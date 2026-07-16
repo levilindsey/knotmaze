@@ -33,7 +33,9 @@ export interface RibbonStyle {
 // base ribbons.
 const SAMPLE_SPACING = 0.09;
 const MIN_SAMPLES = 48;
-const PATCH_SAMPLES = 16;
+// The over-fill patch copies base-ribbon vertices verbatim, so its capacity
+// just needs to cover the longest window (in samples) a crossing can need.
+const OVER_PATCH_MAX_SAMPLES = 30;
 // Patch half-lengths clamp to a fraction of the arc distance to the nearest
 // crossing pass along the same thread, so neighboring patches never fight.
 const NEIGHBOR_CLEARANCE = 0.42;
@@ -42,10 +44,6 @@ const OVER_PATCH_MARGIN = 0.12;
 // Slight overhang so the erase fully covers the under ribbon's antialiased
 // edges.
 const ERASE_WIDTH_PAD = 0.02;
-// The over-fill patch repaints slightly wider than the thread so tiny
-// outline mismatches against the base ribbon (chord/tangent quantization at
-// tight bends) can never expose the erase beneath it.
-const OVER_FILL_PAD = 0.03;
 const MIN_CROSSING_SIN = 0.5;
 // Boundary-march parameters: the over centerline is sampled as a local
 // polyline, and several lanes across the under ribbon march outward until
@@ -60,6 +58,11 @@ const ERASE_LANES = 5;
 // Cut arcs extend outward by this much: widens the gap imperceptibly while
 // swallowing base-ribbon slivers that poke past the cap at tight bends.
 const CUT_BIAS = 0.03;
+// Soft-clamp scale for a cap lane's deviation from the cap chord. The true
+// offset curve hooks sharply on the inside of tight bends (curvature is
+// amplified by 1/(1 - d*k)); compressing large deviations keeps the cut
+// reading parallel to the over thread while gentle curvature stays intact.
+const CAP_DEVIATION_SOFT = 0.08;
 
 function hslToHex(h: number, s: number, l: number): number {
   const k = (n: number) => (n + h / 30) % 12;
@@ -88,13 +91,11 @@ export class RibbonRenderer {
   private overFills: RibbonMesh[] = [];
   private chainControls: Float32Array[] = [];
   private chainSamples: (SplineSamples | null)[] = [];
-  private window = new Float32Array(PATCH_SAMPLES * 4);
   private sampleScratch = new Float32Array(4);
   private overLocal = new Float32Array(OVER_LOCAL_SAMPLES * 2);
   private laneCutsPos = new Float32Array(ERASE_LANES);
   private laneCutsNeg = new Float32Array(ERASE_LANES);
   private lanePrevG = new Float32Array(ERASE_LANES);
-  private overWidths = new Float32Array(PATCH_SAMPLES);
   // Per crossing: neighbor crossing passes along the over and under threads.
   private overNeighbors: PassNeighbors[] = [];
   private underNeighbors: PassNeighbors[] = [];
@@ -165,7 +166,7 @@ export class RibbonRenderer {
         ERASE_LANES,
         style.background
       );
-      const fill = new RibbonMesh(PATCH_SAMPLES, false, 0xffffff);
+      const fill = new RibbonMesh(OVER_PATCH_MAX_SAMPLES, false, 0xffffff);
       this.underErases.push(erase);
       this.overFills.push(fill);
       eraseLayer.addChild(erase.mesh);
@@ -218,17 +219,6 @@ export class RibbonRenderer {
       if (d2 < best) best = d2;
     }
     return Math.sqrt(best);
-  }
-
-  private buildWindow(
-    samples: SplineSamples,
-    center: number,
-    halfLen: number
-  ): void {
-    for (let k = 0; k < PATCH_SAMPLES; k++) {
-      const arc = center - halfLen + (2 * halfLen * k) / (PATCH_SAMPLES - 1);
-      this.sampleAt(samples, arc, this.window, k * 4);
-    }
   }
 
   // Arc gap to the neighboring crossing passes, wrapping around the loop.
@@ -377,6 +367,20 @@ export class RibbonRenderer {
       march(1, uGapNext, this.laneCutsPos);
       march(-1, uGapPrev, this.laneCutsNeg);
 
+      // Soft-clamp interior lanes toward the cap chord so inside-bend
+      // offset hooks (and neighbor-clamp truncations) don't read as sharp
+      // cut-ins; gentle curvature passes through nearly unchanged.
+      for (const cuts of [this.laneCutsPos, this.laneCutsNeg]) {
+        const first = cuts[0];
+        const last = cuts[ERASE_LANES - 1];
+        for (let l = 1; l < ERASE_LANES - 1; l++) {
+          const chord = first + ((last - first) * l) / (ERASE_LANES - 1);
+          const deviation = cuts[l] - chord;
+          cuts[l] =
+            chord + deviation / (1 + Math.abs(deviation) / CAP_DEVIATION_SOFT);
+        }
+      }
+
       // Build the erase grid: each lane spans its own solved cut interval,
       // so the cap rows are polylines lying on the over ribbon's offset
       // curve - they curve with the over thread.
@@ -428,24 +432,20 @@ export class RibbonRenderer {
           overSamples.totalLength / 4
         )
       );
-      // Pad the fill through the middle (covering the erase lens) but taper
-      // to exactly the base width at the caps, so the patch ends leave no
-      // step against the base ribbon.
-      const plateau = Math.max(overHalf - OVER_PATCH_MARGIN, 0);
-      for (let k = 0; k < PATCH_SAMPLES; k++) {
-        const offset = Math.abs((2 * k) / (PATCH_SAMPLES - 1) - 1) * overHalf;
-        if (offset <= plateau) {
-          this.overWidths[k] = fillHalf + OVER_FILL_PAD;
-        } else {
-          const s = (offset - plateau) / (overHalf - plateau);
-          const ease = s * s * (3 - 2 * s);
-          this.overWidths[k] = fillHalf + OVER_FILL_PAD * (1 - ease);
-        }
-      }
-
-      this.buildWindow(overSamples, overCenter, overHalf);
-      this.overFills[c].updateFromWindow(this.window, this.overWidths);
-      this.overFills[c].mesh.tint = this.fills[crossing.over.chain].mesh.tint;
+      // Repaint the over thread across the hole by copying the base
+      // ribbon's vertices for the window's sample range - pixel-identical
+      // to the base ribbon, so no width change and no outline mismatch.
+      const overFill = this.fills[crossing.over.chain];
+      const arcPerSample = overSamples.totalLength / overSamples.count;
+      const startSample = Math.floor((overCenter - overHalf) / arcPerSample);
+      const endSample = Math.ceil((overCenter + overHalf) / arcPerSample);
+      const span = Math.min(
+        endSample - startSample + 1,
+        OVER_PATCH_MAX_SAMPLES,
+        overSamples.count
+      );
+      this.overFills[c].updateFromRibbonWindow(overFill, startSample, span);
+      this.overFills[c].mesh.tint = overFill.mesh.tint;
     });
   }
 

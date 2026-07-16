@@ -65,23 +65,23 @@ export class RibbonMesh {
     this.mesh.geometry.getBuffer("aPosition").update();
   }
 
-  // Variant for callers that assemble the centerline window themselves
-  // (e.g. crossing patches with wrap-around arc windows). halfWidth may be
-  // per-sample, which lets casings taper at their ends.
-  updateFromWindow(
-    centerline: Float32Array,
-    halfWidth: number | Float32Array
+  // Copy a wrapped window of another ribbon's computed vertices into this
+  // patch mesh, repeating the last pair to fill unused stations. Because the
+  // vertices are byte-identical to the source ribbon's, the patch silhouette
+  // matches it exactly - no outline mismatch can expose what's beneath.
+  updateFromRibbonWindow(
+    source: RibbonMesh,
+    startSample: number,
+    sampleSpan: number
   ): void {
+    const n = source.sampleCount;
     for (let i = 0; i < this.sampleCount; i++) {
-      const w = typeof halfWidth === "number" ? halfWidth : halfWidth[i];
-      const cx = centerline[i * 4];
-      const cy = centerline[i * 4 + 1];
-      const tx = centerline[i * 4 + 2];
-      const ty = centerline[i * 4 + 3];
-      this.vertexData[i * 4] = cx - ty * w;
-      this.vertexData[i * 4 + 1] = cy + tx * w;
-      this.vertexData[i * 4 + 2] = cx + ty * w;
-      this.vertexData[i * 4 + 3] = cy - tx * w;
+      const j = Math.min(i, sampleSpan - 1);
+      const s = (((startSample + j) % n) + n) % n;
+      this.vertexData[i * 4] = source.vertexData[s * 4];
+      this.vertexData[i * 4 + 1] = source.vertexData[s * 4 + 1];
+      this.vertexData[i * 4 + 2] = source.vertexData[s * 4 + 2];
+      this.vertexData[i * 4 + 3] = source.vertexData[s * 4 + 3];
     }
     this.mesh.geometry.getBuffer("aPosition").update();
   }
