@@ -65,3 +65,15 @@ Work lands directly to `main`. All changes must be end-to-end working before com
 
 - Phased roadmap: P0 (scaffold) → P1 (combinatorial) → P2 (beauty + live physics) → P3 (touch + audio) → P4 (maze mode) → P5 (growth animation) → P6 (flourishes).
 - Each phase ships as a working demo starting from P2.
+
+## Follow-ups
+
+- **Make the hero settle more dramatic (P2 polish).** The settle currently
+  reads as a gentle "tightening breath" rather than the zigzag-to-curve
+  transition the design imagined: the Catmull-Rom splines round the lattice
+  corners from frame one, so the initial angularity never shows. Fix: blend
+  spline output toward the raw control polyline when settle progress is low
+  (e.g. lerp sampled positions toward straight-line interpolation of the
+  controls by `1 - settle`), so early frames render angular 45° zigzags that
+  visibly soften. Touch points: `RibbonRenderer.update()` +
+  `ParticleSystem` (expose settle progress).
