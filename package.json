@@ -1,0 +1,22 @@
+{
+  "name": "knotmaze",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1",
+    "vitest": "^3.2.7"
+  },
+  "dependencies": {
+    "@types/node": "^26.1.1",
+    "pixi.js": "^8.19.0",
+    "simplex-noise": "^4.0.3",
+    "tweakpane": "^4.0.5"
+  }
+}
