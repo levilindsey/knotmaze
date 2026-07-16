@@ -36,6 +36,8 @@ const ERASE_HALF_LENGTH_MIN = 0.3;
 // edges.
 const ERASE_WIDTH_PAD = 0.02;
 const MIN_CROSSING_SIN = 0.5;
+// Cap-skew clamp: |cot theta| beyond this treats the crossing as degenerate.
+const MAX_CAP_SKEW_COT = 1.6;
 
 function hslToHex(h: number, s: number, l: number): number {
   const k = (n: number) => (n + h / 30) % 12;
@@ -65,6 +67,7 @@ export class RibbonRenderer {
   private chainControls: Float32Array[] = [];
   private chainSamples: (SplineSamples | null)[] = [];
   private window = new Float32Array(PATCH_SAMPLES * 4);
+  private pairScratch = new Float32Array(PATCH_SAMPLES * 4);
   private sampleScratch = new Float32Array(4);
   // Per crossing: neighbor crossing passes along the over and under threads.
   private overNeighbors: PassNeighbors[] = [];
@@ -237,10 +240,26 @@ export class RibbonRenderer {
       const otx = this.sampleScratch[2];
       const oty = this.sampleScratch[3];
       this.sampleAt(underSamples, underCenter, this.sampleScratch, 0);
-      const sinTheta = Math.max(
-        Math.abs(otx * this.sampleScratch[3] - oty * this.sampleScratch[2]),
-        MIN_CROSSING_SIN
-      );
+      const utx = this.sampleScratch[2];
+      const uty = this.sampleScratch[3];
+      const crossUO = utx * oty - uty * otx;
+      const sinTheta = Math.max(Math.abs(crossUO), MIN_CROSSING_SIN);
+
+      // Skew the erase's cap edges so the under thread's cut ends run
+      // parallel to the over thread: shift the left/right edges of the
+      // erase ribbon by +/- eraseW * cot(theta) along the under thread.
+      // Flipping either tangent's orientation flips both the dot and the
+      // cross product, so the skew is orientation-independent.
+      const eraseW = fillHalf + ERASE_WIDTH_PAD;
+      const dotUO = utx * otx + uty * oty;
+      const cot =
+        Math.abs(crossUO) < 1e-4
+          ? 0
+          : Math.max(
+              -MAX_CAP_SKEW_COT,
+              Math.min(MAX_CAP_SKEW_COT, dotUO / crossUO)
+            );
+      const skew = eraseW * cot;
 
       // Under erase: hole reaching gap-width past the over ribbon's edge.
       const [uGapPrev, uGapNext] = this.neighborGaps(
@@ -252,16 +271,29 @@ export class RibbonRenderer {
         ERASE_HALF_LENGTH_MIN,
         Math.min(
           (fillHalf + gap) / sinTheta,
-          NEIGHBOR_CLEARANCE * uGapPrev,
-          NEIGHBOR_CLEARANCE * uGapNext,
+          NEIGHBOR_CLEARANCE * uGapPrev - Math.abs(skew),
+          NEIGHBOR_CLEARANCE * uGapNext - Math.abs(skew),
           underSamples.totalLength / 4
         )
       );
-      this.buildWindow(underSamples, underCenter, eraseHalf);
-      this.underErases[c].updateFromWindow(
-        this.window,
-        fillHalf + ERASE_WIDTH_PAD
-      );
+
+      for (let k = 0; k < PATCH_SAMPLES; k++) {
+        const baseArc =
+          underCenter - eraseHalf + (2 * eraseHalf * k) / (PATCH_SAMPLES - 1);
+
+        this.sampleAt(underSamples, baseArc + skew, this.sampleScratch, 0);
+        this.pairScratch[k * 4] =
+          this.sampleScratch[0] - this.sampleScratch[3] * eraseW;
+        this.pairScratch[k * 4 + 1] =
+          this.sampleScratch[1] + this.sampleScratch[2] * eraseW;
+
+        this.sampleAt(underSamples, baseArc - skew, this.sampleScratch, 0);
+        this.pairScratch[k * 4 + 2] =
+          this.sampleScratch[0] + this.sampleScratch[3] * eraseW;
+        this.pairScratch[k * 4 + 3] =
+          this.sampleScratch[1] - this.sampleScratch[2] * eraseW;
+      }
+      this.underErases[c].updateFromVertexPairs(this.pairScratch);
 
       // Over fill: redraw the over thread across the hole.
       const [oGapPrev, oGapNext] = this.neighborGaps(

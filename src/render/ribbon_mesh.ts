@@ -86,6 +86,13 @@ export class RibbonMesh {
     this.mesh.geometry.getBuffer("aPosition").update();
   }
 
+  // Full manual control of both edges (e.g. skewed cap edges): pairs holds
+  // [leftX, leftY, rightX, rightY] per sample.
+  updateFromVertexPairs(pairs: Float32Array): void {
+    this.vertexData.set(pairs.subarray(0, this.sampleCount * 4));
+    this.mesh.geometry.getBuffer("aPosition").update();
+  }
+
   destroy(): void {
     this.mesh.destroy({ children: true });
   }
