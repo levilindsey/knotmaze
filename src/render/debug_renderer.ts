@@ -10,28 +10,32 @@ export class DebugRenderer {
     this.container = new Container();
   }
 
-  render(graph: TangleGraph): void {
+  render(graph: TangleGraph, screenWidth?: number, screenHeight?: number): void {
     this.container.removeChildren();
 
-    // Draw lattice grid.
+    // Draw the cell grid (primal lines sit at even doubled-lattice coords).
     const gridGraphics = new Graphics();
-    gridGraphics.stroke({ color: 0xcccccc, width: 0.5 });
-    const maxSize = Math.max(
-      ...Array.from(graph.nodes.values()).map((n) => Math.max(...n.latticePos))
-    ) + 1;
+    const maxSize =
+      Math.ceil(
+        Math.max(
+          ...Array.from(graph.nodes.values()).map((n) =>
+            Math.max(...n.latticePos)
+          )
+        ) / 2
+      ) * 2;
 
-    for (let i = 0; i <= maxSize; i++) {
+    for (let i = 0; i <= maxSize; i += 2) {
       gridGraphics.moveTo(i * this.cellSize, 0);
       gridGraphics.lineTo(i * this.cellSize, maxSize * this.cellSize);
       gridGraphics.moveTo(0, i * this.cellSize);
       gridGraphics.lineTo(maxSize * this.cellSize, i * this.cellSize);
     }
+    gridGraphics.stroke({ color: 0x333333, width: 0.5 });
     this.container.addChild(gridGraphics);
 
     // Draw edges.
     for (const [_edgeId, edge] of graph.edges) {
       const edgeGraphics = new Graphics();
-      edgeGraphics.stroke({ color: 0x666666, width: 1 });
 
       if (edge.latticePoints.length > 0) {
         const start = edge.latticePoints[0];
@@ -45,6 +49,7 @@ export class DebugRenderer {
           );
         }
       }
+      edgeGraphics.stroke({ color: 0x999999, width: 1.5 });
       this.container.addChild(edgeGraphics);
     }
 
@@ -74,7 +79,69 @@ export class DebugRenderer {
 
       nodeGraphics.circle(px, py, radius);
       nodeGraphics.fill({ color });
+
+      // At crossings, draw a tick along the over diagonal. Lattice "/"
+      // renders as screen "\" (y is flipped), but the picture is mirrored
+      // consistently, so alternation still reads correctly.
+      if (node.type === NODE_TYPE.CROSSING) {
+        const t = this.cellSize * 0.35;
+        const sy = node.isOver ? 1 : -1;
+        nodeGraphics.moveTo(px - t, py - t * sy);
+        nodeGraphics.lineTo(px + t, py + t * sy);
+        nodeGraphics.stroke({ color: 0xffffff, width: 2 });
+      }
+
       this.container.addChild(nodeGraphics);
     }
+
+    // Center and scale to fit the screen.
+    if (screenWidth !== undefined && screenHeight !== undefined) {
+      this.fitToScreen(graph, screenWidth, screenHeight);
+    }
+  }
+
+  private fitToScreen(
+    graph: TangleGraph,
+    screenWidth: number,
+    screenHeight: number
+  ): void {
+    // Compute lattice-space bounds across nodes and edge paths.
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    const include = ([x, y]: [number, number]) => {
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    };
+
+    for (const node of graph.nodes.values()) {
+      include(node.latticePos);
+    }
+    for (const edge of graph.edges.values()) {
+      for (const point of edge.latticePoints) {
+        include(point);
+      }
+    }
+
+    if (!isFinite(minX)) return;
+
+    const contentWidth = (maxX - minX) * this.cellSize;
+    const contentHeight = (maxY - minY) * this.cellSize;
+    const margin = 40;
+
+    const scale = Math.min(
+      (screenWidth - margin * 2) / Math.max(contentWidth, 1),
+      (screenHeight - margin * 2) / Math.max(contentHeight, 1)
+    );
+
+    this.container.scale.set(scale);
+    this.container.position.set(
+      (screenWidth - contentWidth * scale) / 2 - minX * this.cellSize * scale,
+      (screenHeight - contentHeight * scale) / 2 - minY * this.cellSize * scale
+    );
   }
 }

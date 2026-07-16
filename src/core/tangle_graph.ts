@@ -4,7 +4,6 @@ import type {
   NodeType,
   TangleGraph,
   GenerationParams,
-  Strand,
 } from "./types";
 import { NODE_TYPE } from "./types";
 
@@ -73,135 +72,87 @@ export function addEdge(
   return id;
 }
 
-// Trace strands by walking through the graph.
-// A strand is a maximal path that goes straight through junctions (degree > 2),
-// and terminates at ends or closes in a loop.
-export function traceStrands(graph: TangleGraph): Strand[] {
-  const visitedEdges = new Set<string>();
-  const strands: Strand[] = [];
-
-  for (const [edgeId, _edge] of graph.edges) {
-    if (visitedEdges.has(edgeId)) continue;
-
-    // Start a strand walk.
-    const strand = traceStrand(graph, edgeId, visitedEdges);
-    strands.push(strand);
-  }
-
-  graph.strands = strands;
-  return strands;
-}
-
-function traceStrand(
-  graph: TangleGraph,
-  startEdgeId: string,
-  visitedEdges: Set<string>
-): Strand {
-  const edgeIds: string[] = [startEdgeId];
-  const nodes: string[] = [];
-
-  let currentEdgeId = startEdgeId;
-  const startEdge = graph.edges.get(startEdgeId)!;
-  let currentNodeId = startEdge.nodeA;
-  nodes.push(currentNodeId);
-
-  visitedEdges.add(startEdgeId);
-
-  // Walk forward until we hit a junction, end, or close a loop.
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const currentNode = graph.nodes.get(currentNodeId)!;
-    nodes.push(currentEdgeId === edgeIds[0] ? startEdge.nodeB : currentNodeId);
-
-    // Determine next edge.
-    const adj = graph.adjacency.get(currentNodeId) || [];
-    const unvisitedEdges = adj.filter(
-      (eId) => !visitedEdges.has(eId) || eId === startEdgeId
-    );
-
-    if (currentNode.type === NODE_TYPE.END) {
-      // Strand terminates at an end.
-      break;
-    }
-
-    if (currentNode.type === NODE_TYPE.CROSSING) {
-      // At a crossing, always take the straight-through edge.
-      const nextEdgeId = unvisitedEdges.find((eId) => eId !== currentEdgeId);
-      if (!nextEdgeId) break;
-
-      const nextEdge = graph.edges.get(nextEdgeId)!;
-      const nextNodeId =
-        nextEdge.nodeA === currentNodeId ? nextEdge.nodeB : nextEdge.nodeA;
-
-      if (visitedEdges.has(nextEdgeId) && nextEdgeId !== startEdgeId) {
-        // Loop closed.
-        break;
-      }
-
-      visitedEdges.add(nextEdgeId);
-      currentEdgeId = nextEdgeId;
-      currentNodeId = nextNodeId;
-      edgeIds.push(nextEdgeId);
-
-      if (nextNodeId === nodes[0]) {
-        // Closed loop.
-        return { edgeIds, isClosed: true, nodes };
-      }
-    } else if (currentNode.type === NODE_TYPE.JUNCTION) {
-      // At a junction, trace ends (other edge paths continue elsewhere).
-      break;
-    } else if (currentNode.type === NODE_TYPE.TURN) {
-      // TURN nodes should not occur mid-strand (they're path control only).
-      break;
-    }
-  }
-
-  return {
-    edgeIds,
-    isClosed: nodes[nodes.length - 1] === nodes[0],
-    nodes,
-  };
-}
-
-// Compute checkerboard parity for alternating over/under assignment.
+// Over/under via grid parity. Crossings sit at doubled-lattice points with
+// odd coordinate sum; at (even, odd) points (vertical-wall midpoints) the
+// "/" (NE-SW) pass goes over, at (odd, even) points the "\" pass goes over.
+// Along any thread, consecutive crossings differ by an odd number of
+// {diagonal steps + wall bounces}, and each step flips midpoint class while
+// each bounce flips direction class - so this checkerboard provably
+// alternates over/under along every strand, for any wall placement.
 export function assignCheckerboardParity(graph: TangleGraph): void {
   for (const [_nodeId, node] of graph.nodes) {
     if (node.type === NODE_TYPE.CROSSING) {
-      // Parity is determined by (x + y) % 2 of lattice position.
-      const [x, y] = node.latticePos;
-      node.isOver = (x + y) % 2 === 0;
+      node.isOver = node.latticePos[0] % 2 === 0;
     }
   }
 }
 
-// Compute planarity invariant: verify that all edges connect existing nodes.
-export function checkPlanarity(graph: TangleGraph): boolean {
+// Structural invariants: edges reference existing nodes, and node degrees
+// match their types (crossing 4, turn 2, end 1, junction 3+). True planarity
+// is guaranteed by construction (segments within a cell are either parallel
+// diagonals or share a midpoint endpoint).
+export function checkStructure(graph: TangleGraph): boolean {
   for (const [_edgeId, edge] of graph.edges) {
     if (!graph.nodes.has(edge.nodeA) || !graph.nodes.has(edge.nodeB)) {
       return false;
     }
   }
+
+  for (const [nodeId, node] of graph.nodes) {
+    const degree = graph.adjacency.get(nodeId)?.length ?? 0;
+    if (node.type === NODE_TYPE.CROSSING && degree !== 4) return false;
+    if (node.type === NODE_TYPE.TURN && degree !== 2) return false;
+    if (node.type === NODE_TYPE.END && degree !== 1) return false;
+    if (node.type === NODE_TYPE.JUNCTION && degree < 3) return false;
+  }
+
   return true;
 }
 
-// Verify alternation parity along each strand.
+// Verify perfect alternation: walking each strand in order, crossing passes
+// must go over, under, over, under, ... (wrapping around for closed strands).
 export function checkAlternation(graph: TangleGraph): boolean {
   for (const strand of graph.strands) {
-    for (const edgeId of strand.edgeIds) {
-      const edge = graph.edges.get(edgeId)!;
-      const nodeA = graph.nodes.get(edge.nodeA)!;
-      const nodeB = graph.nodes.get(edge.nodeB)!;
+    const passes: boolean[] = [];
+    // Closed strands repeat the start node at the end; skip the duplicate.
+    const count = strand.isClosed
+      ? strand.nodes.length - 1
+      : strand.nodes.length;
 
-      // Both endpoints of an edge between two crossings must have opposite parity.
-      if (
-        nodeA.type === NODE_TYPE.CROSSING &&
-        nodeB.type === NODE_TYPE.CROSSING
-      ) {
-        if (nodeA.isOver === nodeB.isOver) {
-          return false; // Alternation failed.
-        }
-      }
+    for (let i = 0; i < count; i++) {
+      const node = graph.nodes.get(strand.nodes[i])!;
+      if (node.type !== NODE_TYPE.CROSSING) continue;
+      if (i + 1 >= strand.nodes.length) continue; // open strand ends here
+
+      // Direction of this pass, from the next node along the strand. Turn
+      // nodes are offset by half a step, which shrinks one component but
+      // never flips its sign, so the diagonal class is preserved.
+      const next = graph.nodes.get(strand.nodes[i + 1])!;
+      const vx = next.latticePos[0] - node.latticePos[0];
+      const vy = next.latticePos[1] - node.latticePos[1];
+      const isSlash = vx * vy > 0;
+      passes.push(isSlash ? node.isOver === true : node.isOver !== true);
+    }
+
+    if (passes.length < 2) continue;
+    for (let i = 0; i < passes.length; i++) {
+      const j = (i + 1) % passes.length;
+      if (j === 0 && !strand.isClosed) continue;
+      if (passes[i] === passes[j]) return false;
     }
   }
   return true;
+}
+
+// Verify that strands partition the edge set: every edge appears in exactly
+// one strand.
+export function checkStrandPartition(graph: TangleGraph): boolean {
+  const seen = new Set<string>();
+  for (const strand of graph.strands) {
+    for (const edgeId of strand.edgeIds) {
+      if (seen.has(edgeId) || !graph.edges.has(edgeId)) return false;
+      seen.add(edgeId);
+    }
+  }
+  return seen.size === graph.edges.size;
 }

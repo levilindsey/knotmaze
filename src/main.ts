@@ -1,6 +1,7 @@
 import { Application } from "pixi.js";
 import { initRNG } from "./util/random";
 import { generateLatticeKnotwork } from "./core/lattice_grower";
+import { checkStructure, checkAlternation } from "./core/tangle_graph";
 import { DebugRenderer } from "./render/debug_renderer";
 import type { GenerationParams } from "./core/types";
 
@@ -32,23 +33,21 @@ async function main(): Promise<void> {
 
   // Generate a knot.
   const genParams: GenerationParams = {
-    gridSize: 16,
-    threadCount: 4,
-    branchRate: 0.1,
-    mergeRate: 0.05,
-    terminateRate: 0.02,
-    weaveDensity: 0.3,
-    turnBias: 0.3,
-    loopClosurePreference: 0.2,
-    overlapPenalty: Infinity,
+    gridSize: 12,
+    weaveDensity: 0.35,
+    turnBias: 0.7,
     randSeed: seed,
   };
 
   const graph = generateLatticeKnotwork(genParams);
 
+  if (!checkStructure(graph) || !checkAlternation(graph)) {
+    console.warn("Knot invariants violated; generation bug.");
+  }
+
   // Debug render.
   const renderer = new DebugRenderer();
-  renderer.render(graph);
+  renderer.render(graph, app.screen.width, app.screen.height);
   app.stage.addChild(renderer.container);
 
   console.log(

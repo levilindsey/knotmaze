@@ -12,8 +12,8 @@ export type NodeType = (typeof NODE_TYPE)[keyof typeof NODE_TYPE];
 export interface Node {
   id: string;
   type: NodeType;
-  latticePos: [number, number];  // Grid position.
-  isOver?: boolean;              // For crossings: true if this is the over strand.
+  latticePos: [number, number];  // Doubled-lattice position (turns may be fractional).
+  isOver?: boolean;              // For crossings: true if the "/" (NE-SW) pass goes over.
 }
 
 export interface Edge {
@@ -40,18 +40,13 @@ export interface TangleGraph {
   params: GenerationParams;
 }
 
-// Parameters for generation.
+// Parameters for generation. Junction/end carving (entrances, exits, branch
+// points for maze mode) arrives in P4 and will add its own params then.
 export interface GenerationParams {
-  gridSize: number;              // Number of lattice cells per dimension.
-  threadCount: number;           // Target number of initial threads.
-  branchRate: number;            // P(end branches) per step.
-  mergeRate: number;             // P(end merges with nearby thread).
-  terminateRate: number;         // P(end terminates).
-  weaveDensity: number;          // P(crossing allowed).
-  turnBias: number;              // [0, 1] bias toward windy paths.
-  loopClosurePreference: number; // [0, 1] bias toward closing loops.
-  overlapPenalty: number;        // Pairwise-crossing enforcement weight.
-  randSeed: number;              // RNG seed.
+  gridSize: number;     // Number of lattice cells per dimension.
+  weaveDensity: number; // [0, 1] P(non-tree wall opened): more = denser weave.
+  turnBias: number;     // [0, 1] growing-tree newest-cell bias: more = windier corridors.
+  randSeed: number;     // RNG seed.
 }
 
 export interface ParamFieldConfig {
