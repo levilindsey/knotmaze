@@ -59,9 +59,12 @@ const ERASE_WIDTH_PAD = 0.02;
 const LOCAL_SAMPLES = 24;
 const OVER_LOCAL_REACH = 1.9;
 const UNDER_LOCAL_REACH = 1.6;
-const MARCH_STEP = 0.12;
+const MARCH_STEP = 0.07;
 const CUT_REACH_MAX = 1.35;
 const OVER_REACH_MAX = 1.2;
+// Matches the base ribbon's sample spacing so the erase's miter factor
+// tracks the base extrusion's at kinks.
+const MITER_PROBE = 0.09;
 const ERASE_STATIONS = 16;
 const ERASE_LANES = 5;
 // Cut arcs extend outward by this much: widens the gap imperceptibly while
@@ -75,6 +78,10 @@ const CUT_BIAS = 0.03;
 // straight over thread) is a fixed point regardless of under-thread
 // curvature.
 const CAP_DEVIATION_SOFT = 0.08;
+// Corner rounding for cap polylines: a kinked over centerline makes the
+// distance level set genuinely angular; clamping each interior cap point's
+// second difference rounds corners while leaving gentle bows untouched.
+const CAP_D2_MAX = 0.03;
 
 function hslToHex(h: number, s: number, l: number): number {
   const k = (n: number) => (n + h / 30) % 12;
@@ -422,6 +429,30 @@ export class RibbonRenderer {
           this.capScratch[l * 4 + 3] = this.sampleScratch[3];
         }
 
+        // Round genuine corners in the solved boundary before the chord
+        // clamp: clamp each interior point's second difference.
+        for (let l = 1; l < ERASE_LANES - 1; l++) {
+          const midX =
+            (this.capScratch[(l - 1) * 4] + this.capScratch[(l + 1) * 4]) / 2;
+          const midY =
+            (this.capScratch[(l - 1) * 4 + 1] +
+              this.capScratch[(l + 1) * 4 + 1]) /
+            2;
+          const dx = this.capScratch[l * 4] - midX;
+          const dy = this.capScratch[l * 4 + 1] - midY;
+          const m = Math.hypot(dx, dy);
+          if (m <= CAP_D2_MAX) continue;
+          const scale = CAP_D2_MAX / m;
+          const tx = this.capScratch[l * 4 + 2];
+          const ty = this.capScratch[l * 4 + 3];
+          const ds =
+            (midX + dx * scale - this.capScratch[l * 4]) * tx +
+            (midY + dy * scale - this.capScratch[l * 4 + 1]) * ty;
+          cuts[l] += ds;
+          this.capScratch[l * 4] += tx * ds;
+          this.capScratch[l * 4 + 1] += ty * ds;
+        }
+
         const x0 = this.capScratch[0];
         const y0 = this.capScratch[1];
         const xn = this.capScratch[(ERASE_LANES - 1) * 4];
@@ -449,13 +480,42 @@ export class RibbonRenderer {
       // so the cap rows are polylines lying on the over ribbon's offset
       // curve - they curve with the over thread.
       const erase = this.underErases[c];
+      const midLane = (ERASE_LANES - 1) / 2;
       for (let k = 0; k < ERASE_STATIONS; k++) {
         const t = k / (ERASE_STATIONS - 1);
+
+        // Station miter factor from the local turn of the under centerline,
+        // matching the base ribbon's mitered extrusion so the erase keeps
+        // covering it at kinks.
+        const sMid =
+          underCenter +
+          this.laneCutsNeg[midLane] +
+          (this.laneCutsPos[midLane] - this.laneCutsNeg[midLane]) * t;
+        this.sampleAt(underSamples, sMid - MITER_PROBE, this.sampleScratch, 0);
+        const pax = this.sampleScratch[0];
+        const pay = this.sampleScratch[1];
+        this.sampleAt(underSamples, sMid + MITER_PROBE, this.sampleScratch, 0);
+        const pbx = this.sampleScratch[0];
+        const pby = this.sampleScratch[1];
+        this.sampleAt(underSamples, sMid, this.sampleScratch, 0);
+        let ax = this.sampleScratch[0] - pax;
+        let ay = this.sampleScratch[1] - pay;
+        let bx = pbx - this.sampleScratch[0];
+        let by = pby - this.sampleScratch[1];
+        const la = Math.hypot(ax, ay) || 1;
+        const lb = Math.hypot(bx, by) || 1;
+        ax /= la;
+        ay /= la;
+        bx /= lb;
+        by /= lb;
+        const miter =
+          1 / Math.sqrt(Math.max((1 + ax * bx + ay * by) / 2, 0.25));
+
         for (let l = 0; l < ERASE_LANES; l++) {
           const s =
             this.laneCutsNeg[l] +
             (this.laneCutsPos[l] - this.laneCutsNeg[l]) * t;
-          const u = laneOffset(l);
+          const u = laneOffset(l) * miter;
           this.sampleAt(underSamples, underCenter + s, this.sampleScratch, 0);
           erase.setVertex(
             k,
