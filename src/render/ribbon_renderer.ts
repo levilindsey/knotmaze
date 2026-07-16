@@ -49,15 +49,19 @@ const OVER_PATCH_MARGIN = 0.12;
 // Slight overhang so the erase fully covers the under ribbon's antialiased
 // edges.
 const ERASE_WIDTH_PAD = 0.02;
-const MIN_CROSSING_SIN = 0.35;
-// Boundary-march parameters: the over centerline is sampled as a local
-// polyline, and several lanes across the under ribbon march outward until
-// each exits the cut region (distance to that polyline >= cut boundary).
-// Multiple lanes let the cap edges curve with the over thread.
-const OVER_LOCAL_SAMPLES = 24;
-const OVER_LOCAL_REACH = 1.7;
+// Boundary-march parameters: each thread's centerline is sampled as a local
+// polyline around the crossing, and marches measure distances against it.
+// The erase marches several lanes across the under ribbon outward until
+// each exits the cut region (multiple lanes let cap edges curve with the
+// over thread); the over-fill window marches along the over thread until
+// it is provably beyond the erase's reach - direct measurement, robust to
+// kinked centerlines and any crossing angle.
+const LOCAL_SAMPLES = 24;
+const OVER_LOCAL_REACH = 1.9;
+const UNDER_LOCAL_REACH = 1.6;
 const MARCH_STEP = 0.12;
-const CUT_REACH_MAX = 1.15;
+const CUT_REACH_MAX = 1.35;
+const OVER_REACH_MAX = 1.2;
 const ERASE_STATIONS = 16;
 const ERASE_LANES = 5;
 // Cut arcs extend outward by this much: widens the gap imperceptibly while
@@ -100,7 +104,8 @@ export class RibbonRenderer {
   private chainControls: Float32Array[] = [];
   private chainSamples: (SplineSamples | null)[] = [];
   private sampleScratch = new Float32Array(4);
-  private overLocal = new Float32Array(OVER_LOCAL_SAMPLES * 2);
+  private overLocal = new Float32Array(LOCAL_SAMPLES * 2);
+  private underLocal = new Float32Array(LOCAL_SAMPLES * 2);
   private laneCutsPos = new Float32Array(ERASE_LANES);
   private laneCutsNeg = new Float32Array(ERASE_LANES);
   private lanePrevG = new Float32Array(ERASE_LANES);
@@ -216,18 +221,32 @@ export class RibbonRenderer {
     out[offset + 3] = ty / len;
   }
 
-  // Distance from a point to the locally sampled over centerline. The
-  // polyline is dense (~0.14 spacing), so nearest-vertex distance is within
-  // ~0.005 of the true curve distance at the ranges we care about.
-  private distToOverLocal(x: number, y: number): number {
+  // Distance from a point to a locally sampled centerline polyline. The
+  // polylines are dense (~0.15 spacing), so nearest-vertex distance is
+  // within ~0.007 of the true curve distance at the ranges we care about.
+  private distToLocal(poly: Float32Array, x: number, y: number): number {
     let best = Infinity;
-    for (let m = 0; m < OVER_LOCAL_SAMPLES; m++) {
-      const dx = this.overLocal[m * 2] - x;
-      const dy = this.overLocal[m * 2 + 1] - y;
+    for (let m = 0; m < LOCAL_SAMPLES; m++) {
+      const dx = poly[m * 2] - x;
+      const dy = poly[m * 2 + 1] - y;
       const d2 = dx * dx + dy * dy;
       if (d2 < best) best = d2;
     }
     return Math.sqrt(best);
+  }
+
+  private buildLocal(
+    poly: Float32Array,
+    samples: SplineSamples,
+    center: number,
+    reach: number
+  ): void {
+    for (let m = 0; m < LOCAL_SAMPLES; m++) {
+      const arc = center - reach + (2 * reach * m) / (LOCAL_SAMPLES - 1);
+      this.sampleAt(samples, arc, this.sampleScratch, 0);
+      poly[m * 2] = this.sampleScratch[0];
+      poly[m * 2 + 1] = this.sampleScratch[1];
+    }
   }
 
   // Arc gap to the neighboring crossing passes, wrapping around the loop.
@@ -277,17 +296,22 @@ export class RibbonRenderer {
       const overCenter = overSamples.controlArcLengths[crossing.over.ctrl];
       const underCenter = underSamples.controlArcLengths[crossing.under.ctrl];
 
-      // Local polyline of the over centerline; the cut boundary is
-      // "distance to this curve == fillHalf + gap", i.e. the offset curve
-      // of the over ribbon.
-      const reach = Math.min(OVER_LOCAL_REACH, overSamples.totalLength / 4);
-      for (let m = 0; m < OVER_LOCAL_SAMPLES; m++) {
-        const arc =
-          overCenter - reach + (2 * reach * m) / (OVER_LOCAL_SAMPLES - 1);
-        this.sampleAt(overSamples, arc, this.sampleScratch, 0);
-        this.overLocal[m * 2] = this.sampleScratch[0];
-        this.overLocal[m * 2 + 1] = this.sampleScratch[1];
-      }
+      // Local centerline polylines around the crossing. The cut boundary is
+      // "distance to the over polyline == fillHalf + gap" (the offset curve
+      // of the over ribbon); the over-fill window is measured against the
+      // under polyline.
+      this.buildLocal(
+        this.overLocal,
+        overSamples,
+        overCenter,
+        Math.min(OVER_LOCAL_REACH, overSamples.totalLength / 4)
+      );
+      this.buildLocal(
+        this.underLocal,
+        underSamples,
+        underCenter,
+        Math.min(UNDER_LOCAL_REACH, underSamples.totalLength / 4)
+      );
 
       const cutBoundary = fillHalf + gap;
       const eraseW = fillHalf + ERASE_WIDTH_PAD;
@@ -324,7 +348,7 @@ export class RibbonRenderer {
         for (let l = 0; l < ERASE_LANES; l++) {
           const u = laneOffset(l);
           const g =
-            this.distToOverLocal(
+            this.distToLocal(this.overLocal, 
               this.sampleScratch[0] - this.sampleScratch[3] * u,
               this.sampleScratch[1] + this.sampleScratch[2] * u
             ) - cutBoundary;
@@ -350,7 +374,7 @@ export class RibbonRenderer {
             if (!Number.isNaN(cuts[l])) continue;
             const u = laneOffset(l);
             const g =
-              this.distToOverLocal(
+              this.distToLocal(this.overLocal, 
                 this.sampleScratch[0] - this.sampleScratch[3] * u,
                 this.sampleScratch[1] + this.sampleScratch[2] * u
               ) - cutBoundary;
@@ -443,42 +467,48 @@ export class RibbonRenderer {
       }
       erase.commit();
 
-      // Over fill: redraw the over thread across the hole. Its length must
-      // cover the crossing lens (where the erase overlaps the over ribbon),
-      // which grows as the crossing angle shallows.
-      this.sampleAt(overSamples, overCenter, this.sampleScratch, 0);
-      const otx = this.sampleScratch[2];
-      const oty = this.sampleScratch[3];
-      this.sampleAt(underSamples, underCenter, this.sampleScratch, 0);
-      const utx = this.sampleScratch[2];
-      const uty = this.sampleScratch[3];
-      const sinTheta = Math.max(
-        Math.abs(utx * oty - uty * otx),
-        MIN_CROSSING_SIN
-      );
-      const cosTheta = Math.abs(utx * otx + uty * oty);
-
+      // Over fill: redraw the over thread across the hole. The window is
+      // measured directly: march along the over thread until its centerline
+      // is provably beyond the erase's reach of the under thread. No angle
+      // estimates, so kinked centerlines can't undersize it.
       const [oGapPrev, oGapNext] = this.neighborGaps(
         overSamples,
         crossing.over.ctrl,
         this.overNeighbors[c]
       );
-      const overHalf = Math.max(
-        OVER_HALF_LENGTH_MIN,
-        Math.min(
-          (eraseW + fillHalf * cosTheta) / sinTheta + OVER_PATCH_MARGIN,
-          NEIGHBOR_CLEARANCE * oGapPrev,
-          NEIGHBOR_CLEARANCE * oGapNext,
-          overSamples.totalLength / 4
-        )
-      );
+      const overlapReach = eraseW + fillHalf + ERASE_WIDTH_PAD + 0.05;
+      const reachAlongOver = (dir: number, gapLimit: number): number => {
+        const rMax = Math.max(
+          OVER_HALF_LENGTH_MIN,
+          Math.min(
+            OVER_REACH_MAX,
+            NEIGHBOR_CLEARANCE * gapLimit,
+            overSamples.totalLength / 4
+          )
+        );
+        for (let s = MARCH_STEP; s < rMax; s += MARCH_STEP) {
+          this.sampleAt(overSamples, overCenter + dir * s, this.sampleScratch, 0);
+          const d = this.distToLocal(
+            this.underLocal,
+            this.sampleScratch[0],
+            this.sampleScratch[1]
+          );
+          if (d >= overlapReach) {
+            return Math.min(s + OVER_PATCH_MARGIN, rMax);
+          }
+        }
+        return rMax;
+      };
+      const halfPos = reachAlongOver(1, oGapNext);
+      const halfNeg = reachAlongOver(-1, oGapPrev);
+
       // Repaint the over thread across the hole by copying the base
       // ribbon's vertices for the window's sample range - pixel-identical
       // to the base ribbon, so no width change and no outline mismatch.
       const overFill = this.fills[crossing.over.chain];
       const arcPerSample = overSamples.totalLength / overSamples.count;
-      const startSample = Math.floor((overCenter - overHalf) / arcPerSample);
-      const endSample = Math.ceil((overCenter + overHalf) / arcPerSample);
+      const startSample = Math.floor((overCenter - halfNeg) / arcPerSample);
+      const endSample = Math.ceil((overCenter + halfPos) / arcPerSample);
       const span = Math.min(
         endSample - startSample + 1,
         OVER_PATCH_MAX_SAMPLES,

@@ -48,9 +48,10 @@ const REPULSION_STIFFNESS = 0.15;
 const SHRINK_TAUT = 0.78; // Rest-length fraction at slack 0...
 const SHRINK_LOOSE = 0.97; // ...and at slack 1.
 // The taut floor stays high enough that threads never kink at crossings:
-// kinks read as rendering defects, and tautness comes from the structural
-// shrink, not from bending going slack.
-const BEND_TAUT = 0.9; // Bending-stiffness multiplier at slack 0...
+// taut string over a peg bends at a small round radius, not a corner.
+// Kinks also read as rendering defects, and tautness comes from the
+// structural shrink, not from bending going slack.
+const BEND_TAUT = 1.2; // Bending-stiffness multiplier at slack 0...
 const BEND_LOOSE = 2.2; // ...and at slack 1.
 const REPULSE_DIST_TAUT = 0.5; // Repulsion min distance at slack 0...
 const REPULSE_DIST_LOOSE = 0.95; // ...and at slack 1.

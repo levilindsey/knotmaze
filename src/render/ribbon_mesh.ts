@@ -42,21 +42,43 @@ export class RibbonMesh {
     this.mesh.tint = color;
   }
 
-  // Rewrite vertex positions from a centerline. `positions`/`tangents` are
-  // flat [x0,y0,...] arrays; `offset` selects the first sample to read.
+  // Rewrite vertex positions from a closed centerline. `positions`/
+  // `tangents` are flat [x0,y0,...] arrays; `offset` selects the first
+  // sample to read.
   update(
     positions: Float32Array,
     tangents: Float32Array,
     halfWidth: number,
     offset = 0
   ): void {
-    for (let i = 0; i < this.sampleCount; i++) {
+    const n = this.sampleCount;
+    for (let i = 0; i < n; i++) {
       const s = (offset + i) * 2;
+      const sPrev = (offset + ((i - 1 + n) % n)) * 2;
+      const sNext = (offset + ((i + 1) % n)) * 2;
       const cx = positions[s];
       const cy = positions[s + 1];
-      // Normal is the tangent rotated 90 degrees.
-      const nx = -tangents[s + 1] * halfWidth;
-      const ny = tangents[s] * halfWidth;
+
+      // Miter: at a sharp join the perpendicular offset must lengthen to
+      // halfWidth / cos(half-angle) along the bisector (which the
+      // centered-difference tangent already is), or the outline dimples at
+      // every kink apex.
+      let ax = cx - positions[sPrev];
+      let ay = cy - positions[sPrev + 1];
+      let bx = positions[sNext] - cx;
+      let by = positions[sNext + 1] - cy;
+      const la = Math.hypot(ax, ay) || 1;
+      const lb = Math.hypot(bx, by) || 1;
+      ax /= la;
+      ay /= la;
+      bx /= lb;
+      by /= lb;
+      // cos^2(half-angle) = (1 + cos(angle)) / 2; clamp keeps miter <= 2x.
+      const cosHalf = Math.sqrt(Math.max((1 + ax * bx + ay * by) / 2, 0.25));
+      const w = halfWidth / cosHalf;
+
+      const nx = -tangents[s + 1] * w;
+      const ny = tangents[s] * w;
       this.vertexData[i * 4] = cx + nx;
       this.vertexData[i * 4 + 1] = cy + ny;
       this.vertexData[i * 4 + 2] = cx - nx;
