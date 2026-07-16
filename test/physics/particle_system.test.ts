@@ -70,6 +70,29 @@ describe("particle system", () => {
     expect(pathLength()).toBeLessThan(before);
   });
 
+  it("higher slack settles to a longer (looser) rest state", () => {
+    const settled = (slack: number) => {
+      const { ps } = build(11);
+      for (let i = 0; i < 400; i++) {
+        ps.step(1 / 60, 0, slack);
+      }
+      let total = 0;
+      for (const chain of ps.chains) {
+        for (let i = 0; i < chain.length; i++) {
+          const a = chain[i];
+          const b = chain[(i + 1) % chain.length];
+          total += Math.hypot(
+            ps.positions[b * 2] - ps.positions[a * 2],
+            ps.positions[b * 2 + 1] - ps.positions[a * 2 + 1]
+          );
+        }
+      }
+      return total;
+    };
+
+    expect(settled(0.9)).toBeGreaterThan(settled(0.1) * 1.05);
+  });
+
   it("reset returns particles to the lattice", () => {
     const { ps } = build(5);
     const initial = new Float32Array(ps.positions);

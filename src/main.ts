@@ -106,6 +106,7 @@ async function main(): Promise<void> {
     onDebugToggle: (visible) => {
       if (debug) debug.container.visible = visible;
     },
+    onSlackChange: () => writeParams(params),
   });
 
   window.addEventListener("resize", () => {
@@ -115,7 +116,7 @@ async function main(): Promise<void> {
 
   app.ticker.add((ticker) => {
     if (!ps || !renderer) return;
-    ps.step(ticker.deltaMS / 1000, settings.temperature);
+    ps.step(ticker.deltaMS / 1000, settings.temperature, params.slack);
     renderer.update();
   });
 

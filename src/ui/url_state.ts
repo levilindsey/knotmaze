@@ -6,12 +6,14 @@ export interface UrlParams {
   gridSize: number;
   weaveDensity: number;
   turnBias: number;
+  slack: number; // [0, 1] rest-state looseness (physics, applies live).
 }
 
 const DEFAULTS = {
   gridSize: 12,
   weaveDensity: 0.35,
   turnBias: 0.7,
+  slack: 0.55,
 };
 
 export function newSeed(): number {
@@ -36,6 +38,7 @@ export function readParams(): UrlParams {
     gridSize: readNumber(query, "gs", DEFAULTS.gridSize),
     weaveDensity: readNumber(query, "wd", DEFAULTS.weaveDensity),
     turnBias: readNumber(query, "tb", DEFAULTS.turnBias),
+    slack: readNumber(query, "sl", DEFAULTS.slack),
   };
 }
 
@@ -45,5 +48,6 @@ export function writeParams(params: UrlParams): void {
   query.set("gs", String(params.gridSize));
   query.set("wd", String(params.weaveDensity));
   query.set("tb", String(params.turnBias));
+  query.set("sl", String(params.slack));
   history.replaceState(null, "", `?${query.toString()}`);
 }

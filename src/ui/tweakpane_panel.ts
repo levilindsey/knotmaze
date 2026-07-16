@@ -14,6 +14,7 @@ export interface PanelCallbacks {
   onReseed: () => void;
   onReplaySettle: () => void;
   onDebugToggle: (visible: boolean) => void;
+  onSlackChange: () => void;
 }
 
 interface ChangeEvent {
@@ -42,6 +43,11 @@ export function buildPanel(
     .addBinding(params, "turnBias", { min: 0, max: 1, step: 0.05 })
     .on("change", regenerateWhenDone);
   pane.addButton({ title: "New seed" }).on("click", callbacks.onReseed);
+
+  // Slack applies live to the physics (no regeneration).
+  pane
+    .addBinding(params, "slack", { min: 0, max: 1, step: 0.05 })
+    .on("change", callbacks.onSlackChange);
 
   pane.addBinding(settings, "temperature", { min: 0, max: 1, step: 0.01 });
   pane

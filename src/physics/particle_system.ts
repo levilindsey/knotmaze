@@ -33,16 +33,24 @@ const DAMPING = 0.9;
 
 // The hero settle: structural rest lengths are stored at their full lattice
 // values, so the angular initial state is a true equilibrium. Over
-// SETTLE_DURATION seconds a smoothstep ramp shrinks rests toward REST_SHRINK
-// and fades bending in, so corners visibly open into smooth curves while the
-// constraints themselves stay stiff (crisp at every moment).
+// SETTLE_DURATION seconds a smoothstep ramp shrinks rests toward the slack-
+// dependent target and fades bending in, so corners visibly open into smooth
+// curves while the constraints themselves stay stiff (crisp at every moment).
 const SETTLE_DURATION = 2.2;
-const REST_SHRINK = 0.82;
 const STRUCTURAL_STIFFNESS = 0.7;
 const BENDING_STIFFNESS = 0.18;
 const ANCHOR_STIFFNESS = 0.25;
-const REPULSION_MIN_DIST = 0.65;
 const REPULSION_STIFFNESS = 0.15;
+
+// Slack [0, 1] shapes the rest state: 0 = taut threads pulled tight against
+// the crossings, 1 = loose threads with round, continuous curvature and
+// generous spacing. It interpolates three knobs:
+const SHRINK_TAUT = 0.78; // Rest-length fraction at slack 0...
+const SHRINK_LOOSE = 0.97; // ...and at slack 1.
+const BEND_TAUT = 0.5; // Bending-stiffness multiplier at slack 0...
+const BEND_LOOSE = 2.2; // ...and at slack 1.
+const REPULSE_DIST_TAUT = 0.5; // Repulsion min distance at slack 0...
+const REPULSE_DIST_LOOSE = 0.95; // ...and at slack 1.
 const TEMPERATURE_SCALE = 0.05;
 const NOISE_SPATIAL_FREQ = 0.3;
 const NOISE_TIME_FREQ = 0.8;
@@ -227,18 +235,18 @@ export class ParticleSystem {
     this.accumulator = 0;
   }
 
-  step(dt: number, temperature: number): void {
+  step(dt: number, temperature: number, slack = 0.5): void {
     this.accumulator += Math.min(dt, 0.1);
     let substeps = Math.floor(this.accumulator / SUBSTEP);
     substeps = Math.min(substeps, MAX_SUBSTEPS_PER_FRAME);
     this.accumulator = Math.max(0, this.accumulator - substeps * SUBSTEP);
 
     for (let s = 0; s < substeps; s++) {
-      this.substep(temperature);
+      this.substep(temperature, slack);
     }
   }
 
-  private substep(temperature: number): void {
+  private substep(temperature: number, slack: number): void {
     this.time += SUBSTEP;
 
     // Temperature: Simplex-noise agitation, injected as velocity.
@@ -263,16 +271,26 @@ export class ParticleSystem {
     // Settle ramp: 0 at load (lattice equilibrium) -> 1 when fully relaxed.
     const x = Math.min(this.time / SETTLE_DURATION, 1);
     const settle = x * x * (3 - 2 * x);
-    const restScale = 1 - (1 - REST_SHRINK) * settle;
+
+    const shrink = SHRINK_TAUT + (SHRINK_LOOSE - SHRINK_TAUT) * slack;
+    const restScale = 1 - (1 - shrink) * settle;
+    const bendScale = settle * (BEND_TAUT + (BEND_LOOSE - BEND_TAUT) * slack);
+    const repulseDist =
+      REPULSE_DIST_TAUT + (REPULSE_DIST_LOOSE - REPULSE_DIST_TAUT) * slack;
 
     for (let iter = 0; iter < CONSTRAINT_ITERATIONS; iter++) {
       applyDistanceConstraints(this.positions, this.structural, restScale);
       applyAnchors(this.positions, this.anchors);
-      applyDistanceConstraints(this.positions, this.bending, restScale, settle);
+      applyDistanceConstraints(
+        this.positions,
+        this.bending,
+        restScale,
+        bendScale
+      );
       applyRepulsion(
         this.positions,
         this.particleCount,
-        REPULSION_MIN_DIST,
+        repulseDist,
         REPULSION_STIFFNESS * settle,
         this.excludedPairs
       );
