@@ -21,6 +21,9 @@ async function main(): Promise<void> {
     antialias: true,
     preference: "webgl",
     resolution: Math.min(window.devicePixelRatio, 2),
+    // Keep the canvas CSS size at logical pixels; without this, any
+    // devicePixelRatio > 1 blows the canvas up past the viewport.
+    autoDensity: true,
     background: BACKGROUND,
   });
   document.body.appendChild(app.canvas);
@@ -77,6 +80,9 @@ async function main(): Promise<void> {
 
     debug = new DebugRenderer();
     debug.render(graph);
+    // The debug renderer draws at cellSize px per lattice unit; the root
+    // container already maps lattice units to screen, so counter-scale.
+    debug.container.scale.set(1 / debug.cellSize);
     debug.container.visible = settings.showDebug;
 
     root.addChild(renderer.root, debug.container);
