@@ -12,6 +12,11 @@ import type { GenerationParams } from "./core/types";
 const BACKGROUND = 0x151b28;
 const FIT_MARGIN = 40;
 
+// Bumped manually with each rendering/physics change, so a browser tab's
+// code state is verifiable at a glance (repos sync across machines with lag;
+// stale tabs and stale checkouts happen).
+const BUILD_STAMP = "P2.9 miter+march 2026-07-16";
+
 const app = new Application();
 
 async function main(): Promise<void> {
@@ -119,6 +124,21 @@ async function main(): Promise<void> {
     ps.step(ticker.deltaMS / 1000, settings.temperature, params.slack);
     renderer.update();
   });
+
+  // Verifiable code-state stamp: on screen and in the console, with the
+  // environment facts that matter when debugging rendering discrepancies.
+  const stamp = document.createElement("div");
+  stamp.textContent = BUILD_STAMP;
+  stamp.style.cssText =
+    "position:fixed;left:6px;bottom:4px;font:10px monospace;" +
+    "color:#5a6478;pointer-events:none;z-index:10";
+  document.body.appendChild(stamp);
+
+  const gl = (app.renderer as unknown as { gl?: WebGLRenderingContext }).gl;
+  console.log(
+    `KnotMaze ${BUILD_STAMP} | dpr ${window.devicePixelRatio} | ` +
+      `gpu ${gl ? gl.getParameter(gl.RENDERER) : "unknown"}`
+  );
 
   rebuild();
 }
