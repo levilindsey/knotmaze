@@ -20,7 +20,13 @@ export interface RibbonStyle {
 const SAMPLE_SPACING = 0.15;
 const MIN_SAMPLES = 48;
 const PATCH_SAMPLES = 16;
-const PATCH_HALF_LENGTH = 0.85;
+// Patch windows adapt per frame: long enough to sever the under thread,
+// short enough to never reach the neighboring crossings on the same thread
+// (whose patches would fight this one).
+const PATCH_HALF_LENGTH_MAX = 0.65;
+const PATCH_HALF_LENGTH_MIN = 0.35;
+const PATCH_NEIGHBOR_CLEARANCE = 0.42; // Fraction of the arc gap to a neighbor.
+const CASING_PLATEAU = 0.45; // Full casing width within this arc distance.
 
 function hslToHex(h: number, s: number, l: number): number {
   const k = (n: number) => (n + h / 30) % 12;
@@ -45,6 +51,10 @@ export class RibbonRenderer {
   private chainControls: Float32Array[] = [];
   private chainSamples: (SplineSamples | null)[] = [];
   private patchWindow = new Float32Array(PATCH_SAMPLES * 4);
+  private casingWidths = new Float32Array(PATCH_SAMPLES);
+  // Per patch: ctrl indices of the nearest crossing passes (either over or
+  // under) before/after the over pass along its own chain.
+  private patchNeighbors: Array<{ prevCtrl: number; nextCtrl: number }> = [];
 
   constructor(ps: ParticleSystem, style: RibbonStyle) {
     this.ps = ps;
@@ -52,8 +62,31 @@ export class RibbonRenderer {
     this.root = new Container();
 
     const baseLayer = new Container();
-    const patchLayer = new Container();
-    this.root.addChild(baseLayer, patchLayer);
+    // All casings render below all patch fills: a casing must never notch
+    // another crossing's already-drawn over ribbon.
+    const patchCasingLayer = new Container();
+    const patchFillLayer = new Container();
+    this.root.addChild(baseLayer, patchCasingLayer, patchFillLayer);
+
+    // Every crossing pass (over and under) along each chain, sorted by ctrl.
+    const passesByChain = new Map<number, number[]>();
+    for (const crossing of ps.crossings) {
+      for (const pass of [crossing.over, crossing.under]) {
+        const list = passesByChain.get(pass.chain);
+        if (list) list.push(pass.ctrl);
+        else passesByChain.set(pass.chain, [pass.ctrl]);
+      }
+    }
+    for (const list of passesByChain.values()) list.sort((a, b) => a - b);
+
+    for (const crossing of ps.crossings) {
+      const list = passesByChain.get(crossing.over.chain)!;
+      const i = list.indexOf(crossing.over.ctrl);
+      this.patchNeighbors.push({
+        prevCtrl: list[(i - 1 + list.length) % list.length],
+        nextCtrl: list[(i + 1) % list.length],
+      });
+    }
 
     ps.chains.forEach((chain, i) => {
       this.chainControls.push(new Float32Array(chain.length * 2));
@@ -83,7 +116,8 @@ export class RibbonRenderer {
       const fill = new RibbonMesh(PATCH_SAMPLES, false, 0xffffff);
       this.patchCasings.push(casing);
       this.patchFills.push(fill);
-      patchLayer.addChild(casing.mesh, fill.mesh);
+      patchCasingLayer.addChild(casing.mesh);
+      patchFillLayer.addChild(fill.mesh);
     }
   }
 
@@ -108,15 +142,53 @@ export class RibbonRenderer {
     this.ps.crossings.forEach((crossing, c) => {
       const { chain, ctrl } = crossing.over;
       const samples = this.chainSamples[chain]!;
+      const total = samples.totalLength;
       const center = samples.controlArcLengths[ctrl];
-      const halfLen = Math.min(PATCH_HALF_LENGTH, samples.totalLength / 4);
+
+      // Stay clear of the neighboring crossings along this thread.
+      const { prevCtrl, nextCtrl } = this.patchNeighbors[c];
+      let gapPrev = total / 2;
+      let gapNext = total / 2;
+      if (nextCtrl !== ctrl) {
+        gapNext =
+          (((samples.controlArcLengths[nextCtrl] - center) % total) + total) %
+          total;
+        gapPrev =
+          (((center - samples.controlArcLengths[prevCtrl]) % total) + total) %
+          total;
+      }
+      const halfLen = Math.max(
+        PATCH_HALF_LENGTH_MIN,
+        Math.min(
+          PATCH_HALF_LENGTH_MAX,
+          PATCH_NEIGHBOR_CLEARANCE * gapNext,
+          PATCH_NEIGHBOR_CLEARANCE * gapPrev,
+          total / 4
+        )
+      );
+
+      // Casing tapers from full width at the crossing down to the fill
+      // width at the window ends, so its caps never notch nearby threads.
+      const plateau = Math.min(CASING_PLATEAU, halfLen * 0.75);
+      const casingHalf = this.style.casingWidth / 2;
+      const fillHalf = this.style.threadWidth / 2;
+      for (let k = 0; k < PATCH_SAMPLES; k++) {
+        const offset = Math.abs((2 * k) / (PATCH_SAMPLES - 1) - 1) * halfLen;
+        if (offset <= plateau) {
+          this.casingWidths[k] = casingHalf;
+        } else {
+          const s = (offset - plateau) / (halfLen - plateau);
+          const ease = s * s * (3 - 2 * s);
+          this.casingWidths[k] = casingHalf + (fillHalf - casingHalf) * ease;
+        }
+      }
 
       for (let k = 0; k < PATCH_SAMPLES; k++) {
         let arc = center - halfLen + (2 * halfLen * k) / (PATCH_SAMPLES - 1);
-        arc = ((arc % samples.totalLength) + samples.totalLength) % samples.totalLength;
+        arc = ((arc % total) + total) % total;
 
         // Interpolate position and tangent from the uniform samples.
-        const f = (arc / samples.totalLength) * samples.count;
+        const f = (arc / total) * samples.count;
         const i0 = Math.floor(f) % samples.count;
         const i1 = (i0 + 1) % samples.count;
         const frac = f - Math.floor(f);
@@ -142,14 +214,8 @@ export class RibbonRenderer {
         this.patchWindow[k * 4 + 3] = ty;
       }
 
-      this.patchCasings[c].updateFromWindow(
-        this.patchWindow,
-        this.style.casingWidth / 2
-      );
-      this.patchFills[c].updateFromWindow(
-        this.patchWindow,
-        this.style.threadWidth / 2
-      );
+      this.patchCasings[c].updateFromWindow(this.patchWindow, this.casingWidths);
+      this.patchFills[c].updateFromWindow(this.patchWindow, fillHalf);
       // Patch fill matches its strand's color.
       this.patchFills[c].mesh.tint = this.fills[chain].mesh.tint;
     });

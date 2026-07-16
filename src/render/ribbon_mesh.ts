@@ -66,17 +66,22 @@ export class RibbonMesh {
   }
 
   // Variant for callers that assemble the centerline window themselves
-  // (e.g. crossing patches with wrap-around arc windows).
-  updateFromWindow(centerline: Float32Array, halfWidth: number): void {
+  // (e.g. crossing patches with wrap-around arc windows). halfWidth may be
+  // per-sample, which lets casings taper at their ends.
+  updateFromWindow(
+    centerline: Float32Array,
+    halfWidth: number | Float32Array
+  ): void {
     for (let i = 0; i < this.sampleCount; i++) {
+      const w = typeof halfWidth === "number" ? halfWidth : halfWidth[i];
       const cx = centerline[i * 4];
       const cy = centerline[i * 4 + 1];
       const tx = centerline[i * 4 + 2];
       const ty = centerline[i * 4 + 3];
-      this.vertexData[i * 4] = cx - ty * halfWidth;
-      this.vertexData[i * 4 + 1] = cy + tx * halfWidth;
-      this.vertexData[i * 4 + 2] = cx + ty * halfWidth;
-      this.vertexData[i * 4 + 3] = cy - tx * halfWidth;
+      this.vertexData[i * 4] = cx - ty * w;
+      this.vertexData[i * 4 + 1] = cy + tx * w;
+      this.vertexData[i * 4 + 2] = cx + ty * w;
+      this.vertexData[i * 4 + 3] = cy - tx * w;
     }
     this.mesh.geometry.getBuffer("aPosition").update();
   }
