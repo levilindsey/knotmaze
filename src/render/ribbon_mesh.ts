@@ -86,10 +86,64 @@ export class RibbonMesh {
     this.mesh.geometry.getBuffer("aPosition").update();
   }
 
-  // Full manual control of both edges (e.g. skewed cap edges): pairs holds
-  // [leftX, leftY, rightX, rightY] per sample.
-  updateFromVertexPairs(pairs: Float32Array): void {
-    this.vertexData.set(pairs.subarray(0, this.sampleCount * 4));
+  destroy(): void {
+    this.mesh.destroy({ children: true });
+  }
+}
+
+// A stations x lanes grid mesh for crossing erase patches: stations run
+// along the under thread, lanes run across its width. Both boundary rows
+// (the cut caps) and boundary columns (the ribbon sides) are polylines, so
+// caps can curve to follow the over thread's offset curve.
+export class PatchGridMesh {
+  mesh: Mesh;
+  readonly stations: number;
+  readonly lanes: number;
+
+  private vertexData: Float32Array;
+
+  constructor(stations: number, lanes: number, color: number) {
+    this.stations = stations;
+    this.lanes = lanes;
+    this.vertexData = new Float32Array(stations * lanes * 2);
+
+    const uvs = new Float32Array(stations * lanes * 2);
+    for (let k = 0; k < stations; k++) {
+      for (let l = 0; l < lanes; l++) {
+        uvs[(k * lanes + l) * 2] = k / (stations - 1);
+        uvs[(k * lanes + l) * 2 + 1] = l / (lanes - 1);
+      }
+    }
+
+    const indices = new Uint32Array((stations - 1) * (lanes - 1) * 6);
+    let i = 0;
+    for (let k = 0; k < stations - 1; k++) {
+      for (let l = 0; l < lanes - 1; l++) {
+        const a = k * lanes + l;
+        const b = a + 1;
+        const c = a + lanes;
+        const d = c + 1;
+        indices.set([a, b, c, b, d, c], i);
+        i += 6;
+      }
+    }
+
+    const geometry = new MeshGeometry({
+      positions: this.vertexData,
+      uvs,
+      indices,
+    });
+    this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
+    this.mesh.tint = color;
+  }
+
+  setVertex(station: number, lane: number, x: number, y: number): void {
+    const i = (station * this.lanes + lane) * 2;
+    this.vertexData[i] = x;
+    this.vertexData[i + 1] = y;
+  }
+
+  commit(): void {
     this.mesh.geometry.getBuffer("aPosition").update();
   }
 

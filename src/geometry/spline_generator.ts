@@ -9,8 +9,10 @@ export interface SplineSamples {
   controlArcLengths: number[]; // Arc position of each control point.
 }
 
-// Subsamples per control segment when measuring arc length.
-const SUBDIVISIONS = 6;
+// Subsamples per control segment when measuring arc length. Must stay well
+// below the renderer's resample spacing, or resampled tangents alias against
+// the fine polyline's chords and ribbon edges turn fuzzy.
+const SUBDIVISIONS = 12;
 const EPSILON = 1e-6;
 
 // Evaluate one centripetal Catmull-Rom segment (p1 -> p2) at u in [0, 1]

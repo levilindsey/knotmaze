@@ -19,7 +19,7 @@ import { Container } from "pixi.js";
 import type { ParticleSystem } from "../physics/particle_system";
 import type { SplineSamples } from "../geometry/spline_generator";
 import { sampleClosedSpline } from "../geometry/spline_generator";
-import { RibbonMesh } from "./ribbon_mesh";
+import { RibbonMesh, PatchGridMesh } from "./ribbon_mesh";
 
 export interface RibbonStyle {
   threadWidth: number; // In lattice units.
@@ -28,7 +28,10 @@ export interface RibbonStyle {
   baseHue: number; // [0, 360) starting hue for the strand palette.
 }
 
-const SAMPLE_SPACING = 0.15;
+// Dense enough that tight bends near crossings (low slack) stay resolved;
+// patch outlines interpolate this same data, keeping them aligned with the
+// base ribbons.
+const SAMPLE_SPACING = 0.09;
 const MIN_SAMPLES = 48;
 const PATCH_SAMPLES = 16;
 // Patch half-lengths clamp to a fraction of the arc distance to the nearest
@@ -39,14 +42,24 @@ const OVER_PATCH_MARGIN = 0.12;
 // Slight overhang so the erase fully covers the under ribbon's antialiased
 // edges.
 const ERASE_WIDTH_PAD = 0.02;
+// The over-fill patch repaints slightly wider than the thread so tiny
+// outline mismatches against the base ribbon (chord/tangent quantization at
+// tight bends) can never expose the erase beneath it.
+const OVER_FILL_PAD = 0.03;
 const MIN_CROSSING_SIN = 0.5;
 // Boundary-march parameters: the over centerline is sampled as a local
-// polyline, and each under-ribbon edge marches outward until it exits the
-// cut region (distance to that polyline >= cut boundary).
+// polyline, and several lanes across the under ribbon march outward until
+// each exits the cut region (distance to that polyline >= cut boundary).
+// Multiple lanes let the cap edges curve with the over thread.
 const OVER_LOCAL_SAMPLES = 24;
 const OVER_LOCAL_REACH = 1.7;
 const MARCH_STEP = 0.12;
 const CUT_REACH_MAX = 1.15;
+const ERASE_STATIONS = 16;
+const ERASE_LANES = 5;
+// Cut arcs extend outward by this much: widens the gap imperceptibly while
+// swallowing base-ribbon slivers that poke past the cap at tight bends.
+const CUT_BIAS = 0.03;
 
 function hslToHex(h: number, s: number, l: number): number {
   const k = (n: number) => (n + h / 30) % 12;
@@ -71,14 +84,17 @@ export class RibbonRenderer {
   private ps: ParticleSystem;
   private style: RibbonStyle;
   private fills: RibbonMesh[] = [];
-  private underErases: RibbonMesh[] = [];
+  private underErases: PatchGridMesh[] = [];
   private overFills: RibbonMesh[] = [];
   private chainControls: Float32Array[] = [];
   private chainSamples: (SplineSamples | null)[] = [];
   private window = new Float32Array(PATCH_SAMPLES * 4);
-  private pairScratch = new Float32Array(PATCH_SAMPLES * 4);
   private sampleScratch = new Float32Array(4);
   private overLocal = new Float32Array(OVER_LOCAL_SAMPLES * 2);
+  private laneCutsPos = new Float32Array(ERASE_LANES);
+  private laneCutsNeg = new Float32Array(ERASE_LANES);
+  private lanePrevG = new Float32Array(ERASE_LANES);
+  private overWidths = new Float32Array(PATCH_SAMPLES);
   // Per crossing: neighbor crossing passes along the over and under threads.
   private overNeighbors: PassNeighbors[] = [];
   private underNeighbors: PassNeighbors[] = [];
@@ -144,7 +160,11 @@ export class RibbonRenderer {
         neighborsOf(crossing.under.chain, crossing.under.ctrl)
       );
 
-      const erase = new RibbonMesh(PATCH_SAMPLES, false, style.background);
+      const erase = new PatchGridMesh(
+        ERASE_STATIONS,
+        ERASE_LANES,
+        style.background
+      );
       const fill = new RibbonMesh(PATCH_SAMPLES, false, 0xffffff);
       this.underErases.push(erase);
       this.overFills.push(fill);
@@ -278,10 +298,19 @@ export class RibbonRenderer {
         this.underNeighbors[c]
       );
 
-      // March both under-ribbon edges away from the crossing until each
-      // exits the cut region, refining the exit arc by linear interpolation.
-      // Returns [leftCut, rightCut] as signed arcs relative to underCenter.
-      const march = (dir: number, gapLimit: number): [number, number] => {
+      // Lane offsets span the erase width: lane 0 = left edge (+eraseW),
+      // last lane = right edge (-eraseW).
+      const laneOffset = (l: number): number =>
+        eraseW * (1 - (2 * l) / (ERASE_LANES - 1));
+
+      // March all lanes away from the crossing until each exits the cut
+      // region, refining every exit arc by linear interpolation. Writes
+      // signed arcs (relative to underCenter, biased outward) into cuts.
+      const march = (
+        dir: number,
+        gapLimit: number,
+        cuts: Float32Array
+      ): void => {
         const sMax = Math.max(
           0.15,
           Math.min(
@@ -291,22 +320,26 @@ export class RibbonRenderer {
           )
         );
 
+        let unfinished = 0;
         this.sampleAt(underSamples, underCenter, this.sampleScratch, 0);
-        let prevGL =
-          this.distToOverLocal(
-            this.sampleScratch[0] - this.sampleScratch[3] * eraseW,
-            this.sampleScratch[1] + this.sampleScratch[2] * eraseW
-          ) - cutBoundary;
-        let prevGR =
-          this.distToOverLocal(
-            this.sampleScratch[0] + this.sampleScratch[3] * eraseW,
-            this.sampleScratch[1] - this.sampleScratch[2] * eraseW
-          ) - cutBoundary;
-        let cutL = prevGL >= 0 ? 0.01 * dir : Number.NaN;
-        let cutR = prevGR >= 0 ? 0.01 * dir : Number.NaN;
+        for (let l = 0; l < ERASE_LANES; l++) {
+          const u = laneOffset(l);
+          const g =
+            this.distToOverLocal(
+              this.sampleScratch[0] - this.sampleScratch[3] * u,
+              this.sampleScratch[1] + this.sampleScratch[2] * u
+            ) - cutBoundary;
+          if (g >= 0) {
+            cuts[l] = 0.01 * dir;
+          } else {
+            cuts[l] = Number.NaN;
+            this.lanePrevG[l] = g;
+            unfinished++;
+          }
+        }
 
         let prevS = 0;
-        for (let s = MARCH_STEP; ; s += MARCH_STEP) {
+        for (let s = MARCH_STEP; unfinished > 0; s += MARCH_STEP) {
           const clamped = Math.min(s, sMax);
           this.sampleAt(
             underSamples,
@@ -314,66 +347,57 @@ export class RibbonRenderer {
             this.sampleScratch,
             0
           );
-          if (Number.isNaN(cutL)) {
-            const gL =
+          for (let l = 0; l < ERASE_LANES; l++) {
+            if (!Number.isNaN(cuts[l])) continue;
+            const u = laneOffset(l);
+            const g =
               this.distToOverLocal(
-                this.sampleScratch[0] - this.sampleScratch[3] * eraseW,
-                this.sampleScratch[1] + this.sampleScratch[2] * eraseW
+                this.sampleScratch[0] - this.sampleScratch[3] * u,
+                this.sampleScratch[1] + this.sampleScratch[2] * u
               ) - cutBoundary;
-            if (gL >= 0) {
-              cutL =
-                dir * (prevS + (clamped - prevS) * (prevGL / (prevGL - gL)));
+            if (g >= 0) {
+              const prevG = this.lanePrevG[l];
+              cuts[l] =
+                dir * (prevS + (clamped - prevS) * (prevG / (prevG - g)));
+              unfinished--;
             } else {
-              prevGL = gL;
+              this.lanePrevG[l] = g;
             }
           }
-          if (Number.isNaN(cutR)) {
-            const gR =
-              this.distToOverLocal(
-                this.sampleScratch[0] + this.sampleScratch[3] * eraseW,
-                this.sampleScratch[1] - this.sampleScratch[2] * eraseW
-              ) - cutBoundary;
-            if (gR >= 0) {
-              cutR =
-                dir * (prevS + (clamped - prevS) * (prevGR / (prevGR - gR)));
-            } else {
-              prevGR = gR;
-            }
-          }
-          if (!Number.isNaN(cutL) && !Number.isNaN(cutR)) break;
           if (clamped >= sMax) break;
           prevS = clamped;
         }
 
-        if (Number.isNaN(cutL)) cutL = dir * sMax;
-        if (Number.isNaN(cutR)) cutR = dir * sMax;
-        return [cutL, cutR];
+        for (let l = 0; l < ERASE_LANES; l++) {
+          if (Number.isNaN(cuts[l])) cuts[l] = dir * sMax;
+          cuts[l] += dir * CUT_BIAS;
+        }
       };
 
-      const [cutLPos, cutRPos] = march(1, uGapNext);
-      const [cutLNeg, cutRNeg] = march(-1, uGapPrev);
+      march(1, uGapNext, this.laneCutsPos);
+      march(-1, uGapPrev, this.laneCutsNeg);
 
-      // Build the erase strip: each edge spans its own solved cut interval,
-      // so the cap edges connect corners that are exactly equidistant from
-      // the over thread.
-      for (let k = 0; k < PATCH_SAMPLES; k++) {
-        const t = k / (PATCH_SAMPLES - 1);
-        const sL = cutLNeg + (cutLPos - cutLNeg) * t;
-        const sR = cutRNeg + (cutRPos - cutRNeg) * t;
-
-        this.sampleAt(underSamples, underCenter + sL, this.sampleScratch, 0);
-        this.pairScratch[k * 4] =
-          this.sampleScratch[0] - this.sampleScratch[3] * eraseW;
-        this.pairScratch[k * 4 + 1] =
-          this.sampleScratch[1] + this.sampleScratch[2] * eraseW;
-
-        this.sampleAt(underSamples, underCenter + sR, this.sampleScratch, 0);
-        this.pairScratch[k * 4 + 2] =
-          this.sampleScratch[0] + this.sampleScratch[3] * eraseW;
-        this.pairScratch[k * 4 + 3] =
-          this.sampleScratch[1] - this.sampleScratch[2] * eraseW;
+      // Build the erase grid: each lane spans its own solved cut interval,
+      // so the cap rows are polylines lying on the over ribbon's offset
+      // curve - they curve with the over thread.
+      const erase = this.underErases[c];
+      for (let k = 0; k < ERASE_STATIONS; k++) {
+        const t = k / (ERASE_STATIONS - 1);
+        for (let l = 0; l < ERASE_LANES; l++) {
+          const s =
+            this.laneCutsNeg[l] +
+            (this.laneCutsPos[l] - this.laneCutsNeg[l]) * t;
+          const u = laneOffset(l);
+          this.sampleAt(underSamples, underCenter + s, this.sampleScratch, 0);
+          erase.setVertex(
+            k,
+            l,
+            this.sampleScratch[0] - this.sampleScratch[3] * u,
+            this.sampleScratch[1] + this.sampleScratch[2] * u
+          );
+        }
       }
-      this.underErases[c].updateFromVertexPairs(this.pairScratch);
+      erase.commit();
 
       // Over fill: redraw the over thread across the hole. Its length must
       // cover the crossing lens (where the erase overlaps the over ribbon),
@@ -404,8 +428,23 @@ export class RibbonRenderer {
           overSamples.totalLength / 4
         )
       );
+      // Pad the fill through the middle (covering the erase lens) but taper
+      // to exactly the base width at the caps, so the patch ends leave no
+      // step against the base ribbon.
+      const plateau = Math.max(overHalf - OVER_PATCH_MARGIN, 0);
+      for (let k = 0; k < PATCH_SAMPLES; k++) {
+        const offset = Math.abs((2 * k) / (PATCH_SAMPLES - 1) - 1) * overHalf;
+        if (offset <= plateau) {
+          this.overWidths[k] = fillHalf + OVER_FILL_PAD;
+        } else {
+          const s = (offset - plateau) / (overHalf - plateau);
+          const ease = s * s * (3 - 2 * s);
+          this.overWidths[k] = fillHalf + OVER_FILL_PAD * (1 - ease);
+        }
+      }
+
       this.buildWindow(overSamples, overCenter, overHalf);
-      this.overFills[c].updateFromWindow(this.window, fillHalf);
+      this.overFills[c].updateFromWindow(this.window, this.overWidths);
       this.overFills[c].mesh.tint = this.fills[crossing.over.chain].mesh.tint;
     });
   }
