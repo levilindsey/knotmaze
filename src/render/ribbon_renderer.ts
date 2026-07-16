@@ -35,16 +35,21 @@ const SAMPLE_SPACING = 0.09;
 const MIN_SAMPLES = 48;
 // The over-fill patch copies base-ribbon vertices verbatim, so its capacity
 // just needs to cover the longest window (in samples) a crossing can need.
-const OVER_PATCH_MAX_SAMPLES = 30;
-// Patch half-lengths clamp to a fraction of the arc distance to the nearest
-// crossing pass along the same thread, so neighboring patches never fight.
+const OVER_PATCH_MAX_SAMPLES = 36;
+// The over-fill window clamps to a fraction of the arc distance to the
+// nearest crossing pass along the same thread. The erase march gets a larger
+// budget: truncating a lane's boundary solve leaves that cap corner short
+// (visibly closer to the over thread), and any overreach toward the
+// neighboring crossing is repainted by its vertex-exact over-fill - the two
+// fractions summing past 1.0 guarantees the windows overlap.
 const NEIGHBOR_CLEARANCE = 0.42;
+const ERASE_NEIGHBOR_CLEARANCE = 0.65;
 const OVER_HALF_LENGTH_MIN = 0.35;
 const OVER_PATCH_MARGIN = 0.12;
 // Slight overhang so the erase fully covers the under ribbon's antialiased
 // edges.
 const ERASE_WIDTH_PAD = 0.02;
-const MIN_CROSSING_SIN = 0.5;
+const MIN_CROSSING_SIN = 0.35;
 // Boundary-march parameters: the over centerline is sampled as a local
 // polyline, and several lanes across the under ribbon march outward until
 // each exits the cut region (distance to that polyline >= cut boundary).
@@ -58,10 +63,13 @@ const ERASE_LANES = 5;
 // Cut arcs extend outward by this much: widens the gap imperceptibly while
 // swallowing base-ribbon slivers that poke past the cap at tight bends.
 const CUT_BIAS = 0.03;
-// Soft-clamp scale for a cap lane's deviation from the cap chord. The true
-// offset curve hooks sharply on the inside of tight bends (curvature is
-// amplified by 1/(1 - d*k)); compressing large deviations keeps the cut
-// reading parallel to the over thread while gentle curvature stays intact.
+// Soft-clamp scale for a cap point's WORLD deviation from the world cap
+// chord. The true offset curve hooks sharply on the inside of tight bends
+// (curvature is amplified by 1/(1 - d*k)); compressing large deviations
+// keeps the cut reading parallel to the over thread while gentle curvature
+// stays intact. Measured in world space so a genuinely straight cap (e.g.
+// straight over thread) is a fixed point regardless of under-thread
+// curvature.
 const CAP_DEVIATION_SOFT = 0.08;
 
 function hslToHex(h: number, s: number, l: number): number {
@@ -96,6 +104,7 @@ export class RibbonRenderer {
   private laneCutsPos = new Float32Array(ERASE_LANES);
   private laneCutsNeg = new Float32Array(ERASE_LANES);
   private lanePrevG = new Float32Array(ERASE_LANES);
+  private capScratch = new Float32Array(ERASE_LANES * 4); // [x, y, tx, ty]
   // Per crossing: neighbor crossing passes along the over and under threads.
   private overNeighbors: PassNeighbors[] = [];
   private underNeighbors: PassNeighbors[] = [];
@@ -305,7 +314,7 @@ export class RibbonRenderer {
           0.15,
           Math.min(
             CUT_REACH_MAX,
-            NEIGHBOR_CLEARANCE * gapLimit,
+            ERASE_NEIGHBOR_CLEARANCE * gapLimit,
             underSamples.totalLength / 4
           )
         );
@@ -367,17 +376,48 @@ export class RibbonRenderer {
       march(1, uGapNext, this.laneCutsPos);
       march(-1, uGapPrev, this.laneCutsNeg);
 
-      // Soft-clamp interior lanes toward the cap chord so inside-bend
-      // offset hooks (and neighbor-clamp truncations) don't read as sharp
-      // cut-ins; gentle curvature passes through nearly unchanged.
+      // Soft-clamp interior cap points toward the world-space cap chord so
+      // inside-bend offset hooks don't read as sharp cut-ins. Working in
+      // world space matters: a straight-in-arc-space reference bows in
+      // world space whenever the under thread curves, which would bend a
+      // correctly straight cap concave.
       for (const cuts of [this.laneCutsPos, this.laneCutsNeg]) {
-        const first = cuts[0];
-        const last = cuts[ERASE_LANES - 1];
+        for (let l = 0; l < ERASE_LANES; l++) {
+          const u = laneOffset(l);
+          this.sampleAt(
+            underSamples,
+            underCenter + cuts[l],
+            this.sampleScratch,
+            0
+          );
+          this.capScratch[l * 4] =
+            this.sampleScratch[0] - this.sampleScratch[3] * u;
+          this.capScratch[l * 4 + 1] =
+            this.sampleScratch[1] + this.sampleScratch[2] * u;
+          this.capScratch[l * 4 + 2] = this.sampleScratch[2];
+          this.capScratch[l * 4 + 3] = this.sampleScratch[3];
+        }
+
+        const x0 = this.capScratch[0];
+        const y0 = this.capScratch[1];
+        const xn = this.capScratch[(ERASE_LANES - 1) * 4];
+        const yn = this.capScratch[(ERASE_LANES - 1) * 4 + 1];
+
         for (let l = 1; l < ERASE_LANES - 1; l++) {
-          const chord = first + ((last - first) * l) / (ERASE_LANES - 1);
-          const deviation = cuts[l] - chord;
-          cuts[l] =
-            chord + deviation / (1 + Math.abs(deviation) / CAP_DEVIATION_SOFT);
+          const t = l / (ERASE_LANES - 1);
+          const dx = this.capScratch[l * 4] - (x0 + (xn - x0) * t);
+          const dy = this.capScratch[l * 4 + 1] - (y0 + (yn - y0) * t);
+          const dev = Math.hypot(dx, dy);
+          if (dev < 1e-6) continue;
+          const keep = 1 / (1 + dev / CAP_DEVIATION_SOFT);
+          // Move the point toward the chord along its lane (~ the local
+          // tangent direction), converting the world correction back into
+          // an arc adjustment.
+          const correction = keep - 1; // Fraction of the deviation to remove.
+          cuts[l] +=
+            (dx * this.capScratch[l * 4 + 2] +
+              dy * this.capScratch[l * 4 + 3]) *
+            correction;
         }
       }
 
