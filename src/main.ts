@@ -1,58 +1,119 @@
-import { Application } from "pixi.js";
-import { initRNG } from "./util/random";
+import { Application, Container } from "pixi.js";
 import { generateLatticeKnotwork } from "./core/lattice_grower";
 import { checkStructure, checkAlternation } from "./core/tangle_graph";
+import { ParticleSystem } from "./physics/particle_system";
+import { RibbonRenderer } from "./render/ribbon_renderer";
 import { DebugRenderer } from "./render/debug_renderer";
+import { readParams, writeParams, newSeed } from "./ui/url_state";
+import { buildPanel } from "./ui/tweakpane_panel";
+import type { PanelSettings } from "./ui/tweakpane_panel";
 import type { GenerationParams } from "./core/types";
+
+const BACKGROUND = 0x151b28;
+const FIT_MARGIN = 40;
 
 const app = new Application();
 
 async function main(): Promise<void> {
-  // Initialize canvas and PixiJS stage.
   await app.init({
     width: window.innerWidth,
     height: window.innerHeight,
     antialias: true,
     preference: "webgl",
     resolution: Math.min(window.devicePixelRatio, 2),
+    background: BACKGROUND,
   });
-
   document.body.appendChild(app.canvas);
 
-  // Handle window resize.
-  window.addEventListener("resize", () => {
-    app.renderer.resize(window.innerWidth, window.innerHeight);
-  });
+  const params = readParams();
+  const settings: PanelSettings = { temperature: 0, showDebug: false };
 
-  // Parse URL parameters.
-  const params = new URLSearchParams(window.location.search);
-  const seed = parseInt(params.get("seed") ?? String(Date.now()), 10);
+  const root = new Container();
+  app.stage.addChild(root);
 
-  // Initialize global RNG.
-  initRNG(seed);
+  let ps: ParticleSystem | null = null;
+  let renderer: RibbonRenderer | null = null;
+  let debug: DebugRenderer | null = null;
+  let latticeExtent = 1;
 
-  // Generate a knot.
-  const genParams: GenerationParams = {
-    gridSize: 12,
-    weaveDensity: 0.35,
-    turnBias: 0.7,
-    randSeed: seed,
-  };
-
-  const graph = generateLatticeKnotwork(genParams);
-
-  if (!checkStructure(graph) || !checkAlternation(graph)) {
-    console.warn("Knot invariants violated; generation bug.");
+  function fitToScreen(): void {
+    const w = app.screen.width;
+    const h = app.screen.height;
+    const scale = Math.min(
+      (w - FIT_MARGIN * 2) / latticeExtent,
+      (h - FIT_MARGIN * 2) / latticeExtent
+    );
+    root.scale.set(scale);
+    root.position.set(
+      (w - latticeExtent * scale) / 2,
+      (h - latticeExtent * scale) / 2
+    );
   }
 
-  // Debug render.
-  const renderer = new DebugRenderer();
-  renderer.render(graph, app.screen.width, app.screen.height);
-  app.stage.addChild(renderer.container);
+  function rebuild(): void {
+    renderer?.destroy();
+    debug?.container.destroy({ children: true });
+    root.removeChildren();
 
-  console.log(
-    `KnotMaze initialized. Seed: ${seed}, Nodes: ${graph.nodes.size}, Edges: ${graph.edges.size}, Strands: ${graph.strands.length}`
-  );
+    const genParams: GenerationParams = {
+      gridSize: params.gridSize,
+      weaveDensity: params.weaveDensity,
+      turnBias: params.turnBias,
+      randSeed: params.seed,
+    };
+    const graph = generateLatticeKnotwork(genParams);
+
+    if (!checkStructure(graph) || !checkAlternation(graph)) {
+      console.warn("Knot invariants violated; generation bug.");
+    }
+
+    ps = new ParticleSystem(graph);
+    renderer = new RibbonRenderer(ps, {
+      threadWidth: 0.42,
+      casingWidth: 0.78,
+      background: BACKGROUND,
+      baseHue: params.seed % 360,
+    });
+
+    debug = new DebugRenderer();
+    debug.render(graph);
+    debug.container.visible = settings.showDebug;
+
+    root.addChild(renderer.root, debug.container);
+    latticeExtent = params.gridSize * 2;
+    fitToScreen();
+    writeParams(params);
+
+    console.log(
+      `KnotMaze: seed ${params.seed}, ${graph.nodes.size} nodes, ` +
+        `${graph.edges.size} edges, ${graph.strands.length} strands.`
+    );
+  }
+
+  buildPanel(params, settings, {
+    onRegenerate: rebuild,
+    onReseed: () => {
+      params.seed = newSeed();
+      rebuild();
+    },
+    onReplaySettle: () => ps?.reset(),
+    onDebugToggle: (visible) => {
+      if (debug) debug.container.visible = visible;
+    },
+  });
+
+  window.addEventListener("resize", () => {
+    app.renderer.resize(window.innerWidth, window.innerHeight);
+    fitToScreen();
+  });
+
+  app.ticker.add((ticker) => {
+    if (!ps || !renderer) return;
+    ps.step(ticker.deltaMS / 1000, settings.temperature);
+    renderer.update();
+  });
+
+  rebuild();
 }
 
 main().catch(console.error);
