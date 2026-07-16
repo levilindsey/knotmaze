@@ -1,13 +1,18 @@
 // Renders the knot as smooth ribbons. Base layer: every strand's fill ribbon.
 // At each crossing, two patches recompute every frame:
 //   1. An "under erase" patch: a background-colored ribbon that follows the
-//      UNDER thread through the crossing, slightly wider than the thread.
-//      Its flat end caps are the visible cut ends of the under thread -
-//      always perpendicular to the under thread, so the cut is clean, and
-//      its footprint never exceeds the under thread's own, so it cannot
-//      notch anything else.
+//      UNDER thread through the crossing, slightly wider than the thread, so
+//      its footprint never exceeds the under thread's own and it cannot
+//      notch anything else. Its end caps are the visible cut ends of the
+//      under thread. The correct cut boundary is "perpendicular distance to
+//      the over CENTERLINE CURVE equals overHalfWidth + gap" (the offset
+//      curve of the over ribbon), so each cap corner is found by marching
+//      along its under-ribbon edge until that distance condition flips,
+//      against a locally sampled polyline of the over centerline. Both
+//      corners of a cap therefore sit at the same distance from the over
+//      thread, curvature included, at any crossing angle.
 //   2. The OVER pass fill, redrawn on top so the over thread rides above
-//      the hole.
+//      the hole, with a length that adapts to the crossing angle.
 // All erases render below all fills, so patches never slice each other.
 
 import { Container } from "pixi.js";
@@ -29,15 +34,19 @@ const PATCH_SAMPLES = 16;
 // Patch half-lengths clamp to a fraction of the arc distance to the nearest
 // crossing pass along the same thread, so neighboring patches never fight.
 const NEIGHBOR_CLEARANCE = 0.42;
-const OVER_HALF_LENGTH_MAX = 0.65;
 const OVER_HALF_LENGTH_MIN = 0.35;
-const ERASE_HALF_LENGTH_MIN = 0.3;
+const OVER_PATCH_MARGIN = 0.12;
 // Slight overhang so the erase fully covers the under ribbon's antialiased
 // edges.
 const ERASE_WIDTH_PAD = 0.02;
 const MIN_CROSSING_SIN = 0.5;
-// Cap-skew clamp: |cot theta| beyond this treats the crossing as degenerate.
-const MAX_CAP_SKEW_COT = 1.6;
+// Boundary-march parameters: the over centerline is sampled as a local
+// polyline, and each under-ribbon edge marches outward until it exits the
+// cut region (distance to that polyline >= cut boundary).
+const OVER_LOCAL_SAMPLES = 24;
+const OVER_LOCAL_REACH = 1.7;
+const MARCH_STEP = 0.12;
+const CUT_REACH_MAX = 1.15;
 
 function hslToHex(h: number, s: number, l: number): number {
   const k = (n: number) => (n + h / 30) % 12;
@@ -69,6 +78,7 @@ export class RibbonRenderer {
   private window = new Float32Array(PATCH_SAMPLES * 4);
   private pairScratch = new Float32Array(PATCH_SAMPLES * 4);
   private sampleScratch = new Float32Array(4);
+  private overLocal = new Float32Array(OVER_LOCAL_SAMPLES * 2);
   // Per crossing: neighbor crossing passes along the over and under threads.
   private overNeighbors: PassNeighbors[] = [];
   private underNeighbors: PassNeighbors[] = [];
@@ -176,6 +186,20 @@ export class RibbonRenderer {
     out[offset + 3] = ty / len;
   }
 
+  // Distance from a point to the locally sampled over centerline. The
+  // polyline is dense (~0.14 spacing), so nearest-vertex distance is within
+  // ~0.005 of the true curve distance at the ranges we care about.
+  private distToOverLocal(x: number, y: number): number {
+    let best = Infinity;
+    for (let m = 0; m < OVER_LOCAL_SAMPLES; m++) {
+      const dx = this.overLocal[m * 2] - x;
+      const dy = this.overLocal[m * 2 + 1] - y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < best) best = d2;
+    }
+    return Math.sqrt(best);
+  }
+
   private buildWindow(
     samples: SplineSamples,
     center: number,
@@ -234,60 +258,116 @@ export class RibbonRenderer {
       const overCenter = overSamples.controlArcLengths[crossing.over.ctrl];
       const underCenter = underSamples.controlArcLengths[crossing.under.ctrl];
 
-      // Crossing angle from the two pass tangents; a shallower angle needs a
-      // longer hole to keep the visual gap uniform.
-      this.sampleAt(overSamples, overCenter, this.sampleScratch, 0);
-      const otx = this.sampleScratch[2];
-      const oty = this.sampleScratch[3];
-      this.sampleAt(underSamples, underCenter, this.sampleScratch, 0);
-      const utx = this.sampleScratch[2];
-      const uty = this.sampleScratch[3];
-      const crossUO = utx * oty - uty * otx;
-      const sinTheta = Math.max(Math.abs(crossUO), MIN_CROSSING_SIN);
+      // Local polyline of the over centerline; the cut boundary is
+      // "distance to this curve == fillHalf + gap", i.e. the offset curve
+      // of the over ribbon.
+      const reach = Math.min(OVER_LOCAL_REACH, overSamples.totalLength / 4);
+      for (let m = 0; m < OVER_LOCAL_SAMPLES; m++) {
+        const arc =
+          overCenter - reach + (2 * reach * m) / (OVER_LOCAL_SAMPLES - 1);
+        this.sampleAt(overSamples, arc, this.sampleScratch, 0);
+        this.overLocal[m * 2] = this.sampleScratch[0];
+        this.overLocal[m * 2 + 1] = this.sampleScratch[1];
+      }
 
-      // Skew the erase's cap edges so the under thread's cut ends run
-      // parallel to the over thread: shift the left/right edges of the
-      // erase ribbon by +/- eraseW * cot(theta) along the under thread.
-      // Flipping either tangent's orientation flips both the dot and the
-      // cross product, so the skew is orientation-independent.
+      const cutBoundary = fillHalf + gap;
       const eraseW = fillHalf + ERASE_WIDTH_PAD;
-      const dotUO = utx * otx + uty * oty;
-      const cot =
-        Math.abs(crossUO) < 1e-4
-          ? 0
-          : Math.max(
-              -MAX_CAP_SKEW_COT,
-              Math.min(MAX_CAP_SKEW_COT, dotUO / crossUO)
-            );
-      const skew = eraseW * cot;
-
-      // Under erase: hole reaching gap-width past the over ribbon's edge.
       const [uGapPrev, uGapNext] = this.neighborGaps(
         underSamples,
         crossing.under.ctrl,
         this.underNeighbors[c]
       );
-      const eraseHalf = Math.max(
-        ERASE_HALF_LENGTH_MIN,
-        Math.min(
-          (fillHalf + gap) / sinTheta,
-          NEIGHBOR_CLEARANCE * uGapPrev - Math.abs(skew),
-          NEIGHBOR_CLEARANCE * uGapNext - Math.abs(skew),
-          underSamples.totalLength / 4
-        )
-      );
 
+      // March both under-ribbon edges away from the crossing until each
+      // exits the cut region, refining the exit arc by linear interpolation.
+      // Returns [leftCut, rightCut] as signed arcs relative to underCenter.
+      const march = (dir: number, gapLimit: number): [number, number] => {
+        const sMax = Math.max(
+          0.15,
+          Math.min(
+            CUT_REACH_MAX,
+            NEIGHBOR_CLEARANCE * gapLimit,
+            underSamples.totalLength / 4
+          )
+        );
+
+        this.sampleAt(underSamples, underCenter, this.sampleScratch, 0);
+        let prevGL =
+          this.distToOverLocal(
+            this.sampleScratch[0] - this.sampleScratch[3] * eraseW,
+            this.sampleScratch[1] + this.sampleScratch[2] * eraseW
+          ) - cutBoundary;
+        let prevGR =
+          this.distToOverLocal(
+            this.sampleScratch[0] + this.sampleScratch[3] * eraseW,
+            this.sampleScratch[1] - this.sampleScratch[2] * eraseW
+          ) - cutBoundary;
+        let cutL = prevGL >= 0 ? 0.01 * dir : Number.NaN;
+        let cutR = prevGR >= 0 ? 0.01 * dir : Number.NaN;
+
+        let prevS = 0;
+        for (let s = MARCH_STEP; ; s += MARCH_STEP) {
+          const clamped = Math.min(s, sMax);
+          this.sampleAt(
+            underSamples,
+            underCenter + dir * clamped,
+            this.sampleScratch,
+            0
+          );
+          if (Number.isNaN(cutL)) {
+            const gL =
+              this.distToOverLocal(
+                this.sampleScratch[0] - this.sampleScratch[3] * eraseW,
+                this.sampleScratch[1] + this.sampleScratch[2] * eraseW
+              ) - cutBoundary;
+            if (gL >= 0) {
+              cutL =
+                dir * (prevS + (clamped - prevS) * (prevGL / (prevGL - gL)));
+            } else {
+              prevGL = gL;
+            }
+          }
+          if (Number.isNaN(cutR)) {
+            const gR =
+              this.distToOverLocal(
+                this.sampleScratch[0] + this.sampleScratch[3] * eraseW,
+                this.sampleScratch[1] - this.sampleScratch[2] * eraseW
+              ) - cutBoundary;
+            if (gR >= 0) {
+              cutR =
+                dir * (prevS + (clamped - prevS) * (prevGR / (prevGR - gR)));
+            } else {
+              prevGR = gR;
+            }
+          }
+          if (!Number.isNaN(cutL) && !Number.isNaN(cutR)) break;
+          if (clamped >= sMax) break;
+          prevS = clamped;
+        }
+
+        if (Number.isNaN(cutL)) cutL = dir * sMax;
+        if (Number.isNaN(cutR)) cutR = dir * sMax;
+        return [cutL, cutR];
+      };
+
+      const [cutLPos, cutRPos] = march(1, uGapNext);
+      const [cutLNeg, cutRNeg] = march(-1, uGapPrev);
+
+      // Build the erase strip: each edge spans its own solved cut interval,
+      // so the cap edges connect corners that are exactly equidistant from
+      // the over thread.
       for (let k = 0; k < PATCH_SAMPLES; k++) {
-        const baseArc =
-          underCenter - eraseHalf + (2 * eraseHalf * k) / (PATCH_SAMPLES - 1);
+        const t = k / (PATCH_SAMPLES - 1);
+        const sL = cutLNeg + (cutLPos - cutLNeg) * t;
+        const sR = cutRNeg + (cutRPos - cutRNeg) * t;
 
-        this.sampleAt(underSamples, baseArc + skew, this.sampleScratch, 0);
+        this.sampleAt(underSamples, underCenter + sL, this.sampleScratch, 0);
         this.pairScratch[k * 4] =
           this.sampleScratch[0] - this.sampleScratch[3] * eraseW;
         this.pairScratch[k * 4 + 1] =
           this.sampleScratch[1] + this.sampleScratch[2] * eraseW;
 
-        this.sampleAt(underSamples, baseArc - skew, this.sampleScratch, 0);
+        this.sampleAt(underSamples, underCenter + sR, this.sampleScratch, 0);
         this.pairScratch[k * 4 + 2] =
           this.sampleScratch[0] + this.sampleScratch[3] * eraseW;
         this.pairScratch[k * 4 + 3] =
@@ -295,7 +375,21 @@ export class RibbonRenderer {
       }
       this.underErases[c].updateFromVertexPairs(this.pairScratch);
 
-      // Over fill: redraw the over thread across the hole.
+      // Over fill: redraw the over thread across the hole. Its length must
+      // cover the crossing lens (where the erase overlaps the over ribbon),
+      // which grows as the crossing angle shallows.
+      this.sampleAt(overSamples, overCenter, this.sampleScratch, 0);
+      const otx = this.sampleScratch[2];
+      const oty = this.sampleScratch[3];
+      this.sampleAt(underSamples, underCenter, this.sampleScratch, 0);
+      const utx = this.sampleScratch[2];
+      const uty = this.sampleScratch[3];
+      const sinTheta = Math.max(
+        Math.abs(utx * oty - uty * otx),
+        MIN_CROSSING_SIN
+      );
+      const cosTheta = Math.abs(utx * otx + uty * oty);
+
       const [oGapPrev, oGapNext] = this.neighborGaps(
         overSamples,
         crossing.over.ctrl,
@@ -304,7 +398,7 @@ export class RibbonRenderer {
       const overHalf = Math.max(
         OVER_HALF_LENGTH_MIN,
         Math.min(
-          OVER_HALF_LENGTH_MAX,
+          (eraseW + fillHalf * cosTheta) / sinTheta + OVER_PATCH_MARGIN,
           NEIGHBOR_CLEARANCE * oGapPrev,
           NEIGHBOR_CLEARANCE * oGapNext,
           overSamples.totalLength / 4
