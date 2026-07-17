@@ -226,14 +226,30 @@ export class RibbonRenderer {
     return Math.sqrt(best);
   }
 
+  // guardCenter/guardHalf mask an arc neighborhood out of the polyline
+  // (sentinel far away): for SELF-crossings the "other thread" is the same
+  // chain, and without the mask the under region measures distance to
+  // itself (always ~0), blowing the boundary marches out to their clamps.
   private buildLocal(
     poly: Float32Array,
     samples: SplineSamples,
     center: number,
-    reach: number
+    reach: number,
+    guardCenter = Number.NaN,
+    guardHalf = 0
   ): void {
+    const total = samples.totalLength;
     for (let m = 0; m < LOCAL_SAMPLES; m++) {
       const arc = center - reach + (2 * reach * m) / (LOCAL_SAMPLES - 1);
+      if (!Number.isNaN(guardCenter)) {
+        let d = Math.abs(arc - guardCenter) % total;
+        d = Math.min(d, total - d);
+        if (d < guardHalf) {
+          poly[m * 2] = 1e9;
+          poly[m * 2 + 1] = 1e9;
+          continue;
+        }
+      }
       this.sampleAt(samples, arc, this.sampleScratch, 0);
       poly[m * 2] = this.sampleScratch[0];
       poly[m * 2 + 1] = this.sampleScratch[1];
@@ -309,18 +325,35 @@ export class RibbonRenderer {
       // Local centerline polylines around the crossing. The cut boundary is
       // "distance to the over polyline == fillHalf + gap" (the offset curve
       // of the over ribbon); the over-fill window is measured against the
-      // under polyline.
+      // under polyline. For SELF-crossings each polyline masks out the
+      // other pass's neighborhood, and the arc between the passes is split
+      // between the over window and the erase zone so the fill can never
+      // repaint the gap.
+      const selfCross = crossing.over.chain === crossing.under.chain;
+      const total = overSamples.totalLength;
+      let splitPos = Infinity;
+      let splitNeg = Infinity;
+      if (selfCross) {
+        const dPos = (((underCenter - overCenter) % total) + total) % total;
+        const dNeg = total - dPos;
+        splitPos = Math.max(0.12, dPos / 2 - 0.08);
+        splitNeg = Math.max(0.12, dNeg / 2 - 0.08);
+      }
       this.buildLocal(
         this.overLocal,
         overSamples,
         overCenter,
-        Math.min(OVER_LOCAL_REACH, overSamples.totalLength / 4)
+        Math.min(OVER_LOCAL_REACH, overSamples.totalLength / 4),
+        selfCross ? underCenter : Number.NaN,
+        0.5
       );
       this.buildLocal(
         this.underLocal,
         underSamples,
         underCenter,
-        Math.min(UNDER_LOCAL_REACH, underSamples.totalLength / 4)
+        Math.min(UNDER_LOCAL_REACH, underSamples.totalLength / 4),
+        selfCross ? overCenter : Number.NaN,
+        0.5
       );
 
       const cutBoundary = fillHalf + gap;
@@ -342,13 +375,15 @@ export class RibbonRenderer {
       const march = (
         dir: number,
         gapLimit: number,
-        cuts: Float32Array
+        cuts: Float32Array,
+        selfLimit: number
       ): void => {
         const sMax = Math.max(
           0.15,
           Math.min(
             CUT_REACH_MAX,
             ERASE_NEIGHBOR_CLEARANCE * gapLimit,
+            selfLimit,
             underSamples.totalLength / 4
           )
         );
@@ -407,8 +442,10 @@ export class RibbonRenderer {
         }
       };
 
-      march(1, uGapNext, this.laneCutsPos);
-      march(-1, uGapPrev, this.laneCutsNeg);
+      // Forward along the under thread heads into the over->under span's
+      // complement (splitNeg); backward heads into the splitPos span.
+      march(1, uGapNext, this.laneCutsPos, splitNeg);
+      march(-1, uGapPrev, this.laneCutsNeg, splitPos);
 
       // Clamp each cap's lane spread around its median so hairpin-divergent
       // marches can't shear the grid across a loop tip.
@@ -554,11 +591,14 @@ export class RibbonRenderer {
       );
       const overlapReach = eraseW + fillHalf + ERASE_WIDTH_PAD + 0.05;
       const reachAlongOver = (dir: number, gapLimit: number): number => {
+        // Floor sits below the self-crossing split so tight tips can clamp
+        // the window all the way down.
         const rMax = Math.max(
-          OVER_HALF_LENGTH_MIN,
+          0.12,
           Math.min(
             OVER_REACH_MAX,
             NEIGHBOR_CLEARANCE * gapLimit,
+            dir > 0 ? splitPos : splitNeg,
             overSamples.totalLength / 4
           )
         );
@@ -575,8 +615,8 @@ export class RibbonRenderer {
         }
         return rMax;
       };
-      const halfPos = reachAlongOver(1, oGapNext);
-      const halfNeg = reachAlongOver(-1, oGapPrev);
+      const halfPos = Math.max(OVER_HALF_LENGTH_MIN, reachAlongOver(1, oGapNext));
+      const halfNeg = Math.max(OVER_HALF_LENGTH_MIN, reachAlongOver(-1, oGapPrev));
 
       // Repaint the over thread across the hole by copying the base
       // ribbon's vertices for the window's sample range - pixel-identical
