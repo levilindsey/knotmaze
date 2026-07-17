@@ -49,6 +49,9 @@ export function buildPanel(
 
   // Physics tuning applies live (no regeneration).
   pane
+    .addBinding(params, "simSpeed", { min: 0, max: 10, step: 0.5 })
+    .on("change", callbacks.onSlackChange);
+  pane
     .addBinding(params, "slack", { min: 0, max: 1, step: 0.05 })
     .on("change", callbacks.onSlackChange);
   pane

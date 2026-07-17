@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.10 tight-tip 2026-07-17";
+const BUILD_STAMP = "P3.11 sim speed 2026-07-17";
 
 const app = new Application();
 
@@ -231,13 +231,26 @@ async function main(): Promise<void> {
 
   app.ticker.add((ticker) => {
     if (!ps || !renderer) return;
+
+    // simSpeed [0, 10]: piecewise-linear multiplier hitting the spec's
+    // pinned points exactly - 0 paused, 1 -> 0.2x, 5 -> 1x, 10 -> 5x.
+    const speedMult =
+      params.simSpeed <= 5
+        ? params.simSpeed / 5
+        : 1 + (params.simSpeed - 5) * 0.8;
+    if (speedMult === 0) {
+      perfLine = " | paused";
+      updateStamp();
+      return;
+    }
+
     if (asleep) {
       perfLine = " | asleep";
       updateStamp();
       return;
     }
     const t0 = performance.now();
-    ps.step(ticker.deltaMS / 1000, {
+    ps.step((ticker.deltaMS / 1000) * speedMult, {
       temperature: settings.temperature,
       slack: params.slack,
       drag: params.drag,
