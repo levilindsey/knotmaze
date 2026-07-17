@@ -15,7 +15,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P2.9 miter+march 2026-07-16";
+const BUILD_STAMP = "P2.10 true-eq tune + style params 2026-07-16";
 
 const app = new Application();
 
@@ -77,8 +77,8 @@ async function main(): Promise<void> {
 
     ps = new ParticleSystem(graph);
     renderer = new RibbonRenderer(ps, {
-      threadWidth: 0.42,
-      casingWidth: 0.78,
+      threadWidth: params.threadWidth,
+      casingWidth: params.threadWidth + params.gap * 2,
       background: BACKGROUND,
       baseHue: params.seed % 360,
     });
@@ -112,6 +112,10 @@ async function main(): Promise<void> {
       if (debug) debug.container.visible = visible;
     },
     onSlackChange: () => writeParams(params),
+    onStyleChange: () => {
+      renderer?.setWidths(params.threadWidth, params.gap);
+      writeParams(params);
+    },
   });
 
   window.addEventListener("resize", () => {
@@ -123,16 +127,26 @@ async function main(): Promise<void> {
     if (!ps || !renderer) return;
     ps.step(ticker.deltaMS / 1000, settings.temperature, params.slack);
     renderer.update();
+    updateStamp();
   });
 
   // Verifiable code-state stamp: on screen and in the console, with the
   // environment facts that matter when debugging rendering discrepancies.
+  // sim vs wall time exposes rAF throttling (an under-simulated knot is
+  // frozen mid-settle and looks kinked/notched).
   const stamp = document.createElement("div");
-  stamp.textContent = BUILD_STAMP;
   stamp.style.cssText =
     "position:fixed;left:6px;bottom:4px;font:10px monospace;" +
     "color:#5a6478;pointer-events:none;z-index:10";
   document.body.appendChild(stamp);
+  const wallStart = performance.now();
+  const updateStamp = (): void => {
+    const wall = (performance.now() - wallStart) / 1000;
+    const sim = ps?.simTime ?? 0;
+    stamp.textContent =
+      `${BUILD_STAMP} | sim ${sim.toFixed(1)}s / wall ${wall.toFixed(1)}s`;
+  };
+  updateStamp();
 
   const gl = (app.renderer as unknown as { gl?: WebGLRenderingContext }).gl;
   console.log(

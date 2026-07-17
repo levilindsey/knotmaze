@@ -66,7 +66,25 @@ Work lands directly to `main`. All changes must be end-to-end working before com
 - Phased roadmap: P0 (scaffold) → P1 (combinatorial) → P2 (beauty + live physics) → P3 (touch + audio) → P4 (maze mode) → P5 (growth animation) → P6 (flourishes).
 - Each phase ships as a working demo starting from P2.
 
+## Verification rule (hard-won)
+
+**Never use Chrome's `--virtual-time-budget` to screenshot anything
+physics-dependent.** Virtual-time mode advances the sim only a fraction of
+the nominal budget (~0.5 sim-seconds for a 12s budget), so screenshots show
+an early mid-settle state, not equilibrium — an entire debugging session
+chased "fixed" artifacts that only existed at true equilibrium. Use
+`node scripts/diag_screenshot.mjs <url> <out.png> [settleMs]` instead: it
+drives a headed, hardware-GPU Chrome in real time and reports the page's
+build stamp plus `sim/wall` seconds (which must match; the on-page
+bottom-left stamp shows the same counters).
+
 ## Follow-ups
+
+- **Wobbly threads at slack ~0 (P2 polish).** At the taut end the true
+  equilibrium shows small-amplitude waviness along runs and rope-tight
+  twist chains. Candidate knobs: constraint iterations (2 -> 3), pullOnly
+  bending nonlinearity, repulsion/structural balance. Validate only via
+  the real-time diag harness (see verification rule).
 
 - **Make the hero settle more dramatic (P2 polish).** The settle currently
   reads as a gentle "tightening breath" rather than the zigzag-to-curve

@@ -26,8 +26,14 @@ export interface CrossingInfo {
 }
 
 // Fixed physics timestep; frames accumulate real time into substeps.
+// The per-frame cap must be generous: Chrome throttles rAF to ~1fps for
+// occluded (or occlusion-misdetected) windows, and a small cap would pin
+// the sim at a few percent of real time - the knot freezes mid-settle,
+// which reads as kinked threads and notched crossings. A large cap lets
+// throttled tabs catch up in bursts.
 const SUBSTEP = 1 / 120;
-const MAX_SUBSTEPS_PER_FRAME = 5;
+const MAX_SUBSTEPS_PER_FRAME = 30;
+const MAX_FRAME_DT = 0.25;
 const CONSTRAINT_ITERATIONS = 2;
 const DAMPING = 0.9;
 
@@ -45,15 +51,16 @@ const REPULSION_STIFFNESS = 0.15;
 // Slack [0, 1] shapes the rest state: 0 = taut threads pulled tight against
 // the crossings, 1 = loose threads with round, continuous curvature and
 // generous spacing. It interpolates three knobs:
-const SHRINK_TAUT = 0.78; // Rest-length fraction at slack 0...
+const SHRINK_TAUT = 0.82; // Rest-length fraction at slack 0...
 const SHRINK_LOOSE = 0.97; // ...and at slack 1.
-// The taut floor stays high enough that threads never kink at crossings:
-// taut string over a peg bends at a small round radius, not a corner.
-// Kinks also read as rendering defects, and tautness comes from the
-// structural shrink, not from bending going slack.
-const BEND_TAUT = 1.2; // Bending-stiffness multiplier at slack 0...
-const BEND_LOOSE = 2.2; // ...and at slack 1.
-const REPULSE_DIST_TAUT = 0.5; // Repulsion min distance at slack 0...
+// The taut floor must stay high enough that threads never kink at
+// crossings at TRUE equilibrium (validate with a real-time run, not a
+// virtual-time screenshot): taut string over a peg bends at a small round
+// radius, not a corner. Tautness comes from the structural shrink, not
+// from bending going slack.
+const BEND_TAUT = 2.8; // Bending-stiffness multiplier at slack 0...
+const BEND_LOOSE = 3.0; // ...and at slack 1.
+const REPULSE_DIST_TAUT = 0.62; // Repulsion min distance at slack 0...
 const REPULSE_DIST_LOOSE = 0.95; // ...and at slack 1.
 const TEMPERATURE_SCALE = 0.05;
 const NOISE_SPATIAL_FREQ = 0.3;
@@ -74,6 +81,7 @@ export class ParticleSystem {
   private noise3D: (x: number, y: number, z: number) => number;
   private time = 0;
   private accumulator = 0;
+  private substepCount = 0;
 
   constructor(graph: TangleGraph) {
     const particleByKey = new Map<string, number>();
@@ -239,8 +247,14 @@ export class ParticleSystem {
     this.accumulator = 0;
   }
 
+  // Simulated seconds since construction/reset; wall-clock comparison
+  // reveals rAF throttling.
+  get simTime(): number {
+    return this.time;
+  }
+
   step(dt: number, temperature: number, slack = 0.5): void {
-    this.accumulator += Math.min(dt, 0.1);
+    this.accumulator += Math.min(dt, MAX_FRAME_DT);
     let substeps = Math.floor(this.accumulator / SUBSTEP);
     substeps = Math.min(substeps, MAX_SUBSTEPS_PER_FRAME);
     this.accumulator = Math.max(0, this.accumulator - substeps * SUBSTEP);
@@ -252,6 +266,7 @@ export class ParticleSystem {
 
   private substep(temperature: number, slack: number): void {
     this.time += SUBSTEP;
+    this.substepCount++;
 
     // Temperature: Simplex-noise agitation, injected as velocity.
     if (temperature > 0) {
@@ -291,11 +306,15 @@ export class ParticleSystem {
         restScale,
         bendScale
       );
+      // Repulsion runs at full strength from the first substep: while the
+      // settle ramp shrinks rests, parallel threads get dragged toward the
+      // same corridor line, and weak early repulsion lets them pass through
+      // each other and lock into braided local minima.
       applyRepulsion(
         this.positions,
         this.particleCount,
         repulseDist,
-        REPULSION_STIFFNESS * settle,
+        REPULSION_STIFFNESS,
         this.excludedPairs
       );
     }

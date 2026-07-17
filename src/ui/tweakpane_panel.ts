@@ -15,6 +15,7 @@ export interface PanelCallbacks {
   onReplaySettle: () => void;
   onDebugToggle: (visible: boolean) => void;
   onSlackChange: () => void;
+  onStyleChange: () => void;
 }
 
 interface ChangeEvent {
@@ -48,6 +49,14 @@ export function buildPanel(
   pane
     .addBinding(params, "slack", { min: 0, max: 1, step: 0.05 })
     .on("change", callbacks.onSlackChange);
+
+  // Ribbon styling applies live to the renderer.
+  pane
+    .addBinding(params, "threadWidth", { min: 0.15, max: 0.8, step: 0.01 })
+    .on("change", callbacks.onStyleChange);
+  pane
+    .addBinding(params, "gap", { min: 0.04, max: 0.5, step: 0.01 })
+    .on("change", callbacks.onStyleChange);
 
   pane.addBinding(settings, "temperature", { min: 0, max: 1, step: 0.01 });
   pane

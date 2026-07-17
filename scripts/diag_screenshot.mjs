@@ -1,0 +1,72 @@
+// Diagnostic renderer: drives a headed, hardware-GPU Chrome (system binary,
+// throwaway profile) via DevTools protocol, captures the settled page, and
+// reports the page's build stamp, real GPU string, and console output.
+// Usage: node scripts/diag_screenshot.mjs <url> <out.png> [settleMs]
+import puppeteer from "puppeteer-core";
+import { rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+const [, , url, outPath, settleMsArg] = process.argv;
+const settleMs = Number(settleMsArg ?? 12000);
+const profileDir = join(tmpdir(), "knotmaze-diag-profile");
+
+const browser = await puppeteer.launch({
+  executablePath:
+    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  headless: false,
+  userDataDir: profileDir,
+  args: [
+    process.env.DIAG_SWIFTSHADER
+      ? "--use-angle=swiftshader"
+      : "--use-angle=d3d11",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--window-size=1720,1000",
+  ],
+});
+
+try {
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1600, height: 900, deviceScaleFactor: 1.5 });
+
+  const logs = [];
+  page.on("console", (m) => logs.push(m.text()));
+  page.on("pageerror", (e) => logs.push(`PAGEERROR: ${e.message}`));
+
+  await page.goto(url, { waitUntil: "load", timeout: 30000 });
+  // Foreground the window: Chrome throttles rAF to ~1fps when occluded,
+  // which freezes the sim mid-settle and invalidates the capture.
+  await page.bringToFront();
+  await new Promise((resolve) => setTimeout(resolve, settleMs));
+
+  const facts = await page.evaluate(() => {
+    const canvas = document.createElement("canvas");
+    const gl =
+      canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+    const ext = gl?.getExtension("WEBGL_debug_renderer_info");
+    const divs = [...document.querySelectorAll("div")].map(
+      (d) => d.textContent ?? ""
+    );
+    return {
+      gpu: gl
+        ? ext
+          ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)
+          : gl.getParameter(gl.RENDERER)
+        : "no webgl",
+      stamp: divs.find((t) => t.startsWith("P2.")) ?? "STAMP MISSING",
+      dpr: window.devicePixelRatio,
+      canvasCount: document.querySelectorAll("canvas").length,
+    };
+  });
+
+  await page.screenshot({ path: outPath });
+  console.log(JSON.stringify({ facts, logs }, null, 2));
+} finally {
+  await browser.close();
+  try {
+    rmSync(profileDir, { recursive: true, force: true });
+  } catch {
+    // Profile cleanup is best-effort.
+  }
+}

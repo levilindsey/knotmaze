@@ -7,6 +7,8 @@ export interface UrlParams {
   weaveDensity: number;
   turnBias: number;
   slack: number; // [0, 1] rest-state looseness (physics, applies live).
+  threadWidth: number; // Ribbon width in lattice units (applies live).
+  gap: number; // Space between an under-thread cut end and the over thread.
 }
 
 const DEFAULTS = {
@@ -14,6 +16,8 @@ const DEFAULTS = {
   weaveDensity: 0.35,
   turnBias: 0.7,
   slack: 0.55,
+  threadWidth: 0.42,
+  gap: 0.18,
 };
 
 export function newSeed(): number {
@@ -39,6 +43,8 @@ export function readParams(): UrlParams {
     weaveDensity: readNumber(query, "wd", DEFAULTS.weaveDensity),
     turnBias: readNumber(query, "tb", DEFAULTS.turnBias),
     slack: readNumber(query, "sl", DEFAULTS.slack),
+    threadWidth: readNumber(query, "tw", DEFAULTS.threadWidth),
+    gap: readNumber(query, "gap", DEFAULTS.gap),
   };
 }
 
@@ -49,5 +55,7 @@ export function writeParams(params: UrlParams): void {
   query.set("wd", String(params.weaveDensity));
   query.set("tb", String(params.turnBias));
   query.set("sl", String(params.slack));
+  query.set("tw", String(params.threadWidth));
+  query.set("gap", String(params.gap));
   history.replaceState(null, "", `?${query.toString()}`);
 }

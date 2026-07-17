@@ -276,6 +276,12 @@ export class RibbonRenderer {
     return [gapPrev, gapNext];
   }
 
+  // Widths are read per frame during update(), so they apply live.
+  setWidths(threadWidth: number, gap: number): void {
+    this.style.threadWidth = threadWidth;
+    this.style.casingWidth = threadWidth + gap * 2;
+  }
+
   update(): void {
     const { positions } = this.ps;
 
