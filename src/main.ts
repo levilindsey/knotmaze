@@ -125,8 +125,24 @@ async function main(): Promise<void> {
 
   app.ticker.add((ticker) => {
     if (!ps || !renderer) return;
+    const t0 = performance.now();
     ps.step(ticker.deltaMS / 1000, settings.temperature, params.slack);
+    const t1 = performance.now();
     renderer.update();
+    const t2 = performance.now();
+
+    perf.physMs += t1 - t0;
+    perf.renderMs += t2 - t1;
+    perf.frames++;
+    if (t2 - perf.flushedAt >= 500) {
+      const fps = (perf.frames * 1000) / (t2 - perf.flushedAt);
+      perfLine =
+        ` | phys ${(perf.physMs / perf.frames).toFixed(2)}ms` +
+        ` render ${(perf.renderMs / perf.frames).toFixed(2)}ms` +
+        ` ${fps.toFixed(0)}fps`;
+      perf.physMs = perf.renderMs = perf.frames = 0;
+      perf.flushedAt = t2;
+    }
     updateStamp();
   });
 
@@ -140,11 +156,15 @@ async function main(): Promise<void> {
     "color:#5a6478;pointer-events:none;z-index:10";
   document.body.appendChild(stamp);
   const wallStart = performance.now();
+  // Rolling per-frame cost, flushed twice a second.
+  const perf = { physMs: 0, renderMs: 0, frames: 0, flushedAt: wallStart };
+  let perfLine = "";
   const updateStamp = (): void => {
     const wall = (performance.now() - wallStart) / 1000;
     const sim = ps?.simTime ?? 0;
     stamp.textContent =
-      `${BUILD_STAMP} | sim ${sim.toFixed(1)}s / wall ${wall.toFixed(1)}s`;
+      `${BUILD_STAMP} | sim ${sim.toFixed(1)}s / wall ${wall.toFixed(1)}s` +
+      perfLine;
   };
   updateStamp();
 
