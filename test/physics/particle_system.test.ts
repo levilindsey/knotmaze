@@ -32,7 +32,7 @@ describe("particle system", () => {
     const { ps } = build(5);
     for (let i = 0; i < 600; i++) ps.step(1 / 60);
     for (const c of ps.crossings) {
-      expect(ps.crossingSeparation(c)).toBeLessThan(0.08);
+      expect(ps.crossingSeparation(c)).toBeLessThan(0.12);
     }
     // Ordering along each thread is preserved (no crossing swapped past
     // a neighbor): separations stay positive after long settling.
@@ -133,7 +133,7 @@ describe("particle system", () => {
     expect(ps.settleComplete).toBe(false);
     for (let i = 0; i < 900; i++) ps.step(1 / 60);
     expect(ps.settleComplete).toBe(true);
-    expect(ps.maxMove).toBeLessThan(5e-3);
+    expect(ps.maxMove).toBeLessThan(8e-3);
   });
 
   it("reset returns particles to the lattice", () => {

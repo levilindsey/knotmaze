@@ -102,8 +102,10 @@ const NOISE_TIME_FREQ = 0.8;
 // repulsion against the other side (the threads are supposed to touch).
 const MAX_SLIDE_PER_SUBSTEP = 0.04;
 const SLIDE_EASE = 0.2;
-const MIN_PASS_SEPARATION = 1.1;
-const COUPLING_STIFFNESS = 0.45;
+// Keep enough material between neighboring crossings that twist eyes can't
+// degenerate to the point of inverting.
+const MIN_PASS_SEPARATION = 1.6;
+const COUPLING_STIFFNESS = 0.6;
 // Candidate windows for the contact-bubble exemption; must cover every
 // particle within CONTACT_RADIUS of a binding.
 const CROSSING_ZONE_HALF = 4;
@@ -242,8 +244,11 @@ export class ParticleSystem {
           pullOnly: true,
         });
 
-        // Exclude chain neighbors (within 2 steps) from repulsion.
-        for (const span of [1, 2]) {
+        // Exclude nearby same-chain particles from repulsion: within ~6
+        // steps the geodesic span along the thread is shorter than the
+        // maximum repulsion distance, and repelling such pairs makes the
+        // chain accordion into permanent buckling waves at high repulsion.
+        for (let span = 1; span <= 6; span++) {
           const c = chain[(i + span) % len];
           const lo = Math.min(a, c);
           const hi = Math.max(a, c);

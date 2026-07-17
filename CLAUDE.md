@@ -80,6 +80,13 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **Physics micro-oscillation floor (P3 polish).** The sliding-crossing
+  contact system (taper + coupling + repulsion) holds a bounded ~1e-2
+  units/substep oscillation at rest (sub-pixel; sleep threshold sits above
+  it at 1.5e-2). A root-cause damping pass would let the threshold drop.
+  Also: default composition got looser/sprawlier after the twist-eye work
+  (MIN_PASS_SEPARATION 1.6 is the main compactness lever; consider making
+  twist-eye openness a user param instead of a constant).
 - **Wobbly threads at slack ~0 (P2 polish).** At the taut end the true
   equilibrium shows small-amplitude waviness along runs and rope-tight
   twist chains. Candidate knobs: constraint iterations (2 -> 3), pullOnly

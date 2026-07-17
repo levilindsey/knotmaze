@@ -78,8 +78,6 @@ export function applyRepulsion(
     else buckets.set(k, [i]);
   }
 
-  const minDistSq = minDist * minDist;
-
   for (let i = 0; i < particleCount; i++) {
     const cx = Math.floor(positions[i * 2] / cellSize);
     const cy = Math.floor(positions[i * 2 + 1] / cellSize);
@@ -92,6 +90,7 @@ export function applyRepulsion(
         for (const j of bucket) {
           if (j <= i) continue;
           if (excludedPairs.has(i * 65536 + j)) continue;
+          let pairMinDist = minDist;
           if (exemption) {
             const a1 = exemption.zoneA[i];
             const a2 = exemption.zoneB[i];
@@ -103,26 +102,35 @@ export function applyRepulsion(
             if (shared >= 0) {
               const cx = exemption.contacts[shared * 2];
               const cy = exemption.contacts[shared * 2 + 1];
-              const r2 = exemption.radius * exemption.radius;
-              const di =
-                (positions[i * 2] - cx) * (positions[i * 2] - cx) +
-                (positions[i * 2 + 1] - cy) * (positions[i * 2 + 1] - cy);
-              const dj =
-                (positions[j * 2] - cx) * (positions[j * 2] - cx) +
-                (positions[j * 2 + 1] - cy) * (positions[j * 2 + 1] - cy);
-              // Only exempt the pair inside the contact bubble; between
-              // twist crossings repulsion resumes and opens the eye.
-              if (di < r2 && dj < r2) continue;
+              const di = Math.hypot(
+                positions[i * 2] - cx,
+                positions[i * 2 + 1] - cy
+              );
+              const dj = Math.hypot(
+                positions[j * 2] - cx,
+                positions[j * 2 + 1] - cy
+              );
+              // Near a crossing the allowed separation ramps smoothly from
+              // zero at the contact bubble's edge up to the full repulsion
+              // distance - a hard cliff here torques twist loops until
+              // they buckle and the crossing inverts.
+              pairMinDist = Math.min(
+                minDist,
+                Math.max(0, (Math.max(di, dj) - exemption.radius) * 1.0)
+              );
+              if (pairMinDist < 1e-3) continue;
             }
           }
 
           const dx = positions[j * 2] - positions[i * 2];
           const dy = positions[j * 2 + 1] - positions[i * 2 + 1];
           const distSq = dx * dx + dy * dy;
-          if (distSq >= minDistSq || distSq < EPSILON) continue;
+          if (distSq >= pairMinDist * pairMinDist || distSq < EPSILON) {
+            continue;
+          }
 
           const dist = Math.sqrt(distSq);
-          const push = ((minDist - dist) / dist) * stiffness * 0.5;
+          const push = ((pairMinDist - dist) / dist) * stiffness * 0.5;
           positions[i * 2] -= dx * push;
           positions[i * 2 + 1] -= dy * push;
           positions[j * 2] += dx * push;
