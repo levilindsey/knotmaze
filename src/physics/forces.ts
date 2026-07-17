@@ -52,6 +52,15 @@ export interface CrossingExemption {
   radius: number;
 }
 
+// Taper slope: how fast the allowed separation ramps from zero at the
+// contact bubble's edge back up to the full repulsion/collision distance.
+// Sized so a TIGHT twist eye (contacts ~1 apart at slack 0) recovers the
+// full thread-width floor at mid-eye: with radius 0.25, (0.5 - 0.25) * 2.0
+// = 0.5 >= the 0.44 floor. Too shallow and the eye's strands legitimately
+// hug (same-color ribbons touching render as one merged blob - reported
+// as a gap-less twist); too cliff-like and the eye buckles and inverts.
+export const EXEMPTION_TAPER_SLOPE = 2.0;
+
 // Hard capsule collision between thread segments: no two non-exempt
 // segments may come closer (centerline to centerline) than minDist, so
 // thread width is honored everywhere except inside a crossing's contact
@@ -121,6 +130,8 @@ export function applySegmentCollision(
           // Crossing-lens exemption with the same smooth taper as point
           // repulsion.
           let pairMinDist = minDist;
+          let sharedKx = Number.NaN;
+          let sharedKy = Number.NaN;
           const a1 = exemption.zoneA[i];
           const a2 = exemption.zoneB[i];
           const b1 = exemption.zoneA[j];
@@ -131,6 +142,8 @@ export function applySegmentCollision(
           if (shared >= 0) {
             const kx = exemption.contacts[shared * 2];
             const ky = exemption.contacts[shared * 2 + 1];
+            sharedKx = kx;
+            sharedKy = ky;
             const di = Math.hypot(
               positions[i * 2] - kx,
               positions[i * 2 + 1] - ky
@@ -141,7 +154,7 @@ export function applySegmentCollision(
             );
             pairMinDist = Math.min(
               minDist,
-              Math.max(0, (Math.max(di, dj) - exemption.radius) * 1.6)
+              Math.max(0, (Math.max(di, dj) - exemption.radius) * EXEMPTION_TAPER_SLOPE)
             );
             if (pairMinDist < 1e-3) continue;
           }
@@ -179,19 +192,38 @@ export function applySegmentCollision(
           }
 
           // Proper intersection: the pair has tunneled - record it as an
-          // emergent crossing so the renderer can gap it.
+          // emergent crossing so the renderer can gap it. Segment pairs at
+          // the fringe of a REGISTERED crossing's lens also properly
+          // intersect (the coupling holds those threads coincident); those
+          // are duplicates of a crossing that already renders, and left in
+          // they flood the collector and starve genuine emergent
+          // crossings of buffer and pool space - skip any intersection
+          // near its shared crossing's contact point.
           if (collector && collector.n * 4 < collector.data.length) {
             const denom2 = d1x * d2y - d1y * d2x;
-            if (Math.abs(denom2) > 1e-9) {
+            // Transversal crossings only: |sin| of the crossing angle
+            // >= 0.25. Taut knots hold dozens of GRAZING micro-overlaps
+            // (near-parallel threads pressed together by the collision
+            // floor penetrate by solver tolerance) - those are not visual
+            // crossings and gapping them would be wrong.
+            const lenProd = Math.sqrt(a * e);
+            if (Math.abs(denom2) > 0.25 * lenProd) {
               const u = (-rx * d2y + ry * d2x) / denom2;
               const v = (-rx * d1y + ry * d1x) / denom2;
               if (u > 0 && u < 1 && v > 0 && v < 1) {
-                const idx = collector.n * 4;
-                collector.data[idx] = i;
-                collector.data[idx + 1] = u;
-                collector.data[idx + 2] = j;
-                collector.data[idx + 3] = v;
-                collector.n++;
+                const ix = p1x + d1x * u;
+                const iy = p1y + d1y * u;
+                const nearRegistered =
+                  shared >= 0 &&
+                  Math.hypot(ix - sharedKx, iy - sharedKy) < 0.8;
+                if (!nearRegistered) {
+                  const idx = collector.n * 4;
+                  collector.data[idx] = i;
+                  collector.data[idx + 1] = u;
+                  collector.data[idx + 2] = j;
+                  collector.data[idx + 3] = v;
+                  collector.n++;
+                }
               }
             }
           }
@@ -289,7 +321,7 @@ export function applyRepulsion(
               // the eye of a taut twist without reintroducing the cliff).
               pairMinDist = Math.min(
                 minDist,
-                Math.max(0, (Math.max(di, dj) - exemption.radius) * 1.6)
+                Math.max(0, (Math.max(di, dj) - exemption.radius) * EXEMPTION_TAPER_SLOPE)
               );
               if (pairMinDist < 1e-3) continue;
             }

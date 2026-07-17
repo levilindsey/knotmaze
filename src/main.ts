@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.17 static-kinetic contacts 2026-07-17";
+const BUILD_STAMP = "P3.18 emergent pool + coupling toggle 2026-07-17";
 
 const app = new Application();
 
@@ -266,6 +266,7 @@ async function main(): Promise<void> {
       stiffness: params.stiffness,
       gridAlign: params.gridAlign,
       threadWidth: params.threadWidth,
+      coupling: params.coupling,
     });
     const t1 = performance.now();
     renderer.update();
@@ -345,6 +346,33 @@ async function main(): Promise<void> {
     x: number,
     y: number
   ) => renderer?.requestInspect(x, y);
+  // Physics-side twin of __knotDiag: binding state per crossing (world
+  // position, ctrls, separation), contact regime, emergent count.
+  (window as unknown as Record<string, unknown>).__knotPhys = () => {
+    const sys = ps;
+    if (!sys) return null;
+    const scratch = new Float32Array(4);
+    return {
+      sticky: sys.contactsStatic,
+      simTime: sys.simTime,
+      emergent: sys.emergentCrossings.length,
+      emergentList: sys.emergentCrossings.map((em) => {
+        sys.bindingPoint(em.over, scratch, 0);
+        return { x: scratch[0], y: scratch[1] };
+      }),
+      crossings: sys.crossings.map((c) => {
+        sys.bindingPoint(c.over, scratch, 0);
+        sys.bindingPoint(c.under, scratch, 2);
+        return {
+          x: (scratch[0] + scratch[2]) / 2,
+          y: (scratch[1] + scratch[3]) / 2,
+          over: `${c.over.chain}:${c.over.ctrl.toFixed(2)}`,
+          under: `${c.under.chain}:${c.under.ctrl.toFixed(2)}`,
+          sep: sys.crossingSeparation(c),
+        };
+      }),
+    };
+  };
 
   rebuild();
 }

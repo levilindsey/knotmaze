@@ -68,7 +68,9 @@ const MITER_PROBE = 0.09;
 const ERASE_STATIONS = 16;
 const ERASE_LANES = 5;
 // Patch pool for emergent (tunneled) crossings discovered by the physics.
-const EMERGENT_POOL = 16;
+// Sized for taut knots: at slack ~0 dozens of real emergent crossings can
+// coexist, and a starved pool renders some overlaps gap-less.
+const EMERGENT_POOL = 64;
 // Cut arcs extend outward by this much: widens the gap imperceptibly while
 // swallowing base-ribbon slivers that poke past the cap at tight bends.
 const CUT_BIAS = 0.03;

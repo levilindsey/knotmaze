@@ -46,6 +46,12 @@ export interface PhysicsTuning {
   stiffness: number; // Multiplier on the structural (adjacency) springs.
   gridAlign: boolean; // Soft-anchor every particle to its lattice position.
   threadWidth: number; // Render width; the hard collision floor honors it.
+  // Coincidence coupling on crossings. Off is an EXPERIMENT: the capsule
+  // collision floor already prevents closed loops from passing through
+  // each other, so the coupling's remaining job is guarding the crossing
+  // lenses (where collision is exempted) - disable to observe what that
+  // guard is actually worth.
+  coupling: boolean;
 }
 
 export const DEFAULT_TUNING: PhysicsTuning = {
@@ -58,6 +64,7 @@ export const DEFAULT_TUNING: PhysicsTuning = {
   stiffness: 1,
   gridAlign: false,
   threadWidth: 0.42,
+  coupling: true,
 };
 
 // Collision floor margin: centerlines may not come closer than
@@ -160,8 +167,14 @@ const COUPLING_STIFFNESS = 0.7;
 // conflict. Hysteresis: re-release only on strong motion (UNSTICK), so
 // the rest wander cannot unlock itself. A static weld is invisible at
 // rest; kinetic sliding is active whenever the user can see motion.
-const CONTACT_STICK_EPS = 2.5e-2; // Per-substep displacement, engage.
-const CONTACT_UNSTICK_EPS = 5e-2; // Per-substep displacement, release.
+// Engage must be SUB-VISIBLE: at 2.5e-2/substep the knot is still
+// clearly flowing, and welding then reads as intersections snapping
+// rigid to material points mid-motion. 1e-2 matches the historical rest
+// oscillation floor. (Per-substep displacement conflates drift with
+// oscillation; if freezing still reads wrong, the next refinement is
+// net-displacement-over-a-window, which separates the two.)
+const CONTACT_STICK_EPS = 1e-2; // Per-substep displacement, engage.
+const CONTACT_UNSTICK_EPS = 2.5e-2; // Per-substep displacement, release.
 // Candidate windows for the contact-bubble exemption; must cover every
 // particle within CONTACT_RADIUS of a binding.
 const CROSSING_ZONE_HALF = 4;
@@ -169,8 +182,10 @@ const CROSSING_ZONE_HALF = 4;
 // beyond it repulsion resumes (so twist eyes open between close crossings).
 // Keep this near the thread width: a generous bubble plus the taper left
 // almost no repulsion between the tightly-spaced crossings of a taut
-// twist, and the two threads hugged.
-const CONTACT_RADIUS = 0.35;
+// twist, and the two threads hugged. Sized with EXEMPTION_TAPER_SLOPE
+// (see forces.ts) so a tight eye recovers the full width floor at
+// mid-eye.
+const CONTACT_RADIUS = 0.25;
 // Laplacian fairing stiffness at smooth = 1.
 const FAIRING_MAX = 0.3;
 // Transversality torque: fraction of the angular error (toward the signed
@@ -215,7 +230,7 @@ export class ParticleSystem {
   private zoneB: Int32Array;
   private contacts: Float32Array;
   private topology!: SegmentTopology;
-  private emergentCollector = { data: new Float32Array(64 * 4), n: 0 };
+  private emergentCollector = { data: new Float32Array(256 * 4), n: 0 };
   private homeX = 0;
   private homeY = 0;
 
@@ -477,6 +492,11 @@ export class ParticleSystem {
 
   get grabbedParticle(): number {
     return this.grabbed;
+  }
+
+  // True while contacts are in the STATIC (welded/frozen) regime.
+  get contactsStatic(): boolean {
+    return this.stickyContacts;
   }
 
   // Nearest particle within radius (lattice units), or -1. Pure query.
@@ -895,6 +915,7 @@ export class ParticleSystem {
       // Coincidence coupling LAST, so nothing re-separates the crossing
       // within the iteration: pull each crossing's two bound points
       // together, distributing corrections to the surrounding particles.
+      if (!tuning.coupling) continue;
       for (const crossing of this.crossings) {
         this.bindingPoint(crossing.over, this.bindScratch, 0);
         this.bindingPoint(crossing.under, this.bindScratch, 2);
