@@ -26,6 +26,25 @@ export interface CrossingInfo {
   under: CrossingPass;
 }
 
+// Live physics tuning, applied per substep (no rebuild needed).
+export interface PhysicsTuning {
+  temperature: number; // [0, 1] Simplex agitation.
+  slack: number; // [0, 1] rest-state looseness.
+  drag: number; // [0, 1] 0 = ringy waves, 1 = heavily damped.
+  repulsion: number; // Multiplier on the repulsion distance.
+  bend: number; // Multiplier on bending stiffness.
+  gridAlign: boolean; // Soft-anchor every particle to its lattice position.
+}
+
+export const DEFAULT_TUNING: PhysicsTuning = {
+  temperature: 0,
+  slack: 0.55,
+  drag: 0.5,
+  repulsion: 1,
+  bend: 1,
+  gridAlign: false,
+};
+
 // Fixed physics timestep; frames accumulate real time into substeps.
 // The per-frame cap must be generous: Chrome throttles rAF to ~1fps for
 // occluded (or occlusion-misdetected) windows, and a small cap would pin
@@ -36,7 +55,11 @@ const SUBSTEP = 1 / 120;
 const MAX_SUBSTEPS_PER_FRAME = 30;
 const MAX_FRAME_DT = 0.25;
 const CONSTRAINT_ITERATIONS = 2;
-const DAMPING = 0.9;
+// Verlet velocity retention maps from the drag tuning: drag 0 keeps 99.5%
+// per substep (waves ring), drag 1 keeps 80% (heavily damped).
+const DAMPING_MIN_DRAG = 0.995;
+const DAMPING_MAX_DRAG = 0.8;
+const GRID_ALIGN_STIFFNESS = 0.08;
 
 // The hero settle: structural rest lengths are stored at their full lattice
 // values, so the angular initial state is a true equilibrium. Over
@@ -385,7 +408,7 @@ export class ParticleSystem {
     return arc;
   }
 
-  step(dt: number, temperature: number, slack = 0.5): void {
+  step(dt: number, tuning: PhysicsTuning = DEFAULT_TUNING): void {
     this.accumulator += Math.min(dt, MAX_FRAME_DT);
     let substeps = Math.floor(this.accumulator / SUBSTEP);
     substeps = Math.min(substeps, MAX_SUBSTEPS_PER_FRAME);
@@ -393,7 +416,7 @@ export class ParticleSystem {
 
     if (substeps > 0) this.frameMaxMoveSq = 0;
     for (let s = 0; s < substeps; s++) {
-      this.substep(temperature, slack);
+      this.substep(tuning);
     }
   }
 
@@ -451,13 +474,13 @@ export class ParticleSystem {
     self.ctrl = ((f % len) + len) % len;
   }
 
-  private substep(temperature: number, slack: number): void {
+  private substep(tuning: PhysicsTuning): void {
     this.time += SUBSTEP;
     this.substepCount++;
 
     // Temperature: Simplex-noise agitation, injected as velocity.
-    if (temperature > 0) {
-      const amp = temperature * TEMPERATURE_SCALE;
+    if (tuning.temperature > 0) {
+      const amp = tuning.temperature * TEMPERATURE_SCALE;
       const t = this.time * NOISE_TIME_FREQ;
       for (let i = 0; i < this.particleCount; i++) {
         const nx = this.positions[i * 2] * NOISE_SPATIAL_FREQ;
@@ -469,11 +492,13 @@ export class ParticleSystem {
 
     // Verlet integration. (current - prev) is the net displacement of the
     // previous substep, so quiescence tracking is free here.
+    const damping =
+      DAMPING_MIN_DRAG + (DAMPING_MAX_DRAG - DAMPING_MIN_DRAG) * tuning.drag;
     for (let i = 0; i < this.particleCount * 2; i++) {
       const current = this.positions[i];
       const d = current - this.prev[i];
       if (d * d > this.frameMaxMoveSq) this.frameMaxMoveSq = d * d;
-      this.positions[i] = current + d * DAMPING;
+      this.positions[i] = current + d * damping;
       this.prev[i] = current;
     }
 
@@ -481,11 +506,14 @@ export class ParticleSystem {
     const x = Math.min(this.time / SETTLE_DURATION, 1);
     const settle = x * x * (3 - 2 * x);
 
+    const slack = tuning.slack;
     const shrink = SHRINK_TAUT + (SHRINK_LOOSE - SHRINK_TAUT) * slack;
     const restScale = 1 - (1 - shrink) * settle;
-    const bendScale = settle * (BEND_TAUT + (BEND_LOOSE - BEND_TAUT) * slack);
+    const bendScale =
+      settle * (BEND_TAUT + (BEND_LOOSE - BEND_TAUT) * slack) * tuning.bend;
     const repulseDist =
-      REPULSE_DIST_TAUT + (REPULSE_DIST_LOOSE - REPULSE_DIST_TAUT) * slack;
+      (REPULSE_DIST_TAUT + (REPULSE_DIST_LOOSE - REPULSE_DIST_TAUT) * slack) *
+      tuning.repulsion;
 
     // Slide bindings toward the other thread's current point, then mark
     // repulsion-exempt zones around every binding.
@@ -557,6 +585,15 @@ export class ParticleSystem {
           COUPLING_STIFFNESS;
         this.applyBindingCorrection(crossing.over, dx, dy);
         this.applyBindingCorrection(crossing.under, -dx, -dy);
+      }
+    }
+
+    // Optional grid alignment: softly anchor every particle back toward
+    // its lattice position, restoring the structured look.
+    if (tuning.gridAlign) {
+      for (let i = 0; i < this.particleCount * 2; i++) {
+        this.positions[i] +=
+          (this.initial[i] - this.positions[i]) * GRID_ALIGN_STIFFNESS;
       }
     }
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
-import { ParticleSystem } from "../../src/physics/particle_system";
+import { ParticleSystem, DEFAULT_TUNING } from "../../src/physics/particle_system";
 
 function build(seed: number) {
   const graph = generateLatticeKnotwork({
@@ -30,7 +30,7 @@ describe("particle system", () => {
 
   it("keeps crossings coupled while bindings slide", () => {
     const { ps } = build(5);
-    for (let i = 0; i < 600; i++) ps.step(1 / 60, 0);
+    for (let i = 0; i < 600; i++) ps.step(1 / 60);
     for (const c of ps.crossings) {
       expect(ps.crossingSeparation(c)).toBeLessThan(0.08);
     }
@@ -49,7 +49,7 @@ describe("particle system", () => {
   it("relaxes without NaN", () => {
     const { ps } = build(5);
     for (let i = 0; i < 300; i++) {
-      ps.step(1 / 60, 0);
+      ps.step(1 / 60);
     }
     for (let i = 0; i < ps.particleCount * 2; i++) {
       expect(Number.isFinite(ps.positions[i])).toBe(true);
@@ -75,7 +75,7 @@ describe("particle system", () => {
 
     const before = pathLength();
     for (let i = 0; i < 300; i++) {
-      ps.step(1 / 60, 0);
+      ps.step(1 / 60);
     }
     expect(pathLength()).toBeLessThan(before);
   });
@@ -84,7 +84,7 @@ describe("particle system", () => {
     const settled = (slack: number) => {
       const { ps } = build(11);
       for (let i = 0; i < 400; i++) {
-        ps.step(1 / 60, 0, slack);
+        ps.step(1 / 60, { ...DEFAULT_TUNING, slack });
       }
       let total = 0;
       for (const chain of ps.chains) {
@@ -105,7 +105,7 @@ describe("particle system", () => {
 
   it("grab drags a particle toward the target; release reports a pluck", () => {
     const { ps } = build(5);
-    for (let i = 0; i < 240; i++) ps.step(1 / 60, 0);
+    for (let i = 0; i < 240; i++) ps.step(1 / 60);
 
     const px = ps.positions[0];
     const py = ps.positions[1];
@@ -114,7 +114,7 @@ describe("particle system", () => {
     expect(ps.grabbedParticle).toBe(grabbed);
 
     ps.dragTo(px + 1.5, py + 1.5);
-    for (let i = 0; i < 30; i++) ps.step(1 / 60, 0);
+    for (let i = 0; i < 30; i++) ps.step(1 / 60);
     const dx = ps.positions[grabbed * 2] - px;
     const dy = ps.positions[grabbed * 2 + 1] - py;
     expect(Math.hypot(dx, dy)).toBeGreaterThan(0.8);
@@ -131,7 +131,7 @@ describe("particle system", () => {
   it("goes quiescent at rest and reports settle completion", () => {
     const { ps } = build(5);
     expect(ps.settleComplete).toBe(false);
-    for (let i = 0; i < 900; i++) ps.step(1 / 60, 0);
+    for (let i = 0; i < 900; i++) ps.step(1 / 60);
     expect(ps.settleComplete).toBe(true);
     expect(ps.maxMove).toBeLessThan(5e-3);
   });
@@ -140,7 +140,7 @@ describe("particle system", () => {
     const { ps } = build(5);
     const initial = new Float32Array(ps.positions);
     for (let i = 0; i < 100; i++) {
-      ps.step(1 / 60, 0.5);
+      ps.step(1 / 60, { ...DEFAULT_TUNING, temperature: 0.5 });
     }
     ps.reset();
     expect([...ps.positions]).toEqual([...initial]);

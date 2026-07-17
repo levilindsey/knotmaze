@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.1 organic 2026-07-16";
+const BUILD_STAMP = "P3.2 force params 2026-07-16";
 
 const app = new Application();
 
@@ -73,9 +73,11 @@ async function main(): Promise<void> {
     maxY += pad;
     const w = Math.max(maxX - minX, 1);
     const h = Math.max(maxY - minY, 1);
+    // Fit the knot, but never zoom in past a comfortable thread scale.
     fitTarget.scale = Math.min(
       (app.screen.width - FIT_MARGIN * 2) / w,
-      (app.screen.height - FIT_MARGIN * 2) / h
+      (app.screen.height - FIT_MARGIN * 2) / h,
+      90
     );
     fitTarget.x = (app.screen.width - w * fitTarget.scale) / 2 - minX * fitTarget.scale;
     fitTarget.y =
@@ -235,7 +237,14 @@ async function main(): Promise<void> {
       return;
     }
     const t0 = performance.now();
-    ps.step(ticker.deltaMS / 1000, settings.temperature, params.slack);
+    ps.step(ticker.deltaMS / 1000, {
+      temperature: settings.temperature,
+      slack: params.slack,
+      drag: params.drag,
+      repulsion: params.repulsion,
+      bend: params.bend,
+      gridAlign: params.gridAlign,
+    });
     const t1 = performance.now();
     renderer.update();
     const t2 = performance.now();

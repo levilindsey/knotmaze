@@ -47,9 +47,21 @@ export function buildPanel(
     .on("change", regenerateWhenDone);
   pane.addButton({ title: "New seed" }).on("click", callbacks.onReseed);
 
-  // Slack applies live to the physics (no regeneration).
+  // Physics tuning applies live (no regeneration).
   pane
     .addBinding(params, "slack", { min: 0, max: 1, step: 0.05 })
+    .on("change", callbacks.onSlackChange);
+  pane
+    .addBinding(params, "drag", { min: 0, max: 1, step: 0.05 })
+    .on("change", callbacks.onSlackChange);
+  pane
+    .addBinding(params, "repulsion", { min: 0.4, max: 1.8, step: 0.05 })
+    .on("change", callbacks.onSlackChange);
+  pane
+    .addBinding(params, "bend", { min: 0.2, max: 2.5, step: 0.05 })
+    .on("change", callbacks.onSlackChange);
+  pane
+    .addBinding(params, "gridAlign")
     .on("change", callbacks.onSlackChange);
 
   // Ribbon styling applies live to the renderer.
