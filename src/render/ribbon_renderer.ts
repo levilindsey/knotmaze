@@ -333,11 +333,18 @@ export class RibbonRenderer {
       const total = overSamples.totalLength;
       let splitPos = Infinity;
       let splitNeg = Infinity;
+      let maskHalf = 0.5;
       if (selfCross) {
         const dPos = (((underCenter - overCenter) % total) + total) % total;
         const dNeg = total - dPos;
         splitPos = Math.max(0.12, dPos / 2 - 0.08);
         splitNeg = Math.max(0.12, dNeg / 2 - 0.08);
+        // The mask must never swallow the crossing's own neighborhood: at
+        // tight tips the pass separation bounds it.
+        maskHalf = Math.max(
+          0.1,
+          Math.min(0.5, Math.min(dPos, dNeg) / 2 - 0.05)
+        );
       }
       this.buildLocal(
         this.overLocal,
@@ -345,7 +352,7 @@ export class RibbonRenderer {
         overCenter,
         Math.min(OVER_LOCAL_REACH, overSamples.totalLength / 4),
         selfCross ? underCenter : Number.NaN,
-        0.5
+        maskHalf
       );
       this.buildLocal(
         this.underLocal,
@@ -353,7 +360,7 @@ export class RibbonRenderer {
         underCenter,
         Math.min(UNDER_LOCAL_REACH, underSamples.totalLength / 4),
         selfCross ? overCenter : Number.NaN,
-        0.5
+        maskHalf
       );
 
       const cutBoundary = fillHalf + gap;
@@ -615,8 +622,16 @@ export class RibbonRenderer {
         }
         return rMax;
       };
-      const halfPos = Math.max(OVER_HALF_LENGTH_MIN, reachAlongOver(1, oGapNext));
-      const halfNeg = Math.max(OVER_HALF_LENGTH_MIN, reachAlongOver(-1, oGapPrev));
+      // The comfort floor must never override the self-crossing split, or
+      // the fill repaints the gap at tight tips.
+      const halfPos = Math.min(
+        Math.max(OVER_HALF_LENGTH_MIN, reachAlongOver(1, oGapNext)),
+        splitPos
+      );
+      const halfNeg = Math.min(
+        Math.max(OVER_HALF_LENGTH_MIN, reachAlongOver(-1, oGapPrev)),
+        splitNeg
+      );
 
       // Repaint the over thread across the hole by copying the base
       // ribbon's vertices for the window's sample range - pixel-identical
