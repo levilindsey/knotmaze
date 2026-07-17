@@ -8,6 +8,7 @@ import { readParams, writeParams, newSeed } from "./ui/url_state";
 import { buildPanel } from "./ui/tweakpane_panel";
 import type { PanelSettings } from "./ui/tweakpane_panel";
 import type { GenerationParams } from "./core/types";
+import { KnotSynth, pitchForLoopLength } from "./audio/knot_synth";
 
 const BACKGROUND = 0x151b28;
 const FIT_MARGIN = 40;
@@ -15,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P2.10 true-eq tune + style params 2026-07-16";
+const BUILD_STAMP = "P3.0 tug+audio 2026-07-16";
 
 const app = new Application();
 
@@ -34,7 +35,12 @@ async function main(): Promise<void> {
   document.body.appendChild(app.canvas);
 
   const params = readParams();
-  const settings: PanelSettings = { temperature: 0, showDebug: false };
+  const settings: PanelSettings = {
+    temperature: 0,
+    showDebug: false,
+    muted: false,
+  };
+  const synth = new KnotSynth();
 
   const root = new Container();
   app.stage.addChild(root);
@@ -102,20 +108,32 @@ async function main(): Promise<void> {
   }
 
   buildPanel(params, settings, {
-    onRegenerate: rebuild,
+    onRegenerate: () => {
+      rebuild();
+      wake();
+    },
     onReseed: () => {
       params.seed = newSeed();
       rebuild();
+      wake();
     },
-    onReplaySettle: () => ps?.reset(),
+    onReplaySettle: () => {
+      ps?.reset();
+      wake();
+    },
     onDebugToggle: (visible) => {
       if (debug) debug.container.visible = visible;
     },
-    onSlackChange: () => writeParams(params),
+    onSlackChange: () => {
+      writeParams(params);
+      wake();
+    },
     onStyleChange: () => {
       renderer?.setWidths(params.threadWidth, params.gap);
       writeParams(params);
+      wake();
     },
+    onTemperatureChange: () => wake(),
   });
 
   window.addEventListener("resize", () => {
@@ -123,13 +141,88 @@ async function main(): Promise<void> {
     fitToScreen();
   });
 
+  // Pointer tug: grab the nearest thread particle, drag it (springs carry
+  // the tug through the knot), and pluck the strand on release.
+  const toLattice = (e: PointerEvent): [number, number] => [
+    (e.clientX - root.position.x) / root.scale.x,
+    (e.clientY - root.position.y) / root.scale.y,
+  ];
+  const GRAB_RADIUS = 0.7;
+
+  app.canvas.style.touchAction = "none";
+  app.canvas.addEventListener("pointerdown", (e) => {
+    if (!ps) return;
+    wake();
+    const [x, y] = toLattice(e);
+    if (ps.grab(x, y, GRAB_RADIUS) >= 0) {
+      app.canvas.setPointerCapture(e.pointerId);
+      app.canvas.style.cursor = "grabbing";
+    }
+  });
+  app.canvas.addEventListener("pointermove", (e) => {
+    if (!ps) return;
+    if (ps.grabbedParticle >= 0) {
+      const [x, y] = toLattice(e);
+      ps.dragTo(x, y);
+      wake();
+    } else {
+      const [x, y] = toLattice(e);
+      app.canvas.style.cursor =
+        ps.nearest(x, y, GRAB_RADIUS) >= 0 ? "grab" : "default";
+    }
+  });
+  const endDrag = (e: PointerEvent): void => {
+    if (!ps) return;
+    const pluck = ps.release();
+    if (pluck && pluck.chain >= 0) {
+      wake();
+      if (!settings.muted) {
+        const freq = pitchForLoopLength(ps.chainArcLength(pluck.chain));
+        synth.pluck(freq, Math.min(1, pluck.speed / 25));
+      }
+    }
+    if (app.canvas.hasPointerCapture(e.pointerId)) {
+      app.canvas.releasePointerCapture(e.pointerId);
+    }
+    app.canvas.style.cursor = "default";
+  };
+  app.canvas.addEventListener("pointerup", endDrag);
+  app.canvas.addEventListener("pointercancel", endDrag);
+
+  // Quiescence: a motionless deterministic knot stays motionless without
+  // external input, so once displacement stays under threshold, skip both
+  // physics and rendering entirely until something wakes it.
+  const QUIET_EPS = 3e-4; // Max per-component displacement per substep.
+  const QUIET_FRAMES = 45;
+  let stillFrames = 0;
+  let asleep = false;
+  const wake = (): void => {
+    stillFrames = 0;
+    asleep = false;
+  };
+
   app.ticker.add((ticker) => {
     if (!ps || !renderer) return;
+    if (asleep) {
+      perfLine = " | asleep";
+      updateStamp();
+      return;
+    }
     const t0 = performance.now();
     ps.step(ticker.deltaMS / 1000, settings.temperature, params.slack);
     const t1 = performance.now();
     renderer.update();
     const t2 = performance.now();
+
+    if (
+      ps.settleComplete &&
+      ps.grabbedParticle < 0 &&
+      ps.maxMove < QUIET_EPS
+    ) {
+      if (++stillFrames >= QUIET_FRAMES) asleep = true;
+    } else {
+      stillFrames = 0;
+    }
 
     perf.physMs += t1 - t0;
     perf.renderMs += t2 - t1;

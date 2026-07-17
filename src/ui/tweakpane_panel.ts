@@ -7,6 +7,7 @@ import type { UrlParams } from "./url_state";
 export interface PanelSettings {
   temperature: number;
   showDebug: boolean;
+  muted: boolean;
 }
 
 export interface PanelCallbacks {
@@ -16,6 +17,7 @@ export interface PanelCallbacks {
   onDebugToggle: (visible: boolean) => void;
   onSlackChange: () => void;
   onStyleChange: () => void;
+  onTemperatureChange: () => void;
 }
 
 interface ChangeEvent {
@@ -58,7 +60,10 @@ export function buildPanel(
     .addBinding(params, "gap", { min: 0.04, max: 0.5, step: 0.01 })
     .on("change", callbacks.onStyleChange);
 
-  pane.addBinding(settings, "temperature", { min: 0, max: 1, step: 0.01 });
+  pane
+    .addBinding(settings, "temperature", { min: 0, max: 1, step: 0.01 })
+    .on("change", callbacks.onTemperatureChange);
+  pane.addBinding(settings, "muted");
   pane
     .addButton({ title: "Replay settle" })
     .on("click", callbacks.onReplaySettle);

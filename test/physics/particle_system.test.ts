@@ -93,6 +93,39 @@ describe("particle system", () => {
     expect(settled(0.9)).toBeGreaterThan(settled(0.1) * 1.05);
   });
 
+  it("grab drags a particle toward the target; release reports a pluck", () => {
+    const { ps } = build(5);
+    for (let i = 0; i < 240; i++) ps.step(1 / 60, 0);
+
+    const px = ps.positions[0];
+    const py = ps.positions[1];
+    const grabbed = ps.grab(px, py, 0.7);
+    expect(grabbed).toBeGreaterThanOrEqual(0);
+    expect(ps.grabbedParticle).toBe(grabbed);
+
+    ps.dragTo(px + 1.5, py + 1.5);
+    for (let i = 0; i < 30; i++) ps.step(1 / 60, 0);
+    const dx = ps.positions[grabbed * 2] - px;
+    const dy = ps.positions[grabbed * 2 + 1] - py;
+    expect(Math.hypot(dx, dy)).toBeGreaterThan(0.8);
+
+    const pluck = ps.release();
+    expect(pluck).not.toBeNull();
+    expect(pluck!.particle).toBe(grabbed);
+    expect(pluck!.chain).toBeGreaterThanOrEqual(0);
+    expect(Number.isFinite(pluck!.speed)).toBe(true);
+    expect(ps.grabbedParticle).toBe(-1);
+    expect(ps.chainArcLength(pluck!.chain)).toBeGreaterThan(0);
+  });
+
+  it("goes quiescent at rest and reports settle completion", () => {
+    const { ps } = build(5);
+    expect(ps.settleComplete).toBe(false);
+    for (let i = 0; i < 900; i++) ps.step(1 / 60, 0);
+    expect(ps.settleComplete).toBe(true);
+    expect(ps.maxMove).toBeLessThan(3e-4);
+  });
+
   it("reset returns particles to the lattice", () => {
     const { ps } = build(5);
     const initial = new Float32Array(ps.positions);

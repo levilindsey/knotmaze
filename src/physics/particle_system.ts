@@ -82,6 +82,11 @@ export class ParticleSystem {
   private time = 0;
   private accumulator = 0;
   private substepCount = 0;
+  private frameMaxMoveSq = 0;
+  private grabbed = -1;
+  private grabX = 0;
+  private grabY = 0;
+  private particleChain: Int32Array;
 
   constructor(graph: TangleGraph) {
     const particleByKey = new Map<string, number>();
@@ -123,6 +128,15 @@ export class ParticleSystem {
 
     this.buildConstraints(graph, particleByKey);
     this.crossings = this.findCrossings(graph, particleByKey);
+
+    // First chain each particle belongs to (crossings belong to two; the
+    // first is fine for pluck-pitch purposes).
+    this.particleChain = new Int32Array(this.particleCount).fill(-1);
+    this.chains.forEach((chain, chainIdx) => {
+      for (const p of chain) {
+        if (this.particleChain[p] < 0) this.particleChain[p] = chainIdx;
+      }
+    });
 
     const noiseRng = new SeededRNG((graph.seed ^ 0x9e3779b9) >>> 0);
     this.noise3D = createNoise3D(() => noiseRng.next());
@@ -245,6 +259,74 @@ export class ParticleSystem {
     this.prev.set(this.initial);
     this.time = 0;
     this.accumulator = 0;
+    this.grabbed = -1;
+  }
+
+  get grabbedParticle(): number {
+    return this.grabbed;
+  }
+
+  // Nearest particle within radius (lattice units), or -1. Pure query.
+  nearest(x: number, y: number, radius: number): number {
+    let best = -1;
+    let bestDistSq = radius * radius;
+    for (let i = 0; i < this.particleCount; i++) {
+      const dx = this.positions[i * 2] - x;
+      const dy = this.positions[i * 2 + 1] - y;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < bestDistSq) {
+        bestDistSq = distSq;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  // Grab the nearest particle within radius; returns its index or -1.
+  // While grabbed, substeps pull it stiffly toward the drag target, and
+  // the springs propagate the tug through the knot.
+  grab(x: number, y: number, radius = 0.7): number {
+    this.grabbed = this.nearest(x, y, radius);
+    if (this.grabbed >= 0) {
+      this.grabX = x;
+      this.grabY = y;
+    }
+    return this.grabbed;
+  }
+
+  dragTo(x: number, y: number): void {
+    this.grabX = x;
+    this.grabY = y;
+  }
+
+  // Release the grabbed particle; reports which chain was plucked and the
+  // release speed (lattice units/second) for pluck loudness.
+  release(): { particle: number; chain: number; speed: number } | null {
+    if (this.grabbed < 0) return null;
+    const p = this.grabbed;
+    this.grabbed = -1;
+    const vx = this.positions[p * 2] - this.prev[p * 2];
+    const vy = this.positions[p * 2 + 1] - this.prev[p * 2 + 1];
+    return {
+      particle: p,
+      chain: this.particleChain[p],
+      speed: Math.hypot(vx, vy) / SUBSTEP,
+    };
+  }
+
+  // Current arc length of a chain, for mapping loop size to pluck pitch.
+  chainArcLength(chainIdx: number): number {
+    const chain = this.chains[chainIdx];
+    let arc = 0;
+    for (let k = 0; k < chain.length; k++) {
+      const a = chain[k];
+      const b = chain[(k + 1) % chain.length];
+      arc += Math.hypot(
+        this.positions[b * 2] - this.positions[a * 2],
+        this.positions[b * 2 + 1] - this.positions[a * 2 + 1]
+      );
+    }
+    return arc;
   }
 
   // Simulated seconds since construction/reset; wall-clock comparison
@@ -253,12 +335,26 @@ export class ParticleSystem {
     return this.time;
   }
 
+  // Largest single-component particle displacement in the most recent
+  // substep, measured for free during Verlet integration. Drives the
+  // renderer's quiescence detection.
+  get maxMove(): number {
+    return Math.sqrt(this.frameMaxMoveSq);
+  }
+
+  // The initial lattice state is itself an equilibrium, so quiescence
+  // detection must not engage until the settle ramp has fully played out.
+  get settleComplete(): boolean {
+    return this.time > SETTLE_DURATION + 0.3;
+  }
+
   step(dt: number, temperature: number, slack = 0.5): void {
     this.accumulator += Math.min(dt, MAX_FRAME_DT);
     let substeps = Math.floor(this.accumulator / SUBSTEP);
     substeps = Math.min(substeps, MAX_SUBSTEPS_PER_FRAME);
     this.accumulator = Math.max(0, this.accumulator - substeps * SUBSTEP);
 
+    if (substeps > 0) this.frameMaxMoveSq = 0;
     for (let s = 0; s < substeps; s++) {
       this.substep(temperature, slack);
     }
@@ -280,10 +376,13 @@ export class ParticleSystem {
       }
     }
 
-    // Verlet integration.
+    // Verlet integration. (current - prev) is the net displacement of the
+    // previous substep, so quiescence tracking is free here.
     for (let i = 0; i < this.particleCount * 2; i++) {
       const current = this.positions[i];
-      this.positions[i] = current + (current - this.prev[i]) * DAMPING;
+      const d = current - this.prev[i];
+      if (d * d > this.frameMaxMoveSq) this.frameMaxMoveSq = d * d;
+      this.positions[i] = current + d * DAMPING;
       this.prev[i] = current;
     }
 
@@ -298,6 +397,14 @@ export class ParticleSystem {
       REPULSE_DIST_TAUT + (REPULSE_DIST_LOOSE - REPULSE_DIST_TAUT) * slack;
 
     for (let iter = 0; iter < CONSTRAINT_ITERATIONS; iter++) {
+      // The grabbed particle chases the pointer stiffly; springs carry the
+      // tug outward through the knot.
+      if (this.grabbed >= 0) {
+        const g = this.grabbed;
+        this.positions[g * 2] += (this.grabX - this.positions[g * 2]) * 0.6;
+        this.positions[g * 2 + 1] +=
+          (this.grabY - this.positions[g * 2 + 1]) * 0.6;
+      }
       applyDistanceConstraints(this.positions, this.structural, restScale);
       applyAnchors(this.positions, this.anchors);
       applyDistanceConstraints(
