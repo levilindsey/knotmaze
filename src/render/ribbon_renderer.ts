@@ -70,6 +70,11 @@ const ERASE_LANES = 5;
 // Cut arcs extend outward by this much: widens the gap imperceptibly while
 // swallowing base-ribbon slivers that poke past the cap at tight bends.
 const CUT_BIAS = 0.03;
+// At a hairpin (end-of-loop twist) the inside lane's march exits far later
+// than the outside lane's; unclamped, the erase grid shears across the loop
+// tip and bites it. Lane cuts stay within this arc distance of their
+// median - wide enough for legitimate oblique-crossing skew.
+const LANE_SPREAD_CLAMP = 0.4;
 // Soft-clamp scale for a cap point's WORLD deviation from the world cap
 // chord. The true offset curve hooks sharply on the inside of tight bends
 // (curvature is amplified by 1/(1 - d*k)); compressing large deviations
@@ -404,6 +409,19 @@ export class RibbonRenderer {
 
       march(1, uGapNext, this.laneCutsPos);
       march(-1, uGapPrev, this.laneCutsNeg);
+
+      // Clamp each cap's lane spread around its median so hairpin-divergent
+      // marches can't shear the grid across a loop tip.
+      for (const cuts of [this.laneCutsPos, this.laneCutsNeg]) {
+        const sorted = [...cuts].sort((a, b) => a - b);
+        const median = sorted[(ERASE_LANES - 1) >> 1];
+        for (let l = 0; l < ERASE_LANES; l++) {
+          cuts[l] = Math.max(
+            median - LANE_SPREAD_CLAMP,
+            Math.min(median + LANE_SPREAD_CLAMP, cuts[l])
+          );
+        }
+      }
 
       // Soft-clamp interior cap points toward the world-space cap chord so
       // inside-bend offset hooks don't read as sharp cut-ins. Working in
