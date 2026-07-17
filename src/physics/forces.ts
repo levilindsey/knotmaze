@@ -113,10 +113,12 @@ export function applyRepulsion(
               // Near a crossing the allowed separation ramps smoothly from
               // zero at the contact bubble's edge up to the full repulsion
               // distance - a hard cliff here torques twist loops until
-              // they buckle and the crossing inverts.
+              // they buckle and the crossing inverts, while too shallow a
+              // ramp lets taut twists hug (slope 1.6 reaches full within
+              // the eye of a taut twist without reintroducing the cliff).
               pairMinDist = Math.min(
                 minDist,
-                Math.max(0, (Math.max(di, dj) - exemption.radius) * 1.0)
+                Math.max(0, (Math.max(di, dj) - exemption.radius) * 1.6)
               );
               if (pairMinDist < 1e-3) continue;
             }

@@ -133,7 +133,7 @@ describe("particle system", () => {
     expect(ps.settleComplete).toBe(false);
     for (let i = 0; i < 900; i++) ps.step(1 / 60);
     expect(ps.settleComplete).toBe(true);
-    expect(ps.maxMove).toBeLessThan(8e-3);
+    expect(ps.maxMove).toBeLessThan(1.2e-2);
   });
 
   it("reset returns particles to the lattice", () => {

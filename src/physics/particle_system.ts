@@ -105,13 +105,16 @@ const SLIDE_EASE = 0.2;
 // Keep enough material between neighboring crossings that twist eyes can't
 // degenerate to the point of inverting.
 const MIN_PASS_SEPARATION = 1.6;
-const COUPLING_STIFFNESS = 0.6;
+const COUPLING_STIFFNESS = 0.7;
 // Candidate windows for the contact-bubble exemption; must cover every
 // particle within CONTACT_RADIUS of a binding.
 const CROSSING_ZONE_HALF = 4;
 // Threads may touch within this distance of a crossing's contact point;
 // beyond it repulsion resumes (so twist eyes open between close crossings).
-const CONTACT_RADIUS = 0.6;
+// Keep this near the thread width: a generous bubble plus the taper left
+// almost no repulsion between the tightly-spaced crossings of a taut
+// twist, and the two threads hugged.
+const CONTACT_RADIUS = 0.35;
 // Laplacian fairing stiffness at smooth = 1.
 const FAIRING_MAX = 0.3;
 // Without lattice anchors the knot free-floats; a gentle pull keeps its
