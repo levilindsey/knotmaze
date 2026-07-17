@@ -46,6 +46,28 @@ describe("particle system", () => {
     }
   });
 
+  it("keeps crossings transversal (no tangential gluing)", () => {
+    const { ps } = build(5);
+    for (let i = 0; i < 600; i++) ps.step(1 / 60);
+    const tangent = (pass: { chain: number; ctrl: number }) => {
+      const chain = ps.chains[pass.chain];
+      const len = chain.length;
+      const i = Math.floor(pass.ctrl);
+      const a = chain[((i % len) + len) % len];
+      const b = chain[(((i + 1) % len) + len) % len];
+      const tx = ps.positions[b * 2] - ps.positions[a * 2];
+      const ty = ps.positions[b * 2 + 1] - ps.positions[a * 2 + 1];
+      const l = Math.hypot(tx, ty) || 1;
+      return [tx / l, ty / l];
+    };
+    for (const c of ps.crossings) {
+      const [ax, ay] = tangent(c.over);
+      const [bx, by] = tangent(c.under);
+      const sinTheta = Math.abs(ax * by - ay * bx);
+      expect(sinTheta).toBeGreaterThan(0.3);
+    }
+  });
+
   it("relaxes without NaN", () => {
     const { ps } = build(5);
     for (let i = 0; i < 300; i++) {

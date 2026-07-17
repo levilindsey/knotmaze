@@ -24,6 +24,11 @@ export interface CrossingPass {
 export interface CrossingInfo {
   over: CrossingPass;
   under: CrossingPass;
+  // Initial sign of cross(overTangent, underTangent): the crossing's
+  // orientation. The transversality torque steers toward this sign's
+  // perpendicular, which both keeps crossings X-shaped (no tangential
+  // gluing) and prevents orientation flips (fold-inversions).
+  sign: number;
 }
 
 // Live physics tuning, applied per substep (no rebuild needed).
@@ -117,6 +122,10 @@ const CROSSING_ZONE_HALF = 4;
 const CONTACT_RADIUS = 0.35;
 // Laplacian fairing stiffness at smooth = 1.
 const FAIRING_MAX = 0.3;
+// Transversality torque: fraction of the angular error (toward the signed
+// perpendicular) corrected per substep, and its per-substep clamp.
+const TRANSVERSALITY_GAIN = 0.08;
+const TRANSVERSALITY_MAX_STEP = 0.05;
 // Without lattice anchors the knot free-floats; a gentle pull keeps its
 // centroid where it started (applied to positions and prev alike, so it
 // injects no velocity).
@@ -282,9 +291,24 @@ export class ParticleSystem {
       };
       const slashFirst = isSlash(list[0].pass);
       const overFirst = list[0].isOver ? slashFirst : !slashFirst;
+      const over = overFirst ? list[0].pass : list[1].pass;
+      const under = overFirst ? list[1].pass : list[0].pass;
+
+      const tangent = (pass: CrossingPass): [number, number] => {
+        const chain = this.chains[pass.chain];
+        const a = chain[pass.ctrl];
+        const b = chain[(pass.ctrl + 1) % chain.length];
+        return [
+          this.initial[b * 2] - this.initial[a * 2],
+          this.initial[b * 2 + 1] - this.initial[a * 2 + 1],
+        ];
+      };
+      const [ox, oy] = tangent(over);
+      const [ux, uy] = tangent(under);
       crossings.push({
-        over: overFirst ? list[0].pass : list[1].pass,
-        under: overFirst ? list[1].pass : list[0].pass,
+        over,
+        under,
+        sign: Math.sign(ox * uy - oy * ux) || 1,
       });
     }
     return crossings;
@@ -550,6 +574,7 @@ export class ParticleSystem {
         (this.bindScratch[1] + this.bindScratch[3]) / 2;
       this.slideBinding(crossing.over, this.bindScratch[2], this.bindScratch[3]);
       this.slideBinding(crossing.under, this.bindScratch[0], this.bindScratch[1]);
+      this.applyTransversality(crossing, c);
 
       for (const pass of [crossing.over, crossing.under]) {
         const chain = this.chains[pass.chain];
@@ -677,6 +702,65 @@ export class ParticleSystem {
       this.prev[i * 2] += shiftX;
       this.prev[i * 2 + 1] += shiftY;
     }
+  }
+
+  // Steer the two threads at a crossing toward the signed perpendicular:
+  // rotate each binding's segment about the contact point so tangents can
+  // never align (threads gluing along a stretch) or flip orientation.
+  private applyTransversality(crossing: CrossingInfo, index: number): void {
+    const segment = (
+      pass: CrossingPass
+    ): [number, number, number, number] => {
+      const chain = this.chains[pass.chain];
+      const len = chain.length;
+      const i = Math.floor(pass.ctrl);
+      return [
+        chain[((i % len) + len) % len],
+        chain[(((i + 1) % len) + len) % len],
+        0,
+        0,
+      ];
+    };
+
+    const [a0, a1] = segment(crossing.over);
+    const [b0, b1] = segment(crossing.under);
+    let tax = this.positions[a1 * 2] - this.positions[a0 * 2];
+    let tay = this.positions[a1 * 2 + 1] - this.positions[a0 * 2 + 1];
+    let tbx = this.positions[b1 * 2] - this.positions[b0 * 2];
+    let tby = this.positions[b1 * 2 + 1] - this.positions[b0 * 2 + 1];
+    const la = Math.hypot(tax, tay) || 1;
+    const lb = Math.hypot(tbx, tby) || 1;
+    tax /= la;
+    tay /= la;
+    tbx /= lb;
+    tby /= lb;
+
+    // Angle from over-tangent to under-tangent, steered toward sign * 90deg.
+    const theta = Math.atan2(tax * tby - tay * tbx, tax * tbx + tay * tby);
+    let error = crossing.sign * (Math.PI / 2) - theta;
+    if (error > Math.PI) error -= 2 * Math.PI;
+    if (error < -Math.PI) error += 2 * Math.PI;
+
+    const delta = Math.max(
+      -TRANSVERSALITY_MAX_STEP,
+      Math.min(TRANSVERSALITY_MAX_STEP, error * TRANSVERSALITY_GAIN)
+    );
+    if (delta === 0) return;
+
+    const cx = this.contacts[index * 2];
+    const cy = this.contacts[index * 2 + 1];
+    const rotate = (p: number, angle: number): void => {
+      const dx = this.positions[p * 2] - cx;
+      const dy = this.positions[p * 2 + 1] - cy;
+      this.positions[p * 2] += -dy * angle;
+      this.positions[p * 2 + 1] += dx * angle;
+    };
+    // Rotating the under segment CCW increases theta; the over segment CW
+    // does the same, splitting the correction between the two threads.
+    rotate(b0, delta / 2);
+    rotate(b1, delta / 2);
+    rotate(a0, -delta / 2);
+    rotate(a1, -delta / 2);
   }
 
   private applyBindingCorrection(
