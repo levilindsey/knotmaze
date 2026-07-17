@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.11 sim speed 2026-07-17";
+const BUILD_STAMP = "P3.12 inspector + soft pluck 2026-07-17";
 
 const app = new Application();
 
@@ -179,6 +179,12 @@ async function main(): Promise<void> {
     if (!ps) return;
     wake();
     const [x, y] = toLattice(e);
+    // Alt+click: dump the nearest crossing's render state to the console
+    // (diagnostic; makes broken-crossing reports exactly reproducible).
+    if (e.altKey) {
+      renderer?.requestInspect(x, y);
+      return;
+    }
     if (ps.grab(x, y, GRAB_RADIUS) >= 0) {
       app.canvas.setPointerCapture(e.pointerId);
       app.canvas.style.cursor = "grabbing";

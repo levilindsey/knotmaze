@@ -289,6 +289,26 @@ export class RibbonRenderer {
     return [gapPrev, gapNext];
   }
 
+  private inspectIndex = -1;
+
+  // Diagnostic: mark the crossing nearest (x, y) in lattice space; the next
+  // update() logs its full render state to the console once.
+  requestInspect(x: number, y: number): void {
+    let best = -1;
+    let bestDist = 1.5;
+    const scratch = new Float32Array(2);
+    this.ps.crossings.forEach((c, i) => {
+      this.ps.bindingPoint(c.over, scratch, 0);
+      const d = Math.hypot(scratch[0] - x, scratch[1] - y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    });
+    this.inspectIndex = best;
+    if (best < 0) console.log("INSPECT: no crossing within 1.5 units");
+  }
+
   // Widths are read per frame during update(), so they apply live.
   setWidths(threadWidth: number, gap: number): void {
     this.style.threadWidth = threadWidth;
@@ -647,6 +667,38 @@ export class RibbonRenderer {
       );
       this.overFills[c].updateFromRibbonWindow(overFill, startSample, span);
       this.overFills[c].mesh.tint = overFill.mesh.tint;
+
+      if (c === this.inspectIndex) {
+        this.inspectIndex = -1;
+        const round = (v: number): number => Math.round(v * 1000) / 1000;
+        console.log(
+          "CROSSING INSPECT " +
+            JSON.stringify({
+              crossing: c,
+              selfCross,
+              over: { chain: crossing.over.chain, ctrl: round(crossing.over.ctrl) },
+              under: {
+                chain: crossing.under.chain,
+                ctrl: round(crossing.under.ctrl),
+              },
+              sign: crossing.sign,
+              overCenter: round(overCenter),
+              underCenter: round(underCenter),
+              splitPos: round(splitPos),
+              splitNeg: round(splitNeg),
+              maskHalf: round(maskHalf),
+              uGaps: [round(uGapPrev), round(uGapNext)],
+              oGaps: [round(oGapPrev), round(oGapNext)],
+              halfPos: round(halfPos),
+              halfNeg: round(halfNeg),
+              cutsPos: [...this.laneCutsPos].map(round),
+              cutsNeg: [...this.laneCutsNeg].map(round),
+              startSample,
+              span,
+              totalLength: round(total),
+            })
+        );
+      }
     });
   }
 
