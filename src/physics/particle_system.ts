@@ -122,8 +122,22 @@ const NOISE_TIME_FREQ = 0.8;
 // stops a loop-end twist's two crossings from sliding through each other
 // and untwisting.
 const SLIDE_WINDOW = 3; // Segments each side searched by the projection.
-const MAX_SLIDE_PER_SUBSTEP = 0.12;
-const SLIDE_EASE = 0.5;
+// Slide chase runs in two regimes: fast while the user is dragging (a
+// grabbed thread can sweep an intersection along the threads far faster
+// than material moves through space, and a lagging chase makes the
+// coupling drag the other thread bodily), gentle at rest (fast chase
+// amplifies contact chatter between closely-spaced twist crossings).
+const MAX_SLIDE_GRABBED = 0.35;
+const SLIDE_EASE_GRABBED = 0.7;
+const MAX_SLIDE_REST = 0.12;
+const SLIDE_EASE_REST = 0.5;
+// Chase deadband: sub-threshold re-projection deltas are noise, and
+// chasing them churns the (particle-quantized) exemption and torque
+// windows, which keeps the contact system chattering forever. 0.015 ctrl
+// is spatially sub-pixel. (Snapping exactly to target instead of easing
+// was tried and made things worse: larger instantaneous ctrl jumps kick
+// the quantized windows harder.)
+const SLIDE_DEADBAND = 0.015;
 // Minimum binding separation along a chain. Large values were an
 // anti-inversion band-aid that FORCED bindings away from the true
 // intersections at tight twist ends - the coupling then contorted threads
@@ -133,6 +147,21 @@ const SLIDE_EASE = 0.5;
 // outright coincidence.
 const MIN_PASS_SEPARATION = 0.9;
 const COUPLING_STIFFNESS = 0.7;
+// Static/kinetic contact friction. KINETIC (frictionless coupling -
+// material slides through crossings) while the user drags, temperature
+// agitates, or the knot is in motion; STATIC (full-vector coupling, the
+// crossing grips its material points) once per-substep motion falls
+// below STICK. Rationale: at rest the constraint set is a standing
+// tug-of-war (bending/structural/collision each correct ~8e-2 per
+// substep and cancel); friction pins its free tangential mode so the
+// cancellation repeats identically and the knot can sleep, while a
+// permanently frictionless contact lets the standoff wander forever
+// (~3e-2 peaks, measured) - and no damping can quiet a constraint
+// conflict. Hysteresis: re-release only on strong motion (UNSTICK), so
+// the rest wander cannot unlock itself. A static weld is invisible at
+// rest; kinetic sliding is active whenever the user can see motion.
+const CONTACT_STICK_EPS = 2.5e-2; // Per-substep displacement, engage.
+const CONTACT_UNSTICK_EPS = 5e-2; // Per-substep displacement, release.
 // Candidate windows for the contact-bubble exemption; must cover every
 // particle within CONTACT_RADIUS of a binding.
 const CROSSING_ZONE_HALF = 4;
@@ -388,18 +417,27 @@ export class ParticleSystem {
     };
   }
 
-  // World position of a fractional control position along a chain.
-  bindingPoint(pass: CrossingPass, out: Float32Array, offset: number): void {
-    const chain = this.chains[pass.chain];
+  // World position of a fractional control position along a chain
+  // (optionally read from another position array, e.g. prev).
+  pointOnChain(
+    chainIndex: number,
+    f: number,
+    out: Float32Array,
+    offset: number,
+    source: Float32Array = this.positions
+  ): void {
+    const chain = this.chains[chainIndex];
     const len = chain.length;
-    const i = Math.floor(pass.ctrl);
-    const t = pass.ctrl - i;
+    const i = Math.floor(f);
+    const t = f - i;
     const a = chain[((i % len) + len) % len];
     const b = chain[(((i + 1) % len) + len) % len];
-    out[offset] =
-      this.positions[a * 2] * (1 - t) + this.positions[b * 2] * t;
-    out[offset + 1] =
-      this.positions[a * 2 + 1] * (1 - t) + this.positions[b * 2 + 1] * t;
+    out[offset] = source[a * 2] * (1 - t) + source[b * 2] * t;
+    out[offset + 1] = source[a * 2 + 1] * (1 - t) + source[b * 2 + 1] * t;
+  }
+
+  bindingPoint(pass: CrossingPass, out: Float32Array, offset: number): void {
+    this.pointOnChain(pass.chain, pass.ctrl, out, offset);
   }
 
   // Separation between a crossing's two bound points (diagnostic/tests).
@@ -412,6 +450,8 @@ export class ParticleSystem {
     );
   }
   private bindScratch = new Float32Array(4);
+  private tangentScratch = new Float32Array(4);
+  private stickyContacts = false;
 
   get simTime(): number {
     return this.time;
@@ -431,6 +471,7 @@ export class ParticleSystem {
     this.time = 0;
     this.accumulator = 0;
     this.grabbed = -1;
+    this.stickyContacts = false;
     for (const [pass, ctrl] of this.initialCtrl) pass.ctrl = ctrl;
   }
 
@@ -544,44 +585,101 @@ export class ParticleSystem {
 
   // Re-project a binding onto its local chain geometry so the crossing can
   // slide along the thread toward wherever the other thread actually is.
-  private slideBinding(self: CrossingPass, qx: number, qy: number): void {
+  // The target is the TRUE INTERSECTION of the two local polylines when
+  // one exists: nearest-point projection onto a polyline parks at
+  // vertices (a corner captures the projection for a whole range of
+  // source points), which read as bindings snapping to particles.
+  // Intersections move continuously through vertices. The projection of
+  // the other thread's bound point remains as the fallback for the
+  // moments when the threads have locally separated.
+  private slideBinding(
+    self: CrossingPass,
+    other: CrossingPass,
+    qx: number,
+    qy: number
+  ): void {
     const chain = this.chains[self.chain];
     const len = chain.length;
     const i0 = Math.floor(self.ctrl);
+    const oChain = this.chains[other.chain];
+    const oLen = oChain.length;
+    const j0 = Math.floor(other.ctrl);
 
-    let bestF = self.ctrl;
-    let bestDistSq = Infinity;
+    let bestF = Number.NaN;
+    let bestCyc = Infinity;
     for (let s = i0 - SLIDE_WINDOW; s <= i0 + SLIDE_WINDOW; s++) {
       const a = chain[((s % len) + len) % len];
       const b = chain[(((s + 1) % len) + len) % len];
       const ax = this.positions[a * 2];
       const ay = this.positions[a * 2 + 1];
-      const bx = this.positions[b * 2];
-      const by = this.positions[b * 2 + 1];
-      const ex = bx - ax;
-      const ey = by - ay;
-      const lenSq = ex * ex + ey * ey;
-      const t =
-        lenSq > 1e-12
-          ? Math.max(0, Math.min(1, ((qx - ax) * ex + (qy - ay) * ey) / lenSq))
-          : 0;
-      const px = ax + ex * t;
-      const py = ay + ey * t;
-      const dSq = (px - qx) * (px - qx) + (py - qy) * (py - qy);
-      if (dSq < bestDistSq) {
-        bestDistSq = dSq;
-        bestF = s + t;
+      const e1x = this.positions[b * 2] - ax;
+      const e1y = this.positions[b * 2 + 1] - ay;
+      for (let r = j0 - SLIDE_WINDOW; r <= j0 + SLIDE_WINDOW; r++) {
+        const c = oChain[((r % oLen) + oLen) % oLen];
+        const d = oChain[(((r + 1) % oLen) + oLen) % oLen];
+        const cx = this.positions[c * 2];
+        const cy = this.positions[c * 2 + 1];
+        const e2x = this.positions[d * 2] - cx;
+        const e2y = this.positions[d * 2 + 1] - cy;
+        const denom = e1x * e2y - e1y * e2x;
+        if (Math.abs(denom) < 1e-12) continue;
+        const rx = cx - ax;
+        const ry = cy - ay;
+        const u = (rx * e2y - ry * e2x) / denom;
+        if (u < 0 || u > 1) continue;
+        const v = (rx * e1y - ry * e1x) / denom;
+        if (v < 0 || v > 1) continue;
+        // Nearest candidate in cyclic ctrl distance: a twist's twin
+        // crossing may also intersect within the window, but it sits at
+        // least MIN_PASS_SEPARATION away.
+        const raw = Math.abs(s + u - self.ctrl) % len;
+        const cyc = Math.min(raw, len - raw);
+        if (cyc < bestCyc) {
+          bestCyc = cyc;
+          bestF = s + u;
+        }
       }
     }
 
-    // Ease toward the projection with a hard rate limit, then keep order
-    // against neighboring passes on this chain.
+    if (Number.isNaN(bestF)) {
+      let bestDistSq = Infinity;
+      bestF = self.ctrl;
+      for (let s = i0 - SLIDE_WINDOW; s <= i0 + SLIDE_WINDOW; s++) {
+        const a = chain[((s % len) + len) % len];
+        const b = chain[(((s + 1) % len) + len) % len];
+        const ax = this.positions[a * 2];
+        const ay = this.positions[a * 2 + 1];
+        const bx = this.positions[b * 2];
+        const by = this.positions[b * 2 + 1];
+        const ex = bx - ax;
+        const ey = by - ay;
+        const lenSq = ex * ex + ey * ey;
+        const t =
+          lenSq > 1e-12
+            ? Math.max(
+                0,
+                Math.min(1, ((qx - ax) * ex + (qy - ay) * ey) / lenSq)
+              )
+            : 0;
+        const px = ax + ex * t;
+        const py = ay + ey * t;
+        const dSq = (px - qx) * (px - qx) + (py - qy) * (py - qy);
+        if (dSq < bestDistSq) {
+          bestDistSq = dSq;
+          bestF = s + t;
+        }
+      }
+    }
+
+    // Ease toward the projection with a deadband and a hard rate limit,
+    // then keep order against neighboring passes on this chain.
+    const maxSlide =
+      this.grabbed >= 0 ? MAX_SLIDE_GRABBED : MAX_SLIDE_REST;
+    const ease = this.grabbed >= 0 ? SLIDE_EASE_GRABBED : SLIDE_EASE_REST;
+    const delta = bestF - self.ctrl;
+    if (Math.abs(delta) < SLIDE_DEADBAND) return;
     let f =
-      self.ctrl +
-      Math.max(
-        -MAX_SLIDE_PER_SUBSTEP,
-        Math.min(MAX_SLIDE_PER_SUBSTEP, (bestF - self.ctrl) * SLIDE_EASE)
-      );
+      self.ctrl + Math.max(-maxSlide, Math.min(maxSlide, delta * ease));
     const prev = this.passPrev.get(self);
     const next = this.passNext.get(self);
     if (prev && next && prev !== self) {
@@ -596,9 +694,42 @@ export class ParticleSystem {
     self.ctrl = ((f % len) + len) % len;
   }
 
+  // Phase probe: when enabled, records the max single-particle
+  // displacement produced by each solver phase (accumulated across
+  // substeps until read). Costs nothing when disabled.
+  private phaseProbe: Map<string, number> | null = null;
+  private probeSnap: Float32Array | null = null;
+
+  enablePhaseProbe(): void {
+    this.phaseProbe = new Map();
+    this.probeSnap = new Float32Array(this.positions.length);
+    this.probeSnap.set(this.positions);
+  }
+
+  readPhaseProbe(): Map<string, number> {
+    const out = this.phaseProbe ?? new Map<string, number>();
+    if (this.phaseProbe) this.phaseProbe = new Map();
+    return out;
+  }
+
+  private probe(label: string): void {
+    if (!this.phaseProbe || !this.probeSnap) return;
+    let m = 0;
+    for (let i = 0; i < this.particleCount * 2; i++) {
+      const d = Math.abs(this.positions[i] - this.probeSnap[i]);
+      if (d > m) m = d;
+    }
+    this.phaseProbe.set(
+      label,
+      Math.max(this.phaseProbe.get(label) ?? 0, m)
+    );
+    this.probeSnap.set(this.positions);
+  }
+
   private substep(tuning: PhysicsTuning): void {
     this.time += SUBSTEP;
     this.substepCount++;
+    if (this.probeSnap) this.probeSnap.set(this.positions);
 
     // Temperature: Simplex-noise agitation, injected as velocity.
     if (tuning.temperature > 0) {
@@ -616,12 +747,25 @@ export class ParticleSystem {
     // previous substep, so quiescence tracking is free here.
     const damping =
       DAMPING_MIN_DRAG + (DAMPING_MAX_DRAG - DAMPING_MIN_DRAG) * tuning.drag;
+    let substepMoveSq = 0;
     for (let i = 0; i < this.particleCount * 2; i++) {
       const current = this.positions[i];
       const d = current - this.prev[i];
-      if (d * d > this.frameMaxMoveSq) this.frameMaxMoveSq = d * d;
+      if (d * d > substepMoveSq) substepMoveSq = d * d;
       this.positions[i] = current + d * damping;
       this.prev[i] = current;
+    }
+    if (substepMoveSq > this.frameMaxMoveSq) {
+      this.frameMaxMoveSq = substepMoveSq;
+    }
+
+    // Static/kinetic friction switch (see CONTACT_STICK_EPS).
+    if (this.grabbed >= 0 || tuning.temperature > 0) {
+      this.stickyContacts = false;
+    } else if (substepMoveSq < CONTACT_STICK_EPS * CONTACT_STICK_EPS) {
+      this.stickyContacts = true;
+    } else if (substepMoveSq > CONTACT_UNSTICK_EPS * CONTACT_UNSTICK_EPS) {
+      this.stickyContacts = false;
     }
 
     // Settle ramp: 0 at load (lattice equilibrium) -> 1 when fully relaxed.
@@ -649,9 +793,26 @@ export class ParticleSystem {
       this.contacts[c * 2] = (this.bindScratch[0] + this.bindScratch[2]) / 2;
       this.contacts[c * 2 + 1] =
         (this.bindScratch[1] + this.bindScratch[3]) / 2;
-      this.slideBinding(crossing.over, this.bindScratch[2], this.bindScratch[3]);
-      this.slideBinding(crossing.under, this.bindScratch[0], this.bindScratch[1]);
-      this.applyTransversality(crossing, c);
+      // STATIC contacts freeze the crossing machinery entirely: no
+      // sliding, no transversality torque. Both serve motion; at rest the
+      // springs hold the shape, and a welded binding that keeps
+      // micro-adjusting its ctrl is itself a motor (the weld turns every
+      // re-projection nudge into thread motion).
+      if (!this.stickyContacts) {
+        this.slideBinding(
+          crossing.over,
+          crossing.under,
+          this.bindScratch[2],
+          this.bindScratch[3]
+        );
+        this.slideBinding(
+          crossing.under,
+          crossing.over,
+          this.bindScratch[0],
+          this.bindScratch[1]
+        );
+        this.applyTransversality(crossing, c);
+      }
 
       for (const pass of [crossing.over, crossing.under]) {
         const chain = this.chains[pass.chain];
@@ -668,6 +829,7 @@ export class ParticleSystem {
         }
       }
     }
+    this.probe("slide+transversality");
 
     for (let iter = 0; iter < CONSTRAINT_ITERATIONS; iter++) {
       // The grabbed particle chases the pointer stiffly; springs carry the
@@ -686,12 +848,14 @@ export class ParticleSystem {
         restScale,
         Math.max(0.1, Math.min(1.35, tuning.stiffness))
       );
+      this.probe("structural");
       applyDistanceConstraints(
         this.positions,
         this.bending,
         restScale,
         bendScale
       );
+      this.probe("bending");
 
       // Repulsion runs at full strength from the first substep: while the
       // settle ramp shrinks rests, parallel threads get dragged toward the
@@ -711,6 +875,7 @@ export class ParticleSystem {
         this.excludedPairs,
         exemption
       );
+      this.probe("repulsion");
       // Hard floor: thread width honored everywhere outside crossing
       // lenses, regardless of how weak the aesthetic repulsion is. The
       // collector gathers tunneled (properly intersecting) pairs so the
@@ -725,6 +890,7 @@ export class ParticleSystem {
         exemption,
         iter === 0 ? this.emergentCollector : undefined
       );
+      this.probe("collision");
 
       // Coincidence coupling LAST, so nothing re-separates the crossing
       // within the iteration: pull each crossing's two bound points
@@ -743,6 +909,7 @@ export class ParticleSystem {
         this.applyBindingCorrection(crossing.over, dx, dy);
         this.applyBindingCorrection(crossing.under, -dx, -dy);
       }
+      this.probe("coupling");
     }
 
     // Laplacian fairing: nudge every particle toward its chain neighbors'
@@ -794,6 +961,7 @@ export class ParticleSystem {
       this.prev[i * 2] += shiftX;
       this.prev[i * 2 + 1] += shiftY;
     }
+    this.probe("fairing+align+center");
   }
 
   // Steer the two threads at a crossing toward the signed perpendicular:
@@ -881,6 +1049,27 @@ export class ParticleSystem {
     const t = pass.ctrl - i;
     const a = chain[((i % len) + len) % len];
     const b = chain[(((i + 1) % len) + len) % len];
+    // KINETIC contacts are frictionless: drop the component ALONG this
+    // thread, keeping only the sideways push, so material slides through
+    // the crossing and the slide re-projection alone owns the tangential
+    // dimension. (Full-vector coupling welds the crossing to two material
+    // points - correct for STATIC contacts at rest, but it made dragged
+    // threads carry each other bodily.) The tangent is a central
+    // difference across the binding, NOT the raw segment direction, which
+    // jumps at every vertex and made each particle a detent the binding
+    // snapped to.
+    if (!this.stickyContacts) {
+      this.pointOnChain(pass.chain, pass.ctrl - 0.5, this.tangentScratch, 0);
+      this.pointOnChain(pass.chain, pass.ctrl + 0.5, this.tangentScratch, 2);
+      const ex = this.tangentScratch[2] - this.tangentScratch[0];
+      const ey = this.tangentScratch[3] - this.tangentScratch[1];
+      const eLenSq = ex * ex + ey * ey;
+      if (eLenSq > 1e-12) {
+        const along = (dx * ex + dy * ey) / eLenSq;
+        dx -= ex * along;
+        dy -= ey * along;
+      }
+    }
     // Normalize by the lerp-weight energy so the bound POINT moves by
     // exactly (dx, dy) rather than a t-dependent fraction of it.
     const w = (1 - t) * (1 - t) + t * t;
@@ -889,4 +1078,6 @@ export class ParticleSystem {
     this.positions[b * 2] += (dx * t) / w;
     this.positions[b * 2 + 1] += (dy * t) / w;
   }
+
+
 }

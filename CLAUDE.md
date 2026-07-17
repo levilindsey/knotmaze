@@ -7,7 +7,7 @@ A web-based procedural generator for celtic-knot-style mazes with physics-based 
 Three-layer architecture:
 - **Layer 1 (Combinatorial):** `TangleGraph` — planar multigraph on a lattice with nodes (crossing/junction/end) and edges (thread segments). Strand tracing, checkerboard alternation, pairwise-crossing invariants.
 - **Layer 2 (Geometric):** Centripetal Catmull-Rom splines through lattice points; arc-length parameterization.
-- **Layer 3 (Dynamic):** Verlet-integrated particles; each strand is an independent closed chain (springs, bending, repulsion — no lattice anchors). Crossings are SLIDING BINDINGS: a fractional position along each of the two threads, re-projected each substep so intersections migrate along threads, coupled by a coincidence constraint, with ordering clamps preserving diagram topology. Gentle centroid centering + a bounds-following viewport replace grid anchoring. Simplex-noise temperature agitation.
+- **Layer 3 (Dynamic):** Verlet-integrated particles; each strand is an independent closed chain (springs, bending, repulsion — no lattice anchors). Crossings are SLIDING BINDINGS: a fractional position along each of the two threads, re-projected each substep (true polyline-intersection targeting, nearest-point fallback) so intersections migrate along threads, coupled by a coincidence constraint, with ordering clamps preserving diagram topology. Contacts have STATIC/KINETIC friction: kinetic (coupling projected off each thread's tangent — material slides through crossings; slide + transversality active) while grabbed/agitated/moving, static (full-vector weld, crossing machinery frozen) once per-substep motion drops below a stick threshold — kinetic-only contacts wander forever (a PBD constraint standoff pumps the free tangential mode; no damping fixes it — measured via the phase probe), static-only reads as pinned when dragging. Gentle centroid centering + a bounds-following viewport replace grid anchoring. Simplex-noise temperature agitation.
 
 Rendering: PixiJS v8 custom ribbon meshes with depth-based over/under casing gaps.
 
@@ -80,12 +80,17 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
-- **Physics micro-oscillation floor (P3 polish).** The sliding-crossing
-  contact system (taper + coupling + repulsion) holds a bounded ~1e-2
-  units/substep oscillation at rest (sub-pixel; sleep threshold sits above
-  it at 1.5e-2). A root-cause damping pass would let the threshold drop.
-  Also: default composition got looser/sprawlier after the twist-eye work
-  (MIN_PASS_SEPARATION 1.6 is the main compactness lever; consider making
+- **Physics micro-oscillation floor: RESOLVED by static/kinetic contacts
+  (P3.17).** Rest floor is now ~2e-3 units/substep (was ~1e-2): static
+  mode freezes the crossing machinery so the constraint standoff repeats
+  identically. QUIET_EPS 1.5e-2 and the test bound 1.2e-2 could tighten
+  to ~5e-3 if ever useful. Hard-won negative results (measured with
+  `ParticleSystem.enablePhaseProbe()`): velocity-impulse damping at
+  bindings destabilizes (fights constraint projection, twice), inertial
+  zone drag does nothing (the motion is constraint-driven, not inertial),
+  and permanently frictionless contacts wander forever. Still open:
+  default composition got looser/sprawlier after the twist-eye work
+  (MIN_PASS_SEPARATION is the main compactness lever; consider making
   twist-eye openness a user param instead of a constant).
 - **Wobbly threads at slack ~0 (P2 polish).** At the taut end the true
   equilibrium shows small-amplitude waviness along runs and rope-tight
