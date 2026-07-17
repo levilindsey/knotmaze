@@ -26,19 +26,28 @@ export function pitchForLoopLength(length: number): number {
 }
 
 export class KnotSynth {
-  private ctx: AudioContext | null = null;
+  private ctx: BaseAudioContext | null = null;
   private master: GainNode | null = null;
+
+  // An injected context (e.g. OfflineAudioContext) makes the synth
+  // measurable: diag scripts render a pluck offline and inspect the
+  // actual output envelope instead of trusting the node graph.
+  private readonly provided: BaseAudioContext | null;
+
+  constructor(provided: BaseAudioContext | null = null) {
+    this.provided = provided;
+  }
 
   // Must be called from a user gesture the first time, so the context is
   // allowed to start.
-  private ensure(): AudioContext | null {
+  private ensure(): BaseAudioContext | null {
     if (!this.ctx) {
-      this.ctx = new AudioContext();
+      this.ctx = this.provided ?? new AudioContext();
       this.master = this.ctx.createGain();
       this.master.gain.value = 0.55;
       this.master.connect(this.ctx.destination);
     }
-    if (this.ctx.state === "suspended") {
+    if (this.ctx instanceof AudioContext && this.ctx.state === "suspended") {
       void this.ctx.resume();
     }
     return this.ctx;
@@ -73,31 +82,39 @@ export class KnotSynth {
     const burst = ctx.createBufferSource();
     burst.buffer = buffer;
 
-    // String: delay tuned to the period, dark lowpass damping in the
-    // feedback, modest feedback so the note dies quickly on its own.
+    // String: delay tuned to the period, with a ONE-POLE lowpass in the
+    // loop. The filter must have monotone gain <= 1 at EVERY frequency:
+    // a biquad lowpass here (WebAudio Q is in dB; the default is +1dB of
+    // resonant peak) pushed loop gain past unity and every pluck was an
+    // exponentially GROWING self-oscillator - heard as a clipping
+    // crescendo chopped off by the teardown timer.
     const delay = ctx.createDelay(Math.max(0.05, period * 2));
     delay.delayTime.value = period;
-    const damping = ctx.createBiquadFilter();
-    damping.type = "lowpass";
-    damping.frequency.value = 600 + s * 1400;
+    const pole = 0.45 - 0.3 * s; // Higher strength = brighter pluck.
+    const damping = ctx.createIIRFilter([1 - pole], [1, -pole]);
+    // Per-pass gain set for pitch-uniform ring time (about -40dB of loop
+    // energy by 0.9s); the clamp keeps high notes strictly decaying.
     const feedback = ctx.createGain();
-    feedback.gain.value = 0.9;
+    feedback.gain.value = Math.min(
+      0.985,
+      Math.pow(10, (-2 * period) / 0.9)
+    );
 
     // Envelope: plucked-string shape - the attack IS the loudest moment
     // (2ms rise), then a fast two-stage decay: drop to ~8% within 250ms,
     // tail closed by 700ms.
     const out = ctx.createGain();
-    const peak = 0.24 * s;
+    const peak = 0.5 * s;
     out.gain.setValueAtTime(0.0001, now);
     out.gain.linearRampToValueAtTime(peak, now + 0.002);
-    out.gain.exponentialRampToValueAtTime(peak * 0.08, now + 0.25);
-    out.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+    out.gain.exponentialRampToValueAtTime(peak * 0.08, now + 0.35);
+    out.gain.exponentialRampToValueAtTime(0.0001, now + 1.0);
 
     // The excitation also taps straight to the output (through a small
     // "pick" gain): via the loop alone the first sound arrives one delay
     // period late and pre-darkened, which buries the attack transient.
     const pick = ctx.createGain();
-    pick.gain.value = 0.6;
+    pick.gain.value = 0.9;
 
     burst.connect(delay);
     burst.connect(pick);
@@ -119,6 +136,6 @@ export class KnotSynth {
       damping.disconnect();
       feedback.disconnect();
       out.disconnect();
-    }, 900);
+    }, 1200);
   }
 }
