@@ -11,8 +11,12 @@
 
 import type { TangleGraph } from "../core/types";
 import { NODE_TYPE } from "../core/types";
-import type { DistanceConstraint } from "./forces";
-import { applyDistanceConstraints, applyRepulsion } from "./forces";
+import type { DistanceConstraint, SegmentTopology } from "./forces";
+import {
+  applyDistanceConstraints,
+  applyRepulsion,
+  applySegmentCollision,
+} from "./forces";
 import { SeededRNG } from "../util/random";
 import { createNoise3D } from "simplex-noise";
 
@@ -41,6 +45,7 @@ export interface PhysicsTuning {
   smooth: number; // [0, 1] Laplacian fairing: evens curvature along threads.
   stiffness: number; // Multiplier on the structural (adjacency) springs.
   gridAlign: boolean; // Soft-anchor every particle to its lattice position.
+  threadWidth: number; // Render width; the hard collision floor honors it.
 }
 
 export const DEFAULT_TUNING: PhysicsTuning = {
@@ -52,7 +57,13 @@ export const DEFAULT_TUNING: PhysicsTuning = {
   smooth: 0.25,
   stiffness: 1,
   gridAlign: false,
+  threadWidth: 0.42,
 };
+
+// Collision floor margin: centerlines may not come closer than
+// threadWidth * this outside crossing lenses (surfaces just kiss at 1.0).
+const COLLISION_MARGIN = 1.05;
+const COLLISION_STIFFNESS = 0.5;
 
 // Fixed physics timestep; frames accumulate real time into substeps.
 // The per-frame cap must be generous: Chrome throttles rAF to ~1fps for
@@ -163,6 +174,7 @@ export class ParticleSystem {
   private zoneA: Int32Array;
   private zoneB: Int32Array;
   private contacts: Float32Array;
+  private topology!: SegmentTopology;
   private homeX = 0;
   private homeY = 0;
 
@@ -226,6 +238,25 @@ export class ParticleSystem {
         if (this.particleChain[p] < 0) this.particleChain[p] = chainIdx;
       }
     });
+
+    // Segment topology for capsule collision: every particle starts the
+    // segment to its chain successor.
+    const next = new Int32Array(this.particleCount);
+    const ctrlOf = new Int32Array(this.particleCount);
+    const chainLen = new Int32Array(this.particleCount);
+    this.chains.forEach((chain) => {
+      for (let i = 0; i < chain.length; i++) {
+        next[chain[i]] = chain[(i + 1) % chain.length];
+        ctrlOf[chain[i]] = i;
+        chainLen[chain[i]] = chain.length;
+      }
+    });
+    this.topology = {
+      next,
+      chainOf: this.particleChain,
+      ctrlOf,
+      chainLen,
+    };
 
     const noiseRng = new SeededRNG((graph.seed ^ 0x9e3779b9) >>> 0);
     this.noise3D = createNoise3D(() => noiseRng.next());
@@ -625,18 +656,29 @@ export class ParticleSystem {
       // settle ramp shrinks rests, parallel threads get dragged toward the
       // same corridor line, and weak early repulsion lets them pass through
       // each other and lock into braided local minima.
+      const exemption = {
+        zoneA: this.zoneA,
+        zoneB: this.zoneB,
+        contacts: this.contacts,
+        radius: CONTACT_RADIUS,
+      };
       applyRepulsion(
         this.positions,
         this.particleCount,
         repulseDist,
         REPULSION_STIFFNESS,
         this.excludedPairs,
-        {
-          zoneA: this.zoneA,
-          zoneB: this.zoneB,
-          contacts: this.contacts,
-          radius: CONTACT_RADIUS,
-        }
+        exemption
+      );
+      // Hard floor: thread width honored everywhere outside crossing
+      // lenses, regardless of how weak the aesthetic repulsion is.
+      applySegmentCollision(
+        this.positions,
+        this.particleCount,
+        this.topology,
+        tuning.threadWidth * COLLISION_MARGIN,
+        COLLISION_STIFFNESS,
+        exemption
       );
 
       // Coincidence coupling LAST, so nothing re-separates the crossing

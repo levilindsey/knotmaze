@@ -52,6 +52,150 @@ export interface CrossingExemption {
   radius: number;
 }
 
+// Hard capsule collision between thread segments: no two non-exempt
+// segments may come closer (centerline to centerline) than minDist, so
+// thread width is honored everywhere except inside a crossing's contact
+// lens. This is what point repulsion cannot guarantee: points can spread
+// while the segments between them still overlap, and exemption bubbles
+// let parallel runs hug.
+export interface SegmentTopology {
+  next: Int32Array; // Particle -> next particle along its chain.
+  chainOf: Int32Array; // Particle -> chain index.
+  ctrlOf: Int32Array; // Particle -> control index within its chain.
+  chainLen: Int32Array; // Particle -> its chain's length.
+}
+
+export function applySegmentCollision(
+  positions: Float32Array,
+  particleCount: number,
+  topology: SegmentTopology,
+  minDist: number,
+  stiffness: number,
+  exemption: CrossingExemption
+): void {
+  const cellSize = Math.max(1, minDist * 2);
+  const buckets = new Map<number, number[]>();
+  const bucketKey = (cx: number, cy: number): number =>
+    (cx + 2048) * 65536 + (cy + 2048);
+
+  for (let i = 0; i < particleCount; i++) {
+    const k = bucketKey(
+      Math.floor(positions[i * 2] / cellSize),
+      Math.floor(positions[i * 2 + 1] / cellSize)
+    );
+    const bucket = buckets.get(k);
+    if (bucket) bucket.push(i);
+    else buckets.set(k, [i]);
+  }
+
+  const { next, chainOf, ctrlOf, chainLen } = topology;
+
+  for (let i = 0; i < particleCount; i++) {
+    const cx = Math.floor(positions[i * 2] / cellSize);
+    const cy = Math.floor(positions[i * 2 + 1] / cellSize);
+
+    for (let ox = -1; ox <= 1; ox++) {
+      for (let oy = -1; oy <= 1; oy++) {
+        const bucket = buckets.get(bucketKey(cx + ox, cy + oy));
+        if (!bucket) continue;
+
+        for (const j of bucket) {
+          if (j <= i) continue;
+
+          // Skip nearby same-chain segments (they legitimately connect).
+          if (chainOf[i] === chainOf[j]) {
+            const len = chainLen[i];
+            const d = Math.abs(ctrlOf[i] - ctrlOf[j]);
+            if (Math.min(d, len - d) <= 6) continue;
+          }
+
+          // Crossing-lens exemption with the same smooth taper as point
+          // repulsion.
+          let pairMinDist = minDist;
+          const a1 = exemption.zoneA[i];
+          const a2 = exemption.zoneB[i];
+          const b1 = exemption.zoneA[j];
+          const b2 = exemption.zoneB[j];
+          let shared = -1;
+          if (a1 >= 0 && (a1 === b1 || a1 === b2)) shared = a1;
+          else if (a2 >= 0 && (a2 === b1 || a2 === b2)) shared = a2;
+          if (shared >= 0) {
+            const kx = exemption.contacts[shared * 2];
+            const ky = exemption.contacts[shared * 2 + 1];
+            const di = Math.hypot(
+              positions[i * 2] - kx,
+              positions[i * 2 + 1] - ky
+            );
+            const dj = Math.hypot(
+              positions[j * 2] - kx,
+              positions[j * 2 + 1] - ky
+            );
+            pairMinDist = Math.min(
+              minDist,
+              Math.max(0, (Math.max(di, dj) - exemption.radius) * 1.6)
+            );
+            if (pairMinDist < 1e-3) continue;
+          }
+
+          // Closest points between segment (i -> next[i]) and
+          // (j -> next[j]).
+          const i2 = next[i];
+          const j2 = next[j];
+          const p1x = positions[i * 2];
+          const p1y = positions[i * 2 + 1];
+          const d1x = positions[i2 * 2] - p1x;
+          const d1y = positions[i2 * 2 + 1] - p1y;
+          const p2x = positions[j * 2];
+          const p2y = positions[j * 2 + 1];
+          const d2x = positions[j2 * 2] - p2x;
+          const d2y = positions[j2 * 2 + 1] - p2y;
+
+          const rx = p1x - p2x;
+          const ry = p1y - p2y;
+          const a = d1x * d1x + d1y * d1y;
+          const e = d2x * d2x + d2y * d2y;
+          const f = d2x * rx + d2y * ry;
+          const c = d1x * rx + d1y * ry;
+          const b = d1x * d2x + d1y * d2y;
+          const denom = a * e - b * b;
+          let s = denom > 1e-12 ? (b * f - c * e) / denom : 0;
+          s = Math.max(0, Math.min(1, s));
+          let t = e > 1e-12 ? (b * s + f) / e : 0;
+          t = Math.max(0, Math.min(1, t));
+          if (t === 0 || t === 1) {
+            s = Math.max(
+              0,
+              Math.min(1, a > 1e-12 ? (b * t - c) / a : 0)
+            );
+          }
+
+          const q1x = p1x + d1x * s;
+          const q1y = p1y + d1y * s;
+          const q2x = p2x + d2x * t;
+          const q2y = p2y + d2y * t;
+          let nx = q1x - q2x;
+          let ny = q1y - q2y;
+          const dist = Math.hypot(nx, ny);
+          if (dist >= pairMinDist || dist < 1e-9) continue;
+          nx /= dist;
+          ny /= dist;
+
+          const push = (pairMinDist - dist) * stiffness * 0.5;
+          // Distribute to endpoints by closest-point weights.
+          positions[i * 2] += nx * push * (1 - s);
+          positions[i * 2 + 1] += ny * push * (1 - s);
+          positions[i2 * 2] += nx * push * s;
+          positions[i2 * 2 + 1] += ny * push * s;
+          positions[j * 2] -= nx * push * (1 - t);
+          positions[j * 2 + 1] -= ny * push * (1 - t);
+          positions[j2 * 2] -= nx * push * t;
+          positions[j2 * 2 + 1] -= ny * push * t;
+        }
+      }
+    }
+  }
+}
+
 // Soft minimum-distance repulsion between non-neighboring particles, using a
 // uniform spatial hash. Keeps parallel threads from visually overlapping.
 export function applyRepulsion(
