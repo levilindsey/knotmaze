@@ -65,13 +65,22 @@ export interface SegmentTopology {
   chainLen: Int32Array; // Particle -> its chain's length.
 }
 
+// Emergent crossing collector: segment pairs that PROPERLY INTERSECT are
+// threads that tunneled through each other - real visual crossings with no
+// graph entry. Rows of [segA, paramA, segB, paramB].
+export interface EmergentCollector {
+  data: Float32Array;
+  n: number;
+}
+
 export function applySegmentCollision(
   positions: Float32Array,
   particleCount: number,
   topology: SegmentTopology,
   minDist: number,
   stiffness: number,
-  exemption: CrossingExemption
+  exemption: CrossingExemption,
+  collector?: EmergentCollector
 ): void {
   const cellSize = Math.max(1, minDist * 2);
   const buckets = new Map<number, number[]>();
@@ -167,6 +176,24 @@ export function applySegmentCollision(
               0,
               Math.min(1, a > 1e-12 ? (b * t - c) / a : 0)
             );
+          }
+
+          // Proper intersection: the pair has tunneled - record it as an
+          // emergent crossing so the renderer can gap it.
+          if (collector && collector.n * 4 < collector.data.length) {
+            const denom2 = d1x * d2y - d1y * d2x;
+            if (Math.abs(denom2) > 1e-9) {
+              const u = (-rx * d2y + ry * d2x) / denom2;
+              const v = (-rx * d1y + ry * d1x) / denom2;
+              if (u > 0 && u < 1 && v > 0 && v < 1) {
+                const idx = collector.n * 4;
+                collector.data[idx] = i;
+                collector.data[idx + 1] = u;
+                collector.data[idx + 2] = j;
+                collector.data[idx + 3] = v;
+                collector.n++;
+              }
+            }
           }
 
           const q1x = p1x + d1x * s;

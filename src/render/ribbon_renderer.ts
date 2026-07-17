@@ -16,7 +16,7 @@
 // All erases render below all fills, so patches never slice each other.
 
 import { Container } from "pixi.js";
-import type { ParticleSystem } from "../physics/particle_system";
+import type { ParticleSystem, CrossingPass } from "../physics/particle_system";
 import type { SplineSamples } from "../geometry/spline_generator";
 import { sampleClosedSpline } from "../geometry/spline_generator";
 import { RibbonMesh, PatchGridMesh } from "./ribbon_mesh";
@@ -67,6 +67,8 @@ const OVER_REACH_MAX = 1.2;
 const MITER_PROBE = 0.09;
 const ERASE_STATIONS = 16;
 const ERASE_LANES = 5;
+// Patch pool for emergent (tunneled) crossings discovered by the physics.
+const EMERGENT_POOL = 16;
 // Cut arcs extend outward by this much: widens the gap imperceptibly while
 // swallowing base-ribbon slivers that poke past the cap at tight bends.
 const CUT_BIAS = 0.03;
@@ -113,6 +115,8 @@ export class RibbonRenderer {
   private fills: RibbonMesh[] = [];
   private underErases: PatchGridMesh[] = [];
   private overFills: RibbonMesh[] = [];
+  private emergentErases: PatchGridMesh[] = [];
+  private emergentFills: RibbonMesh[] = [];
   private chainControls: Float32Array[] = [];
   private chainSamples: (SplineSamples | null)[] = [];
   private sampleScratch = new Float32Array(4);
@@ -174,6 +178,21 @@ export class RibbonRenderer {
       const fill = new RibbonMesh(OVER_PATCH_MAX_SAMPLES, false, 0xffffff);
       this.underErases.push(erase);
       this.overFills.push(fill);
+      eraseLayer.addChild(erase.mesh);
+      overLayer.addChild(fill.mesh);
+    }
+
+    for (let k = 0; k < EMERGENT_POOL; k++) {
+      const erase = new PatchGridMesh(
+        ERASE_STATIONS,
+        ERASE_LANES,
+        style.background
+      );
+      const fill = new RibbonMesh(OVER_PATCH_MAX_SAMPLES, false, 0xffffff);
+      erase.mesh.visible = false;
+      fill.mesh.visible = false;
+      this.emergentErases.push(erase);
+      this.emergentFills.push(fill);
       eraseLayer.addChild(erase.mesh);
       overLayer.addChild(fill.mesh);
     }
@@ -290,6 +309,13 @@ export class RibbonRenderer {
   }
 
   private inspectIndex = -1;
+  // Per-crossing diagnostic summary, refreshed each update():
+  // [worldX, worldY, eraseSpanMean, overSpan, selfPassDist(-1 if not self)]
+  private diagData = new Float32Array(0);
+
+  getDiag(): { stride: number; data: Float32Array } {
+    return { stride: 5, data: this.diagData };
+  }
 
   // Diagnostic: mark the crossing nearest (x, y) in lattice space; the next
   // update() logs its full render state to the console once.
@@ -337,6 +363,37 @@ export class RibbonRenderer {
     const gap = (this.style.casingWidth - this.style.threadWidth) / 2;
 
     this.ps.crossings.forEach((crossing, c) => {
+      this.renderCrossing(
+        crossing,
+        c,
+        this.underErases[c],
+        this.overFills[c],
+        this.overNeighbors[c],
+        this.underNeighbors[c],
+        fillHalf,
+        gap
+      );
+    });
+    this.renderEmergent(fillHalf, gap);
+  }
+
+  // Render one crossing's erase + over-fill patches. index < 0 marks an
+  // emergent (unregistered) crossing: no neighbor lists, no diagnostics.
+  private renderCrossing(
+    crossing: { over: CrossingPass; under: CrossingPass; sign?: number },
+    index: number,
+    eraseMesh: PatchGridMesh,
+    fillMesh: RibbonMesh,
+    overNbIn: PassNeighbors | null,
+    underNbIn: PassNeighbors | null,
+    fillHalf: number,
+    gap: number
+  ): void {
+    const c = index;
+    const overNb = overNbIn ?? { prev: crossing.over, next: crossing.over };
+    const underNb =
+      underNbIn ?? { prev: crossing.under, next: crossing.under };
+    {
       const overSamples = this.chainSamples[crossing.over.chain]!;
       const underSamples = this.chainSamples[crossing.under.chain]!;
       const overCenter = this.arcAt(overSamples, crossing.over.ctrl);
@@ -388,7 +445,7 @@ export class RibbonRenderer {
       const [uGapPrev, uGapNext] = this.neighborGaps(
         underSamples,
         crossing.under,
-        this.underNeighbors[c]
+        underNb
       );
 
       // Lane offsets span the erase width: lane 0 = left edge (+eraseW),
@@ -559,7 +616,7 @@ export class RibbonRenderer {
       // Build the erase grid: each lane spans its own solved cut interval,
       // so the cap rows are polylines lying on the over ribbon's offset
       // curve - they curve with the over thread.
-      const erase = this.underErases[c];
+      const erase = eraseMesh;
       const midLane = (ERASE_LANES - 1) / 2;
       for (let k = 0; k < ERASE_STATIONS; k++) {
         const t = k / (ERASE_STATIONS - 1);
@@ -614,7 +671,7 @@ export class RibbonRenderer {
       const [oGapPrev, oGapNext] = this.neighborGaps(
         overSamples,
         crossing.over,
-        this.overNeighbors[c]
+        overNb
       );
       const overlapReach = eraseW + fillHalf + ERASE_WIDTH_PAD + 0.05;
       const reachAlongOver = (dir: number, gapLimit: number): number => {
@@ -665,10 +722,31 @@ export class RibbonRenderer {
         OVER_PATCH_MAX_SAMPLES,
         overSamples.count
       );
-      this.overFills[c].updateFromRibbonWindow(overFill, startSample, span);
-      this.overFills[c].mesh.tint = overFill.mesh.tint;
+      fillMesh.updateFromRibbonWindow(overFill, startSample, span);
+      fillMesh.mesh.tint = overFill.mesh.tint;
 
-      if (c === this.inspectIndex) {
+      if (index >= 0) {
+        if (this.diagData.length < this.ps.crossings.length * 5) {
+          this.diagData = new Float32Array(this.ps.crossings.length * 5);
+        }
+        let spanSum = 0;
+        for (let l = 0; l < ERASE_LANES; l++) {
+          spanSum += this.laneCutsPos[l] - this.laneCutsNeg[l];
+        }
+        this.ps.bindingPoint(crossing.over as CrossingPass, this.sampleScratch, 0);
+        this.diagData[c * 5] = this.sampleScratch[0];
+        this.diagData[c * 5 + 1] = this.sampleScratch[1];
+        this.diagData[c * 5 + 2] = spanSum / ERASE_LANES;
+        this.diagData[c * 5 + 3] = halfPos + halfNeg;
+        this.diagData[c * 5 + 4] = selfCross
+          ? Math.min(
+              (((underCenter - overCenter) % total) + total) % total,
+              (((overCenter - underCenter) % total) + total) % total
+            )
+          : -1;
+      }
+
+      if (index >= 0 && c === this.inspectIndex) {
         this.inspectIndex = -1;
         const round = (v: number): number => Math.round(v * 1000) / 1000;
         console.log(
@@ -699,7 +777,56 @@ export class RibbonRenderer {
             })
         );
       }
-    });
+    }
+  }
+
+  // Pooled patches for emergent (tunneled) crossings, deduped against
+  // registered crossings and each other.
+  private renderEmergent(fillHalf: number, gap: number): void {
+    let poolUsed = 0;
+    const used: number[] = [];
+    for (const em of this.ps.emergentCrossings) {
+      if (poolUsed >= EMERGENT_POOL) break;
+      this.ps.bindingPoint(em.over, this.sampleScratch, 0);
+      const ex = this.sampleScratch[0];
+      const ey = this.sampleScratch[1];
+
+      let dup = false;
+      for (let c = 0; c * 5 < this.diagData.length; c++) {
+        if (
+          Math.hypot(
+            this.diagData[c * 5] - ex,
+            this.diagData[c * 5 + 1] - ey
+          ) < 0.8
+        ) {
+          dup = true;
+          break;
+        }
+      }
+      for (let k = 0; !dup && k < used.length; k += 2) {
+        if (Math.hypot(used[k] - ex, used[k + 1] - ey) < 0.8) dup = true;
+      }
+      if (dup) continue;
+
+      used.push(ex, ey);
+      const pool = poolUsed++;
+      this.emergentErases[pool].mesh.visible = true;
+      this.emergentFills[pool].mesh.visible = true;
+      this.renderCrossing(
+        em,
+        -1,
+        this.emergentErases[pool],
+        this.emergentFills[pool],
+        null,
+        null,
+        fillHalf,
+        gap
+      );
+    }
+    for (let k = poolUsed; k < EMERGENT_POOL; k++) {
+      this.emergentErases[k].mesh.visible = false;
+      this.emergentFills[k].mesh.visible = false;
+    }
   }
 
   destroy(): void {

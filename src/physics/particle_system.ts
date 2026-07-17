@@ -116,11 +116,22 @@ const NOISE_TIME_FREQ = 0.8;
 // never swap order; the coincidence constraint is applied inside the
 // iteration loop; particles inside a crossing's windows are exempt from
 // repulsion against the other side (the threads are supposed to touch).
-const MAX_SLIDE_PER_SUBSTEP = 0.04;
-const SLIDE_EASE = 0.2;
-// Keep enough material between neighboring crossings that twist eyes can't
-// degenerate to the point of inverting.
-const MIN_PASS_SEPARATION = 1.6;
+// Bindings track the geometric contact essentially at motion speed: wide
+// projection window, strong easing, generous rate cap. The ordering clamp
+// below (MIN_PASS_SEPARATION) remains the one deliberate restriction - it
+// stops a loop-end twist's two crossings from sliding through each other
+// and untwisting.
+const SLIDE_WINDOW = 3; // Segments each side searched by the projection.
+const MAX_SLIDE_PER_SUBSTEP = 0.12;
+const SLIDE_EASE = 0.5;
+// Minimum binding separation along a chain. Large values were an
+// anti-inversion band-aid that FORCED bindings away from the true
+// intersections at tight twist ends - the coupling then contorted threads
+// into tangent stretches (reads as a missing gap) with erase holes at the
+// displaced binding spots (reads as an oversized gap). Inversion is now
+// guarded by the transversality torque, so this only needs to prevent
+// outright coincidence.
+const MIN_PASS_SEPARATION = 0.9;
 const COUPLING_STIFFNESS = 0.7;
 // Candidate windows for the contact-bubble exemption; must cover every
 // particle within CONTACT_RADIUS of a binding.
@@ -175,6 +186,7 @@ export class ParticleSystem {
   private zoneB: Int32Array;
   private contacts: Float32Array;
   private topology!: SegmentTopology;
+  private emergentCollector = { data: new Float32Array(64 * 4), n: 0 };
   private homeX = 0;
   private homeY = 0;
 
@@ -474,6 +486,35 @@ export class ParticleSystem {
     };
   }
 
+  // Thread pairs that tunneled through each other during motion: real
+  // visual crossings absent from the graph. Over/under is assigned
+  // deterministically (coarse ctrl compare, so it doesn't flap frame to
+  // frame as bindings drift).
+  get emergentCrossings(): Array<{ over: CrossingPass; under: CrossingPass }> {
+    const out: Array<{ over: CrossingPass; under: CrossingPass }> = [];
+    const { data, n } = this.emergentCollector;
+    for (let k = 0; k < n; k++) {
+      const i = data[k * 4];
+      const u = data[k * 4 + 1];
+      const j = data[k * 4 + 2];
+      const v = data[k * 4 + 3];
+      const a: CrossingPass = {
+        chain: this.topology.chainOf[i],
+        ctrl: this.topology.ctrlOf[i] + u,
+      };
+      const b: CrossingPass = {
+        chain: this.topology.chainOf[j],
+        ctrl: this.topology.ctrlOf[j] + v,
+      };
+      const aFirst =
+        a.chain < b.chain ||
+        (a.chain === b.chain &&
+          Math.floor(a.ctrl / 4) <= Math.floor(b.ctrl / 4));
+      out.push(aFirst ? { over: a, under: b } : { over: b, under: a });
+    }
+    return out;
+  }
+
   // Current arc length of a chain, for mapping loop size to pluck pitch.
   chainArcLength(chainIdx: number): number {
     const chain = this.chains[chainIdx];
@@ -510,7 +551,7 @@ export class ParticleSystem {
 
     let bestF = self.ctrl;
     let bestDistSq = Infinity;
-    for (let s = i0 - 1; s <= i0 + 1; s++) {
+    for (let s = i0 - SLIDE_WINDOW; s <= i0 + SLIDE_WINDOW; s++) {
       const a = chain[((s % len) + len) % len];
       const b = chain[(((s + 1) % len) + len) % len];
       const ax = this.positions[a * 2];
@@ -671,14 +712,18 @@ export class ParticleSystem {
         exemption
       );
       // Hard floor: thread width honored everywhere outside crossing
-      // lenses, regardless of how weak the aesthetic repulsion is.
+      // lenses, regardless of how weak the aesthetic repulsion is. The
+      // collector gathers tunneled (properly intersecting) pairs so the
+      // renderer can gap emergent crossings.
+      if (iter === 0) this.emergentCollector.n = 0;
       applySegmentCollision(
         this.positions,
         this.particleCount,
         this.topology,
         tuning.threadWidth * COLLISION_MARGIN,
         COLLISION_STIFFNESS,
-        exemption
+        exemption,
+        iter === 0 ? this.emergentCollector : undefined
       );
 
       // Coincidence coupling LAST, so nothing re-separates the crossing

@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.12 inspector + soft pluck 2026-07-17";
+const BUILD_STAMP = "P3.14 dynamic gaps 2026-07-17";
 
 const app = new Application();
 
@@ -332,6 +332,19 @@ async function main(): Promise<void> {
     `KnotMaze ${BUILD_STAMP} | dpr ${window.devicePixelRatio} | ` +
       `gpu ${gl ? gl.getParameter(gl.RENDERER) : "unknown"}`
   );
+
+  // Diagnostic hooks for the automated crossing scanner.
+  (window as unknown as Record<string, unknown>).__knotDiag = () =>
+    renderer ? Array.from(renderer.getDiag().data) : [];
+  (window as unknown as Record<string, unknown>).__knotView = () => ({
+    x: root.position.x,
+    y: root.position.y,
+    s: root.scale.x,
+  });
+  (window as unknown as Record<string, unknown>).__knotInspect = (
+    x: number,
+    y: number
+  ) => renderer?.requestInspect(x, y);
 
   rebuild();
 }
