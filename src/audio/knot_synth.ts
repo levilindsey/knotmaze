@@ -44,7 +44,7 @@ export class KnotSynth {
     if (!this.ctx) {
       this.ctx = this.provided ?? new AudioContext();
       this.master = this.ctx.createGain();
-      this.master.gain.value = 0.55;
+      this.master.gain.value = 0.85;
       this.master.connect(this.ctx.destination);
     }
     if (this.ctx instanceof AudioContext && this.ctx.state === "suspended") {
@@ -72,7 +72,7 @@ export class KnotSynth {
     const rise = Math.max(2, Math.round(burstSamples * 0.06));
     let smoothed = 0;
     for (let i = 0; i < burstSamples; i++) {
-      smoothed = smoothed * 0.6 + (Math.random() * 2 - 1) * 0.4;
+      smoothed = smoothed * 0.72 + (Math.random() * 2 - 1) * 0.28;
       const fade =
         i < rise
           ? i / rise
@@ -90,7 +90,7 @@ export class KnotSynth {
     // crescendo chopped off by the teardown timer.
     const delay = ctx.createDelay(Math.max(0.05, period * 2));
     delay.delayTime.value = period;
-    const pole = 0.45 - 0.3 * s; // Higher strength = brighter pluck.
+    const pole = 0.5 - 0.28 * s; // Higher strength = brighter pluck.
     const damping = ctx.createIIRFilter([1 - pole], [1, -pole]);
     // Per-pass gain set for pitch-uniform ring time (about -40dB of loop
     // energy by 0.9s); the clamp keeps high notes strictly decaying.
@@ -104,7 +104,7 @@ export class KnotSynth {
     // (2ms rise), then a fast two-stage decay: drop to ~8% within 250ms,
     // tail closed by 700ms.
     const out = ctx.createGain();
-    const peak = 0.5 * s;
+    const peak = 1.0 * s;
     out.gain.setValueAtTime(0.0001, now);
     out.gain.linearRampToValueAtTime(peak, now + 0.002);
     out.gain.exponentialRampToValueAtTime(peak * 0.08, now + 0.35);
@@ -114,7 +114,7 @@ export class KnotSynth {
     // "pick" gain): via the loop alone the first sound arrives one delay
     // period late and pre-darkened, which buries the attack transient.
     const pick = ctx.createGain();
-    pick.gain.value = 0.9;
+    pick.gain.value = 0.75;
 
     burst.connect(delay);
     burst.connect(pick);
