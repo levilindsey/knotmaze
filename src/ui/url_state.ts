@@ -10,6 +10,8 @@ export interface UrlParams {
   drag: number; // [0, 1] wave damping (physics, applies live).
   repulsion: number; // Repulsion distance multiplier (applies live).
   bend: number; // Bending stiffness multiplier (applies live).
+  smooth: number; // [0, 1] Laplacian fairing (applies live).
+  stiffness: number; // Structural spring multiplier (applies live).
   gridAlign: boolean; // Soft-anchor to lattice positions (applies live).
   threadWidth: number; // Ribbon width in lattice units (applies live).
   gap: number; // Space between an under-thread cut end and the over thread.
@@ -23,6 +25,8 @@ const DEFAULTS = {
   drag: 0.5,
   repulsion: 1,
   bend: 1,
+  smooth: 0.25,
+  stiffness: 1,
   threadWidth: 0.42,
   gap: 0.18,
 };
@@ -53,6 +57,8 @@ export function readParams(): UrlParams {
     drag: readNumber(query, "dr", DEFAULTS.drag),
     repulsion: readNumber(query, "rep", DEFAULTS.repulsion),
     bend: readNumber(query, "bd", DEFAULTS.bend),
+    smooth: readNumber(query, "sm", DEFAULTS.smooth),
+    stiffness: readNumber(query, "st", DEFAULTS.stiffness),
     gridAlign: readNumber(query, "ga", 0) > 0.5,
     threadWidth: readNumber(query, "tw", DEFAULTS.threadWidth),
     gap: readNumber(query, "gap", DEFAULTS.gap),
@@ -69,6 +75,8 @@ export function writeParams(params: UrlParams): void {
   query.set("dr", String(params.drag));
   query.set("rep", String(params.repulsion));
   query.set("bd", String(params.bend));
+  query.set("sm", String(params.smooth));
+  query.set("st", String(params.stiffness));
   query.set("ga", params.gridAlign ? "1" : "0");
   query.set("tw", String(params.threadWidth));
   query.set("gap", String(params.gap));

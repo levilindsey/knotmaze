@@ -33,6 +33,8 @@ export interface PhysicsTuning {
   drag: number; // [0, 1] 0 = ringy waves, 1 = heavily damped.
   repulsion: number; // Multiplier on the repulsion distance.
   bend: number; // Multiplier on bending stiffness.
+  smooth: number; // [0, 1] Laplacian fairing: evens curvature along threads.
+  stiffness: number; // Multiplier on the structural (adjacency) springs.
   gridAlign: boolean; // Soft-anchor every particle to its lattice position.
 }
 
@@ -42,6 +44,8 @@ export const DEFAULT_TUNING: PhysicsTuning = {
   drag: 0.5,
   repulsion: 1,
   bend: 1,
+  smooth: 0.25,
+  stiffness: 1,
   gridAlign: false,
 };
 
@@ -100,9 +104,14 @@ const MAX_SLIDE_PER_SUBSTEP = 0.04;
 const SLIDE_EASE = 0.2;
 const MIN_PASS_SEPARATION = 1.1;
 const COUPLING_STIFFNESS = 0.45;
-// Zones must cover everything within repulsion range of the contact point,
-// or boundary particles get pushed while the coupling pulls - a limit cycle.
+// Candidate windows for the contact-bubble exemption; must cover every
+// particle within CONTACT_RADIUS of a binding.
 const CROSSING_ZONE_HALF = 4;
+// Threads may touch within this distance of a crossing's contact point;
+// beyond it repulsion resumes (so twist eyes open between close crossings).
+const CONTACT_RADIUS = 0.6;
+// Laplacian fairing stiffness at smooth = 1.
+const FAIRING_MAX = 0.3;
 // Without lattice anchors the knot free-floats; a gentle pull keeps its
 // centroid where it started (applied to positions and prev alike, so it
 // injects no velocity).
@@ -132,7 +141,9 @@ export class ParticleSystem {
   private passPrev = new Map<CrossingPass, CrossingPass>();
   private passNext = new Map<CrossingPass, CrossingPass>();
   private initialCtrl = new Map<CrossingPass, number>();
-  private repulsionZone: Int32Array;
+  private zoneA: Int32Array;
+  private zoneB: Int32Array;
+  private contacts: Float32Array;
   private homeX = 0;
   private homeY = 0;
 
@@ -175,7 +186,8 @@ export class ParticleSystem {
     this.initial = new Float32Array(initialPositions);
     this.positions = new Float32Array(this.initial);
     this.prev = new Float32Array(this.initial);
-    this.repulsionZone = new Int32Array(this.particleCount).fill(-1);
+    this.zoneA = new Int32Array(this.particleCount).fill(-1);
+    this.zoneB = new Int32Array(this.particleCount).fill(-1);
 
     for (let i = 0; i < this.particleCount; i++) {
       this.homeX += this.initial[i * 2];
@@ -187,6 +199,7 @@ export class ParticleSystem {
     this.buildConstraints();
     this.crossings = this.assignCrossings(occurrences);
     this.buildPassOrder();
+    this.contacts = new Float32Array(this.crossings.length * 2);
 
     this.particleChain = new Int32Array(this.particleCount).fill(-1);
     this.chains.forEach((chain, chainIdx) => {
@@ -515,13 +528,18 @@ export class ParticleSystem {
       (REPULSE_DIST_TAUT + (REPULSE_DIST_LOOSE - REPULSE_DIST_TAUT) * slack) *
       tuning.repulsion;
 
-    // Slide bindings toward the other thread's current point, then mark
-    // repulsion-exempt zones around every binding.
-    this.repulsionZone.fill(-1);
+    // Slide bindings toward the other thread's current point, record each
+    // crossing's contact point, and mark candidate exemption windows (up to
+    // two per particle - twist windows overlap).
+    this.zoneA.fill(-1);
+    this.zoneB.fill(-1);
     for (let c = 0; c < this.crossings.length; c++) {
       const crossing = this.crossings[c];
       this.bindingPoint(crossing.over, this.bindScratch, 0);
       this.bindingPoint(crossing.under, this.bindScratch, 2);
+      this.contacts[c * 2] = (this.bindScratch[0] + this.bindScratch[2]) / 2;
+      this.contacts[c * 2 + 1] =
+        (this.bindScratch[1] + this.bindScratch[3]) / 2;
       this.slideBinding(crossing.over, this.bindScratch[2], this.bindScratch[3]);
       this.slideBinding(crossing.under, this.bindScratch[0], this.bindScratch[1]);
 
@@ -534,7 +552,9 @@ export class ParticleSystem {
           k <= base + CROSSING_ZONE_HALF + 1;
           k++
         ) {
-          this.repulsionZone[chain[((k % len) + len) % len]] = c;
+          const p = chain[((k % len) + len) % len];
+          if (this.zoneA[p] < 0 || this.zoneA[p] === c) this.zoneA[p] = c;
+          else this.zoneB[p] = c;
         }
       }
     }
@@ -548,7 +568,14 @@ export class ParticleSystem {
         this.positions[g * 2 + 1] +=
           (this.grabY - this.positions[g * 2 + 1]) * 0.6;
       }
-      applyDistanceConstraints(this.positions, this.structural, restScale);
+      // Structural stiffness scales with the tuning param, clamped so the
+      // PBD correction fraction stays below 1 (0.7 base x 1.35 max = 0.95).
+      applyDistanceConstraints(
+        this.positions,
+        this.structural,
+        restScale,
+        Math.max(0.1, Math.min(1.35, tuning.stiffness))
+      );
       applyDistanceConstraints(
         this.positions,
         this.bending,
@@ -566,7 +593,12 @@ export class ParticleSystem {
         repulseDist,
         REPULSION_STIFFNESS,
         this.excludedPairs,
-        this.repulsionZone
+        {
+          zoneA: this.zoneA,
+          zoneB: this.zoneB,
+          contacts: this.contacts,
+          radius: CONTACT_RADIUS,
+        }
       );
 
       // Coincidence coupling LAST, so nothing re-separates the crossing
@@ -585,6 +617,29 @@ export class ParticleSystem {
           COUPLING_STIFFNESS;
         this.applyBindingCorrection(crossing.over, dx, dy);
         this.applyBindingCorrection(crossing.under, -dx, -dy);
+      }
+    }
+
+    // Laplacian fairing: nudge every particle toward its chain neighbors'
+    // midpoint, evening out curvature so threads read as smooth continuous
+    // curves (the structural springs preserve length against shrinkage).
+    if (tuning.smooth > 0) {
+      const k = tuning.smooth * FAIRING_MAX * settle;
+      for (const chain of this.chains) {
+        const len = chain.length;
+        for (let i = 0; i < len; i++) {
+          const p = chain[i];
+          const a = chain[(i - 1 + len) % len];
+          const b = chain[(i + 1) % len];
+          this.positions[p * 2] +=
+            ((this.positions[a * 2] + this.positions[b * 2]) / 2 -
+              this.positions[p * 2]) *
+            k;
+          this.positions[p * 2 + 1] +=
+            ((this.positions[a * 2 + 1] + this.positions[b * 2 + 1]) / 2 -
+              this.positions[p * 2 + 1]) *
+            k;
+        }
       }
     }
 

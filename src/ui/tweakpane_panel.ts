@@ -61,6 +61,12 @@ export function buildPanel(
     .addBinding(params, "bend", { min: 0.2, max: 2.5, step: 0.05 })
     .on("change", callbacks.onSlackChange);
   pane
+    .addBinding(params, "stiffness", { min: 0.1, max: 1.35, step: 0.05 })
+    .on("change", callbacks.onSlackChange);
+  pane
+    .addBinding(params, "smooth", { min: 0, max: 1, step: 0.05 })
+    .on("change", callbacks.onSlackChange);
+  pane
     .addBinding(params, "gridAlign")
     .on("change", callbacks.onSlackChange);
 

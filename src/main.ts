@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.2 force params 2026-07-16";
+const BUILD_STAMP = "P3.3 twist-spacing + fairing 2026-07-16";
 
 const app = new Application();
 
@@ -243,6 +243,8 @@ async function main(): Promise<void> {
       drag: params.drag,
       repulsion: params.repulsion,
       bend: params.bend,
+      smooth: params.smooth,
+      stiffness: params.stiffness,
       gridAlign: params.gridAlign,
     });
     const t1 = performance.now();
@@ -276,7 +278,7 @@ async function main(): Promise<void> {
       perfLine =
         ` | phys ${(perf.physMs / perf.frames).toFixed(2)}ms` +
         ` render ${(perf.renderMs / perf.frames).toFixed(2)}ms` +
-        ` ${fps.toFixed(0)}fps`;
+        ` ${fps.toFixed(0)}fps mv ${ps.maxMove.toExponential(1)}`;
       perf.physMs = perf.renderMs = perf.frames = 0;
       perf.flushedAt = t2;
     }

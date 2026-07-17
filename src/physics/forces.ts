@@ -41,18 +41,26 @@ export function applyDistanceConstraints(
   }
 }
 
+// Contact-bubble exemption for crossings: a pair of particles skips
+// repulsion only when both lie within `radius` of the shared crossing's
+// actual contact point. Threads may touch AT a crossing, but between two
+// nearby crossings (a twist) repulsion resumes and holds them apart.
+export interface CrossingExemption {
+  zoneA: Int32Array; // Up to two crossing ids per particle...
+  zoneB: Int32Array; // ...(twist windows overlap).
+  contacts: Float32Array; // Per-crossing contact point [x, y].
+  radius: number;
+}
+
 // Soft minimum-distance repulsion between non-neighboring particles, using a
 // uniform spatial hash. Keeps parallel threads from visually overlapping.
-// `zones` marks particles inside a crossing's binding windows: two particles
-// in the SAME zone are the two threads meeting at that crossing, which are
-// supposed to touch, so they skip repulsion.
 export function applyRepulsion(
   positions: Float32Array,
   particleCount: number,
   minDist: number,
   stiffness: number,
   excludedPairs: Set<number>,
-  zones?: Int32Array
+  exemption?: CrossingExemption
 ): void {
   const cellSize = minDist;
   const buckets = new Map<number, number[]>();
@@ -84,7 +92,29 @@ export function applyRepulsion(
         for (const j of bucket) {
           if (j <= i) continue;
           if (excludedPairs.has(i * 65536 + j)) continue;
-          if (zones && zones[i] >= 0 && zones[i] === zones[j]) continue;
+          if (exemption) {
+            const a1 = exemption.zoneA[i];
+            const a2 = exemption.zoneB[i];
+            const b1 = exemption.zoneA[j];
+            const b2 = exemption.zoneB[j];
+            let shared = -1;
+            if (a1 >= 0 && (a1 === b1 || a1 === b2)) shared = a1;
+            else if (a2 >= 0 && (a2 === b1 || a2 === b2)) shared = a2;
+            if (shared >= 0) {
+              const cx = exemption.contacts[shared * 2];
+              const cy = exemption.contacts[shared * 2 + 1];
+              const r2 = exemption.radius * exemption.radius;
+              const di =
+                (positions[i * 2] - cx) * (positions[i * 2] - cx) +
+                (positions[i * 2 + 1] - cy) * (positions[i * 2 + 1] - cy);
+              const dj =
+                (positions[j * 2] - cx) * (positions[j * 2] - cx) +
+                (positions[j * 2 + 1] - cy) * (positions[j * 2 + 1] - cy);
+              // Only exempt the pair inside the contact bubble; between
+              // twist crossings repulsion resumes and opens the eye.
+              if (di < r2 && dj < r2) continue;
+            }
+          }
 
           const dx = positions[j * 2] - positions[i * 2];
           const dy = positions[j * 2 + 1] - positions[i * 2 + 1];
