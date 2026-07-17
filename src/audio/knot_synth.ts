@@ -53,15 +53,21 @@ export class KnotSynth {
     const period = 1 / freq;
     const s = Math.min(1, Math.max(0.05, strength));
 
-    // Excitation: one period of pre-softened noise (one-pole smoothed, with
-    // a fade envelope over the burst so there is no attack click).
+    // Excitation: one period of pre-softened noise. The window is
+    // pluck-shaped - near-instant rise, then decay across the burst - so
+    // the transient leads; a symmetric fade here makes the whole note
+    // swell instead of snap.
     const burstSamples = Math.max(8, Math.round(ctx.sampleRate * period));
     const buffer = ctx.createBuffer(1, burstSamples, ctx.sampleRate);
     const data = buffer.getChannelData(0);
+    const rise = Math.max(2, Math.round(burstSamples * 0.06));
     let smoothed = 0;
     for (let i = 0; i < burstSamples; i++) {
-      smoothed = smoothed * 0.7 + (Math.random() * 2 - 1) * 0.3;
-      const fade = Math.sin((Math.PI * i) / burstSamples);
+      smoothed = smoothed * 0.6 + (Math.random() * 2 - 1) * 0.4;
+      const fade =
+        i < rise
+          ? i / rise
+          : Math.pow(1 - (i - rise) / (burstSamples - rise), 2);
       data[i] = smoothed * fade;
     }
     const burst = ctx.createBufferSource();
@@ -75,16 +81,27 @@ export class KnotSynth {
     damping.type = "lowpass";
     damping.frequency.value = 600 + s * 1400;
     const feedback = ctx.createGain();
-    feedback.gain.value = 0.92;
+    feedback.gain.value = 0.9;
 
-    // Envelope: fast soft attack, exponential decay, closed within ~1.1s.
+    // Envelope: plucked-string shape - the attack IS the loudest moment
+    // (2ms rise), then a fast two-stage decay: drop to ~8% within 250ms,
+    // tail closed by 700ms.
     const out = ctx.createGain();
-    const peak = 0.22 * s;
+    const peak = 0.24 * s;
     out.gain.setValueAtTime(0.0001, now);
-    out.gain.linearRampToValueAtTime(peak, now + 0.008);
-    out.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+    out.gain.linearRampToValueAtTime(peak, now + 0.002);
+    out.gain.exponentialRampToValueAtTime(peak * 0.08, now + 0.25);
+    out.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+
+    // The excitation also taps straight to the output (through a small
+    // "pick" gain): via the loop alone the first sound arrives one delay
+    // period late and pre-darkened, which buries the attack transient.
+    const pick = ctx.createGain();
+    pick.gain.value = 0.6;
 
     burst.connect(delay);
+    burst.connect(pick);
+    pick.connect(out);
     delay.connect(damping);
     damping.connect(feedback);
     feedback.connect(delay);
@@ -97,10 +114,11 @@ export class KnotSynth {
     // Tear the string down once the envelope has closed.
     setTimeout(() => {
       burst.disconnect();
+      pick.disconnect();
       delay.disconnect();
       damping.disconnect();
       feedback.disconnect();
       out.disconnect();
-    }, 1400);
+    }, 900);
   }
 }
