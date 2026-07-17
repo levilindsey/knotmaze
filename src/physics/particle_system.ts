@@ -1,26 +1,27 @@
-// Layer 3: Verlet-integrated particles over the tangle graph. Each strand
-// becomes a closed chain of particles: one per graph node plus one per edge
-// midpoint. Crossing particles are SHARED between the two passes, so threads
-// stay joined at crossings and tugs propagate across the whole knot.
+// Layer 3: Verlet-integrated particles over the tangle graph. Each strand is
+// an INDEPENDENT closed chain of particles (one per graph node occurrence
+// plus one per edge midpoint) - nothing is anchored to the lattice, and
+// crossings are SLIDING BINDINGS rather than shared particles: each crossing
+// tracks a fractional position along each of its two threads, re-projects
+// onto the local geometry every substep (so the intersection point migrates
+// along both threads), and a coincidence constraint holds the two points
+// together. Ordering clamps keep crossings from sliding past their neighbors
+// along a thread, preserving the diagram's topology while the overall shape
+// relaxes into an organic, force-directed equilibrium.
 
 import type { TangleGraph } from "../core/types";
 import { NODE_TYPE } from "../core/types";
-import type { DistanceConstraint, AnchorConstraint } from "./forces";
-import {
-  applyDistanceConstraints,
-  applyAnchors,
-  applyRepulsion,
-} from "./forces";
+import type { DistanceConstraint } from "./forces";
+import { applyDistanceConstraints, applyRepulsion } from "./forces";
 import { SeededRNG } from "../util/random";
 import { createNoise3D } from "simplex-noise";
 
 export interface CrossingPass {
   chain: number; // Chain (strand) index.
-  ctrl: number;  // Control-point index within the chain.
+  ctrl: number; // FRACTIONAL control position along the chain; slides live.
 }
 
 export interface CrossingInfo {
-  particle: number;
   over: CrossingPass;
   under: CrossingPass;
 }
@@ -45,7 +46,6 @@ const DAMPING = 0.9;
 const SETTLE_DURATION = 2.2;
 const STRUCTURAL_STIFFNESS = 0.7;
 const BENDING_STIFFNESS = 0.18;
-const ANCHOR_STIFFNESS = 0.25;
 const REPULSION_STIFFNESS = 0.15;
 
 // Slack [0, 1] shapes the rest state: 0 = taut threads pulled tight against
@@ -62,9 +62,28 @@ const BEND_TAUT = 2.8; // Bending-stiffness multiplier at slack 0...
 const BEND_LOOSE = 3.0; // ...and at slack 1.
 const REPULSE_DIST_TAUT = 0.62; // Repulsion min distance at slack 0...
 const REPULSE_DIST_LOOSE = 0.95; // ...and at slack 1.
+
 const TEMPERATURE_SCALE = 0.05;
 const NOISE_SPATIAL_FREQ = 0.3;
 const NOISE_TIME_FREQ = 0.8;
+
+// Sliding-crossing tuning. Bindings re-project within a small local window
+// each substep, rate-limited for stability; passes along one chain keep a
+// minimum separation (in control units, 2 per lattice edge) so crossings
+// never swap order; the coincidence constraint is applied inside the
+// iteration loop; particles inside a crossing's windows are exempt from
+// repulsion against the other side (the threads are supposed to touch).
+const MAX_SLIDE_PER_SUBSTEP = 0.04;
+const SLIDE_EASE = 0.2;
+const MIN_PASS_SEPARATION = 1.1;
+const COUPLING_STIFFNESS = 0.45;
+// Zones must cover everything within repulsion range of the contact point,
+// or boundary particles get pushed while the coupling pulls - a limit cycle.
+const CROSSING_ZONE_HALF = 4;
+// Without lattice anchors the knot free-floats; a gentle pull keeps its
+// centroid where it started (applied to positions and prev alike, so it
+// injects no velocity).
+const CENTER_PULL = 0.04;
 
 export class ParticleSystem {
   particleCount: number;
@@ -76,7 +95,6 @@ export class ParticleSystem {
   private initial: Float32Array;
   private structural: DistanceConstraint[] = [];
   private bending: DistanceConstraint[] = [];
-  private anchors: AnchorConstraint[] = [];
   private excludedPairs = new Set<number>();
   private noise3D: (x: number, y: number, z: number) => number;
   private time = 0;
@@ -87,36 +105,45 @@ export class ParticleSystem {
   private grabX = 0;
   private grabY = 0;
   private particleChain: Int32Array;
+  private passesByChain: CrossingPass[][] = [];
+  private passPrev = new Map<CrossingPass, CrossingPass>();
+  private passNext = new Map<CrossingPass, CrossingPass>();
+  private initialCtrl = new Map<CrossingPass, number>();
+  private repulsionZone: Int32Array;
+  private homeX = 0;
+  private homeY = 0;
 
   constructor(graph: TangleGraph) {
-    const particleByKey = new Map<string, number>();
     const initialPositions: number[] = [];
-
-    const getParticle = (k: string, x: number, y: number): number => {
-      let idx = particleByKey.get(k);
-      if (idx === undefined) {
-        idx = initialPositions.length / 2;
-        initialPositions.push(x, y);
-        particleByKey.set(k, idx);
-      }
-      return idx;
+    const addParticle = (x: number, y: number): number => {
+      initialPositions.push(x, y);
+      return initialPositions.length / 2 - 1;
     };
 
-    // Build closed chains: node, edge midpoint, node, edge midpoint, ...
-    this.chains = graph.strands.map((strand) => {
+    // Build fully independent chains: every node occurrence gets its own
+    // particle (crossings appear once per pass).
+    const occurrences = new Map<
+      string,
+      Array<{ pass: CrossingPass; isOver: boolean }>
+    >();
+
+    this.chains = graph.strands.map((strand, chainIdx) => {
       const chain: number[] = [];
       const nodeCount = strand.nodes.length - 1; // Last repeats the first.
       for (let i = 0; i < nodeCount; i++) {
         const node = graph.nodes.get(strand.nodes[i])!;
-        chain.push(
-          getParticle(node.id, node.latticePos[0], node.latticePos[1])
-        );
+        if (node.type === NODE_TYPE.CROSSING) {
+          const pass: CrossingPass = { chain: chainIdx, ctrl: chain.length };
+          const list = occurrences.get(node.id);
+          const entry = { pass, isOver: node.isOver === true };
+          if (list) list.push(entry);
+          else occurrences.set(node.id, [entry]);
+        }
+        chain.push(addParticle(node.latticePos[0], node.latticePos[1]));
 
         const edge = graph.edges.get(strand.edgeIds[i])!;
         const [pa, pb] = edge.latticePoints;
-        chain.push(
-          getParticle(edge.id, (pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2)
-        );
+        chain.push(addParticle((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2));
       }
       return chain;
     });
@@ -125,12 +152,19 @@ export class ParticleSystem {
     this.initial = new Float32Array(initialPositions);
     this.positions = new Float32Array(this.initial);
     this.prev = new Float32Array(this.initial);
+    this.repulsionZone = new Int32Array(this.particleCount).fill(-1);
 
-    this.buildConstraints(graph, particleByKey);
-    this.crossings = this.findCrossings(graph, particleByKey);
+    for (let i = 0; i < this.particleCount; i++) {
+      this.homeX += this.initial[i * 2];
+      this.homeY += this.initial[i * 2 + 1];
+    }
+    this.homeX /= this.particleCount;
+    this.homeY /= this.particleCount;
 
-    // First chain each particle belongs to (crossings belong to two; the
-    // first is fine for pluck-pitch purposes).
+    this.buildConstraints();
+    this.crossings = this.assignCrossings(occurrences);
+    this.buildPassOrder();
+
     this.particleChain = new Int32Array(this.particleCount).fill(-1);
     this.chains.forEach((chain, chainIdx) => {
       for (const p of chain) {
@@ -142,10 +176,7 @@ export class ParticleSystem {
     this.noise3D = createNoise3D(() => noiseRng.next());
   }
 
-  private buildConstraints(
-    graph: TangleGraph,
-    particleByKey: Map<string, number>
-  ): void {
+  private buildConstraints(): void {
     const dist = (a: number, b: number): number =>
       Math.hypot(
         this.initial[b * 2] - this.initial[a * 2],
@@ -184,74 +215,98 @@ export class ParticleSystem {
         }
       }
     }
-
-    // Crossings anchor to their lattice positions to preserve the tangle's
-    // global layout while everything between them relaxes.
-    for (const [nodeId, node] of graph.nodes) {
-      if (node.type !== NODE_TYPE.CROSSING) continue;
-      const p = particleByKey.get(nodeId)!;
-      this.anchors.push({
-        p,
-        x: node.latticePos[0],
-        y: node.latticePos[1],
-        stiffness: ANCHOR_STIFFNESS,
-      });
-    }
   }
 
-  private findCrossings(
-    graph: TangleGraph,
-    particleByKey: Map<string, number>
+  // Pair up the two passes of each crossing and assign over/under from the
+  // graph's checkerboard bit (isOver = the "/" pass goes over), using the
+  // initial geometry for the diagonal class of each pass.
+  private assignCrossings(
+    occurrences: Map<string, Array<{ pass: CrossingPass; isOver: boolean }>>
   ): CrossingInfo[] {
-    // Collect the two passes through each crossing particle, with the
-    // diagonal class of each pass taken from the initial geometry.
-    const passes = new Map<
-      number,
-      Array<{ pass: CrossingPass; isSlash: boolean }>
-    >();
-
-    const crossingParticles = new Set<number>();
-    for (const [nodeId, node] of graph.nodes) {
-      if (node.type === NODE_TYPE.CROSSING) {
-        crossingParticles.add(particleByKey.get(nodeId)!);
-      }
-    }
-
-    this.chains.forEach((chain, chainIdx) => {
-      const len = chain.length;
-      for (let i = 0; i < len; i++) {
-        const particle = chain[i];
-        if (!crossingParticles.has(particle)) continue;
-
-        const next = chain[(i + 1) % len];
-        const vx = this.initial[next * 2] - this.initial[particle * 2];
-        const vy = this.initial[next * 2 + 1] - this.initial[particle * 2 + 1];
-        const entry = { pass: { chain: chainIdx, ctrl: i }, isSlash: vx * vy > 0 };
-
-        const list = passes.get(particle);
-        if (list) list.push(entry);
-        else passes.set(particle, [entry]);
-      }
-    });
-
     const crossings: CrossingInfo[] = [];
-    for (const [nodeId, node] of graph.nodes) {
-      if (node.type !== NODE_TYPE.CROSSING) continue;
-      const particle = particleByKey.get(nodeId)!;
-      const list = passes.get(particle);
-      if (!list || list.length !== 2) {
+    for (const list of occurrences.values()) {
+      if (list.length !== 2) {
         throw new Error("Crossing does not have exactly two passes; bug.");
       }
-      // isOver means the "/" pass goes over.
-      const slashFirst = list[0].isSlash;
-      const overFirst = node.isOver ? slashFirst : !slashFirst;
+      const isSlash = (pass: CrossingPass): boolean => {
+        const chain = this.chains[pass.chain];
+        const p = chain[pass.ctrl];
+        const next = chain[(pass.ctrl + 1) % chain.length];
+        const vx = this.initial[next * 2] - this.initial[p * 2];
+        const vy = this.initial[next * 2 + 1] - this.initial[p * 2 + 1];
+        return vx * vy > 0;
+      };
+      const slashFirst = isSlash(list[0].pass);
+      const overFirst = list[0].isOver ? slashFirst : !slashFirst;
       crossings.push({
-        particle,
         over: overFirst ? list[0].pass : list[1].pass,
         under: overFirst ? list[1].pass : list[0].pass,
       });
     }
     return crossings;
+  }
+
+  // Sorted pass lists per chain, with cyclic prev/next links used by the
+  // slide's ordering clamps (and by the renderer's patch clearances).
+  private buildPassOrder(): void {
+    this.passesByChain = this.chains.map(() => []);
+    for (const c of this.crossings) {
+      this.passesByChain[c.over.chain].push(c.over);
+      this.passesByChain[c.under.chain].push(c.under);
+      this.initialCtrl.set(c.over, c.over.ctrl);
+      this.initialCtrl.set(c.under, c.under.ctrl);
+    }
+    for (const list of this.passesByChain) {
+      list.sort((a, b) => a.ctrl - b.ctrl);
+      for (let i = 0; i < list.length; i++) {
+        this.passNext.set(list[i], list[(i + 1) % list.length]);
+        this.passPrev.set(list[i], list[(i - 1 + list.length) % list.length]);
+      }
+    }
+  }
+
+  passNeighbors(pass: CrossingPass): { prev: CrossingPass; next: CrossingPass } {
+    return {
+      prev: this.passPrev.get(pass) ?? pass,
+      next: this.passNext.get(pass) ?? pass,
+    };
+  }
+
+  // World position of a fractional control position along a chain.
+  bindingPoint(pass: CrossingPass, out: Float32Array, offset: number): void {
+    const chain = this.chains[pass.chain];
+    const len = chain.length;
+    const i = Math.floor(pass.ctrl);
+    const t = pass.ctrl - i;
+    const a = chain[((i % len) + len) % len];
+    const b = chain[(((i + 1) % len) + len) % len];
+    out[offset] =
+      this.positions[a * 2] * (1 - t) + this.positions[b * 2] * t;
+    out[offset + 1] =
+      this.positions[a * 2 + 1] * (1 - t) + this.positions[b * 2 + 1] * t;
+  }
+
+  // Separation between a crossing's two bound points (diagnostic/tests).
+  crossingSeparation(c: CrossingInfo): number {
+    this.bindingPoint(c.over, this.bindScratch, 0);
+    this.bindingPoint(c.under, this.bindScratch, 2);
+    return Math.hypot(
+      this.bindScratch[2] - this.bindScratch[0],
+      this.bindScratch[3] - this.bindScratch[1]
+    );
+  }
+  private bindScratch = new Float32Array(4);
+
+  get simTime(): number {
+    return this.time;
+  }
+
+  get maxMove(): number {
+    return Math.sqrt(this.frameMaxMoveSq);
+  }
+
+  get settleComplete(): boolean {
+    return this.time > SETTLE_DURATION + 0.3;
   }
 
   reset(): void {
@@ -260,6 +315,7 @@ export class ParticleSystem {
     this.time = 0;
     this.accumulator = 0;
     this.grabbed = -1;
+    for (const [pass, ctrl] of this.initialCtrl) pass.ctrl = ctrl;
   }
 
   get grabbedParticle(): number {
@@ -329,25 +385,6 @@ export class ParticleSystem {
     return arc;
   }
 
-  // Simulated seconds since construction/reset; wall-clock comparison
-  // reveals rAF throttling.
-  get simTime(): number {
-    return this.time;
-  }
-
-  // Largest single-component particle displacement in the most recent
-  // substep, measured for free during Verlet integration. Drives the
-  // renderer's quiescence detection.
-  get maxMove(): number {
-    return Math.sqrt(this.frameMaxMoveSq);
-  }
-
-  // The initial lattice state is itself an equilibrium, so quiescence
-  // detection must not engage until the settle ramp has fully played out.
-  get settleComplete(): boolean {
-    return this.time > SETTLE_DURATION + 0.3;
-  }
-
   step(dt: number, temperature: number, slack = 0.5): void {
     this.accumulator += Math.min(dt, MAX_FRAME_DT);
     let substeps = Math.floor(this.accumulator / SUBSTEP);
@@ -358,6 +395,60 @@ export class ParticleSystem {
     for (let s = 0; s < substeps; s++) {
       this.substep(temperature, slack);
     }
+  }
+
+  // Re-project a binding onto its local chain geometry so the crossing can
+  // slide along the thread toward wherever the other thread actually is.
+  private slideBinding(self: CrossingPass, qx: number, qy: number): void {
+    const chain = this.chains[self.chain];
+    const len = chain.length;
+    const i0 = Math.floor(self.ctrl);
+
+    let bestF = self.ctrl;
+    let bestDistSq = Infinity;
+    for (let s = i0 - 1; s <= i0 + 1; s++) {
+      const a = chain[((s % len) + len) % len];
+      const b = chain[(((s + 1) % len) + len) % len];
+      const ax = this.positions[a * 2];
+      const ay = this.positions[a * 2 + 1];
+      const bx = this.positions[b * 2];
+      const by = this.positions[b * 2 + 1];
+      const ex = bx - ax;
+      const ey = by - ay;
+      const lenSq = ex * ex + ey * ey;
+      const t =
+        lenSq > 1e-12
+          ? Math.max(0, Math.min(1, ((qx - ax) * ex + (qy - ay) * ey) / lenSq))
+          : 0;
+      const px = ax + ex * t;
+      const py = ay + ey * t;
+      const dSq = (px - qx) * (px - qx) + (py - qy) * (py - qy);
+      if (dSq < bestDistSq) {
+        bestDistSq = dSq;
+        bestF = s + t;
+      }
+    }
+
+    // Ease toward the projection with a hard rate limit, then keep order
+    // against neighboring passes on this chain.
+    let f =
+      self.ctrl +
+      Math.max(
+        -MAX_SLIDE_PER_SUBSTEP,
+        Math.min(MAX_SLIDE_PER_SUBSTEP, (bestF - self.ctrl) * SLIDE_EASE)
+      );
+    const prev = this.passPrev.get(self);
+    const next = this.passNext.get(self);
+    if (prev && next && prev !== self) {
+      const cyc = (d: number): number => ((d % len) + len) % len;
+      if (cyc(f - prev.ctrl) < MIN_PASS_SEPARATION) {
+        f = prev.ctrl + MIN_PASS_SEPARATION;
+      }
+      if (cyc(next.ctrl - f) < MIN_PASS_SEPARATION) {
+        f = next.ctrl - MIN_PASS_SEPARATION;
+      }
+    }
+    self.ctrl = ((f % len) + len) % len;
   }
 
   private substep(temperature: number, slack: number): void {
@@ -396,6 +487,30 @@ export class ParticleSystem {
     const repulseDist =
       REPULSE_DIST_TAUT + (REPULSE_DIST_LOOSE - REPULSE_DIST_TAUT) * slack;
 
+    // Slide bindings toward the other thread's current point, then mark
+    // repulsion-exempt zones around every binding.
+    this.repulsionZone.fill(-1);
+    for (let c = 0; c < this.crossings.length; c++) {
+      const crossing = this.crossings[c];
+      this.bindingPoint(crossing.over, this.bindScratch, 0);
+      this.bindingPoint(crossing.under, this.bindScratch, 2);
+      this.slideBinding(crossing.over, this.bindScratch[2], this.bindScratch[3]);
+      this.slideBinding(crossing.under, this.bindScratch[0], this.bindScratch[1]);
+
+      for (const pass of [crossing.over, crossing.under]) {
+        const chain = this.chains[pass.chain];
+        const len = chain.length;
+        const base = Math.floor(pass.ctrl);
+        for (
+          let k = base - CROSSING_ZONE_HALF;
+          k <= base + CROSSING_ZONE_HALF + 1;
+          k++
+        ) {
+          this.repulsionZone[chain[((k % len) + len) % len]] = c;
+        }
+      }
+    }
+
     for (let iter = 0; iter < CONSTRAINT_ITERATIONS; iter++) {
       // The grabbed particle chases the pointer stiffly; springs carry the
       // tug outward through the knot.
@@ -406,13 +521,13 @@ export class ParticleSystem {
           (this.grabY - this.positions[g * 2 + 1]) * 0.6;
       }
       applyDistanceConstraints(this.positions, this.structural, restScale);
-      applyAnchors(this.positions, this.anchors);
       applyDistanceConstraints(
         this.positions,
         this.bending,
         restScale,
         bendScale
       );
+
       // Repulsion runs at full strength from the first substep: while the
       // settle ramp shrinks rests, parallel threads get dragged toward the
       // same corridor line, and weak early repulsion lets them pass through
@@ -422,8 +537,65 @@ export class ParticleSystem {
         this.particleCount,
         repulseDist,
         REPULSION_STIFFNESS,
-        this.excludedPairs
+        this.excludedPairs,
+        this.repulsionZone
       );
+
+      // Coincidence coupling LAST, so nothing re-separates the crossing
+      // within the iteration: pull each crossing's two bound points
+      // together, distributing corrections to the surrounding particles.
+      for (const crossing of this.crossings) {
+        this.bindingPoint(crossing.over, this.bindScratch, 0);
+        this.bindingPoint(crossing.under, this.bindScratch, 2);
+        const dx =
+          (this.bindScratch[2] - this.bindScratch[0]) *
+          0.5 *
+          COUPLING_STIFFNESS;
+        const dy =
+          (this.bindScratch[3] - this.bindScratch[1]) *
+          0.5 *
+          COUPLING_STIFFNESS;
+        this.applyBindingCorrection(crossing.over, dx, dy);
+        this.applyBindingCorrection(crossing.under, -dx, -dy);
+      }
     }
+
+    // Keep the free-floating knot centered without injecting velocity.
+    let cx = 0;
+    let cy = 0;
+    for (let i = 0; i < this.particleCount; i++) {
+      cx += this.positions[i * 2];
+      cy += this.positions[i * 2 + 1];
+    }
+    cx /= this.particleCount;
+    cy /= this.particleCount;
+    const shiftX = (this.homeX - cx) * CENTER_PULL;
+    const shiftY = (this.homeY - cy) * CENTER_PULL;
+    for (let i = 0; i < this.particleCount; i++) {
+      this.positions[i * 2] += shiftX;
+      this.positions[i * 2 + 1] += shiftY;
+      this.prev[i * 2] += shiftX;
+      this.prev[i * 2 + 1] += shiftY;
+    }
+  }
+
+  private applyBindingCorrection(
+    pass: CrossingPass,
+    dx: number,
+    dy: number
+  ): void {
+    const chain = this.chains[pass.chain];
+    const len = chain.length;
+    const i = Math.floor(pass.ctrl);
+    const t = pass.ctrl - i;
+    const a = chain[((i % len) + len) % len];
+    const b = chain[(((i + 1) % len) + len) % len];
+    // Normalize by the lerp-weight energy so the bound POINT moves by
+    // exactly (dx, dy) rather than a t-dependent fraction of it.
+    const w = (1 - t) * (1 - t) + t * t;
+    this.positions[a * 2] += (dx * (1 - t)) / w;
+    this.positions[a * 2 + 1] += (dy * (1 - t)) / w;
+    this.positions[b * 2] += (dx * t) / w;
+    this.positions[b * 2 + 1] += (dy * t) / w;
   }
 }

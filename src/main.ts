@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.0 tug+audio 2026-07-16";
+const BUILD_STAMP = "P3.1 organic 2026-07-16";
 
 const app = new Application();
 
@@ -48,20 +48,44 @@ async function main(): Promise<void> {
   let ps: ParticleSystem | null = null;
   let renderer: RibbonRenderer | null = null;
   let debug: DebugRenderer | null = null;
-  let latticeExtent = 1;
+
+  // The unanchored knot finds its own shape, so the viewport fit follows
+  // the live particle bounds, easing toward the target to avoid popping.
+  const fitTarget = { scale: 1, x: 0, y: 0 };
+  function computeFitTarget(): void {
+    if (!ps) return;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (let i = 0; i < ps.particleCount; i++) {
+      const x = ps.positions[i * 2];
+      const y = ps.positions[i * 2 + 1];
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+    const pad = params.threadWidth / 2 + 0.3;
+    minX -= pad;
+    minY -= pad;
+    maxX += pad;
+    maxY += pad;
+    const w = Math.max(maxX - minX, 1);
+    const h = Math.max(maxY - minY, 1);
+    fitTarget.scale = Math.min(
+      (app.screen.width - FIT_MARGIN * 2) / w,
+      (app.screen.height - FIT_MARGIN * 2) / h
+    );
+    fitTarget.x = (app.screen.width - w * fitTarget.scale) / 2 - minX * fitTarget.scale;
+    fitTarget.y =
+      (app.screen.height - h * fitTarget.scale) / 2 - minY * fitTarget.scale;
+  }
 
   function fitToScreen(): void {
-    const w = app.screen.width;
-    const h = app.screen.height;
-    const scale = Math.min(
-      (w - FIT_MARGIN * 2) / latticeExtent,
-      (h - FIT_MARGIN * 2) / latticeExtent
-    );
-    root.scale.set(scale);
-    root.position.set(
-      (w - latticeExtent * scale) / 2,
-      (h - latticeExtent * scale) / 2
-    );
+    computeFitTarget();
+    root.scale.set(fitTarget.scale);
+    root.position.set(fitTarget.x, fitTarget.y);
   }
 
   function rebuild(): void {
@@ -97,7 +121,6 @@ async function main(): Promise<void> {
     debug.container.visible = settings.showDebug;
 
     root.addChild(renderer.root, debug.container);
-    latticeExtent = params.gridSize * 2;
     fitToScreen();
     writeParams(params);
 
@@ -192,7 +215,10 @@ async function main(): Promise<void> {
   // Quiescence: a motionless deterministic knot stays motionless without
   // external input, so once displacement stays under threshold, skip both
   // physics and rendering entirely until something wakes it.
-  const QUIET_EPS = 3e-4; // Max per-component displacement per substep.
+  // Sliding crossings leave a sub-pixel oscillation floor at rest, so the
+  // threshold sits above it; deliberate motion (temperature > 0, grabs) is
+  // guarded explicitly rather than by amplitude.
+  const QUIET_EPS = 5e-3; // Max per-component displacement per substep.
   const QUIET_FRAMES = 45;
   let stillFrames = 0;
   let asleep = false;
@@ -214,9 +240,18 @@ async function main(): Promise<void> {
     renderer.update();
     const t2 = performance.now();
 
+    // Follow the free-floating knot with an eased viewport fit.
+    if (perf.frames % 15 === 0) computeFitTarget();
+    root.scale.set(root.scale.x + (fitTarget.scale - root.scale.x) * 0.08);
+    root.position.set(
+      root.position.x + (fitTarget.x - root.position.x) * 0.08,
+      root.position.y + (fitTarget.y - root.position.y) * 0.08
+    );
+
     if (
       ps.settleComplete &&
       ps.grabbedParticle < 0 &&
+      settings.temperature === 0 &&
       ps.maxMove < QUIET_EPS
     ) {
       if (++stillFrames >= QUIET_FRAMES) asleep = true;

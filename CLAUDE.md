@@ -7,7 +7,7 @@ A web-based procedural generator for celtic-knot-style mazes with physics-based 
 Three-layer architecture:
 - **Layer 1 (Combinatorial):** `TangleGraph` — planar multigraph on a lattice with nodes (crossing/junction/end) and edges (thread segments). Strand tracing, checkerboard alternation, pairwise-crossing invariants.
 - **Layer 2 (Geometric):** Centripetal Catmull-Rom splines through lattice points; arc-length parameterization.
-- **Layer 3 (Dynamic):** Verlet-integrated particles with springs, bending, repulsion, crossing anchors; Simplex-noise ambient oscillation.
+- **Layer 3 (Dynamic):** Verlet-integrated particles; each strand is an independent closed chain (springs, bending, repulsion — no lattice anchors). Crossings are SLIDING BINDINGS: a fractional position along each of the two threads, re-projected each substep so intersections migrate along threads, coupled by a coincidence constraint, with ordering clamps preserving diagram topology. Gentle centroid centering + a bounds-following viewport replace grid anchoring. Simplex-noise temperature agitation.
 
 Rendering: PixiJS v8 custom ribbon meshes with depth-based over/under casing gaps.
 

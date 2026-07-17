@@ -54,7 +54,7 @@ try {
           ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)
           : gl.getParameter(gl.RENDERER)
         : "no webgl",
-      stamp: divs.find((t) => t.startsWith("P2.")) ?? "STAMP MISSING",
+      stamp: divs.find((t) => /^P\d/.test(t)) ?? "STAMP MISSING",
       dpr: window.devicePixelRatio,
       canvasCount: document.querySelectorAll("canvas").length,
     };

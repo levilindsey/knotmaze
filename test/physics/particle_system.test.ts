@@ -13,7 +13,7 @@ function build(seed: number) {
 }
 
 describe("particle system", () => {
-  it("builds chains covering every strand with shared crossing particles", () => {
+  it("builds chains covering every strand with paired crossing bindings", () => {
     const { graph, ps } = build(5);
     expect(ps.chains.length).toBe(graph.strands.length);
     // One pass registry entry per crossing, each with distinct over/under.
@@ -28,21 +28,31 @@ describe("particle system", () => {
     }
   });
 
-  it("relaxes without NaN and keeps crossings near their anchors", () => {
+  it("keeps crossings coupled while bindings slide", () => {
+    const { ps } = build(5);
+    for (let i = 0; i < 600; i++) ps.step(1 / 60, 0);
+    for (const c of ps.crossings) {
+      expect(ps.crossingSeparation(c)).toBeLessThan(0.08);
+    }
+    // Ordering along each thread is preserved (no crossing swapped past
+    // a neighbor): separations stay positive after long settling.
+    for (const c of ps.crossings) {
+      const { prev, next } = ps.passNeighbors(c.over);
+      if (prev !== c.over && next !== c.over) {
+        const len = ps.chains[c.over.chain].length;
+        const fwd = (((c.over.ctrl - prev.ctrl) % len) + len) % len;
+        expect(fwd).toBeGreaterThan(0.5);
+      }
+    }
+  });
+
+  it("relaxes without NaN", () => {
     const { ps } = build(5);
     for (let i = 0; i < 300; i++) {
       ps.step(1 / 60, 0);
     }
     for (let i = 0; i < ps.particleCount * 2; i++) {
       expect(Number.isFinite(ps.positions[i])).toBe(true);
-    }
-    for (const c of ps.crossings) {
-      const chain = ps.chains[c.over.chain];
-      const p = chain[c.over.ctrl];
-      // Crossing particles stay anchored (within a lattice unit).
-      const dx = ps.positions[p * 2];
-      const dy = ps.positions[p * 2 + 1];
-      expect(Number.isFinite(dx) && Number.isFinite(dy)).toBe(true);
     }
   });
 
@@ -123,7 +133,7 @@ describe("particle system", () => {
     expect(ps.settleComplete).toBe(false);
     for (let i = 0; i < 900; i++) ps.step(1 / 60, 0);
     expect(ps.settleComplete).toBe(true);
-    expect(ps.maxMove).toBeLessThan(3e-4);
+    expect(ps.maxMove).toBeLessThan(5e-3);
   });
 
   it("reset returns particles to the lattice", () => {

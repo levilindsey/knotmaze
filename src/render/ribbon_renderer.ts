@@ -96,8 +96,8 @@ function hslToHex(h: number, s: number, l: number): number {
 }
 
 interface PassNeighbors {
-  prevCtrl: number;
-  nextCtrl: number;
+  prev: { chain: number; ctrl: number };
+  next: { chain: number; ctrl: number };
 }
 
 export class RibbonRenderer {
@@ -154,33 +154,12 @@ export class RibbonRenderer {
       baseLayer.addChild(fill.mesh);
     });
 
-    // Every crossing pass (over and under) along each chain, sorted by ctrl.
-    const passesByChain = new Map<number, number[]>();
+    // Neighboring crossing passes along each thread come from the particle
+    // system; passes slide live, so we hold references and read their
+    // current fractional positions each frame.
     for (const crossing of ps.crossings) {
-      for (const pass of [crossing.over, crossing.under]) {
-        const list = passesByChain.get(pass.chain);
-        if (list) list.push(pass.ctrl);
-        else passesByChain.set(pass.chain, [pass.ctrl]);
-      }
-    }
-    for (const list of passesByChain.values()) list.sort((a, b) => a - b);
-
-    const neighborsOf = (chain: number, ctrl: number): PassNeighbors => {
-      const list = passesByChain.get(chain)!;
-      const i = list.indexOf(ctrl);
-      return {
-        prevCtrl: list[(i - 1 + list.length) % list.length],
-        nextCtrl: list[(i + 1) % list.length],
-      };
-    };
-
-    for (const crossing of ps.crossings) {
-      this.overNeighbors.push(
-        neighborsOf(crossing.over.chain, crossing.over.ctrl)
-      );
-      this.underNeighbors.push(
-        neighborsOf(crossing.under.chain, crossing.under.ctrl)
-      );
+      this.overNeighbors.push(ps.passNeighbors(crossing.over));
+      this.underNeighbors.push(ps.passNeighbors(crossing.under));
 
       const erase = new PatchGridMesh(
         ERASE_STATIONS,
@@ -256,22 +235,35 @@ export class RibbonRenderer {
     }
   }
 
+  // Arc position of a fractional control position, wrapping around the loop.
+  private arcAt(samples: SplineSamples, ctrl: number): number {
+    const n = samples.controlArcLengths.length;
+    const i = Math.floor(ctrl);
+    const t = ctrl - i;
+    const i0 = ((i % n) + n) % n;
+    const i1 = (i0 + 1) % n;
+    const a0 = samples.controlArcLengths[i0];
+    let a1 = samples.controlArcLengths[i1];
+    if (a1 <= a0) a1 += samples.totalLength;
+    return (a0 + (a1 - a0) * t) % samples.totalLength;
+  }
+
   // Arc gap to the neighboring crossing passes, wrapping around the loop.
   private neighborGaps(
     samples: SplineSamples,
-    ctrl: number,
+    pass: { ctrl: number },
     neighbors: PassNeighbors
   ): [number, number] {
     const total = samples.totalLength;
-    if (neighbors.nextCtrl === ctrl) return [total / 2, total / 2];
-    const center = samples.controlArcLengths[ctrl];
+    if (neighbors.next === pass || neighbors.next.ctrl === pass.ctrl) {
+      return [total / 2, total / 2];
+    }
+    const center = this.arcAt(samples, pass.ctrl);
     const gapNext =
-      (((samples.controlArcLengths[neighbors.nextCtrl] - center) % total) +
-        total) %
+      (((this.arcAt(samples, neighbors.next.ctrl) - center) % total) + total) %
       total;
     const gapPrev =
-      (((center - samples.controlArcLengths[neighbors.prevCtrl]) % total) +
-        total) %
+      (((center - this.arcAt(samples, neighbors.prev.ctrl)) % total) + total) %
       total;
     return [gapPrev, gapNext];
   }
@@ -306,8 +298,8 @@ export class RibbonRenderer {
     this.ps.crossings.forEach((crossing, c) => {
       const overSamples = this.chainSamples[crossing.over.chain]!;
       const underSamples = this.chainSamples[crossing.under.chain]!;
-      const overCenter = overSamples.controlArcLengths[crossing.over.ctrl];
-      const underCenter = underSamples.controlArcLengths[crossing.under.ctrl];
+      const overCenter = this.arcAt(overSamples, crossing.over.ctrl);
+      const underCenter = this.arcAt(underSamples, crossing.under.ctrl);
 
       // Local centerline polylines around the crossing. The cut boundary is
       // "distance to the over polyline == fillHalf + gap" (the offset curve
@@ -330,7 +322,7 @@ export class RibbonRenderer {
       const eraseW = fillHalf + ERASE_WIDTH_PAD;
       const [uGapPrev, uGapNext] = this.neighborGaps(
         underSamples,
-        crossing.under.ctrl,
+        crossing.under,
         this.underNeighbors[c]
       );
 
@@ -539,7 +531,7 @@ export class RibbonRenderer {
       // estimates, so kinked centerlines can't undersize it.
       const [oGapPrev, oGapNext] = this.neighborGaps(
         overSamples,
-        crossing.over.ctrl,
+        crossing.over,
         this.overNeighbors[c]
       );
       const overlapReach = eraseW + fillHalf + ERASE_WIDTH_PAD + 0.05;

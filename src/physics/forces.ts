@@ -9,12 +9,6 @@ export interface DistanceConstraint {
   pullOnly?: boolean; // Only act when current < rest (used for bending).
 }
 
-export interface AnchorConstraint {
-  p: number; // Particle index.
-  x: number;
-  y: number;
-  stiffness: number;
-}
 
 const EPSILON = 1e-9;
 
@@ -47,26 +41,18 @@ export function applyDistanceConstraints(
   }
 }
 
-export function applyAnchors(
-  positions: Float32Array,
-  anchors: AnchorConstraint[]
-): void {
-  for (const a of anchors) {
-    positions[a.p * 2] += (a.x - positions[a.p * 2]) * a.stiffness;
-    positions[a.p * 2 + 1] += (a.y - positions[a.p * 2 + 1]) * a.stiffness;
-  }
-}
-
 // Soft minimum-distance repulsion between non-neighboring particles, using a
-// uniform spatial hash. Keeps parallel threads from visually overlapping;
-// thread contact at crossings is preserved because those pairs share a
-// particle or are excluded as chain neighbors.
+// uniform spatial hash. Keeps parallel threads from visually overlapping.
+// `zones` marks particles inside a crossing's binding windows: two particles
+// in the SAME zone are the two threads meeting at that crossing, which are
+// supposed to touch, so they skip repulsion.
 export function applyRepulsion(
   positions: Float32Array,
   particleCount: number,
   minDist: number,
   stiffness: number,
-  excludedPairs: Set<number>
+  excludedPairs: Set<number>,
+  zones?: Int32Array
 ): void {
   const cellSize = minDist;
   const buckets = new Map<number, number[]>();
@@ -98,6 +84,7 @@ export function applyRepulsion(
         for (const j of bucket) {
           if (j <= i) continue;
           if (excludedPairs.has(i * 65536 + j)) continue;
+          if (zones && zones[i] >= 0 && zones[i] === zones[j]) continue;
 
           const dx = positions[j * 2] - positions[i * 2];
           const dy = positions[j * 2 + 1] - positions[i * 2 + 1];
