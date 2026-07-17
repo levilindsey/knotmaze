@@ -123,9 +123,14 @@ const CONTACT_RADIUS = 0.35;
 // Laplacian fairing stiffness at smooth = 1.
 const FAIRING_MAX = 0.3;
 // Transversality torque: fraction of the angular error (toward the signed
-// perpendicular) corrected per substep, and its per-substep clamp.
-const TRANSVERSALITY_GAIN = 0.08;
-const TRANSVERSALITY_MAX_STEP = 0.05;
+// perpendicular) corrected per substep, and its per-substep clamp. The
+// torque must rotate a WINDOW of particles around the binding, not just
+// the binding segment: a single-segment rotation gets absorbed by bending
+// and fairing as a local S-kink while the thread's course through the
+// crossing stays tangential.
+const TRANSVERSALITY_GAIN = 0.15;
+const TRANSVERSALITY_MAX_STEP = 0.08;
+const TRANSVERSALITY_WINDOW = 2; // Particles each side beyond the segment.
 // Without lattice anchors the knot free-floats; a gentle pull keeps its
 // centroid where it started (applied to positions and prev alike, so it
 // injects no velocity).
@@ -755,12 +760,27 @@ export class ParticleSystem {
       this.positions[p * 2] += -dy * angle;
       this.positions[p * 2 + 1] += dx * angle;
     };
-    // Rotating the under segment CCW increases theta; the over segment CW
-    // does the same, splitting the correction between the two threads.
-    rotate(b0, delta / 2);
-    rotate(b1, delta / 2);
-    rotate(a0, -delta / 2);
-    rotate(a1, -delta / 2);
+    // Rotating the under side CCW increases theta; the over side CW does
+    // the same, splitting the correction between the two threads. Apply
+    // across the window (weights falling off outward) so the thread's
+    // course rotates rather than kinking at one segment.
+    const rotateWindow = (pass: CrossingPass, angle: number): void => {
+      const chain = this.chains[pass.chain];
+      const len = chain.length;
+      const base = Math.floor(pass.ctrl);
+      for (
+        let k = base - TRANSVERSALITY_WINDOW;
+        k <= base + 1 + TRANSVERSALITY_WINDOW;
+        k++
+      ) {
+        const distOut =
+          k < base ? base - k : k > base + 1 ? k - (base + 1) : 0;
+        const weight = 1 / (1 + distOut);
+        rotate(chain[((k % len) + len) % len], angle * weight);
+      }
+    };
+    rotateWindow(crossing.under, delta / 2);
+    rotateWindow(crossing.over, -delta / 2);
   }
 
   private applyBindingCorrection(
