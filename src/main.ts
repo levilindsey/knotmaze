@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.18 emergent pool + coupling toggle 2026-07-17";
+const BUILD_STAMP = "P3.19 slide deadband trap 2026-07-17";
 
 const app = new Application();
 
@@ -371,7 +371,19 @@ async function main(): Promise<void> {
           sep: sys.crossingSeparation(c),
         };
       }),
+      slide: sys.readSlideStats(),
     };
+  };
+  // World point at a fractional ctrl along a chain (probe scripting).
+  (window as unknown as Record<string, unknown>).__knotPoint = (
+    chain: number,
+    f: number
+  ) => {
+    const sys = ps;
+    if (!sys) return null;
+    const scratch = new Float32Array(2);
+    sys.pointOnChain(chain, f, scratch, 0);
+    return { x: scratch[0], y: scratch[1] };
   };
 
   rebuild();

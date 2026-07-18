@@ -138,13 +138,17 @@ const MAX_SLIDE_GRABBED = 0.35;
 const SLIDE_EASE_GRABBED = 0.7;
 const MAX_SLIDE_REST = 0.12;
 const SLIDE_EASE_REST = 0.5;
-// Chase deadband: sub-threshold re-projection deltas are noise, and
-// chasing them churns the (particle-quantized) exemption and torque
-// windows, which keeps the contact system chattering forever. 0.015 ctrl
-// is spatially sub-pixel. (Snapping exactly to target instead of easing
-// was tried and made things worse: larger instantaneous ctrl jumps kick
-// the quantized windows harder.)
-const SLIDE_DEADBAND = 0.015;
+// Chase deadband: numerical epsilon ONLY. A perceptible deadband is a
+// friction trap: a weak tug moves material ~0.006 ctrl/substep - below
+// any deadband of useful size - so the binding never slides, the
+// exemption lens stays glued to the material, collision welds the two
+// threads, and they translate together, which keeps the re-projection
+// delta sub-threshold forever (measured: 99% of slide calls swallowed,
+// binding slid 0.12 ctrl while the other thread was dragged 1.5 units).
+// Rest-chatter suppression - the deadband's original job - is now
+// handled by static friction freezing the crossing machinery entirely
+// (CONTACT_STICK_EPS below).
+const SLIDE_DEADBAND = 1e-4;
 // Minimum binding separation along a chain. Large values were an
 // anti-inversion band-aid that FORCED bindings away from the true
 // intersections at tight twist ends - the coupling then contorted threads
@@ -697,9 +701,15 @@ export class ParticleSystem {
       this.grabbed >= 0 ? MAX_SLIDE_GRABBED : MAX_SLIDE_REST;
     const ease = this.grabbed >= 0 ? SLIDE_EASE_GRABBED : SLIDE_EASE_REST;
     const delta = bestF - self.ctrl;
-    if (Math.abs(delta) < SLIDE_DEADBAND) return;
+    this.slideStats.calls++;
+    this.slideStats.requested += Math.abs(delta);
+    if (Math.abs(delta) < SLIDE_DEADBAND) {
+      this.slideStats.deadbandSkips++;
+      return;
+    }
     let f =
       self.ctrl + Math.max(-maxSlide, Math.min(maxSlide, delta * ease));
+    const unclamped = f;
     const prev = this.passPrev.get(self);
     const next = this.passNext.get(self);
     if (prev && next && prev !== self) {
@@ -711,7 +721,33 @@ export class ParticleSystem {
         f = next.ctrl - MIN_PASS_SEPARATION;
       }
     }
+    if (f !== unclamped) this.slideStats.clampHits++;
+    {
+      const raw = Math.abs(f - self.ctrl) % len;
+      this.slideStats.applied += Math.min(raw, len - raw);
+    }
     self.ctrl = ((f % len) + len) % len;
+  }
+
+  // Slide telemetry, accumulated between readSlideStats() calls: answers
+  // "are bindings actually sliding, and what stops them - deadband, rate
+  // cap, or the ordering clamp?"
+  readonly slideStats = {
+    calls: 0,
+    requested: 0,
+    applied: 0,
+    deadbandSkips: 0,
+    clampHits: 0,
+  };
+
+  readSlideStats(): typeof this.slideStats {
+    const out = { ...this.slideStats };
+    this.slideStats.calls = 0;
+    this.slideStats.requested = 0;
+    this.slideStats.applied = 0;
+    this.slideStats.deadbandSkips = 0;
+    this.slideStats.clampHits = 0;
+    return out;
   }
 
   // Phase probe: when enabled, records the max single-particle
