@@ -23,6 +23,11 @@ import { createNoise3D } from "simplex-noise";
 export interface CrossingPass {
   chain: number; // Chain (strand) index.
   ctrl: number; // FRACTIONAL control position along the chain; slides live.
+  // Set by slideCrossing each kinetic substep: the slide target was the
+  // TRUE local polyline intersection (vs the nearest-point fallback).
+  // Diagnostic bookkeeping (a fallback means the threads have locally
+  // separated at the crossing).
+  intersected?: boolean;
 }
 
 export interface CrossingInfo {
@@ -46,12 +51,6 @@ export interface PhysicsTuning {
   stiffness: number; // Multiplier on the structural (adjacency) springs.
   gridAlign: boolean; // Soft-anchor every particle to its lattice position.
   threadWidth: number; // Render width; the hard collision floor honors it.
-  // Coincidence coupling on crossings. Off is an EXPERIMENT: the capsule
-  // collision floor already prevents closed loops from passing through
-  // each other, so the coupling's remaining job is guarding the crossing
-  // lenses (where collision is exempted) - disable to observe what that
-  // guard is actually worth.
-  coupling: boolean;
 }
 
 export const DEFAULT_TUNING: PhysicsTuning = {
@@ -64,7 +63,6 @@ export const DEFAULT_TUNING: PhysicsTuning = {
   stiffness: 1,
   gridAlign: false,
   threadWidth: 0.42,
-  coupling: true,
 };
 
 // Collision floor margin: centerlines may not come closer than
@@ -134,8 +132,12 @@ const SLIDE_WINDOW = 3; // Segments each side searched by the projection.
 // than material moves through space, and a lagging chase makes the
 // coupling drag the other thread bodily), gentle at rest (fast chase
 // amplifies contact chatter between closely-spaced twist crossings).
-const MAX_SLIDE_GRABBED = 0.35;
-const SLIDE_EASE_GRABBED = 0.7;
+// Grabbed chase is EXACT (ease 1): any per-substep chase lag becomes a
+// parasitic pull on the other thread - the coupling pulls the lagging
+// binding's thread toward the leading one every substep, which integrates
+// into bodily drag during sweeps and grabs at intersections.
+const MAX_SLIDE_GRABBED = 0.6;
+const SLIDE_EASE_GRABBED = 1.0;
 const MAX_SLIDE_REST = 0.12;
 const SLIDE_EASE_REST = 0.5;
 // Chase deadband: numerical epsilon ONLY. A perceptible deadband is a
@@ -470,6 +472,7 @@ export class ParticleSystem {
   }
   private bindScratch = new Float32Array(4);
   private tangentScratch = new Float32Array(4);
+  private slideScratch = new Float32Array(4);
   private stickyContacts = false;
 
   get simTime(): number {
@@ -607,30 +610,36 @@ export class ParticleSystem {
     }
   }
 
-  // Re-project a binding onto its local chain geometry so the crossing can
-  // slide along the thread toward wherever the other thread actually is.
-  // The target is the TRUE INTERSECTION of the two local polylines when
-  // one exists: nearest-point projection onto a polyline parks at
-  // vertices (a corner captures the projection for a whole range of
-  // source points), which read as bindings snapping to particles.
-  // Intersections move continuously through vertices. The projection of
-  // the other thread's bound point remains as the fallback for the
-  // moments when the threads have locally separated.
-  private slideBinding(
-    self: CrossingPass,
-    other: CrossingPass,
-    qx: number,
-    qy: number
-  ): void {
-    const chain = this.chains[self.chain];
+  // Re-project a crossing's bindings onto their local chain geometry so
+  // the crossing can slide along the threads toward wherever the threads
+  // actually intersect. The target is the TRUE INTERSECTION of the two
+  // local polylines when one exists: nearest-point projection onto a
+  // polyline parks at vertices (a corner captures the projection for a
+  // whole range of source points), which read as bindings snapping to
+  // particles. Intersections move continuously through vertices.
+  //
+  // The search is JOINT - one candidate chosen for the crossing by
+  // minimal combined cyclic ctrl distance from BOTH passes. Per-pass
+  // nearest-candidate selection could lock the two passes onto DIFFERENT
+  // intersections of the same two threads (a twist eye keeps two in the
+  // window), and once the coupling goes silent at intersecting crossings
+  // nothing reconciles the split (measured: sep 0.60 mid-drag).
+  //
+  // Projection of the other thread's bound point remains the fallback for
+  // the moments when the threads have locally separated.
+  private slideCrossing(crossing: CrossingInfo): void {
+    const over = crossing.over;
+    const under = crossing.under;
+    const chain = this.chains[over.chain];
     const len = chain.length;
-    const i0 = Math.floor(self.ctrl);
-    const oChain = this.chains[other.chain];
+    const i0 = Math.floor(over.ctrl);
+    const oChain = this.chains[under.chain];
     const oLen = oChain.length;
-    const j0 = Math.floor(other.ctrl);
+    const j0 = Math.floor(under.ctrl);
 
-    let bestF = Number.NaN;
-    let bestCyc = Infinity;
+    let bestFOver = Number.NaN;
+    let bestFUnder = Number.NaN;
+    let bestCost = Infinity;
     for (let s = i0 - SLIDE_WINDOW; s <= i0 + SLIDE_WINDOW; s++) {
       const a = chain[((s % len) + len) % len];
       const b = chain[(((s + 1) % len) + len) % len];
@@ -653,50 +662,83 @@ export class ParticleSystem {
         if (u < 0 || u > 1) continue;
         const v = (rx * e1y - ry * e1x) / denom;
         if (v < 0 || v > 1) continue;
-        // Nearest candidate in cyclic ctrl distance: a twist's twin
-        // crossing may also intersect within the window, but it sits at
-        // least MIN_PASS_SEPARATION away.
-        const raw = Math.abs(s + u - self.ctrl) % len;
-        const cyc = Math.min(raw, len - raw);
-        if (cyc < bestCyc) {
-          bestCyc = cyc;
-          bestF = s + u;
+        const rawO = Math.abs(s + u - over.ctrl) % len;
+        const cycO = Math.min(rawO, len - rawO);
+        const rawU = Math.abs(r + v - under.ctrl) % oLen;
+        const cycU = Math.min(rawU, oLen - rawU);
+        const cost = cycO + cycU;
+        if (cost < bestCost) {
+          bestCost = cost;
+          bestFOver = s + u;
+          bestFUnder = r + v;
         }
       }
     }
 
-    if (Number.isNaN(bestF)) {
-      let bestDistSq = Infinity;
-      bestF = self.ctrl;
-      for (let s = i0 - SLIDE_WINDOW; s <= i0 + SLIDE_WINDOW; s++) {
-        const a = chain[((s % len) + len) % len];
-        const b = chain[(((s + 1) % len) + len) % len];
-        const ax = this.positions[a * 2];
-        const ay = this.positions[a * 2 + 1];
-        const bx = this.positions[b * 2];
-        const by = this.positions[b * 2 + 1];
-        const ex = bx - ax;
-        const ey = by - ay;
-        const lenSq = ex * ex + ey * ey;
-        const t =
-          lenSq > 1e-12
-            ? Math.max(
-                0,
-                Math.min(1, ((qx - ax) * ex + (qy - ay) * ey) / lenSq)
-              )
-            : 0;
-        const px = ax + ex * t;
-        const py = ay + ey * t;
-        const dSq = (px - qx) * (px - qx) + (py - qy) * (py - qy);
-        if (dSq < bestDistSq) {
-          bestDistSq = dSq;
-          bestF = s + t;
-        }
+    const found = !Number.isNaN(bestFOver);
+    over.intersected = found;
+    under.intersected = found;
+    if (found) {
+      this.easePassToward(over, bestFOver);
+      this.easePassToward(under, bestFUnder);
+      return;
+    }
+    // Fallback: each binding chases the projection of the other's bound
+    // point. Compute both q points BEFORE easing either pass.
+    this.bindingPoint(under, this.slideScratch, 0);
+    this.bindingPoint(over, this.slideScratch, 2);
+    this.easePassToward(
+      over,
+      this.projectOntoChain(over, this.slideScratch[0], this.slideScratch[1])
+    );
+    this.easePassToward(
+      under,
+      this.projectOntoChain(under, this.slideScratch[2], this.slideScratch[3])
+    );
+  }
+
+  private projectOntoChain(
+    self: CrossingPass,
+    qx: number,
+    qy: number
+  ): number {
+    const chain = this.chains[self.chain];
+    const len = chain.length;
+    const i0 = Math.floor(self.ctrl);
+    let bestDistSq = Infinity;
+    let bestF = self.ctrl;
+    for (let s = i0 - SLIDE_WINDOW; s <= i0 + SLIDE_WINDOW; s++) {
+      const a = chain[((s % len) + len) % len];
+      const b = chain[(((s + 1) % len) + len) % len];
+      const ax = this.positions[a * 2];
+      const ay = this.positions[a * 2 + 1];
+      const bx = this.positions[b * 2];
+      const by = this.positions[b * 2 + 1];
+      const ex = bx - ax;
+      const ey = by - ay;
+      const lenSq = ex * ex + ey * ey;
+      const t =
+        lenSq > 1e-12
+          ? Math.max(
+              0,
+              Math.min(1, ((qx - ax) * ex + (qy - ay) * ey) / lenSq)
+            )
+          : 0;
+      const px = ax + ex * t;
+      const py = ay + ey * t;
+      const dSq = (px - qx) * (px - qx) + (py - qy) * (py - qy);
+      if (dSq < bestDistSq) {
+        bestDistSq = dSq;
+        bestF = s + t;
       }
     }
+    return bestF;
+  }
 
-    // Ease toward the projection with a deadband and a hard rate limit,
-    // then keep order against neighboring passes on this chain.
+  // Ease a pass toward its slide target with a rate limit, then keep
+  // order against neighboring passes on the same chain.
+  private easePassToward(self: CrossingPass, bestF: number): void {
+    const len = this.chains[self.chain].length;
     const maxSlide =
       this.grabbed >= 0 ? MAX_SLIDE_GRABBED : MAX_SLIDE_REST;
     const ease = this.grabbed >= 0 ? SLIDE_EASE_GRABBED : SLIDE_EASE_REST;
@@ -855,18 +897,7 @@ export class ParticleSystem {
       // micro-adjusting its ctrl is itself a motor (the weld turns every
       // re-projection nudge into thread motion).
       if (!this.stickyContacts) {
-        this.slideBinding(
-          crossing.over,
-          crossing.under,
-          this.bindScratch[2],
-          this.bindScratch[3]
-        );
-        this.slideBinding(
-          crossing.under,
-          crossing.over,
-          this.bindScratch[0],
-          this.bindScratch[1]
-        );
+        this.slideCrossing(crossing);
         this.applyTransversality(crossing, c);
       }
 
@@ -951,7 +982,18 @@ export class ParticleSystem {
       // Coincidence coupling LAST, so nothing re-separates the crossing
       // within the iteration: pull each crossing's two bound points
       // together, distributing corrections to the surrounding particles.
-      if (!tuning.coupling) continue;
+      //
+      // The coupling stays CONTINUOUS (with the kinetic tangential
+      // projection) even while grabbed. Silencing it at intersecting
+      // crossings during a grab was tried and made things WORSE: without
+      // the coupling's organizing pull, raw segment collision outside the
+      // exemption lens couples the threads instead and welds them
+      // tangentially (weak-tug material flow dropped from 2.17 to 1.14
+      // ctrl and bodily drag of the other thread returned). Disabling it
+      // outright (the retired cp=0 experiment) also welded crossings and
+      // left stress-torn bound pairs (sep 0.83) whose erase gaps rendered
+      // as naked holes. The coupling is the crossing's lubricant in every
+      // measured gesture.
       for (const crossing of this.crossings) {
         this.bindingPoint(crossing.over, this.bindScratch, 0);
         this.bindingPoint(crossing.under, this.bindScratch, 2);

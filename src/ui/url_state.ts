@@ -16,7 +16,6 @@ export interface UrlParams {
   gridAlign: boolean; // Soft-anchor to lattice positions (applies live).
   threadWidth: number; // Ribbon width in lattice units (applies live).
   gap: number; // Space between an under-thread cut end and the over thread.
-  coupling: boolean; // Crossing coincidence coupling (off = experiment).
 }
 
 const DEFAULTS = {
@@ -66,7 +65,6 @@ export function readParams(): UrlParams {
     gridAlign: readNumber(query, "ga", 0) > 0.5,
     threadWidth: readNumber(query, "tw", DEFAULTS.threadWidth),
     gap: readNumber(query, "gap", DEFAULTS.gap),
-    coupling: readNumber(query, "cp", 1) > 0.5,
   };
 }
 
@@ -86,6 +84,5 @@ export function writeParams(params: UrlParams): void {
   query.set("ga", params.gridAlign ? "1" : "0");
   query.set("tw", String(params.threadWidth));
   query.set("gap", String(params.gap));
-  query.set("cp", params.coupling ? "1" : "0");
   history.replaceState(null, "", `?${query.toString()}`);
 }

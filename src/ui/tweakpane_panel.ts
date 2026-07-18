@@ -72,9 +72,6 @@ export function buildPanel(
   pane
     .addBinding(params, "gridAlign")
     .on("change", callbacks.onSlackChange);
-  pane
-    .addBinding(params, "coupling")
-    .on("change", callbacks.onSlackChange);
 
   // Ribbon styling applies live to the renderer.
   pane

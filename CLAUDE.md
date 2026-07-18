@@ -7,7 +7,7 @@ A web-based procedural generator for celtic-knot-style mazes with physics-based 
 Three-layer architecture:
 - **Layer 1 (Combinatorial):** `TangleGraph` — planar multigraph on a lattice with nodes (crossing/junction/end) and edges (thread segments). Strand tracing, checkerboard alternation, pairwise-crossing invariants.
 - **Layer 2 (Geometric):** Centripetal Catmull-Rom splines through lattice points; arc-length parameterization.
-- **Layer 3 (Dynamic):** Verlet-integrated particles; each strand is an independent closed chain (springs, bending, repulsion — no lattice anchors). Crossings are SLIDING BINDINGS: a fractional position along each of the two threads, re-projected each substep (true polyline-intersection targeting, nearest-point fallback) so intersections migrate along threads, coupled by a coincidence constraint, with ordering clamps preserving diagram topology. Contacts have STATIC/KINETIC friction: kinetic (coupling projected off each thread's tangent — material slides through crossings; slide + transversality active) while grabbed/agitated/moving, static (full-vector weld, crossing machinery frozen) once per-substep motion drops below a stick threshold — kinetic-only contacts wander forever (a PBD constraint standoff pumps the free tangential mode; no damping fixes it — measured via the phase probe), static-only reads as pinned when dragging. Two hard-won corollaries (measured via scripted weak-tug probes): the coincidence coupling is the crossing's LUBRICANT, not its friction — with it off (`cp=0`), raw segment collision couples the threads instead and welds them tangentially (10× less material flow through a crossing, and stress tears bound pairs ~0.8 apart whose erase gaps then render as naked holes); and the slide chase must have NO perceptible deadband — a weak tug moves material ~0.006 ctrl/substep, below any useful deadband, so a deadband is a self-sustaining stick-slip trap (binding freezes → collision welds → threads translate together → re-projection delta stays sub-threshold forever). Gentle centroid centering + a bounds-following viewport replace grid anchoring. Simplex-noise temperature agitation.
+- **Layer 3 (Dynamic):** Verlet-integrated particles; each strand is an independent closed chain (springs, bending, repulsion — no lattice anchors). Crossings are SLIDING BINDINGS: a fractional position along each of the two threads, re-projected each substep (true polyline-intersection targeting, nearest-point fallback) so intersections migrate along threads, coupled by a coincidence constraint, with ordering clamps preserving diagram topology. Contacts have STATIC/KINETIC friction: kinetic (coupling projected off each thread's tangent — material slides through crossings; slide + transversality active) while grabbed/agitated/moving, static (full-vector weld, crossing machinery frozen) once per-substep motion drops below a stick threshold — kinetic-only contacts wander forever (a PBD constraint standoff pumps the free tangential mode; no damping fixes it — measured via the phase probe), static-only reads as pinned when dragging. Two hard-won corollaries (measured via scripted weak-tug probes): the coincidence coupling is the crossing's LUBRICANT, not its friction — with it off (the retired `cp=0` toggle), raw segment collision couples the threads instead and welds them tangentially (10× less material flow through a crossing, and stress tears bound pairs ~0.8 apart whose erase gaps then render as naked holes); and the slide chase must have NO perceptible deadband — a weak tug moves material ~0.006 ctrl/substep, below any useful deadband, so a deadband is a self-sustaining stick-slip trap (binding freezes → collision welds → threads translate together → re-projection delta stays sub-threshold forever). The slide search is JOINT per crossing (one intersection candidate for both passes, minimal combined ctrl distance) and the grabbed chase is EXACT (ease 1.0) — per-pass targeting let the two passes lock onto different intersections of a twist eye, and chase lag feeds parasitic pull through the coupling. Gentle centroid centering + a bounds-following viewport replace grid anchoring. Simplex-noise temperature agitation.
 
 Rendering: PixiJS v8 custom ribbon meshes with depth-based over/under casing gaps.
 
@@ -80,25 +80,36 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
-- **Stuck-crossing feel: RESOLVED by removing the slide deadband (P3.19).**
+- **Stuck-crossing feel: RESOLVED by removing the slide deadband (P3.19)
+  + joint slide targeting and exact grabbed chase (P3.20).**
   A weak tug moves material ~0.006 ctrl/substep — below the old 0.015
   deadband — so bindings never slid, the exemption lens stayed glued to
   the material, and collision welded the two threads (measured: 99% of
   slide calls swallowed; binding slid 0.12 ctrl while the other thread was
-  dragged 1.5 units; at cp=1 the slide was stick-slip jerks). With the
-  deadband at 1e-4 and coupling ON, the same weak tug slides 2.17 ctrl
-  smoothly with 10× less drag on the other thread and no snapback.
-  Rest chatter (the deadband's old job) is owned by static friction.
-  Negative results from the same investigation: transversality off and
-  MIN_PASS_SEPARATION 0.3 each changed nothing (clamp hits went to zero
-  without freeing the slide). `ParticleSystem.slideStats` +
-  `window.__knotPoint(chain, ctrl)` are the diagnostics.
-- **`cp=0` (coupling off) is the BAD mode — keep coupling default-on.**
-  It welds crossings (collision has no tangential projection) and under
-  stress leaves bound pairs torn up to ~0.8 apart that render as naked
-  holes / displaced gaps at twists (the user-reported "occasional large
-  gaps at loop-end twists" repro'd exactly this way). The toggle stays
-  for experimentation only.
+  dragged 1.5 units; at cp=1 the slide was stick-slip jerks). Final state
+  (deadband 1e-4, joint targeting, SLIDE_EASE_GRABBED 1.0): the same weak
+  tug slides 2.21 ctrl smoothly, other-thread residual 0.042, no
+  snapback. Rest chatter (the deadband's old job) is owned by static
+  friction. Negative results from the same investigation: transversality
+  off and MIN_PASS_SEPARATION 0.3 each changed nothing (clamp hits went
+  to zero without freeing the slide); silencing the coupling at
+  intersecting crossings while grabbed (a "boundary guard" theory) made
+  it WORSE (slide 2.17 → 1.14, drag returned — collision re-welds).
+  Sweeps/grabs near a crossing still carry the co-woven neighborhood at
+  ~70% at +2 ctrl decaying smoothly to ~35% at +8 — that profile is the
+  WEAVE deforming (identical at slack 0.4), not crossing friction; a
+  woven region cannot displace without carrying co-woven threads.
+  `ParticleSystem.slideStats` + `window.__knotPoint(chain, ctrl)` are the
+  diagnostics.
+- **The `cp` coupling toggle is REMOVED (P3.20).** The experiment
+  answered its question: cp=0 welds crossings (collision has no
+  tangential projection) and under stress leaves bound pairs torn up to
+  ~0.8 apart that render as naked holes / displaced gaps at twists (the
+  user-reported "occasional large gaps at loop-end twists" repro'd
+  exactly this way). It was removed rather than kept as a toggle because
+  a lingering `cp=0` in a live tab's URL silently poisons every later
+  evaluation (Vite reloads preserve query params). Re-add from git
+  history if ever needed.
 - **Physics micro-oscillation floor: RESOLVED by static/kinetic contacts
   (P3.17).** Rest floor is now ~2e-3 units/substep (was ~1e-2): static
   mode freezes the crossing machinery so the constraint standoff repeats
