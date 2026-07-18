@@ -49,8 +49,11 @@ try {
     .filter((c) => c.eraseSpan < 0.14)
     .sort((a, b) => a.eraseSpan - b.eraseSpan)
     .slice(0, 6);
+  // Healthy spans: ~0.60 perpendicular, up to ~0.67 oblique with the
+  // arc-length margin (P3.21). The old 1.3 threshold certified the
+  // gap/sin(angle) naked-gap bug as healthy - keep this tight.
   const bigGap = crossings
-    .filter((c) => c.eraseSpan > 1.3)
+    .filter((c) => c.eraseSpan > 0.85)
     .sort((a, b) => b.eraseSpan - a.eraseSpan)
     .slice(0, 6);
 

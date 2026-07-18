@@ -95,12 +95,27 @@ bottom-left stamp shows the same counters).
   to zero without freeing the slide); silencing the coupling at
   intersecting crossings while grabbed (a "boundary guard" theory) made
   it WORSE (slide 2.17 → 1.14, drag returned — collision re-welds).
-  Sweeps/grabs near a crossing still carry the co-woven neighborhood at
-  ~70% at +2 ctrl decaying smoothly to ~35% at +8 — that profile is the
-  WEAVE deforming (identical at slack 0.4), not crossing friction; a
-  woven region cannot displace without carrying co-woven threads.
-  `ParticleSystem.slideStats` + `window.__knotPoint(chain, ctrl)` are the
-  diagnostics.
+  RETRACTED (P3.21): the "woven fabric co-motion" claim was a MEASUREMENT
+  ARTIFACT — the sweep probe sampled reference points at fixed offsets
+  from the SLIDING binding ctrl, conflating binding slide with material
+  motion. With fixed material coordinates, swept-through material returns
+  to within 0.06–0.09 of start after release: the crossings genuinely
+  let material through. Probe rule: reference points must be FIXED
+  material ctrls captured before the gesture. `ParticleSystem.slideStats`
+  + `window.__knotPoint(chain, ctrl)` are the diagnostics.
+- **Giant gaps at loop-end twists: RESOLVED by arc-length gap margins
+  (P3.21).** The erase cut boundary was the over ribbon's OFFSET CURVE
+  (perpendicular distance = fillHalf + gap), so the bare margin projected
+  as gap/sin(angle) along the under thread — at the ~30° crossings that
+  loop-end twists settle into, spans hit 1.07 with naked background
+  wedges ~2× gap per side, reading as giant gaps. Fix: cut at the over
+  SILHOUETTE (fillHalf) and push caps outward by `gap` as ARC LENGTH —
+  margin now constant along the thread at every angle (span range
+  collapsed 0.59–1.07 → 0.59–0.67). The scanner's BIG-GAP threshold sat
+  at 1.3 and certified the bug as healthy through two "clean" audits —
+  now 0.85. Lesson: a scanner threshold chosen without a perceptual
+  reference is a rubber stamp; calibrate against what the worst healthy
+  case SHOULD be.
 - **The `cp` coupling toggle is REMOVED (P3.20).** The experiment
   answered its question: cp=0 welds crossings (collision has no
   tangential projection) and under stress leaves bound pairs torn up to

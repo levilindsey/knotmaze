@@ -4,13 +4,16 @@
 //      UNDER thread through the crossing, slightly wider than the thread, so
 //      its footprint never exceeds the under thread's own and it cannot
 //      notch anything else. Its end caps are the visible cut ends of the
-//      under thread. The correct cut boundary is "perpendicular distance to
-//      the over CENTERLINE CURVE equals overHalfWidth + gap" (the offset
-//      curve of the over ribbon), so each cap corner is found by marching
-//      along its under-ribbon edge until that distance condition flips,
-//      against a locally sampled polyline of the over centerline. Both
-//      corners of a cap therefore sit at the same distance from the over
-//      thread, curvature included, at any crossing angle.
+//      under thread. Each cap corner is found by marching along its
+//      under-ribbon edge until "perpendicular distance to the over
+//      CENTERLINE CURVE equals overHalfWidth" (the over ribbon's
+//      SILHOUETTE) flips, against a locally sampled polyline of the over
+//      centerline - then the cap is pushed outward by `gap` as ARC LENGTH
+//      along the under thread. The margin must be constant ALONG the
+//      thread, not perpendicular to the over thread: a perpendicular
+//      margin projects as gap/sin(angle) of bare background at oblique
+//      crossings, which reads as a giant naked gap at loop-end twists
+//      (spans up to 1.07 at 30-degree crossings measured, vs gap 0.06).
 //   2. The OVER pass fill, redrawn on top so the over thread rides above
 //      the hole, with a length that adapts to the crossing angle.
 // All erases render below all fills, so patches never slice each other.
@@ -402,9 +405,10 @@ export class RibbonRenderer {
       const underCenter = this.arcAt(underSamples, crossing.under.ctrl);
 
       // Local centerline polylines around the crossing. The cut boundary is
-      // "distance to the over polyline == fillHalf + gap" (the offset curve
-      // of the over ribbon); the over-fill window is measured against the
-      // under polyline. For SELF-crossings each polyline masks out the
+      // "distance to the over polyline == fillHalf" (the over ribbon's
+      // silhouette), with the visible margin added afterward as ARC LENGTH
+      // (see the header comment); the over-fill window is measured against
+      // the under polyline. For SELF-crossings each polyline masks out the
       // other pass's neighborhood, and the arc between the passes is split
       // between the over window and the erase zone so the fill can never
       // repaint the gap.
@@ -442,7 +446,7 @@ export class RibbonRenderer {
         maskHalf
       );
 
-      const cutBoundary = fillHalf + gap;
+      const cutBoundary = fillHalf;
       const eraseW = fillHalf + ERASE_WIDTH_PAD;
       const [uGapPrev, uGapNext] = this.neighborGaps(
         underSamples,
@@ -524,7 +528,9 @@ export class RibbonRenderer {
 
         for (let l = 0; l < ERASE_LANES; l++) {
           if (Number.isNaN(cuts[l])) cuts[l] = dir * sMax;
-          cuts[l] += dir * CUT_BIAS;
+          // The visible margin, applied as arc length so it stays `gap`
+          // wide along the under thread at every crossing angle.
+          cuts[l] += dir * (CUT_BIAS + gap);
         }
       };
 
