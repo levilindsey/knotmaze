@@ -1001,15 +1001,21 @@ export class ParticleSystem {
     const restScale = 1 - (1 - shrink) * settle;
     const bendScale =
       settle * (BEND_TAUT + (BEND_LOOSE - BEND_TAUT) * slack) * tuning.bend;
-    const repulseDist =
+    const collisionDist = tuning.threadWidth * COLLISION_MARGIN;
+    // Aesthetic spacing can never drop below the hard floor: at low
+    // repulsion x wide threads the raw formula fell below the thread
+    // width (rep 0.4 x taut 0.62 = 0.25 < width 0.52), silently
+    // disabling all soft spacing.
+    const repulseDist = Math.max(
+      collisionDist * 1.02,
       (REPULSE_DIST_TAUT + (REPULSE_DIST_LOOSE - REPULSE_DIST_TAUT) * slack) *
-      tuning.repulsion;
+        tuning.repulsion
+    );
 
     // Slide bindings toward the other thread's current point, record each
     // crossing's contact point, mark zone tags (they gate the depth
     // exemption and dedup the collector; ZONE_SLOTS per particle - dense
     // weaves overlap several windows), and rebuild the depth field.
-    const collisionDist = tuning.threadWidth * COLLISION_MARGIN;
     const depthAmp = collisionDist * DEPTH_AMP_FACTOR;
     this.zones.fill(-1);
     this.depths.fill(0);
@@ -1275,6 +1281,33 @@ export class ParticleSystem {
       this.prev[i * 2 + 1] += shiftY;
     }
     this.probe("fairing+align+center");
+
+    // FINAL AUTHORITY collision projection: the last position operation
+    // of every substep, at full stiffness. In-loop collision is one
+    // voice in a committee - at high bend/smooth or minimum repulsion,
+    // the other constraints outvote its 0.5-stiffness correction and the
+    // equilibrium (which the quiescence gate then freezes) can sit in
+    // visible interpenetration. Projecting the floor once more AFTER
+    // everything else guarantees the substep-END state - the only state
+    // ever rendered or frozen - honors the width floor everywhere the
+    // depth field doesn't exempt it. Internal tug-of-wars continue
+    // between substeps but can no longer appear on screen. TWO sweeps:
+    // one Gauss-Seidel pass leaves residual where a particle sits
+    // between two violated pairs (each correction pushes into the
+    // other; measured 0.45 vs the 0.60 floor after one sweep).
+    for (let fs = 0; fs < 2; fs++) {
+      applySegmentCollision(
+        this.positions,
+        this.particleCount,
+        this.topology,
+        collisionDist,
+        1.0,
+        this.depths,
+        { zones: this.zones, contacts: this.contacts },
+        undefined
+      );
+    }
+    this.probe("final-collision");
   }
 
   // Steer the two threads at a crossing toward the signed perpendicular:

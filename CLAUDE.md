@@ -80,6 +80,23 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **Deep penetration at extreme params: RESOLVED by the final-authority
+  collision projection (P3.26).** At rep 0.4 (raw repulsion distance
+  0.25 < thread width — the slider could silently disable spacing),
+  bend 1.75, smooth 0.7, tw 0.52, PBD collision at stiffness 0.5 lost
+  its committee votes: equilibria settled in visible interpenetration
+  (census: 9 cross-thread pairs at 0.31 vs the 0.60 floor) and the
+  quiescence gate froze them. Architectural principle: collision is now
+  the FINAL AUTHORITY over the rendered state — a full-stiffness
+  double-sweep projection is the LAST position operation of every
+  substep, so the substep-end state (the only state ever rendered or
+  frozen) honors the width floor wherever depth doesn't exempt it;
+  internal tug-of-wars continue between substeps but cannot appear on
+  screen. Two sweeps because one Gauss-Seidel pass leaves ~25% residual
+  where a particle sits between two violated pairs. Also: repulseDist
+  now floors at collisionDist*1.02. Census after: crossFree 0,
+  selfNear 0, remaining selfMid pairs are kink necks that render as
+  proper covered crossings. Play-settle, scans, tests all green.
 - **Shallow-crossing tangential merges + release twitching: RESOLVED
   (P3.25).** Two P3.24 leftovers. (1) The 3D-capsule floor
   sqrt(margin²−dz²) is the wrong SHAPE for renderability: its slow

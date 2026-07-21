@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.25 quartic depth floor + eased release 2026-07-21";
+const BUILD_STAMP = "P3.26 final-authority collision floor 2026-07-21";
 
 const app = new Application();
 
