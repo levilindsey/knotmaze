@@ -41,48 +41,19 @@ export function applyDistanceConstraints(
   }
 }
 
-// Crossing zone tags: which registered crossings each particle belongs
-// to, up to ZONE_SLOTS per particle (-1 = empty, first slots fill
-// first). Dense weaves put 3+ crossings within a zone window of one
-// particle; the old two-slot/last-writer-evicts table dropped tags as
-// bindings slid, which flickered the depth-exemption gate - pairs sank
-// while covered, lost the tag, and froze as canceled standoffs ~0.2
-// apart (threads visibly merged). The tags gate the depth exemption
-// (collision + repulsion) and dedup the emergent collector.
-export const ZONE_SLOTS = 4;
-export interface CrossingZones {
-  zones: Int32Array; // ZONE_SLOTS crossing ids per particle, -1 = empty.
-  contacts: Float32Array; // Per-crossing contact point [x, y].
-}
 
-// Shared registered crossing of two particles, or -1.
-function sharedZone(zones: Int32Array, i: number, j: number): number {
-  for (let a = 0; a < ZONE_SLOTS; a++) {
-    const za = zones[i * ZONE_SLOTS + a];
-    if (za < 0) break;
-    for (let b = 0; b < ZONE_SLOTS; b++) {
-      const zb = zones[j * ZONE_SLOTS + b];
-      if (zb < 0) break;
-      if (za === zb) return za;
-    }
-  }
-  return -1;
-}
-
-// Hard capsule collision between thread segments, DEPTH-AWARE: the knot
-// is quasi-3D, with per-particle depth z assigned from the crossing
-// diagram (over passes lift, under passes sink; see the depth field in
-// ParticleSystem). Two segments are treated as 3D capsules: the required
-// 2D separation is sqrt(minDist^2 - dz^2), so exactly where the diagram
-// says the threads pass over/under each other the floor vanishes, and it
-// recovers smoothly as material moves away from the crossing along
-// either thread - at ANY crossing angle. This replaces the old circular
-// contact-bubble exemption, whose fixed radius mismatched the true
-// overlap region (margin/sin(angle) long) at oblique crossings: the
-// mismatch both welded threads tangentially (full-vector corrections in
-// the annulus) and fought the geometry in a standing conflict.
-// This is what point repulsion cannot guarantee: points can spread
-// while the segments between them still overlap.
+// Hard capsule collision between thread segments in TRUE 3D: z is a
+// real simulated per-particle coordinate (see ParticleSystem.zPos - the
+// crossing diagram supplies soft z TARGETS, over passes up / under
+// passes down). Collision is UNCONDITIONAL: no zones, no exemptions, no
+// falloff shapes - two capsules may never come within minDist in 3D, at
+// any thread width. Where the 2D layout squeezes two threads together
+// they resolve by separating in z (one goes over), which is renderable
+// by definition: that is just a crossing. Every "exemption" mechanism
+// this replaced (circular lens, derived depth field with quartic
+// falloff, zone gating) eventually leaked - an exempt region is a hole,
+// and holes admit bugs. The xy components of a correction go to the xy
+// state, the z component to zPos.
 export interface SegmentTopology {
   next: Int32Array; // Particle -> next particle along its chain.
   chainOf: Int32Array; // Particle -> chain index.
@@ -100,12 +71,13 @@ export interface EmergentCollector {
 
 export function applySegmentCollision(
   positions: Float32Array,
+  zPos: Float32Array,
   particleCount: number,
   topology: SegmentTopology,
   minDist: number,
   stiffness: number,
-  depths: Float32Array,
-  zones: CrossingZones,
+  // Registered crossing contact points [x, y] - collector dedup only.
+  contacts: Float32Array,
   collector?: EmergentCollector
 ): void {
   const cellSize = Math.max(1, minDist * 2);
@@ -140,22 +112,11 @@ export function applySegmentCollision(
           // Skip immediate same-chain neighbors (they legitimately
           // connect and overlap at shared endpoints). Only 2: farther
           // same-chain pairs are policed like any other - this is what
-          // keeps kink loops and hairpin tips from collapsing flat. Depth
-          // exempts the pairs that genuinely cross.
+          // keeps kink loops and hairpin tips from collapsing flat.
           if (chainOf[i] === chainOf[j]) {
             const len = chainLen[i];
             const d = Math.abs(ctrlOf[i] - ctrlOf[j]);
             if (Math.min(d, len - d) <= 2) continue;
-          }
-
-          // Shared registered crossing: gates the depth exemption and
-          // dedups the collector.
-          let sharedKx = Number.NaN;
-          let sharedKy = Number.NaN;
-          const shared = sharedZone(zones.zones, i, j);
-          if (shared >= 0) {
-            sharedKx = zones.contacts[shared * 2];
-            sharedKy = zones.contacts[shared * 2 + 1];
           }
 
           // Closest points between segment (i -> next[i]) and
@@ -204,14 +165,9 @@ export function applySegmentCollision(
             }
           }
 
-          // Proper intersection: the pair has tunneled - record it as an
-          // emergent crossing so the renderer can gap it. Segment pairs at
-          // the fringe of a REGISTERED crossing's lens also properly
-          // intersect (the coupling holds those threads coincident); those
-          // are duplicates of a crossing that already renders, and left in
-          // they flood the collector and starve genuine emergent
-          // crossings of buffer and pool space - skip any intersection
-          // near its shared crossing's contact point.
+          // Proper intersection: a real visual crossing. Register it as
+          // emergent unless it belongs to a registered crossing (within
+          // 0.8 of any registered contact - those already render).
           if (collector && collector.n * 4 < collector.data.length) {
             // Transversal crossings only: |sin| of the crossing angle
             // >= 0.25. Taut knots hold dozens of GRAZING micro-overlaps
@@ -222,9 +178,16 @@ export function applySegmentCollision(
             if (properU >= 0 && Math.abs(denom2) > 0.25 * lenProd) {
               const ix = p1x + d1x * properU;
               const iy = p1y + d1y * properU;
-              const nearRegistered =
-                shared >= 0 &&
-                Math.hypot(ix - sharedKx, iy - sharedKy) < 0.8;
+              let nearRegistered = false;
+              for (let cc = 0; cc * 2 < contacts.length; cc++) {
+                if (
+                  Math.hypot(ix - contacts[cc * 2], iy - contacts[cc * 2 + 1]) <
+                  0.8
+                ) {
+                  nearRegistered = true;
+                  break;
+                }
+              }
               if (!nearRegistered) {
                 const idx = collector.n * 4;
                 collector.data[idx] = i;
@@ -236,51 +199,33 @@ export function applySegmentCollision(
             }
           }
 
-          // (Exempting properly-intersecting shared-crossing pairs from
-          // the push was tried against the post-play jiggle and made it
-          // WORSE: the intersect/separate boundary is binary, so collision
-          // flickered on/off - a new discontinuity, mv spikes 3.5e-1.)
-
-          // Depth-aware floor at the closest points. ONLY for pairs
-          // sharing a registered crossing's zone: the depth field is
-          // per-particle and pair-blind, so without the gate any THIRD
-          // thread near a crossing inherited a reduced floor and could
-          // sink into the crossing pair with no gap rendered (grazing
-          // overlaps are also below the emergent collector's
-          // transversality cutoff). Non-shared pairs get the full width
-          // floor, exactly like the pre-depth lens.
-          // QUARTIC falloff (1 - u^4), not the true 3D-capsule circle
-          // (1 - u^2): the circle's slow lateral recovery let shallow
-          // crossings hug tangentially along the tent slopes (dz =
-          // 0.7*margin still allowed centerlines at 0.71*margin - inside
-          // ribbon overlap, rendered as merged threads since the erase
-          // only covers the silhouette span). The quartic keeps ~90% of
-          // the floor at dz = 0.7*margin and still vanishes exactly at
-          // the crossing point, where dz exceeds margin.
-          let pairMinDistSq = minDist * minDist;
-          if (shared >= 0) {
-            const zi = depths[i] + (depths[i2] - depths[i]) * s;
-            const zj = depths[j] + (depths[j2] - depths[j]) * t;
-            const dz = zi - zj;
-            const dz2 = dz * dz;
-            pairMinDistSq -= (dz2 * dz2) / (minDist * minDist);
-            if (pairMinDistSq <= 1e-9) continue;
-          }
-
+          // TRUE-3D capsule contact at the closest points: z lerped from
+          // the simulated per-particle z. Unconditional - no exemptions.
+          const zi = zPos[i] + (zPos[i2] - zPos[i]) * s;
+          const zj = zPos[j] + (zPos[j2] - zPos[j]) * t;
           const q1x = p1x + d1x * s;
           const q1y = p1y + d1y * s;
           const q2x = p2x + d2x * t;
           const q2y = p2y + d2y * t;
           let nx = q1x - q2x;
           let ny = q1y - q2y;
-          const dist = Math.hypot(nx, ny);
-          if (dist * dist >= pairMinDistSq || dist < 1e-9) continue;
-          nx /= dist;
-          ny /= dist;
+          let nz = zi - zj;
+          const dist = Math.hypot(nx, ny, nz);
+          if (dist >= minDist) continue;
+          if (dist < 1e-9) {
+            // Fully coincident: resolve straight up/down, deterministic.
+            nx = 0;
+            ny = 0;
+            nz = chainOf[i] <= chainOf[j] ? 1 : -1;
+          } else {
+            nx /= dist;
+            ny /= dist;
+            nz /= dist;
+          }
 
-          const pairMinDist = Math.sqrt(pairMinDistSq);
-          const push = (pairMinDist - dist) * stiffness * 0.5;
-          // Distribute to endpoints by closest-point weights.
+          const push = (minDist - dist) * stiffness * 0.5;
+          // Distribute to endpoints by closest-point weights; xy goes to
+          // the plane state, z to the depth state.
           positions[i * 2] += nx * push * (1 - s);
           positions[i * 2 + 1] += ny * push * (1 - s);
           positions[i2 * 2] += nx * push * s;
@@ -289,6 +234,10 @@ export function applySegmentCollision(
           positions[j * 2 + 1] -= ny * push * (1 - t);
           positions[j2 * 2] -= nx * push * t;
           positions[j2 * 2 + 1] -= ny * push * t;
+          zPos[i] += nz * push * (1 - s);
+          zPos[i2] += nz * push * s;
+          zPos[j] -= nz * push * (1 - t);
+          zPos[j2] -= nz * push * t;
         }
       }
     }
@@ -297,20 +246,16 @@ export function applySegmentCollision(
 
 // Soft minimum-distance repulsion between non-neighboring particles, using a
 // uniform spatial hash. Keeps parallel threads from visually overlapping.
-// Depth-aware like collision, and gated the same way: only a pair sharing
-// a registered crossing's zone scales its range by
-// sqrt(1 - (dz/depthRange)^2) (depthRange = the collision margin - a pair
-// fully over/under each other needs no spacing at all); everyone else
-// gets full spacing.
+// TRUE 3D like collision: distance and push direction include z, so a
+// genuine over/under pair (large dz) is already spaced and gets little or
+// no planar push.
 export function applyRepulsion(
   positions: Float32Array,
+  zPos: Float32Array,
   particleCount: number,
   minDist: number,
   stiffness: number,
-  excludedPairs: Set<number>,
-  depths: Float32Array,
-  depthRange: number,
-  zones: CrossingZones
+  excludedPairs: Set<number>
 ): void {
   const cellSize = minDist;
   const buckets = new Map<number, number[]>();
@@ -341,30 +286,22 @@ export function applyRepulsion(
           if (j <= i) continue;
           if (excludedPairs.has(i * 65536 + j)) continue;
 
-          let pairMinDistSq = minDist * minDist;
-          if (sharedZone(zones.zones, i, j) >= 0) {
-            // Quartic falloff, matching collision (see its comment).
-            const u2 =
-              (depths[j] - depths[i]) ** 2 / (depthRange * depthRange);
-            const scaleSq = 1 - u2 * u2;
-            if (scaleSq <= 1e-6) continue;
-            pairMinDistSq *= scaleSq;
-          }
-
           const dx = positions[j * 2] - positions[i * 2];
           const dy = positions[j * 2 + 1] - positions[i * 2 + 1];
-          const distSq = dx * dx + dy * dy;
-          if (distSq >= pairMinDistSq || distSq < EPSILON) {
+          const dz = zPos[j] - zPos[i];
+          const distSq = dx * dx + dy * dy + dz * dz;
+          if (distSq >= minDist * minDist || distSq < EPSILON) {
             continue;
           }
 
           const dist = Math.sqrt(distSq);
-          const pairMinDist = Math.sqrt(pairMinDistSq);
-          const push = ((pairMinDist - dist) / dist) * stiffness * 0.5;
+          const push = ((minDist - dist) / dist) * stiffness * 0.5;
           positions[i * 2] -= dx * push;
           positions[i * 2 + 1] -= dy * push;
           positions[j * 2] += dx * push;
           positions[j * 2 + 1] += dy * push;
+          zPos[i] -= dz * push;
+          zPos[j] += dz * push;
         }
       }
     }

@@ -16,7 +16,6 @@ import {
   applyDistanceConstraints,
   applyRepulsion,
   applySegmentCollision,
-  ZONE_SLOTS,
 } from "./forces";
 import { SeededRNG } from "../util/random";
 import { createNoise3D } from "simplex-noise";
@@ -255,10 +254,6 @@ const CONTACT_SPEED_EMA = 0.15; // Per-substep blend into the average.
 const GRAB_FREE_RADIUS = 1.2;
 const GRAB_FREE_TAPER = 1.8;
 const GRAB_GATE_EASE = 0.05;
-// Zone tag window: particles within this many ctrl of a binding carry the
-// crossing's id, so the emergent collector can recognize a registered
-// crossing's own overlap (dedup only - exemption is the depth field's job).
-const CROSSING_ZONE_HALF = 4;
 // Depth field: the quasi-3D crossing model. Each pass tents its thread's
 // depth to +/-amp over DEPTH_WINDOW ctrl around the binding; collision and
 // repulsion treat threads as 3D capsules (required 2D separation
@@ -277,6 +272,11 @@ const CROSSING_ZONE_HALF = 4;
 // exempts the crossing point: dz = 2 * 0.64 * amp >= margin.
 const DEPTH_WINDOW = 1.4;
 const DEPTH_AMP_FACTOR = 1.0;
+// Per-substep ease of the real z toward its diagram target. Strong
+// enough to enforce over/under ordering within a few substeps, soft
+// enough that the (last-run, full-stiffness) collision projection wins
+// wherever the layout genuinely overlaps.
+const Z_EASE = 0.2;
 // Laplacian fairing stiffness at smooth = 1.
 const FAIRING_MAX = 0.3;
 // Transversality torque: fraction of the angular error (toward the signed
@@ -317,8 +317,12 @@ export class ParticleSystem {
   private passPrev = new Map<CrossingPass, CrossingPass>();
   private passNext = new Map<CrossingPass, CrossingPass>();
   private initialCtrl = new Map<CrossingPass, number>();
-  private zones: Int32Array;
-  private depths: Float32Array;
+  // TRUE-3D depth: zPos is a real simulated per-particle coordinate
+  // (collision/repulsion push it); zTargets are the soft diagram-derived
+  // targets it eases toward (over passes +amp, under passes -amp, tents
+  // along the thread, contributions summing).
+  private zPos: Float32Array;
+  private zTargets: Float32Array;
   private contacts: Float32Array;
   private topology!: SegmentTopology;
   private emergentCollector = { data: new Float32Array(256 * 4), n: 0 };
@@ -364,8 +368,8 @@ export class ParticleSystem {
     this.initial = new Float32Array(initialPositions);
     this.positions = new Float32Array(this.initial);
     this.prev = new Float32Array(this.initial);
-    this.zones = new Int32Array(this.particleCount * ZONE_SLOTS).fill(-1);
-    this.depths = new Float32Array(this.particleCount);
+    this.zPos = new Float32Array(this.particleCount);
+    this.zTargets = new Float32Array(this.particleCount);
 
     for (let i = 0; i < this.particleCount; i++) {
       this.homeX += this.initial[i * 2];
@@ -595,6 +599,7 @@ export class ParticleSystem {
     this.contactSpeedEma.fill(1);
     this.grabGate.fill(1);
     this.prevContacts.fill(0);
+    this.zPos.fill(0);
     for (const [pass, ctrl] of this.initialCtrl) {
       pass.ctrl = ctrl;
       pass.displayF = undefined;
@@ -678,11 +683,12 @@ export class ParticleSystem {
         chain: this.topology.chainOf[j],
         ctrl: this.topology.ctrlOf[j] + v,
       };
-      const aFirst =
-        a.chain < b.chain ||
-        (a.chain === b.chain &&
-          Math.floor(a.ctrl / 4) <= Math.floor(b.ctrl / 4));
-      out.push(aFirst ? { over: a, under: b } : { over: b, under: a });
+      // Over/under from REAL z: with the simulated third coordinate, the
+      // thread that rides higher at the overlap genuinely is the over
+      // thread (collision separated them in z).
+      const za = this.zPos[i] + (this.zPos[this.topology.next[i]] - this.zPos[i]) * u;
+      const zb = this.zPos[j] + (this.zPos[this.topology.next[j]] - this.zPos[j]) * v;
+      out.push(za >= zb ? { over: a, under: b } : { over: b, under: a });
     }
     return out;
   }
@@ -857,7 +863,7 @@ export class ParticleSystem {
       k++
     ) {
       const w = 1 - Math.abs(k - c) / DEPTH_WINDOW;
-      this.depths[chain[((k % len) + len) % len]] += amp * w;
+      this.zTargets[chain[((k % len) + len) % len]] += amp * w;
     }
   }
 
@@ -1028,12 +1034,9 @@ export class ParticleSystem {
     );
 
     // Slide bindings toward the other thread's current point, record each
-    // crossing's contact point, mark zone tags (they gate the depth
-    // exemption and dedup the collector; ZONE_SLOTS per particle - dense
-    // weaves overlap several windows), and rebuild the depth field.
+    // crossing's contact point, and rebuild the z-target field.
     const depthAmp = collisionDist * DEPTH_AMP_FACTOR;
-    this.zones.fill(-1);
-    this.depths.fill(0);
+    this.zTargets.fill(0);
     for (let c = 0; c < this.crossings.length; c++) {
       const crossing = this.crossings[c];
       this.bindingPoint(crossing.over, this.bindScratch, 0);
@@ -1084,36 +1087,19 @@ export class ParticleSystem {
         }
       }
 
-      for (const pass of [crossing.over, crossing.under]) {
-        const chain = this.chains[pass.chain];
-        const len = chain.length;
-        const base = Math.floor(pass.ctrl);
-        for (
-          let k = base - CROSSING_ZONE_HALF;
-          k <= base + CROSSING_ZONE_HALF + 1;
-          k++
-        ) {
-          const p = chain[((k % len) + len) % len];
-          for (let slot = 0; slot < ZONE_SLOTS; slot++) {
-            const at = p * ZONE_SLOTS + slot;
-            if (this.zones[at] === c) break;
-            if (this.zones[at] < 0) {
-              this.zones[at] = c;
-              break;
-            }
-          }
-        }
-      }
-
-      // Depth tents for the quasi-3D collision model (see DEPTH_WINDOW).
+      // z-target tents from the diagram (see DEPTH_WINDOW).
       this.addDepthTent(crossing.over, depthAmp);
       this.addDepthTent(crossing.under, -depthAmp);
     }
+    // Ease the REAL z toward its diagram target (overdamped - z carries
+    // no inertia, so it cannot ring; collision's z-pushes stack on top
+    // and, running last, win where the layout genuinely overlaps).
     for (let i = 0; i < this.particleCount; i++) {
-      this.depths[i] = Math.max(
+      const target = Math.max(
         -depthAmp,
-        Math.min(depthAmp, this.depths[i])
+        Math.min(depthAmp, this.zTargets[i])
       );
+      this.zPos[i] += (target - this.zPos[i]) * Z_EASE;
     }
     this.probe("slide+transversality");
 
@@ -1149,28 +1135,25 @@ export class ParticleSystem {
       // each other and lock into braided local minima.
       applyRepulsion(
         this.positions,
+        this.zPos,
         this.particleCount,
         repulseDist,
         REPULSION_STIFFNESS,
-        this.excludedPairs,
-        this.depths,
-        collisionDist,
-        { zones: this.zones, contacts: this.contacts }
+        this.excludedPairs
       );
       this.probe("repulsion");
-      // Hard floor: thread width honored everywhere the depth field says
-      // the threads are at the same depth, regardless of how weak the
-      // aesthetic repulsion is. The collector gathers tunneled (properly
-      // intersecting) pairs so the renderer can gap emergent crossings.
+      // Hard 3D floor: no two threads within the margin in 3D, ever. The
+      // collector gathers tunneled (properly intersecting) pairs so the
+      // renderer can gap emergent crossings.
       if (iter === 0) this.emergentCollector.n = 0;
       applySegmentCollision(
         this.positions,
+        this.zPos,
         this.particleCount,
         this.topology,
         collisionDist,
         COLLISION_STIFFNESS,
-        this.depths,
-        { zones: this.zones, contacts: this.contacts },
+        this.contacts,
         iter === 0 ? this.emergentCollector : undefined
       );
       this.probe("collision");
@@ -1313,12 +1296,12 @@ export class ParticleSystem {
     for (let fs = 0; fs < 2; fs++) {
       applySegmentCollision(
         this.positions,
+        this.zPos,
         this.particleCount,
         this.topology,
         collisionDist,
         1.0,
-        this.depths,
-        { zones: this.zones, contacts: this.contacts },
+        this.contacts,
         undefined
       );
     }

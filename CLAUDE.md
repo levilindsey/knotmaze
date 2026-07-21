@@ -80,6 +80,23 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **"Threads too close" (all remaining forms): RESOLVED by TRUE-3D
+  collision (P3.29).** The tug-then-rest census showed ZERO violations
+  of the depth-exemption spec - the spec itself permitted sub-width
+  hugging in every crossing's exempt core. Root insight after five
+  exemption patches: an exempt region is a hole, and holes admit bugs.
+  z is now a REAL simulated per-particle coordinate (`zPos`, overdamped,
+  eased toward diagram-derived `zTargets` at Z_EASE 0.2); collision and
+  repulsion are UNCONDITIONAL 3D capsule tests - no zones, no gates, no
+  falloff shapes, at any width. 2D-squeezed threads resolve by
+  separating in z (one goes over) - renderable by definition; emergent
+  crossings order over/under by real z. Deleted: ZONE_SLOTS/zones,
+  sharedZone, quartic falloff, CrossingZones (collector dedup is now a
+  spatial scan of registered contacts). Post-tug census: flatClose
+  (2D-close without depth separation) 0, VIOL3D 1 marginal at 92% of
+  floor (Gauss-Seidel sandwich residual), 472 clean over/unders. All
+  scans/settles/tests green. The z state is invisible to rendering
+  except through over/under ordering.
 - **Torn/mangled crossings after a small pull: RESOLVED by rendering at
   the true intersection (P3.28).** The user's actual workflow - a small
   tug, then observe AT REST - left crossings drawn as jagged, torn
