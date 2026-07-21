@@ -28,6 +28,11 @@ export interface CrossingPass {
   // Diagnostic bookkeeping (a fallback means the threads have locally
   // separated at the crossing).
   intersected?: boolean;
+  // The other pass of the same crossing. When the partner is also this
+  // pass's chain-order neighbor, the crossing is a self-crossing kink and
+  // the ordering clamp holds the larger KINK_MIN_SEPARATION so the kink's
+  // loop keeps enough material to render as an eyelet.
+  partner?: CrossingPass;
 }
 
 export interface CrossingInfo {
@@ -159,6 +164,13 @@ const SLIDE_DEADBAND = 1e-4;
 // guarded by the transversality torque, so this only needs to prevent
 // outright coincidence.
 const MIN_PASS_SEPARATION = 0.9;
+// Between the two passes of a SELF-crossing (a kink: the thread crossing
+// itself), the material between the passes IS the kink's visible eyelet.
+// The generic 0.9 floor let kink loops starve to ~0.25 arc of material -
+// unrenderable (the erase cuts ~1 unit of thread with nothing to repaint:
+// the reported giant gaps at loop-end non-twists). ~2.6 ctrl of loop
+// material renders as a legible eyelet at the default thread width.
+const KINK_MIN_SEPARATION = 2.6;
 const COUPLING_STIFFNESS = 0.7;
 // Static/kinetic contact friction. KINETIC (frictionless coupling -
 // material slides through crossings) while the user drags, temperature
@@ -181,17 +193,22 @@ const COUPLING_STIFFNESS = 0.7;
 // net-displacement-over-a-window, which separates the two.)
 const CONTACT_STICK_EPS = 1e-2; // Per-substep displacement, engage.
 const CONTACT_UNSTICK_EPS = 2.5e-2; // Per-substep displacement, release.
-// Candidate windows for the contact-bubble exemption; must cover every
-// particle within CONTACT_RADIUS of a binding.
+// Zone tag window: particles within this many ctrl of a binding carry the
+// crossing's id, so the emergent collector can recognize a registered
+// crossing's own overlap (dedup only - exemption is the depth field's job).
 const CROSSING_ZONE_HALF = 4;
-// Threads may touch within this distance of a crossing's contact point;
-// beyond it repulsion resumes (so twist eyes open between close crossings).
-// Keep this near the thread width: a generous bubble plus the taper left
-// almost no repulsion between the tightly-spaced crossings of a taut
-// twist, and the two threads hugged. Sized with EXEMPTION_TAPER_SLOPE
-// (see forces.ts) so a tight eye recovers the full width floor at
-// mid-eye.
-const CONTACT_RADIUS = 0.25;
+// Depth field: the quasi-3D crossing model. Each pass tents its thread's
+// depth to +/-amp over DEPTH_WINDOW ctrl around the binding; collision and
+// repulsion treat threads as 3D capsules (required 2D separation
+// sqrt(margin^2 - dz^2)). Contributions SUM, so a twist eye's midpoint
+// (opposite-sign tents from its two crossings) returns to depth 0 and
+// recovers the full width floor - eyes stay open with no tuned taper.
+// AMP_FACTOR is sized so the worst-case tent sampling (binding at ctrl
+// x.5: nearest particles carry weight 1 - 0.5/W = 0.583 each) still fully
+// exempts the crossing point: dz = 2 * 0.583 * amp >= margin requires
+// amp >= 0.86 * margin.
+const DEPTH_WINDOW = 1.2;
+const DEPTH_AMP_FACTOR = 1.0;
 // Laplacian fairing stiffness at smooth = 1.
 const FAIRING_MAX = 0.3;
 // Transversality torque: fraction of the angular error (toward the signed
@@ -234,6 +251,7 @@ export class ParticleSystem {
   private initialCtrl = new Map<CrossingPass, number>();
   private zoneA: Int32Array;
   private zoneB: Int32Array;
+  private depths: Float32Array;
   private contacts: Float32Array;
   private topology!: SegmentTopology;
   private emergentCollector = { data: new Float32Array(256 * 4), n: 0 };
@@ -281,6 +299,7 @@ export class ParticleSystem {
     this.prev = new Float32Array(this.initial);
     this.zoneA = new Int32Array(this.particleCount).fill(-1);
     this.zoneB = new Int32Array(this.particleCount).fill(-1);
+    this.depths = new Float32Array(this.particleCount);
 
     for (let i = 0; i < this.particleCount; i++) {
       this.homeX += this.initial[i * 2];
@@ -403,6 +422,8 @@ export class ParticleSystem {
       };
       const [ox, oy] = tangent(over);
       const [ux, uy] = tangent(under);
+      over.partner = under;
+      under.partner = over;
       crossings.push({
         over,
         under,
@@ -735,6 +756,22 @@ export class ParticleSystem {
     return bestF;
   }
 
+  // Accumulate one pass's depth tent: +/-amp at the binding, linear to
+  // zero over DEPTH_WINDOW ctrl each side.
+  private addDepthTent(pass: CrossingPass, amp: number): void {
+    const chain = this.chains[pass.chain];
+    const len = chain.length;
+    const c = pass.ctrl;
+    for (
+      let k = Math.ceil(c - DEPTH_WINDOW);
+      k <= Math.floor(c + DEPTH_WINDOW);
+      k++
+    ) {
+      const w = 1 - Math.abs(k - c) / DEPTH_WINDOW;
+      this.depths[chain[((k % len) + len) % len]] += amp * w;
+    }
+  }
+
   // Ease a pass toward its slide target with a rate limit, then keep
   // order against neighboring passes on the same chain.
   private easePassToward(self: CrossingPass, bestF: number): void {
@@ -756,11 +793,15 @@ export class ParticleSystem {
     const next = this.passNext.get(self);
     if (prev && next && prev !== self) {
       const cyc = (d: number): number => ((d % len) + len) % len;
-      if (cyc(f - prev.ctrl) < MIN_PASS_SEPARATION) {
-        f = prev.ctrl + MIN_PASS_SEPARATION;
+      const sepPrev =
+        prev === self.partner ? KINK_MIN_SEPARATION : MIN_PASS_SEPARATION;
+      const sepNext =
+        next === self.partner ? KINK_MIN_SEPARATION : MIN_PASS_SEPARATION;
+      if (cyc(f - prev.ctrl) < sepPrev) {
+        f = prev.ctrl + sepPrev;
       }
-      if (cyc(next.ctrl - f) < MIN_PASS_SEPARATION) {
-        f = next.ctrl - MIN_PASS_SEPARATION;
+      if (cyc(next.ctrl - f) < sepNext) {
+        f = next.ctrl - sepNext;
       }
     }
     if (f !== unclamped) this.slideStats.clampHits++;
@@ -880,10 +921,14 @@ export class ParticleSystem {
       tuning.repulsion;
 
     // Slide bindings toward the other thread's current point, record each
-    // crossing's contact point, and mark candidate exemption windows (up to
-    // two per particle - twist windows overlap).
+    // crossing's contact point, mark zone tags (collector dedup), and
+    // rebuild the depth field (up to two zone tags per particle - twist
+    // windows overlap).
+    const collisionDist = tuning.threadWidth * COLLISION_MARGIN;
+    const depthAmp = collisionDist * DEPTH_AMP_FACTOR;
     this.zoneA.fill(-1);
     this.zoneB.fill(-1);
+    this.depths.fill(0);
     for (let c = 0; c < this.crossings.length; c++) {
       const crossing = this.crossings[c];
       this.bindingPoint(crossing.over, this.bindScratch, 0);
@@ -915,6 +960,16 @@ export class ParticleSystem {
           else this.zoneB[p] = c;
         }
       }
+
+      // Depth tents for the quasi-3D collision model (see DEPTH_WINDOW).
+      this.addDepthTent(crossing.over, depthAmp);
+      this.addDepthTent(crossing.under, -depthAmp);
+    }
+    for (let i = 0; i < this.particleCount; i++) {
+      this.depths[i] = Math.max(
+        -depthAmp,
+        Math.min(depthAmp, this.depths[i])
+      );
     }
     this.probe("slide+transversality");
 
@@ -948,33 +1003,29 @@ export class ParticleSystem {
       // settle ramp shrinks rests, parallel threads get dragged toward the
       // same corridor line, and weak early repulsion lets them pass through
       // each other and lock into braided local minima.
-      const exemption = {
-        zoneA: this.zoneA,
-        zoneB: this.zoneB,
-        contacts: this.contacts,
-        radius: CONTACT_RADIUS,
-      };
       applyRepulsion(
         this.positions,
         this.particleCount,
         repulseDist,
         REPULSION_STIFFNESS,
         this.excludedPairs,
-        exemption
+        this.depths,
+        collisionDist
       );
       this.probe("repulsion");
-      // Hard floor: thread width honored everywhere outside crossing
-      // lenses, regardless of how weak the aesthetic repulsion is. The
-      // collector gathers tunneled (properly intersecting) pairs so the
-      // renderer can gap emergent crossings.
+      // Hard floor: thread width honored everywhere the depth field says
+      // the threads are at the same depth, regardless of how weak the
+      // aesthetic repulsion is. The collector gathers tunneled (properly
+      // intersecting) pairs so the renderer can gap emergent crossings.
       if (iter === 0) this.emergentCollector.n = 0;
       applySegmentCollision(
         this.positions,
         this.particleCount,
         this.topology,
-        tuning.threadWidth * COLLISION_MARGIN,
+        collisionDist,
         COLLISION_STIFFNESS,
-        exemption,
+        this.depths,
+        { zoneA: this.zoneA, zoneB: this.zoneB, contacts: this.contacts },
         iter === 0 ? this.emergentCollector : undefined
       );
       this.probe("collision");

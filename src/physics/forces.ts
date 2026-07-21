@@ -41,32 +41,32 @@ export function applyDistanceConstraints(
   }
 }
 
-// Contact-bubble exemption for crossings: a pair of particles skips
-// repulsion only when both lie within `radius` of the shared crossing's
-// actual contact point. Threads may touch AT a crossing, but between two
-// nearby crossings (a twist) repulsion resumes and holds them apart.
-export interface CrossingExemption {
+// Crossing zone tags: which registered crossing (if any) each particle
+// belongs to, up to two per particle (twist windows overlap). Since the
+// depth model took over collision exemption, these serve only the
+// emergent-crossing collector: a properly-intersecting segment pair whose
+// particles share a registered crossing is that crossing's own overlap,
+// not an emergent one.
+export interface CrossingZones {
   zoneA: Int32Array; // Up to two crossing ids per particle...
   zoneB: Int32Array; // ...(twist windows overlap).
   contacts: Float32Array; // Per-crossing contact point [x, y].
-  radius: number;
 }
 
-// Taper slope: how fast the allowed separation ramps from zero at the
-// contact bubble's edge back up to the full repulsion/collision distance.
-// Sized so a TIGHT twist eye (contacts ~1 apart at slack 0) recovers the
-// full thread-width floor at mid-eye: with radius 0.25, (0.5 - 0.25) * 2.0
-// = 0.5 >= the 0.44 floor. Too shallow and the eye's strands legitimately
-// hug (same-color ribbons touching render as one merged blob - reported
-// as a gap-less twist); too cliff-like and the eye buckles and inverts.
-export const EXEMPTION_TAPER_SLOPE = 2.0;
-
-// Hard capsule collision between thread segments: no two non-exempt
-// segments may come closer (centerline to centerline) than minDist, so
-// thread width is honored everywhere except inside a crossing's contact
-// lens. This is what point repulsion cannot guarantee: points can spread
-// while the segments between them still overlap, and exemption bubbles
-// let parallel runs hug.
+// Hard capsule collision between thread segments, DEPTH-AWARE: the knot
+// is quasi-3D, with per-particle depth z assigned from the crossing
+// diagram (over passes lift, under passes sink; see the depth field in
+// ParticleSystem). Two segments are treated as 3D capsules: the required
+// 2D separation is sqrt(minDist^2 - dz^2), so exactly where the diagram
+// says the threads pass over/under each other the floor vanishes, and it
+// recovers smoothly as material moves away from the crossing along
+// either thread - at ANY crossing angle. This replaces the old circular
+// contact-bubble exemption, whose fixed radius mismatched the true
+// overlap region (margin/sin(angle) long) at oblique crossings: the
+// mismatch both welded threads tangentially (full-vector corrections in
+// the annulus) and fought the geometry in a standing conflict.
+// This is what point repulsion cannot guarantee: points can spread
+// while the segments between them still overlap.
 export interface SegmentTopology {
   next: Int32Array; // Particle -> next particle along its chain.
   chainOf: Int32Array; // Particle -> chain index.
@@ -88,7 +88,8 @@ export function applySegmentCollision(
   topology: SegmentTopology,
   minDist: number,
   stiffness: number,
-  exemption: CrossingExemption,
+  depths: Float32Array,
+  zones: CrossingZones,
   collector?: EmergentCollector
 ): void {
   const cellSize = Math.max(1, minDist * 2);
@@ -120,43 +121,30 @@ export function applySegmentCollision(
         for (const j of bucket) {
           if (j <= i) continue;
 
-          // Skip nearby same-chain segments (they legitimately connect).
+          // Skip immediate same-chain neighbors (they legitimately
+          // connect and overlap at shared endpoints). Only 2: farther
+          // same-chain pairs are policed like any other - this is what
+          // keeps kink loops and hairpin tips from collapsing flat. Depth
+          // exempts the pairs that genuinely cross.
           if (chainOf[i] === chainOf[j]) {
             const len = chainLen[i];
             const d = Math.abs(ctrlOf[i] - ctrlOf[j]);
-            if (Math.min(d, len - d) <= 6) continue;
+            if (Math.min(d, len - d) <= 2) continue;
           }
 
-          // Crossing-lens exemption with the same smooth taper as point
-          // repulsion.
-          let pairMinDist = minDist;
+          // Shared registered crossing, for the collector's dedup only.
           let sharedKx = Number.NaN;
           let sharedKy = Number.NaN;
-          const a1 = exemption.zoneA[i];
-          const a2 = exemption.zoneB[i];
-          const b1 = exemption.zoneA[j];
-          const b2 = exemption.zoneB[j];
+          const a1 = zones.zoneA[i];
+          const a2 = zones.zoneB[i];
+          const b1 = zones.zoneA[j];
+          const b2 = zones.zoneB[j];
           let shared = -1;
           if (a1 >= 0 && (a1 === b1 || a1 === b2)) shared = a1;
           else if (a2 >= 0 && (a2 === b1 || a2 === b2)) shared = a2;
           if (shared >= 0) {
-            const kx = exemption.contacts[shared * 2];
-            const ky = exemption.contacts[shared * 2 + 1];
-            sharedKx = kx;
-            sharedKy = ky;
-            const di = Math.hypot(
-              positions[i * 2] - kx,
-              positions[i * 2 + 1] - ky
-            );
-            const dj = Math.hypot(
-              positions[j * 2] - kx,
-              positions[j * 2 + 1] - ky
-            );
-            pairMinDist = Math.min(
-              minDist,
-              Math.max(0, (Math.max(di, dj) - exemption.radius) * EXEMPTION_TAPER_SLOPE)
-            );
-            if (pairMinDist < 1e-3) continue;
+            sharedKx = zones.contacts[shared * 2];
+            sharedKy = zones.contacts[shared * 2 + 1];
           }
 
           // Closest points between segment (i -> next[i]) and
@@ -228,6 +216,13 @@ export function applySegmentCollision(
             }
           }
 
+          // Depth-aware floor at the closest points: 3D capsule contact.
+          const zi = depths[i] + (depths[i2] - depths[i]) * s;
+          const zj = depths[j] + (depths[j2] - depths[j]) * t;
+          const dz = zi - zj;
+          const pairMinDistSq = minDist * minDist - dz * dz;
+          if (pairMinDistSq <= 1e-9) continue;
+
           const q1x = p1x + d1x * s;
           const q1y = p1y + d1y * s;
           const q2x = p2x + d2x * t;
@@ -235,10 +230,11 @@ export function applySegmentCollision(
           let nx = q1x - q2x;
           let ny = q1y - q2y;
           const dist = Math.hypot(nx, ny);
-          if (dist >= pairMinDist || dist < 1e-9) continue;
+          if (dist * dist >= pairMinDistSq || dist < 1e-9) continue;
           nx /= dist;
           ny /= dist;
 
+          const pairMinDist = Math.sqrt(pairMinDistSq);
           const push = (pairMinDist - dist) * stiffness * 0.5;
           // Distribute to endpoints by closest-point weights.
           positions[i * 2] += nx * push * (1 - s);
@@ -257,13 +253,17 @@ export function applySegmentCollision(
 
 // Soft minimum-distance repulsion between non-neighboring particles, using a
 // uniform spatial hash. Keeps parallel threads from visually overlapping.
+// Depth-aware like collision: the repulsion range scales by
+// sqrt(1 - (dz/depthRange)^2), where depthRange is the collision margin -
+// a pair fully over/under each other needs no spacing at all.
 export function applyRepulsion(
   positions: Float32Array,
   particleCount: number,
   minDist: number,
   stiffness: number,
   excludedPairs: Set<number>,
-  exemption?: CrossingExemption
+  depths: Float32Array,
+  depthRange: number
 ): void {
   const cellSize = minDist;
   const buckets = new Map<number, number[]>();
@@ -293,48 +293,21 @@ export function applyRepulsion(
         for (const j of bucket) {
           if (j <= i) continue;
           if (excludedPairs.has(i * 65536 + j)) continue;
-          let pairMinDist = minDist;
-          if (exemption) {
-            const a1 = exemption.zoneA[i];
-            const a2 = exemption.zoneB[i];
-            const b1 = exemption.zoneA[j];
-            const b2 = exemption.zoneB[j];
-            let shared = -1;
-            if (a1 >= 0 && (a1 === b1 || a1 === b2)) shared = a1;
-            else if (a2 >= 0 && (a2 === b1 || a2 === b2)) shared = a2;
-            if (shared >= 0) {
-              const cx = exemption.contacts[shared * 2];
-              const cy = exemption.contacts[shared * 2 + 1];
-              const di = Math.hypot(
-                positions[i * 2] - cx,
-                positions[i * 2 + 1] - cy
-              );
-              const dj = Math.hypot(
-                positions[j * 2] - cx,
-                positions[j * 2 + 1] - cy
-              );
-              // Near a crossing the allowed separation ramps smoothly from
-              // zero at the contact bubble's edge up to the full repulsion
-              // distance - a hard cliff here torques twist loops until
-              // they buckle and the crossing inverts, while too shallow a
-              // ramp lets taut twists hug (slope 1.6 reaches full within
-              // the eye of a taut twist without reintroducing the cliff).
-              pairMinDist = Math.min(
-                minDist,
-                Math.max(0, (Math.max(di, dj) - exemption.radius) * EXEMPTION_TAPER_SLOPE)
-              );
-              if (pairMinDist < 1e-3) continue;
-            }
-          }
+
+          const dz = depths[j] - depths[i];
+          const scaleSq = 1 - (dz * dz) / (depthRange * depthRange);
+          if (scaleSq <= 1e-6) continue;
+          const pairMinDistSq = minDist * minDist * scaleSq;
 
           const dx = positions[j * 2] - positions[i * 2];
           const dy = positions[j * 2 + 1] - positions[i * 2 + 1];
           const distSq = dx * dx + dy * dy;
-          if (distSq >= pairMinDist * pairMinDist || distSq < EPSILON) {
+          if (distSq >= pairMinDistSq || distSq < EPSILON) {
             continue;
           }
 
           const dist = Math.sqrt(distSq);
+          const pairMinDist = Math.sqrt(pairMinDistSq);
           const push = ((pairMinDist - dist) / dist) * stiffness * 0.5;
           positions[i * 2] -= dx * push;
           positions[i * 2 + 1] -= dy * push;

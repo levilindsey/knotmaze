@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.21 constant-arc crossing gaps 2026-07-18";
+const BUILD_STAMP = "P3.22 quasi-3D depth collision 2026-07-21";
 
 const app = new Application();
 
