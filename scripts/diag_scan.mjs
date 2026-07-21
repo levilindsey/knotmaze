@@ -49,11 +49,17 @@ try {
     .filter((c) => c.eraseSpan < 0.14)
     .sort((a, b) => a.eraseSpan - b.eraseSpan)
     .slice(0, 6);
-  // Healthy spans: ~0.60 perpendicular, up to ~0.67 oblique with the
-  // arc-length margin (P3.21). The old 1.3 threshold certified the
-  // gap/sin(angle) naked-gap bug as healthy - keep this tight.
+  // Healthy spans scale with thread width and gap: ~2*(fillHalf/sin) +
+  // 2*gap, moderately oblique. Derive the threshold from the URL's tw
+  // and gap (defaults 0.42 / 0.18) - a fixed 0.85 flagged healthy fat
+  // threads and once (at 1.3) certified the naked-gap bug as healthy.
+  const q = new URL(url).searchParams;
+  const tw = Number(q.get("tw") ?? 0.42);
+  const gapParam = Number(q.get("gap") ?? 0.18);
+  const bigGapThreshold = (tw * 1.5 + gapParam * 2) * 1.15;
+  console.log(`big-gap threshold ${bigGapThreshold.toFixed(2)}`);
   const bigGap = crossings
-    .filter((c) => c.eraseSpan > 0.85)
+    .filter((c) => c.eraseSpan > bigGapThreshold)
     .sort((a, b) => b.eraseSpan - a.eraseSpan)
     .slice(0, 6);
 

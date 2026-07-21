@@ -80,6 +80,23 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **Fat-thread "penetration": RESOLVED by width-scaled renderer reaches
+  (P3.27).** After P3.26 the post-play physics state was verifiably
+  clean (0 overlap pairs without full depth separation) yet tw 0.52
+  still showed merges: the RENDERER's reach caps (CUT_REACH_MAX 1.35,
+  OVER_REACH_MAX 1.2, neighbor clearances 0.65/0.42) were absolute
+  constants calibrated at tw 0.42 - a fat shallow crossing's overlap
+  extends past them, the erase cap lands INSIDE the overlap, and
+  everything beyond renders uncut. Reaches now scale with fillHalf
+  (CUT 6.5x, OVER 5.8x, floored at the old values), clearances raised
+  to 0.8/0.5 (window-overlap invariant: their sum must exceed 1 so
+  neighbor windows meet), local polylines out-reach the marches by 0.8,
+  over-patch capacity 36 -> 56 samples. The scanner's BIG-GAP threshold
+  is now derived from tw/gap in the URL instead of a constant. Probe
+  rule: verify the POST-PLAY state, not just fresh settles - and
+  separate "physics penetration" (pairs without depth separation) from
+  "renderer failure" (depth-separated pairs drawn uncut) before fixing
+  either.
 - **Deep penetration at extreme params: RESOLVED by the final-authority
   collision projection (P3.26).** At rep 0.4 (raw repulsion distance
   0.25 < thread width — the slider could silently disable spacing),

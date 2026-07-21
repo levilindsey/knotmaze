@@ -38,15 +38,16 @@ const SAMPLE_SPACING = 0.09;
 const MIN_SAMPLES = 48;
 // The over-fill patch copies base-ribbon vertices verbatim, so its capacity
 // just needs to cover the longest window (in samples) a crossing can need.
-const OVER_PATCH_MAX_SAMPLES = 36;
+// Sized for the widest thread: over windows scale with fillHalf.
+const OVER_PATCH_MAX_SAMPLES = 56;
 // The over-fill window clamps to a fraction of the arc distance to the
 // nearest crossing pass along the same thread. The erase march gets a larger
 // budget: truncating a lane's boundary solve leaves that cap corner short
 // (visibly closer to the over thread), and any overreach toward the
 // neighboring crossing is repainted by its vertex-exact over-fill - the two
 // fractions summing past 1.0 guarantees the windows overlap.
-const NEIGHBOR_CLEARANCE = 0.42;
-const ERASE_NEIGHBOR_CLEARANCE = 0.65;
+const NEIGHBOR_CLEARANCE = 0.5;
+const ERASE_NEIGHBOR_CLEARANCE = 0.8;
 const OVER_HALF_LENGTH_MIN = 0.35;
 const OVER_PATCH_MARGIN = 0.12;
 // Slight overhang so the erase fully covers the under ribbon's antialiased
@@ -60,11 +61,17 @@ const ERASE_WIDTH_PAD = 0.02;
 // it is provably beyond the erase's reach - direct measurement, robust to
 // kinked centerlines and any crossing angle.
 const LOCAL_SAMPLES = 24;
-const OVER_LOCAL_REACH = 1.9;
-const UNDER_LOCAL_REACH = 1.6;
 const MARCH_STEP = 0.07;
-const CUT_REACH_MAX = 1.35;
-const OVER_REACH_MAX = 1.2;
+// Reach limits SCALE WITH THREAD WIDTH (fillHalf): they were absolute
+// constants calibrated at width 0.42, and at wider threads a shallow
+// crossing's overlap extends past them - the erase cap then sits INSIDE
+// the overlap and everything beyond renders as an uncut merge (reported
+// as "heavy penetration" at tw 0.52; the physics state was clean).
+const CUT_REACH_PER_HALF = 6.5; // * fillHalf, floored at the 0.42 values.
+const OVER_REACH_PER_HALF = 5.8;
+const CUT_REACH_MIN = 1.35;
+const OVER_REACH_MIN = 1.2;
+const LOCAL_REACH_PAD = 0.8; // Local polylines must out-reach the marches.
 // Matches the base ribbon's sample spacing so the erase's miter factor
 // tracks the base extrusion's at kinks.
 const MITER_PROBE = 0.09;
@@ -429,11 +436,16 @@ export class RibbonRenderer {
           Math.min(0.5, Math.min(dPos, dNeg) / 2 - 0.05)
         );
       }
+      const cutReachMax = Math.max(CUT_REACH_MIN, fillHalf * CUT_REACH_PER_HALF);
+      const overReachMax = Math.max(
+        OVER_REACH_MIN,
+        fillHalf * OVER_REACH_PER_HALF
+      );
       this.buildLocal(
         this.overLocal,
         overSamples,
         overCenter,
-        Math.min(OVER_LOCAL_REACH, overSamples.totalLength / 4),
+        Math.min(cutReachMax + LOCAL_REACH_PAD, overSamples.totalLength / 4),
         selfCross ? underCenter : Number.NaN,
         maskHalf
       );
@@ -441,7 +453,7 @@ export class RibbonRenderer {
         this.underLocal,
         underSamples,
         underCenter,
-        Math.min(UNDER_LOCAL_REACH, underSamples.totalLength / 4),
+        Math.min(overReachMax + LOCAL_REACH_PAD, underSamples.totalLength / 4),
         selfCross ? overCenter : Number.NaN,
         maskHalf
       );
@@ -471,7 +483,7 @@ export class RibbonRenderer {
         const sMax = Math.max(
           0.15,
           Math.min(
-            CUT_REACH_MAX,
+            cutReachMax,
             ERASE_NEIGHBOR_CLEARANCE * gapLimit,
             selfLimit,
             underSamples.totalLength / 4
@@ -688,7 +700,7 @@ export class RibbonRenderer {
         const rMax = Math.max(
           0.12,
           Math.min(
-            OVER_REACH_MAX,
+            overReachMax,
             NEIGHBOR_CLEARANCE * gapLimit,
             dir > 0 ? splitPos : splitNeg,
             overSamples.totalLength / 4
