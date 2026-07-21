@@ -16,6 +16,7 @@ import {
   applyDistanceConstraints,
   applyRepulsion,
   applySegmentCollision,
+  ZONE_SLOTS,
 } from "./forces";
 import { SeededRNG } from "../util/random";
 import { createNoise3D } from "simplex-noise";
@@ -228,6 +229,13 @@ const CONTACT_UNSTICK_EPS = 2.5e-2; // Per-substep displacement, release.
 const CONTACT_WELD_HI = 3e-2;
 const CONTACT_WELD_LO = 5e-3;
 const CONTACT_SPEED_EMA = 0.15; // Per-substep blend into the average.
+// Contacts within RADIUS of the grabbed particle are fully released
+// (a weak tug moves material ~3e-3/substep - below WELD_LO - and would
+// otherwise weld mid-gesture); the release tapers out by
+// RADIUS + TAPER. Beyond that the speed sensing decides, keeping the
+// response to a drag LOCAL.
+const GRAB_FREE_RADIUS = 2.5;
+const GRAB_FREE_TAPER = 2.5;
 // Zone tag window: particles within this many ctrl of a binding carry the
 // crossing's id, so the emergent collector can recognize a registered
 // crossing's own overlap (dedup only - exemption is the depth field's job).
@@ -290,8 +298,7 @@ export class ParticleSystem {
   private passPrev = new Map<CrossingPass, CrossingPass>();
   private passNext = new Map<CrossingPass, CrossingPass>();
   private initialCtrl = new Map<CrossingPass, number>();
-  private zoneA: Int32Array;
-  private zoneB: Int32Array;
+  private zones: Int32Array;
   private depths: Float32Array;
   private contacts: Float32Array;
   private topology!: SegmentTopology;
@@ -338,8 +345,7 @@ export class ParticleSystem {
     this.initial = new Float32Array(initialPositions);
     this.positions = new Float32Array(this.initial);
     this.prev = new Float32Array(this.initial);
-    this.zoneA = new Int32Array(this.particleCount).fill(-1);
-    this.zoneB = new Int32Array(this.particleCount).fill(-1);
+    this.zones = new Int32Array(this.particleCount * ZONE_SLOTS).fill(-1);
     this.depths = new Float32Array(this.particleCount);
 
     for (let i = 0; i < this.particleCount; i++) {
@@ -985,13 +991,12 @@ export class ParticleSystem {
       tuning.repulsion;
 
     // Slide bindings toward the other thread's current point, record each
-    // crossing's contact point, mark zone tags (collector dedup), and
-    // rebuild the depth field (up to two zone tags per particle - twist
-    // windows overlap).
+    // crossing's contact point, mark zone tags (they gate the depth
+    // exemption and dedup the collector; ZONE_SLOTS per particle - dense
+    // weaves overlap several windows), and rebuild the depth field.
     const collisionDist = tuning.threadWidth * COLLISION_MARGIN;
     const depthAmp = collisionDist * DEPTH_AMP_FACTOR;
-    this.zoneA.fill(-1);
-    this.zoneB.fill(-1);
+    this.zones.fill(-1);
     this.depths.fill(0);
     for (let c = 0; c < this.crossings.length; c++) {
       const crossing = this.crossings[c];
@@ -1038,8 +1043,14 @@ export class ParticleSystem {
           k++
         ) {
           const p = chain[((k % len) + len) % len];
-          if (this.zoneA[p] < 0 || this.zoneA[p] === c) this.zoneA[p] = c;
-          else this.zoneB[p] = c;
+          for (let slot = 0; slot < ZONE_SLOTS; slot++) {
+            const at = p * ZONE_SLOTS + slot;
+            if (this.zones[at] === c) break;
+            if (this.zones[at] < 0) {
+              this.zones[at] = c;
+              break;
+            }
+          }
         }
       }
 
@@ -1092,7 +1103,8 @@ export class ParticleSystem {
         REPULSION_STIFFNESS,
         this.excludedPairs,
         this.depths,
-        collisionDist
+        collisionDist,
+        { zones: this.zones, contacts: this.contacts }
       );
       this.probe("repulsion");
       // Hard floor: thread width honored everywhere the depth field says
@@ -1107,7 +1119,7 @@ export class ParticleSystem {
         collisionDist,
         COLLISION_STIFFNESS,
         this.depths,
-        { zoneA: this.zoneA, zoneB: this.zoneB, contacts: this.contacts },
+        { zones: this.zones, contacts: this.contacts },
         iter === 0 ? this.emergentCollector : undefined
       );
       this.probe("collision");
@@ -1315,11 +1327,17 @@ export class ParticleSystem {
   }
 
   // Graduated contact friction for one crossing: 0 (frictionless) while
-  // grabbed or agitated, else blended from its smoothed contact speed -
-  // 1 (full weld) below CONTACT_WELD_LO, 0 above CONTACT_WELD_HI.
+  // agitated or near the grab point, else blended from its smoothed
+  // contact speed - 1 (full weld) below CONTACT_WELD_LO, 0 above
+  // CONTACT_WELD_HI. The grab release is LOCAL: a global release
+  // unfroze every contact in the knot at once, dumping the whole
+  // fabric's stored standoff stress on the first touch (reported as
+  // "the ENTIRE tangle jiggles" on a small one-sided drag). Distant
+  // contacts stay welded until the tension wave actually arrives and
+  // raises their contact speed.
   private weldFactor(ci: number, temperature: number): number {
-    if (this.grabbed >= 0 || temperature > 0) return 0;
-    return Math.max(
+    if (temperature > 0) return 0;
+    let weld = Math.max(
       0,
       Math.min(
         1,
@@ -1327,6 +1345,17 @@ export class ParticleSystem {
           (CONTACT_WELD_HI - CONTACT_WELD_LO)
       )
     );
+    if (this.grabbed >= 0 && weld > 0) {
+      const d = Math.hypot(
+        this.contacts[ci * 2] - this.positions[this.grabbed * 2],
+        this.contacts[ci * 2 + 1] - this.positions[this.grabbed * 2 + 1]
+      );
+      weld *= Math.max(
+        0,
+        Math.min(1, (d - GRAB_FREE_RADIUS) / GRAB_FREE_TAPER)
+      );
+    }
+    return weld;
   }
 
   private applyBindingCorrection(

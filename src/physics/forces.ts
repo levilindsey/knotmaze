@@ -41,16 +41,32 @@ export function applyDistanceConstraints(
   }
 }
 
-// Crossing zone tags: which registered crossing (if any) each particle
-// belongs to, up to two per particle (twist windows overlap). Since the
-// depth model took over collision exemption, these serve only the
-// emergent-crossing collector: a properly-intersecting segment pair whose
-// particles share a registered crossing is that crossing's own overlap,
-// not an emergent one.
+// Crossing zone tags: which registered crossings each particle belongs
+// to, up to ZONE_SLOTS per particle (-1 = empty, first slots fill
+// first). Dense weaves put 3+ crossings within a zone window of one
+// particle; the old two-slot/last-writer-evicts table dropped tags as
+// bindings slid, which flickered the depth-exemption gate - pairs sank
+// while covered, lost the tag, and froze as canceled standoffs ~0.2
+// apart (threads visibly merged). The tags gate the depth exemption
+// (collision + repulsion) and dedup the emergent collector.
+export const ZONE_SLOTS = 4;
 export interface CrossingZones {
-  zoneA: Int32Array; // Up to two crossing ids per particle...
-  zoneB: Int32Array; // ...(twist windows overlap).
+  zones: Int32Array; // ZONE_SLOTS crossing ids per particle, -1 = empty.
   contacts: Float32Array; // Per-crossing contact point [x, y].
+}
+
+// Shared registered crossing of two particles, or -1.
+function sharedZone(zones: Int32Array, i: number, j: number): number {
+  for (let a = 0; a < ZONE_SLOTS; a++) {
+    const za = zones[i * ZONE_SLOTS + a];
+    if (za < 0) break;
+    for (let b = 0; b < ZONE_SLOTS; b++) {
+      const zb = zones[j * ZONE_SLOTS + b];
+      if (zb < 0) break;
+      if (za === zb) return za;
+    }
+  }
+  return -1;
 }
 
 // Hard capsule collision between thread segments, DEPTH-AWARE: the knot
@@ -132,16 +148,11 @@ export function applySegmentCollision(
             if (Math.min(d, len - d) <= 2) continue;
           }
 
-          // Shared registered crossing, for the collector's dedup only.
+          // Shared registered crossing: gates the depth exemption and
+          // dedups the collector.
           let sharedKx = Number.NaN;
           let sharedKy = Number.NaN;
-          const a1 = zones.zoneA[i];
-          const a2 = zones.zoneB[i];
-          const b1 = zones.zoneA[j];
-          const b2 = zones.zoneB[j];
-          let shared = -1;
-          if (a1 >= 0 && (a1 === b1 || a1 === b2)) shared = a1;
-          else if (a2 >= 0 && (a2 === b1 || a2 === b2)) shared = a2;
+          const shared = sharedZone(zones.zones, i, j);
           if (shared >= 0) {
             sharedKx = zones.contacts[shared * 2];
             sharedKy = zones.contacts[shared * 2 + 1];
@@ -231,11 +242,21 @@ export function applySegmentCollision(
           // flickered on/off - a new discontinuity, mv spikes 3.5e-1.)
 
           // Depth-aware floor at the closest points: 3D capsule contact.
-          const zi = depths[i] + (depths[i2] - depths[i]) * s;
-          const zj = depths[j] + (depths[j2] - depths[j]) * t;
-          const dz = zi - zj;
-          const pairMinDistSq = minDist * minDist - dz * dz;
-          if (pairMinDistSq <= 1e-9) continue;
+          // ONLY for pairs sharing a registered crossing's zone: the depth
+          // field is per-particle and pair-blind, so without the gate any
+          // THIRD thread near a crossing inherited a reduced floor and
+          // could sink into the crossing pair with no gap rendered
+          // (grazing overlaps are also below the emergent collector's
+          // transversality cutoff). Non-shared pairs get the full width
+          // floor, exactly like the pre-depth lens.
+          let pairMinDistSq = minDist * minDist;
+          if (shared >= 0) {
+            const zi = depths[i] + (depths[i2] - depths[i]) * s;
+            const zj = depths[j] + (depths[j2] - depths[j]) * t;
+            const dz = zi - zj;
+            pairMinDistSq -= dz * dz;
+            if (pairMinDistSq <= 1e-9) continue;
+          }
 
           const q1x = p1x + d1x * s;
           const q1y = p1y + d1y * s;
@@ -267,9 +288,11 @@ export function applySegmentCollision(
 
 // Soft minimum-distance repulsion between non-neighboring particles, using a
 // uniform spatial hash. Keeps parallel threads from visually overlapping.
-// Depth-aware like collision: the repulsion range scales by
-// sqrt(1 - (dz/depthRange)^2), where depthRange is the collision margin -
-// a pair fully over/under each other needs no spacing at all.
+// Depth-aware like collision, and gated the same way: only a pair sharing
+// a registered crossing's zone scales its range by
+// sqrt(1 - (dz/depthRange)^2) (depthRange = the collision margin - a pair
+// fully over/under each other needs no spacing at all); everyone else
+// gets full spacing.
 export function applyRepulsion(
   positions: Float32Array,
   particleCount: number,
@@ -277,7 +300,8 @@ export function applyRepulsion(
   stiffness: number,
   excludedPairs: Set<number>,
   depths: Float32Array,
-  depthRange: number
+  depthRange: number,
+  zones: CrossingZones
 ): void {
   const cellSize = minDist;
   const buckets = new Map<number, number[]>();
@@ -308,10 +332,13 @@ export function applyRepulsion(
           if (j <= i) continue;
           if (excludedPairs.has(i * 65536 + j)) continue;
 
-          const dz = depths[j] - depths[i];
-          const scaleSq = 1 - (dz * dz) / (depthRange * depthRange);
-          if (scaleSq <= 1e-6) continue;
-          const pairMinDistSq = minDist * minDist * scaleSq;
+          let pairMinDistSq = minDist * minDist;
+          if (sharedZone(zones.zones, i, j) >= 0) {
+            const dz = depths[j] - depths[i];
+            const scaleSq = 1 - (dz * dz) / (depthRange * depthRange);
+            if (scaleSq <= 1e-6) continue;
+            pairMinDistSq *= scaleSq;
+          }
 
           const dx = positions[j * 2] - positions[i * 2];
           const dy = positions[j * 2 + 1] - positions[i * 2 + 1];

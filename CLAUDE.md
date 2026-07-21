@@ -80,6 +80,24 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **Whole-tangle response to a local tug + thread sink-through: RESOLVED
+  (P3.24).** Two P3.23 leftovers. (1) `weldFactor` released EVERY weld
+  globally on grab — first touch dumped the entire fabric's stored
+  standoff stress (reported: "the ENTIRE tangle jiggles"). Now the grab
+  release is spatial (free within 2.5 of the grab, tapering to
+  speed-sensed by 5.0); far-field response to a 1.3-unit drag dropped
+  0.25 → 0.097 mean (residual is spring transmission, physical at slack
+  0). (2) The depth exemption was pair-blind: any third thread near a
+  crossing inherited a reduced floor and could sink into the pair with
+  no rendered gap (grazing overlaps are below the collector's |sin|
+  cutoff too). Depth scaling (collision AND repulsion) now gates on the
+  pair sharing a registered crossing's zone — and the zone table itself
+  was a bug: 2 slots with last-writer eviction flapped tags in dense
+  weaves (crossings every ~5 ctrl on big chains), letting pairs sink
+  while covered then freeze as canceled standoffs 0.18-0.25 apart.
+  ZONE_SLOTS=4, first-come no-evict. Sink census (non-shared pairs
+  < 0.7 margin at rest): 8 → 0. Probe rule: census scripts must
+  replicate the force pass's zone lookup exactly or they lie.
 - **Post-play endless jiggle: RESOLVED by graduated contact friction +
   the spacing/window triangle (P3.23).** P3.22's depth model removed the
   lens's parasitic tangential weld — which had ALSO been the only
