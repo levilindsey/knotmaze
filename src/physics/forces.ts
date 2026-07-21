@@ -241,20 +241,29 @@ export function applySegmentCollision(
           // WORSE: the intersect/separate boundary is binary, so collision
           // flickered on/off - a new discontinuity, mv spikes 3.5e-1.)
 
-          // Depth-aware floor at the closest points: 3D capsule contact.
-          // ONLY for pairs sharing a registered crossing's zone: the depth
-          // field is per-particle and pair-blind, so without the gate any
-          // THIRD thread near a crossing inherited a reduced floor and
-          // could sink into the crossing pair with no gap rendered
-          // (grazing overlaps are also below the emergent collector's
+          // Depth-aware floor at the closest points. ONLY for pairs
+          // sharing a registered crossing's zone: the depth field is
+          // per-particle and pair-blind, so without the gate any THIRD
+          // thread near a crossing inherited a reduced floor and could
+          // sink into the crossing pair with no gap rendered (grazing
+          // overlaps are also below the emergent collector's
           // transversality cutoff). Non-shared pairs get the full width
           // floor, exactly like the pre-depth lens.
+          // QUARTIC falloff (1 - u^4), not the true 3D-capsule circle
+          // (1 - u^2): the circle's slow lateral recovery let shallow
+          // crossings hug tangentially along the tent slopes (dz =
+          // 0.7*margin still allowed centerlines at 0.71*margin - inside
+          // ribbon overlap, rendered as merged threads since the erase
+          // only covers the silhouette span). The quartic keeps ~90% of
+          // the floor at dz = 0.7*margin and still vanishes exactly at
+          // the crossing point, where dz exceeds margin.
           let pairMinDistSq = minDist * minDist;
           if (shared >= 0) {
             const zi = depths[i] + (depths[i2] - depths[i]) * s;
             const zj = depths[j] + (depths[j2] - depths[j]) * t;
             const dz = zi - zj;
-            pairMinDistSq -= dz * dz;
+            const dz2 = dz * dz;
+            pairMinDistSq -= (dz2 * dz2) / (minDist * minDist);
             if (pairMinDistSq <= 1e-9) continue;
           }
 
@@ -334,8 +343,10 @@ export function applyRepulsion(
 
           let pairMinDistSq = minDist * minDist;
           if (sharedZone(zones.zones, i, j) >= 0) {
-            const dz = depths[j] - depths[i];
-            const scaleSq = 1 - (dz * dz) / (depthRange * depthRange);
+            // Quartic falloff, matching collision (see its comment).
+            const u2 =
+              (depths[j] - depths[i]) ** 2 / (depthRange * depthRange);
+            const scaleSq = 1 - u2 * u2;
             if (scaleSq <= 1e-6) continue;
             pairMinDistSq *= scaleSq;
           }

@@ -229,13 +229,18 @@ const CONTACT_UNSTICK_EPS = 2.5e-2; // Per-substep displacement, release.
 const CONTACT_WELD_HI = 3e-2;
 const CONTACT_WELD_LO = 5e-3;
 const CONTACT_SPEED_EMA = 0.15; // Per-substep blend into the average.
-// Contacts within RADIUS of the grabbed particle are fully released
-// (a weak tug moves material ~3e-3/substep - below WELD_LO - and would
+// Contacts within RADIUS of the grabbed particle are released (a weak
+// tug moves material ~3e-3/substep - below WELD_LO - and would
 // otherwise weld mid-gesture); the release tapers out by
 // RADIUS + TAPER. Beyond that the speed sensing decides, keeping the
-// response to a drag LOCAL.
-const GRAB_FREE_RADIUS = 2.5;
-const GRAB_FREE_TAPER = 2.5;
+// response to a drag LOCAL. The release EASES in time (GATE_EASE per
+// substep): welded crossings hold pent-up slide/torque corrections, and
+// an instant release dumped them all at once - nearby crossings visibly
+// twitched "in unrelated ways" at the start of every drag. Easing
+// bleeds the stored stress out over ~100ms instead.
+const GRAB_FREE_RADIUS = 1.2;
+const GRAB_FREE_TAPER = 1.8;
+const GRAB_GATE_EASE = 0.05;
 // Zone tag window: particles within this many ctrl of a binding carry the
 // crossing's id, so the emergent collector can recognize a registered
 // crossing's own overlap (dedup only - exemption is the depth field's job).
@@ -363,6 +368,7 @@ export class ParticleSystem {
     // Seed high so contacts start kinetic; the EMA settles within ~10
     // substeps.
     this.contactSpeedEma = new Float32Array(this.crossings.length).fill(1);
+    this.grabGate = new Float32Array(this.crossings.length).fill(1);
 
     this.particleChain = new Int32Array(this.particleCount).fill(-1);
     this.chains.forEach((chain, chainIdx) => {
@@ -550,6 +556,8 @@ export class ParticleSystem {
   // contact points, for GRADUATED contact friction (see weldFactor).
   private contactSpeedEma: Float32Array = new Float32Array(0);
   private prevContacts: Float32Array = new Float32Array(0);
+  // Per-crossing eased grab-release gate: 1 = weld allowed, 0 = released.
+  private grabGate: Float32Array = new Float32Array(0);
 
   get simTime(): number {
     return this.time;
@@ -571,6 +579,7 @@ export class ParticleSystem {
     this.grabbed = -1;
     this.stickyContacts = false;
     this.contactSpeedEma.fill(1);
+    this.grabGate.fill(1);
     this.prevContacts.fill(0);
     for (const [pass, ctrl] of this.initialCtrl) pass.ctrl = ctrl;
   }
@@ -1015,6 +1024,21 @@ export class ParticleSystem {
           CONTACT_SPEED_EMA;
       this.prevContacts[c * 2] = this.contacts[c * 2];
       this.prevContacts[c * 2 + 1] = this.contacts[c * 2 + 1];
+      // Eased grab-release gate (see GRAB_GATE_EASE).
+      {
+        let target = 1;
+        if (this.grabbed >= 0) {
+          const d = Math.hypot(
+            this.contacts[c * 2] - this.positions[this.grabbed * 2],
+            this.contacts[c * 2 + 1] - this.positions[this.grabbed * 2 + 1]
+          );
+          target = Math.max(
+            0,
+            Math.min(1, (d - GRAB_FREE_RADIUS) / GRAB_FREE_TAPER)
+          );
+        }
+        this.grabGate[c] += (target - this.grabGate[c]) * GRAB_GATE_EASE;
+      }
       // STATIC contacts freeze the crossing machinery entirely: no
       // sliding, no transversality torque. Both serve motion; at rest the
       // springs hold the shape, and a welded binding that keeps
@@ -1337,25 +1361,16 @@ export class ParticleSystem {
   // raises their contact speed.
   private weldFactor(ci: number, temperature: number): number {
     if (temperature > 0) return 0;
-    let weld = Math.max(
-      0,
-      Math.min(
-        1,
-        (CONTACT_WELD_HI - this.contactSpeedEma[ci]) /
-          (CONTACT_WELD_HI - CONTACT_WELD_LO)
-      )
-    );
-    if (this.grabbed >= 0 && weld > 0) {
-      const d = Math.hypot(
-        this.contacts[ci * 2] - this.positions[this.grabbed * 2],
-        this.contacts[ci * 2 + 1] - this.positions[this.grabbed * 2 + 1]
-      );
-      weld *= Math.max(
+    return (
+      Math.max(
         0,
-        Math.min(1, (d - GRAB_FREE_RADIUS) / GRAB_FREE_TAPER)
-      );
-    }
-    return weld;
+        Math.min(
+          1,
+          (CONTACT_WELD_HI - this.contactSpeedEma[ci]) /
+            (CONTACT_WELD_HI - CONTACT_WELD_LO)
+        )
+      ) * this.grabGate[ci]
+    );
   }
 
   private applyBindingCorrection(

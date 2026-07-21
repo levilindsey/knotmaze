@@ -80,6 +80,23 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **Shallow-crossing tangential merges + release twitching: RESOLVED
+  (P3.25).** Two P3.24 leftovers. (1) The 3D-capsule floor
+  sqrt(margin²−dz²) is the wrong SHAPE for renderability: its slow
+  lateral recovery let shallow crossings hug tangentially along the tent
+  slopes (dz = 0.7·margin still allowed centerlines at 0.71·margin —
+  inside ribbon overlap, unrenderable since the erase covers only the
+  silhouette span). Now QUARTIC (1 − u⁴): ~90% floor at dz = 0.7·margin,
+  still exactly 0 at the crossing point. Tangential-merge census
+  (shared pairs < 0.85·width beyond 0.6 of every shared contact): 8
+  artifacts → 0 real (probe rule: with multi-zone tags, always measure
+  against the NEAREST shared crossing — first-match flags legit crossing
+  pairs of a twist's other crossing). (2) Grab release snapped welds
+  open instantly across the whole radius — every released crossing
+  dumped its pent slide/torque corrections at once ("nearby parts
+  jiggle in unrelated ways"). Now a per-crossing gate eased at 0.05/
+  substep (~100ms) with a tighter bubble (1.2 → 3.0). Locality: 4–8
+  band mean displacement for a 1.3-unit drag 0.199 → 0.080.
 - **Whole-tangle response to a local tug + thread sink-through: RESOLVED
   (P3.24).** Two P3.23 leftovers. (1) `weldFactor` released EVERY weld
   globally on grab — first touch dumped the entire fabric's stored
