@@ -18,7 +18,7 @@ export interface UrlParams {
   gap: number; // Space between an under-thread cut end and the over thread.
 }
 
-const DEFAULTS = {
+export const DEFAULTS = {
   gridSize: 12,
   weaveDensity: 0.35,
   turnBias: 0.7,

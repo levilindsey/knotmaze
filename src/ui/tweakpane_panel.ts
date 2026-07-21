@@ -4,6 +4,7 @@
 
 import { Pane } from "tweakpane";
 import type { UrlParams } from "./url_state";
+import { DEFAULTS } from "./url_state";
 
 export interface PanelSettings {
   temperature: number;
@@ -127,6 +128,16 @@ export function buildPanel(
     "Overlay the physics debug view (particles, bindings, contacts)."
   ).on("change", (ev: ChangeEvent) => {
     callbacks.onDebugToggle(ev.value === true);
+  });
+
+  tip(
+    pane.addButton({ title: "Reset to defaults" }),
+    "Restore every parameter to its default value (keeps the current seed) and regenerate."
+  ).on("click", () => {
+    Object.assign(params, DEFAULTS, { gridAlign: false });
+    settings.temperature = 0;
+    pane.refresh();
+    callbacks.onRegenerate();
   });
 
   return pane;
