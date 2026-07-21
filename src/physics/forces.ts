@@ -179,6 +179,20 @@ export function applySegmentCollision(
             );
           }
 
+          // Proper segment-segment intersection test, shared by the
+          // emergent collector and the registered-crossing exemption.
+          const denom2 = d1x * d2y - d1y * d2x;
+          let properU = -1;
+          let properV = -1;
+          if (Math.abs(denom2) > 1e-12) {
+            const u = (-rx * d2y + ry * d2x) / denom2;
+            const v = (-rx * d1y + ry * d1x) / denom2;
+            if (u > 0 && u < 1 && v > 0 && v < 1) {
+              properU = u;
+              properV = v;
+            }
+          }
+
           // Proper intersection: the pair has tunneled - record it as an
           // emergent crossing so the renderer can gap it. Segment pairs at
           // the fringe of a REGISTERED crossing's lens also properly
@@ -188,33 +202,33 @@ export function applySegmentCollision(
           // crossings of buffer and pool space - skip any intersection
           // near its shared crossing's contact point.
           if (collector && collector.n * 4 < collector.data.length) {
-            const denom2 = d1x * d2y - d1y * d2x;
             // Transversal crossings only: |sin| of the crossing angle
             // >= 0.25. Taut knots hold dozens of GRAZING micro-overlaps
             // (near-parallel threads pressed together by the collision
             // floor penetrate by solver tolerance) - those are not visual
             // crossings and gapping them would be wrong.
             const lenProd = Math.sqrt(a * e);
-            if (Math.abs(denom2) > 0.25 * lenProd) {
-              const u = (-rx * d2y + ry * d2x) / denom2;
-              const v = (-rx * d1y + ry * d1x) / denom2;
-              if (u > 0 && u < 1 && v > 0 && v < 1) {
-                const ix = p1x + d1x * u;
-                const iy = p1y + d1y * u;
-                const nearRegistered =
-                  shared >= 0 &&
-                  Math.hypot(ix - sharedKx, iy - sharedKy) < 0.8;
-                if (!nearRegistered) {
-                  const idx = collector.n * 4;
-                  collector.data[idx] = i;
-                  collector.data[idx + 1] = u;
-                  collector.data[idx + 2] = j;
-                  collector.data[idx + 3] = v;
-                  collector.n++;
-                }
+            if (properU >= 0 && Math.abs(denom2) > 0.25 * lenProd) {
+              const ix = p1x + d1x * properU;
+              const iy = p1y + d1y * properU;
+              const nearRegistered =
+                shared >= 0 &&
+                Math.hypot(ix - sharedKx, iy - sharedKy) < 0.8;
+              if (!nearRegistered) {
+                const idx = collector.n * 4;
+                collector.data[idx] = i;
+                collector.data[idx + 1] = properU;
+                collector.data[idx + 2] = j;
+                collector.data[idx + 3] = properV;
+                collector.n++;
               }
             }
           }
+
+          // (Exempting properly-intersecting shared-crossing pairs from
+          // the push was tried against the post-play jiggle and made it
+          // WORSE: the intersect/separate boundary is binary, so collision
+          // flickered on/off - a new discontinuity, mv spikes 3.5e-1.)
 
           // Depth-aware floor at the closest points: 3D capsule contact.
           const zi = depths[i] + (depths[i2] - depths[i]) * s;

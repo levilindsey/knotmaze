@@ -33,6 +33,11 @@ export interface CrossingPass {
   // the ordering clamp holds the larger KINK_MIN_SEPARATION so the kink's
   // loop keeps enough material to render as an eyelet.
   partner?: CrossingPass;
+  // |slide target - achieved ctrl| after the ordering clamps, updated
+  // each kinetic substep. Nonzero means the clamp (or rate cap) is
+  // holding this binding away from the true intersection; the coupling
+  // scales down with it (see the coupling block).
+  clampLag?: number;
 }
 
 export interface CrossingInfo {
@@ -156,14 +161,26 @@ const SLIDE_EASE_REST = 0.5;
 // handled by static friction freezing the crossing machinery entirely
 // (CONTACT_STICK_EPS below).
 const SLIDE_DEADBAND = 1e-4;
-// Minimum binding separation along a chain. Large values were an
-// anti-inversion band-aid that FORCED bindings away from the true
-// intersections at tight twist ends - the coupling then contorted threads
-// into tangent stretches (reads as a missing gap) with erase holes at the
-// displaced binding spots (reads as an oversized gap). Inversion is now
-// guarded by the transversality torque, so this only needs to prevent
-// outright coincidence.
-const MIN_PASS_SEPARATION = 0.9;
+// Minimum binding separation along a chain. This is set by the DEPTH
+// FIELD'S RESOLUTION, not by inversion guarding: the field lives on
+// particles (resolution 1 ctrl), so passes closer than ~2 ctrl cannot be
+// represented - their opposite-sign tents overlap and cancel, the
+// exemption fails at segments the diagram requires to intersect, and the
+// resulting coupling-vs-collision fight can never resolve (the post-play
+// endless jiggle: an over-tightened interleaved twist pinned at the old
+// 0.9 floor rang forever at ~5e-2). With the floor above DEPTH_WINDOW,
+// neighbor tents never cancel at a crossing, and the window is wide
+// enough that a clamp-pinned binding's intersection (lag <= ~1.3) stays
+// covered. The ceiling is the corridor weave pitch: checkerboard
+// corridors place passes exactly 2.0 apart, and a floor at 2.0 left zero
+// slack - bindings could only slide as convoys, which re-created the
+// pinned-intersection drag feel (grab-at-X crossing motion 0.59 -> 1.29
+// measured). 1.6 restores 0.4 of independent play per crossing. The
+// historical warning about large values ("forced bindings away from true
+// intersections, coupling contorted threads") predates the depth model:
+// the wide tents cover exactly that displacement, and the coupling
+// additionally YIELDS under clamp lag instead of contorting.
+const MIN_PASS_SEPARATION = 1.6;
 // Between the two passes of a SELF-crossing (a kink: the thread crossing
 // itself), the material between the passes IS the kink's visible eyelet.
 // The generic 0.9 floor let kink loops starve to ~0.25 arc of material -
@@ -172,6 +189,8 @@ const MIN_PASS_SEPARATION = 0.9;
 // material renders as a legible eyelet at the default thread width.
 const KINK_MIN_SEPARATION = 2.6;
 const COUPLING_STIFFNESS = 0.7;
+// Clamp lag (ctrl) at which the coupling has yielded to half strength.
+const COUPLING_YIELD_LAG = 0.25;
 // Static/kinetic contact friction. KINETIC (frictionless coupling -
 // material slides through crossings) while the user drags, temperature
 // agitates, or the knot is in motion; STATIC (full-vector coupling, the
@@ -193,6 +212,22 @@ const COUPLING_STIFFNESS = 0.7;
 // net-displacement-over-a-window, which separates the two.)
 const CONTACT_STICK_EPS = 1e-2; // Per-substep displacement, engage.
 const CONTACT_UNSTICK_EPS = 2.5e-2; // Per-substep displacement, release.
+// GRADUATED contact friction, the dissipation channel between fully
+// kinetic and the deep-freeze above. Per crossing, from a smoothed
+// contact speed: below LO the coupling keeps its full tangential
+// component (weld); above HI it is fully projected off (frictionless);
+// blended between. Rationale: the depth model removed the old exemption
+// lens's parasitic tangential weld - which was ALSO the only dissipation
+// for the PBD standoff (bending/structural/collision cancel ~1e-1 each
+// at rest). Without any friction the standoff wanders at ~4e-2 forever,
+// above the binary stick gate, and the knot never sleeps after play.
+// Graduated + LOCAL: an active region (wave crest, agitation) stays
+// slippery while quiet regions grip; while GRABBED the weld is released
+// everywhere, so gestures never feel it (a weak tug moves material
+// ~3e-3/substep - below LO - and would otherwise weld mid-gesture).
+const CONTACT_WELD_HI = 3e-2;
+const CONTACT_WELD_LO = 5e-3;
+const CONTACT_SPEED_EMA = 0.15; // Per-substep blend into the average.
 // Zone tag window: particles within this many ctrl of a binding carry the
 // crossing's id, so the emergent collector can recognize a registered
 // crossing's own overlap (dedup only - exemption is the depth field's job).
@@ -203,11 +238,17 @@ const CROSSING_ZONE_HALF = 4;
 // sqrt(margin^2 - dz^2)). Contributions SUM, so a twist eye's midpoint
 // (opposite-sign tents from its two crossings) returns to depth 0 and
 // recovers the full width floor - eyes stay open with no tuned taper.
+// The WINDOW must be NARROWER than MIN_PASS_SEPARATION (neighbor tents
+// pinned at the ordering clamp must not cancel at the crossing - that
+// cancellation was the post-play endless-jiggle pump) yet WIDE enough to
+// keep a clamp-pinned binding's true intersection covered (lag reaches
+// ~1.3 ctrl on over-tightened twists). 1.4 sits between the 1.6 clamp
+// floor and the ~1.3 lag reach; see MIN_PASS_SEPARATION for the triangle
+// of constraints.
 // AMP_FACTOR is sized so the worst-case tent sampling (binding at ctrl
-// x.5: nearest particles carry weight 1 - 0.5/W = 0.583 each) still fully
-// exempts the crossing point: dz = 2 * 0.583 * amp >= margin requires
-// amp >= 0.86 * margin.
-const DEPTH_WINDOW = 1.2;
+// x.5: nearest particles carry weight 1 - 0.5/W = 0.64 each) still fully
+// exempts the crossing point: dz = 2 * 0.64 * amp >= margin.
+const DEPTH_WINDOW = 1.4;
 const DEPTH_AMP_FACTOR = 1.0;
 // Laplacian fairing stiffness at smooth = 1.
 const FAIRING_MAX = 0.3;
@@ -312,6 +353,10 @@ export class ParticleSystem {
     this.crossings = this.assignCrossings(occurrences);
     this.buildPassOrder();
     this.contacts = new Float32Array(this.crossings.length * 2);
+    this.prevContacts = new Float32Array(this.crossings.length * 2);
+    // Seed high so contacts start kinetic; the EMA settles within ~10
+    // substeps.
+    this.contactSpeedEma = new Float32Array(this.crossings.length).fill(1);
 
     this.particleChain = new Int32Array(this.particleCount).fill(-1);
     this.chains.forEach((chain, chainIdx) => {
@@ -495,6 +540,10 @@ export class ParticleSystem {
   private tangentScratch = new Float32Array(4);
   private slideScratch = new Float32Array(4);
   private stickyContacts = false;
+  // Per-crossing smoothed contact speed (units/substep) and the previous
+  // contact points, for GRADUATED contact friction (see weldFactor).
+  private contactSpeedEma: Float32Array = new Float32Array(0);
+  private prevContacts: Float32Array = new Float32Array(0);
 
   get simTime(): number {
     return this.time;
@@ -515,6 +564,8 @@ export class ParticleSystem {
     this.accumulator = 0;
     this.grabbed = -1;
     this.stickyContacts = false;
+    this.contactSpeedEma.fill(1);
+    this.prevContacts.fill(0);
     for (const [pass, ctrl] of this.initialCtrl) pass.ctrl = ctrl;
   }
 
@@ -648,7 +699,7 @@ export class ParticleSystem {
   //
   // Projection of the other thread's bound point remains the fallback for
   // the moments when the threads have locally separated.
-  private slideCrossing(crossing: CrossingInfo): void {
+  private slideCrossing(crossing: CrossingInfo, mobility = 1): void {
     const over = crossing.over;
     const under = crossing.under;
     const chain = this.chains[over.chain];
@@ -700,8 +751,8 @@ export class ParticleSystem {
     over.intersected = found;
     under.intersected = found;
     if (found) {
-      this.easePassToward(over, bestFOver);
-      this.easePassToward(under, bestFUnder);
+      this.easePassToward(over, bestFOver, mobility);
+      this.easePassToward(under, bestFUnder, mobility);
       return;
     }
     // Fallback: each binding chases the projection of the other's bound
@@ -710,11 +761,13 @@ export class ParticleSystem {
     this.bindingPoint(over, this.slideScratch, 2);
     this.easePassToward(
       over,
-      this.projectOntoChain(over, this.slideScratch[0], this.slideScratch[1])
+      this.projectOntoChain(over, this.slideScratch[0], this.slideScratch[1]),
+      mobility
     );
     this.easePassToward(
       under,
-      this.projectOntoChain(under, this.slideScratch[2], this.slideScratch[3])
+      this.projectOntoChain(under, this.slideScratch[2], this.slideScratch[3]),
+      mobility
     );
   }
 
@@ -773,17 +826,24 @@ export class ParticleSystem {
   }
 
   // Ease a pass toward its slide target with a rate limit, then keep
-  // order against neighboring passes on the same chain.
-  private easePassToward(self: CrossingPass, bestF: number): void {
+  // order against neighboring passes on the same chain. `mobility` scales
+  // the chase (graduated friction: a quieting contact's slide fades out).
+  private easePassToward(
+    self: CrossingPass,
+    bestF: number,
+    mobility: number
+  ): void {
     const len = this.chains[self.chain].length;
     const maxSlide =
-      this.grabbed >= 0 ? MAX_SLIDE_GRABBED : MAX_SLIDE_REST;
-    const ease = this.grabbed >= 0 ? SLIDE_EASE_GRABBED : SLIDE_EASE_REST;
+      (this.grabbed >= 0 ? MAX_SLIDE_GRABBED : MAX_SLIDE_REST) * mobility;
+    const ease =
+      (this.grabbed >= 0 ? SLIDE_EASE_GRABBED : SLIDE_EASE_REST) * mobility;
     const delta = bestF - self.ctrl;
     this.slideStats.calls++;
     this.slideStats.requested += Math.abs(delta);
     if (Math.abs(delta) < SLIDE_DEADBAND) {
       this.slideStats.deadbandSkips++;
+      self.clampLag = 0;
       return;
     }
     let f =
@@ -808,6 +868,10 @@ export class ParticleSystem {
     {
       const raw = Math.abs(f - self.ctrl) % len;
       this.slideStats.applied += Math.min(raw, len - raw);
+    }
+    {
+      const raw = Math.abs(bestF - f) % len;
+      self.clampLag = Math.min(raw, len - raw);
     }
     self.ctrl = ((f % len) + len) % len;
   }
@@ -936,14 +1000,32 @@ export class ParticleSystem {
       this.contacts[c * 2] = (this.bindScratch[0] + this.bindScratch[2]) / 2;
       this.contacts[c * 2 + 1] =
         (this.bindScratch[1] + this.bindScratch[3]) / 2;
+      // Smoothed contact speed for graduated friction (weldFactor).
+      this.contactSpeedEma[c] =
+        this.contactSpeedEma[c] * (1 - CONTACT_SPEED_EMA) +
+        Math.hypot(
+          this.contacts[c * 2] - this.prevContacts[c * 2],
+          this.contacts[c * 2 + 1] - this.prevContacts[c * 2 + 1]
+        ) *
+          CONTACT_SPEED_EMA;
+      this.prevContacts[c * 2] = this.contacts[c * 2];
+      this.prevContacts[c * 2 + 1] = this.contacts[c * 2 + 1];
       // STATIC contacts freeze the crossing machinery entirely: no
       // sliding, no transversality torque. Both serve motion; at rest the
       // springs hold the shape, and a welded binding that keeps
       // micro-adjusting its ctrl is itself a motor (the weld turns every
-      // re-projection nudge into thread motion).
+      // re-projection nudge into thread motion). Graduated friction
+      // applies the same logic per crossing BEFORE the global freeze: a
+      // quieting contact's slide/torque fade with its weld, so the local
+      // constraint standoff becomes substep-identical and the whole knot
+      // can reach the global stick threshold (anchors that keep
+      // micro-moving hold the standoff in slow wander forever).
       if (!this.stickyContacts) {
-        this.slideCrossing(crossing);
-        this.applyTransversality(crossing, c);
+        const weld = this.weldFactor(c, tuning.temperature);
+        if (weld < 1) {
+          this.slideCrossing(crossing, 1 - weld);
+          this.applyTransversality(crossing, c, 1 - weld);
+        }
       }
 
       for (const pass of [crossing.over, crossing.under]) {
@@ -1045,19 +1127,58 @@ export class ParticleSystem {
       // left stress-torn bound pairs (sep 0.83) whose erase gaps rendered
       // as naked holes. The coupling is the crossing's lubricant in every
       // measured gesture.
-      for (const crossing of this.crossings) {
+      //
+      // But the coupling YIELDS where the ordering clamp holds a binding
+      // away from the true intersection (clampLag): coincidence at the
+      // binding is then geometrically unachievable - the threads already
+      // intersect elsewhere - and insisting on it demands tangential
+      // overlap, a fight against collision that cannot resolve and pumps
+      // energy forever (the post-play endless jiggle: an over-tightened
+      // twist's bindings pinned at MIN_PASS_SEPARATION, coupling and
+      // collision each correcting ~1.5e-1/substep indefinitely). Yielding
+      // lets the pair separate slightly instead; when the clamp releases,
+      // lag returns to zero and full coupling resumes.
+      for (let ci = 0; ci < this.crossings.length; ci++) {
+        const crossing = this.crossings[ci];
+        // Yield ONLY while the threads genuinely intersect: coincidence
+        // at the binding is then redundant and insisting on it fights
+        // collision. In fallback (threads locally separated) the coupling
+        // is the boundary guard - the only force that can pull an
+        // uncrossing pair back together - and must act at full strength
+        // (yielding there abandoned crossings: bound pairs torn 5.4
+        // apart, weave visibly broken).
+        const lag =
+          crossing.over.intersected === true &&
+          crossing.under.intersected === true
+            ? Math.max(
+                crossing.over.clampLag ?? 0,
+                crossing.under.clampLag ?? 0
+              )
+            : 0;
+        // As the weld engages, the yield fades back out: the yield exists
+        // for the KINETIC fight (coupling vs collision while material
+        // moves), but a resting crossing should close its bound pair
+        // fully - the wide depth tents cover the clamp-lagged
+        // intersection, so the pull no longer fights collision - or the
+        // freeze would fossilize the pair mid-separation and render as a
+        // displaced gap.
+        const weld = this.weldFactor(ci, tuning.temperature);
+        const give =
+          1 / (1 + (lag / COUPLING_YIELD_LAG) ** 2) * (1 - weld) + weld;
         this.bindingPoint(crossing.over, this.bindScratch, 0);
         this.bindingPoint(crossing.under, this.bindScratch, 2);
         const dx =
           (this.bindScratch[2] - this.bindScratch[0]) *
           0.5 *
-          COUPLING_STIFFNESS;
+          COUPLING_STIFFNESS *
+          give;
         const dy =
           (this.bindScratch[3] - this.bindScratch[1]) *
           0.5 *
-          COUPLING_STIFFNESS;
-        this.applyBindingCorrection(crossing.over, dx, dy);
-        this.applyBindingCorrection(crossing.under, -dx, -dy);
+          COUPLING_STIFFNESS *
+          give;
+        this.applyBindingCorrection(crossing.over, dx, dy, weld);
+        this.applyBindingCorrection(crossing.under, -dx, -dy, weld);
       }
       this.probe("coupling");
     }
@@ -1117,7 +1238,11 @@ export class ParticleSystem {
   // Steer the two threads at a crossing toward the signed perpendicular:
   // rotate each binding's segment about the contact point so tangents can
   // never align (threads gluing along a stretch) or flip orientation.
-  private applyTransversality(crossing: CrossingInfo, index: number): void {
+  private applyTransversality(
+    crossing: CrossingInfo,
+    index: number,
+    mobility = 1
+  ): void {
     const segment = (
       pass: CrossingPass
     ): [number, number, number, number] => {
@@ -1151,10 +1276,11 @@ export class ParticleSystem {
     if (error > Math.PI) error -= 2 * Math.PI;
     if (error < -Math.PI) error += 2 * Math.PI;
 
-    const delta = Math.max(
-      -TRANSVERSALITY_MAX_STEP,
-      Math.min(TRANSVERSALITY_MAX_STEP, error * TRANSVERSALITY_GAIN)
-    );
+    const delta =
+      Math.max(
+        -TRANSVERSALITY_MAX_STEP,
+        Math.min(TRANSVERSALITY_MAX_STEP, error * TRANSVERSALITY_GAIN)
+      ) * mobility;
     if (delta === 0) return;
 
     const cx = this.contacts[index * 2];
@@ -1188,10 +1314,26 @@ export class ParticleSystem {
     rotateWindow(crossing.over, -delta / 2);
   }
 
+  // Graduated contact friction for one crossing: 0 (frictionless) while
+  // grabbed or agitated, else blended from its smoothed contact speed -
+  // 1 (full weld) below CONTACT_WELD_LO, 0 above CONTACT_WELD_HI.
+  private weldFactor(ci: number, temperature: number): number {
+    if (this.grabbed >= 0 || temperature > 0) return 0;
+    return Math.max(
+      0,
+      Math.min(
+        1,
+        (CONTACT_WELD_HI - this.contactSpeedEma[ci]) /
+          (CONTACT_WELD_HI - CONTACT_WELD_LO)
+      )
+    );
+  }
+
   private applyBindingCorrection(
     pass: CrossingPass,
     dx: number,
-    dy: number
+    dy: number,
+    weld: number
   ): void {
     const chain = this.chains[pass.chain];
     const len = chain.length;
@@ -1204,18 +1346,19 @@ export class ParticleSystem {
     // the crossing and the slide re-projection alone owns the tangential
     // dimension. (Full-vector coupling welds the crossing to two material
     // points - correct for STATIC contacts at rest, but it made dragged
-    // threads carry each other bodily.) The tangent is a central
-    // difference across the binding, NOT the raw segment direction, which
-    // jumps at every vertex and made each particle a detent the binding
-    // snapped to.
-    if (!this.stickyContacts) {
+    // threads carry each other bodily.) `weld` grades between the two
+    // regimes: 0 = frictionless, 1 = full weld (graduated friction; see
+    // weldFactor). The tangent is a central difference across the
+    // binding, NOT the raw segment direction, which jumps at every vertex
+    // and made each particle a detent the binding snapped to.
+    if (!this.stickyContacts && weld < 1) {
       this.pointOnChain(pass.chain, pass.ctrl - 0.5, this.tangentScratch, 0);
       this.pointOnChain(pass.chain, pass.ctrl + 0.5, this.tangentScratch, 2);
       const ex = this.tangentScratch[2] - this.tangentScratch[0];
       const ey = this.tangentScratch[3] - this.tangentScratch[1];
       const eLenSq = ex * ex + ey * ey;
       if (eLenSq > 1e-12) {
-        const along = (dx * ex + dy * ey) / eLenSq;
+        const along = ((dx * ex + dy * ey) / eLenSq) * (1 - weld);
         dx -= ex * along;
         dy -= ey * along;
       }
