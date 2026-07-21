@@ -300,22 +300,37 @@ export class RibbonRenderer {
     return (a0 + (a1 - a0) * t) % samples.totalLength;
   }
 
+  // Ctrl a pass RENDERS at: the true intersection when the physics has
+  // one (displayF), else the binding. During a tug the ordering clamps
+  // can pin the binding away from where the threads actually cross;
+  // drawing there mangles the crossing.
+  private renderCtrl(pass: CrossingPass): number {
+    return pass.displayF ?? pass.ctrl;
+  }
+
   // Arc gap to the neighboring crossing passes, wrapping around the loop.
   private neighborGaps(
     samples: SplineSamples,
-    pass: { ctrl: number },
+    pass: CrossingPass,
     neighbors: PassNeighbors
   ): [number, number] {
     const total = samples.totalLength;
-    if (neighbors.next === pass || neighbors.next.ctrl === pass.ctrl) {
+    if (
+      neighbors.next === pass ||
+      neighbors.next.ctrl === pass.ctrl
+    ) {
       return [total / 2, total / 2];
     }
-    const center = this.arcAt(samples, pass.ctrl);
+    const center = this.arcAt(samples, this.renderCtrl(pass));
     const gapNext =
-      (((this.arcAt(samples, neighbors.next.ctrl) - center) % total) + total) %
+      (((this.arcAt(samples, this.renderCtrl(neighbors.next)) - center) %
+        total) +
+        total) %
       total;
     const gapPrev =
-      (((center - this.arcAt(samples, neighbors.prev.ctrl)) % total) + total) %
+      (((center - this.arcAt(samples, this.renderCtrl(neighbors.prev))) %
+        total) +
+        total) %
       total;
     return [gapPrev, gapNext];
   }
@@ -408,8 +423,11 @@ export class RibbonRenderer {
     {
       const overSamples = this.chainSamples[crossing.over.chain]!;
       const underSamples = this.chainSamples[crossing.under.chain]!;
-      const overCenter = this.arcAt(overSamples, crossing.over.ctrl);
-      const underCenter = this.arcAt(underSamples, crossing.under.ctrl);
+      const overCenter = this.arcAt(overSamples, this.renderCtrl(crossing.over));
+      const underCenter = this.arcAt(
+        underSamples,
+        this.renderCtrl(crossing.under)
+      );
 
       // Local centerline polylines around the crossing. The cut boundary is
       // "distance to the over polyline == fillHalf" (the over ribbon's

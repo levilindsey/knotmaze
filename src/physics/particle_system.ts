@@ -39,6 +39,14 @@ export interface CrossingPass {
   // holding this binding away from the true intersection; the coupling
   // scales down with it (see the coupling block).
   clampLag?: number;
+  // RENDER-ONLY ctrl of the true local intersection (raw slide target,
+  // before easing and ordering clamps; undefined while the threads are
+  // locally separated). The renderer draws the crossing HERE: during a
+  // tug the clamps can pin the physics binding away from where the
+  // threads actually cross, and erase/fill patches drawn at the binding
+  // land beside the real overlap - mangled, torn-looking crossings
+  // mid-gesture. Physics never reads this.
+  displayF?: number;
 }
 
 export interface CrossingInfo {
@@ -587,7 +595,10 @@ export class ParticleSystem {
     this.contactSpeedEma.fill(1);
     this.grabGate.fill(1);
     this.prevContacts.fill(0);
-    for (const [pass, ctrl] of this.initialCtrl) pass.ctrl = ctrl;
+    for (const [pass, ctrl] of this.initialCtrl) {
+      pass.ctrl = ctrl;
+      pass.displayF = undefined;
+    }
   }
 
   get grabbedParticle(): number {
@@ -772,10 +783,14 @@ export class ParticleSystem {
     over.intersected = found;
     under.intersected = found;
     if (found) {
+      over.displayF = ((bestFOver % len) + len) % len;
+      under.displayF = ((bestFUnder % oLen) + oLen) % oLen;
       this.easePassToward(over, bestFOver, mobility);
       this.easePassToward(under, bestFUnder, mobility);
       return;
     }
+    over.displayF = undefined;
+    under.displayF = undefined;
     // Fallback: each binding chases the projection of the other's bound
     // point. Compute both q points BEFORE easing either pass.
     this.bindingPoint(under, this.slideScratch, 0);

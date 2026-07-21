@@ -80,6 +80,20 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **Torn/mangled crossings after a small pull: RESOLVED by rendering at
+  the true intersection (P3.28).** The user's actual workflow - a small
+  tug, then observe AT REST - left crossings drawn as jagged, torn
+  merges. Cause: the ordering clamps pin the physics binding away from
+  the true intersection during the pull, the graduated weld then
+  freezes that displacement into the rest state, and the renderer drew
+  the erase + over-fill AT THE BINDING - beside the real overlap.
+  Passes now carry a RENDER-ONLY `displayF` (the raw joint slide
+  target, before easing/clamps, stale-frozen through static mode);
+  `RibbonRenderer.renderCtrl()` prefers it everywhere crossing
+  geometry is placed (centers + neighbor gaps). The physics ctrl keeps
+  its clamp/topology duties untouched. Probe rule (twice burned):
+  verify AT REST **after a small tug**, not just fresh settles or long
+  play sessions - the three states fail differently.
 - **Fat-thread "penetration": RESOLVED by width-scaled renderer reaches
   (P3.27).** After P3.26 the post-play physics state was verifiably
   clean (0 overlap pairs without full depth separation) yet tw 0.52
