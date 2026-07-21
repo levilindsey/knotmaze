@@ -77,8 +77,14 @@ export const DEFAULT_TUNING: PhysicsTuning = {
 };
 
 // Collision floor margin: centerlines may not come closer than
-// threadWidth * this outside crossing lenses (surfaces just kiss at 1.0).
-const COLLISION_MARGIN = 1.05;
+// threadWidth * this outside crossing lenses (surfaces just kiss at
+// 1.0). This is a VISUAL floor, not just a physical one: at 1.05 the
+// edge clearance was 0.02 - sub-pixel - so threads squeezed to the
+// floor (tight twist eyes under bending pressure) rendered as touching/
+// merged and were reported as "sinking into each other". 1.16 keeps a
+// visible sliver of background (~0.07 at default width) between any two
+// passing threads.
+const COLLISION_MARGIN = 1.16;
 const COLLISION_STIFFNESS = 0.5;
 
 // Fixed physics timestep; frames accumulate real time into substeps.
