@@ -80,6 +80,35 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **OPEN: post-VIOLENT-play loud attractor at fat params.** After ~75s
+  of machine-gun gestures (fast circles + sweeps at 5 sites) on the fat
+  URL, the knot sometimes parks at mv 1.3-2.3e-1 indefinitely (3-min
+  watch, no trend) and sometimes self-recovers - stochastically
+  bistable. Gentle play (3 small tugs) always re-sleeps (~sim 14).
+  MEASURED FINGERPRINT, do not re-derive: (1) hot particle wanders the
+  whole knot (not one site); ~half the hot attributions sit at torn
+  fallback pairs, sep 0.77-1.17; (2) high-speed slide/transversality
+  mobility taper (`abHighSpeedTaper`): partial - drops to 4-9e-2 then
+  re-inflates; aligning the taper band to the weld band did not close
+  it; ALSO freezes bindings stale, blocking torn-pair recovery - wrong
+  lever; (3) slip-based weld (`abSlipWeld`, EMA of relative binding
+  slip instead of absolute contact speed): NO effect - the loud state
+  slips for real, co-motion is not the issue; (4) `abCoupling=0`
+  explodes the fabric (mv 5.8) - the fallback boundary guard is
+  load-bearing; (5) extra velocity damping 0.3/substep
+  (`abExtraDrag`) does NOT kill it - the motion is DRIVEN (constraints
+  re-inject each substep), not kinetic; note this was measured on the
+  post-explosion state. WORKING THEORY: torn fallback pairs whose
+  reunion path is BLOCKED by an interposed thread - the coupling does
+  not yield in fallback (P3.23: chronic fallback yield abandons
+  crossings), so a blocked pair fights collision at full strength
+  forever. Candidate directions: progress-gated fallback yield (yield
+  only while sep is not decreasing; risks parking above the sleep
+  gate), or a z-aware reunion channel (the path is blocked in 2D but
+  legal over the obstruction in 3D - Z_EASE currently pulls z back to
+  the diagram tents faster than a traversal can hold altitude). The
+  inert `ab*` knobs on ParticleSystem and `contactSlipEma` plumbing
+  are kept for the next session; behavior at defaults is identical.
 - **Fresh-settle limit cycle at fat widths: RESOLVED by crossing
   coverage + soft cosmetic margin on the anti-riding floor (P3.31).**
   P3.30's floor pumped with NO interaction at fat params (tw 0.52,
