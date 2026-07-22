@@ -80,6 +80,41 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **Post-play riders in the sin 0.35-0.55 band: RESOLVED by the strict
+  ramp + emergent coverage + bounded authority (P3.32).** User repro:
+  parallel-thread merges reappeared on the fat URL after play. The
+  P3.30 ramp zeroed the floor by sin 0.55 on the assumption that
+  2D-close pairs in the 0.35-0.55 band are crossing-adjacent and
+  render - true at rest, FALSE for tunneled tangles from violent play
+  (renderability census: 23-27 unrenderable riders mid-churn, NONE
+  sharing a registered crossing; the P3.30 census only counted
+  sin < 0.35 and missed the class; my P3.31 census classified pairs
+  with the force pass's own coverage rule and so could not see
+  coverage leaks either - A CENSUS MUST MEASURE RENDERABILITY, i.e.
+  erase-reach coverage, never the force rule under test). Fix: (1)
+  ramp par = (0.8 - sin)/0.25 - full floor through sin 0.55, zero
+  only above 0.8 so threads can still pass transversally to FORM
+  crossings; (2) properly-intersecting pairs at collectible angle
+  (sin > 0.25) are exempt - they render as crossings by definition;
+  (3) PassCover extended to EMERGENT crossings (previous substep's
+  collector rows feed addWindow with ids crossings.length+k) so the
+  strict ramp cannot pump at tunneled crossings' arms; (4) BOUNDED
+  AUTHORITY - the hard sub-width push is capped at RIDE_MAX_PUSH
+  1.2e-2: at slack ~0 a violent wound can leave overlap the geometry
+  cannot undo without stretching thread (globally infeasible), and
+  the uncapped floor rang forever on it (90 sim-s no trend in the
+  headless drag test); capped, free riders still separate ~0.3
+  units/s (gone within the sleep gate's 45-frame window) while
+  blocked pairs freeze sub-threshold. Only the 2D renderability
+  preference is bounded; the 3D capsule keeps unbounded final
+  authority. Headless violent wound now re-sleeps at sim+49 (test
+  budget 1920 frames; the old 30-s pass was sleeping ON the merges).
+  Census after: riders 0 at rest (fresh + small-tug), 4-6 transients
+  mid-churn (was 23-27); fat sweep 8/8 asleep; standard play session
+  settles FASTER than P3.31 (post-play mv 3.2e-3 vs 5.8e-2); scans
+  clean; 19/19. Accepted residual: a truly blocked pair in a
+  pathological wound can freeze merged - rare, bounded, and owned by
+  the open loud-attractor problem below.
 - **OPEN: post-VIOLENT-play loud attractor at fat params.** After ~75s
   of machine-gun gestures (fast circles + sweeps at 5 sites) on the fat
   URL, the knot sometimes parks at mv 1.3-2.3e-1 indefinitely (3-min

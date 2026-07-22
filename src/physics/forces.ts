@@ -89,6 +89,17 @@ export interface PassCover {
 // room to give was a measured limit-cycle pump (standing 3e-2 pushes at
 // pairs pinned at 90% of the floor - the knot could never sleep).
 const RIDE_SOFT_STIFFNESS = 0.15;
+// BOUNDED AUTHORITY for the hard (sub-width) zone: at slack ~0 a violent
+// wound can leave overlap the geometry cannot undo without stretching
+// threads - the configuration is globally infeasible, and an unbounded
+// renderability fight against it rings forever (measured: 90 sim-s of
+// mv 3e-2 - 1.5e-1 with no trend in the headless drag-session test).
+// Capping each push below the stick threshold keeps free riders
+// resolving fast (~0.3 units/s, gone within the sleep gate's 45-frame
+// window) while blocked pairs hold a sub-threshold standoff that the
+// friction machinery can freeze. Only the 2D renderability floor is
+// bounded - the 3D capsule keeps unbounded final authority.
+const RIDE_MAX_PUSH = 1.2e-2;
 
 export function applySegmentCollision(
   positions: Float32Array,
@@ -227,23 +238,30 @@ export function applySegmentCollision(
           // plane only where they CROSS, never where they RUN TOGETHER.
           // A 2D-rendered knot has no vocabulary for tangential overlap
           // (an over/under crossing gets an erase gap; parallel riding
-          // just paints one ribbon onto the other), so the required 2D
-          // separation scales with parallelism: full floor when the
-          // local tangents are parallel - regardless of z - fading to
-          // zero by |sin| = 0.55, where the pair is a genuine crossing
-          // and the 3D test below governs.
+          // just paints one ribbon onto the other). Overlap is legal
+          // ONLY where a rendered crossing covers it:
+          // - a pair that PROPERLY INTERSECTS at a collectible angle
+          //   (the emergent cutoff) IS a rendered crossing - exempt;
+          // - a pair inside the coverage of a registered or emergent
+          //   crossing (see PassCover) is inside that crossing's erase
+          //   neighborhood - exempt, fading with distance;
+          // - everything else gets the full width floor, with only a
+          //   narrow angle ramp at the steep end (zero above sin 0.8)
+          //   so threads can still pass transversally across each other
+          //   to FORM crossings (they ride over in z, then settle into
+          //   an emergent crossing). The P3.30 ramp (zero by 0.55) left
+          //   a lenient band at sin 0.35-0.55 where tunneled tangles
+          //   from violent play welded at a fraction of the width with
+          //   no rendered gap - the measured post-play rider class.
           //
-          // Two refinements, both from a measured fresh-settle limit
+          // Two further refinements, from a measured fresh-settle limit
           // cycle (3 of 8 fat-width seeds could never sleep):
-          // 1. CROSSING COVERAGE: arm segments converging into a genuine
-          //    crossing sweep through the shallow band with a 2D
-          //    separation the crossing's own geometry forbids raising
-          //    (the walls meet at the crossing point) - the floor was
-          //    demanding the impossible there, a permanent pump. Pairs
-          //    that share a registered crossing (one endpoint near its
-          //    over pass, the other near its under pass) fade the floor
-          //    out: that neighborhood is exactly what the erase gap
-          //    renders. The unconditional 3D test still governs - a
+          // 1. CROSSING COVERAGE (above): the floor may never demand
+          //    what a crossing's own geometry forbids - arm segments
+          //    converge at the crossing point, so the neighborhood the
+          //    erase gap renders is exempt. Pair-scoped: one endpoint
+          //    near one pass, the other near the SAME crossing's other
+          //    pass. The unconditional 3D test still governs - a
           //    covered pair can never interpenetrate, only render close.
           // 2. TWO-ZONE STIFFNESS: below the ribbon width the floor is
           //    a renderability line and corrects at full authority;
@@ -255,11 +273,12 @@ export function applySegmentCollision(
           const q1y = p1y + d1y * s;
           const q2x = p2x + d2x * t;
           const q2y = p2y + d2y * t;
-          {
-            const lenProd2 = Math.sqrt(a * e);
-            const sinAngle =
-              lenProd2 > 1e-12 ? Math.abs(denom2) / lenProd2 : 1;
-            const par = Math.max(0, Math.min(1, (0.55 - sinAngle) / 0.25));
+          const lenProd2 = Math.sqrt(a * e);
+          const sinAngle =
+            lenProd2 > 1e-12 ? Math.abs(denom2) / lenProd2 : 1;
+          const rendersAsCrossing = properU >= 0 && sinAngle > 0.25;
+          if (!rendersAsCrossing) {
+            const par = Math.max(0, Math.min(1, (0.8 - sinAngle) / 0.25));
             let px = q1x - q2x;
             let py = q1y - q2y;
             const d2d = Math.hypot(px, py);
@@ -292,7 +311,7 @@ export function applySegmentCollision(
               if (d2d < target) {
                 const hardDef = Math.max(0, renderWidth * scale - d2d);
                 const push2 =
-                  (hardDef * stiffness +
+                  (Math.min(hardDef * stiffness, RIDE_MAX_PUSH) +
                     (target - d2d - hardDef) * RIDE_SOFT_STIFFNESS) *
                   0.5;
                 px /= d2d;

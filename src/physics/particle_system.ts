@@ -1396,38 +1396,61 @@ export class ParticleSystem {
   private updatePassCover(): void {
     this.passCoverSlot.fill(-1);
     const span = Math.ceil(RIDE_COVER_REACH) + 1;
-    for (let c = 0; c < this.crossings.length; c++) {
-      const crossing = this.crossings[c];
-      for (let side = 0; side < 2; side++) {
-        const pass = side === 0 ? crossing.over : crossing.under;
-        const chain = this.chains[pass.chain];
-        const len = chain.length;
-        const base = Math.floor(pass.ctrl);
-        for (let k = base - span; k <= base + span; k++) {
-          let d = Math.abs(k - pass.ctrl);
-          d = Math.min(d, len - d);
-          const cov = Math.min(
-            1,
-            (RIDE_COVER_REACH - d) / (RIDE_COVER_REACH - RIDE_COVER_FULL)
-          );
-          if (cov <= 0) continue;
-          const s = chain[((k % len) + len) % len] * 4;
-          const value = c * 2 + side;
-          for (let u = 0; u < 4; u++) {
-            if (this.passCoverSlot[s + u] === value) {
-              if (cov > this.passCoverCov[s + u]) {
-                this.passCoverCov[s + u] = cov;
-              }
-              break;
-            }
-            if (this.passCoverSlot[s + u] < 0) {
-              this.passCoverSlot[s + u] = value;
+    const addWindow = (chainIdx: number, ctrl: number, value: number): void => {
+      const chain = this.chains[chainIdx];
+      const len = chain.length;
+      const base = Math.floor(ctrl);
+      for (let k = base - span; k <= base + span; k++) {
+        let d = Math.abs(k - ctrl);
+        d = Math.min(d, len - d);
+        const cov = Math.min(
+          1,
+          (RIDE_COVER_REACH - d) / (RIDE_COVER_REACH - RIDE_COVER_FULL)
+        );
+        if (cov <= 0) continue;
+        const s = chain[((k % len) + len) % len] * 4;
+        for (let u = 0; u < 4; u++) {
+          if (this.passCoverSlot[s + u] === value) {
+            if (cov > this.passCoverCov[s + u]) {
               this.passCoverCov[s + u] = cov;
-              break;
             }
+            break;
+          }
+          if (this.passCoverSlot[s + u] < 0) {
+            this.passCoverSlot[s + u] = value;
+            this.passCoverCov[s + u] = cov;
+            break;
           }
         }
       }
+    };
+    for (let c = 0; c < this.crossings.length; c++) {
+      const crossing = this.crossings[c];
+      addWindow(crossing.over.chain, crossing.over.ctrl, c * 2);
+      addWindow(crossing.under.chain, crossing.under.ctrl, c * 2 + 1);
+    }
+    // EMERGENT crossings cover their neighborhoods too - they render
+    // with erase gaps exactly like registered ones, so the strict
+    // anti-riding ramp must not fight their converging arms. The
+    // collector still holds the PREVIOUS substep's rows here (it is
+    // reset inside the iteration loop) - one substep of lag, which the
+    // fade tolerates.
+    const eBase = this.crossings.length;
+    const { ctrlOf, chainOf } = this.topology;
+    for (let k = 0; k < this.emergentCollector.n; k++) {
+      const row = k * 4;
+      const pi = this.emergentCollector.data[row] | 0;
+      const pj = this.emergentCollector.data[row + 2] | 0;
+      addWindow(
+        chainOf[pi],
+        ctrlOf[pi] + this.emergentCollector.data[row + 1],
+        (eBase + k) * 2
+      );
+      addWindow(
+        chainOf[pj],
+        ctrlOf[pj] + this.emergentCollector.data[row + 3],
+        (eBase + k) * 2 + 1
+      );
     }
   }
 
