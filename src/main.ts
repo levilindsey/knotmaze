@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.29 true-3D collision 2026-07-21";
+const BUILD_STAMP = "P3.30 transversality-gated overlap 2026-07-22";
 
 const app = new Application();
 
@@ -226,7 +226,12 @@ async function main(): Promise<void> {
   // Sliding crossings leave a sub-pixel oscillation floor at rest, so the
   // threshold sits above it; deliberate motion (temperature > 0, grabs) is
   // guarded explicitly rather than by amplitude.
-  const QUIET_EPS = 1.5e-2; // Max per-component displacement per substep.
+  // Max per-component displacement per substep. 2.2e-2 rather than the
+  // historical 1.5e-2: the transversality-gated 2D floor adds small
+  // standing corrections at shallow crossings that hover ~1.8e-2 after
+  // heavy interaction - sub-visible, and the graduated welds keep the
+  // frozen state stable.
+  const QUIET_EPS = 2.2e-2;
   const QUIET_FRAMES = 45;
   let stillFrames = 0;
   let asleep = false;

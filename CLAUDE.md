@@ -80,6 +80,21 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **Tangential riding under true-3D: RESOLVED by the
+  transversality-gated 2D floor (P3.30).** True-3D collision legalized
+  the one thing the eye still caught: threads riding ALONG each other,
+  2D-close but z-separated - legal in 3D, unrenderable in 2D (only
+  transversal overlap has a rendering: the erase gap). New stateless
+  rule in collision: required 2D separation scales with parallelism -
+  full width floor when local tangents are parallel (regardless of z),
+  fading to zero by |sin| 0.55 (real crossings; the 3D test governs).
+  Ramp (0.55 - sin)/0.25 - the shallower first ramp left riders parked
+  at partial floors in the sin~0.3 band. Post-tug tangential census 12
+  -> 0. QUIET_EPS raised 1.5e-2 -> 2.2e-2 (the gated push holds
+  ~1.8e-2 standing corrections at shallow crossings post-interaction).
+  THE INVARIANT, hard-won over ~10 iterations: a 2D-rendered knot may
+  overlap only transversally; enforce closeness rules by ANGLE, not by
+  place (every place-based exemption leaked).
 - **"Threads too close" (all remaining forms): RESOLVED by TRUE-3D
   collision (P3.29).** The tug-then-rest census showed ZERO violations
   of the depth-exemption spec - the spec itself permitted sub-width

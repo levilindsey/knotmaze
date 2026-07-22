@@ -199,14 +199,48 @@ export function applySegmentCollision(
             }
           }
 
-          // TRUE-3D capsule contact at the closest points: z lerped from
-          // the simulated per-particle z. Unconditional - no exemptions.
-          const zi = zPos[i] + (zPos[i2] - zPos[i]) * s;
-          const zj = zPos[j] + (zPos[j2] - zPos[j]) * t;
+          // TRANSVERSALITY-GATED 2D floor: threads may overlap in the
+          // plane only where they CROSS, never where they RUN TOGETHER.
+          // A 2D-rendered knot has no vocabulary for tangential overlap
+          // (an over/under crossing gets an erase gap; parallel riding
+          // just paints one ribbon onto the other), so the required 2D
+          // separation scales with parallelism: full floor when the
+          // local tangents are parallel - regardless of z - fading to
+          // zero by |sin| = 0.5 (~30 deg), where the pair is a genuine
+          // crossing and the 3D test below governs. Stateless local
+          // geometry: nothing to mis-tag, nothing to lag.
           const q1x = p1x + d1x * s;
           const q1y = p1y + d1y * s;
           const q2x = p2x + d2x * t;
           const q2y = p2y + d2y * t;
+          {
+            const lenProd2 = Math.sqrt(a * e);
+            const sinAngle =
+              lenProd2 > 1e-12 ? Math.abs(denom2) / lenProd2 : 1;
+            const par = Math.max(0, Math.min(1, (0.55 - sinAngle) / 0.25));
+            const req2 = minDist * par;
+            let px = q1x - q2x;
+            let py = q1y - q2y;
+            const d2d = Math.hypot(px, py);
+            if (req2 > 1e-6 && d2d < req2 && d2d > 1e-9) {
+              px /= d2d;
+              py /= d2d;
+              const push2 = (req2 - d2d) * stiffness * 0.5;
+              positions[i * 2] += px * push2 * (1 - s);
+              positions[i * 2 + 1] += py * push2 * (1 - s);
+              positions[i2 * 2] += px * push2 * s;
+              positions[i2 * 2 + 1] += py * push2 * s;
+              positions[j * 2] -= px * push2 * (1 - t);
+              positions[j * 2 + 1] -= py * push2 * (1 - t);
+              positions[j2 * 2] -= px * push2 * t;
+              positions[j2 * 2 + 1] -= py * push2 * t;
+            }
+          }
+
+          // TRUE-3D capsule contact at the closest points: z lerped from
+          // the simulated per-particle z. Unconditional - no exemptions.
+          const zi = zPos[i] + (zPos[i2] - zPos[i]) * s;
+          const zj = zPos[j] + (zPos[j2] - zPos[j]) * t;
           let nx = q1x - q2x;
           let ny = q1y - q2y;
           let nz = zi - zj;
