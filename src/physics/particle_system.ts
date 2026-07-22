@@ -209,14 +209,8 @@ const MIN_PASS_SEPARATION = 1.6;
 // 0.42, the original calibration expressed per unit width.
 const KINK_MIN_SEPARATION = 2.6;
 const KINK_SEP_PER_WIDTH = 6.2;
-// Crossing coverage for the anti-riding 2D floor (see PassCover in
-// forces.ts): particles within RIDE_COVER_FULL ctrl of a pass are fully
-// inside that crossing's rendered neighborhood (the erase gap spans
-// >= 1.35 of thread), fading to uncovered by RIDE_COVER_REACH. The fade
-// must reach past the sharpest arm curvature a fat thread produces
-// beside its crossing (measured pump sites sat 1-2 ctrl off the pass).
-const RIDE_COVER_FULL = 1.0;
-const RIDE_COVER_REACH = 2.5;
+// Crossing coverage for the anti-riding 2D floor is measured in WORLD
+// ARC bounded by the renderer's erase reach - see updatePassCover.
 const COUPLING_STIFFNESS = 0.7;
 // Clamp lag (ctrl) at which the coupling has yielded to half strength.
 const COUPLING_YIELD_LAG = 0.25;
@@ -596,6 +590,7 @@ export class ParticleSystem {
   private stickyContacts = false;
   // Width-scaled kink-eye material budget, refreshed each substep.
   private kinkSep = KINK_MIN_SEPARATION;
+  private lastThreadWidth = 0.42;
   // TEMP A/B flag (probe_afterplay2): taper slide/transversality mobility
   // at chaotic contact speeds during free decay.
   abHighSpeedTaper = false;
@@ -1090,6 +1085,7 @@ export class ParticleSystem {
       KINK_MIN_SEPARATION,
       tuning.threadWidth * KINK_SEP_PER_WIDTH
     );
+    this.lastThreadWidth = tuning.threadWidth;
     // Aesthetic spacing can never drop below the hard floor: at low
     // repulsion x wide threads the raw formula fell below the thread
     // width (rep 0.4 x taut 0.62 = 0.25 < width 0.52), silently
@@ -1470,26 +1466,37 @@ export class ParticleSystem {
 
   // Rebuild the per-particle registered-crossing membership table used by
   // the anti-riding 2D floor's crossing coverage. 4 slots per particle,
-  // slot value = crossing * 2 + side (0 over / 1 under), with a coverage
-  // weight fading from 1 (within RIDE_COVER_FULL ctrl of the pass) to 0
-  // at RIDE_COVER_REACH. Deterministic crossing-index order, first-come
-  // on overflow - and rebuilt from scratch every substep, so slides move
-  // the coverage with the binding and nothing goes stale.
+  // slot value = crossing * 2 + side (0 over / 1 under).
+  //
+  // Coverage is measured in WORLD ARC along the thread and bounded by
+  // the renderer's actual erase-gap reach. The original ctrl-count
+  // window (2.5 per side) was the P3.31 -> P3.34 regression the user
+  // kept reporting: a twist is two crossings a few ctrl apart, their
+  // ctrl windows CHAINED across the whole eye, the anti-riding floor
+  // went to zero through the entire twist, and the two threads rode
+  // flat through it - re-opening the exact merge P3.30 had fixed
+  // ("Success!"), while every census that consulted the same slots
+  // certified it healthy. The exemption must match what the renderer
+  // paints, nothing more: erase reach = max(1.35, 3.25 * width) along
+  // the thread, and coverage ends where the erase ends.
   private updatePassCover(): void {
     this.passCoverSlot.fill(-1);
-    const span = Math.ceil(RIDE_COVER_REACH) + 1;
+    const p = this.positions;
+    const reach = Math.max(1.35, this.lastThreadWidth * 3.25) * 0.85;
+    const fade = reach * 0.35;
     const addWindow = (chainIdx: number, ctrl: number, value: number): void => {
       const chain = this.chains[chainIdx];
       const len = chain.length;
       const base = Math.floor(ctrl);
-      for (let k = base - span; k <= base + span; k++) {
-        let d = Math.abs(k - ctrl);
-        d = Math.min(d, len - d);
-        const cov = Math.min(
-          1,
-          (RIDE_COVER_REACH - d) / (RIDE_COVER_REACH - RIDE_COVER_FULL)
-        );
-        if (cov <= 0) continue;
+      const frac = ctrl - base;
+      const seg = (k: number): number => {
+        const a = chain[((k % len) + len) % len];
+        const b = chain[(((k + 1) % len) + len) % len];
+        return Math.hypot(p[b * 2] - p[a * 2], p[b * 2 + 1] - p[a * 2 + 1]);
+      };
+      const put = (k: number, arc: number): void => {
+        const cov = Math.min(1, Math.max(0, (reach - arc) / fade));
+        if (cov <= 0) return;
         const s = chain[((k % len) + len) % len] * 4;
         for (let u = 0; u < 4; u++) {
           if (this.passCoverSlot[s + u] === value) {
@@ -1504,6 +1511,18 @@ export class ParticleSystem {
             break;
           }
         }
+      };
+      // Walk outward from the binding in both directions, accumulating
+      // real arc length; stop where the erase gap ends.
+      let arc = frac * seg(base);
+      for (let k = base; arc < reach && k > base - 8; k--) {
+        put(k, arc);
+        arc += seg(k - 1);
+      }
+      arc = (1 - frac) * seg(base);
+      for (let k = base + 1; arc < reach && k < base + 9; k++) {
+        put(k, arc);
+        arc += seg(k);
       }
     };
     for (let c = 0; c < this.crossings.length; c++) {

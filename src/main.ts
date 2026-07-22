@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.34 turn-radius floor + miter clamp 2026-07-22";
+const BUILD_STAMP = "P3.35 erase-true coverage 2026-07-22";
 
 const app = new Application();
 
