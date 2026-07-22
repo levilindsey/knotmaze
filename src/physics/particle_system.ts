@@ -200,8 +200,15 @@ const MIN_PASS_SEPARATION = 1.6;
 // The generic 0.9 floor let kink loops starve to ~0.25 arc of material -
 // unrenderable (the erase cuts ~1 unit of thread with nothing to repaint:
 // the reported giant gaps at loop-end non-twists). ~2.6 ctrl of loop
-// material renders as a legible eyelet at the default thread width.
+// material renders as a legible eyelet at the DEFAULT thread width -
+// and the budget must SCALE with width: a fat ribbon's eye needs a
+// proportionally longer loop or its turn radius is geometrically
+// capped below the renderable minimum (measured at tw 0.52: a 2.6-ctrl
+// eye froze at radius 0.13-0.25 vs the 0.30 floor - the "merged
+// parallel threads" seam was its strip self-overlapping). 6.2 = 2.6 /
+// 0.42, the original calibration expressed per unit width.
 const KINK_MIN_SEPARATION = 2.6;
+const KINK_SEP_PER_WIDTH = 6.2;
 // Crossing coverage for the anti-riding 2D floor (see PassCover in
 // forces.ts): particles within RIDE_COVER_FULL ctrl of a pass are fully
 // inside that crossing's rendered neighborhood (the erase gap spans
@@ -587,6 +594,8 @@ export class ParticleSystem {
   private tangentScratch = new Float32Array(4);
   private slideScratch = new Float32Array(4);
   private stickyContacts = false;
+  // Width-scaled kink-eye material budget, refreshed each substep.
+  private kinkSep = KINK_MIN_SEPARATION;
   // TEMP A/B flag (probe_afterplay2): taper slide/transversality mobility
   // at chaotic contact speeds during free decay.
   abHighSpeedTaper = false;
@@ -943,9 +952,9 @@ export class ParticleSystem {
     if (prev && next && prev !== self) {
       const cyc = (d: number): number => ((d % len) + len) % len;
       const sepPrev =
-        prev === self.partner ? KINK_MIN_SEPARATION : MIN_PASS_SEPARATION;
+        prev === self.partner ? this.kinkSep : MIN_PASS_SEPARATION;
       const sepNext =
-        next === self.partner ? KINK_MIN_SEPARATION : MIN_PASS_SEPARATION;
+        next === self.partner ? this.kinkSep : MIN_PASS_SEPARATION;
       if (cyc(f - prev.ctrl) < sepPrev) {
         f = prev.ctrl + sepPrev;
       }
@@ -1077,6 +1086,10 @@ export class ParticleSystem {
     const bendScale =
       settle * (BEND_TAUT + (BEND_LOOSE - BEND_TAUT) * slack) * tuning.bend;
     const collisionDist = tuning.threadWidth * COLLISION_MARGIN;
+    this.kinkSep = Math.max(
+      KINK_MIN_SEPARATION,
+      tuning.threadWidth * KINK_SEP_PER_WIDTH
+    );
     // Aesthetic spacing can never drop below the hard floor: at low
     // repulsion x wide threads the raw formula fell below the thread
     // width (rep 0.4 x taut 0.62 = 0.25 < width 0.52), silently
@@ -1208,6 +1221,7 @@ export class ParticleSystem {
         Math.max(0.1, Math.min(1.35, tuning.stiffness))
       );
       this.probe("structural");
+      this.applyTurnRadiusFloor(tuning.threadWidth * 0.5 * 1.15, 0.5);
       applyDistanceConstraints(
         this.positions,
         this.bending,
@@ -1383,6 +1397,13 @@ export class ParticleSystem {
     // one Gauss-Seidel pass leaves residual where a particle sits
     // between two violated pairs (each correction pushes into the
     // other; measured 0.45 vs the 0.60 floor after one sweep).
+    // (The turn-radius floor was tried at final authority here and
+    // REJECTED: on a violently wounded tangle it pinned a standing
+    // 3.4e-2 pump for 3+ minutes - a tangle-squeezed fold cannot open
+    // without the tangle yielding, and full-stiffness insistence is a
+    // pump by construction. The floor stays an in-loop preference; the
+    // renderer's concave-side miter clamp owns renderability at any
+    // radius.)
     for (let fs = 0; fs < 2; fs++) {
       if (fs === 1) this.violationList.n = 0;
       applySegmentCollision(
@@ -1408,6 +1429,41 @@ export class ParticleSystem {
     if (this.abExtraDrag > 0) {
       for (let i = 0; i < this.particleCount * 2; i++) {
         this.prev[i] += (this.positions[i] - this.prev[i]) * this.abExtraDrag;
+      }
+    }
+  }
+
+  // Minimum turn radius: the ribbon's OWN renderability floor. A
+  // centerline turning tighter than the ribbon half-width makes the
+  // triangle strip self-overlap (jagged seam inside the fill) - a
+  // single-thread artifact no pair census can see. Enforced as a
+  // per-triple chord floor: for neighbors a, c of b, the chord |ac|
+  // that corresponds to turn radius R at mean segment length l is
+  // 2l / sqrt(1 + (l / 2R)^2); push a and c apart when below it. The
+  // renderer's concave-side miter clamp covers any residual.
+  private applyTurnRadiusFloor(minRadius: number, stiffness: number): void {
+    const p = this.positions;
+    for (const chain of this.chains) {
+      const len = chain.length;
+      for (let k = 0; k < len; k++) {
+        const a = chain[(k - 1 + len) % len];
+        const b = chain[k];
+        const c = chain[(k + 1) % len];
+        const l1 = Math.hypot(p[b * 2] - p[a * 2], p[b * 2 + 1] - p[a * 2 + 1]);
+        const l2 = Math.hypot(p[c * 2] - p[b * 2], p[c * 2 + 1] - p[b * 2 + 1]);
+        const lm = (l1 + l2) / 2;
+        if (lm < 1e-9) continue;
+        const q = lm / (2 * minRadius);
+        const minChord = (2 * lm) / Math.sqrt(1 + q * q);
+        const dx = p[c * 2] - p[a * 2];
+        const dy = p[c * 2 + 1] - p[a * 2 + 1];
+        const d = Math.hypot(dx, dy);
+        if (d >= minChord || d < 1e-9) continue;
+        const corr = ((minChord - d) / d) * stiffness * 0.5;
+        p[a * 2] -= dx * corr;
+        p[a * 2 + 1] -= dy * corr;
+        p[c * 2] += dx * corr;
+        p[c * 2 + 1] += dy * corr;
       }
     }
   }

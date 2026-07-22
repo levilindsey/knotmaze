@@ -73,16 +73,35 @@ export class RibbonMesh {
       ay /= la;
       bx /= lb;
       by /= lb;
+      const dot = ax * bx + ay * by;
       // cos^2(half-angle) = (1 + cos(angle)) / 2; clamp keeps miter <= 2x.
-      const cosHalf = Math.sqrt(Math.max((1 + ax * bx + ay * by) / 2, 0.25));
+      const cosHalf = Math.sqrt(Math.max((1 + dot) / 2, 0.25));
       const w = halfWidth / cosHalf;
 
-      const nx = -tangents[s + 1] * w;
-      const ny = tangents[s] * w;
-      this.vertexData[i * 4] = cx + nx;
-      this.vertexData[i * 4 + 1] = cy + ny;
-      this.vertexData[i * 4 + 2] = cx - nx;
-      this.vertexData[i * 4 + 3] = cy - ny;
+      // CONCAVE-SIDE CLAMP: where the centerline turns tighter than the
+      // offset length, the inner vertices of consecutive samples cross
+      // past the local center of curvature and the strip self-overlaps -
+      // rendered as a jagged sawtooth seam inside the fill (the
+      // "parallel threads merged" user artifact was this, a single
+      // over-tight fold). The inner offset may never exceed the local
+      // turn radius; the ribbon instead thins into the fold. Floor at
+      // 30% width so the strip never fully collapses.
+      let wInner = w;
+      const sinHalf = Math.sqrt(Math.max((1 - dot) / 2, 0));
+      if (sinHalf > 1e-4) {
+        const radius = ((la + lb) / 4) * (cosHalf / sinHalf);
+        wInner = Math.min(w, Math.max(radius * 0.95, halfWidth * 0.3));
+      }
+      const cross = ax * by - ay * bx;
+      const wLeft = cross > 0 ? wInner : w;
+      const wRight = cross > 0 ? w : wInner;
+
+      const nx = -tangents[s + 1];
+      const ny = tangents[s];
+      this.vertexData[i * 4] = cx + nx * wLeft;
+      this.vertexData[i * 4 + 1] = cy + ny * wLeft;
+      this.vertexData[i * 4 + 2] = cx - nx * wRight;
+      this.vertexData[i * 4 + 3] = cy - ny * wRight;
     }
     this.mesh.geometry.getBuffer("aPosition").update();
   }

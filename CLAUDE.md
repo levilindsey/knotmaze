@@ -80,6 +80,34 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **The "merged parallel threads" seam was a SINGLE THREAD all along:
+  RESOLVED by the concave-side miter clamp (P3.34).** Three
+  pair-floor fixes (P3.31-33) changed nothing on the user's screen
+  because the artifact was never a pair: a centerline turning tighter
+  than the ribbon half-width makes the triangle strip's inner
+  vertices cross past the local center of curvature - the strip
+  self-overlaps and draws a jagged sawtooth seam inside the fill that
+  READS as two merged threads. Invisible to every pair census, and
+  the old miter (halfWidth/cosHalf, both sides) made it WORSE at
+  sharp joins. THE FIX IS IN RENDERING: the concave-side offset is
+  clamped to the local turn radius (min 30% width), so an over-tight
+  fold renders as a clean thinned fold at ANY radius - verified at
+  radius 0.13 vs half-width 0.26. Physics keeps two gentler helpers:
+  a per-triple TURN-RADIUS chord floor (in-loop 0.5 only - full
+  authority was tried and pinned a flat 3.4e-2 pump for 3+ minutes on
+  a wounded tangle; a tangle-squeezed fold cannot open without the
+  tangle yielding) and a WIDTH-SCALED kink-eye budget (kinkSep =
+  max(2.6, 6.2 * threadWidth) ctrl - 2.6 was calibrated at tw 0.42
+  and starves fat eyes; note the ctrl metric cannot see COMPRESSED
+  segments, measured at 53% rest inside a squeezed eye, so arc
+  starvation can persist regardless - the miter clamp is the
+  correctness layer, physics floors are aesthetics). Curvature census
+  lives in the probe archive (probe_curv). Verified: harsh headless
+  wound re-sleeps at sim+6.5 (was +49); both sweeps 8/8; riders 0;
+  tap2 sleeps; scans clean; 19/19. LESSON, twice paid this session: a
+  census that only measures PAIRS certifies single-thread artifacts
+  as healthy; and "exactly the same after the fix" means the
+  diagnosis class is wrong, not the tuning.
 - **Frozen merge seam after play: RESOLVED for the casual-play class by
   the two-tier push law + renderability-aware sleep (P3.33); the
   torture-play residual is owned by the open attractor problem.** User
