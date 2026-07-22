@@ -234,6 +234,13 @@ async function main(): Promise<void> {
   const QUIET_FRAMES = 45;
   let stillFrames = 0;
   let asleep = false;
+  // Non-finite watchdog: if the physics state ever explodes to NaN/Inf,
+  // HALT instead of churning. NaN positions collapse the collision
+  // spatial hash into a single bucket (NaN keys compare equal in Map),
+  // turning each frame into an O(9*N^2) multi-second task - the page
+  // hard-hangs and can't even process a dev-server reload. A halted sim
+  // is debuggable; a hung tab is not. Cleared on regenerate.
+  let halted = false;
   const wake = (): void => {
     stillFrames = 0;
     asleep = false;
@@ -241,6 +248,7 @@ async function main(): Promise<void> {
 
   app.ticker.add((ticker) => {
     if (!ps || !renderer) return;
+    if (halted) return;
 
     // simSpeed [0, 10]: piecewise-linear multiplier hitting the spec's
     // pinned points exactly - 0 paused, 1 -> 0.2x, 5 -> 1x, 10 -> 5x.
@@ -272,6 +280,15 @@ async function main(): Promise<void> {
       threadWidth: params.threadWidth,
     });
     const t1 = performance.now();
+    if (!Number.isFinite(ps.maxMove)) {
+      halted = true;
+      perfLine = " | HALTED: physics went non-finite (regenerate to reset)";
+      updateStamp();
+      console.error(
+        "KnotMaze: physics state went non-finite; simulation halted."
+      );
+      return;
+    }
     renderer.update();
     const t2 = performance.now();
 
