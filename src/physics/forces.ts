@@ -89,17 +89,31 @@ export interface PassCover {
 // room to give was a measured limit-cycle pump (standing 3e-2 pushes at
 // pairs pinned at 90% of the floor - the knot could never sleep).
 const RIDE_SOFT_STIFFNESS = 0.15;
-// BOUNDED AUTHORITY for the hard (sub-width) zone: at slack ~0 a violent
-// wound can leave overlap the geometry cannot undo without stretching
-// threads - the configuration is globally infeasible, and an unbounded
-// renderability fight against it rings forever (measured: 90 sim-s of
-// mv 3e-2 - 1.5e-1 with no trend in the headless drag-session test).
-// Capping each push below the stick threshold keeps free riders
-// resolving fast (~0.3 units/s, gone within the sleep gate's 45-frame
-// window) while blocked pairs hold a sub-threshold standoff that the
-// friction machinery can freeze. Only the 2D renderability floor is
-// bounded - the 3D capsule keeps unbounded final authority.
-const RIDE_MAX_PUSH = 1.2e-2;
+// TWO-TIER hard zone: full authority for the first HARD_SNAP of
+// deficit, gentle (RIDE_SOFT_STIFFNESS) beyond. Both single-tier laws
+// failed measurably: a flat cap (1.2e-2) lost the tug-of-war against
+// bd 1.75 bending at hairpin tips - the equilibrium parked 10-15%
+// below width and rendered as a lengthwise merge seam (user repro) -
+// while unbounded authority rang for 90+ sim-s on violent wounds
+// whose overlap the slack-0 geometry cannot undo quickly. HARD_SNAP
+// must exceed the largest per-substep deficit an opposing constraint
+// can re-create (bending at bd 1.75 re-pulls ~2.4e-2/substep) so
+// standing tug-of-wars are WON and held at width; deep merges beyond
+// it grind at the bounded rate that measurably converges (~sim+49 on
+// the harshest headless wound). A violation-driven local weld release
+// was also tried and REJECTED: it fed the loud attractor (5 min of
+// mv 1e-1 - 3e-1, pending violations never draining).
+const HARD_SNAP = 0.04;
+
+// Standing hard-zone violations of the anti-riding floor, reported to
+// the caller: [x, y, depth] rows, filled during the pass that the
+// caller designates (the last final-authority sweep - substep-end
+// truth). Deeper than a Gauss-Seidel crumb only.
+export interface ViolationList {
+  data: Float32Array;
+  n: number;
+}
+const VIOLATION_MIN_DEPTH = 0.03;
 
 export function applySegmentCollision(
   positions: Float32Array,
@@ -113,7 +127,8 @@ export function applySegmentCollision(
   // Registered crossing contact points [x, y] - collector dedup only.
   contacts: Float32Array,
   passCover: PassCover | undefined,
-  collector?: EmergentCollector
+  collector?: EmergentCollector,
+  violations?: ViolationList
 ): void {
   const cellSize = Math.max(1, minDist * 2);
   const buckets = new Map<number, number[]>();
@@ -310,8 +325,19 @@ export function applySegmentCollision(
               const target = minDist * scale;
               if (d2d < target) {
                 const hardDef = Math.max(0, renderWidth * scale - d2d);
+                if (
+                  violations &&
+                  hardDef > VIOLATION_MIN_DEPTH &&
+                  violations.n * 3 < violations.data.length
+                ) {
+                  const o = violations.n++ * 3;
+                  violations.data[o] = (q1x + q2x) / 2;
+                  violations.data[o + 1] = (q1y + q2y) / 2;
+                  violations.data[o + 2] = hardDef;
+                }
                 const push2 =
-                  (Math.min(hardDef * stiffness, RIDE_MAX_PUSH) +
+                  (Math.min(hardDef, HARD_SNAP) * stiffness +
+                    Math.max(0, hardDef - HARD_SNAP) * RIDE_SOFT_STIFFNESS +
                     (target - d2d - hardDef) * RIDE_SOFT_STIFFNESS) *
                   0.5;
                 px /= d2d;

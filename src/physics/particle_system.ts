@@ -607,6 +607,12 @@ export class ParticleSystem {
   private prevBindings: Float32Array = new Float32Array(0);
   // Per-crossing eased grab-release gate: 1 = weld allowed, 0 = released.
   private grabGate: Float32Array = new Float32Array(0);
+  // Standing hard violations at substep end ([x, y, depth] rows), from
+  // the last final-authority collision sweep. (A violation-driven local
+  // weld release was tried here and REJECTED - it fed the loud
+  // attractor. The list's remaining jobs: block the global stick and
+  // the sleep gate, so the knot never freezes ON a rendered merge.)
+  private violationList = { data: new Float32Array(32 * 3), n: 0 };
 
   get simTime(): number {
     return this.time;
@@ -630,6 +636,7 @@ export class ParticleSystem {
     this.contactSpeedEma.fill(1);
     this.contactSlipEma.fill(1);
     this.grabGate.fill(1);
+    this.violationList.n = 0;
     this.prevContacts.fill(0);
     this.prevBindings.fill(0);
     this.zPos.fill(0);
@@ -646,6 +653,13 @@ export class ParticleSystem {
   // True while contacts are in the STATIC (welded/frozen) regime.
   get contactsStatic(): boolean {
     return this.stickyContacts;
+  }
+
+  // Standing hard violations of the anti-riding floor at substep end.
+  // Nonzero means an unrenderable overlap is still being worked on -
+  // the sleep gate must not freeze the knot on it.
+  get ridersPending(): number {
+    return this.violationList.n;
   }
 
   // Nearest particle within radius (lattice units), or -1. Pure query.
@@ -1037,8 +1051,15 @@ export class ParticleSystem {
       this.frameMaxMoveSq = substepMoveSq;
     }
 
-    // Static/kinetic friction switch (see CONTACT_STICK_EPS).
-    if (this.grabbed >= 0 || tuning.temperature > 0) {
+    // Static/kinetic friction switch (see CONTACT_STICK_EPS). Standing
+    // hard violations of the anti-riding floor block the global freeze:
+    // the work gate needs the machinery live to resolve them, and a
+    // frozen merge is the one rest state the renderer cannot draw.
+    if (
+      this.grabbed >= 0 ||
+      tuning.temperature > 0 ||
+      this.violationList.n > 0
+    ) {
       this.stickyContacts = false;
     } else if (substepMoveSq < CONTACT_STICK_EPS * CONTACT_STICK_EPS) {
       this.stickyContacts = true;
@@ -1363,6 +1384,7 @@ export class ParticleSystem {
     // between two violated pairs (each correction pushes into the
     // other; measured 0.45 vs the 0.60 floor after one sweep).
     for (let fs = 0; fs < 2; fs++) {
+      if (fs === 1) this.violationList.n = 0;
       applySegmentCollision(
         this.positions,
         this.zPos,
@@ -1373,7 +1395,11 @@ export class ParticleSystem {
         1.0,
         this.contacts,
         { slot: this.passCoverSlot, cov: this.passCoverCov },
-        undefined
+        undefined,
+        // Record standing hard violations from the LAST sweep only -
+        // the substep-end truth that drives the work gate, the global
+        // stick block, and the sleep gate.
+        fs === 1 ? this.violationList : undefined
       );
     }
     this.probe("final-collision");

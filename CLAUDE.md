@@ -80,6 +80,32 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **Frozen merge seam after play: RESOLVED for the casual-play class by
+  the two-tier push law + renderability-aware sleep (P3.33); the
+  torture-play residual is owned by the open attractor problem.** User
+  repro'd the same seam TWICE (P3.32's flat cap RIDE_MAX_PUSH 1.2e-2
+  lost the tug-of-war against bd 1.75 bending at a hairpin tip - the
+  equilibrium parked 10-15% below width and the sleep gate froze it).
+  Six push-law/mechanism experiments, all measured (do not re-run
+  them): flat cap loses small fights; unbounded authority rings 90+
+  sim-s on violent wounds; violation-driven local weld release (work
+  gate) FED the attractor (5 min mv 1e-1-3e-1, rejected); two-tier
+  wins: full authority for the first HARD_SNAP 0.04 of deficit
+  (exceeds bending's ~2.4e-2/substep re-creation - standing
+  tug-of-wars are WON and held at width), RIDE_SOFT 0.15 beyond.
+  Plus: the last final-authority sweep records standing hard
+  violations deeper than 0.03 into `violationList`; `ridersPending`
+  blocks BOTH the global stick and main.ts sleep - the knot may never
+  freeze ON a rendered merge. Verified: moderate play (5 sites,
+  2.2-unit drags) riders 0 and sleeps at sim 21.6 with the pending
+  gate draining first; fat sweep 8/8; tap2 sleeps; scans clean; 19/19
+  fast. KNOWN RESIDUAL: 75-s torture gestures create multi-thread
+  tangle clusters (~10 pairs at d 0.29-0.49, same set for 5 min) that
+  are TOPOLOGICALLY stuck at slack ~0 - no local push law resolves
+  them (separating one pair violates another); the knot stays dimly
+  awake on them (mv ~3-5e-2, slowly trending down) instead of
+  freezing merged. Their resolution needs material redistribution
+  through crossings - the open loud-attractor problem below.
 - **Post-play riders in the sin 0.35-0.55 band: RESOLVED by the strict
   ramp + emergent coverage + bounded authority (P3.32).** User repro:
   parallel-thread merges reappeared on the fat URL after play. The

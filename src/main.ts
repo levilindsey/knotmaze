@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.32 strict ramp + emergent coverage 2026-07-22";
+const BUILD_STAMP = "P3.33 full floor authority + work gate 2026-07-22";
 
 const app = new Application();
 
@@ -304,7 +304,11 @@ async function main(): Promise<void> {
       ps.settleComplete &&
       ps.grabbedParticle < 0 &&
       settings.temperature === 0 &&
-      ps.maxMove < QUIET_EPS
+      ps.maxMove < QUIET_EPS &&
+      // Never freeze on an unrenderable overlap - a standing hard
+      // violation of the anti-riding floor keeps the sim awake (the
+      // work gate is actively resolving it).
+      ps.ridersPending === 0
     ) {
       if (++stillFrames >= QUIET_FRAMES) asleep = true;
     } else {
