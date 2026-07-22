@@ -80,6 +80,42 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **Fresh-settle limit cycle at fat widths: RESOLVED by crossing
+  coverage + soft cosmetic margin on the anti-riding floor (P3.31).**
+  P3.30's floor pumped with NO interaction at fat params (tw 0.52,
+  rep 0.4, bd 1.75, sm 0.7): 3 of 8 seeds never slept, hot sites at
+  STEEP crossings (sin 0.85-1.0), mv bursting 1.2e-2 - 7e-2 through
+  the stick/unstick hysteresis (the freeze/unfreeze regimes have
+  different equilibria - a limit cycle THROUGH the friction switch).
+  Floor-push instrumentation found two standing-violation classes the
+  angle gate alone can't be right about: (1) arm segments converging
+  INTO a genuine crossing sweep through the shallow band at 2D
+  separations the crossing's own geometry forbids raising (walls meet
+  at the crossing point) - the floor demanded the impossible forever;
+  (2) packed parallel weave pairs pinned at ~90% of the floor (0.54 vs
+  0.60 target, ribbon width 0.52) - a full-stiffness war over COSMETIC
+  margin the weave cannot yield. Fixes: (1) per-pair crossing COVERAGE
+  (`PassCover`: 4 slots/particle, crossing*2+side, rebuilt every
+  substep from pass ctrls - no stale state; a pair fades the floor
+  out only when one endpoint sits near a shared registered crossing's
+  over pass and the other near its UNDER pass, cover 1 within 1.0
+  ctrl fading to 0 at 2.5) - pair-aware like P3.24, so third threads
+  get no relief, and the unconditional 3D test still forbids
+  interpenetration inside covered zones (coverage legalizes exactly
+  what the erase gap renders, nothing more - visually audited);
+  (2) TWO-ZONE stiffness: full authority below ribbon width (the true
+  renderability line), RIDE_SOFT_STIFFNESS 0.15 in the width->margin
+  band, so margin standoffs sit sub-stick-threshold and freeze.
+  QUIET_EPS restored 2.2e-2 -> 1.5e-2 (its raise existed solely to
+  tolerate the removed standing pushes; rest floor is ~2e-3 again).
+  Verified: fat sweep 8/8 asleep sim 5-7s (was 5/8 at 12-23s + 3
+  never); default sweep 8/8 at 3.9s unchanged; rider census 0 fresh
+  AND post-tug (P3.30 regression guarded); play+tap re-sleeps; scans
+  clean both repro URLs; 19/19 tests. Amends the P3.30 invariant:
+  enforce closeness by angle, not place - EXCEPT that the rendered
+  neighborhood of a crossing is a legitimate pair-scoped place (it is
+  precisely where the renderer draws overlap), and a floor may never
+  demand what geometry cannot give (that is a pump by construction).
 - **Tangential riding under true-3D: RESOLVED by the
   transversality-gated 2D floor (P3.30).** True-3D collision legalized
   the one thing the eye still caught: threads riding ALONG each other,

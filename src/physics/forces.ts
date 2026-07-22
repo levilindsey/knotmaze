@@ -69,15 +69,39 @@ export interface EmergentCollector {
   n: number;
 }
 
+// Per-particle registered-crossing membership, for the 2D anti-riding
+// floor: 4 slots per particle, each `crossing * 2 + side` (-1 empty) with
+// a coverage weight in `cov` (1 at the pass, fading with ctrl distance).
+// A segment PAIR is "covered" when one endpoint sits on a crossing's over
+// pass and the other on the SAME crossing's under pass - the pair is then
+// inside that crossing's rendered neighborhood (the erase gap), where 2D
+// closeness at any angle has a rendering. Pair-aware by construction: a
+// third thread near the crossing shares no membership and gets no relief
+// (the P3.24 sink lesson).
+export interface PassCover {
+  slot: Int32Array;
+  cov: Float32Array;
+}
+
+// The anti-riding floor above the ribbon-width line is COSMETIC margin
+// (COLLISION_MARGIN headroom, not renderability). Correct it gently:
+// a full-stiffness fight over margin against a packed weave that has no
+// room to give was a measured limit-cycle pump (standing 3e-2 pushes at
+// pairs pinned at 90% of the floor - the knot could never sleep).
+const RIDE_SOFT_STIFFNESS = 0.15;
+
 export function applySegmentCollision(
   positions: Float32Array,
   zPos: Float32Array,
   particleCount: number,
   topology: SegmentTopology,
   minDist: number,
+  // Ribbon width: the true 2D renderability line for the riding floor.
+  renderWidth: number,
   stiffness: number,
   // Registered crossing contact points [x, y] - collector dedup only.
   contacts: Float32Array,
+  passCover: PassCover | undefined,
   collector?: EmergentCollector
 ): void {
   const cellSize = Math.max(1, minDist * 2);
@@ -206,9 +230,27 @@ export function applySegmentCollision(
           // just paints one ribbon onto the other), so the required 2D
           // separation scales with parallelism: full floor when the
           // local tangents are parallel - regardless of z - fading to
-          // zero by |sin| = 0.5 (~30 deg), where the pair is a genuine
-          // crossing and the 3D test below governs. Stateless local
-          // geometry: nothing to mis-tag, nothing to lag.
+          // zero by |sin| = 0.55, where the pair is a genuine crossing
+          // and the 3D test below governs.
+          //
+          // Two refinements, both from a measured fresh-settle limit
+          // cycle (3 of 8 fat-width seeds could never sleep):
+          // 1. CROSSING COVERAGE: arm segments converging into a genuine
+          //    crossing sweep through the shallow band with a 2D
+          //    separation the crossing's own geometry forbids raising
+          //    (the walls meet at the crossing point) - the floor was
+          //    demanding the impossible there, a permanent pump. Pairs
+          //    that share a registered crossing (one endpoint near its
+          //    over pass, the other near its under pass) fade the floor
+          //    out: that neighborhood is exactly what the erase gap
+          //    renders. The unconditional 3D test still governs - a
+          //    covered pair can never interpenetrate, only render close.
+          // 2. TWO-ZONE STIFFNESS: below the ribbon width the floor is
+          //    a renderability line and corrects at full authority;
+          //    between width and the margin target it is cosmetic and
+          //    corrects at RIDE_SOFT_STIFFNESS, so a packed weave that
+          //    cannot yield the full margin holds a sub-stick-threshold
+          //    standoff instead of ringing forever.
           const q1x = p1x + d1x * s;
           const q1y = p1y + d1y * s;
           const q2x = p2x + d2x * t;
@@ -218,22 +260,52 @@ export function applySegmentCollision(
             const sinAngle =
               lenProd2 > 1e-12 ? Math.abs(denom2) / lenProd2 : 1;
             const par = Math.max(0, Math.min(1, (0.55 - sinAngle) / 0.25));
-            const req2 = minDist * par;
             let px = q1x - q2x;
             let py = q1y - q2y;
             const d2d = Math.hypot(px, py);
-            if (req2 > 1e-6 && d2d < req2 && d2d > 1e-9) {
-              px /= d2d;
-              py /= d2d;
-              const push2 = (req2 - d2d) * stiffness * 0.5;
-              positions[i * 2] += px * push2 * (1 - s);
-              positions[i * 2 + 1] += py * push2 * (1 - s);
-              positions[i2 * 2] += px * push2 * s;
-              positions[i2 * 2 + 1] += py * push2 * s;
-              positions[j * 2] -= px * push2 * (1 - t);
-              positions[j * 2 + 1] -= py * push2 * (1 - t);
-              positions[j2 * 2] -= px * push2 * t;
-              positions[j2 * 2 + 1] -= py * push2 * t;
+            if (par > 0 && d2d < minDist * par && d2d > 1e-9) {
+              let cover = 0;
+              if (passCover) {
+                const { slot, cov } = passCover;
+                const ends = [i, i2, j, j2];
+                for (let ea = 0; ea < 2 && cover < 1; ea++) {
+                  const sa = ends[ea] * 4;
+                  for (let eb = 2; eb < 4 && cover < 1; eb++) {
+                    const sb = ends[eb] * 4;
+                    for (let u = 0; u < 4; u++) {
+                      const va = slot[sa + u];
+                      if (va < 0) break;
+                      for (let v = 0; v < 4; v++) {
+                        const vb = slot[sb + v];
+                        if (vb < 0) break;
+                        if ((va >> 1) === (vb >> 1) && (va & 1) !== (vb & 1)) {
+                          const cc = Math.min(cov[sa + u], cov[sb + v]);
+                          if (cc > cover) cover = cc;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+              const scale = par * (1 - cover);
+              const target = minDist * scale;
+              if (d2d < target) {
+                const hardDef = Math.max(0, renderWidth * scale - d2d);
+                const push2 =
+                  (hardDef * stiffness +
+                    (target - d2d - hardDef) * RIDE_SOFT_STIFFNESS) *
+                  0.5;
+                px /= d2d;
+                py /= d2d;
+                positions[i * 2] += px * push2 * (1 - s);
+                positions[i * 2 + 1] += py * push2 * (1 - s);
+                positions[i2 * 2] += px * push2 * s;
+                positions[i2 * 2 + 1] += py * push2 * s;
+                positions[j * 2] -= px * push2 * (1 - t);
+                positions[j * 2 + 1] -= py * push2 * (1 - t);
+                positions[j2 * 2] -= px * push2 * t;
+                positions[j2 * 2 + 1] -= py * push2 * t;
+              }
             }
           }
 

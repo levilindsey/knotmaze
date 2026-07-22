@@ -202,6 +202,14 @@ const MIN_PASS_SEPARATION = 1.6;
 // the reported giant gaps at loop-end non-twists). ~2.6 ctrl of loop
 // material renders as a legible eyelet at the default thread width.
 const KINK_MIN_SEPARATION = 2.6;
+// Crossing coverage for the anti-riding 2D floor (see PassCover in
+// forces.ts): particles within RIDE_COVER_FULL ctrl of a pass are fully
+// inside that crossing's rendered neighborhood (the erase gap spans
+// >= 1.35 of thread), fading to uncovered by RIDE_COVER_REACH. The fade
+// must reach past the sharpest arm curvature a fat thread produces
+// beside its crossing (measured pump sites sat 1-2 ctrl off the pass).
+const RIDE_COVER_FULL = 1.0;
+const RIDE_COVER_REACH = 2.5;
 const COUPLING_STIFFNESS = 0.7;
 // Clamp lag (ctrl) at which the coupling has yielded to half strength.
 const COUPLING_YIELD_LAG = 0.25;
@@ -324,6 +332,11 @@ export class ParticleSystem {
   private zPos: Float32Array;
   private zTargets: Float32Array;
   private contacts: Float32Array;
+  // Per-particle registered-crossing membership for the anti-riding
+  // floor's crossing coverage (see PassCover in forces.ts). Rebuilt each
+  // substep from pass ctrls - no incremental state, nothing to go stale.
+  private passCoverSlot: Int32Array;
+  private passCoverCov: Float32Array;
   private topology!: SegmentTopology;
   private emergentCollector = { data: new Float32Array(256 * 4), n: 0 };
   private homeX = 0;
@@ -387,6 +400,8 @@ export class ParticleSystem {
     // substeps.
     this.contactSpeedEma = new Float32Array(this.crossings.length).fill(1);
     this.grabGate = new Float32Array(this.crossings.length).fill(1);
+    this.passCoverSlot = new Int32Array(this.particleCount * 4);
+    this.passCoverCov = new Float32Array(this.particleCount * 4);
 
     this.particleChain = new Int32Array(this.particleCount).fill(-1);
     this.chains.forEach((chain, chainIdx) => {
@@ -1101,6 +1116,7 @@ export class ParticleSystem {
       );
       this.zPos[i] += (target - this.zPos[i]) * Z_EASE;
     }
+    this.updatePassCover();
     this.probe("slide+transversality");
 
     for (let iter = 0; iter < CONSTRAINT_ITERATIONS; iter++) {
@@ -1152,8 +1168,10 @@ export class ParticleSystem {
         this.particleCount,
         this.topology,
         collisionDist,
+        tuning.threadWidth,
         COLLISION_STIFFNESS,
         this.contacts,
+        { slot: this.passCoverSlot, cov: this.passCoverCov },
         iter === 0 ? this.emergentCollector : undefined
       );
       this.probe("collision");
@@ -1300,12 +1318,59 @@ export class ParticleSystem {
         this.particleCount,
         this.topology,
         collisionDist,
+        tuning.threadWidth,
         1.0,
         this.contacts,
+        { slot: this.passCoverSlot, cov: this.passCoverCov },
         undefined
       );
     }
     this.probe("final-collision");
+  }
+
+  // Rebuild the per-particle registered-crossing membership table used by
+  // the anti-riding 2D floor's crossing coverage. 4 slots per particle,
+  // slot value = crossing * 2 + side (0 over / 1 under), with a coverage
+  // weight fading from 1 (within RIDE_COVER_FULL ctrl of the pass) to 0
+  // at RIDE_COVER_REACH. Deterministic crossing-index order, first-come
+  // on overflow - and rebuilt from scratch every substep, so slides move
+  // the coverage with the binding and nothing goes stale.
+  private updatePassCover(): void {
+    this.passCoverSlot.fill(-1);
+    const span = Math.ceil(RIDE_COVER_REACH) + 1;
+    for (let c = 0; c < this.crossings.length; c++) {
+      const crossing = this.crossings[c];
+      for (let side = 0; side < 2; side++) {
+        const pass = side === 0 ? crossing.over : crossing.under;
+        const chain = this.chains[pass.chain];
+        const len = chain.length;
+        const base = Math.floor(pass.ctrl);
+        for (let k = base - span; k <= base + span; k++) {
+          let d = Math.abs(k - pass.ctrl);
+          d = Math.min(d, len - d);
+          const cov = Math.min(
+            1,
+            (RIDE_COVER_REACH - d) / (RIDE_COVER_REACH - RIDE_COVER_FULL)
+          );
+          if (cov <= 0) continue;
+          const s = chain[((k % len) + len) % len] * 4;
+          const value = c * 2 + side;
+          for (let u = 0; u < 4; u++) {
+            if (this.passCoverSlot[s + u] === value) {
+              if (cov > this.passCoverCov[s + u]) {
+                this.passCoverCov[s + u] = cov;
+              }
+              break;
+            }
+            if (this.passCoverSlot[s + u] < 0) {
+              this.passCoverSlot[s + u] = value;
+              this.passCoverCov[s + u] = cov;
+              break;
+            }
+          }
+        }
+      }
+    }
   }
 
   // Steer the two threads at a crossing toward the signed perpendicular:
