@@ -39,7 +39,7 @@ const MIN_SAMPLES = 48;
 // The over-fill patch copies base-ribbon vertices verbatim, so its capacity
 // just needs to cover the longest window (in samples) a crossing can need.
 // Sized for the widest thread: over windows scale with fillHalf.
-const OVER_PATCH_MAX_SAMPLES = 56;
+const OVER_PATCH_MAX_SAMPLES = 128;
 // The over-fill window clamps to a fraction of the arc distance to the
 // nearest crossing pass along the same thread. The erase march gets a larger
 // budget: truncating a lane's boundary solve leaves that cap corner short
@@ -60,7 +60,7 @@ const ERASE_WIDTH_PAD = 0.02;
 // over thread); the over-fill window marches along the over thread until
 // it is provably beyond the erase's reach - direct measurement, robust to
 // kinked centerlines and any crossing angle.
-const LOCAL_SAMPLES = 24;
+const LOCAL_SAMPLES = 48;
 const MARCH_STEP = 0.07;
 // Reach limits SCALE WITH THREAD WIDTH (fillHalf): they were absolute
 // constants calibrated at width 0.42, and at wider threads a shallow
@@ -71,6 +71,15 @@ const CUT_REACH_PER_HALF = 6.5; // * fillHalf, floored at the 0.42 values.
 const OVER_REACH_PER_HALF = 5.8;
 const CUT_REACH_MIN = 1.35;
 const OVER_REACH_MIN = 1.2;
+// Long-overlap cap: a cinched twist (grab a thread just past the twist,
+// pull perpendicular - the user's gesture) leaves the two threads
+// genuinely STACKED for several units, which physics must not undo (that
+// is what a tightened twist is) and the erase must therefore cover. The
+// marches already stop where overlap truly ends; the old width-scaled
+// caps (~1.7) truncated them mid-ride, and the truncation boundary
+// rendered as the jagged lengthwise seam reported four times. All other
+// limits (neighbor clearance, self-split, total/4) still apply.
+const RIDE_REACH_CAP = 4.5;
 const LOCAL_REACH_PAD = 0.8; // Local polylines must out-reach the marches.
 // Matches the base ribbon's sample spacing so the erase's miter factor
 // tracks the base extrusion's at kinks.
@@ -454,10 +463,15 @@ export class RibbonRenderer {
           Math.min(0.5, Math.min(dPos, dNeg) / 2 - 0.05)
         );
       }
-      const cutReachMax = Math.max(CUT_REACH_MIN, fillHalf * CUT_REACH_PER_HALF);
+      const cutReachMax = Math.max(
+        CUT_REACH_MIN,
+        fillHalf * CUT_REACH_PER_HALF,
+        RIDE_REACH_CAP
+      );
       const overReachMax = Math.max(
         OVER_REACH_MIN,
-        fillHalf * OVER_REACH_PER_HALF
+        fillHalf * OVER_REACH_PER_HALF,
+        RIDE_REACH_CAP
       );
       this.buildLocal(
         this.overLocal,

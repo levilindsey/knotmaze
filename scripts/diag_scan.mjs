@@ -58,8 +58,13 @@ try {
   const gapParam = Number(q.get("gap") ?? 0.18);
   const bigGapThreshold = (tw * 1.5 + gapParam * 2) * 1.15;
   console.log(`big-gap threshold ${bigGapThreshold.toFixed(2)}`);
+  // A long erase whose over-patch out-spans it is a COVERED long
+  // crossing (the P3.36 long-overlap reach renders cinched twists this
+  // way) - healthy. Flag only spans the over fill fails to cover.
   const bigGap = crossings
-    .filter((c) => c.eraseSpan > bigGapThreshold)
+    .filter(
+      (c) => c.eraseSpan > bigGapThreshold && c.overSpan < c.eraseSpan + 0.2
+    )
     .sort((a, b) => b.eraseSpan - a.eraseSpan)
     .slice(0, 6);
 

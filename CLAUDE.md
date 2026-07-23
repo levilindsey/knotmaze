@@ -80,6 +80,38 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **The cinched-twist merge (the user's actual four-times-reported
+  artifact): RESOLVED by the LONG-OVERLAP erase reach + matched
+  coverage (P3.36).** The gesture, finally pinned by asking: grab a
+  thread JUST PAST a twist, pull PERPENDICULAR outward - this cinches
+  the twist and leaves the two threads genuinely STACKED for several
+  units (d 0.03-0.25, dz ~1, at rest). Physics must NOT undo that
+  (that is what a tightened twist is; forcing separation is the P3.31
+  pump), so RENDERING must cover it - but the erase marches, though
+  already overlap-driven, were truncated at fixed width-scaled caps
+  (~1.7): the truncation boundary mid-ride rendered as the jagged
+  lengthwise seam. Fixes: RIDE_REACH_CAP 4.5 on both marches (all
+  other limits - neighbor clearance, self-split, total/4 - still
+  apply; the marches stop where overlap truly ends), LOCAL_SAMPLES
+  24 -> 48, OVER_PATCH_MAX_SAMPLES 56 -> 128. Force-side coverage
+  reach settled at 2.0 WORLD ARC by triangulation: 1.16 (fixed erase
+  span) moved the pump to wide-kink necks at arc 1.2-1.7; 3.8 (the
+  full render cap) exposed a coupling-side post-tug standoff; 2.0
+  covers the measured impossible-separation band, and beyond it the
+  floor separates threads while the long erase covers the interim.
+  diag_scan: a long erase whose over-patch out-spans it is a COVERED
+  long crossing, healthy - only uncovered spans are flagged.
+  Quiescence test split in two tiers: realistic drags (radius 1.2)
+  must fully re-sleep; the pathological teleport wound (radius 2.5
+  dragTo jumps) leaves topologically stuck sub-width tangles that the
+  sim REFUSES to freeze (never sleep on a merge) - its guarantee is
+  bounded churn < 7e-2, no loud attractor. Verified: cinch probe (6
+  twists, the exact gesture) renders clean woven over/unders; fat +
+  default sweeps 8/8; riders 0; tap2 sleeps; scans clean; 20/20.
+  LESSON: the P3.31 sin was never exemption size - it was exempting
+  more than the renderer painted. Force exemptions and render reach
+  must quote the same geometry, and when physics legitimately cannot
+  separate threads, rendering must own the overlap.
 - **The "merged parallel threads" seam was a SINGLE THREAD all along:
   RESOLVED by the concave-side miter clamp (P3.34).** Three
   pair-floor fixes (P3.31-33) changed nothing on the user's screen

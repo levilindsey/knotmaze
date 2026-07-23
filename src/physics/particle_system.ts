@@ -590,7 +590,6 @@ export class ParticleSystem {
   private stickyContacts = false;
   // Width-scaled kink-eye material budget, refreshed each substep.
   private kinkSep = KINK_MIN_SEPARATION;
-  private lastThreadWidth = 0.42;
   // TEMP A/B flag (probe_afterplay2): taper slide/transversality mobility
   // at chaotic contact speeds during free decay.
   abHighSpeedTaper = false;
@@ -1085,7 +1084,6 @@ export class ParticleSystem {
       KINK_MIN_SEPARATION,
       tuning.threadWidth * KINK_SEP_PER_WIDTH
     );
-    this.lastThreadWidth = tuning.threadWidth;
     // Aesthetic spacing can never drop below the hard floor: at low
     // repulsion x wide threads the raw formula fell below the thread
     // width (rep 0.4 x taut 0.62 = 0.25 < width 0.52), silently
@@ -1482,7 +1480,16 @@ export class ParticleSystem {
   private updatePassCover(): void {
     this.passCoverSlot.fill(-1);
     const p = this.positions;
-    const reach = Math.max(1.35, this.lastThreadWidth * 3.25) * 0.85;
+    // Coverage reach 2.0: the MINIMAL span where separation is
+    // geometrically impossible (measured pump sites: crossing-adjacent
+    // pairs out to arc ~1.7 from their bindings; a shorter reach - the
+    // fixed 1.16 erase span - moved the P3.31 pump to the coverage
+    // boundary at wide-kink necks, and the renderer's full 4.5
+    // long-overlap reach exposed a different post-tug standoff).
+    // Beyond 2.0 the floor prefers separation, which is achievable
+    // there; the P3.36 long-overlap erase covers whatever overlap
+    // remains while it resolves.
+    const reach = 2.0;
     const fade = reach * 0.35;
     const addWindow = (chainIdx: number, ctrl: number, value: number): void => {
       const chain = this.chains[chainIdx];
@@ -1515,12 +1522,12 @@ export class ParticleSystem {
       // Walk outward from the binding in both directions, accumulating
       // real arc length; stop where the erase gap ends.
       let arc = frac * seg(base);
-      for (let k = base; arc < reach && k > base - 8; k--) {
+      for (let k = base; arc < reach && k > base - 12; k--) {
         put(k, arc);
         arc += seg(k - 1);
       }
       arc = (1 - frac) * seg(base);
-      for (let k = base + 1; arc < reach && k < base + 9; k++) {
+      for (let k = base + 1; arc < reach && k < base + 13; k++) {
         put(k, arc);
         arc += seg(k);
       }
