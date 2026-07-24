@@ -80,6 +80,43 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **The flattened-twist flip ("same as before" after P3.38): RESOLVED
+  by the twist MATERIAL RATCHET (P3.39) - held twists now render as
+  two ordinary separated crossings.** What remained after P3.37/38:
+  a held/pulled twist whose eye flattened into a TAUT CHORD still
+  rendered its flip as a color-to-color fill cap - tidy after the
+  P3.37 bias, but pink fused to green with no dark gap IS the user's
+  "parallel overlap" regardless of cap neatness, and no flat-layer
+  cap assignment can fix it (the corridor is over-constrained: the
+  two crossings' gap footprints sum past the corridor length, so any
+  1D split either repaints a gap or leaves a dark pinch band; the
+  correct render needs per-pixel masking). The escape: make the
+  flattened state UNREACHABLE - the taut chord existed only because
+  twist twins clamp at the generic MIN_PASS_SEPARATION 1.6 ctrl (arc
+  0.77 at slack 0), too little material for the eye to stay open at
+  the P3.37 world floor. Twist twins now hold a kinkSep-style budget
+  twistSep = max(2.2, 5.2*threadWidth) ctrl, applied as a
+  RATE-LIMITED RATCHET (TWIST_SEP_RATE 0.015 ctrl/slide,
+  mobility-scaled): the clamp floor rises from the pair's current gap
+  toward the budget instead of snapping. The snap version pinned fat
+  seed 42424242 at mv 1.6e-2 FOREVER (hot at two steep crossings the
+  weave would not let separate - the P3.31 full-authority pump
+  shape); rate-limiting keeps a pinned pair's standing push
+  sub-stick (~7.5e-3 world) and mobility-scaling lets the graduated
+  friction weld strangle it, so the sweep sleeps again. Held/pulled
+  twists now park at pairDist 1.23-2.43 with CURVED eyes (arcs well
+  above chords, ctrl gaps 2.7-5.4) and every hold/pull crop shows
+  fully separated over/unders - zero color-color contact for the
+  first time in the saga. Verified: fat + default sweeps 8/8 (6.3-6.8
+  / 3.9); census riders 0 fresh + post-tug, re-sleeps 16.3; cinch
+  clean (cinch pairs sit at 4-8 ctrl, unaffected); scans clean; 20/20
+  tests. LESSONS: (1) when a render corridor is over-constrained, fix
+  the PHYSICS reachability of the state, not the paint; (2) a
+  positional clamp is full-authority by construction - any clamp
+  RAISE against unknown geometry needs a rate limit under the stick
+  gate or it is a pump waiting for the right seed; (3) my own "tidy"
+  judgment of a color-color boundary was the blind spot - the user's
+  standard is NO thread-thread contact without a dark line, ever.
 - **The pull-outward merge (the user's persistent artifact, still
   reported after P3.37): RESOLVED by the NEIGHBOR-GAP fill reserve
   (P3.38).** Recipe: outer twist, grab the thread between the

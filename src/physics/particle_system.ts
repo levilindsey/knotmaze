@@ -231,6 +231,23 @@ const TWIST_SOFT_STIFFNESS = 0.15;
 // Below this separation the live axis between the contacts is noise;
 // push along the last trusted axis instead.
 const TWIST_AXIS_TRUST = 0.05;
+// ALONG-THREAD material budget between twist twins (the kinkSep analog,
+// twist-scoped). The world floor above cannot exceed the material arc
+// connecting the contacts: with the generic 1.6-ctrl clamp a held fold
+// pulls the eye into a TAUT CHORD (measured: ctrl gaps 1.6/1.6, arc
+// 0.77, chord 0.77-0.81) - a stacked ride whose over/under flip has no
+// clean flat-layer rendering. A bigger twist-only clamp keeps enough
+// material that the eye stays OPEN (curved) at the world floor, so
+// held twists render as two ordinary separated crossings. Twist-scoped
+// like kinkSep, so the global MIN_PASS_SEPARATION corridor triangle
+// (floor < 2.0 corridor pitch) is untouched for everything else.
+const TWIST_MIN_SEPARATION = 2.2;
+const TWIST_SEP_PER_WIDTH = 5.2;
+// Max ctrl the twist ratchet may raise a pair's clamp floor per slide
+// call (mobility-scaled). ~0.0075 world/substep - below the 1e-2 stick
+// gate, so a pinned pair's standing push cannot hold the knot awake;
+// a free eye still opens 1.6 -> 2.7 ctrl in ~0.6 s of kinetic time.
+const TWIST_SEP_RATE = 0.015;
 // Crossing coverage for the anti-riding 2D floor is measured in WORLD
 // ARC bounded by the renderer's erase reach - see updatePassCover.
 const COUPLING_STIFFNESS = 0.7;
@@ -695,6 +712,8 @@ export class ParticleSystem {
   private stickyContacts = false;
   // Width-scaled kink-eye material budget, refreshed each substep.
   private kinkSep = KINK_MIN_SEPARATION;
+  // Width-scaled twist-eye material budget (see TWIST_MIN_SEPARATION).
+  private twistSep = TWIST_MIN_SEPARATION;
   // TEMP A/B flag (probe_afterplay2): taper slide/transversality mobility
   // at chaotic contact speeds during free decay.
   abHighSpeedTaper = false;
@@ -1050,10 +1069,29 @@ export class ParticleSystem {
     const next = this.passNext.get(self);
     if (prev && next && prev !== self) {
       const cyc = (d: number): number => ((d % len) + len) % len;
-      const sepPrev =
-        prev === self.partner ? this.kinkSep : MIN_PASS_SEPARATION;
-      const sepNext =
-        next === self.partner ? this.kinkSep : MIN_PASS_SEPARATION;
+      // Kink partners and twist twins hold a larger material budget:
+      // a kink's budget is its eyelet; a twist's keeps the eye OPEN so
+      // it never flattens into a taut chord (a chord equal to the
+      // material arc is a stacked ride whose over/under flip has no
+      // clean rendering - the held-grab merge; see the twist entries).
+      // The twist budget is a RATE-LIMITED RATCHET, not a snap: the
+      // floor rises from the pair's current gap toward twistSep at
+      // most TWIST_SEP_RATE (mobility-scaled) per slide, so at a
+      // geometry-pinned pair the standing push stays sub-stick and the
+      // graduated friction weld can strangle it (a full-authority snap
+      // pinned fat seed 42424242 at mv 1.6e-2 forever - the P3.31
+      // pump shape).
+      const sepOf = (nb: CrossingPass, gap: number): number =>
+        nb === self.partner
+          ? this.kinkSep
+          : this.twistBias.get(self)?.has(nb)
+            ? Math.max(
+                MIN_PASS_SEPARATION,
+                Math.min(this.twistSep, gap + TWIST_SEP_RATE * mobility)
+              )
+            : MIN_PASS_SEPARATION;
+      const sepPrev = sepOf(prev, cyc(self.ctrl - prev.ctrl));
+      const sepNext = sepOf(next, cyc(next.ctrl - self.ctrl));
       if (cyc(f - prev.ctrl) < sepPrev) {
         f = prev.ctrl + sepPrev;
       }
@@ -1188,6 +1226,10 @@ export class ParticleSystem {
     this.kinkSep = Math.max(
       KINK_MIN_SEPARATION,
       tuning.threadWidth * KINK_SEP_PER_WIDTH
+    );
+    this.twistSep = Math.max(
+      TWIST_MIN_SEPARATION,
+      tuning.threadWidth * TWIST_SEP_PER_WIDTH
     );
     // Aesthetic spacing can never drop below the hard floor: at low
     // repulsion x wide threads the raw formula fell below the thread
