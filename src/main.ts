@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.36 long-overlap erase reach 2026-07-22";
+const BUILD_STAMP = "P3.37 twist contact spacing + flip bias 2026-07-23";
 
 const app = new Application();
 

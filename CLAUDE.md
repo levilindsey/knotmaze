@@ -80,33 +80,50 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
-- **OPEN - THE ACTUAL USER ARTIFACT, now deterministically
-  reproducible: twist-collapse during a HELD grab.** Recipe (from the
-  user, exact): pick a twist (two crossings between the same two
-  threads) on the OUTSIDE of the grid, grab one thread BETWEEN the two
-  intersections, HOLD without moving for 6 seconds. One of the two
-  intersections renders as a gapless ragged merge. Probe:
-  `probe_hold.mjs` (session archive), captures `hold_*_6s_*.png` at
-  deviceScaleFactor 1.5 - USE dsf >= 1.5 AND <= 140px clips; every
-  earlier "renders clean" verdict was a dsf-1 resolution failure, and
-  the artifact is invariant to physics changes (survived P3.31-36
-  identically). DIAGNOSIS: during the hold the eye folds and the
-  twist's two crossings COLLAPSE ONTO EACH OTHER IN WORLD SPACE
-  (bindings stay >= MIN_PASS_SEPARATION apart ALONG the threads; the
-  2D distance between the two contact points goes to ~0). Each
-  crossing renders its own erase window + over patch with OPPOSITE
-  over/under orientation, and ERASE_NEIGHBOR_CLEARANCE shrinks both
-  windows toward zero as the contacts converge - below a spacing
-  there is no erase left between them and the threads render as raw
-  painter's-order overlap. Fix directions: (a) physics - a 2D
-  contact-contact spacing force between crossings that share both
-  threads (keep twist contacts from world-collapsing; note the
-  along-thread clamps cannot see world collapse), (b) render -
-  composite overlapping crossing patch systems instead of letting
-  them overwrite each other. Related fixes that are real but were NOT
-  this bug: P3.36 long-overlap erase (cinch rides), lane-spread
-  scaling (LANE_SPREAD_PER_MEDIAN), miter clamp (folds), P3.31-35
-  floor/coverage work (pump vs riding).
+- **Twist-collapse during a HELD grab (THE user artifact): RESOLVED by
+  the world-space twist contact floor + the flip fill bias (P3.37).**
+  Recipe (user's, deterministic): outside twist, grab one thread
+  BETWEEN the two intersections, HOLD 6s - one intersection rendered a
+  gapless ragged merge. Probe: `probe_hold.mjs` (archive, now reports
+  pairDist/arcs/ctrlGaps), captures at dsf >= 1.5 with small clips
+  (dsf-1 hid this artifact for a whole session). Two mechanisms, both
+  needed: (1) PHYSICS - the twist's two crossings world-collapsed to
+  pairDist 0.01-0.04 while the along-thread clamps stayed satisfied;
+  `applyTwistSpacing` now enforces a WORLD floor between the contact
+  points of every twist pair (pass-adjacency on BOTH threads, built
+  once in `buildTwistPairs`): max(0.72, 1.8*threadWidth), two-tier
+  authority (TWIST_HARD_SNAP 0.12 at collision stiffness, 0.15 soft
+  beyond), full-vector binding corrections (weld 1 - the separation
+  axis is largely ALONG the threads and the kinetic tangential
+  projection would swallow it), runs after the coupling every
+  iteration regardless of grab/weld/stick. Census anchor (fat +
+  default + kink seeds): healthy resting pairs sit at 1.03+ world, so
+  the floor engages only on abnormal folds. (2) RENDER - held pairs
+  can park BELOW the floor at the MATERIAL BOUND: a starved eye
+  (ctrl gaps pinned at 1.6/1.6, world arc 0.77 = taut chord) is a
+  short stacked ride whose over/under flip must render INSIDE the
+  span, and the two fills' sample-quantized end caps abutted as the
+  ragged seam. Over-fill meshes draw in crossing order, so the
+  HIGHER-indexed crossing of a pair wins overlaps: `twistFillBias`
+  extends the winner's fill clearance by one gap and the flip becomes
+  that fill's single clean cap over the twin's fill (inert whenever
+  the eye is open - the march stops before any cap). Verified: held
+  pairs park at 0.80-0.90+ (was 0.01-0.04) and all hold crops render
+  as clean woven joints; fat + default sweeps 8/8 (sim 4.0 / 5.6-7.0);
+  census riders 0 fresh + post-tug, post-tug re-sleeps sim 16.4;
+  cinch probe still clean and rests at 2.7e-3 (long cinch rides'
+  crossings are FAR apart so the contact floor ignores them - the
+  P3.31 forced-separation pump is not reintroduced); scans clean both
+  URLs; 20/20 tests; vigorous-play watch shows only the pre-existing
+  bistable attractor with `twist-spacing` absent from every phase
+  attribution. LESSONS: a world-space invariant cannot be enforced by
+  along-thread rules (the clamps could not see the collapse); and
+  when a floor parks below target, measure the MATERIAL ARC before
+  adding authority - twist 1 parked at 0.80 because 0.78 of thread
+  connected the contacts, and no push law can exceed a taut chord.
+  Related fixes that were real but NOT this bug: P3.36 long-overlap
+  erase (cinch rides), lane-spread scaling, miter clamp, P3.31-35
+  floor/coverage work.
 - **The cinched-twist merge (the user's actual four-times-reported
   artifact): RESOLVED by the LONG-OVERLAP erase reach + matched
   coverage (P3.36).** The gesture, finally pinned by asking: grab a

@@ -209,6 +209,28 @@ const MIN_PASS_SEPARATION = 1.6;
 // 0.42, the original calibration expressed per unit width.
 const KINK_MIN_SEPARATION = 2.6;
 const KINK_SEP_PER_WIDTH = 6.2;
+// TWIST contact spacing, in WORLD space. A twist's two crossings
+// (adjacent along BOTH threads) can fold onto each other during a held
+// grab: the along-thread ordering clamps stay satisfied (bindings >=
+// MIN_PASS_SEPARATION apart ALONG the threads) while the two contact
+// POINTS converge to ~0 in 2D - and each crossing's erase march is
+// capped at ERASE_NEIGHBOR_CLEARANCE times the world arc to its twin,
+// so both erase windows shrink to slivers and the two opposite-
+// orientation patch systems overwrite each other as a raw painter's-
+// order merge. No along-thread rule can see this; the floor must be
+// world-space. Census (fat + default + kink seeds): healthy resting
+// pairs sit at 1.03+ world, so the floor below engages only on
+// abnormal folds. Two-tier authority mirrors the anti-riding law
+// (P3.33): a hard tier that wins standing micro-fights against
+// bending near the floor, a soft tier so deep deficits recover
+// gently instead of ringing.
+const TWIST_CONTACT_MIN_BASE = 0.72;
+const TWIST_CONTACT_MIN_PER_WIDTH = 1.8;
+const TWIST_HARD_SNAP = 0.12;
+const TWIST_SOFT_STIFFNESS = 0.15;
+// Below this separation the live axis between the contacts is noise;
+// push along the last trusted axis instead.
+const TWIST_AXIS_TRUST = 0.05;
 // Crossing coverage for the anti-riding 2D floor is measured in WORLD
 // ARC bounded by the renderer's erase reach - see updatePassCover.
 const COUPLING_STIFFNESS = 0.7;
@@ -395,6 +417,7 @@ export class ParticleSystem {
     this.buildConstraints();
     this.crossings = this.assignCrossings(occurrences);
     this.buildPassOrder();
+    this.buildTwistPairs();
     this.contacts = new Float32Array(this.crossings.length * 2);
     this.prevContacts = new Float32Array(this.crossings.length * 2);
     this.prevBindings = new Float32Array(this.crossings.length * 4);
@@ -552,6 +575,62 @@ export class ParticleSystem {
     };
   }
 
+  // Twist pairs: crossings whose passes are chain-order neighbors on
+  // BOTH threads (a bigon in the diagram). Pass order never changes
+  // (the ordering clamps preserve it), so this is build-once. Kinks
+  // (partner adjacency, same crossing) are excluded by j === i.
+  private buildTwistPairs(): void {
+    const passCrossing = new Map<CrossingPass, number>();
+    for (let i = 0; i < this.crossings.length; i++) {
+      passCrossing.set(this.crossings[i].over, i);
+      passCrossing.set(this.crossings[i].under, i);
+    }
+    const seen = new Set<number>();
+    const list: number[] = [];
+    for (let i = 0; i < this.crossings.length; i++) {
+      const a = this.crossings[i];
+      for (const qA of [this.passNext.get(a.over), this.passPrev.get(a.over)]) {
+        if (!qA) continue;
+        const j = passCrossing.get(qA);
+        if (j === undefined || j === i) continue;
+        const b = this.crossings[j];
+        const qB = b.over === qA ? b.under : b.over;
+        if (qB.chain !== a.under.chain) continue;
+        if (
+          this.passNext.get(a.under) !== qB &&
+          this.passPrev.get(a.under) !== qB
+        ) {
+          continue;
+        }
+        const key = Math.min(i, j) * 65536 + Math.max(i, j);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        list.push(i, j);
+        // Fill bias for the renderer's twist-flip treatment: over-fill
+        // meshes draw in crossing order, so the HIGHER-indexed crossing
+        // of a pair wins overlaps; its fill extends across the flip.
+        const s = i > j ? 1 : -1;
+        this.setTwistBias(a.over, qA, s);
+        this.setTwistBias(qA, a.over, -s);
+        this.setTwistBias(a.under, qB, s);
+        this.setTwistBias(qB, a.under, -s);
+      }
+    }
+    this.twistPairs = Int32Array.from(list);
+    this.twistAxis = new Float32Array(list.length);
+    for (let p = 0; p * 2 < list.length; p++) {
+      const ca = this.crossings[list[p * 2]];
+      const cb = this.crossings[list[p * 2 + 1]];
+      this.bindingPoint(ca.over, this.bindScratch, 0);
+      this.bindingPoint(cb.over, this.bindScratch, 2);
+      const dx = this.bindScratch[2] - this.bindScratch[0];
+      const dy = this.bindScratch[3] - this.bindScratch[1];
+      const d = Math.hypot(dx, dy) || 1;
+      this.twistAxis[p * 2] = dx / d;
+      this.twistAxis[p * 2 + 1] = dy / d;
+    }
+  }
+
   // World position of a fractional control position along a chain
   // (optionally read from another position array, e.g. prev).
   pointOnChain(
@@ -587,6 +666,32 @@ export class ParticleSystem {
   private bindScratch = new Float32Array(4);
   private tangentScratch = new Float32Array(4);
   private slideScratch = new Float32Array(4);
+  // Twist pairs (2 crossing indices per pair) and each pair's last
+  // trusted separation axis (2 floats per pair); see buildTwistPairs.
+  private twistPairs = new Int32Array(0);
+  private twistAxis = new Float32Array(0);
+  // Per pass-adjacency fill bias for twist twins (see buildTwistPairs).
+  private twistBias = new Map<CrossingPass, Map<CrossingPass, number>>();
+
+  private setTwistBias(
+    p: CrossingPass,
+    q: CrossingPass,
+    s: number
+  ): void {
+    let m = this.twistBias.get(p);
+    if (!m) {
+      m = new Map();
+      this.twistBias.set(p, m);
+    }
+    m.set(q, s);
+  }
+
+  // +1: `pass`'s crossing twins with `neighbor`'s and draws LATER (its
+  // over-fill wins overlaps at the flip); -1: twins but draws earlier;
+  // 0: not a twist adjacency.
+  twistFillBias(pass: CrossingPass, neighbor: CrossingPass): number {
+    return this.twistBias.get(pass)?.get(neighbor) ?? 0;
+  }
   private stickyContacts = false;
   // Width-scaled kink-eye material budget, refreshed each substep.
   private kinkSep = KINK_MIN_SEPARATION;
@@ -1325,6 +1430,17 @@ export class ParticleSystem {
         this.applyBindingCorrection(crossing.under, -dx, -dy, weld);
       }
       this.probe("coupling");
+
+      // Twist contact spacing AFTER the coupling: it translates both
+      // bindings of a crossing by the same vector, so the coincidence
+      // the coupling just enforced is preserved exactly.
+      this.applyTwistSpacing(
+        Math.max(
+          TWIST_CONTACT_MIN_BASE,
+          tuning.threadWidth * TWIST_CONTACT_MIN_PER_WIDTH
+        )
+      );
+      this.probe("twist-spacing");
     }
 
     // Laplacian fairing: nudge every particle toward its chain neighbors'
@@ -1664,6 +1780,52 @@ export class ParticleSystem {
         )
       ) * this.grabGate[ci]
     );
+  }
+
+  // World-space floor between the two contacts of every twist pair.
+  // Fires only when a fold has pulled a pair below the floor (healthy
+  // rest sits at 1.03+ vs a floor of 0.72-0.81); pushes the pairs apart
+  // along the contact-contact axis with full-vector binding
+  // corrections (weld 1: the axis is largely ALONG the threads near a
+  // folded eye, and the kinetic tangential projection would swallow
+  // exactly the component that reopens it). Runs regardless of grab,
+  // weld, or the global stick - the collapse forms DURING a held grab,
+  // and a world-collapsed twist is a rendered merge the knot must
+  // never freeze on.
+  private applyTwistSpacing(minDist: number): void {
+    for (let p = 0; p * 2 < this.twistPairs.length; p++) {
+      const a = this.crossings[this.twistPairs[p * 2]];
+      const b = this.crossings[this.twistPairs[p * 2 + 1]];
+      this.bindingPoint(a.over, this.bindScratch, 0);
+      this.bindingPoint(a.under, this.bindScratch, 2);
+      const ax = (this.bindScratch[0] + this.bindScratch[2]) / 2;
+      const ay = (this.bindScratch[1] + this.bindScratch[3]) / 2;
+      this.bindingPoint(b.over, this.bindScratch, 0);
+      this.bindingPoint(b.under, this.bindScratch, 2);
+      const bx = (this.bindScratch[0] + this.bindScratch[2]) / 2;
+      const by = (this.bindScratch[1] + this.bindScratch[3]) / 2;
+      const dx = bx - ax;
+      const dy = by - ay;
+      const dist = Math.hypot(dx, dy);
+      if (dist > TWIST_AXIS_TRUST) {
+        this.twistAxis[p * 2] = dx / dist;
+        this.twistAxis[p * 2 + 1] = dy / dist;
+      }
+      if (dist >= minDist) continue;
+      const nx = this.twistAxis[p * 2];
+      const ny = this.twistAxis[p * 2 + 1];
+      const deficit = minDist - dist;
+      // Per side, per iteration: hard tier at collision's in-loop
+      // authority, soft tier beyond (see TWIST_HARD_SNAP).
+      const push =
+        (Math.min(deficit, TWIST_HARD_SNAP) * COLLISION_STIFFNESS +
+          Math.max(0, deficit - TWIST_HARD_SNAP) * TWIST_SOFT_STIFFNESS) *
+        0.5;
+      this.applyBindingCorrection(a.over, -nx * push, -ny * push, 1);
+      this.applyBindingCorrection(a.under, -nx * push, -ny * push, 1);
+      this.applyBindingCorrection(b.over, nx * push, ny * push, 1);
+      this.applyBindingCorrection(b.under, nx * push, ny * push, 1);
+    }
   }
 
   private applyBindingCorrection(

@@ -736,13 +736,25 @@ export class RibbonRenderer {
       );
       const overlapReach = eraseW + fillHalf + ERASE_WIDTH_PAD + 0.05;
       const reachAlongOver = (dir: number, gapLimit: number): number => {
+        // TWIST FLIP: a flattened twist (threads stacked between its two
+        // crossings) drives both fills to their clearance caps, and their
+        // two sample-quantized end caps abut mid-span as a ragged seam.
+        // When the neighbor pass in this direction is the twist TWIN and
+        // this crossing draws LATER (higher index - its fill wins
+        // overlaps), extend the clearance by one gap so the flip renders
+        // as this fill's single clean cap over the twin's fill. Inert
+        // whenever the overlap ends naturally (open eye): the march
+        // stops before any cap.
+        const nbPass = dir > 0 ? overNb.next : overNb.prev;
+        const twinExtend =
+          this.ps.twistFillBias(crossing.over, nbPass) > 0 ? gap : 0;
         // Floor sits below the self-crossing split so tight tips can clamp
         // the window all the way down.
         const rMax = Math.max(
           0.12,
           Math.min(
             overReachMax,
-            NEIGHBOR_CLEARANCE * gapLimit,
+            NEIGHBOR_CLEARANCE * gapLimit + twinExtend,
             dir > 0 ? splitPos : splitNeg,
             overSamples.totalLength / 4
           )
