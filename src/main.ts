@@ -16,7 +16,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.39 twist material ratchet 2026-07-23";
+const BUILD_STAMP = "P3.40 curvature-faithful erase caps 2026-07-23";
 
 const app = new Application();
 
@@ -400,6 +400,9 @@ async function main(): Promise<void> {
   };
   // Raw system access for probe scripting (phase probe, slide stats).
   (window as unknown as Record<string, unknown>).__knotPS = () => ps;
+  // Raw renderer access for probe scripting (patch visibility/tinting).
+  (window as unknown as Record<string, unknown>).__knotRenderer = () =>
+    renderer;
   // World point at a fractional ctrl along a chain (probe scripting).
   (window as unknown as Record<string, unknown>).__knotPoint = (
     chain: number,

@@ -80,34 +80,59 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
-- **OPEN: weird gap SHAPES at loop-end twists (user report after the
-  P3.39 "Success!", fat URL).** The under-gaps at loop-end (same-chain)
-  twist crossings render as angular wedge-slashes / thin slits that
-  bite into the ribbon instead of clean transversal bands - see the
-  green hook at (22.2, 5.7) on the fat repro URL (crossings X186/X187),
-  also (20.6, 20.3) and (3.7, 3.2). ESTABLISHED FACTS, do not
-  re-derive: (1) PRE-EXISTING - P3.36 renders these sites pixel-near-
-  identically (A/B via git checkout; captures loopspot_p36_* in the
-  session archive), so P3.37-39 did not cause it; the fixed merges and
-  opener twist eyes exposed it. (2) NOT a crossing-angle problem:
-  tangent census (probe_loopang.mjs, +/-0.7 ctrl tangents) gives the
-  92 same-chain-twist crossings sin min 0.80 med 0.92 vs 0.80/0.98
-  for the other 96 - transversal. The culprit class is local
-  CURVATURE: the over thread bends sharply AT the crossing (loop
-  bulb), the erase lane marches exit along the strongly curved
-  silhouette at wildly different arcs (X187 inspect: cutsPos
-  [0.60, 1.03, 0.87, 0.35, 0.22] - a diagonal polygon), and
-  ERASE_LANES 5 + CAP_DEVIATION_SOFT/CAP_D2_MAX shaping render the
-  curved boundary as an angular wedge. (3) Probes: probe_loopend.mjs
-  (finds same-chain twist pairs via ps.twistPairs, inspects +
-  captures; NOTE __knotInspect only logs while the sim is AWAKE -
-  probe_loopinsp.mjs wakes it with a tiny far tug first). Full
-  inspect JSON for X186/X187 in the session transcript. Fix
-  directions to evaluate: more erase lanes at high-curvature
-  crossings, curvature-aware cap construction (follow the silhouette
-  instead of clamping toward the chord), or bounding the erase to the
-  perpendicular band at the contact. Verify at dsf 2 against the
-  user's screenshot (Screenshot 2026-07-23 134758, the green hook).
+- **Weird gap SHAPES at loop-end twists (wedge-slashes + thin slits):
+  RESOLVED by curvature-faithful erase caps (P3.40).** The single
+  reported "shape" was THREE under-erase mechanisms, separated only
+  after per-primitive attribution: (1) WEDGES - the cap chord
+  soft-clamp (CAP_DEVIATION_SOFT) flattened genuinely curved
+  silhouette boundaries into diagonals and 5 coarse lanes rendered
+  them angular; the chord clamp is REMOVED (a sharply-bent over
+  thread's boundary is correctly curved), ERASE_LANES 5 -> 13, the D2
+  spike-rounder stays (at 13-lane spacing real curvature passes under
+  it), plus a [1,2,1] lane smoothing pass because the RAW level set
+  carries polyline-discretization scallops that render as ragged torn
+  caps (measured in the all-shapers-off A/B). (2) THIN SLITS biting
+  bulbs/hairpin tips, two causes: (a) the erase grid's mitered width
+  lacked the base ribbon's P3.34 concave-side turn-radius clamp - at
+  tight folds the erase jutted past the ribbon's real inner edge and
+  slashed the wall beside it; station widths now mirror
+  RibbonMesh.update exactly (+pad). (b) grid SHEAR: the ride-scaled
+  median-spread clamp let adjacent lanes sit at arcs UNITS apart, and
+  straight grid quads chord across a bend - tint attribution showed
+  one erase covering its entire hairpin-bulb interior. Replaced by a
+  per-ADJACENT-LANE step bound scaled by local straightness (endpoint
+  + midspan tangent checks so S-curves/full wraps can't read
+  straight), enforced by TRUNCATION of the longer lane only - the old
+  clamp's raising of short lanes toward a long median was itself a
+  biting eraser (measured: shrinking the spread while raising stayed
+  ate a chunk of the bulb), and truncated overlap is always repainted
+  by the over fill riding the same overlap. (3) NAKED BITES past the
+  fill: the erase certified its cut region against the whole over
+  local polyline (reach ~5.3) while the fill repaints only its capped
+  window - at bulbs the erase rode the far wall the fill never
+  reaches. The over polyline is now RESTRICTED per direction to the
+  fill's guaranteed window through a SHARED fillBound closure
+  (twinExtend + P3.38 reserve + splits included): the same-geometry
+  theorem, now structural (one closure, cannot drift). Verified:
+  hairpin tip + the user's green hook (X186/X187) render clean curved
+  gap bands at dsf 2-3; hold/pull/cinch battery at 5 twist pairs
+  (incl. X177/X178 corridor, X0/X5 self) all clean, re-sleeps after
+  every gesture; fat + default sweeps 8/8 (sim 5.2-6.3 / 4.0-4.2);
+  diag_scan clean on fat/kink/default URLs; 20/20 tests; render
+  ~10ms mid-drag at fat params (frame is physics-bound regardless).
+  PROBE LORE: `window.__knotRenderer()` now exposes the renderer -
+  tinting `underErases[i]` by index (emergent white) attributes WHICH
+  primitive draws a wrong pixel; this cracked in one capture what
+  three blind fixes missed. Session probe scripts die with the
+  scratchpad - recipes: gesture battery = hold pair midpoint 6s /
+  pull perp 0.5 + hold / grab 0.7 past pair, pull perp 1.2, release;
+  sweep = 8 seeds x fat/default, expect "asleep" by wall 18s.
+  LESSONS: (1) one artifact NAME hid three mechanisms - attribute the
+  exact primitive under the bad pixel before choosing a fix class;
+  (2) a shaper guarding a rare degeneracy must be curvature-
+  PRESERVING or it becomes the artifact at the sites that need it
+  most; (3) an erase boundary may be truncated but never extended
+  past its solved exit - extension erases material nothing repaints.
 - **The flattened-twist flip ("same as before" after P3.38): RESOLVED
   by the twist MATERIAL RATCHET (P3.39) - held twists now render as
   two ordinary separated crossings.** What remained after P3.37/38:

@@ -85,7 +85,12 @@ const LOCAL_REACH_PAD = 0.8; // Local polylines must out-reach the marches.
 // tracks the base extrusion's at kinks.
 const MITER_PROBE = 0.09;
 const ERASE_STATIONS = 16;
-const ERASE_LANES = 5;
+// 13 lanes (was 5): cap rows are polylines approximating the over
+// silhouette's level set, and at loop-end twists that boundary is
+// genuinely CURVED (the over thread bends sharply at the crossing) - 5
+// segments rendered it as an angular wedge. Finer lanes also shrink the
+// D2 clamp's per-point spacing, so genuine curvature passes through it.
+const ERASE_LANES = 13;
 // Patch pool for emergent (tunneled) crossings discovered by the physics.
 // Sized for taut knots: at slack ~0 dozens of real emergent crossings can
 // coexist, and a starved pool renders some overlaps gap-less.
@@ -93,29 +98,31 @@ const EMERGENT_POOL = 64;
 // Cut arcs extend outward by this much: widens the gap imperceptibly while
 // swallowing base-ribbon slivers that poke past the cap at tight bends.
 const CUT_BIAS = 0.03;
-// At a hairpin (end-of-loop twist) the inside lane's march exits far later
-// than the outside lane's; unclamped, the erase grid shears across the loop
-// tip and bites it. Lane cuts stay within this arc distance of their
-// median - wide enough for legitimate oblique-crossing skew. For LONG
-// grazing overlaps (cinched twists, P3.36 reach) the legitimate lane
-// spread grows with the cut length itself - one lane can stay inside the
-// overlap for units after another exits - so the clamp scales with the
-// median: the fixed 0.4 was landing lane cuts mid-overlap and drawing
-// the jagged background zigzag along ridden threads (the user's seam,
-// visible only at their display scale; probe captures at dsf 1 hid it).
-const LANE_SPREAD_CLAMP = 0.4;
-const LANE_SPREAD_PER_MEDIAN = 0.6;
-// Soft-clamp scale for a cap point's WORLD deviation from the world cap
-// chord. The true offset curve hooks sharply on the inside of tight bends
-// (curvature is amplified by 1/(1 - d*k)); compressing large deviations
-// keeps the cut reading parallel to the over thread while gentle curvature
-// stays intact. Measured in world space so a genuinely straight cap (e.g.
-// straight over thread) is a fixed point regardless of under-thread
-// curvature.
-const CAP_DEVIATION_SOFT = 0.08;
+// Adjacent-lane arc-step limits for the erase grid. A grid quad's edges
+// are straight, so when neighboring lanes sit at different arcs the edge
+// chords across the under thread's bend (wander ~ (dS^2/8) * curvature).
+// On STRAIGHT spans long lane diagonals are safe and load-bearing
+// (cinched-twist rides, P3.36 - one lane legitimately stays inside the
+// overlap for units after its neighbor exits, and the chords hug a
+// straight thread), so the allowed step scales with the local
+// straightness between the two arcs; over a bend it pins to the base
+// step - unbounded steps sheared quads across whole hairpin bulbs and
+// slashed background slits into them (the loop-end gap-shape artifact;
+// one erase measured covering its entire bulb interior). Enforced by
+// TRUNCATION of the longer lane only: raising the shorter lane erases
+// material its march never certified (the old symmetric median clamp's
+// bite), while truncated overlap is repainted by the over fill, which
+// rides the same overlap.
+const LANE_STEP_MIN = 0.12;
+const LANE_STEP_RIDE = 1.0;
 // Corner rounding for cap polylines: a kinked over centerline makes the
 // distance level set genuinely angular; clamping each interior cap point's
 // second difference rounds corners while leaving gentle bows untouched.
+// At 13-lane spacing a silhouette curvature up to ~8/unit stays under this
+// bound, so only true spikes are rounded. There is deliberately NO clamp
+// toward the cap CHORD: the boundary at a sharply-bent over thread is
+// genuinely curved, and flattening it rendered the loop-end twist gaps as
+// angular wedge-slashes (the P3.40 artifact class).
 const CAP_D2_MAX = 0.03;
 
 function hslToHex(h: number, s: number, l: number): number {
@@ -153,6 +160,7 @@ export class RibbonRenderer {
   private laneCutsPos = new Float32Array(ERASE_LANES);
   private laneCutsNeg = new Float32Array(ERASE_LANES);
   private lanePrevG = new Float32Array(ERASE_LANES);
+  private laneStepScratch = new Float32Array(ERASE_LANES);
   private capScratch = new Float32Array(ERASE_LANES * 4); // [x, y, tx, ty]
   // Per crossing: neighbor crossing passes along the over and under threads.
   private overNeighbors: PassNeighbors[] = [];
@@ -307,13 +315,15 @@ export class RibbonRenderer {
     poly: Float32Array,
     samples: SplineSamples,
     center: number,
-    reach: number,
+    reachNeg: number,
+    reachPos: number,
     guardCenter = Number.NaN,
     guardHalf = 0
   ): void {
     const total = samples.totalLength;
+    const span = reachNeg + reachPos;
     for (let m = 0; m < LOCAL_SAMPLES; m++) {
-      const arc = center - reach + (2 * reach * m) / (LOCAL_SAMPLES - 1);
+      const arc = center - reachNeg + (span * m) / (LOCAL_SAMPLES - 1);
       if (!Number.isNaN(guardCenter)) {
         let d = Math.abs(arc - guardCenter) % total;
         d = Math.min(d, total - d);
@@ -506,11 +516,87 @@ export class RibbonRenderer {
         fillHalf * OVER_REACH_PER_HALF,
         RIDE_REACH_CAP
       );
+      const [oGapPrev, oGapNext] = this.neighborGaps(
+        overSamples,
+        crossing.over,
+        overNb
+      );
+
+      // The over-fill window's reach bound per direction, shared between
+      // the fill march (reachAlongOver) and the erase's over polyline so
+      // the two CANNOT drift: the erase certifies cut region by distance
+      // to the over centerline, and any cut justified by over arcs the
+      // fill will never repaint renders as a naked background bite (at
+      // hairpin bulbs and loop-end twists the unrestricted polyline let
+      // the erase ride the bulb's far wall while the split-capped fill
+      // stopped at the neck).
+      const fillBound = (dir: number): number => {
+        const gapLimit = dir > 0 ? oGapNext : oGapPrev;
+        // TWIST FLIP: a flattened twist (threads stacked between its two
+        // crossings) drives both fills to their clearance caps, and their
+        // two sample-quantized end caps abut mid-span as a ragged seam.
+        // When the neighbor pass in this direction is the twist TWIN and
+        // this crossing draws LATER (higher index - its fill wins
+        // overlaps), extend the clearance by one gap so the flip renders
+        // as this fill's single clean cap over the twin's fill. Inert
+        // whenever the overlap ends naturally (open eye): the march
+        // stops before any cap.
+        const nbPass = dir > 0 ? overNb.next : overNb.prev;
+        const twinBias = this.ps.twistFillBias(crossing.over, nbPass);
+        const twinExtend = twinBias > 0 ? gap : 0;
+        // NEIGHBOR-GAP RESERVE: by alternation, the neighbor pass is a
+        // crossing where THIS thread goes under - that crossing's erase
+        // cuts this thread's under-gap there, and because every fill
+        // draws over every erase, a fill that reaches into the gap
+        // repaints it (a compressed corridor renders as a blunt fill cap
+        // welded to the neighbor's over thread - the pull-outward merge).
+        // Cap the march at the neighbor's MEASURED erase footprint so the
+        // fill stops where the neighbor's gap begins. Twist twins keep
+        // the winner-extension treatment instead (the flip needs one
+        // continuous cover); self-partners are owned by the split caps.
+        let reserveCap = Infinity;
+        if (twinBias === 0 && nbPass !== crossing.under) {
+          const info = this.passInfo.get(nbPass);
+          if (info && info.isUnder) {
+            const reserve =
+              dir > 0
+                ? this.eraseExtentNeg[info.index]
+                : this.eraseExtentPos[info.index];
+            reserveCap = Math.max(0.12, gapLimit - reserve);
+          }
+        }
+        // Floor sits below the self-crossing split so tight tips can
+        // clamp the window all the way down.
+        return Math.max(
+          0.12,
+          Math.min(
+            overReachMax,
+            NEIGHBOR_CLEARANCE * gapLimit + twinExtend,
+            reserveCap,
+            dir > 0 ? splitPos : splitNeg,
+            overSamples.totalLength / 4
+          )
+        );
+      };
+      // What the fill is GUARANTEED to repaint while overlap persists:
+      // its march can only stop early where overlap truly ends (where
+      // the erase has nothing to cut either).
+      const overCoverPos = Math.min(
+        Math.max(OVER_HALF_LENGTH_MIN, fillBound(1)),
+        splitPos,
+        overSamples.totalLength / 4
+      );
+      const overCoverNeg = Math.min(
+        Math.max(OVER_HALF_LENGTH_MIN, fillBound(-1)),
+        splitNeg,
+        overSamples.totalLength / 4
+      );
       this.buildLocal(
         this.overLocal,
         overSamples,
         overCenter,
-        Math.min(cutReachMax + LOCAL_REACH_PAD, overSamples.totalLength / 4),
+        overCoverNeg,
+        overCoverPos,
         selfCross ? underCenter : Number.NaN,
         maskHalf
       );
@@ -518,6 +604,7 @@ export class RibbonRenderer {
         this.underLocal,
         underSamples,
         underCenter,
+        Math.min(overReachMax + LOCAL_REACH_PAD, underSamples.totalLength / 4),
         Math.min(overReachMax + LOCAL_REACH_PAD, underSamples.totalLength / 4),
         selfCross ? overCenter : Number.NaN,
         maskHalf
@@ -616,26 +703,61 @@ export class RibbonRenderer {
       march(1, uGapNext, this.laneCutsPos, splitNeg);
       march(-1, uGapPrev, this.laneCutsNeg, splitPos);
 
-      // Clamp each cap's lane spread around its median so hairpin-divergent
-      // marches can't shear the grid across a loop tip.
-      for (const cuts of [this.laneCutsPos, this.laneCutsNeg]) {
-        const sorted = [...cuts].sort((a, b) => a - b);
-        const median = sorted[(ERASE_LANES - 1) >> 1];
-        const spread =
-          LANE_SPREAD_CLAMP + Math.abs(median) * LANE_SPREAD_PER_MEDIAN;
-        for (let l = 0; l < ERASE_LANES; l++) {
-          cuts[l] = Math.max(
-            median - spread,
-            Math.min(median + spread, cuts[l])
+      // Shear guard (see LANE_STEP_MIN): bound each adjacent-lane arc
+      // step by the thread's straightness between the two arcs, pulling
+      // the LONGER lane back. One forward + one backward sweep converges
+      // (the constraint graph is a path). Straightness checks the
+      // endpoint AND mid-span tangents so S-curves and full wraps cannot
+      // read as straight.
+      const laneStep = (arcA: number, arcB: number): number => {
+        this.sampleAt(underSamples, underCenter + arcA, this.sampleScratch, 0);
+        const tax = this.sampleScratch[2];
+        const tay = this.sampleScratch[3];
+        let c = 1;
+        for (const arc of [(arcA + arcB) / 2, arcB]) {
+          this.sampleAt(underSamples, underCenter + arc, this.sampleScratch, 0);
+          c = Math.min(
+            c,
+            tax * this.sampleScratch[2] + tay * this.sampleScratch[3]
           );
+        }
+        const s01 = Math.max(0, Math.min(1, (c - 0.5) / 0.4));
+        return LANE_STEP_MIN + LANE_STEP_RIDE * s01;
+      };
+      for (const [cuts, dir] of [
+        [this.laneCutsPos, 1],
+        [this.laneCutsNeg, -1],
+      ] as [Float32Array, number][]) {
+        for (let l = 0; l < ERASE_LANES - 1; l++) {
+          this.laneStepScratch[l] = laneStep(cuts[l], cuts[l + 1]);
+        }
+        for (let l = 0; l < ERASE_LANES - 1; l++) {
+          const cap = dir * cuts[l] + this.laneStepScratch[l];
+          if (dir * cuts[l + 1] > cap) cuts[l + 1] = dir * cap;
+        }
+        for (let l = ERASE_LANES - 2; l >= 0; l--) {
+          const cap = dir * cuts[l + 1] + this.laneStepScratch[l];
+          if (dir * cuts[l] > cap) cuts[l] = dir * cap;
         }
       }
 
-      // Soft-clamp interior cap points toward the world-space cap chord so
-      // inside-bend offset hooks don't read as sharp cut-ins. Working in
-      // world space matters: a straight-in-arc-space reference bows in
-      // world space whenever the under thread curves, which would bend a
-      // correctly straight cap concave.
+      // One binomial pass across lanes: the marched level set carries
+      // small-amplitude discretization noise from the local-polyline
+      // distance field (segment scallops), which renders as ragged torn
+      // cap edges at 13-lane resolution. A [1,2,1] pass removes it while
+      // leaving the low-frequency (genuine silhouette) shape intact.
+      // Endpoint lanes stay - they are the strip's side boundaries.
+      for (const cuts of [this.laneCutsPos, this.laneCutsNeg]) {
+        let prev = cuts[0];
+        for (let l = 1; l < ERASE_LANES - 1; l++) {
+          const cur = cuts[l];
+          cuts[l] = (prev + 2 * cur + cuts[l + 1]) / 4;
+          prev = cur;
+        }
+      }
+
+      // Round genuine corners in the solved boundary: clamp each interior
+      // cap point's world second difference (see CAP_D2_MAX).
       for (const cuts of [this.laneCutsPos, this.laneCutsNeg]) {
         for (let l = 0; l < ERASE_LANES; l++) {
           const u = laneOffset(l);
@@ -653,8 +775,6 @@ export class RibbonRenderer {
           this.capScratch[l * 4 + 3] = this.sampleScratch[3];
         }
 
-        // Round genuine corners in the solved boundary before the chord
-        // clamp: clamp each interior point's second difference.
         for (let l = 1; l < ERASE_LANES - 1; l++) {
           const midX =
             (this.capScratch[(l - 1) * 4] + this.capScratch[(l + 1) * 4]) / 2;
@@ -675,28 +795,6 @@ export class RibbonRenderer {
           cuts[l] += ds;
           this.capScratch[l * 4] += tx * ds;
           this.capScratch[l * 4 + 1] += ty * ds;
-        }
-
-        const x0 = this.capScratch[0];
-        const y0 = this.capScratch[1];
-        const xn = this.capScratch[(ERASE_LANES - 1) * 4];
-        const yn = this.capScratch[(ERASE_LANES - 1) * 4 + 1];
-
-        for (let l = 1; l < ERASE_LANES - 1; l++) {
-          const t = l / (ERASE_LANES - 1);
-          const dx = this.capScratch[l * 4] - (x0 + (xn - x0) * t);
-          const dy = this.capScratch[l * 4 + 1] - (y0 + (yn - y0) * t);
-          const dev = Math.hypot(dx, dy);
-          if (dev < 1e-6) continue;
-          const keep = 1 / (1 + dev / CAP_DEVIATION_SOFT);
-          // Move the point toward the chord along its lane (~ the local
-          // tangent direction), converting the world correction back into
-          // an arc adjustment.
-          const correction = keep - 1; // Fraction of the deviation to remove.
-          cuts[l] +=
-            (dx * this.capScratch[l * 4 + 2] +
-              dy * this.capScratch[l * 4 + 3]) *
-            correction;
         }
       }
 
@@ -745,14 +843,34 @@ export class RibbonRenderer {
         ay /= la;
         bx /= lb;
         by /= lb;
-        const miter =
-          1 / Math.sqrt(Math.max((1 + ax * bx + ay * by) / 2, 0.25));
+        const dot = ax * bx + ay * by;
+        const cosHalf = Math.sqrt(Math.max((1 + dot) / 2, 0.25));
+
+        // Per-side widths mirroring RibbonMesh.update exactly: mitered
+        // width, with the CONCAVE side clamped to the local turn radius.
+        // The base under-ribbon thins into tight folds (P3.34); an erase
+        // that keeps full mitered width there juts past the ribbon's real
+        // inner edge and slashes whatever is drawn beside it - the thin
+        // slit biting into loop-end twist bulbs and hairpin tips. The
+        // erase must quote the base ribbon's RENDERED footprint (+ pad).
+        let wInner = fillHalf / cosHalf;
+        const sinHalf = Math.sqrt(Math.max((1 - dot) / 2, 0));
+        if (sinHalf > 1e-4) {
+          const radius = ((la + lb) / 4) * (cosHalf / sinHalf);
+          wInner = Math.min(wInner, Math.max(radius * 0.95, fillHalf * 0.3));
+        }
+        const cross = ax * by - ay * bx;
+        const wOuterE = fillHalf / cosHalf + ERASE_WIDTH_PAD;
+        const wInnerE = wInner + ERASE_WIDTH_PAD;
+        const wLeftE = cross > 0 ? wInnerE : wOuterE;
+        const wRightE = cross > 0 ? wOuterE : wInnerE;
 
         for (let l = 0; l < ERASE_LANES; l++) {
           const s =
             this.laneCutsNeg[l] +
             (this.laneCutsPos[l] - this.laneCutsNeg[l]) * t;
-          const u = laneOffset(l) * miter;
+          const f = 1 - (2 * l) / (ERASE_LANES - 1);
+          const u = (f >= 0 ? wLeftE : wRightE) * f;
           this.sampleAt(underSamples, underCenter + s, this.sampleScratch, 0);
           erase.setVertex(
             k,
@@ -767,59 +885,12 @@ export class RibbonRenderer {
       // Over fill: redraw the over thread across the hole. The window is
       // measured directly: march along the over thread until its centerline
       // is provably beyond the erase's reach of the under thread. No angle
-      // estimates, so kinked centerlines can't undersize it.
-      const [oGapPrev, oGapNext] = this.neighborGaps(
-        overSamples,
-        crossing.over,
-        overNb
-      );
+      // estimates, so kinked centerlines can't undersize it. Reach bounds
+      // come from fillBound - the same closure the erase's over polyline
+      // quoted before the marches ran.
       const overlapReach = eraseW + fillHalf + ERASE_WIDTH_PAD + 0.05;
-      const reachAlongOver = (dir: number, gapLimit: number): number => {
-        // TWIST FLIP: a flattened twist (threads stacked between its two
-        // crossings) drives both fills to their clearance caps, and their
-        // two sample-quantized end caps abut mid-span as a ragged seam.
-        // When the neighbor pass in this direction is the twist TWIN and
-        // this crossing draws LATER (higher index - its fill wins
-        // overlaps), extend the clearance by one gap so the flip renders
-        // as this fill's single clean cap over the twin's fill. Inert
-        // whenever the overlap ends naturally (open eye): the march
-        // stops before any cap.
-        const nbPass = dir > 0 ? overNb.next : overNb.prev;
-        const twinBias = this.ps.twistFillBias(crossing.over, nbPass);
-        const twinExtend = twinBias > 0 ? gap : 0;
-        // NEIGHBOR-GAP RESERVE: by alternation, the neighbor pass is a
-        // crossing where THIS thread goes under - that crossing's erase
-        // cuts this thread's under-gap there, and because every fill
-        // draws over every erase, a fill that reaches into the gap
-        // repaints it (a compressed corridor renders as a blunt fill cap
-        // welded to the neighbor's over thread - the pull-outward merge).
-        // Cap the march at the neighbor's MEASURED erase footprint so the
-        // fill stops where the neighbor's gap begins. Twist twins keep
-        // the winner-extension treatment instead (the flip needs one
-        // continuous cover); self-partners are owned by the split caps.
-        let reserveCap = Infinity;
-        if (twinBias === 0 && nbPass !== crossing.under) {
-          const info = this.passInfo.get(nbPass);
-          if (info && info.isUnder) {
-            const reserve =
-              dir > 0
-                ? this.eraseExtentNeg[info.index]
-                : this.eraseExtentPos[info.index];
-            reserveCap = Math.max(0.12, gapLimit - reserve);
-          }
-        }
-        // Floor sits below the self-crossing split so tight tips can clamp
-        // the window all the way down.
-        const rMax = Math.max(
-          0.12,
-          Math.min(
-            overReachMax,
-            NEIGHBOR_CLEARANCE * gapLimit + twinExtend,
-            reserveCap,
-            dir > 0 ? splitPos : splitNeg,
-            overSamples.totalLength / 4
-          )
-        );
+      const reachAlongOver = (dir: number): number => {
+        const rMax = fillBound(dir);
         for (let s = MARCH_STEP; s < rMax; s += MARCH_STEP) {
           this.sampleAt(overSamples, overCenter + dir * s, this.sampleScratch, 0);
           const d = this.distToLocal(
@@ -836,11 +907,11 @@ export class RibbonRenderer {
       // The comfort floor must never override the self-crossing split, or
       // the fill repaints the gap at tight tips.
       const halfPos = Math.min(
-        Math.max(OVER_HALF_LENGTH_MIN, reachAlongOver(1, oGapNext)),
+        Math.max(OVER_HALF_LENGTH_MIN, reachAlongOver(1)),
         splitPos
       );
       const halfNeg = Math.min(
-        Math.max(OVER_HALF_LENGTH_MIN, reachAlongOver(-1, oGapPrev)),
+        Math.max(OVER_HALF_LENGTH_MIN, reachAlongOver(-1)),
         splitNeg
       );
 
