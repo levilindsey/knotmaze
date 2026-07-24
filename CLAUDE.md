@@ -80,6 +80,48 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **The pull-outward merge (the user's persistent artifact, still
+  reported after P3.37): RESOLVED by the NEIGHBOR-GAP fill reserve
+  (P3.38).** Recipe: outer twist, grab the thread between the
+  intersections, pull outward slightly, hold - a blunt fill cap
+  renders WELDED to another thread with no casing gap. The broken
+  spot is NOT the twist itself (its two crossings stayed healthy,
+  pairDist 1.0-2.0): it is the corridor between two ADJACENT NON-TWIN
+  crossings (X177/X178 on the repro: same chain-0 arc, different
+  chain-1 arms, so no twist machinery applies). The pull compresses
+  the corridor (arc gap 0.916) and stacks the threads through it, so
+  the higher crossing's over-fill marches to its 0.5-clearance cap -
+  which lands DEEP INSIDE the neighbor's under-gap (the neighbor's
+  erase footprint reached 0.73, oblique crossings project wide) - and
+  because every fill draws over every erase (three flat layers), the
+  fill REPAINTS the neighbor's erased gap: blunt cap flush against
+  the neighbor's over thread. Diagnosed by elimination with an
+  in-state probe (probe_inspect.mjs, archive): chain-seam wrap ruled
+  out (all arc math is modular), emergent-dedup ruled out
+  (emergentTotal 0), then the registered-crossing dump put crossing
+  X176-X178 contacts exactly at the artifact with healthy diag rows -
+  the conflict is BETWEEN systems, not within one. FIX: each crossing
+  records its final erase extents along its under thread (max |cut|
+  per direction, fresh for lower-indexed neighbors, one frame stale
+  for higher); a fill marching toward a pass where its thread goes
+  UNDER (always true by alternation) caps at gapLimit minus the
+  neighbor's MEASURED extent. Twist twins are exempt (the P3.37
+  winner-extension owns the flip - a reserve there produces a dark
+  pinch band because BOTH fills would stop short); self-partners are
+  owned by the split caps. Inert at rest (normal corridors stop
+  naturally well before any cap) - this is the same theorem as
+  P3.36 again: render reach must quote the RENDERED geometry of its
+  neighbors, and the 0.5/0.5 clearance split was a static guess that
+  an oblique compressed neighbor invalidates. Verified: pull probe
+  renders proper dive-under gaps at the exact repro corridor; hold +
+  cinch probes unchanged-clean; scans clean both URLs (physics
+  untouched this round - the P3.37 battery stands). LESSON: the
+  "same artifact" reported across N fixes was at least THREE render
+  classes (fill-cap abutment at twist flips, taut-chord stacked
+  twists, and this neighbor-gap repaint) plus one physics class
+  (world collapse) - a merge on screen underdetermines its
+  mechanism; find the exact broken STRUCTURE (which crossing, which
+  fill, which erase) before choosing the class.
 - **Twist-collapse during a HELD grab (THE user artifact): RESOLVED by
   the world-space twist contact floor + the flip fill bias (P3.37).**
   Recipe (user's, deterministic): outside twist, grab one thread

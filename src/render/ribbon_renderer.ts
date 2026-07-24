@@ -157,6 +157,19 @@ export class RibbonRenderer {
   // Per crossing: neighbor crossing passes along the over and under threads.
   private overNeighbors: PassNeighbors[] = [];
   private underNeighbors: PassNeighbors[] = [];
+  // Pass -> owning crossing index + whether it is the UNDER pass; and each
+  // crossing's measured erase extents along its under thread (max |cut|
+  // across lanes, per arc direction). The fill NEIGHBOR-GAP RESERVE quotes
+  // these: a fill marching toward a pass where its thread goes UNDER must
+  // not repaint that crossing's erased under-gap. Extents are fresh for
+  // lower-indexed neighbors and one frame stale for higher - fine at any
+  // realistic frame rate.
+  private passInfo = new Map<
+    CrossingPass,
+    { index: number; isUnder: boolean }
+  >();
+  private eraseExtentPos = new Float32Array(0);
+  private eraseExtentNeg = new Float32Array(0);
 
   constructor(ps: ParticleSystem, style: RibbonStyle) {
     this.ps = ps;
@@ -194,7 +207,17 @@ export class RibbonRenderer {
     // Neighboring crossing passes along each thread come from the particle
     // system; passes slide live, so we hold references and read their
     // current fractional positions each frame.
+    let crossingIndex = 0;
     for (const crossing of ps.crossings) {
+      this.passInfo.set(crossing.over, {
+        index: crossingIndex,
+        isUnder: false,
+      });
+      this.passInfo.set(crossing.under, {
+        index: crossingIndex,
+        isUnder: true,
+      });
+      crossingIndex++;
       this.overNeighbors.push(ps.passNeighbors(crossing.over));
       this.underNeighbors.push(ps.passNeighbors(crossing.under));
 
@@ -224,6 +247,9 @@ export class RibbonRenderer {
       eraseLayer.addChild(erase.mesh);
       overLayer.addChild(fill.mesh);
     }
+
+    this.eraseExtentPos = new Float32Array(ps.crossings.length);
+    this.eraseExtentNeg = new Float32Array(ps.crossings.length);
   }
 
   // Interpolate position and unit tangent at an arc position into `out`
@@ -674,6 +700,19 @@ export class RibbonRenderer {
         }
       }
 
+      // Record this crossing's final erase extents along its under thread
+      // for the fill NEIGHBOR-GAP RESERVE (see reachAlongOver).
+      if (index >= 0) {
+        let ePos = 0;
+        let eNeg = 0;
+        for (let l = 0; l < ERASE_LANES; l++) {
+          if (this.laneCutsPos[l] > ePos) ePos = this.laneCutsPos[l];
+          if (-this.laneCutsNeg[l] > eNeg) eNeg = -this.laneCutsNeg[l];
+        }
+        this.eraseExtentPos[index] = ePos;
+        this.eraseExtentNeg[index] = eNeg;
+      }
+
       // Build the erase grid: each lane spans its own solved cut interval,
       // so the cap rows are polylines lying on the over ribbon's offset
       // curve - they curve with the over thread.
@@ -746,8 +785,29 @@ export class RibbonRenderer {
         // whenever the overlap ends naturally (open eye): the march
         // stops before any cap.
         const nbPass = dir > 0 ? overNb.next : overNb.prev;
-        const twinExtend =
-          this.ps.twistFillBias(crossing.over, nbPass) > 0 ? gap : 0;
+        const twinBias = this.ps.twistFillBias(crossing.over, nbPass);
+        const twinExtend = twinBias > 0 ? gap : 0;
+        // NEIGHBOR-GAP RESERVE: by alternation, the neighbor pass is a
+        // crossing where THIS thread goes under - that crossing's erase
+        // cuts this thread's under-gap there, and because every fill
+        // draws over every erase, a fill that reaches into the gap
+        // repaints it (a compressed corridor renders as a blunt fill cap
+        // welded to the neighbor's over thread - the pull-outward merge).
+        // Cap the march at the neighbor's MEASURED erase footprint so the
+        // fill stops where the neighbor's gap begins. Twist twins keep
+        // the winner-extension treatment instead (the flip needs one
+        // continuous cover); self-partners are owned by the split caps.
+        let reserveCap = Infinity;
+        if (twinBias === 0 && nbPass !== crossing.under) {
+          const info = this.passInfo.get(nbPass);
+          if (info && info.isUnder) {
+            const reserve =
+              dir > 0
+                ? this.eraseExtentNeg[info.index]
+                : this.eraseExtentPos[info.index];
+            reserveCap = Math.max(0.12, gapLimit - reserve);
+          }
+        }
         // Floor sits below the self-crossing split so tight tips can clamp
         // the window all the way down.
         const rMax = Math.max(
@@ -755,6 +815,7 @@ export class RibbonRenderer {
           Math.min(
             overReachMax,
             NEIGHBOR_CLEARANCE * gapLimit + twinExtend,
+            reserveCap,
             dir > 0 ? splitPos : splitNeg,
             overSamples.totalLength / 4
           )
