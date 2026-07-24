@@ -80,6 +80,34 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **OPEN: weird gap SHAPES at loop-end twists (user report after the
+  P3.39 "Success!", fat URL).** The under-gaps at loop-end (same-chain)
+  twist crossings render as angular wedge-slashes / thin slits that
+  bite into the ribbon instead of clean transversal bands - see the
+  green hook at (22.2, 5.7) on the fat repro URL (crossings X186/X187),
+  also (20.6, 20.3) and (3.7, 3.2). ESTABLISHED FACTS, do not
+  re-derive: (1) PRE-EXISTING - P3.36 renders these sites pixel-near-
+  identically (A/B via git checkout; captures loopspot_p36_* in the
+  session archive), so P3.37-39 did not cause it; the fixed merges and
+  opener twist eyes exposed it. (2) NOT a crossing-angle problem:
+  tangent census (probe_loopang.mjs, +/-0.7 ctrl tangents) gives the
+  92 same-chain-twist crossings sin min 0.80 med 0.92 vs 0.80/0.98
+  for the other 96 - transversal. The culprit class is local
+  CURVATURE: the over thread bends sharply AT the crossing (loop
+  bulb), the erase lane marches exit along the strongly curved
+  silhouette at wildly different arcs (X187 inspect: cutsPos
+  [0.60, 1.03, 0.87, 0.35, 0.22] - a diagonal polygon), and
+  ERASE_LANES 5 + CAP_DEVIATION_SOFT/CAP_D2_MAX shaping render the
+  curved boundary as an angular wedge. (3) Probes: probe_loopend.mjs
+  (finds same-chain twist pairs via ps.twistPairs, inspects +
+  captures; NOTE __knotInspect only logs while the sim is AWAKE -
+  probe_loopinsp.mjs wakes it with a tiny far tug first). Full
+  inspect JSON for X186/X187 in the session transcript. Fix
+  directions to evaluate: more erase lanes at high-curvature
+  crossings, curvature-aware cap construction (follow the silhouette
+  instead of clamping toward the chord), or bounding the erase to the
+  perpendicular band at the contact. Verify at dsf 2 against the
+  user's screenshot (Screenshot 2026-07-23 134758, the green hook).
 - **The flattened-twist flip ("same as before" after P3.38): RESOLVED
   by the twist MATERIAL RATCHET (P3.39) - held twists now render as
   two ordinary separated crossings.** What remained after P3.37/38:
