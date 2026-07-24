@@ -80,6 +80,33 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **OPEN - THE ACTUAL USER ARTIFACT, now deterministically
+  reproducible: twist-collapse during a HELD grab.** Recipe (from the
+  user, exact): pick a twist (two crossings between the same two
+  threads) on the OUTSIDE of the grid, grab one thread BETWEEN the two
+  intersections, HOLD without moving for 6 seconds. One of the two
+  intersections renders as a gapless ragged merge. Probe:
+  `probe_hold.mjs` (session archive), captures `hold_*_6s_*.png` at
+  deviceScaleFactor 1.5 - USE dsf >= 1.5 AND <= 140px clips; every
+  earlier "renders clean" verdict was a dsf-1 resolution failure, and
+  the artifact is invariant to physics changes (survived P3.31-36
+  identically). DIAGNOSIS: during the hold the eye folds and the
+  twist's two crossings COLLAPSE ONTO EACH OTHER IN WORLD SPACE
+  (bindings stay >= MIN_PASS_SEPARATION apart ALONG the threads; the
+  2D distance between the two contact points goes to ~0). Each
+  crossing renders its own erase window + over patch with OPPOSITE
+  over/under orientation, and ERASE_NEIGHBOR_CLEARANCE shrinks both
+  windows toward zero as the contacts converge - below a spacing
+  there is no erase left between them and the threads render as raw
+  painter's-order overlap. Fix directions: (a) physics - a 2D
+  contact-contact spacing force between crossings that share both
+  threads (keep twist contacts from world-collapsing; note the
+  along-thread clamps cannot see world collapse), (b) render -
+  composite overlapping crossing patch systems instead of letting
+  them overwrite each other. Related fixes that are real but were NOT
+  this bug: P3.36 long-overlap erase (cinch rides), lane-spread
+  scaling (LANE_SPREAD_PER_MEDIAN), miter clamp (folds), P3.31-35
+  floor/coverage work (pump vs riding).
 - **The cinched-twist merge (the user's actual four-times-reported
   artifact): RESOLVED by the LONG-OVERLAP erase reach + matched
   coverage (P3.36).** The gesture, finally pinned by asking: grab a

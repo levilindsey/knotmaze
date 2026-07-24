@@ -96,8 +96,15 @@ const CUT_BIAS = 0.03;
 // At a hairpin (end-of-loop twist) the inside lane's march exits far later
 // than the outside lane's; unclamped, the erase grid shears across the loop
 // tip and bites it. Lane cuts stay within this arc distance of their
-// median - wide enough for legitimate oblique-crossing skew.
+// median - wide enough for legitimate oblique-crossing skew. For LONG
+// grazing overlaps (cinched twists, P3.36 reach) the legitimate lane
+// spread grows with the cut length itself - one lane can stay inside the
+// overlap for units after another exits - so the clamp scales with the
+// median: the fixed 0.4 was landing lane cuts mid-overlap and drawing
+// the jagged background zigzag along ridden threads (the user's seam,
+// visible only at their display scale; probe captures at dsf 1 hid it).
 const LANE_SPREAD_CLAMP = 0.4;
+const LANE_SPREAD_PER_MEDIAN = 0.6;
 // Soft-clamp scale for a cap point's WORLD deviation from the world cap
 // chord. The true offset curve hooks sharply on the inside of tight bends
 // (curvature is amplified by 1/(1 - d*k)); compressing large deviations
@@ -588,10 +595,12 @@ export class RibbonRenderer {
       for (const cuts of [this.laneCutsPos, this.laneCutsNeg]) {
         const sorted = [...cuts].sort((a, b) => a - b);
         const median = sorted[(ERASE_LANES - 1) >> 1];
+        const spread =
+          LANE_SPREAD_CLAMP + Math.abs(median) * LANE_SPREAD_PER_MEDIAN;
         for (let l = 0; l < ERASE_LANES; l++) {
           cuts[l] = Math.max(
-            median - LANE_SPREAD_CLAMP,
-            Math.min(median + LANE_SPREAD_CLAMP, cuts[l])
+            median - spread,
+            Math.min(median + spread, cuts[l])
           );
         }
       }
