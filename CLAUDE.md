@@ -118,6 +118,38 @@ before P4 unless the user asks):
   from commit af2efb4 were removed 2026-07-24 — their stale-worker cure
   had long since taken effect and nothing in the app registers a SW.)
 
+**CANDIDATE perf follow-up — move the sim to a Web Worker (NOT taken;
+recorded 2026-07-24).** The one multi-threading win with a good
+risk/reward, if mid-drag perf ever needs it (currently ~32fps mid-drag
+is playable; at rest the sleep gate makes it moot). Mid-drag the main
+thread runs physics (~15.8ms) THEN render (~10ms) serially → ~25ms. The
+render only needs a positions snapshot, so relocating the whole
+(still single-threaded) `ParticleSystem` into a dedicated worker
+overlaps them → frame ≈ max(15.8, 10) ≈ 15.8ms, potentially 60fps
+mid-drag, with the physics NUMERICS UNCHANGED (the sim just moves
+threads; it is not re-ordered). Good fit already: `positions`/`zPos`
+are `Float32Array`, so a `SharedArrayBuffer` backs them zero-copy for
+the render read. Costs: (1) COOP/COEP cross-origin-isolation headers
+for SAB (Vite dev config + a Cloudflare `_headers` file); (2)
+marshaling grab/dragTo/release to the worker and sharing the extra
+per-crossing render state (displayF, over/under, emergent crossings),
+not just positions; (3) THE REAL TAX — the diagnostic harness
+(`window.__knotPoint`/`__knotRenderer`, the sim/wall build-stamp
+counters, the `diag_*` probes) reaches SYNCHRONOUSLY into
+`ParticleSystem` from the main thread and is load-bearing per the
+verification lore; it needs an async/shared-memory bridge. Architecture-
+change-sized; rank it BELOW P4 unless drag perf actually bothers you on
+target hardware. DO NOT instead parallelize the SOLVER: it is
+Gauss-Seidel PBD (each constraint reads the prior one's writes — the
+P3.26 double-sweep exists for exactly this reason); coloring it into
+independent sets changes the numerics and would perturb the hard-won
+equilibria, for a payoff only on the ~7ms collision slice. WebGPU
+compute (particle count too small — dispatch overhead eats it) and WASM
+threads (same SAB+coloring cost plus a language rewrite) are both ruled
+out at this scale; single-threaded WASM for just the collision
+narrow-phase is a separate non-threading raw-speed lever (2–4× on that
+~7ms) if ever wanted.
+
 ## Verification rule (hard-won)
 
 **Never use Chrome's `--virtual-time-budget` to screenshot anything
