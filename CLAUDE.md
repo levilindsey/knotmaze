@@ -69,6 +69,51 @@ Work lands directly to `main`. All changes must be end-to-end working before com
 - Phased roadmap: P0 (scaffold) → P1 (combinatorial) → P2 (beauty + live physics) → P3 (touch + audio) → P4 (maze mode) → P5 (growth animation) → P6 (flourishes).
 - Each phase ships as a working demo starting from P2.
 
+## Roadmap status — what's next (recorded 2026-07-24, after P3.42)
+
+**P0–P3 are done. The next new feature is P4 (maze mode); it has not
+been started.**
+
+What just concluded: P3 (touch + audio) is feature-complete. Touch
+(pointer tug/drag → wave propagation) and audio (Karplus-Strong pluck
+on release, loop-length → pentatonic pitch, wired in `main.ts`) both
+work. But P3's real cost was a ~25-commit tail (P3.17 → P3.42) making
+**interactive crossings render and settle correctly**: the sliding-
+binding + quasi-3D-depth physics, the under-erase/over-fill crossing
+renderer, quiescence/sleep after gestures, and finally the flat-grid
+broadphase perf pass. THIS is the "current step" that was finally
+fixed — see the Follow-ups below for the full saga; do not reopen a
+resolved entry without a fresh on-screen repro. One bounded residual
+stays open (the post-VIOLENT-play loud attractor at fat params — a
+rare bistable non-sleep, not a blocker).
+
+**P4 — maze mode (NEXT).** The generator already produces the
+substrate: `lattice_grower` builds the knot as the *medial of a maze's
+passage graph* (corridors carry the threads — the maze and the knot
+are the same object; growing-tree guarantees every cell reachable).
+What's missing is the gameplay layer on top:
+- Entrance/exit + branch-point carving. `types.ts:44` explicitly
+  reserves this: `GenerationParams` gains its maze params in P4
+  ("Junction/end carving (entrances, exits, branch points for maze
+  mode) arrives in P4 and will add its own params then").
+- Solve interaction + win-state detection (trace a path start→end
+  through the corridors), and its URL/param serialization.
+- The **daily seed** (Wordle-style shared daily maze + time-to-solve
+  sharing) from the Key Design Decisions belongs here.
+Nothing about maze mode exists in `src/` yet beyond the generator —
+grep confirms no solve/goal/daily/win code today.
+
+**P5 — growth animation** (animate the knot being drawn/growing) and
+**P6 — flourishes** (polish) remain untouched after P4.
+
+**Deferred, not phase-blocking** (pick up opportunistically, not
+before P4 unless the user asks):
+- P2 polish still open in Follow-ups: the "make the hero settle
+  visibly angular" zigzag→curve blend, and slack~0 thread waviness.
+- Janitorial judgment calls flagged during the P3.41 cleanup but left
+  alone: the skip-gated `test/sweep.manual.test.ts`, and the
+  suicide service workers planted in `public/` (commit af2efb4).
+
 ## Verification rule (hard-won)
 
 **Never use Chrome's `--virtual-time-budget` to screenshot anything
