@@ -12,6 +12,81 @@ export interface DistanceConstraint {
 
 const EPSILON = 1e-9;
 
+// Zero-allocation uniform-grid broadphase scratch, shared by collision
+// and repulsion (their calls never interleave; each call rebuilds).
+// Replaces a per-call Map<number, number[]> whose allocation and lookup
+// overhead dominated the interaction profile: applySegmentCollision was
+// 73% of ALL CPU mid-drag at fat params, rebuilding the Map hash 4x per
+// substep. Counting sort fills cells in ascending particle order, so
+// pair iteration order matches the old Map-push order exactly.
+const grid = {
+  cellStart: new Int32Array(0), // cells + 1 prefix sums.
+  cellCursor: new Int32Array(0),
+  entries: new Int32Array(0), // Particle indices, cell-contiguous.
+  cols: 0,
+  rows: 0,
+  minX: 0,
+  minY: 0,
+};
+
+// Build the grid over current positions. Returns false when the state is
+// non-finite or absurdly spread - those frames skip the force pass (the
+// main-loop watchdog owns non-finite states; a NaN previously collapsed
+// the Map into one bucket and hard-hung the tab at O(9*N^2)).
+function buildGrid(
+  positions: Float32Array,
+  particleCount: number,
+  cellSize: number
+): boolean {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (let i = 0; i < particleCount; i++) {
+    const x = positions[i * 2];
+    const y = positions[i * 2 + 1];
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  if (!(minX <= maxX && minY <= maxY)) return false;
+  const cols = Math.floor((maxX - minX) / cellSize) + 1;
+  const rows = Math.floor((maxY - minY) / cellSize) + 1;
+  const cells = cols * rows;
+  if (!(cells > 0) || cells > 1 << 20) return false;
+  grid.cols = cols;
+  grid.rows = rows;
+  grid.minX = minX;
+  grid.minY = minY;
+  if (grid.cellStart.length < cells + 1) {
+    const cap = Math.ceil((cells + 1) * 1.5);
+    grid.cellStart = new Int32Array(cap);
+    grid.cellCursor = new Int32Array(cap);
+  }
+  if (grid.entries.length < particleCount) {
+    grid.entries = new Int32Array(particleCount);
+  }
+  grid.cellStart.fill(0, 0, cells + 1);
+  for (let i = 0; i < particleCount; i++) {
+    const c =
+      Math.floor((positions[i * 2] - minX) / cellSize) +
+      Math.floor((positions[i * 2 + 1] - minY) / cellSize) * cols;
+    grid.cellStart[c + 1]++;
+  }
+  for (let c = 0; c < cells; c++) {
+    grid.cellStart[c + 1] += grid.cellStart[c];
+    grid.cellCursor[c] = grid.cellStart[c];
+  }
+  for (let i = 0; i < particleCount; i++) {
+    const c =
+      Math.floor((positions[i * 2] - minX) / cellSize) +
+      Math.floor((positions[i * 2 + 1] - minY) / cellSize) * cols;
+    grid.entries[grid.cellCursor[c]++] = i;
+  }
+  return true;
+}
+
 // restScale/stiffnessScale let the caller animate targets over time (the
 // settle ramp) without rebuilding constraint lists.
 export function applyDistanceConstraints(
@@ -28,7 +103,7 @@ export function applyDistanceConstraints(
     const by = positions[c.b * 2 + 1];
     const dx = bx - ax;
     const dy = by - ay;
-    const dist = Math.hypot(dx, dy);
+    const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist < EPSILON) continue;
     if (c.pullOnly && dist >= rest) continue;
 
@@ -131,32 +206,25 @@ export function applySegmentCollision(
   violations?: ViolationList
 ): void {
   const cellSize = Math.max(1, minDist * 2);
-  const buckets = new Map<number, number[]>();
-  const bucketKey = (cx: number, cy: number): number =>
-    (cx + 2048) * 65536 + (cy + 2048);
-
-  for (let i = 0; i < particleCount; i++) {
-    const k = bucketKey(
-      Math.floor(positions[i * 2] / cellSize),
-      Math.floor(positions[i * 2 + 1] / cellSize)
-    );
-    const bucket = buckets.get(k);
-    if (bucket) bucket.push(i);
-    else buckets.set(k, [i]);
-  }
-
+  if (!buildGrid(positions, particleCount, cellSize)) return;
   const { next, chainOf, ctrlOf, chainLen } = topology;
+  const { cols, rows, minX, minY, entries, cellStart } = grid;
 
   for (let i = 0; i < particleCount; i++) {
-    const cx = Math.floor(positions[i * 2] / cellSize);
-    const cy = Math.floor(positions[i * 2 + 1] / cellSize);
+    const cx = Math.floor((positions[i * 2] - minX) / cellSize);
+    const cy = Math.floor((positions[i * 2 + 1] - minY) / cellSize);
 
     for (let ox = -1; ox <= 1; ox++) {
+      const ncx = cx + ox;
+      if (ncx < 0 || ncx >= cols) continue;
       for (let oy = -1; oy <= 1; oy++) {
-        const bucket = buckets.get(bucketKey(cx + ox, cy + oy));
-        if (!bucket) continue;
+        const ncy = cy + oy;
+        if (ncy < 0 || ncy >= rows) continue;
+        const cell = ncx + ncy * cols;
+        const kEnd = cellStart[cell + 1];
 
-        for (const j of bucket) {
+        for (let k = cellStart[cell]; k < kEnd; k++) {
+          const j = entries[k];
           if (j <= i) continue;
 
           // Skip immediate same-chain neighbors (they legitimately
@@ -230,10 +298,9 @@ export function applySegmentCollision(
               const iy = p1y + d1y * properU;
               let nearRegistered = false;
               for (let cc = 0; cc * 2 < contacts.length; cc++) {
-                if (
-                  Math.hypot(ix - contacts[cc * 2], iy - contacts[cc * 2 + 1]) <
-                  0.8
-                ) {
+                const ddx = ix - contacts[cc * 2];
+                const ddy = iy - contacts[cc * 2 + 1];
+                if (ddx * ddx + ddy * ddy < 0.64) {
                   nearRegistered = true;
                   break;
                 }
@@ -296,7 +363,7 @@ export function applySegmentCollision(
             const par = Math.max(0, Math.min(1, (0.8 - sinAngle) / 0.25));
             let px = q1x - q2x;
             let py = q1y - q2y;
-            const d2d = Math.hypot(px, py);
+            const d2d = Math.sqrt(px * px + py * py);
             if (par > 0 && d2d < minDist * par && d2d > 1e-9) {
               let cover = 0;
               if (passCover) {
@@ -361,7 +428,7 @@ export function applySegmentCollision(
           let nx = q1x - q2x;
           let ny = q1y - q2y;
           let nz = zi - zj;
-          const dist = Math.hypot(nx, ny, nz);
+          const dist = Math.sqrt(nx * nx + ny * ny + nz * nz);
           if (dist >= minDist) continue;
           if (dist < 1e-9) {
             // Fully coincident: resolve straight up/down, deterministic.
@@ -404,38 +471,42 @@ export function applyRepulsion(
   positions: Float32Array,
   zPos: Float32Array,
   particleCount: number,
+  topology: SegmentTopology,
   minDist: number,
-  stiffness: number,
-  excludedPairs: Set<number>
+  stiffness: number
 ): void {
   const cellSize = minDist;
-  const buckets = new Map<number, number[]>();
-
-  const bucketKey = (cx: number, cy: number): number =>
-    (cx + 2048) * 65536 + (cy + 2048);
-
-  for (let i = 0; i < particleCount; i++) {
-    const k = bucketKey(
-      Math.floor(positions[i * 2] / cellSize),
-      Math.floor(positions[i * 2 + 1] / cellSize)
-    );
-    const bucket = buckets.get(k);
-    if (bucket) bucket.push(i);
-    else buckets.set(k, [i]);
-  }
+  if (!buildGrid(positions, particleCount, cellSize)) return;
+  const { chainOf, ctrlOf, chainLen } = topology;
+  const { cols, rows, minX, minY, entries, cellStart } = grid;
 
   for (let i = 0; i < particleCount; i++) {
-    const cx = Math.floor(positions[i * 2] / cellSize);
-    const cy = Math.floor(positions[i * 2 + 1] / cellSize);
+    const cx = Math.floor((positions[i * 2] - minX) / cellSize);
+    const cy = Math.floor((positions[i * 2 + 1] - minY) / cellSize);
 
     for (let ox = -1; ox <= 1; ox++) {
+      const ncx = cx + ox;
+      if (ncx < 0 || ncx >= cols) continue;
       for (let oy = -1; oy <= 1; oy++) {
-        const bucket = buckets.get(bucketKey(cx + ox, cy + oy));
-        if (!bucket) continue;
+        const ncy = cy + oy;
+        if (ncy < 0 || ncy >= rows) continue;
+        const cell = ncx + ncy * cols;
+        const kEnd = cellStart[cell + 1];
 
-        for (const j of bucket) {
+        for (let k = cellStart[cell]; k < kEnd; k++) {
+          const j = entries[k];
           if (j <= i) continue;
-          if (excludedPairs.has(i * 65536 + j)) continue;
+          // Exclude nearby same-chain particles: within ~6 steps the
+          // geodesic span along the thread is shorter than the maximum
+          // repulsion distance, and repelling such pairs makes the chain
+          // accordion into permanent buckling waves at high repulsion.
+          // (Formerly a precomputed pair Set; the topology test is
+          // allocation-free and equivalent.)
+          if (chainOf[i] === chainOf[j]) {
+            const len = chainLen[i];
+            const d = Math.abs(ctrlOf[i] - ctrlOf[j]);
+            if (Math.min(d, len - d) <= 6) continue;
+          }
 
           const dx = positions[j * 2] - positions[i * 2];
           const dy = positions[j * 2 + 1] - positions[i * 2 + 1];

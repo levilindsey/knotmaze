@@ -83,6 +83,34 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **Physics broadphase rebuilt flat (P3.42): phys 85.9 -> 15.8 ms,
+  10 -> 32 fps mid-drag at fat params.** applySegmentCollision was 73%
+  of ALL CPU (measured via CDP profile, probe recipe: drag-wiggle 4s at
+  the fat URL) - the cost was the per-call Map<number, number[]>
+  spatial hash rebuilt 4x per substep, not the narrow-phase math. Now a
+  zero-allocation counting-sort grid (forces.ts `buildGrid`), with the
+  repulsion exclusion moved from the precomputed pair Set to a topology
+  ctrl-distance test, and hot-loop Math.hypot -> Math.sqrt (hypot is
+  several times slower in V8). Pair iteration order is preserved by the
+  counting sort; cell ORIGINS moved from absolute to bounds-anchored,
+  which shifts marginal broadphase catches - trajectories diverge from
+  P3.41 (chaotic, statistically identical; both grids only guarantee
+  catches within one cell size). Non-finite states now SKIP the force
+  pass instead of collapsing the Map into one bucket (the old O(9N^2)
+  NaN hang). TWO GOTCHAS measured during verification: (1) settle
+  sweeps now report "asleep" at sim ~3.9s for EVERY seed (was 4.0-6.3)
+  - not a physics change: the sleep gate counts 45 STILL FRAMES, and
+  faster frames span fewer sim-seconds; quiet-start is unchanged. Do
+  not compare sim-at-sleep across builds with different frame rates.
+  (2) The pathological-wound regression test failed on a healthy state:
+  its fixed 60s measurement window landed on a transient burst (the
+  wound transient bursts to ~2e-1 near 50s, decays to the ~1e-2 band by
+  ~110s - measured over 240s; the loud attractor by contrast holds
+  1.3e-1+ with NO trend). The test now measures at 120s, past the
+  transient, so it asserts the actual guarantee (no self-sustainment).
+  Verified: fat+default sweeps 16/16; scans clean x3 URLs; gesture
+  battery (hold/pull/cinch at 5 twist pairs) clean, re-sleeps; 20/20
+  tests (suite wall time 122s -> 93s as a side effect).
 - **Weird gap SHAPES at loop-end twists (wedge-slashes + thin slits):
   RESOLVED by curvature-faithful erase caps (P3.40).** The single
   reported "shape" was THREE under-erase mechanisms, separated only

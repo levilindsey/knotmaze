@@ -351,7 +351,6 @@ export class ParticleSystem {
   private initial: Float32Array;
   private structural: DistanceConstraint[] = [];
   private bending: DistanceConstraint[] = [];
-  private excludedPairs = new Set<number>();
   private noise3D: (x: number, y: number, z: number) => number;
   private time = 0;
   private accumulator = 0;
@@ -504,16 +503,8 @@ export class ParticleSystem {
           pullOnly: true,
         });
 
-        // Exclude nearby same-chain particles from repulsion: within ~6
-        // steps the geodesic span along the thread is shorter than the
-        // maximum repulsion distance, and repelling such pairs makes the
-        // chain accordion into permanent buckling waves at high repulsion.
-        for (let span = 1; span <= 6; span++) {
-          const c = chain[(i + span) % len];
-          const lo = Math.min(a, c);
-          const hi = Math.max(a, c);
-          if (lo !== hi) this.excludedPairs.add(lo * 65536 + hi);
-        }
+        // (Nearby same-chain repulsion exclusion lives in applyRepulsion
+        // itself now, as a topology ctrl-distance test.)
       }
     }
   }
@@ -1239,13 +1230,13 @@ export class ParticleSystem {
       this.contacts[c * 2 + 1] =
         (this.bindScratch[1] + this.bindScratch[3]) / 2;
       // Smoothed contact speed for graduated friction (weldFactor).
-      this.contactSpeedEma[c] =
-        this.contactSpeedEma[c] * (1 - CONTACT_SPEED_EMA) +
-        Math.hypot(
-          this.contacts[c * 2] - this.prevContacts[c * 2],
-          this.contacts[c * 2 + 1] - this.prevContacts[c * 2 + 1]
-        ) *
-          CONTACT_SPEED_EMA;
+      {
+        const mdx = this.contacts[c * 2] - this.prevContacts[c * 2];
+        const mdy = this.contacts[c * 2 + 1] - this.prevContacts[c * 2 + 1];
+        this.contactSpeedEma[c] =
+          this.contactSpeedEma[c] * (1 - CONTACT_SPEED_EMA) +
+          Math.sqrt(mdx * mdx + mdy * mdy) * CONTACT_SPEED_EMA;
+      }
       this.prevContacts[c * 2] = this.contacts[c * 2];
       this.prevContacts[c * 2 + 1] = this.contacts[c * 2 + 1];
       // Eased grab-release gate (see GRAB_GATE_EASE).
@@ -1334,9 +1325,9 @@ export class ParticleSystem {
         this.positions,
         this.zPos,
         this.particleCount,
+        this.topology,
         repulseDist,
-        REPULSION_STIFFNESS,
-        this.excludedPairs
+        REPULSION_STIFFNESS
       );
       this.probe("repulsion");
       // Hard 3D floor: no two threads within the margin in 3D, ever. The
@@ -1548,15 +1539,19 @@ export class ParticleSystem {
         const a = chain[(k - 1 + len) % len];
         const b = chain[k];
         const c = chain[(k + 1) % len];
-        const l1 = Math.hypot(p[b * 2] - p[a * 2], p[b * 2 + 1] - p[a * 2 + 1]);
-        const l2 = Math.hypot(p[c * 2] - p[b * 2], p[c * 2 + 1] - p[b * 2 + 1]);
+        const e1x = p[b * 2] - p[a * 2];
+        const e1y = p[b * 2 + 1] - p[a * 2 + 1];
+        const e2x = p[c * 2] - p[b * 2];
+        const e2y = p[c * 2 + 1] - p[b * 2 + 1];
+        const l1 = Math.sqrt(e1x * e1x + e1y * e1y);
+        const l2 = Math.sqrt(e2x * e2x + e2y * e2y);
         const lm = (l1 + l2) / 2;
         if (lm < 1e-9) continue;
         const q = lm / (2 * minRadius);
         const minChord = (2 * lm) / Math.sqrt(1 + q * q);
         const dx = p[c * 2] - p[a * 2];
         const dy = p[c * 2 + 1] - p[a * 2 + 1];
-        const d = Math.hypot(dx, dy);
+        const d = Math.sqrt(dx * dx + dy * dy);
         if (d >= minChord || d < 1e-9) continue;
         const corr = ((minChord - d) / d) * stiffness * 0.5;
         p[a * 2] -= dx * corr;
@@ -1604,7 +1599,9 @@ export class ParticleSystem {
       const seg = (k: number): number => {
         const a = chain[((k % len) + len) % len];
         const b = chain[(((k + 1) % len) + len) % len];
-        return Math.hypot(p[b * 2] - p[a * 2], p[b * 2 + 1] - p[a * 2 + 1]);
+        const dx = p[b * 2] - p[a * 2];
+        const dy = p[b * 2 + 1] - p[a * 2 + 1];
+        return Math.sqrt(dx * dx + dy * dy);
       };
       const put = (k: number, arc: number): void => {
         const cov = Math.min(1, Math.max(0, (reach - arc) / fade));
@@ -1695,8 +1692,8 @@ export class ParticleSystem {
     let tay = this.positions[a1 * 2 + 1] - this.positions[a0 * 2 + 1];
     let tbx = this.positions[b1 * 2] - this.positions[b0 * 2];
     let tby = this.positions[b1 * 2 + 1] - this.positions[b0 * 2 + 1];
-    const la = Math.hypot(tax, tay) || 1;
-    const lb = Math.hypot(tbx, tby) || 1;
+    const la = Math.sqrt(tax * tax + tay * tay) || 1;
+    const lb = Math.sqrt(tbx * tbx + tby * tby) || 1;
     tax /= la;
     tay /= la;
     tbx /= lb;
@@ -1793,7 +1790,7 @@ export class ParticleSystem {
       const by = (this.bindScratch[1] + this.bindScratch[3]) / 2;
       const dx = bx - ax;
       const dy = by - ay;
-      const dist = Math.hypot(dx, dy);
+      const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist > TWIST_AXIS_TRUST) {
         this.twistAxis[p * 2] = dx / dist;
         this.twistAxis[p * 2 + 1] = dy / dist;
