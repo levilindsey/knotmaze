@@ -437,11 +437,9 @@ export class ParticleSystem {
     this.buildTwistPairs();
     this.contacts = new Float32Array(this.crossings.length * 2);
     this.prevContacts = new Float32Array(this.crossings.length * 2);
-    this.prevBindings = new Float32Array(this.crossings.length * 4);
     // Seed high so contacts start kinetic; the EMA settles within ~10
     // substeps.
     this.contactSpeedEma = new Float32Array(this.crossings.length).fill(1);
-    this.contactSlipEma = new Float32Array(this.crossings.length).fill(1);
     this.grabGate = new Float32Array(this.crossings.length).fill(1);
     this.passCoverSlot = new Int32Array(this.particleCount * 4);
     this.passCoverCov = new Float32Array(this.particleCount * 4);
@@ -714,24 +712,14 @@ export class ParticleSystem {
   private kinkSep = KINK_MIN_SEPARATION;
   // Width-scaled twist-eye material budget (see TWIST_MIN_SEPARATION).
   private twistSep = TWIST_MIN_SEPARATION;
-  // TEMP A/B flag (probe_afterplay2): taper slide/transversality mobility
-  // at chaotic contact speeds during free decay.
-  abHighSpeedTaper = false;
-  // TEMP A/B flag (probe_afterplay3): weld from relative SLIP at the
-  // contact (|d(over binding) - d(under binding)| per substep) instead of
-  // absolute contact motion, so co-moving crossings riding a wave weld.
-  abSlipWeld = false;
-  // TEMP A/B injector-fingerprint multipliers (probe_afterplay4).
-  abCoupling = 1;
-  abSlide = 1;
-  abTrans = 1;
-  abExtraDrag = 0;
+  // (The loud-attractor A/B knobs - ab* multipliers and the slip-EMA
+  // plumbing - were removed after their experiments concluded; the
+  // measured verdicts live in the CLAUDE.md loud-attractor entry and
+  // the code in commit 0b91d15 if fingerprinting is ever re-run.)
   // Per-crossing smoothed contact speed (units/substep) and the previous
   // contact points, for GRADUATED contact friction (see weldFactor).
   private contactSpeedEma: Float32Array = new Float32Array(0);
-  private contactSlipEma: Float32Array = new Float32Array(0);
   private prevContacts: Float32Array = new Float32Array(0);
-  private prevBindings: Float32Array = new Float32Array(0);
   // Per-crossing eased grab-release gate: 1 = weld allowed, 0 = released.
   private grabGate: Float32Array = new Float32Array(0);
   // Standing hard violations at substep end ([x, y, depth] rows), from
@@ -761,11 +749,9 @@ export class ParticleSystem {
     this.grabbed = -1;
     this.stickyContacts = false;
     this.contactSpeedEma.fill(1);
-    this.contactSlipEma.fill(1);
     this.grabGate.fill(1);
     this.violationList.n = 0;
     this.prevContacts.fill(0);
-    this.prevBindings.fill(0);
     this.zPos.fill(0);
     for (const [pass, ctrl] of this.initialCtrl) {
       pass.ctrl = ctrl;
@@ -1262,24 +1248,6 @@ export class ParticleSystem {
           CONTACT_SPEED_EMA;
       this.prevContacts[c * 2] = this.contacts[c * 2];
       this.prevContacts[c * 2 + 1] = this.contacts[c * 2 + 1];
-      // Smoothed relative SLIP at the contact: how differently the two
-      // binding points moved this substep. A crossing riding a wave
-      // co-moves (slip ~0) even when its absolute speed is large.
-      this.contactSlipEma[c] =
-        this.contactSlipEma[c] * (1 - CONTACT_SPEED_EMA) +
-        Math.hypot(
-          this.bindScratch[0] -
-            this.prevBindings[c * 4] -
-            (this.bindScratch[2] - this.prevBindings[c * 4 + 2]),
-          this.bindScratch[1] -
-            this.prevBindings[c * 4 + 1] -
-            (this.bindScratch[3] - this.prevBindings[c * 4 + 3])
-        ) *
-          CONTACT_SPEED_EMA;
-      this.prevBindings[c * 4] = this.bindScratch[0];
-      this.prevBindings[c * 4 + 1] = this.bindScratch[1];
-      this.prevBindings[c * 4 + 2] = this.bindScratch[2];
-      this.prevBindings[c * 4 + 3] = this.bindScratch[3];
       // Eased grab-release gate (see GRAB_GATE_EASE).
       {
         let target = 1;
@@ -1307,23 +1275,10 @@ export class ParticleSystem {
       // micro-moving hold the standoff in slow wander forever).
       if (!this.stickyContacts) {
         const weld = this.weldFactor(c, tuning.temperature);
-        let mobility = 1 - weld;
-        // TEMP A/B (probe_afterplay2): high-speed machinery taper.
-        if (
-          this.abHighSpeedTaper &&
-          this.grabbed < 0 &&
-          tuning.temperature === 0
-        ) {
-          const ema = this.contactSpeedEma[c];
-          mobility *= Math.max(0, Math.min(1, (1.2e-1 - ema) / (1.2e-1 - 3e-2)));
-        }
+        const mobility = 1 - weld;
         if (mobility > 0) {
-          if (this.abSlide > 0) {
-            this.slideCrossing(crossing, mobility * this.abSlide);
-          }
-          if (this.abTrans > 0) {
-            this.applyTransversality(crossing, c, mobility * this.abTrans);
-          }
+          this.slideCrossing(crossing, mobility);
+          this.applyTransversality(crossing, c, mobility);
         }
       }
 
@@ -1454,8 +1409,7 @@ export class ParticleSystem {
         // displaced gap.
         const weld = this.weldFactor(ci, tuning.temperature);
         const give =
-          (1 / (1 + (lag / COUPLING_YIELD_LAG) ** 2) * (1 - weld) + weld) *
-          this.abCoupling;
+          1 / (1 + (lag / COUPLING_YIELD_LAG) ** 2) * (1 - weld) + weld;
         this.bindingPoint(crossing.over, this.bindScratch, 0);
         this.bindingPoint(crossing.under, this.bindScratch, 2);
         const dx =
@@ -1576,13 +1530,6 @@ export class ParticleSystem {
       );
     }
     this.probe("final-collision");
-
-    // TEMP A/B (probe_afterplay4): extra velocity damping diagnostic.
-    if (this.abExtraDrag > 0) {
-      for (let i = 0; i < this.particleCount * 2; i++) {
-        this.prev[i] += (this.positions[i] - this.prev[i]) * this.abExtraDrag;
-      }
-    }
   }
 
   // Minimum turn radius: the ribbon's OWN renderability floor. A
@@ -1810,9 +1757,7 @@ export class ParticleSystem {
   // raises their contact speed.
   private weldFactor(ci: number, temperature: number): number {
     if (temperature > 0) return 0;
-    const speed = this.abSlipWeld
-      ? this.contactSlipEma[ci]
-      : this.contactSpeedEma[ci];
+    const speed = this.contactSpeedEma[ci];
     return (
       Math.max(
         0,

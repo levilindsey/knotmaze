@@ -43,10 +43,13 @@ src/
   main.ts                 # Entry point
 test/
   core/
-    tangle_graph.test.ts  # Layer 1 invariant tests
     lattice_grower.test.ts
   geometry/
     spline_generator.test.ts
+  physics/
+    particle_system.test.ts
+  quiescence.regression.test.ts  # Guards the friction dissipation channel
+  sweep.manual.test.ts           # Skip-gated; run via SWEEP=1
 ```
 
 ## Running Locally
@@ -404,8 +407,10 @@ bottom-left stamp shows the same counters).
   gate), or a z-aware reunion channel (the path is blocked in 2D but
   legal over the obstruction in 3D - Z_EASE currently pulls z back to
   the diagram tents faster than a traversal can hold altitude). The
-  inert `ab*` knobs on ParticleSystem and `contactSlipEma` plumbing
-  are kept for the next session; behavior at defaults is identical.
+  `ab*` A/B knobs and `contactSlipEma` plumbing from this
+  investigation were REMOVED in the P3.41 cleanup (their verdicts are
+  recorded above; re-add from commit 0b91d15 if injector
+  fingerprinting is ever re-run).
 - **Fresh-settle limit cycle at fat widths: RESOLVED by crossing
   coverage + soft cosmetic margin on the anti-riding floor (P3.31).**
   P3.30's floor pumped with NO interaction at fat params (tw 0.52,
