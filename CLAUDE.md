@@ -110,9 +110,13 @@ grep confirms no solve/goal/daily/win code today.
 before P4 unless the user asks):
 - P2 polish still open in Follow-ups: the "make the hero settle
   visibly angular" zigzag→curve blend, and slack~0 thread waviness.
-- Janitorial judgment calls flagged during the P3.41 cleanup but left
-  alone: the skip-gated `test/sweep.manual.test.ts`, and the
-  suicide service workers planted in `public/` (commit af2efb4).
+- `test/sweep.manual.test.ts` was reviewed and KEPT (2026-07-24): a
+  skip-gated (`SWEEP=1`), asserts-nothing node-side census of crossing
+  quality across seeds — zero CI cost, self-labeled "not a regression
+  gate." If it ever breaks against a `ParticleSystem` API change,
+  delete it rather than fix it. (The `public/` suicide service workers
+  from commit af2efb4 were removed 2026-07-24 — their stale-worker cure
+  had long since taken effect and nothing in the app registers a SW.)
 
 ## Verification rule (hard-won)
 
