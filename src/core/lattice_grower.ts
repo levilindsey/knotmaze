@@ -7,6 +7,7 @@ import {
   assignCheckerboardParity,
 } from "./tangle_graph";
 import { ConstantField } from "./param_field";
+import { buildMazeGraph } from "./maze";
 import { initRNG, rng } from "../util/random";
 
 // The knot lives on a "doubled" integer lattice: cell (cx, cy) spans
@@ -59,6 +60,9 @@ export function generateLatticeKnotwork(
   const open = carveWalls(size, weaveDensityField, turnBiasField);
   traceKnot(graph, size, open);
   assignCheckerboardParity(graph);
+
+  // The maze thread is one of the knot's own strands (P4 maze mode).
+  graph.maze = buildMazeGraph(graph);
 
   return graph;
 }

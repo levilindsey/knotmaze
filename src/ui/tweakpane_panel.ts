@@ -20,6 +20,8 @@ export interface PanelCallbacks {
   onSlackChange: () => void;
   onStyleChange: () => void;
   onTemperatureChange: () => void;
+  onModeChange: () => void;
+  onResetPath: () => void;
 }
 
 interface ChangeEvent {
@@ -129,6 +131,16 @@ export function buildPanel(
   ).on("change", (ev: ChangeEvent) => {
     callbacks.onDebugToggle(ev.value === true);
   });
+
+  // Maze mode: repurposes the pointer to trace a solve path (tugging off).
+  tip(
+    pane.addBinding(params, "mazeMode"),
+    "Maze mode: tap the entrance, then adjacent cells, to trace a path to the exit. Thread-tugging is off while solving."
+  ).on("change", callbacks.onModeChange);
+  tip(
+    pane.addButton({ title: "Reset path" }),
+    "Clear the traced maze path and start over from the entrance."
+  ).on("click", callbacks.onResetPath);
 
   tip(
     pane.addButton({ title: "Reset to defaults" }),

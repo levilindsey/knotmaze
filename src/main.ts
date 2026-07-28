@@ -4,10 +4,12 @@ import { checkStructure, checkAlternation } from "./core/tangle_graph";
 import { ParticleSystem } from "./physics/particle_system";
 import { RibbonRenderer } from "./render/ribbon_renderer";
 import { DebugRenderer } from "./render/debug_renderer";
+import { MazeRenderer } from "./render/maze_renderer";
+import { MazeController } from "./game/maze_controller";
 import { readParams, writeParams, newSeed } from "./ui/url_state";
 import { buildPanel } from "./ui/tweakpane_panel";
 import type { PanelSettings } from "./ui/tweakpane_panel";
-import type { GenerationParams } from "./core/types";
+import type { GenerationParams, MazeGraph } from "./core/types";
 import { KnotSynth, pitchForLoopLength } from "./audio/knot_synth";
 
 const BACKGROUND = 0x151b28;
@@ -16,7 +18,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P3.42 flat-grid broadphase 2026-07-24";
+const BUILD_STAMP = "P4.3 maze traces along the thread 2026-07-27";
 
 const app = new Application();
 
@@ -48,6 +50,9 @@ async function main(): Promise<void> {
   let ps: ParticleSystem | null = null;
   let renderer: RibbonRenderer | null = null;
   let debug: DebugRenderer | null = null;
+  let maze: MazeRenderer | null = null;
+  let controller: MazeController | null = null;
+  let mazeGraph: MazeGraph | null = null;
 
   // The unanchored knot finds its own shape, so the viewport fit follows
   // the live particle bounds, easing toward the target to avoid popping.
@@ -93,6 +98,7 @@ async function main(): Promise<void> {
   function rebuild(): void {
     renderer?.destroy();
     debug?.container.destroy({ children: true });
+    maze?.destroy();
     root.removeChildren();
 
     const genParams: GenerationParams = {
@@ -115,6 +121,15 @@ async function main(): Promise<void> {
       baseHue: params.seed % 360,
     });
 
+    // Maze overlay + solve state. Capture the un-settled positions NOW (still
+    // at lattice coords) so cell membership is assigned before physics drifts.
+    mazeGraph = graph.maze!;
+    controller = new MazeController(mazeGraph);
+    maze = new MazeRenderer(ps, mazeGraph, params.threadWidth);
+    maze.setVisible(params.mazeMode);
+    maze.update(controller);
+    hideWin();
+
     debug = new DebugRenderer();
     debug.render(graph);
     // The debug renderer draws at cellSize px per lattice unit; the root
@@ -122,7 +137,14 @@ async function main(): Promise<void> {
     debug.container.scale.set(1 / debug.cellSize);
     debug.container.visible = settings.showDebug;
 
-    root.addChild(renderer.root, debug.container);
+    // Order: the maze under-layer, ribbons, the maze over-layer (so the solve
+    // strand weaves under threads at crossings and over them between), debug.
+    root.addChild(
+      maze.underContainer,
+      renderer.root,
+      maze.overContainer,
+      debug.container
+    );
     fitToScreen();
     writeParams(params);
 
@@ -155,10 +177,27 @@ async function main(): Promise<void> {
     },
     onStyleChange: () => {
       renderer?.setWidths(params.threadWidth, params.gap);
+      maze?.setThreadWidth(params.threadWidth);
+      if (maze && controller) maze.update(controller);
       writeParams(params);
       wake();
     },
     onTemperatureChange: () => wake(),
+    onModeChange: () => {
+      if (maze) maze.setVisible(params.mazeMode);
+      controller?.reset();
+      hideWin();
+      if (maze && controller) maze.update(controller);
+      app.canvas.style.cursor = "default";
+      writeParams(params);
+      wake();
+    },
+    onResetPath: () => {
+      controller?.reset();
+      hideWin();
+      if (maze && controller) maze.update(controller);
+      wake();
+    },
   });
 
   window.addEventListener("resize", () => {
@@ -174,6 +213,36 @@ async function main(): Promise<void> {
   ];
   const GRAB_RADIUS = 0.7;
 
+  // Win banner (maze mode). Hidden until a solve completes.
+  const banner = document.createElement("div");
+  banner.style.cssText =
+    "position:fixed;top:16px;left:50%;transform:translateX(-50%);" +
+    "padding:10px 18px;background:#1b2233ee;color:#8fe6ff;" +
+    "font:14px/1.3 monospace;border:1px solid #39d353;border-radius:6px;" +
+    "z-index:20;display:none;pointer-events:none";
+  document.body.appendChild(banner);
+  const showWin = (steps: number): void => {
+    banner.textContent = `Solved in ${steps} steps \u{1F389}`;
+    banner.style.display = "block";
+  };
+  const hideWin = (): void => {
+    banner.style.display = "none";
+  };
+
+  // Maze mode: resolve a tap to a node ON the maze thread and move the trace
+  // there; redraw immediately so it lands even while the knot sleeps.
+  const handleMazeTap = (x: number, y: number): void => {
+    if (!maze || !controller) return;
+    const node = maze.nodeAt(x, y);
+    if (node < 0) return;
+    const result = controller.tapNode(node);
+    maze.update(controller);
+    wake();
+    if (result === "win") showWin(controller.total);
+  };
+  const mazeActionable = (x: number, y: number): boolean =>
+    maze ? maze.nodeAt(x, y) >= 0 : false;
+
   app.canvas.style.touchAction = "none";
   app.canvas.addEventListener("pointerdown", (e) => {
     if (!ps) return;
@@ -185,6 +254,10 @@ async function main(): Promise<void> {
       renderer?.requestInspect(x, y);
       return;
     }
+    if (params.mazeMode) {
+      handleMazeTap(x, y);
+      return;
+    }
     if (ps.grab(x, y, GRAB_RADIUS) >= 0) {
       app.canvas.setPointerCapture(e.pointerId);
       app.canvas.style.cursor = "grabbing";
@@ -192,18 +265,22 @@ async function main(): Promise<void> {
   });
   app.canvas.addEventListener("pointermove", (e) => {
     if (!ps) return;
+    const [x, y] = toLattice(e);
+    if (params.mazeMode) {
+      app.canvas.style.cursor = mazeActionable(x, y) ? "pointer" : "default";
+      return;
+    }
     if (ps.grabbedParticle >= 0) {
-      const [x, y] = toLattice(e);
       ps.dragTo(x, y);
       wake();
     } else {
-      const [x, y] = toLattice(e);
       app.canvas.style.cursor =
         ps.nearest(x, y, GRAB_RADIUS) >= 0 ? "grab" : "default";
     }
   });
   const endDrag = (e: PointerEvent): void => {
     if (!ps) return;
+    if (params.mazeMode) return; // no grab/pluck while solving
     const pluck = ps.release();
     if (pluck && pluck.chain >= 0) {
       wake();
@@ -290,6 +367,8 @@ async function main(): Promise<void> {
       return;
     }
     renderer.update();
+    // Keep the maze overlay locked to the deforming knot while it moves.
+    if (params.mazeMode && maze && controller) maze.update(controller);
     const t2 = performance.now();
 
     // Follow the free-floating knot with an eased viewport fit.
@@ -403,6 +482,25 @@ async function main(): Promise<void> {
   // Raw renderer access for probe scripting (patch visibility/tinting).
   (window as unknown as Record<string, unknown>).__knotRenderer = () =>
     renderer;
+  // Maze-mode diagnostics: solve state + a path node's live SCREEN position
+  // (via the live root transform), for scripted solve verification.
+  (window as unknown as Record<string, unknown>).__knotMaze = () => {
+    if (!maze || !controller || !mazeGraph) return null;
+    return {
+      strand: mazeGraph.strand,
+      steps: mazeGraph.steps,
+      head: controller.head,
+      solved: controller.solved,
+      nodeScreen: (k: number) => {
+        const out = new Float32Array(2);
+        maze!.nodeWorld(k, out, 0);
+        return {
+          x: out[0] * root.scale.x + root.position.x,
+          y: out[1] * root.scale.y + root.position.y,
+        };
+      },
+    };
+  };
   // World point at a fractional ctrl along a chain (probe scripting).
   (window as unknown as Record<string, unknown>).__knotPoint = (
     chain: number,

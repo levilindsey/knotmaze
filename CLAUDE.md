@@ -87,21 +87,51 @@ resolved entry without a fresh on-screen repro. One bounded residual
 stays open (the post-VIOLENT-play loud attractor at fat params — a
 rare bistable non-sleep, not a blocker).
 
-**P4 — maze mode (NEXT).** The generator already produces the
-substrate: `lattice_grower` builds the knot as the *medial of a maze's
-passage graph* (corridors carry the threads — the maze and the knot
-are the same object; growing-tree guarantees every cell reachable).
-What's missing is the gameplay layer on top:
-- Entrance/exit + branch-point carving. `types.ts:44` explicitly
-  reserves this: `GenerationParams` gains its maze params in P4
-  ("Junction/end carving (entrances, exits, branch points for maze
-  mode) arrives in P4 and will add its own params then").
-- Solve interaction + win-state detection (trace a path start→end
-  through the corridors), and its URL/param serialization.
-- The **daily seed** (Wordle-style shared daily maze + time-to-solve
-  sharing) from the Key Design Decisions belongs here.
-Nothing about maze mode exists in `src/` yet beyond the generator —
-grep confirms no solve/goal/daily/win code today.
+**P4 — maze mode (IN PROGRESS).** Core insight, learned the hard way
+over three wrong iterations: **the threads ARE the maze paths.** You
+trace ALONG a thread band, always continuing straight at crossings
+(following a strand == going straight, by construction of `traceKnot`).
+The maze is NOT a route through the cells/negative-space between threads
+— that was the wrong model (cell passage-graph, gate-routed path); it is
+recoloring the actual strand you walk. Do not reintroduce a
+between-threads path.
+
+Done so far (`src/core/maze.ts`, `src/game/maze_controller.ts`,
+`src/render/maze_renderer.ts`, wiring in `main.ts`, `?md=1` in
+`url_state.ts`, Maze-mode toggle in the panel):
+- The maze thread = one of the knot's own strands (the longest).
+  `MazeGraph` = `{ strand, chainLen, ctrlStart, steps }`; strand node i
+  sits at chain control `2i` (`ParticleSystem.chains` mirrors
+  `graph.strands`). Read positions live via `ps.pointOnChain`.
+- Tap ALONG the thread to move the trace head (start end → exit end);
+  the TRAVELED stretch is RECOLORED (full thread width, opaque, gold),
+  woven under/over by the crossing table (`underAtCtrl`). Win at exit.
+- Verified end-to-end with real pointer taps (`__knotMaze` hook exposes
+  `nodeScreen(k)`); build + tests green.
+
+Still to do:
+- **Real off-screen loose ends** (start/exit). Today the strand is still
+  a *closed* loop and start/exit are its extreme nodes; the thread loops
+  around the back. Carve the strand OPEN at the border so two loose ends
+  actually enter/leave off-screen (generator + open-chain physics).
+- **Merging junctions** — threads that MERGE (not cross over/under),
+  where the player CHOOSES which way. This is what makes it a real
+  branching maze (today the single strand is a deterministic trace).
+  `types.ts` already reserves the JUNCTION/END node types.
+- URL/param serialization for any new maze params; the **daily seed**
+  (Wordle-style shared daily + time-to-solve share).
+
+**P4 follow-ups (recorded 2026-07-27, do once junctions exist):**
+1. **Branch-point-only clicking.** A tap may only choose among the paths
+   at the CURRENT branch point — you cannot click past a later branch
+   point. Backtracking is allowed, one branching segment at a time.
+   (Today, before junctions, taps can jump anywhere along the single
+   deterministic strand; tighten this to branch-by-branch then.)
+2. **Optimal-path + two distance metrics.** Compute the optimal path
+   through the maze. Track (a) the CURRENT path's distance relative to
+   optimal (regardless of any backtracking), and — SEPARATELY — (b) the
+   cumulative distance traveled via backtracking actions. Two distinct
+   readouts.
 
 **P5 — growth animation** (animate the knot being drawn/growing) and
 **P6 — flourishes** (polish) remain untouched after P4.
