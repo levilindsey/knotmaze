@@ -18,7 +18,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4.3 maze traces along the thread 2026-07-27";
+const BUILD_STAMP = "P4.4 maze thread has off-screen ends 2026-07-27";
 
 const app = new Application();
 
@@ -125,7 +125,13 @@ async function main(): Promise<void> {
     // at lattice coords) so cell membership is assigned before physics drifts.
     mazeGraph = graph.maze!;
     controller = new MazeController(mazeGraph);
-    maze = new MazeRenderer(ps, mazeGraph, params.threadWidth);
+    maze = new MazeRenderer(
+      ps,
+      mazeGraph,
+      params.threadWidth,
+      params.threadWidth + params.gap * 2,
+      BACKGROUND
+    );
     maze.setVisible(params.mazeMode);
     maze.update(controller);
     hideWin();
@@ -177,7 +183,7 @@ async function main(): Promise<void> {
     },
     onStyleChange: () => {
       renderer?.setWidths(params.threadWidth, params.gap);
-      maze?.setThreadWidth(params.threadWidth);
+      maze?.setWidths(params.threadWidth, params.threadWidth + params.gap * 2);
       if (maze && controller) maze.update(controller);
       writeParams(params);
       wake();

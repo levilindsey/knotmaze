@@ -46,11 +46,11 @@ describe("maze thread", () => {
     expect(g.maze!.strand).toBe(longest);
   });
 
-  it("traces the longer of the two arcs between the ends", () => {
+  it("traces the whole strand except the one hidden cut edge", () => {
     for (let seed = 1; seed <= 10; seed++) {
       const m = gen(seed).maze!;
       const nodeCount = m.chainLen / 2;
-      expect(m.steps).toBeGreaterThanOrEqual(Math.floor(nodeCount / 2));
+      expect(m.steps).toBe(nodeCount - 1);
     }
   });
 

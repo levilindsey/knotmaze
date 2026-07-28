@@ -30,14 +30,25 @@ export class MazeRenderer {
   private underGfx: Graphics;
   private overGfx: Graphics;
   private threadWidth: number;
+  private casingWidth: number;
+  private background: number;
   // 1 where the maze strand is the UNDER pass of a crossing (per control).
   private underAtCtrl: Uint8Array;
   private scratch = new Float32Array(2);
+  private scratch2 = new Float32Array(2);
 
-  constructor(ps: ParticleSystem, maze: MazeGraph, threadWidth: number) {
+  constructor(
+    ps: ParticleSystem,
+    maze: MazeGraph,
+    threadWidth: number,
+    casingWidth: number,
+    background: number
+  ) {
     this.ps = ps;
     this.maze = maze;
     this.threadWidth = threadWidth;
+    this.casingWidth = casingWidth;
+    this.background = background;
     this.underContainer = new Container();
     this.overContainer = new Container();
     this.underGfx = new Graphics();
@@ -65,8 +76,9 @@ export class MazeRenderer {
     this.overContainer.visible = visible;
   }
 
-  setThreadWidth(w: number): void {
-    this.threadWidth = w;
+  setWidths(threadWidth: number, casingWidth: number): void {
+    this.threadWidth = threadWidth;
+    this.casingWidth = casingWidth;
   }
 
   // Live world position of path node k (0 = start, maze.steps = exit).
@@ -103,24 +115,93 @@ export class MazeRenderer {
     under.clear();
     over.clear();
 
-    // Highlight the traced stretch, woven under/over with the knot.
+    const exitCtrl =
+      (this.maze.ctrlStart + 2 * this.maze.steps) % this.maze.chainLen;
+
+    // 1. Hide the cut edge (the peripheral segment between the two ends) by
+    //    painting the background over it, so the strand reads as OPEN there.
+    this.hideCut(over, exitCtrl);
+
+    // 2. The traced stretch, woven under/over with the knot.
     if (controller.head > 0) {
       this.strokeWoven(under, over, controller.head);
     }
 
-    // Start and exit markers (over layer, always visible).
+    // 3. Off-screen tails: the two loose ends run outward past the knot.
+    this.computeCentroid(this.scratch2);
+    this.drawStub(over, this.maze.ctrlStart, this.scratch2);
+    this.drawStub(over, exitCtrl, this.scratch2);
+
+    // 4. Start and exit markers (always visible, on top).
     const r = Math.max(0.32, this.threadWidth * 0.95);
     this.nodeWorld(0, this.scratch, 0);
     over.circle(this.scratch[0], this.scratch[1], r);
-    over.fill({ color: START_COLOR, alpha: 0.92 });
+    over.fill({ color: START_COLOR, alpha: 0.95 });
 
     this.nodeWorld(this.maze.steps, this.scratch, 0);
     over.circle(this.scratch[0], this.scratch[1], r);
-    over.fill({ color: EXIT_COLOR, alpha: controller.solved ? 0.98 : 0.92 });
+    over.fill({ color: EXIT_COLOR, alpha: controller.solved ? 0.98 : 0.95 });
     if (controller.solved) {
       over.circle(this.scratch[0], this.scratch[1], r * 1.5);
       over.stroke({ color: EXIT_COLOR, width: this.threadWidth * 0.25, alpha: 0.9 });
     }
+  }
+
+  // Paint the background over the hidden cut edge (exitCtrl -> +2 ctrl, the
+  // wrap gap back to ctrlStart), a bit wider than the casing so no sliver of
+  // the closed loop shows.
+  private hideCut(g: Graphics, exitCtrl: number): void {
+    const n = 8;
+    this.sampleCtrl(exitCtrl, this.scratch);
+    g.moveTo(this.scratch[0], this.scratch[1]);
+    for (let i = 1; i <= n; i++) {
+      this.sampleCtrl(exitCtrl + (2 * i) / n, this.scratch);
+      g.lineTo(this.scratch[0], this.scratch[1]);
+    }
+    g.stroke({
+      color: this.background,
+      width: this.casingWidth * 1.2,
+      cap: "round",
+      join: "round",
+    });
+  }
+
+  // A loose end running outward (away from the knot centroid) off-screen.
+  private drawStub(g: Graphics, ctrl: number, centroid: Float32Array): void {
+    this.sampleCtrl(ctrl, this.scratch);
+    let dx = this.scratch[0] - centroid[0];
+    let dy = this.scratch[1] - centroid[1];
+    const len = Math.hypot(dx, dy) || 1;
+    dx /= len;
+    dy /= len;
+    const STUB = 3.2;
+    g.moveTo(this.scratch[0], this.scratch[1]);
+    g.lineTo(this.scratch[0] + dx * STUB, this.scratch[1] + dy * STUB);
+    g.stroke({
+      color: PATH_COLOR,
+      width: this.threadWidth,
+      cap: "round",
+      join: "round",
+    });
+  }
+
+  private sampleCtrl(ctrl: number, out: Float32Array): void {
+    const f = ((ctrl % this.maze.chainLen) + this.maze.chainLen) % this.maze.chainLen;
+    this.ps.pointOnChain(this.maze.strand, f, out, 0);
+  }
+
+  private computeCentroid(out: Float32Array): Float32Array {
+    let sx = 0;
+    let sy = 0;
+    const nodeCount = this.maze.chainLen / 2;
+    for (let k = 0; k < nodeCount; k++) {
+      this.ps.pointOnChain(this.maze.strand, 2 * k, this.scratch, 0);
+      sx += this.scratch[0];
+      sy += this.scratch[1];
+    }
+    out[0] = sx / nodeCount;
+    out[1] = sy / nodeCount;
+    return out;
   }
 
   // Sample the thread from the start control to node `head`, and stroke it into
