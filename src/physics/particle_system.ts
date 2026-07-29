@@ -367,10 +367,19 @@ export class ParticleSystem {
   // junctions/ends empty, anchored all 0 -> `hasCarve` false -> none of the
   // generalized code branches run, so the closed-loop path is byte-identical.
   chainClosed: boolean[] = [];
+  // Per-chain cyclic seam that is REMOVED to open the loop: the segment
+  // between chain slot `chainBreakAfter[c]` and slot +1 carries no
+  // structural/bending spring and no collision segment, so the chain is a
+  // path instead of a loop. -1 (the knot-mode default) = closed, every
+  // break-aware branch takes its original cyclic path -> byte-identical.
+  chainBreakAfter: number[] = [];
   junctions: MazeJunction[] = [];
   ends: MazeEnd[] = [];
   anchored: Uint8Array = new Uint8Array(0);
   anchorPos: Float32Array = new Float32Array(0);
+  // Particle indices with anchored[p] === 1, for the substep-end pin. Empty
+  // in knot mode -> the pin loop is a no-op.
+  private anchoredList: number[] = [];
 
   private prev: Float32Array;
   private initial: Float32Array;
@@ -449,6 +458,7 @@ export class ParticleSystem {
     this.zTargets = new Float32Array(this.particleCount);
     // Topology defaults: every chain closed, nothing anchored (knot mode).
     this.chainClosed = this.chains.map(() => true);
+    this.chainBreakAfter = this.chains.map(() => -1);
     this.anchored = new Uint8Array(this.particleCount);
     this.anchorPos = new Float32Array(this.particleCount * 2);
 
@@ -484,9 +494,12 @@ export class ParticleSystem {
     const next = new Int32Array(this.particleCount);
     const ctrlOf = new Int32Array(this.particleCount);
     const chainLen = new Int32Array(this.particleCount);
-    this.chains.forEach((chain) => {
+    this.chains.forEach((chain, chainIdx) => {
+      const brk = this.chainBreakAfter[chainIdx]; // -1 closed.
       for (let i = 0; i < chain.length; i++) {
-        next[chain[i]] = chain[(i + 1) % chain.length];
+        // Open-chain terminal: point at itself (a zero-length segment the
+        // collision math skips) instead of wrapping to slot 0.
+        next[chain[i]] = i === brk ? chain[i] : chain[(i + 1) % chain.length];
         ctrlOf[chain[i]] = i;
         chainLen[chain[i]] = chain.length;
       }
@@ -519,33 +532,95 @@ export class ParticleSystem {
         this.initial[b * 2 + 1] - this.initial[a * 2 + 1]
       );
 
-    for (const chain of this.chains) {
+    this.chains.forEach((chain, chainIdx) => {
       const len = chain.length;
+      const brk = this.chainBreakAfter[chainIdx]; // -1 closed.
       for (let i = 0; i < len; i++) {
         const a = chain[i];
         const b = chain[(i + 1) % len];
-        // Rests stored at full lattice length; the settle ramp scales them.
-        this.structural.push({
-          a,
-          b,
-          rest: dist(a, b),
-          stiffness: STRUCTURAL_STIFFNESS,
-        });
+        // Structural: skip the removed seam so the two loose ends aren't
+        // held together (i === brk closed => never skips => byte-identical).
+        if (i !== brk) {
+          // Rests stored at full lattice length; the settle ramp scales them.
+          this.structural.push({
+            a,
+            b,
+            rest: dist(a, b),
+            stiffness: STRUCTURAL_STIFFNESS,
+          });
+        }
 
-        // Bending: pull i-1 and i+1 apart toward a straight line.
-        const p = chain[(i - 1 + len) % len];
-        this.bending.push({
-          a: p,
-          b,
-          rest: dist(p, a) + dist(a, b),
-          stiffness: BENDING_STIFFNESS,
-          pullOnly: true,
-        });
+        // Bending: pull i-1 and i+1 apart toward a straight line. Skip any
+        // triple whose i-1..i or i..i+1 leg crosses the removed seam, so the
+        // seam carries no straightening pull across the gap either.
+        if (brk !== i && brk !== (i - 1 + len) % len) {
+          const p = chain[(i - 1 + len) % len];
+          this.bending.push({
+            a: p,
+            b,
+            rest: dist(p, a) + dist(a, b),
+            stiffness: BENDING_STIFFNESS,
+            pullOnly: true,
+          });
+        }
 
         // (Nearby same-chain repulsion exclusion lives in applyRepulsion
         // itself now, as a topology ctrl-distance test.)
       }
-    }
+    });
+  }
+
+  // P4 maze mode. Carve a closed chain OPEN by removing the cyclic seam
+  // after chain slot `breakAfter`: the two flanking particles become loose
+  // ends, pinned to fixed (off-screen) anchor points so the thread hangs
+  // between them. Crossings are untouched - the carved seam must be a plain
+  // edge, not a crossing pass. Knot mode never calls this; every break-aware
+  // branch keeps its cyclic form until it does.
+  openChain(
+    chainIndex: number,
+    breakAfter: number,
+    anchorA: [number, number],
+    anchorB: [number, number]
+  ): void {
+    const chain = this.chains[chainIndex];
+    const len = chain.length;
+    this.chainClosed[chainIndex] = false;
+    this.chainBreakAfter[chainIndex] = breakAfter;
+    const pa = chain[breakAfter];
+    const pb = chain[(breakAfter + 1) % len];
+    this.setAnchor(pa, anchorA[0], anchorA[1]);
+    this.setAnchor(pb, anchorB[0], anchorB[1]);
+    this.ends.push({ particle: pa, chain: chainIndex, anchor: anchorA });
+    this.ends.push({ particle: pb, chain: chainIndex, anchor: anchorB });
+    this.rebuildTopology();
+  }
+
+  private setAnchor(p: number, x: number, y: number): void {
+    if (this.anchored[p] !== 1) this.anchoredList.push(p);
+    this.anchored[p] = 1;
+    this.anchorPos[p * 2] = x;
+    this.anchorPos[p * 2 + 1] = y;
+    this.positions[p * 2] = x;
+    this.positions[p * 2 + 1] = y;
+    this.prev[p * 2] = x;
+    this.prev[p * 2 + 1] = y;
+  }
+
+  // Re-derive constraints + the collision segment successors after the chain
+  // topology (chainBreakAfter) changes. Crossings/passes are unaffected by an
+  // open seam, so only structural/bending and topology.next are rebuilt.
+  private rebuildTopology(): void {
+    this.structural = [];
+    this.bending = [];
+    this.buildConstraints();
+    this.chains.forEach((chain, chainIdx) => {
+      const len = chain.length;
+      const brk = this.chainBreakAfter[chainIdx];
+      for (let i = 0; i < len; i++) {
+        this.topology.next[chain[i]] =
+          i === brk ? chain[i] : chain[(i + 1) % len];
+      }
+    });
   }
 
   // Pair up the two passes of each crossing and assign over/under from the
@@ -1474,9 +1549,13 @@ export class ParticleSystem {
     // curves (the structural springs preserve length against shrinkage).
     if (tuning.smooth > 0) {
       const k = tuning.smooth * FAIRING_MAX * settle;
-      for (const chain of this.chains) {
+      this.chains.forEach((chain, chainIdx) => {
         const len = chain.length;
+        const brk = this.chainBreakAfter[chainIdx]; // -1 closed.
         for (let i = 0; i < len; i++) {
+          // Skip the two loose-end particles: one fairing neighbor is across
+          // the removed seam (closed => brk -1 => never skips).
+          if (i === brk || (i - 1 + len) % len === brk) continue;
           const p = chain[i];
           const a = chain[(i - 1 + len) % len];
           const b = chain[(i + 1) % len];
@@ -1489,7 +1568,7 @@ export class ParticleSystem {
               this.positions[p * 2 + 1]) *
             k;
         }
-      }
+      });
     }
 
     // Optional grid alignment: softly anchor every particle back toward
@@ -1560,6 +1639,19 @@ export class ParticleSystem {
       );
     }
     this.probe("final-collision");
+
+    // Anchored loose ends (maze open-chain terminals) are authoritative:
+    // pin them exactly at their off-screen anchor, injecting no velocity, so
+    // no upstream force can drag them off. Empty in knot mode -> no-op.
+    for (let a = 0; a < this.anchoredList.length; a++) {
+      const p = this.anchoredList[a];
+      const x = this.anchorPos[p * 2];
+      const y = this.anchorPos[p * 2 + 1];
+      this.positions[p * 2] = x;
+      this.positions[p * 2 + 1] = y;
+      this.prev[p * 2] = x;
+      this.prev[p * 2 + 1] = y;
+    }
   }
 
   // Minimum turn radius: the ribbon's OWN renderability floor. A
@@ -1572,9 +1664,12 @@ export class ParticleSystem {
   // renderer's concave-side miter clamp covers any residual.
   private applyTurnRadiusFloor(minRadius: number, stiffness: number): void {
     const p = this.positions;
-    for (const chain of this.chains) {
+    this.chains.forEach((chain, chainIdx) => {
       const len = chain.length;
+      const brk = this.chainBreakAfter[chainIdx]; // -1 closed.
       for (let k = 0; k < len; k++) {
+        // Skip triples straddling the removed seam (closed => never skips).
+        if (k === brk || (k - 1 + len) % len === brk) continue;
         const a = chain[(k - 1 + len) % len];
         const b = chain[k];
         const c = chain[(k + 1) % len];
@@ -1598,7 +1693,7 @@ export class ParticleSystem {
         p[c * 2] += dx * corr;
         p[c * 2 + 1] += dy * corr;
       }
-    }
+    });
   }
 
   // Rebuild the per-particle registered-crossing membership table used by
