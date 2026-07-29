@@ -341,11 +341,36 @@ const TRANSVERSALITY_WINDOW = 2; // Particles each side beyond the segment.
 // injects no velocity).
 const CENTER_PULL = 0.04;
 
+// P4 maze mode topology generalization. A JUNCTION is a real degree-3 vertex:
+// one shared particle, referenced as the terminal of three arm-chains (the
+// "stem" arm is the straight-through line, used for bending). An END is a
+// degree-1 open-chain terminal anchored to a fixed off-screen point. In knot
+// mode there are none of either, so the sim stays a set of closed chains.
+export interface MazeJunction {
+  particle: number;
+  arms: Array<{ chain: number; ctrlEnd: number }>;
+  stem: number; // index into `arms` of the straight-through arm.
+}
+export interface MazeEnd {
+  particle: number;
+  chain: number;
+  anchor: [number, number];
+}
+
 export class ParticleSystem {
   particleCount: number;
   positions: Float32Array;
-  chains: number[][]; // Closed particle-index loops, one per strand.
+  chains: number[][]; // Particle-index paths, one per strand (closed in knot mode).
   crossings: CrossingInfo[];
+
+  // Topology generalization (P4 maze mode). Knot mode: chainClosed all true,
+  // junctions/ends empty, anchored all 0 -> `hasCarve` false -> none of the
+  // generalized code branches run, so the closed-loop path is byte-identical.
+  chainClosed: boolean[] = [];
+  junctions: MazeJunction[] = [];
+  ends: MazeEnd[] = [];
+  anchored: Uint8Array = new Uint8Array(0);
+  anchorPos: Float32Array = new Float32Array(0);
 
   private prev: Float32Array;
   private initial: Float32Array;
@@ -422,6 +447,10 @@ export class ParticleSystem {
     this.prev = new Float32Array(this.initial);
     this.zPos = new Float32Array(this.particleCount);
     this.zTargets = new Float32Array(this.particleCount);
+    // Topology defaults: every chain closed, nothing anchored (knot mode).
+    this.chainClosed = this.chains.map(() => true);
+    this.anchored = new Uint8Array(this.particleCount);
+    this.anchorPos = new Float32Array(this.particleCount * 2);
 
     for (let i = 0; i < this.particleCount; i++) {
       this.homeX += this.initial[i * 2];
@@ -471,6 +500,16 @@ export class ParticleSystem {
 
     const noiseRng = new SeededRNG((graph.seed ^ 0x9e3779b9) >>> 0);
     this.noise3D = createNoise3D(() => noiseRng.next());
+  }
+
+  // True once the topology has been carved (open ends and/or Y-junctions). In
+  // knot mode this is false and every generalized code path is skipped.
+  get hasCarve(): boolean {
+    return this.junctions.length > 0 || this.ends.length > 0;
+  }
+
+  isAnchored(i: number): boolean {
+    return this.anchored[i] === 1;
   }
 
   private buildConstraints(): void {

@@ -1,0 +1,40 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`knot-mode byte identity (golden guard) > matches the recorded knot-mode fingerprints 1`] = `
+{
+  "knot": {
+    "checkpoints": [
+      {
+        "hash": -1945748614,
+        "sum": 3456.233483,
+      },
+      {
+        "hash": -711344157,
+        "sum": 3456.320959,
+      },
+      {
+        "hash": -454133250,
+        "sum": 3456.316572,
+      },
+    ],
+    "count": 288,
+  },
+  "torture": {
+    "checkpoints": [
+      {
+        "hash": 1273945147,
+        "sum": 3456.946308,
+      },
+      {
+        "hash": -1683244830,
+        "sum": 3456.623633,
+      },
+      {
+        "hash": 860299072,
+        "sum": 3456.663918,
+      },
+    ],
+    "count": 288,
+  },
+}
+`;
