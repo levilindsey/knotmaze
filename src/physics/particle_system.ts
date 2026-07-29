@@ -593,6 +593,10 @@ export class ParticleSystem {
     this.ends.push({ particle: pa, chain: chainIndex, anchor: anchorA });
     this.ends.push({ particle: pb, chain: chainIndex, anchor: anchorB });
     this.rebuildTopology();
+    // Re-derive pass links + twist pairs so the seam's straddling passes are
+    // unlinked (crossings themselves are unchanged by an open plain edge).
+    this.buildPassOrder();
+    this.buildTwistPairs();
   }
 
   private setAnchor(p: number, x: number, y: number): void {
@@ -670,7 +674,11 @@ export class ParticleSystem {
   }
 
   // Sorted pass lists per chain, with cyclic prev/next links used by the
-  // slide's ordering clamps (and by the renderer's patch clearances).
+  // slide's ordering clamps (and by the renderer's patch clearances). On an
+  // OPEN chain the one consecutive pass pair straddling the removed seam is
+  // unlinked (each side points at itself) so the two loose ends' passes are
+  // not treated as chain-order neighbors - the ordering clamp and twist
+  // detection skip that phantom adjacency.
   private buildPassOrder(): void {
     this.passesByChain = this.chains.map(() => []);
     for (const c of this.crossings) {
@@ -679,13 +687,32 @@ export class ParticleSystem {
       this.initialCtrl.set(c.over, c.over.ctrl);
       this.initialCtrl.set(c.under, c.under.ctrl);
     }
-    for (const list of this.passesByChain) {
+    this.passesByChain.forEach((list, chainIdx) => {
       list.sort((a, b) => a.ctrl - b.ctrl);
-      for (let i = 0; i < list.length; i++) {
-        this.passNext.set(list[i], list[(i + 1) % list.length]);
-        this.passPrev.set(list[i], list[(i - 1 + list.length) % list.length]);
+      const m = list.length;
+      for (let i = 0; i < m; i++) {
+        this.passNext.set(list[i], list[(i + 1) % m]);
+        this.passPrev.set(list[i], list[(i - 1 + m) % m]);
       }
-    }
+      const brk = this.chainBreakAfter[chainIdx];
+      if (brk < 0 || m === 0) return; // Closed (or empty): fully cyclic.
+      // The seam sits between slots brk and brk+1, i.e. at ctrl brk + 0.5.
+      // Break the one consecutive pass pair whose forward ctrl-arc spans it.
+      const x = brk + 0.5;
+      for (let i = 0; i < m; i++) {
+        const a = list[i];
+        const b = list[(i + 1) % m];
+        const spans =
+          a.ctrl < b.ctrl
+            ? x > a.ctrl && x < b.ctrl
+            : x > a.ctrl || x < b.ctrl; // wrap pair
+        if (spans) {
+          this.passNext.set(a, a);
+          this.passPrev.set(b, b);
+          break;
+        }
+      }
+    });
   }
 
   passNeighbors(pass: CrossingPass): { prev: CrossingPass; next: CrossingPass } {
@@ -1007,23 +1034,29 @@ export class ParticleSystem {
     const under = crossing.under;
     const chain = this.chains[over.chain];
     const len = chain.length;
+    const brk = this.chainBreakAfter[over.chain]; // -1 closed.
     const i0 = Math.floor(over.ctrl);
     const oChain = this.chains[under.chain];
     const oLen = oChain.length;
+    const oBrk = this.chainBreakAfter[under.chain];
     const j0 = Math.floor(under.ctrl);
 
     let bestFOver = Number.NaN;
     let bestFUnder = Number.NaN;
     let bestCost = Infinity;
     for (let s = i0 - SLIDE_WINDOW; s <= i0 + SLIDE_WINDOW; s++) {
-      const a = chain[((s % len) + len) % len];
+      const sSlot = ((s % len) + len) % len;
+      if (sSlot === brk) continue; // Removed seam: no segment here.
+      const a = chain[sSlot];
       const b = chain[(((s + 1) % len) + len) % len];
       const ax = this.positions[a * 2];
       const ay = this.positions[a * 2 + 1];
       const e1x = this.positions[b * 2] - ax;
       const e1y = this.positions[b * 2 + 1] - ay;
       for (let r = j0 - SLIDE_WINDOW; r <= j0 + SLIDE_WINDOW; r++) {
-        const c = oChain[((r % oLen) + oLen) % oLen];
+        const rSlot = ((r % oLen) + oLen) % oLen;
+        if (rSlot === oBrk) continue; // Removed seam on the under thread.
+        const c = oChain[rSlot];
         const d = oChain[(((r + 1) % oLen) + oLen) % oLen];
         const cx = this.positions[c * 2];
         const cy = this.positions[c * 2 + 1];
@@ -1085,11 +1118,14 @@ export class ParticleSystem {
   ): number {
     const chain = this.chains[self.chain];
     const len = chain.length;
+    const brk = this.chainBreakAfter[self.chain]; // -1 closed.
     const i0 = Math.floor(self.ctrl);
     let bestDistSq = Infinity;
     let bestF = self.ctrl;
     for (let s = i0 - SLIDE_WINDOW; s <= i0 + SLIDE_WINDOW; s++) {
-      const a = chain[((s % len) + len) % len];
+      const sSlot = ((s % len) + len) % len;
+      if (sSlot === brk) continue; // Removed seam: no segment here.
+      const a = chain[sSlot];
       const b = chain[(((s + 1) % len) + len) % len];
       const ax = this.positions[a * 2];
       const ay = this.positions[a * 2 + 1];
@@ -1122,13 +1158,28 @@ export class ParticleSystem {
     const chain = this.chains[pass.chain];
     const len = chain.length;
     const c = pass.ctrl;
-    for (
-      let k = Math.ceil(c - DEPTH_WINDOW);
-      k <= Math.floor(c + DEPTH_WINDOW);
-      k++
-    ) {
-      const w = 1 - Math.abs(k - c) / DEPTH_WINDOW;
-      this.zTargets[chain[((k % len) + len) % len]] += amp * w;
+    const brk = this.chainBreakAfter[pass.chain]; // -1 closed.
+    if (brk < 0) {
+      for (
+        let k = Math.ceil(c - DEPTH_WINDOW);
+        k <= Math.floor(c + DEPTH_WINDOW);
+        k++
+      ) {
+        const w = 1 - Math.abs(k - c) / DEPTH_WINDOW;
+        this.zTargets[chain[((k % len) + len) % len]] += amp * w;
+      }
+      return;
+    }
+    // Open chain: work in seam-relative coords r (the strand runs r = 0 at
+    // one loose end to r = len - 1 at the other, no wrap across the removed
+    // seam), so the tent never leaks onto the far loose end.
+    const off = brk + 1;
+    const rc = (((c - off) % len) + len) % len;
+    const rLo = Math.max(0, Math.ceil(rc - DEPTH_WINDOW));
+    const rHi = Math.min(len - 1, Math.floor(rc + DEPTH_WINDOW));
+    for (let r = rLo; r <= rHi; r++) {
+      const w = 1 - Math.abs(r - rc) / DEPTH_WINDOW;
+      this.zTargets[chain[(r + off) % len]] += amp * w;
     }
   }
 
