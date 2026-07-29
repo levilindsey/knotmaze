@@ -48,6 +48,10 @@ export interface MazeGraph {
   chainLen: number;  // that chain's control count (2 * node count).
   ctrlStart: number; // control of the start end (even = a node).
   steps: number;     // node-steps from start to exit along the strand.
+  // Chain slot AFTER which the loop is carved open (the hidden edge's
+  // midpoint): ParticleSystem.openChain removes the seam there, making the
+  // strand a genuine path with the two loose ends running off-screen.
+  breakSlot: number;
 }
 
 // Main combinatorial graph.

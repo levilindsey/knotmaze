@@ -54,5 +54,11 @@ export function buildMazeGraph(graph: TangleGraph): MazeGraph {
   const ctrlStart = 2 * ((cut + 1) % nodeCount);
   const steps = Math.max(1, nodeCount - 1);
 
-  return { strand, chainLen, ctrlStart, steps };
+  // Carve the loop open at the hidden edge's MIDPOINT seam (slot 2*cut+1 ->
+  // 2*cut+2): the midpoint stays attached to the exit node (a short tail past
+  // it) and the start node becomes a clean loose end. Both flanking NODES stay
+  // on-screen as the tappable start/exit markers.
+  const breakSlot = (2 * cut + 1) % chainLen;
+
+  return { strand, chainLen, ctrlStart, steps, breakSlot };
 }

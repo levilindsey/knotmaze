@@ -3,10 +3,10 @@
 
 export interface SplineSamples {
   count: number;
-  positions: Float32Array; // 2 * count, uniformly spaced along arc, closed.
+  positions: Float32Array; // 2 * count, uniformly spaced along arc.
   tangents: Float32Array;  // 2 * count, unit length.
   totalLength: number;
-  controlArcLengths: number[]; // Arc position of each control point.
+  controlArcLengths: number[]; // Arc position of each control point, by slot.
 }
 
 // Subsamples per control segment when measuring arc length. Must stay well
@@ -129,6 +129,109 @@ export function sampleClosedSpline(
   for (let k = 0; k < count; k++) {
     const prev = ((k - 1 + count) % count) * 2;
     const next = ((k + 1) % count) * 2;
+    let tx = positions[next] - positions[prev];
+    let ty = positions[next + 1] - positions[prev + 1];
+    const len = Math.hypot(tx, ty);
+    if (len > EPSILON) {
+      tx /= len;
+      ty /= len;
+    } else {
+      tx = 1;
+      ty = 0;
+    }
+    tangents[k * 2] = tx;
+    tangents[k * 2 + 1] = ty;
+  }
+
+  return { count, positions, tangents, totalLength, controlArcLengths };
+}
+
+// Sample an OPEN spline: a centripetal Catmull-Rom path through `controls`
+// (flat, slot order 0..n-1) whose cyclic seam AFTER slot `breakAfter` is
+// removed. The strand runs from the loose end at slot breakAfter+1 (arc 0) the
+// long way around to the loose end at slot breakAfter (arc totalLength), with
+// clamped (non-wrapping) endpoints. `controlArcLengths` is indexed by SLOT, so
+// a crossing's fractional control maps straight through arcAt() - the caller
+// keeps its interior crossings well away from the seam, where the arc jumps.
+export function sampleOpenSpline(
+  controls: ArrayLike<number>,
+  count: number,
+  breakAfter: number
+): SplineSamples {
+  const n = controls.length / 2;
+  if (n < 3) {
+    throw new Error("Open spline needs at least 3 control points.");
+  }
+  const off = breakAfter + 1; // Traversal slot(r) = (off + r) % n.
+  const slotBase = (r: number): number => (((off + r) % n) + n) % n;
+  const segCount = n - 1; // Real segments (the seam segment is gone).
+
+  // Fine polyline over the real segments, endpoints clamped (p0=p1 / p3=p2).
+  const fineCount = segCount * SUBDIVISIONS + 1;
+  const fine = new Float32Array(fineCount * 2);
+  const point: [number, number] = [0, 0];
+  for (let r = 0; r < segCount; r++) {
+    const i0 = slotBase(Math.max(0, r - 1)) * 2;
+    const i1 = slotBase(r) * 2;
+    const i2 = slotBase(r + 1) * 2;
+    const i3 = slotBase(Math.min(segCount, r + 2)) * 2;
+    for (let s = 0; s < SUBDIVISIONS; s++) {
+      evalSegment(
+        controls[i0], controls[i0 + 1],
+        controls[i1], controls[i1 + 1],
+        controls[i2], controls[i2 + 1],
+        controls[i3], controls[i3 + 1],
+        s / SUBDIVISIONS,
+        point
+      );
+      const f = r * SUBDIVISIONS + s;
+      fine[f * 2] = point[0];
+      fine[f * 2 + 1] = point[1];
+    }
+  }
+  // The final endpoint (u = 1 of the last segment == control slot(n-1)).
+  const last = slotBase(n - 1) * 2;
+  fine[(fineCount - 1) * 2] = controls[last];
+  fine[(fineCount - 1) * 2 + 1] = controls[last + 1];
+
+  const cumulative = new Float32Array(fineCount);
+  for (let f = 1; f < fineCount; f++) {
+    cumulative[f] =
+      cumulative[f - 1] +
+      Math.hypot(
+        fine[f * 2] - fine[(f - 1) * 2],
+        fine[f * 2 + 1] - fine[(f - 1) * 2 + 1]
+      );
+  }
+  const totalLength = cumulative[fineCount - 1];
+
+  const controlArcLengths: number[] = new Array(n).fill(0);
+  for (let r = 0; r < n; r++) {
+    controlArcLengths[slotBase(r)] = cumulative[Math.min(fineCount - 1, r * SUBDIVISIONS)];
+  }
+
+  // Uniform arc-length resampling, endpoints inclusive (k = 0 -> arc 0,
+  // k = count-1 -> total), walking the open fine polyline.
+  const positions = new Float32Array(count * 2);
+  const tangents = new Float32Array(count * 2);
+  let cursor = 0;
+  for (let k = 0; k < count; k++) {
+    const target = (k / (count - 1)) * totalLength;
+    while (cursor < fineCount - 2 && cumulative[cursor + 1] < target) {
+      cursor++;
+    }
+    const segLen = cumulative[cursor + 1] - cumulative[cursor];
+    const frac = segLen > EPSILON ? (target - cumulative[cursor]) / segLen : 0;
+    const a = cursor * 2;
+    const b = (cursor + 1) * 2;
+    positions[k * 2] = fine[a] + (fine[b] - fine[a]) * frac;
+    positions[k * 2 + 1] = fine[a + 1] + (fine[b + 1] - fine[a + 1]) * frac;
+  }
+
+  // Tangents from centered differences; one-sided at the two open ends.
+  for (let k = 0; k < count; k++) {
+    const prev = Math.max(0, k - 1) * 2;
+    const next = Math.min(count - 1, k + 1) * 2;
     let tx = positions[next] - positions[prev];
     let ty = positions[next + 1] - positions[prev + 1];
     const len = Math.hypot(tx, ty);

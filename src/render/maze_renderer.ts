@@ -30,25 +30,15 @@ export class MazeRenderer {
   private underGfx: Graphics;
   private overGfx: Graphics;
   private threadWidth: number;
-  private casingWidth: number;
-  private background: number;
   // 1 where the maze strand is the UNDER pass of a crossing (per control).
   private underAtCtrl: Uint8Array;
   private scratch = new Float32Array(2);
   private scratch2 = new Float32Array(2);
 
-  constructor(
-    ps: ParticleSystem,
-    maze: MazeGraph,
-    threadWidth: number,
-    casingWidth: number,
-    background: number
-  ) {
+  constructor(ps: ParticleSystem, maze: MazeGraph, threadWidth: number) {
     this.ps = ps;
     this.maze = maze;
     this.threadWidth = threadWidth;
-    this.casingWidth = casingWidth;
-    this.background = background;
     this.underContainer = new Container();
     this.overContainer = new Container();
     this.underGfx = new Graphics();
@@ -76,9 +66,8 @@ export class MazeRenderer {
     this.overContainer.visible = visible;
   }
 
-  setWidths(threadWidth: number, casingWidth: number): void {
+  setWidths(threadWidth: number): void {
     this.threadWidth = threadWidth;
-    this.casingWidth = casingWidth;
   }
 
   // Live world position of path node k (0 = start, maze.steps = exit).
@@ -118,21 +107,21 @@ export class MazeRenderer {
     const exitCtrl =
       (this.maze.ctrlStart + 2 * this.maze.steps) % this.maze.chainLen;
 
-    // 1. Hide the cut edge (the peripheral segment between the two ends) by
-    //    painting the background over it, so the strand reads as OPEN there.
-    this.hideCut(over, exitCtrl);
+    // The base ribbon now renders this strand genuinely OPEN (the physics
+    // carve removed the hidden edge), so there is no closed-loop segment to
+    // paint over - the strand already reads as open at the ends.
 
-    // 2. The traced stretch, woven under/over with the knot.
+    // 1. The traced stretch, woven under/over with the knot.
     if (controller.head > 0) {
       this.strokeWoven(under, over, controller.head);
     }
 
-    // 3. Off-screen tails: the two loose ends run outward past the knot.
+    // 2. Off-screen tails: the two loose ends run outward past the knot.
     this.computeCentroid(this.scratch2);
     this.drawStub(over, this.maze.ctrlStart, this.scratch2);
     this.drawStub(over, exitCtrl, this.scratch2);
 
-    // 4. Start and exit markers (always visible, on top).
+    // 3. Start and exit markers (always visible, on top).
     const r = Math.max(0.32, this.threadWidth * 0.95);
     this.nodeWorld(0, this.scratch, 0);
     over.circle(this.scratch[0], this.scratch[1], r);
@@ -145,25 +134,6 @@ export class MazeRenderer {
       over.circle(this.scratch[0], this.scratch[1], r * 1.5);
       over.stroke({ color: EXIT_COLOR, width: this.threadWidth * 0.25, alpha: 0.9 });
     }
-  }
-
-  // Paint the background over the hidden cut edge (exitCtrl -> +2 ctrl, the
-  // wrap gap back to ctrlStart), a bit wider than the casing so no sliver of
-  // the closed loop shows.
-  private hideCut(g: Graphics, exitCtrl: number): void {
-    const n = 8;
-    this.sampleCtrl(exitCtrl, this.scratch);
-    g.moveTo(this.scratch[0], this.scratch[1]);
-    for (let i = 1; i <= n; i++) {
-      this.sampleCtrl(exitCtrl + (2 * i) / n, this.scratch);
-      g.lineTo(this.scratch[0], this.scratch[1]);
-    }
-    g.stroke({
-      color: this.background,
-      width: this.casingWidth * 1.2,
-      cap: "round",
-      join: "round",
-    });
   }
 
   // A loose end running outward (away from the knot centroid) off-screen.

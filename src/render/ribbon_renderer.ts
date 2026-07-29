@@ -21,7 +21,10 @@
 import { Container } from "pixi.js";
 import type { ParticleSystem, CrossingPass } from "../physics/particle_system";
 import type { SplineSamples } from "../geometry/spline_generator";
-import { sampleClosedSpline } from "../geometry/spline_generator";
+import {
+  sampleClosedSpline,
+  sampleOpenSpline,
+} from "../geometry/spline_generator";
 import { RibbonMesh, PatchGridMesh } from "./ribbon_mesh";
 
 export interface RibbonStyle {
@@ -207,7 +210,10 @@ export class RibbonRenderer {
       const count = Math.max(MIN_SAMPLES, Math.round(arc / SAMPLE_SPACING));
 
       const hue = (style.baseHue + i * 137.508) % 360;
-      const fill = new RibbonMesh(count, true, hslToHex(hue, 0.45, 0.64));
+      // An already-carved chain (maze mode) renders as an OPEN ribbon: no
+      // closing quad across the removed seam.
+      const closed = ps.chainBreakAfter[i] < 0;
+      const fill = new RibbonMesh(count, closed, hslToHex(hue, 0.45, 0.64));
       this.fills.push(fill);
       baseLayer.addChild(fill.mesh);
     });
@@ -429,7 +435,11 @@ export class RibbonRenderer {
         controls[k * 2] = positions[chain[k] * 2];
         controls[k * 2 + 1] = positions[chain[k] * 2 + 1];
       }
-      const samples = sampleClosedSpline(controls, this.fills[i].sampleCount);
+      const brk = this.ps.chainBreakAfter[i];
+      const samples =
+        brk < 0
+          ? sampleClosedSpline(controls, this.fills[i].sampleCount)
+          : sampleOpenSpline(controls, this.fills[i].sampleCount, brk);
       this.chainSamples[i] = samples;
       this.fills[i].update(
         samples.positions,

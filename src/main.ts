@@ -18,7 +18,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4.4 maze thread has off-screen ends 2026-07-27";
+const BUILD_STAMP = "P4 Stage 3: maze strand physically open 2026-07-28";
 
 const app = new Application();
 
@@ -114,6 +114,25 @@ async function main(): Promise<void> {
     }
 
     ps = new ParticleSystem(graph);
+    mazeGraph = graph.maze!;
+
+    // Maze mode carves the maze strand OPEN (real off-screen loose ends)
+    // BEFORE the renderer is built - the base ribbon reads chainBreakAfter to
+    // render that strand as an open spline. Knot mode leaves it closed. The
+    // two loose ends are pinned at their lattice (border) positions.
+    if (params.mazeMode) {
+      const chain = ps.chains[mazeGraph.strand];
+      const brk = mazeGraph.breakSlot;
+      const pa = chain[brk];
+      const pb = chain[(brk + 1) % chain.length];
+      ps.openChain(
+        mazeGraph.strand,
+        brk,
+        [ps.positions[pa * 2], ps.positions[pa * 2 + 1]],
+        [ps.positions[pb * 2], ps.positions[pb * 2 + 1]]
+      );
+    }
+
     renderer = new RibbonRenderer(ps, {
       threadWidth: params.threadWidth,
       casingWidth: params.threadWidth + params.gap * 2,
@@ -121,17 +140,9 @@ async function main(): Promise<void> {
       baseHue: params.seed % 360,
     });
 
-    // Maze overlay + solve state. Capture the un-settled positions NOW (still
-    // at lattice coords) so cell membership is assigned before physics drifts.
-    mazeGraph = graph.maze!;
+    // Maze overlay + solve state.
     controller = new MazeController(mazeGraph);
-    maze = new MazeRenderer(
-      ps,
-      mazeGraph,
-      params.threadWidth,
-      params.threadWidth + params.gap * 2,
-      BACKGROUND
-    );
+    maze = new MazeRenderer(ps, mazeGraph, params.threadWidth);
     maze.setVisible(params.mazeMode);
     maze.update(controller);
     hideWin();
@@ -183,19 +194,19 @@ async function main(): Promise<void> {
     },
     onStyleChange: () => {
       renderer?.setWidths(params.threadWidth, params.gap);
-      maze?.setWidths(params.threadWidth, params.threadWidth + params.gap * 2);
+      maze?.setWidths(params.threadWidth);
       if (maze && controller) maze.update(controller);
       writeParams(params);
       wake();
     },
     onTemperatureChange: () => wake(),
     onModeChange: () => {
-      if (maze) maze.setVisible(params.mazeMode);
-      controller?.reset();
-      hideWin();
-      if (maze && controller) maze.update(controller);
-      app.canvas.style.cursor = "default";
+      // Maze mode changes the strand's TOPOLOGY (open vs closed), which is
+      // baked into the ribbon meshes at build time, so a full rebuild is
+      // required rather than a visibility toggle.
       writeParams(params);
+      rebuild();
+      app.canvas.style.cursor = "default";
       wake();
     },
     onResetPath: () => {
