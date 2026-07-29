@@ -134,6 +134,11 @@ export interface SegmentTopology {
   chainOf: Int32Array; // Particle -> chain index.
   ctrlOf: Int32Array; // Particle -> control index within its chain.
   chainLen: Int32Array; // Particle -> its chain's length.
+  // Particle -> maze junction id (-1 = none). Two particles sharing a
+  // non-negative id are arms of the same degree-3+ merge and legitimately
+  // meet there, so collision/repulsion skip the pair (like same-chain
+  // neighbors). All -1 in knot mode -> no effect.
+  junctionOf: Int32Array;
 }
 
 // Emergent crossing collector: segment pairs that PROPERLY INTERSECT are
@@ -207,7 +212,7 @@ export function applySegmentCollision(
 ): void {
   const cellSize = Math.max(1, minDist * 2);
   if (!buildGrid(positions, particleCount, cellSize)) return;
-  const { next, chainOf, ctrlOf, chainLen } = topology;
+  const { next, chainOf, ctrlOf, chainLen, junctionOf } = topology;
   const { cols, rows, minX, minY, entries, cellStart } = grid;
 
   for (let i = 0; i < particleCount; i++) {
@@ -226,6 +231,9 @@ export function applySegmentCollision(
         for (let k = cellStart[cell]; k < kEnd; k++) {
           const j = entries[k];
           if (j <= i) continue;
+
+          // Arms of the same merge junction meet there legitimately.
+          if (junctionOf[i] >= 0 && junctionOf[i] === junctionOf[j]) continue;
 
           // Skip immediate same-chain neighbors (they legitimately
           // connect and overlap at shared endpoints). Only 2: farther
@@ -477,7 +485,7 @@ export function applyRepulsion(
 ): void {
   const cellSize = minDist;
   if (!buildGrid(positions, particleCount, cellSize)) return;
-  const { chainOf, ctrlOf, chainLen } = topology;
+  const { chainOf, ctrlOf, chainLen, junctionOf } = topology;
   const { cols, rows, minX, minY, entries, cellStart } = grid;
 
   for (let i = 0; i < particleCount; i++) {
@@ -496,6 +504,8 @@ export function applyRepulsion(
         for (let k = cellStart[cell]; k < kEnd; k++) {
           const j = entries[k];
           if (j <= i) continue;
+          // Arms of the same merge junction meet there legitimately.
+          if (junctionOf[i] >= 0 && junctionOf[i] === junctionOf[j]) continue;
           // Exclude nearby same-chain particles: within ~6 steps the
           // geodesic span along the thread is shorter than the maximum
           // repulsion distance, and repelling such pairs makes the chain

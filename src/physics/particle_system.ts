@@ -341,15 +341,23 @@ const TRANSVERSALITY_WINDOW = 2; // Particles each side beyond the segment.
 // injects no velocity).
 const CENTER_PULL = 0.04;
 
-// P4 maze mode topology generalization. A JUNCTION is a real degree-3 vertex:
-// one shared particle, referenced as the terminal of three arm-chains (the
-// "stem" arm is the straight-through line, used for bending). An END is a
-// degree-1 open-chain terminal anchored to a fixed off-screen point. In knot
-// mode there are none of either, so the sim stays a set of closed chains.
+// Merge coincidence stiffness (per-constraint, scaled by the global structural
+// multiplier): a junction's arm terminals are pulled together by rest-0
+// springs at near-full authority so the merge stays a tight point.
+const JUNCTION_MERGE_STIFFNESS = 1.0;
+
+// P4 maze mode topology generalization. A JUNCTION is a real degree-3+ merge:
+// several open-chain ARMS whose terminals are pulled to coincidence (rest-0
+// springs, so the flat per-particle topology is preserved - no shared index),
+// with one designated STEM pair bent straight through the merge while the
+// remaining arms branch off. An END is a degree-1 open-chain terminal anchored
+// to a fixed off-screen point. In knot mode there are none of either, so the
+// sim stays a set of closed chains.
 export interface MazeJunction {
-  particle: number;
-  arms: Array<{ chain: number; ctrlEnd: number }>;
-  stem: number; // index into `arms` of the straight-through arm.
+  // Each arm's terminal particle and the particle one step INWARD from it
+  // (used for the straight-through bending of the stem pair).
+  arms: Array<{ terminal: number; inward: number }>;
+  stem: [number, number]; // indices into `arms` of the two collinear arms.
 }
 export interface MazeEnd {
   particle: number;
@@ -380,6 +388,9 @@ export class ParticleSystem {
   // Particle indices with anchored[p] === 1, for the substep-end pin. Empty
   // in knot mode -> the pin loop is a no-op.
   private anchoredList: number[] = [];
+  // Particle -> junction id (-1 none); the collision/repulsion exemption for
+  // arms of the same merge. Shared into `topology.junctionOf`.
+  private junctionOf: Int32Array = new Int32Array(0);
 
   private prev: Float32Array;
   private initial: Float32Array;
@@ -504,11 +515,13 @@ export class ParticleSystem {
         chainLen[chain[i]] = chain.length;
       }
     });
+    this.junctionOf = new Int32Array(this.particleCount).fill(-1);
     this.topology = {
       next,
       chainOf: this.particleChain,
       ctrlOf,
       chainLen,
+      junctionOf: this.junctionOf,
     };
 
     const noiseRng = new SeededRNG((graph.seed ^ 0x9e3779b9) >>> 0);
@@ -579,8 +592,8 @@ export class ParticleSystem {
   openChain(
     chainIndex: number,
     breakAfter: number,
-    anchorA: [number, number],
-    anchorB: [number, number]
+    anchorA: [number, number] | null,
+    anchorB: [number, number] | null
   ): void {
     const chain = this.chains[chainIndex];
     const len = chain.length;
@@ -588,15 +601,72 @@ export class ParticleSystem {
     this.chainBreakAfter[chainIndex] = breakAfter;
     const pa = chain[breakAfter];
     const pb = chain[(breakAfter + 1) % len];
-    this.setAnchor(pa, anchorA[0], anchorA[1]);
-    this.setAnchor(pb, anchorB[0], anchorB[1]);
-    this.ends.push({ particle: pa, chain: chainIndex, anchor: anchorA });
-    this.ends.push({ particle: pb, chain: chainIndex, anchor: anchorB });
+    // A null anchor leaves that terminal FREE (a junction arm fuses it to
+    // other arms instead of pinning it off-screen).
+    if (anchorA) {
+      this.setAnchor(pa, anchorA[0], anchorA[1]);
+      this.ends.push({ particle: pa, chain: chainIndex, anchor: anchorA });
+    }
+    if (anchorB) {
+      this.setAnchor(pb, anchorB[0], anchorB[1]);
+      this.ends.push({ particle: pb, chain: chainIndex, anchor: anchorB });
+    }
     this.rebuildTopology();
     // Re-derive pass links + twist pairs so the seam's straddling passes are
     // unlinked (crossings themselves are unchanged by an open plain edge).
     this.buildPassOrder();
     this.buildTwistPairs();
+  }
+
+  // P4 maze mode. Fuse several open-chain ARM terminals into a degree-3+
+  // merge: rest-0 springs pull the terminals to coincidence and a pullOnly
+  // bending constraint runs the STEM pair straight through, while the other
+  // arms branch off. The arms must already be OPEN (openChain, free terminals)
+  // and this must run AFTER all openChain calls - rebuildTopology rebuilds the
+  // per-chain constraints and would drop these otherwise. Collision/repulsion
+  // between the arms is exempted near the merge via junctionOf.
+  addJunction(
+    arms: Array<{ terminal: number; inward: number }>,
+    stem: [number, number]
+  ): void {
+    if (arms.length < 3) throw new Error("A junction needs at least 3 arms.");
+    const jid = this.junctions.length;
+    this.junctions.push({ arms, stem });
+
+    const dist = (a: number, b: number): number =>
+      Math.hypot(
+        this.positions[b * 2] - this.positions[a * 2],
+        this.positions[b * 2 + 1] - this.positions[a * 2 + 1]
+      );
+
+    // Coincidence: a chain of rest-0 springs joining consecutive terminals
+    // pulls every arm terminal to the same point (a rigid merge).
+    for (let k = 1; k < arms.length; k++) {
+      this.structural.push({
+        a: arms[k - 1].terminal,
+        b: arms[k].terminal,
+        rest: 0,
+        stiffness: JUNCTION_MERGE_STIFFNESS,
+      });
+    }
+
+    // Straight-through: bend the two stem arms' inward particles apart so the
+    // stem reads as one smooth line passing through the merged terminals.
+    const s0 = arms[stem[0]];
+    const s1 = arms[stem[1]];
+    this.bending.push({
+      a: s0.inward,
+      b: s1.inward,
+      rest: dist(s0.inward, s0.terminal) + dist(s1.terminal, s1.inward),
+      stiffness: BENDING_STIFFNESS,
+      pullOnly: true,
+    });
+
+    // Exempt the merge zone from collision/repulsion between arms.
+    for (const arm of arms) {
+      this.junctionOf[arm.terminal] = jid;
+      this.junctionOf[arm.inward] = jid;
+    }
   }
 
   private setAnchor(p: number, x: number, y: number): void {
