@@ -35,6 +35,10 @@ export interface MazeParams {
   entranceClearance: number;
   // Minimum lattice-distance between chosen junctions (spatial spread).
   junctionSpacing: number;
+  // Fraction of CHOICE junctions realized as 3-way spurs (each spawns one
+  // dead-end) vs. 4-way braided merges (no dead-end). 0 = fully braided.
+  // Reachability connections are always 4-way, so this only touches extras.
+  deadEndDensity: number;
 }
 
 export const DEFAULT_MAZE_PARAMS: MazeParams = {
@@ -42,7 +46,15 @@ export const DEFAULT_MAZE_PARAMS: MazeParams = {
   exitClearance: 5,
   entranceClearance: 2.5,
   junctionSpacing: 2,
+  deadEndDensity: 0.3,
 };
+
+// A junction site with its realized degree. "four" = braided merge (no dead-
+// end); "three" = a 3-way that spawns one dead-end spur.
+export interface RealizedJunction {
+  crossing: string;
+  type: "three" | "four";
+}
 
 export interface MazePlan {
   entrance: MazeCut; // top-left corner.
@@ -55,6 +67,10 @@ export interface MazePlan {
   // Crossing node ids selected as CHOICE junctions (branch points), spread
   // across the maze and clear of the entrance/exit corridors.
   junctions: string[];
+  // Every junction that gets realized, with its degree: the reachability
+  // connections (always 4-way) plus the choice junctions (split into 3-way
+  // spurs vs 4-way merges by deadEndDensity). This is what Stage 6 consumes.
+  realized: RealizedJunction[];
 }
 
 // Inter-strand adjacency entry: a crossing linking this strand to `other`.
@@ -263,5 +279,36 @@ export function buildMazePlan(
     params
   );
 
-  return { entrance, exit, mazeStrands, culledStrands, connections, junctions };
+  const realized = realizeJunctions(connections, junctions, params);
+
+  return {
+    entrance,
+    exit,
+    mazeStrands,
+    culledStrands,
+    connections,
+    junctions,
+    realized,
+  };
+}
+
+// Assign a degree to every junction that will be built: reachability
+// connections stay 4-way (they must connect both strands cleanly), and the
+// pure-choice junctions are split into 3-way spurs vs 4-way merges by
+// deadEndDensity. Deterministic (id-sorted, no RNG).
+function realizeJunctions(
+  connections: string[],
+  junctions: string[],
+  params: MazeParams
+): RealizedJunction[] {
+  const connSet = new Set(connections);
+  const out: RealizedJunction[] = [];
+  for (const c of connSet) out.push({ crossing: c, type: "four" });
+
+  const choices = junctions.filter((c) => !connSet.has(c)).sort();
+  const nThree = Math.round(params.deadEndDensity * choices.length);
+  choices.forEach((c, i) => {
+    out.push({ crossing: c, type: i < nThree ? "three" : "four" });
+  });
+  return out;
 }

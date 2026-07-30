@@ -162,3 +162,47 @@ describe("maze plan: choice-junction selection", () => {
     expect(buildMazePlan(g1).junctions).toEqual(buildMazePlan(g2).junctions);
   });
 });
+
+describe("maze plan: junction realization (3-way spurs vs 4-way merges)", () => {
+  const P = (over: Partial<typeof DEFAULT_MAZE_PARAMS>) => ({
+    ...DEFAULT_MAZE_PARAMS,
+    ...over,
+  });
+
+  it("keeps reachability connections 4-way and honors deadEndDensity on choices", () => {
+    for (const seed of SEEDS) {
+      const g = build(seed, 8);
+      const params = P({ branchDensity: 0.7, deadEndDensity: 0.5 });
+      const plan = buildMazePlan(g, params);
+
+      // Connections are always 4-way.
+      const connSet = new Set(plan.connections);
+      for (const r of plan.realized) {
+        if (connSet.has(r.crossing)) expect(r.type).toBe("four");
+      }
+      // Every realized crossing is a connection or a chosen junction.
+      const known = new Set([...plan.connections, ...plan.junctions]);
+      for (const r of plan.realized) expect(known.has(r.crossing)).toBe(true);
+      // No duplicate realized crossings.
+      expect(new Set(plan.realized.map((r) => r.crossing)).size).toBe(
+        plan.realized.length
+      );
+    }
+  });
+
+  it("deadEndDensity 0 gives no 3-way spurs; 1 makes all choices 3-way", () => {
+    for (const seed of SEEDS) {
+      const g = build(seed, 8);
+      const connSet = new Set(buildMazePlan(g).connections);
+
+      const braided = buildMazePlan(g, P({ branchDensity: 0.8, deadEndDensity: 0 }));
+      expect(braided.realized.every((r) => r.type === "four")).toBe(true);
+
+      const spurred = buildMazePlan(g, P({ branchDensity: 0.8, deadEndDensity: 1 }));
+      // Every pure-choice junction is a 3-way; connections remain 4-way.
+      for (const r of spurred.realized) {
+        expect(r.type).toBe(connSet.has(r.crossing) ? "four" : "three");
+      }
+    }
+  });
+});
