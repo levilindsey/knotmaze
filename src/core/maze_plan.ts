@@ -24,6 +24,26 @@ export interface MazeCut {
   edgeId: string;
 }
 
+// Tunable maze-generation knobs (serialized into the URL in a later stage).
+export interface MazeParams {
+  // Fraction of eligible crossings turned into CHOICE junctions (branch
+  // points). A ParamField later lets this vary by region; a scalar for now.
+  branchDensity: number;
+  // Lattice-distance around the exit / entrance corners kept branch-free, so
+  // the ends of the solve aren't cluttered with choices (challenge shaping).
+  exitClearance: number;
+  entranceClearance: number;
+  // Minimum lattice-distance between chosen junctions (spatial spread).
+  junctionSpacing: number;
+}
+
+export const DEFAULT_MAZE_PARAMS: MazeParams = {
+  branchDensity: 0.4,
+  exitClearance: 5,
+  entranceClearance: 2.5,
+  junctionSpacing: 2,
+};
+
 export interface MazePlan {
   entrance: MazeCut; // top-left corner.
   exit: MazeCut; // bottom-right corner.
@@ -32,6 +52,9 @@ export interface MazePlan {
   // Crossing node ids that must be realized (merge/smooth/junction) to make
   // every maze strand reachable - the spanning backbone.
   connections: string[];
+  // Crossing node ids selected as CHOICE junctions (branch points), spread
+  // across the maze and clear of the entrance/exit corridors.
+  junctions: string[];
 }
 
 // Inter-strand adjacency entry: a crossing linking this strand to `other`.
@@ -122,7 +145,80 @@ function nearestEdgeToCorner(
   return best!;
 }
 
-export function buildMazePlan(graph: TangleGraph): MazePlan {
+// Choose CHOICE-junction crossings: eligible = crossings among maze strands,
+// clear of the entrance/exit corners; then farthest-first up to the
+// branchDensity target while honoring the minimum spacing (deterministic - no
+// RNG, ties broken by node id). All crossings on this lattice are near-
+// orthogonal (a "/" meets a "\"), so no symmetry filter is needed.
+function selectJunctions(
+  graph: TangleGraph,
+  crossings: Map<string, number[]>,
+  mazeStrands: number[],
+  bound: number,
+  params: MazeParams
+): string[] {
+  const mazeSet = new Set(mazeStrands);
+  const eligible: Array<{ id: string; x: number; y: number }> = [];
+  for (const [cid, strands] of crossings) {
+    if (!strands.every((s) => mazeSet.has(s))) continue;
+    const [x, y] = graph.nodes.get(cid)!.latticePos;
+    if (Math.hypot(x, y) < params.entranceClearance) continue;
+    if (Math.hypot(x - bound, y - bound) < params.exitClearance) continue;
+    eligible.push({ id: cid, x, y });
+  }
+  eligible.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+
+  const target = Math.round(params.branchDensity * eligible.length);
+  if (target <= 0 || eligible.length === 0) return [];
+
+  // Seed farthest-first at the crossing nearest the eligible centroid.
+  let cx = 0;
+  let cy = 0;
+  for (const e of eligible) {
+    cx += e.x;
+    cy += e.y;
+  }
+  cx /= eligible.length;
+  cy /= eligible.length;
+  let first = 0;
+  let firstD = Infinity;
+  eligible.forEach((e, i) => {
+    const d = (e.x - cx) ** 2 + (e.y - cy) ** 2;
+    if (d < firstD) {
+      firstD = d;
+      first = i;
+    }
+  });
+
+  const chosen = [eligible[first]];
+  const used = new Set([first]);
+  while (chosen.length < target) {
+    let bestI = -1;
+    let bestMin = -1;
+    for (let i = 0; i < eligible.length; i++) {
+      if (used.has(i)) continue;
+      let mn = Infinity;
+      for (const c of chosen) {
+        const d = Math.hypot(eligible[i].x - c.x, eligible[i].y - c.y);
+        if (d < mn) mn = d;
+      }
+      if (mn < params.junctionSpacing) continue; // too close to a chosen one.
+      if (mn > bestMin) {
+        bestMin = mn;
+        bestI = i;
+      }
+    }
+    if (bestI < 0) break; // nothing left satisfies the spacing floor.
+    chosen.push(eligible[bestI]);
+    used.add(bestI);
+  }
+  return chosen.map((c) => c.id);
+}
+
+export function buildMazePlan(
+  graph: TangleGraph,
+  params: MazeParams = DEFAULT_MAZE_PARAMS
+): MazePlan {
   const crossings = crossingStrandMap(graph);
   const adj = strandAdjacency(graph, crossings);
   const { comp, count } = components(adj);
@@ -159,6 +255,13 @@ export function buildMazePlan(graph: TangleGraph): MazePlan {
   const bound = size * 2;
   const entrance = nearestEdgeToCorner(graph, mazeStrands, [0, 0]);
   const exit = nearestEdgeToCorner(graph, mazeStrands, [bound, bound]);
+  const junctions = selectJunctions(
+    graph,
+    crossings,
+    mazeStrands,
+    bound,
+    params
+  );
 
-  return { entrance, exit, mazeStrands, culledStrands, connections };
+  return { entrance, exit, mazeStrands, culledStrands, connections, junctions };
 }

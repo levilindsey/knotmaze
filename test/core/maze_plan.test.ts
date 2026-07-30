@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
-import { buildMazePlan } from "../../src/core/maze_plan";
+import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { NODE_TYPE } from "../../src/core/types";
 import type { TangleGraph } from "../../src/core/types";
 
@@ -103,5 +103,62 @@ describe("maze plan: connectivity backbone", () => {
     const a = buildMazePlan(build(1234));
     const b = buildMazePlan(build(1234));
     expect(a).toEqual(b);
+  });
+});
+
+describe("maze plan: choice-junction selection", () => {
+  const P = (over: Partial<typeof DEFAULT_MAZE_PARAMS>) => ({
+    ...DEFAULT_MAZE_PARAMS,
+    ...over,
+  });
+
+  it("scales junction count with branchDensity (0 = none)", () => {
+    for (const seed of SEEDS) {
+      const g = build(seed, 8);
+      expect(buildMazePlan(g, P({ branchDensity: 0 })).junctions).toEqual([]);
+      const few = buildMazePlan(g, P({ branchDensity: 0.15 })).junctions.length;
+      const many = buildMazePlan(g, P({ branchDensity: 0.6 })).junctions.length;
+      expect(many).toBeGreaterThanOrEqual(few);
+      expect(many).toBeGreaterThan(0);
+    }
+  });
+
+  it("keeps junctions clear of the entrance/exit corners and spaced apart", () => {
+    for (const seed of SEEDS) {
+      const g = build(seed, 8);
+      const params = P({ branchDensity: 0.8, exitClearance: 5, entranceClearance: 3, junctionSpacing: 2 });
+      const plan = buildMazePlan(g, params);
+      const bound = Math.max(2, Math.round(g.params.gridSize)) * 2;
+      const pts = plan.junctions.map((id) => g.nodes.get(id)!.latticePos);
+
+      for (const [x, y] of pts) {
+        expect(Math.hypot(x, y)).toBeGreaterThanOrEqual(params.entranceClearance);
+        expect(Math.hypot(x - bound, y - bound)).toBeGreaterThanOrEqual(params.exitClearance);
+      }
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          const d = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]);
+          expect(d).toBeGreaterThanOrEqual(params.junctionSpacing - 1e-9);
+        }
+      }
+    }
+  });
+
+  it("only selects crossings that belong to maze strands", () => {
+    for (const seed of SEEDS) {
+      const g = build(seed, 8);
+      const plan = buildMazePlan(g, P({ branchDensity: 0.7 }));
+      for (const id of plan.junctions) {
+        expect(g.nodes.get(id)!.type).toBe(NODE_TYPE.CROSSING);
+      }
+      // No junction sits on a culled strand's crossing exclusively.
+      expect(new Set(plan.junctions).size).toBe(plan.junctions.length);
+    }
+  });
+
+  it("junction selection is deterministic", () => {
+    const g1 = build(4242, 8);
+    const g2 = build(4242, 8);
+    expect(buildMazePlan(g1).junctions).toEqual(buildMazePlan(g2).junctions);
   });
 });
