@@ -594,8 +594,15 @@ export function buildMazePlan(
     placed
   ).map(stripKey);
 
+  // Inter-strand crossings only: merging a SELF-crossing fuses a thread to
+  // itself at a kink, and once the crossing machinery is gone the kink's
+  // eyelet clamps vanish with it - a pinch, not an intersection.
   const fourPool = crossings.filter(
-    (x) => x.strands.every((s) => mazeSet.has(s)) && clearOf(x.pos)
+    (x) =>
+      x.strands.length === 2 &&
+      x.strands[0] !== x.strands[1] &&
+      x.strands.every((s) => mazeSet.has(s)) &&
+      clearOf(x.pos)
   );
   const fourWayMerges = pickFarthest(
     fourPool,

@@ -115,3 +115,104 @@ export function applyMazePlan(graph: TangleGraph, plan: MazePlan): void {
     graph.nodes.get(cid)!.type = NODE_TYPE.JUNCTION;
   }
 }
+
+// Entrance/exit carves, applied AFTER the junction surgery (they locate their
+// edge by SEARCH, so earlier strand splits can't stale the reference). Each
+// cut replaces its edge with two half-edges ending at two new anchored END
+// nodes, and the host strand is rethreaded open - or split in two if a
+// previous cut already opened it. Anchors sit past the cut toward the corner,
+// spread slightly apart so the two loose ends stay visually distinct.
+const CUT_REACH = 1.5;
+const CUT_SPREAD = 0.4;
+
+export function applyMazeCuts(graph: TangleGraph, plan: MazePlan): void {
+  const s = Math.SQRT1_2;
+  cutStrandOpen(graph, plan.entrance.edgeId, [-s, -s], "mentr");
+  cutStrandOpen(graph, plan.exit.edgeId, [s, s], "mexit");
+}
+
+function cutStrandOpen(
+  graph: TangleGraph,
+  edgeId: string,
+  dir: [number, number],
+  idBase: string
+): void {
+  const si = graph.strands.findIndex((st) => st.edgeIds.includes(edgeId));
+  if (si < 0) throw new Error(`maze cut: edge ${edgeId} not on any strand`);
+  const strand = graph.strands[si];
+  const c = strand.edgeIds.indexOf(edgeId);
+  const edge = graph.edges.get(edgeId)!;
+  const p0 = edge.latticePoints[0];
+  const p1 = edge.latticePoints[edge.latticePoints.length - 1];
+  const mid: [number, number] = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2];
+  const perp: [number, number] = [-dir[1], dir[0]];
+
+  const mkEnd = (suffix: string, sign: number): string => {
+    const id = `${idBase}_${suffix}`;
+    graph.nodes.set(id, {
+      id,
+      type: NODE_TYPE.END,
+      latticePos: mid,
+      anchor: [
+        mid[0] + dir[0] * CUT_REACH + perp[0] * CUT_SPREAD * sign,
+        mid[1] + dir[1] * CUT_REACH + perp[1] * CUT_SPREAD * sign,
+      ],
+    });
+    graph.adjacency.set(id, []);
+    return id;
+  };
+  const ea = mkEnd("a", 1); // terminates the pre-cut side (edge.nodeA side).
+  const eb = mkEnd("b", -1); // starts the post-cut side (edge.nodeB side).
+
+  const addE = (
+    id: string,
+    a: string,
+    b: string,
+    pts: Array<[number, number]>
+  ): string => {
+    graph.edges.set(id, { id, nodeA: a, nodeB: b, latticePoints: pts });
+    graph.adjacency.get(a)!.push(id);
+    graph.adjacency.get(b)!.push(id);
+    return id;
+  };
+  const rmAdj = (n: string, e: string): void => {
+    const list = graph.adjacency.get(n)!;
+    const i = list.indexOf(e);
+    if (i >= 0) list.splice(i, 1);
+  };
+
+  graph.edges.delete(edgeId);
+  rmAdj(edge.nodeA, edgeId);
+  rmAdj(edge.nodeB, edgeId);
+  const h1 = addE(`${idBase}_h1`, edge.nodeA, ea, [p0, mid]);
+  const h2 = addE(`${idBase}_h2`, eb, edge.nodeB, [mid, p1]);
+
+  if (strand.isClosed) {
+    // Rethread the loop as one open path: eb -> (post-cut nodes) -> wraps ->
+    // (pre-cut nodes) -> ea.
+    const nodes = strand.nodes.slice(0, -1); // drop the duplicate closer.
+    const edges0 = strand.edgeIds;
+    strand.nodes = [eb, ...nodes.slice(c + 1), ...nodes.slice(0, c + 1), ea];
+    strand.edgeIds = [
+      h2,
+      ...edges0.slice(c + 1),
+      ...edges0.slice(0, c),
+      h1,
+    ];
+    strand.isClosed = false;
+  } else {
+    // A second cut on an already-open strand splits it in two.
+    const nodes0 = strand.nodes;
+    const edges0 = strand.edgeIds;
+    graph.strands[si] = {
+      edgeIds: [...edges0.slice(0, c), h1],
+      isClosed: false,
+      nodes: [...nodes0.slice(0, c + 1), ea],
+    };
+    graph.strands.push({
+      edgeIds: [h2, ...edges0.slice(c + 1)],
+      isClosed: false,
+      nodes: [eb, ...nodes0.slice(c + 1)],
+    });
+  }
+}

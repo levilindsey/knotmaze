@@ -382,6 +382,14 @@ export class ParticleSystem {
   // break-aware branch takes its original cyclic path -> byte-identical.
   chainBreakAfter: number[] = [];
   junctions: MazeJunction[] = [];
+  // Graph-carved junction fusions: each entry is the group of coincident
+  // particles of one JUNCTION node (host pass-throughs + bridge/stub
+  // terminals, or a merged crossing's two passes).
+  fusedJunctions: number[][] = [];
+  private junctionIdCounter = 0;
+  // The fusion rest-0 springs, shared into `structural` (in-loop voice) and
+  // re-applied as a final projection each substep (see the substep tail).
+  private fusionConstraints: DistanceConstraint[] = [];
   ends: MazeEnd[] = [];
   anchored: Uint8Array = new Uint8Array(0);
   anchorPos: Float32Array = new Float32Array(0);
@@ -434,15 +442,30 @@ export class ParticleSystem {
     };
 
     // Build fully independent chains: every node occurrence gets its own
-    // particle (crossings appear once per pass).
+    // particle (crossings appear once per pass). JUNCTION and anchored END
+    // occurrences (maze fabric) are recorded for fusion/anchoring below;
+    // knot-mode graphs have neither, so those paths stay inert.
     const occurrences = new Map<
       string,
       Array<{ pass: CrossingPass; isOver: boolean }>
     >();
+    const junctionOcc = new Map<
+      string,
+      Array<{ chain: number; slot: number }>
+    >();
+    const endOcc: Array<{
+      anchor: [number, number] | undefined;
+      chain: number;
+      slot: number;
+    }> = [];
 
     this.chains = graph.strands.map((strand, chainIdx) => {
       const chain: number[] = [];
-      const nodeCount = strand.nodes.length - 1; // Last repeats the first.
+      // Closed strands repeat the start node at the end; open strands (maze
+      // bridges/stubs and carved hosts) list every node exactly once.
+      const nodeCount = strand.isClosed
+        ? strand.nodes.length - 1
+        : strand.nodes.length;
       for (let i = 0; i < nodeCount; i++) {
         const node = graph.nodes.get(strand.nodes[i])!;
         if (node.type === NODE_TYPE.CROSSING) {
@@ -451,12 +474,28 @@ export class ParticleSystem {
           const entry = { pass, isOver: node.isOver === true };
           if (list) list.push(entry);
           else occurrences.set(node.id, [entry]);
+        } else if (node.type === NODE_TYPE.JUNCTION) {
+          const rec = { chain: chainIdx, slot: chain.length };
+          const list = junctionOcc.get(node.id);
+          if (list) list.push(rec);
+          else junctionOcc.set(node.id, [rec]);
+        } else if (node.type === NODE_TYPE.END) {
+          endOcc.push({
+            anchor: node.anchor,
+            chain: chainIdx,
+            slot: chain.length,
+          });
         }
         chain.push(addParticle(node.latticePos[0], node.latticePos[1]));
 
-        const edge = graph.edges.get(strand.edgeIds[i])!;
-        const [pa, pb] = edge.latticePoints;
-        chain.push(addParticle((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2));
+        // Open strands have one fewer edge than nodes; closed strands pair
+        // every node with its outgoing edge (the condition is always true
+        // there - byte-identical knot path).
+        if (i < strand.edgeIds.length) {
+          const edge = graph.edges.get(strand.edgeIds[i])!;
+          const [pa, pb] = edge.latticePoints;
+          chain.push(addParticle((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2));
+        }
       }
       return chain;
     });
@@ -467,9 +506,14 @@ export class ParticleSystem {
     this.prev = new Float32Array(this.initial);
     this.zPos = new Float32Array(this.particleCount);
     this.zTargets = new Float32Array(this.particleCount);
-    // Topology defaults: every chain closed, nothing anchored (knot mode).
-    this.chainClosed = this.chains.map(() => true);
-    this.chainBreakAfter = this.chains.map(() => -1);
+    // Topology from the graph: knot-mode strands are all closed (-1 seam,
+    // nothing anchored); maze-fabric open strands are natively open - their
+    // "removed seam" is the nonexistent wrap segment (last slot), which makes
+    // every Stage-1/2 seam-aware branch handle them with no extra cases.
+    this.chainClosed = graph.strands.map((s) => s.isClosed);
+    this.chainBreakAfter = this.chains.map((chain, i) =>
+      graph.strands[i].isClosed ? -1 : chain.length - 1
+    );
     this.anchored = new Uint8Array(this.particleCount);
     this.anchorPos = new Float32Array(this.particleCount * 2);
 
@@ -524,14 +568,70 @@ export class ParticleSystem {
       junctionOf: this.junctionOf,
     };
 
+    // Graph-carved maze fabric: fuse each JUNCTION node's particle
+    // occurrences (host pass-through + bridge/stub terminals, or a merged
+    // crossing's two passes) and pin anchored END nodes. Knot mode records
+    // neither, so both loops are no-ops there.
+    for (const occ of junctionOcc.values()) {
+      if (occ.length >= 2) this.fuseJunction(occ);
+    }
+    for (const { anchor, chain, slot } of endOcc) {
+      if (!anchor) continue; // Free tip (dead-end stub).
+      const p = this.chains[chain][slot];
+      this.setAnchor(p, anchor[0], anchor[1]);
+      this.ends.push({ particle: p, chain, anchor });
+    }
+
     const noiseRng = new SeededRNG((graph.seed ^ 0x9e3779b9) >>> 0);
     this.noise3D = createNoise3D(() => noiseRng.next());
   }
 
-  // True once the topology has been carved (open ends and/or Y-junctions). In
+  // Fuse one graph JUNCTION node's particle occurrences: rest-0 springs chain
+  // consecutive occurrences to coincidence, and junctionOf marks each
+  // occurrence plus its immediate chain neighbors so collision/repulsion
+  // don't fight the merge (the arms legitimately meet here; the mark radius
+  // keeps everything inside the collision floor exempt, while material one
+  // more step out sits beyond it). junctionOf is single-slot: where two
+  // junctions' neighborhoods touch (a short bridge's midpoint), the later
+  // mark wins - the overwritten pair sits ~half a bridge away, outside the
+  // floor, so nothing fights.
+  private fuseJunction(occ: Array<{ chain: number; slot: number }>): void {
+    const jid = this.junctionIdCounter++;
+    const group: number[] = [];
+    for (const { chain, slot } of occ) {
+      const chainArr = this.chains[chain];
+      const len = chainArr.length;
+      const brk = this.chainBreakAfter[chain];
+      const p = chainArr[slot];
+      group.push(p);
+      this.junctionOf[p] = jid;
+      // Chain neighbors, respecting the open seam (a bridge terminal's
+      // "previous" wraps across the removed segment to the far end - skip).
+      const prevSlot = (slot - 1 + len) % len;
+      if (prevSlot !== brk) this.junctionOf[chainArr[prevSlot]] = jid;
+      if (slot !== brk) this.junctionOf[chainArr[(slot + 1) % len]] = jid;
+    }
+    for (let k = 1; k < group.length; k++) {
+      const spring: DistanceConstraint = {
+        a: group[k - 1],
+        b: group[k],
+        rest: 0,
+        stiffness: JUNCTION_MERGE_STIFFNESS,
+      };
+      this.structural.push(spring);
+      this.fusionConstraints.push(spring);
+    }
+    this.fusedJunctions.push(group);
+  }
+
+  // True once the topology has been carved (open ends and/or junctions). In
   // knot mode this is false and every generalized code path is skipped.
   get hasCarve(): boolean {
-    return this.junctions.length > 0 || this.ends.length > 0;
+    return (
+      this.junctions.length > 0 ||
+      this.fusedJunctions.length > 0 ||
+      this.ends.length > 0
+    );
   }
 
   isAnchored(i: number): boolean {
@@ -595,6 +695,12 @@ export class ParticleSystem {
     anchorA: [number, number] | null,
     anchorB: [number, number] | null
   ): void {
+    if (this.fusedJunctions.length > 0) {
+      // rebuildTopology below resets and re-derives the per-chain constraint
+      // lists, which would silently DROP the graph-carved fusion springs.
+      // Graph-built fabrics carve at graph level instead (applyMazeCuts).
+      throw new Error("openChain is unsupported after graph junction fusion.");
+    }
     const chain = this.chains[chainIndex];
     const len = chain.length;
     this.chainClosed[chainIndex] = false;
@@ -630,7 +736,7 @@ export class ParticleSystem {
     stem: [number, number]
   ): void {
     if (arms.length < 3) throw new Error("A junction needs at least 3 arms.");
-    const jid = this.junctions.length;
+    const jid = this.junctionIdCounter++;
     this.junctions.push({ arms, stem });
 
     const dist = (a: number, b: number): number =>
@@ -1760,6 +1866,21 @@ export class ParticleSystem {
       );
     }
     this.probe("final-collision");
+
+    // Junction coincidence is FINAL AUTHORITY, same pattern as the collision
+    // floor above: in-loop the fusion springs are one committee voice and
+    // bending gets a later word, leaving merges parked ~0.3 apart; projecting
+    // the rest-0 springs once more here guarantees the substep-END state -
+    // the only state ever rendered or frozen - shows every merge closed.
+    // Fused pairs are collision-exempt (junctionOf), so this cannot fight the
+    // floor just enforced; and at rest the projection repeats identically, so
+    // the integrated quiescence metric stays quiet (the final collision sweep
+    // established this pattern). Two sweeps close 3+-particle groups.
+    if (this.fusionConstraints.length > 0) {
+      applyDistanceConstraints(this.positions, this.fusionConstraints, 1, 1);
+      applyDistanceConstraints(this.positions, this.fusionConstraints, 1, 1);
+      this.probe("fusion-snap");
+    }
 
     // Anchored loose ends (maze open-chain terminals) are authoritative:
     // pin them exactly at their off-screen anchor, injecting no velocity, so

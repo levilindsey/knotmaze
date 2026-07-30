@@ -14,6 +14,9 @@ export interface Node {
   type: NodeType;
   latticePos: [number, number];  // Doubled-lattice position (turns may be fractional).
   isOver?: boolean;              // For crossings: true if the "/" (NE-SW) pass goes over.
+  // P4 maze: entrance/exit END nodes are pinned to this world position by the
+  // physics; free END tips (dead-end stubs) carry no anchor.
+  anchor?: [number, number];
 }
 
 export interface Edge {
