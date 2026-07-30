@@ -1,12 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
+import type { MazeParams, SpliceSite } from "../../src/core/maze_plan";
 import { NODE_TYPE } from "../../src/core/types";
 import type { TangleGraph } from "../../src/core/types";
 
-// P4 Stage 5 (increment 1): the maze plan's connectivity backbone.
+// P4 Stage 5: the combinatorial maze plan, splice model.
 
-function build(seed: number, gridSize = 6): TangleGraph {
+function build(seed: number, gridSize = 8): TangleGraph {
   return generateLatticeKnotwork({
     gridSize,
     weaveDensity: 0.3,
@@ -14,6 +15,11 @@ function build(seed: number, gridSize = 6): TangleGraph {
     randSeed: seed,
   });
 }
+
+const P = (over: Partial<MazeParams>): MazeParams => ({
+  ...DEFAULT_MAZE_PARAMS,
+  ...over,
+});
 
 // Which strands pass through each crossing (2 entries; equal for self-cross).
 function crossingStrands(graph: TangleGraph): Map<string, number[]> {
@@ -31,6 +37,21 @@ function crossingStrands(graph: TangleGraph): Map<string, number[]> {
   return map;
 }
 
+// Strict-interior segment intersection (mirror of the module's test).
+function properIntersect(
+  ax: number, ay: number, bx: number, by: number,
+  cx: number, cy: number, dx: number, dy: number
+): boolean {
+  const r1x = bx - ax, r1y = by - ay;
+  const r2x = dx - cx, r2y = dy - cy;
+  const denom = r1x * r2y - r1y * r2x;
+  if (Math.abs(denom) < 1e-12) return false;
+  const qx = cx - ax, qy = cy - ay;
+  const u = (qx * r2y - qy * r2x) / denom;
+  const v = (qx * r1y - qy * r1x) / denom;
+  return u > 1e-6 && u < 1 - 1e-6 && v > 1e-6 && v < 1 - 1e-6;
+}
+
 const SEEDS = [5, 42, 1234, 2773729296, 99];
 
 describe("maze plan: connectivity backbone", () => {
@@ -40,23 +61,23 @@ describe("maze plan: connectivity backbone", () => {
       const plan = buildMazePlan(g);
       const all = [...plan.mazeStrands, ...plan.culledStrands].sort((a, b) => a - b);
       expect(all).toEqual(g.strands.map((_, i) => i));
-      // No strand in both sets.
       expect(new Set(all).size).toBe(g.strands.length);
     }
   });
 
-  it("makes every maze strand reachable from the entrance via the connections", () => {
+  it("makes every maze strand reachable via the spanning sites", () => {
     for (const seed of SEEDS) {
       const g = build(seed);
       const plan = buildMazePlan(g);
 
-      // Rebuild adjacency using ONLY the connection crossings, then BFS from
-      // the entrance strand; it must cover every maze strand.
-      const cs = crossingStrands(g);
-      const conn = new Set(plan.connections);
       const adj = new Map<number, number[]>();
       for (const s of plan.mazeStrands) adj.set(s, []);
-      for (const cid of conn) {
+      for (const sp of plan.spanningSplices) {
+        adj.get(sp.strandA)!.push(sp.strandB);
+        adj.get(sp.strandB)!.push(sp.strandA);
+      }
+      const cs = crossingStrands(g);
+      for (const cid of plan.spanningMerges) {
         const [a, b] = cs.get(cid)!;
         adj.get(a)!.push(b);
         adj.get(b)!.push(a);
@@ -90,11 +111,9 @@ describe("maze plan: connectivity backbone", () => {
         }
         return d;
       };
-      // Within a quarter of the diagonal of the corner it belongs to.
       const quarterDiag = (bound * Math.SQRT2) / 4;
       expect(nearestPoint(plan.entrance.edgeId, [0, 0])).toBeLessThan(quarterDiag);
       expect(nearestPoint(plan.exit.edgeId, [bound, bound])).toBeLessThan(quarterDiag);
-      // Entrance and exit are genuinely at opposite corners.
       expect(plan.entrance.edgeId).not.toBe(plan.exit.edgeId);
     }
   });
@@ -106,102 +125,185 @@ describe("maze plan: connectivity backbone", () => {
   });
 });
 
-describe("maze plan: choice-junction selection", () => {
-  const P = (over: Partial<typeof DEFAULT_MAZE_PARAMS>) => ({
-    ...DEFAULT_MAZE_PARAMS,
-    ...over,
-  });
-
-  it("scales junction count with branchDensity (0 = none)", () => {
+describe("maze plan: splice geometry", () => {
+  it("finds a healthy candidate pool (choice splices exist)", () => {
     for (const seed of SEEDS) {
-      const g = build(seed, 8);
-      expect(buildMazePlan(g, P({ branchDensity: 0 })).junctions).toEqual([]);
-      const few = buildMazePlan(g, P({ branchDensity: 0.15 })).junctions.length;
-      const many = buildMazePlan(g, P({ branchDensity: 0.6 })).junctions.length;
-      expect(many).toBeGreaterThanOrEqual(few);
-      expect(many).toBeGreaterThan(0);
+      const plan = buildMazePlan(build(seed));
+      expect(plan.choiceSplices.length).toBeGreaterThan(0);
     }
   });
 
-  it("keeps junctions clear of the entrance/exit corners and spaced apart", () => {
+  it("bridges are short, on their claimed strands, and cross no thread", () => {
     for (const seed of SEEDS) {
-      const g = build(seed, 8);
-      const params = P({ branchDensity: 0.8, exitClearance: 5, entranceClearance: 3, junctionSpacing: 2 });
-      const plan = buildMazePlan(g, params);
-      const bound = Math.max(2, Math.round(g.params.gridSize)) * 2;
-      const pts = plan.junctions.map((id) => g.nodes.get(id)!.latticePos);
-
-      for (const [x, y] of pts) {
-        expect(Math.hypot(x, y)).toBeGreaterThanOrEqual(params.entranceClearance);
-        expect(Math.hypot(x - bound, y - bound)).toBeGreaterThanOrEqual(params.exitClearance);
+      const g = build(seed);
+      const plan = buildMazePlan(g);
+      const splices: SpliceSite[] = [
+        ...plan.spanningSplices,
+        ...plan.choiceSplices,
+      ];
+      const bridges: Array<{
+        seg: [number, number, number, number];
+        hosts: string[];
+      }> = splices.map((sp) => ({
+        seg: [sp.a[0], sp.a[1], sp.b[0], sp.b[1]],
+        hosts: [sp.edgeA, sp.edgeB],
+      }));
+      for (const st of plan.deadEndStubs) {
+        bridges.push({
+          seg: [st.at[0], st.at[1], st.toward[0], st.toward[1]],
+          hosts: [st.edge],
+        });
       }
-      for (let i = 0; i < pts.length; i++) {
-        for (let j = i + 1; j < pts.length; j++) {
-          const d = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]);
-          expect(d).toBeGreaterThanOrEqual(params.junctionSpacing - 1e-9);
+
+      for (const sp of splices) {
+        const len = Math.hypot(sp.a[0] - sp.b[0], sp.a[1] - sp.b[1]);
+        expect(len).toBeGreaterThanOrEqual(1.2);
+        expect(len).toBeLessThanOrEqual(2.2);
+        expect(g.strands[sp.strandA].edgeIds).toContain(sp.edgeA);
+        expect(g.strands[sp.strandB].edgeIds).toContain(sp.edgeB);
+      }
+
+      // No bridge may properly cross any existing edge (other than glancing
+      // its own hosts, whose midpoints are its endpoints).
+      for (const br of bridges) {
+        for (const [eid, edge] of g.edges) {
+          if (br.hosts.includes(eid)) continue;
+          const p0 = edge.latticePoints[0];
+          const p1 = edge.latticePoints[edge.latticePoints.length - 1];
+          expect(
+            properIntersect(
+              br.seg[0], br.seg[1], br.seg[2], br.seg[3],
+              p0[0], p0[1], p1[0], p1[1]
+            )
+          ).toBe(false);
         }
       }
     }
   });
 
-  it("only selects crossings that belong to maze strands", () => {
+  it("never places two junction sites on the same edge", () => {
     for (const seed of SEEDS) {
-      const g = build(seed, 8);
-      const plan = buildMazePlan(g, P({ branchDensity: 0.7 }));
-      for (const id of plan.junctions) {
-        expect(g.nodes.get(id)!.type).toBe(NODE_TYPE.CROSSING);
+      const plan = buildMazePlan(build(seed), P({ branchDensity: 0.8, deadEndDensity: 0.5 }));
+      const edges: string[] = [];
+      for (const sp of [...plan.spanningSplices, ...plan.choiceSplices]) {
+        edges.push(sp.edgeA, sp.edgeB);
       }
-      // No junction sits on a culled strand's crossing exclusively.
-      expect(new Set(plan.junctions).size).toBe(plan.junctions.length);
+      for (const st of plan.deadEndStubs) edges.push(st.edge);
+      edges.push(plan.entrance.edgeId, plan.exit.edgeId);
+      expect(new Set(edges).size).toBe(edges.length);
     }
-  });
-
-  it("junction selection is deterministic", () => {
-    const g1 = build(4242, 8);
-    const g2 = build(4242, 8);
-    expect(buildMazePlan(g1).junctions).toEqual(buildMazePlan(g2).junctions);
   });
 });
 
-describe("maze plan: junction realization (3-way spurs vs 4-way merges)", () => {
-  const P = (over: Partial<typeof DEFAULT_MAZE_PARAMS>) => ({
-    ...DEFAULT_MAZE_PARAMS,
-    ...over,
-  });
-
-  it("keeps reachability connections 4-way and honors deadEndDensity on choices", () => {
+describe("maze plan: knobs", () => {
+  it("branchDensity 0 yields no choice sites at all", () => {
     for (const seed of SEEDS) {
-      const g = build(seed, 8);
-      const params = P({ branchDensity: 0.7, deadEndDensity: 0.5 });
-      const plan = buildMazePlan(g, params);
-
-      // Connections are always 4-way.
-      const connSet = new Set(plan.connections);
-      for (const r of plan.realized) {
-        if (connSet.has(r.crossing)) expect(r.type).toBe("four");
-      }
-      // Every realized crossing is a connection or a chosen junction.
-      const known = new Set([...plan.connections, ...plan.junctions]);
-      for (const r of plan.realized) expect(known.has(r.crossing)).toBe(true);
-      // No duplicate realized crossings.
-      expect(new Set(plan.realized.map((r) => r.crossing)).size).toBe(
-        plan.realized.length
-      );
+      const plan = buildMazePlan(build(seed), P({ branchDensity: 0 }));
+      expect(plan.choiceSplices).toEqual([]);
+      expect(plan.fourWayMerges).toEqual([]);
+      expect(plan.deadEndStubs).toEqual([]);
     }
   });
 
-  it("deadEndDensity 0 gives no 3-way spurs; 1 makes all choices 3-way", () => {
+  it("choice-site count grows with branchDensity", () => {
     for (const seed of SEEDS) {
-      const g = build(seed, 8);
-      const connSet = new Set(buildMazePlan(g).connections);
+      const g = build(seed);
+      const count = (bd: number): number => {
+        const p = buildMazePlan(g, P({ branchDensity: bd }));
+        return p.choiceSplices.length + p.fourWayMerges.length;
+      };
+      expect(count(0.5)).toBeGreaterThanOrEqual(count(0.15));
+      expect(count(0.5)).toBeGreaterThan(0);
+    }
+  });
 
-      const braided = buildMazePlan(g, P({ branchDensity: 0.8, deadEndDensity: 0 }));
-      expect(braided.realized.every((r) => r.type === "four")).toBe(true);
+  it("fourWayFraction 0 -> no merges; 1 -> no choice splices", () => {
+    for (const seed of SEEDS) {
+      const g = build(seed);
+      const none = buildMazePlan(g, P({ fourWayFraction: 0 }));
+      expect(none.fourWayMerges).toEqual([]);
+      const all = buildMazePlan(g, P({ fourWayFraction: 1, branchDensity: 0.4 }));
+      expect(all.choiceSplices).toEqual([]);
+    }
+  });
 
-      const spurred = buildMazePlan(g, P({ branchDensity: 0.8, deadEndDensity: 1 }));
-      // Every pure-choice junction is a 3-way; connections remain 4-way.
-      for (const r of spurred.realized) {
-        expect(r.type).toBe(connSet.has(r.crossing) ? "four" : "three");
+  it("deadEndDensity 0 -> no stubs; raising it adds stubs", () => {
+    for (const seed of SEEDS) {
+      const g = build(seed);
+      const none = buildMazePlan(g, P({ deadEndDensity: 0 }));
+      expect(none.deadEndStubs).toEqual([]);
+      const some = buildMazePlan(g, P({ deadEndDensity: 1, branchDensity: 0.5 }));
+      expect(some.deadEndStubs.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("choice sites respect corner clearance and the spacing floor", () => {
+    for (const seed of SEEDS) {
+      const g = build(seed);
+      const params = P({
+        branchDensity: 0.8,
+        deadEndDensity: 0.4,
+        exitClearance: 5,
+        entranceClearance: 3,
+        junctionSpacing: 2,
+      });
+      const plan = buildMazePlan(g, params);
+      const bound = Math.max(2, Math.round(g.params.gridSize)) * 2;
+
+      // Per-site point groups: a splice's own two ends are one site.
+      const sites: number[][] = [];
+      for (const sp of plan.choiceSplices) {
+        sites.push([sp.a[0], sp.a[1], sp.b[0], sp.b[1]]);
+      }
+      for (const cid of plan.fourWayMerges) {
+        const pos = g.nodes.get(cid)!.latticePos;
+        sites.push([pos[0], pos[1]]);
+      }
+      for (const st of plan.deadEndStubs) sites.push([st.at[0], st.at[1]]);
+
+      for (const pts of sites) {
+        for (let k = 0; k < pts.length; k += 2) {
+          expect(Math.hypot(pts[k], pts[k + 1])).toBeGreaterThanOrEqual(
+            params.entranceClearance
+          );
+          expect(
+            Math.hypot(pts[k] - bound, pts[k + 1] - bound)
+          ).toBeGreaterThanOrEqual(params.exitClearance);
+        }
+      }
+
+      // Spacing between DIFFERENT sites (spanning sites included as
+      // obstacles the choice phase must respect).
+      const obstacles: number[][] = [...sites];
+      for (const sp of plan.spanningSplices) {
+        obstacles.push([sp.a[0], sp.a[1], sp.b[0], sp.b[1]]);
+      }
+      const cs = crossingStrands(g);
+      for (const cid of plan.spanningMerges) {
+        expect(cs.has(cid)).toBe(true);
+        const pos = g.nodes.get(cid)!.latticePos;
+        obstacles.push([pos[0], pos[1]]);
+      }
+      const nChoice = sites.length;
+      for (let i = 0; i < nChoice; i++) {
+        for (let j = 0; j < obstacles.length; j++) {
+          if (obstacles[j] === sites[i]) continue;
+          // Only enforce for pairs where at least one is a choice site.
+          if (j >= nChoice && i >= nChoice) continue;
+          let d = Infinity;
+          for (let k = 0; k < sites[i].length; k += 2) {
+            for (let m = 0; m < obstacles[j].length; m += 2) {
+              d = Math.min(
+                d,
+                Math.hypot(
+                  sites[i][k] - obstacles[j][m],
+                  sites[i][k + 1] - obstacles[j][m + 1]
+                )
+              );
+            }
+          }
+          expect(d).toBeGreaterThanOrEqual(params.junctionSpacing - 1e-9);
+        }
       }
     }
   });
