@@ -117,10 +117,11 @@ async function main(): Promise<void> {
     // junctions, anchored ends). The old single-strand maze overlay is
     // incompatible with the applied graph and is skipped entirely.
     const oldMaze = params.mazeMode && !params.mazeFabric;
+    let hueGroup: number[] | undefined;
     if (params.mazeFabric) {
       const plan = buildMazePlan(graph);
-      applyMazePlan(graph, plan);
-      applyMazeCuts(graph, plan);
+      hueGroup = applyMazePlan(graph, plan);
+      applyMazeCuts(graph, plan, hueGroup);
     }
 
     if (!checkStructure(graph) || !checkAlternation(graph)) {
@@ -152,6 +153,7 @@ async function main(): Promise<void> {
       casingWidth: params.threadWidth + params.gap * 2,
       background: BACKGROUND,
       baseHue: params.seed % 360,
+      hueGroup,
     });
 
     // Maze overlay + solve state (old single-strand maze mode only).

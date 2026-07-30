@@ -32,6 +32,10 @@ export interface RibbonStyle {
   casingWidth: number; // Thread width + twice the crossing gap.
   background: number;
   baseHue: number; // [0, 360) starting hue for the strand palette.
+  // Optional strand -> palette-slot mapping (maze fabric: bridges/stubs and
+  // cut halves inherit their host strand's hue so splices read as thread
+  // material). Identity when absent.
+  hueGroup?: number[];
 }
 
 // Dense enough that tight bends near crossings (low slack) stay resolved;
@@ -209,7 +213,8 @@ export class RibbonRenderer {
       }
       const count = Math.max(MIN_SAMPLES, Math.round(arc / SAMPLE_SPACING));
 
-      const hue = (style.baseHue + i * 137.508) % 360;
+      const hue =
+        (style.baseHue + (style.hueGroup?.[i] ?? i) * 137.508) % 360;
       // An already-carved chain (maze mode) renders as an OPEN ribbon: no
       // closing quad across the removed seam.
       const closed = ps.chainBreakAfter[i] < 0;

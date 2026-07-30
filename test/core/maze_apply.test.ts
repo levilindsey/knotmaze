@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import type { MazeParams, MazePlan } from "../../src/core/maze_plan";
-import { applyMazePlan } from "../../src/core/maze_apply";
+import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
 import {
   checkStructure,
   checkAlternation,
@@ -121,5 +121,35 @@ describe("maze apply: graph surgery", () => {
     expect(a.g.nodes).toEqual(b.g.nodes);
     expect(a.g.edges).toEqual(b.g.edges);
     expect(a.g.strands).toEqual(b.g.strands);
+  });
+
+  it("maps bridge/stub/cut-half hues back to their hosts", () => {
+    for (const seed of SEEDS) {
+      const g = generateLatticeKnotwork({
+        gridSize: 8,
+        weaveDensity: 0.3,
+        turnBias: 0.6,
+        randSeed: seed,
+      });
+      const nOriginal = g.strands.length;
+      const plan = buildMazePlan(g, P({ deadEndDensity: 0.5 }));
+      const hueGroup = applyMazePlan(g, plan);
+      applyMazeCuts(g, plan, hueGroup);
+
+      expect(hueGroup.length).toBe(g.strands.length);
+      // Originals map to themselves; everything appended maps to an original.
+      hueGroup.forEach((h, i) => {
+        if (i < nOriginal) expect(h).toBe(i);
+        else expect(h).toBeLessThan(nOriginal);
+      });
+      // Bridges map to their strandA host, stubs to their host strand.
+      const splices = [...plan.spanningSplices, ...plan.choiceSplices];
+      splices.forEach((sp, k) => {
+        expect(hueGroup[nOriginal + k]).toBe(sp.strandA);
+      });
+      plan.deadEndStubs.forEach((st, k) => {
+        expect(hueGroup[nOriginal + splices.length + k]).toBe(st.strand);
+      });
+    }
   });
 });

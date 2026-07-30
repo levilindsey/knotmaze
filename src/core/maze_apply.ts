@@ -32,7 +32,12 @@ import type { MazePlan } from "./maze_plan";
 // physically) clear of the neighbor it points at.
 const STUB_REACH = 0.6;
 
-export function applyMazePlan(graph: TangleGraph, plan: MazePlan): void {
+// Returns the render HUE GROUP per strand (index into the original strand
+// list): bridges and stubs inherit their host strand's hue so a splice reads
+// as thread material rather than a foreign patch, and applyMazeCuts extends
+// the mapping when a cut splits a strand (both halves keep the loop's hue).
+export function applyMazePlan(graph: TangleGraph, plan: MazePlan): number[] {
+  const hueGroup = graph.strands.map((_, i) => i);
   let nodeCounter = 0;
   let edgeCounter = 0;
 
@@ -96,6 +101,7 @@ export function applyMazePlan(graph: TangleGraph, plan: MazePlan): void {
     const jb = splitEdge(sp.strandB, sp.edgeB, sp.b);
     const bid = addEdgeBetween(ja, jb, [sp.a, sp.b]);
     graph.strands.push({ edgeIds: [bid], isClosed: false, nodes: [ja, jb] });
+    hueGroup.push(sp.strandA);
   }
 
   // Dead-end stubs: one host junction + a dangling tip.
@@ -108,12 +114,15 @@ export function applyMazePlan(graph: TangleGraph, plan: MazePlan): void {
     const s = addNodeAt(NODE_TYPE.END, tip);
     const eid = addEdgeBetween(j, s, [st.at, tip]);
     graph.strands.push({ edgeIds: [eid], isClosed: false, nodes: [j, s] });
+    hueGroup.push(st.strand);
   }
 
   // 4-way merges: the crossing becomes a true intersection.
   for (const cid of [...plan.spanningMerges, ...plan.fourWayMerges]) {
     graph.nodes.get(cid)!.type = NODE_TYPE.JUNCTION;
   }
+
+  return hueGroup;
 }
 
 // Entrance/exit carves, applied AFTER the junction surgery (they locate their
@@ -125,17 +134,22 @@ export function applyMazePlan(graph: TangleGraph, plan: MazePlan): void {
 const CUT_REACH = 1.5;
 const CUT_SPREAD = 0.4;
 
-export function applyMazeCuts(graph: TangleGraph, plan: MazePlan): void {
+export function applyMazeCuts(
+  graph: TangleGraph,
+  plan: MazePlan,
+  hueGroup?: number[]
+): void {
   const s = Math.SQRT1_2;
-  cutStrandOpen(graph, plan.entrance.edgeId, [-s, -s], "mentr");
-  cutStrandOpen(graph, plan.exit.edgeId, [s, s], "mexit");
+  cutStrandOpen(graph, plan.entrance.edgeId, [-s, -s], "mentr", hueGroup);
+  cutStrandOpen(graph, plan.exit.edgeId, [s, s], "mexit", hueGroup);
 }
 
 function cutStrandOpen(
   graph: TangleGraph,
   edgeId: string,
   dir: [number, number],
-  idBase: string
+  idBase: string,
+  hueGroup?: number[]
 ): void {
   const si = graph.strands.findIndex((st) => st.edgeIds.includes(edgeId));
   if (si < 0) throw new Error(`maze cut: edge ${edgeId} not on any strand`);
@@ -214,5 +228,7 @@ function cutStrandOpen(
       isClosed: false,
       nodes: [eb, ...nodes0.slice(c + 1)],
     });
+    // Both halves keep the original loop's hue.
+    hueGroup?.push(hueGroup[si]);
   }
 }
