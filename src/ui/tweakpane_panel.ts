@@ -138,6 +138,10 @@ export function buildPanel(
     "Maze mode: tap the entrance, then adjacent cells, to trace a path to the exit. Thread-tugging is off while solving."
   ).on("change", callbacks.onModeChange);
   tip(
+    pane.addBinding(params, "mazeFabric"),
+    "Branching maze fabric (preview): splice junctions, occasional 4-way merges, dead-end stubs, and corner entrance/exit. Tug interaction stays on; branching gameplay lands next."
+  ).on("change", callbacks.onModeChange);
+  tip(
     pane.addButton({ title: "Reset path" }),
     "Clear the traced maze path and start over from the entrance."
   ).on("click", callbacks.onResetPath);

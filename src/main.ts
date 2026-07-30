@@ -1,5 +1,7 @@
 import { Application, Container } from "pixi.js";
 import { generateLatticeKnotwork } from "./core/lattice_grower";
+import { buildMazePlan } from "./core/maze_plan";
+import { applyMazePlan, applyMazeCuts } from "./core/maze_apply";
 import { checkStructure, checkAlternation } from "./core/tangle_graph";
 import { ParticleSystem } from "./physics/particle_system";
 import { RibbonRenderer } from "./render/ribbon_renderer";
@@ -18,7 +20,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 3: maze strand physically open 2026-07-28";
+const BUILD_STAMP = "P4 Stage 6b: branching maze fabric preview 2026-07-29";
 
 const app = new Application();
 
@@ -109,18 +111,30 @@ async function main(): Promise<void> {
     };
     const graph = generateLatticeKnotwork(genParams);
 
+    // Branching maze fabric (mazeFabric): plan + apply the splice/merge/stub
+    // surgery and carve the corner entrance/exit at GRAPH level, so the
+    // particle system builds the fabric natively (open chains, fused
+    // junctions, anchored ends). The old single-strand maze overlay is
+    // incompatible with the applied graph and is skipped entirely.
+    const oldMaze = params.mazeMode && !params.mazeFabric;
+    if (params.mazeFabric) {
+      const plan = buildMazePlan(graph);
+      applyMazePlan(graph, plan);
+      applyMazeCuts(graph, plan);
+    }
+
     if (!checkStructure(graph) || !checkAlternation(graph)) {
       console.warn("Knot invariants violated; generation bug.");
     }
 
     ps = new ParticleSystem(graph);
-    mazeGraph = graph.maze!;
 
-    // Maze mode carves the maze strand OPEN (real off-screen loose ends)
+    // Old maze mode carves the maze strand OPEN (real off-screen loose ends)
     // BEFORE the renderer is built - the base ribbon reads chainBreakAfter to
     // render that strand as an open spline. Knot mode leaves it closed. The
     // two loose ends are pinned at their lattice (border) positions.
-    if (params.mazeMode) {
+    mazeGraph = oldMaze ? graph.maze! : null;
+    if (oldMaze && mazeGraph) {
       const chain = ps.chains[mazeGraph.strand];
       const brk = mazeGraph.breakSlot;
       const pa = chain[brk];
@@ -140,11 +154,16 @@ async function main(): Promise<void> {
       baseHue: params.seed % 360,
     });
 
-    // Maze overlay + solve state.
-    controller = new MazeController(mazeGraph);
-    maze = new MazeRenderer(ps, mazeGraph, params.threadWidth);
-    maze.setVisible(params.mazeMode);
-    maze.update(controller);
+    // Maze overlay + solve state (old single-strand maze mode only).
+    if (oldMaze && mazeGraph) {
+      controller = new MazeController(mazeGraph);
+      maze = new MazeRenderer(ps, mazeGraph, params.threadWidth);
+      maze.setVisible(true);
+      maze.update(controller);
+    } else {
+      controller = null;
+      maze = null;
+    }
     hideWin();
 
     debug = new DebugRenderer();
@@ -156,12 +175,10 @@ async function main(): Promise<void> {
 
     // Order: the maze under-layer, ribbons, the maze over-layer (so the solve
     // strand weaves under threads at crossings and over them between), debug.
-    root.addChild(
-      maze.underContainer,
-      renderer.root,
-      maze.overContainer,
-      debug.container
-    );
+    if (maze) root.addChild(maze.underContainer);
+    root.addChild(renderer.root);
+    if (maze) root.addChild(maze.overContainer);
+    root.addChild(debug.container);
     fitToScreen();
     writeParams(params);
 
@@ -271,7 +288,7 @@ async function main(): Promise<void> {
       renderer?.requestInspect(x, y);
       return;
     }
-    if (params.mazeMode) {
+    if (params.mazeMode && !params.mazeFabric) {
       handleMazeTap(x, y);
       return;
     }
@@ -283,7 +300,7 @@ async function main(): Promise<void> {
   app.canvas.addEventListener("pointermove", (e) => {
     if (!ps) return;
     const [x, y] = toLattice(e);
-    if (params.mazeMode) {
+    if (params.mazeMode && !params.mazeFabric) {
       app.canvas.style.cursor = mazeActionable(x, y) ? "pointer" : "default";
       return;
     }
@@ -297,7 +314,7 @@ async function main(): Promise<void> {
   });
   const endDrag = (e: PointerEvent): void => {
     if (!ps) return;
-    if (params.mazeMode) return; // no grab/pluck while solving
+    if (params.mazeMode && !params.mazeFabric) return; // no grab/pluck while solving
     const pluck = ps.release();
     if (pluck && pluck.chain >= 0) {
       wake();
