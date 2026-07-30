@@ -111,9 +111,15 @@ export function checkStructure(graph: TangleGraph): boolean {
 
 // Verify perfect alternation: walking each strand in order, crossing passes
 // must go over, under, over, under, ... (wrapping around for closed strands).
+// JUNCTIONS (maze merges/splices) interrupt the weave: alternation is checked
+// within the runs between junctions, never across one - a 4-way merge removes
+// a crossing from the sequence, and the two flanking passes legitimately
+// repeat parity.
 export function checkAlternation(graph: TangleGraph): boolean {
   for (const strand of graph.strands) {
-    const passes: boolean[] = [];
+    // Tokens along the strand: a boolean per crossing pass (goes over?),
+    // "J" per junction interruption.
+    const tokens: Array<boolean | "J"> = [];
     // Closed strands repeat the start node at the end; skip the duplicate.
     const count = strand.isClosed
       ? strand.nodes.length - 1
@@ -121,6 +127,10 @@ export function checkAlternation(graph: TangleGraph): boolean {
 
     for (let i = 0; i < count; i++) {
       const node = graph.nodes.get(strand.nodes[i])!;
+      if (node.type === NODE_TYPE.JUNCTION) {
+        tokens.push("J");
+        continue;
+      }
       if (node.type !== NODE_TYPE.CROSSING) continue;
       if (i + 1 >= strand.nodes.length) continue; // open strand ends here
 
@@ -131,14 +141,32 @@ export function checkAlternation(graph: TangleGraph): boolean {
       const vx = next.latticePos[0] - node.latticePos[0];
       const vy = next.latticePos[1] - node.latticePos[1];
       const isSlash = vx * vy > 0;
-      passes.push(isSlash ? node.isOver === true : node.isOver !== true);
+      tokens.push(isSlash ? node.isOver === true : node.isOver !== true);
     }
 
-    if (passes.length < 2) continue;
-    for (let i = 0; i < passes.length; i++) {
-      const j = (i + 1) % passes.length;
-      if (j === 0 && !strand.isClosed) continue;
-      if (passes[i] === passes[j]) return false;
+    const firstJ = tokens.indexOf("J");
+    if (strand.isClosed && firstJ < 0) {
+      // Closed, uninterrupted: the original cyclic check.
+      const passes = tokens as boolean[];
+      if (passes.length < 2) continue;
+      for (let i = 0; i < passes.length; i++) {
+        if (passes[i] === passes[(i + 1) % passes.length]) return false;
+      }
+    } else {
+      // Open strand, or closed with junction interruptions: scan linearly
+      // (rotated to start just after a junction so the wrap pair is checked
+      // exactly when no junction separates it), resetting at each "J".
+      const n = tokens.length;
+      let prev: boolean | null = null;
+      for (let k = 0; k < n; k++) {
+        const t = strand.isClosed ? tokens[(firstJ + 1 + k) % n] : tokens[k];
+        if (t === "J") {
+          prev = null;
+          continue;
+        }
+        if (prev !== null && prev === t) return false;
+        prev = t;
+      }
     }
   }
   return true;
