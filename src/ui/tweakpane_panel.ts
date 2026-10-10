@@ -195,14 +195,32 @@ export function buildPanel(
     pane.addBinding(params, "deadEnds"),
     "Dead ends: some loops become long threads that end, somewhere far away, in a loose tip. Off = a pure braided maze where every wrong turn loops back. Regenerates the maze."
   ).on("change", callbacks.onModeChange);
-  tip(
-    pane.addBinding(params, "trailMode"),
-    "Memory mode: only a short trail of your recent path stays gold — no backtrack bookkeeping, remember your own route. Applies live."
-  ).on("change", callbacks.onTrailChange);
-  tip(
+  const pathVizRow = tip(
+    pane.addBinding(params, "pathViz", {
+      options: { gold: "gold", trail: "trail", string: "string" },
+    }),
+    "How your route is shown: gold = the traveled thread recolors; trail = memory mode, only a short trail stays gold and there is no backtracking; string = unroll a thin white yarn behind you - it U-turns at junctions when you backtrack and is never picked up. Applies live."
+  );
+  const trailLenRow = tip(
     pane.addBinding(params, "trailLength", { min: 1, max: 15, step: 0.5 }),
     "How much recent path stays lit in memory mode, in lattice units. Applies live."
-  ).on("change", callbacks.onTrailChange);
+  );
+  trailLenRow.on("change", callbacks.onTrailChange);
+  const tensionRow = tip(
+    pane.addBinding(params, "tension", { min: 0, max: 1, step: 0.05 }),
+    "Ariadne string tension: 1 lays the yarn taut along the thread, 0 leaves it loose and wavy like slack cotton. Applies live."
+  );
+  tensionRow.on("change", callbacks.onTrailChange);
+  // The per-mode sliders only show for their mode.
+  const refreshVizRows = (): void => {
+    trailLenRow.hidden = params.pathViz !== "trail";
+    tensionRow.hidden = params.pathViz !== "string";
+  };
+  refreshVizRows();
+  pathVizRow.on("change", () => {
+    refreshVizRows();
+    callbacks.onTrailChange();
+  });
   tip(
     pane.addBinding(params, "moveSpeed", { min: 0.25, max: 4, step: 0.05 }),
     "Maze travel speed: how fast the dot and the gold front move along the thread. Applies live."

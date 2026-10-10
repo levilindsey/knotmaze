@@ -17,6 +17,11 @@ export const SOUND_MODES: SoundMode[] = ["none", "manual", "random", "music"];
 export type PluckStyle = "soft" | "string";
 export const PLUCK_STYLES: PluckStyle[] = ["soft", "string"];
 
+// Traversal-path visualization: full gold recolor | short memory trail |
+// an unspooled Ariadne string laid along everywhere you have walked.
+export type PathViz = "gold" | "trail" | "string";
+export const PATH_VIZ_MODES: PathViz[] = ["gold", "trail", "string"];
+
 export interface UrlParams {
   seed: number;
   gridSize: number;
@@ -50,12 +55,18 @@ export interface UrlParams {
   // Dead-end stubs in the fabric (classic wrong-turn spurs). OFF by default:
   // a pure braided maze where every wrong turn loops back.
   deadEnds: boolean;
-  // Memory-trail mode (fabric gameplay): no backtracking, no full traveled
-  // highlight - only a short gold trail of recent path behind the head.
-  // Gameplay interpretation + paint only; applies live (no rebuild).
-  trailMode: boolean;
+  // Traversal-path visualization (fabric gameplay). gold = the classic
+  // full recolor. trail = memory mode: no backtracking concept, only a
+  // short gold trail of recent path behind the head. string = Ariadne's
+  // thread: a thin wavy white yarn unspools along everywhere you walk,
+  // U-turning at junctions on backtracks, never erased. Gameplay
+  // interpretation + paint only; applies live (no rebuild).
+  pathViz: PathViz;
   // [1, 15] lattice units of recent path kept lit in memory-trail mode.
   trailLength: number;
+  // [0, 1] Ariadne string tension: 1 = taut along the centerline, 0 =
+  // slack cotton laid loose. Applies live to the whole laid string.
+  tension: number;
   // Section color scheme (fabric mode; knot mode supports mono/strands):
   // mono | strands | depth | segments | noise. Replaces the old multiColor
   // checkbox (mc=1 reads as "strands").
@@ -90,6 +101,7 @@ export const DEFAULTS = {
   snapBack: 4,
   octaves: 2,
   trailLength: 5,
+  tension: 0.45,
   appearSpeed: 1,
 };
 
@@ -139,8 +151,9 @@ export function readParams(): UrlParams {
     mazeMode: readNumber(query, "md", 0) > 0.5,
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
     deadEnds: readNumber(query, "de", 0) > 0.5,
-    trailMode: readNumber(query, "trm", 0) > 0.5,
+    pathViz: readPathViz(query),
     trailLength: readNumber(query, "trl", DEFAULTS.trailLength),
+    tension: readNumber(query, "tn", DEFAULTS.tension),
     colorScheme: readScheme(query),
     appearMode: readAppear(query),
     appearSpeed: readNumber(query, "as", DEFAULTS.appearSpeed),
@@ -157,6 +170,15 @@ function readChoice<T extends string>(
   return raw && (options as readonly string[]).includes(raw)
     ? (raw as T)
     : fallback;
+}
+
+function readPathViz(query: URLSearchParams): PathViz {
+  const raw = query.get("pv");
+  if (raw && (PATH_VIZ_MODES as readonly string[]).includes(raw)) {
+    return raw as PathViz;
+  }
+  // Back-compat: the short-lived Stage 23 trailMode checkbox.
+  return readNumber(query, "trm", 0) > 0.5 ? "trail" : "gold";
 }
 
 function readAppear(query: URLSearchParams): AppearMode {
@@ -206,8 +228,9 @@ export function writeParams(params: UrlParams): void {
   query.set("md", params.mazeMode ? "1" : "0");
   query.set("mf", params.mazeFabric ? "1" : "0");
   query.set("de", params.deadEnds ? "1" : "0");
-  query.set("trm", params.trailMode ? "1" : "0");
+  query.set("pv", params.pathViz);
   query.set("trl", String(params.trailLength));
+  query.set("tn", String(params.tension));
   query.set("cs", params.colorScheme);
   query.set("ap", params.appearMode);
   query.set("as", String(params.appearSpeed));

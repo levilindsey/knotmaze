@@ -31,6 +31,7 @@ import type {
   PulseArm,
   PaintCap,
 } from "./ribbon_renderer";
+import type { PathViz } from "../ui/url_state";
 
 const START_COLOR = 0x46e35a;
 const EXIT_COLOR = 0xff6b3d;
@@ -52,6 +53,28 @@ const MOVE_MIN_FACTOR = 0.3;
 // Memory-trail tail fade: the oldest fraction of the trail budget ramps
 // gold -> base (per-end PaintSpan intensities; the renderer interpolates).
 const TRAIL_FADE_FRAC = 0.3;
+
+// ARIADNE STRING (Stage 24, pathViz "string"): instead of recoloring the
+// thread, a thin white yarn UNSPOOLS along everywhere you walk - one
+// append-only EVENT per traversal (a backtrack is its own return pass
+// that U-turns at the junction; nothing is ever picked up). Each event
+// stores ctrl stations plus a unit-amplitude wander profile; tension and
+// world positions are applied at draw time, so the laid string rides the
+// deforming/flowing threads and the tension slider reshapes it live.
+const YARN_STATION_CTRL = 0.45; // Station spacing (ctrl, ~2 per world unit).
+const YARN_WIDTH = 0.046; // Stroke width, lattice units.
+const YARN_SHADOW_W = 0.075;
+const YARN_SHADOW_OFF = 0.034; // Drop-shadow offset (down-right).
+const YARN_END_WIN = 0.16; // Wander tapers over this fraction at each end.
+
+interface YarnEvent {
+  chain: number;
+  c0: number; // Travel-ordered ctrl endpoints (beginMove's convention).
+  c1: number;
+  ctrls: Float64Array;
+  wave: Float64Array; // Unit-amplitude slack-cotton wander per station.
+  lane: number; // Per-pass lane bias in [-1, 1].
+}
 
 interface MoveAnim {
   e: WalkEdge;
@@ -95,6 +118,13 @@ export class FabricMazeRenderer {
   // main.ts syncs both every tick and refreshes the paint on change.
   trailMode = false;
   trailLength = 5;
+  // Path-visualization mode + Ariadne string tension (main.ts syncs
+  // every tick; see the YARN block above).
+  pathViz: PathViz = "gold";
+  tension = 0.45;
+  private yarnGfx: Graphics;
+  private yarnEvents: YarnEvent[] = [];
+  private yarnSeed = 0;
   // REVEAL (Stage 22): while the appearance animation runs, main.ts wires
   // this to the renderer's reveal mask. The start marker (and the head
   // dot sitting on it) shows from the first frame; the exit marker waits
@@ -113,8 +143,11 @@ export class FabricMazeRenderer {
     this.ribbons = ribbons;
     this.threadWidth = threadWidth;
     this.overContainer = new Container();
+    this.yarnGfx = new Graphics();
     this.gfx = new Graphics();
-    this.overContainer.addChild(this.gfx);
+    // Yarn under the markers: the head dot and start/exit discs stay
+    // readable on top of the laid string.
+    this.overContainer.addChild(this.yarnGfx, this.gfx);
   }
 
   setWidths(threadWidth: number): void {
@@ -224,6 +257,10 @@ export class FabricMazeRenderer {
       to = e.ctrlB;
     }
     this.anim = { e, from, to, cur: from, kind };
+    // String mode: every move - advance OR backtrack - lays one new yarn
+    // pass in the dot's travel direction (the backtrack pass IS the
+    // U-turning return; nothing is removed).
+    if (this.pathViz === "string") this.pushYarnEvent(e, from, to);
     this.emitAnimFrame(controller);
   }
 
@@ -275,6 +312,192 @@ export class FabricMazeRenderer {
       return;
     }
     this.emitAnimFrame(controller);
+  }
+
+  // --- Ariadne string (Stage 24). See the YARN block up top.
+
+  private pushYarnEvent(e: WalkEdge, from: number, to: number): void {
+    const n = Math.max(
+      3,
+      Math.ceil(Math.abs(to - from) / YARN_STATION_CTRL) + 1
+    );
+    const ctrls = new Float64Array(n);
+    const wave = new Float64Array(n);
+    const sd = ++this.yarnSeed;
+    const h = (k: number): number => {
+      let x = (Math.imul(sd, 374761393) + Math.imul(k, 668265263)) >>> 0;
+      x = Math.imul(x ^ (x >>> 13), 1274126177) >>> 0;
+      return ((x ^ (x >>> 16)) >>> 0) / 4294967296;
+    };
+    // Slack-cotton wander: two incommensurate wavelengths (~1.2-2.6
+    // world) plus a fine ripple, tapered at the ends so junction U-turns
+    // meet near the lane instead of flying off mid-wave.
+    const Lw = Math.abs(to - from) * 0.5; // Ctrl -> approx world units.
+    const f1 = 0.42 + h(1) * 0.35;
+    const f2 = f1 * (1.9 + h(2) * 0.8);
+    const f3 = f1 * 4.3;
+    const p1 = h(3);
+    const p2 = h(4);
+    const p3 = h(5);
+    for (let k = 0; k < n; k++) {
+      const u = n > 1 ? k / (n - 1) : 0;
+      ctrls[k] = from + (to - from) * u;
+      const s = u * Lw;
+      const ew = Math.min(1, Math.min(u, 1 - u) / YARN_END_WIN);
+      const win = ew * ew * (3 - 2 * ew);
+      wave[k] =
+        (0.58 * Math.sin(2 * Math.PI * (f1 * s + p1)) +
+          0.32 * Math.sin(2 * Math.PI * (f2 * s + p2)) +
+          0.1 * Math.sin(2 * Math.PI * (f3 * s + p3))) *
+        win;
+    }
+    this.yarnEvents.push({
+      chain: e.chain,
+      c0: from,
+      c1: to,
+      ctrls,
+      wave,
+      lane: (h(6) - 0.5) * 2,
+    });
+  }
+
+  // Entering string mode mid-game re-lays the current path as a single
+  // chain of advances (the backtrack history is not retained elsewhere).
+  private rebuildYarnFromPath(controller: FabricMazeController): void {
+    this.yarnEvents.length = 0;
+    const pe = controller.pathEdges;
+    const pv = controller.pathVertices;
+    for (let i = 0; i < pe.length; i++) {
+      const e = this.walk.edges[pe[i]];
+      if (e.va === e.vb || e.va === pv[i]) {
+        this.pushYarnEvent(e, e.ctrlA, e.ctrlB);
+      } else {
+        this.pushYarnEvent(e, e.ctrlB, e.ctrlA);
+      }
+    }
+  }
+
+  // Keep the yarn store consistent with the mode + path (reset clears;
+  // leaving string mode drops the laid string).
+  private syncYarn(controller: FabricMazeController): void {
+    if (this.pathViz !== "string") {
+      if (this.yarnEvents.length > 0) {
+        this.yarnEvents.length = 0;
+        this.yarnGfx.clear();
+      }
+      return;
+    }
+    if (controller.pathEdges.length === 0 && !this.anim) {
+      this.yarnEvents.length = 0;
+      this.yarnGfx.clear();
+      return;
+    }
+    if (this.yarnEvents.length === 0 && controller.pathEdges.length > 0) {
+      this.rebuildYarnFromPath(controller);
+    }
+  }
+
+  private drawYarn(): void {
+    const g = this.yarnGfx;
+    g.clear();
+    if (this.pathViz !== "string" || this.yarnEvents.length === 0) return;
+    const slack = 1 - this.tension;
+    const amp = this.threadWidth * (0.05 + 0.5 * slack);
+    const laneAmp = this.threadWidth * 0.3 * slack;
+
+    // Resolve every station to world (centerline, then offset along the
+    // local normal), concatenating events with a rounded overshoot past
+    // each junction - the visible U-turn on a backtrack.
+    const xs: number[] = [];
+    const ys: number[] = [];
+    const a = this.anim;
+    for (let ev = 0; ev < this.yarnEvents.length; ev++) {
+      const y = this.yarnEvents[ev];
+      // The newest pass unspools with the dot while its move animates.
+      let tClip = 1;
+      if (
+        a &&
+        ev === this.yarnEvents.length - 1 &&
+        y.chain === a.e.chain &&
+        Math.abs(y.c0 - a.from) < 1e-6 &&
+        Math.abs(y.c1 - a.to) < 1e-6
+      ) {
+        const span = y.c1 - y.c0;
+        tClip =
+          Math.abs(span) > 1e-9
+            ? Math.max(0, Math.min(1, (a.cur - y.c0) / span))
+            : 1;
+      }
+      const n = y.ctrls.length;
+      const kMaxF = tClip * (n - 1);
+      const kMax = Math.floor(kMaxF);
+      const cxs: number[] = [];
+      const cys: number[] = [];
+      for (let k = 0; k <= kMax; k++) {
+        this.pointFlowed(
+          y.chain,
+          this.ctrlMod(y.chain, y.ctrls[k]),
+          this.scratch,
+          0
+        );
+        cxs.push(this.scratch[0]);
+        cys.push(this.scratch[1]);
+      }
+      if (kMax < n - 1 && kMaxF > kMax) {
+        const f =
+          y.ctrls[kMax] + (y.ctrls[kMax + 1] - y.ctrls[kMax]) * (kMaxF - kMax);
+        this.pointFlowed(y.chain, this.ctrlMod(y.chain, f), this.scratch, 0);
+        cxs.push(this.scratch[0]);
+        cys.push(this.scratch[1]);
+      }
+      if (cxs.length < 2) continue;
+      // Rounded overshoot past the junction before this pass begins.
+      if (xs.length >= 2) {
+        const ex = xs[xs.length - 1];
+        const ey = ys[ys.length - 1];
+        const inx = ex - xs[xs.length - 2];
+        const iny = ey - ys[ys.length - 2];
+        const il = Math.hypot(inx, iny) || 1;
+        const o = 0.16 + 0.2 * slack;
+        xs.push(ex + (inx / il) * o);
+        ys.push(ey + (iny / il) * o);
+      }
+      for (let k = 0; k < cxs.length; k++) {
+        const kp = Math.max(0, k - 1);
+        const kn = Math.min(cxs.length - 1, k + 1);
+        let tx = cxs[kn] - cxs[kp];
+        let ty = cys[kn] - cys[kp];
+        const tl = Math.hypot(tx, ty) || 1;
+        tx /= tl;
+        ty /= tl;
+        const kk = Math.min(k, y.wave.length - 1);
+        const off = y.wave[kk] * amp + y.lane * laneAmp;
+        xs.push(cxs[k] - ty * off);
+        ys.push(cys[k] + tx * off);
+      }
+    }
+    if (xs.length < 2) return;
+    // Faint drop shadow first, so the yarn reads where it crosses itself.
+    g.moveTo(xs[0] + YARN_SHADOW_OFF, ys[0] + YARN_SHADOW_OFF * 1.3);
+    for (let i = 1; i < xs.length; i++) {
+      g.lineTo(xs[i] + YARN_SHADOW_OFF, ys[i] + YARN_SHADOW_OFF * 1.3);
+    }
+    g.stroke({
+      width: YARN_SHADOW_W,
+      color: 0x05070c,
+      alpha: 0.3,
+      cap: "round",
+      join: "round",
+    });
+    g.moveTo(xs[0], ys[0]);
+    for (let i = 1; i < xs.length; i++) g.lineTo(xs[i], ys[i]);
+    g.stroke({
+      width: YARN_WIDTH,
+      color: 0xf7f3e8,
+      alpha: 0.95,
+      cap: "round",
+      join: "round",
+    });
   }
 
   // --- Memory-trail paint (Stage 23).
@@ -439,6 +662,15 @@ export class FabricMazeRenderer {
   // with the in-flight partial as the newest material.
   private emitAnimFrame(controller: FabricMazeController): void {
     const a = this.anim!;
+    this.syncYarn(controller);
+    if (this.pathViz === "string") {
+      // The yarn is the record: no gold spans or caps; pulses stay quiet
+      // mid-move exactly like the other modes.
+      this.ribbons.setPaint([], [], []);
+      this.drawMarkers(controller, a.e.chain, a.cur, false);
+      this.drawYarn();
+      return;
+    }
     if (this.trailMode) {
       const trail = this.buildTrail(controller, a);
       this.ribbons.setPaint(trail.spans, [], trail.caps);
@@ -470,10 +702,16 @@ export class FabricMazeRenderer {
       this.emitAnimFrame(controller);
       return;
     }
-    const trail = this.trailMode ? this.buildTrail(controller, null) : null;
+    this.syncYarn(controller);
+    // String mode: the yarn is the traversal record - no gold spans or
+    // junction caps; the choice pulses/hover (choice UI, not path viz)
+    // stay, attributed to the base band.
+    const stringViz = this.pathViz === "string";
+    const trail =
+      !stringViz && this.trailMode ? this.buildTrail(controller, null) : null;
     const spans: PaintSpan[] = trail ? trail.spans : [];
     const onPath = new Set<number>();
-    if (!trail) {
+    if (!trail && !stringViz) {
       for (const eid of controller.pathEdges) {
         const e = this.walk.edges[eid];
         spans.push({ chain: e.chain, c0: e.ctrlA, c1: e.ctrlB });
@@ -481,7 +719,11 @@ export class FabricMazeRenderer {
       }
     }
 
-    const caps = trail ? trail.caps : this.buildCaps(controller);
+    const caps = stringViz
+      ? []
+      : trail
+        ? trail.caps
+        : this.buildCaps(controller);
 
     const pulses: PulseArm[] = [];
     if (!controller.solved) {
@@ -518,6 +760,7 @@ export class FabricMazeRenderer {
     }
     this.ribbons.setPaint(spans, pulses, caps);
     this.drawMarkers(controller, -1, 0, controller.solved);
+    this.drawYarn();
   }
 
   // Junction caps: at every vertex the path traversed, several ribbons
