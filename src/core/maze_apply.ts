@@ -130,9 +130,17 @@ export function applyMazeCuts(
   plan: MazePlan,
   hueGroup?: number[]
 ): void {
+  // Tail directions follow the plan's anchors (SHAPED LATTICES); legacy
+  // plans without dirs keep the historic corner diagonals.
   const s = Math.SQRT1_2;
-  cutStrandOpen(graph, plan.entrance, [-s, -s], "mentr", hueGroup);
-  cutStrandOpen(graph, plan.exit, [s, s], "mexit", hueGroup);
+  cutStrandOpen(
+    graph,
+    plan.entrance,
+    plan.entranceDir ?? [-s, -s],
+    "mentr",
+    hueGroup
+  );
+  cutStrandOpen(graph, plan.exit, plan.exitDir ?? [s, s], "mexit", hueGroup);
   // Long dead-end threads: same cut+trim surgery, but the surviving tip is
   // FREE (null dir -> no anchor), hanging mid-fabric at the end of what is
   // now a long open thread.

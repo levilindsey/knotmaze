@@ -7,6 +7,7 @@ import {
   assignCheckerboardParity,
 } from "./tangle_graph";
 import { ConstantField } from "./param_field";
+import { buildCellMask } from "./shapes";
 import { initRNG, rng } from "../util/random";
 
 // The knot lives on a "doubled" integer lattice: cell (cx, cy) spans
@@ -56,7 +57,12 @@ export function generateLatticeKnotwork(
   const weaveDensityField = new ConstantField(params.weaveDensity);
   const turnBiasField = new ConstantField(params.turnBias);
 
-  const open = carveWalls(size, weaveDensityField, turnBiasField);
+  // SHAPED LATTICES: an analytic silhouette mask over the cells (null for
+  // rect = the full lattice). Computed without RNG, so the rect path's
+  // consumption order is untouched (byte-identity guard).
+  const mask = buildCellMask(params.shape ?? "rect", size);
+
+  const open = carveWalls(size, weaveDensityField, turnBiasField, mask);
   traceKnot(graph, size, open);
   assignCheckerboardParity(graph);
 
@@ -67,16 +73,31 @@ export function generateLatticeKnotwork(
 // A growing-tree maze guarantees every cell is reachable (no strand can be an
 // isolated diamond trapped inside a fully-walled cell); weaveDensity then
 // opens extra non-tree walls for denser weave and more loops.
+//
+// With a shape mask, the tree and the extra openings are restricted to
+// in-mask cells: masked-out cells keep every border midpoint walled, so they
+// contain only never-traced diamond orbits - no knotwork. The mask is one
+// orthogonally-connected component (core/shapes.ts), so the tree still spans
+// every growable cell. A null mask is the full lattice and consumes RNG in
+// exactly the historic order (every guard below passes without drawing).
 function carveWalls(
   size: number,
   weaveDensityField: ParamField,
-  turnBiasField: ParamField
+  turnBiasField: ParamField,
+  mask: boolean[] | null
 ): Set<string> {
   const open = new Set<string>();
   const visited: boolean[] = new Array(size * size).fill(false);
   const cellIdx = (cx: number, cy: number): number => cy * size + cx;
+  const inMask = (cx: number, cy: number): boolean =>
+    mask === null || mask[cellIdx(cx, cy)];
 
-  const start: Vec = [rng().nextInt(size), rng().nextInt(size)];
+  // Rejection-sample the tree root into the mask: a full mask accepts the
+  // first draw, keeping the rect path's RNG consumption identical.
+  let start: Vec = [rng().nextInt(size), rng().nextInt(size)];
+  while (!inMask(start[0], start[1])) {
+    start = [rng().nextInt(size), rng().nextInt(size)];
+  }
   visited[cellIdx(start[0], start[1])] = true;
   const active: Vec[] = [start];
 
@@ -96,7 +117,12 @@ function carveWalls(
       ([dx, dy]) => [cx + dx, cy + dy] as Vec
     ).filter(
       ([nx, ny]) =>
-        nx >= 0 && nx < size && ny >= 0 && ny < size && !visited[cellIdx(nx, ny)]
+        nx >= 0 &&
+        nx < size &&
+        ny >= 0 &&
+        ny < size &&
+        inMask(nx, ny) &&
+        !visited[cellIdx(nx, ny)]
     );
 
     if (unvisited.length === 0) {
@@ -111,9 +137,12 @@ function carveWalls(
     active.push([nx, ny]);
   }
 
-  // Open extra non-tree walls with probability weaveDensity.
+  // Open extra non-tree walls with probability weaveDensity. Mask-boundary
+  // walls (one flanking cell outside) never open - and never draw RNG, so
+  // the full-mask path consumes in the historic order.
   for (let cx = 1; cx < size; cx++) {
     for (let cy = 0; cy < size; cy++) {
+      if (!inMask(cx - 1, cy) || !inMask(cx, cy)) continue;
       const k = key(2 * cx, 2 * cy + 1);
       if (!open.has(k) && rng().next() < weaveDensityField.evaluate([2 * cx, 2 * cy + 1])) {
         open.add(k);
@@ -122,6 +151,7 @@ function carveWalls(
   }
   for (let cy = 1; cy < size; cy++) {
     for (let cx = 0; cx < size; cx++) {
+      if (!inMask(cx, cy - 1) || !inMask(cx, cy)) continue;
       const k = key(2 * cx + 1, 2 * cy);
       if (!open.has(k) && rng().next() < weaveDensityField.evaluate([2 * cx + 1, 2 * cy])) {
         open.add(k);

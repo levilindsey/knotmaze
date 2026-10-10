@@ -2,6 +2,7 @@ import { Application, Container } from "pixi.js";
 import { generateLatticeKnotwork } from "./core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "./core/maze_plan";
 import { buildSectionField, setGamutConfig } from "./core/section_colors";
+import { planAnchors } from "./core/shapes";
 import { applyMazePlan, applyMazeCuts } from "./core/maze_apply";
 import { buildWalkGraph } from "./core/walk_graph";
 import type { WalkGraph } from "./core/walk_graph";
@@ -32,7 +33,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4: junction spacing + voice params 2026-10-10";
+const BUILD_STAMP = "P4: shaped lattices 2026-10-10";
 
 // Appearance pre-sim: with any non-instant appear mode the sim settles
 // briefly BEFORE the first rendered frame, so the reveal plays over a
@@ -192,6 +193,7 @@ async function main(): Promise<void> {
       weaveDensity: params.weaveDensity,
       turnBias: params.turnBias,
       randSeed: params.seed,
+      shape: params.shape,
     };
     const graph = generateLatticeKnotwork(genParams);
 
@@ -206,6 +208,13 @@ async function main(): Promise<void> {
         branchDensity: params.branchDensity,
         fourWayFraction: params.fourWayFraction,
         deadEndDensity: params.deadEnds ? params.deadEndDensity : 0,
+        // Entrance/exit anchored to the shape's boundary (shp/sa/xa).
+        ...planAnchors(
+          params.shape,
+          params.gridSize,
+          params.startAnchor,
+          params.exitAnchor
+        ),
       });
       hueGroup = applyMazePlan(graph, plan);
       applyMazeCuts(graph, plan, hueGroup);

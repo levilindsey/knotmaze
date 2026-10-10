@@ -232,6 +232,34 @@ export function buildPanel(
     D.gridSize, regenerateWhenDone
   );
   row(
+    fDesign, p, "shape",
+    {
+      options: {
+        rect: "rect",
+        heart: "heart",
+        star: "star",
+        fish: "fish",
+        tree: "tree",
+        ring: "ring",
+      },
+    },
+    "Lattice silhouette: the knotwork grows only inside this shape (ring keeps a real hole in the middle). Regenerates the design.",
+    D.shape, regenerateWhenDone
+  );
+  const ANCHOR_OPTS = {
+    options: { nw: "nw", n: "n", ne: "ne", e: "e", se: "se", s: "s", sw: "sw", w: "w" },
+  };
+  const startAnchorRow = row(
+    fDesign, p, "startAnchor", ANCHOR_OPTS,
+    "Which side of the shape hosts the maze ENTRANCE (compass point). Regenerates the maze.",
+    D.startAnchor, regenerateWhenDone
+  );
+  const exitAnchorRow = row(
+    fDesign, p, "exitAnchor", ANCHOR_OPTS,
+    "Which side of the shape hosts the maze EXIT (compass point). Regenerates the maze.",
+    D.exitAnchor, regenerateWhenDone
+  );
+  row(
     fDesign, p, "weaveDensity", { min: 0, max: 1, step: 0.05 },
     "How much of the lattice fills with woven thread. Low = sparse open tangle, high = tight fabric. Regenerates the design.",
     D.weaveDensity, regenerateWhenDone
@@ -609,6 +637,8 @@ export function buildPanel(
   // hides whenever the feature it tunes is off or owned by another mode.
   refreshCond = (): void => {
     const fab = params.mazeFabric;
+    startAnchorRow.hidden = !fab;
+    exitAnchorRow.hidden = !fab;
     deadEndsRow.hidden = !fab;
     deadEndDensityRow.hidden = !fab || !params.deadEnds;
     branchDensityRow.hidden = !fab;

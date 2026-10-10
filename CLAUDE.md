@@ -350,6 +350,22 @@ between-threads/cell-passage route.
   over the Stage 18 transparent canvas), frontier positions via the
   clamping samplers + tipsAt dir/rate, ink mode emits at the mask's
   0.5-crossings; drains to a one-compare no-op after the reveal.
+- SHAPED LATTICES (worktree agent, user-requested): `shape` (shp=:
+  rect | heart | star | fish | tree | ring) sculpts the lattice via
+  analytic inside/outside masks sampled at cell centers
+  (core/shapes.ts; largest-connected-component keep, holes = out-of-
+  mask interiors - the ring proves them); the grower confines tree +
+  weave openings to in-mask pairs, mask boundaries act like the outer
+  border. rect = null mask, BYTE-IDENTICAL path (unit-tested + the
+  physics golden). Maze entrance/exit generalize to ANCHORS (sa=/xa=,
+  compass points): maskExtremePoint -> thick-material nudge (cuts at
+  silhouette slivers parked tails beside boundary-hairpin kink eyes
+  that tore and stood - shapes were FATTENED instead of touching
+  physics, per the convexify rule) -> nearest maze-strand edge.
+  Battery: 24/24 shape x mode x seed settles; scripted star solve
+  lands exactly on optimal; invariants unit-tested per shape. Known
+  residual: star e-w 6/8 sleeps, 2 stragglers hover at threshold
+  (bistable-attractor class, no blowups).
 - PHYSICS JUNCTION SPACING (worktree agent, user-requested): fused
   joints keep their nearest crossing at jnSep = max(2.2,
   5.7*threadWidth) ctrl per arm via a P3.39-style rate-limited ratchet

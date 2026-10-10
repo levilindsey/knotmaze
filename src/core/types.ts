@@ -1,5 +1,7 @@
 // Layer 1: Combinatorial graph types.
 
+import type { ShapeId } from "./shapes";
+
 export const NODE_TYPE = {
   CROSSING: "crossing",   // degree 4, over/under bit
   JUNCTION: "junction",   // degree 3+, branch/merge
@@ -51,6 +53,9 @@ export interface GenerationParams {
   weaveDensity: number; // [0, 1] P(non-tree wall opened): more = denser weave.
   turnBias: number;     // [0, 1] growing-tree newest-cell bias: more = windier corridors.
   randSeed: number;     // RNG seed.
+  // Silhouette mask id (core/shapes.ts). Absent or "rect" = the full
+  // rectangular lattice, byte-identical to the pre-shape grower.
+  shape?: ShapeId;
 }
 
 export interface ParamFieldConfig {
