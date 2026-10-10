@@ -83,7 +83,7 @@ Work lands directly to `main`. All changes must be end-to-end working before com
 - Phased roadmap: P0 (scaffold) → P1 (combinatorial) → P2 (beauty + live physics) → P3 (touch + audio) → P4 (maze mode) → P5 (growth animation) → P6 (flourishes).
 - Each phase ships as a working demo starting from P2.
 
-## Roadmap status — what's next (updated 2026-10-09, after P4 Stage 18)
+## Roadmap status — what's next (updated 2026-10-10, after P4 Stage 21)
 
 **P0–P3 done** (their saga lives in Follow-ups; the bounded
 post-VIOLENT-play loud attractor at fat params remains the one open
@@ -230,6 +230,28 @@ between-threads/cell-passage route.
   erase grid past the solved caps with a per-vertex fade coordinate
   into a cached premultiplied alpha-ramp texture; fl=0 is bit-identical
   sharp. laneCuts/eraseExtent bookkeeping untouched.
+- Stage 19 — BOUNDED TUG + SNAP-BACK, pointer-layer only (grab
+  machinery untouched; knot byte identity holds): drag target
+  rubber-bands around the grab origin (eff = L·tanh(r/L), L =
+  `tugLimit` (`tl=`) thread widths); on release the target eases home
+  at `snapBack` 1/s (`sb=`, 0 = off) before the grab frees. The pluck
+  voice fires at POINTERUP from tracked drag speed (actual release is
+  near-still by design).
+- Stages 20+21 — THE INSTRUMENT: `audio/pitch_space.ts` (9 scales
+  incl. chromatic; octaves 1-4; root = seed%12 at A2) assigns every
+  SEGMENT (walk run / strand) a stable pitch by LENGTH BUCKET
+  (quantile, longer = lower; unit-tested). `soundMode` (`snd=`):
+  none | manual | random (self-plucks at bounded random intervals) |
+  music (`audio/songs.ts` — {note, beats}; demo: Scarborough Fair,
+  Dorian; each note physically plucks a random segment with the
+  nearest assigned pitch). Auto plucks run a scripted 0.15s
+  perpendicular pull on the SHARED grab machinery, then release into
+  the string ring. `pitchSpace`/`octaves` re-derive the assignment
+  via onAudioChange with NO scene rebuild. `pluckStyle` (`pk=`,
+  default string): release snaps back sharply and RINGS (damped
+  cosine, ~4 visible cycles, 3-8Hz rising with the audible pitch) -
+  only the grabbed point is driven, springs localize the ring;
+  "soft" keeps the Stage 19 ease.
 
 RENDER LORE (hard-won, 2026-10-09): **flat fills cannot represent a
 field.** Once per-vertex V blending exists, ANY flat-colored overlay
