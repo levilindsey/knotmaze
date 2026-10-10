@@ -350,6 +350,21 @@ between-threads/cell-passage route.
   over the Stage 18 transparent canvas), frontier positions via the
   clamping samplers + tipsAt dir/rate, ink mode emits at the mask's
   0.5-crossings; drains to a one-compare no-op after the reveal.
+- PHYSICS JUNCTION SPACING (worktree agent, user-requested): fused
+  joints keep their nearest crossing at jnSep = max(2.2,
+  5.7*threadWidth) ctrl per arm via a P3.39-style rate-limited ratchet
+  (JN_SEP_RATE 0.015, mobility-scaled) in easePassToward BEFORE the
+  ordering clamps (they always win - never forces topology). Corridor
+  lesson: a pass flanked by TWO joints needs each side's budget capped
+  at half the joint-to-joint span, or last-writer dominance CONVEYS it
+  tighter than before. Census at the repro seed: sub-2.0-ctrl tail
+  41 -> 9, worst 1.39 -> 1.90, survivors parked sub-stick (fabric
+  still sleeps 3.9). Knot mode structurally untouched (no fusions ->
+  no clamp records). Full battery green (sweeps knot+fabric incl. the
+  P3.39 pin seed, quiescence, gesture battery 9/9 re-sleep, scans).
+  Agent also flagged (unverified): easePassToward's seam-end guard
+  skips/mis-clamps the two terminal passes of open chains -
+  pre-existing, needs its own measured look.
 - JUNCTION CLEARANCE (fix A) + TWO-LAYER FILLETS (fix B), same round:
   junctions were invisible to the crossing bookkeeping, so gap cuts +
   fade tails marched into seal discs/webs (worse with gap, fl, cr) -
