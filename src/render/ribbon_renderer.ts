@@ -204,6 +204,13 @@ const FILLET_MAX_WEDGE = 2.6; // Radians.
 const FILLET_CORNER_LIM = 2.2; // * edge half-width: skip distant corners.
 const FILLET_BEZIER_STEPS = 8;
 const FILLET_EDGE_PTS = 5; // Samples per curve-hugging wedge flank.
+// Under-gap flank clamp (rebuildFillets armReach): stop this many
+// fillHalfs short of the arm's nearest cut (underWindows carry MID-lane
+// extents; the wedge-side lanes of an oblique crossing cut nearer - a
+// 0.5 pad still left small points at the repro's oblique dives), never
+// below this fraction of the full reach (the joint still needs rounding).
+const FILLET_GAP_PAD = 1.0;
+const FILLET_GAP_MIN_FRAC = 0.3;
 const DISC_SEGS = 16; // Rim segments on tip/junction seal discs.
 
 // Wrap (closed) or clamp (open) a world arc into a chain's [0, total].
@@ -729,14 +736,20 @@ export class RibbonRenderer {
   // paint pass can re-copy recolored UVs into patches without re-running
   // the full crossing solve.
   private overWindows = new Int32Array(0);
+  // Per crossing: the window's fractional end trims [startFrac, endFrac]
+  // (CONTINUOUS ENDS), replayed by the paint pass with the window.
+  private overWindowFracs = new Float32Array(0);
   private overChainCrossings = new Map<number, number[]>();
   private emergentWindows: Array<{
     chain: number;
     start: number;
     span: number;
+    startFrac: number;
+    endFrac: number;
   } | null> = [];
   private lastWindowStart = 0;
   private lastWindowSpan = 0;
+  private lastWindowFracs = new Float32Array([0, 1]);
   // Junction joinery: arms per fused junction (built once), per-chain
   // fused-terminal flags for the tuck, and palette pixel rows for CPU-side
   // fillet coloring.
@@ -1047,6 +1060,7 @@ export class RibbonRenderer {
     this.crossingShownAt = new Float64Array(ps.crossings.length).fill(-1);
     this.prevCutSign = new Int8Array(ps.crossings.length * ERASE_LANES * 2);
     this.overWindows = new Int32Array(ps.crossings.length * 2);
+    this.overWindowFracs = new Float32Array(ps.crossings.length * 2);
     this.emergentWindows = new Array(EMERGENT_POOL).fill(null);
 
     // Junction joinery bookkeeping (fabric only; knot mode has no fused
@@ -2465,8 +2479,19 @@ export class RibbonRenderer {
       // come from fillBound - the same closure the erase's over polyline
       // quoted before the marches ran.
       const overlapReach = eraseW + fillHalf + ERASE_WIDTH_PAD + 0.05;
+      // The exit is refined by linear interpolation between the bracketing
+      // march samples, as the erase lanes do: returning the raw step
+      // quantized the window to MARCH_STEP, and under flow a stop that
+      // flips steps moved the fill end in 0.07 jumps.
       const reachAlongOver = (dir: number): number => {
         const rMax = fillBound(dir);
+        this.sampleAt(overSamples, overCenter, this.sampleScratch, 0);
+        let prevS = 0;
+        let prevD = this.distToLocal(
+          this.underLocal,
+          this.sampleScratch[0],
+          this.sampleScratch[1]
+        );
         for (let s = MARCH_STEP; s < rMax; s += MARCH_STEP) {
           this.sampleAt(overSamples, overCenter + dir * s, this.sampleScratch, 0);
           const d = this.distToLocal(
@@ -2475,8 +2500,14 @@ export class RibbonRenderer {
             this.sampleScratch[1]
           );
           if (d >= overlapReach) {
-            return Math.min(s + OVER_PATCH_MARGIN, rMax);
+            const t =
+              d > prevD
+                ? Math.max(0, Math.min(1, (overlapReach - prevD) / (d - prevD)))
+                : 1;
+            return Math.min(prevS + (s - prevS) * t + OVER_PATCH_MARGIN, rMax);
           }
+          prevS = s;
+          prevD = d;
         }
         return rMax;
       };
@@ -2494,24 +2525,52 @@ export class RibbonRenderer {
       // Repaint the over thread across the hole by copying the base
       // ribbon's vertices for the window's sample range - pixel-identical
       // to the base ribbon, so no width change and no outline mismatch.
+      // CONTINUOUS ENDS: the window ends sit at the EXACT arcs (fractional
+      // samples; the end pairs are lerped on the source strip's edges -
+      // see updateFromRibbonWindow). Whole-sample ends were the measured
+      // gap jitter: a fill end visible over erased base (a dive-under fade)
+      // rode the resampling grid, which slides along the material as flow
+      // breathes the chain's length, and re-snapped one sample (0.082 arc)
+      // 2-7 times per second per crossing. Rings resample over `count`
+      // segments, open runs over `count - 1` (sampleOpenSpline) - the old
+      // total/count mapping skewed open-run windows by up to one sample.
       const overFill = this.fills[crossing.over.chain];
-      const arcPerSample = overSamples.totalLength / overSamples.count;
-      const startSample = Math.floor((overCenter - halfNeg) / arcPerSample);
-      const endSample = Math.ceil((overCenter + halfPos) / arcPerSample);
-      const span = Math.min(
-        endSample - startSample + 1,
-        OVER_PATCH_MAX_SAMPLES,
-        overSamples.count
-      );
+      const arcPerSample =
+        overSamples.totalLength /
+        (overSamples.closed ? overSamples.count : overSamples.count - 1);
+      let f0 = (overCenter - halfNeg) / arcPerSample;
+      let f1 = (overCenter + halfPos) / arcPerSample;
+      if (!overSamples.closed) {
+        f0 = Math.max(0, f0);
+        f1 = Math.min(overSamples.count - 1, f1);
+      }
+      const startSample = Math.floor(f0);
+      const endSample = Math.max(startSample + 1, Math.ceil(f1));
+      const fullSpan = endSample - startSample + 1;
+      const span = Math.min(fullSpan, OVER_PATCH_MAX_SAMPLES, overSamples.count);
+      const startFrac = f0 - startSample;
+      // A capacity-truncated window keeps its whole-sample cut.
+      const endFrac = span === fullSpan ? f1 - (endSample - 1) : 1;
       const palette = this.style.paletteMode === true;
-      fillMesh.updateFromRibbonWindow(overFill, startSample, span, palette);
+      fillMesh.updateFromRibbonWindow(
+        overFill,
+        startSample,
+        span,
+        palette,
+        startFrac,
+        endFrac
+      );
       fillMesh.mesh.tint = overFill.mesh.tint;
       if (palette) fillMesh.mesh.texture = overFill.mesh.texture;
       this.lastWindowStart = startSample;
       this.lastWindowSpan = span;
+      this.lastWindowFracs[0] = startFrac;
+      this.lastWindowFracs[1] = endFrac;
       if (index >= 0) {
         this.overWindows[index * 2] = startSample;
         this.overWindows[index * 2 + 1] = span;
+        this.overWindowFracs[index * 2] = startFrac;
+        this.overWindowFracs[index * 2 + 1] = endFrac;
       }
 
       if (index >= 0) {
@@ -2620,6 +2679,8 @@ export class RibbonRenderer {
             chain: em.over.chain,
             start: this.lastWindowStart,
             span: this.lastWindowSpan,
+            startFrac: this.lastWindowFracs[0],
+            endFrac: this.lastWindowFracs[1],
           }
         : null;
     }
@@ -2923,11 +2984,15 @@ export class RibbonRenderer {
         for (const ci of list) {
           const span = this.overWindows[ci * 2 + 1];
           if (span > 0) {
+            // Replay the SAME trims as the solve, or paint ticks would
+            // alternate trimmed/whole-sample ends at the tick rate.
             this.overFills[ci].updateFromRibbonWindow(
               this.fills[chain],
               this.overWindows[ci * 2],
               span,
-              true
+              true,
+              this.overWindowFracs[ci * 2],
+              this.overWindowFracs[ci * 2 + 1]
             );
           }
         }
@@ -2939,7 +3004,9 @@ export class RibbonRenderer {
             this.fills[chain],
             w.start,
             w.span,
-            true
+            true,
+            w.startFrac,
+            w.endFrac
           );
         }
       }
@@ -4389,6 +4456,34 @@ export class RibbonRenderer {
     const w = fillHalf * 0.97;
     const L = fillHalf * FILLET_REACH_PER_HALF * this.cuspRadius;
     const drawWedges = this.cuspRadius > 0.05 && L > w * 0.3;
+    // JOINERY HONORS THE WEAVE (the yarn's Stage 24b rule): a flank stops
+    // short of its arm's nearest under-gap. Junction clearance never caps
+    // a cut's COVERAGE, so a crossing parked near a joint cuts within the
+    // web's reach (0.24 world vs L 0.55 at cr 2.1); the erase only spans
+    // the under thread's width, so web material past the cut survived
+    // beside it and floated into the dark gap as a pale spur.
+    const armReach = (arm: JArm): number => {
+      const win = this.underWindows.get(arm.chain);
+      if (!win) return L;
+      let near = Infinity;
+      for (let i = 0; i < win.length; i += 3) {
+        let along = (win[i] - arm.arc0) * arm.dir;
+        if (arm.closed) {
+          along = ((along % arm.total) + arm.total) % arm.total;
+          if (along > arm.total / 2) along -= arm.total;
+        }
+        // [center, extNeg, extPos] along the chain -> near/far edges
+        // along this arm's outward direction.
+        const far = along + (arm.dir > 0 ? win[i + 2] : win[i + 1]);
+        if (far <= 0) continue; // Entirely behind the joint.
+        const nearEdge = along - (arm.dir > 0 ? win[i + 1] : win[i + 2]);
+        if (nearEdge < near) near = nearEdge;
+      }
+      return Math.min(
+        L,
+        Math.max(L * FILLET_GAP_MIN_FRAC, near - fillHalf * FILLET_GAP_PAD)
+      );
+    };
 
     for (const rec of recs) {
       const jx = rec.jx;
@@ -4461,9 +4556,10 @@ export class RibbonRenderer {
           left: boolean,
           out: number[]
         ): void => {
+          const reach = armReach(arm);
           for (let e = 0; e < FILLET_EDGE_PTS; e++) {
             const sArc =
-              (0.12 + (0.88 * e) / (FILLET_EDGE_PTS - 1)) * L;
+              (0.12 + (0.88 * e) / (FILLET_EDGE_PTS - 1)) * reach;
             const a0 = normArc(
               arm.arc0 + arm.dir * sArc,
               arm.total,
@@ -4479,11 +4575,26 @@ export class RibbonRenderer {
             const px = this.sampleScratch[0];
             const py = this.sampleScratch[1];
             this.sampleAtSafe(samples, a1, arm.closed, this.sampleScratch, 0);
-            let tx = (this.sampleScratch[0] - px) * arm.dir;
-            let ty = (this.sampleScratch[1] - py) * arm.dir;
-            const tl = Math.hypot(tx, ty) || 1;
-            tx /= tl;
-            ty /= tl;
+            // a1 already sits FARTHER OUT along the arm than a0 (both
+            // step by arm.dir), so this difference IS the outward
+            // tangent. Multiplying by arm.dir again (the Stage 16d form)
+            // mirrored every dir = -1 flank onto its arm's FAR edge: the
+            // fan swept across the whole arm, painting the junction-field
+            // blend over the thread and cutting it with a diagonal rim
+            // (pale shards / smudges ON the weave; 100% of dir = -1
+            // flank vertices measured on the far edge).
+            let tx = this.sampleScratch[0] - px;
+            let ty = this.sampleScratch[1] - py;
+            const tl = Math.hypot(tx, ty);
+            if (tl > 1e-6) {
+              tx /= tl;
+              ty /= tl;
+            } else {
+              // Both probes inside a fused tip's tuck (samples collapsed
+              // onto the tuck point): use the arm's junction direction.
+              tx = arm.dx;
+              ty = arm.dy;
+            }
             const sgn = left ? 1 : -1;
             out.push(px - ty * w * sgn, py + tx * w * sgn);
           }

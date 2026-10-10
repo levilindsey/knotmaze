@@ -261,11 +261,24 @@ export class RibbonMesh {
   // `copyUVs` (palette mode) the paint coordinates AND section colors ride
   // along too, so the patch recolors pixel-identically with its source
   // thread.
+  // CONTINUOUS ENDS: `startFrac` / `endFrac` trim the first / last pair to
+  // a fractional sample position (first pair slides toward the second by
+  // startFrac; last pair sits endFrac of the way from its predecessor).
+  // The source strip's quad edges are straight between consecutive pairs,
+  // so a lerped pair lies exactly on them: the trimmed end quad is a
+  // sub-quad of the source quad (still pixel-identical where it overlaps),
+  // but the patch end can sit at ANY arc instead of snapping to whole
+  // samples - a sample-snapped end rode the resampling grid (which slides
+  // along the material as flow breathes the chain's length) and re-snapped
+  // a full sample several times per second, the "gap jitter" report.
+  // Defaults (0, 1) reproduce the whole-sample copy exactly.
   updateFromRibbonWindow(
     source: RibbonMesh,
     startSample: number,
     sampleSpan: number,
-    copyUVs = false
+    copyUVs = false,
+    startFrac = 0,
+    endFrac = 1
   ): void {
     const n = source.sampleCount;
     const copyColors =
@@ -301,6 +314,44 @@ export class RibbonMesh {
         this.fxData![i * 2 + 1] = source.fxData![s * 2 + 1];
       }
     }
+    if (sampleSpan >= 2) {
+      if (startFrac > 0) {
+        this.lerpPairFrom(
+          source,
+          0,
+          startSample,
+          startFrac,
+          copyUVs,
+          copyColors,
+          copyFx
+        );
+      }
+      if (endFrac < 1) {
+        const last = sampleSpan - 1;
+        this.lerpPairFrom(
+          source,
+          last,
+          startSample + last - 1,
+          endFrac,
+          copyUVs,
+          copyColors,
+          copyFx
+        );
+        // Unused stations repeat the last pair (degenerate quads); they
+        // must repeat the TRIMMED pair or the quad after it re-extends to
+        // the untrimmed sample.
+        for (let i = last + 1; i < this.sampleCount; i++) {
+          this.vertexData.copyWithin(i * 4, last * 4, last * 4 + 4);
+          if (copyUVs) this.uvData.copyWithin(i * 4, last * 4, last * 4 + 4);
+          if (copyColors) {
+            this.colorData!.copyWithin(i * 6, last * 6, last * 6 + 6);
+          }
+          if (copyFx) {
+            this.fxData!.copyWithin(i * 2, last * 2, last * 2 + 2);
+          }
+        }
+      }
+    }
     this.mesh.geometry.getBuffer("aPosition").update();
     if (copyUVs) this.mesh.geometry.getBuffer("aUV").update();
     if (copyColors) {
@@ -310,6 +361,47 @@ export class RibbonMesh {
     if (copyFx) {
       this.mesh.geometry.getBuffer("aFx").update();
       this.fxZero = source.fxZero;
+    }
+  }
+
+  // Write pair `dst` as the lerp of source pairs (a, a + 1) by t (wrapped
+  // indices, as the window copy) - positions, plus UVs / colors / FX
+  // weights when those are copied.
+  private lerpPairFrom(
+    source: RibbonMesh,
+    dst: number,
+    a: number,
+    t: number,
+    copyUVs: boolean,
+    copyColors: boolean,
+    copyFx: boolean
+  ): void {
+    const n = source.sampleCount;
+    const s0 = ((a % n) + n) % n;
+    const s1 = (((a + 1) % n) + n) % n;
+    for (let k = 0; k < 4; k++) {
+      const p0 = source.vertexData[s0 * 4 + k];
+      this.vertexData[dst * 4 + k] =
+        p0 + (source.vertexData[s1 * 4 + k] - p0) * t;
+    }
+    if (copyUVs) {
+      for (let k = 0; k < 4; k++) {
+        const u0 = source.uvData[s0 * 4 + k];
+        this.uvData[dst * 4 + k] = u0 + (source.uvData[s1 * 4 + k] - u0) * t;
+      }
+    }
+    if (copyColors) {
+      for (let k = 0; k < 6; k++) {
+        const c0 = source.colorData![s0 * 6 + k];
+        this.colorData![dst * 6 + k] =
+          c0 + (source.colorData![s1 * 6 + k] - c0) * t;
+      }
+    }
+    if (copyFx) {
+      for (let k = 0; k < 2; k++) {
+        const f0 = source.fxData![s0 * 2 + k];
+        this.fxData![dst * 2 + k] = f0 + (source.fxData![s1 * 2 + k] - f0) * t;
+      }
     }
   }
 
