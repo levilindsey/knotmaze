@@ -83,7 +83,7 @@ Work lands directly to `main`. All changes must be end-to-end working before com
 - Phased roadmap: P0 (scaffold) → P1 (combinatorial) → P2 (beauty + live physics) → P3 (touch + audio) → P4 (maze mode) → P5 (growth animation) → P6 (flourishes).
 - Each phase ships as a working demo starting from P2.
 
-## Roadmap status — what's next (updated 2026-10-09, after P4 Stage 8)
+## Roadmap status — what's next (updated 2026-10-09, after P4 Stage 10)
 
 **P0–P3 done** (their saga lives in Follow-ups; the bounded
 post-VIOLENT-play loud attractor at fat params remains the one open
@@ -117,31 +117,45 @@ between-threads/cell-passage route.
   7b — open-ribbon tips get clean perpendicular caps (no phantom miter).
 - Stage 8 — GAMEPLAY on the fabric: `core/walk_graph.ts` (JUNCTION/END
   vertices, thread-run multigraph edges carrying chain ctrl spans +
-  deterministic LATTICE lengths; Dijkstra; start/exit = the
-  longest-shortest-path pair among the four cut tails, other two tails
-  = walkable decoys), `game/fabric_controller.ts` (BRANCH-POINT-ONLY
-  taps — one run per tap, never past a later branch point; backtrack =
-  re-tap the last run; the two recorded metrics: current-path length vs
-  optimal AND cumulative backtrack distance, separate meters),
-  `render/fabric_maze_renderer.ts` (gold recolor woven per chain from
-  LIVE crossing bindings, start/exit/head markers, choice hints), HUD +
-  win banner in `main.ts`. Both 2026-07-27 follow-ups (branch-point-only
-  clicking; optimal + two distance readouts) are DONE. Verification
-  recipe (scripted REAL pointer taps via `__knotFabric`) is in the
-  Stage 8 commit message; the scripted solve lands exactly on optimal.
+  deterministic LATTICE lengths; Dijkstra; start/exit from the cut
+  tails), `game/fabric_controller.ts` (BRANCH-POINT-ONLY taps — one run
+  per tap, never past a later branch point; backtrack = re-tap the last
+  run; the two recorded metrics: current-path length vs optimal AND
+  cumulative backtrack distance, separate meters), HUD + win banner in
+  `main.ts`. Both 2026-07-27 follow-ups are DONE. Verification recipe
+  (scripted REAL pointer taps via `__knotFabric`) is in the Stage 8
+  commit message; the scripted solve lands exactly on optimal.
+- Stage 9 — BRAIDED BY DEFAULT + TRIMMED CORNERS: deadEndDensity
+  defaults to 0 (stubs behind the `deadEnds` checkbox / `de=1`), and
+  each corner cut keeps ONE anchored tail — the other flank merges into
+  its first crossing (fused 3-way; stub deleted at graph level).
+  Self-crossing merges are allowed when the kept loop spans >=
+  SELF_MERGE_MIN_LOOP strand edges (the corner-lobe case, which is the
+  typical corner geometry — measured 10/10 across the test seeds).
+  Side effect: the default fabric now actually sleeps.
+- Stage 10 — THREAD-TRUE GAMEPLAY PAINT: gameplay rendering recolors
+  the ACTUAL ribbons via per-chain 256x1 palette textures + per-vertex
+  UVs (RibbonRenderer palette mode; over-fill patches copy UVs, so the
+  weave recolors pixel-identically). Traveled runs gold; choice arms
+  carry a lightened distance-fading tint with traveling crests (OUT of
+  the junction on choices, INTO it on the arrival run, phase-staggered
+  into one continuous flow); hover lights a run steady near-white;
+  traversed junctions wear small gold caps on every arm (hides the
+  overlapping-ribbon footprint at fusions — attributed via
+  `__knotFabric().near()`, not guessed). The paint pass (`tickPaint`)
+  rewrites only UV buffers, so the pulse animates while the knot
+  sleeps. Distance labels are x10 integers. This RETIRED the Stage 8
+  stroke overlay and its ~1px handoff-hairline residual wholesale.
 
 Still open in P4:
-- **URL/param serialization for `MazeParams`** (branchDensity,
-  deadEndDensity, fourWayFraction, … — today only `mf` serializes and
-  `DEFAULT_MAZE_PARAMS` always applies) and the **daily seed**
+- **URL/param serialization for the remaining `MazeParams`**
+  (branchDensity, fourWayFraction, … — today `mf` + `de` serialize and
+  `DEFAULT_MAZE_PARAMS` supplies the rest) and the **daily seed**
   (Wordle-style shared daily + time-to-solve share).
 - **Old maze mode's fate** (`md=1`, single-strand trace,
   `core/maze.ts` + `game/maze_controller.ts` + `render/maze_renderer.ts`)
   — still works, untouched; retire it once fabric gameplay is strictly
   better, to drop a whole legacy toggle+overlay.
-- Cosmetic residual: ~1px dark hairline where a gold over-stretch hands
-  off to its under-stretch at an erase boundary (Stage 8 commit notes;
-  same class existed in the old overlay).
 
 **P5 — growth animation** (animate the knot being drawn/growing) and
 **P6 — flourishes** (polish) remain untouched after P4.
