@@ -2033,6 +2033,125 @@ export class RibbonRenderer {
       this.axisScratch[1] = dy / len;
     };
 
+    // THE JUNCTION FIELD: one continuous (u, v) function around each
+    // junction, shared by EVERY overlay primitive there. A query point's
+    // direction from the junction picks the two bracketing arms (by
+    // angle); each arm is sampled at the point's distance PROJECTED onto
+    // it (a point beside a thread reads its cross-section, a point along
+    // it reads its ramp), and the two samples blend by angular fraction.
+    // Disc rims, wedge rims, and the ribbons themselves then agree
+    // wherever they meet. Per-primitive sampling (host-axis discs,
+    // per-arm wedges) left faint rim arcs wherever one primitive's color
+    // crossed ANOTHER arm's material - the circled phone-zoom reports.
+    interface JArm {
+      ang: number;
+      dx: number;
+      dy: number;
+      chain: number;
+      dir: number;
+      arc0: number;
+      closed: boolean;
+      total: number;
+    }
+    interface JRec {
+      jx: number;
+      jy: number;
+      arms: JArm[];
+    }
+    const pos = this.ps.positions;
+    const recs: JRec[] = [];
+    for (const jn of this.junctionArms) {
+      let jx = 0;
+      let jy = 0;
+      for (const p of jn.particles) {
+        jx += pos[p * 2];
+        jy += pos[p * 2 + 1];
+      }
+      jx /= jn.particles.length;
+      jy /= jn.particles.length;
+      const arms: JArm[] = [];
+      for (const a of jn.arms) {
+        const samples = this.chainSamples[a.chain];
+        if (!samples) continue;
+        const closedA = this.ps.chainBreakAfter[a.chain] < 0;
+        this.sampleAt(
+          samples,
+          this.paintArcAt(samples, a.slot + a.dir * 0.8, closedA),
+          this.sampleScratch,
+          0
+        );
+        let dx = this.sampleScratch[0] - jx;
+        let dy = this.sampleScratch[1] - jy;
+        const len = Math.hypot(dx, dy);
+        if (len < 0.15) continue;
+        dx /= len;
+        dy /= len;
+        arms.push({
+          ang: Math.atan2(dy, dx),
+          dx,
+          dy,
+          chain: a.chain,
+          dir: a.dir,
+          arc0: this.paintArcAt(samples, a.slot, closedA),
+          closed: closedA,
+          total: samples.totalLength,
+        });
+      }
+      arms.sort((p, q) => p.ang - q.ang);
+      recs.push({ jx, jy, arms });
+    }
+
+    let fieldU = U_BASE;
+    let fieldV = 0.5;
+    const armSample = (arm: JArm, proj: number): void => {
+      const arc = normArc(arm.arc0 + arm.dir * proj, arm.total, arm.closed);
+      fieldU = this.paintUAtArc(arm.chain, arc, arm.closed);
+      fieldV = this.vAtArc(arm.chain, arc);
+    };
+    const fieldAt = (rec: JRec, px: number, py: number): void => {
+      const arms = rec.arms;
+      if (arms.length === 0) {
+        fieldU = U_BASE;
+        fieldV = 0.5;
+        return;
+      }
+      const d = Math.hypot(px - rec.jx, py - rec.jy);
+      const ang = Math.atan2(py - rec.jy, px - rec.jx);
+      let bi = 0;
+      while (bi < arms.length && arms[bi].ang < ang) bi++;
+      const B = arms[bi % arms.length];
+      const A = arms[(bi - 1 + arms.length) % arms.length];
+      armSample(A, d * Math.max(0, Math.cos(ang - A.ang)));
+      if (A === B) return;
+      const uA = fieldU;
+      const vA = fieldV;
+      armSample(B, d * Math.max(0, Math.cos(ang - B.ang)));
+      let span = B.ang - A.ang;
+      if (span <= 0) span += Math.PI * 2;
+      let off = ang - A.ang;
+      if (off < 0) off += Math.PI * 2;
+      const t = span > 1e-6 ? Math.min(1, Math.max(0, off / span)) : 0;
+      fieldU = uA + (fieldU - uA) * t;
+      fieldV = vA + (fieldV - vA) * t;
+    };
+    const pushDiscField = (
+      rec: JRec,
+      cx: number,
+      cy: number,
+      r: number
+    ): void => {
+      const rim: number[] = [];
+      for (let i = 0; i <= DISC_SEGS; i++) {
+        const th = ((i % DISC_SEGS) / DISC_SEGS) * Math.PI * 2;
+        const px = cx + Math.cos(th) * r;
+        const py = cy + Math.sin(th) * r;
+        fieldAt(rec, px, py);
+        rim.push(px, py, fieldU, fieldV);
+      }
+      fieldAt(rec, cx, cy);
+      fm.pushFan(cx, cy, fieldU, fieldV, rim);
+    };
+
     // Tip positions read the ENDPOINT SAMPLE directly: sampleAt wraps its
     // arc modulo totalLength, so asking it for arc == total lands at arc 0
     // - every atEnd tip disc rendered at its chain's START, carrying the
@@ -2066,10 +2185,10 @@ export class RibbonRenderer {
       );
     }
     // Tucked fused tips get the same disc (rounds the cap, covers its
-    // corner ears and the cap/host sliver) but wear the HOST's material:
-    // the disc lies mostly on the host's face, and arm-material discs
-    // rendered as floating pale/gold dots wherever the two paints
-    // disagreed.
+    // corner ears and the cap/host sliver). The tuck point IS a junction,
+    // so the disc wears the shared junction field - axis-projected HOST
+    // sampling painted host color over the bridge arm's ramp, a faint rim
+    // arc on the bridge side (circled in the phone zooms).
     for (const tip of this.fusedTips) {
       const samples = this.chainSamples[tip.chain];
       const hostSamples = this.chainSamples[tip.hostChain];
@@ -2077,6 +2196,23 @@ export class RibbonRenderer {
       tipXY(samples, tip.atEnd);
       const cx = this.sampleScratch[0];
       const cy = this.sampleScratch[1];
+      let rec: JRec | null = null;
+      let best = fillHalf * fillHalf * 9;
+      for (const r of recs) {
+        if (r.arms.length < 2) continue;
+        const ddx = r.jx - cx;
+        const ddy = r.jy - cy;
+        const dd = ddx * ddx + ddy * ddy;
+        if (dd < best) {
+          best = dd;
+          rec = r;
+        }
+      }
+      if (rec) {
+        pushDiscField(rec, cx, cy, fillHalf * 0.99);
+        continue;
+      }
+      // No junction within reach (shouldn't happen): host-axis fallback.
       const closedH = this.ps.chainBreakAfter[tip.hostChain] < 0;
       const arcH = this.paintArcAt(hostSamples, tip.hostCtrl, closedH);
       axisAt(tip.hostChain, arcH);
@@ -2091,94 +2227,27 @@ export class RibbonRenderer {
       );
     }
 
-    if (this.junctionArms.length === 0) {
+    if (recs.length === 0) {
       fm.commit();
       return;
     }
     const w = fillHalf * 0.97;
     const L = fillHalf * FILLET_REACH_PER_HALF * this.cuspRadius;
     const drawWedges = this.cuspRadius > 0.05 && L > w * 0.3;
-    const pos = this.ps.positions;
 
-    for (const jn of this.junctionArms) {
-      let jx = 0;
-      let jy = 0;
-      for (const p of jn.particles) {
-        jx += pos[p * 2];
-        jy += pos[p * 2 + 1];
-      }
-      jx /= jn.particles.length;
-      jy /= jn.particles.length;
-
-      const arms: Array<{
-        ang: number;
-        dx: number;
-        dy: number;
-        chain: number;
-        dir: number;
-        arc0: number;
-        closed: boolean;
-        total: number;
-      }> = [];
-      for (const a of jn.arms) {
-        const samples = this.chainSamples[a.chain];
-        if (!samples) continue;
-        const closedA = this.ps.chainBreakAfter[a.chain] < 0;
-        this.sampleAt(
-          samples,
-          this.paintArcAt(samples, a.slot + a.dir * 0.8, closedA),
-          this.sampleScratch,
-          0
-        );
-        let dx = this.sampleScratch[0] - jx;
-        let dy = this.sampleScratch[1] - jy;
-        const len = Math.hypot(dx, dy);
-        if (len < 0.15) continue;
-        dx /= len;
-        dy /= len;
-        arms.push({
-          ang: Math.atan2(dy, dx),
-          dx,
-          dy,
-          chain: a.chain,
-          dir: a.dir,
-          arc0: this.paintArcAt(samples, a.slot, closedA),
-          closed: closedA,
-          total: samples.totalLength,
-        });
-      }
+    for (const rec of recs) {
+      const jx = rec.jx;
+      const jy = rec.jy;
+      const arms = rec.arms;
       if (arms.length < 2) continue;
 
-      // Seal the junction center with a disc of HOST material under the
-      // fillets: the concave-side miter clamp can thin a host ribbon at a
-      // bend, opening a nick between a tucked cap and the receded edge
-      // regardless of tuck depth. Host = a pass-through occurrence (one
-      // with both directions present), the thread the disc lies on.
-      let hostArm = jn.arms[0];
-      const seen = new Map<string, number>();
-      for (const a of jn.arms) {
-        const key = `${a.chain}:${a.slot}`;
-        seen.set(key, (seen.get(key) ?? 0) + 1);
-        if (seen.get(key) === 2) hostArm = a;
-      }
-      const hostSamples = this.chainSamples[hostArm.chain];
-      if (hostSamples) {
-        const closedH = this.ps.chainBreakAfter[hostArm.chain] < 0;
-        const arcH = this.paintArcAt(hostSamples, hostArm.slot, closedH);
-        axisAt(hostArm.chain, arcH);
-        pushDisc(
-          jx,
-          jy,
-          fillHalf * 0.92,
-          hostArm.chain,
-          arcH,
-          this.axisScratch[0],
-          this.axisScratch[1]
-        );
-      }
+      // Seal the junction center with a disc of the junction field under
+      // the fillets: the concave-side miter clamp can thin a host ribbon
+      // at a bend, opening a nick between a tucked cap and the receded
+      // edge regardless of tuck depth.
+      pushDiscField(rec, jx, jy, fillHalf * 0.92);
 
       if (!drawWedges) continue;
-      arms.sort((p, q) => p.ang - q.ang);
 
       for (let k = 0; k < arms.length; k++) {
         const A = arms[k];
@@ -2221,14 +2290,10 @@ export class RibbonRenderer {
         const pby = o2y + B.dy * L;
 
         // Quadratic bezier PA -> (corner) -> PB, fanned from the corner.
+        // Every vertex evaluates the shared junction field, so the wedge
+        // is a window onto the same continuous material as the discs and
+        // the adjacent ribbons - the pulse animation rides through.
         const n = FILLET_BEZIER_STEPS;
-        // Per-vertex palette UVs: each rim point samples its own distance
-        // d from the junction along BOTH arms' live materials (gameplay U
-        // + section V via the same per-sample cache the ribbons wear),
-        // blended across the wedge by the bezier parameter q. At q=0/q=1
-        // the wedge edge matches the adjacent ribbon exactly, the pulse
-        // animation rides through, and the interior is the GPU-blended
-        // transition between the two arms.
         const rim: number[] = [];
         for (let i = 0; i <= n; i++) {
           const q = i / n;
@@ -2237,29 +2302,11 @@ export class RibbonRenderer {
           const m2 = q * q;
           const px = m0 * pax + m1 * cx + m2 * pbx;
           const py = m0 * pay + m1 * cy + m2 * pby;
-          const d = Math.hypot(px - jx, py - jy);
-          const aArc = normArc(A.arc0 + A.dir * d, A.total, A.closed);
-          const bArc = normArc(B.arc0 + B.dir * d, B.total, B.closed);
-          const u =
-            this.paintUAtArc(A.chain, aArc, A.closed) * (1 - q) +
-            this.paintUAtArc(B.chain, bArc, B.closed) * q;
-          const v =
-            this.vAtArc(A.chain, aArc) * (1 - q) +
-            this.vAtArc(B.chain, bArc) * q;
-          rim.push(px, py, u, v);
+          fieldAt(rec, px, py);
+          rim.push(px, py, fieldU, fieldV);
         }
-        const dC = Math.hypot(cx - jx, cy - jy);
-        const aArcC = normArc(A.arc0 + A.dir * dC, A.total, A.closed);
-        const bArcC = normArc(B.arc0 + B.dir * dC, B.total, B.closed);
-        fm.pushFan(
-          cx,
-          cy,
-          (this.paintUAtArc(A.chain, aArcC, A.closed) +
-            this.paintUAtArc(B.chain, bArcC, B.closed)) /
-            2,
-          (this.vAtArc(A.chain, aArcC) + this.vAtArc(B.chain, bArcC)) / 2,
-          rim
-        );
+        fieldAt(rec, cx, cy);
+        fm.pushFan(cx, cy, fieldU, fieldV, rim);
       }
     }
     fm.commit();
