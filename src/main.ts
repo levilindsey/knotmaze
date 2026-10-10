@@ -174,7 +174,10 @@ async function main(): Promise<void> {
       ps.step(0.1, tuning);
     }
     reveal = new RevealAnimator(params.appearMode, walkGraph, ps, params.seed);
-    reveal.speed = params.appearSpeed;
+    // Burn eats the threads faster (x1.8) - a creeping fire line, not a
+    // slow trace.
+    reveal.speed =
+      params.appearSpeed * (params.appearFx === "burn" ? 1.8 : 1);
     renderer.beginReveal(reveal);
     if (fabric) {
       const r = renderer;
@@ -611,8 +614,7 @@ async function main(): Promise<void> {
   const dragPos = new Float64Array(2);
   let dragVel = 0;
   let lastMoveT = 0;
-  let snapMode: "none" | "soft" | "string" = "none";
-  const strum = { t: 0, ax: 0, ay: 0, amp: 0, hz: 5 };
+  let snapMode: "none" | "soft" = "none";
   // In-flight auto-pluck gesture (random/music modes): a short scripted
   // pull-out on the shared grab machinery, released into string mode.
   let autoGesture: {
@@ -687,13 +689,38 @@ async function main(): Promise<void> {
         amp = minAmp;
       }
     }
-    if (style === "string" && amp > 0.02) {
-      strum.t = 0;
-      strum.ax = ax;
-      strum.ay = ay;
-      strum.amp = amp;
-      strum.hz = hz;
-      snapMode = "string";
+    if (style === "string" && amp > 0.02 && ps && renderer) {
+      // RENDER-ONLY RING: release the physics IMMEDIATELY (neighbors
+      // feel only the brief natural snap-back - the old grab-driven
+      // oscillation shook the whole neighborhood through the crossing
+      // couplings, the "too much overall jiggle" report) and paint the
+      // visible vibration as a damped standing wave on the render
+      // controls. snappiness scales frequency AND tightens decay.
+      const p = ps.grabbedParticle;
+      const px = p >= 0 ? ps.positions[p * 2] : grabOrigin[0];
+      const py = p >= 0 ? ps.positions[p * 2 + 1] : grabOrigin[1];
+      let chain = -1;
+      if (p >= 0) {
+        for (let c = 0; c < ps.chains.length; c++) {
+          if (ps.chains[c].includes(p)) {
+            chain = c;
+            break;
+          }
+        }
+      }
+      const s = params.snappiness;
+      renderer.addPluckWave(
+        chain,
+        px,
+        py,
+        ax,
+        ay,
+        Math.min(amp, 0.6),
+        hz * (0.6 + 1.3 * s),
+        0.55 - 0.4 * s
+      );
+      snapMode = "none";
+      ps.release();
     } else if (style === "soft" && params.snapBack > 0) {
       snapMode = "soft";
     } else {
@@ -995,41 +1022,28 @@ async function main(): Promise<void> {
       return;
     }
 
-    // Release animations: ease (soft) or ring (string) the freed target
-    // around the grab origin, then free the grab. Runs ahead of the
-    // asleep check (wake() keeps the sim stepping while the thread
-    // moves); skipped while paused - a frozen world holds.
-    if (snapMode !== "none") {
+    // Release animation (soft style): ease the freed target back to the
+    // grab origin, then free the grab. The STRING ring is render-only
+    // now (renderer.addPluckWave at release; physics freed instantly).
+    // Runs ahead of the asleep check (wake() keeps the sim stepping
+    // while the thread moves); skipped while paused - a frozen world
+    // holds.
+    if (snapMode === "soft") {
       if (ps.grabbedParticle >= 0) {
         const dt = ticker.deltaMS / 1000;
-        if (snapMode === "soft") {
-          const f = 1 - Math.exp(-params.snapBack * dt);
-          dragPos[0] += (grabOrigin[0] - dragPos[0]) * f;
-          dragPos[1] += (grabOrigin[1] - dragPos[1]) * f;
-          ps.dragTo(dragPos[0], dragPos[1]);
-          wake();
-          if (
-            Math.hypot(
-              dragPos[0] - grabOrigin[0],
-              dragPos[1] - grabOrigin[1]
-            ) < 0.02
-          ) {
-            snapMode = "none";
-            ps.release();
-          }
-        } else {
-          // String: sharp return + damped ring along the release axis.
-          strum.t += dt;
-          const env = strum.amp * Math.exp(-strum.t / 0.22);
-          const off = env * Math.cos(2 * Math.PI * strum.hz * strum.t);
-          dragPos[0] = grabOrigin[0] + strum.ax * off;
-          dragPos[1] = grabOrigin[1] + strum.ay * off;
-          ps.dragTo(dragPos[0], dragPos[1]);
-          wake();
-          if (env < 0.015) {
-            snapMode = "none";
-            ps.release();
-          }
+        const f = 1 - Math.exp(-params.snapBack * dt);
+        dragPos[0] += (grabOrigin[0] - dragPos[0]) * f;
+        dragPos[1] += (grabOrigin[1] - dragPos[1]) * f;
+        ps.dragTo(dragPos[0], dragPos[1]);
+        wake();
+        if (
+          Math.hypot(
+            dragPos[0] - grabOrigin[0],
+            dragPos[1] - grabOrigin[1]
+          ) < 0.02
+        ) {
+          snapMode = "none";
+          ps.release();
         }
       } else {
         snapMode = "none";
@@ -1041,8 +1055,9 @@ async function main(): Promise<void> {
       // is cheap but moving the controls forces the full spline + crossing
       // re-solve (~10ms/frame). 30fps sway is imperceptible for a slow
       // drift and halves the idle burn; the paint pass stays at full rate.
+      // Active pluck waves force FULL rate - a 5-13Hz ring aliases at 30.
       flowParity = !flowParity;
-      if (flowParity) flowRender();
+      if (flowParity || renderer.hasActivePluckWaves()) flowRender();
       fabricTick();
       perfLine = " | asleep";
       updateStamp();

@@ -67,6 +67,7 @@ const K_SPARK = 0;
 const K_STREAK = 1;
 const K_HALO = 2;
 const K_DUST = 3;
+const K_SMOKE = 4;
 
 // Per-frontier spawn rates, particles/second. Deliberately generous - the
 // feature is in its explore-then-tone-down phase; the 600 pool is the
@@ -75,13 +76,43 @@ const SPARK_RATE = 150;
 const STREAK_RATE = 130;
 const HALO_RATE = 70;
 const FLECK_RATE = 30;
-const DUST_RATE = 70;
+// Dust: DENSE and short-lived per request - a busy glitter cloud that
+// churns instead of lingering.
+const DUST_RATE = 190;
+
+// Comet/dust emit AHEAD of the reveal frontier (world units along the
+// travel direction): the effect announces the thread, whose own
+// appearance fades in behind it (the widened reveal taper in
+// revealMaskFor when these styles are active).
+const COMET_LEAD = 0.9;
+const DUST_LEAD = 0.6;
+
+// Burn: smoldering smoke from the charring zone just BEHIND the tip,
+// plus a few weak embers (the thread's own orange->char->normal
+// gradient lives in the renderer's applyBurnColors).
+const SMOKE_RATE = 40;
+const BURN_SPARK_RATE = 36;
+const SMOKE_DRAG = 0.8;
+const SMOKE_RISE = 0.5; // World units/s^2 of buoyancy.
+
+// hue [0,360), s/l [0,1] -> 0xrrggbb (sparks' rainbow tints).
+function hslHex(h: number, s: number, l: number): number {
+  const k = (n: number): number => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number): number =>
+    l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return (
+    (Math.round(f(0) * 255) << 16) |
+    (Math.round(f(8) * 255) << 8) |
+    Math.round(f(4) * 255)
+  );
+}
 
 // Spark physics.
 const SPARK_GRAVITY = 3.1; // World units/s^2, +y is down.
 const SPARK_DRAG = 2.3; // 1/s.
 const STREAK_DRAG = 3.2;
-const DUST_DRAG = 0.35;
+const DUST_DRAG = 0.9;
 
 // Dust mote pastel set (fixed per mote; twinkle pushes toward white).
 const DUST_COLORS = [0xffd9ee, 0xd9c8ff, 0xc5f1e3, 0xffeab8, 0xc9e2ff];
@@ -210,6 +241,8 @@ export class AppearFxSystem {
       this.emitSparks(x, y, dx, dy, frontSpeed, dt);
     } else if (this.style === "comet") {
       this.emitComet(x, y, dx, dy, frontSpeed, dt);
+    } else if (this.style === "burn") {
+      this.emitBurn(x, y, dx, dy, dt);
     } else {
       this.emitDust(x, y, dx, dy, dt);
     }
@@ -260,8 +293,74 @@ export class AppearFxSystem {
       d[o + PSIZE] = tw * (0.1 + R.next() * 0.15) * (hot ? 1.6 : 1);
       d[o + PKIND] = K_SPARK;
       d[o + PROT] = 0;
-      d[o + PC0] = 0xfff3d0; // White-hot birth...
-      d[o + PC1] = R.next() < 0.5 ? 0xffb43c : 0xff7a2e; // ...ember death.
+      // Rainbow-ish sparks, biased toward blue: ~55% land in the
+      // blue-violet band, the rest anywhere on the wheel. Birth is the
+      // hue pulled most of the way to white (still reads white-hot).
+      const hue =
+        R.next() < 0.55 ? 195 + R.next() * 70 : R.next() * 360;
+      d[o + PC0] = hslHex(hue, 0.65, 0.88);
+      d[o + PC1] = hslHex(hue, 0.85, hot ? 0.66 : 0.58);
+    }
+  }
+
+  // Burn: smoke puffs rising from the charring zone just behind the
+  // tip, plus sparse weak embers.
+  private emitBurn(
+    x: number,
+    y: number,
+    dx: number,
+    dy: number,
+    dt: number
+  ): void {
+    const R = this.rng;
+    const d = this.data;
+    const tw = this.unit;
+    // Smoke births slightly BEHIND the frontier (the charring zone).
+    const sx = x - dx * 0.35;
+    const sy = y - dy * 0.35;
+    let c = this.countFor(SMOKE_RATE, dt);
+    while (c-- > 0) {
+      const i = this.alloc();
+      if (i < 0) return;
+      const o = i * FP;
+      const ja = R.next() * Math.PI * 2;
+      const jr = R.next() * tw * 0.5;
+      d[o + PX] = sx + Math.cos(ja) * jr;
+      d[o + PY] = sy + Math.sin(ja) * jr;
+      d[o + PVX] = (R.next() - 0.5) * 0.25;
+      d[o + PVY] = -(0.15 + R.next() * 0.2);
+      d[o + PAGE] = 0;
+      d[o + PLIFE] = 1.1 + R.next() * 0.9;
+      d[o + PSIZE] = tw * (0.45 + R.next() * 0.5);
+      d[o + PKIND] = K_SMOKE;
+      d[o + PROT] = 0;
+      d[o + PPHASE] = 0;
+      d[o + PFREQ] = 0;
+      d[o + PCURL] = (R.next() - 0.5) * 1.6;
+      d[o + PC0] = 0x9a8f96;
+      d[o + PC1] = 0x4a434c;
+    }
+    // Weak embers: the sparks integrator at reduced count/speed/size.
+    c = this.countFor(BURN_SPARK_RATE, dt);
+    while (c-- > 0) {
+      const i = this.alloc();
+      if (i < 0) return;
+      const o = i * FP;
+      const spread = (R.next() - 0.5) * 2.2;
+      const cs = Math.cos(spread);
+      const sn = Math.sin(spread);
+      const sp = 0.5 + R.next() * 1.1;
+      d[o + PX] = x + (R.next() - 0.5) * tw * 0.3;
+      d[o + PY] = y + (R.next() - 0.5) * tw * 0.3;
+      d[o + PVX] = (dx * cs - dy * sn) * sp;
+      d[o + PVY] = (dx * sn + dy * cs) * sp - 0.3;
+      d[o + PAGE] = 0;
+      d[o + PLIFE] = 0.25 + R.next() * 0.4;
+      d[o + PSIZE] = tw * (0.12 + R.next() * 0.16);
+      d[o + PKIND] = K_SPARK;
+      d[o + PROT] = 0;
+      d[o + PC0] = 0xffd9a8;
+      d[o + PC1] = R.next() < 0.5 ? 0xff9a3c : 0xd14f1e;
     }
   }
 
@@ -277,6 +376,10 @@ export class AppearFxSystem {
     const d = this.data;
     const tw = this.unit;
     const rot = Math.atan2(dy, dx);
+    // The whole comet rides AHEAD of the frontier; its backward-drifting
+    // streaks fall toward the arriving thread tip.
+    x += dx * COMET_LEAD;
+    y += dy * COMET_LEAD;
     // Streak afterglow: laid near the head with a slight backward drift,
     // stretched along the travel direction.
     let c = this.countFor(STREAK_RATE, dt);
@@ -350,21 +453,26 @@ export class AppearFxSystem {
     const R = this.rng;
     const d = this.data;
     const tw = this.unit;
+    // Dust scatters AHEAD of the frontier (see COMET_LEAD's comment).
+    x += dx * DUST_LEAD;
+    y += dy * DUST_LEAD;
     let c = this.countFor(DUST_RATE, dt);
     while (c-- > 0) {
       const i = this.alloc();
       if (i < 0) return;
       const o = i * FP;
+      // Hug the thread: tight birth jitter and gentle drift, so the
+      // glitter reads as ON the appearing thread rather than a cloud.
       const ja = R.next() * Math.PI * 2;
-      const jr = R.next() * tw * 0.9;
+      const jr = R.next() * tw * 0.25;
       const va = R.next() * Math.PI * 2;
-      const sp = 0.12 + R.next() * 0.35;
+      const sp = 0.05 + R.next() * 0.1;
       d[o + PX] = x + Math.cos(ja) * jr;
       d[o + PY] = y + Math.sin(ja) * jr;
       d[o + PVX] = Math.cos(va) * sp + dx * 0.15;
       d[o + PVY] = Math.sin(va) * sp + dy * 0.15 - 0.18; // Upward bias.
       d[o + PAGE] = 0;
-      d[o + PLIFE] = 0.8 + R.next() * 1.1;
+      d[o + PLIFE] = 0.3 + R.next() * 0.45;
       d[o + PSIZE] = tw * (0.08 + R.next() * 0.13);
       d[o + PKIND] = K_DUST;
       d[o + PROT] = 0;
@@ -456,6 +564,26 @@ export class AppearFxSystem {
         slot.scaleY = size * scalePerRadius;
         slot.tint = lerpHex(d[o + PC0], d[o + PC1], t);
         slot.alpha = 0.5 * (1 - t);
+      } else if (kind === K_SMOKE) {
+        // Smolder: curl + buoyant rise, growing and thinning as it ages.
+        const cu = d[o + PCURL] * dt;
+        const cs = Math.cos(cu);
+        const sn = Math.sin(cu);
+        const vx = d[o + PVX];
+        const vy = d[o + PVY];
+        const drag = Math.exp(-SMOKE_DRAG * dt);
+        d[o + PVX] = (vx * cs - vy * sn) * drag;
+        d[o + PVY] = (vx * sn + vy * cs) * drag - SMOKE_RISE * dt;
+        d[o + PX] += d[o + PVX] * dt;
+        d[o + PY] += d[o + PVY] * dt;
+        const size = d[o + PSIZE] * (0.7 + 1.9 * t);
+        slot.x = d[o + PX];
+        slot.y = d[o + PY];
+        slot.rotation = 0;
+        slot.scaleX = size * scalePerRadius;
+        slot.scaleY = size * scalePerRadius;
+        slot.tint = lerpHex(d[o + PC0], d[o + PC1], Math.min(1, t * 1.2));
+        slot.alpha = (1 - t) * (1 - t) * 0.32;
       } else {
         // K_DUST: curl the velocity, drift, twinkle.
         const cu = d[o + PCURL] * dt;

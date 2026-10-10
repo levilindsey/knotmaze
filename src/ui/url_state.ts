@@ -91,6 +91,7 @@ export interface UrlParams {
   fourWayFraction: number; // [0, 1] share of junctions as 4-way merges.
   deadEndDensity: number; // [0.05, 1] strands cut into dead ends (de on).
   pluckStyle: PluckStyle; // Release feel: soft ease vs ringing string.
+  snappiness: number; // [0, 1] string-ring speed/decay. 0.5 = stock.
   // P4 branching maze: generate the spliced maze FABRIC (junctions, 4-way
   // merges, corner entrance/exit) and play it (branch-point taps).
   mazeFabric: boolean;
@@ -157,6 +158,7 @@ export const DEFAULTS = {
   sustain: 0.5,
   shimmer: 0.4,
   pickPosition: 0.4,
+  snappiness: 0.5,
   rootNote: "seed" as RootNote,
   pulseSpacing: 2.5,
   hueShift: 0,
@@ -247,6 +249,7 @@ export function readParams(): UrlParams {
     sustain: readNumber(query, "sus", DEFAULTS.sustain),
     shimmer: readNumber(query, "shm", DEFAULTS.shimmer),
     pickPosition: readNumber(query, "pp", DEFAULTS.pickPosition),
+    snappiness: readNumber(query, "snpy", DEFAULTS.snappiness),
     rootNote: readChoice(query, "rn", ROOT_NOTES, "seed"),
     pulseSpacing: readNumber(query, "psp", DEFAULTS.pulseSpacing),
     hueShift: readNumber(query, "hs", DEFAULTS.hueShift),
@@ -355,6 +358,7 @@ export function writeParams(params: UrlParams): void {
   query.set("sus", String(params.sustain));
   query.set("shm", String(params.shimmer));
   query.set("pp", String(params.pickPosition));
+  query.set("snpy", String(params.snappiness));
   query.set("rn", params.rootNote);
   query.set("psp", String(params.pulseSpacing));
   query.set("hs", String(params.hueShift));

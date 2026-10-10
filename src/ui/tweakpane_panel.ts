@@ -106,7 +106,20 @@ export function buildPanel(
     "transition:opacity .12s,color .12s}" +
     ".kp-row:hover .kp-reset{opacity:.45}" +
     ".kp-row.kp-mod .kp-reset{opacity:.9;color:#e7c56f}" +
-    ".kp-row.kp-mod .tp-lblv_l{color:#e7c56f}";
+    ".kp-row.kp-mod .tp-lblv_l{color:#e7c56f}" +
+    // Folder disclosure marker: a plain triangle (right when collapsed,
+    // down when expanded) instead of Tweakpane's default icon. The
+    // button must become a FLEX row - an inline-block ::before next to
+    // the block-level title wrapped it out of the button's fixed height
+    // (folder headers rendered with no text at all).
+    ".tp-fldv_m{display:none}" +
+    ".tp-fldv_b{display:flex;align-items:center}" +
+    ".tp-fldv_t{flex:1 1 auto}" +
+    ".tp-fldv_b::before{content:'';flex:0 0 auto;width:0;height:0;" +
+    "border-left:4px solid transparent;border-right:4px solid transparent;" +
+    "border-top:5px solid #8ea0c0;margin-right:7px;" +
+    "transform:rotate(-90deg);transition:transform .15s}" +
+    ".tp-fldv_b[aria-expanded='true']::before{transform:rotate(0deg)}";
   document.head.appendChild(style);
 
   // --- Modified-state tracking + per-row reset ---------------------------
@@ -449,9 +462,10 @@ export function buildPanel(
         sparks: "sparks",
         comet: "comet",
         dust: "dust",
+        burn: "burn",
       },
     },
-    "Particle effect at the growing thread ends while the design draws itself in: sparks = warm ember spray; comet = an icy streaking head with a glowing halo; dust = slow twinkling glitter motes. Applies live.",
+    "Particle effect at the growing thread ends while the design draws itself in: sparks = rainbow ember spray; comet = an icy streaking head leading the thread; dust = dense twinkling glitter; burn = the thread smolders in, orange tip charring to black with rising smoke. Applies live.",
     D.appearFx, () => callbacks.onSlackChange()
   );
   button(
@@ -477,6 +491,11 @@ export function buildPanel(
     { options: { string: "string", soft: "soft" } },
     "Release feel: string = sharp snap-back with a decaying ring, like a real plucked string; soft = gentle ease home (speed = the snapBack slider).",
     D.pluckStyle, () => callbacks.onSlackChange()
+  );
+  const snappinessRow = row(
+    fFeel, p, "snappiness", { min: 0, max: 1, step: 0.01 },
+    "String-ring character: low = slow loose wobble, high = fast tight vibration that dies quickly. Applies to the next pluck.",
+    D.snappiness, () => callbacks.onSlackChange()
   );
   row(
     fFeel, s, "temperature", { min: 0, max: 0.5, step: 0.01 },
@@ -663,6 +682,7 @@ export function buildPanel(
     soundSpeedRow.hidden =
       params.soundMode !== "random" && params.soundMode !== "music";
     snapBackRow.hidden = params.pluckStyle !== "soft";
+    snappinessRow.hidden = params.pluckStyle !== "string";
     appearSpeedRow.hidden = params.appearMode === "instant";
     appearFxRow.hidden = params.appearMode === "instant";
     flowSpeedRow.hidden = params.flowStrength <= 0;

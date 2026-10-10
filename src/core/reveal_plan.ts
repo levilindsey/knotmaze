@@ -40,7 +40,13 @@ export type AppearMode = (typeof APPEAR_MODES)[number];
 // beside APPEAR_MODES so ui/url_state stays pixi-free. none | sparks
 // (warm ember spray) | comet (ice-white streaked head) | dust (slow
 // twinkling pastel motes).
-export const APPEAR_FX_MODES = ["none", "sparks", "comet", "dust"] as const;
+export const APPEAR_FX_MODES = [
+  "none",
+  "sparks",
+  "comet",
+  "dust",
+  "burn",
+] as const;
 export type AppearFxMode = (typeof APPEAR_FX_MODES)[number];
 
 // One directional reveal front along a chain. Ctrls are UNWRAPPED (walk

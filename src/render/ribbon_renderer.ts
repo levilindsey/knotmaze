@@ -182,6 +182,9 @@ const PULSE_END_WINDOW = 0.45;
 const PULSE_OUT_LEAD = 0.3;
 // Seconds for a new junction's pulse animation to breathe in.
 const PULSE_FADE_IN = 0.45;
+// Pluck-wave window (world units) along the plucked chain. Crossing
+// partners are deliberately NOT displaced (see the update() loop).
+const PLUCK_WAVE_R = 3.0;
 // JUNCTION JOINERY. Fused arms (bridge/stub/merge terminals) tuck their
 // rendered tip back by the host's half-width so the ribbon lands flush on
 // the host's near edge instead of overhanging past its centerline - the
@@ -241,6 +244,14 @@ const REVEAL_CROSSING_MIN = 0.98;
 // palette-U family split (>= gold band start -> brighten via band B,
 // else via band A; both bands end at the same near-white accent).
 const REVEAL_GLOW_ARC = 1.15;
+// Burn appearFx COOLING CLOCK (applyBurnColors): seconds after
+// ignition at which the flickering ember window closes, the char
+// plateau ends, and the thread has fully recovered its color. Long by
+// request - the char lingers and fades out slowly.
+const BURN_EMBER_END = 0.4;
+const BURN_CHAR_END = 0.9;
+const BURN_RECOVER_END = 1.3;
+const BURN_COLD = 1e4;
 const GOLD_FAMILY_MIN = 118 / PAL_W;
 
 function mixHex(a: number, b: number, t: number): number {
@@ -512,10 +523,13 @@ const ERASE_STATIONS = 16;
 // the roll-off resolved regardless of how long the solved cut is.
 const FADE_TAIL_STATIONS = 3;
 // JUNCTION CLEARANCE: how much of the fillet wedge reach
-// (fillHalf * FILLET_REACH_PER_HALF * cuspRadius) a nearby under-gap must
-// stay clear of. Below 1 because the web thins toward its tips - a full
-// reservation starves gaps on arms at large cuspRadius.
-const JOINT_CLEAR_REACH_SCALE = 0.85;
+// (fillHalf * FILLET_REACH_PER_HALF * cuspRadius) a nearby under-gap's
+// MARGIN must stay clear of (coverage is never capped - see the march's
+// margin note). Well below 1: the web thins toward its tips, the top
+// fillet layer + physics junction spacing carry most of the protection
+// now, and a large radius at big cuspRadius half-margined far too many
+// crossings.
+const JOINT_CLEAR_REACH_SCALE = 0.55;
 // 13 lanes (was 5): cap rows are polylines approximating the over
 // silhouette's level set, and at loop-end twists that boundary is
 // genuinely CURVED (the over thread bends sharply at the crossing) - 5
@@ -728,6 +742,39 @@ export class RibbonRenderer {
   private prevCutsValid: Uint8Array = new Uint8Array(0);
   private prevCutSign: Int8Array = new Int8Array(0);
   private acc4Scratch = new Float32Array(4);
+  // PLUCK WAVES (render-only string ring): the physics releases
+  // instantly at pointer-up - the old grab-driven ring oscillated the
+  // whole neighborhood through springs and crossing couplings ("too
+  // much overall jiggle"). The visible vibration is a damped standing
+  // wave displacing control COPIES here, exactly like the flow field;
+  // neighbors get a small deliberate SYMPATHY fraction, and the real
+  // physics contributes only its brief natural snap-back.
+  // Burn state (see applyBurnColors): ping-pong color buffers + a
+  // per-sample AGE since ignition - the gradient is TEMPORAL cooling,
+  // so a front finishing never pops its char off (it just keeps
+  // cooling in place).
+  private burnScratch = new Map<
+    number,
+    {
+      a: Float32Array;
+      b: Float32Array;
+      flip: boolean;
+      age: Float32Array;
+      last: number;
+      hot: boolean;
+    }
+  >();
+  private pluckWaves: Array<{
+    chain: number;
+    x: number;
+    y: number;
+    nx: number;
+    ny: number;
+    amp: number;
+    hz: number;
+    tau: number;
+    t: number;
+  }> = [];
   private filletMesh: TriFanMesh | null = null;
   private sectionSegs: VSegment[][] = [];
   private sectionNoise: ((x: number, y: number) => number) | null = null;
@@ -1344,6 +1391,19 @@ export class RibbonRenderer {
     // the arc-wrap family bites here otherwise).
     mask.fill(0);
     const intervals = anim.intervalsFor(chain);
+    // Per-style frontier shaping: comet fades in over a LONG ghost
+    // trail with a FAT tip (width floored, so the head reads as a
+    // translucent thread, not a needle); sparks get the long skinny
+    // taper; dust snaps in short (swapped with sparks by request).
+    let taperMul = 1;
+    let tipFloor = 0;
+    if (this.appearFx === "comet") {
+      taperMul = 8;
+      tipFloor = 0.32;
+    } else if (this.appearFx === "sparks") {
+      taperMul = 8;
+    }
+    const taper = REVEAL_TAPER_ARC * taperMul;
     let minM = 1;
     for (const iv of intervals) {
       const A0 = this.paintArcAt(samples, iv.c0, closed);
@@ -1363,8 +1423,9 @@ export class RibbonRenderer {
           dIn1 = A1 - a;
         }
         let m = 1;
-        if (iv.soft0) m = Math.min(m, dIn0 / REVEAL_TAPER_ARC);
-        if (iv.soft1) m = Math.min(m, dIn1 / REVEAL_TAPER_ARC);
+        if (iv.soft0) m = Math.min(m, dIn0 / taper);
+        if (iv.soft1) m = Math.min(m, dIn1 / taper);
+        if (tipFloor > 0 && m < 1) m = tipFloor + (1 - tipFloor) * m;
         if (m > mask[k]) mask[k] = m;
       }
     }
@@ -1583,6 +1644,30 @@ export class RibbonRenderer {
           this.flowOffset(controls[k * 2], controls[k * 2 + 1], this.flowScratch);
           controls[k * 2] += this.flowScratch[0];
           controls[k * 2 + 1] += this.flowScratch[1];
+        }
+      }
+      // Pluck waves ride the same control copies (see the field's doc).
+      // ONLY the plucked chain moves: a crossed-over/under partner holds
+      // perfectly still (user spec) - the crossing machinery re-solves
+      // against the vibrating thread, so the gap tracks it like a string
+      // through a stationary fret. The partner's only motion is the real
+      // physics snap-back at release.
+      for (const w of this.pluckWaves) {
+        if (i !== w.chain) continue;
+        const base =
+          w.amp *
+          Math.exp(-w.t / w.tau) *
+          Math.cos(2 * Math.PI * w.hz * w.t);
+        if (Math.abs(base) < 1e-4) continue;
+        for (let k = 0; k < chain.length; k++) {
+          const dx = controls[k * 2] - w.x;
+          const dy = controls[k * 2 + 1] - w.y;
+          const d = Math.hypot(dx, dy);
+          if (d >= PLUCK_WAVE_R) continue;
+          const win = Math.cos((d / PLUCK_WAVE_R) * Math.PI * 0.5);
+          const off = base * win * win;
+          controls[k * 2] += w.nx * off;
+          controls[k * 2 + 1] += w.ny * off;
         }
       }
       const brk = this.ps.chainBreakAfter[i];
@@ -1893,7 +1978,6 @@ export class RibbonRenderer {
             cutReachMax,
             ERASE_NEIGHBOR_CLEARANCE * gapLimit,
             selfLimit,
-            dir > 0 ? jRoomPos : jRoomNeg,
             underSamples.totalLength / 4
           )
         );
@@ -1946,11 +2030,29 @@ export class RibbonRenderer {
           prevS = clamped;
         }
 
+        const jRoom = dir > 0 ? jRoomPos : jRoomNeg;
         for (let l = 0; l < ERASE_LANES; l++) {
           if (Number.isNaN(cuts[l])) cuts[l] = dir * sMax;
           // The visible margin, applied as arc length so it stays `gap`
           // wide along the under thread at every crossing angle.
-          cuts[l] += dir * (CUT_BIAS + gap);
+          // JUNCTION CLEARANCE applies ONLY here, to the COSMETIC
+          // margin: the first version capped the march itself, which
+          // TRUNCATED erases that still had real overlap to cover -
+          // tight twists near big-cuspRadius joints rendered as ragged
+          // merges (the P3.36/P3.40 theorem: an erase may be trimmed of
+          // decoration, never of coverage). Required overlap always
+          // renders; only the margin shrinks as the cut nears a joint
+          // (the fade tails are room-capped separately below).
+          // Floor at HALF margin: a zero-margin cut renders as a busted
+          // one-sided gap (silhouette-level cut with no visible casing
+          // band) at every junction-adjacent crossing; half a band stays
+          // readable while still leaning out of the joint.
+          const full = CUT_BIAS + gap;
+          const margin = Math.max(
+            full * 0.5,
+            Math.min(full, jRoom - Math.abs(cuts[l]))
+          );
+          cuts[l] += dir * margin;
         }
       };
 
@@ -2069,7 +2171,14 @@ export class RibbonRenderer {
       if (index >= 0 && this.prevCuts.length > 0) {
         const base = index * ERASE_LANES * 2;
         if (this.prevCutsValid[index]) {
+          // Micro-motions (under MICRO) get a heavy one-pole: a
+          // 2-frame ping-pong collapses to ~18% amplitude instead of
+          // crawling at the clamp every frame (the user's alt-clicked
+          // residual shimmer), while slow real drift still tracks with
+          // a few frames of lag and no pops. Mid-size direction
+          // REVERSALS crawl; consistent motion passes untouched.
           const CRAWL = 0.02;
+          const MICRO = 0.035;
           for (let side = 0; side < 2; side++) {
             const cuts = side === 0 ? this.laneCutsPos : this.laneCutsNeg;
             for (let l = 0; l < ERASE_LANES; l++) {
@@ -2078,12 +2187,9 @@ export class RibbonRenderer {
               const d = cuts[l] - prev;
               const sgn = d > 1e-6 ? 1 : d < -1e-6 ? -1 : 0;
               const last = this.prevCutSign[idx];
-              if (
-                sgn !== 0 &&
-                last !== 0 &&
-                sgn !== last &&
-                Math.abs(d) > CRAWL
-              ) {
+              if (Math.abs(d) < MICRO) {
+                cuts[l] = prev + d * 0.18;
+              } else if (sgn !== 0 && last !== 0 && sgn !== last) {
                 cuts[l] = prev + sgn * CRAWL;
               }
               if (sgn !== 0) this.prevCutSign[idx] = sgn;
@@ -2490,6 +2596,34 @@ export class RibbonRenderer {
     // speed keeps a flowSpeed slider change from phase-jumping the field,
     // which multiplying at evaluation time would.
     this.flowTime += dt * this.flowSpeed;
+    // Pluck-wave clocks; waves die once their envelope is invisible.
+    if (this.pluckWaves.length > 0) {
+      for (const w of this.pluckWaves) w.t += dt;
+      this.pluckWaves = this.pluckWaves.filter(
+        (w) => w.amp * Math.exp(-w.t / w.tau) > 0.004
+      );
+    }
+  }
+
+  // Fire a render-only string ring at a world point (see pluckWaves).
+  addPluckWave(
+    chain: number,
+    x: number,
+    y: number,
+    nx: number,
+    ny: number,
+    amp: number,
+    hz: number,
+    tau: number
+  ): void {
+    if (this.pluckWaves.length >= 6) this.pluckWaves.shift();
+    this.pluckWaves.push({ chain, x, y, nx, ny, amp, hz, tau, t: 0 });
+  }
+
+  // While waves ring, the asleep ticker must keep re-solving at full
+  // rate (the half-rate flow path would alias a 5-13Hz vibration).
+  hasActivePluckWaves(): boolean {
+    return this.pluckWaves.length > 0;
   }
 
   private tickPaintPalette(dt: number): void {
@@ -2528,6 +2662,14 @@ export class RibbonRenderer {
       if (!glowNow.has(c) && !toWrite.includes(c)) toWrite.push(c);
     }
     this.glowChains = glowNow;
+
+    // Burn cooling: chains with hot samples repaint every tick (the
+    // cooling + ember flicker animate), through and past the reveal.
+    if (this.appearFx === "burn" && this.burnScratch.size > 0) {
+      for (const [c, pool] of this.burnScratch) {
+        if (pool.hot && !toWrite.includes(c)) toWrite.push(c);
+      }
+    }
 
     for (const chain of toWrite) {
       if (!this.chainSamples[chain]) continue;
@@ -2873,7 +3015,10 @@ export class RibbonRenderer {
     us.fill(U_BASE, 0, count);
     if (!painted) {
       this.applyRevealGlowU(chain, us, count);
-      mesh.writePaint(us, this.rgbCache[chain]);
+      mesh.writePaint(
+        us,
+        this.applyBurnColors(chain, count) ?? this.rgbCache[chain]
+      );
       return;
     }
 
@@ -2957,7 +3102,140 @@ export class RibbonRenderer {
       }
     }
     this.applyRevealGlowU(chain, us, count);
-    mesh.writePaint(us, this.rgbCache[chain]);
+    mesh.writePaint(
+      us,
+      this.applyBurnColors(chain, count) ?? this.rgbCache[chain]
+    );
+  }
+
+  // BURN appearFx: the thread itself wears the fire, as TEMPORAL
+  // COOLING - every sample records WHEN the front ignited it and then
+  // cools through heat -> flickering ember -> char -> its section color
+  // on its own clock. The first version keyed the gradient to live tip
+  // POSITIONS, so a front finishing (or the reveal ending) popped its
+  // whole char region back to color in one frame ("abrupt snappy
+  // transitions"); cooling continues through and past the reveal and
+  // cannot pop by construction. Writes into a per-chain PING-PONG copy
+  // of the section colors: writePaint skips re-uploads on
+  // reference-equal arrays, so a single mutated scratch would freeze
+  // after its first frame.
+  private applyBurnColors(
+    chain: number,
+    count: number
+  ): Float32Array | null {
+    if (this.appearFx !== "burn") return null;
+    const samples = this.chainSamples[chain];
+    if (!samples || samples.totalLength <= 0) return null;
+    const src = this.rgbCache[chain];
+    if (src.length < count * 3) return null; // Constant-color chain.
+    let pool = this.burnScratch.get(chain);
+    if (!pool || pool.a.length !== count * 3) {
+      if (!this.revealOn) return null; // Cold chain, nothing burning.
+      pool = {
+        a: new Float32Array(count * 3),
+        b: new Float32Array(count * 3),
+        flip: false,
+        age: new Float32Array(count).fill(BURN_COLD),
+        last: this.paintClock,
+        hot: false,
+      };
+      this.burnScratch.set(chain, pool);
+    }
+
+    // Advance every sample's age by the paint clock.
+    const dtc = Math.max(
+      0,
+      Math.min(0.1, this.paintClock - pool.last)
+    );
+    pool.last = this.paintClock;
+    const age = pool.age;
+    let hot = false;
+    for (let k = 0; k < count; k++) {
+      if (age[k] < BURN_RECOVER_END) {
+        age[k] += dtc;
+        if (age[k] < BURN_RECOVER_END) hot = true;
+      }
+    }
+
+    // Ignite samples under the live fronts.
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    const total = samples.totalLength;
+    const arcPer = closed ? total / count : total / (count - 1);
+    if (this.revealOn) {
+      const halfWin = Math.ceil(0.45 / Math.max(arcPer, 1e-6)) + 1;
+      for (const tip of this.revealTips) {
+        if (tip.chain !== chain) continue;
+        const aT = this.paintArcAt(samples, tip.ctrl, closed);
+        const kC = Math.round(aT / arcPer);
+        for (let o = -halfWin; o <= halfWin; o++) {
+          let k = kC + o;
+          if (closed) k = ((k % count) + count) % count;
+          else if (k < 0 || k >= count) continue;
+          let dd = Math.abs(k * arcPer - aT);
+          if (closed) dd = Math.min(dd, total - dd);
+          if (dd > 0.45) continue;
+          if (age[k] > 0) age[k] = 0;
+          hot = true;
+        }
+      }
+    }
+    pool.hot = hot;
+    if (!hot) {
+      if (!this.revealOn) this.burnScratch.delete(chain);
+      return null;
+    }
+
+    pool.flip = !pool.flip;
+    const out = pool.flip ? pool.a : pool.b;
+    out.set(src);
+    const mask = this.revealMask[chain];
+    const smooth = (x: number): number => {
+      const c = Math.max(0, Math.min(1, x));
+      return c * c * (3 - 2 * c);
+    };
+    for (let k = 0; k < count; k++) {
+      const t = age[k];
+      if (t >= BURN_RECOVER_END) continue;
+      if (mask && mask[k] <= 0.004) continue;
+      // Cooling envelope: white-orange heat flash, then a flickering
+      // ember window, then the long char plateau easing smoothly back
+      // to the section color (every edge is a smoothstep - no snaps).
+      const heat = 1 - smooth((t - 0.03) / 0.1);
+      const ember =
+        smooth(t / 0.08) * (1 - smooth((t - BURN_EMBER_END) / 0.25));
+      const char =
+        smooth((t - BURN_EMBER_END * 0.55) / 0.25) *
+        (1 - smooth((t - BURN_CHAR_END) / (BURN_RECOVER_END - BURN_CHAR_END)));
+      const i3 = k * 3;
+      let r = out[i3];
+      let g = out[i3 + 1];
+      let b = out[i3 + 2];
+      r += (0.14 - r) * char * 0.92;
+      g += (0.11 - g) * char * 0.92;
+      b += (0.1 - b) * char * 0.92;
+      if (ember > 0.01) {
+        // Mostly TEMPORAL flicker with a broad, slow spatial drift -
+        // high per-sample phase rendered as zebra stripes, not embers.
+        const fl =
+          0.5 +
+          0.3 * Math.sin(13 * this.paintClock + k * 0.31) +
+          0.2 * Math.sin(29 * this.paintClock + k * 0.83);
+        const e = ember * 0.85 * (1 - heat * 0.7);
+        r += (1.0 - 0.3 * fl - r) * e;
+        g += (0.54 - 0.35 * fl - g) * e;
+        b += (0.16 - 0.08 * fl - b) * e;
+      }
+      if (heat > 0.001) {
+        // White-hot: the brief tip flash reads near-white.
+        r += (1.0 - r) * heat;
+        g += (0.93 - g) * heat;
+        b += (0.68 - b) * heat;
+      }
+      out[i3] = r;
+      out[i3 + 1] = g;
+      out[i3 + 2] = b;
+    }
+    return out;
   }
 
   // REVEAL frontier glow (palette mode): push the paint U of the samples
@@ -2973,6 +3251,10 @@ export class RibbonRenderer {
     count: number
   ): void {
     if (!this.revealOn || this.revealTips.length === 0) return;
+    // Burn style: the orange/char gradient IS the frontier treatment -
+    // the near-white accent glow sat on the same samples and washed it
+    // out completely (acc.a ~0.94 overrides vSection).
+    if (this.appearFx === "burn") return;
     const samples = this.chainSamples[chain];
     if (!samples || samples.totalLength <= 0) return;
     const closed = this.ps.chainBreakAfter[chain] < 0;
@@ -3152,7 +3434,15 @@ export class RibbonRenderer {
   // aColor verts carry, so overlay geometry sampling through here matches
   // the adjacent ribbon exactly at a seam.
   private colorAtArc(chain: number, arc: number, out: Float32Array): void {
-    const cache = this.rgbCache[chain];
+    let cache = this.rgbCache[chain];
+    // Burn: joinery must read the COOLED colors, not the static section
+    // cache - otherwise every junction wears a pastel star while its
+    // threads char (the burn-fillet report). The pool's current
+    // ping-pong buffer has identical per-sample layout.
+    if (this.appearFx === "burn") {
+      const pool = this.burnScratch.get(chain);
+      if (pool && pool.hot) cache = pool.flip ? pool.a : pool.b;
+    }
     if (cache.length === 3) {
       out[0] = cache[0];
       out[1] = cache[1];
