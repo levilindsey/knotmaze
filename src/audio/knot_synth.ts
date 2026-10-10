@@ -221,11 +221,17 @@ class KnotStringProcessor extends AudioWorkletProcessor {
 registerProcessor("knot-string", KnotStringProcessor);
 `;
 
+// Slider [0, 1] -> wet-gain scale (1.0 on the slider = a WASH of hall).
+const REVERB_WET_SCALE = 0.4;
+
 export class KnotSynth {
   private ctx: BaseAudioContext | null = null;
   private master: GainNode | null = null;
   // Master output level [0, 1]; the pre-synth default headroom was 0.85.
   private volume = 0.85;
+  // Reverb wet mix [0, 1]; 0.42 * REVERB_WET_SCALE = the original 0.17.
+  private reverb = 0.42;
+  private wetGain: GainNode | null = null;
 
   // An injected context (e.g. OfflineAudioContext) makes the synth
   // measurable: diag scripts render a pluck offline and inspect the
@@ -256,6 +262,14 @@ export class KnotSynth {
   setVolume(v: number): void {
     this.volume = Math.max(0, Math.min(1, v));
     if (this.master) this.master.gain.value = this.volume;
+  }
+
+  // Live reverb amount [0, 1] (wet-mix level; safe pre-context).
+  setReverb(v: number): void {
+    this.reverb = Math.max(0, Math.min(1, v));
+    if (this.wetGain) {
+      this.wetGain.gain.value = this.reverb * REVERB_WET_SCALE;
+    }
   }
 
   // Resolves once the string engine is decided and any queued plucks are
@@ -308,7 +322,8 @@ export class KnotSynth {
       const verb = this.ctx.createConvolver();
       verb.buffer = ir;
       const wet = this.ctx.createGain();
-      wet.gain.value = 0.17;
+      wet.gain.value = this.reverb * REVERB_WET_SCALE;
+      this.wetGain = wet;
       sink.connect(verb); // Post-EQ, so the room hears the same harp.
       verb.connect(wet);
       wet.connect(this.ctx.destination);

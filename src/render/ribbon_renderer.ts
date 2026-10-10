@@ -665,6 +665,25 @@ export class RibbonRenderer {
   // their own gap legitimately punches the web.
   private filletTopLayer: Container | null = null;
   private filletTopMesh: TriFanMesh | null = null;
+  // MARKER DISC OCCLUDERS (start/exit dots): each punches a real erase
+  // grid on its thread - same lanes/miter/fade machinery as a crossing
+  // gap, with the cut boundary being the DISC silhouette instead of an
+  // over thread (the hand-drawn stroke punches never matched; "should it
+  // resemble how the other gaps work" - yes, it IS one now).
+  private eraseLayerRef: Container | null = null;
+  private markerOccluders: Array<{
+    chain: number;
+    ctrl: number;
+    radius: number;
+  }> = [];
+  private markerErases: PatchGridMesh[] = [];
+  // LANE-CUT RATE LIMITER state (registered crossings): previous frame's
+  // final cuts + center world position, so near-rest cap noise and
+  // discrete cap-source flips slide instead of popping (the "gaps
+  // jitter under movement/undulation" report).
+  private prevCuts: Float32Array = new Float32Array(0);
+  private prevCutsValid: Uint8Array = new Uint8Array(0);
+  private prevCenter: Float32Array = new Float32Array(0);
   private filletMesh: TriFanMesh | null = null;
   private sectionSegs: VSegment[][] = [];
   private sectionNoise: ((x: number, y: number) => number) | null = null;
@@ -719,6 +738,7 @@ export class RibbonRenderer {
       filletTopLayer
     );
     this.filletTopLayer = filletTopLayer;
+    this.eraseLayerRef = eraseLayer;
     if (style.paletteMode) {
       this.filletLayer = filletLayer;
     }
@@ -822,6 +842,9 @@ export class RibbonRenderer {
 
     this.eraseExtentPos = new Float32Array(ps.crossings.length);
     this.eraseExtentNeg = new Float32Array(ps.crossings.length);
+    this.prevCuts = new Float32Array(ps.crossings.length * ERASE_LANES * 2);
+    this.prevCutsValid = new Uint8Array(ps.crossings.length);
+    this.prevCenter = new Float32Array(ps.crossings.length * 2);
     this.overWindows = new Int32Array(ps.crossings.length * 2);
     this.emergentWindows = new Array(EMERGENT_POOL).fill(null);
 
@@ -1570,6 +1593,8 @@ export class RibbonRenderer {
           this.eraseExtentPos[c] = 0;
           this.eraseExtentNeg[c] = 0;
           this.overWindows[c * 2 + 1] = 0;
+          // Rate limiter must SNAP on re-show, not slide from stale cuts.
+          if (this.prevCutsValid.length > 0) this.prevCutsValid[c] = 0;
           return;
         }
       }
@@ -1585,6 +1610,7 @@ export class RibbonRenderer {
       );
     });
     this.renderEmergent(fillHalf, gap);
+    this.renderMarkerGaps(fillHalf, gap);
     this.drawRevealTips();
   }
 
@@ -1978,6 +2004,52 @@ export class RibbonRenderer {
         }
       }
 
+      // LANE-CUT RATE LIMITER: at near-rest / under flow the marched caps
+      // re-quantize against drifting local polylines, and the discrete
+      // cap sources (neighbor reserve branch, twin bias, self splits) can
+      // flip between frames - small pops the eye reads as gap jitter.
+      // Each registered crossing's final cuts may move at most a
+      // MOTION-SCALED step per frame: free during drags (the geometry
+      // itself moves fast), pinned to smooth slides at rest. Cuts are
+      // CENTER-RELATIVE arcs, so coherent translation (flow sway) passes
+      // through untouched; only relative-cut noise is limited.
+      if (index >= 0 && this.prevCuts.length > 0) {
+        const base = index * ERASE_LANES * 2;
+        this.sampleAt(underSamples, underCenter, this.sampleScratch, 0);
+        const wx = this.sampleScratch[0];
+        const wy = this.sampleScratch[1];
+        const moved = Math.hypot(
+          wx - this.prevCenter[index * 2],
+          wy - this.prevCenter[index * 2 + 1]
+        );
+        this.prevCenter[index * 2] = wx;
+        this.prevCenter[index * 2 + 1] = wy;
+        if (this.prevCutsValid[index]) {
+          const maxStep = Math.max(0.025, moved * 1.2);
+          for (let l = 0; l < ERASE_LANES; l++) {
+            const dp = this.laneCutsPos[l] - this.prevCuts[base + l];
+            if (Math.abs(dp) > maxStep) {
+              this.laneCutsPos[l] =
+                this.prevCuts[base + l] + Math.sign(dp) * maxStep;
+            }
+            this.prevCuts[base + l] = this.laneCutsPos[l];
+            const bn = base + ERASE_LANES + l;
+            const dn = this.laneCutsNeg[l] - this.prevCuts[bn];
+            if (Math.abs(dn) > maxStep) {
+              this.laneCutsNeg[l] =
+                this.prevCuts[bn] + Math.sign(dn) * maxStep;
+            }
+            this.prevCuts[bn] = this.laneCutsNeg[l];
+          }
+        } else {
+          for (let l = 0; l < ERASE_LANES; l++) {
+            this.prevCuts[base + l] = this.laneCutsPos[l];
+            this.prevCuts[base + ERASE_LANES + l] = this.laneCutsNeg[l];
+          }
+          this.prevCutsValid[index] = 1;
+        }
+      }
+
       // Record this crossing's final erase extents along its under thread
       // for the fill NEIGHBOR-GAP RESERVE (see reachAlongOver), and the
       // under-gap WINDOW for overlay consumers (the Ariadne yarn dips
@@ -2033,120 +2105,14 @@ export class RibbonRenderer {
       // joint's own material covers that edge.
       const fadePos = Math.max(0, Math.min(fade, jRoomPos - extPos));
       const fadeNeg = Math.max(0, Math.min(fade, jRoomNeg - extNeg));
-      const midLane = (ERASE_LANES - 1) / 2;
-      // Station -> arc parameterization. Fade OFF: uniform across the
-      // solved cut, bit-identical to the sharp render. Fade ON: a FIXED
-      // station budget pins to each fade tail and the rest span the
-      // opaque cut. The old uniform-over-everything spread starved long
-      // rides' tails below one station (16 stations over a span of
-      // several world units left ~0.4 for a 0.28 tail), collapsing the
-      // whole roll-off onto a single quad straddling the boundary - a
-      // near-hard edge - and the lattice slid against the boundary as
-      // the span breathed, resampling that quad every frame (the
-      // "sharper-than-they-should-be gaps jitter" report). Tail stations
-      // anchor to the solved boundary, so both symptoms die together.
-      // The cap rows themselves are LANE polylines at the boundary
-      // stations - their fidelity is unchanged by the re-spread.
-      const tailK = fade > 0 ? FADE_TAIL_STATIONS : 0;
-      const kIn0 = tailK;
-      const kIn1 = ERASE_STATIONS - 1 - tailK;
-      for (let k = 0; k < ERASE_STATIONS; k++) {
-        // seg: -1 = neg fade tail, 0 = opaque cut, +1 = pos fade tail;
-        // g = position within the segment (tails: 1/0 at the boundary).
-        let seg = 0;
-        let g = k / (ERASE_STATIONS - 1);
-        if (tailK > 0) {
-          if (k <= kIn0) {
-            seg = -1;
-            g = k / tailK;
-          } else if (k >= kIn1) {
-            seg = 1;
-            g = (k - kIn1) / tailK;
-          } else {
-            seg = 0;
-            g = (k - kIn0) / (kIn1 - kIn0);
-          }
-        }
-
-        // Station miter factor from the local turn of the under centerline,
-        // matching the base ribbon's mitered extrusion so the erase keeps
-        // covering it at kinks.
-        const midN = this.laneCutsNeg[midLane];
-        const midP = this.laneCutsPos[midLane];
-        const sMid =
-          underCenter +
-          (seg < 0
-            ? midN - fadeNeg * (1 - g)
-            : seg > 0
-              ? midP + fadePos * g
-              : midN + (midP - midN) * g);
-        this.sampleAt(underSamples, sMid - MITER_PROBE, this.sampleScratch, 0);
-        const pax = this.sampleScratch[0];
-        const pay = this.sampleScratch[1];
-        this.sampleAt(underSamples, sMid + MITER_PROBE, this.sampleScratch, 0);
-        const pbx = this.sampleScratch[0];
-        const pby = this.sampleScratch[1];
-        this.sampleAt(underSamples, sMid, this.sampleScratch, 0);
-        let ax = this.sampleScratch[0] - pax;
-        let ay = this.sampleScratch[1] - pay;
-        let bx = pbx - this.sampleScratch[0];
-        let by = pby - this.sampleScratch[1];
-        const la = Math.hypot(ax, ay) || 1;
-        const lb = Math.hypot(bx, by) || 1;
-        ax /= la;
-        ay /= la;
-        bx /= lb;
-        by /= lb;
-        const dot = ax * bx + ay * by;
-        const cosHalf = Math.sqrt(Math.max((1 + dot) / 2, 0.25));
-
-        // Per-side widths mirroring RibbonMesh.update exactly: mitered
-        // width, with the CONCAVE side clamped to the local turn radius.
-        // The base under-ribbon thins into tight folds (P3.34); an erase
-        // that keeps full mitered width there juts past the ribbon's real
-        // inner edge and slashes whatever is drawn beside it - the thin
-        // slit biting into loop-end twist bulbs and hairpin tips. The
-        // erase must quote the base ribbon's RENDERED footprint (+ pad).
-        let wInner = fillHalf / cosHalf;
-        const sinHalf = Math.sqrt(Math.max((1 - dot) / 2, 0));
-        if (sinHalf > 1e-4) {
-          const radius = ((la + lb) / 4) * (cosHalf / sinHalf);
-          wInner = Math.min(wInner, Math.max(radius * 0.95, fillHalf * 0.3));
-        }
-        const cross = ax * by - ay * bx;
-        const wOuterE = fillHalf / cosHalf + ERASE_WIDTH_PAD;
-        const wInnerE = wInner + ERASE_WIDTH_PAD;
-        const wLeftE = cross > 0 ? wInnerE : wOuterE;
-        const wRightE = cross > 0 ? wOuterE : wInnerE;
-
-        for (let l = 0; l < ERASE_LANES; l++) {
-          const s =
-            seg < 0
-              ? this.laneCutsNeg[l] - fadeNeg * (1 - g)
-              : seg > 0
-                ? this.laneCutsPos[l] + fadePos * g
-                : this.laneCutsNeg[l] +
-                  (this.laneCutsPos[l] - this.laneCutsNeg[l]) * g;
-          // Fade coordinate: how far this station overshoots the lane's
-          // solved cut interval, as a fraction of the fade length.
-          const over = Math.max(
-            this.laneCutsNeg[l] - s,
-            s - this.laneCutsPos[l]
-          );
-          const f = 1 - (2 * l) / (ERASE_LANES - 1);
-          const u = (f >= 0 ? wLeftE : wRightE) * f;
-          this.sampleAt(underSamples, underCenter + s, this.sampleScratch, 0);
-          erase.setVertex(
-            k,
-            l,
-            this.sampleScratch[0] - this.sampleScratch[3] * u,
-            this.sampleScratch[1] + this.sampleScratch[2] * u
-          );
-          const fSide = seg < 0 ? fadeNeg : fadePos;
-          erase.setVertexU(k, l, fSide > 0 && over > 0 ? over / fSide : 0);
-        }
-      }
-      erase.commit();
+      this.buildEraseGrid(
+        erase,
+        underSamples,
+        underCenter,
+        fillHalf,
+        fadeNeg,
+        fadePos
+      );
 
       // Over fill: redraw the over thread across the hole. The window is
       // measured directly: march along the over thread until its centerline
@@ -2569,6 +2535,247 @@ export class RibbonRenderer {
     }
   }
 
+  // Build one erase grid from the solved laneCutsPos/Neg scratch: the
+  // station->arc mapping with pinned fade-tail stations, the per-station
+  // miter (mirroring RibbonMesh.update, incl. the P3.34 concave-side
+  // turn-radius clamp), and per-vertex fade coordinates into the ramp
+  // texture. Shared VERBATIM by crossing erases and marker disc gaps -
+  // one implementation, so the two can never drift (the same-geometry
+  // theorem, structural form).
+  private buildEraseGrid(
+    erase: PatchGridMesh,
+    samples: SplineSamples,
+    centerArc: number,
+    fillHalf: number,
+    fadeNeg: number,
+    fadePos: number
+  ): void {
+    const fade = Math.max(fadeNeg, fadePos);
+    const midLane = (ERASE_LANES - 1) / 2;
+    const tailK = fade > 0 ? FADE_TAIL_STATIONS : 0;
+    const kIn0 = tailK;
+    const kIn1 = ERASE_STATIONS - 1 - tailK;
+    for (let k = 0; k < ERASE_STATIONS; k++) {
+      // seg: -1 = neg fade tail, 0 = opaque cut, +1 = pos fade tail;
+      // g = position within the segment (tails: 1/0 at the boundary).
+      let seg = 0;
+      let g = k / (ERASE_STATIONS - 1);
+      if (tailK > 0) {
+        if (k <= kIn0) {
+          seg = -1;
+          g = k / tailK;
+        } else if (k >= kIn1) {
+          seg = 1;
+          g = (k - kIn1) / tailK;
+        } else {
+          seg = 0;
+          g = (k - kIn0) / (kIn1 - kIn0);
+        }
+      }
+
+      // Station miter factor from the local turn of the centerline,
+      // matching the base ribbon's mitered extrusion so the erase keeps
+      // covering it at kinks.
+      const midN = this.laneCutsNeg[midLane];
+      const midP = this.laneCutsPos[midLane];
+      const sMid =
+        centerArc +
+        (seg < 0
+          ? midN - fadeNeg * (1 - g)
+          : seg > 0
+            ? midP + fadePos * g
+            : midN + (midP - midN) * g);
+      this.sampleAt(samples, sMid - MITER_PROBE, this.sampleScratch, 0);
+      const pax = this.sampleScratch[0];
+      const pay = this.sampleScratch[1];
+      this.sampleAt(samples, sMid + MITER_PROBE, this.sampleScratch, 0);
+      const pbx = this.sampleScratch[0];
+      const pby = this.sampleScratch[1];
+      this.sampleAt(samples, sMid, this.sampleScratch, 0);
+      let ax = this.sampleScratch[0] - pax;
+      let ay = this.sampleScratch[1] - pay;
+      let bx = pbx - this.sampleScratch[0];
+      let by = pby - this.sampleScratch[1];
+      const la = Math.hypot(ax, ay) || 1;
+      const lb = Math.hypot(bx, by) || 1;
+      ax /= la;
+      ay /= la;
+      bx /= lb;
+      by /= lb;
+      const dot = ax * bx + ay * by;
+      const cosHalf = Math.sqrt(Math.max((1 + dot) / 2, 0.25));
+
+      // Per-side widths mirroring RibbonMesh.update exactly: mitered
+      // width, with the CONCAVE side clamped to the local turn radius
+      // (P3.34) so the erase quotes the base ribbon's RENDERED footprint
+      // (+ pad) instead of slashing whatever is drawn beside a fold.
+      let wInner = fillHalf / cosHalf;
+      const sinHalf = Math.sqrt(Math.max((1 - dot) / 2, 0));
+      if (sinHalf > 1e-4) {
+        const radius = ((la + lb) / 4) * (cosHalf / sinHalf);
+        wInner = Math.min(wInner, Math.max(radius * 0.95, fillHalf * 0.3));
+      }
+      const cross = ax * by - ay * bx;
+      const wOuterE = fillHalf / cosHalf + ERASE_WIDTH_PAD;
+      const wInnerE = wInner + ERASE_WIDTH_PAD;
+      const wLeftE = cross > 0 ? wInnerE : wOuterE;
+      const wRightE = cross > 0 ? wOuterE : wInnerE;
+
+      for (let l = 0; l < ERASE_LANES; l++) {
+        const s =
+          seg < 0
+            ? this.laneCutsNeg[l] - fadeNeg * (1 - g)
+            : seg > 0
+              ? this.laneCutsPos[l] + fadePos * g
+              : this.laneCutsNeg[l] +
+                (this.laneCutsPos[l] - this.laneCutsNeg[l]) * g;
+        // Fade coordinate: how far this station overshoots the lane's
+        // solved cut interval, as a fraction of the fade length.
+        const over = Math.max(
+          this.laneCutsNeg[l] - s,
+          s - this.laneCutsPos[l]
+        );
+        const f = 1 - (2 * l) / (ERASE_LANES - 1);
+        const u = (f >= 0 ? wLeftE : wRightE) * f;
+        this.sampleAt(samples, centerArc + s, this.sampleScratch, 0);
+        erase.setVertex(
+          k,
+          l,
+          this.sampleScratch[0] - this.sampleScratch[3] * u,
+          this.sampleScratch[1] + this.sampleScratch[2] * u
+        );
+        const fSide = seg < 0 ? fadeNeg : fadePos;
+        erase.setVertexU(k, l, fSide > 0 && over > 0 ? over / fSide : 0);
+      }
+    }
+    erase.commit();
+  }
+
+  // Register (or clear) marker disc occluders; meshes pool to the list
+  // length and rebuild every update like crossing erases.
+  setMarkerOccluders(
+    list: Array<{ chain: number; ctrl: number; radius: number }>
+  ): void {
+    this.markerOccluders = list;
+    while (this.markerErases.length < list.length) {
+      const erase = new PatchGridMesh(ERASE_STATIONS, ERASE_LANES, 0xffffff);
+      erase.mesh.texture = fadeTexture();
+      erase.mesh.blendMode = "erase";
+      this.eraseLayerRef?.addChild(erase.mesh);
+      this.markerErases.push(erase);
+    }
+    for (let i = 0; i < this.markerErases.length; i++) {
+      this.markerErases[i].mesh.visible = i < list.length;
+    }
+  }
+
+  // World position of a marker: the SAME spline sample its gap grid
+  // marches from, so the disc and the gap stay concentric under flow and
+  // display adjustments (physics-position markers sat slightly off the
+  // rendered centerline).
+  markerWorld(chain: number, ctrl: number, out: Float32Array): void {
+    const samples = this.chainSamples[chain];
+    if (!samples) {
+      out[0] = 0;
+      out[1] = 0;
+      return;
+    }
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    this.sampleAtSafe(
+      samples,
+      this.paintArcAt(samples, ctrl, closed),
+      closed,
+      this.sampleScratch,
+      0
+    );
+    out[0] = this.sampleScratch[0];
+    out[1] = this.sampleScratch[1];
+  }
+
+  // MARKER DISC GAPS: a start/exit disc is an "over pass" whose
+  // silhouette is a circle - its thread gets a REAL erase grid via the
+  // exact crossing machinery (lane marches to the silhouette + arc-length
+  // gap margin + buildEraseGrid's miter/fade), so these gaps look and
+  // fade like every other gap by construction.
+  private renderMarkerGaps(fillHalf: number, gap: number): void {
+    for (let m = 0; m < this.markerOccluders.length; m++) {
+      const occ = this.markerOccluders[m];
+      const erase = this.markerErases[m];
+      const samples = this.chainSamples[occ.chain];
+      if (!samples || !erase) continue;
+      if (
+        this.revealOn &&
+        this.revealMulAtCtrl(occ.chain, occ.ctrl) < REVEAL_CROSSING_MIN
+      ) {
+        erase.mesh.visible = false;
+        continue;
+      }
+      erase.mesh.visible = true;
+      const closed = this.ps.chainBreakAfter[occ.chain] < 0;
+      const total = samples.totalLength;
+      const center = this.paintArcAt(samples, occ.ctrl, closed);
+      this.sampleAtSafe(samples, center, closed, this.sampleScratch, 0);
+      const cx = this.sampleScratch[0];
+      const cy = this.sampleScratch[1];
+      const eraseW = fillHalf + ERASE_WIDTH_PAD;
+      const marchMax = occ.radius + gap + 1.2;
+      for (let dir = -1; dir <= 1; dir += 2) {
+        const cuts = dir > 0 ? this.laneCutsPos : this.laneCutsNeg;
+        const sMax = closed
+          ? Math.min(marchMax, total / 4)
+          : Math.min(
+              marchMax,
+              dir > 0 ? total - center - 1e-3 : center - 1e-3
+            );
+        for (let l = 0; l < ERASE_LANES; l++) {
+          const u = eraseW * (1 - (2 * l) / (ERASE_LANES - 1));
+          let prevG = -occ.radius;
+          let prevS = 0;
+          let cut = Number.NaN;
+          for (let s = MARCH_STEP; ; s += MARCH_STEP) {
+            const sc = Math.min(s, Math.max(sMax, MARCH_STEP));
+            this.sampleAtSafe(
+              samples,
+              center + dir * sc,
+              closed,
+              this.sampleScratch,
+              0
+            );
+            const px = this.sampleScratch[0] - this.sampleScratch[3] * u;
+            const py = this.sampleScratch[1] + this.sampleScratch[2] * u;
+            const g = Math.hypot(px - cx, py - cy) - occ.radius;
+            if (g >= 0) {
+              cut =
+                dir *
+                (prevS + (sc - prevS) * (prevG / (prevG - g || 1e-6)));
+              break;
+            }
+            prevS = sc;
+            prevG = g;
+            if (sc >= sMax) break;
+          }
+          if (Number.isNaN(cut)) cut = dir * Math.max(sMax, MARCH_STEP);
+          // Arc-length visible margin, like every crossing cut (P3.21).
+          cuts[l] = cut + dir * (CUT_BIAS + gap);
+          if (!closed) {
+            const lo = -center + 1e-3;
+            const hi = total - center - 1e-3;
+            if (cuts[l] < lo) cuts[l] = lo;
+            if (cuts[l] > hi) cuts[l] = hi;
+          }
+        }
+      }
+      this.buildEraseGrid(
+        erase,
+        samples,
+        center,
+        fillHalf,
+        this.fadeLength,
+        this.fadeLength
+      );
+    }
+  }
+
   // Arc of a ctrl for PAINT purposes. arcAt's closing modulo is correct
   // for closed chains but wraps an OPEN chain's terminal arc (== total) to
   // ZERO - a traveled bridge's span [0, lastCtrl] collapsed to a point and
@@ -2947,16 +3154,18 @@ export class RibbonRenderer {
     let fm = fmBottom;
     const c3 = this.rgbScratch;
 
-    // LAYER VOTES (see filletTopLayer): a junction goes TOP when some
-    // nearby crossing has one of its arm chains as the OVER pass (a
-    // foreign thread dives under the arm there - that crossing's erase
-    // swath would clip the web), UNLESS another nearby crossing has an
-    // arm as the UNDER pass (the arm dives - its own gap must punch the
-    // web, so bottom wins conflicts).
-    const jnTop: boolean[] = new Array(this.junctionArms.length).fill(false);
-    const jnBottomForce: boolean[] = new Array(
-      this.junctionArms.length
-    ).fill(false);
+    // LAYER VOTES (see filletTopLayer), PER-ARM: an arm is "over-near"
+    // when a nearby crossing on its chain side has the arm as the OVER
+    // pass (a foreign thread dives under it - that crossing's erase
+    // swath would clip the web beside the arm), "under-near" when the
+    // arm itself dives. Each WEDGE then picks its layer from its own
+    // two arms - the earlier per-junction binary let one diving arm
+    // force the whole joint punchable, and webs still clipped at
+    // crossing overpasses on the other arms.
+    const underNear = new Set<string>();
+    const overNear = new Set<string>();
+    const armKey = (chain: number, slot: number, dir: number): string =>
+      chain + ":" + slot + ":" + dir;
     if (this.junctionArcCtrls.size > 0) {
       const gapW = (this.style.casingWidth - this.style.threadWidth) / 2;
       const jointReach = Math.max(
@@ -2981,11 +3190,15 @@ export class RibbonRenderer {
         const pArc = this.paintArcAt(samples, this.renderCtrl(pass), closed);
         for (const e of list) {
           const jArc = this.paintArcAt(samples, e.ctrl, closed);
-          let d = Math.abs(jArc - pArc);
-          if (closed) d = Math.min(d, total - d);
-          if (d >= voteReach) continue;
-          if (isOver) jnTop[e.jn] = true;
-          else jnBottomForce[e.jn] = true;
+          let d = pArc - jArc;
+          if (closed) {
+            d = ((d % total) + total) % total;
+            if (d > total / 2) d -= total;
+          }
+          if (Math.abs(d) >= voteReach || Math.abs(d) < 1e-4) continue;
+          const key = armKey(pass.chain, e.ctrl, d > 0 ? 1 : -1);
+          if (isOver) overNear.add(key);
+          else underNear.add(key);
         }
       };
       for (const cr of this.ps.crossings) {
@@ -3087,6 +3300,7 @@ export class RibbonRenderer {
       dy: number;
       chain: number;
       dir: number;
+      slot: number;
       arc0: number;
       closed: boolean;
       total: number;
@@ -3098,22 +3312,50 @@ export class RibbonRenderer {
       on: boolean; // REVEAL: all arm-adjacent samples revealed.
       jn: number; // Index into junctionArms (for the layer vote).
     }
-    const pos = this.ps.positions;
     const recs: JRec[] = [];
     for (const jn of this.junctionArms) {
+      // APEX FROM THE ARMS' OWN SAMPLES: the physics centroid +
+      // flowOffset(point) rides a DIFFERENT displacement model than the
+      // ribbons (per-control flow displacement re-splined, plus displayF
+      // and tuck adjustments) - the two disagree by up to ~0.06 world
+      // under flow (apex-drift census: 82/92 junctions over 0.05), so
+      // wedge bases shifted against the curve-hugging flank tips and
+      // fanned small ear slivers (the "jagged sticky-outy bits" seen
+      // with fw > 0). The mean of each arm's arc0 sample IS the flank
+      // pipeline's own junction point - zero mismatch by construction.
       let jx = 0;
       let jy = 0;
-      for (const p of jn.particles) {
-        jx += pos[p * 2];
-        jy += pos[p * 2 + 1];
+      let nA = 0;
+      for (const a of jn.arms) {
+        const samples = this.chainSamples[a.chain];
+        if (!samples) continue;
+        const closedA = this.ps.chainBreakAfter[a.chain] < 0;
+        this.sampleAtSafe(
+          samples,
+          this.paintArcAt(samples, a.slot, closedA),
+          closedA,
+          this.sampleScratch,
+          0
+        );
+        jx += this.sampleScratch[0];
+        jy += this.sampleScratch[1];
+        nA++;
       }
-      jx /= jn.particles.length;
-      jy /= jn.particles.length;
-      // The centroid comes from raw physics positions; the arms it joins
-      // are displaced chain samples - ride the same flow field.
-      this.flowOffset(jx, jy, this.flowScratch);
-      jx += this.flowScratch[0];
-      jy += this.flowScratch[1];
+      if (nA > 0) {
+        jx /= nA;
+        jy /= nA;
+      } else {
+        // No live samples (shouldn't happen): physics-centroid fallback.
+        for (const p of jn.particles) {
+          jx += this.ps.positions[p * 2];
+          jy += this.ps.positions[p * 2 + 1];
+        }
+        jx /= jn.particles.length;
+        jy /= jn.particles.length;
+        this.flowOffset(jx, jy, this.flowScratch);
+        jx += this.flowScratch[0];
+        jy += this.flowScratch[1];
+      }
       const arms: JArm[] = [];
       for (const a of jn.arms) {
         const samples = this.chainSamples[a.chain];
@@ -3138,6 +3380,7 @@ export class RibbonRenderer {
           dy,
           chain: a.chain,
           dir: a.dir,
+          slot: a.slot,
           arc0: this.paintArcAt(samples, a.slot, closedA),
           closed: closedA,
           total: samples.totalLength,
@@ -3160,8 +3403,17 @@ export class RibbonRenderer {
       }
       recs.push({ jx, jy, arms, on, jn: recs.length });
     }
+    const armTop = (a: JArm): boolean =>
+      overNear.has(armKey(a.chain, a.slot, a.dir)) &&
+      !underNear.has(armKey(a.chain, a.slot, a.dir));
+    const armDives = (a: JArm): boolean =>
+      underNear.has(armKey(a.chain, a.slot, a.dir));
+    // Discs (seal + fused tips) stay junction-level: top only when some
+    // arm needs cover and none dives.
     const layerFor = (rec: JRec): TriFanMesh =>
-      jnTop[rec.jn] && !jnBottomForce[rec.jn] ? fmTop : fmBottom;
+      rec.arms.some(armTop) && !rec.arms.some(armDives)
+        ? fmTop
+        : fmBottom;
 
     let fieldU = U_BASE;
     let fieldR = this.baseRgb[0];
@@ -3353,6 +3605,14 @@ export class RibbonRenderer {
         // Only the near-straight pass-through side gets no fillet (a patch
         // across ~180 degrees would bulge off the host's far edge).
         if (gap > FILLET_MAX_WEDGE) continue;
+
+        // PER-WEDGE layer: this wedge rides above the erase stack iff a
+        // nearby foreign thread dives under either of ITS arms and
+        // neither arm dives itself.
+        fm =
+          (armTop(A) || armTop(B)) && !armDives(A) && !armDives(B)
+            ? fmTop
+            : fmBottom;
 
         // A's wedge-facing edge is its LEFT edge; B's is its RIGHT edge.
         const o1x = jx - A.dy * w;

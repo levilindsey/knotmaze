@@ -36,7 +36,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4: appear-fx frontier particles 2026-10-10";
+const BUILD_STAMP = "P4: worklet harp (true pitch) 2026-10-10";
 
 // Appearance pre-sim: with any non-instant appear mode the sim settles
 // briefly BEFORE the first rendered frame, so the reveal plays over a
@@ -456,9 +456,11 @@ async function main(): Promise<void> {
     onVolumeChange: () => {
       writeParams(params);
       synth.setVolume(params.volume);
+      synth.setReverb(params.reverb);
     },
   });
   synth.setVolume(params.volume);
+  synth.setReverb(params.reverb);
 
   window.addEventListener("resize", () => {
     app.renderer.resize(window.innerWidth, window.innerHeight);

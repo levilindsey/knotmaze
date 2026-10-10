@@ -235,11 +235,7 @@ export class FabricMazeRenderer {
   pathViz: PathViz = "gold";
   tension = 0.45;
   private yarnGfx: Graphics;
-  // Marker under-gap: an erase-blend graphics at the BOTTOM of the
-  // overlay punches the thread layer around the start/exit discs.
-  private markerEraseGfx: Graphics;
   private markerRgb = new Float32Array(3);
-  private tailScratch = new Float32Array(2);
   private yarnEvents: YarnEvent[] = [];
   private yarnSeed = 0;
   // Fog of war (main.ts syncs the first two every tick; see FOG block).
@@ -275,15 +271,12 @@ export class FabricMazeRenderer {
     this.overContainer = new Container();
     this.yarnGfx = new Graphics();
     this.gfx = new Graphics();
-    this.markerEraseGfx = new Graphics();
-    this.markerEraseGfx.blendMode = "erase";
-    // Marker gap punch lowest, yarn under the markers: the head dot and
-    // start/exit discs stay readable on top of the laid string.
-    this.overContainer.addChild(
-      this.markerEraseGfx,
-      this.yarnGfx,
-      this.gfx
-    );
+    // Yarn under the markers: the head dot and start/exit discs stay
+    // readable on top of the laid string. (Marker under-gaps are REAL
+    // erase grids owned by the ribbon renderer - see
+    // syncMarkerOccluders.)
+    this.overContainer.addChild(this.yarnGfx, this.gfx);
+    this.syncMarkerOccluders();
     this.underContainer = new Container();
     this.glowSprite = new Sprite(headGlowTexture());
     this.glowSprite.anchor.set(0.5);
@@ -296,6 +289,25 @@ export class FabricMazeRenderer {
 
   setWidths(threadWidth: number): void {
     this.threadWidth = threadWidth;
+    this.syncMarkerOccluders();
+  }
+
+  // Start/exit markers are DISC OCCLUDERS in the ribbon renderer: their
+  // threads get real crossing-machinery erase gaps (lanes, miter, fade),
+  // concentric with the discs by construction.
+  private markerRadius(): number {
+    return Math.max(0.32, this.threadWidth * 0.95);
+  }
+
+  private syncMarkerOccluders(): void {
+    const s = this.walk.vertices.get(this.walk.start);
+    const e = this.walk.vertices.get(this.walk.exit);
+    if (!s || !e) return;
+    const r = this.markerRadius();
+    this.ribbons.setMarkerOccluders([
+      { chain: s.chain, ctrl: s.ctrl, radius: r },
+      { chain: e.chain, ctrl: e.ctrl, radius: r },
+    ]);
   }
 
   // Track the hovered choosable run; returns true when it changed (the
@@ -1215,9 +1227,7 @@ export class FabricMazeRenderer {
     showRing: boolean
   ): void {
     const g = this.gfx;
-    const eg = this.markerEraseGfx;
     g.clear();
-    eg.clear();
     // The head dot sits INSIDE its thread (diameter < threadWidth).
     const rHead = Math.max(0.13, this.threadWidth * 0.42);
     if (dotChain >= 0) {
@@ -1242,40 +1252,12 @@ export class FabricMazeRenderer {
     this.polyCircle(g, this.scratch[0], this.scratch[1], rHead, 48);
     g.fill({ color: 0xffffff, alpha: 0.95 });
 
-    const r = Math.max(0.32, this.threadWidth * 0.95);
-    const rGap = r + Math.max(0.1, this.threadWidth * 0.3);
-    // Punch ONLY the connecting thread, not a full ring: a capsule from
-    // the disc center along the thread's inward direction - the tail
-    // thread reads as passing under the marker while the under-weave
-    // glow stays visible everywhere else around the dot.
-    const punchTail = (chain: number, ctrl: number): void => {
-      const cx = this.scratch[0];
-      const cy = this.scratch[1];
-      const len = this.ps.chains[chain].length;
-      const inward = ctrl < len / 2 ? 1 : -1;
-      this.pointFlowed(
-        chain,
-        this.ctrlMod(chain, ctrl + inward * 0.8),
-        this.tailScratch,
-        0
-      );
-      let dx = this.tailScratch[0] - cx;
-      let dy = this.tailScratch[1] - cy;
-      const dl = Math.hypot(dx, dy) || 1;
-      dx /= dl;
-      dy /= dl;
-      eg.moveTo(cx, cy);
-      eg.lineTo(cx + dx * rGap, cy + dy * rGap);
-      eg.stroke({
-        width: this.threadWidth * 1.45,
-        cap: "round",
-        color: 0xffffff,
-        alpha: 1,
-      });
-    };
+    // Start/exit discs sit at the renderer's OWN sample of their ctrl
+    // (markerWorld), concentric with the real erase gaps the renderer
+    // cuts for them (setMarkerOccluders).
+    const r = this.markerRadius();
     const startV = this.walk.vertices.get(this.walk.start)!;
-    this.vertexWorld(this.walk.start, this.scratch, 0);
-    punchTail(startV.chain, startV.ctrl);
+    this.ribbons.markerWorld(startV.chain, startV.ctrl, this.scratch);
     this.ribbons.sectionColorAt(startV.chain, startV.ctrl, this.markerRgb);
     this.polyCircle(g, this.scratch[0], this.scratch[1], r, 56);
     g.fill({ color: this.rgbHex(this.markerRgb), alpha: 1 });
@@ -1287,8 +1269,7 @@ export class FabricMazeRenderer {
     ) {
       return; // Exit still unrevealed: no marker, no gap, no ring.
     }
-    this.vertexWorld(this.walk.exit, this.scratch, 0);
-    punchTail(exitV.chain, exitV.ctrl);
+    this.ribbons.markerWorld(exitV.chain, exitV.ctrl, this.scratch);
     this.ribbons.sectionColorAt(exitV.chain, exitV.ctrl, this.markerRgb);
     this.polyCircle(g, this.scratch[0], this.scratch[1], r, 56);
     g.fill({ color: this.rgbHex(this.markerRgb), alpha: 1 });

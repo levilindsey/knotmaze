@@ -446,7 +446,7 @@ export function buildPanel(
     D.octaves, () => callbacks.onAudioChange()
   );
   const soundSpeedRow = row(
-    fSound, p, "soundSpeed", { min: 0.25, max: 3, step: 0.05 },
+    fSound, p, "soundSpeed", { min: 0.25, max: 6, step: 0.05 },
     "Tempo of music mode and cadence of random plucks. 1 = normal.",
     D.soundSpeed, () => callbacks.onAudioChange()
   );
@@ -454,6 +454,11 @@ export function buildPanel(
     fSound, p, "volume", { min: 0, max: 1, step: 0.01 },
     "Master output level.",
     D.volume, () => callbacks.onVolumeChange()
+  );
+  row(
+    fSound, p, "reverb", { min: 0, max: 1, step: 0.01 },
+    "Hall reverb amount. 0 = dry strings, 1 = a wash of room.",
+    D.reverb, () => callbacks.onVolumeChange()
   );
   row(
     fSound, s, "muted", undefined,

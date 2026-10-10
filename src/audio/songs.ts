@@ -18,7 +18,9 @@ export interface Song {
 // D-dorian waltz setting, transcribed FROM the musicaviva/abcnotation
 // ABC source (anon., 3/4, K:Ddor):
 //   D2D | AGA | E>FE | D3 | zAc | d2c | ABG | A2A |
-//   d2D | F2G | AGF | (EC)D | D2A | G2F | EDC | D3
+//   d2d | F2G | AGF | (EC)D | D2A | G2F | EDC | D3
+// (bar 9's third note is d - the source's "d2D" octave drop mid-phrase
+// is not in any sung performance and the user flagged it immediately.)
 // Beats below are quarter notes of that 3/4.
 export const SCARBOROUGH_FAIR: Song = {
   name: "Scarborough Fair",
@@ -44,7 +46,7 @@ export const SCARBOROUGH_FAIR: Song = {
     { note: "A4", beats: 2 },
     { note: "A4", beats: 1 },
     { note: "D5", beats: 2 },
-    { note: "D4", beats: 1 },
+    { note: "D5", beats: 1 },
     { note: "F4", beats: 2 },
     { note: "G4", beats: 1 },
     { note: "A4", beats: 1 },
