@@ -960,7 +960,9 @@ export class RibbonRenderer {
     const samples = this.chainSamples[chain];
     const total = samples ? samples.totalLength : 0;
     const closed = this.ps.chainBreakAfter[chain] < 0;
-    const ramp = Math.max(0.12, this.fadeLength);
+    // The ramp IS fadeLength (the yarn fades out exactly with its host);
+    // the tiny floor only prevents per-station alpha popping at fl=0.
+    const ramp = Math.max(0.04, this.fadeLength);
     let vis = 1;
     for (let i = 0; i < win.length; i += 3) {
       let d = arc - win[i];
@@ -1649,12 +1651,21 @@ export class RibbonRenderer {
           this.eraseExtentPos[index] = ePos;
           this.eraseExtentNeg[index] = eNeg;
         }
+        // The yarn window quotes the MID-LANE cuts, not the max: the
+        // yarn rides the centerline, and the widest (edge-lane) cut at
+        // an oblique crossing made it vanish well before its host's own
+        // material did - the hidden span must track `gap` exactly.
+        const midL = (ERASE_LANES - 1) >> 1;
         let win = this.underWindows.get(crossing.under.chain);
         if (!win) {
           win = [];
           this.underWindows.set(crossing.under.chain, win);
         }
-        win.push(underCenter, eNeg, ePos);
+        win.push(
+          underCenter,
+          -this.laneCutsNeg[midL],
+          this.laneCutsPos[midL]
+        );
       }
 
       // Build the erase grid: each lane spans its own solved cut interval,
