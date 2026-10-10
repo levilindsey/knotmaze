@@ -29,7 +29,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 16: section color schemes 2026-10-09";
+const BUILD_STAMP = "P4 Stage 17: flow undulation 2026-10-09";
 
 const app = new Application();
 
@@ -181,6 +181,7 @@ async function main(): Promise<void> {
           : graph.strands.map(() => 0),
       // Fabric gameplay recolors the actual threads via palette textures.
       paletteMode: params.mazeFabric,
+      flowSeed: params.seed,
     });
     renderer.setSectionField(
       buildSectionField(
@@ -519,6 +520,8 @@ async function main(): Promise<void> {
     // physics or splines.
     const fabricTick = (): void => {
       renderer!.cuspRadius = params.cuspRadius;
+      renderer!.flowStrength = params.flowStrength;
+      renderer!.flowSpeed = params.flowSpeed;
       if (params.mazeFabric && fabric && fabricController) {
         fabric.moveSpeed = params.moveSpeed;
         fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
@@ -530,7 +533,23 @@ async function main(): Promise<void> {
       renderer!.tickPaint(ticker.deltaMS / 1000);
     };
 
+    // Flow undulation is RENDER-side only: while the physics is paused or
+    // asleep the scene must keep swaying, so the render pass (and the
+    // overlay updates that ride it, exactly as in the awake path) runs
+    // WITHOUT ps.step. At flowStrength 0 this is a no-op and the
+    // asleep/paused branches stay byte-identical to the pre-flow behavior
+    // (no render at all while asleep).
+    const flowRender = (): void => {
+      if (params.flowStrength <= 0) return;
+      renderer!.update();
+      if (params.mazeMode && maze && controller) maze.update(controller);
+      if (params.mazeFabric && fabric && fabricController) {
+        fabric.update(fabricController);
+      }
+    };
+
     if (speedMult === 0) {
+      flowRender();
       fabricTick();
       perfLine = " | paused";
       updateStamp();
@@ -538,6 +557,7 @@ async function main(): Promise<void> {
     }
 
     if (asleep) {
+      flowRender();
       fabricTick();
       perfLine = " | asleep";
       updateStamp();

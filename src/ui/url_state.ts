@@ -21,6 +21,8 @@ export interface UrlParams {
   gap: number; // Space between an under-thread cut end and the over thread.
   moveSpeed: number; // [0.25, 4] maze traversal-animation speed multiplier.
   cuspRadius: number; // [0, 3] junction cusp-rounding (fillet) radius mult.
+  flowStrength: number; // [0, 1] flow-undulation amplitude (render-only).
+  flowSpeed: number; // [0, 3] flow-undulation drift speed multiplier.
   mazeMode: boolean; // P4: trace a solve path instead of tugging threads.
   // P4 branching maze: generate the spliced maze FABRIC (junctions, 4-way
   // merges, corner entrance/exit) and play it (branch-point taps).
@@ -49,6 +51,8 @@ export const DEFAULTS = {
   gap: 0.18,
   moveSpeed: 1,
   cuspRadius: 1,
+  flowStrength: 0.3,
+  flowSpeed: 1,
 };
 
 export function newSeed(): number {
@@ -85,6 +89,8 @@ export function readParams(): UrlParams {
     gap: readNumber(query, "gap", DEFAULTS.gap),
     moveSpeed: readNumber(query, "ms", DEFAULTS.moveSpeed),
     cuspRadius: readNumber(query, "cr", DEFAULTS.cuspRadius),
+    flowStrength: readNumber(query, "fw", DEFAULTS.flowStrength),
+    flowSpeed: readNumber(query, "fv", DEFAULTS.flowSpeed),
     mazeMode: readNumber(query, "md", 0) > 0.5,
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
     deadEnds: readNumber(query, "de", 0) > 0.5,
@@ -119,6 +125,8 @@ export function writeParams(params: UrlParams): void {
   query.set("gap", String(params.gap));
   query.set("ms", String(params.moveSpeed));
   query.set("cr", String(params.cuspRadius));
+  query.set("fw", String(params.flowStrength));
+  query.set("fv", String(params.flowSpeed));
   query.set("md", params.mazeMode ? "1" : "0");
   query.set("mf", params.mazeFabric ? "1" : "0");
   query.set("de", params.deadEnds ? "1" : "0");

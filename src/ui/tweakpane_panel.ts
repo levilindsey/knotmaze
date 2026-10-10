@@ -166,6 +166,14 @@ export function buildPanel(
     "How far the rounded corners reach where threads join at an intersection. 0 = sharp joints. Applies live."
   ).on("change", callbacks.onSlackChange);
   tip(
+    pane.addBinding(params, "flowStrength", { min: 0, max: 1, step: 0.05 }),
+    "Flow undulation: how far the whole fabric sways, as if drifting in water. 0 = perfectly still. Render-only - applies live, even while the knot sleeps."
+  ).on("change", callbacks.onSlackChange);
+  tip(
+    pane.addBinding(params, "flowSpeed", { min: 0, max: 3, step: 0.05 }),
+    "How fast the flow undulation drifts. Applies live."
+  ).on("change", callbacks.onSlackChange);
+  tip(
     pane.addButton({ title: "Reset path" }),
     "Clear the traced maze path and start over from the entrance."
   ).on("click", callbacks.onResetPath);

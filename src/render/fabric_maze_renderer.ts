@@ -59,6 +59,7 @@ export class FabricMazeRenderer {
   private hoverEdge = -1;
   private anim: MoveAnim | null = null;
   private scratch = new Float32Array(2);
+  private flowScratch = new Float32Array(2);
   // Live traversal-speed multiplier (the moveSpeed slider; main.ts keeps
   // it synced every tick).
   moveSpeed = 1;
@@ -90,11 +91,28 @@ export class FabricMazeRenderer {
     return true;
   }
 
+  // World position on a chain plus the ribbons' flow-undulation offset:
+  // the ribbons render their splines through RibbonRenderer's flow field,
+  // so every position this overlay draws or hit-tests must ride the same
+  // field or the markers detach from the undulating threads. Exact
+  // pass-through at flowStrength 0.
+  private pointFlowed(
+    chain: number,
+    ctrl: number,
+    out: Float32Array,
+    offset: number
+  ): void {
+    this.ps.pointOnChain(chain, ctrl, out, offset);
+    this.ribbons.flowOffset(out[offset], out[offset + 1], this.flowScratch);
+    out[offset] += this.flowScratch[0];
+    out[offset + 1] += this.flowScratch[1];
+  }
+
   // Live world position of a walk vertex (any fused occurrence works: the
   // junction coincidence holds them together).
   vertexWorld(id: string, out: Float32Array, offset: number): void {
     const v = this.walk.vertices.get(id)!;
-    this.ps.pointOnChain(v.chain, this.ctrlMod(v.chain, v.ctrl), out, offset);
+    this.pointFlowed(v.chain, this.ctrlMod(v.chain, v.ctrl), out, offset);
   }
 
   private ctrlMod(chain: number, f: number): number {
@@ -121,12 +139,7 @@ export class FabricMazeRenderer {
           (exA && ff - e.ctrlA <= HEAD_EXCLUDE) ||
           (exB && e.ctrlB - ff <= HEAD_EXCLUDE);
         if (!nearHead || e.ctrlB - e.ctrlA <= 2 * HEAD_EXCLUDE) {
-          this.ps.pointOnChain(
-            e.chain,
-            this.ctrlMod(e.chain, ff),
-            this.scratch,
-            0
-          );
+          this.pointFlowed(e.chain, this.ctrlMod(e.chain, ff), this.scratch, 0);
           const dx = this.scratch[0] - x;
           const dy = this.scratch[1] - y;
           const d = dx * dx + dy * dy;
@@ -195,7 +208,7 @@ export class FabricMazeRenderer {
       const fc = closed
         ? ((f % len) + len) % len
         : Math.max(0, Math.min(len - 1, f));
-      this.ps.pointOnChain(a.e.chain, fc, this.scratch, 0);
+      this.pointFlowed(a.e.chain, fc, this.scratch, 0);
       return [this.scratch[0], this.scratch[1]];
     };
     const [x0, y0] = at(a.cur - 1);
@@ -349,12 +362,7 @@ export class FabricMazeRenderer {
     g.clear();
     const rHead = Math.max(0.24, this.threadWidth * 0.72);
     if (dotChain >= 0) {
-      this.ps.pointOnChain(
-        dotChain,
-        this.ctrlMod(dotChain, dotCtrl),
-        this.scratch,
-        0
-      );
+      this.pointFlowed(dotChain, this.ctrlMod(dotChain, dotCtrl), this.scratch, 0);
     } else {
       this.vertexWorld(controller.head, this.scratch, 0);
     }

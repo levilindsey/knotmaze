@@ -19,7 +19,7 @@
 // All erases render below all fills, so patches never slice each other.
 
 import { BufferImageSource, Container, Graphics, Texture } from "pixi.js";
-import { createNoise2D } from "simplex-noise";
+import { createNoise2D, createNoise3D } from "simplex-noise";
 import type { ParticleSystem, CrossingPass } from "../physics/particle_system";
 import type { VSegment, ColorScheme } from "../core/section_colors";
 import { SeededRNG } from "../util/random";
@@ -46,6 +46,8 @@ export interface RibbonStyle {
   // making the weave pixel-identical. Knot mode leaves this off and keeps
   // the original tint path untouched.
   paletteMode?: boolean;
+  // Seed for the flow-undulation noise field (defaults to 1).
+  flowSeed?: number;
 }
 
 // PAINT: gameplay recoloring, declared by the fabric overlay and rendered by
@@ -157,6 +159,21 @@ const FILLET_REACH_PER_HALF = 1.25; // * fillHalf, along each arm.
 const FILLET_MAX_WEDGE = 2.6; // Radians.
 const FILLET_CORNER_LIM = 2.2; // * edge half-width: skip distant corners.
 const FILLET_BEZIER_STEPS = 8;
+
+// FLOW UNDULATION (render-side ONLY). A seeded, slowly drifting simplex
+// field displaces each chain's spline CONTROL points right after they are
+// copied from the particle positions, so the fabric sways as if in water.
+// Everything downstream of chainControls (splines, erase/fill marches,
+// tuck, over-fill windows) reads chainSamples and therefore rides the same
+// field coherently; the few consumers that read raw physics positions
+// (junction fillet centroids here, markers/hit-tests in the fabric
+// overlay) add flowOffset() explicitly. The PHYSICS state is never
+// touched: the sim's sleep gate stays sacred - main.ts keeps calling
+// update() while asleep/paused only when flowStrength > 0, and at 0 the
+// displacement pass is skipped entirely (byte-identical rest behavior).
+const FLOW_FREQ = 0.22; // Spatial noise frequency (1 / lattice units).
+const FLOW_TIME_SCALE = 0.35; // Noise-time seconds per flow-clock second.
+const FLOW_AMP = 0.38; // Displacement in world units at flowStrength 1.
 
 function mixHex(a: number, b: number, t: number): number {
   const ar = (a >> 16) & 255;
@@ -413,6 +430,14 @@ export class RibbonRenderer {
   // Live junction-rounding radius multiplier (the cuspRadius slider;
   // main.ts keeps it synced every tick).
   cuspRadius = 1;
+  // Live flow-undulation controls (sliders; main.ts syncs them every tick
+  // like cuspRadius). See the FLOW_* constants: render-side displacement
+  // only, never the physics state.
+  flowStrength = 0;
+  flowSpeed = 1;
+  private flowTime = 0;
+  private flowScratch = new Float32Array(2);
+  private flowNoise: (x: number, y: number, z: number) => number;
   private filletGfx: Graphics | null = null;
   private junctionArms: Array<{
     particles: number[];
@@ -449,6 +474,9 @@ export class RibbonRenderer {
     this.ps = ps;
     this.style = style;
     this.root = new Container();
+
+    const flowRng = new SeededRNG(((style.flowSeed ?? 1) ^ 0xf10a) >>> 0);
+    this.flowNoise = createNoise3D(() => flowRng.next());
 
     const baseLayer = new Container();
     const filletLayer = new Container();
@@ -783,6 +811,23 @@ export class RibbonRenderer {
     this.style.casingWidth = threadWidth + gap * 2;
   }
 
+  // The flow-undulation displacement field at a world point: out[0..1]
+  // receives (dx, dy). Exactly zero at flowStrength 0. Public so the
+  // fabric overlay can keep its markers and hit-tests on the displaced
+  // threads.
+  flowOffset(x: number, y: number, out: Float32Array): void {
+    const amp = FLOW_AMP * this.flowStrength;
+    if (amp === 0) {
+      out[0] = 0;
+      out[1] = 0;
+      return;
+    }
+    const t = this.flowTime * FLOW_TIME_SCALE;
+    out[0] = amp * this.flowNoise(x * FLOW_FREQ, y * FLOW_FREQ, t);
+    out[1] =
+      amp * this.flowNoise(x * FLOW_FREQ + 61.7, y * FLOW_FREQ + 47.3, t);
+  }
+
   update(): void {
     const { positions } = this.ps;
 
@@ -791,6 +836,16 @@ export class RibbonRenderer {
       for (let k = 0; k < chain.length; k++) {
         controls[k * 2] = positions[chain[k] * 2];
         controls[k * 2 + 1] = positions[chain[k] * 2 + 1];
+      }
+      // Flow undulation: displace the control COPIES (never the physics
+      // state) so the splines and the whole crossing machinery downstream
+      // ride one coherent field.
+      if (this.flowStrength > 0) {
+        for (let k = 0; k < chain.length; k++) {
+          this.flowOffset(controls[k * 2], controls[k * 2 + 1], this.flowScratch);
+          controls[k * 2] += this.flowScratch[0];
+          controls[k * 2 + 1] += this.flowScratch[1];
+        }
       }
       const brk = this.ps.chainBreakAfter[i];
       const samples =
@@ -1555,8 +1610,19 @@ export class RibbonRenderer {
   // ones only when the declaration changed, dropped ones reset once), then
   // re-copies the over-fill windows riding those chains so crossing patches
   // recolor in the same frame. Touches no positions and no splines - safe
-  // to run while the physics sleeps.
+  // to run while the physics sleeps. Also owns the flow-undulation clock
+  // (it receives real dt every frame in all ticker branches, both modes).
   tickPaint(dt: number): void {
+    this.tickPaintPalette(dt);
+    // Flow clock, advanced AFTER the palette/fillet pass so everything
+    // rendered this frame (update()'s chain samples, the fillet
+    // centroids) read ONE field time. Scaling the ACCUMULATOR by the live
+    // speed keeps a flowSpeed slider change from phase-jumping the field,
+    // which multiplying at evaluation time would.
+    this.flowTime += dt * this.flowSpeed;
+  }
+
+  private tickPaintPalette(dt: number): void {
     if (!this.style.paletteMode) return;
     this.paintClock += dt;
 
@@ -1942,6 +2008,11 @@ export class RibbonRenderer {
       }
       jx /= jn.particles.length;
       jy /= jn.particles.length;
+      // The centroid comes from raw physics positions; the arms it joins
+      // are displaced chain samples - ride the same flow field.
+      this.flowOffset(jx, jy, this.flowScratch);
+      jx += this.flowScratch[0];
+      jy += this.flowScratch[1];
 
       const arms: Array<{
         ang: number;
