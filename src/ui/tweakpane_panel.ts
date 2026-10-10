@@ -287,6 +287,11 @@ export function buildPanel(
     "Maze travel speed: how fast the dot and the gold front move along the thread. Applies live.",
     D.moveSpeed, () => callbacks.onSlackChange()
   );
+  const pulseSpacingRow = row(
+    fMaze, p, "pulseSpacing", { min: 0.8, max: 6, step: 0.1 },
+    "Distance between traveling pulses on the current junction's arms. Applies live.",
+    D.pulseSpacing, () => callbacks.onSlackChange()
+  );
   const resetPathBtn = button(
     fMaze,
     "Reset path",
@@ -519,6 +524,7 @@ export function buildPanel(
     fowRadiusRow.hidden = !fab || !params.fogOfWar;
     moveSpeedRow.hidden = !fab;
     resetPathBtn.hidden = !fab;
+    pulseSpacingRow.hidden = !fab;
     // Music mode derives its pitch set from the song itself; manual and
     // random are the modes where the space/octaves choices apply.
     const freePitch =

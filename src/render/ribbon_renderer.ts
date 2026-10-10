@@ -605,6 +605,9 @@ export class RibbonRenderer {
   // erase strength fades to nothing. 0 = sharp caps, exactly the original
   // render.
   fadeLength = 0;
+  // Live world-unit spacing between crests in a run's pulse train (the
+  // pulseSpacing panel param; main.ts syncs it every tick).
+  pulseSpacing = 2.5;
   // Live flow-undulation controls (sliders; main.ts syncs them every tick
   // like cuspRadius). See the FLOW_* constants: render-side displacement
   // only, never the physics state.
@@ -2601,41 +2604,43 @@ export class RibbonRenderer {
   }
 
   // The pulse field at distance d from the junction along an arm whose run
-  // spans spanArc. GLOBAL period and phase (every arm in lockstep): a crest
-  // sinks inward along the arrival arm exactly as its successor emerges
-  // along all the choices. The steady floor, the crest, and the hover
-  // highlight all fade smoothly at both the reach end and the arm's far
-  // end - a hard cutoff rendered as a distinct line wherever a crest met
-  // the boundary.
+  // spans spanArc. FULL-LENGTH CREST TRAINS: crests march the entire run
+  // at `pulseSpacing` world units apart (live panel param) - inbound
+  // trains sink toward the junction while outbound trains emerge along
+  // the choices (outbound leads by PULSE_OUT_LEAD). The steady glow floor
+  // still hugs the junction (PULSE_REACH); crests hold near-full strength
+  // along the whole run, swell in over CREST_RAMP near the junction, and
+  // dissolve only across the far-end window.
   private pulseValueAt(
     d: number,
     spanArc: number,
     inward: boolean,
     hovered: boolean
   ): number {
-    const R0 = PULSE_REACH;
-    const end = Math.min(R0, spanArc);
+    const end = spanArc;
     if (d < 0 || d > end) return 0;
-    const endWin = Math.min(1, (end - d) / PULSE_END_WINDOW);
-    if (hovered) return Math.max(0, endWin);
-    const fade = 1 - d / R0;
-    const period = 2 * R0;
+    const endWin = Math.min(1, Math.max(0, (end - d) / PULSE_END_WINDOW));
+    if (hovered) return endWin;
+    const spacing = Math.max(0.5, this.pulseSpacing);
     const clock = inward ? this.paintClock : this.paintClock + PULSE_OUT_LEAD;
-    const s0 = (((clock * PULSE_SPEED) % period) + period) % period;
-    let bump = 0;
-    for (const sPh of [s0, (s0 + R0) % period]) {
-      // s in [0, R0) is the inbound half of the cycle, [R0, 2R0) outbound.
-      if (inward !== sPh < R0) continue;
-      const dC = inward ? R0 - sPh : sPh - R0;
-      const b =
-        (1 - Math.abs(d - dC) / CREST_WIDTH) *
-        Math.min(1, dC / CREST_RAMP);
-      if (b > bump) bump = b;
-    }
+    const travel = clock * PULSE_SPEED;
+    // Distance to the nearest crest of the comb (outbound combs slide
+    // outward with time, inbound combs slide toward the junction).
+    const raw = inward ? d + travel : d - travel;
+    const ph = ((raw % spacing) + spacing) % spacing;
+    const dist = Math.min(ph, spacing - ph);
+    // That crest's own position, for the near-junction swell-in.
+    const dC = Math.max(
+      0,
+      d - (ph <= spacing - ph ? ph : ph - spacing)
+    );
+    const bump =
+      Math.max(0, 1 - dist / CREST_WIDTH) * Math.min(1, dC / CREST_RAMP);
     const floor =
-      PULSE_FLOOR +
-      PULSE_CORE_BOOST * Math.max(0, 1 - d / PULSE_CORE_RADIUS);
-    return Math.min(1, (floor + bump) * fade * endWin);
+      (PULSE_FLOOR +
+        PULSE_CORE_BOOST * Math.max(0, 1 - d / PULSE_CORE_RADIUS)) *
+      Math.max(0, 1 - d / PULSE_REACH);
+    return Math.min(1, (floor + bump * 0.9) * endWin);
   }
 
   // The paint field at a single chain ARC (same rules as writeChainPaint,
@@ -2717,6 +2722,18 @@ export class RibbonRenderer {
       ? arc
       : Math.min(Math.max(0, arc), samples.totalLength - 1e-4);
     this.sampleAt(samples, a, out, offset);
+  }
+
+  // Section RGB at a chain CTRL (public: the fabric overlay colors its
+  // start/exit markers from the thread they sit on).
+  sectionColorAt(chain: number, ctrl: number, out: Float32Array): void {
+    const samples = this.chainSamples[chain];
+    if (!samples) {
+      out.set(this.baseRgb);
+      return;
+    }
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    this.colorAtArc(chain, this.paintArcAt(samples, ctrl, closed), out);
   }
 
   // Section RGB at a world ARC along a chain, read from the baked

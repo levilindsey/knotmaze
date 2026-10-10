@@ -442,6 +442,7 @@ async function main(): Promise<void> {
     onResetPath: () => {
       fabricController?.reset();
       fabric?.cancelMove();
+      fabric?.clearYarn();
       pendingWin = false;
       hideWin();
       if (fabric && fabricController) fabric.update(fabricController);
@@ -618,9 +619,13 @@ async function main(): Promise<void> {
   };
 
   // Visible ring frequency from the audible pitch: low strings wobble
-  // slow, high strings shimmer.
+  // slow, high strings shimmer. Band raised 3-8 -> 5-13 Hz ("too loose
+  // and wobbly, not enough like an actual plucked string").
   const visibleHz = (freq: number): number =>
-    Math.min(8, Math.max(3, 3.2 + 1.3 * Math.log2(Math.max(55, freq) / 110)));
+    Math.min(
+      13,
+      Math.max(5, 5.5 + 1.6 * Math.log2(Math.max(55, freq) / 110))
+    );
 
   // Begin the release animation for whatever is currently displaced.
   const beginRelease = (style: "soft" | "string", hz: number): void => {
@@ -913,6 +918,7 @@ async function main(): Promise<void> {
       renderer!.fadeLength = params.fadeLength;
       renderer!.flowStrength = params.flowStrength;
       renderer!.flowSpeed = params.flowSpeed;
+      renderer!.pulseSpacing = params.pulseSpacing;
       if (params.mazeFabric && fabric && fabricController) {
         fabric.moveSpeed = params.moveSpeed;
         fabric.trailMode = params.pathViz === "trail";
@@ -981,7 +987,7 @@ async function main(): Promise<void> {
         } else {
           // String: sharp return + damped ring along the release axis.
           strum.t += dt;
-          const env = strum.amp * Math.exp(-strum.t / 0.33);
+          const env = strum.amp * Math.exp(-strum.t / 0.22);
           const off = env * Math.cos(2 * Math.PI * strum.hz * strum.t);
           dragPos[0] = grabOrigin[0] + strum.ax * off;
           dragPos[1] = grabOrigin[1] + strum.ay * off;

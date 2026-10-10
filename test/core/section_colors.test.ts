@@ -120,10 +120,18 @@ describe("section color field (RGB)", () => {
       SEED,
       HUE
     );
-    // Every run wears its own constant mid color; all four distinct.
+    // Every run wears its own constant mid color, and runs SHARING A
+    // JUNCTION always wear distinct swatches (the collision walk).
+    // Non-adjacent runs may legitimately repeat: colors come from a
+    // finite stride-spread swatch set - global uniqueness is neither
+    // guaranteed nor wanted (uniform hue draws read as clumped; see
+    // the swatch comment in section_colors.ts).
     const runColors = walk.edges.map((e) => midRgb(field[e.chain], e));
+    const adjacent = (a: WalkEdge, b: WalkEdge): boolean =>
+      a.va === b.va || a.va === b.vb || a.vb === b.va || a.vb === b.vb;
     for (let i = 0; i < runColors.length; i++) {
       for (let j = i + 1; j < runColors.length; j++) {
+        if (!adjacent(walk.edges[i], walk.edges[j])) continue;
         const d =
           Math.abs(runColors[i][0] - runColors[j][0]) +
           Math.abs(runColors[i][1] - runColors[j][1]) +

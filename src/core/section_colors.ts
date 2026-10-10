@@ -51,6 +51,8 @@ export interface VSegment {
 
 // Ramp length at each end of a discontinuous run (ctrl units; ~1.2 world).
 const RAMP_CTRL = 2.4;
+// Segments scheme only: much shorter junction blends (see its loop).
+const SEG_RAMP_CTRL = 1.0;
 
 // THE GAMUT: a 280-degree hue arc around the seed hue at the fabric's
 // saturation/lightness - wide enough to read as distinct sections, no full
@@ -253,9 +255,31 @@ export function buildSectionField(
   // a channel-wise mean, NOT a coordinate mean - hue coordinates do not
   // average across an arc. Ramps are straight RGB blends by design:
   // "just the blend given whatever the colors are".
-  const runRgb: RGB[] = walk.edges.map((e) =>
-    gamutRgb(baseHue, hash01(`run${e.id}`, seed))
-  );
+  // Swatch assignment, not raw uniform draws: uniform hues over a pastel
+  // arc land in the same color FAMILY constantly (teal next to teal next
+  // to mint), which reads as correlated even though it is independent -
+  // the "many neighboring segments with matching colors" report. K
+  // stride-spread swatches + a collision walk guarantee that runs
+  // SHARING A JUNCTION never wear the same swatch, and the stride keeps
+  // consecutive swatch indices far apart in the gamut. Seed-determined,
+  // order-stable.
+  const K = 12;
+  const STRIDE = 5; // Coprime with K: neighboring indices sit far apart.
+  const vOf = (j: number): number => ((j * STRIDE) % K) / (K - 1);
+  const picks = new Array<number>(walk.edges.length).fill(-1);
+  const runRgb: RGB[] = new Array(walk.edges.length);
+  for (const e of walk.edges) {
+    const taken = new Set<number>();
+    for (const vid of [e.va, e.vb]) {
+      for (const nb of walk.vertices.get(vid)!.edges) {
+        if (picks[nb] >= 0) taken.add(picks[nb]);
+      }
+    }
+    let j = Math.floor(hash01(`run${e.id}`, seed) * K) % K;
+    for (let t = 0; t < K && taken.has(j); t++) j = (j + 1) % K;
+    picks[e.id] = j;
+    runRgb[e.id] = gamutRgb(baseHue, vOf(j));
+  }
   const vJ = new Map<string, RGB>();
   for (const [id, v] of walk.vertices) {
     let sr = 0;
@@ -282,7 +306,14 @@ export function buildSectionField(
     const rgbB = vJ.get(e.vb)!;
     const mid = runRgb[e.id];
     const span = e.ctrlB - e.ctrlA;
-    const r = Math.min(RAMP_CTRL, span / 2.5);
+    // SHORT blend zones: with the generic RAMP_CTRL (2.4) a typical run
+    // was ~80% ramp toward its junctions' MEAN colors, which diffused
+    // every neighborhood toward a shared average - the maze rendered as
+    // large same-hued fields ("neighboring segments with matching
+    // colors"). Independence IS the scheme: each run must wear its own
+    // color for most of its length, with just enough junction blend to
+    // avoid a hard seam.
+    const r = Math.min(SEG_RAMP_CTRL, span * 0.18);
     const segs = field[e.chain];
     pushRgb(segs, e.ctrlA, e.ctrlA + r, rgbA, mid);
     pushRgb(segs, e.ctrlA + r, e.ctrlB - r, mid, mid);

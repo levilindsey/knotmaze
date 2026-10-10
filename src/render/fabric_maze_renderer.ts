@@ -39,7 +39,8 @@ import type {
 } from "./ribbon_renderer";
 import type { PathViz } from "../ui/url_state";
 
-const START_COLOR = 0x46e35a;
+// Start/exit discs wear their thread's own section color now; the exit
+// keeps its accent only for the win ring.
 const EXIT_COLOR = 0xff6b3d;
 
 // Hit-test sampling density along runs (ctrl units).
@@ -234,6 +235,11 @@ export class FabricMazeRenderer {
   pathViz: PathViz = "gold";
   tension = 0.45;
   private yarnGfx: Graphics;
+  // Marker under-gap: an erase-blend graphics at the BOTTOM of the
+  // overlay punches the thread layer around the start/exit discs.
+  private markerEraseGfx: Graphics;
+  private markerRgb = new Float32Array(3);
+  private tailScratch = new Float32Array(2);
   private yarnEvents: YarnEvent[] = [];
   private yarnSeed = 0;
   // Fog of war (main.ts syncs the first two every tick; see FOG block).
@@ -269,9 +275,15 @@ export class FabricMazeRenderer {
     this.overContainer = new Container();
     this.yarnGfx = new Graphics();
     this.gfx = new Graphics();
-    // Yarn under the markers: the head dot and start/exit discs stay
-    // readable on top of the laid string.
-    this.overContainer.addChild(this.yarnGfx, this.gfx);
+    this.markerEraseGfx = new Graphics();
+    this.markerEraseGfx.blendMode = "erase";
+    // Marker gap punch lowest, yarn under the markers: the head dot and
+    // start/exit discs stay readable on top of the laid string.
+    this.overContainer.addChild(
+      this.markerEraseGfx,
+      this.yarnGfx,
+      this.gfx
+    );
     this.underContainer = new Container();
     this.glowSprite = new Sprite(headGlowTexture());
     this.glowSprite.anchor.set(0.5);
@@ -522,14 +534,19 @@ export class FabricMazeRenderer {
       }
       return;
     }
-    if (controller.pathEdges.length === 0 && !this.anim) {
-      this.yarnEvents.length = 0;
-      this.yarnGfx.clear();
-      return;
-    }
+    // NOTE: an EMPTY path no longer clears the yarn - backtracking all
+    // the way to the start leaves the laid string on the maze (it is
+    // never picked up, per the Ariadne model). Only the explicit reset
+    // button (clearYarn) or leaving string mode drops it.
     if (this.yarnEvents.length === 0 && controller.pathEdges.length > 0) {
       this.rebuildYarnFromPath(controller);
     }
+  }
+
+  // Explicit reset (the panel button): drop the laid string.
+  clearYarn(): void {
+    this.yarnEvents.length = 0;
+    this.yarnGfx.clear();
   }
 
   private drawYarn(): void {
@@ -1132,11 +1149,17 @@ export class FabricMazeRenderer {
     // now, and bigger caps painted gold ticks on every unchosen side arm.
     const capR = Math.max(0.22, this.threadWidth * 0.6);
     const seenCap = new Set<string>();
+    // Only arms the path actually TRAVELED: capping every incident edge
+    // painted gold ticks on the unchosen side arms (the "little stubs
+    // around intersections" report). The fillet joinery owns the joint
+    // overlap footprint now; untraveled arms need no gold cover.
+    const traveled = new Set(controller.pathEdges);
     const nVisited =
       controller.pathVertices.length - (controller.solved ? 0 : 1);
     for (let i = 0; i < nVisited; i++) {
       const v = this.walk.vertices.get(controller.pathVertices[i])!;
       for (const eid of v.edges) {
+        if (!traveled.has(eid)) continue;
         const e = this.walk.edges[eid];
         const atA = e.va === v.id;
         const ctrl = atA ? e.ctrlA : e.ctrlB;
@@ -1160,17 +1183,31 @@ export class FabricMazeRenderer {
   // Explicit N-gon circle: pixi's adaptive circle tessellation counts
   // segments from the RAW radius, and these markers are fractions of a
   // world unit - they rendered as visible polygons at typical zoom.
-  private polyCircle(x: number, y: number, r: number, n: number): void {
+  private polyCircle(
+    g: Graphics,
+    x: number,
+    y: number,
+    r: number,
+    n: number
+  ): void {
     const pts: number[] = [];
     for (let i = 0; i < n; i++) {
       const a = (i / n) * Math.PI * 2;
       pts.push(x + Math.cos(a) * r, y + Math.sin(a) * r);
     }
-    this.gfx.poly(pts);
+    g.poly(pts);
   }
 
-  // Markers: start/exit discs, the head dot (at the given chain position
-  // mid-move, at the head vertex otherwise), and the win ring.
+  private rgbHex(c: Float32Array): number {
+    const b = (v: number): number =>
+      Math.max(0, Math.min(255, Math.round(v * 255)));
+    return (b(c[0]) << 16) | (b(c[1]) << 8) | b(c[2]);
+  }
+
+  // Markers: start/exit discs (wearing their thread's own section color,
+  // set into a punched gap as though the thread passes UNDER them), the
+  // head dot (black-ringed, at the given chain position mid-move, at the
+  // head vertex otherwise), and the win ring.
   private drawMarkers(
     controller: FabricMazeController,
     dotChain: number,
@@ -1178,7 +1215,9 @@ export class FabricMazeRenderer {
     showRing: boolean
   ): void {
     const g = this.gfx;
+    const eg = this.markerEraseGfx;
     g.clear();
+    eg.clear();
     // The head dot sits INSIDE its thread (diameter < threadWidth).
     const rHead = Math.max(0.13, this.threadWidth * 0.42);
     if (dotChain >= 0) {
@@ -1191,26 +1230,70 @@ export class FabricMazeRenderer {
     // The under-weave halo follows the dot.
     this.glowSprite.visible = true;
     this.glowSprite.position.set(this.scratch[0], this.scratch[1]);
-    this.polyCircle(this.scratch[0], this.scratch[1], rHead, 48);
-    g.fill({ color: 0xffffff, alpha: 0.92 });
+    // Black border ring, then the white dot.
+    this.polyCircle(
+      g,
+      this.scratch[0],
+      this.scratch[1],
+      rHead + this.threadWidth * 0.12,
+      48
+    );
+    g.fill({ color: 0x000000, alpha: 0.9 });
+    this.polyCircle(g, this.scratch[0], this.scratch[1], rHead, 48);
+    g.fill({ color: 0xffffff, alpha: 0.95 });
 
     const r = Math.max(0.32, this.threadWidth * 0.95);
+    const rGap = r + Math.max(0.1, this.threadWidth * 0.3);
+    // Punch ONLY the connecting thread, not a full ring: a capsule from
+    // the disc center along the thread's inward direction - the tail
+    // thread reads as passing under the marker while the under-weave
+    // glow stays visible everywhere else around the dot.
+    const punchTail = (chain: number, ctrl: number): void => {
+      const cx = this.scratch[0];
+      const cy = this.scratch[1];
+      const len = this.ps.chains[chain].length;
+      const inward = ctrl < len / 2 ? 1 : -1;
+      this.pointFlowed(
+        chain,
+        this.ctrlMod(chain, ctrl + inward * 0.8),
+        this.tailScratch,
+        0
+      );
+      let dx = this.tailScratch[0] - cx;
+      let dy = this.tailScratch[1] - cy;
+      const dl = Math.hypot(dx, dy) || 1;
+      dx /= dl;
+      dy /= dl;
+      eg.moveTo(cx, cy);
+      eg.lineTo(cx + dx * rGap, cy + dy * rGap);
+      eg.stroke({
+        width: this.threadWidth * 1.45,
+        cap: "round",
+        color: 0xffffff,
+        alpha: 1,
+      });
+    };
+    const startV = this.walk.vertices.get(this.walk.start)!;
     this.vertexWorld(this.walk.start, this.scratch, 0);
-    this.polyCircle(this.scratch[0], this.scratch[1], r, 56);
-    g.fill({ color: START_COLOR, alpha: 0.95 });
+    punchTail(startV.chain, startV.ctrl);
+    this.ribbons.sectionColorAt(startV.chain, startV.ctrl, this.markerRgb);
+    this.polyCircle(g, this.scratch[0], this.scratch[1], r, 56);
+    g.fill({ color: this.rgbHex(this.markerRgb), alpha: 1 });
 
     const exitV = this.walk.vertices.get(this.walk.exit)!;
     if (
       this.revealQuery &&
       this.revealQuery(exitV.chain, exitV.ctrl) < 0.98
     ) {
-      return; // Exit still unrevealed: no marker, no ring.
+      return; // Exit still unrevealed: no marker, no gap, no ring.
     }
     this.vertexWorld(this.walk.exit, this.scratch, 0);
-    this.polyCircle(this.scratch[0], this.scratch[1], r, 56);
-    g.fill({ color: EXIT_COLOR, alpha: 0.95 });
+    punchTail(exitV.chain, exitV.ctrl);
+    this.ribbons.sectionColorAt(exitV.chain, exitV.ctrl, this.markerRgb);
+    this.polyCircle(g, this.scratch[0], this.scratch[1], r, 56);
+    g.fill({ color: this.rgbHex(this.markerRgb), alpha: 1 });
     if (showRing) {
-      this.polyCircle(this.scratch[0], this.scratch[1], r * 1.5, 64);
+      this.polyCircle(g, this.scratch[0], this.scratch[1], r * 1.5, 64);
       g.stroke({
         color: EXIT_COLOR,
         width: this.threadWidth * 0.25,
