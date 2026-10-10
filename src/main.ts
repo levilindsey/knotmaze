@@ -17,6 +17,7 @@ import { MazeRenderer } from "./render/maze_renderer";
 import { MazeController } from "./game/maze_controller";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
 import { FabricMazeController } from "./game/fabric_controller";
+import { RevealAnimator } from "./render/reveal";
 import { readParams, writeParams, newSeed } from "./ui/url_state";
 import { buildPanel } from "./ui/tweakpane_panel";
 import type { PanelSettings } from "./ui/tweakpane_panel";
@@ -36,7 +37,15 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 23: memory-trail mode 2026-10-10";
+const BUILD_STAMP = "P4 Stage 22: appearance animation modes 2026-10-10";
+
+// Appearance pre-sim: with any non-instant appear mode the sim settles
+// briefly BEFORE the first rendered frame, so the reveal plays over a
+// calm fabric instead of the violent initial snap. Bounded by sim time
+// AND wall time, whichever first (normal step() calls in a loop - the
+// physics numerics are untouched).
+const PRE_SIM_SECONDS = 1.2;
+const PRE_SIM_WALL_MS = 450;
 
 const app = new Application();
 
@@ -80,6 +89,9 @@ async function main(): Promise<void> {
   let walkGraph: WalkGraph | null = null;
   let fabric: FabricMazeRenderer | null = null;
   let fabricController: FabricMazeController | null = null;
+  // Stage 22: the running appearance animation (null = instant / done
+  // long ago). Rebuilds and "Replay settle" restart it.
+  let reveal: RevealAnimator | null = null;
 
   // Stage 20 audio: every segment (walk-graph run in fabric mode, whole
   // strand otherwise) owns one pitch from the chosen space, assigned by
@@ -134,6 +146,47 @@ async function main(): Promise<void> {
     computeFitTarget();
     root.scale.set(fitTarget.scale);
     root.position.set(fitTarget.x, fitTarget.y);
+  }
+
+  // Stage 22: (re)start the appearance animation. Pre-settles the sim
+  // (hidden - nothing has rendered yet on a rebuild, and the reveal masks
+  // start collapsed), then hands the renderer a fresh animator. Instant
+  // mode detaches everything: the render path is byte-identical to the
+  // pre-Stage-22 build.
+  function startAppearance(): void {
+    if (!ps || !renderer) return;
+    if (params.appearMode === "instant") {
+      reveal = null;
+      renderer.beginReveal(null);
+      if (fabric) fabric.revealQuery = null;
+      return;
+    }
+    const tuning = {
+      temperature: settings.temperature,
+      slack: params.slack,
+      drag: params.drag,
+      repulsion: params.repulsion,
+      bend: params.bend,
+      smooth: params.smooth,
+      stiffness: params.stiffness,
+      gridAlign: params.gridAlign,
+      threadWidth: params.threadWidth,
+    };
+    const wall0 = performance.now();
+    const simTarget = ps.simTime + PRE_SIM_SECONDS;
+    while (
+      ps.simTime < simTarget &&
+      performance.now() - wall0 < PRE_SIM_WALL_MS
+    ) {
+      ps.step(0.1, tuning);
+    }
+    reveal = new RevealAnimator(params.appearMode, walkGraph, ps, params.seed);
+    reveal.speed = params.appearSpeed;
+    renderer.beginReveal(reveal);
+    if (fabric) {
+      const r = renderer;
+      fabric.revealQuery = (chain, ctrl) => r.revealMulAtCtrl(chain, ctrl);
+    }
   }
 
   function rebuild(): void {
@@ -254,6 +307,11 @@ async function main(): Promise<void> {
     hideWin();
     rebuildAudioMap();
 
+    // Appearance animation: pre-settle + attach the reveal BEFORE the
+    // first frame renders (and before the viewport fit below, which then
+    // frames the calmer pre-rolled bounds).
+    startAppearance();
+
     debug = new DebugRenderer();
     debug.render(graph);
     // The debug renderer draws at cellSize px per lattice unit; the root
@@ -353,6 +411,8 @@ async function main(): Promise<void> {
     },
     onReplaySettle: () => {
       ps?.reset();
+      // Replay the appearance too: fresh pre-roll, fresh reveal clock.
+      startAppearance();
       wake();
     },
     onDebugToggle: (visible) => {
@@ -840,6 +900,17 @@ async function main(): Promise<void> {
       params.simSpeed <= 5
         ? params.simSpeed / 5
         : 1 + (params.simSpeed - 5) * 0.8;
+
+    // Stage 22: the appearance reveal advances on WALL time in every
+    // branch (awake, asleep, paused). While it runs, the render pass must
+    // execute even when the physics does not (see flowRender's guard);
+    // once it completes, every branch returns to its exact pre-reveal
+    // behavior.
+    const revealing = reveal !== null && !reveal.done;
+    if (revealing && reveal) {
+      reveal.speed = params.appearSpeed;
+      reveal.tick(ticker.deltaMS / 1000);
+    }
     // The gameplay animations (traversal, pulse, hover) run even while
     // paused or asleep - they touch only markers and UV buffers, never
     // physics or splines.
@@ -870,9 +941,11 @@ async function main(): Promise<void> {
     // overlay updates that ride it, exactly as in the awake path) runs
     // WITHOUT ps.step. At flowStrength 0 this is a no-op and the
     // asleep/paused branches stay byte-identical to the pre-flow behavior
-    // (no render at all while asleep).
+    // (no render at all while asleep). The appearance reveal rides the
+    // same channel: its masks animate in update(), so while revealing the
+    // render pass runs regardless of flowStrength.
     const flowRender = (): void => {
-      if (params.flowStrength <= 0) return;
+      if (params.flowStrength <= 0 && !revealing) return;
       renderer!.update();
       if (params.mazeMode && maze && controller) maze.update(controller);
       if (params.mazeFabric && fabric && fabricController) {
@@ -1080,6 +1153,16 @@ async function main(): Promise<void> {
   };
   // Raw system access for probe scripting (phase probe, slide stats).
   (window as unknown as Record<string, unknown>).__knotPS = () => ps;
+  // Appearance-reveal diagnostics: mode, clock, completion.
+  (window as unknown as Record<string, unknown>).__knotReveal = () =>
+    reveal
+      ? {
+          mode: reveal.mode,
+          done: reveal.done,
+          clock: reveal.clock,
+          duration: reveal.planDuration,
+        }
+      : null;
   // Raw renderer access for probe scripting (patch visibility/tinting).
   (window as unknown as Record<string, unknown>).__knotRenderer = () =>
     renderer;

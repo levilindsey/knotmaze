@@ -95,6 +95,12 @@ export class FabricMazeRenderer {
   // main.ts syncs both every tick and refreshes the paint on change.
   trailMode = false;
   trailLength = 5;
+  // REVEAL (Stage 22): while the appearance animation runs, main.ts wires
+  // this to the renderer's reveal mask. The start marker (and the head
+  // dot sitting on it) shows from the first frame; the exit marker waits
+  // until its thread is revealed. Null / fully-revealed = everything
+  // draws. Gameplay input is never gated.
+  revealQuery: ((chain: number, ctrl: number) => number) | null = null;
 
   constructor(
     ps: ParticleSystem,
@@ -576,6 +582,13 @@ export class FabricMazeRenderer {
     g.circle(this.scratch[0], this.scratch[1], r);
     g.fill({ color: START_COLOR, alpha: 0.95 });
 
+    const exitV = this.walk.vertices.get(this.walk.exit)!;
+    if (
+      this.revealQuery &&
+      this.revealQuery(exitV.chain, exitV.ctrl) < 0.98
+    ) {
+      return; // Exit still unrevealed: no marker, no ring.
+    }
     this.vertexWorld(this.walk.exit, this.scratch, 0);
     g.circle(this.scratch[0], this.scratch[1], r);
     g.fill({ color: EXIT_COLOR, alpha: 0.95 });

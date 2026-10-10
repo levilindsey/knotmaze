@@ -5,6 +5,8 @@ import type { ColorScheme } from "../core/section_colors";
 import { COLOR_SCHEMES } from "../core/section_colors";
 import type { PitchSpace } from "../audio/pitch_space";
 import { PITCH_SPACES } from "../audio/pitch_space";
+import type { AppearMode } from "../core/reveal_plan";
+import { APPEAR_MODES } from "../core/reveal_plan";
 
 // Pluck audio behavior: silent | user plucks only | ambient random plucks
 // | scripted song playback.
@@ -58,6 +60,12 @@ export interface UrlParams {
   // mono | strands | depth | segments | noise. Replaces the old multiColor
   // checkbox (mc=1 reads as "strands").
   colorScheme: ColorScheme;
+  // Appearance animation: how the design draws itself in on build.
+  // instant (default - today's pop-in, byte-identical) | trace | bloom |
+  // draw | ink. trace/bloom need the walk graph and fall back to draw in
+  // knot mode.
+  appearMode: AppearMode;
+  appearSpeed: number; // [0.3, 4] reveal frontier speed multiplier.
 }
 
 export const DEFAULTS = {
@@ -82,6 +90,7 @@ export const DEFAULTS = {
   snapBack: 4,
   octaves: 2,
   trailLength: 5,
+  appearSpeed: 1,
 };
 
 export function newSeed(): number {
@@ -133,6 +142,8 @@ export function readParams(): UrlParams {
     trailMode: readNumber(query, "trm", 0) > 0.5,
     trailLength: readNumber(query, "trl", DEFAULTS.trailLength),
     colorScheme: readScheme(query),
+    appearMode: readAppear(query),
+    appearSpeed: readNumber(query, "as", DEFAULTS.appearSpeed),
   };
 }
 
@@ -146,6 +157,14 @@ function readChoice<T extends string>(
   return raw && (options as readonly string[]).includes(raw)
     ? (raw as T)
     : fallback;
+}
+
+function readAppear(query: URLSearchParams): AppearMode {
+  const raw = query.get("ap");
+  if (raw && (APPEAR_MODES as readonly string[]).includes(raw)) {
+    return raw as AppearMode;
+  }
+  return "instant"; // Existing URLs keep today's pop-in exactly.
 }
 
 function readScheme(query: URLSearchParams): ColorScheme {
@@ -190,5 +209,7 @@ export function writeParams(params: UrlParams): void {
   query.set("trm", params.trailMode ? "1" : "0");
   query.set("trl", String(params.trailLength));
   query.set("cs", params.colorScheme);
+  query.set("ap", params.appearMode);
+  query.set("as", String(params.appearSpeed));
   history.replaceState(null, "", `?${query.toString()}`);
 }
