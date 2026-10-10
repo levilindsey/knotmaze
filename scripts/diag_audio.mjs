@@ -38,6 +38,10 @@ try {
       const off = new OfflineAudioContext(1, sr * seconds, sr);
       const synth = new mod.KnotSynth(off);
       synth.pluck(freq, strength);
+      // The harp voice loads an AudioWorklet module; queued plucks flush
+      // when it resolves. Await it before rendering or the offline render
+      // completes while the voice is still pending (= silence).
+      if (synth.whenReady) await synth.whenReady();
       const buf = await off.startRendering();
       const data = buf.getChannelData(0);
       const binMs = 50;

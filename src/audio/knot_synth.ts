@@ -1,29 +1,225 @@
-// Knot-as-instrument: Karplus-Strong plucked strings built from native
-// WebAudio nodes (noise burst into a tuned feedback delay with lowpass
-// damping). Each strand's pitch comes from its loop length - long loops
-// ring low - quantized to a pentatonic scale so multi-strand knots stay
-// musical.
+// Knot-as-instrument: extended Karplus-Strong harp strings, implemented
+// inside an AudioWorklet so the string loop is tuned SAMPLE-EXACTLY.
+//
+// WHY A WORKLET (the music-mode transposition bug): a native-node KS loop
+// (DelayNode -> IIR -> Gain -> DelayNode) is a WebAudio CYCLE, and the
+// spec processes cycles with one render quantum (128 samples) of implicit
+// extra loop latency. The effective period is delayTime + 128/sampleRate
+// + the loop filter's phase delay, so every pluck sounded transposed DOWN
+// by a pitch-dependent amount (measured at 48kHz: D4 -> 164.2Hz, -1007
+// cents; D5 -> 227.9Hz, -1639 cents - contour preserved, intervals
+// compressed, exactly the user's "relative direction right, actual notes
+// off"). Notes above ~375Hz (period < one quantum) are UNREACHABLE by a
+// native cycle at 48kHz, so compensation cannot fix it; the worklet owns
+// its delay line per-sample and has no such latency. Tuning here solves
+// integer delay + Thiran fractional allpass + the measured phase delay of
+// every in-loop filter at the fundamental, numerically, per string.
+//
+// HARP VOICE (vs the old "rubber band"): two detuned strings per note
+// (+/- ~1.2 cents, like a course - slow beating shimmer), gut-string
+// decay times (T60 ~3.4s at 220Hz, longer low / shorter high) with the
+// one-pole loop damping darkening the tone progressively as it rings,
+// mild stiffness DISPERSION (two in-loop allpasses -> slightly stretched
+// partials, strongest on bass strings), a finger-soft excitation (heavier
+// pre-smoothing, pick-position comb), and the existing body EQ + small
+// generated-IR hall on the master bus.
 
-const PENTATONIC = [0, 3, 5, 7, 10];
-const BASE_FREQ = 110; // A2.
-const SCALE_SPAN_STEPS = 20; // Pentatonic degrees spanned by the length map.
-const MIN_LOOP = 6; // Lattice units mapped to the top of the range...
-const MAX_LOOP = 260; // ...and the bottom.
+// ---------------------------------------------------------------------------
+// The string processor source. Kept as a plain-JS string and loaded via a
+// Blob URL so it needs no bundler config and works for injected
+// OfflineAudioContexts (the measurement harness) exactly like live audio.
+const WORKLET_SRC = `
+class KnotStringProcessor extends AudioWorkletProcessor {
+  constructor(options) {
+    super();
+    const o = (options && options.processorOptions) || {};
+    const freq = Math.min(1800, Math.max(40, o.freq || 220));
+    const s = Math.min(1, Math.max(0.05, o.strength || 0.5));
+    // Deterministic per-voice RNG (mulberry32) so offline probe renders
+    // are reproducible.
+    let rs = (o.seed >>> 0) || 1;
+    const rand = () => {
+      rs |= 0; rs = (rs + 0x6D2B79F5) | 0;
+      let t = Math.imul(rs ^ (rs >>> 15), 1 | rs);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const sr = sampleRate;
 
-export function pitchForLoopLength(length: number): number {
-  const t = Math.min(
-    1,
-    Math.max(
-      0,
-      (Math.log(length) - Math.log(MIN_LOOP)) /
-        (Math.log(MAX_LOOP) - Math.log(MIN_LOOP))
-    )
-  );
-  const step = Math.round((1 - t) * SCALE_SPAN_STEPS);
-  const octave = Math.floor(step / PENTATONIC.length);
-  const degree = PENTATONIC[step % PENTATONIC.length];
-  return BASE_FREQ * Math.pow(2, octave + degree / 12);
+    // Decay: harp strings ring LONG - seconds, longer in the bass. (The
+    // MEASURED aggregate T60 lands ~25-35% under this fundamental target
+    // because upper partials decay faster - that is the progressive
+    // darkening, not an error.)
+    const t60 = Math.min(6.5, Math.max(1, 4.2 * Math.pow(220 / freq, 0.5)));
+    // Loop damping one-pole: brightness now AND how fast highs die
+    // relative to the fundamental (the progressive darkening of a real
+    // string). Softer plucks start darker; high strings get less damping
+    // so they keep some voice.
+    const pole = Math.min(0.55, Math.max(0.12,
+      (0.45 - 0.18 * s) * Math.pow(220 / freq, 0.12)));
+    // Stiffness dispersion: two first-order allpasses in the loop with a
+    // NEGATIVE coefficient delay high partials LESS -> upper partials land
+    // slightly sharp (stretched), the metallic-sweet "ping" of a real
+    // string. Scaled down with pitch (short treble loops would otherwise
+    // stretch absurdly - the deviation is a fixed sample count against a
+    // shrinking loop length).
+    const aDisp = -0.72 * Math.pow(Math.min(1, 200 / freq), 0.8);
+    this.pole = pole;
+    this.aDisp = aDisp;
+
+    // Phase delay (samples) of a first-order allpass (a + z^-1)/(1 + a z^-1)
+    // at angular frequency w - evaluated numerically, no approximations.
+    const apTau = (a, w) => {
+      const phN = Math.atan2(-Math.sin(w), a + Math.cos(w));
+      const phD = Math.atan2(-a * Math.sin(w), 1 + a * Math.cos(w));
+      return -(phN - phD) / w;
+    };
+
+    const mkString = (fs) => {
+      const w = (2 * Math.PI * fs) / sr;
+      const tDamp = Math.atan2(pole * Math.sin(w), 1 - pole * Math.cos(w)) / w;
+      const tDisp = 2 * apTau(aDisp, w);
+      const total = sr / fs; // Required loop delay, samples.
+      const line = total - tDamp - tDisp;
+      let dInt = Math.floor(line - 0.5);
+      if (dInt < 1) dInt = 1;
+      // Thiran first-order fractional delay, refined so the WHOLE loop's
+      // phase delay at the fundamental is exact.
+      let frac = line - dInt;
+      let c = (1 - frac) / (1 + frac);
+      for (let it = 0; it < 3; it++) {
+        const err = dInt + apTau(c, w) + tDamp + tDisp - total;
+        frac = Math.min(1.499, Math.max(0.21, frac - err));
+        c = (1 - frac) / (1 + frac);
+      }
+      // Feedback gain for the target T60 at the fundamental, compensating
+      // the damping filter's gain there. |H_damp| <= 1 everywhere with its
+      // max at DC, so clamping g below 1 keeps every mode decaying.
+      const hDamp = (1 - pole) /
+        Math.sqrt(1 - 2 * pole * Math.cos(w) + pole * pole);
+      const g = Math.min(0.9995,
+        Math.pow(10, (-3 * (total / sr)) / t60) / hDamp);
+      const cap = dInt + 4;
+      return {
+        buf: new Float32Array(cap), cap, w: 0, dInt,
+        thC: c, thX: 0, thY: 0,
+        dampY: 0,
+        a1X: 0, a1Y: 0, a2X: 0, a2Y: 0,
+        g,
+      };
+    };
+
+    // Two strings per course, detuned +/- DETUNE cents: unison shimmer.
+    const DETUNE = 1.2;
+    this.strings = [
+      mkString(freq * Math.pow(2, -DETUNE / 1200)),
+      mkString(freq * Math.pow(2, DETUNE / 1200)),
+    ];
+
+    // Excitation: one period of finger-soft noise. Heavy pre-smoothing
+    // (darker for soft plucks), near-instant rise then squared decay, a
+    // pick-position comb (the finger plucks partway along the string;
+    // beta wanders like a hand), and equal-energy normalization
+    // referenced at 220Hz so low notes do not boom (one-period bursts
+    // otherwise inject energy proportional to the period).
+    const burstLen = Math.max(8, Math.round(sr / freq));
+    const burst = new Float32Array(burstLen);
+    const rise = Math.max(2, Math.round(burstLen * 0.1));
+    const q = 0.9 - 0.12 * s;
+    let sm = 0;
+    let energy = 0;
+    for (let i = 0; i < burstLen; i++) {
+      sm = sm * q + (rand() * 2 - 1) * (1 - q);
+      const fade = i < rise
+        ? i / rise
+        : Math.pow(1 - (i - rise) / (burstLen - rise), 2);
+      burst[i] = sm * fade;
+      energy += burst[i] * burst[i];
+    }
+    const rms = Math.sqrt(energy / burstLen) || 1e-6;
+    // Exponent 0.65 (vs 0.5 = strict equal energy) leans the balance a
+    // little toward the trebles, which otherwise measure several dB shy
+    // of the mids (shorter bursts + the 310Hz body peak favor low notes).
+    const norm = Math.min(3.5, (0.5 / rms) * Math.pow(freq / 220, 0.65));
+    for (let i = 0; i < burstLen; i++) burst[i] *= norm;
+    const beta = 0.32 + rand() * 0.16;
+    const combD = Math.max(1, Math.round(burstLen * beta));
+    for (let i = burstLen - 1; i >= combD; i--) {
+      burst[i] -= 0.92 * burst[i - combD];
+    }
+    this.burst = burst;
+    this.burstLen = burstLen;
+    this.outGain = 0.1 + 0.42 * s;
+
+    this.n = 0;
+    this.life = Math.floor(sr * Math.min(9, t60 * 1.5 + 0.8));
+    this.fadeStart = this.life - Math.floor(sr * 0.35);
+    this.quietQuanta = 0;
+    this.done = false;
+  }
+
+  process(inputs, outputs) {
+    if (this.done) return false;
+    const out = outputs[0][0];
+    if (!out) return true;
+    const S = this.strings;
+    const b = this.burst;
+    const bl = this.burstLen;
+    const pole1 = 1 - this.pole;
+    const a = this.aDisp;
+    let peak = 0;
+    for (let i = 0; i < out.length; i++) {
+      const n = this.n + i;
+      const ex = n < bl ? b[n] : 0;
+      let acc = 0;
+      for (let k = 0; k < 2; k++) {
+        const st = S[k];
+        let r = st.w - st.dInt;
+        if (r < 0) r += st.cap;
+        const xd = st.buf[r];
+        // Thiran fractional-delay allpass.
+        const th = st.thC * (xd - st.thY) + st.thX;
+        st.thX = xd;
+        st.thY = th;
+        // Damping one-pole lowpass.
+        st.dampY += pole1 * (th - st.dampY);
+        // Two dispersion allpasses.
+        const y1 = a * (st.dampY - st.a1Y) + st.a1X;
+        st.a1X = st.dampY;
+        st.a1Y = y1;
+        const y2 = a * (y1 - st.a2Y) + st.a2X;
+        st.a2X = y1;
+        st.a2Y = y2;
+        const inp = ex + st.g * y2;
+        st.buf[st.w] = inp;
+        st.w = st.w + 1 < st.cap ? st.w + 1 : 0;
+        acc += inp;
+      }
+      let v = acc * 0.5 * this.outGain;
+      if (n >= this.fadeStart) {
+        const u = 1 - (n - this.fadeStart) / (this.life - this.fadeStart);
+        v *= u > 0 ? u * u : 0;
+      }
+      out[i] = v;
+      const av = v < 0 ? -v : v;
+      if (av > peak) peak = av;
+    }
+    this.n += out.length;
+    // Self-terminate: hard lifespan OR sustained near-silence (post-burst).
+    if (this.n > bl + 4800) {
+      if (peak < 1e-4) this.quietQuanta++;
+      else this.quietQuanta = 0;
+    }
+    if (this.n >= this.life || this.quietQuanta >= 24) {
+      this.done = true;
+      this.port.postMessage(1);
+      return false;
+    }
+    return true;
+  }
 }
+registerProcessor("knot-string", KnotStringProcessor);
+`;
 
 export class KnotSynth {
   private ctx: BaseAudioContext | null = null;
@@ -33,16 +229,26 @@ export class KnotSynth {
 
   // An injected context (e.g. OfflineAudioContext) makes the synth
   // measurable: diag scripts render a pluck offline and inspect the
-  // actual output envelope instead of trusting the node graph.
+  // actual output instead of trusting the node graph.
   private readonly provided: BaseAudioContext | null;
+
+  // Worklet life cycle: "pending" until addModule settles. Plucks arriving
+  // before then are queued and flushed on resolution (first-ever pluck of
+  // a session only; the module compiles in milliseconds). If AudioWorklet
+  // is unavailable or the module fails, the legacy native-node voice
+  // plays instead (it carries the old render-quantum detune - acceptable
+  // for a last-resort fallback).
+  private engine: "pending" | "harp" | "legacy" = "pending";
+  private readyPromise: Promise<void> | null = null;
+  private pendingPlucks: Array<{ freq: number; strength: number }> = [];
 
   constructor(provided: BaseAudioContext | null = null) {
     this.provided = provided;
   }
 
-  // Diagnostics (window.__knotSynth): pluck count, context state, and a
-  // master-bus analyser so probes can verify notes are actually AUDIBLE,
-  // not just scheduled (the music-mode silent-note report).
+  // Diagnostics (window.__knotSynth): pluck count, context state, engine,
+  // and a master-bus analyser so probes can verify notes are actually
+  // AUDIBLE, not just scheduled (the music-mode silent-note report).
   private analyser: AnalyserNode | null = null;
   private stats = { plucks: 0, lastFreq: 0 };
 
@@ -50,6 +256,13 @@ export class KnotSynth {
   setVolume(v: number): void {
     this.volume = Math.max(0, Math.min(1, v));
     if (this.master) this.master.gain.value = this.volume;
+  }
+
+  // Resolves once the string engine is decided and any queued plucks are
+  // scheduled - measurement probes await this before startRendering().
+  whenReady(): Promise<void> {
+    this.ensure();
+    return this.readyPromise ?? Promise.resolve();
   }
 
   // Must be called from a user gesture the first time, so the context is
@@ -115,9 +328,34 @@ export class KnotSynth {
           plucks: self.stats.plucks,
           lastFreq: self.stats.lastFreq,
           state: self.ctx ? self.ctx.state : "none",
+          engine: self.engine,
           peak,
         };
       };
+      // Kick off the string-engine load exactly once per context.
+      const aw = this.ctx.audioWorklet;
+      if (aw && typeof AudioWorkletNode !== "undefined") {
+        const url = URL.createObjectURL(
+          new Blob([WORKLET_SRC], { type: "application/javascript" })
+        );
+        this.readyPromise = aw
+          .addModule(url)
+          .then(() => {
+            this.engine = "harp";
+          })
+          .catch(() => {
+            this.engine = "legacy";
+          })
+          .finally(() => {
+            URL.revokeObjectURL(url);
+            const queued = this.pendingPlucks;
+            this.pendingPlucks = [];
+            for (const p of queued) this.playNow(p.freq, p.strength);
+          });
+      } else {
+        this.engine = "legacy";
+        this.readyPromise = Promise.resolve();
+      }
     }
     if (this.ctx instanceof AudioContext && this.ctx.state === "suspended") {
       void this.ctx.resume();
@@ -131,18 +369,58 @@ export class KnotSynth {
     if (!ctx || !this.master) return;
     this.stats.plucks++;
     this.stats.lastFreq = freq;
+    if (this.engine === "pending") {
+      this.pendingPlucks.push({ freq, strength });
+      return;
+    }
+    this.playNow(freq, strength);
+  }
 
+  private playNow(freq: number, strength: number): void {
+    if (this.engine === "harp") this.pluckHarp(freq, strength);
+    else this.pluckLegacy(freq, strength);
+  }
+
+  private pluckHarp(freq: number, strength: number): void {
+    const ctx = this.ctx!;
+    // Deterministic per-pluck seed (probe reproducibility): pluck ordinal
+    // mixed with the pitch.
+    const seed =
+      (Math.imul(this.stats.plucks, 2654435761) ^ Math.round(freq * 128)) >>>
+      0;
+    const node = new AudioWorkletNode(ctx, "knot-string", {
+      numberOfInputs: 0,
+      numberOfOutputs: 1,
+      outputChannelCount: [1],
+      processorOptions: { freq, strength, seed },
+    });
+    node.connect(this.master!);
+    let dead = false;
+    const kill = (): void => {
+      if (dead) return;
+      dead = true;
+      try {
+        node.disconnect();
+      } catch {
+        // Already gone.
+      }
+    };
+    // The processor self-terminates (silence or lifespan) and pings us to
+    // drop the node; the timer is a belt-and-suspenders backstop.
+    node.port.onmessage = kill;
+    setTimeout(kill, 11000);
+  }
+
+  // LEGACY VOICE (no-AudioWorklet fallback only): the original native-node
+  // Karplus-Strong loop. Known detune: the DelayNode cycle adds one render
+  // quantum of loop latency, so pitches land flat (see the header comment).
+  private pluckLegacy(freq: number, strength: number): void {
+    const ctx = this.ctx!;
     const now = ctx.currentTime;
     const period = 1 / freq;
     const s = Math.min(1, Math.max(0.05, strength));
 
-    // Excitation: one period of pre-softened noise. The window is
-    // pluck-shaped - near-instant rise, then decay across the burst - so
-    // the transient leads; a symmetric fade here makes the whole note
-    // swell instead of snap.
-    // HARP VOICE (user-tuned): a much DARKER excitation than before -
-    // heavier pre-smoothing and a gentler rise - reads as a fingertip on
-    // a gut string instead of a snapped rubber band.
+    // Excitation: one period of pre-softened noise, pluck-shaped window.
     const burstSamples = Math.max(8, Math.round(ctx.sampleRate * period));
     const buffer = ctx.createBuffer(1, burstSamples, ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -158,22 +436,11 @@ export class KnotSynth {
       data[i] = smoothed * fade;
       energy += data[i] * data[i];
     }
-    // EQUAL-LOUDNESS normalization: the burst is one period long, so low
-    // notes inject far more total energy than high ones (the classic
-    // Karplus loudness skew - heard as inconsistent pluck volume).
-    // Normalize to a constant total excitation energy, referenced at
-    // 220Hz, with a clamp so extreme pitches stay sane.
+    // Equal-loudness normalization referenced at 220Hz.
     const rms = Math.sqrt(energy / burstSamples) || 1e-6;
-    const norm = Math.min(
-      3,
-      (0.5 / rms) * Math.sqrt((1 / 220) / period)
-    );
+    const norm = Math.min(3, (0.5 / rms) * Math.sqrt(1 / 220 / period));
     for (let i = 0; i < burstSamples; i++) data[i] *= norm;
-    // PICK-POSITION comb (Jaffe-Smith EKS): subtract a beta-period-
-    // delayed copy of the excitation. Without it every harmonic rings at
-    // full strength - the "rubber band" twang; with it the spectrum gets
-    // the notches of a finger plucking partway along a real string.
-    // Beta wanders a little per pluck, like a hand does.
+    // Pick-position comb (Jaffe-Smith EKS).
     const beta = 0.2 + Math.random() * 0.08;
     const combD = Math.max(1, Math.round(burstSamples * beta));
     for (let i = burstSamples - 1; i >= combD; i--) {
@@ -182,30 +449,17 @@ export class KnotSynth {
     const burst = ctx.createBufferSource();
     burst.buffer = buffer;
 
-    // String: delay tuned to the period, with a ONE-POLE lowpass in the
-    // loop. The filter must have monotone gain <= 1 at EVERY frequency:
-    // a biquad lowpass here (WebAudio Q is in dB; the default is +1dB of
-    // resonant peak) pushed loop gain past unity and every pluck was an
-    // exponentially GROWING self-oscillator - heard as a clipping
-    // crescendo chopped off by the teardown timer.
+    // String: delay tuned to the period, one-pole lowpass in the loop
+    // (monotone gain <= 1 at every frequency - a biquad's resonant peak
+    // once made every pluck a growing self-oscillator).
     const delay = ctx.createDelay(Math.max(0.05, period * 2));
     delay.delayTime.value = period;
-    // Warmer loop than the old 0.5 - 0.28s: more high-frequency damping
-    // per pass keeps the sustain ROUND (harp body, not wire).
     const pole = 0.62 - 0.22 * s;
     const damping = ctx.createIIRFilter([1 - pole], [1, -pole]);
-    // Per-pass gain set for pitch-uniform ring time (about -40dB of loop
-    // energy by 1.4s - harps ring longer); the clamp keeps high notes
-    // strictly decaying.
     const feedback = ctx.createGain();
-    feedback.gain.value = Math.min(
-      0.988,
-      Math.pow(10, (-2 * period) / 1.4)
-    );
+    feedback.gain.value = Math.min(0.988, Math.pow(10, (-2 * period) / 1.4));
 
-    // Envelope: plucked-string shape - the attack IS the loudest moment
-    // (2ms rise), then a fast two-stage decay: drop to ~8% within 250ms,
-    // tail closed by 700ms.
+    // Envelope: attack is the loudest moment, two-stage decay.
     const out = ctx.createGain();
     const peak = 1.0 * s;
     out.gain.setValueAtTime(0.0001, now);
@@ -213,10 +467,7 @@ export class KnotSynth {
     out.gain.exponentialRampToValueAtTime(peak * 0.14, now + 0.45);
     out.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
 
-    // The excitation also taps straight to the output (through a small
-    // "pick" gain): via the loop alone the first sound arrives one delay
-    // period late and pre-darkened. Kept LOW - the loud raw tap was most
-    // of the rubber-band snap.
+    // Small direct tap so the first sound doesn't arrive a period late.
     const pick = ctx.createGain();
     pick.gain.value = 0.3;
 
@@ -227,14 +478,10 @@ export class KnotSynth {
     damping.connect(feedback);
     feedback.connect(delay);
     damping.connect(out);
-    out.connect(this.master);
+    out.connect(this.master!);
 
-    // No explicit stop: the one-period buffer self-terminates. An explicit
-    // stop(now + period*2) was a 4-8ms window measured against a MAIN-
-    // thread currentTime - any frame stall past it (and every auto-pluck
-    // wakes the physics into 10-30ms frames) clamped the stop to at-or-
-    // before the start, so the burst never fired and the string was born
-    // silent (measured: 12/22 music notes audible; 22/22 after).
+    // No explicit stop: the one-period buffer self-terminates (an explicit
+    // stop raced the main thread and silenced notes - see git history).
     burst.start(now);
 
     // Tear the string down once the envelope has closed.
