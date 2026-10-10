@@ -70,23 +70,26 @@ export interface PaintCap {
   radius: number; // Arc radius.
 }
 
-// Palette layout (one 256x1 RGBA strip per hue group; linear filtering, so
-// solid entries are 4 texels wide and sampled dead-center):
-//   0..3    base thread color
-//   4..7    traveled gold
-//   8..11   hover highlight
-//   12..15  base (guard)
-//   16..127 band A: base -> near-white pulse gradient
-//   128..143 gold (guard)
-//   144..255 band B: gold -> near-white pulse gradient
+// Palette layout (one 256x1 RGBA strip per hue group; linear filtering).
+// ORDER IS LOAD-BEARING: per-vertex UVs interpolate LINEARLY between
+// samples, so the strip must be arranged so that every adjacency the paint
+// can produce (base<->bandA at pulse-region ends, base<->gold at traveled
+// ends, gold<->bandB on the arrival arm) interpolates only through its own
+// two color families - the original [base, gold, hover, bandA...] layout
+// swept the UV straight across the gold+hover texels at every band/base
+// boundary, rendering a thin bright hairline there (the reported "distinct
+// line at the end of the gradient"):
+//   0..111   band A, REVERSED: near-white accent -> base
+//   112..117 base thread color
+//   118..123 traveled gold
+//   124..235 band B: gold -> near-white accent
+//   236..255 band B accent (guard)
 const PAL_W = 256;
-const U_BASE = 2 / PAL_W;
-const U_GOLD = 6 / PAL_W;
-// (Texels 8..11 hold a hover color; hover currently rides the gradient
-// bands at full strength instead, so nothing samples it.)
+const U_BASE = 115 / PAL_W;
+const U_GOLD = 121 / PAL_W;
 const bandU = (onPath: boolean, p: number): number => {
   const q = p < 0 ? 0 : p > 1 ? 1 : p;
-  return ((onPath ? 144.5 : 16.5) + q * 110) / PAL_W;
+  return onPath ? (124.5 + q * 110) / PAL_W : (111.5 - q * 110) / PAL_W;
 };
 const PATH_GOLD = 0xffd24a;
 // Pulse geometry/motion, in ARC units (world-ish): the influence zone
@@ -101,8 +104,13 @@ const PATH_GOLD = 0xffd24a;
 const PULSE_REACH = 2.0;
 const CREST_WIDTH = 0.55;
 const PULSE_SPEED = 1.6;
-// Steady floor of the choice tint at the junction (fades with distance).
+// Steady floor of the choice tint at the junction (fades with distance),
+// plus a bright core right at the branch point so the inbound (gold-band)
+// and outbound (base-band) arms converge to a near-common bright tone
+// instead of meeting in two visibly different mid-tints.
 const PULSE_FLOOR = 0.38;
+const PULSE_CORE_BOOST = 0.5;
+const PULSE_CORE_RADIUS = 0.55;
 const PULSE_END_WINDOW = 0.45;
 // JUNCTION JOINERY. Fused arms (bridge/stub/merge terminals) tuck their
 // rendered tip back by the host's half-width so the ribbon lands flush on
@@ -173,18 +181,15 @@ function buildPalettePixels(base: number): Uint8Array {
     px[i * 4 + 2] = hex & 255;
     px[i * 4 + 3] = 255;
   };
-  const hover = mixHex(base, 0xffffff, 0.93);
-  for (let i = 0; i < 4; i++) put(i, base);
-  for (let i = 4; i < 8; i++) put(i, PATH_GOLD);
-  for (let i = 8; i < 12; i++) put(i, hover);
-  for (let i = 12; i < 16; i++) put(i, base);
-  for (let i = 16; i < 128; i++) {
-    put(i, mixHex(base, 0xffffff, (0.85 * (i - 16)) / 111));
+  for (let i = 0; i < 112; i++) {
+    put(i, mixHex(base, 0xffffff, 0.85 * (1 - i / 111)));
   }
-  for (let i = 128; i < 144; i++) put(i, PATH_GOLD);
-  for (let i = 144; i < 256; i++) {
-    put(i, mixHex(PATH_GOLD, 0xffffff, (0.8 * (i - 144)) / 111));
+  for (let i = 112; i < 118; i++) put(i, base);
+  for (let i = 118; i < 124; i++) put(i, PATH_GOLD);
+  for (let i = 124; i < 236; i++) {
+    put(i, mixHex(PATH_GOLD, 0xffffff, (0.8 * (i - 124)) / 111));
   }
+  for (let i = 236; i < 256; i++) put(i, mixHex(PATH_GOLD, 0xffffff, 0.8));
   return px;
 }
 
@@ -369,6 +374,19 @@ export class RibbonRenderer {
   // get rounded caps, drawn with the fillets and colored from the live
   // paint.
   private freeTips: Array<{ chain: number; atEnd: boolean }> = [];
+  // Fused (tucked) tips get the same disc treatment: it rounds the tucked
+  // cap and covers its corner ears and the hairline sliver between the cap
+  // and the host's edge. The disc lies mostly ON the host's face, so it
+  // wears the HOST's paint at the junction (hostChain/hostCtrl) - coloring
+  // it from the arm's own tip rendered floating pale/gold dots wherever
+  // the two paints disagreed (pulsing arm over a traveled host, traveled
+  // bridge over a backtracked host).
+  private fusedTips: Array<{
+    chain: number;
+    atEnd: boolean;
+    hostChain: number;
+    hostCtrl: number;
+  }> = [];
   private chainTipFused: Array<[boolean, boolean]> = [];
   private chainBaseHex: number[] = [];
   private palettePx = new Map<number, Uint8Array>();
@@ -487,15 +505,44 @@ export class RibbonRenderer {
         });
       });
       const fusedSet = new Set<number>();
-      for (const grp of ps.fusedJunctions) for (const p of grp) fusedSet.add(p);
+      const groupOf = new Map<number, number[]>();
+      for (const grp of ps.fusedJunctions) {
+        for (const p of grp) {
+          fusedSet.add(p);
+          groupOf.set(p, grp);
+        }
+      }
+      const hostOf = (
+        p: number,
+        fallbackChain: number,
+        fallbackCtrl: number
+      ): { hostChain: number; hostCtrl: number } => {
+        const grp = groupOf.get(p);
+        const q = grp?.find((x) => x !== p);
+        const occ = q !== undefined ? slotOf.get(q) : undefined;
+        return occ
+          ? { hostChain: occ.chain, hostCtrl: occ.slot }
+          : { hostChain: fallbackChain, hostCtrl: fallbackCtrl };
+      };
       ps.chains.forEach((chain, ci) => {
         if (ps.chainBreakAfter[ci] < 0) return;
-        if (fusedSet.has(chain[0])) this.chainTipFused[ci][0] = true;
-        else if (!ps.isAnchored(chain[0])) {
+        if (fusedSet.has(chain[0])) {
+          this.chainTipFused[ci][0] = true;
+          this.fusedTips.push({
+            chain: ci,
+            atEnd: false,
+            ...hostOf(chain[0], ci, 0),
+          });
+        } else if (!ps.isAnchored(chain[0])) {
           this.freeTips.push({ chain: ci, atEnd: false });
         }
         if (fusedSet.has(chain[chain.length - 1])) {
           this.chainTipFused[ci][1] = true;
+          this.fusedTips.push({
+            chain: ci,
+            atEnd: true,
+            ...hostOf(chain[chain.length - 1], ci, chain.length - 1),
+          });
         } else if (!ps.isAnchored(chain[chain.length - 1])) {
           this.freeTips.push({ chain: ci, atEnd: true });
         }
@@ -1559,7 +1606,10 @@ export class RibbonRenderer {
       const b = 1 - Math.abs(d - dC) / CREST_WIDTH;
       if (b > bump) bump = b;
     }
-    return Math.min(1, (PULSE_FLOOR + bump * 0.8) * fade * endWin);
+    const floor =
+      PULSE_FLOOR +
+      PULSE_CORE_BOOST * Math.max(0, 1 - d / PULSE_CORE_RADIUS);
+    return Math.min(1, (floor + bump * 0.8) * fade * endWin);
   }
 
   // The paint field at a single chain position (same rules as
@@ -1642,8 +1692,8 @@ export class RibbonRenderer {
     g.clear();
     const fillHalf = this.style.threadWidth / 2;
 
-    // Rounded caps on dead-end tips: a disc at the terminal, half tucked
-    // under the ribbon, colored from the live paint.
+    // Rounded caps: dead-end tips get a disc at the terminal colored from
+    // their own live paint (nothing overlaps a free tip).
     for (const tip of this.freeTips) {
       const samples = this.chainSamples[tip.chain];
       if (!samples) continue;
@@ -1655,6 +1705,23 @@ export class RibbonRenderer {
         color: this.paletteColor(
           this.chainBaseHex[tip.chain],
           this.paintUAt(tip.chain, ctrl)
+        ),
+      });
+    }
+    // Tucked fused tips get the same disc (rounds the cap, covers its
+    // corner ears and the cap/host sliver) but wear the HOST's paint: the
+    // disc lies mostly on the host's face, and arm-colored discs rendered
+    // as floating pale/gold dots wherever the two paints disagreed.
+    for (const tip of this.fusedTips) {
+      const samples = this.chainSamples[tip.chain];
+      if (!samples) continue;
+      const arc = tip.atEnd ? samples.totalLength : 0;
+      this.sampleAt(samples, arc, this.sampleScratch, 0);
+      g.circle(this.sampleScratch[0], this.sampleScratch[1], fillHalf * 0.99);
+      g.fill({
+        color: this.paletteColor(
+          this.chainBaseHex[tip.hostChain],
+          this.paintUAt(tip.hostChain, tip.hostCtrl)
         ),
       });
     }

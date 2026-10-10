@@ -32,12 +32,13 @@ const SAMPLE_STEP = 0.25;
 // arms converge there, so taps on the junction blob itself stay ambiguous
 // and are rejected rather than resolved arbitrarily.
 const HEAD_EXCLUDE = 0.7;
-// Traversal animation: the dot covers this many ctrl per second, with the
-// duration clamped so short hops stay perceptible and long runs stay
-// snappy.
-const MOVE_CTRL_PER_S = 18;
-const MOVE_MIN_S = 0.15;
-const MOVE_MAX_S = 0.9;
+// Traversal animation: a CONSTANT base rate (deliberately independent of
+// the run's length - long runs take proportionally longer), slowed through
+// bends like natural motion: the live rate is base / (1 + k * turn), where
+// turn is the local bend angle per ctrl at the dot's position.
+const MOVE_CTRL_PER_S = 20;
+const MOVE_CURVE_SLOWDOWN = 2.2; // Per radian-per-ctrl of local turn.
+const MOVE_MIN_FACTOR = 0.3;
 
 interface MoveAnim {
   e: WalkEdge;
@@ -45,7 +46,6 @@ interface MoveAnim {
   to: number; // Ctrl at the destination end (the controller's new head).
   cur: number; // Current dot position (ctrl).
   kind: "advance" | "backtrack";
-  rate: number; // ctrl per second.
 }
 
 export class FabricMazeRenderer {
@@ -168,9 +168,7 @@ export class FabricMazeRenderer {
       from = e.ctrlA;
       to = e.ctrlB;
     }
-    const span = Math.abs(to - from);
-    const dur = Math.min(MOVE_MAX_S, Math.max(MOVE_MIN_S, span / MOVE_CTRL_PER_S));
-    this.anim = { e, from, to, cur: from, kind, rate: span / dur };
+    this.anim = { e, from, to, cur: from, kind };
     this.emitAnimFrame(controller);
   }
 
@@ -179,11 +177,43 @@ export class FabricMazeRenderer {
   }
 
   // Advance the in-flight move; on arrival, hand back to the full refresh.
+  // The rate slows through bends (natural motion): local turn measured
+  // from three points one ctrl apart around the dot.
   tickAnim(dt: number, controller: FabricMazeController): void {
     const a = this.anim;
     if (!a) return;
     const dir = Math.sign(a.to - a.from) || 1;
-    a.cur += dir * a.rate * dt;
+
+    const chain = this.ps.chains[a.e.chain];
+    const len = chain.length;
+    const closed = this.ps.chainBreakAfter[a.e.chain] < 0;
+    const at = (f: number): [number, number] => {
+      const fc = closed
+        ? ((f % len) + len) % len
+        : Math.max(0, Math.min(len - 1, f));
+      this.ps.pointOnChain(a.e.chain, fc, this.scratch, 0);
+      return [this.scratch[0], this.scratch[1]];
+    };
+    const [x0, y0] = at(a.cur - 1);
+    const [x1, y1] = at(a.cur);
+    const [x2, y2] = at(a.cur + 1);
+    const v1x = x1 - x0;
+    const v1y = y1 - y0;
+    const v2x = x2 - x1;
+    const v2y = y2 - y1;
+    const n1 = Math.hypot(v1x, v1y) || 1;
+    const n2 = Math.hypot(v2x, v2y) || 1;
+    const cosT = Math.max(
+      -1,
+      Math.min(1, (v1x * v2x + v1y * v2y) / (n1 * n2))
+    );
+    const turn = Math.acos(cosT); // Radians over ~2 ctrl.
+    const factor = Math.max(
+      MOVE_MIN_FACTOR,
+      1 / (1 + MOVE_CURVE_SLOWDOWN * turn)
+    );
+
+    a.cur += dir * MOVE_CTRL_PER_S * factor * dt;
     if ((dir > 0 && a.cur >= a.to) || (dir < 0 && a.cur <= a.to)) {
       this.anim = null;
       this.update(controller);
