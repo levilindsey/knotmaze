@@ -27,14 +27,24 @@ src/
     tangle_graph.ts       # Layer 1: combinatorial structure
     lattice_grower.ts     # Lattice-based generation
     param_field.ts        # ParamField abstraction
+    maze_plan.ts          # P4: combinatorial maze plan (splices/merges/stubs)
+    maze_apply.ts         # P4: graph surgery realizing the plan + corner cuts
+    walk_graph.ts         # P4: player-facing junction/run multigraph + Dijkstra
+    maze.ts               # P4 LEGACY (md=1): single-strand maze graph
   geometry/
-    spline_generator.ts   # Layer 2: splines from lattice
+    spline_generator.ts   # Layer 2: splines from lattice (closed + open)
   physics/
-    particle_system.ts    # Layer 3: Verlet particles
+    particle_system.ts    # Layer 3: Verlet particles (+ open chains, junctions)
     forces.ts             # Springs, bending, repulsion
+  game/
+    fabric_controller.ts  # P4: branch-point-only solve state + metrics
+    maze_controller.ts    # P4 LEGACY (md=1): single-strand solve state
   render/
     ribbon_renderer.ts    # PixiJS ribbon meshes
     ribbon_mesh.ts        # Triangle strip extrusion
+    fabric_maze_renderer.ts # P4: woven gold path recolor + markers + hints
+    maze_renderer.ts      # P4 LEGACY (md=1): single-strand overlay
+    debug_renderer.ts     # Lattice/graph debug overlay
   audio/
     knot_synth.ts         # Web Audio pluck/strum
   ui/
@@ -43,11 +53,15 @@ src/
   main.ts                 # Entry point
 test/
   core/
-    lattice_grower.test.ts
+    lattice_grower.test.ts, maze_plan.test.ts, maze_apply.test.ts,
+    walk_graph.test.ts, maze.test.ts
   geometry/
     spline_generator.test.ts
   physics/
-    particle_system.test.ts
+    particle_system.test.ts, byte_identity.test.ts (golden guard),
+    open_chain.test.ts, junction.test.ts, maze_fabric.test.ts
+  game/
+    fabric_controller.test.ts, maze_controller.test.ts
   quiescence.regression.test.ts  # Guards the friction dissipation channel
   sweep.manual.test.ts           # Skip-gated; run via SWEEP=1
 ```
@@ -69,69 +83,65 @@ Work lands directly to `main`. All changes must be end-to-end working before com
 - Phased roadmap: P0 (scaffold) → P1 (combinatorial) → P2 (beauty + live physics) → P3 (touch + audio) → P4 (maze mode) → P5 (growth animation) → P6 (flourishes).
 - Each phase ships as a working demo starting from P2.
 
-## Roadmap status — what's next (recorded 2026-07-24, after P3.42)
+## Roadmap status — what's next (updated 2026-10-09, after P4 Stage 8)
 
-**P0–P3 are done. The next new feature is P4 (maze mode); it has not
-been started.**
+**P0–P3 done** (their saga lives in Follow-ups; the bounded
+post-VIOLENT-play loud attractor at fat params remains the one open
+residual from P3 — a rare bistable non-sleep, not a blocker).
 
-What just concluded: P3 (touch + audio) is feature-complete. Touch
-(pointer tug/drag → wave propagation) and audio (Karplus-Strong pluck
-on release, loop-length → pentatonic pitch, wired in `main.ts`) both
-work. But P3's real cost was a ~25-commit tail (P3.17 → P3.42) making
-**interactive crossings render and settle correctly**: the sliding-
-binding + quasi-3D-depth physics, the under-erase/over-fill crossing
-renderer, quiescence/sleep after gestures, and finally the flat-grid
-broadphase perf pass. THIS is the "current step" that was finally
-fixed — see the Follow-ups below for the full saga; do not reopen a
-resolved entry without a fresh on-screen repro. One bounded residual
-stays open (the post-VIOLENT-play loud attractor at fat params — a
-rare bistable non-sleep, not a blocker).
+**P4 — maze mode: the branching maze is BUILT and PLAYABLE.** The maze
+rearchitecture shipped as Stages 0–8 (commits `80fbb06..68032d4`,
+2026-07-28 → 2026-10-09; each stage commit message is the detailed
+record). Core insight, learned over three wrong iterations, still
+binding: **the threads ARE the maze paths** — never reintroduce a
+between-threads/cell-passage route.
 
-**P4 — maze mode (IN PROGRESS).** Core insight, learned the hard way
-over three wrong iterations: **the threads ARE the maze paths.** You
-trace ALONG a thread band, always continuing straight at crossings
-(following a strand == going straight, by construction of `traceKnot`).
-The maze is NOT a route through the cells/negative-space between threads
-— that was the wrong model (cell passage-graph, gate-routed path); it is
-recoloring the actual strand you walk. Do not reintroduce a
-between-threads path.
+- Stages 0–4 — physics generalized: open chains (`chainBreakAfter`),
+  anchored ends, seam-aware crossing machinery, junction fusion. Knot
+  mode is guarded BYTE-IDENTICAL by the golden snapshot
+  (`test/physics/byte_identity.test.ts`) — keep it green.
+- Stages 5a–5d — the combinatorial plan (`core/maze_plan.ts`): SPLICES
+  as the 3-way workhorse (bridge between near-parallel edges → two
+  degree-3 junctions, parity-paired, no dead-end), occasional 4-WAY
+  MERGES (crossing retyped JUNCTION; self-crossings excluded),
+  independent DEAD-END STUBS, largest-component culling, splice-first
+  reachability spanning, corner cuts. `core/maze_apply.ts` realizes it
+  at GRAPH level (splice/stub/merge surgery + entrance/exit cuts with
+  anchored END nodes) BEFORE the particle system builds.
+- Stages 6a–6b — physics builds the fabric natively (native open
+  strands, fused junctions with a final-authority coincidence
+  projection, pinned corner ends); on screen behind `mf=1` / the panel
+  "mazeFabric" toggle. Entrance runs off the top-left, exit the
+  bottom-right, each with an unmarked decoy twin. Tug/pluck stays live.
+- Stage 7a — bridges/stubs/cut halves inherit host hue (`hueGroup`);
+  7b — open-ribbon tips get clean perpendicular caps (no phantom miter).
+- Stage 8 — GAMEPLAY on the fabric: `core/walk_graph.ts` (JUNCTION/END
+  vertices, thread-run multigraph edges carrying chain ctrl spans +
+  deterministic LATTICE lengths; Dijkstra; start/exit = the
+  longest-shortest-path pair among the four cut tails, other two tails
+  = walkable decoys), `game/fabric_controller.ts` (BRANCH-POINT-ONLY
+  taps — one run per tap, never past a later branch point; backtrack =
+  re-tap the last run; the two recorded metrics: current-path length vs
+  optimal AND cumulative backtrack distance, separate meters),
+  `render/fabric_maze_renderer.ts` (gold recolor woven per chain from
+  LIVE crossing bindings, start/exit/head markers, choice hints), HUD +
+  win banner in `main.ts`. Both 2026-07-27 follow-ups (branch-point-only
+  clicking; optimal + two distance readouts) are DONE. Verification
+  recipe (scripted REAL pointer taps via `__knotFabric`) is in the
+  Stage 8 commit message; the scripted solve lands exactly on optimal.
 
-Done so far (`src/core/maze.ts`, `src/game/maze_controller.ts`,
-`src/render/maze_renderer.ts`, wiring in `main.ts`, `?md=1` in
-`url_state.ts`, Maze-mode toggle in the panel):
-- The maze thread = one of the knot's own strands (the longest).
-  `MazeGraph` = `{ strand, chainLen, ctrlStart, steps }`; strand node i
-  sits at chain control `2i` (`ParticleSystem.chains` mirrors
-  `graph.strands`). Read positions live via `ps.pointOnChain`.
-- Tap ALONG the thread to move the trace head (start end → exit end);
-  the TRAVELED stretch is RECOLORED (full thread width, opaque, gold),
-  woven under/over by the crossing table (`underAtCtrl`). Win at exit.
-- Verified end-to-end with real pointer taps (`__knotMaze` hook exposes
-  `nodeScreen(k)`); build + tests green.
-
-Still to do:
-- **Real off-screen loose ends** (start/exit). Today the strand is still
-  a *closed* loop and start/exit are its extreme nodes; the thread loops
-  around the back. Carve the strand OPEN at the border so two loose ends
-  actually enter/leave off-screen (generator + open-chain physics).
-- **Merging junctions** — threads that MERGE (not cross over/under),
-  where the player CHOOSES which way. This is what makes it a real
-  branching maze (today the single strand is a deterministic trace).
-  `types.ts` already reserves the JUNCTION/END node types.
-- URL/param serialization for any new maze params; the **daily seed**
+Still open in P4:
+- **URL/param serialization for `MazeParams`** (branchDensity,
+  deadEndDensity, fourWayFraction, … — today only `mf` serializes and
+  `DEFAULT_MAZE_PARAMS` always applies) and the **daily seed**
   (Wordle-style shared daily + time-to-solve share).
-
-**P4 follow-ups (recorded 2026-07-27, do once junctions exist):**
-1. **Branch-point-only clicking.** A tap may only choose among the paths
-   at the CURRENT branch point — you cannot click past a later branch
-   point. Backtracking is allowed, one branching segment at a time.
-   (Today, before junctions, taps can jump anywhere along the single
-   deterministic strand; tighten this to branch-by-branch then.)
-2. **Optimal-path + two distance metrics.** Compute the optimal path
-   through the maze. Track (a) the CURRENT path's distance relative to
-   optimal (regardless of any backtracking), and — SEPARATELY — (b) the
-   cumulative distance traveled via backtracking actions. Two distinct
-   readouts.
+- **Old maze mode's fate** (`md=1`, single-strand trace,
+  `core/maze.ts` + `game/maze_controller.ts` + `render/maze_renderer.ts`)
+  — still works, untouched; retire it once fabric gameplay is strictly
+  better, to drop a whole legacy toggle+overlay.
+- Cosmetic residual: ~1px dark hairline where a gold over-stretch hands
+  off to its under-stretch at an erase boundary (Stage 8 commit notes;
+  same class existed in the old overlay).
 
 **P5 — growth animation** (animate the knot being drawn/growing) and
 **P6 — flourishes** (polish) remain untouched after P4.
