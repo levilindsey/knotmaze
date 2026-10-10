@@ -175,6 +175,20 @@ between-threads/cell-passage route.
   and stayed base-colored; the paint pass uses `paintArcAt` (clamping)
   while the crossing machinery keeps `arcAt` untouched.
 
+RENDER LORE (hard-won, 2026-10-09): **the palette strip's ORDER is
+load-bearing.** Per-vertex UVs interpolate linearly between samples, so
+any two paint values that can sit on ADJACENT samples must be contiguous
+color families in the strip — the original [base, gold, hover, bandA…]
+layout swept the UV across the gold+hover texels at every band/base
+boundary and rendered a thin bright hairline exactly at gradient ends
+(survived the smooth-field fix: the FIELD was continuous, the UV PATH
+wasn't; per-sample color dumps validate samples, not the path between
+them). Current layout: [bandA reversed | base | gold | bandB]. Also:
+flat-colored overlays (tip discs, fillet halves) must sample the paint
+of whatever they VISUALLY OVERLAP — a fused-tip disc lies on its HOST's
+face and wears the host's paint; arm-colored discs rendered floating
+pale/gold dots wherever the two paints disagreed.
+
 RENDER LORE (hard-won, 2026-10-09): **never destroy palette textures
 mid-session.** Pixi's retained render state (bind groups subscribe to
 texture resources) can still reference a TextureSource the frame after
