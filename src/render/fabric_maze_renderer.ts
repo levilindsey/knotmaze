@@ -14,7 +14,7 @@
 
 import { Container, Graphics } from "pixi.js";
 import type { ParticleSystem } from "../physics/particle_system";
-import type { WalkGraph } from "../core/walk_graph";
+import type { WalkGraph, WalkEdge } from "../core/walk_graph";
 import type { FabricMazeController } from "../game/fabric_controller";
 import type {
   RibbonRenderer,
@@ -32,6 +32,21 @@ const SAMPLE_STEP = 0.25;
 // arms converge there, so taps on the junction blob itself stay ambiguous
 // and are rejected rather than resolved arbitrarily.
 const HEAD_EXCLUDE = 0.7;
+// Traversal animation: the dot covers this many ctrl per second, with the
+// duration clamped so short hops stay perceptible and long runs stay
+// snappy.
+const MOVE_CTRL_PER_S = 18;
+const MOVE_MIN_S = 0.15;
+const MOVE_MAX_S = 0.9;
+
+interface MoveAnim {
+  e: WalkEdge;
+  from: number; // Ctrl at the departure end.
+  to: number; // Ctrl at the destination end (the controller's new head).
+  cur: number; // Current dot position (ctrl).
+  kind: "advance" | "backtrack";
+  rate: number; // ctrl per second.
+}
 
 export class FabricMazeRenderer {
   overContainer: Container;
@@ -41,6 +56,7 @@ export class FabricMazeRenderer {
   private gfx: Graphics;
   private threadWidth: number;
   private hoverEdge = -1;
+  private anim: MoveAnim | null = null;
   private scratch = new Float32Array(2);
 
   constructor(
@@ -121,9 +137,89 @@ export class FabricMazeRenderer {
     return best;
   }
 
+  // --- Traversal animation: game state moves instantly; the dot and the
+  // gold front travel the thread's actual curve to catch up (ctrl-space
+  // interpolation through pointOnChain, so the motion follows every bend).
+
+  get animating(): boolean {
+    return this.anim !== null;
+  }
+
+  // Start animating the move the controller just performed. The controller
+  // head is already at the destination; the dot departs the other end.
+  beginMove(
+    edgeId: number,
+    kind: "advance" | "backtrack",
+    controller: FabricMazeController
+  ): void {
+    this.anim = null; // A tap mid-flight snaps the previous move.
+    const e = this.walk.edges[edgeId];
+    const head = controller.head;
+    let from: number;
+    let to: number;
+    if (e.va === head && e.vb === head) {
+      // Self-loop run: direction is unknowable; sweep A -> B.
+      from = e.ctrlA;
+      to = e.ctrlB;
+    } else if (e.va === head) {
+      from = e.ctrlB;
+      to = e.ctrlA;
+    } else {
+      from = e.ctrlA;
+      to = e.ctrlB;
+    }
+    const span = Math.abs(to - from);
+    const dur = Math.min(MOVE_MAX_S, Math.max(MOVE_MIN_S, span / MOVE_CTRL_PER_S));
+    this.anim = { e, from, to, cur: from, kind, rate: span / dur };
+    this.emitAnimFrame(controller);
+  }
+
+  cancelMove(): void {
+    this.anim = null;
+  }
+
+  // Advance the in-flight move; on arrival, hand back to the full refresh.
+  tickAnim(dt: number, controller: FabricMazeController): void {
+    const a = this.anim;
+    if (!a) return;
+    const dir = Math.sign(a.to - a.from) || 1;
+    a.cur += dir * a.rate * dt;
+    if ((dir > 0 && a.cur >= a.to) || (dir < 0 && a.cur <= a.to)) {
+      this.anim = null;
+      this.update(controller);
+      return;
+    }
+    this.emitAnimFrame(controller);
+  }
+
+  // Paint + markers for one animation frame: the stack minus the in-flight
+  // run, plus the swept part of it (growing behind the dot on an advance,
+  // the shrinking remnant ahead of it on a backtrack); pulses stay quiet
+  // until arrival.
+  private emitAnimFrame(controller: FabricMazeController): void {
+    const a = this.anim!;
+    const spans: PaintSpan[] = [];
+    for (const eid of controller.pathEdges) {
+      if (a.kind === "advance" && eid === a.e.id) continue;
+      const e = this.walk.edges[eid];
+      spans.push({ chain: e.chain, c0: e.ctrlA, c1: e.ctrlB });
+    }
+    const lo = Math.min(a.cur, a.kind === "advance" ? a.from : a.to);
+    const hi = Math.max(a.cur, a.kind === "advance" ? a.from : a.to);
+    if (hi - lo > 1e-6) {
+      spans.push({ chain: a.e.chain, c0: lo, c1: hi });
+    }
+    this.ribbons.setPaint(spans, [], this.buildCaps(controller));
+    this.drawMarkers(controller, a.e.chain, a.cur, false);
+  }
+
   // Refresh the paint declaration (traveled spans + pulse arms) and redraw
-  // the markers.
+  // the markers. While a move is animating, tickAnim owns the frame.
   update(controller: FabricMazeController): void {
+    if (this.anim) {
+      this.emitAnimFrame(controller);
+      return;
+    }
     const spans: PaintSpan[] = [];
     const onPath = new Set<number>();
     for (const eid of controller.pathEdges) {
@@ -132,37 +228,7 @@ export class FabricMazeRenderer {
       onPath.add(eid);
     }
 
-    // Junction caps: at every vertex the path traversed, several ribbons
-    // converge and overlap (bridge tips ride their hosts; merged crossings
-    // overlap diagonally). Painting each arm's immediate neighborhood gold
-    // hides the overlap footprint in both directions. The head vertex keeps
-    // its pulse affordance instead (and wears the head marker), except once
-    // solved.
-    const caps: PaintCap[] = [];
-    const capR = Math.max(0.3, this.threadWidth * 0.95);
-    const seenCap = new Set<string>();
-    const nVisited =
-      controller.pathVertices.length - (controller.solved ? 0 : 1);
-    for (let i = 0; i < nVisited; i++) {
-      const v = this.walk.vertices.get(controller.pathVertices[i])!;
-      for (const eid of v.edges) {
-        const e = this.walk.edges[eid];
-        const atA = e.va === v.id;
-        const ctrl = atA ? e.ctrlA : e.ctrlB;
-        const key = `${e.chain}:${ctrl}`;
-        if (seenCap.has(key)) continue;
-        seenCap.add(key);
-        caps.push({ chain: e.chain, ctrl, radius: capR });
-        // A self-loop run touches the vertex at BOTH its ends.
-        if (atA && e.vb === v.id) {
-          const key2 = `${e.chain}:${e.ctrlB}`;
-          if (!seenCap.has(key2)) {
-            seenCap.add(key2);
-            caps.push({ chain: e.chain, ctrl: e.ctrlB, radius: capR });
-          }
-        }
-      }
-    }
+    const caps = this.buildCaps(controller);
 
     const pulses: PulseArm[] = [];
     if (!controller.solved) {
@@ -196,12 +262,65 @@ export class FabricMazeRenderer {
       }
     }
     this.ribbons.setPaint(spans, pulses, caps);
+    this.drawMarkers(controller, -1, 0, controller.solved);
+  }
 
-    // Markers.
+  // Junction caps: at every vertex the path traversed, several ribbons
+  // converge and overlap (bridge tips ride their hosts; merged crossings
+  // overlap diagonally). Painting each arm's immediate neighborhood gold
+  // hides the overlap footprint in both directions. The head vertex keeps
+  // its pulse affordance instead (and wears the head marker), except once
+  // solved.
+  private buildCaps(controller: FabricMazeController): PaintCap[] {
+    const caps: PaintCap[] = [];
+    const capR = Math.max(0.3, this.threadWidth * 0.95);
+    const seenCap = new Set<string>();
+    const nVisited =
+      controller.pathVertices.length - (controller.solved ? 0 : 1);
+    for (let i = 0; i < nVisited; i++) {
+      const v = this.walk.vertices.get(controller.pathVertices[i])!;
+      for (const eid of v.edges) {
+        const e = this.walk.edges[eid];
+        const atA = e.va === v.id;
+        const ctrl = atA ? e.ctrlA : e.ctrlB;
+        const key = `${e.chain}:${ctrl}`;
+        if (seenCap.has(key)) continue;
+        seenCap.add(key);
+        caps.push({ chain: e.chain, ctrl, radius: capR });
+        // A self-loop run touches the vertex at BOTH its ends.
+        if (atA && e.vb === v.id) {
+          const key2 = `${e.chain}:${e.ctrlB}`;
+          if (!seenCap.has(key2)) {
+            seenCap.add(key2);
+            caps.push({ chain: e.chain, ctrl: e.ctrlB, radius: capR });
+          }
+        }
+      }
+    }
+    return caps;
+  }
+
+  // Markers: start/exit discs, the head dot (at the given chain position
+  // mid-move, at the head vertex otherwise), and the win ring.
+  private drawMarkers(
+    controller: FabricMazeController,
+    dotChain: number,
+    dotCtrl: number,
+    showRing: boolean
+  ): void {
     const g = this.gfx;
     g.clear();
     const rHead = Math.max(0.24, this.threadWidth * 0.72);
-    this.vertexWorld(controller.head, this.scratch, 0);
+    if (dotChain >= 0) {
+      this.ps.pointOnChain(
+        dotChain,
+        this.ctrlMod(dotChain, dotCtrl),
+        this.scratch,
+        0
+      );
+    } else {
+      this.vertexWorld(controller.head, this.scratch, 0);
+    }
     g.circle(this.scratch[0], this.scratch[1], rHead);
     g.fill({ color: 0xffffff, alpha: 0.92 });
 
@@ -213,7 +332,7 @@ export class FabricMazeRenderer {
     this.vertexWorld(this.walk.exit, this.scratch, 0);
     g.circle(this.scratch[0], this.scratch[1], r);
     g.fill({ color: EXIT_COLOR, alpha: 0.95 });
-    if (controller.solved) {
+    if (showRing) {
       g.circle(this.scratch[0], this.scratch[1], r * 1.5);
       g.stroke({
         color: EXIT_COLOR,

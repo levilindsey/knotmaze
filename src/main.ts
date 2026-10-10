@@ -28,7 +28,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 11: long dead-end threads 2026-10-09";
+const BUILD_STAMP = "P4 Stage 12: animated traversal 2026-10-09";
 
 const app = new Application();
 
@@ -207,6 +207,7 @@ async function main(): Promise<void> {
       fabricController = null;
       fabric = null;
     }
+    pendingWin = false;
     updateHud();
     hideWin();
 
@@ -276,6 +277,8 @@ async function main(): Promise<void> {
     onResetPath: () => {
       controller?.reset();
       fabricController?.reset();
+      fabric?.cancelMove();
+      pendingWin = false;
       hideWin();
       if (maze && controller) maze.update(controller);
       if (fabric && fabricController) fabric.update(fabricController);
@@ -339,6 +342,9 @@ async function main(): Promise<void> {
       `backtracked ${fmt(c.backtrackDist)}`;
     hud.style.display = "block";
   };
+  // Set when a winning tap lands; the banner shows once the traversal
+  // animation delivers the dot to the exit.
+  let pendingWin = false;
   const showFabricWin = (): void => {
     if (!fabricController) return;
     const c = fabricController;
@@ -376,10 +382,20 @@ async function main(): Promise<void> {
     if (eid < 0) return false;
     const result = fabricController.tapEdge(eid);
     fabric.setHover(-1);
-    fabric.update(fabricController);
+    // The game state moved instantly; the dot + gold front animate along
+    // the thread to catch up. The win banner waits for the arrival.
+    if (result === "advance" || result === "backtrack" || result === "win") {
+      fabric.beginMove(
+        eid,
+        result === "backtrack" ? "backtrack" : "advance",
+        fabricController
+      );
+      if (result === "win") pendingWin = true;
+    } else {
+      fabric.update(fabricController);
+    }
     updateHud();
     wake();
-    if (result === "win") showFabricWin();
     return result !== "reject";
   };
 
@@ -485,17 +501,29 @@ async function main(): Promise<void> {
       params.simSpeed <= 5
         ? params.simSpeed / 5
         : 1 + (params.simSpeed - 5) * 0.8;
+    // The gameplay animations (traversal, pulse, hover) run even while
+    // paused or asleep - they touch only markers and UV buffers, never
+    // physics or splines.
+    const fabricTick = (): void => {
+      if (params.mazeFabric && fabric && fabricController) {
+        fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
+        if (pendingWin && !fabric.animating) {
+          pendingWin = false;
+          showFabricWin();
+        }
+      }
+      renderer!.tickPaint(ticker.deltaMS / 1000);
+    };
+
     if (speedMult === 0) {
-      // The gameplay paint (pulse/hover) animates even while paused or
-      // asleep - it rewrites only UV buffers, never physics or splines.
-      renderer.tickPaint(ticker.deltaMS / 1000);
+      fabricTick();
       perfLine = " | paused";
       updateStamp();
       return;
     }
 
     if (asleep) {
-      renderer.tickPaint(ticker.deltaMS / 1000);
+      fabricTick();
       perfLine = " | asleep";
       updateStamp();
       return;
@@ -528,7 +556,7 @@ async function main(): Promise<void> {
     if (params.mazeFabric && fabric && fabricController) {
       fabric.update(fabricController);
     }
-    renderer.tickPaint(ticker.deltaMS / 1000);
+    fabricTick();
     const t2 = performance.now();
 
     // Follow the free-floating knot with an eased viewport fit.
@@ -678,6 +706,7 @@ async function main(): Promise<void> {
     return {
       head: c.head,
       solved: c.solved,
+      animating: fb.animating,
       pathLength: c.pathLength,
       optimal: wg.optimalLength,
       backtrack: c.backtrackDist,
