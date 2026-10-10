@@ -1288,6 +1288,35 @@ export class RibbonRenderer {
     neighbors: PassNeighbors
   ): [number, number] {
     const total = samples.totalLength;
+    // OPEN chains: physics unlinks the open seam by SELF-linking (the first
+    // pass's prev and the last pass's next point at the pass itself), so
+    // a self-linked side has no neighbor - its room is the run to that
+    // chain end. The ring rule below only knew `next === pass` (a
+    // single-pass ring): first passes read a ZERO prev gap (their
+    // chain-start-side cut sat at the march's 0.15 floor) and last passes
+    // ignored their real prev neighbor.
+    if (!samples.closed) {
+      const selfPrev = neighbors.prev === pass;
+      const selfNext = neighbors.next === pass;
+      if (selfPrev || selfNext) {
+        const c = this.paintArcAt(samples, this.renderCtrl(pass), false);
+        const gapPrev = selfPrev
+          ? c
+          : Math.max(
+              0,
+              c -
+                this.paintArcAt(samples, this.renderCtrl(neighbors.prev), false)
+            );
+        const gapNext = selfNext
+          ? total - c
+          : Math.max(
+              0,
+              this.paintArcAt(samples, this.renderCtrl(neighbors.next), false) -
+                c
+            );
+        return [gapPrev, gapNext];
+      }
+    }
     if (
       neighbors.next === pass ||
       neighbors.next.ctrl === pass.ctrl

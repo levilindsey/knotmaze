@@ -579,11 +579,9 @@ Still open in P4:
   circular blend pools + hard color seams at some intersections (Stage
   26 follow-up; base caches measured smooth, overlay suspect - needs a
   user Alt+click CROSSING INSPECT on a seam). AGENT-MEASURED, NOT YET
-  FIXED: (1) the renderer's neighborGaps has the terminal-pass
-  asymmetry too - every open chain's FIRST pass gets prev-gap 0 (its
-  chain-start-side erase is cut short: 0.36 vs a 0.44 median) and its
-  LAST pass gets [total/2, total/2] (its real prev neighbor ignored);
-  fix = compute each side separately + screenshot check; (2) latent
+  FIXED: (1) [FIXED late 2026-10-10: neighborGaps now gives an open
+  chain's self-linked side the run to its chain end - first passes'
+  chain-start cut 0.360 -> 0.482]; (2) latent
   seam-window wraps on open chains (applyTransversality's window, the
   slideCrossing/projectOntoChain windows, updatePassCover +-12 slots)
   index modulo len - a seam-relative clamp like addDepthTent's;
