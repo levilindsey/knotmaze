@@ -160,6 +160,21 @@ between-threads/cell-passage route.
   snap the previous move); the win banner waits for arrival. Runs in
   the asleep/paused ticker branches like the pulse.
 
+- Stage 13 — JUNCTION JOINERY + paint fixes: fused arm tips TUCK flush
+  to the host's near edge (the overhang read as gapless fake crossings
+  and floating scraps — attributed via a renderability census to
+  bridge terminals at fused junctions); rounded FILLETS fill every
+  junction wedge, split per arm and colored from the live paint (CPU
+  palette sample; redrawn each paint tick); free dead-end tips get
+  rounded caps; the branch pulse has ONE global period/phase with
+  smooth end windows (the hard boundary line was the crest popping
+  against the d>R cutoff); `multiColor` checkbox / `mc=1` (DEFAULT
+  OFF: whole fabric one hue — much stronger gold route). GOTCHA worth
+  keeping: `arcAt`'s closing modulo wraps an OPEN chain's terminal arc
+  (== total) to ZERO — traveled bridges' spans collapsed to a point
+  and stayed base-colored; the paint pass uses `paintArcAt` (clamping)
+  while the crossing machinery keeps `arcAt` untouched.
+
 RENDER LORE (hard-won, 2026-10-09): **never destroy palette textures
 mid-session.** Pixi's retained render state (bind groups subscribe to
 texture resources) can still reference a TextureSource the frame after
