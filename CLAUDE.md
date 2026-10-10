@@ -546,15 +546,20 @@ Still open in P4:
 - ~~Old maze mode~~ — RETIRED 2026-10-10 (commit bf86855): `md=1`,
   `core/maze.ts`, `game/maze_controller.ts`, `render/maze_renderer.ts`
   and their tests are deleted; `mf` is the only mode toggle.
-- **Open artifact queue (2026-10-10)**: segments-scheme circular blend
-  pools + hard color seams at some intersections (Stage 26 follow-up;
-  suspects recorded above); gamut-selection UX for all schemes (user
-  wants player-facing gamut control; mono/strands/depth should sample
-  intelligently for contrast); physics junction–crossing spacing
-  (user-proposed incidence reducer for gaps-near-joints; design = a
-  P3.39-style rate-limited along-thread ratchet, needs the full
-  verification battery); reveal running-end particle effects + icon
-  set (start/finish/player) both have agents/designs in flight.
+- **Open artifact queue (updated 2026-10-10, late)**: segments-scheme
+  circular blend pools + hard color seams at some intersections (Stage
+  26 follow-up; base caches measured smooth, overlay suspect - needs a
+  user Alt+click CROSSING INSPECT on a seam); fillet artifacts at big
+  cuspRadius - pale jagged spurs past silhouettes and webs overhanging
+  an arm's under-gap (attribution agent in flight; the third reported
+  class, olive smudges, was the pathColor binding bug, fixed); gap
+  JITTER under flow (4th report - the limiter stack is treated as
+  failed symptom-patching; root-cause agent measuring cut traces +
+  pixel flicker); the open-chain terminal-pass guard in
+  easePassToward (audit agent). Icon set: user rejected the generated
+  icons; a portable prompt for another model was delivered instead.
+  DONE from the old queue: gamut UX (hs/arc/pal/pc, now live), physics
+  junction spacing (dc20d4c), reveal frontier FX (all styles).
 
 **P5 — growth animation** (animate the knot being drawn/growing) and
 **P6 — flourishes** (polish) remain untouched after P4.
