@@ -5,6 +5,7 @@ import {
   DEFAULT_MAZE_PARAMS,
   DEAD_END_DENSITY_ON,
 } from "./core/maze_plan";
+import { buildSectionField } from "./core/section_colors";
 import { applyMazePlan, applyMazeCuts } from "./core/maze_apply";
 import { buildWalkGraph } from "./core/walk_graph";
 import type { WalkGraph } from "./core/walk_graph";
@@ -28,7 +29,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 15: cusp-radius slider 2026-10-09";
+const BUILD_STAMP = "P4 Stage 16: section color schemes 2026-10-09";
 
 const app = new Application();
 
@@ -163,19 +164,35 @@ async function main(): Promise<void> {
       );
     }
 
+    // The walk graph feeds both the section coloring and (in fabric mode)
+    // the gameplay, so it builds before the renderer.
+    walkGraph = params.mazeFabric ? buildWalkGraph(graph) : null;
+
     renderer = new RibbonRenderer(ps, {
       threadWidth: params.threadWidth,
       casingWidth: params.threadWidth + params.gap * 2,
       background: BACKGROUND,
       baseHue: params.seed % 360,
-      // multiColor off: every strand maps to palette slot 0 - one hue for
-      // the whole fabric (gameplay paint stays distinct regardless).
-      hueGroup: params.multiColor
-        ? hueGroup
-        : graph.strands.map(() => 0),
+      // Knot-mode tints only (palette mode colors via the section field):
+      // per-strand hues for the strands scheme, mono otherwise.
+      hueGroup:
+        params.colorScheme === "strands"
+          ? hueGroup
+          : graph.strands.map(() => 0),
       // Fabric gameplay recolors the actual threads via palette textures.
       paletteMode: params.mazeFabric,
     });
+    renderer.setSectionField(
+      buildSectionField(
+        params.colorScheme,
+        walkGraph,
+        ps.chains.map((c) => c.length),
+        hueGroup,
+        params.seed
+      ),
+      params.colorScheme,
+      params.seed
+    );
 
     // Maze overlay + solve state (old single-strand maze mode only).
     if (oldMaze && mazeGraph) {
@@ -188,26 +205,18 @@ async function main(): Promise<void> {
       maze = null;
     }
 
-    // Branching gameplay over the fabric: walk graph (junction/end vertices,
-    // thread runs between them) + branch-point-only solve state + the woven
-    // path recolor overlay.
-    if (params.mazeFabric) {
-      walkGraph = buildWalkGraph(graph);
-      if (walkGraph) {
-        fabricController = new FabricMazeController(walkGraph);
-        fabric = new FabricMazeRenderer(
-          ps,
-          walkGraph,
-          params.threadWidth,
-          renderer
-        );
-        fabric.update(fabricController);
-      } else {
-        fabricController = null;
-        fabric = null;
-      }
+    // Branching gameplay over the fabric: branch-point-only solve state +
+    // the thread-true paint overlay (the walk graph was built above).
+    if (params.mazeFabric && walkGraph) {
+      fabricController = new FabricMazeController(walkGraph);
+      fabric = new FabricMazeRenderer(
+        ps,
+        walkGraph,
+        params.threadWidth,
+        renderer
+      );
+      fabric.update(fabricController);
     } else {
-      walkGraph = null;
       fabricController = null;
       fabric = null;
     }

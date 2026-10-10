@@ -142,8 +142,16 @@ export function buildPanel(
     "Branching maze: walk the thread from the green entrance to the orange exit. Tap a highlighted run at your branch point to advance (tap the gold one to backtrack); tug anywhere else."
   ).on("change", callbacks.onModeChange);
   tip(
-    pane.addBinding(params, "multiColor"),
-    "Render each thread region in its own hue. Off = the whole fabric wears one color (traveled gold and branch highlights stay distinct). Rebuilds the scene."
+    pane.addBinding(params, "colorScheme", {
+      options: {
+        mono: "mono",
+        strands: "strands",
+        depth: "depth",
+        segments: "segments",
+        noise: "noise",
+      },
+    }),
+    "Section coloring: mono = one color; strands = per-thread hues; depth = gradient by distance from the start; segments = a random gamut color per run between intersections; noise = a spatial dye field. Sections blend smoothly through intersections. Rebuilds the scene."
   ).on("change", callbacks.onModeChange);
   tip(
     pane.addBinding(params, "deadEnds"),

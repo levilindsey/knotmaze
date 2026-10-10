@@ -123,16 +123,19 @@ export class RibbonMesh {
     this.mesh.geometry.getBuffer("aPosition").update();
   }
 
-  // PAINT (maze-fabric palette mode): set every sample's palette coordinate.
-  // `us` holds one normalized U per sample; both verts of a sample share it
-  // (the palette texture is 1 texel tall, so V pins to its center).
-  writeUs(us: ArrayLike<number>): void {
+  // PAINT (maze-fabric palette mode): set every sample's palette
+  // coordinates. U = gameplay paint (gold/pulse band), V = section color
+  // row; both verts of a sample share them. `vs` may be a single number
+  // (constant section color for the chain).
+  writeUVs(us: ArrayLike<number>, vs: ArrayLike<number> | number): void {
+    const constV = typeof vs === "number" ? vs : -1;
     for (let i = 0; i < this.sampleCount; i++) {
       const u = us[i];
+      const v = constV >= 0 ? constV : (vs as ArrayLike<number>)[i];
       this.uvData[i * 4] = u;
-      this.uvData[i * 4 + 1] = 0.5;
+      this.uvData[i * 4 + 1] = v;
       this.uvData[i * 4 + 2] = u;
-      this.uvData[i * 4 + 3] = 0.5;
+      this.uvData[i * 4 + 3] = v;
     }
     this.mesh.geometry.getBuffer("aUV").update();
   }

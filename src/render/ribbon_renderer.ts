@@ -19,7 +19,10 @@
 // All erases render below all fills, so patches never slice each other.
 
 import { BufferImageSource, Container, Graphics, Texture } from "pixi.js";
+import { createNoise2D } from "simplex-noise";
 import type { ParticleSystem, CrossingPass } from "../physics/particle_system";
+import type { VSegment, ColorScheme } from "../core/section_colors";
+import { SeededRNG } from "../util/random";
 import type { SplineSamples } from "../geometry/spline_generator";
 import {
   sampleClosedSpline,
@@ -84,9 +87,26 @@ export interface PaintCap {
 //   118..123 traveled gold
 //   124..235 band B: gold -> near-white accent
 //   236..255 band B accent (guard)
+//
+// SECOND DIMENSION (V): the palette is PAL_H rows, each the same strip
+// built from a different base color along a bounded GAMUT ramp. Per-vertex
+// V selects the section color; bilinear filtering blends adjacent-sample
+// Vs through intermediate gamut colors - smooth section transitions along
+// threads and through junctions for free, always inside the gamut.
+// Gameplay paint (U) rides on top unchanged: the gold/band-B half of every
+// row is identical, so the traveled path stays uniform gold.
 const PAL_W = 256;
+const PAL_H = 64;
 const U_BASE = 115 / PAL_W;
 const U_GOLD = 121 / PAL_W;
+// The gamut: a 280-degree hue arc around the seed hue at the fabric's
+// saturation/lightness - wide enough to read as distinct sections, no
+// full wrap so V-interpolation never has a long-way-around ambiguity.
+const GAMUT_SWEEP = 280;
+const vRow = (v: number): number => {
+  const q = v < 0 ? 0 : v > 1 ? 1 : v;
+  return (0.5 + q * (PAL_H - 1)) / PAL_H;
+};
 const bandU = (onPath: boolean, p: number): number => {
   const q = p < 0 ? 0 : p > 1 ? 1 : p;
   return onPath ? (124.5 + q * 110) / PAL_W : (111.5 - q * 110) / PAL_W;
@@ -163,21 +183,33 @@ function mixHex(a: number, b: number, t: number): number {
 // strips).
 const PALETTE_CACHE = new Map<number, { tex: Texture; px: Uint8Array }>();
 
-function paletteFor(base: number): { tex: Texture; px: Uint8Array } {
-  let entry = PALETTE_CACHE.get(base);
+function gamutHex(baseHue: number, v: number): number {
+  const h = (((baseHue + (v - 0.5) * GAMUT_SWEEP) % 360) + 360) % 360;
+  return hslToHex(h, 0.45, 0.64);
+}
+
+// The full 2D palette for one seed hue: PAL_H gamut rows of the standard
+// paint strip. Cached for the page lifetime keyed by (rounded) base hue.
+function paletteFor(baseHue: number): { tex: Texture; px: Uint8Array } {
+  const key = Math.round(baseHue);
+  let entry = PALETTE_CACHE.get(key);
   if (!entry) {
-    const px = buildPalettePixels(base);
+    const px = new Uint8Array(PAL_W * PAL_H * 4);
+    for (let r = 0; r < PAL_H; r++) {
+      const row = buildPalettePixels(gamutHex(baseHue, r / (PAL_H - 1)));
+      px.set(row, r * PAL_W * 4);
+    }
     entry = {
       px,
       tex: new Texture({
         source: new BufferImageSource({
           resource: px,
           width: PAL_W,
-          height: 1,
+          height: PAL_H,
         }),
       }),
     };
-    PALETTE_CACHE.set(base, entry);
+    PALETTE_CACHE.set(key, entry);
   }
   return entry;
 }
@@ -404,8 +436,14 @@ export class RibbonRenderer {
     hostCtrl: number;
   }> = [];
   private chainTipFused: Array<[boolean, boolean]> = [];
-  private chainBaseHex: number[] = [];
-  private palettePx = new Map<number, Uint8Array>();
+  // Shared 2D palette pixels (CPU-side fillet/disc sampling) + the section
+  // color field: piecewise-linear v(ctrl) per chain from section_colors
+  // (or spatial noise), baked to a per-SAMPLE V cache on the first update.
+  private palettePx: Uint8Array | null = null;
+  private sectionSegs: VSegment[][] = [];
+  private sectionNoise: ((x: number, y: number) => number) | null = null;
+  private vCache: (Float32Array | number)[] = [];
+  private vCacheReady = false;
 
   constructor(ps: ParticleSystem, style: RibbonStyle) {
     this.ps = ps;
@@ -446,17 +484,18 @@ export class RibbonRenderer {
       const closed = ps.chainBreakAfter[i] < 0;
       const base = hslToHex(hue, 0.45, 0.64);
       const fill = new RibbonMesh(count, closed, base);
-      this.chainBaseHex.push(base);
       if (style.paletteMode) {
-        const pal = paletteFor(base);
+        const pal = paletteFor(style.baseHue);
+        this.palettePx = pal.px;
         fill.mesh.texture = pal.tex;
         fill.mesh.tint = 0xffffff;
-        fill.writeUs(new Float32Array(count).fill(U_BASE));
-        this.palettePx.set(base, pal.px);
+        fill.writeUVs(new Float32Array(count).fill(U_BASE), 0.5);
       }
       this.fills.push(fill);
       baseLayer.addChild(fill.mesh);
     });
+    this.vCache = ps.chains.map(() => 0.5);
+    this.sectionSegs = ps.chains.map(() => []);
 
     // Neighboring crossing passes along each thread come from the particle
     // system; passes slide live, so we hold references and read their
@@ -767,12 +806,31 @@ export class RibbonRenderer {
         if (fusedA || fusedB) this.tuckFusedTips(samples, fusedA, fusedB);
       }
       this.chainSamples[i] = samples;
+      if (this.style.paletteMode && !this.vCacheReady) {
+        this.buildVCacheFor(i, samples);
+      }
       this.fills[i].update(
         samples.positions,
         samples.tangents,
         this.style.threadWidth / 2
       );
     });
+    if (this.style.paletteMode && !this.vCacheReady) {
+      this.vCacheReady = true;
+      // One full UV write so every chain wears its section colors; chains
+      // with gameplay paint get rewritten by the next paint tick.
+      this.ps.chains.forEach((_, i) => {
+        const count = this.fills[i].sampleCount;
+        let us = this.uScratch.get(i);
+        if (!us || us.length < count) {
+          us = new Float32Array(count);
+          this.uScratch.set(i, us);
+        }
+        us.fill(U_BASE, 0, count);
+        this.fills[i].writeUVs(us, this.vCache[i]);
+      });
+      this.chainRev.clear();
+    }
 
     const fillHalf = this.style.threadWidth / 2;
     const gap = (this.style.casingWidth - this.style.threadWidth) / 2;
@@ -1386,6 +1444,103 @@ export class RibbonRenderer {
     }
   }
 
+  // Install the section color field (see core/section_colors). The noise
+  // scheme carries no segments - it is evaluated spatially per sample.
+  setSectionField(
+    segs: VSegment[][],
+    scheme: ColorScheme,
+    seed: number
+  ): void {
+    this.sectionSegs = segs;
+    if (scheme === "noise") {
+      const rng = new SeededRNG((seed ^ 0x5ec7c0) >>> 0);
+      this.sectionNoise = createNoise2D(() => rng.next());
+    } else {
+      this.sectionNoise = null;
+    }
+    this.vCacheReady = false;
+  }
+
+  // Section color coordinate at a chain ctrl (piecewise-linear segments,
+  // or the spatial noise field).
+  private sectionVAt(chain: number, ctrl: number): number {
+    if (this.sectionNoise) {
+      const samples = this.chainSamples[chain];
+      if (!samples) return 0.5;
+      this.ps.pointOnChain(
+        chain,
+        (((ctrl % this.ps.chains[chain].length) +
+          this.ps.chains[chain].length) %
+          this.ps.chains[chain].length),
+        this.sampleScratch,
+        0
+      );
+      return this.noiseV(this.sampleScratch[0], this.sampleScratch[1]);
+    }
+    const segs = this.sectionSegs[chain];
+    if (!segs || segs.length === 0) return 0.5;
+    const len = this.ps.chains[chain].length;
+    for (const c of [ctrl, ctrl + len]) {
+      for (const s of segs) {
+        if (c >= s.c0 - 1e-6 && c <= s.c1 + 1e-6) {
+          const t = s.c1 > s.c0 ? (c - s.c0) / (s.c1 - s.c0) : 0;
+          return s.v0 + (s.v1 - s.v0) * t;
+        }
+      }
+    }
+    return segs[0].v0;
+  }
+
+  private noiseV(x: number, y: number): number {
+    const n = this.sectionNoise!(x * 0.16, y * 0.16);
+    return Math.max(0, Math.min(1, 0.5 + 0.62 * n));
+  }
+
+  // Bake the per-sample V cache for one chain (initial arc tables; sample
+  // k's arc FRACTION is fixed by uniform resampling, so this stays valid
+  // as the chain deforms).
+  private buildVCacheFor(chain: number, samples: SplineSamples): void {
+    const count = samples.count;
+    if (this.sectionNoise) {
+      const vs = new Float32Array(count);
+      for (let k = 0; k < count; k++) {
+        vs[k] = this.noiseV(
+          samples.positions[k * 2],
+          samples.positions[k * 2 + 1]
+        );
+      }
+      this.vCache[chain] = vs;
+      return;
+    }
+    const segs = this.sectionSegs[chain];
+    if (!segs || segs.length === 0) {
+      this.vCache[chain] = 0.5;
+      return;
+    }
+    if (
+      segs.length === 1 &&
+      Math.abs(segs[0].v0 - segs[0].v1) < 1e-6
+    ) {
+      this.vCache[chain] = segs[0].v0;
+      return;
+    }
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    const cal = samples.controlArcLengths;
+    const n = cal.length;
+    const total = samples.totalLength;
+    const vs = new Float32Array(count);
+    let slot = 0;
+    for (let k = 0; k < count; k++) {
+      const a = closed ? (k / count) * total : (k / (count - 1)) * total;
+      while (slot < n - 1 && cal[slot + 1] <= a) slot++;
+      const a0 = cal[slot];
+      const a1 = slot < n - 1 ? cal[slot + 1] : total;
+      const t = a1 > a0 ? Math.min(1, (a - a0) / (a1 - a0)) : 0;
+      vs[k] = this.sectionVAt(chain, slot + t);
+    }
+    this.vCache[chain] = vs;
+  }
+
   // Declare the current gameplay paint (traveled spans + branch-point
   // pulse arms). Cheap; the heavy lifting happens in tickPaint.
   setPaint(spans: PaintSpan[], pulses: PulseArm[], caps: PaintCap[]): void {
@@ -1525,7 +1680,7 @@ export class RibbonRenderer {
     }
     us.fill(U_BASE, 0, count);
     if (!painted) {
-      mesh.writeUs(us);
+      mesh.writeUVs(us, this.vCache[chain]);
       return;
     }
 
@@ -1590,7 +1745,7 @@ export class RibbonRenderer {
         if (v > 0.004) us[k] = bandU(p.onPath, v);
       }
     }
-    mesh.writeUs(us);
+    mesh.writeUVs(us, this.vCache[chain]);
   }
 
   // The pulse field at distance d from the junction along an arm whose run
@@ -1693,19 +1848,30 @@ export class RibbonRenderer {
     return u;
   }
 
-  // CPU-side palette sample (linear, matching the GPU's filtering closely
-  // enough for flat fills).
-  private paletteColor(baseHex: number, u: number): number {
-    const px = this.palettePx.get(baseHex);
-    if (!px) return baseHex;
+  // CPU-side 2D palette sample (bilinear, matching the GPU's filtering
+  // closely enough for flat fills).
+  private paletteColor2(u: number, v: number): number {
+    const px = this.palettePx;
+    if (!px) return 0xffffff;
     const x = Math.max(0.5, Math.min(PAL_W - 1.5, u * PAL_W - 0.5));
     const i0 = Math.floor(x);
-    const f = x - i0;
-    const i1 = i0 + 1;
-    const r = px[i0 * 4] + (px[i1 * 4] - px[i0 * 4]) * f;
-    const g = px[i0 * 4 + 1] + (px[i1 * 4 + 1] - px[i0 * 4 + 1]) * f;
-    const b = px[i0 * 4 + 2] + (px[i1 * 4 + 2] - px[i0 * 4 + 2]) * f;
-    return (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(b);
+    const fx = x - i0;
+    const y = Math.max(0.5, Math.min(PAL_H - 1.5, vRow(v) * PAL_H - 0.5));
+    const r0 = Math.floor(y);
+    const fy = y - r0;
+    const chan = (row: number, col: number, c: number): number =>
+      px[(row * PAL_W + col) * 4 + c];
+    const lerp2 = (c: number): number => {
+      const top = chan(r0, i0, c) + (chan(r0, i0 + 1, c) - chan(r0, i0, c)) * fx;
+      const bot =
+        chan(r0 + 1, i0, c) + (chan(r0 + 1, i0 + 1, c) - chan(r0 + 1, i0, c)) * fx;
+      return top + (bot - top) * fy;
+    };
+    return (
+      (Math.round(lerp2(0)) << 16) |
+      (Math.round(lerp2(1)) << 8) |
+      Math.round(lerp2(2))
+    );
   }
 
   // Rounded junction fillets: for each wedge between adjacent arms, a
@@ -1738,9 +1904,9 @@ export class RibbonRenderer {
       const ctrl = tip.atEnd ? this.ps.chains[tip.chain].length - 1 : 0;
       g.circle(this.sampleScratch[0], this.sampleScratch[1], fillHalf * 0.99);
       g.fill({
-        color: this.paletteColor(
-          this.chainBaseHex[tip.chain],
-          this.paintUAt(tip.chain, ctrl)
+        color: this.paletteColor2(
+          this.paintUAt(tip.chain, ctrl),
+          this.sectionVAt(tip.chain, ctrl)
         ),
       });
     }
@@ -1754,9 +1920,9 @@ export class RibbonRenderer {
       tipXY(samples, tip.atEnd);
       g.circle(this.sampleScratch[0], this.sampleScratch[1], fillHalf * 0.99);
       g.fill({
-        color: this.paletteColor(
-          this.chainBaseHex[tip.hostChain],
-          this.paintUAt(tip.hostChain, tip.hostCtrl)
+        color: this.paletteColor2(
+          this.paintUAt(tip.hostChain, tip.hostCtrl),
+          this.sectionVAt(tip.hostChain, tip.hostCtrl)
         ),
       });
     }
@@ -1818,9 +1984,9 @@ export class RibbonRenderer {
           ang: Math.atan2(dy, dx),
           dx,
           dy,
-          color: this.paletteColor(
-            this.chainBaseHex[a.chain],
-            this.paintUAtArc(a.chain, colorArc, closedA)
+          color: this.paletteColor2(
+            this.paintUAtArc(a.chain, colorArc, closedA),
+            this.sectionVAt(a.chain, a.slot + a.dir)
           ),
         });
       }
@@ -1840,9 +2006,9 @@ export class RibbonRenderer {
       }
       g.circle(jx, jy, fillHalf * 0.92);
       g.fill({
-        color: this.paletteColor(
-          this.chainBaseHex[hostArm.chain],
-          this.paintUAt(hostArm.chain, hostArm.slot)
+        color: this.paletteColor2(
+          this.paintUAt(hostArm.chain, hostArm.slot),
+          this.sectionVAt(hostArm.chain, hostArm.slot)
         ),
       });
 

@@ -1,6 +1,9 @@
 // URL-as-complete-state: every design is fully specified by (seed, params)
 // serialized in the query string.
 
+import type { ColorScheme } from "../core/section_colors";
+import { COLOR_SCHEMES } from "../core/section_colors";
+
 export interface UrlParams {
   seed: number;
   gridSize: number;
@@ -25,9 +28,10 @@ export interface UrlParams {
   // Dead-end stubs in the fabric (classic wrong-turn spurs). OFF by default:
   // a pure braided maze where every wrong turn loops back.
   deadEnds: boolean;
-  // Render each thread region in its own hue. OFF by default: the whole
-  // fabric wears one color (gameplay paint stays distinct regardless).
-  multiColor: boolean;
+  // Section color scheme (fabric mode; knot mode supports mono/strands):
+  // mono | strands | depth | segments | noise. Replaces the old multiColor
+  // checkbox (mc=1 reads as "strands").
+  colorScheme: ColorScheme;
 }
 
 export const DEFAULTS = {
@@ -84,8 +88,17 @@ export function readParams(): UrlParams {
     mazeMode: readNumber(query, "md", 0) > 0.5,
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
     deadEnds: readNumber(query, "de", 0) > 0.5,
-    multiColor: readNumber(query, "mc", 0) > 0.5,
+    colorScheme: readScheme(query),
   };
+}
+
+function readScheme(query: URLSearchParams): ColorScheme {
+  const raw = query.get("cs");
+  if (raw && (COLOR_SCHEMES as string[]).includes(raw)) {
+    return raw as ColorScheme;
+  }
+  // Back-compat: the old multiColor checkbox.
+  return readNumber(query, "mc", 0) > 0.5 ? "strands" : "mono";
 }
 
 export function writeParams(params: UrlParams): void {
@@ -109,6 +122,6 @@ export function writeParams(params: UrlParams): void {
   query.set("md", params.mazeMode ? "1" : "0");
   query.set("mf", params.mazeFabric ? "1" : "0");
   query.set("de", params.deadEnds ? "1" : "0");
-  query.set("mc", params.multiColor ? "1" : "0");
+  query.set("cs", params.colorScheme);
   history.replaceState(null, "", `?${query.toString()}`);
 }
