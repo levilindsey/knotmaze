@@ -35,8 +35,9 @@ const HEAD_EXCLUDE = 0.7;
 // Traversal animation: a CONSTANT base rate (deliberately independent of
 // the run's length - long runs take proportionally longer), slowed through
 // bends like natural motion: the live rate is base / (1 + k * turn), where
-// turn is the local bend angle per ctrl at the dot's position.
-const MOVE_CTRL_PER_S = 20;
+// turn is the local bend angle per ctrl at the dot's position. The user's
+// moveSpeed slider multiplies the base.
+const MOVE_CTRL_PER_S = 34;
 const MOVE_CURVE_SLOWDOWN = 2.2; // Per radian-per-ctrl of local turn.
 const MOVE_MIN_FACTOR = 0.3;
 
@@ -58,6 +59,9 @@ export class FabricMazeRenderer {
   private hoverEdge = -1;
   private anim: MoveAnim | null = null;
   private scratch = new Float32Array(2);
+  // Live traversal-speed multiplier (the moveSpeed slider; main.ts keeps
+  // it synced every tick).
+  moveSpeed = 1;
 
   constructor(
     ps: ParticleSystem,
@@ -213,7 +217,7 @@ export class FabricMazeRenderer {
       1 / (1 + MOVE_CURVE_SLOWDOWN * turn)
     );
 
-    a.cur += dir * MOVE_CTRL_PER_S * factor * dt;
+    a.cur += dir * MOVE_CTRL_PER_S * this.moveSpeed * factor * dt;
     if ((dir > 0 && a.cur >= a.to) || (dir < 0 && a.cur <= a.to)) {
       this.anim = null;
       this.update(controller);
@@ -303,7 +307,10 @@ export class FabricMazeRenderer {
   // solved.
   private buildCaps(controller: FabricMazeController): PaintCap[] {
     const caps: PaintCap[] = [];
-    const capR = Math.max(0.3, this.threadWidth * 0.95);
+    // Just enough to cover the overlap footprint at the junction center
+    // (~half a thread width): the tuck + fillets own the joint geometry
+    // now, and bigger caps painted gold ticks on every unchosen side arm.
+    const capR = Math.max(0.22, this.threadWidth * 0.6);
     const seenCap = new Set<string>();
     const nVisited =
       controller.pathVertices.length - (controller.solved ? 0 : 1);

@@ -150,6 +150,10 @@ export function buildPanel(
     "Dead ends: some loops become long threads that end, somewhere far away, in a loose tip. Off = a pure braided maze where every wrong turn loops back. Regenerates the maze."
   ).on("change", callbacks.onModeChange);
   tip(
+    pane.addBinding(params, "moveSpeed", { min: 0.25, max: 4, step: 0.05 }),
+    "Maze travel speed: how fast the dot and the gold front move along the thread. Applies live."
+  ).on("change", callbacks.onSlackChange);
+  tip(
     pane.addButton({ title: "Reset path" }),
     "Clear the traced maze path and start over from the entrance."
   ).on("click", callbacks.onResetPath);

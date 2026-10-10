@@ -510,6 +510,7 @@ async function main(): Promise<void> {
     // physics or splines.
     const fabricTick = (): void => {
       if (params.mazeFabric && fabric && fabricController) {
+        fabric.moveSpeed = params.moveSpeed;
         fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
         if (pendingWin && !fabric.animating) {
           pendingWin = false;

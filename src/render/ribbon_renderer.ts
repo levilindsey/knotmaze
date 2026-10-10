@@ -109,8 +109,15 @@ const PULSE_SPEED = 1.6;
 // and outbound (base-band) arms converge to a near-common bright tone
 // instead of meeting in two visibly different mid-tints.
 const PULSE_FLOOR = 0.38;
-const PULSE_CORE_BOOST = 0.5;
+// Core reaches FULL band strength at d=0 (0.38 + 0.62 = 1), where both
+// bands are the same near-white accent - see buildPalettePixels.
+const PULSE_CORE_BOOST = 0.62;
 const PULSE_CORE_RADIUS = 0.55;
+// Crest amplitude ramps with its distance from the junction: an outbound
+// crest swells OUT of the core glow instead of being born full-strength
+// (the reported abrupt onset), and symmetrically the inbound crest
+// submerges into it.
+const CREST_RAMP = 0.5;
 const PULSE_END_WINDOW = 0.45;
 // JUNCTION JOINERY. Fused arms (bridge/stub/merge terminals) tuck their
 // rendered tip back by the host's half-width so the ribbon lands flush on
@@ -181,15 +188,19 @@ function buildPalettePixels(base: number): Uint8Array {
     px[i * 4 + 2] = hex & 255;
     px[i * 4 + 3] = 255;
   };
+  // Both bands converge to the SAME near-white accent (0.94 toward white)
+  // so that at full strength - the junction core - the inbound gold band,
+  // the outbound base bands, and every flat-colored overlay (discs,
+  // fillets) meet in one color; family tints only separate mid-arm.
   for (let i = 0; i < 112; i++) {
-    put(i, mixHex(base, 0xffffff, 0.85 * (1 - i / 111)));
+    put(i, mixHex(base, 0xffffff, 0.94 * (1 - i / 111)));
   }
   for (let i = 112; i < 118; i++) put(i, base);
   for (let i = 118; i < 124; i++) put(i, PATH_GOLD);
   for (let i = 124; i < 236; i++) {
-    put(i, mixHex(PATH_GOLD, 0xffffff, (0.8 * (i - 124)) / 111));
+    put(i, mixHex(PATH_GOLD, 0xffffff, (0.94 * (i - 124)) / 111));
   }
-  for (let i = 236; i < 256; i++) put(i, mixHex(PATH_GOLD, 0xffffff, 0.8));
+  for (let i = 236; i < 256; i++) put(i, mixHex(PATH_GOLD, 0xffffff, 0.94));
   return px;
 }
 
@@ -1603,7 +1614,9 @@ export class RibbonRenderer {
       // s in [0, R0) is the inbound half of the cycle, [R0, 2R0) outbound.
       if (inward !== sPh < R0) continue;
       const dC = inward ? R0 - sPh : sPh - R0;
-      const b = 1 - Math.abs(d - dC) / CREST_WIDTH;
+      const b =
+        (1 - Math.abs(d - dC) / CREST_WIDTH) *
+        Math.min(1, dC / CREST_RAMP);
       if (b > bump) bump = b;
     }
     const floor =
@@ -1692,13 +1705,22 @@ export class RibbonRenderer {
     g.clear();
     const fillHalf = this.style.threadWidth / 2;
 
+    // Tip positions read the ENDPOINT SAMPLE directly: sampleAt wraps its
+    // arc modulo totalLength, so asking it for arc == total lands at arc 0
+    // - every atEnd tip disc rendered at its chain's START, carrying the
+    // far end's host color across the thread (the floating gold/pale dot
+    // reports; the arcAt terminal-wrap bug's sibling).
+    const tipXY = (samples: SplineSamples, atEnd: boolean): void => {
+      const k = atEnd ? samples.count - 1 : 0;
+      this.sampleScratch[0] = samples.positions[k * 2];
+      this.sampleScratch[1] = samples.positions[k * 2 + 1];
+    };
     // Rounded caps: dead-end tips get a disc at the terminal colored from
     // their own live paint (nothing overlaps a free tip).
     for (const tip of this.freeTips) {
       const samples = this.chainSamples[tip.chain];
       if (!samples) continue;
-      const arc = tip.atEnd ? samples.totalLength : 0;
-      this.sampleAt(samples, arc, this.sampleScratch, 0);
+      tipXY(samples, tip.atEnd);
       const ctrl = tip.atEnd ? this.ps.chains[tip.chain].length - 1 : 0;
       g.circle(this.sampleScratch[0], this.sampleScratch[1], fillHalf * 0.99);
       g.fill({
@@ -1715,8 +1737,7 @@ export class RibbonRenderer {
     for (const tip of this.fusedTips) {
       const samples = this.chainSamples[tip.chain];
       if (!samples) continue;
-      const arc = tip.atEnd ? samples.totalLength : 0;
-      this.sampleAt(samples, arc, this.sampleScratch, 0);
+      tipXY(samples, tip.atEnd);
       g.circle(this.sampleScratch[0], this.sampleScratch[1], fillHalf * 0.99);
       g.fill({
         color: this.paletteColor(
@@ -1777,6 +1798,27 @@ export class RibbonRenderer {
         });
       }
       if (arms.length < 2) continue;
+
+      // Seal the junction center with a host-colored disc under the
+      // fillets: the concave-side miter clamp can thin a host ribbon at a
+      // bend, opening a nick between a tucked cap and the receded edge
+      // regardless of tuck depth. Color from a pass-through occurrence
+      // (one with both directions present), the thread the disc lies on.
+      let hostArm = jn.arms[0];
+      const seen = new Map<string, number>();
+      for (const a of jn.arms) {
+        const key = `${a.chain}:${a.slot}`;
+        seen.set(key, (seen.get(key) ?? 0) + 1);
+        if (seen.get(key) === 2) hostArm = a;
+      }
+      g.circle(jx, jy, fillHalf * 0.92);
+      g.fill({
+        color: this.paletteColor(
+          this.chainBaseHex[hostArm.chain],
+          this.paintUAt(hostArm.chain, hostArm.slot)
+        ),
+      });
+
       arms.sort((p, q) => p.ang - q.ang);
 
       for (let k = 0; k < arms.length; k++) {
@@ -1784,23 +1826,35 @@ export class RibbonRenderer {
         const B = arms[(k + 1) % arms.length];
         let gap = B.ang - A.ang;
         if (k === arms.length - 1) gap += Math.PI * 2;
-        if (gap < 0.25 || gap > FILLET_MAX_WEDGE) continue;
+        // Only the near-straight pass-through side gets no fillet (a patch
+        // across ~180 degrees would bulge off the host's far edge).
+        if (gap > FILLET_MAX_WEDGE) continue;
 
         // A's wedge-facing edge is its LEFT edge; B's is its RIGHT edge.
         const o1x = jx - A.dy * w;
         const o1y = jy + A.dx * w;
         const o2x = jx + B.dy * w;
         const o2y = jy - B.dx * w;
+        // Corner = the edge intersection when it is sane; otherwise (near-
+        // parallel arms - junction arms relax to shallow angles, nothing
+        // constrains them - or a curvature-displaced corner) fall back to
+        // the midpoint between the edge origins, which collapses the
+        // fillet into a sliver-filling patch instead of SKIPPING and
+        // leaving the reported V-notch holes between shallow arms.
         const denom = A.dx * B.dy - A.dy * B.dx;
-        if (Math.abs(denom) < 0.08) continue;
-        const rx = o2x - o1x;
-        const ry = o2y - o1y;
-        const t = (rx * B.dy - ry * B.dx) / denom;
-        const s = (rx * A.dy - ry * A.dx) / denom;
         const lim = w * FILLET_CORNER_LIM;
-        if (t < -w * 0.5 || t > lim || s < -w * 0.5 || s > lim) continue;
-        const cx = o1x + A.dx * t;
-        const cy = o1y + A.dy * t;
+        let cx = (o1x + o2x) / 2;
+        let cy = (o1y + o2y) / 2;
+        if (Math.abs(denom) >= 0.08) {
+          const rx = o2x - o1x;
+          const ry = o2y - o1y;
+          const t = (rx * B.dy - ry * B.dx) / denom;
+          const s = (rx * A.dy - ry * A.dx) / denom;
+          if (t >= -w * 0.5 && t <= lim && s >= -w * 0.5 && s <= lim) {
+            cx = o1x + A.dx * t;
+            cy = o1y + A.dy * t;
+          }
+        }
 
         const pax = o1x + A.dx * L;
         const pay = o1y + A.dy * L;
