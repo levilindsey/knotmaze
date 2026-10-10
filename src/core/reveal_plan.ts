@@ -37,12 +37,14 @@ export type AppearMode = (typeof APPEAR_MODES)[number];
 
 // Frontier particle styles for the appearance animation (Stage 26). The
 // effect itself is render-side (render/appear_fx); the list lives here
-// beside APPEAR_MODES so ui/url_state stays pixi-free. none | sparks
-// (warm ember spray) | comet (ice-white streaked head) | dust (slow
-// twinkling pastel motes).
+// beside APPEAR_MODES so ui/url_state stays pixi-free. none | rainbow
+// (6-stripe rainbow riding the fresh thread + saturated spark spray;
+// formerly "sparks" - a legacy afx=sparks URL falls back to the default,
+// which is this mode anyway) | comet (blue-green streaked head, thread
+// fades in behind) | dust (twinkling motes, thread fades in).
 export const APPEAR_FX_MODES = [
   "none",
-  "sparks",
+  "rainbow",
   "comet",
   "dust",
   "burn",

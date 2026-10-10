@@ -125,8 +125,9 @@ export interface UrlParams {
   appearMode: AppearMode;
   appearSpeed: number; // [0.3, 4] reveal frontier speed multiplier.
   // Frontier particle effect while the appearance animation runs: none |
-  // sparks (warm embers) | comet (ice-white streaked head) | dust (slow
-  // twinkling motes). Inert when appearMode is instant; applies live.
+  // rainbow (6-stripe rainbow on the fresh thread + saturated sparks) |
+  // comet (blue-green streaked head) | dust (twinkling motes) | burn |
+  // roots. Inert when appearMode is instant; applies live.
   appearFx: AppearFxMode;
 }
 
@@ -194,7 +195,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   pitchSpace: "pentMinor",
   pluckStyle: "string",
   appearMode: "instant",
-  appearFx: "sparks",
+  appearFx: "rainbow",
 };
 
 export function newSeed(): number {
@@ -270,7 +271,9 @@ export function readParams(): UrlParams {
     colorScheme: readScheme(query),
     appearMode: readAppear(query),
     appearSpeed: readNumber(query, "as", DEFAULTS.appearSpeed),
-    appearFx: readChoice(query, "afx", APPEAR_FX_MODES, "sparks"),
+    // Legacy afx=sparks URLs fall through readChoice's validation to the
+    // default, which is the renamed mode itself.
+    appearFx: readChoice(query, "afx", APPEAR_FX_MODES, "rainbow"),
   };
 }
 

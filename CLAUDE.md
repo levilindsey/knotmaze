@@ -381,19 +381,64 @@ between-threads/cell-passage route.
   Agent also flagged (unverified): easePassToward's seam-end guard
   skips/mis-clamps the two terminal passes of open chains -
   pre-existing, needs its own measured look.
-- JUNCTION CLEARANCE (fix A) + TWO-LAYER FILLETS (fix B), same round:
-  junctions were invisible to the crossing bookkeeping, so gap cuts +
-  fade tails marched into seal discs/webs (worse with gap, fl, cr) -
-  every fused joint now acts as a VIRTUAL NEIGHBOR on its arm chains
-  (junctionArcCtrls; march sMax + per-side fade room capped by
-  jointClear = max(1.1*fillHalf, 0.85*wedge reach) + gap + CUT_BIAS);
-  and a foreign thread diving UNDER an arm had its erase swath clip
-  the web (swath wider than the arm fill repaints) - fillets split
-  onto TWO TriFanMeshes, the top one ABOVE the erase/fill stack for
-  junctions voted "arm-over" vs nearby crossings (arm-under keeps the
-  bottom layer so the joint's own gap still punches; bottom wins
-  conflicts). Probe note: layer-toggle attribution must now hide BOTH
-  filletMesh and filletTopMesh.
+- JUNCTION CLEARANCE (fix A) + TWO-LAYER FILLETS (fix B), same round,
+  REFIT in e78909c: junctions were invisible to the crossing
+  bookkeeping, so gap cuts + fade tails marched into seal discs/webs
+  (worse with gap, fl, cr) - every fused joint acts as a VIRTUAL
+  NEIGHBOR on its arm chains (junctionArcCtrls). The clearance caps
+  ONLY the cosmetic margin (floored at half a band - zero margin read
+  as a "busted gap on one side") and the fade room; the MARCH is never
+  capped (capping it truncated real coverage = ragged twists near
+  big-cr joints - the P3.36/P3.40 theorem). jointClear = max(1.1 *
+  fillHalf, 0.55 * wedge reach) + gap + CUT_BIAS; a squeezed side's
+  fade keeps >= FADE_JOINT_FLOOR 0.45 of fadeLength (zero room
+  rendered skinny + ABRUPT beside the twin side's full roll-off).
+  Fillets split onto TWO TriFanMeshes: filletTopLayer sits ABOVE the
+  erases but BELOW the over fills (above the fills, its field
+  approximation overpainted them - "discontinuous intersection
+  blends"); per-ARM votes pick each wedge's layer (arm-under keeps the
+  bottom layer so the joint's own gap still punches). Fan apex = mean
+  of the arms' arc0 SAMPLES (the flow-offset physics centroid drifted
+  0.06 world off the flanks - ear slivers), fan colors composed CPU-
+  side (raw U across band families swept phantom gold mid-triangle).
+  Probe note: layer-toggle attribution must hide BOTH filletMesh and
+  filletTopMesh.
+- FX + FEEL rounds (e78909c, 877ee00): RENDER-ONLY PLUCK RING - physics
+  releases at pointer-up and a damped standing wave displaces ONLY the
+  plucked chain's render controls (cos^2 window PLUCK_WAVE_R 3.0), so
+  crossing partners hold still (measured 0.525 vs 0.015 world/frame;
+  the grab-driven ring shook the neighborhood through the couplings).
+  `snappiness` (snpy=) scales FREQUENCY only (x(0.35+1.8s), capped 24Hz
+  under the 60fps Nyquist - past it the render-sampled ring aliases
+  into a slow beat); decay stays 0.55s (a taut string rings fast AND
+  long). BURN + ROOTS appearFx as TEMPORAL COOLING: per-sample ignition
+  ages in ping-pong pools (writePaint's reference skip froze a single
+  mutated scratch); tip-POSITION-keyed gradients popped whenever a
+  front finished, ages cannot; cooling outlives the reveal; joinery
+  reads the pools via colorAtArc. Per-style reveal shaping lives in
+  revealShape() (comet/rainbow taper x8 with width floors, roots x16).
+- APPEARANCE FX round 3 + LIVE RECOLOR (2026-10-10): `sparks` RENAMED
+  `rainbow` (afx=sparks falls back to the default, which is rainbow):
+  six stripes across the ribbon width (vUV.y in the section shader)
+  under a white-hot tip (the reveal glow), then a faded-white wash,
+  then the section color; full-wheel saturated sparks. Mechanism = a
+  per-vertex `aFx` channel, SIGN-CODED ((0,1] rainbow progress,
+  [-1,0) materialize transparency), copied into over-fills; every
+  geometry drawn with the section shader must carry aFx. dust + comet
+  MATERIALIZE from transparent. OVERLAYS VS FX: fans fade in only as
+  their least-settled arm settles (opaque fans over translucent or
+  striped arms read as pale stars); crossings wait for both passes to
+  go solid (a fill copying a translucent host double-covers its window
+  beyond the erase); every reveal-gated gap FADES IN over 0.3s (erase
+  mesh alpha) instead of popping. SUB-FRAME IGNITION: FX ages are
+  back-dated by taper depth - igniting everything one frame exposed at
+  age 0 stepped the effect once per frame of front travel (bands
+  along every fresh thread). Comet streaks lie along the host thread
+  (tip-backward polyline, local tangents), blue..blue-green tints;
+  dust x2 (pool 1200); roots dirt x2 + bigger; hover breathes
+  0.2..0.8. Look color controls (scheme/hue/gamut/palette/pathColor)
+  now RECOLOR IN PLACE (renderer.recolor) - the rebuild they used to
+  trigger reset the knot, replayed the reveal and wiped progress.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
@@ -411,6 +456,16 @@ the recorded plan, then WASM collision narrow-phase (2-4x on the ~40%
 slice); never color the Gauss-Seidel solver. Micro: hypot→sqrt in
 sampleAt/evalSegment/RibbonMesh.update (est 1-2ms), optional
 ticker-stop when fully asleep.
+
+RENDER LORE (hard-won, 2026-10-10): **a custom pixi shader ignores
+mesh.texture.** Pixi v8's Mesh texture setter only updates
+`shader.texture` (bookkeeping) and GlMeshAdaptor binds uTexture from
+mesh.texture for the DEFAULT shader only, so the shared section shader
+kept the strip it was created with: `pathColor` NEVER reached the
+ribbons (default gold), while the CPU-composed fillet fans used the real
+pathColor - olive fans on gold paths at a khaki pc= (the user's "olive
+smudges"). Any texture a shared custom shader samples must be bound via
+its resources (`bindAccent`).
 
 RENDER LORE (hard-won, 2026-10-09): **flat fills cannot represent a
 field.** Once per-vertex V blending exists, ANY flat-colored overlay

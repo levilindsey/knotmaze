@@ -33,7 +33,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4: shaped lattices 2026-10-10";
+const BUILD_STAMP = "P4: rainbow + materialize FX, live recolor 2026-10-10";
 
 // Appearance pre-sim: with any non-instant appear mode the sim settles
 // briefly BEFORE the first rendered frame, so the reveal plays over a
@@ -80,6 +80,10 @@ async function main(): Promise<void> {
   let renderer: RibbonRenderer | null = null;
   let debug: DebugRenderer | null = null;
   let walkGraph: WalkGraph | null = null;
+  // The build's strand hue groups (maze plan; undefined in knot mode) +
+  // strand count, kept for live recolors (the Look color controls).
+  let buildHueGroup: number[] | undefined;
+  let buildStrandCount = 0;
   let fabric: FabricMazeRenderer | null = null;
   let fabricController: FabricMazeController | null = null;
   // Stage 22: the running appearance animation (null = instant / done
@@ -228,6 +232,8 @@ async function main(): Promise<void> {
     }
 
     ps = new ParticleSystem(graph);
+    buildHueGroup = hueGroup;
+    buildStrandCount = graph.strands.length;
 
     // Color space for this build: seed hue rotated by hueShift; arc width
     // and palette preset configure gamutRgb for every consumer (schemes
@@ -448,6 +454,36 @@ async function main(): Promise<void> {
       }
       updateHud();
       writeParams(params);
+    },
+    // Look color controls: recolor the live scene in place (the full
+    // rebuild they used to trigger reset the knot, replayed the reveal and
+    // wiped the player's progress for a hue tweak).
+    onRecolor: () => {
+      if (renderer && ps) {
+        const effHue =
+          (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
+        setGamutConfig(params.gamutArc, params.palette);
+        renderer.recolor(
+          effHue,
+          parseInt(params.pathColor.slice(1), 16),
+          params.colorScheme === "strands"
+            ? buildHueGroup
+            : new Array<number>(buildStrandCount).fill(0),
+          buildSectionField(
+            params.colorScheme,
+            walkGraph,
+            ps.chains.map((c) => c.length),
+            buildHueGroup,
+            params.seed,
+            effHue
+          ),
+          params.colorScheme,
+          params.seed
+        );
+        if (fabric && fabricController) fabric.update(fabricController);
+      }
+      writeParams(params);
+      wake();
     },
     onModeChange: () => {
       // Mode changes alter the graph TOPOLOGY (fabric surgery, color
@@ -695,7 +731,9 @@ async function main(): Promise<void> {
       // oscillation shook the whole neighborhood through the crossing
       // couplings, the "too much overall jiggle" report) and paint the
       // visible vibration as a damped standing wave on the render
-      // controls. snappiness scales frequency AND tightens decay.
+      // controls. snappiness scales FREQUENCY ONLY - a taut string
+      // rings fast but just as long, so the decay stays fixed (the
+      // earlier tau tightening made snappy plucks die instantly).
       const p = ps.grabbedParticle;
       const px = p >= 0 ? ps.positions[p * 2] : grabOrigin[0];
       const py = p >= 0 ? ps.positions[p * 2 + 1] : grabOrigin[1];
@@ -716,8 +754,10 @@ async function main(): Promise<void> {
         ax,
         ay,
         Math.min(amp, 0.6),
-        hz * (0.6 + 1.3 * s),
-        0.55 - 0.4 * s
+        // Capped well under the ~30Hz Nyquist of a 60fps display - past
+        // it the render-sampled ring aliases into a slow beat wobble.
+        Math.min(24, hz * (0.35 + 1.8 * s)),
+        0.55
       );
       snapMode = "none";
       ps.release();

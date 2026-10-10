@@ -23,6 +23,25 @@ function addColorAttribute(
   });
 }
 
+// Per-vertex appearance-FX weight (palette mode; see the section shader):
+// 0 = inert, (0, 1] = rainbow-stripe blend over the section color,
+// [-1, 0) = transparency (alpha = 1 + fx) - the dust/comet materialize
+// fade. Sign-coding keeps the shared shader uniform-free. Every geometry
+// drawn with the section shader MUST carry the attribute (fan meshes get
+// a constant-zero buffer).
+function addFxAttribute(geometry: MeshGeometry, data: Float32Array): void {
+  geometry.addAttribute("aFx", {
+    buffer: new Buffer({
+      data,
+      label: "attribute-appear-fx",
+      usage: BufferUsage.VERTEX | BufferUsage.COPY_DST,
+    }),
+    format: "float32",
+    stride: 4,
+    offset: 0,
+  });
+}
+
 export class RibbonMesh {
   mesh: Mesh;
   readonly sampleCount: number;
@@ -36,6 +55,10 @@ export class RibbonMesh {
   // are static between scene rebuilds, so repeated paint ticks skip the
   // color fill + upload entirely.
   private lastColors: Float32Array | null = null;
+  // Per-vertex appearance-FX weight (palette mode only). `fxZero` makes
+  // the null-input path a one-compare no-op once the buffer is cleared.
+  private fxData: Float32Array | null = null;
+  private fxZero = true;
   private readonly closed: boolean;
 
   constructor(
@@ -76,6 +99,8 @@ export class RibbonMesh {
     if (paint) {
       this.colorData = new Float32Array(sampleCount * 6);
       addColorAttribute(geometry, this.colorData);
+      this.fxData = new Float32Array(sampleCount * 2);
+      addFxAttribute(geometry, this.fxData);
     }
     this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
     this.mesh.tint = color;
@@ -200,6 +225,35 @@ export class RibbonMesh {
     this.lastColors = colors;
   }
 
+  // Forget the last writePaint colors source so the next call re-uploads
+  // even when handed the SAME array (an in-place recolor mutates shared
+  // constant-color triplets, which the reference skip would miss).
+  invalidateColors(): void {
+    this.lastColors = null;
+  }
+
+  // Per-sample appearance-FX weights (both verts share). null = clear;
+  // repeated nulls cost one compare. Hot chains re-upload every call -
+  // the weights animate (ages tick), so no reference skip applies.
+  setFx(fx: ArrayLike<number> | null): void {
+    const fd = this.fxData;
+    if (!fd) return;
+    if (!fx) {
+      if (this.fxZero) return;
+      fd.fill(0);
+      this.mesh.geometry.getBuffer("aFx").update();
+      this.fxZero = true;
+      return;
+    }
+    for (let i = 0; i < this.sampleCount; i++) {
+      const w = fx[i];
+      fd[i * 2] = w;
+      fd[i * 2 + 1] = w;
+    }
+    this.mesh.geometry.getBuffer("aFx").update();
+    this.fxZero = false;
+  }
+
   // Copy a wrapped window of another ribbon's computed vertices into this
   // patch mesh, repeating the last pair to fill unused stations. Because the
   // vertices are byte-identical to the source ribbon's, the patch silhouette
@@ -216,6 +270,14 @@ export class RibbonMesh {
     const n = source.sampleCount;
     const copyColors =
       copyUVs && this.colorData !== null && source.colorData !== null;
+    // FX rides along like the colors (the rainbow stripes / materialize
+    // fade must recolor the over-fill patch pixel-identically with its
+    // host); a zero source into an already-zero patch is a no-op.
+    const copyFx =
+      copyUVs &&
+      this.fxData !== null &&
+      source.fxData !== null &&
+      !(source.fxZero && this.fxZero);
     for (let i = 0; i < this.sampleCount; i++) {
       const j = Math.min(i, sampleSpan - 1);
       const s = (((startSample + j) % n) + n) % n;
@@ -234,12 +296,20 @@ export class RibbonMesh {
           this.colorData![i * 6 + k] = source.colorData![s * 6 + k];
         }
       }
+      if (copyFx) {
+        this.fxData![i * 2] = source.fxData![s * 2];
+        this.fxData![i * 2 + 1] = source.fxData![s * 2 + 1];
+      }
     }
     this.mesh.geometry.getBuffer("aPosition").update();
     if (copyUVs) this.mesh.geometry.getBuffer("aUV").update();
     if (copyColors) {
       this.mesh.geometry.getBuffer("aColor").update();
       this.lastColors = null; // Buffer no longer mirrors a writePaint call.
+    }
+    if (copyFx) {
+      this.mesh.geometry.getBuffer("aFx").update();
+      this.fxZero = source.fxZero;
     }
   }
 
@@ -338,6 +408,13 @@ export class TriFanMesh {
   private uvData: Float32Array;
   private colorData: Float32Array;
   private indexData: Uint32Array;
+  // Per-vertex appearance-FX weight, constant per fan (fans only ever
+  // carry the materialize TRANSPARENCY - stripes need the ribbon's V
+  // axis). Uploads only while some fan is non-inert, plus one frame to
+  // clear.
+  private fxData: Float32Array;
+  private fxAny = false;
+  private fxWas = false;
   private vUsed = 0;
   private iUsed = 0;
 
@@ -345,6 +422,7 @@ export class TriFanMesh {
     this.vertexData = new Float32Array(vertexCapacity * 2);
     this.uvData = new Float32Array(vertexCapacity * 2);
     this.colorData = new Float32Array(vertexCapacity * 3);
+    this.fxData = new Float32Array(vertexCapacity);
     this.indexData = new Uint32Array(indexCapacity);
     const geometry = new MeshGeometry({
       positions: this.vertexData,
@@ -352,17 +430,20 @@ export class TriFanMesh {
       indices: this.indexData,
     });
     addColorAttribute(geometry, this.colorData);
+    addFxAttribute(geometry, this.fxData);
     this.mesh = new Mesh({ geometry, texture });
   }
 
   begin(): void {
     this.vUsed = 0;
     this.iUsed = 0;
+    this.fxAny = false;
     this.indexData.fill(0);
   }
 
   // Emit one fan around an apex. `rim` is flat [x, y, u, r, g, b] per
   // vertex, in winding order; triangles are (apex, rim[i], rim[i+1]).
+  // `fx` (whole fan): 0 = inert, [-1, 0) = materialize transparency.
   pushFan(
     apexX: number,
     apexY: number,
@@ -370,7 +451,8 @@ export class TriFanMesh {
     apexR: number,
     apexG: number,
     apexB: number,
-    rim: number[]
+    rim: number[],
+    fx = 0
   ): void {
     const rimCount = rim.length / 6;
     if (
@@ -387,6 +469,8 @@ export class TriFanMesh {
     this.colorData[apex * 3] = apexR;
     this.colorData[apex * 3 + 1] = apexG;
     this.colorData[apex * 3 + 2] = apexB;
+    this.fxData.fill(fx, apex, apex + rimCount + 1);
+    if (fx !== 0) this.fxAny = true;
     for (let i = 0; i < rimCount; i++) {
       const k = this.vUsed + i;
       this.vertexData[k * 2] = rim[i * 6];
@@ -409,6 +493,10 @@ export class TriFanMesh {
     this.mesh.geometry.getBuffer("aPosition").update();
     this.mesh.geometry.getBuffer("aUV").update();
     this.mesh.geometry.getBuffer("aColor").update();
+    if (this.fxAny || this.fxWas) {
+      this.mesh.geometry.getBuffer("aFx").update();
+    }
+    this.fxWas = this.fxAny;
     this.mesh.geometry.getIndex().update();
   }
 }

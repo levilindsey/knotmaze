@@ -3,7 +3,7 @@
 // frontier (reveal tip, or ink dye edge) emits particles from one pooled,
 // Float32Array-backed system rendered on a single ParticleContainer above
 // the ribbons. Styles (the `afx` URL param / appearFx dropdown):
-//   sparks - warm ember spray ahead of the front: gravity + drag, a
+//   rainbow - saturated full-spectrum spray ahead of the front: gravity + drag, a
 //            white-hot -> gold -> ember tint ramp (echoes the game's gold
 //            path accent), fast young sparks stretch along their velocity
 //            and contract to dots (the classic speed read).
@@ -42,7 +42,9 @@ import { Particle, ParticleContainer, Texture } from "pixi.js";
 import type { AppearFxMode } from "../core/reveal_plan";
 import { SeededRNG } from "../util/random";
 
-export const MAX_FX_PARTICLES = 600;
+// 1200: dust at 380/s x ~0.5s life x several frontiers saturated the
+// original 600 pool, which silently capped the requested density.
+export const MAX_FX_PARTICLES = 1200;
 
 // Pool row layout (Float32 fields). Tints are 24-bit hex values, exact in
 // f32 (integers through 2^24).
@@ -76,9 +78,9 @@ const SPARK_RATE = 150;
 const STREAK_RATE = 130;
 const HALO_RATE = 70;
 const FLECK_RATE = 30;
-// Dust: DENSE and short-lived per request - a busy glitter cloud that
-// churns instead of lingering.
-const DUST_RATE = 190;
+// Dust: DENSE and short-lived per request (doubled again 2026-10-10) -
+// a busy glitter cloud that churns instead of lingering.
+const DUST_RATE = 380;
 
 // Comet/dust emit AHEAD of the reveal frontier (world units along the
 // travel direction): the effect announces the thread, whose own
@@ -92,11 +94,13 @@ const DUST_LEAD = 0.6;
 // gradient lives in the renderer's applyBurnColors).
 const SMOKE_RATE = 40;
 const BURN_SPARK_RATE = 36;
-const ROOTS_RATE = 55;
+// Doubled + enlarged 2026-10-10 per request (dirt reads as a real spray
+// now, not an accent).
+const ROOTS_RATE = 110;
 const SMOKE_DRAG = 0.8;
 const SMOKE_RISE = 0.5; // World units/s^2 of buoyancy.
 
-// hue [0,360), s/l [0,1] -> 0xrrggbb (sparks' rainbow tints).
+// hue [0,360), s/l [0,1] -> 0xrrggbb (rainbow/comet particle tints).
 function hslHex(h: number, s: number, l: number): number {
   const k = (n: number): number => (n + h / 30) % 12;
   const a = s * Math.min(l, 1 - l);
@@ -161,7 +165,7 @@ export class AppearFxSystem {
   // Live style for NEW spawns (per-row kinds persist, so switching the
   // dropdown mid-reveal lets the old population finish while fresh
   // particles wear the new look).
-  style: Exclude<AppearFxMode, "none"> = "sparks";
+  style: Exclude<AppearFxMode, "none"> = "rainbow";
   // World-units size reference (the thread width); the renderer syncs it.
   unit = 0.42;
 
@@ -221,13 +225,21 @@ export class AppearFxSystem {
   // Emit this frame's particles for ONE frontier: (x, y) world position,
   // (dx, dy) travel direction (normalized here), frontSpeed in world
   // units/s. Call once per frontier per frame, then tick(dt) once.
+  // `path` (optional, comet): a flat [x, y, ...] polyline of `pathPts`
+  // points sampled along the HOST THREAD, ordered from the tip BACKWARD
+  // over the revealed side - streaks birth along it and orient to its
+  // local tangents, so the ensemble follows the thread's curve. The
+  // caller may reuse one scratch array across frontiers (consumed
+  // synchronously).
   spawnFrontier(
     x: number,
     y: number,
     dx: number,
     dy: number,
     frontSpeed: number,
-    dt: number
+    dt: number,
+    path: Float32Array | null = null,
+    pathPts = 0
   ): void {
     const n = Math.sqrt(dx * dx + dy * dy);
     if (n > 1e-6) {
@@ -238,10 +250,10 @@ export class AppearFxSystem {
       dx = Math.cos(a);
       dy = Math.sin(a);
     }
-    if (this.style === "sparks") {
+    if (this.style === "rainbow") {
       this.emitSparks(x, y, dx, dy, frontSpeed, dt);
     } else if (this.style === "comet") {
-      this.emitComet(x, y, dx, dy, frontSpeed, dt);
+      this.emitComet(x, y, dx, dy, frontSpeed, dt, path, pathPts);
     } else if (this.style === "burn") {
       this.emitBurn(x, y, dx, dy, dt);
     } else if (this.style === "roots") {
@@ -281,7 +293,7 @@ export class AppearFxSystem {
       d[o + PVY] = (dx * sn + dy * cs) * sp + 0.2;
       d[o + PAGE] = 0;
       d[o + PLIFE] = 0.18 + R.next() * 0.3;
-      d[o + PSIZE] = tw * (0.05 + R.next() * 0.08);
+      d[o + PSIZE] = tw * (0.09 + R.next() * 0.14);
       d[o + PKIND] = K_SPARK;
       d[o + PROT] = 0;
       d[o + PC0] = R.next() < 0.5 ? 0x6b4a2f : 0x57402a;
@@ -334,13 +346,13 @@ export class AppearFxSystem {
       d[o + PSIZE] = tw * (0.1 + R.next() * 0.15) * (hot ? 1.6 : 1);
       d[o + PKIND] = K_SPARK;
       d[o + PROT] = 0;
-      // Rainbow-ish sparks, biased toward blue: ~55% land in the
-      // blue-violet band, the rest anywhere on the wheel. Birth is the
-      // hue pulled most of the way to white (still reads white-hot).
+      // Full-wheel rainbow sparks with only a FAINT blue lean (~25%),
+      // and well SATURATED from birth - the old 0.88-lightness birth
+      // read as washed-out white confetti.
       const hue =
-        R.next() < 0.55 ? 195 + R.next() * 70 : R.next() * 360;
-      d[o + PC0] = hslHex(hue, 0.65, 0.88);
-      d[o + PC1] = hslHex(hue, 0.85, hot ? 0.66 : 0.58);
+        R.next() < 0.25 ? 195 + R.next() * 70 : R.next() * 360;
+      d[o + PC0] = hslHex(hue, 0.85, 0.72);
+      d[o + PC1] = hslHex(hue, 1.0, hot ? 0.58 : 0.5);
     }
   }
 
@@ -411,35 +423,75 @@ export class AppearFxSystem {
     dx: number,
     dy: number,
     frontSpeed: number,
-    dt: number
+    dt: number,
+    path: Float32Array | null,
+    pathPts: number
   ): void {
     const R = this.rng;
     const d = this.data;
     const tw = this.unit;
     const rot = Math.atan2(dy, dx);
-    // The whole comet rides AHEAD of the frontier; its backward-drifting
-    // streaks fall toward the arriving thread tip.
-    x += dx * COMET_LEAD;
-    y += dy * COMET_LEAD;
-    // Streak afterglow: laid near the head with a slight backward drift,
-    // stretched along the travel direction.
+    // The comet HEAD rides AHEAD of the frontier; its streak tail lies
+    // along the thread behind it.
+    const hx = x + dx * COMET_LEAD;
+    const hy = y + dy * COMET_LEAD;
+    // Streak afterglow: LONG strokes laid along the host thread's own
+    // polyline (tip backward), each oriented to its local tangent - the
+    // straight segments are short against the thread's curvature, so
+    // the ensemble reads as one curved tail hugging the thread. Every
+    // comet particle carries a FAINT cool tint with a per-particle
+    // random hue in the blue..blue-green range (births stay near-white;
+    // the hue shows as the particle dies).
+    const cometHue = (): number => 160 + R.next() * 65;
+    const segs = pathPts - 1;
     let c = this.countFor(STREAK_RATE, dt);
     while (c-- > 0) {
       const i = this.alloc();
       if (i < 0) return;
       const o = i * FP;
       const back = 0.25 + R.next() * 0.75;
-      d[o + PX] = x + (R.next() - 0.5) * tw * 0.45;
-      d[o + PY] = y + (R.next() - 0.5) * tw * 0.45;
-      d[o + PVX] = -dx * back + (R.next() - 0.5) * 0.35;
-      d[o + PVY] = -dy * back + (R.next() - 0.5) * 0.35;
+      const hue = cometHue();
+      let px = hx;
+      let py = hy;
+      let tx = dx;
+      let ty = dy;
+      let r = rot;
+      if (path && segs >= 1) {
+        // Random station along the tail (biased toward the head), then
+        // the local segment tangent. Path points run tip -> backward, so
+        // the travel direction is j+1 -> j.
+        const t = R.next() * R.next() * segs;
+        const j = Math.min(segs - 1, Math.floor(t));
+        const f = t - j;
+        const ax = path[j * 2];
+        const ay = path[j * 2 + 1];
+        const bx = path[(j + 1) * 2];
+        const by = path[(j + 1) * 2 + 1];
+        px = ax + (bx - ax) * f;
+        py = ay + (by - ay) * f;
+        const sx = ax - bx;
+        const sy = ay - by;
+        const sl = Math.sqrt(sx * sx + sy * sy);
+        if (sl > 1e-6) {
+          tx = sx / sl;
+          ty = sy / sl;
+          r = Math.atan2(ty, tx);
+        }
+      }
+      // Cross-thread jitter perpendicular to the LOCAL tangent.
+      const w = (R.next() - 0.5) * tw * 0.5;
+      d[o + PX] = px - ty * w;
+      d[o + PY] = py + tx * w;
+      // Drift backward ALONG the thread, not along the head's chord.
+      d[o + PVX] = -tx * back + (R.next() - 0.5) * 0.2;
+      d[o + PVY] = -ty * back + (R.next() - 0.5) * 0.2;
       d[o + PAGE] = 0;
       d[o + PLIFE] = 0.5 + R.next() * 0.6;
-      d[o + PSIZE] = tw * (1.2 + R.next() * 0.9); // Full streak length.
+      d[o + PSIZE] = tw * (2.1 + R.next() * 1.5); // Full streak length.
       d[o + PKIND] = K_STREAK;
-      d[o + PROT] = rot;
-      d[o + PC0] = 0xffffff;
-      d[o + PC1] = 0x9db9ff;
+      d[o + PROT] = r;
+      d[o + PC0] = hslHex(hue, 0.3, 0.93);
+      d[o + PC1] = hslHex(hue, 0.7, 0.68);
     }
     // Halo: short-lived big soft glow; overlapping replacements read as a
     // steady luminous head riding the front.
@@ -448,8 +500,9 @@ export class AppearFxSystem {
       const i = this.alloc();
       if (i < 0) return;
       const o = i * FP;
-      d[o + PX] = x;
-      d[o + PY] = y;
+      const hue = cometHue();
+      d[o + PX] = hx;
+      d[o + PY] = hy;
       d[o + PVX] = dx * frontSpeed * 0.9;
       d[o + PVY] = dy * frontSpeed * 0.9;
       d[o + PAGE] = 0;
@@ -457,8 +510,8 @@ export class AppearFxSystem {
       d[o + PSIZE] = tw * (1.6 + R.next() * 0.8);
       d[o + PKIND] = K_HALO;
       d[o + PROT] = 0;
-      d[o + PC0] = 0xffffff;
-      d[o + PC1] = 0xbfd4ff;
+      d[o + PC0] = hslHex(hue, 0.22, 0.95);
+      d[o + PC1] = hslHex(hue, 0.55, 0.78);
     }
     // Sparse cool flecks tossed wide (the spark integrator, iced).
     c = this.countFor(FLECK_RATE, dt);
@@ -470,8 +523,9 @@ export class AppearFxSystem {
       const cs = Math.cos(a);
       const sn = Math.sin(a);
       const sp = 0.6 + R.next() * 1.4;
-      d[o + PX] = x;
-      d[o + PY] = y;
+      const hue = cometHue();
+      d[o + PX] = hx;
+      d[o + PY] = hy;
       d[o + PVX] = (dx * cs - dy * sn) * sp;
       d[o + PVY] = (dx * sn + dy * cs) * sp;
       d[o + PAGE] = 0;
@@ -479,8 +533,8 @@ export class AppearFxSystem {
       d[o + PSIZE] = tw * (0.07 + R.next() * 0.08);
       d[o + PKIND] = K_SPARK;
       d[o + PROT] = 0;
-      d[o + PC0] = 0xffffff;
-      d[o + PC1] = 0x8fb4ff;
+      d[o + PC0] = hslHex(hue, 0.4, 0.9);
+      d[o + PC1] = hslHex(hue, 0.85, 0.62);
     }
   }
 

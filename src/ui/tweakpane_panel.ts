@@ -30,6 +30,9 @@ export interface PanelCallbacks {
   onStyleChange: () => void;
   onTemperatureChange: () => void;
   onModeChange: () => void;
+  // Color-only Look change (scheme / hue / gamut / palette / path color):
+  // recolors the live scene in place - no rebuild, progress survives.
+  onRecolor: () => void;
   // Memory-trail mode + trail length: gameplay interpretation and paint
   // only, applied live (no scene rebuild).
   onTrailChange: () => void;
@@ -370,18 +373,18 @@ export function buildPanel(
         noise: "noise",
       },
     },
-    "Section coloring: mono = one color; strands = per-thread hues; depth = gradient by distance from the start; segments = a random gamut color per run between intersections; noise = a spatial dye field. Sections blend smoothly through intersections. Rebuilds the scene.",
-    D.colorScheme, () => callbacks.onModeChange()
+    "Section coloring: mono = one color; strands = per-thread hues; depth = gradient by distance from the start; segments = a random gamut color per run between intersections; noise = a spatial dye field. Sections blend smoothly through intersections. Applies live.",
+    D.colorScheme, () => callbacks.onRecolor()
   );
   row(
     fLook, p, "hueShift", { min: 0, max: 359, step: 1 },
-    "Rotates the whole color gamut around the hue wheel (added to the seed's base hue). Rebuilds the scene.",
-    D.hueShift, (ev) => { if (!ev || ev.last !== false) callbacks.onStyleChange(); }
+    "Rotates the whole color gamut around the hue wheel (added to the seed's base hue). Applies live.",
+    D.hueShift, () => callbacks.onRecolor()
   );
   row(
     fLook, p, "gamutArc", { min: 40, max: 360, step: 5 },
-    "Width of the hue arc colors are drawn from: narrow = one tight family, 360 = the full rainbow. Rebuilds the scene.",
-    D.gamutArc, (ev) => { if (!ev || ev.last !== false) callbacks.onStyleChange(); }
+    "Width of the hue arc colors are drawn from: narrow = one tight family, 360 = the full rainbow. Applies live.",
+    D.gamutArc, () => callbacks.onRecolor()
   );
   row(
     fLook, p, "palette",
@@ -394,13 +397,13 @@ export function buildPanel(
         ink: "ink",
       },
     },
-    "Saturation/lightness character of the gamut. Rebuilds the scene.",
-    D.palette, () => callbacks.onStyleChange()
+    "Saturation/lightness character of the gamut. Applies live.",
+    D.palette, () => callbacks.onRecolor()
   );
   const pathColorRow = row(
     fLook, p, "pathColor", { view: "color" },
-    "Color of the traveled-path highlight (the classic gold). Rebuilds the scene.",
-    D.pathColor, () => callbacks.onStyleChange()
+    "Color of the traveled-path highlight (the classic gold). Applies live.",
+    D.pathColor, () => callbacks.onRecolor()
   );
   row(
     fLook, p, "threadWidth", { min: 0.15, max: 0.8, step: 0.01 },
@@ -459,14 +462,14 @@ export function buildPanel(
     {
       options: {
         none: "none",
-        sparks: "sparks",
+        rainbow: "rainbow",
         comet: "comet",
         dust: "dust",
         burn: "burn",
         roots: "roots",
       },
     },
-    "Particle effect at the growing thread ends while the design draws itself in: sparks = rainbow ember spray; comet = an icy streaking head leading the thread; dust = dense twinkling glitter; burn = the thread smolders in, orange tip charring to black with rising smoke; roots = brown rootlets probing in with a soft dirt spray. Applies live.",
+    "Particle effect at the growing thread ends while the design draws itself in: rainbow = six saturated stripes ride each fresh thread behind a white-hot tip, fading to its true color, with a full-spectrum spark spray; comet = a blue-green streaking head, the thread materializing from transparent behind it; dust = dense twinkling glitter over threads that fade in; burn = the thread smolders in, orange tip charring to black with rising smoke; roots = brown rootlets probing in with a soft dirt spray. Applies live.",
     D.appearFx, () => callbacks.onSlackChange()
   );
   button(
@@ -495,7 +498,7 @@ export function buildPanel(
   );
   const snappinessRow = row(
     fFeel, p, "snappiness", { min: 0, max: 1, step: 0.01 },
-    "String-ring character: low = slow loose wobble, high = fast tight vibration that dies quickly. Applies to the next pluck.",
+    "String-ring character: low = slow loose wobble, high = fast taut-string vibration. The ring lasts the same either way - only the oscillation speed changes. Applies to the next pluck.",
     D.snappiness, () => callbacks.onSlackChange()
   );
   row(
