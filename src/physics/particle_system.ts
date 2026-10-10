@@ -1600,7 +1600,19 @@ export class ParticleSystem {
     }
     const prev = this.passPrev.get(self);
     const next = this.passNext.get(self);
-    if (prev && next && prev !== self) {
+    // Each side clamps INDEPENDENTLY, skipping only a SELF-linked side.
+    // buildPassOrder unlinks an OPEN chain's seam-straddling pair by
+    // pointing each side at itself, so its FIRST pass has prev === self
+    // and its LAST pass next === self (a closed chain self-links only
+    // when single-pass, where both sides skip - knot mode is unchanged).
+    // The old shared `prev !== self` guard dropped BOTH clamps for the
+    // first pass (it slid into and through its neighbor), and clamped the
+    // last pass against its OWN pre-step ctrl: any backward step snapped a
+    // full MIN_PASS_SEPARATION back, overriding the prev clamp - 1.6-ctrl
+    // jumps, a sawtooth against the jn ratchet, order inversions, and in
+    // fallback a runaway that marched a binding down its whole strand.
+    // Measured on the fabric: 4/28 configs never slept; all sleep now.
+    if (prev && next) {
       const cyc = (d: number): number => ((d % len) + len) % len;
       // Kink partners and twist twins hold a larger material budget:
       // a kink's budget is its eyelet; a twist's keeps the eye OPEN so
@@ -1623,13 +1635,17 @@ export class ParticleSystem {
                 Math.min(this.twistSep, gap + TWIST_SEP_RATE * mobility)
               )
             : MIN_PASS_SEPARATION;
-      const sepPrev = sepOf(prev, cyc(self.ctrl - prev.ctrl));
-      const sepNext = sepOf(next, cyc(next.ctrl - self.ctrl));
-      if (cyc(f - prev.ctrl) < sepPrev) {
-        f = prev.ctrl + sepPrev;
+      if (prev !== self) {
+        const sepPrev = sepOf(prev, cyc(self.ctrl - prev.ctrl));
+        if (cyc(f - prev.ctrl) < sepPrev) {
+          f = prev.ctrl + sepPrev;
+        }
       }
-      if (cyc(next.ctrl - f) < sepNext) {
-        f = next.ctrl - sepNext;
+      if (next !== self) {
+        const sepNext = sepOf(next, cyc(next.ctrl - self.ctrl));
+        if (cyc(next.ctrl - f) < sepNext) {
+          f = next.ctrl - sepNext;
+        }
       }
     }
     if (f !== unclamped) this.slideStats.clampHits++;
