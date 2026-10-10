@@ -33,31 +33,9 @@ export interface Strand {
   nodes: string[];    // nodes traversed; first and last may be the same if closed.
 }
 
-// The maze IS a knot thread: the player traces ALONG one strand from a start
-// end to an exit end, always continuing straight at crossings (following the
-// strand = going straight, by construction of the trace). Positions are read
-// live from the physics chain, so the maze thread is the same chain index as
-// the strand (ParticleSystem.chains mirrors graph.strands). A strand node at
-// index i sits at chain control `2*i` (chain = [node, edge-mid, node, ...]).
-//
-// The traced path runs from control `ctrlStart` forward `steps` nodes (each
-// node = +2 control), so node k of the path is at control (ctrlStart + 2k),
-// and the exit is node `steps`. Populated by `buildMazeGraph`.
-//
-// (Real off-screen loose ends and merging junctions - where the player would
-// choose - are the next increment; today the traced strand is deterministic.)
-export interface MazeGraph {
-  strand: number;    // chain/strand index of the maze thread.
-  chainLen: number;  // that chain's control count (2 * node count).
-  ctrlStart: number; // control of the start end (even = a node).
-  steps: number;     // node-steps from start to exit along the strand.
-  // Chain slot AFTER which the loop is carved open (the hidden edge's
-  // midpoint): ParticleSystem.openChain removes the seam there, making the
-  // strand a genuine path with the two loose ends running off-screen.
-  breakSlot: number;
-}
-
-// Main combinatorial graph.
+// Main combinatorial graph. (The legacy single-strand MazeGraph - the old
+// mazeMode / md=1 - was RETIRED 2026-10-10 once fabric gameplay strictly
+// superseded it; the branching maze lives in core/maze_plan + walk_graph.)
 export interface TangleGraph {
   nodes: Map<string, Node>;
   edges: Map<string, Edge>;
@@ -65,11 +43,9 @@ export interface TangleGraph {
   strands: Strand[];
   seed: number;
   params: GenerationParams;
-  maze?: MazeGraph;  // Set by generateLatticeKnotwork (P4 maze mode).
 }
 
-// Parameters for generation. Junction/end carving (entrances, exits, branch
-// points for maze mode) arrives in P4 and will add its own params then.
+// Parameters for generation.
 export interface GenerationParams {
   gridSize: number;     // Number of lattice cells per dimension.
   weaveDensity: number; // [0, 1] P(non-tree wall opened): more = denser weave.

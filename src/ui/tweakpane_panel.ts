@@ -187,11 +187,6 @@ export function buildPanel(
     callbacks.onDebugToggle(ev.value === true);
   });
 
-  // Maze mode: repurposes the pointer to trace a solve path (tugging off).
-  tip(
-    pane.addBinding(params, "mazeMode"),
-    "Maze mode: tap the entrance, then adjacent cells, to trace a path to the exit. Thread-tugging is off while solving."
-  ).on("change", callbacks.onModeChange);
   tip(
     pane.addBinding(params, "mazeFabric"),
     "Branching maze: walk the thread from the green entrance to the orange exit. Tap a highlighted run at your branch point to advance (tap the gold one to backtrack); tug anywhere else."

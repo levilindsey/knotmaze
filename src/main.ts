@@ -13,15 +13,13 @@ import { checkStructure, checkAlternation } from "./core/tangle_graph";
 import { ParticleSystem } from "./physics/particle_system";
 import { RibbonRenderer } from "./render/ribbon_renderer";
 import { DebugRenderer } from "./render/debug_renderer";
-import { MazeRenderer } from "./render/maze_renderer";
-import { MazeController } from "./game/maze_controller";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
 import { FabricMazeController } from "./game/fabric_controller";
 import { RevealAnimator } from "./render/reveal";
 import { readParams, writeParams, newSeed } from "./ui/url_state";
 import { buildPanel } from "./ui/tweakpane_panel";
 import type { PanelSettings } from "./ui/tweakpane_panel";
-import type { GenerationParams, MazeGraph } from "./core/types";
+import type { GenerationParams } from "./core/types";
 import { KnotSynth } from "./audio/knot_synth";
 import {
   assignPitches,
@@ -37,7 +35,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 24c: smoother yarn 2026-10-10";
+const BUILD_STAMP = "P4: legacy maze retired 2026-10-10";
 
 // Appearance pre-sim: with any non-instant appear mode the sim settles
 // briefly BEFORE the first rendered frame, so the reveal plays over a
@@ -83,9 +81,6 @@ async function main(): Promise<void> {
   let ps: ParticleSystem | null = null;
   let renderer: RibbonRenderer | null = null;
   let debug: DebugRenderer | null = null;
-  let maze: MazeRenderer | null = null;
-  let controller: MazeController | null = null;
-  let mazeGraph: MazeGraph | null = null;
   let walkGraph: WalkGraph | null = null;
   let fabric: FabricMazeRenderer | null = null;
   let fabricController: FabricMazeController | null = null;
@@ -192,7 +187,6 @@ async function main(): Promise<void> {
   function rebuild(): void {
     renderer?.destroy();
     debug?.container.destroy({ children: true });
-    maze?.destroy();
     fabric?.destroy();
     root.removeChildren();
 
@@ -207,9 +201,7 @@ async function main(): Promise<void> {
     // Branching maze fabric (mazeFabric): plan + apply the splice/merge/stub
     // surgery and carve the corner entrance/exit at GRAPH level, so the
     // particle system builds the fabric natively (open chains, fused
-    // junctions, anchored ends). The old single-strand maze overlay is
-    // incompatible with the applied graph and is skipped entirely.
-    const oldMaze = params.mazeMode && !params.mazeFabric;
+    // junctions, anchored ends).
     let hueGroup: number[] | undefined;
     if (params.mazeFabric) {
       const plan = buildMazePlan(graph, {
@@ -225,24 +217,6 @@ async function main(): Promise<void> {
     }
 
     ps = new ParticleSystem(graph);
-
-    // Old maze mode carves the maze strand OPEN (real off-screen loose ends)
-    // BEFORE the renderer is built - the base ribbon reads chainBreakAfter to
-    // render that strand as an open spline. Knot mode leaves it closed. The
-    // two loose ends are pinned at their lattice (border) positions.
-    mazeGraph = oldMaze ? graph.maze! : null;
-    if (oldMaze && mazeGraph) {
-      const chain = ps.chains[mazeGraph.strand];
-      const brk = mazeGraph.breakSlot;
-      const pa = chain[brk];
-      const pb = chain[(brk + 1) % chain.length];
-      ps.openChain(
-        mazeGraph.strand,
-        brk,
-        [ps.positions[pa * 2], ps.positions[pa * 2 + 1]],
-        [ps.positions[pb * 2], ps.positions[pb * 2 + 1]]
-      );
-    }
 
     // The walk graph feeds both the section coloring and (in fabric mode)
     // the gameplay, so it builds before the renderer.
@@ -273,17 +247,6 @@ async function main(): Promise<void> {
       params.colorScheme,
       params.seed
     );
-
-    // Maze overlay + solve state (old single-strand maze mode only).
-    if (oldMaze && mazeGraph) {
-      controller = new MazeController(mazeGraph);
-      maze = new MazeRenderer(ps, mazeGraph, params.threadWidth);
-      maze.setVisible(true);
-      maze.update(controller);
-    } else {
-      controller = null;
-      maze = null;
-    }
 
     // Branching gameplay over the fabric: branch-point-only solve state +
     // the thread-true paint overlay (the walk graph was built above).
@@ -327,11 +290,8 @@ async function main(): Promise<void> {
     debug.container.scale.set(1 / debug.cellSize);
     debug.container.visible = settings.showDebug;
 
-    // Order: the maze under-layer, ribbons, the maze over-layer (so the solve
-    // strand weaves under threads at crossings and over them between), debug.
-    if (maze) root.addChild(maze.underContainer);
+    // Order: ribbons, the fabric gameplay overlay, debug.
     root.addChild(renderer.root);
-    if (maze) root.addChild(maze.overContainer);
     if (fabric) root.addChild(fabric.overContainer);
     root.addChild(debug.container);
     fitToScreen();
@@ -432,8 +392,6 @@ async function main(): Promise<void> {
     },
     onStyleChange: () => {
       renderer?.setWidths(params.threadWidth, params.gap);
-      maze?.setWidths(params.threadWidth);
-      if (maze && controller) maze.update(controller);
       fabric?.setWidths(params.threadWidth);
       if (fabric && fabricController) fabric.update(fabricController);
       writeParams(params);
@@ -461,8 +419,8 @@ async function main(): Promise<void> {
       writeParams(params);
     },
     onModeChange: () => {
-      // Maze mode changes the strand's TOPOLOGY (open vs closed), which is
-      // baked into the ribbon meshes at build time, so a full rebuild is
+      // Mode changes alter the graph TOPOLOGY (fabric surgery, color
+      // field), which is baked in at build time, so a full rebuild is
       // required rather than a visibility toggle.
       writeParams(params);
       rebuild();
@@ -470,12 +428,10 @@ async function main(): Promise<void> {
       wake();
     },
     onResetPath: () => {
-      controller?.reset();
       fabricController?.reset();
       fabric?.cancelMove();
       pendingWin = false;
       hideWin();
-      if (maze && controller) maze.update(controller);
       if (fabric && fabricController) fabric.update(fabricController);
       updateHud();
       wake();
@@ -499,7 +455,7 @@ async function main(): Promise<void> {
   ];
   const GRAB_RADIUS = 0.7;
 
-  // Win banner (maze mode). Hidden until a solve completes.
+  // Win banner. Hidden until a solve completes.
   const banner = document.createElement("div");
   banner.id = "maze-banner";
   banner.style.cssText =
@@ -508,10 +464,6 @@ async function main(): Promise<void> {
     "font:14px/1.3 monospace;border:1px solid #39d353;border-radius:6px;" +
     "z-index:20;display:none;pointer-events:none";
   document.body.appendChild(banner);
-  const showWin = (steps: number): void => {
-    banner.textContent = `Solved in ${steps} steps \u{1F389}`;
-    banner.style.display = "block";
-  };
   const hideWin = (): void => {
     banner.style.display = "none";
   };
@@ -563,20 +515,6 @@ async function main(): Promise<void> {
       ` \u{1F389}`;
     banner.style.display = "block";
   };
-
-  // Maze mode: resolve a tap to a node ON the maze thread and move the trace
-  // there; redraw immediately so it lands even while the knot sleeps.
-  const handleMazeTap = (x: number, y: number): void => {
-    if (!maze || !controller) return;
-    const node = maze.nodeAt(x, y);
-    if (node < 0) return;
-    const result = controller.tapNode(node);
-    maze.update(controller);
-    wake();
-    if (result === "win") showWin(controller.total);
-  };
-  const mazeActionable = (x: number, y: number): boolean =>
-    maze ? maze.nodeAt(x, y) >= 0 : false;
 
   // Fabric maze: a tap on a run incident to the current branch point is a
   // move (advance or backtrack); anywhere else falls through to grab/tug,
@@ -699,10 +637,6 @@ async function main(): Promise<void> {
       renderer?.requestInspect(x, y);
       return;
     }
-    if (params.mazeMode && !params.mazeFabric) {
-      handleMazeTap(x, y);
-      return;
-    }
     if (params.mazeFabric && handleFabricTap(x, y)) return;
     if (ps.grab(x, y, GRAB_RADIUS) >= 0) {
       const p = ps.grabbedParticle;
@@ -719,10 +653,6 @@ async function main(): Promise<void> {
   app.canvas.addEventListener("pointermove", (e) => {
     if (!ps) return;
     const [x, y] = toLattice(e);
-    if (params.mazeMode && !params.mazeFabric) {
-      app.canvas.style.cursor = mazeActionable(x, y) ? "pointer" : "default";
-      return;
-    }
     if (ps.grabbedParticle >= 0 && snapMode === "none" && !autoGesture) {
       const px = dragPos[0];
       const py = dragPos[1];
@@ -751,7 +681,6 @@ async function main(): Promise<void> {
   });
   const endDrag = (e: PointerEvent): void => {
     if (!ps) return;
-    if (params.mazeMode && !params.mazeFabric) return; // no grab/pluck while solving
     if (ps.grabbedParticle >= 0 && snapMode === "none" && !autoGesture) {
       wake();
       const chain = ps.chainOfParticle(ps.grabbedParticle);
@@ -970,7 +899,6 @@ async function main(): Promise<void> {
     const flowRender = (): void => {
       if (params.flowStrength <= 0 && !revealing) return;
       renderer!.update();
-      if (params.mazeMode && maze && controller) maze.update(controller);
       if (params.mazeFabric && fabric && fabricController) {
         fabric.update(fabricController);
       }
@@ -1060,8 +988,7 @@ async function main(): Promise<void> {
       return;
     }
     renderer.update();
-    // Keep the maze overlays locked to the deforming knot while it moves.
-    if (params.mazeMode && maze && controller) maze.update(controller);
+    // Keep the gameplay overlay locked to the deforming knot.
     if (params.mazeFabric && fabric && fabricController) {
       fabric.update(fabricController);
     }
@@ -1189,25 +1116,6 @@ async function main(): Promise<void> {
   // Raw renderer access for probe scripting (patch visibility/tinting).
   (window as unknown as Record<string, unknown>).__knotRenderer = () =>
     renderer;
-  // Maze-mode diagnostics: solve state + a path node's live SCREEN position
-  // (via the live root transform), for scripted solve verification.
-  (window as unknown as Record<string, unknown>).__knotMaze = () => {
-    if (!maze || !controller || !mazeGraph) return null;
-    return {
-      strand: mazeGraph.strand,
-      steps: mazeGraph.steps,
-      head: controller.head,
-      solved: controller.solved,
-      nodeScreen: (k: number) => {
-        const out = new Float32Array(2);
-        maze!.nodeWorld(k, out, 0);
-        return {
-          x: out[0] * root.scale.x + root.position.x,
-          y: out[1] * root.scale.y + root.position.y,
-        };
-      },
-    };
-  };
   // Fabric-maze diagnostics: solve state, metrics, and each current choice
   // with a tappable SCREEN point (via the live root transform) plus its
   // cost-to-exit, for scripted solve verification.

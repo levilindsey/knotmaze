@@ -48,7 +48,6 @@ export interface UrlParams {
   pitchSpace: PitchSpace; // Scale for segment pitches.
   octaves: number; // [1, 4] octave span of the pitch space.
   pluckStyle: PluckStyle; // Release feel: soft ease vs ringing string.
-  mazeMode: boolean; // P4: trace a solve path instead of tugging threads.
   // P4 branching maze: generate the spliced maze FABRIC (junctions, 4-way
   // merges, corner entrance/exit) and play it (branch-point taps).
   mazeFabric: boolean;
@@ -153,7 +152,6 @@ export function readParams(): UrlParams {
     pitchSpace: readChoice(query, "sc", PITCH_SPACES, "pentMinor"),
     octaves: readNumber(query, "oct", DEFAULTS.octaves),
     pluckStyle: readChoice(query, "pk", PLUCK_STYLES, "string"),
-    mazeMode: readNumber(query, "md", 0) > 0.5,
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
     deadEnds: readNumber(query, "de", 0) > 0.5,
     pathViz: readPathViz(query),
@@ -232,7 +230,6 @@ export function writeParams(params: UrlParams): void {
   query.set("sc", params.pitchSpace);
   query.set("oct", String(params.octaves));
   query.set("pk", params.pluckStyle);
-  query.set("md", params.mazeMode ? "1" : "0");
   query.set("mf", params.mazeFabric ? "1" : "0");
   query.set("de", params.deadEnds ? "1" : "0");
   query.set("pv", params.pathViz);
