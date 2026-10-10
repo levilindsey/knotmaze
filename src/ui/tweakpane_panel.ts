@@ -53,6 +53,23 @@ export function buildPanel(
 ): Pane {
   const pane = new Pane({ title: "Knotmaze" });
 
+  // The pane has outgrown short viewports: cap Tweakpane's fixed wrapper
+  // at the window height and scroll INSIDE it (wheel over the panel stays
+  // in the panel; the thin scrollbar matches the dark theme).
+  const wrap = pane.element.parentElement;
+  if (wrap) {
+    wrap.style.maxHeight = "calc(100vh - 16px)";
+    wrap.style.overflowY = "auto";
+    wrap.style.overscrollBehavior = "contain";
+    wrap.style.scrollbarWidth = "thin";
+    const style = document.createElement("style");
+    style.textContent =
+      ".tp-dfwv::-webkit-scrollbar{width:6px}" +
+      ".tp-dfwv::-webkit-scrollbar-thumb{background:#3a4254;border-radius:3px}" +
+      ".tp-dfwv::-webkit-scrollbar-track{background:transparent}";
+    document.head.appendChild(style);
+  }
+
   const regenerateWhenDone = (ev: ChangeEvent): void => {
     if (ev.last !== false) callbacks.onRegenerate();
   };
