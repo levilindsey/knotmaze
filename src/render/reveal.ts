@@ -17,6 +17,7 @@ import type {
   AppearMode,
   RevealInterval,
   RevealPlan,
+  RevealTip,
 } from "../core/reveal_plan";
 import { SeededRNG } from "../util/random";
 
@@ -92,7 +93,7 @@ export class RevealAnimator {
     return intervalsAt(this.plan, chain, this.t);
   }
 
-  tips(): Array<{ chain: number; ctrl: number }> {
+  tips(): RevealTip[] {
     return this.mode === "ink" ? [] : tipsAt(this.plan, this.t);
   }
 
@@ -104,6 +105,11 @@ export class RevealAnimator {
 
   get inkRadius(): number {
     return this.t * this.plan.inkSpeed;
+  }
+
+  // World units/s of the dye front, live speed applied (frontier FX).
+  get inkRate(): number {
+    return this.plan.inkSpeed * this.speed;
   }
 
   // Signed wobble of the dye edge at a world point.

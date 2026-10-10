@@ -369,6 +369,19 @@ export function buildPanel(
     "How fast the appearance animation reveals the threads. Applies live.",
     D.appearSpeed, () => callbacks.onSlackChange()
   );
+  const appearFxRow = row(
+    fMotion, p, "appearFx",
+    {
+      options: {
+        none: "none",
+        sparks: "sparks",
+        comet: "comet",
+        dust: "dust",
+      },
+    },
+    "Particle effect at the growing thread ends while the design draws itself in: sparks = warm ember spray; comet = an icy streaking head with a glowing halo; dust = slow twinkling glitter motes. Applies live.",
+    D.appearFx, () => callbacks.onSlackChange()
+  );
   button(
     fMotion,
     "Replay settle",
@@ -535,6 +548,7 @@ export function buildPanel(
       params.soundMode !== "random" && params.soundMode !== "music";
     snapBackRow.hidden = params.pluckStyle !== "soft";
     appearSpeedRow.hidden = params.appearMode === "instant";
+    appearFxRow.hidden = params.appearMode === "instant";
     flowSpeedRow.hidden = params.flowStrength <= 0;
   };
   refreshCond();

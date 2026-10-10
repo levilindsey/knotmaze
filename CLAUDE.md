@@ -330,6 +330,26 @@ between-threads/cell-passage route.
   color seams at some intersections under segments - suspects are the
   joinery field model vs unrelated-RGB ramps and the over-fill window
   color copy; attribution unfinished.
+- Gameplay/visual round (b440fe9): FULL-LENGTH PULSE TRAINS (crests
+  march whole runs at `pulseSpacing` (psp=, default 2.5, live);
+  inbound/outbound combs, outbound leads 0.3s; floor glow still hugs
+  the junction; far-end-only dissolve); SEGMENTS = 12 stride-spread
+  swatches + junction-sharing collision walk (uniform hue draws over a
+  pastel arc read as clumped; SEG_RAMP_CTRL 1.0 / 18%-of-run blends -
+  the old 2.4 ramps diffused the whole maze toward neighborhood
+  means); start/exit discs wear their thread's section color with a
+  capsule erase notch under the connecting tail only (full ring
+  punched the head glow); black-ringed head dot; gold caps only on
+  TRAVELED arms (stubs on unchosen arms); backtrack-to-start keeps the
+  Ariadne yarn (explicit Reset clears via clearYarn); pluck ring band
+  5-13Hz / decay 0.22 (interim - render-side standing wave queued).
+- APPEARANCE FX merge (worktree agent): reveal frontiers emit pooled
+  particles - `appearFx` (afx=, sparks | comet | dust | none, default
+  sparks, hidden when appearMode=instant). 600-slot Float32Array pool,
+  one ParticleContainer, NORMAL blending (additive reads muddy grey
+  over the Stage 18 transparent canvas), frontier positions via the
+  clamping samplers + tipsAt dir/rate, ink mode emits at the mask's
+  0.5-crossings; drains to a one-compare no-op after the reveal.
 - JUNCTION CLEARANCE (fix A) + TWO-LAYER FILLETS (fix B), same round:
   junctions were invisible to the crossing bookkeeping, so gap cuts +
   fade tails marched into seal discs/webs (worse with gap, fl, cr) -

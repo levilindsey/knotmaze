@@ -36,7 +36,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4: sampleAt fix + fade tails + harp 2026-10-10";
+const BUILD_STAMP = "P4: appear-fx frontier particles 2026-10-10";
 
 // Appearance pre-sim: with any non-instant appear mode the sim settles
 // briefly BEFORE the first rendered frame, so the reveal plays over a
@@ -919,6 +919,9 @@ async function main(): Promise<void> {
       renderer!.flowStrength = params.flowStrength;
       renderer!.flowSpeed = params.flowSpeed;
       renderer!.pulseSpacing = params.pulseSpacing;
+      // Frontier particle style: live dropdown, consumed by the
+      // appearance-FX pass inside tickPaint while a reveal runs.
+      renderer!.appearFx = params.appearFx;
       if (params.mazeFabric && fabric && fabricController) {
         fabric.moveSpeed = params.moveSpeed;
         fabric.trailMode = params.pathViz === "trail";
@@ -1153,7 +1156,7 @@ async function main(): Promise<void> {
   };
   // Raw system access for probe scripting (phase probe, slide stats).
   (window as unknown as Record<string, unknown>).__knotPS = () => ps;
-  // Appearance-reveal diagnostics: mode, clock, completion.
+  // Appearance-reveal diagnostics: mode, clock, completion, frontier FX.
   (window as unknown as Record<string, unknown>).__knotReveal = () =>
     reveal
       ? {
@@ -1161,6 +1164,8 @@ async function main(): Promise<void> {
           done: reveal.done,
           clock: reveal.clock,
           duration: reveal.planDuration,
+          fx: params.appearFx,
+          fxAlive: renderer?.appearFxAlive() ?? 0,
         }
       : null;
   // Raw renderer access for probe scripting (patch visibility/tinting).
