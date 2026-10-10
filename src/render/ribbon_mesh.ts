@@ -9,9 +9,11 @@ export class RibbonMesh {
   readonly sampleCount: number;
 
   private vertexData: Float32Array;
+  private readonly closed: boolean;
 
   constructor(sampleCount: number, closed: boolean, color: number) {
     this.sampleCount = sampleCount;
+    this.closed = closed;
     this.vertexData = new Float32Array(sampleCount * 4); // 2 verts per sample.
 
     const uvs = new Float32Array(sampleCount * 4);
@@ -67,6 +69,19 @@ export class RibbonMesh {
       let ay = cy - positions[sPrev + 1];
       let bx = positions[sNext] - cx;
       let by = positions[sNext + 1] - cy;
+      // An OPEN ribbon's tips have no join: the wrapped "neighbor" above is
+      // the far end of the thread, and mitering against that phantom leg
+      // flares the tip into a wedge. Duplicate the one real leg so the tip
+      // gets a plain perpendicular cap (dot = 1 -> w = halfWidth).
+      if (!this.closed) {
+        if (i === 0) {
+          ax = bx;
+          ay = by;
+        } else if (i === n - 1) {
+          bx = ax;
+          by = ay;
+        }
+      }
       const la = Math.hypot(ax, ay) || 1;
       const lb = Math.hypot(bx, by) || 1;
       ax /= la;
