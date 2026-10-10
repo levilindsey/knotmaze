@@ -2,12 +2,16 @@ import { Application, Container } from "pixi.js";
 import { generateLatticeKnotwork } from "./core/lattice_grower";
 import { buildMazePlan } from "./core/maze_plan";
 import { applyMazePlan, applyMazeCuts } from "./core/maze_apply";
+import { buildWalkGraph } from "./core/walk_graph";
+import type { WalkGraph } from "./core/walk_graph";
 import { checkStructure, checkAlternation } from "./core/tangle_graph";
 import { ParticleSystem } from "./physics/particle_system";
 import { RibbonRenderer } from "./render/ribbon_renderer";
 import { DebugRenderer } from "./render/debug_renderer";
 import { MazeRenderer } from "./render/maze_renderer";
 import { MazeController } from "./game/maze_controller";
+import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
+import { FabricMazeController } from "./game/fabric_controller";
 import { readParams, writeParams, newSeed } from "./ui/url_state";
 import { buildPanel } from "./ui/tweakpane_panel";
 import type { PanelSettings } from "./ui/tweakpane_panel";
@@ -20,7 +24,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 7b: clean open-ribbon end caps 2026-10-09";
+const BUILD_STAMP = "P4 Stage 8: branching maze gameplay 2026-10-09";
 
 const app = new Application();
 
@@ -55,6 +59,9 @@ async function main(): Promise<void> {
   let maze: MazeRenderer | null = null;
   let controller: MazeController | null = null;
   let mazeGraph: MazeGraph | null = null;
+  let walkGraph: WalkGraph | null = null;
+  let fabric: FabricMazeRenderer | null = null;
+  let fabricController: FabricMazeController | null = null;
 
   // The unanchored knot finds its own shape, so the viewport fit follows
   // the live particle bounds, easing toward the target to avoid popping.
@@ -101,6 +108,7 @@ async function main(): Promise<void> {
     renderer?.destroy();
     debug?.container.destroy({ children: true });
     maze?.destroy();
+    fabric?.destroy();
     root.removeChildren();
 
     const genParams: GenerationParams = {
@@ -166,6 +174,26 @@ async function main(): Promise<void> {
       controller = null;
       maze = null;
     }
+
+    // Branching gameplay over the fabric: walk graph (junction/end vertices,
+    // thread runs between them) + branch-point-only solve state + the woven
+    // path recolor overlay.
+    if (params.mazeFabric) {
+      walkGraph = buildWalkGraph(graph);
+      if (walkGraph) {
+        fabricController = new FabricMazeController(walkGraph);
+        fabric = new FabricMazeRenderer(ps, walkGraph, params.threadWidth);
+        fabric.update(fabricController);
+      } else {
+        fabricController = null;
+        fabric = null;
+      }
+    } else {
+      walkGraph = null;
+      fabricController = null;
+      fabric = null;
+    }
+    updateHud();
     hideWin();
 
     debug = new DebugRenderer();
@@ -178,8 +206,10 @@ async function main(): Promise<void> {
     // Order: the maze under-layer, ribbons, the maze over-layer (so the solve
     // strand weaves under threads at crossings and over them between), debug.
     if (maze) root.addChild(maze.underContainer);
+    if (fabric) root.addChild(fabric.underContainer);
     root.addChild(renderer.root);
     if (maze) root.addChild(maze.overContainer);
+    if (fabric) root.addChild(fabric.overContainer);
     root.addChild(debug.container);
     fitToScreen();
     writeParams(params);
@@ -215,6 +245,8 @@ async function main(): Promise<void> {
       renderer?.setWidths(params.threadWidth, params.gap);
       maze?.setWidths(params.threadWidth);
       if (maze && controller) maze.update(controller);
+      fabric?.setWidths(params.threadWidth);
+      if (fabric && fabricController) fabric.update(fabricController);
       writeParams(params);
       wake();
     },
@@ -230,8 +262,11 @@ async function main(): Promise<void> {
     },
     onResetPath: () => {
       controller?.reset();
+      fabricController?.reset();
       hideWin();
       if (maze && controller) maze.update(controller);
+      if (fabric && fabricController) fabric.update(fabricController);
+      updateHud();
       wake();
     },
   });
@@ -265,6 +300,43 @@ async function main(): Promise<void> {
     banner.style.display = "none";
   };
 
+  // Fabric-maze HUD: the two distance readouts, both in deterministic
+  // lattice arc. (a) the CURRENT path vs the optimal solve, (b) cumulative
+  // distance retracted by backtracking - separate meters by design.
+  const hud = document.createElement("div");
+  hud.style.cssText =
+    "position:fixed;top:10px;left:10px;padding:7px 12px;" +
+    "background:#1b2233cc;color:#c8d3e8;font:12px/1.5 monospace;" +
+    "border:1px solid #2c3a55;border-radius:6px;z-index:20;" +
+    "display:none;pointer-events:none;white-space:pre";
+  document.body.appendChild(hud);
+  const fmt = (v: number): string =>
+    Number.isFinite(v) ? v.toFixed(1) : "—";
+  const updateHud = (): void => {
+    if (!params.mazeFabric || !fabricController) {
+      hud.style.display = "none";
+      return;
+    }
+    const c = fabricController;
+    hud.textContent =
+      `path ${fmt(c.pathLength)} / optimal ${fmt(c.walk.optimalLength)}\n` +
+      `backtracked ${fmt(c.backtrackDist)}`;
+    hud.style.display = "block";
+  };
+  const showFabricWin = (): void => {
+    if (!fabricController) return;
+    const c = fabricController;
+    const over =
+      Number.isFinite(c.walk.optimalLength) && c.walk.optimalLength > 0
+        ? ` (+${(((c.pathLength - c.walk.optimalLength) / c.walk.optimalLength) * 100).toFixed(0)}%)`
+        : "";
+    banner.textContent =
+      `Solved! path ${fmt(c.pathLength)} vs optimal ` +
+      `${fmt(c.walk.optimalLength)}${over} · backtracked ` +
+      `${fmt(c.backtrackDist)} \u{1F389}`;
+    banner.style.display = "block";
+  };
+
   // Maze mode: resolve a tap to a node ON the maze thread and move the trace
   // there; redraw immediately so it lands even while the knot sleeps.
   const handleMazeTap = (x: number, y: number): void => {
@@ -278,6 +350,21 @@ async function main(): Promise<void> {
   };
   const mazeActionable = (x: number, y: number): boolean =>
     maze ? maze.nodeAt(x, y) >= 0 : false;
+
+  // Fabric maze: a tap on a run incident to the current branch point is a
+  // move (advance or backtrack); anywhere else falls through to grab/tug,
+  // which stays live in fabric mode. Returns true when the tap was a move.
+  const handleFabricTap = (x: number, y: number): boolean => {
+    if (!fabric || !fabricController) return false;
+    const eid = fabric.edgeAt(x, y, fabricController);
+    if (eid < 0) return false;
+    const result = fabricController.tapEdge(eid);
+    fabric.update(fabricController);
+    updateHud();
+    wake();
+    if (result === "win") showFabricWin();
+    return result !== "reject";
+  };
 
   app.canvas.style.touchAction = "none";
   app.canvas.addEventListener("pointerdown", (e) => {
@@ -294,6 +381,7 @@ async function main(): Promise<void> {
       handleMazeTap(x, y);
       return;
     }
+    if (params.mazeFabric && handleFabricTap(x, y)) return;
     if (ps.grab(x, y, GRAB_RADIUS) >= 0) {
       app.canvas.setPointerCapture(e.pointerId);
       app.canvas.style.cursor = "grabbing";
@@ -309,6 +397,13 @@ async function main(): Promise<void> {
     if (ps.grabbedParticle >= 0) {
       ps.dragTo(x, y);
       wake();
+    } else if (
+      params.mazeFabric &&
+      fabric &&
+      fabricController &&
+      fabric.edgeAt(x, y, fabricController) >= 0
+    ) {
+      app.canvas.style.cursor = "pointer";
     } else {
       app.canvas.style.cursor =
         ps.nearest(x, y, GRAB_RADIUS) >= 0 ? "grab" : "default";
@@ -403,8 +498,11 @@ async function main(): Promise<void> {
       return;
     }
     renderer.update();
-    // Keep the maze overlay locked to the deforming knot while it moves.
+    // Keep the maze overlays locked to the deforming knot while it moves.
     if (params.mazeMode && maze && controller) maze.update(controller);
+    if (params.mazeFabric && fabric && fabricController) {
+      fabric.update(fabricController);
+    }
     const t2 = performance.now();
 
     // Follow the free-floating knot with an eased viewport fit.
@@ -534,6 +632,49 @@ async function main(): Promise<void> {
           x: out[0] * root.scale.x + root.position.x,
           y: out[1] * root.scale.y + root.position.y,
         };
+      },
+    };
+  };
+  // Fabric-maze diagnostics: solve state, metrics, and each current choice
+  // with a tappable SCREEN point (via the live root transform) plus its
+  // cost-to-exit, for scripted solve verification.
+  (window as unknown as Record<string, unknown>).__knotFabric = () => {
+    if (!fabric || !fabricController || !walkGraph) return null;
+    const c = fabricController;
+    const wg = walkGraph;
+    const fb = fabric;
+    const out = new Float32Array(2);
+    const toScreen = (wx: number, wy: number): { x: number; y: number } => ({
+      x: wx * root.scale.x + root.position.x,
+      y: wy * root.scale.y + root.position.y,
+    });
+    const sys = ps!;
+    return {
+      head: c.head,
+      solved: c.solved,
+      pathLength: c.pathLength,
+      optimal: wg.optimalLength,
+      backtrack: c.backtrackDist,
+      pathEdges: [...c.pathEdges],
+      choices: c.choices().map((eid) => {
+        const e = wg.edges[eid];
+        const far = e.va === c.head ? e.vb : e.va;
+        const f =
+          e.va === c.head
+            ? Math.min(e.ctrlA + 1.5, (e.ctrlA + e.ctrlB) / 2)
+            : Math.max(e.ctrlB - 1.5, (e.ctrlA + e.ctrlB) / 2);
+        const len = sys.chains[e.chain].length;
+        sys.pointOnChain(e.chain, ((f % len) + len) % len, out, 0);
+        return {
+          edge: eid,
+          far,
+          cost: e.length + (wg.distToExit.get(far) ?? Infinity),
+          screen: toScreen(out[0], out[1]),
+        };
+      }),
+      vertexScreen: (id: string) => {
+        fb.vertexWorld(id, out, 0);
+        return toScreen(out[0], out[1]);
       },
     };
   };

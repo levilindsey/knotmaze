@@ -134,6 +134,11 @@ export function applyMazePlan(graph: TangleGraph, plan: MazePlan): number[] {
 const CUT_REACH = 1.5;
 const CUT_SPREAD = 0.4;
 
+// The four anchored END node ids the cuts create, exported for the walk
+// graph (gameplay) to locate the entrance/exit tails.
+export const ENTRANCE_END_IDS = ["mentr_a", "mentr_b"] as const;
+export const EXIT_END_IDS = ["mexit_a", "mexit_b"] as const;
+
 export function applyMazeCuts(
   graph: TangleGraph,
   plan: MazePlan,

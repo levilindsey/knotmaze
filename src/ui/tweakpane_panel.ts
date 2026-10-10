@@ -139,7 +139,7 @@ export function buildPanel(
   ).on("change", callbacks.onModeChange);
   tip(
     pane.addBinding(params, "mazeFabric"),
-    "Branching maze fabric (preview): splice junctions, occasional 4-way merges, dead-end stubs, and corner entrance/exit. Tug interaction stays on; branching gameplay lands next."
+    "Branching maze: walk the thread from the green entrance to the orange exit. Tap a highlighted run at your branch point to advance (tap the gold one to backtrack); tug anywhere else."
   ).on("change", callbacks.onModeChange);
   tip(
     pane.addButton({ title: "Reset path" }),
