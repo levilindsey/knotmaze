@@ -1,8 +1,8 @@
 // URL-as-complete-state: every design is fully specified by (seed, params)
 // serialized in the query string.
 
-import type { ColorScheme } from "../core/section_colors";
-import { COLOR_SCHEMES } from "../core/section_colors";
+import type { ColorScheme, GamutPalette } from "../core/section_colors";
+import { COLOR_SCHEMES, GAMUT_PALETTES } from "../core/section_colors";
 import type { PitchSpace } from "../audio/pitch_space";
 import { PITCH_SPACES } from "../audio/pitch_space";
 import type { AppearMode, AppearFxMode } from "../core/reveal_plan";
@@ -21,6 +21,25 @@ export const PLUCK_STYLES: PluckStyle[] = ["soft", "string"];
 // an unspooled Ariadne string laid along everywhere you have walked.
 export type PathViz = "gold" | "trail" | "string";
 export const PATH_VIZ_MODES: PathViz[] = ["gold", "trail", "string"];
+
+// Scale root for manual/random sound modes ("seed" derives it from the
+// design seed, the long-standing default).
+export const ROOT_NOTES = [
+  "seed",
+  "C",
+  "C#",
+  "D",
+  "D#",
+  "E",
+  "F",
+  "F#",
+  "G",
+  "G#",
+  "A",
+  "A#",
+  "B",
+] as const;
+export type RootNote = (typeof ROOT_NOTES)[number];
 
 export interface UrlParams {
   seed: number;
@@ -50,7 +69,15 @@ export interface UrlParams {
   soundSpeed: number; // [0.25, 6] music tempo / random-pluck cadence mult.
   volume: number; // [0, 1] master output gain.
   reverb: number; // [0, 1] hall wet mix.
+  rootNote: RootNote; // Scale root for manual/random modes; "seed" = auto.
   pulseSpacing: number; // [0.8, 6] world units between traversal pulses.
+  hueShift: number; // [0, 360) rotation added to the seed's base hue.
+  gamutArc: number; // [40, 360] hue-arc width of the color gamut.
+  palette: GamutPalette; // Saturation/lightness preset for the gamut.
+  pathColor: string; // "#rrggbb" traversal-highlight (gold) color.
+  branchDensity: number; // [0, 1] extra maze junctions beyond the backbone.
+  fourWayFraction: number; // [0, 1] share of junctions as 4-way merges.
+  deadEndDensity: number; // [0.05, 1] strands cut into dead ends (de on).
   pluckStyle: PluckStyle; // Release feel: soft ease vs ringing string.
   // P4 branching maze: generate the spliced maze FABRIC (junctions, 4-way
   // merges, corner entrance/exit) and play it (branch-point taps).
@@ -114,7 +141,15 @@ export const DEFAULTS = {
   soundSpeed: 1,
   volume: 0.85,
   reverb: 0.42,
+  rootNote: "seed" as RootNote,
   pulseSpacing: 2.5,
+  hueShift: 0,
+  gamutArc: 280,
+  palette: "pastel" as GamutPalette,
+  pathColor: "#ffd24a",
+  branchDensity: 0.35,
+  fourWayFraction: 0.12,
+  deadEndDensity: 0.25,
   trailLength: 5,
   tension: 0.45,
   fowRadius: 4,
@@ -186,7 +221,15 @@ export function readParams(): UrlParams {
     soundSpeed: readNumber(query, "ss", DEFAULTS.soundSpeed),
     volume: readNumber(query, "vol", DEFAULTS.volume),
     reverb: readNumber(query, "rv", DEFAULTS.reverb),
+    rootNote: readChoice(query, "rn", ROOT_NOTES, "seed"),
     pulseSpacing: readNumber(query, "psp", DEFAULTS.pulseSpacing),
+    hueShift: readNumber(query, "hs", DEFAULTS.hueShift),
+    gamutArc: readNumber(query, "arc", DEFAULTS.gamutArc),
+    palette: readChoice(query, "pal", GAMUT_PALETTES, "pastel"),
+    pathColor: readHexColor(query, "pc", DEFAULTS.pathColor),
+    branchDensity: readNumber(query, "brd", DEFAULTS.branchDensity),
+    fourWayFraction: readNumber(query, "fwf", DEFAULTS.fourWayFraction),
+    deadEndDensity: readNumber(query, "ded", DEFAULTS.deadEndDensity),
     pluckStyle: readChoice(query, "pk", PLUCK_STYLES, "string"),
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
     deadEnds: readNumber(query, "de", 0) > 0.5,
@@ -200,6 +243,16 @@ export function readParams(): UrlParams {
     appearSpeed: readNumber(query, "as", DEFAULTS.appearSpeed),
     appearFx: readChoice(query, "afx", APPEAR_FX_MODES, "sparks"),
   };
+}
+
+function readHexColor(
+  query: URLSearchParams,
+  key: string,
+  fallback: string
+): string {
+  const raw = query.get(key);
+  if (raw && /^[0-9a-fA-F]{6}$/.test(raw)) return "#" + raw.toLowerCase();
+  return fallback;
 }
 
 function readChoice<T extends string>(
@@ -269,7 +322,15 @@ export function writeParams(params: UrlParams): void {
   query.set("ss", String(params.soundSpeed));
   query.set("vol", String(params.volume));
   query.set("rv", String(params.reverb));
+  query.set("rn", params.rootNote);
   query.set("psp", String(params.pulseSpacing));
+  query.set("hs", String(params.hueShift));
+  query.set("arc", String(params.gamutArc));
+  query.set("pal", params.palette);
+  query.set("pc", params.pathColor.replace("#", ""));
+  query.set("brd", String(params.branchDensity));
+  query.set("fwf", String(params.fourWayFraction));
+  query.set("ded", String(params.deadEndDensity));
   query.set("pk", params.pluckStyle);
   query.set("mf", params.mazeFabric ? "1" : "0");
   query.set("de", params.deadEnds ? "1" : "0");

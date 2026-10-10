@@ -60,6 +60,36 @@ const SEG_RAMP_CTRL = 1.0;
 // is the design's color space: every scheme picks its colors from it
 // (coordinate v in [0, 1] -> hue), so sections always read as one family.
 const GAMUT_SWEEP = 280;
+
+// LIVE GAMUT CONFIG (the gamutArc + palette params): module-level so
+// every consumer - the schemes here AND the renderer's per-sample noise
+// path - reads the same values without threading extra args everywhere.
+// main.ts sets it from params before any field/scene build.
+export type GamutPalette = "pastel" | "jewel" | "ember" | "moss" | "ink";
+export const GAMUT_PALETTES: GamutPalette[] = [
+  "pastel",
+  "jewel",
+  "ember",
+  "moss",
+  "ink",
+];
+// Saturation / lightness per palette preset (hue comes from the arc).
+const PALETTE_SL: Record<GamutPalette, [number, number]> = {
+  pastel: [0.45, 0.64],
+  jewel: [0.62, 0.5],
+  ember: [0.72, 0.54],
+  moss: [0.34, 0.52],
+  ink: [0.16, 0.56],
+};
+let gamutArcDeg = GAMUT_SWEEP;
+let gamutSat = PALETTE_SL.pastel[0];
+let gamutLight = PALETTE_SL.pastel[1];
+export function setGamutConfig(arcDeg: number, palette: GamutPalette): void {
+  gamutArcDeg = Math.max(10, Math.min(360, arcDeg));
+  const sl = PALETTE_SL[palette] ?? PALETTE_SL.pastel;
+  gamutSat = sl[0];
+  gamutLight = sl[1];
+}
 // Max gamut-coordinate span per emitted segment for schemes that sweep
 // the gamut (depth, strands): ~17 degrees of hue per linear-RGB piece
 // keeps the chained lerps on the hue arc.
@@ -76,8 +106,8 @@ function hslToRgb(h: number, s: number, l: number): RGB {
 // Gamut coordinate -> RGB (shared with the renderer, which uses it to
 // convert the spatial noise field per sample).
 export function gamutRgb(baseHue: number, v: number): RGB {
-  const h = (((baseHue + (v - 0.5) * GAMUT_SWEEP) % 360) + 360) % 360;
-  return hslToRgb(h, 0.45, 0.64);
+  const h = (((baseHue + (v - 0.5) * gamutArcDeg) % 360) + 360) % 360;
+  return hslToRgb(h, gamutSat, gamutLight);
 }
 
 // Deterministic hash -> [0, 1) for per-run colors.

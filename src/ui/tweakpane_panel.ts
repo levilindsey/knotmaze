@@ -256,6 +256,21 @@ export function buildPanel(
     "Dead ends: some loops become long threads that end, somewhere far away, in a loose tip. Off = a pure braided maze where every wrong turn loops back. Regenerates the maze.",
     D.deadEnds, () => callbacks.onModeChange()
   );
+  const deadEndDensityRow = row(
+    fMaze, p, "deadEndDensity", { min: 0.05, max: 1, step: 0.05 },
+    "Fraction of eligible loops cut into dead-end threads. 1 = maximally tree-like. Regenerates the maze.",
+    D.deadEndDensity, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const branchDensityRow = row(
+    fMaze, p, "branchDensity", { min: 0, max: 1, step: 0.05 },
+    "How many extra choice junctions the maze adds beyond the minimum needed to connect everything. Regenerates the maze.",
+    D.branchDensity, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const fourWayRow = row(
+    fMaze, p, "fourWayFraction", { min: 0, max: 1, step: 0.05 },
+    "Share of junctions realized as 4-way crossings instead of 3-way splits. Regenerates the maze.",
+    D.fourWayFraction, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
   const pathVizRow = row(
     fMaze, p, "pathViz",
     { options: { gold: "gold", trail: "trail", string: "string" } },
@@ -316,6 +331,35 @@ export function buildPanel(
     },
     "Section coloring: mono = one color; strands = per-thread hues; depth = gradient by distance from the start; segments = a random gamut color per run between intersections; noise = a spatial dye field. Sections blend smoothly through intersections. Rebuilds the scene.",
     D.colorScheme, () => callbacks.onModeChange()
+  );
+  row(
+    fLook, p, "hueShift", { min: 0, max: 359, step: 1 },
+    "Rotates the whole color gamut around the hue wheel (added to the seed's base hue). Rebuilds the scene.",
+    D.hueShift, (ev) => { if (!ev || ev.last !== false) callbacks.onStyleChange(); }
+  );
+  row(
+    fLook, p, "gamutArc", { min: 40, max: 360, step: 5 },
+    "Width of the hue arc colors are drawn from: narrow = one tight family, 360 = the full rainbow. Rebuilds the scene.",
+    D.gamutArc, (ev) => { if (!ev || ev.last !== false) callbacks.onStyleChange(); }
+  );
+  row(
+    fLook, p, "palette",
+    {
+      options: {
+        pastel: "pastel",
+        jewel: "jewel",
+        ember: "ember",
+        moss: "moss",
+        ink: "ink",
+      },
+    },
+    "Saturation/lightness character of the gamut. Rebuilds the scene.",
+    D.palette, () => callbacks.onStyleChange()
+  );
+  const pathColorRow = row(
+    fLook, p, "pathColor", { view: "color" },
+    "Color of the traveled-path highlight (the classic gold). Rebuilds the scene.",
+    D.pathColor, () => callbacks.onStyleChange()
   );
   row(
     fLook, p, "threadWidth", { min: 0.15, max: 0.8, step: 0.01 },
@@ -445,6 +489,17 @@ export function buildPanel(
     "How many octaves the segment pitches spread across.",
     D.octaves, () => callbacks.onAudioChange()
   );
+  const rootNoteRow = row(
+    fSound, p, "rootNote",
+    {
+      options: {
+        seed: "seed", C: "C", "C#": "C#", D: "D", "D#": "D#", E: "E",
+        F: "F", "F#": "F#", G: "G", "G#": "G#", A: "A", "A#": "A#", B: "B",
+      },
+    },
+    "Root note of the pluck scale. 'seed' derives it from the design seed.",
+    D.rootNote, () => callbacks.onAudioChange()
+  );
   const soundSpeedRow = row(
     fSound, p, "soundSpeed", { min: 0.25, max: 6, step: 0.05 },
     "Tempo of music mode and cadence of random plucks. 1 = normal.",
@@ -535,6 +590,9 @@ export function buildPanel(
   refreshCond = (): void => {
     const fab = params.mazeFabric;
     deadEndsRow.hidden = !fab;
+    deadEndDensityRow.hidden = !fab || !params.deadEnds;
+    branchDensityRow.hidden = !fab;
+    fourWayRow.hidden = !fab;
     pathVizRow.hidden = !fab;
     trailLenRow.hidden = !fab || params.pathViz !== "trail";
     tensionRow.hidden = !fab || params.pathViz !== "string";
@@ -543,12 +601,15 @@ export function buildPanel(
     moveSpeedRow.hidden = !fab;
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;
+    // The gold recolor paints in gold/trail modes; the yarn replaces it.
+    pathColorRow.hidden = !fab || params.pathViz === "string";
     // Music mode derives its pitch set from the song itself; manual and
     // random are the modes where the space/octaves choices apply.
     const freePitch =
       params.soundMode === "manual" || params.soundMode === "random";
     pitchSpaceRow.hidden = !freePitch;
     octavesRow.hidden = !freePitch;
+    rootNoteRow.hidden = !freePitch;
     soundSpeedRow.hidden =
       params.soundMode !== "random" && params.soundMode !== "music";
     snapBackRow.hidden = params.pluckStyle !== "soft";

@@ -66,6 +66,8 @@ export interface RibbonStyle {
   paletteMode?: boolean;
   // Seed for the flow-undulation noise field (defaults to 1).
   flowSeed?: number;
+  // Traversal-highlight color (the "gold"); accent strips cache per color.
+  pathColor?: number;
 }
 
 // PAINT: gameplay recoloring, declared by the fabric overlay and rendered by
@@ -178,6 +180,8 @@ const PULSE_END_WINDOW = 0.45;
 // departure visibly answers each arrival instead of waiting out the full
 // half-cycle.
 const PULSE_OUT_LEAD = 0.3;
+// Seconds for a new junction's pulse animation to breathe in.
+const PULSE_FADE_IN = 0.45;
 // JUNCTION JOINERY. Fused arms (bridge/stub/merge terminals) tuck their
 // rendered tip back by the host's half-width so the ribbon lands flush on
 // the host's near edge instead of overhanging past its centerline - the
@@ -260,12 +264,38 @@ function mixHex(a: number, b: number, t: number): number {
 // setResource on every subsequent render - the ticker dies and the screen
 // goes blank. (They are also seed-independent now - the strip carries
 // only white/gold accents; section colors arrive per vertex.)
-let ACCENT_TEXTURE: Texture | null = null;
+// Accent strips are PAGE-LIFETIME cached PER PATH COLOR (the pathColor
+// param) - pixi's retained render state can reference a TextureSource a
+// frame after a rebuild, so these are never destroyed (the PALETTE_CACHE
+// lore).
+const ACCENT_CACHE = new Map<number, Texture>();
+const ACCENT_PIX_CACHE = new Map<number, Uint8Array>();
+
+// CPU accent-strip sample with the GPU's linear filtering (1D lerp over
+// texels), for overlays that must composite the accent BEFORE
+// interpolation - a fan triangle interpolating raw U across a band seam
+// sweeps the strip THROUGH the gold rows mid-triangle (the palette-order
+// lore, fan edition: the jagged gold shards at traversed junctions).
+function accentSampleCpu(
+  px: Uint8Array,
+  u: number,
+  out: Float32Array
+): void {
+  const f = Math.max(0, Math.min(PAL_W - 1, u * PAL_W - 0.5));
+  const i0 = Math.floor(f);
+  const i1 = Math.min(PAL_W - 1, i0 + 1);
+  const t = f - i0;
+  for (let c = 0; c < 4; c++) {
+    out[c] =
+      ((px[i0 * 4 + c] * (1 - t) + px[i1 * 4 + c] * t) / 255) *
+      (c === 3 ? 1 : 1);
+  }
+}
 // Mesh.shader wants a TextureShader (a Shader carrying its texture).
 type SectionShader = Shader & { texture: Texture };
 let SECTION_SHADER: SectionShader | null = null;
 
-function buildAccentPixels(): Uint8Array {
+function buildAccentPixels(gold: number): Uint8Array {
   const px = new Uint8Array(PAL_W * 4);
   const put = (i: number, hex: number, w: number): void => {
     px[i * 4] = (hex >> 16) & 255;
@@ -278,22 +308,32 @@ function buildAccentPixels(): Uint8Array {
   // the outbound base bands, and every joinery overlay (discs, fillets)
   // meet in one color; family tints only separate mid-arm.
   for (let i = 0; i < 112; i++) put(i, 0xffffff, 0.94 * (1 - i / 111));
-  for (let i = 112; i < 118; i++) put(i, PATH_GOLD, 0);
-  for (let i = 118; i < 124; i++) put(i, PATH_GOLD, 1);
+  for (let i = 112; i < 118; i++) put(i, gold, 0);
+  for (let i = 118; i < 124; i++) put(i, gold, 1);
   for (let i = 124; i < 236; i++) {
-    put(i, mixHex(PATH_GOLD, 0xffffff, (0.94 * (i - 124)) / 111), 1);
+    put(i, mixHex(gold, 0xffffff, (0.94 * (i - 124)) / 111), 1);
   }
   for (let i = 236; i < 256; i++) {
-    put(i, mixHex(PATH_GOLD, 0xffffff, 0.94), 1);
+    put(i, mixHex(gold, 0xffffff, 0.94), 1);
   }
   return px;
 }
 
-function accentTexture(): Texture {
-  if (!ACCENT_TEXTURE) {
-    ACCENT_TEXTURE = new Texture({
+function accentPixels(gold: number = PATH_GOLD): Uint8Array {
+  let px = ACCENT_PIX_CACHE.get(gold);
+  if (!px) {
+    px = buildAccentPixels(gold);
+    ACCENT_PIX_CACHE.set(gold, px);
+  }
+  return px;
+}
+
+function accentTexture(gold: number = PATH_GOLD): Texture {
+  let tex = ACCENT_CACHE.get(gold);
+  if (!tex) {
+    tex = new Texture({
       source: new BufferImageSource({
-        resource: buildAccentPixels(),
+        resource: accentPixels(gold),
         width: PAL_W,
         height: 1,
         // The alpha channel is a MIX WEIGHT consumed by the shader, not
@@ -304,8 +344,9 @@ function accentTexture(): Texture {
         alphaMode: "premultiplied-alpha",
       }),
     });
+    ACCENT_CACHE.set(gold, tex);
   }
-  return ACCENT_TEXTURE;
+  return tex;
 }
 
 // The section shader (palette mode only; the app forces WebGL, so a GL
@@ -579,6 +620,8 @@ export class RibbonRenderer {
   // the pulse animation can run while the physics sleeps.
   private paintSpans: PaintSpan[] = [];
   private paintPulses: PulseArm[] = [];
+  private pulseKey = "";
+  private pulseBorn = -1e9;
   private paintCaps: PaintCap[] = [];
   private paintRev = 0;
   private chainRev = new Map<number, number>();
@@ -683,7 +726,8 @@ export class RibbonRenderer {
   // jitter under movement/undulation" report).
   private prevCuts: Float32Array = new Float32Array(0);
   private prevCutsValid: Uint8Array = new Uint8Array(0);
-  private prevCenter: Float32Array = new Float32Array(0);
+  private prevCutSign: Int8Array = new Int8Array(0);
+  private acc4Scratch = new Float32Array(4);
   private filletMesh: TriFanMesh | null = null;
   private sectionSegs: VSegment[][] = [];
   private sectionNoise: ((x: number, y: number) => number) | null = null;
@@ -730,12 +774,18 @@ export class RibbonRenderer {
     const eraseLayer = new Container();
     const overLayer = new Container();
     const filletTopLayer = new Container();
+    // Top fillets sit ABOVE the erases (a foreign under-thread's punch
+    // cannot clip a covering web) but BELOW the over fills: fills keep
+    // painting threads over the web with their exact per-sample colors.
+    // (Rendering top fillets above the fills overpainted crossing fills
+    // near big joints with the field's approximated blend - the "weird
+    // discontinuous intersection color blends" report at cr=2.1.)
     this.root.addChild(
       baseLayer,
       filletLayer,
       eraseLayer,
-      overLayer,
-      filletTopLayer
+      filletTopLayer,
+      overLayer
     );
     this.filletTopLayer = filletTopLayer;
     this.eraseLayerRef = eraseLayer;
@@ -768,7 +818,7 @@ export class RibbonRenderer {
       const base = hslToHex(hue, 0.45, 0.64);
       const fill = new RibbonMesh(count, closed, base, style.paletteMode);
       if (style.paletteMode) {
-        this.accentTex = accentTexture();
+        this.accentTex = accentTexture(style.pathColor);
         fill.mesh.texture = this.accentTex;
         fill.mesh.shader = sectionShader();
         fill.mesh.tint = 0xffffff;
@@ -844,7 +894,7 @@ export class RibbonRenderer {
     this.eraseExtentNeg = new Float32Array(ps.crossings.length);
     this.prevCuts = new Float32Array(ps.crossings.length * ERASE_LANES * 2);
     this.prevCutsValid = new Uint8Array(ps.crossings.length);
-    this.prevCenter = new Float32Array(ps.crossings.length * 2);
+    this.prevCutSign = new Int8Array(ps.crossings.length * ERASE_LANES * 2);
     this.overWindows = new Int32Array(ps.crossings.length * 2);
     this.emergentWindows = new Array(EMERGENT_POOL).fill(null);
 
@@ -2008,43 +2058,44 @@ export class RibbonRenderer {
       // re-quantize against drifting local polylines, and the discrete
       // cap sources (neighbor reserve branch, twin bias, self splits) can
       // flip between frames - small pops the eye reads as gap jitter.
-      // Each registered crossing's final cuts may move at most a
-      // MOTION-SCALED step per frame: free during drags (the geometry
-      // itself moves fast), pinned to smooth slides at rest. Cuts are
-      // CENTER-RELATIVE arcs, so coherent translation (flow sway) passes
-      // through untouched; only relative-cut noise is limited.
+      // The discriminator is DIRECTION REVERSAL, not speed: jitter
+      // alternates sign every frame, while real geometry (drags, flow
+      // sway) moves each cut consistently and reverses slowly. A cut
+      // moving the same way as last frame passes untouched; a reversal
+      // is snubbed to a crawl. (The first cut of this limiter scaled the
+      // allowance by center MOTION - flow sway inflated it enough for
+      // the march noise to wiggle inside, the user's alt-clicked
+      // still-jittering self-crossing.)
       if (index >= 0 && this.prevCuts.length > 0) {
         const base = index * ERASE_LANES * 2;
-        this.sampleAt(underSamples, underCenter, this.sampleScratch, 0);
-        const wx = this.sampleScratch[0];
-        const wy = this.sampleScratch[1];
-        const moved = Math.hypot(
-          wx - this.prevCenter[index * 2],
-          wy - this.prevCenter[index * 2 + 1]
-        );
-        this.prevCenter[index * 2] = wx;
-        this.prevCenter[index * 2 + 1] = wy;
         if (this.prevCutsValid[index]) {
-          const maxStep = Math.max(0.025, moved * 1.2);
-          for (let l = 0; l < ERASE_LANES; l++) {
-            const dp = this.laneCutsPos[l] - this.prevCuts[base + l];
-            if (Math.abs(dp) > maxStep) {
-              this.laneCutsPos[l] =
-                this.prevCuts[base + l] + Math.sign(dp) * maxStep;
+          const CRAWL = 0.02;
+          for (let side = 0; side < 2; side++) {
+            const cuts = side === 0 ? this.laneCutsPos : this.laneCutsNeg;
+            for (let l = 0; l < ERASE_LANES; l++) {
+              const idx = base + side * ERASE_LANES + l;
+              const prev = this.prevCuts[idx];
+              const d = cuts[l] - prev;
+              const sgn = d > 1e-6 ? 1 : d < -1e-6 ? -1 : 0;
+              const last = this.prevCutSign[idx];
+              if (
+                sgn !== 0 &&
+                last !== 0 &&
+                sgn !== last &&
+                Math.abs(d) > CRAWL
+              ) {
+                cuts[l] = prev + sgn * CRAWL;
+              }
+              if (sgn !== 0) this.prevCutSign[idx] = sgn;
+              this.prevCuts[idx] = cuts[l];
             }
-            this.prevCuts[base + l] = this.laneCutsPos[l];
-            const bn = base + ERASE_LANES + l;
-            const dn = this.laneCutsNeg[l] - this.prevCuts[bn];
-            if (Math.abs(dn) > maxStep) {
-              this.laneCutsNeg[l] =
-                this.prevCuts[bn] + Math.sign(dn) * maxStep;
-            }
-            this.prevCuts[bn] = this.laneCutsNeg[l];
           }
         } else {
           for (let l = 0; l < ERASE_LANES; l++) {
             this.prevCuts[base + l] = this.laneCutsPos[l];
             this.prevCuts[base + ERASE_LANES + l] = this.laneCutsNeg[l];
+            this.prevCutSign[base + l] = 0;
+            this.prevCutSign[base + ERASE_LANES + l] = 0;
           }
           this.prevCutsValid[index] = 1;
         }
@@ -2409,6 +2460,18 @@ export class RibbonRenderer {
     this.paintPulses = pulses;
     this.paintCaps = caps;
     this.paintRev++;
+    // PULSE FADE-IN: pulses live around the current head junction; when
+    // that junction changes, restart the fade clock so the gradient
+    // animation breathes in instead of popping (the "appear too
+    // abruptly" report). Keyed by the inbound arm's junction ctrl.
+    const key =
+      pulses.length > 0
+        ? pulses[0].chain + ":" + Math.round(pulses[0].cJunction * 4)
+        : "";
+    if (key !== this.pulseKey) {
+      this.pulseKey = key;
+      this.pulseBorn = this.paintClock;
+    }
   }
 
   // The light per-frame paint pass: advances the pulse clock and rewrites
@@ -2961,6 +3024,14 @@ export class RibbonRenderer {
     if (d < 0 || d > end) return 0;
     const endWin = Math.min(1, Math.max(0, (end - d) / PULSE_END_WINDOW));
     if (hovered) return endWin;
+    // Fade the whole animation in over the first moments at a NEW head
+    // junction (smoothstep; hover stays instant - it is a direct
+    // pointer response).
+    const fi = Math.min(
+      1,
+      Math.max(0, (this.paintClock - this.pulseBorn) / PULSE_FADE_IN)
+    );
+    const fadeIn = fi * fi * (3 - 2 * fi);
     const spacing = Math.max(0.5, this.pulseSpacing);
     const clock = inward ? this.paintClock : this.paintClock + PULSE_OUT_LEAD;
     const travel = clock * PULSE_SPEED;
@@ -2980,7 +3051,7 @@ export class RibbonRenderer {
       (PULSE_FLOOR +
         PULSE_CORE_BOOST * Math.max(0, 1 - d / PULSE_CORE_RADIUS)) *
       Math.max(0, 1 - d / PULSE_REACH);
-    return Math.min(1, (floor + bump * 0.9) * endWin);
+    return Math.min(1, (floor + bump * 0.9) * endWin) * fadeIn;
   }
 
   // The paint field at a single chain ARC (same rules as writeChainPaint,
@@ -3153,6 +3224,22 @@ export class RibbonRenderer {
     // the voted layer and resets it to bottom afterward.
     let fm = fmBottom;
     const c3 = this.rgbScratch;
+    // Fans composite the accent CPU-SIDE into the vertex RGB and carry a
+    // NEUTRAL U: a fan triangle interpolating raw U across the band seam
+    // sweeps the accent strip THROUGH the gold rows mid-triangle (the
+    // palette-order lore, fan edition - the jagged gold shards at
+    // traversed junctions under the pulse animation). Linear RGB
+    // interpolation cannot phantom-sweep.
+    const accPx = accentPixels(this.style.pathColor);
+    const acc4 = this.acc4Scratch;
+    const composeInto = (u: number, rgb: Float32Array): number => {
+      accentSampleCpu(accPx, u, acc4);
+      const a = acc4[3];
+      rgb[0] += (acc4[0] - rgb[0]) * a;
+      rgb[1] += (acc4[1] - rgb[1]) * a;
+      rgb[2] += (acc4[2] - rgb[2]) * a;
+      return U_BASE;
+    };
 
     // LAYER VOTES (see filletTopLayer), PER-ARM: an arm is "over-near"
     // when a nearby crossing on its chain side has the arm as the OVER
@@ -3234,26 +3321,13 @@ export class RibbonRenderer {
           closed
         );
         this.colorAtArc(chain, arc, c3);
-        rim.push(
-          px,
-          py,
-          this.paintUAtArc(chain, arc, closed),
-          c3[0],
-          c3[1],
-          c3[2]
-        );
+        const u = composeInto(this.paintUAtArc(chain, arc, closed), c3);
+        rim.push(px, py, u, c3[0], c3[1], c3[2]);
       }
       const arcC = normArc(arc0, total, closed);
       this.colorAtArc(chain, arcC, c3);
-      fm.pushFan(
-        cx,
-        cy,
-        this.paintUAtArc(chain, arcC, closed),
-        c3[0],
-        c3[1],
-        c3[2],
-        rim
-      );
+      const uC = composeInto(this.paintUAtArc(chain, arcC, closed), c3);
+      fm.pushFan(cx, cy, uC, c3[0], c3[1], c3[2], rim);
     };
     // Local thread direction at an arc (two nearby probes), into
     // axisScratch.
@@ -3419,6 +3493,15 @@ export class RibbonRenderer {
     let fieldR = this.baseRgb[0];
     let fieldG = this.baseRgb[1];
     let fieldB = this.baseRgb[2];
+    const compose = (): void => {
+      c3[0] = fieldR;
+      c3[1] = fieldG;
+      c3[2] = fieldB;
+      fieldU = composeInto(fieldU, c3);
+      fieldR = c3[0];
+      fieldG = c3[1];
+      fieldB = c3[2];
+    };
     const armSample = (arm: JArm, proj: number): void => {
       const arc = normArc(arm.arc0 + arm.dir * proj, arm.total, arm.closed);
       fieldU = this.paintUAtArc(arm.chain, arc, arm.closed);
@@ -3434,6 +3517,7 @@ export class RibbonRenderer {
         fieldR = this.baseRgb[0];
         fieldG = this.baseRgb[1];
         fieldB = this.baseRgb[2];
+        compose();
         return;
       }
       const d = Math.hypot(px - rec.jx, py - rec.jy);
@@ -3443,7 +3527,10 @@ export class RibbonRenderer {
       const B = arms[bi % arms.length];
       const A = arms[(bi - 1 + arms.length) % arms.length];
       armSample(A, d * Math.max(0, Math.cos(ang - A.ang)));
-      if (A === B) return;
+      if (A === B) {
+        compose();
+        return;
+      }
       const uA = fieldU;
       const rA = fieldR;
       const gA = fieldG;
@@ -3458,6 +3545,7 @@ export class RibbonRenderer {
       fieldR = rA + (fieldR - rA) * t;
       fieldG = gA + (fieldG - gA) * t;
       fieldB = bA + (fieldB - bA) * t;
+      compose();
     };
     const pushDiscField = (
       rec: JRec,

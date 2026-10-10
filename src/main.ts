@@ -1,11 +1,7 @@
 import { Application, Container } from "pixi.js";
 import { generateLatticeKnotwork } from "./core/lattice_grower";
-import {
-  buildMazePlan,
-  DEFAULT_MAZE_PARAMS,
-  DEAD_END_DENSITY_ON,
-} from "./core/maze_plan";
-import { buildSectionField } from "./core/section_colors";
+import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "./core/maze_plan";
+import { buildSectionField, setGamutConfig } from "./core/section_colors";
 import { applyMazePlan, applyMazeCuts } from "./core/maze_apply";
 import { buildWalkGraph } from "./core/walk_graph";
 import type { WalkGraph } from "./core/walk_graph";
@@ -16,7 +12,7 @@ import { DebugRenderer } from "./render/debug_renderer";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
 import { FabricMazeController } from "./game/fabric_controller";
 import { RevealAnimator } from "./render/reveal";
-import { readParams, writeParams, newSeed } from "./ui/url_state";
+import { readParams, writeParams, newSeed, ROOT_NOTES } from "./ui/url_state";
 import { buildPanel } from "./ui/tweakpane_panel";
 import type { PanelSettings } from "./ui/tweakpane_panel";
 import type { GenerationParams } from "./core/types";
@@ -36,7 +32,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4: worklet harp (true pitch) 2026-10-10";
+const BUILD_STAMP = "P4: gamut+maze+audio params 2026-10-10";
 
 // Appearance pre-sim: with any non-instant appear mode the sim settles
 // briefly BEFORE the first rendered frame, so the reveal plays over a
@@ -207,7 +203,9 @@ async function main(): Promise<void> {
     if (params.mazeFabric) {
       const plan = buildMazePlan(graph, {
         ...DEFAULT_MAZE_PARAMS,
-        deadEndDensity: params.deadEnds ? DEAD_END_DENSITY_ON : 0,
+        branchDensity: params.branchDensity,
+        fourWayFraction: params.fourWayFraction,
+        deadEndDensity: params.deadEnds ? params.deadEndDensity : 0,
       });
       hueGroup = applyMazePlan(graph, plan);
       applyMazeCuts(graph, plan, hueGroup);
@@ -219,6 +217,12 @@ async function main(): Promise<void> {
 
     ps = new ParticleSystem(graph);
 
+    // Color space for this build: seed hue rotated by hueShift; arc width
+    // and palette preset configure gamutRgb for every consumer (schemes
+    // AND the renderer's per-sample noise path).
+    const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
+    setGamutConfig(params.gamutArc, params.palette);
+
     // The walk graph feeds both the section coloring and (in fabric mode)
     // the gameplay, so it builds before the renderer.
     walkGraph = params.mazeFabric ? buildWalkGraph(graph) : null;
@@ -226,7 +230,8 @@ async function main(): Promise<void> {
     renderer = new RibbonRenderer(ps, {
       threadWidth: params.threadWidth,
       casingWidth: params.threadWidth + params.gap * 2,
-      baseHue: params.seed % 360,
+      baseHue: effHue,
+      pathColor: parseInt(params.pathColor.slice(1), 16),
       // Knot-mode tints only (palette mode colors via the section field):
       // per-strand hues for the strands scheme, mono otherwise.
       hueGroup:
@@ -244,7 +249,7 @@ async function main(): Promise<void> {
         ps.chains.map((c) => c.length),
         hueGroup,
         params.seed,
-        params.seed % 360 // The gamut anchor; matches style.baseHue.
+        effHue // The gamut anchor; matches style.baseHue.
       ),
       params.colorScheme,
       params.seed
@@ -325,7 +330,9 @@ async function main(): Promise<void> {
       const pitches = [...set].sort((a, b) => a - b);
       assignFor = (lengths) => assignPitchesFromList(pitches, lengths);
     } else {
-      const root = params.seed % 12;
+      // Root: seed-derived unless the rootNote param picks a fixed class.
+      const rootIdx = ROOT_NOTES.indexOf(params.rootNote) - 1;
+      const root = rootIdx >= 0 ? rootIdx : params.seed % 12;
       assignFor = (lengths) =>
         assignPitches(params.pitchSpace, params.octaves, root, lengths);
     }
