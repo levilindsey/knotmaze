@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assignPitches,
+  degreeWeights,
   midiToFreq,
   noteToFreq,
   segmentsNear,
@@ -60,5 +61,42 @@ describe("pitch spaces", () => {
     expect(segmentsNear(a, 1e5)).toEqual(
       a.byFreq[a.byFreq.length - 1].segs
     );
+  });
+});
+
+describe("tonal weighting", () => {
+  const lengths = Array.from({ length: 850 }, (_, i) => 1000 - i);
+
+  it("is the uniform quantile split at emphasis 0", () => {
+    const a = assignPitches("pentMinor", 2, 0, lengths, 0);
+    const b = assignPitches("pentMinor", 2, 0, lengths);
+    expect(a.segFreq).toEqual(b.segFreq);
+  });
+
+  it("sizes buckets by scale-degree weight at full emphasis", () => {
+    // pentMinor [0,3,5,7,10]: tonic 3, mediant (minor 3rd) 1.5, 4th 1,
+    // dominant 2, minor 7th 1 -> total 8.5.
+    expect(degreeWeights("pentMinor", 1)).toEqual([3, 1.5, 1, 2, 1]);
+    const a = assignPitches("pentMinor", 1, 0, lengths, 1);
+    const count = new Map<number, number>();
+    for (const f of a.segFreq) count.set(f, (count.get(f) ?? 0) + 1);
+    const rows = a.byFreq.map((r) => count.get(r.freq)!);
+    expect(rows).toEqual([300, 150, 100, 200, 100]);
+  });
+
+  it("keeps longer segments at lower-or-equal pitches", () => {
+    const a = assignPitches("dorian", 3, 2, lengths, 0.7);
+    for (let i = 1; i < lengths.length; i++) {
+      expect(a.segFreq[i]).toBeGreaterThanOrEqual(a.segFreq[i - 1]);
+    }
+  });
+
+  it("weights only an unambiguous third as the mediant", () => {
+    // Chromatic has both thirds, insen neither: tonic + dominant only.
+    const c = degreeWeights("chromatic", 1);
+    expect(c.filter((w) => w !== 1).length).toBe(2);
+    const ins = degreeWeights("insen", 1);
+    expect(ins.filter((w) => w !== 1).length).toBe(2);
+    expect(degreeWeights("pentMajor", 1)[2]).toBe(1.5); // Major 3rd.
   });
 });

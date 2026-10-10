@@ -551,6 +551,11 @@ export function buildPanel(
     "Root note of the pluck scale. 'seed' derives it from the design seed.",
     D.rootNote, () => callbacks.onAudioChange()
   );
+  const tonicEmphasisRow = row(
+    fSound, p, "tonicEmphasis", { min: 0, max: 1, step: 0.05 },
+    "How strongly the segment pitches gravitate to the key: more threads ring the tonic (up to 3x), the dominant (2x) and the third (1.5x). 0 = every scale note equally often.",
+    D.tonicEmphasis, (ev) => { if (!ev || ev.last !== false) callbacks.onAudioChange(); }
+  );
   const soundSpeedRow = row(
     fSound, p, "soundSpeed", { min: 0.25, max: 6, step: 0.05 },
     "Tempo of music mode and cadence of random plucks. 1 = normal.",
@@ -683,6 +688,7 @@ export function buildPanel(
     pitchSpaceRow.hidden = !freePitch;
     octavesRow.hidden = !freePitch;
     rootNoteRow.hidden = !freePitch;
+    tonicEmphasisRow.hidden = !freePitch;
     soundSpeedRow.hidden =
       params.soundMode !== "random" && params.soundMode !== "music";
     snapBackRow.hidden = params.pluckStyle !== "soft";

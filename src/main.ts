@@ -352,7 +352,13 @@ async function main(): Promise<void> {
       const rootIdx = ROOT_NOTES.indexOf(params.rootNote) - 1;
       const root = rootIdx >= 0 ? rootIdx : params.seed % 12;
       assignFor = (lengths) =>
-        assignPitches(params.pitchSpace, params.octaves, root, lengths);
+        assignPitches(
+          params.pitchSpace,
+          params.octaves,
+          root,
+          lengths,
+          params.tonicEmphasis
+        );
     }
     if (walkGraph) {
       audioAssign = assignFor(walkGraph.edges.map((e) => e.length));

@@ -82,6 +82,9 @@ export interface UrlParams {
   shimmer: number; // [0, 1] course detune (x3 cents). 0.4 = stock.
   pickPosition: number; // [0, 1] pluck point along the string. 0.4 = stock.
   rootNote: RootNote; // Scale root for manual/random modes; "seed" = auto.
+  // [0, 1] tonal gravity of the segment pitch buckets (manual/random):
+  // the tonic/dominant/mediant buckets widen up to 3x/2x/1.5x at 1.
+  tonicEmphasis: number;
   pulseSpacing: number; // [0.8, 6] world units between traversal pulses.
   hueShift: number; // [0, 360) rotation added to the seed's base hue.
   gamutArc: number; // [40, 360] hue-arc width of the color gamut.
@@ -161,6 +164,7 @@ export const DEFAULTS = {
   pickPosition: 0.4,
   snappiness: 0.5,
   rootNote: "seed" as RootNote,
+  tonicEmphasis: 0.5,
   pulseSpacing: 2.5,
   hueShift: 0,
   gamutArc: 280,
@@ -252,6 +256,7 @@ export function readParams(): UrlParams {
     pickPosition: readNumber(query, "pp", DEFAULTS.pickPosition),
     snappiness: readNumber(query, "snpy", DEFAULTS.snappiness),
     rootNote: readChoice(query, "rn", ROOT_NOTES, "seed"),
+    tonicEmphasis: readNumber(query, "tnc", DEFAULTS.tonicEmphasis),
     pulseSpacing: readNumber(query, "psp", DEFAULTS.pulseSpacing),
     hueShift: readNumber(query, "hs", DEFAULTS.hueShift),
     gamutArc: readNumber(query, "arc", DEFAULTS.gamutArc),
@@ -363,6 +368,7 @@ export function writeParams(params: UrlParams): void {
   query.set("pp", String(params.pickPosition));
   query.set("snpy", String(params.snappiness));
   query.set("rn", params.rootNote);
+  query.set("tnc", String(params.tonicEmphasis));
   query.set("psp", String(params.pulseSpacing));
   query.set("hs", String(params.hueShift));
   query.set("arc", String(params.gamutArc));

@@ -92,25 +92,48 @@ export interface PitchAssignment {
   byFreq: Array<{ freq: number; segs: number[] }>;
 }
 
+// TONAL WEIGHTS per scale degree (semitones from the root) at emphasis
+// s in [0, 1]: the tonic's bucket grows to 1+2s, the dominant's to 1+s,
+// the mediant's to 1+0.5s, so random/manual plucking gravitates tonal.
+// The mediant is the scale's ONLY third (minor 3 or major 4); scales
+// with both (chromatic) or neither (insen) get no mediant weight.
+export function degreeWeights(space: PitchSpace, s: number): number[] {
+  const degs = DEGREES[space];
+  const has3 = degs.includes(3);
+  const has4 = degs.includes(4);
+  const mediant = has3 !== has4 ? (has3 ? 3 : 4) : -1;
+  return degs.map((d) =>
+    d === 0 ? 1 + 2 * s : d === 7 ? 1 + s : d === mediant ? 1 + 0.5 * s : 1
+  );
+}
+
 // Quantile bucket assignment: segments ranked by length DESC map onto the
 // space's pitches ASC (longest = lowest). Every pitch gets a bucket when
 // there are at least as many segments as pitches; otherwise the extremes
-// are preserved and the middle thins.
+// are preserved and the middle thins. `tonicEmphasis` widens the tonic /
+// dominant / mediant buckets (degreeWeights); 0 = uniform buckets.
 export function assignPitches(
   space: PitchSpace,
   octaves: number,
   root: number,
-  lengths: number[]
+  lengths: number[],
+  tonicEmphasis = 0
 ): PitchAssignment {
-  return assignPitchesFromList(spacePitches(space, octaves, root), lengths);
+  const pitches = spacePitches(space, octaves, root);
+  if (tonicEmphasis <= 0) return assignPitchesFromList(pitches, lengths);
+  const perOct = degreeWeights(space, Math.min(1, tonicEmphasis));
+  const weights = pitches.map((_, i) => perOct[i % perOct.length]);
+  return assignPitchesFromList(pitches, lengths, weights);
 }
 
 // Same bucketing over an EXPLICIT ascending pitch list - music mode uses
 // the song's own distinct pitches, so every segment belongs to a note the
-// piece actually plays.
+// piece actually plays. Optional per-pitch `weights` size the buckets
+// proportionally (omitted = uniform, the original quantile split).
 export function assignPitchesFromList(
   pitches: number[],
-  lengths: number[]
+  lengths: number[],
+  weights?: number[]
 ): PitchAssignment {
   const n = lengths.length;
   const segFreq = new Array<number>(n).fill(pitches[0] ?? 220);
@@ -118,12 +141,32 @@ export function assignPitchesFromList(
   const order = lengths
     .map((len, i) => ({ len, i }))
     .sort((a, b) => b.len - a.len || a.i - b.i);
+  // Cumulative bucket edges for the weighted split.
+  let cum: number[] | null = null;
+  if (weights && weights.length === pitches.length) {
+    const total = weights.reduce((a, w) => a + Math.max(0, w), 0);
+    if (total > 0) {
+      cum = [];
+      let acc = 0;
+      for (const w of weights) {
+        acc += Math.max(0, w) / total;
+        cum.push(acc);
+      }
+    }
+  }
   const byFreqMap = new Map<number, number[]>();
   for (let rank = 0; rank < n; rank++) {
-    const k = Math.min(
-      pitches.length - 1,
-      Math.floor((rank / n) * pitches.length)
-    );
+    let k: number;
+    if (cum) {
+      const q = rank / n;
+      k = 0;
+      while (k < pitches.length - 1 && q >= cum[k]) k++;
+    } else {
+      k = Math.min(
+        pitches.length - 1,
+        Math.floor((rank / n) * pitches.length)
+      );
+    }
     const f = pitches[k];
     segFreq[order[rank].i] = f;
     const list = byFreqMap.get(f);
