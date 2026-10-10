@@ -83,7 +83,7 @@ Work lands directly to `main`. All changes must be end-to-end working before com
 - Phased roadmap: P0 (scaffold) → P1 (combinatorial) → P2 (beauty + live physics) → P3 (touch + audio) → P4 (maze mode) → P5 (growth animation) → P6 (flourishes).
 - Each phase ships as a working demo starting from P2.
 
-## Roadmap status — what's next (updated 2026-10-09, after P4 Stage 16)
+## Roadmap status — what's next (updated 2026-10-09, after P4 Stage 18)
 
 **P0–P3 done** (their saga lives in Follow-ups; the bounded
 post-VIOLENT-play loud attractor at fat params remains the one open
@@ -203,6 +203,42 @@ between-threads/cell-passage route.
   `mc=1` reads as strands): mono (default) | strands | depth
   (distance-from-start Dijkstra gradient) | segments (random gamut
   color per run) | noise (seeded spatial dye field).
+- Stages 16b/16c — JOINERY WEARS THE FIELD: junction overlays moved
+  off flat Graphics fills onto ONE palette-textured fan mesh
+  (`TriFanMesh`; capacity fixed at first build, refilled per paint
+  tick, unused indices zeroed) with per-vertex UVs. 16c unified the
+  sampling into a SHARED JUNCTION FIELD: a query point's direction
+  picks the two bracketing arms by angle, each sampled at the point's
+  cos-projected distance, blended by angular fraction — disc rims,
+  wedge rims, and the arriving ribbons agree wherever they meet, for
+  section V and animated gameplay U alike. (vitest.config.ts also
+  landed here: it excludes `.claude/**` so agent worktrees inside the
+  repo don't triple the suite.)
+- Stage 17 — FLOW UNDULATION (worktree agent): the fabric sways in a
+  seeded simplex field — render-only displacement of each chain's
+  control COPIES in `renderer.update()`, so splines, crossing
+  machinery, fades, and joinery ride it coherently; physics never
+  touched. `fw=`/`fv=` sliders (default 0.3/1); paused/asleep ticker
+  branches run a render-only `flowRender()`; markers/dot/hit-tests
+  route through `flowOffset()`. Knot-mode guard: fw=0 asleep frames
+  byte-identical.
+- Stage 18 — UNDER-GAP CLIPPING + FADE (worktree agent): erase patches
+  draw with pixi's core `'erase'` blend over a TRANSPARENT canvas
+  (background hex moved to canvas CSS) — gaps CLIP the thread layer,
+  so a textured page backdrop drops in later with zero renderer
+  changes. `fadeLength` (`fl=`, [0, 1.2], default 0) extends each
+  erase grid past the solved caps with a per-vertex fade coordinate
+  into a cached premultiplied alpha-ramp texture; fl=0 is bit-identical
+  sharp. laneCuts/eraseExtent bookkeeping untouched.
+
+RENDER LORE (hard-won, 2026-10-09): **flat fills cannot represent a
+field.** Once per-vertex V blending exists, ANY flat-colored overlay
+(wedge, disc) over a ramping ribbon draws a visible step or stamped
+circle at its silhouette — and per-primitive sampling (host-axis
+discs, per-arm wedges) still leaks faint rim arcs wherever one
+primitive's footprint crosses ANOTHER arm's material. Overlays must
+evaluate the SAME continuous field as the ribbons (the 16c angular
+junction field). Don't reintroduce point-sampled joinery.
 
 RENDER LORE (hard-won, 2026-10-09): **the arc-wrap family bites twice.**
 Both `arcAt` AND `sampleAt` wrap their arc modulo totalLength, so an
@@ -252,12 +288,10 @@ length. Global gamut coverage must come from accumulated drift, never
 from adjacent jumps.
 
 Still open in P4:
-- **Textured background** (direction set 2026-10-09): gaps must CLIP
-  the thread layer instead of painting background color, so any
-  CSS/texture background can show through a transparent canvas. The
-  erase-blend conversion + under-gap fade slider is Stage 18 (in
-  flight as of this note); actually shipping a texture behind the
-  canvas remains open after it.
+- **Textured background**: the render side is DONE (Stage 18 — gaps
+  clip the thread layer over a transparent canvas); what remains is
+  actually shipping a texture/pattern behind the canvas (CSS on
+  `app.canvas` or a DOM layer) and picking the art.
 - **URL/param serialization for the remaining `MazeParams`**
   (branchDensity, fourWayFraction, … — today `mf` + `de` serialize and
   `DEFAULT_MAZE_PARAMS` supplies the rest) and the **daily seed**
