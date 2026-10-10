@@ -282,14 +282,24 @@ between-threads/cell-passage route.
   wander + per-pass lane bias; `tension` (`tn=`) reshapes the laid
   string live; drop shadow for self-crossings; stations resolve
   through pointFlowed so the yarn rides flow/deformation). Per-mode
-  sliders show dynamically (tweakpane row `.hidden`).
+  sliders show dynamically (tweakpane row `.hidden`). 24b: the yarn
+  HONORS THE WEAVE - the renderer records per-chain UNDER-GAP windows
+  from the live crossing solve each frame ([centerArc, extNeg,
+  extPos], emergent included; `underGapVisibility()` ramps over the
+  fadeLength extension), and the yarn strokes alpha-bucketed runs so
+  it fades out and dips under exactly where its host thread does,
+  instead of bridging over the gaps.
 - Stage 25 — FOG OF WAR (`fow=` + `fowRadius` / `fr=`, dynamic
   slider): the maze hides until explored; explored stays visible.
   One sprite over the gameplay overlay, offscreen-2D-canvas texture
   (background fill + destination-out radial holes), stamps follow the
   head at 0.8-unit spacing, redraws only on change; spatial memory
   (deliberately does not ride the flow field). Exit/pulses/labels
-  emerge only as explored.
+  emerge only as explored. 25b: the fog EDGES UNDULATE - a
+  DisplacementFilter over the fog sprite driven by a slowly drifting
+  tileable noise map (page-lifetime cached); displacing the uniform
+  interior is invisible, so only the lifted regions' edges breathe,
+  one GPU pass, animating even while physics sleeps.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +

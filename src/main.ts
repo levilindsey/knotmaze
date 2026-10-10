@@ -37,7 +37,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 25: fog of war 2026-10-10";
+const BUILD_STAMP = "P4 Stage 25b: yarn honors gaps + misty fog edges 2026-10-10";
 
 // Appearance pre-sim: with any non-instant appear mode the sim settles
 // briefly BEFORE the first rendered frame, so the reveal plays over a
@@ -948,6 +948,7 @@ async function main(): Promise<void> {
         fabric.trailLength = params.trailLength;
         fabric.fogOfWar = params.fogOfWar;
         fabric.fowRadius = params.fowRadius;
+        fabric.tickFog(ticker.deltaMS / 1000);
         fabricController.trailMode = params.pathViz === "trail";
         fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
         if (pendingWin && !fabric.animating) {

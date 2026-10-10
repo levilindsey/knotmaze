@@ -21,7 +21,13 @@
 // trail, at the trail's local intensity. The head-junction pulse/choice/
 // hover machinery is untouched.
 
-import { Container, Graphics, Sprite, Texture } from "pixi.js";
+import {
+  Container,
+  DisplacementFilter,
+  Graphics,
+  Sprite,
+  Texture,
+} from "pixi.js";
 import type { ParticleSystem } from "../physics/particle_system";
 import type { WalkGraph, WalkEdge } from "../core/walk_graph";
 import type { FabricMazeController } from "../game/fabric_controller";
@@ -89,6 +95,62 @@ interface YarnEvent {
 const FOG_CANVAS = 512;
 const FOG_MARGIN = 8; // World margin around the build-time bounds.
 const FOG_STAMP_SPACING = 0.8;
+// Fog-edge undulation: a DisplacementFilter over the fog sprite, driven
+// by a slowly drifting TILEABLE noise map. Displacing the uniform fog
+// interior is invisible - only the EDGES of the lifted regions wobble,
+// like living mist - and the whole effect is one GPU filter pass that
+// keeps animating while the physics sleeps (pixi re-renders every
+// frame). The map texture is page-lifetime cached (never destroyed).
+const FOG_DISP_SCALE = 14; // Screen-px of edge wobble.
+const FOG_DISP_DRIFT_X = 0.37; // World units/s of map drift.
+const FOG_DISP_DRIFT_Y = 0.22;
+
+let FOG_DISP_TEX: Texture | null = null;
+function fogDispTexture(): Texture {
+  if (FOG_DISP_TEX) return FOG_DISP_TEX;
+  const N = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = N;
+  canvas.height = N;
+  const ctx = canvas.getContext("2d")!;
+  const img = ctx.createImageData(N, N);
+  // Integer wave numbers keep the field exactly periodic (tileable);
+  // two decorrelated channel mixes for x/y displacement.
+  const termsR: Array<[number, number, number, number]> = [
+    [2, 1, 0.9, 0.3],
+    [3, 2, 0.55, 2.1],
+    [1, 3, 0.45, 4.4],
+  ];
+  const termsG: Array<[number, number, number, number]> = [
+    [1, 2, 0.9, 1.2],
+    [3, 1, 0.55, 3.6],
+    [2, 3, 0.45, 5.1],
+  ];
+  const evalTerms = (
+    terms: Array<[number, number, number, number]>,
+    x: number,
+    y: number
+  ): number => {
+    let v = 0;
+    for (const [a, b, amp, ph] of terms) {
+      v += amp * Math.sin((2 * Math.PI * (a * x + b * y)) / N + ph);
+    }
+    return v / 1.9; // Normalize to ~[-1, 1].
+  };
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      const o = (y * N + x) * 4;
+      img.data[o] = Math.round(128 + 120 * evalTerms(termsR, x, y));
+      img.data[o + 1] = Math.round(128 + 120 * evalTerms(termsG, x, y));
+      img.data[o + 2] = 128;
+      img.data[o + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  FOG_DISP_TEX = Texture.from(canvas);
+  FOG_DISP_TEX.source.style.addressMode = "repeat";
+  return FOG_DISP_TEX;
+}
 
 interface MoveAnim {
   e: WalkEdge;
@@ -150,6 +212,8 @@ export class FabricMazeRenderer {
   private fogStamps: number[] = []; // Flat explored world [x, y, ...].
   private fogDirty = true;
   private fogLastRadius = -1;
+  private fogDispSprite: Sprite | null = null;
+  private fogTime = 0;
   // REVEAL (Stage 22): while the appearance animation runs, main.ts wires
   // this to the renderer's reveal mask. The start marker (and the head
   // dot sitting on it) shows from the first frame; the exit marker waits
@@ -432,9 +496,14 @@ export class FabricMazeRenderer {
 
     // Resolve every station to world (centerline, then offset along the
     // local normal), concatenating events with a rounded overshoot past
-    // each junction - the visible U-turn on a backtrack.
+    // each junction - the visible U-turn on a backtrack. Each point also
+    // carries a VISIBILITY from the renderer's live under-gap windows,
+    // quantized to a few alpha levels: the yarn dips under and fades out
+    // exactly where its host thread does, instead of bridging over the
+    // threads its host passes under.
     const xs: number[] = [];
     const ys: number[] = [];
+    const as: number[] = [];
     const a = this.anim;
     for (let ev = 0; ev < this.yarnEvents.length; ev++) {
       const y = this.yarnEvents[ev];
@@ -476,7 +545,8 @@ export class FabricMazeRenderer {
         cys.push(this.scratch[1]);
       }
       if (cxs.length < 2) continue;
-      // Rounded overshoot past the junction before this pass begins.
+      // Rounded overshoot past the junction before this pass begins
+      // (junctions have no under-gap windows: full visibility).
       if (xs.length >= 2) {
         const ex = xs[xs.length - 1];
         const ey = ys[ys.length - 1];
@@ -486,6 +556,7 @@ export class FabricMazeRenderer {
         const o = 0.16 + 0.2 * slack;
         xs.push(ex + (inx / il) * o);
         ys.push(ey + (iny / il) * o);
+        as.push(1);
       }
       for (let k = 0; k < cxs.length; k++) {
         const kp = Math.max(0, k - 1);
@@ -499,30 +570,53 @@ export class FabricMazeRenderer {
         const off = y.wave[kk] * amp + y.lane * laneAmp;
         xs.push(cxs[k] - ty * off);
         ys.push(cys[k] + tx * off);
+        const ctrlK = y.ctrls[Math.min(k, y.ctrls.length - 1)];
+        const vis = this.ribbons.underGapVisibility(
+          y.chain,
+          this.ribbons.arcForCtrl(y.chain, this.ctrlMod(y.chain, ctrlK))
+        );
+        as.push(Math.round(vis * 5) / 5);
       }
     }
     if (xs.length < 2) return;
-    // Faint drop shadow first, so the yarn reads where it crosses itself.
-    g.moveTo(xs[0] + YARN_SHADOW_OFF, ys[0] + YARN_SHADOW_OFF * 1.3);
-    for (let i = 1; i < xs.length; i++) {
-      g.lineTo(xs[i] + YARN_SHADOW_OFF, ys[i] + YARN_SHADOW_OFF * 1.3);
-    }
-    g.stroke({
-      width: YARN_SHADOW_W,
-      color: 0x05070c,
-      alpha: 0.3,
-      cap: "round",
-      join: "round",
-    });
-    g.moveTo(xs[0], ys[0]);
-    for (let i = 1; i < xs.length; i++) g.lineTo(xs[i], ys[i]);
-    g.stroke({
-      width: YARN_WIDTH,
-      color: 0xf7f3e8,
-      alpha: 0.95,
-      cap: "round",
-      join: "round",
-    });
+    // Stroke contiguous runs of equal (quantized) visibility, skipping
+    // hidden spans - shadow pass first, then the yarn.
+    const strokeRuns = (
+      dx: number,
+      dy: number,
+      width: number,
+      color: number,
+      baseAlpha: number
+    ): void => {
+      let i = 0;
+      while (i < xs.length - 1) {
+        const q = Math.min(as[i], as[i + 1]);
+        if (q <= 0) {
+          i++;
+          continue;
+        }
+        g.moveTo(xs[i] + dx, ys[i] + dy);
+        let j = i + 1;
+        g.lineTo(xs[j] + dx, ys[j] + dy);
+        while (
+          j < xs.length - 1 &&
+          Math.min(as[j], as[j + 1]) === q
+        ) {
+          j++;
+          g.lineTo(xs[j] + dx, ys[j] + dy);
+        }
+        g.stroke({
+          width,
+          color,
+          alpha: baseAlpha * q,
+          cap: "round",
+          join: "round",
+        });
+        i = j;
+      }
+    };
+    strokeRuns(YARN_SHADOW_OFF, YARN_SHADOW_OFF * 1.3, YARN_SHADOW_W, 0x05070c, 0.3);
+    strokeRuns(0, 0, YARN_WIDTH, 0xf7f3e8, 0.95);
   }
 
   // --- Fog of war (Stage 25). See the FOG block up top.
@@ -564,6 +658,31 @@ export class FabricMazeRenderer {
     // sit inside the lifted area by construction; the exit emerges only
     // once explored, which is the point.
     this.overContainer.addChild(sp);
+    // Edge undulation (see the FOG_DISP block): the map sprite is only
+    // a sampling transform for the filter, never drawn itself.
+    const disp = new Sprite(fogDispTexture());
+    disp.renderable = false;
+    disp.width = span;
+    disp.height = span;
+    disp.position.set(this.fogRect.x0, this.fogRect.y0);
+    this.fogDispSprite = disp;
+    this.overContainer.addChild(disp);
+    sp.filters = [
+      new DisplacementFilter({ sprite: disp, scale: FOG_DISP_SCALE }),
+    ];
+  }
+
+  // Drift the displacement map so the fog edges breathe. Called every
+  // ticker frame (all branches) - cheap: one sprite transform; the GPU
+  // filter does the rest even while the physics sleeps.
+  tickFog(dt: number): void {
+    if (!this.fogOfWar || !this.fogDispSprite) return;
+    this.fogTime += dt;
+    const span = this.fogRect.span;
+    this.fogDispSprite.position.set(
+      this.fogRect.x0 + ((this.fogTime * FOG_DISP_DRIFT_X) % span),
+      this.fogRect.y0 + ((this.fogTime * FOG_DISP_DRIFT_Y) % span)
+    );
   }
 
   private maybeStampFog(x: number, y: number): void {

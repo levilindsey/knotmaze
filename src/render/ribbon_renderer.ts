@@ -483,6 +483,12 @@ export class RibbonRenderer {
   >();
   private eraseExtentPos = new Float32Array(0);
   private eraseExtentNeg = new Float32Array(0);
+  // Per-chain UNDER-GAP windows, rebuilt every update() from the live
+  // crossing solve (emergent crossings included): flat triplets
+  // [centerArc, extNeg, extPos] along the UNDER chain. Overlay consumers
+  // (the Ariadne yarn) use these to dip under with their host thread -
+  // see underGapVisibility().
+  private underWindows = new Map<number, number[]>();
   // Palette-mode paint state (see PaintSpan/PulseArm). The paint pass is
   // deliberately decoupled from update(): it rewrites only UV buffers, so
   // the pulse animation can run while the physics sleeps.
@@ -929,6 +935,48 @@ export class RibbonRenderer {
       amp * this.flowNoise(x * FLOW_FREQ + 61.7, y * FLOW_FREQ + 47.3, t);
   }
 
+  // Arc position of a chain ctrl (paint-side clamping semantics - safe
+  // at open-chain terminals). For overlay consumers.
+  arcForCtrl(chain: number, ctrl: number): number {
+    const samples = this.chainSamples[chain];
+    if (!samples) return 0;
+    return this.paintArcAt(
+      samples,
+      ctrl,
+      this.ps.chainBreakAfter[chain] < 0
+    );
+  }
+
+  // Visibility of overlay material riding a chain at `arc`: 0 inside any
+  // crossing gap where THIS chain goes under, ramping back to 1 across
+  // the fade extension - so the Ariadne yarn dips under and fades out
+  // exactly with its host thread. The ramp floors at a small feather so
+  // fadeLength 0 still cuts without pixel-popping. 1 where the chain is
+  // the over pass (no window on this chain there).
+  underGapVisibility(chain: number, arc: number): number {
+    const win = this.underWindows.get(chain);
+    if (!win) return 1;
+    const samples = this.chainSamples[chain];
+    const total = samples ? samples.totalLength : 0;
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    const ramp = Math.max(0.12, this.fadeLength);
+    let vis = 1;
+    for (let i = 0; i < win.length; i += 3) {
+      let d = arc - win[i];
+      if (closed && total > 0) {
+        d = ((d % total) + total) % total;
+        if (d > total / 2) d -= total;
+      }
+      const past = d >= 0 ? d - win[i + 2] : -d - win[i + 1];
+      const v = past <= 0 ? 0 : Math.min(1, past / ramp);
+      if (v < vis) {
+        vis = v;
+        if (vis === 0) break;
+      }
+    }
+    return vis;
+  }
+
   // --- REVEAL (Stage 22 appearance animation) ---
 
   // Attach a running appearance animator; masks start collapsed and grow
@@ -1140,6 +1188,9 @@ export class RibbonRenderer {
 
   update(): void {
     const { positions } = this.ps;
+    // Under-gap windows are rebuilt from scratch by this frame's
+    // crossing solves (renderCrossing appends).
+    this.underWindows.clear();
 
     // Reveal lifecycle: refresh the active flag, and on the completion
     // frame restore the full render exactly once.
@@ -1583,16 +1634,26 @@ export class RibbonRenderer {
       }
 
       // Record this crossing's final erase extents along its under thread
-      // for the fill NEIGHBOR-GAP RESERVE (see reachAlongOver).
-      if (index >= 0) {
+      // for the fill NEIGHBOR-GAP RESERVE (see reachAlongOver), and the
+      // under-gap WINDOW for overlay consumers (the Ariadne yarn dips
+      // under with its host; emergent crossings included).
+      {
         let ePos = 0;
         let eNeg = 0;
         for (let l = 0; l < ERASE_LANES; l++) {
           if (this.laneCutsPos[l] > ePos) ePos = this.laneCutsPos[l];
           if (-this.laneCutsNeg[l] > eNeg) eNeg = -this.laneCutsNeg[l];
         }
-        this.eraseExtentPos[index] = ePos;
-        this.eraseExtentNeg[index] = eNeg;
+        if (index >= 0) {
+          this.eraseExtentPos[index] = ePos;
+          this.eraseExtentNeg[index] = eNeg;
+        }
+        let win = this.underWindows.get(crossing.under.chain);
+        if (!win) {
+          win = [];
+          this.underWindows.set(crossing.under.chain, win);
+        }
+        win.push(underCenter, eNeg, ePos);
       }
 
       // Build the erase grid: each lane spans its own solved cut interval,
