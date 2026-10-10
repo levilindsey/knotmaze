@@ -67,7 +67,7 @@ const TRAIL_FADE_FRAC = 0.3;
 // stores ctrl stations plus a unit-amplitude wander profile; tension and
 // world positions are applied at draw time, so the laid string rides the
 // deforming/flowing threads and the tension slider reshapes it live.
-const YARN_STATION_CTRL = 0.45; // Station spacing (ctrl, ~2 per world unit).
+const YARN_STATION_CTRL = 0.32; // Station spacing (ctrl, ~3 per world unit).
 const YARN_WIDTH = 0.046; // Stroke width, lattice units.
 const YARN_SHADOW_W = 0.075;
 const YARN_SHADOW_OFF = 0.034; // Drop-shadow offset (down-right).
@@ -424,7 +424,10 @@ export class FabricMazeRenderer {
     const Lw = Math.abs(to - from) * 0.5; // Ctrl -> approx world units.
     const f1 = 0.42 + h(1) * 0.35;
     const f2 = f1 * (1.9 + h(2) * 0.8);
-    const f3 = f1 * 4.3;
+    // The fine ripple stays SLOW (2.6x base): at 4.3x it fell under the
+    // station sampling rate and rendered as zigzag jitter, not ripple -
+    // the reported jagged feel.
+    const f3 = f1 * 2.6;
     const p1 = h(3);
     const p2 = h(4);
     const p3 = h(5);
@@ -435,9 +438,9 @@ export class FabricMazeRenderer {
       const ew = Math.min(1, Math.min(u, 1 - u) / YARN_END_WIN);
       const win = ew * ew * (3 - 2 * ew);
       wave[k] =
-        (0.58 * Math.sin(2 * Math.PI * (f1 * s + p1)) +
+        (0.6 * Math.sin(2 * Math.PI * (f1 * s + p1)) +
           0.32 * Math.sin(2 * Math.PI * (f2 * s + p2)) +
-          0.1 * Math.sin(2 * Math.PI * (f3 * s + p3))) *
+          0.06 * Math.sin(2 * Math.PI * (f3 * s + p3))) *
         win;
     }
     this.yarnEvents.push({
@@ -575,12 +578,50 @@ export class FabricMazeRenderer {
           y.chain,
           this.ribbons.arcForCtrl(y.chain, this.ctrlMod(y.chain, ctrlK))
         );
-        as.push(Math.round(vis * 5) / 5);
+        as.push(vis);
       }
     }
     if (xs.length < 2) return;
+
+    // CHAIKIN corner-cutting (two passes; one when the lay gets huge):
+    // stations connect as straight segments, and the wander's direction
+    // change between them read as kinks at play zoom - corner cutting
+    // renders the lay as smooth curves. Visibility interpolates along
+    // and re-quantizes at stroke time.
+    let sx = xs;
+    let sy = ys;
+    let sa = as;
+    const passes = xs.length > 2600 ? 1 : 2;
+    for (let p = 0; p < passes; p++) {
+      const nx: number[] = [sx[0]];
+      const ny: number[] = [sy[0]];
+      const na: number[] = [sa[0]];
+      for (let i = 0; i < sx.length - 1; i++) {
+        nx.push(
+          sx[i] * 0.75 + sx[i + 1] * 0.25,
+          sx[i] * 0.25 + sx[i + 1] * 0.75
+        );
+        ny.push(
+          sy[i] * 0.75 + sy[i + 1] * 0.25,
+          sy[i] * 0.25 + sy[i + 1] * 0.75
+        );
+        na.push(
+          sa[i] * 0.75 + sa[i + 1] * 0.25,
+          sa[i] * 0.25 + sa[i + 1] * 0.75
+        );
+      }
+      nx.push(sx[sx.length - 1]);
+      ny.push(sy[sy.length - 1]);
+      na.push(sa[sa.length - 1]);
+      sx = nx;
+      sy = ny;
+      sa = na;
+    }
+
     // Stroke contiguous runs of equal (quantized) visibility, skipping
     // hidden spans - shadow pass first, then the yarn.
+    const quant = (i: number): number =>
+      Math.round(Math.min(sa[i], sa[i + 1]) * 5) / 5;
     const strokeRuns = (
       dx: number,
       dy: number,
@@ -589,21 +630,18 @@ export class FabricMazeRenderer {
       baseAlpha: number
     ): void => {
       let i = 0;
-      while (i < xs.length - 1) {
-        const q = Math.min(as[i], as[i + 1]);
+      while (i < sx.length - 1) {
+        const q = quant(i);
         if (q <= 0) {
           i++;
           continue;
         }
-        g.moveTo(xs[i] + dx, ys[i] + dy);
+        g.moveTo(sx[i] + dx, sy[i] + dy);
         let j = i + 1;
-        g.lineTo(xs[j] + dx, ys[j] + dy);
-        while (
-          j < xs.length - 1 &&
-          Math.min(as[j], as[j + 1]) === q
-        ) {
+        g.lineTo(sx[j] + dx, sy[j] + dy);
+        while (j < sx.length - 1 && quant(j) === q) {
           j++;
-          g.lineTo(xs[j] + dx, ys[j] + dy);
+          g.lineTo(sx[j] + dx, sy[j] + dy);
         }
         g.stroke({
           width,
