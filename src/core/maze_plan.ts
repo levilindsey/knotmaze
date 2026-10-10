@@ -79,6 +79,14 @@ export interface MazeParams {
   // Minimum lattice distance between junction SITES. A splice's own two ends
   // are one site and exempt from each other.
   junctionSpacing: number;
+  // SHAPED LATTICES (core/shapes.ts): entrance/exit anchor targets in
+  // doubled-lattice coordinates (the mask's extreme points toward the
+  // chosen compass anchors) + the outward tail directions. Absent =
+  // the historic rect corners: top-left entrance, bottom-right exit.
+  entrancePoint?: [number, number];
+  exitPoint?: [number, number];
+  entranceDir?: [number, number];
+  exitDir?: [number, number];
 }
 
 export const DEFAULT_MAZE_PARAMS: MazeParams = {
@@ -107,8 +115,12 @@ export interface SpliceSite {
 }
 
 export interface MazePlan {
-  entrance: MazeCut; // top-left corner.
-  exit: MazeCut; // bottom-right corner.
+  entrance: MazeCut; // at the entrance anchor (default top-left corner).
+  exit: MazeCut; // at the exit anchor (default bottom-right corner).
+  // Outward tail directions for the two cuts (anchor directions). Absent
+  // on legacy plans: maze_apply falls back to the historic corner dirs.
+  entranceDir?: [number, number];
+  exitDir?: [number, number];
   mazeStrands: number[]; // strands that form the reachable maze.
   culledStrands: number[]; // isolated loops excluded from the maze.
   // Reachability backbone: splices (preferred) and 4-way crossing merges
@@ -387,17 +399,21 @@ function components(
   return comp;
 }
 
-// Nearest maze-strand edge to a corner, by the closest lattice point on the
-// edge. Ties break on edge id for determinism.
+// Nearest maze-strand edge to an anchor point (historically a lattice
+// corner), by the closest lattice point on the edge. Ties break on edge id
+// for determinism. `exclude` keeps the exit cut off the entrance's edge
+// when both anchors target the same region of the silhouette.
 function nearestEdgeToCorner(
   graph: TangleGraph,
   mazeStrands: number[],
-  corner: [number, number]
+  corner: [number, number],
+  exclude?: string
 ): MazeCut {
   let best: MazeCut | null = null;
   let bestD = Infinity;
   for (const strand of mazeStrands) {
     for (const edgeId of graph.strands[strand].edgeIds) {
+      if (edgeId === exclude) continue;
       const edge = graph.edges.get(edgeId)!;
       let d = Infinity;
       for (const [x, y] of edge.latticePoints) {
@@ -585,12 +601,23 @@ export function buildMazePlan(
 
   const size = Math.max(2, Math.round(graph.params.gridSize));
   const bound = size * 2;
-  const entrance = nearestEdgeToCorner(graph, mazeStrands, [0, 0]);
-  const exit = nearestEdgeToCorner(graph, mazeStrands, [bound, bound]);
+  // Anchor targets: the shape mask's extreme points toward the chosen
+  // compass anchors (core/shapes.ts), defaulting to the historic corners.
+  const entrancePoint = params.entrancePoint ?? [0, 0];
+  const exitPoint = params.exitPoint ?? [bound, bound];
+  const entrance = nearestEdgeToCorner(graph, mazeStrands, entrancePoint);
+  const exit = nearestEdgeToCorner(
+    graph,
+    mazeStrands,
+    exitPoint,
+    entrance.edgeId
+  );
 
   const clearOf = (p: [number, number]): boolean =>
-    Math.hypot(p[0], p[1]) >= params.entranceClearance &&
-    Math.hypot(p[0] - bound, p[1] - bound) >= params.exitClearance;
+    Math.hypot(p[0] - entrancePoint[0], p[1] - entrancePoint[1]) >=
+      params.entranceClearance &&
+    Math.hypot(p[0] - exitPoint[0], p[1] - exitPoint[1]) >=
+      params.exitClearance;
 
   const usedEdges = new Set<string>([entrance.edgeId, exit.edgeId]);
   const usedCrossings = new Set<string>();
@@ -833,9 +860,12 @@ export function buildMazePlan(
     placed
   );
 
+  const SQ = Math.SQRT1_2;
   return {
     entrance,
     exit,
+    entranceDir: params.entranceDir ?? [-SQ, -SQ],
+    exitDir: params.exitDir ?? [SQ, SQ],
     mazeStrands,
     culledStrands: culledStrands.sort((a, b) => a - b),
     spanningSplices,

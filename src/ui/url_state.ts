@@ -7,6 +7,8 @@ import type { PitchSpace } from "../audio/pitch_space";
 import { PITCH_SPACES } from "../audio/pitch_space";
 import type { AppearMode, AppearFxMode } from "../core/reveal_plan";
 import { APPEAR_MODES, APPEAR_FX_MODES } from "../core/reveal_plan";
+import type { ShapeId, AnchorId } from "../core/shapes";
+import { SHAPES, ANCHORS } from "../core/shapes";
 
 // Pluck audio behavior: silent | user plucks only | ambient random plucks
 // | scripted song playback.
@@ -25,6 +27,12 @@ export const PATH_VIZ_MODES: PathViz[] = ["gold", "trail", "string"];
 export interface UrlParams {
   seed: number;
   gridSize: number;
+  // Lattice silhouette: rect (full lattice) or a sculpted mask shape.
+  shape: ShapeId;
+  // Maze entrance/exit anchors: which boundary region of the shape hosts
+  // each cut (compass points; mazeFabric only).
+  startAnchor: AnchorId;
+  exitAnchor: AnchorId;
   weaveDensity: number;
   turnBias: number;
   slack: number; // [0, 1] rest-state looseness (physics, applies live).
@@ -128,6 +136,9 @@ export const DEFAULTS = {
 // provably in sync with UrlParams.
 export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   ...DEFAULTS,
+  shape: "rect",
+  startAnchor: "nw",
+  exitAnchor: "se",
   gridAlign: false,
   mazeFabric: false,
   deadEnds: false,
@@ -161,6 +172,9 @@ export function readParams(): UrlParams {
   return {
     seed: Math.floor(readNumber(query, "seed", newSeed())) >>> 0,
     gridSize: readNumber(query, "gs", DEFAULTS.gridSize),
+    shape: readChoice(query, "shp", SHAPES, "rect"),
+    startAnchor: readChoice(query, "sa", ANCHORS, "nw"),
+    exitAnchor: readChoice(query, "xa", ANCHORS, "se"),
     weaveDensity: readNumber(query, "wd", DEFAULTS.weaveDensity),
     turnBias: readNumber(query, "tb", DEFAULTS.turnBias),
     slack: readNumber(query, "sl", DEFAULTS.slack),
@@ -244,6 +258,9 @@ export function writeParams(params: UrlParams): void {
   const query = new URLSearchParams();
   query.set("seed", String(params.seed));
   query.set("gs", String(params.gridSize));
+  query.set("shp", params.shape);
+  query.set("sa", params.startAnchor);
+  query.set("xa", params.exitAnchor);
   query.set("wd", String(params.weaveDensity));
   query.set("tb", String(params.turnBias));
   query.set("sl", String(params.slack));

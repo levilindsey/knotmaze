@@ -6,6 +6,7 @@ import {
   DEAD_END_DENSITY_ON,
 } from "./core/maze_plan";
 import { buildSectionField } from "./core/section_colors";
+import { planAnchors } from "./core/shapes";
 import { applyMazePlan, applyMazeCuts } from "./core/maze_apply";
 import { buildWalkGraph } from "./core/walk_graph";
 import type { WalkGraph } from "./core/walk_graph";
@@ -196,6 +197,7 @@ async function main(): Promise<void> {
       weaveDensity: params.weaveDensity,
       turnBias: params.turnBias,
       randSeed: params.seed,
+      shape: params.shape,
     };
     const graph = generateLatticeKnotwork(genParams);
 
@@ -208,6 +210,13 @@ async function main(): Promise<void> {
       const plan = buildMazePlan(graph, {
         ...DEFAULT_MAZE_PARAMS,
         deadEndDensity: params.deadEnds ? DEAD_END_DENSITY_ON : 0,
+        // Entrance/exit anchored to the shape's boundary (shp/sa/xa).
+        ...planAnchors(
+          params.shape,
+          params.gridSize,
+          params.startAnchor,
+          params.exitAnchor
+        ),
       });
       hueGroup = applyMazePlan(graph, plan);
       applyMazeCuts(graph, plan, hueGroup);
