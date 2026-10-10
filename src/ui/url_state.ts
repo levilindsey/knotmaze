@@ -33,6 +33,12 @@ export interface UrlParams {
   // Dead-end stubs in the fabric (classic wrong-turn spurs). OFF by default:
   // a pure braided maze where every wrong turn loops back.
   deadEnds: boolean;
+  // Memory-trail mode (fabric gameplay): no backtracking, no full traveled
+  // highlight - only a short gold trail of recent path behind the head.
+  // Gameplay interpretation + paint only; applies live (no rebuild).
+  trailMode: boolean;
+  // [1, 15] lattice units of recent path kept lit in memory-trail mode.
+  trailLength: number;
   // Section color scheme (fabric mode; knot mode supports mono/strands):
   // mono | strands | depth | segments | noise. Replaces the old multiColor
   // checkbox (mc=1 reads as "strands").
@@ -59,6 +65,7 @@ export const DEFAULTS = {
   flowSpeed: 1,
   tugLimit: 2,
   snapBack: 4,
+  trailLength: 5,
 };
 
 export function newSeed(): number {
@@ -103,6 +110,8 @@ export function readParams(): UrlParams {
     mazeMode: readNumber(query, "md", 0) > 0.5,
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
     deadEnds: readNumber(query, "de", 0) > 0.5,
+    trailMode: readNumber(query, "trm", 0) > 0.5,
+    trailLength: readNumber(query, "trl", DEFAULTS.trailLength),
     colorScheme: readScheme(query),
   };
 }
@@ -142,6 +151,8 @@ export function writeParams(params: UrlParams): void {
   query.set("md", params.mazeMode ? "1" : "0");
   query.set("mf", params.mazeFabric ? "1" : "0");
   query.set("de", params.deadEnds ? "1" : "0");
+  query.set("trm", params.trailMode ? "1" : "0");
+  query.set("trl", String(params.trailLength));
   query.set("cs", params.colorScheme);
   history.replaceState(null, "", `?${query.toString()}`);
 }

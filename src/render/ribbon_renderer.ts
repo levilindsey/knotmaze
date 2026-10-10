@@ -62,6 +62,12 @@ export interface PaintSpan {
   chain: number;
   c0: number; // Chain ctrl span, unwrapped (c1 >= c0; sampled modulo).
   c1: number;
+  // Optional gold intensity at each end (memory-trail tail fade): 1 = full
+  // gold (the default), 0 = base. Interpolates linearly in arc between the
+  // ends; the resulting U sweeps only the CONTIGUOUS base..gold texels, so
+  // the palette-order invariant holds (no band/accent crossing).
+  p0?: number;
+  p1?: number;
 }
 export interface PulseArm {
   chain: number;
@@ -79,6 +85,10 @@ export interface PaintCap {
   chain: number;
   ctrl: number;
   radius: number; // Arc radius.
+  // Optional gold intensity (memory-trail fade), default 1. Caps never
+  // DARKEN: they write max(existing, their own U), which is identical to
+  // the old unconditional gold write whenever p is 1.
+  p?: number;
 }
 
 // Palette layout (one 256x1 RGBA strip per hue group; linear filtering).
@@ -115,6 +125,11 @@ const bandU = (onPath: boolean, p: number): number => {
   const q = p < 0 ? 0 : p > 1 ? 1 : p;
   return onPath ? (124.5 + q * 110) / PAL_W : (111.5 - q * 110) / PAL_W;
 };
+// U for a gold intensity p in [0, 1] (memory-trail tail fade): a straight
+// lerp base -> gold, exactly U_GOLD at p 1 and U_BASE at p 0. The sweep
+// stays inside the contiguous base+gold texel families.
+const goldU = (p: number): number =>
+  p >= 1 ? U_GOLD : p <= 0 ? U_BASE : U_BASE + (U_GOLD - U_BASE) * p;
 const PATH_GOLD = 0xffd24a;
 // Pulse geometry/motion, in ARC units (world-ish): the influence zone
 // reaches this far from the junction, crests are this wide, and travel at
@@ -1829,28 +1844,46 @@ export class RibbonRenderer {
     const arcOf = (k: number): number =>
       closed ? (k / count) * total : (k / (count - 1)) * total;
 
-    // Traveled spans -> gold.
+    // Traveled spans -> gold (optionally intensity-graded end to end: the
+    // memory-trail tail fade).
     for (const s of this.paintSpans) {
       if (s.chain !== chain) continue;
       const a0 = this.paintArcAt(samples, s.c0, closed);
       const a1 = this.paintArcAt(samples, s.c1, closed);
       // A closed chain's unwrapped span can cross the arc seam.
       const wraps = closed && a1 <= a0 && s.c1 > s.c0;
-      for (let k = 0; k < count; k++) {
-        const a = arcOf(k);
-        const inside = wraps ? a >= a0 || a <= a1 : a >= a0 && a <= a1;
-        if (inside) us[k] = U_GOLD;
+      const p0 = s.p0 ?? 1;
+      const p1 = s.p1 ?? 1;
+      if (p0 >= 1 && p1 >= 1) {
+        for (let k = 0; k < count; k++) {
+          const a = arcOf(k);
+          const inside = wraps ? a >= a0 || a <= a1 : a >= a0 && a <= a1;
+          if (inside) us[k] = U_GOLD;
+        }
+      } else {
+        const spanLen = Math.max(wraps ? total - a0 + a1 : a1 - a0, 1e-9);
+        for (let k = 0; k < count; k++) {
+          const a = arcOf(k);
+          const inside = wraps ? a >= a0 || a <= a1 : a >= a0 && a <= a1;
+          if (!inside) continue;
+          const da = wraps && a < a0 ? total - a0 + a : a - a0;
+          const t = Math.min(1, Math.max(0, da / spanLen));
+          us[k] = goldU(p0 + (p1 - p0) * t);
+        }
       }
     }
 
     // Traversed-junction caps -> gold discs around each arm occurrence.
+    // max(): a cap never darkens span paint under it (identical to the old
+    // unconditional gold write at full intensity).
     for (const cp of this.paintCaps) {
       if (cp.chain !== chain) continue;
       const aC = this.paintArcAt(samples, cp.ctrl, closed);
+      const uCap = goldU(cp.p ?? 1);
       for (let k = 0; k < count; k++) {
         let d = Math.abs(arcOf(k) - aC);
         if (closed) d = Math.min(d, total - d);
-        if (d <= cp.radius) us[k] = U_GOLD;
+        if (d <= cp.radius && uCap > us[k]) us[k] = uCap;
       }
     }
 
@@ -1938,14 +1971,25 @@ export class RibbonRenderer {
       const a0 = this.paintArcAt(samples, s.c0, closed);
       const a1 = this.paintArcAt(samples, s.c1, closed);
       const wraps = closed && a1 <= a0 && s.c1 > s.c0;
-      if (wraps ? a >= a0 || a <= a1 : a >= a0 && a <= a1) u = U_GOLD;
+      if (wraps ? a >= a0 || a <= a1 : a >= a0 && a <= a1) {
+        const p0 = s.p0 ?? 1;
+        const p1 = s.p1 ?? 1;
+        if (p0 >= 1 && p1 >= 1) {
+          u = U_GOLD;
+        } else {
+          const spanLen = Math.max(wraps ? total - a0 + a1 : a1 - a0, 1e-9);
+          const da = wraps && a < a0 ? total - a0 + a : a - a0;
+          const t = Math.min(1, Math.max(0, da / spanLen));
+          u = goldU(p0 + (p1 - p0) * t);
+        }
+      }
     }
     for (const cp of this.paintCaps) {
       if (cp.chain !== chain) continue;
       const aC = this.paintArcAt(samples, cp.ctrl, closed);
       let d = Math.abs(a - aC);
       if (closed) d = Math.min(d, total - d);
-      if (d <= cp.radius) u = U_GOLD;
+      if (d <= cp.radius) u = Math.max(u, goldU(cp.p ?? 1));
     }
     for (const p of this.paintPulses) {
       if (p.chain !== chain) continue;
