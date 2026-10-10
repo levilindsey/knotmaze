@@ -83,7 +83,7 @@ Work lands directly to `main`. All changes must be end-to-end working before com
 - Phased roadmap: P0 (scaffold) → P1 (combinatorial) → P2 (beauty + live physics) → P3 (touch + audio) → P4 (maze mode) → P5 (growth animation) → P6 (flourishes).
 - Each phase ships as a working demo starting from P2.
 
-## Roadmap status — what's next (updated 2026-10-10, after P4 Stage 21)
+## Roadmap status — what's next (updated 2026-10-10, after P4 Stage 25)
 
 **P0–P3 done** (their saga lives in Follow-ups; the bounded
 post-VIOLENT-play loud attractor at fat params remains the one open
@@ -252,6 +252,61 @@ between-threads/cell-passage route.
   cosine, ~4 visible cycles, 3-8Hz rising with the audible pitch) -
   only the grabbed point is driven, springs localize the ring;
   "soft" keeps the Stage 19 ease.
+- FABRIC SLEEP FIX + half-rate flow (2026-10-10, from the architecture
+  audit): the fabric had silently lost the ability to sleep somewhere
+  in Stages 10-19 — 2-4 standing anti-riding violations at fused
+  bridge-terminal junctions held `ridersPending` nonzero forever
+  (~25-30ms/frame burned at rest in the flagship mode). Fix = a graded
+  2-slot JUNCTION COVER (forces.ts `JunctionCover`): marks walked ±3
+  ctrl along each fused arm at fusion time fade the 2D anti-riding
+  floor for pairs near arms of the SAME junction — the P3.31 theorem
+  again (the tuck/fillet joinery RENDERS that overlap as a joint, so
+  the floor may not demand separation there). 3D capsule unconditional;
+  knot mode never allocates the cover (byte identity green). All
+  fabric configs now sleep at sim ~3.7s. Also: `flowRender` runs at
+  HALF RATE while asleep (the full crossing re-solve cost ~10ms/frame;
+  30fps sway is imperceptible).
+- Stage 22 (worktree agent) — APPEARANCE ANIMATION: `appearMode`
+  (`ap=`, default instant = byte-identical): trace | bloom | draw |
+  ink + `appearSpeed` (`as=`). Per-sample WIDTH-MULTIPLIER reveal
+  masks (`core/reveal_plan.ts` + `render/reveal.ts`); crossings hide
+  erase+fill until BOTH passes revealed; pre-sim ~1.2 sim-s hidden
+  before the first frame; finished reveal nulls the masks.
+- Stage 23 (worktree agent) + Stage 24 — PATH-VIZ DROPDOWN
+  (`pathViz` / `pv=`, absorbing trailMode; `trm=1` reads as trail):
+  gold | trail (memory mode: every tap advances, no backtracking,
+  only `trailLength` (`trl=`) units of recent path stay gold with a
+  fading tail) | string (ARIADNE'S THREAD: a thin white yarn unspools
+  along everywhere you walk — one append-only pass per move, U-turn
+  return passes on backtracks, never picked up; slack-cotton seeded
+  wander + per-pass lane bias; `tension` (`tn=`) reshapes the laid
+  string live; drop shadow for self-crossings; stations resolve
+  through pointFlowed so the yarn rides flow/deformation). Per-mode
+  sliders show dynamically (tweakpane row `.hidden`).
+- Stage 25 — FOG OF WAR (`fow=` + `fowRadius` / `fr=`, dynamic
+  slider): the maze hides until explored; explored stays visible.
+  One sprite over the gameplay overlay, offscreen-2D-canvas texture
+  (background fill + destination-out radial holes), stamps follow the
+  head at 0.8-unit spacing, redraws only on change; spatial memory
+  (deliberately does not ride the flow field). Exit/pulses/labels
+  emerge only as explored.
+
+**Architecture audit (2026-10-10, agent-measured; full report was
+delivered in-session).** Verdict: the stack (typed-array CPU PBD +
+pixi WebGL mesh rendering + palette-texture recolor) is the right one
+at this scale; CSS/DOM are chrome-only, SVG absent, canvas2d/WebGPU/
+WASM-threads remain ruled out. Measured: knot-mode rest 94.5% idle;
+mid-drag fat URL phys ~12ms / render ~10.5ms / 40fps (at or better
+than P3.42 baselines); collision narrow-phase = 40.3% of drag CPU;
+tickPaint + fillet refill 1.6-1.7ms. Perf levers, in order, each with
+its trigger: (1) the sleep fix (DONE above); (2) flow-at-rest cost
+(half-rate DONE; the full fix if flow is a keeper = shader
+displacement, needs a gap-tracking visual A/B); (3) nothing else
+until mid-drag fps bothers on target hardware — then worker+SAB per
+the recorded plan, then WASM collision narrow-phase (2-4x on the ~40%
+slice); never color the Gauss-Seidel solver. Micro: hypot→sqrt in
+sampleAt/evalSegment/RibbonMesh.update (est 1-2ms), optional
+ticker-stop when fully asleep.
 
 RENDER LORE (hard-won, 2026-10-09): **flat fills cannot represent a
 field.** Once per-vertex V blending exists, ANY flat-colored overlay
