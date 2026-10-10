@@ -29,7 +29,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 16b: joinery section-color fix 2026-10-09";
+const BUILD_STAMP = "P4 Stage 18: under-gap clipping + fade 2026-10-09";
 
 const app = new Application();
 
@@ -43,9 +43,15 @@ async function main(): Promise<void> {
     // Keep the canvas CSS size at logical pixels; without this, any
     // devicePixelRatio > 1 blows the canvas up past the viewport.
     autoDensity: true,
-    background: BACKGROUND,
+    // TRANSPARENT canvas: crossing gaps alpha-PUNCH the thread layer (the
+    // renderer's 'erase'-blend patches), so whatever sits behind the canvas
+    // shows through them. Today that is the same flat color as ever, moved
+    // to the canvas CSS below; later a textured page backdrop can replace
+    // it without touching the renderer.
+    backgroundAlpha: 0,
   });
   document.body.appendChild(app.canvas);
+  app.canvas.style.background = `#${BACKGROUND.toString(16).padStart(6, "0")}`;
 
   const params = readParams();
   const settings: PanelSettings = {
@@ -171,7 +177,6 @@ async function main(): Promise<void> {
     renderer = new RibbonRenderer(ps, {
       threadWidth: params.threadWidth,
       casingWidth: params.threadWidth + params.gap * 2,
-      background: BACKGROUND,
       baseHue: params.seed % 360,
       // Knot-mode tints only (palette mode colors via the section field):
       // per-strand hues for the strands scheme, mono otherwise.
@@ -519,6 +524,9 @@ async function main(): Promise<void> {
     // physics or splines.
     const fabricTick = (): void => {
       renderer!.cuspRadius = params.cuspRadius;
+      // Applies to knot mode too: the erase grids re-read it in the next
+      // renderer.update(), and the slider's onSlackChange wakes the sim.
+      renderer!.fadeLength = params.fadeLength;
       if (params.mazeFabric && fabric && fabricController) {
         fabric.moveSpeed = params.moveSpeed;
         fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
