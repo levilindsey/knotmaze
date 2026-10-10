@@ -25,10 +25,11 @@
 //      the hole, with a length that adapts to the crossing angle.
 // All erases render below all fills, so patches never slice each other.
 
-import { BufferImageSource, Container, Texture } from "pixi.js";
+import { BufferImageSource, Container, Graphics, Texture } from "pixi.js";
 import { createNoise2D, createNoise3D } from "simplex-noise";
 import type { ParticleSystem, CrossingPass } from "../physics/particle_system";
 import type { VSegment, ColorScheme } from "../core/section_colors";
+import type { RevealAnimator } from "./reveal";
 import { SeededRNG } from "../util/random";
 import type { SplineSamples } from "../geometry/spline_generator";
 import {
@@ -184,6 +185,24 @@ function normArc(a: number, total: number, closed: boolean): number {
 const FLOW_FREQ = 0.22; // Spatial noise frequency (1 / lattice units).
 const FLOW_TIME_SCALE = 0.35; // Noise-time seconds per flow-clock second.
 const FLOW_AMP = 0.38; // Displacement in world units at flowStrength 1.
+
+// REVEAL (Stage 22 appearance animation). The mask is a per-chain
+// per-sample width multiplier in [0, 1]: unrevealed samples collapse to
+// zero width, the frontier gets a short 0 -> 1 taper so tips read rounded,
+// and a glow rides just behind each advancing tip. Interval modes
+// (trace/bloom/draw) taper over arc; ink tapers over world distance (its
+// dye edge is wider and softer).
+const REVEAL_TAPER_ARC = 0.3;
+const INK_TAPER_WORLD = 0.6;
+// A crossing renders its erase + over fill only once BOTH passes are at
+// full width locally: an erase for a not-yet-visible thread would punch a
+// naked hole in whatever is revealed beneath it.
+const REVEAL_CROSSING_MIN = 0.98;
+// Frontier glow reach (arc) along the revealed side of a tip, and the
+// palette-U family split (>= gold band start -> brighten via band B,
+// else via band A; both bands end at the same near-white accent).
+const REVEAL_GLOW_ARC = 1.15;
+const GOLD_FAMILY_MIN = 118 / PAL_W;
 
 function mixHex(a: number, b: number, t: number): number {
   const ar = (a >> 16) & 255;
@@ -523,6 +542,19 @@ export class RibbonRenderer {
   private sectionNoise: ((x: number, y: number) => number) | null = null;
   private vCache: (Float32Array | number)[] = [];
   private vCacheReady = false;
+  // REVEAL state (Stage 22): the animator, the per-chain width masks
+  // (null = fully revealed - the zero-cost resting state), the frontier
+  // tips cached once per paint tick for the glow, and the knot-mode tip
+  // glow overlay. `revealOn` is refreshed at the top of update() and read
+  // by the paint/fillet/emergent passes in the same frame.
+  private revealAnim: RevealAnimator | null = null;
+  private revealOn = false;
+  private revealWas = false;
+  private revealMask: (Float32Array | null)[] = [];
+  private revealMaskPool = new Map<number, Float32Array>();
+  private revealTips: Array<{ chain: number; ctrl: number }> = [];
+  private glowChains = new Set<number>();
+  private revealTipGfx: Graphics | null = null;
 
   constructor(ps: ParticleSystem, style: RibbonStyle) {
     this.ps = ps;
@@ -577,6 +609,7 @@ export class RibbonRenderer {
     });
     this.vCache = ps.chains.map(() => 0.5);
     this.sectionSegs = ps.chains.map(() => []);
+    this.revealMask = ps.chains.map(() => null);
 
     // Neighboring crossing passes along each thread come from the particle
     // system; passes slide live, so we hold references and read their
@@ -881,8 +914,224 @@ export class RibbonRenderer {
       amp * this.flowNoise(x * FLOW_FREQ + 61.7, y * FLOW_FREQ + 47.3, t);
   }
 
+  // --- REVEAL (Stage 22 appearance animation) ---
+
+  // Attach a running appearance animator; masks start collapsed and grow
+  // as the animator's clock advances. Passing null (or the animator
+  // finishing) restores the exact non-reveal render.
+  beginReveal(anim: RevealAnimator | null): void {
+    this.revealAnim = anim;
+    this.revealMask = this.ps.chains.map(() => null);
+    this.revealTips = [];
+  }
+
+  // Reveal multiplier at a chain ctrl (1 once fully revealed / inactive).
+  // Public: the fabric overlay gates its exit marker on this, and main.ts
+  // wires it through to probes.
+  revealMulAtCtrl(chain: number, ctrl: number): number {
+    const mask = this.revealMask[chain];
+    if (!mask) return 1;
+    const samples = this.chainSamples[chain];
+    if (!samples || samples.totalLength <= 0) return 0;
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    const arc = this.paintArcAt(samples, ctrl, closed);
+    const count = mask.length;
+    const k = closed
+      ? Math.round((arc / samples.totalLength) * count) % count
+      : Math.max(
+          0,
+          Math.min(
+            count - 1,
+            Math.round((arc / samples.totalLength) * (count - 1))
+          )
+        );
+    return mask[k];
+  }
+
+  private crossingRevealed(crossing: {
+    over: CrossingPass;
+    under: CrossingPass;
+  }): boolean {
+    return (
+      this.revealMulAtCtrl(
+        crossing.over.chain,
+        this.renderCtrl(crossing.over)
+      ) >= REVEAL_CROSSING_MIN &&
+      this.revealMulAtCtrl(
+        crossing.under.chain,
+        this.renderCtrl(crossing.under)
+      ) >= REVEAL_CROSSING_MIN
+    );
+  }
+
+  // Compute (or clear) one chain's reveal mask for this frame. Returns
+  // null when the chain is fully revealed - the fills then take their
+  // untouched fast path, so the finished state is bit-identical to a
+  // non-reveal render.
+  private revealMaskFor(
+    chain: number,
+    samples: SplineSamples
+  ): Float32Array | null {
+    const anim = this.revealAnim!;
+    const count = samples.count;
+    let mask = this.revealMaskPool.get(chain);
+    if (!mask || mask.length !== count) {
+      mask = new Float32Array(count);
+      this.revealMaskPool.set(chain, mask);
+    }
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    const total = samples.totalLength;
+
+    if (anim.mode === "ink") {
+      if (anim.inkChainLatched(chain)) {
+        this.revealMask[chain] = null;
+        return null;
+      }
+      // Dye front: world distance from the (live, flow-displaced) origin
+      // vs the expanding radius, edge wobbled by seeded simplex noise.
+      const o = anim.inkOrigin;
+      const len = this.ps.chains[o.chain].length;
+      this.ps.pointOnChain(
+        o.chain,
+        ((o.ctrl % len) + len) % len,
+        this.sampleScratch,
+        0
+      );
+      this.flowOffset(
+        this.sampleScratch[0],
+        this.sampleScratch[1],
+        this.flowScratch
+      );
+      const ox = this.sampleScratch[0] + this.flowScratch[0];
+      const oy = this.sampleScratch[1] + this.flowScratch[1];
+      const R = anim.inkRadius;
+      let minM = 1;
+      for (let k = 0; k < count; k++) {
+        const x = samples.positions[k * 2];
+        const y = samples.positions[k * 2 + 1];
+        const d = Math.hypot(x - ox, y - oy) + anim.inkPerturb(x, y);
+        const m = Math.max(0, Math.min(1, (R - d) / INK_TAPER_WORLD));
+        mask[k] = m;
+        if (m < minM) minM = m;
+      }
+      if (minM >= 1) {
+        anim.latchInkChain(chain);
+        this.revealMask[chain] = null;
+        return null;
+      }
+      this.revealMask[chain] = mask;
+      return mask;
+    }
+
+    // Interval modes: union of the plan's revealed ctrl intervals,
+    // converted to arc per frame (paintArcAt clamps open-chain terminals -
+    // the arc-wrap family bites here otherwise).
+    mask.fill(0);
+    const intervals = anim.intervalsFor(chain);
+    let minM = 1;
+    for (const iv of intervals) {
+      const A0 = this.paintArcAt(samples, iv.c0, closed);
+      const A1 = this.paintArcAt(samples, iv.c1, closed);
+      const wraps = closed && A1 <= A0 && iv.c1 > iv.c0 + 1e-9;
+      for (let k = 0; k < count; k++) {
+        const a = closed ? (k / count) * total : (k / (count - 1)) * total;
+        let dIn0: number;
+        let dIn1: number;
+        if (wraps) {
+          if (a < A0 && a > A1) continue;
+          dIn0 = a >= A0 ? a - A0 : a + total - A0;
+          dIn1 = a <= A1 ? A1 - a : A1 + total - a;
+        } else {
+          if (a < A0 || a > A1) continue;
+          dIn0 = a - A0;
+          dIn1 = A1 - a;
+        }
+        let m = 1;
+        if (iv.soft0) m = Math.min(m, dIn0 / REVEAL_TAPER_ARC);
+        if (iv.soft1) m = Math.min(m, dIn1 / REVEAL_TAPER_ARC);
+        if (m > mask[k]) mask[k] = m;
+      }
+    }
+    for (let k = 0; k < count; k++) {
+      if (mask[k] < minM) minM = mask[k];
+    }
+    if (minM >= 1) {
+      this.revealMask[chain] = null;
+      return null;
+    }
+    this.revealMask[chain] = mask;
+    return mask;
+  }
+
+  // One-shot restore when the animator completes (or is detached): every
+  // crossing patch visible again, masks dropped, tip glow cleared. The
+  // next paint tick clears any frontier glow (its chain set goes empty).
+  private finishReveal(): void {
+    this.revealAnim = null;
+    this.revealMask = this.ps.chains.map(() => null);
+    this.revealTips = [];
+    for (let c = 0; c < this.underErases.length; c++) {
+      this.underErases[c].mesh.visible = true;
+      this.overFills[c].mesh.visible = true;
+    }
+    this.revealTipGfx?.clear();
+  }
+
+  // Knot-mode frontier glow: small additive discs at the advancing tips
+  // (fabric mode rides the palette instead - flat overlays cannot
+  // represent the blended field there).
+  private drawRevealTips(): void {
+    if (this.style.paletteMode) return;
+    const anim = this.revealAnim;
+    const active = this.revealOn && anim !== null && anim.mode !== "ink";
+    if (!active) {
+      this.revealTipGfx?.clear();
+      return;
+    }
+    if (!this.revealTipGfx) {
+      // NORMAL blending, deliberately: the canvas is TRANSPARENT (Stage
+      // 18 - gaps clip the thread layer), so an additive halo over empty
+      // canvas adds into nothing and composites as a muddy grey disc on
+      // the page backdrop. Bright warm fills under normal blending read
+      // as a glow over both the backdrop and the threads.
+      this.revealTipGfx = new Graphics();
+      this.root.addChild(this.revealTipGfx);
+    }
+    const g = this.revealTipGfx;
+    g.clear();
+    const tw = this.style.threadWidth;
+    for (const tip of anim!.tips()) {
+      const len = this.ps.chains[tip.chain].length;
+      const closed = this.ps.chainBreakAfter[tip.chain] < 0;
+      const f = closed
+        ? ((tip.ctrl % len) + len) % len
+        : Math.max(0, Math.min(len - 1, tip.ctrl));
+      this.ps.pointOnChain(tip.chain, f, this.sampleScratch, 0);
+      this.flowOffset(
+        this.sampleScratch[0],
+        this.sampleScratch[1],
+        this.flowScratch
+      );
+      const x = this.sampleScratch[0] + this.flowScratch[0];
+      const y = this.sampleScratch[1] + this.flowScratch[1];
+      g.circle(x, y, tw * 1.35);
+      g.fill({ color: 0xffedb8, alpha: 0.26 });
+      g.circle(x, y, tw * 0.75);
+      g.fill({ color: 0xfff6d8, alpha: 0.6 });
+      g.circle(x, y, tw * 0.4);
+      g.fill({ color: 0xffffff, alpha: 0.95 });
+    }
+  }
+
   update(): void {
     const { positions } = this.ps;
+
+    // Reveal lifecycle: refresh the active flag, and on the completion
+    // frame restore the full render exactly once.
+    const ra = this.revealAnim;
+    this.revealOn = ra !== null && !ra.done;
+    if (!this.revealOn && this.revealWas) this.finishReveal();
+    this.revealWas = this.revealOn;
 
     this.ps.chains.forEach((chain, i) => {
       const controls = this.chainControls[i];
@@ -917,10 +1166,13 @@ export class RibbonRenderer {
       if (this.style.paletteMode && !this.vCacheReady) {
         this.buildVCacheFor(i, samples);
       }
+      const mask = this.revealOn ? this.revealMaskFor(i, samples) : null;
       this.fills[i].update(
         samples.positions,
         samples.tangents,
-        this.style.threadWidth / 2
+        this.style.threadWidth / 2,
+        0,
+        mask
       );
     });
     if (this.style.paletteMode && !this.vCacheReady) {
@@ -944,6 +1196,20 @@ export class RibbonRenderer {
     const gap = (this.style.casingWidth - this.style.threadWidth) / 2;
 
     this.ps.crossings.forEach((crossing, c) => {
+      // REVEAL: a crossing's erase + over fill stay hidden until BOTH its
+      // threads are revealed at the crossing - an erase for an invisible
+      // over thread would punch a naked hole in a revealed under thread.
+      if (this.revealOn) {
+        const on = this.crossingRevealed(crossing);
+        this.underErases[c].mesh.visible = on;
+        this.overFills[c].mesh.visible = on;
+        if (!on) {
+          this.eraseExtentPos[c] = 0;
+          this.eraseExtentNeg[c] = 0;
+          this.overWindows[c * 2 + 1] = 0;
+          return;
+        }
+      }
       this.renderCrossing(
         crossing,
         c,
@@ -956,6 +1222,7 @@ export class RibbonRenderer {
       );
     });
     this.renderEmergent(fillHalf, gap);
+    this.drawRevealTips();
   }
 
   // Render one crossing's erase + over-fill patches. index < 0 marks an
@@ -1523,6 +1790,8 @@ export class RibbonRenderer {
     const used: number[] = [];
     for (const em of this.ps.emergentCrossings) {
       if (poolUsed >= EMERGENT_POOL) break;
+      // REVEAL: same visibility rule as registered crossings.
+      if (this.revealOn && !this.crossingRevealed(em)) continue;
       this.ps.bindingPoint(em.over, this.sampleScratch, 0);
       const ex = this.sampleScratch[0];
       const ey = this.sampleScratch[1];
@@ -1718,6 +1987,21 @@ export class RibbonRenderer {
       if (!target.has(c)) toWrite.push(c);
     }
 
+    // REVEAL frontier glow: chains carrying an advancing tip rewrite every
+    // tick (the glow travels), and chains whose glow just ended rewrite
+    // once to clear it. The tips are cached here for writeChainPaint.
+    this.revealTips =
+      this.revealOn && this.revealAnim ? this.revealAnim.tips() : [];
+    const glowNow = new Set<number>();
+    for (const t of this.revealTips) glowNow.add(t.chain);
+    for (const c of glowNow) {
+      if (!toWrite.includes(c)) toWrite.push(c);
+    }
+    for (const c of this.glowChains) {
+      if (!glowNow.has(c) && !toWrite.includes(c)) toWrite.push(c);
+    }
+    this.glowChains = glowNow;
+
     for (const chain of toWrite) {
       if (!this.chainSamples[chain]) continue;
       this.writeChainPaint(chain, target.has(chain));
@@ -1820,6 +2104,7 @@ export class RibbonRenderer {
     }
     us.fill(U_BASE, 0, count);
     if (!painted) {
+      this.applyRevealGlowU(chain, us, count);
       mesh.writeUVs(us, this.vCache[chain]);
       return;
     }
@@ -1885,7 +2170,54 @@ export class RibbonRenderer {
         if (v > 0.004) us[k] = bandU(p.onPath, v);
       }
     }
+    this.applyRevealGlowU(chain, us, count);
     mesh.writeUVs(us, this.vCache[chain]);
+  }
+
+  // REVEAL frontier glow (palette mode): push the paint U of the samples
+  // just behind each advancing tip toward the near-white accent through
+  // the EXISTING palette bands - gold-family samples brighten along band
+  // B, everything else along band A, both of which end at the same
+  // accent, so no new strip adjacency class is introduced (the strip's
+  // order is load-bearing). Only ever brightens; the traveled gold and
+  // the pulse keep whatever is brighter.
+  private applyRevealGlowU(
+    chain: number,
+    us: Float32Array,
+    count: number
+  ): void {
+    if (!this.revealOn || this.revealTips.length === 0) return;
+    const samples = this.chainSamples[chain];
+    if (!samples || samples.totalLength <= 0) return;
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    const total = samples.totalLength;
+    const mask = this.revealMask[chain];
+    const arcPer = closed ? total / count : total / (count - 1);
+    const halfWin = Math.ceil(REVEAL_GLOW_ARC / Math.max(arcPer, 1e-6)) + 1;
+    for (const tip of this.revealTips) {
+      if (tip.chain !== chain) continue;
+      const aT = this.paintArcAt(samples, tip.ctrl, closed);
+      const kC = Math.round(aT / arcPer);
+      for (let o = -halfWin; o <= halfWin; o++) {
+        let k = kC + o;
+        if (closed) k = ((k % count) + count) % count;
+        else if (k < 0 || k >= count) continue;
+        const a = k * arcPer;
+        let d = Math.abs(a - aT);
+        if (closed) d = Math.min(d, total - d);
+        if (d > REVEAL_GLOW_ARC) continue;
+        if (mask && mask[k] <= 0.004) continue; // Unrevealed side: invisible.
+        const g = 1 - d / REVEAL_GLOW_ARC;
+        const u = us[k];
+        if (u >= GOLD_FAMILY_MIN) {
+          const cand = bandU(true, g);
+          if (cand > u) us[k] = cand;
+        } else {
+          const cand = bandU(false, g);
+          if (cand < u) us[k] = cand;
+        }
+      }
+    }
   }
 
   // The pulse field at distance d from the junction along an arm whose run
@@ -2123,6 +2455,7 @@ export class RibbonRenderer {
       jx: number;
       jy: number;
       arms: JArm[];
+      on: boolean; // REVEAL: all arm-adjacent samples revealed.
     }
     const pos = this.ps.positions;
     const recs: JRec[] = [];
@@ -2169,7 +2502,21 @@ export class RibbonRenderer {
         });
       }
       arms.sort((p, q) => p.ang - q.ang);
-      recs.push({ jx, jy, arms });
+      // REVEAL: joinery waits until every arm-adjacent sample is revealed
+      // (half-drawn fillets over zero-width arms read as floating scraps).
+      let on = true;
+      if (this.revealOn) {
+        for (const a of jn.arms) {
+          if (
+            this.revealMulAtCtrl(a.chain, a.slot + a.dir * 0.8) <
+            REVEAL_CROSSING_MIN
+          ) {
+            on = false;
+            break;
+          }
+        }
+      }
+      recs.push({ jx, jy, arms, on });
     }
 
     let fieldU = U_BASE;
@@ -2238,6 +2585,15 @@ export class RibbonRenderer {
     for (const tip of this.freeTips) {
       const samples = this.chainSamples[tip.chain];
       if (!samples) continue;
+      if (
+        this.revealOn &&
+        this.revealMulAtCtrl(
+          tip.chain,
+          tip.atEnd ? this.ps.chains[tip.chain].length - 1 : 0
+        ) < REVEAL_CROSSING_MIN
+      ) {
+        continue;
+      }
       tipXY(samples, tip.atEnd);
       const cx = this.sampleScratch[0];
       const cy = this.sampleScratch[1];
@@ -2280,7 +2636,14 @@ export class RibbonRenderer {
         }
       }
       if (rec) {
-        pushDiscField(rec, cx, cy, fillHalf * 0.99);
+        if (rec.on) pushDiscField(rec, cx, cy, fillHalf * 0.99);
+        continue;
+      }
+      if (
+        this.revealOn &&
+        this.revealMulAtCtrl(tip.hostChain, tip.hostCtrl) <
+          REVEAL_CROSSING_MIN
+      ) {
         continue;
       }
       // No junction within reach (shouldn't happen): host-axis fallback.
@@ -2311,6 +2674,7 @@ export class RibbonRenderer {
       const jy = rec.jy;
       const arms = rec.arms;
       if (arms.length < 2) continue;
+      if (!rec.on) continue; // REVEAL: joinery waits for its arms.
 
       // Seal the junction center with a disc of the junction field under
       // the fillets: the concave-side miter clamp can thin a host ribbon

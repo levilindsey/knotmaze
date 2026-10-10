@@ -3,6 +3,8 @@
 
 import type { ColorScheme } from "../core/section_colors";
 import { COLOR_SCHEMES } from "../core/section_colors";
+import type { AppearMode } from "../core/reveal_plan";
+import { APPEAR_MODES } from "../core/reveal_plan";
 
 export interface UrlParams {
   seed: number;
@@ -37,6 +39,12 @@ export interface UrlParams {
   // mono | strands | depth | segments | noise. Replaces the old multiColor
   // checkbox (mc=1 reads as "strands").
   colorScheme: ColorScheme;
+  // Appearance animation: how the design draws itself in on build.
+  // instant (default - today's pop-in, byte-identical) | trace | bloom |
+  // draw | ink. trace/bloom need the walk graph and fall back to draw in
+  // knot mode.
+  appearMode: AppearMode;
+  appearSpeed: number; // [0.3, 4] reveal frontier speed multiplier.
 }
 
 export const DEFAULTS = {
@@ -59,6 +67,7 @@ export const DEFAULTS = {
   flowSpeed: 1,
   tugLimit: 2,
   snapBack: 4,
+  appearSpeed: 1,
 };
 
 export function newSeed(): number {
@@ -104,7 +113,17 @@ export function readParams(): UrlParams {
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
     deadEnds: readNumber(query, "de", 0) > 0.5,
     colorScheme: readScheme(query),
+    appearMode: readAppear(query),
+    appearSpeed: readNumber(query, "as", DEFAULTS.appearSpeed),
   };
+}
+
+function readAppear(query: URLSearchParams): AppearMode {
+  const raw = query.get("ap");
+  if (raw && (APPEAR_MODES as readonly string[]).includes(raw)) {
+    return raw as AppearMode;
+  }
+  return "instant"; // Existing URLs keep today's pop-in exactly.
 }
 
 function readScheme(query: URLSearchParams): ColorScheme {
@@ -143,5 +162,7 @@ export function writeParams(params: UrlParams): void {
   query.set("mf", params.mazeFabric ? "1" : "0");
   query.set("de", params.deadEnds ? "1" : "0");
   query.set("cs", params.colorScheme);
+  query.set("ap", params.appearMode);
+  query.set("as", String(params.appearSpeed));
   history.replaceState(null, "", `?${query.toString()}`);
 }

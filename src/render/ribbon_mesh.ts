@@ -48,12 +48,16 @@ export class RibbonMesh {
 
   // Rewrite vertex positions from a closed centerline. `positions`/
   // `tangents` are flat [x0,y0,...] arrays; `offset` selects the first
-  // sample to read.
+  // sample to read. `widthMul` (REVEAL mask, Stage 22) scales each
+  // sample's extrusion width in [0, 1]: unrevealed samples collapse to the
+  // centerline (zero-area triangles rasterize nothing). null = all 1, the
+  // zero-cost default - the multiply never runs.
   update(
     positions: Float32Array,
     tangents: Float32Array,
     halfWidth: number,
-    offset = 0
+    offset = 0,
+    widthMul: Float32Array | null = null
   ): void {
     const n = this.sampleCount;
     for (let i = 0; i < n; i++) {
@@ -110,8 +114,13 @@ export class RibbonMesh {
         wInner = Math.min(w, Math.max(radius * 0.95, halfWidth * 0.3));
       }
       const cross = ax * by - ay * bx;
-      const wLeft = cross > 0 ? wInner : w;
-      const wRight = cross > 0 ? w : wInner;
+      let wLeft = cross > 0 ? wInner : w;
+      let wRight = cross > 0 ? w : wInner;
+      if (widthMul) {
+        const m = widthMul[i];
+        wLeft *= m;
+        wRight *= m;
+      }
 
       const nx = -tangents[s + 1];
       const ny = tangents[s];

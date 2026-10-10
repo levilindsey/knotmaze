@@ -186,6 +186,22 @@ export function buildPanel(
     "How quickly a released thread eases back to where it was grabbed. 0 = no snap-back (release in place). Applies live."
   ).on("change", callbacks.onSlackChange);
   tip(
+    pane.addBinding(params, "appearMode", {
+      options: {
+        instant: "instant",
+        trace: "trace",
+        bloom: "bloom",
+        draw: "draw",
+        ink: "ink",
+      },
+    }),
+    "How the design animates in: instant = appear fully drawn; trace = grow outward from the maze entrance, splitting at every junction; bloom = the same flood from several random spots at once; draw = pen-draw each strand end to end; ink = a dye wave spreading from the entrance. Rebuilds the scene."
+  ).on("change", callbacks.onModeChange);
+  tip(
+    pane.addBinding(params, "appearSpeed", { min: 0.3, max: 4, step: 0.05 }),
+    "How fast the appearance animation reveals the threads. Applies live."
+  ).on("change", callbacks.onSlackChange);
+  tip(
     pane.addButton({ title: "Reset path" }),
     "Clear the traced maze path and start over from the entrance."
   ).on("click", callbacks.onResetPath);
