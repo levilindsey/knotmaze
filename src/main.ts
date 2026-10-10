@@ -1053,7 +1053,17 @@ async function main(): Promise<void> {
     // same channel: its masks animate in update(), so while revealing the
     // render pass runs regardless of flowStrength.
     const flowRender = (): void => {
-      if (params.flowStrength <= 0 && !revealing) return;
+      // Appearance FX that outlive the reveal (materialize fades, the
+      // rainbow swell) gate crossings and reshape ribbons in update() -
+      // asleep at flowStrength 0 it must keep running until they settle,
+      // or crossings stay hidden until the next wake.
+      if (
+        params.flowStrength <= 0 &&
+        !revealing &&
+        !renderer!.needsFxRender()
+      ) {
+        return;
+      }
       renderer!.update();
       if (params.mazeFabric && fabric && fabricController) {
         fabric.update(fabricController);

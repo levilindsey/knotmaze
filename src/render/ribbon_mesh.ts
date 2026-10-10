@@ -168,18 +168,30 @@ export class RibbonMesh {
       // turn radius; the ribbon instead thins into the fold. Floor at
       // 30% width so the strip never fully collapses.
       let wInner = w;
+      let innerCap = Infinity;
       const sinHalf = Math.sqrt(Math.max((1 - dot) / 2, 0));
       if (sinHalf > 1e-4) {
         const radius = ((la + lb) / 4) * (cosHalf / sinHalf);
-        wInner = Math.min(w, Math.max(radius * 0.95, halfWidth * 0.3));
+        innerCap = Math.max(radius * 0.95, halfWidth * 0.3);
+        wInner = Math.min(w, innerCap);
       }
       const cross = ax * by - ay * bx;
       let wLeft = cross > 0 ? wInner : w;
       let wRight = cross > 0 ? w : wInner;
       if (widthMul) {
         const m = widthMul[i];
-        wLeft *= m;
-        wRight *= m;
+        if (m > 1) {
+          // SWELL (appearance FX): the outer side grows freely, but the
+          // concave side still may never pass the local turn radius - a
+          // swollen strip would fold back into the sawtooth seam.
+          const grown = w * m;
+          const grownInner = Math.min(grown, Math.max(innerCap, wInner));
+          wLeft = cross > 0 ? grownInner : grown;
+          wRight = cross > 0 ? grown : grownInner;
+        } else {
+          wLeft *= m;
+          wRight *= m;
+        }
       }
 
       const nx = -tangents[s + 1];

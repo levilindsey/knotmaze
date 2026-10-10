@@ -283,6 +283,15 @@ const FX_PATH_STEP = 0.5;
 // fade in over the last FAN_SOLID_START..1 of their arms' solidity
 // (opaque fans over translucent/striped arms read as pale stars).
 const FX_SOLID_EPS = 0.03;
+// Rainbow head: a longer bright-white glow (full strength over the first
+// RAINBOW_GLOW_HOLD of RAINBOW_GLOW_ARC, then the usual linear falloff)
+// and a width SWELL - fresh thread up to 1 + RAINBOW_SWELL wide, easing
+// back to normal width as the stripes fade (exactly normal at rainbow
+// progress <= RAINBOW_SWELL_MIN_P, where its crossings may show again).
+const RAINBOW_GLOW_ARC = 2.4;
+const RAINBOW_GLOW_HOLD = 0.45;
+const RAINBOW_SWELL = 0.6;
+const RAINBOW_SWELL_MIN_P = 0.2;
 const FAN_SOLID_START = 0.55;
 
 // Fan transparency (TriFanMesh fx) from its arms' settledness: invisible
@@ -297,7 +306,7 @@ function fanFx(solid: number): number {
 }
 // Gap fade-in when a crossing's erase first shows during a reveal (the
 // gap used to POP in at full strength once both passes were revealed).
-const CROSSING_FADE_IN = 0.3;
+const CROSSING_FADE_IN = 0.36;
 const GOLD_FAMILY_MIN = 118 / PAL_W;
 
 function mixHex(a: number, b: number, t: number): number {
@@ -876,6 +885,8 @@ export class RibbonRenderer {
     number,
     { age: Float32Array; w: Float32Array; last: number; hot: boolean }
   >();
+  // Per-chain combined width multiplier (reveal mask x rainbow swell).
+  private swellScratch = new Map<number, Float32Array>();
   private pluckWaves: Array<{
     chain: number;
     x: number;
@@ -1461,7 +1472,9 @@ export class RibbonRenderer {
       case "comet":
         return [8, 0.5];
       case "rainbow":
-        return [8, 0.42];
+        // A short rounded head that blooms straight into the width swell
+        // (rainbowWidthMul) - the old long needle taper hid the swell.
+        return [1.6, 0.55];
       case "roots":
         return [16, 0];
       default:
@@ -1846,7 +1859,7 @@ export class RibbonRenderer {
         samples.tangents,
         this.style.threadWidth / 2,
         0,
-        mask
+        this.rainbowWidthMul(i, samples.count, mask)
       );
     });
     if (this.style.paletteMode && !this.rgbCacheReady) {
@@ -1869,11 +1882,16 @@ export class RibbonRenderer {
     const fillHalf = this.style.threadWidth / 2;
     const gap = (this.style.casingWidth - this.style.threadWidth) / 2;
 
-    // MATERIALIZE FX (dust/comet): while any chain is still fading in from
-    // transparent, crossings additionally wait for both passes to go
-    // solid (crossingMaterialized) - this can outlive the reveal itself.
+    // APPEARANCE FX GATE: while any chain is still materializing from
+    // transparent (dust/comet) or swollen by the rainbow head, crossings
+    // additionally wait for both passes to settle (crossingFxSettled) -
+    // this can outlive the reveal itself.
     let fxMatHot = false;
-    if (this.appearFx === "dust" || this.appearFx === "comet") {
+    if (
+      this.appearFx === "dust" ||
+      this.appearFx === "comet" ||
+      this.appearFx === "rainbow"
+    ) {
       for (const pool of this.fxScratch.values()) {
         if (pool.hot) {
           fxMatHot = true;
@@ -1888,6 +1906,7 @@ export class RibbonRenderer {
         this.underErases[c].mesh.visible = true;
         this.underErases[c].mesh.alpha = 1;
         this.overFills[c].mesh.visible = true;
+        this.overFills[c].mesh.alpha = 1;
         this.crossingShownAt[c] = -1;
       }
     }
@@ -1901,7 +1920,7 @@ export class RibbonRenderer {
       if (gate) {
         const on =
           (!this.revealOn || this.crossingRevealed(crossing)) &&
-          (!fxMatHot || this.crossingMaterialized(crossing));
+          (!fxMatHot || this.crossingFxSettled(crossing));
         this.underErases[c].mesh.visible = on;
         this.overFills[c].mesh.visible = on;
         if (!on) {
@@ -1913,16 +1932,31 @@ export class RibbonRenderer {
           this.crossingShownAt[c] = -1;
           return;
         }
-        // The GAP fades in (erase strength 0 -> 1; the fill shows at once
-        // so the over thread never dims): popping in at full strength
-        // read as a flicker at every crossing the front passed.
+        // The crossing FADES IN instead of popping (a full-strength pop
+        // read as a flicker at every crossing the front passed). Where the
+        // over thread already draws on top, only the GAP fades (erase
+        // strength 0 -> 1; the fill shows at once, identical to the base
+        // beneath it). Where the UNDER thread draws on top (chain order),
+        // the fill first crossfades the over thread in OVER it, then the
+        // gap fades - fading both together would erase the under thread
+        // before the fill covered it, dimming the crossing mid-fade.
         let t0 = this.crossingShownAt[c];
         if (t0 < 0) {
           t0 = nowSec;
           this.crossingShownAt[c] = nowSec;
         }
         const t = Math.min(1, (nowSec - t0) / CROSSING_FADE_IN);
-        this.underErases[c].mesh.alpha = t * t * (3 - 2 * t);
+        const ss = (x: number): number => {
+          const q = Math.max(0, Math.min(1, x));
+          return q * q * (3 - 2 * q);
+        };
+        if (this.underDrawnOnTop(crossing)) {
+          this.overFills[c].mesh.alpha = ss(t * 2);
+          this.underErases[c].mesh.alpha = ss(t * 2 - 1);
+        } else {
+          this.overFills[c].mesh.alpha = 1;
+          this.underErases[c].mesh.alpha = ss(t);
+        }
       }
       this.renderCrossing(
         crossing,
@@ -2638,7 +2672,7 @@ export class RibbonRenderer {
       // REVEAL: same visibility rule as registered crossings (no fade-in
       // clock - emergent patches are pooled, not stably indexed).
       if (this.revealOn && !this.crossingRevealed(em)) continue;
-      if (this.fxMatHot && !this.crossingMaterialized(em)) continue;
+      if (this.fxMatHot && !this.crossingFxSettled(em)) continue;
       this.ps.bindingPoint(em.over, this.sampleScratch, 0);
       const ex = this.sampleScratch[0];
       const ey = this.sampleScratch[1];
@@ -2916,6 +2950,17 @@ export class RibbonRenderer {
   // rate (the half-rate flow path would alias a 5-13Hz vibration).
   hasActivePluckWaves(): boolean {
     return this.pluckWaves.length > 0;
+  }
+
+  // Appearance FX still evolving geometry or crossing visibility (FX pools
+  // hot, or the crossing gate's one-frame release pending): update() must
+  // keep running even when the asleep ticker would otherwise skip it.
+  needsFxRender(): boolean {
+    if (this.crossingGateWas) return true;
+    for (const pool of this.fxScratch.values()) {
+      if (pool.hot) return true;
+    }
+    return false;
   }
 
   private tickPaintPalette(dt: number): void {
@@ -3666,6 +3711,36 @@ export class RibbonRenderer {
     return w;
   }
 
+  // RAINBOW SWELL: the reveal mask times a per-sample width swell driven
+  // by the rainbow progress (fresh = up to 1 + RAINBOW_SWELL wide, easing
+  // to normal width as the stripes fade; exactly 1 below
+  // RAINBOW_SWELL_MIN_P, where crossings may show again). Outlives the
+  // reveal like the stripes. Returns the mask itself when inert.
+  private rainbowWidthMul(
+    chain: number,
+    count: number,
+    mask: Float32Array | null
+  ): Float32Array | null {
+    if (this.appearFx !== "rainbow") return mask;
+    const pool = this.fxScratch.get(chain);
+    if (!pool || !pool.hot || pool.w.length !== count) return mask;
+    let buf = this.swellScratch.get(chain);
+    if (!buf || buf.length !== count) {
+      buf = new Float32Array(count);
+      this.swellScratch.set(chain, buf);
+    }
+    const w = pool.w;
+    for (let k = 0; k < count; k++) {
+      const x = Math.max(
+        0,
+        Math.min(1, (w[k] - RAINBOW_SWELL_MIN_P) / (1 - RAINBOW_SWELL_MIN_P))
+      );
+      const swell = 1 + RAINBOW_SWELL * x * x * (3 - 2 * x);
+      buf[k] = (mask ? mask[k] : 1) * swell;
+    }
+    return buf;
+  }
+
   // Live FX weight at a chain ctrl (0 = inert / cold chain), from the
   // pool applyFxWeights last wrote (this tick or the previous one).
   private fxWeightAt(chain: number, ctrl: number): number {
@@ -3695,10 +3770,12 @@ export class RibbonRenderer {
     return 1;
   }
 
-  // Materialize alpha at a crossing's two passes (both must be solid
-  // before its erase + fill may show: a fill copying a translucent host
-  // over the translucent host double-covers the window beyond the erase).
-  private crossingMaterialized(crossing: {
+  // Both passes of a crossing settled enough for its erase + fill to show:
+  // materializing passes must be solid (a fill copying a translucent host
+  // over the translucent host double-covers the window beyond the erase);
+  // rainbow passes must be past their width swell (the cut solve and the
+  // erase lanes assume the normal thread width).
+  private crossingFxSettled(crossing: {
     over: CrossingPass;
     under: CrossingPass;
   }): boolean {
@@ -3710,7 +3787,23 @@ export class RibbonRenderer {
       crossing.under.chain,
       this.renderCtrl(crossing.under)
     );
+    if (this.appearFx === "rainbow") {
+      return wo <= RAINBOW_SWELL_MIN_P && wu <= RAINBOW_SWELL_MIN_P;
+    }
     return wo > -FX_SOLID_EPS && wu > -FX_SOLID_EPS;
+  }
+
+  // Base draw order at a crossing: fills stack in chain order, and a
+  // chain's own strip draws in sample (ctrl) order - true when the UNDER
+  // pass's material is drawn above the over pass's.
+  private underDrawnOnTop(crossing: {
+    over: CrossingPass;
+    under: CrossingPass;
+  }): boolean {
+    if (crossing.under.chain !== crossing.over.chain) {
+      return crossing.under.chain > crossing.over.chain;
+    }
+    return this.renderCtrl(crossing.under) > this.renderCtrl(crossing.over);
   }
 
   // REVEAL frontier glow (palette mode): push the paint U of the samples
@@ -3736,7 +3829,11 @@ export class RibbonRenderer {
     const total = samples.totalLength;
     const mask = this.revealMask[chain];
     const arcPer = closed ? total / count : total / (count - 1);
-    const halfWin = Math.ceil(REVEAL_GLOW_ARC / Math.max(arcPer, 1e-6)) + 1;
+    // Rainbow: a LONGER white head with a full-strength plateau.
+    const rainbow = this.appearFx === "rainbow";
+    const glowArc = rainbow ? RAINBOW_GLOW_ARC : REVEAL_GLOW_ARC;
+    const hold = rainbow ? glowArc * RAINBOW_GLOW_HOLD : 0;
+    const halfWin = Math.ceil(glowArc / Math.max(arcPer, 1e-6)) + 1;
     for (const tip of this.revealTips) {
       if (tip.chain !== chain) continue;
       const aT = this.paintArcAt(samples, tip.ctrl, closed);
@@ -3748,9 +3845,9 @@ export class RibbonRenderer {
         const a = k * arcPer;
         let d = Math.abs(a - aT);
         if (closed) d = Math.min(d, total - d);
-        if (d > REVEAL_GLOW_ARC) continue;
+        if (d > glowArc) continue;
         if (mask && mask[k] <= 0.004) continue; // Unrevealed side: invisible.
-        const g = 1 - d / REVEAL_GLOW_ARC;
+        const g = d <= hold ? 1 : 1 - (d - hold) / (glowArc - hold);
         const u = us[k];
         if (u >= GOLD_FAMILY_MIN) {
           const cand = bandU(true, g);

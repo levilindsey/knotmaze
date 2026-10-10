@@ -378,9 +378,8 @@ between-threads/cell-passage route.
   still sleeps 3.9). Knot mode structurally untouched (no fusions ->
   no clamp records). Full battery green (sweeps knot+fabric incl. the
   P3.39 pin seed, quiescence, gesture battery 9/9 re-sleep, scans).
-  Agent also flagged (unverified): easePassToward's seam-end guard
-  skips/mis-clamps the two terminal passes of open chains -
-  pre-existing, needs its own measured look.
+  The flagged easePassToward seam-end guard bug was REAL and is fixed
+  (633d290 - see the late-2026-10-10 round below).
 - JUNCTION CLEARANCE (fix A) + TWO-LAYER FILLETS (fix B), same round,
   REFIT in e78909c: junctions were invisible to the crossing
   bookkeeping, so gap cuts + fade tails marched into seal discs/webs
@@ -439,6 +438,36 @@ between-threads/cell-passage route.
   0.2..0.8. Look color controls (scheme/hue/gamut/palette/pathColor)
   now RECOLOR IN PLACE (renderer.recolor) - the rebuild they used to
   trigger reset the knot, replayed the reveal and wiped progress.
+- ROOT-CAUSE ROUND (late 2026-10-10; three measuring agents):
+  GAP JITTER (4th report) lived in the OVER-FILLS, not the erase cuts:
+  windows copied WHOLE samples (floor/ceil), so fill ends rode the
+  resampling grid - which slides along the material as flow breathes
+  a chain's length - re-snapping one sample (0.082 arc) 2-7x/s per
+  crossing, visible as a hard edge stepping inside a neighbor's soft
+  fade. Fill ends are now CONTINUOUS (end pairs lerped on the source
+  strip's quad edges; the paint pass replays the same trims), the
+  over-reach exit interpolates, and open runs map over count-1
+  segments (the window used total/count - the arc-wrap family again).
+  The three lane-cut limiter rounds were filtering an already-smooth
+  signal (raw cut change < 0.0063 arc/frame); at rest only the micro
+  one-pole ever fires - candidate for removal after a drag battery.
+  FILLETS: the pale jagged spurs were a Stage 16d sign regression (the
+  flank tangent already pointed outward; multiplying by arm.dir again
+  mirrored every dir = -1 flank onto the arm's FAR edge, 988/988
+  measured), and webs overhanging an arm's under-gap now stop short of
+  its nearest underWindows cut. PHYSICS: easePassToward's open-chain
+  terminal passes clamp against their REAL neighbors (the first pass
+  skipped all ordering clamps; the last clamped against its own
+  pre-step ctrl - 1.6-ctrl sawtooth jumps, order inversions, a
+  fallback runaway; 4/28 fabrics incl. seed 20 at defaults never
+  slept). RAINBOW now swells (up to 1.6x, easing to normal as the
+  stripes fade; swell-aware concave clamp in RibbonMesh.update) under
+  a longer plateaued white head; crossings wait out the swell, and a
+  gated crossing whose UNDER pass draws on top (chain/strip order)
+  crossfades its fill in BEFORE its gap fades (fading both at once
+  dims the crossing mid-fade). The asleep flow-0 ticker keeps calling
+  update() while FX pools are hot (needsFxRender) - else gated
+  crossings stayed hidden until the next wake.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
@@ -549,17 +578,23 @@ Still open in P4:
 - **Open artifact queue (updated 2026-10-10, late)**: segments-scheme
   circular blend pools + hard color seams at some intersections (Stage
   26 follow-up; base caches measured smooth, overlay suspect - needs a
-  user Alt+click CROSSING INSPECT on a seam); fillet artifacts at big
-  cuspRadius - pale jagged spurs past silhouettes and webs overhanging
-  an arm's under-gap (attribution agent in flight; the third reported
-  class, olive smudges, was the pathColor binding bug, fixed); gap
-  JITTER under flow (4th report - the limiter stack is treated as
-  failed symptom-patching; root-cause agent measuring cut traces +
-  pixel flicker); the open-chain terminal-pass guard in
-  easePassToward (audit agent). Icon set: user rejected the generated
-  icons; a portable prompt for another model was delivered instead.
-  DONE from the old queue: gamut UX (hs/arc/pal/pc, now live), physics
-  junction spacing (dc20d4c), reveal frontier FX (all styles).
+  user Alt+click CROSSING INSPECT on a seam). AGENT-MEASURED, NOT YET
+  FIXED: (1) the renderer's neighborGaps has the terminal-pass
+  asymmetry too - every open chain's FIRST pass gets prev-gap 0 (its
+  chain-start-side erase is cut short: 0.36 vs a 0.44 median) and its
+  LAST pass gets [total/2, total/2] (its real prev neighbor ignored);
+  fix = compute each side separately + screenshot check; (2) latent
+  seam-window wraps on open chains (applyTransversality's window, the
+  slideCrossing/projectOntoChain windows, updatePassCover +-12 slots)
+  index modulo len - a seam-relative clamp like addDepthTent's;
+  (3) the lane-cut limiter stack is likely removable (see the
+  root-cause round). Optional look: a narrower two-arm fillet blend
+  band (FILLET_BLEND_BAND 0.18 patch in the session scratchpad) for
+  the residual tan RGB-mean crotches under segments. Icon set: user
+  rejected the generated icons; a portable prompt was delivered.
+  DONE: gamut UX (live recolor), physics junction spacing, reveal FX
+  (all styles), fillet spurs/overhangs, gap jitter, terminal-pass
+  guard, olive smudges (pathColor binding).
 
 **P5 — growth animation** (animate the knot being drawn/growing) and
 **P6 — flourishes** (polish) remain untouched after P4.
