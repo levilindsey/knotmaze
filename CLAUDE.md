@@ -83,7 +83,7 @@ Work lands directly to `main`. All changes must be end-to-end working before com
 - Phased roadmap: P0 (scaffold) → P1 (combinatorial) → P2 (beauty + live physics) → P3 (touch + audio) → P4 (maze mode) → P5 (growth animation) → P6 (flourishes).
 - Each phase ships as a working demo starting from P2.
 
-## Roadmap status — what's next (updated 2026-10-09, after P4 Stage 10)
+## Roadmap status — what's next (updated 2026-10-09, after P4 Stage 12)
 
 **P0–P3 done** (their saga lives in Follow-ups; the bounded
 post-VIOLENT-play loud attractor at fat params remains the one open
@@ -146,6 +146,30 @@ between-threads/cell-passage route.
   rewrites only UV buffers, so the pulse animates while the knot
   sleeps. Distance labels are x10 integers. This RETIRED the Stage 8
   stroke overlay and its ~1px handoff-hairline residual wholesale.
+
+- Stage 11 — LONG DEAD-END THREADS: dead ends (the `deadEnds` toggle)
+  are no longer stubs ("not interesting") — a dead end is a closed maze
+  strand cut open, one flank fused into its first crossing, the other
+  left as a FREE unanchored tip: a long woven thread you branch into
+  through real choices and only later discover goes nowhere.
+  deadEndDensity = fraction of eligible closed strands cut (1 =
+  maximally tree-like). The stub machinery is deleted.
+- Stage 12 — ANIMATED TRAVERSAL: the head dot travels the thread's
+  curve (ctrl-space interpolation) with the gold front sweeping in
+  sync; backtrack retracts; game state stays instant (mid-flight taps
+  snap the previous move); the win banner waits for arrival. Runs in
+  the asleep/paused ticker branches like the pulse.
+
+RENDER LORE (hard-won, 2026-10-09): **never destroy palette textures
+mid-session.** Pixi's retained render state (bind groups subscribe to
+texture resources) can still reference a TextureSource the frame after
+a rebuild; destroying it null-derefs in `setResource` on every
+subsequent render — the shared ticker dies and the canvas blanks, which
+presents as "every checkbox toggle blanks the screen" (and can leave
+half-rendered frames: fills without erase gaps). Palettes live in a
+page-lifetime cache (`PALETTE_CACHE`, keyed by base color); rebuilds
+reuse them. Attributed with a checkbox-toggle pageerror probe — the
+rebuild itself kept working while the stamp's wall clock froze.
 
 Still open in P4:
 - **URL/param serialization for the remaining `MazeParams`**
