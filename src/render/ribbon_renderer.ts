@@ -177,6 +177,7 @@ const FILLET_REACH_PER_HALF = 1.25; // * fillHalf, along each arm.
 const FILLET_MAX_WEDGE = 2.6; // Radians.
 const FILLET_CORNER_LIM = 2.2; // * edge half-width: skip distant corners.
 const FILLET_BEZIER_STEPS = 8;
+const FILLET_EDGE_PTS = 5; // Samples per curve-hugging wedge flank.
 const DISC_SEGS = 16; // Rim segments on tip/junction seal discs.
 
 // Wrap (closed) or clamp (open) a world arc into a chain's [0, total].
@@ -2457,10 +2458,11 @@ export class RibbonRenderer {
     if (!this.filletMesh) {
       let armTotal = 0;
       for (const jn of this.junctionArms) armTotal += jn.arms.length;
+      const wedgeRim = 2 * FILLET_EDGE_PTS + FILLET_BEZIER_STEPS + 1;
       this.filletMesh = new TriFanMesh(
         this.paletteTex,
-        armTotal * (FILLET_BEZIER_STEPS + 2) + nDiscs * (DISC_SEGS + 2),
-        (armTotal * FILLET_BEZIER_STEPS + nDiscs * DISC_SEGS) * 3
+        armTotal * (wedgeRim + 1) + nDiscs * (DISC_SEGS + 2),
+        (armTotal * wedgeRim + nDiscs * DISC_SEGS) * 3
       );
       this.filletLayer.addChild(this.filletMesh.mesh);
     }
@@ -2824,26 +2826,79 @@ export class RibbonRenderer {
           }
         }
 
-        const pax = o1x + A.dx * L;
-        const pay = o1y + A.dy * L;
-        const pbx = o2x + B.dx * L;
-        const pby = o2y + B.dy * L;
+        // Each flank HUGS its arm's true curved silhouette: sample the
+        // centerline along the arc out to L and offset to the wedge-
+        // facing edge. The old straight-line extrapolation (edge origin
+        // + dir * L) diverged from curved arms - fillet EARS poked past
+        // the silhouette on a curve's outside and crotch GAPS opened on
+        // its inside (user report at cr=1.25). The outer rim stays a
+        // corner-controlled bezier between the two flanks' real tips.
+        const flank = (
+          arm: JArm,
+          left: boolean,
+          out: number[]
+        ): void => {
+          for (let e = 0; e < FILLET_EDGE_PTS; e++) {
+            const sArc =
+              (0.12 + (0.88 * e) / (FILLET_EDGE_PTS - 1)) * L;
+            const a0 = normArc(
+              arm.arc0 + arm.dir * sArc,
+              arm.total,
+              arm.closed
+            );
+            const a1 = normArc(
+              arm.arc0 + arm.dir * (sArc + 0.08),
+              arm.total,
+              arm.closed
+            );
+            const samples = this.chainSamples[arm.chain]!;
+            this.sampleAt(samples, a0, this.sampleScratch, 0);
+            const px = this.sampleScratch[0];
+            const py = this.sampleScratch[1];
+            this.sampleAt(samples, a1, this.sampleScratch, 0);
+            let tx = (this.sampleScratch[0] - px) * arm.dir;
+            let ty = (this.sampleScratch[1] - py) * arm.dir;
+            const tl = Math.hypot(tx, ty) || 1;
+            tx /= tl;
+            ty /= tl;
+            const sgn = left ? 1 : -1;
+            out.push(px - ty * w * sgn, py + tx * w * sgn);
+          }
+        };
+        const edgeA: number[] = [];
+        const edgeB: number[] = [];
+        flank(A, true, edgeA);
+        flank(B, false, edgeB);
 
-        // Quadratic bezier PA -> (corner) -> PB, fanned from the corner.
-        // Every vertex evaluates the shared junction field, so the wedge
-        // is a window onto the same continuous material as the discs and
-        // the adjacent ribbons - the pulse animation rides through.
+        // Perimeter: A's flank inner->outer, bezier rim to B's outer tip
+        // (control = corner), B's flank outer->inner. Every vertex
+        // evaluates the shared junction field, so the wedge is a window
+        // onto the same continuous material as the discs and ribbons.
         const n = FILLET_BEZIER_STEPS;
         const rim: number[] = [];
-        for (let i = 0; i <= n; i++) {
+        const pushPt = (px: number, py: number): void => {
+          fieldAt(rec, px, py);
+          rim.push(px, py, fieldU, fieldV);
+        };
+        for (let e = 0; e < FILLET_EDGE_PTS; e++) {
+          pushPt(edgeA[e * 2], edgeA[e * 2 + 1]);
+        }
+        const pax = edgeA[(FILLET_EDGE_PTS - 1) * 2];
+        const pay = edgeA[(FILLET_EDGE_PTS - 1) * 2 + 1];
+        const pbx = edgeB[(FILLET_EDGE_PTS - 1) * 2];
+        const pby = edgeB[(FILLET_EDGE_PTS - 1) * 2 + 1];
+        for (let i = 1; i < n; i++) {
           const q = i / n;
           const m0 = (1 - q) * (1 - q);
           const m1 = 2 * (1 - q) * q;
           const m2 = q * q;
-          const px = m0 * pax + m1 * cx + m2 * pbx;
-          const py = m0 * pay + m1 * cy + m2 * pby;
-          fieldAt(rec, px, py);
-          rim.push(px, py, fieldU, fieldV);
+          pushPt(
+            m0 * pax + m1 * cx + m2 * pbx,
+            m0 * pay + m1 * cy + m2 * pby
+          );
+        }
+        for (let e = FILLET_EDGE_PTS - 1; e >= 0; e--) {
+          pushPt(edgeB[e * 2], edgeB[e * 2 + 1]);
         }
         fieldAt(rec, cx, cy);
         fm.pushFan(cx, cy, fieldU, fieldV, rim);
