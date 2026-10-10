@@ -112,6 +112,32 @@ function mixHex(a: number, b: number, t: number): number {
   );
 }
 
+// Palette textures are cached for the PAGE lifetime, keyed by base color.
+// Rebuilds (checkbox toggles regenerate the whole scene) reuse them, and -
+// load-bearing - nothing ever destroys one mid-session: pixi's retained
+// render state (bind groups listen to their texture resources) can still
+// reference a source on the frame after a rebuild, and destroying it then
+// null-derefs inside setResource on every subsequent render - the ticker
+// dies and the screen goes blank. Growth is bounded by distinct thread
+// colors seen (a reseed adds at most one strand-palette's worth of 1KB
+// strips).
+const PALETTE_CACHE = new Map<number, Texture>();
+
+function paletteFor(base: number): Texture {
+  let tex = PALETTE_CACHE.get(base);
+  if (!tex) {
+    tex = new Texture({
+      source: new BufferImageSource({
+        resource: buildPalettePixels(base),
+        width: PAL_W,
+        height: 1,
+      }),
+    });
+    PALETTE_CACHE.set(base, tex);
+  }
+  return tex;
+}
+
 function buildPalettePixels(base: number): Uint8Array {
   const px = new Uint8Array(PAL_W * 4);
   const put = (i: number, hex: number): void => {
@@ -285,7 +311,6 @@ export class RibbonRenderer {
   // Palette-mode paint state (see PaintSpan/PulseArm). The paint pass is
   // deliberately decoupled from update(): it rewrites only UV buffers, so
   // the pulse animation can run while the physics sleeps.
-  private palettes = new Map<number, Texture>();
   private paintSpans: PaintSpan[] = [];
   private paintPulses: PulseArm[] = [];
   private paintCaps: PaintCap[] = [];
@@ -341,18 +366,7 @@ export class RibbonRenderer {
       const base = hslToHex(hue, 0.45, 0.64);
       const fill = new RibbonMesh(count, closed, base);
       if (style.paletteMode) {
-        let tex = this.palettes.get(slot);
-        if (!tex) {
-          tex = new Texture({
-            source: new BufferImageSource({
-              resource: buildPalettePixels(base),
-              width: PAL_W,
-              height: 1,
-            }),
-          });
-          this.palettes.set(slot, tex);
-        }
-        fill.mesh.texture = tex;
+        fill.mesh.texture = paletteFor(base);
         fill.mesh.tint = 0xffffff;
         fill.writeUs(new Float32Array(count).fill(U_BASE));
       }
@@ -1384,7 +1398,7 @@ export class RibbonRenderer {
 
   destroy(): void {
     this.root.destroy({ children: true });
-    for (const tex of this.palettes.values()) tex.destroy(true);
-    this.palettes.clear();
+    // Palette textures deliberately survive in PALETTE_CACHE - see its
+    // comment for why destroying them here blanks the screen.
   }
 }
