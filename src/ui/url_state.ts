@@ -109,6 +109,25 @@ export const DEFAULTS = {
   appearSpeed: 1,
 };
 
+// COMPLETE per-param defaults (everything but seed), for the panel's
+// per-row reset buttons + modified indicators and the Reset-to-defaults
+// button. DEFAULTS above feeds readNumber fallbacks (numbers only);
+// this adds the booleans and choice strings. The Omit type keeps it
+// provably in sync with UrlParams.
+export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
+  ...DEFAULTS,
+  gridAlign: false,
+  mazeFabric: false,
+  deadEnds: false,
+  fogOfWar: false,
+  colorScheme: "mono",
+  pathViz: "gold",
+  soundMode: "manual",
+  pitchSpace: "pentMinor",
+  pluckStyle: "string",
+  appearMode: "instant",
+};
+
 export function newSeed(): number {
   return (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
 }
