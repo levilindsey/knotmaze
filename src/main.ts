@@ -1,6 +1,10 @@
 import { Application, Container } from "pixi.js";
 import { generateLatticeKnotwork } from "./core/lattice_grower";
-import { buildMazePlan } from "./core/maze_plan";
+import {
+  buildMazePlan,
+  DEFAULT_MAZE_PARAMS,
+  DEAD_END_DENSITY_ON,
+} from "./core/maze_plan";
 import { applyMazePlan, applyMazeCuts } from "./core/maze_apply";
 import { buildWalkGraph } from "./core/walk_graph";
 import type { WalkGraph } from "./core/walk_graph";
@@ -24,7 +28,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 8: branching maze gameplay 2026-10-09";
+const BUILD_STAMP = "P4 Stage 9: trimmed corners, braided default 2026-10-09";
 
 const app = new Application();
 
@@ -127,7 +131,10 @@ async function main(): Promise<void> {
     const oldMaze = params.mazeMode && !params.mazeFabric;
     let hueGroup: number[] | undefined;
     if (params.mazeFabric) {
-      const plan = buildMazePlan(graph);
+      const plan = buildMazePlan(graph, {
+        ...DEFAULT_MAZE_PARAMS,
+        deadEndDensity: params.deadEnds ? DEAD_END_DENSITY_ON : 0,
+      });
       hueGroup = applyMazePlan(graph, plan);
       applyMazeCuts(graph, plan, hueGroup);
     }

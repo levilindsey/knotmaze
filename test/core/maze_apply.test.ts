@@ -2,7 +2,12 @@ import { describe, it, expect } from "vitest";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import type { MazeParams, MazePlan } from "../../src/core/maze_plan";
-import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
+import {
+  applyMazePlan,
+  applyMazeCuts,
+  ENTRANCE_END_IDS,
+  EXIT_END_IDS,
+} from "../../src/core/maze_apply";
 import {
   checkStructure,
   checkAlternation,
@@ -121,6 +126,59 @@ describe("maze apply: graph surgery", () => {
     expect(a.g.nodes).toEqual(b.g.nodes);
     expect(a.g.edges).toEqual(b.g.edges);
     expect(a.g.strands).toEqual(b.g.strands);
+  });
+
+  it("trims each cut's decoy flank into a 3-way merge (one tail per corner)", () => {
+    for (const seed of SEEDS) {
+      const g = generateLatticeKnotwork({
+        gridSize: 8,
+        weaveDensity: 0.3,
+        turnBias: 0.6,
+        randSeed: seed,
+      });
+      const plan = buildMazePlan(g);
+      const hueGroup = applyMazePlan(g, plan);
+      applyMazeCuts(g, plan, hueGroup);
+
+      const cuts: Array<[typeof plan.entrance, readonly string[]]> = [
+        [plan.entrance, ENTRANCE_END_IDS],
+        [plan.exit, EXIT_END_IDS],
+      ];
+      for (const [cut, ids] of cuts) {
+        // These seeds all have eligible flanks; a trim must be planned.
+        expect(cut.trim, `trim for ${ids[0]}`).toBeDefined();
+        const trim = cut.trim!;
+        const present = ids.filter((id) => g.nodes.has(id));
+        expect(present.length).toBe(1);
+        // The tail hangs off the flank OPPOSITE the trimmed one.
+        expect(present[0]).toBe(trim.side === "b" ? ids[0] : ids[1]);
+        expect(g.adjacency.get(present[0])!.length).toBe(1);
+
+        const merge = g.nodes.get(trim.mergeCrossing)!;
+        expect(merge.type).toBe(NODE_TYPE.JUNCTION);
+        expect(g.adjacency.get(trim.mergeCrossing)!.length).toBe(3);
+
+        for (const eid of trim.stubEdges) {
+          expect(g.edges.has(eid)).toBe(false);
+        }
+        for (const nid of trim.stubNodes) {
+          expect(g.nodes.has(nid)).toBe(false);
+        }
+      }
+
+      // All structural invariants hold on the fully applied graph.
+      expect(checkStructure(g)).toBe(true);
+      expect(checkStrandPartition(g)).toBe(true);
+      expect(checkAlternation(g)).toBe(true);
+      g.strands.forEach((strand) => {
+        expect(strand.edgeIds.length).toBe(strand.nodes.length - 1);
+        strand.edgeIds.forEach((eid, i) => {
+          const e = g.edges.get(eid)!;
+          expect(e.nodeA).toBe(strand.nodes[i]);
+          expect(e.nodeB).toBe(strand.nodes[i + 1]);
+        });
+      });
+    }
   });
 
   it("maps bridge/stub/cut-half hues back to their hosts", () => {

@@ -123,12 +123,16 @@ describe("walk graph (P4 Stage 8a)", () => {
       expect([...EXIT_END_IDS]).toContain(walk.exit);
       expect(Number.isFinite(walk.optimalLength)).toBe(true);
       expect(walk.optimalLength).toBeGreaterThan(0);
-      // All four tails exist as degree-1 vertices and can reach the exit
-      // (the decoys are walkable wrong turns, not disconnected stubs).
-      for (const id of [...ENTRANCE_END_IDS, ...EXIT_END_IDS]) {
-        const v = walk.vertices.get(id);
-        expect(v, id).toBeDefined();
-        expect(v!.edges.length).toBe(1);
+      // Each corner has at least one tail (exactly one when its decoy trim
+      // succeeded); every existing tail is a degree-1 vertex that can reach
+      // the exit.
+      const entrances = ENTRANCE_END_IDS.filter((id) => walk.vertices.has(id));
+      const exits = EXIT_END_IDS.filter((id) => walk.vertices.has(id));
+      expect(entrances.length).toBeGreaterThanOrEqual(1);
+      expect(exits.length).toBeGreaterThanOrEqual(1);
+      for (const id of [...entrances, ...exits]) {
+        const v = walk.vertices.get(id)!;
+        expect(v.edges.length).toBe(1);
         expect(Number.isFinite(walk.distToExit.get(id)!)).toBe(true);
       }
       expect(walk.distToExit.get(walk.start)!).toBeCloseTo(

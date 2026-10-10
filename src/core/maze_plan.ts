@@ -37,6 +37,24 @@ import { NODE_TYPE } from "./types";
 export interface MazeCut {
   strand: number;
   edgeId: string;
+  // DECOY TRIM: a cut produces two flanks, but only ONE keeps an anchored
+  // off-screen tail. The other flank is walked back to its first
+  // INTER-STRAND crossing, which is fused into a 3-way merge (the thread
+  // ends by merging into the thread it last crossed), and the stub between
+  // the cut and that crossing is deleted. Absent when neither flank has an
+  // eligible crossing (self-crossings pinch when fused; walking through the
+  // other cut's edge is forbidden) - then both flanks keep decoy tails,
+  // the pre-rework behavior.
+  trim?: MazeCutTrim;
+}
+
+export interface MazeCutTrim {
+  // Which flank is trimmed: "a" = pre-cut (the flank ending at the cut
+  // edge's nodeA), "b" = post-cut. The OTHER flank keeps the tail.
+  side: "a" | "b";
+  mergeCrossing: string; // Crossing node fused into a 3-way junction.
+  stubEdges: string[]; // Edges deleted, from the merge toward the cut.
+  stubNodes: string[]; // Interior TURN nodes deleted (never the merge).
 }
 
 // Tunable maze-generation knobs (serialized into the URL in a later stage).
@@ -62,11 +80,16 @@ export interface MazeParams {
 export const DEFAULT_MAZE_PARAMS: MazeParams = {
   branchDensity: 0.35,
   fourWayFraction: 0.12,
-  deadEndDensity: 0.25,
+  // Dead-end stubs are OFF by default (pure braided maze: every wrong turn
+  // loops back). The UI toggle swaps in DEAD_END_DENSITY_ON.
+  deadEndDensity: 0,
   exitClearance: 5,
   entranceClearance: 2.5,
   junctionSpacing: 2,
 };
+
+// The stub density the "dead ends" toggle enables (the old default).
+export const DEAD_END_DENSITY_ON = 0.25;
 
 // A planned splice: a bridge from the midpoint of edgeA to the midpoint of
 // edgeB, creating a 3-way junction on each host strand.
@@ -445,6 +468,84 @@ function pickFarthest<T>(
   return out;
 }
 
+// A SELF-crossing merge leaves the cut strand fused to itself - fine when
+// the surviving loop through the fusion is long (the corner-lobe case: the
+// cut severs a small peripheral lobe closed by one self-crossing, which is
+// the TYPICAL corner geometry), but a pinch hazard when it is kink-scale
+// (the Stage 5 lesson: a tiny eyelet collapses once its crossing clamps
+// vanish). The kept loop must span at least this many strand edges.
+const SELF_MERGE_MIN_LOOP = 8;
+
+// Walk one flank of a cut to its first crossing. Eligible when that crossing
+// is inter-strand, or a self-crossing whose KEPT loop clears the floor above;
+// the crossing must be unclaimed and the walk must not traverse another
+// cut's edge. Everything passed on the way is a TURN (the graph is
+// pre-surgery: no junctions or ends exist yet).
+function planTrim(
+  graph: TangleGraph,
+  cut: MazeCut,
+  crossMap: Map<string, number[]>,
+  usedCrossings: Set<string>,
+  wallEdges: Set<string>
+): MazeCutTrim | undefined {
+  const strand = graph.strands[cut.strand];
+  const m = strand.edgeIds.length;
+  const c = strand.edgeIds.indexOf(cut.edgeId);
+
+  // Occurrence slots per node on this strand (self-crossings appear twice).
+  const slotsOf = new Map<string, number[]>();
+  const nodeCount = strand.isClosed
+    ? strand.nodes.length - 1
+    : strand.nodes.length;
+  for (let i = 0; i < nodeCount; i++) {
+    const list = slotsOf.get(strand.nodes[i]);
+    if (list) list.push(i);
+    else slotsOf.set(strand.nodes[i], [i]);
+  }
+
+  const walk = (dir: 1 | -1): MazeCutTrim | null => {
+    const stubEdges: string[] = [];
+    const stubNodes: string[] = [];
+    for (let k = 0; k < m; k++) {
+      const ni = (((dir < 0 ? c - k : c + 1 + k) % m) + m) % m;
+      const node = graph.nodes.get(strand.nodes[ni])!;
+      if (node.type === NODE_TYPE.CROSSING) {
+        const ss = crossMap.get(node.id);
+        if (!ss || ss.length !== 2) return null;
+        if (usedCrossings.has(node.id)) return null;
+        if (ss[0] === ss[1]) {
+          const occ = slotsOf.get(node.id);
+          if (!occ || occ.length !== 2) return null;
+          const [i1, i2] = occ;
+          const arcForward = i2 - i1; // edges i1..i2-1
+          const cutInForward = c >= i1 && c < i2;
+          const kept = cutInForward ? m - arcForward : arcForward;
+          if (kept < SELF_MERGE_MIN_LOOP) return null;
+        }
+        return {
+          side: dir < 0 ? "a" : "b",
+          mergeCrossing: node.id,
+          stubEdges,
+          stubNodes,
+        };
+      }
+      stubNodes.push(node.id);
+      const ei = (((dir < 0 ? c - 1 - k : c + 1 + k) % m) + m) % m;
+      const eid = strand.edgeIds[ei];
+      if (wallEdges.has(eid)) return null;
+      stubEdges.push(eid);
+    }
+    return null;
+  };
+
+  // Trim the flank with the shorter stub (less material deleted); ties go
+  // to side "a" for determinism.
+  const a = walk(-1);
+  const b = walk(1);
+  if (a && b) return a.stubEdges.length <= b.stubEdges.length ? a : b;
+  return a ?? b ?? undefined;
+}
+
 function stripKey(c: Candidate): SpliceSite {
   return {
     edgeA: c.edgeA,
@@ -488,10 +589,31 @@ export function buildMazePlan(
     Math.hypot(p[0], p[1]) >= params.entranceClearance &&
     Math.hypot(p[0] - bound, p[1] - bound) >= params.exitClearance;
 
-  // ---- Reachability spanning: splices preferred, merges as fallback. ----
   const usedEdges = new Set<string>([entrance.edgeId, exit.edgeId]);
   const usedCrossings = new Set<string>();
   const placed: number[] = [];
+
+  // ---- Decoy trims: one tail per corner; the other flank merges into its
+  // first inter-strand crossing. Claimed BEFORE spanning/choice placement so
+  // nothing else lands on the doomed stub edges or the merge crossing. Each
+  // trim is also a REAL strand connection (the cut strand fuses with the
+  // merge partner), fed to the reachability sweep below.
+  const crossMap = new Map<string, number[]>();
+  for (const x of crossings) crossMap.set(x.id, x.strands);
+  const wallEdges = new Set([entrance.edgeId, exit.edgeId]);
+  const trimLinks: Array<[number, number]> = [];
+  for (const cut of [entrance, exit]) {
+    cut.trim = planTrim(graph, cut, crossMap, usedCrossings, wallEdges);
+    if (!cut.trim) continue;
+    usedCrossings.add(cut.trim.mergeCrossing);
+    for (const eid of cut.trim.stubEdges) usedEdges.add(eid);
+    const pos = graph.nodes.get(cut.trim.mergeCrossing)!.latticePos;
+    placed.push(pos[0], pos[1]);
+    const ss = crossMap.get(cut.trim.mergeCrossing)!;
+    trimLinks.push([ss[0], ss[1]]);
+  }
+
+  // ---- Reachability spanning: splices preferred, merges as fallback. ----
   const reached = new Set<number>([entrance.strand]);
   const spanningSplices: SpliceSite[] = [];
   const spanningMerges: string[] = [];
@@ -514,9 +636,28 @@ export function buildMazePlan(
     return pc - qc || (p.id < q.id ? -1 : 1);
   });
 
+  // Trim merges connect their two strands for free; absorb across them
+  // whenever the frontier moves.
+  const absorbTrims = (): boolean => {
+    let any = false;
+    for (const [p, q] of trimLinks) {
+      const pIn = reached.has(p);
+      const qIn = reached.has(q);
+      if (pIn !== qIn) {
+        reached.add(pIn ? q : p);
+        any = true;
+      }
+    }
+    return any;
+  };
+  while (absorbTrims()) {
+    // Transitive closure across trim links before spanning starts.
+  }
+
   let guard = 0;
   while (reached.size < mazeStrands.length && guard++ < 100000) {
     let advanced = false;
+    if (absorbTrims()) advanced = true;
     // Splice sweep: absorb everything splice-reachable.
     let sweep = true;
     while (sweep) {

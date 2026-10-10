@@ -82,6 +82,13 @@ describe("maze plan: connectivity backbone", () => {
         adj.get(a)!.push(b);
         adj.get(b)!.push(a);
       }
+      // Decoy-trim merges are real strand connections too.
+      for (const cut of [plan.entrance, plan.exit]) {
+        if (!cut.trim) continue;
+        const [a, b] = cs.get(cut.trim.mergeCrossing)!;
+        adj.get(a)!.push(b);
+        adj.get(b)!.push(a);
+      }
       const seen = new Set<number>([plan.entrance.strand]);
       const queue = [plan.entrance.strand];
       for (let h = 0; h < queue.length; h++) {

@@ -18,9 +18,11 @@ export interface UrlParams {
   gap: number; // Space between an under-thread cut end and the over thread.
   mazeMode: boolean; // P4: trace a solve path instead of tugging threads.
   // P4 branching maze: generate the spliced maze FABRIC (junctions, 4-way
-  // merges, dead-end stubs, corner entrance/exit). Preview stage: renders and
-  // simulates the fabric with tug interaction; branching gameplay follows.
+  // merges, corner entrance/exit) and play it (branch-point taps).
   mazeFabric: boolean;
+  // Dead-end stubs in the fabric (classic wrong-turn spurs). OFF by default:
+  // a pure braided maze where every wrong turn loops back.
+  deadEnds: boolean;
 }
 
 export const DEFAULTS = {
@@ -72,6 +74,7 @@ export function readParams(): UrlParams {
     gap: readNumber(query, "gap", DEFAULTS.gap),
     mazeMode: readNumber(query, "md", 0) > 0.5,
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
+    deadEnds: readNumber(query, "de", 0) > 0.5,
   };
 }
 
@@ -93,5 +96,6 @@ export function writeParams(params: UrlParams): void {
   query.set("gap", String(params.gap));
   query.set("md", params.mazeMode ? "1" : "0");
   query.set("mf", params.mazeFabric ? "1" : "0");
+  query.set("de", params.deadEnds ? "1" : "0");
   history.replaceState(null, "", `?${query.toString()}`);
 }

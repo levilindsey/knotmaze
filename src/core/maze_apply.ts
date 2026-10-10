@@ -25,7 +25,7 @@
 
 import type { TangleGraph } from "./types";
 import { NODE_TYPE } from "./types";
-import type { MazePlan } from "./maze_plan";
+import type { MazePlan, MazeCut, MazeCutTrim } from "./maze_plan";
 
 // A stub reaches this fraction of the way toward the neighboring thread: far
 // enough to read as a real branch, short enough to stay visually (and
@@ -127,15 +127,19 @@ export function applyMazePlan(graph: TangleGraph, plan: MazePlan): number[] {
 
 // Entrance/exit carves, applied AFTER the junction surgery (they locate their
 // edge by SEARCH, so earlier strand splits can't stale the reference). Each
-// cut replaces its edge with two half-edges ending at two new anchored END
-// nodes, and the host strand is rethreaded open - or split in two if a
-// previous cut already opened it. Anchors sit past the cut toward the corner,
+// cut removes its edge; the TAIL flank gets a half-edge to a new anchored END
+// running toward the corner, and the other flank is TRIMMED per the plan:
+// walked back to its first inter-strand crossing, which is fused into a
+// 3-way JUNCTION, with the stub in between deleted - so each corner has
+// exactly one off-screen tail and no dangling decoy. When the plan found no
+// eligible trim (rare), both flanks keep anchored decoy tails as before,
 // spread slightly apart so the two loose ends stay visually distinct.
 const CUT_REACH = 1.5;
 const CUT_SPREAD = 0.4;
 
-// The four anchored END node ids the cuts create, exported for the walk
-// graph (gameplay) to locate the entrance/exit tails.
+// The anchored END node ids the cuts can create, exported for the walk
+// graph (gameplay) to locate the entrance/exit tails. With a trim only one
+// of each pair exists.
 export const ENTRANCE_END_IDS = ["mentr_a", "mentr_b"] as const;
 export const EXIT_END_IDS = ["mexit_a", "mexit_b"] as const;
 
@@ -145,17 +149,55 @@ export function applyMazeCuts(
   hueGroup?: number[]
 ): void {
   const s = Math.SQRT1_2;
-  cutStrandOpen(graph, plan.entrance.edgeId, [-s, -s], "mentr", hueGroup);
-  cutStrandOpen(graph, plan.exit.edgeId, [s, s], "mexit", hueGroup);
+  cutStrandOpen(graph, plan.entrance, [-s, -s], "mentr", hueGroup);
+  cutStrandOpen(graph, plan.exit, [s, s], "mexit", hueGroup);
+}
+
+// Delete a trim's stub (edges + interior TURN nodes) from the graph and
+// retype the merge crossing into a JUNCTION. `pathNodes`/`pathEdges` is the
+// linearized kept-side path containing the stub at its start (fromStart) or
+// end; returns the merge node's index in the path, against which the caller
+// truncates.
+function deleteStub(
+  graph: TangleGraph,
+  trim: MazeCutTrim,
+  pathNodes: string[],
+  fromStart: boolean
+): number {
+  const nStub = trim.stubNodes.length;
+  const mergeIdx = fromStart ? nStub : pathNodes.length - 1 - nStub;
+  if (pathNodes[mergeIdx] !== trim.mergeCrossing) {
+    throw new Error("maze cut trim: plan/graph mismatch at the merge node");
+  }
+  const rmAdj = (n: string, e: string): void => {
+    const list = graph.adjacency.get(n);
+    if (!list) return;
+    const i = list.indexOf(e);
+    if (i >= 0) list.splice(i, 1);
+  };
+  for (const eid of trim.stubEdges) {
+    const e = graph.edges.get(eid);
+    if (!e) throw new Error(`maze cut trim: stub edge ${eid} missing`);
+    graph.edges.delete(eid);
+    rmAdj(e.nodeA, eid);
+    rmAdj(e.nodeB, eid);
+  }
+  for (const nid of trim.stubNodes) {
+    graph.nodes.delete(nid);
+    graph.adjacency.delete(nid);
+  }
+  graph.nodes.get(trim.mergeCrossing)!.type = NODE_TYPE.JUNCTION;
+  return mergeIdx;
 }
 
 function cutStrandOpen(
   graph: TangleGraph,
-  edgeId: string,
+  cut: MazeCut,
   dir: [number, number],
   idBase: string,
   hueGroup?: number[]
 ): void {
+  const edgeId = cut.edgeId;
   const si = graph.strands.findIndex((st) => st.edgeIds.includes(edgeId));
   if (si < 0) throw new Error(`maze cut: edge ${edgeId} not on any strand`);
   const strand = graph.strands[si];
@@ -165,7 +207,10 @@ function cutStrandOpen(
   const p1 = edge.latticePoints[edge.latticePoints.length - 1];
   const mid: [number, number] = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2];
   const perp: [number, number] = [-dir[1], dir[0]];
+  const trim = cut.trim;
 
+  // A single (trimmed) tail is centered on the corner direction (sign 0);
+  // decoy pairs spread apart.
   const mkEnd = (suffix: string, sign: number): string => {
     const id = `${idBase}_${suffix}`;
     graph.nodes.set(id, {
@@ -180,8 +225,6 @@ function cutStrandOpen(
     graph.adjacency.set(id, []);
     return id;
   };
-  const ea = mkEnd("a", 1); // terminates the pre-cut side (edge.nodeA side).
-  const eb = mkEnd("b", -1); // starts the post-cut side (edge.nodeB side).
 
   const addE = (
     id: string,
@@ -199,39 +242,91 @@ function cutStrandOpen(
     const i = list.indexOf(e);
     if (i >= 0) list.splice(i, 1);
   };
+  // Tail terminators: "a" ends the pre-cut flank, "b" starts the post-cut
+  // flank. Created lazily so a trimmed flank gets no END at all.
+  const tailA = (sign: number): { end: string; half: string } => {
+    const ea = mkEnd("a", sign);
+    return { end: ea, half: addE(`${idBase}_h1`, edge.nodeA, ea, [p0, mid]) };
+  };
+  const tailB = (sign: number): { end: string; half: string } => {
+    const eb = mkEnd("b", sign);
+    return { end: eb, half: addE(`${idBase}_h2`, eb, edge.nodeB, [mid, p1]) };
+  };
 
   graph.edges.delete(edgeId);
   rmAdj(edge.nodeA, edgeId);
   rmAdj(edge.nodeB, edgeId);
-  const h1 = addE(`${idBase}_h1`, edge.nodeA, ea, [p0, mid]);
-  const h2 = addE(`${idBase}_h2`, eb, edge.nodeB, [mid, p1]);
 
   if (strand.isClosed) {
-    // Rethread the loop as one open path: eb -> (post-cut nodes) -> wraps ->
-    // (pre-cut nodes) -> ea.
-    const nodes = strand.nodes.slice(0, -1); // drop the duplicate closer.
-    const edges0 = strand.edgeIds;
-    strand.nodes = [eb, ...nodes.slice(c + 1), ...nodes.slice(0, c + 1), ea];
-    strand.edgeIds = [
-      h2,
-      ...edges0.slice(c + 1),
-      ...edges0.slice(0, c),
-      h1,
-    ];
+    // Linearize: P runs n_{c+1} (post-cut flank "b") the long way around to
+    // n_c (pre-cut flank "a"); E are its m-1 connecting edges.
+    const nodes0 = strand.nodes.slice(0, -1); // drop the duplicate closer.
+    const m = nodes0.length;
+    const P: string[] = [];
+    const E: string[] = [];
+    for (let k = 0; k < m; k++) P.push(nodes0[(c + 1 + k) % m]);
+    for (let k = 0; k < m - 1; k++) E.push(strand.edgeIds[(c + 1 + k) % m]);
+
+    if (!trim) {
+      const a = tailA(1);
+      const b = tailB(-1);
+      strand.nodes = [b.end, ...P, a.end];
+      strand.edgeIds = [b.half, ...E, a.half];
+    } else if (trim.side === "b") {
+      // Post-cut flank trimmed to its merge; the tail hangs off flank "a".
+      const j = deleteStub(graph, trim, P, true);
+      const a = tailA(0);
+      strand.nodes = [...P.slice(j), a.end];
+      strand.edgeIds = [...E.slice(j), a.half];
+    } else {
+      // Pre-cut flank trimmed; the tail hangs off flank "b".
+      const j = deleteStub(graph, trim, P, false);
+      const b = tailB(0);
+      strand.nodes = [b.end, ...P.slice(0, j + 1)];
+      strand.edgeIds = [b.half, ...E.slice(0, j)];
+    }
     strand.isClosed = false;
   } else {
     // A second cut on an already-open strand splits it in two.
     const nodes0 = strand.nodes;
     const edges0 = strand.edgeIds;
+    let leftNodes = nodes0.slice(0, c + 1); // flank "a" at its end.
+    let leftEdges = edges0.slice(0, c);
+    let rightNodes = nodes0.slice(c + 1); // flank "b" at its start.
+    let rightEdges = edges0.slice(c + 1);
+
+    if (!trim) {
+      const a = tailA(1);
+      const b = tailB(-1);
+      leftNodes = [...leftNodes, a.end];
+      leftEdges = [...leftEdges, a.half];
+      rightNodes = [b.end, ...rightNodes];
+      rightEdges = [b.half, ...rightEdges];
+    } else if (trim.side === "a") {
+      const j = deleteStub(graph, trim, leftNodes, false);
+      leftNodes = leftNodes.slice(0, j + 1);
+      leftEdges = leftEdges.slice(0, j);
+      const b = tailB(0);
+      rightNodes = [b.end, ...rightNodes];
+      rightEdges = [b.half, ...rightEdges];
+    } else {
+      const j = deleteStub(graph, trim, rightNodes, true);
+      rightNodes = rightNodes.slice(j);
+      rightEdges = rightEdges.slice(j);
+      const a = tailA(0);
+      leftNodes = [...leftNodes, a.end];
+      leftEdges = [...leftEdges, a.half];
+    }
+
     graph.strands[si] = {
-      edgeIds: [...edges0.slice(0, c), h1],
+      edgeIds: leftEdges,
       isClosed: false,
-      nodes: [...nodes0.slice(0, c + 1), ea],
+      nodes: leftNodes,
     };
     graph.strands.push({
-      edgeIds: [h2, ...edges0.slice(c + 1)],
+      edgeIds: rightEdges,
       isClosed: false,
-      nodes: [eb, ...nodes0.slice(c + 1)],
+      nodes: rightNodes,
     });
     // Both halves keep the original loop's hue.
     hueGroup?.push(hueGroup[si]);

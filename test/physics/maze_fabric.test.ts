@@ -39,11 +39,14 @@ describe("maze fabric physics (P4 Stage 6a)", () => {
     for (const seed of SEEDS) {
       const { graph, plan, ps } = buildFabric(seed);
       expect(ps.hasCarve).toBe(true);
+      const nTrims =
+        (plan.entrance.trim ? 1 : 0) + (plan.exit.trim ? 1 : 0);
       expect(ps.fusedJunctions.length).toBe(
         2 * (plan.spanningSplices.length + plan.choiceSplices.length) +
           plan.deadEndStubs.length +
           plan.spanningMerges.length +
-          plan.fourWayMerges.length
+          plan.fourWayMerges.length +
+          nTrims
       );
       graph.strands.forEach((s, i) => {
         expect(ps.chainClosed[i]).toBe(s.isClosed);
@@ -51,8 +54,9 @@ describe("maze fabric physics (P4 Stage 6a)", () => {
           s.isClosed ? -1 : ps.chains[i].length - 1
         );
       });
-      // The two corner cuts pin four loose ends; stub tips stay free.
-      expect(ps.ends.length).toBe(4);
+      // Each corner cut pins one loose end per untrimmed flank (one tail
+      // when the decoy trim succeeded, two otherwise); stub tips stay free.
+      expect(ps.ends.length).toBe(4 - nTrims);
     }
   });
 

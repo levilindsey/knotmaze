@@ -142,6 +142,10 @@ export function buildPanel(
     "Branching maze: walk the thread from the green entrance to the orange exit. Tap a highlighted run at your branch point to advance (tap the gold one to backtrack); tug anywhere else."
   ).on("change", callbacks.onModeChange);
   tip(
+    pane.addBinding(params, "deadEnds"),
+    "Dead-end stubs: classic wrong-turn spurs that stop short. Off = a pure braided maze where every wrong turn loops back. Regenerates the maze."
+  ).on("change", callbacks.onModeChange);
+  tip(
     pane.addButton({ title: "Reset path" }),
     "Clear the traced maze path and start over from the entrance."
   ).on("click", callbacks.onResetPath);
