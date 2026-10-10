@@ -155,12 +155,6 @@ describe("maze plan: splice geometry", () => {
         seg: [sp.a[0], sp.a[1], sp.b[0], sp.b[1]],
         hosts: [sp.edgeA, sp.edgeB],
       }));
-      for (const st of plan.deadEndStubs) {
-        bridges.push({
-          seg: [st.at[0], st.at[1], st.toward[0], st.toward[1]],
-          hosts: [st.edge],
-        });
-      }
 
       for (const sp of splices) {
         const len = Math.hypot(sp.a[0] - sp.b[0], sp.a[1] - sp.b[1]);
@@ -195,7 +189,7 @@ describe("maze plan: splice geometry", () => {
       for (const sp of [...plan.spanningSplices, ...plan.choiceSplices]) {
         edges.push(sp.edgeA, sp.edgeB);
       }
-      for (const st of plan.deadEndStubs) edges.push(st.edge);
+      for (const dc of plan.deadEndCuts) edges.push(dc.edgeId);
       edges.push(plan.entrance.edgeId, plan.exit.edgeId);
       expect(new Set(edges).size).toBe(edges.length);
     }
@@ -208,7 +202,7 @@ describe("maze plan: knobs", () => {
       const plan = buildMazePlan(build(seed), P({ branchDensity: 0 }));
       expect(plan.choiceSplices).toEqual([]);
       expect(plan.fourWayMerges).toEqual([]);
-      expect(plan.deadEndStubs).toEqual([]);
+      expect(plan.deadEndCuts).toEqual([]);
     }
   });
 
@@ -234,13 +228,61 @@ describe("maze plan: knobs", () => {
     }
   });
 
-  it("deadEndDensity 0 -> no stubs; raising it adds stubs", () => {
+  it("deadEndDensity 0 -> no cuts; raising it adds long dead-end cuts", () => {
+    let totalCuts = 0;
     for (const seed of SEEDS) {
       const g = build(seed);
       const none = buildMazePlan(g, P({ deadEndDensity: 0 }));
-      expect(none.deadEndStubs).toEqual([]);
-      const some = buildMazePlan(g, P({ deadEndDensity: 1, branchDensity: 0.5 }));
-      expect(some.deadEndStubs.length).toBeGreaterThan(0);
+      expect(none.deadEndCuts).toEqual([]);
+      const some = buildMazePlan(
+        g,
+        P({ deadEndDensity: 1, branchDensity: 0.5 })
+      );
+      // Eligibility is strand-level: closed maze strands that don't host
+      // the corner cuts. Tiny test knots can have none (seed 5 at gridSize
+      // 8 is two strands, both corner hosts).
+      const eligible = some.mazeStrands.filter(
+        (s) =>
+          g.strands[s].isClosed &&
+          s !== some.entrance.strand &&
+          s !== some.exit.strand
+      ).length;
+      if (eligible === 0) {
+        expect(some.deadEndCuts).toEqual([]);
+      } else {
+        expect(some.deadEndCuts.length).toBeGreaterThan(0);
+      }
+      expect(some.deadEndCuts.length).toBeLessThanOrEqual(eligible);
+      totalCuts += some.deadEndCuts.length;
+    }
+    expect(totalCuts).toBeGreaterThan(0);
+  });
+
+  it("dead-end cuts: one per closed maze strand, trimmed, off-limits edges", () => {
+    for (const seed of SEEDS) {
+      const g = build(seed);
+      const plan = buildMazePlan(
+        g,
+        P({ deadEndDensity: 1, branchDensity: 0.5 })
+      );
+      const strands = plan.deadEndCuts.map((c) => c.strand);
+      expect(new Set(strands).size).toBe(strands.length);
+      for (const dc of plan.deadEndCuts) {
+        expect(g.strands[dc.strand].isClosed).toBe(true);
+        expect(plan.mazeStrands).toContain(dc.strand);
+        expect(dc.strand).not.toBe(plan.entrance.strand);
+        expect(dc.strand).not.toBe(plan.exit.strand);
+        // Every dead-end cut carries a planned trim; its stub never eats
+        // another site's edge.
+        expect(dc.trim).toBeDefined();
+        for (const se of dc.trim!.stubEdges) {
+          expect(se).not.toBe(plan.entrance.edgeId);
+          expect(se).not.toBe(plan.exit.edgeId);
+          for (const other of plan.deadEndCuts) {
+            if (other !== dc) expect(se).not.toBe(other.edgeId);
+          }
+        }
+      }
     }
   });
 
@@ -266,7 +308,12 @@ describe("maze plan: knobs", () => {
         const pos = g.nodes.get(cid)!.latticePos;
         sites.push([pos[0], pos[1]]);
       }
-      for (const st of plan.deadEndStubs) sites.push([st.at[0], st.at[1]]);
+      for (const dc of plan.deadEndCuts) {
+        const e = g.edges.get(dc.edgeId)!;
+        const p0 = e.latticePoints[0];
+        const p1 = e.latticePoints[e.latticePoints.length - 1];
+        sites.push([(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2]);
+      }
 
       for (const pts of sites) {
         for (let k = 0; k < pts.length; k += 2) {

@@ -9,9 +9,9 @@
 //    a new degree-3 JUNCTION node, and connect the two junctions with a
 //    BRIDGE edge (a new open, single-edge strand). The host strand's
 //    traversal passes THROUGH its junction unchanged.
-//  - DEAD-END STUB: one split junction on the host, plus a short edge to a
-//    new degree-1 END node dangling toward the neighboring thread but
-//    stopping short (STUB_REACH of the gap).
+//  - LONG DEAD-END THREAD (applyMazeCuts): a closed maze strand cut open,
+//    one flank fused into its first crossing, the other flank's tip left
+//    FREE mid-fabric.
 //  - 4-WAY MERGE: retype the crossing node CROSSING -> JUNCTION. The graph
 //    keeps its degree-4 adjacency; downstream, the passes lose their crossing
 //    machinery (no over/under) and the threads genuinely meet.
@@ -27,14 +27,9 @@ import type { TangleGraph } from "./types";
 import { NODE_TYPE } from "./types";
 import type { MazePlan, MazeCut, MazeCutTrim } from "./maze_plan";
 
-// A stub reaches this fraction of the way toward the neighboring thread: far
-// enough to read as a real branch, short enough to stay visually (and
-// physically) clear of the neighbor it points at.
-const STUB_REACH = 0.6;
-
 // Returns the render HUE GROUP per strand (index into the original strand
-// list): bridges and stubs inherit their host strand's hue so a splice reads
-// as thread material rather than a foreign patch, and applyMazeCuts extends
+// list): bridges inherit their host strand's hue so a splice reads as
+// thread material rather than a foreign patch, and applyMazeCuts extends
 // the mapping when a cut splits a strand (both halves keep the loop's hue).
 export function applyMazePlan(graph: TangleGraph, plan: MazePlan): number[] {
   const hueGroup = graph.strands.map((_, i) => i);
@@ -104,19 +99,6 @@ export function applyMazePlan(graph: TangleGraph, plan: MazePlan): number[] {
     hueGroup.push(sp.strandA);
   }
 
-  // Dead-end stubs: one host junction + a dangling tip.
-  for (const st of plan.deadEndStubs) {
-    const j = splitEdge(st.strand, st.edge, st.at);
-    const tip: [number, number] = [
-      st.at[0] + (st.toward[0] - st.at[0]) * STUB_REACH,
-      st.at[1] + (st.toward[1] - st.at[1]) * STUB_REACH,
-    ];
-    const s = addNodeAt(NODE_TYPE.END, tip);
-    const eid = addEdgeBetween(j, s, [st.at, tip]);
-    graph.strands.push({ edgeIds: [eid], isClosed: false, nodes: [j, s] });
-    hueGroup.push(st.strand);
-  }
-
   // 4-way merges: the crossing becomes a true intersection.
   for (const cid of [...plan.spanningMerges, ...plan.fourWayMerges]) {
     graph.nodes.get(cid)!.type = NODE_TYPE.JUNCTION;
@@ -151,6 +133,15 @@ export function applyMazeCuts(
   const s = Math.SQRT1_2;
   cutStrandOpen(graph, plan.entrance, [-s, -s], "mentr", hueGroup);
   cutStrandOpen(graph, plan.exit, [s, s], "mexit", hueGroup);
+  // Long dead-end threads: same cut+trim surgery, but the surviving tip is
+  // FREE (null dir -> no anchor), hanging mid-fabric at the end of what is
+  // now a long open thread.
+  plan.deadEndCuts.forEach((cut, k) => {
+    if (!cut.trim) {
+      throw new Error("maze cut: dead-end cuts require a planned trim");
+    }
+    cutStrandOpen(graph, cut, null, `mdead${k}`, hueGroup);
+  });
 }
 
 // Delete a trim's stub (edges + interior TURN nodes) from the graph and
@@ -193,7 +184,9 @@ function deleteStub(
 function cutStrandOpen(
   graph: TangleGraph,
   cut: MazeCut,
-  dir: [number, number],
+  // Corner direction for the anchored off-screen tail, or null for a FREE
+  // tip hanging mid-fabric (long dead-end threads).
+  dir: [number, number] | null,
   idBase: string,
   hueGroup?: number[]
 ): void {
@@ -206,21 +199,23 @@ function cutStrandOpen(
   const p0 = edge.latticePoints[0];
   const p1 = edge.latticePoints[edge.latticePoints.length - 1];
   const mid: [number, number] = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2];
-  const perp: [number, number] = [-dir[1], dir[0]];
   const trim = cut.trim;
 
   // A single (trimmed) tail is centered on the corner direction (sign 0);
-  // decoy pairs spread apart.
+  // decoy pairs spread apart. Without a dir the END carries no anchor and
+  // the tip hangs free.
   const mkEnd = (suffix: string, sign: number): string => {
     const id = `${idBase}_${suffix}`;
     graph.nodes.set(id, {
       id,
       type: NODE_TYPE.END,
       latticePos: mid,
-      anchor: [
-        mid[0] + dir[0] * CUT_REACH + perp[0] * CUT_SPREAD * sign,
-        mid[1] + dir[1] * CUT_REACH + perp[1] * CUT_SPREAD * sign,
-      ],
+      anchor: dir
+        ? [
+            mid[0] + dir[0] * CUT_REACH - dir[1] * CUT_SPREAD * sign,
+            mid[1] + dir[1] * CUT_REACH + dir[0] * CUT_SPREAD * sign,
+          ]
+        : undefined,
     });
     graph.adjacency.set(id, []);
     return id;

@@ -28,7 +28,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 10: thread-true gameplay paint 2026-10-09";
+const BUILD_STAMP = "P4 Stage 11: long dead-end threads 2026-10-09";
 
 const app = new Application();
 

@@ -67,10 +67,9 @@ describe("maze apply: graph surgery", () => {
       const nSplices =
         plan.spanningSplices.length + plan.choiceSplices.length;
       const nMerges = plan.spanningMerges.length + plan.fourWayMerges.length;
-      expect(junctions.length).toBe(
-        2 * nSplices + plan.deadEndStubs.length + nMerges
-      );
-      expect(ends.length).toBe(plan.deadEndStubs.length);
+      // Dead-end cuts and corner trims land in applyMazeCuts, not here.
+      expect(junctions.length).toBe(2 * nSplices + nMerges);
+      expect(ends.length).toBe(0);
 
       // Split junctions are degree 3; merges keep their crossing degree 4.
       const mergeSet = new Set([
@@ -80,9 +79,6 @@ describe("maze apply: graph surgery", () => {
       for (const id of junctions) {
         const deg = g.adjacency.get(id)!.length;
         expect(deg).toBe(mergeSet.has(id) ? 4 : 3);
-      }
-      for (const id of ends) {
-        expect(g.adjacency.get(id)!.length).toBe(1);
       }
     }
   });
@@ -104,13 +100,10 @@ describe("maze apply: graph surgery", () => {
     }
   });
 
-  it("adds bridges and stubs as open single-edge strands", () => {
+  it("adds bridges as open single-edge strands", () => {
     for (const seed of SEEDS) {
       const { g, plan } = applied(seed, P({ deadEndDensity: 0.5 }));
-      const nNew =
-        plan.spanningSplices.length +
-        plan.choiceSplices.length +
-        plan.deadEndStubs.length;
+      const nNew = plan.spanningSplices.length + plan.choiceSplices.length;
       const newStrands = g.strands.slice(g.strands.length - nNew);
       for (const s of newStrands) {
         expect(s.isClosed).toBe(false);
@@ -200,14 +193,66 @@ describe("maze apply: graph surgery", () => {
         if (i < nOriginal) expect(h).toBe(i);
         else expect(h).toBeLessThan(nOriginal);
       });
-      // Bridges map to their strandA host, stubs to their host strand.
+      // Bridges map to their strandA host.
       const splices = [...plan.spanningSplices, ...plan.choiceSplices];
       splices.forEach((sp, k) => {
         expect(hueGroup[nOriginal + k]).toBe(sp.strandA);
       });
-      plan.deadEndStubs.forEach((st, k) => {
-        expect(hueGroup[nOriginal + splices.length + k]).toBe(st.strand);
-      });
     }
+  });
+
+  it("dead-end cuts leave long open threads with one free tip each", () => {
+    let totalCuts = 0;
+    for (const seed of SEEDS) {
+      const g = generateLatticeKnotwork({
+        gridSize: 8,
+        weaveDensity: 0.3,
+        turnBias: 0.6,
+        randSeed: seed,
+      });
+      const plan = buildMazePlan(g, P({ deadEndDensity: 0.6 }));
+      const hueGroup = applyMazePlan(g, plan);
+      applyMazeCuts(g, plan, hueGroup);
+
+      plan.deadEndCuts.forEach((dc, k) => {
+        const trim = dc.trim!;
+        // The merge crossing fused to a degree-3 junction, stub deleted.
+        expect(g.nodes.get(trim.mergeCrossing)!.type).toBe(
+          NODE_TYPE.JUNCTION
+        );
+        expect(g.adjacency.get(trim.mergeCrossing)!.length).toBe(3);
+        for (const eid of trim.stubEdges) expect(g.edges.has(eid)).toBe(false);
+        for (const nid of trim.stubNodes) expect(g.nodes.has(nid)).toBe(false);
+
+        // Exactly one FREE tip (no anchor), on the flank opposite the trim.
+        const ids = [`mdead${k}_a`, `mdead${k}_b`];
+        const present = ids.filter((id) => g.nodes.has(id));
+        expect(present.length).toBe(1);
+        expect(present[0]).toBe(trim.side === "b" ? ids[0] : ids[1]);
+        const tip = g.nodes.get(present[0])!;
+        expect(tip.type).toBe(NODE_TYPE.END);
+        expect(tip.anchor).toBeUndefined();
+        expect(g.adjacency.get(tip.id)!.length).toBe(1);
+
+        // The cut strand is now one long OPEN thread from the merge
+        // junction to the tip.
+        const strand = g.strands[dc.strand];
+        expect(strand.isClosed).toBe(false);
+        const first = strand.nodes[0];
+        const last = strand.nodes[strand.nodes.length - 1];
+        expect([first, last]).toContain(tip.id);
+        expect(
+          first === tip.id ? last : first
+        ).toBe(trim.mergeCrossing);
+      });
+
+      expect(checkStructure(g)).toBe(true);
+      expect(checkStrandPartition(g)).toBe(true);
+      expect(checkAlternation(g)).toBe(true);
+      totalCuts += plan.deadEndCuts.length;
+    }
+    // Tiny test knots can lack eligible strands per seed, but the seed set
+    // as a whole must exercise the surgery.
+    expect(totalCuts).toBeGreaterThan(0);
   });
 });

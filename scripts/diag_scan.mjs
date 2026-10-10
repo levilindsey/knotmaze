@@ -28,7 +28,23 @@ try {
   });
   await page.goto(url, { waitUntil: "load", timeout: 30000 });
   await page.bringToFront();
-  await new Promise((r) => setTimeout(r, settleMs));
+  // Wait for the sim to actually sleep (or the settle budget to run out):
+  // scanning a mid-settle state reports the lattice's uniform orthogonal
+  // crossings, not equilibrium.
+  const deadline = Date.now() + Math.max(settleMs, 90000);
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const stamp = await page.evaluate(
+      () =>
+        [...document.querySelectorAll("div")]
+          .map((d) => d.textContent ?? "")
+          .find((t) => /^P\d/.test(t)) ?? ""
+    );
+    if (stamp.includes("asleep") || Date.now() > deadline) {
+      console.log("settle state: " + stamp);
+      break;
+    }
+  }
 
   const diag = await page.evaluate(() => window.__knotDiag());
   const view = await page.evaluate(() => window.__knotView());

@@ -143,7 +143,7 @@ export function buildPanel(
   ).on("change", callbacks.onModeChange);
   tip(
     pane.addBinding(params, "deadEnds"),
-    "Dead-end stubs: classic wrong-turn spurs that stop short. Off = a pure braided maze where every wrong turn loops back. Regenerates the maze."
+    "Dead ends: some loops become long threads that end, somewhere far away, in a loose tip. Off = a pure braided maze where every wrong turn loops back. Regenerates the maze."
   ).on("change", callbacks.onModeChange);
   tip(
     pane.addButton({ title: "Reset path" }),

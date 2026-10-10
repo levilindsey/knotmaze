@@ -41,12 +41,13 @@ describe("maze fabric physics (P4 Stage 6a)", () => {
       expect(ps.hasCarve).toBe(true);
       const nTrims =
         (plan.entrance.trim ? 1 : 0) + (plan.exit.trim ? 1 : 0);
+      // Every dead-end cut fuses exactly one trim-merge junction too.
       expect(ps.fusedJunctions.length).toBe(
         2 * (plan.spanningSplices.length + plan.choiceSplices.length) +
-          plan.deadEndStubs.length +
           plan.spanningMerges.length +
           plan.fourWayMerges.length +
-          nTrims
+          nTrims +
+          plan.deadEndCuts.length
       );
       graph.strands.forEach((s, i) => {
         expect(ps.chainClosed[i]).toBe(s.isClosed);
