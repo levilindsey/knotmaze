@@ -83,7 +83,7 @@ Work lands directly to `main`. All changes must be end-to-end working before com
 - Phased roadmap: P0 (scaffold) → P1 (combinatorial) → P2 (beauty + live physics) → P3 (touch + audio) → P4 (maze mode) → P5 (growth animation) → P6 (flourishes).
 - Each phase ships as a working demo starting from P2.
 
-## Roadmap status — what's next (updated 2026-10-09, after P4 Stage 12)
+## Roadmap status — what's next (updated 2026-10-09, after P4 Stage 16)
 
 **P0–P3 done** (their saga lives in Follow-ups; the bounded
 post-VIOLENT-play loud attractor at fat params remains the one open
@@ -175,6 +175,35 @@ between-threads/cell-passage route.
   and stayed base-colored; the paint pass uses `paintArcAt` (clamping)
   while the crossing machinery keeps `arcAt` untouched.
 
+- Stage 14 — SPEED + POLISH ROUND: traversal base rate 1.7x (34
+  ctrl/s) under a moveSpeed slider (`ms=`); tip discs read endpoint
+  samples directly (the `sampleAt` terminal-wrap kill — floating gold
+  discs at unvisited junctions); the fillet corner solve falls back to
+  the edge-origin midpoint so shallow near-parallel junction wedges
+  SEAL instead of being skipped (the V-notch holes); host-colored
+  junction center-seal disc + smaller caps; both palette bands
+  converge to one near-white accent and crest amplitude ramps with
+  distance (CREST_RAMP) so pulses swell out of the core glow instead
+  of popping in full-strength.
+- Stage 15 — cuspRadius slider (`cr=`, [0, 3], default 1, live):
+  multiplies fillet reach — 0 = sharp joints, 3 = wide cast-metal
+  webs. Fillet color probes scale with patch reach (`paintUAtArc`,
+  ~0.45·L); fixed-offset probes rendered dark wings inside the head
+  glow at large radii.
+- Stage 16 — SECTION COLOR SCHEMES on a 2D palette: palette textures
+  gain a V axis (256x64 — U stays the gameplay-paint strip with the
+  gold rows identical on every row, V picks a row from a bounded
+  280-degree gamut ramp; bilinear filtering blends section colors
+  along threads and through junctions on the GPU; fillets/discs
+  sample the same field via a CPU bilinear lookup).
+  `core/section_colors.ts` emits piecewise-linear v(ctrl) per chain;
+  every junction converges to ONE coordinate vJ with ~1.2-world ramps,
+  so any number of arms always meet in a single shared color. Schemes
+  (`colorScheme` dropdown / `cs=`; replaces the multiColor checkbox,
+  `mc=1` reads as strands): mono (default) | strands | depth
+  (distance-from-start Dijkstra gradient) | segments (random gamut
+  color per run) | noise (seeded spatial dye field).
+
 RENDER LORE (hard-won, 2026-10-09): **the arc-wrap family bites twice.**
 Both `arcAt` AND `sampleAt` wrap their arc modulo totalLength, so an
 OPEN chain's terminal (arc == total) lands at arc 0: `arcAt` collapsed
@@ -209,7 +238,26 @@ page-lifetime cache (`PALETTE_CACHE`, keyed by base color); rebuilds
 reuse them. Attributed with a checkbox-toggle pageerror probe — the
 rebuild itself kept working while the stamp's wall clock froze.
 
+RENDER LORE (hard-won, 2026-10-09): **gamut locality is load-bearing
+for V blends.** The 2D palette's V axis is a PATH through the gamut,
+not a set of swatches — a V-ramp between two section colors renders
+every hue BETWEEN them, so adjacent sections must sit CLOSE in V or
+junction ramps paint rainbow stripes instead of direct blends (the
+first segments scheme hashed V per run and striped at every ramp).
+Scheme design rule: propagate V locally — segments assigns colors via
+a bounded random walk from the entrance (BFS, steps <= ±0.18);
+strands junctions converge to the THROUGH-thread's V so hosts never
+shift hue and bridges carry the whole transition along their own
+length. Global gamut coverage must come from accumulated drift, never
+from adjacent jumps.
+
 Still open in P4:
+- **Textured background** (direction set 2026-10-09): gaps must CLIP
+  the thread layer instead of painting background color, so any
+  CSS/texture background can show through a transparent canvas. The
+  erase-blend conversion + under-gap fade slider is Stage 18 (in
+  flight as of this note); actually shipping a texture behind the
+  canvas remains open after it.
 - **URL/param serialization for the remaining `MazeParams`**
   (branchDensity, fourWayFraction, … — today `mf` + `de` serialize and
   `DEFAULT_MAZE_PARAMS` supplies the rest) and the **daily seed**
