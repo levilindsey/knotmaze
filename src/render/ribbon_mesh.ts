@@ -2,7 +2,26 @@
 // sample count is fixed at construction so per-frame updates only rewrite
 // the position buffer (no geometry reallocation).
 
-import { Mesh, MeshGeometry, Texture } from "pixi.js";
+import { Buffer, BufferUsage, Mesh, MeshGeometry, Texture } from "pixi.js";
+
+// Attach a per-vertex aColor (vec3) attribute carrying the SECTION RGB
+// (palette mode; see the renderer's section shader). The buffer rides the
+// geometry like aPosition/aUV and uploads via the same update() path.
+function addColorAttribute(
+  geometry: MeshGeometry,
+  data: Float32Array
+): void {
+  geometry.addAttribute("aColor", {
+    buffer: new Buffer({
+      data,
+      label: "attribute-section-rgb",
+      usage: BufferUsage.VERTEX | BufferUsage.COPY_DST,
+    }),
+    format: "float32x3",
+    stride: 3 * 4,
+    offset: 0,
+  });
+}
 
 export class RibbonMesh {
   mesh: Mesh;
@@ -10,9 +29,21 @@ export class RibbonMesh {
 
   private vertexData: Float32Array;
   private uvData: Float32Array;
+  // Per-vertex section RGB (palette mode only; null in knot mode). Two
+  // verts per sample, 3 floats each.
+  private colorData: Float32Array | null = null;
+  // Last writePaint colors source (reference identity): section colors
+  // are static between scene rebuilds, so repeated paint ticks skip the
+  // color fill + upload entirely.
+  private lastColors: Float32Array | null = null;
   private readonly closed: boolean;
 
-  constructor(sampleCount: number, closed: boolean, color: number) {
+  constructor(
+    sampleCount: number,
+    closed: boolean,
+    color: number,
+    paint = false
+  ) {
     this.sampleCount = sampleCount;
     this.closed = closed;
     this.vertexData = new Float32Array(sampleCount * 4); // 2 verts per sample.
@@ -42,6 +73,10 @@ export class RibbonMesh {
       uvs,
       indices,
     });
+    if (paint) {
+      this.colorData = new Float32Array(sampleCount * 6);
+      addColorAttribute(geometry, this.colorData);
+    }
     this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
     this.mesh.tint = color;
   }
@@ -132,29 +167,46 @@ export class RibbonMesh {
     this.mesh.geometry.getBuffer("aPosition").update();
   }
 
-  // PAINT (maze-fabric palette mode): set every sample's palette
-  // coordinates. U = gameplay paint (gold/pulse band), V = section color
-  // row; both verts of a sample share them. `vs` may be a single number
-  // (constant section color for the chain).
-  writeUVs(us: ArrayLike<number>, vs: ArrayLike<number> | number): void {
-    const constV = typeof vs === "number" ? vs : -1;
+  // PAINT (maze-fabric palette mode): set every sample's paint U (the
+  // accent-strip coordinate - gold/pulse band) and section RGB; both
+  // verts of a sample share them. `colors` is either one RGB triplet
+  // (length 3: constant section color for the chain) or per-sample
+  // triplets (length 3 * sampleCount). Color writes are skipped when the
+  // SAME array is passed again (section colors are static per rebuild;
+  // only the U paint animates).
+  writePaint(us: ArrayLike<number>, colors: Float32Array): void {
     for (let i = 0; i < this.sampleCount; i++) {
       const u = us[i];
-      const v = constV >= 0 ? constV : (vs as ArrayLike<number>)[i];
       this.uvData[i * 4] = u;
-      this.uvData[i * 4 + 1] = v;
       this.uvData[i * 4 + 2] = u;
-      this.uvData[i * 4 + 3] = v;
     }
     this.mesh.geometry.getBuffer("aUV").update();
+    const cd = this.colorData;
+    if (!cd || colors === this.lastColors) return;
+    const constant = colors.length === 3;
+    for (let i = 0; i < this.sampleCount; i++) {
+      const o = constant ? 0 : i * 3;
+      const r = colors[o];
+      const g = colors[o + 1];
+      const b = colors[o + 2];
+      cd[i * 6] = r;
+      cd[i * 6 + 1] = g;
+      cd[i * 6 + 2] = b;
+      cd[i * 6 + 3] = r;
+      cd[i * 6 + 4] = g;
+      cd[i * 6 + 5] = b;
+    }
+    this.mesh.geometry.getBuffer("aColor").update();
+    this.lastColors = colors;
   }
 
   // Copy a wrapped window of another ribbon's computed vertices into this
   // patch mesh, repeating the last pair to fill unused stations. Because the
   // vertices are byte-identical to the source ribbon's, the patch silhouette
   // matches it exactly - no outline mismatch can expose what's beneath. With
-  // `copyUVs` (palette mode) the paint coordinates ride along too, so the
-  // patch recolors pixel-identically with its source thread.
+  // `copyUVs` (palette mode) the paint coordinates AND section colors ride
+  // along too, so the patch recolors pixel-identically with its source
+  // thread.
   updateFromRibbonWindow(
     source: RibbonMesh,
     startSample: number,
@@ -162,6 +214,8 @@ export class RibbonMesh {
     copyUVs = false
   ): void {
     const n = source.sampleCount;
+    const copyColors =
+      copyUVs && this.colorData !== null && source.colorData !== null;
     for (let i = 0; i < this.sampleCount; i++) {
       const j = Math.min(i, sampleSpan - 1);
       const s = (((startSample + j) % n) + n) % n;
@@ -175,9 +229,18 @@ export class RibbonMesh {
         this.uvData[i * 4 + 2] = source.uvData[s * 4 + 2];
         this.uvData[i * 4 + 3] = source.uvData[s * 4 + 3];
       }
+      if (copyColors) {
+        for (let k = 0; k < 6; k++) {
+          this.colorData![i * 6 + k] = source.colorData![s * 6 + k];
+        }
+      }
     }
     this.mesh.geometry.getBuffer("aPosition").update();
     if (copyUVs) this.mesh.geometry.getBuffer("aUV").update();
+    if (copyColors) {
+      this.mesh.geometry.getBuffer("aColor").update();
+      this.lastColors = null; // Buffer no longer mirrors a writePaint call.
+    }
   }
 
   destroy(): void {
@@ -264,14 +327,16 @@ export class PatchGridMesh {
 // A pooled triangle-fan scratch mesh (junction fillet wedges): capacity is
 // fixed at construction and the whole thing is refilled each paint tick.
 // Unused index capacity is zeroed (degenerate triangles), so partial fills
-// need no geometry surgery. Textured with the palette: per-vertex UVs make
-// wedges blend EXACTLY like the ribbons they join - a flat-colored wedge
-// over a ramping section color drew a visible step at its boundary.
+// need no geometry surgery. Carries the section shader's full vertex
+// layout - paint U (accent strip) + per-vertex section RGB - so wedges
+// blend EXACTLY like the ribbons they join: a flat-colored wedge over a
+// ramping section color drew a visible step at its boundary.
 export class TriFanMesh {
   mesh: Mesh;
 
   private vertexData: Float32Array;
   private uvData: Float32Array;
+  private colorData: Float32Array;
   private indexData: Uint32Array;
   private vUsed = 0;
   private iUsed = 0;
@@ -279,12 +344,14 @@ export class TriFanMesh {
   constructor(texture: Texture, vertexCapacity: number, indexCapacity: number) {
     this.vertexData = new Float32Array(vertexCapacity * 2);
     this.uvData = new Float32Array(vertexCapacity * 2);
+    this.colorData = new Float32Array(vertexCapacity * 3);
     this.indexData = new Uint32Array(indexCapacity);
     const geometry = new MeshGeometry({
       positions: this.vertexData,
       uvs: this.uvData,
       indices: this.indexData,
     });
+    addColorAttribute(geometry, this.colorData);
     this.mesh = new Mesh({ geometry, texture });
   }
 
@@ -294,16 +361,18 @@ export class TriFanMesh {
     this.indexData.fill(0);
   }
 
-  // Emit one fan around an apex. `rim` is flat [x, y, u, v] per vertex, in
-  // winding order; triangles are (apex, rim[i], rim[i+1]).
+  // Emit one fan around an apex. `rim` is flat [x, y, u, r, g, b] per
+  // vertex, in winding order; triangles are (apex, rim[i], rim[i+1]).
   pushFan(
     apexX: number,
     apexY: number,
     apexU: number,
-    apexV: number,
+    apexR: number,
+    apexG: number,
+    apexB: number,
     rim: number[]
   ): void {
-    const rimCount = rim.length / 4;
+    const rimCount = rim.length / 6;
     if (
       this.vUsed + rimCount + 1 > this.vertexData.length / 2 ||
       this.iUsed + Math.max(0, rimCount - 1) * 3 > this.indexData.length
@@ -314,13 +383,19 @@ export class TriFanMesh {
     this.vertexData[apex * 2] = apexX;
     this.vertexData[apex * 2 + 1] = apexY;
     this.uvData[apex * 2] = apexU;
-    this.uvData[apex * 2 + 1] = apexV;
+    this.uvData[apex * 2 + 1] = 0;
+    this.colorData[apex * 3] = apexR;
+    this.colorData[apex * 3 + 1] = apexG;
+    this.colorData[apex * 3 + 2] = apexB;
     for (let i = 0; i < rimCount; i++) {
       const k = this.vUsed + i;
-      this.vertexData[k * 2] = rim[i * 4];
-      this.vertexData[k * 2 + 1] = rim[i * 4 + 1];
-      this.uvData[k * 2] = rim[i * 4 + 2];
-      this.uvData[k * 2 + 1] = rim[i * 4 + 3];
+      this.vertexData[k * 2] = rim[i * 6];
+      this.vertexData[k * 2 + 1] = rim[i * 6 + 1];
+      this.uvData[k * 2] = rim[i * 6 + 2];
+      this.uvData[k * 2 + 1] = 0;
+      this.colorData[k * 3] = rim[i * 6 + 3];
+      this.colorData[k * 3 + 1] = rim[i * 6 + 4];
+      this.colorData[k * 3 + 2] = rim[i * 6 + 5];
     }
     for (let i = 0; i < rimCount - 1; i++) {
       this.indexData[this.iUsed++] = apex;
@@ -333,6 +408,7 @@ export class TriFanMesh {
   commit(): void {
     this.mesh.geometry.getBuffer("aPosition").update();
     this.mesh.geometry.getBuffer("aUV").update();
+    this.mesh.geometry.getBuffer("aColor").update();
     this.mesh.geometry.getIndex().update();
   }
 }
