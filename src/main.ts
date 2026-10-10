@@ -28,7 +28,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 9: trimmed corners, braided default 2026-10-09";
+const BUILD_STAMP = "P4 Stage 10: thread-true gameplay paint 2026-10-09";
 
 const app = new Application();
 
@@ -169,6 +169,8 @@ async function main(): Promise<void> {
       background: BACKGROUND,
       baseHue: params.seed % 360,
       hueGroup,
+      // Fabric gameplay recolors the actual threads via palette textures.
+      paletteMode: params.mazeFabric,
     });
 
     // Maze overlay + solve state (old single-strand maze mode only).
@@ -189,7 +191,12 @@ async function main(): Promise<void> {
       walkGraph = buildWalkGraph(graph);
       if (walkGraph) {
         fabricController = new FabricMazeController(walkGraph);
-        fabric = new FabricMazeRenderer(ps, walkGraph, params.threadWidth);
+        fabric = new FabricMazeRenderer(
+          ps,
+          walkGraph,
+          params.threadWidth,
+          renderer
+        );
         fabric.update(fabricController);
       } else {
         fabricController = null;
@@ -213,7 +220,6 @@ async function main(): Promise<void> {
     // Order: the maze under-layer, ribbons, the maze over-layer (so the solve
     // strand weaves under threads at crossings and over them between), debug.
     if (maze) root.addChild(maze.underContainer);
-    if (fabric) root.addChild(fabric.underContainer);
     root.addChild(renderer.root);
     if (maze) root.addChild(maze.overContainer);
     if (fabric) root.addChild(fabric.overContainer);
@@ -293,6 +299,7 @@ async function main(): Promise<void> {
 
   // Win banner (maze mode). Hidden until a solve completes.
   const banner = document.createElement("div");
+  banner.id = "maze-banner";
   banner.style.cssText =
     "position:fixed;top:16px;left:50%;transform:translateX(-50%);" +
     "padding:10px 18px;background:#1b2233ee;color:#8fe6ff;" +
@@ -311,14 +318,16 @@ async function main(): Promise<void> {
   // lattice arc. (a) the CURRENT path vs the optimal solve, (b) cumulative
   // distance retracted by backtracking - separate meters by design.
   const hud = document.createElement("div");
+  hud.id = "maze-hud";
   hud.style.cssText =
     "position:fixed;top:10px;left:10px;padding:7px 12px;" +
     "background:#1b2233cc;color:#c8d3e8;font:12px/1.5 monospace;" +
     "border:1px solid #2c3a55;border-radius:6px;z-index:20;" +
     "display:none;pointer-events:none;white-space:pre";
   document.body.appendChild(hud);
+  // Distances display x10 as integers (no decimal point).
   const fmt = (v: number): string =>
-    Number.isFinite(v) ? v.toFixed(1) : "—";
+    Number.isFinite(v) ? String(Math.round(v * 10)) : "—";
   const updateHud = (): void => {
     if (!params.mazeFabric || !fabricController) {
       hud.style.display = "none";
@@ -366,6 +375,7 @@ async function main(): Promise<void> {
     const eid = fabric.edgeAt(x, y, fabricController);
     if (eid < 0) return false;
     const result = fabricController.tapEdge(eid);
+    fabric.setHover(-1);
     fabric.update(fabricController);
     updateHud();
     wake();
@@ -404,13 +414,17 @@ async function main(): Promise<void> {
     if (ps.grabbedParticle >= 0) {
       ps.dragTo(x, y);
       wake();
-    } else if (
-      params.mazeFabric &&
-      fabric &&
-      fabricController &&
-      fabric.edgeAt(x, y, fabricController) >= 0
-    ) {
-      app.canvas.style.cursor = "pointer";
+    } else if (params.mazeFabric && fabric && fabricController) {
+      // Hover: light the choosable run under the pointer (the paint pass
+      // animates it even while the physics sleeps - no wake needed).
+      const eid = fabric.edgeAt(x, y, fabricController);
+      if (fabric.setHover(eid)) fabric.update(fabricController);
+      app.canvas.style.cursor =
+        eid >= 0
+          ? "pointer"
+          : ps.nearest(x, y, GRAB_RADIUS) >= 0
+            ? "grab"
+            : "default";
     } else {
       app.canvas.style.cursor =
         ps.nearest(x, y, GRAB_RADIUS) >= 0 ? "grab" : "default";
@@ -472,12 +486,16 @@ async function main(): Promise<void> {
         ? params.simSpeed / 5
         : 1 + (params.simSpeed - 5) * 0.8;
     if (speedMult === 0) {
+      // The gameplay paint (pulse/hover) animates even while paused or
+      // asleep - it rewrites only UV buffers, never physics or splines.
+      renderer.tickPaint(ticker.deltaMS / 1000);
       perfLine = " | paused";
       updateStamp();
       return;
     }
 
     if (asleep) {
+      renderer.tickPaint(ticker.deltaMS / 1000);
       perfLine = " | asleep";
       updateStamp();
       return;
@@ -510,6 +528,7 @@ async function main(): Promise<void> {
     if (params.mazeFabric && fabric && fabricController) {
       fabric.update(fabricController);
     }
+    renderer.tickPaint(ticker.deltaMS / 1000);
     const t2 = performance.now();
 
     // Follow the free-floating knot with an eased viewport fit.
@@ -682,6 +701,49 @@ async function main(): Promise<void> {
       vertexScreen: (id: string) => {
         fb.vertexWorld(id, out, 0);
         return toScreen(out[0], out[1]);
+      },
+      // Diagnostic: everything within `r` lattice units of a LATTICE point -
+      // walk vertices (live position) and walk edges (nearest sample), with
+      // chains and path membership. Attribution beats speculation.
+      near: (x: number, y: number, r = 1.2) => {
+        const verts: Array<Record<string, unknown>> = [];
+        for (const [id, v] of wg.vertices) {
+          fb.vertexWorld(id, out, 0);
+          const d = Math.hypot(out[0] - x, out[1] - y);
+          if (d <= r) {
+            verts.push({
+              id,
+              d: +d.toFixed(3),
+              isEnd: v.isEnd,
+              chain: v.chain,
+              ctrl: v.ctrl,
+              edges: [...v.edges],
+            });
+          }
+        }
+        const edges: Array<Record<string, unknown>> = [];
+        for (const e of wg.edges) {
+          const len = sys.chains[e.chain].length;
+          let bd = Infinity;
+          for (let f = e.ctrlA; f <= e.ctrlB; f += 0.5) {
+            sys.pointOnChain(e.chain, ((f % len) + len) % len, out, 0);
+            const d = Math.hypot(out[0] - x, out[1] - y);
+            if (d < bd) bd = d;
+          }
+          if (bd <= r) {
+            edges.push({
+              edge: e.id,
+              d: +bd.toFixed(3),
+              va: e.va,
+              vb: e.vb,
+              chain: e.chain,
+              ctrlA: e.ctrlA,
+              ctrlB: e.ctrlB,
+              onPath: c.pathEdges.includes(e.id),
+            });
+          }
+        }
+        return { verts, edges };
       },
     };
   };

@@ -9,6 +9,7 @@ export class RibbonMesh {
   readonly sampleCount: number;
 
   private vertexData: Float32Array;
+  private uvData: Float32Array;
   private readonly closed: boolean;
 
   constructor(sampleCount: number, closed: boolean, color: number) {
@@ -24,6 +25,7 @@ export class RibbonMesh {
       uvs[i * 4 + 2] = u;
       uvs[i * 4 + 3] = 1;
     }
+    this.uvData = uvs;
 
     const quadCount = closed ? sampleCount : sampleCount - 1;
     const indices = new Uint32Array(quadCount * 6);
@@ -121,14 +123,31 @@ export class RibbonMesh {
     this.mesh.geometry.getBuffer("aPosition").update();
   }
 
+  // PAINT (maze-fabric palette mode): set every sample's palette coordinate.
+  // `us` holds one normalized U per sample; both verts of a sample share it
+  // (the palette texture is 1 texel tall, so V pins to its center).
+  writeUs(us: ArrayLike<number>): void {
+    for (let i = 0; i < this.sampleCount; i++) {
+      const u = us[i];
+      this.uvData[i * 4] = u;
+      this.uvData[i * 4 + 1] = 0.5;
+      this.uvData[i * 4 + 2] = u;
+      this.uvData[i * 4 + 3] = 0.5;
+    }
+    this.mesh.geometry.getBuffer("aUV").update();
+  }
+
   // Copy a wrapped window of another ribbon's computed vertices into this
   // patch mesh, repeating the last pair to fill unused stations. Because the
   // vertices are byte-identical to the source ribbon's, the patch silhouette
-  // matches it exactly - no outline mismatch can expose what's beneath.
+  // matches it exactly - no outline mismatch can expose what's beneath. With
+  // `copyUVs` (palette mode) the paint coordinates ride along too, so the
+  // patch recolors pixel-identically with its source thread.
   updateFromRibbonWindow(
     source: RibbonMesh,
     startSample: number,
-    sampleSpan: number
+    sampleSpan: number,
+    copyUVs = false
   ): void {
     const n = source.sampleCount;
     for (let i = 0; i < this.sampleCount; i++) {
@@ -138,8 +157,15 @@ export class RibbonMesh {
       this.vertexData[i * 4 + 1] = source.vertexData[s * 4 + 1];
       this.vertexData[i * 4 + 2] = source.vertexData[s * 4 + 2];
       this.vertexData[i * 4 + 3] = source.vertexData[s * 4 + 3];
+      if (copyUVs) {
+        this.uvData[i * 4] = source.uvData[s * 4];
+        this.uvData[i * 4 + 1] = source.uvData[s * 4 + 1];
+        this.uvData[i * 4 + 2] = source.uvData[s * 4 + 2];
+        this.uvData[i * 4 + 3] = source.uvData[s * 4 + 3];
+      }
     }
     this.mesh.geometry.getBuffer("aPosition").update();
+    if (copyUVs) this.mesh.geometry.getBuffer("aUV").update();
   }
 
   destroy(): void {

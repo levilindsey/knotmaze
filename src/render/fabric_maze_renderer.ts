@@ -1,64 +1,73 @@
-// P4 branching-maze overlay for the fabric. Renders the player's traced path
-// as a RECOLOR of the actual thread material (full width, opaque, gold),
-// woven correctly: stretches where the path's chain dips UNDER a crossing go
-// to the under layer (below the ribbons, so the over thread and its erase
-// gap stay on top), everything else rides the over layer. Generalizes the
-// old single-strand MazeRenderer to multi-chain walk-graph paths; under
-// windows are read LIVE from the crossing bindings (displayF when present),
-// so the recolor tracks crossings as they slide.
+// P4 branching-maze overlay for the fabric. Since Stage 10 the traveled
+// path, the branch-point choice indication, and the hover highlight all
+// recolor the ACTUAL thread ribbons (RibbonRenderer palette mode: per-vertex
+// palette coordinates; crossing patches copy UVs, so the weave is
+// pixel-identical) - this class declares WHAT to paint and draws only the
+// markers on top. The old overdrawn Graphics strokes (which could never sit
+// perfectly on the ribbon) are gone.
 //
-// Also draws the gameplay affordances: start/exit markers, the head marker,
-// and a short translucent hint along each run tappable at the current branch
-// point (the just-traversed run - the backtrack - hints in the path color).
+// Choice arms pulse: a steady alternate tint near the junction, fading with
+// distance, plus a crest that radiates OUT of the junction along each
+// choosable run - while on the arrival run (the backtrack) the crest slides
+// IN, phase-synced so the flow reads as continuous through the junction.
+// Hovering a choosable run lights it steadily.
 
 import { Container, Graphics } from "pixi.js";
 import type { ParticleSystem } from "../physics/particle_system";
-import type { WalkGraph, WalkEdge } from "../core/walk_graph";
+import type { WalkGraph } from "../core/walk_graph";
 import type { FabricMazeController } from "../game/fabric_controller";
+import type {
+  RibbonRenderer,
+  PaintSpan,
+  PulseArm,
+  PaintCap,
+} from "./ribbon_renderer";
 
 const START_COLOR = 0x46e35a;
 const EXIT_COLOR = 0xff6b3d;
-const PATH_COLOR = 0xffd24a;
-const HINT_COLOR = 0xffffff;
 
-// Control-sampling density along runs (samples per control unit).
+// Hit-test sampling density along runs (ctrl units).
 const SAMPLE_STEP = 0.25;
-// Half-width (in controls) of the under window around a crossing's under
-// binding: matches the old overlay's +/-1 integer marking.
-const UNDER_HALF = 1.05;
-// Choice hints reach this far into each run from the branch point.
-const HINT_REACH = 1.6;
 // Hit-testing ignores samples this close (ctrl) to the branch point: all
 // arms converge there, so taps on the junction blob itself stay ambiguous
 // and are rejected rather than resolved arbitrarily.
 const HEAD_EXCLUDE = 0.7;
 
 export class FabricMazeRenderer {
-  underContainer: Container;
   overContainer: Container;
   private ps: ParticleSystem;
   private walk: WalkGraph;
-  private underGfx: Graphics;
-  private overGfx: Graphics;
+  private ribbons: RibbonRenderer;
+  private gfx: Graphics;
   private threadWidth: number;
+  private hoverEdge = -1;
   private scratch = new Float32Array(2);
-  // chain -> live under-binding ctrls, rebuilt each draw.
-  private underCtrls = new Map<number, number[]>();
 
-  constructor(ps: ParticleSystem, walk: WalkGraph, threadWidth: number) {
+  constructor(
+    ps: ParticleSystem,
+    walk: WalkGraph,
+    threadWidth: number,
+    ribbons: RibbonRenderer
+  ) {
     this.ps = ps;
     this.walk = walk;
+    this.ribbons = ribbons;
     this.threadWidth = threadWidth;
-    this.underContainer = new Container();
     this.overContainer = new Container();
-    this.underGfx = new Graphics();
-    this.overGfx = new Graphics();
-    this.underContainer.addChild(this.underGfx);
-    this.overContainer.addChild(this.overGfx);
+    this.gfx = new Graphics();
+    this.overContainer.addChild(this.gfx);
   }
 
   setWidths(threadWidth: number): void {
     this.threadWidth = threadWidth;
+  }
+
+  // Track the hovered choosable run; returns true when it changed (the
+  // caller then refreshes the paint declaration).
+  setHover(edgeId: number): boolean {
+    if (edgeId === this.hoverEdge) return false;
+    this.hoverEdge = edgeId;
+    return true;
   }
 
   // Live world position of a walk vertex (any fused occurrence works: the
@@ -112,62 +121,101 @@ export class FabricMazeRenderer {
     return best;
   }
 
+  // Refresh the paint declaration (traveled spans + pulse arms) and redraw
+  // the markers.
   update(controller: FabricMazeController): void {
-    const under = this.underGfx;
-    const over = this.overGfx;
-    under.clear();
-    over.clear();
-
-    // Live under windows per chain (crossings slide; displayF is the true
-    // intersection when the physics has one).
-    this.underCtrls.clear();
-    for (const c of this.ps.crossings) {
-      const chain = c.under.chain;
-      const ctrl = c.under.displayF ?? c.under.ctrl;
-      const list = this.underCtrls.get(chain);
-      if (list) list.push(ctrl);
-      else this.underCtrls.set(chain, [ctrl]);
-    }
-
-    // 1. The traced path: every run on the stack, recolored woven.
+    const spans: PaintSpan[] = [];
+    const onPath = new Set<number>();
     for (const eid of controller.pathEdges) {
-      this.strokeRunWoven(under, over, this.walk.edges[eid]);
+      const e = this.walk.edges[eid];
+      spans.push({ chain: e.chain, c0: e.ctrlA, c1: e.ctrlB });
+      onPath.add(eid);
     }
 
-    // 2. Choice hints at the branch point.
+    // Junction caps: at every vertex the path traversed, several ribbons
+    // converge and overlap (bridge tips ride their hosts; merged crossings
+    // overlap diagonally). Painting each arm's immediate neighborhood gold
+    // hides the overlap footprint in both directions. The head vertex keeps
+    // its pulse affordance instead (and wears the head marker), except once
+    // solved.
+    const caps: PaintCap[] = [];
+    const capR = Math.max(0.3, this.threadWidth * 0.95);
+    const seenCap = new Set<string>();
+    const nVisited =
+      controller.pathVertices.length - (controller.solved ? 0 : 1);
+    for (let i = 0; i < nVisited; i++) {
+      const v = this.walk.vertices.get(controller.pathVertices[i])!;
+      for (const eid of v.edges) {
+        const e = this.walk.edges[eid];
+        const atA = e.va === v.id;
+        const ctrl = atA ? e.ctrlA : e.ctrlB;
+        const key = `${e.chain}:${ctrl}`;
+        if (seenCap.has(key)) continue;
+        seenCap.add(key);
+        caps.push({ chain: e.chain, ctrl, radius: capR });
+        // A self-loop run touches the vertex at BOTH its ends.
+        if (atA && e.vb === v.id) {
+          const key2 = `${e.chain}:${e.ctrlB}`;
+          if (!seenCap.has(key2)) {
+            seenCap.add(key2);
+            caps.push({ chain: e.chain, ctrl: e.ctrlB, radius: capR });
+          }
+        }
+      }
+    }
+
+    const pulses: PulseArm[] = [];
     if (!controller.solved) {
-      const lastEdge =
+      const last =
         controller.pathEdges.length > 0
           ? controller.pathEdges[controller.pathEdges.length - 1]
           : -1;
       for (const eid of controller.choices()) {
-        this.strokeHint(
-          over,
-          this.walk.edges[eid],
-          controller.head,
-          eid === lastEdge
-        );
+        const e = this.walk.edges[eid];
+        const hovered = eid === this.hoverEdge;
+        const inward = eid === last;
+        const arm = (cJunction: number, cFar: number): void => {
+          pulses.push({
+            chain: e.chain,
+            cJunction,
+            cFar,
+            inward,
+            onPath: onPath.has(eid),
+            hovered,
+          });
+        };
+        if (e.va === e.vb) {
+          // A self-loop run returns to the branch point: pulse both ends.
+          arm(e.ctrlA, e.ctrlB);
+          arm(e.ctrlB, e.ctrlA);
+        } else if (e.va === controller.head) {
+          arm(e.ctrlA, e.ctrlB);
+        } else {
+          arm(e.ctrlB, e.ctrlA);
+        }
       }
     }
+    this.ribbons.setPaint(spans, pulses, caps);
 
-    // 3. Head marker (where the player stands).
+    // Markers.
+    const g = this.gfx;
+    g.clear();
     const rHead = Math.max(0.24, this.threadWidth * 0.72);
     this.vertexWorld(controller.head, this.scratch, 0);
-    over.circle(this.scratch[0], this.scratch[1], rHead);
-    over.fill({ color: 0xffffff, alpha: 0.92 });
+    g.circle(this.scratch[0], this.scratch[1], rHead);
+    g.fill({ color: 0xffffff, alpha: 0.92 });
 
-    // 4. Start and exit markers.
     const r = Math.max(0.32, this.threadWidth * 0.95);
     this.vertexWorld(this.walk.start, this.scratch, 0);
-    over.circle(this.scratch[0], this.scratch[1], r);
-    over.fill({ color: START_COLOR, alpha: 0.95 });
+    g.circle(this.scratch[0], this.scratch[1], r);
+    g.fill({ color: START_COLOR, alpha: 0.95 });
 
     this.vertexWorld(this.walk.exit, this.scratch, 0);
-    over.circle(this.scratch[0], this.scratch[1], r);
-    over.fill({ color: EXIT_COLOR, alpha: 0.95 });
+    g.circle(this.scratch[0], this.scratch[1], r);
+    g.fill({ color: EXIT_COLOR, alpha: 0.95 });
     if (controller.solved) {
-      over.circle(this.scratch[0], this.scratch[1], r * 1.5);
-      over.stroke({
+      g.circle(this.scratch[0], this.scratch[1], r * 1.5);
+      g.stroke({
         color: EXIT_COLOR,
         width: this.threadWidth * 0.25,
         alpha: 0.9,
@@ -175,110 +223,7 @@ export class FabricMazeRenderer {
     }
   }
 
-  // Is the run's chain the UNDER pass of a crossing near ctrl f?
-  private isUnderAt(chain: number, f: number): boolean {
-    const list = this.underCtrls.get(chain);
-    if (!list) return false;
-    const len = this.ps.chains[chain].length;
-    const closed = this.ps.chainBreakAfter[chain] < 0;
-    const ff = this.ctrlMod(chain, f);
-    for (const u of list) {
-      let d = Math.abs(ff - u);
-      if (closed) d = Math.min(d, len - d);
-      if (d <= UNDER_HALF) return true;
-    }
-    return false;
-  }
-
-  // Recolor one run, split into under/over stretches by the live crossing
-  // windows (each stretch extended one sample into its neighbor so the two
-  // layers join seamlessly beneath the over thread).
-  private strokeRunWoven(under: Graphics, over: Graphics, e: WalkEdge): void {
-    const span = e.ctrlB - e.ctrlA;
-    const count = Math.max(2, Math.ceil(span / SAMPLE_STEP) + 1);
-    const xs = new Float32Array(count);
-    const ys = new Float32Array(count);
-    const isUnder = new Uint8Array(count);
-    for (let i = 0; i < count; i++) {
-      const f = e.ctrlA + Math.min(span, i * SAMPLE_STEP);
-      this.ps.pointOnChain(e.chain, this.ctrlMod(e.chain, f), this.scratch, 0);
-      xs[i] = this.scratch[0];
-      ys[i] = this.scratch[1];
-      isUnder[i] = this.isUnderAt(e.chain, f) ? 1 : 0;
-    }
-
-    // Full thread width + opaque so it reads as the strand itself
-    // recolored; slightly proud of the base width to cover its miter.
-    const width = Math.max(0.08, this.threadWidth * 1.06);
-    const style = {
-      color: PATH_COLOR,
-      width,
-      alpha: 1,
-      cap: "round" as const,
-      join: "round" as const,
-    };
-
-    let s = 0;
-    for (let i = 1; i <= count; i++) {
-      if (i === count || isUnder[i] !== isUnder[s]) {
-        const g = isUnder[s] ? under : over;
-        const start = Math.max(0, s - 1);
-        const end = Math.min(count - 1, i);
-        g.moveTo(xs[start], ys[start]);
-        for (let k = start + 1; k <= end; k++) g.lineTo(xs[k], ys[k]);
-        g.stroke(style);
-        s = i;
-      }
-    }
-  }
-
-  // A short translucent stroke along a tappable run, reaching from the
-  // branch point into the run. Self-loop runs hint at both of their ends.
-  private strokeHint(
-    g: Graphics,
-    e: WalkEdge,
-    head: string,
-    isBacktrack: boolean
-  ): void {
-    const style = {
-      color: isBacktrack ? PATH_COLOR : HINT_COLOR,
-      width: Math.max(0.1, this.threadWidth * 1.5),
-      alpha: isBacktrack ? 0.22 : 0.3,
-      cap: "round" as const,
-      join: "round" as const,
-    };
-    const span = e.ctrlB - e.ctrlA;
-    const reach = Math.min(HINT_REACH, span);
-    const fromA = e.va === head;
-    const selfLoop = e.va === e.vb;
-    const spans: Array<[number, number]> =
-      selfLoop && span > 2 * reach
-        ? [
-            [e.ctrlA, e.ctrlA + reach],
-            [e.ctrlB - reach, e.ctrlB],
-          ]
-        : fromA
-          ? [[e.ctrlA, e.ctrlA + reach]]
-          : [[e.ctrlB - reach, e.ctrlB]];
-    for (const [f0, f1] of spans) {
-      const count = Math.max(2, Math.ceil((f1 - f0) / SAMPLE_STEP) + 1);
-      for (let i = 0; i < count; i++) {
-        const f = f0 + Math.min(f1 - f0, i * SAMPLE_STEP);
-        this.ps.pointOnChain(
-          e.chain,
-          this.ctrlMod(e.chain, f),
-          this.scratch,
-          0
-        );
-        if (i === 0) g.moveTo(this.scratch[0], this.scratch[1]);
-        else g.lineTo(this.scratch[0], this.scratch[1]);
-      }
-      g.stroke(style);
-    }
-  }
-
   destroy(): void {
-    this.underContainer.destroy({ children: true });
     this.overContainer.destroy({ children: true });
   }
 }
