@@ -186,6 +186,8 @@ export class PatchGridMesh {
   readonly lanes: number;
 
   private vertexData: Float32Array;
+  private uvData: Float32Array;
+  private uvDirty = false;
 
   constructor(stations: number, lanes: number, color: number) {
     this.stations = stations;
@@ -199,6 +201,7 @@ export class PatchGridMesh {
         uvs[(k * lanes + l) * 2 + 1] = l / (lanes - 1);
       }
     }
+    this.uvData = uvs;
 
     const indices = new Uint32Array((stations - 1) * (lanes - 1) * 6);
     let i = 0;
@@ -228,8 +231,20 @@ export class PatchGridMesh {
     this.vertexData[i + 1] = y;
   }
 
+  // FADE (under-gap fade-out): set a vertex's texture U - its coordinate
+  // along the fade ramp (0 = full-strength erase, 1 = fully faded out).
+  // V stays as constructed.
+  setVertexU(station: number, lane: number, u: number): void {
+    this.uvData[(station * this.lanes + lane) * 2] = u;
+    this.uvDirty = true;
+  }
+
   commit(): void {
     this.mesh.geometry.getBuffer("aPosition").update();
+    if (this.uvDirty) {
+      this.mesh.geometry.getBuffer("aUV").update();
+      this.uvDirty = false;
+    }
   }
 
   destroy(): void {

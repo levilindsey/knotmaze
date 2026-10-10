@@ -1,19 +1,26 @@
 // Renders the knot as smooth ribbons. Base layer: every strand's fill ribbon.
 // At each crossing, two patches recompute every frame:
-//   1. An "under erase" patch: a background-colored ribbon that follows the
-//      UNDER thread through the crossing, slightly wider than the thread, so
-//      its footprint never exceeds the under thread's own and it cannot
-//      notch anything else. Its end caps are the visible cut ends of the
-//      under thread. Each cap corner is found by marching along its
-//      under-ribbon edge until "perpendicular distance to the over
-//      CENTERLINE CURVE equals overHalfWidth" (the over ribbon's
-//      SILHOUETTE) flips, against a locally sampled polyline of the over
-//      centerline - then the cap is pushed outward by `gap` as ARC LENGTH
-//      along the under thread. The margin must be constant ALONG the
-//      thread, not perpendicular to the over thread: a perpendicular
-//      margin projects as gap/sin(angle) of bare background at oblique
-//      crossings, which reads as a giant naked gap at loop-end twists
-//      (spans up to 1.07 at 30-degree crossings measured, vs gap 0.06).
+//   1. An "under erase" patch: an alpha-PUNCH ribbon (pixi 'erase' blend,
+//      destination-out - the canvas is transparent and the page CSS behind
+//      it supplies the backdrop, so gaps CLIP the thread layer instead of
+//      painting a background color and survive any future textured
+//      backdrop) that follows the UNDER thread through the crossing,
+//      slightly wider than the thread, so its footprint never exceeds the
+//      under thread's own and it cannot notch anything else. Its end caps
+//      are the visible cut ends of the under thread. Each cap corner is
+//      found by marching along its under-ribbon edge until "perpendicular
+//      distance to the over CENTERLINE CURVE equals overHalfWidth" (the
+//      over ribbon's SILHOUETTE) flips, against a locally sampled polyline
+//      of the over centerline - then the cap is pushed outward by `gap` as
+//      ARC LENGTH along the under thread. The margin must be constant
+//      ALONG the thread, not perpendicular to the over thread: a
+//      perpendicular margin projects as gap/sin(angle) of bare background
+//      at oblique crossings, which reads as a giant naked gap at loop-end
+//      twists (spans up to 1.07 at 30-degree crossings measured, vs gap
+//      0.06). A nonzero fadeLength softens the caps: the erase's strength
+//      fades out over that arc length past each solved cap (see the FADE
+//      texture), so the under thread dissolves into the backdrop instead
+//      of ending at a hard edge.
 //   2. The OVER pass fill, redrawn on top so the over thread rides above
 //      the hole, with a length that adapts to the crossing angle.
 // All erases render below all fills, so patches never slice each other.
@@ -33,7 +40,6 @@ import { RibbonMesh, PatchGridMesh } from "./ribbon_mesh";
 export interface RibbonStyle {
   threadWidth: number; // In lattice units.
   casingWidth: number; // Thread width + twice the crossing gap.
-  background: number;
   baseHue: number; // [0, 360) starting hue for the strand palette.
   // Optional strand -> palette-slot mapping (maze fabric: bridges/stubs and
   // cut halves inherit their host strand's hue so splices read as thread
@@ -238,6 +244,43 @@ function buildPalettePixels(base: number): Uint8Array {
   return px;
 }
 
+// FADE texture: one shared 256x1 strip of erase STRENGTH, sampled by every
+// erase patch through per-vertex U. Column u carries alpha 1 at u <= 0 (the
+// solved cut interval - full punch, the sharp look) smoothstepped to 0 at
+// u = 1 (the far end of a fade tail - no punch), so under the 'erase'
+// blend the under thread dissolves gradually into the backdrop. Stored
+// premultiplied (r = g = b = a): WebGL2 ignores
+// UNPACK_PREMULTIPLY_ALPHA_WEBGL for ArrayBufferView uploads, so the
+// buffer itself must match the alphaMode declaration - and under the
+// erase blendFunc (ZERO, ONE_MINUS_SRC_ALPHA) only src alpha matters
+// anyway. Cached for the page lifetime and NEVER destroyed, for exactly
+// the PALETTE_CACHE reason above. At fadeLength 0 every vertex samples
+// u = 0 -> strength 1: bit-identical to the old full-strength erase.
+const FADE_W = 256;
+let FADE_TEXTURE: Texture | null = null;
+function fadeTexture(): Texture {
+  if (!FADE_TEXTURE) {
+    const px = new Uint8Array(FADE_W * 4);
+    for (let i = 0; i < FADE_W; i++) {
+      const u = i / (FADE_W - 1);
+      const v = Math.round(255 * (1 - u * u * (3 - 2 * u)));
+      px[i * 4] = v;
+      px[i * 4 + 1] = v;
+      px[i * 4 + 2] = v;
+      px[i * 4 + 3] = v;
+    }
+    FADE_TEXTURE = new Texture({
+      source: new BufferImageSource({
+        resource: px,
+        width: FADE_W,
+        height: 1,
+        alphaMode: "premultiplied-alpha",
+      }),
+    });
+  }
+  return FADE_TEXTURE;
+}
+
 // Dense enough that tight bends near crossings (low slack) stay resolved;
 // patch outlines interpolate this same data, keeping them aligned with the
 // base ribbons.
@@ -413,6 +456,11 @@ export class RibbonRenderer {
   // Live junction-rounding radius multiplier (the cuspRadius slider;
   // main.ts keeps it synced every tick).
   cuspRadius = 1;
+  // Live under-gap fade length (the fadeLength slider; main.ts keeps it
+  // synced every tick): arc length past each solved cut cap over which the
+  // erase strength fades to nothing. 0 = sharp caps, exactly the original
+  // render.
+  fadeLength = 0;
   private filletGfx: Graphics | null = null;
   private junctionArms: Array<{
     particles: number[];
@@ -517,11 +565,13 @@ export class RibbonRenderer {
       if (occ) occ.push(crossingIndex - 1);
       else this.overChainCrossings.set(crossing.over.chain, [crossingIndex - 1]);
 
-      const erase = new PatchGridMesh(
-        ERASE_STATIONS,
-        ERASE_LANES,
-        style.background
-      );
+      // Erase patches PUNCH the thread layer (destination-out through the
+      // shared fade-strength texture; the transparent canvas lets the page
+      // backdrop show through) instead of painting a background color -
+      // same visuals over today's flat CSS color, textured-backdrop-ready.
+      const erase = new PatchGridMesh(ERASE_STATIONS, ERASE_LANES, 0xffffff);
+      erase.mesh.texture = fadeTexture();
+      erase.mesh.blendMode = "erase";
       const fill = new RibbonMesh(OVER_PATCH_MAX_SAMPLES, false, 0xffffff);
       this.underErases.push(erase);
       this.overFills.push(fill);
@@ -530,11 +580,9 @@ export class RibbonRenderer {
     }
 
     for (let k = 0; k < EMERGENT_POOL; k++) {
-      const erase = new PatchGridMesh(
-        ERASE_STATIONS,
-        ERASE_LANES,
-        style.background
-      );
+      const erase = new PatchGridMesh(ERASE_STATIONS, ERASE_LANES, 0xffffff);
+      erase.mesh.texture = fadeTexture();
+      erase.mesh.blendMode = "erase";
       const fill = new RibbonMesh(OVER_PATCH_MAX_SAMPLES, false, 0xffffff);
       erase.mesh.visible = false;
       fill.mesh.visible = false;
@@ -1208,7 +1256,20 @@ export class RibbonRenderer {
       // Build the erase grid: each lane spans its own solved cut interval,
       // so the cap rows are polylines lying on the over ribbon's offset
       // curve - they curve with the over thread.
+      // FADE: a nonzero fadeLength extends each lane's SAMPLED span by
+      // `fade` arc past both solved caps, and every vertex carries a
+      // texture U of overshoot/fade (0 anywhere inside the cut interval),
+      // so the erase strength rolls off across the tails. The extension is
+      // purely additive BEYOND the solved boundary: the marches, shear
+      // guard, smoothing, D2 rounding, the eraseExtent bookkeeping above
+      // (the P3.38 neighbor reserve must keep quoting OPAQUE extents), and
+      // the sMid miter probe below all still read the original laneCuts.
+      // At fade 0 the spans and every U are bit-identical to the sharp
+      // render. (Extending the ERASE past its solved exit is safe only
+      // because the overhang is sub-strength and fades to zero - the P3.40
+      // "never extend a cut" lesson is about full-strength erases.)
       const erase = eraseMesh;
+      const fade = this.fadeLength;
       const midLane = (ERASE_LANES - 1) / 2;
       for (let k = 0; k < ERASE_STATIONS; k++) {
         const t = k / (ERASE_STATIONS - 1);
@@ -1261,8 +1322,15 @@ export class RibbonRenderer {
 
         for (let l = 0; l < ERASE_LANES; l++) {
           const s =
-            this.laneCutsNeg[l] +
-            (this.laneCutsPos[l] - this.laneCutsNeg[l]) * t;
+            this.laneCutsNeg[l] -
+            fade +
+            (this.laneCutsPos[l] - this.laneCutsNeg[l] + 2 * fade) * t;
+          // Fade coordinate: how far this station overshoots the lane's
+          // solved cut interval, as a fraction of the fade length.
+          const over = Math.max(
+            this.laneCutsNeg[l] - s,
+            s - this.laneCutsPos[l]
+          );
           const f = 1 - (2 * l) / (ERASE_LANES - 1);
           const u = (f >= 0 ? wLeftE : wRightE) * f;
           this.sampleAt(underSamples, underCenter + s, this.sampleScratch, 0);
@@ -1272,6 +1340,7 @@ export class RibbonRenderer {
             this.sampleScratch[0] - this.sampleScratch[3] * u,
             this.sampleScratch[1] + this.sampleScratch[2] * u
           );
+          erase.setVertexU(k, l, fade > 0 && over > 0 ? over / fade : 0);
         }
       }
       erase.commit();

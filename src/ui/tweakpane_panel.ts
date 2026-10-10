@@ -166,6 +166,10 @@ export function buildPanel(
     "How far the rounded corners reach where threads join at an intersection. 0 = sharp joints. Applies live."
   ).on("change", callbacks.onSlackChange);
   tip(
+    pane.addBinding(params, "fadeLength", { min: 0, max: 1.2, step: 0.02 }),
+    "How far the under thread fades out approaching a crossing gap. 0 = sharp cut. Applies live."
+  ).on("change", callbacks.onSlackChange);
+  tip(
     pane.addButton({ title: "Reset path" }),
     "Clear the traced maze path and start over from the entrance."
   ).on("click", callbacks.onResetPath);
