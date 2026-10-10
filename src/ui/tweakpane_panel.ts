@@ -22,6 +22,9 @@ export interface PanelCallbacks {
   onTemperatureChange: () => void;
   onModeChange: () => void;
   onResetPath: () => void;
+  // Audio-only change (sound mode / pitch space / octaves): re-derive the
+  // pitch assignment without rebuilding the scene.
+  onAudioChange: () => void;
 }
 
 interface ChangeEvent {
@@ -120,6 +123,38 @@ export function buildPanel(
     pane.addBinding(settings, "muted"),
     "Silence the pluck sounds threads make when released."
   );
+  tip(
+    pane.addBinding(params, "soundMode", {
+      options: { none: "none", manual: "manual", random: "random", music: "music" },
+    }),
+    "Pluck behavior: none = silent; manual = your plucks only; random = the knot plucks a random thread now and then; music = a scripted song plays itself on matching threads. Auto plucks physically move the thread."
+  ).on("change", callbacks.onAudioChange);
+  tip(
+    pane.addBinding(params, "pitchSpace", {
+      options: {
+        chromatic: "chromatic",
+        pentMajor: "pentMajor",
+        pentMinor: "pentMinor",
+        hirajoshi: "hirajoshi",
+        insen: "insen",
+        dorian: "dorian",
+        lydian: "lydian",
+        wholeTone: "wholeTone",
+        harmMinor: "harmMinor",
+      },
+    }),
+    "Scale the thread pitches live in: every maze segment gets one pitch by length (longer rings lower). chromatic = all 12 half steps - enough to play anything."
+  ).on("change", callbacks.onAudioChange);
+  tip(
+    pane.addBinding(params, "octaves", { min: 1, max: 4, step: 1 }),
+    "How many octaves the segment pitches spread across."
+  ).on("change", callbacks.onAudioChange);
+  tip(
+    pane.addBinding(params, "pluckStyle", {
+      options: { string: "string", soft: "soft" },
+    }),
+    "Release feel: string = sharp snap-back with a decaying ring, like a real plucked string; soft = gentle ease home (speed = the snapBack slider)."
+  ).on("change", callbacks.onSlackChange);
   tip(
     pane.addButton({ title: "Replay settle" }),
     "Restart the knot from its angular lattice state and watch it relax again."

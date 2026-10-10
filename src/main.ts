@@ -21,7 +21,14 @@ import { readParams, writeParams, newSeed } from "./ui/url_state";
 import { buildPanel } from "./ui/tweakpane_panel";
 import type { PanelSettings } from "./ui/tweakpane_panel";
 import type { GenerationParams, MazeGraph } from "./core/types";
-import { KnotSynth, pitchForLoopLength } from "./audio/knot_synth";
+import { KnotSynth } from "./audio/knot_synth";
+import {
+  assignPitches,
+  segmentsNear,
+  noteToFreq,
+} from "./audio/pitch_space";
+import type { PitchAssignment } from "./audio/pitch_space";
+import { SCARBOROUGH_FAIR } from "./audio/songs";
 
 const BACKGROUND = 0x151b28;
 const FIT_MARGIN = 40;
@@ -29,7 +36,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 19: bounded tug + snap-back 2026-10-09";
+const BUILD_STAMP = "P4 Stage 20+21: pitch spaces + string plucks 2026-10-10";
 
 const app = new Application();
 
@@ -73,6 +80,20 @@ async function main(): Promise<void> {
   let walkGraph: WalkGraph | null = null;
   let fabric: FabricMazeRenderer | null = null;
   let fabricController: FabricMazeController | null = null;
+
+  // Stage 20 audio: every segment (walk-graph run in fabric mode, whole
+  // strand otherwise) owns one pitch from the chosen space, assigned by
+  // length bucket. audioRuns maps a chain ctrl to its run for manual
+  // plucks; audioSegSite is where auto plucks physically tug.
+  let audioAssign: PitchAssignment | null = null;
+  let audioRuns: Map<
+    number,
+    Array<{ c0: number; c1: number; seg: number }>
+  > | null = null;
+  let audioSegSite: Array<{ chain: number; ctrl: number }> = [];
+  let nextRandomPluck = 0;
+  let songIndex = 0;
+  let songNextAt = 0;
 
   // The unanchored knot finds its own shape, so the viewport fit follows
   // the live particle bounds, easing toward the target to avoid popping.
@@ -229,6 +250,7 @@ async function main(): Promise<void> {
     pendingWin = false;
     updateHud();
     hideWin();
+    rebuildAudioMap();
 
     debug = new DebugRenderer();
     debug.render(graph);
@@ -251,6 +273,70 @@ async function main(): Promise<void> {
       `KnotMaze: seed ${params.seed}, ${graph.nodes.size} nodes, ` +
         `${graph.edges.size} edges, ${graph.strands.length} strands.`
     );
+  }
+
+  // Re-derive the per-segment pitch assignment (cheap; no scene rebuild).
+  function rebuildAudioMap(): void {
+    if (!ps) return;
+    const root = params.seed % 12;
+    if (walkGraph) {
+      audioAssign = assignPitches(
+        params.pitchSpace,
+        params.octaves,
+        root,
+        walkGraph.edges.map((e) => e.length)
+      );
+      audioRuns = new Map();
+      audioSegSite = walkGraph.edges.map((e) => ({
+        chain: e.chain,
+        ctrl: (e.ctrlA + e.ctrlB) / 2,
+      }));
+      for (const e of walkGraph.edges) {
+        let list = audioRuns.get(e.chain);
+        if (!list) {
+          list = [];
+          audioRuns.set(e.chain, list);
+        }
+        list.push({ c0: e.ctrlA, c1: e.ctrlB, seg: e.id });
+      }
+    } else {
+      audioAssign = assignPitches(
+        params.pitchSpace,
+        params.octaves,
+        root,
+        ps.chains.map((c) => c.length)
+      );
+      audioRuns = null;
+      audioSegSite = ps.chains.map((c, i) => ({
+        chain: i,
+        ctrl: Math.floor(c.length / 2),
+      }));
+    }
+    nextRandomPluck = 0;
+    songIndex = 0;
+    songNextAt = 0;
+  }
+
+  // Pitch of the segment under a grabbed particle. Chains outside the walk
+  // graph (decorative culled loops) hash onto the assignment.
+  function freqForGrab(chain: number, particle: number): number {
+    if (!audioAssign || !ps) return 220;
+    const n = audioAssign.segFreq.length;
+    if (n === 0) return 220;
+    if (!audioRuns) return audioAssign.segFreq[chain % n];
+    const list = audioRuns.get(chain);
+    if (!list || list.length === 0) return audioAssign.segFreq[chain % n];
+    const ctrl = ps.chains[chain].indexOf(particle);
+    const len = ps.chains[chain].length;
+    for (const r of list) {
+      if (
+        (ctrl >= r.c0 && ctrl <= r.c1) ||
+        (ctrl + len >= r.c0 && ctrl + len <= r.c1)
+      ) {
+        return audioAssign.segFreq[r.seg];
+      }
+    }
+    return audioAssign.segFreq[list[0].seg];
   }
 
   buildPanel(params, settings, {
@@ -303,6 +389,10 @@ async function main(): Promise<void> {
       if (fabric && fabricController) fabric.update(fabricController);
       updateHud();
       wake();
+    },
+    onAudioChange: () => {
+      writeParams(params);
+      rebuildAudioMap();
     },
   });
 
@@ -428,11 +518,29 @@ async function main(): Promise<void> {
   // (exponential at snapBack 1/s) before the grab frees; the pluck voice
   // fires at POINTERUP from the tracked drag speed, since by actual
   // release time the eased thread is nearly still.
+  // Stage 21 extends the release with a STRING mode: instead of the soft
+  // exponential ease home, the target snaps back sharply and rings - a
+  // damped cosine along the release axis (origin-crossing within ~50ms,
+  // ~4 visible cycles), the visible frequency rising gently with the
+  // segment's pitch. Only the grabbed point is driven; the springs
+  // low-pass the motion into the neighbors, so the ring stays local to
+  // the segment while the pull-out still propagated like any drag.
   const grabOrigin = new Float64Array(2);
   const dragPos = new Float64Array(2);
   let dragVel = 0;
   let lastMoveT = 0;
-  let snapping = false;
+  let snapMode: "none" | "soft" | "string" = "none";
+  const strum = { t: 0, ax: 0, ay: 0, amp: 0, hz: 5 };
+  // In-flight auto-pluck gesture (random/music modes): a short scripted
+  // pull-out on the shared grab machinery, released into string mode.
+  let autoGesture: {
+    t: number;
+    dur: number;
+    nx: number;
+    ny: number;
+    amp: number;
+    hz: number;
+  } | null = null;
 
   const boundedDragTo = (x: number, y: number): void => {
     if (!ps) return;
@@ -446,12 +554,41 @@ async function main(): Promise<void> {
     ps.dragTo(dragPos[0], dragPos[1]);
   };
 
-  // End a snap-back immediately (new grab, regenerate): free the grab
-  // with no sound - the pluck already played at its own pointerup.
+  // End any release animation / auto gesture immediately (new grab,
+  // regenerate): free the grab with no sound - the pluck already played.
   const cancelSnap = (): void => {
-    if (!snapping) return;
-    snapping = false;
+    if (autoGesture) {
+      autoGesture = null;
+      ps?.release();
+    }
+    if (snapMode === "none") return;
+    snapMode = "none";
     ps?.release();
+  };
+
+  // Visible ring frequency from the audible pitch: low strings wobble
+  // slow, high strings shimmer.
+  const visibleHz = (freq: number): number =>
+    Math.min(8, Math.max(3, 3.2 + 1.3 * Math.log2(Math.max(55, freq) / 110)));
+
+  // Begin the release animation for whatever is currently displaced.
+  const beginRelease = (style: "soft" | "string", hz: number): void => {
+    const dx = dragPos[0] - grabOrigin[0];
+    const dy = dragPos[1] - grabOrigin[1];
+    const amp = Math.hypot(dx, dy);
+    if (style === "string" && amp > 0.02) {
+      strum.t = 0;
+      strum.ax = dx / amp;
+      strum.ay = dy / amp;
+      strum.amp = amp;
+      strum.hz = hz;
+      snapMode = "string";
+    } else if (style === "soft" && params.snapBack > 0) {
+      snapMode = "soft";
+    } else {
+      snapMode = "none";
+      ps?.release();
+    }
   };
 
   app.canvas.style.touchAction = "none";
@@ -490,7 +627,7 @@ async function main(): Promise<void> {
       app.canvas.style.cursor = mazeActionable(x, y) ? "pointer" : "default";
       return;
     }
-    if (ps.grabbedParticle >= 0 && !snapping) {
+    if (ps.grabbedParticle >= 0 && snapMode === "none" && !autoGesture) {
       const px = dragPos[0];
       const py = dragPos[1];
       boundedDragTo(x, y);
@@ -519,20 +656,14 @@ async function main(): Promise<void> {
   const endDrag = (e: PointerEvent): void => {
     if (!ps) return;
     if (params.mazeMode && !params.mazeFabric) return; // no grab/pluck while solving
-    if (ps.grabbedParticle >= 0 && !snapping) {
+    if (ps.grabbedParticle >= 0 && snapMode === "none" && !autoGesture) {
       wake();
-      if (!settings.muted) {
-        const chain = ps.chainOfParticle(ps.grabbedParticle);
-        if (chain >= 0) {
-          const freq = pitchForLoopLength(ps.chainArcLength(chain));
-          synth.pluck(freq, Math.min(1, dragVel / 25));
-        }
+      const chain = ps.chainOfParticle(ps.grabbedParticle);
+      const freq = chain >= 0 ? freqForGrab(chain, ps.grabbedParticle) : 220;
+      if (!settings.muted && params.soundMode !== "none" && chain >= 0) {
+        synth.pluck(freq, Math.min(1, dragVel / 25));
       }
-      if (params.snapBack > 0) {
-        snapping = true; // The ticker eases the target home, then frees.
-      } else {
-        ps.release();
-      }
+      beginRelease(params.pluckStyle, visibleHz(freq));
     }
     if (app.canvas.hasPointerCapture(e.pointerId)) {
       app.canvas.releasePointerCapture(e.pointerId);
@@ -541,6 +672,118 @@ async function main(): Promise<void> {
   };
   app.canvas.addEventListener("pointerup", endDrag);
   app.canvas.addEventListener("pointercancel", endDrag);
+
+  // ---- Stage 20: auto plucks (random + music modes). The sound always
+  // plays; the physical gesture runs only when the thread is free (a
+  // release animation in progress yields - it is post-release cosmetics).
+  const triggerAutoPluck = (seg: number, freq: number, amp: number): void => {
+    if (!ps || !Number.isFinite(freq)) return;
+    if (!settings.muted && params.soundMode !== "none") {
+      synth.pluck(freq, amp);
+    }
+    if (ps.grabbedParticle >= 0 && snapMode === "none" && !autoGesture) {
+      return; // Live user drag owns the thread; sound-only.
+    }
+    cancelSnap();
+    const site = audioSegSite[seg];
+    if (!site) return;
+    const chainArr = ps.chains[site.chain];
+    if (!chainArr || chainArr.length === 0) return;
+    const len = chainArr.length;
+    const idx = ((Math.round(site.ctrl) % len) + len) % len;
+    const p = chainArr[idx];
+    const px = ps.positions[p * 2];
+    const py = ps.positions[p * 2 + 1];
+    if (ps.grab(px, py, 0.45) < 0) return;
+    const g = ps.grabbedParticle;
+    grabOrigin[0] = ps.positions[g * 2];
+    grabOrigin[1] = ps.positions[g * 2 + 1];
+    dragPos[0] = grabOrigin[0];
+    dragPos[1] = grabOrigin[1];
+    dragVel = 0;
+    // Pull perpendicular to the local thread direction.
+    const q = chainArr[(idx + 1) % len];
+    const tx = ps.positions[q * 2] - px;
+    const ty = ps.positions[q * 2 + 1] - py;
+    const tl = Math.hypot(tx, ty) || 1;
+    autoGesture = {
+      t: 0,
+      dur: 0.15,
+      nx: -ty / tl,
+      ny: tx / tl,
+      amp: Math.min(
+        params.tugLimit * params.threadWidth * 0.9,
+        params.threadWidth * 1.15 + 0.08
+      ),
+      hz: visibleHz(freq),
+    };
+    wake();
+  };
+
+  const autoAudioTick = (dt: number): void => {
+    if (!ps) return;
+    // Advance an in-flight gesture: pull out, then release into string
+    // mode (auto plucks always ring - that is their point).
+    if (autoGesture) {
+      if (ps.grabbedParticle < 0) {
+        autoGesture = null;
+      } else {
+        autoGesture.t += dt;
+        const u = Math.min(1, autoGesture.t / autoGesture.dur);
+        const a = autoGesture.amp * (1 - Math.pow(1 - u, 2));
+        dragPos[0] = grabOrigin[0] + autoGesture.nx * a;
+        dragPos[1] = grabOrigin[1] + autoGesture.ny * a;
+        ps.dragTo(dragPos[0], dragPos[1]);
+        wake();
+        if (u >= 1) {
+          const hz = autoGesture.hz;
+          autoGesture = null;
+          beginRelease("string", hz);
+        }
+      }
+    }
+    if (!audioAssign || settings.muted) return;
+    const nowS = performance.now() / 1000;
+    if (params.soundMode === "random") {
+      if (nextRandomPluck === 0) nextRandomPluck = nowS + 0.8;
+      if (nowS >= nextRandomPluck) {
+        nextRandomPluck = nowS + 0.45 + Math.random() * 1.75;
+        const n = audioSegSite.length;
+        if (n > 0) {
+          const seg = Math.floor(Math.random() * n);
+          triggerAutoPluck(
+            seg,
+            audioAssign.segFreq[seg] ?? 220,
+            0.4 + Math.random() * 0.35
+          );
+        }
+      }
+    } else if (params.soundMode === "music") {
+      if (songNextAt === 0) songNextAt = nowS + 1.2;
+      if (nowS >= songNextAt) {
+        const song = SCARBOROUGH_FAIR;
+        const row = song.notes[songIndex % song.notes.length];
+        songIndex++;
+        songNextAt = nowS + (row.beats * 60) / song.bpm;
+        if (row.note) {
+          const f = noteToFreq(row.note);
+          const segs = segmentsNear(audioAssign, f);
+          if (segs.length > 0 && Number.isFinite(f)) {
+            // The song's true pitch plays; the matching segment moves.
+            triggerAutoPluck(
+              segs[Math.floor(Math.random() * segs.length)],
+              f,
+              0.62
+            );
+          }
+        }
+      }
+    } else {
+      nextRandomPluck = 0;
+      songNextAt = 0;
+      songIndex = 0;
+    }
+  };
 
   // Quiescence: a motionless deterministic knot stays motionless without
   // external input, so once displacement stays under threshold, skip both
@@ -582,6 +825,7 @@ async function main(): Promise<void> {
     // paused or asleep - they touch only markers and UV buffers, never
     // physics or splines.
     const fabricTick = (): void => {
+      autoAudioTick(ticker.deltaMS / 1000);
       renderer!.cuspRadius = params.cuspRadius;
       // Applies to knot mode too: the erase grids re-read it in the next
       // renderer.update(), and the slider's onSlackChange wakes the sim.
@@ -622,27 +866,44 @@ async function main(): Promise<void> {
       return;
     }
 
-    // Snap-back: ease the released drag target home, then free the grab.
-    // Runs ahead of the asleep check (wake() keeps the sim stepping while
-    // the thread returns); skipped while paused - a frozen world holds.
-    if (snapping) {
+    // Release animations: ease (soft) or ring (string) the freed target
+    // around the grab origin, then free the grab. Runs ahead of the
+    // asleep check (wake() keeps the sim stepping while the thread
+    // moves); skipped while paused - a frozen world holds.
+    if (snapMode !== "none") {
       if (ps.grabbedParticle >= 0) {
-        const f = 1 - Math.exp(-params.snapBack * (ticker.deltaMS / 1000));
-        dragPos[0] += (grabOrigin[0] - dragPos[0]) * f;
-        dragPos[1] += (grabOrigin[1] - dragPos[1]) * f;
-        ps.dragTo(dragPos[0], dragPos[1]);
-        wake();
-        if (
-          Math.hypot(
-            dragPos[0] - grabOrigin[0],
-            dragPos[1] - grabOrigin[1]
-          ) < 0.02
-        ) {
-          snapping = false;
-          ps.release();
+        const dt = ticker.deltaMS / 1000;
+        if (snapMode === "soft") {
+          const f = 1 - Math.exp(-params.snapBack * dt);
+          dragPos[0] += (grabOrigin[0] - dragPos[0]) * f;
+          dragPos[1] += (grabOrigin[1] - dragPos[1]) * f;
+          ps.dragTo(dragPos[0], dragPos[1]);
+          wake();
+          if (
+            Math.hypot(
+              dragPos[0] - grabOrigin[0],
+              dragPos[1] - grabOrigin[1]
+            ) < 0.02
+          ) {
+            snapMode = "none";
+            ps.release();
+          }
+        } else {
+          // String: sharp return + damped ring along the release axis.
+          strum.t += dt;
+          const env = strum.amp * Math.exp(-strum.t / 0.33);
+          const off = env * Math.cos(2 * Math.PI * strum.hz * strum.t);
+          dragPos[0] = grabOrigin[0] + strum.ax * off;
+          dragPos[1] = grabOrigin[1] + strum.ay * off;
+          ps.dragTo(dragPos[0], dragPos[1]);
+          wake();
+          if (env < 0.015) {
+            snapMode = "none";
+            ps.release();
+          }
         }
       } else {
-        snapping = false;
+        snapMode = "none";
       }
     }
 

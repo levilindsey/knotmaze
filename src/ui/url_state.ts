@@ -3,6 +3,17 @@
 
 import type { ColorScheme } from "../core/section_colors";
 import { COLOR_SCHEMES } from "../core/section_colors";
+import type { PitchSpace } from "../audio/pitch_space";
+import { PITCH_SPACES } from "../audio/pitch_space";
+
+// Pluck audio behavior: silent | user plucks only | ambient random plucks
+// | scripted song playback.
+export type SoundMode = "none" | "manual" | "random" | "music";
+export const SOUND_MODES: SoundMode[] = ["none", "manual", "random", "music"];
+
+// Release feel: soft eased snap-back vs sharp ringing string.
+export type PluckStyle = "soft" | "string";
+export const PLUCK_STYLES: PluckStyle[] = ["soft", "string"];
 
 export interface UrlParams {
   seed: number;
@@ -26,6 +37,10 @@ export interface UrlParams {
   flowSpeed: number; // [0, 3] flow-undulation drift speed multiplier.
   tugLimit: number; // [0.5, 6] max tug excursion, in thread widths.
   snapBack: number; // [0, 12] post-release return rate (1/s); 0 = off.
+  soundMode: SoundMode; // none | manual | random | music.
+  pitchSpace: PitchSpace; // Scale for segment pitches.
+  octaves: number; // [1, 4] octave span of the pitch space.
+  pluckStyle: PluckStyle; // Release feel: soft ease vs ringing string.
   mazeMode: boolean; // P4: trace a solve path instead of tugging threads.
   // P4 branching maze: generate the spliced maze FABRIC (junctions, 4-way
   // merges, corner entrance/exit) and play it (branch-point taps).
@@ -59,6 +74,7 @@ export const DEFAULTS = {
   flowSpeed: 1,
   tugLimit: 2,
   snapBack: 4,
+  octaves: 2,
 };
 
 export function newSeed(): number {
@@ -100,11 +116,27 @@ export function readParams(): UrlParams {
     flowSpeed: readNumber(query, "fv", DEFAULTS.flowSpeed),
     tugLimit: readNumber(query, "tl", DEFAULTS.tugLimit),
     snapBack: readNumber(query, "sb", DEFAULTS.snapBack),
+    soundMode: readChoice(query, "snd", SOUND_MODES, "manual"),
+    pitchSpace: readChoice(query, "sc", PITCH_SPACES, "pentMinor"),
+    octaves: readNumber(query, "oct", DEFAULTS.octaves),
+    pluckStyle: readChoice(query, "pk", PLUCK_STYLES, "string"),
     mazeMode: readNumber(query, "md", 0) > 0.5,
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
     deadEnds: readNumber(query, "de", 0) > 0.5,
     colorScheme: readScheme(query),
   };
+}
+
+function readChoice<T extends string>(
+  query: URLSearchParams,
+  key: string,
+  options: readonly T[],
+  fallback: T
+): T {
+  const raw = query.get(key);
+  return raw && (options as readonly string[]).includes(raw)
+    ? (raw as T)
+    : fallback;
 }
 
 function readScheme(query: URLSearchParams): ColorScheme {
@@ -139,6 +171,10 @@ export function writeParams(params: UrlParams): void {
   query.set("fv", String(params.flowSpeed));
   query.set("tl", String(params.tugLimit));
   query.set("sb", String(params.snapBack));
+  query.set("snd", params.soundMode);
+  query.set("sc", params.pitchSpace);
+  query.set("oct", String(params.octaves));
+  query.set("pk", params.pluckStyle);
   query.set("md", params.mazeMode ? "1" : "0");
   query.set("mf", params.mazeFabric ? "1" : "0");
   query.set("de", params.deadEnds ? "1" : "0");
