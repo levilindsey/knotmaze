@@ -468,6 +468,11 @@ const ERASE_STATIONS = 16;
 // remaining ERASE_STATIONS - 1 - 2*tail quads span the opaque cut. Keeps
 // the roll-off resolved regardless of how long the solved cut is.
 const FADE_TAIL_STATIONS = 3;
+// JUNCTION CLEARANCE: how much of the fillet wedge reach
+// (fillHalf * FILLET_REACH_PER_HALF * cuspRadius) a nearby under-gap must
+// stay clear of. Below 1 because the web thins toward its tips - a full
+// reservation starves gaps on arms at large cuspRadius.
+const JOINT_CLEAR_REACH_SCALE = 0.85;
 // 13 lanes (was 5): cap rows are polylines approximating the over
 // silhouette's level set, and at loop-end twists that boundary is
 // genuinely CURVED (the over thread bends sharply at the crossing) - 5
@@ -613,6 +618,15 @@ export class RibbonRenderer {
     particles: number[];
     arms: Array<{ chain: number; slot: number; dir: 1 | -1 }>;
   }> = [];
+  // JUNCTION CLEARANCE + layer votes: per-chain ctrls of every fused
+  // joint (with its junctionArms index), so crossing marches/fades can
+  // treat joints as virtual neighbors (renderCrossing) and the joinery
+  // can classify junctions against nearby crossings (rebuildFillets).
+  // Built once with junctionArms; empty in knot mode.
+  private junctionArcCtrls = new Map<
+    number,
+    Array<{ ctrl: number; jn: number }>
+  >();
   // Free (unanchored, unfused) open-chain tips: dead-end thread ends. They
   // get rounded caps, drawn with the fillets and colored from the live
   // paint.
@@ -637,6 +651,15 @@ export class RibbonRenderer {
   // color; otherwise it is 3 * sampleCount channel triplets.
   private accentTex: Texture | null = null;
   private filletLayer: Container | null = null;
+  // TWO-LAYER JOINERY: a junction whose arms pass OVER a nearby foreign
+  // thread renders its fans on this layer ABOVE the erase/fill stack -
+  // the foreign under-thread's erase swath is wider than the arm ribbon
+  // the fill repaints, so on the bottom layer it clipped the web (the
+  // "fillet ends clipped by a thread passing under" report). Junctions
+  // whose arm dives UNDER a nearby thread stay on the bottom layer so
+  // their own gap legitimately punches the web.
+  private filletTopLayer: Container | null = null;
+  private filletTopMesh: TriFanMesh | null = null;
   private filletMesh: TriFanMesh | null = null;
   private sectionSegs: VSegment[][] = [];
   private sectionNoise: ((x: number, y: number) => number) | null = null;
@@ -673,7 +696,15 @@ export class RibbonRenderer {
     const filletLayer = new Container();
     const eraseLayer = new Container();
     const overLayer = new Container();
-    this.root.addChild(baseLayer, filletLayer, eraseLayer, overLayer);
+    const filletTopLayer = new Container();
+    this.root.addChild(
+      baseLayer,
+      filletLayer,
+      eraseLayer,
+      overLayer,
+      filletTopLayer
+    );
+    this.filletTopLayer = filletTopLayer;
     if (style.paletteMode) {
       this.filletLayer = filletLayer;
     }
@@ -849,6 +880,20 @@ export class RibbonRenderer {
         }
         if (arms.length >= 2) {
           this.junctionArms.push({ particles: [...grp], arms });
+          // JUNCTION CLEARANCE lookup: ctrl positions of every joint per
+          // chain (ctrls are static; arcs are re-derived live each
+          // frame).
+          const jnIdx = this.junctionArms.length - 1;
+          for (const a of arms) {
+            let list = this.junctionArcCtrls.get(a.chain);
+            if (!list) {
+              list = [];
+              this.junctionArcCtrls.set(a.chain, list);
+            }
+            if (!list.some((e) => e.ctrl === a.slot && e.jn === jnIdx)) {
+              list.push({ ctrl: a.slot, jn: jnIdx });
+            }
+          }
         }
       }
     }
@@ -1580,6 +1625,43 @@ export class RibbonRenderer {
         underNb
       );
 
+      // JUNCTION CLEARANCE: junctions are not crossings, so the
+      // neighbor-gap bookkeeping above never capped a march walking into
+      // a fused joint - cuts (and their fade tails) bit into the seal
+      // disc and fillet web, worse with bigger gap, fadeLength, and
+      // cuspRadius (the "gaps extending into the intersection" report).
+      // Every junction on the under thread acts as a virtual neighbor:
+      // the room to the joint's rendered edge caps the march, and the
+      // leftover room caps that side's fade tail below.
+      let jRoomPos = Infinity;
+      let jRoomNeg = Infinity;
+      {
+        const jCtrls = this.junctionArcCtrls.get(crossing.under.chain);
+        if (jCtrls) {
+          const closedU = this.ps.chainBreakAfter[crossing.under.chain] < 0;
+          const reach =
+            fillHalf * FILLET_REACH_PER_HALF * this.cuspRadius;
+          const jointClear =
+            Math.max(fillHalf * 1.1, reach * JOINT_CLEAR_REACH_SCALE) +
+            gap +
+            CUT_BIAS;
+          const totalU = underSamples.totalLength;
+          for (const jc of jCtrls) {
+            const jArc = this.paintArcAt(underSamples, jc.ctrl, closedU);
+            let d = jArc - underCenter;
+            if (closedU) {
+              d = ((d % totalU) + totalU) % totalU;
+              if (d > totalU / 2) d -= totalU;
+            }
+            if (d >= 0) {
+              jRoomPos = Math.min(jRoomPos, Math.max(0, d - jointClear));
+            } else {
+              jRoomNeg = Math.min(jRoomNeg, Math.max(0, -d - jointClear));
+            }
+          }
+        }
+      }
+
       // Lane offsets span the erase width: lane 0 = left edge (+eraseW),
       // last lane = right edge (-eraseW).
       const laneOffset = (l: number): number =>
@@ -1600,6 +1682,7 @@ export class RibbonRenderer {
             cutReachMax,
             ERASE_NEIGHBOR_CLEARANCE * gapLimit,
             selfLimit,
+            dir > 0 ? jRoomPos : jRoomNeg,
             underSamples.totalLength / 4
           )
         );
@@ -1764,16 +1847,16 @@ export class RibbonRenderer {
       // for the fill NEIGHBOR-GAP RESERVE (see reachAlongOver), and the
       // under-gap WINDOW for overlay consumers (the Ariadne yarn dips
       // under with its host; emergent crossings included).
+      let extPos = 0;
+      let extNeg = 0;
       {
-        let ePos = 0;
-        let eNeg = 0;
         for (let l = 0; l < ERASE_LANES; l++) {
-          if (this.laneCutsPos[l] > ePos) ePos = this.laneCutsPos[l];
-          if (-this.laneCutsNeg[l] > eNeg) eNeg = -this.laneCutsNeg[l];
+          if (this.laneCutsPos[l] > extPos) extPos = this.laneCutsPos[l];
+          if (-this.laneCutsNeg[l] > extNeg) extNeg = -this.laneCutsNeg[l];
         }
         if (index >= 0) {
-          this.eraseExtentPos[index] = ePos;
-          this.eraseExtentNeg[index] = eNeg;
+          this.eraseExtentPos[index] = extPos;
+          this.eraseExtentNeg[index] = extNeg;
         }
         // The yarn window quotes the MID-LANE cuts, not the max: the
         // yarn rides the centerline, and the widest (edge-lane) cut at
@@ -1809,6 +1892,12 @@ export class RibbonRenderer {
       // "never extend a cut" lesson is about full-strength erases.)
       const erase = eraseMesh;
       const fade = this.fadeLength;
+      // JUNCTION CLEARANCE, fade side: whatever room remains between the
+      // solved cut and the joint edge bounds each side's roll-off. A side
+      // with no room collapses its tail onto the sharp boundary - the
+      // joint's own material covers that edge.
+      const fadePos = Math.max(0, Math.min(fade, jRoomPos - extPos));
+      const fadeNeg = Math.max(0, Math.min(fade, jRoomNeg - extNeg));
       const midLane = (ERASE_LANES - 1) / 2;
       // Station -> arc parameterization. Fade OFF: uniform across the
       // solved cut, bit-identical to the sharp render. Fade ON: a FIXED
@@ -1852,9 +1941,9 @@ export class RibbonRenderer {
         const sMid =
           underCenter +
           (seg < 0
-            ? midN - fade * (1 - g)
+            ? midN - fadeNeg * (1 - g)
             : seg > 0
-              ? midP + fade * g
+              ? midP + fadePos * g
               : midN + (midP - midN) * g);
         this.sampleAt(underSamples, sMid - MITER_PROBE, this.sampleScratch, 0);
         const pax = this.sampleScratch[0];
@@ -1898,9 +1987,9 @@ export class RibbonRenderer {
         for (let l = 0; l < ERASE_LANES; l++) {
           const s =
             seg < 0
-              ? this.laneCutsNeg[l] - fade * (1 - g)
+              ? this.laneCutsNeg[l] - fadeNeg * (1 - g)
               : seg > 0
-                ? this.laneCutsPos[l] + fade * g
+                ? this.laneCutsPos[l] + fadePos * g
                 : this.laneCutsNeg[l] +
                   (this.laneCutsPos[l] - this.laneCutsNeg[l]) * g;
           // Fade coordinate: how far this station overshoots the lane's
@@ -1918,7 +2007,8 @@ export class RibbonRenderer {
             this.sampleScratch[0] - this.sampleScratch[3] * u,
             this.sampleScratch[1] + this.sampleScratch[2] * u
           );
-          erase.setVertexU(k, l, fade > 0 && over > 0 ? over / fade : 0);
+          const fSide = seg < 0 ? fadeNeg : fadePos;
+          erase.setVertexU(k, l, fSide > 0 && over > 0 ? over / fSide : 0);
         }
       }
       erase.commit();
@@ -2687,17 +2777,72 @@ export class RibbonRenderer {
       let armTotal = 0;
       for (const jn of this.junctionArms) armTotal += jn.arms.length;
       const wedgeRim = 2 * FILLET_EDGE_PTS + FILLET_BEZIER_STEPS + 1;
-      this.filletMesh = new TriFanMesh(
-        this.accentTex,
-        armTotal * (wedgeRim + 1) + nDiscs * (DISC_SEGS + 2),
-        (armTotal * wedgeRim + nDiscs * DISC_SEGS) * 3
-      );
+      const verts = armTotal * (wedgeRim + 1) + nDiscs * (DISC_SEGS + 2);
+      const idx = (armTotal * wedgeRim + nDiscs * DISC_SEGS) * 3;
+      this.filletMesh = new TriFanMesh(this.accentTex, verts, idx);
       this.filletMesh.mesh.shader = sectionShader();
       this.filletLayer.addChild(this.filletMesh.mesh);
+      // The top mesh gets the same capacity: any junction can flip
+      // layers frame to frame as threads move.
+      this.filletTopMesh = new TriFanMesh(this.accentTex, verts, idx);
+      this.filletTopMesh.mesh.shader = sectionShader();
+      this.filletTopLayer!.addChild(this.filletTopMesh.mesh);
     }
-    const fm = this.filletMesh;
-    fm.begin();
+    const fmBottom = this.filletMesh;
+    const fmTop = this.filletTopMesh!;
+    fmBottom.begin();
+    fmTop.begin();
+    // All pushes below route through `fm`; per-junction code points it at
+    // the voted layer and resets it to bottom afterward.
+    let fm = fmBottom;
     const c3 = this.rgbScratch;
+
+    // LAYER VOTES (see filletTopLayer): a junction goes TOP when some
+    // nearby crossing has one of its arm chains as the OVER pass (a
+    // foreign thread dives under the arm there - that crossing's erase
+    // swath would clip the web), UNLESS another nearby crossing has an
+    // arm as the UNDER pass (the arm dives - its own gap must punch the
+    // web, so bottom wins conflicts).
+    const jnTop: boolean[] = new Array(this.junctionArms.length).fill(false);
+    const jnBottomForce: boolean[] = new Array(
+      this.junctionArms.length
+    ).fill(false);
+    if (this.junctionArcCtrls.size > 0) {
+      const gapW = (this.style.casingWidth - this.style.threadWidth) / 2;
+      const jointReach = Math.max(
+        fillHalf * 1.1,
+        fillHalf *
+          FILLET_REACH_PER_HALF *
+          this.cuspRadius *
+          JOINT_CLEAR_REACH_SCALE
+      );
+      const voteReach =
+        jointReach + fillHalf + ERASE_WIDTH_PAD + gapW + this.fadeLength + 0.3;
+      const visit = (
+        pass: CrossingPass,
+        isOver: boolean
+      ): void => {
+        const list = this.junctionArcCtrls.get(pass.chain);
+        if (!list) return;
+        const samples = this.chainSamples[pass.chain];
+        if (!samples) return;
+        const closed = this.ps.chainBreakAfter[pass.chain] < 0;
+        const total = samples.totalLength;
+        const pArc = this.paintArcAt(samples, this.renderCtrl(pass), closed);
+        for (const e of list) {
+          const jArc = this.paintArcAt(samples, e.ctrl, closed);
+          let d = Math.abs(jArc - pArc);
+          if (closed) d = Math.min(d, total - d);
+          if (d >= voteReach) continue;
+          if (isOver) jnTop[e.jn] = true;
+          else jnBottomForce[e.jn] = true;
+        }
+      };
+      for (const cr of this.ps.crossings) {
+        visit(cr.over, true);
+        visit(cr.under, false);
+      }
+    }
 
     // A disc fan whose rim samples the underlying thread's own material at
     // each rim point's arc (the point's offset projected onto the thread's
@@ -2801,6 +2946,7 @@ export class RibbonRenderer {
       jy: number;
       arms: JArm[];
       on: boolean; // REVEAL: all arm-adjacent samples revealed.
+      jn: number; // Index into junctionArms (for the layer vote).
     }
     const pos = this.ps.positions;
     const recs: JRec[] = [];
@@ -2862,8 +3008,10 @@ export class RibbonRenderer {
           }
         }
       }
-      recs.push({ jx, jy, arms, on });
+      recs.push({ jx, jy, arms, on, jn: recs.length });
     }
+    const layerFor = (rec: JRec): TriFanMesh =>
+      jnTop[rec.jn] && !jnBottomForce[rec.jn] ? fmTop : fmBottom;
 
     let fieldU = U_BASE;
     let fieldR = this.baseRgb[0];
@@ -2993,7 +3141,11 @@ export class RibbonRenderer {
         }
       }
       if (rec) {
-        if (rec.on) pushDiscField(rec, cx, cy, fillHalf * 0.99);
+        if (rec.on) {
+          fm = layerFor(rec);
+          pushDiscField(rec, cx, cy, fillHalf * 0.99);
+          fm = fmBottom;
+        }
         continue;
       }
       if (
@@ -3019,7 +3171,8 @@ export class RibbonRenderer {
     }
 
     if (recs.length === 0) {
-      fm.commit();
+      fmBottom.commit();
+      fmTop.commit();
       return;
     }
     const w = fillHalf * 0.97;
@@ -3031,6 +3184,7 @@ export class RibbonRenderer {
       const jy = rec.jy;
       const arms = rec.arms;
       if (arms.length < 2) continue;
+      fm = layerFor(rec);
       if (!rec.on) continue; // REVEAL: joinery waits for its arms.
 
       // Seal the junction center with a disc of the junction field under
@@ -3160,7 +3314,8 @@ export class RibbonRenderer {
         fm.pushFan(jx, jy, fieldU, fieldR, fieldG, fieldB, rim);
       }
     }
-    fm.commit();
+    fmBottom.commit();
+    fmTop.commit();
   }
 
   destroy(): void {

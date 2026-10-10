@@ -300,6 +300,49 @@ between-threads/cell-passage route.
   tileable noise map (page-lifetime cached); displacing the uniform
   interior is invisible, so only the lifted regions' edges breathe,
   one GPU pass, animating even while physics sleeps.
+- 2026-10-10 fix round (commits a37f4f5+2fa7e79): the ARC-WRAP FOURTH
+  BITE (see the updated lore entry - sampleAt itself used ring math on
+  open chains; SplineSamples now carries `closed`); GRADED FADE TAILS
+  (FADE_TAIL_STATIONS=3 pinned per tail - uniform spread starved long
+  rides' tails to <1 station = hard jittering edges; fl=0 bit-identical)
+  + the P3.38 fill reserve subtracts reserve+fadeLength so fills stop
+  clear of neighbor fade tails; AUDIO: EKS harp voice (pick-position
+  comb, body EQ, generated-IR reverb, equal-energy normalization,
+  burst.stop() main-thread race REMOVED - the music silent-note bug),
+  songs.ts rewritten from the musicaviva ABC (the from-memory melody
+  was wrong), music-mode buckets from the song's actual pitch set,
+  soundSpeed (ss=) + volume (vol=) params, tap-pluck visible-ring
+  floor; PANEL: refreshCond conditional-visibility map, folder+scroll
+  localStorage persistence, temperature max 0.5; MARKERS: head dot
+  inside its thread + under-weave halo (underContainer BELOW the
+  ribbon root; erases legitimately punch it), explicit N-gon marker
+  circles (pixi tessellates from raw sub-unit radius), stronger crest,
+  outbound pulse leads inbound by PULSE_OUT_LEAD 0.3s.
+- Stage 26 (worktree agent, merged d99aee8) - PER-VERTEX SECTION RGB:
+  the 256x64 palette collapses to a 256x1 accent strip + a custom
+  section shader (mix(vSection, acc.rgb, acc.a) * vColor); RibbonMesh
+  carries an aColor vec3 buffer; vCache/vAtArc/fieldV became
+  rgbCache/colorAtArc/fieldRGB; segments scheme = pure hash01 per run
+  (junction color = channel-wise RGB MEAN of incident runs, straight
+  RGB ramps - zero association between segment colors, per request);
+  depth/strands emit through a gamut subdivider so their looks hold.
+  KNOWN FOLLOW-UP (user-reported): circular blend artifacts + hard
+  color seams at some intersections under segments - suspects are the
+  joinery field model vs unrelated-RGB ramps and the over-fill window
+  color copy; attribution unfinished.
+- JUNCTION CLEARANCE (fix A) + TWO-LAYER FILLETS (fix B), same round:
+  junctions were invisible to the crossing bookkeeping, so gap cuts +
+  fade tails marched into seal discs/webs (worse with gap, fl, cr) -
+  every fused joint now acts as a VIRTUAL NEIGHBOR on its arm chains
+  (junctionArcCtrls; march sMax + per-side fade room capped by
+  jointClear = max(1.1*fillHalf, 0.85*wedge reach) + gap + CUT_BIAS);
+  and a foreign thread diving UNDER an arm had its erase swath clip
+  the web (swath wider than the arm fill repaints) - fillets split
+  onto TWO TriFanMeshes, the top one ABOVE the erase/fill stack for
+  junctions voted "arm-over" vs nearby crossings (arm-under keeps the
+  bottom layer so the joint's own gap still punches; bottom wins
+  conflicts). Probe note: layer-toggle attribution must now hide BOTH
+  filletMesh and filletTopMesh.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
@@ -327,14 +370,26 @@ primitive's footprint crosses ANOTHER arm's material. Overlays must
 evaluate the SAME continuous field as the ribbons (the 16c angular
 junction field). Don't reintroduce point-sampled joinery.
 
-RENDER LORE (hard-won, 2026-10-09): **the arc-wrap family bites twice.**
-Both `arcAt` AND `sampleAt` wrap their arc modulo totalLength, so an
-OPEN chain's terminal (arc == total) lands at arc 0: `arcAt` collapsed
-traveled-bridge paint spans to a point (fixed via `paintArcAt`), and
-`sampleAt(total)` drew every atEnd tip disc at its chain's START with
-the far end's host color (the floating gold-dot artifact; fixed by
-reading the endpoint sample directly). Any new open-chain-terminal
-consumer must avoid both — grep for this entry first.
+RENDER LORE (hard-won, 2026-10-09, closed 2026-10-10): **the arc-wrap
+family bit FOUR times before the root died.** `arcAt` and `sampleAt`
+wrapped arcs modulo totalLength, so an OPEN chain's terminal
+(arc == total) landed at arc 0: (1) `arcAt` collapsed traveled-bridge
+paint spans to a point (fixed via `paintArcAt`); (2) `sampleAt(total)`
+drew every atEnd tip disc at its chain's START (fixed by reading the
+endpoint sample directly); (3) fillet flank samples at corner-cut
+terminals flew to the chain START (fixed by `sampleAtSafe`'s clamp);
+(4) the ROOT: `sampleAt`'s ring index math itself — (arc/total)*count
+with modulo — maps ANY open-chain arc within one sample spacing of
+total onto a phantom last→first chord (99.8% of the way to the OTHER
+END for a clamped terminal query), which fanned fillet slivers from
+every fused bridge junction (42 on the repro seed) and skewed the
+whole open-chain parameterization by up to one sample. Fixed at the
+root: `SplineSamples.closed`; sampleAt clamps and maps over count-1
+segments for open runs. The per-call-site guards stay as
+belt-and-suspenders. Diagnosis lore: the jarm probe "cleared" the
+junctions because it evaluated PHYSICS positions while the SAMPLES
+were the thing lying — a census must measure the same pipeline it
+certifies (the P3.24 probe rule again, render edition).
 
 RENDER LORE (hard-won, 2026-10-09): **the palette strip's ORDER is
 load-bearing.** Per-vertex UVs interpolate linearly between samples, so
@@ -361,18 +416,17 @@ page-lifetime cache (`PALETTE_CACHE`, keyed by base color); rebuilds
 reuse them. Attributed with a checkbox-toggle pageerror probe — the
 rebuild itself kept working while the stamp's wall clock froze.
 
-RENDER LORE (hard-won, 2026-10-09): **gamut locality is load-bearing
-for V blends.** The 2D palette's V axis is a PATH through the gamut,
-not a set of swatches — a V-ramp between two section colors renders
-every hue BETWEEN them, so adjacent sections must sit CLOSE in V or
-junction ramps paint rainbow stripes instead of direct blends (the
-first segments scheme hashed V per run and striped at every ramp).
-Scheme design rule: propagate V locally — segments assigns colors via
-a bounded random walk from the entrance (BFS, steps <= ±0.18);
-strands junctions converge to the THROUGH-thread's V so hosts never
-shift hue and bridges carry the whole transition along their own
-length. Global gamut coverage must come from accumulated drift, never
-from adjacent jumps.
+RENDER LORE (2026-10-09; MOSTLY RETIRED by Stage 26): **gamut locality
+was load-bearing only for the old V-AXIS palette.** A V-ramp between
+two section colors rendered every hue BETWEEN them (the V axis is a
+PATH through the gamut), so adjacent sections had to sit close in V or
+junction ramps painted rainbow stripes. Stage 26 replaced V with
+per-vertex RGB and straight RGB lerps — unrelated adjacent colors now
+blend DIRECTLY, which is the whole point of the new segments scheme.
+Still true and worth keeping: any scheme whose ramps are expressed as
+coordinates through a 1D gamut path (depth/strands still are, via the
+subdivider) must keep adjacent coordinate jumps small, because a
+coordinate lerp sweeps the hues between.
 
 Still open in P4:
 - **Textured background**: the render side is DONE (Stage 18 — gaps
@@ -383,10 +437,18 @@ Still open in P4:
   (branchDensity, fourWayFraction, … — today `mf` + `de` serialize and
   `DEFAULT_MAZE_PARAMS` supplies the rest) and the **daily seed**
   (Wordle-style shared daily + time-to-solve share).
-- **Old maze mode's fate** (`md=1`, single-strand trace,
-  `core/maze.ts` + `game/maze_controller.ts` + `render/maze_renderer.ts`)
-  — still works, untouched; retire it once fabric gameplay is strictly
-  better, to drop a whole legacy toggle+overlay.
+- ~~Old maze mode~~ — RETIRED 2026-10-10 (commit bf86855): `md=1`,
+  `core/maze.ts`, `game/maze_controller.ts`, `render/maze_renderer.ts`
+  and their tests are deleted; `mf` is the only mode toggle.
+- **Open artifact queue (2026-10-10)**: segments-scheme circular blend
+  pools + hard color seams at some intersections (Stage 26 follow-up;
+  suspects recorded above); gamut-selection UX for all schemes (user
+  wants player-facing gamut control; mono/strands/depth should sample
+  intelligently for contrast); physics junction–crossing spacing
+  (user-proposed incidence reducer for gaps-near-joints; design = a
+  P3.39-style rate-limited along-thread ratchet, needs the full
+  verification battery); reveal running-end particle effects + icon
+  set (start/finish/player) both have agents/designs in flight.
 
 **P5 — growth animation** (animate the knot being drawn/growing) and
 **P6 — flourishes** (polish) remain untouched after P4.
