@@ -1071,6 +1071,12 @@ export class ParticleSystem {
     return this.grabbed;
   }
 
+  // Chain owning a particle (pure query; -1 if unknown). Lets the pointer
+  // layer pick the pluck voice at pointerup, BEFORE the deferred release.
+  chainOfParticle(p: number): number {
+    return p >= 0 && p < this.particleChain.length ? this.particleChain[p] : -1;
+  }
+
   // True while contacts are in the STATIC (welded/frozen) regime.
   get contactsStatic(): boolean {
     return this.stickyContacts;

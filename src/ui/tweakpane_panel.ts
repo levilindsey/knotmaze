@@ -178,6 +178,14 @@ export function buildPanel(
     "How fast the flow undulation drifts. Applies live."
   ).on("change", callbacks.onSlackChange);
   tip(
+    pane.addBinding(params, "tugLimit", { min: 0.5, max: 6, step: 0.1 }),
+    "How far a thread can be tugged, in thread widths. The stretch resists more as it nears the limit (drag further, move less). Applies live."
+  ).on("change", callbacks.onSlackChange);
+  tip(
+    pane.addBinding(params, "snapBack", { min: 0, max: 12, step: 0.5 }),
+    "How quickly a released thread eases back to where it was grabbed. 0 = no snap-back (release in place). Applies live."
+  ).on("change", callbacks.onSlackChange);
+  tip(
     pane.addButton({ title: "Reset path" }),
     "Clear the traced maze path and start over from the entrance."
   ).on("click", callbacks.onResetPath);

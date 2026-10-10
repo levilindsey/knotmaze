@@ -29,7 +29,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 17: flow undulation 2026-10-09";
+const BUILD_STAMP = "P4 Stage 19: bounded tug + snap-back 2026-10-09";
 
 const app = new Application();
 
@@ -418,10 +418,47 @@ async function main(): Promise<void> {
     return result !== "reject";
   };
 
+  // Stage 19 - bounded tug + snap-back, pointer-layer only (the physics
+  // grab machinery is untouched, so knot-mode byte identity holds). The
+  // drag target is rubber-banded around the grab ORIGIN (the grabbed
+  // particle's position at grab time): eff = L * tanh(r / L) with
+  // L = tugLimit thread widths, so the first stretch tracks the cursor
+  // ~1:1 and the thread asymptotes at the limit - pulling further reads
+  // as mounting resistance. On release the target eases home
+  // (exponential at snapBack 1/s) before the grab frees; the pluck voice
+  // fires at POINTERUP from the tracked drag speed, since by actual
+  // release time the eased thread is nearly still.
+  const grabOrigin = new Float64Array(2);
+  const dragPos = new Float64Array(2);
+  let dragVel = 0;
+  let lastMoveT = 0;
+  let snapping = false;
+
+  const boundedDragTo = (x: number, y: number): void => {
+    if (!ps) return;
+    const L = Math.max(0.1, params.tugLimit * params.threadWidth);
+    const dx = x - grabOrigin[0];
+    const dy = y - grabOrigin[1];
+    const r = Math.hypot(dx, dy);
+    const s = r > 1e-9 ? (L * Math.tanh(r / L)) / r : 0;
+    dragPos[0] = grabOrigin[0] + dx * s;
+    dragPos[1] = grabOrigin[1] + dy * s;
+    ps.dragTo(dragPos[0], dragPos[1]);
+  };
+
+  // End a snap-back immediately (new grab, regenerate): free the grab
+  // with no sound - the pluck already played at its own pointerup.
+  const cancelSnap = (): void => {
+    if (!snapping) return;
+    snapping = false;
+    ps?.release();
+  };
+
   app.canvas.style.touchAction = "none";
   app.canvas.addEventListener("pointerdown", (e) => {
     if (!ps) return;
     wake();
+    cancelSnap();
     const [x, y] = toLattice(e);
     // Alt+click: dump the nearest crossing's render state to the console
     // (diagnostic; makes broken-crossing reports exactly reproducible).
@@ -435,6 +472,13 @@ async function main(): Promise<void> {
     }
     if (params.mazeFabric && handleFabricTap(x, y)) return;
     if (ps.grab(x, y, GRAB_RADIUS) >= 0) {
+      const p = ps.grabbedParticle;
+      grabOrigin[0] = ps.positions[p * 2];
+      grabOrigin[1] = ps.positions[p * 2 + 1];
+      dragPos[0] = grabOrigin[0];
+      dragPos[1] = grabOrigin[1];
+      dragVel = 0;
+      lastMoveT = e.timeStamp;
       app.canvas.setPointerCapture(e.pointerId);
       app.canvas.style.cursor = "grabbing";
     }
@@ -446,8 +490,15 @@ async function main(): Promise<void> {
       app.canvas.style.cursor = mazeActionable(x, y) ? "pointer" : "default";
       return;
     }
-    if (ps.grabbedParticle >= 0) {
-      ps.dragTo(x, y);
+    if (ps.grabbedParticle >= 0 && !snapping) {
+      const px = dragPos[0];
+      const py = dragPos[1];
+      boundedDragTo(x, y);
+      const dt = Math.max(1e-3, (e.timeStamp - lastMoveT) / 1000);
+      lastMoveT = e.timeStamp;
+      dragVel =
+        dragVel * 0.6 +
+        (Math.hypot(dragPos[0] - px, dragPos[1] - py) / dt) * 0.4;
       wake();
     } else if (params.mazeFabric && fabric && fabricController) {
       // Hover: light the choosable run under the pointer (the paint pass
@@ -468,12 +519,19 @@ async function main(): Promise<void> {
   const endDrag = (e: PointerEvent): void => {
     if (!ps) return;
     if (params.mazeMode && !params.mazeFabric) return; // no grab/pluck while solving
-    const pluck = ps.release();
-    if (pluck && pluck.chain >= 0) {
+    if (ps.grabbedParticle >= 0 && !snapping) {
       wake();
       if (!settings.muted) {
-        const freq = pitchForLoopLength(ps.chainArcLength(pluck.chain));
-        synth.pluck(freq, Math.min(1, pluck.speed / 25));
+        const chain = ps.chainOfParticle(ps.grabbedParticle);
+        if (chain >= 0) {
+          const freq = pitchForLoopLength(ps.chainArcLength(chain));
+          synth.pluck(freq, Math.min(1, dragVel / 25));
+        }
+      }
+      if (params.snapBack > 0) {
+        snapping = true; // The ticker eases the target home, then frees.
+      } else {
+        ps.release();
       }
     }
     if (app.canvas.hasPointerCapture(e.pointerId)) {
@@ -562,6 +620,30 @@ async function main(): Promise<void> {
       perfLine = " | paused";
       updateStamp();
       return;
+    }
+
+    // Snap-back: ease the released drag target home, then free the grab.
+    // Runs ahead of the asleep check (wake() keeps the sim stepping while
+    // the thread returns); skipped while paused - a frozen world holds.
+    if (snapping) {
+      if (ps.grabbedParticle >= 0) {
+        const f = 1 - Math.exp(-params.snapBack * (ticker.deltaMS / 1000));
+        dragPos[0] += (grabOrigin[0] - dragPos[0]) * f;
+        dragPos[1] += (grabOrigin[1] - dragPos[1]) * f;
+        ps.dragTo(dragPos[0], dragPos[1]);
+        wake();
+        if (
+          Math.hypot(
+            dragPos[0] - grabOrigin[0],
+            dragPos[1] - grabOrigin[1]
+          ) < 0.02
+        ) {
+          snapping = false;
+          ps.release();
+        }
+      } else {
+        snapping = false;
+      }
     }
 
     if (asleep) {

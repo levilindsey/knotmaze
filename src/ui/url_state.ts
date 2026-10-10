@@ -24,6 +24,8 @@ export interface UrlParams {
   fadeLength: number; // [0, 1.2] under-thread fade-out length at crossings.
   flowStrength: number; // [0, 1] flow-undulation amplitude (render-only).
   flowSpeed: number; // [0, 3] flow-undulation drift speed multiplier.
+  tugLimit: number; // [0.5, 6] max tug excursion, in thread widths.
+  snapBack: number; // [0, 12] post-release return rate (1/s); 0 = off.
   mazeMode: boolean; // P4: trace a solve path instead of tugging threads.
   // P4 branching maze: generate the spliced maze FABRIC (junctions, 4-way
   // merges, corner entrance/exit) and play it (branch-point taps).
@@ -55,6 +57,8 @@ export const DEFAULTS = {
   fadeLength: 0,
   flowStrength: 0.3,
   flowSpeed: 1,
+  tugLimit: 2,
+  snapBack: 4,
 };
 
 export function newSeed(): number {
@@ -94,6 +98,8 @@ export function readParams(): UrlParams {
     fadeLength: readNumber(query, "fl", DEFAULTS.fadeLength),
     flowStrength: readNumber(query, "fw", DEFAULTS.flowStrength),
     flowSpeed: readNumber(query, "fv", DEFAULTS.flowSpeed),
+    tugLimit: readNumber(query, "tl", DEFAULTS.tugLimit),
+    snapBack: readNumber(query, "sb", DEFAULTS.snapBack),
     mazeMode: readNumber(query, "md", 0) > 0.5,
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
     deadEnds: readNumber(query, "de", 0) > 0.5,
@@ -131,6 +137,8 @@ export function writeParams(params: UrlParams): void {
   query.set("fl", String(params.fadeLength));
   query.set("fw", String(params.flowStrength));
   query.set("fv", String(params.flowSpeed));
+  query.set("tl", String(params.tugLimit));
+  query.set("sb", String(params.snapBack));
   query.set("md", params.mazeMode ? "1" : "0");
   query.set("mf", params.mazeFabric ? "1" : "0");
   query.set("de", params.deadEnds ? "1" : "0");
