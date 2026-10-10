@@ -92,6 +92,7 @@ const DUST_LEAD = 0.6;
 // gradient lives in the renderer's applyBurnColors).
 const SMOKE_RATE = 40;
 const BURN_SPARK_RATE = 36;
+const ROOTS_RATE = 55;
 const SMOKE_DRAG = 0.8;
 const SMOKE_RISE = 0.5; // World units/s^2 of buoyancy.
 
@@ -243,8 +244,48 @@ export class AppearFxSystem {
       this.emitComet(x, y, dx, dy, frontSpeed, dt);
     } else if (this.style === "burn") {
       this.emitBurn(x, y, dx, dy, dt);
+    } else if (this.style === "roots") {
+      this.emitRoots(x, y, dx, dy, dt);
     } else {
       this.emitDust(x, y, dx, dy, dt);
+    }
+  }
+
+  // Roots: a subtle earthy dirt spray pushed aside by the probing tip -
+  // small dark-brown crumbs tossed backward/outward with a little
+  // gravity, deliberately less prominent than the other styles.
+  private emitRoots(
+    x: number,
+    y: number,
+    dx: number,
+    dy: number,
+    dt: number
+  ): void {
+    const R = this.rng;
+    const d = this.data;
+    const tw = this.unit;
+    let c = this.countFor(ROOTS_RATE, dt);
+    while (c-- > 0) {
+      const i = this.alloc();
+      if (i < 0) return;
+      const o = i * FP;
+      // Toss mostly sideways/backward (soil parting around the tip).
+      const spread = Math.PI * (0.35 + R.next() * 0.5);
+      const side = R.next() < 0.5 ? 1 : -1;
+      const cs = Math.cos(spread * side);
+      const sn = Math.sin(spread * side);
+      const sp = 0.3 + R.next() * 0.7;
+      d[o + PX] = x + (R.next() - 0.5) * tw * 0.25;
+      d[o + PY] = y + (R.next() - 0.5) * tw * 0.25;
+      d[o + PVX] = (dx * cs - dy * sn) * sp;
+      d[o + PVY] = (dx * sn + dy * cs) * sp + 0.2;
+      d[o + PAGE] = 0;
+      d[o + PLIFE] = 0.18 + R.next() * 0.3;
+      d[o + PSIZE] = tw * (0.05 + R.next() * 0.08);
+      d[o + PKIND] = K_SPARK;
+      d[o + PROT] = 0;
+      d[o + PC0] = R.next() < 0.5 ? 0x6b4a2f : 0x57402a;
+      d[o + PC1] = 0x3a2c1d;
     }
   }
 

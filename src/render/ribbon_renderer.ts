@@ -1391,17 +1391,20 @@ export class RibbonRenderer {
     // the arc-wrap family bites here otherwise).
     mask.fill(0);
     const intervals = anim.intervalsFor(chain);
-    // Per-style frontier shaping: comet fades in over a LONG ghost
-    // trail with a FAT tip (width floored, so the head reads as a
-    // translucent thread, not a needle); sparks get the long skinny
-    // taper; dust snaps in short (swapped with sparks by request).
+    // Per-style frontier shaping: comet/sparks fade in over LONG trails
+    // with FAT tips (width floors - translucent threads, not needles);
+    // dust snaps in short; roots goes HARD on the skinny taper (a long
+    // rootlet probing ahead, browned by applyBurnColors).
     let taperMul = 1;
     let tipFloor = 0;
     if (this.appearFx === "comet") {
       taperMul = 8;
-      tipFloor = 0.32;
+      tipFloor = 0.5;
     } else if (this.appearFx === "sparks") {
       taperMul = 8;
+      tipFloor = 0.42;
+    } else if (this.appearFx === "roots") {
+      taperMul = 16;
     }
     const taper = REVEAL_TAPER_ARC * taperMul;
     let minM = 1;
@@ -2663,9 +2666,12 @@ export class RibbonRenderer {
     }
     this.glowChains = glowNow;
 
-    // Burn cooling: chains with hot samples repaint every tick (the
-    // cooling + ember flicker animate), through and past the reveal.
-    if (this.appearFx === "burn" && this.burnScratch.size > 0) {
+    // Burn/roots cooling: chains with hot samples repaint every tick
+    // (the cooling animates), through and past the reveal.
+    if (
+      (this.appearFx === "burn" || this.appearFx === "roots") &&
+      this.burnScratch.size > 0
+    ) {
       for (const [c, pool] of this.burnScratch) {
         if (pool.hot && !toWrite.includes(c)) toWrite.push(c);
       }
@@ -3123,7 +3129,8 @@ export class RibbonRenderer {
     chain: number,
     count: number
   ): Float32Array | null {
-    if (this.appearFx !== "burn") return null;
+    const roots = this.appearFx === "roots";
+    if (this.appearFx !== "burn" && !roots) return null;
     const samples = this.chainSamples[chain];
     if (!samples || samples.totalLength <= 0) return null;
     const src = this.rgbCache[chain];
@@ -3197,10 +3204,26 @@ export class RibbonRenderer {
       const t = age[k];
       if (t >= BURN_RECOVER_END) continue;
       if (mask && mask[k] <= 0.004) continue;
+      // ROOTS: a simple earth-brown tint at the young tip, easing to
+      // the section color - no flicker, no char.
+      if (roots) {
+        const brown = 1 - smooth((t - 0.05) / 1.0);
+        if (brown > 0.004) {
+          const i3 = k * 3;
+          out[i3] += (0.35 - out[i3]) * brown;
+          out[i3 + 1] += (0.25 - out[i3 + 1]) * brown;
+          out[i3 + 2] += (0.18 - out[i3 + 2]) * brown;
+        }
+        continue;
+      }
       // Cooling envelope: white-orange heat flash, then a flickering
       // ember window, then the long char plateau easing smoothly back
       // to the section color (every edge is a smoothstep - no snaps).
-      const heat = 1 - smooth((t - 0.03) / 0.1);
+      // Temperature sequence: a SHORT white-hot flash, a quick yellow
+      // stage, then the flickering orange ember, then char.
+      const heatW = 1 - smooth((t - 0.015) / 0.05);
+      const heatY =
+        smooth(t / 0.02) * (1 - smooth((t - 0.1) / 0.12));
       const ember =
         smooth(t / 0.08) * (1 - smooth((t - BURN_EMBER_END) / 0.25));
       const char =
@@ -3220,16 +3243,22 @@ export class RibbonRenderer {
           0.5 +
           0.3 * Math.sin(13 * this.paintClock + k * 0.31) +
           0.2 * Math.sin(29 * this.paintClock + k * 0.83);
-        const e = ember * 0.85 * (1 - heat * 0.7);
+        const e = ember * 0.85 * (1 - heatW * 0.7);
         r += (1.0 - 0.3 * fl - r) * e;
         g += (0.54 - 0.35 * fl - g) * e;
         b += (0.16 - 0.08 * fl - b) * e;
       }
-      if (heat > 0.001) {
-        // White-hot: the brief tip flash reads near-white.
-        r += (1.0 - r) * heat;
-        g += (0.93 - g) * heat;
-        b += (0.68 - b) * heat;
+      if (heatY > 0.001) {
+        // Yellow stage between the white flash and the orange ember.
+        r += (1.0 - r) * heatY;
+        g += (0.84 - g) * heatY;
+        b += (0.3 - b) * heatY;
+      }
+      if (heatW > 0.001) {
+        // White-hot: the very tip flashes near-white.
+        r += (1.0 - r) * heatW;
+        g += (0.97 - g) * heatW;
+        b += (0.88 - b) * heatW;
       }
       out[i3] = r;
       out[i3 + 1] = g;
@@ -3251,10 +3280,10 @@ export class RibbonRenderer {
     count: number
   ): void {
     if (!this.revealOn || this.revealTips.length === 0) return;
-    // Burn style: the orange/char gradient IS the frontier treatment -
+    // Burn/roots: the thread's own tint IS the frontier treatment -
     // the near-white accent glow sat on the same samples and washed it
     // out completely (acc.a ~0.94 overrides vSection).
-    if (this.appearFx === "burn") return;
+    if (this.appearFx === "burn" || this.appearFx === "roots") return;
     const samples = this.chainSamples[chain];
     if (!samples || samples.totalLength <= 0) return;
     const closed = this.ps.chainBreakAfter[chain] < 0;
@@ -3439,7 +3468,7 @@ export class RibbonRenderer {
     // cache - otherwise every junction wears a pastel star while its
     // threads char (the burn-fillet report). The pool's current
     // ping-pong buffer has identical per-sample layout.
-    if (this.appearFx === "burn") {
+    if (this.appearFx === "burn" || this.appearFx === "roots") {
       const pool = this.burnScratch.get(chain);
       if (pool && pool.hot) cache = pool.flip ? pool.a : pool.b;
     }

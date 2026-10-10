@@ -463,9 +463,10 @@ export function buildPanel(
         comet: "comet",
         dust: "dust",
         burn: "burn",
+        roots: "roots",
       },
     },
-    "Particle effect at the growing thread ends while the design draws itself in: sparks = rainbow ember spray; comet = an icy streaking head leading the thread; dust = dense twinkling glitter; burn = the thread smolders in, orange tip charring to black with rising smoke. Applies live.",
+    "Particle effect at the growing thread ends while the design draws itself in: sparks = rainbow ember spray; comet = an icy streaking head leading the thread; dust = dense twinkling glitter; burn = the thread smolders in, orange tip charring to black with rising smoke; roots = brown rootlets probing in with a soft dirt spray. Applies live.",
     D.appearFx, () => callbacks.onSlackChange()
   );
   button(

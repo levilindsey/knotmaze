@@ -46,6 +46,7 @@ export const APPEAR_FX_MODES = [
   "comet",
   "dust",
   "burn",
+  "roots",
 ] as const;
 export type AppearFxMode = (typeof APPEAR_FX_MODES)[number];
 
