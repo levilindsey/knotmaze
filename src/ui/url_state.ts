@@ -5,8 +5,8 @@ import type { ColorScheme } from "../core/section_colors";
 import { COLOR_SCHEMES } from "../core/section_colors";
 import type { PitchSpace } from "../audio/pitch_space";
 import { PITCH_SPACES } from "../audio/pitch_space";
-import type { AppearMode } from "../core/reveal_plan";
-import { APPEAR_MODES } from "../core/reveal_plan";
+import type { AppearMode, AppearFxMode } from "../core/reveal_plan";
+import { APPEAR_MODES, APPEAR_FX_MODES } from "../core/reveal_plan";
 
 // Pluck audio behavior: silent | user plucks only | ambient random plucks
 // | scripted song playback.
@@ -82,6 +82,10 @@ export interface UrlParams {
   // knot mode.
   appearMode: AppearMode;
   appearSpeed: number; // [0.3, 4] reveal frontier speed multiplier.
+  // Frontier particle effect while the appearance animation runs: none |
+  // sparks (warm embers) | comet (ice-white streaked head) | dust (slow
+  // twinkling motes). Inert when appearMode is instant; applies live.
+  appearFx: AppearFxMode;
 }
 
 export const DEFAULTS = {
@@ -130,6 +134,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   pitchSpace: "pentMinor",
   pluckStyle: "string",
   appearMode: "instant",
+  appearFx: "sparks",
 };
 
 export function newSeed(): number {
@@ -187,6 +192,7 @@ export function readParams(): UrlParams {
     colorScheme: readScheme(query),
     appearMode: readAppear(query),
     appearSpeed: readNumber(query, "as", DEFAULTS.appearSpeed),
+    appearFx: readChoice(query, "afx", APPEAR_FX_MODES, "sparks"),
   };
 }
 
@@ -267,5 +273,6 @@ export function writeParams(params: UrlParams): void {
   query.set("cs", params.colorScheme);
   query.set("ap", params.appearMode);
   query.set("as", String(params.appearSpeed));
+  query.set("afx", params.appearFx);
   history.replaceState(null, "", `?${query.toString()}`);
 }

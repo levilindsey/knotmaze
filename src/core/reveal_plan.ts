@@ -35,6 +35,14 @@ export const APPEAR_MODES = [
 ] as const;
 export type AppearMode = (typeof APPEAR_MODES)[number];
 
+// Frontier particle styles for the appearance animation (Stage 26). The
+// effect itself is render-side (render/appear_fx); the list lives here
+// beside APPEAR_MODES so ui/url_state stays pixi-free. none | sparks
+// (warm ember spray) | comet (ice-white streaked head) | dust (slow
+// twinkling pastel motes).
+export const APPEAR_FX_MODES = ["none", "sparks", "comet", "dust"] as const;
+export type AppearFxMode = (typeof APPEAR_FX_MODES)[number];
+
 // One directional reveal front along a chain. Ctrls are UNWRAPPED (walk
 // wrap runs run past the chain length; the loop fallback can go negative);
 // consumers evaluate modulo/clamped exactly like paint spans.
@@ -339,13 +347,20 @@ export function intervalsAt(
   return out;
 }
 
-// Advancing frontier tips (for glows) at time t: the moving end of every
-// source that has started and not yet landed.
-export function tipsAt(
-  plan: RevealPlan,
-  t: number
-): Array<{ chain: number; ctrl: number }> {
-  const out: Array<{ chain: number; ctrl: number }> = [];
+// An advancing frontier tip at some time t (glows + frontier particles).
+// `dir` is the ctrl-axis travel sign and `rate` the ctrl/s advance on the
+// speed-1 clock (multiply by the live animator speed for the real rate).
+export interface RevealTip {
+  chain: number;
+  ctrl: number;
+  dir: 1 | -1;
+  rate: number;
+}
+
+// Advancing frontier tips at time t: the moving end of every source that
+// has started and not yet landed.
+export function tipsAt(plan: RevealPlan, t: number): RevealTip[] {
+  const out: RevealTip[] = [];
   for (const perChain of plan.sources) {
     for (const s of perChain) {
       const dt = t - s.t0;
@@ -353,8 +368,13 @@ export function tipsAt(
       const span = Math.abs(s.cTo - s.cFrom);
       const prog = dt * s.rate;
       if (prog >= span) continue;
-      const dir = s.cTo >= s.cFrom ? 1 : -1;
-      out.push({ chain: s.chain, ctrl: s.cFrom + dir * prog });
+      const dir: 1 | -1 = s.cTo >= s.cFrom ? 1 : -1;
+      out.push({
+        chain: s.chain,
+        ctrl: s.cFrom + dir * prog,
+        dir,
+        rate: s.rate,
+      });
     }
   }
   return out;

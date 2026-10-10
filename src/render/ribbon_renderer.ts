@@ -29,7 +29,9 @@ import { BufferImageSource, Container, Graphics, Texture } from "pixi.js";
 import { createNoise2D, createNoise3D } from "simplex-noise";
 import type { ParticleSystem, CrossingPass } from "../physics/particle_system";
 import type { VSegment, ColorScheme } from "../core/section_colors";
+import type { AppearFxMode } from "../core/reveal_plan";
 import type { RevealAnimator } from "./reveal";
+import { AppearFxSystem } from "./appear_fx";
 import { SeededRNG } from "../util/random";
 import type { SplineSamples } from "../geometry/spline_generator";
 import {
@@ -581,6 +583,15 @@ export class RibbonRenderer {
   private revealTips: Array<{ chain: number; ctrl: number }> = [];
   private glowChains = new Set<number>();
   private revealTipGfx: Graphics | null = null;
+  // APPEARANCE FX (Stage 26): frontier particles while revealing. The
+  // style is synced from params every tick (live dropdown switches, no
+  // rebuild); the pooled system + its ParticleContainer are created
+  // lazily on the first revealing frame with a non-none style and then
+  // live for the renderer's lifetime (the shared texture is page-lifetime
+  // - see appear_fx.ts).
+  appearFx: AppearFxMode = "none";
+  private appearFxSys: AppearFxSystem | null = null;
+  private fxScanStart = 0;
 
   constructor(ps: ParticleSystem, style: RibbonStyle) {
     this.ps = ps;
@@ -1012,6 +1023,10 @@ export class RibbonRenderer {
     this.revealAnim = anim;
     this.revealMask = this.ps.chains.map(() => null);
     this.revealTips = [];
+    // Fresh reveal, fresh particle field: a Replay-settle resets particle
+    // positions, and motes from the previous run would float over the
+    // re-angular knot.
+    this.appearFxSys?.clear();
   }
 
   // Reveal multiplier at a chain ctrl (1 once fully revealed / inactive).
@@ -1209,6 +1224,123 @@ export class RibbonRenderer {
       g.fill({ color: 0xfff6d8, alpha: 0.6 });
       g.circle(x, y, tw * 0.4);
       g.fill({ color: 0xffffff, alpha: 0.95 });
+    }
+  }
+
+  // Live particle count (diagnostics / probes).
+  appearFxAlive(): number {
+    return this.appearFxSys?.aliveCount ?? 0;
+  }
+
+  // APPEARANCE FX: spawn at every advancing frontier, then advance the
+  // pool. Runs with tickPaint in every ticker branch (awake, asleep,
+  // paused) so the particles keep flying while the physics sleeps. With no
+  // system and no reveal this is a two-compare early-return, and once the
+  // reveal ends the pool drains and tick() degenerates to one compare -
+  // zero per-frame work after the field empties. Spawning skips while the
+  // tab is hidden (a resumed tab would burst the whole backlog at once).
+  private tickAppearFx(dt: number): void {
+    const anim = this.revealAnim;
+    const emitting =
+      this.revealOn && anim !== null && this.appearFx !== "none";
+    if (!this.appearFxSys) {
+      if (!emitting) return;
+      this.appearFxSys = new AppearFxSystem((this.style.flowSeed ?? 1) >>> 0);
+      // Topmost thread-layer child: above every ribbon/fill (and the
+      // knot-mode tip glow, created by this frame's earlier update()).
+      this.root.addChild(this.appearFxSys.container);
+    }
+    const fx = this.appearFxSys;
+    if (emitting && !document.hidden) {
+      fx.style = this.appearFx as Exclude<AppearFxMode, "none">;
+      fx.unit = this.style.threadWidth;
+      if (anim!.mode === "ink") this.spawnInkFrontier(fx, anim!, dt);
+      else this.spawnTipFrontier(fx, anim!, dt);
+    }
+    fx.tick(dt);
+  }
+
+  // Interval modes (trace/bloom/draw): one emitter per advancing reveal
+  // tip. Position and tangent come from the live chain samples through the
+  // clamping paint-arc path (the arc-wrap family bites open-chain
+  // terminals otherwise), so emitters ride flow displacement and tip tucks
+  // exactly like the ribbons. The travel direction is the sample tangent
+  // signed by the plan's ctrl-axis dir; speed converts ctrl/s to world
+  // units through the chain's arc-per-ctrl.
+  private spawnTipFrontier(
+    fx: AppearFxSystem,
+    anim: RevealAnimator,
+    dt: number
+  ): void {
+    const tips = anim.tips();
+    if (tips.length === 0) return;
+    // Rotate which tip gets first claim on the pool budget.
+    const offset = this.fxScanStart++ % tips.length;
+    for (let k = 0; k < tips.length; k++) {
+      const tip = tips[(k + offset) % tips.length];
+      const samples = this.chainSamples[tip.chain];
+      if (!samples || samples.totalLength <= 0) continue;
+      const closed = this.ps.chainBreakAfter[tip.chain] < 0;
+      const arc = this.paintArcAt(samples, tip.ctrl, closed);
+      this.sampleAt(samples, arc, this.sampleScratch, 0);
+      const perCtrl =
+        samples.totalLength / Math.max(1, this.ps.chains[tip.chain].length);
+      fx.spawnFrontier(
+        this.sampleScratch[0],
+        this.sampleScratch[1],
+        this.sampleScratch[2] * tip.dir,
+        this.sampleScratch[3] * tip.dir,
+        tip.rate * anim.speed * perCtrl,
+        dt
+      );
+    }
+  }
+
+  // Ink mode has no plan tips (the dye front is a world-distance field);
+  // the frontier is wherever a chain's mask crosses half-reveal. Scan the
+  // live masks for 0.5-crossings between adjacent samples and emit there,
+  // travel direction toward the unrevealed side, speed = the dye's radial
+  // rate. Budgeted + chain-rotated so dye rings that slice many threads
+  // neither explode the spawn count nor starve high-numbered chains.
+  private spawnInkFrontier(
+    fx: AppearFxSystem,
+    anim: RevealAnimator,
+    dt: number
+  ): void {
+    const chains = this.ps.chains.length;
+    if (chains === 0) return;
+    const speed = anim.inkRate;
+    const start = this.fxScanStart++ % chains;
+    let budget = 48;
+    for (let ci = 0; ci < chains && budget > 0; ci++) {
+      const chain = (ci + start) % chains;
+      const mask = this.revealMask[chain];
+      if (!mask) continue;
+      const samples = this.chainSamples[chain];
+      if (!samples || samples.totalLength <= 0) continue;
+      const count = mask.length;
+      const closed = this.ps.chainBreakAfter[chain] < 0;
+      const arcPer = closed
+        ? samples.totalLength / count
+        : samples.totalLength / (count - 1);
+      const lim = closed ? count : count - 1;
+      for (let k = 0; k < lim && budget > 0; k++) {
+        const m0 = mask[k];
+        const m1 = mask[(k + 1) % count];
+        if (m0 === m1 || (m0 - 0.5) * (m1 - 0.5) > 0) continue;
+        const f = (0.5 - m0) / (m1 - m0);
+        this.sampleAt(samples, (k + f) * arcPer, this.sampleScratch, 0);
+        const dir = m0 > m1 ? 1 : -1; // Toward the unrevealed side.
+        fx.spawnFrontier(
+          this.sampleScratch[0],
+          this.sampleScratch[1],
+          this.sampleScratch[2] * dir,
+          this.sampleScratch[3] * dir,
+          speed,
+          dt
+        );
+        budget--;
+      }
     }
   }
 
@@ -2117,6 +2249,7 @@ export class RibbonRenderer {
   // (it receives real dt every frame in all ticker branches, both modes).
   tickPaint(dt: number): void {
     this.tickPaintPalette(dt);
+    this.tickAppearFx(dt);
     // Flow clock, advanced AFTER the palette/fillet pass so everything
     // rendered this frame (update()'s chain samples, the fillet
     // centroids) read ONE field time. Scaling the ACCUMULATOR by the live
