@@ -9,6 +9,14 @@
 //    compared against walk.optimalLength.
 //  - backtrackDist: cumulative distance retracted via backtracking, summed
 //    forever (a separate price-paid meter; never decreases).
+//
+// MEMORY-TRAIL MODE (Stage 23, `trailMode`): backtracking does not exist -
+// EVERY legal tap is an advance, including re-tapping the run just arrived
+// by (that is simply another advance that happens to revisit the previous
+// vertex), so pathLength only ever accumulates and backtrackDist stays 0.
+// The branch-point-only rule and the win condition are unchanged. The flag
+// is live-togglable mid-solve (gameplay interpretation only; the path state
+// is valid under either reading).
 
 import type { WalkGraph } from "../core/walk_graph";
 
@@ -26,8 +34,13 @@ export class FabricMazeController {
   backtrackDist = 0;
   solved = false;
 
-  constructor(walk: WalkGraph) {
+  // Memory-trail mode: advance-only taps (see the header comment). Set at
+  // construction and freely togglable from main.ts afterwards.
+  trailMode: boolean;
+
+  constructor(walk: WalkGraph, trailMode = false) {
     this.walk = walk;
+    this.trailMode = trailMode;
     this.reset();
   }
 
@@ -62,6 +75,7 @@ export class FabricMazeController {
     if (!e || (e.va !== head && e.vb !== head)) return "reject";
 
     if (
+      !this.trailMode &&
       this.pathEdges.length > 0 &&
       edgeId === this.pathEdges[this.pathEdges.length - 1]
     ) {

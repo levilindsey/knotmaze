@@ -21,6 +21,9 @@ export interface PanelCallbacks {
   onStyleChange: () => void;
   onTemperatureChange: () => void;
   onModeChange: () => void;
+  // Memory-trail mode + trail length: gameplay interpretation and paint
+  // only, applied live (no scene rebuild).
+  onTrailChange: () => void;
   onResetPath: () => void;
   // Audio-only change (sound mode / pitch space / octaves): re-derive the
   // pitch assignment without rebuilding the scene.
@@ -192,6 +195,14 @@ export function buildPanel(
     pane.addBinding(params, "deadEnds"),
     "Dead ends: some loops become long threads that end, somewhere far away, in a loose tip. Off = a pure braided maze where every wrong turn loops back. Regenerates the maze."
   ).on("change", callbacks.onModeChange);
+  tip(
+    pane.addBinding(params, "trailMode"),
+    "Memory mode: only a short trail of your recent path stays gold — no backtrack bookkeeping, remember your own route. Applies live."
+  ).on("change", callbacks.onTrailChange);
+  tip(
+    pane.addBinding(params, "trailLength", { min: 1, max: 15, step: 0.5 }),
+    "How much recent path stays lit in memory mode, in lattice units. Applies live."
+  ).on("change", callbacks.onTrailChange);
   tip(
     pane.addBinding(params, "moveSpeed", { min: 0.25, max: 4, step: 0.05 }),
     "Maze travel speed: how fast the dot and the gold front move along the thread. Applies live."

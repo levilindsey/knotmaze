@@ -36,7 +36,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 fabric-sleep fix + half-rate flow 2026-10-10";
+const BUILD_STAMP = "P4 Stage 23: memory-trail mode 2026-10-10";
 
 const app = new Application();
 
@@ -235,13 +235,15 @@ async function main(): Promise<void> {
     // Branching gameplay over the fabric: branch-point-only solve state +
     // the thread-true paint overlay (the walk graph was built above).
     if (params.mazeFabric && walkGraph) {
-      fabricController = new FabricMazeController(walkGraph);
+      fabricController = new FabricMazeController(walkGraph, params.trailMode);
       fabric = new FabricMazeRenderer(
         ps,
         walkGraph,
         params.threadWidth,
         renderer
       );
+      fabric.trailMode = params.trailMode;
+      fabric.trailLength = params.trailLength;
       fabric.update(fabricController);
     } else {
       fabricController = null;
@@ -370,6 +372,20 @@ async function main(): Promise<void> {
       wake();
     },
     onTemperatureChange: () => wake(),
+    // Memory-trail mode + trail length apply LIVE: they change only the
+    // gameplay interpretation (controller flag) and the paint declaration,
+    // never the scene - no rebuild, and no wake (the paint pass runs in the
+    // asleep/paused ticker branches).
+    onTrailChange: () => {
+      if (fabricController) fabricController.trailMode = params.trailMode;
+      if (fabric && fabricController) {
+        fabric.trailMode = params.trailMode;
+        fabric.trailLength = params.trailLength;
+        fabric.update(fabricController);
+      }
+      updateHud();
+      writeParams(params);
+    },
     onModeChange: () => {
       // Maze mode changes the strand's TOPOLOGY (open vs closed), which is
       // baked into the ribbon meshes at build time, so a full rebuild is
@@ -446,9 +462,10 @@ async function main(): Promise<void> {
       return;
     }
     const c = fabricController;
+    // Memory-trail mode has no backtracking, so no backtrack meter.
     hud.textContent =
-      `path ${fmt(c.pathLength)} / optimal ${fmt(c.walk.optimalLength)}\n` +
-      `backtracked ${fmt(c.backtrackDist)}`;
+      `path ${fmt(c.pathLength)} / optimal ${fmt(c.walk.optimalLength)}` +
+      (params.trailMode ? "" : `\nbacktracked ${fmt(c.backtrackDist)}`);
     hud.style.display = "block";
   };
   // Set when a winning tap lands; the banner shows once the traversal
@@ -463,8 +480,9 @@ async function main(): Promise<void> {
         : "";
     banner.textContent =
       `Solved! path ${fmt(c.pathLength)} vs optimal ` +
-      `${fmt(c.walk.optimalLength)}${over} · backtracked ` +
-      `${fmt(c.backtrackDist)} \u{1F389}`;
+      `${fmt(c.walk.optimalLength)}${over}` +
+      (params.trailMode ? "" : ` · backtracked ${fmt(c.backtrackDist)}`) +
+      ` \u{1F389}`;
     banner.style.display = "block";
   };
 
@@ -835,6 +853,9 @@ async function main(): Promise<void> {
       renderer!.flowSpeed = params.flowSpeed;
       if (params.mazeFabric && fabric && fabricController) {
         fabric.moveSpeed = params.moveSpeed;
+        fabric.trailMode = params.trailMode;
+        fabric.trailLength = params.trailLength;
+        fabricController.trailMode = params.trailMode;
         fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
         if (pendingWin && !fabric.animating) {
           pendingWin = false;
@@ -1102,6 +1123,8 @@ async function main(): Promise<void> {
       pathLength: c.pathLength,
       optimal: wg.optimalLength,
       backtrack: c.backtrackDist,
+      trailMode: c.trailMode,
+      trailLength: params.trailLength,
       pathEdges: [...c.pathEdges],
       choices: c.choices().map((eid) => {
         const e = wg.edges[eid];
