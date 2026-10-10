@@ -142,7 +142,7 @@ const PATH_GOLD = 0xffd24a;
 // reach end and the arm end get smooth windows (a hard cutoff rendered as
 // a distinct moving line where a crest hit the boundary).
 const PULSE_REACH = 2.0;
-const CREST_WIDTH = 0.55;
+const CREST_WIDTH = 0.72;
 const PULSE_SPEED = 1.6;
 // Steady floor of the choice tint at the junction (fades with distance),
 // plus a bright core right at the branch point so the inbound (gold-band)
@@ -391,6 +391,10 @@ const LOCAL_REACH_PAD = 0.8; // Local polylines must out-reach the marches.
 // tracks the base extrusion's at kinks.
 const MITER_PROBE = 0.09;
 const ERASE_STATIONS = 16;
+// Stations (quads) pinned to EACH fade tail when fadeLength > 0; the
+// remaining ERASE_STATIONS - 1 - 2*tail quads span the opaque cut. Keeps
+// the roll-off resolved regardless of how long the solved cut is.
+const FADE_TAIL_STATIONS = 3;
 // 13 lanes (was 5): cap rows are polylines approximating the over
 // silhouette's level set, and at loop-end twists that boundary is
 // genuinely CURVED (the over thread bends sharply at the crossing) - 5
@@ -760,7 +764,15 @@ export class RibbonRenderer {
   }
 
   // Interpolate position and unit tangent at an arc position into `out`
-  // as [x, y, tx, ty].
+  // as [x, y, tx, ty]. Closed chains are rings: `count` segments, arcs wrap
+  // modulo total. Open chains are runs: `count - 1` segments, arcs CLAMP -
+  // the arc-wrap family's fourth bite lived here, in the ring math itself:
+  // applied to an open chain it maps any arc within one sample spacing of
+  // total onto a phantom last->first chord, so terminal queries (bridge
+  // arms, corner tails - arc0 == total) interpolated ~99.8% of the way to
+  // the chain's OTHER END. Every fused bridge junction fanned fillet
+  // slivers toward its twin junction; the corner junctions drew the
+  // start/finish shards.
   private sampleAt(
     samples: SplineSamples,
     arc: number,
@@ -768,11 +780,22 @@ export class RibbonRenderer {
     offset: number
   ): void {
     const total = samples.totalLength;
-    const wrapped = ((arc % total) + total) % total;
-    const f = (wrapped / total) * samples.count;
-    const i0 = Math.floor(f) % samples.count;
-    const i1 = (i0 + 1) % samples.count;
-    const frac = f - Math.floor(f);
+    let i0: number;
+    let i1: number;
+    let frac: number;
+    if (samples.closed) {
+      const wrapped = ((arc % total) + total) % total;
+      const f = (wrapped / total) * samples.count;
+      i0 = Math.floor(f) % samples.count;
+      i1 = (i0 + 1) % samples.count;
+      frac = f - Math.floor(f);
+    } else {
+      const clamped = Math.max(0, Math.min(total, arc));
+      const f = (clamped / total) * (samples.count - 1);
+      i0 = Math.max(0, Math.min(samples.count - 2, Math.floor(f)));
+      i1 = i0 + 1;
+      frac = f - i0;
+    }
 
     out[offset] =
       samples.positions[i0 * 2] +
@@ -1400,7 +1423,17 @@ export class RibbonRenderer {
               dir > 0
                 ? this.eraseExtentNeg[info.index]
                 : this.eraseExtentPos[info.index];
-            reserveCap = Math.max(0.12, gapLimit - reserve);
+            // STAGE 18 FADE: the neighbor's erase keeps dissolving for
+            // fadeLength past its opaque extent toward us, and a fill
+            // marching into that tail repaints it at full alpha - the
+            // fade ends on a hard, march-quantized (so jittering) edge,
+            // the "inconsistent gap fades" report. Reserve the tail too:
+            // this thread goes UNDER there by alternation, so leaving it
+            // faded is the correct render.
+            reserveCap = Math.max(
+              0.12,
+              gapLimit - reserve - this.fadeLength
+            );
           }
         }
         // Floor sits below the self-crossing split so tight tips can
@@ -1686,16 +1719,52 @@ export class RibbonRenderer {
       const erase = eraseMesh;
       const fade = this.fadeLength;
       const midLane = (ERASE_LANES - 1) / 2;
+      // Station -> arc parameterization. Fade OFF: uniform across the
+      // solved cut, bit-identical to the sharp render. Fade ON: a FIXED
+      // station budget pins to each fade tail and the rest span the
+      // opaque cut. The old uniform-over-everything spread starved long
+      // rides' tails below one station (16 stations over a span of
+      // several world units left ~0.4 for a 0.28 tail), collapsing the
+      // whole roll-off onto a single quad straddling the boundary - a
+      // near-hard edge - and the lattice slid against the boundary as
+      // the span breathed, resampling that quad every frame (the
+      // "sharper-than-they-should-be gaps jitter" report). Tail stations
+      // anchor to the solved boundary, so both symptoms die together.
+      // The cap rows themselves are LANE polylines at the boundary
+      // stations - their fidelity is unchanged by the re-spread.
+      const tailK = fade > 0 ? FADE_TAIL_STATIONS : 0;
+      const kIn0 = tailK;
+      const kIn1 = ERASE_STATIONS - 1 - tailK;
       for (let k = 0; k < ERASE_STATIONS; k++) {
-        const t = k / (ERASE_STATIONS - 1);
+        // seg: -1 = neg fade tail, 0 = opaque cut, +1 = pos fade tail;
+        // g = position within the segment (tails: 1/0 at the boundary).
+        let seg = 0;
+        let g = k / (ERASE_STATIONS - 1);
+        if (tailK > 0) {
+          if (k <= kIn0) {
+            seg = -1;
+            g = k / tailK;
+          } else if (k >= kIn1) {
+            seg = 1;
+            g = (k - kIn1) / tailK;
+          } else {
+            seg = 0;
+            g = (k - kIn0) / (kIn1 - kIn0);
+          }
+        }
 
         // Station miter factor from the local turn of the under centerline,
         // matching the base ribbon's mitered extrusion so the erase keeps
         // covering it at kinks.
+        const midN = this.laneCutsNeg[midLane];
+        const midP = this.laneCutsPos[midLane];
         const sMid =
           underCenter +
-          this.laneCutsNeg[midLane] +
-          (this.laneCutsPos[midLane] - this.laneCutsNeg[midLane]) * t;
+          (seg < 0
+            ? midN - fade * (1 - g)
+            : seg > 0
+              ? midP + fade * g
+              : midN + (midP - midN) * g);
         this.sampleAt(underSamples, sMid - MITER_PROBE, this.sampleScratch, 0);
         const pax = this.sampleScratch[0];
         const pay = this.sampleScratch[1];
@@ -1737,9 +1806,12 @@ export class RibbonRenderer {
 
         for (let l = 0; l < ERASE_LANES; l++) {
           const s =
-            this.laneCutsNeg[l] -
-            fade +
-            (this.laneCutsPos[l] - this.laneCutsNeg[l] + 2 * fade) * t;
+            seg < 0
+              ? this.laneCutsNeg[l] - fade * (1 - g)
+              : seg > 0
+                ? this.laneCutsPos[l] + fade * g
+                : this.laneCutsNeg[l] +
+                  (this.laneCutsPos[l] - this.laneCutsNeg[l]) * g;
           // Fade coordinate: how far this station overshoots the lane's
           // solved cut interval, as a fraction of the fade length.
           const over = Math.max(
@@ -2360,7 +2432,7 @@ export class RibbonRenderer {
     const floor =
       PULSE_FLOOR +
       PULSE_CORE_BOOST * Math.max(0, 1 - d / PULSE_CORE_RADIUS);
-    return Math.min(1, (floor + bump * 0.8) * fade * endWin);
+    return Math.min(1, (floor + bump) * fade * endWin);
   }
 
   // The paint field at a single chain ARC (same rules as writeChainPaint,
@@ -2424,6 +2496,23 @@ export class RibbonRenderer {
       if (v > 0.004) u = bandU(p.onPath, v);
     }
     return u;
+  }
+
+  // Positional sampling for junction joinery: sampleAt WRAPS arc == total
+  // to arc 0 on open chains (the arc-wrap family - third bite: flank
+  // samples at corner-cut terminals flew to the chain START and fanned
+  // sliver spikes across the canvas). Clamp open-chain arcs a hair short.
+  private sampleAtSafe(
+    samples: SplineSamples,
+    arc: number,
+    closed: boolean,
+    out: Float32Array,
+    offset: number
+  ): void {
+    const a = closed
+      ? arc
+      : Math.min(Math.max(0, arc), samples.totalLength - 1e-4);
+    this.sampleAt(samples, a, out, offset);
   }
 
   // Section V at a world ARC along a chain, read from the baked per-sample
@@ -2528,17 +2617,19 @@ export class RibbonRenderer {
       const samples = this.chainSamples[chain]!;
       const closed = this.ps.chainBreakAfter[chain] < 0;
       const total = samples.totalLength;
-      this.sampleAt(
+      this.sampleAtSafe(
         samples,
         normArc(arc + 0.2, total, closed),
+        closed,
         this.sampleScratch,
         0
       );
       const x1 = this.sampleScratch[0];
       const y1 = this.sampleScratch[1];
-      this.sampleAt(
+      this.sampleAtSafe(
         samples,
         normArc(arc - 0.2, total, closed),
+        closed,
         this.sampleScratch,
         0
       );
@@ -2596,9 +2687,10 @@ export class RibbonRenderer {
         const samples = this.chainSamples[a.chain];
         if (!samples) continue;
         const closedA = this.ps.chainBreakAfter[a.chain] < 0;
-        this.sampleAt(
+        this.sampleAtSafe(
           samples,
           this.paintArcAt(samples, a.slot + a.dir * 0.8, closedA),
+          closedA,
           this.sampleScratch,
           0
         );
@@ -2863,10 +2955,10 @@ export class RibbonRenderer {
               arm.closed
             );
             const samples = this.chainSamples[arm.chain]!;
-            this.sampleAt(samples, a0, this.sampleScratch, 0);
+            this.sampleAtSafe(samples, a0, arm.closed, this.sampleScratch, 0);
             const px = this.sampleScratch[0];
             const py = this.sampleScratch[1];
-            this.sampleAt(samples, a1, this.sampleScratch, 0);
+            this.sampleAtSafe(samples, a1, arm.closed, this.sampleScratch, 0);
             let tx = (this.sampleScratch[0] - px) * arm.dir;
             let ty = (this.sampleScratch[1] - py) * arm.dir;
             const tl = Math.hypot(tx, ty) || 1;
@@ -2911,8 +3003,14 @@ export class RibbonRenderer {
         for (let e = FILLET_EDGE_PTS - 1; e >= 0; e--) {
           pushPt(edgeB[e * 2], edgeB[e * 2 + 1]);
         }
-        fieldAt(rec, cx, cy);
-        fm.pushFan(cx, cy, fieldU, fieldV, rim);
+        // Fan from the JUNCTION CENTER, not the edge-intersection corner:
+        // the corner comes from a straight-line edge model and lands
+        // OUTSIDE the true silhouette on curved hosts - fan triangles to
+        // it poked jagged stick-outs past the edges (user report). The
+        // center is always inside the joint; the corner survives only as
+        // the outer rim's bezier control.
+        fieldAt(rec, jx, jy);
+        fm.pushFan(jx, jy, fieldU, fieldV, rim);
       }
     }
     fm.commit();

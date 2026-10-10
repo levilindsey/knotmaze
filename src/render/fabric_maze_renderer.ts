@@ -105,6 +105,37 @@ const FOG_DISP_SCALE = 14; // Screen-px of edge wobble.
 const FOG_DISP_DRIFT_X = 0.37; // World units/s of map drift.
 const FOG_DISP_DRIFT_Y = 0.22;
 
+// Head-position halo rendered BENEATH the weave: world-space size and a
+// soft radial falloff; page-lifetime cached texture like the fog maps.
+// The under-gap erases legitimately punch it (gaps clip to the backdrop).
+const HEAD_GLOW_DIAM = 4.2;
+const HEAD_GLOW_ALPHA = 0.3;
+
+let HEAD_GLOW_TEX: Texture | null = null;
+function headGlowTexture(): Texture {
+  if (HEAD_GLOW_TEX) return HEAD_GLOW_TEX;
+  const N = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = N;
+  canvas.height = N;
+  const ctx = canvas.getContext("2d")!;
+  const grad = ctx.createRadialGradient(
+    N / 2,
+    N / 2,
+    0,
+    N / 2,
+    N / 2,
+    N / 2
+  );
+  grad.addColorStop(0, "rgba(255,255,255,0.9)");
+  grad.addColorStop(0.35, "rgba(255,255,255,0.4)");
+  grad.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, N, N);
+  HEAD_GLOW_TEX = Texture.from(canvas);
+  return HEAD_GLOW_TEX;
+}
+
 let FOG_DISP_TEX: Texture | null = null;
 function fogDispTexture(): Texture {
   if (FOG_DISP_TEX) return FOG_DISP_TEX;
@@ -178,6 +209,10 @@ interface TrailPaint {
 
 export class FabricMazeRenderer {
   overContainer: Container;
+  // Below the ribbon layers (main.ts inserts it under renderer.root): a
+  // soft halo tracking the head dot, read through the weave's gaps.
+  underContainer: Container;
+  private glowSprite: Sprite;
   private ps: ParticleSystem;
   private walk: WalkGraph;
   private ribbons: RibbonRenderer;
@@ -237,6 +272,14 @@ export class FabricMazeRenderer {
     // Yarn under the markers: the head dot and start/exit discs stay
     // readable on top of the laid string.
     this.overContainer.addChild(this.yarnGfx, this.gfx);
+    this.underContainer = new Container();
+    this.glowSprite = new Sprite(headGlowTexture());
+    this.glowSprite.anchor.set(0.5);
+    this.glowSprite.width = HEAD_GLOW_DIAM;
+    this.glowSprite.height = HEAD_GLOW_DIAM;
+    this.glowSprite.alpha = HEAD_GLOW_ALPHA;
+    this.glowSprite.visible = false;
+    this.underContainer.addChild(this.glowSprite);
   }
 
   setWidths(threadWidth: number): void {
@@ -507,6 +550,7 @@ export class FabricMazeRenderer {
     const xs: number[] = [];
     const ys: number[] = [];
     const as: number[] = [];
+    const evStarts: number[] = []; // Point index where each pass begins.
     const a = this.anim;
     for (let ev = 0; ev < this.yarnEvents.length; ev++) {
       const y = this.yarnEvents[ev];
@@ -548,6 +592,7 @@ export class FabricMazeRenderer {
         cys.push(this.scratch[1]);
       }
       if (cxs.length < 2) continue;
+      evStarts.push(xs.length);
       // Junction join. Overshoot past the junction ONLY on a genuine
       // U-TURN (the backtrack return doubles back on itself) - that is
       // what reads as the string looping around the corner. An ordinary
@@ -629,7 +674,9 @@ export class FabricMazeRenderer {
     }
 
     // Stroke contiguous runs of equal (quantized) visibility, skipping
-    // hidden spans - shadow pass first, then the yarn.
+    // hidden spans. Shadow and yarn INTERLEAVE per pass (shadow k, yarn
+    // k, shadow k+1, ...) so a later pass's shadow falls on the earlier
+    // passes it crosses - the string shades ITSELF, not just the maze.
     const quant = (i: number): number =>
       Math.round(Math.min(sa[i], sa[i + 1]) * 5) / 5;
     const strokeRuns = (
@@ -637,10 +684,12 @@ export class FabricMazeRenderer {
       dy: number,
       width: number,
       color: number,
-      baseAlpha: number
+      baseAlpha: number,
+      from: number,
+      to: number
     ): void => {
-      let i = 0;
-      while (i < sx.length - 1) {
+      let i = from;
+      while (i < to) {
         const q = quant(i);
         if (q <= 0) {
           i++;
@@ -649,7 +698,7 @@ export class FabricMazeRenderer {
         g.moveTo(sx[i] + dx, sy[i] + dy);
         let j = i + 1;
         g.lineTo(sx[j] + dx, sy[j] + dy);
-        while (j < sx.length - 1 && quant(j) === q) {
+        while (j < to && quant(j) === q) {
           j++;
           g.lineTo(sx[j] + dx, sy[j] + dy);
         }
@@ -663,8 +712,28 @@ export class FabricMazeRenderer {
         i = j;
       }
     };
-    strokeRuns(YARN_SHADOW_OFF, YARN_SHADOW_OFF * 1.3, YARN_SHADOW_W, 0x05070c, 0.3);
-    strokeRuns(0, 0, YARN_WIDTH, 0xf7f3e8, 0.95);
+    // Map pass boundaries through the Chaikin passes (each doubles the
+    // point count; approximate index scaling is plenty for stroke splits).
+    const scale = Math.pow(2, passes);
+    const bounds = evStarts.map((b) =>
+      Math.min(sx.length - 1, Math.round(b * scale))
+    );
+    bounds.push(sx.length - 1);
+    for (let k = 0; k + 1 < bounds.length; k++) {
+      const from = k === 0 ? 0 : bounds[k];
+      const to = bounds[k + 1];
+      if (to <= from) continue;
+      strokeRuns(
+        YARN_SHADOW_OFF,
+        YARN_SHADOW_OFF * 1.3,
+        YARN_SHADOW_W,
+        0x05070c,
+        0.3,
+        from,
+        to
+      );
+      strokeRuns(0, 0, YARN_WIDTH, 0xf7f3e8, 0.95, from, to);
+    }
   }
 
   // --- Fog of war (Stage 25). See the FOG block up top.
@@ -1088,6 +1157,18 @@ export class FabricMazeRenderer {
     return caps;
   }
 
+  // Explicit N-gon circle: pixi's adaptive circle tessellation counts
+  // segments from the RAW radius, and these markers are fractions of a
+  // world unit - they rendered as visible polygons at typical zoom.
+  private polyCircle(x: number, y: number, r: number, n: number): void {
+    const pts: number[] = [];
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      pts.push(x + Math.cos(a) * r, y + Math.sin(a) * r);
+    }
+    this.gfx.poly(pts);
+  }
+
   // Markers: start/exit discs, the head dot (at the given chain position
   // mid-move, at the head vertex otherwise), and the win ring.
   private drawMarkers(
@@ -1098,7 +1179,8 @@ export class FabricMazeRenderer {
   ): void {
     const g = this.gfx;
     g.clear();
-    const rHead = Math.max(0.24, this.threadWidth * 0.72);
+    // The head dot sits INSIDE its thread (diameter < threadWidth).
+    const rHead = Math.max(0.13, this.threadWidth * 0.42);
     if (dotChain >= 0) {
       this.pointFlowed(dotChain, this.ctrlMod(dotChain, dotCtrl), this.scratch, 0);
     } else {
@@ -1106,12 +1188,15 @@ export class FabricMazeRenderer {
     }
     // Fog explores wherever the head (or the mid-move dot) goes.
     this.maybeStampFog(this.scratch[0], this.scratch[1]);
-    g.circle(this.scratch[0], this.scratch[1], rHead);
+    // The under-weave halo follows the dot.
+    this.glowSprite.visible = true;
+    this.glowSprite.position.set(this.scratch[0], this.scratch[1]);
+    this.polyCircle(this.scratch[0], this.scratch[1], rHead, 48);
     g.fill({ color: 0xffffff, alpha: 0.92 });
 
     const r = Math.max(0.32, this.threadWidth * 0.95);
     this.vertexWorld(this.walk.start, this.scratch, 0);
-    g.circle(this.scratch[0], this.scratch[1], r);
+    this.polyCircle(this.scratch[0], this.scratch[1], r, 56);
     g.fill({ color: START_COLOR, alpha: 0.95 });
 
     const exitV = this.walk.vertices.get(this.walk.exit)!;
@@ -1122,10 +1207,10 @@ export class FabricMazeRenderer {
       return; // Exit still unrevealed: no marker, no ring.
     }
     this.vertexWorld(this.walk.exit, this.scratch, 0);
-    g.circle(this.scratch[0], this.scratch[1], r);
+    this.polyCircle(this.scratch[0], this.scratch[1], r, 56);
     g.fill({ color: EXIT_COLOR, alpha: 0.95 });
     if (showRing) {
-      g.circle(this.scratch[0], this.scratch[1], r * 1.5);
+      this.polyCircle(this.scratch[0], this.scratch[1], r * 1.5, 64);
       g.stroke({
         color: EXIT_COLOR,
         width: this.threadWidth * 0.25,
@@ -1136,5 +1221,6 @@ export class FabricMazeRenderer {
 
   destroy(): void {
     this.overContainer.destroy({ children: true });
+    this.underContainer.destroy({ children: true });
   }
 }

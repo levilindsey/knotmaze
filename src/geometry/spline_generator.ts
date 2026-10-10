@@ -7,6 +7,7 @@ export interface SplineSamples {
   tangents: Float32Array;  // 2 * count, unit length.
   totalLength: number;
   controlArcLengths: number[]; // Arc position of each control point, by slot.
+  closed: boolean; // Ring (count segments) vs open run (count - 1 segments).
 }
 
 // Subsamples per control segment when measuring arc length. Must stay well
@@ -143,7 +144,14 @@ export function sampleClosedSpline(
     tangents[k * 2 + 1] = ty;
   }
 
-  return { count, positions, tangents, totalLength, controlArcLengths };
+  return {
+    count,
+    positions,
+    tangents,
+    totalLength,
+    controlArcLengths,
+    closed: true,
+  };
 }
 
 // Sample an OPEN spline: a centripetal Catmull-Rom path through `controls`
@@ -246,5 +254,12 @@ export function sampleOpenSpline(
     tangents[k * 2 + 1] = ty;
   }
 
-  return { count, positions, tangents, totalLength, controlArcLengths };
+  return {
+    count,
+    positions,
+    tangents,
+    totalLength,
+    controlArcLengths,
+    closed: false,
+  };
 }
