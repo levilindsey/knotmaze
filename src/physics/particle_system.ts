@@ -50,6 +50,14 @@ export interface CrossingPass {
   // land beside the real overlap - mangled, torn-looking crossings
   // mid-gesture. Physics never reads this.
   displayF?: number;
+  // P4 fabric: ctrl of the nearest fused junction BEHIND (jnPrevCtrl) /
+  // AHEAD (jnNextCtrl) of this pass along its chain, recorded at fusion
+  // time when within JN_CLAMP_SCAN (see JN_MIN_SEPARATION). The slide's
+  // ordering clamp holds the pass at least jnSep of thread outward of
+  // the joint, as a rate-limited ratchet. Never set in knot mode - the
+  // clamp is structurally absent there.
+  jnPrevCtrl?: number;
+  jnNextCtrl?: number;
 }
 
 export interface CrossingInfo {
@@ -252,6 +260,38 @@ const TWIST_SEP_PER_WIDTH = 5.2;
 // gate, so a pinned pair's standing push cannot hold the knot awake;
 // a free eye still opens 1.6 -> 2.7 ctrl in ~0.6 s of kinetic time.
 const TWIST_SEP_RATE = 0.015;
+// JUNCTION-CROSSING material budget (P4 fabric; the jnSep ratchet).
+// A fused joint wears tuck/fillet/seal joinery, and the renderer caps
+// nearby under-gap cuts at the joint's clearance (junctionArcCtrls +
+// jointClear in ribbon_renderer) - so a crossing that settles too close
+// to a joint renders a truncated, cramped gap crowding the web. Reduce
+// the INCIDENCE in physics: each fused joint acts as a FIXED virtual
+// neighbor in the slide's ordering clamps for the FIRST crossing pass
+// outward along each arm direction (recorded once at fusion time
+// within JN_CLAMP_SCAN ctrl; pass order never changes, so "first" is
+// build-stable). Budget calibrated from the resting census on the
+// fabric repro (seed 2430477599, mf=1): healthy junction-adjacent
+// passes sit at 2.0-2.5 ctrl (the corridor pitch), while the incidence
+// tail sits at 1.4-2.0 ctrl = 0.53-0.65 world arc vs the render's
+// jointClear + typical gap half-span ~0.66 world at default width.
+// 5.7/width (= 2.4 ctrl ~ 0.79 world at tw 0.42) clears the tail while
+// asking only ~0.4 ctrl above lattice pitch from the healthy cluster's
+// lower edge; the base floors narrow threads at the twistSep base.
+// Applied as a RATE-LIMITED RATCHET at the twist budget's proven rate
+// (P3.39): the floor rises from the pair's CURRENT gap toward the
+// budget at most JN_SEP_RATE (mobility-scaled) per slide, so a
+// geometry-pinned pass's standing push stays sub-stick and the
+// graduated friction weld strangles it - never a snap (the P3.39 snap
+// version pinned a fat seed awake forever). The junction clamp runs
+// BEFORE the pass-ordering clamps, so MIN_PASS_SEPARATION / kinkSep /
+// twistSep always win conflicts - diagram topology is never forced,
+// and in corridors too short for both budgets the pass simply parks
+// below jnSep (its inward push is clamped away entirely, leaving no
+// standing world push at all).
+const JN_MIN_SEPARATION = 2.2;
+const JN_SEP_PER_WIDTH = 5.7;
+const JN_SEP_RATE = 0.015;
+const JN_CLAMP_SCAN = 8;
 // Crossing coverage for the anti-riding 2D floor is measured in WORLD
 // ARC bounded by the renderer's erase reach - see updatePassCover.
 const COUPLING_STIFFNESS = 0.7;
@@ -648,6 +688,10 @@ export class ParticleSystem {
         bwd = (bwd - 1 + len) % len;
         this.markJnCover(chainArr[bwd], jid, coverAt(off));
       }
+      // Record this joint as a FIXED virtual neighbor for the first
+      // crossing pass outward along each arm direction (the jnSep
+      // ratchet; see JN_MIN_SEPARATION).
+      this.recordJunctionClamps(chain, slot);
     }
     for (let k = 1; k < group.length; k++) {
       const spring: DistanceConstraint = {
@@ -660,6 +704,62 @@ export class ParticleSystem {
       this.fusionConstraints.push(spring);
     }
     this.fusedJunctions.push(group);
+  }
+
+  // Find the FIRST crossing pass outward of a fused-junction occurrence
+  // in each chain direction (within JN_CLAMP_SCAN ctrl, never across the
+  // open seam) and stamp the joint's ctrl onto it as a fixed virtual
+  // neighbor for the slide's ordering clamps (the jnSep ratchet; see
+  // JN_MIN_SEPARATION). Build-once: the ordering clamps preserve pass
+  // order, so the first-outward pass can never be overtaken, and the
+  // joint's ctrl is a fixed chain slot. Runs inside the constructor's
+  // fusion loop, after buildPassOrder - passesByChain is final. Knot
+  // mode has no fusions, so no pass ever carries a record.
+  private recordJunctionClamps(chainIdx: number, slot: number): void {
+    const len = this.chains[chainIdx].length;
+    const brk = this.chainBreakAfter[chainIdx]; // -1 closed.
+    const cyc = (d: number): number => ((d % len) + len) % len;
+    // Ctrl distance from the joint to the seam in each direction
+    // (passes beyond it are on the far side of the removed segment).
+    const seamF = brk >= 0 ? cyc(brk + 0.5 - slot) : Infinity;
+    const seamB = brk >= 0 ? cyc(slot - (brk + 0.5)) : Infinity;
+    let fwd: CrossingPass | null = null;
+    let fwdD = JN_CLAMP_SCAN;
+    let bwd: CrossingPass | null = null;
+    let bwdD = JN_CLAMP_SCAN;
+    for (const pass of this.passesByChain[chainIdx]) {
+      const dF = cyc(pass.ctrl - slot);
+      if (dF < fwdD && dF <= seamF) {
+        fwd = pass;
+        fwdD = dF;
+      }
+      const dB = cyc(slot - pass.ctrl);
+      if (dB < bwdD && dB <= seamB) {
+        bwd = pass;
+        bwdD = dB;
+      }
+    }
+    // Same pass on both sides (short closed chain): keep the nearer
+    // side only - clamping one pass against the same joint from both
+    // directions would squeeze it between two floors.
+    if (fwd !== null && fwd === bwd) {
+      if (fwdD <= bwdD) bwd = null;
+      else fwd = null;
+    }
+    // Nearest joint wins when two claim the same pass side (ctrls are
+    // still build-time integers here - fusion precedes any stepping).
+    if (fwd) {
+      const cur = fwd.jnPrevCtrl;
+      if (cur === undefined || fwdD < cyc(fwd.ctrl - cur)) {
+        fwd.jnPrevCtrl = slot;
+      }
+    }
+    if (bwd) {
+      const cur = bwd.jnNextCtrl;
+      if (cur === undefined || bwdD < cyc(cur - bwd.ctrl)) {
+        bwd.jnNextCtrl = slot;
+      }
+    }
   }
 
   // Keep the strongest two junction marks per particle.
@@ -1085,6 +1185,10 @@ export class ParticleSystem {
   private kinkSep = KINK_MIN_SEPARATION;
   // Width-scaled twist-eye material budget (see TWIST_MIN_SEPARATION).
   private twistSep = TWIST_MIN_SEPARATION;
+  // Width-scaled junction-crossing material budget (see
+  // JN_MIN_SEPARATION). Read only by passes carrying jn clamp records,
+  // which exist only on the maze fabric.
+  private jnSep = JN_MIN_SEPARATION;
   // (The loud-attractor A/B knobs - ab* multipliers and the slip-EMA
   // plumbing - were removed after their experiments concluded; the
   // measured verdicts live in the CLAUDE.md loud-attractor entry and
@@ -1454,6 +1558,46 @@ export class ParticleSystem {
     let f =
       self.ctrl + Math.max(-maxSlide, Math.min(maxSlide, delta * ease));
     const unclamped = f;
+    // JUNCTION material budget (P4 fabric; see JN_MIN_SEPARATION): a
+    // fused joint is a FIXED virtual neighbor - this pass keeps at
+    // least jnSep of thread between its binding and the joint, with
+    // the floor rising from the CURRENT gap as a rate-limited,
+    // mobility-scaled ratchet (the P3.39 twist pattern: a pinned
+    // pass's standing push stays sub-stick, and the friction weld
+    // strangles it as the contact quiets). Deliberately BEFORE the
+    // pass-ordering clamps below, so kink/twist/ordering floors always
+    // win conflicts - the budget may park unconverged, never force.
+    // Knot mode sets no jn records, so this is structurally absent.
+    if (self.jnPrevCtrl !== undefined || self.jnNextCtrl !== undefined) {
+      const cycJ = (d: number): number => ((d % len) + len) % len;
+      // Between TWO joints the corridor can be too short for both full
+      // budgets (a lattice J-X-J corridor is 4.0 ctrl vs a 2*jnSep
+      // demand of ~4.8), and one-sided clamps with last-writer
+      // dominance then CONVEY the pass across it - the winning side
+      // converges at full budget while the loser is walked down to
+      // corridor - jnSep (measured on the repro: 2.09/1.91 ->
+      // 1.61/2.39, the tight side made WORSE). Share the corridor
+      // instead: each side's budget caps at half the fixed
+      // joint-to-joint span, so the pass CENTERS and both ratchets go
+      // inert at the midpoint.
+      let budget = this.jnSep;
+      if (self.jnPrevCtrl !== undefined && self.jnNextCtrl !== undefined) {
+        budget = Math.min(
+          budget,
+          cycJ(self.jnNextCtrl - self.jnPrevCtrl) / 2
+        );
+      }
+      if (self.jnPrevCtrl !== undefined) {
+        const gap = cycJ(self.ctrl - self.jnPrevCtrl);
+        const sep = Math.min(budget, gap + JN_SEP_RATE * mobility);
+        if (cycJ(f - self.jnPrevCtrl) < sep) f = self.jnPrevCtrl + sep;
+      }
+      if (self.jnNextCtrl !== undefined) {
+        const gap = cycJ(self.jnNextCtrl - self.ctrl);
+        const sep = Math.min(budget, gap + JN_SEP_RATE * mobility);
+        if (cycJ(self.jnNextCtrl - f) < sep) f = self.jnNextCtrl - sep;
+      }
+    }
     const prev = this.passPrev.get(self);
     const next = this.passNext.get(self);
     if (prev && next && prev !== self) {
@@ -1619,6 +1763,10 @@ export class ParticleSystem {
     this.twistSep = Math.max(
       TWIST_MIN_SEPARATION,
       tuning.threadWidth * TWIST_SEP_PER_WIDTH
+    );
+    this.jnSep = Math.max(
+      JN_MIN_SEPARATION,
+      tuning.threadWidth * JN_SEP_PER_WIDTH
     );
     // Aesthetic spacing can never drop below the hard floor: at low
     // repulsion x wide threads the raw formula fell below the thread
