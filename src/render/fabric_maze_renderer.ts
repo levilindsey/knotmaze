@@ -548,18 +548,28 @@ export class FabricMazeRenderer {
         cys.push(this.scratch[1]);
       }
       if (cxs.length < 2) continue;
-      // Rounded overshoot past the junction before this pass begins
-      // (junctions have no under-gap windows: full visibility).
+      // Junction join. Overshoot past the junction ONLY on a genuine
+      // U-TURN (the backtrack return doubles back on itself) - that is
+      // what reads as the string looping around the corner. An ordinary
+      // pass-through continuation just joins and lets the corner-cutting
+      // round it; the unconditional overshoot poked a little hook past
+      // every junction (user report).
       if (xs.length >= 2) {
         const ex = xs[xs.length - 1];
         const ey = ys[ys.length - 1];
         const inx = ex - xs[xs.length - 2];
         const iny = ey - ys[ys.length - 2];
         const il = Math.hypot(inx, iny) || 1;
-        const o = 0.16 + 0.2 * slack;
-        xs.push(ex + (inx / il) * o);
-        ys.push(ey + (iny / il) * o);
-        as.push(1);
+        const ox = cxs[1] - cxs[0];
+        const oy = cys[1] - cys[0];
+        const ol = Math.hypot(ox, oy) || 1;
+        const dot = (inx * ox + iny * oy) / (il * ol);
+        if (dot < -0.35) {
+          const o = 0.16 + 0.2 * slack;
+          xs.push(ex + (inx / il) * o);
+          ys.push(ey + (iny / il) * o);
+          as.push(1);
+        }
       }
       for (let k = 0; k < cxs.length; k++) {
         const kp = Math.max(0, k - 1);
