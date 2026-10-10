@@ -154,6 +154,10 @@ export function buildPanel(
     "Maze travel speed: how fast the dot and the gold front move along the thread. Applies live."
   ).on("change", callbacks.onSlackChange);
   tip(
+    pane.addBinding(params, "cuspRadius", { min: 0, max: 3, step: 0.05 }),
+    "How far the rounded corners reach where threads join at an intersection. 0 = sharp joints. Applies live."
+  ).on("change", callbacks.onSlackChange);
+  tip(
     pane.addButton({ title: "Reset path" }),
     "Clear the traced maze path and start over from the entrance."
   ).on("click", callbacks.onResetPath);

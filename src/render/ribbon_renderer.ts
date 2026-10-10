@@ -130,7 +130,9 @@ const PULSE_END_WINDOW = 0.45;
 // side) get no fillet.
 // Fillets hug the junction tightly: the arm edges are straight-line
 // approximations from the junction point, and a host that curves away from
-// them leaves any far-reaching patch floating in the background.
+// them leaves any far-reaching patch floating in the background. The
+// user's cuspRadius slider multiplies the reach (0 disables the fillets;
+// the center/tip seal discs stay regardless).
 const FILLET_REACH_PER_HALF = 1.25; // * fillHalf, along each arm.
 const FILLET_MAX_WEDGE = 2.6; // Radians.
 const FILLET_CORNER_LIM = 2.2; // * edge half-width: skip distant corners.
@@ -376,6 +378,9 @@ export class RibbonRenderer {
   // Junction joinery: arms per fused junction (built once), per-chain
   // fused-terminal flags for the tuck, and palette pixel rows for CPU-side
   // fillet coloring.
+  // Live junction-rounding radius multiplier (the cuspRadius slider;
+  // main.ts keeps it synced every tick).
+  cuspRadius = 1;
   private filletGfx: Graphics | null = null;
   private junctionArms: Array<{
     particles: number[];
@@ -1632,8 +1637,17 @@ export class RibbonRenderer {
     const samples = this.chainSamples[chain];
     if (!samples) return U_BASE;
     const closed = this.ps.chainBreakAfter[chain] < 0;
+    return this.paintUAtArc(
+      chain,
+      this.paintArcAt(samples, ctrl, closed),
+      closed
+    );
+  }
+
+  private paintUAtArc(chain: number, a: number, closed: boolean): number {
+    const samples = this.chainSamples[chain];
+    if (!samples) return U_BASE;
     const total = samples.totalLength;
-    const a = this.paintArcAt(samples, ctrl, closed);
     let u = U_BASE;
     for (const s of this.paintSpans) {
       if (s.chain !== chain) continue;
@@ -1749,7 +1763,8 @@ export class RibbonRenderer {
 
     if (this.junctionArms.length === 0) return;
     const w = fillHalf * 0.97;
-    const L = Math.max(fillHalf * FILLET_REACH_PER_HALF, w + 0.1);
+    const L = fillHalf * FILLET_REACH_PER_HALF * this.cuspRadius;
+    const drawWedges = this.cuspRadius > 0.05 && L > w * 0.3;
     const pos = this.ps.positions;
 
     for (const jn of this.junctionArms) {
@@ -1787,13 +1802,25 @@ export class RibbonRenderer {
         if (len < 0.15) continue;
         dx /= len;
         dy /= len;
+        // Color probe scales with the patch reach: the fillet is a FLAT
+        // fill over [0, ~L] of the arm, so sample near its centroid - a
+        // fixed far offset rendered dark wings inside the bright junction
+        // core once cuspRadius grew the patches.
+        const closedA = this.ps.chainBreakAfter[a.chain] < 0;
+        let colorArc =
+          this.paintArcAt(samples, a.slot, closedA) +
+          a.dir * Math.max(0.15, L * 0.45);
+        const totalA = samples.totalLength;
+        colorArc = closedA
+          ? ((colorArc % totalA) + totalA) % totalA
+          : Math.max(0, Math.min(totalA, colorArc));
         arms.push({
           ang: Math.atan2(dy, dx),
           dx,
           dy,
           color: this.paletteColor(
             this.chainBaseHex[a.chain],
-            this.paintUAt(a.chain, a.slot + a.dir * 0.8)
+            this.paintUAtArc(a.chain, colorArc, closedA)
           ),
         });
       }
@@ -1819,6 +1846,7 @@ export class RibbonRenderer {
         ),
       });
 
+      if (!drawWedges) continue;
       arms.sort((p, q) => p.ang - q.ang);
 
       for (let k = 0; k < arms.length; k++) {

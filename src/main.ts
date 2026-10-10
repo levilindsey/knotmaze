@@ -28,7 +28,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 13: junction joinery 2026-10-09";
+const BUILD_STAMP = "P4 Stage 15: cusp-radius slider 2026-10-09";
 
 const app = new Application();
 
@@ -509,6 +509,7 @@ async function main(): Promise<void> {
     // paused or asleep - they touch only markers and UV buffers, never
     // physics or splines.
     const fabricTick = (): void => {
+      renderer!.cuspRadius = params.cuspRadius;
       if (params.mazeFabric && fabric && fabricController) {
         fabric.moveSpeed = params.moveSpeed;
         fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
