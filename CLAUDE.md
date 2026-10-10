@@ -175,6 +175,15 @@ between-threads/cell-passage route.
   and stayed base-colored; the paint pass uses `paintArcAt` (clamping)
   while the crossing machinery keeps `arcAt` untouched.
 
+RENDER LORE (hard-won, 2026-10-09): **the arc-wrap family bites twice.**
+Both `arcAt` AND `sampleAt` wrap their arc modulo totalLength, so an
+OPEN chain's terminal (arc == total) lands at arc 0: `arcAt` collapsed
+traveled-bridge paint spans to a point (fixed via `paintArcAt`), and
+`sampleAt(total)` drew every atEnd tip disc at its chain's START with
+the far end's host color (the floating gold-dot artifact; fixed by
+reading the endpoint sample directly). Any new open-chain-terminal
+consumer must avoid both — grep for this entry first.
+
 RENDER LORE (hard-won, 2026-10-09): **the palette strip's ORDER is
 load-bearing.** Per-vertex UVs interpolate linearly between samples, so
 any two paint values that can sit on ADJACENT samples must be contiguous
