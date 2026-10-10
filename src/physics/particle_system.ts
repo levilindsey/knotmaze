@@ -11,7 +11,11 @@
 
 import type { TangleGraph } from "../core/types";
 import { NODE_TYPE } from "../core/types";
-import type { DistanceConstraint, SegmentTopology } from "./forces";
+import type {
+  DistanceConstraint,
+  JunctionCover,
+  SegmentTopology,
+} from "./forces";
 import {
   applyDistanceConstraints,
   applyRepulsion,
@@ -429,6 +433,12 @@ export class ParticleSystem {
   // substep from pass ctrls - no incremental state, nothing to go stale.
   private passCoverSlot: Int32Array;
   private passCoverCov: Float32Array;
+  // Junction cover (see JunctionCover in forces.ts): graded 2-slot marks
+  // along each fused arm, built once at fusion time. null in knot mode,
+  // so the collision pass sees undefined and behaves byte-identically.
+  private jnCoverId: Int32Array = new Int32Array(0);
+  private jnCoverCov: Float32Array = new Float32Array(0);
+  private jnCover: JunctionCover | null = null;
   private topology!: SegmentTopology;
   private emergentCollector = { data: new Float32Array(256 * 4), n: 0 };
   private homeX = 0;
@@ -597,6 +607,11 @@ export class ParticleSystem {
   // floor, so nothing fights.
   private fuseJunction(occ: Array<{ chain: number; slot: number }>): void {
     const jid = this.junctionIdCounter++;
+    if (this.jnCoverId.length === 0) {
+      this.jnCoverId = new Int32Array(this.particleCount * 2).fill(-1);
+      this.jnCoverCov = new Float32Array(this.particleCount * 2);
+      this.jnCover = { id: this.jnCoverId, cov: this.jnCoverCov };
+    }
     const group: number[] = [];
     for (const { chain, slot } of occ) {
       const chainArr = this.chains[chain];
@@ -610,6 +625,29 @@ export class ParticleSystem {
       const prevSlot = (slot - 1 + len) % len;
       if (prevSlot !== brk) this.junctionOf[chainArr[prevSlot]] = jid;
       if (slot !== brk) this.junctionOf[chainArr[(slot + 1) % len]] = jid;
+      // Graded junction COVER +/-3 ctrl along the arm (2-slot, so a short
+      // bridge keeps BOTH of its junctions): the tuck/fillet joinery
+      // renders this neighborhood as a joint, and a tucked arm hugs its
+      // host ~2 ctrl past the merge - without cover the 2D anti-riding
+      // floor records an unresolvable standing violation there every
+      // substep and ridersPending blocks fabric sleep PERMANENTLY (the
+      // 2026-10-10 audit's F1; one measured site held depth 0.247 for
+      // 60+ sim-s). The unconditional 3D capsule still governs covered
+      // pairs. Walks stop at the open seam like the hard marks above.
+      const coverAt = (off: number): number =>
+        off <= 1 ? 1 : off === 2 ? 0.7 : 0.3;
+      let fwd = slot;
+      for (let off = 0; off <= 3; off++) {
+        this.markJnCover(chainArr[fwd], jid, coverAt(off));
+        if (fwd === brk) break;
+        fwd = (fwd + 1) % len;
+      }
+      let bwd = slot;
+      for (let off = 1; off <= 3; off++) {
+        if ((bwd - 1 + len) % len === brk) break;
+        bwd = (bwd - 1 + len) % len;
+        this.markJnCover(chainArr[bwd], jid, coverAt(off));
+      }
     }
     for (let k = 1; k < group.length; k++) {
       const spring: DistanceConstraint = {
@@ -622,6 +660,33 @@ export class ParticleSystem {
       this.fusionConstraints.push(spring);
     }
     this.fusedJunctions.push(group);
+  }
+
+  // Keep the strongest two junction marks per particle.
+  private markJnCover(p: number, jid: number, cov: number): void {
+    const s = p * 2;
+    for (let u = 0; u < 2; u++) {
+      if (this.jnCoverId[s + u] === jid) {
+        if (cov > this.jnCoverCov[s + u]) this.jnCoverCov[s + u] = cov;
+        return;
+      }
+    }
+    for (let u = 0; u < 2; u++) {
+      if (this.jnCoverId[s + u] < 0) {
+        this.jnCoverId[s + u] = jid;
+        this.jnCoverCov[s + u] = cov;
+        return;
+      }
+    }
+    const w = this.jnCoverCov[s] <= this.jnCoverCov[s + 1] ? 0 : 1;
+    if (cov > this.jnCoverCov[s + w]) {
+      this.jnCoverId[s + w] = jid;
+      this.jnCoverCov[s + w] = cov;
+    }
+  }
+
+  private get jnCoverActive(): JunctionCover | undefined {
+    return this.jnCover ?? undefined;
   }
 
   // True once the topology has been carved (open ends and/or junctions). In
@@ -1691,7 +1756,9 @@ export class ParticleSystem {
         COLLISION_STIFFNESS,
         this.contacts,
         { slot: this.passCoverSlot, cov: this.passCoverCov },
-        iter === 0 ? this.emergentCollector : undefined
+        iter === 0 ? this.emergentCollector : undefined,
+        undefined,
+        this.jnCoverActive
       );
       this.probe("collision");
 
@@ -1868,7 +1935,8 @@ export class ParticleSystem {
         // Record standing hard violations from the LAST sweep only -
         // the substep-end truth that drives the work gate, the global
         // stick block, and the sleep gate.
-        fs === 1 ? this.violationList : undefined
+        fs === 1 ? this.violationList : undefined,
+        this.jnCoverActive
       );
     }
     this.probe("final-collision");

@@ -36,7 +36,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 20+21: pitch spaces + string plucks 2026-10-10";
+const BUILD_STAMP = "P4 fabric-sleep fix + half-rate flow 2026-10-10";
 
 const app = new Application();
 
@@ -799,6 +799,7 @@ async function main(): Promise<void> {
   const QUIET_FRAMES = 45;
   let stillFrames = 0;
   let asleep = false;
+  let flowParity = false;
   // Non-finite watchdog: if the physics state ever explodes to NaN/Inf,
   // HALT instead of churning. NaN positions collapse the collision
   // spatial hash into a single bucket (NaN keys compare equal in Map),
@@ -908,7 +909,12 @@ async function main(): Promise<void> {
     }
 
     if (asleep) {
-      flowRender();
+      // Half-rate the flow re-render at rest (audit F2): the displacement
+      // is cheap but moving the controls forces the full spline + crossing
+      // re-solve (~10ms/frame). 30fps sway is imperceptible for a slow
+      // drift and halves the idle burn; the paint pass stays at full rate.
+      flowParity = !flowParity;
+      if (flowParity) flowRender();
       fabricTick();
       perfLine = " | asleep";
       updateStamp();

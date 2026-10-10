@@ -163,6 +163,22 @@ export interface PassCover {
   cov: Float32Array;
 }
 
+// JUNCTION COVER (fabric mode): a segment pair is covered when its two
+// sides sit near arms of the SAME fused junction. A tucked bridge arm
+// hugs its host for ~2 ctrl past the merge, and the joinery (tuck +
+// fillets + seal discs) RENDERS that overlap as a joint - so the 2D
+// renderability floor must not demand separation there (the measured
+// standing riders that blocked fabric sleep permanently; the hard
+// junctionOf skip reaches only +/-1 ctrl and is single-slot, so short
+// bridges leaked). Static per-particle marks, TWO slots each (a
+// 3-particle bridge sits inside BOTH of its junctions' neighborhoods),
+// graded 1 -> 0 away from the merge. Pair-aware like PassCover; the
+// unconditional 3D capsule still governs. Empty in knot mode.
+export interface JunctionCover {
+  id: Int32Array; // particle*2 + slot -> junction id (-1 = empty).
+  cov: Float32Array; // Matching cover weight.
+}
+
 // The anti-riding floor above the ribbon-width line is COSMETIC margin
 // (COLLISION_MARGIN headroom, not renderability). Correct it gently:
 // a full-stiffness fight over margin against a packed weave that has no
@@ -208,7 +224,8 @@ export function applySegmentCollision(
   contacts: Float32Array,
   passCover: PassCover | undefined,
   collector?: EmergentCollector,
-  violations?: ViolationList
+  violations?: ViolationList,
+  jnCover?: JunctionCover
 ): void {
   const cellSize = Math.max(1, minDist * 2);
   if (!buildGrid(positions, particleCount, cellSize)) return;
@@ -389,6 +406,32 @@ export function applySegmentCollision(
                         if (vb < 0) break;
                         if ((va >> 1) === (vb >> 1) && (va & 1) !== (vb & 1)) {
                           const cc = Math.min(cov[sa + u], cov[sb + v]);
+                          if (cc > cover) cover = cc;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+              // Junction coverage: both sides near arms of one fused
+              // junction - rendered as a joint by the tuck/fillet
+              // joinery, so the floor stands down there (graded).
+              if (jnCover && cover < 1) {
+                const jid = jnCover.id;
+                const jcv = jnCover.cov;
+                const ends = [i, i2, j, j2];
+                for (let ea = 0; ea < 2 && cover < 1; ea++) {
+                  const sa = ends[ea] * 2;
+                  for (let eb = 2; eb < 4 && cover < 1; eb++) {
+                    const sb = ends[eb] * 2;
+                    for (let u = 0; u < 2; u++) {
+                      const va = jid[sa + u];
+                      if (va < 0) break;
+                      for (let v = 0; v < 2; v++) {
+                        const vb = jid[sb + v];
+                        if (vb < 0) break;
+                        if (va === vb) {
+                          const cc = Math.min(jcv[sa + u], jcv[sb + v]);
                           if (cc > cover) cover = cc;
                         }
                       }
