@@ -37,7 +37,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 24: Ariadne string path-viz 2026-10-10";
+const BUILD_STAMP = "P4 Stage 25: fog of war 2026-10-10";
 
 // Appearance pre-sim: with any non-instant appear mode the sim settles
 // briefly BEFORE the first rendered frame, so the reveal plays over a
@@ -302,6 +302,9 @@ async function main(): Promise<void> {
       fabric.pathViz = params.pathViz;
       fabric.tension = params.tension;
       fabric.trailLength = params.trailLength;
+      fabric.fogOfWar = params.fogOfWar;
+      fabric.fowRadius = params.fowRadius;
+      fabric.fogColor = BACKGROUND;
       fabric.update(fabricController);
     } else {
       fabricController = null;
@@ -450,6 +453,8 @@ async function main(): Promise<void> {
         fabric.pathViz = params.pathViz;
         fabric.tension = params.tension;
         fabric.trailLength = params.trailLength;
+        fabric.fogOfWar = params.fogOfWar;
+        fabric.fowRadius = params.fowRadius;
         fabric.update(fabricController);
       }
       updateHud();
@@ -941,6 +946,8 @@ async function main(): Promise<void> {
         fabric.pathViz = params.pathViz;
         fabric.tension = params.tension;
         fabric.trailLength = params.trailLength;
+        fabric.fogOfWar = params.fogOfWar;
+        fabric.fowRadius = params.fowRadius;
         fabricController.trailMode = params.pathViz === "trail";
         fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
         if (pendingWin && !fabric.animating) {

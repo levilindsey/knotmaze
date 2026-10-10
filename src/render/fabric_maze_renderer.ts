@@ -21,7 +21,7 @@
 // trail, at the trail's local intensity. The head-junction pulse/choice/
 // hover machinery is untouched.
 
-import { Container, Graphics } from "pixi.js";
+import { Container, Graphics, Sprite, Texture } from "pixi.js";
 import type { ParticleSystem } from "../physics/particle_system";
 import type { WalkGraph, WalkEdge } from "../core/walk_graph";
 import type { FabricMazeController } from "../game/fabric_controller";
@@ -76,6 +76,20 @@ interface YarnEvent {
   lane: number; // Per-pass lane bias in [-1, 1].
 }
 
+// FOG OF WAR (Stage 25, `fogOfWar`): the maze hides under a fog layer
+// until explored; explored stays visible. The fog is ONE sprite whose
+// texture is an offscreen 2D canvas - background-filled, with soft
+// destination-out holes at every explored stamp. Stamps land as the
+// head moves (world spacing below) and persist until Reset path; the
+// radius slider re-renders every hole (a retroactive view setting).
+// The canvas redraws only when a stamp lands or settings change, so
+// the steady per-frame cost is one static sprite. Fog is a SPATIAL
+// memory anchored in world space (it deliberately does not ride the
+// flow field - mist hangs over places, not threads).
+const FOG_CANVAS = 512;
+const FOG_MARGIN = 8; // World margin around the build-time bounds.
+const FOG_STAMP_SPACING = 0.8;
+
 interface MoveAnim {
   e: WalkEdge;
   from: number; // Ctrl at the departure end.
@@ -125,6 +139,17 @@ export class FabricMazeRenderer {
   private yarnGfx: Graphics;
   private yarnEvents: YarnEvent[] = [];
   private yarnSeed = 0;
+  // Fog of war (main.ts syncs the first two every tick; see FOG block).
+  fogOfWar = false;
+  fowRadius = 4;
+  fogColor = 0x151b28;
+  private fogSprite: Sprite | null = null;
+  private fogCanvas: HTMLCanvasElement | null = null;
+  private fogTexture: Texture | null = null;
+  private fogRect = { x0: 0, y0: 0, span: 1 };
+  private fogStamps: number[] = []; // Flat explored world [x, y, ...].
+  private fogDirty = true;
+  private fogLastRadius = -1;
   // REVEAL (Stage 22): while the appearance animation runs, main.ts wires
   // this to the renderer's reveal mask. The start marker (and the head
   // dot sitting on it) shows from the first frame; the exit marker waits
@@ -500,6 +525,92 @@ export class FabricMazeRenderer {
     });
   }
 
+  // --- Fog of war (Stage 25). See the FOG block up top.
+
+  private ensureFog(): void {
+    if (this.fogSprite) return;
+    // Mapping square from the current particle bounds + margin (threads
+    // drift far less than the margin after this point).
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    const pos = this.ps.positions;
+    for (let i = 0; i < this.ps.particleCount; i++) {
+      const x = pos[i * 2];
+      const y = pos[i * 2 + 1];
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+    const span = Math.max(maxX - minX, maxY - minY) + FOG_MARGIN * 2;
+    this.fogRect = {
+      x0: (minX + maxX) / 2 - span / 2,
+      y0: (minY + maxY) / 2 - span / 2,
+      span,
+    };
+    const canvas = document.createElement("canvas");
+    canvas.width = FOG_CANVAS;
+    canvas.height = FOG_CANVAS;
+    this.fogCanvas = canvas;
+    this.fogTexture = Texture.from(canvas);
+    const sp = new Sprite(this.fogTexture);
+    sp.position.set(this.fogRect.x0, this.fogRect.y0);
+    sp.width = span;
+    sp.height = span;
+    this.fogSprite = sp;
+    // Topmost in the overlay: fog covers markers too - the head/start
+    // sit inside the lifted area by construction; the exit emerges only
+    // once explored, which is the point.
+    this.overContainer.addChild(sp);
+  }
+
+  private maybeStampFog(x: number, y: number): void {
+    if (!this.fogOfWar) return;
+    const n = this.fogStamps.length;
+    if (n >= 2) {
+      const dx = x - this.fogStamps[n - 2];
+      const dy = y - this.fogStamps[n - 1];
+      if (dx * dx + dy * dy < FOG_STAMP_SPACING * FOG_STAMP_SPACING) {
+        return;
+      }
+    }
+    this.fogStamps.push(x, y);
+    this.fogDirty = true;
+  }
+
+  private renderFog(): void {
+    if (!this.fogOfWar) {
+      if (this.fogSprite) this.fogSprite.visible = false;
+      return;
+    }
+    this.ensureFog();
+    this.fogSprite!.visible = true;
+    if (!this.fogDirty && this.fogLastRadius === this.fowRadius) return;
+    this.fogDirty = false;
+    this.fogLastRadius = this.fowRadius;
+    const ctx = this.fogCanvas!.getContext("2d")!;
+    const k = FOG_CANVAS / this.fogRect.span;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = `#${this.fogColor.toString(16).padStart(6, "0")}`;
+    ctx.fillRect(0, 0, FOG_CANVAS, FOG_CANVAS);
+    ctx.globalCompositeOperation = "destination-out";
+    const r = Math.max(2, this.fowRadius * k);
+    for (let i = 0; i < this.fogStamps.length; i += 2) {
+      const px = (this.fogStamps[i] - this.fogRect.x0) * k;
+      const py = (this.fogStamps[i + 1] - this.fogRect.y0) * k;
+      const grad = ctx.createRadialGradient(px, py, r * 0.45, px, py, r);
+      grad.addColorStop(0, "rgba(0,0,0,1)");
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(px, py, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    this.fogTexture!.source.update();
+  }
+
   // --- Memory-trail paint (Stage 23).
 
   // Traversal segments in path order, each directed older-end -> head
@@ -669,12 +780,14 @@ export class FabricMazeRenderer {
       this.ribbons.setPaint([], [], []);
       this.drawMarkers(controller, a.e.chain, a.cur, false);
       this.drawYarn();
+      this.renderFog();
       return;
     }
     if (this.trailMode) {
       const trail = this.buildTrail(controller, a);
       this.ribbons.setPaint(trail.spans, [], trail.caps);
       this.drawMarkers(controller, a.e.chain, a.cur, false);
+      this.renderFog();
       return;
     }
     const spans: PaintSpan[] = [];
@@ -690,6 +803,7 @@ export class FabricMazeRenderer {
     }
     this.ribbons.setPaint(spans, [], this.buildCaps(controller));
     this.drawMarkers(controller, a.e.chain, a.cur, false);
+    this.renderFog();
   }
 
   // Refresh the paint declaration (traveled spans + pulse arms) and redraw
@@ -759,8 +873,14 @@ export class FabricMazeRenderer {
       }
     }
     this.ribbons.setPaint(spans, pulses, caps);
+    // Reset path: the fog's explored memory starts over too.
+    if (controller.pathEdges.length === 0 && this.fogStamps.length > 2) {
+      this.fogStamps.length = 0;
+      this.fogDirty = true;
+    }
     this.drawMarkers(controller, -1, 0, controller.solved);
     this.drawYarn();
+    this.renderFog();
   }
 
   // Junction caps: at every vertex the path traversed, several ribbons
@@ -817,6 +937,8 @@ export class FabricMazeRenderer {
     } else {
       this.vertexWorld(controller.head, this.scratch, 0);
     }
+    // Fog explores wherever the head (or the mid-move dot) goes.
+    this.maybeStampFog(this.scratch[0], this.scratch[1]);
     g.circle(this.scratch[0], this.scratch[1], rHead);
     g.fill({ color: 0xffffff, alpha: 0.92 });
 

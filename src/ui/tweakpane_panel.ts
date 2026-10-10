@@ -211,13 +211,27 @@ export function buildPanel(
     "Ariadne string tension: 1 lays the yarn taut along the thread, 0 leaves it loose and wavy like slack cotton. Applies live."
   );
   tensionRow.on("change", callbacks.onTrailChange);
-  // The per-mode sliders only show for their mode.
+  const fowRow = tip(
+    pane.addBinding(params, "fogOfWar"),
+    "Fog of war: the maze hides until you have explored close by; explored areas stay visible. Applies live."
+  );
+  const fowRadiusRow = tip(
+    pane.addBinding(params, "fowRadius", { min: 1.5, max: 10, step: 0.25 }),
+    "How far around your explored path the fog lifts, in lattice units. Applies live and reshapes everything already explored."
+  );
+  fowRadiusRow.on("change", callbacks.onTrailChange);
+  // The per-mode rows only show for their mode.
   const refreshVizRows = (): void => {
     trailLenRow.hidden = params.pathViz !== "trail";
     tensionRow.hidden = params.pathViz !== "string";
+    fowRadiusRow.hidden = !params.fogOfWar;
   };
   refreshVizRows();
   pathVizRow.on("change", () => {
+    refreshVizRows();
+    callbacks.onTrailChange();
+  });
+  fowRow.on("change", () => {
     refreshVizRows();
     callbacks.onTrailChange();
   });

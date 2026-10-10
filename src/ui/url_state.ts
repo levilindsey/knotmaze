@@ -67,6 +67,10 @@ export interface UrlParams {
   // [0, 1] Ariadne string tension: 1 = taut along the centerline, 0 =
   // slack cotton laid loose. Applies live to the whole laid string.
   tension: number;
+  // Fog of war (fabric gameplay): the maze hides under fog until you
+  // have been close by; explored areas stay visible. Applies live.
+  fogOfWar: boolean;
+  fowRadius: number; // [1.5, 10] visibility radius, lattice units.
   // Section color scheme (fabric mode; knot mode supports mono/strands):
   // mono | strands | depth | segments | noise. Replaces the old multiColor
   // checkbox (mc=1 reads as "strands").
@@ -102,6 +106,7 @@ export const DEFAULTS = {
   octaves: 2,
   trailLength: 5,
   tension: 0.45,
+  fowRadius: 4,
   appearSpeed: 1,
 };
 
@@ -154,6 +159,8 @@ export function readParams(): UrlParams {
     pathViz: readPathViz(query),
     trailLength: readNumber(query, "trl", DEFAULTS.trailLength),
     tension: readNumber(query, "tn", DEFAULTS.tension),
+    fogOfWar: readNumber(query, "fow", 0) > 0.5,
+    fowRadius: readNumber(query, "fr", DEFAULTS.fowRadius),
     colorScheme: readScheme(query),
     appearMode: readAppear(query),
     appearSpeed: readNumber(query, "as", DEFAULTS.appearSpeed),
@@ -231,6 +238,8 @@ export function writeParams(params: UrlParams): void {
   query.set("pv", params.pathViz);
   query.set("trl", String(params.trailLength));
   query.set("tn", String(params.tension));
+  query.set("fow", params.fogOfWar ? "1" : "0");
+  query.set("fr", String(params.fowRadius));
   query.set("cs", params.colorScheme);
   query.set("ap", params.appearMode);
   query.set("as", String(params.appearSpeed));
