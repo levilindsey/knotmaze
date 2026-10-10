@@ -25,10 +25,17 @@
 //      the hole, with a length that adapts to the crossing angle.
 // All erases render below all fills, so patches never slice each other.
 
-import { BufferImageSource, Container, Graphics, Texture } from "pixi.js";
+import {
+  BufferImageSource,
+  Container,
+  Graphics,
+  Shader,
+  Texture,
+} from "pixi.js";
 import { createNoise2D, createNoise3D } from "simplex-noise";
 import type { ParticleSystem, CrossingPass } from "../physics/particle_system";
 import type { VSegment, ColorScheme } from "../core/section_colors";
+import { gamutRgb } from "../core/section_colors";
 import type { RevealAnimator } from "./reveal";
 import { SeededRNG } from "../util/random";
 import type { SplineSamples } from "../geometry/spline_generator";
@@ -46,12 +53,14 @@ export interface RibbonStyle {
   // cut halves inherit their host strand's hue so splices read as thread
   // material). Identity when absent.
   hueGroup?: number[];
-  // PALETTE MODE (maze fabric): each chain's fill samples a 256x1 palette
-  // texture through per-vertex UVs instead of a flat tint, so gameplay
-  // recoloring (traveled gold, choice pulses, hover) paints the ACTUAL
-  // thread pixels - over-fill patches copy the UVs along with the vertices,
-  // making the weave pixel-identical. Knot mode leaves this off and keeps
-  // the original tint path untouched.
+  // PALETTE MODE (maze fabric): each chain's fill renders through the
+  // SECTION SHADER - a per-vertex section RGB attribute mixed with a
+  // 256x1 gameplay ACCENT strip sampled through per-vertex U - instead of
+  // a flat tint, so gameplay recoloring (traveled gold, choice pulses,
+  // hover) paints the ACTUAL thread pixels and section colors blend
+  // directly in RGB. Over-fill patches copy UVs and colors along with the
+  // vertices, making the weave pixel-identical. Knot mode leaves this off
+  // and keeps the original tint path untouched.
   paletteMode?: boolean;
   // Seed for the flow-undulation noise field (defaults to 1).
   flowSeed?: number;
@@ -92,13 +101,30 @@ export interface PaintCap {
   p?: number;
 }
 
-// Palette layout (one 256x1 RGBA strip per hue group; linear filtering).
-// ORDER IS LOAD-BEARING: per-vertex UVs interpolate LINEARLY between
+// ACCENT strip layout (one shared 256x1 RGBA strip; linear filtering).
+// Each texel encodes the gameplay paint at that U as an (accent color,
+// mix weight) pair: the section shader computes
+//   mix(sectionRGB, accent.rgb, accent.a)
+// so the SECTION color is per-vertex (the aColor attribute - arbitrary
+// RGB pairs blend directly along threads and through junctions) while the
+// gameplay paint stays a 1D U coordinate exactly as before. Encoding per
+// family, chosen so the mono case reproduces the old 2D palette texel for
+// texel (mix is affine in the weight, so linear filtering commutes):
+//   band A texels: accent WHITE, weight 0.94 * (1 - i/111) - the old
+//     lighten-toward-white curve;
+//   base texels: weight 0 (pure section color); their rgb is GOLD so the
+//     base->gold texel interpolation sweeps mix(section, gold, t) - the
+//     exact old base->gold ramp (rgb is a don't-care AT weight-0 texels
+//     but load-bearing BETWEEN texels);
+//   gold / band B texels: the old gold / gold-toward-white colors at
+//     weight 1 (the traveled path is section-independent, as before).
+//
+// ORDER IS LOAD-BEARING: per-vertex Us interpolate LINEARLY between
 // samples, so the strip must be arranged so that every adjacency the paint
 // can produce (base<->bandA at pulse-region ends, base<->gold at traveled
 // ends, gold<->bandB on the arrival arm) interpolates only through its own
 // two color families - the original [base, gold, hover, bandA...] layout
-// swept the UV straight across the gold+hover texels at every band/base
+// swept the U straight across the gold+hover texels at every band/base
 // boundary, rendering a thin bright hairline there (the reported "distinct
 // line at the end of the gradient"):
 //   0..111   band A, REVERSED: near-white accent -> base
@@ -106,22 +132,9 @@ export interface PaintCap {
 //   118..123 traveled gold
 //   124..235 band B: gold -> near-white accent
 //   236..255 band B accent (guard)
-//
-// SECOND DIMENSION (V): the palette is PAL_H rows, each the same strip
-// built from a different base color along a bounded GAMUT ramp. Per-vertex
-// V selects the section color; bilinear filtering blends adjacent-sample
-// Vs through intermediate gamut colors - smooth section transitions along
-// threads and through junctions for free, always inside the gamut.
-// Gameplay paint (U) rides on top unchanged: the gold/band-B half of every
-// row is identical, so the traveled path stays uniform gold.
 const PAL_W = 256;
-const PAL_H = 64;
 const U_BASE = 115 / PAL_W;
 const U_GOLD = 121 / PAL_W;
-// The gamut: a 280-degree hue arc around the seed hue at the fabric's
-// saturation/lightness - wide enough to read as distinct sections, no
-// full wrap so V-interpolation never has a long-way-around ambiguity.
-const GAMUT_SWEEP = 280;
 const bandU = (onPath: boolean, p: number): number => {
   const q = p < 0 ? 0 : p > 1 ? 1 : p;
   return onPath ? (124.5 + q * 110) / PAL_W : (111.5 - q * 110) / PAL_W;
@@ -150,7 +163,7 @@ const PULSE_SPEED = 1.6;
 // instead of meeting in two visibly different mid-tints.
 const PULSE_FLOOR = 0.38;
 // Core reaches FULL band strength at d=0 (0.38 + 0.62 = 1), where both
-// bands are the same near-white accent - see buildPalettePixels.
+// bands are the same near-white accent - see buildAccentPixels.
 const PULSE_CORE_BOOST = 0.62;
 const PULSE_CORE_RADIUS = 0.55;
 // Crest amplitude ramps with its distance from the junction: an outbound
@@ -159,6 +172,10 @@ const PULSE_CORE_RADIUS = 0.55;
 // submerges into it.
 const CREST_RAMP = 0.5;
 const PULSE_END_WINDOW = 0.45;
+// Outbound crests run this many SECONDS ahead of the inbound clock, so a
+// departure visibly answers each arrival instead of waiting out the full
+// half-cycle.
+const PULSE_OUT_LEAD = 0.3;
 // JUNCTION JOINERY. Fused arms (bridge/stub/merge terminals) tuck their
 // rendered tip back by the host's half-width so the ribbon lands flush on
 // the host's near edge instead of overhanging past its centerline - the
@@ -234,70 +251,126 @@ function mixHex(a: number, b: number, t: number): number {
   );
 }
 
-// Palette textures are cached for the PAGE lifetime, keyed by base color.
-// Rebuilds (checkbox toggles regenerate the whole scene) reuse them, and -
-// load-bearing - nothing ever destroys one mid-session: pixi's retained
-// render state (bind groups listen to their texture resources) can still
-// reference a source on the frame after a rebuild, and destroying it then
-// null-derefs inside setResource on every subsequent render - the ticker
-// dies and the screen goes blank. Growth is bounded by distinct thread
-// colors seen (a reseed adds at most one strand-palette's worth of 1KB
-// strips).
-const PALETTE_CACHE = new Map<number, { tex: Texture; px: Uint8Array }>();
+// The accent strip + section shader live for the PAGE lifetime - nothing
+// ever destroys them mid-session: pixi's retained render state (bind
+// groups listen to their texture resources) can still reference a source
+// on the frame after a rebuild, and destroying it then null-derefs inside
+// setResource on every subsequent render - the ticker dies and the screen
+// goes blank. (They are also seed-independent now - the strip carries
+// only white/gold accents; section colors arrive per vertex.)
+let ACCENT_TEXTURE: Texture | null = null;
+// Mesh.shader wants a TextureShader (a Shader carrying its texture).
+type SectionShader = Shader & { texture: Texture };
+let SECTION_SHADER: SectionShader | null = null;
 
-function gamutHex(baseHue: number, v: number): number {
-  const h = (((baseHue + (v - 0.5) * GAMUT_SWEEP) % 360) + 360) % 360;
-  return hslToHex(h, 0.45, 0.64);
-}
-
-// The full 2D palette for one seed hue: PAL_H gamut rows of the standard
-// paint strip. Cached for the page lifetime keyed by (rounded) base hue.
-function paletteFor(baseHue: number): { tex: Texture; px: Uint8Array } {
-  const key = Math.round(baseHue);
-  let entry = PALETTE_CACHE.get(key);
-  if (!entry) {
-    const px = new Uint8Array(PAL_W * PAL_H * 4);
-    for (let r = 0; r < PAL_H; r++) {
-      const row = buildPalettePixels(gamutHex(baseHue, r / (PAL_H - 1)));
-      px.set(row, r * PAL_W * 4);
-    }
-    entry = {
-      px,
-      tex: new Texture({
-        source: new BufferImageSource({
-          resource: px,
-          width: PAL_W,
-          height: PAL_H,
-        }),
-      }),
-    };
-    PALETTE_CACHE.set(key, entry);
-  }
-  return entry;
-}
-
-function buildPalettePixels(base: number): Uint8Array {
+function buildAccentPixels(): Uint8Array {
   const px = new Uint8Array(PAL_W * 4);
-  const put = (i: number, hex: number): void => {
+  const put = (i: number, hex: number, w: number): void => {
     px[i * 4] = (hex >> 16) & 255;
     px[i * 4 + 1] = (hex >> 8) & 255;
     px[i * 4 + 2] = hex & 255;
-    px[i * 4 + 3] = 255;
+    px[i * 4 + 3] = Math.round(w * 255);
   };
   // Both bands converge to the SAME near-white accent (0.94 toward white)
   // so that at full strength - the junction core - the inbound gold band,
-  // the outbound base bands, and every flat-colored overlay (discs,
-  // fillets) meet in one color; family tints only separate mid-arm.
-  for (let i = 0; i < 112; i++) {
-    put(i, mixHex(base, 0xffffff, 0.94 * (1 - i / 111)));
-  }
-  for (let i = 112; i < 118; i++) put(i, base);
-  for (let i = 118; i < 124; i++) put(i, PATH_GOLD);
+  // the outbound base bands, and every joinery overlay (discs, fillets)
+  // meet in one color; family tints only separate mid-arm.
+  for (let i = 0; i < 112; i++) put(i, 0xffffff, 0.94 * (1 - i / 111));
+  for (let i = 112; i < 118; i++) put(i, PATH_GOLD, 0);
+  for (let i = 118; i < 124; i++) put(i, PATH_GOLD, 1);
   for (let i = 124; i < 236; i++) {
-    put(i, mixHex(PATH_GOLD, 0xffffff, (0.94 * (i - 124)) / 111));
+    put(i, mixHex(PATH_GOLD, 0xffffff, (0.94 * (i - 124)) / 111), 1);
   }
-  for (let i = 236; i < 256; i++) put(i, mixHex(PATH_GOLD, 0xffffff, 0.94));
+  for (let i = 236; i < 256; i++) {
+    put(i, mixHex(PATH_GOLD, 0xffffff, 0.94), 1);
+  }
   return px;
+}
+
+function accentTexture(): Texture {
+  if (!ACCENT_TEXTURE) {
+    ACCENT_TEXTURE = new Texture({
+      source: new BufferImageSource({
+        resource: buildAccentPixels(),
+        width: PAL_W,
+        height: 1,
+        // The alpha channel is a MIX WEIGHT consumed by the shader, not
+        // transparency; declare premultiplied so nothing rescales the
+        // bytes and the mesh blend state stays plain 'normal' (WebGL
+        // ignores the premultiply flag for buffer uploads regardless -
+        // the bytes pass through verbatim, as with the FADE texture).
+        alphaMode: "premultiplied-alpha",
+      }),
+    });
+  }
+  return ACCENT_TEXTURE;
+}
+
+// The section shader (palette mode only; the app forces WebGL, so a GL
+// program suffices). Attribute layout: aPosition/aUV as pixi's default
+// mesh program (only U is meaningful now), plus aColor = the per-vertex
+// section RGB. Transforms and alpha mirror the default mesh program's
+// skeleton: the mesh pipe force-assigns the global (uProjectionMatrix,
+// uWorldTransformMatrix, uWorldColorAlpha) and local (uTransformMatrix,
+// uColor) uniform groups to EVERY mesh shader, custom ones included, and
+// the GL backend syncs them by name.
+const SECTION_VERT = /* glsl */ `#version 300 es
+precision highp float;
+
+in vec2 aPosition;
+in vec2 aUV;
+in vec3 aColor;
+
+out vec2 vUV;
+out vec3 vSection;
+out vec4 vColor;
+
+uniform mat3 uProjectionMatrix;
+uniform mat3 uWorldTransformMatrix;
+uniform vec4 uWorldColorAlpha;
+uniform mat3 uTransformMatrix;
+uniform vec4 uColor;
+
+void main(void) {
+  mat3 mvp = uProjectionMatrix * uWorldTransformMatrix * uTransformMatrix;
+  gl_Position = vec4((mvp * vec3(aPosition, 1.0)).xy, 0.0, 1.0);
+  vUV = aUV;
+  vSection = aColor;
+  vColor = uColor * uWorldColorAlpha;
+}
+`;
+const SECTION_FRAG = /* glsl */ `#version 300 es
+precision mediump float;
+
+in vec2 vUV;
+in vec3 vSection;
+in vec4 vColor;
+
+out vec4 finalColor;
+
+uniform sampler2D uTexture;
+
+void main(void) {
+  vec4 acc = texture(uTexture, vec2(vUV.x, 0.5));
+  vec3 rgb = mix(vSection, acc.rgb, acc.a);
+  finalColor = vec4(rgb, 1.0) * vColor;
+}
+`;
+
+function sectionShader(): SectionShader {
+  if (!SECTION_SHADER) {
+    const tex = accentTexture();
+    const sh = Shader.from({
+      gl: { vertex: SECTION_VERT, fragment: SECTION_FRAG, name: "section-rgb" },
+      resources: {
+        uTexture: tex.source,
+        uSampler: tex.source.style,
+      },
+    }) as SectionShader;
+    sh.texture = tex;
+    SECTION_SHADER = sh;
+  }
+  return SECTION_SHADER;
 }
 
 // FADE texture: one shared 256x1 strip of erase STRENGTH, sampled by every
@@ -558,16 +631,21 @@ export class RibbonRenderer {
     hostCtrl: number;
   }> = [];
   private chainTipFused: Array<[boolean, boolean]> = [];
-  // Shared 2D palette pixels (CPU-side fillet/disc sampling) + the section
-  // color field: piecewise-linear v(ctrl) per chain from section_colors
-  // (or spatial noise), baked to a per-SAMPLE V cache on the first update.
-  private paletteTex: Texture | null = null;
+  // The section color field: piecewise-linear rgb(ctrl) per chain from
+  // section_colors (or spatial noise), baked to a per-SAMPLE RGB cache on
+  // the first update. A cache entry of length 3 is a constant chain
+  // color; otherwise it is 3 * sampleCount channel triplets.
+  private accentTex: Texture | null = null;
   private filletLayer: Container | null = null;
   private filletMesh: TriFanMesh | null = null;
   private sectionSegs: VSegment[][] = [];
   private sectionNoise: ((x: number, y: number) => number) | null = null;
-  private vCache: (Float32Array | number)[] = [];
-  private vCacheReady = false;
+  private rgbCache: Float32Array[] = [];
+  private rgbCacheReady = false;
+  // Default section color (the gamut midpoint = the seed-hue base color).
+  private baseRgb = new Float32Array(3);
+  // Scratch triplet for point color lookups (colorAtArc consumers).
+  private rgbScratch = new Float32Array(3);
   // REVEAL state (Stage 22): the animator, the per-chain width masks
   // (null = fully revealed - the zero-cost resting state), the frontier
   // tips cached once per paint tick for the glow, and the knot-mode tip
@@ -586,6 +664,7 @@ export class RibbonRenderer {
     this.ps = ps;
     this.style = style;
     this.root = new Container();
+    this.baseRgb.set(gamutRgb(style.baseHue, 0.5));
 
     const flowRng = new SeededRNG(((style.flowSeed ?? 1) ^ 0xf10a) >>> 0);
     this.flowNoise = createNoise3D(() => flowRng.next());
@@ -622,18 +701,18 @@ export class RibbonRenderer {
       // closing quad across the removed seam.
       const closed = ps.chainBreakAfter[i] < 0;
       const base = hslToHex(hue, 0.45, 0.64);
-      const fill = new RibbonMesh(count, closed, base);
+      const fill = new RibbonMesh(count, closed, base, style.paletteMode);
       if (style.paletteMode) {
-        const pal = paletteFor(style.baseHue);
-        this.paletteTex = pal.tex;
-        fill.mesh.texture = pal.tex;
+        this.accentTex = accentTexture();
+        fill.mesh.texture = this.accentTex;
+        fill.mesh.shader = sectionShader();
         fill.mesh.tint = 0xffffff;
-        fill.writeUVs(new Float32Array(count).fill(U_BASE), 0.5);
+        fill.writePaint(new Float32Array(count).fill(U_BASE), this.baseRgb);
       }
       this.fills.push(fill);
       baseLayer.addChild(fill.mesh);
     });
-    this.vCache = ps.chains.map(() => 0.5);
+    this.rgbCache = ps.chains.map(() => this.baseRgb);
     this.sectionSegs = ps.chains.map(() => []);
     this.revealMask = ps.chains.map(() => null);
 
@@ -664,7 +743,13 @@ export class RibbonRenderer {
       const erase = new PatchGridMesh(ERASE_STATIONS, ERASE_LANES, 0xffffff);
       erase.mesh.texture = fadeTexture();
       erase.mesh.blendMode = "erase";
-      const fill = new RibbonMesh(OVER_PATCH_MAX_SAMPLES, false, 0xffffff);
+      const fill = new RibbonMesh(
+        OVER_PATCH_MAX_SAMPLES,
+        false,
+        0xffffff,
+        style.paletteMode
+      );
+      if (style.paletteMode) fill.mesh.shader = sectionShader();
       this.underErases.push(erase);
       this.overFills.push(fill);
       eraseLayer.addChild(erase.mesh);
@@ -675,7 +760,13 @@ export class RibbonRenderer {
       const erase = new PatchGridMesh(ERASE_STATIONS, ERASE_LANES, 0xffffff);
       erase.mesh.texture = fadeTexture();
       erase.mesh.blendMode = "erase";
-      const fill = new RibbonMesh(OVER_PATCH_MAX_SAMPLES, false, 0xffffff);
+      const fill = new RibbonMesh(
+        OVER_PATCH_MAX_SAMPLES,
+        false,
+        0xffffff,
+        style.paletteMode
+      );
+      if (style.paletteMode) fill.mesh.shader = sectionShader();
       erase.mesh.visible = false;
       fill.mesh.visible = false;
       this.emergentErases.push(erase);
@@ -1255,8 +1346,8 @@ export class RibbonRenderer {
         if (fusedA || fusedB) this.tuckFusedTips(samples, fusedA, fusedB);
       }
       this.chainSamples[i] = samples;
-      if (this.style.paletteMode && !this.vCacheReady) {
-        this.buildVCacheFor(i, samples);
+      if (this.style.paletteMode && !this.rgbCacheReady) {
+        this.buildRgbCacheFor(i, samples);
       }
       const mask = this.revealOn ? this.revealMaskFor(i, samples) : null;
       this.fills[i].update(
@@ -1267,10 +1358,10 @@ export class RibbonRenderer {
         mask
       );
     });
-    if (this.style.paletteMode && !this.vCacheReady) {
-      this.vCacheReady = true;
-      // One full UV write so every chain wears its section colors; chains
-      // with gameplay paint get rewritten by the next paint tick.
+    if (this.style.paletteMode && !this.rgbCacheReady) {
+      this.rgbCacheReady = true;
+      // One full paint write so every chain wears its section colors;
+      // chains with gameplay paint get rewritten by the next paint tick.
       this.ps.chains.forEach((_, i) => {
         const count = this.fills[i].sampleCount;
         let us = this.uScratch.get(i);
@@ -1279,7 +1370,7 @@ export class RibbonRenderer {
           this.uScratch.set(i, us);
         }
         us.fill(U_BASE, 0, count);
-        this.fills[i].writeUVs(us, this.vCache[i]);
+        this.fills[i].writePaint(us, this.rgbCache[i]);
       });
       this.chainRev.clear();
     }
@@ -2003,7 +2094,8 @@ export class RibbonRenderer {
   }
 
   // Install the section color field (see core/section_colors). The noise
-  // scheme carries no segments - it is evaluated spatially per sample.
+  // scheme carries no segments - it is evaluated spatially per sample and
+  // converted to RGB through the shared gamut curve here.
   setSectionField(
     segs: VSegment[][],
     scheme: ColorScheme,
@@ -2016,37 +2108,48 @@ export class RibbonRenderer {
     } else {
       this.sectionNoise = null;
     }
-    this.vCacheReady = false;
+    this.rgbCacheReady = false;
   }
 
-  // Section color coordinate at a chain ctrl (piecewise-linear segments,
-  // or the spatial noise field).
-  private sectionVAt(chain: number, ctrl: number): number {
+  // Section color at a chain ctrl (piecewise-linear RGB segments, or the
+  // spatial noise field), written into out[0..2].
+  private sectionRgbAt(chain: number, ctrl: number, out: Float32Array): void {
     if (this.sectionNoise) {
-      const samples = this.chainSamples[chain];
-      if (!samples) return 0.5;
+      const len = this.ps.chains[chain].length;
       this.ps.pointOnChain(
         chain,
-        (((ctrl % this.ps.chains[chain].length) +
-          this.ps.chains[chain].length) %
-          this.ps.chains[chain].length),
+        ((ctrl % len) + len) % len,
         this.sampleScratch,
         0
       );
-      return this.noiseV(this.sampleScratch[0], this.sampleScratch[1]);
+      out.set(
+        gamutRgb(
+          this.style.baseHue,
+          this.noiseV(this.sampleScratch[0], this.sampleScratch[1])
+        )
+      );
+      return;
     }
     const segs = this.sectionSegs[chain];
-    if (!segs || segs.length === 0) return 0.5;
+    if (!segs || segs.length === 0) {
+      out.set(this.baseRgb);
+      return;
+    }
     const len = this.ps.chains[chain].length;
     for (const c of [ctrl, ctrl + len]) {
       for (const s of segs) {
         if (c >= s.c0 - 1e-6 && c <= s.c1 + 1e-6) {
           const t = s.c1 > s.c0 ? (c - s.c0) / (s.c1 - s.c0) : 0;
-          return s.v0 + (s.v1 - s.v0) * t;
+          out[0] = s.rgb0[0] + (s.rgb1[0] - s.rgb0[0]) * t;
+          out[1] = s.rgb0[1] + (s.rgb1[1] - s.rgb0[1]) * t;
+          out[2] = s.rgb0[2] + (s.rgb1[2] - s.rgb0[2]) * t;
+          return;
         }
       }
     }
-    return segs[0].v0;
+    out[0] = segs[0].rgb0[0];
+    out[1] = segs[0].rgb0[1];
+    out[2] = segs[0].rgb0[2];
   }
 
   private noiseV(x: number, y: number): number {
@@ -2054,39 +2157,45 @@ export class RibbonRenderer {
     return Math.max(0, Math.min(1, 0.5 + 0.62 * n));
   }
 
-  // Bake the per-sample V cache for one chain (initial arc tables; sample
-  // k's arc FRACTION is fixed by uniform resampling, so this stays valid
-  // as the chain deforms).
-  private buildVCacheFor(chain: number, samples: SplineSamples): void {
+  // Bake the per-sample RGB cache for one chain (initial arc tables;
+  // sample k's arc FRACTION is fixed by uniform resampling, so this stays
+  // valid as the chain deforms). Constant chains store one triplet.
+  private buildRgbCacheFor(chain: number, samples: SplineSamples): void {
     const count = samples.count;
     if (this.sectionNoise) {
-      const vs = new Float32Array(count);
+      const rgbs = new Float32Array(count * 3);
       for (let k = 0; k < count; k++) {
-        vs[k] = this.noiseV(
-          samples.positions[k * 2],
-          samples.positions[k * 2 + 1]
+        const rgb = gamutRgb(
+          this.style.baseHue,
+          this.noiseV(samples.positions[k * 2], samples.positions[k * 2 + 1])
         );
+        rgbs[k * 3] = rgb[0];
+        rgbs[k * 3 + 1] = rgb[1];
+        rgbs[k * 3 + 2] = rgb[2];
       }
-      this.vCache[chain] = vs;
+      this.rgbCache[chain] = rgbs;
       return;
     }
     const segs = this.sectionSegs[chain];
     if (!segs || segs.length === 0) {
-      this.vCache[chain] = 0.5;
+      this.rgbCache[chain] = this.baseRgb;
       return;
     }
     if (
       segs.length === 1 &&
-      Math.abs(segs[0].v0 - segs[0].v1) < 1e-6
+      Math.abs(segs[0].rgb0[0] - segs[0].rgb1[0]) < 1e-6 &&
+      Math.abs(segs[0].rgb0[1] - segs[0].rgb1[1]) < 1e-6 &&
+      Math.abs(segs[0].rgb0[2] - segs[0].rgb1[2]) < 1e-6
     ) {
-      this.vCache[chain] = segs[0].v0;
+      this.rgbCache[chain] = new Float32Array(segs[0].rgb0);
       return;
     }
     const closed = this.ps.chainBreakAfter[chain] < 0;
     const cal = samples.controlArcLengths;
     const n = cal.length;
     const total = samples.totalLength;
-    const vs = new Float32Array(count);
+    const rgbs = new Float32Array(count * 3);
+    const tmp = this.rgbScratch;
     let slot = 0;
     for (let k = 0; k < count; k++) {
       const a = closed ? (k / count) * total : (k / (count - 1)) * total;
@@ -2094,9 +2203,12 @@ export class RibbonRenderer {
       const a0 = cal[slot];
       const a1 = slot < n - 1 ? cal[slot + 1] : total;
       const t = a1 > a0 ? Math.min(1, (a - a0) / (a1 - a0)) : 0;
-      vs[k] = this.sectionVAt(chain, slot + t);
+      this.sectionRgbAt(chain, slot + t, tmp);
+      rgbs[k * 3] = tmp[0];
+      rgbs[k * 3 + 1] = tmp[1];
+      rgbs[k * 3 + 2] = tmp[2];
     }
-    this.vCache[chain] = vs;
+    this.rgbCache[chain] = rgbs;
   }
 
   // Declare the current gameplay paint (traveled spans + branch-point
@@ -2265,7 +2377,7 @@ export class RibbonRenderer {
     us.fill(U_BASE, 0, count);
     if (!painted) {
       this.applyRevealGlowU(chain, us, count);
-      mesh.writeUVs(us, this.vCache[chain]);
+      mesh.writePaint(us, this.rgbCache[chain]);
       return;
     }
 
@@ -2349,7 +2461,7 @@ export class RibbonRenderer {
       }
     }
     this.applyRevealGlowU(chain, us, count);
-    mesh.writeUVs(us, this.vCache[chain]);
+    mesh.writePaint(us, this.rgbCache[chain]);
   }
 
   // REVEAL frontier glow (palette mode): push the paint U of the samples
@@ -2418,7 +2530,8 @@ export class RibbonRenderer {
     if (hovered) return Math.max(0, endWin);
     const fade = 1 - d / R0;
     const period = 2 * R0;
-    const s0 = (((this.paintClock * PULSE_SPEED) % period) + period) % period;
+    const clock = inward ? this.paintClock : this.paintClock + PULSE_OUT_LEAD;
+    const s0 = (((clock * PULSE_SPEED) % period) + period) % period;
     let bump = 0;
     for (const sPh of [s0, (s0 + R0) % period]) {
       // s in [0, R0) is the inbound half of the cycle, [R0, 2R0) outbound.
@@ -2498,10 +2611,11 @@ export class RibbonRenderer {
     return u;
   }
 
-  // Positional sampling for junction joinery: sampleAt WRAPS arc == total
-  // to arc 0 on open chains (the arc-wrap family - third bite: flank
-  // samples at corner-cut terminals flew to the chain START and fanned
-  // sliver spikes across the canvas). Clamp open-chain arcs a hair short.
+  // Positional sampling for junction joinery: before the sampleAt
+  // open-chain fix this clamp was the only guard against the arc-wrap
+  // family's third bite (flank samples at corner-cut terminals flew to
+  // the chain START). sampleAt now clamps open chains itself; this stays
+  // as a cheap belt-and-suspenders for joinery callers.
   private sampleAtSafe(
     samples: SplineSamples,
     arc: number,
@@ -2515,28 +2629,42 @@ export class RibbonRenderer {
     this.sampleAt(samples, a, out, offset);
   }
 
-  // Section V at a world ARC along a chain, read from the baked per-sample
-  // cache - the SAME data the ribbon's own UVs carry, so overlay geometry
-  // sampling through here matches the adjacent ribbon exactly at a seam.
-  private vAtArc(chain: number, arc: number): number {
-    const cache = this.vCache[chain];
-    if (typeof cache === "number") return cache;
+  // Section RGB at a world ARC along a chain, read from the baked
+  // per-sample cache into out[0..2] - the SAME data the ribbon's own
+  // aColor verts carry, so overlay geometry sampling through here matches
+  // the adjacent ribbon exactly at a seam.
+  private colorAtArc(chain: number, arc: number, out: Float32Array): void {
+    const cache = this.rgbCache[chain];
+    if (cache.length === 3) {
+      out[0] = cache[0];
+      out[1] = cache[1];
+      out[2] = cache[2];
+      return;
+    }
     const samples = this.chainSamples[chain];
-    if (!samples || samples.totalLength <= 0) return 0.5;
-    const count = cache.length;
+    if (!samples || samples.totalLength <= 0) {
+      out.set(this.baseRgb);
+      return;
+    }
+    const count = cache.length / 3;
     const total = samples.totalLength;
+    let k0: number;
+    let k1: number;
+    let fr: number;
     if (this.ps.chainBreakAfter[chain] < 0) {
       const f = (normArc(arc, total, true) / total) * count;
-      const k0 = Math.floor(f) % count;
-      const k1 = (k0 + 1) % count;
-      const fr = f - Math.floor(f);
-      return cache[k0] + (cache[k1] - cache[k0]) * fr;
+      k0 = Math.floor(f) % count;
+      k1 = (k0 + 1) % count;
+      fr = f - Math.floor(f);
+    } else {
+      const f = (normArc(arc, total, false) / total) * (count - 1);
+      k0 = Math.floor(f);
+      k1 = Math.min(count - 1, k0 + 1);
+      fr = f - k0;
     }
-    const f = (normArc(arc, total, false) / total) * (count - 1);
-    const k0 = Math.floor(f);
-    const k1 = Math.min(count - 1, k0 + 1);
-    const fr = f - k0;
-    return cache[k0] + (cache[k1] - cache[k0]) * fr;
+    out[0] = cache[k0 * 3] + (cache[k1 * 3] - cache[k0 * 3]) * fr;
+    out[1] = cache[k0 * 3 + 1] + (cache[k1 * 3 + 1] - cache[k0 * 3 + 1]) * fr;
+    out[2] = cache[k0 * 3 + 2] + (cache[k1 * 3 + 2] - cache[k0 * 3 + 2]) * fr;
   }
 
   // Rounded junction joinery: tip/seal discs and, for each wedge between
@@ -2550,7 +2678,7 @@ export class RibbonRenderer {
   // stamped circle of junction color) at its boundary, the
   // junction-blotch reports.
   private rebuildFillets(): void {
-    if (!this.filletLayer || !this.paletteTex) return;
+    if (!this.filletLayer || !this.accentTex) return;
     const fillHalf = this.style.threadWidth / 2;
     const nDiscs =
       this.freeTips.length + this.fusedTips.length + this.junctionArms.length;
@@ -2560,14 +2688,16 @@ export class RibbonRenderer {
       for (const jn of this.junctionArms) armTotal += jn.arms.length;
       const wedgeRim = 2 * FILLET_EDGE_PTS + FILLET_BEZIER_STEPS + 1;
       this.filletMesh = new TriFanMesh(
-        this.paletteTex,
+        this.accentTex,
         armTotal * (wedgeRim + 1) + nDiscs * (DISC_SEGS + 2),
         (armTotal * wedgeRim + nDiscs * DISC_SEGS) * 3
       );
+      this.filletMesh.mesh.shader = sectionShader();
       this.filletLayer.addChild(this.filletMesh.mesh);
     }
     const fm = this.filletMesh;
     fm.begin();
+    const c3 = this.rgbScratch;
 
     // A disc fan whose rim samples the underlying thread's own material at
     // each rim point's arc (the point's offset projected onto the thread's
@@ -2595,19 +2725,25 @@ export class RibbonRenderer {
           total,
           closed
         );
+        this.colorAtArc(chain, arc, c3);
         rim.push(
           px,
           py,
           this.paintUAtArc(chain, arc, closed),
-          this.vAtArc(chain, arc)
+          c3[0],
+          c3[1],
+          c3[2]
         );
       }
       const arcC = normArc(arc0, total, closed);
+      this.colorAtArc(chain, arcC, c3);
       fm.pushFan(
         cx,
         cy,
         this.paintUAtArc(chain, arcC, closed),
-        this.vAtArc(chain, arcC),
+        c3[0],
+        c3[1],
+        c3[2],
         rim
       );
     };
@@ -2730,17 +2866,24 @@ export class RibbonRenderer {
     }
 
     let fieldU = U_BASE;
-    let fieldV = 0.5;
+    let fieldR = this.baseRgb[0];
+    let fieldG = this.baseRgb[1];
+    let fieldB = this.baseRgb[2];
     const armSample = (arm: JArm, proj: number): void => {
       const arc = normArc(arm.arc0 + arm.dir * proj, arm.total, arm.closed);
       fieldU = this.paintUAtArc(arm.chain, arc, arm.closed);
-      fieldV = this.vAtArc(arm.chain, arc);
+      this.colorAtArc(arm.chain, arc, c3);
+      fieldR = c3[0];
+      fieldG = c3[1];
+      fieldB = c3[2];
     };
     const fieldAt = (rec: JRec, px: number, py: number): void => {
       const arms = rec.arms;
       if (arms.length === 0) {
         fieldU = U_BASE;
-        fieldV = 0.5;
+        fieldR = this.baseRgb[0];
+        fieldG = this.baseRgb[1];
+        fieldB = this.baseRgb[2];
         return;
       }
       const d = Math.hypot(px - rec.jx, py - rec.jy);
@@ -2752,7 +2895,9 @@ export class RibbonRenderer {
       armSample(A, d * Math.max(0, Math.cos(ang - A.ang)));
       if (A === B) return;
       const uA = fieldU;
-      const vA = fieldV;
+      const rA = fieldR;
+      const gA = fieldG;
+      const bA = fieldB;
       armSample(B, d * Math.max(0, Math.cos(ang - B.ang)));
       let span = B.ang - A.ang;
       if (span <= 0) span += Math.PI * 2;
@@ -2760,7 +2905,9 @@ export class RibbonRenderer {
       if (off < 0) off += Math.PI * 2;
       const t = span > 1e-6 ? Math.min(1, Math.max(0, off / span)) : 0;
       fieldU = uA + (fieldU - uA) * t;
-      fieldV = vA + (fieldV - vA) * t;
+      fieldR = rA + (fieldR - rA) * t;
+      fieldG = gA + (fieldG - gA) * t;
+      fieldB = bA + (fieldB - bA) * t;
     };
     const pushDiscField = (
       rec: JRec,
@@ -2774,10 +2921,10 @@ export class RibbonRenderer {
         const px = cx + Math.cos(th) * r;
         const py = cy + Math.sin(th) * r;
         fieldAt(rec, px, py);
-        rim.push(px, py, fieldU, fieldV);
+        rim.push(px, py, fieldU, fieldR, fieldG, fieldB);
       }
       fieldAt(rec, cx, cy);
-      fm.pushFan(cx, cy, fieldU, fieldV, rim);
+      fm.pushFan(cx, cy, fieldU, fieldR, fieldG, fieldB, rim);
     };
 
     // Tip positions read the ENDPOINT SAMPLE directly: sampleAt wraps its
@@ -2981,7 +3128,7 @@ export class RibbonRenderer {
         const rim: number[] = [];
         const pushPt = (px: number, py: number): void => {
           fieldAt(rec, px, py);
-          rim.push(px, py, fieldU, fieldV);
+          rim.push(px, py, fieldU, fieldR, fieldG, fieldB);
         };
         for (let e = 0; e < FILLET_EDGE_PTS; e++) {
           pushPt(edgeA[e * 2], edgeA[e * 2 + 1]);
@@ -3010,7 +3157,7 @@ export class RibbonRenderer {
         // center is always inside the joint; the corner survives only as
         // the outer rim's bezier control.
         fieldAt(rec, jx, jy);
-        fm.pushFan(jx, jy, fieldU, fieldV, rim);
+        fm.pushFan(jx, jy, fieldU, fieldR, fieldG, fieldB, rim);
       }
     }
     fm.commit();
@@ -3018,7 +3165,8 @@ export class RibbonRenderer {
 
   destroy(): void {
     this.root.destroy({ children: true });
-    // Palette textures deliberately survive in PALETTE_CACHE - see its
-    // comment for why destroying them here blanks the screen.
+    // The accent texture and section shader deliberately survive
+    // (page-lifetime singletons) - see their comment for why destroying
+    // them here blanks the screen.
   }
 }

@@ -243,7 +243,8 @@ async function main(): Promise<void> {
         walkGraph,
         ps.chains.map((c) => c.length),
         hueGroup,
-        params.seed
+        params.seed,
+        params.seed % 360 // The gamut anchor; matches style.baseHue.
       ),
       params.colorScheme,
       params.seed
