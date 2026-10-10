@@ -236,3 +236,79 @@ export class PatchGridMesh {
     this.mesh.destroy({ children: true });
   }
 }
+
+// A pooled triangle-fan scratch mesh (junction fillet wedges): capacity is
+// fixed at construction and the whole thing is refilled each paint tick.
+// Unused index capacity is zeroed (degenerate triangles), so partial fills
+// need no geometry surgery. Textured with the palette: per-vertex UVs make
+// wedges blend EXACTLY like the ribbons they join - a flat-colored wedge
+// over a ramping section color drew a visible step at its boundary.
+export class TriFanMesh {
+  mesh: Mesh;
+
+  private vertexData: Float32Array;
+  private uvData: Float32Array;
+  private indexData: Uint32Array;
+  private vUsed = 0;
+  private iUsed = 0;
+
+  constructor(texture: Texture, vertexCapacity: number, indexCapacity: number) {
+    this.vertexData = new Float32Array(vertexCapacity * 2);
+    this.uvData = new Float32Array(vertexCapacity * 2);
+    this.indexData = new Uint32Array(indexCapacity);
+    const geometry = new MeshGeometry({
+      positions: this.vertexData,
+      uvs: this.uvData,
+      indices: this.indexData,
+    });
+    this.mesh = new Mesh({ geometry, texture });
+  }
+
+  begin(): void {
+    this.vUsed = 0;
+    this.iUsed = 0;
+    this.indexData.fill(0);
+  }
+
+  // Emit one fan around an apex. `rim` is flat [x, y, u, v] per vertex, in
+  // winding order; triangles are (apex, rim[i], rim[i+1]).
+  pushFan(
+    apexX: number,
+    apexY: number,
+    apexU: number,
+    apexV: number,
+    rim: number[]
+  ): void {
+    const rimCount = rim.length / 4;
+    if (
+      this.vUsed + rimCount + 1 > this.vertexData.length / 2 ||
+      this.iUsed + Math.max(0, rimCount - 1) * 3 > this.indexData.length
+    ) {
+      return; // Capacity is sized for the worst case; never grows.
+    }
+    const apex = this.vUsed++;
+    this.vertexData[apex * 2] = apexX;
+    this.vertexData[apex * 2 + 1] = apexY;
+    this.uvData[apex * 2] = apexU;
+    this.uvData[apex * 2 + 1] = apexV;
+    for (let i = 0; i < rimCount; i++) {
+      const k = this.vUsed + i;
+      this.vertexData[k * 2] = rim[i * 4];
+      this.vertexData[k * 2 + 1] = rim[i * 4 + 1];
+      this.uvData[k * 2] = rim[i * 4 + 2];
+      this.uvData[k * 2 + 1] = rim[i * 4 + 3];
+    }
+    for (let i = 0; i < rimCount - 1; i++) {
+      this.indexData[this.iUsed++] = apex;
+      this.indexData[this.iUsed++] = this.vUsed + i;
+      this.indexData[this.iUsed++] = this.vUsed + i + 1;
+    }
+    this.vUsed += rimCount;
+  }
+
+  commit(): void {
+    this.mesh.geometry.getBuffer("aPosition").update();
+    this.mesh.geometry.getBuffer("aUV").update();
+    this.mesh.geometry.getIndex().update();
+  }
+}

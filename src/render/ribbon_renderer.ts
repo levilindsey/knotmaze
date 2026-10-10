@@ -18,7 +18,7 @@
 //      the hole, with a length that adapts to the crossing angle.
 // All erases render below all fills, so patches never slice each other.
 
-import { BufferImageSource, Container, Graphics, Texture } from "pixi.js";
+import { BufferImageSource, Container, Texture } from "pixi.js";
 import { createNoise2D } from "simplex-noise";
 import type { ParticleSystem, CrossingPass } from "../physics/particle_system";
 import type { VSegment, ColorScheme } from "../core/section_colors";
@@ -28,7 +28,7 @@ import {
   sampleClosedSpline,
   sampleOpenSpline,
 } from "../geometry/spline_generator";
-import { RibbonMesh, PatchGridMesh } from "./ribbon_mesh";
+import { RibbonMesh, PatchGridMesh, TriFanMesh } from "./ribbon_mesh";
 
 export interface RibbonStyle {
   threadWidth: number; // In lattice units.
@@ -103,10 +103,6 @@ const U_GOLD = 121 / PAL_W;
 // saturation/lightness - wide enough to read as distinct sections, no
 // full wrap so V-interpolation never has a long-way-around ambiguity.
 const GAMUT_SWEEP = 280;
-const vRow = (v: number): number => {
-  const q = v < 0 ? 0 : v > 1 ? 1 : v;
-  return (0.5 + q * (PAL_H - 1)) / PAL_H;
-};
 const bandU = (onPath: boolean, p: number): number => {
   const q = p < 0 ? 0 : p > 1 ? 1 : p;
   return onPath ? (124.5 + q * 110) / PAL_W : (111.5 - q * 110) / PAL_W;
@@ -157,6 +153,14 @@ const FILLET_REACH_PER_HALF = 1.25; // * fillHalf, along each arm.
 const FILLET_MAX_WEDGE = 2.6; // Radians.
 const FILLET_CORNER_LIM = 2.2; // * edge half-width: skip distant corners.
 const FILLET_BEZIER_STEPS = 8;
+const DISC_SEGS = 16; // Rim segments on tip/junction seal discs.
+
+// Wrap (closed) or clamp (open) a world arc into a chain's [0, total].
+function normArc(a: number, total: number, closed: boolean): number {
+  if (total <= 0) return 0;
+  if (closed) return ((a % total) + total) % total;
+  return Math.max(0, Math.min(total, a));
+}
 
 function mixHex(a: number, b: number, t: number): number {
   const ar = (a >> 16) & 255;
@@ -413,7 +417,7 @@ export class RibbonRenderer {
   // Live junction-rounding radius multiplier (the cuspRadius slider;
   // main.ts keeps it synced every tick).
   cuspRadius = 1;
-  private filletGfx: Graphics | null = null;
+  private axisScratch = new Float32Array(2);
   private junctionArms: Array<{
     particles: number[];
     arms: Array<{ chain: number; slot: number; dir: 1 | -1 }>;
@@ -439,7 +443,9 @@ export class RibbonRenderer {
   // Shared 2D palette pixels (CPU-side fillet/disc sampling) + the section
   // color field: piecewise-linear v(ctrl) per chain from section_colors
   // (or spatial noise), baked to a per-SAMPLE V cache on the first update.
-  private palettePx: Uint8Array | null = null;
+  private paletteTex: Texture | null = null;
+  private filletLayer: Container | null = null;
+  private filletMesh: TriFanMesh | null = null;
   private sectionSegs: VSegment[][] = [];
   private sectionNoise: ((x: number, y: number) => number) | null = null;
   private vCache: (Float32Array | number)[] = [];
@@ -456,8 +462,7 @@ export class RibbonRenderer {
     const overLayer = new Container();
     this.root.addChild(baseLayer, filletLayer, eraseLayer, overLayer);
     if (style.paletteMode) {
-      this.filletGfx = new Graphics();
-      filletLayer.addChild(this.filletGfx);
+      this.filletLayer = filletLayer;
     }
 
     ps.chains.forEach((chain, i) => {
@@ -486,7 +491,7 @@ export class RibbonRenderer {
       const fill = new RibbonMesh(count, closed, base);
       if (style.paletteMode) {
         const pal = paletteFor(style.baseHue);
-        this.palettePx = pal.px;
+        this.paletteTex = pal.tex;
         fill.mesh.texture = pal.tex;
         fill.mesh.tint = 0xffffff;
         fill.writeUVs(new Float32Array(count).fill(U_BASE), 0.5);
@@ -1785,20 +1790,9 @@ export class RibbonRenderer {
     return Math.min(1, (floor + bump * 0.8) * fade * endWin);
   }
 
-  // The paint field at a single chain position (same rules as
-  // writeChainPaint, point-evaluated): used to color fillets in sync with
-  // the live paint, including the pulse animation.
-  private paintUAt(chain: number, ctrl: number): number {
-    const samples = this.chainSamples[chain];
-    if (!samples) return U_BASE;
-    const closed = this.ps.chainBreakAfter[chain] < 0;
-    return this.paintUAtArc(
-      chain,
-      this.paintArcAt(samples, ctrl, closed),
-      closed
-    );
-  }
-
+  // The paint field at a single chain ARC (same rules as writeChainPaint,
+  // point-evaluated): colors joinery in sync with the live paint,
+  // including the pulse animation.
   private paintUAtArc(chain: number, a: number, closed: boolean): number {
     const samples = this.chainSamples[chain];
     if (!samples) return U_BASE;
@@ -1848,42 +1842,127 @@ export class RibbonRenderer {
     return u;
   }
 
-  // CPU-side 2D palette sample (bilinear, matching the GPU's filtering
-  // closely enough for flat fills).
-  private paletteColor2(u: number, v: number): number {
-    const px = this.palettePx;
-    if (!px) return 0xffffff;
-    const x = Math.max(0.5, Math.min(PAL_W - 1.5, u * PAL_W - 0.5));
-    const i0 = Math.floor(x);
-    const fx = x - i0;
-    const y = Math.max(0.5, Math.min(PAL_H - 1.5, vRow(v) * PAL_H - 0.5));
-    const r0 = Math.floor(y);
-    const fy = y - r0;
-    const chan = (row: number, col: number, c: number): number =>
-      px[(row * PAL_W + col) * 4 + c];
-    const lerp2 = (c: number): number => {
-      const top = chan(r0, i0, c) + (chan(r0, i0 + 1, c) - chan(r0, i0, c)) * fx;
-      const bot =
-        chan(r0 + 1, i0, c) + (chan(r0 + 1, i0 + 1, c) - chan(r0 + 1, i0, c)) * fx;
-      return top + (bot - top) * fy;
-    };
-    return (
-      (Math.round(lerp2(0)) << 16) |
-      (Math.round(lerp2(1)) << 8) |
-      Math.round(lerp2(2))
-    );
+  // Section V at a world ARC along a chain, read from the baked per-sample
+  // cache - the SAME data the ribbon's own UVs carry, so overlay geometry
+  // sampling through here matches the adjacent ribbon exactly at a seam.
+  private vAtArc(chain: number, arc: number): number {
+    const cache = this.vCache[chain];
+    if (typeof cache === "number") return cache;
+    const samples = this.chainSamples[chain];
+    if (!samples || samples.totalLength <= 0) return 0.5;
+    const count = cache.length;
+    const total = samples.totalLength;
+    if (this.ps.chainBreakAfter[chain] < 0) {
+      const f = (normArc(arc, total, true) / total) * count;
+      const k0 = Math.floor(f) % count;
+      const k1 = (k0 + 1) % count;
+      const fr = f - Math.floor(f);
+      return cache[k0] + (cache[k1] - cache[k0]) * fr;
+    }
+    const f = (normArc(arc, total, false) / total) * (count - 1);
+    const k0 = Math.floor(f);
+    const k1 = Math.min(count - 1, k0 + 1);
+    const fr = f - k0;
+    return cache[k0] + (cache[k1] - cache[k0]) * fr;
   }
 
-  // Rounded junction fillets: for each wedge between adjacent arms, a
-  // concave patch from one arm's edge to the next (quadratic bezier with
-  // the edge-intersection corner as control), split at its midpoint so
-  // each half wears its own arm's live paint color. Redrawn every paint
-  // tick: positions are live, and the colors ride the gameplay animation.
+  // Rounded junction joinery: tip/seal discs and, for each wedge between
+  // adjacent junction arms, a concave patch from one arm's edge to the
+  // next (quadratic bezier with the edge-intersection corner as control).
+  // Rebuilt every paint tick: positions are live, and the colors ride the
+  // gameplay animation. Everything renders on ONE palette-textured fan
+  // mesh: per-vertex UVs let discs and wedges carry the same BLENDED
+  // material as the ribbons they join, which no flat Graphics fill can -
+  // a flat overlay over a ramping section color drew a visible step (or a
+  // stamped circle of junction color) at its boundary, the
+  // junction-blotch reports.
   private rebuildFillets(): void {
-    const g = this.filletGfx;
-    if (!g) return;
-    g.clear();
+    if (!this.filletLayer || !this.paletteTex) return;
     const fillHalf = this.style.threadWidth / 2;
+    const nDiscs =
+      this.freeTips.length + this.fusedTips.length + this.junctionArms.length;
+    if (nDiscs === 0) return;
+    if (!this.filletMesh) {
+      let armTotal = 0;
+      for (const jn of this.junctionArms) armTotal += jn.arms.length;
+      this.filletMesh = new TriFanMesh(
+        this.paletteTex,
+        armTotal * (FILLET_BEZIER_STEPS + 2) + nDiscs * (DISC_SEGS + 2),
+        (armTotal * FILLET_BEZIER_STEPS + nDiscs * DISC_SEGS) * 3
+      );
+      this.filletLayer.addChild(this.filletMesh.mesh);
+    }
+    const fm = this.filletMesh;
+    fm.begin();
+
+    // A disc fan whose rim samples the underlying thread's own material at
+    // each rim point's arc (the point's offset projected onto the thread's
+    // local axis): the disc IS a patch of that thread's paint, so it
+    // vanishes into ramped section colors instead of stamping a circle.
+    const pushDisc = (
+      cx: number,
+      cy: number,
+      r: number,
+      chain: number,
+      arc0: number,
+      ax: number,
+      ay: number
+    ): void => {
+      const closed = this.ps.chainBreakAfter[chain] < 0;
+      const samples = this.chainSamples[chain];
+      const total = samples ? samples.totalLength : 1;
+      const rim: number[] = [];
+      for (let i = 0; i <= DISC_SEGS; i++) {
+        const th = ((i % DISC_SEGS) / DISC_SEGS) * Math.PI * 2;
+        const px = cx + Math.cos(th) * r;
+        const py = cy + Math.sin(th) * r;
+        const arc = normArc(
+          arc0 + (px - cx) * ax + (py - cy) * ay,
+          total,
+          closed
+        );
+        rim.push(
+          px,
+          py,
+          this.paintUAtArc(chain, arc, closed),
+          this.vAtArc(chain, arc)
+        );
+      }
+      const arcC = normArc(arc0, total, closed);
+      fm.pushFan(
+        cx,
+        cy,
+        this.paintUAtArc(chain, arcC, closed),
+        this.vAtArc(chain, arcC),
+        rim
+      );
+    };
+    // Local thread direction at an arc (two nearby probes), into
+    // axisScratch.
+    const axisAt = (chain: number, arc: number): void => {
+      const samples = this.chainSamples[chain]!;
+      const closed = this.ps.chainBreakAfter[chain] < 0;
+      const total = samples.totalLength;
+      this.sampleAt(
+        samples,
+        normArc(arc + 0.2, total, closed),
+        this.sampleScratch,
+        0
+      );
+      const x1 = this.sampleScratch[0];
+      const y1 = this.sampleScratch[1];
+      this.sampleAt(
+        samples,
+        normArc(arc - 0.2, total, closed),
+        this.sampleScratch,
+        0
+      );
+      const dx = x1 - this.sampleScratch[0];
+      const dy = y1 - this.sampleScratch[1];
+      const len = Math.hypot(dx, dy) || 1;
+      this.axisScratch[0] = dx / len;
+      this.axisScratch[1] = dy / len;
+    };
 
     // Tip positions read the ENDPOINT SAMPLE directly: sampleAt wraps its
     // arc modulo totalLength, so asking it for arc == total lands at arc 0
@@ -1895,39 +1974,58 @@ export class RibbonRenderer {
       this.sampleScratch[0] = samples.positions[k * 2];
       this.sampleScratch[1] = samples.positions[k * 2 + 1];
     };
-    // Rounded caps: dead-end tips get a disc at the terminal colored from
-    // their own live paint (nothing overlaps a free tip).
+    // Rounded caps: dead-end tips get a disc at the terminal wearing
+    // their own live material (nothing overlaps a free tip).
     for (const tip of this.freeTips) {
       const samples = this.chainSamples[tip.chain];
       if (!samples) continue;
       tipXY(samples, tip.atEnd);
-      const ctrl = tip.atEnd ? this.ps.chains[tip.chain].length - 1 : 0;
-      g.circle(this.sampleScratch[0], this.sampleScratch[1], fillHalf * 0.99);
-      g.fill({
-        color: this.paletteColor2(
-          this.paintUAt(tip.chain, ctrl),
-          this.sectionVAt(tip.chain, ctrl)
-        ),
-      });
+      const cx = this.sampleScratch[0];
+      const cy = this.sampleScratch[1];
+      const k = tip.atEnd ? samples.count - 1 : 0;
+      const tx = samples.tangents[k * 2];
+      const ty = samples.tangents[k * 2 + 1];
+      const tl = Math.hypot(tx, ty) || 1;
+      pushDisc(
+        cx,
+        cy,
+        fillHalf * 0.99,
+        tip.chain,
+        tip.atEnd ? samples.totalLength : 0,
+        tx / tl,
+        ty / tl
+      );
     }
     // Tucked fused tips get the same disc (rounds the cap, covers its
-    // corner ears and the cap/host sliver) but wear the HOST's paint: the
-    // disc lies mostly on the host's face, and arm-colored discs rendered
-    // as floating pale/gold dots wherever the two paints disagreed.
+    // corner ears and the cap/host sliver) but wear the HOST's material:
+    // the disc lies mostly on the host's face, and arm-material discs
+    // rendered as floating pale/gold dots wherever the two paints
+    // disagreed.
     for (const tip of this.fusedTips) {
       const samples = this.chainSamples[tip.chain];
-      if (!samples) continue;
+      const hostSamples = this.chainSamples[tip.hostChain];
+      if (!samples || !hostSamples) continue;
       tipXY(samples, tip.atEnd);
-      g.circle(this.sampleScratch[0], this.sampleScratch[1], fillHalf * 0.99);
-      g.fill({
-        color: this.paletteColor2(
-          this.paintUAt(tip.hostChain, tip.hostCtrl),
-          this.sectionVAt(tip.hostChain, tip.hostCtrl)
-        ),
-      });
+      const cx = this.sampleScratch[0];
+      const cy = this.sampleScratch[1];
+      const closedH = this.ps.chainBreakAfter[tip.hostChain] < 0;
+      const arcH = this.paintArcAt(hostSamples, tip.hostCtrl, closedH);
+      axisAt(tip.hostChain, arcH);
+      pushDisc(
+        cx,
+        cy,
+        fillHalf * 0.99,
+        tip.hostChain,
+        arcH,
+        this.axisScratch[0],
+        this.axisScratch[1]
+      );
     }
 
-    if (this.junctionArms.length === 0) return;
+    if (this.junctionArms.length === 0) {
+      fm.commit();
+      return;
+    }
     const w = fillHalf * 0.97;
     const L = fillHalf * FILLET_REACH_PER_HALF * this.cuspRadius;
     const drawWedges = this.cuspRadius > 0.05 && L > w * 0.3;
@@ -1947,18 +2045,19 @@ export class RibbonRenderer {
         ang: number;
         dx: number;
         dy: number;
-        color: number;
+        chain: number;
+        dir: number;
+        arc0: number;
+        closed: boolean;
+        total: number;
       }> = [];
       for (const a of jn.arms) {
         const samples = this.chainSamples[a.chain];
         if (!samples) continue;
+        const closedA = this.ps.chainBreakAfter[a.chain] < 0;
         this.sampleAt(
           samples,
-          this.paintArcAt(
-            samples,
-            a.slot + a.dir * 0.8,
-            this.ps.chainBreakAfter[a.chain] < 0
-          ),
+          this.paintArcAt(samples, a.slot + a.dir * 0.8, closedA),
           this.sampleScratch,
           0
         );
@@ -1968,35 +2067,24 @@ export class RibbonRenderer {
         if (len < 0.15) continue;
         dx /= len;
         dy /= len;
-        // Color probe scales with the patch reach: the fillet is a FLAT
-        // fill over [0, ~L] of the arm, so sample near its centroid - a
-        // fixed far offset rendered dark wings inside the bright junction
-        // core once cuspRadius grew the patches.
-        const closedA = this.ps.chainBreakAfter[a.chain] < 0;
-        let colorArc =
-          this.paintArcAt(samples, a.slot, closedA) +
-          a.dir * Math.max(0.15, L * 0.45);
-        const totalA = samples.totalLength;
-        colorArc = closedA
-          ? ((colorArc % totalA) + totalA) % totalA
-          : Math.max(0, Math.min(totalA, colorArc));
         arms.push({
           ang: Math.atan2(dy, dx),
           dx,
           dy,
-          color: this.paletteColor2(
-            this.paintUAtArc(a.chain, colorArc, closedA),
-            this.sectionVAt(a.chain, a.slot + a.dir)
-          ),
+          chain: a.chain,
+          dir: a.dir,
+          arc0: this.paintArcAt(samples, a.slot, closedA),
+          closed: closedA,
+          total: samples.totalLength,
         });
       }
       if (arms.length < 2) continue;
 
-      // Seal the junction center with a host-colored disc under the
+      // Seal the junction center with a disc of HOST material under the
       // fillets: the concave-side miter clamp can thin a host ribbon at a
       // bend, opening a nick between a tucked cap and the receded edge
-      // regardless of tuck depth. Color from a pass-through occurrence
-      // (one with both directions present), the thread the disc lies on.
+      // regardless of tuck depth. Host = a pass-through occurrence (one
+      // with both directions present), the thread the disc lies on.
       let hostArm = jn.arms[0];
       const seen = new Map<string, number>();
       for (const a of jn.arms) {
@@ -2004,13 +2092,21 @@ export class RibbonRenderer {
         seen.set(key, (seen.get(key) ?? 0) + 1);
         if (seen.get(key) === 2) hostArm = a;
       }
-      g.circle(jx, jy, fillHalf * 0.92);
-      g.fill({
-        color: this.paletteColor2(
-          this.paintUAt(hostArm.chain, hostArm.slot),
-          this.sectionVAt(hostArm.chain, hostArm.slot)
-        ),
-      });
+      const hostSamples = this.chainSamples[hostArm.chain];
+      if (hostSamples) {
+        const closedH = this.ps.chainBreakAfter[hostArm.chain] < 0;
+        const arcH = this.paintArcAt(hostSamples, hostArm.slot, closedH);
+        axisAt(hostArm.chain, arcH);
+        pushDisc(
+          jx,
+          jy,
+          fillHalf * 0.92,
+          hostArm.chain,
+          arcH,
+          this.axisScratch[0],
+          this.axisScratch[1]
+        );
+      }
 
       if (!drawWedges) continue;
       arms.sort((p, q) => p.ang - q.ang);
@@ -2055,27 +2151,49 @@ export class RibbonRenderer {
         const pbx = o2x + B.dx * L;
         const pby = o2y + B.dy * L;
 
-        // Quadratic bezier PA -> (corner) -> PB, split at the midpoint.
+        // Quadratic bezier PA -> (corner) -> PB, fanned from the corner.
         const n = FILLET_BEZIER_STEPS;
-        const ptsX: number[] = [];
-        const ptsY: number[] = [];
+        // Per-vertex palette UVs: each rim point samples its own distance
+        // d from the junction along BOTH arms' live materials (gameplay U
+        // + section V via the same per-sample cache the ribbons wear),
+        // blended across the wedge by the bezier parameter q. At q=0/q=1
+        // the wedge edge matches the adjacent ribbon exactly, the pulse
+        // animation rides through, and the interior is the GPU-blended
+        // transition between the two arms.
+        const rim: number[] = [];
         for (let i = 0; i <= n; i++) {
           const q = i / n;
           const m0 = (1 - q) * (1 - q);
           const m1 = 2 * (1 - q) * q;
           const m2 = q * q;
-          ptsX.push(m0 * pax + m1 * cx + m2 * pbx);
-          ptsY.push(m0 * pay + m1 * cy + m2 * pby);
+          const px = m0 * pax + m1 * cx + m2 * pbx;
+          const py = m0 * pay + m1 * cy + m2 * pby;
+          const d = Math.hypot(px - jx, py - jy);
+          const aArc = normArc(A.arc0 + A.dir * d, A.total, A.closed);
+          const bArc = normArc(B.arc0 + B.dir * d, B.total, B.closed);
+          const u =
+            this.paintUAtArc(A.chain, aArc, A.closed) * (1 - q) +
+            this.paintUAtArc(B.chain, bArc, B.closed) * q;
+          const v =
+            this.vAtArc(A.chain, aArc) * (1 - q) +
+            this.vAtArc(B.chain, bArc) * q;
+          rim.push(px, py, u, v);
         }
-        const half = n / 2;
-        const polyA: number[] = [cx, cy];
-        for (let i = 0; i <= half; i++) polyA.push(ptsX[i], ptsY[i]);
-        g.poly(polyA).fill({ color: A.color });
-        const polyB: number[] = [cx, cy];
-        for (let i = half; i <= n; i++) polyB.push(ptsX[i], ptsY[i]);
-        g.poly(polyB).fill({ color: B.color });
+        const dC = Math.hypot(cx - jx, cy - jy);
+        const aArcC = normArc(A.arc0 + A.dir * dC, A.total, A.closed);
+        const bArcC = normArc(B.arc0 + B.dir * dC, B.total, B.closed);
+        fm.pushFan(
+          cx,
+          cy,
+          (this.paintUAtArc(A.chain, aArcC, A.closed) +
+            this.paintUAtArc(B.chain, bArcC, B.closed)) /
+            2,
+          (this.vAtArc(A.chain, aArcC) + this.vAtArc(B.chain, bArcC)) / 2,
+          rim
+        );
       }
     }
+    fm.commit();
   }
 
   destroy(): void {
