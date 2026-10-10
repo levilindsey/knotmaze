@@ -102,7 +102,16 @@ export function assignPitches(
   root: number,
   lengths: number[]
 ): PitchAssignment {
-  const pitches = spacePitches(space, octaves, root);
+  return assignPitchesFromList(spacePitches(space, octaves, root), lengths);
+}
+
+// Same bucketing over an EXPLICIT ascending pitch list - music mode uses
+// the song's own distinct pitches, so every segment belongs to a note the
+// piece actually plays.
+export function assignPitchesFromList(
+  pitches: number[],
+  lengths: number[]
+): PitchAssignment {
   const n = lengths.length;
   const segFreq = new Array<number>(n).fill(pitches[0] ?? 220);
   if (n === 0 || pitches.length === 0) return { segFreq, byFreq: [] };

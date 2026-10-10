@@ -37,6 +37,7 @@ export interface PanelCallbacks {
   // Audio-only change (sound mode / pitch space / octaves): re-derive the
   // pitch assignment without rebuilding the scene.
   onAudioChange: () => void;
+  onVolumeChange: () => void;
 }
 
 interface ChangeEvent {
@@ -75,11 +76,25 @@ export function buildPanel(
   // at the window height and scroll INSIDE it (wheel over the panel stays
   // in the panel; the thin scrollbar matches the dark theme).
   const wrap = pane.element.parentElement;
+  const SCROLL_KEY = "knotmaze.panelScroll";
   if (wrap) {
     wrap.style.maxHeight = "calc(100vh - 16px)";
     wrap.style.overflowY = "auto";
     wrap.style.overscrollBehavior = "contain";
     wrap.style.scrollbarWidth = "thin";
+    // Scroll position persists across sessions (restored at the end of
+    // buildPanel, once the folders exist and the pane has its height).
+    wrap.addEventListener(
+      "scroll",
+      () => {
+        try {
+          localStorage.setItem(SCROLL_KEY, String(wrap.scrollTop));
+        } catch {
+          // Storage unavailable: position just doesn't persist.
+        }
+      },
+      { passive: true }
+    );
   }
   const style = document.createElement("style");
   style.textContent =
@@ -113,6 +128,11 @@ export function buildPanel(
   const markAll = (): void => {
     for (const t of tracked) markRow(t);
   };
+
+  // Conditional visibility (assigned after all rows exist): rows that
+  // only matter under some other param's value hide otherwise. Runs
+  // after EVERY row change/reset, so dependencies never go stale.
+  let refreshCond: () => void = () => {};
 
   // One adjustable row: tooltip + reset glyph + modified tint. `after`
   // runs on every change AND after a glyph reset (the forwarded ev lets
@@ -148,12 +168,14 @@ export function buildPanel(
         api.refresh?.();
         markRow(t);
         after();
+        refreshCond();
       });
       label.appendChild(btn);
     }
     api.on("change", (ev) => {
       markRow(t);
       after(ev);
+      refreshCond();
     });
     tracked.push(t);
     markRow(t);
@@ -168,12 +190,42 @@ export function buildPanel(
   const p = params as unknown as Record<string, unknown>;
   const s = settings as unknown as Record<string, unknown>;
   const D = PARAM_DEFAULTS as unknown as Record<string, unknown>;
+
+  // Folder open/closed state persists across sessions (localStorage),
+  // keyed by folder title.
+  const FOLD_KEY = "knotmaze.panelFolds";
+  let folds: Record<string, boolean> = {};
+  try {
+    folds = JSON.parse(localStorage.getItem(FOLD_KEY) ?? "{}") as Record<
+      string,
+      boolean
+    >;
+  } catch {
+    folds = {};
+  }
+  const folder = (title: string, defaultExpanded: boolean): Parent => {
+    const f = pane.addFolder({
+      title,
+      expanded: folds[title] ?? defaultExpanded,
+    }) as unknown as Parent & {
+      on: (ev: "fold", cb: (e: { expanded: boolean }) => void) => unknown;
+    };
+    f.on("fold", (e) => {
+      folds[title] = e.expanded;
+      try {
+        localStorage.setItem(FOLD_KEY, JSON.stringify(folds));
+      } catch {
+        // Storage unavailable: folds just don't persist.
+      }
+    });
+    return f;
+  };
   const regenerateWhenDone = (ev?: ChangeEvent): void => {
     if (!ev || ev.last !== false) callbacks.onRegenerate();
   };
 
   // --- Design -------------------------------------------------------------
-  const fDesign = pane.addFolder({ title: "Design", expanded: true }) as Parent;
+  const fDesign = folder("Design", true);
   row(
     fDesign, p, "gridSize", { min: 4, max: 24, step: 1 },
     "Lattice size. Bigger = a larger, denser knot with more threads. Regenerates the design.",
@@ -193,28 +245,23 @@ export function buildPanel(
     .on("click", callbacks.onReseed);
 
   // --- Maze ---------------------------------------------------------------
-  const fMaze = pane.addFolder({ title: "Maze", expanded: true }) as Parent;
+  const fMaze = folder("Maze", true);
   row(
     fMaze, p, "mazeFabric", undefined,
     "Branching maze: walk the thread from the green entrance to the orange exit. Tap a highlighted run at your branch point to advance (tap the gold one to backtrack); tug anywhere else.",
     D.mazeFabric, () => callbacks.onModeChange()
   );
-  row(
+  const deadEndsRow = row(
     fMaze, p, "deadEnds", undefined,
     "Dead ends: some loops become long threads that end, somewhere far away, in a loose tip. Off = a pure braided maze where every wrong turn loops back. Regenerates the maze.",
     D.deadEnds, () => callbacks.onModeChange()
   );
-  let refreshVizRows = (): void => {};
   const pathVizRow = row(
     fMaze, p, "pathViz",
     { options: { gold: "gold", trail: "trail", string: "string" } },
     "How your route is shown: gold = the traveled thread recolors; trail = memory mode, only a short trail stays gold and there is no backtracking; string = unroll a thin white yarn behind you - it U-turns at junctions when you backtrack and is never picked up. Applies live.",
-    D.pathViz, () => {
-      refreshVizRows();
-      callbacks.onTrailChange();
-    }
+    D.pathViz, () => callbacks.onTrailChange()
   );
-  void pathVizRow;
   const trailLenRow = row(
     fMaze, p, "trailLength", { min: 1, max: 15, step: 0.5 },
     "How much recent path stays lit in memory mode, in lattice units. Applies live.",
@@ -225,36 +272,32 @@ export function buildPanel(
     "Ariadne string tension: 1 lays the yarn taut along the thread, 0 leaves it loose and wavy like slack cotton. Applies live.",
     D.tension, () => callbacks.onTrailChange()
   );
-  row(
+  const fowRow = row(
     fMaze, p, "fogOfWar", undefined,
     "Fog of war: the maze hides until you have explored close by; explored areas stay visible. Applies live.",
-    D.fogOfWar, () => {
-      refreshVizRows();
-      callbacks.onTrailChange();
-    }
+    D.fogOfWar, () => callbacks.onTrailChange()
   );
   const fowRadiusRow = row(
     fMaze, p, "fowRadius", { min: 1.5, max: 10, step: 0.25 },
     "How far around your explored path the fog lifts, in lattice units. Applies live and reshapes everything already explored.",
     D.fowRadius, () => callbacks.onTrailChange()
   );
-  row(
+  const moveSpeedRow = row(
     fMaze, p, "moveSpeed", { min: 0.25, max: 4, step: 0.05 },
     "Maze travel speed: how fast the dot and the gold front move along the thread. Applies live.",
     D.moveSpeed, () => callbacks.onSlackChange()
   );
-  button(fMaze, "Reset path", "Clear the traced maze path and start over from the entrance.")
-    .on("click", callbacks.onResetPath);
-  // The per-mode rows only show for their mode.
-  refreshVizRows = (): void => {
-    trailLenRow.hidden = params.pathViz !== "trail";
-    tensionRow.hidden = params.pathViz !== "string";
-    fowRadiusRow.hidden = !params.fogOfWar;
-  };
-  refreshVizRows();
+  const resetPathBtn = button(
+    fMaze,
+    "Reset path",
+    "Clear the traced maze path and start over from the entrance."
+  ) as ButtonApi & { hidden: boolean };
+  resetPathBtn.on("click", callbacks.onResetPath);
+  void fowRow;
+  void pathVizRow;
 
   // --- Look ---------------------------------------------------------------
-  const fLook = pane.addFolder({ title: "Look", expanded: true }) as Parent;
+  const fLook = folder("Look", true);
   row(
     fLook, p, "colorScheme",
     {
@@ -291,16 +334,13 @@ export function buildPanel(
   );
 
   // --- Motion & intro -----------------------------------------------------
-  const fMotion = pane.addFolder({
-    title: "Motion & intro",
-    expanded: false,
-  }) as Parent;
+  const fMotion = folder("Motion & intro", false);
   row(
     fMotion, p, "flowStrength", { min: 0, max: 1, step: 0.05 },
     "Flow undulation: how far the whole fabric sways, as if drifting in water. 0 = perfectly still. Render-only - applies live, even while the knot sleeps.",
     D.flowStrength, () => callbacks.onSlackChange()
   );
-  row(
+  const flowSpeedRow = row(
     fMotion, p, "flowSpeed", { min: 0, max: 3, step: 0.05 },
     "How fast the flow undulation drifts. Applies live.",
     D.flowSpeed, () => callbacks.onSlackChange()
@@ -319,7 +359,7 @@ export function buildPanel(
     "How the design animates in: instant = appear fully drawn; trace = grow outward from the maze entrance, splitting at every junction; bloom = the same flood from several random spots at once; draw = pen-draw each strand end to end; ink = a dye wave spreading from the entrance. Rebuilds the scene.",
     D.appearMode, () => callbacks.onModeChange()
   );
-  row(
+  const appearSpeedRow = row(
     fMotion, p, "appearSpeed", { min: 0.3, max: 4, step: 0.05 },
     "How fast the appearance animation reveals the threads. Applies live.",
     D.appearSpeed, () => callbacks.onSlackChange()
@@ -331,16 +371,13 @@ export function buildPanel(
   ).on("click", callbacks.onReplaySettle);
 
   // --- Touch & feel ---------------------------------------------------------
-  const fFeel = pane.addFolder({
-    title: "Touch & feel",
-    expanded: false,
-  }) as Parent;
+  const fFeel = folder("Touch & feel", false);
   row(
     fFeel, p, "tugLimit", { min: 0.5, max: 6, step: 0.1 },
     "How far a thread can be tugged, in thread widths. The stretch resists more as it nears the limit (drag further, move less). Applies live.",
     D.tugLimit, () => callbacks.onSlackChange()
   );
-  row(
+  const snapBackRow = row(
     fFeel, p, "snapBack", { min: 0, max: 12, step: 0.5 },
     "How quickly a released thread eases back to where it was grabbed (soft pluck style). 0 = release in place. Applies live.",
     D.snapBack, () => callbacks.onSlackChange()
@@ -352,13 +389,13 @@ export function buildPanel(
     D.pluckStyle, () => callbacks.onSlackChange()
   );
   row(
-    fFeel, s, "temperature", { min: 0, max: 1, step: 0.01 },
+    fFeel, s, "temperature", { min: 0, max: 0.5, step: 0.01 },
     "Agitation. Shake the knot with noise; slide back to 0 and it settles into a new pose.",
     SETTINGS_DEFAULTS.temperature, () => callbacks.onTemperatureChange()
   );
 
   // --- Sound ----------------------------------------------------------------
-  const fSound = pane.addFolder({ title: "Sound", expanded: false }) as Parent;
+  const fSound = folder("Sound", false);
   row(
     fSound, p, "soundMode",
     {
@@ -367,7 +404,7 @@ export function buildPanel(
     "Pluck behavior: none = silent; manual = your plucks only; random = the knot plucks a random thread now and then; music = a scripted song plays itself on matching threads. Auto plucks physically move the thread.",
     D.soundMode, () => callbacks.onAudioChange()
   );
-  row(
+  const pitchSpaceRow = row(
     fSound, p, "pitchSpace",
     {
       options: {
@@ -385,10 +422,20 @@ export function buildPanel(
     "Scale the thread pitches live in: every maze segment gets one pitch by length (longer rings lower). chromatic = all 12 half steps - enough to play anything.",
     D.pitchSpace, () => callbacks.onAudioChange()
   );
-  row(
+  const octavesRow = row(
     fSound, p, "octaves", { min: 1, max: 4, step: 1 },
     "How many octaves the segment pitches spread across.",
     D.octaves, () => callbacks.onAudioChange()
+  );
+  const soundSpeedRow = row(
+    fSound, p, "soundSpeed", { min: 0.25, max: 3, step: 0.05 },
+    "Tempo of music mode and cadence of random plucks. 1 = normal.",
+    D.soundSpeed, () => callbacks.onAudioChange()
+  );
+  row(
+    fSound, p, "volume", { min: 0, max: 1, step: 0.01 },
+    "Master output level.",
+    D.volume, () => callbacks.onVolumeChange()
   );
   row(
     fSound, s, "muted", undefined,
@@ -397,10 +444,7 @@ export function buildPanel(
   );
 
   // --- Physics --------------------------------------------------------------
-  const fPhysics = pane.addFolder({
-    title: "Physics",
-    expanded: false,
-  }) as Parent;
+  const fPhysics = folder("Physics", false);
   row(
     fPhysics, p, "simSpeed", { min: 0, max: 10, step: 0.5 },
     "Simulation speed. 0 pauses, 5 is real time, 10 is 5x.",
@@ -443,10 +487,7 @@ export function buildPanel(
   );
 
   // --- Advanced ---------------------------------------------------------------
-  const fAdvanced = pane.addFolder({
-    title: "Advanced",
-    expanded: false,
-  }) as Parent;
+  const fAdvanced = folder("Advanced", false);
   row(
     fAdvanced, s, "showDebug", undefined,
     "Overlay the physics debug view (particles, bindings, contacts).",
@@ -461,10 +502,45 @@ export function buildPanel(
     Object.assign(params, PARAM_DEFAULTS);
     settings.temperature = SETTINGS_DEFAULTS.temperature;
     pane.refresh();
-    refreshVizRows();
     markAll();
     callbacks.onRegenerate();
+    refreshCond();
   });
+
+  // The full conditional-visibility map (the 2026-10-10 audit): a row
+  // hides whenever the feature it tunes is off or owned by another mode.
+  refreshCond = (): void => {
+    const fab = params.mazeFabric;
+    deadEndsRow.hidden = !fab;
+    pathVizRow.hidden = !fab;
+    trailLenRow.hidden = !fab || params.pathViz !== "trail";
+    tensionRow.hidden = !fab || params.pathViz !== "string";
+    fowRow.hidden = !fab;
+    fowRadiusRow.hidden = !fab || !params.fogOfWar;
+    moveSpeedRow.hidden = !fab;
+    resetPathBtn.hidden = !fab;
+    // Music mode derives its pitch set from the song itself; manual and
+    // random are the modes where the space/octaves choices apply.
+    const freePitch =
+      params.soundMode === "manual" || params.soundMode === "random";
+    pitchSpaceRow.hidden = !freePitch;
+    octavesRow.hidden = !freePitch;
+    soundSpeedRow.hidden =
+      params.soundMode !== "random" && params.soundMode !== "music";
+    snapBackRow.hidden = params.pluckStyle !== "soft";
+    appearSpeedRow.hidden = params.appearMode === "instant";
+    flowSpeedRow.hidden = params.flowStrength <= 0;
+  };
+  refreshCond();
+
+  if (wrap) {
+    const saved = Number(localStorage.getItem(SCROLL_KEY) ?? "0");
+    if (saved > 0) {
+      requestAnimationFrame(() => {
+        wrap.scrollTop = saved;
+      });
+    }
+  }
 
   return pane;
 }

@@ -23,6 +23,7 @@ import type { GenerationParams } from "./core/types";
 import { KnotSynth } from "./audio/knot_synth";
 import {
   assignPitches,
+  assignPitchesFromList,
   segmentsNear,
   noteToFreq,
 } from "./audio/pitch_space";
@@ -35,7 +36,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4: legacy maze retired 2026-10-10";
+const BUILD_STAMP = "P4: sampleAt fix + fade tails + harp 2026-10-10";
 
 // Appearance pre-sim: with any non-instant appear mode the sim settles
 // briefly BEFORE the first rendered frame, so the reveal plays over a
@@ -290,7 +291,9 @@ async function main(): Promise<void> {
     debug.container.scale.set(1 / debug.cellSize);
     debug.container.visible = settings.showDebug;
 
-    // Order: ribbons, the fabric gameplay overlay, debug.
+    // Order: head glow UNDER the weave, ribbons, the fabric gameplay
+    // overlay, debug.
+    if (fabric) root.addChild(fabric.underContainer);
     root.addChild(renderer.root);
     if (fabric) root.addChild(fabric.overContainer);
     root.addChild(debug.container);
@@ -306,14 +309,27 @@ async function main(): Promise<void> {
   // Re-derive the per-segment pitch assignment (cheap; no scene rebuild).
   function rebuildAudioMap(): void {
     if (!ps) return;
-    const root = params.seed % 12;
+    let assignFor: (lengths: number[]) => PitchAssignment;
+    if (params.soundMode === "music") {
+      // Music mode: the buckets are EXACTLY the song's distinct pitches,
+      // so every thread belongs to some note the piece actually plays
+      // and every note has segments to animate. pitchSpace/octaves do
+      // not apply here (the panel hides them).
+      const set = new Set<number>();
+      for (const r of SCARBOROUGH_FAIR.notes) {
+        if (!r.note) continue;
+        const f = noteToFreq(r.note);
+        if (Number.isFinite(f)) set.add(Math.round(f * 1000) / 1000);
+      }
+      const pitches = [...set].sort((a, b) => a - b);
+      assignFor = (lengths) => assignPitchesFromList(pitches, lengths);
+    } else {
+      const root = params.seed % 12;
+      assignFor = (lengths) =>
+        assignPitches(params.pitchSpace, params.octaves, root, lengths);
+    }
     if (walkGraph) {
-      audioAssign = assignPitches(
-        params.pitchSpace,
-        params.octaves,
-        root,
-        walkGraph.edges.map((e) => e.length)
-      );
+      audioAssign = assignFor(walkGraph.edges.map((e) => e.length));
       audioRuns = new Map();
       audioSegSite = walkGraph.edges.map((e) => ({
         chain: e.chain,
@@ -328,12 +344,7 @@ async function main(): Promise<void> {
         list.push({ c0: e.ctrlA, c1: e.ctrlB, seg: e.id });
       }
     } else {
-      audioAssign = assignPitches(
-        params.pitchSpace,
-        params.octaves,
-        root,
-        ps.chains.map((c) => c.length)
-      );
+      audioAssign = assignFor(ps.chains.map((c) => c.length));
       audioRuns = null;
       audioSegSite = ps.chains.map((c, i) => ({
         chain: i,
@@ -440,7 +451,12 @@ async function main(): Promise<void> {
       writeParams(params);
       rebuildAudioMap();
     },
+    onVolumeChange: () => {
+      writeParams(params);
+      synth.setVolume(params.volume);
+    },
   });
+  synth.setVolume(params.volume);
 
   window.addEventListener("resize", () => {
     app.renderer.resize(window.innerWidth, window.innerHeight);
@@ -609,11 +625,36 @@ async function main(): Promise<void> {
   const beginRelease = (style: "soft" | "string", hz: number): void => {
     const dx = dragPos[0] - grabOrigin[0];
     const dy = dragPos[1] - grabOrigin[1];
-    const amp = Math.hypot(dx, dy);
+    let amp = Math.hypot(dx, dy);
+    let ax = amp > 1e-6 ? dx / amp : 1;
+    let ay = amp > 1e-6 ? dy / amp : 0;
+    // Tap-plucks: the audible pluck fires regardless of drag distance, but
+    // a near-zero release offset rang invisibly. Floor the visible
+    // amplitude, swinging across the thread (the transverse axis a real
+    // string rings on; small drags get the same axis - their direction is
+    // pointer noise anyway).
+    if (style === "string" && ps && ps.grabbedParticle >= 0) {
+      const minAmp = Math.max(0.12, params.threadWidth * 0.35);
+      if (amp < minAmp) {
+        const p = ps.grabbedParticle;
+        const pos = ps.positions;
+        const n = pos.length / 2;
+        const p0 = Math.max(0, p - 1);
+        const p1 = Math.min(n - 1, p + 1);
+        const tx = pos[p1 * 2] - pos[p0 * 2];
+        const ty = pos[p1 * 2 + 1] - pos[p0 * 2 + 1];
+        const tl = Math.hypot(tx, ty);
+        if (tl > 1e-6) {
+          ax = -ty / tl;
+          ay = tx / tl;
+        }
+        amp = minAmp;
+      }
+    }
     if (style === "string" && amp > 0.02) {
       strum.t = 0;
-      strum.ax = dx / amp;
-      strum.ay = dy / amp;
+      strum.ax = ax;
+      strum.ay = ay;
       strum.amp = amp;
       strum.hz = hz;
       snapMode = "string";
@@ -772,7 +813,8 @@ async function main(): Promise<void> {
     if (params.soundMode === "random") {
       if (nextRandomPluck === 0) nextRandomPluck = nowS + 0.8;
       if (nowS >= nextRandomPluck) {
-        nextRandomPluck = nowS + 0.45 + Math.random() * 1.75;
+        nextRandomPluck =
+          nowS + (0.45 + Math.random() * 1.75) / Math.max(0.1, params.soundSpeed);
         const n = audioSegSite.length;
         if (n > 0) {
           const seg = Math.floor(Math.random() * n);
@@ -789,7 +831,8 @@ async function main(): Promise<void> {
         const song = SCARBOROUGH_FAIR;
         const row = song.notes[songIndex % song.notes.length];
         songIndex++;
-        songNextAt = nowS + (row.beats * 60) / song.bpm;
+        songNextAt =
+          nowS + (row.beats * 60) / (song.bpm * Math.max(0.1, params.soundSpeed));
         if (row.note) {
           const f = noteToFreq(row.note);
           const segs = segmentsNear(audioAssign, f);

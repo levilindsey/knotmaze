@@ -47,6 +47,8 @@ export interface UrlParams {
   soundMode: SoundMode; // none | manual | random | music.
   pitchSpace: PitchSpace; // Scale for segment pitches.
   octaves: number; // [1, 4] octave span of the pitch space.
+  soundSpeed: number; // [0.25, 3] music tempo / random-pluck cadence mult.
+  volume: number; // [0, 1] master output gain.
   pluckStyle: PluckStyle; // Release feel: soft ease vs ringing string.
   // P4 branching maze: generate the spliced maze FABRIC (junctions, 4-way
   // merges, corner entrance/exit) and play it (branch-point taps).
@@ -103,6 +105,8 @@ export const DEFAULTS = {
   tugLimit: 2,
   snapBack: 4,
   octaves: 2,
+  soundSpeed: 1,
+  volume: 0.85,
   trailLength: 5,
   tension: 0.45,
   fowRadius: 4,
@@ -170,6 +174,8 @@ export function readParams(): UrlParams {
     soundMode: readChoice(query, "snd", SOUND_MODES, "manual"),
     pitchSpace: readChoice(query, "sc", PITCH_SPACES, "pentMinor"),
     octaves: readNumber(query, "oct", DEFAULTS.octaves),
+    soundSpeed: readNumber(query, "ss", DEFAULTS.soundSpeed),
+    volume: readNumber(query, "vol", DEFAULTS.volume),
     pluckStyle: readChoice(query, "pk", PLUCK_STYLES, "string"),
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
     deadEnds: readNumber(query, "de", 0) > 0.5,
@@ -248,6 +254,8 @@ export function writeParams(params: UrlParams): void {
   query.set("snd", params.soundMode);
   query.set("sc", params.pitchSpace);
   query.set("oct", String(params.octaves));
+  query.set("ss", String(params.soundSpeed));
+  query.set("vol", String(params.volume));
   query.set("pk", params.pluckStyle);
   query.set("mf", params.mazeFabric ? "1" : "0");
   query.set("de", params.deadEnds ? "1" : "0");
