@@ -69,6 +69,10 @@ export interface UrlParams {
   soundSpeed: number; // [0.25, 6] music tempo / random-pluck cadence mult.
   volume: number; // [0, 1] master output gain.
   reverb: number; // [0, 1] hall wet mix.
+  brightness: number; // [0, 1] string brightness (loop damping). 0.5 = stock.
+  sustain: number; // [0, 1] ring length (T60 scale). 0.5 = stock.
+  shimmer: number; // [0, 1] course detune (x3 cents). 0.4 = stock.
+  pickPosition: number; // [0, 1] pluck point along the string. 0.4 = stock.
   rootNote: RootNote; // Scale root for manual/random modes; "seed" = auto.
   pulseSpacing: number; // [0.8, 6] world units between traversal pulses.
   hueShift: number; // [0, 360) rotation added to the seed's base hue.
@@ -141,6 +145,10 @@ export const DEFAULTS = {
   soundSpeed: 1,
   volume: 0.85,
   reverb: 0.42,
+  brightness: 0.5,
+  sustain: 0.5,
+  shimmer: 0.4,
+  pickPosition: 0.4,
   rootNote: "seed" as RootNote,
   pulseSpacing: 2.5,
   hueShift: 0,
@@ -221,6 +229,10 @@ export function readParams(): UrlParams {
     soundSpeed: readNumber(query, "ss", DEFAULTS.soundSpeed),
     volume: readNumber(query, "vol", DEFAULTS.volume),
     reverb: readNumber(query, "rv", DEFAULTS.reverb),
+    brightness: readNumber(query, "brt", DEFAULTS.brightness),
+    sustain: readNumber(query, "sus", DEFAULTS.sustain),
+    shimmer: readNumber(query, "shm", DEFAULTS.shimmer),
+    pickPosition: readNumber(query, "pp", DEFAULTS.pickPosition),
     rootNote: readChoice(query, "rn", ROOT_NOTES, "seed"),
     pulseSpacing: readNumber(query, "psp", DEFAULTS.pulseSpacing),
     hueShift: readNumber(query, "hs", DEFAULTS.hueShift),
@@ -322,6 +334,10 @@ export function writeParams(params: UrlParams): void {
   query.set("ss", String(params.soundSpeed));
   query.set("vol", String(params.volume));
   query.set("rv", String(params.reverb));
+  query.set("brt", String(params.brightness));
+  query.set("sus", String(params.sustain));
+  query.set("shm", String(params.shimmer));
+  query.set("pp", String(params.pickPosition));
   query.set("rn", params.rootNote);
   query.set("psp", String(params.pulseSpacing));
   query.set("hs", String(params.hueShift));

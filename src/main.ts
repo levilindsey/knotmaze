@@ -464,10 +464,22 @@ async function main(): Promise<void> {
       writeParams(params);
       synth.setVolume(params.volume);
       synth.setReverb(params.reverb);
+      synth.setVoice({
+        brightness: params.brightness,
+        sustain: params.sustain,
+        shimmer: params.shimmer,
+        pickPosition: params.pickPosition,
+      });
     },
   });
   synth.setVolume(params.volume);
   synth.setReverb(params.reverb);
+  synth.setVoice({
+    brightness: params.brightness,
+    sustain: params.sustain,
+    shimmer: params.shimmer,
+    pickPosition: params.pickPosition,
+  });
 
   window.addEventListener("resize", () => {
     app.renderer.resize(window.innerWidth, window.innerHeight);

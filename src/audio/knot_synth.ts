@@ -33,6 +33,14 @@ class KnotStringProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
     const o = (options && options.processorOptions) || {};
+    // Instrument voice params (each defaulted so 0.5/0.5/0.4/0.4 is
+    // EXACTLY the pre-param harp): brightness scales the loop damping
+    // pole down (brighter) or up (darker); sustain scales T60; shimmer
+    // is the course detune in cents/3; pickPosition recenters the comb.
+    const vBrt = o.brightness === undefined ? 0.5 : o.brightness;
+    const vSus = o.sustain === undefined ? 0.5 : o.sustain;
+    const vShm = o.shimmer === undefined ? 0.4 : o.shimmer;
+    const vPp = o.pickPosition === undefined ? 0.4 : o.pickPosition;
     const freq = Math.min(1800, Math.max(40, o.freq || 220));
     const s = Math.min(1, Math.max(0.05, o.strength || 0.5));
     // Deterministic per-voice RNG (mulberry32) so offline probe renders
@@ -50,13 +58,20 @@ class KnotStringProcessor extends AudioWorkletProcessor {
     // MEASURED aggregate T60 lands ~25-35% under this fundamental target
     // because upper partials decay faster - that is the progressive
     // darkening, not an error.)
-    const t60 = Math.min(6.5, Math.max(1, 4.2 * Math.pow(220 / freq, 0.5)));
+    const t60 = Math.min(
+      9,
+      Math.max(
+        0.5,
+        4.2 * Math.pow(220 / freq, 0.5) * (0.35 + 1.3 * vSus)
+      )
+    );
     // Loop damping one-pole: brightness now AND how fast highs die
     // relative to the fundamental (the progressive darkening of a real
     // string). Softer plucks start darker; high strings get less damping
     // so they keep some voice.
-    const pole = Math.min(0.55, Math.max(0.12,
-      (0.45 - 0.18 * s) * Math.pow(220 / freq, 0.12)));
+    const pole = Math.min(0.8, Math.max(0.05,
+      (0.45 - 0.18 * s) * Math.pow(220 / freq, 0.12) *
+      (1.6 - 1.2 * vBrt)));
     // Stiffness dispersion: two first-order allpasses in the loop with a
     // NEGATIVE coefficient delay high partials LESS -> upper partials land
     // slightly sharp (stretched), the metallic-sweet "ping" of a real
@@ -110,7 +125,7 @@ class KnotStringProcessor extends AudioWorkletProcessor {
     };
 
     // Two strings per course, detuned +/- DETUNE cents: unison shimmer.
-    const DETUNE = 1.2;
+    const DETUNE = vShm * 3;
     this.strings = [
       mkString(freq * Math.pow(2, -DETUNE / 1200)),
       mkString(freq * Math.pow(2, DETUNE / 1200)),
@@ -142,7 +157,10 @@ class KnotStringProcessor extends AudioWorkletProcessor {
     // of the mids (shorter bursts + the 310Hz body peak favor low notes).
     const norm = Math.min(3.5, (0.5 / rms) * Math.pow(freq / 220, 0.65));
     for (let i = 0; i < burstLen; i++) burst[i] *= norm;
-    const beta = 0.32 + rand() * 0.16;
+    const beta = Math.min(
+      0.6,
+      Math.max(0.05, vPp - 0.08 + rand() * 0.16)
+    );
     const combD = Math.max(1, Math.round(burstLen * beta));
     for (let i = burstLen - 1; i >= combD; i--) {
       burst[i] -= 0.92 * burst[i - combD];
@@ -232,6 +250,11 @@ export class KnotSynth {
   // Reverb wet mix [0, 1]; 0.42 * REVERB_WET_SCALE = the original 0.17.
   private reverb = 0.42;
   private wetGain: GainNode | null = null;
+  // Instrument voice (see setVoice; these defaults ARE the stock harp).
+  private voiceBrightness = 0.5;
+  private voiceSustain = 0.5;
+  private voiceShimmer = 0.4;
+  private voicePickPos = 0.4;
 
   // An injected context (e.g. OfflineAudioContext) makes the synth
   // measurable: diag scripts render a pluck offline and inspect the
@@ -270,6 +293,21 @@ export class KnotSynth {
     if (this.wetGain) {
       this.wetGain.gain.value = this.reverb * REVERB_WET_SCALE;
     }
+  }
+
+  // Live instrument voice (applies to every pluck from the next note on;
+  // defaults reproduce the stock harp exactly). All [0, 1].
+  setVoice(v: {
+    brightness: number;
+    sustain: number;
+    shimmer: number;
+    pickPosition: number;
+  }): void {
+    const c = (x: number): number => Math.max(0, Math.min(1, x));
+    this.voiceBrightness = c(v.brightness);
+    this.voiceSustain = c(v.sustain);
+    this.voiceShimmer = c(v.shimmer);
+    this.voicePickPos = c(v.pickPosition);
   }
 
   // Resolves once the string engine is decided and any queued plucks are
@@ -407,7 +445,15 @@ export class KnotSynth {
       numberOfInputs: 0,
       numberOfOutputs: 1,
       outputChannelCount: [1],
-      processorOptions: { freq, strength, seed },
+      processorOptions: {
+        freq,
+        strength,
+        seed,
+        brightness: this.voiceBrightness,
+        sustain: this.voiceSustain,
+        shimmer: this.voiceShimmer,
+        pickPosition: this.voicePickPos,
+      },
     });
     node.connect(this.master!);
     let dead = false;

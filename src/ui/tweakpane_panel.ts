@@ -516,6 +516,26 @@ export function buildPanel(
     D.reverb, () => callbacks.onVolumeChange()
   );
   row(
+    fSound, p, "brightness", { min: 0, max: 1, step: 0.01 },
+    "String brightness: low = felted and dark, high = wiry and bright. Applies from the next pluck.",
+    D.brightness, () => callbacks.onVolumeChange()
+  );
+  row(
+    fSound, p, "sustain", { min: 0, max: 1, step: 0.01 },
+    "How long strings ring after a pluck.",
+    D.sustain, () => callbacks.onVolumeChange()
+  );
+  row(
+    fSound, p, "shimmer", { min: 0, max: 1, step: 0.01 },
+    "Unison-course detune: the slow beating shimmer of paired strings. 0 = a single pure string.",
+    D.shimmer, () => callbacks.onVolumeChange()
+  );
+  row(
+    fSound, p, "pickPosition", { min: 0, max: 1, step: 0.01 },
+    "Where along the string the finger plucks: low = near the end (nasal, thin), high = near the middle (round, hollow).",
+    D.pickPosition, () => callbacks.onVolumeChange()
+  );
+  row(
     fSound, s, "muted", undefined,
     "Silence everything (also pauses the random/music auto-pluck modes).",
     SETTINGS_DEFAULTS.muted, () => {}
