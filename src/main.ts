@@ -28,7 +28,7 @@ const FIT_MARGIN = 40;
 // Bumped manually with each rendering/physics change, so a browser tab's
 // code state is verifiable at a glance (repos sync across machines with lag;
 // stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4 Stage 12: animated traversal 2026-10-09";
+const BUILD_STAMP = "P4 Stage 13: junction joinery 2026-10-09";
 
 const app = new Application();
 
@@ -168,7 +168,11 @@ async function main(): Promise<void> {
       casingWidth: params.threadWidth + params.gap * 2,
       background: BACKGROUND,
       baseHue: params.seed % 360,
-      hueGroup,
+      // multiColor off: every strand maps to palette slot 0 - one hue for
+      // the whole fabric (gameplay paint stays distinct regardless).
+      hueGroup: params.multiColor
+        ? hueGroup
+        : graph.strands.map(() => 0),
       // Fabric gameplay recolors the actual threads via palette textures.
       paletteMode: params.mazeFabric,
     });

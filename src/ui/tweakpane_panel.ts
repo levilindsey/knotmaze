@@ -142,6 +142,10 @@ export function buildPanel(
     "Branching maze: walk the thread from the green entrance to the orange exit. Tap a highlighted run at your branch point to advance (tap the gold one to backtrack); tug anywhere else."
   ).on("change", callbacks.onModeChange);
   tip(
+    pane.addBinding(params, "multiColor"),
+    "Render each thread region in its own hue. Off = the whole fabric wears one color (traveled gold and branch highlights stay distinct). Rebuilds the scene."
+  ).on("change", callbacks.onModeChange);
+  tip(
     pane.addBinding(params, "deadEnds"),
     "Dead ends: some loops become long threads that end, somewhere far away, in a loose tip. Off = a pure braided maze where every wrong turn loops back. Regenerates the maze."
   ).on("change", callbacks.onModeChange);

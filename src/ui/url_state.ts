@@ -23,6 +23,9 @@ export interface UrlParams {
   // Dead-end stubs in the fabric (classic wrong-turn spurs). OFF by default:
   // a pure braided maze where every wrong turn loops back.
   deadEnds: boolean;
+  // Render each thread region in its own hue. OFF by default: the whole
+  // fabric wears one color (gameplay paint stays distinct regardless).
+  multiColor: boolean;
 }
 
 export const DEFAULTS = {
@@ -75,6 +78,7 @@ export function readParams(): UrlParams {
     mazeMode: readNumber(query, "md", 0) > 0.5,
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
     deadEnds: readNumber(query, "de", 0) > 0.5,
+    multiColor: readNumber(query, "mc", 0) > 0.5,
   };
 }
 
@@ -97,5 +101,6 @@ export function writeParams(params: UrlParams): void {
   query.set("md", params.mazeMode ? "1" : "0");
   query.set("mf", params.mazeFabric ? "1" : "0");
   query.set("de", params.deadEnds ? "1" : "0");
+  query.set("mc", params.multiColor ? "1" : "0");
   history.replaceState(null, "", `?${query.toString()}`);
 }
