@@ -22,7 +22,7 @@ const stampText = (page) =>
     () =>
       [...document.querySelectorAll("div")]
         .map((d) => d.textContent ?? "")
-        .find((t) => t.startsWith("P3")) ?? "STAMP MISSING"
+        .find((t) => /^P\d/.test(t)) ?? "STAMP MISSING"
   );
 
 try {

@@ -1,6 +1,9 @@
 // URL-as-complete-state: every design is fully specified by (seed, params)
-// serialized in the query string.
+// serialized in the query string - one compact token (ui/param_codec.ts),
+// `?<seed>` or `?<seed>.<blob>`. The older key=value links still parse.
 
+import { codecDefaults, decodeToken, encodeToken } from "./param_codec";
+import type { ParamValue } from "./param_codec";
 import type { ColorScheme, GamutPalette } from "../core/section_colors";
 import { COLOR_SCHEMES, GAMUT_PALETTES } from "../core/section_colors";
 import type { PitchSpace } from "../audio/pitch_space";
@@ -244,14 +247,16 @@ export interface UrlParams {
   appearFx: AppearFxMode;
 }
 
-// COMPLETE per-param defaults (everything but seed): the URL readers'
-// fallbacks, the panel's per-row reset buttons + modified indicators, and
-// the Reset-to-defaults button. The Omit type keeps it provably in sync
-// with UrlParams. The user's chosen settings (2026-10-11).
-// SHORT LINKS OMIT DEFAULTS (see encodeParams), so this table is part of
-// every s= link's meaning: test/ui/url_codec.test.ts pins it. Changing a
-// default means freezing this table as the s= links' table and moving new
-// links to a new seed key (s2=) - the test failure says so.
+// COMPLETE per-param defaults (everything but seed): the panel's per-row
+// reset buttons + modified indicators, and the Reset-to-defaults button.
+// The Omit type keeps it provably in sync with UrlParams. The user's chosen
+// settings (2026-10-11).
+// LINKS OMIT DEFAULTS, so the defaults are part of every link's meaning -
+// and the codec keeps its own frozen copy per version (param_codec.ts
+// CODEC_V1, which legacy s=/seed= links read with too). The tests pin this
+// table and require it to equal the current codec table's defaults:
+// changing a default means a new codec version (see param_codec.ts), and a
+// new param must be appended to the codec table as well.
 export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   gridSize: 18,
   shape: "rect",
@@ -320,6 +325,59 @@ export function newSeed(): number {
   return (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
 }
 
+// The CURRENT option list of every enum param: what this build accepts
+// from any link (anything else reads as the default) - and, in the tests,
+// what every codec table must still list.
+export const ENUM_OPTIONS: {
+  readonly [K in keyof typeof PARAM_DEFAULTS]?: readonly string[];
+} = {
+  shape: SHAPES,
+  startAnchor: ANCHORS,
+  exitAnchor: ANCHORS,
+  soundMode: SOUND_MODES,
+  pitchSpace: PITCH_SPACES,
+  rootNote: ROOT_NOTES,
+  palette: GAMUT_PALETTES,
+  pluckStyle: PLUCK_STYLES,
+  pathViz: PATH_VIZ_MODES,
+  cameraMode: CAMERA_MODES,
+  colorScheme: COLOR_SCHEMES,
+  appearMode: APPEAR_MODES,
+  appearSequence: APPEAR_SEQUENCES,
+  appearFx: APPEAR_FX_MODES,
+};
+
+function clamp01(v: number): number {
+  return Math.max(0, Math.min(1, v));
+}
+
+// A decoded token's values as app params. A value this build cannot use
+// (wrong type, an option it no longer has) reads as the default; the clamps
+// match the legacy reader's.
+function fromCodecValues(
+  values: Readonly<Record<string, ParamValue>>
+): Omit<UrlParams, "seed"> {
+  const out: Record<string, ParamValue> = { ...PARAM_DEFAULTS };
+  for (const name of Object.keys(PARAM_DEFAULTS)) {
+    if (!Object.hasOwn(values, name)) continue;
+    const value = values[name];
+    if (typeof value !== typeof out[name]) continue;
+    const options = ENUM_OPTIONS[name as keyof typeof PARAM_DEFAULTS];
+    if (options && !options.includes(value as string)) continue;
+    out[name] = value;
+  }
+  const p = out as unknown as Omit<UrlParams, "seed">;
+  p.gridAlign = clamp01(p.gridAlign);
+  p.junctionBlend = clamp01(p.junctionBlend);
+  return p;
+}
+
+// What legacy links (s=, seed=) read for a missing key: the codec's v1
+// defaults - the table s= links were written against. Equal to
+// PARAM_DEFAULTS until a default changes; then the codec moves to v2 and
+// legacy links keep their meaning.
+const LEGACY_BASE = fromCodecValues(codecDefaults(1));
+
 function readNumber(
   query: URLSearchParams,
   key: string,
@@ -342,8 +400,8 @@ function readBool(
   return Number.isFinite(value) ? value > 0.5 : fallback;
 }
 
-// The seed: s= (base-36, short links) or seed= (decimal, every link made
-// before short links); neither = a fresh random design.
+// The legacy seed: s= (base-36, short links) or seed= (decimal, every link
+// made before short links); neither = a fresh random design.
 function readSeed(query: URLSearchParams): number {
   const s = query.get("s");
   if (s && /^[0-9a-z]{1,7}$/.test(s)) return Number.parseInt(s, 36) >>> 0;
@@ -354,14 +412,54 @@ export function readParams(): UrlParams {
   return parseParams(window.location.search);
 }
 
-// Missing keys read as PARAM_DEFAULTS: short links omit every default, and
-// pre-short links (seed=, every param written out) only lack params added
-// after they were made.
+// Reads every link form:
+// - COMPACT: `?<seed>` / `?<seed>.<blob>` (param_codec.ts). Legacy
+//   key=value pairs AFTER the token override it (probes:
+//   `?<token>&am=instant`); unknown keys (fbclid, utm_*) are ignored.
+// - LEGACY: `?s=<base-36 seed>&<changed params>` short links and
+//   `?seed=<decimal>&<every param>` links, legacy keys (mc, trm) included.
+// No seed at all = a fresh random design. Never throws: an unreadable
+// token keeps whatever seed it has and warns once.
 export function parseParams(search: string): UrlParams {
-  const query = new URLSearchParams(search);
-  const D = PARAM_DEFAULTS;
+  const query = search.startsWith("?") ? search.slice(1) : search;
+  const amp = query.indexOf("&");
+  // A query re-serialized through URLSearchParams gains a "=" after the
+  // valueless token (new URL(link).searchParams.append(...) does that).
+  const head = (amp < 0 ? query : query.slice(0, amp)).replace(/=$/, "");
+  if (head === "" || head.includes("=")) {
+    const legacy = new URLSearchParams(query);
+    return { seed: readSeed(legacy), ...readLegacy(legacy, LEGACY_BASE) };
+  }
+  const decoded = decodeToken(head);
+  if (decoded.error !== null) {
+    console.warn(
+      decoded.seed === null
+        ? `KnotMaze: unreadable link "?${head}" (${decoded.error}); ` +
+            "showing a new random design."
+        : `KnotMaze: unreadable link settings (${decoded.error}); ` +
+            "kept the seed, every setting is at its default."
+    );
+  }
+  const seed = decoded.seed ?? newSeed();
+  const values = fromCodecValues(decoded.values);
+  // A preset (re)writes its three values; random re-rolls on every load.
+  applyAppearMode(values);
+  if (amp < 0) return { seed, ...values };
+  const overrides = new URLSearchParams(query.slice(amp + 1));
+  return { seed, ...readLegacy(overrides, values) };
+}
+
+// The legacy key=value readers: each key the query lacks reads `base`
+// (LEGACY_BASE for a legacy link; the decoded token for overrides after
+// one). A param added after compact links needs no key here - it simply
+// reads base.
+function readLegacy(
+  query: URLSearchParams,
+  base: Omit<UrlParams, "seed">
+): Omit<UrlParams, "seed"> {
+  const D = base;
   return {
-    seed: readSeed(query),
+    ...base,
     gridSize: readNumber(query, "gs", D.gridSize),
     shape: readChoice(query, "shp", SHAPES, D.shape),
     startAnchor: readChoice(query, "sa", ANCHORS, D.startAnchor),
@@ -376,7 +474,7 @@ export function parseParams(search: string): UrlParams {
     smooth: readNumber(query, "sm", D.smooth),
     stiffness: readNumber(query, "st", D.stiffness),
     // Old checkbox URLs (ga=0 / ga=1) read as the same strengths.
-    gridAlign: Math.max(0, Math.min(1, readNumber(query, "ga", D.gridAlign))),
+    gridAlign: clamp01(readNumber(query, "ga", D.gridAlign)),
     threadWidth: readNumber(query, "tw", D.threadWidth),
     gap: readNumber(query, "gap", D.gap),
     moveSpeed: readNumber(query, "ms", D.moveSpeed),
@@ -418,27 +516,39 @@ export function parseParams(search: string): UrlParams {
     fowRadius: readNumber(query, "fr", D.fowRadius),
     fowIntro: readBool(query, "fwi", D.fowIntro),
     colorScheme: readScheme(query, D.colorScheme),
-    junctionBlend: Math.max(
-      0,
-      Math.min(1, readNumber(query, "jbl", D.junctionBlend))
-    ),
-    ...readAppearance(query),
+    junctionBlend: clamp01(readNumber(query, "jbl", D.junctionBlend)),
+    ...readAppearance(query, D),
   };
 }
 
 // The appearance group (see APPEAR_MODES). A URL without am= (a short link
 // in custom mode, or any link made before the mode existed) gets the mode
 // its values describe; a preset or random mode then (re)writes the three
-// values - so random re-rolls on every page load.
-function readAppearance(query: URLSearchParams): AppearParams {
-  const D = PARAM_DEFAULTS;
+// values - so random re-rolls on every page load. A query with none of
+// the four keys keeps base's group as it is.
+function readAppearance(
+  query: URLSearchParams,
+  base: AppearParams
+): AppearParams {
+  const keep: AppearParams = {
+    appearMode: base.appearMode,
+    appearSequence: base.appearSequence,
+    appearSpeed: base.appearSpeed,
+    appearFx: base.appearFx,
+  };
+  if (!["am", "ap", "as", "afx"].some((key) => query.has(key))) return keep;
   const p: AppearParams = {
     appearMode: "custom",
-    appearSequence: readChoice(query, "ap", APPEAR_SEQUENCES, D.appearSequence),
-    appearSpeed: readNumber(query, "as", D.appearSpeed),
+    appearSequence: readChoice(
+      query,
+      "ap",
+      APPEAR_SEQUENCES,
+      base.appearSequence
+    ),
+    appearSpeed: readNumber(query, "as", base.appearSpeed),
     // Legacy afx=sparks URLs fall through readChoice's validation to the
     // default.
-    appearFx: readChoice(query, "afx", APPEAR_FX_MODES, D.appearFx),
+    appearFx: readChoice(query, "afx", APPEAR_FX_MODES, base.appearFx),
   };
   const raw = query.get("am");
   p.appearMode =
@@ -498,114 +608,29 @@ function readScheme(
   return fallback;
 }
 
-// URL key per param (everything but the seed), in write order. A test
-// checks it covers PARAM_DEFAULTS exactly once.
-export const URL_KEYS: ReadonlyArray<
-  readonly [keyof typeof PARAM_DEFAULTS, string]
-> = [
-  ["gridSize", "gs"],
-  ["shape", "shp"],
-  ["startAnchor", "sa"],
-  ["exitAnchor", "xa"],
-  ["weaveDensity", "wd"],
-  ["turnBias", "tb"],
-  ["slack", "sl"],
-  ["simSpeed", "sp"],
-  ["drag", "dr"],
-  ["repulsion", "rep"],
-  ["bend", "bd"],
-  ["smooth", "sm"],
-  ["stiffness", "st"],
-  ["gridAlign", "ga"],
-  ["threadWidth", "tw"],
-  ["gap", "gap"],
-  ["moveSpeed", "ms"],
-  ["cuspRadius", "cr"],
-  ["fadeLength", "fl"],
-  ["flowStrength", "fw"],
-  ["flowSpeed", "fv"],
-  ["tugLimit", "tl"],
-  ["snapBack", "sb"],
-  ["soundMode", "snd"],
-  ["pitchSpace", "sc"],
-  ["octaves", "oct"],
-  ["soundSpeed", "ss"],
-  ["volume", "vol"],
-  ["reverb", "rv"],
-  ["brightness", "brt"],
-  ["sustain", "sus"],
-  ["shimmer", "shm"],
-  ["pickPosition", "pp"],
-  ["snappiness", "snpy"],
-  ["rootNote", "rn"],
-  ["tonicEmphasis", "tnc"],
-  ["pulseSpacing", "psp"],
-  ["hueShift", "hs"],
-  ["gamutArc", "arc"],
-  ["palette", "pal"],
-  ["pathColor", "pc"],
-  ["branchDensity", "brd"],
-  ["fourWayFraction", "fwf"],
-  ["deadEndDensity", "ded"],
-  ["pluckStyle", "pk"],
-  ["mazeFabric", "mf"],
-  ["deadEnds", "de"],
-  ["pathViz", "pv"],
-  ["cameraMode", "cam"],
-  ["trailLength", "trl"],
-  ["tension", "tn"],
-  ["fogOfWar", "fow"],
-  ["fowRadius", "fr"],
-  ["fowIntro", "fwi"],
-  ["colorScheme", "cs"],
-  ["junctionBlend", "jbl"],
-  ["appearMode", "am"],
-  ["appearSequence", "ap"],
-  ["appearSpeed", "as"],
-  ["appearFx", "afx"],
-];
+// The three values a preset, random or instant appearMode implies, so a
+// link in one of those modes leaves them out.
+const APPEAR_IMPLIED: ReadonlySet<string> = new Set([
+  "appearSequence",
+  "appearSpeed",
+  "appearFx",
+]);
+const NOTHING_IMPLIED: ReadonlySet<string> = new Set();
 
-// SHORT LINKS: s=<base-36 seed>, then only the params that differ from
-// PARAM_DEFAULTS, numbers in their shortest form. A preset, random or
-// instant appearMode implies the three appearance values, so they are
-// left out too. parseParams still reads every older link (seed=, every
-// param written out).
+// The link token for a design, without the "?": `<seed>` when every
+// setting is at its default, else `<seed>.<blob>` listing only the params
+// that differ (param_codec.ts). Numbers compare after 6-decimal rounding,
+// so slider float noise that equals a default is no change.
 export function encodeParams(params: UrlParams): string {
-  const query = new URLSearchParams();
-  query.set("s", params.seed.toString(36));
-  const appearImplied = params.appearMode !== "custom";
-  for (const [name, key] of URL_KEYS) {
-    if (
-      appearImplied &&
-      (name === "appearSequence" ||
-        name === "appearSpeed" ||
-        name === "appearFx")
-    ) {
-      continue;
-    }
-    const value = params[name];
-    const def = PARAM_DEFAULTS[name];
-    const same =
-      typeof value === "number"
-        ? Math.abs(value - (def as number)) < 1e-9
-        : value === def;
-    if (!same) query.set(key, encodeValue(value));
-  }
-  return query.toString();
+  return encodeToken(
+    params.seed,
+    params as unknown as Record<string, unknown>,
+    params.appearMode === "custom" ? NOTHING_IMPLIED : APPEAR_IMPLIED
+  );
 }
 
-function encodeValue(value: number | string | boolean): string {
-  if (typeof value === "boolean") return value ? "1" : "0";
-  if (typeof value === "string") return value.replace("#", "");
-  // Rounding to 6 decimals drops the float noise slider steps leave behind
-  // (1.4500000000000002, and 1.7e-17 for a zero); the leading zero goes
-  // (".25").
-  const s = String(Math.round(value * 1e6) / 1e6);
-  if (s.startsWith("0.")) return s.slice(1);
-  if (s.startsWith("-0.")) return "-" + s.slice(2);
-  return s;
-}
-
+// RELATIVE ("?<token>"): the path survives, so the same build works at the
+// root and under a prefix (levi.dev/knotmaze/).
 export function writeParams(params: UrlParams): void {
   history.replaceState(null, "", `?${encodeParams(params)}`);
 }

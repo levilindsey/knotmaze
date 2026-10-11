@@ -1700,6 +1700,11 @@ async function main(): Promise<void> {
       `gpu ${gl ? gl.getParameter(gl.RENDERER) : "unknown"}`
   );
 
+  // The live design params (a copy). The address bar holds one compact
+  // token (ui/param_codec.ts), so probes read settings here, not the URL.
+  (window as unknown as Record<string, unknown>).__knotParams = () => ({
+    ...params,
+  });
   // Diagnostic hooks for the automated crossing scanner.
   (window as unknown as Record<string, unknown>).__knotDiag = () =>
     renderer ? Array.from(renderer.getDiag().data) : [];

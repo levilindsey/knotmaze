@@ -1,11 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  APPEAR_PRESETS,
+  ENUM_OPTIONS,
   PARAM_DEFAULTS,
-  URL_KEYS,
+  applyAppearMode,
   encodeParams,
   parseParams,
+  writeParams,
 } from "../../src/ui/url_state";
-import type { UrlParams } from "../../src/ui/url_state";
+import type { AppearPreset, UrlParams } from "../../src/ui/url_state";
+import { CODEC_V1, numberText } from "../../src/ui/param_codec";
 
 const withSeed = (seed: number, over: Partial<UrlParams> = {}): UrlParams => ({
   ...PARAM_DEFAULTS,
@@ -13,14 +17,45 @@ const withSeed = (seed: number, over: Partial<UrlParams> = {}): UrlParams => ({
   ...over,
 });
 
-describe("short links", () => {
-  // Short links OMIT defaults, so every s= link means "these values unless
-  // stated". ADDING a new param is safe (old links lack its key and read
-  // its default): add it here too. If this fails because an EXISTING
-  // default changed on purpose: freeze the OLD table (copy it from here) as
-  // the table s= links read with, write new links under a new seed key
-  // (s2=), and update this pin to the new table.
-  it("pins the defaults table that s= links are read with", () => {
+// The user's rect design as a legacy short link (2026-10-11 morning)...
+const USER_LEGACY =
+  "s=1471kin&gs=12&rep=1&bd=1&sm=.25&ga=0&tw=.64&gap=.12&cr=2.4&fl=0&fw=.25&fv=1.15&vol=.18&hs=312&pal=moss&pc=6c644c&as=2.1";
+// ...and as a compact link (121 -> 55 chars).
+const USER_COMPACT = "1471kin.hGJeJH4_ol9B-mT9CXoqT4fol-NCvnoY8UYl6JbGRMCRUPg";
+const USER = withSeed(2430477599, {
+  gridSize: 12,
+  repulsion: 1,
+  bend: 1,
+  smooth: 0.25,
+  gridAlign: 0,
+  threadWidth: 0.64,
+  gap: 0.12,
+  cuspRadius: 2.4,
+  fadeLength: 0,
+  flowStrength: 0.25,
+  flowSpeed: 1.15,
+  volume: 0.18,
+  hueShift: 312,
+  palette: "moss",
+  pathColor: "#6c644c",
+  appearSpeed: 2.1,
+});
+
+const warnings = (): ReturnType<typeof vi.spyOn> =>
+  vi.spyOn(console, "warn").mockImplementation(() => {});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
+describe("links", () => {
+  // Links OMIT defaults, so the defaults are part of every link's meaning.
+  // ADDING a param is safe (append it to the codec table too - the codec
+  // tests say so). If this fails because an EXISTING default changed on
+  // purpose: that is a new codec version (see param_codec.ts), and this
+  // pin moves to the new table.
+  it("pins the defaults table", () => {
     expect(PARAM_DEFAULTS).toEqual({
       gridSize: 18, shape: "rect", startAnchor: "nw", exitAnchor: "se",
       weaveDensity: 0.35, turnBias: 0.7, slack: 0.55, simSpeed: 5, drag: 0.5,
@@ -41,21 +76,22 @@ describe("short links", () => {
     });
   });
 
-  it("has exactly one URL key per param, all distinct", () => {
-    const names = URL_KEYS.map(([name]) => name).sort();
-    expect(names).toEqual(Object.keys(PARAM_DEFAULTS).sort());
-    const keys = URL_KEYS.map(([, key]) => key);
-    expect(new Set(keys).size).toBe(keys.length);
-    expect(keys).not.toContain("s");
-    expect(keys).not.toContain("seed");
+  it("is just the seed for an all-default design", () => {
+    expect(encodeParams(withSeed(2430477599))).toBe("1471kin");
+    expect(parseParams("?1471kin")).toEqual(withSeed(2430477599));
+    expect(parseParams("1471kin")).toEqual(withSeed(2430477599));
+    expect(parseParams("?1471kin.")).toEqual(withSeed(2430477599));
   });
 
-  it("writes only the seed for an all-default design", () => {
-    expect(encodeParams(withSeed(2430477599))).toBe("s=1471kin");
-    expect(parseParams("?s=1471kin")).toEqual(withSeed(2430477599));
+  it("packs the user's rect design into one token", () => {
+    expect(encodeParams(USER)).toBe(USER_COMPACT);
+    expect(USER_COMPACT.length).toBe(55);
+    expect(USER_LEGACY.length).toBe(121);
+    expect(parseParams("?" + USER_COMPACT)).toEqual(USER);
+    expect(parseParams("?" + USER_LEGACY)).toEqual(USER);
   });
 
-  it("round-trips changed params in their shortest form", () => {
+  it("round-trips changed params at their written precision", () => {
     const p = withSeed(4294967295, {
       threadWidth: 0.6000000000000001, // slider-step float noise
       gap: 0,
@@ -65,23 +101,13 @@ describe("short links", () => {
       hueShift: -15,
     });
     const q = encodeParams(p);
-    expect(q).toBe("s=1z141z3&shp=ring&tw=.6&gap=0&hs=-15&pc=ffd24a&mf=0");
-    const back = parseParams("?" + q);
-    expect(back).toEqual({ ...p, threadWidth: 0.6 });
+    expect(q).toBe("1z141z3.nRhtN8PC1ivv_0koo");
+    expect(parseParams("?" + q)).toEqual({ ...p, threadWidth: 0.6 });
   });
 
   it("drops float noise that equals a default", () => {
-    const q = encodeParams(withSeed(7, { repulsion: 1.4500000000000002 }));
-    expect(q).toBe("s=7");
-  });
-
-  it("writes a noisy zero as 0, and the user's rect link compactly", () => {
-    const user = parseParams(
-      "?seed=2430477599&gs=12&shp=rect&sa=nw&xa=se&wd=0.35&tb=0.7&sl=0.55&sp=5&dr=0.5&rep=1&bd=1&sm=0.25&st=1&ga=0&tw=0.64&gap=0.12&ms=1&cr=2.4&fl=1.734723475976807e-17&fw=0.25&fv=1.1500000000000001&tl=2&sb=4&snd=music&sc=chromatic&oct=3&ss=0.9999999999999996&vol=0.18&rv=0.42&brt=0.5&sus=0.5&shm=0.4&pp=0.4&snpy=0.88&rn=seed&tnc=0.5&psp=2.5&hs=312&arc=130&pal=moss&pc=6c644c&brd=0.35&fwf=0.12&ded=0.25&pk=string&mf=1&de=0&pv=gold&cam=fit&trl=5&tn=0.45&fow=0&fr=4&fwi=0&cs=segments&ap=trace&as=2.1&afx=burn"
-    );
-    expect(encodeParams(user)).toBe(
-      "s=1471kin&gs=12&rep=1&bd=1&sm=.25&ga=0&tw=.64&gap=.12&cr=2.4&fl=0&fw=.25&fv=1.15&vol=.18&hs=312&pal=moss&pc=6c644c&as=2.1"
-    );
+    expect(encodeParams(withSeed(7, { repulsion: 1.4500000000000002 }))).toBe("7");
+    expect(encodeParams(withSeed(7, { junctionBlend: 1.7e-17 }))).toBe("7");
   });
 
   it("leaves out appearance values a mode implies", () => {
@@ -91,21 +117,228 @@ describe("short links", () => {
       appearFx: "rainbow",
       appearSpeed: 2,
     });
-    expect(encodeParams(preset)).toBe("s=7&am=trace-rainbow");
-    expect(parseParams("?s=7&am=trace-rainbow")).toEqual(preset);
+    expect(encodeParams(preset)).toBe("7.oHJA");
+    expect(parseParams("?7.oHJA")).toEqual(preset);
+    const instant = withSeed(7, {
+      appearMode: "instant",
+      appearSequence: "instant",
+    });
+    expect(encodeParams(instant)).toBe("7.oHM");
+    expect(parseParams("?7.oHM")).toEqual(instant);
     const custom = withSeed(7, { appearFx: "dust" });
-    expect(encodeParams(custom)).toBe("s=7&afx=dust");
-    expect(parseParams("?s=7&afx=dust")).toEqual(custom);
+    expect(encodeParams(custom)).toBe("7.oHhA");
+    expect(parseParams("?7.oHhA")).toEqual(custom);
+    // Every preset round-trips, values implied.
+    for (const id of Object.keys(APPEAR_PRESETS) as AppearPreset[]) {
+      const p = withSeed(9, { appearMode: id });
+      applyAppearMode(p);
+      expect(parseParams("?" + encodeParams(p))).toEqual(p);
+    }
   });
 
-  it("reads older links: seed=, every param written out, legacy keys", () => {
+  it("re-rolls a random appearance on every load", () => {
+    const q = encodeParams(withSeed(7, { appearMode: "random" }));
+    const seen = new Set<string>();
+    for (let k = 0; k < 40; k++) {
+      const p = parseParams("?" + q);
+      expect(p.appearMode).toBe("random");
+      expect(p.appearSequence).not.toBe("instant");
+      expect(p.appearFx).not.toBe("none");
+      expect(encodeParams(p)).toBe(q);
+      seen.add(`${p.appearSequence} ${p.appearFx} ${p.appearSpeed}`);
+    }
+    expect(seen.size).toBeGreaterThan(1);
+  });
+
+  it("writes a relative URL, so a path prefix survives", () => {
+    const replaceState = vi.fn();
+    vi.stubGlobal("history", { replaceState });
+    writeParams(USER);
+    expect(replaceState).toHaveBeenCalledWith(null, "", "?" + USER_COMPACT);
+  });
+});
+
+describe("legacy links", () => {
+  it("reads s= short links and rewrites them compactly", () => {
+    expect(parseParams("?s=1471kin")).toEqual(withSeed(2430477599));
+    expect(encodeParams(parseParams("?s=1471kin"))).toBe("1471kin");
+    expect(encodeParams(parseParams("?" + USER_LEGACY))).toBe(USER_COMPACT);
+    expect(encodeParams(parseParams("?s=7&am=trace-rainbow"))).toBe("7.oHJA");
+    expect(parseParams("?s=7&afx=dust")).toEqual(withSeed(7, { appearFx: "dust" }));
+  });
+
+  it("reads seed= links: every param written out, legacy keys", () => {
     const old =
       "?seed=2430477599&gs=18&shp=rect&sa=nw&xa=se&wd=0.35&tb=0.7&sl=0.55&sp=5&dr=0.5&rep=1.4500000000000002&bd=2&sm=0.75&st=1&ga=0.1&tw=0.52&gap=0.04&ms=1&cr=3&fl=0.14000000000000004&fw=0.3&fv=0.5000000000000001&tl=2&sb=4&snd=music&sc=chromatic&oct=3&ss=0.9999999999999996&vol=0.33&rv=0.42&brt=0.5&sus=0.5&shm=0.4&pp=0.4&snpy=0.88&rn=seed&tnc=0.5&psp=2.5&hs=300&arc=130&pal=pastel&pc=eccc41&brd=0.35&fwf=0.12&ded=0.25&pk=string&mf=1&de=0&pv=gold&cam=fit&trl=5&tn=0.45&fow=0&fr=4&fwi=0&cs=segments&ap=trace&as=2.1999999999999997&afx=burn";
-    expect(encodeParams(parseParams(old))).toBe("s=1471kin");
+    expect(encodeParams(parseParams(old))).toBe("1471kin");
+    const user = parseParams(
+      "?seed=2430477599&gs=12&shp=rect&sa=nw&xa=se&wd=0.35&tb=0.7&sl=0.55&sp=5&dr=0.5&rep=1&bd=1&sm=0.25&st=1&ga=0&tw=0.64&gap=0.12&ms=1&cr=2.4&fl=1.734723475976807e-17&fw=0.25&fv=1.1500000000000001&tl=2&sb=4&snd=music&sc=chromatic&oct=3&ss=0.9999999999999996&vol=0.18&rv=0.42&brt=0.5&sus=0.5&shm=0.4&pp=0.4&snpy=0.88&rn=seed&tnc=0.5&psp=2.5&hs=312&arc=130&pal=moss&pc=6c644c&brd=0.35&fwf=0.12&ded=0.25&pk=string&mf=1&de=0&pv=gold&cam=fit&trl=5&tn=0.45&fow=0&fr=4&fwi=0&cs=segments&ap=trace&as=2.1&afx=burn"
+    );
+    expect(encodeParams(user)).toBe(USER_COMPACT);
     expect(parseParams("?seed=1&mc=1").colorScheme).toBe("strands");
     expect(parseParams("?seed=1&mc=0").colorScheme).toBe("mono");
     expect(parseParams("?seed=1&trm=1").pathViz).toBe("trail");
     expect(parseParams("?seed=1&ga=1").gridAlign).toBe(1);
+    expect(parseParams("?seed=1&afx=sparks").appearFx).toBe("burn");
+  });
+
+  it("gives a link without any seed a fresh random design", () => {
+    for (const q of ["", "?", "?am=instant", "?fbclid=x"]) {
+      const p = parseParams(q);
+      expect(Number.isInteger(p.seed) && p.seed >= 0 && p.seed < 2 ** 32).toBe(true);
+    }
+    expect(parseParams("?am=instant").appearMode).toBe("instant");
   });
 });
 
+describe("token + overrides", () => {
+  it("applies legacy key=value pairs after the token, then folds them in", () => {
+    const p = parseParams(`?${USER_COMPACT}&am=instant&tw=.5`);
+    expect(p).toEqual({
+      ...USER,
+      threadWidth: 0.5,
+      appearMode: "instant",
+      appearSequence: "instant",
+    });
+    // Folded into one token; instant implies its values, so the inert speed
+    // reads back as the default (as with every instant link).
+    expect(encodeParams(p)).toMatch(/^1471kin\.[A-Za-z0-9_-]+$/);
+    expect(parseParams("?" + encodeParams(p))).toEqual({
+      ...p,
+      appearSpeed: PARAM_DEFAULTS.appearSpeed,
+    });
+    expect(parseParams("?7&mf=0").mazeFabric).toBe(false);
+    // The token's own seed wins over s=/seed= after it.
+    expect(parseParams("?7&s=zz&seed=5").seed).toBe(7);
+  });
+
+  it("ignores unknown keys (click ids, utm tags)", () => {
+    expect(parseParams(`?${USER_COMPACT}&fbclid=IwAR0x&utm_source=x`)).toEqual(USER);
+    expect(encodeParams(parseParams("?1471kin&fbclid=IwAR0x"))).toBe("1471kin");
+  });
+
+  it("reads a token re-serialized by URLSearchParams (a trailing =)", () => {
+    const url = new URL(`https://levi.dev/knotmaze/?${USER_COMPACT}`);
+    url.searchParams.append("ref", "newsletter");
+    expect(url.search).toBe(`?${USER_COMPACT}=&ref=newsletter`);
+    expect(parseParams(url.search)).toEqual(USER);
+    expect(parseParams("?1471kin=")).toEqual(withSeed(2430477599));
+  });
+});
+
+describe("unreadable links", () => {
+  it("keeps the seed and warns once for a malformed blob", () => {
+    for (const blob of ["@@", "hGJeJH4_ol9B", "U", "w-"]) {
+      const warn = warnings();
+      expect(parseParams(`?1471kin.${blob}`)).toEqual(withSeed(2430477599));
+      expect(warn).toHaveBeenCalledTimes(1);
+      warn.mockRestore();
+    }
+  });
+
+  it("clamps the [0, 1] strengths like the legacy reader", () => {
+    const q = encodeParams(withSeed(7, { gridAlign: 5, junctionBlend: -2 }));
+    const p = parseParams("?" + q);
+    expect([p.gridAlign, p.junctionBlend]).toEqual([1, 0]);
+    expect(parseParams("?s=7&ga=5&jbl=-2")).toEqual(p);
+  });
+
+  it("warns once and rolls a new design for an unreadable seed", () => {
+    const warn = warnings();
+    const p = parseParams("?NOT-A-SEED.AAAA");
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(p).toEqual(withSeed(p.seed));
+  });
+
+  it("never throws on random queries", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    let s = 7;
+    const rand = (): number => {
+      s = (s * 16807) % 2147483647;
+      return (s - 1) / 2147483646;
+    };
+    const alphabet =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.=&%?é ";
+    for (let k = 0; k < 2000; k++) {
+      let q = "?";
+      const n = Math.floor(rand() * 40);
+      for (let i = 0; i < n; i++) q += alphabet[Math.floor(rand() * alphabet.length)];
+      const p = parseParams(q);
+      expect(Object.keys(p).sort()).toEqual(
+        ["seed", ...Object.keys(PARAM_DEFAULTS)].sort()
+      );
+    }
+  });
+});
+
+describe("links round trip (seeded property test)", () => {
+  // A random design: each param changed with a random share, numbers mixing
+  // short decimals, slider noise, negatives and big values.
+  const randomParams = (rand: () => number): UrlParams => {
+    const p = withSeed(Math.floor(rand() * 2 ** 32) >>> 0) as unknown as Record<
+      string,
+      unknown
+    >;
+    const share = rand();
+    for (const c of CODEC_V1.params) {
+      if (rand() >= share) continue;
+      if (c.type === "boolean") p[c.name] = !c.def;
+      else if (c.type === "color") {
+        p[c.name] = "#" + Math.floor(rand() * 0x1000000).toString(16).padStart(6, "0");
+      } else if (c.type === "enum") {
+        const options = ENUM_OPTIONS[c.name as keyof typeof ENUM_OPTIONS]!;
+        p[c.name] = options[Math.floor(rand() * options.length)];
+      } else {
+        const d = Math.floor(rand() * 10000) / 10 ** Math.floor(rand() * 7);
+        const r = rand();
+        p[c.name] =
+          r < 0.4 ? d : r < 0.6 ? d + (rand() - 0.5) * 1e-11 : r < 0.7 ? -d : Math.floor(rand() * 400);
+      }
+    }
+    // The two [0, 1] strengths never leave their range in the app (both
+    // readers clamp; see "clamps the [0, 1] strengths").
+    p.gridAlign = rand();
+    p.junctionBlend = rand();
+    return p as unknown as UrlParams;
+  };
+  // What a design reads back as: numbers at their written precision, the
+  // two clamped strengths, and the values its appearance mode implies.
+  const expected = (p: UrlParams, back: UrlParams): UrlParams => {
+    const e = { ...p } as unknown as Record<string, unknown>;
+    for (const c of CODEC_V1.params) {
+      if (c.type === "number") e[c.name] = Number(numberText(e[c.name] as number));
+    }
+    const out = e as unknown as UrlParams;
+    out.gridAlign = Math.max(0, Math.min(1, out.gridAlign));
+    out.junctionBlend = Math.max(0, Math.min(1, out.junctionBlend));
+    if (out.appearMode !== "custom") {
+      out.appearSequence = PARAM_DEFAULTS.appearSequence;
+      out.appearSpeed = PARAM_DEFAULTS.appearSpeed;
+      out.appearFx = PARAM_DEFAULTS.appearFx;
+    }
+    if (out.appearMode === "random") {
+      out.appearSequence = back.appearSequence;
+      out.appearSpeed = back.appearSpeed;
+      out.appearFx = back.appearFx;
+    } else {
+      applyAppearMode(out);
+    }
+    return out;
+  };
+
+  it("reads back what it writes, and writes it back the same", () => {
+    let s = 20261011;
+    const rand = (): number => {
+      s = (s * 16807) % 2147483647;
+      return (s - 1) / 2147483646;
+    };
+    for (let k = 0; k < 1500; k++) {
+      const p = randomParams(rand);
+      const q = encodeParams(p);
+      expect(q).toMatch(/^[0-9a-z]{1,7}(\.[A-Za-z0-9_-]+)?$/);
+      const back = parseParams("?" + q);
+      expect(back).toEqual(expected(p, back));
+      expect(encodeParams(back)).toBe(q);
+    }
+  });
+});

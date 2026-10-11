@@ -13,7 +13,7 @@ Rendering: PixiJS v8 custom ribbon meshes with depth-based over/under casing gap
 
 ## Key Design Decisions
 
-- **URL-as-complete-state:** Every design fully specified by `(seed, params)` serialized in the URL. Deterministic seeded RNG throughout. SHORT LINKS (2026-10-11): `?s=<base-36 seed>` plus only the params that differ from `PARAM_DEFAULTS`, numbers in shortest form (no slider-step float noise, `.25`); an appearMode preset/random/instant implies the three appearance values. Because links omit defaults, `PARAM_DEFAULTS` is part of every `s=` link's meaning and `test/ui/url_codec.test.ts` pins it: changing a default = freeze the old table for `s=` links and write new links under a new seed key (`s2=`). Older `seed=` links (every param written out) still parse.
+- **URL-as-complete-state:** Every design fully specified by `(seed, params)` serialized in the URL. Deterministic seeded RNG throughout. COMPACT LINKS (2026-10-11, `src/ui/param_codec.ts`): the query is ONE token - `?<seed>` when every setting is default, else `?<seed>.<blob>` (seed base-36; blob = base64url bitstream: version, entry count, then per changed param its index delta + value - booleans flip in 0 bits, enums as an option index, colors 24 bits, numbers as their 6-decimal shortest text in 4-bit codes; all counts Elias-gamma). Self-describing, so slider ranges/steps can change freely. What a link DOES depend on is the frozen codec table of its version: param ORDER, codec types, enum option lists, DEFAULTS (links list only what differs, after 6-decimal rounding; an appearMode preset/random/instant implies the three appearance values). A new param or enum option is APPENDED to the current table; anything else (a default change included) = a new codec version, old tables kept for decoding. `test/ui/param_codec.test.ts` pins `CODEC_V1` literally and fails until a new `PARAM_DEFAULTS` key is appended. Legacy links still parse and are rewritten to the token on load: `?s=<seed>&tw=.64...` short links and `?seed=...` full links (legacy keys mc/trm), both read with the v1 defaults; legacy `key=value` pairs AFTER a token override it (`?<token>&am=instant`). Unreadable blobs keep the seed, default the rest, warn once.
 - **ParamField abstraction:** All generator parameters read through a `ParamField` (constant | Simplex-modulated | painted), enabling region-biome variety natively.
 - **Hero relaxation:** On load, lattice paths (angular 45° zigzags) visibly settle into smooth curves. Temperature slider allows re-agitation.
 - **Knot-as-instrument:** Pluck threads → waves propagate; Web Audio maps loop-length to pitch.
@@ -50,7 +50,8 @@ src/
     knot_synth.ts         # Web Audio pluck/strum
   ui/
     tweakpane_panel.ts    # Control panel
-    url_state.ts          # URL serialization
+    url_state.ts          # URL params, defaults, link parse/write (+ legacy keys)
+    param_codec.ts        # Compact link token: frozen codec tables + bitstream
   main.ts                 # Entry point
 test/
   core/
@@ -63,6 +64,9 @@ test/
     open_chain.test.ts, junction.test.ts, maze_fabric.test.ts
   game/
     fabric_controller.test.ts, maze_controller.test.ts
+  ui/
+    param_codec.test.ts (codec table pins + format), url_codec.test.ts
+    (links, legacy forms), appear_mode.test.ts
   quiescence.regression.test.ts  # Guards the friction dissipation channel
   sweep.manual.test.ts           # Skip-gated; run via SWEEP=1
 ```
@@ -666,12 +670,12 @@ between-threads/cell-passage route.
   value re-derives the mode (custom unless it matches a preset). The
   user's chosen settings became PARAM_DEFAULTS (gs 18, mazeFabric ON,
   music/chromatic, cr 3, tw 0.52, gap 0.04, segments, trace + burn 2.2
-  intro, ...) and links shrank to `?s=<seed>` + changed params (see Key
-  Design Decisions). PANEL LORE: Tweakpane 4's refresh() FIRES change
-  handlers whenever the shown value changes - programmatic refreshes need
-  a guard (appearSync), and the reset glyph runs a row's effects only if
-  refresh() did not; slider step constraints write float noise
-  (1.4500000000000002) back into params.
+  intro, ...) and links shrank to `?s=<seed>` + changed params (superseded
+  the same day by COMPACT LINKS, below). PANEL LORE: Tweakpane 4's
+  refresh() FIRES change handlers whenever the shown value changes -
+  programmatic refreshes need a guard (appearSync), and the reset glyph
+  runs a row's effects only if refresh() did not; slider step constraints
+  write float noise (1.4500000000000002) back into params.
 - 2026-10-11 small round 2. JUNCTION BLEND REACH (`junctionBlend`, jbl=,
   [0, 1], default 0 = the historic look, live via recolor): stretches the
   segments/strands junction ramps toward each run's midpoint (1 = every run
@@ -732,6 +736,27 @@ between-threads/cell-passage route.
   because PHYSICS took 150-190 ms per frame (sp=0 -> 60 fps); the exact
   per-pixel ages of the planned shader reveal (GPU migration G2) retire
   this CPU machinery.
+- 2026-10-11 COMPACT LINKS (worktree agent; user: "an encoding function
+  that converts all param deltas into a single compacted value", and no
+  query at all for an all-default design). The `?s=<seed>&tw=.64&...` short
+  links (live that morning) gave way to ONE token, `?<seed>` /
+  `?<seed>.<blob>` (format in Key Design Decisions; param_codec.ts header).
+  The user's rect design: 121 -> 55 chars. KEPT from the short links: the
+  delta semantics (6-decimal rounding, implied appearance values, random
+  re-rolls on load). DETAILS beyond the spec, each for a measured reason:
+  a TRAILING "=" on the token is tolerated (`new URL(link).searchParams
+  .append(...)` re-serializes `?<token>` as `?<token>=&...`), as are
+  trailing dots (sentence punctuation after a pasted link); `&key=value`
+  pairs after a token apply as legacy overrides, so probes keep writing
+  `&am=instant` / `&mf=0`, and unknown keys (fbclid, utm_*) drop on the
+  rewrite. The decoder is strict otherwise: an invalid char, truncation,
+  unknown version, out-of-range index/option, reserved number code, or
+  leftover bits beyond the zero padding rejects the whole blob (seed kept,
+  defaults, one console.warn) - all-or-nothing, never a partial design.
+  Legacy readers now fall back to the frozen v1 defaults (LEGACY_BASE), so
+  a future default change (codec v2) leaves old s= links' meaning alone.
+  `window.__knotParams()` returns the live params (the address bar has no
+  readable keys any more); scripts/diag_scan.mjs reads tw/gap from it.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
@@ -782,7 +807,11 @@ every upload (ribbon_mesh `uploadAll`, `copyUploadPending`).
 PROBE LORE (2026-10-11, defaults change): **a bare URL is now FABRIC
 mode with music and an animated trace + burn intro.** Probes that want
 knot mode must pass `mf=0`, and probes that need a settled first frame
-without a reveal pass `am=instant`. AUDIO IS GATED on a trusted user
+without a reveal pass `am=instant` - as legacy links (`?s=1471kin&am=
+instant`, still parsed) or after a compact token (`?1471kin.<blob>&am=
+instant`). COMPACT LINKS: the app rewrites every link to one token, so
+`location.search` has no keys to read - read settings via
+`window.__knotParams()`. AUDIO IS GATED on a trusted user
 gesture: a probe that expects sound must `page.mouse.click` (or press a
 key) first, and `window.__knotSynth` exists only once the gate has opened
 (scripts/diag_audio.mjs injects an OfflineAudioContext, which bypasses it).

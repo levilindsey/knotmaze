@@ -66,12 +66,16 @@ try {
     .sort((a, b) => a.eraseSpan - b.eraseSpan)
     .slice(0, 6);
   // Healthy spans scale with thread width and gap: ~2*(fillHalf/sin) +
-  // 2*gap, moderately oblique. Derive the threshold from the URL's tw
-  // and gap (defaults 0.42 / 0.18) - a fixed 0.85 flagged healthy fat
-  // threads and once (at 1.3) certified the naked-gap bug as healthy.
+  // 2*gap, moderately oblique. Derive the threshold from the design's tw
+  // and gap - a fixed 0.85 flagged healthy fat threads and once (at 1.3)
+  // certified the naked-gap bug as healthy. The page reports the live
+  // values (__knotParams); a compact link (?<seed>.<blob>) has no readable
+  // keys, so the URL's tw=/gap= are only the fallback for builds without
+  // the hook (then the defaults of the time, 0.52 / 0.04).
+  const live = await page.evaluate(() => window.__knotParams?.() ?? null);
   const q = new URL(url).searchParams;
-  const tw = Number(q.get("tw") ?? 0.42);
-  const gapParam = Number(q.get("gap") ?? 0.18);
+  const tw = Number(live?.threadWidth ?? q.get("tw") ?? 0.52);
+  const gapParam = Number(live?.gap ?? q.get("gap") ?? 0.04);
   const bigGapThreshold = (tw * 1.5 + gapParam * 2) * 1.15;
   console.log(`big-gap threshold ${bigGapThreshold.toFixed(2)}`);
   // A long erase whose over-patch out-spans it is a COVERED long
