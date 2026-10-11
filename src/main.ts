@@ -26,14 +26,31 @@ import {
 } from "./audio/pitch_space";
 import type { PitchAssignment } from "./audio/pitch_space";
 import { SCARBOROUGH_FAIR } from "./audio/songs";
+import { APP_VERSION, BUILD_SHA, BUILD_TIME } from "./build_info";
 
 const BACKGROUND = 0x151b28;
 const FIT_MARGIN = 40;
 
-// Bumped manually with each rendering/physics change, so a browser tab's
-// code state is verifiable at a glance (repos sync across machines with lag;
-// stale tabs and stale checkouts happen).
-const BUILD_STAMP = "P4: rainbow + materialize FX, live recolor 2026-10-10";
+// Code-state stamp, so a tab's build is verifiable at a glance (repos sync
+// across machines with lag; stale tabs and stale checkouts happen). DERIVED
+// at build time (vite.config.ts): version + git short SHA ("+" = built with
+// uncommitted changes) + build time - it can no longer drift like the old
+// hand-bumped description did. Leads with the roadmap phase: the diag
+// scripts find the stamp by its /^P\d/ prefix.
+const BUILD_STAMP =
+  `P4 v${APP_VERSION} ${BUILD_SHA}` + (BUILD_TIME ? ` ${BUILD_TIME}` : "");
+// The stamp/perf readout's visibility persists per browser.
+const STATS_KEY = "knotmaze.showStats";
+// Pinch / wheel zoom ceiling, as a multiple of the auto-fit scale.
+const MAX_ZOOM = 8;
+// FOLLOW camera (cameraMode follow): framing span (lattice units across
+// the short screen side), the grace period after a pan/zoom gesture
+// before the pull-back spring engages, its ease-in time, and its
+// full-strength angular rate (critically damped - weak, no overshoot).
+const FOLLOW_SPAN = 13;
+const FOLLOW_DELAY = 1.2;
+const FOLLOW_RAMP = 1.0;
+const FOLLOW_W = 2.4;
 
 // Appearance pre-sim: with any non-instant appear mode the sim settles
 // briefly BEFORE the first rendered frame, so the reveal plays over a
@@ -66,10 +83,17 @@ async function main(): Promise<void> {
   app.canvas.style.background = `#${BACKGROUND.toString(16).padStart(6, "0")}`;
 
   const params = readParams();
+  let statsShown = false;
+  try {
+    statsShown = localStorage.getItem(STATS_KEY) === "1";
+  } catch {
+    // Storage unavailable: hidden by default.
+  }
   const settings: PanelSettings = {
     temperature: 0,
     showDebug: false,
     muted: false,
+    showStats: statsShown,
   };
   const synth = new KnotSynth();
 
@@ -121,7 +145,18 @@ async function main(): Promise<void> {
       if (y < minY) minY = y;
       if (y > maxY) maxY = y;
     }
-    const pad = params.threadWidth / 2 + 0.3;
+    let pad = params.threadWidth / 2 + 0.3;
+    // FOG OF WAR: frame only what the fog lets you see (the explored
+    // region grown by the reveal radius) - it widens as you explore.
+    const fogBox =
+      params.mazeFabric && fabric ? fabric.fogVisibleBounds() : null;
+    if (fogBox) {
+      minX = fogBox.minX;
+      minY = fogBox.minY;
+      maxX = fogBox.maxX;
+      maxY = fogBox.maxY;
+      pad = 0.3;
+    }
     minX -= pad;
     minY -= pad;
     maxX += pad;
@@ -139,10 +174,207 @@ async function main(): Promise<void> {
       (app.screen.height - h * fitTarget.scale) / 2 - minY * fitTarget.scale;
   }
 
+  // ---- CAMERA ------------------------------------------------------------
+  // Two modes (params.cameraMode):
+  // FIT - the eased auto-fit (the whole knot, or under fog the visible
+  //   region) with the user's zoom/pan composed on top in SCREEN space:
+  //   screen = zoom * fitScreen + pan. Zoom 1 is the home view and pans
+  //   clamp so the zoomed fit frame always covers the screen (at zoom 1
+  //   the pan is forced to 0 - pinching back out lands exactly on the
+  //   fit).
+  // FOLLOW - a chase camera on the player's head (maze mode): a scale +
+  //   world center that gestures move freely, pulled back by a weak,
+  //   critically damped spring that stays OFF for FOLLOW_DELAY after the
+  //   last gesture and then eases its stiffness in over FOLLOW_RAMP (the
+  //   approach itself eases out). During the intro it frames the knot.
+  // Gestures speak one primitive - put world point (wx, wy) at screen
+  // point (sx, sy) at scale s (placeWorldAt) - and each mode maps it onto
+  // its own state, so pinch / wheel / drag behave identically in both.
+  const fitCur = { scale: 1, x: 0, y: 0 };
+  const view = { zoom: 1, panX: 0, panY: 0 };
+  const cam = { s: 1, cx: 0, cy: 0, vl: 0, vx: 0, vy: 0 };
+  let camFollow = false;
+  let camTouchedAt = -1e9; // performance.now seconds of the last gesture.
+  let viewHoming = false; // Fit mode: easing a reset back to the home view.
+  const headScratch = new Float64Array(2);
+  const nowSec = (): number => performance.now() / 1000;
+  const touchCamera = (): void => {
+    camTouchedAt = nowSec();
+    viewHoming = false;
+  };
+  const clampView = (): void => {
+    view.zoom = Math.min(MAX_ZOOM, Math.max(1, view.zoom));
+    const w = app.screen.width;
+    const h = app.screen.height;
+    view.panX = Math.min(0, Math.max(w * (1 - view.zoom), view.panX));
+    view.panY = Math.min(0, Math.max(h * (1 - view.zoom), view.panY));
+  };
+  const applyView = (): void => {
+    root.scale.set(fitCur.scale * view.zoom);
+    root.position.set(
+      fitCur.x * view.zoom + view.panX,
+      fitCur.y * view.zoom + view.panY
+    );
+  };
+  const applyCam = (): void => {
+    root.scale.set(cam.s);
+    root.position.set(
+      app.screen.width / 2 - cam.cx * cam.s,
+      app.screen.height / 2 - cam.cy * cam.s
+    );
+  };
+  // Follow framing: FOLLOW_SPAN lattice units across the short screen
+  // side - or under fog, the visible disc plus a margin.
+  const followScale = (): number => {
+    const span = params.fogOfWar
+      ? 2 * (params.fowRadius + 1.2)
+      : FOLLOW_SPAN;
+    return Math.min(app.screen.width, app.screen.height) / span;
+  };
+  const placeWorldAt = (
+    wx: number,
+    wy: number,
+    sx: number,
+    sy: number,
+    s: number
+  ): void => {
+    const lo = camFollow
+      ? Math.min(fitTarget.scale, followScale()) * 0.85
+      : fitCur.scale;
+    const hi = camFollow ? followScale() * 4 : fitCur.scale * MAX_ZOOM;
+    const sc = Math.min(hi, Math.max(lo, s));
+    const px = sx - wx * sc;
+    const py = sy - wy * sc;
+    if (camFollow) {
+      cam.s = sc;
+      cam.cx = (app.screen.width / 2 - px) / sc;
+      cam.cy = (app.screen.height / 2 - py) / sc;
+      cam.vl = 0;
+      cam.vx = 0;
+      cam.vy = 0;
+      applyCam();
+    } else {
+      view.zoom = sc / fitCur.scale;
+      view.panX = px - fitCur.x * view.zoom;
+      view.panY = py - fitCur.y * view.zoom;
+      clampView();
+      applyView();
+    }
+  };
+  // Zoom by `factor` about screen point (sx, sy).
+  const zoomAt = (sx: number, sy: number, factor: number): void => {
+    const s = root.scale.x;
+    placeWorldAt(
+      (sx - root.position.x) / s,
+      (sy - root.position.y) / s,
+      sx,
+      sy,
+      s * factor
+    );
+    touchCamera();
+  };
+  const panBy = (dx: number, dy: number): void => {
+    const s = root.scale.x;
+    placeWorldAt(-root.position.x / s, -root.position.y / s, dx, dy, s);
+    touchCamera();
+  };
+  // Double-click / double-tap on empty space: back to the home framing.
+  const resetCamera = (): void => {
+    if (camFollow) camTouchedAt = -1e9; // Full-strength pull at once.
+    else viewHoming = true;
+  };
+  // Mode switches hand over the CURRENT framing (no jump); each mode then
+  // eases to its own target.
+  const setCamFollow = (on: boolean): void => {
+    if (on === camFollow) return;
+    if (on) {
+      cam.s = root.scale.x;
+      cam.cx = (app.screen.width / 2 - root.position.x) / cam.s;
+      cam.cy = (app.screen.height / 2 - root.position.y) / cam.s;
+      cam.vl = 0;
+      cam.vx = 0;
+      cam.vy = 0;
+      camTouchedAt = nowSec() - FOLLOW_DELAY;
+    } else {
+      fitCur.scale = root.scale.x;
+      fitCur.x = root.position.x;
+      fitCur.y = root.position.y;
+      view.zoom = 1;
+      view.panX = 0;
+      view.panY = 0;
+    }
+    camFollow = on;
+  };
+
+  // Per-frame camera step, in EVERY ticker branch (fog reveals grow and
+  // the head travels while the physics sleeps).
+  let fitFrames = 0;
+  const updateCamera = (dt: number): void => {
+    if (fitFrames++ % 3 === 0) computeFitTarget();
+    fitCur.scale += (fitTarget.scale - fitCur.scale) * 0.08;
+    fitCur.x += (fitTarget.x - fitCur.x) * 0.08;
+    fitCur.y += (fitTarget.y - fitCur.y) * 0.08;
+    setCamFollow(
+      params.cameraMode === "follow" && params.mazeFabric && fabric !== null
+    );
+    if (!camFollow) {
+      if (viewHoming) {
+        view.zoom += (1 - view.zoom) * 0.15;
+        view.panX -= view.panX * 0.15;
+        view.panY -= view.panY * 0.15;
+        if (Math.abs(view.zoom - 1) < 1e-3) {
+          view.zoom = 1;
+          view.panX = 0;
+          view.panY = 0;
+          viewHoming = false;
+        }
+        clampView();
+      }
+      applyView();
+      return;
+    }
+    // Target: the head - or the whole knot while the intro plays.
+    let ts = fitTarget.scale;
+    let tx = (app.screen.width / 2 - fitTarget.x) / ts;
+    let ty = (app.screen.height / 2 - fitTarget.y) / ts;
+    const intro = reveal !== null && !reveal.done;
+    if (!intro && fabric && fabric.headPosition(headScratch)) {
+      ts = followScale();
+      tx = headScratch[0];
+      ty = headScratch[1];
+    }
+    const idle = nowSec() - camTouchedAt;
+    const r = Math.max(0, Math.min(1, (idle - FOLLOW_DELAY) / FOLLOW_RAMP));
+    const ease = r * r * (3 - 2 * r);
+    if (ease > 0) {
+      const w = FOLLOW_W * ease;
+      const h = Math.min(dt, 0.05);
+      // Critically damped spring per axis (zoom in log space).
+      const step = (
+        x: number,
+        v: number,
+        target: number
+      ): [number, number] => {
+        const v2 = v + (w * w * (target - x) - 2 * w * v) * h;
+        return [x + v2 * h, v2];
+      };
+      const [ls, vl] = step(Math.log(cam.s), cam.vl, Math.log(ts));
+      cam.s = Math.exp(ls);
+      cam.vl = vl;
+      [cam.cx, cam.vx] = step(cam.cx, cam.vx, tx);
+      [cam.cy, cam.vy] = step(cam.cy, cam.vy, ty);
+    }
+    applyCam();
+  };
+
   function fitToScreen(): void {
     computeFitTarget();
-    root.scale.set(fitTarget.scale);
-    root.position.set(fitTarget.x, fitTarget.y);
+    fitCur.scale = fitTarget.scale;
+    fitCur.x = fitTarget.x;
+    fitCur.y = fitTarget.y;
+    clampView();
+    if (camFollow) applyCam();
+    else applyView();
   }
 
   // Stage 22: (re)start the appearance animation. Pre-settles the sim
@@ -321,6 +553,13 @@ async function main(): Promise<void> {
     root.addChild(renderer.root);
     if (fabric) root.addChild(fabric.overContainer);
     root.addChild(debug.container);
+    // A new scene starts at the home view (user zoom/pan reset); a
+    // follow camera takes over from this framing on the next frame.
+    setCamFollow(false);
+    view.zoom = 1;
+    view.panX = 0;
+    view.panY = 0;
+    viewHoming = false;
     fitToScreen();
     writeParams(params);
 
@@ -425,6 +664,14 @@ async function main(): Promise<void> {
       // Replay the appearance too: fresh pre-roll, fresh reveal clock.
       startAppearance();
       wake();
+    },
+    onStatsToggle: (visible) => {
+      stamp.style.display = visible ? "" : "none";
+      try {
+        localStorage.setItem(STATS_KEY, visible ? "1" : "0");
+      } catch {
+        // Storage unavailable: the choice just doesn't persist.
+      }
     },
     onDebugToggle: (visible) => {
       if (debug) debug.container.visible = visible;
@@ -567,7 +814,8 @@ async function main(): Promise<void> {
   const hud = document.createElement("div");
   hud.id = "maze-hud";
   hud.style.cssText =
-    "position:fixed;top:10px;left:10px;padding:7px 12px;" +
+    "position:fixed;top:max(10px,env(safe-area-inset-top));" +
+    "left:max(10px,env(safe-area-inset-left));padding:7px 12px;" +
     "background:#1b2233cc;color:#c8d3e8;font:12px/1.5 monospace;" +
     "border:1px solid #2c3a55;border-radius:6px;z-index:20;" +
     "display:none;pointer-events:none;white-space:pre";
@@ -776,8 +1024,132 @@ async function main(): Promise<void> {
   };
 
   app.canvas.style.touchAction = "none";
+
+  // GESTURES. Touch: two fingers pinch-zoom + pan; one finger tugs
+  // threads and taps choices as before, and drags EMPTY space to pan.
+  // Touch taps on maze choices resolve on RELEASE (desktop clicks stay on
+  // press), so the first finger of a pinch can never move the player; a
+  // pinch also drops any tug it interrupts without plucking, and after a
+  // pinch, fingers still down do nothing until all have lifted. Desktop:
+  // the wheel zooms at the cursor, a trackpad two-finger scroll pans and
+  // its pinch (ctrl+wheel) zooms, dragging empty space (or any middle-
+  // button drag) pans. Double-click / double-tap empty space resets.
+  const touches = new Map<number, { x: number; y: number }>();
+  let pinch: {
+    d0: number;
+    s0: number;
+    wx: number;
+    wy: number;
+  } | null = null;
+  let touchLocked = false;
+  let pendingTap: {
+    id: number;
+    sx: number;
+    sy: number;
+    x: number;
+    y: number;
+  } | null = null;
+  let dragPan: { id: number; x: number; y: number; moved: number } | null =
+    null;
+  let lastEmptyTap = -1e9;
+  const TAP_SLOP = 10; // CSS px a tap may wander and still count.
+  const pinchPair = (): [
+    { x: number; y: number },
+    { x: number; y: number },
+  ] => {
+    const it = touches.values();
+    return [it.next().value!, it.next().value!];
+  };
+  const beginPinch = (): void => {
+    if (ps && ps.grabbedParticle >= 0 && !autoGesture) {
+      ps.release();
+      snapMode = "none";
+    }
+    pendingTap = null;
+    dragPan = null;
+    touchLocked = true;
+    const [a, b] = pinchPair();
+    const mx = (a.x + b.x) / 2;
+    const my = (a.y + b.y) / 2;
+    const s0 = root.scale.x;
+    pinch = {
+      d0: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+      s0,
+      wx: (mx - root.position.x) / s0,
+      wy: (my - root.position.y) / s0,
+    };
+  };
+  const updatePinch = (): void => {
+    if (!pinch) return;
+    const [a, b] = pinchPair();
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    placeWorldAt(
+      pinch.wx,
+      pinch.wy,
+      (a.x + b.x) / 2,
+      (a.y + b.y) / 2,
+      pinch.s0 * (d / pinch.d0)
+    );
+    touchCamera();
+  };
+  // Nothing to tap or tug at this lattice point (where empty-space
+  // gestures - pan, double-tap reset - may take over).
+  const emptyAt = (x: number, y: number): boolean =>
+    !!ps &&
+    ps.nearest(x, y, GRAB_RADIUS) < 0 &&
+    !(
+      params.mazeFabric &&
+      fabric &&
+      fabricController &&
+      fabric.edgeAt(x, y, fabricController) >= 0
+    );
+
+  app.canvas.addEventListener(
+    "wheel",
+    (e) => {
+      e.preventDefault();
+      const unit =
+        e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? app.screen.height : 1;
+      // A mouse wheel ticks in big integer steps with no deltaX (or in
+      // lines); a trackpad pinch arrives as ctrl+wheel; anything else is
+      // a two-finger trackpad scroll, which PANS like a laptop map.
+      const mouseWheel =
+        e.deltaMode !== 0 ||
+        (e.deltaX === 0 &&
+          Number.isInteger(e.deltaY) &&
+          Math.abs(e.deltaY) >= 40);
+      if (e.ctrlKey || mouseWheel) {
+        const k = e.ctrlKey ? 0.01 : 0.0015;
+        zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * unit * k));
+      } else {
+        panBy(-e.deltaX * unit, -e.deltaY * unit);
+      }
+    },
+    { passive: false }
+  );
+  app.canvas.addEventListener("dblclick", (e) => {
+    const [x, y] = toLattice(e as unknown as PointerEvent);
+    if (emptyAt(x, y)) resetCamera();
+  });
+
   app.canvas.addEventListener("pointerdown", (e) => {
     if (!ps) return;
+    if (e.pointerType === "touch") {
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.size >= 2) {
+        if (!pinch) beginPinch();
+        return;
+      }
+      if (touchLocked) return;
+    }
+    // Middle-button drag pans from anywhere.
+    if (e.pointerType === "mouse" && e.button === 1) {
+      e.preventDefault();
+      dragPan = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 };
+      app.canvas.setPointerCapture(e.pointerId);
+      app.canvas.style.cursor = "grabbing";
+      return;
+    }
     wake();
     cancelSnap();
     const [x, y] = toLattice(e);
@@ -787,7 +1159,20 @@ async function main(): Promise<void> {
       renderer?.requestInspect(x, y);
       return;
     }
-    if (params.mazeFabric && handleFabricTap(x, y)) return;
+    if (params.mazeFabric) {
+      if (e.pointerType === "touch") {
+        if (
+          fabric &&
+          fabricController &&
+          fabric.edgeAt(x, y, fabricController) >= 0
+        ) {
+          pendingTap = { id: e.pointerId, sx: e.clientX, sy: e.clientY, x, y };
+          return;
+        }
+      } else if (handleFabricTap(x, y)) {
+        return;
+      }
+    }
     if (ps.grab(x, y, GRAB_RADIUS) >= 0) {
       const p = ps.grabbedParticle;
       grabOrigin[0] = ps.positions[p * 2];
@@ -798,10 +1183,53 @@ async function main(): Promise<void> {
       lastMoveT = e.timeStamp;
       app.canvas.setPointerCapture(e.pointerId);
       app.canvas.style.cursor = "grabbing";
+    } else {
+      // Empty space: drag to pan the camera.
+      dragPan = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 };
+      app.canvas.setPointerCapture(e.pointerId);
     }
   });
   app.canvas.addEventListener("pointermove", (e) => {
     if (!ps) return;
+    if (e.pointerType === "touch") {
+      const t = touches.get(e.pointerId);
+      if (t) {
+        t.x = e.clientX;
+        t.y = e.clientY;
+      }
+      if (pinch) {
+        updatePinch();
+        return;
+      }
+      if (
+        pendingTap &&
+        pendingTap.id === e.pointerId &&
+        Math.hypot(e.clientX - pendingTap.sx, e.clientY - pendingTap.sy) >
+          TAP_SLOP
+      ) {
+        // The finger is dragging, not tapping: it pans instead.
+        dragPan = {
+          id: e.pointerId,
+          x: pendingTap.sx,
+          y: pendingTap.sy,
+          moved: TAP_SLOP + 1,
+        };
+        pendingTap = null;
+      }
+      if (touchLocked) return;
+    }
+    if (dragPan && dragPan.id === e.pointerId) {
+      const dx = e.clientX - dragPan.x;
+      const dy = e.clientY - dragPan.y;
+      dragPan.x = e.clientX;
+      dragPan.y = e.clientY;
+      dragPan.moved += Math.abs(dx) + Math.abs(dy);
+      if (dragPan.moved > TAP_SLOP) {
+        panBy(dx, dy);
+        app.canvas.style.cursor = "grabbing";
+      }
+      return;
+    }
     const [x, y] = toLattice(e);
     if (ps.grabbedParticle >= 0 && snapMode === "none" && !autoGesture) {
       const px = dragPos[0];
@@ -831,6 +1259,42 @@ async function main(): Promise<void> {
   });
   const endDrag = (e: PointerEvent): void => {
     if (!ps) return;
+    if (dragPan && dragPan.id === e.pointerId) {
+      // A touch that never really moved on empty space is a TAP there:
+      // two within 320ms reset the view (double-tap).
+      if (
+        e.pointerType === "touch" &&
+        e.type === "pointerup" &&
+        dragPan.moved <= TAP_SLOP &&
+        !touchLocked
+      ) {
+        const t = nowSec();
+        if (t - lastEmptyTap < 0.32) {
+          resetCamera();
+          lastEmptyTap = -1e9;
+        } else {
+          lastEmptyTap = t;
+        }
+      }
+      dragPan = null;
+    }
+    if (e.pointerType === "touch") {
+      touches.delete(e.pointerId);
+      if (touches.size < 2) pinch = null;
+      if (pendingTap && pendingTap.id === e.pointerId) {
+        const tap = pendingTap;
+        pendingTap = null;
+        if (e.type === "pointerup" && !touchLocked) {
+          handleFabricTap(tap.x, tap.y);
+        }
+      }
+      // A lifted finger leaves no hover behind (touch has no pointer
+      // to move off the run).
+      if (fabric && fabricController && fabric.setHover(-1)) {
+        fabric.update(fabricController);
+      }
+      if (touches.size === 0) touchLocked = false;
+    }
     if (ps.grabbedParticle >= 0 && snapMode === "none" && !autoGesture) {
       wake();
       const chain = ps.chainOfParticle(ps.grabbedParticle);
@@ -1033,6 +1497,9 @@ async function main(): Promise<void> {
         fabric.trailLength = params.trailLength;
         fabric.fogOfWar = params.fogOfWar;
         fabric.fowRadius = params.fowRadius;
+        // fowIntro: keep the fog off while the intro animation plays; the
+        // release closes it in (fade + contracting radius).
+        fabric.setFogHold(params.fogOfWar && params.fowIntro && revealing);
         fabric.tickFog(ticker.deltaMS / 1000);
         fabricController.trailMode = params.pathViz === "trail";
         fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
@@ -1042,6 +1509,7 @@ async function main(): Promise<void> {
         }
       }
       renderer!.tickPaint(ticker.deltaMS / 1000);
+      updateCamera(ticker.deltaMS / 1000);
     };
 
     // Flow undulation is RENDER-side only: while the physics is paused or
@@ -1150,12 +1618,6 @@ async function main(): Promise<void> {
     const t2 = performance.now();
 
     // Follow the free-floating knot with an eased viewport fit.
-    if (perf.frames % 15 === 0) computeFitTarget();
-    root.scale.set(root.scale.x + (fitTarget.scale - root.scale.x) * 0.08);
-    root.position.set(
-      root.position.x + (fitTarget.x - root.position.x) * 0.08,
-      root.position.y + (fitTarget.y - root.position.y) * 0.08
-    );
 
     if (
       ps.settleComplete &&
@@ -1191,10 +1653,14 @@ async function main(): Promise<void> {
   // environment facts that matter when debugging rendering discrepancies.
   // sim vs wall time exposes rAF throttling (an under-simulated knot is
   // frozen mid-settle and looks kinked/notched).
+  // Hidden unless the panel's showStats is on (the text still updates, so
+  // probes reading it via textContent keep working either way).
   const stamp = document.createElement("div");
   stamp.style.cssText =
-    "position:fixed;left:6px;bottom:4px;font:10px monospace;" +
+    "position:fixed;left:max(6px,env(safe-area-inset-left));" +
+    "bottom:max(4px,env(safe-area-inset-bottom));font:10px monospace;" +
     "color:#5a6478;pointer-events:none;z-index:10";
+  stamp.style.display = settings.showStats ? "" : "none";
   document.body.appendChild(stamp);
   const wallStart = performance.now();
   // Rolling per-frame cost, flushed twice a second.

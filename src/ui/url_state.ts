@@ -24,6 +24,11 @@ export const PLUCK_STYLES: PluckStyle[] = ["soft", "string"];
 export type PathViz = "gold" | "trail" | "string";
 export const PATH_VIZ_MODES: PathViz[] = ["gold", "trail", "string"];
 
+// Camera: fit = frame the whole knot (or, under fog, what you can see);
+// follow = chase the player's head (maze mode).
+export type CameraMode = "fit" | "follow";
+export const CAMERA_MODES: CameraMode[] = ["fit", "follow"];
+
 // Scale root for manual/random sound modes ("seed" derives it from the
 // design seed, the long-standing default).
 export const ROOT_NOTES = [
@@ -108,6 +113,9 @@ export interface UrlParams {
   // U-turning at junctions on backtracks, never erased. Gameplay
   // interpretation + paint only; applies live (no rebuild).
   pathViz: PathViz;
+  // Camera framing (see CAMERA_MODES). Pinch/wheel/drag still zoom and
+  // pan in both; in follow mode a delayed, eased spring pulls back.
+  cameraMode: CameraMode;
   // [1, 15] lattice units of recent path kept lit in memory-trail mode.
   trailLength: number;
   // [0, 1] Ariadne string tension: 1 = taut along the centerline, 0 =
@@ -117,6 +125,9 @@ export interface UrlParams {
   // have been close by; explored areas stay visible. Applies live.
   fogOfWar: boolean;
   fowRadius: number; // [1.5, 10] visibility radius, lattice units.
+  // With fog on: still play the intro appearance animation unfogged, then
+  // close the fog in (fade + contracting reveal radius). Live.
+  fowIntro: boolean;
   // Section color scheme (fabric mode; knot mode supports mono/strands):
   // mono | strands | depth | segments | noise. Replaces the old multiColor
   // checkbox (mc=1 reads as "strands").
@@ -193,8 +204,10 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   mazeFabric: false,
   deadEnds: false,
   fogOfWar: false,
+  fowIntro: false,
   colorScheme: "mono",
   pathViz: "gold",
+  cameraMode: "fit" as CameraMode,
   soundMode: "manual",
   pitchSpace: "pentMinor",
   pluckStyle: "string",
@@ -269,10 +282,12 @@ export function readParams(): UrlParams {
     mazeFabric: readNumber(query, "mf", 0) > 0.5,
     deadEnds: readNumber(query, "de", 0) > 0.5,
     pathViz: readPathViz(query),
+    cameraMode: readChoice(query, "cam", CAMERA_MODES, "fit"),
     trailLength: readNumber(query, "trl", DEFAULTS.trailLength),
     tension: readNumber(query, "tn", DEFAULTS.tension),
     fogOfWar: readNumber(query, "fow", 0) > 0.5,
     fowRadius: readNumber(query, "fr", DEFAULTS.fowRadius),
+    fowIntro: readNumber(query, "fwi", 0) > 0.5,
     colorScheme: readScheme(query),
     appearMode: readAppear(query),
     appearSpeed: readNumber(query, "as", DEFAULTS.appearSpeed),
@@ -381,10 +396,12 @@ export function writeParams(params: UrlParams): void {
   query.set("mf", params.mazeFabric ? "1" : "0");
   query.set("de", params.deadEnds ? "1" : "0");
   query.set("pv", params.pathViz);
+  query.set("cam", params.cameraMode);
   query.set("trl", String(params.trailLength));
   query.set("tn", String(params.tension));
   query.set("fow", params.fogOfWar ? "1" : "0");
   query.set("fr", String(params.fowRadius));
+  query.set("fwi", params.fowIntro ? "1" : "0");
   query.set("cs", params.colorScheme);
   query.set("ap", params.appearMode);
   query.set("as", String(params.appearSpeed));

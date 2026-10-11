@@ -105,6 +105,11 @@ const FOG_STAMP_SPACING = 0.8;
 const FOG_DISP_SCALE = 14; // Screen-px of edge wobble.
 const FOG_DISP_DRIFT_X = 0.37; // World units/s of map drift.
 const FOG_DISP_DRIFT_Y = 0.22;
+// Fog INTRO (fowIntro): after an unfogged appearance animation the fog
+// closes in - it fades in over FOG_INTRO_FADE seconds while its reveal
+// radius contracts from the whole maze to fowRadius over FOG_INTRO_DUR.
+const FOG_INTRO_DUR = 1.6;
+const FOG_INTRO_FADE = 0.6;
 
 // Head-position halo rendered BENEATH the weave: world-space size and a
 // soft radial falloff; page-lifetime cached texture like the fog maps.
@@ -251,6 +256,15 @@ export class FabricMazeRenderer {
   private fogLastRadius = -1;
   private fogDispSprite: Sprite | null = null;
   private fogTime = 0;
+  // Intro hold (fog hidden while the appearance animation plays) and the
+  // close-in clock that follows (-1 = not running); see setFogHold.
+  private fogHeld = false;
+  private fogIntroT = -1;
+  // Where the head dot was last drawn (world; mid-move included) - the
+  // follow camera's target (main.ts).
+  private headX = 0;
+  private headY = 0;
+  private headValid = false;
   // REVEAL (Stage 22): while the appearance animation runs, main.ts wires
   // this to the renderer's reveal mask. The start marker (and the head
   // dot sitting on it) shows from the first frame; the exit marker waits
@@ -822,6 +836,12 @@ export class FabricMazeRenderer {
   // ticker frame (all branches) - cheap: one sprite transform; the GPU
   // filter does the rest even while the physics sleeps.
   tickFog(dt: number): void {
+    if (this.fogOfWar && this.fogIntroT >= 0) {
+      this.fogIntroT += dt;
+      if (this.fogIntroT >= FOG_INTRO_DUR) this.fogIntroT = -1;
+      this.fogDirty = true;
+      this.renderFog();
+    }
     if (!this.fogOfWar || !this.fogDispSprite) return;
     this.fogTime += dt;
     const span = this.fogRect.span;
@@ -845,13 +865,74 @@ export class FabricMazeRenderer {
     this.fogDirty = true;
   }
 
+  // The head dot's last drawn world position (false before the first
+  // marker pass).
+  headPosition(out: Float32Array | Float64Array): boolean {
+    if (!this.headValid) return false;
+    out[0] = this.headX;
+    out[1] = this.headY;
+    return true;
+  }
+
+  // Hold the fog off (true) while an unfogged intro plays; releasing the
+  // hold starts the close-in (fade + contracting radius).
+  setFogHold(hold: boolean): void {
+    if (hold === this.fogHeld) return;
+    this.fogHeld = hold;
+    this.fogIntroT = hold ? -1 : 0;
+    this.fogDirty = true;
+    this.renderFog();
+  }
+
+  // The fog's reveal radius multiplier during the close-in (1 at rest).
+  private fogRadiusMul(): number {
+    if (this.fogIntroT < 0) return 1;
+    const u = Math.min(1, this.fogIntroT / FOG_INTRO_DUR);
+    const e = u * u * (3 - 2 * u);
+    const big = Math.max(1, this.fogRect.span / Math.max(0.5, this.fowRadius));
+    return big + (1 - big) * e;
+  }
+
+  // World bounds of what the fog lets you see (explored stamps grown by
+  // the live reveal radius), or null when fog is off / held / unexplored.
+  // main.ts fits the camera to this while fog is on.
+  fogVisibleBounds(): {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+  } | null {
+    if (!this.fogOfWar || this.fogHeld || this.fogStamps.length < 2) {
+      return null;
+    }
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (let i = 0; i < this.fogStamps.length; i += 2) {
+      const x = this.fogStamps[i];
+      const y = this.fogStamps[i + 1];
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+    const r = this.fowRadius * this.fogRadiusMul();
+    return { minX: minX - r, minY: minY - r, maxX: maxX + r, maxY: maxY + r };
+  }
+
   private renderFog(): void {
-    if (!this.fogOfWar) {
+    if (!this.fogOfWar || this.fogHeld) {
       if (this.fogSprite) this.fogSprite.visible = false;
       return;
     }
     this.ensureFog();
     this.fogSprite!.visible = true;
+    // Close-in: the fog fades in over the first FOG_INTRO_FADE seconds.
+    this.fogSprite!.alpha =
+      this.fogIntroT >= 0
+        ? Math.min(1, this.fogIntroT / FOG_INTRO_FADE)
+        : 1;
     if (!this.fogDirty && this.fogLastRadius === this.fowRadius) return;
     this.fogDirty = false;
     this.fogLastRadius = this.fowRadius;
@@ -861,7 +942,7 @@ export class FabricMazeRenderer {
     ctx.fillStyle = `#${this.fogColor.toString(16).padStart(6, "0")}`;
     ctx.fillRect(0, 0, FOG_CANVAS, FOG_CANVAS);
     ctx.globalCompositeOperation = "destination-out";
-    const r = Math.max(2, this.fowRadius * k);
+    const r = Math.max(2, this.fowRadius * this.fogRadiusMul() * k);
     for (let i = 0; i < this.fogStamps.length; i += 2) {
       const px = (this.fogStamps[i] - this.fogRect.x0) * k;
       const py = (this.fogStamps[i + 1] - this.fogRect.y0) * k;
@@ -1235,6 +1316,9 @@ export class FabricMazeRenderer {
     } else {
       this.vertexWorld(controller.head, this.scratch, 0);
     }
+    this.headX = this.scratch[0];
+    this.headY = this.scratch[1];
+    this.headValid = true;
     // Fog explores wherever the head (or the mid-move dot) goes.
     this.maybeStampFog(this.scratch[0], this.scratch[1]);
     // The under-weave halo follows the dot.

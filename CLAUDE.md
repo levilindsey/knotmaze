@@ -78,6 +78,18 @@ npm test         # Vitest
 
 Work lands directly on `master` (the GitHub default and only branch; there is no `main`). All changes must be end-to-end working before committing; no partial or broken work. Every push to `master` deploys: `.github/workflows/deploy.yml` runs `npm test` then publishes `dist` to Cloudflare Pages (https://knotmaze.pages.dev, which https://levi.dev/knots redirects to with the query string kept) - a red suite leaves the previous deployment live. Never run `wrangler pages project create` (or other project-scaffolding wrangler commands) inside this repo: it rewrites package.json, the lockfile and .gitignore and adds wrangler/vite configs.
 
+## Versioning
+
+`package.json` `version` is `0.<roadmap phase>.0` (P4 = 0.4.0): bump the
+minor at a phase transition, 1.0.0 at public launch - nothing else bumps
+it. The BUILD identity is derived, never hand-edited: `vite.config.ts`
+defines the git short SHA (`+` = built with uncommitted changes to
+tracked files) and the UTC build time, read through `src/build_info.ts`.
+The panel header shows `v<version> · <sha>`; `BUILD_STAMP` (main.ts) is
+built from the same values and keeps a leading phase tag (`P4`) because
+`scripts/diag_screenshot.mjs` finds the stamp by `/^P\d/` - bump that
+tag together with the version.
+
 ## Notes
 
 - Phased roadmap: P0 (scaffold) → P1 (combinatorial) → P2 (beauty + live physics) → P3 (touch + audio) → P4 (maze mode) → P5 (growth animation) → P6 (flourishes).
@@ -468,6 +480,31 @@ between-threads/cell-passage route.
   dims the crossing mid-fade). The asleep flow-0 ticker keeps calling
   update() while FX pools are hot (needsFxRender) - else gated
   crossings stayed hidden until the next wake.
+- MOBILE + CAMERA ROUND (late 2026-10-10): the settings panel hides
+  behind a HAMBURGER (no Tweakpane title bar - it would be a second,
+  competing collapse; a custom header shows the name + version; open by
+  default on wide pointer-precise screens, closed on phones, persisted;
+  finger-sized rows under pointer:coarse); the footer stamp is a
+  persisted showStats toggle (hidden by default - the text still updates
+  for the diag scripts); safe-area insets (viewport-fit=cover). CAMERA
+  (`cameraMode`, cam=): fit = the eased auto-fit + user zoom/pan
+  composed in screen space (clamped so zoom 1 is exactly the home view;
+  under fog the fit frames only the FOG-VISIBLE region) | follow = a
+  chase camera on the head with a critically damped pull-back spring,
+  OFF for FOLLOW_DELAY after the last gesture, stiffness eased in over
+  FOLLOW_RAMP (it frames the whole knot during the intro). Every
+  gesture goes through ONE primitive (placeWorldAt: world point to
+  screen point at a scale) that each mode maps onto its own state.
+  GESTURES: pinch (world-anchored midpoint) + two-finger pan; touch taps
+  on choices resolve on RELEASE and a pinch cancels a tug without a
+  pluck (its first finger can never move the player); empty-space drag
+  pans (mouse + touch), middle-drag pans anywhere; wheel = mouse zoom at
+  the cursor / trackpad two-finger scroll pans / trackpad pinch
+  (ctrl+wheel) zooms; double-click / double-tap empty space resets. The
+  camera steps in EVERY ticker branch (moves and fog growth happen while
+  the physics sleeps). FOG: `fowIntro` (fwi=) holds the fog off during
+  the intro animation, then closes it in (fade + reveal radius
+  contracting from the whole maze to fowRadius).
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +

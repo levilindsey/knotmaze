@@ -6,6 +6,7 @@
 // blue-bold values) adapted to Tweakpane's DOM.
 
 import { Pane } from "tweakpane";
+import { APP_VERSION, BUILD_SHA, BUILD_TIME } from "../build_info";
 import type { UrlParams } from "./url_state";
 import { PARAM_DEFAULTS } from "./url_state";
 
@@ -13,12 +14,15 @@ export interface PanelSettings {
   temperature: number;
   showDebug: boolean;
   muted: boolean;
+  // The bottom-left build/perf readout (persisted per browser).
+  showStats: boolean;
 }
 
 const SETTINGS_DEFAULTS: PanelSettings = {
   temperature: 0,
   showDebug: false,
   muted: false,
+  showStats: false,
 };
 
 export interface PanelCallbacks {
@@ -26,6 +30,7 @@ export interface PanelCallbacks {
   onReseed: () => void;
   onReplaySettle: () => void;
   onDebugToggle: (visible: boolean) => void;
+  onStatsToggle: (visible: boolean) => void;
   onSlackChange: () => void;
   onStyleChange: () => void;
   onTemperatureChange: () => void;
@@ -73,15 +78,34 @@ export function buildPanel(
   settings: PanelSettings,
   callbacks: PanelCallbacks
 ): Pane {
-  const pane = new Pane({ title: "Knotmaze" });
+  // No Tweakpane title bar: the HAMBURGER button (end of buildPanel) owns
+  // open/close - a title would add a second, competing collapse - and a
+  // custom header row carries the name + the build's version.
+  const pane = new Pane();
+  const head = document.createElement("div");
+  head.className = "kp-head";
+  const headName = document.createElement("span");
+  headName.textContent = "Knotmaze";
+  const headVer = document.createElement("span");
+  headVer.className = "kp-ver";
+  headVer.textContent = `v${APP_VERSION} · ${BUILD_SHA}`;
+  if (BUILD_TIME) headVer.title = `Built ${BUILD_TIME} UTC`;
+  head.append(headName, headVer);
+  pane.element.prepend(head);
 
   // The pane has outgrown short viewports: cap Tweakpane's fixed wrapper
   // at the window height and scroll INSIDE it (wheel over the panel stays
-  // in the panel; the thin scrollbar matches the dark theme).
+  // in the panel; the thin scrollbar matches the dark theme). It sits
+  // BELOW the menu button, inside the safe area (notches).
   const wrap = pane.element.parentElement;
   const SCROLL_KEY = "knotmaze.panelScroll";
   if (wrap) {
-    wrap.style.maxHeight = "calc(100vh - 16px)";
+    const top = "(max(10px, env(safe-area-inset-top)) + 50px)";
+    wrap.style.top = `calc${top}`;
+    wrap.style.right = "max(10px, env(safe-area-inset-right))";
+    wrap.style.maxHeight = `calc(100vh - ${top} - 10px)`;
+    // Dynamic viewport height where supported (mobile URL bars).
+    wrap.style.maxHeight = `calc(100dvh - ${top} - 10px)`;
     wrap.style.overflowY = "auto";
     wrap.style.overscrollBehavior = "contain";
     wrap.style.scrollbarWidth = "thin";
@@ -122,7 +146,36 @@ export function buildPanel(
     "border-left:4px solid transparent;border-right:4px solid transparent;" +
     "border-top:5px solid #8ea0c0;margin-right:7px;" +
     "transform:rotate(-90deg);transition:transform .15s}" +
-    ".tp-fldv_b[aria-expanded='true']::before{transform:rotate(0deg)}";
+    ".tp-fldv_b[aria-expanded='true']::before{transform:rotate(0deg)}" +
+    // Header row: name left, the version de-emphasized in the corner.
+    ".kp-head{display:flex;align-items:baseline;" +
+    "justify-content:space-between;gap:8px;padding:7px 10px 6px;" +
+    "font:600 11px var(--tp-base-font-family,'Roboto Mono',Menlo,monospace);" +
+    "color:var(--tp-label-foreground-color,#bbbcc4);" +
+    "border-bottom:1px solid rgba(255,255,255,.06)}" +
+    ".kp-ver{font-weight:400;font-size:10px;opacity:.42;" +
+    "white-space:nowrap;font-variant-numeric:tabular-nums}" +
+    // Hamburger: three bars that fold into an X while the panel is open.
+    ".kp-menu{position:fixed;z-index:30;" +
+    "top:max(10px,env(safe-area-inset-top));" +
+    "right:max(10px,env(safe-area-inset-right));" +
+    "width:42px;height:42px;padding:0;border:0;border-radius:9px;" +
+    "background:rgba(40,41,46,.92);box-shadow:0 2px 8px rgba(0,0,0,.35);" +
+    "display:flex;flex-direction:column;align-items:center;" +
+    "justify-content:center;gap:4px;cursor:pointer;" +
+    "-webkit-tap-highlight-color:transparent;touch-action:manipulation}" +
+    ".kp-menu span{display:block;width:18px;height:2px;border-radius:1px;" +
+    "background:#c8cad3;transition:transform .2s,opacity .2s}" +
+    ".kp-menu[aria-expanded='true'] span:nth-child(1)" +
+    "{transform:translateY(6px) rotate(45deg)}" +
+    ".kp-menu[aria-expanded='true'] span:nth-child(2){opacity:0}" +
+    ".kp-menu[aria-expanded='true'] span:nth-child(3)" +
+    "{transform:translateY(-6px) rotate(-45deg)}" +
+    ".kp-menu:focus-visible{outline:2px solid #8ea0c0;outline-offset:2px}" +
+    // Touch screens: finger-sized rows and a wider panel.
+    "@media (pointer:coarse){.tp-dfwv{width:min(320px,calc(100vw - 20px));" +
+    "--tp-container-unit-size:30px;--tp-blade-value-width:150px}" +
+    ".kp-reset{opacity:.45;font-size:14px;padding:0 4px}}";
   document.head.appendChild(style);
 
   // --- Modified-state tracking + per-row reset ---------------------------
@@ -321,6 +374,12 @@ export function buildPanel(
     "How your route is shown: gold = the traveled thread recolors; trail = memory mode, only a short trail stays gold and there is no backtracking; string = unroll a thin white yarn behind you - it U-turns at junctions when you backtrack and is never picked up. Applies live.",
     D.pathViz, () => callbacks.onTrailChange()
   );
+  const cameraRow = row(
+    fMaze, p, "cameraMode",
+    { options: { fit: "fit", follow: "follow" } },
+    "Camera: fit = frame the whole maze (under fog: just what you can see); follow = chase your position. Pinch, scroll or drag to zoom and pan in either - in follow mode a gentle pull brings the view back after a moment. Double-click / double-tap empty space to reset the view. Applies live.",
+    D.cameraMode, () => callbacks.onTrailChange()
+  );
   const trailLenRow = row(
     fMaze, p, "trailLength", { min: 1, max: 15, step: 0.5 },
     "How much recent path stays lit in memory mode, in lattice units. Applies live.",
@@ -340,6 +399,11 @@ export function buildPanel(
     fMaze, p, "fowRadius", { min: 1.5, max: 10, step: 0.25 },
     "How far around your explored path the fog lifts, in lattice units. Applies live and reshapes everything already explored.",
     D.fowRadius, () => callbacks.onTrailChange()
+  );
+  const fowIntroRow = row(
+    fMaze, p, "fowIntro", undefined,
+    "Play the intro appearance animation in the open, then close the fog in around you (it fades in while its reveal radius contracts). Applies to the next intro.",
+    D.fowIntro, () => callbacks.onTrailChange()
   );
   const moveSpeedRow = row(
     fMaze, p, "moveSpeed", { min: 0.25, max: 4, step: 0.05 },
@@ -648,6 +712,12 @@ export function buildPanel(
     SETTINGS_DEFAULTS.showDebug,
     () => callbacks.onDebugToggle(settings.showDebug === true)
   );
+  row(
+    fAdvanced, s, "showStats", undefined,
+    "Show the build + performance readout (version, sim/wall time, frame cost) in the bottom-left corner. Remembered per browser.",
+    SETTINGS_DEFAULTS.showStats,
+    () => callbacks.onStatsToggle(settings.showStats === true)
+  );
   button(
     fAdvanced,
     "Reset to defaults",
@@ -672,10 +742,13 @@ export function buildPanel(
     branchDensityRow.hidden = !fab;
     fourWayRow.hidden = !fab;
     pathVizRow.hidden = !fab;
+    cameraRow.hidden = !fab;
     trailLenRow.hidden = !fab || params.pathViz !== "trail";
     tensionRow.hidden = !fab || params.pathViz !== "string";
     fowRow.hidden = !fab;
     fowRadiusRow.hidden = !fab || !params.fogOfWar;
+    fowIntroRow.hidden =
+      !fab || !params.fogOfWar || params.appearMode === "instant";
     moveSpeedRow.hidden = !fab;
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;
@@ -699,14 +772,50 @@ export function buildPanel(
   };
   refreshCond();
 
-  if (wrap) {
-    const saved = Number(localStorage.getItem(SCROLL_KEY) ?? "0");
-    if (saved > 0) {
-      requestAnimationFrame(() => {
-        wrap.scrollTop = saved;
-      });
-    }
+  // HAMBURGER: shows/hides the whole panel. Open by default on roomy,
+  // pointer-precise screens; closed on phones (it would cover the maze).
+  // The choice persists per browser.
+  const menu = document.createElement("button");
+  menu.type = "button";
+  menu.className = "kp-menu";
+  menu.setAttribute("aria-label", "Settings");
+  menu.innerHTML = "<span></span><span></span><span></span>";
+  document.body.appendChild(menu);
+  const OPEN_KEY = "knotmaze.panelOpen";
+  let open = !window.matchMedia("(max-width: 700px), (pointer: coarse)")
+    .matches;
+  try {
+    const v = localStorage.getItem(OPEN_KEY);
+    if (v !== null) open = v === "1";
+  } catch {
+    // Storage unavailable: the default stands.
   }
+  // Scroll restores on the first OPEN (a hidden wrapper has no layout).
+  let scrollRestored = false;
+  const setOpen = (v: boolean): void => {
+    open = v;
+    if (wrap) wrap.style.display = v ? "" : "none";
+    menu.setAttribute("aria-expanded", String(v));
+    menu.title = v ? "Hide settings" : "Show settings";
+    if (v && !scrollRestored && wrap) {
+      scrollRestored = true;
+      const saved = Number(localStorage.getItem(SCROLL_KEY) ?? "0");
+      if (saved > 0) {
+        requestAnimationFrame(() => {
+          wrap.scrollTop = saved;
+        });
+      }
+    }
+  };
+  menu.addEventListener("click", () => {
+    setOpen(!open);
+    try {
+      localStorage.setItem(OPEN_KEY, open ? "1" : "0");
+    } catch {
+      // Storage unavailable: state just doesn't persist.
+    }
+  });
+  setOpen(open);
 
   return pane;
 }

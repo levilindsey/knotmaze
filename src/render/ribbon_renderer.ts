@@ -290,7 +290,7 @@ const FX_SOLID_EPS = 0.03;
 // progress <= RAINBOW_SWELL_MIN_P, where its crossings may show again).
 const RAINBOW_GLOW_ARC = 2.4;
 const RAINBOW_GLOW_HOLD = 0.45;
-const RAINBOW_SWELL = 0.6;
+const RAINBOW_SWELL = 1.0;
 const RAINBOW_SWELL_MIN_P = 0.2;
 const FAN_SOLID_START = 0.55;
 
