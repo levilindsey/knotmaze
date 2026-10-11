@@ -8,7 +8,13 @@
 import { Pane } from "tweakpane";
 import { APP_VERSION, BUILD_SHA, BUILD_TIME } from "../build_info";
 import type { UrlParams } from "./url_state";
-import { PARAM_DEFAULTS, appearModeFor, applyAppearMode } from "./url_state";
+import {
+  PARAM_DEFAULTS,
+  appearModeFor,
+  applyAppearMode,
+  seedFromText,
+  seedText,
+} from "./url_state";
 import { gridAlignSlider, gridAlignStrength } from "./grid_align_curve";
 
 export interface PanelSettings {
@@ -32,6 +38,8 @@ const SETTINGS_DEFAULTS: PanelSettings = {
 export interface PanelCallbacks {
   onRegenerate: () => void;
   onReseed: () => void;
+  // A seed typed into the seed row (rebuilds that design; same seed = no-op).
+  onSetSeed: (seed: number) => void;
   onReplaySettle: () => void;
   onDebugToggle: (visible: boolean) => void;
   onStatsToggle: (visible: boolean) => void;
@@ -207,6 +215,19 @@ export function buildPanel(
     ".kp-credit a:hover,.kp-credit a:focus-visible{color:#e7c56f}" +
     ".kp-credit img{width:16px;height:16px;display:block}" +
     ".kp-credit .kp-gh{margin-left:auto;padding:2px}" +
+    // Seed row: the token field plus a square dice button beside it.
+    ".kp-seed .tp-lblv_v{display:flex;align-items:center;gap:4px}" +
+    ".kp-seed .tp-txtv{flex:1 1 auto;min-width:0}" +
+    ".kp-dice{flex:0 0 auto;width:var(--tp-container-unit-size,20px);" +
+    "height:var(--tp-container-unit-size,20px);padding:0;border:0;" +
+    "border-radius:var(--tp-blade-border-radius,2px);" +
+    "background:var(--tp-button-background-color,#adafb8);" +
+    "color:var(--tp-button-foreground-color,#28292e);display:flex;" +
+    "align-items:center;justify-content:center;cursor:pointer;" +
+    "-webkit-tap-highlight-color:transparent;touch-action:manipulation}" +
+    ".kp-dice:hover{background:var(--tp-button-background-color-hover,#bbbcc4)}" +
+    ".kp-dice:active{background:var(--tp-button-background-color-active,#d6d7db)}" +
+    ".kp-dice svg{width:14px;height:14px;display:block}" +
     // Hamburger: three bars that fold into an X while the panel is open.
     ".kp-menu{position:fixed;z-index:30;" +
     "top:max(10px,env(safe-area-inset-top));" +
@@ -400,8 +421,47 @@ export function buildPanel(
     "How often growing threads turn instead of running straight. Low = long runs, high = curly meanders. Regenerates the design.",
     D.turnBias, regenerateWhenDone
   );
-  button(fDesign, "New seed", "Regenerate a fresh design from a new random seed.")
-    .on("click", callbacks.onReseed);
+  // SEED ROW: the design's seed as the link's base-36 token (?<seed>...).
+  // Typing a seed (or any word - it hashes to one) and pressing Enter loads
+  // that design; the dice button in the row rolls a random one. The row
+  // always re-shows the canonical token, so a hashed word shows its seed.
+  const seedView = { seed: seedText(params.seed) };
+  const seedApi = fDesign.addBinding(seedView, "seed" as never) as RowApi;
+  seedApi.element.title =
+    "The design's seed - the first part of the link. Type a seed (or any word) and press Enter to load that design; the dice rolls a random one.";
+  seedApi.element.classList.add("kp-row", "kp-seed");
+  const syncSeed = (): void => {
+    const t = seedText(params.seed);
+    if (seedView.seed === t) return;
+    seedView.seed = t;
+    seedApi.refresh?.(); // Re-enters the change handler with t: a no-op.
+  };
+  seedApi.on("change", (ev) => {
+    const s = seedFromText(String(ev.value));
+    if (s !== null && s !== params.seed) callbacks.onSetSeed(s);
+    syncSeed();
+  });
+  const dice = document.createElement("button");
+  dice.type = "button";
+  dice.className = "kp-dice";
+  dice.title = "Roll a new random seed";
+  dice.setAttribute("aria-label", "Roll a new random seed");
+  dice.innerHTML =
+    '<svg viewBox="0 0 16 16" aria-hidden="true">' +
+    '<rect x="1.5" y="1.5" width="13" height="13" rx="3" fill="none" ' +
+    'stroke="currentColor" stroke-width="1.6"/>' +
+    '<circle cx="5" cy="5" r="1.4" fill="currentColor"/>' +
+    '<circle cx="8" cy="8" r="1.4" fill="currentColor"/>' +
+    '<circle cx="11" cy="11" r="1.4" fill="currentColor"/></svg>';
+  dice.addEventListener("click", () => {
+    callbacks.onReseed();
+    syncSeed();
+  });
+  seedApi.element.querySelector(".tp-lblv_v")?.appendChild(dice);
+  // Focusing the field selects the token, so typing replaces it.
+  seedApi.element
+    .querySelector("input")
+    ?.addEventListener("focus", (e) => (e.target as HTMLInputElement).select());
 
   // --- Maze ---------------------------------------------------------------
   const fMaze = folder("Maze", true);

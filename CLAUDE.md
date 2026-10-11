@@ -698,6 +698,12 @@ between-threads/cell-passage route.
   "./"): one build serves at knotmaze.pages.dev/ and under a path prefix
   (levi.dev/knotmaze/ via levi.dev's proxy function); the dev server still
   serves at /. Credit line reads "[cat] Made by Snoring Cat" as one link.
+  SEED ROW (Design folder, replaces the New seed button): shows the seed as
+  the link's base-36 token; typing a token (any case) loads it exactly as a
+  link would, and any other text (a phrase, a word longer than 7 chars)
+  hashes (FNV-1a, url_state `seedFromText`) to a seed, so a word gives
+  "its" maze; the field always re-shows the canonical token; a dice button
+  inside the row rolls a random seed; focusing selects the token.
 - gridAlign EXPONENTIAL SLIDER (worktree agent + panel wiring,
   2026-10-11): the settled look follows the LOG of the anchor strength
   (alignment progress ~30% per decade from 5e-4 to 1; the linear slider

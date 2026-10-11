@@ -325,6 +325,26 @@ export function newSeed(): number {
   return (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
 }
 
+// A seed as players see it: the link's base-36 token (?<seed>...).
+export function seedText(seed: number): string {
+  return (seed >>> 0).toString(36);
+}
+
+// A typed seed (the panel's seed row): a base-36 token reads exactly as a
+// link would (case-insensitive), and any other text - a word too long to
+// be a token, a phrase, punctuation - hashes (FNV-1a) to a seed, so typing
+// a word gives "that word's" maze. Blank text is no seed (null).
+export function seedFromText(text: string): number | null {
+  const t = text.trim().toLowerCase();
+  if (t === "") return null;
+  if (/^[0-9a-z]{1,7}$/.test(t)) return Number.parseInt(t, 36) >>> 0;
+  let h = 0x811c9dc5;
+  for (let i = 0; i < t.length; i++) {
+    h = Math.imul(h ^ t.charCodeAt(i), 0x01000193) >>> 0;
+  }
+  return h;
+}
+
 // The CURRENT option list of every enum param: what this build accepts
 // from any link (anything else reads as the default) - and, in the tests,
 // what every codec table must still list.

@@ -669,6 +669,12 @@ async function main(): Promise<void> {
       rebuild();
       wake();
     },
+    onSetSeed: (seed: number) => {
+      if (seed === params.seed) return;
+      params.seed = seed;
+      rebuild();
+      wake();
+    },
     onReplaySettle: () => {
       ps?.reset();
       // Replay the appearance too: fresh pre-roll, fresh reveal clock.
