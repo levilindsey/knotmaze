@@ -87,6 +87,10 @@ export interface MazeParams {
   exitPoint?: [number, number];
   entranceDir?: [number, number];
   exitDir?: [number, number];
+  // Shaped lattices: route the entrance/exit tails out to open space
+  // (see maze_apply's TAIL ESCAPE). Absent/false = the historic fixed
+  // CUT_REACH tails.
+  escapeTails?: boolean;
 }
 
 export const DEFAULT_MAZE_PARAMS: MazeParams = {
@@ -121,6 +125,7 @@ export interface MazePlan {
   // on legacy plans: maze_apply falls back to the historic corner dirs.
   entranceDir?: [number, number];
   exitDir?: [number, number];
+  escapeTails?: boolean;
   mazeStrands: number[]; // strands that form the reachable maze.
   culledStrands: number[]; // isolated loops excluded from the maze.
   // Reachability backbone: splices (preferred) and 4-way crossing merges
@@ -403,17 +408,139 @@ function components(
 // corner), by the closest lattice point on the edge. Ties break on edge id
 // for determinism. `exclude` keeps the exit cut off the entrance's edge
 // when both anchors target the same region of the silhouette.
+// OUTER-FACE edges: drawn edges with open space on one side. A cut on
+// an INTERIOR edge cannot hand its tail to open space without crossing
+// threads (planarity), so shaped-lattice entrances/exits (whose anchor
+// targets are nudged into thick material) restrict their cut search to
+// these. Found by rasterizing every edge as a wall and flood-filling the
+// raster from its border; an edge is outer when a probe point beside its
+// middle segment, on either side, lands in the flooded exterior.
+export function outerFaceEdges(graph: TangleGraph): Set<string> {
+  const RES = 4; // Raster px per lattice unit.
+  const PAD = 3;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const e of graph.edges.values()) {
+    for (const [x, y] of e.latticePoints) {
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+  }
+  const out = new Set<string>();
+  if (!Number.isFinite(minX)) return out;
+  const W = Math.ceil((maxX - minX + 2 * PAD) * RES) + 1;
+  const H = Math.ceil((maxY - minY + 2 * PAD) * RES) + 1;
+  const px = (x: number): number => Math.round((x - minX + PAD) * RES);
+  const py = (y: number): number => Math.round((y - minY + PAD) * RES);
+  const wall = new Uint8Array(W * H);
+  const stamp = (cx: number, cy: number): void => {
+    for (let oy = -1; oy <= 1; oy++) {
+      for (let ox = -1; ox <= 1; ox++) {
+        const x = cx + ox;
+        const y = cy + oy;
+        if (x >= 0 && x < W && y >= 0 && y < H) wall[y * W + x] = 1;
+      }
+    }
+  };
+  for (const e of graph.edges.values()) {
+    const lp = e.latticePoints;
+    for (let i = 0; i + 1 < lp.length; i++) {
+      const [ax, ay] = lp[i];
+      const [bx, by] = lp[i + 1];
+      const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) * RES * 2));
+      for (let k = 0; k <= n; k++) {
+        stamp(px(ax + ((bx - ax) * k) / n), py(ay + ((by - ay) * k) / n));
+      }
+    }
+  }
+  // Flood the exterior from the raster border.
+  const ext = new Uint8Array(W * H);
+  const queue: number[] = [];
+  const seed = (i: number): void => {
+    if (!wall[i] && !ext[i]) {
+      ext[i] = 1;
+      queue.push(i);
+    }
+  };
+  for (let x = 0; x < W; x++) {
+    seed(x);
+    seed((H - 1) * W + x);
+  }
+  for (let y = 0; y < H; y++) {
+    seed(y * W);
+    seed(y * W + W - 1);
+  }
+  while (queue.length > 0) {
+    const i = queue.pop()!;
+    const x = i % W;
+    const y = (i - x) / W;
+    if (x > 0) seed(i - 1);
+    if (x < W - 1) seed(i + 1);
+    if (y > 0) seed(i - W);
+    if (y < H - 1) seed(i + W);
+  }
+  const isExt = (x: number, y: number): boolean => {
+    const ix = px(x);
+    const iy = py(y);
+    return ix >= 0 && ix < W && iy >= 0 && iy < H && ext[iy * W + ix] === 1;
+  };
+  for (const e of graph.edges.values()) {
+    const lp = e.latticePoints;
+    if (lp.length < 2) continue;
+    const m = Math.floor((lp.length - 1) / 2);
+    const [ax, ay] = lp[m];
+    const [bx, by] = lp[m + 1];
+    const len = Math.hypot(bx - ax, by - ay) || 1;
+    const nx = -(by - ay) / len;
+    const ny = (bx - ax) / len;
+    const mx = (ax + bx) / 2;
+    const my = (ay + by) / 2;
+    for (const off of [0.45, 0.65, 0.85]) {
+      if (
+        isExt(mx + nx * off, my + ny * off) ||
+        isExt(mx - nx * off, my - ny * off)
+      ) {
+        out.add(e.id);
+        break;
+      }
+    }
+  }
+  return out;
+}
+
 function nearestEdgeToCorner(
   graph: TangleGraph,
   mazeStrands: number[],
   corner: [number, number],
-  exclude?: string
+  exclude?: string,
+  // Restrict candidates to these edges (outer-face cuts); falls back to
+  // every maze edge when none qualifies.
+  only?: Set<string>
 ): MazeCut {
+  if (only) {
+    const hit = nearestEdgeToCornerIn(graph, mazeStrands, corner, exclude, only);
+    if (hit) return hit;
+  }
+  return nearestEdgeToCornerIn(graph, mazeStrands, corner, exclude)!;
+}
+
+function nearestEdgeToCornerIn(
+  graph: TangleGraph,
+  mazeStrands: number[],
+  corner: [number, number],
+  exclude?: string,
+  only?: Set<string>
+): MazeCut | null {
   let best: MazeCut | null = null;
   let bestD = Infinity;
   for (const strand of mazeStrands) {
     for (const edgeId of graph.strands[strand].edgeIds) {
       if (edgeId === exclude) continue;
+      if (only && !only.has(edgeId)) continue;
       const edge = graph.edges.get(edgeId)!;
       let d = Infinity;
       for (const [x, y] of edge.latticePoints) {
@@ -426,7 +553,7 @@ function nearestEdgeToCorner(
       }
     }
   }
-  return best!;
+  return best;
 }
 
 // Farthest-first selection under a spacing floor. `placed` is the flat list
@@ -605,12 +732,22 @@ export function buildMazePlan(
   // compass anchors (core/shapes.ts), defaulting to the historic corners.
   const entrancePoint = params.entrancePoint ?? [0, 0];
   const exitPoint = params.exitPoint ?? [bound, bound];
-  const entrance = nearestEdgeToCorner(graph, mazeStrands, entrancePoint);
+  // Shaped lattices cut on the OUTER FACE so their tails can escape to
+  // open space (maze_apply TAIL ESCAPE); rect keeps the historic search.
+  const outer = params.escapeTails ? outerFaceEdges(graph) : undefined;
+  const entrance = nearestEdgeToCorner(
+    graph,
+    mazeStrands,
+    entrancePoint,
+    undefined,
+    outer
+  );
   const exit = nearestEdgeToCorner(
     graph,
     mazeStrands,
     exitPoint,
-    entrance.edgeId
+    entrance.edgeId,
+    outer
   );
 
   const clearOf = (p: [number, number]): boolean =>
@@ -866,6 +1003,7 @@ export function buildMazePlan(
     exit,
     entranceDir: params.entranceDir ?? [-SQ, -SQ],
     exitDir: params.exitDir ?? [SQ, SQ],
+    escapeTails: params.escapeTails ?? false,
     mazeStrands,
     culledStrands: culledStrands.sort((a, b) => a - b),
     spanningSplices,

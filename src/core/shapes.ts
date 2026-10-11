@@ -99,12 +99,22 @@ const SHAPE_FNS: Record<Exclude<ShapeId, "rect">, ShapeFn> = {
     return Math.abs(y) <= 0.18 + t * 0.34;
   },
   tree: (x, y) => {
-    // Fir: two stacked canopy triangles + a trunk.
-    const tri = (apexY: number, baseY: number, halfW: number): boolean =>
-      y <= apexY && y >= baseY && Math.abs(x) <= halfW * ((apexY - y) / (apexY - baseY));
-    if (tri(1.0, -0.1, 0.62)) return true;
-    if (tri(0.45, -0.55, 0.85)) return true;
-    return Math.abs(x) <= 0.16 && y >= -1.0 && y <= -0.4;
+    // Broadleaf: a BUSHY round canopy (a cloud of overlapping lobes) on a
+    // long skinny trunk with a slight root flare.
+    const lobe = (cx: number, cy: number, r: number): boolean =>
+      (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r;
+    if (
+      lobe(0, 0.36, 0.5) ||
+      lobe(-0.47, 0.24, 0.34) ||
+      lobe(0.47, 0.24, 0.34) ||
+      lobe(-0.27, 0.66, 0.32) ||
+      lobe(0.27, 0.66, 0.32) ||
+      lobe(0, 0.8, 0.2)
+    ) {
+      return true;
+    }
+    const flare = 0.4 * Math.max(0, -0.8 - y);
+    return Math.abs(x) <= 0.12 + flare && y >= -1.0 && y <= 0;
   },
   ring: (x, y) => {
     // Annulus: the interior hole proves hole support end to end.
@@ -252,6 +262,9 @@ export interface AnchorPlan {
   exitPoint: [number, number];
   entranceDir: [number, number];
   exitDir: [number, number];
+  // SHAPED masks nudge their cuts into thick material, so their tails
+  // must ESCAPE to open space (maze_apply); rect corners never need it.
+  escapeTails: boolean;
 }
 
 // SHAPED anchor targets are pulled off the silhouette's outermost sliver
@@ -346,5 +359,6 @@ export function planAnchors(
     exitPoint: nudged(maskExtremePoint(mask, size, exitAnchor)),
     entranceDir: ANCHOR_DIRS[startAnchor],
     exitDir: ANCHOR_DIRS[exitAnchor],
+    escapeTails: mask !== null,
   };
 }

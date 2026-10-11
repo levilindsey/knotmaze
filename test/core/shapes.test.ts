@@ -274,6 +274,11 @@ describe("shaped lattices: maze fabric end to end", () => {
         ).toBeLessThan(edgeDist(plan.exit.edgeId, anchors.entrancePoint));
 
         const hueGroup = applyMazePlan(g, plan);
+        // The entrance cut's midpoint (the tail starts there).
+        const cutPts = g.edges.get(plan.entrance.edgeId)!.latticePoints;
+        const cutA = cutPts[0];
+        const cutB = cutPts[cutPts.length - 1];
+        const cutMid = [(cutA[0] + cutB[0]) / 2, (cutA[1] + cutB[1]) / 2];
         applyMazeCuts(g, plan, hueGroup);
         expect(checkStructure(g), `${shape} seed ${seed}`).toBe(true);
         expect(checkAlternation(g), `${shape} seed ${seed}`).toBe(true);
@@ -283,17 +288,42 @@ describe("shaped lattices: maze fabric end to end", () => {
         expect(Number.isFinite(wg!.optimalLength)).toBe(true);
         expect(wg!.optimalLength).toBeGreaterThan(0);
 
-        // The anchored tails carry the anchor directions.
+        // The anchored tails carry the anchor directions. A fixed tail's
+        // pin sits CUT_REACH out from its END along the anchor; an
+        // ESCAPED tail (shaped lattices) ends AT its pin, which must head
+        // away from the cut (sideways allowed, never back inward) and
+        // clear every other edge.
         const entrNode = [...g.nodes.values()].find(
           (n) => n.id.startsWith("mentr") && n.anchor
         )!;
         const d = anchors.entranceDir;
-        const off = [
-          entrNode.anchor![0] - entrNode.latticePos[0],
-          entrNode.anchor![1] - entrNode.latticePos[1],
-        ];
-        const dot = off[0] * d[0] + off[1] * d[1];
-        expect(dot, `${shape} entrance tail direction`).toBeGreaterThan(0);
+        const pin = entrNode.anchor!;
+        const escaped =
+          pin[0] === entrNode.latticePos[0] && pin[1] === entrNode.latticePos[1];
+        if (!escaped) {
+          const off = [
+            pin[0] - entrNode.latticePos[0],
+            pin[1] - entrNode.latticePos[1],
+          ];
+          const dot = off[0] * d[0] + off[1] * d[1];
+          expect(dot, `${shape} entrance tail direction`).toBeGreaterThan(0);
+        } else {
+          const off = [pin[0] - cutMid[0], pin[1] - cutMid[1]];
+          const len = Math.hypot(off[0], off[1]);
+          const dot = off[0] * d[0] + off[1] * d[1];
+          expect(dot, `${shape} escaped tail heads outward`).toBeGreaterThan(
+            -0.25 * len
+          );
+          const own = new Set(g.adjacency.get(entrNode.id) ?? []);
+          let clear = Infinity;
+          for (const e of g.edges.values()) {
+            if (own.has(e.id)) continue;
+            for (const [x, y] of e.latticePoints) {
+              clear = Math.min(clear, Math.hypot(x - pin[0], y - pin[1]));
+            }
+          }
+          expect(clear, `${shape} escaped tail clearance`).toBeGreaterThan(2);
+        }
       }
     }
   });

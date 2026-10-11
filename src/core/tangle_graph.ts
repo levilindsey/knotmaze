@@ -134,12 +134,28 @@ export function checkAlternation(graph: TangleGraph): boolean {
       if (node.type !== NODE_TYPE.CROSSING) continue;
       if (i + 1 >= strand.nodes.length) continue; // open strand ends here
 
-      // Direction of this pass, from the next node along the strand. Turn
+      // Direction of this pass: the first segment of its own edge toward
+      // the next node (for two-point edges, exactly the next node - turn
       // nodes are offset by half a step, which shrinks one component but
-      // never flips its sign, so the diagonal class is preserved.
-      const next = graph.nodes.get(strand.nodes[i + 1])!;
-      const vx = next.latticePos[0] - node.latticePos[0];
-      const vy = next.latticePos[1] - node.latticePos[1];
+      // never flips its sign, so the diagonal class is preserved). The
+      // segment, not the next node, because an escaped maze tail's END
+      // sits far down a bent path; physics reads the same first segment
+      // (assignCrossings' next particle).
+      let vx: number;
+      let vy: number;
+      const edge = graph.edges.get(strand.edgeIds[i]);
+      if (edge && edge.latticePoints.length >= 2) {
+        const lp = edge.latticePoints;
+        const fwd = edge.nodeA === strand.nodes[i];
+        const a = fwd ? lp[0] : lp[lp.length - 1];
+        const b = fwd ? lp[1] : lp[lp.length - 2];
+        vx = b[0] - a[0];
+        vy = b[1] - a[1];
+      } else {
+        const next = graph.nodes.get(strand.nodes[i + 1])!;
+        vx = next.latticePos[0] - node.latticePos[0];
+        vy = next.latticePos[1] - node.latticePos[1];
+      }
       const isSlash = vx * vy > 0;
       tokens.push(isSlash ? node.isOver === true : node.isOver !== true);
     }
