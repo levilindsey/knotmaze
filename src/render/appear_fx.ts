@@ -42,9 +42,10 @@ import { Particle, ParticleContainer, Texture } from "pixi.js";
 import type { AppearFxMode } from "../core/reveal_plan";
 import { SeededRNG } from "../util/random";
 
-// 1200: dust at 380/s x ~0.5s life x several frontiers saturated the
-// original 600 pool, which silently capped the requested density.
-export const MAX_FX_PARTICLES = 1200;
+// 3200: dense dust (380/s x ~0.5s) and heavy burn smoke (110/s x ~1.9s)
+// across several frontiers saturated smaller pools, which silently
+// capped the requested densities.
+export const MAX_FX_PARTICLES = 3200;
 
 // Pool row layout (Float32 fields). Tints are 24-bit hex values, exact in
 // f32 (integers through 2^24).
@@ -92,11 +93,13 @@ const DUST_LEAD = 0.6;
 // Burn: smoldering smoke from the charring zone just BEHIND the tip,
 // plus a few weak embers (the thread's own orange->char->normal
 // gradient lives in the renderer's applyBurnColors).
-const SMOKE_RATE = 40;
+// Heavy smoke per request (was 40/s and faint).
+const SMOKE_RATE = 110;
 const BURN_SPARK_RATE = 36;
-// Doubled + enlarged 2026-10-10 per request (dirt reads as a real spray
-// now, not an accent).
-const ROOTS_RATE = 110;
+// A real soil spray per repeated requests: dense, chunky, and in LIGHT
+// earth tones - the original dark browns all but vanished against the
+// near-black backdrop.
+const ROOTS_RATE = 240;
 const SMOKE_DRAG = 0.8;
 const SMOKE_RISE = 0.5; // World units/s^2 of buoyancy.
 
@@ -286,18 +289,21 @@ export class AppearFxSystem {
       const side = R.next() < 0.5 ? 1 : -1;
       const cs = Math.cos(spread * side);
       const sn = Math.sin(spread * side);
-      const sp = 0.3 + R.next() * 0.7;
-      d[o + PX] = x + (R.next() - 0.5) * tw * 0.25;
-      d[o + PY] = y + (R.next() - 0.5) * tw * 0.25;
-      d[o + PVX] = (dx * cs - dy * sn) * sp;
-      d[o + PVY] = (dx * sn + dy * cs) * sp + 0.2;
+      const sp = 0.35 + R.next() * 0.9;
+      // ~1 in 6 is a big clod: slower, heavier-looking.
+      const clod = R.next() < 0.16;
+      d[o + PX] = x + (R.next() - 0.5) * tw * 0.3;
+      d[o + PY] = y + (R.next() - 0.5) * tw * 0.3;
+      d[o + PVX] = (dx * cs - dy * sn) * sp * (clod ? 0.6 : 1);
+      d[o + PVY] = (dx * sn + dy * cs) * sp * (clod ? 0.6 : 1) + 0.2;
       d[o + PAGE] = 0;
-      d[o + PLIFE] = 0.18 + R.next() * 0.3;
-      d[o + PSIZE] = tw * (0.09 + R.next() * 0.14);
+      d[o + PLIFE] = (0.3 + R.next() * 0.4) * (clod ? 1.3 : 1);
+      d[o + PSIZE] = tw * (0.16 + R.next() * 0.22) * (clod ? 1.7 : 1);
       d[o + PKIND] = K_SPARK;
       d[o + PROT] = 0;
-      d[o + PC0] = R.next() < 0.5 ? 0x6b4a2f : 0x57402a;
-      d[o + PC1] = 0x3a2c1d;
+      const tone = R.next();
+      d[o + PC0] = tone < 0.4 ? 0xb88a5c : tone < 0.75 ? 0x9c7450 : 0xc9a77a;
+      d[o + PC1] = 0x6a4c33;
     }
   }
 
@@ -383,8 +389,8 @@ export class AppearFxSystem {
       d[o + PVX] = (R.next() - 0.5) * 0.25;
       d[o + PVY] = -(0.15 + R.next() * 0.2);
       d[o + PAGE] = 0;
-      d[o + PLIFE] = 1.1 + R.next() * 0.9;
-      d[o + PSIZE] = tw * (0.45 + R.next() * 0.5);
+      d[o + PLIFE] = 1.3 + R.next() * 1.1;
+      d[o + PSIZE] = tw * (0.55 + R.next() * 0.6);
       d[o + PKIND] = K_SMOKE;
       d[o + PROT] = 0;
       d[o + PPHASE] = 0;
@@ -678,7 +684,10 @@ export class AppearFxSystem {
         slot.scaleX = size * scalePerRadius;
         slot.scaleY = size * scalePerRadius;
         slot.tint = lerpHex(d[o + PC0], d[o + PC1], Math.min(1, t * 1.2));
-        slot.alpha = (1 - t) * (1 - t) * 0.32;
+        // Billows in over the first moments instead of popping, then
+        // thins out as it grows.
+        const fin = Math.min(1, t / 0.12);
+        slot.alpha = fin * fin * (3 - 2 * fin) * Math.pow(1 - t, 1.6) * 0.45;
       } else {
         // K_DUST: curl the velocity, drift, twinkle.
         const cu = d[o + PCURL] * dt;

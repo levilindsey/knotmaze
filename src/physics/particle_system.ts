@@ -79,7 +79,9 @@ export interface PhysicsTuning {
   bend: number; // Multiplier on bending stiffness.
   smooth: number; // [0, 1] Laplacian fairing: evens curvature along threads.
   stiffness: number; // Multiplier on the structural (adjacency) springs.
-  gridAlign: boolean; // Soft-anchor every particle to its lattice position.
+  // [0, 1] soft anchor of every particle to its lattice position (0 =
+  // off; 1 = the original full-strength checkbox).
+  gridAlign: number;
   threadWidth: number; // Render width; the hard collision floor honors it.
 }
 
@@ -91,7 +93,7 @@ export const DEFAULT_TUNING: PhysicsTuning = {
   bend: 1,
   smooth: 0.25,
   stiffness: 1,
-  gridAlign: false,
+  gridAlign: 0,
   threadWidth: 0.42,
 };
 
@@ -2036,11 +2038,12 @@ export class ParticleSystem {
     }
 
     // Optional grid alignment: softly anchor every particle back toward
-    // its lattice position, restoring the structured look.
-    if (tuning.gridAlign) {
+    // its lattice position, restoring the structured look. Strength 0
+    // skips the pass entirely (bit-identical to the old unchecked box).
+    if (tuning.gridAlign > 0) {
+      const k = GRID_ALIGN_STIFFNESS * Math.min(1, tuning.gridAlign);
       for (let i = 0; i < this.particleCount * 2; i++) {
-        this.positions[i] +=
-          (this.initial[i] - this.positions[i]) * GRID_ALIGN_STIFFNESS;
+        this.positions[i] += (this.initial[i] - this.positions[i]) * k;
       }
     }
 

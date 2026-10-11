@@ -699,8 +699,8 @@ export function buildPanel(
     D.smooth, () => callbacks.onSlackChange()
   );
   row(
-    fPhysics, p, "gridAlign", undefined,
-    "Softly pull every thread back toward its original lattice position - a more formal, grid-like composition.",
+    fPhysics, p, "gridAlign", { min: 0, max: 1, step: 0.05 },
+    "How strongly every thread is pulled back toward its original lattice position: 0 = free-flowing curves, 1 = a formal, grid-like composition. Applies live.",
     D.gridAlign, () => callbacks.onSlackChange()
   );
 

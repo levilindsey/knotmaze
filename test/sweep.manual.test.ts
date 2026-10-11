@@ -30,7 +30,7 @@ function metrics(seed: number, slack: number) {
       bend: 1,
       smooth: 0.25,
       stiffness: 1,
-      gridAlign: false,
+      gridAlign: 0,
     });
   }
 

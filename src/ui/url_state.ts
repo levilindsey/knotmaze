@@ -66,7 +66,8 @@ export interface UrlParams {
   bend: number; // Bending stiffness multiplier (applies live).
   smooth: number; // [0, 1] Laplacian fairing (applies live).
   stiffness: number; // Structural spring multiplier (applies live).
-  gridAlign: boolean; // Soft-anchor to lattice positions (applies live).
+  // [0, 1] pull toward the original lattice positions (applies live).
+  gridAlign: number;
   threadWidth: number; // Ribbon width in lattice units (applies live).
   gap: number; // Space between an under-thread cut end and the over thread.
   moveSpeed: number; // [0.25, 4] maze traversal-animation speed multiplier.
@@ -200,7 +201,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   shape: "rect",
   startAnchor: "nw",
   exitAnchor: "se",
-  gridAlign: false,
+  gridAlign: 0,
   mazeFabric: false,
   deadEnds: false,
   fogOfWar: false,
@@ -247,7 +248,8 @@ export function readParams(): UrlParams {
     bend: readNumber(query, "bd", DEFAULTS.bend),
     smooth: readNumber(query, "sm", DEFAULTS.smooth),
     stiffness: readNumber(query, "st", DEFAULTS.stiffness),
-    gridAlign: readNumber(query, "ga", 0) > 0.5,
+    // Old checkbox URLs (ga=0 / ga=1) read as the same strengths.
+    gridAlign: Math.max(0, Math.min(1, readNumber(query, "ga", 0))),
     threadWidth: readNumber(query, "tw", DEFAULTS.threadWidth),
     gap: readNumber(query, "gap", DEFAULTS.gap),
     moveSpeed: readNumber(query, "ms", DEFAULTS.moveSpeed),
@@ -361,7 +363,7 @@ export function writeParams(params: UrlParams): void {
   query.set("bd", String(params.bend));
   query.set("sm", String(params.smooth));
   query.set("st", String(params.stiffness));
-  query.set("ga", params.gridAlign ? "1" : "0");
+  query.set("ga", String(params.gridAlign));
   query.set("tw", String(params.threadWidth));
   query.set("gap", String(params.gap));
   query.set("ms", String(params.moveSpeed));
