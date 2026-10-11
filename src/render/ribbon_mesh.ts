@@ -688,10 +688,14 @@ export class TriFanMesh {
     this.indexData = new Uint32Array(indexCapacity);
     const geometry = new MeshGeometry({
       positions: this.vertexData,
-      // Unused by the field shader (MeshGeometry wants the slot).
-      uvs: new Float32Array(vertexCapacity * 2),
+      uvs: new Float32Array(2),
       indices: this.indexData,
     });
+    // The field shader has no aUV, and pixi warns about every geometry
+    // attribute its shader lacks - drop MeshGeometry's default slot.
+    const uvBuffer = geometry.attributes.aUV.buffer;
+    delete geometry.attributes.aUV;
+    geometry.buffers.splice(geometry.buffers.indexOf(uvBuffer), 1);
     addFloatAttribute(geometry, "aRec", this.recData, 1);
     this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
   }
