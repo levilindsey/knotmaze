@@ -2,6 +2,8 @@
 
 A web-based procedural generator for celtic-knot-style mazes with physics-based relaxation, interactive tugging, and maze-solving gameplay.
 
+**Open work lives in `LEDGER.md`** (follow-ups, residuals, decisions waiting on Levi, ideas - add an item whenever something is deferred, proposed or left over; close it with the resolving commit; convention: claude-config `rules/ledger.md`). Design documents live in `docs/design/`. This file keeps history, measurements and lore.
+
 ## Overview
 
 Three-layer architecture:
