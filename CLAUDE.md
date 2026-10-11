@@ -676,12 +676,17 @@ between-threads/cell-passage route.
   programmatic refreshes need a guard (appearSync), and the reset glyph
   runs a row's effects only if refresh() did not; slider step constraints
   write float noise (1.4500000000000002) back into params.
-- 2026-10-11 small round 2. JUNCTION BLEND REACH (`junctionBlend`, jbl=,
-  [0, 1], default 0 = the historic look, live via recolor): stretches the
-  segments/strands junction ramps toward each run's midpoint (1 = every run
-  is one gradient junction -> own color -> junction), easing them toward
-  smoothstep by reach 0.25 - a long LINEAR ramp meets the flat run (or, at
-  1, the opposite ramp) with a slope kink the eye reads as a band. The
+- 2026-10-11 small round 2. JUNCTION BLEND DISTANCE (`junctionBlend`, jbl=,
+  lattice units, panel [0, 6], default 0 = the historic look, live via
+  recolor): extends the segments/strands junction ramps by a FIXED distance
+  (user correction: not a ratio of the run's length - every junction bleeds
+  the same distance; converted to ctrl per run through its lattice length,
+  capped at the run's midpoint, so runs shorter than twice the ramps become
+  one gradient junction -> own color -> junction). Measured run lengths at
+  defaults: median ~3.7 lattice units, p90 11-15, max ~50; ~0.45-0.9
+  lattice units per ctrl. Ramps ease toward smoothstep, fully once the
+  extension reaches 1 lattice unit - a long LINEAR ramp meets the flat run
+  (or the opposite ramp) with a slope kink the eye reads as a band. The
   renderer's segment lookup is now a binary search (eased ramps emit 6
   pieces each). AUDIO AUTOPLAY GATE (knot_synth.ts): no AudioContext exists
   until the first activation-triggering input (keydown, mousedown, mouse

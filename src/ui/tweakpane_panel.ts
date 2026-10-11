@@ -509,8 +509,8 @@ export function buildPanel(
     D.colorScheme, () => callbacks.onRecolor()
   );
   const junctionBlendRow = row(
-    fLook, p, "junctionBlend", { min: 0, max: 1, step: 0.01 },
-    "How far each intersection's blended color bleeds into the sections meeting there. 0 = the blend stays inside the intersection; 1 = every section is one continuous gradient between its two intersections, wearing its own color only at its middle. Segments and strands schemes. Applies live.",
+    fLook, p, "junctionBlend", { min: 0, max: 6, step: 0.05 },
+    "How far (in lattice units) each intersection's blended color bleeds into the sections meeting there, beyond the short built-in blend. 0 = the blend stays inside the intersection; a section shorter than twice this becomes one continuous gradient between its two intersections. Segments and strands schemes. Applies live.",
     D.junctionBlend, () => callbacks.onRecolor()
   );
   row(

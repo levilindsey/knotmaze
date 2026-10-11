@@ -226,10 +226,10 @@ export interface UrlParams {
   // mono | strands | depth | segments | noise. Replaces the old multiColor
   // checkbox (mc=1 reads as "strands").
   colorScheme: ColorScheme;
-  // [0, 1] how far a junction's blended color bleeds into the sections
-  // meeting there (segments + strands schemes): 0 = the blend stays inside
-  // the junction, 1 = each section is one gradient between its two
-  // junctions. Applies live.
+  // [0, 6] lattice units: how far a junction's blended color bleeds into
+  // the sections meeting there, beyond the short built-in blend (segments +
+  // strands schemes). 0 = the blend stays inside the junction; a section
+  // shorter than twice this is one gradient between its junctions. Live.
   junctionBlend: number;
   // Appearance animation (how the design draws itself in on build): the
   // MODE sets the three params below together (see APPEAR_MODES).
@@ -368,7 +368,7 @@ function fromCodecValues(
   }
   const p = out as unknown as Omit<UrlParams, "seed">;
   p.gridAlign = clamp01(p.gridAlign);
-  p.junctionBlend = clamp01(p.junctionBlend);
+  p.junctionBlend = Math.max(0, p.junctionBlend);
   return p;
 }
 
@@ -516,7 +516,7 @@ function readLegacy(
     fowRadius: readNumber(query, "fr", D.fowRadius),
     fowIntro: readBool(query, "fwi", D.fowIntro),
     colorScheme: readScheme(query, D.colorScheme),
-    junctionBlend: clamp01(readNumber(query, "jbl", D.junctionBlend)),
+    junctionBlend: Math.max(0, readNumber(query, "jbl", D.junctionBlend)),
     ...readAppearance(query, D),
   };
 }

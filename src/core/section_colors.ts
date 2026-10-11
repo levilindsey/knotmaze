@@ -53,22 +53,31 @@ export interface VSegment {
 const RAMP_CTRL = 2.4;
 // Segments scheme only: much shorter junction blends (see its loop).
 const SEG_RAMP_CTRL = 1.0;
-// JUNCTION BLEND REACH (the junctionBlend param, [0, 1]): how far each
-// junction's converged color bleeds into its incident runs. 0 = the ramps
-// above, so the blend sits inside the joint; 1 = every ramp reaches its
-// run's midpoint, so a run is one continuous gradient junction -> own color
-// -> junction. Lengthened ramps also EASE toward smoothstep (fully by
-// RAMP_EASE_FULL reach): a long LINEAR ramp meets the flat run - or, at 1,
+// JUNCTION BLEND DISTANCE (the junctionBlend param, lattice units >= 0): how
+// far each junction's converged color bleeds into its incident runs BEYOND
+// the base ramps above - a fixed distance, the same at every junction
+// whatever the run's length (converted to ctrl per run through its lattice
+// length). 0 = the base ramps, so the blend sits inside the joint. A run
+// shorter than twice the ramps becomes one continuous gradient junction ->
+// own color -> junction (the two ramps meet at its midpoint). Lengthened
+// ramps also EASE toward smoothstep (fully once the extension reaches
+// RAMP_EASE_FULL lattice units): a long LINEAR ramp meets the flat run - or
 // the opposite ramp - with a slope kink the eye reads as a band.
-const RAMP_EASE_FULL = 0.25;
+const RAMP_EASE_FULL = 1.0;
 // Linear pieces per eased ramp (per-vertex RGB lerps fill in between; 6
 // pieces keep a smoothstep within ~1/255 per channel).
 const RAMP_EASE_PIECES = 6;
 
-// A run end's ramp length: the base ramp `r0`, stretched toward the run's
-// midpoint by the blend reach.
-function rampLen(r0: number, span: number, reach: number): number {
-  return r0 + (span / 2 - r0) * reach;
+// A run end's ramp length (ctrl): the base ramp `r0` plus the blend
+// extension, never past the run's midpoint.
+function rampLen(r0: number, span: number, extraCtrl: number): number {
+  return Math.min(span / 2, r0 + extraCtrl);
+}
+
+// The blend extension in a run's ctrl units: `dist` lattice units at the
+// run's own lattice-length-per-ctrl.
+function extraCtrlFor(dist: number, span: number, length: number): number {
+  return dist > 0 && length > 1e-9 ? (dist * span) / length : 0;
 }
 
 // Eased-ramp blend weight at ramp parameter u: linear at ease 0 (the
@@ -221,8 +230,8 @@ function pushGamut(
 // chain lengths (slot counts). The "noise" scheme returns EMPTY lists -
 // the renderer evaluates it spatially per sample instead (it is
 // continuous everywhere, junctions included). `baseHue` anchors the gamut
-// (the renderer's style.baseHue; seed % 360). `blendReach` is the
-// junctionBlend param (see RAMP_EASE_FULL's comment).
+// (the renderer's style.baseHue; seed % 360). `blendDist` is the
+// junctionBlend param, lattice units (see RAMP_EASE_FULL's comment).
 export function buildSectionField(
   scheme: ColorScheme,
   walk: WalkGraph | null,
@@ -230,10 +239,10 @@ export function buildSectionField(
   hueGroup: number[] | undefined,
   seed: number,
   baseHue: number,
-  blendReach = 0
+  blendDist = 0
 ): VSegment[][] {
-  const reach = Math.max(0, Math.min(1, blendReach));
-  const ease = Math.min(1, reach / RAMP_EASE_FULL);
+  const dist = Math.max(0, blendDist);
+  const ease = Math.min(1, dist / RAMP_EASE_FULL);
   const nChains = chainLens.length;
   const field: VSegment[][] = chainLens.map(() => []);
   if (scheme === "noise") return field;
@@ -327,7 +336,11 @@ export function buildSectionField(
       const vB = chainCoord(walk.vertices.get(e.vb)!.chain);
       const mid = chainCoord(e.chain);
       const span = e.ctrlB - e.ctrlA;
-      const r = rampLen(Math.min(RAMP_CTRL, span / 2.5), span, reach);
+      const r = rampLen(
+        Math.min(RAMP_CTRL, span / 2.5),
+        span,
+        extraCtrlFor(dist, span, e.length)
+      );
       const segs = field[e.chain];
       pushGamut(segs, e.ctrlA, e.ctrlA + r, vA, mid, baseHue, ease);
       if (e.ctrlB - r > e.ctrlA + r) {
@@ -410,8 +423,12 @@ export function buildSectionField(
     // colors"). Independence IS the scheme: each run must wear its own
     // color for most of its length, with just enough junction blend to
     // avoid a hard seam.
-    // junctionBlend stretches these toward the run's midpoint on request.
-    const r = rampLen(Math.min(SEG_RAMP_CTRL, span * 0.18), span, reach);
+    // junctionBlend extends these by a fixed distance on request.
+    const r = rampLen(
+      Math.min(SEG_RAMP_CTRL, span * 0.18),
+      span,
+      extraCtrlFor(dist, span, e.length)
+    );
     const segs = field[e.chain];
     pushRampRgb(segs, e.ctrlA, e.ctrlA + r, rgbA, mid, ease);
     if (e.ctrlB - r > e.ctrlA + r) {
