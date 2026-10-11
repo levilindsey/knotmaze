@@ -36,7 +36,7 @@ import { createNoise2D, createNoise3D } from "simplex-noise";
 import type { ParticleSystem, CrossingPass } from "../physics/particle_system";
 import type { VSegment, ColorScheme } from "../core/section_colors";
 import { gamutRgb } from "../core/section_colors";
-import type { AppearFxMode } from "../core/reveal_plan";
+import type { AppearFxMode, RevealTip } from "../core/reveal_plan";
 import type { RevealAnimator } from "./reveal";
 import { AppearFxSystem } from "./appear_fx";
 import { SeededRNG } from "../util/random";
@@ -303,6 +303,10 @@ const BURN_EMBER_END = 0.4;
 const BURN_CHAR_END = 0.9;
 const BURN_RECOVER_END = 1.3;
 const BURN_COLD = 1e4;
+// Burn/roots HOT HEAD: revealed samples within this arc behind a live
+// front hold age 0 (the white-hot head rides the tip at any speed); behind
+// it, ages count from the moment the head left the sample.
+const BURN_HOT_ARC = 0.45;
 // Appearance-FX per-sample clocks (applyFxWeights - same temporal-cooling
 // architecture as burn, so nothing pops when a front or the whole reveal
 // finishes): rainbow holds full stripes briefly then runs the shader's
@@ -1003,7 +1007,17 @@ export class RibbonRenderer {
   private revealWas = false;
   private revealMask: (Float32Array | null)[] = [];
   private revealMaskPool = new Map<number, Float32Array>();
-  private revealTips: Array<{ chain: number; ctrl: number }> = [];
+  private revealTips: RevealTip[] = [];
+  // Reveal progress per chain (revealed ctrl total, interval modes) and
+  // the chains that gained material since the last paint tick: burn/roots
+  // must repaint those even when no tip is live on them at a paint tick (a
+  // short run swept between two ticks never carries one).
+  private revealProg = new Map<number, number>();
+  private revealAdvanced = new Set<number>();
+  // The reveal whose burn pools were armed (see armBurnPools), and whether
+  // the current reveal has not painted yet (everything shown is new then).
+  private burnArmed: RevealAnimator | null = null;
+  private revealFirstPaint = false;
   private glowChains = new Set<number>();
   private revealTipGfx: Graphics | null = null;
   // APPEARANCE FX (Stage 26): frontier particles while revealing. The
@@ -1552,6 +1566,15 @@ export class RibbonRenderer {
     // makes this a one-compare no-op for already-clean meshes).
     this.fxScratch.clear();
     for (const f of this.fills) f.setFx(null);
+    // Burn/roots likewise start from fresh clocks on a new reveal (ignition
+    // only fires on COLD samples now - see applyBurnColors). The masks
+    // collapse with the new reveal, so a dropped mid-cooling chain is
+    // hidden until its re-reveal repaints it.
+    this.revealProg.clear();
+    this.revealAdvanced.clear();
+    this.burnArmed = null;
+    this.revealFirstPaint = anim !== null;
+    if (anim) this.burnScratch.clear();
     // Fresh reveal, fresh particle field: a Replay-settle resets particle
     // positions, and motes from the previous run would float over the
     // re-angular knot.
@@ -1678,6 +1701,12 @@ export class RibbonRenderer {
     // the arc-wrap family bites here otherwise).
     mask.fill(0);
     const intervals = anim.intervalsFor(chain);
+    let prog = 0;
+    for (const iv of intervals) prog += iv.c1 - iv.c0;
+    if (prog > (this.revealProg.get(chain) ?? 0) + 1e-9) {
+      this.revealAdvanced.add(chain);
+    }
+    this.revealProg.set(chain, prog);
     // Per-style frontier shaping: comet/rainbow fade in over LONG trails
     // with FAT tips (width floors - translucent threads, not needles);
     // dust snaps in short; roots goes HARD on the skinny taper (a long
@@ -3203,15 +3232,22 @@ export class RibbonRenderer {
     this.glowChains = glowNow;
 
     // Burn/roots cooling: chains with hot samples repaint every tick
-    // (the cooling animates), through and past the reveal.
-    if (
-      (this.appearFx === "burn" || this.appearFx === "roots") &&
-      this.burnScratch.size > 0
-    ) {
+    // (the cooling animates), through and past the reveal - and so does
+    // every chain the reveal advanced on, so material swept between two
+    // paint ticks ignites in the tick it appears.
+    if (this.appearFx === "burn" || this.appearFx === "roots") {
+      if (this.revealOn) this.armBurnPools();
       for (const [c, pool] of this.burnScratch) {
         if (pool.hot && !toWrite.includes(c)) toWrite.push(c);
       }
+      for (const c of this.revealAdvanced) {
+        if (!toWrite.includes(c)) toWrite.push(c);
+      }
+    } else {
+      this.burnArmed = null;
     }
+    this.revealAdvanced.clear();
+    this.revealFirstPaint = false;
     // Rainbow/dust/comet FX weights animate on the same per-sample
     // clocks: hot chains repaint every tick, through and past the reveal.
     if (this.fxScratch.size > 0) {
@@ -3717,6 +3753,123 @@ export class RibbonRenderer {
     pd.markDirty(base, base + count);
   }
 
+  // A burn/roots pool: every sample COLD (never ignited), except what
+  // `mask` already shows when given, which starts burned out.
+  private newBurnPool(
+    count: number,
+    mask: Float32Array | null | undefined
+  ): {
+    a: Float32Array;
+    b: Float32Array;
+    flip: boolean;
+    age: Float32Array;
+    last: number;
+    hot: boolean;
+  } {
+    const age = new Float32Array(count).fill(BURN_COLD);
+    if (mask !== undefined) {
+      for (let k = 0; k < count; k++) {
+        if (!mask || mask[k] > 0.004) age[k] = BURN_RECOVER_END;
+      }
+    }
+    return {
+      a: new Float32Array(count * 3),
+      b: new Float32Array(count * 3),
+      flip: false,
+      age,
+      last: this.paintClock,
+      hot: false,
+    };
+  }
+
+  // Arm burn/roots for the current reveal: a pool for EVERY chain before
+  // any chain needs one, because ignition fires only on COLD samples and a
+  // short run can be swept whole before its chain's first paint. At the
+  // reveal's first paint everything shown is new; arming later (the style
+  // switched to burn mid-reveal) marks what is already shown burned out
+  // instead of flashing it all at once.
+  private armBurnPools(): void {
+    const anim = this.revealAnim;
+    if (!anim || this.burnArmed === anim) return;
+    this.burnArmed = anim;
+    for (let c = 0; c < this.ps.chains.length; c++) {
+      const mesh = this.fills[c];
+      if (!mesh) continue;
+      const count = mesh.sampleCount;
+      const mask = this.revealFirstPaint ? undefined : this.revealMask[c];
+      const pool = this.burnScratch.get(c);
+      if (!pool || pool.a.length !== count * 3) {
+        this.burnScratch.set(c, this.newBurnPool(count, mask));
+      } else if (mask !== undefined) {
+        for (let k = 0; k < count; k++) {
+          if (pool.age[k] >= BURN_COLD * 0.5 && (!mask || mask[k] > 0.004)) {
+            pool.age[k] = BURN_RECOVER_END;
+          }
+        }
+      }
+    }
+  }
+
+  // Ignite the revealed-but-COLD samples no live front dated this tick (a
+  // front that finished between ticks, or a short run swept whole): each
+  // such run was swept during the last `dtc`, starting from its dated
+  // neighbors, so its ages ramp from theirs (capped at dtc) down to 0 where
+  // the sweep ended - the run's middle when it is dated on both sides, its
+  // far end when on one. A flat age would leave a step at every such run's
+  // edges that shows while the char ramps in and out. Returns whether
+  // anything ignited.
+  private datePassedRuns(
+    age: Float32Array,
+    mask: Float32Array | null,
+    count: number,
+    closed: boolean,
+    dtc: number
+  ): boolean {
+    const fresh = (k: number): boolean =>
+      age[k] >= BURN_COLD * 0.5 && (!mask || mask[k] > 0.004);
+    // A dated neighbor: ignited and still cooling (not old material).
+    const datedAge = (k: number): number =>
+      k >= 0 && age[k] < BURN_RECOVER_END ? Math.min(age[k], dtc) : -1;
+    // Closed chains scan from a non-fresh sample so no run wraps the seam.
+    let s0 = 0;
+    if (closed) {
+      while (s0 < count && fresh(s0)) s0++;
+      if (s0 === count) s0 = 0;
+    }
+    const at = (i: number): number =>
+      closed ? (((s0 + i) % count) + count) % count : i;
+    let any = false;
+    for (let i = 0; i < count; ) {
+      if (!fresh(at(i))) {
+        i++;
+        continue;
+      }
+      let j = i;
+      while (j < count && fresh(at(j))) j++;
+      const n = j - i;
+      const whole = closed && n === count;
+      const aL = whole || (!closed && i === 0) ? -1 : datedAge(at(i - 1));
+      const aR = whole || (!closed && j === count) ? -1 : datedAge(at(j));
+      for (let m = 0; m < n; m++) {
+        const u = (m + 0.5) / n; // 0 at the left edge, 1 at the right.
+        let a: number;
+        if (aL >= 0 && aR >= 0) {
+          a = u < 0.5 ? aL * (1 - 2 * u) : aR * (2 * u - 1);
+        } else if (aL >= 0) {
+          a = aL * (1 - u);
+        } else if (aR >= 0) {
+          a = aR * u;
+        } else {
+          a = dtc * 0.5;
+        }
+        age[at(i + m)] = a;
+      }
+      any = true;
+      i = j;
+    }
+    return any;
+  }
+
   // BURN appearFx: the thread itself wears the fire, as TEMPORAL
   // COOLING - every sample records WHEN the front ignited it and then
   // cools through heat -> flickering ember -> char -> its section color
@@ -3741,14 +3894,9 @@ export class RibbonRenderer {
     let pool = this.burnScratch.get(chain);
     if (!pool || pool.a.length !== count * 3) {
       if (!this.revealOn) return null; // Cold chain, nothing burning.
-      pool = {
-        a: new Float32Array(count * 3),
-        b: new Float32Array(count * 3),
-        flip: false,
-        age: new Float32Array(count).fill(BURN_COLD),
-        last: this.paintClock,
-        hot: false,
-      };
+      // (armBurnPools normally created it; treat what is already shown as
+      // burned out rather than flashing it.)
+      pool = this.newBurnPool(count, this.revealMask[chain]);
       this.burnScratch.set(chain, pool);
     }
 
@@ -3767,26 +3915,64 @@ export class RibbonRenderer {
       }
     }
 
-    // Ignite samples under the live fronts.
+    // IGNITION is SWEPT, not stamped. The first cut reset a +-0.45-arc
+    // window around each live tip once per paint tick, so a front moving
+    // more than 0.9 arc between ticks (fronts run 16-33 arc/s at speed
+    // 2.2-3; a loaded desktop drew the gs-18 intro at ~5 fps) skipped
+    // samples that then never ignited and showed their own section color
+    // as bands inside the char; every stamp also shared one age, so the
+    // gradients stepped once per frame. Each live front now dates every
+    // revealed sample it crossed since the last tick from where it stood
+    // then: the hot head (BURN_HOT_ARC behind the tip) holds age 0, and
+    // behind it a sample's age is the time since the head left it -
+    // continuous along the thread at any frame rate. Revealed samples no
+    // live front accounts for (a front that finished, or a short run swept
+    // between two ticks) ignite as revealed during this tick.
     const closed = this.ps.chainBreakAfter[chain] < 0;
     const total = samples.totalLength;
     const arcPer = closed ? total / count : total / (count - 1);
-    if (this.revealOn) {
-      const halfWin = Math.ceil(0.45 / Math.max(arcPer, 1e-6)) + 1;
+    const mask = this.revealMask[chain];
+    const anim = this.revealAnim;
+    if (this.revealOn && anim) {
       for (const tip of this.revealTips) {
         if (tip.chain !== chain) continue;
         const aT = this.paintArcAt(samples, tip.ctrl, closed);
+        const aP = this.paintArcAt(
+          samples,
+          tip.ctrl - tip.dir * tip.rate * anim.speed * dtc,
+          closed
+        );
+        // Arc grows with ctrl, so the travel direction is the ctrl dir.
+        let swept = tip.dir * (aT - aP);
+        if (closed) swept = ((swept % total) + total) % total;
+        swept = Math.max(0, swept);
+        const v = dtc > 1e-6 ? swept / dtc : 0;
+        const reach = BURN_HOT_ARC + swept + arcPer;
         const kC = Math.round(aT / arcPer);
-        for (let o = -halfWin; o <= halfWin; o++) {
+        const span = Math.ceil(reach / arcPer) + 1;
+        for (let o = -span; o <= span; o++) {
           let k = kC + o;
           if (closed) k = ((k % count) + count) % count;
           else if (k < 0 || k >= count) continue;
-          let dd = Math.abs(k * arcPer - aT);
-          if (closed) dd = Math.min(dd, total - dd);
-          if (dd > 0.45) continue;
-          if (age[k] > 0) age[k] = 0;
+          if (mask && mask[k] <= 0.004) continue;
+          let d = tip.dir * (aT - k * arcPer); // > 0 behind the front.
+          if (closed) d -= Math.round(d / total) * total;
+          if (d < -BURN_HOT_ARC || d > reach) continue;
+          let a = 0;
+          if (d > BURN_HOT_ARC) {
+            if (v <= 1e-6) continue;
+            a = (d - BURN_HOT_ARC) / v;
+          }
+          if (a < age[k]) age[k] = a;
           hot = true;
         }
+      }
+      // (Ink has no fronts and never burned; it stays that way.)
+      if (
+        anim.mode !== "ink" &&
+        this.datePassedRuns(age, mask, count, closed, dtc)
+      ) {
+        hot = true;
       }
     }
     pool.hot = hot;
@@ -3798,11 +3984,14 @@ export class RibbonRenderer {
     pool.flip = !pool.flip;
     const out = pool.flip ? pool.a : pool.b;
     out.set(src);
-    const mask = this.revealMask[chain];
     const smooth = (x: number): number => {
       const c = Math.max(0, Math.min(1, x));
       return c * c * (3 - 2 * c);
     };
+    // The ember flicker's uniform (sample-independent) part.
+    const flTime =
+      0.3 * Math.sin(13 * this.paintClock) +
+      0.2 * Math.sin(29 * this.paintClock);
     for (let k = 0; k < count; k++) {
       const t = age[k];
       if (t >= BURN_RECOVER_END) continue;
@@ -3842,10 +4031,16 @@ export class RibbonRenderer {
       if (ember > 0.01) {
         // Mostly TEMPORAL flicker with a broad, slow spatial drift -
         // high per-sample phase rendered as zebra stripes, not embers.
+        // The drift still stripes the handoff into black (orange bits
+        // inside the char), so it fades out as the char takes over and
+        // the last of the ember dies uniformly.
+        const spatial = 1 - char;
         const fl =
           0.5 +
-          0.3 * Math.sin(13 * this.paintClock + k * 0.31) +
-          0.2 * Math.sin(29 * this.paintClock + k * 0.83);
+          spatial *
+            (0.3 * Math.sin(13 * this.paintClock + k * 0.31) +
+              0.2 * Math.sin(29 * this.paintClock + k * 0.83)) +
+          (1 - spatial) * flTime;
         const e = ember * 0.85 * (1 - heatW * 0.7);
         r += (1.0 - 0.3 * fl - r) * e;
         g += (0.54 - 0.35 * fl - g) * e;
