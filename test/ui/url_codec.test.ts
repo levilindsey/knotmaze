@@ -15,9 +15,11 @@ const withSeed = (seed: number, over: Partial<UrlParams> = {}): UrlParams => ({
 
 describe("short links", () => {
   // Short links OMIT defaults, so every s= link means "these values unless
-  // stated". If this fails because a default changed on purpose: freeze the
-  // OLD table (copy it from here) as the table s= links read with, write new
-  // links under a new seed key (s2=), and update this pin to the new table.
+  // stated". ADDING a new param is safe (old links lack its key and read
+  // its default): add it here too. If this fails because an EXISTING
+  // default changed on purpose: freeze the OLD table (copy it from here) as
+  // the table s= links read with, write new links under a new seed key
+  // (s2=), and update this pin to the new table.
   it("pins the defaults table that s= links are read with", () => {
     expect(PARAM_DEFAULTS).toEqual({
       gridSize: 18, shape: "rect", startAnchor: "nw", exitAnchor: "se",
