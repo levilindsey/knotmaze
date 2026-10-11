@@ -9,6 +9,7 @@ import { Pane } from "tweakpane";
 import { APP_VERSION, BUILD_SHA, BUILD_TIME } from "../build_info";
 import type { UrlParams } from "./url_state";
 import { PARAM_DEFAULTS, appearModeFor, applyAppearMode } from "./url_state";
+import { gridAlignSlider, gridAlignStrength } from "./grid_align_curve";
 
 export interface PanelSettings {
   temperature: number;
@@ -316,6 +317,10 @@ export function buildPanel(
   const p = params as unknown as Record<string, unknown>;
   const s = settings as unknown as Record<string, unknown>;
   const D = PARAM_DEFAULTS as unknown as Record<string, unknown>;
+  // The gridAlign row's slider position (see its row).
+  const gaView: Record<string, unknown> = {
+    gridAlign: gridAlignSlider(params.gridAlign),
+  };
 
   // Folder open/closed state persists across sessions (localStorage),
   // keyed by folder title.
@@ -809,10 +814,19 @@ export function buildPanel(
     "Curvature smoothing. Evens out wiggles along threads so they read as continuous curves.",
     D.smooth, () => callbacks.onSlackChange()
   );
+  // gridAlign speaks an EXPONENTIAL slider (grid_align_curve.ts): the row
+  // binds a view object holding the slider POSITION, and its change
+  // handler writes the STRENGTH back into params - the URL and the physics
+  // keep the strength, so every link keeps its look. No step: a step
+  // constraint would snap the default (slider 0.669) off its exact value.
   row(
-    fPhysics, p, "gridAlign", { min: 0, max: 1, step: 0.05 },
-    "How strongly every thread is pulled back toward its original lattice position: 0 = free-flowing curves, 1 = a formal, grid-like composition. Applies live.",
-    D.gridAlign, () => callbacks.onSlackChange()
+    fPhysics, gaView, "gridAlign",
+    { min: 0, max: 1, format: (v: number) => v.toFixed(2) },
+    "How strongly every thread is pulled back toward its lattice position, on an exponential scale (each tenth of the slider doubles the pull): 0 = free-flowing curves, 1 = a formal, grid-like composition. Applies live.",
+    gridAlignSlider(PARAM_DEFAULTS.gridAlign), () => {
+      params.gridAlign = gridAlignStrength(gaView.gridAlign as number);
+      callbacks.onSlackChange();
+    }
   );
 
   // --- Advanced ---------------------------------------------------------------
@@ -836,6 +850,7 @@ export function buildPanel(
   ).on("click", () => {
     Object.assign(params, PARAM_DEFAULTS);
     settings.temperature = SETTINGS_DEFAULTS.temperature;
+    gaView.gridAlign = gridAlignSlider(params.gridAlign);
     pane.refresh();
     markAll();
     callbacks.onRegenerate();

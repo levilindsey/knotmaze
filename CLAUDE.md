@@ -77,7 +77,7 @@ npm test         # Vitest
 
 ## Commit Policy
 
-Work lands directly on `master` (the GitHub default and only branch; there is no `main`). All changes must be end-to-end working before committing; no partial or broken work. Every push to `master` deploys: `.github/workflows/deploy.yml` runs `npm test` then publishes `dist` to Cloudflare Pages (https://knotmaze.pages.dev, which https://levi.dev/knots redirects to with the query string kept) - a red suite leaves the previous deployment live. Never run `wrangler pages project create` (or other project-scaffolding wrangler commands) inside this repo: it rewrites package.json, the lockfile and .gitignore and adds wrangler/vite configs.
+Work lands directly on `master` (the GitHub default and only branch; there is no `main`). All changes must be end-to-end working before committing; no partial or broken work. Every push to `master` deploys: `.github/workflows/deploy.yml` runs `npm test` then publishes `dist` to Cloudflare Pages - a red suite leaves the previous deployment live. The canonical URL is https://levi.dev/knotmaze/: levi.dev's Pages Function (`functions/knotmaze/[[path]].js` in the levi.dev repo, 2026-10-11) proxies it to https://knotmaze.pages.dev, so the address bar stays on levi.dev; `/knots` and its aliases 301 there with the query kept. That is why the Vite base is RELATIVE ("./") - absolute asset paths would load levi.dev's own files. Proxied non-HTML files get a 4-hour browser cache on levi.dev (hashed assets are unaffected; the HTML stays max-age=0), and Cloudflare injects levi.dev's Web Analytics beacon. Never run `wrangler pages project create` (or other project-scaffolding wrangler commands) inside this repo: it rewrites package.json, the lockfile and .gitignore and adds wrangler/vite configs.
 
 ## Versioning
 
@@ -689,6 +689,23 @@ between-threads/cell-passage route.
   "./"): one build serves at knotmaze.pages.dev/ and under a path prefix
   (levi.dev/knotmaze/ via levi.dev's proxy function); the dev server still
   serves at /. Credit line reads "[cat] Made by Snoring Cat" as one link.
+- gridAlign EXPONENTIAL SLIDER (worktree agent + panel wiring,
+  2026-10-11): the settled look follows the LOG of the anchor strength
+  (alignment progress ~30% per decade from 5e-4 to 1; the linear slider
+  spent 56% of the visible change on its first 0.05 step).
+  `src/ui/grid_align_curve.ts`: strength = (2^(10x) - 1) / 1023 (each
+  tenth of the slider doubles it; settled steps 8-13% each), inverse
+  gridAlignSlider. The URL (ga=) and physics keep the STRENGTH, so links
+  keep their look; the panel row binds a view object holding the slider
+  position (no step - a step would snap the default 0.669 off its exact
+  value; 2-decimal display) and writes the strength on change; Reset to
+  defaults resyncs the view before pane.refresh(). Strengths snap to 12
+  significant digits so decimal values round-trip bit-exactly. Measured
+  residuals (pre-existing physics, not the curve): loose rings buckle
+  lopsided below strength ~1.8e-3 and snap round above it (one step
+  between slider 0.1 and 0.2); at 5e-4..1.6e-3 a ring can wander for
+  minutes without sleeping; the ring at ga=1 never sleeps (a ~7 s cycle
+  near the SE exit).
 - APPEARANCE FX round 4 (worktree agent, 2026-10-11). ROOTS dirt sprays
   (launch 1.6-4.4 units/s, fling 45-171 degrees, a small upward pop, life
   0.45-0.95 s - the old throw was under one thread width). DRAW sequence
