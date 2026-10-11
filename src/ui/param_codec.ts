@@ -198,10 +198,27 @@ export const CODEC_V1: CodecTable = Object.freeze({
   ]),
 });
 
+// V2 (2026-10-11): junctionBlend defaults to 0.88 lattice units (the
+// user's pick once the param became a fixed blend distance); an edited
+// copy of V1, nothing else differs. V1 links - and the bare `?<seed>` -
+// keep junctionBlend 0.
+export const CODEC_V2: CodecTable = Object.freeze({
+  version: 2,
+  params: Object.freeze(
+    CODEC_V1.params.map((p) =>
+      p.name === "junctionBlend" ? num("junctionBlend", 0.88) : p
+    )
+  ),
+});
+
 // Every table ever published, oldest first (never edit or drop one).
-export const CODEC_TABLES: readonly CodecTable[] = Object.freeze([CODEC_V1]);
-// The table new links are written with.
-export const CODEC_VERSION = 1;
+export const CODEC_TABLES: readonly CodecTable[] = Object.freeze([
+  CODEC_V1,
+  CODEC_V2,
+]);
+// The table new links are written with (typed wide: encodeToken still
+// compares it with 1, the version whose all-default links are bare seeds).
+export const CODEC_VERSION: number = 2;
 
 export function codecTable(version: number): CodecTable | undefined {
   return CODEC_TABLES.find((t) => t.version === version);

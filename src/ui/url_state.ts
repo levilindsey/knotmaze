@@ -313,7 +313,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   fowRadius: 4,
   fowIntro: false,
   colorScheme: "segments",
-  junctionBlend: 0,
+  junctionBlend: 0.88, // Since codec v2 (v1 links read 0).
   // trace + burn at 2.2 matches no preset.
   appearMode: "custom",
   appearSequence: "trace",
@@ -448,7 +448,14 @@ export function parseParams(search: string): UrlParams {
   const head = (amp < 0 ? query : query.slice(0, amp)).replace(/=$/, "");
   if (head === "" || head.includes("=")) {
     const legacy = new URLSearchParams(query);
-    return { seed: readSeed(legacy), ...readLegacy(legacy, LEGACY_BASE) };
+    // A legacy LINK (s= / seed=) means what it meant when written: the v1
+    // defaults. Without a seed it is no link at all - a fresh design at
+    // TODAY's defaults (the bare page, or a `?am=instant` probe URL).
+    const linked = legacy.has("s") || legacy.has("seed");
+    return {
+      seed: readSeed(legacy),
+      ...readLegacy(legacy, linked ? LEGACY_BASE : { ...PARAM_DEFAULTS }),
+    };
   }
   const decoded = decodeToken(head);
   if (decoded.error !== null) {

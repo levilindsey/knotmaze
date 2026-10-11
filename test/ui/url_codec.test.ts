@@ -20,9 +20,13 @@ const withSeed = (seed: number, over: Partial<UrlParams> = {}): UrlParams => ({
 // The user's rect design as a legacy short link (2026-10-11 morning)...
 const USER_LEGACY =
   "s=1471kin&gs=12&rep=1&bd=1&sm=.25&ga=0&tw=.64&gap=.12&cr=2.4&fl=0&fw=.25&fv=1.15&vol=.18&hs=312&pal=moss&pc=6c644c&as=2.1";
-// ...and as a compact link (121 -> 55 chars).
-const USER_COMPACT = "1471kin.hGJeJH4_ol9B-mT9CXoqT4fol-NCvnoY8UYl6JbGRMCRUPg";
+// ...as the v1 compact link written this afternoon (121 -> 55 chars)...
+const USER_COMPACT_V1 = "1471kin.hGJeJH4_ol9B-mT9CXoqT4fol-NCvnoY8UYl6JbGRMCRUPg";
+// ...and as today's (v2) link. The design predates junctionBlend's 0.88
+// default, so it keeps 0 - written out explicitly under v2.
+const USER_COMPACT = "1471kin.QSiXiR-P6JfQfpk_Ql6Kk-H6JfjQr56GPFGJeiWxkTB4eyof";
 const USER = withSeed(2430477599, {
+  junctionBlend: 0,
   gridSize: 12,
   repulsion: 1,
   bend: 1,
@@ -71,23 +75,28 @@ describe("links", () => {
       pluckStyle: "string", mazeFabric: true, deadEnds: false, pathViz: "gold",
       cameraMode: "fit", trailLength: 5, tension: 0.45, fogOfWar: false,
       fowRadius: 4, fowIntro: false, colorScheme: "segments",
-      junctionBlend: 0, appearMode: "custom", appearSequence: "trace", appearSpeed: 2.2,
+      junctionBlend: 0.88, appearMode: "custom", appearSequence: "trace", appearSpeed: 2.2,
       appearFx: "burn",
     });
   });
 
-  it("is just the seed for an all-default design", () => {
-    expect(encodeParams(withSeed(2430477599))).toBe("1471kin");
-    expect(parseParams("?1471kin")).toEqual(withSeed(2430477599));
-    expect(parseParams("1471kin")).toEqual(withSeed(2430477599));
-    expect(parseParams("?1471kin.")).toEqual(withSeed(2430477599));
+  it("is the seed plus a version tag for an all-default design", () => {
+    // A bare seed is a v1 link: today's defaults except junctionBlend 0
+    // (v2 moved that default), so current links name their version.
+    expect(encodeParams(withSeed(2430477599))).toBe("1471kin.U");
+    expect(parseParams("?1471kin.U")).toEqual(withSeed(2430477599));
+    const v1 = withSeed(2430477599, { junctionBlend: 0 });
+    expect(parseParams("?1471kin")).toEqual(v1);
+    expect(parseParams("1471kin")).toEqual(v1);
+    expect(parseParams("?1471kin.")).toEqual(v1);
   });
 
   it("packs the user's rect design into one token", () => {
     expect(encodeParams(USER)).toBe(USER_COMPACT);
-    expect(USER_COMPACT.length).toBe(55);
+    expect(USER_COMPACT.length).toBe(56);
     expect(USER_LEGACY.length).toBe(121);
     expect(parseParams("?" + USER_COMPACT)).toEqual(USER);
+    expect(parseParams("?" + USER_COMPACT_V1)).toEqual(USER); // v1 keeps its look
     expect(parseParams("?" + USER_LEGACY)).toEqual(USER);
   });
 
@@ -101,13 +110,13 @@ describe("links", () => {
       hueShift: -15,
     });
     const q = encodeParams(p);
-    expect(q).toBe("1z141z3.nRhtN8PC1ivv_0koo");
+    expect(q).toBe("1z141z3.R0YbTfDwtYr7_9JKK");
     expect(parseParams("?" + q)).toEqual({ ...p, threadWidth: 0.6 });
   });
 
   it("drops float noise that equals a default", () => {
-    expect(encodeParams(withSeed(7, { repulsion: 1.4500000000000002 }))).toBe("7");
-    expect(encodeParams(withSeed(7, { junctionBlend: 1.7e-17 }))).toBe("7");
+    expect(encodeParams(withSeed(7, { repulsion: 1.4500000000000002 }))).toBe("7.U");
+    expect(encodeParams(withSeed(7, { junctionBlend: 0.8800000000000001 }))).toBe("7.U");
   });
 
   it("leaves out appearance values a mode implies", () => {
@@ -117,17 +126,17 @@ describe("links", () => {
       appearFx: "rainbow",
       appearSpeed: 2,
     });
-    expect(encodeParams(preset)).toBe("7.oHJA");
-    expect(parseParams("?7.oHJA")).toEqual(preset);
+    expect(encodeParams(preset)).toBe("7.SByQ");
+    expect(parseParams("?7.SByQ")).toEqual(preset);
     const instant = withSeed(7, {
       appearMode: "instant",
       appearSequence: "instant",
     });
-    expect(encodeParams(instant)).toBe("7.oHM");
-    expect(parseParams("?7.oHM")).toEqual(instant);
+    expect(encodeParams(instant)).toBe("7.SBz");
+    expect(parseParams("?7.SBz")).toEqual(instant);
     const custom = withSeed(7, { appearFx: "dust" });
-    expect(encodeParams(custom)).toBe("7.oHhA");
-    expect(parseParams("?7.oHhA")).toEqual(custom);
+    expect(encodeParams(custom)).toBe("7.SB4Q");
+    expect(parseParams("?7.SB4Q")).toEqual(custom);
     // Every preset round-trips, values implied.
     for (const id of Object.keys(APPEAR_PRESETS) as AppearPreset[]) {
       const p = withSeed(9, { appearMode: id });
@@ -160,17 +169,23 @@ describe("links", () => {
 
 describe("legacy links", () => {
   it("reads s= short links and rewrites them compactly", () => {
-    expect(parseParams("?s=1471kin")).toEqual(withSeed(2430477599));
-    expect(encodeParams(parseParams("?s=1471kin"))).toBe("1471kin");
+    // Legacy links read the v1 defaults (junctionBlend 0), so they rewrite
+    // with that value explicit.
+    expect(parseParams("?s=1471kin")).toEqual(
+      withSeed(2430477599, { junctionBlend: 0 })
+    );
+    expect(encodeParams(parseParams("?s=1471kin"))).toBe("1471kin.SBwHg");
     expect(encodeParams(parseParams("?" + USER_LEGACY))).toBe(USER_COMPACT);
-    expect(encodeParams(parseParams("?s=7&am=trace-rainbow"))).toBe("7.oHJA");
-    expect(parseParams("?s=7&afx=dust")).toEqual(withSeed(7, { appearFx: "dust" }));
+    expect(encodeParams(parseParams("?s=7&am=trace-rainbow"))).toBe("7.TBwHyA");
+    expect(parseParams("?s=7&afx=dust")).toEqual(
+      withSeed(7, { appearFx: "dust", junctionBlend: 0 })
+    );
   });
 
   it("reads seed= links: every param written out, legacy keys", () => {
     const old =
       "?seed=2430477599&gs=18&shp=rect&sa=nw&xa=se&wd=0.35&tb=0.7&sl=0.55&sp=5&dr=0.5&rep=1.4500000000000002&bd=2&sm=0.75&st=1&ga=0.1&tw=0.52&gap=0.04&ms=1&cr=3&fl=0.14000000000000004&fw=0.3&fv=0.5000000000000001&tl=2&sb=4&snd=music&sc=chromatic&oct=3&ss=0.9999999999999996&vol=0.33&rv=0.42&brt=0.5&sus=0.5&shm=0.4&pp=0.4&snpy=0.88&rn=seed&tnc=0.5&psp=2.5&hs=300&arc=130&pal=pastel&pc=eccc41&brd=0.35&fwf=0.12&ded=0.25&pk=string&mf=1&de=0&pv=gold&cam=fit&trl=5&tn=0.45&fow=0&fr=4&fwi=0&cs=segments&ap=trace&as=2.1999999999999997&afx=burn";
-    expect(encodeParams(parseParams(old))).toBe("1471kin");
+    expect(encodeParams(parseParams(old))).toBe("1471kin.SBwHg");
     const user = parseParams(
       "?seed=2430477599&gs=12&shp=rect&sa=nw&xa=se&wd=0.35&tb=0.7&sl=0.55&sp=5&dr=0.5&rep=1&bd=1&sm=0.25&st=1&ga=0&tw=0.64&gap=0.12&ms=1&cr=2.4&fl=1.734723475976807e-17&fw=0.25&fv=1.1500000000000001&tl=2&sb=4&snd=music&sc=chromatic&oct=3&ss=0.9999999999999996&vol=0.18&rv=0.42&brt=0.5&sus=0.5&shm=0.4&pp=0.4&snpy=0.88&rn=seed&tnc=0.5&psp=2.5&hs=312&arc=130&pal=moss&pc=6c644c&brd=0.35&fwf=0.12&ded=0.25&pk=string&mf=1&de=0&pv=gold&cam=fit&trl=5&tn=0.45&fow=0&fr=4&fwi=0&cs=segments&ap=trace&as=2.1&afx=burn"
     );
@@ -188,6 +203,12 @@ describe("legacy links", () => {
       expect(Number.isInteger(p.seed) && p.seed >= 0 && p.seed < 2 ** 32).toBe(true);
     }
     expect(parseParams("?am=instant").appearMode).toBe("instant");
+    // No seed = no link: today's defaults, not the v1 table legacy links use.
+    expect(parseParams("").junctionBlend).toBe(PARAM_DEFAULTS.junctionBlend);
+    expect(parseParams("?am=instant").junctionBlend).toBe(
+      PARAM_DEFAULTS.junctionBlend
+    );
+    expect(parseParams("?s=7").junctionBlend).toBe(0);
   });
 });
 
@@ -214,7 +235,7 @@ describe("token + overrides", () => {
 
   it("ignores unknown keys (click ids, utm tags)", () => {
     expect(parseParams(`?${USER_COMPACT}&fbclid=IwAR0x&utm_source=x`)).toEqual(USER);
-    expect(encodeParams(parseParams("?1471kin&fbclid=IwAR0x"))).toBe("1471kin");
+    expect(encodeParams(parseParams("?1471kin&fbclid=IwAR0x"))).toBe("1471kin.SBwHg");
   });
 
   it("reads a token re-serialized by URLSearchParams (a trailing =)", () => {
@@ -222,13 +243,15 @@ describe("token + overrides", () => {
     url.searchParams.append("ref", "newsletter");
     expect(url.search).toBe(`?${USER_COMPACT}=&ref=newsletter`);
     expect(parseParams(url.search)).toEqual(USER);
-    expect(parseParams("?1471kin=")).toEqual(withSeed(2430477599));
+    expect(parseParams("?1471kin=")).toEqual(
+      withSeed(2430477599, { junctionBlend: 0 })
+    );
   });
 });
 
 describe("unreadable links", () => {
   it("keeps the seed and warns once for a malformed blob", () => {
-    for (const blob of ["@@", "hGJeJH4_ol9B", "U", "w-"]) {
+    for (const blob of ["@@", "hGJeJH4_ol9B", "Y", "w-"]) {
       const warn = warnings();
       expect(parseParams(`?1471kin.${blob}`)).toEqual(withSeed(2430477599));
       expect(warn).toHaveBeenCalledTimes(1);
@@ -236,11 +259,13 @@ describe("unreadable links", () => {
     }
   });
 
-  it("clamps the [0, 1] strengths like the legacy reader", () => {
+  it("clamps gridAlign to [0, 1] and junctionBlend at 0, like the legacy reader", () => {
     const q = encodeParams(withSeed(7, { gridAlign: 5, junctionBlend: -2 }));
     const p = parseParams("?" + q);
     expect([p.gridAlign, p.junctionBlend]).toEqual([1, 0]);
     expect(parseParams("?s=7&ga=5&jbl=-2")).toEqual(p);
+    // junctionBlend is a distance: no upper clamp.
+    expect(parseParams("?" + encodeParams(withSeed(7, { junctionBlend: 9 }))).junctionBlend).toBe(9);
   });
 
   it("warns once and rolls a new design for an unreadable seed", () => {
@@ -295,14 +320,15 @@ describe("links round trip (seeded property test)", () => {
           r < 0.4 ? d : r < 0.6 ? d + (rand() - 0.5) * 1e-11 : r < 0.7 ? -d : Math.floor(rand() * 400);
       }
     }
-    // The two [0, 1] strengths never leave their range in the app (both
-    // readers clamp; see "clamps the [0, 1] strengths").
+    // gridAlign never leaves [0, 1] and junctionBlend (a distance) never
+    // goes negative in the app - both readers clamp (see "clamps ...").
     p.gridAlign = rand();
-    p.junctionBlend = rand();
+    p.junctionBlend = rand() * 6;
     return p as unknown as UrlParams;
   };
   // What a design reads back as: numbers at their written precision, the
-  // two clamped strengths, and the values its appearance mode implies.
+  // clamped gridAlign / junctionBlend, and the values its appearance mode
+  // implies.
   const expected = (p: UrlParams, back: UrlParams): UrlParams => {
     const e = { ...p } as unknown as Record<string, unknown>;
     for (const c of CODEC_V1.params) {
@@ -310,7 +336,7 @@ describe("links round trip (seeded property test)", () => {
     }
     const out = e as unknown as UrlParams;
     out.gridAlign = Math.max(0, Math.min(1, out.gridAlign));
-    out.junctionBlend = Math.max(0, Math.min(1, out.junctionBlend));
+    out.junctionBlend = Math.max(0, out.junctionBlend);
     if (out.appearMode !== "custom") {
       out.appearSequence = PARAM_DEFAULTS.appearSequence;
       out.appearSpeed = PARAM_DEFAULTS.appearSpeed;

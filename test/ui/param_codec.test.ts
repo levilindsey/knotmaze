@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CODEC_TABLES,
   CODEC_V1,
+  CODEC_V2,
   CODEC_VERSION,
   codecDefaults,
   codecTable,
@@ -14,11 +15,9 @@ import { ENUM_OPTIONS, PARAM_DEFAULTS } from "../../src/ui/url_state";
 
 // CODEC_V1, pinned literally: [name, type, default, options?] per param, in
 // table order (the index is the position). Every link written with v1
-// depends on all of it. If this fails:
-// - you APPENDED a param (or an enum option) to the current table: append
-//   the same here. That is the only edit v1 allows.
-// - anything else (a default, the order, a type, an option's name or
-//   position): don't edit v1 - add a CODEC_V2 (see param_codec.ts).
+// depends on all of it, and v1 is no longer the current table, so it is
+// FROZEN: new params and options are appended to the current table only
+// (see param_codec.ts). V2_PIN below is v1 with the one v2 edit.
 const V1_PIN: ReadonlyArray<readonly unknown[]> = [
   ["gridSize", "number", 18], // 0
   ["shape", "enum", "rect", ["rect", "heart", "star", "fish", "tree", "ring"]],
@@ -140,6 +139,15 @@ describe("codec tables", () => {
     expect(CODEC_V1.params.map(asPin)).toEqual(V1_PIN);
   });
 
+  it("pins CODEC_V2: v1 with junctionBlend defaulting to 0.88", () => {
+    expect(CODEC_V2.version).toBe(2);
+    expect(CODEC_V2.params.map(asPin)).toEqual(
+      V1_PIN.map((p) =>
+        p[0] === "junctionBlend" ? ["junctionBlend", "number", 0.88] : p
+      )
+    );
+  });
+
   it("registers every table, oldest first; new links use the newest", () => {
     expect(CODEC_TABLES.map((t) => t.version)).toEqual(
       CODEC_TABLES.map((_, i) => i + 1)
@@ -196,10 +204,14 @@ describe("codec tables", () => {
 });
 
 describe("token format", () => {
-  it("is a bare base-36 seed when nothing differs from the v1 defaults", () => {
-    expect(encodeToken(2430477599, PARAM_DEFAULTS)).toBe("1471kin");
-    expect(encodeToken(0, {})).toBe("0");
-    expect(encodeToken(4294967295, {})).toBe("1z141z3");
+  it("names its version even with nothing changed (a bare seed is v1)", () => {
+    expect(encodeToken(2430477599, PARAM_DEFAULTS)).toBe("1471kin.U");
+    expect(encodeToken(0, {})).toBe("0.U");
+    expect(encodeToken(4294967295, {})).toBe("1z141z3.U");
+    expect(decodeToken("1471kin").values).toEqual(codecDefaults(1));
+    expect(decodeToken("1471kin.U").values).toEqual(codecDefaults(2));
+    expect(codecDefaults(1).junctionBlend).toBe(0);
+    expect(codecDefaults(2).junctionBlend).toBe(0.88);
   });
 
   it("writes the documented bitstream", () => {
@@ -211,7 +223,7 @@ describe("token format", () => {
       mazeFabric: false,
     };
     const bits = [
-      "1", // version 1 = gamma(1)
+      "010", // version 2 = gamma(2)
       "00101", // 4 entries = gamma(4 + 1)
       "0001111", // index 14 threadWidth: gamma(14 - -1 = 15)
       "1010 0110 0100 1111", // ".64", then the terminator 15
@@ -222,10 +234,15 @@ describe("token format", () => {
       "00101", // index 45 mazeFabric: gamma(5); a boolean has no value bits
     ].join(" ");
     expect(encodeToken(7, values)).toBe(`7.${bitsToBlob(bits)}`);
-    expect(encodeToken(7, values)).toBe("7.lH0yeGSWxkTCg");
-    const back = decodeToken("7.lH0yeGSWxkTCg");
+    expect(encodeToken(7, values)).toBe("7.RR9MnhklsZEwo");
+    const back = decodeToken("7.RR9MnhklsZEwo");
     expect(back.error).toBeNull();
     expect(back.values).toEqual(values);
+    // The same design written under v1 still reads back - with v1's
+    // junctionBlend default.
+    const v1 = decodeToken("7.lH0yeGSWxkTCg");
+    expect(v1.error).toBeNull();
+    expect(v1.values).toEqual({ ...values, junctionBlend: 0 });
   });
 
   it("writes numbers as the legacy short links did", () => {
@@ -254,11 +271,11 @@ describe("token format", () => {
     };
     const all = encodeToken(1, values);
     expect(decodeToken(all).values).toEqual({
-      ...codecDefaults(1),
+      ...codecDefaults(CODEC_VERSION),
       gridSize: 12,
       cuspRadius: 2.4,
     });
-    expect(encodeToken(1, values, new Set(["gridSize", "cuspRadius"]))).toBe("1");
+    expect(encodeToken(1, values, new Set(["gridSize", "cuspRadius"]))).toBe("1.U");
   });
 
   it("reads `<seed>.` (a trailing sentence period) as the bare seed", () => {
@@ -292,7 +309,7 @@ describe("token robustness", () => {
     const size = CODEC_V1.params.length;
     const cases: Array<[string, RegExp]> = [
       ["7.l!0y", /invalid character/],
-      [`7.${bitsToBlob("010 1")}`, /unknown version 2/], // gamma(2) = v2
+      [`7.${bitsToBlob("011 1")}`, /unknown version 3/], // gamma(3) = v3
       [`7.${bitsToBlob("1 1")}A`, /trailing data/], // a whole extra char
       [`7.${bitsToBlob("1 1 01")}`, /trailing data/], // non-zero padding
       [`7.${bitsToBlob("1 00101")}`, /truncated/], // 4 entries, none there
@@ -401,7 +418,9 @@ describe("token round trip (seeded property test)", () => {
       const d = decodeToken(token);
       expect(d.error).toBeNull();
       expect(d.seed).toBe(seed);
-      const expected: Record<string, ParamValue> = { ...codecDefaults(1) };
+      const expected: Record<string, ParamValue> = {
+        ...codecDefaults(CODEC_VERSION),
+      };
       for (const p of params) {
         if (Object.hasOwn(values, p.name) && !omit.has(p.name)) {
           expected[p.name] = canonical(p, values[p.name]);

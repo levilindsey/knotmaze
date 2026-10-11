@@ -13,7 +13,7 @@ Rendering: PixiJS v8 custom ribbon meshes with depth-based over/under casing gap
 
 ## Key Design Decisions
 
-- **URL-as-complete-state:** Every design fully specified by `(seed, params)` serialized in the URL. Deterministic seeded RNG throughout. COMPACT LINKS (2026-10-11, `src/ui/param_codec.ts`): the query is ONE token - `?<seed>` when every setting is default, else `?<seed>.<blob>` (seed base-36; blob = base64url bitstream: version, entry count, then per changed param its index delta + value - booleans flip in 0 bits, enums as an option index, colors 24 bits, numbers as their 6-decimal shortest text in 4-bit codes; all counts Elias-gamma). Self-describing, so slider ranges/steps can change freely. What a link DOES depend on is the frozen codec table of its version: param ORDER, codec types, enum option lists, DEFAULTS (links list only what differs, after 6-decimal rounding; an appearMode preset/random/instant implies the three appearance values). A new param or enum option is APPENDED to the current table; anything else (a default change included) = a new codec version, old tables kept for decoding. `test/ui/param_codec.test.ts` pins `CODEC_V1` literally and fails until a new `PARAM_DEFAULTS` key is appended. Legacy links still parse and are rewritten to the token on load: `?s=<seed>&tw=.64...` short links and `?seed=...` full links (legacy keys mc/trm), both read with the v1 defaults; legacy `key=value` pairs AFTER a token override it (`?<token>&am=instant`). Unreadable blobs keep the seed, default the rest, warn once.
+- **URL-as-complete-state:** Every design fully specified by `(seed, params)` serialized in the URL. Deterministic seeded RNG throughout. COMPACT LINKS (2026-10-11, `src/ui/param_codec.ts`): the query is ONE token - `?<seed>.<blob>` (a bare `?<seed>` is a v1 all-default link; since v2 every new link names its version, so an all-default design is `?<seed>.U`) (seed base-36; blob = base64url bitstream: version, entry count, then per changed param its index delta + value - booleans flip in 0 bits, enums as an option index, colors 24 bits, numbers as their 6-decimal shortest text in 4-bit codes; all counts Elias-gamma). Self-describing, so slider ranges/steps can change freely. What a link DOES depend on is the frozen codec table of its version: param ORDER, codec types, enum option lists, DEFAULTS (links list only what differs, after 6-decimal rounding; an appearMode preset/random/instant implies the three appearance values). A new param or enum option is APPENDED to the current table; anything else (a default change included) = a new codec version, old tables kept for decoding. `test/ui/param_codec.test.ts` pins `CODEC_V1` literally (frozen) and `CODEC_V2` as v1 + its one edit, and fails until a new `PARAM_DEFAULTS` key is appended to the current table. VERSIONS: v1 (the first table); v2 (2026-10-11) = junctionBlend default 0 -> 0.88. Legacy links still parse and are rewritten to the token on load: `?s=<seed>&tw=.64...` short links and `?seed=...` full links (legacy keys mc/trm), both read with the v1 defaults; legacy `key=value` pairs AFTER a token override it (`?<token>&am=instant`). Unreadable blobs keep the seed, default the rest, warn once.
 - **ParamField abstraction:** All generator parameters read through a `ParamField` (constant | Simplex-modulated | painted), enabling region-biome variety natively.
 - **Hero relaxation:** On load, lattice paths (angular 45° zigzags) visibly settle into smooth curves. Temperature slider allows re-agitation.
 - **Knot-as-instrument:** Pluck threads → waves propagate; Web Audio maps loop-length to pitch.
@@ -677,8 +677,8 @@ between-threads/cell-passage route.
   runs a row's effects only if refresh() did not; slider step constraints
   write float noise (1.4500000000000002) back into params.
 - 2026-10-11 small round 2. JUNCTION BLEND DISTANCE (`junctionBlend`, jbl=,
-  lattice units, panel [0, 6], default 0 = the historic look, live via
-  recolor): extends the segments/strands junction ramps by a FIXED distance
+  lattice units, panel [0, 6], default 0.88 since codec v2 - 0 = the
+  historic look; live via recolor): extends the segments/strands junction ramps by a FIXED distance
   (user correction: not a ratio of the run's length - every junction bleeds
   the same distance; converted to ctrl per run through its lattice length,
   capped at the run's midpoint, so runs shorter than twice the ramps become
@@ -768,6 +768,15 @@ between-threads/cell-passage route.
   a future default change (codec v2) leaves old s= links' meaning alone.
   `window.__knotParams()` returns the live params (the address bar has no
   readable keys any more); scripts/diag_scan.mjs reads tw/gap from it.
+  CODEC V2 (same day): the user set junctionBlend's default to 0.88, the
+  first default change under the codec - so CODEC_V2 (an edited copy of
+  v1), CODEC_VERSION 2, and all-default links became `?<seed>.U` (the v2
+  header with zero entries). Bare seeds, v1 blobs and legacy s=/seed=
+  links keep junctionBlend 0 and re-encode with it explicit.
+  A query WITHOUT a seed (the bare page, `?am=instant`) is no link at all:
+  a fresh design at TODAY's defaults. PROBE GOTCHA: `?<seed>&am=instant`
+  and `?s=<seed>&...` probe URLs are v1 links (junctionBlend 0, not the
+  current 0.88): write `?<seed>.U&...` for current defaults.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
