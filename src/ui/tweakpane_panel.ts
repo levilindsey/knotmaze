@@ -8,7 +8,7 @@
 import { Pane } from "tweakpane";
 import { APP_VERSION, BUILD_SHA, BUILD_TIME } from "../build_info";
 import type { UrlParams } from "./url_state";
-import { PARAM_DEFAULTS } from "./url_state";
+import { PARAM_DEFAULTS, appearModeFor, applyAppearMode } from "./url_state";
 
 export interface PanelSettings {
   temperature: number;
@@ -223,6 +223,9 @@ export function buildPanel(
     api.element.title = tipText;
     api.element.classList.add("kp-row");
     const t: Tracked = { api, obj, key, def };
+    // Set by the change handler: Tweakpane's refresh() fires it whenever the
+    // shown value changes, so a reset must not run the row's effects again.
+    let fired = false;
     const label = api.element.querySelector(".tp-lblv_l");
     if (label) {
       const btn = document.createElement("span");
@@ -234,7 +237,9 @@ export function buildPanel(
         e.preventDefault();
         if (obj[key] === def) return;
         obj[key] = def;
+        fired = false;
         api.refresh?.();
+        if (fired) return;
         markRow(t);
         after();
         refreshCond();
@@ -242,6 +247,7 @@ export function buildPanel(
       label.appendChild(btn);
     }
     api.on("change", (ev) => {
+      fired = true;
       markRow(t);
       after(ev);
       refreshCond();
@@ -502,8 +508,50 @@ export function buildPanel(
     "How fast the flow undulation drifts. Applies live.",
     D.flowSpeed, () => callbacks.onSlackChange()
   );
-  row(
+  // APPEARANCE: the mode row sets the three rows below it together, and
+  // editing any of those re-derives the mode. Each side refreshes the other
+  // under `appearSync`, because refresh() fires the change handlers - one
+  // choice must rebuild the scene once.
+  let appearSync = false;
+  const appearRows: RowApi[] = [];
+  const appearModeRow = row(
     fMotion, p, "appearMode",
+    {
+      options: {
+        instant: "instant",
+        "ink + dust": "ink-dust",
+        "trace + burn": "trace-burn",
+        "trace + rainbow": "trace-rainbow",
+        "trace + roots": "trace-roots",
+        "bloom + comet": "bloom-comet",
+        random: "random",
+        custom: "custom",
+      },
+    },
+    "Appearance preset: sets the sequence, effect and speed below together. random = new random ones every time the page loads; custom = keep them as set. Editing any of the three switches this to custom (or to the preset they match). Rebuilds the scene.",
+    D.appearMode, () => {
+      if (appearSync) return;
+      if (params.appearMode === "custom") {
+        callbacks.onSlackChange();
+        return;
+      }
+      applyAppearMode(params);
+      appearSync = true;
+      for (const r of appearRows) r.refresh?.();
+      appearSync = false;
+      callbacks.onModeChange();
+    }
+  );
+  const appearEdited = (then: () => void) => (): void => {
+    if (appearSync) return;
+    params.appearMode = appearModeFor(params);
+    appearSync = true;
+    appearModeRow.refresh?.();
+    appearSync = false;
+    then();
+  };
+  const appearSequenceRow = row(
+    fMotion, p, "appearSequence",
     {
       options: {
         instant: "instant",
@@ -514,12 +562,12 @@ export function buildPanel(
       },
     },
     "How the design animates in: instant = appear fully drawn; trace = grow outward from the maze entrance, splitting at every junction; bloom = the same flood from several random spots at once; draw = pen-draw each strand end to end; ink = a dye wave spreading from the entrance. Rebuilds the scene.",
-    D.appearMode, () => callbacks.onModeChange()
+    D.appearSequence, appearEdited(() => callbacks.onModeChange())
   );
   const appearSpeedRow = row(
     fMotion, p, "appearSpeed", { min: 0.3, max: 4, step: 0.05 },
     "How fast the appearance animation reveals the threads. Applies live.",
-    D.appearSpeed, () => callbacks.onSlackChange()
+    D.appearSpeed, appearEdited(() => callbacks.onSlackChange())
   );
   const appearFxRow = row(
     fMotion, p, "appearFx",
@@ -534,8 +582,9 @@ export function buildPanel(
       },
     },
     "Particle effect at the growing thread ends while the design draws itself in: rainbow = six saturated stripes ride each fresh thread behind a white-hot tip, fading to its true color, with a full-spectrum spark spray; comet = a blue-green streaking head, the thread materializing from transparent behind it; dust = dense twinkling glitter over threads that fade in; burn = the thread smolders in, orange tip charring to black with rising smoke; roots = brown rootlets probing in with a soft dirt spray. Applies live.",
-    D.appearFx, () => callbacks.onSlackChange()
+    D.appearFx, appearEdited(() => callbacks.onSlackChange())
   );
+  appearRows.push(appearSequenceRow, appearSpeedRow, appearFxRow);
   button(
     fMotion,
     "Replay settle",
@@ -748,7 +797,7 @@ export function buildPanel(
     fowRow.hidden = !fab;
     fowRadiusRow.hidden = !fab || !params.fogOfWar;
     fowIntroRow.hidden =
-      !fab || !params.fogOfWar || params.appearMode === "instant";
+      !fab || !params.fogOfWar || params.appearSequence === "instant";
     moveSpeedRow.hidden = !fab;
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;
@@ -766,8 +815,8 @@ export function buildPanel(
       params.soundMode !== "random" && params.soundMode !== "music";
     snapBackRow.hidden = params.pluckStyle !== "soft";
     snappinessRow.hidden = params.pluckStyle !== "string";
-    appearSpeedRow.hidden = params.appearMode === "instant";
-    appearFxRow.hidden = params.appearMode === "instant";
+    appearSpeedRow.hidden = params.appearSequence === "instant";
+    appearFxRow.hidden = params.appearSequence === "instant";
     flowSpeedRow.hidden = params.flowStrength <= 0;
   };
   refreshCond();

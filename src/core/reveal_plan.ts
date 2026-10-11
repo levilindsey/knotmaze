@@ -26,18 +26,20 @@
 import type { WalkGraph } from "./walk_graph";
 import { SeededRNG } from "../util/random";
 
-export const APPEAR_MODES = [
+// How the reveal travels (the appearSequence param; ui/url_state's
+// appearMode presets pick it together with the effect and speed).
+export const APPEAR_SEQUENCES = [
   "instant",
   "trace",
   "bloom",
   "draw",
   "ink",
 ] as const;
-export type AppearMode = (typeof APPEAR_MODES)[number];
+export type AppearSequence = (typeof APPEAR_SEQUENCES)[number];
 
 // Frontier particle styles for the appearance animation (Stage 26). The
 // effect itself is render-side (render/appear_fx); the list lives here
-// beside APPEAR_MODES so ui/url_state stays pixi-free. none | rainbow
+// beside APPEAR_SEQUENCES so ui/url_state stays pixi-free. none | rainbow
 // (6-stripe rainbow riding the fresh thread + saturated spark spray;
 // formerly "sparks" - a legacy afx=sparks URL falls back to the default,
 // which is this mode anyway) | comet (blue-green streaked head, thread
@@ -80,7 +82,7 @@ export interface ChainGeom {
 }
 
 export interface RevealPlan {
-  mode: Exclude<AppearMode, "instant">;
+  mode: Exclude<AppearSequence, "instant">;
   sources: RevealSource[][]; // Per chain.
   duration: number; // Speed-1 seconds to full reveal (ink: a safety cap).
   origin: { chain: number; ctrl: number }; // Ink dye origin (walk start).
@@ -111,13 +113,13 @@ const INK_CAP_RADIUS = 80; // Safety cap on the dye radius (world units).
 // trace and bloom then fall back to draw. `pointAt` supplies INITIAL world
 // positions (used only for chains the walk graph does not cover).
 export function buildRevealPlan(
-  mode: Exclude<AppearMode, "instant">,
+  mode: Exclude<AppearSequence, "instant">,
   walk: WalkGraph | null,
   chains: ChainGeom[],
   seed: number,
   pointAt: (chain: number, ctrl: number) => readonly [number, number]
 ): RevealPlan {
-  const effective: Exclude<AppearMode, "instant"> =
+  const effective: Exclude<AppearSequence, "instant"> =
     (mode === "trace" || mode === "bloom") && !walk ? "draw" : mode;
 
   const origin = walk

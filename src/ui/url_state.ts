@@ -5,8 +5,8 @@ import type { ColorScheme, GamutPalette } from "../core/section_colors";
 import { COLOR_SCHEMES, GAMUT_PALETTES } from "../core/section_colors";
 import type { PitchSpace } from "../audio/pitch_space";
 import { PITCH_SPACES } from "../audio/pitch_space";
-import type { AppearMode, AppearFxMode } from "../core/reveal_plan";
-import { APPEAR_MODES, APPEAR_FX_MODES } from "../core/reveal_plan";
+import type { AppearSequence, AppearFxMode } from "../core/reveal_plan";
+import { APPEAR_SEQUENCES, APPEAR_FX_MODES } from "../core/reveal_plan";
 import type { ShapeId, AnchorId } from "../core/shapes";
 import { SHAPES, ANCHORS } from "../core/shapes";
 
@@ -47,6 +47,96 @@ export const ROOT_NOTES = [
   "B",
 ] as const;
 export type RootNote = (typeof ROOT_NOTES)[number];
+
+// APPEARANCE MODE (the appearMode dropdown): one choice sets the three
+// appearance params - appearSequence, appearFx and appearSpeed - together.
+// instant = no reveal; each hand-tailored preset fixes all three; random
+// rolls fresh values on every page load (and whenever it is picked);
+// custom keeps whatever the three rows say. Editing any of the three
+// re-derives the mode (appearModeFor): custom, unless the values still
+// match instant or a preset exactly.
+export type AppearPreset =
+  | "ink-dust"
+  | "trace-burn"
+  | "trace-rainbow"
+  | "trace-roots"
+  | "bloom-comet";
+export type AppearMode = "instant" | AppearPreset | "random" | "custom";
+export const APPEAR_MODES: AppearMode[] = [
+  "instant",
+  "ink-dust",
+  "trace-burn",
+  "trace-rainbow",
+  "trace-roots",
+  "bloom-comet",
+  "random",
+  "custom",
+];
+export const APPEAR_PRESETS: Record<
+  AppearPreset,
+  { sequence: AppearSequence; fx: AppearFxMode; speed: number }
+> = {
+  "ink-dust": { sequence: "ink", fx: "dust", speed: 3 },
+  "trace-burn": { sequence: "trace", fx: "burn", speed: 3 },
+  "trace-rainbow": { sequence: "trace", fx: "rainbow", speed: 2 },
+  "trace-roots": { sequence: "trace", fx: "roots", speed: 1.5 },
+  "bloom-comet": { sequence: "bloom", fx: "comet", speed: 2.2 },
+};
+// random: any real reveal (never instant), any visible effect (never
+// none), a speed across the presets' range on the slider's 0.05 grid.
+const RANDOM_SPEED_MIN = 1.5;
+const RANDOM_SPEED_MAX = 3;
+
+type AppearParams = Pick<
+  UrlParams,
+  "appearMode" | "appearSequence" | "appearFx" | "appearSpeed"
+>;
+
+// The mode these values describe: instant, the preset they match exactly,
+// else custom. Never random - random is only ever chosen.
+export function appearModeFor(p: AppearParams): AppearMode {
+  if (p.appearSequence === "instant") return "instant";
+  for (const id of Object.keys(APPEAR_PRESETS) as AppearPreset[]) {
+    const v = APPEAR_PRESETS[id];
+    if (
+      v.sequence === p.appearSequence &&
+      v.fx === p.appearFx &&
+      Math.abs(v.speed - p.appearSpeed) < 1e-9
+    ) {
+      return id;
+    }
+  }
+  return "custom";
+}
+
+// Make the three values match p.appearMode: a preset sets all three,
+// instant sets the sequence (the effect and speed are inert), random rolls
+// them, custom leaves them.
+export function applyAppearMode(
+  p: AppearParams,
+  rand: () => number = Math.random
+): void {
+  const mode = p.appearMode;
+  if (mode === "custom") return;
+  if (mode === "instant") {
+    p.appearSequence = "instant";
+    return;
+  }
+  if (mode === "random") {
+    const pick = <T>(options: readonly T[]): T =>
+      options[Math.min(options.length - 1, Math.floor(rand() * options.length))];
+    p.appearSequence = pick(APPEAR_SEQUENCES.filter((s) => s !== "instant"));
+    p.appearFx = pick(APPEAR_FX_MODES.filter((f) => f !== "none"));
+    const speed =
+      RANDOM_SPEED_MIN + rand() * (RANDOM_SPEED_MAX - RANDOM_SPEED_MIN);
+    p.appearSpeed = Math.round(speed * 20) / 20;
+    return;
+  }
+  const v = APPEAR_PRESETS[mode];
+  p.appearSequence = v.sequence;
+  p.appearFx = v.fx;
+  p.appearSpeed = v.speed;
+}
 
 export interface UrlParams {
   seed: number;
@@ -133,16 +223,19 @@ export interface UrlParams {
   // mono | strands | depth | segments | noise. Replaces the old multiColor
   // checkbox (mc=1 reads as "strands").
   colorScheme: ColorScheme;
-  // Appearance animation: how the design draws itself in on build.
-  // instant (default - today's pop-in, byte-identical) | trace | bloom |
-  // draw | ink. trace/bloom need the walk graph and fall back to draw in
-  // knot mode.
+  // Appearance animation (how the design draws itself in on build): the
+  // MODE sets the three params below together (see APPEAR_MODES).
   appearMode: AppearMode;
+  // How the reveal travels: instant (default - today's pop-in,
+  // byte-identical) | trace | bloom | draw | ink. trace/bloom need the walk
+  // graph and fall back to draw in knot mode. (URL key ap=, from before
+  // the rename from appearMode.)
+  appearSequence: AppearSequence;
   appearSpeed: number; // [0.3, 4] reveal frontier speed multiplier.
   // Frontier particle effect while the appearance animation runs: none |
   // rainbow (6-stripe rainbow on the fresh thread + saturated sparks) |
   // comet (blue-green streaked head) | dust (twinkling motes) | burn |
-  // roots. Inert when appearMode is instant; applies live.
+  // roots. Inert when appearSequence is instant; applies live.
   appearFx: AppearFxMode;
 }
 
@@ -213,6 +306,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   pitchSpace: "pentMinor",
   pluckStyle: "string",
   appearMode: "instant",
+  appearSequence: "instant",
   appearFx: "rainbow",
 };
 
@@ -291,12 +385,31 @@ export function readParams(): UrlParams {
     fowRadius: readNumber(query, "fr", DEFAULTS.fowRadius),
     fowIntro: readNumber(query, "fwi", 0) > 0.5,
     colorScheme: readScheme(query),
-    appearMode: readAppear(query),
+    ...readAppearance(query),
+  };
+}
+
+// The appearance group (see APPEAR_MODES). A URL without am= (every link
+// made before the mode existed) gets the mode its values describe; a
+// preset or random mode then (re)writes the three values - so random
+// re-rolls on every page load.
+function readAppearance(query: URLSearchParams): AppearParams {
+  const p: AppearParams = {
+    appearMode: "custom",
+    // Existing URLs without ap= keep today's pop-in exactly.
+    appearSequence: readChoice(query, "ap", APPEAR_SEQUENCES, "instant"),
     appearSpeed: readNumber(query, "as", DEFAULTS.appearSpeed),
     // Legacy afx=sparks URLs fall through readChoice's validation to the
     // default, which is the renamed mode itself.
     appearFx: readChoice(query, "afx", APPEAR_FX_MODES, "rainbow"),
   };
+  const raw = query.get("am");
+  p.appearMode =
+    raw && (APPEAR_MODES as string[]).includes(raw)
+      ? (raw as AppearMode)
+      : appearModeFor(p);
+  applyAppearMode(p);
+  return p;
 }
 
 function readHexColor(
@@ -328,14 +441,6 @@ function readPathViz(query: URLSearchParams): PathViz {
   }
   // Back-compat: the short-lived Stage 23 trailMode checkbox.
   return readNumber(query, "trm", 0) > 0.5 ? "trail" : "gold";
-}
-
-function readAppear(query: URLSearchParams): AppearMode {
-  const raw = query.get("ap");
-  if (raw && (APPEAR_MODES as readonly string[]).includes(raw)) {
-    return raw as AppearMode;
-  }
-  return "instant"; // Existing URLs keep today's pop-in exactly.
 }
 
 function readScheme(query: URLSearchParams): ColorScheme {
@@ -405,7 +510,8 @@ export function writeParams(params: UrlParams): void {
   query.set("fr", String(params.fowRadius));
   query.set("fwi", params.fowIntro ? "1" : "0");
   query.set("cs", params.colorScheme);
-  query.set("ap", params.appearMode);
+  query.set("am", params.appearMode);
+  query.set("ap", params.appearSequence);
   query.set("as", String(params.appearSpeed));
   query.set("afx", params.appearFx);
   history.replaceState(null, "", `?${query.toString()}`);

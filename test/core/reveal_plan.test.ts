@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  APPEAR_MODES,
+  APPEAR_SEQUENCES,
   buildRevealPlan,
   intervalsAt,
   tipsAt,
@@ -44,12 +44,12 @@ const pointAt = (_chain: number, ctrl: number): readonly [number, number] => [
 ];
 
 describe("reveal plan", () => {
-  it("lists instant first among the modes", () => {
-    expect(APPEAR_MODES[0]).toBe("instant");
-    expect(APPEAR_MODES).toContain("trace");
-    expect(APPEAR_MODES).toContain("bloom");
-    expect(APPEAR_MODES).toContain("draw");
-    expect(APPEAR_MODES).toContain("ink");
+  it("lists instant first among the sequences", () => {
+    expect(APPEAR_SEQUENCES[0]).toBe("instant");
+    expect(APPEAR_SEQUENCES).toContain("trace");
+    expect(APPEAR_SEQUENCES).toContain("bloom");
+    expect(APPEAR_SEQUENCES).toContain("draw");
+    expect(APPEAR_SEQUENCES).toContain("ink");
   });
 
   it("trace floods outward from the start and finishes", () => {

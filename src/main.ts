@@ -384,7 +384,7 @@ async function main(): Promise<void> {
   // pre-Stage-22 build.
   function startAppearance(): void {
     if (!ps || !renderer) return;
-    if (params.appearMode === "instant") {
+    if (params.appearSequence === "instant") {
       reveal = null;
       renderer.beginReveal(null);
       if (fabric) fabric.revealQuery = null;
@@ -409,11 +409,16 @@ async function main(): Promise<void> {
     ) {
       ps.step(0.1, tuning);
     }
-    reveal = new RevealAnimator(params.appearMode, walkGraph, ps, params.seed);
-    // Burn eats the threads faster (x1.8) - a creeping fire line, not a
-    // slow trace.
-    reveal.speed =
-      params.appearSpeed * (params.appearFx === "burn" ? 1.8 : 1);
+    reveal = new RevealAnimator(
+      params.appearSequence,
+      walkGraph,
+      ps,
+      params.seed
+    );
+    // The ticker re-syncs this from the slider every frame (an x1.8 burn
+    // factor applied here was overwritten before it ever ticked - the
+    // appearMode presets are tuned at the plain slider speed).
+    reveal.speed = params.appearSpeed;
     renderer.beginReveal(reveal);
     if (fabric) {
       const r = renderer;

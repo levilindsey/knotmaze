@@ -14,7 +14,7 @@ import {
   tipsAt,
 } from "../core/reveal_plan";
 import type {
-  AppearMode,
+  AppearSequence,
   RevealInterval,
   RevealPlan,
   RevealTip,
@@ -27,7 +27,7 @@ const INK_NOISE_AMP = 1.15;
 const INK_NOISE_FREQ = 0.42;
 
 export class RevealAnimator {
-  readonly mode: Exclude<AppearMode, "instant">;
+  readonly mode: Exclude<AppearSequence, "instant">;
   // Live speed multiplier (the appearSpeed slider; main.ts syncs it every
   // tick like moveSpeed/cuspRadius).
   speed = 1;
@@ -39,7 +39,7 @@ export class RevealAnimator {
   private inkChainDone: boolean[] = [];
 
   constructor(
-    mode: Exclude<AppearMode, "instant">,
+    mode: Exclude<AppearSequence, "instant">,
     walk: WalkGraph | null,
     ps: ParticleSystem,
     seed: number
