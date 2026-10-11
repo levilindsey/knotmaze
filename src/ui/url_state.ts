@@ -239,75 +239,75 @@ export interface UrlParams {
   appearFx: AppearFxMode;
 }
 
-export const DEFAULTS = {
-  gridSize: 12,
+// COMPLETE per-param defaults (everything but seed): the URL readers'
+// fallbacks, the panel's per-row reset buttons + modified indicators, and
+// the Reset-to-defaults button. The Omit type keeps it provably in sync
+// with UrlParams. The user's chosen settings (2026-10-11).
+// SHORT LINKS OMIT DEFAULTS (see encodeParams), so this table is part of
+// every s= link's meaning: test/ui/url_codec.test.ts pins it. Changing a
+// default means freezing this table as the s= links' table and moving new
+// links to a new seed key (s2=) - the test failure says so.
+export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
+  gridSize: 18,
+  shape: "rect",
+  startAnchor: "nw",
+  exitAnchor: "se",
   weaveDensity: 0.35,
   turnBias: 0.7,
   slack: 0.55,
   simSpeed: 5,
   drag: 0.5,
-  repulsion: 1,
-  bend: 1,
-  smooth: 0.25,
+  repulsion: 1.45,
+  bend: 2,
+  smooth: 0.75,
   stiffness: 1,
-  threadWidth: 0.42,
-  gap: 0.18,
+  gridAlign: 0.1,
+  threadWidth: 0.52,
+  gap: 0.04,
   moveSpeed: 1,
-  cuspRadius: 1,
-  fadeLength: 0,
+  cuspRadius: 3,
+  fadeLength: 0.14,
   flowStrength: 0.3,
-  flowSpeed: 1,
+  flowSpeed: 0.5,
   tugLimit: 2,
   snapBack: 4,
-  octaves: 2,
+  soundMode: "music",
+  pitchSpace: "chromatic",
+  octaves: 3,
   soundSpeed: 1,
-  volume: 0.85,
+  volume: 0.33,
   reverb: 0.42,
   brightness: 0.5,
   sustain: 0.5,
   shimmer: 0.4,
   pickPosition: 0.4,
-  snappiness: 0.5,
-  rootNote: "seed" as RootNote,
+  snappiness: 0.88,
+  rootNote: "seed",
   tonicEmphasis: 0.5,
   pulseSpacing: 2.5,
-  hueShift: 0,
-  gamutArc: 280,
-  palette: "pastel" as GamutPalette,
-  pathColor: "#ffd24a",
+  hueShift: 300,
+  gamutArc: 130,
+  palette: "pastel",
+  pathColor: "#eccc41",
   branchDensity: 0.35,
   fourWayFraction: 0.12,
   deadEndDensity: 0.25,
+  pluckStyle: "string",
+  mazeFabric: true,
+  deadEnds: false,
+  pathViz: "gold",
+  cameraMode: "fit",
   trailLength: 5,
   tension: 0.45,
-  fowRadius: 4,
-  appearSpeed: 1,
-};
-
-// COMPLETE per-param defaults (everything but seed), for the panel's
-// per-row reset buttons + modified indicators and the Reset-to-defaults
-// button. DEFAULTS above feeds readNumber fallbacks (numbers only);
-// this adds the booleans and choice strings. The Omit type keeps it
-// provably in sync with UrlParams.
-export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
-  ...DEFAULTS,
-  shape: "rect",
-  startAnchor: "nw",
-  exitAnchor: "se",
-  gridAlign: 0,
-  mazeFabric: false,
-  deadEnds: false,
   fogOfWar: false,
+  fowRadius: 4,
   fowIntro: false,
-  colorScheme: "mono",
-  pathViz: "gold",
-  cameraMode: "fit" as CameraMode,
-  soundMode: "manual",
-  pitchSpace: "pentMinor",
-  pluckStyle: "string",
-  appearMode: "instant",
-  appearSequence: "instant",
-  appearFx: "rainbow",
+  colorScheme: "segments",
+  // trace + burn at 2.2 matches no preset.
+  appearMode: "custom",
+  appearSequence: "trace",
+  appearSpeed: 2.2,
+  appearFx: "burn",
 };
 
 export function newSeed(): number {
@@ -325,83 +325,110 @@ function readNumber(
   return Number.isFinite(value) ? value : fallback;
 }
 
+function readBool(
+  query: URLSearchParams,
+  key: string,
+  fallback: boolean
+): boolean {
+  const raw = query.get(key);
+  if (raw === null) return fallback;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value > 0.5 : fallback;
+}
+
+// The seed: s= (base-36, short links) or seed= (decimal, every link made
+// before short links); neither = a fresh random design.
+function readSeed(query: URLSearchParams): number {
+  const s = query.get("s");
+  if (s && /^[0-9a-z]{1,7}$/.test(s)) return Number.parseInt(s, 36) >>> 0;
+  return Math.floor(readNumber(query, "seed", newSeed())) >>> 0;
+}
+
 export function readParams(): UrlParams {
-  const query = new URLSearchParams(window.location.search);
+  return parseParams(window.location.search);
+}
+
+// Missing keys read as PARAM_DEFAULTS: short links omit every default, and
+// pre-short links (seed=, every param written out) only lack params added
+// after they were made.
+export function parseParams(search: string): UrlParams {
+  const query = new URLSearchParams(search);
+  const D = PARAM_DEFAULTS;
   return {
-    seed: Math.floor(readNumber(query, "seed", newSeed())) >>> 0,
-    gridSize: readNumber(query, "gs", DEFAULTS.gridSize),
-    shape: readChoice(query, "shp", SHAPES, "rect"),
-    startAnchor: readChoice(query, "sa", ANCHORS, "nw"),
-    exitAnchor: readChoice(query, "xa", ANCHORS, "se"),
-    weaveDensity: readNumber(query, "wd", DEFAULTS.weaveDensity),
-    turnBias: readNumber(query, "tb", DEFAULTS.turnBias),
-    slack: readNumber(query, "sl", DEFAULTS.slack),
-    simSpeed: readNumber(query, "sp", DEFAULTS.simSpeed),
-    drag: readNumber(query, "dr", DEFAULTS.drag),
-    repulsion: readNumber(query, "rep", DEFAULTS.repulsion),
-    bend: readNumber(query, "bd", DEFAULTS.bend),
-    smooth: readNumber(query, "sm", DEFAULTS.smooth),
-    stiffness: readNumber(query, "st", DEFAULTS.stiffness),
+    seed: readSeed(query),
+    gridSize: readNumber(query, "gs", D.gridSize),
+    shape: readChoice(query, "shp", SHAPES, D.shape),
+    startAnchor: readChoice(query, "sa", ANCHORS, D.startAnchor),
+    exitAnchor: readChoice(query, "xa", ANCHORS, D.exitAnchor),
+    weaveDensity: readNumber(query, "wd", D.weaveDensity),
+    turnBias: readNumber(query, "tb", D.turnBias),
+    slack: readNumber(query, "sl", D.slack),
+    simSpeed: readNumber(query, "sp", D.simSpeed),
+    drag: readNumber(query, "dr", D.drag),
+    repulsion: readNumber(query, "rep", D.repulsion),
+    bend: readNumber(query, "bd", D.bend),
+    smooth: readNumber(query, "sm", D.smooth),
+    stiffness: readNumber(query, "st", D.stiffness),
     // Old checkbox URLs (ga=0 / ga=1) read as the same strengths.
-    gridAlign: Math.max(0, Math.min(1, readNumber(query, "ga", 0))),
-    threadWidth: readNumber(query, "tw", DEFAULTS.threadWidth),
-    gap: readNumber(query, "gap", DEFAULTS.gap),
-    moveSpeed: readNumber(query, "ms", DEFAULTS.moveSpeed),
-    cuspRadius: readNumber(query, "cr", DEFAULTS.cuspRadius),
-    fadeLength: readNumber(query, "fl", DEFAULTS.fadeLength),
-    flowStrength: readNumber(query, "fw", DEFAULTS.flowStrength),
-    flowSpeed: readNumber(query, "fv", DEFAULTS.flowSpeed),
-    tugLimit: readNumber(query, "tl", DEFAULTS.tugLimit),
-    snapBack: readNumber(query, "sb", DEFAULTS.snapBack),
-    soundMode: readChoice(query, "snd", SOUND_MODES, "manual"),
-    pitchSpace: readChoice(query, "sc", PITCH_SPACES, "pentMinor"),
-    octaves: readNumber(query, "oct", DEFAULTS.octaves),
-    soundSpeed: readNumber(query, "ss", DEFAULTS.soundSpeed),
-    volume: readNumber(query, "vol", DEFAULTS.volume),
-    reverb: readNumber(query, "rv", DEFAULTS.reverb),
-    brightness: readNumber(query, "brt", DEFAULTS.brightness),
-    sustain: readNumber(query, "sus", DEFAULTS.sustain),
-    shimmer: readNumber(query, "shm", DEFAULTS.shimmer),
-    pickPosition: readNumber(query, "pp", DEFAULTS.pickPosition),
-    snappiness: readNumber(query, "snpy", DEFAULTS.snappiness),
-    rootNote: readChoice(query, "rn", ROOT_NOTES, "seed"),
-    tonicEmphasis: readNumber(query, "tnc", DEFAULTS.tonicEmphasis),
-    pulseSpacing: readNumber(query, "psp", DEFAULTS.pulseSpacing),
-    hueShift: readNumber(query, "hs", DEFAULTS.hueShift),
-    gamutArc: readNumber(query, "arc", DEFAULTS.gamutArc),
-    palette: readChoice(query, "pal", GAMUT_PALETTES, "pastel"),
-    pathColor: readHexColor(query, "pc", DEFAULTS.pathColor),
-    branchDensity: readNumber(query, "brd", DEFAULTS.branchDensity),
-    fourWayFraction: readNumber(query, "fwf", DEFAULTS.fourWayFraction),
-    deadEndDensity: readNumber(query, "ded", DEFAULTS.deadEndDensity),
-    pluckStyle: readChoice(query, "pk", PLUCK_STYLES, "string"),
-    mazeFabric: readNumber(query, "mf", 0) > 0.5,
-    deadEnds: readNumber(query, "de", 0) > 0.5,
-    pathViz: readPathViz(query),
-    cameraMode: readChoice(query, "cam", CAMERA_MODES, "fit"),
-    trailLength: readNumber(query, "trl", DEFAULTS.trailLength),
-    tension: readNumber(query, "tn", DEFAULTS.tension),
-    fogOfWar: readNumber(query, "fow", 0) > 0.5,
-    fowRadius: readNumber(query, "fr", DEFAULTS.fowRadius),
-    fowIntro: readNumber(query, "fwi", 0) > 0.5,
-    colorScheme: readScheme(query),
+    gridAlign: Math.max(0, Math.min(1, readNumber(query, "ga", D.gridAlign))),
+    threadWidth: readNumber(query, "tw", D.threadWidth),
+    gap: readNumber(query, "gap", D.gap),
+    moveSpeed: readNumber(query, "ms", D.moveSpeed),
+    cuspRadius: readNumber(query, "cr", D.cuspRadius),
+    fadeLength: readNumber(query, "fl", D.fadeLength),
+    flowStrength: readNumber(query, "fw", D.flowStrength),
+    flowSpeed: readNumber(query, "fv", D.flowSpeed),
+    tugLimit: readNumber(query, "tl", D.tugLimit),
+    snapBack: readNumber(query, "sb", D.snapBack),
+    soundMode: readChoice(query, "snd", SOUND_MODES, D.soundMode),
+    pitchSpace: readChoice(query, "sc", PITCH_SPACES, D.pitchSpace),
+    octaves: readNumber(query, "oct", D.octaves),
+    soundSpeed: readNumber(query, "ss", D.soundSpeed),
+    volume: readNumber(query, "vol", D.volume),
+    reverb: readNumber(query, "rv", D.reverb),
+    brightness: readNumber(query, "brt", D.brightness),
+    sustain: readNumber(query, "sus", D.sustain),
+    shimmer: readNumber(query, "shm", D.shimmer),
+    pickPosition: readNumber(query, "pp", D.pickPosition),
+    snappiness: readNumber(query, "snpy", D.snappiness),
+    rootNote: readChoice(query, "rn", ROOT_NOTES, D.rootNote),
+    tonicEmphasis: readNumber(query, "tnc", D.tonicEmphasis),
+    pulseSpacing: readNumber(query, "psp", D.pulseSpacing),
+    hueShift: readNumber(query, "hs", D.hueShift),
+    gamutArc: readNumber(query, "arc", D.gamutArc),
+    palette: readChoice(query, "pal", GAMUT_PALETTES, D.palette),
+    pathColor: readHexColor(query, "pc", D.pathColor),
+    branchDensity: readNumber(query, "brd", D.branchDensity),
+    fourWayFraction: readNumber(query, "fwf", D.fourWayFraction),
+    deadEndDensity: readNumber(query, "ded", D.deadEndDensity),
+    pluckStyle: readChoice(query, "pk", PLUCK_STYLES, D.pluckStyle),
+    mazeFabric: readBool(query, "mf", D.mazeFabric),
+    deadEnds: readBool(query, "de", D.deadEnds),
+    pathViz: readPathViz(query, D.pathViz),
+    cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
+    trailLength: readNumber(query, "trl", D.trailLength),
+    tension: readNumber(query, "tn", D.tension),
+    fogOfWar: readBool(query, "fow", D.fogOfWar),
+    fowRadius: readNumber(query, "fr", D.fowRadius),
+    fowIntro: readBool(query, "fwi", D.fowIntro),
+    colorScheme: readScheme(query, D.colorScheme),
     ...readAppearance(query),
   };
 }
 
-// The appearance group (see APPEAR_MODES). A URL without am= (every link
-// made before the mode existed) gets the mode its values describe; a
-// preset or random mode then (re)writes the three values - so random
-// re-rolls on every page load.
+// The appearance group (see APPEAR_MODES). A URL without am= (a short link
+// in custom mode, or any link made before the mode existed) gets the mode
+// its values describe; a preset or random mode then (re)writes the three
+// values - so random re-rolls on every page load.
 function readAppearance(query: URLSearchParams): AppearParams {
+  const D = PARAM_DEFAULTS;
   const p: AppearParams = {
     appearMode: "custom",
-    // Existing URLs without ap= keep today's pop-in exactly.
-    appearSequence: readChoice(query, "ap", APPEAR_SEQUENCES, "instant"),
-    appearSpeed: readNumber(query, "as", DEFAULTS.appearSpeed),
+    appearSequence: readChoice(query, "ap", APPEAR_SEQUENCES, D.appearSequence),
+    appearSpeed: readNumber(query, "as", D.appearSpeed),
     // Legacy afx=sparks URLs fall through readChoice's validation to the
-    // default, which is the renamed mode itself.
-    appearFx: readChoice(query, "afx", APPEAR_FX_MODES, "rainbow"),
+    // default.
+    appearFx: readChoice(query, "afx", APPEAR_FX_MODES, D.appearFx),
   };
   const raw = query.get("am");
   p.appearMode =
@@ -434,85 +461,139 @@ function readChoice<T extends string>(
     : fallback;
 }
 
-function readPathViz(query: URLSearchParams): PathViz {
+function readPathViz(query: URLSearchParams, fallback: PathViz): PathViz {
   const raw = query.get("pv");
   if (raw && (PATH_VIZ_MODES as readonly string[]).includes(raw)) {
     return raw as PathViz;
   }
   // Back-compat: the short-lived Stage 23 trailMode checkbox.
-  return readNumber(query, "trm", 0) > 0.5 ? "trail" : "gold";
+  if (query.has("trm")) {
+    return readNumber(query, "trm", 0) > 0.5 ? "trail" : "gold";
+  }
+  return fallback;
 }
 
-function readScheme(query: URLSearchParams): ColorScheme {
+function readScheme(
+  query: URLSearchParams,
+  fallback: ColorScheme
+): ColorScheme {
   const raw = query.get("cs");
   if (raw && (COLOR_SCHEMES as string[]).includes(raw)) {
     return raw as ColorScheme;
   }
   // Back-compat: the old multiColor checkbox.
-  return readNumber(query, "mc", 0) > 0.5 ? "strands" : "mono";
+  if (query.has("mc")) {
+    return readNumber(query, "mc", 0) > 0.5 ? "strands" : "mono";
+  }
+  return fallback;
+}
+
+// URL key per param (everything but the seed), in write order. A test
+// checks it covers PARAM_DEFAULTS exactly once.
+export const URL_KEYS: ReadonlyArray<
+  readonly [keyof typeof PARAM_DEFAULTS, string]
+> = [
+  ["gridSize", "gs"],
+  ["shape", "shp"],
+  ["startAnchor", "sa"],
+  ["exitAnchor", "xa"],
+  ["weaveDensity", "wd"],
+  ["turnBias", "tb"],
+  ["slack", "sl"],
+  ["simSpeed", "sp"],
+  ["drag", "dr"],
+  ["repulsion", "rep"],
+  ["bend", "bd"],
+  ["smooth", "sm"],
+  ["stiffness", "st"],
+  ["gridAlign", "ga"],
+  ["threadWidth", "tw"],
+  ["gap", "gap"],
+  ["moveSpeed", "ms"],
+  ["cuspRadius", "cr"],
+  ["fadeLength", "fl"],
+  ["flowStrength", "fw"],
+  ["flowSpeed", "fv"],
+  ["tugLimit", "tl"],
+  ["snapBack", "sb"],
+  ["soundMode", "snd"],
+  ["pitchSpace", "sc"],
+  ["octaves", "oct"],
+  ["soundSpeed", "ss"],
+  ["volume", "vol"],
+  ["reverb", "rv"],
+  ["brightness", "brt"],
+  ["sustain", "sus"],
+  ["shimmer", "shm"],
+  ["pickPosition", "pp"],
+  ["snappiness", "snpy"],
+  ["rootNote", "rn"],
+  ["tonicEmphasis", "tnc"],
+  ["pulseSpacing", "psp"],
+  ["hueShift", "hs"],
+  ["gamutArc", "arc"],
+  ["palette", "pal"],
+  ["pathColor", "pc"],
+  ["branchDensity", "brd"],
+  ["fourWayFraction", "fwf"],
+  ["deadEndDensity", "ded"],
+  ["pluckStyle", "pk"],
+  ["mazeFabric", "mf"],
+  ["deadEnds", "de"],
+  ["pathViz", "pv"],
+  ["cameraMode", "cam"],
+  ["trailLength", "trl"],
+  ["tension", "tn"],
+  ["fogOfWar", "fow"],
+  ["fowRadius", "fr"],
+  ["fowIntro", "fwi"],
+  ["colorScheme", "cs"],
+  ["appearMode", "am"],
+  ["appearSequence", "ap"],
+  ["appearSpeed", "as"],
+  ["appearFx", "afx"],
+];
+
+// SHORT LINKS: s=<base-36 seed>, then only the params that differ from
+// PARAM_DEFAULTS, numbers in their shortest form. A preset, random or
+// instant appearMode implies the three appearance values, so they are
+// left out too. parseParams still reads every older link (seed=, every
+// param written out).
+export function encodeParams(params: UrlParams): string {
+  const query = new URLSearchParams();
+  query.set("s", params.seed.toString(36));
+  const appearImplied = params.appearMode !== "custom";
+  for (const [name, key] of URL_KEYS) {
+    if (
+      appearImplied &&
+      (name === "appearSequence" ||
+        name === "appearSpeed" ||
+        name === "appearFx")
+    ) {
+      continue;
+    }
+    const value = params[name];
+    const def = PARAM_DEFAULTS[name];
+    const same =
+      typeof value === "number"
+        ? Math.abs(value - (def as number)) < 1e-9
+        : value === def;
+    if (!same) query.set(key, encodeValue(value));
+  }
+  return query.toString();
+}
+
+function encodeValue(value: number | string | boolean): string {
+  if (typeof value === "boolean") return value ? "1" : "0";
+  if (typeof value === "string") return value.replace("#", "");
+  // toPrecision drops the float noise slider steps leave behind
+  // (1.4500000000000002); the leading zero goes (".25").
+  const s = String(Number(value.toPrecision(10)));
+  if (s.startsWith("0.")) return s.slice(1);
+  if (s.startsWith("-0.")) return "-" + s.slice(2);
+  return s;
 }
 
 export function writeParams(params: UrlParams): void {
-  const query = new URLSearchParams();
-  query.set("seed", String(params.seed));
-  query.set("gs", String(params.gridSize));
-  query.set("shp", params.shape);
-  query.set("sa", params.startAnchor);
-  query.set("xa", params.exitAnchor);
-  query.set("wd", String(params.weaveDensity));
-  query.set("tb", String(params.turnBias));
-  query.set("sl", String(params.slack));
-  query.set("sp", String(params.simSpeed));
-  query.set("dr", String(params.drag));
-  query.set("rep", String(params.repulsion));
-  query.set("bd", String(params.bend));
-  query.set("sm", String(params.smooth));
-  query.set("st", String(params.stiffness));
-  query.set("ga", String(params.gridAlign));
-  query.set("tw", String(params.threadWidth));
-  query.set("gap", String(params.gap));
-  query.set("ms", String(params.moveSpeed));
-  query.set("cr", String(params.cuspRadius));
-  query.set("fl", String(params.fadeLength));
-  query.set("fw", String(params.flowStrength));
-  query.set("fv", String(params.flowSpeed));
-  query.set("tl", String(params.tugLimit));
-  query.set("sb", String(params.snapBack));
-  query.set("snd", params.soundMode);
-  query.set("sc", params.pitchSpace);
-  query.set("oct", String(params.octaves));
-  query.set("ss", String(params.soundSpeed));
-  query.set("vol", String(params.volume));
-  query.set("rv", String(params.reverb));
-  query.set("brt", String(params.brightness));
-  query.set("sus", String(params.sustain));
-  query.set("shm", String(params.shimmer));
-  query.set("pp", String(params.pickPosition));
-  query.set("snpy", String(params.snappiness));
-  query.set("rn", params.rootNote);
-  query.set("tnc", String(params.tonicEmphasis));
-  query.set("psp", String(params.pulseSpacing));
-  query.set("hs", String(params.hueShift));
-  query.set("arc", String(params.gamutArc));
-  query.set("pal", params.palette);
-  query.set("pc", params.pathColor.replace("#", ""));
-  query.set("brd", String(params.branchDensity));
-  query.set("fwf", String(params.fourWayFraction));
-  query.set("ded", String(params.deadEndDensity));
-  query.set("pk", params.pluckStyle);
-  query.set("mf", params.mazeFabric ? "1" : "0");
-  query.set("de", params.deadEnds ? "1" : "0");
-  query.set("pv", params.pathViz);
-  query.set("cam", params.cameraMode);
-  query.set("trl", String(params.trailLength));
-  query.set("tn", String(params.tension));
-  query.set("fow", params.fogOfWar ? "1" : "0");
-  query.set("fr", String(params.fowRadius));
-  query.set("fwi", params.fowIntro ? "1" : "0");
-  query.set("cs", params.colorScheme);
-  query.set("am", params.appearMode);
-  query.set("ap", params.appearSequence);
-  query.set("as", String(params.appearSpeed));
-  query.set("afx", params.appearFx);
-  history.replaceState(null, "", `?${query.toString()}`);
+  history.replaceState(null, "", `?${encodeParams(params)}`);
 }

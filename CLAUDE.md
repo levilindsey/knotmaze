@@ -13,7 +13,7 @@ Rendering: PixiJS v8 custom ribbon meshes with depth-based over/under casing gap
 
 ## Key Design Decisions
 
-- **URL-as-complete-state:** Every design fully specified by `(seed, params)` serialized in the URL. Deterministic seeded RNG throughout.
+- **URL-as-complete-state:** Every design fully specified by `(seed, params)` serialized in the URL. Deterministic seeded RNG throughout. SHORT LINKS (2026-10-11): `?s=<base-36 seed>` plus only the params that differ from `PARAM_DEFAULTS`, numbers in shortest form (no slider-step float noise, `.25`); an appearMode preset/random/instant implies the three appearance values. Because links omit defaults, `PARAM_DEFAULTS` is part of every `s=` link's meaning and `test/ui/url_codec.test.ts` pins it: changing a default = freeze the old table for `s=` links and write new links under a new seed key (`s2=`). Older `seed=` links (every param written out) still parse.
 - **ParamField abstraction:** All generator parameters read through a `ParamField` (constant | Simplex-modulated | painted), enabling region-biome variety natively.
 - **Hero relaxation:** On load, lattice paths (angular 45° zigzags) visibly settle into smooth curves. Temperature slider allows re-agitation.
 - **Knot-as-instrument:** Pluck threads → waves propagate; Web Audio maps loop-length to pitch.
@@ -651,7 +651,27 @@ between-threads/cell-passage route.
   variant, pixel-diffed by cells_diff). A tried "outward-only flank" rule
   (stop a flank where its arm curls back toward the joint) cut V-notches
   into webs and was dropped; a fan from the joint center over-covers a
-  non-star-shaped outline, it never leaves holes.
+  non-star-shaped outline, it never leaves holes. STALE FAN INDICES
+  (1ba7382): TriFanMesh uploads indices up to a high-water mark - with two
+  commits before one draw, pixi's last-update()-size upload dropped a
+  shrinking fill's re-zeroing for good (grey/white fans, thin bars; only
+  probes forcing several rebuilds per frame hit it). WORKTREE DEV SERVERS
+  (ab09488): the watch-ignore is anchored to this checkout's own .claude/,
+  so a server started inside an agent worktree sees its own edits.
+- 2026-10-11 APPEARANCE MODES + USER DEFAULTS + SHORT LINKS. The old
+  appearMode dropdown is now `appearSequence` (ap=, unchanged key); a NEW
+  `appearMode` (am=) sets sequence + fx + speed together: presets ink +
+  dust 3, trace + burn 3, trace + rainbow 2, trace + roots 1.5, bloom +
+  comet 2.2; random (re-rolled on every load); custom; instant. Editing a
+  value re-derives the mode (custom unless it matches a preset). The
+  user's chosen settings became PARAM_DEFAULTS (gs 18, mazeFabric ON,
+  music/chromatic, cr 3, tw 0.52, gap 0.04, segments, trace + burn 2.2
+  intro, ...) and links shrank to `?s=<seed>` + changed params (see Key
+  Design Decisions). PANEL LORE: Tweakpane 4's refresh() FIRES change
+  handlers whenever the shown value changes - programmatic refreshes need
+  a guard (appearSync), and the reset glyph runs a row's effects only if
+  refresh() did not; slider step constraints write float noise
+  (1.4500000000000002) back into params.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
@@ -698,6 +718,11 @@ paint pass's prefix uploads (review round, measured by GL readback:
 probe_glreadback compares every mesh's buffers against its CPU mirror).
 Any buffer that ever gets a partial upload must pass explicit sizes on
 every upload (ribbon_mesh `uploadAll`, `copyUploadPending`).
+
+PROBE LORE (2026-10-11, defaults change): **a bare URL is now FABRIC
+mode with music and an animated trace + burn intro.** Probes that want
+knot mode must pass `mf=0`, and probes that need a settled first frame
+without a reveal pass `am=instant`.
 
 PROBE LORE (2026-10-11): **the session scratchpad is shared by every
 agent of the session** - another agent rebuilt `dist_before` under a
