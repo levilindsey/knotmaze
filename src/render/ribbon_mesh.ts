@@ -702,9 +702,10 @@ export class TriFanMesh {
   private indexData: Uint32Array;
   private vUsed = 0;
   private iUsed = 0;
-  // Index span uploaded last commit: the GPU copy past the current fill
-  // must be re-zeroed when a fill shrinks (partial uploads, see commit).
-  private iPrev = 0;
+  // High-water mark of every fill's index span: the GPU copy may hold
+  // nonzero indices anywhere below it, so every commit re-sends it all
+  // (see commit).
+  private iHigh = 0;
 
   constructor(vertexCapacity: number, indexCapacity: number) {
     this.vertexData = new Float32Array(vertexCapacity * 2);
@@ -762,16 +763,22 @@ export class TriFanMesh {
     this.vUsed = apex + rimCount + 1;
   }
 
-  // Upload only the used ranges. The index range covers the larger of this
-  // and the previous fill, so a shrinking fill re-zeroes its stale GPU tail
-  // (begin() zeroed the CPU copy); the first upload sends the whole buffer
+  // Upload only the used vertex ranges (indices never reference past
+  // vUsed), but the index range up to the HIGH-WATER MARK of every fill,
+  // so a shrunk fill's stale GPU tail is always re-zeroed (begin() zeroed
+  // the CPU copy). Not "the previous fill": pixi uploads a buffer once per
+  // DRAW at its LAST update() size, so with two commits before one draw
+  // (forced probe rebuilds, or a manual rebuild racing the tick's) the
+  // shrinking commit's wider span was overwritten by the second's, and
+  // with the previous span already advanced nothing re-zeroed it later -
+  // stale triangles over the new layout drew flat grey/white fans and
+  // thin bars across joints. The first upload sends the whole buffer
   // either way.
   commit(): void {
     const v = this.vUsed;
     this.mesh.geometry.getBuffer("aPosition").update(v * 2 * 4);
     this.mesh.geometry.getBuffer("aRec").update(v * 4);
-    const iSpan = Math.max(this.iUsed, this.iPrev);
-    this.iPrev = this.iUsed;
-    this.mesh.geometry.getIndex().update(iSpan * 4);
+    if (this.iUsed > this.iHigh) this.iHigh = this.iUsed;
+    this.mesh.geometry.getIndex().update(this.iHigh * 4);
   }
 }
