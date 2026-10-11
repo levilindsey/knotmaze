@@ -1,5 +1,7 @@
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { isAbsolute, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
 // BUILD IDENTITY for the version readouts (src/build_info.ts): the
@@ -23,6 +25,19 @@ const pkg = JSON.parse(
 const sha = git("rev-parse --short HEAD") || "nogit";
 const dirty = git("status --porcelain --untracked-files=no") !== "";
 
+// Agent worktrees live under .claude/worktrees/ - a checkout there writes
+// an index.html and a tsconfig.json, and the dev server answered with a
+// forced full reload of every open page (a phone mid-maze lost its game).
+// Ignore THIS checkout's .claude/ only: a "**/.claude/**" glob also matched
+// a worktree's own sources (their paths run through .claude/worktrees/),
+// so a dev server started inside a worktree never saw its own edits and
+// kept serving the code it started with.
+const claudeDir = fileURLToPath(new URL("./.claude/", import.meta.url));
+const inClaudeDir = (path: string): boolean => {
+  const rel = relative(claudeDir, resolve(path));
+  return !rel.startsWith("..") && !isAbsolute(rel);
+};
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
@@ -31,8 +46,5 @@ export default defineConfig({
       new Date().toISOString().slice(0, 16).replace("T", " ")
     ),
   },
-  // Agent worktrees live under .claude/worktrees/ - a checkout there writes
-  // an index.html and a tsconfig.json, and the dev server answered with a
-  // forced full reload of every open page (a phone mid-maze lost its game).
-  server: { watch: { ignored: ["**/.claude/**"] } },
+  server: { watch: { ignored: [inClaudeDir] } },
 });
