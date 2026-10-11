@@ -107,6 +107,25 @@ const DRAW_STAGGER = 0.12;
 // still read as strokes rather than pops.
 const DRAW_TIME_MIN = 0.6;
 const DRAW_TIME_MAX = 6.5;
+// CONNECTORS LAST: the short splice bridges (and any other short
+// junction-to-junction chain - see connectorRuns) used to sit in the
+// shuffle with the long strands, so they popped in from the first frame as
+// confetti floating in empty space (the user's rect URL drew 28 bridges
+// and no long strand in its first two seconds). They now draw as the
+// closing cascade of the long-strand pass: starts spread over its last
+// CONNECT_TAIL, the last connector finishing together with the last long
+// strand, so connectors add no running time of their own. Each is also
+// held back until both host junctions it joins have been drawn: the bare
+// cascade left 0-7 bridges per fabric drawn up to 1.4s before a thread
+// they attach to (7 fabrics measured). That hold can overrun the long
+// pass by at most one connector stroke (+0-0.5s measured).
+const CONNECT_TAIL = 0.2;
+// A connector is SHORT: its run's lattice length is at most this. Splice
+// bridges span 1.2-2.2 lattice (maze_plan's splice length window); the
+// shortest non-connector chain across 10 surveyed fabrics was 8.7 world
+// units long, so a long thread that happens to run junction to junction
+// with no choice on it keeps its slot among the strands.
+const CONNECTOR_MAX_LEN = 4;
 const INK_CAP_RADIUS = 80; // Safety cap on the dye radius (world units).
 
 // Build the reveal plan. `walk` may be null (knot mode / old maze mode):
@@ -139,7 +158,10 @@ export function buildRevealPlan(
   const sources: RevealSource[][] = chains.map(() => []);
 
   if (effective === "draw") {
-    // Deterministic strand order, staggered starts.
+    // Deterministic strand order, staggered starts. Short CONNECTORS keep
+    // their shuffled order but sit out the long-strand pass and draw as its
+    // closing cascade (CONNECT_TAIL); without a walk graph (knot mode) there
+    // are none and the plan is exactly the plain shuffled stagger.
     const order = chains.map((_, i) => i);
     const rng = new SeededRNG((seed ^ 0xd4a3) >>> 0);
     for (let i = order.length - 1; i > 0; i--) {
@@ -148,16 +170,15 @@ export function buildRevealPlan(
       order[i] = order[j];
       order[j] = tmp;
     }
+    const runs = walk ? connectorRuns(walk, chains) : null;
     let start = 0;
     let duration = 0;
     for (const chain of order) {
+      if (runs?.[chain]) continue; // Connector: closing cascade below.
       const g = chains[chain];
       const span = g.closed ? g.len : g.len - 1;
       if (span <= 0) continue;
-      const dur = Math.max(
-        DRAW_TIME_MIN,
-        Math.min(DRAW_TIME_MAX, g.worldLen / DRAW_SPEED)
-      );
+      const dur = drawTime(g);
       sources[chain].push({
         chain,
         cFrom: 0,
@@ -167,6 +188,9 @@ export function buildRevealPlan(
       });
       if (start + dur > duration) duration = start + dur;
       start += dur * DRAW_STAGGER;
+    }
+    if (runs) {
+      duration = drawConnectors(order, runs, walk!, chains, sources, duration);
     }
     return { mode: effective, sources, duration, origin, inkSpeed: INK_SPEED };
   }
@@ -317,6 +341,107 @@ export function buildRevealPlan(
   });
 
   return { mode: effective, sources, duration, origin, inkSpeed: INK_SPEED };
+}
+
+// Draw sequence: one pen's time for a whole chain (clamped, see
+// DRAW_TIME_MIN/MAX).
+function drawTime(g: ChainGeom): number {
+  return Math.max(
+    DRAW_TIME_MIN,
+    Math.min(DRAW_TIME_MAX, g.worldLen / DRAW_SPEED)
+  );
+}
+
+type WalkRun = WalkGraph["edges"][number];
+
+// The draw sequence's CONNECTORS, structurally: an OPEN chain the walk
+// graph covers with exactly one run, from ctrl 0 to its last ctrl, between
+// two JUNCTION vertices (no choice on it, no maze end), and SHORT (lattice
+// length <= CONNECTOR_MAX_LEN). Splice bridges are exactly this by
+// construction (a single-edge open strand between two degree-3 junctions);
+// cut tails and dead-end threads carry an END vertex and stay strands.
+// Returns the run per connector chain, null for every other chain.
+function connectorRuns(
+  walk: WalkGraph,
+  chains: ChainGeom[]
+): (WalkRun | null)[] {
+  const only: (WalkRun | null)[] = chains.map(() => null);
+  const count = chains.map(() => 0);
+  for (const e of walk.edges) {
+    if (e.chain < 0 || e.chain >= chains.length) continue;
+    count[e.chain]++;
+    only[e.chain] = e;
+  }
+  const junction = (id: string): boolean =>
+    walk.vertices.get(id)?.isEnd === false;
+  return only.map((e, chain) => {
+    const g = chains[chain];
+    if (!e || g.closed || count[chain] !== 1) return null;
+    if (e.ctrlA !== 0 || e.ctrlB !== g.len - 1) return null;
+    if (e.length > CONNECTOR_MAX_LEN) return null;
+    return junction(e.va) && junction(e.vb) ? e : null;
+  });
+}
+
+// Schedule the connectors (`runs`, from connectorRuns) as the long pass's
+// closing cascade: in shuffled order, starts spread evenly so the first
+// opens the last CONNECT_TAIL of the long pass and the last finishes with
+// it, each held back until both host junctions it attaches to have been
+// drawn (the earliest long-strand pen to reach that junction). `longEnd` is
+// the long pass's end; returns the plan's duration.
+function drawConnectors(
+  order: number[],
+  runs: (WalkRun | null)[],
+  walk: WalkGraph,
+  chains: ChainGeom[],
+  sources: RevealSource[][],
+  longEnd: number
+): number {
+  const conns = order.filter((c) => runs[c] && chains[c].len > 1);
+  const n = conns.length;
+  if (n === 0) return longEnd;
+  const durs = conns.map((c) => drawTime(chains[c]));
+  const window = Math.max(CONNECT_TAIL * longEnd, ...durs);
+
+  // When a long-strand pen first draws junction vertex `id` (0 if none
+  // does: nothing to wait for).
+  const drawnAt = (id: string, self: number): number => {
+    const v = walk.vertices.get(id);
+    if (!v) return 0;
+    let best = Infinity;
+    for (const eid of v.edges) {
+      const h = walk.edges[eid];
+      if (!h || h.chain === self || runs[h.chain]) continue;
+      const pen = sources[h.chain]?.[0];
+      if (!pen) continue; // A degenerate (span 0) chain draws nothing.
+      const len = chains[h.chain].len;
+      const at = (ctrl: number): number =>
+        pen.t0 + (((ctrl % len) + len) % len) / pen.rate;
+      if (h.va === id) best = Math.min(best, at(h.ctrlA));
+      if (h.vb === id) best = Math.min(best, at(h.ctrlB));
+    }
+    return Number.isFinite(best) ? best : 0;
+  };
+
+  let duration = longEnd;
+  conns.forEach((chain, k) => {
+    const run = runs[chain]!;
+    const span = chains[chain].len - 1; // Connectors are open.
+    const dur = durs[k];
+    const slot =
+      n > 1
+        ? longEnd - window + ((window - dur) * k) / (n - 1)
+        : longEnd - dur;
+    const t0 = Math.max(
+      0,
+      slot,
+      drawnAt(run.va, chain),
+      drawnAt(run.vb, chain)
+    );
+    sources[chain].push({ chain, cFrom: 0, cTo: span, t0, rate: span / dur });
+    if (t0 + dur > duration) duration = t0 + dur;
+  });
+  return duration;
 }
 
 function originOf(walk: WalkGraph): { chain: number; ctrl: number } {

@@ -37,6 +37,54 @@ function tinyWalk(): WalkGraph {
   };
 }
 
+// A small maze-fabric walk graph for the draw ordering: closed loops 0
+// (len 20) and 1 (len 16), splice bridges 2 (J1-J2) and 3 (J3-J4), a cut
+// tail 4 (END E1 -> J5), and a long junction-to-junction run 5 (J5 -> J4,
+// lattice 9).
+function fabricWalk(): WalkGraph {
+  const vertices = new Map<string, WalkVertex>();
+  const edges: WalkEdge[] = [];
+  const addV = (id: string, chain: number, ctrl: number, isEnd = false) => {
+    vertices.set(id, { id, isEnd, chain, ctrl, edges: [] });
+  };
+  addV("J1", 0, 4);
+  addV("J5", 0, 10);
+  addV("J3", 0, 14);
+  addV("J4", 1, 2);
+  addV("J2", 1, 15);
+  addV("E1", 4, 0, true);
+  const addE = (
+    va: string,
+    vb: string,
+    chain: number,
+    ctrlA: number,
+    ctrlB: number,
+    length: number
+  ): void => {
+    const id = edges.length;
+    edges.push({ id, va, vb, chain, ctrlA, ctrlB, length });
+    vertices.get(va)!.edges.push(id);
+    if (vb !== va) vertices.get(vb)!.edges.push(id);
+  };
+  addE("J1", "J5", 0, 4, 10, 6);
+  addE("J5", "J3", 0, 10, 14, 4);
+  addE("J3", "J1", 0, 14, 24, 10); // Wrap run (unwrapped ctrlB).
+  addE("J4", "J2", 1, 2, 15, 13);
+  addE("J2", "J4", 1, 15, 18, 3); // Wrap run.
+  addE("J1", "J2", 2, 0, 2, 1.5);
+  addE("J3", "J4", 3, 0, 2, 1.6);
+  addE("E1", "J5", 4, 0, 8, 4);
+  addE("J5", "J4", 5, 0, 10, 9);
+  return {
+    vertices,
+    edges,
+    start: "E1",
+    exit: "E1",
+    optimalLength: 0,
+    distToExit: new Map(),
+  };
+}
+
 const openChain: ChainGeom = { len: 9, closed: false, worldLen: 4 };
 const pointAt = (_chain: number, ctrl: number): readonly [number, number] => [
   ctrl / 2,
@@ -126,6 +174,98 @@ describe("reveal plan", () => {
     expect(Math.min(...starts)).toBe(0);
     expect(Math.max(...starts)).toBeGreaterThan(0);
     expect(Number.isFinite(plan.duration)).toBe(true);
+  });
+
+  it("knot-mode draw keeps the plain shuffled stagger (pre-connector golden)", () => {
+    // Values from the pre-connector code (a67b598): without a walk graph
+    // there are no connectors, so the plan must be byte-identical.
+    const chains: ChainGeom[] = [
+      { len: 40, closed: true, worldLen: 30 },
+      { len: 12, closed: true, worldLen: 6 },
+      { len: 90, closed: true, worldLen: 120 },
+      { len: 24, closed: true, worldLen: 15 },
+      { len: 7, closed: false, worldLen: 3 },
+    ];
+    const plan = buildRevealPlan("draw", null, chains, 7, pointAt);
+    expect(plan.sources.map((s) => s.map((x) => x.t0))).toEqual([
+      [0],
+      [0.2571428571428571],
+      [0.3291428571428571],
+      [1.1091428571428572],
+      [1.2377142857142858],
+    ]);
+    expect(plan.duration).toBe(6.829142857142857);
+  });
+
+  it("draw puts short junction-to-junction connectors last, after their hosts", () => {
+    const chains: ChainGeom[] = [
+      { len: 20, closed: true, worldLen: 60 }, // 0: long loop
+      { len: 16, closed: true, worldLen: 70 }, // 1: long loop
+      { len: 3, closed: false, worldLen: 1.5 }, // 2: splice bridge
+      { len: 3, closed: false, worldLen: 1.6 }, // 3: splice bridge
+      { len: 9, closed: false, worldLen: 4 }, // 4: cut tail (END)
+      { len: 11, closed: false, worldLen: 9 }, // 5: long J-J run
+    ];
+    const walk = fabricWalk();
+    const seed = 11;
+    const plan = buildRevealPlan("draw", walk, chains, seed, pointAt);
+    expect(plan.mode).toBe("draw");
+    const src = chains.map((g, i) => {
+      expect(plan.sources[i].length).toBe(1);
+      const s = plan.sources[i][0];
+      expect(s.cFrom).toBe(0);
+      expect(s.cTo).toBe(g.closed ? g.len : g.len - 1);
+      return s;
+    });
+    const end = (i: number): number =>
+      src[i].t0 + src[i].cTo / src[i].rate;
+    const longs = [0, 1, 4, 5]; // The END tail and the long run stay strands.
+    const conns = [2, 3];
+
+    // Every long strand starts before any connector.
+    const lastLongStart = Math.max(...longs.map((i) => src[i].t0));
+    for (const c of conns) expect(src[c].t0).toBeGreaterThan(lastLongStart);
+
+    // Long strands: the same shuffle and pen times as the plain stagger
+    // (the knot-mode plan of the same chains), with the connectors' stagger
+    // slots removed - so the first one starts at once.
+    const plain = buildRevealPlan("draw", null, chains, seed, pointAt);
+    const byPlain = [...longs].sort(
+      (a, b) => plain.sources[a][0].t0 - plain.sources[b][0].t0
+    );
+    const byPlan = [...longs].sort((a, b) => src[a].t0 - src[b].t0);
+    expect(byPlan).toEqual(byPlain);
+    expect(src[byPlan[0]].t0).toBe(0);
+    for (const i of longs) expect(src[i].rate).toBe(plain.sources[i][0].rate);
+
+    // Closing cascade: connectors start in the back half of the long pass;
+    // the one free of any hold finishes by the last long strand.
+    const longEnd = Math.max(...longs.map(end));
+    for (const c of conns) {
+      expect(src[c].t0).toBeGreaterThanOrEqual(longEnd * 0.5);
+    }
+    // ...and never before both junctions they join are drawn. J2 sits at
+    // ctrl 15 of chain 1's 16 (drawn near that pen's end), so bridge 2 is
+    // HELD to exactly that moment; bridge 3's hosts are long drawn.
+    const drawnAt = (chain: number, ctrl: number): number =>
+      src[chain].t0 + ctrl / src[chain].rate;
+    const j1 = drawnAt(0, 4);
+    const j2 = drawnAt(1, 15);
+    const j3 = drawnAt(0, 14);
+    const j4 = Math.min(drawnAt(1, 2), drawnAt(5, 10));
+    expect(src[2].t0).toBeGreaterThanOrEqual(Math.max(j1, j2));
+    expect(src[3].t0).toBeGreaterThanOrEqual(Math.max(j3, j4));
+    expect(src[2].t0).toBeCloseTo(j2, 12);
+    expect(end(3)).toBeLessThanOrEqual(longEnd + 1e-9);
+    // The hold overruns the long pass by at most one connector stroke.
+    expect(end(2)).toBeGreaterThan(longEnd);
+    expect(end(2) - longEnd).toBeLessThanOrEqual(src[2].cTo / src[2].rate);
+    expect(plan.duration).toBeCloseTo(Math.max(...chains.map((_, i) => end(i))), 12);
+    expect(tipsAt(plan, plan.duration + 1e-6).length).toBe(0);
+
+    // Deterministic in the seed.
+    const again = buildRevealPlan("draw", fabricWalk(), chains, seed, pointAt);
+    expect(again.sources).toEqual(plan.sources);
   });
 
   it("bloom is deterministic in the seed", () => {
