@@ -266,9 +266,8 @@ export class AppearFxSystem {
     }
   }
 
-  // Roots: a subtle earthy dirt spray pushed aside by the probing tip -
-  // small dark-brown crumbs tossed backward/outward with a little
-  // gravity, deliberately less prominent than the other styles.
+  // Roots: an earthy dirt spray flung aside by the probing tip - crumbs
+  // tossed sideways/backward that arc out and fall under gravity.
   private emitRoots(
     x: number,
     y: number,
@@ -284,20 +283,28 @@ export class AppearFxSystem {
       const i = this.alloc();
       if (i < 0) return;
       const o = i * FP;
-      // Toss mostly sideways/backward (soil parting around the tip).
-      const spread = Math.PI * (0.35 + R.next() * 0.5);
+      // Fling sideways/backward (soil thrown clear of the tip), 45-171
+      // degrees off the travel direction (was 63-153).
+      const spread = Math.PI * (0.25 + R.next() * 0.7);
       const side = R.next() < 0.5 ? 1 : -1;
       const cs = Math.cos(spread * side);
       const sn = Math.sin(spread * side);
-      const sp = 0.35 + R.next() * 0.9;
+      // Launch speed, world units/s. Against the spark drag (2.3/s) the old
+      // 0.35-1.25 threw crumbs 0.1-0.4 units - under one thread width, so
+      // the "spray" stayed a smudge on the tip; 1.6-4.4 throws ~0.6-1.6.
+      const sp = 1.6 + R.next() * 2.8;
       // ~1 in 6 is a big clod: slower, heavier-looking.
       const clod = R.next() < 0.16;
+      const kick = clod ? 0.6 : 1;
       d[o + PX] = x + (R.next() - 0.5) * tw * 0.3;
       d[o + PY] = y + (R.next() - 0.5) * tw * 0.3;
-      d[o + PVX] = (dx * cs - dy * sn) * sp * (clod ? 0.6 : 1);
-      d[o + PVY] = (dx * sn + dy * cs) * sp * (clod ? 0.6 : 1) + 0.2;
+      // A small upward pop (+y is down) so each throw arcs before gravity
+      // brings it down, instead of sliding off along the ground.
+      d[o + PVX] = (dx * cs - dy * sn) * sp * kick;
+      d[o + PVY] = (dx * sn + dy * cs) * sp * kick - 0.5;
       d[o + PAGE] = 0;
-      d[o + PLIFE] = (0.3 + R.next() * 0.4) * (clod ? 1.3 : 1);
+      // Lives long enough for the throw to read (was 0.3-0.7s).
+      d[o + PLIFE] = (0.45 + R.next() * 0.5) * (clod ? 1.3 : 1);
       d[o + PSIZE] = tw * (0.16 + R.next() * 0.22) * (clod ? 1.7 : 1);
       d[o + PKIND] = K_SPARK;
       d[o + PROT] = 0;
