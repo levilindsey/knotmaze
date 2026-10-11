@@ -223,6 +223,11 @@ export interface UrlParams {
   // mono | strands | depth | segments | noise. Replaces the old multiColor
   // checkbox (mc=1 reads as "strands").
   colorScheme: ColorScheme;
+  // [0, 1] how far a junction's blended color bleeds into the sections
+  // meeting there (segments + strands schemes): 0 = the blend stays inside
+  // the junction, 1 = each section is one gradient between its two
+  // junctions. Applies live.
+  junctionBlend: number;
   // Appearance animation (how the design draws itself in on build): the
   // MODE sets the three params below together (see APPEAR_MODES).
   appearMode: AppearMode;
@@ -303,6 +308,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   fowRadius: 4,
   fowIntro: false,
   colorScheme: "segments",
+  junctionBlend: 0,
   // trace + burn at 2.2 matches no preset.
   appearMode: "custom",
   appearSequence: "trace",
@@ -412,6 +418,10 @@ export function parseParams(search: string): UrlParams {
     fowRadius: readNumber(query, "fr", D.fowRadius),
     fowIntro: readBool(query, "fwi", D.fowIntro),
     colorScheme: readScheme(query, D.colorScheme),
+    junctionBlend: Math.max(
+      0,
+      Math.min(1, readNumber(query, "jbl", D.junctionBlend))
+    ),
     ...readAppearance(query),
   };
 }
@@ -548,6 +558,7 @@ export const URL_KEYS: ReadonlyArray<
   ["fowRadius", "fr"],
   ["fowIntro", "fwi"],
   ["colorScheme", "cs"],
+  ["junctionBlend", "jbl"],
   ["appearMode", "am"],
   ["appearSequence", "ap"],
   ["appearSpeed", "as"],

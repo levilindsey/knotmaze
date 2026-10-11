@@ -508,7 +508,8 @@ async function main(): Promise<void> {
         ps.chains.map((c) => c.length),
         hueGroup,
         params.seed,
-        effHue // The gamut anchor; matches style.baseHue.
+        effHue, // The gamut anchor; matches style.baseHue.
+        params.junctionBlend
       ),
       params.colorScheme,
       params.seed
@@ -745,7 +746,8 @@ async function main(): Promise<void> {
             ps.chains.map((c) => c.length),
             buildHueGroup,
             params.seed,
-            effHue
+            effHue,
+            params.junctionBlend
           ),
           params.colorScheme,
           params.seed

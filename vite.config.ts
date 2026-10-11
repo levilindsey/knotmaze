@@ -39,6 +39,11 @@ const inClaudeDir = (path: string): boolean => {
 };
 
 export default defineConfig({
+  // RELATIVE base: the same build serves at knotmaze.pages.dev/ and,
+  // through levi.dev's proxy function, at levi.dev/knotmaze/ (asset URLs
+  // resolve against whichever path the page loaded from). The dev server
+  // still serves at /.
+  base: "./",
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_SHA__: JSON.stringify(dirty ? `${sha}+` : sha),

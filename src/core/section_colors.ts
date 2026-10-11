@@ -53,6 +53,29 @@ export interface VSegment {
 const RAMP_CTRL = 2.4;
 // Segments scheme only: much shorter junction blends (see its loop).
 const SEG_RAMP_CTRL = 1.0;
+// JUNCTION BLEND REACH (the junctionBlend param, [0, 1]): how far each
+// junction's converged color bleeds into its incident runs. 0 = the ramps
+// above, so the blend sits inside the joint; 1 = every ramp reaches its
+// run's midpoint, so a run is one continuous gradient junction -> own color
+// -> junction. Lengthened ramps also EASE toward smoothstep (fully by
+// RAMP_EASE_FULL reach): a long LINEAR ramp meets the flat run - or, at 1,
+// the opposite ramp - with a slope kink the eye reads as a band.
+const RAMP_EASE_FULL = 0.25;
+// Linear pieces per eased ramp (per-vertex RGB lerps fill in between; 6
+// pieces keep a smoothstep within ~1/255 per channel).
+const RAMP_EASE_PIECES = 6;
+
+// A run end's ramp length: the base ramp `r0`, stretched toward the run's
+// midpoint by the blend reach.
+function rampLen(r0: number, span: number, reach: number): number {
+  return r0 + (span / 2 - r0) * reach;
+}
+
+// Eased-ramp blend weight at ramp parameter u: linear at ease 0 (the
+// historic one-piece ramp), smoothstep at ease 1.
+function easeAt(u: number, ease: number): number {
+  return u + (u * u * (3 - 2 * u) - u) * ease;
+}
 
 // THE GAMUT: a 280-degree hue arc around the seed hue at the fabric's
 // saturation/lightness - wide enough to read as distinct sections, no full
@@ -131,21 +154,59 @@ function pushRgb(
   segs.push({ c0, c1, rgb0, rgb1 });
 }
 
+// Emit an RGB end ramp: one straight piece at ease 0 (the historic ramp),
+// else RAMP_EASE_PIECES pieces following the eased curve.
+function pushRampRgb(
+  segs: VSegment[],
+  c0: number,
+  c1: number,
+  rgb0: RGB,
+  rgb1: RGB,
+  ease: number
+): void {
+  if (ease <= 0) {
+    pushRgb(segs, c0, c1, rgb0, rgb1);
+    return;
+  }
+  let prev = rgb0;
+  for (let i = 1; i <= RAMP_EASE_PIECES; i++) {
+    const u = i / RAMP_EASE_PIECES;
+    const w = easeAt(u, ease);
+    const next: RGB = [
+      rgb0[0] + (rgb1[0] - rgb0[0]) * w,
+      rgb0[1] + (rgb1[1] - rgb0[1]) * w,
+      rgb0[2] + (rgb1[2] - rgb0[2]) * w,
+    ];
+    segs.push({
+      c0: c0 + (c1 - c0) * ((i - 1) / RAMP_EASE_PIECES),
+      c1: c0 + (c1 - c0) * u,
+      rgb0: prev,
+      rgb1: next,
+    });
+    prev = next;
+  }
+}
+
 // Emit a GAMUT sweep between two coordinates, subdivided so the chained
-// RGB lerps track the hue arc (see GAMUT_EMIT_STEP).
+// RGB lerps track the hue arc (see GAMUT_EMIT_STEP); `ease` shapes an end
+// ramp like pushRampRgb.
 function pushGamut(
   segs: VSegment[],
   c0: number,
   c1: number,
   v0: number,
   v1: number,
-  baseHue: number
+  baseHue: number,
+  ease = 0
 ): void {
-  const n = Math.max(1, Math.ceil(Math.abs(v1 - v0) / GAMUT_EMIT_STEP));
+  const n = Math.max(
+    ease > 0 ? RAMP_EASE_PIECES : 1,
+    Math.ceil(Math.abs(v1 - v0) / GAMUT_EMIT_STEP)
+  );
   let prev = gamutRgb(baseHue, v0);
   for (let i = 1; i <= n; i++) {
     const t = i / n;
-    const next = gamutRgb(baseHue, v0 + (v1 - v0) * t);
+    const next = gamutRgb(baseHue, v0 + (v1 - v0) * easeAt(t, ease));
     segs.push({
       c0: c0 + (c1 - c0) * ((i - 1) / n),
       c1: c0 + (c1 - c0) * t,
@@ -160,15 +221,19 @@ function pushGamut(
 // chain lengths (slot counts). The "noise" scheme returns EMPTY lists -
 // the renderer evaluates it spatially per sample instead (it is
 // continuous everywhere, junctions included). `baseHue` anchors the gamut
-// (the renderer's style.baseHue; seed % 360).
+// (the renderer's style.baseHue; seed % 360). `blendReach` is the
+// junctionBlend param (see RAMP_EASE_FULL's comment).
 export function buildSectionField(
   scheme: ColorScheme,
   walk: WalkGraph | null,
   chainLens: number[],
   hueGroup: number[] | undefined,
   seed: number,
-  baseHue: number
+  baseHue: number,
+  blendReach = 0
 ): VSegment[][] {
+  const reach = Math.max(0, Math.min(1, blendReach));
+  const ease = Math.min(1, reach / RAMP_EASE_FULL);
   const nChains = chainLens.length;
   const field: VSegment[][] = chainLens.map(() => []);
   if (scheme === "noise") return field;
@@ -262,11 +327,13 @@ export function buildSectionField(
       const vB = chainCoord(walk.vertices.get(e.vb)!.chain);
       const mid = chainCoord(e.chain);
       const span = e.ctrlB - e.ctrlA;
-      const r = Math.min(RAMP_CTRL, span / 2.5);
+      const r = rampLen(Math.min(RAMP_CTRL, span / 2.5), span, reach);
       const segs = field[e.chain];
-      pushGamut(segs, e.ctrlA, e.ctrlA + r, vA, mid, baseHue);
-      pushGamut(segs, e.ctrlA + r, e.ctrlB - r, mid, mid, baseHue);
-      pushGamut(segs, e.ctrlB - r, e.ctrlB, mid, vB, baseHue);
+      pushGamut(segs, e.ctrlA, e.ctrlA + r, vA, mid, baseHue, ease);
+      if (e.ctrlB - r > e.ctrlA + r) {
+        pushGamut(segs, e.ctrlA + r, e.ctrlB - r, mid, mid, baseHue);
+      }
+      pushGamut(segs, e.ctrlB - r, e.ctrlB, mid, vB, baseHue, ease);
     }
     for (let c = 0; c < nChains; c++) {
       if (field[c].length === 0) {
@@ -343,11 +410,14 @@ export function buildSectionField(
     // colors"). Independence IS the scheme: each run must wear its own
     // color for most of its length, with just enough junction blend to
     // avoid a hard seam.
-    const r = Math.min(SEG_RAMP_CTRL, span * 0.18);
+    // junctionBlend stretches these toward the run's midpoint on request.
+    const r = rampLen(Math.min(SEG_RAMP_CTRL, span * 0.18), span, reach);
     const segs = field[e.chain];
-    pushRgb(segs, e.ctrlA, e.ctrlA + r, rgbA, mid);
-    pushRgb(segs, e.ctrlA + r, e.ctrlB - r, mid, mid);
-    pushRgb(segs, e.ctrlB - r, e.ctrlB, mid, rgbB);
+    pushRampRgb(segs, e.ctrlA, e.ctrlA + r, rgbA, mid, ease);
+    if (e.ctrlB - r > e.ctrlA + r) {
+      pushRgb(segs, e.ctrlA + r, e.ctrlB - r, mid, mid);
+    }
+    pushRampRgb(segs, e.ctrlB - r, e.ctrlB, mid, rgbB, ease);
   }
   // Chains (or chain stretches) outside the walk keep a constant color.
   for (let c = 0; c < nChains; c++) {

@@ -672,6 +672,23 @@ between-threads/cell-passage route.
   a guard (appearSync), and the reset glyph runs a row's effects only if
   refresh() did not; slider step constraints write float noise
   (1.4500000000000002) back into params.
+- 2026-10-11 small round 2. JUNCTION BLEND REACH (`junctionBlend`, jbl=,
+  [0, 1], default 0 = the historic look, live via recolor): stretches the
+  segments/strands junction ramps toward each run's midpoint (1 = every run
+  is one gradient junction -> own color -> junction), easing them toward
+  smoothstep by reach 0.25 - a long LINEAR ramp meets the flat run (or, at
+  1, the opposite ramp) with a slope kink the eye reads as a band. The
+  renderer's segment lookup is now a binary search (eased ramps emit 6
+  pieces each). AUDIO AUTOPLAY GATE (knot_synth.ts): no AudioContext exists
+  until the first activation-triggering input (keydown, mousedown, mouse
+  pointerdown, touch/pen pointerup, touchend; navigator.userActivation
+  decides where supported), and the gate's capture-phase window listener
+  creates + resumes it INSIDE that gesture (iOS unlocks only there) -
+  music-mode plucks before it are silent no-ops, so Chrome's "AudioContext
+  was not allowed to start" warning is gone. RELATIVE BASE (vite base
+  "./"): one build serves at knotmaze.pages.dev/ and under a path prefix
+  (levi.dev/knotmaze/ via levi.dev's proxy function); the dev server still
+  serves at /. Credit line reads "[cat] Made by Snoring Cat" as one link.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
@@ -722,7 +739,10 @@ every upload (ribbon_mesh `uploadAll`, `copyUploadPending`).
 PROBE LORE (2026-10-11, defaults change): **a bare URL is now FABRIC
 mode with music and an animated trace + burn intro.** Probes that want
 knot mode must pass `mf=0`, and probes that need a settled first frame
-without a reveal pass `am=instant`.
+without a reveal pass `am=instant`. AUDIO IS GATED on a trusted user
+gesture: a probe that expects sound must `page.mouse.click` (or press a
+key) first, and `window.__knotSynth` exists only once the gate has opened
+(scripts/diag_audio.mjs injects an OfflineAudioContext, which bypasses it).
 
 PROBE LORE (2026-10-11): **the session scratchpad is shared by every
 agent of the session** - another agent rebuilt `dist_before` under a

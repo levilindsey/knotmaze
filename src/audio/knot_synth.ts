@@ -242,6 +242,27 @@ registerProcessor("knot-string", KnotStringProcessor);
 // Slider [0, 1] -> wet-gain scale (1.0 on the slider = a WASH of hall).
 const REVERB_WET_SCALE = 0.4;
 
+// AUTOPLAY GATE: browsers refuse to start an AudioContext before the page
+// has had a user gesture, and log "The AudioContext was not allowed to
+// start" for every context created (or resumed) too early - and music mode
+// plucks from the first frames. So no live context exists until the first
+// ACTIVATION-TRIGGERING input (the HTML spec's list: keydown, mousedown,
+// pointerdown from a mouse, pointerup from touch/pen, touchend); plucks
+// before it are silent no-ops. The context is created and resumed INSIDE
+// that input's handler - iOS Safari unlocks audio only there. Listeners
+// capture on window, so the unlock runs before the app's own handler for
+// the same event (a tap-pluck sounds on the very first tap).
+const UNLOCK_EVENTS = [
+  "keydown",
+  "mousedown",
+  "pointerdown",
+  "pointerup",
+  "touchend",
+];
+type ActivationNavigator = Navigator & {
+  userActivation?: { isActive: boolean; hasBeenActive: boolean };
+};
+
 export class KnotSynth {
   private ctx: BaseAudioContext | null = null;
   private master: GainNode | null = null;
@@ -271,8 +292,44 @@ export class KnotSynth {
   private readyPromise: Promise<void> | null = null;
   private pendingPlucks: Array<{ freq: number; strength: number }> = [];
 
+  // False until the autoplay gate opens (an injected context needs none).
+  private unlocked: boolean;
+
   constructor(provided: BaseAudioContext | null = null) {
     this.provided = provided;
+    this.unlocked = provided !== null;
+    if (!this.unlocked && typeof window !== "undefined") this.armUnlock();
+  }
+
+  // Opens the autoplay gate on the first activation-triggering input (see
+  // UNLOCK_EVENTS). Where the browser reports transient activation, its
+  // verdict decides (a touch pointerdown does not activate; its pointerup
+  // does); engines without navigator.userActivation accept every listed
+  // event except a non-mouse pointerdown.
+  private armUnlock(): void {
+    const nav = navigator as ActivationNavigator;
+    if (nav.userActivation?.hasBeenActive) {
+      this.unlocked = true;
+      return;
+    }
+    const onInput = (e: Event): void => {
+      if (!e.isTrusted) return;
+      const active = nav.userActivation
+        ? nav.userActivation.isActive
+        : !(
+            e.type === "pointerdown" &&
+            (e as PointerEvent).pointerType !== "mouse"
+          );
+      if (!active) return;
+      for (const t of UNLOCK_EVENTS) {
+        window.removeEventListener(t, onInput, true);
+      }
+      this.unlocked = true;
+      this.ensure();
+    };
+    for (const t of UNLOCK_EVENTS) {
+      window.addEventListener(t, onInput, { capture: true, passive: true });
+    }
   }
 
   // Diagnostics (window.__knotSynth): pluck count, context state, engine,
@@ -317,9 +374,10 @@ export class KnotSynth {
     return this.readyPromise ?? Promise.resolve();
   }
 
-  // Must be called from a user gesture the first time, so the context is
-  // allowed to start.
+  // Null until the autoplay gate opens; the gate's own handler makes the
+  // first call, inside the unlocking gesture.
   private ensure(): BaseAudioContext | null {
+    if (!this.unlocked) return null;
     if (!this.ctx) {
       this.ctx = this.provided ?? new AudioContext();
       this.master = this.ctx.createGain();
@@ -411,7 +469,9 @@ export class KnotSynth {
       }
     }
     if (this.ctx instanceof AudioContext && this.ctx.state === "suspended") {
-      void this.ctx.resume();
+      // Outside a gesture (an iOS interruption, say) this can reject; the
+      // next tap-pluck retries from inside its gesture.
+      this.ctx.resume().catch(() => undefined);
     }
     return this.ctx;
   }

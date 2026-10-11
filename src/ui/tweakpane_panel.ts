@@ -97,8 +97,8 @@ export function buildPanel(
   headVer.textContent = `v${APP_VERSION} · ${BUILD_SHA}`;
   if (BUILD_TIME) headVer.title = `Built ${BUILD_TIME} UTC`;
   headTop.append(headName, headVer);
-  // Credit line: "Made by [cat] Snoring Cat" (icon + name link to the
-  // studio site) with the GitHub mark at the right (the repo is public).
+  // Credit line: "[cat] Made by Snoring Cat", the whole phrase one link to
+  // the studio site, with the GitHub mark at the right (the repo is public).
   const credit = document.createElement("div");
   credit.className = "kp-credit";
   const studio = document.createElement("a");
@@ -109,7 +109,7 @@ export function buildPanel(
   const cat = document.createElement("img");
   cat.src = `${import.meta.env.BASE_URL}snoring-cat.png`;
   cat.alt = "";
-  studio.append(cat, "Snoring Cat");
+  studio.append(cat, "Made by Snoring Cat");
   const github = document.createElement("a");
   github.href = "https://github.com/levilindsey/knotmaze";
   github.target = "_blank";
@@ -128,7 +128,7 @@ export function buildPanel(
     " 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75" +
     "-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55" +
     '.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>';
-  credit.append("Made by", studio, github);
+  credit.append(studio, github);
   head.append(headTop, credit);
   pane.element.prepend(head);
 
@@ -503,6 +503,11 @@ export function buildPanel(
     "Section coloring: mono = one color; strands = per-thread hues; depth = gradient by distance from the start; segments = a random gamut color per run between intersections; noise = a spatial dye field. Sections blend smoothly through intersections. Applies live.",
     D.colorScheme, () => callbacks.onRecolor()
   );
+  const junctionBlendRow = row(
+    fLook, p, "junctionBlend", { min: 0, max: 1, step: 0.01 },
+    "How far each intersection's blended color bleeds into the sections meeting there. 0 = the blend stays inside the intersection; 1 = every section is one continuous gradient between its two intersections, wearing its own color only at its middle. Segments and strands schemes. Applies live.",
+    D.junctionBlend, () => callbacks.onRecolor()
+  );
   row(
     fLook, p, "hueShift", { min: 0, max: 359, step: 1 },
     "Rotates the whole color gamut around the hue wheel (added to the seed's base hue). Applies live.",
@@ -876,6 +881,11 @@ export function buildPanel(
     appearSpeedRow.hidden = params.appearSequence === "instant";
     appearFxRow.hidden = params.appearSequence === "instant";
     flowSpeedRow.hidden = params.flowStrength <= 0;
+    // Only the segments and strands schemes have junction ramps (depth and
+    // noise are continuous; knot mode has no junctions).
+    junctionBlendRow.hidden =
+      !fab ||
+      (params.colorScheme !== "segments" && params.colorScheme !== "strands");
   };
   refreshCond();
 

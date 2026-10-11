@@ -226,3 +226,57 @@ describe("section color field (RGB)", () => {
     for (const segs of field) expect(segs.length).toBe(0);
   });
 });
+
+describe("junctionBlend (junction ramp reach)", () => {
+  const build = (reach?: number): VSegment[][] =>
+    buildSectionField(
+      "segments",
+      makeWalk(),
+      CHAIN_LENS,
+      undefined,
+      SEED,
+      HUE,
+      reach
+    );
+  // A chain's color at ctrl c (first containing segment, as the renderer).
+  const at = (segs: VSegment[], c: number): RGB => {
+    const s = segs.find((g) => c >= g.c0 - 1e-9 && c <= g.c1 + 1e-9)!;
+    const t = s.c1 > s.c0 ? (c - s.c0) / (s.c1 - s.c0) : 0;
+    return [0, 1, 2].map(
+      (k) => s.rgb0[k] + (s.rgb1[k] - s.rgb0[k]) * t
+    ) as RGB;
+  };
+  const expectRgb = (a: RGB, b: RGB): void => {
+    for (let k = 0; k < 3; k++) expect(a[k]).toBeCloseTo(b[k], 9);
+  };
+
+  it("0 reproduces the historic field exactly", () => {
+    expect(build(0)).toEqual(build());
+  });
+
+  it("1 makes a run one gradient through its own color at its midpoint", () => {
+    // e1 = chain 0, ctrl 10..30 (J1 -> J2): own color at 20, junction
+    // colors at the ends, and no flat stretch anywhere inside it.
+    const base = build(0)[0];
+    const full = build(1)[0];
+    expectRgb(at(full, 20), at(base, 20));
+    expectRgb(at(full, 10), at(base, 10));
+    expectRgb(at(full, 30), at(base, 30));
+    const inside = full.filter((s) => s.c0 >= 10 - 1e-9 && s.c1 <= 30 + 1e-9);
+    for (const s of inside) {
+      const flat = s.rgb0.every((v, k) => Math.abs(v - s.rgb1[k]) < 1e-12);
+      expect(flat && s.c1 - s.c0 > 1e-9).toBe(false);
+    }
+  });
+
+  it("stays continuous between consecutive segments at every reach", () => {
+    for (const reach of [0.05, 0.3, 0.7, 1]) {
+      for (const segs of build(reach)) {
+        for (let i = 0; i + 1 < segs.length; i++) {
+          if (Math.abs(segs[i].c1 - segs[i + 1].c0) > 1e-9) continue;
+          expectRgb(segs[i].rgb1, segs[i + 1].rgb0);
+        }
+      }
+    }
+  });
+});

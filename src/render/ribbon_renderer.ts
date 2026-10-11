@@ -2949,14 +2949,23 @@ export class RibbonRenderer {
     }
     const len = this.ps.chains[chain].length;
     for (const c of [ctrl, ctrl + len]) {
-      for (const s of segs) {
-        if (c >= s.c0 - 1e-6 && c <= s.c1 + 1e-6) {
-          const t = s.c1 > s.c0 ? (c - s.c0) / (s.c1 - s.c0) : 0;
-          out[0] = s.rgb0[0] + (s.rgb1[0] - s.rgb0[0]) * t;
-          out[1] = s.rgb0[1] + (s.rgb1[1] - s.rgb0[1]) * t;
-          out[2] = s.rgb0[2] + (s.rgb1[2] - s.rgb0[2]) * t;
-          return;
-        }
+      // Segments are sorted, contiguous runs, so c1 rises with c0: the
+      // first segment whose c1 reaches c is the only candidate (a binary
+      // search - eased junctionBlend ramps multiply the segment count).
+      let lo = 0;
+      let hi = segs.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (segs[mid].c1 + 1e-6 < c) lo = mid + 1;
+        else hi = mid;
+      }
+      const s = segs[lo];
+      if (s && c >= s.c0 - 1e-6) {
+        const t = s.c1 > s.c0 ? (c - s.c0) / (s.c1 - s.c0) : 0;
+        out[0] = s.rgb0[0] + (s.rgb1[0] - s.rgb0[0]) * t;
+        out[1] = s.rgb0[1] + (s.rgb1[1] - s.rgb0[1]) * t;
+        out[2] = s.rgb0[2] + (s.rgb1[2] - s.rgb0[2]) * t;
+        return;
       }
     }
     out[0] = segs[0].rgb0[0];

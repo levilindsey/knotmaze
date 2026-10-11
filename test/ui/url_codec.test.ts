@@ -36,7 +36,7 @@ describe("short links", () => {
       pluckStyle: "string", mazeFabric: true, deadEnds: false, pathViz: "gold",
       cameraMode: "fit", trailLength: 5, tension: 0.45, fogOfWar: false,
       fowRadius: 4, fowIntro: false, colorScheme: "segments",
-      appearMode: "custom", appearSequence: "trace", appearSpeed: 2.2,
+      junctionBlend: 0, appearMode: "custom", appearSequence: "trace", appearSpeed: 2.2,
       appearFx: "burn",
     });
   });
