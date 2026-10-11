@@ -621,6 +621,17 @@ between-threads/cell-passage route.
   faint hairline dashes inside 4-way merge cores - wedge flank edges
   meet the uncovered arm strips just outside the seal disc, where the
   overlap-core blend differs from the base ribbon underneath.
+- 2026-10-11 small fixes. TUCKED-TIP SPURS (318b64b; the user's "faint
+  jagged sticky-outy bits"): tuckFusedTips collapses a bridge tip's last
+  samples onto one point, so the miter legs there have ZERO length -
+  normalizing a zero vector read as a 90-degree turn and widened the tip
+  1.41x into spurs past the host's edge, at every tucked bridge tip. A
+  zero-length leg borrows the other leg (both zero = straight cap) in
+  RibbonMesh.update AND buildEraseGrid's station widths, which must
+  mirror each other. CONCENTRIC DOT GAPS (5983077, user spec): the gap
+  around a start/exit dot is a ring of radius dot + gap (lanes march to
+  that circle); the old dot-circle-plus-arc-margin edge kept the dot's
+  own tighter curvature.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
