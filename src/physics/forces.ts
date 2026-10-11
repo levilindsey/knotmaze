@@ -139,6 +139,11 @@ export interface SegmentTopology {
   // meet there, so collision/repulsion skip the pair (like same-chain
   // neighbors). All -1 in knot mode -> no effect.
   junctionOf: Int32Array;
+  // Particle -> kink loop id (-1 = none), refreshed each substep; absent
+  // when the scene has no kinks. Two particles of the SAME kink loop are
+  // spaced by the eye-pressure pass (ParticleSystem.applyKinkEyePressure),
+  // so applyRepulsion skips the pair.
+  kinkOf?: Int32Array;
 }
 
 // Emergent crossing collector: segment pairs that PROPERLY INTERSECT are
@@ -528,7 +533,7 @@ export function applyRepulsion(
 ): void {
   const cellSize = minDist;
   if (!buildGrid(positions, particleCount, cellSize)) return;
-  const { chainOf, ctrlOf, chainLen, junctionOf } = topology;
+  const { chainOf, ctrlOf, chainLen, junctionOf, kinkOf } = topology;
   const { cols, rows, minX, minY, entries, cellStart } = grid;
 
   for (let i = 0; i < particleCount; i++) {
@@ -556,6 +561,10 @@ export function applyRepulsion(
           // (Formerly a precomputed pair Set; the topology test is
           // allocation-free and equivalent.)
           if (chainOf[i] === chainOf[j]) {
+            // One kink loop's own pairs belong to the eye-pressure pass.
+            if (kinkOf !== undefined && kinkOf[i] >= 0 && kinkOf[i] === kinkOf[j]) {
+              continue;
+            }
             const len = chainLen[i];
             const d = Math.abs(ctrlOf[i] - ctrlOf[j]);
             if (Math.min(d, len - d) <= 6) continue;

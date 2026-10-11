@@ -223,6 +223,65 @@ const MIN_PASS_SEPARATION = 1.6;
 // 0.42, the original calibration expressed per unit width.
 const KINK_MIN_SEPARATION = 2.6;
 const KINK_SEP_PER_WIDTH = 6.2;
+// KINK EYES - the eye-OPENING layer above the hard floor. The floor above
+// guarantees a renderable eyelet, not an OPEN one: at rest the census
+// (every kink, 5 configs) measured holes of 0.05-0.5 widths - knot mode
+// 20/20 under 0.4 - and a phone parked one AT the floor (3.37 ctrl,
+// ~1.3 world of loop): a closed dark notch. Three mechanisms closed eyes,
+// each measured, and each has its own fix:
+// 1. LASSO DRAIN (material): kinks are all one lattice motif (8 ctrl,
+//    3.29 world of rest material at slack 0.55), and in the first ~0.5 s
+//    the initial transient pulls material out through the crossing
+//    (traced: 8.0 -> 6.65 ctrl) before the contacts go static at ~0.6 s
+//    and freeze whatever is left. Fix: a material RATCHET (below).
+// 2. FAIRING (shape): on a closed loop the umbrella step is pure curve-
+//    shortening - the dominant closer at rest. Fix: kink loops are exempt
+//    from fairing (the fairing pass).
+// 3. ASYMMETRIC REPULSION (shape): the global repulsion skips same-chain
+//    pairs within 6 ctrl, so an 8-ctrl loop never repels across its own
+//    eye, while each loop arm IS repelled by the opposite pass's tail.
+//    Fix: EYE PRESSURE (applyKinkEyePressure).
+// Material alone was tried first and is not enough: holding the full
+// lattice material (3.32 world, no drain) left knot-mode holes at
+// 0.30-0.49 widths, the extra arc going into a long narrow neck.
+//
+// The RATCHET's budget is REST MATERIAL (world arc of the structural
+// rests between the two passes), not ctrl: lattice segments rest anywhere
+// from 0.16 to 0.64 world per ctrl (fabric bridges, junction half-edges),
+// so a ctrl count is not a size. 7 widths of arc: the census needed ~6.8
+// for a 0.8-width hole in a teardrop eye before pressure; with pressure
+// it is headroom. Applied the P3.39 way - RATE-LIMITED and mobility-
+// scaled, rising from the CURRENT gap - so while a kink's contact is
+// kinetic its loop can never lose material and grows into free room,
+// while a pinned kink's standing push stays sub-stick and the graduated
+// friction weld strangles it. It never outranks a neighbor: the ordering
+// clamps (MIN_PASS_SEPARATION, the hard kink floor) always win, and a
+// fused joint's jn ratchet or a twist twin's ratchet on the pass's outer
+// side INTERSECTS with it (see easePassToward) - neither takes material
+// from the other's unmet budget.
+const KINK_EYE_ARC_MIN = 2.9;
+const KINK_EYE_ARC_PER_WIDTH = 7.0;
+const KINK_SEP_RATE = 0.015;
+// EYE PRESSURE distance: particles of one kink loop facing each other
+// across the eye repel to max(repulseDist, this x width) - the knot's own
+// spacing law, applied to the pairs the 6-ctrl exclusion hides. Width-
+// scaled because the target is in widths: a centerline diameter of 2.4
+// widths leaves a 1.4-width hole before the teardrop apex and the loop's
+// material take their share. Measured (8 seeds x tw 0.52 / 0.64): 2.0 and
+// 2.2 left fat eyes at 0.59 / 0.76 widths; 2.6 inflated default eyes
+// (median 1.25 -> 1.34 widths) without lifting the material-limited fat
+// outliers; 2.8 PUMPED - 2 of 8 fat seeds never slept, a limit cycle at
+// one kink's crossing core: once the eye distance outruns the depth
+// tents' z separation, pressure on the two arms beside the crossing
+// fights the coupling (lags 0.5-1.4, mv bursts to 1e-1 through the
+// friction switch). 2.4 keeps that margin.
+const KINK_EYE_DIST_PER_WIDTH = 2.4;
+// Which pairs of a loop face each other ACROSS the eye: those at least
+// this fraction of the loop's interior material apart along it (on a
+// round loop, a chord of >= 0.89 diameters at 0.35). Relative to the
+// loop, so small and large loops alike are pressurized only across their
+// eye, never along a side.
+const KINK_EYE_GATE_FRACTION = 0.35;
 // TWIST contact spacing, in WORLD space. A twist's two crossings
 // (adjacent along BOTH threads) can fold onto each other during a held
 // grab: the along-thread ordering clamps stay satisfied (bindings >=
@@ -577,6 +636,7 @@ export class ParticleSystem {
     this.homeY /= this.particleCount;
 
     this.buildConstraints();
+    this.buildRestCum();
     this.crossings = this.assignCrossings(occurrences);
     this.buildPassOrder();
     this.buildTwistPairs();
@@ -619,6 +679,7 @@ export class ParticleSystem {
       chainLen,
       junctionOf: this.junctionOf,
     };
+    this.buildKinkList();
 
     // Graph-carved maze fabric: fuse each JUNCTION node's particle
     // occurrences (host pass-through + bridge/stub terminals, or a merged
@@ -850,6 +911,179 @@ export class ParticleSystem {
     });
   }
 
+  // KINK LOOPS (see KINK_EYE_ARC_PER_WIDTH): self-crossings whose two
+  // passes are chain-order neighbors - an R1 monogon, the thread between
+  // the passes being the loop. Pass order never changes, so the list is
+  // fixed until the pass links are rebuilt (constructor, openChain).
+  private buildKinkList(): void {
+    this.kinks = [];
+    for (const c of this.crossings) {
+      if (c.over.chain !== c.under.chain) continue;
+      const next = this.passNext.get(c.over);
+      const prev = this.passPrev.get(c.over);
+      const fwd = next === c.under && next !== c.over;
+      const bwd = prev === c.under && prev !== c.over;
+      if (fwd || bwd) this.kinks.push({ over: c.over, under: c.under, fwd, bwd });
+    }
+    this.kinkLoopOf = new Int32Array(this.particleCount).fill(-1);
+    this.kinkLoopStart = new Int32Array(this.kinks.length);
+    this.kinkLoopEnd = new Int32Array(this.kinks.length);
+    // Kink-free scenes leave the topology field unset: applyRepulsion and
+    // the fairing pass then take exactly their kink-free paths.
+    this.topology.kinkOf = this.kinks.length > 0 ? this.kinkLoopOf : undefined;
+  }
+
+  // Per-substep kink-loop membership (kinkLoopOf: particle -> kink, -1
+  // none) plus the flat particle / unwrapped lattice-arc lists the eye
+  // pressure walks. The loop is every particle strictly between the two
+  // bindings (a two-pass chain loops on both sides: the shorter one is the
+  // eye).
+  private updateKinkLoops(): void {
+    this.kinkLoopOf.fill(-1);
+    let n = 0;
+    for (let k = 0; k < this.kinks.length; k++) {
+      const { over, under, fwd, bwd } = this.kinks[k];
+      const chain = this.chains[over.chain];
+      const len = chain.length;
+      const cyc = (d: number): number => ((d % len) + len) % len;
+      const sF = cyc(under.ctrl - over.ctrl);
+      const sB = cyc(over.ctrl - under.ctrl);
+      const useF = fwd && (!bwd || sF <= sB);
+      const a = useF ? over.ctrl : under.ctrl;
+      const span = useF ? sF : sB;
+      const cum = this.chainRestCum[over.chain];
+      this.kinkLoopStart[k] = n;
+      for (let s = Math.floor(a) + 1; s < a + span; s++) {
+        if (n >= this.kinkLoopParts.length) {
+          const parts = new Int32Array(this.kinkLoopParts.length * 2 + 64);
+          parts.set(this.kinkLoopParts);
+          this.kinkLoopParts = parts;
+          const arcs = new Float64Array(parts.length);
+          arcs.set(this.kinkLoopArc);
+          this.kinkLoopArc = arcs;
+        }
+        const slot = cyc(s);
+        const p = chain[slot];
+        this.kinkLoopOf[p] = k;
+        this.kinkLoopParts[n] = p;
+        // Unwrapped along the loop (a closed chain's loop may straddle
+        // slot 0).
+        this.kinkLoopArc[n] = cum[slot] + (s >= len ? cum[len] : 0);
+        n++;
+      }
+      this.kinkLoopEnd[k] = n;
+    }
+  }
+
+  // EYE PRESSURE (see KINK_EYE_DIST_PER_WIDTH): the same soft 3D
+  // repulsion law applyRepulsion applies between any two threads, between
+  // particles of ONE kink loop that face each other across the eye. The
+  // global repulsion skips same-chain pairs within 6 ctrl (it exists to
+  // keep straight runs from accordion-buckling), and a lattice kink is 8
+  // ctrl: its loop never repelled itself at all, while each loop arm WAS
+  // repelled by the opposite pass's tail - an asymmetric squeeze that
+  // pushed the arms together (measured at rest: -23e-3 and -26e-3 per
+  // substep on the two arm particles, into the eye). Pairs qualify by
+  // REST ARC along the loop, not ctrl (segments rest 0.16-0.64 world per
+  // ctrl): at least KINK_EYE_GATE_FRACTION of the loop's material apart,
+  // so a pair is always across the eye, never neighbors along one side -
+  // the force is eye pressure, not a stretch along the thread. The global
+  // pass skips these pairs (topology.kinkOf), so nothing counts twice.
+  private applyKinkEyePressure(eyeDist: number, stiffness: number): void {
+    const P = this.positions;
+    const Z = this.zPos;
+    const d2Max = eyeDist * eyeDist;
+    for (let k = 0; k < this.kinks.length; k++) {
+      const start = this.kinkLoopStart[k];
+      const end = this.kinkLoopEnd[k];
+      if (end - start < 2) continue;
+      const gateLattice =
+        KINK_EYE_GATE_FRACTION *
+        (this.kinkLoopArc[end - 1] - this.kinkLoopArc[start]);
+      for (let u = start; u < end; u++) {
+        const i = this.kinkLoopParts[u];
+        const arcI = this.kinkLoopArc[u];
+        for (let v = u + 1; v < end; v++) {
+          if (this.kinkLoopArc[v] - arcI < gateLattice) continue;
+          const j = this.kinkLoopParts[v];
+          const dx = P[j * 2] - P[i * 2];
+          const dy = P[j * 2 + 1] - P[i * 2 + 1];
+          const dz = Z[j] - Z[i];
+          const d2 = dx * dx + dy * dy + dz * dz;
+          if (d2 >= d2Max || d2 < 1e-9) continue;
+          const dist = Math.sqrt(d2);
+          const push = ((eyeDist - dist) / dist) * stiffness * 0.5;
+          P[i * 2] -= dx * push;
+          P[i * 2 + 1] -= dy * push;
+          P[j * 2] += dx * push;
+          P[j * 2 + 1] += dy * push;
+          Z[i] -= dz * push;
+          Z[j] += dz * push;
+        }
+      }
+    }
+  }
+
+  // Cumulative lattice rest arc per chain (see chainRestCum). An open
+  // chain's seam entry (last slot -> slot 0) is a phantom; kink loops
+  // never straddle the seam (its pass pair is unlinked), so it is unread.
+  private buildRestCum(): void {
+    this.chainRestCum = this.chains.map((chain) => {
+      const len = chain.length;
+      const cum = new Float64Array(len + 1);
+      for (let k = 0; k < len; k++) {
+        const a = chain[k];
+        const b = chain[(k + 1) % len];
+        cum[k + 1] =
+          cum[k] +
+          Math.hypot(
+            this.initial[b * 2] - this.initial[a * 2],
+            this.initial[b * 2 + 1] - this.initial[a * 2 + 1]
+          );
+      }
+      return cum;
+    });
+  }
+
+  // Ctrl gap from `anchor` (walking `dir` along the chain) that holds the
+  // kink-eye rest-material budget (kinkEyeLattice), capped at half the
+  // chain. Pure function of ctrl - no geometry feedback, so a squeezed
+  // eye cannot read as "short" and drive the ratchet on.
+  private kinkGapTarget(chainIdx: number, anchor: number, dir: number): number {
+    const cum = this.chainRestCum[chainIdx];
+    const len = cum.length - 1;
+    const cap = len / 2;
+    const seg = (k: number): number => cum[k + 1] - cum[k];
+    const a = ((anchor % len) + len) % len;
+    let k = Math.min(len - 1, Math.floor(a));
+    let remaining = this.kinkEyeLattice;
+    let g = 0;
+    if (dir > 0) {
+      let frac = a - k; // Consumed part of segment k.
+      while (g < cap) {
+        const s = seg(k);
+        const avail = s * (1 - frac);
+        if (avail >= remaining && s > 1e-9) return g + remaining / s;
+        remaining -= avail;
+        g += 1 - frac;
+        frac = 0;
+        k = (k + 1) % len;
+      }
+    } else {
+      let frac = a - k; // Available part of segment k, behind the anchor.
+      while (g < cap) {
+        const s = seg(k);
+        const avail = s * frac;
+        if (avail >= remaining && s > 1e-9) return g + remaining / s;
+        remaining -= avail;
+        g += frac;
+        frac = 1;
+        k = (k - 1 + len) % len;
+      }
+    }
+    return cap;
+  }
+
   // P4 maze mode. Carve a closed chain OPEN by removing the cyclic seam
   // after chain slot `breakAfter`: the two flanking particles become loose
   // ends, pinned to fixed (off-screen) anchor points so the thread hangs
@@ -889,6 +1123,7 @@ export class ParticleSystem {
     // unlinked (crossings themselves are unchanged by an open plain edge).
     this.buildPassOrder();
     this.buildTwistPairs();
+    this.buildKinkList();
   }
 
   // P4 maze mode. Fuse several open-chain ARM terminals into a degree-3+
@@ -1185,6 +1420,27 @@ export class ParticleSystem {
   private stickyContacts = false;
   // Width-scaled kink-eye material budget, refreshed each substep.
   private kinkSep = KINK_MIN_SEPARATION;
+  // Kink-eye rest-material budget in LATTICE rest units (world arc / the
+  // settled shrink), refreshed each substep (see KINK_EYE_ARC_PER_WIDTH).
+  private kinkEyeLattice = KINK_EYE_ARC_MIN;
+  // Per-chain cumulative lattice rest arc: entry k = rest arc from slot 0
+  // to slot k (len + 1 entries; the structural rests ARE these lattice
+  // distances). Static - built once from the initial positions.
+  private chainRestCum: Float64Array[] = [];
+  // Kink loops (see buildKinkList / updateKinkLoops): the kink crossings'
+  // passes with which side of the over pass the loop lies on, per-particle
+  // loop membership, and the flat per-substep loop lists.
+  private kinks: Array<{
+    over: CrossingPass;
+    under: CrossingPass;
+    fwd: boolean;
+    bwd: boolean;
+  }> = [];
+  private kinkLoopOf: Int32Array = new Int32Array(0);
+  private kinkLoopStart: Int32Array = new Int32Array(0);
+  private kinkLoopEnd: Int32Array = new Int32Array(0);
+  private kinkLoopParts: Int32Array = new Int32Array(256);
+  private kinkLoopArc: Float64Array = new Float64Array(256);
   // Width-scaled twist-eye material budget (see TWIST_MIN_SEPARATION).
   private twistSep = TWIST_MIN_SEPARATION;
   // Width-scaled junction-crossing material budget (see
@@ -1560,17 +1816,98 @@ export class ParticleSystem {
     let f =
       self.ctrl + Math.max(-maxSlide, Math.min(maxSlide, delta * ease));
     const unclamped = f;
-    // JUNCTION material budget (P4 fabric; see JN_MIN_SEPARATION): a
-    // fused joint is a FIXED virtual neighbor - this pass keeps at
-    // least jnSep of thread between its binding and the joint, with
-    // the floor rising from the CURRENT gap as a rate-limited,
-    // mobility-scaled ratchet (the P3.39 twist pattern: a pinned
-    // pass's standing push stays sub-stick, and the friction weld
-    // strangles it as the contact quiets). Deliberately BEFORE the
-    // pass-ordering clamps below, so kink/twist/ordering floors always
-    // win conflicts - the budget may park unconverged, never force.
-    // Knot mode sets no jn records, so this is structurally absent.
-    if (self.jnPrevCtrl !== undefined || self.jnNextCtrl !== undefined) {
+    const prev = this.passPrev.get(self);
+    const next = this.passNext.get(self);
+    const kPrev =
+      prev !== undefined && prev === self.partner && prev !== self;
+    const kNext =
+      next !== undefined && next === self.partner && next !== self;
+    // KINK EYE material ratchet (see KINK_EYE_ARC_PER_WIDTH): when the
+    // chain-order neighbor IS this pass's partner, the thread between them
+    // is the kink's loop. Its floor rises from the current gap toward the
+    // rest-material budget at the twist rate; the ordering clamps below
+    // always outrank it (an eye grows only into free corridor room).
+    if (kPrev || kNext) {
+      const cycK = (d: number): number => ((d % len) + len) % len;
+      // Bounds on this step's ctrl offset o = f - self.ctrl.
+      let lo = -Infinity;
+      let hi = Infinity;
+      // A two-pass chain is a loop on BOTH sides: share the chain.
+      const cap = kPrev && kNext ? len / 2 : len;
+      if (kPrev) {
+        const gap = cycK(self.ctrl - prev!.ctrl);
+        const sep = Math.min(
+          Math.min(cap, this.kinkGapTarget(self.chain, prev!.ctrl, 1)),
+          gap + KINK_SEP_RATE * mobility
+        );
+        lo = Math.max(lo, sep - gap);
+      }
+      if (kNext) {
+        const gap = cycK(next!.ctrl - self.ctrl);
+        const sep = Math.min(
+          Math.min(cap, this.kinkGapTarget(self.chain, next!.ctrl, -1)),
+          gap + KINK_SEP_RATE * mobility
+        );
+        hi = Math.min(hi, gap - sep);
+      }
+      // A fused joint beside a kink pass carries the jn ratchet (same
+      // form, same rate). Two ratchets on opposite sides must never take
+      // material from each other's UNMET budget: applied in sequence the
+      // later one wins, and both orders were measured failing - jn last
+      // walked a joint-adjacent kink back into its loop (8 -> 6.8 ctrl:
+      // the lasso drain again, by another route), kink last parked the
+      // joint on the crossing (its bridge arm rode the kink's other pass
+      // as a standing rider; the fabric never slept). So they intersect:
+      // each yields only slack above its own budget, and when both are
+      // short the pass HOLDS (neither advances).
+      if (self.jnPrevCtrl !== undefined || self.jnNextCtrl !== undefined) {
+        let budget = this.jnSep;
+        if (self.jnPrevCtrl !== undefined && self.jnNextCtrl !== undefined) {
+          budget = Math.min(budget, cycK(self.jnNextCtrl - self.jnPrevCtrl) / 2);
+        }
+        if (self.jnPrevCtrl !== undefined) {
+          const gap = cycK(self.ctrl - self.jnPrevCtrl);
+          const sep = Math.min(budget, gap + JN_SEP_RATE * mobility);
+          lo = Math.max(lo, sep - gap);
+        }
+        if (self.jnNextCtrl !== undefined) {
+          const gap = cycK(self.jnNextCtrl - self.ctrl);
+          const sep = Math.min(budget, gap + JN_SEP_RATE * mobility);
+          hi = Math.min(hi, gap - sep);
+        }
+      }
+      // Same for a TWIST twin on the outer side (a second self-crossing
+      // bracketing the kink - the lattice's curl-plus-twist motif): the
+      // twist ratchet's soft part (above MIN_PASS_SEPARATION) joins the
+      // intersection instead of outranking it from the ordering clamps -
+      // at tw 0.64 its 3.3-ctrl budget conveyed a measured kink's end
+      // pass back into the loop at the twist rate (8.34 -> 8.01 ctrl).
+      // The hard MIN_PASS_SEPARATION part stays in the ordering clamps.
+      if (!kPrev && this.twistBias.get(self)?.has(prev!)) {
+        const gap = cycK(self.ctrl - prev!.ctrl);
+        const sep = Math.min(this.twistSep, gap + TWIST_SEP_RATE * mobility);
+        lo = Math.max(lo, sep - gap);
+      }
+      if (!kNext && this.twistBias.get(self)?.has(next!)) {
+        const gap = cycK(next!.ctrl - self.ctrl);
+        const sep = Math.min(this.twistSep, gap + TWIST_SEP_RATE * mobility);
+        hi = Math.min(hi, gap - sep);
+      }
+      const o = f - self.ctrl;
+      f = self.ctrl + (lo <= hi ? Math.max(lo, Math.min(hi, o)) : 0);
+    } else if (self.jnPrevCtrl !== undefined || self.jnNextCtrl !== undefined) {
+      // JUNCTION material budget (P4 fabric; see JN_MIN_SEPARATION): a
+      // fused joint is a FIXED virtual neighbor - this pass keeps at
+      // least jnSep of thread between its binding and the joint, with
+      // the floor rising from the CURRENT gap as a rate-limited,
+      // mobility-scaled ratchet (the P3.39 twist pattern: a pinned
+      // pass's standing push stays sub-stick, and the friction weld
+      // strangles it as the contact quiets). Deliberately BEFORE the
+      // pass-ordering clamps below, so kink/twist/ordering floors always
+      // win conflicts - the budget may park unconverged, never force.
+      // Knot mode sets no jn records, so this is structurally absent.
+      // (Kink passes take the branch above, which applies the same jn
+      // floors intersected with the kink eye's.)
       const cycJ = (d: number): number => ((d % len) + len) % len;
       // Between TWO joints the corridor can be too short for both full
       // budgets (a lattice J-X-J corridor is 4.0 ctrl vs a 2*jnSep
@@ -1600,8 +1937,6 @@ export class ParticleSystem {
         if (cycJ(self.jnNextCtrl - f) < sep) f = self.jnNextCtrl - sep;
       }
     }
-    const prev = this.passPrev.get(self);
-    const next = this.passNext.get(self);
     // Each side clamps INDEPENDENTLY, skipping only a SELF-linked side.
     // buildPassOrder unlinks an OPEN chain's seam-straddling pair by
     // pointing each side at itself, so its FIRST pass has prev === self
@@ -1628,10 +1963,13 @@ export class ParticleSystem {
       // graduated friction weld can strangle it (a full-authority snap
       // pinned fat seed 42424242 at mv 1.6e-2 forever - the P3.31
       // pump shape).
+      // (A kink pass already applied its twin's soft twist ratchet in the
+      // eye intersection above; only the hard floor remains here.)
+      const kinkPass = kPrev || kNext;
       const sepOf = (nb: CrossingPass, gap: number): number =>
         nb === self.partner
           ? this.kinkSep
-          : this.twistBias.get(self)?.has(nb)
+          : !kinkPass && this.twistBias.get(self)?.has(nb)
             ? Math.max(
                 MIN_PASS_SEPARATION,
                 Math.min(this.twistSep, gap + TWIST_SEP_RATE * mobility)
@@ -1778,6 +2116,13 @@ export class ParticleSystem {
       KINK_MIN_SEPARATION,
       tuning.threadWidth * KINK_SEP_PER_WIDTH
     );
+    // In LATTICE units at the SETTLED rest scale: the budget is the
+    // resting eye's, and measuring it at the live ramp (restScale ~1 for
+    // the first ~0.6 s - the only window the slides run in before the
+    // contacts go static) made the target the lattice loop itself.
+    this.kinkEyeLattice =
+      Math.max(KINK_EYE_ARC_MIN, tuning.threadWidth * KINK_EYE_ARC_PER_WIDTH) /
+      shrink;
     this.twistSep = Math.max(
       TWIST_MIN_SEPARATION,
       tuning.threadWidth * TWIST_SEP_PER_WIDTH
@@ -1794,6 +2139,14 @@ export class ParticleSystem {
       collisionDist * 1.02,
       (REPULSE_DIST_TAUT + (REPULSE_DIST_LOOSE - REPULSE_DIST_TAUT) * slack) *
         tuning.repulsion
+    );
+
+    // Kink eye pressure distance (see KINK_EYE_DIST_PER_WIDTH): never
+    // below the knot's own spacing, so an eye is at least as open as the
+    // gap between any two threads.
+    const kinkEyeDist = Math.max(
+      repulseDist,
+      tuning.threadWidth * KINK_EYE_DIST_PER_WIDTH
     );
 
     // Slide bindings toward the other thread's current point, record each
@@ -1866,6 +2219,9 @@ export class ParticleSystem {
       this.zPos[i] += (target - this.zPos[i]) * Z_EASE;
     }
     this.updatePassCover();
+    // Bindings are final for this substep: refresh the kink loops (eye
+    // pressure + fairing exemption read them).
+    if (this.kinks.length > 0) this.updateKinkLoops();
     this.probe("slide+transversality");
 
     for (let iter = 0; iter < CONSTRAINT_ITERATIONS; iter++) {
@@ -1907,6 +2263,9 @@ export class ParticleSystem {
         repulseDist,
         REPULSION_STIFFNESS
       );
+      if (this.kinks.length > 0) {
+        this.applyKinkEyePressure(kinkEyeDist, REPULSION_STIFFNESS);
+      }
       this.probe("repulsion");
       // Hard 3D floor: no two threads within the margin in 3D, ever. The
       // collector gathers tunneled (properly intersecting) pairs so the
@@ -2013,8 +2372,15 @@ export class ParticleSystem {
     // Laplacian fairing: nudge every particle toward its chain neighbors'
     // midpoint, evening out curvature so threads read as smooth continuous
     // curves (the structural springs preserve length against shrinkage).
+    // Kink loops are EXEMPT: on a closed loop the umbrella step is pure
+    // curve-shortening - it was the dominant eye-closing force at rest
+    // (measured -21.6e-3 per loop particle per substep at the default
+    // smooth 0.75, against bending's +26.5e-3 holding the eye open), and a
+    // loop has no straightening left for it to do. Bending still evens the
+    // loop's curvature.
     if (tuning.smooth > 0) {
       const k = tuning.smooth * FAIRING_MAX * settle;
+      const kinkOf = this.topology.kinkOf;
       this.chains.forEach((chain, chainIdx) => {
         const len = chain.length;
         const brk = this.chainBreakAfter[chainIdx]; // -1 closed.
@@ -2023,6 +2389,7 @@ export class ParticleSystem {
           // the removed seam (closed => brk -1 => never skips).
           if (i === brk || (i - 1 + len) % len === brk) continue;
           const p = chain[i];
+          if (kinkOf !== undefined && kinkOf[p] >= 0) continue;
           const a = chain[(i - 1 + len) % len];
           const b = chain[(i + 1) % len];
           this.positions[p * 2] +=
