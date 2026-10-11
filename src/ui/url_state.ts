@@ -586,9 +586,10 @@ export function encodeParams(params: UrlParams): string {
 function encodeValue(value: number | string | boolean): string {
   if (typeof value === "boolean") return value ? "1" : "0";
   if (typeof value === "string") return value.replace("#", "");
-  // toPrecision drops the float noise slider steps leave behind
-  // (1.4500000000000002); the leading zero goes (".25").
-  const s = String(Number(value.toPrecision(10)));
+  // Rounding to 6 decimals drops the float noise slider steps leave behind
+  // (1.4500000000000002, and 1.7e-17 for a zero); the leading zero goes
+  // (".25").
+  const s = String(Math.round(value * 1e6) / 1e6);
   if (s.startsWith("0.")) return s.slice(1);
   if (s.startsWith("-0.")) return "-" + s.slice(2);
   return s;
