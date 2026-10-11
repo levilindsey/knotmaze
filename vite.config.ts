@@ -31,4 +31,8 @@ export default defineConfig({
       new Date().toISOString().slice(0, 16).replace("T", " ")
     ),
   },
+  // Agent worktrees live under .claude/worktrees/ - a checkout there writes
+  // an index.html and a tsconfig.json, and the dev server answered with a
+  // forced full reload of every open page (a phone mid-maze lost its game).
+  server: { watch: { ignored: ["**/.claude/**"] } },
 });
