@@ -1,4 +1,5 @@
 import { Application, Container } from "pixi.js";
+import type { Ticker } from "pixi.js";
 import { generateLatticeKnotwork } from "./core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "./core/maze_plan";
 import { buildSectionField, setGamutConfig } from "./core/section_colors";
@@ -61,6 +62,147 @@ const FOLLOW_W = 2.4;
 const PRE_SIM_SECONDS = 1.2;
 const PRE_SIM_WALL_MS = 450;
 
+// PHYSICS OFF (the `physics` param unchecked): every build settles HIDDEN
+// behind the loading indicator - normal step() calls at a virtual 60 fps,
+// in SETTLE_CHUNK_MS slices per animation frame so the page stays live -
+// until the regular sleep gate trips, then the simulation stops for good
+// and the appearance animation plays over the frozen layout. A knot that
+// never trips the gate (the rare loud attractor) freezes anyway after
+// LOAD_SIM_CAP simulated seconds - a SIMULATED cap, so a slow phone still
+// gets a settled layout (a 9 s wall cap froze one at 1.1 sim-s under 4x
+// CPU throttle, mid-relaxation) - and LOAD_WALL_CAP_MS is only the last
+// resort. A later visible re-settle (unchecking while awake, or a physics
+// slider moved while frozen) gives up after SETTLE_WALL_CAP_MS.
+const SETTLE_CHUNK_MS = 22;
+const LOAD_SIM_CAP = 10;
+const LOAD_WALL_CAP_MS = 45000;
+const SETTLE_WALL_CAP_MS = 12000;
+
+// RENDER-ONLY PLUCK input (see render/pluck_overlay.ts): a press that
+// stays within the slop (CSS px, per pointer type) until release is a TAP
+// - it plucks, touching no physics; moving past it commits a tug (or, with
+// physics off, a camera pan). Taps sound at TAP_STRENGTH.
+const TAP_SLOP_PX: Record<string, number> = { mouse: 4, pen: 6, touch: 10 };
+const TAP_STRENGTH = 0.55;
+// Lobes kept each side of the plucked one: the fabric walk run (capped)
+// and the local window used in knot mode / off the walk graph.
+const RUN_REACH = 6;
+const LOBE_REACH = 2;
+
+// The loading indicator: a trefoil knot (with real over/under gaps,
+// alternating along the strand like the app's own weave) turning slowly in
+// the middle of the screen. No text - it reads in any language. Rotation
+// and breathing are CSS transforms, which the compositor animates even
+// while a settle slice keeps the main thread busy.
+function createLoader(): { show: () => void; hide: () => void; el: HTMLElement } {
+  const N = 240;
+  const P: Array<[number, number]> = [];
+  for (let i = 0; i < N; i++) {
+    const t = (i / N) * Math.PI * 2;
+    P.push([
+      Math.sin(t) + 2 * Math.sin(2 * t),
+      -(Math.cos(t) - 2 * Math.cos(2 * t)),
+    ]);
+  }
+  // Self-intersections between non-adjacent chords -> crossing events
+  // (parameter along the strand), then over/under alternating in order.
+  const events: Array<{ s: number; id: number }> = [];
+  let id = 0;
+  for (let i = 0; i < N; i++) {
+    const [ax, ay] = P[i];
+    const [bx, by] = P[(i + 1) % N];
+    for (let j = i + 2; j < N; j++) {
+      if (i === 0 && j === N - 1) continue;
+      const [cx, cy] = P[j];
+      const [dx, dy] = P[(j + 1) % N];
+      const den = (bx - ax) * (dy - cy) - (by - ay) * (dx - cx);
+      if (Math.abs(den) < 1e-12) continue;
+      const u = ((cx - ax) * (dy - cy) - (cy - ay) * (dx - cx)) / den;
+      const v = ((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) / den;
+      if (u < 0 || u >= 1 || v < 0 || v >= 1) continue;
+      events.push({ s: i + u, id }, { s: j + v, id });
+      id++;
+    }
+  }
+  events.sort((a, b) => a.s - b.s);
+  // Every other event (along the strand) dives UNDER: cut a gap there,
+  // 0.6 units of curve each side (the strand is 0.42 wide).
+  let curve = 0;
+  for (let i = 0; i < N; i++) {
+    const [ax, ay] = P[i];
+    const [bx, by] = P[(i + 1) % N];
+    curve += Math.hypot(bx - ax, by - ay);
+  }
+  const GAP = 0.6 / (curve / N);
+  const under = events.filter((_, k) => k % 2 === 1).map((e) => e.s);
+  const inGap = (s: number): boolean =>
+    under.some((g) => {
+      const d = Math.abs(s - g);
+      return Math.min(d, N - d) < GAP;
+    });
+  const pieces: string[] = [];
+  let cur: string[] = [];
+  // Start just past a gap so no piece straddles the parameter seam.
+  const s0 = under.length > 0 ? Math.ceil(under[0] + GAP) : 0;
+  for (let k = 0; k <= N; k++) {
+    const s = (s0 + k) % N;
+    if (inGap(s)) {
+      if (cur.length > 1) pieces.push("M" + cur.join("L"));
+      cur = [];
+      continue;
+    }
+    cur.push(`${P[s][0].toFixed(3)} ${P[s][1].toFixed(3)}`);
+  }
+  if (cur.length > 1) pieces.push("M" + cur.join("L"));
+  const el = document.createElement("div");
+  el.id = "knot-loading";
+  el.setAttribute("role", "progressbar");
+  el.setAttribute("aria-busy", "true");
+  el.setAttribute("aria-label", "Loading");
+  el.style.cssText =
+    "position:fixed;inset:0;display:flex;align-items:center;" +
+    "justify-content:center;pointer-events:none;z-index:15;opacity:0;" +
+    "visibility:hidden;transition:opacity .25s ease,visibility 0s .25s";
+  const style = document.createElement("style");
+  style.textContent =
+    "@keyframes kl-spin{to{transform:rotate(360deg)}}" +
+    "@keyframes kl-breathe{0%,100%{transform:scale(.9);opacity:.75}" +
+    "50%{transform:scale(1.04);opacity:1}}" +
+    "#knot-loading .kl-b{animation:kl-breathe 1.6s ease-in-out infinite;" +
+    "will-change:transform,opacity}" +
+    "#knot-loading svg{animation:kl-spin 3.2s linear infinite;" +
+    "will-change:transform;overflow:visible}" +
+    "@media (prefers-reduced-motion:reduce){#knot-loading svg" +
+    "{animation-duration:12s}#knot-loading .kl-b{animation:none}}";
+  document.head.appendChild(style);
+  el.innerHTML =
+    '<div class="kl-b"><svg width="76" height="76" viewBox="-4 -4 8 8" ' +
+    'aria-hidden="true"><g fill="none" stroke="#e7c56f" ' +
+    'stroke-width="0.42" stroke-linecap="round" stroke-linejoin="round">' +
+    pieces.map((d) => `<path d="${d}"/>`).join("") +
+    "</g></svg></div>";
+  document.body.appendChild(el);
+  let timer = 0;
+  return {
+    el,
+    // A short delay keeps fast settles from flashing the indicator.
+    show: () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        el.style.transition = "opacity .25s ease,visibility 0s";
+        el.style.visibility = "visible";
+        el.style.opacity = "1";
+      }, 120);
+    },
+    hide: () => {
+      window.clearTimeout(timer);
+      el.style.transition = "opacity .25s ease,visibility 0s .25s";
+      el.style.opacity = "0";
+      el.style.visibility = "hidden";
+    },
+  };
+}
+
 const app = new Application();
 
 async function main(): Promise<void> {
@@ -100,6 +242,16 @@ async function main(): Promise<void> {
     showMazeStats: mazeStatsShown,
   };
   const synth = new KnotSynth();
+  // prefers-reduced-motion (live): render-only plucks drop the strobe ghost
+  // and the attack, swing smaller and settle sooner (WCAG 2.3.3).
+  const motionQuery =
+    typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)")
+      : null;
+  let reducedMotion = motionQuery?.matches ?? false;
+  motionQuery?.addEventListener?.("change", (e) => {
+    reducedMotion = e.matches;
+  });
 
   const root = new Container();
   app.stage.addChild(root);
@@ -117,6 +269,65 @@ async function main(): Promise<void> {
   // Stage 22: the running appearance animation (null = instant / done
   // long ago). Rebuilds and "Replay settle" restart it.
   let reveal: RevealAnimator | null = null;
+
+  // PHYSICS MODE. live = physics on (today's behavior: awake until the
+  // sleep gate, woken by input). With the `physics` param off: loading =
+  // the hidden chunked settle behind the indicator; settling = a VISIBLE
+  // settle-then-freeze (unchecked while awake, or a physics slider moved
+  // while frozen); frozen = no ps.step() at all - only render-side motion
+  // (flow, pulses, traversal, the reveal, plucks) runs.
+  type PhysState = "live" | "loading" | "settling" | "frozen";
+  let physState: PhysState = "live";
+  let loadWall0 = 0;
+  let loadStill = 0;
+  let loadMs = 0; // Last hidden load's wall time (diagnostics)...
+  let loadStepMs = 0; // ...of which inside ps.step()...
+  let loadSteps = 0; // ...over this many virtual frames...
+  let loadFrames = 0; // ...across this many real frames.
+  let settleWall0 = 0;
+  // Physics inputs the frozen layout was settled with: a change while
+  // frozen re-settles (visibly) instead of being silently ignored.
+  let frozenSig = "";
+  // ps.step() calls ever made (probes: physics off must add none).
+  let stepCount = 0;
+  const physicsTuning = (): {
+    temperature: number;
+    slack: number;
+    drag: number;
+    repulsion: number;
+    bend: number;
+    smooth: number;
+    stiffness: number;
+    gridAlign: number;
+    threadWidth: number;
+  } => ({
+    // Physics off never agitates: temperature would keep it from settling.
+    temperature: params.physics ? settings.temperature : 0,
+    slack: params.slack,
+    drag: params.drag,
+    repulsion: params.repulsion,
+    bend: params.bend,
+    smooth: params.smooth,
+    stiffness: params.stiffness,
+    gridAlign: params.gridAlign,
+    threadWidth: params.threadWidth,
+  });
+  const physSig = (): string => {
+    const t = physicsTuning();
+    return [
+      t.slack,
+      t.drag,
+      t.repulsion,
+      t.bend,
+      t.smooth,
+      t.stiffness,
+      t.gridAlign,
+      t.threadWidth,
+    ].join(",");
+  };
+  // Tugs exist only while the physics runs live.
+  const physicsLive = (): boolean => params.physics && physState === "live";
+  const loader = createLoader();
 
   // Stage 20 audio: every segment (walk-graph run in fabric mode, whole
   // strand otherwise) owns one pitch from the chosen space, assigned by
@@ -385,8 +596,9 @@ async function main(): Promise<void> {
   // (hidden - nothing has rendered yet on a rebuild, and the reveal masks
   // start collapsed), then hands the renderer a fresh animator. Instant
   // mode detaches everything: the render path is byte-identical to the
-  // pre-Stage-22 build.
-  function startAppearance(): void {
+  // pre-Stage-22 build. With physics off the hidden load already settled
+  // the layout completely (preSim false).
+  function startAppearance(preSim = true): void {
     if (!ps || !renderer) return;
     if (params.appearSequence === "instant") {
       reveal = null;
@@ -394,24 +606,16 @@ async function main(): Promise<void> {
       if (fabric) fabric.revealQuery = null;
       return;
     }
-    const tuning = {
-      temperature: settings.temperature,
-      slack: params.slack,
-      drag: params.drag,
-      repulsion: params.repulsion,
-      bend: params.bend,
-      smooth: params.smooth,
-      stiffness: params.stiffness,
-      gridAlign: params.gridAlign,
-      threadWidth: params.threadWidth,
-    };
+    const tuning = physicsTuning();
     const wall0 = performance.now();
     const simTarget = ps.simTime + PRE_SIM_SECONDS;
     while (
+      preSim &&
       ps.simTime < simTarget &&
       performance.now() - wall0 < PRE_SIM_WALL_MS
     ) {
       ps.step(0.1, tuning);
+      stepCount++;
     }
     reveal = new RevealAnimator(
       params.appearSequence,
@@ -428,6 +632,102 @@ async function main(): Promise<void> {
       const r = renderer;
       fabric.revealQuery = (chain, ctrl) => r.revealMulAtCtrl(chain, ctrl);
     }
+  }
+
+  // PHYSICS OFF, step 1: hide the scene and settle it in slices (the
+  // ticker calls loadingTick every frame) behind the loading indicator.
+  function beginLoading(): void {
+    if (!ps || !renderer) return;
+    physState = "loading";
+    loadWall0 = performance.now();
+    loadStill = 0;
+    loadStepMs = 0;
+    loadSteps = 0;
+    loadFrames = 0;
+    reveal = null;
+    renderer.beginReveal(null);
+    if (fabric) fabric.revealQuery = null;
+    root.visible = false;
+    loader.show();
+  }
+
+  // One slice of the hidden settle: virtual 60 fps frames through the
+  // normal step() and the normal sleep gate, for SETTLE_CHUNK_MS.
+  function loadingTick(): void {
+    if (!ps) return;
+    const t0 = performance.now();
+    const tuning = physicsTuning();
+    tuning.temperature = 0;
+    loadFrames++;
+    do {
+      const s0 = performance.now();
+      ps.step(1 / 60, tuning);
+      loadStepMs += performance.now() - s0;
+      loadSteps++;
+      stepCount++;
+      if (!Number.isFinite(ps.maxMove)) {
+        halted = true;
+        loader.hide();
+        root.visible = true;
+        perfLine = " | HALTED: physics went non-finite (regenerate to reset)";
+        console.error("KnotMaze: physics state went non-finite; simulation halted.");
+        return;
+      }
+      if (quietNow(true)) {
+        if (++loadStill >= QUIET_FRAMES) {
+          finishLoading();
+          return;
+        }
+      } else {
+        loadStill = 0;
+      }
+      if (
+        ps.simTime > LOAD_SIM_CAP ||
+        performance.now() - loadWall0 > LOAD_WALL_CAP_MS
+      ) {
+        finishLoading();
+        return;
+      }
+    } while (performance.now() - t0 < SETTLE_CHUNK_MS);
+  }
+
+  // PHYSICS OFF, step 2: the layout is final. Build the render once, start
+  // the appearance animation over it, show the scene, and stop simulating
+  // (or go live, if physics was switched back on meanwhile).
+  function finishLoading(): void {
+    if (!ps || !renderer) return;
+    loadMs = performance.now() - loadWall0;
+    // Reveal first, so the very first visible frame already wears its
+    // (collapsed) masks - no one-frame flash of the finished knot.
+    startAppearance(false);
+    renderer.update();
+    if (fabric && fabricController) fabric.update(fabricController);
+    fitToScreen();
+    root.visible = true;
+    loader.hide();
+    stillFrames = 0;
+    if (params.physics) {
+      physState = "live";
+      asleep = false;
+    } else {
+      physState = "frozen";
+      asleep = true;
+      frozenSig = physSig();
+    }
+  }
+
+  // "Replay settle": back to the lattice state, settle and appear again.
+  function replaySettle(): void {
+    ps?.reset();
+    renderer?.plucks.clear();
+    if (!params.physics) {
+      // Physics off: the replay is a fresh hidden load + reveal.
+      beginLoading();
+      return;
+    }
+    // Replay the appearance too: fresh pre-roll, fresh reveal clock.
+    startAppearance();
+    wake();
   }
 
   function rebuild(): void {
@@ -547,8 +847,14 @@ async function main(): Promise<void> {
 
     // Appearance animation: pre-settle + attach the reveal BEFORE the
     // first frame renders (and before the viewport fit below, which then
-    // frames the calmer pre-rolled bounds).
-    startAppearance();
+    // frames the calmer pre-rolled bounds). Physics off: settle the whole
+    // layout hidden first (finishLoading starts the reveal).
+    if (params.physics) {
+      physState = "live";
+      startAppearance();
+    } else {
+      beginLoading();
+    }
 
     debug = new DebugRenderer();
     debug.render(graph);
@@ -637,26 +943,52 @@ async function main(): Promise<void> {
     songNextAt = 0;
   }
 
-  // Pitch of the segment under a grabbed particle. Chains outside the walk
-  // graph (decorative culled loops) hash onto the assignment.
-  function freqForGrab(chain: number, particle: number): number {
-    if (!audioAssign || !ps) return 220;
-    const n = audioAssign.segFreq.length;
-    if (n === 0) return 220;
-    if (!audioRuns) return audioAssign.segFreq[chain % n];
+  // The walk run (fabric) holding a chain ctrl, or null (knot mode, or a
+  // decorative chain outside the walk graph).
+  function runForCtrl(
+    chain: number,
+    ctrl: number
+  ): { c0: number; c1: number; seg: number } | null {
+    if (!audioRuns || !ps) return null;
     const list = audioRuns.get(chain);
-    if (!list || list.length === 0) return audioAssign.segFreq[chain % n];
-    const ctrl = ps.chains[chain].indexOf(particle);
+    if (!list) return null;
     const len = ps.chains[chain].length;
     for (const r of list) {
       if (
         (ctrl >= r.c0 && ctrl <= r.c1) ||
         (ctrl + len >= r.c0 && ctrl + len <= r.c1)
       ) {
-        return audioAssign.segFreq[r.seg];
+        return r;
       }
     }
-    return audioAssign.segFreq[list[0].seg];
+    return null;
+  }
+
+  // Pitch of the segment at a chain ctrl. Chains outside the walk graph
+  // (decorative culled loops) hash onto the assignment.
+  function freqForCtrl(chain: number, ctrl: number): number {
+    if (!audioAssign || !ps) return 220;
+    const n = audioAssign.segFreq.length;
+    if (n === 0) return 220;
+    if (!audioRuns) return audioAssign.segFreq[chain % n];
+    const list = audioRuns.get(chain);
+    if (!list || list.length === 0) return audioAssign.segFreq[chain % n];
+    const r = runForCtrl(chain, ctrl);
+    return audioAssign.segFreq[(r ?? list[0]).seg];
+  }
+
+  // What a pluck at a chain ctrl sets ringing (the pluckReach param):
+  // the whole walk run (capped at RUN_REACH lobes each side) - exactly the
+  // segment the audio sounds - or, in knot mode and off the walk graph,
+  // the plucked lobe +-LOBE_REACH; "lobe" = only the plucked lobe.
+  function pluckUnit(
+    chain: number,
+    ctrl: number
+  ): { spanCtrl: [number, number] | null; reach: number } {
+    if (params.pluckReach === "lobe") return { spanCtrl: null, reach: 0 };
+    const r = runForCtrl(chain, ctrl);
+    if (r) return { spanCtrl: [r.c0, r.c1], reach: RUN_REACH };
+    return { spanCtrl: null, reach: LOBE_REACH };
   }
 
   buildPanel(params, settings, {
@@ -675,11 +1007,10 @@ async function main(): Promise<void> {
       rebuild();
       wake();
     },
-    onReplaySettle: () => {
-      ps?.reset();
-      // Replay the appearance too: fresh pre-roll, fresh reveal clock.
-      startAppearance();
-      wake();
+    onReplaySettle: () => replaySettle(),
+    onPhysicsToggle: () => {
+      writeParams(params);
+      applyPhysicsMode();
     },
     onStatsToggle: (visible) => {
       stamp.style.display = visible ? "" : "none";
@@ -702,6 +1033,7 @@ async function main(): Promise<void> {
     },
     onSlackChange: () => {
       writeParams(params);
+      physicsInputsChanged();
       wake();
     },
     onStyleChange: () => {
@@ -709,6 +1041,7 @@ async function main(): Promise<void> {
       fabric?.setWidths(params.threadWidth);
       if (fabric && fabricController) fabric.update(fabricController);
       writeParams(params);
+      physicsInputsChanged();
       wake();
     },
     onTemperatureChange: () => wake(),
@@ -904,7 +1237,10 @@ async function main(): Promise<void> {
       fabric.update(fabricController);
     }
     updateHud();
-    wake();
+    // No wake(): a move touches markers, paint and the yarn only, and the
+    // traversal (tickAnim) runs in every ticker branch - waking cost ~45
+    // frames of full simulation per move (about a second at the heavy
+    // settings), for nothing.
     return result !== "reject";
   };
 
@@ -918,28 +1254,16 @@ async function main(): Promise<void> {
   // (exponential at snapBack 1/s) before the grab frees; the pluck voice
   // fires at POINTERUP from the tracked drag speed, since by actual
   // release time the eased thread is nearly still.
-  // Stage 21 extends the release with a STRING mode: instead of the soft
-  // exponential ease home, the target snaps back sharply and rings - a
-  // damped cosine along the release axis (origin-crossing within ~50ms,
-  // ~4 visible cycles), the visible frequency rising gently with the
-  // segment's pitch. Only the grabbed point is driven; the springs
-  // low-pass the motion into the neighbors, so the ring stays local to
-  // the segment while the pull-out still propagated like any drag.
+  // A STRING-style release (pluckStyle string, the default) frees the
+  // physics at once - the knot's natural snap-back propagates as with any
+  // drag - and adds the RENDER-ONLY vibration (render/pluck_overlay.ts) on
+  // the released unit. Taps and auto plucks are that vibration alone:
+  // they never grab, drag or wake the physics.
   const grabOrigin = new Float64Array(2);
   const dragPos = new Float64Array(2);
   let dragVel = 0;
   let lastMoveT = 0;
   let snapMode: "none" | "soft" = "none";
-  // In-flight auto-pluck gesture (random/music modes): a short scripted
-  // pull-out on the shared grab machinery, released into string mode.
-  let autoGesture: {
-    t: number;
-    dur: number;
-    nx: number;
-    ny: number;
-    amp: number;
-    hz: number;
-  } | null = null;
 
   const boundedDragTo = (x: number, y: number): void => {
     if (!ps) return;
@@ -953,91 +1277,45 @@ async function main(): Promise<void> {
     ps.dragTo(dragPos[0], dragPos[1]);
   };
 
-  // End any release animation / auto gesture immediately (new grab,
-  // regenerate): free the grab with no sound - the pluck already played.
+  // End any release animation immediately (new grab, regenerate): free
+  // the grab with no sound - the pluck already played.
   const cancelSnap = (): void => {
-    if (autoGesture) {
-      autoGesture = null;
-      ps?.release();
-    }
     if (snapMode === "none") return;
     snapMode = "none";
     ps?.release();
   };
 
-  // Visible ring frequency from the audible pitch: low strings wobble
-  // slow, high strings shimmer. Band raised 3-8 -> 5-13 Hz ("too loose
-  // and wobbly, not enough like an actual plucked string").
-  const visibleHz = (freq: number): number =>
-    Math.min(
-      13,
-      Math.max(5, 5.5 + 1.6 * Math.log2(Math.max(55, freq) / 110))
-    );
-
-  // Begin the release animation for whatever is currently displaced.
-  const beginRelease = (style: "soft" | "string", hz: number): void => {
-    const dx = dragPos[0] - grabOrigin[0];
-    const dy = dragPos[1] - grabOrigin[1];
-    let amp = Math.hypot(dx, dy);
-    let ax = amp > 1e-6 ? dx / amp : 1;
-    let ay = amp > 1e-6 ? dy / amp : 0;
-    // Tap-plucks: the audible pluck fires regardless of drag distance, but
-    // a near-zero release offset rang invisibly. Floor the visible
-    // amplitude, swinging across the thread (the transverse axis a real
-    // string rings on; small drags get the same axis - their direction is
-    // pointer noise anyway).
-    if (style === "string" && ps && ps.grabbedParticle >= 0) {
-      const minAmp = Math.max(0.12, params.threadWidth * 0.35);
-      if (amp < minAmp) {
-        const p = ps.grabbedParticle;
-        const pos = ps.positions;
-        const n = pos.length / 2;
-        const p0 = Math.max(0, p - 1);
-        const p1 = Math.min(n - 1, p + 1);
-        const tx = pos[p1 * 2] - pos[p0 * 2];
-        const ty = pos[p1 * 2 + 1] - pos[p0 * 2 + 1];
-        const tl = Math.hypot(tx, ty);
-        if (tl > 1e-6) {
-          ax = -ty / tl;
-          ay = tx / tl;
-        }
-        amp = minAmp;
-      }
-    }
-    if (style === "string" && amp > 0.02 && ps && renderer) {
-      // RENDER-ONLY RING: release the physics IMMEDIATELY (neighbors
-      // feel only the brief natural snap-back - the old grab-driven
-      // oscillation shook the whole neighborhood through the crossing
-      // couplings, the "too much overall jiggle" report) and paint the
-      // visible vibration as a damped standing wave on the render
-      // controls. snappiness scales FREQUENCY ONLY - a taut string
-      // rings fast but just as long, so the decay stays fixed (the
-      // earlier tau tightening made snappy plucks die instantly).
+  // Release the current drag. string: free the physics now and set the
+  // released unit vibrating (amplitude from the release offset, swinging
+  // from the side it was pulled toward); soft: ease home (snapBack).
+  const beginRelease = (style: "soft" | "string", freq: number): void => {
+    if (style === "string" && ps && renderer && ps.grabbedParticle >= 0) {
       const p = ps.grabbedParticle;
-      const px = p >= 0 ? ps.positions[p * 2] : grabOrigin[0];
-      const py = p >= 0 ? ps.positions[p * 2 + 1] : grabOrigin[1];
-      let chain = -1;
-      if (p >= 0) {
-        for (let c = 0; c < ps.chains.length; c++) {
-          if (ps.chains[c].includes(p)) {
-            chain = c;
-            break;
-          }
-        }
+      const chain = ps.chainOfParticle(p);
+      if (chain >= 0) {
+        const arr = ps.chains[chain];
+        const slot = arr.indexOf(p);
+        const dx = dragPos[0] - grabOrigin[0];
+        const dy = dragPos[1] - grabOrigin[1];
+        const off = Math.hypot(dx, dy);
+        // Pulled side, against the thread's local normal (-ty, tx).
+        const len = arr.length;
+        const a = arr[Math.max(0, slot - 1)];
+        const b = arr[Math.min(len - 1, slot + 1)];
+        const tx = ps.positions[b * 2] - ps.positions[a * 2];
+        const ty = ps.positions[b * 2 + 1] - ps.positions[a * 2 + 1];
+        const side = off > 1e-6 && tx * dy - ty * dx < 0 ? -1 : 1;
+        const unit = pluckUnit(chain, slot);
+        renderer.pluck({
+          chain,
+          ctrl: slot,
+          side,
+          gain: Math.max(0.6, Math.min(1.4, off / (1.5 * params.threadWidth))),
+          freq,
+          reach: unit.reach,
+          spanCtrl: unit.spanCtrl,
+        });
       }
-      const s = params.snappiness;
-      renderer.addPluckWave(
-        chain,
-        px,
-        py,
-        ax,
-        ay,
-        Math.min(amp, 0.6),
-        // Capped well under the ~30Hz Nyquist of a 60fps display - past
-        // it the render-sampled ring aliases into a slow beat wobble.
-        Math.min(24, hz * (0.35 + 1.8 * s)),
-        0.55
-      );
       snapMode = "none";
       ps.release();
     } else if (style === "soft" && params.snapBack > 0) {
@@ -1046,6 +1324,30 @@ async function main(): Promise<void> {
       snapMode = "none";
       ps?.release();
     }
+  };
+
+  // A TAP on a thread: the render-only pluck, sounding and vibrating on
+  // RELEASE (how a real pluck works, and what tells a tap from a drag).
+  // Re-picks at the press point so a knot that moved meanwhile still
+  // plucks the thread that is there now.
+  const tapPluck = (x: number, y: number): void => {
+    if (!ps || !renderer) return;
+    const hit = renderer.pickThread(x, y, GRAB_RADIUS);
+    if (!hit) return;
+    const freq = freqForCtrl(hit.chain, hit.ctrl);
+    if (!settings.muted && params.soundMode !== "none") {
+      synth.pluck(freq, TAP_STRENGTH);
+    }
+    const unit = pluckUnit(hit.chain, hit.ctrl);
+    renderer.pluck({
+      chain: hit.chain,
+      arc: hit.arc,
+      side: hit.side,
+      gain: 1,
+      freq,
+      reach: unit.reach,
+      spanCtrl: unit.spanCtrl,
+    });
   };
 
   app.canvas.style.touchAction = "none";
@@ -1076,6 +1378,16 @@ async function main(): Promise<void> {
   } | null = null;
   let dragPan: { id: number; x: number; y: number; moved: number } | null =
     null;
+  // A press on a thread, undecided until it moves past the slop (a tug -
+  // or a pan with physics off) or lifts (a render-only tap-pluck).
+  let pendingPluck: {
+    id: number;
+    slop: number;
+    sx: number;
+    sy: number;
+    x: number;
+    y: number;
+  } | null = null;
   let lastEmptyTap = -1e9;
   const TAP_SLOP = 10; // CSS px a tap may wander and still count.
   const pinchPair = (): [
@@ -1086,11 +1398,12 @@ async function main(): Promise<void> {
     return [it.next().value!, it.next().value!];
   };
   const beginPinch = (): void => {
-    if (ps && ps.grabbedParticle >= 0 && !autoGesture) {
+    if (ps && ps.grabbedParticle >= 0) {
       ps.release();
       snapMode = "none";
     }
     pendingTap = null;
+    pendingPluck = null;
     dragPan = null;
     touchLocked = true;
     const [a, b] = pinchPair();
@@ -1117,6 +1430,9 @@ async function main(): Promise<void> {
     );
     touchCamera();
   };
+  // Over a thread: grab where it can be tugged, a plain pointer where it
+  // can only be plucked (physics off).
+  const threadCursor = (): string => (physicsLive() ? "grab" : "pointer");
   // Nothing to tap or tug at this lattice point (where empty-space
   // gestures - pan, double-tap reset - may take over).
   const emptyAt = (x: number, y: number): boolean =>
@@ -1175,15 +1491,19 @@ async function main(): Promise<void> {
       app.canvas.style.cursor = "grabbing";
       return;
     }
-    wake();
-    cancelSnap();
+    // No wake() here: a press decides nothing yet. Taps never touch the
+    // physics; a committed drag wakes it (pointermove); maze moves and
+    // the inspector wake for themselves.
     const [x, y] = toLattice(e);
     // Alt+click: dump the nearest crossing's render state to the console
     // (diagnostic; makes broken-crossing reports exactly reproducible).
     if (e.altKey) {
       renderer?.requestInspect(x, y);
+      wake();
       return;
     }
+    // While the hidden settle runs there is nothing on screen to touch.
+    if (physState === "loading") return;
     if (params.mazeFabric) {
       if (e.pointerType === "touch") {
         if (
@@ -1198,22 +1518,53 @@ async function main(): Promise<void> {
         return;
       }
     }
-    if (ps.grab(x, y, GRAB_RADIUS) >= 0) {
-      const p = ps.grabbedParticle;
-      grabOrigin[0] = ps.positions[p * 2];
-      grabOrigin[1] = ps.positions[p * 2 + 1];
-      dragPos[0] = grabOrigin[0];
-      dragPos[1] = grabOrigin[1];
-      dragVel = 0;
-      lastMoveT = e.timeStamp;
+    if (
+      ps.nearest(x, y, GRAB_RADIUS) >= 0 ||
+      renderer?.pickThread(x, y, GRAB_RADIUS)
+    ) {
+      // A thread: undecided until it moves past the slop or lifts.
+      pendingPluck = {
+        id: e.pointerId,
+        slop: TAP_SLOP_PX[e.pointerType] ?? TAP_SLOP,
+        sx: e.clientX,
+        sy: e.clientY,
+        x,
+        y,
+      };
       app.canvas.setPointerCapture(e.pointerId);
-      app.canvas.style.cursor = "grabbing";
     } else {
       // Empty space: drag to pan the camera.
       dragPan = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 };
       app.canvas.setPointerCapture(e.pointerId);
     }
   });
+
+  // A pending press moved past its slop: commit a TUG (grab at the PRESSED
+  // point - the bounded target then catches up to the pointer smoothly), or
+  // with physics off, a camera PAN from the press point.
+  const commitPendingDrag = (e: PointerEvent): void => {
+    const pp = pendingPluck;
+    pendingPluck = null;
+    if (!pp || !ps) return;
+    if (!physicsLive()) {
+      dragPan = { id: pp.id, x: pp.sx, y: pp.sy, moved: pp.slop + 1 };
+      return;
+    }
+    cancelSnap();
+    if (ps.grab(pp.x, pp.y, GRAB_RADIUS) < 0) {
+      dragPan = { id: pp.id, x: pp.sx, y: pp.sy, moved: pp.slop + 1 };
+      return;
+    }
+    const p = ps.grabbedParticle;
+    grabOrigin[0] = ps.positions[p * 2];
+    grabOrigin[1] = ps.positions[p * 2 + 1];
+    dragPos[0] = grabOrigin[0];
+    dragPos[1] = grabOrigin[1];
+    dragVel = 0;
+    lastMoveT = e.timeStamp;
+    app.canvas.style.cursor = "grabbing";
+    wake();
+  };
   app.canvas.addEventListener("pointermove", (e) => {
     if (!ps) return;
     if (e.pointerType === "touch") {
@@ -1243,6 +1594,16 @@ async function main(): Promise<void> {
       }
       if (touchLocked) return;
     }
+    if (pendingPluck && pendingPluck.id === e.pointerId) {
+      // Within the slop nothing moves: it may still be a tap.
+      if (
+        Math.hypot(e.clientX - pendingPluck.sx, e.clientY - pendingPluck.sy) <=
+        pendingPluck.slop
+      ) {
+        return;
+      }
+      commitPendingDrag(e);
+    }
     if (dragPan && dragPan.id === e.pointerId) {
       const dx = e.clientX - dragPan.x;
       const dy = e.clientY - dragPan.y;
@@ -1256,7 +1617,7 @@ async function main(): Promise<void> {
       return;
     }
     const [x, y] = toLattice(e);
-    if (ps.grabbedParticle >= 0 && snapMode === "none" && !autoGesture) {
+    if (ps.grabbedParticle >= 0 && snapMode === "none") {
       const px = dragPos[0];
       const py = dragPos[1];
       boundedDragTo(x, y);
@@ -1275,11 +1636,11 @@ async function main(): Promise<void> {
         eid >= 0
           ? "pointer"
           : ps.nearest(x, y, GRAB_RADIUS) >= 0
-            ? "grab"
+            ? threadCursor()
             : "default";
     } else {
       app.canvas.style.cursor =
-        ps.nearest(x, y, GRAB_RADIUS) >= 0 ? "grab" : "default";
+        ps.nearest(x, y, GRAB_RADIUS) >= 0 ? threadCursor() : "default";
     }
   });
   const endDrag = (e: PointerEvent): void => {
@@ -1320,14 +1681,23 @@ async function main(): Promise<void> {
       }
       if (touches.size === 0) touchLocked = false;
     }
-    if (ps.grabbedParticle >= 0 && snapMode === "none" && !autoGesture) {
+    if (pendingPluck && pendingPluck.id === e.pointerId) {
+      // Lifted within the slop: a TAP. Cancels (pointercancel, a pinch -
+      // beginPinch drops pendingPluck) never pluck.
+      const pp = pendingPluck;
+      pendingPluck = null;
+      if (e.type === "pointerup") tapPluck(pp.x, pp.y);
+    } else if (ps.grabbedParticle >= 0 && snapMode === "none") {
       wake();
       const chain = ps.chainOfParticle(ps.grabbedParticle);
-      const freq = chain >= 0 ? freqForGrab(chain, ps.grabbedParticle) : 220;
+      const freq =
+        chain >= 0
+          ? freqForCtrl(chain, ps.chains[chain].indexOf(ps.grabbedParticle))
+          : 220;
       if (!settings.muted && params.soundMode !== "none" && chain >= 0) {
-        synth.pluck(freq, Math.min(1, dragVel / 25));
+        synth.pluck(freq, Math.max(0.35, Math.min(1, dragVel / 25)));
       }
-      beginRelease(params.pluckStyle, visibleHz(freq));
+      beginRelease(params.pluckStyle, freq);
     }
     if (app.canvas.hasPointerCapture(e.pointerId)) {
       app.canvas.releasePointerCapture(e.pointerId);
@@ -1337,75 +1707,49 @@ async function main(): Promise<void> {
   app.canvas.addEventListener("pointerup", endDrag);
   app.canvas.addEventListener("pointercancel", endDrag);
 
-  // ---- Stage 20: auto plucks (random + music modes). The sound always
-  // plays; the physical gesture runs only when the thread is free (a
-  // release animation in progress yields - it is post-release cosmetics).
+  // ---- Stage 20: auto plucks (random + music modes), RENDER-ONLY: the
+  // sound plays and the segment's unit vibrates (render/pluck_overlay.ts) -
+  // no grab, no pull, no wake, so they never disturb the knot and may play
+  // during a user drag (only a unit holding the grabbed particle stays
+  // sound-only). The visual waits out the audio output latency so sight
+  // lands on the sound.
   const triggerAutoPluck = (seg: number, freq: number, amp: number): void => {
-    if (!ps || !Number.isFinite(freq)) return;
+    if (!ps || !renderer || !Number.isFinite(freq)) return;
     if (!settings.muted && params.soundMode !== "none") {
       synth.pluck(freq, amp);
     }
-    if (ps.grabbedParticle >= 0 && snapMode === "none" && !autoGesture) {
-      return; // Live user drag owns the thread; sound-only.
-    }
-    cancelSnap();
     const site = audioSegSite[seg];
     if (!site) return;
     const chainArr = ps.chains[site.chain];
     if (!chainArr || chainArr.length === 0) return;
     const len = chainArr.length;
-    const idx = ((Math.round(site.ctrl) % len) + len) % len;
-    const p = chainArr[idx];
-    const px = ps.positions[p * 2];
-    const py = ps.positions[p * 2 + 1];
-    if (ps.grab(px, py, 0.45) < 0) return;
+    // Knot mode: the audio segment is the whole strand - excite a random
+    // place along it (the fixed mid-strand site rang one spot forever).
+    const ctrl = walkGraph ? site.ctrl : Math.random() * len;
+    const unit = pluckUnit(site.chain, ctrl);
+    // A unit the user is holding stays sound-only.
     const g = ps.grabbedParticle;
-    grabOrigin[0] = ps.positions[g * 2];
-    grabOrigin[1] = ps.positions[g * 2 + 1];
-    dragPos[0] = grabOrigin[0];
-    dragPos[1] = grabOrigin[1];
-    dragVel = 0;
-    // Pull perpendicular to the local thread direction.
-    const q = chainArr[(idx + 1) % len];
-    const tx = ps.positions[q * 2] - px;
-    const ty = ps.positions[q * 2 + 1] - py;
-    const tl = Math.hypot(tx, ty) || 1;
-    autoGesture = {
-      t: 0,
-      dur: 0.15,
-      nx: -ty / tl,
-      ny: tx / tl,
-      amp: Math.min(
-        params.tugLimit * params.threadWidth * 0.9,
-        params.threadWidth * 1.15 + 0.08
-      ),
-      hz: visibleHz(freq),
-    };
-    wake();
+    const avoidCtrl =
+      g >= 0 && ps.chainOfParticle(g) === site.chain
+        ? chainArr.indexOf(g)
+        : undefined;
+    renderer.pluck({
+      avoidCtrl,
+      chain: site.chain,
+      ctrl,
+      side: Math.random() < 0.5 ? -1 : 1,
+      // Auto strengths 0.4-0.75 -> amplitude gains 0.75-1.25.
+      gain: Math.max(0.75, Math.min(1.25, 0.75 + ((amp - 0.4) / 0.35) * 0.5)),
+      freq,
+      reach: unit.reach,
+      spanCtrl: unit.spanCtrl,
+      beta: 0.3 + Math.random() * 0.2,
+      delay: synth.outputLatency(),
+    });
   };
 
-  const autoAudioTick = (dt: number): void => {
+  const autoAudioTick = (): void => {
     if (!ps) return;
-    // Advance an in-flight gesture: pull out, then release into string
-    // mode (auto plucks always ring - that is their point).
-    if (autoGesture) {
-      if (ps.grabbedParticle < 0) {
-        autoGesture = null;
-      } else {
-        autoGesture.t += dt;
-        const u = Math.min(1, autoGesture.t / autoGesture.dur);
-        const a = autoGesture.amp * (1 - Math.pow(1 - u, 2));
-        dragPos[0] = grabOrigin[0] + autoGesture.nx * a;
-        dragPos[1] = grabOrigin[1] + autoGesture.ny * a;
-        ps.dragTo(dragPos[0], dragPos[1]);
-        wake();
-        if (u >= 1) {
-          const hz = autoGesture.hz;
-          autoGesture = null;
-          beginRelease("string", hz);
-        }
-      }
-    }
     if (!audioAssign || settings.muted) return;
     const nowS = performance.now() / 1000;
     if (params.soundMode === "random") {
@@ -1473,21 +1817,93 @@ async function main(): Promise<void> {
   // hard-hangs and can't even process a dev-server reload. A halted sim
   // is debuggable; a hung tab is not. Cleared on regenerate.
   let halted = false;
+  // A one-shot render pass requested where nothing else would run
+  // update() (a frozen physics-off scene: width / recolor changes).
+  let renderDirty = false;
   const wake = (): void => {
     stillFrames = 0;
     asleep = false;
+    renderDirty = true;
+  };
+  // The sleep gate's per-frame test (ignoreTemp: physics-off settles never
+  // agitate, so temperature cannot hold them awake).
+  const quietNow = (ignoreTemp: boolean): boolean =>
+    !!ps &&
+    ps.settleComplete &&
+    ps.grabbedParticle < 0 &&
+    (ignoreTemp || settings.temperature === 0) &&
+    ps.maxMove < QUIET_EPS &&
+    // Never freeze on an unrenderable overlap - a standing hard
+    // violation of the anti-riding floor keeps the sim awake (the work
+    // gate is actively resolving it).
+    ps.ridersPending === 0;
+  const startSettling = (): void => {
+    physState = "settling";
+    settleWall0 = performance.now();
+    stillFrames = 0;
+    asleep = false;
+  };
+  const freeze = (): void => {
+    physState = "frozen";
+    asleep = true;
+    frozenSig = physSig();
+  };
+  // The live physics toggle (panel checkbox). OFF: freeze at once if the
+  // knot sleeps, else keep stepping VISIBLY until the gate trips (a soft
+  // snap-back in flight finishes first - the gate needs the grab freed).
+  // ON: wake and run as ever. A hidden load in progress just finishes
+  // into whichever mode is current then (finishLoading).
+  const applyPhysicsMode = (): void => {
+    if (physState === "loading") return;
+    if (params.physics) {
+      physState = "live";
+      wake();
+    } else if (asleep && ps && ps.grabbedParticle < 0) {
+      freeze();
+    } else {
+      startSettling();
+    }
+  };
+  // A physics input moved while frozen: settle (visibly) into the new
+  // layout, then freeze again - a slider must not silently do nothing.
+  const physicsInputsChanged = (): void => {
+    if (physState === "frozen" && physSig() !== frozenSig) startSettling();
   };
 
+  // Main-thread cost of every ticker callback, ms (probes: __knotPerf),
+  // plus running totals since load.
+  const frameCost = new Float32Array(600);
+  let frameCostN = 0;
+  let frameCostTotal = 0;
+
   app.ticker.add((ticker) => {
+    const c0 = performance.now();
+    tick(ticker);
+    const c = performance.now() - c0;
+    frameCost[frameCostN++ % frameCost.length] = c;
+    frameCostTotal += c;
+  });
+
+  const tick = (ticker: Ticker): void => {
     if (!ps || !renderer) return;
     if (halted) return;
 
+    if (physState === "loading") {
+      loadingTick();
+      if (physState === "loading") perfLine = " | loading";
+      updateStamp();
+      return;
+    }
+
     // simSpeed [0, 10]: piecewise-linear multiplier hitting the spec's
-    // pinned points exactly - 0 paused, 1 -> 0.2x, 5 -> 1x, 10 -> 5x.
-    const speedMult =
+    // pinned points exactly - 0 paused, 1 -> 0.2x, 5 -> 1x, 10 -> 5x. A
+    // physics-off settle runs regardless (it must reach its freeze).
+    const rawMult =
       params.simSpeed <= 5
         ? params.simSpeed / 5
         : 1 + (params.simSpeed - 5) * 0.8;
+    const speedMult =
+      physState === "settling" && rawMult === 0 ? 1 : rawMult;
 
     // Stage 22: the appearance reveal advances on WALL time in every
     // branch (awake, asleep, paused). While it runs, the render pass must
@@ -1503,8 +1919,14 @@ async function main(): Promise<void> {
     // paused or asleep - they touch only markers and UV buffers, never
     // physics or splines.
     const fabricTick = (): void => {
-      autoAudioTick(ticker.deltaMS / 1000);
+      autoAudioTick();
       renderer!.cuspRadius = params.cuspRadius;
+      // Render-only pluck look (live; a hand-edited link cannot leave the
+      // panel's ranges).
+      renderer!.plucks.size = Math.max(0, Math.min(2, params.pluckSize));
+      renderer!.plucks.ghost = Math.max(0, Math.min(1, params.pluckGhost));
+      renderer!.plucks.sustain = params.sustain;
+      renderer!.plucks.reducedMotion = reducedMotion;
       // Applies to knot mode too: the erase grids re-read it in the next
       // renderer.update(), and the slider's onSlackChange wakes the sim.
       renderer!.fadeLength = params.fadeLength;
@@ -1534,6 +1956,8 @@ async function main(): Promise<void> {
         }
       }
       renderer!.tickPaint(ticker.deltaMS / 1000);
+      // After the paint pass: fabric pluck colors read this frame's paint.
+      renderer!.tickPlucks(ticker.deltaMS / 1000);
       updateCamera(ticker.deltaMS / 1000);
     };
 
@@ -1545,12 +1969,14 @@ async function main(): Promise<void> {
     // (no render at all while asleep). The appearance reveal rides the
     // same channel: its masks animate in update(), so while revealing the
     // render pass runs regardless of flowStrength.
-    const flowRender = (): void => {
+    // `force` = a requested one-shot pass (renderDirty), whatever the flow.
+    const flowRender = (force = false): void => {
       // Appearance FX that outlive the reveal (materialize fades, the
       // rainbow swell) gate crossings and reshape ribbons in update() -
       // asleep at flowStrength 0 it must keep running until they settle,
       // or crossings stay hidden until the next wake.
       if (
+        !force &&
         params.flowStrength <= 0 &&
         !revealing &&
         !renderer!.needsFxRender()
@@ -1562,9 +1988,36 @@ async function main(): Promise<void> {
         fabric.update(fabricController);
       }
     };
+    const takeDirty = (): boolean => {
+      const d = renderDirty;
+      renderDirty = false;
+      return d;
+    };
+
+    // At rest - asleep, or frozen with physics off (which NEVER steps):
+    // render-side motion only. Half-rate the flow re-render (audit F2):
+    // the displacement is cheap but moving the controls forces the full
+    // spline + crossing re-solve (~10ms/frame), and 30fps sway is
+    // imperceptible for a slow drift; the paint pass and the render-only
+    // plucks stay at full rate. A reveal (or its lingering FX) renders at
+    // FULL rate - with physics off the whole intro plays in this branch.
+    const restFrame = (label: string): void => {
+      flowParity = !flowParity;
+      const force = takeDirty();
+      if (force || flowParity || revealing || renderer!.needsFxRender()) {
+        flowRender(force);
+      }
+      fabricTick();
+      perfLine = label;
+      updateStamp();
+    };
+    if (physState === "frozen") {
+      restFrame(" | asleep (physics off)");
+      return;
+    }
 
     if (speedMult === 0) {
-      flowRender();
+      flowRender(takeDirty());
       fabricTick();
       perfLine = " | paused";
       updateStamp();
@@ -1572,11 +2025,10 @@ async function main(): Promise<void> {
     }
 
     // Release animation (soft style): ease the freed target back to the
-    // grab origin, then free the grab. The STRING ring is render-only
-    // now (renderer.addPluckWave at release; physics freed instantly).
-    // Runs ahead of the asleep check (wake() keeps the sim stepping
-    // while the thread moves); skipped while paused - a frozen world
-    // holds.
+    // grab origin, then free the grab. (The STRING style frees the physics
+    // at once and vibrates render-only.) Runs ahead of the asleep check
+    // (wake() keeps the sim stepping while the thread moves); skipped
+    // while paused - a frozen world holds.
     if (snapMode === "soft") {
       if (ps.grabbedParticle >= 0) {
         const dt = ticker.deltaMS / 1000;
@@ -1600,30 +2052,12 @@ async function main(): Promise<void> {
     }
 
     if (asleep) {
-      // Half-rate the flow re-render at rest (audit F2): the displacement
-      // is cheap but moving the controls forces the full spline + crossing
-      // re-solve (~10ms/frame). 30fps sway is imperceptible for a slow
-      // drift and halves the idle burn; the paint pass stays at full rate.
-      // Active pluck waves force FULL rate - a 5-13Hz ring aliases at 30.
-      flowParity = !flowParity;
-      if (flowParity || renderer.hasActivePluckWaves()) flowRender();
-      fabricTick();
-      perfLine = " | asleep";
-      updateStamp();
+      restFrame(" | asleep");
       return;
     }
     const t0 = performance.now();
-    ps.step((ticker.deltaMS / 1000) * speedMult, {
-      temperature: settings.temperature,
-      slack: params.slack,
-      drag: params.drag,
-      repulsion: params.repulsion,
-      bend: params.bend,
-      smooth: params.smooth,
-      stiffness: params.stiffness,
-      gridAlign: params.gridAlign,
-      threadWidth: params.threadWidth,
-    });
+    ps.step((ticker.deltaMS / 1000) * speedMult, physicsTuning());
+    stepCount++;
     const t1 = performance.now();
     if (!Number.isFinite(ps.maxMove)) {
       halted = true;
@@ -1635,6 +2069,7 @@ async function main(): Promise<void> {
       return;
     }
     renderer.update();
+    renderDirty = false;
     // Keep the gameplay overlay locked to the deforming knot.
     if (params.mazeFabric && fabric && fabricController) {
       fabric.update(fabricController);
@@ -1642,21 +2077,23 @@ async function main(): Promise<void> {
     fabricTick();
     const t2 = performance.now();
 
-    // Follow the free-floating knot with an eased viewport fit.
-
-    if (
-      ps.settleComplete &&
-      ps.grabbedParticle < 0 &&
-      settings.temperature === 0 &&
-      ps.maxMove < QUIET_EPS &&
-      // Never freeze on an unrenderable overlap - a standing hard
-      // violation of the anti-riding floor keeps the sim awake (the
-      // work gate is actively resolving it).
-      ps.ridersPending === 0
-    ) {
-      if (++stillFrames >= QUIET_FRAMES) asleep = true;
+    // The sleep gate. A physics-off settle freezes where live physics
+    // would fall asleep (or at its wall-clock cap).
+    const settling = physState === "settling";
+    if (quietNow(settling)) {
+      if (++stillFrames >= QUIET_FRAMES) {
+        asleep = true;
+        if (settling) freeze();
+      }
     } else {
       stillFrames = 0;
+    }
+    if (
+      settling &&
+      physState === "settling" &&
+      performance.now() - settleWall0 > SETTLE_WALL_CAP_MS
+    ) {
+      freeze();
     }
 
     perf.physMs += t1 - t0;
@@ -1665,6 +2102,7 @@ async function main(): Promise<void> {
     if (t2 - perf.flushedAt >= 500) {
       const fps = (perf.frames * 1000) / (t2 - perf.flushedAt);
       perfLine =
+        (settling ? " | settling" : "") +
         ` | phys ${(perf.physMs / perf.frames).toFixed(2)}ms` +
         ` render ${(perf.renderMs / perf.frames).toFixed(2)}ms` +
         ` ${fps.toFixed(0)}fps mv ${ps.maxMove.toExponential(1)}`;
@@ -1672,7 +2110,7 @@ async function main(): Promise<void> {
       perf.flushedAt = t2;
     }
     updateStamp();
-  });
+  };
 
   // Verifiable code-state stamp: on screen and in the console, with the
   // environment facts that matter when debugging rendering discrepancies.
@@ -1857,6 +2295,89 @@ async function main(): Promise<void> {
         return { verts, edges };
       },
     };
+  };
+  // RENDER-ONLY PLUCK probes: fire a pluck on a chain at a ctrl (as a tap
+  // there would, unless opts override), and read the live plucks + stats.
+  (window as unknown as Record<string, unknown>).__knotPluck = (
+    chain: number,
+    ctrl: number,
+    opts: { side?: number; gain?: number; beta?: number; delay?: number } = {}
+  ) => {
+    if (!renderer || !ps) return false;
+    const unit = pluckUnit(chain, ctrl);
+    return renderer.pluck({
+      chain,
+      ctrl,
+      side: opts.side ?? 1,
+      gain: opts.gain ?? 1,
+      freq: freqForCtrl(chain, ctrl),
+      reach: unit.reach,
+      spanCtrl: unit.spanCtrl,
+      beta: opts.beta,
+      delay: opts.delay,
+    });
+  };
+  (window as unknown as Record<string, unknown>).__knotPluckState = () =>
+    renderer
+      ? {
+          active: renderer.plucks.state(),
+          stats: { ...renderer.plucks.stats },
+          updates: renderer.updateCount,
+        }
+      : null;
+  // Frame-cost + physics-mode probe: main-thread ms per ticker callback
+  // over the last `n` frames, renderer.update() and ps.step() call counts.
+  (window as unknown as Record<string, unknown>).__knotPerf = (n = 120) => {
+    const k = Math.min(n, frameCostN, frameCost.length);
+    const xs: number[] = [];
+    for (let i = 0; i < k; i++) {
+      xs.push(frameCost[(frameCostN - 1 - i + frameCost.length * 4) % frameCost.length]);
+    }
+    xs.sort((a, b) => a - b);
+    const mean = xs.reduce((s, v) => s + v, 0) / Math.max(1, xs.length);
+    return {
+      frames: k,
+      mean,
+      p50: xs[Math.floor(xs.length * 0.5)] ?? 0,
+      p95: xs[Math.floor(xs.length * 0.95)] ?? 0,
+      max: xs[xs.length - 1] ?? 0,
+      updates: renderer?.updateCount ?? 0,
+      steps: stepCount,
+      state: physState,
+      asleep,
+      loadMs,
+      loadStepMs,
+      loadSteps,
+      loadFrames,
+      totalFrames: frameCostN,
+      totalCostMs: frameCostTotal,
+      plucks: renderer?.plucks.activeCount ?? 0,
+    };
+  };
+  // The physics checkbox, as the panel drives it (probe scripting).
+  (window as unknown as Record<string, unknown>).__knotSetPhysics = (
+    on: boolean
+  ) => {
+    params.physics = on;
+    writeParams(params);
+    applyPhysicsMode();
+    return physState;
+  };
+  // A Physics-folder slider, as the panel drives it (probe scripting).
+  (window as unknown as Record<string, unknown>).__knotSetPhysicsParam = (
+    key: "slack" | "drag" | "repulsion" | "bend" | "smooth" | "stiffness" | "gridAlign",
+    value: number
+  ) => {
+    params[key] = value;
+    writeParams(params);
+    physicsInputsChanged();
+    wake();
+    return physState;
+  };
+  // The "Replay settle" button (probe scripting).
+  (window as unknown as Record<string, unknown>).__knotReplay = () => {
+    replaySettle();
+    return physState;
   };
   // World point at a fractional ctrl along a chain (probe scripting).
   (window as unknown as Record<string, unknown>).__knotPoint = (

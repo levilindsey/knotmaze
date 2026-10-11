@@ -46,6 +46,8 @@ import {
   sampleOpenSpline,
 } from "../geometry/spline_generator";
 import { RibbonMesh, PatchGridMesh, TriFanMesh } from "./ribbon_mesh";
+import { PluckOverlay } from "./pluck_overlay";
+import type { PluckHost, PluckNode } from "./pluck_overlay";
 import {
   FIELD_BLEND_MIN,
   FIELD_PROF_ARC,
@@ -195,9 +197,11 @@ const PULSE_END_WINDOW = 0.45;
 const PULSE_OUT_LEAD = 0.3;
 // Seconds for a new junction's pulse animation to breathe in.
 const PULSE_FADE_IN = 0.45;
-// Pluck-wave window (world units) along the plucked chain. Crossing
-// partners are deliberately NOT displaced (see the update() loop).
-const PLUCK_WAVE_R = 3.0;
+// RENDER-ONLY PLUCK node keys (pluck_overlay.ts PluckNode.key): crossing
+// passes are 2 * crossing + (under ? 1 : 0); the other kinds start above.
+const PLUCK_KEY_JOINT = 1e6;
+const PLUCK_KEY_MARKER = 2e8;
+const PLUCK_KEY_END = 3e8;
 // JUNCTION JOINERY. Fused arms (bridge/stub/merge terminals) tuck their
 // rendered tip back by the host's half-width so the ribbon lands flush on
 // the host's near edge instead of overhanging past its centerline - the
@@ -907,13 +911,6 @@ export class RibbonRenderer {
   private fxMatHot = false;
   private prevCutSign: Int8Array = new Int8Array(0);
   private acc4Scratch = new Float32Array(4);
-  // PLUCK WAVES (render-only string ring): the physics releases
-  // instantly at pointer-up - the old grab-driven ring oscillated the
-  // whole neighborhood through springs and crossing couplings ("too
-  // much overall jiggle"). The visible vibration is a damped standing
-  // wave displacing control COPIES here, exactly like the flow field;
-  // neighbors get a small deliberate SYMPATHY fraction, and the real
-  // physics contributes only its brief natural snap-back.
   // Burn state (see applyBurnColors): ping-pong color buffers + a
   // per-sample AGE since ignition - the gradient is TEMPORAL cooling,
   // so a front finishing never pops its char off (it just keeps
@@ -938,17 +935,17 @@ export class RibbonRenderer {
   >();
   // Per-chain combined width multiplier (reveal mask x rainbow swell).
   private swellScratch = new Map<number, Float32Array>();
-  private pluckWaves: Array<{
-    chain: number;
-    x: number;
-    y: number;
-    nx: number;
-    ny: number;
-    amp: number;
-    hz: number;
-    tau: number;
-    t: number;
-  }> = [];
+  // RENDER-ONLY PLUCKS (pluck_overlay.ts): the overlay itself, each
+  // crossing's over-fill half-lengths along its over thread (the over-node
+  // footprints), and the per-chain base COLLAPSE multipliers the overlay
+  // installs (composed into widthMul here, never inside a footprint).
+  readonly plucks: PluckOverlay;
+  private overHalfNeg = new Float32Array(0);
+  private overHalfPos = new Float32Array(0);
+  private pluckCollapse = new Map<number, Float32Array>();
+  private collapseScratch = new Map<number, Float32Array>();
+  // update() calls so far (probes: a render-only pluck must add none).
+  updateCount = 0;
   private filletMesh: TriFanMesh | null = null;
   private sectionSegs: VSegment[][] = [];
   private sectionNoise: ((x: number, y: number) => number) | null = null;
@@ -1060,6 +1057,11 @@ export class RibbonRenderer {
       filletTopLayer,
       overLayer
     );
+    // Render-only plucks draw ABOVE every ribbon, erase, fillet and fill
+    // (rule 1 in pluck_overlay.ts); the lazily added reveal-tip glow and
+    // appearance-FX containers still land on top of it.
+    this.plucks = new PluckOverlay(this.makePluckHost());
+    this.root.addChild(this.plucks.layer);
     this.filletTopLayer = filletTopLayer;
     this.eraseLayerRef = eraseLayer;
     if (style.paletteMode) {
@@ -1183,6 +1185,8 @@ export class RibbonRenderer {
 
     this.eraseExtentPos = new Float32Array(ps.crossings.length);
     this.eraseExtentNeg = new Float32Array(ps.crossings.length);
+    this.overHalfPos = new Float32Array(ps.crossings.length);
+    this.overHalfNeg = new Float32Array(ps.crossings.length);
     this.prevCuts = new Float32Array(ps.crossings.length * ERASE_LANES * 2);
     this.prevCutsValid = new Uint8Array(ps.crossings.length);
     this.crossingShownAt = new Float64Array(ps.crossings.length).fill(-1);
@@ -1946,6 +1950,7 @@ export class RibbonRenderer {
 
   update(): void {
     const { positions } = this.ps;
+    this.updateCount++;
     // Joinery geometry follows (rebuildFillets rebuilds on a new revision).
     this.geomRev++;
     // Under-gap windows are rebuilt from scratch by this frame's
@@ -1973,30 +1978,6 @@ export class RibbonRenderer {
           this.flowOffset(controls[k * 2], controls[k * 2 + 1], this.flowScratch);
           controls[k * 2] += this.flowScratch[0];
           controls[k * 2 + 1] += this.flowScratch[1];
-        }
-      }
-      // Pluck waves ride the same control copies (see the field's doc).
-      // ONLY the plucked chain moves: a crossed-over/under partner holds
-      // perfectly still (user spec) - the crossing machinery re-solves
-      // against the vibrating thread, so the gap tracks it like a string
-      // through a stationary fret. The partner's only motion is the real
-      // physics snap-back at release.
-      for (const w of this.pluckWaves) {
-        if (i !== w.chain) continue;
-        const base =
-          w.amp *
-          Math.exp(-w.t / w.tau) *
-          Math.cos(2 * Math.PI * w.hz * w.t);
-        if (Math.abs(base) < 1e-4) continue;
-        for (let k = 0; k < chain.length; k++) {
-          const dx = controls[k * 2] - w.x;
-          const dy = controls[k * 2 + 1] - w.y;
-          const d = Math.hypot(dx, dy);
-          if (d >= PLUCK_WAVE_R) continue;
-          const win = Math.cos((d / PLUCK_WAVE_R) * Math.PI * 0.5);
-          const off = base * win * win;
-          controls[k * 2] += w.nx * off;
-          controls[k * 2 + 1] += w.ny * off;
         }
       }
       const brk = this.ps.chainBreakAfter[i];
@@ -2028,7 +2009,11 @@ export class RibbonRenderer {
         samples.tangents,
         this.style.threadWidth / 2,
         0,
-        this.rainbowWidthMul(i, samples.count, mask)
+        this.withPluckCollapse(
+          i,
+          samples.count,
+          this.rainbowWidthMul(i, samples.count, mask)
+        )
       );
     });
     if (this.style.paletteMode && !this.rgbCacheReady) {
@@ -2095,6 +2080,8 @@ export class RibbonRenderer {
         if (!on) {
           this.eraseExtentPos[c] = 0;
           this.eraseExtentNeg[c] = 0;
+          this.overHalfPos[c] = 0;
+          this.overHalfNeg[c] = 0;
           this.overWindows[c * 2 + 1] = 0;
           // Rate limiter must SNAP on re-show, not slide from stale cuts.
           if (this.prevCutsValid.length > 0) this.prevCutsValid[c] = 0;
@@ -2774,6 +2761,9 @@ export class RibbonRenderer {
         this.overWindows[index * 2 + 1] = span;
         this.overWindowFracs[index * 2] = startFrac;
         this.overWindowFracs[index * 2 + 1] = endFrac;
+        // The over-node FOOTPRINT a render-only pluck keeps static.
+        this.overHalfNeg[index] = halfNeg;
+        this.overHalfPos[index] = halfPos;
       }
 
       if (index >= 0) {
@@ -3148,34 +3138,444 @@ export class RibbonRenderer {
     // speed keeps a flowSpeed slider change from phase-jumping the field,
     // which multiplying at evaluation time would.
     this.flowTime += dt * this.flowSpeed;
-    // Pluck-wave clocks; waves die once their envelope is invisible.
-    if (this.pluckWaves.length > 0) {
-      for (const w of this.pluckWaves) w.t += dt;
-      this.pluckWaves = this.pluckWaves.filter(
-        (w) => w.amp * Math.exp(-w.t / w.tau) > 0.004
-      );
-    }
   }
 
-  // Fire a render-only string ring at a world point (see pluckWaves).
-  addPluckWave(
-    chain: number,
+  // ---- RENDER-ONLY PLUCKS (see pluck_overlay.ts) -------------------------
+
+  // The thread under a world point: the nearest rendered sample within
+  // `radius`, preferring the OVER thread where the nearest one is inside
+  // its own under-gap (the visible thread there is its partner). Returns
+  // the chain, its arc + fractional ctrl, the side of the thread the point
+  // lies on (+1 = the left normal (-ty, tx)), and the centerline distance.
+  pickThread(
     x: number,
     y: number,
-    nx: number,
-    ny: number,
-    amp: number,
-    hz: number,
-    tau: number
-  ): void {
-    if (this.pluckWaves.length >= 6) this.pluckWaves.shift();
-    this.pluckWaves.push({ chain, x, y, nx, ny, amp, hz, tau, t: 0 });
+    radius: number
+  ): {
+    chain: number;
+    arc: number;
+    ctrl: number;
+    side: number;
+    dist: number;
+  } | null {
+    const r2 = radius * radius;
+    const hits: Array<{ chain: number; k: number; d2: number }> = [];
+    for (let c = 0; c < this.chainSamples.length; c++) {
+      const s = this.chainSamples[c];
+      if (!s) continue;
+      let best = r2;
+      let bk = -1;
+      for (let k = 0; k < s.count; k++) {
+        const dx = s.positions[k * 2] - x;
+        const dy = s.positions[k * 2 + 1] - y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < best) {
+          best = d2;
+          bk = k;
+        }
+      }
+      if (bk >= 0) hits.push({ chain: c, k: bk, d2: best });
+    }
+    if (hits.length === 0) return null;
+    hits.sort((a, b) => a.d2 - b.d2);
+    // Refine each candidate's arc by projecting onto its two neighboring
+    // sample chords.
+    const refine = (
+      chain: number,
+      k: number
+    ): { arc: number; px: number; py: number; d: number } => {
+      const s = this.chainSamples[chain]!;
+      const closed = s.closed;
+      const per = s.totalLength / (closed ? s.count : s.count - 1);
+      let bestArc = k * per;
+      let bx = s.positions[k * 2];
+      let by = s.positions[k * 2 + 1];
+      let bd = Math.hypot(bx - x, by - y);
+      for (const j of [k - 1, k]) {
+        let a = j;
+        let b = j + 1;
+        if (closed) {
+          a = ((a % s.count) + s.count) % s.count;
+          b = ((b % s.count) + s.count) % s.count;
+        } else if (a < 0 || b >= s.count) {
+          continue;
+        }
+        const ax = s.positions[a * 2];
+        const ay = s.positions[a * 2 + 1];
+        const ex = s.positions[b * 2] - ax;
+        const ey = s.positions[b * 2 + 1] - ay;
+        const l2 = ex * ex + ey * ey;
+        if (l2 < 1e-12) continue;
+        const t = Math.max(0, Math.min(1, ((x - ax) * ex + (y - ay) * ey) / l2));
+        const px = ax + ex * t;
+        const py = ay + ey * t;
+        const d = Math.hypot(px - x, py - y);
+        if (d < bd) {
+          bd = d;
+          bx = px;
+          by = py;
+          bestArc = (j + t) * per;
+        }
+      }
+      return { arc: normArc(bestArc, s.totalLength, closed), px: bx, py: by, d: bd };
+    };
+    let pick = hits[0];
+    let hit = refine(pick.chain, pick.k);
+    if (
+      hits.length > 1 &&
+      this.underGapVisibility(pick.chain, hit.arc) < 0.5
+    ) {
+      const h = this.style.threadWidth / 2;
+      for (let i = 1; i < hits.length; i++) {
+        const alt = refine(hits[i].chain, hits[i].k);
+        if (alt.d <= hit.d + 1.5 * h) {
+          pick = hits[i];
+          hit = alt;
+          break;
+        }
+      }
+    }
+    const s = this.chainSamples[pick.chain]!;
+    this.sampleAt(s, hit.arc, this.sampleScratch, 0);
+    const tx = this.sampleScratch[2];
+    const ty = this.sampleScratch[3];
+    const side = tx * (y - hit.py) - ty * (x - hit.px) >= 0 ? 1 : -1;
+    return {
+      chain: pick.chain,
+      arc: hit.arc,
+      ctrl: this.ctrlAtArc(s, hit.arc),
+      side,
+      dist: hit.d,
+    };
   }
 
-  // While waves ring, the asleep ticker must keep re-solving at full
-  // rate (the half-rate flow path would alias a 5-13Hz vibration).
-  hasActivePluckWaves(): boolean {
-    return this.pluckWaves.length > 0;
+  // Inverse of paintArcAt: the fractional ctrl at an arc.
+  private ctrlAtArc(samples: SplineSamples, arc: number): number {
+    const cal = samples.controlArcLengths;
+    const n = cal.length;
+    const total = samples.totalLength;
+    const a = normArc(arc, total, samples.closed);
+    let lo = 0;
+    let hi = n - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (cal[mid] <= a) lo = mid;
+      else hi = mid - 1;
+    }
+    const a0 = cal[lo];
+    const a1 = lo + 1 < n ? cal[lo + 1] : total;
+    return lo + (a1 > a0 ? Math.max(0, Math.min(1, (a - a0) / (a1 - a0))) : 0);
+  }
+
+  // Start a render-only pluck on a chain at a ctrl (or an arc). spanCtrl =
+  // the unit's ctrl span (the fabric walk run, unwrapped c1 >= c0); reach =
+  // lobes kept each side. Returns false when it is sound-only (a chain
+  // mid-reveal, or nothing to vibrate).
+  pluck(req: {
+    chain: number;
+    ctrl?: number;
+    arc?: number;
+    side: number;
+    gain: number;
+    freq: number;
+    reach: number;
+    spanCtrl?: [number, number] | null;
+    beta?: number;
+    delay?: number;
+    // A ctrl on this chain the unit must not contain (a held particle):
+    // when it does, the pluck stays sound-only.
+    avoidCtrl?: number;
+  }): boolean {
+    const samples = this.chainSamples[req.chain];
+    if (!samples) return false;
+    const closed = this.ps.chainBreakAfter[req.chain] < 0;
+    const len = this.ps.chains[req.chain].length;
+    const ctrlArc = (c: number): number =>
+      this.paintArcAt(
+        samples,
+        closed ? ((c % len) + len) % len : Math.max(0, Math.min(len - 1, c)),
+        closed
+      );
+    const arc = req.arc ?? ctrlArc(req.ctrl ?? 0);
+    let span: [number, number] | null = null;
+    if (req.spanCtrl) {
+      const a0 = ctrlArc(req.spanCtrl[0]);
+      let a1 = ctrlArc(req.spanCtrl[1]);
+      // A wrap run on a closed chain (c1 past the seam) or a whole loop.
+      if (closed && (a1 < a0 || req.spanCtrl[1] - req.spanCtrl[0] >= len)) {
+        a1 += samples.totalLength;
+      }
+      span = [a0, a1];
+    }
+    return this.plucks.add({
+      chain: req.chain,
+      arc,
+      side: req.side,
+      gain: req.gain,
+      freq: req.freq,
+      reach: req.reach,
+      span,
+      beta: req.beta,
+      delay: req.delay,
+      avoidArc:
+        req.avoidCtrl !== undefined ? ctrlArc(req.avoidCtrl) : undefined,
+    });
+  }
+
+  // Per-frame pluck pass (every ticker branch, after tickPaint so fabric
+  // colors read this frame's paint). Never calls update().
+  tickPlucks(dt: number): void {
+    this.plucks.tick(dt);
+  }
+
+  private makePluckHost(): PluckHost {
+    return {
+      halfWidth: () => this.style.threadWidth / 2,
+      casing: () => this.style.casingWidth / 2,
+      samples: (c) => this.chainSamples[c] ?? null,
+      allSamples: () => this.chainSamples,
+      closed: (c) => this.ps.chainBreakAfter[c] < 0,
+      nodes: (c) => this.pluckNodes(c),
+      sampleAt: (s, a, out, o) => this.sampleAt(s, a, out, o),
+      visibility: (c, a) => this.underGapVisibility(c, a),
+      color: (c, a, out) => this.pluckColor(c, a, out),
+      staticColors: () => !this.style.paletteMode,
+      viewScale: () => {
+        const wt = this.root.worldTransform;
+        return Math.hypot(wt.a, wt.b);
+      },
+      hot: (c) =>
+        (this.revealOn && this.revealMask[c] !== null) ||
+        this.fxScratch.get(c)?.hot === true,
+      setCollapse: (c, mul) => {
+        if (mul) this.pluckCollapse.set(c, mul);
+        else this.pluckCollapse.delete(c);
+        this.reextrude(c);
+      },
+      geomRev: () => this.geomRev,
+      baseSampleCount: (c) => this.fills[c].sampleCount,
+    };
+  }
+
+  // Compose a chain's pluck collapse into the width multiplier update()
+  // (or reextrude) hands its base ribbon. Inert without a collapse.
+  private withPluckCollapse(
+    chain: number,
+    count: number,
+    base: Float32Array | null
+  ): Float32Array | null {
+    const col = this.pluckCollapse.get(chain);
+    if (!col || col.length !== count) return base;
+    let buf = this.collapseScratch.get(chain);
+    if (!buf || buf.length !== count) {
+      buf = new Float32Array(count);
+      this.collapseScratch.set(chain, buf);
+    }
+    for (let k = 0; k < count; k++) buf[k] = (base ? base[k] : 1) * col[k];
+    return buf;
+  }
+
+  // The LIGHT PATH: re-extrude one chain's base ribbon from its cached
+  // samples (pluck collapse on/off) - no spline, no crossing solve. Same
+  // inputs as update() everywhere outside the collapse, so the vertices
+  // there come out bit-identical.
+  private reextrude(chain: number): void {
+    const samples = this.chainSamples[chain];
+    if (!samples) return;
+    const mask = this.revealOn ? (this.revealMask[chain] ?? null) : null;
+    this.fills[chain].update(
+      samples.positions,
+      samples.tangents,
+      this.style.threadWidth / 2,
+      0,
+      this.withPluckCollapse(
+        chain,
+        samples.count,
+        this.rainbowWidthMul(chain, samples.count, mask)
+      )
+    );
+  }
+
+  // The thread's composed color at an arc, 0..1 RGB: knot mode = the
+  // chain tint; fabric = the section color mixed with the live gameplay
+  // accent at the ribbon's own paint U (exactly the section shader).
+  private pluckColor(chain: number, arc: number, out: Float32Array): void {
+    const fill = this.fills[chain];
+    if (!this.style.paletteMode) {
+      const t = fill.mesh.tint as number;
+      out[0] = ((t >> 16) & 255) / 255;
+      out[1] = ((t >> 8) & 255) / 255;
+      out[2] = (t & 255) / 255;
+      return;
+    }
+    this.colorAtArc(chain, arc, out);
+    const samples = this.chainSamples[chain];
+    if (!samples || samples.totalLength <= 0) return;
+    const count = fill.sampleCount;
+    const total = samples.totalLength;
+    let k0: number;
+    let k1: number;
+    let fr: number;
+    if (samples.closed) {
+      const f = (normArc(arc, total, true) / total) * count;
+      k0 = Math.floor(f) % count;
+      k1 = (k0 + 1) % count;
+      fr = f - Math.floor(f);
+    } else {
+      const f = (normArc(arc, total, false) / total) * (count - 1);
+      k0 = Math.min(count - 1, Math.floor(f));
+      k1 = Math.min(count - 1, k0 + 1);
+      fr = f - Math.floor(f);
+    }
+    const u = fill.paintU(k0) + (fill.paintU(k1) - fill.paintU(k0)) * fr;
+    const acc = this.acc4Scratch;
+    accentSampleCpu(accentPixels(this.style.pathColor), u, acc);
+    out[0] += (acc[0] - out[0]) * acc[3];
+    out[1] += (acc[1] - out[1]) * acc[3];
+    out[2] += (acc[2] - out[2]) * acc[3];
+  }
+
+  // The NODES a plucked chain passes (pluck_overlay.ts PluckNode): every
+  // registered crossing pass (footprint = its erase extents + fade when
+  // the chain goes under, its over-fill half-lengths when over), every
+  // fused junction (hide zone = the joint's overlap core, see below),
+  // start/exit marker discs, and an open chain's two ends. Sorted by arc.
+  private pluckNodes(chain: number): PluckNode[] {
+    const samples = this.chainSamples[chain];
+    if (!samples) return [];
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    const total = samples.totalLength;
+    const fillHalf = this.style.threadWidth / 2;
+    const gap = (this.style.casingWidth - this.style.threadWidth) / 2;
+    const fade = this.fadeLength;
+    const sc = this.sampleScratch;
+    const out: PluckNode[] = [];
+    this.ps.crossings.forEach((cr, ci) => {
+      for (let u = 0; u < 2; u++) {
+        const isUnder = u === 1;
+        const pass = isUnder ? cr.under : cr.over;
+        if (pass.chain !== chain) continue;
+        const arc = this.paintArcAt(samples, this.renderCtrl(pass), closed);
+        let line: [number, number, number, number] | null = null;
+        let footNeg: number;
+        let footPos: number;
+        if (isUnder) {
+          footNeg = this.eraseExtentNeg[ci] + fade;
+          footPos = this.eraseExtentPos[ci] + fade;
+          const os = this.chainSamples[cr.over.chain];
+          if (os) {
+            const oc = this.ps.chainBreakAfter[cr.over.chain] < 0;
+            this.sampleAt(
+              os,
+              this.paintArcAt(os, this.renderCtrl(cr.over), oc),
+              sc,
+              0
+            );
+            line = [sc[0], sc[1], sc[2], sc[3]];
+          }
+        } else {
+          footNeg = this.overHalfNeg[ci];
+          footPos = this.overHalfPos[ci];
+        }
+        out.push({
+          arc,
+          footNeg,
+          footPos,
+          hide: 0,
+          under: isUnder,
+          line,
+          key: ci * 2 + u,
+        });
+      }
+    });
+    const joints = this.junctionArcCtrls.get(chain);
+    if (joints) {
+      // The overlay hides only over the joint's OVERLAP CORE: the seal disc
+      // (0.92 fillHalf) where the chain passes THROUGH the joint, and for a
+      // TERMINAL arm its tucked tip (0.75 fillHalf in) plus the fused-tip
+      // disc (0.99 fillHalf) that rounds it. The edge-aware junction field
+      // is each arm's own material across that arm's width, so beyond the
+      // core the vibrating arm repaints exactly its own color. (Hiding the
+      // whole fillet reach - ~1 world at cuspRadius 3 - and later 2
+      // fillHalf on every arm left half of all fabric taps without a
+      // single vibrating stretch.) The static FOOTPRINT spans the fillet
+      // web's flank: each wedge paints a tapering triangle of joint material
+      // ON its arms, out to the wedge reach, above the base - a base
+      // collapsing under it left that triangle standing as a pale static
+      // sliver beside a dark gap (the "spike" at an eye between two arms).
+      // Inside it the base stays intact and the swing under NODE_CORE h,
+      // as at a crossing.
+      const len = this.ps.chains[chain].length;
+      const webReach = fillHalf * FILLET_REACH_PER_HALF * this.cuspRadius;
+      const web = this.cuspRadius > 0.05 && webReach > fillHalf * 0.97 * 0.3;
+      for (const j of joints) {
+        const terminal = !closed && (j.ctrl < 0.5 || j.ctrl > len - 1.5);
+        const hide = fillHalf * (terminal ? 1.75 : 1.0) + gap;
+        const foot = Math.max(hide + 2 * CUT_BIAS, web ? webReach : 0);
+        out.push({
+          arc: this.paintArcAt(samples, j.ctrl, closed),
+          footNeg: foot,
+          footPos: foot,
+          hide,
+          under: false,
+          line: null,
+          key: PLUCK_KEY_JOINT + j.jn * 1e5 + j.ctrl,
+        });
+      }
+    }
+    this.markerOccluders.forEach((mk, mi) => {
+      if (mk.chain !== chain) return;
+      const r = mk.radius + gap + fade + CUT_BIAS;
+      out.push({
+        arc: this.paintArcAt(samples, mk.ctrl, closed),
+        footNeg: r,
+        footPos: r,
+        hide: r,
+        under: false,
+        line: null,
+        key: PLUCK_KEY_MARKER + mi,
+      });
+    });
+    if (!closed) {
+      out.push({
+        arc: 0,
+        footNeg: 0,
+        footPos: fillHalf,
+        hide: 0,
+        under: false,
+        line: null,
+        key: PLUCK_KEY_END,
+      });
+      out.push({
+        arc: total,
+        footNeg: fillHalf,
+        footPos: 0,
+        hide: 0,
+        under: false,
+        line: null,
+        key: PLUCK_KEY_END + 1,
+      });
+    }
+    out.sort((a, b) => a.arc - b.arc || a.key - b.key);
+    // Coincident nodes (a fused tip or a marker sitting on a chain end)
+    // merge into one: the larger footprint and hide zone, the lower key.
+    const merged: PluckNode[] = [];
+    for (const n of out) {
+      const prev = merged[merged.length - 1];
+      if (prev && n.arc - prev.arc < 0.02 && (n.key >= PLUCK_KEY_JOINT || prev.key >= PLUCK_KEY_JOINT)) {
+        prev.footNeg = Math.max(prev.footNeg, n.footNeg);
+        prev.footPos = Math.max(prev.footPos, n.footPos);
+        prev.hide = Math.max(prev.hide, n.hide);
+        if (n.key < prev.key) {
+          prev.key = n.key;
+          prev.under = n.under;
+          prev.line = n.line;
+        }
+        continue;
+      }
+      merged.push({ ...n });
+    }
+    return merged;
   }
 
   // Appearance FX still evolving geometry or crossing visibility (FX pools

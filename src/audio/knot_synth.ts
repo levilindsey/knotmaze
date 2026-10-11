@@ -367,6 +367,18 @@ export class KnotSynth {
     this.voicePickPos = c(v.pickPosition);
   }
 
+  // Seconds between scheduling a note and hearing it (the context's output
+  // + base latency where the browser reports them; 0 before the first
+  // pluck), so an auto pluck's visual can land on its sound.
+  outputLatency(): number {
+    const ctx = this.ctx;
+    if (typeof AudioContext === "undefined" || !(ctx instanceof AudioContext)) {
+      return 0;
+    }
+    const l = (ctx.outputLatency || 0) + (ctx.baseLatency || 0);
+    return Number.isFinite(l) ? Math.max(0, Math.min(0.25, l)) : 0;
+  }
+
   // Resolves once the string engine is decided and any queued plucks are
   // scheduled - measurement probes await this before startRendering().
   whenReady(): Promise<void> {

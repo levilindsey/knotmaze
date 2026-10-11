@@ -72,7 +72,8 @@ describe("links", () => {
       rootNote: "seed", tonicEmphasis: 0.5, pulseSpacing: 2.5, hueShift: 300,
       gamutArc: 130, palette: "pastel", pathColor: "#eccc41",
       branchDensity: 0.35, fourWayFraction: 0.12, deadEndDensity: 0.25,
-      pluckStyle: "string", mazeFabric: true, deadEnds: false, pathViz: "gold",
+      pluckStyle: "string", pluckSize: 1, pluckGhost: 0.35, pluckReach: "run",
+      physics: true, mazeFabric: true, deadEnds: false, pathViz: "gold",
       cameraMode: "fit", trailLength: 5, tension: 0.45, fogOfWar: false,
       fowRadius: 4, fowIntro: false, colorScheme: "segments",
       junctionBlend: 0.88, appearMode: "custom", appearSequence: "trace", appearSpeed: 2.2,
@@ -246,6 +247,22 @@ describe("token + overrides", () => {
     expect(parseParams("?1471kin=")).toEqual(
       withSeed(2430477599, { junctionBlend: 0 })
     );
+  });
+
+  it("round-trips the pluck and physics params (appended to v2)", () => {
+    const p = withSeed(7, {
+      pluckSize: 1.5,
+      pluckGhost: 0,
+      pluckReach: "lobe",
+      physics: false,
+    });
+    const q = encodeParams(p);
+    expect(q).toBe("7.RQejS_D6g");
+    expect(parseParams("?" + q)).toEqual(p);
+    // Links written before they existed read their defaults...
+    expect(parseParams("?7.U")).toEqual(withSeed(7));
+    // ...and a token takes them as overrides (probe URLs: &phy=0).
+    expect(parseParams("?7.U&psz=1.5&pgh=0&prc=lobe&phy=0")).toEqual(p);
   });
 });
 

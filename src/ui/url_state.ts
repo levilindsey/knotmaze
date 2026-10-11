@@ -22,6 +22,11 @@ export const SOUND_MODES: SoundMode[] = ["none", "manual", "random", "music"];
 export type PluckStyle = "soft" | "string";
 export const PLUCK_STYLES: PluckStyle[] = ["soft", "string"];
 
+// What a render-only pluck sets vibrating: the whole walk run (in knot
+// mode, the plucked lobe +-2) or only the plucked lobe.
+export type PluckReach = "run" | "lobe";
+export const PLUCK_REACHES: PluckReach[] = ["run", "lobe"];
+
 // Traversal-path visualization: full gold recolor | short memory trail |
 // an unspooled Ariadne string laid along everywhere you have walked.
 export type PathViz = "gold" | "trail" | "string";
@@ -192,8 +197,23 @@ export interface UrlParams {
   branchDensity: number; // [0, 1] extra maze junctions beyond the backbone.
   fourWayFraction: number; // [0, 1] share of junctions as 4-way merges.
   deadEndDensity: number; // [0.05, 1] strands cut into dead ends (de on).
-  pluckStyle: PluckStyle; // Release feel: soft ease vs ringing string.
-  snappiness: number; // [0, 1] string-ring speed/decay. 0.5 = stock.
+  pluckStyle: PluckStyle; // Drag-release feel: soft ease vs ringing string.
+  // RETIRED with the render-only plucks (2026-10-11): the old render ring's
+  // frequency/decay scale - the time-exposure vibration has no visible
+  // frequency, and its decay follows the sound's sustain. Nothing reads it;
+  // it stays only because the codec tables list it (dropping a param is a
+  // codec version bump), so links that carry it still read.
+  snappiness: number;
+  // RENDER-ONLY PLUCKS (taps, auto plucks, string releases): visual swing
+  // multiplier [0, 2] (0 = sound only), strobe-ghost strength [0, 1] (the
+  // speed cue; 0 = pure time-exposure blur), and what vibrates. Live.
+  pluckSize: number;
+  pluckGhost: number;
+  pluckReach: PluckReach;
+  // Physics simulation on (default). Off: each build settles hidden behind
+  // a loading indicator, then the layout freezes (no stepping at all) -
+  // threads can be plucked but not tugged. Applies live.
+  physics: boolean;
   // P4 branching maze: generate the spliced maze FABRIC (junctions, 4-way
   // merges, corner entrance/exit) and play it (branch-point taps).
   mazeFabric: boolean;
@@ -291,7 +311,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   sustain: 0.5,
   shimmer: 0.4,
   pickPosition: 0.4,
-  snappiness: 0.88,
+  snappiness: 0.88, // Retired (see UrlParams).
   rootNote: "seed",
   tonicEmphasis: 0.5,
   pulseSpacing: 2.5,
@@ -303,6 +323,10 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   fourWayFraction: 0.12,
   deadEndDensity: 0.25,
   pluckStyle: "string",
+  pluckSize: 1,
+  pluckGhost: 0.35,
+  pluckReach: "run",
+  physics: true,
   mazeFabric: true,
   deadEnds: false,
   pathViz: "gold",
@@ -359,6 +383,7 @@ export const ENUM_OPTIONS: {
   rootNote: ROOT_NOTES,
   palette: GAMUT_PALETTES,
   pluckStyle: PLUCK_STYLES,
+  pluckReach: PLUCK_REACHES,
   pathViz: PATH_VIZ_MODES,
   cameraMode: CAMERA_MODES,
   colorScheme: COLOR_SCHEMES,
@@ -533,6 +558,12 @@ function readLegacy(
     fourWayFraction: readNumber(query, "fwf", D.fourWayFraction),
     deadEndDensity: readNumber(query, "ded", D.deadEndDensity),
     pluckStyle: readChoice(query, "pk", PLUCK_STYLES, D.pluckStyle),
+    // Added after compact links (no legacy link carries them): keys only
+    // so a token can take overrides - probe URLs write `&phy=0`.
+    pluckSize: readNumber(query, "psz", D.pluckSize),
+    pluckGhost: readNumber(query, "pgh", D.pluckGhost),
+    pluckReach: readChoice(query, "prc", PLUCK_REACHES, D.pluckReach),
+    physics: readBool(query, "phy", D.physics),
     mazeFabric: readBool(query, "mf", D.mazeFabric),
     deadEnds: readBool(query, "de", D.deadEnds),
     pathViz: readPathViz(query, D.pathViz),

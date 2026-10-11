@@ -41,6 +41,8 @@ export interface PanelCallbacks {
   // A seed typed into the seed row (rebuilds that design; same seed = no-op).
   onSetSeed: (seed: number) => void;
   onReplaySettle: () => void;
+  // The physics checkbox: freeze (after settling) / resume, live.
+  onPhysicsToggle: () => void;
   onDebugToggle: (visible: boolean) => void;
   onStatsToggle: (visible: boolean) => void;
   onMazeStatsToggle: (visible: boolean) => void;
@@ -721,27 +723,38 @@ export function buildPanel(
   // --- Touch & feel ---------------------------------------------------------
   const fFeel = folder("Touch & feel", false);
   row(
+    fFeel, p, "pluckSize", { min: 0, max: 2, step: 0.05 },
+    "How wide a plucked thread swings. A tap (or an auto pluck) sets the thread between its crossings vibrating - visual only, nothing else moves. 0 = sound only. Applies live.",
+    D.pluckSize, () => callbacks.onSlackChange()
+  );
+  const pluckGhostRow = row(
+    fFeel, p, "pluckGhost", { min: 0, max: 1, step: 0.05 },
+    "The speed cue on a vibrating thread: a faint crisp copy of the string flickering inside the blur. 0 = a pure time-exposure blur. Off under reduced motion. Applies live.",
+    D.pluckGhost, () => callbacks.onSlackChange()
+  );
+  row(
+    fFeel, p, "pluckReach",
+    { options: { run: "run", lobe: "lobe" } },
+    "What a pluck sets vibrating: run = the whole maze segment you hear, each stretch between crossings humming (in knot mode, the plucked stretch and two either side); lobe = only the stretch between the two nearest crossings. Applies to the next pluck.",
+    D.pluckReach, () => callbacks.onSlackChange()
+  );
+  const tugLimitRow = row(
     fFeel, p, "tugLimit", { min: 0.5, max: 6, step: 0.1 },
-    "How far a thread can be tugged, in thread widths. The stretch resists more as it nears the limit (drag further, move less). Applies live.",
+    "Dragging a thread tugs it (taps pluck instead). How far a thread can be tugged, in thread widths; the stretch resists more as it nears the limit (drag further, move less). Applies live.",
     D.tugLimit, () => callbacks.onSlackChange()
   );
   const snapBackRow = row(
     fFeel, p, "snapBack", { min: 0, max: 12, step: 0.5 },
-    "How quickly a released thread eases back to where it was grabbed (soft pluck style). 0 = release in place. Applies live.",
+    "After a drag: how quickly the released thread eases back to where it was grabbed (soft release style). 0 = release in place. Applies live.",
     D.snapBack, () => callbacks.onSlackChange()
   );
-  row(
+  const pluckStyleRow = row(
     fFeel, p, "pluckStyle",
     { options: { string: "string", soft: "soft" } },
-    "Release feel: string = sharp snap-back with a decaying ring, like a real plucked string; soft = gentle ease home (speed = the snapBack slider).",
+    "After a drag: string = let go at once - the knot snaps back and the released stretch vibrates like a plucked string; soft = ease home gently (speed = the snapBack slider), no vibration.",
     D.pluckStyle, () => callbacks.onSlackChange()
   );
-  const snappinessRow = row(
-    fFeel, p, "snappiness", { min: 0, max: 1, step: 0.01 },
-    "String-ring character: low = slow loose wobble, high = fast taut-string vibration. The ring lasts the same either way - only the oscillation speed changes. Applies to the next pluck.",
-    D.snappiness, () => callbacks.onSlackChange()
-  );
-  row(
+  const temperatureRow = row(
     fFeel, s, "temperature", { min: 0, max: 0.5, step: 0.01 },
     "Agitation. Shake the knot with noise; slide back to 0 and it settles into a new pose.",
     SETTINGS_DEFAULTS.temperature, () => callbacks.onTemperatureChange()
@@ -754,7 +767,7 @@ export function buildPanel(
     {
       options: { none: "none", manual: "manual", random: "random", music: "music" },
     },
-    "Pluck behavior: none = silent; manual = your plucks only; random = the knot plucks a random thread now and then; music = a scripted song plays itself on matching threads. Auto plucks physically move the thread.",
+    "Pluck behavior: none = silent; manual = your plucks only; random = the knot plucks a random thread now and then; music = a scripted song plays itself on matching threads. Auto plucks make the thread ring (visual only - nothing else moves).",
     D.soundMode, () => callbacks.onAudioChange()
   );
   const pitchSpaceRow = row(
@@ -840,6 +853,11 @@ export function buildPanel(
   // --- Physics --------------------------------------------------------------
   const fPhysics = folder("Physics", false);
   row(
+    fPhysics, p, "physics", undefined,
+    "Physics simulation. Off: each design settles behind a loading spinner, then its layout freezes - nothing simulates afterwards (lighter on battery and slow devices). Threads can still be plucked (and flow, pulses and the intro still play), but not tugged: a drag pans the view. Applies live - turning it off first lets a moving knot come to rest; the sliders below still shape the frozen layout.",
+    D.physics, () => callbacks.onPhysicsToggle()
+  );
+  const simSpeedRow = row(
     fPhysics, p, "simSpeed", { min: 0, max: 10, step: 0.5 },
     "Simulation speed. 0 pauses, 5 is real time, 10 is 5x.",
     D.simSpeed, () => callbacks.onSlackChange()
@@ -951,8 +969,15 @@ export function buildPanel(
     tonicEmphasisRow.hidden = !freePitch;
     soundSpeedRow.hidden =
       params.soundMode !== "random" && params.soundMode !== "music";
-    snapBackRow.hidden = params.pluckStyle !== "soft";
-    snappinessRow.hidden = params.pluckStyle !== "string";
+    // Tugs (and their release controls), agitation and the sim speed exist
+    // only while the physics runs.
+    const live = params.physics;
+    tugLimitRow.hidden = !live;
+    pluckStyleRow.hidden = !live;
+    snapBackRow.hidden = !live || params.pluckStyle !== "soft";
+    temperatureRow.hidden = !live;
+    simSpeedRow.hidden = !live;
+    pluckGhostRow.hidden = params.pluckSize <= 0;
     appearSpeedRow.hidden = params.appearSequence === "instant";
     appearFxRow.hidden = params.appearSequence === "instant";
     flowSpeedRow.hidden = params.flowStrength <= 0;

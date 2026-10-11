@@ -139,13 +139,18 @@ describe("codec tables", () => {
     expect(CODEC_V1.params.map(asPin)).toEqual(V1_PIN);
   });
 
-  it("pins CODEC_V2: v1 with junctionBlend defaulting to 0.88", () => {
+  it("pins CODEC_V2: v1 with junctionBlend defaulting to 0.88, plus appends", () => {
     expect(CODEC_V2.version).toBe(2);
-    expect(CODEC_V2.params.map(asPin)).toEqual(
-      V1_PIN.map((p) =>
+    expect(CODEC_V2.params.map(asPin)).toEqual([
+      ...V1_PIN.map((p) =>
         p[0] === "junctionBlend" ? ["junctionBlend", "number", 0.88] : p
-      )
-    );
+      ),
+      // Appended to v2 (new params: older v2 links read these defaults).
+      ["pluckSize", "number", 1], // 60
+      ["pluckGhost", "number", 0.35],
+      ["pluckReach", "enum", "run", ["run", "lobe"]],
+      ["physics", "boolean", true],
+    ]);
   });
 
   it("registers every table, oldest first; new links use the newest", () => {

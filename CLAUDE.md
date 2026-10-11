@@ -45,6 +45,8 @@ src/
     ribbon_renderer.ts    # PixiJS ribbon meshes
     ribbon_mesh.ts        # Triangle strip extrusion
     junction_field.ts     # GPU junction field: float data textures + shaders
+    pluck_overlay.ts      # Render-only pluck: time-exposure strip + base collapse
+    pluck_model.ts        # Pure plucked-string math (modes, envelope, lobes)
     fabric_maze_renderer.ts # P4: woven gold path recolor + markers + hints
     maze_renderer.ts      # P4 LEGACY (md=1): single-strand overlay
     debug_renderer.ts     # Lattice/graph debug overlay
@@ -66,6 +68,8 @@ test/
     open_chain.test.ts, junction.test.ts, maze_fabric.test.ts
   game/
     fabric_controller.test.ts, maze_controller.test.ts
+  render/
+    pluck_model.test.ts  # String math vs a modal sum, coverage, lobes
   ui/
     param_codec.test.ts (codec table pins + format), url_codec.test.ts
     (links, legacy forms), appear_mode.test.ts
@@ -779,6 +783,65 @@ between-threads/cell-passage route.
   a fresh design at TODAY's defaults. PROBE GOTCHA: `?<seed>&am=instant`
   and `?s=<seed>&...` probe URLs are v1 links (junctionBlend 0, not the
   current 0.88): write `?<seed>.U&...` for current defaults.
+- RENDER-ONLY PLUCKS + PHYSICS CHECKBOX (worktree agent, 2026-10-11; user:
+  a tap or auto pluck moves nothing but the plucked segment, vibrating
+  "way faster", motion-blurred; then "a checkbox for disabling physics
+  entirely"). Retires the render-only standing-wave ring (pluckWaves) and
+  the auto pluck's physical pull. TAPS + AUTO PLUCKS touch zero physics
+  (bitwise: positions/prev/zPos/pass ctrls, 0 steps, never wake); a DRAG
+  still tugs and its release keeps the snap-back plus the vibration. A
+  press on a thread waits for a per-pointer slop (mouse 4 / pen 6 / touch
+  10 CSS px): lift = tap-pluck on pointerup, move = tug grabbed at the
+  PRESS point (physics off: a pan). THE LOOK (render/pluck_overlay.ts;
+  pure math in pluck_model.ts, unit-tested) is a TIME EXPOSURE: every
+  node-to-node LOBE of the unit (fabric: the walk run; knot: the tapped
+  lobe +-2) is an ideal plucked string (modes a1(beta), d'Alembert
+  triangle, parallelogram envelope rounding to a lens); the strip shader
+  box-filters the arcsine dwell density per pixel (ink-conserving; zero
+  amplitude is exactly an AA band); the speed cue is a STROBE GHOST (60 Hz
+  wall-clock phase steps, area-capped 15000 px^2, WCAG 2.3.1); decay
+  follows the voice's T60 (sustain). The overlay sits above every layer;
+  under it the BASE ribbon COLLAPSES (widthMul, one chain re-extruded - no
+  spline or crossing solve, 0 update() calls per pluck) to what the
+  overlay's opaque core always covers. NODES: crossing passes are SOFT
+  (static footprint = erase extent + fade under / over-fill half-lengths
+  over; swing <= 0.9h inside, opening at 1.5/world); junction cores and
+  marker gaps HIDE the overlay (rigid fret at the hide end), and a
+  junction's soft footprint spans the FILLET WEB's reach (each wedge paints
+  a tapering triangle of joint material ON its arms above the base - a
+  collapsed base left it as a pale static sliver beside a dark gap). Weave
+  checks: every erase / fill / fillet buffer and every other chain stays
+  identical during a pluck; partner casing bands at under nodes: 0 px
+  changed (fw=0). CONCAVE SIDE: the inner swing is capped at 0.9 radius
+  minus the thread (5-station circumradius, min over +-2), SLOPE-LIMITED
+  along the lobe (CAP_SLOPE 1/world - the raw cap jumped 0.06 -> 0.52 in
+  two stations at a tight loop and creased the blur); tight bends keep the
+  base intact +-TIGHT_K stations with a ramp (without it, narrowing beside
+  the clamped fold cut slivers out of the thread). Tried and REJECTED: a
+  symmetric (both-sides) cap - clean eyes zoomed in, but the noisy cap
+  carved every hook's outer blur into lumps at normal zoom - and a
+  3-station radius (noisier). PARAMS (appended to codec v2): pluckSize
+  psz (0-2, 0 = sound only), pluckGhost pgh, pluckReach prc (run|lobe),
+  physics phy. snappiness/snpy is RETIRED (no visible ring frequency left
+  to scale; decay follows sustain) but stays in the codec tables, since
+  dropping a param is a codec version bump. PHYSICS OFF: each build
+  settles HIDDEN (chunked ps.step(1/60), <= 22 ms per frame, the normal
+  sleep gate with temperature ignored, caps 10 sim-s / 45 s wall) behind a
+  centered animated trefoil loader (no text; reduced-motion variant), then
+  never steps; the reveal plays after. Taps pluck, drags pan; auto plucks,
+  flow, pulses, traversal and the reveal all run frozen. Toggling off mid-
+  motion settles visibly (12 s wall cap) then freezes; physics sliders
+  while frozen re-settle visibly and refreeze. Measured at gs 18: load
+  ~5 s desktop (195 steps), ~26 s at 4x CPU throttle (physics ~14 ms per
+  step) vs the physics-on intro at ~5 fps for ~14 s; at rest both modes
+  cost the same (the sleep gate already stops stepping). Probe hooks:
+  __knotPluck, __knotPluckState, __knotPerf, __knotSetPhysics,
+  __knotSetPhysicsParam, __knotReplay. PROBE GOTCHA: a legacy `seed=`
+  probe URL that already carries a key IGNORES a second copy appended
+  after it (URLSearchParams.get returns the first) - REPLACE `mf=1` with
+  `mf=0`, never append. Known: at the defaults the median tapped lobe gets
+  the 0.45h amplitude floor (psz 1.5-2 reads better at default zoom);
+  short lobes inside junction web footprints show a halo, not a blur.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +

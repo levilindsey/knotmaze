@@ -201,14 +201,20 @@ export const CODEC_V1: CodecTable = Object.freeze({
 // V2 (2026-10-11): junctionBlend defaults to 0.88 lattice units (the
 // user's pick once the param became a fixed blend distance); an edited
 // copy of V1, nothing else differs. V1 links - and the bare `?<seed>` -
-// keep junctionBlend 0.
+// keep junctionBlend 0. New params since are APPENDED below (links
+// written before them read their defaults).
 export const CODEC_V2: CodecTable = Object.freeze({
   version: 2,
-  params: Object.freeze(
-    CODEC_V1.params.map((p) =>
+  params: Object.freeze([
+    ...CODEC_V1.params.map((p) =>
       p.name === "junctionBlend" ? num("junctionBlend", 0.88) : p
-    )
-  ),
+    ),
+    // Render-only plucks + the physics checkbox (2026-10-11).
+    num("pluckSize", 1), // 60
+    num("pluckGhost", 0.35),
+    choice("pluckReach", "run", ["run", "lobe"]),
+    flag("physics", true),
+  ]),
 });
 
 // Every table ever published, oldest first (never edit or drop one).

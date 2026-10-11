@@ -314,6 +314,12 @@ export class RibbonMesh {
     this.lastColors = null;
   }
 
+  // Sample k's paint U (the accent-strip coordinate writePaint set) - the
+  // render-only pluck overlay composes the same color the shader does.
+  paintU(k: number): number {
+    return this.uvData[k * 4];
+  }
+
   // Per-sample appearance-FX weights (both verts share). null = clear;
   // repeated nulls cost one compare. Hot chains re-upload every call -
   // the weights animate (ages tick), so no reference skip applies.

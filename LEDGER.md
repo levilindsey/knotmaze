@@ -13,7 +13,11 @@ and never reused.
 
 ## Waiting on Levi
 
-(nothing right now)
+- **K25** · Pluck size default. At today's defaults the median tapped
+  lobe swings at the amplitude floor (0.45 x the thread's half-width),
+  which is subtle at default zoom; `psz` 1.5-2 reads better. Changing
+  pluckSize's default costs nothing until the K3 commit merges (the param
+  is appended to codec v2). After that it needs a codec version bump.
 
 ## In progress
 
@@ -25,8 +29,6 @@ and never reused.
 - **K2** · Kink loops squished shut (Levi's report: crossing 305 at
   `?k88dtb.oHFEfg`, eye held at the 3.2-ctrl floor). Agent: a
   rate-limited material-budget ratchet, sized by an eye-hole census.
-- **K3** · Render-only plucks plus a physics-off mode (settle, stop
-  simulating, then the appear animation; pluck only, no tug). Agent.
 
 ## Next, in order
 
@@ -71,6 +73,15 @@ and never reused.
   `404.html` so unknown paths 404.
 - **K18** · vitest rewrites the byte-identity snapshot's line endings on
   Windows (reverted by hand each run). Fix with `.gitattributes`.
+- **K26** · Plucks at tight loops, seen zoomed in. Only the concave side
+  of the swing is capped, so the time exposure leans outward and a loop's
+  eye gets a slightly ragged, enlarged rim during the ring. A symmetric
+  cap fixed the eye but carved every hook's outer blur into lumps at
+  normal zoom, so it was rejected.
+- **K27** · Plucks near junctions. Lobes inside a junction's fillet-web
+  footprint (about 1 world at cr 3) keep their base intact, so they ring
+  as a crisp thread with a halo rather than a blur, as crossing
+  footprints already do.
 
 ## Ideas (not scheduled)
 
@@ -89,3 +100,8 @@ and never reused.
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K3** · Render-only plucks plus a physics-off mode (settle, stop
+  simulating, then the appear animation; pluck only, no tug). Resolved
+  by the commit that moved this item here ("P4: render-only plucks
+  (time-exposure vibration) + physics checkbox").
