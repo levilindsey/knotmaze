@@ -689,6 +689,32 @@ between-threads/cell-passage route.
   "./"): one build serves at knotmaze.pages.dev/ and under a path prefix
   (levi.dev/knotmaze/ via levi.dev's proxy function); the dev server still
   serves at /. Credit line reads "[cat] Made by Snoring Cat" as one link.
+- APPEARANCE FX round 4 (worktree agent, 2026-10-11). ROOTS dirt sprays
+  (launch 1.6-4.4 units/s, fling 45-171 degrees, a small upward pop, life
+  0.45-0.95 s - the old throw was under one thread width). DRAW sequence
+  draws CONNECTORS LAST: an open chain the walk graph covers with ONE
+  junction-to-junction run <= 4 lattice units (the splice bridges; across
+  10 fabrics every match was a 3-sample bridge, the shortest non-connector
+  8.7) starts evenly over the last 20% of the long-strand pass, and waits
+  until both threads it joins are drawn at its ends (else bridges floated
+  up to 1.4 s early); knot mode has no connectors and its plan is
+  byte-identical. BURN IGNITION IS SWEPT, NOT STAMPED - the user's "bands
+  of black interleaved with colored bits": ignition stamped +-0.45 arc
+  around each front once per paint tick, and fronts run 16-33 arc/s, so at
+  low frame rates whole stretches between stamps never ignited and kept
+  their thread color inside the char. Each front now dates every sample it
+  crossed since the last tick (the hot head, BURN_HOT_ARC 0.45, holds age
+  0; behind it a sample's age is the time since the head left it); runs
+  swept with no live front (finished fronts, short runs crossed between
+  ticks) ignite with ages ramped from their dated neighbors
+  (datePassedRuns); every chain's pool is armed at reveal start, since
+  ignition fires only on COLD samples; the ember flicker fades out as the
+  char sets (it drew orange zebra stripes). Colored bits inside the char
+  at 3.4 s: 46 -> 2 (speed 2.2), 61 -> 8 (speed 3). Roots shares the
+  ignition. PERF NOTE: the gs-18 intro ran ~5 fps on a loaded desktop
+  because PHYSICS took 150-190 ms per frame (sp=0 -> 60 fps); the exact
+  per-pixel ages of the planned shader reveal (GPU migration G2) retire
+  this CPU machinery.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
