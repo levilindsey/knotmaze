@@ -158,8 +158,27 @@ export class RibbonMesh {
           by = ay;
         }
       }
-      const la = Math.hypot(ax, ay) || 1;
-      const lb = Math.hypot(bx, by) || 1;
+      let la = Math.hypot(ax, ay);
+      let lb = Math.hypot(bx, by);
+      // ZERO-LENGTH LEGS: a bridge's tucked tip collapses its last samples
+      // onto one point, so a leg can have no direction. Normalizing the
+      // zero vector left it zero, dot came out 0 - read as a 90-degree turn
+      // - and the miter widened those samples to 1.41x: the tip cap flared
+      // past the ribbon's sides as thin spurs ("sticky-outy bits" at every
+      // tucked bridge tip). Borrow the other leg; both zero = straight.
+      if (la < 1e-6 && lb < 1e-6) {
+        ax = bx = 1;
+        ay = by = 0;
+        la = lb = 1;
+      } else if (la < 1e-6) {
+        ax = bx;
+        ay = by;
+        la = lb;
+      } else if (lb < 1e-6) {
+        bx = ax;
+        by = ay;
+        lb = la;
+      }
       ax /= la;
       ay /= la;
       bx /= lb;

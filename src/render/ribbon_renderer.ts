@@ -3302,8 +3302,23 @@ export class RibbonRenderer {
       let ay = this.sampleScratch[1] - pay;
       let bx = pbx - this.sampleScratch[0];
       let by = pby - this.sampleScratch[1];
-      const la = Math.hypot(ax, ay) || 1;
-      const lb = Math.hypot(bx, by) || 1;
+      let la = Math.hypot(ax, ay);
+      let lb = Math.hypot(bx, by);
+      // Zero-length legs borrow the other leg (both zero = straight),
+      // exactly as RibbonMesh.update does - tucked tips collapse samples.
+      if (la < 1e-6 && lb < 1e-6) {
+        ax = bx = 1;
+        ay = by = 0;
+        la = lb = 1;
+      } else if (la < 1e-6) {
+        ax = bx;
+        ay = by;
+        la = lb;
+      } else if (lb < 1e-6) {
+        bx = ax;
+        by = ay;
+        lb = la;
+      }
       ax /= la;
       ay /= la;
       bx /= lb;
