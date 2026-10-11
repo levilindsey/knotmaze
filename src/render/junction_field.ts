@@ -63,9 +63,11 @@ export const FILL_JOINT_OUT = 3.0;
 // Arms per junction the shader scans (its loop bound). The fabric's fused
 // junctions carry 3 (splice) or 4 (merge) arms.
 export const MAX_ARMS = 12;
-// Texel row widths of the two data textures (linear index -> (i % W, i / W)).
-export const RECORD_W = 1024;
-export const PAINT_W = 1024;
+// Texel row widths of the two data textures (linear index -> (i % W, i / W),
+// done in GLSL as a mask and a shift - both widths are 2^ROW_SHIFT).
+const ROW_SHIFT = 10;
+export const RECORD_W = 1 << ROW_SHIFT;
+export const PAINT_W = 1 << ROW_SHIFT;
 
 // ---------------------------------------------------------------------------
 // Row-dirty float data textures.
@@ -164,14 +166,12 @@ export class FloatRows {
   data: Float32Array;
   rows: number;
   readonly source: RowSource;
-  readonly texture: Texture;
 
   constructor(width: number, rows: number) {
     this.width = width;
     this.rows = rows;
     this.data = new Float32Array(width * rows * 4);
     this.source = new RowSource(this.data, width, rows);
-    this.texture = new Texture({ source: this.source });
   }
 
   // Capacity for at least `texels` texels. Growing swaps the mirror for a
@@ -268,8 +268,8 @@ uniform vec4 uJParams2;
 const float TAU = 6.283185307179586;
 const float HALF_PI = 1.5707963267948966;
 
-vec4 jAt(int i) { return texelFetch(uJData, ivec2(i % ${RECORD_W}, i / ${RECORD_W}), 0); }
-vec4 pAt(int i) { return texelFetch(uPData, ivec2(i % ${PAINT_W}, i / ${PAINT_W}), 0); }
+vec4 jAt(int i) { return texelFetch(uJData, ivec2(i & ${RECORD_W - 1}, i >> ${ROW_SHIFT}), 0); }
+vec4 pAt(int i) { return texelFetch(uPData, ivec2(i & ${PAINT_W - 1}, i >> ${ROW_SHIFT}), 0); }
 
 // Paint (r, g, b, u) of a chain at a world arc (closed chains wrap, open
 // chains clamp - colorAtArc's sample mapping). h = (base, count, closed,
@@ -321,7 +321,9 @@ float profArc(int ab, float rp) {
 }
 
 vec3 composeU(vec3 rgb, float u) {
-  vec4 acc = texture(uTexture, vec2(u, 0.5));
+  // Explicit LOD: this runs in non-uniform control flow, where implicit
+  // derivatives are undefined (the strip has one mip level either way).
+  vec4 acc = textureLod(uTexture, vec2(u, 0.5), 0.0);
   return mix(rgb, acc.rgb, acc.a);
 }
 
@@ -520,6 +522,10 @@ float jointWeight(float d) {
 void main(void) {
   vec3 base = vSection;
   vec4 acc = texture(uTexture, vec2(vUV.x, 0.5));
+  // How much reveal FX (rainbow stripes, white wash) shows. The joint
+  // field yields to it, so a patch shows exactly what its own ribbon shows
+  // while the FX plays (the fans stay hidden until their arms settle).
+  float fxShow = 0.0;
   if (vFx > 0.0) {
     float p = min(vFx, 1.0);
     int bi = int(min(vUV.y, 0.99999) * 6.0);
@@ -533,9 +539,10 @@ void main(void) {
     float wh = smoothstep(0.06, 0.26, p) * (1.0 - smoothstep(0.38, 0.60, p));
     base = mix(base, stripe, rb);
     base = mix(base, vec3(0.93, 0.93, 0.95), wh * 0.6);
+    fxShow = max(rb, wh);
   }
   vec3 rgb = mix(base, acc.rgb, acc.a);
-  if (vJ.x > 0.5) {
+  if (vJ.x > 0.5 && fxShow < 1.0) {
     float d1 = 1e9;
     float d2 = 1e9;
     int r1 = -1;
@@ -546,18 +553,23 @@ void main(void) {
     considerJoint(vJ.w, d1, r1, d2, r2);
     float w1 = r1 >= 0 ? jointWeight(d1) : 0.0;
     if (w1 > 0.0) {
-      vec3 f = junctionField(r1, vPos);
-      float w = w1;
+      // Each joint PULLS the patch toward its own field by its own weight;
+      // equidistant from two joints the pulls hand off smoothly (q = 0.5 on
+      // the bisector) instead of switching fields along it. Weighting the
+      // pulls - not mixing fields and weights separately - keeps the far
+      // joint's share as small as its weight, so nothing steps where it
+      // leaves range.
+      float q = 1.0;
+      float w2 = 0.0;
       float band = uJParams.x;
-      if (r2 >= 0 && d2 < uJParams.w && d2 - d1 < band) {
-        // Equidistant from two joints: hand off smoothly (50/50 on the
-        // bisector) instead of switching fields along it.
+      if (r2 >= 0 && d2 - d1 < band) {
         float s = (d2 - d1) / band;
-        float q = 0.5 + 0.5 * s * s * (3.0 - 2.0 * s);
-        f = mix(junctionField(r2, vPos), f, q);
-        w = mix(jointWeight(d2), w1, q);
+        q = 0.5 + 0.5 * s * s * (3.0 - 2.0 * s);
+        w2 = jointWeight(d2);
       }
-      rgb = mix(rgb, f, w);
+      vec3 pull = q * w1 * (junctionField(r1, vPos) - rgb);
+      if (w2 > 0.0) pull += (1.0 - q) * w2 * (junctionField(r2, vPos) - rgb);
+      rgb += pull * (1.0 - fxShow);
     }
   }
   float aM = vFx < 0.0 ? clamp(1.0 + vFx, 0.0, 1.0) : 1.0;

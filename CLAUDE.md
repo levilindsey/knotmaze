@@ -620,7 +620,15 @@ between-threads/cell-passage route.
   probe_jstats. Known residual, PRE-EXISTING (identical on master):
   faint hairline dashes inside 4-way merge cores - wedge flank edges
   meet the uncovered arm strips just outside the seal disc, where the
-  overlap-core blend differs from the base ribbon underneath.
+  overlap-core blend differs from the base ribbon underneath. REVIEW
+  ROUND (same day, read-only review agent): stale GPU tails on over-fills
+  (PARTIAL BUFFER UPLOADS lore below), a hand-off step where the farther
+  of two joints left range (each joint now pulls by its own weight), and
+  rainbow stripes erased on fills near joints for ~0.8 s (the field now
+  yields to aFx, as master's CPU override did) - all fixed. Also seen,
+  PRE-EXISTING: during a reveal a joint's fan can turn opaque while a fill
+  beside it is still striped (the fan samples each arm's settledness 0.8
+  ctrl out, which can sit on a different reveal phase than the fill).
 - 2026-10-11 small fixes. TUCKED-TIP SPURS (318b64b; the user's "faint
   jagged sticky-outy bits"): tuckFusedTips collapses a bridge tip's last
   samples onto one point, so the miter legs there have ZERO length -
@@ -669,7 +677,15 @@ default to lowp). Row-partial uploads go through a TextureUploaderWebGL
 extension, which must be registered BEFORE the renderer exists (its
 GlTextureSystem merges the uploader map at construction) - module load
 of junction_field.ts does it. Texture `source.update()` runs its GL
-upload synchronously, mid-tick.
+upload synchronously, mid-tick. PARTIAL BUFFER UPLOADS: pixi's
+`Buffer.update(sizeInBytes)` REMEMBERS the size (GlBufferSystem uploads
+`buffer._updateSize` bytes at the next draw), so a bare update() after a
+partial one re-sends only that prefix, and within a frame the LAST request
+before the draw wins - over-fills kept stale paint/FX on the GPU past the
+paint pass's prefix uploads (review round, measured by GL readback:
+probe_glreadback compares every mesh's buffers against its CPU mirror).
+Any buffer that ever gets a partial upload must pass explicit sizes on
+every upload (ribbon_mesh `uploadAll`, `copyUploadPending`).
 
 PROBE LORE (2026-10-11): **the session scratchpad is shared by every
 agent of the session** - another agent rebuilt `dist_before` under a

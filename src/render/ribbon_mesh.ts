@@ -5,6 +5,16 @@
 import { Buffer, BufferUsage, Mesh, MeshGeometry, Texture } from "pixi.js";
 import { addFloatAttribute } from "./junction_field";
 
+// Upload a WHOLE attribute buffer. pixi's Buffer.update(size) REMEMBERS
+// its size: a bare update() after a partial one re-sends only that prefix
+// (GlBufferSystem uploads buffer._updateSize bytes), leaving the GPU tail
+// stale. Over-fills mix both - repaintFromRibbonWindow's prefix uploads,
+// then a window copy that GREW the span showed old paint/FX at its end.
+function uploadAll(geometry: MeshGeometry, name: string): void {
+  const buffer = geometry.getBuffer(name);
+  buffer.update(buffer.data.byteLength);
+}
+
 // Attach a per-vertex aColor (vec3) attribute carrying the SECTION RGB
 // (palette mode; see the renderer's section shader). The buffer rides the
 // geometry like aPosition/aUV and uploads via the same update() path.
@@ -70,6 +80,9 @@ export class RibbonMesh {
   // Samples the last window copy actually used (the rest repeat its last
   // pair as degenerate quads).
   private usedSpan = 0;
+  // A window copy requested WHOLE-buffer paint uploads that no repaint has
+  // passed through yet (see repaintFromRibbonWindow).
+  private copyUploadPending = false;
 
   constructor(
     sampleCount: number,
@@ -141,7 +154,7 @@ export class RibbonMesh {
       jd[v + 2] = k[2];
       jd[v + 3] = k[3];
     }
-    this.mesh.geometry.getBuffer("aJoint").update();
+    uploadAll(this.mesh.geometry, "aJoint");
   }
 
   // Rewrite vertex positions from a closed centerline. `positions`/
@@ -258,7 +271,7 @@ export class RibbonMesh {
       this.vertexData[i * 4 + 2] = cx - nx * wRight;
       this.vertexData[i * 4 + 3] = cy - ny * wRight;
     }
-    this.mesh.geometry.getBuffer("aPosition").update();
+    uploadAll(this.mesh.geometry, "aPosition");
   }
 
   // PAINT (maze-fabric palette mode): set every sample's paint U (the
@@ -274,7 +287,7 @@ export class RibbonMesh {
       this.uvData[i * 4] = u;
       this.uvData[i * 4 + 2] = u;
     }
-    this.mesh.geometry.getBuffer("aUV").update();
+    uploadAll(this.mesh.geometry, "aUV");
     const cd = this.colorData;
     if (!cd || colors === this.lastColors) return;
     const constant = colors.length === 3;
@@ -290,7 +303,7 @@ export class RibbonMesh {
       cd[i * 6 + 4] = g;
       cd[i * 6 + 5] = b;
     }
-    this.mesh.geometry.getBuffer("aColor").update();
+    uploadAll(this.mesh.geometry, "aColor");
     this.lastColors = colors;
   }
 
@@ -310,7 +323,7 @@ export class RibbonMesh {
     if (!fx) {
       if (this.fxZero) return;
       fd.fill(0);
-      this.mesh.geometry.getBuffer("aFx").update();
+      uploadAll(this.mesh.geometry, "aFx");
       this.fxZero = true;
       return;
     }
@@ -319,7 +332,7 @@ export class RibbonMesh {
       fd[i * 2] = w;
       fd[i * 2 + 1] = w;
     }
-    this.mesh.geometry.getBuffer("aFx").update();
+    uploadAll(this.mesh.geometry, "aFx");
     this.fxZero = false;
   }
 
@@ -422,16 +435,17 @@ export class RibbonMesh {
       }
     }
     this.usedSpan = Math.max(1, Math.min(sampleSpan, this.sampleCount));
-    this.mesh.geometry.getBuffer("aPosition").update();
-    if (copyUVs) this.mesh.geometry.getBuffer("aUV").update();
+    uploadAll(this.mesh.geometry, "aPosition");
+    if (copyUVs) uploadAll(this.mesh.geometry, "aUV");
     if (copyColors) {
-      this.mesh.geometry.getBuffer("aColor").update();
+      uploadAll(this.mesh.geometry, "aColor");
       this.lastColors = null; // Buffer no longer mirrors a writePaint call.
     }
     if (copyFx) {
-      this.mesh.geometry.getBuffer("aFx").update();
+      uploadAll(this.mesh.geometry, "aFx");
       this.fxZero = source.fxZero;
     }
+    if (copyUVs) this.copyUploadPending = true;
   }
 
   // PAINT-ONLY refresh of the window the last updateFromRibbonWindow copied
@@ -500,17 +514,27 @@ export class RibbonMesh {
         );
       }
     }
-    this.mesh.geometry.getBuffer("aUV").update(span * 4 * 4);
+    // pixi uploads each buffer ONCE per draw, at the size of its LAST
+    // update() request: after a window copy (whole buffers, tail included)
+    // a prefix request would truncate that upload and strand the copy's
+    // tail on the CPU. The first repaint after a copy therefore stays full.
+    const geo = this.mesh.geometry;
+    const full = this.copyUploadPending;
+    this.copyUploadPending = false;
+    if (full) uploadAll(geo, "aUV");
+    else geo.getBuffer("aUV").update(span * 4 * 4);
     if (copyColors) {
-      this.mesh.geometry.getBuffer("aColor").update(span * 6 * 4);
+      if (full) uploadAll(geo, "aColor");
+      else geo.getBuffer("aColor").update(span * 6 * 4);
       this.lastColors = null;
     }
     if (fxClear) {
       this.fxData!.fill(0);
-      this.mesh.geometry.getBuffer("aFx").update();
+      uploadAll(geo, "aFx");
       this.fxZero = true;
     } else if (copyFx) {
-      this.mesh.geometry.getBuffer("aFx").update(span * 2 * 4);
+      if (full) uploadAll(geo, "aFx");
+      else geo.getBuffer("aFx").update(span * 2 * 4);
       this.fxZero = false;
     }
   }
@@ -649,9 +673,9 @@ export class PatchGridMesh {
   }
 
   commit(): void {
-    this.mesh.geometry.getBuffer("aPosition").update();
+    uploadAll(this.mesh.geometry, "aPosition");
     if (this.uvDirty) {
-      this.mesh.geometry.getBuffer("aUV").update();
+      uploadAll(this.mesh.geometry, "aUV");
       this.uvDirty = false;
     }
   }
