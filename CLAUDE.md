@@ -42,6 +42,7 @@ src/
   render/
     ribbon_renderer.ts    # PixiJS ribbon meshes
     ribbon_mesh.ts        # Triangle strip extrusion
+    junction_field.ts     # GPU junction field: float data textures + shaders
     fabric_maze_renderer.ts # P4: woven gold path recolor + markers + hints
     maze_renderer.ts      # P4 LEGACY (md=1): single-strand overlay
     debug_renderer.ts     # Lattice/graph debug overlay
@@ -571,7 +572,55 @@ between-threads/cell-passage route.
   default-URL A/B, suite green. Known leftover: a gameplay PULSE CREST
   (a narrow paint-U band) crossing a junction web still Gouraud-streaks
   along fan triangles at the player's junction (seen in a frozen-paint
-  diff) - finer rings or a U-only ring refinement would cure it.
+  diff) - finer rings or a U-only ring refinement would cure it. (Both
+  the cost and the leftover were closed by the GPU JUNCTION FIELD round
+  below: rings are gone, the field runs per pixel.)
+- GPU JUNCTION FIELD (2026-10-11; worktree agent, user request "compute
+  the junction blend per pixel in a shader"): the field moved from
+  per-vertex CPU evaluation (ring-subdivided fans; 8-11 ms per paint tick
+  at the user's rect URL, main thread saturated) to PER-PIXEL fragment
+  shaders (render/junction_field.ts). DATA = two page-lifetime RGBA32F
+  textures, linear texel index, read with texelFetch + manual lerp:
+  PAINT (one texel per ribbon sample = section rgb + paint U, written by
+  `writeFillPaint` beside every ribbon writePaint - so the field reads
+  exactly what the ribbons wear, burn cooling / reveal glow / gameplay
+  paint included; a custom "knot-float-rows" uploader sends only touched
+  rows) and RECORDS (per joint: center, nArms, fan fx; per arm in angle
+  order: (paintBase, count, closed, total), (arc0, dir, domain), then one
+  texel per FIELD_PROF_DR step (angle[g], arc[g], angle[g+1], arc[g+1]);
+  nArms 0 = an AXIS record - free-tip caps). Fans (TriFanMesh) carry only
+  positions + `aRec`; over/emergent fills carry `aJoint` (up to four
+  record candidates; the fill shader picks the nearest per pixel, smooth
+  hand-off on bisectors). The CPU rebuilds fan geometry + records only
+  when update() ran (geomRev), a joinery slider moved, or a reveal / FX
+  animates; a paint-only tick just flushes paint rows (rebuildFillets
+  takes `force` for probes). `renderer.fieldProbe` is now a line-for-line
+  CPU transliteration of the shader reading the SAME mirrors
+  (`cpuJunctionField`; `fieldProbe.record(ji)` = a joint's texel index).
+  Two model fixes ride along (user/coordinator requirement: gameplay
+  paint must stay clean at joints): (1) each arm is COMPOSED with its own
+  accent before the edge-aware blend (render lore below); (2) a patch
+  wears a joint's field only where it IS one of that joint's arms (same
+  chain, window within the arm's reach) - foreign threads passing a
+  joint were painted with its colors and pulse glow (183 -> 88 wearing
+  patches at the tw 0.64 traversal state; the original j4 fill-seam site
+  at the ring URL is unchanged). Plus a PAINT-ONLY over-fill refresh
+  (`repaintFromRibbonWindow`: used pairs' UV/RGB/FX, prefix upload) -
+  the full 128-station window re-copy was 2/3 of the paint pass.
+  MEASURED (desktop Chrome, interleaved runs): user URL rebuildFillets
+  7.9-10.7 -> 0.95-0.99 ms/call (forced full rebuild 8.0 -> 2.1),
+  tickPaint 9.1-12.7 -> 1.1-1.2 ms, main-thread script 96-98% -> 49-52%,
+  rest 41-57 -> 60 fps (vsync-bound); ring 4.5 -> 0.46, default 5.5 ->
+  0.79 ms/call; draw-phase GPU 0.34 -> 0.62 ms/frame at 3200x1800.
+  GPU-vs-CPU census (probe_gpucensus: tiny triangles injected into the fan
+  mesh carry record indices, read back vs fieldProbe): max |err| 0.0024
+  (< 1/255) over 30-42k points per URL, gameplay paint included. Probes
+  (repo .claude/probes, untracked): probe_gpucensus, probe_absheet,
+  probe_pulseframes (HOVER=1), probe_filldiff, probe_gpudraw,
+  probe_jstats. Known residual, PRE-EXISTING (identical on master):
+  faint hairline dashes inside 4-way merge cores - wedge flank edges
+  meet the uncovered arm strips just outside the seal disc, where the
+  overlap-core blend differs from the base ribbon underneath.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
@@ -589,6 +638,38 @@ the recorded plan, then WASM collision narrow-phase (2-4x on the ~40%
 slice); never color the Gauss-Seidel solver. Micro: hypot→sqrt in
 sampleAt/evalSegment/RibbonMesh.update (est 1-2ms), optional
 ticker-stop when fully asleep.
+
+RENDER LORE (2026-10-11, GPU junction field): **blend COMPOSED colors,
+never palette U from different sources.** The accent strip is ordered
+[bandA reversed | base | gold | bandB], so a U lerp between two arms (or
+a fill and the field) sweeps every family in between: two near-white
+pulse cores (U 1.5 and 234.5) blended THROUGH gold, and a traveled /
+untraveled pair stepped inside 1/6 of the blend instead of ramping.
+Compose each source with its own accent first (exactly the section
+shader's mix(section, acc.rgb, acc.a)), then mix RGB. Interpolating U
+between ADJACENT samples of one thread stays fine (that is what the
+ribbon itself does). FLOAT DATA TEXTURES in pixi v8: format
+rgba32float, scaleMode nearest (a float texture whose sampler asks for
+LINEAR without OES_texture_float_linear is incomplete and reads black -
+even via texelFetch; WebKit/mobile do not guarantee the extension),
+alphaMode premultiplied-alpha (pixi sets UNPACK_PREMULTIPLY_ALPHA from
+it before every upload), `precision highp sampler2D` (fragment samplers
+default to lowp). Row-partial uploads go through a TextureUploaderWebGL
+extension, which must be registered BEFORE the renderer exists (its
+GlTextureSystem merges the uploader map at construction) - module load
+of junction_field.ts does it. Texture `source.update()` runs its GL
+upload synchronously, mid-tick.
+
+PROBE LORE (2026-10-11): **the session scratchpad is shared by every
+agent of the session** - another agent rebuilt `dist_before` under a
+running A/B (the "before" stamp silently became a different commit).
+Give every build/output a unique subdirectory and check the stamp's SHA.
+rebuildFillets is GATED now: timing loops must call it with `true`, and
+geometry injected into the fan meshes (the GPU census) survives only
+until the next update() - wait for sleep and use a fw=0 URL. A rAF-to-rAF
+TIME_ELAPSED query also counts GPU idle between a mid-tick GL upload and
+the render (10-12 ms phantom "spikes" at rest): start the query at the
+frame's first draw call (probe_gpudraw).
 
 RENDER LORE (hard-won, 2026-10-11): **a junction overlay must match
 the ribbons across their whole WIDTH, not along their centerlines -
