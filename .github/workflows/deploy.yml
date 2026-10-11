@@ -1,0 +1,41 @@
+name: Deploy to Cloudflare Pages
+
+# Every push to master builds and deploys https://knotmaze.pages.dev,
+# which https://levi.dev/knots redirects to (see levi.dev's
+# functions/[[catchall]].js). Tests gate the deploy: a red test suite
+# leaves the previous deployment live.
+#
+# Secrets: CLOUDFLARE_API_TOKEN (Pages:Edit) and CLOUDFLARE_ACCOUNT_ID
+# (Levi's personal account, the same pair levi.dev uses).
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      - run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=knotmaze --branch=master --commit-hash=${{ github.sha }}
