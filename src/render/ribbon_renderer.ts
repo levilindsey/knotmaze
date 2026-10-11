@@ -3415,9 +3415,9 @@ export class RibbonRenderer {
 
   // MARKER DISC GAPS: a start/exit disc is an "over pass" whose
   // silhouette is a circle - its thread gets a REAL erase grid via the
-  // exact crossing machinery (lane marches to the silhouette + arc-length
-  // gap margin + buildEraseGrid's miter/fade), so these gaps look and
-  // fade like every other gap by construction.
+  // crossing machinery (lane marches + buildEraseGrid's miter/fade), so
+  // these gaps fade like every other gap. The margin, unlike a crossing's,
+  // is CONCENTRIC: lanes march to the circle of radius (disc + gap).
   private renderMarkerGaps(fillHalf: number, gap: number): void {
     for (let m = 0; m < this.markerOccluders.length; m++) {
       const occ = this.markerOccluders[m];
@@ -3440,6 +3440,13 @@ export class RibbonRenderer {
       const cy = this.sampleScratch[1];
       const eraseW = fillHalf + ERASE_WIDTH_PAD;
       const marchMax = occ.radius + gap + 1.2;
+      // CONCENTRIC margin: the gap's edge is the circle of radius
+      // (disc + gap) around the disc center - a circle as big as the disc
+      // would be if it reached the gap's edge. The crossing-style
+      // arc-length margin (cut at the disc's own circle, then + gap along
+      // the thread) slid the disc's circle outward instead, so the gap
+      // edge kept the DISC's tighter curvature (user report).
+      const gapRadius = occ.radius + gap;
       for (let dir = -1; dir <= 1; dir += 2) {
         const cuts = dir > 0 ? this.laneCutsPos : this.laneCutsNeg;
         const sMax = closed
@@ -3450,7 +3457,7 @@ export class RibbonRenderer {
             );
         for (let l = 0; l < ERASE_LANES; l++) {
           const u = eraseW * (1 - (2 * l) / (ERASE_LANES - 1));
-          let prevG = -occ.radius;
+          let prevG = -gapRadius;
           let prevS = 0;
           let cut = Number.NaN;
           for (let s = MARCH_STEP; ; s += MARCH_STEP) {
@@ -3464,7 +3471,7 @@ export class RibbonRenderer {
             );
             const px = this.sampleScratch[0] - this.sampleScratch[3] * u;
             const py = this.sampleScratch[1] + this.sampleScratch[2] * u;
-            const g = Math.hypot(px - cx, py - cy) - occ.radius;
+            const g = Math.hypot(px - cx, py - cy) - gapRadius;
             if (g >= 0) {
               cut =
                 dir *
@@ -3476,8 +3483,7 @@ export class RibbonRenderer {
             if (sc >= sMax) break;
           }
           if (Number.isNaN(cut)) cut = dir * Math.max(sMax, MARCH_STEP);
-          // Arc-length visible margin, like every crossing cut (P3.21).
-          cuts[l] = cut + dir * (CUT_BIAS + gap);
+          cuts[l] = cut + dir * CUT_BIAS;
           if (!closed) {
             const lo = -center + 1e-3;
             const hi = total - center - 1e-3;
