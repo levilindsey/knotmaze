@@ -568,8 +568,10 @@ between-threads/cell-passage route.
   4.9 ms (default); the lever if it matters is caching each junction's
   RGB field across paint-only ticks (only U animates). Verified: all 41
   junction crops at the user's ring URL (live | agent patch | final),
-  default-URL A/B, suite green. NOT FIXED here: third-thread bites (see
-  the open queue).
+  default-URL A/B, suite green. Known leftover: a gameplay PULSE CREST
+  (a narrow paint-U band) crossing a junction web still Gouraud-streaks
+  along fan triangles at the player's junction (seen in a frozen-paint
+  diff) - finer rings or a U-only ring refinement would cure it.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
@@ -695,16 +697,26 @@ Still open in P4:
 - ~~Old maze mode~~ — RETIRED 2026-10-10 (commit bf86855): `md=1`,
   `core/maze.ts`, `game/maze_controller.ts`, `render/maze_renderer.ts`
   and their tests are deleted; `mf` is the only mode toggle.
-- **Open artifact queue (updated 2026-10-11)**: THIRD-THREAD BITES
-  (the user's "occasional breaks in threads", bottom center of the
-  ring URL): an erase cuts everything under its footprint and the
-  over-fill repaints only its own over thread, so a joint's OTHER arm
-  (a bridge fused beside the crossing) inside the footprint stays cut -
-  probe_bites census at the ring URL: crossings 61/63/78 (chain-3
-  self-crossings) biting chains 8/12/19, edge-weighted and flickering
-  with flow. Needs a repaint of the joint's other arms inside an
-  over-pass erase footprint (or an erase exclusion). The segments-scheme
-  seams are RESOLVED (junction blend round). AGENT-MEASURED, NOT YET
+- **Open artifact queue (updated 2026-10-11)**: the user's "occasional
+  breaks in threads" (ring URL, phone, pre-e1cac59 maze - optimal 504)
+  are SHARP DARK SPIKES at a crossing gap (crossing 67: a thin black
+  triangle into the over thread, another along the under thread's cap)
+  - erase-grid class, NOT junction bites. NOT REPRODUCED: ~10 runs of
+  the old maze (desktop + emulated phone with 4x CPU throttle, at rest,
+  under flow, during pluck rings, through the ap=trace reveal) never
+  produced one; the settle is chaotic, so the user's run reached a
+  configuration ours do not. Next step needs a fresh repro on the
+  current build (panel version string + screenshot). Census lore from
+  the hunt: probe_bites' "third-thread bites" (erases cutting a joint's
+  bridge beside the crossing, 61/63/78 at the ring URL) are real in the
+  BASE layer but covered by webs in the final image; a rescue-patch
+  repaint was built, measured, and DISCARDED (it drew faint edge lines
+  and fixed nothing visible). Self-crossing censuses must restrict
+  "the over thread" to the over PASS's local ribbon (a shared chain
+  matches the under pass too); tight kink loops still confound it. One
+  real leftover seen: a tiny dark spur at a kink-loop tip (crossing 30
+  at the current ring URL). The segments-scheme seams are RESOLVED
+  (junction blend round). AGENT-MEASURED, NOT YET
   FIXED: (1) [FIXED late 2026-10-10: neighborGaps now gives an open
   chain's self-linked side the run to its chain end - first passes'
   chain-start cut 0.360 -> 0.482]; (2) latent
