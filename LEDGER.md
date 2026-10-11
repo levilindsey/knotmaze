@@ -15,9 +15,18 @@ and never reused.
 
 - **K25** · Pluck size default. At today's defaults the median tapped
   lobe swings at the amplitude floor (0.45 x the thread's half-width),
-  which is subtle at default zoom; `psz` 1.5-2 reads better. Changing
-  pluckSize's default costs nothing until the K3 commit merges (the param
-  is appended to codec v2). After that it needs a codec version bump.
+  which is subtle at default zoom; `psz` 1.5-2 reads better. K3 has
+  merged (df373b5), so changing pluckSize's default now means a codec
+  version bump (cheap).
+- **K28** · Intro vs physics settle. The intro runs over a settling sim,
+  so its frame rate follows physics (5 fps measured on a desktop loaded
+  by parallel agents; the phone settles at half real time). Options:
+  (a) settle first behind the physics-off loader, then play the intro on
+  the settled layout at full frame rate, then live physics - smooth, but
+  every rebuild waits ~5 s on desktop, longer on a phone; (b) keep it
+  until K7, whose worker lets the intro run at full frame rate WHILE
+  physics settles, with no wait. Recommendation: (b), unless the interim
+  smoothness is worth the wait.
 
 ## In progress
 
@@ -68,9 +77,6 @@ and never reused.
   beside it is still striped (K4 fixes it by construction).
 - **K16** · Physics settle is slow: 100-190 ms/frame at gs 18 on a loaded
   desktop; on the phone 7 sim-seconds took 14 s. K6/K7 fix the UI side.
-- **K17** · Deep URLs such as `levi.dev/knotmaze/foo/bar` fail (the SPA
-  fallback serves the page under the wrong relative base). Fix: ship a
-  `404.html` so unknown paths 404.
 - **K18** · vitest rewrites the byte-identity snapshot's line endings on
   Windows (reverted by hand each run). Fix with `.gitattributes`.
 - **K26** · Plucks at tight loops, seen zoomed in. Only the concave side
@@ -83,25 +89,34 @@ and never reused.
   as a crisp thread with a halo rather than a blur, as crossing
   footprints already do.
 
-## Ideas (not scheduled)
+## Approved, to schedule (2026-10-11)
 
-- **K19** · More maze stats: elapsed/solve time, efficiency %, junctions
-  visited, dead ends entered.
-- **K20** · Daily seed (Wordle-style shared maze with time-to-solve
-  sharing); serialize the remaining MazeParams.
-- **K21** · Textured page background (the render side is ready since
-  Stage 18; needs art).
+- **K19** · More maze stats in the HUD: solve time, efficiency %,
+  junctions visited, dead ends entered.
+- **K20** · Daily seed: a Wordle-style shared daily maze, with each day's
+  play recorded in localStorage (stats and per-day history) and
+  time-to-solve sharing. Also serialize the remaining MazeParams.
+- **K21** · Shader backgrounds: research noise-based effects, implement
+  several that never distract (low contrast; colors from the design's
+  gamut), selectable from a dropdown. Draw them as the first layer of the
+  main canvas once K1 lands (per-pixel gaps no longer erase what is
+  beneath); run at reduced resolution and frame rate.
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
-  allows), after G3.
+  allows; down when struggling). Part of K6, refined after G3.
 - **K23** · GPU particles (G2.4), GPU fog-of-war accumulation, the yarn as
   a gap-masked ribbon (G3-5).
-- **K24** · Render on demand when the scene is fully static (battery).
+- **K24** · Render on demand when the scene is fully static (battery);
+  part of K6. An animated background (K21) must not defeat it.
 
 ## Done
 
 (items move here with the commit that resolved them)
 
 - **K3** · Render-only plucks plus a physics-off mode (settle, stop
-  simulating, then the appear animation; pluck only, no tug). Resolved
-  by the commit that moved this item here ("P4: render-only plucks
-  (time-exposure vibration) + physics checkbox").
+  simulating, then the appear animation; pluck only, no tug). Done in
+  df373b5.
+- **K17** · Deep URLs such as `levi.dev/knotmaze/foo/bar` failed (the SPA
+  fallback served the page under the wrong relative base). Done in the
+  commit that moved this item here: `public/404.html` turns off Pages'
+  SPA fallback and sends any unknown path to the app root, keeping the
+  link's token.
