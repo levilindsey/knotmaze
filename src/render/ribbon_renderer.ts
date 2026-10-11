@@ -216,7 +216,17 @@ const FILLET_REACH_PER_HALF = 1.25; // * fillHalf, along each arm.
 const FILLET_MAX_WEDGE = 2.6; // Radians.
 const FILLET_CORNER_LIM = 2.2; // * edge half-width: skip distant corners.
 const FILLET_BEZIER_STEPS = 8;
-const FILLET_EDGE_PTS = 5; // Samples per curve-hugging wedge flank.
+// Samples per curve-hugging wedge flank: at least FILLET_EDGE_PTS, more as
+// the reach grows so no flank chord exceeds FILLET_EDGE_CHORD world (reach
+// tops out near 3 world: threadWidth 0.8 at cuspRadius 6). The flank is a
+// polyline through points on its arm's edge; where the arm wraps a small
+// eye, each chord cuts across the curved edge and leaves a circular
+// segment (sagitta c^2/8R) that neither web nor ribbon covers - a thin dark
+// crescent. A fixed 5 made 0.48-world chords at cuspRadius 6 (crescents at
+// 12 of 41 joints on the user's ring URL); 0.3 still left specks.
+const FILLET_EDGE_PTS = 5;
+const FILLET_EDGE_CHORD = 0.15;
+const FILLET_EDGE_PTS_MAX = 20;
 // Under-gap flank clamp (rebuildFillets armReach): stop this many
 // fillHalfs short of the arm's nearest cut (underWindows carry MID-lane
 // extents; the wedge-side lanes of an oblique crossing cut nearer - a
@@ -4445,7 +4455,7 @@ export class RibbonRenderer {
     if (!this.filletMesh) {
       let armTotal = 0;
       for (const jn of this.junctionArms) armTotal += jn.arms.length;
-      const wedgeRim = 2 * FILLET_EDGE_PTS + FILLET_BEZIER_STEPS + 1;
+      const wedgeRim = 2 * FILLET_EDGE_PTS_MAX + FILLET_BEZIER_STEPS + 1;
       const verts = armTotal * (1 + wedgeRim) + nDiscs * (2 + DISC_SEGS);
       const idx = (armTotal * (wedgeRim - 1) + nDiscs * DISC_SEGS) * 3;
       this.filletMesh = new TriFanMesh(verts, idx);
@@ -4673,7 +4683,7 @@ export class RibbonRenderer {
       // Layer flags (see LAYER VOTES), resolved once per rebuild.
       top: boolean;
       dives: boolean;
-      // Flank centerline samples [x, y, tx, ty] x FILLET_EDGE_PTS, shared
+      // Flank centerline samples [x, y, tx, ty] per flank point, shared
       // by the arm's two wedges (left and right flanks differ only in the
       // offset side). null until first used.
       flankPts: Float64Array | null;
@@ -5343,12 +5353,18 @@ export class RibbonRenderer {
           // arm's two wedges (only the offset side differs).
           let fp = arm.flankPts;
           if (!fp) {
-            fp = new Float64Array(FILLET_EDGE_PTS * 4);
             const reach = armReach(arm);
             const samples = this.chainSamples[arm.chain]!;
-            for (let e = 0; e < FILLET_EDGE_PTS; e++) {
-              const sArc =
-                (0.12 + (0.88 * e) / (FILLET_EDGE_PTS - 1)) * reach;
+            const np = Math.min(
+              FILLET_EDGE_PTS_MAX,
+              Math.max(
+                FILLET_EDGE_PTS,
+                Math.ceil((0.88 * reach) / FILLET_EDGE_CHORD) + 1
+              )
+            );
+            fp = new Float64Array(np * 4);
+            for (let e = 0; e < np; e++) {
+              const sArc = (0.12 + (0.88 * e) / (np - 1)) * reach;
               const a0 = normArc(
                 arm.arc0 + arm.dir * sArc,
                 arm.total,
@@ -5391,7 +5407,7 @@ export class RibbonRenderer {
             arm.flankPts = fp;
           }
           const sgn = left ? w : -w;
-          for (let e = 0; e < FILLET_EDGE_PTS; e++) {
+          for (let e = 0; e < fp.length / 4; e++) {
             const px = fp[e * 4];
             const py = fp[e * 4 + 1];
             out.push(px - fp[e * 4 + 3] * sgn, py + fp[e * 4 + 2] * sgn);
@@ -5411,13 +5427,15 @@ export class RibbonRenderer {
         const pushPt = (px: number, py: number): void => {
           rim.push(px, py);
         };
-        for (let e = 0; e < FILLET_EDGE_PTS; e++) {
+        const nA = edgeA.length / 2;
+        const nB = edgeB.length / 2;
+        for (let e = 0; e < nA; e++) {
           pushPt(edgeA[e * 2], edgeA[e * 2 + 1]);
         }
-        const pax = edgeA[(FILLET_EDGE_PTS - 1) * 2];
-        const pay = edgeA[(FILLET_EDGE_PTS - 1) * 2 + 1];
-        const pbx = edgeB[(FILLET_EDGE_PTS - 1) * 2];
-        const pby = edgeB[(FILLET_EDGE_PTS - 1) * 2 + 1];
+        const pax = edgeA[(nA - 1) * 2];
+        const pay = edgeA[(nA - 1) * 2 + 1];
+        const pbx = edgeB[(nB - 1) * 2];
+        const pby = edgeB[(nB - 1) * 2 + 1];
         for (let i = 1; i < n; i++) {
           const q = i / n;
           const m0 = (1 - q) * (1 - q);
@@ -5428,7 +5446,7 @@ export class RibbonRenderer {
             m0 * pay + m1 * cy + m2 * pby
           );
         }
-        for (let e = FILLET_EDGE_PTS - 1; e >= 0; e--) {
+        for (let e = nB - 1; e >= 0; e--) {
           pushPt(edgeB[e * 2], edgeB[e * 2 + 1]);
         }
         // Fan from the JUNCTION CENTER, not the edge-intersection corner:

@@ -198,9 +198,9 @@ between-threads/cell-passage route.
   converge to one near-white accent and crest amplitude ramps with
   distance (CREST_RAMP) so pulses swell out of the core glow instead
   of popping in full-strength.
-- Stage 15 — cuspRadius slider (`cr=`, [0, 3], default 1, live):
-  multiplies fillet reach — 0 = sharp joints, 3 = wide cast-metal
-  webs. Fillet color probes scale with patch reach (`paintUAtArc`,
+- Stage 15 — cuspRadius slider (`cr=`, [0, 3] - max raised to 6 on
+  2026-10-11, default 1, live): multiplies fillet reach — 0 = sharp
+  joints, 3+ = wide cast-metal webs. Fillet color probes scale with patch reach (`paintUAtArc`,
   ~0.45·L); fixed-offset probes rendered dark wings inside the head
   glow at large radii.
 - Stage 16 — SECTION COLOR SCHEMES on a 2D palette: palette textures
@@ -639,7 +639,19 @@ between-threads/cell-passage route.
   mirror each other. CONCENTRIC DOT GAPS (5983077, user spec): the gap
   around a start/exit dot is a ring of radius dot + gap (lanes march to
   that circle); the old dot-circle-plus-arc-margin edge kept the dot's
-  own tighter curvature.
+  own tighter curvature. CUSP RADIUS MAX 3 -> 6 (user request) + ADAPTIVE
+  WEDGE FLANKS: a wedge flank is a polyline through points on its arm's
+  edge, and where the arm wraps a small eye each chord cuts across the
+  curved edge, leaving a circular segment (sagitta c^2/8R) that neither
+  the web nor the ribbon covers - thin dark crescents. A fixed 5 flank
+  points made 0.48-world chords at cr 6 (crescents at 12 of 41 ring-URL
+  joints); flanks now take enough points for chords <= 0.15 world
+  (FILLET_EDGE_CHORD; 0.3 still left specks). Same-state A/B
+  (probe_chordab: one settled page, only the fans re-rendered per
+  variant, pixel-diffed by cells_diff). A tried "outward-only flank" rule
+  (stop a flank where its arm curls back toward the joint) cut V-notches
+  into webs and was dropped; a fan from the joint center over-covers a
+  non-star-shaped outline, it never leaves holes.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +

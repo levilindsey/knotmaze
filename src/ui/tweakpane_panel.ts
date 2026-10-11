@@ -485,7 +485,7 @@ export function buildPanel(
     D.fadeLength, () => callbacks.onSlackChange()
   );
   row(
-    fLook, p, "cuspRadius", { min: 0, max: 3, step: 0.05 },
+    fLook, p, "cuspRadius", { min: 0, max: 6, step: 0.05 },
     "How far the rounded corners reach where threads join at an intersection. 0 = sharp joints. Applies live.",
     D.cuspRadius, () => callbacks.onSlackChange()
   );

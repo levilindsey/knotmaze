@@ -71,7 +71,7 @@ export interface UrlParams {
   threadWidth: number; // Ribbon width in lattice units (applies live).
   gap: number; // Space between an under-thread cut end and the over thread.
   moveSpeed: number; // [0.25, 4] maze traversal-animation speed multiplier.
-  cuspRadius: number; // [0, 3] junction cusp-rounding (fillet) radius mult.
+  cuspRadius: number; // [0, 6] junction cusp-rounding (fillet) radius mult.
   fadeLength: number; // [0, 1.2] under-thread fade-out length at crossings.
   flowStrength: number; // [0, 1] flow-undulation amplitude (render-only).
   flowSpeed: number; // [0, 3] flow-undulation drift speed multiplier.
