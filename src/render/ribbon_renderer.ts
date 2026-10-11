@@ -5029,16 +5029,59 @@ export class RibbonRenderer {
     // joints (record index + 1, the four nearest to its bounds within the
     // outer radius; any pixel within reach of a joint has its patch's
     // bounds within reach too).
+    // OWN ARMS ONLY: a patch wears a joint's field only where its window
+    // IS one of that joint's arms (same chain, overlapping arc span near
+    // the joint). A FOREIGN thread passing over near a joint is not the
+    // joint's material: wearing the field painted the joint's colors -
+    // and its gameplay paint: pulse glow, crest troughs, the traveled
+    // path - onto threads that merely pass by (half of the patches near
+    // the user's head junction).
     {
       const r1 = fillHalf * FILL_JOINT_OUT;
       const r1sq = r1 * r1;
+      const reach = r1 + fillHalf;
       const live = recs.filter((rc) => rc.on && rc.rb >= 0);
       const bb = this.fillBoundsScratch;
       const cand = this.jointCand;
       const candD = this.jointCandD;
-      const apply = (fill: RibbonMesh): void => {
+      // Does the window's arc span [wa0, wa1] (unwrapped, wa1 >= wa0) on
+      // `chain` overlap one of the joint's arms within `reach` of it?
+      const ownsArm = (
+        rc: JRec,
+        chain: number,
+        wa0: number,
+        wa1: number
+      ): boolean => {
+        for (const a of rc.arms) {
+          if (a.chain !== chain) continue;
+          const len = Math.min(a.domain, reach);
+          const s0 = a.dir > 0 ? a.arc0 : a.arc0 - len;
+          const s1 = s0 + len;
+          if (!a.closed) {
+            if (wa0 <= s1 && wa1 >= s0) return true;
+            continue;
+          }
+          const T = a.total;
+          for (let k = -1; k <= 1; k++) {
+            if (wa0 + k * T <= s1 && wa1 + k * T >= s0) return true;
+          }
+        }
+        return false;
+      };
+      const apply = (
+        fill: RibbonMesh,
+        chain: number,
+        start: number,
+        span: number
+      ): void => {
         cand.fill(0);
-        if (fill.mesh.visible && live.length > 0) {
+        const samples = chain >= 0 ? this.chainSamples[chain] : null;
+        if (fill.mesh.visible && span > 0 && samples && live.length > 0) {
+          const arcPer =
+            samples.totalLength /
+            (samples.closed ? samples.count : samples.count - 1);
+          const wa0 = start * arcPer;
+          const wa1 = (start + span - 1) * arcPer;
           fill.bounds(bb);
           candD.fill(Infinity);
           for (const rc of live) {
@@ -5046,6 +5089,7 @@ export class RibbonRenderer {
             const dy = Math.max(bb[1] - rc.jy, 0, rc.jy - bb[3]);
             const d2 = dx * dx + dy * dy;
             if (d2 >= r1sq || d2 >= candD[3]) continue;
+            if (!ownsArm(rc, chain, wa0, wa1)) continue;
             // Sorted insertion into the four nearest.
             let k = 3;
             while (k > 0 && candD[k - 1] > d2) {
@@ -5059,8 +5103,18 @@ export class RibbonRenderer {
         }
         fill.setJoints(cand);
       };
-      for (const f of this.overFills) apply(f);
-      for (const f of this.emergentFills) apply(f);
+      this.ps.crossings.forEach((cr, c) => {
+        apply(
+          this.overFills[c],
+          cr.over.chain,
+          this.overWindows[c * 2],
+          this.overWindows[c * 2 + 1]
+        );
+      });
+      this.emergentFills.forEach((f, k) => {
+        const w = this.emergentWindows[k];
+        apply(f, w ? w.chain : -1, w ? w.start : 0, w ? w.span : 0);
+      });
     }
     // Every junction fan (seal disc, fused-tip disc, wedge) goes through
     // here: geometry plus the joint's record index - the shader evaluates
