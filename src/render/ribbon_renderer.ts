@@ -46,6 +46,19 @@ import {
   sampleOpenSpline,
 } from "../geometry/spline_generator";
 import { RibbonMesh, PatchGridMesh, TriFanMesh } from "./ribbon_mesh";
+import {
+  FIELD_BLEND_MIN,
+  FIELD_PROF_ARC,
+  FIELD_PROF_DR,
+  FILL_JOINT_OUT,
+  MAX_ARMS,
+  bindFieldAccent,
+  fillShader,
+  junctionShader,
+  paintData,
+  recordData,
+  setFieldParams,
+} from "./junction_field";
 
 export interface RibbonStyle {
   threadWidth: number; // In lattice units.
@@ -211,30 +224,8 @@ const FILLET_EDGE_PTS = 5; // Samples per curve-hugging wedge flank.
 // below this fraction of the full reach (the joint still needs rounding).
 const FILLET_GAP_PAD = 1.0;
 const FILLET_GAP_MIN_FRAC = 0.3;
-// RADIAL FAN RINGS: junction fans (wedges + seal/tip discs) subdivide into
-// concentric rings, one per FAN_RING_STEP world of fan radius (at most
-// FAN_RINGS_MAX), each ring vertex evaluating the junction field. One long
-// apex-to-rim triangle Gouraud-interpolates a NONLINEAR field (1-ctrl
-// segment ramps, cos-projected arm samples, angular blend) into straight
-// streaks - the faceted "triangle-fan" junction blends at cr=3 (mean
-// error 0.034 RGB, max 0.18 at one triangle per spoke; 0.0033 at 6 rings).
-// Rings crowd toward the apex (FAN_RING_POW), where the ramps live; the
-// default-size fans (radius < FAN_RING_STEP) stay single-ring.
-const FAN_RING_STEP = 0.35;
-const FAN_RINGS_MAX = 4;
-const FAN_RING_POW = 1.5;
-// Junction field (see fieldAt): arm radial profiles resample the
-// centerline (walked in FIELD_PROF_ARC world-arc steps) onto a uniform
-// FIELD_PROF_DR radius grid; FIELD_BLEND_MIN is the smallest share of a
-// wedge's angle the arm-to-arm blend keeps where ribbons overlap.
-const FIELD_PROF_DR = 0.06;
-const FIELD_PROF_ARC = 0.08;
-const FIELD_BLEND_MIN = 0.5;
-// Over-fill vertices within FILL_JOINT_IN fillHalfs of a fused joint wear
-// the junction field, easing back to the exact copied material by
-// FILL_JOINT_OUT (see "FILLS WEAR THE JOINT FIELD" in rebuildFillets).
-const FILL_JOINT_IN = 2.0;
-const FILL_JOINT_OUT = 3.0;
+// The junction field itself (profile grid, blend band, fill-joint radii)
+// is configured in junction_field.ts and evaluated PER PIXEL on the GPU.
 // SECTION CACHE DRIFT: the per-sample RGB cache maps sample -> ctrl through
 // the arc table at BAKE time, but lookups (and the joint itself) live at
 // the CURRENT table. Relaxation shifts a chain's ctrl/arc distribution by
@@ -247,6 +238,14 @@ const CACHE_REBAKE_CTRL = 0.1;
 // rebuildFillets armDives).
 const FILLET_DIVE_NEAR = 2.0;
 const DISC_SEGS = 16; // Rim segments on tip/junction seal discs.
+// Unit-circle rim of a disc fan (closed: the first point repeats).
+const DISC_COS = new Float64Array(DISC_SEGS + 1);
+const DISC_SIN = new Float64Array(DISC_SEGS + 1);
+for (let i = 0; i <= DISC_SEGS; i++) {
+  const th = ((i % DISC_SEGS) / DISC_SEGS) * Math.PI * 2;
+  DISC_COS[i] = Math.cos(th);
+  DISC_SIN[i] = Math.sin(th);
+}
 
 // Wrap (closed) or clamp (open) a world arc into a chain's [0, total].
 function normArc(a: number, total: number, closed: boolean): number {
@@ -539,6 +538,9 @@ void main(void) {
 // strip while the CPU-composed fillet fans used pathColor - olive fans on
 // gold paths at a khaki pc= (the user's "olive smudge" report).
 function bindAccent(tex: Texture): void {
+  // The GPU junction-field shaders (fans, over-fills) compose the same
+  // strip and follow it too.
+  bindFieldAccent(tex);
   const sh = sectionShader();
   if (sh.texture === tex) return;
   sh.resources.uTexture = tex.source;
@@ -949,17 +951,33 @@ export class RibbonRenderer {
   // length per rebuild geometry; reset when the length changes).
   private fieldProfPool: Float32Array[] = [];
   private fieldProfLen = 0;
+  // GPU JUNCTION FIELD (junction_field.ts): each chain's first texel in the
+  // shared PAINT data texture (palette mode; one texel per ribbon sample).
+  private paintBase = new Int32Array(0);
+  // Joinery rebuild gating (see rebuildFillets): bumped by every update();
+  // the last rebuild's inputs; whether that rebuild saw hot appearance FX.
+  private geomRev = 0;
+  private filletKey = "";
+  private filletFxWas = false;
   // Scratch for the fills-wear-the-joint-field pass (rebuildFillets).
   private fillBoundsScratch = new Float32Array(4);
-  private fillFieldScratch = new Float32Array(4);
+  private jointCand = new Float32Array(4);
+  private jointCandD = new Float32Array(4);
+  private fieldAccScratch = new Float32Array(4);
+  private fieldMbScratch = new Float32Array(4);
   // PROBE HOOK (diagnostics only): the last rebuild's junction field -
-  // `at(ji, x, y, out)` writes [r, g, b, u] at a world point (junction
-  // index = junctionArms index); `arms(ji)` lists that joint's arms.
-  // Field-vs-ribbon censuses evaluate the exact function the fans use.
+  // `at(ji, x, y, out)` writes the composed [r, g, b] (+ U_BASE) at a world
+  // point (junction index = junctionArms index); `arms(ji)` lists that
+  // joint's arms. A CPU transliteration of the GPU shader reading the SAME
+  // record + paint data the shader samples (cpuJunctionField) - the ground
+  // truth for GPU-vs-CPU and field-vs-ribbon censuses.
   fieldProbe: {
     at: (ji: number, x: number, y: number, out: Float32Array) => boolean;
     arms: (ji: number) => unknown[];
     center: (ji: number) => [number, number] | null;
+    // The joint's record texel index (-1: no field) - what a fan's aRec
+    // and a patch's aJoint (minus 1) carry.
+    record: (ji: number) => number;
   } | null = null;
   // Default section color (the gamut midpoint = the seed-hue base color).
   private baseRgb = new Float32Array(3);
@@ -1062,6 +1080,17 @@ export class RibbonRenderer {
     this.rgbCache = ps.chains.map(() => this.baseRgb);
     this.sectionSegs = ps.chains.map(() => []);
     this.revealMask = ps.chains.map(() => null);
+    // GPU junction field: every chain's samples get a contiguous texel
+    // range in the shared paint texture (filled by writeFillPaint).
+    if (style.paletteMode) {
+      this.paintBase = new Int32Array(ps.chains.length);
+      let texels = 0;
+      for (let i = 0; i < ps.chains.length; i++) {
+        this.paintBase[i] = texels;
+        texels += this.fills[i].sampleCount;
+      }
+      paintData().ensure(texels);
+    }
 
     // Neighboring crossing passes along each thread come from the particle
     // system; passes slide live, so we hold references and read their
@@ -1094,9 +1123,12 @@ export class RibbonRenderer {
         OVER_PATCH_MAX_SAMPLES,
         false,
         0xffffff,
+        style.paletteMode,
         style.paletteMode
       );
-      if (style.paletteMode) fill.mesh.shader = sectionShader();
+      if (style.paletteMode && this.accentTex) {
+        fill.mesh.shader = fillShader(this.accentTex);
+      }
       this.underErases.push(erase);
       this.overFills.push(fill);
       eraseLayer.addChild(erase.mesh);
@@ -1111,9 +1143,12 @@ export class RibbonRenderer {
         OVER_PATCH_MAX_SAMPLES,
         false,
         0xffffff,
+        style.paletteMode,
         style.paletteMode
       );
-      if (style.paletteMode) fill.mesh.shader = sectionShader();
+      if (style.paletteMode && this.accentTex) {
+        fill.mesh.shader = fillShader(this.accentTex);
+      }
       erase.mesh.visible = false;
       fill.mesh.visible = false;
       this.emergentErases.push(erase);
@@ -1872,6 +1907,8 @@ export class RibbonRenderer {
 
   update(): void {
     const { positions } = this.ps;
+    // Joinery geometry follows (rebuildFillets rebuilds on a new revision).
+    this.geomRev++;
     // Under-gap windows are rebuilt from scratch by this frame's
     // crossing solves (renderCrossing appends).
     this.underWindows.clear();
@@ -1967,7 +2004,7 @@ export class RibbonRenderer {
           this.uScratch.set(i, us);
         }
         us.fill(U_BASE, 0, count);
-        this.fills[i].writePaint(us, this.rgbCache[i]);
+        this.writeFillPaint(i, us, this.rgbCache[i]);
       });
       this.chainRev.clear();
     }
@@ -2862,8 +2899,6 @@ export class RibbonRenderer {
         for (const f of this.fills) f.mesh.texture = tex;
         for (const f of this.overFills) f.mesh.texture = tex;
         for (const f of this.emergentFills) f.mesh.texture = tex;
-        if (this.filletMesh) this.filletMesh.mesh.texture = tex;
-        if (this.filletTopMesh) this.filletTopMesh.mesh.texture = tex;
       }
       // Constant-color chains hand writePaint the SAME (mutated) baseRgb.
       for (const f of this.fills) f.invalidateColors();
@@ -3537,7 +3572,8 @@ export class RibbonRenderer {
     us.fill(U_BASE, 0, count);
     if (!painted) {
       this.applyRevealGlowU(chain, us, count);
-      mesh.writePaint(
+      this.writeFillPaint(
+        chain,
         us,
         this.applyBurnColors(chain, count) ?? this.rgbCache[chain]
       );
@@ -3625,11 +3661,42 @@ export class RibbonRenderer {
       }
     }
     this.applyRevealGlowU(chain, us, count);
-    mesh.writePaint(
+    this.writeFillPaint(
+      chain,
       us,
       this.applyBurnColors(chain, count) ?? this.rgbCache[chain]
     );
     mesh.setFx(this.applyFxWeights(chain, count));
+  }
+
+  // Every ribbon paint write goes through here: the ribbon gets its per-
+  // vertex U + section RGB, and the GPU junction field's PAINT texture
+  // gets the same per-sample values (texel = (r, g, b, u)), so joinery and
+  // fills near joints read exactly the material the ribbons wear (burn
+  // cooling, reveal glow and gameplay paint included). Only the touched
+  // rows upload (flushed once per tick by rebuildFillets).
+  private writeFillPaint(
+    chain: number,
+    us: ArrayLike<number>,
+    colors: Float32Array
+  ): void {
+    const fill = this.fills[chain];
+    fill.writePaint(us, colors);
+    if (this.paintBase.length === 0) return;
+    const pd = paintData();
+    const d = pd.data;
+    const base = this.paintBase[chain];
+    const count = fill.sampleCount;
+    const constant = colors.length === 3;
+    for (let k = 0; k < count; k++) {
+      const o = (base + k) * 4;
+      const c = constant ? 0 : k * 3;
+      d[o] = colors[c];
+      d[o + 1] = colors[c + 1];
+      d[o + 2] = colors[c + 2];
+      d[o + 3] = us[k];
+    }
+    pd.markDirty(base, base + count);
   }
 
   // BURN appearFx: the thread itself wears the fire, as TEMPORAL
@@ -4084,67 +4151,173 @@ export class RibbonRenderer {
     return Math.min(1, (floor + bump * 0.9) * endWin) * fadeIn;
   }
 
-  // The paint field at a single chain ARC (same rules as writeChainPaint,
-  // point-evaluated): colors joinery in sync with the live paint,
-  // including the pulse animation.
-  private paintUAtArc(chain: number, a: number, closed: boolean): number {
-    const samples = this.chainSamples[chain];
-    if (!samples) return U_BASE;
-    const total = samples.totalLength;
-    let u = U_BASE;
-    for (const s of this.paintSpans) {
-      if (s.chain !== chain) continue;
-      const a0 = this.paintArcAt(samples, s.c0, closed);
-      const a1 = this.paintArcAt(samples, s.c1, closed);
-      const wraps = closed && a1 <= a0 && s.c1 > s.c0;
-      if (wraps ? a >= a0 || a <= a1 : a >= a0 && a <= a1) {
-        const p0 = s.p0 ?? 1;
-        const p1 = s.p1 ?? 1;
-        if (p0 >= 1 && p1 >= 1) {
-          u = U_GOLD;
-        } else {
-          const spanLen = Math.max(wraps ? total - a0 + a1 : a1 - a0, 1e-9);
-          const da = wraps && a < a0 ? total - a0 + a : a - a0;
-          const t = Math.min(1, Math.max(0, da / spanLen));
-          u = goldU(p0 + (p1 - p0) * t);
-        }
-      }
-    }
-    for (const cp of this.paintCaps) {
-      if (cp.chain !== chain) continue;
-      const aC = this.paintArcAt(samples, cp.ctrl, closed);
-      let d = Math.abs(a - aC);
-      if (closed) d = Math.min(d, total - d);
-      if (d <= cp.radius) u = Math.max(u, goldU(cp.p ?? 1));
-    }
-    for (const p of this.paintPulses) {
-      if (p.chain !== chain) continue;
-      const aJ = this.paintArcAt(samples, p.cJunction, closed);
-      const aF = this.paintArcAt(samples, p.cFar, closed);
-      let dirPos: boolean;
-      let spanArc: number;
-      if (closed) {
-        dirPos = p.cFar > p.cJunction;
-        spanArc = dirPos
-          ? (((aF - aJ) % total) + total) % total
-          : (((aJ - aF) % total) + total) % total;
+  // CPU REFERENCE of the GPU junction field (junction_field.ts FIELD_GLSL),
+  // transliterated line for line and reading the SAME record + paint data
+  // the shader samples - the fieldProbe ground truth. Not on any hot path.
+  // Paint (r, g, b, u) of a chain at a world arc from the paint mirror;
+  // h = the record's (paintBase, count, closed, total) texel.
+  private cpuPaintAtArc(
+    h0: number,
+    h1: number,
+    h2: number,
+    total: number,
+    a: number,
+    out: Float32Array
+  ): void {
+    const d = paintData().data;
+    const base = Math.round(h0);
+    const count = Math.round(h1);
+    let k0 = 0;
+    let k1 = 0;
+    let fr = 0;
+    if (total > 0 && count >= 2) {
+      if (h2 > 0.5) {
+        const w = a - total * Math.floor(a / total);
+        const f = (w / total) * count;
+        const fl = Math.floor(f);
+        k0 = fl % count;
+        k1 = (k0 + 1) % count;
+        fr = f - fl;
       } else {
-        dirPos = aF >= aJ;
-        spanArc = Math.abs(aF - aJ);
+        const c = Math.max(0, Math.min(total, a));
+        const f = (c / total) * (count - 1);
+        const fl = Math.floor(f);
+        k0 = Math.min(fl, count - 1);
+        k1 = Math.min(count - 1, k0 + 1);
+        fr = f - fl;
       }
-      if (spanArc <= 1e-6) continue;
-      let d: number;
-      if (closed) {
-        d = dirPos
-          ? (((a - aJ) % total) + total) % total
-          : (((aJ - a) % total) + total) % total;
-      } else {
-        d = dirPos ? a - aJ : aJ - a;
-      }
-      const v = this.pulseValueAt(d, spanArc, p.inward, p.hovered);
-      if (v > 0.004) u = bandU(p.onPath, v);
     }
-    return u;
+    const o0 = (base + k0) * 4;
+    const o1 = (base + k1) * 4;
+    for (let c = 0; c < 4; c++) out[c] = d[o0 + c] + (d[o1 + c] - d[o0 + c]) * fr;
+  }
+
+  // The composed junction-field color at (x, y) for the record at texel
+  // `rec` into out[0..2] (out[3] = U_BASE: the accent is already composed).
+  private cpuJunctionField(
+    rec: number,
+    x: number,
+    y: number,
+    out: Float32Array
+  ): void {
+    const J = recordData().data;
+    const at = (i: number): number => i * 4;
+    const TAU = Math.PI * 2;
+    const fillHalf = this.style.threadWidth / 2;
+    const profN = this.fieldProfLen;
+    const last = profN - 1;
+    const stride = 2 + profN;
+    const hd = at(rec);
+    const n = Math.round(J[hd + 2]);
+    const ex = x - J[hd];
+    const ey = y - J[hd + 1];
+    const mA = this.acc4Scratch;
+    // Compose in place: m[0..2] = mix(section, accent(u).rgb, accent.a).
+    const composeM = (m: Float32Array): void => {
+      const acc = this.fieldAccScratch;
+      accentSampleCpu(accentPixels(this.style.pathColor), m[3], acc);
+      m[0] += (acc[0] - m[0]) * acc[3];
+      m[1] += (acc[1] - m[1]) * acc[3];
+      m[2] += (acc[2] - m[2]) * acc[3];
+    };
+    const compose = (m: Float32Array): void => {
+      composeM(m);
+      out[0] = m[0];
+      out[1] = m[1];
+      out[2] = m[2];
+      out[3] = U_BASE;
+    };
+    if (n === 0) {
+      const h = at(rec + 1);
+      const ax = at(rec + 2);
+      this.cpuPaintAtArc(
+        J[h],
+        J[h + 1],
+        J[h + 2],
+        J[h + 3],
+        J[ax] + ex * J[ax + 1] + ey * J[ax + 2],
+        mA
+      );
+      compose(mA);
+      return;
+    }
+    const armPaint = (ab: number, s: number, m: Float32Array): void => {
+      const h = at(ab);
+      const a = at(ab + 1);
+      this.cpuPaintAtArc(
+        J[h],
+        J[h + 1],
+        J[h + 2],
+        J[h + 3],
+        J[a] + J[a + 1] * Math.min(s, J[a + 2]),
+        m
+      );
+    };
+    const profArc = (ab: number, rp: number): number => {
+      const xg = rp / FIELD_PROF_DR;
+      if (xg >= last) {
+        return J[at(ab + 2 + last) + 1] + (rp - last * FIELD_PROF_DR);
+      }
+      const i = Math.floor(xg);
+      const t = at(ab + 2 + i);
+      return J[t + 1] + (J[t + 3] - J[t + 1]) * (xg - i);
+    };
+    const rho = Math.sqrt(ex * ex + ey * ey);
+    const phi = Math.atan2(ey, ex);
+    const gx = rho / FIELD_PROF_DR;
+    let gi: number;
+    let gf: number;
+    if (gx >= last) {
+      gi = last - 1;
+      gf = 1;
+    } else {
+      gi = Math.floor(gx);
+      gf = gx - gi;
+    }
+    let relA = 1e9;
+    let relB = 1e9;
+    let ia = 0;
+    let ib = 0;
+    for (let i = 0; i < Math.min(n, MAX_ARMS); i++) {
+      const t = at(rec + 1 + i * stride + 2 + gi);
+      let ra = phi - (J[t] + (J[t + 2] - J[t]) * gf);
+      ra -= TAU * Math.floor(ra / TAU);
+      const rb = ra > 0 ? TAU - ra : 0;
+      if (ra < relA) {
+        relA = ra;
+        ia = i;
+      }
+      if (rb < relB) {
+        relB = rb;
+        ib = i;
+      }
+    }
+    const abA = rec + 1 + ia * stride;
+    armPaint(abA, profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0), mA);
+    if (ia === ib) {
+      compose(mA);
+      return;
+    }
+    composeM(mA);
+    const mB = this.fieldMbScratch;
+    const abB = rec + 1 + ib * stride;
+    armPaint(abB, profArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0), mB);
+    composeM(mB);
+    const span = relA + relB;
+    const hw = rho > fillHalf ? Math.asin(fillHalf / rho) : Math.PI / 2;
+    let lo = hw;
+    let hi = span - hw;
+    const minW = span * FIELD_BLEND_MIN;
+    if (hi - lo < minW) {
+      lo = (span - minW) * 0.5;
+      hi = lo + minW;
+    }
+    let t = hi > lo ? (relA - lo) / (hi - lo) : relA < span * 0.5 ? 0 : 1;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    t = t * t * (3 - 2 * t);
+    // Composed colors blend - never the raw U (see FIELD_GLSL).
+    for (let c = 0; c < 3; c++) out[c] = mA[c] + (mB[c] - mA[c]) * t;
+    out[3] = U_BASE;
   }
 
   // Positional sampling for junction joinery: before the sampleAt
@@ -4226,37 +4399,63 @@ export class RibbonRenderer {
   // Rounded junction joinery: tip/seal discs and, for each wedge between
   // adjacent junction arms, a concave patch from one arm's edge to the
   // next (quadratic bezier with the edge-intersection corner as control).
-  // Rebuilt every paint tick: positions are live, and the colors ride the
-  // gameplay animation. Everything renders on ONE palette-textured fan
-  // mesh: per-vertex UVs let discs and wedges carry the same BLENDED
-  // material as the ribbons they join, which no flat Graphics fill can -
-  // a flat overlay over a ramping section color drew a visible step (or a
-  // stamped circle of junction color) at its boundary, the
-  // junction-blotch reports.
-  private rebuildFillets(): void {
+  // Every fan is a window onto ONE continuous junction FIELD, evaluated
+  // PER PIXEL on the GPU (junction_field.ts): the CPU builds only the fan
+  // geometry (positions + the texel index of the fan's RECORD) and the
+  // records (junction center, arms, radial profiles); the shader reads the
+  // ribbons' own per-sample paint from the paint texture. A flat overlay
+  // over a ramping section color drew a visible step (or a stamped circle
+  // of junction color) at its boundary - the junction-blotch reports - and
+  // per-vertex evaluation needed ring-subdivided fans to keep Gouraud from
+  // faceting the field (5-30 ms per paint tick at big cuspRadius).
+  //
+  // GATED: the field animates on the GPU, so a paint-only tick just
+  // flushes the paint rows its writes touched. The geometry rebuilds when
+  // an update() ran (positions, under-gap windows, over-fill windows and
+  // visibility), a live joinery input moved, or a reveal / appearance FX
+  // is gating joints and fading fans. `force` = rebuild regardless (probes).
+  rebuildFillets(force = false): void {
     if (!this.filletLayer || !this.accentTex) return;
+    paintData().flush();
     const fillHalf = this.style.threadWidth / 2;
     const nDiscs =
       this.freeTips.length + this.fusedTips.length + this.junctionArms.length;
     if (nDiscs === 0) return;
+    let fxHot = false;
+    for (const pool of this.fxScratch.values()) {
+      if (pool.hot) {
+        fxHot = true;
+        break;
+      }
+    }
+    const key =
+      this.geomRev +
+      "|" +
+      this.cuspRadius +
+      "|" +
+      this.style.threadWidth +
+      "|" +
+      this.style.casingWidth +
+      "|" +
+      this.fadeLength;
+    // fxWas: one more rebuild after the FX settle clears the fan fades.
+    const animating = fxHot || this.filletFxWas || this.revealOn;
+    this.filletFxWas = fxHot;
+    if (!force && !animating && key === this.filletKey) return;
+    this.filletKey = key;
     if (!this.filletMesh) {
       let armTotal = 0;
       for (const jn of this.junctionArms) armTotal += jn.arms.length;
       const wedgeRim = 2 * FILLET_EDGE_PTS + FILLET_BEZIER_STEPS + 1;
-      // Ring capacity for the WORST case (cuspRadius/threadWidth are live
-      // sliders); commit() uploads only the used ranges.
-      const K = FAN_RINGS_MAX;
-      const verts =
-        armTotal * (1 + K * wedgeRim) + nDiscs * (1 + K * (DISC_SEGS + 1));
-      const idx =
-        (armTotal * (wedgeRim - 1) + nDiscs * DISC_SEGS) * (2 * K - 1) * 3;
-      this.filletMesh = new TriFanMesh(this.accentTex, verts, idx);
-      this.filletMesh.mesh.shader = sectionShader();
+      const verts = armTotal * (1 + wedgeRim) + nDiscs * (2 + DISC_SEGS);
+      const idx = (armTotal * (wedgeRim - 1) + nDiscs * DISC_SEGS) * 3;
+      this.filletMesh = new TriFanMesh(verts, idx);
+      this.filletMesh.mesh.shader = junctionShader(this.accentTex);
       this.filletLayer.addChild(this.filletMesh.mesh);
       // The top mesh gets the same capacity: any junction can flip
       // layers frame to frame as threads move.
-      this.filletTopMesh = new TriFanMesh(this.accentTex, verts, idx);
-      this.filletTopMesh.mesh.shader = sectionShader();
+      this.filletTopMesh = new TriFanMesh(verts, idx);
+      this.filletTopMesh.mesh.shader = junctionShader(this.accentTex);
       this.filletTopLayer!.addChild(this.filletTopMesh.mesh);
     }
     const fmBottom = this.filletMesh;
@@ -4266,23 +4465,6 @@ export class RibbonRenderer {
     // All pushes below route through `fm`; per-junction code points it at
     // the voted layer and resets it to bottom afterward.
     let fm = fmBottom;
-    const c3 = this.rgbScratch;
-    // Fans composite the accent CPU-SIDE into the vertex RGB and carry a
-    // NEUTRAL U: a fan triangle interpolating raw U across the band seam
-    // sweeps the accent strip THROUGH the gold rows mid-triangle (the
-    // palette-order lore, fan edition - the jagged gold shards at
-    // traversed junctions under the pulse animation). Linear RGB
-    // interpolation cannot phantom-sweep.
-    const accPx = accentPixels(this.style.pathColor);
-    const acc4 = this.acc4Scratch;
-    const composeInto = (u: number, rgb: Float32Array): number => {
-      accentSampleCpu(accPx, u, acc4);
-      const a = acc4[3];
-      rgb[0] += (acc4[0] - rgb[0]) * a;
-      rgb[1] += (acc4[1] - rgb[1]) * a;
-      rgb[2] += (acc4[2] - rgb[2]) * a;
-      return U_BASE;
-    };
 
     // LAYER VOTES (see filletTopLayer), PER-ARM: an arm is "over-near"
     // when a nearby crossing on its chain side has the arm as the OVER
@@ -4307,6 +4489,9 @@ export class RibbonRenderer {
       );
       const voteReach =
         jointReach + fillHalf + ERASE_WIDTH_PAD + gapW + this.fadeLength + 0.3;
+      // Joint arcs per chain, derived once per rebuild (every pass on a
+      // chain compares against the same list).
+      const jArcCache = new Map<number, Float64Array>();
       const visit = (
         pass: CrossingPass,
         isOver: boolean
@@ -4318,8 +4503,17 @@ export class RibbonRenderer {
         const closed = this.ps.chainBreakAfter[pass.chain] < 0;
         const total = samples.totalLength;
         const pArc = this.paintArcAt(samples, this.renderCtrl(pass), closed);
-        for (const e of list) {
-          const jArc = this.paintArcAt(samples, e.ctrl, closed);
+        let jArcs = jArcCache.get(pass.chain);
+        if (!jArcs) {
+          jArcs = new Float64Array(list.length);
+          for (let i = 0; i < list.length; i++) {
+            jArcs[i] = this.paintArcAt(samples, list[i].ctrl, closed);
+          }
+          jArcCache.set(pass.chain, jArcs);
+        }
+        for (let i = 0; i < list.length; i++) {
+          const e = list[i];
+          const jArc = jArcs[i];
           let d = pArc - jArc;
           if (closed) {
             d = ((d % total) + total) % total;
@@ -4337,10 +4531,53 @@ export class RibbonRenderer {
       }
     }
 
-    // A disc fan whose rim samples the underlying thread's own material at
-    // each rim point's arc (the point's offset projected onto the thread's
-    // local axis): the disc IS a patch of that thread's paint, so it
-    // vanishes into ramped section colors instead of stamping a circle.
+    // RECORDS for the GPU field (layout: junction_field.ts), appended as
+    // junctions and tips are built and uploaded once at the end. ensure()
+    // may swap the mirror, so writers re-read rd.data after it.
+    const rd = recordData();
+    let cursor = 0;
+    // An AXIS record: the material of `chain` at a point's projection onto
+    // the axis (ax, ay) through (cx, cy) at arc0 - a free tip's cap disc
+    // (or the host-axis fallback) is a patch of that thread's own paint,
+    // so it vanishes into ramped section colors instead of stamping a
+    // circle.
+    const writeAxis = (
+      cx: number,
+      cy: number,
+      fx: number,
+      chain: number,
+      arc0: number,
+      ax: number,
+      ay: number
+    ): number => {
+      rd.ensure(cursor + 3);
+      const D = rd.data;
+      const o = cursor * 4;
+      const samples = this.chainSamples[chain];
+      D[o] = cx;
+      D[o + 1] = cy;
+      D[o + 2] = 0;
+      D[o + 3] = fx;
+      D[o + 4] = this.paintBase[chain];
+      D[o + 5] = this.fills[chain].sampleCount;
+      D[o + 6] = this.ps.chainBreakAfter[chain] < 0 ? 1 : 0;
+      D[o + 7] = samples ? samples.totalLength : 0;
+      D[o + 8] = arc0;
+      D[o + 9] = ax;
+      D[o + 10] = ay;
+      D[o + 11] = 0;
+      const base = cursor;
+      cursor += 3;
+      return base;
+    };
+    // A disc fan's rim (closed: DISC_SEGS + 1 points, first repeated).
+    const discRim = (cx: number, cy: number, r: number): number[] => {
+      const rim: number[] = [];
+      for (let i = 0; i <= DISC_SEGS; i++) {
+        rim.push(cx + DISC_COS[i] * r, cy + DISC_SIN[i] * r);
+      }
+      return rim;
+    };
     const pushDisc = (
       cx: number,
       cy: number,
@@ -4353,29 +4590,22 @@ export class RibbonRenderer {
       const closed = this.ps.chainBreakAfter[chain] < 0;
       const samples = this.chainSamples[chain];
       const total = samples ? samples.totalLength : 1;
-      const rim: number[] = [];
-      for (let i = 0; i <= DISC_SEGS; i++) {
-        const th = ((i % DISC_SEGS) / DISC_SEGS) * Math.PI * 2;
-        const px = cx + Math.cos(th) * r;
-        const py = cy + Math.sin(th) * r;
-        const arc = normArc(
-          arc0 + (px - cx) * ax + (py - cy) * ay,
-          total,
-          closed
-        );
-        this.colorAtArc(chain, arc, c3);
-        const u = composeInto(this.paintUAtArc(chain, arc, closed), c3);
-        rim.push(px, py, u, c3[0], c3[1], c3[2]);
-      }
       const arcC = normArc(arc0, total, closed);
-      this.colorAtArc(chain, arcC, c3);
-      const uC = composeInto(this.paintUAtArc(chain, arcC, closed), c3);
       // A lone cap disc (free tip / host fallback) reads its own thread.
       const w =
         this.fxScratch.size > 0 && samples
           ? this.fxWeightAt(chain, (arcC / total) * this.ps.chains[chain].length)
           : 0;
-      fm.pushFan(cx, cy, uC, c3[0], c3[1], c3[2], rim, fanFx(this.fxSolid(w)));
+      const rb = writeAxis(
+        cx,
+        cy,
+        fanFx(this.fxSolid(w)),
+        chain,
+        arc0,
+        ax,
+        ay
+      );
+      fm.pushFan(cx, cy, discRim(cx, cy, r), rb);
     };
     // Local thread direction at an arc (two nearby probes), into
     // axisScratch.
@@ -4406,14 +4636,17 @@ export class RibbonRenderer {
       this.axisScratch[1] = dy / len;
     };
 
-    // THE JUNCTION FIELD: one continuous (u, v) function around each
-    // junction, shared by EVERY overlay primitive there. A query point's
-    // direction from the junction picks the two bracketing arms (by
-    // angle); each arm is sampled at the point's distance PROJECTED onto
-    // it (a point beside a thread reads its cross-section, a point along
-    // it reads its ramp), and the two samples blend by angular fraction.
-    // Disc rims, wedge rims, and the ribbons themselves then agree
-    // wherever they meet. Per-primitive sampling (host-axis discs,
+    // THE JUNCTION FIELD: one continuous color function around each
+    // junction, shared by EVERY overlay primitive there (and by over-fills
+    // near the joint). A query point's direction from the junction picks
+    // the two bracketing arms (by their angles at the point's radius);
+    // each arm is sampled at the point's distance PROJECTED onto it (a
+    // point beside a thread reads its cross-section, a point along it
+    // reads its ramp), composed with its own paint, and the two blend
+    // edge-aware across the gap between their ribbons (FIELD_GLSL in
+    // junction_field.ts evaluates it per pixel; cpuJunctionField is the CPU
+    // reference). Disc rims, wedge rims, and the ribbons themselves then
+    // agree wherever they meet. Per-primitive sampling (host-axis discs,
     // per-arm wedges) left faint rim arcs wherever one primitive's color
     // crossed ANOTHER arm's material - the circled phone-zoom reports.
     interface JArm {
@@ -4438,6 +4671,13 @@ export class RibbonRenderer {
       // axis put curved arms' own edges outside their footprint).
       pth: Float32Array;
       ps: Float32Array;
+      // Layer flags (see LAYER VOTES), resolved once per rebuild.
+      top: boolean;
+      dives: boolean;
+      // Flank centerline samples [x, y, tx, ty] x FILLET_EDGE_PTS, shared
+      // by the arm's two wedges (left and right flanks differ only in the
+      // offset side). null until first used.
+      flankPts: Float64Array | null;
     }
     interface JRec {
       jx: number;
@@ -4446,6 +4686,7 @@ export class RibbonRenderer {
       on: boolean; // REVEAL: all arm-adjacent samples revealed.
       jn: number; // Index into junctionArms (for the layer vote).
       fx: number; // Fan transparency vs the arms' appearance FX.
+      rb: number; // Record texel index (-1: < 2 arms, no field).
     }
     // Radial profile of one arm around its joint (JArm.pth/ps): walk the
     // centerline outward in FIELD_PROF_ARC steps and resample angle + arc
@@ -4621,6 +4862,9 @@ export class RibbonRenderer {
           domain: Math.min(nextJ / 2, toEnd),
           pth: prof.pth,
           ps: prof.ps,
+          top: false,
+          dives: false,
+          flankPts: null,
         });
       }
       arms.sort((p, q) => p.ang - q.ang);
@@ -4648,7 +4892,56 @@ export class RibbonRenderer {
           );
         }
       }
-      recs.push({ jx, jy, arms, on, jn: recs.length, fx: fanFx(solid) });
+      recs.push({
+        jx,
+        jy,
+        arms,
+        on,
+        jn: recs.length,
+        fx: fanFx(solid),
+        rb: -1,
+      });
+    }
+    // JUNCTION RECORDS (joints with >= 2 arms - nothing else draws or reads
+    // a field): header, then per arm (in angle order) its paint/arc header
+    // pair and its profile, one texel per radius step carrying both ends
+    // of a lookup.
+    setFieldParams(fillHalf, profN);
+    const armStride = 2 + profN;
+    for (const rec of recs) {
+      const n = Math.min(rec.arms.length, MAX_ARMS);
+      if (n < 2) continue;
+      rd.ensure(cursor + 1 + n * armStride);
+      const D = rd.data;
+      const o = cursor * 4;
+      D[o] = rec.jx;
+      D[o + 1] = rec.jy;
+      D[o + 2] = n;
+      D[o + 3] = rec.fx;
+      for (let i = 0; i < n; i++) {
+        const a = rec.arms[i];
+        const ab = (cursor + 1 + i * armStride) * 4;
+        D[ab] = this.paintBase[a.chain];
+        D[ab + 1] = this.fills[a.chain].sampleCount;
+        D[ab + 2] = a.closed ? 1 : 0;
+        D[ab + 3] = a.total;
+        D[ab + 4] = a.arc0;
+        D[ab + 5] = a.dir;
+        D[ab + 6] = Math.min(a.domain, 1e9);
+        D[ab + 7] = 0;
+        const pth = a.pth;
+        const ps = a.ps;
+        for (let g = 0; g < profN; g++) {
+          const p = ab + 8 + g * 4;
+          const g1 = g + 1 < profN ? g + 1 : g;
+          D[p] = pth[g];
+          D[p + 1] = ps[g];
+          D[p + 2] = pth[g1];
+          D[p + 3] = ps[g1];
+        }
+      }
+      rec.rb = cursor;
+      cursor += 1 + n * armStride;
     }
     // Nearest under-gap near edge ahead along an arm (mid-lane extents of
     // underWindows), or Infinity.
@@ -4671,20 +4964,26 @@ export class RibbonRenderer {
       }
       return near;
     };
-    const armTop = (a: JArm): boolean =>
-      overNear.has(armKey(a.chain, a.slot, a.dir)) &&
-      !underNear.has(armKey(a.chain, a.slot, a.dir));
-    // An arm DIVES AT THE JOINT only when its own gap starts within
-    // FILLET_DIVE_NEAR fillHalfs: a farther dive is kept out of the web by
-    // the reach clamp (armReach), so the joint may still ride the top
-    // layer. Counting every under-near arm as diving pinned "mixed" joints
-    // (one arm over-near, another diving ~1 world out) to the bottom
-    // layer, where the OVER crossing's under-thread erase punched their
-    // seal discs and wedges - the hairline cracks / dark bites at fat
-    // widths (crossings 23/43/62 at the cr=3 tw=0.58 repro).
-    const armDives = (a: JArm): boolean =>
-      underNear.has(armKey(a.chain, a.slot, a.dir)) &&
-      gapNearOf(a) < fillHalf * FILLET_DIVE_NEAR;
+    // TOP: some nearby crossing has this arm as its OVER pass, and none
+    // has it diving. An arm DIVES AT THE JOINT only when its own gap
+    // starts within FILLET_DIVE_NEAR fillHalfs: a farther dive is kept out
+    // of the web by the reach clamp (armReach), so the joint may still
+    // ride the top layer. Counting every under-near arm as diving pinned
+    // "mixed" joints (one arm over-near, another diving ~1 world out) to
+    // the bottom layer, where the OVER crossing's under-thread erase
+    // punched their seal discs and wedges - the hairline cracks / dark
+    // bites at fat widths (crossings 23/43/62 at the cr=3 tw=0.58 repro).
+    // Resolved once per arm (the wedge loop asks per wedge).
+    for (const rec of recs) {
+      for (const a of rec.arms) {
+        const k = armKey(a.chain, a.slot, a.dir);
+        const under = underNear.has(k);
+        a.top = overNear.has(k) && !under;
+        a.dives = under && gapNearOf(a) < fillHalf * FILLET_DIVE_NEAR;
+      }
+    }
+    const armTop = (a: JArm): boolean => a.top;
+    const armDives = (a: JArm): boolean => a.dives;
     // Discs (seal + fused tips) stay junction-level: top only when some
     // arm needs cover and none dives.
     const layerFor = (rec: JRec): TriFanMesh =>
@@ -4692,148 +4991,28 @@ export class RibbonRenderer {
         ? fmTop
         : fmBottom;
 
-    let fieldU = U_BASE;
-    let fieldR = this.baseRgb[0];
-    let fieldG = this.baseRgb[1];
-    let fieldB = this.baseRgb[2];
-    const compose = (): void => {
-      c3[0] = fieldR;
-      c3[1] = fieldG;
-      c3[2] = fieldB;
-      fieldU = composeInto(fieldU, c3);
-      fieldR = c3[0];
-      fieldG = c3[1];
-      fieldB = c3[2];
-    };
-    const armSample = (arm: JArm, proj: number): void => {
-      if (proj > arm.domain) proj = arm.domain;
-      const arc = normArc(arm.arc0 + arm.dir * proj, arm.total, arm.closed);
-      fieldU = this.paintUAtArc(arm.chain, arc, arm.closed);
-      this.colorAtArc(arm.chain, arc, c3);
-      fieldR = c3[0];
-      fieldG = c3[1];
-      fieldB = c3[2];
-    };
-    // An arm's material beside a point at angular offset `off` from the
-    // arm's ray (at the point's radius `rho`): the arm point at the
-    // projected radius, at its true arc (profile lookup inlined - this
-    // runs for every fan vertex on every paint tick).
-    const profLast = profN - 1;
-    const sampleBeside = (arm: JArm, rho: number, off: number): void => {
-      const rp = off < Math.PI / 2 ? rho * Math.cos(off) : 0;
-      const x = rp / FIELD_PROF_DR;
-      const ps = arm.ps;
-      let s: number;
-      if (x >= profLast) {
-        s = ps[profLast] + (rp - profLast * FIELD_PROF_DR);
-      } else {
-        const i = x | 0;
-        s = ps[i] + (ps[i + 1] - ps[i]) * (x - i);
-      }
-      armSample(arm, s);
-    };
-    const TAU = Math.PI * 2;
-    // EDGE-AWARE BLEND: the two bracketing arms (by their rays' angles AT
-    // THE POINT'S RADIUS - curved arms) blend only across the GAP between
-    // their ribbon edges; inside an arm's own width the field IS that
-    // arm's material. The old centerline-to-centerline angular blend
-    // painted neighbor colors onto every arm's footprint off its
-    // centerline (~40% at a flank half a world out), so wherever the web
-    // met the arm's own ribbon - flank edges, disc rims, crossing
-    // over-fills drawn on top with exact colors - a hard seam showed
-    // (masked until the section cache re-bake made ramps converge AT the
-    // joint). Where the ribbons still overlap near the joint, the blend
-    // keeps FIELD_BLEND_MIN of the wedge angle, centered.
-    const fieldAt = (rec: JRec, px: number, py: number): void => {
-      const arms = rec.arms;
-      if (arms.length === 0) {
-        fieldU = U_BASE;
-        fieldR = this.baseRgb[0];
-        fieldG = this.baseRgb[1];
-        fieldB = this.baseRgb[2];
-        compose();
-        return;
-      }
-      const ex = px - rec.jx;
-      const ey = py - rec.jy;
-      const rho = Math.sqrt(ex * ex + ey * ey);
-      const phi = Math.atan2(ey, ex);
-      // Every arm's profile shares the radius grid: one index per query.
-      const gx = rho / FIELD_PROF_DR;
-      let gi: number;
-      let gf: number;
-      if (gx >= profLast) {
-        gi = profLast - 1;
-        gf = 1;
-      } else {
-        gi = gx | 0;
-        gf = gx - gi;
-      }
-      let ia = 0;
-      let ib = 0;
-      let relA = Infinity;
-      let relB = Infinity;
-      for (let i = 0; i < arms.length; i++) {
-        const pth = arms[i].pth;
-        const th = pth[gi] + (pth[gi + 1] - pth[gi]) * gf;
-        // Profile angles stay within a turn or so of [-PI, PI] (unwrapped
-        // around the arm's ray), so a few conditional wraps beat fmod.
-        let ra = phi - th;
-        while (ra < 0) ra += TAU;
-        while (ra >= TAU) ra -= TAU;
-        const rb = ra > 0 ? TAU - ra : 0;
-        if (ra < relA) {
-          relA = ra;
-          ia = i;
-        }
-        if (rb < relB) {
-          relB = rb;
-          ib = i;
-        }
-      }
-      const A = arms[ia];
-      const B = arms[ib];
-      sampleBeside(A, rho, relA);
-      if (A === B) {
-        compose();
-        return;
-      }
-      const uA = fieldU;
-      const rA = fieldR;
-      const gA = fieldG;
-      const bA = fieldB;
-      sampleBeside(B, rho, relB);
-      const span = relA + relB;
-      const half = rho > fillHalf ? Math.asin(fillHalf / rho) : Math.PI / 2;
-      let lo = half;
-      let hi = span - half;
-      const minW = span * FIELD_BLEND_MIN;
-      if (hi - lo < minW) {
-        lo = (span - minW) / 2;
-        hi = lo + minW;
-      }
-      let t = hi > lo ? (relA - lo) / (hi - lo) : relA < span / 2 ? 0 : 1;
-      t = t < 0 ? 0 : t > 1 ? 1 : t;
-      t = t * t * (3 - 2 * t);
-      fieldU = uA + (fieldU - uA) * t;
-      fieldR = rA + (fieldR - rA) * t;
-      fieldG = gA + (fieldG - gA) * t;
-      fieldB = bA + (fieldB - bA) * t;
-      compose();
-    };
+    // EDGE-AWARE BLEND (the field's model; FIELD_GLSL evaluates it): the
+    // two bracketing arms (by their rays' angles AT THE POINT'S RADIUS -
+    // curved arms) blend only across the GAP between their ribbon edges;
+    // inside an arm's own width the field IS that arm's material. The old
+    // centerline-to-centerline angular blend painted neighbor colors onto
+    // every arm's footprint off its centerline (~40% at a flank half a
+    // world out), so wherever the web met the arm's own ribbon - flank
+    // edges, disc rims, crossing over-fills drawn on top with exact colors
+    // - a hard seam showed (masked until the section cache re-bake made
+    // ramps converge AT the joint). Where the ribbons still overlap near
+    // the joint, the blend keeps FIELD_BLEND_MIN of the wedge angle,
+    // centered. PROBE HOOK: the CPU reference over THIS rebuild's records.
     this.fieldProbe = {
       at: (ji, x, y, out) => {
         const rec = recs[ji];
-        if (!rec) return false;
-        fieldAt(rec, x, y);
-        out[0] = fieldR;
-        out[1] = fieldG;
-        out[2] = fieldB;
-        out[3] = fieldU;
+        if (!rec || rec.rb < 0) return false;
+        this.cpuJunctionField(rec.rb, x, y, out);
         return true;
       },
       arms: (ji) => recs[ji]?.arms ?? [],
       center: (ji) => (recs[ji] ? [recs[ji].jx, recs[ji].jy] : null),
+      record: (ji) => recs[ji]?.rb ?? -1,
     };
 
     // FILLS WEAR THE JOINT FIELD: a crossing parked beside a fused joint
@@ -4844,102 +5023,56 @@ export class RibbonRenderer {
     // overlap core). Capping the fill short of the joint is not an option:
     // the erase is restricted to the fill's window (fillBound), so the
     // under thread would stop being cut there - a wrong weave. Instead,
-    // fill vertices within FILL_JOINT_IN fillHalfs of a joint wear the
-    // field itself, easing back to the exact material by FILL_JOINT_OUT.
+    // fill PIXELS within FILL_JOINT_IN fillHalfs of a joint wear the field
+    // itself, easing back to the exact material by FILL_JOINT_OUT - on the
+    // GPU (FILL_FRAG). The CPU only lists each visible patch's nearby
+    // joints (record index + 1, the four nearest to its bounds within the
+    // outer radius; any pixel within reach of a joint has its patch's
+    // bounds within reach too).
     {
-      const r0 = fillHalf * FILL_JOINT_IN;
       const r1 = fillHalf * FILL_JOINT_OUT;
-      const live = recs.filter((rc) => rc.on && rc.arms.length >= 2);
-      const near: JRec[] = [];
+      const r1sq = r1 * r1;
+      const live = recs.filter((rc) => rc.on && rc.rb >= 0);
       const bb = this.fillBoundsScratch;
-      const out4 = this.fillFieldScratch;
-      const field = (x: number, y: number, out: Float32Array): number => {
-        let best = r1 * r1;
-        let rec: JRec | null = null;
-        for (const rc of near) {
-          const dx = x - rc.jx;
-          const dy = y - rc.jy;
-          const d2 = dx * dx + dy * dy;
-          if (d2 < best) {
-            best = d2;
-            rec = rc;
-          }
-        }
-        if (!rec) return 0;
-        const d = Math.sqrt(best);
-        let w = 1;
-        if (d > r0) {
-          const t = (d - r0) / (r1 - r0);
-          w = 1 - t * t * (3 - 2 * t);
-        }
-        fieldAt(rec, x, y);
-        out[0] = fieldR;
-        out[1] = fieldG;
-        out[2] = fieldB;
-        out[3] = fieldU;
-        return w;
-      };
+      const cand = this.jointCand;
+      const candD = this.jointCandD;
       const apply = (fill: RibbonMesh): void => {
-        if (!fill.mesh.visible) {
-          fill.blendTowardField(null, out4);
-          return;
-        }
-        fill.bounds(bb);
-        near.length = 0;
-        for (const rc of live) {
-          if (
-            rc.jx > bb[0] - r1 &&
-            rc.jx < bb[2] + r1 &&
-            rc.jy > bb[1] - r1 &&
-            rc.jy < bb[3] + r1
-          ) {
-            near.push(rc);
+        cand.fill(0);
+        if (fill.mesh.visible && live.length > 0) {
+          fill.bounds(bb);
+          candD.fill(Infinity);
+          for (const rc of live) {
+            const dx = Math.max(bb[0] - rc.jx, 0, rc.jx - bb[2]);
+            const dy = Math.max(bb[1] - rc.jy, 0, rc.jy - bb[3]);
+            const d2 = dx * dx + dy * dy;
+            if (d2 >= r1sq || d2 >= candD[3]) continue;
+            // Sorted insertion into the four nearest.
+            let k = 3;
+            while (k > 0 && candD[k - 1] > d2) {
+              candD[k] = candD[k - 1];
+              cand[k] = cand[k - 1];
+              k--;
+            }
+            candD[k] = d2;
+            cand[k] = rc.rb + 1;
           }
         }
-        fill.blendTowardField(near.length > 0 ? field : null, out4);
+        fill.setJoints(cand);
       };
       for (const f of this.overFills) apply(f);
       for (const f of this.emergentFills) apply(f);
     }
     // Every junction fan (seal disc, fused-tip disc, wedge) goes through
-    // here: ring-subdivided by its radius so Gouraud tracks the field.
+    // here: geometry plus the joint's record index - the shader evaluates
+    // the field per pixel, so one apex-to-rim triangle per rim segment
+    // renders it exactly (no ring subdivision, no per-vertex colors).
     const emitFan = (
       rec: JRec,
       cx: number,
       cy: number,
       rim: number[]
     ): void => {
-      const per = rim.length / 6;
-      let rMax = 0;
-      for (let i = 0; i < per; i++) {
-        const d = Math.hypot(rim[i * 6] - cx, rim[i * 6 + 1] - cy);
-        if (d > rMax) rMax = d;
-      }
-      const K = Math.min(
-        FAN_RINGS_MAX,
-        Math.max(1, Math.ceil(rMax / FAN_RING_STEP))
-      );
-      fieldAt(rec, cx, cy);
-      const aU = fieldU;
-      const aR = fieldR;
-      const aG = fieldG;
-      const aB = fieldB;
-      if (K <= 1) {
-        fm.pushFan(cx, cy, aU, aR, aG, aB, rim, rec.fx);
-        return;
-      }
-      const rings: number[] = [];
-      for (let k = 1; k < K; k++) {
-        const s = Math.pow(k / K, FAN_RING_POW);
-        for (let i = 0; i < per; i++) {
-          const px = cx + (rim[i * 6] - cx) * s;
-          const py = cy + (rim[i * 6 + 1] - cy) * s;
-          fieldAt(rec, px, py);
-          rings.push(px, py, fieldU, fieldR, fieldG, fieldB);
-        }
-      }
-      for (let q = 0; q < rim.length; q++) rings.push(rim[q]);
-      fm.pushRings(cx, cy, aU, aR, aG, aB, rings, per, rec.fx);
+      fm.pushFan(cx, cy, rim, rec.rb);
     };
     const pushDiscField = (
       rec: JRec,
@@ -4947,15 +5080,7 @@ export class RibbonRenderer {
       cy: number,
       r: number
     ): void => {
-      const rim: number[] = [];
-      for (let i = 0; i <= DISC_SEGS; i++) {
-        const th = ((i % DISC_SEGS) / DISC_SEGS) * Math.PI * 2;
-        const px = cx + Math.cos(th) * r;
-        const py = cy + Math.sin(th) * r;
-        fieldAt(rec, px, py);
-        rim.push(px, py, fieldU, fieldR, fieldG, fieldB);
-      }
-      emitFan(rec, cx, cy, rim);
+      emitFan(rec, cx, cy, discRim(cx, cy, r));
     };
 
     // Tip positions read the ENDPOINT SAMPLE directly: sampleAt wraps its
@@ -5053,9 +5178,15 @@ export class RibbonRenderer {
       );
     }
 
-    if (recs.length === 0) {
+    // Upload this rebuild's geometry and records.
+    const finish = (): void => {
       fmBottom.commit();
       fmTop.commit();
+      rd.markDirty(0, cursor);
+      rd.flush();
+    };
+    if (recs.length === 0) {
+      finish();
       return;
     }
     const w = fillHalf * 0.97;
@@ -5155,47 +5286,62 @@ export class RibbonRenderer {
           left: boolean,
           out: number[]
         ): void => {
-          const reach = armReach(arm);
-          for (let e = 0; e < FILLET_EDGE_PTS; e++) {
-            const sArc =
-              (0.12 + (0.88 * e) / (FILLET_EDGE_PTS - 1)) * reach;
-            const a0 = normArc(
-              arm.arc0 + arm.dir * sArc,
-              arm.total,
-              arm.closed
-            );
-            const a1 = normArc(
-              arm.arc0 + arm.dir * (sArc + 0.08),
-              arm.total,
-              arm.closed
-            );
+          // The centerline points + outward tangents are shared by the
+          // arm's two wedges (only the offset side differs).
+          let fp = arm.flankPts;
+          if (!fp) {
+            fp = new Float64Array(FILLET_EDGE_PTS * 4);
+            const reach = armReach(arm);
             const samples = this.chainSamples[arm.chain]!;
-            this.sampleAtSafe(samples, a0, arm.closed, this.sampleScratch, 0);
-            const px = this.sampleScratch[0];
-            const py = this.sampleScratch[1];
-            this.sampleAtSafe(samples, a1, arm.closed, this.sampleScratch, 0);
-            // a1 already sits FARTHER OUT along the arm than a0 (both
-            // step by arm.dir), so this difference IS the outward
-            // tangent. Multiplying by arm.dir again (the Stage 16d form)
-            // mirrored every dir = -1 flank onto its arm's FAR edge: the
-            // fan swept across the whole arm, painting the junction-field
-            // blend over the thread and cutting it with a diagonal rim
-            // (pale shards / smudges ON the weave; 100% of dir = -1
-            // flank vertices measured on the far edge).
-            let tx = this.sampleScratch[0] - px;
-            let ty = this.sampleScratch[1] - py;
-            const tl = Math.hypot(tx, ty);
-            if (tl > 1e-6) {
-              tx /= tl;
-              ty /= tl;
-            } else {
-              // Both probes inside a fused tip's tuck (samples collapsed
-              // onto the tuck point): use the arm's junction direction.
-              tx = arm.dx;
-              ty = arm.dy;
+            for (let e = 0; e < FILLET_EDGE_PTS; e++) {
+              const sArc =
+                (0.12 + (0.88 * e) / (FILLET_EDGE_PTS - 1)) * reach;
+              const a0 = normArc(
+                arm.arc0 + arm.dir * sArc,
+                arm.total,
+                arm.closed
+              );
+              const a1 = normArc(
+                arm.arc0 + arm.dir * (sArc + 0.08),
+                arm.total,
+                arm.closed
+              );
+              this.sampleAtSafe(samples, a0, arm.closed, this.sampleScratch, 0);
+              const px = this.sampleScratch[0];
+              const py = this.sampleScratch[1];
+              this.sampleAtSafe(samples, a1, arm.closed, this.sampleScratch, 0);
+              // a1 already sits FARTHER OUT along the arm than a0 (both
+              // step by arm.dir), so this difference IS the outward
+              // tangent. Multiplying by arm.dir again (the Stage 16d form)
+              // mirrored every dir = -1 flank onto its arm's FAR edge: the
+              // fan swept across the whole arm, painting the junction-field
+              // blend over the thread and cutting it with a diagonal rim
+              // (pale shards / smudges ON the weave; 100% of dir = -1
+              // flank vertices measured on the far edge).
+              let tx = this.sampleScratch[0] - px;
+              let ty = this.sampleScratch[1] - py;
+              const tl = Math.hypot(tx, ty);
+              if (tl > 1e-6) {
+                tx /= tl;
+                ty /= tl;
+              } else {
+                // Both probes inside a fused tip's tuck (samples collapsed
+                // onto the tuck point): use the arm's junction direction.
+                tx = arm.dx;
+                ty = arm.dy;
+              }
+              fp[e * 4] = px;
+              fp[e * 4 + 1] = py;
+              fp[e * 4 + 2] = tx;
+              fp[e * 4 + 3] = ty;
             }
-            const sgn = left ? 1 : -1;
-            out.push(px - ty * w * sgn, py + tx * w * sgn);
+            arm.flankPts = fp;
+          }
+          const sgn = left ? w : -w;
+          for (let e = 0; e < FILLET_EDGE_PTS; e++) {
+            const px = fp[e * 4];
+            const py = fp[e * 4 + 1];
+            out.push(px - fp[e * 4 + 3] * sgn, py + fp[e * 4 + 2] * sgn);
           }
         };
         const edgeA: number[] = [];
@@ -5204,14 +5350,13 @@ export class RibbonRenderer {
         flank(B, false, edgeB);
 
         // Perimeter: A's flank inner->outer, bezier rim to B's outer tip
-        // (control = corner), B's flank outer->inner. Every vertex
+        // (control = corner), B's flank outer->inner. Every pixel
         // evaluates the shared junction field, so the wedge is a window
         // onto the same continuous material as the discs and ribbons.
         const n = FILLET_BEZIER_STEPS;
         const rim: number[] = [];
         const pushPt = (px: number, py: number): void => {
-          fieldAt(rec, px, py);
-          rim.push(px, py, fieldU, fieldR, fieldG, fieldB);
+          rim.push(px, py);
         };
         for (let e = 0; e < FILLET_EDGE_PTS; e++) {
           pushPt(edgeA[e * 2], edgeA[e * 2 + 1]);
@@ -5242,8 +5387,7 @@ export class RibbonRenderer {
         emitFan(rec, jx, jy, rim);
       }
     }
-    fmBottom.commit();
-    fmTop.commit();
+    finish();
   }
 
   destroy(): void {

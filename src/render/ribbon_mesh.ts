@@ -3,6 +3,7 @@
 // the position buffer (no geometry reallocation).
 
 import { Buffer, BufferUsage, Mesh, MeshGeometry, Texture } from "pixi.js";
+import { addFloatAttribute } from "./junction_field";
 
 // Attach a per-vertex aColor (vec3) attribute carrying the SECTION RGB
 // (palette mode; see the renderer's section shader). The buffer rides the
@@ -60,13 +61,12 @@ export class RibbonMesh {
   private fxData: Float32Array | null = null;
   private fxZero = true;
   private readonly closed: boolean;
-  // JOINT FIELD OVERRIDE (blendTowardField): the exact colors / paint U
-  // this patch last copied from its source ribbon (refreshed on every
-  // copy), so the per-tick override always blends from the exact material
-  // and never compounds on its own previous output.
-  private exactColors: Float32Array | null = null;
-  private exactU: Float32Array | null = null;
-  private overridden = false;
+  // FILLS WEAR THE JOINT FIELD (over-fill patches, drawn with the GPU
+  // field's fill shader): up to four nearby junction records per patch
+  // (record texel index + 1, 0 = none), constant across every vertex - the
+  // shader blends per PIXEL. null on base ribbons.
+  private jointData: Float32Array | null = null;
+  private jointKey = new Float32Array(4);
   // Samples the last window copy actually used (the rest repeat its last
   // pair as degenerate quads).
   private usedSpan = 0;
@@ -75,7 +75,8 @@ export class RibbonMesh {
     sampleCount: number,
     closed: boolean,
     color: number,
-    paint = false
+    paint = false,
+    joint = false
   ) {
     this.sampleCount = sampleCount;
     this.closed = closed;
@@ -111,9 +112,36 @@ export class RibbonMesh {
       addColorAttribute(geometry, this.colorData);
       this.fxData = new Float32Array(sampleCount * 2);
       addFxAttribute(geometry, this.fxData);
+      if (joint) {
+        this.jointData = new Float32Array(sampleCount * 2 * 4);
+        addFloatAttribute(geometry, "aJoint", this.jointData, 4);
+      }
     }
     this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
     this.mesh.tint = color;
+  }
+
+  // Set this patch's nearby junction records (see jointData): `c` holds
+  // four entries (record texel index + 1, 0 = none). Uploads only when the
+  // set changes.
+  setJoints(c: ArrayLike<number>): void {
+    const jd = this.jointData;
+    if (!jd) return;
+    const k = this.jointKey;
+    if (k[0] === c[0] && k[1] === c[1] && k[2] === c[2] && k[3] === c[3]) {
+      return;
+    }
+    k[0] = c[0];
+    k[1] = c[1];
+    k[2] = c[2];
+    k[3] = c[3];
+    for (let v = 0; v < jd.length; v += 4) {
+      jd[v] = k[0];
+      jd[v + 1] = k[1];
+      jd[v + 2] = k[2];
+      jd[v + 3] = k[3];
+    }
+    this.mesh.geometry.getBuffer("aJoint").update();
   }
 
   // Rewrite vertex positions from a closed centerline. `positions`/
@@ -394,12 +422,6 @@ export class RibbonMesh {
       }
     }
     this.usedSpan = Math.max(1, Math.min(sampleSpan, this.sampleCount));
-    if (copyColors && this.exactColors) {
-      this.exactColors.set(this.colorData!);
-      const eu = this.exactU!;
-      for (let v = 0; v < eu.length; v++) eu[v] = this.uvData[v * 2];
-    }
-    if (copyColors) this.overridden = false;
     this.mesh.geometry.getBuffer("aPosition").update();
     if (copyUVs) this.mesh.geometry.getBuffer("aUV").update();
     if (copyColors) {
@@ -432,68 +454,6 @@ export class RibbonMesh {
     out[1] = y0;
     out[2] = x1;
     out[3] = y1;
-  }
-
-  // JOINT FIELD OVERRIDE (palette patches near fused joints): per vertex,
-  // `field(x, y, out)` writes the field's [r, g, b, u] there and returns a
-  // blend weight in [0, 1]; the vertex wears lerp(exact, field, weight).
-  // `field === null` (or all-zero weights) restores the exact copied
-  // material once and is free afterwards.
-  blendTowardField(
-    field: ((x: number, y: number, out: Float32Array) => number) | null,
-    out: Float32Array
-  ): void {
-    const cd = this.colorData;
-    if (!cd) return;
-    if (!field && !this.overridden) return;
-    const nv = this.sampleCount * 2;
-    if (!this.exactColors) {
-      // First override: the buffers still hold the exact copy.
-      this.exactColors = new Float32Array(cd.length);
-      this.exactColors.set(cd);
-      this.exactU = new Float32Array(nv);
-      for (let v = 0; v < nv; v++) this.exactU[v] = this.uvData[v * 2];
-    }
-    const ec = this.exactColors;
-    const eu = this.exactU!;
-    const vd = this.vertexData;
-    // Only the window's used pairs are evaluated; the repeated tail pairs
-    // (degenerate quads) copy the last used pair's result below.
-    const nUsed = (this.usedSpan > 0 ? this.usedSpan : this.sampleCount) * 2;
-    let any = false;
-    for (let v = 0; v < nUsed; v++) {
-      const w = field ? field(vd[v * 2], vd[v * 2 + 1], out) : 0;
-      const c = v * 3;
-      if (w > 0) {
-        any = true;
-        cd[c] = ec[c] + (out[0] - ec[c]) * w;
-        cd[c + 1] = ec[c + 1] + (out[1] - ec[c + 1]) * w;
-        cd[c + 2] = ec[c + 2] + (out[2] - ec[c + 2]) * w;
-        this.uvData[v * 2] = eu[v] + (out[3] - eu[v]) * w;
-      } else if (this.overridden) {
-        cd[c] = ec[c];
-        cd[c + 1] = ec[c + 1];
-        cd[c + 2] = ec[c + 2];
-        this.uvData[v * 2] = eu[v];
-      }
-    }
-    if (nUsed < nv && (any || this.overridden)) {
-      const lc = (nUsed - 2) * 3;
-      for (let v = nUsed; v < nv; v++) {
-        const c = v * 3;
-        const p = lc + (v % 2) * 3;
-        cd[c] = cd[p];
-        cd[c + 1] = cd[p + 1];
-        cd[c + 2] = cd[p + 2];
-        this.uvData[v * 2] = this.uvData[(nUsed - 2 + (v % 2)) * 2];
-      }
-    }
-    if (any || this.overridden) {
-      this.mesh.geometry.getBuffer("aColor").update();
-      this.mesh.geometry.getBuffer("aUV").update();
-      this.lastColors = null;
-    }
-    this.overridden = any;
   }
 
   // Write pair `dst` as the lerp of source pairs (a, a + 1) by t (wrapped
@@ -618,189 +578,87 @@ export class PatchGridMesh {
   }
 }
 
-// A pooled triangle-fan scratch mesh (junction fillet wedges): capacity is
-// fixed at construction and the whole thing is refilled each paint tick.
-// Unused index capacity is zeroed (degenerate triangles), so partial fills
-// need no geometry surgery. Carries the section shader's full vertex
-// layout - paint U (accent strip) + per-vertex section RGB - so wedges
-// blend EXACTLY like the ribbons they join: a flat-colored wedge over a
-// ramping section color drew a visible step at its boundary.
+// A pooled triangle-fan scratch mesh for junction joinery (seal discs,
+// fused-tip discs, wedges, free-tip caps): capacity is fixed at
+// construction and the whole thing is refilled per rebuild. Unused index
+// capacity is zeroed (degenerate triangles), so partial fills need no
+// geometry surgery. Vertices carry only a position and the texel index of
+// their junction RECORD (aRec): the GPU junction-field shader
+// (junction_field.ts) evaluates the field PER PIXEL, so fans no longer
+// subdivide into rings or carry colors (Gouraud smeared the nonlinear
+// field into straight streaks unless the fan was ring-subdivided).
 export class TriFanMesh {
   mesh: Mesh;
 
   private vertexData: Float32Array;
-  private uvData: Float32Array;
-  private colorData: Float32Array;
+  private recData: Float32Array;
   private indexData: Uint32Array;
-  // Per-vertex appearance-FX weight, constant per fan (fans only ever
-  // carry the materialize TRANSPARENCY - stripes need the ribbon's V
-  // axis). Uploads only while some fan is non-inert, plus one frame to
-  // clear.
-  private fxData: Float32Array;
-  private fxAny = false;
-  private fxWas = false;
   private vUsed = 0;
   private iUsed = 0;
   // Index span uploaded last commit: the GPU copy past the current fill
   // must be re-zeroed when a fill shrinks (partial uploads, see commit).
   private iPrev = 0;
 
-  constructor(texture: Texture, vertexCapacity: number, indexCapacity: number) {
+  constructor(vertexCapacity: number, indexCapacity: number) {
     this.vertexData = new Float32Array(vertexCapacity * 2);
-    this.uvData = new Float32Array(vertexCapacity * 2);
-    this.colorData = new Float32Array(vertexCapacity * 3);
-    this.fxData = new Float32Array(vertexCapacity);
+    this.recData = new Float32Array(vertexCapacity);
     this.indexData = new Uint32Array(indexCapacity);
     const geometry = new MeshGeometry({
       positions: this.vertexData,
-      uvs: this.uvData,
+      // Unused by the field shader (MeshGeometry wants the slot).
+      uvs: new Float32Array(vertexCapacity * 2),
       indices: this.indexData,
     });
-    addColorAttribute(geometry, this.colorData);
-    addFxAttribute(geometry, this.fxData);
-    this.mesh = new Mesh({ geometry, texture });
+    addFloatAttribute(geometry, "aRec", this.recData, 1);
+    this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
   }
 
   begin(): void {
     this.vUsed = 0;
     this.iUsed = 0;
-    this.fxAny = false;
     this.indexData.fill(0);
   }
 
-  // Emit one fan around an apex. `rim` is flat [x, y, u, r, g, b] per
-  // vertex, in winding order; triangles are (apex, rim[i], rim[i+1]).
-  // `fx` (whole fan): 0 = inert, [-1, 0) = materialize transparency.
-  pushFan(
-    apexX: number,
-    apexY: number,
-    apexU: number,
-    apexR: number,
-    apexG: number,
-    apexB: number,
-    rim: number[],
-    fx = 0
-  ): void {
-    const rimCount = rim.length / 6;
+  // Emit one fan around an apex. `rim` is flat [x, y] per vertex, in
+  // winding order; triangles are (apex, rim[i], rim[i+1]). Every vertex
+  // carries `rec`, the record texel index of the fan's junction field.
+  pushFan(apexX: number, apexY: number, rim: number[], rec: number): void {
+    const rimCount = rim.length / 2;
     if (
-      this.vUsed + rimCount + 1 > this.vertexData.length / 2 ||
-      this.iUsed + Math.max(0, rimCount - 1) * 3 > this.indexData.length
-    ) {
-      return; // Capacity is sized for the worst case; never grows.
-    }
-    const apex = this.vUsed++;
-    this.vertexData[apex * 2] = apexX;
-    this.vertexData[apex * 2 + 1] = apexY;
-    this.uvData[apex * 2] = apexU;
-    this.uvData[apex * 2 + 1] = 0;
-    this.colorData[apex * 3] = apexR;
-    this.colorData[apex * 3 + 1] = apexG;
-    this.colorData[apex * 3 + 2] = apexB;
-    this.fxData.fill(fx, apex, apex + rimCount + 1);
-    if (fx !== 0) this.fxAny = true;
-    for (let i = 0; i < rimCount; i++) {
-      const k = this.vUsed + i;
-      this.vertexData[k * 2] = rim[i * 6];
-      this.vertexData[k * 2 + 1] = rim[i * 6 + 1];
-      this.uvData[k * 2] = rim[i * 6 + 2];
-      this.uvData[k * 2 + 1] = 0;
-      this.colorData[k * 3] = rim[i * 6 + 3];
-      this.colorData[k * 3 + 1] = rim[i * 6 + 4];
-      this.colorData[k * 3 + 2] = rim[i * 6 + 5];
-    }
-    for (let i = 0; i < rimCount - 1; i++) {
-      this.indexData[this.iUsed++] = apex;
-      this.indexData[this.iUsed++] = this.vUsed + i;
-      this.indexData[this.iUsed++] = this.vUsed + i + 1;
-    }
-    this.vUsed += rimCount;
-  }
-
-  // Emit a fan SUBDIVIDED into concentric rings around its apex: `rings`
-  // is flat [x, y, u, r, g, b] per vertex, ring after ring from the apex
-  // outward (`perRing` vertices each, in rim winding order; the last ring
-  // is the rim). The caller evaluates its field at every ring vertex, so
-  // per-vertex interpolation tracks a nonlinear field instead of smearing
-  // it across one long apex-to-rim triangle (the faceted-fan streaks).
-  pushRings(
-    apexX: number,
-    apexY: number,
-    apexU: number,
-    apexR: number,
-    apexG: number,
-    apexB: number,
-    rings: number[],
-    perRing: number,
-    fx = 0
-  ): void {
-    const total = rings.length / 6;
-    const ringCount = total / perRing;
-    if (perRing < 2 || ringCount < 1) return;
-    const tris = (perRing - 1) * (2 * ringCount - 1);
-    if (
-      this.vUsed + total + 1 > this.vertexData.length / 2 ||
-      this.iUsed + tris * 3 > this.indexData.length
+      rimCount < 2 ||
+      this.vUsed + rimCount + 1 > this.recData.length ||
+      this.iUsed + (rimCount - 1) * 3 > this.indexData.length
     ) {
       return; // Capacity is sized for the worst case; never grows.
     }
     const apex = this.vUsed;
-    this.vertexData[apex * 2] = apexX;
-    this.vertexData[apex * 2 + 1] = apexY;
-    this.uvData[apex * 2] = apexU;
-    this.uvData[apex * 2 + 1] = 0;
-    this.colorData[apex * 3] = apexR;
-    this.colorData[apex * 3 + 1] = apexG;
-    this.colorData[apex * 3 + 2] = apexB;
-    this.fxData.fill(fx, apex, apex + total + 1);
-    if (fx !== 0) this.fxAny = true;
-    const base = apex + 1;
-    for (let i = 0; i < total; i++) {
-      const k = base + i;
-      this.vertexData[k * 2] = rings[i * 6];
-      this.vertexData[k * 2 + 1] = rings[i * 6 + 1];
-      this.uvData[k * 2] = rings[i * 6 + 2];
-      this.uvData[k * 2 + 1] = 0;
-      this.colorData[k * 3] = rings[i * 6 + 3];
-      this.colorData[k * 3 + 1] = rings[i * 6 + 4];
-      this.colorData[k * 3 + 2] = rings[i * 6 + 5];
+    const vd = this.vertexData;
+    vd[apex * 2] = apexX;
+    vd[apex * 2 + 1] = apexY;
+    for (let i = 0; i < rimCount; i++) {
+      vd[(apex + 1 + i) * 2] = rim[i * 2];
+      vd[(apex + 1 + i) * 2 + 1] = rim[i * 2 + 1];
     }
+    this.recData.fill(rec, apex, apex + rimCount + 1);
     const ix = this.indexData;
     let n = this.iUsed;
-    for (let i = 0; i < perRing - 1; i++) {
+    for (let i = 0; i < rimCount - 1; i++) {
       ix[n++] = apex;
-      ix[n++] = base + i;
-      ix[n++] = base + i + 1;
-    }
-    for (let r = 0; r < ringCount - 1; r++) {
-      const inner = base + r * perRing;
-      const outer = inner + perRing;
-      for (let i = 0; i < perRing - 1; i++) {
-        ix[n++] = inner + i;
-        ix[n++] = outer + i;
-        ix[n++] = outer + i + 1;
-        ix[n++] = inner + i;
-        ix[n++] = outer + i + 1;
-        ix[n++] = inner + i + 1;
-      }
+      ix[n++] = apex + 1 + i;
+      ix[n++] = apex + 2 + i;
     }
     this.iUsed = n;
-    this.vUsed = base + total;
+    this.vUsed = apex + rimCount + 1;
   }
 
-  // Upload only the used ranges (capacity is sized for the worst case -
-  // with ring subdivision that is several times the typical fill). The
-  // index range covers the larger of this and the previous fill, so a
-  // shrinking fill re-zeroes its stale GPU tail (begin() zeroed the CPU
-  // copy); the first upload sends the whole buffer either way.
+  // Upload only the used ranges. The index range covers the larger of this
+  // and the previous fill, so a shrinking fill re-zeroes its stale GPU tail
+  // (begin() zeroed the CPU copy); the first upload sends the whole buffer
+  // either way.
   commit(): void {
     const v = this.vUsed;
     this.mesh.geometry.getBuffer("aPosition").update(v * 2 * 4);
-    this.mesh.geometry.getBuffer("aUV").update(v * 2 * 4);
-    this.mesh.geometry.getBuffer("aColor").update(v * 3 * 4);
-    if (this.fxAny || this.fxWas) {
-      this.mesh.geometry.getBuffer("aFx").update(v * 4);
-    }
-    this.fxWas = this.fxAny;
+    this.mesh.geometry.getBuffer("aRec").update(v * 4);
     const iSpan = Math.max(this.iUsed, this.iPrev);
     this.iPrev = this.iUsed;
     this.mesh.geometry.getIndex().update(iSpan * 4);
