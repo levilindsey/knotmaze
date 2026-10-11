@@ -339,9 +339,9 @@ between-threads/cell-passage route.
   RGB ramps - zero association between segment colors, per request);
   depth/strands emit through a gamut subdivider so their looks hold.
   KNOWN FOLLOW-UP (user-reported): circular blend artifacts + hard
-  color seams at some intersections under segments - suspects are the
-  joinery field model vs unrelated-RGB ramps and the over-fill window
-  color copy; attribution unfinished.
+  color seams at some intersections under segments. RESOLVED
+  2026-10-11 by the JUNCTION BLEND ROUND below (both suspects were
+  real: the field model AND the over-fill copy, plus a stale cache).
 - Gameplay/visual round (b440fe9): FULL-LENGTH PULSE TRAINS (crests
   march whole runs at `pulseSpacing` (psp=, default 2.5, live);
   inbound/outbound combs, outbound leads 0.3s; floor glow still hugs
@@ -527,6 +527,49 @@ between-threads/cell-passage route.
   one physics outlier (fish seed 11 n/s: a loose loop swings past the
   start dot while settling). `tree` is now a broadleaf: a bushy lobed
   round canopy on a long two-cell trunk.
+- JUNCTION BLEND ROUND (2026-10-11; fillet agent + integration): the
+  "jagged discontinuities of color blending in intersections" report
+  was FOUR stacked causes. (1) FACETED FANS: one apex-to-rim triangle
+  per spoke Gouraud-smeared the nonlinear junction field into straight
+  streaks - fans subdivide into concentric rings (`TriFanMesh.pushRings`,
+  one per FAN_RING_STEP 0.35 world of radius, <= 4, crowded apex-ward;
+  commit uploads only the used ranges). (2) STALE SECTION CACHE: the
+  per-sample RGB cache mapped sample -> ctrl through the LATTICE-time
+  arc table; relaxation shifts ctrl/arc ~1 ctrl near joints (a whole
+  SEG_RAMP_CTRL), so 29/41 (ring URL) and 68/89 (default segments)
+  junctions never reached their shared color. `cacheDrift` re-bakes a
+  chain past CACHE_REBAKE_CTRL 0.1 ctrl (-> 0-1 non-converged; ~30
+  re-bakes/s at rest under flow, ~0.1 ms each). (3) Fixing (2) EXPOSED
+  the field's own error (render lore below): the 16c blend ran
+  centerline-to-centerline, painting neighbor colors onto every arm's
+  footprint off its centerline. The field is now EDGE-AWARE (blends only
+  across the gap between ribbon edges; inside an arm's width it IS that
+  arm's material; the overlap core keeps FIELD_BLEND_MIN 0.5 of the
+  wedge, centered) and CURVE-FOLLOWING (per-arm radial profiles on a
+  FIELD_PROF_DR grid; brackets chosen by the arms' angles AT the query
+  radius, continuous at switches). Footprint census (fieldProbe vs
+  colorAtArc, true overlap excluded): mean err 0.031 -> 0.005, >0.05
+  20.5% -> 2.8% (ring URL); 0.035 -> 0.015 at default (its small web
+  lies inside the overlap core). (4) OVER-FILLS AT JOINTS: a third of
+  all over-fills reach within 1.5 fillHalf of a joint center (23/88
+  ring, 49/183 default) and repainted exact colors over the web, their
+  window ends cutting hard lines through the blend. Capping them short
+  is a wrong weave (fillBound also restricts the erase), so fill
+  vertices within FILL_JOINT_IN 2 fillHalf wear the junction field,
+  easing to exact by FILL_JOINT_OUT 3 (`RibbonMesh.blendTowardField`
+  over an exact-color shadow refreshed on every window copy -
+  idempotent across paint ticks). Also from the agent: per-arm joinery
+  DOMAIN (reach/sampling capped half way to the arm's next joint) and
+  the LAYER VOTE fix (an under-near arm pins its joint to the punchable
+  bottom layer only when its gap starts within FILLET_DIVE_NEAR 2
+  fillHalf; any over-near arm lifts the joint's non-diving wedges to
+  the top layer): bottom-web bites 0.56-0.60 -> 0.06-0.34 punched area.
+  COST: fillet rebuild per paint tick 1.5 -> 4.3 ms (ring, cr=3), 3.0 ->
+  4.9 ms (default); the lever if it matters is caching each junction's
+  RGB field across paint-only ticks (only U animates). Verified: all 41
+  junction crops at the user's ring URL (live | agent patch | final),
+  default-URL A/B, suite green. NOT FIXED here: third-thread bites (see
+  the open queue).
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
@@ -544,6 +587,24 @@ the recorded plan, then WASM collision narrow-phase (2-4x on the ~40%
 slice); never color the Gauss-Seidel solver. Micro: hypot→sqrt in
 sampleAt/evalSegment/RibbonMesh.update (est 1-2ms), optional
 ticker-stop when fully asleep.
+
+RENDER LORE (hard-won, 2026-10-11): **a junction overlay must match
+the ribbons across their whole WIDTH, not along their centerlines -
+and a stale cache can hide that it doesn't.** The 16c field agreed with
+each arm only on its centerline, so every primitive boundary crossing an
+arm's width (wedge flanks at 0.97 fillHalf, disc rims, over-fill window
+ends drawn on top) showed the difference as a hard line. It stayed
+invisible while the section cache was stale (ramps sat ~1 ctrl off their
+joints, so nothing near a joint was strongly colored); fixing the cache
+made it the dominant artifact. Certify overlays with a FIELD-vs-RIBBON
+census over arm footprints (`renderer.fieldProbe`), excluding true
+ribbon overlap (whose visible color is draw order, not the field).
+PROBE LORE, same round: the renderer resets every fill/erase mesh's
+`visible` each frame (hide with `renderable = false`, or per layer);
+the custom section shader ignores `mesh.tint` (tint attribution only
+works on default-shader meshes such as erases); and the URL-state
+rewrite drops `#hash` on load (pass probe args through page.evaluate).
+Three "no effect" toggles in a row meant the probe, not the renderer.
 
 RENDER LORE (hard-won, 2026-10-10): **a custom pixi shader ignores
 mesh.texture.** Pixi v8's Mesh texture setter only updates
@@ -634,10 +695,16 @@ Still open in P4:
 - ~~Old maze mode~~ — RETIRED 2026-10-10 (commit bf86855): `md=1`,
   `core/maze.ts`, `game/maze_controller.ts`, `render/maze_renderer.ts`
   and their tests are deleted; `mf` is the only mode toggle.
-- **Open artifact queue (updated 2026-10-10, late)**: segments-scheme
-  circular blend pools + hard color seams at some intersections (Stage
-  26 follow-up; base caches measured smooth, overlay suspect - needs a
-  user Alt+click CROSSING INSPECT on a seam). AGENT-MEASURED, NOT YET
+- **Open artifact queue (updated 2026-10-11)**: THIRD-THREAD BITES
+  (the user's "occasional breaks in threads", bottom center of the
+  ring URL): an erase cuts everything under its footprint and the
+  over-fill repaints only its own over thread, so a joint's OTHER arm
+  (a bridge fused beside the crossing) inside the footprint stays cut -
+  probe_bites census at the ring URL: crossings 61/63/78 (chain-3
+  self-crossings) biting chains 8/12/19, edge-weighted and flickering
+  with flow. Needs a repaint of the joint's other arms inside an
+  over-pass erase footprint (or an erase exclusion). The segments-scheme
+  seams are RESOLVED (junction blend round). AGENT-MEASURED, NOT YET
   FIXED: (1) [FIXED late 2026-10-10: neighborGaps now gives an open
   chain's self-linked side the run to its chain end - first passes'
   chain-start cut 0.360 -> 0.482]; (2) latent

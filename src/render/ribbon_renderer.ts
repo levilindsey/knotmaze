@@ -211,6 +211,41 @@ const FILLET_EDGE_PTS = 5; // Samples per curve-hugging wedge flank.
 // below this fraction of the full reach (the joint still needs rounding).
 const FILLET_GAP_PAD = 1.0;
 const FILLET_GAP_MIN_FRAC = 0.3;
+// RADIAL FAN RINGS: junction fans (wedges + seal/tip discs) subdivide into
+// concentric rings, one per FAN_RING_STEP world of fan radius (at most
+// FAN_RINGS_MAX), each ring vertex evaluating the junction field. One long
+// apex-to-rim triangle Gouraud-interpolates a NONLINEAR field (1-ctrl
+// segment ramps, cos-projected arm samples, angular blend) into straight
+// streaks - the faceted "triangle-fan" junction blends at cr=3 (mean
+// error 0.034 RGB, max 0.18 at one triangle per spoke; 0.0033 at 6 rings).
+// Rings crowd toward the apex (FAN_RING_POW), where the ramps live; the
+// default-size fans (radius < FAN_RING_STEP) stay single-ring.
+const FAN_RING_STEP = 0.35;
+const FAN_RINGS_MAX = 4;
+const FAN_RING_POW = 1.5;
+// Junction field (see fieldAt): arm radial profiles resample the
+// centerline (walked in FIELD_PROF_ARC world-arc steps) onto a uniform
+// FIELD_PROF_DR radius grid; FIELD_BLEND_MIN is the smallest share of a
+// wedge's angle the arm-to-arm blend keeps where ribbons overlap.
+const FIELD_PROF_DR = 0.06;
+const FIELD_PROF_ARC = 0.08;
+const FIELD_BLEND_MIN = 0.5;
+// Over-fill vertices within FILL_JOINT_IN fillHalfs of a fused joint wear
+// the junction field, easing back to the exact copied material by
+// FILL_JOINT_OUT (see "FILLS WEAR THE JOINT FIELD" in rebuildFillets).
+const FILL_JOINT_IN = 2.0;
+const FILL_JOINT_OUT = 3.0;
+// SECTION CACHE DRIFT: the per-sample RGB cache maps sample -> ctrl through
+// the arc table at BAKE time, but lookups (and the joint itself) live at
+// the CURRENT table. Relaxation shifts a chain's ctrl/arc distribution by
+// ~1 ctrl near joints - a whole segments junction ramp (SEG_RAMP_CTRL 1) -
+// so hosts stopped converging at their joints (29/41 at the repro). Re-bake
+// a chain once its table drifts this far (ctrl units).
+const CACHE_REBAKE_CTRL = 0.1;
+// Layer vote: an under-near arm only pins its joint to the punchable
+// bottom layer when its gap starts within this many fillHalfs (see
+// rebuildFillets armDives).
+const FILLET_DIVE_NEAR = 2.0;
 const DISC_SEGS = 16; // Rim segments on tip/junction seal discs.
 
 // Wrap (closed) or clamp (open) a world arc into a chain's [0, total].
@@ -903,6 +938,29 @@ export class RibbonRenderer {
   private sectionNoise: ((x: number, y: number) => number) | null = null;
   private rgbCache: Float32Array[] = [];
   private rgbCacheReady = false;
+  // Per chain: each control's arc FRACTION when its cache was baked (null
+  // for constant / spatial-noise caches) - see CACHE_REBAKE_CTRL.
+  private bakeFrac: (Float32Array | null)[] = [];
+  // Chains re-baked by update() whose colors the next paint tick uploads.
+  private recolorPending = new Set<number>();
+  // Junction arm -> next joint ctrl along it (see armNextJointCtrl).
+  private nextJointCache = new Map<string, number | null>();
+  // Junction-field arm profiles, pooled across fillet rebuilds (fixed
+  // length per rebuild geometry; reset when the length changes).
+  private fieldProfPool: Float32Array[] = [];
+  private fieldProfLen = 0;
+  // Scratch for the fills-wear-the-joint-field pass (rebuildFillets).
+  private fillBoundsScratch = new Float32Array(4);
+  private fillFieldScratch = new Float32Array(4);
+  // PROBE HOOK (diagnostics only): the last rebuild's junction field -
+  // `at(ji, x, y, out)` writes [r, g, b, u] at a world point (junction
+  // index = junctionArms index); `arms(ji)` lists that joint's arms.
+  // Field-vs-ribbon censuses evaluate the exact function the fans use.
+  fieldProbe: {
+    at: (ji: number, x: number, y: number, out: Float32Array) => boolean;
+    arms: (ji: number) => unknown[];
+    center: (ji: number) => [number, number] | null;
+  } | null = null;
   // Default section color (the gamut midpoint = the seed-hue base color).
   private baseRgb = new Float32Array(3);
   // Scratch triplet for point color lookups (colorAtArc consumers).
@@ -1881,6 +1939,12 @@ export class RibbonRenderer {
       this.chainSamples[i] = samples;
       if (this.style.paletteMode && !this.rgbCacheReady) {
         this.buildRgbCacheFor(i, samples);
+      } else if (
+        this.style.paletteMode &&
+        this.cacheDrift(i, samples) > CACHE_REBAKE_CTRL
+      ) {
+        this.buildRgbCacheFor(i, samples);
+        this.recolorPending.add(i);
       }
       const mask = this.revealOn ? this.revealMaskFor(i, samples) : null;
       this.fills[i].update(
@@ -2860,11 +2924,58 @@ export class RibbonRenderer {
     return Math.max(0, Math.min(1, 0.5 + 0.62 * n));
   }
 
-  // Bake the per-sample RGB cache for one chain (initial arc tables;
-  // sample k's arc FRACTION is fixed by uniform resampling, so this stays
-  // valid as the chain deforms). Constant chains store one triplet.
+  // The ctrl of the next fused joint along a junction arm (its chain, in
+  // the arm's direction), or null - static (joint ctrls are fixed chain
+  // slots), so cached once; the arc is re-derived live by the caller.
+  private armNextJointCtrl(
+    jn: number,
+    a: { chain: number; slot: number; dir: 1 | -1 }
+  ): number | null {
+    const key = jn + ":" + a.chain + ":" + a.slot + ":" + a.dir;
+    const hit = this.nextJointCache.get(key);
+    if (hit !== undefined) return hit;
+    const len = this.ps.chains[a.chain].length;
+    const closed = this.ps.chainBreakAfter[a.chain] < 0;
+    let best: number | null = null;
+    let bestD = Infinity;
+    for (const e of this.junctionArcCtrls.get(a.chain) ?? []) {
+      if (e.jn === jn) continue;
+      let d = (e.ctrl - a.slot) * a.dir;
+      if (closed) d = ((d % len) + len) % len;
+      if (d > 1e-6 && d < bestD) {
+        bestD = d;
+        best = e.ctrl;
+      }
+    }
+    this.nextJointCache.set(key, best);
+    return best;
+  }
+
+  // How far (ctrl units, ~) this chain's ctrl -> arc-fraction table has
+  // drifted since its cache was baked. The cache maps sample k -> ctrl
+  // through the BAKE-time table, while lookups and the joints themselves
+  // live at the current one.
+  private cacheDrift(chain: number, samples: SplineSamples): number {
+    const snap = this.bakeFrac[chain];
+    const cal = samples.controlArcLengths;
+    const total = samples.totalLength;
+    if (!snap || snap.length !== cal.length || total <= 0) return 0;
+    let m = 0;
+    for (let k = 0; k < cal.length; k++) {
+      const d = Math.abs(cal[k] / total - snap[k]);
+      if (d > m) m = d;
+    }
+    return m * cal.length;
+  }
+
+  // Bake the per-sample RGB cache for one chain. Sample k sits at a fixed
+  // arc FRACTION (uniform resampling), but the ctrl at that fraction moves
+  // as the chain deforms - so the bake records its table (bakeFrac) and
+  // update() re-bakes once it drifts (CACHE_REBAKE_CTRL). Constant chains
+  // store one triplet.
   private buildRgbCacheFor(chain: number, samples: SplineSamples): void {
     const count = samples.count;
+    this.bakeFrac[chain] = null;
     if (this.sectionNoise) {
       const rgbs = new Float32Array(count * 3);
       for (let k = 0; k < count; k++) {
@@ -2912,6 +3023,9 @@ export class RibbonRenderer {
       rgbs[k * 3 + 2] = tmp[2];
     }
     this.rgbCache[chain] = rgbs;
+    const frac = new Float32Array(n);
+    for (let k = 0; k < n; k++) frac[k] = total > 0 ? cal[k] / total : 0;
+    this.bakeFrac[chain] = frac;
   }
 
   // Declare the current gameplay paint (traveled spans + branch-point
@@ -3013,6 +3127,11 @@ export class RibbonRenderer {
     for (const c of this.chainRev.keys()) {
       if (!target.has(c)) toWrite.push(c);
     }
+    // Chains whose section cache update() just re-baked (drift).
+    for (const c of this.recolorPending) {
+      if (!toWrite.includes(c)) toWrite.push(c);
+    }
+    this.recolorPending.clear();
 
     // REVEAL frontier glow: chains carrying an advancing tip rewrite every
     // tick (the glow travels), and chains whose glow just ended rewrite
@@ -4103,8 +4222,13 @@ export class RibbonRenderer {
       let armTotal = 0;
       for (const jn of this.junctionArms) armTotal += jn.arms.length;
       const wedgeRim = 2 * FILLET_EDGE_PTS + FILLET_BEZIER_STEPS + 1;
-      const verts = armTotal * (wedgeRim + 1) + nDiscs * (DISC_SEGS + 2);
-      const idx = (armTotal * wedgeRim + nDiscs * DISC_SEGS) * 3;
+      // Ring capacity for the WORST case (cuspRadius/threadWidth are live
+      // sliders); commit() uploads only the used ranges.
+      const K = FAN_RINGS_MAX;
+      const verts =
+        armTotal * (1 + K * wedgeRim) + nDiscs * (1 + K * (DISC_SEGS + 1));
+      const idx =
+        (armTotal * (wedgeRim - 1) + nDiscs * DISC_SEGS) * (2 * K - 1) * 3;
       this.filletMesh = new TriFanMesh(this.accentTex, verts, idx);
       this.filletMesh.mesh.shader = sectionShader();
       this.filletLayer.addChild(this.filletMesh.mesh);
@@ -4281,6 +4405,18 @@ export class RibbonRenderer {
       arc0: number;
       closed: boolean;
       total: number;
+      // DOMAIN: how far along this arm the joint's joinery may reach or
+      // sample - half way to the arm's next joint (a short bridge's far
+      // half belongs to the OTHER joint: its ramp converges there), or to
+      // an open chain's end. Without it both joints' webs spanned the
+      // whole bridge and overlapped with two different fields.
+      domain: number;
+      // RADIAL PROFILE (see FIELD_PROF_DR): the arm centerline's angle
+      // around the joint and its arc, at uniform radius steps - the field
+      // follows CURVED arms (flanks hug the true silhouette; a straight
+      // axis put curved arms' own edges outside their footprint).
+      pth: Float32Array;
+      ps: Float32Array;
     }
     interface JRec {
       jx: number;
@@ -4290,6 +4426,84 @@ export class RibbonRenderer {
       jn: number; // Index into junctionArms (for the layer vote).
       fx: number; // Fan transparency vs the arms' appearance FX.
     }
+    // Radial profile of one arm around its joint (JArm.pth/ps): walk the
+    // centerline outward in FIELD_PROF_ARC steps and resample angle + arc
+    // onto a uniform radius grid, so field lookups are O(1). Radius that
+    // stalls (an arm curling back) keeps the last outward sample; past the
+    // walk, the profile extends straight.
+    // Queries reach the wedge tips (L) and tip-disc rims (~2 fillHalf);
+    // past the grid the profile extrapolates straight.
+    const fieldReach =
+      Math.max(fillHalf * FILLET_REACH_PER_HALF * this.cuspRadius, fillHalf * 2) +
+      0.25;
+    const profN = Math.ceil(fieldReach / FIELD_PROF_DR) + 2;
+    if (this.fieldProfLen !== profN) {
+      this.fieldProfPool.length = 0;
+      this.fieldProfLen = profN;
+    }
+    let profUsed = 0;
+    const buildProfile = (
+      samples: SplineSamples,
+      arc0: number,
+      dir: number,
+      closed: boolean,
+      toEnd: number,
+      jx: number,
+      jy: number,
+      ang0: number
+    ): { pth: Float32Array; ps: Float32Array } => {
+      // Pooled across rebuilds (this runs every paint tick).
+      while (this.fieldProfPool.length < profUsed + 2) {
+        this.fieldProfPool.push(new Float32Array(profN));
+      }
+      const pth = this.fieldProfPool[profUsed++];
+      const ps = this.fieldProfPool[profUsed++];
+      const total = samples.totalLength;
+      const steps = Math.ceil((fieldReach * 1.4) / FIELD_PROF_ARC);
+      let prevR = 0;
+      let prevTh = ang0;
+      let prevS = 0;
+      let first = true;
+      let g = 0;
+      for (let k = 1; k <= steps && g < profN; k++) {
+        const s = Math.min(k * FIELD_PROF_ARC, toEnd);
+        this.sampleAtSafe(
+          samples,
+          normArc(arc0 + dir * s, total, closed),
+          closed,
+          this.sampleScratch,
+          0
+        );
+        const ex = this.sampleScratch[0] - jx;
+        const ey = this.sampleScratch[1] - jy;
+        const r = Math.hypot(ex, ey);
+        let th = Math.atan2(ey, ex);
+        while (th - prevTh > Math.PI) th -= Math.PI * 2;
+        while (th - prevTh < -Math.PI) th += Math.PI * 2;
+        if (first) {
+          prevTh = th; // The grid's innermost entries share the first ray.
+          first = false;
+        }
+        if (r > prevR) {
+          while (g < profN && g * FIELD_PROF_DR <= r) {
+            const f = (g * FIELD_PROF_DR - prevR) / (r - prevR);
+            pth[g] = prevTh + (th - prevTh) * f;
+            ps[g] = prevS + (s - prevS) * f;
+            g++;
+          }
+          prevR = r;
+          prevTh = th;
+          prevS = s;
+        }
+        if (s >= toEnd) break;
+      }
+      for (; g < profN; g++) {
+        pth[g] = prevTh;
+        ps[g] = prevS + (g * FIELD_PROF_DR - prevR);
+      }
+      return { pth, ps };
+    };
+
     const recs: JRec[] = [];
     for (const jn of this.junctionArms) {
       // APEX FROM THE ARMS' OWN SAMPLES: the physics centroid +
@@ -4352,16 +4566,40 @@ export class RibbonRenderer {
         if (len < 0.15) continue;
         dx /= len;
         dy /= len;
+        const arc0 = this.paintArcAt(samples, a.slot, closedA);
+        const total = samples.totalLength;
+        const nextCtrl = this.armNextJointCtrl(recs.length, a);
+        let nextJ = Infinity;
+        if (nextCtrl !== null) {
+          nextJ = (this.paintArcAt(samples, nextCtrl, closedA) - arc0) * a.dir;
+          if (closedA) nextJ = ((nextJ % total) + total) % total;
+          if (nextJ <= 1e-3) nextJ = Infinity;
+        }
+        const toEnd = closedA ? Infinity : a.dir > 0 ? total - arc0 : arc0;
+        const ang = Math.atan2(dy, dx);
+        const prof = buildProfile(
+          samples,
+          arc0,
+          a.dir,
+          closedA,
+          toEnd,
+          jx,
+          jy,
+          ang
+        );
         arms.push({
-          ang: Math.atan2(dy, dx),
+          ang,
           dx,
           dy,
           chain: a.chain,
           dir: a.dir,
           slot: a.slot,
-          arc0: this.paintArcAt(samples, a.slot, closedA),
+          arc0,
           closed: closedA,
-          total: samples.totalLength,
+          total,
+          domain: Math.min(nextJ / 2, toEnd),
+          pth: prof.pth,
+          ps: prof.ps,
         });
       }
       arms.sort((p, q) => p.ang - q.ang);
@@ -4391,11 +4629,41 @@ export class RibbonRenderer {
       }
       recs.push({ jx, jy, arms, on, jn: recs.length, fx: fanFx(solid) });
     }
+    // Nearest under-gap near edge ahead along an arm (mid-lane extents of
+    // underWindows), or Infinity.
+    const gapNearOf = (arm: JArm): number => {
+      const win = this.underWindows.get(arm.chain);
+      if (!win) return Infinity;
+      let near = Infinity;
+      for (let i = 0; i < win.length; i += 3) {
+        let along = (win[i] - arm.arc0) * arm.dir;
+        if (arm.closed) {
+          along = ((along % arm.total) + arm.total) % arm.total;
+          if (along > arm.total / 2) along -= arm.total;
+        }
+        // [center, extNeg, extPos] along the chain -> near/far edges
+        // along this arm's outward direction.
+        const far = along + (arm.dir > 0 ? win[i + 2] : win[i + 1]);
+        if (far <= 0) continue; // Entirely behind the joint.
+        const nearEdge = along - (arm.dir > 0 ? win[i + 1] : win[i + 2]);
+        if (nearEdge < near) near = nearEdge;
+      }
+      return near;
+    };
     const armTop = (a: JArm): boolean =>
       overNear.has(armKey(a.chain, a.slot, a.dir)) &&
       !underNear.has(armKey(a.chain, a.slot, a.dir));
+    // An arm DIVES AT THE JOINT only when its own gap starts within
+    // FILLET_DIVE_NEAR fillHalfs: a farther dive is kept out of the web by
+    // the reach clamp (armReach), so the joint may still ride the top
+    // layer. Counting every under-near arm as diving pinned "mixed" joints
+    // (one arm over-near, another diving ~1 world out) to the bottom
+    // layer, where the OVER crossing's under-thread erase punched their
+    // seal discs and wedges - the hairline cracks / dark bites at fat
+    // widths (crossings 23/43/62 at the cr=3 tw=0.58 repro).
     const armDives = (a: JArm): boolean =>
-      underNear.has(armKey(a.chain, a.slot, a.dir));
+      underNear.has(armKey(a.chain, a.slot, a.dir)) &&
+      gapNearOf(a) < fillHalf * FILLET_DIVE_NEAR;
     // Discs (seal + fused tips) stay junction-level: top only when some
     // arm needs cover and none dives.
     const layerFor = (rec: JRec): TriFanMesh =>
@@ -4417,6 +4685,7 @@ export class RibbonRenderer {
       fieldB = c3[2];
     };
     const armSample = (arm: JArm, proj: number): void => {
+      if (proj > arm.domain) proj = arm.domain;
       const arc = normArc(arm.arc0 + arm.dir * proj, arm.total, arm.closed);
       fieldU = this.paintUAtArc(arm.chain, arc, arm.closed);
       this.colorAtArc(arm.chain, arc, c3);
@@ -4424,6 +4693,36 @@ export class RibbonRenderer {
       fieldG = c3[1];
       fieldB = c3[2];
     };
+    // An arm's material beside a point at angular offset `off` from the
+    // arm's ray (at the point's radius `rho`): the arm point at the
+    // projected radius, at its true arc (profile lookup inlined - this
+    // runs for every fan vertex on every paint tick).
+    const profLast = profN - 1;
+    const sampleBeside = (arm: JArm, rho: number, off: number): void => {
+      const rp = off < Math.PI / 2 ? rho * Math.cos(off) : 0;
+      const x = rp / FIELD_PROF_DR;
+      const ps = arm.ps;
+      let s: number;
+      if (x >= profLast) {
+        s = ps[profLast] + (rp - profLast * FIELD_PROF_DR);
+      } else {
+        const i = x | 0;
+        s = ps[i] + (ps[i + 1] - ps[i]) * (x - i);
+      }
+      armSample(arm, s);
+    };
+    const TAU = Math.PI * 2;
+    // EDGE-AWARE BLEND: the two bracketing arms (by their rays' angles AT
+    // THE POINT'S RADIUS - curved arms) blend only across the GAP between
+    // their ribbon edges; inside an arm's own width the field IS that
+    // arm's material. The old centerline-to-centerline angular blend
+    // painted neighbor colors onto every arm's footprint off its
+    // centerline (~40% at a flank half a world out), so wherever the web
+    // met the arm's own ribbon - flank edges, disc rims, crossing
+    // over-fills drawn on top with exact colors - a hard seam showed
+    // (masked until the section cache re-bake made ramps converge AT the
+    // joint). Where the ribbons still overlap near the joint, the blend
+    // keeps FIELD_BLEND_MIN of the wedge angle, centered.
     const fieldAt = (rec: JRec, px: number, py: number): void => {
       const arms = rec.arms;
       if (arms.length === 0) {
@@ -4434,13 +4733,46 @@ export class RibbonRenderer {
         compose();
         return;
       }
-      const d = Math.hypot(px - rec.jx, py - rec.jy);
-      const ang = Math.atan2(py - rec.jy, px - rec.jx);
-      let bi = 0;
-      while (bi < arms.length && arms[bi].ang < ang) bi++;
-      const B = arms[bi % arms.length];
-      const A = arms[(bi - 1 + arms.length) % arms.length];
-      armSample(A, d * Math.max(0, Math.cos(ang - A.ang)));
+      const ex = px - rec.jx;
+      const ey = py - rec.jy;
+      const rho = Math.sqrt(ex * ex + ey * ey);
+      const phi = Math.atan2(ey, ex);
+      // Every arm's profile shares the radius grid: one index per query.
+      const gx = rho / FIELD_PROF_DR;
+      let gi: number;
+      let gf: number;
+      if (gx >= profLast) {
+        gi = profLast - 1;
+        gf = 1;
+      } else {
+        gi = gx | 0;
+        gf = gx - gi;
+      }
+      let ia = 0;
+      let ib = 0;
+      let relA = Infinity;
+      let relB = Infinity;
+      for (let i = 0; i < arms.length; i++) {
+        const pth = arms[i].pth;
+        const th = pth[gi] + (pth[gi + 1] - pth[gi]) * gf;
+        // Profile angles stay within a turn or so of [-PI, PI] (unwrapped
+        // around the arm's ray), so a few conditional wraps beat fmod.
+        let ra = phi - th;
+        while (ra < 0) ra += TAU;
+        while (ra >= TAU) ra -= TAU;
+        const rb = ra > 0 ? TAU - ra : 0;
+        if (ra < relA) {
+          relA = ra;
+          ia = i;
+        }
+        if (rb < relB) {
+          relB = rb;
+          ib = i;
+        }
+      }
+      const A = arms[ia];
+      const B = arms[ib];
+      sampleBeside(A, rho, relA);
       if (A === B) {
         compose();
         return;
@@ -4449,17 +4781,144 @@ export class RibbonRenderer {
       const rA = fieldR;
       const gA = fieldG;
       const bA = fieldB;
-      armSample(B, d * Math.max(0, Math.cos(ang - B.ang)));
-      let span = B.ang - A.ang;
-      if (span <= 0) span += Math.PI * 2;
-      let off = ang - A.ang;
-      if (off < 0) off += Math.PI * 2;
-      const t = span > 1e-6 ? Math.min(1, Math.max(0, off / span)) : 0;
+      sampleBeside(B, rho, relB);
+      const span = relA + relB;
+      const half = rho > fillHalf ? Math.asin(fillHalf / rho) : Math.PI / 2;
+      let lo = half;
+      let hi = span - half;
+      const minW = span * FIELD_BLEND_MIN;
+      if (hi - lo < minW) {
+        lo = (span - minW) / 2;
+        hi = lo + minW;
+      }
+      let t = hi > lo ? (relA - lo) / (hi - lo) : relA < span / 2 ? 0 : 1;
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      t = t * t * (3 - 2 * t);
       fieldU = uA + (fieldU - uA) * t;
       fieldR = rA + (fieldR - rA) * t;
       fieldG = gA + (fieldG - gA) * t;
       fieldB = bA + (fieldB - bA) * t;
       compose();
+    };
+    this.fieldProbe = {
+      at: (ji, x, y, out) => {
+        const rec = recs[ji];
+        if (!rec) return false;
+        fieldAt(rec, x, y);
+        out[0] = fieldR;
+        out[1] = fieldG;
+        out[2] = fieldB;
+        out[3] = fieldU;
+        return true;
+      },
+      arms: (ji) => recs[ji]?.arms ?? [],
+      center: (ji) => (recs[ji] ? [recs[ji].jx, recs[ji].jy] : null),
+    };
+
+    // FILLS WEAR THE JOINT FIELD: a crossing parked beside a fused joint
+    // (a third of all over-fills reach within 1.5 fillHalf of a joint
+    // center) repaints its over thread with EXACT ribbon colors on top of
+    // the web, and its window end / edges cut a hard line through the
+    // joint's blended field (the field and the ribbons only agree off the
+    // overlap core). Capping the fill short of the joint is not an option:
+    // the erase is restricted to the fill's window (fillBound), so the
+    // under thread would stop being cut there - a wrong weave. Instead,
+    // fill vertices within FILL_JOINT_IN fillHalfs of a joint wear the
+    // field itself, easing back to the exact material by FILL_JOINT_OUT.
+    {
+      const r0 = fillHalf * FILL_JOINT_IN;
+      const r1 = fillHalf * FILL_JOINT_OUT;
+      const live = recs.filter((rc) => rc.on && rc.arms.length >= 2);
+      const near: JRec[] = [];
+      const bb = this.fillBoundsScratch;
+      const out4 = this.fillFieldScratch;
+      const field = (x: number, y: number, out: Float32Array): number => {
+        let best = r1 * r1;
+        let rec: JRec | null = null;
+        for (const rc of near) {
+          const dx = x - rc.jx;
+          const dy = y - rc.jy;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < best) {
+            best = d2;
+            rec = rc;
+          }
+        }
+        if (!rec) return 0;
+        const d = Math.sqrt(best);
+        let w = 1;
+        if (d > r0) {
+          const t = (d - r0) / (r1 - r0);
+          w = 1 - t * t * (3 - 2 * t);
+        }
+        fieldAt(rec, x, y);
+        out[0] = fieldR;
+        out[1] = fieldG;
+        out[2] = fieldB;
+        out[3] = fieldU;
+        return w;
+      };
+      const apply = (fill: RibbonMesh): void => {
+        if (!fill.mesh.visible) {
+          fill.blendTowardField(null, out4);
+          return;
+        }
+        fill.bounds(bb);
+        near.length = 0;
+        for (const rc of live) {
+          if (
+            rc.jx > bb[0] - r1 &&
+            rc.jx < bb[2] + r1 &&
+            rc.jy > bb[1] - r1 &&
+            rc.jy < bb[3] + r1
+          ) {
+            near.push(rc);
+          }
+        }
+        fill.blendTowardField(near.length > 0 ? field : null, out4);
+      };
+      for (const f of this.overFills) apply(f);
+      for (const f of this.emergentFills) apply(f);
+    }
+    // Every junction fan (seal disc, fused-tip disc, wedge) goes through
+    // here: ring-subdivided by its radius so Gouraud tracks the field.
+    const emitFan = (
+      rec: JRec,
+      cx: number,
+      cy: number,
+      rim: number[]
+    ): void => {
+      const per = rim.length / 6;
+      let rMax = 0;
+      for (let i = 0; i < per; i++) {
+        const d = Math.hypot(rim[i * 6] - cx, rim[i * 6 + 1] - cy);
+        if (d > rMax) rMax = d;
+      }
+      const K = Math.min(
+        FAN_RINGS_MAX,
+        Math.max(1, Math.ceil(rMax / FAN_RING_STEP))
+      );
+      fieldAt(rec, cx, cy);
+      const aU = fieldU;
+      const aR = fieldR;
+      const aG = fieldG;
+      const aB = fieldB;
+      if (K <= 1) {
+        fm.pushFan(cx, cy, aU, aR, aG, aB, rim, rec.fx);
+        return;
+      }
+      const rings: number[] = [];
+      for (let k = 1; k < K; k++) {
+        const s = Math.pow(k / K, FAN_RING_POW);
+        for (let i = 0; i < per; i++) {
+          const px = cx + (rim[i * 6] - cx) * s;
+          const py = cy + (rim[i * 6 + 1] - cy) * s;
+          fieldAt(rec, px, py);
+          rings.push(px, py, fieldU, fieldR, fieldG, fieldB);
+        }
+      }
+      for (let q = 0; q < rim.length; q++) rings.push(rim[q]);
+      fm.pushRings(cx, cy, aU, aR, aG, aB, rings, per, rec.fx);
     };
     const pushDiscField = (
       rec: JRec,
@@ -4475,8 +4934,7 @@ export class RibbonRenderer {
         fieldAt(rec, px, py);
         rim.push(px, py, fieldU, fieldR, fieldG, fieldB);
       }
-      fieldAt(rec, cx, cy);
-      fm.pushFan(cx, cy, fieldU, fieldR, fieldG, fieldB, rim, rec.fx);
+      emitFan(rec, cx, cy, rim);
     };
 
     // Tip positions read the ENDPOINT SAMPLE directly: sampleAt wraps its
@@ -4589,24 +5047,11 @@ export class RibbonRenderer {
     // the under thread's width, so web material past the cut survived
     // beside it and floated into the dark gap as a pale spur.
     const armReach = (arm: JArm): number => {
-      const win = this.underWindows.get(arm.chain);
-      if (!win) return L;
-      let near = Infinity;
-      for (let i = 0; i < win.length; i += 3) {
-        let along = (win[i] - arm.arc0) * arm.dir;
-        if (arm.closed) {
-          along = ((along % arm.total) + arm.total) % arm.total;
-          if (along > arm.total / 2) along -= arm.total;
-        }
-        // [center, extNeg, extPos] along the chain -> near/far edges
-        // along this arm's outward direction.
-        const far = along + (arm.dir > 0 ? win[i + 2] : win[i + 1]);
-        if (far <= 0) continue; // Entirely behind the joint.
-        const nearEdge = along - (arm.dir > 0 ? win[i + 1] : win[i + 2]);
-        if (nearEdge < near) near = nearEdge;
-      }
+      // The joint's own domain caps every flank (short bridges).
+      const dom = Math.min(L, Math.max(L * FILLET_GAP_MIN_FRAC, arm.domain));
+      const near = gapNearOf(arm);
       return Math.min(
-        L,
+        dom,
         Math.max(L * FILLET_GAP_MIN_FRAC, near - fillHalf * FILLET_GAP_PAD)
       );
     };
@@ -4617,6 +5062,7 @@ export class RibbonRenderer {
       const arms = rec.arms;
       if (arms.length < 2) continue;
       fm = layerFor(rec);
+      const jointTop = arms.some(armTop);
       if (!rec.on) continue; // REVEAL: joinery waits for its arms.
 
       // Seal the junction center with a disc of the junction field under
@@ -4637,10 +5083,16 @@ export class RibbonRenderer {
         if (gap > FILLET_MAX_WEDGE) continue;
 
         // PER-WEDGE layer: this wedge rides above the erase stack iff a
-        // nearby foreign thread dives under either of ITS arms and
-        // neither arm dives itself.
+        // nearby foreign thread dives under ANY arm of this joint and
+        // neither of ITS arms dives itself. (Only its own arms was not
+        // enough: a joint parked beside a crossing's OVER pass has its
+        // other wedges - bridge vs the host's far side - sitting in that
+        // crossing's under-thread erase footprint; they stayed bottom and
+        // were punched - the dark notches/hairlines at cr=3, tw=0.58.)
         fm =
-          (armTop(A) || armTop(B)) && !armDives(A) && !armDives(B)
+          (jointTop || armTop(A) || armTop(B)) &&
+          !armDives(A) &&
+          !armDives(B)
             ? fmTop
             : fmBottom;
 
@@ -4766,8 +5218,7 @@ export class RibbonRenderer {
         // it poked jagged stick-outs past the edges (user report). The
         // center is always inside the joint; the corner survives only as
         // the outer rim's bezier control.
-        fieldAt(rec, jx, jy);
-        fm.pushFan(jx, jy, fieldU, fieldR, fieldG, fieldB, rim, rec.fx);
+        emitFan(rec, jx, jy, rim);
       }
     }
     fmBottom.commit();
