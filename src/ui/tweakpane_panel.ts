@@ -16,6 +16,8 @@ export interface PanelSettings {
   muted: boolean;
   // The bottom-left build/perf readout (persisted per browser).
   showStats: boolean;
+  // The maze HUD: path vs optimal + backtracked (persisted per browser).
+  showMazeStats: boolean;
 }
 
 const SETTINGS_DEFAULTS: PanelSettings = {
@@ -23,6 +25,7 @@ const SETTINGS_DEFAULTS: PanelSettings = {
   showDebug: false,
   muted: false,
   showStats: false,
+  showMazeStats: true,
 };
 
 export interface PanelCallbacks {
@@ -31,6 +34,7 @@ export interface PanelCallbacks {
   onReplaySettle: () => void;
   onDebugToggle: (visible: boolean) => void;
   onStatsToggle: (visible: boolean) => void;
+  onMazeStatsToggle: (visible: boolean) => void;
   onSlackChange: () => void;
   onStyleChange: () => void;
   onTemperatureChange: () => void;
@@ -84,13 +88,48 @@ export function buildPanel(
   const pane = new Pane();
   const head = document.createElement("div");
   head.className = "kp-head";
+  const headTop = document.createElement("div");
+  headTop.className = "kp-head-top";
   const headName = document.createElement("span");
   headName.textContent = "Knotmaze";
   const headVer = document.createElement("span");
   headVer.className = "kp-ver";
   headVer.textContent = `v${APP_VERSION} · ${BUILD_SHA}`;
   if (BUILD_TIME) headVer.title = `Built ${BUILD_TIME} UTC`;
-  head.append(headName, headVer);
+  headTop.append(headName, headVer);
+  // Credit line: "Made by [cat] Snoring Cat" (icon + name link to the
+  // studio site) with the GitHub mark at the right (the repo is public).
+  const credit = document.createElement("div");
+  credit.className = "kp-credit";
+  const studio = document.createElement("a");
+  studio.href = "https://snoringcat.games";
+  studio.target = "_blank";
+  studio.rel = "noopener";
+  studio.title = "snoringcat.games";
+  const cat = document.createElement("img");
+  cat.src = `${import.meta.env.BASE_URL}snoring-cat.png`;
+  cat.alt = "";
+  studio.append(cat, "Snoring Cat");
+  const github = document.createElement("a");
+  github.href = "https://github.com/levilindsey/knotmaze";
+  github.target = "_blank";
+  github.rel = "noopener";
+  github.title = "Knotmaze on GitHub";
+  github.setAttribute("aria-label", "Knotmaze on GitHub");
+  github.className = "kp-gh";
+  github.innerHTML =
+    '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">' +
+    '<path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 ' +
+    "5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49" +
+    "-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08" +
+    ".58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64" +
+    "-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67" +
+    "-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82" +
+    " 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75" +
+    "-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55" +
+    '.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>';
+  credit.append("Made by", studio, github);
+  head.append(headTop, credit);
   pane.element.prepend(head);
 
   // The pane has outgrown short viewports: cap Tweakpane's fixed wrapper
@@ -135,26 +174,38 @@ export function buildPanel(
     ".kp-row.kp-mod .kp-reset{opacity:.9;color:#e7c56f}" +
     ".kp-row.kp-mod .tp-lblv_l{color:#e7c56f}" +
     // Folder disclosure marker: a plain triangle (right when collapsed,
-    // down when expanded) instead of Tweakpane's default icon. The
-    // button must become a FLEX row - an inline-block ::before next to
-    // the block-level title wrapped it out of the button's fixed height
-    // (folder headers rendered with no text at all).
+    // down when expanded) instead of Tweakpane's default icon; it spins
+    // 90 degrees on toggle. Tweakpane marks an open folder with the
+    // tp-fldv-expanded class on the FOLDER (it sets no aria-expanded -
+    // a rule keyed on that never matched, so the arrow never turned).
+    // The button must become a FLEX row - an inline-block ::before next
+    // to the block-level title wrapped it out of the button's fixed
+    // height (folder headers rendered with no text at all).
     ".tp-fldv_m{display:none}" +
     ".tp-fldv_b{display:flex;align-items:center}" +
     ".tp-fldv_t{flex:1 1 auto}" +
     ".tp-fldv_b::before{content:'';flex:0 0 auto;width:0;height:0;" +
     "border-left:4px solid transparent;border-right:4px solid transparent;" +
     "border-top:5px solid #8ea0c0;margin-right:7px;" +
-    "transform:rotate(-90deg);transition:transform .15s}" +
-    ".tp-fldv_b[aria-expanded='true']::before{transform:rotate(0deg)}" +
-    // Header row: name left, the version de-emphasized in the corner.
-    ".kp-head{display:flex;align-items:baseline;" +
-    "justify-content:space-between;gap:8px;padding:7px 10px 6px;" +
+    "transform:rotate(-90deg);transition:transform .2s ease}" +
+    ".tp-fldv.tp-fldv-expanded>.tp-fldv_b::before{transform:rotate(0deg)}" +
+    // Header: name left, the version de-emphasized in the corner; under
+    // it the credit line (studio link left, GitHub mark right).
+    ".kp-head{padding:7px 10px 6px;" +
     "font:600 11px var(--tp-base-font-family,'Roboto Mono',Menlo,monospace);" +
     "color:var(--tp-label-foreground-color,#bbbcc4);" +
     "border-bottom:1px solid rgba(255,255,255,.06)}" +
+    ".kp-head-top{display:flex;align-items:baseline;" +
+    "justify-content:space-between;gap:8px}" +
     ".kp-ver{font-weight:400;font-size:10px;opacity:.42;" +
     "white-space:nowrap;font-variant-numeric:tabular-nums}" +
+    ".kp-credit{display:flex;align-items:center;gap:5px;margin-top:4px;" +
+    "font-weight:400;font-size:10px;color:rgba(187,188,196,.62)}" +
+    ".kp-credit a{display:inline-flex;align-items:center;gap:4px;" +
+    "color:#c8cad3;text-decoration:none;transition:color .12s}" +
+    ".kp-credit a:hover,.kp-credit a:focus-visible{color:#e7c56f}" +
+    ".kp-credit img{width:16px;height:16px;display:block}" +
+    ".kp-credit .kp-gh{margin-left:auto;padding:2px}" +
     // Hamburger: three bars that fold into an X while the panel is open.
     ".kp-menu{position:fixed;z-index:30;" +
     "top:max(10px,env(safe-area-inset-top));" +
@@ -420,6 +471,12 @@ export function buildPanel(
     fMaze, p, "pulseSpacing", { min: 0.8, max: 6, step: 0.1 },
     "Distance between traveling pulses on the current junction's arms. Applies live.",
     D.pulseSpacing, () => callbacks.onSlackChange()
+  );
+  const mazeStatsRow = row(
+    fMaze, s, "showMazeStats", undefined,
+    "Show the maze readout in the top-left corner: your path length vs the optimal route, and the distance you backtracked. Remembered per browser.",
+    SETTINGS_DEFAULTS.showMazeStats,
+    () => callbacks.onMazeStatsToggle(settings.showMazeStats === true)
   );
   const resetPathBtn = button(
     fMaze,
@@ -799,6 +856,7 @@ export function buildPanel(
     fowIntroRow.hidden =
       !fab || !params.fogOfWar || params.appearSequence === "instant";
     moveSpeedRow.hidden = !fab;
+    mazeStatsRow.hidden = !fab;
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;
     // The gold recolor paints in gold/trail modes; the yarn replaces it.

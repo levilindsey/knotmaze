@@ -41,6 +41,7 @@ const BUILD_STAMP =
   `P4 v${APP_VERSION} ${BUILD_SHA}` + (BUILD_TIME ? ` ${BUILD_TIME}` : "");
 // The stamp/perf readout's visibility persists per browser.
 const STATS_KEY = "knotmaze.showStats";
+const MAZE_STATS_KEY = "knotmaze.showMazeStats";
 // Pinch / wheel zoom ceiling, as a multiple of the auto-fit scale.
 const MAX_ZOOM = 8;
 // FOLLOW camera (cameraMode follow): framing span (lattice units across
@@ -84,16 +85,19 @@ async function main(): Promise<void> {
 
   const params = readParams();
   let statsShown = false;
+  let mazeStatsShown = true;
   try {
     statsShown = localStorage.getItem(STATS_KEY) === "1";
+    mazeStatsShown = localStorage.getItem(MAZE_STATS_KEY) !== "0";
   } catch {
-    // Storage unavailable: hidden by default.
+    // Storage unavailable: the defaults (stats hidden, maze HUD shown).
   }
   const settings: PanelSettings = {
     temperature: 0,
     showDebug: false,
     muted: false,
     showStats: statsShown,
+    showMazeStats: mazeStatsShown,
   };
   const synth = new KnotSynth();
 
@@ -678,6 +682,14 @@ async function main(): Promise<void> {
         // Storage unavailable: the choice just doesn't persist.
       }
     },
+    onMazeStatsToggle: (visible) => {
+      updateHud();
+      try {
+        localStorage.setItem(MAZE_STATS_KEY, visible ? "1" : "0");
+      } catch {
+        // Storage unavailable: the choice just doesn't persist.
+      }
+    },
     onDebugToggle: (visible) => {
       if (debug) debug.container.visible = visible;
     },
@@ -829,7 +841,7 @@ async function main(): Promise<void> {
   const fmt = (v: number): string =>
     Number.isFinite(v) ? String(Math.round(v * 10)) : "—";
   const updateHud = (): void => {
-    if (!params.mazeFabric || !fabricController) {
+    if (!params.mazeFabric || !fabricController || !settings.showMazeStats) {
       hud.style.display = "none";
       return;
     }
