@@ -76,7 +76,7 @@ npm test         # Vitest
 
 ## Commit Policy
 
-Work lands directly to `main`. All changes must be end-to-end working before committing; no partial or broken work.
+Work lands directly on `master` (the GitHub default and only branch; there is no `main`). All changes must be end-to-end working before committing; no partial or broken work. Every push to `master` deploys: `.github/workflows/deploy.yml` runs `npm test` then publishes `dist` to Cloudflare Pages (https://knotmaze.pages.dev, which https://levi.dev/knots redirects to with the query string kept) - a red suite leaves the previous deployment live. Never run `wrangler pages project create` (or other project-scaffolding wrangler commands) inside this repo: it rewrites package.json, the lockfile and .gitignore and adds wrangler/vite configs.
 
 ## Notes
 
