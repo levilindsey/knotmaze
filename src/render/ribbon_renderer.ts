@@ -3213,12 +3213,12 @@ export class RibbonRenderer {
           const span = this.overWindows[ci * 2 + 1];
           if (span > 0) {
             // Replay the SAME trims as the solve, or paint ticks would
-            // alternate trimmed/whole-sample ends at the tick rate.
-            this.overFills[ci].updateFromRibbonWindow(
+            // alternate trimmed/whole-sample ends at the tick rate. Paint
+            // only: the patch's vertices were copied by the solve.
+            this.overFills[ci].repaintFromRibbonWindow(
               this.fills[chain],
               this.overWindows[ci * 2],
               span,
-              true,
               this.overWindowFracs[ci * 2],
               this.overWindowFracs[ci * 2 + 1]
             );
@@ -3228,11 +3228,10 @@ export class RibbonRenderer {
       for (let k = 0; k < this.emergentWindows.length; k++) {
         const w = this.emergentWindows[k];
         if (w && w.chain === chain) {
-          this.emergentFills[k].updateFromRibbonWindow(
+          this.emergentFills[k].repaintFromRibbonWindow(
             this.fills[chain],
             w.start,
             w.span,
-            true,
             w.startFrac,
             w.endFrac
           );

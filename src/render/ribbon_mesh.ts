@@ -434,6 +434,87 @@ export class RibbonMesh {
     }
   }
 
+  // PAINT-ONLY refresh of the window the last updateFromRibbonWindow copied
+  // (same start, span and trims): the paint pass recolors over-fill patches
+  // every tick, but their vertices only move in update(). Copies the USED
+  // pairs' UV / section color / FX and uploads just that prefix - the
+  // stations past the span repeat the last pair's position (zero-area
+  // quads rasterize nothing), so their attributes are never read. The full
+  // window copy cost the paint pass ~2/3 of its time (every animated chain
+  // re-copied all 128 stations of each of its over-fills, positions
+  // included, every tick). fxZero keeps meaning "the WHOLE FX buffer is
+  // zero": a zero source clears it entirely.
+  repaintFromRibbonWindow(
+    source: RibbonMesh,
+    startSample: number,
+    sampleSpan: number,
+    startFrac = 0,
+    endFrac = 1
+  ): void {
+    const n = source.sampleCount;
+    const span = Math.max(1, Math.min(sampleSpan, this.sampleCount));
+    const cd = this.colorData;
+    const scd = source.colorData;
+    const copyColors = cd !== null && scd !== null;
+    const fxClear = this.fxData !== null && source.fxZero && !this.fxZero;
+    const copyFx =
+      this.fxData !== null && source.fxData !== null && !source.fxZero;
+    for (let i = 0; i < span; i++) {
+      const s = (((startSample + i) % n) + n) % n;
+      this.uvData[i * 4] = source.uvData[s * 4];
+      this.uvData[i * 4 + 1] = source.uvData[s * 4 + 1];
+      this.uvData[i * 4 + 2] = source.uvData[s * 4 + 2];
+      this.uvData[i * 4 + 3] = source.uvData[s * 4 + 3];
+      if (copyColors) {
+        for (let k = 0; k < 6; k++) cd[i * 6 + k] = scd[s * 6 + k];
+      }
+      if (copyFx) {
+        this.fxData![i * 2] = source.fxData![s * 2];
+        this.fxData![i * 2 + 1] = source.fxData![s * 2 + 1];
+      }
+    }
+    if (sampleSpan >= 2) {
+      if (startFrac > 0) {
+        this.lerpPairFrom(
+          source,
+          0,
+          startSample,
+          startFrac,
+          true,
+          copyColors,
+          copyFx,
+          false
+        );
+      }
+      if (endFrac < 1) {
+        const last = span - 1;
+        this.lerpPairFrom(
+          source,
+          last,
+          startSample + last - 1,
+          endFrac,
+          true,
+          copyColors,
+          copyFx,
+          false
+        );
+      }
+    }
+    this.mesh.geometry.getBuffer("aUV").update(span * 4 * 4);
+    if (copyColors) {
+      this.mesh.geometry.getBuffer("aColor").update(span * 6 * 4);
+      this.lastColors = null;
+    }
+    if (fxClear) {
+      this.fxData!.fill(0);
+      this.mesh.geometry.getBuffer("aFx").update();
+      this.fxZero = true;
+    } else if (copyFx) {
+      this.mesh.geometry.getBuffer("aFx").update(span * 2 * 4);
+      this.fxZero = false;
+    }
+  }
+
   // Axis-aligned bounds of the current vertices: [minX, minY, maxX, maxY].
   bounds(out: Float32Array): void {
     const vd = this.vertexData;
@@ -457,8 +538,9 @@ export class RibbonMesh {
   }
 
   // Write pair `dst` as the lerp of source pairs (a, a + 1) by t (wrapped
-  // indices, as the window copy) - positions, plus UVs / colors / FX
-  // weights when those are copied.
+  // indices, as the window copy) - positions (unless `positions` is false:
+  // the paint-only refresh), plus UVs / colors / FX weights when those are
+  // copied.
   private lerpPairFrom(
     source: RibbonMesh,
     dst: number,
@@ -466,12 +548,13 @@ export class RibbonMesh {
     t: number,
     copyUVs: boolean,
     copyColors: boolean,
-    copyFx: boolean
+    copyFx: boolean,
+    positions = true
   ): void {
     const n = source.sampleCount;
     const s0 = ((a % n) + n) % n;
     const s1 = (((a + 1) % n) + n) % n;
-    for (let k = 0; k < 4; k++) {
+    for (let k = 0; positions && k < 4; k++) {
       const p0 = source.vertexData[s0 * 4 + k];
       this.vertexData[dst * 4 + k] =
         p0 + (source.vertexData[s1 * 4 + k] - p0) * t;
