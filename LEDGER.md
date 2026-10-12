@@ -17,12 +17,6 @@ and never reused.
 
 ## In progress
 
-- **K1** · GPU migration G1: per-pixel crossing gaps. The agent is
-  rebasing, fixing residuals 1-3 (cyclic triangles, concave crease,
-  merge-core hairline), cutting the GPU cost (2.83 vs 0.82 ms/frame at
-  3200x1800), and targeting Android. History: CLAUDE.md "PER-PIXEL
-  CROSSING GAPS".
-
 ## Next, in order
 
 - **K4** · G2: all per-sample color work moves into shaders
@@ -129,6 +123,15 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K1** · GPU migration G1: per-pixel crossing gaps. Done in 99443cb
+  (casing masks in the ribbon fragment shader replace the erase grid,
+  over-fills and fade strip; per-pixel protect for cyclic triangles,
+  far-branch smooth-min for concave creases) and 0f25f0f (fused-tip cap
+  cover) (2026-10-11). User URL: overcut 1098 -> 1 px and naked 510 -> 5
+  (asleep, df373b5), draw calls 419 -> 47, update() 12.0 -> 5.7 ms; GPU
+  0.79 -> 1.78 ms/frame at 3200x1800; phone defaults 39 -> 60 fps.
+  History: CLAUDE.md "PER-PIXEL CROSSING GAPS".
 
 - **K31** · Levi's phone collapsed crossing 305 (`?k88dtb.oHFEfg`) to
   3.37 ctrl. Re-checked on the phone (Pixel 11, USB) with the kink fix
