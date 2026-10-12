@@ -1,29 +1,26 @@
-// Renders the knot as smooth ribbons. Base layer: every strand's fill ribbon.
-// At each crossing, two patches recompute every frame:
-//   1. An "under erase" patch: an alpha-PUNCH ribbon (pixi 'erase' blend,
-//      destination-out - the canvas is transparent and the page CSS behind
-//      it supplies the backdrop, so gaps CLIP the thread layer instead of
-//      painting a background color and survive any future textured
-//      backdrop) that follows the UNDER thread through the crossing,
-//      slightly wider than the thread, so its footprint never exceeds the
-//      under thread's own and it cannot notch anything else. Its end caps
-//      are the visible cut ends of the under thread. Each cap corner is
-//      found by marching along its under-ribbon edge until "perpendicular
-//      distance to the over CENTERLINE CURVE equals overHalfWidth" (the
-//      over ribbon's SILHOUETTE) flips, against a locally sampled polyline
-//      of the over centerline - then the cap is pushed outward by `gap` as
-//      ARC LENGTH along the under thread. The margin must be constant
-//      ALONG the thread, not perpendicular to the over thread: a
-//      perpendicular margin projects as gap/sin(angle) of bare background
-//      at oblique crossings, which reads as a giant naked gap at loop-end
-//      twists (spans up to 1.07 at 30-degree crossings measured, vs gap
-//      0.06). A nonzero fadeLength softens the caps: the erase's strength
-//      fades out over that arc length past each solved cap (see the FADE
-//      texture), so the under thread dissolves into the backdrop instead
-//      of ending at a hard edge.
-//   2. The OVER pass fill, redrawn on top so the over thread rides above
-//      the hole, with a length that adapts to the crossing angle.
-// All erases render below all fills, so patches never slice each other.
+// Renders the knot as smooth ribbons: every strand's fill ribbon in one
+// base layer, drawn through the shared SECTION SHADER.
+// CROSSING GAPS ARE PER-PIXEL (gap_mask.ts): each crossing (registered,
+// emergent, and the start/exit marker discs) owns a GAP SLOT - the over
+// thread's local centerline polyline plus the under thread's arc window -
+// and the shader hides every UNDER-thread fragment inside that window that
+// lies within (over half-width + margin) of the polyline: a constant-width
+// CASING around the over thread (gapMode "perp", the default; the erase
+// era's arc-length margin - P3.21, gap * |sin(local angle)| per pixel -
+// survives as gapMode "arc", see its field for why it lost). fadeLength
+// ramps alpha beyond the edge. The over thread is never touched, so there
+// are no erase grids and no over-fill copies: whichever thread the base
+// layer draws first, a hidden under pixel reveals the over ribbon or the
+// backdrop (the canvas is transparent - Stage 18 - so gaps still CLIP the
+// thread layer and a textured backdrop drops in unchanged). The gap's
+// edge is the exact offset curve of the over centerline: the erase grid's
+// lane caps met acute thread edges as wedges and slits that swung with
+// the flow (crossing 57 at the tw 0.64 repro), and cannot exist here.
+// Per-frame CPU work per crossing is two short centerline marches (the
+// under window, the over reach) and one polyline sample - no lanes.
+// Junction fans (the GPU junction field, junction_field.ts) read the same
+// gap table: a fan whose arm dives under a crossing near the joint is
+// masked by that crossing's slot exactly like the arm's own ribbon.
 
 import {
   BufferImageSource,
@@ -45,22 +42,31 @@ import {
   sampleClosedSpline,
   sampleOpenSpline,
 } from "../geometry/spline_generator";
-import { RibbonMesh, PatchGridMesh, TriFanMesh } from "./ribbon_mesh";
+import { RibbonMesh, TriFanMesh } from "./ribbon_mesh";
 import { PluckOverlay } from "./pluck_overlay";
 import type { PluckHost, PluckNode } from "./pluck_overlay";
 import {
   FIELD_BLEND_MIN,
   FIELD_PROF_ARC,
   FIELD_PROF_DR,
-  FILL_JOINT_OUT,
   MAX_ARMS,
   bindFieldAccent,
-  fillShader,
+  bindFieldGap,
   junctionShader,
   paintData,
   recordData,
   setFieldParams,
 } from "./junction_field";
+import {
+  GAP_FRAG,
+  GAP_MAX_PTS,
+  GAP_PROT_PTS,
+  GAP_SLOTS,
+  GAP_VERT_DECL,
+  GAP_VERT_MAIN,
+  GapMaskTable,
+  defaultGapTexture,
+} from "./gap_mask";
 
 export interface RibbonStyle {
   threadWidth: number; // In lattice units.
@@ -70,14 +76,13 @@ export interface RibbonStyle {
   // cut halves inherit their host strand's hue so splices read as thread
   // material). Identity when absent.
   hueGroup?: number[];
-  // PALETTE MODE (maze fabric): each chain's fill renders through the
-  // SECTION SHADER - a per-vertex section RGB attribute mixed with a
-  // 256x1 gameplay ACCENT strip sampled through per-vertex U - instead of
-  // a flat tint, so gameplay recoloring (traveled gold, choice pulses,
-  // hover) paints the ACTUAL thread pixels and section colors blend
-  // directly in RGB. Over-fill patches copy UVs and colors along with the
-  // vertices, making the weave pixel-identical. Knot mode leaves this off
-  // and keeps the original tint path untouched.
+  // PALETTE MODE (maze fabric): each chain's section RGB comes from the
+  // section field and gameplay recoloring (traveled gold, choice pulses,
+  // hover) steers a 256x1 ACCENT strip through per-vertex U, so it paints
+  // the ACTUAL thread pixels - and with per-pixel gaps there is no copy of
+  // any thread to keep in sync. Knot mode leaves this off: its chains
+  // render through the same shader (the gaps live there) with one
+  // constant section color each and a neutral U.
   paletteMode?: boolean;
   // Seed for the flow-undulation noise field (defaults to 1).
   flowSeed?: number;
@@ -271,8 +276,8 @@ function normArc(a: number, total: number, closed: boolean): number {
 // FLOW UNDULATION (render-side ONLY). A seeded, slowly drifting simplex
 // field displaces each chain's spline CONTROL points right after they are
 // copied from the particle positions, so the fabric sways as if in water.
-// Everything downstream of chainControls (splines, erase/fill marches,
-// tuck, over-fill windows) reads chainSamples and therefore rides the same
+// Everything downstream of chainControls (splines, the gap-slot marches
+// and polylines, tuck) reads chainSamples and therefore rides the same
 // field coherently; the few consumers that read raw physics positions
 // (junction fillet centroids here, markers/hit-tests in the fabric
 // overlay) add flowOffset() explicitly. The PHYSICS state is never
@@ -291,9 +296,9 @@ const FLOW_AMP = 0.38; // Displacement in world units at flowStrength 1.
 // dye edge is wider and softer).
 const REVEAL_TAPER_ARC = 0.3;
 const INK_TAPER_WORLD = 0.6;
-// A crossing renders its erase + over fill only once BOTH passes are at
-// full width locally: an erase for a not-yet-visible thread would punch a
-// naked hole in whatever is revealed beneath it.
+// A crossing's gap shows only once BOTH passes are at full width locally:
+// a gap for a not-yet-visible over thread would cut a naked hole in the
+// revealed under thread.
 const REVEAL_CROSSING_MIN = 0.98;
 // Frontier glow reach (arc) along the revealed side of a tip, and the
 // palette-U family split (>= gold band start -> brighten via band B,
@@ -323,15 +328,12 @@ const COMET_FADE_IN = 1.0;
 // Hover-highlight breath (pulseValueAt): angular rate of the 0.2..0.8
 // strength oscillation on a hovered choice run (~1.2s period).
 const HOVER_PULSE_W = 5.2;
-// A gap side squeezed by a fused joint keeps at least this fraction of
-// the configured fade tail (see the fade clamp in renderCrossing).
-const FADE_JOINT_FLOOR = 0.45;
 // Comet streak tail polyline: points sampled along the host thread
 // behind each reveal tip (spawnTipFrontier -> AppearFxSystem).
 const FX_PATH_PTS = 8;
 const FX_PATH_STEP = 0.5;
-// Overlays vs appearance FX: a crossing's erase + fill wait until both
-// passes' materialize alpha is within FX_SOLID_EPS of opaque; fillet fans
+// Overlays vs appearance FX: a crossing's gap waits until both passes'
+// materialize alpha is within FX_SOLID_EPS of opaque; fillet fans
 // fade in over the last FAN_SOLID_START..1 of their arms' solidity
 // (opaque fans over translucent/striped arms read as pale stars).
 const FX_SOLID_EPS = 0.03;
@@ -356,8 +358,9 @@ function fanFx(solid: number): number {
   const a = x * x * (3 - 2 * x);
   return a >= 0.999 ? 0 : a - 1;
 }
-// Gap fade-in when a crossing's erase first shows during a reveal (the
-// gap used to POP in at full strength once both passes were revealed).
+// Gap fade-in (slot strength ramp) when a crossing's gap first shows
+// during a reveal (it used to POP in at full strength once both passes
+// were revealed).
 const CROSSING_FADE_IN = 0.36;
 const GOLD_FAMILY_MIN = 118 / PAL_W;
 
@@ -482,7 +485,7 @@ in vec2 aPosition;
 in vec2 aUV;
 in vec3 aColor;
 in float aFx;
-
+${GAP_VERT_DECL}
 out vec2 vUV;
 out vec3 vSection;
 out vec4 vColor;
@@ -501,6 +504,7 @@ void main(void) {
   vSection = aColor;
   vColor = uColor * uWorldColorAlpha;
   vFx = aFx;
+${GAP_VERT_MAIN}
 }
 `;
 // vFx (appearance FX, sign-coded so the shared shader needs no uniforms):
@@ -509,8 +513,13 @@ void main(void) {
 // the white-hot reveal tip and the gold path stay on top; [-1, 0) is the
 // materialize fade (dust/comet: alpha = 1 + vFx, premultiplied by scaling
 // the whole output color).
+// PER-PIXEL GAPS: gapKeep (gap_mask.ts) scales the premultiplied output;
+// fully hidden fragments discard. pxW (world units per pixel, for the
+// analytic AA of the gap edge) comes from fwidth() HERE, in uniform
+// control flow - derivatives inside gapKeep's data-dependent loop would
+// be undefined.
 const SECTION_FRAG = /* glsl */ `#version 300 es
-precision mediump float;
+precision highp float;
 
 in vec2 vUV;
 in vec3 vSection;
@@ -520,8 +529,11 @@ in float vFx;
 out vec4 finalColor;
 
 uniform sampler2D uTexture;
-
+${GAP_FRAG}
 void main(void) {
+  highp vec2 gfw = fwidth(vPos);
+  highp float pxW = max(max(gfw.x, gfw.y), 1e-5);
+  highp float gTurn = gapTurn();
   vec4 acc = texture(uTexture, vec2(vUV.x, 0.5));
   vec3 base = vSection;
   if (vFx > 0.0) {
@@ -544,7 +556,15 @@ void main(void) {
   }
   vec3 rgb = mix(base, acc.rgb, acc.a);
   float aM = vFx < 0.0 ? clamp(1.0 + vFx, 0.0, 1.0) : 1.0;
-  finalColor = vec4(rgb, 1.0) * vColor * aM;
+  float gk = gapKeep(pxW, gTurn);
+  // Probe view (globals texel .y): masked material tinted, not removed
+  // (only masked fragments read the flag).
+  if (gk < 1.0 && gapProbe()) {
+    rgb = mix(rgb, vec3(1.0, 0.0, 0.85), (1.0 - gk) * 0.75);
+    gk = 1.0;
+  }
+  if (gk <= 0.002) discard;
+  finalColor = vec4(rgb, 1.0) * vColor * (aM * gk);
 }
 `;
 
@@ -556,8 +576,8 @@ void main(void) {
 // strip while the CPU-composed fillet fans used pathColor - olive fans on
 // gold paths at a khaki pc= (the user's "olive smudge" report).
 function bindAccent(tex: Texture): void {
-  // The GPU junction-field shaders (fans, over-fills) compose the same
-  // strip and follow it too.
+  // The GPU junction-field shader (fans) composes the same strip and
+  // follows it too.
   bindFieldAccent(tex);
   const sh = sectionShader();
   if (sh.texture === tex) return;
@@ -574,6 +594,9 @@ function sectionShader(): SectionShader {
       resources: {
         uTexture: tex.source,
         uSampler: tex.source.style,
+        // Bound like uTexture (pixi binds every TextureSource resource to
+        // the sampler uniform of the same name); bindGap swaps it per scene.
+        uGapData: defaultGapTexture().source,
       },
     }) as SectionShader;
     sh.texture = tex;
@@ -582,148 +605,103 @@ function sectionShader(): SectionShader {
   return SECTION_SHADER;
 }
 
-// FADE texture: one shared 256x1 strip of erase STRENGTH, sampled by every
-// erase patch through per-vertex U. Column u carries alpha 1 at u <= 0 (the
-// solved cut interval - full punch, the sharp look) smoothstepped to 0 at
-// u = 1 (the far end of a fade tail - no punch), so under the 'erase'
-// blend the under thread dissolves gradually into the backdrop. Stored
-// premultiplied (r = g = b = a): WebGL2 ignores
-// UNPACK_PREMULTIPLY_ALPHA_WEBGL for ArrayBufferView uploads, so the
-// buffer itself must match the alphaMode declaration - and under the
-// erase blendFunc (ZERO, ONE_MINUS_SRC_ALPHA) only src alpha matters
-// anyway. Cached for the page lifetime and NEVER destroyed, for exactly
-// the PALETTE_CACHE reason above. At fadeLength 0 every vertex samples
-// u = 0 -> strength 1: bit-identical to the old full-strength erase.
-const FADE_W = 256;
-let FADE_TEXTURE: Texture | null = null;
-function fadeTexture(): Texture {
-  if (!FADE_TEXTURE) {
-    const px = new Uint8Array(FADE_W * 4);
-    for (let i = 0; i < FADE_W; i++) {
-      const u = i / (FADE_W - 1);
-      const v = Math.round(255 * (1 - u * u * (3 - 2 * u)));
-      px[i * 4] = v;
-      px[i * 4 + 1] = v;
-      px[i * 4 + 2] = v;
-      px[i * 4 + 3] = v;
-    }
-    FADE_TEXTURE = new Texture({
-      source: new BufferImageSource({
-        resource: px,
-        width: FADE_W,
-        height: 1,
-        alphaMode: "premultiplied-alpha",
-      }),
-    });
-  }
-  return FADE_TEXTURE;
+// Point both gap readers - the shared section shader (ribbons) and the
+// junction-field shader (fans) - at a scene's gap-slot table (gap tables
+// are page-lifetime and sized per scene - see gap_mask.ts).
+function bindGap(tex: Texture): void {
+  bindFieldGap(tex);
+  const sh = sectionShader();
+  if (sh.resources.uGapData !== tex.source) sh.resources.uGapData = tex.source;
 }
 
-// Dense enough that tight bends near crossings (low slack) stay resolved;
-// patch outlines interpolate this same data, keeping them aligned with the
-// base ribbons.
+// Dense enough that tight bends near crossings (low slack) stay resolved.
 const SAMPLE_SPACING = 0.09;
 const MIN_SAMPLES = 48;
-// The over-fill patch copies base-ribbon vertices verbatim, so its capacity
-// just needs to cover the longest window (in samples) a crossing can need.
-// Sized for the widest thread: over windows scale with fillHalf.
-const OVER_PATCH_MAX_SAMPLES = 128;
-// The over-fill window clamps to a fraction of the arc distance to the
-// nearest crossing pass along the same thread. The erase march gets a larger
-// budget: truncating a lane's boundary solve leaves that cap corner short
-// (visibly closer to the over thread), and any overreach toward the
-// neighboring crossing is repainted by its vertex-exact over-fill - the two
-// fractions summing past 1.0 guarantees the windows overlap.
-const NEIGHBOR_CLEARANCE = 0.5;
-const ERASE_NEIGHBOR_CLEARANCE = 0.8;
-const OVER_HALF_LENGTH_MIN = 0.35;
-const OVER_PATCH_MARGIN = 0.12;
-// Slight overhang so the erase fully covers the under ribbon's antialiased
-// edges.
-const ERASE_WIDTH_PAD = 0.02;
-// Boundary-march parameters: each thread's centerline is sampled as a local
-// polyline around the crossing, and marches measure distances against it.
-// The erase marches several lanes across the under ribbon outward until
-// each exits the cut region (multiple lanes let cap edges curve with the
-// over thread); the over-fill window marches along the over thread until
-// it is provably beyond the erase's reach - direct measurement, robust to
-// kinked centerlines and any crossing angle.
-const LOCAL_SAMPLES = 48;
+// GAP SLOT GEOMETRY (per-pixel gaps; see gap_mask.ts). Marches walk one
+// thread's centerline in MARCH_STEP arc steps against the OTHER thread's
+// coarse local polyline (COARSE_SPACING, nearest-vertex distance - within
+// ~0.01 of the curve at casing range).
 const MARCH_STEP = 0.07;
-// Reach limits SCALE WITH THREAD WIDTH (fillHalf): they were absolute
-// constants calibrated at width 0.42, and at wider threads a shallow
-// crossing's overlap extends past them - the erase cap then sits INSIDE
-// the overlap and everything beyond renders as an uncut merge (reported
-// as "heavy penetration" at tw 0.52; the physics state was clean).
-const CUT_REACH_PER_HALF = 6.5; // * fillHalf, floored at the 0.42 values.
+const COARSE_SPACING = 0.1;
+const COARSE_MAX = 128;
+// The shader's over polyline is measured by SEGMENT distance, so its error
+// is the chord sag spacing^2 * curvature / 8 (< 0.003 world even at a
+// radius-0.3 kink).
+const FINE_SPACING = 0.075;
+// Adaptive polyline resolution (computeGapSlot): the coarsest spacing a
+// straight over pass gets, and the chord sagitta allowed on a bend.
+const POLY_SPACING_MAX = 0.3;
+const POLY_SAG_TOL = 0.0015;
+// Far-branch smooth-min radius: SMIN_K_PER x (half-width + margin),
+// clamped (gap_mask.ts).
+const SMIN_K_PER = 0.3;
+const SMIN_K_MIN = 0.03;
+const SMIN_K_MAX = 0.15;
+// Arc padding on each protect interval (computeGapSlot), in half-widths
+// plus a constant. Generous on purpose: the interval only bounds the search,
+// the protect polyline decides per pixel (an interval ending at the
+// measured overlap still left 11 margin-band px over the covered ribbon
+// at a squeezed self-twist, user x31 after the gesture battery).
+const PROTECT_PAD_PER_HALF = 1.0;
+const PROTECT_PAD = 0.02;
+// Measured protect extents (protectReach): march step and the most it may
+// add past the straight-thread estimate.
+const PROTECT_STEP = 0.03;
+const PROTECT_MARCH_MAX = 1.5;
+// Longest stretch of the covered thread a protect polyline spans per side,
+// and its point spacing (coarser only when GAP_PROT_PTS cannot cover the
+// span): every margin-band fragment inside a protect interval tests its
+// segments, so a short polyline keeps that cheap.
+const PROT_POLY_SPAN_MAX = 3.0;
+const PROT_POLY_SPACING = 0.2;
+// Render-only pluck over-node footprints (computeGapSlot): the cover's
+// slack past the casing band, and its floor - the over-fill window's
+// OVER_PATCH_MARGIN / OVER_HALF_LENGTH_MIN, which they replace.
+const PLUCK_OVER_PAD = 0.12;
+const PLUCK_OVER_MIN = 0.35;
+// Reach caps scale with thread width (the P3.27 lesson: caps calibrated at
+// tw 0.42 truncated fat shallow overlaps) and admit the long cinched-twist
+// rides (P3.36). Both marches stop where the threads actually part, so
+// the caps only bound pathological runs.
+const CUT_REACH_PER_HALF = 6.5;
 const OVER_REACH_PER_HALF = 5.8;
 const CUT_REACH_MIN = 1.35;
 const OVER_REACH_MIN = 1.2;
-// Long-overlap cap: a cinched twist (grab a thread just past the twist,
-// pull perpendicular - the user's gesture) leaves the two threads
-// genuinely STACKED for several units, which physics must not undo (that
-// is what a tightened twist is) and the erase must therefore cover. The
-// marches already stop where overlap truly ends; the old width-scaled
-// caps (~1.7) truncated them mid-ride, and the truncation boundary
-// rendered as the jagged lengthwise seam reported four times. All other
-// limits (neighbor clearance, self-split, total/4) still apply.
 const RIDE_REACH_CAP = 4.5;
-const LOCAL_REACH_PAD = 0.8; // Local polylines must out-reach the marches.
-// Matches the base ribbon's sample spacing so the erase's miter factor
-// tracks the base extrusion's at kinks.
-const MITER_PROBE = 0.09;
-const ERASE_STATIONS = 16;
-// Stations (quads) pinned to EACH fade tail when fadeLength > 0; the
-// remaining ERASE_STATIONS - 1 - 2*tail quads span the opaque cut. Keeps
-// the roll-off resolved regardless of how long the solved cut is.
-const FADE_TAIL_STATIONS = 3;
-// JUNCTION CLEARANCE: how much of the fillet wedge reach
-// (fillHalf * FILLET_REACH_PER_HALF * cuspRadius) a nearby under-gap's
-// MARGIN must stay clear of (coverage is never capped - see the march's
-// margin note). Well below 1: the web thins toward its tips, the top
-// fillet layer + physics junction spacing carry most of the protection
-// now, and a large radius at big cuspRadius half-margined far too many
-// crossings.
-const JOINT_CLEAR_REACH_SCALE = 0.55;
-// 13 lanes (was 5): cap rows are polylines approximating the over
-// silhouette's level set, and at loop-end twists that boundary is
-// genuinely CURVED (the over thread bends sharply at the crossing) - 5
-// segments rendered it as an angular wedge. Finer lanes also shrink the
-// D2 clamp's per-point spacing, so genuine curvature passes through it.
-const ERASE_LANES = 13;
-// Patch pool for emergent (tunneled) crossings discovered by the physics.
+// Neighbor clearance: a window (along the under chain) or polyline (along
+// the over chain) stops this fraction of the way to the next crossing pass
+// in that direction. TWINS (the neighbor crossing pairs the same two
+// chains - a twist, where the over/under roles swap) and self-crossings
+// split at the midpoint, so the two gaps meet at one flip line instead of
+// overlapping (both threads hidden = a dark pinch band).
+const NB_CLEAR = 0.8;
+const NB_CLEAR_TWIN = 0.5;
+// A window ends one step after the under ribbon's footprint (centerline
+// offset up to the 2x miter clamp) has left the over thread's casing +
+// fade; the over polyline likewise past the window's footprint.
+const UNDER_FOOT_PER_HALF = 2.0;
+const GAP_EXIT_PAD = 0.05;
+// Visible margin bias, kept from the erase era for gap-width parity: the
+// gap reads as `gap + CUT_BIAS` of arc along the under thread.
+const CUT_BIAS = 0.03;
+// Gap slots for emergent (tunneled) crossings discovered by the physics.
 // Sized for taut knots: at slack ~0 dozens of real emergent crossings can
 // coexist, and a starved pool renders some overlaps gap-less.
 const EMERGENT_POOL = 64;
-// Cut arcs extend outward by this much: widens the gap imperceptibly while
-// swallowing base-ribbon slivers that poke past the cap at tight bends.
-const CUT_BIAS = 0.03;
-// Adjacent-lane arc-step limits for the erase grid. A grid quad's edges
-// are straight, so when neighboring lanes sit at different arcs the edge
-// chords across the under thread's bend (wander ~ (dS^2/8) * curvature).
-// On STRAIGHT spans long lane diagonals are safe and load-bearing
-// (cinched-twist rides, P3.36 - one lane legitimately stays inside the
-// overlap for units after its neighbor exits, and the chords hug a
-// straight thread), so the allowed step scales with the local
-// straightness between the two arcs; over a bend it pins to the base
-// step - unbounded steps sheared quads across whole hairpin bulbs and
-// slashed background slits into them (the loop-end gap-shape artifact;
-// one erase measured covering its entire bulb interior). Enforced by
-// TRUNCATION of the longer lane only: raising the shorter lane erases
-// material its march never certified (the old symmetric median clamp's
-// bite), while truncated overlap is repainted by the over fill, which
-// rides the same overlap.
-const LANE_STEP_MIN = 0.12;
-const LANE_STEP_RIDE = 1.0;
-// Corner rounding for cap polylines: a kinked over centerline makes the
-// distance level set genuinely angular; clamping each interior cap point's
-// second difference rounds corners while leaving gentle bows untouched.
-// At 13-lane spacing a silhouette curvature up to ~8/unit stays under this
-// bound, so only true spikes are rounded. There is deliberately NO clamp
-// toward the cap CHORD: the boundary at a sharply-bent over thread is
-// genuinely curved, and flattening it rendered the loop-end twist gaps as
-// angular wedge-slashes (the P3.40 artifact class).
-const CAP_D2_MAX = 0.03;
+// Gap slots for marker discs (start/exit dots).
+const MARKER_SLOTS = 4;
+// Fillet layer-vote reach terms (rebuildFillets): how much of the wedge
+// reach (fillHalf * FILLET_REACH_PER_HALF * cuspRadius) counts as a
+// joint's clearance, and the old erase-width pad - both kept so the vote
+// classifies exactly as before.
+const JOINT_CLEAR_REACH_SCALE = 0.55;
+// Junction clearance floors (computeGapSlot): a squeezed side keeps at
+// least half its cosmetic margin (zero read as a "busted gap on one
+// side") and FADE_JOINT_FLOOR of its fade (zero room rendered an ABRUPT
+// edge beside the other side's full roll-off) - the erase era's values.
+const JOINT_MARGIN_FLOOR = 0.5;
+const FADE_JOINT_FLOOR = 0.45;
+const ERASE_WIDTH_PAD = 0.02;
 
 function hslToHex(h: number, s: number, l: number): number {
   const k = (n: number) => (n + h / 30) % 12;
@@ -748,41 +726,83 @@ export class RibbonRenderer {
   private ps: ParticleSystem;
   private style: RibbonStyle;
   private fills: RibbonMesh[] = [];
-  private underErases: PatchGridMesh[] = [];
-  private overFills: RibbonMesh[] = [];
-  private emergentErases: PatchGridMesh[] = [];
-  private emergentFills: RibbonMesh[] = [];
+  // Knot mode: each chain's constant section color (the old per-strand
+  // tint, now an aColor through the section shader).
+  private knotRgb: Float32Array[] = [];
   private chainControls: Float32Array[] = [];
   private chainSamples: (SplineSamples | null)[] = [];
   private sampleScratch = new Float32Array(4);
-  private overLocal = new Float32Array(LOCAL_SAMPLES * 2);
-  private underLocal = new Float32Array(LOCAL_SAMPLES * 2);
-  private laneCutsPos = new Float32Array(ERASE_LANES);
-  private laneCutsNeg = new Float32Array(ERASE_LANES);
-  private lanePrevG = new Float32Array(ERASE_LANES);
-  private laneStepScratch = new Float32Array(ERASE_LANES);
-  private capScratch = new Float32Array(ERASE_LANES * 4); // [x, y, tx, ty]
   // Per crossing: neighbor crossing passes along the over and under threads.
   private overNeighbors: PassNeighbors[] = [];
   private underNeighbors: PassNeighbors[] = [];
-  // Pass -> owning crossing index + whether it is the UNDER pass; and each
-  // crossing's measured erase extents along its under thread (max |cut|
-  // across lanes, per arc direction). The fill NEIGHBOR-GAP RESERVE quotes
-  // these: a fill marching toward a pass where its thread goes UNDER must
-  // not repaint that crossing's erased under-gap. Extents are fresh for
-  // lower-indexed neighbors and one frame stale for higher - fine at any
-  // realistic frame rate.
+  // Pass -> owning crossing index + whether it is the UNDER pass (the
+  // twin test of the neighbor clearance - see NB_CLEAR_TWIN).
   private passInfo = new Map<
     CrossingPass,
     { index: number; isUnder: boolean }
   >();
-  private eraseExtentPos = new Float32Array(0);
-  private eraseExtentNeg = new Float32Array(0);
+  // PER-PIXEL GAPS (gap_mask.ts): the slot table (registered crossings,
+  // then the emergent pool, then marker discs), this frame's windows per
+  // under chain as flat [slot, centerArc, winNeg, winPos] quads (vertex
+  // slot ids + junction fan masks are assigned from these), scratch
+  // polylines, and the per-sample id scratch per chain.
+  private gaps: GapMaskTable;
+  private emergentBase = 0;
+  private markerBase = 0;
+  private chainWins = new Map<number, number[]>();
+  private coarseO = new Float32Array(COARSE_MAX * 2);
+  private coarseU = new Float32Array(COARSE_MAX * 2);
+  private fineO = new Float32Array(GAP_MAX_PTS * 2);
+  private idScratch = new Map<number, Float32Array>();
+  private nearIdx = 0; // Out-param of polyDist (nearest vertex index).
+  // Per junction: the gap slots masking its fans (pooled; rebuildFillets).
+  private jointMaskPool: Float32Array[] = [];
+  private tipMaskScratch = new Float32Array(GAP_SLOTS);
+  // [marginNeg, fadeNeg, marginPos, fadePos] clearance scales
+  // (computeGapSlot).
+  private clearScratch = new Float32Array(4);
+  // [negA, negB, posA, posB] protect intervals (computeGapSlot).
+  private protScratch = new Float32Array(4);
+  // protectReach's samples of the two threads.
+  private protScA = new Float32Array(4);
+  private protScB = new Float32Array(4);
+  // The two protect polylines of the slot being written (negative side,
+  // positive side; GAP_PROT_PTS points each).
+  private protPts = new Float32Array(GAP_PROT_PTS * 4);
+  private protPolyNeg = this.protPts.subarray(0, GAP_PROT_PTS * 2);
+  private protPolyPos = this.protPts.subarray(GAP_PROT_PTS * 2);
+  // Per gap slot: the over pass's chain (-1: marker disc / unused) and its
+  // arc, written by computeGapSlot - jointMask tells a joint's own arms
+  // from foreign over threads with them.
+  private slotOverChain = new Int32Array(0);
+  private slotOverArc = new Float32Array(0);
+  // Mask switch (probes A/B the bare base layer) and margin look:
+  // "perp" (default): a constant-width CASING around the over thread -
+  // the gap's edge is one level set of the distance to the over
+  // centerline, continuous everywhere;
+  // "arc": the erase era's P3.21 margin - `gap` measured along the under
+  // thread, i.e. gap * |sin(local angle)| perpendicular. Per pixel that
+  // angle is taken at the NEAREST over point, which jumps between branches
+  // of a curled over pass (fat kinks, eyes): the margin jumps with it and
+  // the gap edge renders STEPPED there (x124 at the tw 0.64 repro), and
+  // the casing thins to nothing at shallow crossings.
+  maskEnabled = true;
+  // Probe view: masked material is tinted magenta instead of removed.
+  maskDebug = false;
+  // The gap slots' far-branch smooth-min (gap_mask.ts); off = A/B probes.
+  smoothMin = true;
+  // The gap slots' protect intervals (computeGapSlot); off = A/B probes.
+  protect = true;
+  gapMode: "arc" | "perp" = "perp";
+  // Windows dropped because a sample already carried GAP_SLOTS slots
+  // (diagnostic; should stay 0).
+  gapOverflow = 0;
   // Per-chain UNDER-GAP windows, rebuilt every update() from the live
   // crossing solve (emergent crossings included): flat triplets
-  // [centerArc, extNeg, extPos] along the UNDER chain. Overlay consumers
-  // (the Ariadne yarn) use these to dip under with their host thread -
-  // see underGapVisibility().
+  // [centerArc, extNeg, extPos] along the UNDER chain - where its
+  // CENTERLINE is hidden. Overlay consumers (the Ariadne yarn, the fillet
+  // flank clamp) use these to dip under with their host thread - see
+  // underGapVisibility().
   private underWindows = new Map<number, number[]>();
   // Palette-mode paint state (see PaintSpan/PulseArm). The paint pass is
   // deliberately decoupled from update(): it rewrites only UV buffers, so
@@ -796,24 +816,6 @@ export class RibbonRenderer {
   private chainRev = new Map<number, number>();
   private uScratch = new Map<number, Float32Array>();
   private paintClock = 0;
-  // Cached over-fill windows (per crossing / per emergent pool slot) so the
-  // paint pass can re-copy recolored UVs into patches without re-running
-  // the full crossing solve.
-  private overWindows = new Int32Array(0);
-  // Per crossing: the window's fractional end trims [startFrac, endFrac]
-  // (CONTINUOUS ENDS), replayed by the paint pass with the window.
-  private overWindowFracs = new Float32Array(0);
-  private overChainCrossings = new Map<number, number[]>();
-  private emergentWindows: Array<{
-    chain: number;
-    start: number;
-    span: number;
-    startFrac: number;
-    endFrac: number;
-  } | null> = [];
-  private lastWindowStart = 0;
-  private lastWindowSpan = 0;
-  private lastWindowFracs = new Float32Array([0, 1]);
   // Junction joinery: arms per fused junction (built once), per-chain
   // fused-terminal flags for the tuck, and palette pixel rows for CPU-side
   // fillet coloring.
@@ -821,9 +823,8 @@ export class RibbonRenderer {
   // main.ts keeps it synced every tick).
   cuspRadius = 1;
   // Live under-gap fade length (the fadeLength slider; main.ts keeps it
-  // synced every tick): arc length past each solved cut cap over which the
-  // erase strength fades to nothing. 0 = sharp caps, exactly the original
-  // render.
+  // synced every tick): arc length past each gap edge over which the under
+  // thread fades back in. 0 = sharp (one-pixel antialiased) edges.
   fadeLength = 0;
   // Live world-unit spacing between crests in a run's pulse train (the
   // pulseSpacing panel param; main.ts syncs it every tick).
@@ -874,42 +875,30 @@ export class RibbonRenderer {
   // color; otherwise it is 3 * sampleCount channel triplets.
   private accentTex: Texture | null = null;
   private filletLayer: Container | null = null;
-  // TWO-LAYER JOINERY: a junction whose arms pass OVER a nearby foreign
-  // thread renders its fans on this layer ABOVE the erase/fill stack -
-  // the foreign under-thread's erase swath is wider than the arm ribbon
-  // the fill repaints, so on the bottom layer it clipped the web (the
-  // "fillet ends clipped by a thread passing under" report). Junctions
-  // whose arm dives UNDER a nearby thread stay on the bottom layer so
-  // their own gap legitimately punches the web.
+  // TWO-LAYER JOINERY (pre-per-pixel-gaps; kept for the junction-shader
+  // merge): the per-wedge layer vote still sorts fans between this layer
+  // and the bottom one, but with no erase layer between them the choice
+  // no longer changes coverage - what used to depend on it (a diving
+  // arm's gap punching its web) is now the fan's own gap mask (see
+  // junction masks in rebuildFillets).
   private filletTopLayer: Container | null = null;
   private filletTopMesh: TriFanMesh | null = null;
-  // MARKER DISC OCCLUDERS (start/exit dots): each punches a real erase
-  // grid on its thread - same lanes/miter/fade machinery as a crossing
-  // gap, with the cut boundary being the DISC silhouette instead of an
-  // over thread (the hand-drawn stroke punches never matched; "should it
-  // resemble how the other gaps work" - yes, it IS one now).
-  private eraseLayerRef: Container | null = null;
+  // MARKER DISC OCCLUDERS (start/exit dots): each owns a gap slot on its
+  // thread whose "over polyline" is the disc center and whose margin is
+  // CONCENTRIC - the thread is hidden inside radius (disc + gap).
   private markerOccluders: Array<{
     chain: number;
     ctrl: number;
     radius: number;
   }> = [];
-  private markerErases: PatchGridMesh[] = [];
-  // LANE-CUT RATE LIMITER state (registered crossings): previous frame's
-  // final cuts + center world position, so near-rest cap noise and
-  // discrete cap-source flips slide instead of popping (the "gaps
-  // jitter under movement/undulation" report).
-  private prevCuts: Float32Array = new Float32Array(0);
-  private prevCutsValid: Uint8Array = new Uint8Array(0);
   // Crossing VISIBILITY GATE (reveal + materialize FX): when each gated
-  // crossing's erase first showed (performance.now seconds; -1 = hidden)
-  // for its gap fade-in, whether the gate ran last frame (its end snaps
-  // every erase back to full strength), and this frame's "some chain is
-  // mid-materialize" flag (update() computes it; renderEmergent reads it).
+  // crossing's gap first showed (performance.now seconds; -1 = hidden)
+  // for its fade-in, whether the gate ran last frame, and this frame's
+  // "some chain is mid-materialize" flag (update() computes it;
+  // renderEmergent reads it).
   private crossingShownAt: Float64Array = new Float64Array(0);
   private crossingGateWas = false;
   private fxMatHot = false;
-  private prevCutSign: Int8Array = new Int8Array(0);
   private acc4Scratch = new Float32Array(4);
   // Burn state (see applyBurnColors): ping-pong color buffers + a
   // per-sample AGE since ignition - the gradient is TEMPORAL cooling,
@@ -936,12 +925,17 @@ export class RibbonRenderer {
   // Per-chain combined width multiplier (reveal mask x rainbow swell).
   private swellScratch = new Map<number, Float32Array>();
   // RENDER-ONLY PLUCKS (pluck_overlay.ts): the overlay itself, each
-  // crossing's over-fill half-lengths along its over thread (the over-node
-  // footprints), and the per-chain base COLLAPSE multipliers the overlay
-  // installs (composed into widthMul here, never inside a footprint).
+  // crossing's static footprints - along its over thread (the over pass's
+  // stretch that covers the under thread's gap) and along its under
+  // thread (the arc where any lane of the under ribbon is hidden, the
+  // erase era's extents) - both solved by computeGapSlot, and the
+  // per-chain base COLLAPSE multipliers the overlay installs (composed into
+  // widthMul here, never inside a footprint).
   readonly plucks: PluckOverlay;
   private overHalfNeg = new Float32Array(0);
   private overHalfPos = new Float32Array(0);
+  private eraseExtentNeg = new Float32Array(0);
+  private eraseExtentPos = new Float32Array(0);
   private pluckCollapse = new Map<number, Float32Array>();
   private collapseScratch = new Map<number, Float32Array>();
   // update() calls so far (probes: a render-only pluck must add none).
@@ -970,10 +964,7 @@ export class RibbonRenderer {
   private geomRev = 0;
   private filletKey = "";
   private filletFxWas = false;
-  // Scratch for the fills-wear-the-joint-field pass (rebuildFillets).
-  private fillBoundsScratch = new Float32Array(4);
-  private jointCand = new Float32Array(4);
-  private jointCandD = new Float32Array(4);
+  // Scratch for the junction-field composition (rebuildFillets).
   private fieldAccScratch = new Float32Array(4);
   private fieldMbScratch = new Float32Array(4);
   // PROBE HOOK (diagnostics only): the last rebuild's junction field -
@@ -987,7 +978,7 @@ export class RibbonRenderer {
     arms: (ji: number) => unknown[];
     center: (ji: number) => [number, number] | null;
     // The joint's record texel index (-1: no field) - what a fan's aRec
-    // and a patch's aJoint (minus 1) carry.
+    // carries.
     record: (ji: number) => number;
   } | null = null;
   // Default section color (the gamut midpoint = the seed-hue base color).
@@ -1041,21 +1032,18 @@ export class RibbonRenderer {
 
     const baseLayer = new Container();
     const filletLayer = new Container();
-    const eraseLayer = new Container();
-    const overLayer = new Container();
     const filletTopLayer = new Container();
-    // Top fillets sit ABOVE the erases (a foreign under-thread's punch
-    // cannot clip a covering web) but BELOW the over fills: fills keep
-    // painting threads over the web with their exact per-sample colors.
-    // (Rendering top fillets above the fills overpainted crossing fills
-    // near big joints with the field's approximated blend - the "weird
-    // discontinuous intersection color blends" report at cr=2.1.)
+    // Layer order: base ribbons (the gaps are cut INSIDE them, per pixel),
+    // then both fillet layers. The two empty containers keep the historic
+    // child indices (0 base, 1 bottom fillets, 2 erases, 3 top fillets,
+    // 4 over fills) that the probe scripts toggle - with per-pixel gaps
+    // there are no erase or over-fill meshes.
     this.root.addChild(
       baseLayer,
       filletLayer,
-      eraseLayer,
+      new Container(),
       filletTopLayer,
-      overLayer
+      new Container()
     );
     // Render-only plucks draw ABOVE every ribbon, erase, fillet and fill
     // (rule 1 in pluck_overlay.ts); the lazily added reveal-tip glow and
@@ -1063,10 +1051,15 @@ export class RibbonRenderer {
     this.plucks = new PluckOverlay(this.makePluckHost());
     this.root.addChild(this.plucks.layer);
     this.filletTopLayer = filletTopLayer;
-    this.eraseLayerRef = eraseLayer;
     if (style.paletteMode) {
       this.filletLayer = filletLayer;
     }
+    // Every chain renders through the section shader (the gap mask lives
+    // there): palette mode wears the section field, knot mode one constant
+    // color per chain (the old tint) with a neutral accent U.
+    const accent = accentTexture(style.pathColor);
+    this.accentTex = accent;
+    bindAccent(accent);
 
     ps.chains.forEach((chain, i) => {
       this.chainControls.push(new Float32Array(chain.length * 2));
@@ -1085,21 +1078,17 @@ export class RibbonRenderer {
       }
       const count = Math.max(MIN_SAMPLES, Math.round(arc / SAMPLE_SPACING));
 
-      const slot = style.hueGroup?.[i] ?? i;
-      const hue = (style.baseHue + slot * 137.508) % 360;
       // An already-carved chain (maze mode) renders as an OPEN ribbon: no
       // closing quad across the removed seam.
       const closed = ps.chainBreakAfter[i] < 0;
-      const base = hslToHex(hue, 0.45, 0.64);
-      const fill = new RibbonMesh(count, closed, base, style.paletteMode);
-      if (style.paletteMode) {
-        this.accentTex = accentTexture(style.pathColor);
-        bindAccent(this.accentTex);
-        fill.mesh.texture = this.accentTex;
-        fill.mesh.shader = sectionShader();
-        fill.mesh.tint = 0xffffff;
-        fill.writePaint(new Float32Array(count).fill(U_BASE), this.baseRgb);
-      }
+      const fill = new RibbonMesh(count, closed, 0xffffff, true);
+      fill.mesh.texture = accent;
+      fill.mesh.shader = sectionShader();
+      this.knotRgb.push(this.knotChainRgb(i));
+      fill.writePaint(
+        new Float32Array(count).fill(U_BASE),
+        style.paletteMode ? this.baseRgb : this.knotRgb[i]
+      );
       this.fills.push(fill);
       baseLayer.addChild(fill.mesh);
     });
@@ -1134,66 +1123,20 @@ export class RibbonRenderer {
       crossingIndex++;
       this.overNeighbors.push(ps.passNeighbors(crossing.over));
       this.underNeighbors.push(ps.passNeighbors(crossing.under));
-      const occ = this.overChainCrossings.get(crossing.over.chain);
-      if (occ) occ.push(crossingIndex - 1);
-      else this.overChainCrossings.set(crossing.over.chain, [crossingIndex - 1]);
-
-      // Erase patches PUNCH the thread layer (destination-out through the
-      // shared fade-strength texture; the transparent canvas lets the page
-      // backdrop show through) instead of painting a background color -
-      // same visuals over today's flat CSS color, textured-backdrop-ready.
-      const erase = new PatchGridMesh(ERASE_STATIONS, ERASE_LANES, 0xffffff);
-      erase.mesh.texture = fadeTexture();
-      erase.mesh.blendMode = "erase";
-      const fill = new RibbonMesh(
-        OVER_PATCH_MAX_SAMPLES,
-        false,
-        0xffffff,
-        style.paletteMode,
-        style.paletteMode
-      );
-      if (style.paletteMode && this.accentTex) {
-        fill.mesh.shader = fillShader(this.accentTex);
-      }
-      this.underErases.push(erase);
-      this.overFills.push(fill);
-      eraseLayer.addChild(erase.mesh);
-      overLayer.addChild(fill.mesh);
     }
-
-    for (let k = 0; k < EMERGENT_POOL; k++) {
-      const erase = new PatchGridMesh(ERASE_STATIONS, ERASE_LANES, 0xffffff);
-      erase.mesh.texture = fadeTexture();
-      erase.mesh.blendMode = "erase";
-      const fill = new RibbonMesh(
-        OVER_PATCH_MAX_SAMPLES,
-        false,
-        0xffffff,
-        style.paletteMode,
-        style.paletteMode
-      );
-      if (style.paletteMode && this.accentTex) {
-        fill.mesh.shader = fillShader(this.accentTex);
-      }
-      erase.mesh.visible = false;
-      fill.mesh.visible = false;
-      this.emergentErases.push(erase);
-      this.emergentFills.push(fill);
-      eraseLayer.addChild(erase.mesh);
-      overLayer.addChild(fill.mesh);
-    }
-
-    this.eraseExtentPos = new Float32Array(ps.crossings.length);
-    this.eraseExtentNeg = new Float32Array(ps.crossings.length);
-    this.overHalfPos = new Float32Array(ps.crossings.length);
-    this.overHalfNeg = new Float32Array(ps.crossings.length);
-    this.prevCuts = new Float32Array(ps.crossings.length * ERASE_LANES * 2);
-    this.prevCutsValid = new Uint8Array(ps.crossings.length);
     this.crossingShownAt = new Float64Array(ps.crossings.length).fill(-1);
-    this.prevCutSign = new Int8Array(ps.crossings.length * ERASE_LANES * 2);
-    this.overWindows = new Int32Array(ps.crossings.length * 2);
-    this.overWindowFracs = new Float32Array(ps.crossings.length * 2);
-    this.emergentWindows = new Array(EMERGENT_POOL).fill(null);
+    this.overHalfNeg = new Float32Array(ps.crossings.length);
+    this.overHalfPos = new Float32Array(ps.crossings.length);
+    this.eraseExtentNeg = new Float32Array(ps.crossings.length);
+    this.eraseExtentPos = new Float32Array(ps.crossings.length);
+    // Gap slots: registered crossings, then the emergent pool, then the
+    // marker discs.
+    this.emergentBase = ps.crossings.length;
+    this.markerBase = this.emergentBase + EMERGENT_POOL;
+    this.gaps = new GapMaskTable(this.markerBase + MARKER_SLOTS);
+    bindGap(this.gaps.tex);
+    this.slotOverChain = new Int32Array(this.gaps.slots).fill(-1);
+    this.slotOverArc = new Float32Array(this.gaps.slots);
 
     // Junction joinery bookkeeping (fabric only; knot mode has no fused
     // junctions). Arms = directed half-threads leaving each junction.
@@ -1283,6 +1226,23 @@ export class RibbonRenderer {
     }
   }
 
+  // Knot-mode chain color: the historic per-strand tint (hue by hueGroup
+  // slot, golden-angle spaced) as 0..1 RGB for the aColor path - the same
+  // bytes the tint multiplied into a white texture.
+  private knotChainRgb(i: number): Float32Array {
+    const slot = this.style.hueGroup?.[i] ?? i;
+    const hex = hslToHex(
+      (this.style.baseHue + slot * 137.508) % 360,
+      0.45,
+      0.64
+    );
+    return new Float32Array([
+      ((hex >> 16) & 255) / 255,
+      ((hex >> 8) & 255) / 255,
+      (hex & 255) / 255,
+    ]);
+  }
+
   // Interpolate position and unit tangent at an arc position into `out`
   // as [x, y, tx, ty]. Closed chains are rings: `count` segments, arcs wrap
   // modulo total. Open chains are runs: `count - 1` segments, arcs CLAMP -
@@ -1335,50 +1295,117 @@ export class RibbonRenderer {
     out[offset + 3] = ty / len;
   }
 
-  // Distance from a point to a locally sampled centerline polyline. The
-  // polylines are dense (~0.15 spacing), so nearest-vertex distance is
-  // within ~0.007 of the true curve distance at the ranges we care about.
-  private distToLocal(poly: Float32Array, x: number, y: number): number {
-    let best = Infinity;
-    for (let m = 0; m < LOCAL_SAMPLES; m++) {
-      const dx = poly[m * 2] - x;
-      const dy = poly[m * 2 + 1] - y;
-      const d2 = dx * dx + dy * dy;
-      if (d2 < best) best = d2;
-    }
-    return Math.sqrt(best);
-  }
-
-  // guardCenter/guardHalf mask an arc neighborhood out of the polyline
-  // (sentinel far away): for SELF-crossings the "other thread" is the same
-  // chain, and without the mask the under region measures distance to
-  // itself (always ~0), blowing the boundary marches out to their clamps.
-  private buildLocal(
+  // Sample a chain's centerline over arcs [center - neg, center + pos] into
+  // a flat [x, y, ...] polyline of at most maxPts points about `spacing`
+  // apart; returns the point count (>= 2). Open chains clamp at their ends
+  // (sampleAt), which only repeats an endpoint.
+  private buildPoly(
     poly: Float32Array,
     samples: SplineSamples,
     center: number,
-    reachNeg: number,
-    reachPos: number,
-    guardCenter = Number.NaN,
-    guardHalf = 0
-  ): void {
-    const total = samples.totalLength;
-    const span = reachNeg + reachPos;
-    for (let m = 0; m < LOCAL_SAMPLES; m++) {
-      const arc = center - reachNeg + (span * m) / (LOCAL_SAMPLES - 1);
-      if (!Number.isNaN(guardCenter)) {
-        let d = Math.abs(arc - guardCenter) % total;
-        d = Math.min(d, total - d);
-        if (d < guardHalf) {
-          poly[m * 2] = 1e9;
-          poly[m * 2 + 1] = 1e9;
-          continue;
-        }
-      }
-      this.sampleAt(samples, arc, this.sampleScratch, 0);
+    neg: number,
+    pos: number,
+    spacing: number,
+    maxPts: number
+  ): number {
+    const span = Math.max(0, neg + pos);
+    const n = Math.max(2, Math.min(maxPts, Math.ceil(span / spacing) + 1));
+    for (let m = 0; m < n; m++) {
+      this.sampleAt(
+        samples,
+        center - neg + (span * m) / (n - 1),
+        this.sampleScratch,
+        0
+      );
       poly[m * 2] = this.sampleScratch[0];
       poly[m * 2 + 1] = this.sampleScratch[1];
     }
+    return n;
+  }
+
+  // Nearest-VERTEX distance from (x, y) to an n-point polyline (dense
+  // enough that this is within ~0.01 of the curve at casing range); the
+  // nearest index lands in nearIdx. ex > 0 = the SELF-CROSSING exclusion
+  // (gap_mask.ts): vertices whose chain arc (s0 + m * st) lies within ex of
+  // fa (wrapped by per on rings) are skipped. Infinity if all are.
+  private polyDist(
+    poly: Float32Array,
+    n: number,
+    x: number,
+    y: number,
+    ex = 0,
+    fa = 0,
+    s0 = 0,
+    st = 0,
+    per = 0
+  ): number {
+    let best = Infinity;
+    let bi = 0;
+    for (let m = 0; m < n; m++) {
+      if (ex > 0) {
+        let da = s0 + m * st - fa;
+        if (per > 0) da -= per * Math.floor(da / per + 0.5);
+        if (Math.abs(da) < ex) continue;
+      }
+      const dx = poly[m * 2] - x;
+      const dy = poly[m * 2 + 1] - y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < best) {
+        best = d2;
+        bi = m;
+      }
+    }
+    this.nearIdx = bi;
+    return Math.sqrt(best);
+  }
+
+  // A protect interval's half-length on one side (computeGapSlot): how far
+  // along thread A, from its crossing over thread B at aArc, some lane of
+  // A's ribbon still overlaps B's ribbon. A lane at A-arc s overlaps while
+  // |delta| < h (1 + |cos|), delta = A's centerline distance to its nearest
+  // point on B and cos taken between the two tangents there - for straight
+  // threads exactly the estimate w0 = h (1 + |cos|) / sin. So the estimate
+  // is probed first (one probe in the common case, and never less than it
+  // is returned); only where A is still on B there - the threads bend
+  // along each other - does the march continue outward. A short interval
+  // left the far end of such an overlap to the cosmetic margin of the
+  // crossing where A is the under thread: a dark notch in A exactly where
+  // it covers B (19 px at the user URL's x170, all freed by +0.15).
+  private protectReach(
+    aS: SplineSamples,
+    aArc: number,
+    dir: number,
+    bS: SplineSamples,
+    bArc: number,
+    h: number,
+    w0: number
+  ): number {
+    const a = this.protScA;
+    const b = this.protScB;
+    let sb = bArc;
+    const overlaps = (s: number): boolean => {
+      this.sampleAt(aS, aArc + dir * s, a, 0);
+      // Nearest point on B: Newton steps along B from the last one.
+      for (let it = 0; it < 3; it++) {
+        this.sampleAt(bS, sb, b, 0);
+        const step = (a[0] - b[0]) * b[2] + (a[1] - b[1]) * b[3];
+        sb += step;
+        if (!bS.closed) sb = Math.max(0, Math.min(bS.totalLength, sb));
+        if (Math.abs(step) < 1e-4) break;
+      }
+      this.sampleAt(bS, sb, b, 0);
+      const dx = a[0] - b[0];
+      const dy = a[1] - b[1];
+      const c = Math.abs(a[2] * b[2] + a[3] * b[3]);
+      return Math.sqrt(dx * dx + dy * dy) < h * (1 + c);
+    };
+    if (!overlaps(w0)) return w0;
+    let s = w0;
+    while (s < w0 + PROTECT_MARCH_MAX) {
+      s += PROTECT_STEP;
+      if (!overlaps(s)) return s - 0.5 * PROTECT_STEP;
+    }
+    return s;
   }
 
   // Arc position of a fractional control position, wrapping around the loop.
@@ -1460,7 +1487,8 @@ export class RibbonRenderer {
 
   private inspectIndex = -1;
   // Per-crossing diagnostic summary, refreshed each update():
-  // [worldX, worldY, eraseSpanMean, overSpan, selfPassDist(-1 if not self)]
+  // [worldX, worldY, gapSpan (the under CENTERLINE's hidden arc span),
+  //  overSpan (the gap polyline's arc span), selfPassDist (-1 if not self)]
   private diagData = new Float32Array(0);
 
   getDiag(): { stride: number; data: Float32Array } {
@@ -1753,17 +1781,14 @@ export class RibbonRenderer {
     return mask;
   }
 
-  // One-shot restore when the animator completes (or is detached): every
-  // crossing patch visible again, masks dropped, tip glow cleared. The
-  // next paint tick clears any frontier glow (its chain set goes empty).
+  // One-shot restore when the animator completes (or is detached): masks
+  // dropped, tip glow cleared (every crossing's gap slot is rewritten by
+  // this same update). The next paint tick clears any frontier glow (its
+  // chain set goes empty).
   private finishReveal(): void {
     this.revealAnim = null;
     this.revealMask = this.ps.chains.map(() => null);
     this.revealTips = [];
-    for (let c = 0; c < this.underErases.length; c++) {
-      this.underErases[c].mesh.visible = true;
-      this.overFills[c].mesh.visible = true;
-    }
     this.revealTipGfx?.clear();
   }
 
@@ -2055,747 +2080,714 @@ export class RibbonRenderer {
     }
     this.fxMatHot = fxMatHot;
     const gate = this.revealOn || fxMatHot;
-    if (!gate && this.crossingGateWas) {
-      for (let c = 0; c < this.underErases.length; c++) {
-        this.underErases[c].mesh.visible = true;
-        this.underErases[c].mesh.alpha = 1;
-        this.overFills[c].mesh.visible = true;
-        this.overFills[c].mesh.alpha = 1;
-        this.crossingShownAt[c] = -1;
-      }
-    }
+    if (!gate && this.crossingGateWas) this.crossingShownAt.fill(-1);
     this.crossingGateWas = gate;
     const nowSec = performance.now() / 1000;
 
+    for (const w of this.chainWins.values()) w.length = 0; // Pooled arrays.
+    this.gaps.setEnabled(this.maskEnabled, this.maskDebug);
     this.ps.crossings.forEach((crossing, c) => {
-      // REVEAL: a crossing's erase + over fill stay hidden until BOTH its
-      // threads are revealed at the crossing - an erase for an invisible
-      // over thread would punch a naked hole in a revealed under thread.
+      // REVEAL: a crossing's gap stays off until BOTH its threads are
+      // revealed at the crossing - a gap for an invisible over thread
+      // would cut a naked hole in a revealed under thread.
+      let strength = 1;
       if (gate) {
         const on =
           (!this.revealOn || this.crossingRevealed(crossing)) &&
           (!fxMatHot || this.crossingFxSettled(crossing));
-        this.underErases[c].mesh.visible = on;
-        this.overFills[c].mesh.visible = on;
         if (!on) {
           this.eraseExtentPos[c] = 0;
           this.eraseExtentNeg[c] = 0;
           this.overHalfPos[c] = 0;
           this.overHalfNeg[c] = 0;
-          this.overWindows[c * 2 + 1] = 0;
-          // Rate limiter must SNAP on re-show, not slide from stale cuts.
-          if (this.prevCutsValid.length > 0) this.prevCutsValid[c] = 0;
           this.crossingShownAt[c] = -1;
+          this.gaps.clearSlot(c);
           return;
         }
-        // The crossing FADES IN instead of popping (a full-strength pop
-        // read as a flicker at every crossing the front passed). Where the
-        // over thread already draws on top, only the GAP fades (erase
-        // strength 0 -> 1; the fill shows at once, identical to the base
-        // beneath it). Where the UNDER thread draws on top (chain order),
-        // the fill first crossfades the over thread in OVER it, then the
-        // gap fades - fading both together would erase the under thread
-        // before the fill covered it, dimming the crossing mid-fade.
+        // The gap FADES IN instead of popping (a full-strength pop read
+        // as a flicker at every crossing the front passed). One ramp
+        // serves both draw orders: where the UNDER thread draws on top, a
+        // partial mask crossfades the over thread in THROUGH it (nothing
+        // dims - the old erase + fill pair needed a two-phase fade), while
+        // the casing fades in over the backdrop.
         let t0 = this.crossingShownAt[c];
         if (t0 < 0) {
           t0 = nowSec;
           this.crossingShownAt[c] = nowSec;
         }
         const t = Math.min(1, (nowSec - t0) / CROSSING_FADE_IN);
-        const ss = (x: number): number => {
-          const q = Math.max(0, Math.min(1, x));
-          return q * q * (3 - 2 * q);
-        };
-        if (this.underDrawnOnTop(crossing)) {
-          this.overFills[c].mesh.alpha = ss(t * 2);
-          this.underErases[c].mesh.alpha = ss(t * 2 - 1);
-        } else {
-          this.overFills[c].mesh.alpha = 1;
-          this.underErases[c].mesh.alpha = ss(t);
-        }
+        strength = t * t * (3 - 2 * t);
       }
-      this.renderCrossing(
+      this.computeGapSlot(
+        c,
         crossing,
         c,
-        this.underErases[c],
-        this.overFills[c],
         this.overNeighbors[c],
         this.underNeighbors[c],
         fillHalf,
-        gap
+        gap,
+        strength
       );
     });
     this.renderEmergent(fillHalf, gap);
     this.renderMarkerGaps(fillHalf, gap);
+    this.assignGapIds();
+    this.gaps.upload();
     this.drawRevealTips();
   }
 
-  // Render one crossing's erase + over-fill patches. index < 0 marks an
-  // emergent (unregistered) crossing: no neighbor lists, no diagnostics.
-  private renderCrossing(
+  // Is the neighbor pass `nb` (along `pass`'s chain) part of a crossing
+  // with the SAME other chain as this crossing - a twist twin, where the
+  // over/under roles swap - or this crossing's own partner? Those split at
+  // the midpoint (NB_CLEAR_TWIN).
+  private twinNeighbor(
+    crossing: { over: CrossingPass; under: CrossingPass },
+    pass: CrossingPass,
+    nb: CrossingPass
+  ): boolean {
+    if (nb === pass) return false;
+    if (nb === crossing.over || nb === crossing.under) return true;
+    const info = this.passInfo.get(nb);
+    if (!info) return false;
+    const cr = this.ps.crossings[info.index];
+    const nbOther = info.isUnder ? cr.over : cr.under;
+    const other = pass === crossing.over ? crossing.under : crossing.over;
+    return nbOther.chain === other.chain;
+  }
+
+  // Solve one crossing's GAP SLOT: the under thread's arc window, the
+  // over thread's local polyline, and the under centerline's hidden span
+  // (underWindows). slot = the table row; index = the registered crossing
+  // (-1 for emergent ones: no neighbor lists, no diagnostics).
+  private computeGapSlot(
+    slot: number,
     crossing: { over: CrossingPass; under: CrossingPass; sign?: number },
     index: number,
-    eraseMesh: PatchGridMesh,
-    fillMesh: RibbonMesh,
     overNbIn: PassNeighbors | null,
     underNbIn: PassNeighbors | null,
     fillHalf: number,
-    gap: number
+    gap: number,
+    strength: number
   ): void {
-    const c = index;
     const overNb = overNbIn ?? { prev: crossing.over, next: crossing.over };
     const underNb =
       underNbIn ?? { prev: crossing.under, next: crossing.under };
+    const overSamples = this.chainSamples[crossing.over.chain]!;
+    const underSamples = this.chainSamples[crossing.under.chain]!;
+    const overCenter = this.arcAt(overSamples, this.renderCtrl(crossing.over));
+    const underCenter = this.arcAt(
+      underSamples,
+      this.renderCtrl(crossing.under)
+    );
+    const totalO = overSamples.totalLength;
+    const totalU = underSamples.totalLength;
+    this.slotOverChain[slot] = crossing.over.chain;
+    this.slotOverArc[slot] = overCenter;
+
+    // SELF-crossings: the arc between the two passes splits at its
+    // midpoint (less a small guard) between the over polyline and the
+    // under window, so the window never masks the over pass's own
+    // material and the polyline never measures the under region against
+    // itself. fwd/bwd = arc from the over pass forward/backward to the
+    // under pass (an open chain reaches it in one direction only).
+    const selfCross = crossing.over.chain === crossing.under.chain;
+    let splitFwd = Infinity;
+    let splitBwd = Infinity;
+    let selfDist = -1;
+    if (selfCross) {
+      let fwd: number;
+      let bwd: number;
+      if (overSamples.closed) {
+        fwd = (((underCenter - overCenter) % totalO) + totalO) % totalO;
+        bwd = totalO - fwd;
+      } else {
+        fwd = underCenter > overCenter ? underCenter - overCenter : Infinity;
+        bwd = overCenter > underCenter ? overCenter - underCenter : Infinity;
+      }
+      splitFwd = Math.max(0.12, fwd / 2 - 0.08);
+      splitBwd = Math.max(0.12, bwd / 2 - 0.08);
+      selfDist = Math.min(fwd, bwd);
+    }
+
+    const margin = gap + CUT_BIAS;
+    const fade = this.fadeLength;
+    const perp = this.gapMode === "perp";
+    // Footprint reach: a point farther than this from the other thread's
+    // centerline can neither be hidden nor hide anything.
+    const exitD =
+      fillHalf * (1 + UNDER_FOOT_PER_HALF) + margin + fade + GAP_EXIT_PAD;
+    // SELF-CROSSING exclusion (gap_mask.ts): a thread never measures itself
+    // within this much arc - along an unfolded thread that is farther than
+    // any hide reach (both half-widths + margin + fade).
+    const selfEx = selfCross
+      ? 2 * fillHalf + margin + fade + GAP_EXIT_PAD
+      : 0;
+    const per = selfCross && overSamples.closed ? totalO : 0;
+    const cutReach = Math.max(
+      CUT_REACH_MIN,
+      fillHalf * CUT_REACH_PER_HALF,
+      RIDE_REACH_CAP
+    );
+    const overReach = Math.max(
+      OVER_REACH_MIN,
+      fillHalf * OVER_REACH_PER_HALF,
+      RIDE_REACH_CAP
+    );
+    const [oGapPrev, oGapNext] = this.neighborGaps(
+      overSamples,
+      crossing.over,
+      overNb
+    );
+    const [uGapPrev, uGapNext] = this.neighborGaps(
+      underSamples,
+      crossing.under,
+      underNb
+    );
+    const clr = (pass: CrossingPass, nb: CrossingPass): number =>
+      this.twinNeighbor(crossing, pass, nb) ? NB_CLEAR_TWIN : NB_CLEAR;
+    const room = (
+      samples: SplineSamples,
+      center: number,
+      dir: number
+    ): number =>
+      samples.closed
+        ? samples.totalLength / 4
+        : dir > 0
+          ? samples.totalLength - center
+          : center;
+    const oCapPos = Math.max(
+      0.12,
+      Math.min(
+        overReach,
+        clr(crossing.over, overNb.next) * oGapNext,
+        splitFwd,
+        room(overSamples, overCenter, 1)
+      )
+    );
+    const oCapNeg = Math.max(
+      0.12,
+      Math.min(
+        overReach,
+        clr(crossing.over, overNb.prev) * oGapPrev,
+        splitBwd,
+        room(overSamples, overCenter, -1)
+      )
+    );
+    // From the under pass, forward reaches the over pass after `bwd`.
+    const uCapPos = Math.max(
+      0.15,
+      Math.min(
+        cutReach,
+        clr(crossing.under, underNb.next) * uGapNext,
+        splitBwd,
+        room(underSamples, underCenter, 1)
+      )
+    );
+    const uCapNeg = Math.max(
+      0.15,
+      Math.min(
+        cutReach,
+        clr(crossing.under, underNb.prev) * uGapPrev,
+        splitFwd,
+        room(underSamples, underCenter, -1)
+      )
+    );
+
+    // UNDER MARCH (each direction) against the coarse over polyline, for
+    // two arcs along the under centerline:
+    //  - the CUT: where its own mask excess first turns >= 0 - the hidden
+    //    span of the centerline (the yarn's dip-under window);
+    //  - the WINDOW: the CONNECTED overlap only. The march stops where the
+    //    two ribbons stop overlapping (centerline distance >= both half
+    //    widths: every lane has left the over silhouette), and the window
+    //    extends past that by the margin's reach along a lane (arc mode:
+    //    exactly margin + fade; perp mode: their arc projection). A window
+    //    sized by "the footprint could still touch the casing" ran all the
+    //    way around a fat kink loop and shaved its eye walls across the eye
+    //    (no crossing there) - the per-pixel test is exact INSIDE the
+    //    window, so the window must hold only material connected, lane by
+    //    lane, to the crossing core (the erase grid's first-exit lanes had
+    //    this property by construction).
+    const nO = this.buildPoly(
+      this.coarseO,
+      overSamples,
+      overCenter,
+      oCapNeg,
+      oCapPos,
+      COARSE_SPACING,
+      COARSE_MAX
+    );
+    const co = this.coarseO;
+    const sc4 = this.sampleScratch;
+    const oS0 = overCenter - oCapNeg;
+    const oSt = (oCapNeg + oCapPos) / (nO - 1);
+    const overlapD = 2 * fillHalf;
+    let cutPos = 0;
+    let cutNeg = 0;
+    let silPos = 0;
+    let silNeg = 0;
+    let winPos = 0;
+    let winNeg = 0;
+    // The arc where every lane of the under ribbon has left the casing, per
+    // side (the erase era's extents: a render-only pluck's under-node
+    // footprint).
+    let allPos = 0;
+    let allNeg = 0;
+    for (let dir = -1; dir <= 1; dir += 2) {
+      const cap = dir > 0 ? uCapPos : uCapNeg;
+      let cut = Number.NaN;
+      let sil = Number.NaN;
+      let win = Number.NaN;
+      // Arc where EVERY lane has left the casing (fade not included), and
+      // the crossing angle there.
+      let all = Number.NaN;
+      let allSin = 1;
+      let prevS = 0;
+      let prevE = Number.NaN;
+      let prevF = Number.NaN;
+      let prevD = Number.NaN;
+      for (let s = 0; ; s += MARCH_STEP) {
+        const sc = Math.min(s, cap);
+        this.sampleAt(underSamples, underCenter + dir * sc, sc4, 0);
+        const d = this.polyDist(
+          co,
+          nO,
+          sc4[0],
+          sc4[1],
+          selfEx,
+          underCenter + dir * sc,
+          oS0,
+          oSt,
+          per
+        );
+        const i = this.nearIdx;
+        const i0 = Math.max(0, i - 1);
+        const i1 = Math.min(nO - 1, i + 1);
+        const ox = co[i1 * 2] - co[i0 * 2];
+        const oy = co[i1 * 2 + 1] - co[i0 * 2 + 1];
+        const ol = Math.hypot(ox, oy) || 1;
+        const sinT = Math.abs(sc4[2] * oy - sc4[3] * ox) / ol;
+        // The centerline's SILHOUETTE exit (where the margin starts) - the
+        // junction clearance caps only what lies beyond it.
+        if (Number.isNaN(sil)) {
+          const f = d - fillHalf;
+          if (f >= 0) {
+            sil = Number.isNaN(prevF)
+              ? sc
+              : prevS + (sc - prevS) * (-prevF / (f - prevF));
+          }
+          prevF = f;
+        }
+        if (Number.isNaN(cut)) {
+          const e = d - fillHalf - (perp ? margin : margin * sinT);
+          if (e >= 0) {
+            cut = Number.isNaN(prevE)
+              ? sc
+              : prevS + (sc - prevS) * (-prevE / (e - prevE));
+          }
+          prevE = e;
+        }
+        // Arc mode: the hide region reaches exactly margin + fade of arc
+        // past each lane's silhouette exit, and every lane has exited once
+        // the centerlines are both half widths apart. Perp mode: every lane
+        // is clear of the casing + fade once the centerlines are that much
+        // farther apart (at shallow angles that is far along the arc, so it
+        // is marched, not projected).
+        const allD = perp ? overlapD + margin : overlapD;
+        if (Number.isNaN(all) && d >= allD) {
+          all =
+            (Number.isNaN(prevD) || !Number.isFinite(d)
+              ? sc
+              : prevS + (sc - prevS) * ((allD - prevD) / (d - prevD))) +
+            (perp ? 0 : margin);
+          allSin = sinT;
+        }
+        const exitD2 = perp ? overlapD + margin + fade : overlapD;
+        if (Number.isNaN(win) && d >= exitD2) {
+          const exit =
+            Number.isNaN(prevD) || !Number.isFinite(d)
+              ? sc
+              : prevS + (sc - prevS) * ((exitD2 - prevD) / (d - prevD));
+          win = Math.min(
+            cap,
+            exit + (perp ? 0 : margin + fade) + MARCH_STEP + GAP_EXIT_PAD
+          );
+        }
+        // EYE-WALL LIMIT (casing look): the fade is an ARC past the casing
+        // exit, so once the march has gone that far past it the window
+        // ends even if the thread still lingers inside the fade band - a
+        // narrow twist eye's far wall (it followed the whole wall: a dark
+        // wedge where master's lane caps stop) or a parallel ride. The
+        // shader's window-end ramp dissolves whatever fade remains.
+        if (
+          perp &&
+          Number.isNaN(win) &&
+          !Number.isNaN(all) &&
+          sc >= all + fade / Math.max(allSin, 0.2) + MARCH_STEP
+        ) {
+          win = Math.min(cap, sc + GAP_EXIT_PAD);
+        }
+        prevD = d;
+        prevS = sc;
+        if ((!Number.isNaN(cut) && !Number.isNaN(win)) || sc >= cap) break;
+      }
+      if (Number.isNaN(win)) win = cap;
+      if (Number.isNaN(cut)) cut = win;
+      cut = Math.min(cut, win);
+      if (Number.isNaN(sil)) sil = cut;
+      sil = Math.min(sil, cut);
+      const allX = Number.isNaN(all) ? win : Math.min(all, win);
+      if (dir > 0) {
+        cutPos = cut;
+        silPos = sil;
+        winPos = win;
+        allPos = allX;
+      } else {
+        cutNeg = cut;
+        silNeg = sil;
+        winNeg = win;
+        allNeg = allX;
+      }
+    }
+
+    // OVER MARCH against the window's centerline: the polyline must hold
+    // every over point within the hide reach of the window's footprint (a
+    // truncated polyline OVER-measures the distance and leaves material
+    // standing).
+    const nU = this.buildPoly(
+      this.coarseU,
+      underSamples,
+      underCenter,
+      winNeg,
+      winPos,
+      COARSE_SPACING,
+      COARSE_MAX
+    );
+    const uS0 = underCenter - winNeg;
+    const uSt = (winNeg + winPos) / (nU - 1);
+    let reachPos = 0;
+    let reachNeg = 0;
+    // The over pass's stretch that covers the under thread's gap, per side:
+    // a render-only pluck's over-node footprint (the over-fill window it
+    // replaced: out to where the over ribbon clears the casing band).
+    const coverD = overlapD + margin + 0.05;
+    let coverPos = 0;
+    let coverNeg = 0;
+    for (let dir = -1; dir <= 1; dir += 2) {
+      const cap = dir > 0 ? oCapPos : oCapNeg;
+      let r = cap;
+      let cover = Number.NaN;
+      let prevS = 0;
+      let prevD = Number.NaN;
+      for (let s = 0; ; s += MARCH_STEP) {
+        const sc = Math.min(s, cap);
+        this.sampleAt(overSamples, overCenter + dir * sc, sc4, 0);
+        const d = this.polyDist(
+          this.coarseU,
+          nU,
+          sc4[0],
+          sc4[1],
+          selfEx,
+          overCenter + dir * sc,
+          uS0,
+          uSt,
+          per
+        );
+        if (Number.isNaN(cover) && d >= coverD) {
+          cover = Number.isNaN(prevD)
+            ? sc
+            : prevS + (sc - prevS) * ((coverD - prevD) / (d - prevD));
+        }
+        prevS = sc;
+        prevD = d;
+        if (d >= exitD) {
+          r = Math.min(cap, sc + MARCH_STEP);
+          break;
+        }
+        if (sc >= cap) break;
+      }
+      const coverX = Math.min(
+        cap,
+        Math.max(
+          PLUCK_OVER_MIN,
+          (Number.isNaN(cover) ? r : cover) + PLUCK_OVER_PAD
+        )
+      );
+      if (dir > 0) {
+        reachPos = r;
+        coverPos = coverX;
+      } else {
+        reachNeg = r;
+        coverNeg = coverX;
+      }
+    }
+    if (index >= 0) {
+      this.overHalfNeg[index] = coverNeg;
+      this.overHalfPos[index] = coverPos;
+      this.eraseExtentNeg[index] = allNeg;
+      this.eraseExtentPos[index] = allPos;
+    }
+    // ADAPTIVE RESOLUTION: the shader's cost is per polyline segment, and a
+    // straight over pass needs few. The spacing keeps the chord sagitta
+    // (s^2 * curvature / 8) under POLY_SAG_TOL on the tightest bend of the
+    // reach, read off the coarse march polyline.
+    let kMax = 0;
     {
-      const overSamples = this.chainSamples[crossing.over.chain]!;
-      const underSamples = this.chainSamples[crossing.under.chain]!;
-      const overCenter = this.arcAt(overSamples, this.renderCtrl(crossing.over));
-      const underCenter = this.arcAt(
-        underSamples,
-        this.renderCtrl(crossing.under)
-      );
-
-      // Local centerline polylines around the crossing. The cut boundary is
-      // "distance to the over polyline == fillHalf" (the over ribbon's
-      // silhouette), with the visible margin added afterward as ARC LENGTH
-      // (see the header comment); the over-fill window is measured against
-      // the under polyline. For SELF-crossings each polyline masks out the
-      // other pass's neighborhood, and the arc between the passes is split
-      // between the over window and the erase zone so the fill can never
-      // repaint the gap.
-      const selfCross = crossing.over.chain === crossing.under.chain;
-      const total = overSamples.totalLength;
-      let splitPos = Infinity;
-      let splitNeg = Infinity;
-      let maskHalf = 0.5;
-      if (selfCross) {
-        const dPos = (((underCenter - overCenter) % total) + total) % total;
-        const dNeg = total - dPos;
-        splitPos = Math.max(0.12, dPos / 2 - 0.08);
-        splitNeg = Math.max(0.12, dNeg / 2 - 0.08);
-        // The mask must never swallow the crossing's own neighborhood: at
-        // tight tips the pass separation bounds it.
-        maskHalf = Math.max(
-          0.1,
-          Math.min(0.5, Math.min(dPos, dNeg) / 2 - 0.05)
-        );
+      const lo = Math.max(1, Math.floor((oCapNeg - reachNeg) / oSt) - 1);
+      const hi = Math.min(nO - 2, Math.ceil((oCapNeg + reachPos) / oSt) + 1);
+      for (let m = lo; m <= hi; m++) {
+        const ax = co[m * 2] - co[(m - 1) * 2];
+        const ay = co[m * 2 + 1] - co[(m - 1) * 2 + 1];
+        const bx = co[(m + 1) * 2] - co[m * 2];
+        const by = co[(m + 1) * 2 + 1] - co[m * 2 + 1];
+        const la = Math.hypot(ax, ay);
+        const lb = Math.hypot(bx, by);
+        if (la < 1e-9 || lb < 1e-9) continue;
+        const turn = Math.abs(Math.atan2(ax * by - ay * bx, ax * bx + ay * by));
+        kMax = Math.max(kMax, turn / (0.5 * (la + lb)));
       }
-      const cutReachMax = Math.max(
-        CUT_REACH_MIN,
-        fillHalf * CUT_REACH_PER_HALF,
-        RIDE_REACH_CAP
-      );
-      const overReachMax = Math.max(
-        OVER_REACH_MIN,
-        fillHalf * OVER_REACH_PER_HALF,
-        RIDE_REACH_CAP
-      );
-      const [oGapPrev, oGapNext] = this.neighborGaps(
-        overSamples,
-        crossing.over,
-        overNb
-      );
-
-      // The over-fill window's reach bound per direction, shared between
-      // the fill march (reachAlongOver) and the erase's over polyline so
-      // the two CANNOT drift: the erase certifies cut region by distance
-      // to the over centerline, and any cut justified by over arcs the
-      // fill will never repaint renders as a naked background bite (at
-      // hairpin bulbs and loop-end twists the unrestricted polyline let
-      // the erase ride the bulb's far wall while the split-capped fill
-      // stopped at the neck).
-      const fillBound = (dir: number): number => {
-        const gapLimit = dir > 0 ? oGapNext : oGapPrev;
-        // TWIST FLIP: a flattened twist (threads stacked between its two
-        // crossings) drives both fills to their clearance caps, and their
-        // two sample-quantized end caps abut mid-span as a ragged seam.
-        // When the neighbor pass in this direction is the twist TWIN and
-        // this crossing draws LATER (higher index - its fill wins
-        // overlaps), extend the clearance by one gap so the flip renders
-        // as this fill's single clean cap over the twin's fill. Inert
-        // whenever the overlap ends naturally (open eye): the march
-        // stops before any cap.
-        const nbPass = dir > 0 ? overNb.next : overNb.prev;
-        const twinBias = this.ps.twistFillBias(crossing.over, nbPass);
-        const twinExtend = twinBias > 0 ? gap : 0;
-        // NEIGHBOR-GAP RESERVE: by alternation, the neighbor pass is a
-        // crossing where THIS thread goes under - that crossing's erase
-        // cuts this thread's under-gap there, and because every fill
-        // draws over every erase, a fill that reaches into the gap
-        // repaints it (a compressed corridor renders as a blunt fill cap
-        // welded to the neighbor's over thread - the pull-outward merge).
-        // Cap the march at the neighbor's MEASURED erase footprint so the
-        // fill stops where the neighbor's gap begins. Twist twins keep
-        // the winner-extension treatment instead (the flip needs one
-        // continuous cover); self-partners are owned by the split caps.
-        let reserveCap = Infinity;
-        if (twinBias === 0 && nbPass !== crossing.under) {
-          const info = this.passInfo.get(nbPass);
-          if (info && info.isUnder) {
-            const reserve =
-              dir > 0
-                ? this.eraseExtentNeg[info.index]
-                : this.eraseExtentPos[info.index];
-            // STAGE 18 FADE: the neighbor's erase keeps dissolving for
-            // fadeLength past its opaque extent toward us, and a fill
-            // marching into that tail repaints it at full alpha - the
-            // fade ends on a hard, march-quantized (so jittering) edge,
-            // the "inconsistent gap fades" report. Reserve the tail too:
-            // this thread goes UNDER there by alternation, so leaving it
-            // faded is the correct render.
-            reserveCap = Math.max(
-              0.12,
-              gapLimit - reserve - this.fadeLength
-            );
-          }
-        }
-        // Floor sits below the self-crossing split so tight tips can
-        // clamp the window all the way down.
-        return Math.max(
-          0.12,
-          Math.min(
-            overReachMax,
-            NEIGHBOR_CLEARANCE * gapLimit + twinExtend,
-            reserveCap,
-            dir > 0 ? splitPos : splitNeg,
-            overSamples.totalLength / 4
+    }
+    const spacing =
+      kMax > 1e-6
+        ? Math.min(
+            POLY_SPACING_MAX,
+            Math.max(FINE_SPACING, Math.sqrt((8 * POLY_SAG_TOL) / kMax))
           )
+        : POLY_SPACING_MAX;
+    const nF = this.buildPoly(
+      this.fineO,
+      overSamples,
+      overCenter,
+      reachNeg,
+      reachPos,
+      spacing,
+      GAP_MAX_PTS
+    );
+    const polyStep = (reachNeg + reachPos) / (nF - 1);
+    // FAR-BRANCH SMOOTH-MIN (gap_mask.ts): a straight run's points beyond
+    // farK segments are at least sqrt(2 * reach * sminK) * 1.3 + one step
+    // of arc from the nearest one, i.e. more than sminK farther - the blend
+    // is exact there; only a polyline that bends back gets it.
+    const sminK = Math.min(
+      SMIN_K_MAX,
+      Math.max(SMIN_K_MIN, SMIN_K_PER * (fillHalf + margin))
+    );
+    const hideReach = fillHalf + margin + fade;
+    const farK = Math.ceil(
+      (Math.sqrt(2 * hideReach * sminK) * 1.3 + polyStep) /
+        Math.max(polyStep, 1e-6)
+    );
+
+    // PROTECT: where the under thread A is itself the OVER pass of a
+    // neighboring crossing (A over B), this slot's cosmetic margin and fade
+    // are waived for A's fragments over B's ribbon (gap_mask.ts). The arc
+    // interval bounds the stretch of A that can cover B (per side: h (1 +
+    // |cos|) / sin, sin floored at 0.25, or the MEASURED overlap where the
+    // threads bend along each other - see protectReach); the protect
+    // polyline is B's centerline over the stretch of B that A's ribbon can
+    // reach. A compressed cyclic triangle (a over b over c over a)
+    // otherwise hid each thread exactly where it must cover the next one.
+    const prot = this.protScratch;
+    prot[0] = 0;
+    prot[1] = 0;
+    prot[2] = 0;
+    prot[3] = 0;
+    let protNegN = 0;
+    let protPosN = 0;
+    if (index >= 0 && this.protect) {
+      for (const nb of [underNb.prev, underNb.next]) {
+        if (nb === crossing.under) continue;
+        const info = this.passInfo.get(nb);
+        if (!info || info.isUnder || info.index === index) continue;
+        const xc = this.ps.crossings[info.index];
+        const bSamples = this.chainSamples[xc.under.chain];
+        if (!bSamples) continue;
+        let off = this.arcAt(underSamples, this.renderCtrl(nb)) - underCenter;
+        if (underSamples.closed) {
+          off = ((off % totalU) + totalU) % totalU;
+          if (off > totalU / 2) off -= totalU;
+        }
+        this.sampleAt(underSamples, underCenter + off, sc4, 0);
+        const tax = sc4[2];
+        const tay = sc4[3];
+        const bArc = this.arcAt(bSamples, this.renderCtrl(xc.under));
+        this.sampleAt(bSamples, bArc, sc4, 0);
+        const sinX = Math.abs(tax * sc4[3] - tay * sc4[2]);
+        const cosX = Math.abs(tax * sc4[2] + tay * sc4[3]);
+        const w0 = (fillHalf * (1 + cosX)) / Math.max(sinX, 0.25);
+        const aArc = underCenter + off;
+        const o = off < 0 ? 0 : 2;
+        const pad = PROTECT_PAD_PER_HALF * fillHalf + PROTECT_PAD;
+        prot[o] =
+          off -
+          this.protectReach(underSamples, aArc, -1, bSamples, bArc, fillHalf, w0) -
+          pad;
+        prot[o + 1] =
+          off +
+          this.protectReach(underSamples, aArc, 1, bSamples, bArc, fillHalf, w0) +
+          pad;
+        // B's centerline wherever A's ribbon can reach it: the same overlap
+        // measured along B, plus a half-width.
+        const bNeg = Math.min(
+          PROT_POLY_SPAN_MAX,
+          this.protectReach(bSamples, bArc, -1, underSamples, aArc, fillHalf, w0) +
+            fillHalf
         );
-      };
-      // What the fill is GUARANTEED to repaint while overlap persists:
-      // its march can only stop early where overlap truly ends (where
-      // the erase has nothing to cut either).
-      const overCoverPos = Math.min(
-        Math.max(OVER_HALF_LENGTH_MIN, fillBound(1)),
-        splitPos,
-        overSamples.totalLength / 4
-      );
-      const overCoverNeg = Math.min(
-        Math.max(OVER_HALF_LENGTH_MIN, fillBound(-1)),
-        splitNeg,
-        overSamples.totalLength / 4
-      );
-      this.buildLocal(
-        this.overLocal,
-        overSamples,
-        overCenter,
-        overCoverNeg,
-        overCoverPos,
-        selfCross ? underCenter : Number.NaN,
-        maskHalf
-      );
-      this.buildLocal(
-        this.underLocal,
-        underSamples,
-        underCenter,
-        Math.min(overReachMax + LOCAL_REACH_PAD, underSamples.totalLength / 4),
-        Math.min(overReachMax + LOCAL_REACH_PAD, underSamples.totalLength / 4),
-        selfCross ? overCenter : Number.NaN,
-        maskHalf
-      );
+        const bPos = Math.min(
+          PROT_POLY_SPAN_MAX,
+          this.protectReach(bSamples, bArc, 1, underSamples, aArc, fillHalf, w0) +
+            fillHalf
+        );
+        const nP = this.buildPoly(
+          o === 0 ? this.protPolyNeg : this.protPolyPos,
+          bSamples,
+          bArc,
+          bNeg,
+          bPos,
+          Math.max(PROT_POLY_SPACING, (bNeg + bPos) / (GAP_PROT_PTS - 1)),
+          GAP_PROT_PTS
+        );
+        if (o === 0) protNegN = nP;
+        else protPosN = nP;
+      }
+    }
 
-      const cutBoundary = fillHalf;
-      const eraseW = fillHalf + ERASE_WIDTH_PAD;
-      const [uGapPrev, uGapNext] = this.neighborGaps(
-        underSamples,
-        crossing.under,
-        underNb
-      );
+    // JUNCTION CLEARANCE (the erase era's rule): every fused joint on the
+    // under thread is a virtual neighbor; the room to its rendered edge
+    // caps that side's cosmetic margin (floored at half) and then its fade
+    // (floored at FADE_JOINT_FLOOR) by the SHORTFALL only, so gaps stop
+    // eating into seal discs and webs ("gaps extending into the
+    // intersection") without trimming a fade that already fits. Required
+    // coverage - the over silhouette - is never reduced (the P3.36/P3.40
+    // theorem). A per-pixel switch to the floors past the room compressed
+    // fade roll-offs into hard edges once big cuspRadius values pushed
+    // the clearance over most crossings.
+    let jRoomPos = 1e6;
+    let jRoomNeg = 1e6;
+    const jCtrls = this.junctionArcCtrls.get(crossing.under.chain);
+    if (jCtrls) {
+      const jointClear =
+        Math.max(
+          fillHalf * 1.1,
+          fillHalf *
+            FILLET_REACH_PER_HALF *
+            this.cuspRadius *
+            JOINT_CLEAR_REACH_SCALE
+        ) +
+        gap +
+        CUT_BIAS;
+      for (const jc of jCtrls) {
+        let d =
+          this.paintArcAt(underSamples, jc.ctrl, underSamples.closed) -
+          underCenter;
+        if (underSamples.closed) {
+          d = ((d % totalU) + totalU) % totalU;
+          if (d > totalU / 2) d -= totalU;
+        }
+        if (d >= 0) jRoomPos = Math.min(jRoomPos, Math.max(0, d - jointClear));
+        else jRoomNeg = Math.min(jRoomNeg, Math.max(0, -d - jointClear));
+      }
+    }
+    const clearScales = (
+      room: number,
+      sil: number,
+      cut: number,
+      out: Float32Array,
+      o: number
+    ): void => {
+      out[o] = 1;
+      out[o + 1] = 1;
+      if (!(room < 1e5)) return;
+      const mArc = Math.max(cut - sil, 1e-6);
+      const ms = Math.min(1, Math.max(JOINT_MARGIN_FLOOR, (room - sil) / mArc));
+      out[o] = ms;
+      if (fade > 0) {
+        const cutEff = sil + mArc * ms;
+        out[o + 1] = Math.min(
+          1,
+          Math.max(FADE_JOINT_FLOOR, (room - cutEff) / fade)
+        );
+      }
+    };
+    const cs = this.clearScratch;
+    clearScales(jRoomNeg, silNeg, cutNeg, cs, 0);
+    clearScales(jRoomPos, silPos, cutPos, cs, 2);
 
-      // JUNCTION CLEARANCE: junctions are not crossings, so the
-      // neighbor-gap bookkeeping above never capped a march walking into
-      // a fused joint - cuts (and their fade tails) bit into the seal
-      // disc and fillet web, worse with bigger gap, fadeLength, and
-      // cuspRadius (the "gaps extending into the intersection" report).
-      // Every junction on the under thread acts as a virtual neighbor:
-      // the room to the joint's rendered edge caps the march, and the
-      // leftover room caps that side's fade tail below.
-      let jRoomPos = Infinity;
-      let jRoomNeg = Infinity;
+    this.sampleAt(underSamples, underCenter, sc4, 0);
+    this.gaps.writeSlot(
+      slot,
       {
-        const jCtrls = this.junctionArcCtrls.get(crossing.under.chain);
-        if (jCtrls) {
-          const closedU = this.ps.chainBreakAfter[crossing.under.chain] < 0;
-          const reach =
-            fillHalf * FILLET_REACH_PER_HALF * this.cuspRadius;
-          const jointClear =
-            Math.max(fillHalf * 1.1, reach * JOINT_CLEAR_REACH_SCALE) +
-            gap +
-            CUT_BIAS;
-          const totalU = underSamples.totalLength;
-          for (const jc of jCtrls) {
-            const jArc = this.paintArcAt(underSamples, jc.ctrl, closedU);
-            let d = jArc - underCenter;
-            if (closedU) {
-              d = ((d % totalU) + totalU) % totalU;
-              if (d > totalU / 2) d -= totalU;
-            }
-            if (d >= 0) {
-              jRoomPos = Math.min(jRoomPos, Math.max(0, d - jointClear));
-            } else {
-              jRoomNeg = Math.min(jRoomNeg, Math.max(0, -d - jointClear));
-            }
-          }
-        }
-      }
-
-      // Lane offsets span the erase width: lane 0 = left edge (+eraseW),
-      // last lane = right edge (-eraseW).
-      const laneOffset = (l: number): number =>
-        eraseW * (1 - (2 * l) / (ERASE_LANES - 1));
-
-      // March all lanes away from the crossing until each exits the cut
-      // region, refining every exit arc by linear interpolation. Writes
-      // signed arcs (relative to underCenter, biased outward) into cuts.
-      const march = (
-        dir: number,
-        gapLimit: number,
-        cuts: Float32Array,
-        selfLimit: number
-      ): void => {
-        const sMax = Math.max(
-          0.15,
-          Math.min(
-            cutReachMax,
-            ERASE_NEIGHBOR_CLEARANCE * gapLimit,
-            selfLimit,
-            underSamples.totalLength / 4
-          )
-        );
-
-        let unfinished = 0;
-        this.sampleAt(underSamples, underCenter, this.sampleScratch, 0);
-        for (let l = 0; l < ERASE_LANES; l++) {
-          const u = laneOffset(l);
-          const g =
-            this.distToLocal(this.overLocal, 
-              this.sampleScratch[0] - this.sampleScratch[3] * u,
-              this.sampleScratch[1] + this.sampleScratch[2] * u
-            ) - cutBoundary;
-          if (g >= 0) {
-            cuts[l] = 0.01 * dir;
-          } else {
-            cuts[l] = Number.NaN;
-            this.lanePrevG[l] = g;
-            unfinished++;
-          }
-        }
-
-        let prevS = 0;
-        for (let s = MARCH_STEP; unfinished > 0; s += MARCH_STEP) {
-          const clamped = Math.min(s, sMax);
-          this.sampleAt(
-            underSamples,
-            underCenter + dir * clamped,
-            this.sampleScratch,
-            0
-          );
-          for (let l = 0; l < ERASE_LANES; l++) {
-            if (!Number.isNaN(cuts[l])) continue;
-            const u = laneOffset(l);
-            const g =
-              this.distToLocal(this.overLocal, 
-                this.sampleScratch[0] - this.sampleScratch[3] * u,
-                this.sampleScratch[1] + this.sampleScratch[2] * u
-              ) - cutBoundary;
-            if (g >= 0) {
-              const prevG = this.lanePrevG[l];
-              cuts[l] =
-                dir * (prevS + (clamped - prevS) * (prevG / (prevG - g)));
-              unfinished--;
-            } else {
-              this.lanePrevG[l] = g;
-            }
-          }
-          if (clamped >= sMax) break;
-          prevS = clamped;
-        }
-
-        const jRoom = dir > 0 ? jRoomPos : jRoomNeg;
-        for (let l = 0; l < ERASE_LANES; l++) {
-          if (Number.isNaN(cuts[l])) cuts[l] = dir * sMax;
-          // The visible margin, applied as arc length so it stays `gap`
-          // wide along the under thread at every crossing angle.
-          // JUNCTION CLEARANCE applies ONLY here, to the COSMETIC
-          // margin: the first version capped the march itself, which
-          // TRUNCATED erases that still had real overlap to cover -
-          // tight twists near big-cuspRadius joints rendered as ragged
-          // merges (the P3.36/P3.40 theorem: an erase may be trimmed of
-          // decoration, never of coverage). Required overlap always
-          // renders; only the margin shrinks as the cut nears a joint
-          // (the fade tails are room-capped separately below).
-          // Floor at HALF margin: a zero-margin cut renders as a busted
-          // one-sided gap (silhouette-level cut with no visible casing
-          // band) at every junction-adjacent crossing; half a band stays
-          // readable while still leaning out of the joint.
-          const full = CUT_BIAS + gap;
-          const margin = Math.max(
-            full * 0.5,
-            Math.min(full, jRoom - Math.abs(cuts[l]))
-          );
-          cuts[l] += dir * margin;
-        }
-      };
-
-      // Forward along the under thread heads into the over->under span's
-      // complement (splitNeg); backward heads into the splitPos span.
-      march(1, uGapNext, this.laneCutsPos, splitNeg);
-      march(-1, uGapPrev, this.laneCutsNeg, splitPos);
-
-      // Shear guard (see LANE_STEP_MIN): bound each adjacent-lane arc
-      // step by the thread's straightness between the two arcs, pulling
-      // the LONGER lane back. One forward + one backward sweep converges
-      // (the constraint graph is a path). Straightness checks the
-      // endpoint AND mid-span tangents so S-curves and full wraps cannot
-      // read as straight.
-      const laneStep = (arcA: number, arcB: number): number => {
-        this.sampleAt(underSamples, underCenter + arcA, this.sampleScratch, 0);
-        const tax = this.sampleScratch[2];
-        const tay = this.sampleScratch[3];
-        let c = 1;
-        for (const arc of [(arcA + arcB) / 2, arcB]) {
-          this.sampleAt(underSamples, underCenter + arc, this.sampleScratch, 0);
-          c = Math.min(
-            c,
-            tax * this.sampleScratch[2] + tay * this.sampleScratch[3]
-          );
-        }
-        const s01 = Math.max(0, Math.min(1, (c - 0.5) / 0.4));
-        return LANE_STEP_MIN + LANE_STEP_RIDE * s01;
-      };
-      for (const [cuts, dir] of [
-        [this.laneCutsPos, 1],
-        [this.laneCutsNeg, -1],
-      ] as [Float32Array, number][]) {
-        for (let l = 0; l < ERASE_LANES - 1; l++) {
-          this.laneStepScratch[l] = laneStep(cuts[l], cuts[l + 1]);
-        }
-        for (let l = 0; l < ERASE_LANES - 1; l++) {
-          const cap = dir * cuts[l] + this.laneStepScratch[l];
-          if (dir * cuts[l + 1] > cap) cuts[l + 1] = dir * cap;
-        }
-        for (let l = ERASE_LANES - 2; l >= 0; l--) {
-          const cap = dir * cuts[l + 1] + this.laneStepScratch[l];
-          if (dir * cuts[l] > cap) cuts[l] = dir * cap;
-        }
-      }
-
-      // One binomial pass across lanes: the marched level set carries
-      // small-amplitude discretization noise from the local-polyline
-      // distance field (segment scallops), which renders as ragged torn
-      // cap edges at 13-lane resolution. A [1,2,1] pass removes it while
-      // leaving the low-frequency (genuine silhouette) shape intact.
-      // Endpoint lanes stay - they are the strip's side boundaries.
-      for (const cuts of [this.laneCutsPos, this.laneCutsNeg]) {
-        let prev = cuts[0];
-        for (let l = 1; l < ERASE_LANES - 1; l++) {
-          const cur = cuts[l];
-          cuts[l] = (prev + 2 * cur + cuts[l + 1]) / 4;
-          prev = cur;
-        }
-      }
-
-      // Round genuine corners in the solved boundary: clamp each interior
-      // cap point's world second difference (see CAP_D2_MAX).
-      for (const cuts of [this.laneCutsPos, this.laneCutsNeg]) {
-        for (let l = 0; l < ERASE_LANES; l++) {
-          const u = laneOffset(l);
-          this.sampleAt(
-            underSamples,
-            underCenter + cuts[l],
-            this.sampleScratch,
-            0
-          );
-          this.capScratch[l * 4] =
-            this.sampleScratch[0] - this.sampleScratch[3] * u;
-          this.capScratch[l * 4 + 1] =
-            this.sampleScratch[1] + this.sampleScratch[2] * u;
-          this.capScratch[l * 4 + 2] = this.sampleScratch[2];
-          this.capScratch[l * 4 + 3] = this.sampleScratch[3];
-        }
-
-        for (let l = 1; l < ERASE_LANES - 1; l++) {
-          const midX =
-            (this.capScratch[(l - 1) * 4] + this.capScratch[(l + 1) * 4]) / 2;
-          const midY =
-            (this.capScratch[(l - 1) * 4 + 1] +
-              this.capScratch[(l + 1) * 4 + 1]) /
-            2;
-          const dx = this.capScratch[l * 4] - midX;
-          const dy = this.capScratch[l * 4 + 1] - midY;
-          const m = Math.hypot(dx, dy);
-          if (m <= CAP_D2_MAX) continue;
-          const scale = CAP_D2_MAX / m;
-          const tx = this.capScratch[l * 4 + 2];
-          const ty = this.capScratch[l * 4 + 3];
-          const ds =
-            (midX + dx * scale - this.capScratch[l * 4]) * tx +
-            (midY + dy * scale - this.capScratch[l * 4 + 1]) * ty;
-          cuts[l] += ds;
-          this.capScratch[l * 4] += tx * ds;
-          this.capScratch[l * 4 + 1] += ty * ds;
-        }
-      }
-
-      // LANE-CUT RATE LIMITER: at near-rest / under flow the marched caps
-      // re-quantize against drifting local polylines, and the discrete
-      // cap sources (neighbor reserve branch, twin bias, self splits) can
-      // flip between frames - small pops the eye reads as gap jitter.
-      // The discriminator is DIRECTION REVERSAL, not speed: jitter
-      // alternates sign every frame, while real geometry (drags, flow
-      // sway) moves each cut consistently and reverses slowly. A cut
-      // moving the same way as last frame passes untouched; a reversal
-      // is snubbed to a crawl. (The first cut of this limiter scaled the
-      // allowance by center MOTION - flow sway inflated it enough for
-      // the march noise to wiggle inside, the user's alt-clicked
-      // still-jittering self-crossing.)
-      if (index >= 0 && this.prevCuts.length > 0) {
-        const base = index * ERASE_LANES * 2;
-        if (this.prevCutsValid[index]) {
-          // Micro-motions (under MICRO) get a heavy one-pole: a
-          // 2-frame ping-pong collapses to ~18% amplitude instead of
-          // crawling at the clamp every frame (the user's alt-clicked
-          // residual shimmer), while slow real drift still tracks with
-          // a few frames of lag and no pops. Mid-size direction
-          // REVERSALS crawl; consistent motion passes untouched.
-          const CRAWL = 0.02;
-          const MICRO = 0.035;
-          for (let side = 0; side < 2; side++) {
-            const cuts = side === 0 ? this.laneCutsPos : this.laneCutsNeg;
-            for (let l = 0; l < ERASE_LANES; l++) {
-              const idx = base + side * ERASE_LANES + l;
-              const prev = this.prevCuts[idx];
-              const d = cuts[l] - prev;
-              const sgn = d > 1e-6 ? 1 : d < -1e-6 ? -1 : 0;
-              const last = this.prevCutSign[idx];
-              if (Math.abs(d) < MICRO) {
-                cuts[l] = prev + d * 0.18;
-              } else if (sgn !== 0 && last !== 0 && sgn !== last) {
-                cuts[l] = prev + sgn * CRAWL;
-              }
-              if (sgn !== 0) this.prevCutSign[idx] = sgn;
-              this.prevCuts[idx] = cuts[l];
-            }
-          }
-        } else {
-          for (let l = 0; l < ERASE_LANES; l++) {
-            this.prevCuts[base + l] = this.laneCutsPos[l];
-            this.prevCuts[base + ERASE_LANES + l] = this.laneCutsNeg[l];
-            this.prevCutSign[base + l] = 0;
-            this.prevCutSign[base + ERASE_LANES + l] = 0;
-          }
-          this.prevCutsValid[index] = 1;
-        }
-      }
-
-      // Record this crossing's final erase extents along its under thread
-      // for the fill NEIGHBOR-GAP RESERVE (see reachAlongOver), and the
-      // under-gap WINDOW for overlay consumers (the Ariadne yarn dips
-      // under with its host; emergent crossings included).
-      let extPos = 0;
-      let extNeg = 0;
-      {
-        for (let l = 0; l < ERASE_LANES; l++) {
-          if (this.laneCutsPos[l] > extPos) extPos = this.laneCutsPos[l];
-          if (-this.laneCutsNeg[l] > extNeg) extNeg = -this.laneCutsNeg[l];
-        }
-        if (index >= 0) {
-          this.eraseExtentPos[index] = extPos;
-          this.eraseExtentNeg[index] = extNeg;
-        }
-        // The yarn window quotes the MID-LANE cuts, not the max: the
-        // yarn rides the centerline, and the widest (edge-lane) cut at
-        // an oblique crossing made it vanish well before its host's own
-        // material did - the hidden span must track `gap` exactly.
-        const midL = (ERASE_LANES - 1) >> 1;
-        let win = this.underWindows.get(crossing.under.chain);
-        if (!win) {
-          win = [];
-          this.underWindows.set(crossing.under.chain, win);
-        }
-        win.push(
-          underCenter,
-          -this.laneCutsNeg[midL],
-          this.laneCutsPos[midL]
-        );
-      }
-
-      // Build the erase grid: each lane spans its own solved cut interval,
-      // so the cap rows are polylines lying on the over ribbon's offset
-      // curve - they curve with the over thread.
-      // FADE: a nonzero fadeLength extends each lane's SAMPLED span by
-      // `fade` arc past both solved caps, and every vertex carries a
-      // texture U of overshoot/fade (0 anywhere inside the cut interval),
-      // so the erase strength rolls off across the tails. The extension is
-      // purely additive BEYOND the solved boundary: the marches, shear
-      // guard, smoothing, D2 rounding, the eraseExtent bookkeeping above
-      // (the P3.38 neighbor reserve must keep quoting OPAQUE extents), and
-      // the sMid miter probe below all still read the original laneCuts.
-      // At fade 0 the spans and every U are bit-identical to the sharp
-      // render. (Extending the ERASE past its solved exit is safe only
-      // because the overhang is sub-strength and fades to zero - the P3.40
-      // "never extend a cut" lesson is about full-strength erases.)
-      const erase = eraseMesh;
-      const fade = this.fadeLength;
-      // JUNCTION CLEARANCE, fade side: whatever room remains between the
-      // solved cut and the joint edge bounds each side's roll-off - but
-      // never below FADE_JOINT_FLOOR of the target: a zero-room side
-      // rendered as a skinny ABRUPT edge next to the other side's full
-      // roll-off (the "one side fades gradually, one side abrupt"
-      // report). A partial fade may encroach that far into the joint
-      // clearance - its alpha ramps to zero, so the web still reads
-      // solid beneath it.
-      const fadePos = Math.min(
+        hOver: fillHalf,
+        margin,
         fade,
-        Math.max(jRoomPos - extPos, fade * FADE_JOINT_FLOOR)
-      );
-      const fadeNeg = Math.min(
-        fade,
-        Math.max(jRoomNeg - extNeg, fade * FADE_JOINT_FLOOR)
-      );
-      this.buildEraseGrid(
-        erase,
-        underSamples,
-        underCenter,
-        fillHalf,
-        fadeNeg,
-        fadePos
-      );
+        strength,
+        perp,
+        arcScale: underSamples.closed ? totalU : totalU / 0.45,
+        centerArc: underCenter,
+        winNeg,
+        winPos,
+        closed: underSamples.closed,
+        totalU,
+        tanX: sc4[2],
+        tanY: sc4[3],
+        selfExcl: selfEx,
+        polyStart: overCenter - reachNeg,
+        polyStep,
+        marginScaleNeg: cs[0],
+        marginScalePos: cs[2],
+        fadeScaleNeg: cs[1],
+        fadeScalePos: cs[3],
+        centerX: sc4[0],
+        centerY: sc4[1],
+        sminK: this.smoothMin ? sminK : 0,
+        farK,
+        protNegA: prot[0],
+        protNegB: prot[1],
+        protPosA: prot[2],
+        protPosB: prot[3],
+        protPts: this.protPts,
+        protNegN,
+        protPosN,
+      },
+      this.fineO,
+      nF
+    );
+    let wins = this.chainWins.get(crossing.under.chain);
+    if (!wins) {
+      wins = [];
+      this.chainWins.set(crossing.under.chain, wins);
+    }
+    wins.push(slot, underCenter, winNeg, winPos);
+    let uw = this.underWindows.get(crossing.under.chain);
+    if (!uw) {
+      uw = [];
+      this.underWindows.set(crossing.under.chain, uw);
+    }
+    uw.push(underCenter, cutNeg, cutPos);
 
-      // Over fill: redraw the over thread across the hole. The window is
-      // measured directly: march along the over thread until its centerline
-      // is provably beyond the erase's reach of the under thread. No angle
-      // estimates, so kinked centerlines can't undersize it. Reach bounds
-      // come from fillBound - the same closure the erase's over polyline
-      // quoted before the marches ran.
-      const overlapReach = eraseW + fillHalf + ERASE_WIDTH_PAD + 0.05;
-      // The exit is refined by linear interpolation between the bracketing
-      // march samples, as the erase lanes do: returning the raw step
-      // quantized the window to MARCH_STEP, and under flow a stop that
-      // flips steps moved the fill end in 0.07 jumps.
-      const reachAlongOver = (dir: number): number => {
-        const rMax = fillBound(dir);
-        this.sampleAt(overSamples, overCenter, this.sampleScratch, 0);
-        let prevS = 0;
-        let prevD = this.distToLocal(
-          this.underLocal,
-          this.sampleScratch[0],
-          this.sampleScratch[1]
-        );
-        for (let s = MARCH_STEP; s < rMax; s += MARCH_STEP) {
-          this.sampleAt(overSamples, overCenter + dir * s, this.sampleScratch, 0);
-          const d = this.distToLocal(
-            this.underLocal,
-            this.sampleScratch[0],
-            this.sampleScratch[1]
-          );
-          if (d >= overlapReach) {
-            const t =
-              d > prevD
-                ? Math.max(0, Math.min(1, (overlapReach - prevD) / (d - prevD)))
-                : 1;
-            return Math.min(prevS + (s - prevS) * t + OVER_PATCH_MARGIN, rMax);
-          }
-          prevS = s;
-          prevD = d;
-        }
-        return rMax;
-      };
-      // The comfort floor must never override the self-crossing split, or
-      // the fill repaints the gap at tight tips.
-      const halfPos = Math.min(
-        Math.max(OVER_HALF_LENGTH_MIN, reachAlongOver(1)),
-        splitPos
-      );
-      const halfNeg = Math.min(
-        Math.max(OVER_HALF_LENGTH_MIN, reachAlongOver(-1)),
-        splitNeg
-      );
-
-      // Repaint the over thread across the hole by copying the base
-      // ribbon's vertices for the window's sample range - pixel-identical
-      // to the base ribbon, so no width change and no outline mismatch.
-      // CONTINUOUS ENDS: the window ends sit at the EXACT arcs (fractional
-      // samples; the end pairs are lerped on the source strip's edges -
-      // see updateFromRibbonWindow). Whole-sample ends were the measured
-      // gap jitter: a fill end visible over erased base (a dive-under fade)
-      // rode the resampling grid, which slides along the material as flow
-      // breathes the chain's length, and re-snapped one sample (0.082 arc)
-      // 2-7 times per second per crossing. Rings resample over `count`
-      // segments, open runs over `count - 1` (sampleOpenSpline) - the old
-      // total/count mapping skewed open-run windows by up to one sample.
-      const overFill = this.fills[crossing.over.chain];
-      const arcPerSample =
-        overSamples.totalLength /
-        (overSamples.closed ? overSamples.count : overSamples.count - 1);
-      let f0 = (overCenter - halfNeg) / arcPerSample;
-      let f1 = (overCenter + halfPos) / arcPerSample;
-      if (!overSamples.closed) {
-        f0 = Math.max(0, f0);
-        f1 = Math.min(overSamples.count - 1, f1);
+    if (index >= 0) {
+      if (this.diagData.length < this.ps.crossings.length * 5) {
+        this.diagData = new Float32Array(this.ps.crossings.length * 5);
       }
-      const startSample = Math.floor(f0);
-      const endSample = Math.max(startSample + 1, Math.ceil(f1));
-      const fullSpan = endSample - startSample + 1;
-      const span = Math.min(fullSpan, OVER_PATCH_MAX_SAMPLES, overSamples.count);
-      const startFrac = f0 - startSample;
-      // A capacity-truncated window keeps its whole-sample cut.
-      const endFrac = span === fullSpan ? f1 - (endSample - 1) : 1;
-      const palette = this.style.paletteMode === true;
-      fillMesh.updateFromRibbonWindow(
-        overFill,
-        startSample,
-        span,
-        palette,
-        startFrac,
-        endFrac
-      );
-      fillMesh.mesh.tint = overFill.mesh.tint;
-      if (palette) fillMesh.mesh.texture = overFill.mesh.texture;
-      this.lastWindowStart = startSample;
-      this.lastWindowSpan = span;
-      this.lastWindowFracs[0] = startFrac;
-      this.lastWindowFracs[1] = endFrac;
-      if (index >= 0) {
-        this.overWindows[index * 2] = startSample;
-        this.overWindows[index * 2 + 1] = span;
-        this.overWindowFracs[index * 2] = startFrac;
-        this.overWindowFracs[index * 2 + 1] = endFrac;
-        // The over-node FOOTPRINT a render-only pluck keeps static.
-        this.overHalfNeg[index] = halfNeg;
-        this.overHalfPos[index] = halfPos;
-      }
-
-      if (index >= 0) {
-        if (this.diagData.length < this.ps.crossings.length * 5) {
-          this.diagData = new Float32Array(this.ps.crossings.length * 5);
-        }
-        let spanSum = 0;
-        for (let l = 0; l < ERASE_LANES; l++) {
-          spanSum += this.laneCutsPos[l] - this.laneCutsNeg[l];
-        }
-        this.ps.bindingPoint(crossing.over as CrossingPass, this.sampleScratch, 0);
-        this.diagData[c * 5] = this.sampleScratch[0];
-        this.diagData[c * 5 + 1] = this.sampleScratch[1];
-        this.diagData[c * 5 + 2] = spanSum / ERASE_LANES;
-        this.diagData[c * 5 + 3] = halfPos + halfNeg;
-        this.diagData[c * 5 + 4] = selfCross
-          ? Math.min(
-              (((underCenter - overCenter) % total) + total) % total,
-              (((overCenter - underCenter) % total) + total) % total
-            )
-          : -1;
-      }
-
-      if (index >= 0 && c === this.inspectIndex) {
+      this.ps.bindingPoint(crossing.over, sc4, 0);
+      this.diagData[index * 5] = sc4[0];
+      this.diagData[index * 5 + 1] = sc4[1];
+      this.diagData[index * 5 + 2] = cutNeg + cutPos;
+      this.diagData[index * 5 + 3] = reachNeg + reachPos;
+      this.diagData[index * 5 + 4] = selfDist;
+      if (index === this.inspectIndex) {
         this.inspectIndex = -1;
         const round = (v: number): number => Math.round(v * 1000) / 1000;
         console.log(
           "CROSSING INSPECT " +
             JSON.stringify({
-              crossing: c,
+              crossing: index,
+              slot,
               selfCross,
-              over: { chain: crossing.over.chain, ctrl: round(crossing.over.ctrl) },
+              over: {
+                chain: crossing.over.chain,
+                ctrl: round(crossing.over.ctrl),
+              },
               under: {
                 chain: crossing.under.chain,
                 ctrl: round(crossing.under.ctrl),
@@ -2803,25 +2795,22 @@ export class RibbonRenderer {
               sign: crossing.sign,
               overCenter: round(overCenter),
               underCenter: round(underCenter),
-              splitPos: round(splitPos),
-              splitNeg: round(splitNeg),
-              maskHalf: round(maskHalf),
-              uGaps: [round(uGapPrev), round(uGapNext)],
-              oGaps: [round(oGapPrev), round(oGapNext)],
-              halfPos: round(halfPos),
-              halfNeg: round(halfNeg),
-              cutsPos: [...this.laneCutsPos].map(round),
-              cutsNeg: [...this.laneCutsNeg].map(round),
-              startSample,
-              span,
-              totalLength: round(total),
+              split: [round(splitBwd), round(splitFwd)],
+              uCaps: [round(uCapNeg), round(uCapPos)],
+              oCaps: [round(oCapNeg), round(oCapPos)],
+              cut: [round(cutNeg), round(cutPos)],
+              win: [round(winNeg), round(winPos)],
+              reach: [round(reachNeg), round(reachPos)],
+              polyPts: nF,
+              strength: round(strength),
+              mode: this.gapMode,
             })
         );
       }
     }
   }
 
-  // Pooled patches for emergent (tunneled) crossings, deduped against
+  // Gap slots for emergent (tunneled) crossings, deduped against
   // registered crossings and each other.
   private renderEmergent(fillHalf: number, gap: number): void {
     let poolUsed = 0;
@@ -2829,7 +2818,7 @@ export class RibbonRenderer {
     for (const em of this.ps.emergentCrossings) {
       if (poolUsed >= EMERGENT_POOL) break;
       // REVEAL: same visibility rule as registered crossings (no fade-in
-      // clock - emergent patches are pooled, not stably indexed).
+      // clock - emergent slots are pooled, not stably indexed).
       if (this.revealOn && !this.crossingRevealed(em)) continue;
       if (this.fxMatHot && !this.crossingFxSettled(em)) continue;
       this.ps.bindingPoint(em.over, this.sampleScratch, 0);
@@ -2855,32 +2844,182 @@ export class RibbonRenderer {
 
       used.push(ex, ey);
       const pool = poolUsed++;
-      this.emergentErases[pool].mesh.visible = true;
-      this.emergentFills[pool].mesh.visible = true;
-      this.renderCrossing(
+      this.computeGapSlot(
+        this.emergentBase + pool,
         em,
         -1,
-        this.emergentErases[pool],
-        this.emergentFills[pool],
         null,
         null,
         fillHalf,
-        gap
+        gap,
+        1
       );
-      this.emergentWindows[pool] = this.style.paletteMode
-        ? {
-            chain: em.over.chain,
-            start: this.lastWindowStart,
-            span: this.lastWindowSpan,
-            startFrac: this.lastWindowFracs[0],
-            endFrac: this.lastWindowFracs[1],
-          }
-        : null;
     }
     for (let k = poolUsed; k < EMERGENT_POOL; k++) {
-      this.emergentErases[k].mesh.visible = false;
-      this.emergentFills[k].mesh.visible = false;
-      this.emergentWindows[k] = null;
+      this.gaps.clearSlot(this.emergentBase + k);
+    }
+  }
+
+  // MARKER DISC GAPS: a start/exit disc is an "over pass" whose
+  // polyline is its center point - its thread is hidden inside the
+  // CONCENTRIC circle of radius (disc + gap): the gap's edge curves like a
+  // disc grown to reach it (user spec), not like the disc slid outward.
+  private renderMarkerGaps(fillHalf: number, gap: number): void {
+    const margin = gap + CUT_BIAS;
+    for (let m = 0; m < MARKER_SLOTS; m++) {
+      const slot = this.markerBase + m;
+      const occ = this.markerOccluders[m];
+      const samples = occ ? this.chainSamples[occ.chain] : null;
+      if (
+        !occ ||
+        !samples ||
+        (this.revealOn &&
+          this.revealMulAtCtrl(occ.chain, occ.ctrl) < REVEAL_CROSSING_MIN)
+      ) {
+        this.gaps.clearSlot(slot);
+        continue;
+      }
+      const closed = this.ps.chainBreakAfter[occ.chain] < 0;
+      const total = samples.totalLength;
+      const center = this.paintArcAt(samples, occ.ctrl, closed);
+      this.sampleAtSafe(samples, center, closed, this.sampleScratch, 0);
+      const cx = this.sampleScratch[0];
+      const cy = this.sampleScratch[1];
+      const tx = this.sampleScratch[2];
+      const ty = this.sampleScratch[3];
+      const exitD =
+        occ.radius +
+        margin +
+        this.fadeLength +
+        fillHalf * UNDER_FOOT_PER_HALF +
+        GAP_EXIT_PAD;
+      const winOf = (dir: number): number => {
+        const cap = closed ? total / 4 : dir > 0 ? total - center : center;
+        for (let s = 0; ; s += MARCH_STEP) {
+          const sc = Math.min(s, cap);
+          this.sampleAtSafe(
+            samples,
+            center + dir * sc,
+            closed,
+            this.sampleScratch,
+            0
+          );
+          const d = Math.hypot(
+            this.sampleScratch[0] - cx,
+            this.sampleScratch[1] - cy
+          );
+          if (d >= exitD) return Math.min(cap, sc + MARCH_STEP);
+          if (sc >= cap) return cap;
+        }
+      };
+      const winNeg = winOf(-1);
+      const winPos = winOf(1);
+      this.fineO[0] = cx;
+      this.fineO[1] = cy;
+      this.gaps.writeSlot(
+        slot,
+        {
+          hOver: occ.radius,
+          margin,
+          fade: this.fadeLength,
+          strength: 1,
+          perp: true,
+          arcScale: closed ? total : total / 0.45,
+          centerArc: center,
+          winNeg,
+          winPos,
+          closed,
+          totalU: total,
+          tanX: tx,
+          tanY: ty,
+          selfExcl: 0,
+          polyStart: 0,
+          polyStep: 0,
+          marginScaleNeg: 1,
+          marginScalePos: 1,
+          fadeScaleNeg: 1,
+          fadeScalePos: 1,
+          centerX: cx,
+          centerY: cy,
+          sminK: 0,
+          farK: 0,
+          protNegA: 0,
+          protNegB: 0,
+          protPosA: 0,
+          protPosB: 0,
+          protPts: null,
+          protNegN: 0,
+          protPosN: 0,
+        },
+        this.fineO,
+        1
+      );
+      let wins = this.chainWins.get(occ.chain);
+      if (!wins) {
+        wins = [];
+        this.chainWins.set(occ.chain, wins);
+      }
+      wins.push(slot, center, winNeg, winPos);
+    }
+  }
+
+  // Vertex slot ids from this frame's windows: each window's samples
+  // (padded by one, so every quad touching the window carries the id at
+  // both ends - the fragment's exact arc test does the real windowing,
+  // independent of the flat-varying provoking-vertex convention) get the
+  // slot in ONE component, free across the whole range, so the per-quad
+  // value is consistent. Uploads only chains whose ids changed.
+  private assignGapIds(): void {
+    for (let c = 0; c < this.fills.length; c++) {
+      const fill = this.fills[c];
+      const count = fill.sampleCount;
+      let ids = this.idScratch.get(c);
+      if (!ids) {
+        ids = new Float32Array(count * GAP_SLOTS);
+        this.idScratch.set(c, ids);
+      }
+      ids.fill(-1);
+      const wins = this.chainWins.get(c);
+      const samples = this.chainSamples[c];
+      if (wins && samples && samples.totalLength > 0) {
+        const closed = samples.closed;
+        const per = (closed ? count : count - 1) / samples.totalLength;
+        for (let w = 0; w < wins.length; w += 4) {
+          const slot = wins[w];
+          // Samples are uniform in arc, so floor/ceil already cover every
+          // quad the window touches; one sample of padding absorbs rounding.
+          let k0 = Math.floor((wins[w + 1] - wins[w + 2]) * per) - 1;
+          let k1 = Math.ceil((wins[w + 1] + wins[w + 3]) * per) + 1;
+          if (!closed) {
+            k0 = Math.max(0, k0);
+            k1 = Math.min(count - 1, k1);
+          } else if (k1 - k0 + 1 >= count) {
+            k0 = 0;
+            k1 = count - 1;
+          }
+          let comp = -1;
+          for (let cc = 0; cc < GAP_SLOTS && comp < 0; cc++) {
+            let free = true;
+            for (let k = k0; k <= k1; k++) {
+              const kk = closed ? ((k % count) + count) % count : k;
+              if (ids[kk * GAP_SLOTS + cc] >= 0) {
+                free = false;
+                break;
+              }
+            }
+            if (free) comp = cc;
+          }
+          if (comp < 0) {
+            this.gapOverflow++;
+            continue;
+          }
+          for (let k = k0; k <= k1; k++) {
+            const kk = closed ? ((k % count) + count) % count : k;
+            ids[kk * GAP_SLOTS + comp] = slot;
+          }
+        }
+      }
+      fill.setMaskIds(ids);
     }
   }
 
@@ -2906,8 +3045,8 @@ export class RibbonRenderer {
   // input in place - physics, the reveal and the player's progress all
   // survive, where a scene rebuild reset them. The caller has already
   // applied the gamut config (setGamutConfig) and built the new field.
-  // Over-fill patches follow on their own (renderCrossing re-copies host
-  // colors every frame); fans compose from the live caches each tick.
+  // Fans read the live paint texture (there are no thread copies to
+  // re-sync: the gaps are cut per pixel in the base ribbons).
   recolor(
     baseHue: number,
     pathColor: number,
@@ -2926,8 +3065,6 @@ export class RibbonRenderer {
         this.accentTex = tex;
         bindAccent(tex);
         for (const f of this.fills) f.mesh.texture = tex;
-        for (const f of this.overFills) f.mesh.texture = tex;
-        for (const f of this.emergentFills) f.mesh.texture = tex;
       }
       // Constant-color chains hand writePaint the SAME (mutated) baseRgb.
       for (const f of this.fills) f.invalidateColors();
@@ -2936,8 +3073,11 @@ export class RibbonRenderer {
       this.chainRev.clear();
     } else {
       this.fills.forEach((fill, i) => {
-        const slot = hueGroup?.[i] ?? i;
-        fill.mesh.tint = hslToHex((baseHue + slot * 137.508) % 360, 0.45, 0.64);
+        this.knotRgb[i] = this.knotChainRgb(i);
+        fill.writePaint(
+          new Float32Array(fill.sampleCount).fill(U_BASE),
+          this.knotRgb[i]
+        );
       });
     }
   }
@@ -3124,10 +3264,10 @@ export class RibbonRenderer {
 
   // The light per-frame paint pass: advances the pulse clock and rewrites
   // the UV buffers of affected chains (animated chains every tick, static
-  // ones only when the declaration changed, dropped ones reset once), then
-  // re-copies the over-fill windows riding those chains so crossing patches
-  // recolor in the same frame. Touches no positions and no splines - safe
-  // to run while the physics sleeps. Also owns the flow-undulation clock
+  // ones only when the declaration changed, dropped ones reset once) -
+  // crossings recolor with them for free (their gaps are cut per pixel in
+  // the same ribbons). Touches no positions and no splines - safe to run
+  // while the physics sleeps. Also owns the flow-undulation clock
   // (it receives real dt every frame in all ticker branches, both modes).
   tickPaint(dt: number): void {
     this.tickPaintPalette(dt);
@@ -3656,42 +3796,13 @@ export class RibbonRenderer {
       }
     }
 
+    // The paint lives ONLY in each base ribbon's U/colors: crossing gaps
+    // are cut per pixel, so no over-fill copy has to replay it.
     for (const chain of toWrite) {
       if (!this.chainSamples[chain]) continue;
       this.writeChainPaint(chain, target.has(chain));
       if (target.has(chain)) this.chainRev.set(chain, this.paintRev);
       else this.chainRev.delete(chain);
-
-      const list = this.overChainCrossings.get(chain);
-      if (list) {
-        for (const ci of list) {
-          const span = this.overWindows[ci * 2 + 1];
-          if (span > 0) {
-            // Replay the SAME trims as the solve, or paint ticks would
-            // alternate trimmed/whole-sample ends at the tick rate. Paint
-            // only: the patch's vertices were copied by the solve.
-            this.overFills[ci].repaintFromRibbonWindow(
-              this.fills[chain],
-              this.overWindows[ci * 2],
-              span,
-              this.overWindowFracs[ci * 2],
-              this.overWindowFracs[ci * 2 + 1]
-            );
-          }
-        }
-      }
-      for (let k = 0; k < this.emergentWindows.length; k++) {
-        const w = this.emergentWindows[k];
-        if (w && w.chain === chain) {
-          this.emergentFills[k].repaintFromRibbonWindow(
-            this.fills[chain],
-            w.start,
-            w.span,
-            w.startFrac,
-            w.endFrac
-          );
-        }
-      }
     }
 
     // Junction fillets ride the same tick: live positions, live paint.
@@ -3730,157 +3841,17 @@ export class RibbonRenderer {
     }
   }
 
-  // Build one erase grid from the solved laneCutsPos/Neg scratch: the
-  // station->arc mapping with pinned fade-tail stations, the per-station
-  // miter (mirroring RibbonMesh.update, incl. the P3.34 concave-side
-  // turn-radius clamp), and per-vertex fade coordinates into the ramp
-  // texture. Shared VERBATIM by crossing erases and marker disc gaps -
-  // one implementation, so the two can never drift (the same-geometry
-  // theorem, structural form).
-  private buildEraseGrid(
-    erase: PatchGridMesh,
-    samples: SplineSamples,
-    centerArc: number,
-    fillHalf: number,
-    fadeNeg: number,
-    fadePos: number
-  ): void {
-    const fade = Math.max(fadeNeg, fadePos);
-    const midLane = (ERASE_LANES - 1) / 2;
-    const tailK = fade > 0 ? FADE_TAIL_STATIONS : 0;
-    const kIn0 = tailK;
-    const kIn1 = ERASE_STATIONS - 1 - tailK;
-    for (let k = 0; k < ERASE_STATIONS; k++) {
-      // seg: -1 = neg fade tail, 0 = opaque cut, +1 = pos fade tail;
-      // g = position within the segment (tails: 1/0 at the boundary).
-      let seg = 0;
-      let g = k / (ERASE_STATIONS - 1);
-      if (tailK > 0) {
-        if (k <= kIn0) {
-          seg = -1;
-          g = k / tailK;
-        } else if (k >= kIn1) {
-          seg = 1;
-          g = (k - kIn1) / tailK;
-        } else {
-          seg = 0;
-          g = (k - kIn0) / (kIn1 - kIn0);
-        }
-      }
-
-      // Station miter factor from the local turn of the centerline,
-      // matching the base ribbon's mitered extrusion so the erase keeps
-      // covering it at kinks.
-      const midN = this.laneCutsNeg[midLane];
-      const midP = this.laneCutsPos[midLane];
-      const sMid =
-        centerArc +
-        (seg < 0
-          ? midN - fadeNeg * (1 - g)
-          : seg > 0
-            ? midP + fadePos * g
-            : midN + (midP - midN) * g);
-      this.sampleAt(samples, sMid - MITER_PROBE, this.sampleScratch, 0);
-      const pax = this.sampleScratch[0];
-      const pay = this.sampleScratch[1];
-      this.sampleAt(samples, sMid + MITER_PROBE, this.sampleScratch, 0);
-      const pbx = this.sampleScratch[0];
-      const pby = this.sampleScratch[1];
-      this.sampleAt(samples, sMid, this.sampleScratch, 0);
-      let ax = this.sampleScratch[0] - pax;
-      let ay = this.sampleScratch[1] - pay;
-      let bx = pbx - this.sampleScratch[0];
-      let by = pby - this.sampleScratch[1];
-      let la = Math.hypot(ax, ay);
-      let lb = Math.hypot(bx, by);
-      // Zero-length legs borrow the other leg (both zero = straight),
-      // exactly as RibbonMesh.update does - tucked tips collapse samples.
-      if (la < 1e-6 && lb < 1e-6) {
-        ax = bx = 1;
-        ay = by = 0;
-        la = lb = 1;
-      } else if (la < 1e-6) {
-        ax = bx;
-        ay = by;
-        la = lb;
-      } else if (lb < 1e-6) {
-        bx = ax;
-        by = ay;
-        lb = la;
-      }
-      ax /= la;
-      ay /= la;
-      bx /= lb;
-      by /= lb;
-      const dot = ax * bx + ay * by;
-      const cosHalf = Math.sqrt(Math.max((1 + dot) / 2, 0.25));
-
-      // Per-side widths mirroring RibbonMesh.update exactly: mitered
-      // width, with the CONCAVE side clamped to the local turn radius
-      // (P3.34) so the erase quotes the base ribbon's RENDERED footprint
-      // (+ pad) instead of slashing whatever is drawn beside a fold.
-      let wInner = fillHalf / cosHalf;
-      const sinHalf = Math.sqrt(Math.max((1 - dot) / 2, 0));
-      if (sinHalf > 1e-4) {
-        const radius = ((la + lb) / 4) * (cosHalf / sinHalf);
-        wInner = Math.min(wInner, Math.max(radius * 0.95, fillHalf * 0.3));
-      }
-      const cross = ax * by - ay * bx;
-      const wOuterE = fillHalf / cosHalf + ERASE_WIDTH_PAD;
-      const wInnerE = wInner + ERASE_WIDTH_PAD;
-      const wLeftE = cross > 0 ? wInnerE : wOuterE;
-      const wRightE = cross > 0 ? wOuterE : wInnerE;
-
-      for (let l = 0; l < ERASE_LANES; l++) {
-        const s =
-          seg < 0
-            ? this.laneCutsNeg[l] - fadeNeg * (1 - g)
-            : seg > 0
-              ? this.laneCutsPos[l] + fadePos * g
-              : this.laneCutsNeg[l] +
-                (this.laneCutsPos[l] - this.laneCutsNeg[l]) * g;
-        // Fade coordinate: how far this station overshoots the lane's
-        // solved cut interval, as a fraction of the fade length.
-        const over = Math.max(
-          this.laneCutsNeg[l] - s,
-          s - this.laneCutsPos[l]
-        );
-        const f = 1 - (2 * l) / (ERASE_LANES - 1);
-        const u = (f >= 0 ? wLeftE : wRightE) * f;
-        this.sampleAt(samples, centerArc + s, this.sampleScratch, 0);
-        erase.setVertex(
-          k,
-          l,
-          this.sampleScratch[0] - this.sampleScratch[3] * u,
-          this.sampleScratch[1] + this.sampleScratch[2] * u
-        );
-        const fSide = seg < 0 ? fadeNeg : fadePos;
-        erase.setVertexU(k, l, fSide > 0 && over > 0 ? over / fSide : 0);
-      }
-    }
-    erase.commit();
-  }
-
-  // Register (or clear) marker disc occluders; meshes pool to the list
-  // length and rebuild every update like crossing erases.
+  // Register (or clear) marker disc occluders: each gets one gap slot,
+  // solved every update() like a crossing's (see renderMarkerGaps). At
+  // most MARKER_SLOTS discs.
   setMarkerOccluders(
     list: Array<{ chain: number; ctrl: number; radius: number }>
   ): void {
-    this.markerOccluders = list;
-    while (this.markerErases.length < list.length) {
-      const erase = new PatchGridMesh(ERASE_STATIONS, ERASE_LANES, 0xffffff);
-      erase.mesh.texture = fadeTexture();
-      erase.mesh.blendMode = "erase";
-      this.eraseLayerRef?.addChild(erase.mesh);
-      this.markerErases.push(erase);
-    }
-    for (let i = 0; i < this.markerErases.length; i++) {
-      this.markerErases[i].mesh.visible = i < list.length;
-    }
+    this.markerOccluders = list.slice(0, MARKER_SLOTS);
   }
 
-  // World position of a marker: the SAME spline sample its gap grid
-  // marches from, so the disc and the gap stay concentric under flow and
+  // World position of a marker: the SAME spline sample its gap slot
+  // centers on, so the disc and the gap stay concentric under flow and
   // display adjustments (physics-position markers sat slightly off the
   // rendered centerline).
   markerWorld(chain: number, ctrl: number, out: Float32Array): void {
@@ -3900,96 +3871,6 @@ export class RibbonRenderer {
     );
     out[0] = this.sampleScratch[0];
     out[1] = this.sampleScratch[1];
-  }
-
-  // MARKER DISC GAPS: a start/exit disc is an "over pass" whose
-  // silhouette is a circle - its thread gets a REAL erase grid via the
-  // crossing machinery (lane marches + buildEraseGrid's miter/fade), so
-  // these gaps fade like every other gap. The margin, unlike a crossing's,
-  // is CONCENTRIC: lanes march to the circle of radius (disc + gap).
-  private renderMarkerGaps(fillHalf: number, gap: number): void {
-    for (let m = 0; m < this.markerOccluders.length; m++) {
-      const occ = this.markerOccluders[m];
-      const erase = this.markerErases[m];
-      const samples = this.chainSamples[occ.chain];
-      if (!samples || !erase) continue;
-      if (
-        this.revealOn &&
-        this.revealMulAtCtrl(occ.chain, occ.ctrl) < REVEAL_CROSSING_MIN
-      ) {
-        erase.mesh.visible = false;
-        continue;
-      }
-      erase.mesh.visible = true;
-      const closed = this.ps.chainBreakAfter[occ.chain] < 0;
-      const total = samples.totalLength;
-      const center = this.paintArcAt(samples, occ.ctrl, closed);
-      this.sampleAtSafe(samples, center, closed, this.sampleScratch, 0);
-      const cx = this.sampleScratch[0];
-      const cy = this.sampleScratch[1];
-      const eraseW = fillHalf + ERASE_WIDTH_PAD;
-      const marchMax = occ.radius + gap + 1.2;
-      // CONCENTRIC margin: the gap's edge is the circle of radius
-      // (disc + gap) around the disc center - a circle as big as the disc
-      // would be if it reached the gap's edge. The crossing-style
-      // arc-length margin (cut at the disc's own circle, then + gap along
-      // the thread) slid the disc's circle outward instead, so the gap
-      // edge kept the DISC's tighter curvature (user report).
-      const gapRadius = occ.radius + gap;
-      for (let dir = -1; dir <= 1; dir += 2) {
-        const cuts = dir > 0 ? this.laneCutsPos : this.laneCutsNeg;
-        const sMax = closed
-          ? Math.min(marchMax, total / 4)
-          : Math.min(
-              marchMax,
-              dir > 0 ? total - center - 1e-3 : center - 1e-3
-            );
-        for (let l = 0; l < ERASE_LANES; l++) {
-          const u = eraseW * (1 - (2 * l) / (ERASE_LANES - 1));
-          let prevG = -gapRadius;
-          let prevS = 0;
-          let cut = Number.NaN;
-          for (let s = MARCH_STEP; ; s += MARCH_STEP) {
-            const sc = Math.min(s, Math.max(sMax, MARCH_STEP));
-            this.sampleAtSafe(
-              samples,
-              center + dir * sc,
-              closed,
-              this.sampleScratch,
-              0
-            );
-            const px = this.sampleScratch[0] - this.sampleScratch[3] * u;
-            const py = this.sampleScratch[1] + this.sampleScratch[2] * u;
-            const g = Math.hypot(px - cx, py - cy) - gapRadius;
-            if (g >= 0) {
-              cut =
-                dir *
-                (prevS + (sc - prevS) * (prevG / (prevG - g || 1e-6)));
-              break;
-            }
-            prevS = sc;
-            prevG = g;
-            if (sc >= sMax) break;
-          }
-          if (Number.isNaN(cut)) cut = dir * Math.max(sMax, MARCH_STEP);
-          cuts[l] = cut + dir * CUT_BIAS;
-          if (!closed) {
-            const lo = -center + 1e-3;
-            const hi = total - center - 1e-3;
-            if (cuts[l] < lo) cuts[l] = lo;
-            if (cuts[l] > hi) cuts[l] = hi;
-          }
-        }
-      }
-      this.buildEraseGrid(
-        erase,
-        samples,
-        center,
-        fillHalf,
-        this.fadeLength,
-        this.fadeLength
-      );
-    }
   }
 
   // Arc of a ctrl for PAINT purposes. arcAt's closing modulo is correct
@@ -4619,11 +4500,10 @@ export class RibbonRenderer {
     return 1;
   }
 
-  // Both passes of a crossing settled enough for its erase + fill to show:
-  // materializing passes must be solid (a fill copying a translucent host
-  // over the translucent host double-covers the window beyond the erase);
-  // rainbow passes must be past their width swell (the cut solve and the
-  // erase lanes assume the normal thread width).
+  // Both passes of a crossing settled enough for its gap to show:
+  // materializing passes must be solid (a gap through a translucent over
+  // thread would read as a hole), and rainbow passes must be past their
+  // width swell (the slot solve assumes the normal thread width).
   private crossingFxSettled(crossing: {
     over: CrossingPass;
     under: CrossingPass;
@@ -4640,19 +4520,6 @@ export class RibbonRenderer {
       return wo <= RAINBOW_SWELL_MIN_P && wu <= RAINBOW_SWELL_MIN_P;
     }
     return wo > -FX_SOLID_EPS && wu > -FX_SOLID_EPS;
-  }
-
-  // Base draw order at a crossing: fills stack in chain order, and a
-  // chain's own strip draws in sample (ctrl) order - true when the UNDER
-  // pass's material is drawn above the over pass's.
-  private underDrawnOnTop(crossing: {
-    over: CrossingPass;
-    under: CrossingPass;
-  }): boolean {
-    if (crossing.under.chain !== crossing.over.chain) {
-      return crossing.under.chain > crossing.over.chain;
-    }
-    return this.renderCtrl(crossing.under) > this.renderCtrl(crossing.over);
   }
 
   // REVEAL frontier glow (palette mode): push the paint U of the samples
@@ -5024,7 +4891,7 @@ export class RibbonRenderer {
   //
   // GATED: the field animates on the GPU, so a paint-only tick just
   // flushes the paint rows its writes touched. The geometry rebuilds when
-  // an update() ran (positions, under-gap windows, over-fill windows and
+  // an update() ran (positions, gap windows - the fans' masks - and
   // visibility), a live joinery input moved, or a reveal / appearance FX
   // is gating joints and fading fans. `force` = rebuild regardless (probes).
   rebuildFillets(force = false): void {
@@ -5250,10 +5117,10 @@ export class RibbonRenderer {
     };
 
     // THE JUNCTION FIELD: one continuous color function around each
-    // junction, shared by EVERY overlay primitive there (and by over-fills
-    // near the joint). A query point's direction from the junction picks
-    // the two bracketing arms (by their angles at the point's radius);
-    // each arm is sampled at the point's distance PROJECTED onto it (a
+    // junction, shared by EVERY overlay primitive there. A query point's
+    // direction from the junction picks the two bracketing arms (by their
+    // angles at the point's radius); each arm is sampled at the point's
+    // distance PROJECTED onto it (a
     // point beside a thread reads its cross-section, a point along it
     // reads its ramp), composed with its own paint, and the two blend
     // edge-aware across the gap between their ribbons (FIELD_GLSL in
@@ -5300,6 +5167,7 @@ export class RibbonRenderer {
       jn: number; // Index into junctionArms (for the layer vote).
       fx: number; // Fan transparency vs the arms' appearance FX.
       rb: number; // Record texel index (-1: < 2 arms, no field).
+      mask: Float32Array; // Gap slots masking this joint's fans.
     }
     // Radial profile of one arm around its joint (JArm.pth/ps): walk the
     // centerline outward in FIELD_PROF_ARC steps and resample angle + arc
@@ -5505,6 +5373,11 @@ export class RibbonRenderer {
           );
         }
       }
+      let mask = this.jointMaskPool[recs.length];
+      if (!mask) {
+        mask = new Float32Array(GAP_SLOTS);
+        this.jointMaskPool[recs.length] = mask;
+      }
       recs.push({
         jx,
         jy,
@@ -5513,6 +5386,7 @@ export class RibbonRenderer {
         jn: recs.length,
         fx: fanFx(solid),
         rb: -1,
+        mask,
       });
     }
     // JUNCTION RECORDS (joints with >= 2 arms - nothing else draws or reads
@@ -5628,107 +5502,98 @@ export class RibbonRenderer {
       record: (ji) => recs[ji]?.rb ?? -1,
     };
 
-    // FILLS WEAR THE JOINT FIELD: a crossing parked beside a fused joint
-    // (a third of all over-fills reach within 1.5 fillHalf of a joint
-    // center) repaints its over thread with EXACT ribbon colors on top of
-    // the web, and its window end / edges cut a hard line through the
-    // joint's blended field (the field and the ribbons only agree off the
-    // overlap core). Capping the fill short of the joint is not an option:
-    // the erase is restricted to the fill's window (fillBound), so the
-    // under thread would stop being cut there - a wrong weave. Instead,
-    // fill PIXELS within FILL_JOINT_IN fillHalfs of a joint wear the field
-    // itself, easing back to the exact material by FILL_JOINT_OUT - on the
-    // GPU (FILL_FRAG). The CPU only lists each visible patch's nearby
-    // joints (record index + 1, the four nearest to its bounds within the
-    // outer radius; any pixel within reach of a joint has its patch's
-    // bounds within reach too).
-    // OWN ARMS ONLY: a patch wears a joint's field only where its window
-    // IS one of that joint's arms (same chain, overlapping arc span near
-    // the joint). A FOREIGN thread passing over near a joint is not the
-    // joint's material: wearing the field painted the joint's colors -
-    // and its gameplay paint: pulse glow, crest troughs, the traveled
-    // path - onto threads that merely pass by (half of the patches near
-    // the user's head junction).
-    {
-      const r1 = fillHalf * FILL_JOINT_OUT;
-      const r1sq = r1 * r1;
-      const reach = r1 + fillHalf;
-      const live = recs.filter((rc) => rc.on && rc.rb >= 0);
-      const bb = this.fillBoundsScratch;
-      const cand = this.jointCand;
-      const candD = this.jointCandD;
-      // Does the window's arc span [wa0, wa1] (unwrapped, wa1 >= wa0) on
-      // `chain` overlap one of the joint's arms within `reach` of it?
-      const ownsArm = (
-        rc: JRec,
-        chain: number,
-        wa0: number,
-        wa1: number
-      ): boolean => {
-        for (const a of rc.arms) {
-          if (a.chain !== chain) continue;
-          const len = Math.min(a.domain, reach);
-          const s0 = a.dir > 0 ? a.arc0 : a.arc0 - len;
-          const s1 = s0 + len;
-          if (!a.closed) {
-            if (wa0 <= s1 && wa1 >= s0) return true;
-            continue;
-          }
-          const T = a.total;
-          for (let k = -1; k <= 1; k++) {
-            if (wa0 + k * T <= s1 && wa1 + k * T >= s0) return true;
-          }
+    // (The over-fill "fills wear the joint field" pass is gone with the
+    // over fills themselves: crossing gaps are per-pixel, so no copy of an
+    // over thread is drawn on top of the web.)
+    // JUNCTION GAP MASKS (per-pixel gaps; see gap_mask.ts): a joint's fans
+    // are masked by the gap slots of the crossings whose UNDER pass is one
+    // of its arms, whose window comes within the joinery's reach, and
+    // whose OVER pass is foreign to the joint. A junction fan hides only
+    // inside that over thread's silhouette, so the thread passing over the
+    // arm shows on top of the web (what its over-fill used to paint - fans
+    // draw above every base ribbon); no casing grooves the joint's own
+    // surfaces. Free-tip caps (below) are the under thread's own material
+    // and take the full mask.
+    const fanReach =
+      Math.max(fillHalf * FILLET_REACH_PER_HALF * this.cuspRadius, fillHalf) +
+      fillHalf;
+    // A slot whose over pass is one of the joint's OWN arms (within the
+    // joinery's reach of the joint) is not listed: the field already
+    // renders that arm's material, and cutting the joint's disc along it
+    // exposed raw tucked tips. Listed slots get the junction-fan id
+    // -(slot + 2): the foreign over thread's silhouette only.
+    const ownArm = (rec: JRec, slot: number): boolean => {
+      const oc = this.slotOverChain[slot];
+      if (oc < 0) return false;
+      const oa = this.slotOverArc[slot];
+      for (const a of rec.arms) {
+        if (a.chain !== oc) continue;
+        let along = (oa - a.arc0) * a.dir;
+        if (a.closed) {
+          along = ((along % a.total) + a.total) % a.total;
+          if (along > a.total / 2) along -= a.total;
         }
-        return false;
-      };
-      const apply = (
-        fill: RibbonMesh,
-        chain: number,
-        start: number,
-        span: number
-      ): void => {
-        cand.fill(0);
-        const samples = chain >= 0 ? this.chainSamples[chain] : null;
-        if (fill.mesh.visible && span > 0 && samples && live.length > 0) {
-          const arcPer =
-            samples.totalLength /
-            (samples.closed ? samples.count : samples.count - 1);
-          const wa0 = start * arcPer;
-          const wa1 = (start + span - 1) * arcPer;
-          fill.bounds(bb);
-          candD.fill(Infinity);
-          for (const rc of live) {
-            const dx = Math.max(bb[0] - rc.jx, 0, rc.jx - bb[2]);
-            const dy = Math.max(bb[1] - rc.jy, 0, rc.jy - bb[3]);
-            const d2 = dx * dx + dy * dy;
-            if (d2 >= r1sq || d2 >= candD[3]) continue;
-            if (!ownsArm(rc, chain, wa0, wa1)) continue;
-            // Sorted insertion into the four nearest.
-            let k = 3;
-            while (k > 0 && candD[k - 1] > d2) {
-              candD[k] = candD[k - 1];
-              cand[k] = cand[k - 1];
-              k--;
+        if (along > -fillHalf && along < fanReach + fillHalf) return true;
+      }
+      return false;
+    };
+    const jointMask = (rec: JRec): void => {
+      rec.mask.fill(-1);
+      const cand: number[] = [];
+      for (const a of rec.arms) {
+        const wins = this.chainWins.get(a.chain);
+        if (!wins) continue;
+        for (let w = 0; w < wins.length; w += 4) {
+          let along = (wins[w + 1] - a.arc0) * a.dir;
+          if (a.closed) {
+            along = ((along % a.total) + a.total) % a.total;
+            if (along > a.total / 2) along -= a.total;
+          }
+          const lo = along - (a.dir > 0 ? wins[w + 2] : wins[w + 3]);
+          const hi = along + (a.dir > 0 ? wins[w + 3] : wins[w + 2]);
+          if (hi < -fillHalf || lo > fanReach) continue;
+          const slot = wins[w];
+          if (ownArm(rec, slot)) continue;
+          const dist = Math.max(0, lo);
+          // Search the SLOT entries only: cand interleaves [slot, dist],
+          // and slot 0 would match any dist of exactly 0.
+          let at = -1;
+          for (let i = 0; i < cand.length; i += 2) {
+            if (cand[i] === slot) {
+              at = i;
+              break;
             }
-            candD[k] = d2;
-            cand[k] = rc.rb + 1;
+          }
+          if (at < 0) cand.push(slot, dist);
+          else cand[at + 1] = Math.min(cand[at + 1], dist);
+        }
+      }
+      // Nearest GAP_SLOTS crossings win.
+      const n = cand.length / 2;
+      for (let k = 0; k < Math.min(GAP_SLOTS, n); k++) {
+        let bi = -1;
+        let bd = Infinity;
+        for (let i = 0; i < n; i++) {
+          if (cand[i * 2] >= 0 && cand[i * 2 + 1] < bd) {
+            bd = cand[i * 2 + 1];
+            bi = i;
           }
         }
-        fill.setJoints(cand);
-      };
-      this.ps.crossings.forEach((cr, c) => {
-        apply(
-          this.overFills[c],
-          cr.over.chain,
-          this.overWindows[c * 2],
-          this.overWindows[c * 2 + 1]
-        );
-      });
-      this.emergentFills.forEach((f, k) => {
-        const w = this.emergentWindows[k];
-        apply(f, w ? w.chain : -1, w ? w.start : 0, w ? w.span : 0);
-      });
-    }
+        if (bi < 0) break;
+        rec.mask[k] = -(cand[bi * 2] + 2);
+        cand[bi * 2] = -1;
+      }
+    };
+    for (const rec of recs) jointMask(rec);
+    const setFanMask = (ids: Float32Array | null): void => {
+      if (ids) {
+        fmBottom.maskIds.set(ids);
+        fmTop.maskIds.set(ids);
+      } else {
+        fmBottom.maskIds.fill(-1);
+        fmTop.maskIds.fill(-1);
+      }
+    };
     // Every junction fan (seal disc, fused-tip disc, wedge) goes through
     // here: geometry plus the joint's record index - the shader evaluates
     // the field per pixel, so one apex-to-rim triangle per rim segment
@@ -5781,15 +5646,28 @@ export class RibbonRenderer {
       const tx = samples.tangents[k * 2];
       const ty = samples.tangents[k * 2 + 1];
       const tl = Math.hypot(tx, ty) || 1;
+      // A tip diving under something wears that gap on its cap disc too.
+      const tipArc = tip.atEnd ? samples.totalLength : 0;
+      const tm = this.tipMaskScratch;
+      tm.fill(-1);
+      const tw = this.chainWins.get(tip.chain);
+      for (let wi = 0, n = 0; tw && wi < tw.length && n < GAP_SLOTS; wi += 4) {
+        const off = tipArc - tw[wi + 1];
+        if (off >= -tw[wi + 2] - fillHalf && off <= tw[wi + 3] + fillHalf) {
+          tm[n++] = tw[wi];
+        }
+      }
+      setFanMask(tm);
       pushDisc(
         cx,
         cy,
         fillHalf * 0.99,
         tip.chain,
-        tip.atEnd ? samples.totalLength : 0,
+        tipArc,
         tx / tl,
         ty / tl
       );
+      setFanMask(null);
     }
     // Tucked fused tips get the same disc (rounds the cap, covers its
     // corner ears and the cap/host sliver). The tuck point IS a junction,
@@ -5818,7 +5696,9 @@ export class RibbonRenderer {
       if (rec) {
         if (rec.on) {
           fm = layerFor(rec);
+          setFanMask(rec.mask);
           pushDiscField(rec, cx, cy, fillHalf * 0.99);
+          setFanMask(null);
           fm = fmBottom;
         }
         continue;
@@ -5881,6 +5761,7 @@ export class RibbonRenderer {
       const arms = rec.arms;
       if (arms.length < 2) continue;
       fm = layerFor(rec);
+      setFanMask(rec.mask);
       const jointTop = arms.some(armTop);
       if (!rec.on) continue; // REVEAL: joinery waits for its arms.
 
@@ -6062,6 +5943,7 @@ export class RibbonRenderer {
         emitFan(rec, jx, jy, rim);
       }
     }
+    setFanMask(null);
     finish();
   }
 

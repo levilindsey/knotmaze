@@ -30,10 +30,16 @@
 // Samplers are declared highp (fragment samplers default to lowp, which
 // some mobile GPUs honor for float textures).
 //
-// Both textures and both shaders live for the PAGE lifetime and are
+// Both textures and the shader live for the PAGE lifetime and are
 // refilled per scene (grown in place when a bigger scene needs more rows)
 // - never destroyed: pixi's retained render state can reference a source
 // the frame after a rebuild (the PALETTE_CACHE lore).
+//
+// PER-PIXEL GAPS (gap_mask.ts): fan pixels are masked by the gap slots
+// their vertices carry (aMaskId) - the same casing test the ribbons run -
+// so a web beside a diving arm dives with it. (The over-fill FILL shader
+// that wore this field is gone with the over-fills: no thread is copied
+// over the webs any more.)
 
 import {
   Buffer,
@@ -46,6 +52,7 @@ import {
   extensions,
 } from "pixi.js";
 import type { MeshGeometry } from "pixi.js";
+import { GAP_FRAG_LIB, defaultGapTexture } from "./gap_mask";
 
 // Field geometry constants (shared with the CPU side in ribbon_renderer):
 // arm radial profiles resample the centerline (walked in FIELD_PROF_ARC
@@ -55,11 +62,6 @@ import type { MeshGeometry } from "pixi.js";
 export const FIELD_PROF_DR = 0.06;
 export const FIELD_PROF_ARC = 0.08;
 export const FIELD_BLEND_MIN = 0.5;
-// Over-fill pixels within FILL_JOINT_IN fillHalfs of a fused joint wear the
-// junction field, easing back to the exact copied material by
-// FILL_JOINT_OUT (see "FILLS WEAR THE JOINT FIELD" in rebuildFillets).
-export const FILL_JOINT_IN = 2.0;
-export const FILL_JOINT_OUT = 3.0;
 // Arms per junction the shader scans (its loop bound). The fabric's fused
 // junctions carry 3 (splice) or 4 (merge) arms.
 export const MAX_ARMS = 12;
@@ -226,14 +228,14 @@ export function recordData(): FloatRows {
   return RECORD_DATA;
 }
 
-// Field parameters shared by both shaders (live: thread width and
-// cuspRadius are sliders). uJParams = (fillHalf, profN, fill-joint inner
-// radius, outer radius); uJParams2 = (FIELD_PROF_DR, FIELD_BLEND_MIN, 0, 0).
+// Field parameters (live: thread width and cuspRadius are sliders).
+// uJParams = (fillHalf, profN, 0, 0) - .zw carried the over-fills'
+// joint radii; uJParams2 = (FIELD_PROF_DR, FIELD_BLEND_MIN, 0, 0).
 let FIELD_UNIFORMS: UniformGroup | null = null;
 function fieldUniforms(): UniformGroup {
   if (!FIELD_UNIFORMS) {
     FIELD_UNIFORMS = new UniformGroup({
-      uJParams: { value: new Float32Array([0.21, 2, 0.42, 0.63]), type: "vec4<f32>" },
+      uJParams: { value: new Float32Array([0.21, 2, 0, 0]), type: "vec4<f32>" },
       uJParams2: {
         value: new Float32Array([FIELD_PROF_DR, FIELD_BLEND_MIN, 0, 0]),
         type: "vec4<f32>",
@@ -246,8 +248,6 @@ export function setFieldParams(fillHalf: number, profN: number): void {
   const u = fieldUniforms().uniforms as { uJParams: Float32Array };
   u.uJParams[0] = fillHalf;
   u.uJParams[1] = profN;
-  u.uJParams[2] = fillHalf * FILL_JOINT_IN;
-  u.uJParams[3] = fillHalf * FILL_JOINT_OUT;
 }
 
 // ---------------------------------------------------------------------------
@@ -408,15 +408,18 @@ uniform vec4 uColor;
 `;
 
 // Junction fans (seal discs, fused-tip discs, wedges, free-tip caps): the
-// vertex carries only its position and its record's texel index.
+// vertex carries its position, its record's texel index, and the gap slots
+// masking its joint (aMaskId, see gap_mask.ts).
 const JUNCTION_VERT = /* glsl */ `#version 300 es
 precision highp float;
 
 in vec2 aPosition;
 in float aRec;
+in vec4 aMaskId;
 
 out vec2 vPos;
 flat out float vRec;
+flat out vec4 vMaskId;
 out vec4 vColor;
 ${MESH_UNIFORMS}
 void main(void) {
@@ -424,162 +427,46 @@ void main(void) {
   gl_Position = vec4((mvp * vec3(aPosition, 1.0)).xy, 0.0, 1.0);
   vPos = aPosition;
   vRec = aRec;
+  vMaskId = aMaskId;
   vColor = uColor * uWorldColorAlpha;
 }
 `;
 
 // Header .w = fx: [-1, 0) is the appearance-FX materialize transparency
-// (fans fade in with their least-settled arm), 0 = inert.
+// (fans fade in with their least-settled arm), 0 = inert. The gap mask
+// (fan mode: no window, header tangent) scales the premultiplied output;
+// pxW comes from fwidth() HERE, in uniform control flow.
 const JUNCTION_FRAG = /* glsl */ `#version 300 es
 ${FIELD_GLSL}
 in vec2 vPos;
 flat in float vRec;
+flat in vec4 vMaskId;
 in vec4 vColor;
 
 out vec4 finalColor;
-
+${GAP_FRAG_LIB}
 void main(void) {
+  vec2 gfw = fwidth(vPos);
+  float pxW = max(max(gfw.x, gfw.y), 1e-5);
   int rec = int(vRec + 0.5);
   vec3 rgb = junctionField(rec, vPos);
   float fx = jAt(rec).w;
   float aM = fx < 0.0 ? clamp(1.0 + fx, 0.0, 1.0) : 1.0;
-  finalColor = vec4(rgb, 1.0) * vColor * aM;
-}
-`;
-
-// Over-fill / emergent-fill patches: the section shader plus FILLS WEAR
-// THE JOINT FIELD - aJoint carries up to four nearby junction records
-// (texel index + 1; 0 = none, constant across a patch). Per pixel, the
-// nearest joint within the outer radius blends its (composed) field over
-// the patch's own COMPOSED color - weight 1 inside the inner radius,
-// smoothstepping to 0 at the outer; between two joints the hand-off is a
-// smooth band across the bisector. Composed colors blend, never U (the
-// old per-vertex override lerped U toward U_BASE: a band-B fill swept
-// through gold on its way to the field).
-const FILL_VERT = /* glsl */ `#version 300 es
-precision highp float;
-
-in vec2 aPosition;
-in vec2 aUV;
-in vec3 aColor;
-in float aFx;
-in vec4 aJoint;
-
-out vec2 vUV;
-out vec3 vSection;
-out vec4 vColor;
-out float vFx;
-out vec2 vPos;
-flat out vec4 vJ;
-${MESH_UNIFORMS}
-void main(void) {
-  mat3 mvp = uProjectionMatrix * uWorldTransformMatrix * uTransformMatrix;
-  gl_Position = vec4((mvp * vec3(aPosition, 1.0)).xy, 0.0, 1.0);
-  vUV = aUV;
-  vSection = aColor;
-  vColor = uColor * uWorldColorAlpha;
-  vFx = aFx;
-  vPos = aPosition;
-  vJ = aJoint;
-}
-`;
-
-const FILL_FRAG = /* glsl */ `#version 300 es
-${FIELD_GLSL}
-in vec2 vUV;
-in vec3 vSection;
-in vec4 vColor;
-in float vFx;
-in vec2 vPos;
-flat in vec4 vJ;
-
-out vec4 finalColor;
-
-void considerJoint(float c, inout float d1, inout int r1, inout float d2, inout int r2) {
-  if (c < 0.5) return;
-  int rec = int(c - 0.5);
-  float d = distance(vPos, jAt(rec).xy);
-  if (d < d1) {
-    d2 = d1;
-    r2 = r1;
-    d1 = d;
-    r1 = rec;
-  } else if (d < d2) {
-    d2 = d;
-    r2 = rec;
+  float gk = gapKeepAt(pxW, vPos, -1.0, vec2(0.0), vMaskId);
+  if (gk < 1.0 && gapProbe()) {
+    rgb = mix(rgb, vec3(1.0, 0.0, 0.85), (1.0 - gk) * 0.75);
+    gk = 1.0;
   }
-}
-
-float jointWeight(float d) {
-  float rIn = uJParams.z;
-  float rOut = uJParams.w;
-  if (d >= rOut) return 0.0;
-  if (d <= rIn) return 1.0;
-  float t = (d - rIn) / (rOut - rIn);
-  return 1.0 - t * t * (3.0 - 2.0 * t);
-}
-
-void main(void) {
-  vec3 base = vSection;
-  vec4 acc = texture(uTexture, vec2(vUV.x, 0.5));
-  // How much reveal FX (rainbow stripes, white wash) shows. The joint
-  // field yields to it, so a patch shows exactly what its own ribbon shows
-  // while the FX plays (the fans stay hidden until their arms settle).
-  float fxShow = 0.0;
-  if (vFx > 0.0) {
-    float p = min(vFx, 1.0);
-    int bi = int(min(vUV.y, 0.99999) * 6.0);
-    vec3 stripe = bi == 0 ? vec3(0.92, 0.15, 0.18)
-      : bi == 1 ? vec3(1.0, 0.55, 0.08)
-      : bi == 2 ? vec3(1.0, 0.88, 0.12)
-      : bi == 3 ? vec3(0.12, 0.78, 0.3)
-      : bi == 4 ? vec3(0.15, 0.42, 1.0)
-      : vec3(0.58, 0.25, 0.95);
-    float rb = smoothstep(0.30, 0.52, p);
-    float wh = smoothstep(0.06, 0.26, p) * (1.0 - smoothstep(0.38, 0.60, p));
-    base = mix(base, stripe, rb);
-    base = mix(base, vec3(0.93, 0.93, 0.95), wh * 0.6);
-    fxShow = max(rb, wh);
-  }
-  vec3 rgb = mix(base, acc.rgb, acc.a);
-  if (vJ.x > 0.5 && fxShow < 1.0) {
-    float d1 = 1e9;
-    float d2 = 1e9;
-    int r1 = -1;
-    int r2 = -1;
-    considerJoint(vJ.x, d1, r1, d2, r2);
-    considerJoint(vJ.y, d1, r1, d2, r2);
-    considerJoint(vJ.z, d1, r1, d2, r2);
-    considerJoint(vJ.w, d1, r1, d2, r2);
-    float w1 = r1 >= 0 ? jointWeight(d1) : 0.0;
-    if (w1 > 0.0) {
-      // Each joint PULLS the patch toward its own field by its own weight;
-      // equidistant from two joints the pulls hand off smoothly (q = 0.5 on
-      // the bisector) instead of switching fields along it. Weighting the
-      // pulls - not mixing fields and weights separately - keeps the far
-      // joint's share as small as its weight, so nothing steps where it
-      // leaves range.
-      float q = 1.0;
-      float w2 = 0.0;
-      float band = uJParams.x;
-      if (r2 >= 0 && d2 - d1 < band) {
-        float s = (d2 - d1) / band;
-        q = 0.5 + 0.5 * s * s * (3.0 - 2.0 * s);
-        w2 = jointWeight(d2);
-      }
-      vec3 pull = q * w1 * (junctionField(r1, vPos) - rgb);
-      if (w2 > 0.0) pull += (1.0 - q) * w2 * (junctionField(r2, vPos) - rgb);
-      rgb += pull * (1.0 - fxShow);
-    }
-  }
-  float aM = vFx < 0.0 ? clamp(1.0 + vFx, 0.0, 1.0) : 1.0;
-  finalColor = vec4(rgb, 1.0) * vColor * aM;
+  if (gk <= 0.002) discard;
+  finalColor = vec4(rgb, 1.0) * vColor * (aM * gk);
 }
 `;
 
 type FieldShader = Shader & { texture: Texture };
 let JUNCTION_SHADER: FieldShader | null = null;
-let FILL_SHADER: FieldShader | null = null;
+// The current scene's gap-slot table (bindFieldGap) - the shader is built
+// lazily, after the renderer bound it.
+let GAP_TEX: Texture | null = null;
 
 function makeShader(
   vertex: string,
@@ -594,6 +481,7 @@ function makeShader(
       uSampler: accent.source.style,
       uJData: recordData().source,
       uPData: paintData().source,
+      uGapData: (GAP_TEX ?? defaultGapTexture()).source,
       fieldUniforms: fieldUniforms(),
     },
   }) as FieldShader;
@@ -613,25 +501,27 @@ export function junctionShader(accent: Texture): FieldShader {
   return JUNCTION_SHADER;
 }
 
-export function fillShader(accent: Texture): FieldShader {
-  if (!FILL_SHADER) {
-    FILL_SHADER = makeShader(FILL_VERT, FILL_FRAG, "fill-joint-field", accent);
-  }
-  return FILL_SHADER;
-}
-
-// Point both field shaders at an accent strip (custom shaders ignore
+// Point the field shader at an accent strip (custom shaders ignore
 // mesh.texture - see bindAccent in ribbon_renderer).
 export function bindFieldAccent(tex: Texture): void {
-  for (const sh of [JUNCTION_SHADER, FILL_SHADER]) {
-    if (!sh || sh.texture === tex) continue;
-    sh.resources.uTexture = tex.source;
-    sh.resources.uSampler = tex.source.style;
-    sh.texture = tex;
+  const sh = JUNCTION_SHADER;
+  if (!sh || sh.texture === tex) return;
+  sh.resources.uTexture = tex.source;
+  sh.resources.uSampler = tex.source.style;
+  sh.texture = tex;
+}
+
+// Point the field shader at a scene's gap-slot table (see bindGap in
+// ribbon_renderer; a shader built later binds the table current then).
+export function bindFieldGap(tex: Texture): void {
+  GAP_TEX = tex;
+  const sh = JUNCTION_SHADER;
+  if (sh && sh.resources.uGapData !== tex.source) {
+    sh.resources.uGapData = tex.source;
   }
 }
 
-// Per-vertex float attribute helper (aRec on fans, aJoint on fills).
+// Per-vertex float attribute helper (aRec / aMaskId on fans).
 export function addFloatAttribute(
   geometry: MeshGeometry,
   name: string,

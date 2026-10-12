@@ -3,13 +3,16 @@
 // the position buffer (no geometry reallocation).
 
 import { Buffer, BufferUsage, Mesh, MeshGeometry, Texture } from "pixi.js";
+import { GAP_SLOTS } from "./gap_mask";
 import { addFloatAttribute } from "./junction_field";
 
 // Upload a WHOLE attribute buffer. pixi's Buffer.update(size) REMEMBERS
 // its size: a bare update() after a partial one re-sends only that prefix
 // (GlBufferSystem uploads buffer._updateSize bytes), leaving the GPU tail
-// stale. Over-fills mix both - repaintFromRibbonWindow's prefix uploads,
-// then a window copy that GREW the span showed old paint/FX at its end.
+// stale. Over-fills mixed both (repaintFromRibbonWindow's prefix uploads,
+// then a window copy that GREW the span showed old paint/FX at its end);
+// with per-pixel gaps there are no over-fills, but every full upload still
+// goes through here so a future partial one cannot strand a tail.
 function uploadAll(geometry: MeshGeometry, name: string): void {
   const buffer = geometry.getBuffer(name);
   buffer.update(buffer.data.byteLength);
@@ -32,6 +35,38 @@ function addColorAttribute(
     stride: 3 * 4,
     offset: 0,
   });
+}
+
+// PER-PIXEL GAP attributes (see gap_mask.ts): aArcPos (vec2, the sample's
+// arc position as a unit vector - static), aTan (vec2, the ribbon tangent)
+// and aMaskId (vec4, gap slot ids, -1 = none). Every geometry drawn with
+// the section shader MUST carry all three (fans: zero arc vectors).
+function addGapAttributes(
+  geometry: MeshGeometry,
+  arcPos: Float32Array,
+  tan: Float32Array,
+  maskId: Float32Array
+): void {
+  const add = (
+    name: string,
+    data: Float32Array,
+    size: 2 | 4,
+    label: string
+  ): void => {
+    geometry.addAttribute(name, {
+      buffer: new Buffer({
+        data,
+        label,
+        usage: BufferUsage.VERTEX | BufferUsage.COPY_DST,
+      }),
+      format: size === 2 ? "float32x2" : "float32x4",
+      stride: size * 4,
+      offset: 0,
+    });
+  };
+  add("aArcPos", arcPos, 2, "attribute-gap-arcpos");
+  add("aTan", tan, 2, "attribute-gap-tangent");
+  add("aMaskId", maskId, 4, "attribute-gap-slots");
 }
 
 // Per-vertex appearance-FX weight (palette mode; see the section shader):
@@ -71,25 +106,18 @@ export class RibbonMesh {
   private fxData: Float32Array | null = null;
   private fxZero = true;
   private readonly closed: boolean;
-  // FILLS WEAR THE JOINT FIELD (over-fill patches, drawn with the GPU
-  // field's fill shader): up to four nearby junction records per patch
-  // (record texel index + 1, 0 = none), constant across every vertex - the
-  // shader blends per PIXEL. null on base ribbons.
-  private jointData: Float32Array | null = null;
-  private jointKey = new Float32Array(4);
-  // Samples the last window copy actually used (the rest repeat its last
-  // pair as degenerate quads).
-  private usedSpan = 0;
-  // A window copy requested WHOLE-buffer paint uploads that no repaint has
-  // passed through yet (see repaintFromRibbonWindow).
-  private copyUploadPending = false;
+  // PER-PIXEL GAPS (shaded meshes only): per-vertex tangent (rewritten by
+  // update()), per-vertex slot ids, and the per-SAMPLE id copy the last
+  // setMaskIds() uploaded (the reference for change detection).
+  private tanData: Float32Array | null = null;
+  private maskData: Float32Array | null = null;
+  private maskSample: Float32Array | null = null;
 
   constructor(
     sampleCount: number,
     closed: boolean,
     color: number,
-    paint = false,
-    joint = false
+    paint = false
   ) {
     this.sampleCount = sampleCount;
     this.closed = closed;
@@ -125,36 +153,58 @@ export class RibbonMesh {
       addColorAttribute(geometry, this.colorData);
       this.fxData = new Float32Array(sampleCount * 2);
       addFxAttribute(geometry, this.fxData);
-      if (joint) {
-        this.jointData = new Float32Array(sampleCount * 2 * 4);
-        addFloatAttribute(geometry, "aJoint", this.jointData, 4);
+      // Arc position as a point on the unit circle: closed rings go once
+      // around (the wrap quad interpolates across angle 0 seamlessly - a
+      // linear arc attribute would sweep the whole ring backwards there);
+      // open runs span 0.9 of a half turn (no atan2 branch ambiguity at
+      // either end). The renderer's gap slots carry the matching arc
+      // scale (closed: total, open: total / 0.45).
+      const arcPos = new Float32Array(sampleCount * 4);
+      for (let i = 0; i < sampleCount; i++) {
+        const th = closed
+          ? (2 * Math.PI * i) / sampleCount
+          : (0.9 * Math.PI * i) / Math.max(sampleCount - 1, 1);
+        const c = Math.cos(th);
+        const s = Math.sin(th);
+        arcPos[i * 4] = c;
+        arcPos[i * 4 + 1] = s;
+        arcPos[i * 4 + 2] = c;
+        arcPos[i * 4 + 3] = s;
       }
+      this.tanData = new Float32Array(sampleCount * 4);
+      this.maskData = new Float32Array(sampleCount * 2 * GAP_SLOTS).fill(-1);
+      this.maskSample = new Float32Array(sampleCount * GAP_SLOTS).fill(-1);
+      addGapAttributes(geometry, arcPos, this.tanData, this.maskData);
     }
     this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
     this.mesh.tint = color;
   }
 
-  // Set this patch's nearby junction records (see jointData): `c` holds
-  // four entries (record texel index + 1, 0 = none). Uploads only when the
-  // set changes.
-  setJoints(c: ArrayLike<number>): void {
-    const jd = this.jointData;
-    if (!jd) return;
-    const k = this.jointKey;
-    if (k[0] === c[0] && k[1] === c[1] && k[2] === c[2] && k[3] === c[3]) {
-      return;
+  // PER-PIXEL GAPS: per-sample slot ids (GAP_SLOTS per sample, -1 = none).
+  // Uploads only when they differ from the last call - window membership
+  // changes far less often than positions.
+  setMaskIds(ids: Float32Array): void {
+    const ms = this.maskSample;
+    const md = this.maskData;
+    if (!ms || !md) return;
+    const n = this.sampleCount * GAP_SLOTS;
+    let same = true;
+    for (let i = 0; i < n; i++) {
+      if (ms[i] !== ids[i]) {
+        same = false;
+        break;
+      }
     }
-    k[0] = c[0];
-    k[1] = c[1];
-    k[2] = c[2];
-    k[3] = c[3];
-    for (let v = 0; v < jd.length; v += 4) {
-      jd[v] = k[0];
-      jd[v + 1] = k[1];
-      jd[v + 2] = k[2];
-      jd[v + 3] = k[3];
+    if (same) return;
+    ms.set(ids.subarray(0, n));
+    for (let k = 0; k < this.sampleCount; k++) {
+      for (let c = 0; c < GAP_SLOTS; c++) {
+        const v = ids[k * GAP_SLOTS + c];
+        md[k * 2 * GAP_SLOTS + c] = v;
+        md[(k * 2 + 1) * GAP_SLOTS + c] = v;
+      }
     }
-    uploadAll(this.mesh.geometry, "aJoint");
+    uploadAll(this.mesh.geometry, "aMaskId");
   }
 
   // Rewrite vertex positions from a closed centerline. `positions`/
@@ -272,6 +322,21 @@ export class RibbonMesh {
       this.vertexData[i * 4 + 3] = cy - ny * wRight;
     }
     uploadAll(this.mesh.geometry, "aPosition");
+    // The gap shader's under tangent (arc-length margin): both verts of a
+    // sample share the sample tangent.
+    const td = this.tanData;
+    if (td) {
+      for (let i = 0; i < n; i++) {
+        const s = (offset + i) * 2;
+        const tx = tangents[s];
+        const ty = tangents[s + 1];
+        td[i * 4] = tx;
+        td[i * 4 + 1] = ty;
+        td[i * 4 + 2] = tx;
+        td[i * 4 + 3] = ty;
+      }
+      uploadAll(this.mesh.geometry, "aTan");
+    }
   }
 
   // PAINT (maze-fabric palette mode): set every sample's paint U (the
@@ -342,350 +407,6 @@ export class RibbonMesh {
     this.fxZero = false;
   }
 
-  // Copy a wrapped window of another ribbon's computed vertices into this
-  // patch mesh, repeating the last pair to fill unused stations. Because the
-  // vertices are byte-identical to the source ribbon's, the patch silhouette
-  // matches it exactly - no outline mismatch can expose what's beneath. With
-  // `copyUVs` (palette mode) the paint coordinates AND section colors ride
-  // along too, so the patch recolors pixel-identically with its source
-  // thread.
-  // CONTINUOUS ENDS: `startFrac` / `endFrac` trim the first / last pair to
-  // a fractional sample position (first pair slides toward the second by
-  // startFrac; last pair sits endFrac of the way from its predecessor).
-  // The source strip's quad edges are straight between consecutive pairs,
-  // so a lerped pair lies exactly on them: the trimmed end quad is a
-  // sub-quad of the source quad (still pixel-identical where it overlaps),
-  // but the patch end can sit at ANY arc instead of snapping to whole
-  // samples - a sample-snapped end rode the resampling grid (which slides
-  // along the material as flow breathes the chain's length) and re-snapped
-  // a full sample several times per second, the "gap jitter" report.
-  // Defaults (0, 1) reproduce the whole-sample copy exactly.
-  updateFromRibbonWindow(
-    source: RibbonMesh,
-    startSample: number,
-    sampleSpan: number,
-    copyUVs = false,
-    startFrac = 0,
-    endFrac = 1
-  ): void {
-    const n = source.sampleCount;
-    const copyColors =
-      copyUVs && this.colorData !== null && source.colorData !== null;
-    // FX rides along like the colors (the rainbow stripes / materialize
-    // fade must recolor the over-fill patch pixel-identically with its
-    // host); a zero source into an already-zero patch is a no-op.
-    const copyFx =
-      copyUVs &&
-      this.fxData !== null &&
-      source.fxData !== null &&
-      !(source.fxZero && this.fxZero);
-    for (let i = 0; i < this.sampleCount; i++) {
-      const j = Math.min(i, sampleSpan - 1);
-      const s = (((startSample + j) % n) + n) % n;
-      this.vertexData[i * 4] = source.vertexData[s * 4];
-      this.vertexData[i * 4 + 1] = source.vertexData[s * 4 + 1];
-      this.vertexData[i * 4 + 2] = source.vertexData[s * 4 + 2];
-      this.vertexData[i * 4 + 3] = source.vertexData[s * 4 + 3];
-      if (copyUVs) {
-        this.uvData[i * 4] = source.uvData[s * 4];
-        this.uvData[i * 4 + 1] = source.uvData[s * 4 + 1];
-        this.uvData[i * 4 + 2] = source.uvData[s * 4 + 2];
-        this.uvData[i * 4 + 3] = source.uvData[s * 4 + 3];
-      }
-      if (copyColors) {
-        for (let k = 0; k < 6; k++) {
-          this.colorData![i * 6 + k] = source.colorData![s * 6 + k];
-        }
-      }
-      if (copyFx) {
-        this.fxData![i * 2] = source.fxData![s * 2];
-        this.fxData![i * 2 + 1] = source.fxData![s * 2 + 1];
-      }
-    }
-    if (sampleSpan >= 2) {
-      if (startFrac > 0) {
-        this.lerpPairFrom(
-          source,
-          0,
-          startSample,
-          startFrac,
-          copyUVs,
-          copyColors,
-          copyFx
-        );
-      }
-      if (endFrac < 1) {
-        const last = sampleSpan - 1;
-        this.lerpPairFrom(
-          source,
-          last,
-          startSample + last - 1,
-          endFrac,
-          copyUVs,
-          copyColors,
-          copyFx
-        );
-        // Unused stations repeat the last pair (degenerate quads); they
-        // must repeat the TRIMMED pair or the quad after it re-extends to
-        // the untrimmed sample.
-        for (let i = last + 1; i < this.sampleCount; i++) {
-          this.vertexData.copyWithin(i * 4, last * 4, last * 4 + 4);
-          if (copyUVs) this.uvData.copyWithin(i * 4, last * 4, last * 4 + 4);
-          if (copyColors) {
-            this.colorData!.copyWithin(i * 6, last * 6, last * 6 + 6);
-          }
-          if (copyFx) {
-            this.fxData!.copyWithin(i * 2, last * 2, last * 2 + 2);
-          }
-        }
-      }
-    }
-    this.usedSpan = Math.max(1, Math.min(sampleSpan, this.sampleCount));
-    uploadAll(this.mesh.geometry, "aPosition");
-    if (copyUVs) uploadAll(this.mesh.geometry, "aUV");
-    if (copyColors) {
-      uploadAll(this.mesh.geometry, "aColor");
-      this.lastColors = null; // Buffer no longer mirrors a writePaint call.
-    }
-    if (copyFx) {
-      uploadAll(this.mesh.geometry, "aFx");
-      this.fxZero = source.fxZero;
-    }
-    if (copyUVs) this.copyUploadPending = true;
-  }
-
-  // PAINT-ONLY refresh of the window the last updateFromRibbonWindow copied
-  // (same start, span and trims): the paint pass recolors over-fill patches
-  // every tick, but their vertices only move in update(). Copies the USED
-  // pairs' UV / section color / FX and uploads just that prefix - the
-  // stations past the span repeat the last pair's position (zero-area
-  // quads rasterize nothing), so their attributes are never read. The full
-  // window copy cost the paint pass ~2/3 of its time (every animated chain
-  // re-copied all 128 stations of each of its over-fills, positions
-  // included, every tick). fxZero keeps meaning "the WHOLE FX buffer is
-  // zero": a zero source clears it entirely.
-  repaintFromRibbonWindow(
-    source: RibbonMesh,
-    startSample: number,
-    sampleSpan: number,
-    startFrac = 0,
-    endFrac = 1
-  ): void {
-    const n = source.sampleCount;
-    const span = Math.max(1, Math.min(sampleSpan, this.sampleCount));
-    const cd = this.colorData;
-    const scd = source.colorData;
-    const copyColors = cd !== null && scd !== null;
-    const fxClear = this.fxData !== null && source.fxZero && !this.fxZero;
-    const copyFx =
-      this.fxData !== null && source.fxData !== null && !source.fxZero;
-    for (let i = 0; i < span; i++) {
-      const s = (((startSample + i) % n) + n) % n;
-      this.uvData[i * 4] = source.uvData[s * 4];
-      this.uvData[i * 4 + 1] = source.uvData[s * 4 + 1];
-      this.uvData[i * 4 + 2] = source.uvData[s * 4 + 2];
-      this.uvData[i * 4 + 3] = source.uvData[s * 4 + 3];
-      if (copyColors) {
-        for (let k = 0; k < 6; k++) cd[i * 6 + k] = scd[s * 6 + k];
-      }
-      if (copyFx) {
-        this.fxData![i * 2] = source.fxData![s * 2];
-        this.fxData![i * 2 + 1] = source.fxData![s * 2 + 1];
-      }
-    }
-    if (sampleSpan >= 2) {
-      if (startFrac > 0) {
-        this.lerpPairFrom(
-          source,
-          0,
-          startSample,
-          startFrac,
-          true,
-          copyColors,
-          copyFx,
-          false
-        );
-      }
-      if (endFrac < 1) {
-        const last = span - 1;
-        this.lerpPairFrom(
-          source,
-          last,
-          startSample + last - 1,
-          endFrac,
-          true,
-          copyColors,
-          copyFx,
-          false
-        );
-      }
-    }
-    // pixi uploads each buffer ONCE per draw, at the size of its LAST
-    // update() request: after a window copy (whole buffers, tail included)
-    // a prefix request would truncate that upload and strand the copy's
-    // tail on the CPU. The first repaint after a copy therefore stays full.
-    const geo = this.mesh.geometry;
-    const full = this.copyUploadPending;
-    this.copyUploadPending = false;
-    if (full) uploadAll(geo, "aUV");
-    else geo.getBuffer("aUV").update(span * 4 * 4);
-    if (copyColors) {
-      if (full) uploadAll(geo, "aColor");
-      else geo.getBuffer("aColor").update(span * 6 * 4);
-      this.lastColors = null;
-    }
-    if (fxClear) {
-      this.fxData!.fill(0);
-      uploadAll(geo, "aFx");
-      this.fxZero = true;
-    } else if (copyFx) {
-      if (full) uploadAll(geo, "aFx");
-      else geo.getBuffer("aFx").update(span * 2 * 4);
-      this.fxZero = false;
-    }
-  }
-
-  // Axis-aligned bounds of the current vertices: [minX, minY, maxX, maxY].
-  bounds(out: Float32Array): void {
-    const vd = this.vertexData;
-    const n = (this.usedSpan > 0 ? this.usedSpan : this.sampleCount) * 4;
-    let x0 = Infinity;
-    let y0 = Infinity;
-    let x1 = -Infinity;
-    let y1 = -Infinity;
-    for (let i = 0; i < n; i += 2) {
-      const x = vd[i];
-      const y = vd[i + 1];
-      if (x < x0) x0 = x;
-      if (x > x1) x1 = x;
-      if (y < y0) y0 = y;
-      if (y > y1) y1 = y;
-    }
-    out[0] = x0;
-    out[1] = y0;
-    out[2] = x1;
-    out[3] = y1;
-  }
-
-  // Write pair `dst` as the lerp of source pairs (a, a + 1) by t (wrapped
-  // indices, as the window copy) - positions (unless `positions` is false:
-  // the paint-only refresh), plus UVs / colors / FX weights when those are
-  // copied.
-  private lerpPairFrom(
-    source: RibbonMesh,
-    dst: number,
-    a: number,
-    t: number,
-    copyUVs: boolean,
-    copyColors: boolean,
-    copyFx: boolean,
-    positions = true
-  ): void {
-    const n = source.sampleCount;
-    const s0 = ((a % n) + n) % n;
-    const s1 = (((a + 1) % n) + n) % n;
-    for (let k = 0; positions && k < 4; k++) {
-      const p0 = source.vertexData[s0 * 4 + k];
-      this.vertexData[dst * 4 + k] =
-        p0 + (source.vertexData[s1 * 4 + k] - p0) * t;
-    }
-    if (copyUVs) {
-      for (let k = 0; k < 4; k++) {
-        const u0 = source.uvData[s0 * 4 + k];
-        this.uvData[dst * 4 + k] = u0 + (source.uvData[s1 * 4 + k] - u0) * t;
-      }
-    }
-    if (copyColors) {
-      for (let k = 0; k < 6; k++) {
-        const c0 = source.colorData![s0 * 6 + k];
-        this.colorData![dst * 6 + k] =
-          c0 + (source.colorData![s1 * 6 + k] - c0) * t;
-      }
-    }
-    if (copyFx) {
-      for (let k = 0; k < 2; k++) {
-        const f0 = source.fxData![s0 * 2 + k];
-        this.fxData![dst * 2 + k] = f0 + (source.fxData![s1 * 2 + k] - f0) * t;
-      }
-    }
-  }
-
-  destroy(): void {
-    this.mesh.destroy({ children: true });
-  }
-}
-
-// A stations x lanes grid mesh for crossing erase patches: stations run
-// along the under thread, lanes run across its width. Both boundary rows
-// (the cut caps) and boundary columns (the ribbon sides) are polylines, so
-// caps can curve to follow the over thread's offset curve.
-export class PatchGridMesh {
-  mesh: Mesh;
-  readonly stations: number;
-  readonly lanes: number;
-
-  private vertexData: Float32Array;
-  private uvData: Float32Array;
-  private uvDirty = false;
-
-  constructor(stations: number, lanes: number, color: number) {
-    this.stations = stations;
-    this.lanes = lanes;
-    this.vertexData = new Float32Array(stations * lanes * 2);
-
-    const uvs = new Float32Array(stations * lanes * 2);
-    for (let k = 0; k < stations; k++) {
-      for (let l = 0; l < lanes; l++) {
-        uvs[(k * lanes + l) * 2] = k / (stations - 1);
-        uvs[(k * lanes + l) * 2 + 1] = l / (lanes - 1);
-      }
-    }
-    this.uvData = uvs;
-
-    const indices = new Uint32Array((stations - 1) * (lanes - 1) * 6);
-    let i = 0;
-    for (let k = 0; k < stations - 1; k++) {
-      for (let l = 0; l < lanes - 1; l++) {
-        const a = k * lanes + l;
-        const b = a + 1;
-        const c = a + lanes;
-        const d = c + 1;
-        indices.set([a, b, c, b, d, c], i);
-        i += 6;
-      }
-    }
-
-    const geometry = new MeshGeometry({
-      positions: this.vertexData,
-      uvs,
-      indices,
-    });
-    this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
-    this.mesh.tint = color;
-  }
-
-  setVertex(station: number, lane: number, x: number, y: number): void {
-    const i = (station * this.lanes + lane) * 2;
-    this.vertexData[i] = x;
-    this.vertexData[i + 1] = y;
-  }
-
-  // FADE (under-gap fade-out): set a vertex's texture U - its coordinate
-  // along the fade ramp (0 = full-strength erase, 1 = fully faded out).
-  // V stays as constructed.
-  setVertexU(station: number, lane: number, u: number): void {
-    this.uvData[(station * this.lanes + lane) * 2] = u;
-    this.uvDirty = true;
-  }
-
-  commit(): void {
-    uploadAll(this.mesh.geometry, "aPosition");
-    if (this.uvDirty) {
-      uploadAll(this.mesh.geometry, "aUV");
-      this.uvDirty = false;
-    }
-  }
-
   destroy(): void {
     this.mesh.destroy({ children: true });
   }
@@ -700,6 +421,10 @@ export class PatchGridMesh {
 // (junction_field.ts) evaluates the field PER PIXEL, so fans no longer
 // subdivide into rings or carry colors (Gouraud smeared the nonlinear
 // field into straight streaks unless the fan was ring-subdivided).
+// PER-PIXEL GAPS (gap_mask.ts): every vertex also carries the gap slots
+// of the joint being emitted (aMaskId, from maskIds at push time) - the
+// field shader masks fan pixels by those crossings' casings, so a web
+// beside a diving arm dives with it.
 export class TriFanMesh {
   mesh: Mesh;
 
@@ -712,11 +437,16 @@ export class TriFanMesh {
   // nonzero indices anywhere below it, so every commit re-sends it all
   // (see commit).
   private iHigh = 0;
+  // The gap slots stamped onto every vertex pushed from now on - the
+  // caller points it at the crossings diving under the joint it emits.
+  readonly maskIds = new Float32Array(GAP_SLOTS).fill(-1);
+  private maskData: Float32Array;
 
   constructor(vertexCapacity: number, indexCapacity: number) {
     this.vertexData = new Float32Array(vertexCapacity * 2);
     this.recData = new Float32Array(vertexCapacity);
     this.indexData = new Uint32Array(indexCapacity);
+    this.maskData = new Float32Array(vertexCapacity * GAP_SLOTS).fill(-1);
     const geometry = new MeshGeometry({
       positions: this.vertexData,
       uvs: new Float32Array(2),
@@ -728,6 +458,7 @@ export class TriFanMesh {
     delete geometry.attributes.aUV;
     geometry.buffers.splice(geometry.buffers.indexOf(uvBuffer), 1);
     addFloatAttribute(geometry, "aRec", this.recData, 1);
+    addFloatAttribute(geometry, "aMaskId", this.maskData, 4);
     this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
   }
 
@@ -739,7 +470,8 @@ export class TriFanMesh {
 
   // Emit one fan around an apex. `rim` is flat [x, y] per vertex, in
   // winding order; triangles are (apex, rim[i], rim[i+1]). Every vertex
-  // carries `rec`, the record texel index of the fan's junction field.
+  // carries `rec`, the record texel index of the fan's junction field,
+  // and the current maskIds.
   pushFan(apexX: number, apexY: number, rim: number[], rec: number): void {
     const rimCount = rim.length / 2;
     if (
@@ -758,6 +490,9 @@ export class TriFanMesh {
       vd[(apex + 1 + i) * 2 + 1] = rim[i * 2 + 1];
     }
     this.recData.fill(rec, apex, apex + rimCount + 1);
+    for (let v = apex; v <= apex + rimCount; v++) {
+      this.maskData.set(this.maskIds, v * GAP_SLOTS);
+    }
     const ix = this.indexData;
     let n = this.iUsed;
     for (let i = 0; i < rimCount - 1; i++) {
@@ -784,6 +519,7 @@ export class TriFanMesh {
     const v = this.vUsed;
     this.mesh.geometry.getBuffer("aPosition").update(v * 2 * 4);
     this.mesh.geometry.getBuffer("aRec").update(v * 4);
+    this.mesh.geometry.getBuffer("aMaskId").update(v * GAP_SLOTS * 4);
     if (this.iUsed > this.iHigh) this.iHigh = this.iUsed;
     this.mesh.geometry.getIndex().update(this.iHigh * 4);
   }
