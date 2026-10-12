@@ -102,6 +102,30 @@ and never reused.
 - **K24** · Render on demand when the scene is fully static (battery);
   part of K6. An animated background (K21) must not defeat it.
 
+## Ideas (not scheduled)
+
+Offers from 2026-10-10 that Levi hasn't answered yet (filed from the
+audit inbox; the first-tap sound offer is done, 82b6b6b).
+
+- **K32** · Bigger tap targets for maze choices on touch screens; choices
+  are tight at full-maze zoom on a small phone.
+- **K33** · A share button that opens the phone's native share sheet with
+  the link (the link holds the whole design). Pairs with K20's
+  time-to-solve sharing.
+- **K34** · The settings panel as a bottom sheet in portrait on phones.
+- **K35** · A short vibration on pluck (Android only; `navigator.vibrate`).
+- **K36** · Add to home screen: a web app manifest and icons. Blocked on
+  icon art (Levi has the prompt for another model).
+- **K37** · Fog-of-war edge wobble: stronger, or a slider (Stage 25b wobbles
+  about 14 screen px).
+- **K38** · Focus fade: softer, longer gap fades near the player's dot
+  (depth-of-field feel), prototyped with a strength slider.
+- **K39** · A manual battery/quality toggle for phones (fewer intro
+  particles, lower resolution); may fold into K22's automatic scaler.
+- **K40** · Remove the lane-cut limiter stack if a drag battery confirms
+  it does nothing (raw cut change < 0.0063 arc/frame; at rest only the
+  micro one-pole fires). K1's per-pixel gaps may retire it outright.
+
 ## Done
 
 (items move here with the commit that resolved them)
