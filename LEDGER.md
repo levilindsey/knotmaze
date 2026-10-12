@@ -35,9 +35,6 @@ and never reused.
   merge-core hairline), cutting the GPU cost (2.83 vs 0.82 ms/frame at
   3200x1800), and targeting Android. History: CLAUDE.md "PER-PIXEL
   CROSSING GAPS".
-- **K2** · Kink loops squished shut (Levi's report: crossing 305 at
-  `?k88dtb.oHFEfg`, eye held at the 3.2-ctrl floor). Agent: a
-  rate-limited material-budget ratchet, sized by an eye-hole census.
 
 ## Next, in order
 
@@ -77,8 +74,16 @@ and never reused.
   beside it is still striped (K4 fixes it by construction).
 - **K16** · Physics settle is slow: 100-190 ms/frame at gs 18 on a loaded
   desktop; on the phone 7 sim-seconds took 14 s. K6/K7 fix the UI side.
-- **K18** · vitest rewrites the byte-identity snapshot's line endings on
-  Windows (reverted by hand each run). Fix with `.gitattributes`.
+- **K29** · Boxed kinks at tw 0.64: 3 of ~152 kinks (8 seeds) rest at
+  0.56-0.78 thread widths of eye hole - boxed in by a fused joint on one
+  side and the 1.6 corridor floor on the other, they keep only lattice
+  material. A stronger eye pressure (2.6) doesn't lift them; 2.8 left 2/8
+  fat seeds awake. See CLAUDE.md "KINK EYES".
+- **K30** · Very wide threads (tw >= 0.72) never sleep - standing riders;
+  the same counts as before the kink fix (2/4 seeds at 0.72, 0/4 at 0.8).
+- **K31** · Levi's phone collapsed crossing 305 to 3.37 ctrl; desktop
+  never reproduced it (even with jitter). Re-check on the phone with the
+  current build when it is back.
 - **K26** · Plucks at tight loops, seen zoomed in. Only the concave side
   of the swing is capped, so the time exposure leans outward and a loop's
   eye gets a slightly ragged, enlarged rim during the ring. A symmetric
@@ -112,6 +117,15 @@ and never reused.
 
 (items move here with the commit that resolved them)
 
+- **K2** · Kink loops squished shut. Done in 9920fab: an eye ratchet (7
+  thread widths of rest length, rising at the twist-ratchet rate), eye
+  pressure across each loop, and no fairing inside kink loops. Every
+  kink eye at rest is now >= 0.8 thread widths on the five census URLs
+  (user URL: min 0.17 -> 0.97, 16/21 -> 0 under target); fat + default
+  sweeps 16/16 asleep (was 13/16).
+- **K18** · vitest rewrote the byte-identity snapshot's line endings on
+  Windows. Done in the commit that moved this item here: `.gitattributes`
+  keeps `*.snap` LF in the working tree.
 - **K3** · Render-only plucks plus a physics-off mode (settle, stop
   simulating, then the appear animation; pluck only, no tug). Done in
   df373b5.

@@ -1,0 +1,4 @@
+# vitest writes snapshots with LF line endings. Keep them LF in the working
+# tree too, so a test run on Windows (core.autocrlf) doesn't show them as
+# modified (LEDGER K18).
+*.snap text eol=lf
