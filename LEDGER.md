@@ -23,8 +23,10 @@ and never reused.
   master 31c3c91: awake after 45 s at 93-95 ms of physics per frame
   (8-9 fps at rest). The rect link holds one standing rider beside
   self-crossing 28; the fat link is pinned at mv 1.9e-2. Both slept at
-  sim 7.0 on df373b5 (reported by the G1 agent). A worktree agent is
-  fixing it and adding a regression test.
+  sim 7.0 on df373b5 (reported by the G1 agent). Its fix agent (worktree
+  `.claude/worktrees/agent-a8e1c36f999bf1027`, mid-ablation, regression
+  test planned) was paused at 21:10 for the weekly usage limit (Levi's
+  call). Resume it after the 2026-10-12 noon reset.
 
 ## Next, in order
 
