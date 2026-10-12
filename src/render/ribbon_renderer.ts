@@ -257,6 +257,19 @@ const CACHE_REBAKE_CTRL = 0.1;
 // rebuildFillets armDives).
 const FILLET_DIVE_NEAR = 2.0;
 const DISC_SEGS = 16; // Rim segments on tip/junction seal discs.
+// FUSED-TIP DISC radius, in half-widths. A tucked cap keeps a quarter
+// half-width of overlap with its host (tuckFusedTips) that only the fans
+// hide, and its corners sit a full half-width from the tuck point: at
+// 0.99 the 16-gon's chords (cos(pi/16) inside the radius) left the corner
+// strips uncovered, so whichever raw ribbon drew on top showed between
+// the disc and the wedges - the light merge-core hairlines (user URL x160,
+// masked on master by over-fills). 1.06 = the chord inset plus about a
+// pixel of AA at the default fit; the rim is clamped to the bridge's own
+// strip (TIP_DISC_SIDE half-widths each side, a hair inside its edges, so
+// the ribbon's own AA edge stays untouched) - it never bulges past the
+// bridge's sides into the backdrop or a neighbor's gap.
+const TIP_DISC_SCALE = 1.06;
+const TIP_DISC_SIDE = 0.995;
 // Unit-circle rim of a disc fan (closed: the first point repeats).
 const DISC_COS = new Float64Array(DISC_SEGS + 1);
 const DISC_SIN = new Float64Array(DISC_SEGS + 1);
@@ -789,6 +802,9 @@ export class RibbonRenderer {
   maskEnabled = true;
   // Probe view: masked material is tinted magenta instead of removed.
   maskDebug = false;
+  // A fused tip's disc radius in half-widths (TIP_DISC_SCALE; public for
+  // same-state probes).
+  tipDiscScale = TIP_DISC_SCALE;
   // The gap slots' far-branch smooth-min (gap_mask.ts); off = A/B probes.
   smoothMin = true;
   // The gap slots' protect intervals (computeGapSlot); off = A/B probes.
@@ -5697,7 +5713,35 @@ export class RibbonRenderer {
         if (rec.on) {
           fm = layerFor(rec);
           setFanMask(rec.mask);
-          pushDiscField(rec, cx, cy, fillHalf * 0.99);
+          // CAP COVER (TIP_DISC_SCALE): the disc reaches the tucked cap's
+          // corners without bulging past the bridge's sides - every rim
+          // point is clamped into the bridge's own strip (|lateral| <=
+          // TIP_DISC_SIDE half-widths) and to 0.99 half-widths behind the
+          // tuck point (the old disc's reach into the host). A plain wider
+          // disc rounded into the backdrop and neighbors' casing gaps.
+          const k = tip.atEnd ? samples.count - 1 : 0;
+          let ux = samples.tangents[k * 2];
+          let uy = samples.tangents[k * 2 + 1];
+          const ul = Math.hypot(ux, uy) || 1;
+          ux /= ul;
+          uy /= ul;
+          if (tip.atEnd) {
+            // Inward, into the bridge.
+            ux = -ux;
+            uy = -uy;
+          }
+          const rim = discRim(cx, cy, fillHalf * this.tipDiscScale);
+          const side = fillHalf * TIP_DISC_SIDE;
+          const back = fillHalf * 0.99;
+          for (let i = 0; i < rim.length; i += 2) {
+            const dx = rim[i] - cx;
+            const dy = rim[i + 1] - cy;
+            const s = Math.max(-back, dx * ux + dy * uy);
+            const l = Math.max(-side, Math.min(side, dy * ux - dx * uy));
+            rim[i] = cx + ux * s - uy * l;
+            rim[i + 1] = cy + uy * s + ux * l;
+          }
+          emitFan(rec, cx, cy, rim);
           setFanMask(null);
           fm = fmBottom;
         }
