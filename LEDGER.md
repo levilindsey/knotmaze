@@ -17,6 +17,15 @@ and never reused.
 
 ## In progress
 
+- **K41** · Physics regression from the kink eyes (9920fab): Levi's rect
+  link (`s=1471kin&gs=12&...&tw=.64`) and the fat link
+  (`s=p9ar6&mf=0&rep=.4&bd=1.75&sm=.7&tw=.52`) never sleep. Verified on
+  master 31c3c91: awake after 45 s at 93-95 ms of physics per frame
+  (8-9 fps at rest). The rect link holds one standing rider beside
+  self-crossing 28; the fat link is pinned at mv 1.9e-2. Both slept at
+  sim 7.0 on df373b5 (reported by the G1 agent). A worktree agent is
+  fixing it and adding a regression test.
+
 ## Next, in order
 
 - **K4** · G2: all per-sample color work moves into shaders
@@ -35,15 +44,22 @@ and never reused.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). Defaults: tight folds render as
   filled lobes, anchored tails keep flat caps, phones stay at a 2x
-  resolution cap.
+  resolution cap. Fold in G1's GPU levers: a loop-free protect test
+  (about 0.15 ms of register pressure at 3200x1800), a zoom-aware
+  polyline tolerance, a per-point far-branch gate, and dropping the
+  globals fetch.
 - **K9** · G4: smooth-union SDF junction webs (cuspRadius = blend
-  radius); A/B crops at cr 1, 3, 6 before the fans are deleted.
+  radius); A/B crops at cr 1, 3, 6 before the fans are deleted. Also
+  closes G1's x160 leftover: a faint tick where a wedge flank meets a
+  tucked bridge.
 - **K10** · Phone benchmark after every stage. Baseline (Pixel 11, Chrome
   154, 2026-10-11, default maze settled): 30 fps at rest with defaults,
   51 fps with `fw=0`. Flow at rest halves the frame rate today. Compare
   builds only with the knot asleep (or `phy=0`): a stale K1 preview that
   had not slept after 19 s on the phone ran 5.8 fps on physics alone
   (158 ms/frame), while master at Levi's link settled and ran 40 fps.
+  Due now: the merged G1 build (the G1 agent measured 39 -> 60 fps at
+  rest under flow at defaults, on an older base).
 
 ## Residuals (known, not fixed)
 
@@ -57,7 +73,9 @@ and never reused.
   (applyTransversality's window, the slide/project windows,
   updatePassCover's +-12 slots): agent-measured, unfixed.
 - **K15** · During a reveal, a joint's fan can turn opaque while a fill
-  beside it is still striped (K4 fixes it by construction).
+  beside it is still striped (K4 fixes it by construction). May be moot:
+  G1 (99443cb) deleted the over-fills. Re-check fan vs base ribbon during
+  a reveal.
 - **K16** · Physics settle is slow: 100-190 ms/frame at gs 18 on a loaded
   desktop; on the phone 7 sim-seconds took 14 s. K6/K7 fix the UI side.
 - **K29** · Boxed kinks at tw 0.64: 3 of ~152 kinks (8 seeds) rest at
@@ -76,6 +94,17 @@ and never reused.
   footprint (about 1 world at cr 3) keep their base intact, so they ring
   as a crisp thread with a halo rather than a blur, as crossing
   footprints already do.
+- **K42** · Silhouette-level cyclic overlaps: three ribbons over one
+  pixel, each over the next (user link x170/x93 after repeated cinches,
+  x134/x135 in one squeezed cinch: chains 1 > 2 > 0 > 1). G1's per-pixel
+  protect can't break a cycle; it needs a per-pixel winner. 52-198
+  naked px in those captures.
+- **K43** · A fused tail riding its host (user link tips 0/1) is still
+  sensitive to draw order. Predates G1.
+- **K44** · Probe tooling: the gap census stops a crossing's ideal over
+  polyline at 0.5 of the neighbor gap where the renderer uses 0.8 (the
+  false overcut at user x57), and its totals drift between two captures
+  of one frozen state (cause unknown). Same-state pixel diffs are exact.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -86,9 +115,9 @@ and never reused.
   time-to-solve sharing. Also serialize the remaining MazeParams.
 - **K21** · Shader backgrounds: research noise-based effects, implement
   several that never distract (low contrast; colors from the design's
-  gamut), selectable from a dropdown. Draw them as the first layer of the
-  main canvas once K1 lands (per-pixel gaps no longer erase what is
-  beneath); run at reduced resolution and frame rate.
+  gamut), selectable from a dropdown. Unblocked: K1 landed (99443cb), so
+  gaps discard instead of erasing and a background can be the first
+  layer of the main canvas. Run it at reduced resolution and frame rate.
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
   allows; down when struggling). Part of K6, refined after G3.
 - **K23** · GPU particles (G2.4), GPU fog-of-war accumulation, the yarn as
@@ -116,13 +145,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   (depth-of-field feel), prototyped with a strength slider.
 - **K39** · A manual battery/quality toggle for phones (fewer intro
   particles, lower resolution); may fold into K22's automatic scaler.
-- **K40** · Remove the lane-cut limiter stack if a drag battery confirms
-  it does nothing (raw cut change < 0.0063 arc/frame; at rest only the
-  micro one-pole fires). K1's per-pixel gaps may retire it outright.
 
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K40** · The lane-cut limiter stack (likely a no-op). Done in 99443cb:
+  G1 deleted it along with the erase grid.
 
 - **K1** · GPU migration G1: per-pixel crossing gaps. Done in 99443cb
   (casing masks in the ribbon fragment shader replace the erase grid,
