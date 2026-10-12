@@ -13,15 +13,7 @@ and never reused.
 
 ## Waiting on Levi
 
-- **K28** · Intro vs physics settle. The intro runs over a settling sim,
-  so its frame rate follows physics (5 fps measured on a desktop loaded
-  by parallel agents; the phone settles at half real time). Options:
-  (a) settle first behind the physics-off loader, then play the intro on
-  the settled layout at full frame rate, then live physics - smooth, but
-  every rebuild waits ~5 s on desktop, longer on a phone; (b) keep it
-  until K7, whose worker lets the intro run at full frame rate WHILE
-  physics settles, with no wait. Recommendation: (b), unless the interim
-  smoothness is worth the wait.
+(nothing right now)
 
 ## In progress
 
@@ -44,6 +36,8 @@ and never reused.
 - **K6** · One frame loop driven by what-changed flags (after K5).
 - **K7** · Physics in a Web Worker, with render-side interpolation between
   physics steps (after K6). Smooths the UI; it does not speed up physics.
+  Acceptance includes K28: the intro runs at full frame rate WHILE
+  physics settles (no settle-first loader wait).
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). Defaults: tight folds render as
   filled lobes, anchored tails keep flat caps, phones stay at a 2x
@@ -111,6 +105,10 @@ and never reused.
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K28** · Intro vs physics settle: Levi chose option (b) - no interim
+  settle-first loader; the intro stays over the live settle until K7's
+  worker lets it run at full frame rate (folded into K7's acceptance).
 
 - **K25** · Pluck size default: Levi chose bigger. Done in the commit that
   moved this item here - pluckSize defaults to 1.75 (codec v3; v2 links
