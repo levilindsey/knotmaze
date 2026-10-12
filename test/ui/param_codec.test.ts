@@ -3,6 +3,7 @@ import {
   CODEC_TABLES,
   CODEC_V1,
   CODEC_V2,
+  CODEC_V3,
   CODEC_VERSION,
   codecDefaults,
   codecTable,
@@ -153,6 +154,15 @@ describe("codec tables", () => {
     ]);
   });
 
+  it("pins CODEC_V3: v2 with pluckSize defaulting to 1.75", () => {
+    expect(CODEC_V3.version).toBe(3);
+    expect(CODEC_V3.params.map(asPin)).toEqual(
+      CODEC_V2.params
+        .map(asPin)
+        .map((p) => (p[0] === "pluckSize" ? ["pluckSize", "number", 1.75] : p))
+    );
+  });
+
   it("registers every table, oldest first; new links use the newest", () => {
     expect(CODEC_TABLES.map((t) => t.version)).toEqual(
       CODEC_TABLES.map((_, i) => i + 1)
@@ -210,13 +220,16 @@ describe("codec tables", () => {
 
 describe("token format", () => {
   it("names its version even with nothing changed (a bare seed is v1)", () => {
-    expect(encodeToken(2430477599, PARAM_DEFAULTS)).toBe("1471kin.U");
-    expect(encodeToken(0, {})).toBe("0.U");
-    expect(encodeToken(4294967295, {})).toBe("1z141z3.U");
+    expect(encodeToken(2430477599, PARAM_DEFAULTS)).toBe("1471kin.c");
+    expect(encodeToken(0, {})).toBe("0.c");
+    expect(encodeToken(4294967295, {})).toBe("1z141z3.c");
     expect(decodeToken("1471kin").values).toEqual(codecDefaults(1));
     expect(decodeToken("1471kin.U").values).toEqual(codecDefaults(2));
+    expect(decodeToken("1471kin.c").values).toEqual(codecDefaults(3));
     expect(codecDefaults(1).junctionBlend).toBe(0);
     expect(codecDefaults(2).junctionBlend).toBe(0.88);
+    expect(codecDefaults(2).pluckSize).toBe(1);
+    expect(codecDefaults(3).pluckSize).toBe(1.75);
   });
 
   it("writes the documented bitstream", () => {
@@ -228,7 +241,7 @@ describe("token format", () => {
       mazeFabric: false,
     };
     const bits = [
-      "010", // version 2 = gamma(2)
+      "011", // version 3 = gamma(3)
       "00101", // 4 entries = gamma(4 + 1)
       "0001111", // index 14 threadWidth: gamma(14 - -1 = 15)
       "1010 0110 0100 1111", // ".64", then the terminator 15
@@ -239,15 +252,18 @@ describe("token format", () => {
       "00101", // index 45 mazeFabric: gamma(5); a boolean has no value bits
     ].join(" ");
     expect(encodeToken(7, values)).toBe(`7.${bitsToBlob(bits)}`);
-    expect(encodeToken(7, values)).toBe("7.RR9MnhklsZEwo");
-    const back = decodeToken("7.RR9MnhklsZEwo");
+    expect(encodeToken(7, values)).toBe("7.ZR9MnhklsZEwo");
+    const back = decodeToken("7.ZR9MnhklsZEwo");
     expect(back.error).toBeNull();
     expect(back.values).toEqual(values);
-    // The same design written under v1 still reads back - with v1's
-    // junctionBlend default.
+    // The same design written under v2 and v1 still reads back - with
+    // those versions' defaults.
+    const v2 = decodeToken("7.RR9MnhklsZEwo");
+    expect(v2.error).toBeNull();
+    expect(v2.values).toEqual({ ...values, pluckSize: 1 });
     const v1 = decodeToken("7.lH0yeGSWxkTCg");
     expect(v1.error).toBeNull();
-    expect(v1.values).toEqual({ ...values, junctionBlend: 0 });
+    expect(v1.values).toEqual({ ...values, junctionBlend: 0, pluckSize: 1 });
   });
 
   it("writes numbers as the legacy short links did", () => {
@@ -280,7 +296,7 @@ describe("token format", () => {
       gridSize: 12,
       cuspRadius: 2.4,
     });
-    expect(encodeToken(1, values, new Set(["gridSize", "cuspRadius"]))).toBe("1.U");
+    expect(encodeToken(1, values, new Set(["gridSize", "cuspRadius"]))).toBe("1.c");
   });
 
   it("reads `<seed>.` (a trailing sentence period) as the bare seed", () => {
@@ -314,7 +330,7 @@ describe("token robustness", () => {
     const size = CODEC_V1.params.length;
     const cases: Array<[string, RegExp]> = [
       ["7.l!0y", /invalid character/],
-      [`7.${bitsToBlob("011 1")}`, /unknown version 3/], // gamma(3) = v3
+      [`7.${bitsToBlob("00100 1")}`, /unknown version 4/], // gamma(4) = v4
       [`7.${bitsToBlob("1 1")}A`, /trailing data/], // a whole extra char
       [`7.${bitsToBlob("1 1 01")}`, /trailing data/], // non-zero padding
       [`7.${bitsToBlob("1 00101")}`, /truncated/], // 4 entries, none there

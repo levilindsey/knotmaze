@@ -13,11 +13,6 @@ and never reused.
 
 ## Waiting on Levi
 
-- **K25** · Pluck size default. At today's defaults the median tapped
-  lobe swings at the amplitude floor (0.45 x the thread's half-width),
-  which is subtle at default zoom; `psz` 1.5-2 reads better. K3 has
-  merged (df373b5), so changing pluckSize's default now means a codec
-  version bump (cheap).
 - **K28** · Intro vs physics settle. The intro runs over a settling sim,
   so its frame rate follows physics (5 fps measured on a desktop loaded
   by parallel agents; the phone settles at half real time). Options:
@@ -116,6 +111,10 @@ and never reused.
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K25** · Pluck size default: Levi chose bigger. Done in the commit that
+  moved this item here - pluckSize defaults to 1.75 (codec v3; v2 links
+  keep 1), panel max 2 -> 3.
 
 - **K2** · Kink loops squished shut. Done in 9920fab: an eye ratchet (7
   thread widths of rest length, rising at the twist-ratchet rate), eye

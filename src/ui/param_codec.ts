@@ -217,14 +217,28 @@ export const CODEC_V2: CodecTable = Object.freeze({
   ]),
 });
 
+// V3 (2026-10-11): pluckSize defaults to 1.75 (Levi: "bigger default for
+// plucks" - at 1 the median tapped lobe swung at the amplitude floor,
+// subtle at default zoom); an edited copy of V2, nothing else differs. V2
+// links keep pluckSize 1.
+export const CODEC_V3: CodecTable = Object.freeze({
+  version: 3,
+  params: Object.freeze(
+    CODEC_V2.params.map((p) =>
+      p.name === "pluckSize" ? num("pluckSize", 1.75) : p
+    )
+  ),
+});
+
 // Every table ever published, oldest first (never edit or drop one).
 export const CODEC_TABLES: readonly CodecTable[] = Object.freeze([
   CODEC_V1,
   CODEC_V2,
+  CODEC_V3,
 ]);
 // The table new links are written with (typed wide: encodeToken still
 // compares it with 1, the version whose all-default links are bare seeds).
-export const CODEC_VERSION: number = 2;
+export const CODEC_VERSION: number = 3;
 
 export function codecTable(version: number): CodecTable | undefined {
   return CODEC_TABLES.find((t) => t.version === version);

@@ -723,7 +723,7 @@ export function buildPanel(
   // --- Touch & feel ---------------------------------------------------------
   const fFeel = folder("Touch & feel", false);
   row(
-    fFeel, p, "pluckSize", { min: 0, max: 2, step: 0.05 },
+    fFeel, p, "pluckSize", { min: 0, max: 3, step: 0.05 },
     "How wide a plucked thread swings. A tap (or an auto pluck) sets the thread between its crossings vibrating - visual only, nothing else moves. 0 = sound only. Applies live.",
     D.pluckSize, () => callbacks.onSlackChange()
   );

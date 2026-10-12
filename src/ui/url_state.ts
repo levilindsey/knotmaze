@@ -323,7 +323,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   fourWayFraction: 0.12,
   deadEndDensity: 0.25,
   pluckStyle: "string",
-  pluckSize: 1,
+  pluckSize: 1.75, // Since codec v3 (v2 links read 1).
   pluckGhost: 0.35,
   pluckReach: "run",
   physics: true,
