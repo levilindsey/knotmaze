@@ -9,7 +9,7 @@ A web-based procedural generator for celtic-knot-style mazes with physics-based 
 Three-layer architecture:
 - **Layer 1 (Combinatorial):** `TangleGraph` — planar multigraph on a lattice with nodes (crossing/junction/end) and edges (thread segments). Strand tracing, checkerboard alternation, pairwise-crossing invariants.
 - **Layer 2 (Geometric):** Centripetal Catmull-Rom splines through lattice points; arc-length parameterization.
-- **Layer 3 (Dynamic):** Verlet-integrated particles; each strand is an independent closed chain (springs, bending, repulsion — no lattice anchors). Crossings are SLIDING BINDINGS: a fractional position along each of the two threads, re-projected each substep (true polyline-intersection targeting, nearest-point fallback) so intersections migrate along threads, coupled by a coincidence constraint, with ordering clamps preserving diagram topology. Contacts have STATIC/KINETIC friction: kinetic (coupling projected off each thread's tangent — material slides through crossings; slide + transversality active) while grabbed/agitated/moving, static (full-vector weld, crossing machinery frozen) once per-substep motion drops below a stick threshold — kinetic-only contacts wander forever (a PBD constraint standoff pumps the free tangential mode; no damping fixes it — measured via the phase probe), static-only reads as pinned when dragging. The knot is QUASI-3D: each particle carries a depth derived from the crossing diagram (over passes tent to +amp, under to −amp, over DEPTH_WINDOW 1.2 ctrl; contributions SUM, so a twist eye's midpoint cancels back to 0), and collision/repulsion treat threads as 3D capsules — required 2D separation is sqrt(margin² − dz²). Crossings therefore exempt themselves exactly where the diagram says the threads overlap, at any angle, and the width floor applies everywhere else, including inside kink loops and twist eyes (same-chain collision skip is only ±2 ctrl; KINK_MIN_SEPARATION 2.6 keeps a self-crossing's loop stocked with enough material to render). This replaced the circular contact-lens exemption (CONTACT_RADIUS + taper), whose radius mismatched the true overlap span (margin/sinθ) at oblique crossings — the mismatch both welded threads tangentially and fought geometry in a standing conflict (the source of the "threads bound at intersections" feel and the loop-end gap artifacts). Contacts carry GRADUATED friction (per-crossing smoothed contact speed → weld 0 while grabbed/agitated/fast, weld 1 when quiet) applied to the coupling's tangential component and to slide/transversality mobility — the dissipation channel that lets the constraint standoff freeze and the knot sleep after interaction (the lens's parasitic weld used to provide this by accident); the coupling also yields under clamp lag while threads intersect. MIN_PASS_SEPARATION (1.6) / DEPTH_WINDOW (1.4) sit in a measured constraint triangle with the 2.0 corridor pitch — see the constants' comments before touching any of the three. Slide-chase corollaries that remain load-bearing: NO perceptible deadband (a weak tug moves material ~0.006 ctrl/substep — any useful deadband is a self-sustaining stick-slip trap), JOINT per-crossing intersection targeting (per-pass targeting can lock the two passes onto different intersections of a twist eye), and EXACT grabbed chase (ease 1.0 — chase lag feeds parasitic pull through the coupling). Gentle centroid centering + a bounds-following viewport replace grid anchoring. Simplex-noise temperature agitation.
+- **Layer 3 (Dynamic):** Verlet-integrated particles; each strand is an independent closed chain (springs, bending, repulsion — no lattice anchors). Crossings are SLIDING BINDINGS: a fractional position along each of the two threads, re-projected each substep (true polyline-intersection targeting, nearest-point fallback) so intersections migrate along threads, coupled by a coincidence constraint, with ordering clamps preserving diagram topology. Contacts have STATIC/KINETIC friction: kinetic (coupling projected off each thread's tangent — material slides through crossings; slide + transversality active) while grabbed/agitated/moving, static (full-vector weld, crossing machinery frozen) once per-substep motion drops below a stick threshold — kinetic-only contacts wander forever (a PBD constraint standoff pumps the free tangential mode; no damping fixes it — measured via the phase probe), static-only reads as pinned when dragging. The knot is QUASI-3D: each particle carries a depth derived from the crossing diagram (over passes tent to +amp, under to −amp, over DEPTH_WINDOW 1.2 ctrl; contributions SUM, so a twist eye's midpoint cancels back to 0), and collision/repulsion treat threads as 3D capsules — required 2D separation is sqrt(margin² − dz²). Crossings therefore exempt themselves exactly where the diagram says the threads overlap, at any angle, and the width floor applies everywhere else, including inside kink loops and twist eyes (same-chain collision skip is only ±2 ctrl; KINK_MIN_SEPARATION 2.6 keeps a self-crossing's loop stocked with enough material to render; a rest-material eye ratchet, across-eye pressure and a fairing exemption hold it OPEN - see the KINK EYES entry). This replaced the circular contact-lens exemption (CONTACT_RADIUS + taper), whose radius mismatched the true overlap span (margin/sinθ) at oblique crossings — the mismatch both welded threads tangentially and fought geometry in a standing conflict (the source of the "threads bound at intersections" feel and the loop-end gap artifacts). Contacts carry GRADUATED friction (per-crossing smoothed contact speed → weld 0 while grabbed/agitated/fast, weld 1 when quiet) applied to the coupling's tangential component and to slide/transversality mobility — the dissipation channel that lets the constraint standoff freeze and the knot sleep after interaction (the lens's parasitic weld used to provide this by accident); the coupling also yields under clamp lag while threads intersect. MIN_PASS_SEPARATION (1.6) / DEPTH_WINDOW (1.4) sit in a measured constraint triangle with the 2.0 corridor pitch — see the constants' comments before touching any of the three. Slide-chase corollaries that remain load-bearing: NO perceptible deadband (a weak tug moves material ~0.006 ctrl/substep — any useful deadband is a self-sustaining stick-slip trap), JOINT per-crossing intersection targeting (per-pass targeting can lock the two passes onto different intersections of a twist eye), and EXACT grabbed chase (ease 1.0 — chase lag feeds parasitic pull through the coupling). Gentle centroid centering + a bounds-following viewport replace grid anchoring. Simplex-noise temperature agitation.
 
 Rendering: PixiJS v8 custom ribbon meshes with depth-based over/under casing gaps.
 
@@ -842,6 +842,72 @@ between-threads/cell-passage route.
   `mf=0`, never append. Known: at the defaults the median tapped lobe gets
   the 0.45h amplitude floor (psz 1.5-2 reads better at default zoom);
   short lobes inside junction web footprints show a halo, not a blur.
+- KINK EYES (worktree agent, 2026-10-11; Levi: "This twist is getting too
+  squished" - crossing 305 at `?k88dtb.oHFEfg` parked at the 3.2-ctrl kink
+  floor, its eye a closed notch). Every kink (a self-crossing whose two
+  passes are chain-order neighbors) now rests with an OPEN, round eye.
+  TARGET + CENSUS: hole = 2 x (largest circle inside the loop's RENDERED
+  centerline - half width) >= 0.8 widths, every kink, at rest, headed
+  real-time Chrome. Before -> after (min / median widths; kinks under):
+  user 0.17/0.36 -> 0.97/1.24 (16/21 -> 0); default 0.20/0.72 ->
+  1.10/1.25 (12/17 -> 0); tw .64 0.08/0.45 -> 0.88/1.17 (17/17 -> 0); tw
+  .42 0.35/1.09 -> 1.27/1.44 (5/17 -> 0); knot mode (19ven80, mf=0)
+  0.22/0.32 -> 1.05/1.27 (20/20 -> 0). THREE CLOSERS, each measured (per-
+  loop-particle phase attribution through the probe() hooks + settle
+  traces): (1) LASSO DRAIN - every kink is one lattice motif (8 ctrl, 3.29
+  world of rest material at slack .55); the initial transient pulls it
+  out through the crossing (8.0 -> 6.65 ctrl in 0.5 s), then the contacts
+  go STATIC at ~0.6 s and freeze what is left; (2) FAIRING is curve-
+  shortening on a closed loop (-21.6e-3 per particle per substep against
+  bending's +26.5e-3); (3) ASYMMETRIC REPULSION - the +-6 ctrl same-chain
+  exclusion hides an 8-ctrl loop's own across-eye pairs while each arm is
+  still pushed INTO the eye by the opposite tail. Material alone is NOT
+  enough: holding the full lattice loop left knot holes at 0.30-0.49, the
+  arc going into a narrow neck. FIX (particle_system.ts): (a) EYE RATCHET -
+  a budget of 7 widths of REST material (structural rests; segments rest
+  0.16-0.64 world per ctrl, so ctrl is not a size) in settled-shrink
+  units, P3.39 form (0.015 ctrl per slide, mobility-scaled, from the
+  current gap), FIRST in the clamp stack. The jn ratchet and a twist
+  twin's soft ratchet on a kink pass's outer side INTERSECT with it
+  (neither takes the other's unmet budget; both short = the pass holds) -
+  both sequential orders failed measurably (jn last walked a kink back
+  into its loop 8 -> 6.8 ctrl; kink last parked a joint on the crossing, a
+  standing rider that never slept; the twin's 3.3-ctrl budget conveyed a
+  fat kink 8.34 -> 8.01). Ordering clamps still always win, so a MIN_PASS
+  convoy can still take a little (seen: 8.0 -> 7.8). (b) EYE PRESSURE -
+  pairs of one loop at least 35% of its material apart repel at
+  max(repulseDist, 2.4 widths) with applyRepulsion's 3D law and stiffness
+  (which now skips them via topology.kinkOf). (c) Kink loops skip fairing
+  (a residual 0.15/0.3 changed roundness by nothing). VERIFIED: browser
+  sleep sweeps, 8 seeds x default/fat, 16/16 asleep at sim 7.0, riders 0
+  (baseline 13/16 - 3 fat seeds never slept); gesture battery, 6 kinks x
+  hold 6 s / pull 0.5 / cinch 1.2, 18/18 re-slept, riders 0, eyes >= 1.0
+  widths after; crossing-gap scan clean at all 5 URLs (kink erase spans
+  0.62-0.89); vitest incl. quiescence green; golden REGENERATED (both
+  golden knots contain kinks - 2 and 4; kink-free knots stay
+  byte-identical). RESIDUALS: at tw .64, 3 of ~152 kinks over 8 seeds rest
+  at 0.56-0.78 widths - BOXED kinks (a fused joint on one side, the 1.6
+  corridor floor on the other) keep only lattice material, whose round
+  loop leaves at most a 0.64-width hole at that width (pressure stretches
+  it ~20%). tw >= 0.72 does not sleep in the baseline either (standing
+  riders: 2/4 at .72, 0/4 at .8 in both builds). The phone's 3.37-ctrl
+  state did not reproduce on desktop: a 1e-3 initial jitter barely moves
+  the settle (it is contractive at that scale), so engine math or prior
+  play put it there; the ratchet now blocks the drain either way. LORE:
+  2.8 widths PUMPED (2/8 fat seeds never slept: once the eye distance
+  outruns the depth tents' z separation, pressure on the arms beside the
+  crossing fights the coupling - lags 0.5-1.4, mv bursts to 1e-1 through
+  the friction switch); 2.6 inflated default eyes (median 1.25 -> 1.34)
+  without lifting the boxed outliers. PROBE LORE: a vite-node harness that
+  builds the scene with main.ts's own calls (parseParams,
+  generateLatticeKnotwork, the maze plan/apply) and steps step(0.1)
+  frames (pixi caps a frame's dt at 0.1 s; gs 18 runs ~5 fps here)
+  reproduces the browser's physics exactly - identical spans - at 8-15 s
+  per scene, 14 in parallel; attribution experiments take minutes, not
+  hours. Wrapping ps.probe() decomposes every solver phase per particle.
+  And the contacts go globally STATIC ~0.6 s into the hero settle: slides,
+  and every along-thread ratchet with them, act only in that window and
+  during gestures - a budget cannot "grow in" during the settle.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
