@@ -46,7 +46,10 @@ and never reused.
   radius); A/B crops at cr 1, 3, 6 before the fans are deleted.
 - **K10** · Phone benchmark after every stage. Baseline (Pixel 11, Chrome
   154, 2026-10-11, default maze settled): 30 fps at rest with defaults,
-  51 fps with `fw=0`. Flow at rest halves the frame rate today.
+  51 fps with `fw=0`. Flow at rest halves the frame rate today. Compare
+  builds only with the knot asleep (or `phy=0`): a stale K1 preview that
+  had not slept after 19 s on the phone ran 5.8 fps on physics alone
+  (158 ms/frame), while master at Levi's link settled and ran 40 fps.
 
 ## Residuals (known, not fixed)
 
@@ -70,9 +73,6 @@ and never reused.
   fat seeds awake. See CLAUDE.md "KINK EYES".
 - **K30** · Very wide threads (tw >= 0.72) never sleep - standing riders;
   the same counts as before the kink fix (2/4 seeds at 0.72, 0/4 at 0.8).
-- **K31** · Levi's phone collapsed crossing 305 to 3.37 ctrl; desktop
-  never reproduced it (even with jitter). Re-check on the phone with the
-  current build when it is back.
 - **K26** · Plucks at tight loops, seen zoomed in. Only the concave side
   of the swing is capped, so the time exposure leans outward and a loop's
   eye gets a slightly ragged, enlarged rim during the ring. A symmetric
@@ -129,6 +129,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K31** · Levi's phone collapsed crossing 305 (`?k88dtb.oHFEfg`) to
+  3.37 ctrl. Re-checked on the phone (Pixel 11, USB) with the kink fix
+  (9920fab): 305 rests at 8.58 ctrl with an open eye and a clean
+  gap-faded crossing; all 22 kinks 8.0-15.0 ctrl (median 8.69); asleep
+  at sim 7.0 s, wall 10.1 s. Closed in the commit that moved this item
+  here (probe: `.claude/probes/probe_k31.mjs`).
 
 - **K28** · Intro vs physics settle: Levi chose option (b) - no interim
   settle-first loader; the intro stays over the live settle until K7's
