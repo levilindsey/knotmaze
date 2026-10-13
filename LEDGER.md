@@ -268,6 +268,7 @@ K5-K7 (split, frame loop, worker) follow.
   - Guards: the K63 sleep battery, the kink-eye censuses, the gesture
     battery, and the knot-mode golden. An inactive constraint must leave
     the golden byte-identical.
+  - Brief: `docs/design/K90.md`.
 - **K86** · Long dead ends (Levi: "ensure longer dead end paths with no
   junctions"): port K74's option F to `src/core/maze_plan.ts` (cut each
   dead end where its free tail is longest, place dead ends before the
@@ -281,7 +282,8 @@ K5-K7 (split, frame loop, worker) follow.
   (K74, inferred, not profiled). A running minimum distance per candidate
   would make it nearly free: faster loads, K46's rerolls and K74's
   greedy-trap search. Profile first; the result must be the same maze
-  for every seed (identity tests, the golden dailies).
+  for every seed (identity tests, the golden dailies). Brief:
+  `docs/design/K87.md`.
 - **K78** · The Knotmaze handbook: algorithms, architecture, decisions
   and trade-offs, and a per-param reference with figures (the
   half-lattice units diagram first). Write it once the churn settles;
