@@ -42,6 +42,9 @@ const S = PAINT_CONST.K_ROW_SHIFT;
 //   uKSect  = (blendDist, ease, -, -)        junctionBlend (lattice units)
 //   uKPaint = (on, refBase, itemBase, hover) gameplay paint (KPAINT)
 //   uKPulse = (travelIn, travelOut, spacing, fadeIn)  pulse clocks
+//   uKReach = (reach, fade, -, -)            pulse trains' reach (world arc
+//                                            from the junction) and the
+//                                            fade over its end (K75)
 //   uKGold  = (gold rgb, -)                  the path color
 export const KNOT_UNIFORMS_GLSL = /* glsl */ `
 uniform vec4 uKBase;
@@ -54,6 +57,7 @@ uniform vec4 uKGamut;
 uniform vec4 uKSect;
 uniform vec4 uKPaint;
 uniform vec4 uKPulse;
+uniform vec4 uKReach;
 uniform vec4 uKGold;
 `;
 
@@ -635,6 +639,14 @@ highp float kGoldU(highp float p) {
   return p >= 1.0 ? 121.0 / 256.0 : p <= 0.0 ? 115.0 / 256.0 : (115.0 + 6.0 * p) / 256.0;
 }
 
+// The pulse trains' reach window (K75): full strength out to reach - fade
+// from the junction, smoothly gone at reach. Hover (kPulseV) is exempt: it
+// lights the whole run a tap would take.
+highp float kReachWin(highp float d) {
+  highp float f = max(uKReach.y, 1e-4);
+  return 1.0 - kSmooth((d - (uKReach.x - f)) / f);
+}
+
 highp float kPulseV(highp float d, highp float span, bool inward, bool hovered) {
   if (d < 0.0 || d > span) return 0.0;
   highp float endWin = clamp((span - d) / PULSE_END_WINDOW, 0.0, 1.0);
@@ -646,8 +658,8 @@ highp float kPulseV(highp float d, highp float span, bool inward, bool hovered) 
   highp float dC = max(0.0, d - (ph <= s - ph ? ph : ph - s));
   highp float bump = max(0.0, 1.0 - dist / CREST_WIDTH) * min(1.0, dC / CREST_RAMP);
   highp float fl = (PULSE_FLOOR + PULSE_CORE_BOOST * max(0.0, 1.0 - d / PULSE_CORE_RADIUS)) *
-    max(0.0, 1.0 - d / PULSE_REACH);
-  return min(1.0, (fl + bump * 0.9) * endWin) * uKPulse.w;
+    max(0.0, 1.0 - d / PULSE_FLOOR_REACH);
+  return min(1.0, (fl + bump * 0.9) * endWin) * uKPulse.w * kReachWin(d);
 }
 
 highp float kRingDist(highp float a, highp float b, highp float total, bool closed) {

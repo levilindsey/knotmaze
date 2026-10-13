@@ -100,6 +100,23 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   (uKBase.z): the visible ribbon's (p, pulse v, glow). Probes:
   `.claude/probes/K75/`.
 
+- PULSE REACH (K75, same day; Levi: the junction's pulse highlight should
+  "only extend a set distance away from the junction along the segment",
+  with a slider, fading out at the end). `pulseReach` (pr=, codec v3 index
+  69, default 3, panel [0.5, 15]) is measured in world (= lattice) units
+  of ARC from the junction, the unit of pulseSpacing, so every arm of a
+  junction lights the same distance. Measuring by each run's lattice
+  length, as trailLength does, would light arms of one junction to
+  different world distances. uKReach = (reach, fade) windows kPulseV:
+  1 - smoothstep over the last PULSE_REACH_FADE 1.0 (at most half the
+  reach). A FIXED fade length, because a share of the reach dimmed a long
+  reach's crests over its whole second half. Hover is exempt: it still
+  lights the whole run a tap would take. Default from same-state sheets
+  (`reach_sheet.mjs`): at 2.5 the floor glow (PULSE_FLOOR_REACH 2.0,
+  renamed from PULSE_REACH) swallows the crests; at 3 one crest emerges
+  past the glow and dissolves, clearly short of a median run (3.7).
+  Links written before it read 3.
+
 ## RENDER LORE
 
 RENDER LORE (2026-10-11, GPU junction field): **blend COMPOSED colors,
