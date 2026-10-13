@@ -13,10 +13,11 @@
 //   two texels per arm. Evaluating it per pixel, twice per web pixel, cost
 //   the phone 60 -> 44 fps.)
 //   RECORD (RGBA32F, linear texel index): one record per junction / tip:
-//          header (jx, jy, nArms, -), the GATE texel J1 = (tOn, tLast, -, -)
-//          (G2.1: reveal-relative wall times - shown once every arm is
-//          revealed, fading in as the latest-ignited arm's appearance FX
-//          settles; paint_glsl knotFanAlpha), then per arm a header pair
+//          header (jx, jy, nArms, routeBase), the GATE texel J1 = (tOn,
+//          tLast, 0, nRoutes) (G2.1: reveal-relative wall times - shown
+//          once every arm is revealed, fading in as the latest-ignited
+//          arm's appearance FX settles; paint_glsl knotFanAlpha reads .xy
+//          only; K81's routes below), then per arm a header pair
 //          (chain, ctrlSlope, stripRow, stripScale) + (arc0, dir, domain,
 //          jointCtrl) (the strip row holds the arm's material from its
 //          joint outward, stripScale texels per world arc; chain, slope,
@@ -28,6 +29,28 @@
 //          fallback): header, J1, (chain, stripRow, stripScale, offset) +
 //          (arc0, axisX, axisY, ctrl0) - the thread's own material at the
 //          point's axis projection (strip texel (t + offset) * stripScale).
+//   ROUTES (K81): where the player's route passes a junction, the gold
+//          reads as ONE smooth band from the arrival arm to the departure
+//          arm instead of two straight ribbons meeting in an L whose outer
+//          corners and wedge blends were gold too (the "flat nub" Levi
+//          reported). A routed record (nRoutes > 0) lists its passes at
+//          routeBase, oldest first: per route R0 = (nVerts, m, armA, armB
+//          or -1 for a one-arm route) then nVerts texels (x, y, tau, 0) -
+//          the band's centerline: arm A's own centerline in to arc d, a
+//          cubic turn, arm B's out (tau = -arc along A, +arc along B). In a
+//          routed record each arm owns TWO strip rows: its composed
+//          material at stripRow and its UNTRAVELED material (arm_strip.ts:
+//          the paint without its gold amount) at stripRow + 1. The base
+//          field reads the untraveled rows, so the web is untraveled
+//          everywhere off the bands; each band is the thread's width and
+//          wears its arms' COMPOSED rows (A at -tau, B at +tau,
+//          smoothstep-blended over |tau| < m), so it follows every paint
+//          the arms show - trail fades included, with no clock of its own.
+//          Band reads are floored at texel 1: a span ending at the joint
+//          half-covers texel 0. The CPU side re-draws the arms' ribbon
+//          quads near a routed joint in this pass (COVER STRIPS, tagged by
+//          a fractional aRec: STRIP_REC_TAG) and drops the paint caps
+//          there, so the field and the bands decide those pixels.
 //
 // Float data is read with texelFetch + manual interpolation only (NEAREST
 // sampling): float LINEAR filtering needs OES_texture_float_linear, which
@@ -66,6 +89,19 @@ export const FIELD_BLEND_MIN = 0.5;
 // Arms per junction the shader scans (its loop bound). The fabric's fused
 // junctions carry 3 (splice) or 4 (merge) arms.
 export const MAX_ARMS = 12;
+// K81 route bands per record (the shader's loop bounds): passes through
+// one junction (a revisit adds one; the CPU keeps the newest) and band
+// centerline vertices per pass.
+export const MAX_ROUTES = 4;
+export const MAX_ROUTE_VERTS = 64;
+// A band's solid pad past the thread half-width, in pixels, on COVER STRIPS
+// only (junctionField): a strip's own edge is the ribbon's MSAA edge, and
+// the pad keeps the untraveled material out of it.
+export const ROUTE_BAND_PAD = 0.5;
+// Added to a cover strip's aRec (TriFanMesh.pushStrip): the fragment tells a
+// strip from a fan by fract(vRec) and still finds the record at
+// int(vRec + 0.5) (exact in float32 below 2^21 records).
+export const STRIP_REC_TAG = 0.25;
 // Texel row widths of the two data textures (linear index -> (i % W, i / W),
 // done in GLSL as a mask and a shift - both widths are 2^ROW_SHIFT; the
 // FloatRows class and its row uploader live in float_rows.ts).
@@ -123,11 +159,14 @@ vec4 jAt(int i) { return texelFetch(uJData, ivec2(i & ${RECORD_W - 1}, i >> ${RO
 
 // An arm's COMPOSED material at arc offset s along it (clamped to its
 // domain): its strip row (h.z) at s times the row's texels per world arc
-// (h.w) - arm_strip.ts renders the material there once per frame.
-vec3 armPaint(int ab, float s) {
+// (h.w) - arm_strip.ts renders the material there once per frame. K81:
+// untrav reads the arm's UNTRAVELED row (h.z + 1, routed records only);
+// band floors the lookup at texel 1 (a gold span ending at the joint
+// half-covers texel 0, and a band must not half-light its own start).
+vec3 armPaint(int ab, float s, bool band, bool untrav) {
   vec4 h = jAt(ab);
-  float sc = min(s, jAt(ab + 1).z);
-  return stripAt(int(h.z + 0.5), sc * h.w);
+  float sc = min(band ? max(s, 1.0 / h.w) : s, jAt(ab + 1).z);
+  return stripAt(int(h.z + 0.5) + (untrav ? 1 : 0), sc * h.w);
 }
 // Arc along an arm at projected radius rp (its radial profile; straight
 // extrapolation past the grid).
@@ -153,8 +192,9 @@ float profArc(int ab, float rp) {
 // (band A -> base -> gold -> band B: phantom gold between two near-white
 // pulse cores; a traveled/untraveled pair stepped sharply inside the
 // blend instead of ramping) - the palette-order lore, field edition.
-vec3 junctionField(int rec, vec2 p) {
-  vec4 hd = jAt(rec);
+// untrav (K81, a routed record): every arm's UNTRAVELED row - the route
+// bands put the gold back along the path itself.
+vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
   int n = int(hd.z + 0.5);
   vec2 e = p - hd.xy;
   if (n == 0) {
@@ -221,12 +261,72 @@ vec3 junctionField(int rec, vec2 p) {
   vec3 cA = vec3(0.0);
   vec3 cB = vec3(0.0);
   if (!onlyB) {
-    cA = armPaint(abA, profArc(abA, relA < HALF_PI ? rho * cos(relA) : 0.0));
+    cA = armPaint(abA, profArc(abA, relA < HALF_PI ? rho * cos(relA) : 0.0), false, untrav);
     if (onlyA) return cA;
   }
-  cB = armPaint(abB, profArc(abB, relB < HALF_PI ? rho * cos(relB) : 0.0));
+  cB = armPaint(abB, profArc(abB, relB < HALF_PI ? rho * cos(relB) : 0.0), false, untrav);
   if (onlyB) return cB;
   return mix(cA, cB, t);
+}
+
+// The junction pass's color at p (pxW: world units per pixel; strip: the
+// fragment belongs to a cover strip): the base field (a routed record's
+// untraveled rows), then each K81 route band through this junction
+// composed over it, oldest first (a revisit's newer pass wins where two
+// cross). A band pixel takes its nearest point on the band's centerline
+// polyline (and that point's tau). In a web the band edge is a one-pixel
+// ramp CENTERED on the thread half-width, like a ribbon's MSAA edge, so
+// the band is the thread's width. On a cover strip the band stays solid
+// ROUTE_BAND_PAD pixels past the half-width before its ramp: the strip's
+// own edge is the ribbon's MSAA edge (4x samples sit within 0.4 px of the
+// pixel center, where this runs), and the pad keeps the untraveled
+// material out of it. The probe views (uKBase.z 3 / 4) show the base alone.
+vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
+  vec4 hd = jAt(rec);
+  int nr = int(j1.w + 0.5);
+  bool routed = nr > 0 && hd.z > 0.5;
+  vec3 c = junctionBase(rec, p, hd, routed);
+  if (!routed || (uKBase.z > 2.5 && uKBase.z < 4.5)) return c;
+  int base = int(hd.w + 0.5);
+  int stride = 2 + int(uJParams.y + 0.5);
+  float reach = uJParams.x + (strip ? ${(ROUTE_BAND_PAD + 1).toFixed(3)} : 0.5) * pxW;
+  for (int r = 0; r < ${MAX_ROUTES}; r++) {
+    if (r >= nr) break;
+    vec4 r0 = jAt(base);
+    int nv = int(r0.x + 0.5);
+    float best = 1e20;
+    float tau = 0.0;
+    vec4 q0 = jAt(base + 1);
+    for (int k = 0; k < ${MAX_ROUTE_VERTS - 1}; k++) {
+      if (k + 1 >= nv) break;
+      vec4 q1 = jAt(base + 2 + k);
+      vec2 d = q1.xy - q0.xy;
+      vec2 w = p - q0.xy;
+      float l2 = dot(d, d);
+      float u = l2 > 1e-12 ? clamp(dot(w, d) / l2, 0.0, 1.0) : 0.0;
+      vec2 off = w - d * u;
+      float dd = dot(off, off);
+      if (dd < best) {
+        best = dd;
+        tau = mix(q0.z, q1.z, u);
+      }
+      q0 = q1;
+    }
+    float cov = clamp((reach - sqrt(best)) / pxW, 0.0, 1.0);
+    if (cov > 0.0) {
+      vec3 bm = armPaint(rec + 2 + int(r0.z + 0.5) * stride, -tau, true, false);
+      if (r0.w > -0.5) {
+        bm = mix(
+          bm,
+          armPaint(rec + 2 + int(r0.w + 0.5) * stride, tau, true, false),
+          smoothstep(-r0.y, r0.y, tau)
+        );
+      }
+      c = mix(c, bm, cov);
+    }
+    base += 1 + nv;
+  }
+  return c;
 }
 `;
 
@@ -281,9 +381,12 @@ void main(void) {
   vec2 gfw = fwidth(vPos);
   float pxW = max(max(gfw.x, gfw.y), 1e-5);
   int rec = int(vRec + 0.5);
-  float aM = knotFanAlpha(jAt(rec + 1));
+  // A cover strip's aRec carries STRIP_REC_TAG.
+  bool strip = fract(vRec) > ${(STRIP_REC_TAG / 2).toFixed(3)};
+  vec4 j1 = jAt(rec + 1);
+  float aM = knotFanAlpha(j1);
   if (aM <= 0.002) discard;
-  vec3 rgb = junctionField(rec, vPos);
+  vec3 rgb = junctionField(rec, vPos, pxW, j1, strip);
   float gk = gapKeepAt(pxW, vPos, -1.0, vec2(0.0), vMaskId);
   if (gk < 1.0 && gapProbe()) {
     rgb = mix(rgb, vec3(1.0, 0.0, 0.85), (1.0 - gk) * 0.75);
