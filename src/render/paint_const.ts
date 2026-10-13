@@ -81,9 +81,11 @@ export const FX_STYLE = {
 
 // GAMEPLAY PAINT items (KPAINT, G2.3): the renderer's paint declaration -
 // traveled spans, junction caps, pulse arms - as records the shaders read
-// per pixel (T0.x = the type; pulse flags in T1.y).
+// per pixel (T0.x = the type; pulse flags in T1.y). Bit 2 was ON_PATH, the
+// per-arm band family retired by K75 (a crest brightens the pixel's own
+// paint now - see kComposePaint).
 export const PAINT_ITEM = { SPAN: 1, CAP: 2, PULSE: 3 } as const;
-export const ITEM_FLAG = { INWARD: 1, ON_PATH: 2, HOVER: 4 } as const;
+export const ITEM_FLAG = { INWARD: 1, HOVER: 4 } as const;
 
 // RUNS flags (R1.w).
 export const RUN_FLAG = {

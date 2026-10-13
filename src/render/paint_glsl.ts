@@ -634,10 +634,6 @@ export const PAINT_PAINT_GLSL = /* glsl */ `
 highp float kGoldU(highp float p) {
   return p >= 1.0 ? 121.0 / 256.0 : p <= 0.0 ? 115.0 / 256.0 : (115.0 + 6.0 * p) / 256.0;
 }
-highp float kBandU(bool onPath, highp float v) {
-  highp float q = clamp(v, 0.0, 1.0);
-  return onPath ? (124.5 + 110.0 * q) / 256.0 : (111.5 - 110.0 * q) / 256.0;
-}
 
 highp float kPulseV(highp float d, highp float span, bool inward, bool hovered) {
   if (d < 0.0 || d > span) return 0.0;
@@ -664,7 +660,7 @@ highp float kCov(highp float sd, highp float px) {
   return clamp(sd / px + 0.5, 0.0, 1.0);
 }
 
-// (p, band, famB, v): the gold ramp amount, or a band and its strength.
+// (p, band, v, -): the gold ramp amount, and a pulse band and its strength.
 highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px) {
   highp vec4 st = vec4(0.0);
   if (uKPaint.x < 0.5) return st;
@@ -732,8 +728,7 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
       highp float v = kPulseV(d, span, (flags & IF_INWARD) != 0, (flags & IF_HOVER) != 0);
       if (v > PULSE_MIN_V) {
         st.y = 1.0;
-        st.z = (flags & IF_ON_PATH) != 0 ? 1.0 : 0.0;
-        st.w = v;
+        st.z = v;
       }
     }
   }
@@ -775,23 +770,18 @@ highp float kGlow(KChain c, highp float ctrl) {
   return g;
 }
 
+// The paint over section S: the gold ramp gives the thread's own paint
+// color (traveled gold, a trail fade, a cap), then a pulse band or the
+// reveal glow (the stronger) brightens THAT color toward white. K75: the
+// retired strip picked a band FAMILY per pulse arm (gold -> white on
+// traveled arms, S -> white elsewhere), so an inbound crest on a fading
+// trail drew gold bands over the faded thread; composed this way a crest
+// meets the thread's paint at its edges whatever the paint is. Where the
+// paint is pure gold or pure section color (gold mode) it equals the old
+// bands.
 vec3 kComposePaint(vec3 S, highp vec4 st, highp float glow) {
-  bool band = st.y > 0.5;
-  bool famB = st.z > 0.5;
-  highp float v = st.w;
-  if (glow > 0.0) {
-    highp float u = band ? kBandU(famB, v) : kGoldU(st.x);
-    if (u >= 118.0 / 256.0) {
-      if (kBandU(true, glow) > u) { band = true; famB = true; v = glow; }
-    } else if (kBandU(false, glow) < u) {
-      band = true; famB = false; v = glow;
-    }
-  }
-  if (band) {
-    highp float w = K_BAND * clamp(v, 0.0, 1.0);
-    vec3 from = famB ? uKGold.rgb : S;
-    return from + (vec3(1.0) - from) * w;
-  }
-  return S + (uKGold.rgb - S) * clamp(st.x, 0.0, 1.0);
+  vec3 under = S + (uKGold.rgb - S) * clamp(st.x, 0.0, 1.0);
+  highp float v = max(st.y > 0.5 ? st.z : 0.0, glow);
+  return under + (vec3(1.0) - under) * (K_BAND * clamp(v, 0.0, 1.0));
 }
 `;

@@ -1146,27 +1146,24 @@ export function writeRunTexels(
 //                                PULSE cA = junction ctrl, cB = far ctrl
 //     T1 = (p1, flags, radius, -)       radius: CAP (arc); flags: PULSE
 // Evaluation follows the retired per-sample pass's PAINT U semantics
-// exactly (spans assign in order, caps never darken, pulses override,
-// the reveal glow brightens within its family) and the accent strip it
-// sampled is replaced by its closed form: band A = mix(S, white, K_BAND v),
-// band B = mix(gold, white, K_BAND v), the gold ramp = mix(S, gold, p) -
-// the K4 trail fade: LINEAR in p (the strip compressed it into
-// clamp(6p - 2.5)). Span / cap edges get a 1-pixel coverage ramp (`px`,
-// world arc per pixel; 0 = hard).
+// (spans assign in order, caps never darken, pulses override) and the
+// accent strip it sampled is replaced by a closed form: the gold ramp
+// mix(S, gold, p) is the thread's own paint - the K4 trail fade: LINEAR in
+// p (the strip compressed it into clamp(6p - 2.5)) - and a pulse band or
+// the reveal glow brightens THAT color: mix(paint, white, K_BAND v). The
+// strip's two bands (S -> white, gold -> white, chosen per pulse arm) are
+// its p = 0 and p = 1 cases; K75 retired the per-arm choice, which drew
+// gold crest bands over a fading trail. Span / cap edges get a 1-pixel
+// coverage ramp (`px`, world arc per pixel; 0 = hard).
 // Uniforms: uKPaint = (on, refBase, itemBase, hover), hover = the hover
 // breath 0.5 + 0.3 sin(clock W); uKPulse = (travelIn, travelOut, spacing,
 // fadeIn), travel reduced mod spacing on the CPU; uKGold = (gold rgb, -).
 // ======================================================================
 
-// The retired strip's paint U (ordering only - comparisons follow the old
-// pass exactly): base 115, gold ramp 115..121, band A 111.5 - 110 v,
-// band B 124.5 + 110 v (in 1/256).
+// The retired strip's gold-ramp U (ordering only - the caps' never-darken
+// comparison follows the old pass exactly): base 115 .. gold 121 (1/256).
 function goldUOf(p: number): number {
   return p >= 1 ? 121 / 256 : p <= 0 ? 115 / 256 : (115 + 6 * p) / 256;
-}
-function bandUOf(onPath: boolean, v: number): number {
-  const q = v < 0 ? 0 : v > 1 ? 1 : v;
-  return onPath ? (124.5 + 110 * q) / 256 : (111.5 - 110 * q) / 256;
 }
 
 // GLSL twin: kPulseV - the pulse field at distance d along an arm of length
@@ -1188,12 +1185,11 @@ export function kPulseV(U: KUniforms, d: number, span: number, inward: boolean, 
   return Math.min(1, (floor + bump * 0.9) * endWin) * U.uKPulse[3];
 }
 
-// Paint state at a point: the gold ramp amount p (when not in a band), or
-// a band (family B = gold side, A = base side) with strength v.
+// Paint state at a point: the gold ramp amount p (the thread's own paint),
+// and whether a pulse band brightens it, with strength v.
 export interface KPaintState {
   p: number;
   band: boolean;
-  famB: boolean;
   v: number;
 }
 
@@ -1223,7 +1219,6 @@ export function kPaintAt(
 ): KPaintState {
   out.p = 0;
   out.band = false;
-  out.famB = false;
   out.v = 0;
   if (U.uKPaint[0] < 0.5) return out;
   const P = D.paint;
@@ -1292,7 +1287,6 @@ export function kPaintAt(
       const v = kPulseV(U, d, span, (flags & ITEM_FLAG.INWARD) !== 0, (flags & ITEM_FLAG.HOVER) !== 0);
       if (v > PAINT_CONST.PULSE_MIN_V) {
         out.band = true;
-        out.famB = (flags & ITEM_FLAG.ON_PATH) !== 0;
         out.v = v;
       }
     }
@@ -1345,41 +1339,20 @@ export function kGlow(D: KData, U: KUniforms, c: KChain, ctrl: number): number {
 }
 
 // GLSL twin: kComposePaint - the painted color over section S (in place):
-// the declaration's state, then the glow (brightening within its family:
-// band B where the point is gold-ish or a gold-band pulse, band A else).
+// the gold ramp gives the thread's own paint color, then the pulse band or
+// the reveal glow (the stronger) brightens that color toward white.
 export function kComposePaint(U: KUniforms, S: Float32Array | number[], st: KPaintState, glow: number): void {
-  let band = st.band;
-  let famB = st.famB;
-  let v = st.v;
-  if (glow > 0) {
-    const u = band ? bandUOf(famB, v) : goldUOf(st.p);
-    if (u >= 118 / 256) {
-      if (bandUOf(true, glow) > u) {
-        band = true;
-        famB = true;
-        v = glow;
-      }
-    } else if (bandUOf(false, glow) < u) {
-      band = true;
-      famB = false;
-      v = glow;
-    }
-  }
   const G = U.uKGold;
-  const K = PAINT_CONST.K_BAND;
-  if (band) {
-    const w = K * Math.max(0, Math.min(1, v));
-    for (let i = 0; i < 3; i++) {
-      const from = famB ? G[i] : S[i];
-      S[i] = from + (1 - from) * w;
-    }
-    return;
-  }
   const p = Math.max(0, Math.min(1, st.p));
-  for (let i = 0; i < 3; i++) S[i] += (G[i] - S[i]) * p;
+  const v = Math.max(st.band ? st.v : 0, glow);
+  const w = PAINT_CONST.K_BAND * Math.max(0, Math.min(1, v));
+  for (let i = 0; i < 3; i++) {
+    const under = S[i] + (G[i] - S[i]) * p;
+    S[i] = under + (1 - under) * w;
+  }
 }
 
-const PAINT_TMP: KPaintState = { p: 0, band: false, famB: false, v: 0 };
+const PAINT_TMP: KPaintState = { p: 0, band: false, v: 0 };
 
 // The ribbon shader's full color at a material point (section S in place,
 // FX, then the paint): what a probe vertex there renders, before the
