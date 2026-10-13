@@ -28,8 +28,9 @@ describe("sleep gate", () => {
       expect(t).toBeGreaterThanOrEqual(QUIET_WINDOW - 1e-9);
       expect(t).toBeLessThan(QUIET_WINDOW + dt + 1e-9);
     }
-    // 60 fps: exactly the old 45-frame window (45 x 1/60 sums to
-    // 0.7499999999999999 - the tolerance must absorb that).
+    // 60 fps: exactly QUIET_WINDOW x 60 frames (sums of 1/60 land just
+    // under the window - 45 of them are 0.7499999999999999 - and the
+    // tolerance must absorb that).
     const gate = new SleepGate();
     let frames = 0;
     while (!gate.frame(true, 1 / 60)) frames++;
