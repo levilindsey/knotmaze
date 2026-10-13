@@ -160,6 +160,12 @@ and never reused.
   (`docs/history.md`), and the code's comment names Reset path as the
   reset. Keep, or clear only on a restart (recommended; the explored
   runs become every tap since the restart)?
+- **K104** · K77's look, live since eec4854: the rounded pluck collapse
+  bends no tighter than a radius of 1 h (the A/B's 0.5 h left shoulders,
+  2 h erased most of the thinning), and the tap amplitude floor stays at
+  0.65 h. Both were the recommendation; confirm, or pick another radius
+  (`COLLAPSE_ROUND` in `src/render/pluck_overlay.ts`). Sheet:
+  `.claude/probes/K77/K77_before_after.png`.
 
 ## In progress
 
@@ -178,18 +184,21 @@ and never reused.
     then prototype the arc.
   - brief: `docs/design/K81.md`.
   - env: its dev servers on ports 5311-5314.
-- **K77** · Plucks show sharp, wedge-like depressions where the
-  vibration is strongest, maybe more on curves (Levi): a thinning should
-  read smooth and rounded. Includes the 0.45 h vs 0.65 h amplitude-floor
-  A/B (44885f3).
-  - owner: the K77 agent of session d8031183, started 2026-10-13 00:58.
-  - branch: `worktree-agent-a92faf33828bf0d6d`
-    (`.claude/worktrees/agent-a92faf33828bf0d6d`), on 182b2cf; last
+- **K79** · Backgrounds: speed, params, colors, Motion. Stage A (this
+  agent): the speed slider (0 = static, default = today's speeds), vellum
+  motion (static by default, K52), the in-app Motion setting (K53: follow
+  system / full / reduced, localStorage; also the pluck's reduced swing),
+  codec v4 appends, GPU cost. Stage B, another agent after the merge:
+  per-effect params and custom colors (brief items 3-4).
+  - owner: the K79 stage A agent (a7e566f4ba72a9d2d) of session
+    d8031183, started 2026-10-13 02:50.
+  - branch: `worktree-agent-a7e566f4ba72a9d2d`
+    (`.claude/worktrees/agent-a7e566f4ba72a9d2d`), on 6e3f124; last
     commit: none yet.
-  - evidence: `.claude/probes/K77/` in its worktree (copied at merge).
-  - next: reproduce with `__knotPluck`, attribute each wedge to its term.
-  - brief: `docs/design/K77.md`.
-  - env: its dev servers on ports 5301-5304.
+  - evidence: `.claude/probes/K79/` in its worktree (copied at merge).
+  - next: the speed slider, then vellum's motion.
+  - brief: `docs/design/K79.md`.
+  - env: its dev servers on ports 5331-5334.
 
 ## Next, in order
 
@@ -200,15 +209,16 @@ awake, over Tailscale.
 Overnight order, 2026-10-13 (Levi: "keep running through the night until
 you've addressed all bits that you don't need my input on"). At most three
 code agents at once, research on top. Stop launching once the week
-passes about 45% (29% at 00:30).
+passes about 45% (37% at 02:45).
 1. Merge the running five as they finish: K80 (docs) is left; K73 and
    K75 merged 2026-10-13 01:00, K83 at 01:30, K74 in dad40f8.
-2. K77 (pluck wedges, running since 00:58) and K81 (the smooth arc,
-   running since 01:07); then K79 (backgrounds; codec v4 is merged).
+2. K77 merged (eec4854). K81 (the smooth arc, running since 01:07) and
+   K79 stage A (running since 02:50); K79 stage B after its merge.
    K49's comparison is done (Waiting on Levi).
-3. K90 stage 1 (measure over-tight folds, prototype a bend limit), K87
-   (the plan's pickFarthest cost, same mazes), then K86 (long dead ends
-   behind params that default to today's maze).
+3. K87 (the plan's pickFarthest cost, same mazes; in the main session
+   from 02:50), K90 stage 1 (measure over-tight folds, prototype a bend
+   limit), then K86 (long dead ends behind params that default to
+   today's maze).
 4. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
    K42.
 
@@ -236,10 +246,6 @@ K5-K7 (split, frame loop, worker) follow.
   gets trailLength 10 unless it overrides it; the memory-trail days were
   designed around 5 (K73). Brief: `docs/design/K46.md`.
 
-- **K79** · Backgrounds: an animation speed slider (0 = static, vellum
-  animated too), general and per-effect params, configurable colors, and
-  an in-app Motion setting (follow system / full / reduced). New params
-  append to codec v4 (K73). Launch after K77. Brief: `docs/design/K79.md`.
 - **K90** · A physical minimum bend radius (Levi, 2026-10-13: "ideally
   we'd have a more physics-based constraint to prevent loops from
   becoming too tight in the first place"). A thread should never fold
@@ -459,6 +465,12 @@ K5-K7 (split, frame loop, worker) follow.
   (e9e01ae) a music note's string motion waits lead + latency for its
   scheduled sound, and below 10 fps it trails the sound by (frame /
   100 ms - 1) x that delay, about 0.15 s at 150 ms frames.
+- **K106** · A dark spike inside a hook's tight bend while it rings (the
+  ribbon's inner corner). Present with the base collapse off, so not
+  K77's: `.claude/probes/K77/out/s2r/s2r_hookspike.png`.
+- **K107** · A dark "X" at the center of big knot-mode attack-lobe blurs,
+  also present with the collapse off:
+  `.claude/probes/K77/out/abknot/sheet_zoomL.png`.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -562,10 +574,26 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K102** · `src/audio/songs.ts` holds one song (Scarborough Fair): a
   small library of public-domain tunes would serve K80's melody path and
   a song per day (K80 doc section 3).
+- **K105** · Scale a pluck's sympathetic lobes from the tapped lobe's
+  CAPPED amplitude. They scale from the pre-cap tap amplitude, while the
+  tapped lobe is usually clearance-capped (74 of 80 fabric taps), so a
+  neighbor can out-swing the lobe that was tapped
+  (`src/render/pluck_overlay.ts`, the `sympatheticAmplitude` callers;
+  K77 finding).
 
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K77** · Plucks showed sharp, wedge-like depressions (Levi): the base
+  collapse met its limits (footprint ramps, tight bends, gap fades) in
+  min()s. `roundCollapse` now opens the collapse depth with raised-cosine
+  bumps, so the narrowed edge bends no tighter than 1 h; same-state worst
+  second difference -5.7 -> -0.98 (bound -1). Cost per pluck layout
+  (desktop, `.claude/probes/K77/k77_cost.ts`): 0.02-0.3 ms; a whole chain
+  at full depth costs n x h/per (1 ms at n 2000, h/per 8). Done in
+  eec4854 + 6e3f124 (2026-10-13; `.claude/probes/K77/`). Follow-ups
+  K104-K107.
 
 - **K101** · Music mode timed its notes from `performance.now()` in the
   render tick, so onsets landed up to a frame late and the tempo
