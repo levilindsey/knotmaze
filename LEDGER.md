@@ -15,11 +15,31 @@ and never reused.
 
 ## Waiting on Levi
 
-- **K48** · On desktop, Share copies the daily's result to the clipboard
-  (with a "Copied" toast), although Chrome and Edge on Windows could open
-  Windows' own Share dialog (Mail, Teams, Nearby Sharing). Phones get
-  their native share sheet. Keep the clipboard on desktop (recommended),
-  or open the Windows dialog?
+- **K76** · The thread-reveal mode's decisions: the stage 1 design is in
+  `docs/design/K76_reveal_mode.md` (2ee2b7f). The contact sheet of eight
+  end looks is `.claude/probes/K76/out/contact.html` (desktop and phone
+  PNGs beside it). Decisions:
+  - the end look (recommended "Beacon": a round cap continuing as fading
+    dots over a soft halo);
+  - the params (`threadReveal`, `revealDistance` 2.5, `revealFade` 1,
+    and an exploration dropdown off | fog | threads);
+  - exclusive with fog;
+  - dailies via a theme, not a toggle;
+  - the literal reveal rule;
+  - hiding the exit indicator until the exit is seen.
+
+  Stage 2 (doc section 7) follows K73, K75 and K81. It must build the
+  mode as a separate shader variant: compiled in, it costs mode-off
+  frames 2.3 -> 2.8 ms on the desktop.
+  - owner: nobody since 2026-10-13 00:01 (stage 1 done; the agent of
+    session d8031183 can resume while the worktree is kept).
+  - branch: `worktree-agent-aea102de995e1ce30`
+    (`.claude/worktrees/agent-aea102de995e1ce30`); prototype WIP 1fbc0d2
+    and 23907a5, doc c05dbfc (on master as 2ee2b7f).
+  - evidence: `.claude/probes/K76/`.
+  - env: the prototype server is in the doc's handle (port 5276, private
+    cacheDir).
+  - brief: `docs/design/K76.md`, then `docs/design/K76_reveal_mode.md`.
 - **K49** · Kink eye size after K41's chord-law pressure: 2.6 widths
   (shipped) keeps the median eye at about 1.25 widths. 2.8 lifts the
   boxed tail (default-width X304 0.78 -> 0.84; every harness link at
@@ -28,13 +48,11 @@ and never reused.
   (static parchment grain plus vignette; the page stays navy on average),
   so every existing link and every daily shows it. Keep it, or default
   to `none`? Changing the default later needs codec v4.
-- **K53** · prefers-reduced-motion stops the background drift
-  completely, and Levi's desktop Chrome reports reduced motion (Windows
-  animation effects are off), so drift never shows there. Stop it, or
-  only slow it?
-- **K57** · Confirm the daily's exempt settings: the ones a player may
-  change without leaving the daily (`DAILY_EXEMPT_KEYS` in
-  `src/ui/daily_link.ts`, persisted across dailies).
+- **K57** · (Levi, 2026-10-13: revisit after all other changes, in the
+  careful daily review with K46 and K84.) Confirm the daily's exempt
+  settings: the ones a player may change without leaving the daily
+  (`DAILY_EXEMPT_KEYS` in `src/ui/daily_link.ts`, persisted across
+  dailies).
   - Levi's list: volume, soundMode, cameraMode, showStats, panel
     open/close/scroll.
   - The agent added: the rest of the Sound folder (pitchSpace, octaves,
@@ -90,23 +108,11 @@ and never reused.
   - next: research, the harness, a sweep of the existing knobs, then
     prototypes.
   - brief: `docs/design/K74.md`.
-- **K76** · A thread-reveal exploration mode (Levi): threads appear only
-  within a set distance of visited junctions, fading out, with distinct
-  unvisited ends and a camera fit to what's shown. Stage 1 is design and
-  a contact sheet of end-marker looks; the implementation waits for K73
-  and K75.
-  - owner: the K76 agent of session d8031183, started 2026-10-12 22:25.
-  - branch: `worktree-agent-aea102de995e1ce30`
-    (`.claude/worktrees/agent-aea102de995e1ce30`), from 42b4f78; last
-    commit: none yet.
-  - evidence: `.claude/probes/K76/`.
-  - next: the mechanism (gameplay-driven per-pixel reveal), the end-marker
-    contact sheet, camera fit and params.
-  - brief: `docs/design/K76.md`.
 - **K80** · Research and design: the minotaur mode (movement, chase
   quality, fairness, params) and a long list of other gameplay additions
   (locks and keys, one-way and collapsing runs, pickups, a sword,
-  patterned enemies, and more), with trade-offs. No code.
+  patterned enemies, and more), with trade-offs. Added 2026-10-13:
+  music-centric and rhythm mechanics. No code.
   - owner: the K80 agent of session d8031183, started 2026-10-12 22:50.
   - branch: `worktree-agent-a25726c24f262b138`
     (`.claude/worktrees/agent-a25726c24f262b138`); last commit: none yet.
@@ -367,6 +373,22 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   3.5-5 s in, mostly under the quiet threshold, which is what forces
   K63's 2.5 s window. Fixing it could make a 0.75 s window safe (K64).
   (K63 agent idea; harness in `.claude/probes/K63/`.)
+- **K84** · After the churn: a pass over EVERY param (Levi, 2026-10-13).
+  - Classify each as a viewer preference (localStorage) or a design param
+    (the link).
+  - Move the preferences into their own panel section.
+  - Re-evaluate each param's worth and grouping, and audit names and
+    tooltips.
+
+  It meets K57 (the daily's exempt keys are mostly preferences) and
+  feeds K78's param reference.
+- **K85** · Replay links (Levi, 2026-10-13): record a playthrough, put it
+  in a link, and replay it with the path animating. The link works for a
+  finished session (watch) or an in-progress one (pick up where it left
+  off). Builds on K47: an attempt already IS its tap list plus a
+  walk-graph fingerprint, and choice indices encode in a few bits per
+  move. A link needs the design token, the taps, and per-move timing for
+  a faithful replay. The share link stays as it is.
 - **K82** · Manually override the daily maze for a given day (Levi,
   2026-10-12; "could be a follow-up thing"). It fits the pinned-daily
   model as a frozen per-day override table beside the versioned
@@ -393,6 +415,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K48** · Desktop Share keeps copying to the clipboard (Levi,
+  2026-10-13). No change needed.
+- **K53** · Reduced motion: Levi chose an in-app Motion setting (follow
+  system / full / reduced, a viewer preference) on 2026-10-13. Built in
+  K79.
 
 - **K45** · CLAUDE.md slimmed from 2,250 lines (about 39k tokens) to
   about 240 (about 5k). History moved verbatim to `docs/history.md`, and
