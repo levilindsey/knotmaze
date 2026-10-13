@@ -106,8 +106,22 @@ and never reused.
   - next: research, the harness, a sweep of the existing knobs, then
     prototypes.
   - brief: `docs/design/K74.md`.
+- **K76** · A thread-reveal exploration mode (Levi): threads appear only
+  within a set distance of visited junctions, fading out, with distinct
+  unvisited ends and a camera fit to what's shown. Stage 1 is design and
+  a contact sheet of end-marker looks; the implementation waits for K73
+  and K75.
+  - owner: the K76 agent of session d8031183, started 2026-10-12 22:25.
+  - branch: `worktree-agent-aea102de995e1ce30`
+    (`.claude/worktrees/agent-aea102de995e1ce30`), from 42b4f78; last
+    commit: none yet.
+  - evidence: `.claude/probes/K76/`.
+  - next: the mechanism (gameplay-driven per-pixel reveal), the end-marker
+    contact sheet, camera fit and params.
+  - brief: `docs/design/K76.md`.
 - **K75** · Yellow banding in recentPath's incoming pulses at the
-  current junction (Levi).
+  current junction (Levi), plus the pulse reach: the junction's pulse
+  highlight extends only a set, slider-controlled distance, fading out.
   - owner: the K75 agent of session d8031183, started 2026-10-12 22:05.
   - branch: `worktree-agent-a40b9ac956a4eaa61`
     (`.claude/worktrees/agent-a40b9ac956a4eaa61`), from 39966da; last
