@@ -220,12 +220,18 @@ export const CODEC_V2: CodecTable = Object.freeze({
 // V3 (2026-10-11): pluckSize defaults to 1.75 (Levi: "bigger default for
 // plucks" - at 1 the median tapped lobe swung at the amplitude floor,
 // subtle at default zoom); an edited copy of V2, nothing else differs. V2
-// links keep pluckSize 1. New params since are APPENDED below.
+// links keep pluckSize 1. New params since are APPENDED below, and new enum
+// options at the end of their list: shape's "circle" (option 6,
+// 2026-10-12) - v1 and v2 links can never name it.
 export const CODEC_V3: CodecTable = Object.freeze({
   version: 3,
   params: Object.freeze([
     ...CODEC_V2.params.map((p) =>
-      p.name === "pluckSize" ? num("pluckSize", 1.75) : p
+      p.name === "pluckSize"
+        ? num("pluckSize", 1.75)
+        : p.name === "shape"
+          ? choice("shape", "rect", ["rect", "heart", "star", "fish", "tree", "ring", "circle"])
+          : p
     ),
     // The last three maze-plan knobs (2026-10-12, K20): until now every
     // link read them from DEFAULT_MAZE_PARAMS, so changing one there would

@@ -29,6 +29,25 @@ export interface HudSnapshot {
 export const fmtDist = (v: number): string =>
   Number.isFinite(v) ? String(Math.round(v * 10)) : "—";
 
+// The stat rows (label, value) the HUD and the win banner both show, in
+// one order. A null field drops its row.
+type StatFields = Pick<
+  HudSnapshot,
+  "timeMs" | "path" | "optimal" | "efficiency" | "backtrack" | "junctions" | "deadEnds"
+>;
+export function statRows(s: StatFields): Array<[string, string]> {
+  const rows: Array<[string, string]> = [];
+  rows.push(["time", formatDuration(s.timeMs)]);
+  rows.push(["path / optimal", `${fmtDist(s.path)} / ${fmtDist(s.optimal)}`]);
+  if (s.efficiency !== null) {
+    rows.push(["efficiency", `${efficiencyPercent(s.efficiency)}%`]);
+  }
+  if (s.backtrack !== null) rows.push(["backtracked", fmtDist(s.backtrack)]);
+  rows.push(["junctions", String(s.junctions)]);
+  if (s.deadEnds !== null) rows.push(["dead ends", String(s.deadEnds)]);
+  return rows;
+}
+
 let styled = false;
 export function ensureHudStyles(): void {
   if (styled) return;
@@ -63,13 +82,18 @@ export function ensureHudStyles(): void {
     ".km-banner{position:fixed;left:50%;transform:translateX(-50%);" +
     "top:max(14px,env(safe-area-inset-top));z-index:25;width:max-content;" +
     "max-width:min(440px,calc(100vw - 24px));box-sizing:border-box;" +
-    "padding:12px 34px 12px 18px;background:#1b2233f2;color:#c8d3e8;" +
+    "padding:12px 18px;background:#1b2233f2;color:#c8d3e8;" +
     `font:13px/1.5 ${mono};border:1px solid #39d353;border-radius:10px;` +
     "box-shadow:0 6px 24px #0008;text-align:center}" +
     ".km-banner[hidden]{display:none}" +
+    // The heading stays centered and clear of the close button.
     `.km-banner .km-head{font:650 15px/1.35 ${sans};color:#8fe6ff;` +
-    "margin-bottom:4px}" +
-    ".km-banner .km-big{color:#e4ecf8;font-size:14px}" +
+    "margin-bottom:6px;padding:0 20px}" +
+    ".km-banner .km-rows{display:grid;grid-template-columns:1fr auto;" +
+    "column-gap:24px;text-align:left}" +
+    ".km-banner .k{color:#8ea0c0;white-space:nowrap}" +
+    ".km-banner .v{color:#e4ecf8;text-align:right;white-space:nowrap;" +
+    "font-variant-numeric:tabular-nums}" +
     ".km-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;" +
     "margin-top:10px}" +
     ".km-btn{min-height:32px;padding:0 14px;border-radius:7px;" +
@@ -133,17 +157,7 @@ export class MazeHud {
       this.lastSig = "";
       return;
     }
-    const rows: Array<[string, string]> = [];
-    if (s.showStats) {
-      rows.push(["time", formatDuration(s.timeMs)]);
-      rows.push(["path / optimal", `${fmtDist(s.path)} / ${fmtDist(s.optimal)}`]);
-      if (s.efficiency !== null) {
-        rows.push(["efficiency", `${efficiencyPercent(s.efficiency)}%`]);
-      }
-      if (s.backtrack !== null) rows.push(["backtracked", fmtDist(s.backtrack)]);
-      rows.push(["junctions", String(s.junctions)]);
-      if (s.deadEnds !== null) rows.push(["dead ends", String(s.deadEnds)]);
-    }
+    const rows = s.showStats ? statRows(s) : [];
     const sig = JSON.stringify([s.title, rows]);
     this.el.hidden = false;
     if (sig === this.lastSig) return;
@@ -215,23 +229,19 @@ export class WinBanner {
     const head = document.createElement("div");
     head.className = "km-head";
     head.textContent = `${w.heading} \u{1F389}`;
-    const big = document.createElement("div");
-    big.className = "km-big";
-    big.textContent =
-      formatDuration(w.timeMs) +
-      (w.efficiency === null
-        ? ""
-        : ` · ${efficiencyPercent(w.efficiency)}% efficient`);
-    const route = document.createElement("div");
-    route.textContent =
-      `path ${fmtDist(w.path)} / optimal ${fmtDist(w.optimal)}` +
-      (w.backtrack === null ? "" : ` · backtracked ${fmtDist(w.backtrack)}`);
-    const explore = document.createElement("div");
-    explore.textContent =
-      `${w.junctions} junction${w.junctions === 1 ? "" : "s"}` +
-      (w.deadEnds === null
-        ? ""
-        : ` · ${w.deadEnds} dead end${w.deadEnds === 1 ? "" : "s"}`);
+    // One stat per row, label at the left edge and value at the right, as
+    // in the HUD.
+    const rows = document.createElement("div");
+    rows.className = "km-rows";
+    for (const [k, v] of statRows(w)) {
+      const kEl = document.createElement("span");
+      kEl.className = "k";
+      kEl.textContent = k;
+      const vEl = document.createElement("span");
+      vEl.className = "v";
+      vEl.textContent = v;
+      rows.append(kEl, vEl);
+    }
     const btns = document.createElement("div");
     btns.className = "km-btns";
     const share = document.createElement("button");
@@ -255,7 +265,7 @@ export class WinBanner {
     x.title = "Close";
     x.setAttribute("aria-label", "Close");
     x.addEventListener("click", () => this.hide());
-    el.append(head, big, route, explore, btns, x);
+    el.append(head, rows, btns, x);
     el.hidden = false;
   }
 

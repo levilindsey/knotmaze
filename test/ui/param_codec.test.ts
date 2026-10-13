@@ -159,9 +159,14 @@ describe("codec tables", () => {
   it("pins CODEC_V3: v2 with pluckSize defaulting to 1.75, plus appends", () => {
     expect(CODEC_V3.version).toBe(3);
     expect(CODEC_V3.params.map(asPin)).toEqual([
-      ...CODEC_V2.params
-        .map(asPin)
-        .map((p) => (p[0] === "pluckSize" ? ["pluckSize", "number", 1.75] : p)),
+      ...CODEC_V2.params.map(asPin).map((p) =>
+        p[0] === "pluckSize"
+          ? ["pluckSize", "number", 1.75]
+          : p[0] === "shape"
+            ? // Option appended to v3 (2026-10-12).
+              ["shape", "enum", "rect", ["rect", "heart", "star", "fish", "tree", "ring", "circle"]]
+            : p
+      ),
       // Appended to v3 (new params: older links read these defaults).
       ["entranceClearance", "number", 2.5], // 64
       ["exitClearance", "number", 5],

@@ -288,12 +288,13 @@ async function main(): Promise<void> {
     }
   };
   let statsShown = false;
-  let mazeStatsShown = true;
+  let mazeStatsShown = false;
   try {
     statsShown = localStorage.getItem(STATS_KEY) === "1";
-    mazeStatsShown = localStorage.getItem(MAZE_STATS_KEY) !== "0";
+    // Opt-in since 2026-10-12 (Levi: the win banner carries the stats).
+    mazeStatsShown = localStorage.getItem(MAZE_STATS_KEY) === "1";
   } catch {
-    // Storage unavailable: the defaults (stats hidden, maze HUD shown).
+    // Storage unavailable: the defaults (both stats readouts hidden).
   }
   const settings: PanelSettings = {
     temperature: 0,
@@ -2446,8 +2447,9 @@ async function main(): Promise<void> {
       autoAudioTick();
       renderer!.cuspRadius = params.cuspRadius;
       // Render-only pluck look (live; a hand-edited link cannot leave the
-      // panel's ranges).
-      renderer!.plucks.size = Math.max(0, Math.min(2, params.pluckSize));
+      // panel's ranges - pluckSize's slider has reached 3 since K25, and a
+      // clamp left at 2 made its top third do nothing).
+      renderer!.plucks.size = Math.max(0, Math.min(3, params.pluckSize));
       renderer!.plucks.ghost = Math.max(0, Math.min(1, params.pluckGhost));
       renderer!.plucks.sustain = params.sustain;
       renderer!.plucks.reducedMotion = reducedMotion;

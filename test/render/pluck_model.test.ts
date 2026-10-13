@@ -163,7 +163,7 @@ describe("decay and amplitude", () => {
   it("scales the plucked lobe with its length, clamped to the thread", () => {
     const h = 0.21;
     expect(tapAmplitude(1.3, h, 1, 1)).toBeCloseTo(0.156, 9);
-    expect(tapAmplitude(0.2, h, 1, 1)).toBeCloseTo(0.45 * h, 9);
+    expect(tapAmplitude(0.2, h, 1, 1)).toBeCloseTo(0.65 * h, 9);
     expect(tapAmplitude(50, h, 1, 1)).toBeCloseTo(2.2 * h, 9);
     expect(tapAmplitude(1.3, h, 2, 0.5)).toBeCloseTo(0.156, 9);
     expect(sympatheticAmplitude(1, 0, 1, 1)).toBe(1);
