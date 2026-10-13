@@ -176,6 +176,7 @@ describe("codec tables", () => {
         ["none", "vellum", "mist", "wash", "silk", "aurora", "contours"],
       ], // 67
       ["backgroundIntensity", "number", 0.5],
+      ["pulseReach", "number", 3], // 69 (K75)
     ]);
   });
 

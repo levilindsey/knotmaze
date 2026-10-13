@@ -719,6 +719,12 @@ export class RibbonRenderer {
   // Live world-unit spacing between crests in a run's pulse train (the
   // pulseSpacing panel param; main.ts syncs it every tick).
   pulseSpacing = 2.5;
+  // Live reach of the pulse trains along each arm, world (= lattice) units
+  // of arc from the junction (the pulseReach panel param, K75; main.ts
+  // syncs it every tick): the train fades out over the last
+  // PULSE_REACH_FADE of it (at most half). Infinity = whole arms (the
+  // pre-K75 trains).
+  pulseReach = Infinity;
   // Live flow-undulation controls (sliders; main.ts syncs them every tick
   // like cuspRadius). See the FLOW_* constants: render-side displacement
   // only, never the physics state.
@@ -3951,6 +3957,10 @@ export class RibbonRenderer {
     U.uKPulse[2] = spacing;
     const fi = Math.min(1, Math.max(0, (clock - this.pulseBorn) / PAINT_CONST.PULSE_FADE_IN));
     U.uKPulse[3] = fi * fi * (3 - 2 * fi);
+    // The trains' reach window (finite on the GPU: 1e6 = whole arms).
+    const reach = Math.min(1e6, Math.max(0, this.pulseReach));
+    U.uKReach[0] = reach;
+    U.uKReach[1] = Math.min(PAINT_CONST.PULSE_REACH_FADE, 0.5 * reach);
     // Hover: a slow whole-run breath between 0.2 and 0.8 strength.
     U.uKPaint[3] = 0.5 + 0.3 * Math.sin(clock * PAINT_CONST.HOVER_PULSE_W);
     // Junction fillets ride the same tick: live positions, live paint.

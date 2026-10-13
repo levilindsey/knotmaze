@@ -45,7 +45,9 @@ export const PAINT_CONST = {
   CROSSING_FADE_IN: 0.36,
 
   // PULSE trains (gameplay paint) - see RibbonRenderer's pulse comments.
-  PULSE_REACH: 2.0,
+  // The steady floor glow fades out over PULSE_FLOOR_REACH of arc from the
+  // junction (the trains themselves end at the pulseReach param, K75).
+  PULSE_FLOOR_REACH: 2.0,
   CREST_WIDTH: 0.72,
   PULSE_SPEED: 1.6,
   PULSE_FLOOR: 0.38,
@@ -58,6 +60,11 @@ export const PAINT_CONST = {
   HOVER_PULSE_W: 5.2,
   // Pulse values at or below this leave the paint untouched (CPU parity).
   PULSE_MIN_V: 0.004,
+  // PULSE REACH (K75): a train runs out to the pulseReach param (world arc
+  // from the junction) and fades out (smoothstep) over this much of its
+  // end - at most half the reach. A fixed length rather than a share: a
+  // share of a long reach dimmed the crests over its whole second half.
+  PULSE_REACH_FADE: 1.0,
 
   // COMPOSITION (the retired accent strip in closed form): both bands
   // converge to 0.94 toward white at full strength, band texels spanning

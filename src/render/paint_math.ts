@@ -259,6 +259,7 @@ export interface KUniforms {
   uKSect: Float32Array; // (blendDist, ease, -, -)
   uKPaint: Float32Array; // (on, refBase, itemBase, hover)
   uKPulse: Float32Array; // (travelIn, travelOut, spacing, fadeIn)
+  uKReach: Float32Array; // (reach, fade, -, -) pulse trains (K75)
   uKGold: Float32Array; // (gold rgb, -)
 }
 
@@ -1157,7 +1158,10 @@ export function writeRunTexels(
 // coverage ramp (`px`, world arc per pixel; 0 = hard).
 // Uniforms: uKPaint = (on, refBase, itemBase, hover), hover = the hover
 // breath 0.5 + 0.3 sin(clock W); uKPulse = (travelIn, travelOut, spacing,
-// fadeIn), travel reduced mod spacing on the CPU; uKGold = (gold rgb, -).
+// fadeIn), travel reduced mod spacing on the CPU; uKReach = (reach, fade,
+// -, -), the trains' reach window in world arc from the junction (K75: the
+// pulseReach param; a train used to run its whole arm); uKGold = (gold
+// rgb, -).
 // ======================================================================
 
 // The retired strip's gold-ramp U (ordering only - the caps' never-darken
@@ -1166,8 +1170,17 @@ function goldUOf(p: number): number {
   return p >= 1 ? 121 / 256 : p <= 0 ? 115 / 256 : (115 + 6 * p) / 256;
 }
 
+// GLSL twin: kReachWin - the pulse trains' reach window (K75): full
+// strength out to reach - fade from the junction, smoothly gone at reach.
+export function kReachWin(U: KUniforms, d: number): number {
+  const f = Math.max(U.uKReach[1], 1e-4);
+  return 1 - smooth01((d - (U.uKReach[0] - f)) / f);
+}
+
 // GLSL twin: kPulseV - the pulse field at distance d along an arm of length
-// span (RibbonRenderer's pulseValueAt with its clocks as uniforms).
+// span (RibbonRenderer's pulseValueAt with its clocks as uniforms), inside
+// the reach window. Hover lights the whole run (it shows the run a tap
+// would take).
 export function kPulseV(U: KUniforms, d: number, span: number, inward: boolean, hovered: boolean): number {
   const C = PAINT_CONST;
   if (d < 0 || d > span) return 0;
@@ -1181,8 +1194,8 @@ export function kPulseV(U: KUniforms, d: number, span: number, inward: boolean, 
   const bump = Math.max(0, 1 - dist / C.CREST_WIDTH) * Math.min(1, dC / C.CREST_RAMP);
   const floor =
     (C.PULSE_FLOOR + C.PULSE_CORE_BOOST * Math.max(0, 1 - d / C.PULSE_CORE_RADIUS)) *
-    Math.max(0, 1 - d / C.PULSE_REACH);
-  return Math.min(1, (floor + bump * 0.9) * endWin) * U.uKPulse[3];
+    Math.max(0, 1 - d / C.PULSE_FLOOR_REACH);
+  return Math.min(1, (floor + bump * 0.9) * endWin) * U.uKPulse[3] * kReachWin(U, d);
 }
 
 // Paint state at a point: the gold ramp amount p (the thread's own paint),

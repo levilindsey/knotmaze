@@ -13,6 +13,8 @@ import {
   kChain,
   kComposePaint,
   kPaintAt,
+  kPulseV,
+  kReachWin,
   writeChainHeader,
   writeGeomTable,
   type KData,
@@ -54,6 +56,8 @@ function uniforms(k: OldClock): KUniforms {
     uKSect: new Float32Array(4),
     uKPaint: new Float32Array([1, 0, 0, 0.5 + 0.3 * Math.sin(k.clock * 5.2)]),
     uKPulse: new Float32Array([mod(k.clock * 1.6), mod((k.clock + 0.3) * 1.6), s, fi * fi * (3 - 2 * fi)]),
+    // Whole arms (the retired pass had no reach window), unless a test sets one.
+    uKReach: new Float32Array([1e6, 1, 0, 0]),
     uKGold: new Float32Array([((GOLD >> 16) & 255) / 255, ((GOLD >> 8) & 255) / 255, (GOLD & 255) / 255, 0]),
   };
 }
@@ -277,5 +281,40 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     expect(crestsOverFade).toBeGreaterThan(500);
     expect(maxStepOld).toBeGreaterThan(40 / 255);
     expect(maxStep).toBeLessThan(6 / 255);
+  });
+
+  // K75 (Levi: the pulses should "only extend a set distance away from the
+  // junction along the segment ... and fade out at the end"): uKReach =
+  // (reach, fade) windows the trains; hover still lights the whole run.
+  it("K75: pulse trains end at the reach, fading over its end; hover is whole-run", () => {
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const U0 = uniforms(k); // Whole arms.
+    const U = uniforms(k);
+    const R = 3;
+    const F = Math.min(PAINT_CONST.PULSE_REACH_FADE, 0.5 * R); // The renderer's rule.
+    U.uKReach[0] = R;
+    U.uKReach[1] = F;
+    expect(kReachWin(U, R - F)).toBe(1);
+    expect(kReachWin(U, R - F / 2)).toBeCloseTo(0.5, 12);
+    expect(kReachWin(U, R)).toBe(0);
+    for (const inward of [true, false]) {
+      let prev = kPulseV(U, 0, 12, inward, false);
+      let maxStep = 0;
+      let lit = 0;
+      for (let i = 0; i <= 12000; i++) {
+        const d = i / 1000;
+        const v = kPulseV(U, d, 12, inward, false);
+        const whole = kPulseV(U0, d, 12, inward, false);
+        if (d <= R - F) expect(v).toBe(whole);
+        if (d >= R) expect(v).toBe(0);
+        expect(v).toBeLessThanOrEqual(whole);
+        if (v > PAINT_CONST.PULSE_MIN_V) lit++;
+        maxStep = Math.max(maxStep, Math.abs(v - prev));
+        prev = v;
+        expect(kPulseV(U, d, 12, inward, true)).toBe(kPulseV(U0, d, 12, inward, true));
+      }
+      expect(lit).toBeGreaterThan(2000); // The floor + crests near the joint.
+      expect(maxStep).toBeLessThan(0.01); // No step at the window.
+    }
   });
 });

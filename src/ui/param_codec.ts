@@ -250,6 +250,9 @@ export const CODEC_V3: CodecTable = Object.freeze({
       "contours",
     ]), // 67
     num("backgroundIntensity", 0.5),
+    // Traversal pulse reach (K75, 2026-10-12): the trains used to run
+    // whole arms; links written before it read 3.
+    num("pulseReach", 3), // 69
   ]),
 });
 

@@ -1135,6 +1135,12 @@ px). ON_PATH, `trailGoldAt` and `famB` are retired. Census after the fix:
 ribbons max 0.0024, fans max 0.0062 (none over 2/255). The record:
 `.claude/rules/render.md` (K75) and the K75 commit.
 
+The same round added a uniform, `uKReach = (reach, fade, -, -)`: the
+`pulseReach` param in world arc from the junction, and its fixed fade.
+`kPulseV` multiplies the trains (floor and crests, not hover) by
+`1 - smoothstep` over the window's end. The floor's own constant is now
+`PULSE_FLOOR_REACH`.
+
 ### Follow-ups (not done)
 
 - G2.4 GPU particles (K23): unchanged plan (instanced quads from a KFX ring,

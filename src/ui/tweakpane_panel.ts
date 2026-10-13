@@ -595,6 +595,11 @@ export function buildPanel(
     "Distance between traveling pulses on the current junction's arms. Applies live.",
     D.pulseSpacing, () => callbacks.onSlackChange()
   );
+  const pulseReachRow = row(
+    fMaze, p, "pulseReach", { min: 0.5, max: 15, step: 0.25 },
+    "How far the current junction's pulses travel along each arm, in lattice units, before fading out. Applies live.",
+    D.pulseReach, () => callbacks.onTrailChange()
+  );
   const mazeStatsRow = row(
     fMaze, s, "showMazeStats", undefined,
     "Show the maze readout in the top-left corner: solve time (from your first move to arriving at the exit), your path vs the optimal route, efficiency once solved, the distance you backtracked, junctions visited and (with dead ends on) dead ends entered. Remembered per browser.",
@@ -1037,6 +1042,7 @@ export function buildPanel(
     mazeStatsRow.hidden = !fab;
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;
+    pulseReachRow.hidden = !fab;
     // The gold recolor paints in gold/trail modes; the yarn replaces it.
     pathColorRow.hidden = !fab || params.pathViz === "string";
     // Music mode derives its pitch set from the song itself; manual and

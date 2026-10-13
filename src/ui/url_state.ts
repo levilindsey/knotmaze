@@ -192,6 +192,10 @@ export interface UrlParams {
   // the tonic/dominant/mediant buckets widen up to 3x/2x/1.5x at 1.
   tonicEmphasis: number;
   pulseSpacing: number; // [0.8, 6] world units between traversal pulses.
+  // [0.5, 15] lattice units of thread, measured from the current junction,
+  // that its traveling pulses reach along each arm before fading out (K75;
+  // the trains used to run whole arms). Live.
+  pulseReach: number;
   hueShift: number; // [0, 360) rotation added to the seed's base hue.
   gamutArc: number; // [40, 360] hue-arc width of the color gamut.
   palette: GamutPalette; // Saturation/lightness preset for the gamut.
@@ -332,6 +336,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   rootNote: "seed",
   tonicEmphasis: 0.5,
   pulseSpacing: 2.5,
+  pulseReach: 3, // K75: appended to codec v3.
   hueShift: 300,
   gamutArc: 130,
   palette: "pastel",
@@ -612,6 +617,8 @@ function readLegacy(
     backgroundIntensity: clamp01(
       readNumber(query, "bgi", D.backgroundIntensity)
     ),
+    // The pulse reach (K75) too (probe URLs write `&pr=2`).
+    pulseReach: readNumber(query, "pr", D.pulseReach),
   };
 }
 

@@ -2459,6 +2459,7 @@ async function main(): Promise<void> {
       renderer!.flowStrength = params.flowStrength;
       renderer!.flowSpeed = params.flowSpeed;
       renderer!.pulseSpacing = params.pulseSpacing;
+      renderer!.pulseReach = params.pulseReach;
       // Frontier particle style: live dropdown, consumed by the
       // appearance-FX pass inside tickPaint while a reveal runs.
       renderer!.appearFx = params.appearFx;

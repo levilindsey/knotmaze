@@ -64,6 +64,9 @@ export function knotUniforms(): UniformGroup {
       uKSect: v4(),
       uKPaint: v4(),
       uKPulse: v4(0, 0, 2.5, 1),
+      // No reach limit until a renderer writes one (finite: the shaders
+      // subtract the fade from it).
+      uKReach: v4(1e6, 1, 0, 0),
       uKGold: v4(1, 0.8235, 0.2902, 0),
       uKKnots: {
         value: new Float32Array(MAX_KNOTS * 4),

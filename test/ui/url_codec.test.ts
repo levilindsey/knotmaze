@@ -84,6 +84,7 @@ describe("links", () => {
       appearFx: "burn",
       entranceClearance: 2.5, exitClearance: 5, junctionSpacing: 2,
       background: "vellum", backgroundIntensity: 0.5,
+      pulseReach: 3,
     });
   });
 

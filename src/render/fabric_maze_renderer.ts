@@ -10,7 +10,8 @@
 // distance, plus a crest that radiates OUT of the junction along each
 // choosable run - while on the arrival run (the backtrack) the crest slides
 // IN, phase-synced so the flow reads as continuous through the junction.
-// Hovering a choosable run lights it steadily.
+// The trains reach pulseReach along each arm (K75; RibbonRenderer).
+// Hovering a choosable run lights it steadily, end to end.
 //
 // MEMORY-TRAIL MODE (Stage 23, `trailMode`): instead of the full traveled
 // path, only the trailing SUFFIX of the path stays gold - walked backward
