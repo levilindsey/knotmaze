@@ -1565,6 +1565,22 @@ bottom-left stamp shows the same counters).
 
 ## Follow-ups
 
+- **The sleep gate counts SIM TIME (K63): QUIET_WINDOW 2.5 s,
+  physics/sleep_gate.ts.** It counted 45 frames: 4.5 sim-s at <= 10 fps
+  (pixi caps a frame at 0.1 s, and real-size settles are physics-bound
+  there, so every design slept at exactly sim 7.0 = settleComplete 2.5 +
+  4.5) but 0.75 s at 60 fps and in the physics-off load. A short window
+  is NOT free: some designs are not at rest at 2.5 s - a bridge, an open
+  tail or a kink's neighborhood snaps through to a new rest 3.5-5 s in,
+  mostly under QUIET_EPS, so no window sees it start. 0.75 s froze 2 of
+  1071 K46 designs before a loud snap and ~4% of a sample 0.05-0.17
+  world from rest. Chosen by tripping every window on one trajectory and
+  diffing each frozen state against a run that kept stepping
+  (.claude/probes/K63 window.ts, gesture.ts): clean (within 0.05 world,
+  no loud lull) from 2.25 s; 2.5 adds a margin. Sleep is ~5.0 sim-s
+  everywhere (default design: desktop 12.3 -> 8.9 s wall, phone 13.0 ->
+  8.8 s) and sim-at-sleep is comparable across frame rates. No window
+  covers sub-QUIET_EPS creep: a ga=0 knot drifts ~1.5 world over ~50 s.
 - **Physics broadphase rebuilt flat (P3.42): phys 85.9 -> 15.8 ms,
   10 -> 32 fps mid-drag at fat params.** applySegmentCollision was 73%
   of ALL CPU (measured via CDP profile, probe recipe: drag-wiggle 4s at
@@ -1581,9 +1597,10 @@ bottom-left stamp shows the same counters).
   pass instead of collapsing the Map into one bucket (the old O(9N^2)
   NaN hang). TWO GOTCHAS measured during verification: (1) settle
   sweeps now report "asleep" at sim ~3.9s for EVERY seed (was 4.0-6.3)
-  - not a physics change: the sleep gate counts 45 STILL FRAMES, and
+  - not a physics change: the sleep gate counted 45 STILL FRAMES, and
   faster frames span fewer sim-seconds; quiet-start is unchanged. Do
   not compare sim-at-sleep across builds with different frame rates.
+  (Until K63: the gate counts sim time now, see above.)
   (2) The pathological-wound regression test failed on a healthy state:
   its fixed 60s measurement window landed on a transient burst (the
   wound transient bursts to ~2e-1 near 50s, decays to the ~1e-2 band by
