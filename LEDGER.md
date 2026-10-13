@@ -120,6 +120,16 @@ and never reused.
   - next: the mechanism (gameplay-driven per-pixel reveal), the end-marker
     contact sheet, camera fit and params.
   - brief: `docs/design/K76.md`.
+- **K80** · Research and design: the minotaur mode (movement, chase
+  quality, fairness, params) and a long list of other gameplay additions
+  (locks and keys, one-way and collapsing runs, pickups, a sword,
+  patterned enemies, and more), with trade-offs. No code.
+  - owner: the K80 agent of session d8031183, started 2026-10-12 22:50.
+  - branch: `worktree-agent-a25726c24f262b138`
+    (`.claude/worktrees/agent-a25726c24f262b138`); last commit: none yet.
+  - evidence: `.claude/probes/K80/` (AI simulations, if any).
+  - next: research, then `docs/design/K80_gameplay_additions.md`.
+  - brief: `docs/design/K80.md`.
 - **K75** · Yellow banding in recentPath's incoming pulses at the
   current junction (Levi), plus the pulse reach: the junction's pulse
   highlight extends only a set, slider-controlled distance, fading out.
