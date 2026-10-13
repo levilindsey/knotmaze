@@ -11,7 +11,7 @@
 // Precision: the GPU evaluates in fp32 from the same fp32 texel values; the
 // mirror runs in f64. Censuses compare at <= 2/255.
 
-import { FX_STYLE, PAINT_CONST, RUN_FLAG } from "./paint_const";
+import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, RUN_FLAG } from "./paint_const";
 
 const SHIFT = PAINT_CONST.K_ROW_SHIFT;
 
@@ -254,6 +254,9 @@ export interface KUniforms {
   uKKnots: Float32Array; // 8 x (animT, wallT, invSpeed, valid)
   uKGamut: Float32Array; // (baseHue, arcDeg, sat, light)
   uKSect: Float32Array; // (blendDist, ease, -, -)
+  uKPaint: Float32Array; // (on, refBase, itemBase, hover)
+  uKPulse: Float32Array; // (travelIn, travelOut, spacing, fadeIn)
+  uKGold: Float32Array; // (gold rgb, -)
 }
 
 export const MAX_KNOTS = 8;
@@ -1121,4 +1124,274 @@ export function writeRunTexels(
   stat[o + 13] = run.colB[1];
   stat[o + 14] = run.colB[2];
   stat[o + 15] = 0;
+}
+
+// ======================================================================
+// G2.3 GAMEPLAY PAINT (per pixel on the GPU; mirrored here for the fans'
+// CPU field, the pluck overlay and the censuses).
+//
+// The renderer's paint DECLARATION (traveled spans, junction caps, pulse
+// arms - core of RibbonRenderer.setPaint) becomes KPAINT records:
+//   per control slot, at the chain's idxBase (KSTATIC's offsets):
+//                                (refFirst, refCount, -, -)
+//   REFS from uKPaint.y:         item indices, 4 per texel - each slot's
+//                                items in declaration order
+//   ITEMS from uKPaint.z:        2 texels each
+//     T0 = (type, cA, cB, p0)    SPAN  ctrl cA..cB (unwrapped, cB >= cA),
+//                                      gold p0 at cA .. p1 at cB
+//                                CAP   cA = ctrl, p0 = gold p
+//                                PULSE cA = junction ctrl, cB = far ctrl
+//     T1 = (p1, flags, radius, -)       radius: CAP (arc); flags: PULSE
+// Evaluation follows the retired per-sample pass's PAINT U semantics
+// exactly (spans assign in order, caps never darken, pulses override,
+// the reveal glow brightens within its family) and the accent strip it
+// sampled is replaced by its closed form: band A = mix(S, white, K_BAND v),
+// band B = mix(gold, white, K_BAND v), the gold ramp = mix(S, gold, p) -
+// the K4 trail fade: LINEAR in p (the strip compressed it into
+// clamp(6p - 2.5)). Span / cap edges get a 1-pixel coverage ramp (`px`,
+// world arc per pixel; 0 = hard).
+// Uniforms: uKPaint = (on, refBase, itemBase, hover), hover = the hover
+// breath 0.5 + 0.3 sin(clock W); uKPulse = (travelIn, travelOut, spacing,
+// fadeIn), travel reduced mod spacing on the CPU; uKGold = (gold rgb, -).
+// ======================================================================
+
+// The retired strip's paint U (ordering only - comparisons follow the old
+// pass exactly): base 115, gold ramp 115..121, band A 111.5 - 110 v,
+// band B 124.5 + 110 v (in 1/256).
+function goldUOf(p: number): number {
+  return p >= 1 ? 121 / 256 : p <= 0 ? 115 / 256 : (115 + 6 * p) / 256;
+}
+function bandUOf(onPath: boolean, v: number): number {
+  const q = v < 0 ? 0 : v > 1 ? 1 : v;
+  return onPath ? (124.5 + 110 * q) / 256 : (111.5 - 110 * q) / 256;
+}
+
+// GLSL twin: kPulseV - the pulse field at distance d along an arm of length
+// span (RibbonRenderer's pulseValueAt with its clocks as uniforms).
+export function kPulseV(U: KUniforms, d: number, span: number, inward: boolean, hovered: boolean): number {
+  const C = PAINT_CONST;
+  if (d < 0 || d > span) return 0;
+  const endWin = Math.min(1, Math.max(0, (span - d) / C.PULSE_END_WINDOW));
+  if (hovered) return endWin * U.uKPaint[3];
+  const s = U.uKPulse[2];
+  const raw = inward ? d + U.uKPulse[0] : d - U.uKPulse[1];
+  const ph = raw - s * Math.floor(raw / s);
+  const dist = Math.min(ph, s - ph);
+  const dC = Math.max(0, d - (ph <= s - ph ? ph : ph - s));
+  const bump = Math.max(0, 1 - dist / C.CREST_WIDTH) * Math.min(1, dC / C.CREST_RAMP);
+  const floor =
+    (C.PULSE_FLOOR + C.PULSE_CORE_BOOST * Math.max(0, 1 - d / C.PULSE_CORE_RADIUS)) *
+    Math.max(0, 1 - d / C.PULSE_REACH);
+  return Math.min(1, (floor + bump * 0.9) * endWin) * U.uKPulse[3];
+}
+
+// Paint state at a point: the gold ramp amount p (when not in a band), or
+// a band (family B = gold side, A = base side) with strength v.
+export interface KPaintState {
+  p: number;
+  band: boolean;
+  famB: boolean;
+  v: number;
+}
+
+// Ring distance on a closed chain (|a - b| folded), plain on open ones.
+function ringDist(a: number, b: number, total: number, closed: boolean): number {
+  let d = Math.abs(a - b);
+  if (closed) d = Math.min(d, total - d);
+  return d;
+}
+
+// Coverage of an inside distance over a pixel footprint px (0 = hard).
+function kCov(sd: number, px: number): number {
+  if (!(px > 0)) return sd >= 0 ? 1 : 0;
+  const x = sd / px + 0.5;
+  return x < 0 ? 0 : x > 1 ? 1 : x;
+}
+
+// GLSL twin: kPaintAt - the declaration's paint at (ctrl, arc) of chain c.
+export function kPaintAt(
+  D: KData,
+  U: KUniforms,
+  c: KChain,
+  ctrl: number,
+  arc: number,
+  px: number,
+  out: KPaintState
+): KPaintState {
+  out.p = 0;
+  out.band = false;
+  out.famB = false;
+  out.v = 0;
+  if (U.uKPaint[0] < 0.5) return out;
+  const P = D.paint;
+  const n = c.nCtrl;
+  const sl = Math.max(0, Math.min(n - 1, Math.floor(ctrl)));
+  const io = (c.idx + sl) * 4;
+  const first = Math.round(P[io]);
+  const cnt = Math.round(P[io + 1]);
+  const total = c.total;
+  const refBase = Math.round(U.uKPaint[1]);
+  const itemBase = Math.round(U.uKPaint[2]);
+  for (let k = 0; k < cnt; k++) {
+    const r = first + k;
+    const item = Math.round(P[(refBase + (r >> 2)) * 4 + (r & 3)]);
+    const o = (itemBase + 2 * item) * 4;
+    const type = Math.round(P[o]);
+    const cA = P[o + 1];
+    const cB = P[o + 2];
+    if (type === PAINT_ITEM.SPAN) {
+      const a0 = kArcOfCtrl(D, c, cA);
+      const a1 = kArcOfCtrl(D, c, cB);
+      const wraps = c.closed && a1 <= a0 && cB > cA;
+      const inside = wraps ? arc >= a0 || arc <= a1 : arc >= a0 && arc <= a1;
+      const dEdge = Math.min(ringDist(arc, a0, total, c.closed), ringDist(arc, a1, total, c.closed));
+      const cov = kCov(inside ? dEdge : -dEdge, px);
+      if (cov <= 0) continue;
+      const p0 = P[o + 3];
+      const p1 = P[o + 4];
+      let p = 1;
+      if (p0 < 1 || p1 < 1) {
+        const spanLen = Math.max(wraps ? total - a0 + a1 : a1 - a0, 1e-9);
+        const da = wraps && arc < a0 ? total - a0 + arc : arc - a0;
+        const t = Math.min(1, Math.max(0, da / spanLen));
+        p = p0 + (p1 - p0) * t;
+      }
+      out.p += (p - out.p) * cov;
+    } else if (type === PAINT_ITEM.CAP) {
+      const pc = P[o + 3];
+      if (!(goldUOf(pc) > goldUOf(out.p))) continue;
+      const d = ringDist(arc, kArcOfCtrl(D, c, cA), total, c.closed);
+      const cov = kCov(P[o + 6] - d, px);
+      if (cov <= 0) continue;
+      out.p += (pc - out.p) * cov;
+    } else if (type === PAINT_ITEM.PULSE) {
+      const flags = Math.round(P[o + 5]);
+      const aJ = kArcOfCtrl(D, c, cA);
+      const aF = kArcOfCtrl(D, c, cB);
+      let dirPos: boolean;
+      let span: number;
+      if (c.closed) {
+        dirPos = cB > cA;
+        const x = dirPos ? aF - aJ : aJ - aF;
+        span = x - total * Math.floor(x / total);
+      } else {
+        dirPos = aF >= aJ;
+        span = Math.abs(aF - aJ);
+      }
+      if (span <= 1e-6) continue;
+      let d: number;
+      if (c.closed) {
+        const x = dirPos ? arc - aJ : aJ - arc;
+        d = x - total * Math.floor(x / total);
+      } else {
+        d = dirPos ? arc - aJ : aJ - arc;
+      }
+      const v = kPulseV(U, d, span, (flags & ITEM_FLAG.INWARD) !== 0, (flags & ITEM_FLAG.HOVER) !== 0);
+      if (v > PAINT_CONST.PULSE_MIN_V) {
+        out.band = true;
+        out.famB = (flags & ITEM_FLAG.ON_PATH) !== 0;
+        out.v = v;
+      }
+    }
+  }
+  return out;
+}
+
+// GLSL twin: kGlow - the reveal frontier glow at a point (interval modes,
+// not burn / roots): the fronts that revealed the point and still move,
+// strongest within REVEAL / RAINBOW_GLOW_ARC behind their tips (full over
+// glowHold). The retired pass glowed every revealed sample near ANY tip of
+// its chain; per pixel, only the point's own fronts are scanned (they are
+// the nearest tips except where another front approaches the same run).
+export function kGlow(D: KData, U: KUniforms, c: KChain, ctrl: number): number {
+  if (U.uKBase[3] < 0.5 || U.uKFx2[2] < 0.5 || U.uKInk[1] > 0.5) return 0;
+  const st = Math.round(U.uKFx[0]);
+  if (st === FX_STYLE.burn || st === FX_STYLE.roots) return 0;
+  const t = U.uKFx[1];
+  const n = c.nCtrl;
+  const sl = Math.max(0, Math.min(n - 1, Math.floor(ctrl)));
+  const hint = D.stat[(c.idx + sl) * 4 + 1];
+  if (hint < -0.5) return 0;
+  const s0 = Math.floor(hint);
+  const cnt = Math.round((hint - s0) * 8) + 1;
+  const R = D.reveal;
+  const glowArc = U.uKShape[2];
+  const hold = U.uKShape[3];
+  const aU = kArcU(D, c, ctrl);
+  let g = 0;
+  for (let k = 0; k < SRC_SCAN; k++) {
+    if (k >= cnt) break;
+    const s = s0 + k;
+    if (s >= c.src0 + c.srcN) break;
+    const A = 2 * s * 4;
+    if (ctrl < R[A] - 1e-4 || ctrl > R[A + 1] + 1e-4) continue;
+    const cFrom = R[A + 2];
+    const dir = R[A + 3];
+    const t0 = R[A + 4];
+    const rate = R[A + 5];
+    const prog = (t - t0) * rate;
+    if (prog <= 0 || prog >= R[A + 7]) continue; // Not started, or landed.
+    const tA = t0 + Math.abs(ctrl - cFrom) / rate;
+    if (t < tA) continue; // The tip has not reached the point.
+    const d = Math.abs(kArcU(D, c, cFrom + dir * prog) - aU);
+    if (d > glowArc) continue;
+    const gi = d <= hold ? 1 : 1 - (d - hold) / (glowArc - hold);
+    if (gi > g) g = gi;
+  }
+  return g;
+}
+
+// GLSL twin: kComposePaint - the painted color over section S (in place):
+// the declaration's state, then the glow (brightening within its family:
+// band B where the point is gold-ish or a gold-band pulse, band A else).
+export function kComposePaint(U: KUniforms, S: Float32Array | number[], st: KPaintState, glow: number): void {
+  let band = st.band;
+  let famB = st.famB;
+  let v = st.v;
+  if (glow > 0) {
+    const u = band ? bandUOf(famB, v) : goldUOf(st.p);
+    if (u >= 118 / 256) {
+      if (bandUOf(true, glow) > u) {
+        band = true;
+        famB = true;
+        v = glow;
+      }
+    } else if (bandUOf(false, glow) < u) {
+      band = true;
+      famB = false;
+      v = glow;
+    }
+  }
+  const G = U.uKGold;
+  const K = PAINT_CONST.K_BAND;
+  if (band) {
+    const w = K * Math.max(0, Math.min(1, v));
+    for (let i = 0; i < 3; i++) {
+      const from = famB ? G[i] : S[i];
+      S[i] = from + (1 - from) * w;
+    }
+    return;
+  }
+  const p = Math.max(0, Math.min(1, st.p));
+  for (let i = 0; i < 3; i++) S[i] += (G[i] - S[i]) * p;
+}
+
+const PAINT_TMP: KPaintState = { p: 0, band: false, famB: false, v: 0 };
+
+// The ribbon shader's full color at a material point (section S in place,
+// FX, then the paint): what a probe vertex there renders, before the
+// coverage alpha (returned). Census reference for G2.3.
+export function kShadeAll(
+  D: KData,
+  U: KUniforms,
+  c: KChain,
+  ctrl: number,
+  arc: number,
+  side: number,
+  px: number,
+  S: Float32Array | number[]
+): number {
+  const a = kShadeFx(D, U, c, ctrl, arc / c.arcPer, side, S);
+  kComposePaint(U, S, kPaintAt(D, U, c, ctrl, arc, px, PAINT_TMP), kGlow(D, U, c, ctrl));
+  return a;
 }

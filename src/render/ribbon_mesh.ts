@@ -57,7 +57,6 @@ export class RibbonMesh {
   readonly sampleCount: number;
 
   private vertexData: Float32Array;
-  private uvData: Float32Array;
   // (The per-vertex section RGB attribute is gone since G2.2: the section
   // shader's vertex stage evaluates the section at the vertex's ctrl.)
 
@@ -88,7 +87,6 @@ export class RibbonMesh {
       uvs[i * 4 + 2] = u;
       uvs[i * 4 + 3] = 1;
     }
-    this.uvData = uvs;
 
     const quadCount = closed ? sampleCount : sampleCount - 1;
     const indices = new Uint32Array(quadCount * 6);
@@ -304,25 +302,6 @@ export class RibbonMesh {
       uploadAll(this.mesh.geometry, "aTan");
     }
   }
-
-  // PAINT (maze-fabric palette mode): set every sample's paint U (the
-  // accent-strip coordinate - gold/pulse band); both verts of a sample
-  // share it.
-  writePaint(us: ArrayLike<number>): void {
-    for (let i = 0; i < this.sampleCount; i++) {
-      const u = us[i];
-      this.uvData[i * 4] = u;
-      this.uvData[i * 4 + 2] = u;
-    }
-    uploadAll(this.mesh.geometry, "aUV");
-  }
-
-  // Sample k's paint U (the accent-strip coordinate writePaint set) - the
-  // render-only pluck overlay composes the same color the shader does.
-  paintU(k: number): number {
-    return this.uvData[k * 4];
-  }
-
 
   destroy(): void {
     this.mesh.destroy({ children: true });

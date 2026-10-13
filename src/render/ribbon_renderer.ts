@@ -23,7 +23,6 @@
 // masked by that crossing's slot exactly like the arm's own ribbon.
 
 import {
-  BufferImageSource,
   Container,
   Graphics,
   Shader,
@@ -38,7 +37,7 @@ import {
   gamutConfig,
   gamutRgb,
 } from "../core/section_colors";
-import type { AppearFxMode, RevealTip } from "../core/reveal_plan";
+import type { AppearFxMode } from "../core/reveal_plan";
 import type { RevealAnimator } from "./reveal";
 import { AppearFxSystem } from "./appear_fx";
 import { SeededRNG } from "../util/random";
@@ -54,6 +53,7 @@ import {
   PAINT_FRAG_DECL,
   PAINT_FRAG_LIB,
   PAINT_FX_GLSL,
+  PAINT_PAINT_GLSL,
   PAINT_SECTION_GLSL,
   PAINT_VERT_DECL,
   PAINT_VERT_MAIN,
@@ -62,6 +62,7 @@ import {
   PaintScene,
   kData,
   kGeom,
+  kPaint,
   kReveal,
   kStatic,
   knotUniformValues,
@@ -86,14 +87,18 @@ import {
   kShadeFx,
   kSwell,
   kWall,
+  kComposePaint,
+  kGlow,
+  kPaintAt,
   knotSection,
   smoothInv,
   sourcePieces,
   type KChain,
   type KData,
+  type KPaintState,
   type KIgn,
 } from "./paint_math";
-import { FX_STYLE, PAINT_CONST } from "./paint_const";
+import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM } from "./paint_const";
 import { PluckOverlay } from "./pluck_overlay";
 import type { PluckHost, PluckNode } from "./pluck_overlay";
 import {
@@ -101,10 +106,8 @@ import {
   FIELD_PROF_ARC,
   FIELD_PROF_DR,
   MAX_ARMS,
-  bindFieldAccent,
   bindFieldGap,
   junctionShader,
-  paintData,
   recordData,
   setFieldParams,
 } from "./junction_field";
@@ -176,84 +179,19 @@ export interface PaintCap {
   p?: number;
 }
 
-// ACCENT strip layout (one shared 256x1 RGBA strip; linear filtering).
-// Each texel encodes the gameplay paint at that U as an (accent color,
-// mix weight) pair: the section shader computes
-//   mix(sectionRGB, accent.rgb, accent.a)
-// so the SECTION color is per-vertex (vSection: since G2.2 the vertex
-// shader's knotSection at the vertex's exact ctrl - arbitrary RGB pairs
-// blend directly along threads and through junctions) while the
-// gameplay paint stays a 1D U coordinate exactly as before. Encoding per
-// family, chosen so the mono case reproduces the old 2D palette texel for
-// texel (mix is affine in the weight, so linear filtering commutes):
-//   band A texels: accent WHITE, weight 0.94 * (1 - i/111) - the old
-//     lighten-toward-white curve;
-//   base texels: weight 0 (pure section color); their rgb is GOLD so the
-//     base->gold texel interpolation sweeps mix(section, gold, t) - the
-//     exact old base->gold ramp (rgb is a don't-care AT weight-0 texels
-//     but load-bearing BETWEEN texels);
-//   gold / band B texels: the old gold / gold-toward-white colors at
-//     weight 1 (the traveled path is section-independent, as before).
-//
-// ORDER IS LOAD-BEARING: per-vertex Us interpolate LINEARLY between
-// samples, so the strip must be arranged so that every adjacency the paint
-// can produce (base<->bandA at pulse-region ends, base<->gold at traveled
-// ends, gold<->bandB on the arrival arm) interpolates only through its own
-// two color families - the original [base, gold, hover, bandA...] layout
-// swept the U straight across the gold+hover texels at every band/base
-// boundary, rendering a thin bright hairline there (the reported "distinct
-// line at the end of the gradient"):
-//   0..111   band A, REVERSED: near-white accent -> base
-//   112..117 base thread color
-//   118..123 traveled gold
-//   124..235 band B: gold -> near-white accent
-//   236..255 band B accent (guard)
-const PAL_W = 256;
-const U_BASE = 115 / PAL_W;
-const U_GOLD = 121 / PAL_W;
-const bandU = (onPath: boolean, p: number): number => {
-  const q = p < 0 ? 0 : p > 1 ? 1 : p;
-  return onPath ? (124.5 + q * 110) / PAL_W : (111.5 - q * 110) / PAL_W;
-};
-// U for a gold intensity p in [0, 1] (memory-trail tail fade): a straight
-// lerp base -> gold, exactly U_GOLD at p 1 and U_BASE at p 0. The sweep
-// stays inside the contiguous base+gold texel families.
-const goldU = (p: number): number =>
-  p >= 1 ? U_GOLD : p <= 0 ? U_BASE : U_BASE + (U_GOLD - U_BASE) * p;
-const PATH_GOLD = 0xffd24a;
-// Pulse geometry/motion, in ARC units (world-ish): the influence zone
-// reaches this far from the junction, crests are this wide, and travel at
-// this speed. The period and phase are GLOBAL (period = 2 * PULSE_REACH,
-// driven by the paint clock alone): every outgoing arm pulses at the same
-// interval and phase, in sync with the single inbound arm - as a crest
-// sinks into the junction its successor emerges outward, one continuous
-// flow that splits across the branches. Short arms clip the zone; both the
-// reach end and the arm end get smooth windows (a hard cutoff rendered as
-// a distinct moving line where a crest hit the boundary).
-const PULSE_REACH = 2.0;
-const CREST_WIDTH = 0.72;
-const PULSE_SPEED = 1.6;
-// Steady floor of the choice tint at the junction (fades with distance),
-// plus a bright core right at the branch point so the inbound (gold-band)
-// and outbound (base-band) arms converge to a near-common bright tone
-// instead of meeting in two visibly different mid-tints.
-const PULSE_FLOOR = 0.38;
-// Core reaches FULL band strength at d=0 (0.38 + 0.62 = 1), where both
-// bands are the same near-white accent - see buildAccentPixels.
-const PULSE_CORE_BOOST = 0.62;
-const PULSE_CORE_RADIUS = 0.55;
-// Crest amplitude ramps with its distance from the junction: an outbound
-// crest swells OUT of the core glow instead of being born full-strength
-// (the reported abrupt onset), and symmetrically the inbound crest
-// submerges into it.
-const CREST_RAMP = 0.5;
-const PULSE_END_WINDOW = 0.45;
-// Outbound crests run this many SECONDS ahead of the inbound clock, so a
-// departure visibly answers each arrival instead of waiting out the full
-// half-cycle.
-const PULSE_OUT_LEAD = 0.3;
-// Seconds for a new junction's pulse animation to breathe in.
-const PULSE_FADE_IN = 0.45;
+// GAMEPLAY PAINT (G2.3): the paint declaration (setPaint - traveled
+// spans, junction caps, pulse arms) is evaluated PER PIXEL by the section
+// shader (paint_glsl kPaintAt / kComposePaint, from KPAINT records) and
+// composed in closed form - the 256x1 accent strip it replaces held
+//   band A (white, weight 0.94 (1 - i / 111)) | base (weight 0) | gold |
+//   band B (gold -> 0.94 white),
+// so mix(section, strip(U)) == mix(S, white, K_BAND v) on band A,
+// mix(gold, white, K_BAND v) on band B and mix(S, gold, p) on the gold
+// ramp. The strip's ORDER was load-bearing because per-vertex U
+// interpolated linearly between samples (the hairline lore); per pixel
+// there is no interpolation left to protect.
+// (The pulse constants live in paint_const.ts - the shaders evaluate the
+// trains; see paint_math kPulseV for their model.)
 // RENDER-ONLY PLUCK node keys (pluck_overlay.ts PluckNode.key): crossing
 // passes are 2 * crossing + (under ? 1 : 0); the other kinds start above.
 const PLUCK_KEY_JOINT = 1e6;
@@ -366,13 +304,11 @@ const {
   REVEAL_GLOW_ARC,
   RAINBOW_GLOW_ARC,
   RAINBOW_GLOW_HOLD,
-  HOVER_PULSE_W,
 } = PAINT_CONST;
 // Comet streak tail polyline: points sampled along the host thread
 // behind each reveal tip (spawnTipFrontier -> AppearFxSystem).
 const FX_PATH_PTS = 8;
 const FX_PATH_STEP = 0.5;
-const GOLD_FAMILY_MIN = 118 / PAL_W;
 // Every appearance FX settles within this many wall seconds of its last
 // ignition (burn's recovery, the longest, plus a margin): fxOn drops after.
 const FX_TAIL = PAINT_CONST.BURN_RECOVER_END + 0.15;
@@ -389,115 +325,14 @@ const RAINBOW_SWELL_END =
   PAINT_CONST.RAINBOW_HOLD +
   PAINT_CONST.RAINBOW_FADE * smoothInv(1 - PAINT_CONST.RAINBOW_SWELL_MIN_P);
 
-function mixHex(a: number, b: number, t: number): number {
-  const ar = (a >> 16) & 255;
-  const ag = (a >> 8) & 255;
-  const ab = a & 255;
-  const br = (b >> 16) & 255;
-  const bg = (b >> 8) & 255;
-  const bb = b & 255;
-  return (
-    (Math.round(ar + (br - ar) * t) << 16) |
-    (Math.round(ag + (bg - ag) * t) << 8) |
-    Math.round(ab + (bb - ab) * t)
-  );
-}
-
-// The accent strip + section shader live for the PAGE lifetime - nothing
-// ever destroys them mid-session: pixi's retained render state (bind
-// groups listen to their texture resources) can still reference a source
-// on the frame after a rebuild, and destroying it then null-derefs inside
-// setResource on every subsequent render - the ticker dies and the screen
-// goes blank. (They are also seed-independent now - the strip carries
-// only white/gold accents; section colors arrive per vertex.)
-// Accent strips are PAGE-LIFETIME cached PER PATH COLOR (the pathColor
-// param) - pixi's retained render state can reference a TextureSource a
-// frame after a rebuild, so these are never destroyed (the PALETTE_CACHE
-// lore).
-const ACCENT_CACHE = new Map<number, Texture>();
-const ACCENT_PIX_CACHE = new Map<number, Uint8Array>();
-
-// CPU accent-strip sample with the GPU's linear filtering (1D lerp over
-// texels), for overlays that must composite the accent BEFORE
-// interpolation - a fan triangle interpolating raw U across a band seam
-// sweeps the strip THROUGH the gold rows mid-triangle (the palette-order
-// lore, fan edition: the jagged gold shards at traversed junctions).
-function accentSampleCpu(
-  px: Uint8Array,
-  u: number,
-  out: Float32Array
-): void {
-  const f = Math.max(0, Math.min(PAL_W - 1, u * PAL_W - 0.5));
-  const i0 = Math.floor(f);
-  const i1 = Math.min(PAL_W - 1, i0 + 1);
-  const t = f - i0;
-  for (let c = 0; c < 4; c++) {
-    out[c] =
-      ((px[i0 * 4 + c] * (1 - t) + px[i1 * 4 + c] * t) / 255) *
-      (c === 3 ? 1 : 1);
-  }
-}
 // Mesh.shader wants a TextureShader (a Shader carrying its texture).
 type SectionShader = Shader & { texture: Texture };
 let SECTION_SHADER: SectionShader | null = null;
 
-function buildAccentPixels(gold: number): Uint8Array {
-  const px = new Uint8Array(PAL_W * 4);
-  const put = (i: number, hex: number, w: number): void => {
-    px[i * 4] = (hex >> 16) & 255;
-    px[i * 4 + 1] = (hex >> 8) & 255;
-    px[i * 4 + 2] = hex & 255;
-    px[i * 4 + 3] = Math.round(w * 255);
-  };
-  // Both bands converge to the SAME near-white accent (0.94 toward white)
-  // so that at full strength - the junction core - the inbound gold band,
-  // the outbound base bands, and every joinery overlay (discs, fillets)
-  // meet in one color; family tints only separate mid-arm.
-  for (let i = 0; i < 112; i++) put(i, 0xffffff, 0.94 * (1 - i / 111));
-  for (let i = 112; i < 118; i++) put(i, gold, 0);
-  for (let i = 118; i < 124; i++) put(i, gold, 1);
-  for (let i = 124; i < 236; i++) {
-    put(i, mixHex(gold, 0xffffff, (0.94 * (i - 124)) / 111), 1);
-  }
-  for (let i = 236; i < 256; i++) {
-    put(i, mixHex(gold, 0xffffff, 0.94), 1);
-  }
-  return px;
-}
-
-function accentPixels(gold: number = PATH_GOLD): Uint8Array {
-  let px = ACCENT_PIX_CACHE.get(gold);
-  if (!px) {
-    px = buildAccentPixels(gold);
-    ACCENT_PIX_CACHE.set(gold, px);
-  }
-  return px;
-}
-
-function accentTexture(gold: number = PATH_GOLD): Texture {
-  let tex = ACCENT_CACHE.get(gold);
-  if (!tex) {
-    tex = new Texture({
-      source: new BufferImageSource({
-        resource: accentPixels(gold),
-        width: PAL_W,
-        height: 1,
-        // The alpha channel is a MIX WEIGHT consumed by the shader, not
-        // transparency; declare premultiplied so nothing rescales the
-        // bytes and the mesh blend state stays plain 'normal' (WebGL
-        // ignores the premultiply flag for buffer uploads regardless -
-        // the bytes pass through verbatim, as with the FADE texture).
-        alphaMode: "premultiplied-alpha",
-      }),
-    });
-    ACCENT_CACHE.set(gold, tex);
-  }
-  return tex;
-}
-
 // The section shader (every ribbon, both modes; the app forces WebGL, so a
 // GL program suffices). Attribute layout: aPosition/aUV as pixi's default
-// mesh program (aUV.x = the paint U, aUV.y = the side across the ribbon),
+// mesh program (aUV.y = the side across the ribbon; aUV.x is unused since
+// G2.3 - the paint is evaluated per pixel),
 // plus the gap (G1) and paint (G2) attributes; the section RGB is computed
 // HERE per vertex (paint_glsl knotSection at the vertex's ctrl through this
 // frame's arc table - no per-sample cache, no drift re-bake, G2.2).
@@ -562,10 +397,10 @@ ${PAINT_FRAG_DECL}
 
 out vec4 finalColor;
 
-uniform sampler2D uTexture;
 ${KNOT_UNIFORMS_GLSL}
 ${PAINT_DATA_GLSL}
 ${PAINT_FX_GLSL}
+${PAINT_PAINT_GLSL}
 ${PAINT_FRAG_LIB}
 ${GAP_FRAG}
 void main(void) {
@@ -573,9 +408,12 @@ void main(void) {
   highp float pxW = max(max(gfw.x, gfw.y), 1e-5);
   highp float gTurn = gapTurn();
   // G2: this fragment's chain point (wrap-pair picks need derivatives in
-  // uniform control flow - here, at the top).
+  // uniform control flow - here, at the top), and its world arc per pixel
+  // (the gameplay paint's edge coverage).
   KChain kc = kFragChain();
   highp vec2 kpt = kFragPoint(kc);
+  highp vec2 ksw = fwidth(vSamp);
+  highp float pxArc = (ksw.y < 0.5 * ksw.x ? ksw.y : ksw.x) * float(kc.count) * kc.arcPer;
   if (uKBase.z > 0.5) {
     // DEBUG VIEW (probes): 1 = ctrl, 2 = arc - (fract(v), fract(16 v),
     // chain / 63); the census decodes 1e-4 precision through 8 bits.
@@ -583,18 +421,20 @@ void main(void) {
     finalColor = vec4(fract(kv), fract(kv * 16.0), float(kc.ch % 64) / 63.0, 1.0);
     return;
   }
-  vec4 acc = texture(uTexture, vec2(vUV.x, 0.5));
   vec3 base = vSection;
   highp float pRain = 0.0;
   highp float aM = 1.0;
-  // (kFxColor's own early outs, hoisted to skip the ctrl refinement: no
-  // style, or this chain's FX all settled.)
-  if (uKFx.w > 0.5 && uKFx.x > 0.5 && uKFx.z < kc.fxDone) {
-    highp float kctrl = kCtrlNear(kc, kpt.x, kpt.y);
-    base = kFxColor(kc, kctrl, kpt.x / kc.arcPer, base, pRain, aM);
-  }
+  // The exact ctrl, when the FX (kFxColor's own early outs hoisted: no
+  // style, or this chain's FX all settled) or the paint / glow need it.
+  bool fxHere = uKFx.w > 0.5 && uKFx.x > 0.5 && uKFx.z < kc.fxDone;
+  bool paintHere = uKPaint.x > 0.5 || uKFx2.z > 0.5;
+  highp float kctrl = fxHere || paintHere ? kCtrlNear(kc, kpt.x, kpt.y) : 0.0;
+  if (fxHere) base = kFxColor(kc, kctrl, kpt.x / kc.arcPer, base, pRain, aM);
   if (pRain > 0.0) base = kRainbowBlend(base, pRain, vUV.y);
-  vec3 rgb = mix(base, acc.rgb, acc.a);
+  // Gameplay paint + the reveal glow, composed over the section (G2.3).
+  vec3 rgb = paintHere
+    ? kComposePaint(base, kPaintAt(kc, kctrl, kpt.x, pxArc), kGlow(kc, kctrl))
+    : base;
   float gk = gapKeep(pxW, gTurn);
   // Probe view (globals texel .y): masked material tinted, not removed
   // (only masked fragments read the flag).
@@ -607,44 +447,27 @@ void main(void) {
 }
 `;
 
-// Point the ONE shared section shader at an accent strip. Under a custom
-// shader pixi binds nothing from mesh.texture (its setter only updates
-// shader.texture bookkeeping; GlMeshAdaptor binds uTexture for the
-// DEFAULT shader only), so this rebind is the only way a path color
-// reaches the ribbons. It never did before: ribbons kept the default gold
-// strip while the CPU-composed fillet fans used pathColor - olive fans on
-// gold paths at a khaki pc= (the user's "olive smudge" report).
-function bindAccent(tex: Texture): void {
-  // The GPU junction-field shader (fans) composes the same strip and
-  // follows it too.
-  bindFieldAccent(tex);
-  const sh = sectionShader();
-  if (sh.texture === tex) return;
-  sh.resources.uTexture = tex.source;
-  sh.resources.uSampler = tex.source.style;
-  sh.texture = tex;
-}
-
+// The ONE shared section shader. (The path color reaches it as a uniform,
+// uKGold - since G2.3 nothing samples mesh.texture, which custom shaders
+// ignore anyway: the olive-smudge lore.)
 function sectionShader(): SectionShader {
   if (!SECTION_SHADER) {
-    const tex = accentTexture();
     const sh = Shader.from({
       gl: { vertex: SECTION_VERT, fragment: SECTION_FRAG, name: "section-rgb" },
       resources: {
-        uTexture: tex.source,
-        uSampler: tex.source.style,
-        // Bound like uTexture (pixi binds every TextureSource resource to
-        // the sampler uniform of the same name); bindGap swaps it per scene.
+        // pixi binds every TextureSource resource to the sampler uniform of
+        // the same name; bindGap swaps it per scene.
         uGapData: defaultGapTexture().source,
         // G2 shader paint (paint_model.ts): page-lifetime data textures +
         // the shared uniform group.
         uKStatic: kStatic().source,
         uKGeom: kGeom().source,
         uKReveal: kReveal().source,
+        uKPaintData: kPaint().source,
         knotUniforms: knotUniforms(),
       },
     }) as SectionShader;
-    sh.texture = tex;
+    sh.texture = Texture.WHITE;
     SECTION_SHADER = sh;
   }
   return SECTION_SHADER;
@@ -860,9 +683,6 @@ export class RibbonRenderer {
   private pulseKey = "";
   private pulseBorn = -1e9;
   private paintCaps: PaintCap[] = [];
-  private paintRev = 0;
-  private chainRev = new Map<number, number>();
-  private uScratch = new Map<number, Float32Array>();
   private paintClock = 0;
   // Junction joinery: arms per fused junction (built once), per-chain
   // fused-terminal flags for the tuck, and palette pixel rows for CPU-side
@@ -921,7 +741,6 @@ export class RibbonRenderer {
   // section_colors (or spatial noise), baked to a per-SAMPLE RGB cache on
   // the first update. A cache entry of length 3 is a constant chain
   // color; otherwise it is 3 * sampleCount channel triplets.
-  private accentTex: Texture | null = null;
   private filletLayer: Container | null = null;
   // TWO-LAYER JOINERY (pre-per-pixel-gaps; kept for the junction-shader
   // merge): the per-wedge layer vote still sorts fans between this layer
@@ -1025,24 +844,20 @@ export class RibbonRenderer {
   // length per rebuild geometry; reset when the length changes).
   private fieldProfPool: Float32Array[] = [];
   private fieldProfLen = 0;
-  // GPU JUNCTION FIELD (junction_field.ts): each chain's first texel in the
-  // shared PAINT data texture (palette mode; one texel per ribbon sample).
-  private paintBase = new Int32Array(0);
   // Joinery rebuild gating (see rebuildFillets): bumped by every update();
   // the last rebuild's inputs.
   private geomRev = 0;
   private filletKey = "";
   // Scratch for the junction-field composition (rebuildFillets).
-  private fieldAccScratch = new Float32Array(4);
   private fieldMbScratch = new Float32Array(4);
   // PROBE HOOK (diagnostics only): the last rebuild's junction field -
-  // `at(ji, x, y, out)` writes the composed [r, g, b] (+ U_BASE) at a world
+  // `at(ji, x, y, out, px?)` writes the composed [r, g, b] at a world
   // point (junction index = junctionArms index); `arms(ji)` lists that
   // joint's arms. A CPU transliteration of the GPU shader reading the SAME
   // record + paint data the shader samples (cpuJunctionField) - the ground
   // truth for GPU-vs-CPU and field-vs-ribbon censuses.
   fieldProbe: {
-    at: (ji: number, x: number, y: number, out: Float32Array) => boolean;
+    at: (ji: number, x: number, y: number, out: Float32Array, px?: number) => boolean;
     arms: (ji: number) => unknown[];
     center: (ji: number) => [number, number] | null;
     // The joint's record texel index (-1: no field) - what a fan's aRec
@@ -1066,8 +881,6 @@ export class RibbonRenderer {
   private revealWas = false;
   private revealMask: (Float32Array | null)[] = [];
   private revealMaskPool = new Map<number, Float32Array>();
-  private revealTips: RevealTip[] = [];
-  private glowChains = new Set<number>();
   private revealTipGfx: Graphics | null = null;
   // APPEARANCE FX (Stage 26): frontier particles while revealing. The
   // style is synced from params every tick (live dropdown switches, no
@@ -1116,12 +929,8 @@ export class RibbonRenderer {
       this.filletLayer = filletLayer;
     }
     // Every chain renders through the section shader (the gap mask lives
-    // there): palette mode wears the section field, knot mode one constant
-    // color per chain (the old tint) with a neutral accent U.
-    const accent = accentTexture(style.pathColor);
-    this.accentTex = accent;
-    bindAccent(accent);
-
+    // there): palette mode wears the section field and the gameplay paint,
+    // knot mode one constant color per chain (the old tint).
     ps.chains.forEach((chain, i) => {
       this.chainControls.push(new Float32Array(chain.length * 2));
       this.chainSamples.push(null);
@@ -1143,10 +952,8 @@ export class RibbonRenderer {
       // closing quad across the removed seam.
       const closed = ps.chainBreakAfter[i] < 0;
       const fill = new RibbonMesh(count, closed, 0xffffff, true, i);
-      fill.mesh.texture = accent;
       fill.mesh.shader = sectionShader();
       this.knotRgb.push(this.knotChainRgb(i));
-      fill.writePaint(new Float32Array(count).fill(U_BASE));
       this.fills.push(fill);
       baseLayer.addChild(fill.mesh);
       // The material's control positions at construction (the renderer is
@@ -1159,29 +966,24 @@ export class RibbonRenderer {
       this.initialControls.push(ic);
     });
     this.revealMask = ps.chains.map(() => null);
-    // GPU junction field: every chain's samples get a contiguous texel
-    // range in the shared paint texture (filled by writeFillPaint).
-    if (style.paletteMode) {
-      this.paintBase = new Int32Array(ps.chains.length);
-      let texels = 0;
-      for (let i = 0; i < ps.chains.length; i++) {
-        this.paintBase[i] = texels;
-        texels += this.fills[i].sampleCount;
-      }
-      paintData().ensure(texels);
-    }
     // G2 SHADER PAINT: the per-scene data-texture layout (paint_model.ts).
     // Open chains are always break-after-last (arc grows with the slot).
+    // (C1.w, the retired PAINT texture's base, stays 0.)
     this.paintScene = new PaintScene(
       ps.chains.map((chain, i) => ({
         nCtrl: chain.length,
         closed: ps.chainBreakAfter[i] < 0,
         count: this.fills[i].sampleCount,
-        paintBase: this.paintBase.length > i ? this.paintBase[i] : 0,
+        paintBase: 0,
       }))
     );
     const U = knotUniformValues();
     U.uKBase[3] = style.paletteMode ? 1 : 0;
+    // Gameplay paint: palette mode only; an empty declaration until the
+    // fabric overlay's first setPaint.
+    U.uKPaint[0] = style.paletteMode ? 1 : 0;
+    this.syncGold();
+    this.paintScene.setPaintItems(new Float32Array(0), 0, []);
     // A new scene starts with no reveal attached.
     U.uKFx[3] = 0;
     U.uKFx2[2] = 0;
@@ -1189,13 +991,6 @@ export class RibbonRenderer {
     // Section colors: a constant default until the caller installs its
     // scheme's runs (knot mode: each strand's tint, for good).
     this.installRuns(null);
-    // Every chain's paint starts at the base family (the junction field
-    // reads it; painted chains are rewritten by the paint tick).
-    if (style.paletteMode) {
-      for (let i = 0; i < ps.chains.length; i++) {
-        this.writeFillPaint(i, new Float32Array(this.fills[i].sampleCount).fill(U_BASE));
-      }
-    }
 
     // Neighboring crossing passes along each thread come from the particle
     // system; passes slide live, so we hold references and read their
@@ -1680,7 +1475,6 @@ export class RibbonRenderer {
   beginReveal(anim: RevealAnimator | null): void {
     this.revealAnim = anim;
     this.revealMask = this.ps.chains.map(() => null);
-    this.revealTips = [];
     // Fresh reveal, fresh particle field: a Replay-settle resets particle
     // positions, and motes from the previous run would float over the
     // re-angular knot.
@@ -2068,7 +1862,6 @@ export class RibbonRenderer {
   private finishReveal(): void {
     this.revealAnim = null;
     this.revealMask = this.ps.chains.map(() => null);
-    this.revealTips = [];
     this.revealTipGfx?.clear();
   }
 
@@ -2151,6 +1944,10 @@ export class RibbonRenderer {
     sectionAt: (ch: number, arc: number) => number[];
     sectionExact: (ch: number, arc: number) => number[];
     sectionAtCtrl: (ch: number, ctrl: number) => number[];
+    // The section shader's full color at the material point exactly at
+    // the arc's ctrl (section, FX, paint + glow; px = edge coverage):
+    // [r, g, b, alpha] - what a probe vertex there renders (G2.3 census).
+    shadeAll: (ch: number, arc: number, side: number, px?: number) => number[];
     // The section shader's color at a material point before the gameplay
     // accent: [r, g, b, alpha] (FX on the given base color).
     shadeFx: (ch: number, arc: number, side: number, base: number[]) => number[];
@@ -2179,6 +1976,15 @@ export class RibbonRenderer {
       sectionAtCtrl: (ch, ctrl) => {
         knotSection(data, U, kChain(data, ch), ctrl, scratch);
         return [scratch[0], scratch[1], scratch[2]];
+      },
+      shadeAll: (ch, arc, side, px = 0) => {
+        const c = kChain(data, ch);
+        const ctrl = kCtrlOfArc(data, c, arc);
+        const rgb = [0, 0, 0];
+        knotSection(data, U, c, ctrl, rgb);
+        const a = kShadeFx(data, U, c, ctrl, arc / c.arcPer, side, rgb);
+        kComposePaint(U, rgb, kPaintAt(data, U, c, ctrl, arc, px, this.paintTmp), kGlow(data, U, c, ctrl));
+        return [rgb[0], rgb[1], rgb[2], a];
       },
       shadeFx: (ch, arc, side, base) => {
         const c = kChain(data, ch);
@@ -3500,10 +3306,7 @@ export class RibbonRenderer {
     if (this.style.paletteMode) {
       if (this.style.pathColor !== pathColor) {
         this.style.pathColor = pathColor;
-        const tex = accentTexture(pathColor);
-        this.accentTex = tex;
-        bindAccent(tex);
-        for (const f of this.fills) f.mesh.texture = tex;
+        this.syncGold();
       }
       // Sections are evaluated per vertex from the run table + uniforms:
       // nothing to repaint (the gameplay U does not depend on them).
@@ -3551,12 +3354,18 @@ export class RibbonRenderer {
 
 
   // Declare the current gameplay paint (traveled spans + branch-point
-  // pulse arms). Cheap; the heavy lifting happens in tickPaint.
+  // pulse arms + junction caps). Called every awake frame; KPAINT is
+  // rewritten only when the declaration's content changed (a traversal
+  // move changes its swept span every frame - a few texels).
   setPaint(spans: PaintSpan[], pulses: PulseArm[], caps: PaintCap[]): void {
     this.paintSpans = spans;
     this.paintPulses = pulses;
     this.paintCaps = caps;
-    this.paintRev++;
+    const declKey = JSON.stringify([spans, pulses, caps]);
+    if (declKey !== this.paintKey && this.style.paletteMode) {
+      this.paintKey = declKey;
+      this.writePaintItems();
+    }
     // PULSE FADE-IN: pulses live around the current head junction; when
     // that junction changes, restart the fade clock so the gradient
     // animation breathes in instead of popping (the "appear too
@@ -3843,44 +3652,28 @@ export class RibbonRenderer {
     );
   }
 
-  // The thread's composed color at an arc, 0..1 RGB: knot mode = the
-  // chain tint; fabric = the section color mixed with the live gameplay
-  // accent at the ribbon's own paint U (exactly the section shader).
+  // The thread's composed color at an arc, 0..1 RGB: the section color,
+  // the burn / roots tint, then the gameplay paint and the reveal glow -
+  // the section shader's own composition (through the mirror).
   private pluckColor(chain: number, arc: number, out: Float32Array): void {
-    const fill = this.fills[chain];
-    if (!this.style.paletteMode) {
-      const t = fill.mesh.tint as number;
-      out[0] = ((t >> 16) & 255) / 255;
-      out[1] = ((t >> 8) & 255) / 255;
-      out[2] = (t & 255) / 255;
-      return;
-    }
-    this.colorAtArc(chain, arc, out);
-    const samples = this.chainSamples[chain];
-    if (!samples || samples.totalLength <= 0) return;
-    const count = fill.sampleCount;
-    const total = samples.totalLength;
-    let k0: number;
-    let k1: number;
-    let fr: number;
-    if (samples.closed) {
-      const f = (normArc(arc, total, true) / total) * count;
-      k0 = Math.floor(f) % count;
-      k1 = (k0 + 1) % count;
-      fr = f - Math.floor(f);
-    } else {
-      const f = (normArc(arc, total, false) / total) * (count - 1);
-      k0 = Math.min(count - 1, Math.floor(f));
-      k1 = Math.min(count - 1, k0 + 1);
-      fr = f - Math.floor(f);
-    }
-    const u = fill.paintU(k0) + (fill.paintU(k1) - fill.paintU(k0)) * fr;
-    const acc = this.acc4Scratch;
-    accentSampleCpu(accentPixels(this.style.pathColor), u, acc);
-    out[0] += (acc[0] - out[0]) * acc[3];
-    out[1] += (acc[1] - out[1]) * acc[3];
-    out[2] += (acc[2] - out[2]) * acc[3];
+    this.composedAtArc(chain, arc, 0, out);
   }
+
+  // The ribbon's composed color at a world arc (no FX stripes or alpha):
+  // colorAtArc's section (the ribbon's Gouraud) + burn, then the paint at
+  // the exact point with edge coverage over `px` (0 = hard).
+  private composedAtArc(chain: number, arc: number, px: number, out: Float32Array): void {
+    this.colorAtArc(chain, arc, out);
+    if (!this.style.paletteMode) return;
+    const D = kData();
+    const c = kChain(D, chain);
+    if (!(c.total > 0)) return;
+    const U = knotUniformValues();
+    const an = normArc(arc, c.total, c.closed);
+    const ctrl = kCtrlOfArc(D, c, an);
+    kComposePaint(U, out, kPaintAt(D, U, c, ctrl, an, px, this.paintTmp), kGlow(D, U, c, ctrl));
+  }
+  private paintTmp: KPaintState = { p: 0, band: false, famB: false, v: 0 };
 
   // The NODES a plucked chain passes (pluck_overlay.ts PluckNode): every
   // registered crossing pass (footprint = its erase extents + fade when
@@ -4087,56 +3880,121 @@ export class RibbonRenderer {
 
   private tickPaintPalette(_dt: number): void {
     if (!this.style.paletteMode) return;
-
-    const target = new Set<number>();
-    const animated = new Set<number>();
-    for (const s of this.paintSpans) target.add(s.chain);
-    for (const cp of this.paintCaps) target.add(cp.chain);
-    for (const p of this.paintPulses) {
-      target.add(p.chain);
-      animated.add(p.chain);
-    }
-    const toWrite: number[] = [];
-    for (const c of target) {
-      if (animated.has(c) || this.chainRev.get(c) !== this.paintRev) {
-        toWrite.push(c);
-      }
-    }
-    for (const c of this.chainRev.keys()) {
-      if (!target.has(c)) toWrite.push(c);
-    }
-
-    // REVEAL frontier glow: chains carrying an advancing tip rewrite every
-    // tick (the glow travels), and chains whose glow just ended rewrite
-    // once to clear it. The tips are cached here for writeChainPaint.
-    this.revealTips =
-      this.revealOn && this.revealAnim ? this.revealAnim.tips() : [];
-    const glowNow = new Set<number>();
-    for (const t of this.revealTips) glowNow.add(t.chain);
-    for (const c of glowNow) {
-      if (!toWrite.includes(c)) toWrite.push(c);
-    }
-    for (const c of this.glowChains) {
-      if (!glowNow.has(c) && !toWrite.includes(c)) toWrite.push(c);
-    }
-    this.glowChains = glowNow;
-
-    // (Appearance FX - burn / roots / rainbow / materialize - no longer
-    // repaint anything here: since G2.1 every pixel evaluates them from the
-    // reveal sources and the clock uniforms.)
-
-    // The paint lives ONLY in each base ribbon's U/colors: crossing gaps
-    // are cut per pixel, so no over-fill copy has to replay it.
-    for (const chain of toWrite) {
-      if (!this.chainSamples[chain]) continue;
-      this.writeChainPaint(chain, target.has(chain));
-      if (target.has(chain)) this.chainRev.set(chain, this.paintRev);
-      else this.chainRev.delete(chain);
-    }
-
+    // GAMEPLAY PAINT (G2.3): every pixel evaluates the declaration (KPAINT,
+    // written by setPaint when it changes) and the reveal glow; the tick
+    // only reduces the animation clocks to uniforms - in float64, mod the
+    // crest spacing, so no absolute clock reaches the GPU.
+    const U = knotUniformValues();
+    const clock = this.paintClock;
+    const spacing = Math.max(0.5, this.pulseSpacing);
+    const modS = (x: number): number => x - spacing * Math.floor(x / spacing);
+    U.uKPulse[0] = modS(clock * PAINT_CONST.PULSE_SPEED);
+    U.uKPulse[1] = modS((clock + PAINT_CONST.PULSE_OUT_LEAD) * PAINT_CONST.PULSE_SPEED);
+    U.uKPulse[2] = spacing;
+    const fi = Math.min(1, Math.max(0, (clock - this.pulseBorn) / PAINT_CONST.PULSE_FADE_IN));
+    U.uKPulse[3] = fi * fi * (3 - 2 * fi);
+    // Hover: a slow whole-run breath between 0.2 and 0.8 strength.
+    U.uKPaint[3] = 0.5 + 0.3 * Math.sin(clock * PAINT_CONST.HOVER_PULSE_W);
     // Junction fillets ride the same tick: live positions, live paint.
     this.rebuildFillets();
   }
+
+  // The path color as the uKGold uniform (0xRRGGBB -> 0..1 floats).
+  private syncGold(): void {
+    const g = this.style.pathColor ?? 0xffd24a;
+    const U = knotUniformValues();
+    U.uKGold[0] = ((g >> 16) & 255) / 255;
+    U.uKGold[1] = ((g >> 8) & 255) / 255;
+    U.uKGold[2] = (g & 255) / 255;
+  }
+
+  // The declaration as KPAINT records (paint_math kPaintAt): items in the
+  // retired pass's evaluation order (spans, caps, pulses), each referenced
+  // from every control slot it can touch - spans and pulses over their ctrl
+  // range, caps over their arc radius at the chain's tightest slot (doubled:
+  // the knot keeps moving under a static declaration), every range widened
+  // by a slot for the edge coverage ramp. Only changed texels upload.
+  private writePaintItems(): void {
+    const items: number[] = [];
+    const n = this.ps.chains.length;
+    const slots: Array<Array<number[] | undefined> | null> = new Array(n).fill(null);
+    let overflow = 0;
+    const touch = (chain: number, lo: number, hi: number, item: number): void => {
+      const len = this.ps.chains[chain].length;
+      const closed = this.ps.chainBreakAfter[chain] < 0;
+      let s0 = Math.floor(lo) - 1;
+      let s1 = Math.floor(hi) + 1;
+      if (!closed) {
+        s0 = Math.max(0, s0);
+        s1 = Math.min(len - 1, s1);
+      } else if (s1 - s0 >= len) {
+        s0 = 0;
+        s1 = len - 1;
+      }
+      let sc = slots[chain];
+      if (!sc) {
+        sc = new Array(len);
+        slots[chain] = sc;
+      }
+      for (let s = s0; s <= s1; s++) {
+        const k = closed ? ((s % len) + len) % len : s;
+        let l = sc[k];
+        if (!l) {
+          l = [];
+          sc[k] = l;
+        }
+        if (l[l.length - 1] === item) continue;
+        if (l.length >= 32) {
+          overflow++;
+          continue;
+        }
+        l.push(item);
+      }
+    };
+    const minArcPerCtrl = (chain: number): number => {
+      const smp = this.chainSamples[chain];
+      if (!smp) return 0.05;
+      const cal = smp.controlArcLengths;
+      let m = Infinity;
+      for (let k = 0; k + 1 < cal.length; k++) m = Math.min(m, cal[k + 1] - cal[k]);
+      return Math.max(0.05, Number.isFinite(m) ? m : 0.05);
+    };
+    for (const s of this.paintSpans) {
+      const i = items.length / 8;
+      items.push(PAINT_ITEM.SPAN, s.c0, s.c1, s.p0 ?? 1, s.p1 ?? 1, 0, 0, 0);
+      touch(s.chain, Math.min(s.c0, s.c1), Math.max(s.c0, s.c1), i);
+    }
+    for (const cp of this.paintCaps) {
+      const i = items.length / 8;
+      items.push(PAINT_ITEM.CAP, cp.ctrl, cp.ctrl, cp.p ?? 1, 0, 0, cp.radius, 0);
+      const r = (2 * cp.radius) / minArcPerCtrl(cp.chain);
+      touch(cp.chain, cp.ctrl - r, cp.ctrl + r, i);
+    }
+    for (const p of this.paintPulses) {
+      const i = items.length / 8;
+      const flags =
+        (p.inward ? ITEM_FLAG.INWARD : 0) |
+        (p.onPath ? ITEM_FLAG.ON_PATH : 0) |
+        (p.hovered ? ITEM_FLAG.HOVER : 0);
+      items.push(PAINT_ITEM.PULSE, p.cJunction, p.cFar, 0, 0, flags, 0, 0);
+      touch(p.chain, Math.min(p.cJunction, p.cFar), Math.max(p.cJunction, p.cFar), i);
+    }
+    if (overflow > 0 && !this.paintOverflowWarned) {
+      this.paintOverflowWarned = true;
+      console.warn(`G2 paint: ${overflow} slot references beyond the shader's 32 per slot`);
+    }
+    this.lastPaintUpload = this.paintScene.setPaintItems(
+      Float32Array.from(items),
+      items.length / 8,
+      slots
+    );
+  }
+
+  // Texels the last paint declaration change uploaded (probes).
+  lastPaintUpload = 0;
+  private paintOverflowWarned = false;
+  // The declaration last written to KPAINT (setPaint skips identical ones).
+  private paintKey = "";
 
   // Collapse the samples within one host half-width of a fused terminal
   // onto the tuck point, so the ribbon ends flush at the host's near edge.
@@ -4222,242 +4080,14 @@ export class RibbonRenderer {
     return Math.min(samples.totalLength, a0 + (a1 - a0) * t);
   }
 
-  // Evaluate the paint field for one chain into palette coordinates, one U
-  // per ribbon sample.
-  private writeChainPaint(chain: number, painted: boolean): void {
-    const samples = this.chainSamples[chain]!;
-    const mesh = this.fills[chain];
-    const count = mesh.sampleCount;
-    let us = this.uScratch.get(chain);
-    if (!us || us.length < count) {
-      us = new Float32Array(count);
-      this.uScratch.set(chain, us);
-    }
-    us.fill(U_BASE, 0, count);
-    if (!painted) {
-      this.applyRevealGlowU(chain, us, count);
-      this.writeFillPaint(chain, us);
-      return;
-    }
-
-    const closed = this.ps.chainBreakAfter[chain] < 0;
-    const total = samples.totalLength;
-    const arcOf = (k: number): number =>
-      closed ? (k / count) * total : (k / (count - 1)) * total;
-
-    // Traveled spans -> gold (optionally intensity-graded end to end: the
-    // memory-trail tail fade).
-    for (const s of this.paintSpans) {
-      if (s.chain !== chain) continue;
-      const a0 = this.paintArcAt(samples, s.c0, closed);
-      const a1 = this.paintArcAt(samples, s.c1, closed);
-      // A closed chain's unwrapped span can cross the arc seam.
-      const wraps = closed && a1 <= a0 && s.c1 > s.c0;
-      const p0 = s.p0 ?? 1;
-      const p1 = s.p1 ?? 1;
-      if (p0 >= 1 && p1 >= 1) {
-        for (let k = 0; k < count; k++) {
-          const a = arcOf(k);
-          const inside = wraps ? a >= a0 || a <= a1 : a >= a0 && a <= a1;
-          if (inside) us[k] = U_GOLD;
-        }
-      } else {
-        const spanLen = Math.max(wraps ? total - a0 + a1 : a1 - a0, 1e-9);
-        for (let k = 0; k < count; k++) {
-          const a = arcOf(k);
-          const inside = wraps ? a >= a0 || a <= a1 : a >= a0 && a <= a1;
-          if (!inside) continue;
-          const da = wraps && a < a0 ? total - a0 + a : a - a0;
-          const t = Math.min(1, Math.max(0, da / spanLen));
-          us[k] = goldU(p0 + (p1 - p0) * t);
-        }
-      }
-    }
-
-    // Traversed-junction caps -> gold discs around each arm occurrence.
-    // max(): a cap never darkens span paint under it (identical to the old
-    // unconditional gold write at full intensity).
-    for (const cp of this.paintCaps) {
-      if (cp.chain !== chain) continue;
-      const aC = this.paintArcAt(samples, cp.ctrl, closed);
-      const uCap = goldU(cp.p ?? 1);
-      for (let k = 0; k < count; k++) {
-        let d = Math.abs(arcOf(k) - aC);
-        if (closed) d = Math.min(d, total - d);
-        if (d <= cp.radius && uCap > us[k]) us[k] = uCap;
-      }
-    }
-
-    // Branch-point pulse arms (see pulseValueAt for the phase model).
-    for (const p of this.paintPulses) {
-      if (p.chain !== chain) continue;
-      const aJ = this.paintArcAt(samples, p.cJunction, closed);
-      const aF = this.paintArcAt(samples, p.cFar, closed);
-      let dirPos: boolean;
-      let spanArc: number;
-      if (closed) {
-        dirPos = p.cFar > p.cJunction;
-        spanArc = dirPos
-          ? (((aF - aJ) % total) + total) % total
-          : (((aJ - aF) % total) + total) % total;
-      } else {
-        dirPos = aF >= aJ;
-        spanArc = Math.abs(aF - aJ);
-      }
-      if (spanArc <= 1e-6) continue;
-      for (let k = 0; k < count; k++) {
-        const a = arcOf(k);
-        let d: number;
-        if (closed) {
-          d = dirPos
-            ? (((a - aJ) % total) + total) % total
-            : (((aJ - a) % total) + total) % total;
-        } else {
-          d = dirPos ? a - aJ : aJ - a;
-        }
-        const v = this.pulseValueAt(d, spanArc, p.inward, p.hovered);
-        if (v > 0.004) us[k] = bandU(p.onPath, v);
-      }
-    }
-    this.applyRevealGlowU(chain, us, count);
-    this.writeFillPaint(chain, us);
-  }
-
-  // Every ribbon paint write goes through here: the ribbon gets its per-
-  // vertex U, and the GPU junction field's PAINT texture the same per-
-  // sample U (texel .w; the section colors are evaluated from the run
-  // table since G2.2, rgb is unused), so joinery reads exactly the paint
-  // the ribbons wear (reveal glow and gameplay paint included). Only the
-  // touched rows upload (flushed once per tick by rebuildFillets).
-  private writeFillPaint(chain: number, us: ArrayLike<number>): void {
-    const fill = this.fills[chain];
-    fill.writePaint(us);
-    if (this.paintBase.length === 0) return;
-    const pd = paintData();
-    const d = pd.data;
-    const base = this.paintBase[chain];
-    const count = fill.sampleCount;
-    for (let k = 0; k < count; k++) d[(base + k) * 4 + 3] = us[k];
-    pd.markDirty(base, base + count);
-  }
-
-  // REVEAL frontier glow (palette mode): push the paint U of the samples
-  // just behind each advancing tip toward the near-white accent through
-  // the EXISTING palette bands - gold-family samples brighten along band
-  // B, everything else along band A, both of which end at the same
-  // accent, so no new strip adjacency class is introduced (the strip's
-  // order is load-bearing). Only ever brightens; the traveled gold and
-  // the pulse keep whatever is brighter.
-  private applyRevealGlowU(
-    chain: number,
-    us: Float32Array,
-    count: number
-  ): void {
-    if (!this.revealOn || this.revealTips.length === 0) return;
-    // Burn/roots: the thread's own tint IS the frontier treatment -
-    // the near-white accent glow sat on the same samples and washed it
-    // out completely (acc.a ~0.94 overrides vSection).
-    if (this.appearFx === "burn" || this.appearFx === "roots") return;
-    const samples = this.chainSamples[chain];
-    if (!samples || samples.totalLength <= 0) return;
-    const closed = this.ps.chainBreakAfter[chain] < 0;
-    const total = samples.totalLength;
-    const mask = this.revealMask[chain];
-    const arcPer = closed ? total / count : total / (count - 1);
-    // Rainbow: a LONGER white head with a full-strength plateau.
-    const rainbow = this.appearFx === "rainbow";
-    const glowArc = rainbow ? RAINBOW_GLOW_ARC : REVEAL_GLOW_ARC;
-    const hold = rainbow ? glowArc * RAINBOW_GLOW_HOLD : 0;
-    const halfWin = Math.ceil(glowArc / Math.max(arcPer, 1e-6)) + 1;
-    for (const tip of this.revealTips) {
-      if (tip.chain !== chain) continue;
-      const aT = this.paintArcAt(samples, tip.ctrl, closed);
-      const kC = Math.round(aT / arcPer);
-      for (let o = -halfWin; o <= halfWin; o++) {
-        let k = kC + o;
-        if (closed) k = ((k % count) + count) % count;
-        else if (k < 0 || k >= count) continue;
-        const a = k * arcPer;
-        let d = Math.abs(a - aT);
-        if (closed) d = Math.min(d, total - d);
-        if (d > glowArc) continue;
-        if (mask && mask[k] <= 0.004) continue; // Unrevealed side: invisible.
-        const g = d <= hold ? 1 : 1 - (d - hold) / (glowArc - hold);
-        const u = us[k];
-        if (u >= GOLD_FAMILY_MIN) {
-          const cand = bandU(true, g);
-          if (cand > u) us[k] = cand;
-        } else {
-          const cand = bandU(false, g);
-          if (cand < u) us[k] = cand;
-        }
-      }
-    }
-  }
-
-  // The pulse field at distance d from the junction along an arm whose run
-  // spans spanArc. FULL-LENGTH CREST TRAINS: crests march the entire run
-  // at `pulseSpacing` world units apart (live panel param) - inbound
-  // trains sink toward the junction while outbound trains emerge along
-  // the choices (outbound leads by PULSE_OUT_LEAD). The steady glow floor
-  // still hugs the junction (PULSE_REACH); crests hold near-full strength
-  // along the whole run, swell in over CREST_RAMP near the junction, and
-  // dissolve only across the far-end window.
-  private pulseValueAt(
-    d: number,
-    spanArc: number,
-    inward: boolean,
-    hovered: boolean
-  ): number {
-    const end = spanArc;
-    if (d < 0 || d > end) return 0;
-    const endWin = Math.min(1, Math.max(0, (end - d) / PULSE_END_WINDOW));
-    // Hover: a slow whole-run breath between 0.2 and 0.8 strength (the
-    // steady full-white read as a frozen slab next to the animated
-    // pulses). Still no fade-in - hover is a direct pointer response.
-    if (hovered) {
-      return (
-        endWin * (0.5 + 0.3 * Math.sin(this.paintClock * HOVER_PULSE_W))
-      );
-    }
-    // Fade the whole animation in over the first moments at a NEW head
-    // junction (smoothstep; hover stays instant - it is a direct
-    // pointer response).
-    const fi = Math.min(
-      1,
-      Math.max(0, (this.paintClock - this.pulseBorn) / PULSE_FADE_IN)
-    );
-    const fadeIn = fi * fi * (3 - 2 * fi);
-    const spacing = Math.max(0.5, this.pulseSpacing);
-    const clock = inward ? this.paintClock : this.paintClock + PULSE_OUT_LEAD;
-    const travel = clock * PULSE_SPEED;
-    // Distance to the nearest crest of the comb (outbound combs slide
-    // outward with time, inbound combs slide toward the junction).
-    const raw = inward ? d + travel : d - travel;
-    const ph = ((raw % spacing) + spacing) % spacing;
-    const dist = Math.min(ph, spacing - ph);
-    // That crest's own position, for the near-junction swell-in.
-    const dC = Math.max(
-      0,
-      d - (ph <= spacing - ph ? ph : ph - spacing)
-    );
-    const bump =
-      Math.max(0, 1 - dist / CREST_WIDTH) * Math.min(1, dC / CREST_RAMP);
-    const floor =
-      (PULSE_FLOOR +
-        PULSE_CORE_BOOST * Math.max(0, 1 - d / PULSE_CORE_RADIUS)) *
-      Math.max(0, 1 - d / PULSE_REACH);
-    return Math.min(1, (floor + bump * 0.9) * endWin) * fadeIn;
-  }
-
   // CPU REFERENCE of the GPU junction field (junction_field.ts FIELD_GLSL),
   // transliterated line for line and reading the SAME record + paint data
   // the shader samples - the fieldProbe ground truth. Not on any hot path.
-  // GLSL twin chainMaterial: the material (r, g, b, u) of a chain at a
-  // world arc - the ribbon's section color there (its own Gouraud between
-  // samples; `seed` = a ctrl near the arc, < 0 for none), the paint U from
-  // the PAINT mirror, with burn / roots applied.
-  private cpuChainMaterial(ch: number, a: number, out: Float32Array, seedIn: number): void {
+  // GLSL twin chainMaterial: the COMPOSED material of a chain at a world
+  // arc - the ribbon's section color there (its own Gouraud between
+  // samples; `seed` = a ctrl near the arc), burn / roots, then the gameplay
+  // paint and the reveal glow with edge coverage over `px` - into out[0..2].
+  private cpuChainMaterial(ch: number, a: number, out: Float32Array, seedIn: number, px = 0): void {
     const D = kData();
     const U = knotUniformValues();
     const c = kChain(D, ch);
@@ -4466,48 +4096,33 @@ export class RibbonRenderer {
     const seed = c.closed
       ? seedIn - nc * Math.floor(seedIn / nc)
       : Math.max(0, Math.min(nc - 1, seedIn));
-    const d = paintData().data;
-    const base = Math.round(D.stat[(2 * ch + 1) * 4 + 3]);
-    const count = c.count;
     const total = c.total;
-    let k0 = 0;
-    let k1 = 0;
-    let fr = 0;
-    let an = 0;
-    if (total > 0 && count >= 2) {
-      if (c.closed) {
-        an = a - total * Math.floor(a / total);
-        const f = (an / total) * count;
-        const fl = Math.floor(f);
-        k0 = fl % count;
-        k1 = (k0 + 1) % count;
-        fr = f - fl;
-      } else {
-        an = Math.max(0, Math.min(total, a));
-        const f = (an / total) * (count - 1);
-        const fl = Math.floor(f);
-        k0 = Math.min(fl, count - 1);
-        k1 = Math.min(count - 1, k0 + 1);
-        fr = f - fl;
-      }
-    }
-    const c0 = kSectionAtArc(D, U, c, a, seed, out);
-    out[3] = d[(base + k0) * 4 + 3] + (d[(base + k1) * 4 + 3] - d[(base + k0) * 4 + 3]) * fr;
-    if (!(total > 0 && count >= 2) || U.uKFx[3] < 0.5 || U.uKFx[2] >= c.fxDone) {
+    if (!(total > 0) || c.count < 2) {
+      knotSection(D, U, c, 0, out);
       return;
     }
-    const st = Math.round(U.uKFx[0]);
-    if (st !== FX_STYLE.burn && st !== FX_STYLE.roots) return;
-    kFxColor(D, U, c, kCtrlOfArcNear(D, c, an, c0), an / c.arcPer, out, this.ignScratch);
+    const an = c.closed ? a - total * Math.floor(a / total) : Math.max(0, Math.min(total, a));
+    const c0 = kSectionAtArc(D, U, c, a, seed, out);
+    const actrl = kCtrlOfArcNear(D, c, an, c0);
+    if (U.uKFx[3] >= 0.5 && U.uKFx[2] < c.fxDone) {
+      const st = Math.round(U.uKFx[0]);
+      if (st === FX_STYLE.burn || st === FX_STYLE.roots) {
+        kFxColor(D, U, c, actrl, an / c.arcPer, out, this.ignScratch);
+      }
+    }
+    if (U.uKPaint[0] > 0.5 || U.uKFx2[2] > 0.5) {
+      kComposePaint(U, out, kPaintAt(D, U, c, actrl, an, px, this.paintTmp), kGlow(D, U, c, actrl));
+    }
   }
-
   // The composed junction-field color at (x, y) for the record at texel
-  // `rec` into out[0..2] (out[3] = U_BASE: the accent is already composed).
+  // `rec` into out[0..2]; `px` = world units per pixel (the paint's edge
+  // coverage - the fan shader's pxW; 0 = hard edges).
   private cpuJunctionField(
     rec: number,
     x: number,
     y: number,
-    out: Float32Array
+    out: Float32Array,
+    px = 0
   ): void {
     const J = recordData().data;
     const at = (i: number): number => i * 4;
@@ -4522,20 +4137,12 @@ export class RibbonRenderer {
     const ex = x - J[hd];
     const ey = y - J[hd + 1];
     const mA = this.acc4Scratch;
-    // Compose in place: m[0..2] = mix(section, accent(u).rgb, accent.a).
-    const composeM = (m: Float32Array): void => {
-      const acc = this.fieldAccScratch;
-      accentSampleCpu(accentPixels(this.style.pathColor), m[3], acc);
-      m[0] += (acc[0] - m[0]) * acc[3];
-      m[1] += (acc[1] - m[1]) * acc[3];
-      m[2] += (acc[2] - m[2]) * acc[3];
-    };
+    // (Materials arrive composed - the shader blends composed colors.)
     const compose = (m: Float32Array): void => {
-      composeM(m);
       out[0] = m[0];
       out[1] = m[1];
       out[2] = m[2];
-      out[3] = U_BASE;
+      out[3] = 0;
     };
     if (n === 0) {
       const h = at(rec + 2);
@@ -4544,7 +4151,8 @@ export class RibbonRenderer {
         Math.round(J[h]),
         J[ax] + ex * J[ax + 1] + ey * J[ax + 2],
         mA,
-        J[ax + 3]
+        J[ax + 3],
+        px
       );
       compose(mA);
       return;
@@ -4557,7 +4165,7 @@ export class RibbonRenderer {
       // GLSL twin: the seed = joint ctrl + offset x the arm's ctrl slope.
       const seed = J[a + 3] + J[a + 1] * sc * J[h + 1];
       this.fieldLastArm.push(Math.round(J[h]), arc, seed);
-      this.cpuChainMaterial(Math.round(J[h]), arc, m, seed);
+      this.cpuChainMaterial(Math.round(J[h]), arc, m, seed, px);
     };
     const profArc = (ab: number, rp: number): number => {
       const xg = rp / FIELD_PROF_DR;
@@ -4606,7 +4214,6 @@ export class RibbonRenderer {
       compose(mA);
       return;
     }
-    composeM(mA);
     const mB = this.fieldMbScratch;
     const abB = rec + 2 + ib * stride;
     armPaint(abB, profArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0), mB);
@@ -4614,7 +4221,6 @@ export class RibbonRenderer {
       compose(mB);
       return;
     }
-    composeM(mB);
     const span = relA + relB;
     const hw = rho > fillHalf ? Math.asin(fillHalf / rho) : Math.PI / 2;
     let lo = hw;
@@ -4627,9 +4233,9 @@ export class RibbonRenderer {
     let t = hi > lo ? (relA - lo) / (hi - lo) : relA < span * 0.5 ? 0 : 1;
     t = t < 0 ? 0 : t > 1 ? 1 : t;
     t = t * t * (3 - 2 * t);
-    // Composed colors blend - never the raw U (see FIELD_GLSL).
+    // Composed colors blend (see FIELD_GLSL).
     for (let c = 0; c < 3; c++) out[c] = mA[c] + (mB[c] - mA[c]) * t;
-    out[3] = U_BASE;
+    out[3] = 0;
   }
 
   // Positional sampling for junction joinery: before the sampleAt
@@ -4732,8 +4338,7 @@ export class RibbonRenderer {
   // visibility), a live joinery input moved, or a reveal / appearance FX
   // is gating joints and fading fans. `force` = rebuild regardless (probes).
   rebuildFillets(force = false): void {
-    if (!this.filletLayer || !this.accentTex) return;
-    paintData().flush();
+    if (!this.filletLayer) return;
     const fillHalf = this.style.threadWidth / 2;
     const nDiscs =
       this.freeTips.length + this.fusedTips.length + this.junctionArms.length;
@@ -4760,12 +4365,12 @@ export class RibbonRenderer {
       const verts = armTotal * (1 + wedgeRim) + nDiscs * (2 + DISC_SEGS);
       const idx = (armTotal * (wedgeRim - 1) + nDiscs * DISC_SEGS) * 3;
       this.filletMesh = new TriFanMesh(verts, idx);
-      this.filletMesh.mesh.shader = junctionShader(this.accentTex);
+      this.filletMesh.mesh.shader = junctionShader();
       this.filletLayer.addChild(this.filletMesh.mesh);
       // The top mesh gets the same capacity: any junction can flip
       // layers frame to frame as threads move.
       this.filletTopMesh = new TriFanMesh(verts, idx);
-      this.filletTopMesh.mesh.shader = junctionShader(this.accentTex);
+      this.filletTopMesh.mesh.shader = junctionShader();
       this.filletTopLayer!.addChild(this.filletTopMesh.mesh);
     }
     const fmBottom = this.filletMesh;
@@ -5308,10 +4913,10 @@ export class RibbonRenderer {
     // the joint, the blend keeps FIELD_BLEND_MIN of the wedge angle,
     // centered. PROBE HOOK: the CPU reference over THIS rebuild's records.
     this.fieldProbe = {
-      at: (ji, x, y, out) => {
+      at: (ji, x, y, out, px = 0) => {
         const rec = recs[ji];
         if (!rec || rec.rb < 0) return false;
-        this.cpuJunctionField(rec.rb, x, y, out);
+        this.cpuJunctionField(rec.rb, x, y, out, px);
         return true;
       },
       arms: (ji) => recs[ji]?.arms ?? [],

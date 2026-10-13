@@ -79,21 +79,13 @@ export const FX_STYLE = {
   roots: 5,
 } as const;
 
-// Gameplay paint modes (uKPaint.x).
-export const PAINT_MODE = { none: 0, gold: 1, trail: 2, string: 3 } as const;
+// GAMEPLAY PAINT items (KPAINT, G2.3): the renderer's paint declaration -
+// traveled spans, junction caps, pulse arms - as records the shaders read
+// per pixel (T0.x = the type; pulse flags in T1.y).
+export const PAINT_ITEM = { SPAN: 1, CAP: 2, PULSE: 3 } as const;
+export const ITEM_FLAG = { INWARD: 1, ON_PATH: 2, HOVER: 4 } as const;
 
-// KPAINT per-run flags (P0.x), and RUNS flags (R1.w).
-export const PAINT_FLAG = {
-  TRAVELED: 1,
-  TRAIL: 2,
-  ARM_A: 4,
-  ARM_B: 8,
-  INWARD: 16,
-  ON_PATH: 32,
-  HOVER: 64,
-  CAP_A: 128,
-  CAP_B: 256,
-} as const;
+// RUNS flags (R1.w).
 export const RUN_FLAG = {
   GAMUT: 1, // Colors are gamut coordinates (in .x), converted per pixel.
   SWEEP: 2, // Depth: one coordinate sweep from colA to colB, no ramps.
@@ -110,8 +102,11 @@ export function glslConstBlock(): string {
     if (k === "K_ROW_SHIFT") continue;
     lines.push(`const float ${k} = ${glslFloat(v)};`);
   }
-  for (const [k, v] of Object.entries(PAINT_FLAG)) {
-    lines.push(`const int PF_${k} = ${v};`);
+  for (const [k, v] of Object.entries(PAINT_ITEM)) {
+    lines.push(`const int PI_${k} = ${v};`);
+  }
+  for (const [k, v] of Object.entries(ITEM_FLAG)) {
+    lines.push(`const int IF_${k} = ${v};`);
   }
   for (const [k, v] of Object.entries(RUN_FLAG)) {
     lines.push(`const int RF_${k} = ${v};`);
