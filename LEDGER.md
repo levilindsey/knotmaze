@@ -13,32 +13,50 @@ and never reused.
 
 ## Waiting on Levi
 
-(nothing right now)
+- **K46** · What should the daily be? `DAILY_V1` (`src/ui/daily_link.ts`)
+  is today's default design every day: 18x18 rect, braided, no dead
+  ends. Variety (weekday sizes, shapes, dead ends) would be a `DAILY_V2`
+  starting a few days ahead.
+- **K47** · A reload mid-attempt restarts the daily, and only the first
+  finish is official, so a player can explore, reload, then post a
+  better official time. Save the attempt in progress, as Wordle does?
+- **K48** · Desktop browsers that offer native sharing (Chrome and Edge
+  on Windows) get the clipboard on purpose; the native sheet is for
+  phones. Native on desktop too? A one-line change.
 
 ## In progress
 
 - **K41** · Physics regression from the kink eyes (9920fab): Levi's rect
   link (`s=1471kin&gs=12&...&tw=.64`) and the fat link
-  (`s=p9ar6&mf=0&rep=.4&bd=1.75&sm=.7&tw=.52`) never sleep. Verified on
-  master 31c3c91: awake after 45 s at 93-95 ms of physics per frame
-  (8-9 fps at rest). The rect link holds one standing rider beside
-  self-crossing 28; the fat link is pinned at mv 1.9e-2. Both slept at
-  sim 7.0 on df373b5 (reported by the G1 agent). Its fix agent was
-  paused overnight for the weekly usage limit and resumed 2026-10-12
-  14:10 (worktree `.claude/worktrees/k41-sleepfix`; harness and results
-  in the session scratchpad), with a regression test planned.
-- **K4** · G2: all per-sample color work moves into shaders
-  (`docs/design/G2_shader_paint.md`; the doc predates G1, so the agent
-  reconciles it). Defaults taken unless Levi objects: the trail fade
-  becomes the intended linear fade over the oldest 30%; burn also
-  applies to single-color threads; noise colors stick to the material;
-  the ink spread is computed from reveal-start positions. Ink + burn and
-  knot-mode FX stay off. Agent started 2026-10-12 14:10 (G2.0-G2.3 and
-  G2.5 required, G2.4 GPU particles wanted).
-- **K19 + K20** · More maze stats in the HUD and a Wordle-style daily
-  maze: one agent started 2026-10-12 14:10.
-- **K21** · Shader noise backgrounds with a dropdown: agent started
-  2026-10-12 14:10.
+  (`s=p9ar6&mf=0&rep=.4&bd=1.75&sm=.7&tw=.52`) never sleep (93-95 ms of
+  physics per frame at rest on 31c3c91; both slept on df373b5).
+  - owner: K41 fix agent of session d8031183, resumed 2026-10-12 14:10
+    after an overnight pause for the weekly usage limit.
+  - branch: `k41-sleepfix` (`.claude/worktrees/k41-sleepfix`); last
+    commit: db108af (WIP commit requested 15:00).
+  - evidence: `.claude/probes/K41/` (harness, ablations, sweep outputs;
+    moving there from the session scratchpad); `.claude/probes/probe_sleep.mjs`.
+  - next: attribute the rect link's standing rider and the fat link's
+    pump through ablations, fix at the root, add a regression test.
+  - brief: `docs/design/K41.md`.
+- **K4** · G2: per-sample color work moves into the shaders.
+  - owner: G2 agent of session d8031183, started 2026-10-12 14:10.
+  - branch: `worktree-agent-a7d1f998c07c3864f`
+    (`.claude/worktrees/agent-a7d1f998c07c3864f`); last commit: db108af
+    (WIP commits requested).
+  - evidence: `.claude/probes/K4/`.
+  - next: reconcile the design doc with G1, then G2.0 through G2.3 and
+    G2.5, then G2.4 GPU particles if the stages verify cleanly.
+  - brief: `docs/design/K4.md` and `docs/design/G2_shader_paint.md`.
+- **K21** · Shader noise backgrounds with a dropdown.
+  - owner: K21 agent of session d8031183, started 2026-10-12 14:10.
+  - branch: `worktree-agent-ad4b73b6b0ff016bd`
+    (`.claude/worktrees/agent-ad4b73b6b0ff016bd`); last commit: db108af
+    (11 changed paths, WIP commit requested).
+  - evidence: `.claude/probes/K21/`.
+  - next: finish the effects and tuning, then rebase and append its
+    codec params after K19/K20's indices 64-66.
+  - brief: `docs/design/K21.md`.
 
 ## Next, in order
 
@@ -95,6 +113,9 @@ and never reused.
   a reveal.
 - **K16** · Physics settle is slow: 100-190 ms/frame at gs 18 on a loaded
   desktop; on the phone 7 sim-seconds took 14 s. K6/K7 fix the UI side.
+  It matters more now: the daily (K20) makes the 18x18 default design
+  the front door, at about 6 fps for its first seconds on a loaded
+  desktop.
 - **K29** · Boxed kinks at tw 0.64: 3 of ~152 kinks (8 seeds) rest at
   0.56-0.78 thread widths of eye hole - boxed in by a fused joint on one
   side and the 1.6 corridor floor on the other, they keep only lattice
@@ -122,6 +143,8 @@ and never reused.
   polyline at 0.5 of the neighbor gap where the renderer uses 0.8 (the
   false overcut at user x57), and its totals drift between two captures
   of one frozen state (cause unknown). Same-state pixel diffs are exact.
+  Also: `.claude/probes/K19-K20/probe_daily.mjs`'s time-zone mode hung
+  once in `browser.close()` after writing its report.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -140,12 +163,14 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K32** · Bigger tap targets for maze choices on touch screens; choices
   are tight at full-maze zoom on a small phone.
 - **K33** · A share button that opens the phone's native share sheet with
-  the link (the link holds the whole design). Pairs with K20's
-  time-to-solve sharing.
+  the link (the link holds the whole design). The daily's result share
+  shipped with K20 (win banner and stats view); a general "share this
+  design" button is what remains.
 - **K34** · The settings panel as a bottom sheet in portrait on phones.
 - **K35** · A short vibration on pluck (Android only; `navigator.vibrate`).
 - **K36** · Add to home screen: a web app manifest and icons. Blocked on
-  icon art (Levi has the prompt for another model).
+  icon art (Levi has the prompt for another model). The same art fixes
+  the `/favicon.ico` 404 on every load.
 - **K37** · Fog-of-war edge wobble: stronger, or a slider (Stage 25b wobbles
   about 14 screen px).
 - **K38** · Focus fade: softer, longer gap fades near the player's dot
@@ -156,6 +181,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K19 + K20** · Maze stats (time, efficiency, junctions, dead ends) in
+  the HUD and win banner, and a Wordle-style daily maze: `?daily`, Daily
+  #1 = 2026-10-12, pinned by the frozen `DAILY_V1`, results and streaks
+  in localStorage, emoji-grid share. Also: the last three MazeParams
+  joined the codec, and the app now starts with storage blocked. Done in
+  3b3e028 and 29b42a1 (2026-10-12). Probes: `.claude/probes/K19-K20/`.
 
 - **K40** · The lane-cut limiter stack (likely a no-op). Done in 99443cb:
   G1 deleted it along with the erase grid.
