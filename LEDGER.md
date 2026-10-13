@@ -30,6 +30,22 @@ and never reused.
   completely, and Levi's desktop Chrome reports reduced motion (Windows
   animation effects are off), so drift never shows there. Stop it, or
   only slow it?
+- **K57** · Confirm the daily's exempt settings: the ones a player may
+  change without leaving the daily (`DAILY_EXEMPT_KEYS` in
+  `src/ui/daily_link.ts`, persisted across dailies).
+  - Levi's list: volume, soundMode, cameraMode, showStats, panel
+    open/close/scroll.
+  - The agent added: the rest of the Sound folder (pitchSpace, octaves,
+    rootNote, tonicEmphasis, soundSpeed, reverb, brightness, sustain,
+    shimmer, pickPosition), Touch & feel (pluckSize, pluckGhost,
+    pluckReach, pluckStyle, tugLimit, snapBack), and physics on/off (the
+    settled layout is the same).
+  - Everything else leaves the daily, including moveSpeed, pathViz, fog,
+    the intro and flow, and the physics tuning.
+- **K58** · Reset path inside a daily backtracks to the entrance with the
+  clock running and logs one backtrack per retracted run, so a long path
+  adds many red squares to the share grid. It is refused in trail mode,
+  which matters only if K46 adds trail dailies. OK as is?
 
 ## In progress
 
@@ -42,17 +58,6 @@ and never reused.
   - next: measured proposal in `docs/design/K46_daily_variety.md` with
     a 14-day sample calendar, then iterate with Levi, then `DAILY_V2`.
   - brief: `docs/design/K46.md`.
-- **K47 + K56** · Save in-progress daily attempts (K47, Levi: yes), and
-  make the daily the front door (K56): a bare URL opens today's daily;
-  any other query, or editing params in the panel, leaves the daily
-  treatment.
-  - owner: the K19/K20 daily agent of session d8031183, resumed
-    2026-10-12.
-  - branch: a new worktree branch from master.
-  - evidence: `.claude/probes/K19-K20/`.
-  - next: routing rules, the exempt-preference set (Levi to confirm),
-    save and restore, tests, browser runs.
-  - brief: `docs/design/K47.md`.
 - **K4** · G2: per-sample color work moves into the shaders.
   - owner: G2 agent of session d8031183, started 2026-10-12 14:10.
   - branch: `worktree-agent-a7d1f998c07c3864f`
@@ -142,6 +147,11 @@ and never reused.
   collision sweep but before the fusion snap, so a resting overlap of up
   to about 0.04 at joints can go unflagged. Measure the end-of-substep
   state instead. (K41 agent idea.)
+- **K59** · Two windows that are BOTH visible, with moves interleaved on
+  one daily, end with the last writer's attempt winning. A tab adopts a
+  newer saved attempt only when it comes into view; adopting on the
+  `storage` event would fix it, at the price of rebuilding the other
+  window (intro included) on every move.
 - **K54** · Background contrast varies with the palette: ember roughly
   halves mist's (luma spread 11.4 -> 6.1). Normalizing the accents'
   brightness would even it out.
@@ -169,7 +179,8 @@ and never reused.
   false overcut at user x57), and its totals drift between two captures
   of one frozen state (cause unknown). Same-state pixel diffs are exact.
   Also: `.claude/probes/K19-K20/probe_daily.mjs`'s time-zone mode hung
-  once in `browser.close()` after writing its report. And any hold probe
+  once in `browser.close()` after writing its report (not since, in
+  three K47 runs). And any hold probe
   must first move past the 4 CSS px tug threshold: since df373b5 a still
   press is a pluck, so the KINK EYES battery's holds did nothing (the
   K41 copy in `.claude/probes/K41/` moves 12 px first).
@@ -205,6 +216,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   (depth-of-field feel), prototyped with a strength slider.
 - **K39** · A manual battery/quality toggle for phones (fewer intro
   particles, lower resolution); may fold into K22's automatic scaler.
+- **K60** · The panel's Daily button always opens today's daily. After
+  leaving an older day, the way back is its stats-history row or
+  `?daily=N`; the button could name the day you left.
+- **K61** · `encodeDelta` (the old `?daily=N.<delta>` writer) is used
+  only by tests now; retire it at the next codec cleanup and keep the
+  reader for old links.
 - **K55** · An optional parallax background mode: it pans and zooms at a
   fraction of the camera, for depth. Today it is screen-fixed on
   purpose. (K21 agent idea.)
@@ -212,6 +229,18 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K47 + K56** · Saved daily attempts, and the daily as the front door.
+  Done in ba908bb and a72d91d (2026-10-12).
+  - A bare URL opens today's daily; any other query, or a non-exempt
+    panel edit, leaves it with a "your attempt is saved" toast.
+  - The attempt (its taps, fingerprinted) is saved on every move and on
+    hide, and restored with a paused clock. Reset path inside a daily is
+    a timed backtrack.
+  - Schema v2 with v1 migration; exempt preferences persist across
+    dailies.
+  - Verified: vitest 287, and 99/99 browser checks across 18 modes.
+    Probes: `.claude/probes/K19-K20/` (results in `results_K47/`).
 
 - **K21** · Shader noise backgrounds: `background` dropdown (none,
   vellum, mist, wash, silk, aurora, contours) and an intensity slider;
