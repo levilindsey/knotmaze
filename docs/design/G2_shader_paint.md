@@ -822,3 +822,101 @@ Verify:
   bytes per frame fell 4211 -> 3800 KB (burn) / 3935 -> 3780 KB (rainbow):
   the color ping-pong, aFx and the FX paint rows are gone; what remains is
   geometry (G3's scope).
+
+### G2.2 section colours on the GPU (landed)
+
+- Run form: `core/section_colors` `buildSectionRuns` (per walk run: the
+  unwrapped ctrl span, the A / own / B colours - RGB, or a gamut coordinate
+  in `.x` - the base ramps and the ctrl-per-lattice-unit factor, plus each
+  slot's run; uncovered stretches get a constant pseudo run in the chain's
+  first run's A colour, the old `segs[0]` fallback) and `evalRunSection`,
+  its TS twin. The VSegment field is frozen in
+  `test/core/fixtures/section_field_v1.ts`. junctionBlend (`uKSect`) and the
+  gamut (`uKGamut`) are uniforms; `recolor` rebuilds the table and uploads
+  only changed texels - a live junctionBlend change sends 0 texels
+  (`renderer.lastRunUpload`; the image changes by 60-115k px).
+- KSTATIC RUNS region (4 texels per run, from the row after the ctrl
+  index), CTRLIDX `.x` = the slot's run, `.z` = the noise coordinate.
+- The ribbon VERTEX shader evaluates `knotSection` at each vertex's ctrl
+  through this frame's arc table (`vSection`). Deleted: `aColor` /
+  `colorData` / the colour half of `writePaint` / `invalidateColors`,
+  `rgbCache`, `rgbCacheReady`, `bakeFrac`, `cacheDrift`, `recolorPending`,
+  `CACHE_REBAKE_CTRL`, `sectionRgbAt`, `buildRgbCacheFor`, the noise bake.
+  The PAINT texture keeps only `.w` (the paint U) until G2.3.
+- Deviation: the FANS evaluate the RIBBON's Gouraud (`kSectionAtArc`: the
+  section at the two bracketing samples' ctrls, lerped), not `knotSection`
+  at the pixel's exact ctrl - the joinery must match the ribbons across
+  their width (render lore). Measured alternative, per-pixel exact sections
+  in ribbons AND fans: fans -0.55 ms, ribbons +0.7 ms at 3200x1800 - worse.
+  The arm record carries the arm's ctrl-per-arc slope (header `.y`) to
+  seed the ctrl searches (`kCtrlOfArcNear`: kCtrlOfArc's exact answer by a
+  short walk); one run fetch serves both samples; a pixel whose blend
+  weight is 0 or 1 evaluates one arm.
+- Deviation: the noise coordinates are read at the controls' positions
+  when the renderer is constructed (before the first physics step: these
+  are `ps.initial`, which is private to the physics module).
+- Knot mode: one constant RGB run per chain (the 8-bit strand tints).
+- Two FX fixes the joint-web census found (fans mid-reveal, with per-arm
+  probe views `uKBase.z` 3 / 4): (1) ignition NEAR-TIES (|dt| < 1e-4 s:
+  fronts leaving one junction, or meeting) go to the first source scanned
+  - at a junction several fronts start at once with different hot heads,
+  and the GPU's f32 ctrl flipped the choice the CPU made (up to 0.41 per
+  channel on web pixels sampling the joint); (2) the burn hot head leaves
+  a point when the tip is `BURN_HOT_ARC` of ARC further along
+  (`kHeadLeave`, an arc-table walk) - the G2.1 form divided the head's arc
+  by the point's own slot's arc per ctrl, which stepped at every slot
+  boundary.
+- Verified: vitest - the run form against the frozen field (mono and
+  segments at junctionBlend 0 identical < 1e-9; eased segment ramps within
+  0.96/255 - the old 6-piece linearisation; strands within 6.75/255 and
+  depth within 5.58/255 - the old 0.06-coordinate RGB chords), the
+  `knotSection` mirror against `evalRunSection` (< 2e-5, 4 schemes x 5
+  blends), `kSectionAtArc` = the Gouraud of the vertex sections, the seeded
+  search = `kCtrlOfArc`, the hot head continuous and `BURN_HOT_ARC` long.
+  GPU section census (probe vertices at random chain / sample points, 7
+  URLs and schemes, 31k points each): max 0.0024, none over 2/255 (knot
+  mode exactly 0). Fan census (GPU fans vs the CPU field): at rest max
+  0.0024 (default, ring), mid-reveal burn / roots at 4 and 6 s, per-arm
+  views included, max 0.0024. Footprint census (field vs ribbon) as G2.1
+  (means 0.0040 / 0.0036 / 0.0055). Junction convergence: the section
+  FUNCTION meets exactly at every joint, every frame, under flow (0 of 45
+  ring joints off); the per-vertex colours at a joint differ by <= 0.013
+  (Gouraud at steep junctionBlend-0 ramps; G2.1's cache: 26-29 of 45 off,
+  <= 0.029). Same-state A/B vs G2.1 (am=instant): default 0 px over
+  2/255, junctionBlend 0 max 1/255, mono 0, knot 0, ring / user max 1,
+  strands 48 px <= 4/255 and depth 77 px <= 3/255 (exact hue arcs vs the
+  old chords), noise differs by design (material-attached, same pattern).- FX census re-run on the G2.2 build (the hot head and the tie-break
+  changed the FX): all 40 runs (4 sequences x 5 styles x t 1.5 / 4), max
+  0.0046, none over 2/255.
+- Perf, desktop, re-measured for master / G2.1 / G2.2 on a QUIET machine
+  under the perf lock (CPU 1% before; no other agent's scans): 3200x1800,
+  b.c, physics off, 5 scripted moves (pulses + gold live), 2 interleaved
+  rounds. ms per call (update per frame in brackets), GPU = draw phase:
+
+  | case | build | update | tickPaint | rebuildFillets | upload KB/frame | GPU |
+  |---|---|---|---|---|---|---|
+  | rest + flow | master | 14.16 (7.12) | 2.24 | 2.09 | 1947 | 2.02 |
+  | rest + flow | G2.1 | 14.29 (7.14) | 2.23 | 2.08 | 1943 | 2.15 |
+  | rest + flow | G2.2 | 13.88 (6.99) | 2.26 | 2.14 | 1804 | 3.08 |
+  | rest, fw 0 | master | - | 0.15 | 0.03 | 151 | 1.75 |
+  | rest, fw 0 | G2.1 | - | 0.15 | 0.03 | 151 | 1.88 |
+  | rest, fw 0 | G2.2 | - | 0.15 | 0.03 | 151 | 2.83 |
+  | reveal burn | master | 10.69 | 4.08 | 3.18 | - | 1.65 |
+  | reveal burn | G2.1 | 10.19 | 3.76 | 3.29 | - | 2.54 |
+  | reveal burn | G2.2 | 10.28 | 3.81 | 3.40 | - | 3.31 |
+  | reveal rainbow | master | 7.66 | 3.31 | 2.82 | - | 0.81 |
+  | reveal rainbow | G2.1 | 7.78 | 3.28 | 2.88 | - | 0.97 |
+  | reveal rainbow | G2.2 | 7.70 | 3.27 | 2.91 | - | 1.09 |
+
+  The CPU side improved (no drift re-bakes: update -0.3 ms with flow; no
+  section uploads: -7% bytes). The GPU cost rose ~0.95 ms, and per-program
+  timing (gpu_by_program.mjs, one timer query per draw) puts all of it in
+  the FANS: 0.71 -> 1.64 ms/frame (ribbons unchanged, 1.39 -> 1.37 - the
+  per-vertex section is free). Attribution by shader variants: the
+  second Gouraud sample costs 0.43 ms, the first sample's ctrl search 0.14
+  ms, the run evaluation ~0.35 ms; seeding the search (arm slope), a
+  closed-form second ctrl, one shared run fetch and single-arm evaluation
+  inside arm footprints each moved it by <= 0.05 ms. A real fix is a
+  per-frame pre-pass that evaluates each arm's material strip once (RGBA8
+  render target, ~32 texels per arm) and has the fan pixels read it - it
+  would also absorb G2.3's per-arm paint. Recorded as a follow-up.
