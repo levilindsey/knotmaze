@@ -40,10 +40,33 @@ import type {
 } from "./ribbon_renderer";
 import type { PathViz } from "../ui/url_state";
 import { FogBackdrop } from "./background";
+import { MarkerMesh } from "./marker_mesh";
+import { DEFAULT_GLYPHS, markerGlyph, markerRadiusFor } from "./marker_glyphs";
+import type { MarkerRole } from "./marker_glyphs";
 
-// Start/exit discs wear their thread's own section color now; the exit
-// keeps its accent only for the win ring.
+// The win ring's accent around the finish marker.
 const EXIT_COLOR = 0xff6b3d;
+
+// MARKERS (K83): the start, the finish and the current position are black
+// discs with a white stroked glyph (marker_glyphs.ts), drawn per pixel by
+// marker_mesh.ts, all three at markerRadiusFor(threadWidth) (world units).
+// The win ring, in marker radii (its stroke stays a fraction of the
+// thread width).
+const WIN_RING_R = 1.32;
+
+// The three marker meshes live for the page (each scene's overlay borrows
+// them; destroy() hands them back undestroyed - the PALETTE_CACHE lore).
+let MARKER_MESHES: Record<MarkerRole, MarkerMesh> | null = null;
+function markerMeshes(): Record<MarkerRole, MarkerMesh> {
+  if (!MARKER_MESHES) {
+    MARKER_MESHES = {
+      start: new MarkerMesh(),
+      head: new MarkerMesh(),
+      exit: new MarkerMesh(),
+    };
+  }
+  return MARKER_MESHES;
+}
 
 // Hit-test sampling density along runs (ctrl units).
 const SAMPLE_STEP = 0.25;
@@ -222,7 +245,13 @@ export class FabricMazeRenderer {
   private ps: ParticleSystem;
   private walk: WalkGraph;
   private ribbons: RibbonRenderer;
+  // The win ring (the markers themselves are MarkerMeshes).
   private gfx: Graphics;
+  private markers: Record<MarkerRole, MarkerMesh>;
+  // The glyph each marker wears (marker_glyphs.ts ids; probes swap them
+  // through setMarkerStyle) and a size multiplier on the marker radius.
+  private markerGlyphIds: Record<MarkerRole, string> = { ...DEFAULT_GLYPHS };
+  private markerScale = 1;
   private threadWidth: number;
   private hoverEdge = -1;
   private anim: MoveAnim | null = null;
@@ -240,7 +269,6 @@ export class FabricMazeRenderer {
   pathViz: PathViz = "gold";
   tension = 0.45;
   private yarnGfx: Graphics;
-  private markerRgb = new Float32Array(3);
   private yarnEvents: YarnEvent[] = [];
   private yarnSeed = 0;
   // Fog of war (main.ts syncs the first two every tick; see FOG block).
@@ -290,11 +318,20 @@ export class FabricMazeRenderer {
     this.overContainer = new Container();
     this.yarnGfx = new Graphics();
     this.gfx = new Graphics();
-    // Yarn under the markers: the head dot and start/exit discs stay
-    // readable on top of the laid string. (Marker under-gaps are REAL
-    // erase grids owned by the ribbon renderer - see
-    // syncMarkerOccluders.)
-    this.overContainer.addChild(this.yarnGfx, this.gfx);
+    this.markers = markerMeshes();
+    // Yarn under the markers: the markers stay readable on top of the
+    // laid string. The head sits above the start (at the entrance the
+    // player sees where they are) and below the finish (once solved, the
+    // flag and the win ring show). (Start/exit under-gaps are gap slots
+    // owned by the ribbon renderer - see syncMarkerOccluders.)
+    this.overContainer.addChild(
+      this.yarnGfx,
+      this.markers.start.mesh,
+      this.markers.head.mesh,
+      this.markers.exit.mesh,
+      this.gfx
+    );
+    for (const m of Object.values(this.markers)) m.hide();
     this.syncMarkerOccluders();
     this.underContainer = new Container();
     this.glowSprite = new Sprite(headGlowTexture());
@@ -311,11 +348,43 @@ export class FabricMazeRenderer {
     this.syncMarkerOccluders();
   }
 
-  // Start/exit markers are DISC OCCLUDERS in the ribbon renderer: their
-  // threads get real crossing-machinery erase gaps (lanes, miter, fade),
-  // concentric with the discs by construction.
+  // Start/exit markers are DISC OCCLUDERS in the ribbon renderer: each
+  // owns a gap slot that hides its thread inside radius (disc + gap),
+  // concentric with the disc by construction (markerWorld).
   private markerRadius(): number {
-    return Math.max(0.32, this.threadWidth * 0.95);
+    return markerRadiusFor(this.threadWidth, this.markerScale);
+  }
+
+  // Swap marker glyphs (marker_glyphs.ts ids) and/or scale the marker
+  // radius - placeholder exploration (the K83 contact sheets). A size
+  // change resizes the start/exit gap slots; the renderer re-solves them
+  // on its next update().
+  setMarkerStyle(style: {
+    start?: string;
+    exit?: string;
+    head?: string;
+    scale?: number;
+  }): void {
+    for (const role of ["start", "exit", "head"] as const) {
+      const id = style[role];
+      if (id === undefined) continue;
+      this.markerGlyphIds[role] = id;
+      this.markers[role].setGlyph(markerGlyph(id, role));
+    }
+    if (style.scale !== undefined && style.scale > 0) {
+      this.markerScale = style.scale;
+      this.syncMarkerOccluders();
+      const r = this.markerRadius();
+      for (const mk of Object.values(this.markers)) mk.mesh.scale.set(r);
+    }
+  }
+
+  markerStyle(): Record<MarkerRole, string> & { scale: number; radius: number } {
+    return {
+      ...this.markerGlyphIds,
+      scale: this.markerScale,
+      radius: this.markerRadius(),
+    };
   }
 
   private syncMarkerOccluders(): void {
@@ -1327,16 +1396,11 @@ export class FabricMazeRenderer {
     g.poly(pts);
   }
 
-  private rgbHex(c: Float32Array): number {
-    const b = (v: number): number =>
-      Math.max(0, Math.min(255, Math.round(v * 255)));
-    return (b(c[0]) << 16) | (b(c[1]) << 8) | b(c[2]);
-  }
-
-  // Markers: start/exit discs (wearing their thread's own section color,
-  // set into a punched gap as though the thread passes UNDER them), the
-  // head dot (black-ringed, at the given chain position mid-move, at the
-  // head vertex otherwise), and the win ring.
+  // Markers (K83): the start and finish discs (set into a punched gap as
+  // though their thread passes UNDER them), the current position (at the
+  // given chain position mid-move, at the head vertex otherwise; its
+  // under-weave halo follows it), and the win ring. All three are black
+  // discs with a white glyph, one radius.
   private drawMarkers(
     controller: FabricMazeController,
     dotChain: number,
@@ -1345,8 +1409,8 @@ export class FabricMazeRenderer {
   ): void {
     const g = this.gfx;
     g.clear();
-    // The head dot sits INSIDE its thread (diameter < threadWidth).
-    const rHead = Math.max(0.13, this.threadWidth * 0.42);
+    const r = this.markerRadius();
+    const m = this.markers;
     if (dotChain >= 0) {
       this.pointFlowed(dotChain, this.ctrlMod(dotChain, dotCtrl), this.scratch, 0);
     } else {
@@ -1356,45 +1420,34 @@ export class FabricMazeRenderer {
     this.headY = this.scratch[1];
     this.headValid = true;
     // Fog explores wherever the head (or the mid-move dot) goes.
-    this.maybeStampFog(this.scratch[0], this.scratch[1]);
-    // The under-weave halo follows the dot.
+    this.maybeStampFog(this.headX, this.headY);
+    // The under-weave halo follows the head.
     this.glowSprite.visible = true;
-    this.glowSprite.position.set(this.scratch[0], this.scratch[1]);
-    // Black border ring, then the white dot.
-    this.polyCircle(
-      g,
-      this.scratch[0],
-      this.scratch[1],
-      rHead + this.threadWidth * 0.12,
-      48
-    );
-    g.fill({ color: 0x000000, alpha: 0.9 });
-    this.polyCircle(g, this.scratch[0], this.scratch[1], rHead, 48);
-    g.fill({ color: 0xffffff, alpha: 0.95 });
+    this.glowSprite.position.set(this.headX, this.headY);
+    m.head.setGlyph(markerGlyph(this.markerGlyphIds.head, "head"));
+    m.head.place(this.headX, this.headY, r);
 
     // Start/exit discs sit at the renderer's OWN sample of their ctrl
-    // (markerWorld), concentric with the real erase gaps the renderer
-    // cuts for them (setMarkerOccluders).
-    const r = this.markerRadius();
+    // (markerWorld), concentric with the gap slots the renderer cuts for
+    // them (setMarkerOccluders).
     const startV = this.walk.vertices.get(this.walk.start)!;
     this.ribbons.markerWorld(startV.chain, startV.ctrl, this.scratch);
-    this.ribbons.sectionColorAt(startV.chain, startV.ctrl, this.markerRgb);
-    this.polyCircle(g, this.scratch[0], this.scratch[1], r, 56);
-    g.fill({ color: this.rgbHex(this.markerRgb), alpha: 1 });
+    m.start.setGlyph(markerGlyph(this.markerGlyphIds.start, "start"));
+    m.start.place(this.scratch[0], this.scratch[1], r);
 
     const exitV = this.walk.vertices.get(this.walk.exit)!;
     if (
       this.revealQuery &&
       this.revealQuery(exitV.chain, exitV.ctrl) < 0.98
     ) {
-      return; // Exit still unrevealed: no marker, no gap, no ring.
+      m.exit.hide(); // Exit still unrevealed: no marker, no gap, no ring.
+      return;
     }
     this.ribbons.markerWorld(exitV.chain, exitV.ctrl, this.scratch);
-    this.ribbons.sectionColorAt(exitV.chain, exitV.ctrl, this.markerRgb);
-    this.polyCircle(g, this.scratch[0], this.scratch[1], r, 56);
-    g.fill({ color: this.rgbHex(this.markerRgb), alpha: 1 });
+    m.exit.setGlyph(markerGlyph(this.markerGlyphIds.exit, "exit"));
+    m.exit.place(this.scratch[0], this.scratch[1], r);
     if (showRing) {
-      this.polyCircle(g, this.scratch[0], this.scratch[1], r * 1.5, 64);
+      this.polyCircle(g, this.scratch[0], this.scratch[1], r * WIN_RING_R, 72);
       g.stroke({
         color: EXIT_COLOR,
         width: this.threadWidth * 0.25,
@@ -1404,6 +1457,12 @@ export class FabricMazeRenderer {
   }
 
   destroy(): void {
+    // The marker meshes outlive the scene (markerMeshes): hand them back
+    // before the containers go.
+    for (const mk of Object.values(this.markers)) {
+      this.overContainer.removeChild(mk.mesh);
+      mk.hide();
+    }
     this.overContainer.destroy({ children: true });
     this.underContainer.destroy({ children: true });
   }

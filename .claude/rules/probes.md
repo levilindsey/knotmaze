@@ -38,6 +38,22 @@ gesture: a probe that expects sound must `page.mouse.click` (or press a
 key) first, and `window.__knotSynth` exists only once the gate has opened
 (scripts/diag_audio.mjs injects an OfflineAudioContext, which bypasses it).
 
+PROBE LORE (2026-10-13, K83): **a same-state A/B needs every clock
+pinned, and since G2 the paint clock lives in `advanceClocks()`** - a
+probe that only overrides `tickPaint` (the older recipe below) still
+animates the pulses, and master-vs-branch differed along every choice
+arm. Pin `r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn =
+0`. Under fog, three more: the fog-fit camera eases for over a second
+after a move (wait until `__knotView()` holds still, before each tap and
+the capture); the background drifts in probe windows (pin
+`__knotBackgroundLayer()`'s tick and clock and re-render - the fog draws
+the background, so a drift changes every fogged pixel); and fog holes are
+stamped wherever the dot is on each frame, so moves must finish in one
+frame (`ms=100000`) for the stamps to repeat. With those, master vs
+master is 0 px (under fog + mist, 76 px of dither). Recipe:
+`.claude/probes/K83/k83_ab.mjs` (phy=0 for a deterministic layout, then
+every differing pixel attributed to a marker footprint).
+
 PROBE LORE (2026-10-11): **the session scratchpad is shared by every
 agent of the session** - another agent rebuilt `dist_before` under a
 running A/B (the "before" stamp silently became a different commit).
