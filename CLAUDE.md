@@ -84,6 +84,8 @@ src/
     maze_hud.ts           # K19: maze HUD + win banner (DOM)
     daily_stats_view.ts   # K20: daily stats modal
     share.ts              # K20: native share sheet / clipboard + toast
+    mode_badge.ts         # K73: "Free play" / "Replay · not scored" pill
+    offscreen_indicators.ts # K73: edge indicators for off-screen targets
   util/
     random.ts             # Seeded RNG
   build_info.ts           # Build identity (git SHA, build time; vite defines)
@@ -118,6 +120,8 @@ test/
     seed_text.test.ts, grid_align_curve.test.ts,
     daily_link.test.ts (frozen definition, seeds, golden dailies, links,
     the front door, the exempt set, prefs)
+    mode_badge.test.ts, offscreen_indicators.test.ts (edge layout,
+    chrome avoidance)
   quiescence.regression.test.ts  # Guards the friction dissipation channel
   sweep.manual.test.ts           # Skip-gated; run via SWEEP=1
 ```
