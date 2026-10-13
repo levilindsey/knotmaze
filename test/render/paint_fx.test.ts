@@ -14,6 +14,8 @@ import {
   kChain,
   kCtrlOfArc,
   kFanAlpha,
+  kFxColor,
+  kFxDoneWall,
   kFxSolid,
   kFxWeight,
   kIgnition,
@@ -78,7 +80,10 @@ function scene(s: FrozenSamples, srcs: KSource[]): KData {
   });
   const h = sourceHints(pieces, lay.first[0], n);
   expect(h.overflow).toBe(0);
-  for (let i = 0; i < n; i++) stat[(idxBase + i) * 4 + 1] = h.hints[i];
+  for (let i = 0; i < n; i++) {
+    stat[(idxBase + i) * 4 + 1] = h.hints[i];
+    stat[(idxBase + i) * 4 + 3] = h.tLate[i];
+  }
   const geom = new Float32Array((2 + Math.ceil(n / 4)) * 4);
   writeGeomTable(geom, 0, s.totalLength, s.count, s.closed, s.controlArcLengths);
   return { stat, geom, reveal: lay.data, paint: new Float32Array(4) };
@@ -196,7 +201,8 @@ describe("G2.1 FX mirror vs the frozen per-sample code", () => {
         }
       }
     }
-  });
+    // (~4 s alone; the full suite runs files in parallel.)
+  }, 30000);
 
   it("ignition times are continuous along a chain (no bands by design)", () => {
     const r = rng(9);
@@ -215,6 +221,93 @@ describe("G2.1 FX mirror vs the frozen per-sample code", () => {
     }
     // Steps of 0.01 ctrl at rates >= 2 ctrl/s move tA by <= 0.005 s.
     expect(maxJump).toBeLessThan(0.006);
+  });
+
+  it("a chain's FX settle time (fxDone) skips only identity FX", () => {
+    const r = rng(9001);
+    const styles = [FX_STYLE.rainbow, FX_STYLE.comet, FX_STYLE.dust, FX_STYLE.burn, FX_STYLE.roots];
+    for (let trial = 0; trial < 16; trial++) {
+      const closed = trial % 2 === 0;
+      const s = randomChain(r, 20 + Math.floor(r() * 120), closed);
+      const n = s.controlArcLengths.length;
+      const srcs = tracePlan(r, n, closed);
+      const D = scene(s, srcs);
+      let tDone = -Infinity;
+      for (const q of srcs) tDone = Math.max(tDone, q.t0 + Math.abs(q.cTo - q.cFrom) / q.rate);
+      for (const style of styles) {
+        const U = uniforms();
+        U.uKFx[0] = style;
+        U.uKFx[3] = 1;
+        U.uKShape[0] = PAINT_CONST.REVEAL_TAPER_ARC;
+        const fxDone = kFxDoneWall(U, tDone);
+        for (const dt of [0, 1e-3, 0.4, 3]) {
+          // One knot at speed 1: anim time = wall time.
+          U.uKFx[2] = fxDone + dt;
+          U.uKFx[1] = U.uKFx[2];
+          for (let i = 0; i < 60; i++) {
+            const ctrl = r() * (closed ? n : n - 1);
+            const base = [r(), r(), r()];
+            const full = [...base];
+            const skip = [...base];
+            const oFull = { pRain: 0, alpha: 1 };
+            const oSkip = { pRain: 0, alpha: 1 };
+            D.geom[2] = 1e9; // G0.z: never skip -> the full evaluation.
+            kFxColor(D, U, kChain(D, 0), ctrl, ctrl * 3.7, full, oFull);
+            D.geom[2] = fxDone;
+            kFxColor(D, U, kChain(D, 0), ctrl, ctrl * 3.7, skip, oSkip);
+            expect(skip).toEqual(full);
+            expect(oSkip).toEqual(oFull);
+            expect(full).toEqual(base); // ...and both are the identity.
+            expect(oFull).toEqual({ pRain: 0, alpha: 1 });
+          }
+        }
+      }
+    }
+  });
+
+  it("the settled-slot skip (CTRLIDX .w) changes nothing, at any time", () => {
+    const r = rng(31337);
+    const styles = [FX_STYLE.rainbow, FX_STYLE.comet, FX_STYLE.dust, FX_STYLE.burn, FX_STYLE.roots];
+    let skipped = 0;
+    let total = 0;
+    for (let trial = 0; trial < 12; trial++) {
+      const closed = trial % 2 === 0;
+      const s = randomChain(r, 20 + Math.floor(r() * 120), closed);
+      const n = s.controlArcLengths.length;
+      const srcs = tracePlan(r, n, closed);
+      const D = scene(s, srcs);
+      const idx = kChain(D, 0).idx;
+      const tLate = Float64Array.from({ length: n }, (_, i) => D.stat[(idx + i) * 4 + 3]);
+      for (const style of styles) {
+        const U = uniforms();
+        U.uKFx[0] = style;
+        U.uKFx[3] = 1;
+        U.uKShape[0] = PAINT_CONST.REVEAL_TAPER_ARC;
+        // Speed 2 from anim 0, then 0.5 from anim 3 (wall 1.5).
+        U.uKKnots.set([0, 0, 0.5, 1, 3, 1.5, 2, 1]);
+        for (let i = 0; i < 400; i++) {
+          U.uKFx[1] = r() * 12;
+          U.uKFx[2] = kWall(U, U.uKFx[1]);
+          const ctrl = r() * (closed ? n : n - 1);
+          const base = [r(), r(), r()];
+          const full = [...base];
+          const fast = [...base];
+          const oFull = { pRain: 0, alpha: 1 };
+          const oFast = { pRain: 0, alpha: 1 };
+          for (let k = 0; k < n; k++) D.stat[(idx + k) * 4 + 3] = 1e9;
+          kFxColor(D, U, kChain(D, 0), ctrl, ctrl * 2.3, full, oFull);
+          for (let k = 0; k < n; k++) D.stat[(idx + k) * 4 + 3] = tLate[k];
+          kFxColor(D, U, kChain(D, 0), ctrl, ctrl * 2.3, fast, oFast);
+          expect(fast).toEqual(full);
+          expect(oFast).toEqual(oFull);
+          const sl = Math.min(n - 1, Math.floor(ctrl));
+          total++;
+          if (U.uKFx[2] >= kWall(U, D.stat[(idx + sl) * 4 + 3]) + 0.5) skipped++;
+        }
+      }
+    }
+    // The skip must actually fire on a good share of the samples.
+    expect(skipped / total).toBeGreaterThan(0.2);
   });
 
   it("speed knots map anim time to wall time piecewise-linearly", () => {
