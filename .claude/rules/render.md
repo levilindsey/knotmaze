@@ -35,7 +35,8 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   pixels ARE background pixels - a flat fog read as a flat square. (4)
   K24/K6 HOOK: needsFrame() + tick(dt, sceneActive); the drift pauses
   after 2.5 s of an otherwise still scene (main.ts sceneAnimating()
-  stands in for K6's flags) and stops under prefers-reduced-motion.
+  stands in for K6's flags) and stops under reduced motion (the Motion
+  setting, ui/motion.ts).
   Screen-fixed, not world-anchored: a backdrop at infinity - camera moves
   never drag it or force a re-render, zoom cannot alias it, and the fog
   can sample it. REJECTED: cells (Voronoi seams form a dark network that
@@ -49,6 +50,27 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   luma spread of a knot-free margin (about 9-13 levels at 0.5). Cost:
   +0.24-0.34 ms GPU per frame at 3200x1800 (the full-screen pass is most
   of it). Probes: `.claude/probes/K21/`.
+  SPEED + VELLUM MOTION (K79, 2026-10-13; the commit messages hold the
+  measurements): `backgroundSpeed` (bgs=, codec v4 index 70) defaults to
+  AUTO (-1; any negative value, NaN or garbage reads as auto) = each
+  effect's own pace; 0 = static, otherwise a multiple of the designed
+  drift, clamped to 3. Clock drift = profile drift x effectiveSpeed (auto
+  = the profile's autoSpeed: vellum 0, the rest 1), so auto is
+  bit-identical to K21, and the pass rate never scales. configure() zeroes
+  the clock on an effect change and when an auto-static effect (vellum)
+  returns to auto. VELLUM moves only at a set speed, in its own program
+  VELLUM_DRIFT (effectProgram(id, t), t != 0): both mottling octaves
+  drift and the vignette's light wanders; fibers and grain stay put. Keep
+  TWO programs: one with its time terms zeroed put static vellum 34 px
+  off master (1 LSB; the compiler fuses the multiply-adds differently).
+  Same-state A/B vs master: 19 cases, 0 px, identical drift clocks. Cost
+  at 3200x1800 (dpr 2): the drift pass ~2.1 ms (1 texel per CSS px =
+  1600x900, for the grain) at ~10.7/s = 0.37 ms/frame, ~8x mist's pass,
+  so the phone gate (K10) comes before vellum moves by default (K52). Vellum at speed 2 changes
+  about as fast as aurora at auto. Programs are named bg-<id>
+  (bg-vellum-drift), which is how a GPU probe times each one. Probes:
+  `.claude/probes/K79/` (run_ab.ps1 + k79_ab.mjs, k79_sheet.mjs,
+  k79_dstats.mjs, k79_gpu.mjs).
 
 - SHADER PAINT (G2 of the GPU migration, K4; worktree agent, 2026-10-12;
   design, deviations, every measurement: docs/design/G2_shader_paint.md
