@@ -216,7 +216,8 @@ to this file (claude-config `rules/context-budget.md`).
   details, panel, camera, gesture and pluck rules, and the audio gate.
 - `.claude/rules/probes.md` (`scripts/**`, `.claude/probes/**`): the PROBE
   LORE blocks, census and diagnosis rules, probe gotchas, hooks and
-  recipes.
+  recipes. Read it before probing: a bare URL is today's daily (intro,
+  saved attempt), not a fresh design.
 - `docs/history.md`: Stages 0–26, the dated rounds, the old "Still open
   in P4" list and the P3 saga (Follow-ups), verbatim; a bracketed note
   marks each passage that moved to a rules file or stayed here.
