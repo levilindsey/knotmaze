@@ -20,31 +20,12 @@ import {
   paintArcAt,
   type FrozenSamples,
 } from "./fixtures/pre_g2";
+import { randomChain } from "./fixtures/chains";
 
 // Deterministic LCG.
 function rng(seed: number): () => number {
   let s = seed >>> 0;
   return () => ((s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 4294967296);
-}
-
-// A random chain table: nCtrl control arcs with segment lengths 0.16-0.64
-// (the measured rest range), f32-rounded as the texture holds them.
-export function randomChain(
-  r: () => number,
-  nCtrl: number,
-  closed: boolean
-): FrozenSamples {
-  const cal: number[] = [0];
-  let a = 0;
-  for (let i = 1; i < nCtrl; i++) {
-    a += 0.16 + r() * 0.48;
-    cal.push(Math.fround(a));
-  }
-  // Closed rings close the loop with one more segment; open runs END at the
-  // last control (cal[n - 1] == total).
-  const total = Math.fround(closed ? a + 0.16 + r() * 0.48 : a);
-  const count = Math.max(48, Math.round(total / 0.09));
-  return { count, totalLength: total, controlArcLengths: cal, closed };
 }
 
 // Lay chains out exactly as PaintScene does (CHAINS at 0, KGEOM packed).
@@ -66,6 +47,7 @@ export function layout(chains: FrozenSamples[]): KData {
       geomBase: bases[ch],
       srcFirst: 0,
       srcCount: 0,
+      paintBase: 0,
     });
     writeGeomTable(
       geom,

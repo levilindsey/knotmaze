@@ -1,7 +1,8 @@
-// G2 SHADER PAINT - the pixi glue: the three page-lifetime data textures
-// and the shared uniform group the GLSL library (paint_glsl.ts) reads, and
-// the per-scene PaintScene that lays them out and writes them. The CPU
-// mirror (paint_math.ts) reads the very same Float32Array mirrors.
+// G2 SHADER PAINT - the pixi glue: the page-lifetime data textures and the
+// shared uniform group the GLSL library (paint_glsl.ts) reads, and the
+// per-scene PaintScene that lays them out and writes them. The CPU mirror
+// (paint_math.ts) reads the very same Float32Array mirrors and uniform
+// value arrays.
 //
 // Lifetime: the textures and the uniform group are PAGE singletons, never
 // destroyed (pixi's retained render state can reference a source the frame
@@ -10,11 +11,18 @@
 
 import { UniformGroup } from "pixi.js";
 import { FloatRows, ROW_W } from "./float_rows";
-import type { KData } from "./paint_math";
-import { writeChainHeader, writeGeomTable } from "./paint_math";
+import type { KData, KPiece, KUniforms } from "./paint_math";
+import {
+  MAX_KNOTS,
+  layoutSources,
+  sourceHints,
+  writeChainHeader,
+  writeGeomTable,
+} from "./paint_math";
 
 let K_STATIC: FloatRows | null = null;
 let K_GEOM: FloatRows | null = null;
+let K_REVEAL: FloatRows | null = null;
 let K_PAINT: FloatRows | null = null;
 export function kStatic(): FloatRows {
   if (!K_STATIC) K_STATIC = new FloatRows(ROW_W, 4);
@@ -24,15 +32,13 @@ export function kGeom(): FloatRows {
   if (!K_GEOM) K_GEOM = new FloatRows(ROW_W, 2);
   return K_GEOM;
 }
+export function kReveal(): FloatRows {
+  if (!K_REVEAL) K_REVEAL = new FloatRows(ROW_W, 1);
+  return K_REVEAL;
+}
 export function kPaint(): FloatRows {
   if (!K_PAINT) K_PAINT = new FloatRows(ROW_W, 1);
   return K_PAINT;
-}
-
-// The uniform VALUES (shared with the mirror: paint_math reads the same
-// Float32Arrays the group uploads).
-export interface KnotUniformValues {
-  uKBase: Float32Array; // (runBase, srcBase, debugView, paletteMode)
 }
 
 let K_UNIFORMS: UniformGroup | null = null;
@@ -47,27 +53,44 @@ export function knotUniforms(): UniformGroup {
     // value arrays is all a writer does.
     K_UNIFORMS = new UniformGroup({
       uKBase: v4(),
+      uKFx: v4(),
+      uKFx2: v4(),
+      uKShape: v4(1, 0, 1, 0),
+      uKInk: v4(1, 0),
+      uKKnots: {
+        value: new Float32Array(MAX_KNOTS * 4),
+        type: "vec4<f32>",
+        size: MAX_KNOTS,
+      },
     });
+    const k = (K_UNIFORMS.uniforms as unknown as KUniforms).uKKnots;
+    k.set([0, 0, 1, 1]);
   }
   return K_UNIFORMS;
 }
-export function knotUniformValues(): KnotUniformValues {
-  return knotUniforms().uniforms as unknown as KnotUniformValues;
+export function knotUniformValues(): KUniforms {
+  return knotUniforms().uniforms as unknown as KUniforms;
 }
 
 // Every texture's current mirror (re-read after any ensure()).
 export function kData(): KData {
-  return { stat: kStatic().data, geom: kGeom().data, paint: kPaint().data };
+  return {
+    stat: kStatic().data,
+    geom: kGeom().data,
+    reveal: kReveal().data,
+    paint: kPaint().data,
+  };
 }
 
 export interface PaintChainInfo {
   nCtrl: number; // Physics chain length (control slots).
   closed: boolean;
   count: number; // Ribbon sample count.
+  paintBase: number; // Junction-field PAINT texture base (palette mode).
 }
 
-// Per-scene layout of the data textures. Regions start on row boundaries
-// so an event rewrites (and uploads) only its own rows.
+// Per-scene layout of the data textures. KSTATIC regions start on row
+// boundaries so an event rewrites (and uploads) only its own rows.
 export class PaintScene {
   readonly chains: PaintChainInfo[];
   // KSTATIC: CHAINS at texel 0, then the ctrl index (one texel per control
@@ -77,6 +100,11 @@ export class PaintScene {
   // KGEOM: per chain, G0 + the packed control arcs.
   readonly geomBase: Int32Array;
   readonly geomEnd: number;
+  // Reveal sources per chain (KREVEAL), for the C1 header.
+  private srcFirst: Int32Array;
+  private srcCount: Int32Array;
+  // Diagnostics: slots whose covering sources exceed the shader's scan.
+  hintOverflow = 0;
 
   constructor(chains: PaintChainInfo[]) {
     this.chains = chains;
@@ -96,22 +124,17 @@ export class PaintScene {
       g += 1 + Math.ceil(chains[c].nCtrl / 4);
     }
     this.geomEnd = g;
+    this.srcFirst = new Int32Array(n);
+    this.srcCount = new Int32Array(n);
 
     const st = kStatic();
     st.ensure(this.idxEnd);
-    const d = st.data;
-    d.fill(0, 0, this.idxEnd * 4);
+    st.data.fill(0, 0, this.idxEnd * 4);
+    for (let c = 0; c < n; c++) this.writeHeader(c);
+    // No reveal yet: every source hint is -1.
     for (let c = 0; c < n; c++) {
-      const ch = chains[c];
-      writeChainHeader(d, c, {
-        nCtrl: ch.nCtrl,
-        closed: ch.closed,
-        count: ch.count,
-        idxBase: this.idxBase[c],
-        geomBase: this.geomBase[c],
-        srcFirst: 0, // Reveal sources (G2.1).
-        srcCount: 0,
-      });
+      const b = this.idxBase[c] * 4;
+      for (let s = 0; s < chains[c].nCtrl; s++) st.data[b + s * 4 + 1] = -1;
     }
     st.markDirty(0, this.idxEnd);
     st.flush();
@@ -121,6 +144,20 @@ export class PaintScene {
     ge.data.fill(0, 0, this.geomEnd * 4);
     ge.markDirty(0, this.geomEnd);
     ge.flush();
+  }
+
+  private writeHeader(c: number): void {
+    const ch = this.chains[c];
+    writeChainHeader(kStatic().data, c, {
+      nCtrl: ch.nCtrl,
+      closed: ch.closed,
+      count: ch.count,
+      idxBase: this.idxBase[c],
+      geomBase: this.geomBase[c],
+      srcFirst: this.srcFirst[c],
+      srcCount: this.srcCount[c],
+      paintBase: ch.paintBase,
+    });
   }
 
   // One chain's arc table for this frame (update(), right after sampling).
@@ -146,5 +183,48 @@ export class PaintScene {
 
   flushGeom(): void {
     kGeom().flush();
+  }
+
+  // A reveal starts: the sources (KREVEAL) and every control's source hint
+  // (CTRLIDX .y) and ink ignition time (.w; null = interval mode).
+  setReveal(pieces: KPiece[][] | null, inkTign: Float32Array[] | null): void {
+    const st = kStatic();
+    const n = this.chains.length;
+    this.hintOverflow = 0;
+    if (pieces) {
+      const lay = layoutSources(pieces);
+      const rv = kReveal();
+      rv.ensure(lay.data.length / 4);
+      rv.data.set(lay.data);
+      rv.markDirty(0, lay.data.length / 4);
+      rv.flush();
+      this.srcFirst = lay.first;
+      this.srcCount = lay.count;
+      const d = st.data;
+      for (let c = 0; c < n; c++) {
+        const h = sourceHints(pieces[c], lay.first[c], this.chains[c].nCtrl);
+        this.hintOverflow += h.overflow;
+        const b = this.idxBase[c] * 4;
+        for (let s = 0; s < this.chains[c].nCtrl; s++) {
+          d[b + s * 4 + 1] = h.hints[s];
+          d[b + s * 4 + 3] = 0;
+        }
+      }
+    } else {
+      this.srcFirst.fill(0);
+      this.srcCount.fill(0);
+      const d = st.data;
+      for (let c = 0; c < n; c++) {
+        const b = this.idxBase[c] * 4;
+        const tig = inkTign ? inkTign[c] : null;
+        for (let s = 0; s < this.chains[c].nCtrl; s++) {
+          d[b + s * 4 + 1] = -1;
+          d[b + s * 4 + 3] = tig ? tig[s] : 0;
+        }
+      }
+    }
+    for (let c = 0; c < n; c++) this.writeHeader(c);
+    st.markDirty(0, this.idxEnd);
+    st.flush();
   }
 }

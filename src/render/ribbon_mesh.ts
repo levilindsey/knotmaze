@@ -69,24 +69,6 @@ function addGapAttributes(
   add("aMaskId", maskId, 4, "attribute-gap-slots");
 }
 
-// Per-vertex appearance-FX weight (palette mode; see the section shader):
-// 0 = inert, (0, 1] = rainbow-stripe blend over the section color,
-// [-1, 0) = transparency (alpha = 1 + fx) - the dust/comet materialize
-// fade. Sign-coding keeps the shared shader uniform-free. Every geometry
-// drawn with the section shader MUST carry the attribute (fan meshes get
-// a constant-zero buffer).
-function addFxAttribute(geometry: MeshGeometry, data: Float32Array): void {
-  geometry.addAttribute("aFx", {
-    buffer: new Buffer({
-      data,
-      label: "attribute-appear-fx",
-      usage: BufferUsage.VERTEX | BufferUsage.COPY_DST,
-    }),
-    format: "float32",
-    stride: 4,
-    offset: 0,
-  });
-}
 
 export class RibbonMesh {
   mesh: Mesh;
@@ -101,10 +83,7 @@ export class RibbonMesh {
   // are static between scene rebuilds, so repeated paint ticks skip the
   // color fill + upload entirely.
   private lastColors: Float32Array | null = null;
-  // Per-vertex appearance-FX weight (palette mode only). `fxZero` makes
-  // the null-input path a one-compare no-op once the buffer is cleared.
-  private fxData: Float32Array | null = null;
-  private fxZero = true;
+
   private readonly closed: boolean;
   // PER-PIXEL GAPS (shaded meshes only): per-vertex tangent (rewritten by
   // update()), per-vertex slot ids, and the per-SAMPLE id copy the last
@@ -152,8 +131,6 @@ export class RibbonMesh {
     if (paint) {
       this.colorData = new Float32Array(sampleCount * 6);
       addColorAttribute(geometry, this.colorData);
-      this.fxData = new Float32Array(sampleCount * 2);
-      addFxAttribute(geometry, this.fxData);
       // Arc position as a point on the unit circle: closed rings go once
       // around (the wrap quad interpolates across angle 0 seamlessly - a
       // linear arc attribute would sweep the whole ring backwards there);
@@ -399,27 +376,6 @@ export class RibbonMesh {
     return this.uvData[k * 4];
   }
 
-  // Per-sample appearance-FX weights (both verts share). null = clear;
-  // repeated nulls cost one compare. Hot chains re-upload every call -
-  // the weights animate (ages tick), so no reference skip applies.
-  setFx(fx: ArrayLike<number> | null): void {
-    const fd = this.fxData;
-    if (!fd) return;
-    if (!fx) {
-      if (this.fxZero) return;
-      fd.fill(0);
-      uploadAll(this.mesh.geometry, "aFx");
-      this.fxZero = true;
-      return;
-    }
-    for (let i = 0; i < this.sampleCount; i++) {
-      const w = fx[i];
-      fd[i * 2] = w;
-      fd[i * 2 + 1] = w;
-    }
-    uploadAll(this.mesh.geometry, "aFx");
-    this.fxZero = false;
-  }
 
   destroy(): void {
     this.mesh.destroy({ children: true });
@@ -552,7 +508,6 @@ export class ProbeTriMesh {
   readonly pos: Float32Array; // 3 verts x [x, y] per triangle.
   readonly uv: Float32Array; // [paint U, side]
   readonly color: Float32Array; // [r, g, b]
-  readonly fx: Float32Array;
   readonly key: Float32Array; // [chain, fractional sample index]
   readonly arcPos: Float32Array; // [cos, sin] of the arc turn.
   readonly tan: Float32Array;
@@ -564,7 +519,6 @@ export class ProbeTriMesh {
     this.pos = new Float32Array(v * 2);
     this.uv = new Float32Array(v * 2);
     this.color = new Float32Array(v * 3);
-    this.fx = new Float32Array(v);
     this.key = new Float32Array(v * 2);
     this.arcPos = new Float32Array(v * 2);
     this.tan = new Float32Array(v * 2);
@@ -577,7 +531,6 @@ export class ProbeTriMesh {
       indices,
     });
     addColorAttribute(geometry, this.color);
-    addFxAttribute(geometry, this.fx);
     addGapAttributes(geometry, this.arcPos, this.tan, this.maskId);
     addFloatAttribute(geometry, "aKey", this.key, 2);
     this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
@@ -591,7 +544,6 @@ export class ProbeTriMesh {
       "aPosition",
       "aUV",
       "aColor",
-      "aFx",
       "aKey",
       "aArcPos",
       "aTan",
