@@ -881,13 +881,17 @@ async function main(): Promise<void> {
     wake();
   }
 
-  // The background follows the design: effect + intensity, the page ink
-  // and the design's gamut accents, the seed - and the fog of war (when
-  // on) draws as the background instead of a flat color.
+  // The background follows the design: effect + intensity + animation
+  // speed, the page ink and the design's gamut accents, the seed - and the
+  // fog of war (when on) draws as the background instead of a flat color.
   function syncBackground(): void {
     const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
     setGamutConfig(params.gamutArc, params.palette);
-    background.configure(params.background, params.backgroundIntensity);
+    background.configure(
+      params.background,
+      params.backgroundIntensity,
+      params.backgroundSpeed
+    );
     background.setDesign(backgroundColors(BACKGROUND, effHue), params.seed);
     fabric?.setFogBackdrop(background.texture);
   }
@@ -3285,6 +3289,7 @@ async function main(): Promise<void> {
   (window as unknown as Record<string, unknown>).__knotBackground = () => ({
     id: background.id,
     active: background.active,
+    speed: params.backgroundSpeed,
     stats: { ...background.stats },
     time: background.clock.time,
     drifting: background.clock.isDrifting,
@@ -3294,10 +3299,12 @@ async function main(): Promise<void> {
     background;
   (window as unknown as Record<string, unknown>).__knotSetBackground = (
     id: UrlParams["background"],
-    intensity?: number
+    intensity?: number,
+    speed?: number
   ) => {
     params.background = id;
     if (intensity !== undefined) params.backgroundIntensity = intensity;
+    if (speed !== undefined) params.backgroundSpeed = speed;
     syncBackground();
     writeParams(params);
     return background.id;

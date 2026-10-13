@@ -3,10 +3,15 @@ import {
   BACKGROUNDS,
   BACKGROUND_PAUSE_GRACE,
   BACKGROUND_PROFILES,
+  BACKGROUND_SPEED_AUTO,
+  BACKGROUND_SPEED_MAX,
   BackgroundClock,
   backgroundColors,
+  backgroundDrift,
   backgroundSeedOffset,
+  effectiveSpeed,
   hexRgb,
+  isAutoSpeed,
 } from "../../src/render/background_model";
 import { gamutRgb, setGamutConfig } from "../../src/core/section_colors";
 import { codecTable, CODEC_VERSION } from "../../src/ui/param_codec";
@@ -171,5 +176,69 @@ describe("background clock (drift + the K24 hook)", () => {
     expect(rendered).toBe(asked);
     expect(rendered).toBeGreaterThanOrEqual(99);
     expect(rendered).toBeLessThanOrEqual(101);
+  });
+});
+
+describe("animation speed (K79)", () => {
+  // The drift every effect had before backgroundSpeed existed (K21): AUTO
+  // must reproduce it exactly, or every existing link changes pace.
+  const PRE_K79_DRIFT: Record<string, number> = {
+    vellum: 0,
+    mist: 0.35,
+    wash: 0.8,
+    silk: 0.8,
+    aurora: 1,
+    contours: 0.3,
+  };
+
+  it("reproduces the pre-K79 drift exactly at auto (the default, -1)", () => {
+    for (const id of BACKGROUNDS) {
+      if (id === "none") continue;
+      expect([id, backgroundDrift(id, BACKGROUND_SPEED_AUTO)]).toEqual([
+        id,
+        PRE_K79_DRIFT[id],
+      ]);
+      // Any negative value, and NaN, reads as auto.
+      expect(backgroundDrift(id, -0.5)).toBe(PRE_K79_DRIFT[id]);
+      expect(backgroundDrift(id, NaN)).toBe(PRE_K79_DRIFT[id]);
+    }
+    expect(isAutoSpeed(BACKGROUND_SPEED_AUTO)).toBe(true);
+    expect(isAutoSpeed(0)).toBe(false);
+  });
+
+  it("keeps vellum static at auto and moves it at a set speed", () => {
+    expect(effectiveSpeed("vellum", BACKGROUND_SPEED_AUTO)).toBe(0);
+    expect(effectiveSpeed("mist", BACKGROUND_SPEED_AUTO)).toBe(1);
+    const v = BACKGROUND_PROFILES.vellum;
+    expect(v.autoSpeed).toBe(0);
+    expect(v.drift).toBeGreaterThan(0);
+    expect(backgroundDrift("vellum", 1)).toBe(v.drift);
+    expect(backgroundDrift("vellum", 2)).toBe(2 * v.drift);
+  });
+
+  it("is static at 0 and multiplies the designed drift otherwise", () => {
+    for (const id of BACKGROUNDS) {
+      if (id === "none") continue;
+      const d = BACKGROUND_PROFILES[id].drift;
+      expect(backgroundDrift(id, 0)).toBe(0);
+      expect(backgroundDrift(id, 1)).toBe(d);
+      expect(backgroundDrift(id, 2)).toBe(2 * d);
+      expect(backgroundDrift(id, 0.25)).toBe(0.25 * d);
+      // Clamped to the slider's range.
+      expect(backgroundDrift(id, 10)).toBe(BACKGROUND_SPEED_MAX * d);
+    }
+    expect(backgroundDrift("none", 2)).toBe(0);
+    expect(effectiveSpeed("none", BACKGROUND_SPEED_AUTO)).toBe(0);
+  });
+
+  it("runs the drift clock at the effective drift (2x = twice the time)", () => {
+    const a = new BackgroundClock();
+    const b = new BackgroundClock();
+    run(a, 10, backgroundDrift("wash", 1), 15, true);
+    run(b, 10, backgroundDrift("wash", 2), 15, true);
+    expect(b.time).toBeCloseTo(2 * a.time, 9);
+    const s = new BackgroundClock();
+    expect(run(s, 10, backgroundDrift("wash", 0), 15, true)).toBe(1);
+    expect(s.time).toBe(0);
   });
 });

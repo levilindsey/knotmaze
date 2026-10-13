@@ -88,7 +88,7 @@ describe("links", () => {
       appearFx: "burn",
       entranceClearance: 2.5, exitClearance: 5, junctionSpacing: 2,
       background: "vellum", backgroundIntensity: 0.5,
-      pulseReach: 3,
+      pulseReach: 3, backgroundSpeed: -1,
     });
   });
 
@@ -382,6 +382,27 @@ describe("token + overrides", () => {
     );
     const hot = encodeParams(withSeed(7, { backgroundIntensity: 3 }));
     expect(parseParams("?" + hot).backgroundIntensity).toBe(1);
+  });
+
+  it("round-trips the background speed (appended to v4; -1 = auto)", () => {
+    for (const speed of [0, 0.5, 1, 2.25, 3]) {
+      const p = withSeed(7, { background: "vellum", backgroundSpeed: speed });
+      expect(parseParams("?" + encodeParams(p))).toEqual(p);
+    }
+    // Auto is the default: the all-default token, and every older link.
+    expect(encodeParams(withSeed(7))).toBe("7.J");
+    expect(parseParams("?7.c").backgroundSpeed).toBe(-1);
+    expect(parseParams("?" + USER_COMPACT).backgroundSpeed).toBe(-1);
+    // A token takes it as an override (probe URLs: &bgs=2); any negative
+    // value is auto, and explicit speeds clamp to the slider's max 3.
+    expect(parseParams("?7.J&bgs=2")).toEqual(withSeed(7, { backgroundSpeed: 2 }));
+    expect(parseParams("?7.J&bgs=-.5").backgroundSpeed).toBe(-1);
+    expect(parseParams("?7.J&bgs=9").backgroundSpeed).toBe(3);
+    expect(parseParams("?7.J&bgs=x").backgroundSpeed).toBe(-1);
+    const fast = encodeParams(withSeed(7, { backgroundSpeed: 9 }));
+    expect(parseParams("?" + fast).backgroundSpeed).toBe(3);
+    const neg = encodeParams(withSeed(7, { backgroundSpeed: -0.25 }));
+    expect(parseParams("?" + neg).backgroundSpeed).toBe(-1);
   });
 });
 

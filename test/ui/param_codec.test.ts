@@ -195,6 +195,7 @@ describe("codec tables", () => {
         .map(asPin)
         .map((p) => (p[0] === "trailLength" ? ["trailLength", "number", 10] : p)),
       // Params appended to v4 go here (older links read their defaults).
+      ["backgroundSpeed", "number", -1], // 70 (K79: -1 = auto)
     ]);
   });
 
@@ -278,8 +279,23 @@ describe("token format", () => {
         entranceClearance: 2.5,
         exitClearance: 5,
         junctionSpacing: 2,
+        // K79: every earlier link animates its background at auto - the
+        // pace it always had.
+        backgroundSpeed: -1,
       });
     }
+  });
+
+  // backgroundSpeed's AUTO default is negative: the number codes carry the
+  // sign ("-" = 11), and explicit speeds round-trip.
+  it("writes the background speed: auto by omission, explicit values", () => {
+    expect(numberText(-1)).toBe("-1");
+    for (const speed of [0, 0.05, 1, 1.45, 3]) {
+      const values = { ...codecDefaults(CODEC_VERSION), backgroundSpeed: speed };
+      const token = encodeToken(7, values);
+      expect([speed, decodeToken(token).values.backgroundSpeed]).toEqual([speed, speed]);
+    }
+    expect(encodeToken(7, { ...codecDefaults(CODEC_VERSION) })).toBe("7.J");
   });
 
   // OLD LINKS KEEP THEIR LOOK (K73): a v3 link that left trailLength at
