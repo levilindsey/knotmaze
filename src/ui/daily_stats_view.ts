@@ -1,8 +1,9 @@
 // The daily stats view (K20): a small modal over the maze - the aggregate
 // tiles (played, solved, current and best streak, best time), today's
-// result with a Share button (or a Play button), and the per-day history,
-// newest first (tap a day to play it). Phone-sized: one column, finger-
-// sized targets, the history scrolls inside the card.
+// result with a Share button (or a Play / Resume button: K47 keeps an
+// unfinished attempt), and the per-day history, newest first (tap a day to
+// play or resume it). Phone-sized: one column, finger-sized targets, the
+// history scrolls inside the card.
 
 import { efficiencyPercent, formatDuration } from "../game/maze_stats";
 import { dailyAggregates, onTime } from "../game/daily_store";
@@ -201,12 +202,16 @@ export function openDailyStats(o: DailyStatsOptions): void {
     btn.textContent = "Share";
     btn.addEventListener("click", () => o.onShare(o.today));
   } else {
+    // K47: a saved attempt picks up where it was.
+    const a = tday?.attempt;
     const b = document.createElement("b");
-    b.textContent = tday ? "In progress" : "Not played yet";
+    b.textContent = a ? "In progress" : tday ? "Not finished" : "Not played yet";
     const line = document.createElement("div");
-    line.textContent = "Same maze for everyone today";
+    line.textContent = a
+      ? `${formatDuration(a.elapsedMs)} · ${a.taps.length} move${a.taps.length === 1 ? "" : "s"}`
+      : "Same maze for everyone today";
     tx.append(b, line);
-    btn.textContent = "Play";
+    btn.textContent = a ? "Resume" : "Play";
     btn.addEventListener("click", () => {
       close();
       o.onPlay(o.today, true);
@@ -236,7 +241,7 @@ export function openDailyStats(o: DailyStatsOptions): void {
       const li = document.createElement("li");
       const b = document.createElement("button");
       b.type = "button";
-      b.title = `Play Daily #${n}`;
+      b.title = `${!r && d.attempt ? "Resume" : "Play"} Daily #${n}`;
       const cell = (text: string, cls: string): void => {
         const s = document.createElement("span");
         s.className = cls;
@@ -251,6 +256,11 @@ export function openDailyStats(o: DailyStatsOptions): void {
         const late = onTime(n, r) ? "" : " late";
         const extra = d.replays.length > 0 ? ` +${d.replays.length}` : "";
         cell(`✓${late}${extra}`, `s${late ? "" : " ok"}`);
+      } else if (d.attempt) {
+        // K47: unfinished and saved - tapping the row resumes it.
+        cell(formatDuration(d.attempt.elapsedMs), "r");
+        cell("", "r");
+        cell("resume", "s");
       } else {
         cell("—", "r");
         cell("", "r");
@@ -271,7 +281,7 @@ export function openDailyStats(o: DailyStatsOptions): void {
   switch (o.store.status) {
     case "ok":
       note.textContent =
-        "Saved in this browser only. A day's first finish is its official result; later ones count as replays.";
+        "Saved in this browser only, unfinished attempts included. A day's first finish is its official result; later ones count as replays.";
       break;
     case "unavailable":
       note.className = "km-note km-warn";

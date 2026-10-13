@@ -23,15 +23,24 @@ import {
 } from "./ui/url_state";
 import type { UrlParams } from "./ui/url_state";
 import {
+  DAILY_EXEMPT_KEYS,
+  applyDailyPrefs,
   dailyDefinition,
   dailyParams,
   dailyQuery,
+  isDailyDesign,
+  mergeDailyPrefs,
   parseLaunch,
-  sameMaze,
 } from "./ui/daily_link";
 import { formatDayDate, todayNumber } from "./game/daily_calendar";
 import { DailyStore, browserStorage } from "./game/daily_store";
 import type { DailyResult } from "./game/daily_store";
+import {
+  attemptRecord as savedAttemptOf,
+  exploredRuns,
+  restoreAttempt,
+  walkFingerprint,
+} from "./game/daily_attempt";
 import { SolveClock, efficiencyOf } from "./game/maze_stats";
 import { shareText } from "./game/share_text";
 import { MazeHud, WinBanner } from "./ui/maze_hud";
@@ -248,31 +257,30 @@ async function main(): Promise<void> {
   document.body.appendChild(app.canvas);
   app.canvas.style.background = `#${BACKGROUND.toString(16).padStart(6, "0")}`;
 
-  // K20: a `?daily...` link loads that day's pinned design (ui/daily_link.ts);
+  // K20/K56: the bare page is today's daily and `?daily...` a daily link
+  // (ui/daily_link.ts), opening with the player's stored daily prefs;
   // anything else reads as an ordinary design link.
-  const launch = parseLaunch(window.location.search, todayNumber());
+  const dailyStore = new DailyStore(browserStorage());
+  const launch = parseLaunch(
+    window.location.search,
+    todayNumber(),
+    dailyStore.prefs()
+  );
   const params = launch.params;
   // The daily on screen, or null for an ordinary design. It ends the moment
-  // a change alters the maze (writeParams).
+  // a param other than a preference changes (syncDaily).
   let dailyN: number | null = launch.daily;
-  // The player came for TODAY's daily (`?daily`, the Daily button) rather
-  // than a numbered one: the address bar may keep saying plain `?daily`.
+  // The player came for TODAY's daily (the bare page, `?daily`, the Daily
+  // button) rather than a numbered one: the address bar stays bare.
   let dailyFloating = launch.floating;
-  const dailyStore = new DailyStore(browserStorage());
-  // Every URL write: on a daily the address bar reads `?daily[=<n>]` (plus
-  // a delta for a changed look); a change to the maze leaves the daily.
+  // Every URL write: on a daily the address bar is bare (today's, as asked
+  // for) or `?daily=<n>`; a param change that leaves the daily is caught
+  // first (syncDaily), and the page becomes an ordinary design link.
   const writeParams = (p: UrlParams): void => {
-    if (dailyN !== null && !sameMaze(p, dailyParams(dailyN))) {
-      dailyN = null;
-      dailyChanged();
-    }
+    syncDaily();
     if (dailyN !== null) {
-      const q = dailyQuery(
-        dailyN,
-        p,
-        dailyFloating ? todayNumber() : undefined
-      );
-      history.replaceState(null, "", `?${q}`);
+      const q = dailyQuery(dailyN, dailyFloating ? todayNumber() : undefined);
+      history.replaceState(null, "", q === "" ? location.pathname : `?${q}`);
     } else {
       writeTokenParams(p);
     }
@@ -804,6 +812,11 @@ async function main(): Promise<void> {
   }
 
   function rebuild(): void {
+    // K47/K56: a change that leaves the daily parks its attempt first; one
+    // that keeps it (a rebuild of the daily itself) saves the attempt now,
+    // to restore it into the new scene below.
+    syncDaily();
+    saveAttempt();
     renderer?.destroy();
     debug?.container.destroy({ children: true });
     fabric?.destroy();
@@ -932,6 +945,8 @@ async function main(): Promise<void> {
     } else {
       beginLoading();
     }
+    // K47: a daily opens where its saved attempt left off.
+    restoreSavedAttempt();
 
     debug = new DebugRenderer();
     debug.render(graph);
@@ -1190,6 +1205,42 @@ async function main(): Promise<void> {
       wake();
     },
     onResetPath: () => {
+      // A winning move whose dot is still on its way counts: finish it.
+      if (pendingWin && fabricController) {
+        pendingWin = false;
+        fabric?.cancelMove();
+        showFabricWin();
+      }
+      // K47: inside a daily's attempt - the one that will be official -
+      // Reset path is backtracking to the entrance: every run retracted
+      // like a tap would (logged, on the backtrack meter), the clock
+      // running on. It never restarts the attempt.
+      if (
+        fabric &&
+        fabricController &&
+        dailyAttemptLive() &&
+        !dailyStore.hasOfficial(dailyN!) &&
+        !fabricController.solved
+      ) {
+        if (fabricController.trailMode) {
+          showToast("Memory mode has no way back: keep exploring.");
+          return;
+        }
+        fabric.cancelMove();
+        if (fabricController.retreatToStart().length > 0) {
+          // The Ariadne string keeps every pass, the way back included.
+          fabric.restoreYarn(fabricController.taps);
+          fabric.update(fabricController);
+          updateHud();
+          saveAttempt();
+          showToast("Back at the start. The clock keeps running.");
+        }
+        return;
+      }
+      // Anywhere else a fresh attempt (a daily's replay starts over).
+      if (dailyN !== null && attemptDaily === dailyN && attemptRecord === null) {
+        dailyStore.clearAttempt(dailyN);
+      }
       fabricController?.reset();
       fabric?.cancelMove();
       fabric?.clearYarn();
@@ -1240,17 +1291,32 @@ async function main(): Promise<void> {
   ];
   const GRAB_RADIUS = 0.7;
 
-  // ---- K19 MAZE STATS + K20 DAILY ----------------------------------------
+  // ---- K19 MAZE STATS + K20 DAILY + K47 SAVED ATTEMPTS + K56 ------------
   // The HUD (top-left) and the win banner live in ui/maze_hud.ts; the
   // metrics' definitions in game/maze_stats.ts. The solve clock runs from
   // the first move to the dot's arrival at the exit, hidden time excluded.
+  // A DAILY attempt is saved as it goes (after every move, when the page
+  // hides or goes, every few seconds while the clock runs, before a
+  // rebuild) and restored whenever its daily opens - a reload is no fresh
+  // start. Leaving the daily (syncDaily) parks it.
   const clock = new SolveClock();
   // The current attempt: the daily it counts for (fixed at its first move;
-  // null = none), the player's local daily number then (streaks count a
-  // result whose attempt began by its day), and what its finish recorded.
+  // null = none, or a daily since left), the player's local daily number
+  // and the time at that first move (streaks count a result whose attempt
+  // began by its day), and what its finish recorded.
   let attemptDaily: number | null = null;
   let attemptDay = 0;
+  let attemptStartedAt = 0;
   let attemptRecord: "official" | "replay" | null = null;
+  // A restored attempt's explored runs, for the fog of war once the scene
+  // is on screen (null = nothing pending).
+  let pendingExplored: number[] | null = null;
+  // The savedAt of the attempt record this tab last wrote or restored: a
+  // newer one was written by another tab (adoptOtherTab).
+  let attemptSyncedAt = 0;
+  // Set while a rebuild adopts another tab's attempt: its save must not
+  // write this tab's older state over it.
+  let adopting = false;
   // The last finish, for the banner's Share button.
   let lastWin: { text: string; url: string } | null = null;
 
@@ -1299,22 +1365,191 @@ async function main(): Promise<void> {
     clock.reset();
     attemptDaily = null;
     attemptRecord = null;
+    pendingExplored = null;
     lastWin = null;
     updateHud();
   };
 
-  // An accepted move. The attempt's first starts the clock and, on a
-  // daily, marks that day played.
-  const noteMove = (): void => {
-    if (clock.started) return;
-    clock.start(performance.now(), document.hidden);
-    attemptDay = todayNumber();
-    attemptDaily = dailyN;
-    if (dailyN !== null) dailyStore.markPlayed(dailyN, Date.now());
+  // K47: is the solve on screen the daily's unfinished attempt (the one
+  // that is saved)?
+  const dailyAttemptLive = (): boolean =>
+    dailyN !== null &&
+    attemptDaily === dailyN &&
+    attemptRecord === null &&
+    fabricController !== null &&
+    clock.started;
+
+  // K47: write the daily attempt in progress (the store re-reads first, so
+  // two tabs never lose each other's results).
+  const saveAttempt = (): void => {
+    if (adopting || !dailyAttemptLive() || !fabricController || !walkGraph) {
+      return;
+    }
+    const n = dailyN!;
+    const rec = savedAttemptOf(fabricController, {
+      startedAt: attemptStartedAt,
+      day: attemptDay,
+      elapsedMs: clock.elapsed(performance.now()),
+      maze: walkFingerprint(walkGraph),
+      def: dailyDefinition(n).version,
+      // Strictly after anything this tab saw (a fast double save, a clock
+      // step), so another tab's later save always reads as later.
+      savedAt: Math.max(Date.now(), attemptSyncedAt + 1),
+    });
+    if (!rec) return;
+    dailyStore.saveAttempt(n, rec);
+    attemptSyncedAt = rec.savedAt;
   };
-  document.addEventListener("visibilitychange", () =>
-    clock.setHidden(document.hidden, performance.now())
-  );
+
+  // Two tabs on one daily: a tab coming back into view takes up the
+  // attempt another tab played on since this one last saved it (this
+  // tab's own state was saved when it was hidden, so nothing of it is
+  // lost) - a rebuild restores it - instead of saving over it.
+  const adoptOtherTab = (): void => {
+    if (dailyN === null || document.hidden || !fabricController) return;
+    const saved = dailyStore.attempt(dailyN);
+    if (!saved || saved.savedAt <= attemptSyncedAt) return;
+    const mine = fabricController.taps;
+    attemptSyncedAt = saved.savedAt;
+    if (
+      saved.taps.length === mine.length &&
+      saved.taps.every((t, i) => t === mine[i])
+    ) {
+      return;
+    }
+    adopting = true;
+    try {
+      rebuild();
+    } finally {
+      adopting = false;
+    }
+    wake();
+    showToast("Picked up your attempt from your other tab.");
+  };
+
+  // K47: rebuild() calls this once the new scene exists - daily dailyN
+  // opens where its saved attempt left off: path, meters, the Ariadne
+  // string, the move log. The clock comes back PAUSED at the saved time
+  // and runs on once the scene is on screen (resumeWhenReady), or at the
+  // next move. A saved winning move (the page closed before the dot
+  // arrived) finishes at once.
+  const restoreSavedAttempt = (): void => {
+    if (dailyN === null || !fabricController || !fabric || !walkGraph) return;
+    const saved = dailyStore.attempt(dailyN);
+    if (!saved) return;
+    attemptSyncedAt = Math.max(attemptSyncedAt, saved.savedAt);
+    const outcome = restoreAttempt(
+      fabricController,
+      saved,
+      walkFingerprint(walkGraph)
+    );
+    if (outcome !== "ok") {
+      console.warn(
+        `KnotMaze: Daily #${dailyN}'s saved attempt does not fit this maze ` +
+          `(${outcome}); it starts over.`
+      );
+      return;
+    }
+    attemptDaily = dailyN;
+    attemptDay = saved.day;
+    attemptStartedAt = saved.startedAt;
+    attemptRecord = null;
+    clock.restore(saved.elapsedMs);
+    fabric.restoreYarn(fabricController.taps);
+    pendingExplored = exploredRuns(fabricController);
+    fabric.update(fabricController);
+    if (fabricController.solved) pendingWin = true;
+    updateHud();
+  };
+
+  // The scene is on screen (no hidden settle, no intro still drawing): a
+  // restored clock runs on from here, and the fog re-explores.
+  const sceneReady = (): boolean =>
+    root.visible && physState !== "loading" && (reveal === null || reveal.done);
+  const resumeWhenReady = (): void => {
+    if (clock.state !== "paused" && pendingExplored === null) return;
+    if (!sceneReady()) return;
+    if (clock.state === "paused") clock.resume(performance.now(), document.hidden);
+    if (pendingExplored !== null && fabric) {
+      fabric.restoreExplored(pendingExplored);
+      pendingExplored = null;
+    }
+    updateHud();
+  };
+
+  // An accepted move. The attempt's first starts the clock and, on a
+  // daily, marks that day played; a restored clock runs on from its first.
+  // Every move of a daily attempt is saved.
+  const noteMove = (): void => {
+    if (clock.state === "paused") {
+      clock.resume(performance.now(), document.hidden);
+    } else if (!clock.started) {
+      clock.start(performance.now(), document.hidden);
+      attemptDay = todayNumber();
+      attemptStartedAt = Date.now();
+      attemptDaily = dailyN;
+      if (dailyN !== null) dailyStore.markPlayed(dailyN, attemptStartedAt);
+    }
+    saveAttempt();
+  };
+  document.addEventListener("visibilitychange", () => {
+    clock.setHidden(document.hidden, performance.now());
+    if (document.hidden) {
+      saveAttempt();
+      savePrefsNow();
+    } else {
+      adoptOtherTab();
+    }
+  });
+  // pagehide: the last event a closing tab or a reload is sure to get.
+  window.addEventListener("pagehide", () => {
+    saveAttempt();
+    savePrefsNow();
+  });
+
+  // K56: the daily on screen must be its pinned design but for the exempt
+  // preferences (ui/daily_link.ts). Every URL write and rebuild checks: a
+  // preference the player changes is stored for future dailies; any other
+  // change leaves the daily (leaveDaily).
+  let prefsTimer = 0;
+  // The params as of the daily's opening (or the last store): only what
+  // the player changes after it is stored.
+  let prefsFrom: UrlParams = { ...params };
+  const savePrefsNow = (): void => {
+    window.clearTimeout(prefsTimer);
+    prefsTimer = 0;
+    if (dailyN === null) return;
+    dailyStore.setPrefs(
+      mergeDailyPrefs(dailyStore.prefs(), prefsFrom, params, dailyN)
+    );
+    prefsFrom = { ...params };
+  };
+  const syncDaily = (): void => {
+    if (dailyN === null) return;
+    if (!isDailyDesign(params, dailyN)) {
+      leaveDaily();
+      return;
+    }
+    // Sliders write on every step: store the prefs once they settle.
+    window.clearTimeout(prefsTimer);
+    prefsTimer = window.setTimeout(savePrefsNow, 400);
+  };
+  // Leave the daily: park its attempt (saved, time and all), become an
+  // ordinary design link. The solve on screen plays on as an ordinary
+  // design's; the Daily button (or the stats view) brings the daily back.
+  const leaveDaily = (): void => {
+    if (dailyN === null) return;
+    const n = dailyN;
+    savePrefsNow();
+    saveAttempt();
+    const parked = dailyStore.attempt(n) !== undefined;
+    dailyN = null;
+    if (attemptDaily === n) attemptDaily = null;
+    dailyChanged();
+    showToast(
+      parked ? `Left Daily #${n}. Your attempt is saved.` : `Left Daily #${n}.`
+    );
+  };
 
   const dailyUrl = (n: number): string =>
     `${location.origin}${location.pathname}?daily=${n}`;
@@ -1407,17 +1642,21 @@ async function main(): Promise<void> {
       },
     });
 
-  // Load daily n's pinned design (the panel's Daily button, the stats
-  // view; `floating` = asked for as TODAY's daily). Already on it: say so -
-  // reloading would wipe the attempt.
+  // Load daily n (the panel's Daily button, the stats view; `floating` =
+  // asked for as TODAY's daily): its pinned design with the stored
+  // prefs, and its saved attempt (rebuild restores it). Another daily on
+  // screen saves its own attempt first. Already on it: say so.
   const playDaily = (n: number, floating = false): void => {
-    if (dailyN === n && sameMaze(params, dailyParams(n))) {
+    if (dailyN === n) {
       showToast(`Already playing Daily #${n}`);
       return;
     }
-    Object.assign(params, dailyParams(n));
+    savePrefsNow();
+    saveAttempt();
+    Object.assign(params, applyDailyPrefs(dailyParams(n), dailyStore.prefs()));
     dailyN = n;
     dailyFloating = floating;
+    prefsFrom = { ...params };
     panel.syncFromParams();
     dailyChanged();
     rebuild();
@@ -1433,7 +1672,7 @@ async function main(): Promise<void> {
     labelDay = t;
     panel.setDailyLabel(
       `Daily #${t}`,
-      `Play today's daily maze, #${t} (${formatDayDate(t)}): the same maze for everyone today. Your results are kept in your daily stats (the chart button).`
+      `Play today's daily maze, #${t} (${formatDayDate(t)}): the same maze for everyone today. An unfinished attempt picks up where you left it; results are kept in your daily stats (the chart button).`
     );
   };
   // The daily on screen changed (entered or left): HUD title, tab title.
@@ -1443,9 +1682,22 @@ async function main(): Promise<void> {
     updateHud();
   };
   dailyChanged();
-  // The ticking clock and the midnight turn, independent of the render loop.
+  // The ticking clock, a restored clock's resume, the running attempt's
+  // periodic save (a crash or a killed tab loses at most this much time -
+  // which must not be a way to stop the clock), and the midnight turn -
+  // independent of the render loop.
+  const AUTOSAVE_MS = 10000;
+  let lastAutosave = 0;
   window.setInterval(() => {
-    if (clock.state === "running") hud.setTime(clock.elapsed(performance.now()));
+    resumeWhenReady();
+    if (clock.state === "running") {
+      const t = performance.now();
+      hud.setTime(clock.elapsed(t));
+      if (t - lastAutosave >= AUTOSAVE_MS && !document.hidden) {
+        lastAutosave = t;
+        saveAttempt();
+      }
+    }
     if (todayNumber() !== labelDay) {
       updateDailyLabel();
       updateHud(); // A daily on screen gains its date once it isn't today's.
@@ -2433,14 +2685,24 @@ async function main(): Promise<void> {
   // stored records (as the stats view reads them).
   (window as unknown as Record<string, unknown>).__knotDaily = () => ({
     daily: dailyN,
+    floating: dailyFloating,
     today: todayNumber(),
     attemptDaily,
     attemptDay,
+    attemptStartedAt,
     attemptRecord,
     clock: { state: clock.state, ms: clock.elapsed(performance.now()) },
     junctions: fabricController ? [...fabricController.visitedJunctions] : [],
     deadEnds: fabricController ? [...fabricController.deadEndTips] : [],
     moves: fabricController ? fabricController.moveLog.join("") : "",
+    taps: fabricController ? [...fabricController.taps] : [],
+    path: fabricController ? [...fabricController.pathEdges] : [],
+    head: fabricController?.head ?? null,
+    backtrack: fabricController?.backtrackDist ?? 0,
+    // K47/K56: the saved attempt of the daily on screen, and the prefs.
+    saved: dailyN !== null ? (dailyStore.attempt(dailyN) ?? null) : null,
+    exempt: [...DAILY_EXEMPT_KEYS],
+    prefs: dailyStore.prefs(),
     share: lastWin,
     storeStatus: dailyStore.status,
     store: dailyStore.data(),

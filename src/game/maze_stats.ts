@@ -5,7 +5,9 @@
 // - TIME: wall-clock milliseconds from the first move (the first accepted
 //   tap - always the entrance run) to the dot's ARRIVAL at the exit, with
 //   the time the page spent hidden left out (SolveClock). Reset path and a
-//   rebuild reset it; it does not run before the first move.
+//   rebuild reset it; it does not run before the first move. A DAILY
+//   attempt (K47) is saved instead: a reload or a rebuild resumes it, and
+//   its Reset path backtracks to the entrance with the clock running.
 // - EFFICIENCY: optimal / path, where path is the route you ended on (the
 //   current-path meter at the exit) - so backtracked detours do not lower
 //   it (the backtrack meter prices them separately, as designed in Stage
@@ -54,26 +56,58 @@ export function formatDuration(ms: number): string {
 // nothing can be played then, and the arrival animation would not finish
 // until the page came back anyway. Every method takes the current time
 // (performance.now() in the app), so the tests drive it exactly.
+//
+// A SAVED attempt (K47) comes back PAUSED at its saved time - restore() -
+// and resume() carries on from there: main.ts resumes once the scene is on
+// screen (after the intro), or at the next move, whichever comes first.
 export class SolveClock {
   private startAt = 0;
   private stopAt = 0;
   private hiddenSince: number | null = null;
   private hiddenTotal = 0;
-  state: "idle" | "running" | "stopped" = "idle";
+  private pausedMs = 0;
+  state: "idle" | "paused" | "running" | "stopped" = "idle";
 
   get started(): boolean {
     return this.state !== "idle";
   }
 
   start(now: number, hidden = false): void {
+    this.runFrom(now, 0, hidden);
+  }
+
+  // A saved attempt's clock: paused at `elapsedMs` until resume().
+  restore(elapsedMs: number): void {
+    this.state = "paused";
+    this.pausedMs = Number.isFinite(elapsedMs) ? Math.max(0, elapsedMs) : 0;
+    this.hiddenSince = null;
+    this.hiddenTotal = 0;
+  }
+
+  // Run on from the paused time (no-op unless paused).
+  resume(now: number, hidden = false): void {
+    if (this.state !== "paused") return;
+    this.runFrom(now, this.pausedMs, hidden);
+  }
+
+  private runFrom(now: number, offsetMs: number, hidden: boolean): void {
     this.state = "running";
-    this.startAt = now;
+    this.startAt = now - offsetMs;
     this.stopAt = now;
     this.hiddenTotal = 0;
     this.hiddenSince = hidden ? now : null;
   }
 
   stop(now: number): void {
+    if (this.state === "paused") {
+      // Finished without resuming (a restored winning move): its saved time.
+      this.startAt = 0;
+      this.stopAt = this.pausedMs;
+      this.hiddenTotal = 0;
+      this.hiddenSince = null;
+      this.state = "stopped";
+      return;
+    }
     if (this.state !== "running") return;
     this.settleHidden(now);
     this.stopAt = now;
@@ -105,6 +139,7 @@ export class SolveClock {
 
   elapsed(now: number): number {
     if (this.state === "idle") return 0;
+    if (this.state === "paused") return this.pausedMs;
     const end = this.state === "running" ? now : this.stopAt;
     const hiddenNow =
       this.state === "running" && this.hiddenSince !== null

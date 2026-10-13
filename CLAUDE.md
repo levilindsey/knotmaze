@@ -15,11 +15,11 @@ Rendering: PixiJS v8 custom ribbon meshes with depth-based over/under casing gap
 
 ## Key Design Decisions
 
-- **URL-as-complete-state:** Every design fully specified by `(seed, params)` serialized in the URL. Deterministic seeded RNG throughout. COMPACT LINKS (2026-10-11, `src/ui/param_codec.ts`): the query is ONE token - `?<seed>.<blob>` (a bare `?<seed>` is a v1 all-default link; since v2 every new link names its version, so an all-default design is `?<seed>.c` under v3 (`.U` was v2)) (seed base-36; blob = base64url bitstream: version, entry count, then per changed param its index delta + value - booleans flip in 0 bits, enums as an option index, colors 24 bits, numbers as their 6-decimal shortest text in 4-bit codes; all counts Elias-gamma). Self-describing, so slider ranges/steps can change freely. What a link DOES depend on is the frozen codec table of its version: param ORDER, codec types, enum option lists, DEFAULTS (links list only what differs, after 6-decimal rounding; an appearMode preset/random/instant implies the three appearance values). A new param or enum option is APPENDED to the current table; anything else (a default change included) = a new codec version, old tables kept for decoding. `test/ui/param_codec.test.ts` pins `CODEC_V1` literally (frozen) and `CODEC_V2` as v1 + its one edit, and fails until a new `PARAM_DEFAULTS` key is appended to the current table. VERSIONS: v1 (the first table); v2 (2026-10-11) = junctionBlend default 0 -> 0.88, plus the appended pluck/physics params; v3 (2026-10-11) = pluckSize default 1 -> 1.75, plus the appended maze-plan knobs entranceClearance / exitClearance / junctionSpacing (2026-10-12; defaults = DEFAULT_MAZE_PARAMS), then background / backgroundIntensity (K21, 2026-10-12). DELTA BLOBS (2026-10-12, `encodeDelta`/`decodeDelta`): the same bitstream measured against a BASE design instead of the table defaults (a listed boolean is base's flipped) - the daily links' `?daily=<n>.<delta>`. Legacy links still parse and are rewritten to the token on load: `?s=<seed>&tw=.64...` short links and `?seed=...` full links (legacy keys mc/trm), both read with the v1 defaults; legacy `key=value` pairs AFTER a token override it (`?<token>&am=instant`). Unreadable blobs keep the seed, default the rest, warn once.
+- **URL-as-complete-state:** Every design fully specified by `(seed, params)` serialized in the URL. Deterministic seeded RNG throughout. COMPACT LINKS (2026-10-11, `src/ui/param_codec.ts`): the query is ONE token - `?<seed>.<blob>` (a bare `?<seed>` is a v1 all-default link; since v2 every new link names its version, so an all-default design is `?<seed>.c` under v3 (`.U` was v2)) (seed base-36; blob = base64url bitstream: version, entry count, then per changed param its index delta + value - booleans flip in 0 bits, enums as an option index, colors 24 bits, numbers as their 6-decimal shortest text in 4-bit codes; all counts Elias-gamma). Self-describing, so slider ranges/steps can change freely. What a link DOES depend on is the frozen codec table of its version: param ORDER, codec types, enum option lists, DEFAULTS (links list only what differs, after 6-decimal rounding; an appearMode preset/random/instant implies the three appearance values). A new param or enum option is APPENDED to the current table; anything else (a default change included) = a new codec version, old tables kept for decoding. `test/ui/param_codec.test.ts` pins `CODEC_V1` literally (frozen) and `CODEC_V2` as v1 + its one edit, and fails until a new `PARAM_DEFAULTS` key is appended to the current table. VERSIONS: v1 (the first table); v2 (2026-10-11) = junctionBlend default 0 -> 0.88, plus the appended pluck/physics params; v3 (2026-10-11) = pluckSize default 1 -> 1.75, plus the appended maze-plan knobs entranceClearance / exitClearance / junctionSpacing (2026-10-12; defaults = DEFAULT_MAZE_PARAMS), then background / backgroundIntensity (K21, 2026-10-12). DELTA BLOBS (2026-10-12, `encodeDelta`/`decodeDelta`): the same bitstream measured against a BASE design instead of the table defaults (a listed boolean is base's flipped) - K20's `?daily=<n>.<delta>` links (only read since K56). Legacy links still parse and are rewritten to the token on load: `?s=<seed>&tw=.64...` short links and `?seed=...` full links (legacy keys mc/trm), both read with the v1 defaults; legacy `key=value` pairs AFTER a token override it (`?<token>&am=instant`). Unreadable blobs keep the seed, default the rest, warn once.
 - **ParamField abstraction:** All generator parameters read through a `ParamField` (constant | Simplex-modulated | painted), enabling region-biome variety natively.
 - **Hero relaxation:** On load, lattice paths (angular 45° zigzags) visibly settle into smooth curves. Temperature slider allows re-agitation.
 - **Knot-as-instrument:** Pluck threads → waves propagate; Web Audio maps loop-length to pitch.
-- **Daily maze (K20, 2026-10-12):** one maze per LOCAL calendar day (Daily #1 = 2026-10-12), the same for everyone: `?daily` (today's) / `?daily=<n>`. A daily's design is PINNED by a frozen, versioned daily definition (`ui/daily_link.ts` DAILY_V1 = codec v3's defaults + a seed from the day number), never by today's PARAM_DEFAULTS. Results live in localStorage (first finish official, replays separate) and share as a Wordle-style move grid. Full record: the MAZE STATS + DAILY MAZE entry below.
+- **Daily maze (K20, 2026-10-12):** one maze per LOCAL calendar day (Daily #1 = 2026-10-12), the same for everyone: THE BARE URL is today's (K56; `?daily` too) / `?daily=<n>`; any other query, or a panel edit other than a playback preference, is an ordinary design. A daily's design is PINNED by a frozen, versioned daily definition (`ui/daily_link.ts` DAILY_V1 = codec v3's defaults + a seed from the day number), never by today's PARAM_DEFAULTS. Results and unfinished attempts (K47: a reload resumes) live in localStorage (first finish official, replays separate) and share as a Wordle-style move grid. Full record: the MAZE STATS + DAILY MAZE entry below.
 
 ## Project Structure
 
@@ -43,6 +43,7 @@ src/
     maze_stats.ts         # K19: stat definitions, SolveClock, move grid
     daily_calendar.ts     # K20: local-date daily numbering (DST-proof)
     daily_store.ts        # K20: versioned localStorage records + aggregates
+    daily_attempt.ts      # K47: saved attempts - record, walk fingerprint, replay
     share_text.ts         # K20: Wordle-style share text
     maze_controller.ts    # P4 LEGACY (md=1): single-strand solve state
   render/
@@ -64,7 +65,7 @@ src/
     tweakpane_panel.ts    # Control panel
     url_state.ts          # URL params, defaults, link parse/write (+ legacy keys)
     param_codec.ts        # Compact link token: frozen codec tables + bitstream
-    daily_link.ts         # K20: daily definitions, seeds, ?daily links, maze identity
+    daily_link.ts         # K20/K56: daily definitions, seeds, routing, exempt prefs
     maze_hud.ts           # K19: maze HUD + win banner (DOM)
     daily_stats_view.ts   # K20: daily stats modal
     share.ts              # K20: native share sheet / clipboard + toast
@@ -81,14 +82,16 @@ test/
   game/
     fabric_controller.test.ts (+ K19 stats), maze_stats.test.ts,
     daily_calendar.test.ts (zones, DST), daily_store.test.ts (schema,
-    corrupt/newer data, quota, no storage, streaks)
+    v1 migration, attempts, prefs, corrupt/newer data, quota, no storage,
+    streaks), daily_attempt.test.ts (fingerprints, save/restore, refusals)
   render/
     pluck_model.test.ts  # String math vs a modal sum, coverage, lobes
     background_model.test.ts  # K21 drift clock (K24 hook), colors, order
   ui/
     param_codec.test.ts (codec table pins + format + delta blobs),
     url_codec.test.ts (links, legacy forms), appear_mode.test.ts,
-    daily_link.test.ts (frozen definition, seeds, golden dailies, links)
+    daily_link.test.ts (frozen definition, seeds, golden dailies, links,
+    the front door, the exempt set, prefs)
   quiescence.regression.test.ts  # Guards the friction dissipation channel
   sweep.manual.test.ts           # Skip-gated; run via SWEEP=1
 ```
@@ -797,8 +800,9 @@ between-threads/cell-passage route.
   v1), CODEC_VERSION 2, and all-default links became `?<seed>.U` (the v2
   header with zero entries). Bare seeds, v1 blobs and legacy s=/seed=
   links keep junctionBlend 0 and re-encode with it explicit.
-  A query WITHOUT a seed (the bare page, `?am=instant`) is no link at all:
-  a fresh design at TODAY's defaults. PROBE GOTCHA: `?<seed>&am=instant`
+  A query WITHOUT a seed (`?am=instant`) is no link at all: a fresh
+  design at TODAY's defaults (the bare page too, until K56 made it the
+  daily). PROBE GOTCHA: `?<seed>&am=instant`
   and `?s=<seed>&...` probe URLs are v1 links (junctionBlend 0, not the
   current 0.88): write `?<seed>.c&...` for current defaults (v3; a `.U` link is v2, pluckSize 1).
 - RENDER-ONLY PLUCKS + PHYSICS CHECKBOX (worktree agent, 2026-10-11; user:
@@ -1114,12 +1118,13 @@ between-threads/cell-passage route.
   (slots 170, 94, 93); also x134/x135 in one squeezed cinch. Breaking it
   needs a winner per pixel (e.g. waive a silhouette whose over thread is
   itself hidden there by the third thread).
-- MAZE STATS + DAILY MAZE (K19 + K20, 2026-10-12; the commit message
-  holds the design notes and the verification record). STATS: the
-  definitions live in game/maze_stats.ts (time = first move to the dot's
-  arrival, hidden time excluded; efficiency = optimal / the route you
-  ended on, shown once solved, rounded down; distinct junctions; distinct
-  dead-end tips, only with deadEnds on; a g/d/b move log for sharing).
+- MAZE STATS + DAILY MAZE (K19 + K20, then K47 + K56 saved attempts and
+  the front door, 2026-10-12; the commit messages hold the design notes
+  and verification records). STATS: the definitions live in
+  game/maze_stats.ts (time = first move to the dot's arrival, hidden time
+  excluded; efficiency = optimal / the route you ended on, shown once
+  solved, rounded down; distinct junctions; distinct dead-end tips, only
+  with deadEnds on; a g/d/b move log for sharing).
   DAILY - binding rules: (1) a daily's design comes ONLY from its frozen
   definition (ui/daily_link.ts DAILY_V1 = codec v3's defaults + a seed
   from the day number), never PARAM_DEFAULTS; to change the daily, append
@@ -1128,27 +1133,47 @@ between-threads/cell-passage route.
   dailies #1-#3 (a failure there means generation code moved every
   daily and every link). (2) Day numbers are the player's LOCAL date
   counted in UTC calendar days (game/daily_calendar.ts), Daily #1 =
-  2026-10-12. (3) MAZE_PARAM_KEYS (sameMaze) must list every param that
-  changes the walk graph: a design stays "the daily" across look, sound,
-  physics and display changes and leaves it on any maze change; a test
-  requires every DEFAULT_MAZE_PARAMS key. (4) Links: `?daily` (today's;
-  the address bar keeps it while the daily is untouched), `?daily=<n>`
-  (1..today+2), `?daily=<n>.<delta>` (param_codec delta blob against the
-  day's design), legacy `&k=v` overrides after. (5) Records:
-  localStorage `knotmaze.daily`, ONE document `{v: 1, days}` - bump `v`
-  for any shape change and never overwrite a newer one; every access is
-  wrapped and the page must work without storage (blocked storage once
-  stopped the whole app booting: the panel's scroll restore, fixed). The
-  first finish is official, later ones replays; streaks count results
-  whose attempt began on or before their day. Share = a Wordle-style
-  move grid + the `?daily=<n>` link, native sheet on coarse pointers.
-  PROBES: `__knotDaily()`, `__knotPlayDaily(n)`, `__knotFabric()` choices'
-  `farDeadEnd` and `routeToDeadEnd(exclude)`; `.claude/probes/K19-K20/`
-  holds probe_daily.mjs (desktop | phone | nostorage | tz | urls |
-  deadends), run_probes.ps1, scan_dailies.ts (the day scan; `--golden`
-  prints the golden test's fingerprints) and the 2026-10-12 results.
-  Editing src/ under a running probe reloads its page mid-solve. Serve an
-  agent's dev server with a private vite cacheDir (that folder's
+  2026-10-12. (3) A page is the daily only while every param but
+  DAILY_EXEMPT_KEYS (playback preferences: the Sound folder, cameraMode,
+  Touch & feel, physics on/off) equals the day's design (isDailyDesign,
+  K56). Any other edit (panel, seed row, dice) LEAVES it: the attempt is
+  parked, a toast ("Left Daily #N. Your attempt is saved."), the bar
+  becomes a token, the solve on screen plays on as an ordinary one; the
+  Daily button returns. Exempt edits made on a daily are stored as
+  prefs (only what the player changed) that every daily opens with.
+  MAZE_PARAM_KEYS (sameMaze) names the walk-graph params: a test requires
+  every DEFAULT_MAZE_PARAMS key there, and none may be exempt. (4) Links:
+  NO query = today's daily, the bar stays bare; `?daily` = the same
+  (rewritten bare); `?daily=<n>` (1..today+2) stays in the bar; `&k=v`
+  after it keep the daily only for exempt keys; ANY other query is an
+  ordinary design; K20's `?daily=<n>.<delta>` opens as the design it
+  describes and is no longer written. (5) Records: localStorage
+  `knotmaze.daily`, ONE document `{v: 2, days, prefs}` (v1 reads as v2
+  without attempts) - bump `v` for any shape change, never overwrite a
+  newer one; every access is wrapped and the page must boot and play
+  without storage (then all of it is session-only). The first finish is
+  official, later ones replays; streaks count results whose attempt
+  began on or before their day. Share = a Wordle-style move grid + the
+  `?daily=<n>` link, native sheet on coarse pointers. (6) SAVED ATTEMPTS
+  (K47, game/daily_attempt.ts): an attempt IS its tap list
+  (FabricMazeController.taps; replay() rebuilds path, meters, stats, move
+  log) plus active time, start time + day, and a walk-graph fingerprint
+  (a moved maze refuses the replay). Saved after every move, on hide and
+  pagehide, every 10 s while running and before any rebuild; restored
+  whenever its daily opens, the clock PAUSED at the saved time until the
+  intro ends or the next move. In an unfinished official attempt Reset
+  path backtracks to the entrance (logged, priced, clock running; none
+  in trail mode); in a replay it starts over. A finish drops the
+  attempt; a tab coming into view adopts a newer one another tab saved.
+  PROBES: `__knotDaily()` (taps, saved attempt, prefs), `__knotPlayDaily
+  (n)`, `__knotFabric()` choices' `farDeadEnd` and `routeToDeadEnd
+  (exclude)`; `.claude/probes/K19-K20/` holds probe_daily.mjs (front |
+  resume | leave | reset | finish | tabs | prefs, `:phone` variants, and
+  K20's desktop | phone | nostorage | tz | deadends; each ends in a CHECK
+  summary), run_probes.ps1, scan_dailies.ts (the day scan; `--golden`
+  prints the golden test's fingerprints) and the results. Editing src/
+  under a running probe reloads its page mid-solve. Serve an agent's dev
+  server with a private vite cacheDir (that folder's
   vite.private-cache.config.ts wraps the served checkout's config):
   worktrees share node_modules through junctions, and a plain `vite`
   re-optimized the shared `.vite` deps under other servers.
@@ -1233,12 +1258,17 @@ probe_glreadback compares every mesh's buffers against its CPU mirror).
 Any buffer that ever gets a partial upload must pass explicit sizes on
 every upload (ribbon_mesh `uploadAll`, `copyUploadPending`).
 
-PROBE LORE (2026-10-11, defaults change): **a bare URL is now FABRIC
-mode with music and an animated trace + burn intro.** Probes that want
-knot mode must pass `mf=0`, and probes that need a settled first frame
-without a reveal pass `am=instant` - as legacy links (`?s=1471kin&am=
-instant`, still parsed) or after a compact token (`?1471kin.<blob>&am=
-instant`). COMPACT LINKS: the app rewrites every link to one token, so
+PROBE LORE (2026-10-12, K56): **a bare URL is TODAY'S DAILY** - fabric
+mode with music, the trace + burn intro, the daily's HUD title, and a
+SAVED ATTEMPT that the next bare load restores (a probe profile that
+played once is no longer fresh). Probes that want a fresh default
+design must pass a query (`?am=instant`: a random seed; `?<seed>.c`: a
+given one); `?daily&am=instant` is NOT a daily any more (am is not a
+preference) - daily probes wait out the intro (probe_daily.mjs
+waitReady). Probes that want knot mode pass `mf=0`, and probes that need
+a settled first frame without a reveal pass `am=instant` - as legacy
+links (`?s=1471kin&am=instant`, still parsed) or after a compact token
+(`?1471kin.<blob>&am=instant`). COMPACT LINKS: the app rewrites every link to one token, so
 `location.search` has no keys to read - read settings via
 `window.__knotParams()`. AUDIO IS GATED on a trusted user
 gesture: a probe that expects sound must `page.mouse.click` (or press a

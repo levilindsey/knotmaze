@@ -21,6 +21,12 @@
 // K19 STATS (definitions in game/maze_stats.ts): the distinct junctions and
 // dead-end tips the head has reached, and a per-move log for the share
 // grid. All reset with reset().
+//
+// K47 SAVED ATTEMPTS: `taps` lists every accepted tap's run, in order. The
+// whole solve state is a pure function of that list and the walk graph, so
+// replay(taps) rebuilds it exactly (path, meters, stats, move log) - that
+// is what a saved daily attempt stores. retreatToStart() is a daily's
+// Reset path: backtracks, one run at a time, to the entrance.
 
 import type { WalkGraph } from "../core/walk_graph";
 import type { MoveKind } from "./maze_stats";
@@ -45,6 +51,8 @@ export class FabricMazeController {
   deadEndTips = new Set<string>();
   // One entry per accepted move: g(ood) / d(etour) / b(acktrack).
   moveLog: MoveKind[] = [];
+  // The run of every accepted tap, in order (replay() reproduces the rest).
+  taps: number[] = [];
 
   // Memory-trail mode: advance-only taps (see the header comment). Set at
   // construction and freely togglable from main.ts afterwards.
@@ -64,6 +72,38 @@ export class FabricMazeController {
     this.visitedJunctions = new Set();
     this.deadEndTips = new Set();
     this.moveLog = [];
+    this.taps = [];
+  }
+
+  // Rebuild the solve state from a tap list (a saved attempt): reset, then
+  // apply every tap. False - and a reset controller - when any tap is not
+  // a legal move from where the previous ones led (a different maze, or a
+  // damaged record).
+  replay(taps: readonly number[]): boolean {
+    this.reset();
+    for (const eid of taps) {
+      const r = Number.isInteger(eid) ? this.tapEdge(eid) : "reject";
+      if (r === "reject" || r === "noop") {
+        this.reset();
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Back to the entrance by backtracking every run of the path, newest
+  // first - exactly the taps a player could make (each is logged "b" and
+  // priced on the backtrack meter). Returns the runs retracted. Nothing in
+  // memory-trail mode (no backtracking exists there) or once solved.
+  retreatToStart(): number[] {
+    const out: number[] = [];
+    if (this.trailMode || this.solved) return out;
+    while (this.pathEdges.length > 0) {
+      const eid = this.pathEdges[this.pathEdges.length - 1];
+      if (this.tapEdge(eid) !== "backtrack") break;
+      out.push(eid);
+    }
+    return out;
   }
 
   // Moves made (accepted taps) since the last reset.
@@ -103,12 +143,14 @@ export class FabricMazeController {
       this.pathVertices.pop();
       this.backtrackDist += e.length;
       this.moveLog.push("b");
+      this.taps.push(edgeId);
       return "backtrack";
     }
 
     // A self-loop run returns to the same vertex; everything else crosses.
     const far = e.va === head ? e.vb : e.va;
     this.moveLog.push(this.onShortestRoute(head, e.length, far) ? "g" : "d");
+    this.taps.push(edgeId);
     this.pathEdges.push(edgeId);
     this.pathVertices.push(far);
     this.arrive(far);
