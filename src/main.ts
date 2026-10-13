@@ -62,6 +62,7 @@ import { openDailyStats } from "./ui/daily_stats_view";
 import { shareOrCopy, showToast } from "./ui/share";
 import { buildPanel } from "./ui/tweakpane_panel";
 import type { PanelSettings } from "./ui/tweakpane_panel";
+import { MotionSetting, browserMotionQuery, whenReduced } from "./ui/motion";
 import type { GenerationParams } from "./core/types";
 import { KnotSynth } from "./audio/knot_synth";
 import {
@@ -231,8 +232,9 @@ function createLoader(): { show: () => void; hide: () => void; el: HTMLElement }
     "will-change:transform,opacity}" +
     "#knot-loading svg{animation:kl-spin 3.2s linear infinite;" +
     "will-change:transform;overflow:visible}" +
-    "@media (prefers-reduced-motion:reduce){#knot-loading svg" +
-    "{animation-duration:12s}#knot-loading .kl-b{animation:none}}";
+    // Reduced motion (the Motion setting): a slow spin, no breathing.
+    whenReduced("#knot-loading svg", "animation-duration:12s") +
+    whenReduced("#knot-loading .kl-b", "animation:none");
   document.head.appendChild(style);
   el.innerHTML =
     '<div class="kl-b"><svg width="76" height="76" viewBox="-4 -4 8 8" ' +
@@ -265,6 +267,15 @@ function createLoader(): { show: () => void; hide: () => void; el: HTMLElement }
 const app = new Application();
 
 async function main(): Promise<void> {
+  // THE MOTION SETTING (K53; ui/motion.ts): follow system / full / reduced,
+  // a viewer preference. First, so the root's data-motion attribute (the
+  // stylesheets' reduced variants) is set before anything animates; every
+  // reduced-motion reader below asks motion.reduced.
+  const motion = new MotionSetting(
+    browserStorage(),
+    browserMotionQuery(),
+    document.documentElement
+  );
   await app.init({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -334,18 +345,9 @@ async function main(): Promise<void> {
     showMazeStats: mazeStatsShown,
     finishIndicator: finishIndicatorShown,
     tapToPan,
+    motion: motion.pref,
   };
   const synth = new KnotSynth();
-  // prefers-reduced-motion (live): render-only plucks drop the strobe ghost
-  // and the attack, swing smaller and settle sooner (WCAG 2.3.3).
-  const motionQuery =
-    typeof window.matchMedia === "function"
-      ? window.matchMedia("(prefers-reduced-motion: reduce)")
-      : null;
-  let reducedMotion = motionQuery?.matches ?? false;
-  motionQuery?.addEventListener?.("change", (e) => {
-    reducedMotion = e.matches;
-  });
 
   // SHADER BACKGROUND (K21): a screen-fixed layer drawn FIRST, beneath the
   // world root (crossing gaps show it). Phones get the cheaper profile
@@ -1224,6 +1226,9 @@ async function main(): Promise<void> {
         // Storage unavailable: the choice just doesn't persist.
       }
     },
+    // Stored by the setting itself; the next frame's readers and the
+    // stylesheets (the root attribute) follow at once.
+    onMotionChange: (pref) => motion.setPref(pref),
     onDebugToggle: (visible) => {
       if (debug) debug.container.visible = visible;
     },
@@ -1502,7 +1507,7 @@ async function main(): Promise<void> {
     );
     camTween = {
       t: 0,
-      dur: reducedMotion ? 0 : 0.6,
+      dur: motion.reduced ? 0 : 0.6,
       s0,
       x0: (w / 2 - root.position.x) / s0,
       y0: (h / 2 - root.position.y) / s0,
@@ -2683,7 +2688,7 @@ async function main(): Promise<void> {
     return params.mazeFabric && fabric !== null;
   };
   const backgroundTick = (dt: number): void => {
-    background.reducedMotion = reducedMotion;
+    background.reducedMotion = motion.reduced;
     background.tick(dt, sceneAnimating());
   };
 
@@ -2744,7 +2749,10 @@ async function main(): Promise<void> {
       renderer!.plucks.size = Math.max(0, Math.min(3, params.pluckSize));
       renderer!.plucks.ghost = Math.max(0, Math.min(1, params.pluckGhost));
       renderer!.plucks.sustain = params.sustain;
-      renderer!.plucks.reducedMotion = reducedMotion;
+      // Reduced motion (the Motion setting, live): render-only plucks drop
+      // the strobe ghost and the attack, swing smaller and settle sooner
+      // (WCAG 2.3.3).
+      renderer!.plucks.reducedMotion = motion.reduced;
       // Applies to knot mode too: the erase grids re-read it in the next
       // renderer.update(), and the slider's onSlackChange wakes the sim.
       renderer!.fadeLength = params.fadeLength;
@@ -3309,6 +3317,14 @@ async function main(): Promise<void> {
     writeParams(params);
     return background.id;
   };
+  // THE MOTION SETTING probe: the choice, the OS's answer, the result and
+  // the root attribute the stylesheets read.
+  (window as unknown as Record<string, unknown>).__knotMotion = () => ({
+    pref: motion.pref,
+    system: motion.system,
+    reduced: motion.reduced,
+    attr: document.documentElement.dataset.motion ?? null,
+  });
   // The "Replay settle" button (probe scripting).
   (window as unknown as Record<string, unknown>).__knotReplay = () => {
     replaySettle();

@@ -89,6 +89,7 @@ src/
     share.ts              # K20: native share sheet / clipboard + toast
     mode_badge.ts         # K73: "Free play" / "Replay · not scored" pill
     offscreen_indicators.ts # K73: edge indicators for off-screen targets
+    motion.ts             # K53/K79: the Motion setting (viewer pref, data-motion)
   util/
     random.ts             # Seeded RNG
     det_math.ts           # K108: engine-exact math for generation (hypot2)
@@ -130,7 +131,8 @@ test/
     daily_link.test.ts (frozen definition, seeds, golden dailies, links,
     the front door, the exempt set, prefs)
     mode_badge.test.ts, offscreen_indicators.test.ts (edge layout,
-    chrome avoidance)
+    chrome avoidance), motion.test.ts (prefs, live follow, storage
+    failures)
   quiescence.regression.test.ts  # Guards the friction dissipation channel
   sweep.manual.test.ts           # Skip-gated; run via SWEEP=1
 ```

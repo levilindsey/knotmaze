@@ -9,6 +9,7 @@
 // the maze underneath still land); only the title takes clicks.
 
 import { efficiencyPercent, formatDuration } from "../game/maze_stats";
+import { whenReduced } from "./motion";
 
 export interface HudSnapshot {
   // Title row text (the daily on screen), or null for none.
@@ -155,7 +156,8 @@ export function ensureHudStyles(): void {
     ".km-mode.km-replay:hover{background:#372d19eb}" +
     ".km-mode:focus-visible{outline:2px solid #8fe6ff;outline-offset:2px}" +
     "@keyframes km-mode-in{from{opacity:0}to{opacity:1}}" +
-    "@media (prefers-reduced-motion:reduce){.km-mode{animation:none}}" +
+    // Static under reduced motion (the Motion setting, ui/motion.ts).
+    whenReduced(".km-mode", "animation:none") +
     "@media (pointer:coarse){.km-hud{font-size:13px}" +
     ".km-hud .km-title{font-size:13px}.km-btn{min-height:40px}" +
     // Touch: the hamburger's full height, a finger-sized target.

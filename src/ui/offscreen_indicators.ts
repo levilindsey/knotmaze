@@ -38,6 +38,8 @@
 //   earlier in a frame are boxes to avoid for later ones. The chevron
 //   always aims at the target from wherever its disc ends up.
 
+import { whenReduced } from "./motion";
+
 export interface Rect {
   left: number;
   top: number;
@@ -277,11 +279,12 @@ function ensureStyles(): void {
     "animation:km-ind-breathe 2.6s ease-in-out infinite;" +
     "filter:drop-shadow(0 1px 3px #000a)}" +
     ".km-ind svg{display:block;width:100%;height:100%;overflow:visible}" +
-    // At most a 2.5% breathe; static under reduced motion.
+    // At most a 2.5% breathe; static under reduced motion (the Motion
+    // setting, ui/motion.ts).
     "@keyframes km-ind-breathe{0%,100%{transform:scale(1)}" +
     "50%{transform:scale(1.025)}}" +
-    "@media (prefers-reduced-motion:reduce){.km-ind,.km-ind.km-on" +
-    "{transition:none}.km-ind .km-ind-b{animation:none}}";
+    whenReduced(".km-ind,.km-ind.km-on", "transition:none") +
+    whenReduced(".km-ind .km-ind-b", "animation:none");
   document.head.appendChild(style);
 }
 
