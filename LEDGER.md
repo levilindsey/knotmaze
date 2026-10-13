@@ -7,8 +7,10 @@ their agents keep it current (the convention lives in claude-config,
 proposed, or left over. Close it by moving it to **Done** with the commit
 that resolved it. The daily transcript audit reconciles against this file.
 
-History, measurements and lore stay in `CLAUDE.md` and the commit
-messages; design documents are in `docs/design/`. IDs are stable (`K<n>`)
+Binding rules stay in `CLAUDE.md`; history and measurements live in
+`docs/history.md` and the commit messages, subsystem lore in the
+path-scoped `.claude/rules/` files, and design documents in
+`docs/design/`. IDs are stable (`K<n>`)
 and never reused.
 
 ## Waiting on Levi
@@ -82,29 +84,15 @@ and never reused.
 
 ## In progress
 
-- **K45** · Slim CLAUDE.md (2,250 lines, about 40k tokens, loaded into
-  every session and agent turn) to about 400 lines under the
-  context-budget rule (claude-config `rules/context-budget.md`): history
-  to `docs/history.md`, lore to path-scoped `.claude/rules/<area>.md`
-  (tracked while the rest of `.claude/` stays untracked), nothing lost.
-  - owner: the K45 agent of session d8031183, started 2026-10-12 21:20.
-  - branch: `worktree-agent-a2c066adcc676565b`
-    (`.claude/worktrees/agent-a2c066adcc676565b`), from 0373528; last
-    commit: none yet.
-  - evidence: `.claude/probes/K45/`.
-  - next: scripted verbatim moves, then the sentence-level loss check,
-    the context-budget measure, a rules-load check and vitest.
-  - brief: `docs/design/K45.md`.
-
 ## Next, in order
 
 Overnight order, 2026-10-12 (Levi: proceed through the night with the
 remaining shader work). Every stage merges only after desktop
 verification AND the phone gate (K10); the phone stays on its charger,
 awake, over Tailscale.
-1. K45 (in progress): slim CLAUDE.md while no agent is editing it.
-2. K8 (G3) and K23 (G2.4 GPU particles, GPU fog) in parallel.
-3. K9 (G4) and K42 (per-pixel overlap winner) in parallel.
+1. K8 (G3) and K23 (G2.4 GPU particles, GPU fog) in parallel, one
+   agent per stage (K8: G3-0 + G3-1 first).
+2. K9 (G4) and K42 (per-pixel overlap winner) in parallel.
 
 K5-K7 (split, frame loop, worker) follow.
 
@@ -167,7 +155,7 @@ K5-K7 (split, frame loop, worker) follow.
   seeds tested across 0.25-0.70. They look broken; rescale, relabel or
   hide them. `junctionSpacing` is the real density knob. (K46 finding.)
 - **K13** · Post-violent-play loud attractor at fat params (the open P3
-  problem; fingerprint in CLAUDE.md Follow-ups).
+  problem; fingerprint in `.claude/rules/physics.md`).
 - **K14** · Latent seam-window wraps on open chains
   (applyTransversality's window, the slide/project windows,
   updatePassCover's +-12 slots): agent-measured, unfixed.
@@ -194,7 +182,7 @@ K5-K7 (split, frame loop, worker) follow.
   0.56-0.78 thread widths of eye hole - boxed in by a fused joint on one
   side and the 1.6 corridor floor on the other, they keep only lattice
   material. A stronger eye pressure (2.6) doesn't lift them; 2.8 left 2/8
-  fat seeds awake. See CLAUDE.md "KINK EYES". Since K41's chord law they
+  fat seeds awake. See "KINK EYES" in `.claude/rules/physics.md`. Since K41's chord law they
   rest a little smaller, because the flat law had pried their crossings
   open: five at 0.64-0.74 at tw .64, and X304 (seed 3zz2a1) at 0.78-0.80
   at the default width (was 0.83-0.86). K49 is the size decision.
@@ -309,10 +297,33 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   zoom) instead of raising the 64-texel width for everyone. About 4x the
   default zoom puts a cr 3 median strip step near 1.5 CSS px. (K4 agent
   idea.)
+- **K70** · A more dramatic hero settle (P2 polish): the splines round
+  the lattice corners from the first frame, so the settle reads as a
+  gentle tightening, not zigzags turning into curves. Blend the sampled
+  positions toward the control polyline while settle progress is low
+  (`docs/history.md`, Follow-ups).
+- **K71** · Wobbly threads at slack ~0 (P2 polish): small waviness along
+  runs and rope-tight twist chains at the taut end. Candidate knobs:
+  constraint iterations, pullOnly bending, repulsion/structural balance
+  (`docs/history.md`, Follow-ups).
+- **K72** · Twist-eye openness as a user param instead of a constant
+  (MIN_PASS_SEPARATION is the main compactness lever; P3.17,
+  `docs/history.md`).
 
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K45** · CLAUDE.md slimmed from 2,250 lines (about 39k tokens) to
+  about 240 (about 5k). History moved verbatim to `docs/history.md`, and
+  subsystem lore to six path-scoped `.claude/rules/` files (physics,
+  render, render-gaps, gameplay, generation, probes; the largest about
+  7.6k tokens), which load only when matching files are touched.
+  `.claude/rules/` is tracked; the rest of `.claude/` is ignored. Done in
+  ca6ca1a and f9859a9 (2026-10-12).
+  - 717 of 720 old sentences sit in exactly one new file; the other 3
+    are pointer rewrites (`.claude/probes/K45/verify.py`).
+  - Rules load checked in a `claude -p` transcript; vitest 315.
 
 - **K4** · G2: per-sample color work runs in the shaders. Section colors,
   the reveal and its FX, and gameplay paint are evaluated per pixel from
@@ -394,7 +405,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   cover) (2026-10-11). User URL: overcut 1098 -> 1 px and naked 510 -> 5
   (asleep, df373b5), draw calls 419 -> 47, update() 12.0 -> 5.7 ms; GPU
   0.79 -> 1.78 ms/frame at 3200x1800; phone defaults 39 -> 60 fps.
-  History: CLAUDE.md "PER-PIXEL CROSSING GAPS".
+  History: "PER-PIXEL CROSSING GAPS" in `.claude/rules/render-gaps.md`.
 
 - **K31** · Levi's phone collapsed crossing 305 (`?k88dtb.oHFEfg`) to
   3.37 ctrl. Re-checked on the phone (Pixel 11, USB) with the kink fix
