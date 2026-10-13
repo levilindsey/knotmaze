@@ -138,15 +138,28 @@ describe("G2.2 section mirror (knotSection)", () => {
           for (let c = 0; c < chains.length; c++) {
             const kc = kChain(D, c);
             const top = chains[c].closed ? chains[c].len : chains[c].len - 1;
+            // One assertion per chain on the worst point: 96k points x 3
+            // channels of expect() overhead ran this test into the 5 s
+            // timeout on CI's runner.
+            let worst = 0;
+            let worstCtrl = -1;
             for (let i = 0; i < 200; i++) {
               const ctrl = r() * top;
               const slot = Math.min(chains[c].len - 1, Math.floor(ctrl));
               const want = evalRunSection(sr.runs[sr.slotRun[c][slot]], ctrl, chains[c].len, chains[c].closed, dist, HUE);
               const got = [0, 0, 0];
               knotSection(D, U, kc, ctrl, got);
-              // f32 table storage: ~1e-6.
-              for (let k = 0; k < 3; k++) expect(Math.abs(got[k] - want[k])).toBeLessThan(2e-5);
+              for (let k = 0; k < 3; k++) {
+                const err = Math.abs(got[k] - want[k]);
+                // A NaN sticks (no later err compares greater), and fails.
+                if (Number.isNaN(err) || err > worst) {
+                  worst = err;
+                  worstCtrl = ctrl;
+                }
+              }
             }
+            // f32 table storage: ~1e-6.
+            expect(worst, `trial ${trial}, ${scheme}, blend ${dist}, chain ${c}, ctrl ${worstCtrl}`).toBeLessThan(2e-5);
           }
         }
       }
