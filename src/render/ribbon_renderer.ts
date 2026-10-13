@@ -31,8 +31,13 @@ import {
 } from "pixi.js";
 import { createNoise2D, createNoise3D } from "simplex-noise";
 import type { ParticleSystem, CrossingPass } from "../physics/particle_system";
-import type { VSegment, ColorScheme } from "../core/section_colors";
-import { gamutRgb } from "../core/section_colors";
+import type { ColorScheme, SectionRuns } from "../core/section_colors";
+import {
+  blendEase,
+  constantSectionRuns,
+  gamutConfig,
+  gamutRgb,
+} from "../core/section_colors";
 import type { AppearFxMode, RevealTip } from "../core/reveal_plan";
 import type { RevealAnimator } from "./reveal";
 import { AppearFxSystem } from "./appear_fx";
@@ -49,6 +54,7 @@ import {
   PAINT_FRAG_DECL,
   PAINT_FRAG_LIB,
   PAINT_FX_GLSL,
+  PAINT_SECTION_GLSL,
   PAINT_VERT_DECL,
   PAINT_VERT_MAIN,
 } from "./paint_glsl";
@@ -67,6 +73,7 @@ import {
   kChain,
   kCtrlNear,
   kCtrlOfArc,
+  kCtrlOfArcNear,
   kFxAge,
   kFxColor,
   kFxDoneWall,
@@ -75,9 +82,11 @@ import {
   kRevealMaskAt,
   kRevealTime,
   kSampleArc,
+  kSectionAtArc,
   kShadeFx,
   kSwell,
   kWall,
+  knotSection,
   smoothInv,
   sourcePieces,
   type KChain,
@@ -171,8 +180,9 @@ export interface PaintCap {
 // Each texel encodes the gameplay paint at that U as an (accent color,
 // mix weight) pair: the section shader computes
 //   mix(sectionRGB, accent.rgb, accent.a)
-// so the SECTION color is per-vertex (the aColor attribute - arbitrary
-// RGB pairs blend directly along threads and through junctions) while the
+// so the SECTION color is per-vertex (vSection: since G2.2 the vertex
+// shader's knotSection at the vertex's exact ctrl - arbitrary RGB pairs
+// blend directly along threads and through junctions) while the
 // gameplay paint stays a 1D U coordinate exactly as before. Encoding per
 // family, chosen so the mono case reproduces the old 2D palette texel for
 // texel (mix is affine in the weight, so linear filtering commutes):
@@ -287,13 +297,10 @@ const FILLET_GAP_PAD = 1.0;
 const FILLET_GAP_MIN_FRAC = 0.3;
 // The junction field itself (profile grid, blend band, fill-joint radii)
 // is configured in junction_field.ts and evaluated PER PIXEL on the GPU.
-// SECTION CACHE DRIFT: the per-sample RGB cache maps sample -> ctrl through
-// the arc table at BAKE time, but lookups (and the joint itself) live at
-// the CURRENT table. Relaxation shifts a chain's ctrl/arc distribution by
-// ~1 ctrl near joints - a whole segments junction ramp (SEG_RAMP_CTRL 1) -
-// so hosts stopped converging at their joints (29/41 at the repro). Re-bake
-// a chain once its table drifts this far (ctrl units).
-const CACHE_REBAKE_CTRL = 0.1;
+// (SECTION CACHE DRIFT is gone since G2.2: the vertex shader evaluates the
+// section at each vertex's ctrl through the CURRENT arc table every frame,
+// so a joint always converges - the old per-sample cache needed re-bakes
+// past 0.1 ctrl of drift, ~30 per second under flow.)
 // Layer vote: an under-near arm only pins its joint to the punchable
 // bottom layer when its gap starts within this many fillHalfs (see
 // rebuildFillets armDives).
@@ -491,8 +498,10 @@ function accentTexture(gold: number = PATH_GOLD): Texture {
 // The section shader (every ribbon, both modes; the app forces WebGL, so a
 // GL program suffices). Attribute layout: aPosition/aUV as pixi's default
 // mesh program (aUV.x = the paint U, aUV.y = the side across the ribbon),
-// aColor = the per-vertex section RGB, plus the gap (G1) and paint (G2)
-// attributes. Transforms and alpha mirror the default mesh program's
+// plus the gap (G1) and paint (G2) attributes; the section RGB is computed
+// HERE per vertex (paint_glsl knotSection at the vertex's ctrl through this
+// frame's arc table - no per-sample cache, no drift re-bake, G2.2).
+// Transforms and alpha mirror the default mesh program's
 // skeleton: the mesh pipe force-assigns the global (uProjectionMatrix,
 // uWorldTransformMatrix, uWorldColorAlpha) and local (uTransformMatrix,
 // uColor) uniform groups to EVERY mesh shader, custom ones included, and
@@ -503,7 +512,6 @@ precision highp int;
 
 in vec2 aPosition;
 in vec2 aUV;
-in vec3 aColor;
 ${GAP_VERT_DECL}
 ${PAINT_VERT_DECL}
 out vec2 vUV;
@@ -517,15 +525,16 @@ uniform mat3 uTransformMatrix;
 uniform vec4 uColor;
 ${KNOT_UNIFORMS_GLSL}
 ${PAINT_DATA_GLSL}
+${PAINT_SECTION_GLSL}
 
 void main(void) {
   mat3 mvp = uProjectionMatrix * uWorldTransformMatrix * uTransformMatrix;
   gl_Position = vec4((mvp * vec3(aPosition, 1.0)).xy, 0.0, 1.0);
   vUV = aUV;
-  vSection = aColor;
   vColor = uColor * uWorldColorAlpha;
 ${GAP_VERT_MAIN}
 ${PAINT_VERT_MAIN}
+  vSection = kVertSection;
 }
 `;
 // APPEARANCE FX, PER PIXEL (G2.1; paint_glsl.ts kFxColor): each fragment
@@ -1002,15 +1011,14 @@ export class RibbonRenderer {
   paintDebug = 0;
   private probeMesh: ProbeTriMesh | null = null;
   private filletMesh: TriFanMesh | null = null;
-  private sectionSegs: VSegment[][] = [];
+  // G2.2 SECTION RUNS (core/section_colors; evaluated by the vertex shader):
+  // the noise scheme's field, junctionBlend (lattice units; a uniform), and
+  // every chain's control positions at construction - the noise scheme's
+  // coordinates are read there, so its colors stick to the material
+  // (deterministic, whatever the pre-sim and flow do).
   private sectionNoise: ((x: number, y: number) => number) | null = null;
-  private rgbCache: Float32Array[] = [];
-  private rgbCacheReady = false;
-  // Per chain: each control's arc FRACTION when its cache was baked (null
-  // for constant / spatial-noise caches) - see CACHE_REBAKE_CTRL.
-  private bakeFrac: (Float32Array | null)[] = [];
-  // Chains re-baked by update() whose colors the next paint tick uploads.
-  private recolorPending = new Set<number>();
+  private junctionBlend = 0;
+  private initialControls: Float32Array[] = [];
   // Junction arm -> next joint ctrl along it (see armNextJointCtrl).
   private nextJointCache = new Map<string, number | null>();
   // Junction-field arm profiles, pooled across fillet rebuilds (fixed
@@ -1040,11 +1048,14 @@ export class RibbonRenderer {
     // The joint's record texel index (-1: no field) - what a fan's aRec
     // carries.
     record: (ji: number) => number;
+    // The joint's gate texel J1 = (tOn, tLast) (reveal-relative wall s).
+    gate: (ji: number) => [number, number] | null;
+    // The arms the last at() sampled: [chain, arc, seed] per arm (probes).
+    lastArms: () => number[];
   } | null = null;
+  private fieldLastArm: number[] = [];
   // Default section color (the gamut midpoint = the seed-hue base color).
   private baseRgb = new Float32Array(3);
-  // Scratch triplet for point color lookups (colorAtArc consumers).
-  private rgbScratch = new Float32Array(3);
   // REVEAL state (Stage 22): the animator, the per-chain width masks
   // (null = fully revealed - the zero-cost resting state), the frontier
   // tips cached once per paint tick for the glow, and the knot-mode tip
@@ -1135,15 +1146,18 @@ export class RibbonRenderer {
       fill.mesh.texture = accent;
       fill.mesh.shader = sectionShader();
       this.knotRgb.push(this.knotChainRgb(i));
-      fill.writePaint(
-        new Float32Array(count).fill(U_BASE),
-        style.paletteMode ? this.baseRgb : this.knotRgb[i]
-      );
+      fill.writePaint(new Float32Array(count).fill(U_BASE));
       this.fills.push(fill);
       baseLayer.addChild(fill.mesh);
+      // The material's control positions at construction (the renderer is
+      // built before the first physics step: these are ps.initial).
+      const ic = new Float32Array(chain.length * 2);
+      for (let k = 0; k < chain.length; k++) {
+        ic[k * 2] = ps.positions[chain[k] * 2];
+        ic[k * 2 + 1] = ps.positions[chain[k] * 2 + 1];
+      }
+      this.initialControls.push(ic);
     });
-    this.rgbCache = ps.chains.map(() => this.baseRgb);
-    this.sectionSegs = ps.chains.map(() => []);
     this.revealMask = ps.chains.map(() => null);
     // GPU junction field: every chain's samples get a contiguous texel
     // range in the shared paint texture (filled by writeFillPaint).
@@ -1172,6 +1186,16 @@ export class RibbonRenderer {
     U.uKFx[3] = 0;
     U.uKFx2[2] = 0;
     U.uKInk[1] = 0;
+    // Section colors: a constant default until the caller installs its
+    // scheme's runs (knot mode: each strand's tint, for good).
+    this.installRuns(null);
+    // Every chain's paint starts at the base family (the junction field
+    // reads it; painted chains are rewritten by the paint tick).
+    if (style.paletteMode) {
+      for (let i = 0; i < ps.chains.length; i++) {
+        this.writeFillPaint(i, new Float32Array(this.fills[i].sampleCount).fill(U_BASE));
+      }
+    }
 
     // Neighboring crossing passes along each thread come from the particle
     // system; passes slide live, so we hold references and read their
@@ -1292,8 +1316,8 @@ export class RibbonRenderer {
   }
 
   // Knot-mode chain color: the historic per-strand tint (hue by hueGroup
-  // slot, golden-angle spaced) as 0..1 RGB for the aColor path - the same
-  // bytes the tint multiplied into a white texture.
+  // slot, golden-angle spaced) as 0..1 RGB for a constant section run - the
+  // same bytes the tint multiplied into a white texture.
   private knotChainRgb(i: number): Float32Array {
     const slot = this.style.hueGroup?.[i] ?? i;
     const hex = hslToHex(
@@ -2122,8 +2146,11 @@ export class RibbonRenderer {
     chain: (ch: number) => ReturnType<typeof kChain>;
     ctrlOfArc: (ch: number, arc: number) => number;
     ctrlNear: (ch: number, arc: number, approx: number) => number;
-    // The section color at an arc (the ribbon's own Gouraud).
+    // The section color at an arc (the ribbon's own Gouraud), exactly at
+    // the arc's ctrl (what a probe vertex there evaluates), and at a ctrl.
     sectionAt: (ch: number, arc: number) => number[];
+    sectionExact: (ch: number, arc: number) => number[];
+    sectionAtCtrl: (ch: number, ctrl: number) => number[];
     // The section shader's color at a material point before the gameplay
     // accent: [r, g, b, alpha] (FX on the given base color).
     shadeFx: (ch: number, arc: number, side: number, base: number[]) => number[];
@@ -2142,6 +2169,15 @@ export class RibbonRenderer {
         kCtrlNear(data, kChain(data, ch), arc, approx),
       sectionAt: (ch, arc) => {
         this.sectionAtArc(ch, arc, scratch);
+        return [scratch[0], scratch[1], scratch[2]];
+      },
+      sectionExact: (ch, arc) => {
+        const c = kChain(data, ch);
+        knotSection(data, U, c, kCtrlOfArc(data, c, arc), scratch);
+        return [scratch[0], scratch[1], scratch[2]];
+      },
+      sectionAtCtrl: (ch, ctrl) => {
+        knotSection(data, U, kChain(data, ch), ctrl, scratch);
         return [scratch[0], scratch[1], scratch[2]];
       },
       shadeFx: (ch, arc, side, base) => {
@@ -2376,15 +2412,6 @@ export class RibbonRenderer {
         this.chainFxDone(i)
       );
       this.kcv[i] = kChain(this.kd, i, this.kcv[i]);
-      if (this.style.paletteMode && !this.rgbCacheReady) {
-        this.buildRgbCacheFor(i, samples);
-      } else if (
-        this.style.paletteMode &&
-        this.cacheDrift(i, samples) > CACHE_REBAKE_CTRL
-      ) {
-        this.buildRgbCacheFor(i, samples);
-        this.recolorPending.add(i);
-      }
       const width = this.widthMulFor(i, samples);
       this.widthLast[i] = width;
       this.fills[i].update(
@@ -2395,23 +2422,6 @@ export class RibbonRenderer {
         this.withPluckCollapse(i, samples.count, width)
       );
     });
-    if (this.style.paletteMode && !this.rgbCacheReady) {
-      this.rgbCacheReady = true;
-      // One full paint write so every chain wears its section colors;
-      // chains with gameplay paint get rewritten by the next paint tick.
-      this.ps.chains.forEach((_, i) => {
-        const count = this.fills[i].sampleCount;
-        let us = this.uScratch.get(i);
-        if (!us || us.length < count) {
-          us = new Float32Array(count);
-          this.uScratch.set(i, us);
-        }
-        us.fill(U_BASE, 0, count);
-        this.writeFillPaint(i, us, this.rgbCache[i]);
-      });
-      this.chainRev.clear();
-    }
-
     const fillHalf = this.style.threadWidth / 2;
     const gap = (this.style.casingWidth - this.style.threadWidth) / 2;
 
@@ -3394,22 +3404,79 @@ export class RibbonRenderer {
     }
   }
 
-  // Install the section color field (see core/section_colors). The noise
-  // scheme carries no segments - it is evaluated spatially per sample and
-  // converted to RGB through the shared gamut curve here.
-  setSectionField(
-    segs: VSegment[][],
+  // Install a scheme's section runs (core/section_colors buildSectionRuns)
+  // and junctionBlend (lattice units - a uniform, no table change). The
+  // noise scheme reads a seeded simplex field at each control's initial
+  // position (its coordinate rides the material: CTRLIDX.z).
+  setSectionRuns(
+    sr: SectionRuns,
     scheme: ColorScheme,
-    seed: number
+    seed: number,
+    blendDist = 0
   ): void {
-    this.sectionSegs = segs;
     if (scheme === "noise") {
       const rng = new SeededRNG((seed ^ 0x5ec7c0) >>> 0);
       this.sectionNoise = createNoise2D(() => rng.next());
     } else {
       this.sectionNoise = null;
     }
-    this.rgbCacheReady = false;
+    this.junctionBlend = blendDist;
+    this.installRuns(sr);
+  }
+
+  // Write a run table (null = the constant default: palette mode's gamut
+  // midpoint, or knot mode's strand tints - knot mode always uses those).
+  // Event time; only changed texels upload (an identical rebuild - a
+  // junctionBlend drag - sends nothing), then the uniforms.
+  private installRuns(sr: SectionRuns | null): void {
+    const chains = this.ps.chains.map((c, i) => ({
+      len: c.length,
+      closed: this.ps.chainBreakAfter[i] < 0,
+    }));
+    let runs: SectionRuns;
+    if (!this.style.paletteMode) {
+      runs = constantSectionRuns(chains, (i) => [
+        this.knotRgb[i][0],
+        this.knotRgb[i][1],
+        this.knotRgb[i][2],
+      ]);
+    } else {
+      runs =
+        sr ??
+        constantSectionRuns(chains, () => [
+          this.baseRgb[0],
+          this.baseRgb[1],
+          this.baseRgb[2],
+        ]);
+    }
+    let noise: Float32Array[] | null = null;
+    if (runs.noise && this.sectionNoise) {
+      noise = this.initialControls.map((ic) => {
+        const z = new Float32Array(ic.length / 2);
+        for (let k = 0; k < z.length; k++) {
+          z[k] = this.noiseV(ic[k * 2], ic[k * 2 + 1]);
+        }
+        return z;
+      });
+    }
+    this.lastRunUpload = this.paintScene.setRuns(runs.runs, runs.slotRun, noise);
+    this.syncSectionUniforms();
+  }
+
+  // Texels the last run install uploaded (probes: a jbl drag sends 0).
+  lastRunUpload = 0;
+
+  // uKGamut (the live gamut: baseHue + gamutConfig) and uKSect (the
+  // junctionBlend distance and its ease).
+  private syncSectionUniforms(): void {
+    const U = knotUniformValues();
+    const [arc, sat, light] = gamutConfig();
+    U.uKGamut[0] = this.style.baseHue;
+    U.uKGamut[1] = arc;
+    U.uKGamut[2] = sat;
+    U.uKGamut[3] = light;
+    U.uKSect[0] = Math.max(0, this.junctionBlend);
+    U.uKSect[1] = blendEase(this.junctionBlend);
   }
 
   // LIVE RECOLOR (the Look panel's color controls): swap every color
@@ -3422,9 +3489,10 @@ export class RibbonRenderer {
     baseHue: number,
     pathColor: number,
     hueGroup: number[] | undefined,
-    segs: VSegment[][],
+    sr: SectionRuns,
     scheme: ColorScheme,
-    seed: number
+    seed: number,
+    blendDist = 0
   ): void {
     this.style.baseHue = baseHue;
     this.style.hueGroup = hueGroup;
@@ -3437,72 +3505,18 @@ export class RibbonRenderer {
         bindAccent(tex);
         for (const f of this.fills) f.mesh.texture = tex;
       }
-      // Constant-color chains hand writePaint the SAME (mutated) baseRgb.
-      for (const f of this.fills) f.invalidateColors();
-      this.setSectionField(segs, scheme, seed);
-      // Gameplay-painted chains repaint on the next paint tick.
-      this.chainRev.clear();
+      // Sections are evaluated per vertex from the run table + uniforms:
+      // nothing to repaint (the gameplay U does not depend on them).
+      this.setSectionRuns(sr, scheme, seed, blendDist);
     } else {
-      this.fills.forEach((fill, i) => {
+      this.fills.forEach((_, i) => {
         this.knotRgb[i] = this.knotChainRgb(i);
-        fill.writePaint(
-          new Float32Array(fill.sampleCount).fill(U_BASE),
-          this.knotRgb[i]
-        );
       });
+      this.installRuns(null);
     }
   }
 
-  // Section color at a chain ctrl (piecewise-linear RGB segments, or the
-  // spatial noise field), written into out[0..2].
-  private sectionRgbAt(chain: number, ctrl: number, out: Float32Array): void {
-    if (this.sectionNoise) {
-      const len = this.ps.chains[chain].length;
-      this.ps.pointOnChain(
-        chain,
-        ((ctrl % len) + len) % len,
-        this.sampleScratch,
-        0
-      );
-      out.set(
-        gamutRgb(
-          this.style.baseHue,
-          this.noiseV(this.sampleScratch[0], this.sampleScratch[1])
-        )
-      );
-      return;
-    }
-    const segs = this.sectionSegs[chain];
-    if (!segs || segs.length === 0) {
-      out.set(this.baseRgb);
-      return;
-    }
-    const len = this.ps.chains[chain].length;
-    for (const c of [ctrl, ctrl + len]) {
-      // Segments are sorted, contiguous runs, so c1 rises with c0: the
-      // first segment whose c1 reaches c is the only candidate (a binary
-      // search - eased junctionBlend ramps multiply the segment count).
-      let lo = 0;
-      let hi = segs.length;
-      while (lo < hi) {
-        const mid = (lo + hi) >> 1;
-        if (segs[mid].c1 + 1e-6 < c) lo = mid + 1;
-        else hi = mid;
-      }
-      const s = segs[lo];
-      if (s && c >= s.c0 - 1e-6) {
-        const t = s.c1 > s.c0 ? (c - s.c0) / (s.c1 - s.c0) : 0;
-        out[0] = s.rgb0[0] + (s.rgb1[0] - s.rgb0[0]) * t;
-        out[1] = s.rgb0[1] + (s.rgb1[1] - s.rgb0[1]) * t;
-        out[2] = s.rgb0[2] + (s.rgb1[2] - s.rgb0[2]) * t;
-        return;
-      }
-    }
-    out[0] = segs[0].rgb0[0];
-    out[1] = segs[0].rgb0[1];
-    out[2] = segs[0].rgb0[2];
-  }
-
+  // The noise scheme's gamut coordinate at a world point.
   private noiseV(x: number, y: number): number {
     const n = this.sectionNoise!(x * 0.16, y * 0.16);
     return Math.max(0, Math.min(1, 0.5 + 0.62 * n));
@@ -3535,82 +3549,6 @@ export class RibbonRenderer {
     return best;
   }
 
-  // How far (ctrl units, ~) this chain's ctrl -> arc-fraction table has
-  // drifted since its cache was baked. The cache maps sample k -> ctrl
-  // through the BAKE-time table, while lookups and the joints themselves
-  // live at the current one.
-  private cacheDrift(chain: number, samples: SplineSamples): number {
-    const snap = this.bakeFrac[chain];
-    const cal = samples.controlArcLengths;
-    const total = samples.totalLength;
-    if (!snap || snap.length !== cal.length || total <= 0) return 0;
-    let m = 0;
-    for (let k = 0; k < cal.length; k++) {
-      const d = Math.abs(cal[k] / total - snap[k]);
-      if (d > m) m = d;
-    }
-    return m * cal.length;
-  }
-
-  // Bake the per-sample RGB cache for one chain. Sample k sits at a fixed
-  // arc FRACTION (uniform resampling), but the ctrl at that fraction moves
-  // as the chain deforms - so the bake records its table (bakeFrac) and
-  // update() re-bakes once it drifts (CACHE_REBAKE_CTRL). Constant chains
-  // store one triplet.
-  private buildRgbCacheFor(chain: number, samples: SplineSamples): void {
-    const count = samples.count;
-    this.bakeFrac[chain] = null;
-    if (this.sectionNoise) {
-      const rgbs = new Float32Array(count * 3);
-      for (let k = 0; k < count; k++) {
-        const rgb = gamutRgb(
-          this.style.baseHue,
-          this.noiseV(samples.positions[k * 2], samples.positions[k * 2 + 1])
-        );
-        rgbs[k * 3] = rgb[0];
-        rgbs[k * 3 + 1] = rgb[1];
-        rgbs[k * 3 + 2] = rgb[2];
-      }
-      this.rgbCache[chain] = rgbs;
-      return;
-    }
-    const segs = this.sectionSegs[chain];
-    if (!segs || segs.length === 0) {
-      this.rgbCache[chain] = this.baseRgb;
-      return;
-    }
-    if (
-      segs.length === 1 &&
-      Math.abs(segs[0].rgb0[0] - segs[0].rgb1[0]) < 1e-6 &&
-      Math.abs(segs[0].rgb0[1] - segs[0].rgb1[1]) < 1e-6 &&
-      Math.abs(segs[0].rgb0[2] - segs[0].rgb1[2]) < 1e-6
-    ) {
-      this.rgbCache[chain] = new Float32Array(segs[0].rgb0);
-      return;
-    }
-    const closed = this.ps.chainBreakAfter[chain] < 0;
-    const cal = samples.controlArcLengths;
-    const n = cal.length;
-    const total = samples.totalLength;
-    const rgbs = new Float32Array(count * 3);
-    const tmp = this.rgbScratch;
-    let slot = 0;
-    for (let k = 0; k < count; k++) {
-      const a = closed ? (k / count) * total : (k / (count - 1)) * total;
-      while (slot < n - 1 && cal[slot + 1] <= a) slot++;
-      const a0 = cal[slot];
-      const a1 = slot < n - 1 ? cal[slot + 1] : total;
-      const t = a1 > a0 ? Math.min(1, (a - a0) / (a1 - a0)) : 0;
-      this.sectionRgbAt(chain, slot + t, tmp);
-      rgbs[k * 3] = tmp[0];
-      rgbs[k * 3 + 1] = tmp[1];
-      rgbs[k * 3 + 2] = tmp[2];
-    }
-    this.rgbCache[chain] = rgbs;
-    const frac = new Float32Array(n);
-    for (let k = 0; k < n; k++) frac[k] = total > 0 ? cal[k] / total : 0;
-    this.bakeFrac[chain] = frac;
-  }
 
   // Declare the current gameplay paint (traveled spans + branch-point
   // pulse arms). Cheap; the heavy lifting happens in tickPaint.
@@ -4167,11 +4105,6 @@ export class RibbonRenderer {
     for (const c of this.chainRev.keys()) {
       if (!target.has(c)) toWrite.push(c);
     }
-    // Chains whose section cache update() just re-baked (drift).
-    for (const c of this.recolorPending) {
-      if (!toWrite.includes(c)) toWrite.push(c);
-    }
-    this.recolorPending.clear();
 
     // REVEAL frontier glow: chains carrying an advancing tip rewrite every
     // tick (the glow travels), and chains whose glow just ended rewrite
@@ -4303,7 +4236,7 @@ export class RibbonRenderer {
     us.fill(U_BASE, 0, count);
     if (!painted) {
       this.applyRevealGlowU(chain, us, count);
-      this.writeFillPaint(chain, us, this.rgbCache[chain]);
+      this.writeFillPaint(chain, us);
       return;
     }
 
@@ -4387,36 +4320,24 @@ export class RibbonRenderer {
       }
     }
     this.applyRevealGlowU(chain, us, count);
-    this.writeFillPaint(chain, us, this.rgbCache[chain]);
+    this.writeFillPaint(chain, us);
   }
 
   // Every ribbon paint write goes through here: the ribbon gets its per-
-  // vertex U + section RGB, and the GPU junction field's PAINT texture
-  // gets the same per-sample values (texel = (r, g, b, u)), so joinery and
-  // fills near joints read exactly the material the ribbons wear (burn
-  // cooling, reveal glow and gameplay paint included). Only the touched
-  // rows upload (flushed once per tick by rebuildFillets).
-  private writeFillPaint(
-    chain: number,
-    us: ArrayLike<number>,
-    colors: Float32Array
-  ): void {
+  // vertex U, and the GPU junction field's PAINT texture the same per-
+  // sample U (texel .w; the section colors are evaluated from the run
+  // table since G2.2, rgb is unused), so joinery reads exactly the paint
+  // the ribbons wear (reveal glow and gameplay paint included). Only the
+  // touched rows upload (flushed once per tick by rebuildFillets).
+  private writeFillPaint(chain: number, us: ArrayLike<number>): void {
     const fill = this.fills[chain];
-    fill.writePaint(us, colors);
+    fill.writePaint(us);
     if (this.paintBase.length === 0) return;
     const pd = paintData();
     const d = pd.data;
     const base = this.paintBase[chain];
     const count = fill.sampleCount;
-    const constant = colors.length === 3;
-    for (let k = 0; k < count; k++) {
-      const o = (base + k) * 4;
-      const c = constant ? 0 : k * 3;
-      d[o] = colors[c];
-      d[o + 1] = colors[c + 1];
-      d[o + 2] = colors[c + 2];
-      d[o + 3] = us[k];
-    }
+    for (let k = 0; k < count; k++) d[(base + k) * 4 + 3] = us[k];
     pd.markDirty(base, base + count);
   }
 
@@ -4533,11 +4454,18 @@ export class RibbonRenderer {
   // transliterated line for line and reading the SAME record + paint data
   // the shader samples - the fieldProbe ground truth. Not on any hot path.
   // GLSL twin chainMaterial: the material (r, g, b, u) of a chain at a
-  // world arc from the paint mirror, with burn / roots applied.
-  private cpuChainMaterial(ch: number, a: number, out: Float32Array): void {
+  // world arc - the ribbon's section color there (its own Gouraud between
+  // samples; `seed` = a ctrl near the arc, < 0 for none), the paint U from
+  // the PAINT mirror, with burn / roots applied.
+  private cpuChainMaterial(ch: number, a: number, out: Float32Array, seedIn: number): void {
     const D = kData();
     const U = knotUniformValues();
     const c = kChain(D, ch);
+    // GLSL twin: the seed normalized onto the chain (rings wrap, runs clamp).
+    const nc = c.nCtrl;
+    const seed = c.closed
+      ? seedIn - nc * Math.floor(seedIn / nc)
+      : Math.max(0, Math.min(nc - 1, seedIn));
     const d = paintData().data;
     const base = Math.round(D.stat[(2 * ch + 1) * 4 + 3]);
     const count = c.count;
@@ -4563,15 +4491,14 @@ export class RibbonRenderer {
         fr = f - fl;
       }
     }
-    const o0 = (base + k0) * 4;
-    const o1 = (base + k1) * 4;
-    for (let i = 0; i < 4; i++) out[i] = d[o0 + i] + (d[o1 + i] - d[o0 + i]) * fr;
+    const c0 = kSectionAtArc(D, U, c, a, seed, out);
+    out[3] = d[(base + k0) * 4 + 3] + (d[(base + k1) * 4 + 3] - d[(base + k0) * 4 + 3]) * fr;
     if (!(total > 0 && count >= 2) || U.uKFx[3] < 0.5 || U.uKFx[2] >= c.fxDone) {
       return;
     }
     const st = Math.round(U.uKFx[0]);
     if (st !== FX_STYLE.burn && st !== FX_STYLE.roots) return;
-    kFxColor(D, U, c, kCtrlOfArc(D, c, an), an / c.arcPer, out, this.ignScratch);
+    kFxColor(D, U, c, kCtrlOfArcNear(D, c, an, c0), an / c.arcPer, out, this.ignScratch);
   }
 
   // The composed junction-field color at (x, y) for the record at texel
@@ -4591,6 +4518,7 @@ export class RibbonRenderer {
     const stride = 2 + profN;
     const hd = at(rec);
     const n = Math.round(J[hd + 2]);
+    this.fieldLastArm.length = 0;
     const ex = x - J[hd];
     const ey = y - J[hd + 1];
     const mA = this.acc4Scratch;
@@ -4615,7 +4543,8 @@ export class RibbonRenderer {
       this.cpuChainMaterial(
         Math.round(J[h]),
         J[ax] + ex * J[ax + 1] + ey * J[ax + 2],
-        mA
+        mA,
+        J[ax + 3]
       );
       compose(mA);
       return;
@@ -4623,11 +4552,12 @@ export class RibbonRenderer {
     const armPaint = (ab: number, s: number, m: Float32Array): void => {
       const h = at(ab);
       const a = at(ab + 1);
-      this.cpuChainMaterial(
-        Math.round(J[h]),
-        J[a] + J[a + 1] * Math.min(s, J[a + 2]),
-        m
-      );
+      const sc = Math.min(s, J[a + 2]);
+      const arc = J[a] + J[a + 1] * sc;
+      // GLSL twin: the seed = joint ctrl + offset x the arm's ctrl slope.
+      const seed = J[a + 3] + J[a + 1] * sc * J[h + 1];
+      this.fieldLastArm.push(Math.round(J[h]), arc, seed);
+      this.cpuChainMaterial(Math.round(J[h]), arc, m, seed);
     };
     const profArc = (ab: number, rp: number): number => {
       const xg = rp / FIELD_PROF_DR;
@@ -4670,7 +4600,9 @@ export class RibbonRenderer {
     }
     const abA = rec + 2 + ia * stride;
     armPaint(abA, profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0), mA);
-    if (ia === ib) {
+    // Probe views (uKBase.z 3 / 4): one bracketing arm's material alone.
+    const dbg = Math.round(knotUniformValues().uKBase[2]);
+    if (ia === ib || dbg === 3) {
       compose(mA);
       return;
     }
@@ -4678,6 +4610,10 @@ export class RibbonRenderer {
     const mB = this.fieldMbScratch;
     const abB = rec + 2 + ib * stride;
     armPaint(abB, profArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0), mB);
+    if (dbg === 4) {
+      compose(mB);
+      return;
+    }
     composeM(mB);
     const span = relA + relB;
     const hw = rho > fillHalf ? Math.asin(fillHalf / rho) : Math.PI / 2;
@@ -4726,10 +4662,10 @@ export class RibbonRenderer {
     this.colorAtArc(chain, this.paintArcAt(samples, ctrl, closed), out);
   }
 
-  // Section RGB at a world ARC along a chain, read from the baked
-  // per-sample cache into out[0..2] - the SAME data the ribbon's own
-  // aColor verts carry, so overlay geometry sampling through here matches
-  // the adjacent ribbon exactly at a seam.
+  // Section RGB at a world ARC along a chain into out[0..2] - the ribbon's
+  // own color there (its vertex shader's section at the two bracketing
+  // samples, lerped), so overlay geometry sampling through here matches the
+  // adjacent ribbon exactly at a seam.
   private colorAtArc(chain: number, arc: number, out: Float32Array): void {
     this.sectionAtArc(chain, arc, out);
     // Burn / roots wear on the CPU-drawn overlays too (markers, pluck
@@ -4745,40 +4681,36 @@ export class RibbonRenderer {
     kFxColor(D, U, c, kCtrlOfArc(D, c, a), a / c.arcPer, out, this.ignScratch);
   }
 
-  // The section color at an arc: the baked per-sample cache, lerped (the
-  // ribbon's own Gouraud between its vertices).
+  // Mean ctrl per world arc along a junction arm over its first `d` of arc
+  // (the fan shader's ctrl search seed slope; 0 when degenerate).
+  private armCtrlSlope(
+    a: { chain: number; slot: number; dir: number; arc0: number; total: number; closed: boolean },
+    d: number
+  ): number {
+    if (!(d > 1e-6)) return 0;
+    const D = kData();
+    const c = kChain(D, a.chain);
+    if (!(c.total > 0)) return 0;
+    const ctrl = kCtrlOfArc(D, c, normArc(a.arc0 + a.dir * d, c.total, c.closed));
+    let delta = ctrl - a.slot;
+    if (c.closed) {
+      const n = c.nCtrl;
+      delta -= n * Math.round(delta / n);
+    }
+    return Math.abs(delta) / d;
+  }
+
+  // The section color at an arc: the ribbon's own Gouraud between its
+  // vertices (paint_math kSectionAtArc - the vertex shader's knotSection at
+  // the two bracketing samples, lerped).
   private sectionAtArc(chain: number, arc: number, out: Float32Array): void {
-    const cache = this.rgbCache[chain];
-    if (cache.length === 3) {
-      out[0] = cache[0];
-      out[1] = cache[1];
-      out[2] = cache[2];
+    const D = kData();
+    const c = kChain(D, chain);
+    if (!(c.total > 0) || !this.chainSamples[chain]) {
+      knotSection(D, knotUniformValues(), c, 0, out);
       return;
     }
-    const samples = this.chainSamples[chain];
-    if (!samples || samples.totalLength <= 0) {
-      out.set(this.baseRgb);
-      return;
-    }
-    const count = cache.length / 3;
-    const total = samples.totalLength;
-    let k0: number;
-    let k1: number;
-    let fr: number;
-    if (this.ps.chainBreakAfter[chain] < 0) {
-      const f = (normArc(arc, total, true) / total) * count;
-      k0 = Math.floor(f) % count;
-      k1 = (k0 + 1) % count;
-      fr = f - Math.floor(f);
-    } else {
-      const f = (normArc(arc, total, false) / total) * (count - 1);
-      k0 = Math.floor(f);
-      k1 = Math.min(count - 1, k0 + 1);
-      fr = f - k0;
-    }
-    out[0] = cache[k0 * 3] + (cache[k1 * 3] - cache[k0 * 3]) * fr;
-    out[1] = cache[k0 * 3 + 1] + (cache[k1 * 3 + 1] - cache[k0 * 3 + 1]) * fr;
-    out[2] = cache[k0 * 3 + 2] + (cache[k1 * 3 + 2] - cache[k0 * 3 + 2]) * fr;
+    kSectionAtArc(D, knotUniformValues(), c, arc, -1, out);
   }
 
   // Rounded junction joinery: tip/seal discs and, for each wedge between
@@ -5288,16 +5220,21 @@ export class RibbonRenderer {
       for (let i = 0; i < n; i++) {
         const a = rec.arms[i];
         const ab = (cursor + 2 + i * armStride) * 4;
+        const pth = a.pth;
+        const ps = a.ps;
         D[ab] = a.chain;
-        D[ab + 1] = this.fills[a.chain].sampleCount;
+        // The ctrl search SEED along the arm: its joint ctrl (.w of the next
+        // texel) plus the arc offset times this mean ctrl-per-arc over the
+        // stretch the field samples (G2.2: the fans evaluate the ribbon's
+        // section from the arc table; a seed from the joint alone cost the
+        // fan shader ~0.6 ms/frame in walks at 3200x1800).
+        D[ab + 1] = this.armCtrlSlope(a, Math.min(a.domain, ps[profN - 1]));
         D[ab + 2] = a.closed ? 1 : 0;
         D[ab + 3] = a.total;
         D[ab + 4] = a.arc0;
         D[ab + 5] = a.dir;
         D[ab + 6] = Math.min(a.domain, 1e9);
         D[ab + 7] = a.slot; // The arm's joint ctrl (the shader's search seed).
-        const pth = a.pth;
-        const ps = a.ps;
         for (let g = 0; g < profN; g++) {
           const p = ab + 8 + g * 4;
           const g1 = g + 1 < profN ? g + 1 : g;
@@ -5380,6 +5317,8 @@ export class RibbonRenderer {
       arms: (ji) => recs[ji]?.arms ?? [],
       center: (ji) => (recs[ji] ? [recs[ji].jx, recs[ji].jy] : null),
       record: (ji) => recs[ji]?.rb ?? -1,
+      gate: (ji) => recs[ji]?.j1 ?? null,
+      lastArms: () => [...this.fieldLastArm],
     };
 
     // (The over-fill "fills wear the joint field" pass is gone with the

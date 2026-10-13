@@ -11,6 +11,7 @@ import {
 import {
   MAX_KNOTS,
   kBurn,
+  kArcU,
   kChain,
   kCtrlOfArc,
   kFanAlpha,
@@ -18,6 +19,7 @@ import {
   kFxDoneWall,
   kFxSolid,
   kFxWeight,
+  kHeadLeave,
   kIgnition,
   kRevealMaskAt,
   kSwell,
@@ -58,6 +60,8 @@ function uniforms(): KUniforms {
     uKShape: new Float32Array([1, 0, 1, 0]),
     uKInk: new Float32Array([1, 0, 0, 0]),
     uKKnots: K,
+    uKGamut: new Float32Array([0, 280, 0.45, 0.64]),
+    uKSect: new Float32Array(4),
   };
 }
 
@@ -310,6 +314,44 @@ describe("G2.1 FX mirror vs the frozen per-sample code", () => {
     expect(skipped / total).toBeGreaterThan(0.2);
   });
 
+  it("the burn hot head leaves points continuously, BURN_HOT_ARC behind the tip", () => {
+    const r = rng(606);
+    for (const closed of [true, false]) {
+      const s = randomChain(r, 140, closed);
+      const n = s.controlArcLengths.length;
+      const D = scene(s, tracePlan(r, n, closed));
+      const c = kChain(D, 0);
+      const U = uniforms();
+      let maxJump = 0;
+      let prev = NaN;
+      let prevKey = "";
+      let checked = 0;
+      for (let x = 0; x < (closed ? n : n - 1); x += 0.002) {
+        const g = kIgnition(D, U, c, x);
+        if (!g.hit) continue;
+        const tl = kHeadLeave(D, c, g, x);
+        const key = g.t0 + ":" + g.cFrom + ":" + g.dir;
+        // Within one front the head-leave time is continuous (fronts meeting
+        // at a balance point, or leaving a junction both ways, switch).
+        // Its slope is the tip's: (arc per ctrl here) / (arc per ctrl at the
+        // tip) / rate - up to 4x a point's own (segments 0.16..0.64).
+        if (key === prevKey) maxJump = Math.max(maxJump, Math.abs(tl - prev));
+        prev = tl;
+        prevKey = key;
+        // Unclamped: the tip is exactly BURN_HOT_ARC further along then (an
+        // open chain's end clamps the tip; tEnd is f32 in the texture).
+        if (tl > g.tA + 1e-6 && tl < g.tEnd - 1e-6) {
+          const tip = g.cFrom + g.dir * (tl - g.t0) * g.rate;
+          const dArc = g.dir * (kArcU(D, c, tip) - kArcU(D, c, x));
+          expect(dArc).toBeCloseTo(PAINT_CONST.BURN_HOT_ARC, 4);
+          checked++;
+        }
+      }
+      // 0.002 ctrl at rates >= 2 ctrl/s: <= 4 x 0.001 s per step.
+      expect(maxJump).toBeLessThan(0.005);
+      expect(checked).toBeGreaterThan(1000);
+    }
+  });
   it("speed knots map anim time to wall time piecewise-linearly", () => {
     const U = uniforms();
     const K = U.uKKnots;

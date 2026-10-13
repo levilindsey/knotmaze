@@ -11,7 +11,7 @@
 // Precision: the GPU evaluates in fp32 from the same fp32 texel values; the
 // mirror runs in f64. Censuses compare at <= 2/255.
 
-import { FX_STYLE, PAINT_CONST } from "./paint_const";
+import { FX_STYLE, PAINT_CONST, RUN_FLAG } from "./paint_const";
 
 const SHIFT = PAINT_CONST.K_ROW_SHIFT;
 
@@ -252,6 +252,8 @@ export interface KUniforms {
   uKShape: Float32Array; // (taperArc, tipFloor, glowArc, glowHold)
   uKInk: Float32Array; // (inkSpeed, isInk, -, -)
   uKKnots: Float32Array; // 8 x (animT, wallT, invSpeed, valid)
+  uKGamut: Float32Array; // (baseHue, arcDeg, sat, light)
+  uKSect: Float32Array; // (blendDist, ease, -, -)
 }
 
 export const MAX_KNOTS = 8;
@@ -381,7 +383,12 @@ export function kIgnition(
     const t0 = R[A + 4];
     const rate = R[A + 5];
     const t = t0 + Math.abs(ctrl - cFrom) / rate;
-    if (t < r.tA) {
+    // NEAR-TIES go to the first source scanned (|dt| < 1e-4 s): at a
+    // junction several fronts start at once with different speeds and hot
+    // heads, and the GPU's f32 ctrl must not flip the choice (the joint-web
+    // census caught exactly that). Invisible elsewhere: ties only occur
+    // within ~1e-3 ctrl of a junction or a meeting point.
+    if (t < r.tA - 1e-4) {
       r.hit = true;
       r.tA = t;
       r.cFrom = cFrom;
@@ -451,18 +458,26 @@ export function knotRevealMask(
   return Math.max(0, m);
 }
 
-// Anim seconds the burn's HOT HEAD (BURN_HOT_ARC behind the tip) takes to
-// clear a point: the arc at the local arc-per-ctrl over the source rate.
-function hotTime(D: KData, c: KChain, g: KIgn, ctrl: number): number {
-  const n = c.nCtrl;
-  let sl = Math.floor(ctrl);
-  if (c.closed) sl -= n * Math.floor(sl / n);
-  else sl = Math.max(0, Math.min(n - 1, sl));
-  const a0 = kCA(D, c, sl);
-  let a1 = sl + 1 < n ? kCA(D, c, sl + 1) : c.total;
-  if (c.closed && sl + 1 >= n) a1 = c.total;
-  const apc = Math.max(1e-4, a1 - a0);
-  return PAINT_CONST.BURN_HOT_ARC / (g.rate * apc);
+// GLSL twin: kHeadLeave - the anim time the burn's HOT HEAD (BURN_HOT_ARC
+// of arc behind the front's tip) leaves a point: when the tip reaches the
+// point's arc + BURN_HOT_ARC in its direction (the arc table inverted by a
+// short walk), clamped to [arrival, the source's finish]. Continuous along
+// the chain - the first form divided the head's arc by the point's own
+// slot's arc per ctrl, which stepped at every slot boundary (the joint-web
+// census caught GPU and CPU on different sides of such a step).
+export function kHeadLeave(D: KData, c: KChain, g: KIgn, ctrl: number): number {
+  const aU = kArcU(D, c, ctrl) + g.dir * PAINT_CONST.BURN_HOT_ARC;
+  let ch: number;
+  if (c.closed) {
+    const n = c.nCtrl;
+    const lap = Math.floor(aU / c.total);
+    const seed = lap > 0 ? 0 : lap < 0 ? n - 1 : ctrl - n * Math.floor(ctrl / n);
+    ch = kCtrlOfArcNear(D, c, aU - lap * c.total, seed) + lap * n;
+  } else {
+    ch = kCtrlOfArcNear(D, c, Math.max(0, Math.min(c.total, aU)), ctrl);
+  }
+  const t = g.t0 + (g.dir * (ch - g.cFrom)) / g.rate;
+  return Math.max(g.tA, Math.min(g.tEnd, t));
 }
 
 // GLSL twin: kBurnAge - wall seconds since the hot head left the point
@@ -474,8 +489,7 @@ export function kBurnAge(
   g: KIgn,
   ctrl: number
 ): number {
-  const tl = Math.min(g.tA + hotTime(D, c, g, ctrl), g.tEnd);
-  return Math.max(0, U.uKFx[2] - kWall(U, tl));
+  return Math.max(0, U.uKFx[2] - kWall(U, kHeadLeave(D, c, g, ctrl)));
 }
 
 // GLSL twin: kFxAge - wall seconds since the front reached the point.
@@ -883,4 +897,228 @@ export function kRevealMaskAt(
     if (best >= 1) break;
   }
   return best;
+}
+// ======================================================================
+// G2.2 SECTION COLORS (the ribbon vertex shader evaluates them per vertex,
+// the fans per pixel through the ribbon's own Gouraud; mirrored here for
+// markers, the junction-field probe and the censuses).
+//
+// RUNS (KSTATIC at uKBase.x, 4 texels per run; core/section_colors
+// RunSection):
+//   R0 = (ctrlA, ctrlB, r0A, r0B)   unwrapped span + base ramp lengths
+//   R1 = (colA, flags)              A-end color (RGB, or a gamut coordinate
+//   R2 = (colMid, perLattice)       in .x under RF_GAMUT), RUN_FLAG bits;
+//   R3 = (colB, -)                  own color, ctrl per lattice unit; B end
+// CTRLIDX.x = the slot's run, .z = the slot's noise coordinate (NOISE runs).
+// uKGamut = (baseHue, arcDeg, sat, light); uKSect = (blendDist, ease, -, -).
+// ======================================================================
+
+// GLSL twin: kHsl (core/section_colors hslToRgb).
+function kHsl(h: number, s: number, l: number, out: Float32Array | number[]): void {
+  const a = s * Math.min(l, 1 - l);
+  for (let i = 0; i < 3; i++) {
+    const n = i === 0 ? 0 : i === 1 ? 8 : 4;
+    const x = n + h / 30;
+    const k = x - 12 * Math.floor(x / 12);
+    out[i] = l - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)));
+  }
+}
+
+// GLSL twin: kGamut - gamut coordinate -> RGB (core gamutRgb).
+export function kGamut(U: KUniforms, v: number, out: Float32Array | number[]): void {
+  const G = U.uKGamut;
+  const x = G[0] + (v - 0.5) * G[1];
+  kHsl(x - 360 * Math.floor(x / 360), G[2], G[3], out);
+}
+
+// GLSL twin: kEase - the junctionBlend ease (core easeAt).
+function kEase(U: KUniforms, u: number): number {
+  return u + (u * u * (3 - 2 * u) - u) * U.uKSect[1];
+}
+
+// GLSL twin: knotSection - the section color at a chain ctrl (the slot's
+// run, evaluated exactly; core evalRunSection). Into out[0..2].
+export function knotSection(
+  D: KData,
+  U: KUniforms,
+  c: KChain,
+  ctrl: number,
+  out: Float32Array | number[]
+): void {
+  const S = D.stat;
+  const n = c.nCtrl;
+  const sl = Math.max(0, Math.min(n - 1, Math.floor(ctrl)));
+  const io = (c.idx + sl) * 4;
+  const b = (Math.round(U.uKBase[0]) + 4 * Math.round(S[io])) * 4;
+  const fl = Math.round(S[b + 7]);
+  if (fl & RUN_FLAG.NOISE) {
+    const j = c.closed ? (sl + 1 === n ? 0 : sl + 1) : Math.min(sl + 1, n - 1);
+    const z0 = S[io + 2];
+    kGamut(U, z0 + (S[(c.idx + j) * 4 + 2] - z0) * (ctrl - sl), out);
+    return;
+  }
+  const cA = S[b];
+  const cB = S[b + 1];
+  const cu = c.closed && ctrl < cA - 1e-4 ? ctrl + n : ctrl;
+  let w = 0; // Blend weight toward the far color (0 = colMid).
+  let far = b + 12; // R3 (colB) or R1 (colA).
+  if (fl & RUN_FLAG.SWEEP) {
+    const t = Math.max(0, Math.min(1, (cu - cA) / Math.max(cB - cA, 1e-6)));
+    const v = S[b + 4] + (S[b + 12] - S[b + 4]) * t;
+    if (fl & RUN_FLAG.GAMUT) {
+      kGamut(U, v, out);
+    } else {
+      out[0] = v;
+      out[1] = 0;
+      out[2] = 0;
+    }
+    return;
+  }
+  const sp = cB - cA;
+  const extra = U.uKSect[0] * S[b + 11];
+  const ra = fl & RUN_FLAG.RAMP_A ? Math.min(0.5 * sp, S[b + 2] + extra) : 0;
+  const rb = fl & RUN_FLAG.RAMP_B ? Math.min(0.5 * sp, S[b + 3] + extra) : 0;
+  const da = cu - cA;
+  const db = cB - cu;
+  if (ra > 0 && da < ra) {
+    w = 1 - kEase(U, Math.max(0, Math.min(1, da / ra)));
+    far = b + 4;
+  } else if (rb > 0 && db < rb) {
+    w = 1 - kEase(U, Math.max(0, Math.min(1, db / rb)));
+    far = b + 12;
+  }
+  // mix(colFar, colMid, e) = colMid + (colFar - colMid) * (1 - e).
+  const m = b + 8;
+  const r = S[m] + (S[far] - S[m]) * w;
+  if (fl & RUN_FLAG.GAMUT) {
+    kGamut(U, r, out);
+    return;
+  }
+  out[0] = r;
+  out[1] = S[m + 1] + (S[far + 1] - S[m + 1]) * w;
+  out[2] = S[m + 2] + (S[far + 2] - S[m + 2]) * w;
+}
+
+// GLSL twin: kCtrlOfArcNear - kCtrlOfArc's exact answer (the largest slot
+// whose arc is <= a) by a short walk from a nearby ctrl, falling back to
+// the binary search when the walk would be long.
+export function kCtrlOfArcNear(D: KData, c: KChain, a: number, seed: number): number {
+  const n = c.nCtrl;
+  let s = Math.max(0, Math.min(n - 1, Math.floor(seed)));
+  let ok = false;
+  for (let it = 0; it < 8; it++) {
+    if (s < n - 1 && kCA(D, c, s + 1) <= a) {
+      s++;
+      continue;
+    }
+    if (s > 0 && kCA(D, c, s) > a) {
+      s--;
+      continue;
+    }
+    ok = true;
+    break;
+  }
+  if (!ok) return kCtrlOfArc(D, c, a);
+  const a0 = kCA(D, c, s);
+  const a1 = s < n - 1 ? kCA(D, c, s + 1) : c.total;
+  return s + (a1 > a0 ? Math.min(1, (a - a0) / (a1 - a0)) : 0);
+}
+
+// Sample bracketing of an arc - the ribbon's own Gouraud (closed rings
+// wrap, open runs clamp): [k0, k1, fraction, normalized arc].
+export function kSampleBracket(c: KChain, a: number, out: number[]): void {
+  const total = c.total;
+  const count = c.count;
+  if (!(total > 0) || count < 2) {
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    return;
+  }
+  if (c.closed) {
+    const an = a - total * Math.floor(a / total);
+    const f = (an / total) * count;
+    const fl = Math.floor(f);
+    out[0] = fl % count;
+    out[1] = (out[0] + 1) % count;
+    out[2] = f - fl;
+    out[3] = an;
+  } else {
+    const an = Math.max(0, Math.min(total, a));
+    const f = (an / total) * (count - 1);
+    const fl = Math.floor(f);
+    out[0] = Math.min(fl, count - 1);
+    out[1] = Math.min(count - 1, out[0] + 1);
+    out[2] = f - fl;
+    out[3] = an;
+  }
+}
+
+const SEC_A = new Float32Array(3);
+const SEC_B = new Float32Array(3);
+const SEC_K = [0, 0, 0, 0];
+
+// GLSL twin: kSectionAtArc - the RIBBON's section color at an arc: the
+// section at the two bracketing samples' ctrls (exactly what the vertex
+// shader evaluates there), lerped. `seed` = a ctrl near the arc (< 0: none).
+// Returns the first sample's ctrl (a seed for nearby queries).
+export function kSectionAtArc(
+  D: KData,
+  U: KUniforms,
+  c: KChain,
+  a: number,
+  seed: number,
+  out: Float32Array | number[]
+): number {
+  if (!(c.total > 0) || c.count < 2) {
+    knotSection(D, U, c, 0, out);
+    return 0;
+  }
+  kSampleBracket(c, a, SEC_K);
+  const k0 = SEC_K[0];
+  const k1 = SEC_K[1];
+  const fr = SEC_K[2];
+  const c0 = seed >= 0 ? kCtrlOfArcNear(D, c, k0 * c.arcPer, seed) : kCtrlOfArc(D, c, k0 * c.arcPer);
+  const c1 = k1 === 0 ? kCtrlOfArc(D, c, 0) : kCtrlOfArcNear(D, c, k1 * c.arcPer, c0);
+  knotSection(D, U, c, c0, SEC_A);
+  knotSection(D, U, c, c1, SEC_B);
+  for (let i = 0; i < 3; i++) out[i] = SEC_A[i] + (SEC_B[i] - SEC_A[i]) * fr;
+  return c0;
+}
+
+// RUNS layout writer: run r at texels base + 4r .. + 3 (see above).
+export function writeRunTexels(
+  stat: Float32Array,
+  base: number,
+  r: number,
+  run: {
+    ctrlA: number;
+    ctrlB: number;
+    r0A: number;
+    r0B: number;
+    perLattice: number;
+    flags: number;
+    colA: ArrayLike<number>;
+    colMid: ArrayLike<number>;
+    colB: ArrayLike<number>;
+  }
+): void {
+  const o = (base + 4 * r) * 4;
+  stat[o] = run.ctrlA;
+  stat[o + 1] = run.ctrlB;
+  stat[o + 2] = run.r0A;
+  stat[o + 3] = run.r0B;
+  stat[o + 4] = run.colA[0];
+  stat[o + 5] = run.colA[1];
+  stat[o + 6] = run.colA[2];
+  stat[o + 7] = run.flags;
+  stat[o + 8] = run.colMid[0];
+  stat[o + 9] = run.colMid[1];
+  stat[o + 10] = run.colMid[2];
+  stat[o + 11] = run.perLattice;
+  stat[o + 12] = run.colB[0];
+  stat[o + 13] = run.colB[1];
+  stat[o + 14] = run.colB[2];
+  stat[o + 15] = 0;
 }

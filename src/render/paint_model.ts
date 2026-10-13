@@ -10,6 +10,7 @@
 // place and grows them with ensure().
 
 import { UniformGroup } from "pixi.js";
+import type { RunSection } from "../core/section_colors";
 import { FloatRows, ROW_W } from "./float_rows";
 import { PAINT_CONST } from "./paint_const";
 import type { KData, KPiece, KUniforms } from "./paint_math";
@@ -19,6 +20,7 @@ import {
   sourceHints,
   writeChainHeader,
   writeGeomTable,
+  writeRunTexels,
 } from "./paint_math";
 
 let K_STATIC: FloatRows | null = null;
@@ -58,6 +60,8 @@ export function knotUniforms(): UniformGroup {
       uKFx2: v4(),
       uKShape: v4(1, 0, 1, 0),
       uKInk: v4(1, 0),
+      uKGamut: v4(0, 280, 0.45, 0.64),
+      uKSect: v4(),
       uKKnots: {
         value: new Float32Array(MAX_KNOTS * 4),
         type: "vec4<f32>",
@@ -95,9 +99,11 @@ export interface PaintChainInfo {
 export class PaintScene {
   readonly chains: PaintChainInfo[];
   // KSTATIC: CHAINS at texel 0, then the ctrl index (one texel per control
-  // slot per chain).
+  // slot per chain), then the section RUNS (4 texels per run, from the
+  // row after the ctrl index; their count changes with the scheme).
   readonly idxBase: Int32Array;
   readonly idxEnd: number;
+  readonly runBase: number;
   // KGEOM: per chain, G0 + the packed control arcs.
   readonly geomBase: Int32Array;
   readonly geomEnd: number;
@@ -121,6 +127,7 @@ export class PaintScene {
       t += chains[c].nCtrl;
     }
     this.idxEnd = t;
+    this.runBase = rowUp(t);
     this.geomBase = new Int32Array(n);
     let g = 0;
     for (let c = 0; c < n; c++) {
@@ -261,5 +268,55 @@ export class PaintScene {
   // A chain's reveal window [first start, last finish] (anim seconds).
   revealSpan(c: number): [number, number] {
     return [this.span[2 * c], this.span[2 * c + 1]];
+  }
+
+  // The section RUN table (G2.2; core/section_colors) and every control
+  // slot's run (CTRLIDX.x) and noise coordinate (.z; null = 0). Event time.
+  // Only texels whose value changed upload (an identical rebuild - every
+  // junctionBlend drag - sends nothing). Returns the texels changed.
+  setRuns(
+    runs: RunSection[],
+    slotRun: Int32Array[],
+    noise: (Float32Array | null)[] | null
+  ): number {
+    const st = kStatic();
+    st.ensure(this.runBase + 4 * runs.length);
+    const d = st.data;
+    let lo = Infinity;
+    let hi = -Infinity;
+    const n = this.chains.length;
+    for (let c = 0; c < n; c++) {
+      const b = this.idxBase[c];
+      const sr = slotRun[c];
+      const nz = noise ? noise[c] : null;
+      for (let s = 0; s < this.chains[c].nCtrl; s++) {
+        const o = (b + s) * 4;
+        const x = sr[s];
+        const z = nz ? Math.fround(nz[s]) : 0;
+        if (d[o] !== x || d[o + 2] !== z) {
+          d[o] = x;
+          d[o + 2] = z;
+          if (b + s < lo) lo = b + s;
+          if (b + s + 1 > hi) hi = b + s + 1;
+        }
+      }
+    }
+    const tmp = new Float32Array(16 * runs.length);
+    for (let r = 0; r < runs.length; r++) writeRunTexels(tmp, 0, r, runs[r]);
+    const o0 = this.runBase * 4;
+    for (let i = 0; i < tmp.length; i++) {
+      if (d[o0 + i] !== tmp[i]) {
+        d[o0 + i] = tmp[i];
+        const t = this.runBase + (i >> 2);
+        if (t < lo) lo = t;
+        if (t + 1 > hi) hi = t + 1;
+      }
+    }
+    if (hi > lo) {
+      st.markDirty(lo, hi);
+      st.flush();
+    }
+    knotUniformValues().uKBase[0] = this.runBase;
+    return hi > lo ? hi - lo : 0;
   }
 }
