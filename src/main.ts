@@ -38,6 +38,7 @@ import type { DailyResult } from "./game/daily_store";
 import {
   attemptRecord as savedAttemptOf,
   exploredRuns,
+  resetPathAction,
   restoreAttempt,
   walkFingerprint,
 } from "./game/daily_attempt";
@@ -1211,21 +1212,22 @@ async function main(): Promise<void> {
         fabric?.cancelMove();
         showFabricWin();
       }
-      // K47: inside a daily's attempt - the one that will be official -
-      // Reset path is backtracking to the entrance: every run retracted
-      // like a tap would (logged, on the backtrack meter), the clock
-      // running on. It never restarts the attempt.
-      if (
-        fabric &&
-        fabricController &&
-        dailyAttemptLive() &&
-        !dailyStore.hasOfficial(dailyN!) &&
-        !fabricController.solved
-      ) {
-        if (fabricController.trailMode) {
-          showToast("Memory mode has no way back: keep exploring.");
-          return;
-        }
+      // K47 (game/daily_attempt.ts resetPathAction): inside a daily's
+      // attempt - the one that will be official - Reset path is
+      // backtracking to the entrance: every run retracted like a tap would
+      // (logged, on the backtrack meter), the clock running on. It never
+      // restarts the attempt.
+      const action = resetPathAction({
+        dailyAttempt: dailyAttemptLive(),
+        official: dailyN !== null && dailyStore.hasOfficial(dailyN),
+        solved: fabricController?.solved ?? false,
+        trailMode: fabricController?.trailMode ?? false,
+      });
+      if (action === "refuse") {
+        showToast("Memory mode has no way back: keep exploring.");
+        return;
+      }
+      if (action === "backtrack" && fabric && fabricController) {
         fabric.cancelMove();
         if (fabricController.retreatToStart().length > 0) {
           // The Ariadne string keeps every pass, the way back included.
