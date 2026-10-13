@@ -10,9 +10,9 @@
 // THE FOUR WEAVE RULES (why crossings stay pixel-static):
 //  1. The overlay layer sits ABOVE every ribbon, erase, fillet and fill.
 //  2. Footprints are never modified. The plucked thread's BASE ribbon is
-//     narrowed only outside every node footprint, and only to the width the
-//     overlay's opaque core covers for the whole ring (collapse mask, fixed
-//     at pluck start - amplitude only decreases). Over-fill windows copy
+//     narrowed only outside every node footprint, and at most to the width
+//     the overlay's opaque core covers for the whole ring (collapse mask,
+//     rounded, fixed at pluck start - amplitude only decreases). Over-fill windows copy
 //     base vertices only inside footprints, so they never see it.
 //  3. Under-gaps: per-station alpha is the renderer's underGapVisibility -
 //     the overlay vanishes where its thread dives, exactly like the yarn.
@@ -48,6 +48,7 @@ import {
   ghostShape,
   nodeCap,
   peakShape,
+  roundCollapse,
   roundTau,
   segmentLobes,
   softMin,
@@ -135,6 +136,13 @@ const COLLAPSE_PAD = 0.02; // Base kept this far inside the overlay's core.
 // the ramp the swing stays under NODE_CORE h, so the (wider) base never
 // shows through a translucent center.
 const COLLAPSE_RAMP = 0.3;
+// The collapse's depth profile is ROUNDED (pluck_model.ts roundCollapse):
+// the narrowed base edge bends no tighter than this radius, x h. Its raw
+// profile met its limits in min()s, and where two limits (a footprint
+// ramp, a tight bend's ramp, a gap fade) closed in on a short window the
+// edge dipped to a V that read through the translucent fringe as a sharp
+// wedge cut into the thread (K77).
+const COLLAPSE_ROUND = 1;
 const HIDE_RAMP = 0.1; // Arc over which a hide zone fades back in.
 // Ghost flash guard (WCAG 2.3.1): the ghost's on-screen area is capped.
 const GHOST_AREA_PX = 15000;
@@ -496,6 +504,9 @@ export class PluckOverlay {
   ghost = 0.35; // pluckGhost: strobe-ghost strength.
   sustain = 0.5; // The voice's sustain (decay clock).
   reducedMotion = false;
+  // The collapse's edge radius, x h (COLLAPSE_ROUND; 0 = the raw profile,
+  // for same-state A/Bs - set it, then flag every live pluck needsLayout).
+  collapseRound = COLLAPSE_ROUND;
   // Diagnostics: plucks drawn, requests skipped (and why), merges, evictions.
   readonly stats = {
     plucks: 0,
@@ -516,6 +527,8 @@ export class PluckOverlay {
   private scratch = new Float32Array(4);
   private env2 = new Float64Array(2);
   private rgb = new Float32Array(3);
+  private depthBuf = new Float32Array(0); // roundCollapse scratch.
+  private roundBuf = new Float32Array(0);
   // Per-chain combined collapse (min over that chain's plucks).
   private collapseOf = new Map<number, Float32Array>();
   // SHADER WARM-UP: the first pluck used to land ~100 ms late while the
@@ -1209,6 +1222,22 @@ export class PluckOverlay {
           else if (k < 0 || k >= count) continue;
           if (mul < mask[kk]) mask[kk] = mul;
         }
+      }
+      // Round it: the deepest profile under the allowance whose edge bends
+      // no tighter than COLLAPSE_ROUND h. A window too short for the full
+      // depth gets a shallow round dip instead of a V, and every shoulder is
+      // round; nothing narrows past the allowance, so footprints, gap fades
+      // and tight bends keep their limits.
+      if (this.collapseRound > 0) {
+        if (this.depthBuf.length !== count) {
+          this.depthBuf = new Float32Array(count);
+          this.roundBuf = new Float32Array(count);
+        }
+        const depth = this.depthBuf;
+        const round = this.roundBuf;
+        for (let k = 0; k < count; k++) depth[k] = 1 - mask[k];
+        roundCollapse(depth, per, closed, 1 / (this.collapseRound * h * h), round);
+        for (let k = 0; k < count; k++) mask[k] = 1 - round[k];
       }
     } else {
       p.mask = null;
