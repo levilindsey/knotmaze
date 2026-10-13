@@ -38,6 +38,7 @@ import type {
   PaintCap,
 } from "./ribbon_renderer";
 import type { PathViz } from "../ui/url_state";
+import { FogBackdrop } from "./background";
 
 // Start/exit discs wear their thread's own section color now; the exit
 // keeps its accent only for the win ring.
@@ -255,6 +256,11 @@ export class FabricMazeRenderer {
   private fogDirty = true;
   private fogLastRadius = -1;
   private fogDispSprite: Sprite | null = null;
+  // Shader background (K21): with one active the fog draws AS that
+  // background (FogBackdrop) instead of the flat sprite - see
+  // setFogBackdrop.
+  private fogBackdrop: FogBackdrop | null = null;
+  private fogBackdropTex: Texture | null = null;
   private fogTime = 0;
   // Intro hold (fog hidden while the appearance animation plays) and the
   // close-in clock that follows (-1 = not running); see setFogHold.
@@ -830,6 +836,28 @@ export class FabricMazeRenderer {
     sp.filters = [
       new DisplacementFilter({ sprite: disp, scale: FOG_DISP_SCALE }),
     ];
+    // The background-colored twin (K21), right above the flat sprite;
+    // renderFog shows exactly one of them.
+    this.fogBackdrop = new FogBackdrop(
+      this.fogTexture,
+      fogDispTexture(),
+      this.fogRect,
+      FOG_DISP_SCALE
+    );
+    this.fogBackdrop.setBackground(this.fogBackdropTex);
+    this.overContainer.addChildAt(
+      this.fogBackdrop.mesh,
+      this.overContainer.getChildIndex(sp) + 1
+    );
+  }
+
+  // The shader background's texture (null: none, the flat fog). Fog of war
+  // hides the maze; over a shader background "hidden" must mean "showing
+  // the background", or the fog reads as a flat square with flat blots.
+  setFogBackdrop(tex: Texture | null): void {
+    this.fogBackdropTex = tex;
+    this.fogBackdrop?.setBackground(tex);
+    this.renderFog();
   }
 
   // Drift the displacement map so the fog edges breathe. Called every
@@ -848,6 +876,10 @@ export class FabricMazeRenderer {
     this.fogDispSprite.position.set(
       this.fogRect.x0 + ((this.fogTime * FOG_DISP_DRIFT_X) % span),
       this.fogRect.y0 + ((this.fogTime * FOG_DISP_DRIFT_Y) % span)
+    );
+    this.fogBackdrop?.setDispOrigin(
+      this.fogDispSprite.position.x,
+      this.fogDispSprite.position.y
     );
   }
 
@@ -924,15 +956,20 @@ export class FabricMazeRenderer {
   private renderFog(): void {
     if (!this.fogOfWar || this.fogHeld) {
       if (this.fogSprite) this.fogSprite.visible = false;
+      if (this.fogBackdrop) this.fogBackdrop.mesh.visible = false;
       return;
     }
     this.ensureFog();
-    this.fogSprite!.visible = true;
+    // Over a shader background the fog draws as the background (K21).
+    const backdrop = this.fogBackdropTex !== null;
+    this.fogSprite!.visible = !backdrop;
+    this.fogBackdrop!.mesh.visible = backdrop;
     // Close-in: the fog fades in over the first FOG_INTRO_FADE seconds.
     this.fogSprite!.alpha =
       this.fogIntroT >= 0
         ? Math.min(1, this.fogIntroT / FOG_INTRO_FADE)
         : 1;
+    this.fogBackdrop!.mesh.alpha = this.fogSprite!.alpha;
     if (!this.fogDirty && this.fogLastRadius === this.fowRadius) return;
     this.fogDirty = false;
     this.fogLastRadius = this.fowRadius;

@@ -83,6 +83,7 @@ describe("links", () => {
       junctionBlend: 0.88, appearMode: "custom", appearSequence: "trace", appearSpeed: 2.2,
       appearFx: "burn",
       entranceClearance: 2.5, exitClearance: 5, junctionSpacing: 2,
+      background: "vellum", backgroundIntensity: 0.5,
     });
   });
 
@@ -303,6 +304,32 @@ describe("token + overrides", () => {
       });
     }
     expect(parseParams("?7.c&ecl=4&xcl=0&jsp=3.25")).toEqual(p);
+  });
+
+  it("round-trips the shader background params (appended to v3)", () => {
+    const p = withSeed(7, { background: "aurora", backgroundIntensity: 0.8 });
+    const q = encodeParams(p);
+    // v3, 2 entries, index 67 (gamma 68) = option 5, index 68 = ".8".
+    expect(q).toBe("7.bAiG1Hg");
+    expect(parseParams("?" + q)).toEqual(p);
+    // Every effect round-trips.
+    for (const id of ENUM_OPTIONS.background!) {
+      const b = withSeed(9, { background: id as UrlParams["background"] });
+      expect(parseParams("?" + encodeParams(b))).toEqual(b);
+    }
+    // Links written before they existed read the defaults...
+    expect(parseParams("?7.c")).toEqual(withSeed(7));
+    expect(parseParams("?" + USER_COMPACT)).toEqual(USER);
+    // ...and a token takes them as overrides (probe URLs: &bg=mist&bgi=.7).
+    expect(parseParams("?7.c&bg=mist&bgi=.7")).toEqual(
+      withSeed(7, { background: "mist", backgroundIntensity: 0.7 })
+    );
+    // An unknown effect reads as the default; the intensity clamps to [0, 1].
+    expect(parseParams("?7.c&bg=lava&bgi=3")).toEqual(
+      withSeed(7, { backgroundIntensity: 1 })
+    );
+    const hot = encodeParams(withSeed(7, { backgroundIntensity: 3 }));
+    expect(parseParams("?" + hot).backgroundIntensity).toBe(1);
   });
 });
 

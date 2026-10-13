@@ -15,7 +15,7 @@ Rendering: PixiJS v8 custom ribbon meshes with depth-based over/under casing gap
 
 ## Key Design Decisions
 
-- **URL-as-complete-state:** Every design fully specified by `(seed, params)` serialized in the URL. Deterministic seeded RNG throughout. COMPACT LINKS (2026-10-11, `src/ui/param_codec.ts`): the query is ONE token - `?<seed>.<blob>` (a bare `?<seed>` is a v1 all-default link; since v2 every new link names its version, so an all-default design is `?<seed>.c` under v3 (`.U` was v2)) (seed base-36; blob = base64url bitstream: version, entry count, then per changed param its index delta + value - booleans flip in 0 bits, enums as an option index, colors 24 bits, numbers as their 6-decimal shortest text in 4-bit codes; all counts Elias-gamma). Self-describing, so slider ranges/steps can change freely. What a link DOES depend on is the frozen codec table of its version: param ORDER, codec types, enum option lists, DEFAULTS (links list only what differs, after 6-decimal rounding; an appearMode preset/random/instant implies the three appearance values). A new param or enum option is APPENDED to the current table; anything else (a default change included) = a new codec version, old tables kept for decoding. `test/ui/param_codec.test.ts` pins `CODEC_V1` literally (frozen) and `CODEC_V2` as v1 + its one edit, and fails until a new `PARAM_DEFAULTS` key is appended to the current table. VERSIONS: v1 (the first table); v2 (2026-10-11) = junctionBlend default 0 -> 0.88, plus the appended pluck/physics params; v3 (2026-10-11) = pluckSize default 1 -> 1.75, plus the appended maze-plan knobs entranceClearance / exitClearance / junctionSpacing (2026-10-12; defaults = DEFAULT_MAZE_PARAMS). DELTA BLOBS (2026-10-12, `encodeDelta`/`decodeDelta`): the same bitstream measured against a BASE design instead of the table defaults (a listed boolean is base's flipped) - the daily links' `?daily=<n>.<delta>`. Legacy links still parse and are rewritten to the token on load: `?s=<seed>&tw=.64...` short links and `?seed=...` full links (legacy keys mc/trm), both read with the v1 defaults; legacy `key=value` pairs AFTER a token override it (`?<token>&am=instant`). Unreadable blobs keep the seed, default the rest, warn once.
+- **URL-as-complete-state:** Every design fully specified by `(seed, params)` serialized in the URL. Deterministic seeded RNG throughout. COMPACT LINKS (2026-10-11, `src/ui/param_codec.ts`): the query is ONE token - `?<seed>.<blob>` (a bare `?<seed>` is a v1 all-default link; since v2 every new link names its version, so an all-default design is `?<seed>.c` under v3 (`.U` was v2)) (seed base-36; blob = base64url bitstream: version, entry count, then per changed param its index delta + value - booleans flip in 0 bits, enums as an option index, colors 24 bits, numbers as their 6-decimal shortest text in 4-bit codes; all counts Elias-gamma). Self-describing, so slider ranges/steps can change freely. What a link DOES depend on is the frozen codec table of its version: param ORDER, codec types, enum option lists, DEFAULTS (links list only what differs, after 6-decimal rounding; an appearMode preset/random/instant implies the three appearance values). A new param or enum option is APPENDED to the current table; anything else (a default change included) = a new codec version, old tables kept for decoding. `test/ui/param_codec.test.ts` pins `CODEC_V1` literally (frozen) and `CODEC_V2` as v1 + its one edit, and fails until a new `PARAM_DEFAULTS` key is appended to the current table. VERSIONS: v1 (the first table); v2 (2026-10-11) = junctionBlend default 0 -> 0.88, plus the appended pluck/physics params; v3 (2026-10-11) = pluckSize default 1 -> 1.75, plus the appended maze-plan knobs entranceClearance / exitClearance / junctionSpacing (2026-10-12; defaults = DEFAULT_MAZE_PARAMS), then background / backgroundIntensity (K21, 2026-10-12). DELTA BLOBS (2026-10-12, `encodeDelta`/`decodeDelta`): the same bitstream measured against a BASE design instead of the table defaults (a listed boolean is base's flipped) - the daily links' `?daily=<n>.<delta>`. Legacy links still parse and are rewritten to the token on load: `?s=<seed>&tw=.64...` short links and `?seed=...` full links (legacy keys mc/trm), both read with the v1 defaults; legacy `key=value` pairs AFTER a token override it (`?<token>&am=instant`). Unreadable blobs keep the seed, default the rest, warn once.
 - **ParamField abstraction:** All generator parameters read through a `ParamField` (constant | Simplex-modulated | painted), enabling region-biome variety natively.
 - **Hero relaxation:** On load, lattice paths (angular 45° zigzags) visibly settle into smooth curves. Temperature slider allows re-agitation.
 - **Knot-as-instrument:** Pluck threads → waves propagate; Web Audio maps loop-length to pitch.
@@ -52,6 +52,9 @@ src/
     gap_mask.ts           # Per-pixel crossing gaps: slot table + shader lib
     pluck_overlay.ts      # Render-only pluck: time-exposure strip + base collapse
     pluck_model.ts        # Pure plucked-string math (modes, envelope, lobes)
+    background.ts         # K21 shader backdrop: low-res texture + blit, fog backdrop
+    background_model.ts   # K21 pure: effect list, profiles, colors, drift clock
+    background_shaders.ts # K21 GLSL: noise lib, six effects, blit, fog
     fabric_maze_renderer.ts # P4: woven gold path recolor + markers + hints
     maze_renderer.ts      # P4 LEGACY (md=1): single-strand overlay
     debug_renderer.ts     # Lattice/graph debug overlay
@@ -81,6 +84,7 @@ test/
     corrupt/newer data, quota, no storage, streaks)
   render/
     pluck_model.test.ts  # String math vs a modal sum, coverage, lobes
+    background_model.test.ts  # K21 drift clock (K24 hook), colors, order
   ui/
     param_codec.test.ts (codec table pins + format + delta blobs),
     url_codec.test.ts (links, legacy forms), appear_mode.test.ts,
@@ -1148,6 +1152,40 @@ between-threads/cell-passage route.
   vite.private-cache.config.ts wraps the served checkout's config):
   worktrees share node_modules through junctions, and a plain `vite`
   re-optimized the shared `.vite` deps under other servers.
+- SHADER BACKGROUNDS (K21, 2026-10-12; the commit message holds the
+  measurements). `background` (bg=: none | vellum | mist | wash | silk |
+  aurora | contours; default VELLUM) + `backgroundIntensity` (bgi=, [0,
+  1], default 0.5; 0 = off like none) - render/background*.ts. A
+  SCREEN-FIXED layer, the stage's first child: the effect's fragment
+  shader fills a LOW-RES RenderTexture (0.34-0.75 texels per CSS px;
+  vellum 1 for its grain) only when the drift clock says so (10-15 fps,
+  6-10 on phones; static vellum once per change), and a dithered blit
+  stretches it over the canvas every frame. Crossing gaps discard (G1),
+  so they show it, and still read as gaps over every effect at
+  intensity 1. RULES: (1) none (and intensity 0) adds NOTHING to a frame
+  - same-state A/B vs master is 0 px; keep it so. (2) Colors = the page
+  ink + three gamut accents (the design's own hue/arc/palette), resent
+  on every recolor; the seed offsets the noise. (3) FOG = BACKGROUND: with
+  an effect on, the fog of war draws the background texture at the
+  pixel's screen position (FogBackdrop; the DisplacementFilter wobble is
+  folded into the alpha lookup, the dither is the blit's), so fogged
+  pixels ARE background pixels - a flat fog read as a flat square. (4)
+  K24/K6 HOOK: needsFrame() + tick(dt, sceneActive); the drift pauses
+  after 2.5 s of an otherwise still scene (main.ts sceneAnimating()
+  stands in for K6's flags) and stops under prefers-reduced-motion.
+  Screen-fixed, not world-anchored: a backdrop at infinity - camera moves
+  never drag it or force a re-render, zoom cannot alias it, and the fog
+  can sample it. REJECTED: cells (Voronoi seams form a dark network that
+  competes with the maze's faces), dither (a screen door that crawls
+  under drift), linen (a 4.5 px weave that moires at fractional DPRs).
+  LORE: this desktop's Chrome reports prefers-reduced-motion: reduce
+  (Windows animation effects are off), so backgrounds never drift here -
+  probes emulate no-preference; a warp of a warp amplifies its time
+  offsets (mist's clock runs at 0.35) and contour lines that move faster
+  than ~1 CSS px/s read as crawling; calibrate contrast as the p2-p98
+  luma spread of a knot-free margin (about 9-13 levels at 0.5). Cost:
+  +0.24-0.34 ms GPU per frame at 3200x1800 (the full-screen pass is most
+  of it). Probes: `.claude/probes/K21/`.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
@@ -1388,12 +1426,8 @@ subdivider) must keep adjacent coordinate jumps small, because a
 coordinate lerp sweeps the hues between.
 
 Still open in P4:
-- **Textured background**: the render side is DONE (Stage 18 — gaps
-  clip the thread layer over a transparent canvas; since G1 a gap
-  DISCARDS the under fragment, so a background may also be the canvas's
-  first layer - K21); what remains is
-  actually shipping a texture/pattern behind the canvas (CSS on
-  `app.canvas` or a DOM layer) and picking the art.
+- ~~Textured background~~ - DONE as K21's shader backgrounds (the
+  SHADER BACKGROUNDS entry above).
 - ~~URL/param serialization for the remaining `MazeParams`~~ and the
   ~~daily seed~~ — DONE 2026-10-12 (K20; the MAZE STATS + DAILY MAZE
   entry): the last three plan knobs joined codec v3, and the daily maze

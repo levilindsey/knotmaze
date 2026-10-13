@@ -53,6 +53,8 @@ export interface PanelCallbacks {
   // Color-only Look change (scheme / hue / gamut / palette / path color):
   // recolors the live scene in place - no rebuild, progress survives.
   onRecolor: () => void;
+  // Shader background effect / intensity: the background layer only.
+  onBackgroundChange: () => void;
   // Memory-trail mode + trail length: gameplay interpretation and paint
   // only, applied live (no scene rebuild).
   onTrailChange: () => void;
@@ -677,6 +679,27 @@ export function buildPanel(
     "How far the rounded corners reach where threads join at an intersection. 0 = sharp joints. Applies live.",
     D.cuspRadius, () => callbacks.onSlackChange()
   );
+  row(
+    fLook, p, "background",
+    {
+      options: {
+        none: "none",
+        vellum: "vellum",
+        mist: "mist",
+        wash: "wash",
+        silk: "silk",
+        aurora: "aurora",
+        contours: "contours",
+      },
+    },
+    "Backdrop behind the knot, in the design's own colors (it shows through the crossing gaps too): none = the plain page; vellum = dark parchment grain (still); mist = slow marbled smoke; wash = drifting watercolor blooms; silk = long flowing streaks; aurora = soft curtains of light; contours = the contour lines of a slowly shifting map. Everything but vellum drifts very slowly (still under reduced motion). Applies live.",
+    D.background, () => callbacks.onBackgroundChange()
+  );
+  const backgroundIntensityRow = row(
+    fLook, p, "backgroundIntensity", { min: 0, max: 1, step: 0.05 },
+    "Backdrop contrast: 0 = the plain page color, 1 = the strongest look. Applies live.",
+    D.backgroundIntensity, () => callbacks.onBackgroundChange()
+  );
 
   // --- Motion & intro -----------------------------------------------------
   const fMotion = folder("Motion & intro", false);
@@ -1042,6 +1065,7 @@ export function buildPanel(
     junctionBlendRow.hidden =
       !fab ||
       (params.colorScheme !== "segments" && params.colorScheme !== "strands");
+    backgroundIntensityRow.hidden = params.background === "none";
   };
   refreshCond();
 
