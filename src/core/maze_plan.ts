@@ -557,9 +557,25 @@ function nearestEdgeToCornerIn(
 }
 
 // Farthest-first selection under a spacing floor. `placed` is the flat list
-// of already-occupied junction points; each pick appends its own points so
-// later phases space against everything before them. When nothing is placed
-// yet, the first available pool entry (canonical order) seeds the process.
+// of already-occupied junction points; each pick appends its own points (and
+// onPick may append more) so later phases space against everything before
+// them. When nothing is placed yet, the first available pool entry
+// (canonical order) seeds the process.
+//
+// K87: INCREMENTAL, and pick-for-pick identical to the full rescan it
+// replaced (frozen in test/core/fixtures/maze_plan_v1.ts; the identity test
+// compares whole plans). Each candidate keeps its minimum distance to the
+// placed points (`near`), folding in only the points appended since the last
+// pass (`seen`): `placed` only grows, so a minimum only falls and a
+// candidate under the floor is dropped for good. The best scan asks
+// `available` only of a candidate that would beat the running best, which
+// still finds the FIRST available argmax in pool order, because every
+// `available` here is pure - the dead-end one also stores its trim on the
+// candidate it is asked about, and onPick reads that trim only for the
+// candidate that just passed. Math.hypot stays: the same distances give the
+// same minimum, so ties break as before. The rescan was ~88% of the plan,
+// paid on every rebuild and daily load: default knobs at gs 24 took 174 ms
+// (median; 1.4 s worst) and dense maps up to 15 s, now 7 ms, 30 ms, 104 ms.
 function pickFarthest<T>(
   pool: T[],
   ptsOf: (t: T) => number[],
@@ -570,40 +586,52 @@ function pickFarthest<T>(
   placed: number[]
 ): T[] {
   const out: T[] = [];
-  const commit = (t: T): void => {
-    const pts = ptsOf(t);
-    for (let k = 0; k < pts.length; k++) placed.push(pts[k]);
-    onPick(t);
-    out.push(t);
+  if (count <= 0) return out;
+  const pts = pool.map(ptsOf);
+  const near = new Float64Array(pool.length).fill(Infinity);
+  const live = pool.map((_, i) => i);
+  let seen = 0;
+  const commit = (i: number): void => {
+    const p = pts[i];
+    for (let k = 0; k < p.length; k++) placed.push(p[k]);
+    onPick(pool[i]);
+    out.push(pool[i]);
   };
   while (out.length < count) {
     if (placed.length === 0) {
-      const first = pool.find(available);
-      if (!first) break;
+      const first = pool.findIndex(available);
+      if (first < 0) break;
       commit(first);
       continue;
     }
-    let bestI = -1;
-    let bestD = -Infinity;
-    for (let i = 0; i < pool.length; i++) {
-      const t = pool[i];
-      if (!available(t)) continue;
-      const pts = ptsOf(t);
-      let d = Infinity;
-      for (let k = 0; k < pts.length; k += 2) {
-        for (let m = 0; m < placed.length; m += 2) {
-          const dd = Math.hypot(pts[k] - placed[m], pts[k + 1] - placed[m + 1]);
+    let w = 0;
+    for (let j = 0; j < live.length; j++) {
+      const i = live[j];
+      const p = pts[i];
+      let d = near[i];
+      for (let k = 0; k < p.length; k += 2) {
+        for (let m = seen; m < placed.length; m += 2) {
+          const dd = Math.hypot(p[k] - placed[m], p[k + 1] - placed[m + 1]);
           if (dd < d) d = dd;
         }
       }
+      near[i] = d;
       if (d < spacing) continue;
-      if (d > bestD) {
-        bestD = d;
+      live[w++] = i;
+    }
+    live.length = w;
+    seen = placed.length;
+    let bestI = -1;
+    let bestD = -Infinity;
+    for (let j = 0; j < live.length; j++) {
+      const i = live[j];
+      if (near[i] > bestD && available(pool[i])) {
+        bestD = near[i];
         bestI = i;
       }
     }
     if (bestI < 0) break; // nothing satisfies the spacing floor.
-    commit(pool[bestI]);
+    commit(bestI);
   }
   return out;
 }

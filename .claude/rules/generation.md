@@ -19,6 +19,19 @@ CLAUDE.md: the threads ARE the maze paths.
 - The plan's design history (splices, merges, corner cuts, long dead
   ends, shaped lattices) is in `docs/history.md`: Stages 5a–5d, 9 and
   11, SHAPED LATTICES and SHAPED START/EXIT CLEARANCE.
+- *K87 (2026-10-13), the plan identity pin:*
+  `test/core/maze_plan_identity.test.ts` builds whole plans with today's
+  `maze_plan.ts` and with the frozen pre-K87 copy
+  (`test/core/fixtures/maze_plan_v1.ts`, never edited) and requires the
+  same JSON: defaults per shape and size, random knobs, dense maps, the
+  first dailies. A refactor must keep it green. A deliberate plan change
+  (K86) keeps its default path equal to the pin, or re-freezes the
+  fixture in a commit that says which mazes move. Plan coordinates are
+  QUARTER units (crossings integer, turn nodes x.5, edge mids x.25/.75),
+  so 64·d² is an exact integer: `.claude/probes/K87/margin.ts` counts
+  exact ties by it. Two thirds of farthest-first picks are exact ties,
+  broken by pool order; some tie between different (dx, dy) pairs at
+  the same distance, where `Math.hypot`'s rounding decides (K108).
 
 ## Shapes, anchors and escape tails
 
