@@ -137,9 +137,21 @@ Overnight order, 2026-10-12 (Levi: proceed through the night with the
 remaining shader work). Every stage merges only after desktop
 verification AND the phone gate (K10); the phone stays on its charger,
 awake, over Tailscale.
-1. K8 (G3) and K23 (G2.4 GPU particles, GPU fog) in parallel, one
-   agent per stage (K8: G3-0 + G3-1 first).
-2. K9 (G4) and K42 (per-pixel overlap winner) in parallel.
+Overnight order, 2026-10-13 (Levi: "keep running through the night until
+you've addressed all bits that you don't need my input on"). At most three
+code agents at once, research on top. Stop launching once the week
+passes about 45% (29% at 00:30).
+1. Merge the running five as they finish: K73, K75, K83 (code; K75 also
+   passes the phone gate), K74 and K80 (docs).
+2. K77 (pluck wedges); K81 (the smooth arc, after K75); K79 (backgrounds,
+   after K73's codec v4); K49's 2.6 vs 2.8 comparison crops (small).
+3. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
+   K42.
+
+Waiting for Levi (not started overnight):
+- decisions: K76 stage 2, K67, K52, K64, K49, K58, K78;
+- deletions: the G3-3 and G4-2 old paths;
+- after the churn: K46, K57, K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
