@@ -191,6 +191,100 @@ export function softMin(a: number, b: number, k: number): number {
 }
 
 // ---------------------------------------------------------------------------
+// The rounded base collapse (K77).
+//
+// The plucked thread's base ribbon narrows by a per-sample DEPTH D (its
+// width multiplier is 1 - D). D is an allowance: the most the base may
+// narrow there without uncovering anything (0 in node footprints, gap
+// fades, tight bends). Its raw profile is a product of ramps meeting in
+// min()s, and where two of them meet across a short window it is a V; the
+// base edge h (1 - D) then reads through the overlay's translucent fringe
+// as a sharp wedge cut into the thread. Limiting the slope cannot fix a V
+// (its corner is a curvature spike), so the collapse keeps instead the
+// largest profile under D built from RAISED-COSINE BUMPS whose curvature
+// is at most `curv`: s cos^2(pi u / (2 a)), half-width a(s) =
+// pi sqrt(s / (2 curv)), so a taller bump is also wider. That is a
+// morphological opening of D: everything stays at or under D (footprints
+// and the other hard limits hold), a window too short for a full-depth
+// bump gets a shallower round dip instead of a V, every peak and every
+// shoulder bends at most `curv` (edge radius >= 1 / (h curv)), and a
+// smooth D wider than its bumps comes through unchanged. The family is
+// nested (a lower bump lies under every higher one at the same center),
+// so each center's height is the minimum over its constraints, each
+// found by bisection.
+
+// One bump's value at scaled distance w = u sqrt(curv / 2) from its center.
+function bumpAt(s: number, w: number): number {
+  const phase = w / Math.sqrt(s);
+  if (!(phase < 0.5 * PI)) return 0;
+  const c = Math.cos(phase);
+  return s * c * c;
+}
+
+// out = the rounded collapse of `depth` (per base sample, spacing `per`
+// along the chain; a closed chain wraps, an open chain's ends count as 0).
+// curv <= 0 copies `depth` unchanged. out must not alias depth.
+export function roundCollapse(
+  depth: ArrayLike<number>,
+  per: number,
+  closed: boolean,
+  curv: number,
+  out: Float32Array
+): void {
+  const n = depth.length;
+  if (!(curv > 0) || !(per > 0)) {
+    for (let k = 0; k < n; k++) out[k] = depth[k];
+    return;
+  }
+  out.fill(0, 0, n);
+  const at = (z: number): number => {
+    if (closed) return depth[((z % n) + n) % n];
+    return z < 0 || z >= n ? 0 : depth[z];
+  };
+  // A closed chain's bump never wraps onto itself.
+  const reach = closed ? (n - 1) >> 1 : n;
+  const scale = per * Math.sqrt(0.5 * curv);
+  const halfPi = 0.5 * PI;
+  for (let c = 0; c < n; c++) {
+    let s = depth[c];
+    if (!(s > 0)) continue;
+    // Tallest bump at c under every neighbor (s only ever shrinks, so a
+    // constraint past the current bump's reach can never bind).
+    for (let d = 1; d <= reach; d++) {
+      const w = d * scale;
+      if (!(w < halfPi * Math.sqrt(s))) break;
+      const lim = Math.min(at(c - d), at(c + d));
+      if (bumpAt(s, w) <= lim) continue;
+      if (!(lim > 0)) {
+        s = (w / halfPi) * (w / halfPi);
+        continue;
+      }
+      let lo = 0;
+      let hi = s;
+      for (let it = 0; it < 24 && hi - lo > 1e-6; it++) {
+        const mid = 0.5 * (lo + hi);
+        if (bumpAt(mid, w) <= lim) lo = mid;
+        else hi = mid;
+      }
+      s = lo;
+    }
+    if (!(s > 0)) continue;
+    if (s > out[c]) out[c] = s;
+    for (let d = 1; d <= reach; d++) {
+      const w = d * scale;
+      if (!(w < halfPi * Math.sqrt(s))) break;
+      const v = bumpAt(s, w);
+      for (const z of [c - d, c + d]) {
+        let zz = z;
+        if (closed) zz = ((z % n) + n) % n;
+        else if (z < 0 || z >= n) continue;
+        if (v > out[zz]) out[zz] = v;
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Coverage (CPU twin of the overlay's fragment shader, for tests/probes).
 
 // Integral of the arcsine CDF over [lo, hi]: 0 below lo, r at hi, slope 1

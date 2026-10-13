@@ -7,6 +7,7 @@ import {
   ghostShape,
   nodeCap,
   peakShape,
+  roundCollapse,
   roundTau,
   segmentLobes,
   softMin,
@@ -255,5 +256,175 @@ describe("lobe segmentation", () => {
     expect(pseudo[0].a).toBe(-1);
     expect(pseudo[0].s0).toBeCloseTo(5.5, 9);
     expect(pseudo[0].s1).toBeCloseTo(8.5, 9);
+  });
+});
+
+// K77: the base collapse's depth profile, rounded so no wedge survives.
+describe("rounded base collapse", () => {
+  // Deterministic profiles: mulberry32.
+  const rng = (seed: number): (() => number) => {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  const round = (d: ArrayLike<number>, per: number, closed: boolean, curv: number): Float32Array => {
+    const out = new Float32Array(d.length);
+    roundCollapse(d, per, closed, curv, out);
+    return out;
+  };
+  // A raw collapse-like profile: runs of ramps and plateaus, zero gaps.
+  const randomDepth = (r: () => number, n: number): Float32Array => {
+    const d = new Float32Array(n);
+    let v = 0;
+    for (let k = 0; k < n; k++) {
+      if (r() < 0.08) v = 0;
+      else v = Math.min(1, Math.max(0, v + (r() - 0.42) * 0.5));
+      d[k] = v;
+    }
+    return d;
+  };
+  const curvOf = (h: number, radiusInH: number): number => 1 / (radiusInH * h * h);
+
+  it("never narrows past the allowance; zero stays zero", () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const r = rng(seed);
+      const n = 40 + Math.floor(r() * 160);
+      const d = randomDepth(r, n);
+      const per = 0.05 + 0.07 * r();
+      const curv = curvOf(0.15 + 0.2 * r(), 0.5 + r());
+      for (const closed of [false, true]) {
+        const f = round(d, per, closed, curv);
+        for (let k = 0; k < n; k++) {
+          expect(f[k]).toBeLessThanOrEqual(d[k] + 1e-6);
+          expect(f[k]).toBeGreaterThanOrEqual(0);
+          if (d[k] === 0) expect(f[k]).toBeLessThan(1e-9);
+        }
+      }
+    }
+  });
+
+  it("bends at most curv: no concave corner (wedge) anywhere", () => {
+    let rawWedges = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const r = rng(1000 + seed);
+      const n = 60 + Math.floor(r() * 160);
+      const d = randomDepth(r, n);
+      const per = 0.06 + 0.04 * r();
+      const curv = curvOf(0.2 + 0.1 * r(), 0.5 + r());
+      const bound = curv * per * per;
+      for (const closed of [false, true]) {
+        const f = round(d, per, closed, curv);
+        const lo = closed ? 0 : 1;
+        const hi = closed ? n : n - 1;
+        let worst = 0;
+        for (let k = lo; k < hi; k++) {
+          const a = f[(k - 1 + n) % n];
+          const c = f[(k + 1) % n];
+          worst = Math.min(worst, a - 2 * f[k] + c);
+        }
+        expect(worst).toBeGreaterThanOrEqual(-bound * (1 + 1e-4) - 1e-6);
+        // The raw profiles do have wedges: the test is not vacuous.
+        let rawWorst = 0;
+        for (let k = 1; k < n - 1; k++) rawWorst = Math.min(rawWorst, d[k - 1] - 2 * d[k] + d[k + 1]);
+        if (rawWorst < -bound) rawWedges++;
+      }
+    }
+    expect(rawWedges).toBeGreaterThan(60);
+  });
+
+  it("a window too short for full depth gets a shallow round dip, not a V", () => {
+    // A V: two ramps meeting at 0.8 over 0.56 world (the s2L waist).
+    const per = 0.086;
+    const h = 0.26;
+    const curv = curvOf(h, 1);
+    const n = 41;
+    const d = new Float32Array(n);
+    for (let k = 0; k < n; k++) {
+      const u = Math.abs(k * per - 20 * per);
+      d[k] = Math.max(0, 0.8 * (1 - u / 0.28));
+    }
+    const f = round(d, per, false, curv);
+    const peak = Math.max(...f);
+    expect(peak).toBeLessThan(0.5);
+    expect(peak).toBeGreaterThan(0.1);
+    // Symmetric, single-peaked, and as tall as the nearest zeros allow.
+    for (let k = 0; k < 20; k++) {
+      expect(f[k]).toBeLessThanOrEqual(f[k + 1] + 1e-7);
+      expect(f[20 + k + 1]).toBeLessThanOrEqual(f[20 + k] + 1e-7);
+      expect(f[20 - k]).toBeCloseTo(f[20 + k], 6);
+    }
+  });
+
+  it("a box: the tallest bump that fits between its zeros", () => {
+    const per = 0.08;
+    const curv = curvOf(0.25, 1);
+    for (const W of [3, 5, 8, 13, 40]) {
+      const n = W + 20;
+      const d = new Float32Array(n);
+      for (let k = 10; k < 10 + W; k++) d[k] = 1;
+      const f = round(d, per, false, curv);
+      // Each center's nearest zero bounds its bump: a(s) <= d0 per.
+      let want = 0;
+      for (let c = 10; c < 10 + W; c++) {
+        const d0 = Math.min(c - 9, 10 + W - c);
+        want = Math.max(want, Math.min(1, 2 * curv * ((d0 * per) / Math.PI) ** 2));
+      }
+      expect(Math.max(...f)).toBeCloseTo(want, 5);
+      // A wide box keeps its full depth in the middle, rounded shoulders.
+      if (W === 40) {
+        expect(f[30]).toBeCloseTo(1, 6);
+        expect(f[11]).toBeLessThan(0.5);
+      }
+    }
+  });
+
+  it("keeps what is already round: constants, and gentle bumps", () => {
+    const per = 0.08;
+    const curv = curvOf(0.25, 1);
+    // A constant ring is unchanged; an open run is rounded only at its ends.
+    const ring = round(new Float32Array(50).fill(0.7), per, true, curv);
+    for (const v of ring) expect(v).toBeCloseTo(0.7, 6);
+    const run = round(new Float32Array(50).fill(0.7), per, false, curv);
+    expect(run[25]).toBeCloseTo(0.7, 6);
+    expect(run[0]).toBeLessThan(0.05);
+    // A raised cosine three times wider than the curvature-limited one.
+    const s = 0.6;
+    const a = 3 * Math.PI * Math.sqrt(s / (2 * curv));
+    const n = Math.ceil((2 * a) / per) + 9;
+    const d = new Float32Array(n);
+    for (let k = 0; k < n; k++) {
+      const u = k * per - 0.5 * (n - 1) * per;
+      d[k] = Math.abs(u) < a ? s * Math.cos((Math.PI * u) / (2 * a)) ** 2 : 0;
+    }
+    const f = round(d, per, false, curv);
+    let dev = 0;
+    for (let k = 0; k < n; k++) dev = Math.max(dev, d[k] - f[k]);
+    expect(dev).toBeLessThan(0.01 * s);
+  });
+
+  it("wraps a closed chain across its seam; curv 0 is the identity", () => {
+    const per = 0.08;
+    const curv = curvOf(0.25, 1);
+    const n = 64;
+    const d = new Float32Array(n);
+    const e = new Float32Array(n);
+    // The same V straddling the seam, and shifted into the middle.
+    for (let k = 0; k < n; k++) {
+      const u = Math.min(Math.abs(k), Math.abs(k - n)) * per;
+      d[k] = Math.max(0, 0.9 * (1 - u / 0.4));
+      e[(k + 32) % n] = d[k];
+    }
+    const f = round(d, per, true, curv);
+    const g = round(e, per, true, curv);
+    for (let k = 0; k < n; k++) expect(f[k]).toBeCloseTo(g[(k + 32) % n], 6);
+    expect(f[0]).toBeLessThan(0.9);
+    expect(f[0]).toBeGreaterThan(0);
+    const same = round(d, per, true, 0);
+    for (let k = 0; k < n; k++) expect(same[k]).toBe(d[k]);
   });
 });
