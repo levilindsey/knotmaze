@@ -144,6 +144,13 @@ export class RibbonMesh {
     this.mesh.tint = color;
   }
 
+  // The extruded outline update() last wrote: [lx, ly, rx, ry] per sample
+  // (vertex 2i = left, 2i + 1 = right). Read-only for callers - K81's
+  // route cover strips re-emit these exact quads in the junction pass.
+  get vertices(): Float32Array {
+    return this.vertexData;
+  }
+
   // PER-PIXEL GAPS: per-sample slot ids (GAP_SLOTS per sample, -1 = none).
   // Uploads only when they differ from the last call - window membership
   // changes far less often than positions.
@@ -398,6 +405,44 @@ export class TriFanMesh {
     }
     this.iUsed = n;
     this.vUsed = apex + rimCount + 1;
+  }
+
+  // Emit one quad strip (K81 route cover strips): `pts` is flat
+  // [lx, ly, rx, ry] per sample, the ribbon layout, and the quads are the
+  // ribbon's own triangles (a, b, c), (b, d, c). Every vertex carries
+  // `rec` and the current maskIds, like a fan.
+  pushStrip(pts: number[], rec: number): void {
+    const samples = pts.length / 4;
+    const verts = samples * 2;
+    if (
+      samples < 2 ||
+      this.vUsed + verts > this.recData.length ||
+      this.iUsed + (samples - 1) * 6 > this.indexData.length
+    ) {
+      return; // Capacity is sized for the worst case; never grows.
+    }
+    const v0 = this.vUsed;
+    this.vertexData.set(pts, v0 * 2);
+    this.recData.fill(rec, v0, v0 + verts);
+    for (let v = v0; v < v0 + verts; v++) {
+      this.maskData.set(this.maskIds, v * GAP_SLOTS);
+    }
+    const ix = this.indexData;
+    let n = this.iUsed;
+    for (let i = 0; i < samples - 1; i++) {
+      const a = v0 + i * 2;
+      const b = a + 1;
+      const c = a + 2;
+      const d = a + 3;
+      ix[n++] = a;
+      ix[n++] = b;
+      ix[n++] = c;
+      ix[n++] = b;
+      ix[n++] = d;
+      ix[n++] = c;
+    }
+    this.iUsed = n;
+    this.vUsed = v0 + verts;
   }
 
   // Upload only the used vertex ranges (indices never reference past

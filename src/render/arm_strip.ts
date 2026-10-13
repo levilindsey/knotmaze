@@ -11,10 +11,16 @@
 //
 //   STRIP TABLE (RGBA32F FloatRows, 2 texels per row r):
 //     T0 = (chain, arc0, arcStep, px)   texel k is the material at
-//     T1 = (seed0, seedStep, -, -)      arc0 + arcStep * k (ctrl search
+//     T1 = (seed0, seedStep, untrav, -) arc0 + arcStep * k (ctrl search
 //                                       seed seed0 + seedStep * k), its
 //                                       gameplay-paint edges antialiased
-//                                       over px (the strip's own step)
+//                                       over px (the strip's own step);
+//                                       untrav 1 (K81) = the UNTRAVELED
+//                                       material: the gold amount of the
+//                                       paint is dropped, pulses / hover /
+//                                       the reveal glow still brighten the
+//                                       section color - what a routed
+//                                       joint's web wears off its band
 //   STRIP TEXTURE (RGBA8 render target, STRIP_RT_W wide): row r occupies
 //     texels [(r % STRIP_LINE) * STRIP_W, +STRIP_W) of line r / STRIP_LINE.
 //     Read with texelFetch + manual lerp (exact weights: the CPU mirror in
@@ -179,8 +185,9 @@ highp float kStripPx;
 // shader's section at the two bracketing samples, lerped - its own
 // Gouraud; seed = a ctrl near the arc), the appearance FX that tint (burn /
 // roots - the joinery wears no stripes or transparency: its gate fades
-// it), then the gameplay paint and the reveal glow (G2.3).
-vec3 chainMaterial(int ch, highp float a, highp float seedIn) {
+// it), then the gameplay paint and the reveal glow (G2.3). untrav (K81):
+// the paint without its gold amount (pulses and the glow kept).
+vec3 chainMaterial(int ch, highp float a, highp float seedIn, bool untrav) {
   KChain c = kChain(ch);
   // The ctrl search seed, normalized onto the chain (rings wrap, runs clamp).
   highp float nc = float(c.nCtrl);
@@ -199,7 +206,9 @@ vec3 chainMaterial(int ch, highp float a, highp float seedIn) {
     }
   }
   if ((uKPaint.x > 0.5 && c.paintOn) || uKFx2.z > 0.5) {
-    m = kComposePaint(m, kPaintAt(c, actrl, an, kStripPx), kGlow(c, actrl));
+    highp vec4 st = kPaintAt(c, actrl, an, kStripPx);
+    if (untrav) st.x = 0.0;
+    m = kComposePaint(m, st, kGlow(c, actrl));
   }
   return m;
 }
@@ -218,7 +227,7 @@ void main(void) {
   highp vec4 t1 = texelFetch(uStripTable, ivec2((t + 1) & ${ROW_W - 1}, (t + 1) >> ${ROW_SHIFT}), 0);
   kStripPx = t0.w;
   highp float fk = float(k);
-  finalColor = vec4(chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk), 1.0);
+  finalColor = vec4(chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z > 0.5), 1.0);
 }
 `;
 

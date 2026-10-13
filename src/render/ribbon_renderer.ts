@@ -108,11 +108,16 @@ import {
   FIELD_PROF_ARC,
   FIELD_PROF_DR,
   MAX_ARMS,
+  MAX_ROUTES,
+  MAX_ROUTE_VERTS,
+  ROUTE_BAND_PAD,
   bindFieldGap,
   junctionShader,
   recordData,
   setFieldParams,
 } from "./junction_field";
+import { pickRoutes, routeCorner, routeCubic } from "./junction_routes";
+import type { PaintRoute } from "./junction_routes";
 import {
   STRIP_STATS,
   STRIP_W,
@@ -186,6 +191,18 @@ export interface PaintCap {
   // the old unconditional gold write whenever p is 1.
   p?: number;
 }
+// K81: a route (junction_routes.ts PaintRoute) resolved against the static
+// junction arms: the arm it arrived by and the arm it left by (null = a
+// one-arm route), as junction arms (chain, particle slot, direction).
+interface RouteJArm {
+  chain: number;
+  slot: number;
+  dir: 1 | -1;
+}
+interface ResolvedRoute {
+  a: RouteJArm;
+  b: RouteJArm | null;
+}
 
 // GAMEPLAY PAINT (G2.3): the paint declaration (setPaint - traveled
 // spans, junction caps, pulse arms) is evaluated PER PIXEL by the section
@@ -255,6 +272,13 @@ const FILLET_GAP_MIN_FRAC = 0.3;
 // rebuildFillets armDives).
 const FILLET_DIVE_NEAR = 2.0;
 const DISC_SEGS = 16; // Rim segments on tip/junction seal discs.
+// K81 COVER STRIPS: at a routed junction every arm's ribbon is redrawn in
+// the junction pass (the field's untraveled base under the route bands)
+// out to its cover reach, from the arm's own extruded ribbon vertices: the
+// arms' gold ribbons would otherwise square off the band's turn (the union
+// of two straight gold ribbons fills the corner outside the arc). At most
+// this many ribbon samples per strip.
+const COVER_STRIP_PTS = 32;
 // FUSED-TIP DISC radius, in half-widths. A tucked cap keeps a quarter
 // half-width of overlap with its host (tuckFusedTips) that only the fans
 // hide, and its corners sit a full half-width from the tuck point: at
@@ -706,6 +730,20 @@ export class RibbonRenderer {
   private pulseBorn = -1e9;
   private paintCaps: PaintCap[] = [];
   private paintClock = 0;
+  // K81 route bands (junction_routes.ts): the path's passes through
+  // junctions, oldest first; routeKey keys the fillet rebuild that draws
+  // them, routedArms holds every arm ("chain:slot") of a junction holding
+  // at least one resolved route - the paint caps there are dropped (the
+  // band and the untraveled web decide those pixels).
+  private paintRoutes: PaintRoute[] = [];
+  private routeKey = "";
+  private routedArms = new Set<string>();
+  // The routes resolved to junctions (junctionArms index -> its passes,
+  // oldest first, at most MAX_ROUTES; b null = a one-arm route), and the
+  // lookup that resolves them ("chain:slot:dir" -> junctionArms index;
+  // built lazily, junctionArms never changes).
+  private routesByJn = new Map<number, ResolvedRoute[]>();
+  private armJunction: Map<string, number> | null = null;
   // Junction joinery: arms per fused junction (built once), per-chain
   // fused-terminal flags for the tuck, and palette pixel rows for CPU-side
   // fillet coloring.
@@ -3418,14 +3456,27 @@ export class RibbonRenderer {
 
 
   // Declare the current gameplay paint (traveled spans + branch-point
-  // pulse arms + junction caps). Called every awake frame; KPAINT is
-  // rewritten only when the declaration's content changed (a traversal
-  // move changes its swept span every frame - a few texels).
-  setPaint(spans: PaintSpan[], pulses: PulseArm[], caps: PaintCap[]): void {
+  // pulse arms + junction caps + K81 route bands). Called every awake
+  // frame; KPAINT is rewritten only when the declaration's content changed
+  // (a traversal move changes its swept span every frame - a few texels),
+  // the routes re-resolve only when they changed (a tap, a move's end).
+  setPaint(
+    spans: PaintSpan[],
+    pulses: PulseArm[],
+    caps: PaintCap[],
+    routes: PaintRoute[] = []
+  ): void {
     this.paintSpans = spans;
     this.paintPulses = pulses;
     this.paintCaps = caps;
-    const declKey = JSON.stringify([spans, pulses, caps]);
+    const rk = JSON.stringify(routes);
+    if (rk !== this.routeKey) {
+      this.routeKey = rk;
+      this.paintRoutes = routes;
+      this.resolveRoutes();
+    }
+    // The routes key the caps too: a routed junction drops its caps.
+    const declKey = JSON.stringify([spans, pulses, caps]) + "|" + rk;
     if (declKey !== this.paintKey && this.style.paletteMode) {
       this.paintKey = declKey;
       this.writePaintItems();
@@ -3441,6 +3492,79 @@ export class RibbonRenderer {
     if (key !== this.pulseKey) {
       this.pulseKey = key;
       this.pulseBorn = this.paintClock;
+    }
+  }
+
+  // K81: a walk ctrl's particle slot on its chain (walk ctrls are particle
+  // slots; a closed chain's may be unwrapped past its length), -1 for a
+  // chain that does not exist.
+  private routeArmSlot(chain: number, ctrl: number): number {
+    const ch = this.ps.chains[chain];
+    if (!ch || ch.length === 0) return -1;
+    const len = ch.length;
+    const s = Math.round(ctrl);
+    return this.ps.chainBreakAfter[chain] < 0
+      ? ((s % len) + len) % len
+      : Math.max(0, Math.min(len - 1, s));
+  }
+
+  // K81: resolve the declared routes against the junction arms. A route
+  // needs its arrival arm on a junction and its departure arm on the SAME
+  // junction (or none, or the arrival arm again: a one-arm route); free
+  // tips (start, exit, dead ends) resolve to nothing and keep their caps.
+  // Each junction keeps its newest MAX_ROUTES passes over distinct arm
+  // pairs (junction_routes pickRoutes), and every arm of a routed junction
+  // is listed in routedArms: its paint caps are dropped (writePaintItems).
+  private resolveRoutes(): void {
+    if (!this.armJunction) {
+      const m = new Map<string, number>();
+      this.junctionArms.forEach((jn, ji) => {
+        for (const a of jn.arms) m.set(a.chain + ":" + a.slot + ":" + a.dir, ji);
+      });
+      this.armJunction = m;
+    }
+    const aj = this.armJunction;
+    const armKey = (x: RouteJArm): string => x.chain + ":" + x.slot + ":" + x.dir;
+    const perJn = new Map<number, ResolvedRoute[]>();
+    for (const r of this.paintRoutes) {
+      const sa = this.routeArmSlot(r.chain, r.ctrl);
+      if (sa < 0) continue;
+      const a: RouteJArm = { chain: r.chain, slot: sa, dir: r.dir };
+      const ja = aj.get(armKey(a));
+      if (ja === undefined) continue;
+      let b: RouteJArm | null = null;
+      if (
+        r.outChain !== undefined &&
+        r.outCtrl !== undefined &&
+        r.outDir !== undefined
+      ) {
+        const sb = this.routeArmSlot(r.outChain, r.outCtrl);
+        if (sb < 0) continue;
+        b = { chain: r.outChain, slot: sb, dir: r.outDir };
+        if (aj.get(armKey(b)) !== ja) continue;
+        if (armKey(b) === armKey(a)) b = null;
+      }
+      let list = perJn.get(ja);
+      if (!list) {
+        list = [];
+        perJn.set(ja, list);
+      }
+      list.push({ a, b });
+    }
+    this.routesByJn = new Map();
+    this.routedArms = new Set();
+    for (const [ji, list] of perJn) {
+      this.routesByJn.set(
+        ji,
+        pickRoutes(
+          list,
+          (r) => (r.b ? [armKey(r.a), armKey(r.b)].sort().join("|") : armKey(r.a)),
+          MAX_ROUTES
+        )
+      );
+      for (const a of this.junctionArms[ji].arms) {
+        this.routedArms.add(a.chain + ":" + a.slot);
+      }
     }
   }
 
@@ -4033,6 +4157,14 @@ export class RibbonRenderer {
       touch(s.chain, Math.min(s.c0, s.c1), Math.max(s.c0, s.c1), i);
     }
     for (const cp of this.paintCaps) {
+      // K81: a routed junction's band and untraveled web decide its
+      // pixels; a cap there would paint gold down every arm's ribbon.
+      if (
+        this.routedArms.size > 0 &&
+        this.routedArms.has(cp.chain + ":" + this.routeArmSlot(cp.chain, cp.ctrl))
+      ) {
+        continue;
+      }
       const i = items.length / 8;
       items.push(PAINT_ITEM.CAP, cp.ctrl, cp.ctrl, cp.p ?? 1, 0, 0, cp.radius, 0);
       const r = (2 * cp.radius) / minArcPerCtrl(cp.chain);
@@ -4157,7 +4289,15 @@ export class RibbonRenderer {
   // arc - the ribbon's section color there (its own Gouraud between
   // samples; `seed` = a ctrl near the arc), burn / roots, then the gameplay
   // paint and the reveal glow with edge coverage over `px` - into out[0..2].
-  private cpuChainMaterial(ch: number, a: number, out: Float32Array, seedIn: number, px = 0): void {
+  // untrav (K81): the paint without its gold amount (an untraveled row).
+  private cpuChainMaterial(
+    ch: number,
+    a: number,
+    out: Float32Array,
+    seedIn: number,
+    px = 0,
+    untrav = false
+  ): void {
     const D = kData();
     const U = knotUniformValues();
     const c = kChain(D, ch);
@@ -4181,19 +4321,23 @@ export class RibbonRenderer {
       }
     }
     if ((U.uKPaint[0] > 0.5 && c.paintOn) || U.uKFx2[2] > 0.5) {
-      kComposePaint(U, out, kPaintAt(D, U, c, actrl, an, px, this.paintTmp), kGlow(D, U, c, actrl));
+      const st = kPaintAt(D, U, c, actrl, an, px, this.paintTmp);
+      if (untrav) st.p = 0;
+      kComposePaint(U, out, st, kGlow(D, U, c, actrl));
     }
   }
   // Append one ARM STRIP row (arm_strip.ts table layout): texel k = the
   // material of `chain` at arc arc0 + arcStep * k (ctrl seed seed0 +
-  // seedStep * k), paint edges antialiased over px. Returns the row.
+  // seedStep * k), paint edges antialiased over px; untrav 1 = the
+  // untraveled material (K81). Returns the row.
   private writeStripRow(
     chain: number,
     arc0: number,
     arcStep: number,
     px: number,
     seed0: number,
-    seedStep: number
+    seedStep: number,
+    untrav = 0
   ): number {
     const r = this.stripRowsUsed++;
     const tb = stripTable();
@@ -4206,7 +4350,7 @@ export class RibbonRenderer {
     d[o + 3] = px;
     d[o + 4] = seed0;
     d[o + 5] = seedStep;
-    d[o + 6] = 0;
+    d[o + 6] = untrav;
     d[o + 7] = 0;
     return r;
   }
@@ -4225,8 +4369,9 @@ export class RibbonRenderer {
     const q = (v: number): number => Math.round(Math.max(0, Math.min(1, v)) * 255) / 255;
     const m0 = this.stripK0;
     const m1 = this.stripK1;
-    this.cpuChainMaterial(T[o], T[o + 1] + T[o + 2] * k0, m0, T[o + 4] + T[o + 5] * k0, T[o + 3]);
-    this.cpuChainMaterial(T[o], T[o + 1] + T[o + 2] * k1, m1, T[o + 4] + T[o + 5] * k1, T[o + 3]);
+    const un = T[o + 6] > 0.5;
+    this.cpuChainMaterial(T[o], T[o + 1] + T[o + 2] * k0, m0, T[o + 4] + T[o + 5] * k0, T[o + 3], un);
+    this.cpuChainMaterial(T[o], T[o + 1] + T[o + 2] * k1, m1, T[o + 4] + T[o + 5] * k1, T[o + 3], un);
     for (let c = 0; c < 3; c++) {
       const a = q(m0[c]);
       out[c] = a + (q(m1[c]) - a) * f;
@@ -4456,7 +4601,9 @@ export class RibbonRenderer {
       "|" +
       this.style.casingWidth +
       "|" +
-      this.fadeLength;
+      this.fadeLength +
+      "|" +
+      this.routeKey;
     // A reveal moves the joint gate times (their speed extrapolation) every
     // frame; the FX fades themselves animate on the GPU from the record's
     // J1 times (G2.1), so they need no rebuild.
@@ -4467,8 +4614,15 @@ export class RibbonRenderer {
       let armTotal = 0;
       for (const jn of this.junctionArms) armTotal += jn.arms.length;
       const wedgeRim = 2 * FILLET_EDGE_PTS_MAX + FILLET_BEZIER_STEPS + 1;
-      const verts = armTotal * (1 + wedgeRim) + nDiscs * (2 + DISC_SEGS);
-      const idx = (armTotal * (wedgeRim - 1) + nDiscs * DISC_SEGS) * 3;
+      // + one K81 cover strip per arm (COVER_STRIP_PTS samples, two
+      // vertices each, two triangles per segment).
+      const verts =
+        armTotal * (1 + wedgeRim + 2 * COVER_STRIP_PTS) +
+        nDiscs * (2 + DISC_SEGS);
+      const idx =
+        (armTotal * (wedgeRim - 1 + 2 * (COVER_STRIP_PTS - 1)) +
+          nDiscs * DISC_SEGS) *
+        3;
       this.filletMesh = new TriFanMesh(verts, idx);
       this.filletMesh.mesh.shader = junctionShader();
       this.filletLayer.addChild(this.filletMesh.mesh);
@@ -4698,6 +4852,9 @@ export class RibbonRenderer {
       // by the arm's two wedges (left and right flanks differ only in the
       // offset side). null until first used.
       flankPts: Float64Array | null;
+      // Arc from the joint to an open chain's end along the arm (Infinity
+      // on a closed chain): bounds the K81 route band's arm stretches.
+      toEnd: number;
     }
     interface JRec {
       jx: number;
@@ -4713,6 +4870,10 @@ export class RibbonRenderer {
       // The farthest any of its fan vertices lies from (jx, jy): bounds the
       // arc its arms' strip rows must cover.
       rMax: number;
+      // K81 ROUTE BANDS through this joint, oldest first: arm indexes into
+      // arms[0..n) (ib -1 = a one-arm band, the head), the turn's start
+      // arc d along both arms and the half-length m of its A -> B blend.
+      routes: Array<{ ia: number; ib: number; d: number; m: number }>;
     }
     // Radial profile of one arm around its joint (JArm.pth/ps): walk the
     // centerline outward in FIELD_PROF_ARC steps and resample angle + arc
@@ -4891,6 +5052,7 @@ export class RibbonRenderer {
           top: false,
           dives: false,
           flankPts: null,
+          toEnd,
         });
       }
       arms.sort((p, q) => p.ang - q.ang);
@@ -4912,6 +5074,7 @@ export class RibbonRenderer {
         rb: -1,
         mask,
         rMax: 0,
+        routes: [],
       });
     }
     // JUNCTION RECORDS (joints with >= 2 arms - nothing else draws or reads
@@ -4965,6 +5128,34 @@ export class RibbonRenderer {
       }
       rec.rb = cursor;
       cursor += 2 + n * armStride;
+    }
+    // K81 ROUTES: each record's resolved routes as indexes into its arms
+    // (the first n, in angle order - what the record holds). A route whose
+    // arm has no record entry (shorter than 0.15 world, or past MAX_ARMS)
+    // gets no band; its junction's caps are dropped all the same (residual).
+    if (this.routesByJn.size > 0) {
+      for (const rec of recs) {
+        if (rec.rb < 0) continue;
+        const list = this.routesByJn.get(rec.jn);
+        if (!list) continue;
+        const n = Math.min(rec.arms.length, MAX_ARMS);
+        const find = (x: RouteJArm): number => {
+          for (let i = 0; i < n; i++) {
+            const a = rec.arms[i];
+            if (a.chain === x.chain && a.slot === x.slot && a.dir === x.dir) {
+              return i;
+            }
+          }
+          return -1;
+        };
+        for (const r of list) {
+          const ia = find(r.a);
+          if (ia < 0) continue;
+          const ib = r.b ? find(r.b) : -1;
+          if (r.b && ib < 0) continue;
+          rec.routes.push({ ia, ib, d: 0, m: 0.5 * fillHalf });
+        }
+      }
     }
     // Nearest under-gap near edge ahead along an arm (mid-lane extents of
     // underWindows), or Infinity.
