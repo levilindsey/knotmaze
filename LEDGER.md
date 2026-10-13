@@ -16,7 +16,7 @@ and never reused.
 ## Waiting on Levi
 
 - **K76** · The thread-reveal mode's decisions: the stage 1 design is in
-  `docs/design/K76_reveal_mode.md` (2ee2b7f). The contact sheet of eight
+  `docs/design/K76_reveal_mode.md` (0474300). The contact sheet of eight
   end looks is `.claude/probes/K76/out/contact.html` (desktop and phone
   PNGs beside it). Decisions:
   - the end look (recommended "Beacon": a round cap continuing as fading
@@ -35,7 +35,7 @@ and never reused.
     session d8031183 can resume while the worktree is kept).
   - branch: `worktree-agent-aea102de995e1ce30`
     (`.claude/worktrees/agent-aea102de995e1ce30`); prototype WIP 1fbc0d2
-    and 23907a5, doc c05dbfc (on master as 2ee2b7f).
+    and 23907a5, doc c05dbfc (on master as 0474300).
   - evidence: `.claude/probes/K76/`.
   - env: the prototype server is in the doc's handle (port 5276, private
     cacheDir).
@@ -91,7 +91,7 @@ and never reused.
   off-screen exit indicator.
   - owner: the K73 agent of session d8031183, started 2026-10-12 22:05.
   - branch: `worktree-agent-a8acc04204f0e3be8`
-    (`.claude/worktrees/agent-a8acc04204f0e3be8`), from 39966da; last
+    (`.claude/worktrees/agent-a8acc04204f0e3be8`), from 44885f3; last
     commit: none yet.
   - evidence: `.claude/probes/K73/`.
   - next: implement the three changes, then screenshots at desktop and
@@ -102,7 +102,7 @@ and never reused.
   lengths), and a plan of formulation changes.
   - owner: the K74 agent of session d8031183, started 2026-10-12 21:55.
   - branch: `worktree-agent-aeaf1e61bcecaaf0b`
-    (`.claude/worktrees/agent-aeaf1e61bcecaaf0b`), from 303d335; last
+    (`.claude/worktrees/agent-aeaf1e61bcecaaf0b`), from 670dbc1; last
     commit: none yet.
   - evidence: `.claude/probes/K74/`.
   - next: research, the harness, a sweep of the existing knobs, then
@@ -124,7 +124,7 @@ and never reused.
   highlight extends only a set, slider-controlled distance, fading out.
   - owner: the K75 agent of session d8031183, started 2026-10-12 22:05.
   - branch: `worktree-agent-a40b9ac956a4eaa61`
-    (`.claude/worktrees/agent-a40b9ac956a4eaa61`), from 39966da; last
+    (`.claude/worktrees/agent-a40b9ac956a4eaa61`), from 44885f3; last
     commit: none yet.
   - evidence: `.claude/probes/K75/`.
   - next: reproduce on a frozen state, then attribute against pv=gold and
@@ -157,7 +157,7 @@ K5-K7 (split, frame loop, worker) follow.
   vibration is strongest, maybe more on curves (Levi): a thinning should
   read smooth and rounded. Launch when an agent slot frees (four running
   at 22:35). Brief: `docs/design/K77.md`. Check whether tonight's bigger
-  amplitude floor (39966da) exposed it.
+  amplitude floor (44885f3) exposed it.
 - **K81** · The traveled highlight at junctions: a smooth gold arc from
   the arrival arm to the departure arm instead of the angular blend's
   flat nub (Levi's screenshot in `.claude/probes/K81/`). After K75 (same
@@ -428,7 +428,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   render, render-gaps, gameplay, generation, probes; the largest about
   7.6k tokens), which load only when matching files are touched.
   `.claude/rules/` is tracked; the rest of `.claude/` is ignored. Done in
-  ca6ca1a and f9859a9 (2026-10-12).
+  436eb37 and 6866d4b (2026-10-12).
   - 717 of 720 old sentences sit in exactly one new file; the other 3
     are pointer rewrites (`.claude/probes/K45/verify.py`).
   - Rules load checked in a `claude -p` transcript; vitest 315.
@@ -437,7 +437,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   the reveal and its FX, and gameplay paint are evaluated per pixel from
   data textures (CPU mirror: `src/render/paint_math.ts`), and junction
   fans read per-arm material strips rendered once per frame
-  (`src/render/arm_strip.ts`). Done in 4243715..470a4ea (2026-10-12).
+  (`src/render/arm_strip.ts`). Done in 72041df..a001b34 (2026-10-12).
   - Phone (Pixel 11, on K63): 59.5 fps with flow, 60.3 flow off (master
     59.5 / 59.3). Without the strips the fans had cost 60 -> 44 fps.
   - Desktop GPU (3200x1800, 5 moves): draw phase 2.07 (master) -> 2.14
