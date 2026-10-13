@@ -371,6 +371,11 @@ class ArmStripSystem {
       this.busy = false;
     }
   }
+  // A lost and restored GL context drops the render texture's contents:
+  // the next frame re-renders whatever the dirty key says.
+  contextChange(): void {
+    invalidateStrips();
+  }
   destroy(): void {}
 }
 extensions.add(ArmStripSystem);
