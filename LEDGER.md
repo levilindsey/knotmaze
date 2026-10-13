@@ -23,19 +23,25 @@ and never reused.
   master 31c3c91: awake after 45 s at 93-95 ms of physics per frame
   (8-9 fps at rest). The rect link holds one standing rider beside
   self-crossing 28; the fat link is pinned at mv 1.9e-2. Both slept at
-  sim 7.0 on df373b5 (reported by the G1 agent). Its fix agent (worktree
-  `.claude/worktrees/agent-a8e1c36f999bf1027`, mid-ablation, regression
-  test planned) was paused at 21:10 for the weekly usage limit (Levi's
-  call). Resume it after the 2026-10-12 noon reset.
+  sim 7.0 on df373b5 (reported by the G1 agent). Its fix agent was
+  paused overnight for the weekly usage limit and resumed 2026-10-12
+  14:10 (worktree `.claude/worktrees/k41-sleepfix`; harness and results
+  in the session scratchpad), with a regression test planned.
+- **K4** · G2: all per-sample color work moves into shaders
+  (`docs/design/G2_shader_paint.md`; the doc predates G1, so the agent
+  reconciles it). Defaults taken unless Levi objects: the trail fade
+  becomes the intended linear fade over the oldest 30%; burn also
+  applies to single-color threads; noise colors stick to the material;
+  the ink spread is computed from reveal-start positions. Ink + burn and
+  knot-mode FX stay off. Agent started 2026-10-12 14:10 (G2.0-G2.3 and
+  G2.5 required, G2.4 GPU particles wanted).
+- **K19 + K20** · More maze stats in the HUD and a Wordle-style daily
+  maze: one agent started 2026-10-12 14:10.
+- **K21** · Shader noise backgrounds with a dropdown: agent started
+  2026-10-12 14:10.
 
 ## Next, in order
 
-- **K4** · G2: all per-sample color work moves into shaders
-  (`docs/design/G2_shader_paint.md`). Defaults taken unless Levi objects:
-  the trail fade becomes the intended linear fade over the oldest 30%;
-  burn also applies to single-color threads; noise colors stick to the
-  material; the ink spread is computed from reveal-start positions.
-  Ink + burn and knot-mode FX stay off.
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along the new data
   lines, once K1-K3 land.
 - **K6** · One frame loop driven by what-changed flags (after K5).
@@ -110,16 +116,6 @@ and never reused.
 
 ## Approved, to schedule (2026-10-11)
 
-- **K19** · More maze stats in the HUD: solve time, efficiency %,
-  junctions visited, dead ends entered.
-- **K20** · Daily seed: a Wordle-style shared daily maze, with each day's
-  play recorded in localStorage (stats and per-day history) and
-  time-to-solve sharing. Also serialize the remaining MazeParams.
-- **K21** · Shader backgrounds: research noise-based effects, implement
-  several that never distract (low contrast; colors from the design's
-  gamut), selectable from a dropdown. Unblocked: K1 landed (99443cb), so
-  gaps discard instead of erasing and a background can be the first
-  layer of the main canvas. Run it at reduced resolution and frame rate.
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
   allows; down when struggling). Part of K6, refined after G3.
 - **K23** · GPU particles (G2.4), GPU fog-of-war accumulation, the yarn as
