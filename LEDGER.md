@@ -144,6 +144,12 @@ awake, over Tailscale.
 
 K5-K7 (split, frame loop, worker) follow.
 
+- **K77** · Plucks show sharp, wedge-like depressions where the
+  vibration is strongest, maybe more on curves (Levi): a thinning should
+  read smooth and rounded. Launch when an agent slot frees (four running
+  at 22:35). Brief: `docs/design/K77.md`. Check whether tonight's bigger
+  amplitude floor (39966da) exposed it.
+
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along the new data
   lines, once K1-K3 land.
 - **K6** · One frame loop driven by what-changed flags (after K5).
