@@ -166,6 +166,11 @@ describe("codec tables", () => {
       ["entranceClearance", "number", 2.5], // 64
       ["exitClearance", "number", 5],
       ["junctionSpacing", "number", 2],
+      [
+        "background", "enum", "vellum",
+        ["none", "vellum", "mist", "wash", "silk", "aurora", "contours"],
+      ], // 67
+      ["backgroundIntensity", "number", 0.5],
     ]);
   });
 

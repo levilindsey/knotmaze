@@ -12,6 +12,8 @@ import type { AppearSequence, AppearFxMode } from "../core/reveal_plan";
 import { APPEAR_SEQUENCES, APPEAR_FX_MODES } from "../core/reveal_plan";
 import type { ShapeId, AnchorId } from "../core/shapes";
 import { SHAPES, ANCHORS } from "../core/shapes";
+import type { BackgroundId } from "../render/background_model";
+import { BACKGROUNDS } from "../render/background_model";
 
 // Pluck audio behavior: silent | user plucks only | ambient random plucks
 // | scripted song playback.
@@ -273,6 +275,13 @@ export interface UrlParams {
   entranceClearance: number;
   exitClearance: number;
   junctionSpacing: number;
+  // SHADER BACKGROUND (K21, render/background.ts): none (the flat page
+  // color) or a slow, low-contrast noise effect in the design's colors,
+  // drawn beneath the knot (crossing gaps show it). Applies live.
+  background: BackgroundId;
+  // [0, 1] the background's contrast: 0 = flat ink (the layer is off),
+  // 1 = the effect's strongest designed look. Applies live.
+  backgroundIntensity: number;
 }
 
 // COMPLETE per-param defaults (everything but seed): the panel's per-row
@@ -356,6 +365,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   entranceClearance: 2.5,
   exitClearance: 5,
   junctionSpacing: 2,
+  // K21: the subtlest backdrop - static, keeps the page's ink on average.
+  background: "vellum",
+  backgroundIntensity: 0.5,
 };
 
 export function newSeed(): number {
@@ -403,6 +415,7 @@ export const ENUM_OPTIONS: {
   appearMode: APPEAR_MODES,
   appearSequence: APPEAR_SEQUENCES,
   appearFx: APPEAR_FX_MODES,
+  background: BACKGROUNDS,
 };
 
 function clamp01(v: number): number {
@@ -427,6 +440,7 @@ function fromCodecValues(
   const p = out as unknown as Omit<UrlParams, "seed">;
   p.gridAlign = clamp01(p.gridAlign);
   p.junctionBlend = Math.max(0, p.junctionBlend);
+  p.backgroundIntensity = clamp01(p.backgroundIntensity);
   return p;
 }
 
@@ -592,6 +606,12 @@ function readLegacy(
     entranceClearance: readNumber(query, "ecl", D.entranceClearance),
     exitClearance: readNumber(query, "xcl", D.exitClearance),
     junctionSpacing: readNumber(query, "jsp", D.junctionSpacing),
+    // Shader backgrounds (K21) postdate compact links: override keys only
+    // (probe URLs write `&bg=mist&bgi=.7`).
+    background: readChoice(query, "bg", BACKGROUNDS, D.background),
+    backgroundIntensity: clamp01(
+      readNumber(query, "bgi", D.backgroundIntensity)
+    ),
   };
 }
 

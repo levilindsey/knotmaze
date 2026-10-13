@@ -233,6 +233,17 @@ export const CODEC_V3: CodecTable = Object.freeze({
     num("entranceClearance", 2.5), // 64
     num("exitClearance", 5),
     num("junctionSpacing", 2),
+    // Shader backgrounds (K21, 2026-10-12).
+    choice("background", "vellum", [
+      "none",
+      "vellum",
+      "mist",
+      "wash",
+      "silk",
+      "aurora",
+      "contours",
+    ]), // 67
+    num("backgroundIntensity", 0.5),
   ]),
 });
 

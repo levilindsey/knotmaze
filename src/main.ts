@@ -14,6 +14,8 @@ import { DebugRenderer } from "./render/debug_renderer";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
 import { FabricMazeController } from "./game/fabric_controller";
 import { RevealAnimator } from "./render/reveal";
+import { BackgroundLayer } from "./render/background";
+import { backgroundColors } from "./render/background_model";
 import {
   writeParams as writeTokenParams,
   newSeed,
@@ -301,6 +303,17 @@ async function main(): Promise<void> {
   motionQuery?.addEventListener?.("change", (e) => {
     reducedMotion = e.matches;
   });
+
+  // SHADER BACKGROUND (K21): a screen-fixed layer drawn FIRST, beneath the
+  // world root (crossing gaps show it). Phones get the cheaper profile
+  // (lower texture resolution, lower drift rate).
+  const background = new BackgroundLayer(
+    app.renderer,
+    typeof window.matchMedia === "function" &&
+      window.matchMedia("(pointer: coarse), (max-width: 700px)").matches
+  );
+  app.stage.addChild(background.container);
+  background.resize(app.screen.width, app.screen.height);
 
   const root = new Container();
   app.stage.addChild(root);
@@ -779,6 +792,17 @@ async function main(): Promise<void> {
     wake();
   }
 
+  // The background follows the design: effect + intensity, the page ink
+  // and the design's gamut accents, the seed - and the fog of war (when
+  // on) draws as the background instead of a flat color.
+  function syncBackground(): void {
+    const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
+    setGamutConfig(params.gamutArc, params.palette);
+    background.configure(params.background, params.backgroundIntensity);
+    background.setDesign(backgroundColors(BACKGROUND, effHue), params.seed);
+    fabric?.setFogBackdrop(background.texture);
+  }
+
   function rebuild(): void {
     renderer?.destroy();
     debug?.container.destroy({ children: true });
@@ -892,6 +916,7 @@ async function main(): Promise<void> {
       fabricController = null;
       fabric = null;
     }
+    syncBackground();
     pendingWin = false;
     resetAttempt();
     hideWin();
@@ -1145,8 +1170,15 @@ async function main(): Promise<void> {
         );
         if (fabric && fabricController) fabric.update(fabricController);
       }
+      // The background wears the design's gamut too.
+      syncBackground();
       writeParams(params);
       wake();
+    },
+    // Background effect / intensity: the layer only - no scene change.
+    onBackgroundChange: () => {
+      syncBackground();
+      writeParams(params);
     },
     onModeChange: () => {
       // Mode changes alter the graph TOPOLOGY (fabric surgery, color
@@ -1196,6 +1228,7 @@ async function main(): Promise<void> {
 
   window.addEventListener("resize", () => {
     app.renderer.resize(window.innerWidth, window.innerHeight);
+    background.resize(app.screen.width, app.screen.height);
     fitToScreen();
   });
 
@@ -2081,9 +2114,51 @@ async function main(): Promise<void> {
   let frameCostN = 0;
   let frameCostTotal = 0;
 
+  // K24/K6 HOOK (approximate until K6's what-changed flags): is anything
+  // besides the background moving this frame? The background's drift
+  // pauses once the rest of the scene has been still for a while
+  // (BACKGROUND_PAUSE_GRACE), and background.needsFrame() then says false -
+  // so a render-on-demand loop can stop drawing.
+  let lastViewX = NaN;
+  let lastViewY = NaN;
+  let lastViewS = NaN;
+  const sceneAnimating = (): boolean => {
+    // The fit camera's ease converges geometrically: ignore sub-pixel
+    // creep (comparing exact floats held the drift awake ~11 s after the
+    // knot slept, instead of the 2.5 s grace).
+    const moved = !(
+      Math.abs(root.position.x - lastViewX) < 0.01 &&
+      Math.abs(root.position.y - lastViewY) < 0.01 &&
+      Math.abs(root.scale.x - lastViewS) < 1e-5 * root.scale.x
+    );
+    lastViewX = root.position.x;
+    lastViewY = root.position.y;
+    lastViewS = root.scale.x;
+    if (moved || !ps || !renderer) return true;
+    if (physState === "loading" || physState === "settling" || !asleep) {
+      return true;
+    }
+    if (params.flowStrength > 0 || (reveal !== null && !reveal.done)) {
+      return true;
+    }
+    if (renderer.needsFxRender() || renderer.plucks.activeCount > 0) {
+      return true;
+    }
+    // Fabric gameplay paint (pulses, hover breathing, traversal, the fog's
+    // wobble) animates continuously.
+    return params.mazeFabric && fabric !== null;
+  };
+  const backgroundTick = (dt: number): void => {
+    background.reducedMotion = reducedMotion;
+    background.tick(dt, sceneAnimating());
+  };
+
   app.ticker.add((ticker) => {
     const c0 = performance.now();
     tick(ticker);
+    // After the scene's frame (the background's render-texture pass, when
+    // due, precedes the stage render either way).
+    backgroundTick(ticker.deltaMS / 1000);
     const c = performance.now() - c0;
     frameCost[frameCostN++ % frameCost.length] = c;
     frameCostTotal += c;
@@ -2637,6 +2712,28 @@ async function main(): Promise<void> {
     physicsInputsChanged();
     wake();
     return physState;
+  };
+  // SHADER BACKGROUND probes: state, the raw layer (pin its clock, force a
+  // texture pass), and the panel's dropdown + slider.
+  (window as unknown as Record<string, unknown>).__knotBackground = () => ({
+    id: background.id,
+    active: background.active,
+    stats: { ...background.stats },
+    time: background.clock.time,
+    drifting: background.clock.isDrifting,
+    needsFrame: background.needsFrame(),
+  });
+  (window as unknown as Record<string, unknown>).__knotBackgroundLayer = () =>
+    background;
+  (window as unknown as Record<string, unknown>).__knotSetBackground = (
+    id: UrlParams["background"],
+    intensity?: number
+  ) => {
+    params.background = id;
+    if (intensity !== undefined) params.backgroundIntensity = intensity;
+    syncBackground();
+    writeParams(params);
+    return background.id;
   };
   // The "Replay settle" button (probe scripting).
   (window as unknown as Record<string, unknown>).__knotReplay = () => {
