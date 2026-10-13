@@ -63,6 +63,14 @@ and never reused.
   clock running and logs one backtrack per retracted run, so a long path
   adds many red squares to the share grid. It is refused in trail mode,
   which matters only if K46 adds trail dailies. OK as is?
+- **K64** · Sleep window length (K63, `QUIET_WINDOW` in
+  `src/physics/sleep_gate.ts`). 2.5 sim-s shipped: knots sleep at about
+  5.0 sim-s, and no false sleeps in the sweeps. A 0.75-1.0 s window
+  sleeps at about 3.3 sim-s (phone: 5.8 s instead of 8.8 s), but about 4%
+  of designs freeze 0.05-0.17 world (1-4 px) short of their rest, and
+  about 0.2% miss a loud late snap. Physics-off loads share the window,
+  so they now settle hidden for 5.0 sim-s instead of 3.25 (+54%); a
+  separate window for them is possible. Keep 2.5 s (recommended)?
 
 ## In progress
 
@@ -77,28 +85,19 @@ and never reused.
     on Levi's go ("Fan fix?") for the fan pre-pass plus the phone gate
     only.
   - branch: `worktree-agent-a7d1f998c07c3864f`
-    (`.claude/worktrees/agent-a7d1f998c07c3864f`); last commit: dce4126,
-    rebased onto 8320cde.
+    (`.claude/worktrees/agent-a7d1f998c07c3864f`); last commit: 00e1784
+    (the fan pre-pass: junction fans read per-arm material strips).
   - evidence: `.claude/probes/K4/` (NOTES.txt is the index) and
     `.claude/probes/K10/bench_2026-10-12.txt`.
-  - next: the per-arm material strip pre-pass from the G2 doc's
-    follow-ups. Re-measure on the phone (`scripts/phone.ps1`,
-    `.claude/probes/K10/phone_bench.mjs`) and merge only at master's
-    56-60 fps at rest. Then Levi signs off the visible changes listed in
+  - next: verify the pre-pass, re-measure on the phone
+    (`scripts/phone.ps1`, `.claude/probes/K10/phone_bench.mjs`) and merge
+    only at master's 56-60 fps at rest; rebase over K63 (`src/main.ts`,
+    CLAUDE.md). Then Levi signs off the visible changes listed in
     the G2 doc on the branch (linear trail fade, burn on mono, noise
     stuck to the material, the ink spread, exact crests and gold edges,
     exact strands/depth hue arcs, emergent crossings fading in, glow
     from a point's own fronts).
   - brief: `docs/design/K4.md` and `docs/design/G2_shader_paint.md`.
-
-- **K63** · A frame-rate-independent sleep gate: a sim-time window instead
-  of 45 frames, to roughly halve every settle.
-  - owner: the K63 agent of session d8031183, started 2026-10-12 19:40.
-  - branch: its worktree branch from master.
-  - evidence: `.claude/probes/K63/`.
-  - next: confirm the mechanism behind the 7.0 s, pick the window from
-    false-sleep sweeps, then the browser and phone timings.
-  - brief: `docs/design/K63.md`.
 
 ## Next, in order
 
@@ -185,16 +184,17 @@ K5-K7 (split, frame loop, worker) follow.
   desktop; on the phone 7 sim-seconds took 14 s. K6/K7 fix the UI side.
   It matters more now: the daily (K20) makes the 18x18 default design
   the front door, at about 6 fps for its first seconds on a loaded
-  desktop. K46 measured that every design sleeps at exactly sim 7.0 s,
-  set by the gate rather than the design, so settle cost is particles x
-  thread width. Thread width costs +25% per substep at 0.58 and +47% at
-  0.64. Intro wall time also stretches with slow settle frames. K63 is
-  the cheapest lever.
-- **K63** · The sleep gate counts 45 still FRAMES, so at 10 fps or less
-  it waits 4.5 of the 7.0 sim-s every daily simulates, though the motion
-  settles by about 0.6 s. A sim-time window (about 0.75 s) would sleep
-  at about 3.3 sim-s on every design: roughly half the phone's settle.
-  Needs a quiescence and gesture re-check. (K46 finding.)
+  desktop. Every design used to sleep at exactly sim 7.0 s, set by the
+  gate rather than the design; since K63 it is about 5.0 (phone: 8.8 s
+  wall instead of 13), so settle cost is particles x thread width.
+  Thread width costs +25% per substep at 0.58 and +47% at 0.64. Intro
+  wall time also stretches with slow settle frames.
+- **K65** · Low-gridAlign knots (`ga=0`, e.g. Levi's rect link) creep
+  under the quiet threshold: a fresh settle drifts about 1.5 world over
+  about 50 s, and a cinch up to about 0.9 world/s. Every sleep gate, old
+  or new, freezes them mid-creep. A net-displacement test over the window
+  would catch it, but would keep such knots awake for tens of seconds.
+  Related: K11. (K63 finding.)
 - **K29** · Boxed kinks at tw 0.64: 3 of ~152 kinks (8 seeds) rest at
   0.56-0.78 thread widths of eye hole - boxed in by a fused joint on one
   side and the 1.6 corridor floor on the other, they keep only lattice
@@ -250,7 +250,10 @@ K5-K7 (split, frame loop, worker) follow.
   only. And any hold probe
   must first move past the 4 CSS px tug threshold: since df373b5 a still
   press is a pluck, so the KINK EYES battery's holds did nothing (the
-  K41 copy in `.claude/probes/K41/` moves 12 px first).
+  K41 copy in `.claude/probes/K41/` moves 12 px first). And with flow on,
+  a kink census of one frozen state varies by about 0.1 widths between
+  captures: A/B at `fw=0`, replacing a link's own `fw=` (a second copy
+  is ignored).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -292,10 +295,30 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K55** · An optional parallax background mode: it pans and zooms at a
   fraction of the camera, for depth. Today it is screen-fixed on
   purpose. (K21 agent idea.)
+- **K66** · Why do bridges at joints, open tails and kink neighborhoods
+  end the settle ramp near an unstable point? They snap to a new rest
+  3.5-5 s in, mostly under the quiet threshold, which is what forces
+  K63's 2.5 s window. Fixing it could make a 0.75 s window safe (K64).
+  (K63 agent idea; harness in `.claude/probes/K63/`.)
 
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K63** · The sleep gate counted 45 still FRAMES, so every real settle
+  (physics-bound under 10 fps, frames capped at 0.1 s) slept at exactly
+  sim 7.0. It now counts 2.5 SIMULATED seconds of quiet
+  (`src/physics/sleep_gate.ts`), on every device. Done in 66b4db5,
+  ed53344 and 7f75e8f (2026-10-12).
+  - Sleep at about 5.0 sim-s on every set (8 seeds x default, fat, tw
+    .64, and the five shapes at their daily sizes); desktop wall 12.3 ->
+    8.9 s at the default; phone 13.0 -> 8.8 s.
+  - The window is the shortest with no false sleep in about 250 harness
+    settles and 130 gestures, each frozen state compared with a run that
+    kept stepping, plus a margin (K64 is the speed trade).
+  - Gap scans and kink censuses identical before and after; gesture
+    battery 45/45 re-slept. Guarded by `test/physics/sleep_gate.test.ts`
+    and the sleep regression test (a 10 vs 60 fps check).
 
 - **K47 + K56** · Saved daily attempts, and the daily as the front door.
   Done in ba908bb and a72d91d (2026-10-12).
