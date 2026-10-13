@@ -13,6 +13,23 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K46** · Daily variety. The measured proposal is in
+  `docs/design/K46_daily_variety.md` (8b1eb90): a weekly arc (Mon rect
+  14 -> Sat rect 20, a Wednesday twist, a Thursday modifier, a Sunday
+  shape) and a look that varies every day. Its nine questions are in
+  section 8.
+  - owner: nobody since 2026-10-12 17:00. The proposal agent of session
+    d8031183 can be resumed while its worktree is kept.
+  - branch: `worktree-agent-a78c73cec4770a14d`
+    (`.claude/worktrees/agent-a78c73cec4770a14d`), merged as 8b1eb90.
+  - evidence: `.claude/probes/K46/` (`sheet_calendar.png`,
+    `sheet_phone.png`, `sheet_path_legibility.png`, the scan scripts and
+    `out/`).
+  - next: Levi answers section 8 and iterates; then implement
+    `DAILY_V2` from a future `fromDay`. Validation must not depend on
+    `Math.hypot` rounding, which can differ between engines.
+  - brief: `docs/design/K46.md`.
+
 - **K48** · On desktop, Share copies the daily's result to the clipboard
   (with a "Copied" toast), although Chrome and Edge on Windows could open
   Windows' own Share dialog (Mail, Teams, Nearby Sharing). Phones get
@@ -49,15 +66,6 @@ and never reused.
 
 ## In progress
 
-- **K46** · Daily variety: Levi wants it to vary, within constraints on
-  which settings are good, and will iterate on a proposal. `DAILY_V1` is
-  today's defaults every day.
-  - owner: K46 proposal agent of session d8031183, started 2026-10-12.
-  - branch: its worktree branch (proposal doc only; no `src/` changes).
-  - evidence: `.claude/probes/K46/`.
-  - next: measured proposal in `docs/design/K46_daily_variety.md` with
-    a 14-day sample calendar, then iterate with Levi, then `DAILY_V2`.
-  - brief: `docs/design/K46.md`.
 - **K4** · G2: per-sample color work moves into the shaders.
   - owner: G2 agent of session d8031183, started 2026-10-12 14:10.
   - branch: `worktree-agent-a7d1f998c07c3864f`
@@ -115,7 +123,13 @@ and never reused.
 - **K11** · Ring + gridAlign: buckles lopsided below strength ~1.8e-3,
   wanders without sleeping at 5e-4..1.6e-3, never sleeps at ga=1.
 - **K12** · Star shape, e-w anchors: 6/8 seeds sleep; 2 hover at the
-  threshold.
+  threshold. Broader per K46's scans at gs 20-24: star fails to sleep on
+  4/60 seeds, tree 4/60 and fish 2/60, some with a loud visible thrash
+  of about 1 unit per substep. Heart 0/60, ring 0/60, rect 0/400.
+- **K62** · The `branchDensity` and `fourWayFraction` panel rows do
+  nothing at the default `junctionSpacing` 2: the same maze for all 150
+  seeds tested across 0.25-0.70. They look broken; rescale, relabel or
+  hide them. `junctionSpacing` is the real density knob. (K46 finding.)
 - **K13** · Post-violent-play loud attractor at fat params (the open P3
   problem; fingerprint in CLAUDE.md Follow-ups).
 - **K14** · Latent seam-window wraps on open chains
@@ -129,7 +143,16 @@ and never reused.
   desktop; on the phone 7 sim-seconds took 14 s. K6/K7 fix the UI side.
   It matters more now: the daily (K20) makes the 18x18 default design
   the front door, at about 6 fps for its first seconds on a loaded
-  desktop.
+  desktop. K46 measured that every design sleeps at exactly sim 7.0 s,
+  set by the gate rather than the design, so settle cost is particles x
+  thread width. Thread width costs +25% per substep at 0.58 and +47% at
+  0.64. Intro wall time also stretches with slow settle frames. K63 is
+  the cheapest lever.
+- **K63** · The sleep gate counts 45 still FRAMES, so at 10 fps or less
+  it waits 4.5 of the 7.0 sim-s every daily simulates, though the motion
+  settles by about 0.6 s. A sim-time window (about 0.75 s) would sleep
+  at about 3.3 sim-s on every design: roughly half the phone's settle.
+  Needs a quiescence and gesture re-check. (K46 finding.)
 - **K29** · Boxed kinks at tw 0.64: 3 of ~152 kinks (8 seeds) rest at
   0.56-0.78 thread widths of eye hole - boxed in by a fused joint on one
   side and the 1.6 corridor floor on the other, they keep only lattice
@@ -180,7 +203,9 @@ and never reused.
   of one frozen state (cause unknown). Same-state pixel diffs are exact.
   Also: `.claude/probes/K19-K20/probe_daily.mjs`'s time-zone mode hung
   once in `browser.close()` after writing its report (not since, in
-  three K47 runs). And any hold probe
+  three K47 runs). And a 4x CPU-throttled desktop runs about 5x slower
+  than the Pixel 11 (68 s vs 14 s to sleep at V1): use it for ratios
+  only. And any hold probe
   must first move past the 4 CSS px tug threshold: since df373b5 a still
   press is a pluck, so the KINK EYES battery's holds did nothing (the
   K41 copy in `.claude/probes/K41/` moves 12 px first).
