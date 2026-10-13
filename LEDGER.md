@@ -163,22 +163,6 @@ and never reused.
 
 ## In progress
 
-- **K83** · Placeholder marker icons (Levi): black discs with white
-  stroked glyphs for the start, finish and head; the finish's off-screen
-  indicator wears the same glyph. Merged on local master, NOT pushed:
-  the phone gate is pending (Levi was using the phone at 01:25).
-  - owner: the coordinator, session d8031183 (the agent finished).
-  - branch: mainline; last commits 45aac50 (the agent's 479d178), then
-    5592f8c (the indicator hand-off). Desktop: tsc, vitest 350, build,
-    live check (`.claude/probes/K83/out/merge/`).
-  - evidence: `.claude/probes/K83/` (sheets, `k83_ab.mjs`);
-    `.claude/probes/K10/wait_phone_idle.ps1` waits for an idle phone.
-  - next: the K10 bench, 5297 (ce331bc) vs 5298 (5592f8c): flow on,
-    `fw=0`, `pv=trail`; then push (K80's doc 17b729b and K99's 0097801
-    wait behind it on local master) and move K83 to Done.
-  - brief: `docs/design/K83.md`.
-  - env: `scripts/preview.ps1 -Port 5297 -Ref ce331bc` and `-Port 5298
-    -Ref 5592f8c`; `scripts/phone.ps1 -Ports 5297,5298`.
 - **K81** · The traveled highlight at junctions: a smooth gold arc from
   the arrival arm to the departure arm instead of the angular blend's
   flat nub (Levi's screenshot in `.claude/probes/K81/`). K75 is merged
@@ -335,6 +319,9 @@ K5-K7 (split, frame loop, worker) follow.
     sleep at sim 5.0 s (wall 9-20 s is load noise)
     (`bench_2026-10-13_K75K73*.txt`). The bench now records a sample
     from a hidden tab (screen timed out) as null instead of crashing.
+  - K83 (5592f8c) vs ce331bc, 2026-10-13: 60.3 vs 60 with flow, 60.3 vs
+    60.3 flow off, 60.5 vs 60.5 with `pv=trail`, p90 16.7 ms everywhere;
+    every run asleep by sim 5.0 s on both (`bench_2026-10-13_K83.txt`).
 
   Rerun after every stage: `scripts/preview.ps1` builds per ref,
   `scripts/phone.ps1 -Ports ...`, then `.claude/probes/K10/phone_bench.mjs`.
@@ -582,6 +569,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 (items move here with the commit that resolved them)
 
+- **K83** · Placeholder marker icons (Levi): black discs with white
+  stroked glyphs for the start, finish and head; the finish's off-screen
+  indicator wears the same glyph. Phone gate passed (K10, 2026-10-13).
+  Done in 45aac50 + 5592f8c (2026-10-13; `.claude/probes/K83/`).
+  Follow-ups K98, K99.
 - **K96** · The follow camera reaches the head at the same real speed at
   any frame rate: it steps by real elapsed time in substeps of at most
   0.05 s. t95 at 151 ms frames went 8.6 s -> 4.4 s; 60 Hz is unchanged.
