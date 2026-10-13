@@ -1,9 +1,11 @@
 // P4 Stage 22, the APPEARANCE ANIMATOR: the live clock + queries over a
-// pure reveal plan (core/reveal_plan). RibbonRenderer consumes it: interval
-// modes (trace/bloom/draw) hand per-chain ctrl intervals to the mask pass;
-// ink mode hands the dye origin + radius and the renderer evaluates the
-// world-distance field per sample (positions move while settling - that is
-// the organic look, so ink is deliberately evaluated against LIVE samples).
+// pure reveal plan (core/reveal_plan). RibbonRenderer consumes it: since
+// G2 the renderer reads the plan's SOURCES directly (per-pixel ignition
+// times in the shaders, mirrored on the CPU for the width masks); ink mode
+// hands the dye origin + speed, and the renderer fixes every control's
+// ignition time from the REVEAL-START positions (G2: the dye no longer
+// re-reads settling positions, so ink is exact and stateless) and tells the
+// animator its exact duration (setDuration).
 
 import { createNoise2D } from "simplex-noise";
 import type { ParticleSystem } from "../physics/particle_system";
@@ -36,7 +38,6 @@ export class RevealAnimator {
   private plan: RevealPlan;
   private t = 0; // Speed-scaled clock, seconds.
   private inkNoise: ((x: number, y: number) => number) | null = null;
-  private inkChainDone: boolean[] = [];
 
   constructor(
     mode: Exclude<AppearSequence, "instant">,
@@ -68,7 +69,6 @@ export class RevealAnimator {
     if (this.mode === "ink") {
       const rng = new SeededRNG((seed ^ 0x1e4b) >>> 0);
       this.inkNoise = createNoise2D(() => rng.next());
-      this.inkChainDone = ps.chains.map(() => false);
     }
   }
 
@@ -89,6 +89,20 @@ export class RevealAnimator {
     return this.plan.duration;
   }
 
+  // The plan itself (G2: the renderer builds its per-pixel source table
+  // from it at reveal start).
+  get planData(): RevealPlan {
+    return this.plan;
+  }
+
+  // Exact duration (anim seconds) once the renderer knows it - ink: the
+  // latest control ignition plus the dye taper (the plan only carries a
+  // safety cap there).
+  setDuration(d: number): void {
+    this.plan = { ...this.plan, duration: d };
+    if (this.t >= d) this.done = true;
+  }
+
   intervalsFor(chain: number): RevealInterval[] {
     return intervalsAt(this.plan, chain, this.t);
   }
@@ -103,10 +117,6 @@ export class RevealAnimator {
     return this.plan.origin;
   }
 
-  get inkRadius(): number {
-    return this.t * this.plan.inkSpeed;
-  }
-
   // World units/s of the dye front, live speed applied (frontier FX).
   get inkRate(): number {
     return this.plan.inkSpeed * this.speed;
@@ -117,18 +127,5 @@ export class RevealAnimator {
     return this.inkNoise
       ? INK_NOISE_AMP * this.inkNoise(x * INK_NOISE_FREQ, y * INK_NOISE_FREQ)
       : 0;
-  }
-
-  // A chain whose every sample has reached full width LATCHES revealed
-  // (live positions keep moving; the dye never retreats). All latched =
-  // done.
-  latchInkChain(chain: number): void {
-    if (this.mode !== "ink" || this.inkChainDone[chain]) return;
-    this.inkChainDone[chain] = true;
-    if (this.inkChainDone.every(Boolean)) this.done = true;
-  }
-
-  inkChainLatched(chain: number): boolean {
-    return this.inkChainDone[chain];
   }
 }

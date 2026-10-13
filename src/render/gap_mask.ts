@@ -22,6 +22,10 @@
 //            and its radius grown by the slot's reach of interest (full
 //            mask / silhouette only); negative = disabled slot
 //   texel 1: [arcScale, centerArc, period (0 = open chain), strength]
+//            strength >= 0: plain; < 0: GATED (G2.1) - the gap fades in
+//            from its show time tShow = -strength - 1 (reveal-relative wall
+//            seconds) over CROSSING_FADE_IN, from the knot uniforms' clock
+//            (gapStrength), so a reveal / FX gate needs no CPU fade state
 //   texel 2: [winNeg, winPos, hOver, nPts]
 //   texel 3: [capR, nProtNeg, nProtPos, flags (1 perp margin, 2 self)]
 //   texel 4: [selfExcl, polyStartArc, polyStepArc, farK]
@@ -293,6 +297,17 @@ bool gapProbe() {
   return texelFetch(uGapData, ivec2(0, 0), 0).y > 0.5;
 }
 
+// A slot's effective strength (texel 1.w; see the header): gated slots
+// ramp in from their show time on the knot clock (uKFx.z = fxNow); with the
+// FX clock stopped (uKFx.w = 0) every gate has long opened. Needs the knot
+// uniforms and CROSSING_FADE_IN (paint_glsl.ts) declared first.
+highp float gapStrength(highp float s) {
+  if (s >= 0.0) return s;
+  if (uKFx.w < 0.5) return 1.0;
+  highp float x = clamp((uKFx.z + s + 1.0) / CROSSING_FADE_IN, 0.0, 1.0);
+  return x * x * (3.0 - 2.0 * x);
+}
+
 // 1 inside the arc interval [a, b] (with a short ramp), 0 outside; an
 // empty interval (a >= b) is 0.
 highp float gapInterval(highp float o, highp float a, highp float b) {
@@ -369,6 +384,7 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
     highp vec4 t1 = texelFetch(uGapData, ivec2(1, row), 0);
     highp vec4 t2 = texelFetch(uGapData, ivec2(2, row), 0);
     highp float hO = t2.z;
+    highp float gst = gapStrength(t1.w);
     highp float inWin = 1.0;
     highp float inFoot = 1.0;
     // Arc distance to the nearer window end (fade ramp below).
@@ -447,7 +463,7 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
     }
     if (bk < 0) continue; // Nothing of this slot within reach.
     if (best < sure2) {
-      keep = min(keep, 1.0 - (full ? inWin * inFoot : 1.0) * t1.w);
+      keep = min(keep, 1.0 - (full ? inWin * inFoot : 1.0) * gst);
       continue;
     }
     // PROTECT: where this thread covers another one at a neighboring
@@ -556,7 +572,7 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
       // (thin dark seams wherever a web met the over thread).
       cut = max(cut, 1.0 - clamp((d - hO + pxW) / pxW + 0.5, 0.0, 1.0));
     }
-    keep = min(keep, 1.0 - cut * t1.w);
+    keep = min(keep, 1.0 - cut * gst);
   }
   return keep;
 }
@@ -894,7 +910,7 @@ export class GapMaskTable {
     br += 1e-4;
     // Texel 0: the bounding circle, grown by the reach of interest (the
     // smooth-min can lower a distance by up to sminK / 4).
-    const on = p.strength > 0 && nPts >= 1;
+    const on = p.strength !== 0 && nPts >= 1;
     d[o] = bcx;
     d[o + 1] = bcy;
     d[o + 2] = on ? br + p.hOver + p.margin + p.fade + 0.25 * p.sminK : -1;
