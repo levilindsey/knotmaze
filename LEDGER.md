@@ -91,6 +91,15 @@ and never reused.
     from a point's own fronts).
   - brief: `docs/design/K4.md` and `docs/design/G2_shader_paint.md`.
 
+- **K63** · A frame-rate-independent sleep gate: a sim-time window instead
+  of 45 frames, to roughly halve every settle.
+  - owner: the K63 agent of session d8031183, started 2026-10-12 19:40.
+  - branch: its worktree branch from master.
+  - evidence: `.claude/probes/K63/`.
+  - next: confirm the mechanism behind the 7.0 s, pick the window from
+    false-sleep sweeps, then the browser and phone timings.
+  - brief: `docs/design/K63.md`.
+
 ## Next, in order
 
 Overnight order, 2026-10-12 (Levi: proceed through the night with the
