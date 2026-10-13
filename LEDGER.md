@@ -195,11 +195,16 @@ and never reused.
   - owner: the K81 agent (a8c2a999e6c2d5a8e) of session d8031183,
     started 2026-10-13 01:07.
   - branch: `worktree-agent-a8c2a999e6c2d5a8e`
-    (`.claude/worktrees/agent-a8c2a999e6c2d5a8e`), on 457b494; last
-    commit: none yet.
+    (`.claude/worktrees/agent-a8c2a999e6c2d5a8e`), on 4deeda1; last
+    commit: 2fc0ec2 (WIP 07:35: route bands - the pure module, the
+    record layout, the shader's band pass; untraveled strip rows and
+    route resolution work).
   - evidence: `.claude/probes/K81/` in its worktree (copied at merge).
-  - next: read the junction paint path (`setPaint`, the fan arm strips),
-    then prototype the arc.
+  - next (the agent's estimate at 07:35: 60-90 turns): the wedge-loop
+    rims and cover strips, `finish()`'s route blocks, the CPU mirror,
+    wiring `fabric_maze_renderer`, unit tests; then the census,
+    same-state crops and GPU ms, the lore, the rebase. Then its phone
+    gate (K10).
   - brief: `docs/design/K81.md`.
   - env: its dev servers on ports 5311-5314.
 - **K79** · Backgrounds: speed, params, colors, Motion. Stage A MERGED
@@ -212,20 +217,45 @@ and never reused.
   colors (brief items 3-4; recommended: per-effect scale, contrast and
   drift direction, vellum fiber density and grain; custom accent colors
   replacing the three gamut accents).
-  - owner: nobody since 2026-10-13 07:15 (stage A agent
-    a7e566f4ba72a9d2d finished and merged; stage B not started).
-  - branch: mainline; last commit: 9ffda8a. The stage A worktree
-    (`.claude/worktrees/agent-a7e566f4ba72a9d2d`) is kept until the
+  - owner: the stage B agent (a4cf71c585e48612a) of session d8031183,
+    started 2026-10-13 07:45 (stage A's agent a7e566f4ba72a9d2d finished
+    and merged).
+  - branch: stage B `worktree-agent-a4cf71c585e48612a`
+    (`.claude/worktrees/agent-a4cf71c585e48612a`), on 66ee658; last
+    commit: none yet. Stage A is on mainline (9ffda8a); its worktree
+    (`.claude/worktrees/agent-a7e566f4ba72a9d2d`) is kept until its
     phone gate passes.
-  - evidence: `.claude/probes/K79/` (`run_ab.ps1`, `k79_sheet.mjs`,
-    `k79_dstats.mjs`, `k79_gpu.mjs`; `out/sheets/`, `out/ab_final/`,
-    `out/motion.log`, `out/gpu_k79.log`).
-  - next: the phone gate (K10; the phone was off its charger and locked
-    at 07:15): default vs e25d202, vellum at `bgs=1` (412x915 texture
-    at 6 passes/s), the speed row. Then launch stage B.
-  - brief: `docs/design/K79.md`.
+  - evidence: stage A's `.claude/probes/K79/` (`run_ab.ps1`,
+    `k79_sheet.mjs`, `k79_dstats.mjs`, `k79_gpu.mjs`; `out/sheets/`,
+    `out/ab_final/`, `out/motion.log`, `out/gpu_k79.log`); stage B's
+    `k79b_*` files in its worktree's `.claude/probes/K79/`.
+  - next: stage A's phone gate (K10; waits for Levi's phone): default vs
+    e25d202, vellum at `bgs=1` (412x915 texture at 6 passes/s), the
+    speed row. Stage B: brief items 3-4 (params, custom colors) with
+    their codec appends and GPU cost; then its merge and phone gate.
+  - brief: `docs/design/K79.md` (stage B: items 3, 4, 6 and 7).
   - env: `.claude/probes/K79/run_ab.ps1` (its header starts servers on
-    5331/5332).
+    5331/5332); stage B's servers on 5341-5344.
+- **K90** · A physical minimum bend radius, stage 1 (Levi, 2026-10-13:
+  "ideally we'd have a more physics-based constraint to prevent loops
+  from becoming too tight in the first place"). No thread folds tighter
+  than half its width, so neither the pinch nor the filled lobe (K8)
+  ever shows. Stage 1: a census of over-tight folds on the rendered
+  centerline (fresh, gestures, violent play), then prototypes behind a
+  flag that defaults OFF (not a codec param), and
+  `docs/design/K90_bend_radius.md` with a recommendation. Guards: the K63
+  sleep battery, the kink-eye censuses, the gesture battery, and the
+  knot-mode golden (byte-identical with the flag off). Same-chain
+  collision skips +-2 ctrl, so it cannot catch folds that short.
+  - owner: the K90 stage 1 agent (a1b6fa0fe2294cd2a) of session
+    d8031183, started 2026-10-13 07:45.
+  - branch: `worktree-agent-a1b6fa0fe2294cd2a`
+    (`.claude/worktrees/agent-a1b6fa0fe2294cd2a`), on 66ee658; last
+    commit: none yet.
+  - evidence: `.claude/probes/K90/` in its worktree (copied at merge).
+  - next: stage 1a's census, then 1b's prototypes in the brief's order.
+  - brief: `docs/design/K90.md`.
+  - env: its dev servers, if any, on ports 5351-5354.
 
 ## Next, in order
 
@@ -235,24 +265,26 @@ verification AND the phone gate (K10); the phone stays on its charger,
 awake, over Tailscale.
 Overnight order, 2026-10-13 (Levi: "keep running through the night until
 you've addressed all bits that you don't need my input on"). At most three
-code agents at once, research on top. Stop launching once the week
-passes about 45% (37% at 02:45).
-1. Merge the running five as they finish: K80 (docs) is left; K73 and
-   K75 merged 2026-10-13 01:00, K83 at 01:30, K74 in dad40f8.
+code agents at once, research on top. Usage (Levi, 2026-10-13 07:40):
+an agent costs no more than the same work done in the coordinator, so
+don't hold agents back for usage until the week nears 90%. The earlier
+45% stop was the coordinator's own pacing; the week was at 42% at 07:17
+and resets Mondays at 12:00.
+1. The running five merged: K73 and K75 at 01:00, K83 at 01:30, K74 in
+   dad40f8, K80 in 17b729b.
 2. K77 merged (eec4854). K81 (the smooth arc, running since 01:07);
-   K79 stage A merged (9ffda8a), its phone gate and stage B next.
-   K49's comparison is done (Waiting on Levi).
+   K79 stage A merged (9ffda8a), its phone gate pending; stage B
+   running since 07:45. K49's comparison is done (Waiting on Levi).
 3. K87 done (62dd16d), K108 done (b62cea3), K109 done (b722a12; K110
-   waits on Levi). K90 stage 1 (measure over-tight folds, prototype a
-   bend limit), then K86 (long dead ends behind params that default to
-   today's maze).
+   waits on Levi). K90 stage 1 running since 07:45. Then K86 (long dead
+   ends behind params that default to today's maze), after K79 stage B
+   merges, since both append codec params.
 4. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
    K42.
 
-From 00:45, at most TWO code agents at once (Levi asked about tokens):
-the same total, at a gentler rate on the 5-hour window (14% used in its
-first half hour), so fewer agents die mid-task at the limit. A one-shot
-wake-up at 05:07 resumes the run if the limit stalled it.
+From 07:45, three code agents again (K81, K79 stage B, K90 stage 1),
+with the 5-hour window at 7%. From 00:45 to 07:45 it was two, for a
+gentler rate on the 5-hour window.
 
 Waiting for Levi (not started overnight):
 - decisions: K74, K76 stage 2, K52, K49, K78;
@@ -274,19 +306,6 @@ K5-K7 (split, frame loop, worker) follow.
   gets trailLength 10 unless it overrides it; the memory-trail days were
   designed around 5 (K73). Brief: `docs/design/K46.md`.
 
-- **K90** · A physical minimum bend radius (Levi, 2026-10-13: "ideally
-  we'd have a more physics-based constraint to prevent loops from
-  becoming too tight in the first place"). A thread should never fold
-  tighter than half its width, so neither the pinch nor the filled lobe
-  (K8) ever shows.
-  - Stage 1: measure how often over-tight folds occur at rest and under
-    tugs (the P3.34 repro), then prototype a one-sided bend constraint.
-    Same-chain collision skips +-2 ctrl, so it cannot catch folds that
-    short.
-  - Guards: the K63 sleep battery, the kink-eye censuses, the gesture
-    battery, and the knot-mode golden. An inactive constraint must leave
-    the golden byte-identical.
-  - Brief: `docs/design/K90.md`.
 - **K86** · Long dead ends (Levi: "ensure longer dead end paths with no
   junctions"): port K74's option F to `src/core/maze_plan.ts` (cut each
   dead end where its free tail is longest, place dead ends before the
