@@ -66,14 +66,29 @@ and never reused.
 
 ## In progress
 
-- **K4** · G2: per-sample color work moves into the shaders.
-  - owner: G2 agent of session d8031183, started 2026-10-12 14:10.
+- **K4** · G2: per-sample color work moves into the shaders. Stages
+  G2.0-G2.3 and G2.5 are done and verified (desktop censuses, same-state
+  A/Bs, 309 tests on master), but NOT MERGED. On the Pixel 11 it costs
+  60 -> 44 fps at rest even with flow off (p90 33 ms, GPU-bound), while
+  master holds 56-60. The desktop shows the cause: fans 0.57 -> 1.84 ms
+  of GPU at 3200x1800, from the per-arm section Gouraud plus per-arm
+  paint. G2.4 is not done.
+  - owner: nobody since 2026-10-12 19:05, paused because the weekly
+    limit was ahead of pace (19% on day one). The G2 agent of session
+    d8031183 can be resumed while its worktree is kept.
   - branch: `worktree-agent-a7d1f998c07c3864f`
-    (`.claude/worktrees/agent-a7d1f998c07c3864f`); last commit: 786b4bb
-    (WIP).
-  - evidence: `.claude/probes/K4/`.
-  - next: reconcile the design doc with G1, then G2.0 through G2.3 and
-    G2.5, then G2.4 GPU particles if the stages verify cleanly.
+    (`.claude/worktrees/agent-a7d1f998c07c3864f`); last commit: dce4126,
+    rebased onto 8320cde.
+  - evidence: `.claude/probes/K4/` (NOTES.txt is the index) and
+    `.claude/probes/K10/bench_2026-10-12.txt`.
+  - next: the per-arm material strip pre-pass from the G2 doc's
+    follow-ups. Re-measure on the phone (`scripts/phone.ps1`,
+    `.claude/probes/K10/phone_bench.mjs`) and merge only at master's
+    56-60 fps at rest. Then Levi signs off the visible changes listed in
+    the G2 doc on the branch (linear trail fade, burn on mono, noise
+    stuck to the material, the ink spread, exact crests and gold edges,
+    exact strands/depth hue arcs, emergent crossings fading in, glow
+    from a point's own fronts).
   - brief: `docs/design/K4.md` and `docs/design/G2_shader_paint.md`.
 
 ## Next, in order
@@ -113,10 +128,17 @@ and never reused.
   builds only with the knot asleep (or `phy=0`): a stale K1 preview that
   had not slept after 19 s on the phone ran 5.8 fps on physics alone
   (158 ms/frame), while master at Levi's link settled and ran 40 fps.
-  Due now: the merged G1 build (the G1 agent measured 39 -> 60 fps at
-  rest under flow at defaults, on an older base) and the K21 backgrounds
-  (vellum and one drifting effect, at rest). If the full-screen blit
-  costs frames, give phones a cheaper path. Setup: `scripts/phone.ps1`.
+  Measured 2026-10-12, Pixel 11 over Tailscale, `?b.c&am=instant&snd=none`
+  settled, medians of 2 (`.claude/probes/K10/bench_2026-10-12.txt`):
+  - pre-G1 40.5 fps with flow, 60 with flow off;
+  - G1 58-60 with flow (the regression flow caused is gone);
+  - master 56-59 with flow;
+  - backgrounds: none 58-59, vellum 56-59, mist 55-58 (a small cost);
+  - G2 about 44 with flow on or off (K4).
+
+  Rerun after every stage: `scripts/preview.ps1` builds per ref,
+  `scripts/phone.ps1 -Ports ...`, then `.claude/probes/K10/phone_bench.mjs`.
+  The phone must be unlocked and awake.
 
 ## Residuals (known, not fixed)
 
