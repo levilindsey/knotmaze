@@ -84,6 +84,39 @@ and never reused.
 
 ## In progress
 
+- **K73** · UI round from Levi's testing: the pathViz labels fullPath and
+  recentPath, recentPath reaching twice as far (trailLength 5 -> 10, a
+  codec v4), and corner badges for free play and daily replays.
+  - owner: the K73 agent of session d8031183, started 2026-10-12 22:05.
+  - branch: `worktree-agent-a8acc04204f0e3be8`
+    (`.claude/worktrees/agent-a8acc04204f0e3be8`), from 39966da; last
+    commit: none yet.
+  - evidence: `.claude/probes/K73/`.
+  - next: implement the three changes, then screenshots at desktop and
+    phone sizes.
+  - brief: `docs/design/K73.md`.
+- **K74** · Maze design research: what makes a maze good, measured
+  against ours (junctions near the exit, greedy walkers, dead-end
+  lengths), and a plan of formulation changes.
+  - owner: the K74 agent of session d8031183, started 2026-10-12 21:55.
+  - branch: `worktree-agent-aeaf1e61bcecaaf0b`
+    (`.claude/worktrees/agent-aeaf1e61bcecaaf0b`), from 303d335; last
+    commit: none yet.
+  - evidence: `.claude/probes/K74/`.
+  - next: research, the harness, a sweep of the existing knobs, then
+    prototypes.
+  - brief: `docs/design/K74.md`.
+- **K75** · Yellow banding in recentPath's incoming pulses at the
+  current junction (Levi).
+  - owner: the K75 agent of session d8031183, started 2026-10-12 22:05.
+  - branch: `worktree-agent-a40b9ac956a4eaa61`
+    (`.claude/worktrees/agent-a40b9ac956a4eaa61`), from 39966da; last
+    commit: none yet.
+  - evidence: `.claude/probes/K75/`.
+  - next: reproduce on a frozen state, then attribute against pv=gold and
+    pre-G2.
+  - brief: `docs/design/K75.md`.
+
 ## Next, in order
 
 Overnight order, 2026-10-12 (Levi: proceed through the night with the
@@ -150,6 +183,11 @@ K5-K7 (split, frame loop, worker) follow.
   threshold. Broader per K46's scans at gs 20-24: star fails to sleep on
   4/60 seeds, tree 4/60 and fish 2/60, some with a loud visible thrash
   of about 1 unit per substep. Heart 0/60, ring 0/60, rect 0/400.
+  The circle (2026-10-12, gs 18) is clean on its default nw/se anchors
+  (7/7) and w/e (6/6), but with n/s anchors 3 of 7 seeds never sleep:
+  seeds 1 and 4 thrash at mv 2-6e-2 (about 108 ms of physics per
+  frame), and seed 7 holds a standing rider at mv 1e-3. The ring at seed
+  7 n/s sleeps. Repro: `?4.c&shp=circle&sa=n&xa=s&am=instant`.
 - **K62** · The `branchDensity` and `fourWayFraction` panel rows do
   nothing at the default `junctionSpacing` 2: the same maze for all 150
   seeds tested across 0.25-0.70. They look broken; rescale, relabel or
