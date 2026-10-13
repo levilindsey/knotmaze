@@ -13,9 +13,10 @@
 //   harsher than any real pointer input) can leave topologically stuck
 //   sub-width tangles at slack 0 that the sim deliberately refuses to
 //   freeze (the sleep gate never sleeps ON a rendered merge, and no
-//   local push law can untangle them - see CLAUDE.md, loud-attractor
-//   entry). The guarantee there is BOUNDED churn: the loud attractor
-//   (mv 1.3e-1 - 2.3e-1, self-sustaining) must not reappear.
+//   local push law can untangle them - see .claude/rules/physics.md,
+//   loud-attractor entry). The guarantee there is BOUNDED churn: the
+//   loud attractor (mv 1.3e-1 - 2.3e-1, self-sustaining) must not
+//   reappear.
 import { describe, it, expect } from "vitest";
 import { generateLatticeKnotwork } from "../src/core/lattice_grower";
 import {

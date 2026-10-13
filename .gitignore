@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code: track only the path-scoped rules (.claude/rules/); agent
+# worktrees, probes and everything else under .claude/ stay untracked.
+.claude/*
+!.claude/rules/

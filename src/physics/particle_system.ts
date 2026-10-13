@@ -1496,8 +1496,9 @@ export class ParticleSystem {
   private jnSep = JN_MIN_SEPARATION;
   // (The loud-attractor A/B knobs - ab* multipliers and the slip-EMA
   // plumbing - were removed after their experiments concluded; the
-  // measured verdicts live in the CLAUDE.md loud-attractor entry and
-  // the code in commit 0b91d15 if fingerprinting is ever re-run.)
+  // measured verdicts live in the loud-attractor entry of
+  // .claude/rules/physics.md and the code in commit 0b91d15 if
+  // fingerprinting is ever re-run.)
   // Per-crossing smoothed contact speed (units/substep) and the previous
   // contact points, for GRADUATED contact friction (see weldFactor).
   private contactSpeedEma: Float32Array = new Float32Array(0);
