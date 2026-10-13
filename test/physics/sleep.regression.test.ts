@@ -18,7 +18,7 @@
 // Both are fixed at the root (3D closest points in applySegmentCollision;
 // the chord-law eye pressure; the ratchet intersection for every pass
 // between a joint and a twist twin; crossing coverage through fused
-// joints). See CLAUDE.md, KINK EYES.
+// joints). See .claude/rules/physics.md, KINK EYES.
 //
 // The scene is built with main.ts's own calls and stepped in 0.1-s frames
 // (pixi caps a frame's dt at 0.1 s, and these links run at ~10 fps in

@@ -1,0 +1,139 @@
+---
+paths:
+  - "src/game/**"
+  - "src/ui/**"
+  - "src/audio/**"
+  - "src/main.ts"
+  - "test/game/**"
+  - "test/ui/**"
+  - "test/audio/**"
+---
+
+# Gameplay, daily and UI lore
+
+Binding lore for the game state, the daily maze, links, the panel,
+the camera and gestures, and audio, moved verbatim from CLAUDE.md by
+K45 (2026-10-12). The link format and codec versioning rules stay in
+CLAUDE.md (Key Design Decisions). A passage taken from inside a longer
+entry is labeled with its source; the narrative is in
+`docs/history.md`. Daily probes and the probe tooling are in
+`probes.md`. Add new gameplay and UI lore here, not to CLAUDE.md.
+
+## The daily maze and stats (binding)
+
+- MAZE STATS + DAILY MAZE (K19 + K20, then K47 + K56 saved attempts and
+  the front door, 2026-10-12; the commit messages hold the design notes
+  and verification records). STATS: the definitions live in
+  game/maze_stats.ts (time = first move to the dot's arrival, hidden time
+  excluded; efficiency = optimal / the route you ended on, shown once
+  solved, rounded down; distinct junctions; distinct dead-end tips, only
+  with deadEnds on; a g/d/b move log for sharing).
+  DAILY - binding rules: (1) a daily's design comes ONLY from its frozen
+  definition (ui/daily_link.ts DAILY_V1 = codec v3's defaults + a seed
+  from the day number), never PARAM_DEFAULTS; to change the daily, append
+  DAILY_V<n+1> with fromDay a few days ahead (open tabs cannot learn
+  it), never edit a published one; test/ui/daily_link.test.ts pins
+  dailies #1-#3 (a failure there means generation code moved every
+  daily and every link). (2) Day numbers are the player's LOCAL date
+  counted in UTC calendar days (game/daily_calendar.ts), Daily #1 =
+  2026-10-12. (3) A page is the daily only while every param but
+  DAILY_EXEMPT_KEYS (playback preferences: the Sound folder, cameraMode,
+  Touch & feel, physics on/off) equals the day's design (isDailyDesign,
+  K56). Any other edit (panel, seed row, dice) LEAVES it: the attempt is
+  parked, a toast ("Left Daily #N. Your attempt is saved."), the bar
+  becomes a token, the solve on screen plays on as an ordinary one; the
+  Daily button returns. Exempt edits made on a daily are stored as
+  prefs (only what the player changed) that every daily opens with.
+  MAZE_PARAM_KEYS (sameMaze) names the walk-graph params: a test requires
+  every DEFAULT_MAZE_PARAMS key there, and none may be exempt. (4) Links:
+  NO query = today's daily, the bar stays bare; `?daily` = the same
+  (rewritten bare); `?daily=<n>` (1..today+2) stays in the bar; `&k=v`
+  after it keep the daily only for exempt keys; ANY other query is an
+  ordinary design; K20's `?daily=<n>.<delta>` opens as the design it
+  describes and is no longer written. (5) Records: localStorage
+  `knotmaze.daily`, ONE document `{v: 2, days, prefs}` (v1 reads as v2
+  without attempts) - bump `v` for any shape change, never overwrite a
+  newer one; every access is wrapped and the page must boot and play
+  without storage (then all of it is session-only). The first finish is
+  official, later ones replays; streaks count results whose attempt
+  began on or before their day. Share = a Wordle-style move grid + the
+  `?daily=<n>` link, native sheet on coarse pointers. (6) SAVED ATTEMPTS
+  (K47, game/daily_attempt.ts): an attempt IS its tap list
+  (FabricMazeController.taps; replay() rebuilds path, meters, stats, move
+  log) plus active time, start time + day, and a walk-graph fingerprint
+  (a moved maze refuses the replay). Saved after every move, on hide and
+  pagehide, every 10 s while running and before any rebuild; restored
+  whenever its daily opens, the clock PAUSED at the saved time until the
+  intro ends or the next move. In an unfinished official attempt Reset
+  path backtracks to the entrance (logged, priced, clock running; none
+  in trail mode); in a replay it starts over. A finish drops the
+  attempt; a tab coming into view adopts a newer one another tab saved.
+
+## Links and the codec
+
+- *From COMPACT LINKS (2026-10-11), decoder details:* DETAILS beyond the spec, each for a measured reason:
+  a TRAILING "=" on the token is tolerated (`new URL(link).searchParams
+  .append(...)` re-serializes `?<token>` as `?<token>=&...`), as are
+  trailing dots (sentence punctuation after a pasted link); `&key=value`
+  pairs after a token apply as legacy overrides, so probes keep writing
+  `&am=instant` / `&mf=0`, and unknown keys (fbclid, utm_*) drop on the
+  rewrite. The decoder is strict otherwise: an invalid char, truncation,
+  unknown version, out-of-range index/option, reserved number code, or
+  leftover bits beyond the zero padding rejects the whole blob (seed kept,
+  defaults, one console.warn) - all-or-nothing, never a partial design.
+  Legacy readers now fall back to the frozen v1 defaults (LEGACY_BASE), so
+  a future default change (codec v2) leaves old s= links' meaning alone.
+
+- *From COMPACT LINKS, a query without a seed:* A query WITHOUT a seed (`?am=instant`) is no link at all: a fresh
+  design at TODAY's defaults (the bare page too, until K56 made it the
+  daily).
+
+## The panel
+
+- *From APPEARANCE FX round 3 (2026-10-10), live recolor:* Look color controls (scheme/hue/gamut/palette/pathColor)
+  now RECOLOR IN PLACE (renderer.recolor) - the rebuild they used to
+  trigger reset the knot, replayed the reveal and wiped progress.
+
+- *From the 2026-10-11 APPEARANCE MODES round, panel lore:* PANEL LORE: Tweakpane 4's
+  refresh() FIRES change handlers whenever the shown value changes -
+  programmatic refreshes need a guard (appearSync), and the reset glyph
+  runs a row's effects only if refresh() did not; slider step constraints
+  write float noise (1.4500000000000002) back into params.
+
+- *From the gridAlign EXPONENTIAL SLIDER (2026-10-11), the strength and view rules:* The URL (ga=) and physics keep the STRENGTH, so links
+  keep their look; the panel row binds a view object holding the slider
+  position (no step - a step would snap the default 0.669 off its exact
+  value; 2-decimal display) and writes the strength on change; Reset to
+  defaults resyncs the view before pane.refresh(). Strengths snap to 12
+  significant digits so decimal values round-trip bit-exactly.
+
+## Camera, gestures and plucks
+
+- *From the MOBILE + CAMERA ROUND (late 2026-10-10), camera and gestures:* Every
+  gesture goes through ONE primitive (placeWorldAt: world point to
+  screen point at a scale) that each mode maps onto its own state.
+  GESTURES: pinch (world-anchored midpoint) + two-finger pan; touch taps
+  on choices resolve on RELEASE and a pinch cancels a tug without a
+  pluck (its first finger can never move the player); empty-space drag
+  pans (mouse + touch), middle-drag pans anywhere; wheel = mouse zoom at
+  the cursor / trackpad two-finger scroll pans / trackpad pinch
+  (ctrl+wheel) zooms; double-click / double-tap empty space resets. The
+  camera steps in EVERY ticker branch (moves and fog growth happen while
+  the physics sleeps).
+
+- *From RENDER-ONLY PLUCKS (2026-10-11), taps and drags:* TAPS + AUTO PLUCKS touch zero physics
+  (bitwise: positions/prev/zPos/pass ctrls, 0 steps, never wake); a DRAG
+  still tugs and its release keeps the snap-back plus the vibration. A
+  press on a thread waits for a per-pointer slop (mouse 4 / pen 6 / touch
+  10 CSS px): lift = tap-pluck on pointerup, move = tug grabbed at the
+  PRESS point (physics off: a pan).
+
+## Audio
+
+- *From the 2026-10-11 small round 2, the audio autoplay gate:* AUDIO AUTOPLAY GATE (knot_synth.ts): no AudioContext exists
+  until the first activation-triggering input (keydown, mousedown, mouse
+  pointerdown, touch/pen pointerup, touchend; navigator.userActivation
+  decides where supported), and the gate's capture-phase window listener
+  creates + resumes it INSIDE that gesture (iOS unlocks only there) -
+  music-mode plucks before it are silent no-ops, so Chrome's "AudioContext
+  was not allowed to start" warning is gone.
