@@ -169,6 +169,30 @@ entry is labeled with its source; the narrative is in
   defaults resyncs the view before pane.refresh(). Strengths snap to 12
   significant digits so decimal values round-trip bit-exactly.
 
+- BACKGROUND SPEED ROW (K79, 2026-10-13): gridAlign's view pattern. The
+  row binds a view showing the EFFECTIVE speed (auto shows 1, or
+  vellum's 0) and writes backgroundSpeed only when the slider leaves that
+  value (2 decimals); the reset glyph writes auto through row()'s custom
+  {modified, reset}. No step (it would snap an off-step link speed on the
+  next refresh). Hidden while background is none.
+
+- THE MOTION SETTING (K53, built in K79, 2026-10-13; ui/motion.ts):
+  follow system (default) / full / reduced, the "motion" row in Motion &
+  intro. A viewer preference like showMazeStats: localStorage
+  `knotmaze.motion` (anything else reads as follow system), never in a
+  link or a daily, kept by Reset to defaults. MotionSetting.reduced is
+  the ONE answer: the background's drift, the render-only plucks (no
+  attack, tau x0.7, no ghost, lobes x0.6) and the camera tween to an edge
+  marker's target (a jump) read it every frame, and CSS keys on the
+  root's data-motion through whenReduced() - a new `@media
+  (prefers-reduced-motion)` rule would miss the in-app choice. Follow
+  system is live (the media query's change event). Storage missing,
+  throwing or full: the page boots following the system and a choice
+  lasts the session. NOT gated (left for Levi): flow, the intros, the
+  pulses. No cross-tab sync; K84 sorts it with the other viewer prefs.
+  Probe: `.claude/probes/K79/k79_motion.mjs` (38 checks); after
+  emulateMediaFeatures, wait two rAFs before reading the change.
+
 ## Camera, gestures and plucks
 
 - *From the MOBILE + CAMERA ROUND (late 2026-10-10), camera and gestures:* Every
