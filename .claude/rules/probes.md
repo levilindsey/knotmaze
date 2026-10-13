@@ -47,9 +47,13 @@ arm. Pin `r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn =
 after a move (wait until `__knotView()` holds still, before each tap and
 the capture); the background drifts in probe windows (pin
 `__knotBackgroundLayer()`'s tick and clock and re-render - the fog draws
-the background, so a drift changes every fogged pixel); and fog holes are
-stamped wherever the dot is on each frame, so moves must finish in one
-frame (`ms=100000`) for the stamps to repeat. With those, master vs
+the background, so a drift changes every fogged pixel); and fog holes
+were stamped wherever the dot was on each frame, so moves had to finish
+in one frame (`ms=100000`) for the stamps to repeat - since K99 a move
+stamps fixed stations along its run (`src/render/fog_arc.ts`), the same
+at any speed, frame rate or mid-flight tap (`.claude/probes/K99/
+k99_fog.mjs` checks four timings; builds before K99 still need
+`ms=100000`). With those, master vs
 master is 0 px (under fog + mist, 76 px of dither). Recipe:
 `.claude/probes/K83/k83_ab.mjs` (phy=0 for a deterministic layout, then
 every differing pixel attributed to a marker footprint).
