@@ -27,27 +27,26 @@ and never reused.
   (shipped) keeps the median eye at about 1.25 widths. 2.8 lifts the
   boxed tail (default-width X304 0.78 -> 0.84; every harness link at
   0.82 or more) but grows median eyes to about 1.43 widths. Keep 2.6?
+- **K52** · Default background: K21 shipped `vellum` at intensity 0.5
+  (static parchment grain plus vignette; the page stays navy on average),
+  so every existing link and every daily shows it. Keep it, or default
+  to `none`? Changing the default later needs codec v4.
+- **K53** · prefers-reduced-motion stops the background drift
+  completely, and Levi's desktop Chrome reports reduced motion (Windows
+  animation effects are off), so drift never shows there. Stop it, or
+  only slow it?
 
 ## In progress
 
 - **K4** · G2: per-sample color work moves into the shaders.
   - owner: G2 agent of session d8031183, started 2026-10-12 14:10.
   - branch: `worktree-agent-a7d1f998c07c3864f`
-    (`.claude/worktrees/agent-a7d1f998c07c3864f`); last commit: db108af
-    (WIP commits requested).
+    (`.claude/worktrees/agent-a7d1f998c07c3864f`); last commit: 786b4bb
+    (WIP).
   - evidence: `.claude/probes/K4/`.
   - next: reconcile the design doc with G1, then G2.0 through G2.3 and
     G2.5, then G2.4 GPU particles if the stages verify cleanly.
   - brief: `docs/design/K4.md` and `docs/design/G2_shader_paint.md`.
-- **K21** · Shader noise backgrounds with a dropdown.
-  - owner: K21 agent of session d8031183, started 2026-10-12 14:10.
-  - branch: `worktree-agent-ad4b73b6b0ff016bd`
-    (`.claude/worktrees/agent-ad4b73b6b0ff016bd`); last commit: db108af
-    (11 changed paths, WIP commit requested).
-  - evidence: `.claude/probes/K21/`.
-  - next: finish the effects and tuning, then rebase and append its
-    codec params after K19/K20's indices 64-66.
-  - brief: `docs/design/K21.md`.
 
 ## Next, in order
 
@@ -63,6 +62,8 @@ and never reused.
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along the new data
   lines, once K1-K3 land.
 - **K6** · One frame loop driven by what-changed flags (after K5).
+  Replaces K21's stand-in `sceneAnimating()` in main.ts, and the
+  render-on-demand loop (K24) asks `background.needsFrame()`.
 - **K7** · Physics in a Web Worker, with render-side interpolation between
   physics steps (after K6). Smooths the UI; it does not speed up physics.
   Acceptance includes K28: the intro runs at full frame rate WHILE
@@ -85,7 +86,9 @@ and never reused.
   had not slept after 19 s on the phone ran 5.8 fps on physics alone
   (158 ms/frame), while master at Levi's link settled and ran 40 fps.
   Due now: the merged G1 build (the G1 agent measured 39 -> 60 fps at
-  rest under flow at defaults, on an older base).
+  rest under flow at defaults, on an older base) and the K21 backgrounds
+  (vellum and one drifting effect, at rest). If the full-screen blit
+  costs frames, give phones a cheaper path. Setup: `scripts/phone.ps1`.
 
 ## Residuals (known, not fixed)
 
@@ -124,6 +127,9 @@ and never reused.
   collision sweep but before the fusion snap, so a resting overlap of up
   to about 0.04 at joints can go unflagged. Measure the end-of-substep
   state instead. (K41 agent idea.)
+- **K54** · Background contrast varies with the palette: ember roughly
+  halves mist's (luma spread 11.4 -> 6.1). Normalizing the accents'
+  brightness would even it out.
 - **K51** · Knot-mode braids: where one pass sits between two twist
   twins, the two ratchets still clamp one after the other. K41's
   ratchet-intersection rule could apply there; no failure seen yet.
@@ -184,10 +190,21 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   (depth-of-field feel), prototyped with a strength slider.
 - **K39** · A manual battery/quality toggle for phones (fewer intro
   particles, lower resolution); may fold into K22's automatic scaler.
+- **K55** · An optional parallax background mode: it pans and zooms at a
+  fraction of the camera, for depth. Today it is screen-fixed on
+  purpose. (K21 agent idea.)
 
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K21** · Shader noise backgrounds: `background` dropdown (none,
+  vellum, mist, wash, silk, aurora, contours) and an intensity slider;
+  screen-fixed, low-res and low-rate, colors from the design's gamut;
+  fog draws the background in fogged areas; `none` is pixel-identical to
+  master. Each effect adds 0.24-0.34 ms of GPU per frame at 3200x1800.
+  Done in 66e80e9 (2026-10-12). Probes and contact sheets:
+  `.claude/probes/K21/out/final/`.
 
 - **K41** · Since the kink eyes (9920fab), Levi's rect link and the fat
   link never slept (93-95 ms of physics per frame at rest). Done in
