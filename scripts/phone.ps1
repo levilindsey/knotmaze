@@ -19,13 +19,15 @@
 # are on Tailscale, until the phone reboots. Later runs reconnect on
 # their own.
 param(
-  [int[]]$Ports = @(5173),
+  # Strings, split on commas: `pwsh -File` passes "5173,5174" as ONE value.
+  [string[]]$Ports = @("5173"),
   [string]$Url = "",
   [switch]$Wireless,
   [string]$TailscaleHost = "pixel-11"
 )
 $ErrorActionPreference = "Stop"
 $TcpPort = 5555
+$Ports = @($Ports | ForEach-Object { $_ -split "," } | Where-Object { $_ } | ForEach-Object { [int]$_ })
 
 function Find-Adb {
   $onPath = Get-Command adb -ErrorAction SilentlyContinue
