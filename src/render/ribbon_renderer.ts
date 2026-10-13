@@ -42,7 +42,24 @@ import {
   sampleClosedSpline,
   sampleOpenSpline,
 } from "../geometry/spline_generator";
-import { RibbonMesh, TriFanMesh } from "./ribbon_mesh";
+import { ProbeTriMesh, RibbonMesh, TriFanMesh } from "./ribbon_mesh";
+import {
+  KNOT_UNIFORMS_GLSL,
+  PAINT_DATA_GLSL,
+  PAINT_FRAG_DECL,
+  PAINT_FRAG_LIB,
+  PAINT_VERT_DECL,
+  PAINT_VERT_MAIN,
+} from "./paint_glsl";
+import {
+  PaintScene,
+  kData,
+  kGeom,
+  kStatic,
+  knotUniformValues,
+  knotUniforms,
+} from "./paint_model";
+import { kChain, kCtrlNear, kCtrlOfArc } from "./paint_math";
 import { PluckOverlay } from "./pluck_overlay";
 import type { PluckHost, PluckNode } from "./pluck_overlay";
 import {
@@ -493,12 +510,14 @@ function accentTexture(gold: number = PATH_GOLD): Texture {
 // the GL backend syncs them by name.
 const SECTION_VERT = /* glsl */ `#version 300 es
 precision highp float;
+precision highp int;
 
 in vec2 aPosition;
 in vec2 aUV;
 in vec3 aColor;
 in float aFx;
 ${GAP_VERT_DECL}
+${PAINT_VERT_DECL}
 out vec2 vUV;
 out vec3 vSection;
 out vec4 vColor;
@@ -509,6 +528,8 @@ uniform mat3 uWorldTransformMatrix;
 uniform vec4 uWorldColorAlpha;
 uniform mat3 uTransformMatrix;
 uniform vec4 uColor;
+${KNOT_UNIFORMS_GLSL}
+${PAINT_DATA_GLSL}
 
 void main(void) {
   mat3 mvp = uProjectionMatrix * uWorldTransformMatrix * uTransformMatrix;
@@ -518,6 +539,7 @@ void main(void) {
   vColor = uColor * uWorldColorAlpha;
   vFx = aFx;
 ${GAP_VERT_MAIN}
+${PAINT_VERT_MAIN}
 }
 `;
 // vFx (appearance FX, sign-coded so the shared shader needs no uniforms):
@@ -533,20 +555,36 @@ ${GAP_VERT_MAIN}
 // be undefined.
 const SECTION_FRAG = /* glsl */ `#version 300 es
 precision highp float;
+precision highp int;
 
 in vec2 vUV;
 in vec3 vSection;
 in vec4 vColor;
 in float vFx;
+${PAINT_FRAG_DECL}
 
 out vec4 finalColor;
 
 uniform sampler2D uTexture;
+${KNOT_UNIFORMS_GLSL}
+${PAINT_DATA_GLSL}
+${PAINT_FRAG_LIB}
 ${GAP_FRAG}
 void main(void) {
   highp vec2 gfw = fwidth(vPos);
   highp float pxW = max(max(gfw.x, gfw.y), 1e-5);
   highp float gTurn = gapTurn();
+  // G2: this fragment's chain point (wrap-pair picks need derivatives in
+  // uniform control flow - here, at the top).
+  KChain kc = kFragChain();
+  highp vec2 kpt = kFragPoint(kc);
+  if (uKBase.z > 0.5) {
+    // DEBUG VIEW (probes): 1 = ctrl, 2 = arc - (fract(v), fract(16 v),
+    // chain / 63); the census decodes 1e-4 precision through 8 bits.
+    highp float kv = uKBase.z < 1.5 ? kCtrlNear(kc, kpt.x, kpt.y) : kpt.x;
+    finalColor = vec4(fract(kv), fract(kv * 16.0), float(kc.ch % 64) / 63.0, 1.0);
+    return;
+  }
   vec4 acc = texture(uTexture, vec2(vUV.x, 0.5));
   vec3 base = vSection;
   if (vFx > 0.0) {
@@ -610,6 +648,11 @@ function sectionShader(): SectionShader {
         // Bound like uTexture (pixi binds every TextureSource resource to
         // the sampler uniform of the same name); bindGap swaps it per scene.
         uGapData: defaultGapTexture().source,
+        // G2 shader paint (paint_model.ts): page-lifetime data textures +
+        // the shared uniform group.
+        uKStatic: kStatic().source,
+        uKGeom: kGeom().source,
+        knotUniforms: knotUniforms(),
       },
     }) as SectionShader;
     sh.texture = tex;
@@ -956,6 +999,12 @@ export class RibbonRenderer {
   private collapseScratch = new Map<number, Float32Array>();
   // update() calls so far (probes: a render-only pluck must add none).
   updateCount = 0;
+  // G2 SHADER PAINT: this scene's data-texture layout, the debug view
+  // (probes: 0 off, 1 = ctrl, 2 = arc - see SECTION_FRAG) and the probe
+  // triangle mesh (lazily built by probeTris).
+  private paintScene: PaintScene;
+  paintDebug = 0;
+  private probeMesh: ProbeTriMesh | null = null;
   private filletMesh: TriFanMesh | null = null;
   private sectionSegs: VSegment[][] = [];
   private sectionNoise: ((x: number, y: number) => number) | null = null;
@@ -1097,7 +1146,7 @@ export class RibbonRenderer {
       // An already-carved chain (maze mode) renders as an OPEN ribbon: no
       // closing quad across the removed seam.
       const closed = ps.chainBreakAfter[i] < 0;
-      const fill = new RibbonMesh(count, closed, 0xffffff, true);
+      const fill = new RibbonMesh(count, closed, 0xffffff, true, i);
       fill.mesh.texture = accent;
       fill.mesh.shader = sectionShader();
       this.knotRgb.push(this.knotChainRgb(i));
@@ -1111,6 +1160,16 @@ export class RibbonRenderer {
     this.rgbCache = ps.chains.map(() => this.baseRgb);
     this.sectionSegs = ps.chains.map(() => []);
     this.revealMask = ps.chains.map(() => null);
+    // G2 SHADER PAINT: the per-scene data-texture layout (paint_model.ts).
+    // Open chains are always break-after-last (arc grows with the slot).
+    this.paintScene = new PaintScene(
+      ps.chains.map((chain, i) => ({
+        nCtrl: chain.length,
+        closed: ps.chainBreakAfter[i] < 0,
+        count: this.fills[i].sampleCount,
+      }))
+    );
+    knotUniformValues().uKBase[3] = style.paletteMode ? 1 : 0;
     // GPU junction field: every chain's samples get a contiguous texel
     // range in the shared paint texture (filled by writeFillPaint).
     if (style.paletteMode) {
@@ -1859,6 +1918,41 @@ export class RibbonRenderer {
     return this.appearFxSys?.aliveCount ?? 0;
   }
 
+  // ---- G2 PROBE HOOKS (diagnostics only) --------------------------------
+
+  // The probe triangle mesh (ribbon_mesh.ts ProbeTriMesh), created on first
+  // use with `capacity` triangles, drawn with the section shader above every
+  // ribbon layer. Hidden (renderable false) until a probe enables it.
+  probeTris(capacity: number): ProbeTriMesh {
+    if (!this.probeMesh || this.probeMesh.capacity < capacity) {
+      if (this.probeMesh) this.probeMesh.mesh.destroy();
+      this.probeMesh = new ProbeTriMesh(capacity);
+      this.probeMesh.mesh.shader = sectionShader();
+      this.root.addChild(this.probeMesh.mesh);
+    }
+    return this.probeMesh;
+  }
+
+  // The CPU mirror's view of this frame (paint_math.ts): the data-texture
+  // mirrors, the uniform values, and helpers for probe scripts.
+  paintMirror(): {
+    data: ReturnType<typeof kData>;
+    uniforms: ReturnType<typeof knotUniformValues>;
+    chain: (ch: number) => ReturnType<typeof kChain>;
+    ctrlOfArc: (ch: number, arc: number) => number;
+    ctrlNear: (ch: number, arc: number, approx: number) => number;
+  } {
+    const data = kData();
+    return {
+      data,
+      uniforms: knotUniformValues(),
+      chain: (ch) => kChain(data, ch),
+      ctrlOfArc: (ch, arc) => kCtrlOfArc(data, kChain(data, ch), arc),
+      ctrlNear: (ch, arc, approx) =>
+        kCtrlNear(data, kChain(data, ch), arc, approx),
+    };
+  }
+
   // APPEARANCE FX: spawn at every advancing frontier, then advance the
   // pool. Runs with tickPaint in every ticker branch (awake, asleep,
   // paused) so the particles keep flying while the physics sleeps. With no
@@ -2035,6 +2129,14 @@ export class RibbonRenderer {
         if (fusedA || fusedB) this.tuckFusedTips(samples, fusedA, fusedB);
       }
       this.chainSamples[i] = samples;
+      // G2: this frame's arc table for the shaders (KGEOM).
+      this.paintScene.writeGeom(
+        i,
+        samples.totalLength,
+        samples.count,
+        samples.closed,
+        samples.controlArcLengths
+      );
       if (this.style.paletteMode && !this.rgbCacheReady) {
         this.buildRgbCacheFor(i, samples);
       } else if (
@@ -2149,6 +2251,7 @@ export class RibbonRenderer {
     this.renderMarkerGaps(fillHalf, gap);
     this.assignGapIds();
     this.gaps.upload();
+    this.paintScene.flushGeom();
     this.drawRevealTips();
   }
 
@@ -3286,6 +3389,7 @@ export class RibbonRenderer {
   // while the physics sleeps. Also owns the flow-undulation clock
   // (it receives real dt every frame in all ticker branches, both modes).
   tickPaint(dt: number): void {
+    knotUniformValues().uKBase[2] = this.paintDebug;
     this.tickPaintPalette(dt);
     this.tickAppearFx(dt);
     // Flow clock, advanced AFTER the palette/fillet pass so everything
@@ -3745,9 +3849,17 @@ export class RibbonRenderer {
     return false;
   }
 
-  private tickPaintPalette(dt: number): void {
-    if (!this.style.paletteMode) return;
+  // THE PAINT CLOCK (G2): advanced once per frame by main.ts right after
+  // the reveal animator's tick - BEFORE update() - so every CPU mirror
+  // evaluation inside update() (reveal masks, crossing and joint gates) and
+  // this frame's shader uniforms read one clock. Probes freeze the paint
+  // animation by overriding this method (tickPaint no longer advances it).
+  advanceClocks(dt: number): void {
     this.paintClock += dt;
+  }
+
+  private tickPaintPalette(_dt: number): void {
+    if (!this.style.paletteMode) return;
 
     const target = new Set<number>();
     const animated = new Set<number>();
