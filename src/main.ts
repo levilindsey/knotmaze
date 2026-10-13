@@ -50,9 +50,14 @@ import type { HudSnapshot } from "./ui/maze_hud";
 import { ModeBadge, modeBadgeFor } from "./ui/mode_badge";
 import {
   DARK_DISC,
-  FLAG_GLYPH,
+  GLYPH_R,
   OffscreenIndicators,
 } from "./ui/offscreen_indicators";
+import {
+  DEFAULT_GLYPHS,
+  markerGlyphSvgFit,
+  markerRadiusFor,
+} from "./render/marker_glyphs";
 import { openDailyStats } from "./ui/daily_stats_view";
 import { shareOrCopy, showToast } from "./ui/share";
 import { buildPanel } from "./ui/tweakpane_panel";
@@ -1500,6 +1505,18 @@ async function main(): Promise<void> {
   };
   const exitScratch = new Float32Array(2);
   let finishWhy = "init";
+  // The exit marker's glyph (K83) in the indicator's glyph box. icon() is
+  // read every frame while shown, so the markup is built once per glyph.
+  let finishIconId = "";
+  let finishIconSvg = "";
+  const finishIcon = (): string => {
+    const id = fabric?.markerGlyphId("exit") ?? DEFAULT_GLYPHS.exit;
+    if (id !== finishIconId) {
+      finishIconId = id;
+      finishIconSvg = markerGlyphSvgFit(id, "exit", GLYPH_R, DARK_DISC.ink);
+    }
+    return finishIconSvg;
+  };
   const finishIndicator = indicators.add({
     id: "finish",
     world: (out) => {
@@ -1509,9 +1526,9 @@ async function main(): Promise<void> {
       renderer.markerWorld(v.chain, v.ctrl, out);
       return true;
     },
-    // The marker disc's radius (FabricMazeRenderer.markerRadius).
-    radius: () => Math.max(0.32, params.threadWidth * 0.95),
-    icon: () => FLAG_GLYPH,
+    // The exit marker's own radius (FabricMazeRenderer.markerRadius).
+    radius: () => fabric?.markerRadius() ?? markerRadiusFor(params.threadWidth),
+    icon: finishIcon,
     style: DARK_DISC,
     visible: () => {
       const v = exitVertex();
