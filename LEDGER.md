@@ -90,27 +90,6 @@ and never reused.
     settled layout is the same).
   - Everything else leaves the daily, including moveSpeed, pathViz, fog,
     the intro and flow, and the physics tuning.
-- **K58** · Reset path inside a daily backtracks to the entrance with the
-  clock running and logs one backtrack per retracted run, so a long path
-  adds many red squares to the share grid. It is refused in trail mode,
-  which matters only if K46 adds trail dailies. OK as is?
-- **K64** · Sleep window length (K63, `QUIET_WINDOW` in
-  `src/physics/sleep_gate.ts`). 2.5 sim-s shipped: knots sleep at about
-  5.0 sim-s, and no false sleeps in the sweeps. A 0.75-1.0 s window
-  sleeps at about 3.3 sim-s (phone: 5.8 s instead of 8.8 s), but about 4%
-  of designs freeze 0.05-0.17 world (1-4 px) short of their rest, and
-  about 0.2% miss a loud late snap. Physics-off loads share the window,
-  so they now settle hidden for 5.0 sim-s instead of 3.25 (+54%); a
-  separate window for them is possible. Keep 2.5 s (recommended)?
-- **K67** · Sign off G2's visible changes, live since the K4 merge: the
-  list is in `docs/design/G2_shader_paint.md` section 3.8 (exact crests
-  and gold edges, exact strands/depth/noise hue arcs, burn on mono and
-  decorative chains, noise stuck to the material, ink dye from
-  reveal-start positions, emergent crossings fading in, the trail fade).
-  New with the fan fix: paint and burn-front edges inside junction webs
-  ramp over one strip step (at most 0.64 CSS px at the default zoom,
-  1.42 at cr 6 with tw .64).
-
 ## In progress
 
 - **K73** · UI round from Levi's testing: the pathViz labels fullPath and
@@ -180,13 +159,19 @@ passes about 45% (29% at 00:30).
    passes the phone gate), K74 (docs, merged in dad40f8) and K80 (docs).
 2. K77 (pluck wedges); K81 (the smooth arc, after K75); K79 (backgrounds,
    after K73's codec v4); K49's 2.6 vs 2.8 comparison crops (small).
-3. K87 (the plan's pickFarthest cost, same mazes), then K86 (long dead
-   ends behind params that default to today's maze).
+3. K90 stage 1 (measure over-tight folds, prototype a bend limit), K87
+   (the plan's pickFarthest cost, same mazes), then K86 (long dead ends
+   behind params that default to today's maze).
 4. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
    K42.
 
+From 00:45, at most TWO code agents at once (Levi asked about tokens):
+the same total, at a gentler rate on the 5-hour window (14% used in its
+first half hour), so fewer agents die mid-task at the limit. A one-shot
+wake-up at 05:07 resumes the run if the limit stalled it.
+
 Waiting for Levi (not started overnight):
-- decisions: K74, K76 stage 2, K67, K52, K64, K49, K58, K78;
+- decisions: K74, K76 stage 2, K52, K49, K78;
 - deletions: the G3-3 and G4-2 old paths;
 - after the churn: K46, K57, K84.
 
@@ -215,6 +200,18 @@ K5-K7 (split, frame loop, worker) follow.
   animated too), general and per-effect params, configurable colors, and
   an in-app Motion setting (follow system / full / reduced). Launch after
   K77. Brief: `docs/design/K79.md`.
+- **K90** · A physical minimum bend radius (Levi, 2026-10-13: "ideally
+  we'd have a more physics-based constraint to prevent loops from
+  becoming too tight in the first place"). A thread should never fold
+  tighter than half its width, so neither the pinch nor the filled lobe
+  (K8) ever shows.
+  - Stage 1: measure how often over-tight folds occur at rest and under
+    tugs (the P3.34 repro), then prototype a one-sided bend constraint.
+    Same-chain collision skips +-2 ctrl, so it cannot catch folds that
+    short.
+  - Guards: the K63 sleep battery, the kink-eye censuses, the gesture
+    battery, and the knot-mode golden. An inactive constraint must leave
+    the golden byte-identical.
 - **K86** · Long dead ends (Levi: "ensure longer dead end paths with no
   junctions"): port K74's option F to `src/core/maze_plan.ts` (cut each
   dead end where its free tail is longest, place dead ends before the
@@ -245,9 +242,12 @@ K5-K7 (split, frame loop, worker) follow.
   Acceptance includes K28: the intro runs at full frame rate WHILE
   physics settles (no settle-first loader wait).
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
-  (`docs/design/G3G4_sdf_geometry.md`). Defaults: tight folds render as
-  filled lobes, anchored tails keep flat caps, phones stay at a 2x
-  resolution cap. Fold in G1's GPU levers: a loop-free protect test
+  (`docs/design/G3G4_sdf_geometry.md`). Defaults: anchored tails keep
+  flat caps, phones stay at a 2x resolution cap. Over-tight folds keep
+  today's pinch, not the doc's filled lobe (Levi, 2026-10-13: "Pinching
+  is probably better"): shrink the per-sample radii to the local bend
+  radius inside the CPU-flagged fold windows. K90 aims to make such
+  folds physically impossible. Fold in G1's GPU levers: a loop-free protect test
   (about 0.15 ms of register pressure at 3200x1800), a zoom-aware
   polyline tolerance, a per-point far-branch gate, and dropping the
   globals fetch.
@@ -456,6 +456,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   walk-graph fingerprint, and choice indices encode in a few bits per
   move. A link needs the design token, the taps, and per-move timing for
   a faithful replay. The share link stays as it is.
+- **K91** · A shorter quiet window for physics-off loads. They never wake,
+  so a freeze 1-4 px short of rest can't snap later, and their hidden
+  settle would drop from 5.0 sim-s back toward 3.25. The cost: for about
+  4% of designs, the layout differs by 1-4 px from physics-on, which
+  K57's exempt physics toggle assumes is the same. (K64 follow-up.)
 - **K88** · Validate K74's difficulty measures (greedy walks, route
   turns, decision counts) against real daily solves: moves, backtracks
   and time. Only local results exist today. (K74 idea.)
@@ -488,6 +493,14 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K67** · G2's visible changes (`docs/design/G2_shader_paint.md` 3.8,
+  plus the fan fix's one-strip-step edge ramps): signed off by Levi on
+  2026-10-13. No change needed.
+- **K64** · Sleep window: Levi kept the recommended 2.5 sim-s
+  (2026-10-13). No change needed; K91 is the physics-off follow-up.
+- **K58** · Reset path inside a daily stays a timed backtrack with one
+  backtrack per retracted run (Levi, 2026-10-13). No change needed.
 
 - **K48** · Desktop Share keeps copying to the clipboard (Levi,
   2026-10-13). No change needed.
