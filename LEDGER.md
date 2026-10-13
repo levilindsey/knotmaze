@@ -149,6 +149,15 @@ K5-K7 (split, frame loop, worker) follow.
   read smooth and rounded. Launch when an agent slot frees (four running
   at 22:35). Brief: `docs/design/K77.md`. Check whether tonight's bigger
   amplitude floor (39966da) exposed it.
+- **K79** · Backgrounds: an animation speed slider (0 = static, vellum
+  animated too), general and per-effect params, configurable colors, and
+  an in-app Motion setting (follow system / full / reduced). Launch after
+  K77. Brief: `docs/design/K79.md`.
+- **K78** · The Knotmaze handbook: algorithms, architecture, decisions
+  and trade-offs, and a per-param reference with figures (the
+  half-lattice units diagram first). Write it once the churn settles;
+  the plan and Levi's open questions (audience, format) are in
+  `docs/design/K78_handbook_plan.md`.
 
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along the new data
   lines, once K1-K3 land.
