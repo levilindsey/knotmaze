@@ -5,6 +5,16 @@ changes until it is agreed; the implementation (`DAILY_V2`) follows. Brief:
 `docs/design/K46.md`. Evidence: `.claude/probes/K46/` (scripts, scan
 outputs, screenshots; section 6 says how to rerun them).
 
+**Levi's direction (2026-10-12, after a first read).** Revisit this after
+the feature churn (K73-K81 and the modes K76/K80 may add) has settled.
+- **No weekly or other regular arc.** The weekday schedule below is out.
+- **Themes, yes:** each theme defines its own set of parameter
+  constraints. The measured per-recipe constraints and the validation
+  rules below remain the raw material.
+- **Later:** a manual override of the maze for a given day (K82).
+
+The rest of this document is the original proposal, kept as written.
+
 ## Recommendation
 
 - **A weekly arc.** Monday is small and quick and the week grows to a big
