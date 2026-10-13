@@ -13,7 +13,12 @@ import { APPEAR_SEQUENCES, APPEAR_FX_MODES } from "../core/reveal_plan";
 import type { ShapeId, AnchorId } from "../core/shapes";
 import { SHAPES, ANCHORS } from "../core/shapes";
 import type { BackgroundId } from "../render/background_model";
-import { BACKGROUNDS } from "../render/background_model";
+import {
+  BACKGROUNDS,
+  BACKGROUND_SPEED_AUTO,
+  BACKGROUND_SPEED_MAX,
+  isAutoSpeed,
+} from "../render/background_model";
 
 // Pluck audio behavior: silent | user plucks only | ambient random plucks
 // | scripted song playback.
@@ -287,6 +292,10 @@ export interface UrlParams {
   // [0, 1] the background's contrast: 0 = flat ink (the layer is off),
   // 1 = the effect's strongest designed look. Applies live.
   backgroundIntensity: number;
+  // The background's animation speed (K79; render/background_model.ts):
+  // -1 = AUTO, each effect's own pace (vellum static); 0 = static; else
+  // [0, 3] x the effect's designed drift. Applies live.
+  backgroundSpeed: number;
 }
 
 // COMPLETE per-param defaults (everything but seed): the panel's per-row
@@ -374,6 +383,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K21: the subtlest backdrop - static, keeps the page's ink on average.
   background: "vellum",
   backgroundIntensity: 0.5,
+  // K79: auto - every effect's pre-K79 pace (appended to codec v4).
+  backgroundSpeed: BACKGROUND_SPEED_AUTO,
 };
 
 export function newSeed(): number {
@@ -447,7 +458,16 @@ function fromCodecValues(
   p.gridAlign = clamp01(p.gridAlign);
   p.junctionBlend = Math.max(0, p.junctionBlend);
   p.backgroundIntensity = clamp01(p.backgroundIntensity);
+  p.backgroundSpeed = sanitizeBackgroundSpeed(p.backgroundSpeed);
   return p;
+}
+
+// backgroundSpeed: any negative value (or garbage) is AUTO, anything else
+// clamps to the slider's [0, BACKGROUND_SPEED_MAX].
+function sanitizeBackgroundSpeed(v: number): number {
+  return isAutoSpeed(v)
+    ? BACKGROUND_SPEED_AUTO
+    : Math.min(BACKGROUND_SPEED_MAX, v);
 }
 
 // What legacy links (s=, seed=) read for a missing key: the codec's v1
@@ -620,6 +640,10 @@ function readLegacy(
     ),
     // The pulse reach (K75) too (probe URLs write `&pr=2`).
     pulseReach: readNumber(query, "pr", D.pulseReach),
+    // And the background's animation speed (K79: `&bgs=2`; -1 = auto).
+    backgroundSpeed: sanitizeBackgroundSpeed(
+      readNumber(query, "bgs", D.backgroundSpeed)
+    ),
   };
 }
 

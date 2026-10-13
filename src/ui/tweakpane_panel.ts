@@ -16,6 +16,12 @@ import {
   seedText,
 } from "./url_state";
 import { gridAlignSlider, gridAlignStrength } from "./grid_align_curve";
+import {
+  BACKGROUND_SPEED_AUTO,
+  BACKGROUND_SPEED_MAX,
+  effectiveSpeed,
+  isAutoSpeed,
+} from "../render/background_model";
 
 export interface PanelSettings {
   temperature: number;
@@ -282,17 +288,26 @@ export function buildPanel(
   document.head.appendChild(style);
 
   // --- Modified-state tracking + per-row reset ---------------------------
+  // A row whose shown value is not its stored param (a view object, like
+  // the background speed's AUTO) says itself whether it is modified and
+  // how its reset glyph restores the default.
+  interface CustomDefault {
+    modified: () => boolean;
+    reset: () => void;
+  }
   interface Tracked {
     api: RowApi;
     obj: Record<string, unknown>;
     key: string;
     def: unknown;
+    custom?: CustomDefault;
   }
   const tracked: Tracked[] = [];
   const markRow = (t: Tracked): void => {
     const v = t.obj[t.key];
-    const mod =
-      typeof t.def === "number"
+    const mod = t.custom
+      ? t.custom.modified()
+      : typeof t.def === "number"
         ? Math.abs((v as number) - t.def) > 1e-9
         : v !== t.def;
     t.api.element.classList.toggle("kp-mod", mod);
@@ -319,7 +334,8 @@ export function buildPanel(
     opts: Record<string, unknown> | undefined,
     tipText: string,
     def: unknown,
-    after: (ev?: ChangeEvent) => void
+    after: (ev?: ChangeEvent) => void,
+    custom?: CustomDefault
   ): RowApi => {
     const api = parent.addBinding(
       obj as object,
@@ -328,7 +344,7 @@ export function buildPanel(
     ) as RowApi;
     api.element.title = tipText;
     api.element.classList.add("kp-row");
-    const t: Tracked = { api, obj, key, def };
+    const t: Tracked = { api, obj, key, def, custom };
     // Set by the change handler: Tweakpane's refresh() fires it whenever the
     // shown value changes, so a reset must not run the row's effects again.
     let fired = false;
@@ -341,8 +357,13 @@ export function buildPanel(
       btn.addEventListener("pointerdown", (e) => {
         e.stopPropagation();
         e.preventDefault();
-        if (obj[key] === def) return;
-        obj[key] = def;
+        if (custom) {
+          if (!custom.modified()) return;
+          custom.reset();
+        } else {
+          if (obj[key] === def) return;
+          obj[key] = def;
+        }
         fired = false;
         api.refresh?.();
         if (fired) return;
@@ -376,6 +397,11 @@ export function buildPanel(
   const gaView: Record<string, unknown> = {
     gridAlign: gridAlignSlider(params.gridAlign),
   };
+  // The background speed row's shown speed: AUTO (-1) shows the effect's
+  // own pace (see its row).
+  const shownSpeed = (): number =>
+    effectiveSpeed(params.background, params.backgroundSpeed);
+  const bgView: Record<string, unknown> = { backgroundSpeed: shownSpeed() };
 
   // Folder open/closed state persists across sessions (localStorage),
   // keyed by folder title.
@@ -729,13 +755,49 @@ export function buildPanel(
         contours: "contours",
       },
     },
-    "Backdrop behind the knot, in the design's own colors (it shows through the crossing gaps too): none = the plain page; vellum = dark parchment grain (still); mist = slow marbled smoke; wash = drifting watercolor blooms; silk = long flowing streaks; aurora = soft curtains of light; contours = the contour lines of a slowly shifting map. Everything but vellum drifts very slowly (still under reduced motion). Applies live.",
-    D.background, () => callbacks.onBackgroundChange()
+    "Backdrop behind the knot, in the design's own colors (it shows through the crossing gaps too): none = the plain page; vellum = dark parchment grain (still unless given a speed); mist = slow marbled smoke; wash = drifting watercolor blooms; silk = long flowing streaks; aurora = soft curtains of light; contours = the contour lines of a slowly shifting map. Everything but vellum drifts very slowly (backgroundSpeed sets how fast; reduced motion keeps every backdrop still). Applies live.",
+    D.background, () => {
+      // The speed row shows the new effect's pace while it is on auto.
+      bgView.backgroundSpeed = shownSpeed();
+      backgroundSpeedRow.refresh?.();
+      callbacks.onBackgroundChange();
+    }
   );
   const backgroundIntensityRow = row(
     fLook, p, "backgroundIntensity", { min: 0, max: 1, step: 0.05 },
     "Backdrop contrast: 0 = the plain page color, 1 = the strongest look. Applies live.",
     D.backgroundIntensity, () => callbacks.onBackgroundChange()
+  );
+  // K79: the backdrop's animation speed. The param's default is AUTO (-1:
+  // each effect's own pace - 1 for the drifting ones, 0 for vellum), so
+  // the row binds a view holding the SHOWN speed and writes the param only
+  // when the slider moves off it; the reset glyph returns to auto. No step
+  // (a step constraint snaps an off-step speed from a link on the next
+  // refresh); the param keeps 2 decimals.
+  const backgroundSpeedRow = row(
+    fLook, bgView, "backgroundSpeed",
+    {
+      min: 0,
+      max: BACKGROUND_SPEED_MAX,
+      keyScale: 0.05,
+      pointerScale: 0.01,
+      format: (v: number) => v.toFixed(2),
+    },
+    "How fast the backdrop moves: 0 = still, 1 = the effect's own pace, up to 3x. Vellum is still until you give it a speed (then its mottling drifts and its light wanders; the grain stays put). The reset glyph returns to each effect's own pace. Reduced motion keeps every backdrop still. Applies live.",
+    0, () => {
+      const v = bgView.backgroundSpeed as number;
+      if (Math.abs(v - shownSpeed()) > 1e-9) {
+        params.backgroundSpeed = Math.round(v * 100) / 100;
+      }
+      callbacks.onBackgroundChange();
+    },
+    {
+      modified: () => !isAutoSpeed(params.backgroundSpeed),
+      reset: () => {
+        params.backgroundSpeed = BACKGROUND_SPEED_AUTO;
+        bgView.backgroundSpeed = shownSpeed();
+      },
+    }
   );
 
   // --- Motion & intro -----------------------------------------------------
@@ -1042,6 +1104,7 @@ export function buildPanel(
     Object.assign(params, PARAM_DEFAULTS);
     settings.temperature = SETTINGS_DEFAULTS.temperature;
     gaView.gridAlign = gridAlignSlider(params.gridAlign);
+    bgView.backgroundSpeed = shownSpeed();
     pane.refresh();
     markAll();
     callbacks.onRegenerate();
@@ -1106,6 +1169,7 @@ export function buildPanel(
       !fab ||
       (params.colorScheme !== "segments" && params.colorScheme !== "strands");
     backgroundIntensityRow.hidden = params.background === "none";
+    backgroundSpeedRow.hidden = params.background === "none";
   };
   refreshCond();
 
@@ -1165,6 +1229,7 @@ export function buildPanel(
       syncing = true;
       try {
         gaView.gridAlign = gridAlignSlider(params.gridAlign);
+        bgView.backgroundSpeed = shownSpeed();
         pane.refresh();
       } finally {
         syncing = false;

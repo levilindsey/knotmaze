@@ -104,6 +104,9 @@ void main(void) {
 // soft vignette. It keeps the page's own ink ON AVERAGE (the texture lifts
 // toward the design's hue and sinks toward black about equally), so it
 // reads as a surface, not a recolor. Static (rendered once per change).
+// This is the program for drift time 0 - vellum's default, still at auto
+// speed - kept VERBATIM from K21 so its frames stay bit-identical; any
+// other time renders VELLUM_DRIFT (see effectProgram).
 const VELLUM = /* glsl */ `
 vec3 effect(vec2 p, float t, float I) {
   vec2 s = p + uParams.xy;
@@ -124,6 +127,38 @@ vec3 effect(vec2 p, float t, float I) {
     ? mix(uInk.rgb, mix(uInk.rgb, uA2.rgb, 0.55), min(lift, 1.0))
     : uInk.rgb * (1.0 + 0.9 * max(lift, -0.6));
   float vig = smoothstep(0.35, 1.3, length(p));
+  return c * (1.0 - 0.34 * I * vig);
+}
+`;
+
+// VELLUM, MOVING (K79: vellum at a set animation speed). The mottling and
+// the pulp drift apart slowly, so their sum evolves rather than slides,
+// and the vignette's light wanders; the fibers and the grain stay put, the
+// paper itself. Every time term vanishes at t = 0, but the compiled
+// program does not reproduce VELLUM's bits there (the GPU compiler fuses
+// the multiply-adds differently: 34 px at 1 LSB of 1.26 M in a same-state
+// A/B), hence two programs.
+const VELLUM_DRIFT = /* glsl */ `
+vec3 effect(vec2 p, float t, float I) {
+  vec2 s = p + uParams.xy;
+  float m1 = fbm(s * 2.1 + t * vec2(0.006, -0.004), 5);
+  float m2 = fbm(s * 7.5 + 11.3 + t * vec2(-0.012, 0.009), 4);
+  float fib = 0.0;
+  for (int k = 0; k < 5; k++) {
+    float a = 0.4 + 1.2566 * float(k) + uParams.y;
+    vec2 dir = vec2(cos(a), sin(a));
+    vec2 q = vec2(dot(s, dir), dot(s, vec2(-dir.y, dir.x)));
+    float n = gnoise(q * vec2(28.0, 520.0) + float(k) * 17.0);
+    float dens = 0.55 + 0.45 * gnoise(q * 6.0 + float(k) * 5.3);
+    fib += pow(max(0.0, 1.0 - abs(n) * 4.0), 4.0) * dens;
+  }
+  float grain = tpdf(gl_FragCoord.xy + 31.0);
+  float lift = I * (0.55 * m1 + 0.28 * m2 + 0.2 * (fib - 0.12) + 0.08 * grain);
+  vec3 c = lift > 0.0
+    ? mix(uInk.rgb, mix(uInk.rgb, uA2.rgb, 0.55), min(lift, 1.0))
+    : uInk.rgb * (1.0 + 0.9 * max(lift, -0.6));
+  float vig = smoothstep(0.35, 1.3,
+    length(p - 0.08 * vec2(sin(0.05 * t), sin(0.037 * t))));
   return c * (1.0 - 0.34 * I * vig);
 }
 `;
@@ -235,14 +270,22 @@ vec3 effect(vec2 p, float t, float I) {
 }
 `;
 
+// Keyed by PROGRAM id: an effect id, or "vellum-drift".
 const BODIES: Record<string, string> = {
   vellum: VELLUM,
+  "vellum-drift": VELLUM_DRIFT,
   mist: MIST,
   wash: WASH,
   silk: SILK,
   aurora: AURORA,
   contours: CONTOURS,
 };
+
+// The program an effect renders with at drift time t: its own, except
+// vellum away from t = 0 (VELLUM's comment).
+export function effectProgram(id: string, t: number): string {
+  return id === "vellum" && t !== 0 ? "vellum-drift" : id;
+}
 
 export function effectFragment(id: string): string {
   const body = BODIES[id];

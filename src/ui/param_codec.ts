@@ -267,6 +267,9 @@ export const CODEC_V4: CodecTable = Object.freeze({
     ...CODEC_V3.params.map((p) =>
       p.name === "trailLength" ? num("trailLength", 10) : p
     ),
+    // The background's animation speed (K79, 2026-10-13): -1 = auto, each
+    // effect's own pace - the drift every earlier link had (vellum static).
+    num("backgroundSpeed", -1), // 70
   ]),
 });
 

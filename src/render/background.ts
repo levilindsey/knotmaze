@@ -5,7 +5,9 @@
 // PIPELINE: the active effect's fragment shader draws one quad into a
 // LOW-RES RenderTexture (BackgroundProfile.scale texels per CSS px) - only
 // when the drift clock says so (10-15 fps while drifting, 6-10 on phones;
-// once per change when static). A screen-sized BLIT mesh, the first child
+// once per change when static: speed 0, vellum at auto, reduced motion,
+// the K24 pause). The drift is the effect's designed pace times the
+// animation speed (K79 backgroundSpeed). A screen-sized BLIT mesh, the first child
 // of the stage, stretches it over the canvas every frame (bilinear,
 // dithered). The ribbons' crossing gaps discard their pixels (G1), so the
 // gaps show this layer; nothing in the scene erases the framebuffer any
@@ -33,8 +35,11 @@ import type { Renderer } from "pixi.js";
 import {
   BACKGROUNDS,
   BACKGROUND_PROFILES,
+  BACKGROUND_SPEED_AUTO,
   BackgroundClock,
+  backgroundDrift,
   backgroundSeedOffset,
+  isAutoSpeed,
 } from "./background_model";
 import type { BackgroundColors, BackgroundId } from "./background_model";
 import {
@@ -43,6 +48,7 @@ import {
   FOG_VERT,
   QUAD_VERT,
   effectFragment,
+  effectProgram,
 } from "./background_shaders";
 
 type TexShader = Shader & { texture: Texture };
@@ -88,8 +94,9 @@ function screenUniforms(): UniformGroup {
   return SCREEN_UNIFORMS;
 }
 
-const EFFECT_SHADERS = new Map<BackgroundId, TexShader>();
-function effectShader(id: BackgroundId): TexShader {
+// Keyed by program id (effectProgram: an effect, or "vellum-drift").
+const EFFECT_SHADERS = new Map<string, TexShader>();
+function effectShader(id: string): TexShader {
   let sh = EFFECT_SHADERS.get(id);
   if (!sh) {
     sh = Shader.from({
@@ -131,7 +138,8 @@ function setQuad(mesh: Mesh, x0: number, y0: number, w: number, h: number): void
 export class BackgroundLayer {
   // Screen-space layer: add it to the stage BEFORE the world root.
   readonly container = new Container();
-  // Live prefers-reduced-motion: no drift (a still backdrop).
+  // Live prefers-reduced-motion: no drift, a still backdrop at whatever
+  // time it reached.
   reducedMotion = false;
   // K24 policy: pause the drift once the rest of the scene is static.
   pauseWhenStatic = true;
@@ -140,6 +148,12 @@ export class BackgroundLayer {
   readonly stats = { renders: 0, rtW: 0, rtH: 0 };
   private effect: BackgroundId = "none";
   private intensity = 0.5;
+  // The animation speed (backgroundSpeed; -1 = auto) and whether it leaves
+  // the effect static at auto (vellum).
+  private speed = BACKGROUND_SPEED_AUTO;
+  private autoStatic = false;
+  // The program the quad draws with (renderTexture picks it per pass).
+  private program = "";
   private readonly phone: boolean;
   private readonly renderer: Renderer;
   private rt: RenderTexture | null = null;
@@ -171,8 +185,9 @@ export class BackgroundLayer {
     return this.active ? this.ensure() : null;
   }
 
-  // Effect + intensity (the two params). Unknown ids read as none.
-  configure(effect: BackgroundId, intensity: number): void {
+  // Effect, intensity and animation speed (the three params; speed < 0 =
+  // auto, see backgroundDrift). Unknown ids read as none.
+  configure(effect: BackgroundId, intensity: number, speed = BACKGROUND_SPEED_AUTO): void {
     const id = BACKGROUNDS.includes(effect) ? effect : "none";
     const k = Math.max(0, Math.min(1, Number.isFinite(intensity) ? intensity : 0));
     const was = this.active;
@@ -186,9 +201,20 @@ export class BackgroundLayer {
       this.effect = id;
       this.clock.dirty = true;
     }
+    const auto = isAutoSpeed(speed);
+    // A new effect starts at drift time 0, like a fresh page; so does an
+    // effect that is static at auto (vellum) once its speed returns to
+    // auto - its link then shows the canonical look, not wherever an
+    // earlier speed left it.
+    const autoStatic = auto && id !== "none" && backgroundDrift(id, speed) === 0;
+    if ((changed || (autoStatic && !this.autoStatic)) && this.clock.time !== 0) {
+      this.clock.time = 0;
+      this.clock.dirty = true;
+    }
+    this.autoStatic = autoStatic;
+    this.speed = auto ? BACKGROUND_SPEED_AUTO : speed;
     if (this.active && (changed || !was)) {
       this.ensure();
-      this.quad!.shader = effectShader(id);
       this.layout();
     }
     this.container.visible = this.active;
@@ -233,7 +259,7 @@ export class BackgroundLayer {
   tick(dt: number, sceneActive: boolean): boolean {
     if (!this.active) return false;
     const prof = BACKGROUND_PROFILES[this.effect as Exclude<BackgroundId, "none">];
-    const drift = this.reducedMotion ? 0 : prof.drift;
+    const drift = this.reducedMotion ? 0 : backgroundDrift(this.effect, this.speed);
     const fps = this.phone ? prof.phoneFps : prof.fps;
     if (!this.clock.tick(dt, drift, fps, sceneActive, this.pauseWhenStatic)) {
       return false;
@@ -253,6 +279,11 @@ export class BackgroundLayer {
   renderTexture(): void {
     if (!this.active) return;
     this.ensure();
+    const program = effectProgram(this.effect, this.clock.time);
+    if (program !== this.program) {
+      this.quad!.shader = effectShader(program);
+      this.program = program;
+    }
     bgValues().uView[3] = this.clock.time;
     this.renderer.render({
       container: this.scene!,
@@ -274,7 +305,8 @@ export class BackgroundLayer {
         scaleMode: "linear",
         autoGenerateMipmaps: false,
       });
-      this.quad = quadMesh(effectShader(this.active ? this.effect : "mist"));
+      this.program = effectProgram(this.active ? this.effect : "mist", this.clock.time);
+      this.quad = quadMesh(effectShader(this.program));
       this.scene = new Container();
       this.scene.addChild(this.quad);
       const blitShader = Shader.from({

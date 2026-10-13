@@ -42,9 +42,14 @@ export interface BackgroundProfile {
   // grain texture needs about one texel per CSS pixel.
   scale: number;
   phoneScale: number;
-  // Drift speed multiplier (0 = a static backdrop: rendered once per
-  // change, never again).
+  // The DESIGNED drift: the clock's speed (drift seconds per wall second)
+  // at an animation speed of 1 (the backgroundSpeed param multiplies it).
   drift: number;
+  // The animation speed at AUTO (backgroundSpeed's default): 1 = drift at
+  // the designed pace, 0 = static (rendered once per change, never again)
+  // until a speed is set - vellum (K79; whether it moves by default is
+  // K52's call).
+  autoSpeed: number;
   // Re-render rate while drifting (desktop / phone). The drift is slow
   // enough that a texel moves a small fraction of itself per update.
   fps: number;
@@ -55,23 +60,56 @@ export const BACKGROUND_PROFILES: Record<
   Exclude<BackgroundId, "none">,
   BackgroundProfile
 > = {
-  // Paper grain: static, one texel per CSS pixel (the fibers are fine).
-  vellum: { scale: 1, phoneScale: 1, drift: 0, fps: 0, phoneFps: 0 },
+  // Paper grain: one texel per CSS pixel (the fibers are fine). Static at
+  // auto; at a set speed its mottling drifts and its light wanders, while
+  // the fibers and the grain stay put (paper does not move).
+  vellum: { scale: 1, phoneScale: 1, drift: 1, autoSpeed: 0, fps: 10, phoneFps: 6 },
   // Domain-warped fbm: big soft clouds - a third-res field is plenty. The
   // warp of a warp amplifies its offsets, so its clock runs slowest.
-  mist: { scale: 0.34, phoneScale: 0.3, drift: 0.35, fps: 15, phoneFps: 10 },
+  mist: { scale: 0.34, phoneScale: 0.3, drift: 0.35, autoSpeed: 1, fps: 15, phoneFps: 10 },
   // Watercolor washes: soft blotches with pooled rims.
-  wash: { scale: 0.4, phoneScale: 0.34, drift: 0.8, fps: 15, phoneFps: 10 },
+  wash: { scale: 0.4, phoneScale: 0.34, drift: 0.8, autoSpeed: 1, fps: 15, phoneFps: 10 },
   // Flow streaks: thin features - half-res.
-  silk: { scale: 0.5, phoneScale: 0.4, drift: 0.8, fps: 15, phoneFps: 10 },
+  silk: { scale: 0.5, phoneScale: 0.4, drift: 0.8, autoSpeed: 1, fps: 15, phoneFps: 10 },
   // Curtains: the vertical rays need some horizontal detail.
-  aurora: { scale: 0.4, phoneScale: 0.34, drift: 1, fps: 15, phoneFps: 10 },
+  aurora: { scale: 0.4, phoneScale: 0.34, drift: 1, autoSpeed: 1, fps: 15, phoneFps: 10 },
   // Contour lines: the sharpest feature (antialiased lines about 1.5
   // texels wide - at half resolution a phone's 5x upscale stair-stepped
   // them) - and lines that visibly creep are the one motion the eye
   // follows, so they move about 1 CSS px a second.
-  contours: { scale: 0.75, phoneScale: 0.75, drift: 0.3, fps: 10, phoneFps: 6 },
+  contours: { scale: 0.75, phoneScale: 0.75, drift: 0.3, autoSpeed: 1, fps: 10, phoneFps: 6 },
 };
+
+// THE ANIMATION SPEED (backgroundSpeed, K79): one param for every effect.
+// AUTO (any negative value; the default, -1) = each effect's own pace
+// (autoSpeed: its designed drift, or static for vellum) - exactly the
+// drift every link had before the param existed. 0 = static, any other
+// value a multiple of the designed drift, up to BACKGROUND_SPEED_MAX. The
+// re-render rate (fps) does not scale with it.
+export const BACKGROUND_SPEED_AUTO = -1;
+export const BACKGROUND_SPEED_MAX = 3;
+
+// Whether a backgroundSpeed value means AUTO (NaN does too).
+export function isAutoSpeed(speed: number): boolean {
+  return !(speed >= 0);
+}
+
+// The speed `speed` stands for on effect `id` (what the panel's slider
+// shows): auto resolves to the effect's autoSpeed, an explicit value
+// clamps to [0, BACKGROUND_SPEED_MAX]. 0 for none.
+export function effectiveSpeed(id: BackgroundId, speed: number): number {
+  if (id === "none") return 0;
+  if (isAutoSpeed(speed)) return BACKGROUND_PROFILES[id].autoSpeed;
+  return Math.min(BACKGROUND_SPEED_MAX, speed);
+}
+
+// The drift clock's speed for effect `id` at backgroundSpeed `speed`. At
+// auto it is the designed drift times 1 (or 0 for vellum): bit-identical
+// to the drift before the param existed (x * 1 is exact).
+export function backgroundDrift(id: BackgroundId, speed: number): number {
+  if (id === "none") return 0;
+  return BACKGROUND_PROFILES[id].drift * effectiveSpeed(id, speed);
+}
 
 // The drift pauses once the REST of the scene has been static this long
 // (seconds) - the K24 render-on-demand hook (see BackgroundClock).
@@ -123,9 +161,9 @@ export function backgroundSeedOffset(seed: number): [number, number] {
 // whole battery story of an animated backdrop:
 //   - DIRTY (effect, colors, size, seed or intensity changed): re-render on
 //     the next frame, whatever else holds.
-//   - DRIFTING (an animated effect, motion allowed, not paused): re-render
-//     every `interval` seconds of wall time - 12-20 fps of slow drift
-//     instead of the display's 60+.
+//   - DRIFTING (an animated effect at a non-zero speed, motion allowed,
+//     not paused): re-render every `interval` seconds of wall time - 6-15
+//     fps of slow drift instead of the display's 60+.
 //   - PAUSED: when the rest of the scene has been static for
 //     BACKGROUND_PAUSE_GRACE seconds (and pauseWhenStatic is on), the drift
 //     clock stops - the texture stops changing, so a render-on-demand frame
