@@ -1,32 +1,36 @@
-// P4 section coloring: assign every stretch of thread a SECTION COLOR -
-// an RGB value - as piecewise-linear functions of chain ctrl. Pure
-// combinatorics: schemes are deterministic from (graph, walk, seed), per
-// URL-as-complete-state.
+// P4 section coloring: assign every stretch of thread a SECTION COLOR.
+// Pure combinatorics: schemes are deterministic from (graph, walk, seed),
+// per URL-as-complete-state.
 //
 // THE BLENDING CONTRACT: at a junction several runs meet, and their colors
 // must transition smoothly through it in every direction. Each junction
 // gets ONE converged color, and every incident run ramps from its own
-// color to it over the last RAMP_CTRL of ctrl - so any number of arms
-// always meet in a single shared color. Schemes whose field is already
-// continuous across junctions (depth) need no ramps.
+// color to it near its ends - so any number of arms always meet in a
+// single shared color. Schemes whose field is already continuous across
+// junctions (depth) need no ramps.
 //
-// RGB, NOT GAMUT COORDINATES (Stage 26): segments are emitted as RGB
-// endpoints and the renderer interpolates them PER VERTEX in RGB space
-// (a custom shader mixes the gameplay accent on top). Two consequences:
-//   - Arbitrary color pairs blend DIRECTLY (straight line through RGB -
-//     a desaturated middle for near-complementary pairs is correct),
-//     which is what the "segments" scheme wants: fully random unrelated
-//     run colors, junctions showing just the blend of whatever meets.
-//     The old 1D palette V axis swept the hue PATH between two colors,
-//     so distant pairs rendered rainbow stripes - the bounded random
-//     walk that used to constrain segments existed only as a workaround
-//     for that axis, and is retired with it.
-//   - Schemes that MEAN "sweep the gamut" between two coordinates
-//     (depth's gradient, strands' bridge transitions) keep that look by
-//     SUBDIVIDING at emit: a coordinate span is cut into small steps,
-//     each converted through the gamut curve, so chained RGB lerps
-//     follow the hue arc.
+// RUN FORM (G2.2): one record per walk RUN - its unwrapped ctrl span, its
+// two junction colors and its own color, its base ramp lengths and the
+// ctrl-per-lattice-unit factor that turns junctionBlend's fixed lattice
+// distance into ctrl - plus each control slot's run. The ribbon VERTEX
+// shader evaluates the run at the vertex's exact ctrl every frame
+// (paint_glsl knotSection; evalRunSection is the TS twin), so section
+// colors follow the material with no per-sample cache, no drift re-bake,
+// and junctionBlend (and the hue, for gamut-space schemes) is a uniform.
+// The previous form - per-chain piecewise-linear RGB segments, eased ramps
+// approximated by 6 linear pieces and gamut sweeps by 0.06-coordinate
+// chords - is frozen in test/core/fixtures/section_field_v1.ts.
+//
+// RGB OR GAMUT SPACE: segments (and knot mode) carry RGB colors and blend
+// along straight RGB lines - arbitrary pairs blend DIRECTLY (a desaturated
+// middle for near-complementary pairs is correct), which is what segments
+// wants: fully random unrelated run colors, junctions showing just the
+// blend of whatever meets. Schemes that MEAN "sweep the gamut" between two
+// coordinates (depth's gradient, strands' bridge transitions, mono, noise)
+// carry gamut COORDINATES and convert per vertex, so a sweep follows the
+// hue arc exactly.
 
+import { PAINT_CONST, RUN_FLAG } from "../render/paint_const";
 import type { WalkGraph } from "./walk_graph";
 
 export type ColorScheme = "mono" | "strands" | "depth" | "segments" | "noise";
@@ -40,14 +44,6 @@ export const COLOR_SCHEMES: ColorScheme[] = [
 ];
 
 export type RGB = [number, number, number];
-
-// One piecewise-linear piece of a chain's rgb(ctrl) function.
-export interface VSegment {
-  c0: number; // Ctrl span, unwrapped (sampled modulo chain length).
-  c1: number;
-  rgb0: RGB; // Channels in [0, 1].
-  rgb1: RGB;
-}
 
 // Ramp length at each end of a discontinuous run (ctrl units; ~1.2 world).
 const RAMP_CTRL = 2.4;
@@ -63,10 +59,7 @@ const SEG_RAMP_CTRL = 1.0;
 // ramps also EASE toward smoothstep (fully once the extension reaches
 // RAMP_EASE_FULL lattice units): a long LINEAR ramp meets the flat run - or
 // the opposite ramp - with a slope kink the eye reads as a band.
-const RAMP_EASE_FULL = 1.0;
-// Linear pieces per eased ramp (per-vertex RGB lerps fill in between; 6
-// pieces keep a smoothstep within ~1/255 per channel).
-const RAMP_EASE_PIECES = 6;
+const RAMP_EASE_FULL = PAINT_CONST.RAMP_EASE_FULL;
 
 // A run end's ramp length (ctrl): the base ramp `r0` plus the blend
 // extension, never past the run's midpoint.
@@ -74,16 +67,15 @@ function rampLen(r0: number, span: number, extraCtrl: number): number {
   return Math.min(span / 2, r0 + extraCtrl);
 }
 
-// The blend extension in a run's ctrl units: `dist` lattice units at the
-// run's own lattice-length-per-ctrl.
-function extraCtrlFor(dist: number, span: number, length: number): number {
-  return dist > 0 && length > 1e-9 ? (dist * span) / length : 0;
-}
-
 // Eased-ramp blend weight at ramp parameter u: linear at ease 0 (the
 // historic one-piece ramp), smoothstep at ease 1.
 function easeAt(u: number, ease: number): number {
   return u + (u * u * (3 - 2 * u) - u) * ease;
+}
+
+// The junctionBlend ease for a blend distance (shader uniform uKSect.y).
+export function blendEase(dist: number): number {
+  return Math.min(1, Math.max(0, dist) / RAMP_EASE_FULL);
 }
 
 // THE GAMUT: a 280-degree hue arc around the seed hue at the fabric's
@@ -94,9 +86,10 @@ function easeAt(u: number, ease: number): number {
 const GAMUT_SWEEP = 280;
 
 // LIVE GAMUT CONFIG (the gamutArc + palette params): module-level so
-// every consumer - the schemes here AND the renderer's per-sample noise
-// path - reads the same values without threading extra args everywhere.
-// main.ts sets it from params before any field/scene build.
+// every consumer - the schemes here AND the renderer (which hands it to
+// the shaders as a uniform, gamutConfig) - reads the same values without
+// threading extra args everywhere. main.ts sets it from params before any
+// run table or scene build.
 export type GamutPalette = "pastel" | "jewel" | "ember" | "moss" | "ink";
 export const GAMUT_PALETTES: GamutPalette[] = [
   "pastel",
@@ -122,10 +115,10 @@ export function setGamutConfig(arcDeg: number, palette: GamutPalette): void {
   gamutSat = sl[0];
   gamutLight = sl[1];
 }
-// Max gamut-coordinate span per emitted segment for schemes that sweep
-// the gamut (depth, strands): ~17 degrees of hue per linear-RGB piece
-// keeps the chained lerps on the hue arc.
-const GAMUT_EMIT_STEP = 0.06;
+// The live gamut (arc degrees, saturation, lightness): the shaders' uKGamut.
+export function gamutConfig(): [number, number, number] {
+  return [gamutArcDeg, gamutSat, gamutLight];
+}
 
 function hslToRgb(h: number, s: number, l: number): RGB {
   const k = (n: number) => (n + h / 30) % 12;
@@ -135,8 +128,7 @@ function hslToRgb(h: number, s: number, l: number): RGB {
   return [f(0), f(8), f(4)];
 }
 
-// Gamut coordinate -> RGB (shared with the renderer, which uses it to
-// convert the spatial noise field per sample).
+// Gamut coordinate -> RGB (GLSL twin: paint_glsl kGamut).
 export function gamutRgb(baseHue: number, v: number): RGB {
   const h = (((baseHue + (v - 0.5) * gamutArcDeg) % 360) + 360) % 360;
   return hslToRgb(h, gamutSat, gamutLight);
@@ -152,101 +144,113 @@ function hash01(s: string, seed: number): number {
   return ((h >>> 8) & 0xffffff) / 0x1000000;
 }
 
-// Emit a straight RGB-lerp segment.
-function pushRgb(
-  segs: VSegment[],
-  c0: number,
-  c1: number,
-  rgb0: RGB,
-  rgb1: RGB
-): void {
-  segs.push({ c0, c1, rgb0, rgb1 });
+// ---- RUN FORM -----------------------------------------------------------
+
+export interface RunSection {
+  chain: number;
+  ctrlA: number; // Unwrapped span (closed wrap runs: ctrlB > chain length).
+  ctrlB: number;
+  r0A: number; // Base ramp length at each end (ctrl; under RAMP_A / RAMP_B).
+  r0B: number;
+  perLattice: number; // Ctrl per lattice unit (span / run length; 0 = none).
+  flags: number; // RUN_FLAG bits.
+  colA: RGB; // RGB, or [gamut coordinate, 0, 0] under RUN_FLAG.GAMUT.
+  colMid: RGB;
+  colB: RGB;
 }
 
-// Emit an RGB end ramp: one straight piece at ease 0 (the historic ramp),
-// else RAMP_EASE_PIECES pieces following the eased curve.
-function pushRampRgb(
-  segs: VSegment[],
-  c0: number,
-  c1: number,
-  rgb0: RGB,
-  rgb1: RGB,
-  ease: number
-): void {
-  if (ease <= 0) {
-    pushRgb(segs, c0, c1, rgb0, rgb1);
-    return;
-  }
-  let prev = rgb0;
-  for (let i = 1; i <= RAMP_EASE_PIECES; i++) {
-    const u = i / RAMP_EASE_PIECES;
-    const w = easeAt(u, ease);
-    const next: RGB = [
-      rgb0[0] + (rgb1[0] - rgb0[0]) * w,
-      rgb0[1] + (rgb1[1] - rgb0[1]) * w,
-      rgb0[2] + (rgb1[2] - rgb0[2]) * w,
+export interface SectionRuns {
+  runs: RunSection[];
+  // Per chain, per control slot: the run whose half-open span [ctrlA,
+  // ctrlB) holds the slot (wrap runs modulo the ring; an open chain's last
+  // slot belongs to the run ending there).
+  slotRun: Int32Array[];
+  // The noise scheme: every run reads per-control coordinates (CTRLIDX.z,
+  // from the material's initial positions - the renderer owns those).
+  noise: boolean;
+}
+
+export interface RunChain {
+  len: number; // Control slots.
+  closed: boolean;
+}
+
+// A run's section color at a ctrl (GLSL twin: paint_glsl knotSection, after
+// its run lookup; RUN_FLAG.NOISE is resolved by the caller, which owns the
+// per-control coordinates). `dist` = junctionBlend (lattice units).
+export function evalRunSection(
+  run: RunSection,
+  ctrl: number,
+  nCtrl: number,
+  closed: boolean,
+  dist: number,
+  baseHue: number
+): RGB {
+  const cu = closed && ctrl < run.ctrlA - 1e-4 ? ctrl + nCtrl : ctrl;
+  let col: RGB;
+  if (run.flags & RUN_FLAG.SWEEP) {
+    const t = Math.max(
+      0,
+      Math.min(1, (cu - run.ctrlA) / Math.max(run.ctrlB - run.ctrlA, 1e-6))
+    );
+    col = [run.colA[0] + (run.colB[0] - run.colA[0]) * t, 0, 0];
+  } else {
+    const sp = run.ctrlB - run.ctrlA;
+    const extra = Math.max(0, dist) * run.perLattice;
+    const ease = blendEase(dist);
+    const ra = run.flags & RUN_FLAG.RAMP_A ? rampLen(run.r0A, sp, extra) : 0;
+    const rb = run.flags & RUN_FLAG.RAMP_B ? rampLen(run.r0B, sp, extra) : 0;
+    const da = cu - run.ctrlA;
+    const db = run.ctrlB - cu;
+    const mix3 = (a: RGB, b: RGB, w: number): RGB => [
+      a[0] + (b[0] - a[0]) * w,
+      a[1] + (b[1] - a[1]) * w,
+      a[2] + (b[2] - a[2]) * w,
     ];
-    segs.push({
-      c0: c0 + (c1 - c0) * ((i - 1) / RAMP_EASE_PIECES),
-      c1: c0 + (c1 - c0) * u,
-      rgb0: prev,
-      rgb1: next,
-    });
-    prev = next;
+    if (ra > 0 && da < ra) {
+      col = mix3(run.colA, run.colMid, easeAt(Math.max(0, Math.min(1, da / ra)), ease));
+    } else if (rb > 0 && db < rb) {
+      col = mix3(run.colB, run.colMid, easeAt(Math.max(0, Math.min(1, db / rb)), ease));
+    } else {
+      col = [run.colMid[0], run.colMid[1], run.colMid[2]];
+    }
   }
+  return run.flags & RUN_FLAG.GAMUT ? gamutRgb(baseHue, col[0]) : col;
 }
 
-// Emit a GAMUT sweep between two coordinates, subdivided so the chained
-// RGB lerps track the hue arc (see GAMUT_EMIT_STEP); `ease` shapes an end
-// ramp like pushRampRgb.
-function pushGamut(
-  segs: VSegment[],
-  c0: number,
-  c1: number,
-  v0: number,
-  v1: number,
-  baseHue: number,
-  ease = 0
-): void {
-  const n = Math.max(
-    ease > 0 ? RAMP_EASE_PIECES : 1,
-    Math.ceil(Math.abs(v1 - v0) / GAMUT_EMIT_STEP)
-  );
-  let prev = gamutRgb(baseHue, v0);
-  for (let i = 1; i <= n; i++) {
-    const t = i / n;
-    const next = gamutRgb(baseHue, v0 + (v1 - v0) * easeAt(t, ease));
-    segs.push({
-      c0: c0 + (c1 - c0) * ((i - 1) / n),
-      c1: c0 + (c1 - c0) * t,
-      rgb0: prev,
-      rgb1: next,
-    });
-    prev = next;
-  }
-}
-
-// Build per-chain rgb(ctrl) segment lists. `chainLens` are the physics
-// chain lengths (slot counts). The "noise" scheme returns EMPTY lists -
-// the renderer evaluates it spatially per sample instead (it is
-// continuous everywhere, junctions included). `baseHue` anchors the gamut
-// (the renderer's style.baseHue; seed % 360). `blendDist` is the
-// junctionBlend param, lattice units (see RAMP_EASE_FULL's comment).
-export function buildSectionField(
+// Build the run table for a scheme (event time: scene build, Look change).
+// The same colors the segment field used - swatches, junction RGB means,
+// Dijkstra depth, ramp lengths - now as run records the shader evaluates
+// exactly. junctionBlend is NOT an input (a uniform). `baseHue` anchors
+// the gamut for the RGB-space segments scheme (the renderer's
+// style.baseHue; seed % 360 rotated by hueShift).
+export function buildSectionRuns(
   scheme: ColorScheme,
   walk: WalkGraph | null,
-  chainLens: number[],
+  chains: RunChain[],
   hueGroup: number[] | undefined,
   seed: number,
-  baseHue: number,
-  blendDist = 0
-): VSegment[][] {
-  const dist = Math.max(0, blendDist);
-  const ease = Math.min(1, dist / RAMP_EASE_FULL);
-  const nChains = chainLens.length;
-  const field: VSegment[][] = chainLens.map(() => []);
-  if (scheme === "noise") return field;
-
+  baseHue: number
+): SectionRuns {
+  const nChains = chains.length;
+  const runs: RunSection[] = [];
+  const perChain: number[][] = chains.map(() => []);
+  const addRun = (r: RunSection): void => {
+    perChain[r.chain].push(runs.length);
+    runs.push(r);
+  };
+  const constRun = (chain: number, col: RGB, gamut: boolean, flags = 0): RunSection => ({
+    chain,
+    ctrlA: 0,
+    ctrlB: chains[chain].len,
+    r0A: 0,
+    r0B: 0,
+    perLattice: 0,
+    flags: (gamut ? RUN_FLAG.GAMUT : 0) | flags,
+    colA: col,
+    colMid: col,
+    colB: col,
+  });
   // Per-chain gamut coordinate for constant-colored chains (and the
   // strands scheme's per-thread colors).
   const chainCoord = (chain: number): number => {
@@ -260,16 +264,24 @@ export function buildSectionField(
     if (scheme === "segments") return hash01(`chain${chain}`, seed);
     return 0.5;
   };
+  // Ctrl per lattice unit along a run (junctionBlend's conversion).
+  const perLat = (e: { ctrlA: number; ctrlB: number; length: number }): number =>
+    e.length > 1e-9 ? (e.ctrlB - e.ctrlA) / e.length : 0;
 
-  if (scheme === "mono" || !walk) {
+  if (scheme === "noise") {
+    // One constant NOISE run per chain: the shader reads each control's
+    // coordinate (continuous everywhere, junctions included).
+    const slotRun = chains.map((g) => new Int32Array(g.len));
     for (let c = 0; c < nChains; c++) {
-      const rgb = gamutRgb(baseHue, chainCoord(c));
-      pushRgb(field[c], 0, chainLens[c], rgb, rgb);
+      slotRun[c].fill(runs.length);
+      runs.push(constRun(c, [0.5, 0, 0], true, RUN_FLAG.NOISE));
     }
-    return field;
+    return { runs, slotRun, noise: true };
   }
 
-  if (scheme === "depth") {
+  if (scheme === "mono" || !walk) {
+    for (let c = 0; c < nChains; c++) addRun(constRun(c, [chainCoord(c), 0, 0], true));
+  } else if (scheme === "depth") {
     // Distance from the START (Dijkstra over the walk multigraph; the
     // graph ships distToExit, so run the mirror from the start). The
     // field is continuous across junctions by construction - no ramps;
@@ -301,148 +313,191 @@ export function buildSectionField(
     for (const d of dist.values()) {
       if (Number.isFinite(d) && d > maxD) maxD = d;
     }
-    const coordJ = new Map<string, number>();
-    for (const [id, d] of dist) {
-      coordJ.set(id, Number.isFinite(d) && maxD > 0 ? d / maxD : 1);
-    }
+    const coordJ = (id: string): number => {
+      const d = dist.get(id)!;
+      return Number.isFinite(d) && maxD > 0 ? d / maxD : 1;
+    };
     for (const e of walk.edges) {
-      pushGamut(
-        field[e.chain],
-        e.ctrlA,
-        e.ctrlB,
-        coordJ.get(e.va)!,
-        coordJ.get(e.vb)!,
-        baseHue
-      );
+      addRun({
+        chain: e.chain,
+        ctrlA: e.ctrlA,
+        ctrlB: e.ctrlB,
+        r0A: 0,
+        r0B: 0,
+        perLattice: 0,
+        flags: RUN_FLAG.GAMUT | RUN_FLAG.SWEEP,
+        colA: [coordJ(e.va), 0, 0],
+        colMid: [0, 0, 0],
+        colB: [coordJ(e.vb), 0, 0],
+      });
     }
     for (let c = 0; c < nChains; c++) {
-      if (field[c].length === 0) {
-        const rgb = gamutRgb(baseHue, 1);
-        pushRgb(field[c], 0, chainLens[c], rgb, rgb);
-      }
+      if (perChain[c].length === 0) addRun(constRun(c, [1, 0, 0], true));
     }
-    for (const segs of field) segs.sort((p, q) => p.c0 - q.c0);
-    return field;
-  }
-
-  if (scheme === "strands") {
+  } else if (scheme === "strands") {
     // Per-thread colors; the through-thread keeps its color across each
     // junction (hosts never shift hue) and bridges carry the whole
     // transition along their own end ramps - as a GAMUT sweep, so a
     // bridge between distant thread colors walks the hue arc instead of
     // fading through grey.
     for (const e of walk.edges) {
-      const vA = chainCoord(walk.vertices.get(e.va)!.chain);
-      const vB = chainCoord(walk.vertices.get(e.vb)!.chain);
-      const mid = chainCoord(e.chain);
       const span = e.ctrlB - e.ctrlA;
-      const r = rampLen(
-        Math.min(RAMP_CTRL, span / 2.5),
-        span,
-        extraCtrlFor(dist, span, e.length)
-      );
-      const segs = field[e.chain];
-      pushGamut(segs, e.ctrlA, e.ctrlA + r, vA, mid, baseHue, ease);
-      if (e.ctrlB - r > e.ctrlA + r) {
-        pushGamut(segs, e.ctrlA + r, e.ctrlB - r, mid, mid, baseHue);
-      }
-      pushGamut(segs, e.ctrlB - r, e.ctrlB, mid, vB, baseHue, ease);
+      const r0 = Math.min(RAMP_CTRL, span / 2.5);
+      addRun({
+        chain: e.chain,
+        ctrlA: e.ctrlA,
+        ctrlB: e.ctrlB,
+        r0A: r0,
+        r0B: r0,
+        perLattice: perLat(e),
+        flags: RUN_FLAG.GAMUT | RUN_FLAG.RAMP_A | RUN_FLAG.RAMP_B,
+        colA: [chainCoord(walk.vertices.get(e.va)!.chain), 0, 0],
+        colMid: [chainCoord(e.chain), 0, 0],
+        colB: [chainCoord(walk.vertices.get(e.vb)!.chain), 0, 0],
+      });
     }
     for (let c = 0; c < nChains; c++) {
-      if (field[c].length === 0) {
-        const rgb = gamutRgb(baseHue, chainCoord(c));
-        pushRgb(field[c], 0, chainLens[c], rgb, rgb);
+      if (perChain[c].length === 0) addRun(constRun(c, [chainCoord(c), 0, 0], true));
+    }
+  } else {
+    // segments: a FULLY RANDOM gamut color per run - adjacent runs have
+    // zero association (pure hash). Each junction converges to the RGB
+    // MEAN of its incident runs' colors (self-loops touch twice): a
+    // channel-wise mean, NOT a coordinate mean - hue coordinates do not
+    // average across an arc. Ramps are straight RGB blends by design:
+    // "just the blend given whatever the colors are".
+    // Swatch assignment, not raw uniform draws: uniform hues over a pastel
+    // arc land in the same color FAMILY constantly (teal next to teal next
+    // to mint), which reads as correlated even though it is independent -
+    // the "many neighboring segments with matching colors" report. K
+    // stride-spread swatches + a collision walk guarantee that runs
+    // SHARING A JUNCTION never wear the same swatch, and the stride keeps
+    // consecutive swatch indices far apart in the gamut. Seed-determined,
+    // order-stable.
+    const K = 12;
+    const STRIDE = 5; // Coprime with K: neighboring indices sit far apart.
+    const vOf = (j: number): number => ((j * STRIDE) % K) / (K - 1);
+    const picks = new Array<number>(walk.edges.length).fill(-1);
+    const runRgb: RGB[] = new Array(walk.edges.length);
+    for (const e of walk.edges) {
+      const taken = new Set<number>();
+      for (const vid of [e.va, e.vb]) {
+        for (const nb of walk.vertices.get(vid)!.edges) {
+          if (picks[nb] >= 0) taken.add(picks[nb]);
+        }
+      }
+      let j = Math.floor(hash01(`run${e.id}`, seed) * K) % K;
+      for (let t = 0; t < K && taken.has(j); t++) j = (j + 1) % K;
+      picks[e.id] = j;
+      runRgb[e.id] = gamutRgb(baseHue, vOf(j));
+    }
+    const vJ = new Map<string, RGB>();
+    for (const [id, v] of walk.vertices) {
+      let sr = 0;
+      let sg = 0;
+      let sb = 0;
+      let n = 0;
+      for (const eid of v.edges) {
+        const times =
+          walk.edges[eid].va === id && walk.edges[eid].vb === id ? 2 : 1;
+        sr += runRgb[eid][0] * times;
+        sg += runRgb[eid][1] * times;
+        sb += runRgb[eid][2] * times;
+        n += times;
+      }
+      vJ.set(id, n > 0 ? [sr / n, sg / n, sb / n] : gamutRgb(baseHue, 0.5));
+    }
+    for (const e of walk.edges) {
+      // SHORT blend zones: with the generic RAMP_CTRL (2.4) a typical run
+      // was ~80% ramp toward its junctions' MEAN colors, which diffused
+      // every neighborhood toward a shared average - the maze rendered as
+      // large same-hued fields ("neighboring segments with matching
+      // colors"). Independence IS the scheme: each run must wear its own
+      // color for most of its length, with just enough junction blend to
+      // avoid a hard seam. junctionBlend extends these by a fixed distance.
+      const span = e.ctrlB - e.ctrlA;
+      const r0 = Math.min(SEG_RAMP_CTRL, span * 0.18);
+      addRun({
+        chain: e.chain,
+        ctrlA: e.ctrlA,
+        ctrlB: e.ctrlB,
+        r0A: r0,
+        r0B: r0,
+        perLattice: perLat(e),
+        flags: RUN_FLAG.RAMP_A | RUN_FLAG.RAMP_B,
+        colA: vJ.get(e.va)!,
+        colMid: runRgb[e.id],
+        colB: vJ.get(e.vb)!,
+      });
+    }
+    // Chains outside the walk keep a constant color.
+    for (let c = 0; c < nChains; c++) {
+      if (perChain[c].length === 0) {
+        addRun(constRun(c, gamutRgb(baseHue, chainCoord(c)), false));
       }
     }
-    for (const segs of field) segs.sort((p, q) => p.c0 - q.c0);
-    return field;
   }
 
-  // segments: a FULLY RANDOM gamut color per run - adjacent runs have
-  // zero association (pure hash; the old bounded-random-walk locality
-  // machinery is retired, see the header). Each junction converges to
-  // the RGB MEAN of its incident runs' colors (self-loops touch twice):
-  // a channel-wise mean, NOT a coordinate mean - hue coordinates do not
-  // average across an arc. Ramps are straight RGB blends by design:
-  // "just the blend given whatever the colors are".
-  // Swatch assignment, not raw uniform draws: uniform hues over a pastel
-  // arc land in the same color FAMILY constantly (teal next to teal next
-  // to mint), which reads as correlated even though it is independent -
-  // the "many neighboring segments with matching colors" report. K
-  // stride-spread swatches + a collision walk guarantee that runs
-  // SHARING A JUNCTION never wear the same swatch, and the stride keeps
-  // consecutive swatch indices far apart in the gamut. Seed-determined,
-  // order-stable.
-  const K = 12;
-  const STRIDE = 5; // Coprime with K: neighboring indices sit far apart.
-  const vOf = (j: number): number => ((j * STRIDE) % K) / (K - 1);
-  const picks = new Array<number>(walk.edges.length).fill(-1);
-  const runRgb: RGB[] = new Array(walk.edges.length);
-  for (const e of walk.edges) {
-    const taken = new Set<number>();
-    for (const vid of [e.va, e.vb]) {
-      for (const nb of walk.vertices.get(vid)!.edges) {
-        if (picks[nb] >= 0) taken.add(picks[nb]);
+  // Slot -> run. Uncovered stretches (an open chain beyond its walk, a
+  // closed one between runs) get a constant PSEUDO run in the color of the
+  // chain's first run's A end - the segment field's fallback (segs[0]).
+  const slotRun = chains.map((g) => new Int32Array(g.len).fill(-1));
+  for (let c = 0; c < nChains; c++) {
+    const n = chains[c].len;
+    const list = perChain[c];
+    for (const idx of list) {
+      const r = runs[idx];
+      for (let s = Math.ceil(r.ctrlA - 1e-9); s < r.ctrlB - 1e-9; s++) {
+        const k = chains[c].closed ? ((s % n) + n) % n : s;
+        if (k >= 0 && k < n) slotRun[c][k] = idx;
       }
     }
-    let j = Math.floor(hash01(`run${e.id}`, seed) * K) % K;
-    for (let t = 0; t < K && taken.has(j); t++) j = (j + 1) % K;
-    picks[e.id] = j;
-    runRgb[e.id] = gamutRgb(baseHue, vOf(j));
-  }
-  const vJ = new Map<string, RGB>();
-  for (const [id, v] of walk.vertices) {
-    let sr = 0;
-    let sg = 0;
-    let sb = 0;
-    let n = 0;
-    for (const eid of v.edges) {
-      const times =
-        walk.edges[eid].va === id && walk.edges[eid].vb === id ? 2 : 1;
-      sr += runRgb[eid][0] * times;
-      sg += runRgb[eid][1] * times;
-      sb += runRgb[eid][2] * times;
-      n += times;
+    if (!chains[c].closed && n > 0 && slotRun[c][n - 1] < 0) {
+      for (const idx of list) {
+        if (Math.abs(runs[idx].ctrlB - (n - 1)) < 1e-9) slotRun[c][n - 1] = idx;
+      }
     }
-    vJ.set(
-      id,
-      n > 0
-        ? [sr / n, sg / n, sb / n]
-        : gamutRgb(baseHue, 0.5)
-    );
-  }
-  for (const e of walk.edges) {
-    const rgbA = vJ.get(e.va)!;
-    const rgbB = vJ.get(e.vb)!;
-    const mid = runRgb[e.id];
-    const span = e.ctrlB - e.ctrlA;
-    // SHORT blend zones: with the generic RAMP_CTRL (2.4) a typical run
-    // was ~80% ramp toward its junctions' MEAN colors, which diffused
-    // every neighborhood toward a shared average - the maze rendered as
-    // large same-hued fields ("neighboring segments with matching
-    // colors"). Independence IS the scheme: each run must wear its own
-    // color for most of its length, with just enough junction blend to
-    // avoid a hard seam.
-    // junctionBlend extends these by a fixed distance on request.
-    const r = rampLen(
-      Math.min(SEG_RAMP_CTRL, span * 0.18),
-      span,
-      extraCtrlFor(dist, span, e.length)
-    );
-    const segs = field[e.chain];
-    pushRampRgb(segs, e.ctrlA, e.ctrlA + r, rgbA, mid, ease);
-    if (e.ctrlB - r > e.ctrlA + r) {
-      pushRgb(segs, e.ctrlA + r, e.ctrlB - r, mid, mid);
-    }
-    pushRampRgb(segs, e.ctrlB - r, e.ctrlB, mid, rgbB, ease);
-  }
-  // Chains (or chain stretches) outside the walk keep a constant color.
-  for (let c = 0; c < nChains; c++) {
-    if (field[c].length === 0) {
-      const rgb = gamutRgb(baseHue, chainCoord(c));
-      pushRgb(field[c], 0, chainLens[c], rgb, rgb);
+    let pseudo = -1;
+    for (let s = 0; s < n; s++) {
+      if (slotRun[c][s] >= 0) continue;
+      if (pseudo < 0) {
+        let first = -1;
+        for (const idx of list) {
+          if (first < 0 || runs[idx].ctrlA < runs[first].ctrlA) first = idx;
+        }
+        const src = first >= 0 ? runs[first] : null;
+        const col: RGB = src ? [src.colA[0], src.colA[1], src.colA[2]] : [0.5, 0, 0];
+        const gamut = src ? (src.flags & RUN_FLAG.GAMUT) !== 0 : true;
+        pseudo = runs.length;
+        runs.push(constRun(c, col, gamut));
+      }
+      slotRun[c][s] = pseudo;
     }
   }
-  for (const segs of field) segs.sort((p, q) => p.c0 - q.c0);
-  return field;
+  return { runs, slotRun, noise: false };
+}
+
+// One constant RGB run per chain (knot mode: each strand's tint).
+export function constantSectionRuns(
+  chains: RunChain[],
+  rgbOf: (chain: number) => RGB
+): SectionRuns {
+  const runs: RunSection[] = [];
+  const slotRun = chains.map((g, c) => {
+    const col = rgbOf(c);
+    runs.push({
+      chain: c,
+      ctrlA: 0,
+      ctrlB: g.len,
+      r0A: 0,
+      r0B: 0,
+      perLattice: 0,
+      flags: 0,
+      colA: col,
+      colMid: col,
+      colB: col,
+    });
+    return new Int32Array(g.len).fill(c);
+  });
+  return { runs, slotRun, noise: false };
 }

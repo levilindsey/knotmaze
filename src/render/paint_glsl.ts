@@ -18,8 +18,10 @@
 //
 // LAYOUTS (texel = vec4; i = linear texel index, row = i >> 10):
 //   CHAINS (texel 2ch, 2ch+1):  C0 = (nCtrl, closed, sampleCount, idxBase)
-//                               C1 = (geomBase, srcFirst, srcCount, -)
-//   KGEOM at geomBase:          G0 = (total, arcPer, -, -), then the
+//                               C1 = (geomBase, srcFirst, srcCount, paintBase)
+//   CTRLIDX (idxBase + slot):   (runId, srcHint, noiseV, inkTign | tLate)
+//   RUNS (uKBase.x + 4 run):    see paint_math.ts (G2.2 SECTION COLORS)
+//   KGEOM at geomBase:          G0 = (total, arcPer, fxDone, -), then the
 //                               control arcs packed 4 per texel (slot order)
 
 import { PAINT_CONST, glslConstBlock } from "./paint_const";
@@ -36,6 +38,8 @@ const S = PAINT_CONST.K_ROW_SHIFT;
 //   uKShape = (taperArc, tipFloor, glowArc, glowHold)
 //   uKInk   = (inkSpeed, isInk, -, -)
 //   uKKnots = anim -> wall speed knots (animT, wallT, invSpeed, valid)
+//   uKGamut = (baseHue, arcDeg, sat, light)  the section gamut
+//   uKSect  = (blendDist, ease, -, -)        junctionBlend (lattice units)
 export const KNOT_UNIFORMS_GLSL = /* glsl */ `
 uniform vec4 uKBase;
 uniform vec4 uKFx;
@@ -43,6 +47,8 @@ uniform vec4 uKFx2;
 uniform vec4 uKShape;
 uniform vec4 uKInk;
 uniform vec4 uKKnots[8];
+uniform vec4 uKGamut;
+uniform vec4 uKSect;
 `;
 
 // Data access + chain geometry (vertex and fragment stages).
@@ -145,6 +151,24 @@ highp float kCtrlOfArc(KChain c, highp float a) {
   return float(lo) + (a1 > a0 ? min(1.0, (a - a0) / (a1 - a0)) : 0.0);
 }
 
+// kCtrlOfArc's exact answer (the largest slot whose arc is <= a) by a short
+// walk from a nearby ctrl; the binary search when the walk would be long.
+highp float kCtrlOfArcNear(KChain c, highp float a, highp float seed) {
+  int n = c.nCtrl;
+  int s = clamp(int(floor(seed)), 0, n - 1);
+  bool ok = false;
+  for (int it = 0; it < 8; it++) {
+    if (s < n - 1 && kCA(c, s + 1) <= a) { s++; continue; }
+    if (s > 0 && kCA(c, s) > a) { s--; continue; }
+    ok = true;
+    break;
+  }
+  if (!ok) return kCtrlOfArc(c, a);
+  highp float a0 = kCA(c, s);
+  highp float a1 = s < n - 1 ? kCA(c, s + 1) : c.total;
+  return float(s) + (a1 > a0 ? min(1.0, (a - a0) / (a1 - a0)) : 0.0);
+}
+
 // The exact ctrl at arc a from an approximate one (fragment stage: the
 // interpolated vertex ctrl is off by a fraction of a slot where a control
 // breakpoint falls inside a quad): ring-aware slot walk, then the clamped
@@ -197,6 +221,8 @@ out highp vec2 vSamp;
 flat out highp vec4 vKC0;
 flat out highp vec4 vKC1;
 flat out highp vec4 vKG0;
+// The vertex's section color (PAINT_VERT_MAIN; needs PAINT_SECTION_GLSL).
+vec3 kVertSection;
 `;
 export const PAINT_VERT_MAIN = /* glsl */ `
   {
@@ -213,6 +239,7 @@ export const PAINT_VERT_MAIN = /* glsl */ `
     vKC0 = kc0;
     vKC1 = vec4(kc1.xyz, float(kch));
     vKG0 = kg0;
+    kVertSection = knotSection(kc, kctrl);
   }
 `;
 
@@ -291,7 +318,9 @@ KIgn kIgnition(KChain c, highp float ctrl) {
     if (ctrl < A.x - 1e-4 || ctrl > A.y + 1e-4) continue;
     highp vec4 B = kR(2 * s + 1);
     highp float t = B.x + abs(ctrl - A.z) / B.y;
-    if (t < r.tA) {
+    // Near-ties (fronts leaving one junction, or meeting) go to the first
+    // source scanned: an f32 ctrl must not flip the choice the CPU makes.
+    if (t < r.tA - 1e-4) {
       r.hit = true;
       r.tA = t;
       r.cFrom = A.z;
@@ -328,18 +357,25 @@ highp float kFxTail(int st) {
   return t + 0.02;
 }
 
-highp float kBurnAge(KChain c, KIgn g, highp float ctrl) {
-  int n = c.nCtrl;
-  int sl = int(floor(ctrl));
-  if (c.closed) sl -= n * int(floor(float(sl) / float(n)));
-  else sl = clamp(sl, 0, n - 1);
-  highp float a0 = kCA(c, sl);
-  highp float a1 = sl + 1 < n ? kCA(c, sl + 1) : c.total;
-  highp float apc = max(1e-4, a1 - a0);
-  highp float tl = min(g.tA + BURN_HOT_ARC / (g.rate * apc), g.tEnd);
-  return max(0.0, uKFx.z - kWall(tl));
+// The anim time the burn's hot head leaves a point (paint_math kHeadLeave).
+highp float kHeadLeave(KChain c, KIgn g, highp float ctrl) {
+  highp float aU = kArcU(c, ctrl) + g.dir * BURN_HOT_ARC;
+  highp float ch;
+  if (c.closed) {
+    highp float n = float(c.nCtrl);
+    highp float lap = floor(aU / c.total);
+    highp float seed = lap > 0.0 ? 0.0 : lap < 0.0 ? n - 1.0 : ctrl - n * floor(ctrl / n);
+    ch = kCtrlOfArcNear(c, aU - lap * c.total, seed) + lap * n;
+  } else {
+    ch = kCtrlOfArcNear(c, clamp(aU, 0.0, c.total), ctrl);
+  }
+  highp float t = g.t0 + g.dir * (ch - g.cFrom) / g.rate;
+  return max(g.tA, min(g.tEnd, t));
 }
 
+highp float kBurnAge(KChain c, KIgn g, highp float ctrl) {
+  return max(0.0, uKFx.z - kWall(kHeadLeave(c, g, ctrl)));
+}
 highp float kRainbowP(highp float age) {
   return age >= RAINBOW_HOLD + RAINBOW_FADE
     ? 0.0
@@ -446,5 +482,127 @@ vec3 kFxColor(KChain c, highp float ctrl, highp float kSample, vec3 rgb,
   if (st == 1) pRain = kRainbowP(age);
   else alpha = kMaterialize(age, st);
   return rgb;
+}
+`;
+// G2.2 SECTION COLOR (needs PAINT_DATA_GLSL + KNOT_UNIFORMS_GLSL). RUNS
+// layout and semantics: paint_math.ts (knotSection), core/section_colors.
+export const PAINT_SECTION_GLSL = /* glsl */ `
+vec3 kHsl(highp float h, highp float s, highp float l) {
+  highp float a = s * min(l, 1.0 - l);
+  highp vec3 x = vec3(0.0, 8.0, 4.0) + h / 30.0;
+  highp vec3 k = x - 12.0 * floor(x / 12.0);
+  return l - a * max(vec3(-1.0), min(k - 3.0, min(9.0 - k, vec3(1.0))));
+}
+
+vec3 kGamut(highp float v) {
+  highp float x = uKGamut.x + (v - 0.5) * uKGamut.y;
+  return kHsl(x - 360.0 * floor(x / 360.0), uKGamut.z, uKGamut.w);
+}
+
+highp float kEase(highp float u) {
+  return u + (u * u * (3.0 - 2.0 * u) - u) * uKSect.y;
+}
+
+// A run's section color at ctrl, given its slot's CTRLIDX texel and the
+// run's 4 texels (knotSection after the lookup; kSectionAtArc reuses one
+// fetch for two nearby ctrls of the same run).
+vec3 kRunSection(KChain c, highp float ctrl, int sl, highp vec4 I,
+    highp vec4 R0, highp vec4 R1, highp vec4 R2, highp vec4 R3) {
+  int n = c.nCtrl;
+  int fl = int(R1.w + 0.5);
+  if ((fl & RF_NOISE) != 0) {
+    int j = c.closed ? (sl + 1 == n ? 0 : sl + 1) : min(sl + 1, n - 1);
+    return kGamut(I.z + (kS(c.idx + j).z - I.z) * (ctrl - float(sl)));
+  }
+  highp float cu = c.closed && ctrl < R0.x - 1e-4 ? ctrl + float(n) : ctrl;
+  if ((fl & RF_SWEEP) != 0) {
+    highp float t = clamp((cu - R0.x) / max(R0.y - R0.x, 1e-6), 0.0, 1.0);
+    highp float v = R1.x + (R3.x - R1.x) * t;
+    return (fl & RF_GAMUT) != 0 ? kGamut(v) : vec3(v, 0.0, 0.0);
+  }
+  highp float sp = R0.y - R0.x;
+  highp float extra = uKSect.x * R2.w;
+  highp float ra = (fl & RF_RAMP_A) != 0 ? min(0.5 * sp, R0.z + extra) : 0.0;
+  highp float rb = (fl & RF_RAMP_B) != 0 ? min(0.5 * sp, R0.w + extra) : 0.0;
+  highp float da = cu - R0.x;
+  highp float db = R0.y - cu;
+  highp float w = 0.0;
+  highp vec3 far = R3.xyz;
+  if (ra > 0.0 && da < ra) {
+    w = 1.0 - kEase(clamp(da / ra, 0.0, 1.0));
+    far = R1.xyz;
+  } else if (rb > 0.0 && db < rb) {
+    w = 1.0 - kEase(clamp(db / rb, 0.0, 1.0));
+  }
+  highp vec3 col = R2.xyz + (far - R2.xyz) * w;
+  return (fl & RF_GAMUT) != 0 ? kGamut(col.x) : col;
+}
+
+vec3 knotSection(KChain c, highp float ctrl) {
+  int sl = clamp(int(floor(ctrl)), 0, c.nCtrl - 1);
+  highp vec4 I = kS(c.idx + sl);
+  int b = int(uKBase.x + 0.5) + 4 * int(I.x + 0.5);
+  return kRunSection(c, ctrl, sl, I, kS(b), kS(b + 1), kS(b + 2), kS(b + 3));
+}
+// The RIBBON's section color at arc a: the section at the two bracketing
+// samples' ctrls (what the vertex shader evaluates there), lerped - joinery
+// must match the ribbons across their whole width (render lore). seed = a
+// ctrl near a (< 0: none). kSecK0 returns the first sample's ctrl.
+highp float kSecK0;
+vec3 kSectionAtArc(KChain c, highp float a, highp float seed) {
+  highp float total = c.total;
+  int count = c.count;
+  if (!(total > 0.0) || count < 2) {
+    kSecK0 = 0.0;
+    return knotSection(c, 0.0);
+  }
+  int k0;
+  int k1;
+  highp float fr;
+  if (c.closed) {
+    highp float an = a - total * floor(a / total);
+    highp float f = an / total * float(count);
+    highp float fl = floor(f);
+    k0 = int(fl) % count;
+    k1 = (k0 + 1) % count;
+    fr = f - fl;
+  } else {
+    highp float an = clamp(a, 0.0, total);
+    highp float f = an / total * float(count - 1);
+    highp float fl = floor(f);
+    k0 = min(int(fl), count - 1);
+    k1 = min(count - 1, k0 + 1);
+    fr = f - fl;
+  }
+  highp float A0 = float(k0) * c.arcPer;
+  highp float c0 = seed >= 0.0 ? kCtrlOfArcNear(c, A0, seed) : kCtrlOfArc(c, A0);
+  // The next sample's ctrl: in the same slot (the usual case) it is the
+  // same closed form kCtrlOfArc ends with - no second walk.
+  int q0 = clamp(int(floor(c0)), 0, c.nCtrl - 1);
+  highp float qa0 = kCA(c, q0);
+  highp float qa1 = q0 < c.nCtrl - 1 ? kCA(c, q0 + 1) : c.total;
+  highp float A1 = float(k1) * c.arcPer;
+  highp float c1 = k1 == 0
+    ? kCtrlOfArc(c, 0.0)
+    : A1 < qa1 && qa1 > qa0 && A1 >= qa0
+      ? float(q0) + min(1.0, (A1 - qa0) / (qa1 - qa0))
+      : kCtrlOfArcNear(c, A1, c0);
+  kSecK0 = c0;
+  // Both samples usually sit in one run: fetch it once.
+  int n = c.nCtrl;
+  int sl0 = clamp(int(floor(c0)), 0, n - 1);
+  int sl1 = clamp(int(floor(c1)), 0, n - 1);
+  highp vec4 I0 = kS(c.idx + sl0);
+  highp vec4 I1 = sl1 == sl0 ? I0 : kS(c.idx + sl1);
+  int b = int(uKBase.x + 0.5) + 4 * int(I0.x + 0.5);
+  highp vec4 R0 = kS(b);
+  highp vec4 R1 = kS(b + 1);
+  highp vec4 R2 = kS(b + 2);
+  highp vec4 R3 = kS(b + 3);
+  vec3 s0 = kRunSection(c, c0, sl0, I0, R0, R1, R2, R3);
+  vec3 s1 = int(I1.x + 0.5) == int(I0.x + 0.5)
+    ? kRunSection(c, c1, sl1, I1, R0, R1, R2, R3)
+    : knotSection(c, c1);
+  return mix(s0, s1, fr);
 }
 `;

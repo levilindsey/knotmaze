@@ -2,7 +2,7 @@ import { Application, Container } from "pixi.js";
 import type { Ticker } from "pixi.js";
 import { generateLatticeKnotwork } from "./core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "./core/maze_plan";
-import { buildSectionField, setGamutConfig } from "./core/section_colors";
+import { buildSectionRuns, setGamutConfig } from "./core/section_colors";
 import { planAnchors } from "./core/shapes";
 import { applyMazePlan, applyMazeCuts } from "./core/maze_apply";
 import { buildWalkGraph } from "./core/walk_graph";
@@ -891,18 +891,18 @@ async function main(): Promise<void> {
       paletteMode: params.mazeFabric,
       flowSeed: params.seed,
     });
-    renderer.setSectionField(
-      buildSectionField(
+    renderer.setSectionRuns(
+      buildSectionRuns(
         params.colorScheme,
         walkGraph,
-        ps.chains.map((c) => c.length),
+        ps.chains.map((c, i) => ({ len: c.length, closed: ps!.chainBreakAfter[i] < 0 })),
         hueGroup,
         params.seed,
-        effHue, // The gamut anchor; matches style.baseHue.
-        params.junctionBlend
+        effHue // The gamut anchor; matches style.baseHue.
       ),
       params.colorScheme,
-      params.seed
+      params.seed,
+      params.junctionBlend
     );
 
     // Branching gameplay over the fabric: branch-point-only solve state +
@@ -1172,17 +1172,17 @@ async function main(): Promise<void> {
           params.colorScheme === "strands"
             ? buildHueGroup
             : new Array<number>(buildStrandCount).fill(0),
-          buildSectionField(
+          buildSectionRuns(
             params.colorScheme,
             walkGraph,
-            ps.chains.map((c) => c.length),
+            ps.chains.map((c, i) => ({ len: c.length, closed: ps!.chainBreakAfter[i] < 0 })),
             buildHueGroup,
             params.seed,
-            effHue,
-            params.junctionBlend
+            effHue
           ),
           params.colorScheme,
-          params.seed
+          params.seed,
+          params.junctionBlend
         );
         if (fabric && fabricController) fabric.update(fabricController);
       }

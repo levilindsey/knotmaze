@@ -18,24 +18,6 @@ function uploadAll(geometry: MeshGeometry, name: string): void {
   buffer.update(buffer.data.byteLength);
 }
 
-// Attach a per-vertex aColor (vec3) attribute carrying the SECTION RGB
-// (palette mode; see the renderer's section shader). The buffer rides the
-// geometry like aPosition/aUV and uploads via the same update() path.
-function addColorAttribute(
-  geometry: MeshGeometry,
-  data: Float32Array
-): void {
-  geometry.addAttribute("aColor", {
-    buffer: new Buffer({
-      data,
-      label: "attribute-section-rgb",
-      usage: BufferUsage.VERTEX | BufferUsage.COPY_DST,
-    }),
-    format: "float32x3",
-    stride: 3 * 4,
-    offset: 0,
-  });
-}
 
 // PER-PIXEL GAP attributes (see gap_mask.ts): aArcPos (vec2, the sample's
 // arc position as a unit vector - static), aTan (vec2, the ribbon tangent)
@@ -76,13 +58,8 @@ export class RibbonMesh {
 
   private vertexData: Float32Array;
   private uvData: Float32Array;
-  // Per-vertex section RGB (palette mode only; null in knot mode). Two
-  // verts per sample, 3 floats each.
-  private colorData: Float32Array | null = null;
-  // Last writePaint colors source (reference identity): section colors
-  // are static between scene rebuilds, so repeated paint ticks skip the
-  // color fill + upload entirely.
-  private lastColors: Float32Array | null = null;
+  // (The per-vertex section RGB attribute is gone since G2.2: the section
+  // shader's vertex stage evaluates the section at the vertex's ctrl.)
 
   private readonly closed: boolean;
   // PER-PIXEL GAPS (shaded meshes only): per-vertex tangent (rewritten by
@@ -129,8 +106,6 @@ export class RibbonMesh {
       indices,
     });
     if (paint) {
-      this.colorData = new Float32Array(sampleCount * 6);
-      addColorAttribute(geometry, this.colorData);
       // Arc position as a point on the unit circle: closed rings go once
       // around (the wrap quad interpolates across angle 0 seamlessly - a
       // linear arc attribute would sweep the whole ring backwards there);
@@ -331,43 +306,15 @@ export class RibbonMesh {
   }
 
   // PAINT (maze-fabric palette mode): set every sample's paint U (the
-  // accent-strip coordinate - gold/pulse band) and section RGB; both
-  // verts of a sample share them. `colors` is either one RGB triplet
-  // (length 3: constant section color for the chain) or per-sample
-  // triplets (length 3 * sampleCount). Color writes are skipped when the
-  // SAME array is passed again (section colors are static per rebuild;
-  // only the U paint animates).
-  writePaint(us: ArrayLike<number>, colors: Float32Array): void {
+  // accent-strip coordinate - gold/pulse band); both verts of a sample
+  // share it.
+  writePaint(us: ArrayLike<number>): void {
     for (let i = 0; i < this.sampleCount; i++) {
       const u = us[i];
       this.uvData[i * 4] = u;
       this.uvData[i * 4 + 2] = u;
     }
     uploadAll(this.mesh.geometry, "aUV");
-    const cd = this.colorData;
-    if (!cd || colors === this.lastColors) return;
-    const constant = colors.length === 3;
-    for (let i = 0; i < this.sampleCount; i++) {
-      const o = constant ? 0 : i * 3;
-      const r = colors[o];
-      const g = colors[o + 1];
-      const b = colors[o + 2];
-      cd[i * 6] = r;
-      cd[i * 6 + 1] = g;
-      cd[i * 6 + 2] = b;
-      cd[i * 6 + 3] = r;
-      cd[i * 6 + 4] = g;
-      cd[i * 6 + 5] = b;
-    }
-    uploadAll(this.mesh.geometry, "aColor");
-    this.lastColors = colors;
-  }
-
-  // Forget the last writePaint colors source so the next call re-uploads
-  // even when handed the SAME array (an in-place recolor mutates shared
-  // constant-color triplets, which the reference skip would miss).
-  invalidateColors(): void {
-    this.lastColors = null;
   }
 
   // Sample k's paint U (the accent-strip coordinate writePaint set) - the
@@ -507,7 +454,9 @@ export class ProbeTriMesh {
   readonly capacity: number;
   readonly pos: Float32Array; // 3 verts x [x, y] per triangle.
   readonly uv: Float32Array; // [paint U, side]
-  readonly color: Float32Array; // [r, g, b]
+  // [r, g, b] - no longer an attribute (G2.2: the vertex stage evaluates
+  // the section at the key's ctrl); kept so older probes still run.
+  readonly color: Float32Array;
   readonly key: Float32Array; // [chain, fractional sample index]
   readonly arcPos: Float32Array; // [cos, sin] of the arc turn.
   readonly tan: Float32Array;
@@ -530,7 +479,6 @@ export class ProbeTriMesh {
       uvs: this.uv,
       indices,
     });
-    addColorAttribute(geometry, this.color);
     addGapAttributes(geometry, this.arcPos, this.tan, this.maskId);
     addFloatAttribute(geometry, "aKey", this.key, 2);
     this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
@@ -543,7 +491,6 @@ export class ProbeTriMesh {
     for (const name of [
       "aPosition",
       "aUV",
-      "aColor",
       "aKey",
       "aArcPos",
       "aTan",

@@ -54,6 +54,7 @@ import {
   KNOT_UNIFORMS_GLSL,
   PAINT_DATA_GLSL,
   PAINT_FX_GLSL,
+  PAINT_SECTION_GLSL,
 } from "./paint_glsl";
 import { kGeom, kReveal, kStatic, knotUniforms } from "./paint_model";
 
@@ -123,6 +124,7 @@ uniform vec4 uJParams;
 uniform vec4 uJParams2;
 ${KNOT_UNIFORMS_GLSL}
 ${PAINT_DATA_GLSL}
+${PAINT_SECTION_GLSL}
 ${PAINT_FX_GLSL}
 
 const float TAU = 6.283185307179586;
@@ -131,16 +133,21 @@ const float HALF_PI = 1.5707963267948966;
 vec4 jAt(int i) { return texelFetch(uJData, ivec2(i & ${RECORD_W - 1}, i >> ${ROW_SHIFT}), 0); }
 vec4 pAt(int i) { return texelFetch(uPData, ivec2(i & ${PAINT_W - 1}, i >> ${ROW_SHIFT}), 0); }
 
-// The material (r, g, b, paint u) of chain ch at a world arc: the paint
-// texels lerped (closed chains wrap, open chains clamp - colorAtArc's
-// sample mapping, i.e. the ribbon's own Gouraud), then the appearance FX
-// that tint the color (burn / roots) exactly as the ribbon shader does.
-vec4 chainMaterial(int ch, float a) {
+// The material (r, g, b, paint u) of chain ch at a world arc: the RIBBON's
+// section color there (its vertex shader's section at the two bracketing
+// samples, lerped - its own Gouraud; seed = a ctrl near the arc: the arm's
+// joint), the paint U texels lerped the same way (closed chains wrap, open
+// chains clamp), then the appearance FX that tint the color (burn / roots)
+// exactly as the ribbon shader does.
+vec4 chainMaterial(int ch, float a, float seedIn) {
   KChain c = kChain(ch);
+  // The ctrl search seed, normalized onto the chain (rings wrap, runs clamp).
+  float nc = float(c.nCtrl);
+  float seed = c.closed ? seedIn - nc * floor(seedIn / nc) : clamp(seedIn, 0.0, nc - 1.0);
   int base = int(kS(2 * ch + 1).w + 0.5);
   int count = c.count;
   float total = c.total;
-  if (total <= 0.0 || count < 2) return pAt(base);
+  if (total <= 0.0 || count < 2) return vec4(knotSection(c, 0.0), pAt(base).w);
   int k0;
   int k1;
   float fr;
@@ -160,7 +167,7 @@ vec4 chainMaterial(int ch, float a) {
     k1 = min(count - 1, k0 + 1);
     fr = f - fl;
   }
-  vec4 m = mix(pAt(base + k0), pAt(base + k1), fr);
+  vec4 m = vec4(kSectionAtArc(c, a, seed), mix(pAt(base + k0).w, pAt(base + k1).w, fr));
   if (uKFx.w > 0.5 && uKFx.z < c.fxDone) {
     int st = int(uKFx.x + 0.5);
     if (st == 4 || st == 5) {
@@ -168,17 +175,20 @@ vec4 chainMaterial(int ch, float a) {
       // wears no stripes or transparency - its gate fades it instead).
       highp float pR;
       highp float al;
-      m.rgb = kFxColor(c, kCtrlOfArc(c, an), an / c.arcPer, m.rgb, pR, al);
+      m.rgb = kFxColor(c, kCtrlOfArcNear(c, an, kSecK0), an / c.arcPer, m.rgb, pR, al);
     }
   }
   return m;
 }
 
-// An arm's material at arc offset s along it (clamped to its domain).
+// An arm's material at arc offset s along it (clamped to its domain); the
+// arm's joint ctrl (texel .w) seeds the ctrl search.
 vec4 armPaint(int ab, float s) {
   vec4 h = jAt(ab);
   vec4 a = jAt(ab + 1);
-  return chainMaterial(int(h.x + 0.5), a.x + a.y * min(s, a.z));
+  float sc = min(s, a.z);
+  // Seed: the joint ctrl plus the offset times the arm's ctrl slope (h.y).
+  return chainMaterial(int(h.x + 0.5), a.x + a.y * sc, a.w + a.y * sc * h.y);
 }
 
 // Arc along an arm at projected radius rp (its radial profile; straight
@@ -217,7 +227,7 @@ vec3 junctionField(int rec, vec2 p) {
   vec2 e = p - hd.xy;
   if (n == 0) {
     vec4 ax = jAt(rec + 3);
-    vec4 m = chainMaterial(int(jAt(rec + 2).x + 0.5), ax.x + dot(e, ax.yz));
+    vec4 m = chainMaterial(int(jAt(rec + 2).x + 0.5), ax.x + dot(e, ax.yz), ax.w);
     return composeU(m.rgb, m.w);
   }
   float rho = length(e);
@@ -249,25 +259,41 @@ vec3 junctionField(int rec, vec2 p) {
     if (rb < relB) { relB = rb; ib = i; }
   }
   int abA = rec + 2 + ia * stride;
-  vec4 mA = armPaint(abA, profArc(abA, relA < HALF_PI ? rho * cos(relA) : 0.0));
-  vec3 cA = composeU(mA.rgb, mA.w);
-  if (ia == ib) return cA;
   int abB = rec + 2 + ib * stride;
-  vec4 mB = armPaint(abB, profArc(abB, relB < HALF_PI ? rho * cos(relB) : 0.0));
-  vec3 cB = composeU(mB.rgb, mB.w);
-  float fh = uJParams.x;
-  float span = relA + relB;
-  float hw = rho > fh ? asin(fh / rho) : HALF_PI;
-  float lo = hw;
-  float hi = span - hw;
-  float minW = span * uJParams2.y;
-  if (hi - lo < minW) {
-    lo = (span - minW) * 0.5;
-    hi = lo + minW;
+  // Probe views (uKBase.z 3 / 4): one bracketing arm's material alone.
+  bool onlyA = ia == ib || (uKBase.z > 2.5 && uKBase.z < 3.5);
+  bool onlyB = !onlyA && uKBase.z > 3.5 && uKBase.z < 4.5;
+  // The blend weight does not depend on the materials: compute it first,
+  // so a pixel inside one arm's footprint (t 0 or 1 - most of a web)
+  // evaluates that arm alone (identical result: mix at 0 / 1 is exact).
+  float t = 0.0;
+  if (!onlyA && !onlyB) {
+    float fh = uJParams.x;
+    float span = relA + relB;
+    float hw = rho > fh ? asin(fh / rho) : HALF_PI;
+    float lo = hw;
+    float hi = span - hw;
+    float minW = span * uJParams2.y;
+    if (hi - lo < minW) {
+      lo = (span - minW) * 0.5;
+      hi = lo + minW;
+    }
+    t = hi > lo ? (relA - lo) / (hi - lo) : (relA < span * 0.5 ? 0.0 : 1.0);
+    t = clamp(t, 0.0, 1.0);
+    t = t * t * (3.0 - 2.0 * t);
+    if (t <= 0.0) onlyA = true;
+    else if (t >= 1.0) onlyB = true;
   }
-  float t = hi > lo ? (relA - lo) / (hi - lo) : (relA < span * 0.5 ? 0.0 : 1.0);
-  t = clamp(t, 0.0, 1.0);
-  t = t * t * (3.0 - 2.0 * t);
+  vec3 cA = vec3(0.0);
+  vec3 cB = vec3(0.0);
+  if (!onlyB) {
+    vec4 mA = armPaint(abA, profArc(abA, relA < HALF_PI ? rho * cos(relA) : 0.0));
+    cA = composeU(mA.rgb, mA.w);
+    if (onlyA) return cA;
+  }
+  vec4 mB = armPaint(abB, profArc(abB, relB < HALF_PI ? rho * cos(relB) : 0.0));
+  cB = composeU(mB.rgb, mB.w);
+  if (onlyB) return cB;
   return mix(cA, cB, t);
 }
 `;
