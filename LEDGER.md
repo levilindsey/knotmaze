@@ -86,7 +86,8 @@ and never reused.
 
 - **K73** · UI round from Levi's testing: the pathViz labels fullPath and
   recentPath, recentPath reaching twice as far (trailLength 5 -> 10, a
-  codec v4), and corner badges for free play and daily replays.
+  codec v4), corner badges for free play and daily replays, and an
+  off-screen exit indicator.
   - owner: the K73 agent of session d8031183, started 2026-10-12 22:05.
   - branch: `worktree-agent-a8acc04204f0e3be8`
     (`.claude/worktrees/agent-a8acc04204f0e3be8`), from 39966da; last
