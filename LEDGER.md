@@ -159,6 +159,10 @@ K5-K7 (split, frame loop, worker) follow.
   read smooth and rounded. Launch when an agent slot frees (four running
   at 22:35). Brief: `docs/design/K77.md`. Check whether tonight's bigger
   amplitude floor (39966da) exposed it.
+- **K81** · The traveled highlight at junctions: a smooth gold arc from
+  the arrival arm to the departure arm instead of the angular blend's
+  flat nub (Levi's screenshot in `.claude/probes/K81/`). After K75 (same
+  paint code), ideally its agent resumed. Brief: `docs/design/K81.md`.
 - **K79** · Backgrounds: an animation speed slider (0 = static, vellum
   animated too), general and per-effect params, configurable colors, and
   an in-app Motion setting (follow system / full / reduced). Launch after
