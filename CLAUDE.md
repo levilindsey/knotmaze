@@ -104,7 +104,7 @@ npm run build    # Production build
 npm test         # Vitest
 ```
 
-Phone and build A/Bs: `pwsh scripts/phone.ps1 [-Ports 5173,5174] [-Url <link>]` tunnels the USB phone to local servers and Chrome DevTools (probes in `.claude/probes/`, e.g. `phone_probe.mjs`); `pwsh scripts/preview.ps1 -Port <p> [-Ref <commit>]` builds any commit into its own directory and serves it.
+Phone and build A/Bs: `pwsh scripts/phone.ps1 [-Wireless] [-Ports 5173,5174] [-Url <link>]` tunnels the phone (USB, or over Tailscale after one `-Wireless` run while plugged in, until it reboots) to local servers and Chrome DevTools (probes in `.claude/probes/`, e.g. `phone_probe.mjs`); `pwsh scripts/preview.ps1 -Port <p> [-Ref <commit>]` builds any commit into its own directory and serves it.
 
 ## Commit Policy
 
