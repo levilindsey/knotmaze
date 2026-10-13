@@ -93,6 +93,17 @@ and never reused.
 
 ## Next, in order
 
+Overnight order, 2026-10-12 (Levi: proceed through the night with the
+remaining shader work). Every stage merges only after desktop
+verification AND the phone gate (K10); the phone stays on its charger,
+awake, over Tailscale.
+1. K4: the fan fix, then merge G2.
+2. K45: slim CLAUDE.md while no agent is editing it.
+3. K8 (G3) and K23 (G2.4 GPU particles, GPU fog) in parallel.
+4. K9 (G4) and K42 (per-pixel overlap winner) in parallel.
+
+K5-K7 (split, frame loop, worker) follow.
+
 - **K45** · Slim CLAUDE.md (2,040 lines, ~36k tokens, loaded into every
   session and agent) to about 400 lines under the new context-budget rule
   (claude-config `rules/context-budget.md`): keep binding rules, the
