@@ -2436,6 +2436,9 @@ async function main(): Promise<void> {
       reveal.speed = params.appearSpeed;
       reveal.tick(ticker.deltaMS / 1000);
     }
+    // G2: the paint clock advances here, BEFORE any update() this frame
+    // (the shader uniforms and update()'s CPU mirror read one clock).
+    renderer.advanceClocks(ticker.deltaMS / 1000);
     // The gameplay animations (traversal, pulse, hover) run even while
     // paused or asleep - they touch only markers and UV buffers, never
     // physics or splines.

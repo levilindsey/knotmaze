@@ -117,7 +117,8 @@ export class RibbonMesh {
     sampleCount: number,
     closed: boolean,
     color: number,
-    paint = false
+    paint = false,
+    chain = 0
   ) {
     this.sampleCount = sampleCount;
     this.closed = closed;
@@ -175,6 +176,19 @@ export class RibbonMesh {
       this.maskData = new Float32Array(sampleCount * 2 * GAP_SLOTS).fill(-1);
       this.maskSample = new Float32Array(sampleCount * GAP_SLOTS).fill(-1);
       addGapAttributes(geometry, arcPos, this.tanData, this.maskData);
+      // G2 SHADER PAINT (paint_glsl.ts): aKey = (chain, sample index),
+      // static - the vertex stage reads the chain's header and arc table
+      // with it, and the sample's arc is EXACTLY k * arcPer (decoding the
+      // aArcPos turn through the GPU's atan cost ~1e-3 world on long open
+      // chains - measured by the G2.0 census).
+      const key = new Float32Array(sampleCount * 4);
+      for (let i = 0; i < sampleCount; i++) {
+        key[i * 4] = chain;
+        key[i * 4 + 1] = i;
+        key[i * 4 + 2] = chain;
+        key[i * 4 + 3] = i;
+      }
+      addFloatAttribute(geometry, "aKey", key, 2);
     }
     this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
     this.mesh.tint = color;
@@ -522,5 +536,68 @@ export class TriFanMesh {
     this.mesh.geometry.getBuffer("aMaskId").update(v * GAP_SLOTS * 4);
     if (this.iUsed > this.iHigh) this.iHigh = this.iUsed;
     this.mesh.geometry.getIndex().update(this.iHigh * 4);
+  }
+}
+
+// PROBE TRIANGLES (G2 censuses, diagnostics only): a mesh of independent
+// triangles drawn with the ribbon SECTION shader, every attribute exposed as
+// a plain Float32Array so a probe can place each triangle around one device
+// pixel center and give all three vertices the SAME chain, arc turn and
+// side - the production shader then evaluates exactly that material point
+// (no interpolation), and the pixel is compared against the CPU mirror
+// (paint_math.ts). Hidden until a probe fills it; commit() uploads all.
+export class ProbeTriMesh {
+  mesh: Mesh;
+  readonly capacity: number;
+  readonly pos: Float32Array; // 3 verts x [x, y] per triangle.
+  readonly uv: Float32Array; // [paint U, side]
+  readonly color: Float32Array; // [r, g, b]
+  readonly fx: Float32Array;
+  readonly key: Float32Array; // [chain, fractional sample index]
+  readonly arcPos: Float32Array; // [cos, sin] of the arc turn.
+  readonly tan: Float32Array;
+  readonly maskId: Float32Array;
+
+  constructor(capacity: number) {
+    this.capacity = capacity;
+    const v = capacity * 3;
+    this.pos = new Float32Array(v * 2);
+    this.uv = new Float32Array(v * 2);
+    this.color = new Float32Array(v * 3);
+    this.fx = new Float32Array(v);
+    this.key = new Float32Array(v * 2);
+    this.arcPos = new Float32Array(v * 2);
+    this.tan = new Float32Array(v * 2);
+    this.maskId = new Float32Array(v * GAP_SLOTS).fill(-1);
+    const indices = new Uint32Array(v);
+    for (let i = 0; i < v; i++) indices[i] = i;
+    const geometry = new MeshGeometry({
+      positions: this.pos,
+      uvs: this.uv,
+      indices,
+    });
+    addColorAttribute(geometry, this.color);
+    addFxAttribute(geometry, this.fx);
+    addGapAttributes(geometry, this.arcPos, this.tan, this.maskId);
+    addFloatAttribute(geometry, "aKey", this.key, 2);
+    this.mesh = new Mesh({ geometry, texture: Texture.WHITE });
+    this.mesh.renderable = false;
+  }
+
+  // Upload every attribute (call after filling the arrays).
+  commit(): void {
+    const g = this.mesh.geometry;
+    for (const name of [
+      "aPosition",
+      "aUV",
+      "aColor",
+      "aFx",
+      "aKey",
+      "aArcPos",
+      "aTan",
+      "aMaskId",
+    ]) {
+      uploadAll(g, name);
+    }
   }
 }

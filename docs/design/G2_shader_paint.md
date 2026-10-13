@@ -6,6 +6,35 @@
 
 Read-only design. No files were changed.
 
+## R. Reconciliation with the landed G1 (2026-10-12, before building)
+
+G1 (99443cb..19209c4) landed after this design was written. What it changes
+for the plan below (each item is a deviation the implementation follows):
+
+- **Over-fills are gone** (PatchGridMesh, `repaintFromRibbonWindow`, the fill
+  shader and its `aJoint` joint blend). Nothing of b6 / the fill-joint parts of
+  3.7 needs migrating; paint lives only in the base ribbons and the fans.
+- **The erase grid is gone.** Crossing gaps are casing masks in the section
+  fragment shader (`gap_mask.ts`); a crossing's gate is its gap SLOT. G1 gates
+  by `clearSlot` (hidden) plus a CPU-clocked strength ramp (`crossingShownAt`,
+  slot texel 1.w). The plan's `tShow` goes into the free slot texel 8.w and the
+  gap library reads the knot uniforms (fxNow) for the ramp. Marker slots keep
+  their CPU reveal gate (they pop today; they are not FX-gated).
+- **Ribbon vertices already carry G1 data**: `aArcPos` (the sample's arc as a
+  unit vector), `aTan`, `aMaskId`, and the fragment's arc TURN arrives as G1's
+  wrap pair (`vTurnA`/`vTurnB`, picked by fwidth). The plan's `vCtrlCS`
+  unit-circle varying is implemented with the same A/B wrap-pair trick (no
+  per-fragment atan). The vertex's arc comes from a static SAMPLE INDEX
+  (`aKey = (chain, k)`, arc = k * arcPer) instead of decoding `aArcPos`: the
+  G2.0 census measured the GPU atan decode at ~1e-3 world (2e-3 ctrl) on the
+  long open chains, the exact index brings both to the 8-bit readout limit.
+- **Junction fans** (G1 `TriFanMesh`: `aPosition`, `aRec`, `aMaskId`) are
+  unchanged; their records gain the G2 fields as planned.
+- **LEDGER K15** (a fan opaque beside a striped fill) is moot: no fills.
+
+Implementation deviations found while building are listed per stage at the
+end of this document (section 7).
+
 **Base.** Master @14b6a14. It now contains junctionBlend (82b6b6b), swept burn ignition (b76f556), connectors-last draw (32849ac) and the roots spray (0cbfcc1). G1 sits on top of that once it lands.
 - The G1 branch (`worktree-agent-ad6a952e924609ab8`, head 4ce02fa) is currently based on 61662cb, so it still has to rebase over those four commits.
 - Its worktree has uncommitted gap_mask changes in progress: the slot header grew to 8 texels, and texel 4.w is now `farK`. G1 line numbers below are therefore approximate and given with function names.
@@ -679,3 +708,31 @@ Verify:
 - src\core\section_colors.ts
 - src\render\fabric_maze_renderer.ts
 - src\render\gap_mask.ts and ribbon_mesh.ts (G1 worktree src\render\)
+---
+
+## 7. Implementation log and deviations
+
+### G2.0 infrastructure (landed)
+
+- `float_rows.ts` (FloatRows + the "knot-float-rows" uploader, plus an upload
+  byte counter for probes), `paint_const.ts`, `paint_glsl.ts`,
+  `paint_math.ts`, `paint_model.ts` as planned. Layout writers
+  (`writeChainHeader`, `writeGeomTable`) live in `paint_math.ts` so the scene
+  and the vitest fixtures share one layout.
+- Deviation: `aKey = (chain, sample index)` replaces the planned `aChain`
+  (see section R); the fragment's arc comes from the interpolated sample
+  wrap pair (`vSamp`), its ctrl from the interpolated vertex ctrl refined by
+  `kCtrlNear` (a ring-aware slot walk), so both are exact per pixel.
+- `advanceClocks(dt)` (main.ts, right after `reveal.tick`); `tickPaint` no
+  longer advances the paint clock. Probes freeze it by overriding
+  `advanceClocks`.
+- Debug view `paintDebug` (1 = ctrl, 2 = arc): (fract v, fract 16 v,
+  chain/63), decoded to ~1.2e-4 through 8 bits. `ProbeTriMesh` +
+  `renderer.probeTris(n)` + `renderer.paintMirror()` carry the censuses.
+- Verified: vitest mirror parity vs the frozen pre-G2 mapping (5 tests,
+  f64); GPU census (screen-space probe triangles) |d ctrl|, |d arc| <= 3e-4
+  (the readout limit) on the default fabric, knot mode and the ring URL;
+  cross-build same-state A/B (physics-off links settle deterministically):
+  0 px on def / knot / user / fat / def + 5 moves, ring 2 px at delta 1
+  (shader-recompile rounding); `update()` +0.16 ms/call (the KGEOM writes),
+  GPU unchanged (1.71 -> 1.69 ms/frame at 3200x1800, fw 0).

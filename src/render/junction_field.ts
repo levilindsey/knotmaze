@@ -41,18 +41,10 @@
 // that wore this field is gone with the over-fills: no thread is copied
 // over the webs any more.)
 
-import {
-  Buffer,
-  BufferImageSource,
-  BufferUsage,
-  ExtensionType,
-  Shader,
-  Texture,
-  UniformGroup,
-  extensions,
-} from "pixi.js";
+import { Buffer, BufferUsage, Shader, Texture, UniformGroup } from "pixi.js";
 import type { MeshGeometry } from "pixi.js";
 import { GAP_FRAG_LIB, defaultGapTexture } from "./gap_mask";
+import { FloatRows, ROW_SHIFT } from "./float_rows";
 
 // Field geometry constants (shared with the CPU side in ribbon_renderer):
 // arm radial profiles resample the centerline (walked in FIELD_PROF_ARC
@@ -66,156 +58,10 @@ export const FIELD_BLEND_MIN = 0.5;
 // junctions carry 3 (splice) or 4 (merge) arms.
 export const MAX_ARMS = 12;
 // Texel row widths of the two data textures (linear index -> (i % W, i / W),
-// done in GLSL as a mask and a shift - both widths are 2^ROW_SHIFT).
-const ROW_SHIFT = 10;
+// done in GLSL as a mask and a shift - both widths are 2^ROW_SHIFT; the
+// FloatRows class and its row uploader live in float_rows.ts).
 export const RECORD_W = 1 << ROW_SHIFT;
 export const PAINT_W = 1 << ROW_SHIFT;
-
-// ---------------------------------------------------------------------------
-// Row-dirty float data textures.
-
-// A BufferImageSource whose uploads go through ROWS_UPLOADER: a resize (or
-// the first upload) allocates with texImage2D; afterwards only the rows
-// marked dirty since the last upload are sent (texSubImage2D) - a paint
-// tick rewrites a few chains, not the whole texture.
-class RowSource extends BufferImageSource {
-  dirtyLo = 0;
-  dirtyHi = 0;
-  constructor(data: Float32Array, width: number, rows: number) {
-    super({
-      resource: data,
-      width,
-      height: rows,
-      format: "rgba32float",
-      // The payload is DATA: never premultiply (pixi sets
-      // UNPACK_PREMULTIPLY_ALPHA_WEBGL from this before every upload).
-      alphaMode: "premultiplied-alpha",
-      scaleMode: "nearest",
-      addressMode: "clamp-to-edge",
-      autoGenerateMipmaps: false,
-    });
-    this.uploadMethodId = "knot-float-rows";
-  }
-}
-
-interface GlTextureLike {
-  target: number;
-  width: number;
-  height: number;
-  internalFormat: number;
-  format: number;
-  type: number;
-}
-
-const ROWS_UPLOADER = {
-  id: "knot-float-rows",
-  upload(
-    source: RowSource,
-    glTexture: GlTextureLike,
-    gl: WebGL2RenderingContext
-  ): void {
-    const w = source.pixelWidth;
-    const h = source.pixelHeight;
-    const data = source.resource as Float32Array;
-    if (glTexture.width !== w || glTexture.height !== h) {
-      gl.texImage2D(
-        glTexture.target,
-        0,
-        glTexture.internalFormat,
-        w,
-        h,
-        0,
-        glTexture.format,
-        glTexture.type,
-        data
-      );
-      glTexture.width = w;
-      glTexture.height = h;
-    } else if (source.dirtyHi > source.dirtyLo) {
-      const lo = Math.max(0, source.dirtyLo);
-      const hi = Math.min(h, source.dirtyHi);
-      if (hi > lo) {
-        gl.texSubImage2D(
-          glTexture.target,
-          0,
-          0,
-          lo,
-          w,
-          hi - lo,
-          glTexture.format,
-          glTexture.type,
-          data.subarray(lo * w * 4, hi * w * 4)
-        );
-      }
-    }
-    source.dirtyLo = 0;
-    source.dirtyHi = 0;
-  },
-};
-// Registered at module load - before the app creates its renderer, whose
-// GlTextureSystem merges the uploader map at construction.
-extensions.add({
-  type: ExtensionType.TextureUploaderWebGL,
-  name: ROWS_UPLOADER.id,
-  ref: ROWS_UPLOADER,
-});
-
-// CPU mirror + GPU source of one data texture. `data` is the mirror
-// (RGBA float per texel); write into it, mark the touched texel range,
-// flush() once per frame.
-export class FloatRows {
-  readonly width: number;
-  data: Float32Array;
-  rows: number;
-  readonly source: RowSource;
-
-  constructor(width: number, rows: number) {
-    this.width = width;
-    this.rows = rows;
-    this.data = new Float32Array(width * rows * 4);
-    this.source = new RowSource(this.data, width, rows);
-  }
-
-  // Capacity for at least `texels` texels. Growing swaps the mirror for a
-  // larger one (contents kept) and resizes the SAME source - pixi
-  // re-allocates the same GL texture; nothing is destroyed.
-  ensure(texels: number): void {
-    const need = Math.max(1, Math.ceil(texels / this.width));
-    if (need <= this.rows) return;
-    const rows = Math.max(need, Math.ceil(this.rows * 1.5));
-    const next = new Float32Array(this.width * rows * 4);
-    next.set(this.data);
-    this.data = next;
-    this.rows = rows;
-    this.source.resource = next;
-    this.source.resize(this.width, rows);
-  }
-
-  // Mark texels [t0, t1) for upload.
-  markDirty(t0: number, t1: number): void {
-    if (t1 <= t0) return;
-    const r0 = Math.floor(t0 / this.width);
-    const r1 = Math.min(this.rows, Math.ceil(t1 / this.width));
-    const s = this.source;
-    if (s.dirtyHi <= s.dirtyLo) {
-      s.dirtyLo = r0;
-      s.dirtyHi = r1;
-    } else {
-      if (r0 < s.dirtyLo) s.dirtyLo = r0;
-      if (r1 > s.dirtyHi) s.dirtyHi = r1;
-    }
-  }
-
-  get dirty(): boolean {
-    return this.source.dirtyHi > this.source.dirtyLo;
-  }
-
-  // Upload the dirty rows now (no-op when clean). Before the source's first
-  // bind there is no GL texture yet: the first bind uploads everything.
-  flush(): void {
-    if (this.dirty) this.source.update();
-  }
-}
 
 let PAINT_DATA: FloatRows | null = null;
 let RECORD_DATA: FloatRows | null = null;
@@ -526,7 +372,7 @@ export function addFloatAttribute(
   geometry: MeshGeometry,
   name: string,
   data: Float32Array,
-  components: 1 | 4
+  components: 1 | 2 | 4
 ): void {
   geometry.addAttribute(name, {
     buffer: new Buffer({
@@ -534,7 +380,8 @@ export function addFloatAttribute(
       label: "attribute-" + name,
       usage: BufferUsage.VERTEX | BufferUsage.COPY_DST,
     }),
-    format: components === 1 ? "float32" : "float32x4",
+    format:
+      components === 1 ? "float32" : components === 2 ? "float32x2" : "float32x4",
     stride: components * 4,
     offset: 0,
   });
