@@ -6,7 +6,7 @@
 //       uKStatic  CHAINS | CTRLIDX | RUNS               (events)
 //       uKGeom    per-chain arc tables                  (per update())
 //       uKReveal  reveal SOURCES                        (reveal start)
-//       uKPaint   per-run gameplay paint records        (gameplay events)
+//       uKPaintData  gameplay paint items + per-slot refs (declaration changes)
 //   - one uniform group (knotUniforms) whose clocks are reduced on the CPU
 //     in float64 - no absolute clock ever reaches the GPU.
 // The CPU mirror (paint_math.ts) transliterates every function here line

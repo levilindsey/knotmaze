@@ -4,6 +4,32 @@
 
 # G2 design: all per-sample and per-tick COLOR moves into the shaders
 
+> STATUS: IMPLEMENTED (2026-10-12; G2.0 824d561, G2.1 26a8af2, G2.2
+> c815efb, G2.3 1c56a40, on the K4 worktree branch). G2.4 (GPU particles)
+> NOT done - a follow-up, behind the fan GPU cost below. Section 7 is the
+> implementation log with every measurement. Deviations from this design,
+> in short:
+> - G1 retired the over-fills, the fade strip and the erase grid
+>   (section R); per-fragment chain points come from aKey (chain, sample
+>   index), not aChain + unit-circle ctrl varyings.
+> - Reveal sources live in their own texture (KREVEAL); gate show times are
+>   encoded in the gap slot's strength sign and latched once open; the CPU
+>   width mask is the max over covering sources (the GPU ignition the
+>   earliest arrival); near-ties go to the first source scanned; the burn
+>   hot head is an ARC length beyond the point (continuous); FX settle
+>   skips per chain (KGEOM G0.z) and per slot (CTRLIDX.w) are exact.
+> - Fans evaluate the RIBBON's per-vertex Gouraud of the section (two
+>   samples), not knotSection at the pixel's exact ctrl; noise coordinates
+>   are read at the renderer's construction (ps.initial is private).
+> - Gameplay paint uses per-SLOT item references built from the existing
+>   setPaint declaration, not per-run records + a PaintState in
+>   FabricMazeRenderer (untouched); the reveal glow per pixel comes from the
+>   point's own moving fronts; a per-chain paint flag (KGEOM G0.w) skips
+>   unpainted chains.
+> - Open: the fan shader costs ~1.3 ms more than master's at 3200x1800 (per
+>   program); the fix proposed in section 7 is a per-arm material strip
+>   pre-pass.
+
 Read-only design. No files were changed.
 
 ## R. Reconciliation with the landed G1 (2026-10-12, before building)
@@ -991,3 +1017,23 @@ Verify:
   ribbons 1.33 ms (master 1.24), fans 1.84 ms (master 0.57) - the fan cost
   (G2.2's per-pixel section Gouraud +1.0, G2.3's per-arm paint +0.25) is
   the open GPU item; see the follow-up (a per-arm material strip pre-pass).
+### Follow-ups (not done)
+
+- FAN COST: a per-arm material STRIP pre-pass. Each frame (or when the
+  joinery rebuilds), render every fused arm's composed material (section
+  Gouraud + FX + paint) at ~32-64 arc steps over the stretch its fans
+  sample (`min(domain, profile reach)`) into an RGBA8 render target (one
+  row per arm; RGBA8 render targets and LINEAR filtering are universal),
+  and have the field read two strip texels per arm instead of evaluating
+  `chainMaterial` per pixel. Fan cost would fall below master's (master
+  read per-sample texels). The CPU mirror (`cpuJunctionField`) would quote
+  the same strip (8-bit, lerped) so the census stays exact; paint edges in
+  webs soften to the strip's step (~0.02-0.04 world). Needs the pixi
+  renderer handle in RibbonRenderer (one main.ts line).
+- G2.4 GPU particles (K23): unchanged plan (instanced quads from a KFX ring,
+  closed-form motion). Particles cost 0.2-0.3 ms/frame of CPU during a
+  reveal only.
+- String mode on master / G2.2 draws a 1-px diagonal sliver from the start
+  to the exit marker inside the markers Graphics after a few moves
+  (b.c&pv=string, 6 moves; hiding that Graphics removes it); G2.3 does not
+  show it. Unattributed - worth a look if it reappears.
