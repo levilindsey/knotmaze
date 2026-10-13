@@ -49,10 +49,12 @@ import {
 import { ProbeTriMesh, RibbonMesh, TriFanMesh } from "./ribbon_mesh";
 import {
   KNOT_UNIFORMS_GLSL,
+  PAINT_CONST_GLSL,
   PAINT_DATA_GLSL,
   PAINT_FRAG_DECL,
   PAINT_FRAG_LIB,
   PAINT_FX_GLSL,
+  PAINT_GATE_GLSL,
   PAINT_PAINT_GLSL,
   PAINT_SECTION_GLSL,
   PAINT_VERT_DECL,
@@ -111,6 +113,13 @@ import {
   recordData,
   setFieldParams,
 } from "./junction_field";
+import {
+  STRIP_STATS,
+  STRIP_W,
+  setStripRows,
+  stripTable,
+  stripTexture,
+} from "./arm_strip";
 import {
   GAP_FRAG,
   GAP_MAX_PTS,
@@ -359,6 +368,7 @@ uniform vec4 uWorldColorAlpha;
 uniform mat3 uTransformMatrix;
 uniform vec4 uColor;
 ${KNOT_UNIFORMS_GLSL}
+${PAINT_CONST_GLSL}
 ${PAINT_DATA_GLSL}
 ${PAINT_SECTION_GLSL}
 
@@ -398,7 +408,9 @@ ${PAINT_FRAG_DECL}
 out vec4 finalColor;
 
 ${KNOT_UNIFORMS_GLSL}
+${PAINT_CONST_GLSL}
 ${PAINT_DATA_GLSL}
+${PAINT_GATE_GLSL}
 ${PAINT_FX_GLSL}
 ${PAINT_PAINT_GLSL}
 ${PAINT_FRAG_LIB}
@@ -869,6 +881,18 @@ export class RibbonRenderer {
     lastArms: () => number[];
   } | null = null;
   private fieldLastArm: number[] = [];
+  // ARM STRIPS (arm_strip.ts): rows written by the current rebuild, and
+  // the CPU mirror's scratch (two quantized texels).
+  private stripRowsUsed = 0;
+  private stripK0 = new Float32Array(4);
+  private stripK1 = new Float32Array(4);
+  // Diagnostics (probes): the strip pass's counters and its render texture.
+  get stripStats(): { renders: number; rows: number; lines: number } {
+    return STRIP_STATS;
+  }
+  get stripRT(): unknown {
+    return stripTexture();
+  }
   // Default section color (the gamut midpoint = the seed-hue base color).
   private baseRgb = new Float32Array(3);
   // REVEAL state (Stage 22): the animator, the per-chain width masks
@@ -988,6 +1012,9 @@ export class RibbonRenderer {
     U.uKFx[3] = 0;
     U.uKFx2[2] = 0;
     U.uKInk[1] = 0;
+    // ...and no arm strips until its first joinery rebuild (the strip
+    // table's rows belonged to the previous scene's chains).
+    setStripRows(0);
     // Section colors: a constant default until the caller installs its
     // scheme's runs (knot mode: each strand's tint, for good).
     this.installRuns(null);
@@ -4083,10 +4110,11 @@ export class RibbonRenderer {
     return Math.min(samples.totalLength, a0 + (a1 - a0) * t);
   }
 
-  // CPU REFERENCE of the GPU junction field (junction_field.ts FIELD_GLSL),
-  // transliterated line for line and reading the SAME record + paint data
-  // the shader samples - the fieldProbe ground truth. Not on any hot path.
-  // GLSL twin chainMaterial: the COMPOSED material of a chain at a world
+  // CPU REFERENCE of the GPU junction field (junction_field.ts FIELD_GLSL)
+  // and of the arm strips it reads (arm_strip.ts), transliterated line for
+  // line and reading the SAME record, strip table and paint data the
+  // shaders sample - the fieldProbe ground truth. Not on any hot path.
+  // GLSL twin (arm_strip STRIP_FRAG) chainMaterial: the COMPOSED material of a chain at a world
   // arc - the ribbon's section color there (its own Gouraud between
   // samples; `seed` = a ctrl near the arc), burn / roots, then the gameplay
   // paint and the reveal glow with edge coverage over `px` - into out[0..2].
@@ -4113,19 +4141,69 @@ export class RibbonRenderer {
         kFxColor(D, U, c, actrl, an / c.arcPer, out, this.ignScratch);
       }
     }
-    if (U.uKPaint[0] > 0.5 || U.uKFx2[2] > 0.5) {
+    if ((U.uKPaint[0] > 0.5 && c.paintOn) || U.uKFx2[2] > 0.5) {
       kComposePaint(U, out, kPaintAt(D, U, c, actrl, an, px, this.paintTmp), kGlow(D, U, c, actrl));
     }
   }
+  // Append one ARM STRIP row (arm_strip.ts table layout): texel k = the
+  // material of `chain` at arc arc0 + arcStep * k (ctrl seed seed0 +
+  // seedStep * k), paint edges antialiased over px. Returns the row.
+  private writeStripRow(
+    chain: number,
+    arc0: number,
+    arcStep: number,
+    px: number,
+    seed0: number,
+    seedStep: number
+  ): number {
+    const r = this.stripRowsUsed++;
+    const tb = stripTable();
+    tb.ensure(2 * r + 2);
+    const d = tb.data;
+    const o = r * 8;
+    d[o] = chain;
+    d[o + 1] = arc0;
+    d[o + 2] = arcStep;
+    d[o + 3] = px;
+    d[o + 4] = seed0;
+    d[o + 5] = seedStep;
+    d[o + 6] = 0;
+    d[o + 7] = 0;
+    return r;
+  }
+
+  // GLSL twin of arm_strip STRIP_LOOKUP_GLSL stripAt: strip row `row` at
+  // texel coordinate x, from the two nearest texels - each the strip pass's
+  // material (cpuChainMaterial at the row's arc / seed / px) quantized to
+  // the render texture's 8 bits - lerped with exact weights.
+  private cpuStripAt(row: number, x: number, out: Float32Array): void {
+    const T = stripTable().data;
+    const o = row * 8;
+    const xc = Math.max(0, Math.min(STRIP_W - 1, x));
+    const k0 = Math.floor(xc);
+    const k1 = Math.min(k0 + 1, STRIP_W - 1);
+    const f = xc - k0;
+    const q = (v: number): number => Math.round(Math.max(0, Math.min(1, v)) * 255) / 255;
+    const m0 = this.stripK0;
+    const m1 = this.stripK1;
+    this.cpuChainMaterial(T[o], T[o + 1] + T[o + 2] * k0, m0, T[o + 4] + T[o + 5] * k0, T[o + 3]);
+    this.cpuChainMaterial(T[o], T[o + 1] + T[o + 2] * k1, m1, T[o + 4] + T[o + 5] * k1, T[o + 3]);
+    for (let c = 0; c < 3; c++) {
+      const a = q(m0[c]);
+      out[c] = a + (q(m1[c]) - a) * f;
+    }
+  }
+
   // The composed junction-field color at (x, y) for the record at texel
-  // `rec` into out[0..2]; `px` = world units per pixel (the paint's edge
-  // coverage - the fan shader's pxW; 0 = hard edges).
+  // `rec` into out[0..2] (the arms' materials come from their strip rows;
+  // `_px` is kept for probe compatibility - the strips antialias the paint
+  // over their own step).
   private cpuJunctionField(
     rec: number,
     x: number,
     y: number,
     out: Float32Array,
-    px = 0
+    _px = 0
   ): void {
     const J = recordData().data;
     const at = (i: number): number => i * 4;
@@ -4150,12 +4228,10 @@ export class RibbonRenderer {
     if (n === 0) {
       const h = at(rec + 2);
       const ax = at(rec + 3);
-      this.cpuChainMaterial(
-        Math.round(J[h]),
-        J[ax] + ex * J[ax + 1] + ey * J[ax + 2],
-        mA,
-        J[ax + 3],
-        px
+      this.cpuStripAt(
+        Math.round(J[h + 1]),
+        (ex * J[ax + 1] + ey * J[ax + 2] + J[h + 3]) * J[h + 2],
+        mA
       );
       compose(mA);
       return;
@@ -4164,11 +4240,9 @@ export class RibbonRenderer {
       const h = at(ab);
       const a = at(ab + 1);
       const sc = Math.min(s, J[a + 2]);
-      const arc = J[a] + J[a + 1] * sc;
-      // GLSL twin: the seed = joint ctrl + offset x the arm's ctrl slope.
-      const seed = J[a + 3] + J[a + 1] * sc * J[h + 1];
-      this.fieldLastArm.push(Math.round(J[h]), arc, seed);
-      this.cpuChainMaterial(Math.round(J[h]), arc, m, seed, px);
+      // (Probes: the exact arc and ctrl seed the strip texel stands for.)
+      this.fieldLastArm.push(Math.round(J[h]), J[a] + J[a + 1] * sc, J[a + 3] + J[a + 1] * sc * J[h + 1]);
+      this.cpuStripAt(Math.round(J[h + 2]), sc * J[h + 3], m);
     };
     const profArc = (ab: number, rp: number): number => {
       const xg = rp / FIELD_PROF_DR;
@@ -4361,6 +4435,7 @@ export class RibbonRenderer {
     // J1 times (G2.1), so they need no rebuild.
     if (!force && !this.revealOn && key === this.filletKey) return;
     this.filletKey = key;
+    this.stripRowsUsed = 0;
     if (!this.filletMesh) {
       let armTotal = 0;
       for (const jn of this.junctionArms) armTotal += jn.arms.length;
@@ -4467,12 +4542,15 @@ export class RibbonRenderer {
       arc0: number,
       ax: number,
       ay: number,
-      ctrl0: number
+      ctrl0: number,
+      rad: number
     ): number => {
+      // The cap's strip row spans the axis projections [-rad, rad].
+      const step = (2 * rad) / (STRIP_W - 1);
+      const row = this.writeStripRow(chain, arc0 - rad, step, step, ctrl0, 0);
       rd.ensure(cursor + 4);
       const D = rd.data;
       const o = cursor * 4;
-      const samples = this.chainSamples[chain];
       D[o] = cx;
       D[o + 1] = cy;
       D[o + 2] = 0;
@@ -4482,9 +4560,9 @@ export class RibbonRenderer {
       D[o + 6] = 0;
       D[o + 7] = 0;
       D[o + 8] = chain;
-      D[o + 9] = this.fills[chain].sampleCount;
-      D[o + 10] = this.ps.chainBreakAfter[chain] < 0 ? 1 : 0;
-      D[o + 11] = samples ? samples.totalLength : 0;
+      D[o + 9] = row;
+      D[o + 10] = 1 / step;
+      D[o + 11] = rad;
       D[o + 12] = arc0;
       D[o + 13] = ax;
       D[o + 14] = ay;
@@ -4519,7 +4597,7 @@ export class RibbonRenderer {
       // gate still far off skips the cap this rebuild).
       const j1 = this.jointGate("c" + chain + ":" + gateCtrl, [[chain, gateCtrl]]);
       if (j1[0] > fxNowJ + GATE_LEAD) return;
-      const rb = writeAxis(cx, cy, j1, chain, arc0, ax, ay, gateCtrl);
+      const rb = writeAxis(cx, cy, j1, chain, arc0, ax, ay, gateCtrl, r);
       fm.pushFan(cx, cy, discRim(cx, cy, r), rb);
     };
     // Local thread direction at an arc (two nearby probes), into
@@ -4605,6 +4683,9 @@ export class RibbonRenderer {
       jn: number; // Index into junctionArms (for the layer vote).
       rb: number; // Record texel index (-1: < 2 arms, no field).
       mask: Float32Array; // Gap slots masking this joint's fans.
+      // The farthest any of its fan vertices lies from (jx, jy): bounds the
+      // arc its arms' strip rows must cover.
+      rMax: number;
     }
     // Radial profile of one arm around its joint (JArm.pth/ps): walk the
     // centerline outward in FIELD_PROF_ARC steps and resample angle + arc
@@ -4803,6 +4884,7 @@ export class RibbonRenderer {
         jn: recs.length,
         rb: -1,
         mask,
+        rMax: 0,
       });
     }
     // JUNCTION RECORDS (joints with >= 2 arms - nothing else draws or reads
@@ -4837,8 +4919,10 @@ export class RibbonRenderer {
         // section from the arc table; a seed from the joint alone cost the
         // fan shader ~0.6 ms/frame in walks at 3200x1800).
         D[ab + 1] = this.armCtrlSlope(a, Math.min(a.domain, ps[profN - 1]));
-        D[ab + 2] = a.closed ? 1 : 0;
-        D[ab + 3] = a.total;
+        // The arm's strip row and its texels per world arc: written in
+        // finish(), once the fans have bounded the reach (rMax).
+        D[ab + 2] = 0;
+        D[ab + 3] = 0;
         D[ab + 4] = a.arc0;
         D[ab + 5] = a.dir;
         D[ab + 6] = Math.min(a.domain, 1e9);
@@ -5031,6 +5115,16 @@ export class RibbonRenderer {
       cy: number,
       rim: number[]
     ): void => {
+      // A triangle's farthest point from the joint is one of its vertices.
+      let r2 = (cx - rec.jx) * (cx - rec.jx) + (cy - rec.jy) * (cy - rec.jy);
+      for (let i = 0; i < rim.length; i += 2) {
+        const dx = rim[i] - rec.jx;
+        const dy = rim[i + 1] - rec.jy;
+        const d2 = dx * dx + dy * dy;
+        if (d2 > r2) r2 = d2;
+      }
+      const r = Math.sqrt(r2);
+      if (r > rec.rMax) rec.rMax = r;
       fm.pushFan(cx, cy, rim, rec.rb);
     };
     const pushDiscField = (
@@ -5167,6 +5261,44 @@ export class RibbonRenderer {
 
     // Upload this rebuild's geometry and records.
     const finish = (): void => {
+      // ARM STRIP ROWS (arm_strip.ts): each arm's row covers the arc its
+      // fans can query - from the joint out to the profile's arc at the
+      // record's outermost fan vertex (a pixel's projected radius never
+      // exceeds its distance from the joint; the profile is monotone),
+      // capped by the arm's domain - in STRIP_W texels.
+      const last = profN - 1;
+      const profArcAt = (ps: Float32Array, rp: number): number => {
+        const x = rp / FIELD_PROF_DR;
+        if (x >= last) return ps[last] + (rp - last * FIELD_PROF_DR);
+        const i = Math.floor(x);
+        const i1 = i + 1 < profN ? i + 1 : i;
+        return ps[i] + (ps[i1] - ps[i]) * (x - i);
+      };
+      for (const rec of recs) {
+        if (rec.rb < 0) continue;
+        const n = Math.min(rec.arms.length, MAX_ARMS);
+        for (let i = 0; i < n; i++) {
+          const a = rec.arms[i];
+          const ab = (rec.rb + 2 + i * armStride) * 4;
+          const sMax = Math.max(1e-4, Math.min(a.domain, profArcAt(a.ps, rec.rMax)));
+          const step = sMax / (STRIP_W - 1);
+          const slope = rd.data[ab + 1];
+          const row = this.writeStripRow(
+            a.chain,
+            a.arc0,
+            a.dir * step,
+            step,
+            a.slot,
+            a.dir * step * slope
+          );
+          rd.data[ab + 2] = row;
+          rd.data[ab + 3] = 1 / step;
+        }
+      }
+      const tb = stripTable();
+      tb.markDirty(0, this.stripRowsUsed * 2);
+      tb.flush();
+      setStripRows(this.stripRowsUsed);
       fmBottom.commit();
       fmTop.commit();
       rd.markDirty(0, cursor);

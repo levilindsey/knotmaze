@@ -124,6 +124,8 @@ export class FloatRows {
   data: Float32Array;
   rows: number;
   readonly source: RowSource;
+  // Content revision: bumped by every markDirty().
+  rev = 0;
 
   constructor(width: number, rows: number) {
     this.width = width;
@@ -147,9 +149,11 @@ export class FloatRows {
     this.source.resize(this.width, rows);
   }
 
-  // Mark texels [t0, t1) for upload.
+  // Mark texels [t0, t1) for upload. Every mark bumps `rev` (consumers
+  // that cache derived output - the arm strips - compare it).
   markDirty(t0: number, t1: number): void {
     if (t1 <= t0) return;
+    this.rev++;
     const r0 = Math.floor(t0 / this.width);
     const r1 = Math.min(this.rows, Math.ceil(t1 / this.width));
     const s = this.source;

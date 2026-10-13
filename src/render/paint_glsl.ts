@@ -57,15 +57,21 @@ uniform vec4 uKPulse;
 uniform vec4 uKGold;
 `;
 
-// Data access + chain geometry (vertex and fragment stages).
+// The shared numeric constants (paint_const.ts). Every assembly includes it
+// once, before any other chunk of this library.
+export const PAINT_CONST_GLSL = /* glsl */ `
+${glslConstBlock()}
+const float K_TAU = 6.283185307179586;
+const float K_INV_TAU = 0.15915494309189535;
+`;
+
+// Data access + chain geometry (vertex and fragment stages; needs
+// PAINT_CONST_GLSL).
 export const PAINT_DATA_GLSL = /* glsl */ `
 uniform highp sampler2D uKStatic;
 uniform highp sampler2D uKGeom;
 uniform highp sampler2D uKReveal;
 uniform highp sampler2D uKPaintData;
-${glslConstBlock()}
-const float K_TAU = 6.283185307179586;
-const float K_INV_TAU = 0.15915494309189535;
 
 highp vec4 kS(int i) { return texelFetch(uKStatic, ivec2(i & ${W1}, i >> ${S}), 0); }
 highp vec4 kG(int i) { return texelFetch(uKGeom, ivec2(i & ${W1}, i >> ${S}), 0); }
@@ -282,8 +288,53 @@ KChain kFragChain() {
 }
 `;
 
-// G2.1 REVEAL + APPEARANCE FX (needs PAINT_DATA_GLSL + KNOT_UNIFORMS_GLSL).
-// Every function mirrors paint_math.ts line for line.
+// The FX timing curves and the JOINT GATE (needs KNOT_UNIFORMS_GLSL +
+// PAINT_CONST_GLSL only - the junction fans include just this, not the
+// data library). Mirrors paint_math.ts line for line.
+export const PAINT_GATE_GLSL = /* glsl */ `
+highp float kSmooth(highp float x) {
+  highp float c = clamp(x, 0.0, 1.0);
+  return c * c * (3.0 - 2.0 * c);
+}
+
+highp float kRainbowP(highp float age) {
+  return age >= RAINBOW_HOLD + RAINBOW_FADE
+    ? 0.0
+    : 1.0 - kSmooth((age - RAINBOW_HOLD) / RAINBOW_FADE);
+}
+
+highp float kMaterialize(highp float age, int style) {
+  highp float e = style == 3 ? DUST_FADE_IN : COMET_FADE_IN;
+  return age >= e ? 1.0 : kSmooth(age / e);
+}
+
+highp float kFxWeight(int style, highp float age) {
+  if (style == 1) return kRainbowP(age);
+  if (style == 2 || style == 3) return kMaterialize(age, style) - 1.0;
+  return 0.0;
+}
+
+highp float kFxSolid(highp float w) {
+  if (w < 0.0) return 1.0 + w;
+  if (w > 0.0) return 1.0 - kSmooth((w - 0.06) / 0.34);
+  return 1.0;
+}
+
+highp float kFanAlpha(highp float solid) {
+  highp float a = kSmooth((solid - FAN_SOLID_START) / (1.0 - FAN_SOLID_START));
+  return a >= 0.999 ? 1.0 : a;
+}
+
+// The joint gate (record header J1 = (tOn, tLast)).
+highp float knotFanAlpha(highp vec4 J1) {
+  if (uKFx.w < 0.5) return 1.0;
+  if (uKFx.z < J1.x) return 0.0;
+  return kFanAlpha(kFxSolid(kFxWeight(int(uKFx.x + 0.5), uKFx.z - J1.y)));
+}
+`;
+
+// G2.1 REVEAL + APPEARANCE FX (needs PAINT_DATA_GLSL + KNOT_UNIFORMS_GLSL +
+// PAINT_GATE_GLSL). Every function mirrors paint_math.ts line for line.
 export const PAINT_FX_GLSL = /* glsl */ `
 struct KIgn {
   bool hit;
@@ -354,11 +405,6 @@ highp float kWall(highp float tA) {
   return k.y + (tA - k.x) * k.z;
 }
 
-highp float kSmooth(highp float x) {
-  highp float c = clamp(x, 0.0, 1.0);
-  return c * c * (3.0 - 2.0 * c);
-}
-
 highp float kFxTail(int st) {
   highp float t = st == 1 ? RAINBOW_HOLD + RAINBOW_FADE
     : st == 2 ? COMET_FADE_IN
@@ -386,16 +432,6 @@ highp float kHeadLeave(KChain c, KIgn g, highp float ctrl) {
 highp float kBurnAge(KChain c, KIgn g, highp float ctrl) {
   return max(0.0, uKFx.z - kWall(kHeadLeave(c, g, ctrl)));
 }
-highp float kRainbowP(highp float age) {
-  return age >= RAINBOW_HOLD + RAINBOW_FADE
-    ? 0.0
-    : 1.0 - kSmooth((age - RAINBOW_HOLD) / RAINBOW_FADE);
-}
-
-highp float kMaterialize(highp float age, int style) {
-  highp float e = style == 3 ? DUST_FADE_IN : COMET_FADE_IN;
-  return age >= e ? 1.0 : kSmooth(age / e);
-}
 
 vec3 kBurn(vec3 rgb, highp float t, highp float k, bool roots) {
   if (t >= BURN_RECOVER_END) return rgb;
@@ -421,30 +457,6 @@ vec3 kBurn(vec3 rgb, highp float t, highp float k, bool roots) {
   if (heatY > 0.001) rgb += (vec3(1.0, 0.84, 0.3) - rgb) * heatY;
   if (heatW > 0.001) rgb += (vec3(1.0, 0.97, 0.88) - rgb) * heatW;
   return rgb;
-}
-
-highp float kFxWeight(int style, highp float age) {
-  if (style == 1) return kRainbowP(age);
-  if (style == 2 || style == 3) return kMaterialize(age, style) - 1.0;
-  return 0.0;
-}
-
-highp float kFxSolid(highp float w) {
-  if (w < 0.0) return 1.0 + w;
-  if (w > 0.0) return 1.0 - kSmooth((w - 0.06) / 0.34);
-  return 1.0;
-}
-
-highp float kFanAlpha(highp float solid) {
-  highp float a = kSmooth((solid - FAN_SOLID_START) / (1.0 - FAN_SOLID_START));
-  return a >= 0.999 ? 1.0 : a;
-}
-
-// The joint gate (record header J1 = (tOn, tLast)).
-highp float knotFanAlpha(highp vec4 J1) {
-  if (uKFx.w < 0.5) return 1.0;
-  if (uKFx.z < J1.x) return 0.0;
-  return kFanAlpha(kFxSolid(kFxWeight(int(uKFx.x + 0.5), uKFx.z - J1.y)));
 }
 
 // RAINBOW: p = appearance progress (1 = just appeared -> 0 = recovered).
