@@ -238,3 +238,119 @@ describe("fabric maze stats (K19)", () => {
     expect(c.moveLog.slice(1, 3)).toContain("d");
   });
 });
+
+describe("saved attempts (K47): taps, replay, retreat", () => {
+  // A walk with a detour backed out of and a detour kept, then the rest of
+  // a shortest route: every kind of move.
+  const play = (seed: number): FabricMazeController => {
+    const c = new FabricMazeController(walkFor(seed));
+    const cost = (eid: number): number => {
+      const e = c.walk.edges[eid];
+      const far = e.va === c.head ? e.vb : e.va;
+      return e.length + (c.walk.distToExit.get(far) ?? Infinity);
+    };
+    let detours = 0;
+    for (let guard = 0; guard < 300 && !c.solved; guard++) {
+      const best = bestChoice(c);
+      const last = c.pathEdges[c.pathEdges.length - 1];
+      const alt = c.choices().find((e) => e !== last && cost(e) > cost(best) + 1e-6);
+      if (alt !== undefined && detours < 2 && c.pathEdges.length > 1) {
+        detours++;
+        c.tapEdge(alt);
+        if (detours === 1) c.tapEdge(alt); // back out of the first
+        continue;
+      }
+      c.tapEdge(best);
+    }
+    return c;
+  };
+
+  it("records every accepted tap and nothing else", () => {
+    const c = new FabricMazeController(walkFor(42));
+    const far = c.walk.edges.find((e) => e.va !== c.head && e.vb !== c.head)!;
+    c.tapEdge(far.id); // rejected
+    const first = c.choices()[0];
+    c.tapEdge(first);
+    c.tapEdge(first);
+    expect(c.taps).toEqual([first, first]);
+    expect(c.taps.length).toBe(c.moveLog.length);
+    c.reset();
+    expect(c.taps).toEqual([]);
+  });
+
+  it("replays a tap list to exactly the same state", () => {
+    for (const seed of [5, 42, 1234]) {
+      const a = play(seed);
+      expect(a.solved).toBe(true);
+      expect(a.moveLog).toContain("b");
+      const b = new FabricMazeController(a.walk);
+      expect(b.replay(a.taps)).toBe(true);
+      expect({
+        path: b.pathEdges,
+        verts: b.pathVertices,
+        back: b.backtrackDist,
+        log: b.moveLog,
+        junctions: [...b.visitedJunctions].sort(),
+        solved: b.solved,
+        taps: b.taps,
+      }).toEqual({
+        path: a.pathEdges,
+        verts: a.pathVertices,
+        back: a.backtrackDist,
+        log: a.moveLog,
+        junctions: [...a.visitedJunctions].sort(),
+        solved: a.solved,
+        taps: a.taps,
+      });
+      // Part of the way is a valid attempt too.
+      const half = a.taps.slice(0, Math.floor(a.taps.length / 2));
+      expect(b.replay(half)).toBe(true);
+      expect(b.taps).toEqual(half);
+      expect(b.solved).toBe(false);
+    }
+  });
+
+  it("refuses a tap list that is not a legal walk (left at the entrance)", () => {
+    const a = play(42);
+    const b = new FabricMazeController(a.walk);
+    const far = a.walk.edges.find((e) => e.va !== a.walk.start && e.vb !== a.walk.start)!;
+    for (const bad of [[far.id], [...a.taps, a.taps[0]], [a.taps[0], 99999], [a.taps[0], 1.5], [-1]]) {
+      expect(b.replay(bad)).toBe(false);
+      expect([b.head, b.taps, b.pathEdges]).toEqual([a.walk.start, [], []]);
+    }
+    // Another maze's taps.
+    const other = play(5);
+    expect(new FabricMazeController(walkFor(42)).replay(other.taps)).toBe(false);
+  });
+
+  it("retreats to the entrance as backtracks, logged and priced", () => {
+    const c = new FabricMazeController(walkFor(1234));
+    for (let i = 0; i < 6; i++) c.tapEdge(bestChoice(c));
+    const path = [...c.pathEdges];
+    const length = c.pathLength;
+    const back0 = c.backtrackDist;
+    const log0 = c.moveLog.length;
+    const runs = c.retreatToStart();
+    expect(runs).toEqual([...path].reverse());
+    expect(c.head).toBe(c.walk.start);
+    expect(c.pathEdges).toEqual([]);
+    expect(c.backtrackDist).toBeCloseTo(back0 + length, 9);
+    expect(c.moveLog.slice(log0)).toEqual(path.map(() => "b"));
+    // Exactly what tapping back would have been: a replay agrees.
+    const d = new FabricMazeController(c.walk);
+    expect(d.replay(c.taps)).toBe(true);
+    expect(d.backtrackDist).toBeCloseTo(c.backtrackDist, 9);
+    // At the entrance already: nothing to do.
+    expect(c.retreatToStart()).toEqual([]);
+  });
+
+  it("does not retreat in trail mode or once solved", () => {
+    const t = new FabricMazeController(walkFor(5), true);
+    t.tapEdge(t.choices()[0]);
+    expect(t.retreatToStart()).toEqual([]);
+    expect(t.pathEdges.length).toBe(1);
+    const s = play(5);
+    expect(s.retreatToStart()).toEqual([]);
+    expect(s.solved).toBe(true);
+  });
+});

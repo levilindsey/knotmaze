@@ -7,9 +7,12 @@ import {
   browserStorage,
   dailyAggregates,
   parseDailyData,
+  validAttempt,
+  validPrefs,
   validResult,
 } from "../../src/game/daily_store";
 import type {
+  DailyAttempt,
   DailyData,
   DailyResult,
   StorageLike,
@@ -54,6 +57,20 @@ const result = (over: Partial<DailyResult> = {}): DailyResult => ({
   ...over,
 });
 
+const attempt = (over: Partial<DailyAttempt> = {}): DailyAttempt => ({
+  startedAt: 1_790_000_000_000,
+  day: 5,
+  elapsedMs: 41_500,
+  taps: [0, 4, 9, 9, 7],
+  path: [0, 4, 7],
+  moves: "ggdbg",
+  backtrack: 3.2,
+  maze: "w1.200.302.0a1b2c3d",
+  def: 1,
+  savedAt: 1_790_000_041_500,
+  ...over,
+});
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -80,7 +97,7 @@ describe("recording", () => {
     // It is all in storage: a new store (a reload) reads the same.
     const again = new DailyStore(s);
     expect(again.data()).toEqual(store.data());
-    expect(JSON.parse(s.map.get(DAILY_STORE_KEY)!).v).toBe(1);
+    expect(JSON.parse(s.map.get(DAILY_STORE_KEY)!).v).toBe(2);
   });
 
   it("keeps the earliest played time", () => {
@@ -176,7 +193,7 @@ describe("damaged, foreign and missing storage", () => {
   it("never overwrites records from a newer schema", () => {
     quiet();
     const s = new FakeStorage();
-    const newer = JSON.stringify({ v: 2, everything: "else" });
+    const newer = JSON.stringify({ v: 3, everything: "else" });
     s.map.set(DAILY_STORE_KEY, newer);
     const store = new DailyStore(s);
     expect(store.status).toBe("newer");
@@ -241,9 +258,163 @@ describe("damaged, foreign and missing storage", () => {
   });
 });
 
+describe("saved attempts and prefs (K47, K56: schema v2)", () => {
+  it("migrates a v1 document: every result kept, no attempts, no prefs", () => {
+    quiet();
+    const s = new FakeStorage();
+    const v1 = {
+      v: 1,
+      days: {
+        "1": { played: 10, official: result({ day: 1 }), replays: [result()] },
+        "2": { played: 20, replays: [] },
+        // v1 never had attempts: a stray one is not read as one.
+        "3": { played: 30, replays: [], attempt: attempt() },
+      },
+      prefs: { volume: 0 },
+    };
+    s.map.set(DAILY_STORE_KEY, JSON.stringify(v1));
+    const store = new DailyStore(s);
+    expect(store.status).toBe("ok");
+    const d = store.data();
+    expect(d.v).toBe(2);
+    expect(Object.keys(d.days).sort()).toEqual(["1", "2", "3"]);
+    expect(d.days["1"].official).toEqual(result({ day: 1 }));
+    expect(d.days["1"].replays).toEqual([result()]);
+    expect(d.days["3"].attempt).toBeUndefined();
+    expect(d.prefs).toEqual({});
+    // Nothing is written until something changes; then it is v2.
+    expect(s.sets).toBe(0);
+    store.saveAttempt(2, attempt());
+    const raw = JSON.parse(s.map.get(DAILY_STORE_KEY)!);
+    expect(raw.v).toBe(2);
+    expect(raw.days["1"].official.timeMs).toBe(result().timeMs);
+    expect(new DailyStore(s).attempt(2)).toEqual(attempt());
+  });
+
+  it("saves, replaces, restores and clears an attempt", () => {
+    const s = new FakeStorage();
+    const store = new DailyStore(s);
+    expect(store.attempt(4)).toBeUndefined();
+    store.saveAttempt(4, attempt());
+    // The first save marks the day played (an attempt is a move made).
+    expect(store.day(4)!.played).toBe(attempt().startedAt);
+    store.saveAttempt(4, attempt({ taps: [0, 4], path: [0, 4], moves: "gg", elapsedMs: 9_000 }));
+    // A reload reads the latest.
+    const again = new DailyStore(s);
+    expect(again.attempt(4)).toEqual(
+      attempt({ taps: [0, 4], path: [0, 4], moves: "gg", elapsedMs: 9_000 })
+    );
+    expect(dailyAggregates(again.data(), 4).played).toBe(1);
+    again.clearAttempt(4);
+    expect(new DailyStore(s).attempt(4)).toBeUndefined();
+    expect(new DailyStore(s).day(4)!.played).toBe(attempt().startedAt);
+  });
+
+  it("drops the attempt when it finishes, official or replay", () => {
+    const store = new DailyStore(new FakeStorage());
+    store.saveAttempt(6, attempt());
+    expect(store.recordSolve(6, result())).toBe("official");
+    expect(store.attempt(6)).toBeUndefined();
+    store.saveAttempt(6, attempt({ startedAt: 1_800_000_000_000 }));
+    expect(store.recordSolve(6, result())).toBe("replay");
+    expect(store.attempt(6)).toBeUndefined();
+    // played stays the earliest move.
+    expect(store.day(6)!.played).toBe(attempt().startedAt);
+  });
+
+  it("drops a damaged attempt alone; the day's results survive", () => {
+    const bad = [
+      { ...attempt(), taps: [] },
+      { ...attempt(), taps: [1, -2] },
+      { ...attempt(), taps: [1.5] },
+      { ...attempt(), moves: "gg" }, // one letter per tap
+      { ...attempt(), moves: "ggdbx" },
+      { ...attempt(), path: [0, 1, 2, 3, 4, 5] }, // longer than the taps
+      { ...attempt(), elapsedMs: -1 },
+      { ...attempt(), maze: "" },
+      { ...attempt(), startedAt: "x" },
+      "nope",
+    ];
+    for (const a of bad) {
+      expect([a, validAttempt(a)]).toEqual([a, null]);
+      const parsed = parseDailyData(
+        JSON.stringify({ v: 2, days: { "3": { played: 1, official: result(), replays: [], attempt: a } }, prefs: {} })
+      );
+      expect(parsed.kind).toBe("ok");
+      if (parsed.kind !== "ok") continue;
+      expect(parsed.dropped).toBe(1);
+      expect(parsed.data.days["3"].official).toEqual(result());
+      expect(parsed.data.days["3"].attempt).toBeUndefined();
+    }
+    // Soft fields fall back.
+    const { savedAt: _s, def: _d, ...lean } = attempt();
+    void _s;
+    void _d;
+    expect(validAttempt(lean)).toEqual({ ...attempt(), savedAt: attempt().startedAt, def: 1 });
+    // A day with only an attempt is played from its start.
+    const p = parseDailyData(JSON.stringify({ v: 2, days: { "8": { attempt: attempt() } } }));
+    expect(p.kind === "ok" && p.data.days["8"].played).toBe(attempt().startedAt);
+  });
+
+  it("keeps prefs: plain values under param names only", () => {
+    expect(
+      validPrefs({ volume: 0.2, soundMode: "none", physics: false, x: Infinity, "a-b": 1, big: "y".repeat(41), o: {} })
+    ).toEqual({ volume: 0.2, soundMode: "none", physics: false });
+    expect(validPrefs([1])).toEqual({});
+    const s = new FakeStorage();
+    const store = new DailyStore(s);
+    expect(store.prefs()).toEqual({});
+    store.setPrefs({ volume: 0.2, cameraMode: "follow" });
+    expect(new DailyStore(s).prefs()).toEqual({ volume: 0.2, cameraMode: "follow" });
+    // An unchanged set is not rewritten.
+    const sets = s.sets;
+    store.setPrefs({ volume: 0.2, cameraMode: "follow" });
+    expect(s.sets).toBe(sets);
+    // prefs() is a copy.
+    store.prefs().volume = 1;
+    expect(store.prefs().volume).toBe(0.2);
+  });
+
+  it("over quota: replays go first, then other days' attempts", () => {
+    quiet();
+    const s = new FakeStorage();
+    const store = new DailyStore(s);
+    for (let i = 0; i < 10; i++) store.recordSolve(1, result({ timeMs: i }));
+    // A long attempt (~6000 characters) on day 2.
+    store.saveAttempt(2, attempt({ taps: new Array(2000).fill(1), path: [], moves: "g".repeat(2000) }));
+    store.saveAttempt(3, attempt());
+    const full = s.map.get(DAILY_STORE_KEY)!.length;
+    // Pruning six replays (~1500) is not room enough; day 2's attempt is.
+    s.quota = full - 3000;
+    store.saveAttempt(3, attempt({ elapsedMs: 50_000 }));
+    expect(store.status).toBe("ok");
+    const saved = JSON.parse(s.map.get(DAILY_STORE_KEY)!);
+    expect(saved.days["1"].replays.length).toBe(3);
+    expect(saved.days["2"].attempt).toBeUndefined();
+    expect(saved.days["3"].attempt.elapsedMs).toBe(50_000);
+  });
+
+  it("works without storage, and leaves a newer schema alone", () => {
+    quiet();
+    const mem = new DailyStore(null);
+    mem.saveAttempt(1, attempt());
+    mem.setPrefs({ volume: 0 });
+    expect(mem.attempt(1)).toEqual(attempt());
+    expect(mem.prefs()).toEqual({ volume: 0 });
+    const s = new FakeStorage();
+    const newer = JSON.stringify({ v: 3, days: {} });
+    s.map.set(DAILY_STORE_KEY, newer);
+    const store = new DailyStore(s);
+    store.saveAttempt(1, attempt());
+    expect(store.status).toBe("newer");
+    expect(store.attempt(1)).toEqual(attempt()); // this session
+    expect(s.map.get(DAILY_STORE_KEY)).toBe(newer);
+  });
+});
+
 describe("aggregates", () => {
   const data = (days: Record<number, Partial<{ official: DailyResult; replays: DailyResult[] }>>): DailyData => {
-    const out: DailyData = { v: 1, days: {} };
+    const out: DailyData = { v: 2, days: {}, prefs: {} };
     for (const [n, d] of Object.entries(days)) {
       out.days[n] = { played: 1, replays: d.replays ?? [], ...(d.official ? { official: d.official } : {}) };
     }

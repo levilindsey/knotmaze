@@ -581,6 +581,42 @@ export class FabricMazeRenderer {
     this.yarnGfx.clear();
   }
 
+  // K47 RESTORE: lay a restored attempt's string again - one pass per
+  // tap, in the dot's travel direction, exactly as beginMove lays them
+  // (the head after a tap is the run's other end, a self-loop runs A -> B;
+  // the pass seeds count up the same way). Then update() draws it.
+  restoreYarn(taps: readonly number[]): void {
+    this.yarnEvents.length = 0;
+    if (this.pathViz !== "string") return;
+    let head = this.walk.start;
+    for (const eid of taps) {
+      const e = this.walk.edges[eid];
+      if (!e) break;
+      head = e.va === head ? e.vb : e.va;
+      if (e.va === e.vb) this.pushYarnEvent(e, e.ctrlA, e.ctrlB);
+      else if (e.va === head) this.pushYarnEvent(e, e.ctrlB, e.ctrlA);
+      else this.pushYarnEvent(e, e.ctrlA, e.ctrlB);
+    }
+  }
+
+  // K47 RESTORE: the fog of war explores along runs crossed before the
+  // page was reloaded (main.ts calls this once the restored scene is on
+  // screen, so the stamps land where the settled threads lie).
+  restoreExplored(runs: readonly number[]): void {
+    if (!this.fogOfWar) return;
+    for (const eid of runs) {
+      const e = this.walk.edges[eid];
+      if (!e) continue;
+      for (let f = e.ctrlA; ; f += 0.5) {
+        const ff = Math.min(f, e.ctrlB);
+        this.pointFlowed(e.chain, this.ctrlMod(e.chain, ff), this.scratch, 0);
+        this.maybeStampFog(this.scratch[0], this.scratch[1]);
+        if (ff >= e.ctrlB) break;
+      }
+    }
+    this.renderFog();
+  }
+
   private drawYarn(): void {
     const g = this.yarnGfx;
     g.clear();

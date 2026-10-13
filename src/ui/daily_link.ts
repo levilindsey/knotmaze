@@ -22,22 +22,26 @@
 // grower, maze plan/apply) - that moves every link too. The golden test in
 // test/ui/daily_link.test.ts pins dailies #1-#3's mazes to catch it.
 //
-// LINKS: `?daily` = today's daily (and it stays `?daily` in the address
-// bar - see dailyQuery), `?daily=<n>` = daily n, and `?daily=<n>.<delta>`
-// = daily n with changed non-maze params (a delta blob, param_codec.ts
-// encodeDelta, measured against the day's pinned design) - so a daily with
-// a tweaked look still names its day. Legacy key=value pairs may follow
-// (`&am=instant`), as after a token. A change that alters the MAZE
-// (sameMaze) leaves the daily: the link becomes a normal token.
+// THE FRONT DOOR (K56, 2026-10-12). The page with NO query at all is
+// today's daily, and the address bar stays bare while it is on screen.
+// `?daily` means the same (and is rewritten to the bare address);
+// `?daily=<n>` names a day and stays in the bar. Any other query is an
+// ordinary design link with no daily treatment: a token, legacy keys,
+// seedless overrides (`?am=instant`). A daily's design is EXACTLY its
+// pinned design (isDailyDesign) - except DAILY_EXEMPT_KEYS, the player's
+// playback preferences (sound, camera, touch and feel, physics on/off),
+// which a daily opens with from the stored prefs (main.ts saves the ones
+// the player sets while on a daily). Editing anything else - a panel row,
+// the seed, legacy `&k=v` overrides after `?daily` - leaves the daily: the
+// page becomes an ordinary design link. `?daily=<n>.<delta>` (K20 links
+// for a daily with a changed look - no longer written, since a changed
+// look is no longer the daily) opens as the ordinary design it describes.
 
-import {
-  codecDefaults,
-  decodeDelta,
-  encodeDelta,
-  numberText,
-} from "./param_codec";
+import { codecDefaults, decodeDelta, numberText } from "./param_codec";
 import type { ParamValue } from "./param_codec";
 import {
+  ENUM_OPTIONS,
+  PARAM_DEFAULTS,
   applyLegacyOverrides,
   impliedParams,
   parseParams,
@@ -140,43 +144,160 @@ export function sameMaze(a: UrlParams, b: UrlParams): boolean {
   return mazeKey(a) === mazeKey(b);
 }
 
-// The address-bar query for daily n showing `params` (no "?"): `daily=<n>`,
-// or `daily=<n>.<delta>` when params differ from the day's pinned design
-// (only in non-maze params - a changed maze is no longer the daily). Given
-// `today` (main.ts passes it while the player came for TODAY's daily -
-// `?daily` or the Daily button - not a numbered one), today's daily as
-// published stays plain `daily`: that address keeps meaning "today's
-// daily", so a bookmark or home-screen shortcut taken from it does not
-// freeze on one day (a reload after midnight brings the new daily, as in
-// Wordle). Share links always name the day.
-export function dailyQuery(
-  n: number,
-  params: UrlParams,
-  today?: number
-): string {
-  const delta = encodeDelta(
-    params as unknown as Record<string, unknown>,
-    dailyParams(n) as unknown as Record<string, unknown>,
-    impliedParams(params)
-  );
-  if (delta !== "") return `daily=${n}.${delta}`;
-  return n === today ? "daily" : `daily=${n}`;
+// K56 EXEMPT PARAMS: the player's playback preferences. Changing one keeps
+// the daily (the daily is the same maze, looking the same, played the same
+// way); changing any other param leaves it. Levi named volume, sound mode
+// and camera mode (plus the stats readout and the panel, which are not
+// params); the rest of the Sound folder, Touch & feel and the physics
+// switch are the same kind of choice. The settings outside the link (stats
+// readouts, debug overlay, mute, agitation) never leave a daily either.
+// Never list a MAZE_PARAM_KEYS param (a test checks).
+export const DAILY_EXEMPT_KEYS = [
+  // Sound.
+  "soundMode",
+  "pitchSpace",
+  "octaves",
+  "rootNote",
+  "tonicEmphasis",
+  "soundSpeed",
+  "volume",
+  "reverb",
+  "brightness",
+  "sustain",
+  "shimmer",
+  "pickPosition",
+  // View.
+  "cameraMode",
+  // Touch & feel (how threads answer a tap or a drag).
+  "pluckSize",
+  "pluckGhost",
+  "pluckReach",
+  "pluckStyle",
+  "tugLimit",
+  "snapBack",
+  // Physics on/off: a device-speed choice; the settled layout is the same.
+  "physics",
+] as const satisfies readonly (keyof UrlParams)[];
+
+const EXEMPT: ReadonlySet<string> = new Set(DAILY_EXEMPT_KEYS);
+const NOTHING: ReadonlySet<string> = new Set();
+
+// One param value against another, numbers at link precision (slider
+// float noise is no change).
+function sameValue(a: unknown, b: unknown): boolean {
+  if (typeof a === "number" && typeof b === "number") {
+    return numberText(a) === numberText(b);
+  }
+  return a === b;
+}
+
+// Is `p` the design `base` - every param but the exempt ones the same? An
+// appearance preset (or random, or instant) implies its three values -
+// random rolls them anew on every load - so with base's mode they are not
+// compared, as a link leaves them out.
+export function matchesDesign(p: UrlParams, base: UrlParams): boolean {
+  const implied =
+    p.appearMode === base.appearMode ? impliedParams(base) : NOTHING;
+  const a = p as unknown as Record<string, unknown>;
+  const b = base as unknown as Record<string, unknown>;
+  for (const k of Object.keys(b)) {
+    if (EXEMPT.has(k) || implied.has(k)) continue;
+    if (!sameValue(a[k], b[k])) return false;
+  }
+  return true;
+}
+
+// Is `p` daily n's design (but for the player's preferences)?
+export function isDailyDesign(p: UrlParams, n: number): boolean {
+  return matchesDesign(p, dailyParams(n));
+}
+
+// The stored prefs after the player moved exempt params from `before` to
+// `after` while daily n was on screen (main.ts: since the daily opened or
+// last stored them). A changed param is stored where it differs from the
+// day's design and dropped where it is back to it (it follows the daily
+// again); an untouched one keeps what was stored - so a link's one-off
+// `&vol=0` is never stored, and neither is anything else not chosen.
+export function mergeDailyPrefs(
+  stored: Readonly<Record<string, unknown>>,
+  before: UrlParams,
+  after: UrlParams,
+  n: number
+): Record<string, ParamValue> {
+  const base = dailyParams(n) as unknown as Record<string, unknown>;
+  const b = before as unknown as Record<string, unknown>;
+  const a = after as unknown as Record<string, unknown>;
+  const out: Record<string, ParamValue> = {};
+  for (const k of DAILY_EXEMPT_KEYS) {
+    if (sameValue(a[k], b[k])) {
+      if (Object.hasOwn(stored, k)) out[k] = stored[k] as ParamValue;
+    } else if (!sameValue(a[k], base[k])) {
+      const v = a[k] as ParamValue;
+      // At link precision: slider steps leave float noise behind.
+      out[k] = typeof v === "number" ? Math.round(v * 1e6) / 1e6 : v;
+    }
+  }
+  return out;
+}
+
+// `p` with stored prefs applied (a copy): exempt params only, each a value
+// this build can use (its type, a current option), anything else ignored.
+export function applyDailyPrefs(
+  p: UrlParams,
+  prefs: Readonly<Record<string, unknown>>
+): UrlParams {
+  const out = { ...p } as unknown as Record<string, unknown>;
+  const D = PARAM_DEFAULTS as unknown as Record<string, unknown>;
+  for (const k of DAILY_EXEMPT_KEYS) {
+    if (!Object.hasOwn(prefs, k)) continue;
+    const v = prefs[k];
+    if (typeof v !== typeof D[k]) continue;
+    if (typeof v === "number" && !Number.isFinite(v)) continue;
+    const options = ENUM_OPTIONS[k as keyof typeof PARAM_DEFAULTS];
+    if (options && !options.includes(v as string)) continue;
+    out[k] = v;
+  }
+  return out as unknown as UrlParams;
+}
+
+// The address-bar query for daily n (no "?"): "" - the bare address - for
+// TODAY's daily when the player came for today's (the bare page, `?daily`,
+// the Daily button; main.ts passes `today` then), else `daily=<n>`. The
+// bare address keeps meaning "today's daily", so a bookmark or home-screen
+// shortcut never freezes one day (after midnight a reload brings the new
+// daily, as in Wordle). Share links always name the day.
+export function dailyQuery(n: number, today?: number): string {
+  return n === today ? "" : `daily=${n}`;
 }
 
 export interface Launch {
   params: UrlParams;
   // The daily on screen, or null for an ordinary design.
   daily: number | null;
-  // The link asked for TODAY's daily (`?daily`, or a number out of range)
-  // rather than a numbered day: the address bar may keep saying `?daily`.
+  // The link asked for TODAY's daily (no query, `?daily`, or a number out
+  // of range) rather than a numbered day: the address bar stays bare.
   floating: boolean;
 }
 
-// What a page load shows: a daily link (`?daily...`, first in the query)
-// or anything parseParams reads. `today` = todayNumber(); a daily number
-// outside [1, today + DAILY_MAX_AHEAD] (or not a number) loads today's.
-export function parseLaunch(search: string, today: number): Launch {
+// What a page load shows (K56): no query = today's daily; a daily link
+// (`?daily...`, first in the query); else whatever parseParams reads.
+// `today` = todayNumber(); a daily number outside [1, today +
+// DAILY_MAX_AHEAD] (or not a number) loads today's. `prefs` = the stored
+// daily prefs, which a daily opens with (legacy overrides after the link
+// still win).
+export function parseLaunch(
+  search: string,
+  today: number,
+  prefs: Readonly<Record<string, unknown>> = {}
+): Launch {
   const query = search.startsWith("?") ? search.slice(1) : search;
+  if (query === "") {
+    return {
+      params: applyDailyPrefs(dailyParams(today), prefs),
+      daily: today,
+      floating: true,
+    };
+  }
   const amp = query.indexOf("&");
   const head = amp < 0 ? query : query.slice(0, amp);
   const m = /^daily(?:=(.*))?$/.exec(head);
@@ -206,22 +327,27 @@ export function parseLaunch(search: string, today: number): Launch {
     }
   }
   const base = dailyParams(n);
-  let params = base;
+  const overrides = amp >= 0 ? query.slice(amp + 1) : "";
   if (deltaText !== "" && n === Number(numText)) {
     const d = decodeDelta(
       deltaText,
       base as unknown as Record<string, ParamValue>
     );
-    if (d.error !== null) {
-      console.warn(
-        `KnotMaze: unreadable daily settings (${d.error}); showing the daily as published.`
-      );
-    } else {
-      params = paramsFromValues(base.seed, d.values);
+    if (d.error === null) {
+      // A K20 daily with a changed look: the ordinary design it describes.
+      let params = paramsFromValues(base.seed, d.values);
+      if (overrides !== "") params = applyLegacyOverrides(params, overrides);
+      return { params, daily: null, floating: false };
     }
+    console.warn(
+      `KnotMaze: unreadable daily settings (${d.error}); showing the daily as published.`
+    );
   }
-  if (amp >= 0) params = applyLegacyOverrides(params, query.slice(amp + 1));
-  // An override that changes the maze (`&gs=8`) is no longer the daily.
-  if (!sameMaze(params, base)) return { params, daily: null, floating: false };
+  let params = applyDailyPrefs(base, prefs);
+  if (overrides !== "") params = applyLegacyOverrides(params, overrides);
+  // An override of anything but a preference (`&gs=8`, `&am=instant`) is
+  // an ordinary design: the day's design with that change.
+  if (!isDailyDesign(params, n)) return { params, daily: null, floating: false };
   return { params, daily: n, floating };
 }
+

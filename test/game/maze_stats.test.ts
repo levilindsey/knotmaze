@@ -77,6 +77,42 @@ describe("solve clock", () => {
     expect(c.elapsed(1e9)).toBe(20_000);
   });
 
+  it("restores a saved time paused, then runs on from it (K47)", () => {
+    const c = new SolveClock();
+    c.restore(41_500);
+    expect([c.state, c.started]).toEqual(["paused", true]);
+    expect(c.elapsed(1e9)).toBe(41_500);
+    c.setHidden(true, 500); // paused: visibility changes nothing
+    c.setHidden(false, 900);
+    c.resume(1000);
+    expect(c.state).toBe("running");
+    expect(c.elapsed(4000)).toBe(44_500);
+    c.setHidden(true, 5000);
+    c.setHidden(false, 65_000);
+    expect(c.elapsed(66_000)).toBe(46_500);
+    c.stop(70_000);
+    expect(c.elapsed(1e9)).toBe(50_500);
+    c.resume(80_000); // only a paused clock resumes
+    expect(c.state).toBe("stopped");
+    // Resumed while hidden: nothing counts until it shows.
+    const h = new SolveClock();
+    h.restore(10_000);
+    h.resume(0, true);
+    h.setHidden(false, 30_000);
+    expect(h.elapsed(31_000)).toBe(11_000);
+  });
+
+  it("stops a paused clock at its saved time (a restored finish)", () => {
+    const c = new SolveClock();
+    c.restore(83_250);
+    c.stop(999_999);
+    expect([c.state, c.elapsed(1e12)]).toEqual(["stopped", 83_250]);
+    c.reset();
+    expect([c.state, c.elapsed(5)]).toEqual(["idle", 0]);
+    c.restore(Number.NaN);
+    expect(c.elapsed(5)).toBe(0);
+  });
+
   it("can start hidden, and ignores visibility while idle", () => {
     const c = new SolveClock();
     c.setHidden(true, 0);

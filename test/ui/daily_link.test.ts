@@ -1,25 +1,31 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   DAILY_DEFINITIONS,
+  DAILY_EXEMPT_KEYS,
   DAILY_MAX_AHEAD,
   DAILY_V1,
   MAZE_PARAM_KEYS,
+  applyDailyPrefs,
   dailyDefinition,
   dailyParams,
   dailyQuery,
   dailySeed,
+  isDailyDesign,
+  matchesDesign,
   mazeKey,
+  mergeDailyPrefs,
   parseLaunch,
   sameMaze,
 } from "../../src/ui/daily_link";
 import {
+  ENUM_OPTIONS,
   PARAM_DEFAULTS,
-  encodeParams,
+  impliedParams,
   paramsFromValues,
   parseParams,
 } from "../../src/ui/url_state";
 import type { UrlParams } from "../../src/ui/url_state";
-import { codecDefaults } from "../../src/ui/param_codec";
+import { codecDefaults, encodeDelta } from "../../src/ui/param_codec";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { planAnchors } from "../../src/core/shapes";
@@ -177,8 +183,28 @@ describe("maze identity", () => {
   });
 });
 
-describe("daily links", () => {
+
+// A different valid value for any param (the design's own value changed).
+function otherValue(key: string, v: unknown): unknown {
+  const options = (ENUM_OPTIONS as Record<string, readonly string[] | undefined>)[key];
+  if (options) return options.find((o) => o !== v);
+  if (typeof v === "boolean") return !v;
+  if (typeof v === "number") return v + 0.25;
+  if (key === "pathColor") return v === "#123456" ? "#654321" : "#123456";
+  throw new Error(`no other value for ${key}`);
+}
+
+describe("the front door (K56)", () => {
   const today = 10;
+
+  it("opens today's daily at a bare address", () => {
+    for (const q of ["", "?"]) {
+      expect([q, parseLaunch(q, today)]).toEqual([
+        q,
+        { params: dailyParams(10), daily: 10, floating: true },
+      ]);
+    }
+  });
 
   it("reads ?daily as today's, ?daily=<n> as daily n", () => {
     // `?daily` asks for TODAY's daily (floating); a number names a day.
@@ -211,30 +237,29 @@ describe("daily links", () => {
     }
   });
 
-  it("leaves ordinary links to parseParams", () => {
-    for (const q of ["", "?1471kin.c", "?s=7&gs=9", "?dailyx", "?am=instant&daily=3"]) {
-      const l = parseLaunch(q, today);
-      expect(l.daily).toBeNull();
+  it("treats any other query as an ordinary design", () => {
+    for (const q of ["?1471kin.c", "?s=7&gs=9", "?dailyx", "?am=instant", "?am=instant&daily=3", "?&daily", "?mf=1"]) {
+      const l = parseLaunch(q, today, { volume: 0 });
+      expect([q, l.daily]).toEqual([q, null]);
+      expect([q, l.params.volume]).toEqual([q, parseParams(q).volume]);
     }
     expect(parseLaunch("?1471kin.c", today).params).toEqual(parseParams("?1471kin.c"));
   });
 
-  it("keeps today's daily as published at plain `daily`", () => {
-    const p = dailyParams(today);
-    expect(dailyQuery(today, p, today)).toBe("daily");
-    expect(parseLaunch(`?${dailyQuery(today, p, today)}`, today)).toEqual({
-      params: p,
-      daily: today,
-      floating: true,
+  it("writes the bare address for today's, `daily=<n>` otherwise", () => {
+    expect(dailyQuery(today, today)).toBe("");
+    expect(dailyQuery(9, today)).toBe("daily=9");
+    // A numbered daily (not floating) keeps its number even on its day.
+    expect(dailyQuery(today)).toBe(`daily=${today}`);
+    expect(parseLaunch(`?${dailyQuery(9, today)}`, today)).toEqual({
+      params: dailyParams(9),
+      daily: 9,
+      floating: false,
     });
-    // Any other day, or a changed look, names the day.
-    expect(dailyQuery(9, dailyParams(9), today)).toBe("daily=9");
-    expect(dailyQuery(today, { ...p, hueShift: 3 }, today)).toMatch(/^daily=10\./);
   });
 
-  it("writes `daily=<n>` for the pinned design and a delta for a changed look", () => {
+  it("opens K20's `?daily=<n>.<delta>` links as the design they describe", () => {
     const p = dailyParams(7);
-    expect(dailyQuery(7, p)).toBe("daily=7");
     const tweaked: UrlParams = {
       ...p,
       hueShift: 40,
@@ -243,32 +268,25 @@ describe("daily links", () => {
       fogOfWar: true,
       threadWidth: 0.6,
     };
-    const q = dailyQuery(7, tweaked);
-    expect(q).toMatch(/^daily=7\.[A-Za-z0-9_-]+$/);
-    expect(parseLaunch(`?${q}`, today)).toEqual({ params: tweaked, daily: 7, floating: false });
-    // Shorter than the whole design as a token.
-    expect(q.length).toBeLessThan(encodeParams(tweaked).length + "daily=".length);
-  });
-
-  it("writes an appearance mode's implied values like a token does", () => {
-    const p = { ...dailyParams(7), appearMode: "trace-rainbow" as const };
-    p.appearSequence = "trace";
-    p.appearFx = "rainbow";
-    p.appearSpeed = 2;
-    const back = parseLaunch(`?${dailyQuery(7, p)}`, today);
-    expect(back).toEqual({ params: p, daily: 7, floating: false });
-  });
-
-  it("takes legacy overrides after it (probe URLs)", () => {
-    const l = parseLaunch("?daily=5&am=instant&fbclid=x", today);
-    expect(l.daily).toBe(5);
-    expect(l.params.appearSequence).toBe("instant");
-    expect(sameMaze(l.params, dailyParams(5))).toBe(true);
-    // An override that changes the maze is no longer the daily.
-    const off = parseLaunch("?daily=5&gs=8", today);
-    expect(off.daily).toBeNull();
-    expect(off.params.gridSize).toBe(8);
-    expect(off.params.seed).toBe(dailySeed(5));
+    const delta = encodeDelta(
+      tweaked as unknown as Record<string, unknown>,
+      p as unknown as Record<string, unknown>,
+      impliedParams(tweaked)
+    );
+    expect(delta).not.toBe("");
+    expect(parseLaunch(`?daily=7.${delta}`, today, { volume: 0 })).toEqual({
+      params: tweaked,
+      daily: null,
+      floating: false,
+    });
+    // Even a delta of preferences only: no daily is written that way now.
+    const quiet = { ...p, volume: 0.1 };
+    const d2 = encodeDelta(
+      quiet as unknown as Record<string, unknown>,
+      p as unknown as Record<string, unknown>,
+      impliedParams(quiet)
+    );
+    expect(parseLaunch(`?daily=7.${d2}`, today).daily).toBeNull();
   });
 
   it("ignores an unreadable delta, keeping the day", () => {
@@ -278,9 +296,139 @@ describe("daily links", () => {
     expect(parseLaunch("?daily=4.Y", today)).toEqual(pinned);
   });
 
+  it("keeps the daily for preference overrides, leaves it for any other", () => {
+    const quiet = parseLaunch("?daily=5&vol=0&cam=follow&fbclid=x", today);
+    expect(quiet.daily).toBe(5);
+    expect([quiet.params.volume, quiet.params.cameraMode]).toEqual([0, "follow"]);
+    // A look or a maze override is an ordinary design: the day's design with
+    // that change (probe URLs `?daily&am=instant` included).
+    for (const q of ["?daily=5&am=instant", "?daily=5&hs=40", "?daily=5&gs=8", "?daily&fow=1"]) {
+      expect([q, parseLaunch(q, today).daily]).toEqual([q, null]);
+    }
+    const off = parseLaunch("?daily=5&gs=8", today);
+    expect(off.params.gridSize).toBe(8);
+    expect(off.params.seed).toBe(dailySeed(5));
+    expect(sameMaze(parseLaunch("?daily=5&am=instant", today).params, dailyParams(5))).toBe(true);
+  });
+
+  it("opens a daily with the stored prefs, which link overrides beat", () => {
+    const prefs = { volume: 0.05, soundMode: "none", cameraMode: "follow" };
+    for (const q of ["", "?daily", "?daily=6"]) {
+      const l = parseLaunch(q, today, prefs);
+      expect([q, l.daily !== null, l.params.volume, l.params.soundMode, l.params.cameraMode]).toEqual(
+        [q, true, 0.05, "none", "follow"]
+      );
+    }
+    const l = parseLaunch("?daily=6&vol=0.9", today, prefs);
+    expect([l.daily, l.params.volume, l.params.soundMode]).toEqual([6, 0.9, "none"]);
+  });
+
   it("re-reads a URLSearchParams-serialized link", () => {
     const url = new URL("https://levi.dev/knotmaze/?daily=6");
     url.searchParams.append("ref", "x");
     expect(parseLaunch(url.search, today).daily).toBe(6);
+  });
+});
+
+describe("the daily design and its exempt preferences (K56)", () => {
+  it("pins the exempt set (Levi confirms changes to it)", () => {
+    expect([...DAILY_EXEMPT_KEYS]).toEqual([
+      "soundMode",
+      "pitchSpace",
+      "octaves",
+      "rootNote",
+      "tonicEmphasis",
+      "soundSpeed",
+      "volume",
+      "reverb",
+      "brightness",
+      "sustain",
+      "shimmer",
+      "pickPosition",
+      "cameraMode",
+      "pluckSize",
+      "pluckGhost",
+      "pluckReach",
+      "pluckStyle",
+      "tugLimit",
+      "snapBack",
+      "physics",
+    ]);
+    for (const k of DAILY_EXEMPT_KEYS) {
+      expect(Object.keys(PARAM_DEFAULTS)).toContain(k);
+      // A preference can never change the maze.
+      expect(MAZE_PARAM_KEYS as readonly string[]).not.toContain(k);
+    }
+  });
+
+  it("stays the daily across every preference, and only those", () => {
+    const n = 4;
+    const base = dailyParams(n);
+    expect(isDailyDesign(base, n)).toBe(true);
+    const b = base as unknown as Record<string, unknown>;
+    const exempt = new Set<string>(DAILY_EXEMPT_KEYS);
+    for (const key of ["seed", ...Object.keys(PARAM_DEFAULTS)]) {
+      const changed = { ...b, [key]: key === "seed" ? base.seed + 1 : otherValue(key, b[key]) };
+      expect([key, isDailyDesign(changed as unknown as UrlParams, n)]).toEqual([key, exempt.has(key)]);
+    }
+    // Every preference at once still is.
+    const all = { ...b };
+    for (const k of DAILY_EXEMPT_KEYS) all[k] = otherValue(k, b[k]);
+    expect(isDailyDesign(all as unknown as UrlParams, n)).toBe(true);
+    // Slider float noise is no change.
+    expect(isDailyDesign({ ...base, hueShift: base.hueShift + 1e-9 }, n)).toBe(true);
+    // Another day's design is not this day's.
+    expect(isDailyDesign(dailyParams(n + 1), n)).toBe(false);
+  });
+
+  it("compares an appearance mode, not the values it implies", () => {
+    // A future daily on `random`: each load rolls its own three values.
+    const roll = (): UrlParams => paramsFromValues(77, { appearMode: "random" });
+    const a = roll();
+    for (let i = 0; i < 20; i++) expect(matchesDesign(roll(), a)).toBe(true);
+    expect(matchesDesign({ ...a, appearMode: "custom" }, a)).toBe(false);
+    // A preset: its values are implied.
+    const preset = paramsFromValues(77, { appearMode: "trace-rainbow" });
+    expect(matchesDesign({ ...preset, appearSpeed: 9 }, preset)).toBe(true);
+    // The V1 daily is custom: all three values count.
+    expect(isDailyDesign({ ...dailyParams(2), appearSpeed: 3 }, 2)).toBe(false);
+  });
+
+  it("applies stored prefs: preferences only, valid values only", () => {
+    const base = dailyParams(3);
+    const p = applyDailyPrefs(base, {
+      volume: 0.2,
+      soundMode: "random",
+      cameraMode: "sideways", // not an option
+      reverb: "loud", // wrong type
+      octaves: Number.NaN,
+      physics: false,
+      hueShift: 12, // not a preference
+      seed: 7,
+    });
+    expect(p).toEqual({ ...base, volume: 0.2, soundMode: "random", physics: false });
+    expect(base.volume).toBe(dailyParams(3).volume); // a copy
+  });
+
+  it("stores only the preferences the player changes on the daily", () => {
+    const n = 3;
+    const base = dailyParams(n);
+    // Opened with a link's one-off `&vol=0` and stored prefs {snd: none}.
+    const opened = { ...base, volume: 0, soundMode: "none" as const };
+    const stored = { soundMode: "none", shimmer: 0.9 };
+    // The player changes the camera: only that is stored on top.
+    const after = { ...opened, cameraMode: "follow" as const };
+    expect(mergeDailyPrefs(stored, opened, after, n)).toEqual({
+      soundMode: "none",
+      shimmer: 0.9,
+      cameraMode: "follow",
+    });
+    // Sound back to the daily's own: dropped (it follows the daily again).
+    const back = { ...after, soundMode: base.soundMode };
+    expect(mergeDailyPrefs(stored, after, back, n)).toEqual({ shimmer: 0.9 });
+    // Non-preferences never land in the prefs.
+    expect(mergeDailyPrefs({}, base, { ...base, hueShift: 5 }, n)).toEqual({});
+    // Slider float noise is stored at link precision.
+    expect(mergeDailyPrefs({}, base, { ...base, volume: 0.1 + 2e-17 + 0.00000000001 }, n)).toEqual({ volume: 0.1 });
   });
 });
