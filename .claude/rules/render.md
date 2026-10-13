@@ -308,6 +308,60 @@ coordinate lerp sweeps the hues between.
   geometry is placed (centers + neighbor gaps). The physics ctrl keeps
   its clamp/topology duties untouched.
 
+## Pluck base collapse (K77)
+
+- ROUNDED BASE COLLAPSE (K77, 2026-10-13; worktree agent). Levi: plucked
+  threads showed "somewhat sharp depressions ... too sharp and
+  wedge-like", more around curves. CAUSE, attributed by toggles with
+  per-station profiles (`.claude/probes/K77/`): during a pluck the visible
+  solid edge is max(static base edge h*mul, moving core edge h - |swing|).
+  Where the footprint's allow is 1 the raw mask clamp(1 - (pk + 0.02)/h)
+  stays under the core. Where allow < 1 it doesn't: the COLLAPSE_RAMP
+  footprint ramps, tightAllow beside tight stations (hence "around
+  curves"), the visibility fades and the wIn gate. There mul = 1 -
+  allow(1 - raw) pokes the base edge out through the translucent fringe;
+  narrow allow windows meeting through min() cut V notches and bites, and
+  the ends of full-collapse plateaus (long lobes, the knot) cut angled
+  beaks. `nocollapse` removed every wedge and `nooverlay` showed them
+  crisp, so it is the base collapse alone, not the overlay, caps or nodes.
+  Raw profiles reached second differences down to -5.7 K*per^2 (K = 1/h^2,
+  per = the base sample spacing).
+- FIX (`roundCollapse` in pluck_model, applied at the end of the
+  overlay's mask build): a morphological OPENING of the collapse depth
+  D = 1 - mask by nested raised-cosine bumps s*cos^2(pi u / 2a(s)),
+  a(s) = pi*sqrt(s / 2K), K = 1/(collapseRound*h^2). The result never
+  exceeds D (the mask is only raised, and stays 1 wherever raw is 1) and
+  its second difference stays >= -K*per^2, so a full pinch ends in an edge
+  of curvature radius collapseRound*h. Narrow windows become shallow
+  round dips; wide smooth profiles pass unchanged. COLLAPSE_ROUND = 1: in
+  the A/B 0.5 left shoulders and 2 erased most of the thinning.
+  `PluckOverlay.collapseRound` is a live field, and 0 is the pre-K77 raw
+  path, for same-state A/Bs (set it, then mark the active plucks
+  needsLayout).
+- VERIFIED (same state): fabric's 6 collapsing sites went from raw worst
+  -0.97..-5.68 to -0.69..-0.95, the knot's 8 from -1.75..-5.73 to
+  -0.46..-0.98; no rounded profile passes -1. Weave checks hold: still 0
+  update() calls, only the plucked chain's base fill buffer changes (every
+  erase, fill and fillet buffer and the gap slot table byte-identical;
+  107 meshes in fabric, 13 in the knot), clear() restores every buffer,
+  raw-vs-rounded pixel changes stay inside the raw footprint, and partner
+  casing bands are identical raw vs rounded (checked at 3.3x zoom). The
+  band pixels that change from before a pluck to mid-pluck are the
+  overlay's under-node clip (render-gaps.md G1 PLUCKS), the same in raw
+  and rounded. The overlay never reads the mask, so the hook blurs of the
+  rejected-cap cases are untouched by construction.
+- AMPLITUDE FLOOR (44885f3 raised tapAmplitude's floor from 0.45 h to
+  0.65 h): it did not create the wedges (raw worst -3.45..-4.15 already at
+  0.45 h) but deepened them by up to about 1.4x at floor-bound taps,
+  through the SYMPATHETIC lobes. They scale from the pre-cap aTap, while
+  the tapped lobe itself is usually clearance-capped (74 of 80 fabric
+  taps, 73 of 80 in the knot), so a neighbor can out-swing the lobe that
+  was tapped. Rounded profiles stay within the bound at both floors; the
+  floor stays 0.65 h.
+- NOT the collapse (present with `nocollapse`, and the same raw and
+  rounded): a dark spike inside a hook's tight bend (the ribbon's inner
+  corner) and a dark X at the center of big knot attack-lobe blurs.
+
 ## Marker icons (K83)
 
 - MARKER ICONS (K83, 2026-10-13; worktree agent). Levi: "placeholder
