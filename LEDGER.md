@@ -23,22 +23,13 @@ and never reused.
 - **K48** · Desktop browsers that offer native sharing (Chrome and Edge
   on Windows) get the clipboard on purpose; the native sheet is for
   phones. Native on desktop too? A one-line change.
+- **K49** · Kink eye size after K41's chord-law pressure: 2.6 widths
+  (shipped) keeps the median eye at about 1.25 widths. 2.8 lifts the
+  boxed tail (default-width X304 0.78 -> 0.84; every harness link at
+  0.82 or more) but grows median eyes to about 1.43 widths. Keep 2.6?
 
 ## In progress
 
-- **K41** · Physics regression from the kink eyes (9920fab): Levi's rect
-  link (`s=1471kin&gs=12&...&tw=.64`) and the fat link
-  (`s=p9ar6&mf=0&rep=.4&bd=1.75&sm=.7&tw=.52`) never sleep (93-95 ms of
-  physics per frame at rest on 31c3c91; both slept on df373b5).
-  - owner: K41 fix agent of session d8031183, resumed 2026-10-12 14:10
-    after an overnight pause for the weekly usage limit.
-  - branch: `k41-sleepfix` (`.claude/worktrees/k41-sleepfix`); last
-    commit: db108af (WIP commit requested 15:00).
-  - evidence: `.claude/probes/K41/` (harness, ablations, sweep outputs;
-    moving there from the session scratchpad); `.claude/probes/probe_sleep.mjs`.
-  - next: attribute the rect link's standing rider and the fat link's
-    pump through ablations, fix at the root, add a regression test.
-  - brief: `docs/design/K41.md`.
 - **K4** · G2: per-sample color work moves into the shaders.
   - owner: G2 agent of session d8031183, started 2026-10-12 14:10.
   - branch: `worktree-agent-a7d1f998c07c3864f`
@@ -120,9 +111,22 @@ and never reused.
   0.56-0.78 thread widths of eye hole - boxed in by a fused joint on one
   side and the 1.6 corridor floor on the other, they keep only lattice
   material. A stronger eye pressure (2.6) doesn't lift them; 2.8 left 2/8
-  fat seeds awake. See CLAUDE.md "KINK EYES".
+  fat seeds awake. See CLAUDE.md "KINK EYES". Since K41's chord law they
+  rest a little smaller, because the flat law had pried their crossings
+  open: five at 0.64-0.74 at tw .64, and X304 (seed 3zz2a1) at 0.78-0.80
+  at the default width (was 0.83-0.86). K49 is the size decision.
 - **K30** · Very wide threads (tw >= 0.72) never sleep - standing riders;
   the same counts as before the kink fix (2/4 seeds at 0.72, 0/4 at 0.8).
+  After K41, 7/8 seeds sleep at tw .72 (was 4/8). Seed 1q2w3e's kink X360
+  cycles material through its crossing at mv about 0.09 (df373b5 did the
+  same); turning eye pressure off doesn't stop it. The slider reaches 0.8.
+- **K50** · The riders gate measures overlap after the first final
+  collision sweep but before the fusion snap, so a resting overlap of up
+  to about 0.04 at joints can go unflagged. Measure the end-of-substep
+  state instead. (K41 agent idea.)
+- **K51** · Knot-mode braids: where one pass sits between two twist
+  twins, the two ratchets still clamp one after the other. K41's
+  ratchet-intersection rule could apply there; no failure seen yet.
 - **K26** · Plucks at tight loops, seen zoomed in. Only the concave side
   of the swing is capped, so the time exposure leans outward and a loop's
   eye gets a slightly ragged, enlarged rim during the ring. A symmetric
@@ -144,7 +148,10 @@ and never reused.
   false overcut at user x57), and its totals drift between two captures
   of one frozen state (cause unknown). Same-state pixel diffs are exact.
   Also: `.claude/probes/K19-K20/probe_daily.mjs`'s time-zone mode hung
-  once in `browser.close()` after writing its report.
+  once in `browser.close()` after writing its report. And any hold probe
+  must first move past the 4 CSS px tug threshold: since df373b5 a still
+  press is a pluck, so the KINK EYES battery's holds did nothing (the
+  K41 copy in `.claude/probes/K41/` moves 12 px first).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -181,6 +188,19 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K41** · Since the kink eyes (9920fab), Levi's rect link and the fat
+  link never slept (93-95 ms of physics per frame at rest). Done in
+  0e98804 and cb73eb5 (2026-10-12):
+  - the capsule test solves its closest points in 3D (its 2D solve
+    double-pushed twist-eye pairs, a cycle that predates the kink eyes);
+  - the eye pressure follows a chord law, 2.6 widths;
+  - ratchets intersect at every pass with both a joint and a twist twin;
+  - crossing coverage continues through fused joints.
+
+  Results: both links asleep at sim 7.0-7.3, and frame cost at rest
+  111-119 -> 5.0-7.5 ms. Browser sweeps 32/32 asleep and gesture battery
+  48/48. Guarded by `test/physics/sleep.regression.test.ts`.
 
 - **K19 + K20** · Maze stats (time, efficiency, junctions, dead ends) in
   the HUD and win banner, and a Wordle-style daily maze: `?daily`, Daily
