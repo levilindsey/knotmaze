@@ -60,18 +60,24 @@ and never reused.
   - env: the prototype server is in the doc's handle (port 5276, private
     cacheDir).
   - brief: `docs/design/K76.md`, then `docs/design/K76_reveal_mode.md`.
-- **K49** · Kink eye size after K41's chord-law pressure: 2.6 widths
-  (shipped) keeps the median eye at about 1.25 widths. 2.8 lifts the
-  boxed tail (default-width X304 0.78 -> 0.84; every harness link at
-  0.82 or more) but grows median eyes to about 1.43 widths. Keep 2.6?
-  A side-by-side sheet for this is in progress:
-  - owner: the K49 crops agent of session d8031183 (Sonnet), started
-    2026-10-13 00:21.
-  - branch: `worktree-agent-ac664e8a9e271757a`; last commit: 4fa22e2
-    (the 2.8 comparison build, never merged).
-  - evidence and output: `.claude/probes/K49/` (`sheet.png`,
-    `full_pair.png`, `notes.md`).
-  - env: `scripts/preview.ps1` on ports 5290 (2.6) and 5291 (2.8).
+- **K49** · Kink eye size after K41's chord-law pressure: keep 2.6
+  widths (shipped), or 2.8? The side-by-side is done (2026-10-13, 87
+  kinks on five links, deterministic same-state A/B): 2.8 opens every
+  eye, by +0.05 to +0.31 widths (mean +0.14; median 1.25 -> 1.43; knot
+  mode most, 1.26 -> 1.47), but it widens the whole population rather
+  than closing the tail: each link's smallest eye gains only +0.07 to
+  +0.10 (tw .64 0.85 -> 0.94; the boxed X304 0.74 -> 0.84, which
+  measures 0.74 at 2.6 on e7d43f4, not the 0.78 recorded earlier). No
+  artifact in any crop pair; all five designs slept at 2.8.
+  - Look at `.claude/probes/K49/sheet.png` (12 pairs, 2.6 left),
+    `full_pair.png` and `notes.md`; extras there: `sheet_rings.png`,
+    `full_pair_marked.png`, `all_L1..L5.png`, raw frames in `out/`.
+  - The 2.8 one-liner is `4fa22e2` on `worktree-agent-ac664e8a9e271757a`
+    (keep it until the call). If 2.8: rerun K41's sleep sweep (8 seeds x
+    default, tw .64, fat fabric, fat knot; flat-law 2.8 pumped on 2/8
+    fat seeds, chord-law 2.8 has only these five) and the gesture
+    battery, regenerate the knot-mode golden, and update the KINK EYES
+    lore and the constant's comment.
 - **K52** · Default background: K21 shipped `vellum` at intensity 0.5
   (static parchment grain plus vignette; the page stays navy on average),
   so every existing link and every daily shows it. Keep it, or default
@@ -90,30 +96,37 @@ and never reused.
     settled layout is the same).
   - Everything else leaves the daily, including moveSpeed, pathViz, fog,
     the intro and flow, and the physics tuning.
+- **K92** · Two calls the K73 agent made (merged 2026-10-13): (1) a tap on
+  the "Free play" badge does what the Daily button does and REPLACES the
+  design's link, so an unshared custom design is lost; alternatives: an
+  undo toast, or pushState + a popstate handler so Back returns to it.
+  (2) Under fog of war, a tap on the finish indicator only shows a toast
+  and does not pan (direction only, like the indicator itself).
+  `.claude/rules/gameplay.md` (MODE BADGE, OFF-SCREEN INDICATORS).
+- **K93** · Two calls from K75 (merged 2026-10-13): (1) the trail fade is
+  not "linear over the oldest 30%" as K4 decided: a span's gold is linear
+  between its two ends, so the run holding the fade start fades all the
+  way from the head junction; splitting it in `buildTrail` (gold up to
+  the fade start, then linear) would match the decision - cheap, but it
+  changes the look. (2) Hover is exempt from `pulseReach` (it lights the
+  whole run a tap would take); keep that, or limit hover too? Sheets:
+  `.claude/probes/K75/` (`NOTES.txt` indexes them).
+- **K94** · Check on real hardware: does the mouse wheel still ZOOM at a
+  browser zoom other than 100%, or at fractional display scaling? The
+  wheel test in `src/main.ts` (`Number.isInteger(e.deltaY)`, about line
+  2182) reads a fractional delta as a two-finger trackpad pan, and K73's
+  synthetic wheel (-300 arriving as -449.99998 at DPR 1.5) did exactly
+  that. If it pans, the likely fix is a tick test in physical pixels
+  (deltaY x devicePixelRatio), whose trackpad side needs his laptop too.
 ## In progress
 
-- **K73** · UI round from Levi's testing: the pathViz labels fullPath and
-  recentPath, recentPath reaching twice as far (trailLength 5 -> 10, a
-  codec v4), corner badges for free play and daily replays, and an
-  off-screen exit indicator.
-  Levi's additions: the exit indicator is a reusable off-screen system
-  (later the minotaur), shows the finish icon (unify with K83's glyph at
-  merge), shows over fog, and has two params (show for the finish; tap
-  pans to it).
-  - owner: the K73 agent of session d8031183, started 2026-10-12 22:05.
-  - branch: `worktree-agent-a8acc04204f0e3be8`
-    (`.claude/worktrees/agent-a8acc04204f0e3be8`), rebased on 0d735bf;
-    last commit: ba7a9b6 (labels, codec v4 and badges done; the
-    indicator registry WIP).
-  - evidence: `.claude/probes/K73/` (`probe_exit.mjs`).
-  - next: finish the indicator's tap-to-pan check, then screenshots at
-    desktop and phone sizes.
-  - brief: `docs/design/K73.md`.
 - **K80** · Research and design: the minotaur mode (movement, chase
   quality, fairness, params) and a long list of other gameplay additions
   (locks and keys, one-way and collapsing runs, pickups, a sword,
   patterned enemies, and more), with trade-offs. Added 2026-10-13:
-  music-centric and rhythm mechanics. No code.
+  music-centric and rhythm mechanics. No code. The minotaur's off-screen
+  marker registers with K73's indicator registry (`indicators.add`,
+  `src/ui/offscreen_indicators.ts`).
   - owner: the K80 agent of session d8031183, started 2026-10-12 22:50.
   - branch: `worktree-agent-a25726c24f262b138`
     (`.claude/worktrees/agent-a25726c24f262b138`); last commit: db0abc8
@@ -121,18 +134,6 @@ and never reused.
   - evidence: `.claude/probes/K80/` (AI simulations, if any).
   - next: finish the research, then `docs/design/K80_gameplay_additions.md`.
   - brief: `docs/design/K80.md`.
-- **K75** · Yellow banding in recentPath's incoming pulses at the
-  current junction (Levi), plus the pulse reach: the junction's pulse
-  highlight extends only a set, slider-controlled distance, fading out.
-  - owner: the K75 agent of session d8031183, started 2026-10-12 22:05.
-  - branch: `worktree-agent-a40b9ac956a4eaa61`
-    (`.claude/worktrees/agent-a40b9ac956a4eaa61`), rebased on 0d735bf;
-    last commit: 5d76a99 (the banding fix d532e1a: pulses brighten the
-    thread's own paint; then `pulseReach`).
-  - evidence: `.claude/probes/K75/`.
-  - next: the GPU A/B per program, then the report; the coordinator
-    runs the phone gate (K10) before merging.
-  - brief: `docs/design/K75.md`.
 - **K83** · Placeholder marker icons (Levi): the start, finish and
   current position as black discs holding white stroked glyphs (play
   triangle, flag, you-are-here), margin about one stroke width.
@@ -142,8 +143,22 @@ and never reused.
     last commit: 791b4ae (glyphs drawn per pixel, WIP).
   - evidence: `.claude/probes/K83/` (`k83_shot.mjs`).
   - next: the contact sheet (rest, mid-move, fog, cr 3, backgrounds) and
-    a same-state A/B showing only marker pixels change.
+    a same-state A/B showing only marker pixels change; on rebase, give
+    K73's off-screen finish indicator (an SVG waving-flag placeholder in
+    `src/main.ts`) the same finish glyph.
   - brief: `docs/design/K83.md`.
+- **K77** · Plucks show sharp, wedge-like depressions where the
+  vibration is strongest, maybe more on curves (Levi): a thinning should
+  read smooth and rounded. Includes the 0.45 h vs 0.65 h amplitude-floor
+  A/B (44885f3).
+  - owner: the K77 agent of session d8031183, started 2026-10-13 00:58.
+  - branch: `worktree-agent-a92faf33828bf0d6d`
+    (`.claude/worktrees/agent-a92faf33828bf0d6d`), on 182b2cf; last
+    commit: none yet.
+  - evidence: `.claude/probes/K77/` in its worktree (copied at merge).
+  - next: reproduce with `__knotPluck`, attribute each wedge to its term.
+  - brief: `docs/design/K77.md`.
+  - env: its dev servers on ports 5301-5304.
 
 ## Next, in order
 
@@ -155,10 +170,11 @@ Overnight order, 2026-10-13 (Levi: "keep running through the night until
 you've addressed all bits that you don't need my input on"). At most three
 code agents at once, research on top. Stop launching once the week
 passes about 45% (29% at 00:30).
-1. Merge the running five as they finish: K73, K75, K83 (code; K75 also
-   passes the phone gate), K74 (docs, merged in dad40f8) and K80 (docs).
-2. K77 (pluck wedges); K81 (the smooth arc, after K75); K79 (backgrounds,
-   after K73's codec v4); K49's 2.6 vs 2.8 comparison crops (small).
+1. Merge the running five as they finish: K83 (code) and K80 (docs) are
+   left; K73 and K75 merged 2026-10-13 01:00, K74 in dad40f8.
+2. K77 (pluck wedges, running since 00:58); K81 (the smooth arc; K75 is
+   merged); K79 (backgrounds; codec v4 is merged); K49's 2.6 vs 2.8
+   comparison crops (small).
 3. K90 stage 1 (measure over-tight folds, prototype a bend limit), K87
    (the plan's pickFarthest cost, same mazes), then K86 (long dead ends
    behind params that default to today's maze).
@@ -185,21 +201,19 @@ K5-K7 (split, frame loop, worker) follow.
   `.claude/probes/K46/`, and the proposal agent's worktree
   (`.claude/worktrees/agent-a78c73cec4770a14d`) is kept. The
   implementation is a `DAILY_V2` from a future `fromDay`. Validation
-  must not depend on `Math.hypot` rounding. Brief: `docs/design/K46.md`.
+  must not depend on `Math.hypot` rounding. A DAILY_V2 built on codec v4
+  gets trailLength 10 unless it overrides it; the memory-trail days were
+  designed around 5 (K73). Brief: `docs/design/K46.md`.
 
-- **K77** · Plucks show sharp, wedge-like depressions where the
-  vibration is strongest, maybe more on curves (Levi): a thinning should
-  read smooth and rounded. Launch when an agent slot frees (four running
-  at 22:35). Brief: `docs/design/K77.md`. Check whether tonight's bigger
-  amplitude floor (44885f3) exposed it.
 - **K81** · The traveled highlight at junctions: a smooth gold arc from
   the arrival arm to the departure arm instead of the angular blend's
-  flat nub (Levi's screenshot in `.claude/probes/K81/`). After K75 (same
-  paint code), ideally its agent resumed. Brief: `docs/design/K81.md`.
+  flat nub (Levi's screenshot in `.claude/probes/K81/`). K75 is merged
+  (same paint code): pulses now brighten the thread's own paint, and
+  `PulseArm.onPath` is gone. Brief: `docs/design/K81.md`.
 - **K79** · Backgrounds: an animation speed slider (0 = static, vellum
   animated too), general and per-effect params, configurable colors, and
-  an in-app Motion setting (follow system / full / reduced). Launch after
-  K77. Brief: `docs/design/K79.md`.
+  an in-app Motion setting (follow system / full / reduced). New params
+  append to codec v4 (K73). Launch after K77. Brief: `docs/design/K79.md`.
 - **K90** · A physical minimum bend radius (Levi, 2026-10-13: "ideally
   we'd have a more physics-based constraint to prevent loops from
   becoming too tight in the first place"). A thread should never fold
@@ -272,6 +286,11 @@ K5-K7 (split, frame loop, worker) follow.
   - G2 about 44 with flow on or off (K4);
   - G2 with the fan fix, on K63 (merged): 59.5 with flow, 60.3 flow off
     (master 59.5 / 59.3).
+  - K75 + K73 (ce331bc) vs 182b2cf, 2026-10-13: 58.3-60.5 vs 58.3-60.5
+    with flow, 60.3 vs 60.3 flow off, 59.3 vs 60.3 with `pv=trail`; both
+    sleep at sim 5.0 s (wall 9-20 s is load noise)
+    (`bench_2026-10-13_K75K73*.txt`). The bench now records a sample
+    from a hidden tab (screen timed out) as null instead of crashing.
 
   Rerun after every stage: `scripts/preview.ps1` builds per ref,
   `scripts/phone.ps1 -Ports ...`, then `.claude/probes/K10/phone_bench.mjs`.
@@ -394,6 +413,9 @@ K5-K7 (split, frame loop, worker) follow.
   Graphics after a few moves (`?b.c&pv=string`, 6 moves; hiding that
   Graphics removes it). G2.3 does not show it, but it was never
   attributed; look again if it comes back (G2 doc section 7, Follow-ups).
+- **K95** · Below about 340 px wide, the mode badge drops below the
+  hamburger and covers the header of an open panel (K73; the fit levels
+  are measured in `.claude/rules/gameplay.md`, MODE BADGE).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -446,6 +468,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   - Move the preferences into their own panel section.
   - Re-evaluate each param's worth and grouping, and audit names and
     tooltips.
+  - Place K73's two viewer preferences, `finishIndicator` and
+    `tapToPan` (localStorage, panel checkboxes).
 
   It meets K57 (the daily's exempt keys are mostly preferences) and
   feeds K78's param reference.
@@ -489,11 +513,28 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K72** · Twist-eye openness as a user param instead of a constant
   (MIN_PASS_SEPARATION is the main compactness lever; P3.17,
   `docs/history.md`).
+- **K96** · The follow camera takes about 7 s to reach the head while the
+  knot settles: its spring advances at most 0.05 s per frame, so at a low
+  frame rate it runs in slow motion (predates K73; seen in its probes).
+  Advance it by real elapsed time in substeps instead.
+- **K97** · Promote K49's `kinkCensusPage` (`.claude/probes/K49/lib.mjs`,
+  an in-page port of K41's kink census, within 0.009 of the node
+  harness) to tracked `scripts/` for same-state browser A/Bs of eye size.
 
 ## Done
 
 (items move here with the commit that resolved them)
 
+- **K73** · Levi's UI batch: pathViz labels read fullPath / recentPath
+  (f917282); codec v4, recentPath lights twice as far, trailLength
+  5 -> 10, dailies keep 5 (a99967e); the mode badge, "Free play" off the
+  daily and "Replay · not scored" (0772f63); off-screen indicators, the
+  finish points the way (ce331bc). Done 2026-10-13; follow-ups K92, K94,
+  K95, K96.
+- **K75** · recentPath's yellow pulse banding: pulses now brighten the
+  thread's own paint (8b1ae7c); `pulseReach` ends the junction's pulse
+  trains a set distance out, default 3 (59cba84). Done 2026-10-13; phone
+  gate in K10; follow-up K93.
 - **K67** · G2's visible changes (`docs/design/G2_shader_paint.md` 3.8,
   plus the fan fix's one-strip-step edge ramps): signed off by Levi on
   2026-10-13. No change needed.
