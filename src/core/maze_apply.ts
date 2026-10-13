@@ -26,6 +26,7 @@
 import type { TangleGraph } from "./types";
 import { NODE_TYPE } from "./types";
 import type { MazePlan, MazeCut, MazeCutTrim } from "./maze_plan";
+import { hypot2 } from "../util/det_math";
 
 // Returns the render HUE GROUP per strand (index into the original strand
 // list): bridges inherit their host strand's hue so a splice reads as
@@ -186,7 +187,7 @@ export function escapePath(
     for (let i = 0; i + 1 < lp.length; i++) {
       const [ax, ay] = lp[i];
       const [bx, by] = lp[i + 1];
-      const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) * ESC_RES * 2));
+      const n = Math.max(1, Math.ceil(hypot2(bx - ax, by - ay) * ESC_RES * 2));
       for (let k = 0; k <= n; k++) {
         dist[toPx(ax + ((bx - ax) * k) / n, ay + ((by - ay) * k) / n)] = 0;
       }
@@ -265,7 +266,7 @@ export function escapePath(
     const i = pop();
     const x = i % W;
     const y = (i - x) / W;
-    const fromStart = Math.hypot(x - sx, y - sy) / ESC_RES;
+    const fromStart = hypot2(x - sx, y - sy) / ESC_RES;
     if (fromStart >= CUT_REACH && clr(i) >= clear) {
       goal = i;
       break;
@@ -278,7 +279,7 @@ export function escapePath(
         const ny = y + oy;
         if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
         const j = ny * W + nx;
-        const near = Math.hypot(nx - sx, ny - sy) / ESC_RES <= TAIL_START;
+        const near = hypot2(nx - sx, ny - sy) / ESC_RES <= TAIL_START;
         if (!near && clr(j) < pass) continue;
         const len = ox !== 0 && oy !== 0 ? Math.SQRT2 : 1;
         const along = (ox * dir[0] + oy * dir[1]) / len;
@@ -306,7 +307,7 @@ export function escapePath(
   for (let k = 0; k < px.length; k++) {
     const q = px[k];
     const isEnd = k === px.length - 1;
-    if (isEnd || Math.hypot(q[0] - last[0], q[1] - last[1]) >= 1) {
+    if (isEnd || hypot2(q[0] - last[0], q[1] - last[1]) >= 1) {
       out.push(q);
       last = q;
     }

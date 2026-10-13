@@ -1,5 +1,6 @@
 import type { ParamField, ParamFieldConfig } from "./types";
 import { createNoise2D } from "simplex-noise";
+import { SeededRNG } from "../util/random";
 
 export class ConstantField implements ParamField {
   config: ParamFieldConfig;
@@ -27,13 +28,11 @@ export class SimplexField implements ParamField {
     this.scale = scale;
     this.octaves = octaves;
 
-    // Seeded random generator for simplex initialization.
-    const seededRandom = () => {
-      let x = Math.sin(seed++) * 10000;
-      return x - Math.floor(x);
-    };
-
-    this.noise2D = createNoise2D(seededRandom);
+    // Seeded random generator for simplex initialization: mulberry32, whose
+    // integer ops give the same table in every engine (the old Math.sin hash
+    // did not; K108).
+    const rng = new SeededRNG(seed);
+    this.noise2D = createNoise2D(() => rng.next());
     this.config = {
       type: "simplex",
       simplexScale: scale,

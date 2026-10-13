@@ -25,6 +25,7 @@
 
 import type { WalkGraph } from "./walk_graph";
 import { SeededRNG } from "../util/random";
+import { hypot2 } from "../util/det_math";
 
 // How the reveal travels (the appearSequence param; ui/url_state's
 // appearMode presets pick it together with the effect and speed).
@@ -321,7 +322,7 @@ export function buildRevealPlan(
       const [vx, vy] = pointAt(v.chain, v.ctrl);
       for (let c = 0; c < g.len; c += 2) {
         const [x, y] = pointAt(chain, c);
-        const d = Math.hypot(x - vx, y - vy);
+        const d = hypot2(x - vx, y - vy);
         if (d < bestD) {
           bestD = d;
           bestT = T.get(v.id)! + d / FLOOD_SPEED;
