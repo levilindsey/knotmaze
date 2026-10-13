@@ -102,6 +102,12 @@ const FOLLOW_SPAN = 13;
 const FOLLOW_DELAY = 1.2;
 const FOLLOW_RAMP = 1.0;
 const FOLLOW_W = 2.4;
+// K96: the camera steps by REAL elapsed time (the ticker's deltaMS is
+// capped at 100 ms), the spring in substeps of at most CAM_STEP so it stays
+// stable, so a low frame rate no longer means a slow-motion camera. A
+// stall longer than CAM_MAX_DT (a hidden tab) counts as that long.
+const CAM_STEP = 0.05;
+const CAM_MAX_DT = 1;
 
 // Appearance pre-sim: with any non-instant appear mode the sim settles
 // briefly BEFORE the first rendered frame, so the reveal plays over a
@@ -702,7 +708,8 @@ async function main(): Promise<void> {
     const ease = r * r * (3 - 2 * r);
     if (ease > 0) {
       const w = FOLLOW_W * ease;
-      const h = Math.min(dt, 0.05);
+      const n = Math.max(1, Math.ceil(dt / CAM_STEP));
+      const h = dt / n;
       // Critically damped spring per axis (zoom in log space).
       const step = (
         x: number,
@@ -712,11 +719,14 @@ async function main(): Promise<void> {
         const v2 = v + (w * w * (target - x) - 2 * w * v) * h;
         return [x + v2 * h, v2];
       };
-      const [ls, vl] = step(Math.log(cam.s), cam.vl, Math.log(ts));
+      let ls = Math.log(cam.s);
+      const lts = Math.log(ts);
+      for (let i = 0; i < n; i++) {
+        [ls, cam.vl] = step(ls, cam.vl, lts);
+        [cam.cx, cam.vx] = step(cam.cx, cam.vx, tx);
+        [cam.cy, cam.vy] = step(cam.cy, cam.vy, ty);
+      }
       cam.s = Math.exp(ls);
-      cam.vl = vl;
-      [cam.cx, cam.vx] = step(cam.cx, cam.vx, tx);
-      [cam.cy, cam.vy] = step(cam.cy, cam.vy, ty);
     }
     applyCam();
   };
@@ -2731,7 +2741,7 @@ async function main(): Promise<void> {
       renderer!.tickPaint(ticker.deltaMS / 1000);
       // After the paint pass: fabric pluck colors read this frame's paint.
       renderer!.tickPlucks(ticker.deltaMS / 1000);
-      updateCamera(ticker.deltaMS / 1000);
+      updateCamera(Math.min(ticker.elapsedMS / 1000, CAM_MAX_DT));
       // After the camera step: the indicators read this frame's framing.
       indicators.update();
     };
