@@ -17,6 +17,11 @@
 // `rect` returns a null mask: the grower takes its original code path with
 // identical RNG consumption (byte-identity guarded by test/core/shapes.test
 // and the physics golden snapshot).
+//
+// The masks decide the maze, so they use exact operations only (util/
+// det_math, K108): no trig, no `**`, Math.hypot only through hypot2.
+
+import { hypot2 } from "../util/det_math";
 
 export const SHAPES = [
   "rect",
@@ -53,13 +58,22 @@ export const ANCHOR_DIRS: Record<AnchorId, [number, number]> = {
 // component with a recognizable silhouette at 12+.
 type ShapeFn = (x: number, y: number) => boolean;
 
+// The star's mirror lines, from sqrt alone (correctly rounded by the spec).
+const STAR_S5 = Math.sqrt(5);
+const STAR_C36 = (1 + STAR_S5) / 4; // cos 36
+const STAR_S36 = Math.sqrt(10 - 2 * STAR_S5) / 4; // sin 36
+const STAR_C72 = (STAR_S5 - 1) / 4; // cos 72
+const STAR_S72 = Math.sqrt(10 + 2 * STAR_S5) / 4; // sin 72
+
 const SHAPE_FNS: Record<Exclude<ShapeId, "rect">, ShapeFn> = {
   heart: (x, y) => {
     // Valentine heart: two lobe circles + a point triangle, minus an
     // explicit notch wedge (the classic implicit heart curve's notch is
     // sub-cell at playable grid sizes and never renders).
     const ax = Math.abs(x);
-    const inLobe = (ax - 0.42) ** 2 + (y - 0.38) ** 2 <= 0.52 ** 2;
+    const lx = ax - 0.42;
+    const ly = y - 0.38;
+    const inLobe = lx * lx + ly * ly <= 0.52 * 0.52;
     const inTri =
       y <= 0.28 && y >= -0.98 && ax <= 0.92 * (1 - (0.28 - y) / 1.26);
     const inNotch = y >= 0.18 && ax <= 0.26 * ((y - 0.18) / 0.82);
@@ -73,17 +87,30 @@ const SHAPE_FNS: Record<Exclude<ShapeId, "rect">, ShapeFn> = {
     // 2-cell-wide tubes at playable grid sizes, whose hairpin-only thread
     // ladders kept tearing at the maze cuts (sleep census, 2026-10-10).
     // The slight downward shift keeps the two leg points on the lattice.
-    const Y = y + 0.06;
-    const r = Math.hypot(x, Y);
-    if (r < 1e-9) return true;
-    const seg = Math.PI / 5;
-    let a = Math.abs(Math.atan2(x, Y)) % (2 * seg);
-    if (a > seg) a = 2 * seg - a;
-    const qx = 0.57 * Math.sin(seg);
-    const qy = 0.57 * Math.cos(seg);
-    const sx = r * Math.sin(a);
-    const sy = r * Math.cos(a);
-    return qx * (sy - 1.0) - (qy - 1.0) * sx <= 0;
+    // The fold is done by REFLECTIONS with sqrt-only constants (K108), not
+    // atan2/sin/cos: the same mask as the trig version at every size 2..400
+    // (closest cell center 2.9e-8 from the boundary; 7.8e-6 at sizes
+    // 2..64), exact in every engine.
+    let px = Math.abs(x);
+    let py = y + 0.06;
+    // Rotate back by 72 degrees while past the 72-degree ray, mirroring x.
+    for (let k = 0; k < 2; k++) {
+      if (STAR_S72 * py - STAR_C72 * px < 0) {
+        const nx = px * STAR_C72 - py * STAR_S72;
+        py = py * STAR_C72 + px * STAR_S72;
+        px = Math.abs(nx);
+      }
+    }
+    // Past the 36-degree ray (through an inner vertex): reflect across it.
+    if (STAR_S36 * py - STAR_C36 * px < 0) {
+      const d = 2 * (px * STAR_S36 + py * STAR_C36);
+      px = d * STAR_S36 - px;
+      py = d * STAR_C36 - py;
+    }
+    // Outer tip (0, 1) to inner vertex 0.57 * (sin 36, cos 36).
+    const qx = 0.57 * STAR_S36;
+    const qy = 0.57 * STAR_C36;
+    return qx * (py - 1.0) - (qy - 1.0) * px <= 0;
   },
   fish: (x, y) => {
     // Body ellipse (nose left, bluntly truncated) + tail triangle fanning
@@ -119,13 +146,11 @@ const SHAPE_FNS: Record<Exclude<ShapeId, "rect">, ShapeFn> = {
   },
   ring: (x, y) => {
     // Annulus: the interior hole proves hole support end to end.
-    const r = Math.hypot(x, y);
+    const r = hypot2(x, y);
     return r >= 0.52 && r <= 0.98;
   },
   circle: (x, y) => {
-    // A plain disc, the ring's outer edge. Squared distances, not
-    // Math.hypot: the mask decides the maze, and hypot's last-bit rounding
-    // may differ between JS engines.
+    // A plain disc, the ring's outer edge (squared distances).
     return x * x + y * y <= 0.98 * 0.98;
   },
 };
@@ -339,7 +364,7 @@ export function planAnchors(
     if (mask === null) return p;
     const dx = cx0 - p[0];
     const dy = cy0 - p[1];
-    const d = Math.hypot(dx, dy);
+    const d = hypot2(dx, dy);
     if (d < 1e-9) return p;
     const ux = dx / d;
     const uy = dy / d;

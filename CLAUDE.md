@@ -91,13 +91,17 @@ src/
     offscreen_indicators.ts # K73: edge indicators for off-screen targets
   util/
     random.ts             # Seeded RNG
+    det_math.ts           # K108: engine-exact math for generation (hypot2)
   build_info.ts           # Build identity (git SHA, build time; vite defines)
   main.ts                 # Entry point
 test/
   core/
     lattice_grower.test.ts, maze_plan.test.ts, maze_apply.test.ts,
     walk_graph.test.ts, shapes.test.ts, section_colors.test.ts,
-    reveal_plan.test.ts
+    reveal_plan.test.ts, maze_plan_identity.test.ts (K87 pin),
+    deterministic_math.test.ts (K108: no engine-rounded math)
+  util/
+    det_math.test.ts (hypot2 = V8's bits, frozen)
   geometry/
     spline_generator.test.ts
   physics/

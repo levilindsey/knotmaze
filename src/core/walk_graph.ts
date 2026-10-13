@@ -19,11 +19,13 @@
 //
 // Lengths are LATTICE arc lengths (sum of the covered graph edges' polyline
 // lengths): deterministic from (seed, params) per URL-as-complete-state, so
-// the optimal-path metric never drifts as the live fabric relaxes.
+// the optimal-path metric never drifts as the live fabric relaxes - and the
+// same in every browser (hypot2, K108).
 
 import type { TangleGraph } from "./types";
 import { NODE_TYPE } from "./types";
 import { ENTRANCE_END_IDS, EXIT_END_IDS } from "./maze_apply";
+import { hypot2 } from "../util/det_math";
 
 export interface WalkEdge {
   id: number; // Index into WalkGraph.edges.
@@ -110,10 +112,7 @@ export function buildWalkGraph(graph: TangleGraph): WalkGraph | null {
       const pts = graph.edges.get(eid)!.latticePoints;
       let len = 0;
       for (let m = 1; m < pts.length; m++) {
-        len += Math.hypot(
-          pts[m][0] - pts[m - 1][0],
-          pts[m][1] - pts[m - 1][1]
-        );
+        len += hypot2(pts[m][0] - pts[m - 1][0], pts[m][1] - pts[m - 1][1]);
       }
       cum[k + 1] = cum[k] + len;
     });

@@ -33,6 +33,7 @@
 
 import type { TangleGraph } from "./types";
 import { NODE_TYPE } from "./types";
+import { hypot2 } from "../util/det_math";
 
 // A place where a strand is carved open (a loose end runs off-screen here).
 export interface MazeCut {
@@ -191,7 +192,7 @@ function buildEdgeInfos(graph: TangleGraph): EdgeInfo[] {
       const p1 = e.latticePoints[e.latticePoints.length - 1];
       const dx = p1[0] - p0[0];
       const dy = p1[1] - p0[1];
-      const len = Math.hypot(dx, dy) || 1;
+      const len = hypot2(dx, dy) || 1;
       infos.push({
         id: eid,
         strand: si,
@@ -310,7 +311,7 @@ function findSpliceCandidates(
           }
           const gx = b.mx - a.mx;
           const gy = b.my - a.my;
-          const glen = Math.hypot(gx, gy);
+          const glen = hypot2(gx, gy);
           if (glen < SPLICE_MIN_LEN || glen > SPLICE_MAX_LEN) continue;
           const ux = gx / glen;
           const uy = gy / glen;
@@ -451,7 +452,7 @@ export function outerFaceEdges(graph: TangleGraph): Set<string> {
     for (let i = 0; i + 1 < lp.length; i++) {
       const [ax, ay] = lp[i];
       const [bx, by] = lp[i + 1];
-      const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) * RES * 2));
+      const n = Math.max(1, Math.ceil(hypot2(bx - ax, by - ay) * RES * 2));
       for (let k = 0; k <= n; k++) {
         stamp(px(ax + ((bx - ax) * k) / n), py(ay + ((by - ay) * k) / n));
       }
@@ -494,7 +495,7 @@ export function outerFaceEdges(graph: TangleGraph): Set<string> {
     const m = Math.floor((lp.length - 1) / 2);
     const [ax, ay] = lp[m];
     const [bx, by] = lp[m + 1];
-    const len = Math.hypot(bx - ax, by - ay) || 1;
+    const len = hypot2(bx - ax, by - ay) || 1;
     const nx = -(by - ay) / len;
     const ny = (bx - ax) / len;
     const mx = (ax + bx) / 2;
@@ -544,7 +545,9 @@ function nearestEdgeToCornerIn(
       const edge = graph.edges.get(edgeId)!;
       let d = Infinity;
       for (const [x, y] of edge.latticePoints) {
-        const dd = (x - corner[0]) ** 2 + (y - corner[1]) ** 2;
+        const ex = x - corner[0];
+        const ey = y - corner[1];
+        const dd = ex * ex + ey * ey;
         if (dd < d) d = dd;
       }
       if (d < bestD || (d === bestD && best !== null && edgeId < best.edgeId)) {
@@ -572,8 +575,10 @@ function nearestEdgeToCornerIn(
 // still finds the FIRST available argmax in pool order, because every
 // `available` here is pure - the dead-end one also stores its trim on the
 // candidate it is asked about, and onPick reads that trim only for the
-// candidate that just passed. Math.hypot stays: the same distances give the
-// same minimum, so ties break as before. The rescan was ~88% of the plan,
+// candidate that just passed. Distances are V8's Math.hypot bits (hypot2,
+// K108): the same distances give the same minimum, so ties break as before -
+// some ties are between different (dx, dy) pairs at one true distance, where
+// the last bit decides. The rescan was ~88% of the plan,
 // paid on every rebuild and daily load: default knobs at gs 24 took 174 ms
 // (median; 1.4 s worst) and dense maps up to 15 s, now 7 ms, 30 ms, 104 ms.
 function pickFarthest<T>(
@@ -611,7 +616,7 @@ function pickFarthest<T>(
       let d = near[i];
       for (let k = 0; k < p.length; k += 2) {
         for (let m = seen; m < placed.length; m += 2) {
-          const dd = Math.hypot(p[k] - placed[m], p[k + 1] - placed[m + 1]);
+          const dd = hypot2(p[k] - placed[m], p[k + 1] - placed[m + 1]);
           if (dd < d) d = dd;
         }
       }
@@ -779,9 +784,9 @@ export function buildMazePlan(
   );
 
   const clearOf = (p: [number, number]): boolean =>
-    Math.hypot(p[0] - entrancePoint[0], p[1] - entrancePoint[1]) >=
+    hypot2(p[0] - entrancePoint[0], p[1] - entrancePoint[1]) >=
       params.entranceClearance &&
-    Math.hypot(p[0] - exitPoint[0], p[1] - exitPoint[1]) >=
+    hypot2(p[0] - exitPoint[0], p[1] - exitPoint[1]) >=
       params.exitClearance;
 
   const usedEdges = new Set<string>([entrance.edgeId, exit.edgeId]);

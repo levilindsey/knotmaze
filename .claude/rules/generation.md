@@ -31,7 +31,32 @@ CLAUDE.md: the threads ARE the maze paths.
   so 64·d² is an exact integer: `.claude/probes/K87/margin.ts` counts
   exact ties by it. Two thirds of farthest-first picks are exact ties,
   broken by pool order; some tie between different (dx, dy) pairs at
-  the same distance, where `Math.hypot`'s rounding decides (K108).
+  the same distance, where the last bit of the distance decides: V8's
+  `Math.hypot` bits, through `hypot2` since K108.
+- *K108 (2026-10-13), engine-exact generation:* everything that decides
+  the maze (`src/core/`, `src/util/`) uses only operations the spec makes
+  exact (+ - * /, `Math.sqrt`, abs/floor/min/max and the like) plus
+  `src/util/det_math.ts`. `Math.hypot`, trig, exp/log and `**` are
+  "implementation-approximated": Firefox's hypot (fdlibm) differs from
+  V8's in the last bit on 7074 of 20301 quarter-grid pairs, and that
+  built a different plan for 31 of the first 60 dailies (real Chrome 155
+  vs Firefox 153: 34 of 144 designs). Safari's JSC calls the platform's
+  `std::hypot`, a third rounding. `hypot2` is V8's algorithm from exact
+  ops, so Chrome-built mazes did not move (snapshot of 3355 plans, walks
+  and optimal lengths: 0 differ) and Firefox now matches Chrome (0 of
+  144). V8's bits are an ulp off the correctly rounded ones on those 7074
+  pairs; they stay because the shipped mazes use them. The star mask
+  folds by reflections with sqrt-only constants instead of
+  atan2/sin/cos (same cells at every size 2..400). Guards:
+  `test/core/deterministic_math.test.ts` (a comment-stripped source scan
+  for `Math.<approximated>` and `**`, plus whole builds with those
+  functions and `Math.random` rigged to throw) and
+  `test/util/det_math.test.ts` (hypot2's bits frozen on the quarter grid
+  and on random doubles). Probes in `.claude/probes/K108/`: `engines.mjs`
+  (real Chrome vs Firefox, esbuild bundle), `snapshot.ts`,
+  `star_margin.mjs`, `pin.ts`, `fdlibm_hypot.mjs`, `unsolvable.ts`.
+  Not held to the rule: Layer 2 and physics (they never change which
+  maze is built) and the codec's integer `2 **` powers.
 
 ## Shapes, anchors and escape tails
 
