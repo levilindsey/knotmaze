@@ -15,6 +15,25 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K74** · Maze design: seven decisions, in
+  `docs/design/K74_maze_design.md` "Decisions for Levi" (dad40f8;
+  conclusions first, diagrams in `docs/design/K74/`).
+  - The target band: proposed greedy walk >= 2.5x optimal, <= 15% of
+    dailies greedy-solvable within 1.5x (today 1.96x, 25%).
+  - The finish: an empty zone (`exitClearance` 12-16, no code), a trap
+    zone (corridor + taper, new code), or both.
+  - Ship `exitClearance 12` now: in DAILY_V2 only, or codec v4 too?
+  - H shapes: H1 fused arm cut, H3 `fourWayFraction` 0.9-1, H6 compound
+    move, or H6 now and H1 later (the free-tip cut breaks sleep).
+  - Dead ends: long-tail placement with a 20 u (or 30 u) reserve; on in
+    DAILY_V2, and at what density?
+  - The greedy-trap search: acceptable? At load or offline?
+  - K46's greedy band: 1.1x -> far-end 1.5x / heading 2x?
+
+  Probes `.claude/probes/K74/` (`out/scan_final.jsonl` holds the option
+  tables); worktree `.claude/worktrees/agent-aeaf1e61bcecaaf0b` kept.
+  Fisher's books, Abbott's essays and Buck's book-only chapters are
+  unverified (doc section 1).
 - **K76** · The thread-reveal mode's decisions: the stage 1 design is in
   `docs/design/K76_reveal_mode.md` (0474300). The contact sheet of eight
   end looks is `.claude/probes/K76/out/contact.html` (desktop and phone
@@ -30,7 +49,8 @@ and never reused.
 
   Stage 2 (doc section 7) follows K73, K75 and K81. It must build the
   mode as a separate shader variant: compiled in, it costs mode-off
-  frames 2.3 -> 2.8 ms on the desktop.
+  frames 2.3 -> 2.8 ms on the desktop (two of K74's CPU scans ran during
+  that measurement; re-time in stage 2).
   - owner: nobody since 2026-10-13 00:01 (stage 1 done; the agent of
     session d8031183 can resume while the worktree is kept).
   - branch: `worktree-agent-aea102de995e1ce30`
@@ -44,6 +64,14 @@ and never reused.
   (shipped) keeps the median eye at about 1.25 widths. 2.8 lifts the
   boxed tail (default-width X304 0.78 -> 0.84; every harness link at
   0.82 or more) but grows median eyes to about 1.43 widths. Keep 2.6?
+  A side-by-side sheet for this is in progress:
+  - owner: the K49 crops agent of session d8031183 (Sonnet), started
+    2026-10-13 00:21.
+  - branch: `worktree-agent-ac664e8a9e271757a`; last commit: 4fa22e2
+    (the 2.8 comparison build, never merged).
+  - evidence and output: `.claude/probes/K49/` (`sheet.png`,
+    `full_pair.png`, `notes.md`).
+  - env: `scripts/preview.ps1` on ports 5290 (2.6) and 5291 (2.8).
 - **K52** · Default background: K21 shipped `vellum` at intensity 0.5
   (static parchment grain plus vignette; the page stays navy on average),
   so every existing link and every daily shows it. Keep it, or default
@@ -89,25 +117,19 @@ and never reused.
   recentPath, recentPath reaching twice as far (trailLength 5 -> 10, a
   codec v4), corner badges for free play and daily replays, and an
   off-screen exit indicator.
+  Levi's additions: the exit indicator is a reusable off-screen system
+  (later the minotaur), shows the finish icon (unify with K83's glyph at
+  merge), shows over fog, and has two params (show for the finish; tap
+  pans to it).
   - owner: the K73 agent of session d8031183, started 2026-10-12 22:05.
   - branch: `worktree-agent-a8acc04204f0e3be8`
-    (`.claude/worktrees/agent-a8acc04204f0e3be8`), from 44885f3; last
-    commit: none yet.
-  - evidence: `.claude/probes/K73/`.
-  - next: implement the three changes, then screenshots at desktop and
-    phone sizes.
+    (`.claude/worktrees/agent-a8acc04204f0e3be8`), rebased on 0d735bf;
+    last commit: ba7a9b6 (labels, codec v4 and badges done; the
+    indicator registry WIP).
+  - evidence: `.claude/probes/K73/` (`probe_exit.mjs`).
+  - next: finish the indicator's tap-to-pan check, then screenshots at
+    desktop and phone sizes.
   - brief: `docs/design/K73.md`.
-- **K74** · Maze design research: what makes a maze good, measured
-  against ours (junctions near the exit, greedy walkers, dead-end
-  lengths), and a plan of formulation changes.
-  - owner: the K74 agent of session d8031183, started 2026-10-12 21:55.
-  - branch: `worktree-agent-aeaf1e61bcecaaf0b`
-    (`.claude/worktrees/agent-aeaf1e61bcecaaf0b`), from 670dbc1; last
-    commit: none yet.
-  - evidence: `.claude/probes/K74/`.
-  - next: research, the harness, a sweep of the existing knobs, then
-    prototypes.
-  - brief: `docs/design/K74.md`.
 - **K80** · Research and design: the minotaur mode (movement, chase
   quality, fairness, params) and a long list of other gameplay additions
   (locks and keys, one-way and collapsing runs, pickups, a sword,
@@ -115,21 +137,34 @@ and never reused.
   music-centric and rhythm mechanics. No code.
   - owner: the K80 agent of session d8031183, started 2026-10-12 22:50.
   - branch: `worktree-agent-a25726c24f262b138`
-    (`.claude/worktrees/agent-a25726c24f262b138`); last commit: none yet.
+    (`.claude/worktrees/agent-a25726c24f262b138`); last commit: db0abc8
+    (research notes so far, WIP).
   - evidence: `.claude/probes/K80/` (AI simulations, if any).
-  - next: research, then `docs/design/K80_gameplay_additions.md`.
+  - next: finish the research, then `docs/design/K80_gameplay_additions.md`.
   - brief: `docs/design/K80.md`.
 - **K75** · Yellow banding in recentPath's incoming pulses at the
   current junction (Levi), plus the pulse reach: the junction's pulse
   highlight extends only a set, slider-controlled distance, fading out.
   - owner: the K75 agent of session d8031183, started 2026-10-12 22:05.
   - branch: `worktree-agent-a40b9ac956a4eaa61`
-    (`.claude/worktrees/agent-a40b9ac956a4eaa61`), from 44885f3; last
-    commit: none yet.
+    (`.claude/worktrees/agent-a40b9ac956a4eaa61`), rebased on 0d735bf;
+    last commit: 5d76a99 (the banding fix d532e1a: pulses brighten the
+    thread's own paint; then `pulseReach`).
   - evidence: `.claude/probes/K75/`.
-  - next: reproduce on a frozen state, then attribute against pv=gold and
-    pre-G2.
+  - next: the GPU A/B per program, then the report; the coordinator
+    runs the phone gate (K10) before merging.
   - brief: `docs/design/K75.md`.
+- **K83** · Placeholder marker icons (Levi): the start, finish and
+  current position as black discs holding white stroked glyphs (play
+  triangle, flag, you-are-here), margin about one stroke width.
+  - owner: the K83 agent of session d8031183, started 2026-10-12 23:29.
+  - branch: `worktree-agent-a61edbbcfc17238a0`
+    (`.claude/worktrees/agent-a61edbbcfc17238a0`), rebased on 0d735bf;
+    last commit: 791b4ae (glyphs drawn per pixel, WIP).
+  - evidence: `.claude/probes/K83/` (`k83_shot.mjs`).
+  - next: the contact sheet (rest, mid-move, fog, cr 3, backgrounds) and
+    a same-state A/B showing only marker pixels change.
+  - brief: `docs/design/K83.md`.
 
 ## Next, in order
 
@@ -142,14 +177,16 @@ you've addressed all bits that you don't need my input on"). At most three
 code agents at once, research on top. Stop launching once the week
 passes about 45% (29% at 00:30).
 1. Merge the running five as they finish: K73, K75, K83 (code; K75 also
-   passes the phone gate), K74 and K80 (docs).
+   passes the phone gate), K74 (docs, merged in dad40f8) and K80 (docs).
 2. K77 (pluck wedges); K81 (the smooth arc, after K75); K79 (backgrounds,
    after K73's codec v4); K49's 2.6 vs 2.8 comparison crops (small).
-3. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
+3. K87 (the plan's pickFarthest cost, same mazes), then K86 (long dead
+   ends behind params that default to today's maze).
+4. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
    K42.
 
 Waiting for Levi (not started overnight):
-- decisions: K76 stage 2, K67, K52, K64, K49, K58, K78;
+- decisions: K74, K76 stage 2, K67, K52, K64, K49, K58, K78;
 - deletions: the G3-3 and G4-2 old paths;
 - after the churn: K46, K57, K84.
 
@@ -178,6 +215,20 @@ K5-K7 (split, frame loop, worker) follow.
   animated too), general and per-effect params, configurable colors, and
   an in-app Motion setting (follow system / full / reduced). Launch after
   K77. Brief: `docs/design/K79.md`.
+- **K86** · Long dead ends (Levi: "ensure longer dead end paths with no
+  junctions"): port K74's option F to `src/core/maze_plan.ts` (cut each
+  dead end where its free tail is longest, place dead ends before the
+  choice junctions, reserve a tail; prototype median tail 4.5 -> 22.8 u)
+  behind appended params (`deadEndPlacement`, `deadEndTail`) whose
+  defaults build today's maze: identity tests on the plan and the
+  dailies. Defaults and DAILY_V2 use wait on K74's decision 5. Brief:
+  `docs/design/K74_maze_design.md` sections 4 (option F) and 5; the
+  prototype is the hooked plan copy in `.claude/probes/K74/`.
+- **K87** · The maze plan takes about 250 ms, mostly in `pickFarthest`
+  (K74, inferred, not profiled). A running minimum distance per candidate
+  would make it nearly free: faster loads, K46's rerolls and K74's
+  greedy-trap search. Profile first; the result must be the same maze
+  for every seed (identity tests, the golden dailies).
 - **K78** · The Knotmaze handbook: algorithms, architecture, decisions
   and trade-offs, and a per-param reference with figures (the
   half-lattice units diagram first). Write it once the churn settles;
@@ -203,7 +254,9 @@ K5-K7 (split, frame loop, worker) follow.
 - **K9** · G4: smooth-union SDF junction webs (cuspRadius = blend
   radius); A/B crops at cr 1, 3, 6 before the fans are deleted. Also
   closes G1's x160 leftover: a faint tick where a wedge flank meets a
-  tucked bridge.
+  tucked bridge, and the merge-core hairline dashes at 4-way merges
+  (`.claude/rules/render-gaps.md`), which K74's H3 (`fourWayFraction`
+  0.9+) would multiply.
 - **K10** · Phone benchmark after every stage. Baseline (Pixel 11, Chrome
   154, 2026-10-11, default maze settled): 30 fps at rest with defaults,
   51 fps with `fw=0`. Flow at rest halves the frame rate today. Compare
@@ -247,6 +300,8 @@ K5-K7 (split, frame loop, worker) follow.
   nothing at the default `junctionSpacing` 2: the same maze for all 150
   seeds tested across 0.25-0.70. They look broken; rescale, relabel or
   hide them. `junctionSpacing` is the real density knob. (K46 finding.)
+  K74 refines it: `branchDensity` 0.2-0.6 and `fourWayFraction` 0.4-0.7
+  build the identical maze; 0.1, 0 and 0.8 or more change it.
 - **K13** · Post-violent-play loud attractor at fat params (the open P3
   problem; fingerprint in `.claude/rules/physics.md`).
 - **K14** · Latent seam-window wraps on open chains
@@ -401,6 +456,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   walk-graph fingerprint, and choice indices encode in a few bits per
   move. A link needs the design token, the taps, and per-move timing for
   a faithful replay. The share link stays as it is.
+- **K88** · Validate K74's difficulty measures (greedy walks, route
+  turns, decision counts) against real daily solves: moves, backtracks
+  and time. Only local results exist today. (K74 idea.)
+- **K89** · Fisher-style pacing: loops in series with mid-maze
+  bottlenecks, then a calm home stretch. Needs strand cuts and its own
+  prototype (`docs/design/K74_maze_design.md`). (K74 idea.)
 - **K82** · Manually override the daily maze for a given day (Levi,
   2026-10-12; "could be a follow-up thing"). It fits the pinned-daily
   model as a frozen per-day override table beside the versioned
