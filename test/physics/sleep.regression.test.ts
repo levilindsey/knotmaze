@@ -22,10 +22,11 @@
 //
 // The scene is built with main.ts's own calls and stepped in 0.1-s frames
 // (pixi caps a frame's dt at 0.1 s, and these links run at ~10 fps in
-// the browser); the gate is main.ts's quietNow + QUIET_FRAMES. Physics
+// the browser); the gate is main.ts's (physics/sleep_gate.ts). Physics
 // runs per fixed substep, so this reproduces the browser trajectory
-// exactly - the gate counts FRAMES, which is why the floor is sim 7.0
-// (2.5 s settle + 45 frames).
+// exactly. (Until K63 the gate counted 45 FRAMES, so at 0.1-s frames
+// every design slept at sim 7.0: 2.5 s settle + 4.5 s. It counts
+// simulated time now - the last test below.)
 import { describe, it, expect } from "vitest";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
@@ -35,6 +36,7 @@ import { ParticleSystem } from "../../src/physics/particle_system";
 import type { PhysicsTuning } from "../../src/physics/particle_system";
 import { applySegmentCollision } from "../../src/physics/forces";
 import type { SegmentTopology } from "../../src/physics/forces";
+import { SleepGate, physicsQuiet } from "../../src/physics/sleep_gate";
 import { parseParams } from "../../src/ui/url_state";
 
 const breathe = (): Promise<void> =>
@@ -84,27 +86,32 @@ function buildScene(query: string): {
   };
 }
 
-// Sim time at which main.ts's sleep gate trips, or Infinity by maxSim.
-async function simToSleep(query: string, maxSim: number): Promise<number> {
+// Sim time at which main.ts's sleep gate trips (frames of `dt` seconds),
+// or Infinity by maxSim.
+async function simToSleep(
+  query: string,
+  maxSim: number,
+  dt = 0.1
+): Promise<number> {
   const { ps, tuning } = buildScene(query);
-  let still = 0;
+  const gate = new SleepGate();
   let frames = 0;
   while (ps.simTime < maxSim) {
-    ps.step(0.1, tuning);
+    const sim0 = ps.simTime;
+    ps.step(dt, tuning);
     if (++frames % 20 === 0) await breathe();
-    const quiet =
-      ps.settleComplete && ps.maxMove < 1.5e-2 && ps.ridersPending === 0;
-    if (quiet) {
-      if (++still >= 45) return ps.simTime;
-    } else {
-      still = 0;
-    }
+    if (gate.frame(physicsQuiet(ps), ps.simTime - sim0)) return ps.simTime;
   }
   return Number.POSITIVE_INFINITY;
 }
 
+// Legacy links read the frozen v1 defaults, exactly as the browser does.
+const USER_RECT_LINK =
+  "?s=1471kin&gs=12&rep=1&bd=1&sm=.25&ga=0&tw=.64&gap=.12&cr=2.4&fl=0" +
+  "&fw=.25&fv=1.15&vol=.18&hs=312&pal=moss&pc=6c644c&as=2.1" +
+  "&am=instant&snd=none";
+
 describe("fresh-settle sleep (K41 links)", () => {
-  // Legacy links read the frozen v1 defaults, exactly as the browser does.
   it("the fat knot link sleeps", { timeout: 120000 }, async () => {
     const sim = await simToSleep(
       "?s=p9ar6&mf=0&rep=.4&bd=1.75&sm=.7&tw=.52&am=instant&snd=none",
@@ -114,13 +121,21 @@ describe("fresh-settle sleep (K41 links)", () => {
   });
 
   it("the user's rect fabric link sleeps", { timeout: 120000 }, async () => {
-    const sim = await simToSleep(
-      "?s=1471kin&gs=12&rep=1&bd=1&sm=.25&ga=0&tw=.64&gap=.12&cr=2.4&fl=0" +
-        "&fw=.25&fv=1.15&vol=.18&hs=312&pal=moss&pc=6c644c&as=2.1" +
-        "&am=instant&snd=none",
-      12
-    );
+    const sim = await simToSleep(USER_RECT_LINK, 12);
     expect(sim).toBeLessThan(12);
+  });
+});
+
+describe("frame-rate independent sleep (K63)", () => {
+  // The same trajectory at 10 fps (pixi's 0.1-s cap) and 60 fps must
+  // sleep at the same SIMULATED time, up to frame quantization (a loud
+  // substep spoils its whole frame, and the window ends on a frame
+  // boundary). The 45-frame gate slept this link at sim 7.3 vs 3.47.
+  it("sleeps at one sim time at 10 and 60 fps", { timeout: 120000 }, async () => {
+    const slow = await simToSleep(USER_RECT_LINK, 12, 0.1);
+    const fast = await simToSleep(USER_RECT_LINK, 12, 1 / 60);
+    expect(Number.isFinite(slow)).toBe(true);
+    expect(Math.abs(slow - fast)).toBeLessThan(0.25);
   });
 });
 
