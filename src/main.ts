@@ -9,6 +9,7 @@ import { buildWalkGraph } from "./core/walk_graph";
 import type { WalkGraph } from "./core/walk_graph";
 import { checkStructure, checkAlternation } from "./core/tangle_graph";
 import { ParticleSystem } from "./physics/particle_system";
+import { SleepGate, physicsQuiet } from "./physics/sleep_gate";
 import { RibbonRenderer } from "./render/ribbon_renderer";
 import { DebugRenderer } from "./render/debug_renderer";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
@@ -349,8 +350,10 @@ async function main(): Promise<void> {
   // (flow, pulses, traversal, the reveal, plucks) runs.
   type PhysState = "live" | "loading" | "settling" | "frozen";
   let physState: PhysState = "live";
+  // The sleep gate (physics/sleep_gate.ts, a SIM-TIME window since K63):
+  // shared by the live ticker, the visible settle and the hidden load.
+  const sleepGate = new SleepGate();
   let loadWall0 = 0;
-  let loadStill = 0;
   let loadMs = 0; // Last hidden load's wall time (diagnostics)...
   let loadStepMs = 0; // ...of which inside ps.step()...
   let loadSteps = 0; // ...over this many virtual frames...
@@ -711,7 +714,7 @@ async function main(): Promise<void> {
     if (!ps || !renderer) return;
     physState = "loading";
     loadWall0 = performance.now();
-    loadStill = 0;
+    sleepGate.reset();
     loadStepMs = 0;
     loadSteps = 0;
     loadFrames = 0;
@@ -732,6 +735,7 @@ async function main(): Promise<void> {
     loadFrames++;
     do {
       const s0 = performance.now();
+      const sim0 = ps.simTime;
       ps.step(1 / 60, tuning);
       loadStepMs += performance.now() - s0;
       loadSteps++;
@@ -744,13 +748,9 @@ async function main(): Promise<void> {
         console.error("KnotMaze: physics state went non-finite; simulation halted.");
         return;
       }
-      if (quietNow(true)) {
-        if (++loadStill >= QUIET_FRAMES) {
-          finishLoading();
-          return;
-        }
-      } else {
-        loadStill = 0;
+      if (sleepGate.frame(quietNow(true), ps.simTime - sim0)) {
+        finishLoading();
+        return;
       }
       if (
         ps.simTime > LOAD_SIM_CAP ||
@@ -776,7 +776,7 @@ async function main(): Promise<void> {
     fitToScreen();
     root.visible = true;
     loader.hide();
-    stillFrames = 0;
+    sleepGate.reset();
     if (params.physics) {
       physState = "live";
       asleep = false;
@@ -2288,18 +2288,9 @@ async function main(): Promise<void> {
   };
 
   // Quiescence: a motionless deterministic knot stays motionless without
-  // external input, so once displacement stays under threshold, skip both
-  // physics and rendering entirely until something wakes it.
-  // Sliding crossings leave a sub-pixel oscillation floor at rest, so the
-  // threshold sits above it; deliberate motion (temperature > 0, grabs) is
-  // guarded explicitly rather than by amplitude.
-  // Max per-component displacement per substep. (Briefly 2.2e-2 while the
-  // anti-riding floor held standing ~1.8e-2 corrections at shallow
-  // crossings; crossing coverage removed those - rest floor is ~2e-3
-  // again.)
-  const QUIET_EPS = 1.5e-2;
-  const QUIET_FRAMES = 45;
-  let stillFrames = 0;
+  // external input, so once the sleep gate trips (sleepGate, above: its
+  // quiet run spans QUIET_WINDOW simulated seconds), skip both physics and
+  // rendering entirely until something wakes it.
   let asleep = false;
   let flowParity = false;
   // Non-finite watchdog: if the physics state ever explodes to NaN/Inf,
@@ -2313,26 +2304,22 @@ async function main(): Promise<void> {
   // update() (a frozen physics-off scene: width / recolor changes).
   let renderDirty = false;
   const wake = (): void => {
-    stillFrames = 0;
+    sleepGate.reset();
     asleep = false;
     renderDirty = true;
   };
-  // The sleep gate's per-frame test (ignoreTemp: physics-off settles never
-  // agitate, so temperature cannot hold them awake).
+  // The sleep gate's per-frame test: physicsQuiet (settle complete, no
+  // grab, motion under QUIET_EPS, no standing rider) plus the temperature
+  // rule - agitation holds the knot awake (ignoreTemp: physics-off settles
+  // never agitate, so temperature cannot hold them awake).
   const quietNow = (ignoreTemp: boolean): boolean =>
     !!ps &&
-    ps.settleComplete &&
-    ps.grabbedParticle < 0 &&
-    (ignoreTemp || settings.temperature === 0) &&
-    ps.maxMove < QUIET_EPS &&
-    // Never freeze on an unrenderable overlap - a standing hard
-    // violation of the anti-riding floor keeps the sim awake (the work
-    // gate is actively resolving it).
-    ps.ridersPending === 0;
+    physicsQuiet(ps) &&
+    (ignoreTemp || settings.temperature === 0);
   const startSettling = (): void => {
     physState = "settling";
     settleWall0 = performance.now();
-    stillFrames = 0;
+    sleepGate.reset();
     asleep = false;
   };
   const freeze = (): void => {
@@ -2590,6 +2577,7 @@ async function main(): Promise<void> {
       return;
     }
     const t0 = performance.now();
+    const sim0 = ps.simTime;
     ps.step((ticker.deltaMS / 1000) * speedMult, physicsTuning());
     stepCount++;
     const t1 = performance.now();
@@ -2611,16 +2599,13 @@ async function main(): Promise<void> {
     fabricTick();
     const t2 = performance.now();
 
-    // The sleep gate. A physics-off settle freezes where live physics
-    // would fall asleep (or at its wall-clock cap).
+    // The sleep gate, fed this frame's SIMULATED time (frame-rate
+    // independent). A physics-off settle freezes where live physics would
+    // fall asleep (or at its wall-clock cap).
     const settling = physState === "settling";
-    if (quietNow(settling)) {
-      if (++stillFrames >= QUIET_FRAMES) {
-        asleep = true;
-        if (settling) freeze();
-      }
-    } else {
-      stillFrames = 0;
+    if (sleepGate.frame(quietNow(settling), ps.simTime - sim0)) {
+      asleep = true;
+      if (settling) freeze();
     }
     if (
       settling &&
