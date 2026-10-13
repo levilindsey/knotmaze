@@ -69,8 +69,7 @@ import {
   kCtrlOfArc,
   kFxAge,
   kFxColor,
-  kBurn,
-  kBurnAge,
+  kFxDoneWall,
   kFxSettleWall,
   kIgnition,
   kRevealMaskAt,
@@ -374,6 +373,9 @@ const FX_TAIL = PAINT_CONST.BURN_RECOVER_END + 0.15;
 // time (earlier it is cleared and skipped - the solve is update()'s main
 // cost, and early in a reveal most crossings are still hidden).
 const GATE_LEAD = 0.1;
+// Pass ctrl drift (ctrl units) under which a pending gate's show-time solve
+// is reused (ribbon_renderer gateCache).
+const GATE_CTRL_EPS = 0.1;
 // Wall seconds after ignition the rainbow width swell lasts (progress down
 // to RAINBOW_SWELL_MIN_P: the swell factor is exactly 1 below it).
 const RAINBOW_SWELL_END =
@@ -576,7 +578,9 @@ void main(void) {
   vec3 base = vSection;
   highp float pRain = 0.0;
   highp float aM = 1.0;
-  if (uKFx.w > 0.5) {
+  // (kFxColor's own early outs, hoisted to skip the ctrl refinement: no
+  // style, or this chain's FX all settled.)
+  if (uKFx.w > 0.5 && uKFx.x > 0.5 && uKFx.z < kc.fxDone) {
     highp float kctrl = kCtrlNear(kc, kpt.x, kpt.y);
     base = kFxColor(kc, kctrl, kpt.x / kc.arcPer, base, pRain, aM);
   }
@@ -941,6 +945,19 @@ export class RibbonRenderer {
   // must never fade back out (master latched its fade start the same way).
   private gateLatch = new Float64Array(0);
   private jointLatch = new Map<string, [number, number]>();
+  // Show-time CACHE for gates not yet open: an exact solve is reused while
+  // its inputs are unchanged (gateRev: the speed knots, the FX style, the
+  // reveal taper shape) and every point's ctrl stays
+  // within GATE_CTRL_EPS of the solved one (a show time moves by about
+  // 1/rate per ctrl - milliseconds per GATE_CTRL_EPS - while the solve was
+  // update()'s largest new cost: every pending crossing, every frame).
+  // Registered crossings: [tShow, overCtrl, underCtrl, gateRev] by index.
+  private gateRev = 0;
+  private gateCache = new Float64Array(0);
+  private jointCache = new Map<
+    string,
+    { rev: number; ctrls: Float64Array; out: [number, number] }
+  >();
   // Per-frame mirror views (no allocation in the hot loops): the data
   // texture mirrors and one KChain per chain, refreshed by update() (the
   // chain's arc table changes every update).
@@ -1727,6 +1744,12 @@ export class RibbonRenderer {
     }
     this.gateLatch.fill(Number.NaN);
     this.jointLatch.clear();
+    this.gateRev++;
+    if (this.gateCache.length !== 4 * this.ps.crossings.length) {
+      this.gateCache = new Float64Array(4 * this.ps.crossings.length);
+    }
+    this.gateCache.fill(Number.NaN);
+    this.jointCache.clear();
     U.uKInk[0] = plan.inkSpeed;
     U.uKInk[1] = anim.mode === "ink" ? 1 : 0;
     U.uKFx[1] = 0;
@@ -1745,10 +1768,17 @@ export class RibbonRenderer {
     let st: number = FX_STYLE[this.appearFx];
     if (!this.style.paletteMode) st = FX_STYLE.none;
     if (ink && (st === FX_STYLE.burn || st === FX_STYLE.roots)) st = FX_STYLE.none;
+    const was0 = U.uKFx[0];
+    const was1 = U.uKShape[0];
+    const was2 = U.uKShape[1];
     U.uKFx[0] = st;
     const [taperMul, tipFloor] = this.revealShape();
     U.uKShape[0] = REVEAL_TAPER_ARC * taperMul;
     U.uKShape[1] = tipFloor;
+    // Show-time inputs changed: cached gate solves lapse.
+    if (U.uKFx[0] !== was0 || U.uKShape[0] !== was1 || U.uKShape[1] !== was2) {
+      this.gateRev++;
+    }
     const rainbow = this.appearFx === "rainbow";
     U.uKShape[2] = rainbow ? RAINBOW_GLOW_ARC : REVEAL_GLOW_ARC;
     U.uKShape[3] = rainbow ? RAINBOW_GLOW_ARC * RAINBOW_GLOW_HOLD : 0;
@@ -1759,6 +1789,7 @@ export class RibbonRenderer {
   // a full table folds history that is long since cooled (every FX settles
   // within FX_TAIL of ignition) into the FLOOR knot (wall -1e4, inv 0).
   private addKnot(animT: number, wallT: number, inv: number): void {
+    this.gateRev++; // Every path below edits the table (gate caches lapse).
     const K = knotUniformValues().uKKnots;
     const last = (this.knotCount - 1) * 4;
     if (wallT - K[last + 1] < 1 / 30) {
@@ -1843,6 +1874,14 @@ export class RibbonRenderer {
     }
   }
 
+  // The wall time (reveal-relative) from which chain `chain`'s appearance
+  // FX are all the identity (KGEOM G0.z; paint_math kFxDoneWall): the
+  // shaders skip the FX evaluation there. 1e9 = never skip.
+  private chainFxDone(chain: number): number {
+    if (!this.fxLive) return 1e9;
+    return kFxDoneWall(knotUniformValues(), this.paintScene.revealSpan(chain)[1]);
+  }
+
   // The wall time (reveal-relative) a crossing pass may show its gap: its
   // reveal mask has reached REVEAL_CROSSING_MIN and its appearance FX have
   // settled (rainbow past its swell, dust/comet opaque). The GPU ramps the
@@ -1876,18 +1915,36 @@ export class RibbonRenderer {
     // Open joints keep their times (latched; nothing left to solve).
     const L = this.jointLatch.get(key);
     if (L !== undefined) return L;
-    for (const [chain, ctrl] of points) {
-      const c = this.kcv[chain] ?? kChain(D, chain);
-      const n = c.nCtrl;
-      const x = c.closed
-        ? ctrl - n * Math.floor(ctrl / n)
-        : Math.max(0, Math.min(n - 1, ctrl));
-      const g = kIgnition(D, U, c, x, this.ignTmp);
-      tOn = Math.max(tOn, kWall(U, kRevealTime(D, U, c, g, x, fallback)));
-      if (g.hit) tLast = Math.max(tLast, kWall(U, g.tA));
+    // A pending joint reuses its last solve while its points hold still
+    // (see gateCache).
+    const C = this.jointCache.get(key);
+    let fresh = C !== undefined && C.rev === this.gateRev && C.ctrls.length === points.length;
+    for (let i = 0; fresh && i < points.length; i++) {
+      if (Math.abs(points[i][1] - C!.ctrls[i]) >= GATE_CTRL_EPS) fresh = false;
     }
-    const out: [number, number] = [tOn, tLast];
-    if (U.uKFx[2] >= tOn) this.jointLatch.set(key, out);
+    let out: [number, number];
+    if (fresh) {
+      out = C!.out;
+    } else {
+      for (const [chain, ctrl] of points) {
+        const c = this.kcv[chain] ?? kChain(D, chain);
+        const n = c.nCtrl;
+        const x = c.closed
+          ? ctrl - n * Math.floor(ctrl / n)
+          : Math.max(0, Math.min(n - 1, ctrl));
+        const g = kIgnition(D, U, c, x, this.ignTmp);
+        tOn = Math.max(tOn, kWall(U, kRevealTime(D, U, c, g, x, fallback)));
+        if (g.hit) tLast = Math.max(tLast, kWall(U, g.tA));
+      }
+      out = [tOn, tLast];
+      const ctrls = C && C.ctrls.length === points.length ? C.ctrls : new Float64Array(points.length);
+      for (let i = 0; i < points.length; i++) ctrls[i] = points[i][1];
+      this.jointCache.set(key, { rev: this.gateRev, ctrls, out });
+    }
+    if (U.uKFx[2] >= out[0]) {
+      this.jointLatch.set(key, out);
+      this.jointCache.delete(key);
+    }
     return out;
   }
 
@@ -2315,7 +2372,8 @@ export class RibbonRenderer {
         samples.totalLength,
         samples.count,
         samples.closed,
-        samples.controlArcLengths
+        samples.controlArcLengths,
+        this.chainFxDone(i)
       );
       this.kcv[i] = kChain(this.kd, i, this.kcv[i]);
       if (this.style.paletteMode && !this.rgbCacheReady) {
@@ -2378,7 +2436,29 @@ export class RibbonRenderer {
         if (!Number.isNaN(L)) {
           tShow = L;
         } else {
-          tShow = this.crossingShowTime(crossing);
+          const co = this.renderCtrl(crossing.over);
+          const cu = this.renderCtrl(crossing.under);
+          const G = this.gateCache;
+          const o = 4 * c;
+          if (
+            o + 3 < G.length &&
+            G[o + 3] === this.gateRev &&
+            Math.abs(co - G[o + 1]) < GATE_CTRL_EPS &&
+            Math.abs(cu - G[o + 2]) < GATE_CTRL_EPS
+          ) {
+            tShow = G[o];
+          } else {
+            tShow = Math.max(
+              this.passShowTime(crossing.over.chain, co),
+              this.passShowTime(crossing.under.chain, cu)
+            );
+            if (o + 3 < G.length) {
+              G[o] = tShow;
+              G[o + 1] = co;
+              G[o + 2] = cu;
+              G[o + 3] = this.gateRev;
+            }
+          }
           if (fxNow >= tShow) this.gateLatch[c] = tShow;
         }
         // A gate opening well in the future skips its slot solve this frame
@@ -3104,6 +3184,13 @@ export class RibbonRenderer {
       // same fade-in (the show time travels with the slot, so a pooled,
       // unstably indexed slot needs no per-crossing clock).
       const tShow = this.crossingShowTime(em);
+      // A gate still well in the future skips the solve (as master skipped
+      // unrevealed emergent crossings - before the dedup, which reads the
+      // registered slots, and those are skipped while pending too).
+      if (fxNow < tShow - GATE_LEAD) {
+        if (tShow > this.gateOpenAt) this.gateOpenAt = tShow;
+        continue;
+      }
       this.ps.bindingPoint(em.over, this.sampleScratch, 0);
       const ex = this.sampleScratch[0];
       const ey = this.sampleScratch[1];
@@ -4479,14 +4566,12 @@ export class RibbonRenderer {
     const o0 = (base + k0) * 4;
     const o1 = (base + k1) * 4;
     for (let i = 0; i < 4; i++) out[i] = d[o0 + i] + (d[o1 + i] - d[o0 + i]) * fr;
-    if (!(total > 0 && count >= 2) || U.uKFx[3] < 0.5) return;
+    if (!(total > 0 && count >= 2) || U.uKFx[3] < 0.5 || U.uKFx[2] >= c.fxDone) {
+      return;
+    }
     const st = Math.round(U.uKFx[0]);
     if (st !== FX_STYLE.burn && st !== FX_STYLE.roots) return;
-    const ctrl = kCtrlOfArc(D, c, an);
-    const g = kIgnition(D, U, c, ctrl);
-    if (g.hit && U.uKFx[1] >= g.tA) {
-      kBurn(U, out, kBurnAge(D, U, c, g, ctrl), an / c.arcPer, st === FX_STYLE.roots);
-    }
+    kFxColor(D, U, c, kCtrlOfArc(D, c, an), an / c.arcPer, out, this.ignScratch);
   }
 
   // The composed junction-field color at (x, y) for the record at texel

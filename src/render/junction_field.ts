@@ -161,14 +161,14 @@ vec4 chainMaterial(int ch, float a) {
     fr = f - fl;
   }
   vec4 m = mix(pAt(base + k0), pAt(base + k1), fr);
-  if (uKFx.w > 0.5) {
+  if (uKFx.w > 0.5 && uKFx.z < c.fxDone) {
     int st = int(uKFx.x + 0.5);
     if (st == 4 || st == 5) {
-      highp float ctrl = kCtrlOfArc(c, an);
-      KIgn g = kIgnition(c, ctrl);
-      if (g.hit && uKFx.y >= g.tA) {
-        m.rgb = kBurn(m.rgb, kBurnAge(c, g, ctrl), an / c.arcPer, st == 5);
-      }
+      // Burn / roots tint the material (kFxColor's tint path: the joinery
+      // wears no stripes or transparency - its gate fades it instead).
+      highp float pR;
+      highp float al;
+      m.rgb = kFxColor(c, kCtrlOfArc(c, an), an / c.arcPer, m.rgb, pR, al);
     }
   }
   return m;

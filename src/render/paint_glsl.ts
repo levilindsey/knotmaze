@@ -69,6 +69,7 @@ struct KChain {
   int srcN;
   float total;
   float arcPer;
+  float fxDone;
 };
 
 KChain kChainOf(int ch, highp vec4 a, highp vec4 b, highp vec4 g) {
@@ -83,6 +84,7 @@ KChain kChainOf(int ch, highp vec4 a, highp vec4 b, highp vec4 g) {
   c.srcN = int(b.z + 0.5);
   c.total = g.x;
   c.arcPer = g.y;
+  c.fxDone = g.z;
   return c;
 }
 
@@ -278,8 +280,11 @@ KIgn kIgnition(KChain c, highp float ctrl) {
     return r;
   }
   if (I.y < -0.5) return r;
-  int s0 = int(I.y + 0.5);
+  // The slot's hint: its first touching source + (count - 1) / 8.
+  int s0 = int(I.y);
+  int cnt = int(fract(I.y) * 8.0 + 0.5) + 1;
   for (int k = 0; k < 4; k++) {
+    if (k >= cnt) break;
     int s = s0 + k;
     if (s >= c.src0 + c.srcN) break;
     highp vec4 A = kR(2 * s);
@@ -313,6 +318,14 @@ highp float kWall(highp float tA) {
 highp float kSmooth(highp float x) {
   highp float c = clamp(x, 0.0, 1.0);
   return c * c * (3.0 - 2.0 * c);
+}
+
+highp float kFxTail(int st) {
+  highp float t = st == 1 ? RAINBOW_HOLD + RAINBOW_FADE
+    : st == 2 ? COMET_FADE_IN
+    : st == 3 ? DUST_FADE_IN
+    : BURN_RECOVER_END;
+  return t + 0.02;
 }
 
 highp float kBurnAge(KChain c, KIgn g, highp float ctrl) {
@@ -415,7 +428,12 @@ vec3 kFxColor(KChain c, highp float ctrl, highp float kSample, vec3 rgb,
   pRain = 0.0;
   alpha = 1.0;
   int st = int(uKFx.x + 0.5);
-  if (uKFx.w < 0.5 || st == 0) return rgb;
+  if (uKFx.w < 0.5 || st == 0 || uKFx.z >= c.fxDone) return rgb;
+  // A SETTLED SLOT (CTRLIDX .w = its latest source finish): identity.
+  if (uKInk.y < 0.5) {
+    int sl = clamp(int(floor(ctrl)), 0, c.nCtrl - 1);
+    if (uKFx.z >= kWall(kS(c.idx + sl).w) + kFxTail(st)) return rgb;
+  }
   KIgn g = kIgnition(c, ctrl);
   if (!g.hit || uKFx.y < g.tA) {
     // Ahead of the front (the tip taper's leading edge): materializing

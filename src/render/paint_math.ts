@@ -11,7 +11,7 @@
 // Precision: the GPU evaluates in fp32 from the same fp32 texel values; the
 // mirror runs in f64. Censuses compare at <= 2/255.
 
-import { PAINT_CONST } from "./paint_const";
+import { FX_STYLE, PAINT_CONST } from "./paint_const";
 
 const SHIFT = PAINT_CONST.K_ROW_SHIFT;
 
@@ -29,8 +29,11 @@ export function texel(d: Float32Array, i: number, c: number): number {
 }
 
 // One chain's header (GLSL struct KChain): CHAINS texels C0 = (nCtrl,
-// closed, sampleCount, idxBase), C1 = (geomBase, srcFirst, srcCount, -),
-// and KGEOM G0 = (total, arcPer, -, -).
+// closed, sampleCount, idxBase), C1 = (geomBase, srcFirst, srcCount,
+// paintBase), and KGEOM G0 = (total, arcPer, fxDone, -). fxDone = the wall
+// time (reveal-relative) from which every appearance FX on the chain is
+// the identity - its last ignition plus the style's settle tail - so the
+// FX evaluation is skipped there with an identical result (1e9 = never).
 export interface KChain {
   ch: number;
   nCtrl: number;
@@ -42,6 +45,7 @@ export interface KChain {
   srcN: number;
   total: number;
   arcPer: number;
+  fxDone: number;
 }
 
 // GLSL twin: kChain. `out` (optional) is filled in place - hot CPU loops
@@ -61,6 +65,7 @@ export function kChain(D: KData, ch: number, out?: KChain): KChain {
   r.srcN = Math.round(s[o + 6]);
   r.total = D.geom[geom * 4];
   r.arcPer = D.geom[geom * 4 + 1];
+  r.fxDone = D.geom[geom * 4 + 2];
   return r;
 }
 
@@ -196,20 +201,21 @@ export function writeChainHeader(
   stat[o + 7] = L.paintBase;
 }
 
-// KGEOM: G0 = (total, arcPer) + the control arcs packed 4 per texel.
-// Returns the texel count written.
+// KGEOM: G0 = (total, arcPer, fxDone) + the control arcs packed 4 per
+// texel. Returns the texel count written.
 export function writeGeomTable(
   geom: Float32Array,
   base: number,
   total: number,
   count: number,
   closed: boolean,
-  cal: ArrayLike<number>
+  cal: ArrayLike<number>,
+  fxDone = 1e9
 ): number {
   const o = base * 4;
   geom[o] = total;
   geom[o + 1] = total / (closed ? count : Math.max(1, count - 1));
-  geom[o + 2] = 0;
+  geom[o + 2] = fxDone;
   geom[o + 3] = 0;
   const n = cal.length;
   const a = o + 4;
@@ -357,11 +363,14 @@ export function kIgnition(
     r.tA = a + (b - a) * (ctrl - sl);
     return r;
   }
+  // The slot's hint: its first touching source + (count - 1) / 8.
   const hint = D.stat[io + 1];
   if (hint < -0.5) return r;
-  const s0 = Math.round(hint);
+  const s0 = Math.floor(hint);
+  const cnt = Math.round((hint - s0) * 8) + 1;
   const R = D.reveal;
   for (let k = 0; k < SRC_SCAN; k++) {
+    if (k >= cnt) break;
     const s = s0 + k;
     if (s >= c.src0 + c.srcN) break;
     const A = 2 * s * 4;
@@ -638,6 +647,35 @@ export function kSwell(age: number): number {
   return 1 + C.RAINBOW_SWELL * x;
 }
 
+// GLSL twin: kFxTail - wall seconds after a point's ignition by which its
+// appearance FX is the identity (rainbow p = 0, materialize alpha = 1,
+// burn / roots recovered), plus a margin that keeps the shaders' f32
+// comparisons on the identity side.
+export function kFxTail(st: number): number {
+  const C = PAINT_CONST;
+  const t =
+    st === FX_STYLE.rainbow
+      ? C.RAINBOW_HOLD + C.RAINBOW_FADE
+      : st === FX_STYLE.comet
+        ? C.COMET_FADE_IN
+        : st === FX_STYLE.dust
+          ? C.DUST_FADE_IN
+          : C.BURN_RECOVER_END;
+  return t + 0.02;
+}
+
+// A chain's FX SETTLE time (KChain.fxDone, KGEOM G0.z): the wall time from
+// which every appearance FX on a chain whose sources all finish by anim
+// time tDone is the identity. Every point's FX age is at least fxNow -
+// kWall(tDone) (burn's hot head never outlives its source's finish), so
+// past the style's settle tail kFxColor changes nothing. 1e9 = never skip.
+// (The same bound per control slot: CTRLIDX .w, kFxColor.)
+export function kFxDoneWall(U: KUniforms, tDone: number): number {
+  const st = Math.round(U.uKFx[0]);
+  if (!Number.isFinite(tDone) || st === FX_STYLE.none) return 1e9;
+  return kWall(U, tDone) + kFxTail(st);
+}
+
 // GLSL twin: kFxColor - FX on a material color at a ribbon point (burn /
 // roots tint in place on rgb; rainbow progress and materialize alpha into
 // out). Points ahead of the front: materializing styles transparent.
@@ -653,7 +691,14 @@ export function kFxColor(
   out.pRain = 0;
   out.alpha = 1;
   const st = Math.round(U.uKFx[0]);
-  if (U.uKFx[3] < 0.5 || st === 0) return;
+  if (U.uKFx[3] < 0.5 || st === 0 || U.uKFx[2] >= c.fxDone) return;
+  // A SETTLED SLOT: every source the slot's points can ignite from has
+  // finished more than the style's tail ago (CTRLIDX .w = the latest such
+  // finish, interval mode) - the FX is the identity there.
+  if (U.uKInk[1] < 0.5) {
+    const sl = Math.max(0, Math.min(c.nCtrl - 1, Math.floor(ctrl)));
+    if (U.uKFx[2] >= kWall(U, D.stat[(c.idx + sl) * 4 + 3]) + kFxTail(st)) return;
+  }
   const g = kIgnition(D, U, c, ctrl);
   if (!g.hit || U.uKFx[1] < g.tA) {
     if (st === 2 || st === 3) out.alpha = 0;
@@ -705,28 +750,43 @@ export function layoutSources(per: KPiece[][]): {
 // Per control slot: the first piece (global index) touching [slot,
 // slot + 1], -1 = none. `overflow` counts slots touched by a piece beyond
 // the shader's scan window (hint .. hint + 3) - must stay 0.
+// Per control slot (CTRLIDX): the scan hint = the first source touching
+// the slot + (number to scan - 1) / 8 (-1 = none), and the slot's LATEST
+// FINISH (anim) over the sources kIgnition can pick there (1e9 = none: the
+// settled-slot skip never fires). "Touching" uses kIgnition's own 1e-4
+// range tolerance, so every source it can accept for a point of the slot
+// is inside the scan and inside the finish bound.
 export function sourceHints(
   pieces: KPiece[],
   first: number,
   nCtrl: number
-): { hints: Int32Array; overflow: number } {
-  const hints = new Int32Array(nCtrl).fill(-1);
+): { hints: Float64Array; tLate: Float64Array; overflow: number } {
+  const hints = new Float64Array(nCtrl).fill(-1);
+  const tLate = new Float64Array(nCtrl).fill(1e9);
   let overflow = 0;
   for (let s = 0; s < nCtrl; s++) {
     let h = -1;
     let last = -1;
     for (let i = 0; i < pieces.length; i++) {
       const p = pieces[i];
-      if (p.cHi < s - 1e-9 || p.cLo > s + 1 + 1e-9) continue;
+      if (p.cHi < s - 1e-4 || p.cLo > s + 1 + 1e-4) continue;
       if (h < 0) h = i;
       last = i;
     }
     if (h >= 0) {
-      hints[s] = first + h;
-      if (last - h >= 4) overflow++;
+      if (last - h >= SRC_SCAN) overflow++;
+      const end = Math.min(last, h + SRC_SCAN - 1);
+      hints[s] = first + h + (end - h) / 8;
+      let t = -Infinity;
+      for (let i = h; i <= end; i++) {
+        const p = pieces[i];
+        if (p.cHi < s - 1e-4 || p.cLo > s + 1 + 1e-4) continue;
+        t = Math.max(t, p.tEnd);
+      }
+      tLate[s] = t;
     }
   }
-  return { hints, overflow };
+  return { hints, tLate, overflow };
 }
 
 const RAINBOW_STRIPES = [

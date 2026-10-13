@@ -165,13 +165,15 @@ export class PaintScene {
     });
   }
 
-  // One chain's arc table for this frame (update(), right after sampling).
+  // One chain's arc table for this frame (update(), right after sampling),
+  // and its FX settle time (KGEOM G0.z; paint_math KChain.fxDone).
   writeGeom(
     chain: number,
     total: number,
     count: number,
     closed: boolean,
-    controlArcLengths: ArrayLike<number>
+    controlArcLengths: ArrayLike<number>,
+    fxDone = 1e9
   ): void {
     const ge = kGeom();
     const base = this.geomBase[chain];
@@ -181,7 +183,8 @@ export class PaintScene {
       total,
       count,
       closed,
-      controlArcLengths
+      controlArcLengths,
+      fxDone
     );
     ge.markDirty(base, base + n);
   }
@@ -234,7 +237,7 @@ export class PaintScene {
         const b = this.idxBase[c] * 4;
         for (let s = 0; s < this.chains[c].nCtrl; s++) {
           d[b + s * 4 + 1] = h.hints[s];
-          d[b + s * 4 + 3] = 0;
+          d[b + s * 4 + 3] = h.tLate[s]; // The settled-slot bound (kFxColor).
         }
       }
     } else {

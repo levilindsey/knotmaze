@@ -775,3 +775,50 @@ Verify:
   with no CPU work. Marker gaps keep their CPU reveal gate (they popped
   before and still do); emergent crossings now fade in like registered
   ones.
+- Reveal-time CPU work kept at master's level (each change measured):
+  a gate solves its slot only from GATE_LEAD (0.1 s) before its show time;
+  pending show times are CACHED per crossing / joint while their inputs
+  hold (gateRev: the speed knots, the FX style, the taper shape) and their
+  points move less than 0.1 ctrl; emergent crossings skip far-off gates;
+  the width mask exits in O(1) for chains wholly revealed or not started
+  (per-chain reveal spans); fans whose gate is far off are not emitted.
+  LORE: the first cache keyed only on the knots, and the first update()
+  after beginReveal can run before the FX style uniform is set - it froze
+  reveal-only show times, and rainbow gaps opened 0.58 s early (the
+  rainbow settle tail exactly). A cache must key on EVERY input of the
+  solve. Found by counting open gates against master over the reveal
+  (gate_count.mjs: first gate 2.06 s on master, 1.54 s in the bad build,
+  2.08 s fixed).
+- GPU fast paths, both EXACT (unit-tested: the skipped and the full
+  evaluation agree bit for bit, and the skipped result is the identity):
+  a per-chain FX settle time (KGEOM G0.z = kWall(last finish) + the
+  style's tail; the ribbon shader skips its ctrl refinement there, the
+  fans their ctrl search) and a per-slot one (CTRLIDX.w = the latest
+  finish of the sources the slot's points can ignite from, interval
+  modes). The source hint also carries its scan count ((count - 1) / 8 in
+  the fraction), so kIgnition stops after the slot's own sources.
+- Verified: vitest (burn colors vs applyBurnColors' block to 6 digits,
+  FX weights / fan alpha / swell to 12, width masks vs revealMaskFor <
+  2e-5, the two settle skips exact); GPU FX census, every appearSequence x
+  appearFx at t 1.5 and 4 (40 runs): max 0.0047 (1.2/255), none over
+  2/255; am=instant same-state A/B vs G2.0: 0 px (default, knot, ring,
+  user); crossing gates monotone with physics on (0 decreases); band
+  census (short non-dark runs inside char): none at either speed; frame-
+  rate independence (6x CPU throttle vs none, pinned at T 6): 0 px for
+  burn, rainbow, comet and dust (particles hidden - G2.4 scope).
+- Perf, desktop, 3200x1800 (dsf 2), b.c, physics off, 4 s of the reveal,
+  3 interleaved rounds, under the perf lock but WITH another agent's six
+  physics scans running (CPU ~32%; both builds equally loaded). ms per
+  call (mask: ms per frame), GPU = draw-phase ms per frame:
+
+  | trace + | build | update | tickPaint | rebuildFillets | mask | GPU mean |
+  |---|---|---|---|---|---|---|
+  | burn | master | 10.76 | 4.22 | 3.29 | 1.02 | 1.83 |
+  | burn | G2.1 | 10.50 | 3.95 | 3.50 | 0.53 | 2.47 |
+  | rainbow | master | 8.09 | 3.57 | 3.05 | 0.48 | 0.76 |
+  | rainbow | G2.1 | 8.12 | 3.46 | 3.08 | 0.67 | 0.89 |
+
+  The burn GPU cost (+0.64 ms) was +1.3 ms before the settle skips. Upload
+  bytes per frame fell 4211 -> 3800 KB (burn) / 3935 -> 3780 KB (rainbow):
+  the color ping-pong, aFx and the FX paint rows are gone; what remains is
+  geometry (G3's scope).
