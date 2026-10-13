@@ -887,11 +887,14 @@ export class RibbonRenderer {
   private stripK0 = new Float32Array(4);
   private stripK1 = new Float32Array(4);
   // Diagnostics (probes): the strip pass's counters and its render texture.
-  get stripStats(): { renders: number; rows: number; lines: number } {
+  get stripStats(): { renders: number; ms: number; rows: number; lines: number } {
     return STRIP_STATS;
   }
   get stripRT(): unknown {
     return stripTexture();
+  }
+  get stripTableData(): Float32Array {
+    return stripTable().data;
   }
   // Default section color (the gamut midpoint = the seed-hue base color).
   private baseRgb = new Float32Array(3);

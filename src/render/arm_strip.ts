@@ -99,7 +99,8 @@ const STATE = {
   // Dirty key of the last render: data-texture revisions + table revision.
   lastRevs: new Float64Array(5).fill(-1),
   lastU: new Float32Array(0),
-  stats: { renders: 0, rows: 0, lines: 0 },
+  // Probes: passes so far, their main-thread ms, the rows / lines drawn.
+  stats: { renders: 0, ms: 0, rows: 0, lines: 0 },
 };
 export const STRIP_STATS = STATE.stats;
 
@@ -325,6 +326,7 @@ function dirty(): boolean {
 export function renderStrips(renderer: Renderer): void {
   const rows = STATE.rows;
   if (rows <= 0) return;
+  const t0 = performance.now();
   const lines = Math.ceil(rows / STRIP_LINE);
   const rt = stripTexture();
   if (rt.height < lines) {
@@ -336,6 +338,7 @@ export function renderStrips(renderer: Renderer): void {
   (stripInfo().uniforms as unknown as { uStripInfo: Float32Array }).uStripInfo[0] = rows;
   renderer.render({ container: scene, target: rt, clear: false });
   STATE.stats.renders++;
+  STATE.stats.ms += performance.now() - t0;
   STATE.stats.rows = rows;
   STATE.stats.lines = lines;
 }
