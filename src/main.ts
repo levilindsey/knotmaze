@@ -3132,6 +3132,10 @@ async function main(): Promise<void> {
       },
     };
   };
+  // The fabric overlay itself (K83 probes: setMarkerStyle swaps the marker
+  // glyphs and size, markerStyle reads them).
+  (window as unknown as Record<string, unknown>).__knotFabricRenderer = () =>
+    fabric;
   // RENDER-ONLY PLUCK probes: fire a pluck on a chain at a ctrl (as a tap
   // there would, unless opts override), and read the live plucks + stats.
   (window as unknown as Record<string, unknown>).__knotPluck = (

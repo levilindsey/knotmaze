@@ -4372,27 +4372,15 @@ export class RibbonRenderer {
     this.sampleAt(samples, a, out, offset);
   }
 
-  // Section RGB at a chain CTRL (public: the fabric overlay colors its
-  // start/exit markers from the thread they sit on).
-  sectionColorAt(chain: number, ctrl: number, out: Float32Array): void {
-    const samples = this.chainSamples[chain];
-    if (!samples) {
-      out.set(this.baseRgb);
-      return;
-    }
-    const closed = this.ps.chainBreakAfter[chain] < 0;
-    this.colorAtArc(chain, this.paintArcAt(samples, ctrl, closed), out);
-  }
-
   // Section RGB at a world ARC along a chain into out[0..2] - the ribbon's
   // own color there (its vertex shader's section at the two bracketing
   // samples, lerped), so overlay geometry sampling through here matches the
   // adjacent ribbon exactly at a seam.
   private colorAtArc(chain: number, arc: number, out: Float32Array): void {
     this.sectionAtArc(chain, arc, out);
-    // Burn / roots wear on the CPU-drawn overlays too (markers, pluck
-    // colors): the shader's own FX function at the point, via the mirror -
-    // the start disc burns with its tail exactly as the ribbon does.
+    // Burn / roots wear on the CPU-drawn overlays too (pluck colors): the
+    // shader's own FX function at the point, via the mirror - a plucked
+    // stretch burns exactly as its ribbon does.
     if (!this.fxLive) return;
     const U = knotUniformValues();
     if (U.uKFx[0] !== FX_STYLE.burn && U.uKFx[0] !== FX_STYLE.roots) return;
