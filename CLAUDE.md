@@ -1099,10 +1099,13 @@ between-threads/cell-passage route.
   whose attempt began on or before their day. Share = a Wordle-style
   move grid + the `?daily=<n>` link, native sheet on coarse pointers.
   PROBES: `__knotDaily()`, `__knotPlayDaily(n)`, `__knotFabric()` choices'
-  `farDeadEnd` and `routeToDeadEnd(exclude)`; `.claude/probes/
-  probe_daily.mjs` (desktop | phone | nostorage | tz | urls | deadends).
-  Editing src/ under a running probe reloads its page mid-solve. Give an
-  agent's dev server a private vite cacheDir (`{...base, cacheDir}`):
+  `farDeadEnd` and `routeToDeadEnd(exclude)`; `.claude/probes/K19-K20/`
+  holds probe_daily.mjs (desktop | phone | nostorage | tz | urls |
+  deadends), run_probes.ps1, scan_dailies.ts (the day scan; `--golden`
+  prints the golden test's fingerprints) and the 2026-10-12 results.
+  Editing src/ under a running probe reloads its page mid-solve. Serve an
+  agent's dev server with a private vite cacheDir (that folder's
+  vite.private-cache.config.ts wraps the served checkout's config):
   worktrees share node_modules through junctions, and a plain `vite`
   re-optimized the shared `.vite` deps under other servers.
 
