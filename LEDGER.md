@@ -449,18 +449,16 @@ K5-K7 (split, frame loop, worker) follow.
 - **K95** · Below about 340 px wide, the mode badge drops below the
   hamburger and covers the header of an open panel (K73; the fit levels
   are measured in `.claude/rules/gameplay.md`, MODE BADGE).
-- **K101** · Music mode times its notes from `performance.now()` polled
-  in the render tick (`autoAudioTick`, `src/main.ts`), not the audio
-  clock, so onsets land up to one frame late (16 ms at 60 fps, about
-  100 ms during a gs-18 settle). Fix: a start time in the worklet plus a
-  look-ahead scheduler on the audio clock; any rhythm mode (K80 doc
-  section 3) needs it first.
 - **K103** · Below 10 fps the fit camera, the move animation and the paint
   clock still slow down. The fit camera eases by a fixed fraction per
   frame (0.08 / 0.15), and `tickAnim` and the paint read the ticker's
   `deltaMS`, which Pixi caps at 100 ms. K96 (d8b9175) moved only the
   follow camera onto real elapsed time. Making the fit easing time-based
-  would change its feel at the refresh rate it was tuned on.
+  would change its feel at the refresh rate it was tuned on. The pluck
+  overlay too (`tickPlucks(ticker.deltaMS / 1000)`): since K101
+  (e9e01ae) a music note's string motion waits lead + latency for its
+  scheduled sound, and below 10 fps it trails the sound by (frame /
+  100 ms - 1) x that delay, about 0.15 s at 150 ms frames.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -569,6 +567,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 (items move here with the commit that resolved them)
 
+- **K101** · Music mode timed its notes from `performance.now()` in the
+  render tick, so onsets landed up to a frame late and the tempo
+  stretched (1.8% at 60 fps, 13.4% with 150 ms frames). Notes are now
+  scheduled 0.3 s ahead on the audio clock and start sample-accurately
+  in the worklet; measured at 60 fps and 150 ms frames, the interval
+  error is at most 0.02 ms and the stretch is 0. Done in e9e01ae
+  (2026-10-13; `.claude/probes/K101/`). Residual in K103.
 - **K83** · Placeholder marker icons (Levi): black discs with white
   stroked glyphs for the start, finish and head; the finish's off-screen
   indicator wears the same glyph. Phone gate passed (K10, 2026-10-13).
