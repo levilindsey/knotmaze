@@ -49,8 +49,13 @@ src/
   render/
     ribbon_renderer.ts    # PixiJS ribbon meshes
     ribbon_mesh.ts        # Triangle strip extrusion
-    junction_field.ts     # GPU junction field: float data textures + shaders
+    junction_field.ts     # GPU junction field: records + fan shader
     gap_mask.ts           # Per-pixel crossing gaps: slot table + shader lib
+    paint_glsl.ts         # G2 shader paint: GLSL library (section, FX, paint)
+    paint_math.ts         # G2: its line-for-line CPU mirror (census reference)
+    paint_model.ts        # G2: data textures (KSTATIC/KGEOM/KREVEAL/KPAINT) + uniforms
+    paint_const.ts        # G2: shared numeric constants (emitted into GLSL)
+    float_rows.ts         # Row-partial RGBA32F data textures + uploader
     pluck_overlay.ts      # Render-only pluck: time-exposure strip + base collapse
     pluck_model.ts        # Pure plucked-string math (modes, envelope, lobes)
     background.ts         # K21 shader backdrop: low-res texture + blit, fog backdrop
@@ -87,6 +92,8 @@ test/
   render/
     pluck_model.test.ts  # String math vs a modal sum, coverage, lobes
     background_model.test.ts  # K21 drift clock (K24 hook), colors, order
+    paint_math / paint_fx / paint_section / paint_gameplay .test.ts  # G2
+      mirror vs frozen pre-G2 code (fixtures/), exact skips, parity
   ui/
     param_codec.test.ts (codec table pins + format + delta blobs),
     url_codec.test.ts (links, legacy forms), appear_mode.test.ts,
@@ -1211,6 +1218,33 @@ between-threads/cell-passage route.
   luma spread of a knot-free margin (about 9-13 levels at 0.5). Cost:
   +0.24-0.34 ms GPU per frame at 3200x1800 (the full-screen pass is most
   of it). Probes: `.claude/probes/K21/`.
+- SHADER PAINT (G2 of the GPU migration, K4; worktree agent, 2026-10-12;
+  design, deviations, every measurement: docs/design/G2_shader_paint.md
+  section 7). All per-sample and per-tick COLOR runs in the shaders from
+  page-lifetime RGBA32F data textures (KSTATIC chains / ctrl index / RUNS,
+  KGEOM arc tables per update(), KREVEAL sources, KPAINT paint records)
+  and one uniform group whose clocks are reduced on the CPU in float64.
+  paint_glsl.ts is the library, paint_math.ts its line-for-line CPU
+  mirror (the census reference), paint_const.ts the shared numbers.
+  G2.1 reveal + FX per pixel (closed-form ignition, wall ages through
+  speed knots, gate SHOW TIMES in the gap slot / joint J1 instead of fade
+  clocks); G2.2 section colors from a run table, evaluated per vertex
+  (no cache, no drift re-bake; junctionBlend + gamut are uniforms); G2.3
+  gameplay paint per pixel from the setPaint declaration (closed-form
+  composition - the accent strip is gone; the trail fade is linear, K4).
+  Censuses: GPU vs mirror <= 1.2/255 for FX (40 runs), section, paint and
+  fans (rest, mid-reveal, after moves). At rest the CPU paint work and its
+  uploads are gone (tickPaint 0.13 -> 0.01 ms, 151 -> 0 KB/frame). OPEN:
+  GPU +1.4 ms vs master at 3200x1800, nearly all in the FANS (0.57 -> 1.84
+  ms: per-pixel section Gouraud per arm + paint) - the planned fix is a
+  per-arm material strip pre-pass. LORE (details in the doc): a cache must
+  key on EVERY input of its solve (gateRev - a style uniform set after the
+  first update() froze reveal-only show times); an earliest-arrival choice
+  needs a precision-independent tie-break (GPU f32 ctrl flipped junction
+  fronts); per-arm field views (uKBase.z 3/4) + census_fan cracked both;
+  measure GPU per PROGRAM (gpu_by_program.mjs), not per frame, before
+  optimizing; take the perf lock (claude-config sessions.md) and re-run
+  numbers taken while other agents' scans ran.
 
 **Architecture audit (2026-10-10, agent-measured; full report was
 delivered in-session).** Verdict: the stack (typed-array CPU PBD +
@@ -1418,7 +1452,8 @@ junctions because it evaluated PHYSICS positions while the SAMPLES
 were the thing lying — a census must measure the same pipeline it
 certifies (the P3.24 probe rule again, render edition).
 
-RENDER LORE (hard-won, 2026-10-09): **the palette strip's ORDER is
+RENDER LORE (hard-won, 2026-10-09; the strip is RETIRED by G2.3 - paint is
+ per pixel now, nothing interpolates U): **the palette strip's ORDER was
 load-bearing.** Per-vertex UVs interpolate linearly between samples, so
 any two paint values that can sit on ADJACENT samples must be contiguous
 color families in the strip — the original [base, gold, hover, bandA…]

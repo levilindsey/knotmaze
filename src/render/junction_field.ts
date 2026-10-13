@@ -15,12 +15,13 @@
 //          (G2.1: reveal-relative wall times - shown once every arm is
 //          revealed, fading in as the latest-ignited arm's appearance FX
 //          settles; paint_glsl knotFanAlpha), then per arm a header pair
-//          (chain, sampleCount, closed, total) + (arc0, dir, domain, 0) and
+//          (chain, ctrlSlope, closed, total) + (arc0, dir, domain, jointCtrl)
+//          (G2.2: the slope and the joint ctrl seed its ctrl searches) and
 //          its RADIAL PROFILE, one texel per FIELD_PROF_DR radius step:
 //          (angle[g], arc[g], angle[g+1], arc[g+1]) - both ends of a lookup
 //          in one fetch. nArms 0 = an AXIS record (free dead-end tip, or the
 //          host-axis fallback): header, J1, (chain, count, closed, total) +
-//          (arc0, axisX, axisY, 0) - the thread's own material at the
+//          (arc0, axisX, axisY, ctrl0) - the thread's own material at the
 //          point's axis projection.
 // Burn / roots tint the arm material PER PIXEL here exactly as on the
 // ribbons (G2.1: the same reveal sources and clock - paint_glsl.ts).
