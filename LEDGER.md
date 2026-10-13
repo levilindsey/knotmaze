@@ -215,10 +215,10 @@ passes about 45% (37% at 02:45).
 2. K77 merged (eec4854). K81 (the smooth arc, running since 01:07) and
    K79 stage A (running since 02:50); K79 stage B after its merge.
    K49's comparison is done (Waiting on Levi).
-3. K87 (the plan's pickFarthest cost, same mazes; in the main session
-   from 02:50), K90 stage 1 (measure over-tight folds, prototype a bend
-   limit), then K86 (long dead ends behind params that default to
-   today's maze).
+3. K87 done (62dd16d). K108 (engine-independent plan distances, no
+   Chrome maze moves; main session), K90 stage 1 (measure over-tight
+   folds, prototype a bend limit), then K86 (long dead ends behind params
+   that default to today's maze).
 4. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
    K42.
 
@@ -268,12 +268,17 @@ K5-K7 (split, frame loop, worker) follow.
   dailies. Defaults and DAILY_V2 use wait on K74's decision 5. Brief:
   `docs/design/K74_maze_design.md` sections 4 (option F) and 5; the
   prototype is the hooked plan copy in `.claude/probes/K74/`.
-- **K87** · The maze plan takes about 250 ms, mostly in `pickFarthest`
-  (K74, inferred, not profiled). A running minimum distance per candidate
-  would make it nearly free: faster loads, K46's rerolls and K74's
-  greedy-trap search. Profile first; the result must be the same maze
-  for every seed (identity tests, the golden dailies). Brief:
-  `docs/design/K87.md`.
+- **K108** · The maze plan depends on the engine's `Math.hypot` rounding
+  (found by K87's margin probe, `.claude/probes/K87/margin.ts`). Two
+  thirds of farthest-first picks are exact ties broken by pool order; 1119
+  of 27467 tie between different (dx, dy) pairs at the same exact
+  distance, which hypot can round apart (V8 did in 165), in 39 of 40
+  dailies. hypot is implementation-approximated (V8 and JSC: a scaled
+  Kahan sum; SpiderMonkey: fdlibm - from memory, unverified), so Firefox
+  may build different dailies. Fix: a deterministic hypot with V8's
+  arithmetic bit for bit (no Chrome maze moves), or exact squared
+  distances (moves the dailies with ulp-decided picks). Also audit the
+  plan's other float decisions (shape masks, maze_apply).
 - **K78** · The Knotmaze handbook: algorithms, architecture, decisions
   and trade-offs, and a per-param reference with figures (the
   half-lattice units diagram first). Write it once the churn settles;
@@ -584,6 +589,15 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K87** · The maze plan's `pickFarthest` rescanned every candidate
+  against every placed point on every pick (~88% of the plan). It now
+  keeps a running minimum per candidate, pick-for-pick identical: 415 of
+  415 whole plans in `.claude/probes/K87/identity.ts`, and the CI pin
+  `test/core/maze_plan_identity.test.ts` against the frozen pre-K87
+  module. Plan build at gs 24 defaults 174 -> 6.9 ms median (1.4 s ->
+  30 ms worst), dense maps 1.7 s -> 25 ms (15.4 s -> 104 ms worst). Done
+  in 62dd16d (2026-10-13). Follow-up K108.
 
 - **K77** · Plucks showed sharp, wedge-like depressions (Levi): the base
   collapse met its limits (footprint ramps, tight bends, gap fades) in
