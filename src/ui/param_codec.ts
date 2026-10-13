@@ -256,15 +256,30 @@ export const CODEC_V3: CodecTable = Object.freeze({
   ]),
 });
 
+// V4 (2026-10-12, K73): trailLength defaults to 10 (Levi: "make
+// recentPath highlight about twice as far" - pathViz trail kept 5 lattice
+// units of recent path lit); an edited copy of V3, nothing else differs.
+// V3 links keep trailLength 5, and so do the dailies (DAILY_V1 pins codec
+// v3's defaults). New params since are APPENDED below.
+export const CODEC_V4: CodecTable = Object.freeze({
+  version: 4,
+  params: Object.freeze([
+    ...CODEC_V3.params.map((p) =>
+      p.name === "trailLength" ? num("trailLength", 10) : p
+    ),
+  ]),
+});
+
 // Every table ever published, oldest first (never edit or drop one).
 export const CODEC_TABLES: readonly CodecTable[] = Object.freeze([
   CODEC_V1,
   CODEC_V2,
   CODEC_V3,
+  CODEC_V4,
 ]);
 // The table new links are written with (typed wide: encodeToken still
 // compares it with 1, the version whose all-default links are bare seeds).
-export const CODEC_VERSION: number = 3;
+export const CODEC_VERSION: number = 4;
 
 export function codecTable(version: number): CodecTable | undefined {
   return CODEC_TABLES.find((t) => t.version === version);

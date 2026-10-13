@@ -5,7 +5,7 @@
 #   pwsh scripts/phone.ps1 -Wireless            # plugged in: switch to
 #                                               # Tailscale, then unplug
 #   pwsh scripts/phone.ps1 -Ports 5173,5174     # tunnel other ports too
-#   pwsh scripts/phone.ps1 -Url "http://localhost:5173/?k88dtb.c"
+#   pwsh scripts/phone.ps1 -Url "http://localhost:5173/?k88dtb.J"
 #
 # The phone then reaches each dev server as http://localhost:<port> (a
 # secure context, unlike a LAN or Tailscale address), and

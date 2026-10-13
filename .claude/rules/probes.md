@@ -25,8 +25,8 @@ PROBE LORE (2026-10-12, K56): **a bare URL is TODAY'S DAILY** - fabric
 mode with music, the trace + burn intro, the daily's HUD title, and a
 SAVED ATTEMPT that the next bare load restores (a probe profile that
 played once is no longer fresh). Probes that want a fresh default
-design must pass a query (`?am=instant`: a random seed; `?<seed>.c`: a
-given one); `?daily&am=instant` is NOT a daily any more (am is not a
+design must pass a query (`?am=instant`: a random seed; `?<seed>.J`: a
+given one, at codec v4's defaults); `?daily&am=instant` is NOT a daily any more (am is not a
 preference) - daily probes wait out the intro (probe_daily.mjs
 waitReady). Probes that want knot mode pass `mf=0`, and probes that need
 a settled first frame without a reveal pass `am=instant` - as legacy
@@ -113,7 +113,10 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
 
 - *From COMPACT LINKS, probe URLs:* PROBE GOTCHA: `?<seed>&am=instant`
   and `?s=<seed>&...` probe URLs are v1 links (junctionBlend 0, not the
-  current 0.88): write `?<seed>.c&...` for current defaults (v3; a `.U` link is v2, pluckSize 1).
+  current 0.88): write `?<seed>.J&...` for current defaults (v4, since
+  K73 on 2026-10-12). Older all-default tokens still parse with their own
+  version's defaults: `.c` is v3 (trailLength 5, not 10), `.U` is v2
+  (pluckSize 1 too).
 
 - *From RENDER-ONLY PLUCKS, probe hooks:* Probe hooks:
   __knotPluck, __knotPluckState, __knotPerf, __knotSetPhysics,

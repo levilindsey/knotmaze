@@ -236,7 +236,8 @@ export interface UrlParams {
   // Camera framing (see CAMERA_MODES). Pinch/wheel/drag still zoom and
   // pan in both; in follow mode a delayed, eased spring pulls back.
   cameraMode: CameraMode;
-  // [1, 15] lattice units of recent path kept lit in memory-trail mode.
+  // [1, 30] lattice units of recent path kept lit in memory-trail mode
+  // (the panel's recentPath).
   trailLength: number;
   // [0, 1] Ariadne string tension: 1 = taut along the centerline, 0 =
   // slack cotton laid loose. Applies live to the whole laid string.
@@ -353,7 +354,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   deadEnds: false,
   pathViz: "gold",
   cameraMode: "fit",
-  trailLength: 5,
+  trailLength: 10, // Since codec v4 (v3 links and the dailies read 5).
   tension: 0.45,
   fogOfWar: false,
   fowRadius: 4,

@@ -25,12 +25,16 @@ const USER_LEGACY =
 const USER_COMPACT_V1 = "1471kin.hGJeJH4_ol9B-mT9CXoqT4fol-NCvnoY8UYl6JbGRMCRUPg";
 // ...as a v2 link...
 const USER_COMPACT_V2 = "1471kin.QSiXiR-P6JfQfpk_Ql6Kk-H6JfjQr56GPFGJeiWxkTB4eyof";
-// ...and as today's (v3) link. The design predates junctionBlend's 0.88
-// and pluckSize's 1.75 defaults, so it keeps 0 and 1 - written out.
-const USER_COMPACT = "1471kin.YTiXiR-P6JfQfpk_Ql6Kk-H6JfjQr56GPFGJeiWxkTB4eyofQ-";
+// ...as a v3 link...
+const USER_COMPACT_V3 = "1471kin.YTiXiR-P6JfQfpk_Ql6Kk-H6JfjQr56GPFGJeiWxkTB4eyofQ-";
+// ...and as today's (v4) link. The design predates junctionBlend's 0.88,
+// pluckSize's 1.75 and trailLength's 10 defaults, so it keeps 0, 1 and 5 -
+// written out.
+const USER_COMPACT = "1471kin.IFIl4kfj-iX0H6ZP0JeipPh-iX40K-ehjxRiXolsZEwSvmD2VD6Hw";
 const USER = withSeed(2430477599, {
   junctionBlend: 0,
   pluckSize: 1,
+  trailLength: 5,
   gridSize: 12,
   repulsion: 1,
   bend: 1,
@@ -78,7 +82,7 @@ describe("links", () => {
       branchDensity: 0.35, fourWayFraction: 0.12, deadEndDensity: 0.25,
       pluckStyle: "string", pluckSize: 1.75, pluckGhost: 0.35, pluckReach: "run",
       physics: true, mazeFabric: true, deadEnds: false, pathViz: "gold",
-      cameraMode: "fit", trailLength: 5, tension: 0.45, fogOfWar: false,
+      cameraMode: "fit", trailLength: 10, tension: 0.45, fogOfWar: false,
       fowRadius: 4, fowIntro: false, colorScheme: "segments",
       junctionBlend: 0.88, appearMode: "custom", appearSequence: "trace", appearSpeed: 2.2,
       appearFx: "burn",
@@ -103,11 +107,20 @@ describe("links", () => {
   });
 
   it("is the seed plus a version tag for an all-default design", () => {
-    // A bare seed is a v1 link: today's defaults except junctionBlend 0
-    // (v2 moved that default), so current links name their version.
-    expect(encodeParams(withSeed(2430477599))).toBe("1471kin.c");
-    expect(parseParams("?1471kin.c")).toEqual(withSeed(2430477599));
-    const v1 = withSeed(2430477599, { junctionBlend: 0, pluckSize: 1 });
+    // A bare seed is a v1 link: today's defaults except junctionBlend 0,
+    // pluckSize 1 and trailLength 5 (later versions moved those defaults),
+    // so current links name their version.
+    expect(encodeParams(withSeed(2430477599))).toBe("1471kin.J");
+    expect(parseParams("?1471kin.J")).toEqual(withSeed(2430477599));
+    // An all-default v3 link keeps v3's trailLength.
+    expect(parseParams("?1471kin.c")).toEqual(
+      withSeed(2430477599, { trailLength: 5 })
+    );
+    const v1 = withSeed(2430477599, {
+      junctionBlend: 0,
+      pluckSize: 1,
+      trailLength: 5,
+    });
     expect(parseParams("?1471kin")).toEqual(v1);
     expect(parseParams("1471kin")).toEqual(v1);
     expect(parseParams("?1471kin.")).toEqual(v1);
@@ -115,12 +128,29 @@ describe("links", () => {
 
   it("packs the user's rect design into one token", () => {
     expect(encodeParams(USER)).toBe(USER_COMPACT);
-    expect(USER_COMPACT.length).toBe(58);
+    expect(USER_COMPACT.length).toBe(61);
     expect(USER_LEGACY.length).toBe(121);
     expect(parseParams("?" + USER_COMPACT)).toEqual(USER);
+    expect(parseParams("?" + USER_COMPACT_V3)).toEqual(USER); // v3 keeps its look
     expect(parseParams("?" + USER_COMPACT_V2)).toEqual(USER); // v2 keeps its look
     expect(parseParams("?" + USER_COMPACT_V1)).toEqual(USER); // v1 keeps its look
     expect(parseParams("?" + USER_LEGACY)).toEqual(USER);
+  });
+
+  // K73: trailLength 5 -> 10 is codec v4. A v3 link at v3's default reads
+  // 5, and the token the page rewrites it to on load keeps 5.
+  it("keeps a v3 link's trailLength (5) through the load rewrite", () => {
+    const old = parseParams("?7.c");
+    expect(old.trailLength).toBe(5);
+    expect(old).toEqual(withSeed(7, { trailLength: 5 }));
+    const rewritten = encodeParams(old);
+    expect(rewritten).toBe("7.IgZL4"); // v4, one entry: trailLength "5"
+    expect(parseParams("?" + rewritten)).toEqual(old);
+    // Legacy links read v1's 5; today's defaults (a v4 link, or no link)
+    // are 10.
+    expect(parseParams("?s=7&pv=trail").trailLength).toBe(5);
+    expect(parseParams("?7.J").trailLength).toBe(10);
+    expect(parseParams("?am=instant").trailLength).toBe(10);
   });
 
   it("round-trips changed params at their written precision", () => {
@@ -133,14 +163,21 @@ describe("links", () => {
       hueShift: -15,
     });
     const q = encodeParams(p);
-    expect(q).toBe("1z141z3.Z0YbTfDwtYr7_9JKK");
+    expect(q).toBe("1z141z3.IdGG03w8LWK-__SSig");
     expect(parseParams("?" + q)).toEqual({ ...p, threadWidth: 0.6 });
+    // Written under v3, it read back the same (with v3's trailLength).
+    expect(parseParams("?1z141z3.Z0YbTfDwtYr7_9JKK")).toEqual({
+      ...p,
+      threadWidth: 0.6,
+      trailLength: 5,
+    });
   });
 
   it("drops float noise that equals a default", () => {
-    expect(encodeParams(withSeed(7, { repulsion: 1.4500000000000002 }))).toBe("7.c");
-    expect(encodeParams(withSeed(7, { junctionBlend: 0.8800000000000001 }))).toBe("7.c");
-    expect(encodeParams(withSeed(7, { pluckSize: 1.7500000000000002 }))).toBe("7.c");
+    expect(encodeParams(withSeed(7, { repulsion: 1.4500000000000002 }))).toBe("7.J");
+    expect(encodeParams(withSeed(7, { junctionBlend: 0.8800000000000001 }))).toBe("7.J");
+    expect(encodeParams(withSeed(7, { pluckSize: 1.7500000000000002 }))).toBe("7.J");
+    expect(encodeParams(withSeed(7, { trailLength: 10.000000000000002 }))).toBe("7.J");
   });
 
   it("leaves out appearance values a mode implies", () => {
@@ -150,17 +187,21 @@ describe("links", () => {
       appearFx: "rainbow",
       appearSpeed: 2,
     });
-    expect(encodeParams(preset)).toBe("7.aByQ");
-    expect(parseParams("?7.aByQ")).toEqual(preset);
+    expect(encodeParams(preset)).toBe("7.Igck");
+    expect(parseParams("?7.Igck")).toEqual(preset);
     const instant = withSeed(7, {
       appearMode: "instant",
       appearSequence: "instant",
     });
-    expect(encodeParams(instant)).toBe("7.aBz");
-    expect(parseParams("?7.aBz")).toEqual(instant);
+    expect(encodeParams(instant)).toBe("7.Igcw");
+    expect(parseParams("?7.Igcw")).toEqual(instant);
     const custom = withSeed(7, { appearFx: "dust" });
-    expect(encodeParams(custom)).toBe("7.aB4Q");
-    expect(parseParams("?7.aB4Q")).toEqual(custom);
+    expect(encodeParams(custom)).toBe("7.IgeE");
+    expect(parseParams("?7.IgeE")).toEqual(custom);
+    // The same three as v3 links (trailLength 5 then).
+    expect(parseParams("?7.aByQ")).toEqual({ ...preset, trailLength: 5 });
+    expect(parseParams("?7.aBz")).toEqual({ ...instant, trailLength: 5 });
+    expect(parseParams("?7.aB4Q")).toEqual({ ...custom, trailLength: 5 });
     // Every preset round-trips, values implied.
     for (const id of Object.keys(APPEAR_PRESETS) as AppearPreset[]) {
       const p = withSeed(9, { appearMode: id });
@@ -193,23 +234,28 @@ describe("links", () => {
 
 describe("legacy links", () => {
   it("reads s= short links and rewrites them compactly", () => {
-    // Legacy links read the v1 defaults (junctionBlend 0), so they rewrite
-    // with that value explicit.
+    // Legacy links read the v1 defaults (junctionBlend 0, pluckSize 1,
+    // trailLength 5), so they rewrite with those values explicit.
     expect(parseParams("?s=1471kin")).toEqual(
-      withSeed(2430477599, { junctionBlend: 0, pluckSize: 1 })
+      withSeed(2430477599, { junctionBlend: 0, pluckSize: 1, trailLength: 5 })
     );
-    expect(encodeParams(parseParams("?s=1471kin"))).toBe("1471kin.bBwHlHw");
+    expect(encodeParams(parseParams("?s=1471kin"))).toBe("1471kin.IQGS-YPKPg");
     expect(encodeParams(parseParams("?" + USER_LEGACY))).toBe(USER_COMPACT);
-    expect(encodeParams(parseParams("?s=7&am=trace-rainbow"))).toBe("7.ZAcB8hB8");
+    expect(encodeParams(parseParams("?s=7&am=trace-rainbow"))).toBe("7.IUGS-YPkIPg");
     expect(parseParams("?s=7&afx=dust")).toEqual(
-      withSeed(7, { appearFx: "dust", junctionBlend: 0, pluckSize: 1 })
+      withSeed(7, {
+        appearFx: "dust",
+        junctionBlend: 0,
+        pluckSize: 1,
+        trailLength: 5,
+      })
     );
   });
 
   it("reads seed= links: every param written out, legacy keys", () => {
     const old =
       "?seed=2430477599&gs=18&shp=rect&sa=nw&xa=se&wd=0.35&tb=0.7&sl=0.55&sp=5&dr=0.5&rep=1.4500000000000002&bd=2&sm=0.75&st=1&ga=0.1&tw=0.52&gap=0.04&ms=1&cr=3&fl=0.14000000000000004&fw=0.3&fv=0.5000000000000001&tl=2&sb=4&snd=music&sc=chromatic&oct=3&ss=0.9999999999999996&vol=0.33&rv=0.42&brt=0.5&sus=0.5&shm=0.4&pp=0.4&snpy=0.88&rn=seed&tnc=0.5&psp=2.5&hs=300&arc=130&pal=pastel&pc=eccc41&brd=0.35&fwf=0.12&ded=0.25&pk=string&mf=1&de=0&pv=gold&cam=fit&trl=5&tn=0.45&fow=0&fr=4&fwi=0&cs=segments&ap=trace&as=2.1999999999999997&afx=burn";
-    expect(encodeParams(parseParams(old))).toBe("1471kin.bBwHlHw");
+    expect(encodeParams(parseParams(old))).toBe("1471kin.IQGS-YPKPg");
     const user = parseParams(
       "?seed=2430477599&gs=12&shp=rect&sa=nw&xa=se&wd=0.35&tb=0.7&sl=0.55&sp=5&dr=0.5&rep=1&bd=1&sm=0.25&st=1&ga=0&tw=0.64&gap=0.12&ms=1&cr=2.4&fl=1.734723475976807e-17&fw=0.25&fv=1.1500000000000001&tl=2&sb=4&snd=music&sc=chromatic&oct=3&ss=0.9999999999999996&vol=0.18&rv=0.42&brt=0.5&sus=0.5&shm=0.4&pp=0.4&snpy=0.88&rn=seed&tnc=0.5&psp=2.5&hs=312&arc=130&pal=moss&pc=6c644c&brd=0.35&fwf=0.12&ded=0.25&pk=string&mf=1&de=0&pv=gold&cam=fit&trl=5&tn=0.45&fow=0&fr=4&fwi=0&cs=segments&ap=trace&as=2.1&afx=burn"
     );
@@ -259,7 +305,7 @@ describe("token + overrides", () => {
 
   it("ignores unknown keys (click ids, utm tags)", () => {
     expect(parseParams(`?${USER_COMPACT}&fbclid=IwAR0x&utm_source=x`)).toEqual(USER);
-    expect(encodeParams(parseParams("?1471kin&fbclid=IwAR0x"))).toBe("1471kin.bBwHlHw");
+    expect(encodeParams(parseParams("?1471kin&fbclid=IwAR0x"))).toBe("1471kin.IQGS-YPKPg");
   });
 
   it("reads a token re-serialized by URLSearchParams (a trailing =)", () => {
@@ -268,7 +314,7 @@ describe("token + overrides", () => {
     expect(url.search).toBe(`?${USER_COMPACT}=&ref=newsletter`);
     expect(parseParams(url.search)).toEqual(USER);
     expect(parseParams("?1471kin=")).toEqual(
-      withSeed(2430477599, { junctionBlend: 0, pluckSize: 1 })
+      withSeed(2430477599, { junctionBlend: 0, pluckSize: 1, trailLength: 5 })
     );
   });
 
@@ -280,12 +326,17 @@ describe("token + overrides", () => {
       physics: false,
     });
     const q = encodeParams(p);
-    expect(q).toBe("7.ZQejS_D6g");
+    expect(q).toBe("7.IUHo0vw-o");
     expect(parseParams("?" + q)).toEqual(p);
-    // Links written before they existed read their defaults...
-    expect(parseParams("?7.U")).toEqual(withSeed(7, { pluckSize: 1 })); // a v2 link
+    // Links written before they existed read their defaults (a v2 link)...
+    expect(parseParams("?7.U")).toEqual(
+      withSeed(7, { pluckSize: 1, trailLength: 5 })
+    );
     // ...and a token takes them as overrides (probe URLs: &phy=0).
-    expect(parseParams("?7.U&psz=1.5&pgh=0&prc=lobe&phy=0")).toEqual(p);
+    expect(parseParams("?7.U&psz=1.5&pgh=0&prc=lobe&phy=0")).toEqual({
+      ...p,
+      trailLength: 5,
+    });
   });
 
   it("round-trips the maze-plan knobs (appended to v3)", () => {
@@ -297,21 +348,21 @@ describe("token + overrides", () => {
     const q = encodeParams(p);
     expect(parseParams("?" + q)).toEqual(p);
     // Every older link reads the values it was always built with.
-    for (const old of ["?7", "?7.U", "?7.c", "?s=7"]) {
+    for (const old of ["?7", "?7.U", "?7.c", "?7.J", "?s=7"]) {
       expect(parseParams(old)).toMatchObject({
         entranceClearance: 2.5,
         exitClearance: 5,
         junctionSpacing: 2,
       });
     }
-    expect(parseParams("?7.c&ecl=4&xcl=0&jsp=3.25")).toEqual(p);
+    expect(parseParams("?7.J&ecl=4&xcl=0&jsp=3.25")).toEqual(p);
   });
 
   it("round-trips the shader background params (appended to v3)", () => {
     const p = withSeed(7, { background: "aurora", backgroundIntensity: 0.8 });
     const q = encodeParams(p);
-    // v3, 2 entries, index 67 (gamma 68) = option 5, index 68 = ".8".
-    expect(q).toBe("7.bAiG1Hg");
+    // v4, 2 entries, index 67 (gamma 68) = option 5, index 68 = ".8".
+    expect(q).toBe("7.IwIhtR4");
     expect(parseParams("?" + q)).toEqual(p);
     // Every effect round-trips.
     for (const id of ENUM_OPTIONS.background!) {
@@ -319,14 +370,14 @@ describe("token + overrides", () => {
       expect(parseParams("?" + encodeParams(b))).toEqual(b);
     }
     // Links written before they existed read the defaults...
-    expect(parseParams("?7.c")).toEqual(withSeed(7));
+    expect(parseParams("?7.c")).toEqual(withSeed(7, { trailLength: 5 }));
     expect(parseParams("?" + USER_COMPACT)).toEqual(USER);
     // ...and a token takes them as overrides (probe URLs: &bg=mist&bgi=.7).
-    expect(parseParams("?7.c&bg=mist&bgi=.7")).toEqual(
+    expect(parseParams("?7.J&bg=mist&bgi=.7")).toEqual(
       withSeed(7, { background: "mist", backgroundIntensity: 0.7 })
     );
     // An unknown effect reads as the default; the intensity clamps to [0, 1].
-    expect(parseParams("?7.c&bg=lava&bgi=3")).toEqual(
+    expect(parseParams("?7.J&bg=lava&bgi=3")).toEqual(
       withSeed(7, { backgroundIntensity: 1 })
     );
     const hot = encodeParams(withSeed(7, { backgroundIntensity: 3 }));
@@ -348,8 +399,12 @@ describe("unreadable links", () => {
     const q = encodeParams(withSeed(7, { gridAlign: 5, junctionBlend: -2 }));
     const p = parseParams("?" + q);
     expect([p.gridAlign, p.junctionBlend]).toEqual([1, 0]);
-    // (A legacy link reads the v1 defaults, so its pluckSize is 1.)
-    expect(parseParams("?s=7&ga=5&jbl=-2")).toEqual({ ...p, pluckSize: 1 });
+    // (A legacy link reads the v1 defaults: pluckSize 1, trailLength 5.)
+    expect(parseParams("?s=7&ga=5&jbl=-2")).toEqual({
+      ...p,
+      pluckSize: 1,
+      trailLength: 5,
+    });
     // junctionBlend is a distance: no upper clamp.
     expect(parseParams("?" + encodeParams(withSeed(7, { junctionBlend: 9 }))).junctionBlend).toBe(9);
   });

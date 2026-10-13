@@ -4,6 +4,7 @@ import {
   CODEC_V1,
   CODEC_V2,
   CODEC_V3,
+  CODEC_V4,
   CODEC_VERSION,
   codecDefaults,
   codecTable,
@@ -123,6 +124,13 @@ const bitsToBlob = (bits: string): string => {
   }
   return out;
 };
+// Elias gamma bits of n (so cases can follow the tables' lengths).
+const gamma = (n: number): string => {
+  const b = n.toString(2);
+  return "0".repeat(b.length - 1) + b;
+};
+// The first version no table has yet.
+const UNKNOWN_VERSION = CODEC_TABLES.length + 1;
 
 // Deterministic PRNG (mulberry32) for the property tests.
 const rng = (seed: number): (() => number) => {
@@ -177,6 +185,16 @@ describe("codec tables", () => {
       ], // 67
       ["backgroundIntensity", "number", 0.5],
       ["pulseReach", "number", 3], // 69 (K75)
+    ]);
+  });
+
+  it("pins CODEC_V4: v3 with trailLength defaulting to 10", () => {
+    expect(CODEC_V4.version).toBe(4);
+    expect(CODEC_V4.params.map(asPin)).toEqual([
+      ...CODEC_V3.params
+        .map(asPin)
+        .map((p) => (p[0] === "trailLength" ? ["trailLength", "number", 10] : p)),
+      // Params appended to v4 go here (older links read their defaults).
     ]);
   });
 
@@ -237,25 +255,54 @@ describe("codec tables", () => {
 
 describe("token format", () => {
   it("names its version even with nothing changed (a bare seed is v1)", () => {
-    expect(encodeToken(2430477599, PARAM_DEFAULTS)).toBe("1471kin.c");
-    expect(encodeToken(0, {})).toBe("0.c");
-    expect(encodeToken(4294967295, {})).toBe("1z141z3.c");
+    // v4's all-default blob: gamma(4) "00100", zero entries gamma(1) "1".
+    expect(bitsToBlob("00100 1")).toBe("J");
+    expect(encodeToken(2430477599, PARAM_DEFAULTS)).toBe("1471kin.J");
+    expect(encodeToken(0, {})).toBe("0.J");
+    expect(encodeToken(4294967295, {})).toBe("1z141z3.J");
     expect(decodeToken("1471kin").values).toEqual(codecDefaults(1));
     expect(decodeToken("1471kin.U").values).toEqual(codecDefaults(2));
     expect(decodeToken("1471kin.c").values).toEqual(codecDefaults(3));
+    expect(decodeToken("1471kin.J").values).toEqual(codecDefaults(4));
     expect(codecDefaults(1).junctionBlend).toBe(0);
     expect(codecDefaults(2).junctionBlend).toBe(0.88);
     expect(codecDefaults(2).pluckSize).toBe(1);
     expect(codecDefaults(3).pluckSize).toBe(1.75);
+    // Every link before v4 keeps trailLength 5.
+    for (const v of [1, 2, 3]) expect([v, codecDefaults(v).trailLength]).toEqual([v, 5]);
+    expect(codecDefaults(4).trailLength).toBe(10);
     // Params appended later read their introduction default in every
     // older version (= DEFAULT_MAZE_PARAMS for the maze-plan knobs).
-    for (const v of [1, 2, 3]) {
+    for (const v of [1, 2, 3, 4]) {
       expect(codecDefaults(v)).toMatchObject({
         entranceClearance: 2.5,
         exitClearance: 5,
         junctionSpacing: 2,
       });
     }
+  });
+
+  // OLD LINKS KEEP THEIR LOOK (K73): a v3 link that left trailLength at
+  // v3's default 5 still reads 5 - and the token the app rewrites it to on
+  // load (the current encoder) writes that 5 out.
+  it("keeps a v3 link's trailLength at 5, through the rewrite", () => {
+    for (const token of ["7.c", "7.ZR9MnhklsZEwo"]) {
+      const v3 = decodeToken(token);
+      expect([token, v3.error, v3.values.trailLength]).toEqual([token, null, 5]);
+      const rewritten = encodeToken(7, v3.values);
+      expect(decodeToken(rewritten).values).toEqual(v3.values);
+    }
+    // All v3 defaults but trailLength: a one-entry v4 token.
+    expect(encodeToken(7, decodeToken("7.c").values)).toBe(
+      `7.${bitsToBlob(
+        [
+          "00100", // version 4
+          "010", // 1 entry = gamma(1 + 1)
+          gamma(49 + 1), // index 49 trailLength
+          "0101 1111", // "5", end
+        ].join(" ")
+      )}`
+    );
   });
 
   it("writes the documented bitstream", () => {
@@ -267,7 +314,7 @@ describe("token format", () => {
       mazeFabric: false,
     };
     const bits = [
-      "011", // version 3 = gamma(3)
+      "00100", // version 4 = gamma(4)
       "00101", // 4 entries = gamma(4 + 1)
       "0001111", // index 14 threadWidth: gamma(14 - -1 = 15)
       "1010 0110 0100 1111", // ".64", then the terminator 15
@@ -278,18 +325,26 @@ describe("token format", () => {
       "00101", // index 45 mazeFabric: gamma(5); a boolean has no value bits
     ].join(" ");
     expect(encodeToken(7, values)).toBe(`7.${bitsToBlob(bits)}`);
-    expect(encodeToken(7, values)).toBe("7.ZR9MnhklsZEwo");
-    const back = decodeToken("7.ZR9MnhklsZEwo");
+    expect(encodeToken(7, values)).toBe("7.IUfTJ4ZJbGRMK");
+    const back = decodeToken("7.IUfTJ4ZJbGRMK");
     expect(back.error).toBeNull();
     expect(back.values).toEqual(values);
-    // The same design written under v2 and v1 still reads back - with
+    // The same design written under v3, v2 and v1 still reads back - with
     // those versions' defaults.
+    const v3 = decodeToken("7.ZR9MnhklsZEwo");
+    expect(v3.error).toBeNull();
+    expect(v3.values).toEqual({ ...values, trailLength: 5 });
     const v2 = decodeToken("7.RR9MnhklsZEwo");
     expect(v2.error).toBeNull();
-    expect(v2.values).toEqual({ ...values, pluckSize: 1 });
+    expect(v2.values).toEqual({ ...values, pluckSize: 1, trailLength: 5 });
     const v1 = decodeToken("7.lH0yeGSWxkTCg");
     expect(v1.error).toBeNull();
-    expect(v1.values).toEqual({ ...values, junctionBlend: 0, pluckSize: 1 });
+    expect(v1.values).toEqual({
+      ...values,
+      junctionBlend: 0,
+      pluckSize: 1,
+      trailLength: 5,
+    });
   });
 
   it("writes numbers as the legacy short links did", () => {
@@ -322,7 +377,7 @@ describe("token format", () => {
       gridSize: 12,
       cuspRadius: 2.4,
     });
-    expect(encodeToken(1, values, new Set(["gridSize", "cuspRadius"]))).toBe("1.c");
+    expect(encodeToken(1, values, new Set(["gridSize", "cuspRadius"]))).toBe("1.J");
   });
 
   it("reads `<seed>.` (a trailing sentence period) as the bare seed", () => {
@@ -348,15 +403,15 @@ describe("token robustness", () => {
   });
 
   it("rejects malformed blobs and unknown versions, keeping the seed", () => {
-    // Gamma bits, so the cases below follow the table's length.
-    const gamma = (n: number): string => {
-      const b = n.toString(2);
-      return "0".repeat(b.length - 1) + b;
-    };
+    // Gamma bits (gamma, above), so the cases below follow the tables.
     const size = CODEC_V1.params.length;
     const cases: Array<[string, RegExp]> = [
       ["7.l!0y", /invalid character/],
-      [`7.${bitsToBlob("00100 1")}`, /unknown version 4/], // gamma(4) = v4
+      // The first version no table has yet.
+      [
+        `7.${bitsToBlob(`${gamma(UNKNOWN_VERSION)} 1`)}`,
+        new RegExp(`unknown version ${UNKNOWN_VERSION}`),
+      ],
       [`7.${bitsToBlob("1 1")}A`, /trailing data/], // a whole extra char
       [`7.${bitsToBlob("1 1 01")}`, /trailing data/], // non-zero padding
       [`7.${bitsToBlob("1 00101")}`, /truncated/], // 4 entries, none there
@@ -504,7 +559,7 @@ describe("delta blobs (measured against a base design)", () => {
     const delta = encodeDelta(values, base);
     // Three entries; gridSize/threadWidth/pathColor equal base: not listed.
     const bits = [
-      "011", // version 3
+      "00100", // version 4
       "00100", // 3 entries = gamma(3 + 1)
       "00000100110", // index 37 hueShift: gamma(37 - -1 = 38)
       "0100 0000 1111", // "40", end
@@ -534,7 +589,7 @@ describe("delta blobs (measured against a base design)", () => {
       expect(d.error).not.toBeNull();
       expect(d.values).toEqual(base);
     }
-    for (const bad of ["!!", `${bitsToBlob("00100 1")}`, `${delta}A`]) {
+    for (const bad of ["!!", bitsToBlob(`${gamma(UNKNOWN_VERSION)} 1`), `${delta}A`]) {
       const d = decodeDelta(bad, base);
       expect(d.error).not.toBeNull();
       expect(d.values).toEqual(base);

@@ -566,8 +566,10 @@ export function buildPanel(
     "Camera: fit = frame the whole maze (under fog: just what you can see); follow = chase your position. Pinch, scroll or drag to zoom and pan in either - in follow mode a gentle pull brings the view back after a moment. Double-click / double-tap empty space to reset the view. Applies live.",
     D.cameraMode, () => callbacks.onTrailChange()
   );
+  // Max 30 since the default went 5 -> 10 (codec v4): the slider keeps
+  // its old headroom of three times the default.
   const trailLenRow = row(
-    fMaze, p, "trailLength", { min: 1, max: 15, step: 0.5 },
+    fMaze, p, "trailLength", { min: 1, max: 30, step: 0.5 },
     "How much of your recent path stays lit in recentPath mode, in lattice units. Applies live.",
     D.trailLength, () => callbacks.onTrailChange()
   );
