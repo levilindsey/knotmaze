@@ -13,16 +13,11 @@ and never reused.
 
 ## Waiting on Levi
 
-- **K46** · What should the daily be? `DAILY_V1` (`src/ui/daily_link.ts`)
-  is today's default design every day: 18x18 rect, braided, no dead
-  ends. Variety (weekday sizes, shapes, dead ends) would be a `DAILY_V2`
-  starting a few days ahead.
-- **K47** · A reload mid-attempt restarts the daily, and only the first
-  finish is official, so a player can explore, reload, then post a
-  better official time. Save the attempt in progress, as Wordle does?
-- **K48** · Desktop browsers that offer native sharing (Chrome and Edge
-  on Windows) get the clipboard on purpose; the native sheet is for
-  phones. Native on desktop too? A one-line change.
+- **K48** · On desktop, Share copies the daily's result to the clipboard
+  (with a "Copied" toast), although Chrome and Edge on Windows could open
+  Windows' own Share dialog (Mail, Teams, Nearby Sharing). Phones get
+  their native share sheet. Keep the clipboard on desktop (recommended),
+  or open the Windows dialog?
 - **K49** · Kink eye size after K41's chord-law pressure: 2.6 widths
   (shipped) keeps the median eye at about 1.25 widths. 2.8 lifts the
   boxed tail (default-width X304 0.78 -> 0.84; every harness link at
@@ -38,6 +33,26 @@ and never reused.
 
 ## In progress
 
+- **K46** · Daily variety: Levi wants it to vary, within constraints on
+  which settings are good, and will iterate on a proposal. `DAILY_V1` is
+  today's defaults every day.
+  - owner: K46 proposal agent of session d8031183, started 2026-10-12.
+  - branch: its worktree branch (proposal doc only; no `src/` changes).
+  - evidence: `.claude/probes/K46/`.
+  - next: measured proposal in `docs/design/K46_daily_variety.md` with
+    a 14-day sample calendar, then iterate with Levi, then `DAILY_V2`.
+  - brief: `docs/design/K46.md`.
+- **K47 + K56** · Save in-progress daily attempts (K47, Levi: yes), and
+  make the daily the front door (K56): a bare URL opens today's daily;
+  any other query, or editing params in the panel, leaves the daily
+  treatment.
+  - owner: the K19/K20 daily agent of session d8031183, resumed
+    2026-10-12.
+  - branch: a new worktree branch from master.
+  - evidence: `.claude/probes/K19-K20/`.
+  - next: routing rules, the exempt-preference set (Levi to confirm),
+    save and restore, tests, browser runs.
+  - brief: `docs/design/K47.md`.
 - **K4** · G2: per-sample color work moves into the shaders.
   - owner: G2 agent of session d8031183, started 2026-10-12 14:10.
   - branch: `worktree-agent-a7d1f998c07c3864f`
