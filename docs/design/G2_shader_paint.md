@@ -1111,8 +1111,15 @@ VERIFICATION (desktop, 3200x1800 unless noted):
   - dc248d9, medians of 3, the phone by then in LIGHT thermal throttling
     (thermalservice status 1, soc 42.8 C, on its charger): 50.8 / 60.3
     vs master 50.5 / 59.8 - flow at rest is CPU work every other frame,
-    so throttling lowers both builds' flow numbers alike.
-  Raw lines: `.claude/probes/K4/results/phone_*.txt`.
+    so throttling lowers both builds' flow numbers alike;
+  - THE GATE, on the merged code (branch rebased onto master c3ebf11, with
+    K63's sim-time sleep gate; phone cooled to status 0 first, its tab
+    parked on about:blank between runs), medians of 2: 59.5 / 60.3 vs
+    master 59.5 / 59.3, p90 16.7 ms both.
+  Raw lines: `.claude/probes/K4/results/phone_*.txt`. K63 changes where a
+  phy=0 link's hidden settle stops, so a same-state A/B must pair builds on
+  the same side of it (rebased G2.5 vs the fan fix: 0 px over 2/255 at rest
+  on def / ring / knot / user).
 
 ### Follow-ups (not done)
 
