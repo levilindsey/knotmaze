@@ -70,6 +70,7 @@ src/
     background_model.ts   # K21 pure: effect list, profiles, colors, drift clock
     background_shaders.ts # K21 GLSL: noise lib, six effects, blit, fog
     fabric_maze_renderer.ts # P4: what gameplay paints; markers, yarn, fog of war
+    fog_arc.ts            # K99 pure: fog stations along a move's run
     marker_glyphs.ts      # K83 pure: start/finish/head icon designs, fit, SVG
     marker_mesh.ts        # K83: a marker as one quad, glyph drawn by an SDF shader
     debug_renderer.ts     # Lattice/graph debug overlay
@@ -115,6 +116,7 @@ test/
     pluck_model.test.ts  # String math vs a modal sum, coverage, lobes
     background_model.test.ts  # K21 drift clock (K24 hook), colors, order
     marker_glyphs.test.ts  # K83 glyph fit (margin = stroke), shader capacity, SVG
+    fog_arc.test.ts  # K99 the same stations whatever the frame split
     paint_math / paint_fx / paint_section / paint_gameplay .test.ts  # G2
       mirror vs frozen pre-G2 code (fixtures/), exact skips, parity
   ui/

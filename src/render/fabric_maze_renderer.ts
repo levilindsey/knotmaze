@@ -40,6 +40,7 @@ import type {
 } from "./ribbon_renderer";
 import type { PathViz } from "../ui/url_state";
 import { FogBackdrop } from "./background";
+import { FOG_ARC_STEP, fogArcStations } from "./fog_arc";
 import { MarkerMesh } from "./marker_mesh";
 import { DEFAULT_GLYPHS, markerGlyph, markerRadiusFor } from "./marker_glyphs";
 import type { MarkerRole } from "./marker_glyphs";
@@ -111,9 +112,12 @@ interface YarnEvent {
 // FOG OF WAR (Stage 25, `fogOfWar`): the maze hides under a fog layer
 // until explored; explored stays visible. The fog is ONE sprite whose
 // texture is an offscreen 2D canvas - background-filled, with soft
-// destination-out holes at every explored stamp. Stamps land as the
-// head moves (world spacing below) and persist until Reset path; the
-// radius slider re-renders every hole (a retroactive view setting).
+// destination-out holes at every explored stamp. Stamps land where the
+// head rests and, during a move, at fixed stations along its run
+// (fog_arc.ts, K99: the same at any frame rate or move speed), at least
+// the world spacing below apart, and persist until the path empties
+// (Reset path); the radius slider re-renders every hole (a retroactive
+// view setting).
 // The canvas redraws only when a stamp lands or settings change, so
 // the steady per-frame cost is one static sprite. Fog is a SPATIAL
 // memory anchored in world space (it deliberately does not ride the
@@ -491,7 +495,10 @@ export class FabricMazeRenderer {
     kind: "advance" | "backtrack",
     controller: FabricMazeController
   ): void {
-    this.anim = null; // A tap mid-flight snaps the previous move.
+    // A tap mid-flight snaps the previous move: its dot lands at once, and
+    // the fog still lifts along the rest of its run (K99).
+    this.finishFogArc();
+    this.anim = null;
     const e = this.walk.edges[edgeId];
     const head = controller.head;
     let from: number;
@@ -516,7 +523,23 @@ export class FabricMazeRenderer {
   }
 
   cancelMove(): void {
+    this.finishFogArc();
     this.anim = null;
+  }
+
+  // K99: lift the fog at the stations of the in-flight move between `prev`
+  // and `cur` (fogArcStations), wherever the threads lie now.
+  private stampFogArc(a: MoveAnim, prev: number, cur: number): void {
+    if (!this.fogOfWar) return;
+    for (const f of fogArcStations(a.from, a.to, prev, cur)) {
+      this.pointFlowed(a.e.chain, this.ctrlMod(a.e.chain, f), this.scratch, 0);
+      this.maybeStampFog(this.scratch[0], this.scratch[1]);
+    }
+  }
+
+  // A move cut short still uncovers its whole run.
+  private finishFogArc(): void {
+    if (this.anim) this.stampFogArc(this.anim, this.anim.cur, this.anim.to);
   }
 
   // Advance the in-flight move; on arrival, hand back to the full refresh.
@@ -556,8 +579,13 @@ export class FabricMazeRenderer {
       1 / (1 + MOVE_CURVE_SLOWDOWN * turn)
     );
 
+    const prev = a.cur;
     a.cur += dir * MOVE_CTRL_PER_S * this.moveSpeed * factor * dt;
-    if ((dir > 0 && a.cur >= a.to) || (dir < 0 && a.cur <= a.to)) {
+    const arrived = (dir > 0 && a.cur >= a.to) || (dir < 0 && a.cur <= a.to);
+    // The fog lifts at every station the dot passed this frame, not only
+    // where the frame left it (K99).
+    this.stampFogArc(a, prev, arrived ? a.to : a.cur);
+    if (arrived) {
       this.anim = null;
       this.update(controller);
       return;
@@ -682,7 +710,7 @@ export class FabricMazeRenderer {
     for (const eid of runs) {
       const e = this.walk.edges[eid];
       if (!e) continue;
-      for (let f = e.ctrlA; ; f += 0.5) {
+      for (let f = e.ctrlA; ; f += FOG_ARC_STEP) {
         const ff = Math.min(f, e.ctrlB);
         this.pointFlowed(e.chain, this.ctrlMod(e.chain, ff), this.scratch, 0);
         this.maybeStampFog(this.scratch[0], this.scratch[1]);
@@ -1426,8 +1454,10 @@ export class FabricMazeRenderer {
     this.headX = this.scratch[0];
     this.headY = this.scratch[1];
     this.headValid = true;
-    // Fog explores wherever the head (or the mid-move dot) goes.
-    this.maybeStampFog(this.headX, this.headY);
+    // Fog explores wherever the head rests; mid-move, the run's stations
+    // stamp it (tickAnim, K99) - the dot's per-frame position would make
+    // what a move uncovers depend on frame timing.
+    if (dotChain < 0) this.maybeStampFog(this.headX, this.headY);
     // The under-weave halo follows the head.
     this.glowSprite.visible = true;
     this.glowSprite.position.set(this.headX, this.headY);
