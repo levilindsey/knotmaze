@@ -104,8 +104,9 @@ entry is labeled with its source; the narrative is in
   per-frame update - main.ts calls indicators.update() in fabricTick
   after the camera step, so in every ticker branch. THE FINISH is the
   first client (main.ts; the minotaur, K80, is meant to be next): a
-  black disc with a white waving flag (a placeholder until K83's finish
-  icon is shared), shown in fabric mode, unsolved, once the intro has
+  black disc wearing the exit marker's own glyph and radius (K83:
+  markerGlyphSvgFit into the GLYPH_R box, fabric.markerRadius() - a glyph
+  or size swap reaches both), shown in fabric mode, unsolved, once the intro has
   revealed the exit (the 0.98 gate fabric's marker uses) and under fog of
   war too (Levi, 2026-10-13: direction only); a tap eases the camera to
   frame the exit with the head (camTween through placeWorldAt; the

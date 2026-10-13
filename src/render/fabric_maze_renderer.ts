@@ -350,9 +350,16 @@ export class FabricMazeRenderer {
 
   // Start/exit markers are DISC OCCLUDERS in the ribbon renderer: each
   // owns a gap slot that hides its thread inside radius (disc + gap),
-  // concentric with the disc by construction (markerWorld).
-  private markerRadius(): number {
+  // concentric with the disc by construction (markerWorld). The finish's
+  // off-screen indicator (main.ts) reads it too: its "on screen" test needs
+  // the whole marker in view.
+  markerRadius(): number {
     return markerRadiusFor(this.threadWidth, this.markerScale);
+  }
+
+  // The glyph a marker wears now; the finish's indicator draws the same.
+  markerGlyphId(role: MarkerRole): string {
+    return this.markerGlyphIds[role];
   }
 
   // Swap marker glyphs (marker_glyphs.ts ids) and/or scale the marker

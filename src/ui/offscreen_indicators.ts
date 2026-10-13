@@ -256,15 +256,6 @@ export interface IndicatorStyle {
 // finish and head markers become black discs with white stroked icons).
 export const DARK_DISC: IndicatorStyle = { disc: "#000", ink: "#fff" };
 
-// A waving flag in the glyph box - a placeholder for the finish's icon
-// until the markers' own (K83) is shared. A plain flag read as the letter
-// P at this size.
-export const FLAG_GLYPH =
-  '<g fill="none" stroke-width="2" stroke-linecap="round" ' +
-  'stroke-linejoin="round"><path d="M-5 8.2V-8.2"/>' +
-  '<path d="M-5 -7.4C-1.6 -9.6 1.6 -4.4 6.6 -6.8V-0.6C1.6 1.8 -1.6 -3.4 -5 -1.2"/>' +
-  "</g>";
-
 let styled = false;
 function ensureStyles(): void {
   if (styled) return;
