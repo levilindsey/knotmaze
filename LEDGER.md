@@ -83,7 +83,10 @@ and never reused.
 - **K52** · Default background: K21 shipped `vellum` at intensity 0.5
   (static parchment grain plus vignette; the page stays navy on average),
   so every existing link and every daily shows it. Keep it, or default
-  to `none`? Changing the default later needs codec v4.
+  to `none`? Changing the default later needs codec v4. Since K79
+  (9ffda8a) vellum can drift, but stays still at auto; making it move by
+  default means changing its `autoSpeed` (`src/render/background_model.ts`,
+  no codec change), which starts every vellum link and daily drifting.
 - **K57** · (Levi, 2026-10-13: revisit after all other changes, in the
   careful daily review with K46 and K84.) Confirm the daily's exempt
   settings: the ones a player may change without leaving the daily
@@ -97,7 +100,8 @@ and never reused.
     pluckReach, pluckStyle, tugLimit, snapBack), and physics on/off (the
     settled layout is the same).
   - Everything else leaves the daily, including moveSpeed, pathViz, fog,
-    the intro and flow, and the physics tuning.
+    the intro and flow, and the physics tuning. K79's `backgroundSpeed`
+    is not exempt either, like background and its intensity.
 - **K92** · Two calls the K73 agent made (merged 2026-10-13): (1) a tap on
   the "Free play" badge does what the Daily button does and REPLACES the
   design's link, so an unshared custom design is lost; alternatives: an
@@ -175,6 +179,11 @@ and never reused.
   `src/core/maze_plan.ts`) to join every piece to the start; that moves
   those designs' links, no daily. Join them (recommended), or leave
   orphans as decoration? (`.claude/probes/K109/orphans.ts`; b722a12)
+- **K111** · Reduced motion's reach: K79's Motion setting (9ffda8a)
+  stills the background drift, the pluck (no attack, smaller lobes, no
+  ghost), the camera tween and CSS. The flow undulation, the appearance
+  intros and the path pulses still move under "reduced". Cover them too
+  (which, and how: off or slowed)?
 
 ## In progress
 
@@ -193,21 +202,30 @@ and never reused.
     then prototype the arc.
   - brief: `docs/design/K81.md`.
   - env: its dev servers on ports 5311-5314.
-- **K79** · Backgrounds: speed, params, colors, Motion. Stage A (this
-  agent): the speed slider (0 = static, default = today's speeds), vellum
-  motion (static by default, K52), the in-app Motion setting (K53: follow
-  system / full / reduced, localStorage; also the pluck's reduced swing),
-  codec v4 appends, GPU cost. Stage B, another agent after the merge:
-  per-effect params and custom colors (brief items 3-4).
-  - owner: the K79 stage A agent (a7e566f4ba72a9d2d) of session
-    d8031183, started 2026-10-13 02:50.
-  - branch: `worktree-agent-a7e566f4ba72a9d2d`
-    (`.claude/worktrees/agent-a7e566f4ba72a9d2d`), on 6e3f124; last
-    commit: none yet.
-  - evidence: `.claude/probes/K79/` in its worktree (copied at merge).
-  - next: the speed slider, then vellum's motion.
+- **K79** · Backgrounds: speed, params, colors, Motion. Stage A MERGED
+  in 9ffda8a (2026-10-13 07:15): `backgroundSpeed` (codec v4 index 70,
+  `bgs=`; -1 = auto = every effect's pre-K79 pace, vellum static; 0 =
+  static; up to 3x), vellum drift through its own lazily built program,
+  and the Motion setting (`src/ui/motion.ts`, K53). Same-state A/B vs
+  master: 19 of 19 cases 0 px; GPU at 3200x1800: vellum speed 1 costs
+  0.37 ms/frame. Stage B, another agent: per-effect params and custom
+  colors (brief items 3-4; recommended: per-effect scale, contrast and
+  drift direction, vellum fiber density and grain; custom accent colors
+  replacing the three gamut accents).
+  - owner: nobody since 2026-10-13 07:15 (stage A agent
+    a7e566f4ba72a9d2d finished and merged; stage B not started).
+  - branch: mainline; last commit: 9ffda8a. The stage A worktree
+    (`.claude/worktrees/agent-a7e566f4ba72a9d2d`) is kept until the
+    phone gate passes.
+  - evidence: `.claude/probes/K79/` (`run_ab.ps1`, `k79_sheet.mjs`,
+    `k79_dstats.mjs`, `k79_gpu.mjs`; `out/sheets/`, `out/ab_final/`,
+    `out/motion.log`, `out/gpu_k79.log`).
+  - next: the phone gate (K10; the phone was off its charger and locked
+    at 07:15): default vs e25d202, vellum at `bgs=1` (412x915 texture
+    at 6 passes/s), the speed row. Then launch stage B.
   - brief: `docs/design/K79.md`.
-  - env: its dev servers on ports 5331-5334.
+  - env: `.claude/probes/K79/run_ab.ps1` (its header starts servers on
+    5331/5332).
 
 ## Next, in order
 
@@ -221,8 +239,8 @@ code agents at once, research on top. Stop launching once the week
 passes about 45% (37% at 02:45).
 1. Merge the running five as they finish: K80 (docs) is left; K73 and
    K75 merged 2026-10-13 01:00, K83 at 01:30, K74 in dad40f8.
-2. K77 merged (eec4854). K81 (the smooth arc, running since 01:07) and
-   K79 stage A (running since 02:50); K79 stage B after its merge.
+2. K77 merged (eec4854). K81 (the smooth arc, running since 01:07);
+   K79 stage A merged (9ffda8a), its phone gate and stage B next.
    K49's comparison is done (Waiting on Levi).
 3. K87 done (62dd16d), K108 done (b62cea3), K109 done (b722a12; K110
    waits on Levi). K90 stage 1 (measure over-tight folds, prototype a
@@ -332,6 +350,11 @@ K5-K7 (split, frame loop, worker) follow.
   - K83 (5592f8c) vs ce331bc, 2026-10-13: 60.3 vs 60 with flow, 60.3 vs
     60.3 flow off, 60.5 vs 60.5 with `pv=trail`, p90 16.7 ms everywhere;
     every run asleep by sim 5.0 s on both (`bench_2026-10-13_K83.txt`).
+  - K79 stage A (9ffda8a), PENDING: merged without the phone (off its
+    charger and locked at 07:15). Its default path issues the same GL
+    work as before (the vellum drift program is built only once a speed
+    is set; desktop A/B 0 px). Bench default vs e25d202 and vellum at
+    `bgs=1`.
 
   Rerun after every stage: `scripts/preview.ps1` builds per ref,
   `scripts/phone.ps1 -Ports ...`, then `.claude/probes/K10/phone_bench.mjs`.
@@ -475,6 +498,10 @@ K5-K7 (split, frame loop, worker) follow.
 - **K107** · A dark "X" at the center of big knot-mode attack-lobe blurs,
   also present with the collapse off:
   `.claude/probes/K77/out/abknot/sheet_zoomL.png`.
+- **K112** · Motion setting residuals (K79, 9ffda8a): no cross-tab sync
+  (another tab picks a change up on reload; `src/ui/motion.ts`), and the
+  camera's reduced-motion jump on an edge-indicator tap was
+  code-reviewed, not probed.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -528,7 +555,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   - Re-evaluate each param's worth and grouping, and audit names and
     tooltips.
   - Place K73's two viewer preferences, `finishIndicator` and
-    `tapToPan` (localStorage, panel checkboxes).
+    `tapToPan` (localStorage, panel checkboxes), and K79's Motion
+    setting (`knotmaze.motion`, today in Motion & intro).
 
   It meets K57 (the daily's exempt keys are mostly preferences) and
   feeds K78's param reference.
@@ -584,6 +612,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   neighbor can out-swing the lobe that was tapped
   (`src/render/pluck_overlay.ts`, the `sympatheticAmplitude` callers;
   K77 finding).
+- **K113** · Two-layer vellum: render the fibers and grain once into a
+  static texture (1 texel per CSS px) and drift only the mottling in a
+  low-res pass; the drift pass costs about 2.1 ms at 1600x900 today
+  (K79, `.claude/probes/K79/out/gpu_k79.log`).
 
 ## Done
 
