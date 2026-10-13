@@ -6,25 +6,28 @@
 // shaders. The CPU only builds geometry (positions + a per-vertex RECORD
 // index) and uploads two float DATA TEXTURES:
 //
-//   (G2: the arm MATERIAL is evaluated per pixel from the shared paint
-//   model - the ribbon's own section Gouraud, the appearance FX and the
-//   gameplay paint, composed exactly as the ribbon shader composes them;
-//   the PAINT texture of per-sample (rgb, U) texels is retired.)
+//   (G2: the arm MATERIAL - the ribbon's own section Gouraud, burn /
+//   roots and the gameplay paint, composed exactly as the ribbon shader
+//   composes them - comes from the ARM STRIPS (arm_strip.ts, the K4 fan
+//   fix): rendered once per frame per arm into an RGBA8 row, read here as
+//   two texels per arm. Evaluating it per pixel, twice per web pixel, cost
+//   the phone 60 -> 44 fps.)
 //   RECORD (RGBA32F, linear texel index): one record per junction / tip:
 //          header (jx, jy, nArms, -), the GATE texel J1 = (tOn, tLast, -, -)
 //          (G2.1: reveal-relative wall times - shown once every arm is
 //          revealed, fading in as the latest-ignited arm's appearance FX
 //          settles; paint_glsl knotFanAlpha), then per arm a header pair
-//          (chain, ctrlSlope, closed, total) + (arc0, dir, domain, jointCtrl)
-//          (G2.2: the slope and the joint ctrl seed its ctrl searches) and
-//          its RADIAL PROFILE, one texel per FIELD_PROF_DR radius step:
-//          (angle[g], arc[g], angle[g+1], arc[g+1]) - both ends of a lookup
-//          in one fetch. nArms 0 = an AXIS record (free dead-end tip, or the
-//          host-axis fallback): header, J1, (chain, count, closed, total) +
+//          (chain, ctrlSlope, stripRow, stripScale) + (arc0, dir, domain,
+//          jointCtrl) (the strip row holds the arm's material from its
+//          joint outward, stripScale texels per world arc; chain, slope,
+//          arc0, dir and the joint ctrl are what the strip row was written
+//          from - the CPU mirror reads them) and its RADIAL PROFILE, one
+//          texel per FIELD_PROF_DR radius step: (angle[g], arc[g],
+//          angle[g+1], arc[g+1]) - both ends of a lookup in one fetch.
+//          nArms 0 = an AXIS record (free dead-end tip, or the host-axis
+//          fallback): header, J1, (chain, stripRow, stripScale, offset) +
 //          (arc0, axisX, axisY, ctrl0) - the thread's own material at the
-//          point's axis projection.
-// Burn / roots tint the arm material PER PIXEL here exactly as on the
-// ribbons (G2.1: the same reveal sources and clock - paint_glsl.ts).
+//          point's axis projection (strip texel (t + offset) * stripScale).
 //
 // Float data is read with texelFetch + manual interpolation only (NEAREST
 // sampling): float LINEAR filtering needs OES_texture_float_linear, which
@@ -48,14 +51,9 @@ import { Buffer, BufferUsage, Shader, Texture, UniformGroup } from "pixi.js";
 import type { MeshGeometry } from "pixi.js";
 import { GAP_FRAG_LIB, defaultGapTexture } from "./gap_mask";
 import { FloatRows, ROW_SHIFT } from "./float_rows";
-import {
-  KNOT_UNIFORMS_GLSL,
-  PAINT_DATA_GLSL,
-  PAINT_FX_GLSL,
-  PAINT_PAINT_GLSL,
-  PAINT_SECTION_GLSL,
-} from "./paint_glsl";
-import { kGeom, kPaint, kReveal, kStatic, knotUniforms } from "./paint_model";
+import { KNOT_UNIFORMS_GLSL, PAINT_CONST_GLSL, PAINT_GATE_GLSL } from "./paint_glsl";
+import { knotUniforms } from "./paint_model";
+import { STRIP_LOOKUP_GLSL, stripTexture } from "./arm_strip";
 
 // Field geometry constants (shared with the CPU side in ribbon_renderer):
 // arm radial profiles resample the centerline (walked in FIELD_PROF_ARC
@@ -114,59 +112,22 @@ uniform sampler2D uJData;
 uniform vec4 uJParams;
 uniform vec4 uJParams2;
 ${KNOT_UNIFORMS_GLSL}
-${PAINT_DATA_GLSL}
-${PAINT_SECTION_GLSL}
-${PAINT_FX_GLSL}
-${PAINT_PAINT_GLSL}
-
-// World units per pixel at this fragment (set at the top of main): the
-// gameplay paint's edge coverage.
-highp float kFanPx;
+${PAINT_CONST_GLSL}
+${PAINT_GATE_GLSL}
+${STRIP_LOOKUP_GLSL}
 
 const float TAU = 6.283185307179586;
 const float HALF_PI = 1.5707963267948966;
 
 vec4 jAt(int i) { return texelFetch(uJData, ivec2(i & ${RECORD_W - 1}, i >> ${ROW_SHIFT}), 0); }
 
-// The material of chain ch at a world arc, COMPOSED exactly as the ribbon
-// shader composes it: the RIBBON's section color there (its vertex
-// shader's section at the two bracketing samples, lerped - its own
-// Gouraud; seed = a ctrl near the arc: the arm's joint plus its slope),
-// the appearance FX that tint (burn / roots - the joinery wears no
-// stripes or transparency: its gate fades it), then the gameplay paint
-// and the reveal glow at the exact point (G2.3; edges antialiased over
-// kFanPx).
-vec3 chainMaterial(int ch, float a, float seedIn) {
-  KChain c = kChain(ch);
-  // The ctrl search seed, normalized onto the chain (rings wrap, runs clamp).
-  float nc = float(c.nCtrl);
-  float seed = c.closed ? seedIn - nc * floor(seedIn / nc) : clamp(seedIn, 0.0, nc - 1.0);
-  float total = c.total;
-  if (total <= 0.0 || c.count < 2) return knotSection(c, 0.0);
-  float an = c.closed ? a - total * floor(a / total) : clamp(a, 0.0, total);
-  vec3 m = kSectionAtArc(c, a, seed);
-  highp float actrl = kCtrlOfArcNear(c, an, kSecK0);
-  if (uKFx.w > 0.5 && uKFx.z < c.fxDone) {
-    int st = int(uKFx.x + 0.5);
-    if (st == 4 || st == 5) {
-      highp float pR;
-      highp float al;
-      m = kFxColor(c, actrl, an / c.arcPer, m, pR, al);
-    }
-  }
-  if ((uKPaint.x > 0.5 && c.paintOn) || uKFx2.z > 0.5) {
-    m = kComposePaint(m, kPaintAt(c, actrl, an, kFanPx), kGlow(c, actrl));
-  }
-  return m;
-}
-
-// An arm's material at arc offset s along it (clamped to its domain).
+// An arm's COMPOSED material at arc offset s along it (clamped to its
+// domain): its strip row (h.z) at s times the row's texels per world arc
+// (h.w) - arm_strip.ts renders the material there once per frame.
 vec3 armPaint(int ab, float s) {
   vec4 h = jAt(ab);
-  vec4 a = jAt(ab + 1);
-  float sc = min(s, a.z);
-  // Seed: the joint ctrl plus the offset times the arm's ctrl slope (h.y).
-  return chainMaterial(int(h.x + 0.5), a.x + a.y * sc, a.w + a.y * sc * h.y);
+  float sc = min(s, jAt(ab + 1).z);
+  return stripAt(int(h.z + 0.5), sc * h.w);
 }
 // Arc along an arm at projected radius rp (its radial profile; straight
 // extrapolation past the grid).
@@ -197,8 +158,11 @@ vec3 junctionField(int rec, vec2 p) {
   int n = int(hd.z + 0.5);
   vec2 e = p - hd.xy;
   if (n == 0) {
+    // AXIS record: (chain, strip row, texels per world, offset), then
+    // (arc0, axis x, axis y, ctrl0) - the point's axis projection.
+    vec4 hx = jAt(rec + 2);
     vec4 ax = jAt(rec + 3);
-    return chainMaterial(int(jAt(rec + 2).x + 0.5), ax.x + dot(e, ax.yz), ax.w);
+    return stripAt(int(hx.y + 0.5), (dot(e, ax.yz) + hx.w) * hx.z);
   }
   float rho = length(e);
   float phi = atan(e.y, e.x);
@@ -317,7 +281,6 @@ void main(void) {
   vec2 gfw = fwidth(vPos);
   float pxW = max(max(gfw.x, gfw.y), 1e-5);
   int rec = int(vRec + 0.5);
-  kFanPx = pxW;
   float aM = knotFanAlpha(jAt(rec + 1));
   if (aM <= 0.002) discard;
   vec3 rgb = junctionField(rec, vPos);
@@ -348,11 +311,9 @@ function makeShader(
       uJData: recordData().source,
       uGapData: (GAP_TEX ?? defaultGapTexture()).source,
       fieldUniforms: fieldUniforms(),
-      // G2 shader paint (paint_model.ts).
-      uKStatic: kStatic().source,
-      uKGeom: kGeom().source,
-      uKReveal: kReveal().source,
-      uKPaintData: kPaint().source,
+      // The arms' composed materials (arm_strip.ts), and the clocks the
+      // joint gate reads.
+      uStrip: stripTexture().source,
       knotUniforms: knotUniforms(),
     },
   }) as FieldShader;
