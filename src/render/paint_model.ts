@@ -62,6 +62,9 @@ export function knotUniforms(): UniformGroup {
       uKInk: v4(1, 0),
       uKGamut: v4(0, 280, 0.45, 0.64),
       uKSect: v4(),
+      uKPaint: v4(),
+      uKPulse: v4(0, 0, 2.5, 1),
+      uKGold: v4(1, 0.8235, 0.2902, 0),
       uKKnots: {
         value: new Float32Array(MAX_KNOTS * 4),
         type: "vec4<f32>",
@@ -268,6 +271,72 @@ export class PaintScene {
   // A chain's reveal window [first start, last finish] (anim seconds).
   revealSpan(c: number): [number, number] {
     return [this.span[2 * c], this.span[2 * c + 1]];
+  }
+
+  // GAMEPLAY PAINT records (G2.3; paint_math kPaintAt): `items` holds 8
+  // floats per item (T0, T1), `slots[chain][slot]` the item indices touching
+  // each control slot, in evaluation order (undefined = none). Writes KPAINT
+  // (per-slot (refFirst, refCount) at the chain's idxBase, then the REFS
+  // and ITEMS regions, each from a row boundary) and uploads only changed
+  // texels. Returns the texels changed.
+  setPaintItems(
+    items: Float32Array,
+    nItems: number,
+    slots: Array<Array<number[] | undefined> | null>
+  ): number {
+    const n = this.chains.length;
+    const rowUp = (t: number): number => Math.ceil(t / ROW_W) * ROW_W;
+    // Ref lists, packed per slot.
+    let nRefs = 0;
+    for (let c = 0; c < n; c++) {
+      const sc = slots[c];
+      if (!sc) continue;
+      for (const l of sc) if (l) nRefs += l.length;
+    }
+    const refBase = rowUp(this.idxEnd);
+    const itemBase = rowUp(refBase + Math.ceil(nRefs / 4));
+    const end = itemBase + 2 * nItems;
+    const pt = kPaint();
+    pt.ensure(Math.max(end, 1));
+    const d = pt.data;
+    let lo = Infinity;
+    let hi = -Infinity;
+    const put = (texel: number, comp: number, v: number): void => {
+      const o = texel * 4 + comp;
+      if (d[o] !== v) {
+        d[o] = v;
+        if (texel < lo) lo = texel;
+        if (texel + 1 > hi) hi = texel + 1;
+      }
+    };
+    let r = 0;
+    for (let c = 0; c < n; c++) {
+      const sc = slots[c];
+      const b = this.idxBase[c];
+      for (let s = 0; s < this.chains[c].nCtrl; s++) {
+        const l = sc ? sc[s] : undefined;
+        if (l && l.length > 0) {
+          put(b + s, 0, r);
+          put(b + s, 1, l.length);
+          for (const it of l) {
+            put(refBase + (r >> 2), r & 3, it);
+            r++;
+          }
+        } else {
+          put(b + s, 0, 0);
+          put(b + s, 1, 0);
+        }
+      }
+    }
+    for (let i = 0; i < 8 * nItems; i++) put(itemBase + (i >> 2), i & 3, Math.fround(items[i]));
+    if (hi > lo) {
+      pt.markDirty(lo, hi);
+      pt.flush();
+    }
+    const U = knotUniformValues();
+    U.uKPaint[1] = refBase;
+    U.uKPaint[2] = itemBase;
+    return hi > lo ? hi - lo : 0;
   }
 
   // The section RUN table (G2.2; core/section_colors) and every control

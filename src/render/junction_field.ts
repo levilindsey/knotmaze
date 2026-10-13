@@ -6,13 +6,10 @@
 // shaders. The CPU only builds geometry (positions + a per-vertex RECORD
 // index) and uploads two float DATA TEXTURES:
 //
-//   PAINT  (RGBA32F, linear texel index): one texel per ribbon sample,
-//          (section r, g, b, paint U) - exactly what RibbonMesh.writePaint
-//          handed the ribbon, so the field reads the ribbons' own material
-//          (reveal glow and gameplay paint included). Each chain owns a
-//          contiguous texel range (its base: the G2 chain header C1.w);
-//          rows wrap (chains longer than a row are fine). Only rows of
-//          chains a paint tick rewrote upload.
+//   (G2: the arm MATERIAL is evaluated per pixel from the shared paint
+//   model - the ribbon's own section Gouraud, the appearance FX and the
+//   gameplay paint, composed exactly as the ribbon shader composes them;
+//   the PAINT texture of per-sample (rgb, U) texels is retired.)
 //   RECORD (RGBA32F, linear texel index): one record per junction / tip:
 //          header (jx, jy, nArms, -), the GATE texel J1 = (tOn, tLast, -, -)
 //          (G2.1: reveal-relative wall times - shown once every arm is
@@ -54,9 +51,10 @@ import {
   KNOT_UNIFORMS_GLSL,
   PAINT_DATA_GLSL,
   PAINT_FX_GLSL,
+  PAINT_PAINT_GLSL,
   PAINT_SECTION_GLSL,
 } from "./paint_glsl";
-import { kGeom, kReveal, kStatic, knotUniforms } from "./paint_model";
+import { kGeom, kPaint, kReveal, kStatic, knotUniforms } from "./paint_model";
 
 // Field geometry constants (shared with the CPU side in ribbon_renderer):
 // arm radial profiles resample the centerline (walked in FIELD_PROF_ARC
@@ -73,14 +71,8 @@ export const MAX_ARMS = 12;
 // done in GLSL as a mask and a shift - both widths are 2^ROW_SHIFT; the
 // FloatRows class and its row uploader live in float_rows.ts).
 export const RECORD_W = 1 << ROW_SHIFT;
-export const PAINT_W = 1 << ROW_SHIFT;
 
-let PAINT_DATA: FloatRows | null = null;
 let RECORD_DATA: FloatRows | null = null;
-export function paintData(): FloatRows {
-  if (!PAINT_DATA) PAINT_DATA = new FloatRows(PAINT_W, 16);
-  return PAINT_DATA;
-}
 export function recordData(): FloatRows {
   if (!RECORD_DATA) RECORD_DATA = new FloatRows(RECORD_W, 16);
   return RECORD_DATA;
@@ -118,79 +110,63 @@ precision highp int;
 precision highp sampler2D;
 
 uniform sampler2D uJData;
-uniform sampler2D uPData;
-uniform sampler2D uTexture;
 uniform vec4 uJParams;
 uniform vec4 uJParams2;
 ${KNOT_UNIFORMS_GLSL}
 ${PAINT_DATA_GLSL}
 ${PAINT_SECTION_GLSL}
 ${PAINT_FX_GLSL}
+${PAINT_PAINT_GLSL}
+
+// World units per pixel at this fragment (set at the top of main): the
+// gameplay paint's edge coverage.
+highp float kFanPx;
 
 const float TAU = 6.283185307179586;
 const float HALF_PI = 1.5707963267948966;
 
 vec4 jAt(int i) { return texelFetch(uJData, ivec2(i & ${RECORD_W - 1}, i >> ${ROW_SHIFT}), 0); }
-vec4 pAt(int i) { return texelFetch(uPData, ivec2(i & ${PAINT_W - 1}, i >> ${ROW_SHIFT}), 0); }
 
-// The material (r, g, b, paint u) of chain ch at a world arc: the RIBBON's
-// section color there (its vertex shader's section at the two bracketing
-// samples, lerped - its own Gouraud; seed = a ctrl near the arc: the arm's
-// joint), the paint U texels lerped the same way (closed chains wrap, open
-// chains clamp), then the appearance FX that tint the color (burn / roots)
-// exactly as the ribbon shader does.
-vec4 chainMaterial(int ch, float a, float seedIn) {
+// The material of chain ch at a world arc, COMPOSED exactly as the ribbon
+// shader composes it: the RIBBON's section color there (its vertex
+// shader's section at the two bracketing samples, lerped - its own
+// Gouraud; seed = a ctrl near the arc: the arm's joint plus its slope),
+// the appearance FX that tint (burn / roots - the joinery wears no
+// stripes or transparency: its gate fades it), then the gameplay paint
+// and the reveal glow at the exact point (G2.3; edges antialiased over
+// kFanPx).
+vec3 chainMaterial(int ch, float a, float seedIn) {
   KChain c = kChain(ch);
   // The ctrl search seed, normalized onto the chain (rings wrap, runs clamp).
   float nc = float(c.nCtrl);
   float seed = c.closed ? seedIn - nc * floor(seedIn / nc) : clamp(seedIn, 0.0, nc - 1.0);
-  int base = int(kS(2 * ch + 1).w + 0.5);
-  int count = c.count;
   float total = c.total;
-  if (total <= 0.0 || count < 2) return vec4(knotSection(c, 0.0), pAt(base).w);
-  int k0;
-  int k1;
-  float fr;
-  float an;
-  if (c.closed) {
-    an = a - total * floor(a / total);
-    float f = an / total * float(count);
-    float fl = floor(f);
-    k0 = int(fl) % count;
-    k1 = (k0 + 1) % count;
-    fr = f - fl;
-  } else {
-    an = clamp(a, 0.0, total);
-    float f = an / total * float(count - 1);
-    float fl = floor(f);
-    k0 = min(int(fl), count - 1);
-    k1 = min(count - 1, k0 + 1);
-    fr = f - fl;
-  }
-  vec4 m = vec4(kSectionAtArc(c, a, seed), mix(pAt(base + k0).w, pAt(base + k1).w, fr));
+  if (total <= 0.0 || c.count < 2) return knotSection(c, 0.0);
+  float an = c.closed ? a - total * floor(a / total) : clamp(a, 0.0, total);
+  vec3 m = kSectionAtArc(c, a, seed);
+  highp float actrl = kCtrlOfArcNear(c, an, kSecK0);
   if (uKFx.w > 0.5 && uKFx.z < c.fxDone) {
     int st = int(uKFx.x + 0.5);
     if (st == 4 || st == 5) {
-      // Burn / roots tint the material (kFxColor's tint path: the joinery
-      // wears no stripes or transparency - its gate fades it instead).
       highp float pR;
       highp float al;
-      m.rgb = kFxColor(c, kCtrlOfArcNear(c, an, kSecK0), an / c.arcPer, m.rgb, pR, al);
+      m = kFxColor(c, actrl, an / c.arcPer, m, pR, al);
     }
+  }
+  if (uKPaint.x > 0.5 || uKFx2.z > 0.5) {
+    m = kComposePaint(m, kPaintAt(c, actrl, an, kFanPx), kGlow(c, actrl));
   }
   return m;
 }
 
-// An arm's material at arc offset s along it (clamped to its domain); the
-// arm's joint ctrl (texel .w) seeds the ctrl search.
-vec4 armPaint(int ab, float s) {
+// An arm's material at arc offset s along it (clamped to its domain).
+vec3 armPaint(int ab, float s) {
   vec4 h = jAt(ab);
   vec4 a = jAt(ab + 1);
   float sc = min(s, a.z);
   // Seed: the joint ctrl plus the offset times the arm's ctrl slope (h.y).
   return chainMaterial(int(h.x + 0.5), a.x + a.y * sc, a.w + a.y * sc * h.y);
 }
-
 // Arc along an arm at projected radius rp (its radial profile; straight
 // extrapolation past the grid).
 float profArc(int ab, float rp) {
@@ -204,12 +180,6 @@ float profArc(int ab, float rp) {
   return mix(t.y, t.w, x - float(i));
 }
 
-vec3 composeU(vec3 rgb, float u) {
-  // Explicit LOD: this runs in non-uniform control flow, where implicit
-  // derivatives are undefined (the strip has one mip level either way).
-  vec4 acc = textureLod(uTexture, vec2(u, 0.5), 0.0);
-  return mix(rgb, acc.rgb, acc.a);
-}
 
 // The composed junction-field color at world point p for the record at
 // texel rec: bracketing arms by their profile angles AT p's radius, each
@@ -227,8 +197,7 @@ vec3 junctionField(int rec, vec2 p) {
   vec2 e = p - hd.xy;
   if (n == 0) {
     vec4 ax = jAt(rec + 3);
-    vec4 m = chainMaterial(int(jAt(rec + 2).x + 0.5), ax.x + dot(e, ax.yz), ax.w);
-    return composeU(m.rgb, m.w);
+    return chainMaterial(int(jAt(rec + 2).x + 0.5), ax.x + dot(e, ax.yz), ax.w);
   }
   float rho = length(e);
   float phi = atan(e.y, e.x);
@@ -287,12 +256,10 @@ vec3 junctionField(int rec, vec2 p) {
   vec3 cA = vec3(0.0);
   vec3 cB = vec3(0.0);
   if (!onlyB) {
-    vec4 mA = armPaint(abA, profArc(abA, relA < HALF_PI ? rho * cos(relA) : 0.0));
-    cA = composeU(mA.rgb, mA.w);
+    cA = armPaint(abA, profArc(abA, relA < HALF_PI ? rho * cos(relA) : 0.0));
     if (onlyA) return cA;
   }
-  vec4 mB = armPaint(abB, profArc(abB, relB < HALF_PI ? rho * cos(relB) : 0.0));
-  cB = composeU(mB.rgb, mB.w);
+  cB = armPaint(abB, profArc(abB, relB < HALF_PI ? rho * cos(relB) : 0.0));
   if (onlyB) return cB;
   return mix(cA, cB, t);
 }
@@ -349,6 +316,7 @@ void main(void) {
   vec2 gfw = fwidth(vPos);
   float pxW = max(max(gfw.x, gfw.y), 1e-5);
   int rec = int(vRec + 0.5);
+  kFanPx = pxW;
   float aM = knotFanAlpha(jAt(rec + 1));
   if (aM <= 0.002) discard;
   vec3 rgb = junctionField(rec, vPos);
@@ -371,49 +339,31 @@ let GAP_TEX: Texture | null = null;
 function makeShader(
   vertex: string,
   fragment: string,
-  name: string,
-  accent: Texture
+  name: string
 ): FieldShader {
   const sh = Shader.from({
     gl: { vertex, fragment, name },
     resources: {
-      uTexture: accent.source,
-      uSampler: accent.source.style,
       uJData: recordData().source,
-      uPData: paintData().source,
       uGapData: (GAP_TEX ?? defaultGapTexture()).source,
       fieldUniforms: fieldUniforms(),
       // G2 shader paint (paint_model.ts).
       uKStatic: kStatic().source,
       uKGeom: kGeom().source,
       uKReveal: kReveal().source,
+      uKPaintData: kPaint().source,
       knotUniforms: knotUniforms(),
     },
   }) as FieldShader;
-  sh.texture = accent;
+  sh.texture = Texture.WHITE;
   return sh;
 }
 
-export function junctionShader(accent: Texture): FieldShader {
+export function junctionShader(): FieldShader {
   if (!JUNCTION_SHADER) {
-    JUNCTION_SHADER = makeShader(
-      JUNCTION_VERT,
-      JUNCTION_FRAG,
-      "junction-field",
-      accent
-    );
+    JUNCTION_SHADER = makeShader(JUNCTION_VERT, JUNCTION_FRAG, "junction-field");
   }
   return JUNCTION_SHADER;
-}
-
-// Point the field shader at an accent strip (custom shaders ignore
-// mesh.texture - see bindAccent in ribbon_renderer).
-export function bindFieldAccent(tex: Texture): void {
-  const sh = JUNCTION_SHADER;
-  if (!sh || sh.texture === tex) return;
-  sh.resources.uTexture = tex.source;
-  sh.resources.uSampler = tex.source.style;
-  sh.texture = tex;
 }
 
 // Point the field shader at a scene's gap-slot table (see bindGap in

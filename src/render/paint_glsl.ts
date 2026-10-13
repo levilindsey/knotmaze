@@ -40,6 +40,9 @@ const S = PAINT_CONST.K_ROW_SHIFT;
 //   uKKnots = anim -> wall speed knots (animT, wallT, invSpeed, valid)
 //   uKGamut = (baseHue, arcDeg, sat, light)  the section gamut
 //   uKSect  = (blendDist, ease, -, -)        junctionBlend (lattice units)
+//   uKPaint = (on, refBase, itemBase, hover) gameplay paint (KPAINT)
+//   uKPulse = (travelIn, travelOut, spacing, fadeIn)  pulse clocks
+//   uKGold  = (gold rgb, -)                  the path color
 export const KNOT_UNIFORMS_GLSL = /* glsl */ `
 uniform vec4 uKBase;
 uniform vec4 uKFx;
@@ -49,6 +52,9 @@ uniform vec4 uKInk;
 uniform vec4 uKKnots[8];
 uniform vec4 uKGamut;
 uniform vec4 uKSect;
+uniform vec4 uKPaint;
+uniform vec4 uKPulse;
+uniform vec4 uKGold;
 `;
 
 // Data access + chain geometry (vertex and fragment stages).
@@ -56,6 +62,7 @@ export const PAINT_DATA_GLSL = /* glsl */ `
 uniform highp sampler2D uKStatic;
 uniform highp sampler2D uKGeom;
 uniform highp sampler2D uKReveal;
+uniform highp sampler2D uKPaintData;
 ${glslConstBlock()}
 const float K_TAU = 6.283185307179586;
 const float K_INV_TAU = 0.15915494309189535;
@@ -63,6 +70,7 @@ const float K_INV_TAU = 0.15915494309189535;
 highp vec4 kS(int i) { return texelFetch(uKStatic, ivec2(i & ${W1}, i >> ${S}), 0); }
 highp vec4 kG(int i) { return texelFetch(uKGeom, ivec2(i & ${W1}, i >> ${S}), 0); }
 highp vec4 kR(int i) { return texelFetch(uKReveal, ivec2(i & ${W1}, i >> ${S}), 0); }
+highp vec4 kP(int i) { return texelFetch(uKPaintData, ivec2(i & ${W1}, i >> ${S}), 0); }
 
 struct KChain {
   int ch;
@@ -604,5 +612,172 @@ vec3 kSectionAtArc(KChain c, highp float a, highp float seed) {
     ? kRunSection(c, c1, sl1, I1, R0, R1, R2, R3)
     : knotSection(c, c1);
   return mix(s0, s1, fr);
+}
+`;
+// G2.3 GAMEPLAY PAINT (needs PAINT_DATA_GLSL + KNOT_UNIFORMS_GLSL +
+// PAINT_FX_GLSL). KPAINT layout and semantics: paint_math.ts (kPaintAt).
+export const PAINT_PAINT_GLSL = /* glsl */ `
+highp float kGoldU(highp float p) {
+  return p >= 1.0 ? 121.0 / 256.0 : p <= 0.0 ? 115.0 / 256.0 : (115.0 + 6.0 * p) / 256.0;
+}
+highp float kBandU(bool onPath, highp float v) {
+  highp float q = clamp(v, 0.0, 1.0);
+  return onPath ? (124.5 + 110.0 * q) / 256.0 : (111.5 - 110.0 * q) / 256.0;
+}
+
+highp float kPulseV(highp float d, highp float span, bool inward, bool hovered) {
+  if (d < 0.0 || d > span) return 0.0;
+  highp float endWin = clamp((span - d) / PULSE_END_WINDOW, 0.0, 1.0);
+  if (hovered) return endWin * uKPaint.w;
+  highp float s = uKPulse.z;
+  highp float raw = inward ? d + uKPulse.x : d - uKPulse.y;
+  highp float ph = raw - s * floor(raw / s);
+  highp float dist = min(ph, s - ph);
+  highp float dC = max(0.0, d - (ph <= s - ph ? ph : ph - s));
+  highp float bump = max(0.0, 1.0 - dist / CREST_WIDTH) * min(1.0, dC / CREST_RAMP);
+  highp float fl = (PULSE_FLOOR + PULSE_CORE_BOOST * max(0.0, 1.0 - d / PULSE_CORE_RADIUS)) *
+    max(0.0, 1.0 - d / PULSE_REACH);
+  return min(1.0, (fl + bump * 0.9) * endWin) * uKPulse.w;
+}
+
+highp float kRingDist(highp float a, highp float b, highp float total, bool closed) {
+  highp float d = abs(a - b);
+  return closed ? min(d, total - d) : d;
+}
+
+highp float kCov(highp float sd, highp float px) {
+  if (!(px > 0.0)) return sd >= 0.0 ? 1.0 : 0.0;
+  return clamp(sd / px + 0.5, 0.0, 1.0);
+}
+
+// (p, band, famB, v): the gold ramp amount, or a band and its strength.
+highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px) {
+  highp vec4 st = vec4(0.0);
+  if (uKPaint.x < 0.5) return st;
+  int n = c.nCtrl;
+  int sl = clamp(int(floor(ctrl)), 0, n - 1);
+  highp vec4 I = kP(c.idx + sl);
+  int first = int(I.x + 0.5);
+  int cnt = int(I.y + 0.5);
+  highp float total = c.total;
+  int refBase = int(uKPaint.y + 0.5);
+  int itemBase = int(uKPaint.z + 0.5);
+  for (int k = 0; k < 32; k++) {
+    if (k >= cnt) break;
+    int r = first + k;
+    highp vec4 rt = kP(refBase + (r >> 2));
+    int j = r & 3;
+    int item = int((j == 0 ? rt.x : j == 1 ? rt.y : j == 2 ? rt.z : rt.w) + 0.5);
+    highp vec4 T0 = kP(itemBase + 2 * item);
+    highp vec4 T1 = kP(itemBase + 2 * item + 1);
+    int type = int(T0.x + 0.5);
+    if (type == PI_SPAN) {
+      highp float a0 = kArcOfCtrl(c, T0.y);
+      highp float a1 = kArcOfCtrl(c, T0.z);
+      bool wraps = c.closed && a1 <= a0 && T0.z > T0.y;
+      bool inside = wraps ? (arc >= a0 || arc <= a1) : (arc >= a0 && arc <= a1);
+      highp float dEdge = min(kRingDist(arc, a0, total, c.closed), kRingDist(arc, a1, total, c.closed));
+      highp float cov = kCov(inside ? dEdge : -dEdge, px);
+      if (cov <= 0.0) continue;
+      highp float p = 1.0;
+      if (T0.w < 1.0 || T1.x < 1.0) {
+        highp float spanLen = max(wraps ? total - a0 + a1 : a1 - a0, 1e-9);
+        highp float da = wraps && arc < a0 ? total - a0 + arc : arc - a0;
+        p = T0.w + (T1.x - T0.w) * clamp(da / spanLen, 0.0, 1.0);
+      }
+      st.x += (p - st.x) * cov;
+    } else if (type == PI_CAP) {
+      highp float pc = T0.w;
+      if (!(kGoldU(pc) > kGoldU(st.x))) continue;
+      highp float d = kRingDist(arc, kArcOfCtrl(c, T0.y), total, c.closed);
+      highp float cov = kCov(T1.z - d, px);
+      if (cov <= 0.0) continue;
+      st.x += (pc - st.x) * cov;
+    } else if (type == PI_PULSE) {
+      int flags = int(T1.y + 0.5);
+      highp float aJ = kArcOfCtrl(c, T0.y);
+      highp float aF = kArcOfCtrl(c, T0.z);
+      bool dirPos;
+      highp float span;
+      if (c.closed) {
+        dirPos = T0.z > T0.y;
+        highp float x = dirPos ? aF - aJ : aJ - aF;
+        span = x - total * floor(x / total);
+      } else {
+        dirPos = aF >= aJ;
+        span = abs(aF - aJ);
+      }
+      if (span <= 1e-6) continue;
+      highp float d;
+      if (c.closed) {
+        highp float x = dirPos ? arc - aJ : aJ - arc;
+        d = x - total * floor(x / total);
+      } else {
+        d = dirPos ? arc - aJ : aJ - arc;
+      }
+      highp float v = kPulseV(d, span, (flags & IF_INWARD) != 0, (flags & IF_HOVER) != 0);
+      if (v > PULSE_MIN_V) {
+        st.y = 1.0;
+        st.z = (flags & IF_ON_PATH) != 0 ? 1.0 : 0.0;
+        st.w = v;
+      }
+    }
+  }
+  return st;
+}
+
+highp float kGlow(KChain c, highp float ctrl) {
+  // Palette mode only (knot mode marks its tips with discs), interval
+  // modes only, never under burn / roots (their tint IS the frontier).
+  if (uKBase.w < 0.5 || uKFx2.z < 0.5 || uKInk.y > 0.5) return 0.0;
+  int stl = int(uKFx.x + 0.5);
+  if (stl == 4 || stl == 5) return 0.0;
+  highp float t = uKFx.y;
+  int n = c.nCtrl;
+  int sl = clamp(int(floor(ctrl)), 0, n - 1);
+  highp float hint = kS(c.idx + sl).y;
+  if (hint < -0.5) return 0.0;
+  int s0 = int(hint);
+  int cnt = int(fract(hint) * 8.0 + 0.5) + 1;
+  highp float glowArc = uKShape.z;
+  highp float hold = uKShape.w;
+  highp float aU = kArcU(c, ctrl);
+  highp float g = 0.0;
+  for (int k = 0; k < 4; k++) {
+    if (k >= cnt) break;
+    int s = s0 + k;
+    if (s >= c.src0 + c.srcN) break;
+    highp vec4 A = kR(2 * s);
+    if (ctrl < A.x - 1e-4 || ctrl > A.y + 1e-4) continue;
+    highp vec4 B = kR(2 * s + 1);
+    highp float prog = (t - B.x) * B.y;
+    if (prog <= 0.0 || prog >= B.w) continue;
+    highp float tA = B.x + abs(ctrl - A.z) / B.y;
+    if (t < tA) continue;
+    highp float d = abs(kArcU(c, A.z + A.w * prog) - aU);
+    if (d > glowArc) continue;
+    g = max(g, d <= hold ? 1.0 : 1.0 - (d - hold) / (glowArc - hold));
+  }
+  return g;
+}
+
+vec3 kComposePaint(vec3 S, highp vec4 st, highp float glow) {
+  bool band = st.y > 0.5;
+  bool famB = st.z > 0.5;
+  highp float v = st.w;
+  if (glow > 0.0) {
+    highp float u = band ? kBandU(famB, v) : kGoldU(st.x);
+    if (u >= 118.0 / 256.0) {
+      if (kBandU(true, glow) > u) { band = true; famB = true; v = glow; }
+    } else if (kBandU(false, glow) < u) {
+      band = true; famB = false; v = glow;
+    }
+  }
+  if (band) {
+    highp float w = K_BAND * clamp(v, 0.0, 1.0);
+    vec3 from = famB ? uKGold.rgb : S;
+    return from + (vec3(1.0) - from) * w;
+  }
+  return S + (uKGold.rgb - S) * clamp(st.x, 0.0, 1.0);
 }
 `;
