@@ -5,16 +5,16 @@ exports[`knot-mode byte identity (golden guard) > matches the recorded knot-mode
   "knot": {
     "checkpoints": [
       {
-        "hash": 1565452898,
-        "sum": 3458.794504,
+        "hash": -1612311697,
+        "sum": 3458.340695,
       },
       {
-        "hash": 1127775321,
-        "sum": 3458.891101,
+        "hash": 323822867,
+        "sum": 3457.060502,
       },
       {
-        "hash": 1281541317,
-        "sum": 3458.382848,
+        "hash": 1307699268,
+        "sum": 3456.501185,
       },
     ],
     "count": 288,
@@ -22,16 +22,16 @@ exports[`knot-mode byte identity (golden guard) > matches the recorded knot-mode
   "torture": {
     "checkpoints": [
       {
-        "hash": -642484268,
-        "sum": 3469.278798,
+        "hash": -117837800,
+        "sum": 3469.655186,
       },
       {
-        "hash": 983931506,
-        "sum": 3471.750067,
+        "hash": 1393921838,
+        "sum": 3472.257805,
       },
       {
-        "hash": 2089527453,
-        "sum": 3468.620811,
+        "hash": -73532890,
+        "sum": 3468.912922,
       },
     ],
     "count": 288,

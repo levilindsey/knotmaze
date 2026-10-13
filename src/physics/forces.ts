@@ -385,6 +385,9 @@ export function applySegmentCollision(
           const q1y = p1y + d1y * s;
           const q2x = p2x + d2x * t;
           const q2y = p2y + d2y * t;
+          const d2dPair = Math.sqrt(
+            (q1x - q2x) * (q1x - q2x) + (q1y - q2y) * (q1y - q2y)
+          );
           const lenProd2 = Math.sqrt(a * e);
           const sinAngle =
             lenProd2 > 1e-12 ? Math.abs(denom2) / lenProd2 : 1;
@@ -477,12 +480,62 @@ export function applySegmentCollision(
             }
           }
 
-          // TRUE-3D capsule contact at the closest points: z lerped from
-          // the simulated per-particle z. Unconditional - no exemptions.
-          const zi = zPos[i] + (zPos[i2] - zPos[i]) * s;
-          const zj = zPos[j] + (zPos[j2] - zPos[j]) * t;
-          let nx = q1x - q2x;
-          let ny = q1y - q2y;
+          // TRUE-3D capsule contact at the 3D CLOSEST POINTS of the two
+          // segments (z from the simulated per-particle z). Unconditional -
+          // no exemptions. The closest points must be solved in 3D, not
+          // borrowed from the 2D pass above: two segments that run nearly
+          // parallel in the plane while their z runs opposite ways (the two
+          // arms of every twist eye - one tent descends while the other
+          // rises) have an ILL-CONDITIONED 2D closest point that jumps
+          // between segment ends under tiny motions, so the contact's
+          // distance, normal (z share included) and endpoint weights were
+          // discontinuous. The two final sweeps could then each find a
+          // different "closest point" and both push - an overshoot that
+          // rang as a period-2 (or longer) limit cycle the sleep gate never
+          // passed (K41: mv pinned at 1.9e-2 on the fat knot URL, 4-5 of 9
+          // fat fabric seeds never slept even before the kink eyes; every
+          // one stopped within frames when this solve switched to 3D). In
+          // 3D those segments are far from parallel, so the solve is well
+          // conditioned. The 2D floor above stays on the 2D closest points
+          // (it is a statement about the plane).
+          // Projection onto the plane never lengthens a distance, so a pair
+          // already apart in 2D cannot touch in 3D: skip the solve.
+          if (d2dPair >= minDist) continue;
+          const a1x = positions[i * 2];
+          const a1y = positions[i * 2 + 1];
+          const a1z = zPos[i];
+          const e1x = positions[i2 * 2] - a1x;
+          const e1y = positions[i2 * 2 + 1] - a1y;
+          const e1z = zPos[i2] - a1z;
+          const a2x = positions[j * 2];
+          const a2y = positions[j * 2 + 1];
+          const a2z = zPos[j];
+          const e2x = positions[j2 * 2] - a2x;
+          const e2y = positions[j2 * 2 + 1] - a2y;
+          const e2z = zPos[j2] - a2z;
+          const wx = a1x - a2x;
+          const wy = a1y - a2y;
+          const wz = a1z - a2z;
+          const a3 = e1x * e1x + e1y * e1y + e1z * e1z;
+          const e3 = e2x * e2x + e2y * e2y + e2z * e2z;
+          const f3 = e2x * wx + e2y * wy + e2z * wz;
+          const c3 = e1x * wx + e1y * wy + e1z * wz;
+          const b3 = e1x * e2x + e1y * e2y + e1z * e2z;
+          const den3 = a3 * e3 - b3 * b3;
+          s = den3 > 1e-12 ? (b3 * f3 - c3 * e3) / den3 : 0;
+          s = Math.max(0, Math.min(1, s));
+          t = e3 > 1e-12 ? (b3 * s + f3) / e3 : 0;
+          t = Math.max(0, Math.min(1, t));
+          if (t === 0 || t === 1) {
+            s = Math.max(
+              0,
+              Math.min(1, a3 > 1e-12 ? (b3 * t - c3) / a3 : 0)
+            );
+          }
+          const zi = a1z + e1z * s;
+          const zj = a2z + e2z * t;
+          let nx = a1x + e1x * s - (a2x + e2x * t);
+          let ny = a1y + e1y * s - (a2y + e2y * t);
           let nz = zi - zj;
           const dist = Math.sqrt(nx * nx + ny * ny + nz * nz);
           if (dist >= minDist) continue;
