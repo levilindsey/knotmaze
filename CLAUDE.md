@@ -34,12 +34,16 @@ src/
     maze_plan.ts          # P4: combinatorial maze plan (splices/merges/stubs)
     maze_apply.ts         # P4: graph surgery realizing the plan + corner cuts
     walk_graph.ts         # P4: player-facing junction/run multigraph + Dijkstra
-    maze.ts               # P4 LEGACY (md=1): single-strand maze graph
+    shapes.ts             # Shaped lattices: analytic inside/outside masks
+    section_colors.ts     # Section color schemes (per-run color table)
+    reveal_plan.ts        # Appearance sequences: per-chain reveal timing
+    types.ts              # Layer 1 graph types (nodes, edges, strands)
   geometry/
     spline_generator.ts   # Layer 2: splines from lattice (closed + open)
   physics/
     particle_system.ts    # Layer 3: Verlet particles (+ open chains, junctions)
     forces.ts             # Springs, bending, repulsion
+    sleep_gate.ts         # K63: when the sim may sleep (sim-time quiet window)
   game/
     fabric_controller.ts  # P4: branch-point-only solve state + metrics
     maze_stats.ts         # K19: stat definitions, SolveClock, move grid
@@ -47,7 +51,6 @@ src/
     daily_store.ts        # K20: versioned localStorage records + aggregates
     daily_attempt.ts      # K47: saved attempts - record, walk fingerprint, replay
     share_text.ts         # K20: Wordle-style share text
-    maze_controller.ts    # P4 LEGACY (md=1): single-strand solve state
   render/
     ribbon_renderer.ts    # PixiJS ribbon meshes
     ribbon_mesh.ts        # Triangle strip extrusion
@@ -59,36 +62,48 @@ src/
     paint_model.ts        # G2: data textures (KSTATIC/KGEOM/KREVEAL/KPAINT) + uniforms
     paint_const.ts        # G2: shared numeric constants (emitted into GLSL)
     float_rows.ts         # Row-partial RGBA32F data textures + uploader
+    reveal.ts             # Appearance reveal: per-sample width masks
+    appear_fx.ts          # Reveal-front particles (rainbow, comet, dust, burn, roots)
     pluck_overlay.ts      # Render-only pluck: time-exposure strip + base collapse
     pluck_model.ts        # Pure plucked-string math (modes, envelope, lobes)
     background.ts         # K21 shader backdrop: low-res texture + blit, fog backdrop
     background_model.ts   # K21 pure: effect list, profiles, colors, drift clock
     background_shaders.ts # K21 GLSL: noise lib, six effects, blit, fog
-    fabric_maze_renderer.ts # P4: woven gold path recolor + markers + hints
-    maze_renderer.ts      # P4 LEGACY (md=1): single-strand overlay
+    fabric_maze_renderer.ts # P4: what gameplay paints; markers, yarn, fog of war
     debug_renderer.ts     # Lattice/graph debug overlay
   audio/
     knot_synth.ts         # Web Audio pluck/strum
+    pitch_space.ts        # Scales; segment pitch by length bucket
+    songs.ts              # Music mode's songs ({note, beats})
   ui/
     tweakpane_panel.ts    # Control panel
+    grid_align_curve.ts   # gridAlign's exponential slider curve
     url_state.ts          # URL params, defaults, link parse/write (+ legacy keys)
     param_codec.ts        # Compact link token: frozen codec tables + bitstream
     daily_link.ts         # K20/K56: daily definitions, seeds, routing, exempt prefs
     maze_hud.ts           # K19: maze HUD + win banner (DOM)
     daily_stats_view.ts   # K20: daily stats modal
     share.ts              # K20: native share sheet / clipboard + toast
+  util/
+    random.ts             # Seeded RNG
+  build_info.ts           # Build identity (git SHA, build time; vite defines)
   main.ts                 # Entry point
 test/
   core/
     lattice_grower.test.ts, maze_plan.test.ts, maze_apply.test.ts,
-    walk_graph.test.ts, maze.test.ts
+    walk_graph.test.ts, shapes.test.ts, section_colors.test.ts,
+    reveal_plan.test.ts
   geometry/
     spline_generator.test.ts
   physics/
     particle_system.test.ts, byte_identity.test.ts (golden guard),
-    open_chain.test.ts, junction.test.ts, maze_fabric.test.ts
+    open_chain.test.ts, junction.test.ts, maze_fabric.test.ts,
+    sleep_gate.test.ts, sleep.regression.test.ts (K41 links, K63 fps)
+  audio/
+    pitch_space.test.ts
   game/
-    fabric_controller.test.ts (+ K19 stats), maze_stats.test.ts,
+    fabric_controller.test.ts (+ K19 stats), fabric_trail.test.ts,
+    maze_stats.test.ts,
     daily_calendar.test.ts (zones, DST), daily_store.test.ts (schema,
     v1 migration, attempts, prefs, corrupt/newer data, quota, no storage,
     streaks), daily_attempt.test.ts (fingerprints, save/restore, refusals)
@@ -100,6 +115,7 @@ test/
   ui/
     param_codec.test.ts (codec table pins + format + delta blobs),
     url_codec.test.ts (links, legacy forms), appear_mode.test.ts,
+    seed_text.test.ts, grid_align_curve.test.ts,
     daily_link.test.ts (frozen definition, seeds, golden dailies, links,
     the front door, the exempt set, prefs)
   quiescence.regression.test.ts  # Guards the friction dissipation channel
