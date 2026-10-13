@@ -71,33 +71,16 @@ and never reused.
   about 0.2% miss a loud late snap. Physics-off loads share the window,
   so they now settle hidden for 5.0 sim-s instead of 3.25 (+54%); a
   separate window for them is possible. Keep 2.5 s (recommended)?
+- **K67** · Sign off G2's visible changes, live since the K4 merge: the
+  list is in `docs/design/G2_shader_paint.md` section 3.8 (exact crests
+  and gold edges, exact strands/depth/noise hue arcs, burn on mono and
+  decorative chains, noise stuck to the material, ink dye from
+  reveal-start positions, emergent crossings fading in, the trail fade).
+  New with the fan fix: paint and burn-front edges inside junction webs
+  ramp over one strip step (at most 0.64 CSS px at the default zoom,
+  1.42 at cr 6 with tw .64).
 
 ## In progress
-
-- **K4** · G2: per-sample color work moves into the shaders. Stages
-  G2.0-G2.3 and G2.5 are done and verified (desktop censuses, same-state
-  A/Bs, 309 tests on master), but NOT MERGED. On the Pixel 11 it costs
-  60 -> 44 fps at rest even with flow off (p90 33 ms, GPU-bound), while
-  master holds 56-60. The desktop shows the cause: fans 0.57 -> 1.84 ms
-  of GPU at 3200x1800, from the per-arm section Gouraud plus per-arm
-  paint. G2.4 is not done.
-  - owner: the G2 agent of session d8031183, resumed 2026-10-12 19:25
-    on Levi's go ("Fan fix?") for the fan pre-pass plus the phone gate
-    only.
-  - branch: `worktree-agent-a7d1f998c07c3864f`
-    (`.claude/worktrees/agent-a7d1f998c07c3864f`); last commit: 00e1784
-    (the fan pre-pass: junction fans read per-arm material strips).
-  - evidence: `.claude/probes/K4/` (NOTES.txt is the index) and
-    `.claude/probes/K10/bench_2026-10-12.txt`.
-  - next: verify the pre-pass, re-measure on the phone
-    (`scripts/phone.ps1`, `.claude/probes/K10/phone_bench.mjs`) and merge
-    only at master's 56-60 fps at rest; rebase over K63 (`src/main.ts`,
-    CLAUDE.md). Then Levi signs off the visible changes listed in
-    the G2 doc on the branch (linear trail fade, burn on mono, noise
-    stuck to the material, the ink spread, exact crests and gold edges,
-    exact strands/depth hue arcs, emergent crossings fading in, glow
-    from a point's own fronts).
-  - brief: `docs/design/K4.md` and `docs/design/G2_shader_paint.md`.
 
 ## Next, in order
 
@@ -105,10 +88,9 @@ Overnight order, 2026-10-12 (Levi: proceed through the night with the
 remaining shader work). Every stage merges only after desktop
 verification AND the phone gate (K10); the phone stays on its charger,
 awake, over Tailscale.
-1. K4: the fan fix, then merge G2.
-2. K45: slim CLAUDE.md while no agent is editing it.
-3. K8 (G3) and K23 (G2.4 GPU particles, GPU fog) in parallel.
-4. K9 (G4) and K42 (per-pixel overlap winner) in parallel.
+1. K45: slim CLAUDE.md while no agent is editing it (K4 merged).
+2. K8 (G3) and K23 (G2.4 GPU particles, GPU fog) in parallel.
+3. K9 (G4) and K42 (per-pixel overlap winner) in parallel.
 
 K5-K7 (split, frame loop, worker) follow.
 
@@ -153,11 +135,19 @@ K5-K7 (split, frame loop, worker) follow.
   - G1 58-60 with flow (the regression flow caused is gone);
   - master 56-59 with flow;
   - backgrounds: none 58-59, vellum 56-59, mist 55-58 (a small cost);
-  - G2 about 44 with flow on or off (K4).
+  - G2 about 44 with flow on or off (K4);
+  - G2 with the fan fix, on K63 (merged): 59.5 with flow, 60.3 flow off
+    (master 59.5 / 59.3).
 
   Rerun after every stage: `scripts/preview.ps1` builds per ref,
   `scripts/phone.ps1 -Ports ...`, then `.claude/probes/K10/phone_bench.mjs`.
-  The phone must be unlocked and awake.
+  The phone must be unlocked and awake. It heats up under back-to-back
+  runs (light throttling at 39 C skin, on its charger), which lowers
+  flow-on fps for every build alike: check `adb shell dumpsys
+  thermalservice` (status 0) and park the tab between runs
+  (`.claude/probes/K4/phone_blank.mjs`). Vsync-capped fps cannot show the
+  headroom left; a load-amplified bench (a higher render resolution)
+  would.
 
 ## Residuals (known, not fixed)
 
@@ -253,7 +243,16 @@ K5-K7 (split, frame loop, worker) follow.
   K41 copy in `.claude/probes/K41/` moves 12 px first). And with flow on,
   a kink census of one frozen state varies by about 0.1 widths between
   captures: A/B at `fw=0`, replacing a link's own `fw=` (a second copy
-  is ignored).
+  is ignored). K63 moved where a `phy=0` link's hidden settle stops, so
+  a same-state A/B must pair builds on the same side of K63. The fan
+  census's per-arm debug views can swap the two bracketing arms where
+  their angles tie (f32 on the GPU, f64 on the CPU); the blended field
+  agrees there.
+- **K69** · String mode (`pv=string`) on pre-G2.3 builds drew a 1-px
+  diagonal sliver from the start to the exit marker inside the markers
+  Graphics after a few moves (`?b.c&pv=string`, 6 moves; hiding that
+  Graphics removes it). G2.3 does not show it, but it was never
+  attributed; look again if it comes back (G2 doc section 7, Follow-ups).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -300,10 +299,30 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   3.5-5 s in, mostly under the quiet threshold, which is what forces
   K63's 2.5 s window. Fixing it could make a 0.75 s window safe (K64).
   (K63 agent idea; harness in `.claude/probes/K63/`.)
+- **K68** · If junction-web edges look soft at deep zoom, size the arm
+  material strip rows from the camera's world-per-pixel (re-packed on
+  zoom) instead of raising the 64-texel width for everyone. About 4x the
+  default zoom puts a cr 3 median strip step near 1.5 CSS px. (K4 agent
+  idea.)
 
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K4** · G2: per-sample color work runs in the shaders. Section colors,
+  the reveal and its FX, and gameplay paint are evaluated per pixel from
+  data textures (CPU mirror: `src/render/paint_math.ts`), and junction
+  fans read per-arm material strips rendered once per frame
+  (`src/render/arm_strip.ts`). Done in 4243715..470a4ea (2026-10-12).
+  - Phone (Pixel 11, on K63): 59.5 fps with flow, 60.3 flow off (master
+    59.5 / 59.3). Without the strips the fans had cost 60 -> 44 fps.
+  - Desktop GPU (3200x1800, 5 moves): draw phase 2.07 (master) -> 2.14
+    ms; fans 0.59 ms. CPU at rest: tickPaint 0.19 -> 0.01 ms, uploads
+    151 -> 0 KB/frame.
+  - Censuses against the CPU mirror within 2/255; vitest 315. Record:
+    `docs/design/G2_shader_paint.md` section 7; probes
+    `.claude/probes/K4/`. Sign-off of the visible changes: K67. G2.4
+    (GPU particles) is K23.
 
 - **K63** · The sleep gate counted 45 still FRAMES, so every real settle
   (physics-bound under 10 fps, frames capped at 0.1 s) slept at exactly
