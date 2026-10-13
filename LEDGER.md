@@ -42,6 +42,15 @@ and never reused.
 
 ## Next, in order
 
+- **K45** · Slim CLAUDE.md (2,040 lines, ~36k tokens, loaded into every
+  session and agent) to about 400 lines under the new context-budget rule
+  (claude-config `rules/context-budget.md`): keep binding rules, the
+  architecture map and invariants. Stage history moves to
+  `docs/history.md`; physics, render and probe lore move to path-scoped
+  `.claude/rules/*.md` (track `.claude/rules/` while the rest of `.claude/`
+  stays untracked). Do it right after K41, K4, K19+K20 and K21 merge:
+  each of their agents edits CLAUDE.md.
+
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along the new data
   lines, once K1-K3 land.
 - **K6** · One frame loop driven by what-changed flags (after K5).
