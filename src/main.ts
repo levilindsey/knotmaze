@@ -48,6 +48,11 @@ import { shareText } from "./game/share_text";
 import { MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
 import { ModeBadge, modeBadgeFor } from "./ui/mode_badge";
+import {
+  DARK_DISC,
+  FLAG_GLYPH,
+  OffscreenIndicators,
+} from "./ui/offscreen_indicators";
 import { openDailyStats } from "./ui/daily_stats_view";
 import { shareOrCopy, showToast } from "./ui/share";
 import { buildPanel } from "./ui/tweakpane_panel";
@@ -78,6 +83,10 @@ const BUILD_STAMP =
 // The stamp/perf readout's visibility persists per browser.
 const STATS_KEY = "knotmaze.showStats";
 const MAZE_STATS_KEY = "knotmaze.showMazeStats";
+// K73 viewer preferences for the off-screen indicators (both default on;
+// K84 sorts every param into preference vs design later).
+const FINISH_INDICATOR_KEY = "knotmaze.finishIndicator";
+const TAP_TO_PAN_KEY = "knotmaze.tapToPan";
 // Pinch / wheel zoom ceiling, as a multiple of the auto-fit scale.
 const MAX_ZOOM = 8;
 // FOLLOW camera (cameraMode follow): framing span (lattice units across
@@ -290,12 +299,17 @@ async function main(): Promise<void> {
   };
   let statsShown = false;
   let mazeStatsShown = false;
+  let finishIndicatorShown = true;
+  let tapToPan = true;
   try {
     statsShown = localStorage.getItem(STATS_KEY) === "1";
     // Opt-in since 2026-10-12 (Levi: the win banner carries the stats).
     mazeStatsShown = localStorage.getItem(MAZE_STATS_KEY) === "1";
+    finishIndicatorShown = localStorage.getItem(FINISH_INDICATOR_KEY) !== "0";
+    tapToPan = localStorage.getItem(TAP_TO_PAN_KEY) !== "0";
   } catch {
-    // Storage unavailable: the defaults (both stats readouts hidden).
+    // Storage unavailable: the defaults (both stats readouts hidden, the
+    // finish indicator shown and tappable).
   }
   const settings: PanelSettings = {
     temperature: 0,
@@ -303,6 +317,8 @@ async function main(): Promise<void> {
     muted: false,
     showStats: statsShown,
     showMazeStats: mazeStatsShown,
+    finishIndicator: finishIndicatorShown,
+    tapToPan,
   };
   const synth = new KnotSynth();
   // prefers-reduced-motion (live): render-only plucks drop the strobe ghost
@@ -487,11 +503,25 @@ async function main(): Promise<void> {
   let camFollow = false;
   let camTouchedAt = -1e9; // performance.now seconds of the last gesture.
   let viewHoming = false; // Fit mode: easing a reset back to the home view.
+  // K73: an eased move to a framing (an off-screen indicator's tap): the
+  // world point at the screen's center and the scale, from -> to. Any
+  // gesture or a reset cancels it.
+  let camTween: {
+    t: number;
+    dur: number;
+    s0: number;
+    x0: number;
+    y0: number;
+    s1: number;
+    x1: number;
+    y1: number;
+  } | null = null;
   const headScratch = new Float64Array(2);
   const nowSec = (): number => performance.now() / 1000;
   const touchCamera = (): void => {
     camTouchedAt = nowSec();
     viewHoming = false;
+    camTween = null;
   };
   const clampView = (): void => {
     view.zoom = Math.min(MAX_ZOOM, Math.max(1, view.zoom));
@@ -571,8 +601,32 @@ async function main(): Promise<void> {
   };
   // Double-click / double-tap on empty space: back to the home framing.
   const resetCamera = (): void => {
+    camTween = null;
     if (camFollow) camTouchedAt = -1e9; // Full-strength pull at once.
     else viewHoming = true;
+  };
+  // How long a follow camera stays on a framing an indicator's tap moved it
+  // to, beyond the usual FOLLOW_DELAY, before it eases back to the head.
+  const PEEK_HOLD = 1.3;
+  // One frame of camTween (it owns the camera while it runs).
+  const stepCamTween = (dt: number): void => {
+    const tw = camTween;
+    if (!tw) return;
+    tw.t += dt;
+    const u = tw.dur > 0 ? Math.min(1, tw.t / tw.dur) : 1;
+    const e = u * u * (3 - 2 * u);
+    const s = Math.exp(Math.log(tw.s0) + (Math.log(tw.s1) - Math.log(tw.s0)) * e);
+    placeWorldAt(
+      tw.x0 + (tw.x1 - tw.x0) * e,
+      tw.y0 + (tw.y1 - tw.y0) * e,
+      app.screen.width / 2,
+      app.screen.height / 2,
+      s
+    );
+    // The follow spring stays off through the move, then for the hold.
+    camTouchedAt = nowSec() + (u >= 1 ? PEEK_HOLD : 0);
+    viewHoming = false;
+    if (u >= 1) camTween = null;
   };
   // Mode switches hand over the CURRENT framing (no jump); each mode then
   // eases to its own target.
@@ -608,6 +662,10 @@ async function main(): Promise<void> {
     setCamFollow(
       params.cameraMode === "follow" && params.mazeFabric && fabric !== null
     );
+    if (camTween) {
+      stepCamTween(dt);
+      return;
+    }
     if (!camFollow) {
       if (viewHoming) {
         view.zoom += (1 - view.zoom) * 0.15;
@@ -724,6 +782,7 @@ async function main(): Promise<void> {
     renderer.beginReveal(null);
     if (fabric) fabric.revealQuery = null;
     root.visible = false;
+    indicators.hideAll();
     loader.show();
   }
 
@@ -971,6 +1030,10 @@ async function main(): Promise<void> {
     view.panX = 0;
     view.panY = 0;
     viewHoming = false;
+    camTween = null;
+    // The off-screen indicators decide again on the new scene's first
+    // frame.
+    indicators.hideAll();
     fitToScreen();
     writeParams(params);
 
@@ -1119,6 +1182,21 @@ async function main(): Promise<void> {
       updateHud();
       try {
         localStorage.setItem(MAZE_STATS_KEY, visible ? "1" : "0");
+      } catch {
+        // Storage unavailable: the choice just doesn't persist.
+      }
+    },
+    // The next frame shows or hides the indicator / makes it inert.
+    onFinishIndicatorToggle: (visible) => {
+      try {
+        localStorage.setItem(FINISH_INDICATOR_KEY, visible ? "1" : "0");
+      } catch {
+        // Storage unavailable: the choice just doesn't persist.
+      }
+    },
+    onTapToPanToggle: (on) => {
+      try {
+        localStorage.setItem(TAP_TO_PAN_KEY, on ? "1" : "0");
       } catch {
         // Storage unavailable: the choice just doesn't persist.
       }
@@ -1353,6 +1431,126 @@ async function main(): Promise<void> {
     );
     fitModeBadge();
   };
+
+  // K73 OFF-SCREEN INDICATORS (ui/offscreen_indicators.ts): gameplay
+  // targets register there, and while one is off screen a disc at the
+  // screen's edge points the way. The module places them (clear of the
+  // chrome and of each other) and draws them; indicators.update() runs in
+  // fabricTick after the camera step, so in every ticker branch. The finish
+  // is the first client (below); the minotaur (K80) is meant to be next.
+  const menuButton = document.querySelector(".kp-menu");
+  const indicators = new OffscreenIndicators({
+    view: () => ({ x: root.position.x, y: root.position.y, s: root.scale.x }),
+    size: () => ({ w: app.screen.width, h: app.screen.height }),
+    avoid: () => [
+      hud.el,
+      banner.el,
+      modeBadge.el,
+      menuButton,
+      panel.pane.element.parentElement, // The panel (display none closed).
+      stamp,
+    ],
+    // The tap-to-pan preference: off, indicators let taps through.
+    tapEnabled: () => settings.tapToPan,
+  });
+  // A tap on an indicator: ease the camera to frame its target - and the
+  // head, as far as the zoom allows (placeWorldAt clamps the zoom-out: the
+  // home view in fit mode, the whole knot in follow mode, which then holds
+  // the framing a moment before it eases back to the head).
+  const frameWorld = (wx: number, wy: number): void => {
+    let minX = wx;
+    let maxX = wx;
+    let minY = wy;
+    let maxY = wy;
+    if (fabric && fabric.headPosition(headScratch)) {
+      minX = Math.min(minX, headScratch[0]);
+      maxX = Math.max(maxX, headScratch[0]);
+      minY = Math.min(minY, headScratch[1]);
+      maxY = Math.max(maxY, headScratch[1]);
+    }
+    const pad = 1.5;
+    const margin = 70;
+    const w = app.screen.width;
+    const h = app.screen.height;
+    const s0 = root.scale.x;
+    const sFit = Math.min(
+      Math.max(1, w - 2 * margin) / (maxX - minX + 2 * pad),
+      Math.max(1, h - 2 * margin) / (maxY - minY + 2 * pad)
+    );
+    camTween = {
+      t: 0,
+      dur: reducedMotion ? 0 : 0.6,
+      s0,
+      x0: (w / 2 - root.position.x) / s0,
+      y0: (h / 2 - root.position.y) / s0,
+      s1: Math.min(s0, sFit),
+      x1: (minX + maxX) / 2,
+      y1: (minY + maxY) / 2,
+    };
+  };
+  // THE FINISH (the exit marker). Shown in fabric mode with the
+  // finishIndicator preference on, unsolved, once the intro has revealed
+  // the exit (fabric draws the marker past the same 0.98), under fog of
+  // war too (Levi, 2026-10-13: direction only - the exit's place follows
+  // from the design anyway). A tap frames it; under fog it only says which
+  // way. finishWhy says why it hides (probes).
+  const exitVertex = (): { chain: number; ctrl: number } | null => {
+    if (!params.mazeFabric || !walkGraph) return null;
+    return walkGraph.vertices.get(walkGraph.exit) ?? null;
+  };
+  const exitScratch = new Float32Array(2);
+  let finishWhy = "init";
+  const finishIndicator = indicators.add({
+    id: "finish",
+    world: (out) => {
+      const v = exitVertex();
+      if (!v || !renderer) return false;
+      // Where fabric draws the marker: the renderer's own sample.
+      renderer.markerWorld(v.chain, v.ctrl, out);
+      return true;
+    },
+    // The marker disc's radius (FabricMazeRenderer.markerRadius).
+    radius: () => Math.max(0.32, params.threadWidth * 0.95),
+    icon: () => FLAG_GLYPH,
+    style: DARK_DISC,
+    visible: () => {
+      const v = exitVertex();
+      finishWhy = !settings.finishIndicator
+        ? "setting off"
+        : !v || !renderer || !fabric || !fabricController
+          ? "no maze"
+          : fabricController.solved
+            ? "solved"
+            : !root.visible || physState === "loading"
+              ? "loading"
+              : renderer.revealMulAtCtrl(v.chain, v.ctrl) < 0.98
+                ? "exit unrevealed"
+                : "";
+      return finishWhy === "";
+    },
+    label: () =>
+      params.fogOfWar
+        ? "The exit lies this way, still under the fog."
+        : settings.tapToPan
+          ? "The exit is off screen, this way. Tap to bring it into view."
+          : "The exit is off screen, this way.",
+    onTap: () => {
+      if (params.fogOfWar) {
+        showToast("The exit lies this way. Explore to lift the fog.", 3000);
+        return;
+      }
+      const v = exitVertex();
+      if (!v || !renderer) return;
+      renderer.markerWorld(v.chain, v.ctrl, exitScratch);
+      frameWorld(exitScratch[0], exitScratch[1]);
+    },
+  });
+  // K76 HOOK (thread-reveal mode, Decision 6): until the exit marker has
+  // been seen, the finish's indicator would give its direction away. The
+  // mode adds a gate here, e.g.
+  //   finishIndicator.gate(() => !params.threadReveal || exitSeen);
+  // (gate() returns its remover). Nothing else in the indicator changes.
+  void finishIndicator;
 
   // "Daily #12", then " · Oct 11" for any day but today, and " · solved"
   // (this attempt set the official result) or " · replay" (an earlier one
@@ -2517,6 +2715,8 @@ async function main(): Promise<void> {
       // After the paint pass: fabric pluck colors read this frame's paint.
       renderer!.tickPlucks(ticker.deltaMS / 1000);
       updateCamera(ticker.deltaMS / 1000);
+      // After the camera step: the indicators read this frame's framing.
+      indicators.update();
     };
 
     // Flow undulation is RENDER-side only: while the physics is paused or
@@ -2735,6 +2935,15 @@ async function main(): Promise<void> {
   });
   (window as unknown as Record<string, unknown>).__knotPlayDaily = (n: number) =>
     playDaily(n);
+  // K73 probes: every off-screen indicator's last decision (status, the
+  // target's screen point, its placement), why the finish's hides, and the
+  // camera tween a tap runs.
+  (window as unknown as Record<string, unknown>).__knotIndicators = () => ({
+    indicators: indicators.state(),
+    finishWhy,
+    tween: camTween !== null,
+    follow: camFollow,
+  });
   // Diagnostic hooks for the automated crossing scanner.
   (window as unknown as Record<string, unknown>).__knotDiag = () =>
     renderer ? Array.from(renderer.getDiag().data) : [];

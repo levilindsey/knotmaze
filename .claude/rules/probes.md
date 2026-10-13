@@ -138,6 +138,24 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   worktrees share node_modules through junctions, and a plain `vite`
   re-optimized the shared `.vite` deps under other servers.
 
+- K73 (2026-10-13), corner chrome probes: `.claude/probes/K73/`
+  (probe_badge.mjs free | official | replay | narrow, probe_exit.mjs
+  main | solve | intro, each with `:phone`; probe_pointer_look.mjs
+  close-ups) and the hooks `__knotDaily().badge` and `__knotIndicators()`
+  (each indicator's status, target point and placement, `finishWhy`).
+  GOTCHAS: puppeteer's plain `mouse.wheel({deltaY: -300})` arrives here
+  as -449.99998 (not an integer), which main.ts reads as a trackpad
+  scroll (a pan, clamped to nothing at zoom 1) - zoom with ctrl + wheel
+  (the trackpad pinch path). A phone viewport's `touchscreen.tap` stopped
+  dispatching ANY events after a CDP `Input.dispatchTouchEvent` pinch, a
+  few DOM taps and three page loads in one browser (a fresh browser
+  solved the same maze in 22 taps); give touch-tap sequences their own
+  browser. Mobile emulation keeps the layout width it loaded with:
+  after setViewport to a narrower width, load the page again. And the
+  follow camera eases slowly while the knot settles (the spring advances
+  at most 0.05 s per frame): wait for `__knotView()` to hold still before
+  tapping a choice's screen point.
+
 ## Census and diagnosis rules
 
 - *From the open artifact queue (2026-10-11), census lore:* Census lore from

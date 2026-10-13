@@ -25,6 +25,12 @@ export interface PanelSettings {
   showStats: boolean;
   // The maze HUD: path vs optimal + backtracked (persisted per browser).
   showMazeStats: boolean;
+  // K73 viewer preferences (persisted per browser; not part of the design,
+  // so not link params - K84 sorts every param later): the finish's
+  // off-screen indicator, and whether tapping an indicator pans the camera
+  // to its target (off: indicators let taps through to the maze).
+  finishIndicator: boolean;
+  tapToPan: boolean;
 }
 
 const SETTINGS_DEFAULTS: PanelSettings = {
@@ -33,6 +39,8 @@ const SETTINGS_DEFAULTS: PanelSettings = {
   muted: false,
   showStats: false,
   showMazeStats: false,
+  finishIndicator: true,
+  tapToPan: true,
 };
 
 export interface PanelCallbacks {
@@ -46,6 +54,8 @@ export interface PanelCallbacks {
   onDebugToggle: (visible: boolean) => void;
   onStatsToggle: (visible: boolean) => void;
   onMazeStatsToggle: (visible: boolean) => void;
+  onFinishIndicatorToggle: (visible: boolean) => void;
+  onTapToPanToggle: (on: boolean) => void;
   onSlackChange: () => void;
   onStyleChange: () => void;
   onTemperatureChange: () => void;
@@ -614,6 +624,19 @@ export function buildPanel(
     SETTINGS_DEFAULTS.showMazeStats,
     () => callbacks.onMazeStatsToggle(settings.showMazeStats === true)
   );
+  // K73 viewer preferences (K84 will move them with the others).
+  const finishIndicatorRow = row(
+    fMaze, s, "finishIndicator", undefined,
+    "While the finish is off screen, a marker at the edge of the screen points the way to it (under fog of war too, as a direction only). Remembered per browser.",
+    SETTINGS_DEFAULTS.finishIndicator,
+    () => callbacks.onFinishIndicatorToggle(settings.finishIndicator === true)
+  );
+  const tapToPanRow = row(
+    fMaze, s, "tapToPan", undefined,
+    "Tapping an edge marker (the finish's) brings what it points at into view. Off: the markers only point, and taps go through them to the maze. Remembered per browser.",
+    SETTINGS_DEFAULTS.tapToPan,
+    () => callbacks.onTapToPanToggle(settings.tapToPan === true)
+  );
   const resetPathBtn = button(
     fMaze,
     "Reset path",
@@ -1048,6 +1071,8 @@ export function buildPanel(
       !fab || !params.fogOfWar || params.appearSequence === "instant";
     moveSpeedRow.hidden = !fab;
     mazeStatsRow.hidden = !fab;
+    finishIndicatorRow.hidden = !fab;
+    tapToPanRow.hidden = !fab;
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;
     pulseReachRow.hidden = !fab;
