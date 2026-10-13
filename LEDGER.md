@@ -166,6 +166,15 @@ and never reused.
   0.65 h. Both were the recommendation; confirm, or pick another radius
   (`COLLAPSE_ROUND` in `src/render/pluck_overlay.ts`). Sheet:
   `.claude/probes/K77/K77_before_after.png`.
+- **K110** · A solvable maze can hold pieces the start never reaches:
+  walk-graph vertices with no route from the start (drawn, never
+  explorable). Only when the entrance and exit share a strand: 55 of
+  630 default designs (24 of 546 at the panel's gs 4-24; heart, star,
+  fish, tree, ring and circle up to gs 8, never rect), 0 of dailies
+  1-400. Fix: extend K109's repair (`repairTailRoute`,
+  `src/core/maze_plan.ts`) to join every piece to the start; that moves
+  those designs' links, no daily. Join them (recommended), or leave
+  orphans as decoration? (`.claude/probes/K109/orphans.ts`; b722a12)
 
 ## In progress
 
@@ -215,10 +224,10 @@ passes about 45% (37% at 02:45).
 2. K77 merged (eec4854). K81 (the smooth arc, running since 01:07) and
    K79 stage A (running since 02:50); K79 stage B after its merge.
    K49's comparison is done (Waiting on Levi).
-3. K87 done (62dd16d), K108 done (b62cea3). K109 (unsolvable small
-   shaped designs; main session), K90 stage 1 (measure over-tight folds,
-   prototype a bend limit), then K86 (long dead ends behind params that
-   default to today's maze).
+3. K87 done (62dd16d), K108 done (b62cea3), K109 done (b722a12; K110
+   waits on Levi). K90 stage 1 (measure over-tight folds, prototype a
+   bend limit), then K86 (long dead ends behind params that default to
+   today's maze).
 4. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
    K42.
 
@@ -269,14 +278,6 @@ K5-K7 (split, frame loop, worker) follow.
   dailies. Defaults and DAILY_V2 use wait on K74's decision 5. Brief:
   `docs/design/K74_maze_design.md` sections 4 (option F) and 5; the
   prototype is the hooked plan copy in `.claude/probes/K74/`.
-- **K109** · Small shaped designs can have no route from the start to
-  the exit (optimal length Infinity; `src/game/maze_stats.ts` then
-  reports no efficiency). Default knobs, 40 seeds each from 1000: heart
-  gs 4 10/40, circle gs 4 6/40, star gs 6 4/40 and gs 8 2/40, fish gs 6
-  4, gs 8 2, gs 10 2, tree gs 6 3 and gs 8 2; other shapes and sizes 0.
-  Dailies 1-400: none. Found by K108 (`.claude/probes/K108/unsolvable.ts`).
-  Next: find why (the mask splitting the lattice, or the plan's cuts),
-  then repair it so that only unsolvable designs move.
 - **K78** · The Knotmaze handbook: algorithms, architecture, decisions
   and trade-offs, and a per-param reference with figures (the
   half-lattice units diagram first). Write it once the churn settles;
@@ -588,6 +589,17 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 (items move here with the commit that resolved them)
 
+- **K109** · Every maze has a route from the start to the exit. Small
+  shaped designs could be built without one (K108's snapshot: 29 of
+  3355 plans, optimal length Infinity): the exit's cut also split the
+  entrance's loop into two arcs that nothing joined. A piece model
+  (`planTailsJoined`) predicts the walk graph's verdict before surgery;
+  a plan whose tails meet is kept byte-identical (every daily and every
+  solvable link), any other is rebuilt with `repairTailRoute` after
+  spanning. 1110 designs: model = walk graph on all, 0 solvable plans
+  moved, 20/20 repaired with one splice. Test:
+  `test/core/maze_solvable.test.ts`. Done in b722a12 (2026-10-13;
+  `.claude/probes/K109/`). Follow-up K110.
 - **K108** · Generation now builds the same maze in every browser. It
   uses only spec-exact operations plus `src/util/det_math.ts` (`hypot2`
   = V8's Math.hypot, built from exact ops), so no Chrome-built maze
