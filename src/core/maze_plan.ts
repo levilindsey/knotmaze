@@ -736,9 +736,267 @@ function stripKey(c: Candidate): SpliceSite {
   };
 }
 
+// ---------------------------------------------------------------------------
+// K109, the TAIL ROUTE. Spanning works on whole strands and assumes a cut
+// leaves its strand in one piece. But the exit's nearest-edge search may cut
+// the entrance's strand too, and a loop cut twice falls into two arcs. When
+// both cuts are trimmed, each arc keeps one tail and fuses its far end into
+// whatever it crosses there: itself (a lasso), or a strand that nothing else
+// reaches. Spanning counted every strand reached through those trims, so
+// nothing joined the two arcs, and the walk graph had no route from the start
+// to the exit (small shaped designs: heart and circle at gs 4; star, fish and
+// tree at gs 6-10; never a rect design or a daily).
+//
+// PIECES are what the walk graph will see after maze_apply's surgery: a
+// union-find over node OCCURRENCES (strand, index; a self-crossing occurs
+// twice), joined along every surviving edge (cut edges and trim stubs are
+// deleted), across each junction node's occurrences (merges and trim merges)
+// and across splice bridges. A tail hangs at its cut edge's end on its own
+// flank: "a" at nodeA (pre-cut), "b" at nodeB.
+interface Pieces {
+  find(o: number): number;
+  union(a: number, b: number): void;
+  occ(strand: number, index: number): number;
+  occsOf: Map<string, number[]>; // node id -> its occurrences.
+  edgeOcc: Map<string, number>; // edge id -> its nodeA's occurrence.
+}
+
+function buildPieces(
+  graph: TangleGraph,
+  cuts: MazeCut[],
+  merges: string[],
+  splices: SpliceSite[]
+): Pieces {
+  const counts = graph.strands.map((st) =>
+    st.isClosed ? st.nodes.length - 1 : st.nodes.length
+  );
+  const base: number[] = [];
+  let total = 0;
+  for (const n of counts) {
+    base.push(total);
+    total += n;
+  }
+  const parent = new Int32Array(total);
+  for (let i = 0; i < total; i++) parent[i] = i;
+  const find = (o: number): number => {
+    while (parent[o] !== o) {
+      parent[o] = parent[parent[o]];
+      o = parent[o];
+    }
+    return o;
+  };
+  const union = (a: number, b: number): void => {
+    const ra = find(a);
+    const rb = find(b);
+    if (ra !== rb) parent[ra] = rb;
+  };
+  const occ = (s: number, i: number): number => base[s] + (i % counts[s]);
+
+  const removed = new Set<string>();
+  for (const cut of cuts) {
+    removed.add(cut.edgeId);
+    if (cut.trim) for (const eid of cut.trim.stubEdges) removed.add(eid);
+  }
+  const occsOf = new Map<string, number[]>();
+  const edgeOcc = new Map<string, number>();
+  graph.strands.forEach((st, s) => {
+    for (let i = 0; i < counts[s]; i++) {
+      const list = occsOf.get(st.nodes[i]);
+      if (list) list.push(base[s] + i);
+      else occsOf.set(st.nodes[i], [base[s] + i]);
+    }
+    st.edgeIds.forEach((eid, i) => {
+      edgeOcc.set(eid, base[s] + i);
+      if (!removed.has(eid)) union(occ(s, i), occ(s, i + 1));
+    });
+  });
+  const pieces = { find, union, occ, occsOf, edgeOcc };
+  for (const cut of cuts) {
+    if (cut.trim) joinNode(pieces, cut.trim.mergeCrossing);
+  }
+  for (const id of merges) joinNode(pieces, id);
+  for (const sp of splices) {
+    union(edgeOcc.get(sp.edgeA)!, edgeOcc.get(sp.edgeB)!);
+  }
+  return pieces;
+}
+
+function joinNode(p: Pieces, nodeId: string): void {
+  const os = p.occsOf.get(nodeId)!;
+  for (let k = 1; k < os.length; k++) p.union(os[0], os[k]);
+}
+
+// The pieces a cut's surviving tails hang from (one when trimmed).
+function tailRoots(p: Pieces, graph: TangleGraph, cut: MazeCut): number[] {
+  const c = graph.strands[cut.strand].edgeIds.indexOf(cut.edgeId);
+  const a = p.find(p.occ(cut.strand, c));
+  const b = p.find(p.occ(cut.strand, c + 1));
+  if (!cut.trim) return [a, b];
+  return [cut.trim.side === "a" ? b : a];
+}
+
+function tailsJoined(
+  p: Pieces,
+  graph: TangleGraph,
+  entrance: MazeCut,
+  exit: MazeCut
+): boolean {
+  const to = tailRoots(p, graph, exit);
+  return tailRoots(p, graph, entrance).some((r) => to.includes(r));
+}
+
+// Whether a finished plan leaves a route from an entrance tail to an exit
+// tail: exactly the walk graph's verdict (finite optimal length), without
+// building the graph. The K109 probe checks the two agree.
+export function planTailsJoined(graph: TangleGraph, plan: MazePlan): boolean {
+  const p = buildPieces(
+    graph,
+    [plan.entrance, plan.exit, ...plan.deadEndCuts],
+    [...plan.spanningMerges, ...plan.fourWayMerges],
+    [...plan.spanningSplices, ...plan.choiceSplices]
+  );
+  return tailsJoined(p, graph, plan.entrance, plan.exit);
+}
+
+// Joins the start's pieces to the exit's with the fewest new junctions. Each
+// step takes a junction one hop closer (hops counted over the available
+// junctions from the exit's pieces) and prefers, as spanning does, splices
+// to merges and corner-clear sites, then the most room from everything
+// placed; ties go to pool order. Same-strand splices and self-crossings
+// qualify: their two sides lie on different pieces, so neither is a hairpin
+// shortcut nor a kink eyelet. Returns with the plan unchanged when no route
+// exists at all.
+function repairTailRoute(
+  graph: TangleGraph,
+  entrance: MazeCut,
+  exit: MazeCut,
+  candidates: Candidate[],
+  crossings: CrossingSite[],
+  inMaze: Set<number>,
+  usedEdges: Set<string>,
+  usedCrossings: Set<string>,
+  placed: number[],
+  clearOf: (p: [number, number]) => boolean,
+  spanningSplices: SpliceSite[],
+  spanningMerges: string[]
+): void {
+  const cuts = [entrance, exit];
+  const p = buildPieces(graph, cuts, spanningMerges, spanningSplices);
+  interface Link {
+    splice?: Candidate;
+    merge?: CrossingSite;
+    u: number;
+    v: number;
+    pts: number[];
+    clear: boolean;
+  }
+  while (!tailsJoined(p, graph, entrance, exit)) {
+    const links: Link[] = [];
+    for (const c of candidates) {
+      if (usedEdges.has(c.edgeA) || usedEdges.has(c.edgeB)) continue;
+      if (!inMaze.has(c.strandA) || !inMaze.has(c.strandB)) continue;
+      const u = p.find(p.edgeOcc.get(c.edgeA)!);
+      const v = p.find(p.edgeOcc.get(c.edgeB)!);
+      if (u === v) continue;
+      const pts = [c.a[0], c.a[1], c.b[0], c.b[1]];
+      links.push({ splice: c, u, v, pts, clear: clearOf(c.a) && clearOf(c.b) });
+    }
+    for (const x of crossings) {
+      if (usedCrossings.has(x.id) || x.strands.length !== 2) continue;
+      if (!inMaze.has(x.strands[0]) || !inMaze.has(x.strands[1])) continue;
+      const os = p.occsOf.get(x.id)!;
+      const u = p.find(os[0]);
+      const v = p.find(os[1]);
+      if (u === v) continue;
+      links.push({ merge: x, u, v, pts: [...x.pos], clear: clearOf(x.pos) });
+    }
+
+    // Hops from the exit's pieces, breadth first.
+    const adj = new Map<number, number[]>();
+    for (const l of links) {
+      for (const [r, q] of [
+        [l.u, l.v],
+        [l.v, l.u],
+      ]) {
+        const list = adj.get(r);
+        if (list) list.push(q);
+        else adj.set(r, [q]);
+      }
+    }
+    const hopsTo = new Map<number, number>();
+    const queue = tailRoots(p, graph, exit);
+    for (const r of queue) hopsTo.set(r, 0);
+    for (let h = 0; h < queue.length; h++) {
+      const d = hopsTo.get(queue[h])!;
+      for (const q of adj.get(queue[h]) ?? []) {
+        if (!hopsTo.has(q)) {
+          hopsTo.set(q, d + 1);
+          queue.push(q);
+        }
+      }
+    }
+    const from = tailRoots(p, graph, entrance);
+    let hops = Infinity;
+    for (const r of from) hops = Math.min(hops, hopsTo.get(r) ?? Infinity);
+    if (hops === Infinity) return;
+
+    let best: Link | null = null;
+    let bestNear = -1;
+    for (const l of links) {
+      const step =
+        (from.includes(l.u) && hopsTo.get(l.v) === hops - 1) ||
+        (from.includes(l.v) && hopsTo.get(l.u) === hops - 1);
+      if (!step) continue;
+      let near = Infinity;
+      for (let k = 0; k < l.pts.length; k += 2) {
+        for (let m = 0; m < placed.length; m += 2) {
+          const d = hypot2(l.pts[k] - placed[m], l.pts[k + 1] - placed[m + 1]);
+          if (d < near) near = d;
+        }
+      }
+      if (best) {
+        const kind = (best.merge ? 1 : 0) - (l.merge ? 1 : 0);
+        const clear = (l.clear ? 1 : 0) - (best.clear ? 1 : 0);
+        if (kind < 0 || (kind === 0 && (clear < 0 || (clear === 0 && near <= bestNear)))) {
+          continue;
+        }
+      }
+      best = l;
+      bestNear = near;
+    }
+    const pick = best!;
+    if (pick.splice) {
+      const c = pick.splice;
+      usedEdges.add(c.edgeA);
+      usedEdges.add(c.edgeB);
+      spanningSplices.push(stripKey(c));
+      p.union(p.edgeOcc.get(c.edgeA)!, p.edgeOcc.get(c.edgeB)!);
+    } else {
+      const x = pick.merge!;
+      usedCrossings.add(x.id);
+      spanningMerges.push(x.id);
+      joinNode(p, x.id);
+    }
+    for (const v of pick.pts) placed.push(v);
+  }
+}
+
 export function buildMazePlan(
   graph: TangleGraph,
   params: MazeParams = DEFAULT_MAZE_PARAMS
+): MazePlan {
+  // K109: a plan whose tails meet is kept exactly as built (every link and
+  // daily); one whose tails cannot meet is rebuilt with the tail route
+  // repaired right after spanning, so its choice junctions and dead ends
+  // space around the repair.
+  const plan = planMaze(graph, params, false);
+  return planTailsJoined(graph, plan) ? plan : planMaze(graph, params, true);
+}
+
+function planMaze(
+  graph: TangleGraph,
+  params: MazeParams,
+  repairTails: boolean
 ): MazePlan {
   const infos = buildEdgeInfos(graph);
   const hash = buildHash(infos);
@@ -909,6 +1167,23 @@ export function buildMazePlan(
       mazeStrands = mazeStrands.filter((s) => reached.has(s));
       break;
     }
+  }
+
+  if (repairTails) {
+    repairTailRoute(
+      graph,
+      entrance,
+      exit,
+      candidates,
+      crossings,
+      new Set(mazeStrands),
+      usedEdges,
+      usedCrossings,
+      placed,
+      clearOf,
+      spanningSplices,
+      spanningMerges
+    );
   }
 
   // ---- Choice junctions + dead-end stubs. ----

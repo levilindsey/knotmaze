@@ -1,7 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
-import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
-import type { MazeParams } from "../../src/core/maze_plan";
+import {
+  buildMazePlan,
+  DEFAULT_MAZE_PARAMS,
+  planTailsJoined,
+} from "../../src/core/maze_plan";
+import type { MazeParams, MazePlan } from "../../src/core/maze_plan";
 import { ANCHORS, SHAPES, planAnchors } from "../../src/core/shapes";
 import type { TangleGraph } from "../../src/core/types";
 import { PARAM_DEFAULTS } from "../../src/ui/url_state";
@@ -19,6 +23,8 @@ import { buildMazePlan as buildMazePlanV1 } from "./fixtures/maze_plan_v1";
 // A DELIBERATE plan change (K86's dead-end placement, a new daily version)
 // moves mazes on purpose: it must keep its default path equal to this pin,
 // or re-freeze the fixture from the new module and say so in its commit.
+// K109 is the one standing exception: a plan whose start cannot reach its
+// exit is rebuilt (one such case here, listed below).
 
 function graphOf(p: UrlParams): TangleGraph {
   return generateLatticeKnotwork({
@@ -118,12 +124,21 @@ function cases(): [string, UrlParams][] {
 describe("maze plan identity (K87)", () => {
   it("builds the same plan as the frozen pre-K87 module", () => {
     const diffs: string[] = [];
+    const repaired: string[] = [];
     for (const [label, p] of cases()) {
       const params = mazeParamsOf(p);
-      const before = JSON.stringify(buildMazePlanV1(graphOf(p), params));
-      const after = JSON.stringify(buildMazePlan(graphOf(p), params));
-      if (before !== after) diffs.push(`${label} seed ${p.seed}`);
+      const old = buildMazePlanV1(graphOf(p), params) as MazePlan;
+      const plan = buildMazePlan(graphOf(p), params);
+      if (JSON.stringify(old) === JSON.stringify(plan)) continue;
+      // K109 rebuilds a plan on purpose only when its start has no route to
+      // its exit (the model agrees with the walk graph: maze_solvable).
+      if (!planTailsJoined(graphOf(p), old) && planTailsJoined(graphOf(p), plan)) {
+        repaired.push(`${label} seed ${p.seed}`);
+      } else {
+        diffs.push(`${label} seed ${p.seed}`);
+      }
     }
     expect(diffs).toEqual([]);
+    expect(repaired).toEqual(["defaults gs 6 tree seed 85281462"]);
   });
 });

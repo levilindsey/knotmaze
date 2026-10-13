@@ -57,6 +57,31 @@ CLAUDE.md: the threads ARE the maze paths.
   `star_margin.mjs`, `pin.ts`, `fdlibm_hypot.mjs`, `unsolvable.ts`.
   Not held to the rule: Layer 2 and physics (they never change which
   maze is built) and the codec's integer `2 **` powers.
+- *K109 (2026-10-13), a route from start to exit:* spanning joins whole
+  STRANDS, but the exit's nearest-edge search can cut the entrance's
+  strand too: a loop cut twice falls into two arcs, and when both cuts
+  are trimmed on the same side each arc fuses into itself (a lasso) or
+  into a strand nothing else reaches, so the walk graph had no route
+  (optimal Infinity; small shaped designs, never a rect design or a
+  daily). The PIECE model (`buildPieces`, `planTailsJoined`) predicts the
+  walk graph's verdict before surgery: a union-find over node
+  occurrences, joined along surviving edges (cut edges and trim stubs
+  removed), across each merged node's occurrences and across splice
+  bridges; trimming side "a" leaves the tail at the cut edge's nodeB
+  end, "b" at its nodeA end, no trim both.
+  `buildMazePlan` builds the plan as before and keeps it when its tails
+  meet (every solvable plan stays byte-identical); otherwise it rebuilds
+  with `repairTailRoute` right after spanning (fewest junctions by BFS
+  hops from the exit's pieces; splices before merges, corner-clear sites,
+  most room from `placed`, then pool order; same-strand splices and
+  self-crossings allowed), so choices and dead ends space around the
+  repair. Measured over 1110 designs: model and walk graph agree on
+  every plan, 0 solvable plans moved, 20/20 unsolvable ones repaired
+  with one splice; K108's snapshot moved only its 29 Infinity entries.
+  The identity pin names its one repaired case. Probes:
+  `.claude/probes/K109/` (`verify.ts`, `diag.ts`, `links.ts`,
+  `orphans.ts`); test: `test/core/maze_solvable.test.ts`. Still open
+  (K110): a solvable plan can leave pieces the start never reaches.
 
 ## Shapes, anchors and escape tails
 
