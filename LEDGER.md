@@ -73,9 +73,9 @@ and never reused.
   master holds 56-60. The desktop shows the cause: fans 0.57 -> 1.84 ms
   of GPU at 3200x1800, from the per-arm section Gouraud plus per-arm
   paint. G2.4 is not done.
-  - owner: nobody since 2026-10-12 19:05, paused because the weekly
-    limit was ahead of pace (19% on day one). The G2 agent of session
-    d8031183 can be resumed while its worktree is kept.
+  - owner: the G2 agent of session d8031183, resumed 2026-10-12 19:25
+    on Levi's go ("Fan fix?") for the fan pre-pass plus the phone gate
+    only.
   - branch: `worktree-agent-a7d1f998c07c3864f`
     (`.claude/worktrees/agent-a7d1f998c07c3864f`); last commit: dce4126,
     rebased onto 8320cde.
