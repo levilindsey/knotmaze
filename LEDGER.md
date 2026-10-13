@@ -82,26 +82,31 @@ and never reused.
 
 ## In progress
 
+- **K45** · Slim CLAUDE.md (2,250 lines, about 40k tokens, loaded into
+  every session and agent turn) to about 400 lines under the
+  context-budget rule (claude-config `rules/context-budget.md`): history
+  to `docs/history.md`, lore to path-scoped `.claude/rules/<area>.md`
+  (tracked while the rest of `.claude/` stays untracked), nothing lost.
+  - owner: the K45 agent of session d8031183, started 2026-10-12 21:20.
+  - branch: `worktree-agent-a2c066adcc676565b`
+    (`.claude/worktrees/agent-a2c066adcc676565b`), from 0373528; last
+    commit: none yet.
+  - evidence: `.claude/probes/K45/`.
+  - next: scripted verbatim moves, then the sentence-level loss check,
+    the context-budget measure, a rules-load check and vitest.
+  - brief: `docs/design/K45.md`.
+
 ## Next, in order
 
 Overnight order, 2026-10-12 (Levi: proceed through the night with the
 remaining shader work). Every stage merges only after desktop
 verification AND the phone gate (K10); the phone stays on its charger,
 awake, over Tailscale.
-1. K45: slim CLAUDE.md while no agent is editing it (K4 merged).
+1. K45 (in progress): slim CLAUDE.md while no agent is editing it.
 2. K8 (G3) and K23 (G2.4 GPU particles, GPU fog) in parallel.
 3. K9 (G4) and K42 (per-pixel overlap winner) in parallel.
 
 K5-K7 (split, frame loop, worker) follow.
-
-- **K45** · Slim CLAUDE.md (2,040 lines, ~36k tokens, loaded into every
-  session and agent) to about 400 lines under the new context-budget rule
-  (claude-config `rules/context-budget.md`): keep binding rules, the
-  architecture map and invariants. Stage history moves to
-  `docs/history.md`; physics, render and probe lore move to path-scoped
-  `.claude/rules/*.md` (track `.claude/rules/` while the rest of `.claude/`
-  stays untracked). Do it right after K41, K4, K19+K20 and K21 merge:
-  each of their agents edits CLAUDE.md.
 
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along the new data
   lines, once K1-K3 land.
