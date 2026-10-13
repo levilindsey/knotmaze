@@ -15,23 +15,6 @@ and never reused.
 
 ## Waiting on Levi
 
-- **K46** · Daily variety. The measured proposal is in
-  `docs/design/K46_daily_variety.md` (8b1eb90): a weekly arc (Mon rect
-  14 -> Sat rect 20, a Wednesday twist, a Thursday modifier, a Sunday
-  shape) and a look that varies every day. Its nine questions are in
-  section 8.
-  - owner: nobody since 2026-10-12 17:00. The proposal agent of session
-    d8031183 can be resumed while its worktree is kept.
-  - branch: `worktree-agent-a78c73cec4770a14d`
-    (`.claude/worktrees/agent-a78c73cec4770a14d`), merged as 8b1eb90.
-  - evidence: `.claude/probes/K46/` (`sheet_calendar.png`,
-    `sheet_phone.png`, `sheet_path_legibility.png`, the scan scripts and
-    `out/`).
-  - next: Levi answers section 8 and iterates; then implement
-    `DAILY_V2` from a future `fromDay`. Validation must not depend on
-    `Math.hypot` rounding, which can differ between engines.
-  - brief: `docs/design/K46.md`.
-
 - **K48** · On desktop, Share copies the daily's result to the clipboard
   (with a "Copied" toast), although Chrome and Edge on Windows could open
   Windows' own Share dialog (Mail, Teams, Nearby Sharing). Phones get
@@ -153,6 +136,16 @@ awake, over Tailscale.
 2. K9 (G4) and K42 (per-pixel overlap winner) in parallel.
 
 K5-K7 (split, frame loop, worker) follow.
+
+- **K46** · Daily variety, revisited after the feature churn (Levi,
+  2026-10-12): no weekly or regular arc; THEMES, each a set of parameter
+  constraints; manual per-day overrides later (K82). The measured
+  proposal, with his direction at the top, is
+  `docs/design/K46_daily_variety.md` (8b1eb90). Its probes are in
+  `.claude/probes/K46/`, and the proposal agent's worktree
+  (`.claude/worktrees/agent-a78c73cec4770a14d`) is kept. The
+  implementation is a `DAILY_V2` from a future `fromDay`. Validation
+  must not depend on `Math.hypot` rounding. Brief: `docs/design/K46.md`.
 
 - **K77** · Plucks show sharp, wedge-like depressions where the
   vibration is strongest, maybe more on curves (Levi): a thinning should
@@ -374,6 +367,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   3.5-5 s in, mostly under the quiet threshold, which is what forces
   K63's 2.5 s window. Fixing it could make a 0.75 s window safe (K64).
   (K63 agent idea; harness in `.claude/probes/K63/`.)
+- **K82** · Manually override the daily maze for a given day (Levi,
+  2026-10-12; "could be a follow-up thing"). It fits the pinned-daily
+  model as a frozen per-day override table beside the versioned
+  definitions. A published day's override must never change, like a
+  definition (`.claude/rules/gameplay.md`, daily rule 1).
 - **K68** · If junction-web edges look soft at deep zoom, size the arm
   material strip rows from the camera's world-per-pixel (re-packed on
   zoom) instead of raising the 64-texel width for everyone. About 4x the
