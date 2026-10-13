@@ -83,13 +83,38 @@ entry is labeled with its source; the narrative is in
   nothing during the official attempt or once it has set the official
   result. fit() steps the label down (long, short, bare icon, icon below
   the hamburger) until it clears the HUD and the win banner by 8 px;
-  main.ts re-fits on every HUD update, resize and banner hide. Measured:
-  the long labels fit at 1400 and down to 700 px on desktop; a 412 px
-  phone shows "Free play" and "Replay"; at 360 px "Replay" still fits but
-  free play is the bare compass (the HUD's stats rows are ~190 px wide);
-  at 340 px both are icons, and at 300 px the icon drops below the
-  hamburger. The panel never collides (it opens below the hamburger row)
-  except at that last level.
+  main.ts re-fits on every HUD update, resize and banner hide. Measured
+  (2026-10-13, HUD stat rows opt-in): free play has no HUD beside it and
+  shows "Free play" down to 300 px; a replay's HUD title row ("Daily #1 ·
+  Oct 12 · replay", 228 px on a phone) leaves room for "Replay · not
+  scored" down to 700 px on desktop, "Replay" on a 412 px phone, the bare
+  icon at 360 px and the icon below the hamburger at 340 px and less. The
+  panel never collides (it opens below the hamburger row) except at that
+  last level.
+
+- OFF-SCREEN INDICATORS (K73, 2026-10-13; ui/offscreen_indicators.ts):
+  a disc at the screen's edge, with its target's icon and a chevron
+  facing the target, for every registered target that is off screen. A
+  target registers its world position, marker radius, icon (SVG markup
+  in the GLYPH_R box), style, visibility predicate, label and tap; the
+  module owns the off-screen test (EDGE_MARGIN, HYSTERESIS), the edge
+  placement inside the safe area, keeping clear of the chrome (HUD,
+  badge, hamburger, banner, open panel, stats stamp) and of the targets
+  placed before it (layoutIndicators, pure and tested), the DOM and the
+  per-frame update - main.ts calls indicators.update() in fabricTick
+  after the camera step, so in every ticker branch. THE FINISH is the
+  first client (main.ts; the minotaur, K80, is meant to be next): a
+  black disc with a white waving flag (a placeholder until K83's finish
+  icon is shared), shown in fabric mode, unsolved, once the intro has
+  revealed the exit (the 0.98 gate fabric's marker uses) and under fog of
+  war too (Levi, 2026-10-13: direction only); a tap eases the camera to
+  frame the exit with the head (camTween through placeWorldAt; the
+  follow camera holds it PEEK_HOLD before easing back), under fog a
+  toast only. VIEWER PREFERENCES (localStorage + panel checkboxes, both
+  default on, K84 sorts them later): finishIndicator, and tapToPan - off,
+  every indicator is inert and taps go through it to the maze. K76 HOOK:
+  finishIndicator.gate(pred) ANDs in a predicate (the thread-reveal mode
+  hides the finish's until the exit has been seen; returns its remover).
 
 ## Links and the codec
 
