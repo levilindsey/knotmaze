@@ -548,10 +548,16 @@ export function buildPanel(
     "Junction-free radius around the exit (half lattice cells), so the endgame isn't cluttered with choices. Regenerates the maze.",
     D.exitClearance, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
+  // LABELS AND VALUES DIFFER ON PURPOSE (K73, Levi 2026-10-12: "rename
+  // 'gold' to 'fullPath', and 'trail' to 'recentPath'"). Only the shown
+  // labels changed: the values stay gold / trail / string, because links
+  // store the option's index in the frozen codec tables (param_codec.ts),
+  // legacy `pv=` links name the values, `trm=1` reads as trail, and the
+  // daily records keep the value a result ended in.
   const pathVizRow = row(
     fMaze, p, "pathViz",
-    { options: { gold: "gold", trail: "trail", string: "string" } },
-    "How your route is shown: gold = the traveled thread recolors; trail = memory mode, only a short trail stays gold and there is no backtracking; string = unroll a thin white yarn behind you - it U-turns at junctions when you backtrack and is never picked up. Applies live.",
+    { options: { fullPath: "gold", recentPath: "trail", string: "string" } },
+    "How your route is shown: fullPath = your whole traveled route stays recolored; recentPath = memory mode: only the last stretch of your route stays lit (trailLength sets how much) and there is no backtracking; string = unroll a thin white yarn behind you - it U-turns at junctions when you backtrack and is never picked up. Applies live.",
     D.pathViz, () => callbacks.onTrailChange()
   );
   const cameraRow = row(
@@ -562,7 +568,7 @@ export function buildPanel(
   );
   const trailLenRow = row(
     fMaze, p, "trailLength", { min: 1, max: 15, step: 0.5 },
-    "How much recent path stays lit in memory mode, in lattice units. Applies live.",
+    "How much of your recent path stays lit in recentPath mode, in lattice units. Applies live.",
     D.trailLength, () => callbacks.onTrailChange()
   );
   const tensionRow = row(

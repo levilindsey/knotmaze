@@ -1225,7 +1225,7 @@ async function main(): Promise<void> {
         trailMode: fabricController?.trailMode ?? false,
       });
       if (action === "refuse") {
-        showToast("Memory mode has no way back: keep exploring.");
+        showToast("recentPath mode has no way back: keep exploring.");
         return;
       }
       if (action === "backtrack" && fabric && fabricController) {
