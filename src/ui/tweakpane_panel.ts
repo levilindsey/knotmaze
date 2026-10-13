@@ -22,6 +22,7 @@ import {
   effectiveSpeed,
   isAutoSpeed,
 } from "../render/background_model";
+import type { MotionPref } from "./motion";
 
 export interface PanelSettings {
   temperature: number;
@@ -37,6 +38,9 @@ export interface PanelSettings {
   // to its target (off: indicators let taps through to the maze).
   finishIndicator: boolean;
   tapToPan: boolean;
+  // K53 viewer preference (persisted per browser by ui/motion.ts): follow
+  // the OS's reduce-motion setting, or override it either way.
+  motion: MotionPref;
 }
 
 const SETTINGS_DEFAULTS: PanelSettings = {
@@ -47,6 +51,7 @@ const SETTINGS_DEFAULTS: PanelSettings = {
   showMazeStats: false,
   finishIndicator: true,
   tapToPan: true,
+  motion: "system",
 };
 
 export interface PanelCallbacks {
@@ -62,6 +67,7 @@ export interface PanelCallbacks {
   onMazeStatsToggle: (visible: boolean) => void;
   onFinishIndicatorToggle: (visible: boolean) => void;
   onTapToPanToggle: (on: boolean) => void;
+  onMotionChange: (pref: MotionPref) => void;
   onSlackChange: () => void;
   onStyleChange: () => void;
   onTemperatureChange: () => void;
@@ -783,7 +789,7 @@ export function buildPanel(
       pointerScale: 0.01,
       format: (v: number) => v.toFixed(2),
     },
-    "How fast the backdrop moves: 0 = still, 1 = the effect's own pace, up to 3x. Vellum is still until you give it a speed (then its mottling drifts and its light wanders; the grain stays put). The reset glyph returns to each effect's own pace. Reduced motion keeps every backdrop still. Applies live.",
+    "How fast the backdrop moves: 0 = still, 1 = the effect's own pace, up to 3x. Vellum is still until you give it a speed (then its mottling drifts and its light wanders; the grain stays put). The reset glyph returns to each effect's own pace. Reduced motion (Motion & intro) keeps every backdrop still. Applies live.",
     0, () => {
       const v = bgView.backgroundSpeed as number;
       if (Math.abs(v - shownSpeed()) > 1e-9) {
@@ -802,6 +808,15 @@ export function buildPanel(
 
   // --- Motion & intro -----------------------------------------------------
   const fMotion = folder("Motion & intro", false);
+  // THE MOTION SETTING (K53): a viewer preference, not a design param (no
+  // link, no daily; ui/motion.ts stores it).
+  row(
+    fMotion, s, "motion",
+    { options: { "follow system": "system", full: "full", reduced: "reduced" } },
+    "How much the page moves. follow system = your device's reduce-motion setting (it switches live); full = all motion; reduced = backdrops hold still, plucked threads swing less with no speed ghost, the camera jumps to an edge marker's target instead of easing there, and the loading knot, the mode badge and the edge markers stop breathing and fading. Remembered per browser.",
+    SETTINGS_DEFAULTS.motion,
+    () => callbacks.onMotionChange(settings.motion)
+  );
   row(
     fMotion, p, "flowStrength", { min: 0, max: 1, step: 0.05 },
     "Flow undulation: how far the whole fabric sways, as if drifting in water. 0 = perfectly still. Render-only - applies live, even while the knot sleeps.",
@@ -904,7 +919,7 @@ export function buildPanel(
   );
   const pluckGhostRow = row(
     fFeel, p, "pluckGhost", { min: 0, max: 1, step: 0.05 },
-    "The speed cue on a vibrating thread: a faint crisp copy of the string flickering inside the blur. 0 = a pure time-exposure blur. Off under reduced motion. Applies live.",
+    "The speed cue on a vibrating thread: a faint crisp copy of the string flickering inside the blur. 0 = a pure time-exposure blur. Off under reduced motion (Motion & intro). Applies live.",
     D.pluckGhost, () => callbacks.onSlackChange()
   );
   row(

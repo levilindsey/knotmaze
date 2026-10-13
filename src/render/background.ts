@@ -138,8 +138,8 @@ function setQuad(mesh: Mesh, x0: number, y0: number, w: number, h: number): void
 export class BackgroundLayer {
   // Screen-space layer: add it to the stage BEFORE the world root.
   readonly container = new Container();
-  // Live prefers-reduced-motion: no drift, a still backdrop at whatever
-  // time it reached.
+  // Reduced motion (the Motion setting, ui/motion.ts - live): no drift, a
+  // still backdrop at whatever time it reached.
   reducedMotion = false;
   // K24 policy: pause the drift once the rest of the scene is static.
   pauseWhenStatic = true;

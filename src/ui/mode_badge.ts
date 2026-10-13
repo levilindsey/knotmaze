@@ -16,7 +16,8 @@
 // HUD owns the top-left and the win banner the top-center on wide screens:
 // wherever the badge would come within FIT_GAP of either, fit() steps down
 // to a shorter label, then the bare icon, then the icon below the menu
-// button. Static under reduced motion (otherwise a short fade-in).
+// button. Static under reduced motion (the Motion setting; otherwise a
+// short fade-in).
 
 import { ensureHudStyles } from "./maze_hud";
 

@@ -503,6 +503,7 @@ export class PluckOverlay {
   size = 1; // pluckSize: visual amplitude multiplier (0 = sound only).
   ghost = 0.35; // pluckGhost: strobe-ghost strength.
   sustain = 0.5; // The voice's sustain (decay clock).
+  // Reduced motion: set each frame from the Motion setting (ui/motion.ts).
   reducedMotion = false;
   // The collapse's edge radius, x h (COLLAPSE_ROUND; 0 = the raw profile,
   // for same-state A/Bs - set it, then flag every live pluck needsLayout).
