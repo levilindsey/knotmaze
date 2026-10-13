@@ -32,7 +32,7 @@ const SETTINGS_DEFAULTS: PanelSettings = {
   showDebug: false,
   muted: false,
   showStats: false,
-  showMazeStats: true,
+  showMazeStats: false,
 };
 
 export interface PanelCallbacks {
@@ -412,6 +412,7 @@ export function buildPanel(
     {
       options: {
         rect: "rect",
+        circle: "circle",
         heart: "heart",
         star: "star",
         fish: "fish",

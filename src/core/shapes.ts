@@ -25,6 +25,7 @@ export const SHAPES = [
   "fish",
   "tree",
   "ring",
+  "circle", // Appended 2026-10-12: codec v3's shape option 6.
 ] as const;
 export type ShapeId = (typeof SHAPES)[number];
 
@@ -120,6 +121,12 @@ const SHAPE_FNS: Record<Exclude<ShapeId, "rect">, ShapeFn> = {
     // Annulus: the interior hole proves hole support end to end.
     const r = Math.hypot(x, y);
     return r >= 0.52 && r <= 0.98;
+  },
+  circle: (x, y) => {
+    // A plain disc, the ring's outer edge. Squared distances, not
+    // Math.hypot: the mask decides the maze, and hypot's last-bit rounding
+    // may differ between JS engines.
+    return x * x + y * y <= 0.98 * 0.98;
   },
 };
 

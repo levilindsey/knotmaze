@@ -150,14 +150,17 @@ export function roundTau(tau: number): number {
 }
 
 // Tapped-lobe amplitude (world units): longer lobes swing wider, as a real
-// string's would. size = the pluckSize param, gain = pluck strength.
+// string's would. size = the pluckSize param, gain = pluck strength. The
+// median tapped lobe at the defaults is short enough to sit on the floor,
+// so the floor sets how big a typical pluck reads: 0.45 h until Levi asked
+// for a more pronounced swing (2026-10-12), 0.65 h since.
 export function tapAmplitude(
   lobeLength: number,
   h: number,
   size: number,
   gain: number
 ): number {
-  return size * gain * clamp(0.12 * lobeLength, 0.45 * h, 2.2 * h);
+  return size * gain * clamp(0.12 * lobeLength, 0.65 * h, 2.2 * h);
 }
 
 // A sympathetic lobe k lobes away from the tapped one.
