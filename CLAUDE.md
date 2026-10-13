@@ -86,6 +86,8 @@ npm run build    # Production build
 npm test         # Vitest
 ```
 
+Phone and build A/Bs: `pwsh scripts/phone.ps1 [-Ports 5173,5174] [-Url <link>]` tunnels the USB phone to local servers and Chrome DevTools (probes in `.claude/probes/`, e.g. `phone_probe.mjs`); `pwsh scripts/preview.ps1 -Port <p> [-Ref <commit>]` builds any commit into its own directory and serves it.
+
 ## Commit Policy
 
 Work lands directly on `master` (the GitHub default and only branch; there is no `main`). All changes must be end-to-end working before committing; no partial or broken work. Every push to `master` deploys: `.github/workflows/deploy.yml` runs `npm test` then publishes `dist` to Cloudflare Pages - a red suite leaves the previous deployment live. The canonical URL is https://levi.dev/knotmaze/: levi.dev's Pages Function (`functions/knotmaze/[[path]].js` in the levi.dev repo, 2026-10-11) proxies it to https://knotmaze.pages.dev, so the address bar stays on levi.dev; `/knots` and its aliases 301 there with the query kept. That is why the Vite base is RELATIVE ("./") - absolute asset paths would load levi.dev's own files. Proxied non-HTML files get a 4-hour browser cache on levi.dev (hashed assets are unaffected; the HTML stays max-age=0), and Cloudflare injects levi.dev's Web Analytics beacon. Never run `wrangler pages project create` (or other project-scaffolding wrangler commands) inside this repo: it rewrites package.json, the lockfile and .gitignore and adds wrangler/vite configs.
