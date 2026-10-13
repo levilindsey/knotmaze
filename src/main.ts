@@ -47,6 +47,7 @@ import { SolveClock, efficiencyOf } from "./game/maze_stats";
 import { shareText } from "./game/share_text";
 import { MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
+import { ModeBadge, modeBadgeFor } from "./ui/mode_badge";
 import { openDailyStats } from "./ui/daily_stats_view";
 import { shareOrCopy, showToast } from "./ui/share";
 import { buildPanel } from "./ui/tweakpane_panel";
@@ -1326,9 +1327,32 @@ async function main(): Promise<void> {
   const hud = new MazeHud(() => showDailyStats());
   const banner = new WinBanner(
     () => void shareResult(lastWin),
-    () => showDailyStats()
+    () => showDailyStats(),
+    () => fitModeBadge()
   );
   const hideWin = (): void => banner.hide();
+  // K73 MODE BADGE (ui/mode_badge.ts): "Free play" off the daily (a tap =
+  // the panel's Daily button), "Replay · not scored" on a daily whose
+  // official result is recorded (a tap explains it), nothing during the
+  // official attempt. It keeps clear of the HUD and the banner (fit).
+  const modeBadge = new ModeBadge(
+    () => playDaily(todayNumber(), true),
+    (tip) => showToast(tip, 4500)
+  );
+  const fitModeBadge = (): void => modeBadge.fit([hud.el, banner.el]);
+  window.addEventListener("resize", fitModeBadge);
+  const syncModeBadge = (): void => {
+    modeBadge.set(
+      modeBadgeFor({
+        daily: dailyN,
+        official: dailyN !== null && dailyStore.hasOfficial(dailyN),
+        record: attemptRecord,
+      }),
+      dailyN,
+      todayNumber()
+    );
+    fitModeBadge();
+  };
 
   // "Daily #12", then " · Oct 11" for any day but today, and " · solved"
   // (this attempt set the official result) or " · replay" (an earlier one
@@ -1361,7 +1385,11 @@ async function main(): Promise<void> {
       deadEnds: params.deadEnds ? c.deadEndTips.size : null,
     };
   };
-  const updateHud = (): void => hud.render(hudSnapshot());
+  // The HUD and the mode badge (it re-fits around the HUD's new size).
+  const updateHud = (): void => {
+    hud.render(hudSnapshot());
+    syncModeBadge();
+  };
 
   // A fresh attempt (rebuild, Reset path): clock idle, nothing recorded.
   const resetAttempt = (): void => {
@@ -1502,6 +1530,9 @@ async function main(): Promise<void> {
       savePrefsNow();
     } else {
       adoptOtherTab();
+      // Another tab may have finished this daily meanwhile: the HUD title
+      // and the mode badge then read "replay".
+      updateHud();
     }
   });
   // pagehide: the last event a closing tab or a reload is sure to get.
@@ -2699,6 +2730,8 @@ async function main(): Promise<void> {
     share: lastWin,
     storeStatus: dailyStore.status,
     store: dailyStore.data(),
+    // K73: the mode badge on screen ("free" | "replay" | null).
+    badge: modeBadge.kind,
   });
   (window as unknown as Record<string, unknown>).__knotPlayDaily = (n: number) =>
     playDaily(n);
