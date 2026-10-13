@@ -172,9 +172,12 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   solved the same maze in 22 taps); give touch-tap sequences their own
   browser. Mobile emulation keeps the layout width it loaded with:
   after setViewport to a narrower width, load the page again. And the
-  follow camera eases slowly while the knot settles (the spring advances
-  at most 0.05 s per frame): wait for `__knotView()` to hold still before
-  tapping a choice's screen point.
+  follow camera takes seconds to ease onto the head: wait for
+  `__knotView()` to hold still before tapping a choice's screen point.
+  Builds before K96 (d8b9175) ease even slower while the knot settles
+  (at most 0.05 s of spring per frame). `.claude/probes/K96/k96_cam.mjs`
+  slows frames with a busy-wait in every rAF: CPU throttling barely
+  slows a frozen layout.
 
 ## Census and diagnosis rules
 

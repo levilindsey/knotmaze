@@ -468,6 +468,12 @@ K5-K7 (split, frame loop, worker) follow.
   100 ms during a gs-18 settle). Fix: a start time in the worklet plus a
   look-ahead scheduler on the audio clock; any rhythm mode (K80 doc
   section 3) needs it first.
+- **K103** · Below 10 fps the fit camera, the move animation and the paint
+  clock still slow down. The fit camera eases by a fixed fraction per
+  frame (0.08 / 0.15), and `tickAnim` and the paint read the ticker's
+  `deltaMS`, which Pixi caps at 100 ms. K96 (d8b9175) moved only the
+  follow camera onto real elapsed time. Making the fit easing time-based
+  would change its feel at the refresh rate it was tuned on.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -565,10 +571,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K72** · Twist-eye openness as a user param instead of a constant
   (MIN_PASS_SEPARATION is the main compactness lever; P3.17,
   `docs/history.md`).
-- **K96** · The follow camera takes about 7 s to reach the head while the
-  knot settles: its spring advances at most 0.05 s per frame, so at a low
-  frame rate it runs in slow motion (predates K73; seen in its probes).
-  Advance it by real elapsed time in substeps instead.
 - **K97** · Promote K49's `kinkCensusPage` (`.claude/probes/K49/lib.mjs`,
   an in-page port of K41's kink census, within 0.009 of the node
   harness) to tracked `scripts/` for same-state browser A/Bs of eye size.
@@ -580,6 +582,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 (items move here with the commit that resolved them)
 
+- **K96** · The follow camera reaches the head at the same real speed at
+  any frame rate: it steps by real elapsed time in substeps of at most
+  0.05 s. t95 at 151 ms frames went 8.6 s -> 4.4 s; 60 Hz is unchanged.
+  Done in d8b9175 (2026-10-13; `.claude/probes/K96/`). Follow-up K103.
 - **K99** · The fog of war lifts at fixed stations along a move's run,
   the same at any frame rate, move speed or mid-flight tap (0097801,
   2026-10-13; `.claude/probes/K99/`). Follow-up K100.
