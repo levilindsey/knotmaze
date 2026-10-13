@@ -920,3 +920,74 @@ Verify:
   per-frame pre-pass that evaluates each arm's material strip once (RGBA8
   render target, ~32 texels per arm) and has the fan pixels read it - it
   would also absorb G2.3's per-arm paint. Recorded as a follow-up.
+### G2.3 gameplay paint on the GPU (landed)
+
+- The paint DECLARATION the fabric overlay already hands the renderer
+  (`setPaint(spans, pulses, caps)`) becomes KPAINT records - items (SPAN,
+  CAP, PULSE: 2 texels each) plus, per control slot, the list of items that
+  can touch it (refs, at most 32 per slot) - rewritten only when the
+  declaration's content changes (a traversal move's swept span changes it
+  every frame: a few texels). The section shader evaluates the paint per
+  pixel (`kPaintAt`) in the retired pass's exact U semantics (spans assign
+  in order, caps never darken, pulses override, the glow brightens within
+  its family) and composes in closed form (`kComposePaint`): band A =
+  mix(S, white, K_BAND v), band B = mix(gold, white, K_BAND v), the gold
+  ramp = mix(S, gold, p). The tick only reduces the pulse travel (mod the
+  spacing), the fade-in and the hover breath to uniforms (`uKPulse`,
+  `uKPaint.w`); the path colour is `uKGold`.
+- Deleted: writeChainPaint, writeFillPaint, applyRevealGlowU, the CPU
+  pulseValueAt, the accent strip textures / caches / CPU sampler and
+  bindAccent / bindFieldAccent, the PAINT data texture, RibbonMesh
+  writePaint / paintU, the paint-rev / chain-rev / U-scratch machinery.
+- Deviation: per-SLOT item references built from the existing declaration
+  API instead of per-RUN records + a PaintState in FabricMazeRenderer -
+  fabric_maze_renderer.ts is untouched (parallel agents own src/game and
+  the HUD flow); the in-flight move rides the declaration rather than a
+  `uKMove` uniform.
+- Deviation: the reveal glow per pixel comes from the point's OWN moving
+  fronts (the sources that revealed it); the retired pass glowed any
+  revealed sample within reach of any tip on its chain (they differ only
+  where another front approaches the same stretch).
+- Edges: span and cap ends get a one-pixel coverage ramp (`pxArc` from
+  `fwidth` at the top of main; the fans use `pxW`). A per-chain paint flag
+  (KGEOM G0.w) skips the evaluation on chains with no items: without it
+  every palette-mode ribbon pixel paid a ctrl refinement (+0.3 ms).
+- K4 default: the trail fade is LINEAR over the oldest 30% (`mix(S, gold,
+  p)`); the strip compressed it into clamp(6p - 2.5).
+- The fans compose the same paint per arm; the pluck overlay composes
+  through the mirror (in knot mode too: it read the ribbon mesh's tint,
+  which the section shader ignores).
+- Verified: vitest - the mirror against a frozen copy of the retired pass
+  and its 8-bit strip over 24 random declarations (spans, caps, pulses,
+  hover) at the ribbon's sample arcs: within 1.6/255 (the strip's
+  quantisation), 2000+ points incl. 100+ band points; the trail fade is
+  linear. GPU paint census (probe vertices around every span / cap / pulse
+  after 6 moves; gold, trail, ring URL, hover): max 0.0024, none over
+  2/255. Fan census with paint (gold, trail): max 0.0024. Same-state A/B
+  vs G2.2: knot mode 0 px; at rest only the start junction's pulse arms
+  differ (def 46 px <= 9/255, ring 156 px <= 14/255 - crests exact per
+  pixel instead of interpolated between samples); after 6 moves gold 93 px
+  (span / cap edges, now antialiased at the exact ctrl), trail 1071 px
+  (the linear fade). Seen while A/B-ing string mode: master and G2.2 draw
+  a 1-px diagonal sliver from the start to the exit marker inside the
+  markers Graphics (hiding that Graphics removes it); G2.3 does not show
+  it - not attributed further (recorded as a follow-up).
+- Perf (quiet machine, perf lock; 3200x1800, b.c, physics off, 5 moves):
+
+  | case | build | update | tickPaint | upload KB/frame | GPU |
+  |---|---|---|---|---|---|
+  | rest, fw 0 | master | - | 0.13 | 151 | 1.70 |
+  | rest, fw 0 | G2.2 | - | 0.13 | 151 | 2.77 |
+  | rest, fw 0 | G2.3 | - | 0.01 | 0 | 3.12 |
+  | rest + flow | master | 13.76 | 2.16 | 1867 | 1.95 |
+  | rest + flow | G2.3 | 13.57 | 2.05 | 1522 | 3.33 |
+  | reveal burn | master | 9.92 | 3.76 | - | 1.51 |
+  | reveal burn | G2.3 | 9.72 | 3.51 | - | 3.09 |
+  | reveal rainbow | master | 7.38 | 3.12 | - | 0.64 |
+  | reveal rainbow | G2.3 | 7.62 | 3.09 | - | 1.25-1.55 |
+
+  At rest the CPU paint work and its uploads are gone (tickPaint 0.13 ->
+  0.01 ms, 151 -> 0 KB/frame; -18% with flow). GPU per program (G2.3):
+  ribbons 1.33 ms (master 1.24), fans 1.84 ms (master 0.57) - the fan cost
+  (G2.2's per-pixel section Gouraud +1.0, G2.3's per-arm paint +0.25) is
+  the open GPU item; see the follow-up (a per-arm material strip pre-pass).

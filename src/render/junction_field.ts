@@ -153,7 +153,7 @@ vec3 chainMaterial(int ch, float a, float seedIn) {
       m = kFxColor(c, actrl, an / c.arcPer, m, pR, al);
     }
   }
-  if (uKPaint.x > 0.5 || uKFx2.z > 0.5) {
+  if ((uKPaint.x > 0.5 && c.paintOn) || uKFx2.z > 0.5) {
     m = kComposePaint(m, kPaintAt(c, actrl, an, kFanPx), kGlow(c, actrl));
   }
   return m;

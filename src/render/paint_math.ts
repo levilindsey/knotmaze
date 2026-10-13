@@ -46,6 +46,7 @@ export interface KChain {
   total: number;
   arcPer: number;
   fxDone: number;
+  paintOn: boolean; // KGEOM G0.w: the chain carries gameplay paint items.
 }
 
 // GLSL twin: kChain. `out` (optional) is filled in place - hot CPU loops
@@ -66,6 +67,7 @@ export function kChain(D: KData, ch: number, out?: KChain): KChain {
   r.total = D.geom[geom * 4];
   r.arcPer = D.geom[geom * 4 + 1];
   r.fxDone = D.geom[geom * 4 + 2];
+  r.paintOn = D.geom[geom * 4 + 3] > 0.5;
   return r;
 }
 
@@ -210,13 +212,14 @@ export function writeGeomTable(
   count: number,
   closed: boolean,
   cal: ArrayLike<number>,
-  fxDone = 1e9
+  fxDone = 1e9,
+  paintOn = 0
 ): number {
   const o = base * 4;
   geom[o] = total;
   geom[o + 1] = total / (closed ? count : Math.max(1, count - 1));
   geom[o + 2] = fxDone;
-  geom[o + 3] = 0;
+  geom[o + 3] = paintOn;
   const n = cal.length;
   const a = o + 4;
   for (let i = 0; i < n; i++) geom[a + i] = cal[i];
