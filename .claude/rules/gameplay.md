@@ -88,7 +88,21 @@ entry is labeled with its source; the narrative is in
   design at TODAY's defaults (the bare page too, until K56 made it the
   daily).
 
+- CODEC V4 (K73, 2026-10-12): trailLength's default went 5 -> 10 (Levi:
+  recentPath should light "about twice as far"; the panel slider's max
+  went 15 -> 30). v1-v3 links read 5, and the token the page rewrites
+  them to on load writes that 5 out. The dailies keep 5: DAILY_V1 pins
+  codec v3's defaults. A future DAILY_V<n> built on codec v4 gets 10
+  unless its overrides say otherwise - K46's memory-trail days were
+  designed around 5 (docs/design/K46_daily_variety.md).
+
 ## The panel
+
+- pathViz LABELS ARE NOT ITS VALUES (K73, 2026-10-12): the panel shows
+  fullPath / recentPath / string for the values gold / trail / string.
+  Rename labels freely; never the values - links store the option's
+  index in the frozen codec tables, legacy `pv=` links name the values,
+  `trm=1` reads as trail, and daily results record the value.
 
 - *From APPEARANCE FX round 3 (2026-10-10), live recolor:* Look color controls (scheme/hue/gamut/palette/pathColor)
   now RECOLOR IN PLACE (renderer.recolor) - the rebuild they used to
