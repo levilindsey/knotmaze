@@ -262,20 +262,27 @@ const KINK_SEP_PER_WIDTH = 6.2;
 const KINK_EYE_ARC_MIN = 2.9;
 const KINK_EYE_ARC_PER_WIDTH = 7.0;
 const KINK_SEP_RATE = 0.015;
-// EYE PRESSURE distance: particles of one kink loop facing each other
-// across the eye repel to max(repulseDist, this x width) - the knot's own
-// spacing law, applied to the pairs the 6-ctrl exclusion hides. Width-
-// scaled because the target is in widths: a centerline diameter of 2.4
-// widths leaves a 1.4-width hole before the teardrop apex and the loop's
-// material take their share. Measured (8 seeds x tw 0.52 / 0.64): 2.0 and
-// 2.2 left fat eyes at 0.59 / 0.76 widths; 2.6 inflated default eyes
-// (median 1.25 -> 1.34 widths) without lifting the material-limited fat
-// outliers; 2.8 PUMPED - 2 of 8 fat seeds never slept, a limit cycle at
-// one kink's crossing core: once the eye distance outruns the depth
-// tents' z separation, pressure on the two arms beside the crossing
-// fights the coupling (lags 0.5-1.4, mv bursts to 1e-1 through the
-// friction switch). 2.4 keeps that margin.
-const KINK_EYE_DIST_PER_WIDTH = 2.4;
+// EYE PRESSURE distance: the eye's DIAMETER target. Particles of one kink
+// loop facing each other across the eye repel toward the CHORD of a round
+// eye of this diameter (max(repulseDist, this x width)): the target of a
+// pair Ds of rest arc apart on a loop of L is D sin(pi Ds / L) - the full
+// diameter for diametric pairs, falling to zero toward the crossing
+// (see applyKinkEyePressure). The knot's own spacing law, applied to the
+// pairs the 6-ctrl exclusion hides. Width-scaled because the target is
+// in widths. HISTORY: the first version (2.4, flat - every gated pair
+// targeted the full diameter) demanded what the crossing cannot give:
+// the loop's first and last particles flank the crossing ~0.3 world from
+// it on the two passes, a whole diameter apart by fiat, so the pressure
+// pried every kink crossing's bound pair open against the coupling
+// (resting separation 0.04-0.06 world vs 0.01 now) and squeezed the
+// neighboring eye - on the fat knot URL into a never-sleeping limit cycle
+// (K41, with the 3D-closest-point bug in applySegmentCollision). The
+// chord law asks nothing there; 2.6 restores the flat-2.4 eye sizes
+// (medians within 0.01 widths on all five census URLs), since the
+// diametric pairs carry the opening. Flat-law lore, for the record: 2.0 /
+// 2.2 left fat eyes at 0.59 / 0.76 widths; flat 2.8 PUMPED (2/8 fat
+// seeds) - the same crossing-core fight.
+const KINK_EYE_DIST_PER_WIDTH = 2.6;
 // Which pairs of a loop face each other ACROSS the eye: those at least
 // this fraction of the loop's interior material apart along it (on a
 // round loop, a chord of >= 0.89 diameters at 0.35). Relative to the
@@ -492,6 +499,9 @@ export class ParticleSystem {
   // terminals, or a merged crossing's two passes).
   fusedJunctions: number[][] = [];
   private junctionIdCounter = 0;
+  // Particle -> index into fusedJunctions (-1 = not a fused member).
+  // Empty in knot mode (no fusions).
+  private fusedGroupOf: Int32Array = new Int32Array(0);
   // The fusion rest-0 springs, shared into `structural` (in-loop voice) and
   // re-applied as a final projection each substep (see the substep tail).
   private fusionConstraints: DistanceConstraint[] = [];
@@ -766,6 +776,12 @@ export class ParticleSystem {
       this.structural.push(spring);
       this.fusionConstraints.push(spring);
     }
+    // Particle -> fused group, for crossing coverage that continues
+    // through the joint onto its other arms (updatePassCover).
+    if (this.fusedGroupOf.length === 0) {
+      this.fusedGroupOf = new Int32Array(this.particleCount).fill(-1);
+    }
+    for (const m of group) this.fusedGroupOf[m] = this.fusedJunctions.length;
     this.fusedJunctions.push(group);
   }
 
@@ -928,6 +944,7 @@ export class ParticleSystem {
     this.kinkLoopOf = new Int32Array(this.particleCount).fill(-1);
     this.kinkLoopStart = new Int32Array(this.kinks.length);
     this.kinkLoopEnd = new Int32Array(this.kinks.length);
+    this.kinkLoopLen = new Float64Array(this.kinks.length);
     // Kink-free scenes leave the topology field unset: applyRepulsion and
     // the fairing pass then take exactly their kink-free paths.
     this.topology.kinkOf = this.kinks.length > 0 ? this.kinkLoopOf : undefined;
@@ -952,6 +969,18 @@ export class ParticleSystem {
       const a = useF ? over.ctrl : under.ctrl;
       const span = useF ? sF : sB;
       const cum = this.chainRestCum[over.chain];
+      // Rest arc between the two bindings (the loop's material, lattice
+      // units, unwrapped like kinkLoopArc): the eye pressure's chord law.
+      const restAt = (f: number): number => {
+        const fl = Math.floor(f);
+        const slot = ((fl % len) + len) % len;
+        return (
+          cum[slot] +
+          Math.floor(fl / len) * cum[len] +
+          (f - fl) * (cum[slot + 1] - cum[slot])
+        );
+      };
+      this.kinkLoopLen[k] = restAt(a + span) - restAt(a);
       this.kinkLoopStart[k] = n;
       for (let s = Math.floor(a) + 1; s < a + span; s++) {
         if (n >= this.kinkLoopParts.length) {
@@ -989,6 +1018,15 @@ export class ParticleSystem {
   // so a pair is always across the eye, never neighbors along one side -
   // the force is eye pressure, not a stretch along the thread. The global
   // pass skips these pairs (topology.kinkOf), so nothing counts twice.
+  //
+  // The target is the CHORD of a round eye of diameter eyeDist: a pair Ds
+  // of rest arc apart on a loop of L rest arc between the bindings wants
+  // eyeDist * sin(pi Ds / L) - diametric pairs the whole diameter, pairs
+  // that flank the crossing almost nothing. Every target is met at once by
+  // a round eye, so the law never asks for an impossible shape; a flat
+  // target asked the two loop ends beside the crossing to stand a full
+  // diameter apart, which only tearing the crossing open could give (see
+  // KINK_EYE_DIST_PER_WIDTH).
   private applyKinkEyePressure(eyeDist: number, stiffness: number): void {
     const P = this.positions;
     const Z = this.zPos;
@@ -1000,19 +1038,25 @@ export class ParticleSystem {
       const gateLattice =
         KINK_EYE_GATE_FRACTION *
         (this.kinkLoopArc[end - 1] - this.kinkLoopArc[start]);
+      const loopLen = this.kinkLoopLen[k];
+      if (!(loopLen > 1e-9)) continue;
+      const phase = Math.PI / loopLen;
       for (let u = start; u < end; u++) {
         const i = this.kinkLoopParts[u];
         const arcI = this.kinkLoopArc[u];
         for (let v = u + 1; v < end; v++) {
-          if (this.kinkLoopArc[v] - arcI < gateLattice) continue;
+          const dS = this.kinkLoopArc[v] - arcI;
+          if (dS < gateLattice) continue;
           const j = this.kinkLoopParts[v];
           const dx = P[j * 2] - P[i * 2];
           const dy = P[j * 2 + 1] - P[i * 2 + 1];
           const dz = Z[j] - Z[i];
           const d2 = dx * dx + dy * dy + dz * dz;
           if (d2 >= d2Max || d2 < 1e-9) continue;
+          const target = eyeDist * Math.sin(Math.min(Math.PI, dS * phase));
+          if (d2 >= target * target) continue;
           const dist = Math.sqrt(d2);
-          const push = ((eyeDist - dist) / dist) * stiffness * 0.5;
+          const push = ((target - dist) / dist) * stiffness * 0.5;
           P[i * 2] -= dx * push;
           P[i * 2 + 1] -= dy * push;
           P[j * 2] += dx * push;
@@ -1441,6 +1485,9 @@ export class ParticleSystem {
   private kinkLoopEnd: Int32Array = new Int32Array(0);
   private kinkLoopParts: Int32Array = new Int32Array(256);
   private kinkLoopArc: Float64Array = new Float64Array(256);
+  // Per kink: rest arc between its two bindings (lattice units) - the
+  // eye pressure's chord law (see applyKinkEyePressure).
+  private kinkLoopLen: Float64Array = new Float64Array(0);
   // Width-scaled twist-eye material budget (see TWIST_MIN_SEPARATION).
   private twistSep = TWIST_MIN_SEPARATION;
   // Width-scaled junction-crossing material budget (see
@@ -1822,16 +1869,45 @@ export class ParticleSystem {
       prev !== undefined && prev === self.partner && prev !== self;
     const kNext =
       next !== undefined && next === self.partner && next !== self;
-    // KINK EYE material ratchet (see KINK_EYE_ARC_PER_WIDTH): when the
-    // chain-order neighbor IS this pass's partner, the thread between them
-    // is the kink's loop. Its floor rises from the current gap toward the
-    // rest-material budget at the twist rate; the ordering clamps below
-    // always outrank it (an eye grows only into free corridor room).
-    if (kPrev || kNext) {
+    const hasJn =
+      self.jnPrevCtrl !== undefined || self.jnNextCtrl !== undefined;
+    // A twist twin on either side (a self-linked side is no neighbor; a
+    // kink partner is the kink's own side).
+    const twinPrev =
+      prev !== undefined &&
+      prev !== self &&
+      !kPrev &&
+      this.twistBias.get(self)?.has(prev) === true;
+    const twinNext =
+      next !== undefined &&
+      next !== self &&
+      !kNext &&
+      this.twistBias.get(self)?.has(next) === true;
+    // RATCHET INTERSECTION: wherever two along-thread material budgets
+    // meet at one pass from different sources - a kink eye, a fused
+    // joint's jn, a twist twin's soft part - they bound this step's
+    // offset together (below) instead of clamping in sequence, where the
+    // later clamp wins and conveys the pass into the other budget's unmet
+    // share. Kink passes measured that first (see below). K41 found the
+    // same conveyance at a plain pass between a joint and its twist twin:
+    // the twin's ratchet walked the pass 2.0 -> 1.34 ctrl into the joint's
+    // unmet jn budget (jnSep 3.65 at tw .64) in the first 0.5 s, parking
+    // the crossing so close to the joint that the joint's bridge arm rode
+    // the crossing's over thread at the anti-riding floor's hard line - a
+    // standing rider (depth 0.04-0.05) that held the rect user URL awake
+    // forever (3 of 8 jittered starts on a868f31, 1 of 8 even before the
+    // kink eyes).
+    if (kPrev || kNext || (hasJn && (twinPrev || twinNext))) {
       const cycK = (d: number): number => ((d % len) + len) % len;
       // Bounds on this step's ctrl offset o = f - self.ctrl.
       let lo = -Infinity;
       let hi = Infinity;
+      // KINK EYE material ratchet (see KINK_EYE_ARC_PER_WIDTH): when the
+      // chain-order neighbor IS this pass's partner, the thread between
+      // them is the kink's loop. Its floor rises from the current gap
+      // toward the rest-material budget at the twist rate; the ordering
+      // clamps below always outrank it (an eye grows only into free
+      // corridor room).
       // A two-pass chain is a loop on BOTH sides: share the chain.
       const cap = kPrev && kNext ? len / 2 : len;
       if (kPrev) {
@@ -1860,7 +1936,7 @@ export class ParticleSystem {
       // as a standing rider; the fabric never slept). So they intersect:
       // each yields only slack above its own budget, and when both are
       // short the pass HOLDS (neither advances).
-      if (self.jnPrevCtrl !== undefined || self.jnNextCtrl !== undefined) {
+      if (hasJn) {
         let budget = this.jnSep;
         if (self.jnPrevCtrl !== undefined && self.jnNextCtrl !== undefined) {
           budget = Math.min(budget, cycK(self.jnNextCtrl - self.jnPrevCtrl) / 2);
@@ -1876,26 +1952,27 @@ export class ParticleSystem {
           hi = Math.min(hi, gap - sep);
         }
       }
-      // Same for a TWIST twin on the outer side (a second self-crossing
-      // bracketing the kink - the lattice's curl-plus-twist motif): the
-      // twist ratchet's soft part (above MIN_PASS_SEPARATION) joins the
-      // intersection instead of outranking it from the ordering clamps -
-      // at tw 0.64 its 3.3-ctrl budget conveyed a measured kink's end
-      // pass back into the loop at the twist rate (8.34 -> 8.01 ctrl).
-      // The hard MIN_PASS_SEPARATION part stays in the ordering clamps.
-      if (!kPrev && this.twistBias.get(self)?.has(prev!)) {
+      // Same for a TWIST twin (beside a kink: a second self-crossing
+      // bracketing it - the lattice's curl-plus-twist motif; beside a
+      // joint: see the K41 note above): the twist ratchet's soft part
+      // (above MIN_PASS_SEPARATION) joins the intersection instead of
+      // outranking it from the ordering clamps - at tw 0.64 its 3.3-ctrl
+      // budget conveyed a measured kink's end pass back into the loop at
+      // the twist rate (8.34 -> 8.01 ctrl). The hard MIN_PASS_SEPARATION
+      // part stays in the ordering clamps.
+      if (twinPrev) {
         const gap = cycK(self.ctrl - prev!.ctrl);
         const sep = Math.min(this.twistSep, gap + TWIST_SEP_RATE * mobility);
         lo = Math.max(lo, sep - gap);
       }
-      if (!kNext && this.twistBias.get(self)?.has(next!)) {
+      if (twinNext) {
         const gap = cycK(next!.ctrl - self.ctrl);
         const sep = Math.min(this.twistSep, gap + TWIST_SEP_RATE * mobility);
         hi = Math.min(hi, gap - sep);
       }
       const o = f - self.ctrl;
       f = self.ctrl + (lo <= hi ? Math.max(lo, Math.min(hi, o)) : 0);
-    } else if (self.jnPrevCtrl !== undefined || self.jnNextCtrl !== undefined) {
+    } else if (hasJn) {
       // JUNCTION material budget (P4 fabric; see JN_MIN_SEPARATION): a
       // fused joint is a FIXED virtual neighbor - this pass keeps at
       // least jnSep of thread between its binding and the joint, with
@@ -1906,8 +1983,8 @@ export class ParticleSystem {
       // pass-ordering clamps below, so kink/twist/ordering floors always
       // win conflicts - the budget may park unconverged, never force.
       // Knot mode sets no jn records, so this is structurally absent.
-      // (Kink passes take the branch above, which applies the same jn
-      // floors intersected with the kink eye's.)
+      // (Kink passes and passes with a twist twin take the branch above,
+      // which applies the same jn floors intersected with the others.)
       const cycJ = (d: number): number => ((d % len) + len) % len;
       // Between TWO joints the corridor can be too short for both full
       // budgets (a lattice J-X-J corridor is 4.0 ctrl vs a 2*jnSep
@@ -1963,13 +2040,14 @@ export class ParticleSystem {
       // graduated friction weld can strangle it (a full-authority snap
       // pinned fat seed 42424242 at mv 1.6e-2 forever - the P3.31
       // pump shape).
-      // (A kink pass already applied its twin's soft twist ratchet in the
-      // eye intersection above; only the hard floor remains here.)
-      const kinkPass = kPrev || kNext;
+      // (A pass that took the RATCHET INTERSECTION above already applied
+      // its twin's soft twist ratchet there; only the hard floor remains
+      // here.)
+      const intersected = kPrev || kNext || (hasJn && (twinPrev || twinNext));
       const sepOf = (nb: CrossingPass, gap: number): number =>
         nb === self.partner
           ? this.kinkSep
-          : !kinkPass && this.twistBias.get(self)?.has(nb)
+          : !intersected && this.twistBias.get(self)?.has(nb)
             ? Math.max(
                 MIN_PASS_SEPARATION,
                 Math.min(this.twistSep, gap + TWIST_SEP_RATE * mobility)
@@ -2575,35 +2653,85 @@ export class ParticleSystem {
     // remains while it resolves.
     const reach = 2.0;
     const fade = reach * 0.35;
+    const segLen = (chain: number[], k: number): number => {
+      const len = chain.length;
+      const a = chain[((k % len) + len) % len];
+      const b = chain[(((k + 1) % len) + len) % len];
+      const dx = p[b * 2] - p[a * 2];
+      const dy = p[b * 2 + 1] - p[a * 2 + 1];
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+    const mark = (pp: number, arc: number, value: number): void => {
+      const cov = Math.min(1, Math.max(0, (reach - arc) / fade));
+      if (cov <= 0) return;
+      const s = pp * 4;
+      for (let u = 0; u < 4; u++) {
+        if (this.passCoverSlot[s + u] === value) {
+          if (cov > this.passCoverCov[s + u]) {
+            this.passCoverCov[s + u] = cov;
+          }
+          break;
+        }
+        if (this.passCoverSlot[s + u] < 0) {
+          this.passCoverSlot[s + u] = value;
+          this.passCoverCov[s + u] = cov;
+          break;
+        }
+      }
+    };
+    // COVERAGE THROUGH A FUSED JOINT (K41): a joint is ONE material point
+    // shared by all its arms, so a crossing's coverage that reaches it on
+    // one arm continues onto the others with the remaining arc budget.
+    // The coverage is the zone where separation is geometrically
+    // impossible, and that holds for every arm at the joint alike: a
+    // joint sitting ~0.6 world from a crossing's binding can never stand
+    // a full width off the crossing's other thread, whichever arm
+    // carries the pair. Without this, a bridge arm leaving such a joint
+    // alongside the over thread was held to the full floor - an
+    // impossible demand that parked at the hard line as a standing rider
+    // and kept the fabric awake forever (the tw .64 rect URL at seed
+    // 3zz2a1: a lattice-forced joint 2.0 ctrl from its crossing). Pair-
+    // scoped like all PassCover (the other side must sit on the same
+    // crossing's other pass); one joint deep; walks stop at open seams.
+    const throughJoint = (pp: number, arc0: number, value: number): void => {
+      const g = this.fusedGroupOf[pp];
+      if (g < 0) return;
+      for (const q of this.fusedJunctions[g]) {
+        if (q === pp) continue;
+        const qChainIdx = this.particleChain[q];
+        const qChain = this.chains[qChainIdx];
+        const qLen = qChain.length;
+        const qBrk = this.chainBreakAfter[qChainIdx]; // -1 closed.
+        const qSlot = this.topology.ctrlOf[q];
+        mark(q, arc0, value);
+        let arc = arc0;
+        for (let k = qSlot; k < qSlot + 12; k++) {
+          if (((k % qLen) + qLen) % qLen === qBrk) break;
+          arc += segLen(qChain, k);
+          if (arc >= reach) break;
+          mark(qChain[(k + 1) % qLen], arc, value);
+        }
+        arc = arc0;
+        for (let k = qSlot - 1; k > qSlot - 13; k--) {
+          const ks = ((k % qLen) + qLen) % qLen;
+          if (ks === qBrk) break;
+          arc += segLen(qChain, k);
+          if (arc >= reach) break;
+          mark(qChain[ks], arc, value);
+        }
+      }
+    };
+    const fused = this.fusedGroupOf.length > 0;
     const addWindow = (chainIdx: number, ctrl: number, value: number): void => {
       const chain = this.chains[chainIdx];
       const len = chain.length;
       const base = Math.floor(ctrl);
       const frac = ctrl - base;
-      const seg = (k: number): number => {
-        const a = chain[((k % len) + len) % len];
-        const b = chain[(((k + 1) % len) + len) % len];
-        const dx = p[b * 2] - p[a * 2];
-        const dy = p[b * 2 + 1] - p[a * 2 + 1];
-        return Math.sqrt(dx * dx + dy * dy);
-      };
+      const seg = (k: number): number => segLen(chain, k);
       const put = (k: number, arc: number): void => {
-        const cov = Math.min(1, Math.max(0, (reach - arc) / fade));
-        if (cov <= 0) return;
-        const s = chain[((k % len) + len) % len] * 4;
-        for (let u = 0; u < 4; u++) {
-          if (this.passCoverSlot[s + u] === value) {
-            if (cov > this.passCoverCov[s + u]) {
-              this.passCoverCov[s + u] = cov;
-            }
-            break;
-          }
-          if (this.passCoverSlot[s + u] < 0) {
-            this.passCoverSlot[s + u] = value;
-            this.passCoverCov[s + u] = cov;
-            break;
-          }
-        }
+        const pp = chain[((k % len) + len) % len];
+        mark(pp, arc, value);
+        if (fused) throughJoint(pp, arc, value);
       };
       // Walk outward from the binding in both directions, accumulating
       // real arc length; stop where the erase gap ends.
