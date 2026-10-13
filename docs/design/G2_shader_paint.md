@@ -26,9 +26,13 @@
 >   FabricMazeRenderer (untouched); the reveal glow per pixel comes from the
 >   point's own moving fronts; a per-chain paint flag (KGEOM G0.w) skips
 >   unpainted chains.
-> - Open: the fan shader costs ~1.3 ms more than master's at 3200x1800 (per
->   program); the fix proposed in section 7 is a per-arm material strip
->   pre-pass.
+> - FANS READ ARM STRIPS (the K4 fan fix, 2026-10-12, section 7 "K4 fan
+>   fix"): each arm's composed material is rendered once per frame into an
+>   RGBA8 strip row (arm_strip.ts); fans read two texels per arm instead of
+>   evaluating it per pixel. The per-pixel fans cost the Pixel 11 60 -> 44
+>   fps at rest; with strips it holds 60 (master 58-60). Paint and burn-
+>   front edges inside webs ramp over the strip step (<= ~1.4 CSS px at
+>   default zoom) instead of one screen pixel.
 
 Read-only design. No files were changed.
 

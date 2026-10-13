@@ -50,6 +50,7 @@ src/
     ribbon_renderer.ts    # PixiJS ribbon meshes
     ribbon_mesh.ts        # Triangle strip extrusion
     junction_field.ts     # GPU junction field: records + fan shader
+    arm_strip.ts          # Per-arm material strips the fans read (K4 fan fix)
     gap_mask.ts           # Per-pixel crossing gaps: slot table + shader lib
     paint_glsl.ts         # G2 shader paint: GLSL library (section, FX, paint)
     paint_math.ts         # G2: its line-for-line CPU mirror (census reference)
@@ -1234,10 +1235,12 @@ between-threads/cell-passage route.
   composition - the accent strip is gone; the trail fade is linear, K4).
   Censuses: GPU vs mirror <= 1.2/255 for FX (40 runs), section, paint and
   fans (rest, mid-reveal, after moves). At rest the CPU paint work and its
-  uploads are gone (tickPaint 0.13 -> 0.01 ms, 151 -> 0 KB/frame). OPEN:
-  GPU +1.4 ms vs master at 3200x1800, nearly all in the FANS (0.57 -> 1.84
-  ms: per-pixel section Gouraud per arm + paint) - the planned fix is a
-  per-arm material strip pre-pass. LORE (details in the doc): a cache must
+  uploads are gone (tickPaint 0.13 -> 0.01 ms, 151 -> 0 KB/frame). FANS
+  read ARM STRIPS (arm_strip.ts): each arm's composed material rendered
+  once per frame into an RGBA8 row (a pixi system's prerender, dirty-
+  checked); per-pixel evaluation there cost the phone 60 -> 44 fps (fans
+  0.57 -> 1.84 ms GPU); strips: fans 0.59 ms + pass 0.06, phone 60 at rest.
+  Web paint edges ramp over the strip step. LORE (details in the doc): a cache must
   key on EVERY input of its solve (gateRev - a style uniform set after the
   first update() froze reveal-only show times); an earliest-arrival choice
   needs a precision-independent tie-break (GPU f32 ctrl flipped junction

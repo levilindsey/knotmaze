@@ -96,6 +96,7 @@ export function stripTexture(): RenderTexture {
 const STATE = {
   rows: 0,
   tableRev: 0,
+  quadLines: -1,
   // Dirty key of the last render: data-texture revisions + table revision.
   lastRevs: new Float64Array(5).fill(-1),
   lastU: new Float32Array(0),
@@ -334,7 +335,11 @@ export function renderStrips(renderer: Renderer): void {
     rt.resize(STRIP_RT_W, Math.max(lines, Math.ceil(rt.height * 1.5)), 1);
   }
   const scene = passScene();
-  setQuad(lines);
+  // (The quad changes only with the line count: no per-pass upload.)
+  if (STATE.quadLines !== lines) {
+    setQuad(lines);
+    STATE.quadLines = lines;
+  }
   (stripInfo().uniforms as unknown as { uStripInfo: Float32Array }).uStripInfo[0] = rows;
   renderer.render({ container: scene, target: rt, clear: false });
   STATE.stats.renders++;
