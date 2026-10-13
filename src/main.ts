@@ -72,6 +72,7 @@ import {
 } from "./audio/pitch_space";
 import type { PitchAssignment } from "./audio/pitch_space";
 import { SCARBOROUGH_FAIR } from "./audio/songs";
+import { SongScheduler } from "./audio/song_scheduler";
 import { APP_VERSION, BUILD_SHA, BUILD_TIME } from "./build_info";
 
 const BACKGROUND = 0x151b28;
@@ -143,6 +144,9 @@ const TAP_STRENGTH = 0.55;
 // and the local window used in knot mode / off the walk graph.
 const RUN_REACH = 6;
 const LOBE_REACH = 2;
+// K101: how far ahead (seconds of audio clock) music mode schedules its
+// notes. A frame longer than this makes a note start late, never early.
+const MUSIC_LOOKAHEAD = 0.3;
 
 // The loading indicator: a trefoil knot (with real over/under gaps,
 // alternating along the strand like the app's own weave) turning slowly in
@@ -443,8 +447,8 @@ async function main(): Promise<void> {
   > | null = null;
   let audioSegSite: Array<{ chain: number; ctrl: number }> = [];
   let nextRandomPluck = 0;
-  let songIndex = 0;
-  let songNextAt = 0;
+  // K101: music mode's notes, on the audio clock once it runs.
+  const songSched = new SongScheduler();
 
   // The unanchored knot finds its own shape, so the viewport fit follows
   // the live particle bounds, easing toward the target to avoid popping.
@@ -1112,8 +1116,8 @@ async function main(): Promise<void> {
       }));
     }
     nextRandomPluck = 0;
-    songIndex = 0;
-    songNextAt = 0;
+    songSched.reset();
+    synth.cancelScheduled();
   }
 
   // The walk run (fabric) holding a chain ctrl, or null (knot mode, or a
@@ -2461,11 +2465,18 @@ async function main(): Promise<void> {
   // no grab, no pull, no wake, so they never disturb the knot and may play
   // during a user drag (only a unit holding the grabbed particle stays
   // sound-only). The visual waits out the audio output latency so sight
-  // lands on the sound.
-  const triggerAutoPluck = (seg: number, freq: number, amp: number): void => {
+  // lands on the sound. `when` (audio clock) and `lead` (seconds from now)
+  // place a note scheduled ahead (K101): its visual waits for it too.
+  const triggerAutoPluck = (
+    seg: number,
+    freq: number,
+    amp: number,
+    when?: number,
+    lead = 0
+  ): void => {
     if (!ps || !renderer || !Number.isFinite(freq)) return;
     if (!settings.muted && params.soundMode !== "none") {
-      synth.pluck(freq, amp);
+      synth.pluck(freq, amp, when);
     }
     const site = audioSegSite[seg];
     if (!site) return;
@@ -2493,13 +2504,23 @@ async function main(): Promise<void> {
       reach: unit.reach,
       spanCtrl: unit.spanCtrl,
       beta: 0.3 + Math.random() * 0.2,
-      delay: synth.outputLatency(),
+      delay: lead + synth.outputLatency(),
     });
   };
 
+  // K101: the last music notes handed out, for probes (__knotSong).
+  const songLog: Array<{
+    at: number;
+    lead: number;
+    note: string | null;
+    clock: string;
+  }> = [];
   const autoAudioTick = (): void => {
     if (!ps) return;
-    if (!audioAssign || settings.muted) return;
+    if (!audioAssign || settings.muted) {
+      synth.cancelScheduled();
+      return;
+    }
     const nowS = performance.now() / 1000;
     if (params.soundMode === "random") {
       if (nextRandomPluck === 0) nextRandomPluck = nowS + 0.8;
@@ -2517,30 +2538,41 @@ async function main(): Promise<void> {
         }
       }
     } else if (params.soundMode === "music") {
-      if (songNextAt === 0) songNextAt = nowS + 1.2;
-      if (nowS >= songNextAt) {
-        const song = SCARBOROUGH_FAIR;
-        const row = song.notes[songIndex % song.notes.length];
-        songIndex++;
-        songNextAt =
-          nowS + (row.beats * 60) / (song.bpm * Math.max(0.1, params.soundSpeed));
-        if (row.note) {
-          const f = noteToFreq(row.note);
-          const segs = segmentsNear(audioAssign, f);
-          if (segs.length > 0 && Number.isFinite(f)) {
-            // The song's true pitch plays; the matching segment moves.
-            triggerAutoPluck(
-              segs[Math.floor(Math.random() * segs.length)],
-              f,
-              0.62
-            );
-          }
+      // K101: notes start on the audio clock's grid, handed out
+      // MUSIC_LOOKAHEAD ahead so a slow frame cannot delay or stretch them.
+      // Before the autoplay gate (silent plucks, visuals only) the grid runs
+      // on wall time with no lookahead.
+      const audioNow = synth.audioTime();
+      const clock = audioNow === null ? "wall" : "audio";
+      const now = audioNow ?? nowS;
+      const notes = songSched.due(
+        SCARBOROUGH_FAIR,
+        now,
+        clock,
+        audioNow === null ? 0 : MUSIC_LOOKAHEAD,
+        params.soundSpeed
+      );
+      for (const { row, at } of notes) {
+        songLog.push({ at, lead: at - now, note: row.note, clock });
+        if (songLog.length > 64) songLog.shift();
+        if (!row.note) continue;
+        const f = noteToFreq(row.note);
+        const segs = segmentsNear(audioAssign, f);
+        if (segs.length > 0 && Number.isFinite(f)) {
+          // The song's true pitch plays; the matching segment moves.
+          triggerAutoPluck(
+            segs[Math.floor(Math.random() * segs.length)],
+            f,
+            0.62,
+            audioNow === null ? undefined : at,
+            at - now
+          );
         }
       }
     } else {
       nextRandomPluck = 0;
-      songNextAt = 0;
-      songIndex = 0;
+      songSched.reset();
+      synth.cancelScheduled();
     }
   };
 
@@ -2978,6 +3010,13 @@ async function main(): Promise<void> {
     x: root.position.x,
     y: root.position.y,
     s: root.scale.x,
+  });
+  // K101: the music notes handed out lately (start time on their clock,
+  // lead = how far ahead of the tick that scheduled them) and the clocks.
+  (window as unknown as Record<string, unknown>).__knotSong = () => ({
+    notes: songLog.slice(),
+    audioTime: synth.audioTime(),
+    wallTime: performance.now() / 1000,
   });
   (window as unknown as Record<string, unknown>).__knotInspect = (
     x: number,

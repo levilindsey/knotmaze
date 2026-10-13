@@ -174,20 +174,34 @@ class KnotStringProcessor extends AudioWorkletProcessor {
     this.fadeStart = this.life - Math.floor(sr * 0.35);
     this.quietQuanta = 0;
     this.done = false;
+    // K101: the context frame the note starts on (music mode schedules
+    // ahead); 0 = at once. Any message from the main thread cancels.
+    this.startFrame = o.startFrame || 0;
+    this.port.onmessage = () => {
+      this.done = true;
+    };
   }
 
   process(inputs, outputs) {
     if (this.done) return false;
     const out = outputs[0][0];
     if (!out) return true;
+    // A scheduled note stays silent until its start frame, which can fall
+    // inside this render quantum.
+    let off = 0;
+    if (this.n === 0 && this.startFrame > currentFrame) {
+      off = Math.min(out.length, this.startFrame - currentFrame);
+      out.fill(0, 0, off);
+      if (off === out.length) return true;
+    }
     const S = this.strings;
     const b = this.burst;
     const bl = this.burstLen;
     const pole1 = 1 - this.pole;
     const a = this.aDisp;
     let peak = 0;
-    for (let i = 0; i < out.length; i++) {
-      const n = this.n + i;
+    for (let i = off; i < out.length; i++) {
+      const n = this.n + i - off;
       const ex = n < bl ? b[n] : 0;
       let acc = 0;
       for (let k = 0; k < 2; k++) {
@@ -222,7 +236,7 @@ class KnotStringProcessor extends AudioWorkletProcessor {
       const av = v < 0 ? -v : v;
       if (av > peak) peak = av;
     }
-    this.n += out.length;
+    this.n += out.length - off;
     // Self-terminate: hard lifespan OR sustained near-silence (post-burst).
     if (this.n > bl + 4800) {
       if (peak < 1e-4) this.quietQuanta++;
@@ -290,7 +304,15 @@ export class KnotSynth {
   // for a last-resort fallback).
   private engine: "pending" | "harp" | "legacy" = "pending";
   private readyPromise: Promise<void> | null = null;
-  private pendingPlucks: Array<{ freq: number; strength: number }> = [];
+  private pendingPlucks: Array<{
+    freq: number;
+    strength: number;
+    when?: number;
+  }> = [];
+  // Voices scheduled to start later (K101: music mode plays ahead on the
+  // audio clock), so a mute, a mode switch or a rebuild can drop the ones
+  // not yet sounding. Pruned by cancelScheduled and by each voice's end.
+  private future = new Set<{ at: number; kill: () => void }>();
 
   // False until the autoplay gate opens (an injected context needs none).
   private unlocked: boolean;
@@ -377,6 +399,30 @@ export class KnotSynth {
     }
     const l = (ctx.outputLatency || 0) + (ctx.baseLatency || 0);
     return Number.isFinite(l) ? Math.max(0, Math.min(0.25, l)) : 0;
+  }
+
+  // The audio clock in seconds while the context runs; null before the
+  // autoplay gate opens and while the context is suspended or closed. A
+  // pluck's `when` is on this clock.
+  audioTime(): number | null {
+    const ctx = this.ctx;
+    return ctx && ctx.state === "running" ? ctx.currentTime : null;
+  }
+
+  // Drops every scheduled pluck that has not started sounding yet.
+  cancelScheduled(): void {
+    if (this.pendingPlucks.length > 0) {
+      this.pendingPlucks = this.pendingPlucks.filter(
+        (p) => p.when === undefined
+      );
+    }
+    const ctx = this.ctx;
+    if (!ctx || this.future.size === 0) return;
+    const now = ctx.currentTime;
+    for (const v of this.future) {
+      if (v.at > now) v.kill();
+      else this.future.delete(v);
+    }
   }
 
   // Resolves once the string engine is decided and any queued plucks are
@@ -473,7 +519,7 @@ export class KnotSynth {
             URL.revokeObjectURL(url);
             const queued = this.pendingPlucks;
             this.pendingPlucks = [];
-            for (const p of queued) this.playNow(p.freq, p.strength);
+            for (const p of queued) this.playNow(p.freq, p.strength, p.when);
           });
       } else {
         this.engine = "legacy";
@@ -488,31 +534,34 @@ export class KnotSynth {
     return this.ctx;
   }
 
-  // strength in [0, 1] scales loudness and brightness.
-  pluck(freq: number, strength: number): void {
+  // strength in [0, 1] scales loudness and brightness. `when` (audio-clock
+  // seconds, see audioTime) starts the note on that sample; omitted or past,
+  // it starts at once.
+  pluck(freq: number, strength: number, when?: number): void {
     const ctx = this.ensure();
     if (!ctx || !this.master) return;
     this.stats.plucks++;
     this.stats.lastFreq = freq;
     if (this.engine === "pending") {
-      this.pendingPlucks.push({ freq, strength });
+      this.pendingPlucks.push({ freq, strength, when });
       return;
     }
-    this.playNow(freq, strength);
+    this.playNow(freq, strength, when);
   }
 
-  private playNow(freq: number, strength: number): void {
-    if (this.engine === "harp") this.pluckHarp(freq, strength);
-    else this.pluckLegacy(freq, strength);
+  private playNow(freq: number, strength: number, when?: number): void {
+    if (this.engine === "harp") this.pluckHarp(freq, strength, when);
+    else this.pluckLegacy(freq, strength, when);
   }
 
-  private pluckHarp(freq: number, strength: number): void {
+  private pluckHarp(freq: number, strength: number, when?: number): void {
     const ctx = this.ctx!;
     // Deterministic per-pluck seed (probe reproducibility): pluck ordinal
     // mixed with the pitch.
     const seed =
       (Math.imul(this.stats.plucks, 2654435761) ^ Math.round(freq * 128)) >>>
       0;
+    const lead = when === undefined ? 0 : Math.max(0, when - ctx.currentTime);
     const node = new AudioWorkletNode(ctx, "knot-string", {
       numberOfInputs: 0,
       numberOfOutputs: 1,
@@ -525,31 +574,39 @@ export class KnotSynth {
         sustain: this.voiceSustain,
         shimmer: this.voiceShimmer,
         pickPosition: this.voicePickPos,
+        startFrame: lead > 0 ? Math.round(when! * ctx.sampleRate) : 0,
       },
     });
     node.connect(this.master!);
     let dead = false;
-    const kill = (): void => {
-      if (dead) return;
-      dead = true;
-      try {
-        node.disconnect();
-      } catch {
-        // Already gone.
-      }
+    const voice = {
+      at: ctx.currentTime + lead,
+      kill: (): void => {
+        if (dead) return;
+        dead = true;
+        this.future.delete(voice);
+        node.port.postMessage(0); // Stops a voice cut short.
+        try {
+          node.disconnect();
+        } catch {
+          // Already gone.
+        }
+      },
     };
+    if (lead > 0) this.future.add(voice);
     // The processor self-terminates (silence or lifespan) and pings us to
     // drop the node; the timer is a belt-and-suspenders backstop.
-    node.port.onmessage = kill;
-    setTimeout(kill, 11000);
+    node.port.onmessage = voice.kill;
+    setTimeout(voice.kill, 11000 + lead * 1000);
   }
 
   // LEGACY VOICE (no-AudioWorklet fallback only): the original native-node
   // Karplus-Strong loop. Known detune: the DelayNode cycle adds one render
   // quantum of loop latency, so pitches land flat (see the header comment).
-  private pluckLegacy(freq: number, strength: number): void {
+  private pluckLegacy(freq: number, strength: number, when?: number): void {
     const ctx = this.ctx!;
-    const now = ctx.currentTime;
+    const lead = when === undefined ? 0 : Math.max(0, when - ctx.currentTime);
+    const now = ctx.currentTime + lead;
     const period = 1 / freq;
     const s = Math.min(1, Math.max(0.05, strength));
 
@@ -617,14 +674,24 @@ export class KnotSynth {
     // stop raced the main thread and silenced notes - see git history).
     burst.start(now);
 
-    // Tear the string down once the envelope has closed.
-    setTimeout(() => {
-      burst.disconnect();
-      pick.disconnect();
-      delay.disconnect();
-      damping.disconnect();
-      feedback.disconnect();
-      out.disconnect();
-    }, 1800);
+    // Tear the string down once the envelope has closed (or cancel it
+    // before it starts).
+    let torn = false;
+    const voice = {
+      at: now,
+      kill: (): void => {
+        if (torn) return;
+        torn = true;
+        this.future.delete(voice);
+        burst.disconnect();
+        pick.disconnect();
+        delay.disconnect();
+        damping.disconnect();
+        feedback.disconnect();
+        out.disconnect();
+      },
+    };
+    if (lead > 0) this.future.add(voice);
+    setTimeout(voice.kill, 1800 + lead * 1000);
   }
 }
