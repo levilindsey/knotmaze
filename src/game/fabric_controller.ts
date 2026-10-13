@@ -17,8 +17,13 @@
 // The branch-point-only rule and the win condition are unchanged. The flag
 // is live-togglable mid-solve (gameplay interpretation only; the path state
 // is valid under either reading).
+//
+// K19 STATS (definitions in game/maze_stats.ts): the distinct junctions and
+// dead-end tips the head has reached, and a per-move log for the share
+// grid. All reset with reset().
 
 import type { WalkGraph } from "../core/walk_graph";
+import type { MoveKind } from "./maze_stats";
 
 export type FabricTapResult =
   | "advance" // stepped across a run to its far vertex
@@ -33,6 +38,13 @@ export class FabricMazeController {
   pathEdges: number[] = [];
   backtrackDist = 0;
   solved = false;
+  // Distinct JUNCTION vertices (not END) the head has arrived at.
+  visitedJunctions = new Set<string>();
+  // Distinct dead-end tips the head has arrived at: END vertices other
+  // than the start and the exit (main.ts shows them only with deadEnds on).
+  deadEndTips = new Set<string>();
+  // One entry per accepted move: g(ood) / d(etour) / b(acktrack).
+  moveLog: MoveKind[] = [];
 
   // Memory-trail mode: advance-only taps (see the header comment). Set at
   // construction and freely togglable from main.ts afterwards.
@@ -49,6 +61,14 @@ export class FabricMazeController {
     this.pathEdges = [];
     this.backtrackDist = 0;
     this.solved = false;
+    this.visitedJunctions = new Set();
+    this.deadEndTips = new Set();
+    this.moveLog = [];
+  }
+
+  // Moves made (accepted taps) since the last reset.
+  get moveCount(): number {
+    return this.moveLog.length;
   }
 
   get head(): string {
@@ -82,17 +102,38 @@ export class FabricMazeController {
       this.pathEdges.pop();
       this.pathVertices.pop();
       this.backtrackDist += e.length;
+      this.moveLog.push("b");
       return "backtrack";
     }
 
     // A self-loop run returns to the same vertex; everything else crosses.
     const far = e.va === head ? e.vb : e.va;
+    this.moveLog.push(this.onShortestRoute(head, e.length, far) ? "g" : "d");
     this.pathEdges.push(edgeId);
     this.pathVertices.push(far);
+    this.arrive(far);
     if (far === this.walk.exit) {
       this.solved = true;
       return "win";
     }
     return "advance";
+  }
+
+  // Does stepping from `from` across a run of `len` to `to` stay on a
+  // shortest route to the exit?
+  private onShortestRoute(from: string, len: number, to: string): boolean {
+    const d0 = this.walk.distToExit.get(from) ?? Infinity;
+    const d1 = this.walk.distToExit.get(to) ?? Infinity;
+    if (!Number.isFinite(d0) || !Number.isFinite(d1)) return false;
+    return len + d1 <= d0 + 1e-9 * Math.max(1, d0);
+  }
+
+  private arrive(id: string): void {
+    const v = this.walk.vertices.get(id);
+    if (!v) return;
+    if (!v.isEnd) this.visitedJunctions.add(id);
+    else if (id !== this.walk.start && id !== this.walk.exit) {
+      this.deadEndTips.add(id);
+    }
   }
 }

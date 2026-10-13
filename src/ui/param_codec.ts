@@ -220,14 +220,20 @@ export const CODEC_V2: CodecTable = Object.freeze({
 // V3 (2026-10-11): pluckSize defaults to 1.75 (Levi: "bigger default for
 // plucks" - at 1 the median tapped lobe swung at the amplitude floor,
 // subtle at default zoom); an edited copy of V2, nothing else differs. V2
-// links keep pluckSize 1.
+// links keep pluckSize 1. New params since are APPENDED below.
 export const CODEC_V3: CodecTable = Object.freeze({
   version: 3,
-  params: Object.freeze(
-    CODEC_V2.params.map((p) =>
+  params: Object.freeze([
+    ...CODEC_V2.params.map((p) =>
       p.name === "pluckSize" ? num("pluckSize", 1.75) : p
-    )
-  ),
+    ),
+    // The last three maze-plan knobs (2026-10-12, K20): until now every
+    // link read them from DEFAULT_MAZE_PARAMS, so changing one there would
+    // have moved every old link's maze. Defaults = those values exactly.
+    num("entranceClearance", 2.5), // 64
+    num("exitClearance", 5),
+    num("junctionSpacing", 2),
+  ]),
 });
 
 // Every table ever published, oldest first (never edit or drop one).
@@ -401,6 +407,59 @@ function entryFor(p: CodecParam, index: number, value: unknown): Entry | null {
   }
 }
 
+// `p` with its default replaced by base's value for it, when the param's
+// type can hold that value - so "changed" means "differs from base"
+// (DELTA blobs, below). A value it cannot hold leaves the table default.
+function rebased(
+  p: CodecParam,
+  base: Readonly<Record<string, unknown>>
+): CodecParam {
+  if (!Object.hasOwn(base, p.name)) return p;
+  const v = base[p.name];
+  switch (p.type) {
+    case "number":
+      return typeof v === "number" && Number.isFinite(v) ? { ...p, def: v } : p;
+    case "boolean":
+      return typeof v === "boolean" ? { ...p, def: v } : p;
+    case "color":
+      return typeof v === "string" && COLOR_RE.test(v) ? { ...p, def: v } : p;
+    case "enum":
+      return typeof v === "string" && p.options.includes(v)
+        ? { ...p, def: v }
+        : p;
+  }
+}
+
+// The entries of the current table that `values` changes, measured
+// against `ref(p)`'s default.
+function changedEntries(
+  values: Readonly<Record<string, unknown>>,
+  omit: ReadonlySet<string>,
+  ref: (p: CodecParam) => CodecParam
+): Entry[] {
+  const table = codecTable(CODEC_VERSION)!;
+  const entries: Entry[] = [];
+  table.params.forEach((p, index) => {
+    if (omit.has(p.name) || !Object.hasOwn(values, p.name)) return;
+    const entry = entryFor(ref(p), index, values[p.name]);
+    if (entry) entries.push(entry);
+  });
+  return entries;
+}
+
+function writeBlob(entries: readonly Entry[]): string {
+  const w = new BitWriter();
+  w.gamma(CODEC_VERSION);
+  w.gamma(entries.length + 1);
+  let previous = -1;
+  for (const e of entries) {
+    w.gamma(e.index - previous);
+    previous = e.index;
+    e.write(w);
+  }
+  return w.toBase64Url();
+}
+
 // The link token for a design: `<seed>` or `<seed>.<blob>` (no "?"). Every
 // param of the current table whose value differs from its default is
 // written, except any named in `omit`; params `values` lacks count as
@@ -411,24 +470,25 @@ export function encodeToken(
   omit: ReadonlySet<string> = NO_NAMES
 ): string {
   const seedText = (seed >>> 0).toString(36);
-  const table = codecTable(CODEC_VERSION)!;
-  const entries: Entry[] = [];
-  table.params.forEach((p, index) => {
-    if (omit.has(p.name) || !Object.hasOwn(values, p.name)) return;
-    const entry = entryFor(p, index, values[p.name]);
-    if (entry) entries.push(entry);
-  });
+  const entries = changedEntries(values, omit, (p) => p);
   if (entries.length === 0 && CODEC_VERSION === 1) return seedText;
-  const w = new BitWriter();
-  w.gamma(CODEC_VERSION);
-  w.gamma(entries.length + 1);
-  let previous = -1;
-  for (const e of entries) {
-    w.gamma(e.index - previous);
-    previous = e.index;
-    e.write(w);
-  }
-  return `${seedText}.${w.toBase64Url()}`;
+  return `${seedText}.${writeBlob(entries)}`;
+}
+
+// DELTA BLOBS (2026-10-12, the daily links): the same bitstream as a
+// token's blob, but measured against a BASE design instead of the table's
+// defaults - it lists every param of the current table whose value
+// differs from base's, and decodes back onto base (a listed boolean is
+// base's flipped). The daily link `?daily=<n>.<delta>` uses it with base =
+// that day's pinned design, so a daily with a tweaked look keeps naming
+// its day. "" when nothing differs. `base` must hold every current param.
+export function encodeDelta(
+  values: Readonly<Record<string, unknown>>,
+  base: Readonly<Record<string, unknown>>,
+  omit: ReadonlySet<string> = NO_NAMES
+): string {
+  const entries = changedEntries(values, omit, (p) => rebased(p, base));
+  return entries.length === 0 ? "" : writeBlob(entries);
 }
 
 function readValue(r: BitReader, p: CodecParam): ParamValue {
@@ -464,12 +524,17 @@ function readValue(r: BitReader, p: CodecParam): ParamValue {
   }
 }
 
-function decodeBlob(blob: string): Record<string, ParamValue> {
+// A token blob (base undefined: entries land on the version's defaults)
+// or a delta blob (entries land on base, measured against it).
+function decodeBlob(
+  blob: string,
+  base?: Readonly<Record<string, ParamValue>>
+): Record<string, ParamValue> {
   const r = new BitReader(blob);
   const version = r.gamma();
   const table = codecTable(version);
   if (!table) throw new Error(`unknown version ${version}`);
-  const values = codecDefaults(version);
+  const values = base ? { ...base } : codecDefaults(version);
   const count = r.gamma() - 1;
   if (count > table.params.length) throw new Error(`${count} entries`);
   let index = -1;
@@ -477,10 +542,37 @@ function decodeBlob(blob: string): Record<string, ParamValue> {
     index += r.gamma();
     const p = table.params[index];
     if (!p) throw new Error(`param index ${index} out of range`);
-    values[p.name] = readValue(r, p);
+    values[p.name] = readValue(r, base ? rebased(p, base) : p);
   }
   if (!r.atPaddedEnd()) throw new Error("trailing data");
   return values;
+}
+
+export interface DecodedDelta {
+  // base with the delta's entries applied; base itself (a copy) when the
+  // delta is empty or unreadable.
+  values: Record<string, ParamValue>;
+  // Why the delta was ignored, else null.
+  error: string | null;
+}
+
+// Reads a delta blob (encodeDelta) onto `base`. Never throws: an
+// unreadable delta - malformed, truncated, unknown version - leaves base
+// untouched (all-or-nothing, like a token's blob) and says why.
+export function decodeDelta(
+  blob: string,
+  base: Readonly<Record<string, ParamValue>>
+): DecodedDelta {
+  const text = blob.replace(/\.+$/, "");
+  if (text === "") return { values: { ...base }, error: null };
+  try {
+    return { values: decodeBlob(text, base), error: null };
+  } catch (e) {
+    return {
+      values: { ...base },
+      error: e instanceof Error ? e.message : String(e),
+    };
+  }
 }
 
 export interface DecodedToken {
