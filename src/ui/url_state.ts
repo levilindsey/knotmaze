@@ -265,6 +265,14 @@ export interface UrlParams {
   // comet (blue-green streaked head) | dust (twinkling motes) | burn |
   // roots. Inert when appearSequence is instant; applies live.
   appearFx: AppearFxMode;
+  // The last maze-plan knobs (core/maze_plan.ts MazeParams), serialized
+  // since 2026-10-12 so every maze is reproducible from its link. All in
+  // doubled-lattice units (the plan's coordinates): junction-free radii
+  // around the entrance / exit anchors, and the minimum distance between
+  // junction sites. Regenerate the maze.
+  entranceClearance: number;
+  exitClearance: number;
+  junctionSpacing: number;
 }
 
 // COMPLETE per-param defaults (everything but seed): the panel's per-row
@@ -343,6 +351,11 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   appearSequence: "trace",
   appearSpeed: 2.2,
   appearFx: "burn",
+  // = DEFAULT_MAZE_PARAMS (core/maze_plan.ts), the values every link read
+  // before these params existed.
+  entranceClearance: 2.5,
+  exitClearance: 5,
+  junctionSpacing: 2,
 };
 
 export function newSeed(): number {
@@ -576,7 +589,32 @@ function readLegacy(
     colorScheme: readScheme(query, D.colorScheme),
     junctionBlend: Math.max(0, readNumber(query, "jbl", D.junctionBlend)),
     ...readAppearance(query, D),
+    entranceClearance: readNumber(query, "ecl", D.entranceClearance),
+    exitClearance: readNumber(query, "xcl", D.exitClearance),
+    junctionSpacing: readNumber(query, "jsp", D.junctionSpacing),
   };
+}
+
+// A design from codec values (a decoded token, or a daily's pinned
+// values): every value this build can use, the rest at today's defaults,
+// sanitized like a token's; a preset or random appearMode (re)writes its
+// three values.
+export function paramsFromValues(
+  seed: number,
+  values: Readonly<Record<string, ParamValue>>
+): UrlParams {
+  const p = { seed: seed >>> 0, ...fromCodecValues(values) };
+  applyAppearMode(p);
+  return p;
+}
+
+// `base` with the legacy key=value pairs of `query` applied on top (the
+// overrides a link may carry after its token: `&am=instant`, `&mf=0`).
+export function applyLegacyOverrides(
+  base: UrlParams,
+  query: string
+): UrlParams {
+  return { seed: base.seed, ...readLegacy(new URLSearchParams(query), base) };
 }
 
 // The appearance group (see APPEAR_MODES). A URL without am= (a short link
@@ -675,6 +713,12 @@ const APPEAR_IMPLIED: ReadonlySet<string> = new Set([
 ]);
 const NOTHING_IMPLIED: ReadonlySet<string> = new Set();
 
+// The params a link of this design leaves out because its appearMode
+// implies them.
+export function impliedParams(params: UrlParams): ReadonlySet<string> {
+  return params.appearMode === "custom" ? NOTHING_IMPLIED : APPEAR_IMPLIED;
+}
+
 // The link token for a design, without the "?": `<seed>` when every
 // setting is at its default, else `<seed>.<blob>` listing only the params
 // that differ (param_codec.ts). Numbers compare after 6-decimal rounding,
@@ -683,7 +727,7 @@ export function encodeParams(params: UrlParams): string {
   return encodeToken(
     params.seed,
     params as unknown as Record<string, unknown>,
-    params.appearMode === "custom" ? NOTHING_IMPLIED : APPEAR_IMPLIED
+    impliedParams(params)
   );
 }
 

@@ -61,6 +61,19 @@ export interface PanelCallbacks {
   // pitch assignment without rebuilding the scene.
   onAudioChange: () => void;
   onVolumeChange: () => void;
+  // The daily row (K20): load today's daily maze / open the daily stats.
+  onPlayDaily: () => void;
+  onShowDailyStats: () => void;
+}
+
+// What main.ts can ask of the panel after building it.
+export interface PanelApi {
+  pane: Pane;
+  // Every row re-reads params (replaced wholesale - loading a daily),
+  // WITHOUT running any row's change effects.
+  syncFromParams: () => void;
+  // The daily row's label (today's number turns at local midnight).
+  setDailyLabel: (text: string, tip: string) => void;
 }
 
 interface ChangeEvent {
@@ -85,14 +98,14 @@ interface Parent {
     key: never,
     opts?: Record<string, unknown>
   ) => unknown;
-  addButton: (opts: { title: string }) => unknown;
+  addButton: (opts: { title: string; label?: string }) => unknown;
 }
 
 export function buildPanel(
   params: UrlParams,
   settings: PanelSettings,
   callbacks: PanelCallbacks
-): Pane {
+): PanelApi {
   // No Tweakpane title bar: the HAMBURGER button (end of buildPanel) owns
   // open/close - a title would add a second, competing collapse - and a
   // custom header row carries the name + the build's version.
@@ -230,6 +243,9 @@ export function buildPanel(
     ".kp-dice:hover{background:var(--tp-button-background-color-hover,#bbbcc4)}" +
     ".kp-dice:active{background:var(--tp-button-background-color-active,#d6d7db)}" +
     ".kp-dice svg{width:14px;height:14px;display:block}" +
+    // Daily row: the daily button plus the stats button beside it.
+    ".kp-daily .tp-lblv_v{display:flex;align-items:center;gap:4px}" +
+    ".kp-daily .tp-btnv{flex:1 1 auto;min-width:0}" +
     // Hamburger: three bars that fold into an X while the panel is open.
     ".kp-menu{position:fixed;z-index:30;" +
     "top:max(10px,env(safe-area-inset-top));" +
@@ -277,6 +293,9 @@ export function buildPanel(
   // only matter under some other param's value hide otherwise. Runs
   // after EVERY row change/reset, so dependencies never go stale.
   let refreshCond: () => void = () => {};
+  // Set while syncFromParams refreshes the rows: refresh() fires change
+  // handlers, and a wholesale params swap must not run their effects.
+  let syncing = false;
 
   // One adjustable row: tooltip + reset glyph + modified tint. `after`
   // runs on every change AND after a glyph reset (the forwarded ev lets
@@ -324,6 +343,7 @@ export function buildPanel(
     api.on("change", (ev) => {
       fired = true;
       markRow(t);
+      if (syncing) return;
       after(ev);
       refreshCond();
     });
@@ -464,6 +484,24 @@ export function buildPanel(
   seedApi.element
     .querySelector("input")
     ?.addEventListener("focus", (e) => (e.target as HTMLInputElement).select());
+  // DAILY ROW (K20): today's shared daily maze, plus the daily stats (the
+  // chart button beside it). main.ts keeps the label on today's number.
+  const dailyApi = fDesign.addButton({
+    title: "Daily",
+    label: "daily",
+  }) as ButtonApi & { title: string };
+  dailyApi.element.classList.add("kp-row", "kp-daily");
+  dailyApi.on("click", callbacks.onPlayDaily);
+  const dailyStats = document.createElement("button");
+  dailyStats.type = "button";
+  dailyStats.className = "kp-dice";
+  dailyStats.title = "Your daily stats";
+  dailyStats.setAttribute("aria-label", "Your daily stats");
+  dailyStats.innerHTML =
+    '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" ' +
+    'd="M2 13h12v1.5H2zM3 8h2.4v4H3zm3.8-4h2.4v8H6.8zm3.8 2H13v6h-2.4z"/></svg>';
+  dailyStats.addEventListener("click", callbacks.onShowDailyStats);
+  dailyApi.element.querySelector(".tp-lblv_v")?.appendChild(dailyStats);
 
   // --- Maze ---------------------------------------------------------------
   const fMaze = folder("Maze", true);
@@ -491,6 +529,21 @@ export function buildPanel(
     fMaze, p, "fourWayFraction", { min: 0, max: 1, step: 0.05 },
     "Share of junctions realized as 4-way crossings instead of 3-way splits. Regenerates the maze.",
     D.fourWayFraction, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const junctionSpacingRow = row(
+    fMaze, p, "junctionSpacing", { min: 0.5, max: 8, step: 0.25 },
+    "Minimum distance between junctions (half lattice cells): higher spreads the choices out, so fewer fit. Regenerates the maze.",
+    D.junctionSpacing, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const entranceClearanceRow = row(
+    fMaze, p, "entranceClearance", { min: 0, max: 12, step: 0.5 },
+    "Junction-free radius around the entrance (half lattice cells): the first stretch is a single path. Regenerates the maze.",
+    D.entranceClearance, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const exitClearanceRow = row(
+    fMaze, p, "exitClearance", { min: 0, max: 12, step: 0.5 },
+    "Junction-free radius around the exit (half lattice cells), so the endgame isn't cluttered with choices. Regenerates the maze.",
+    D.exitClearance, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const pathVizRow = row(
     fMaze, p, "pathViz",
@@ -541,7 +594,7 @@ export function buildPanel(
   );
   const mazeStatsRow = row(
     fMaze, s, "showMazeStats", undefined,
-    "Show the maze readout in the top-left corner: your path length vs the optimal route, and the distance you backtracked. Remembered per browser.",
+    "Show the maze readout in the top-left corner: solve time (from your first move to arriving at the exit), your path vs the optimal route, efficiency once solved, the distance you backtracked, junctions visited and (with dead ends on) dead ends entered. Remembered per browser.",
     SETTINGS_DEFAULTS.showMazeStats,
     () => callbacks.onMazeStatsToggle(settings.showMazeStats === true)
   );
@@ -945,6 +998,9 @@ export function buildPanel(
     deadEndDensityRow.hidden = !fab || !params.deadEnds;
     branchDensityRow.hidden = !fab;
     fourWayRow.hidden = !fab;
+    junctionSpacingRow.hidden = !fab;
+    entranceClearanceRow.hidden = !fab;
+    exitClearanceRow.hidden = !fab;
     pathVizRow.hidden = !fab;
     cameraRow.hidden = !fab;
     trailLenRow.hidden = !fab || params.pathViz !== "trail";
@@ -1016,7 +1072,12 @@ export function buildPanel(
     menu.title = v ? "Hide settings" : "Show settings";
     if (v && !scrollRestored && wrap) {
       scrollRestored = true;
-      const saved = Number(localStorage.getItem(SCROLL_KEY) ?? "0");
+      let saved = 0;
+      try {
+        saved = Number(localStorage.getItem(SCROLL_KEY) ?? "0");
+      } catch {
+        // Storage unavailable: start at the top.
+      }
       if (saved > 0) {
         requestAnimationFrame(() => {
           wrap.scrollTop = saved;
@@ -1034,5 +1095,23 @@ export function buildPanel(
   });
   setOpen(open);
 
-  return pane;
+  return {
+    pane,
+    syncFromParams: () => {
+      syncing = true;
+      try {
+        gaView.gridAlign = gridAlignSlider(params.gridAlign);
+        pane.refresh();
+      } finally {
+        syncing = false;
+      }
+      syncSeed();
+      markAll();
+      refreshCond();
+    },
+    setDailyLabel: (text, tip) => {
+      if (dailyApi.title !== text) dailyApi.title = text;
+      dailyApi.element.title = tip;
+    },
+  };
 }

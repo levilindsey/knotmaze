@@ -10,6 +10,7 @@ import {
 } from "../../src/ui/url_state";
 import type { AppearPreset, UrlParams } from "../../src/ui/url_state";
 import { CODEC_V1, numberText } from "../../src/ui/param_codec";
+import { DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 
 const withSeed = (seed: number, over: Partial<UrlParams> = {}): UrlParams => ({
   ...PARAM_DEFAULTS,
@@ -81,6 +82,21 @@ describe("links", () => {
       fowRadius: 4, fowIntro: false, colorScheme: "segments",
       junctionBlend: 0.88, appearMode: "custom", appearSequence: "trace", appearSpeed: 2.2,
       appearFx: "burn",
+      entranceClearance: 2.5, exitClearance: 5, junctionSpacing: 2,
+    });
+  });
+
+  it("keeps the maze-plan knobs equal to DEFAULT_MAZE_PARAMS", () => {
+    // Every link before 2026-10-12 read these from DEFAULT_MAZE_PARAMS; a
+    // different default here would move all of their mazes.
+    expect({
+      entranceClearance: DEFAULT_MAZE_PARAMS.entranceClearance,
+      exitClearance: DEFAULT_MAZE_PARAMS.exitClearance,
+      junctionSpacing: DEFAULT_MAZE_PARAMS.junctionSpacing,
+    }).toEqual({
+      entranceClearance: PARAM_DEFAULTS.entranceClearance,
+      exitClearance: PARAM_DEFAULTS.exitClearance,
+      junctionSpacing: PARAM_DEFAULTS.junctionSpacing,
     });
   });
 
@@ -268,6 +284,25 @@ describe("token + overrides", () => {
     expect(parseParams("?7.U")).toEqual(withSeed(7, { pluckSize: 1 })); // a v2 link
     // ...and a token takes them as overrides (probe URLs: &phy=0).
     expect(parseParams("?7.U&psz=1.5&pgh=0&prc=lobe&phy=0")).toEqual(p);
+  });
+
+  it("round-trips the maze-plan knobs (appended to v3)", () => {
+    const p = withSeed(7, {
+      entranceClearance: 4,
+      exitClearance: 0,
+      junctionSpacing: 3.25,
+    });
+    const q = encodeParams(p);
+    expect(parseParams("?" + q)).toEqual(p);
+    // Every older link reads the values it was always built with.
+    for (const old of ["?7", "?7.U", "?7.c", "?s=7"]) {
+      expect(parseParams(old)).toMatchObject({
+        entranceClearance: 2.5,
+        exitClearance: 5,
+        junctionSpacing: 2,
+      });
+    }
+    expect(parseParams("?7.c&ecl=4&xcl=0&jsp=3.25")).toEqual(p);
   });
 });
 

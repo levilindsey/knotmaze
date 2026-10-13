@@ -7,7 +7,9 @@ import {
   CODEC_VERSION,
   codecDefaults,
   codecTable,
+  decodeDelta,
   decodeToken,
+  encodeDelta,
   encodeToken,
   numberText,
 } from "../../src/ui/param_codec";
@@ -154,13 +156,17 @@ describe("codec tables", () => {
     ]);
   });
 
-  it("pins CODEC_V3: v2 with pluckSize defaulting to 1.75", () => {
+  it("pins CODEC_V3: v2 with pluckSize defaulting to 1.75, plus appends", () => {
     expect(CODEC_V3.version).toBe(3);
-    expect(CODEC_V3.params.map(asPin)).toEqual(
-      CODEC_V2.params
+    expect(CODEC_V3.params.map(asPin)).toEqual([
+      ...CODEC_V2.params
         .map(asPin)
-        .map((p) => (p[0] === "pluckSize" ? ["pluckSize", "number", 1.75] : p))
-    );
+        .map((p) => (p[0] === "pluckSize" ? ["pluckSize", "number", 1.75] : p)),
+      // Appended to v3 (new params: older links read these defaults).
+      ["entranceClearance", "number", 2.5], // 64
+      ["exitClearance", "number", 5],
+      ["junctionSpacing", "number", 2],
+    ]);
   });
 
   it("registers every table, oldest first; new links use the newest", () => {
@@ -230,6 +236,15 @@ describe("token format", () => {
     expect(codecDefaults(2).junctionBlend).toBe(0.88);
     expect(codecDefaults(2).pluckSize).toBe(1);
     expect(codecDefaults(3).pluckSize).toBe(1.75);
+    // Params appended later read their introduction default in every
+    // older version (= DEFAULT_MAZE_PARAMS for the maze-plan knobs).
+    for (const v of [1, 2, 3]) {
+      expect(codecDefaults(v)).toMatchObject({
+        entranceClearance: 2.5,
+        exitClearance: 5,
+        junctionSpacing: 2,
+      });
+    }
   });
 
   it("writes the documented bitstream", () => {
@@ -450,6 +465,112 @@ describe("token round trip (seeded property test)", () => {
       expect(d.values).toEqual(expected);
       // One token per state: re-encoding the decoded values changes nothing.
       expect(encodeToken(seed, d.values, omit)).toBe(token);
+    }
+  });
+});
+
+describe("delta blobs (measured against a base design)", () => {
+  // A base unlike the table defaults: the user's rect design, more or less.
+  const base: Record<string, ParamValue> = {
+    ...codecDefaults(CODEC_VERSION),
+    gridSize: 12,
+    threadWidth: 0.64,
+    palette: "moss",
+    pathColor: "#6c644c",
+    mazeFabric: false,
+    deadEnds: true,
+  };
+
+  it("is empty for the base itself, and reads back as the base", () => {
+    expect(encodeDelta(base, base)).toBe("");
+    expect(decodeDelta("", base)).toEqual({ values: base, error: null });
+    // Float noise that rounds to base's value is no change either.
+    expect(encodeDelta({ ...base, threadWidth: 0.6400000000000001 }, base)).toBe("");
+  });
+
+  it("lists what differs from the BASE, not from the table defaults", () => {
+    const values = { ...base, hueShift: 40, mazeFabric: true, palette: "pastel" };
+    const delta = encodeDelta(values, base);
+    // Three entries; gridSize/threadWidth/pathColor equal base: not listed.
+    const bits = [
+      "011", // version 3
+      "00100", // 3 entries = gamma(3 + 1)
+      "00000100110", // index 37 hueShift: gamma(37 - -1 = 38)
+      "0100 0000 1111", // "40", end
+      "010", // index 39 palette: gamma(2)
+      "1", // "pastel" = option 0: gamma(1)
+      "00110", // index 45 mazeFabric: gamma(6); base's flipped
+    ].join(" ");
+    expect(delta).toBe(bitsToBlob(bits));
+    const back = decodeDelta(delta, base);
+    expect(back.error).toBeNull();
+    expect(back.values).toEqual(values);
+    // A listed boolean is BASE's flipped: on a base with mazeFabric true,
+    // the same blob turns it off.
+    expect(decodeDelta(delta, { ...base, mazeFabric: true }).values.mazeFabric).toBe(false);
+  });
+
+  it("leaves out omitted names and values the table cannot hold", () => {
+    const values = { ...base, shape: "moon", gap: NaN, cuspRadius: 1.5, hueShift: 9 };
+    const delta = encodeDelta(values, base, new Set(["hueShift"]));
+    expect(decodeDelta(delta, base).values).toEqual({ ...base, cuspRadius: 1.5 });
+  });
+
+  it("rejects every truncation and malformed blob, keeping the base", () => {
+    const delta = encodeDelta({ ...base, hueShift: 40, gap: 0.2, volume: 0.9 }, base);
+    for (let n = 1; n < delta.length; n++) {
+      const d = decodeDelta(delta.slice(0, n), base);
+      expect(d.error).not.toBeNull();
+      expect(d.values).toEqual(base);
+    }
+    for (const bad of ["!!", `${bitsToBlob("00100 1")}`, `${delta}A`]) {
+      const d = decodeDelta(bad, base);
+      expect(d.error).not.toBeNull();
+      expect(d.values).toEqual(base);
+    }
+    // A trailing sentence period is no part of the blob.
+    expect(decodeDelta(`${delta}.`, base).error).toBeNull();
+  });
+
+  it("decodes exactly what it encodes (seeded property test)", () => {
+    const rand = rng(20261012);
+    const params = current();
+    for (let k = 0; k < 600; k++) {
+      // A random base and random changes on top of it.
+      const b: Record<string, ParamValue> = { ...codecDefaults(CODEC_VERSION) };
+      const v: Record<string, ParamValue> = {};
+      for (const p of params) {
+        if (rand() < 0.3) {
+          b[p.name] =
+            p.type === "boolean"
+              ? rand() < 0.5
+              : p.type === "number"
+                ? Math.floor(rand() * 1000) / 100
+                : p.type === "color"
+                  ? "#" + Math.floor(rand() * 0x1000000).toString(16).padStart(6, "0")
+                  : p.options[Math.floor(rand() * p.options.length)];
+        }
+      }
+      for (const p of params) {
+        if (rand() < 0.25) {
+          v[p.name] =
+            p.type === "boolean"
+              ? !b[p.name]
+              : p.type === "number"
+                ? Math.floor(rand() * 100000) / 1000
+                : p.type === "color"
+                  ? "#" + Math.floor(rand() * 0x1000000).toString(16).padStart(6, "0")
+                  : p.options[Math.floor(rand() * p.options.length)];
+        } else {
+          v[p.name] = b[p.name];
+        }
+      }
+      const delta = encodeDelta(v, b);
+      expect(delta).toMatch(/^[A-Za-z0-9_-]*$/);
+      const d = decodeDelta(delta, b);
+      expect(d.error).toBeNull();
+      expect(d.values).toEqual(v);
+      expect(encodeDelta(d.values, b)).toBe(delta);
     }
   });
 });

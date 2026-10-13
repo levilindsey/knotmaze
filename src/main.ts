@@ -14,7 +14,28 @@ import { DebugRenderer } from "./render/debug_renderer";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
 import { FabricMazeController } from "./game/fabric_controller";
 import { RevealAnimator } from "./render/reveal";
-import { readParams, writeParams, newSeed, ROOT_NOTES } from "./ui/url_state";
+import {
+  writeParams as writeTokenParams,
+  newSeed,
+  ROOT_NOTES,
+} from "./ui/url_state";
+import type { UrlParams } from "./ui/url_state";
+import {
+  dailyDefinition,
+  dailyParams,
+  dailyQuery,
+  parseLaunch,
+  sameMaze,
+} from "./ui/daily_link";
+import { formatDayDate, todayNumber } from "./game/daily_calendar";
+import { DailyStore, browserStorage } from "./game/daily_store";
+import type { DailyResult } from "./game/daily_store";
+import { SolveClock, efficiencyOf } from "./game/maze_stats";
+import { shareText } from "./game/share_text";
+import { MazeHud, WinBanner } from "./ui/maze_hud";
+import type { HudSnapshot } from "./ui/maze_hud";
+import { openDailyStats } from "./ui/daily_stats_view";
+import { shareOrCopy, showToast } from "./ui/share";
 import { buildPanel } from "./ui/tweakpane_panel";
 import type { PanelSettings } from "./ui/tweakpane_panel";
 import type { GenerationParams } from "./core/types";
@@ -225,7 +246,35 @@ async function main(): Promise<void> {
   document.body.appendChild(app.canvas);
   app.canvas.style.background = `#${BACKGROUND.toString(16).padStart(6, "0")}`;
 
-  const params = readParams();
+  // K20: a `?daily...` link loads that day's pinned design (ui/daily_link.ts);
+  // anything else reads as an ordinary design link.
+  const launch = parseLaunch(window.location.search, todayNumber());
+  const params = launch.params;
+  // The daily on screen, or null for an ordinary design. It ends the moment
+  // a change alters the maze (writeParams).
+  let dailyN: number | null = launch.daily;
+  // The player came for TODAY's daily (`?daily`, the Daily button) rather
+  // than a numbered one: the address bar may keep saying plain `?daily`.
+  let dailyFloating = launch.floating;
+  const dailyStore = new DailyStore(browserStorage());
+  // Every URL write: on a daily the address bar reads `?daily[=<n>]` (plus
+  // a delta for a changed look); a change to the maze leaves the daily.
+  const writeParams = (p: UrlParams): void => {
+    if (dailyN !== null && !sameMaze(p, dailyParams(dailyN))) {
+      dailyN = null;
+      dailyChanged();
+    }
+    if (dailyN !== null) {
+      const q = dailyQuery(
+        dailyN,
+        p,
+        dailyFloating ? todayNumber() : undefined
+      );
+      history.replaceState(null, "", `?${q}`);
+    } else {
+      writeTokenParams(p);
+    }
+  };
   let statsShown = false;
   let mazeStatsShown = true;
   try {
@@ -756,6 +805,9 @@ async function main(): Promise<void> {
         branchDensity: params.branchDensity,
         fourWayFraction: params.fourWayFraction,
         deadEndDensity: params.deadEnds ? params.deadEndDensity : 0,
+        entranceClearance: params.entranceClearance,
+        exitClearance: params.exitClearance,
+        junctionSpacing: params.junctionSpacing,
         // Entrance/exit anchored to the shape's boundary (shp/sa/xa).
         ...planAnchors(
           params.shape,
@@ -841,7 +893,7 @@ async function main(): Promise<void> {
       fabric = null;
     }
     pendingWin = false;
-    updateHud();
+    resetAttempt();
     hideWin();
     rebuildAudioMap();
 
@@ -991,7 +1043,7 @@ async function main(): Promise<void> {
     return { spanCtrl: null, reach: LOBE_REACH };
   }
 
-  buildPanel(params, settings, {
+  const panel = buildPanel(params, settings, {
     onRegenerate: () => {
       rebuild();
       wake();
@@ -1112,9 +1164,11 @@ async function main(): Promise<void> {
       pendingWin = false;
       hideWin();
       if (fabric && fabricController) fabric.update(fabricController);
-      updateHud();
+      resetAttempt();
       wake();
     },
+    onPlayDaily: () => playDaily(todayNumber(), true),
+    onShowDailyStats: () => showDailyStats(),
     onAudioChange: () => {
       writeParams(params);
       rebuildAudioMap();
@@ -1153,67 +1207,217 @@ async function main(): Promise<void> {
   ];
   const GRAB_RADIUS = 0.7;
 
-  // Win banner. Hidden until a solve completes.
-  const banner = document.createElement("div");
-  banner.id = "maze-banner";
-  banner.style.cssText =
-    "position:fixed;top:16px;left:50%;transform:translateX(-50%);" +
-    "padding:10px 18px;background:#1b2233ee;color:#8fe6ff;" +
-    "font:14px/1.3 monospace;border:1px solid #39d353;border-radius:6px;" +
-    "z-index:20;display:none;pointer-events:none";
-  document.body.appendChild(banner);
-  const hideWin = (): void => {
-    banner.style.display = "none";
+  // ---- K19 MAZE STATS + K20 DAILY ----------------------------------------
+  // The HUD (top-left) and the win banner live in ui/maze_hud.ts; the
+  // metrics' definitions in game/maze_stats.ts. The solve clock runs from
+  // the first move to the dot's arrival at the exit, hidden time excluded.
+  const clock = new SolveClock();
+  // The current attempt: the daily it counts for (fixed at its first move;
+  // null = none), the player's local daily number then (streaks count a
+  // result whose attempt began by its day), and what its finish recorded.
+  let attemptDaily: number | null = null;
+  let attemptDay = 0;
+  let attemptRecord: "official" | "replay" | null = null;
+  // The last finish, for the banner's Share button.
+  let lastWin: { text: string; url: string } | null = null;
+
+  const hud = new MazeHud(() => showDailyStats());
+  const banner = new WinBanner(
+    () => void shareResult(lastWin),
+    () => showDailyStats()
+  );
+  const hideWin = (): void => banner.hide();
+
+  // "Daily #12", then " · Oct 11" for any day but today, and " · solved"
+  // (this attempt set the official result) or " · replay" (an earlier one
+  // did).
+  const dailyTitle = (): string | null => {
+    if (dailyN === null || !params.mazeFabric) return null;
+    let t = `Daily #${dailyN}`;
+    if (dailyN !== todayNumber()) t += ` · ${formatDayDate(dailyN)}`;
+    if (attemptRecord === "official") t += " · solved";
+    else if (dailyStore.hasOfficial(dailyN)) t += " · replay";
+    return t;
+  };
+  const hudSnapshot = (): HudSnapshot | null => {
+    if (!params.mazeFabric || !fabricController) return null;
+    const c = fabricController;
+    return {
+      title: dailyTitle(),
+      showStats: settings.showMazeStats,
+      timeMs: clock.elapsed(performance.now()),
+      path: c.pathLength,
+      optimal: c.walk.optimalLength,
+      // A finished route's metric: shown from the arrival on.
+      efficiency:
+        c.solved && clock.state === "stopped"
+          ? efficiencyOf(c.walk.optimalLength, c.pathLength)
+          : null,
+      // Memory-trail mode has no backtracking, so no backtrack meter.
+      backtrack: params.pathViz === "trail" ? null : c.backtrackDist,
+      junctions: c.visitedJunctions.size,
+      deadEnds: params.deadEnds ? c.deadEndTips.size : null,
+    };
+  };
+  const updateHud = (): void => hud.render(hudSnapshot());
+
+  // A fresh attempt (rebuild, Reset path): clock idle, nothing recorded.
+  const resetAttempt = (): void => {
+    clock.reset();
+    attemptDaily = null;
+    attemptRecord = null;
+    lastWin = null;
+    updateHud();
   };
 
-  // Fabric-maze HUD: the two distance readouts, both in deterministic
-  // lattice arc. (a) the CURRENT path vs the optimal solve, (b) cumulative
-  // distance retracted by backtracking - separate meters by design.
-  const hud = document.createElement("div");
-  hud.id = "maze-hud";
-  hud.style.cssText =
-    "position:fixed;top:max(10px,env(safe-area-inset-top));" +
-    "left:max(10px,env(safe-area-inset-left));padding:7px 12px;" +
-    "background:#1b2233cc;color:#c8d3e8;font:12px/1.5 monospace;" +
-    "border:1px solid #2c3a55;border-radius:6px;z-index:20;" +
-    "display:none;pointer-events:none;white-space:pre";
-  document.body.appendChild(hud);
-  // Distances display x10 as integers (no decimal point).
-  const fmt = (v: number): string =>
-    Number.isFinite(v) ? String(Math.round(v * 10)) : "—";
-  const updateHud = (): void => {
-    if (!params.mazeFabric || !fabricController || !settings.showMazeStats) {
-      hud.style.display = "none";
-      return;
-    }
-    const c = fabricController;
-    // Memory-trail mode has no backtracking, so no backtrack meter.
-    hud.textContent =
-      `path ${fmt(c.pathLength)} / optimal ${fmt(c.walk.optimalLength)}` +
-      (params.pathViz === "trail"
-        ? ""
-        : `\nbacktracked ${fmt(c.backtrackDist)}`);
-    hud.style.display = "block";
+  // An accepted move. The attempt's first starts the clock and, on a
+  // daily, marks that day played.
+  const noteMove = (): void => {
+    if (clock.started) return;
+    clock.start(performance.now(), document.hidden);
+    attemptDay = todayNumber();
+    attemptDaily = dailyN;
+    if (dailyN !== null) dailyStore.markPlayed(dailyN, Date.now());
   };
+  document.addEventListener("visibilitychange", () =>
+    clock.setHidden(document.hidden, performance.now())
+  );
+
+  const dailyUrl = (n: number): string =>
+    `${location.origin}${location.pathname}?daily=${n}`;
+
   // Set when a winning tap lands; the banner shows once the traversal
   // animation delivers the dot to the exit.
   let pendingWin = false;
+  // The ARRIVAL: stop the clock, record a daily's result (the first finish
+  // is official, later ones replays), show the banner.
   const showFabricWin = (): void => {
     if (!fabricController) return;
     const c = fabricController;
-    const over =
-      Number.isFinite(c.walk.optimalLength) && c.walk.optimalLength > 0
-        ? ` (+${(((c.pathLength - c.walk.optimalLength) / c.walk.optimalLength) * 100).toFixed(0)}%)`
-        : "";
-    banner.textContent =
-      `Solved! path ${fmt(c.pathLength)} vs optimal ` +
-      `${fmt(c.walk.optimalLength)}${over}` +
-      (params.pathViz === "trail"
-        ? ""
-        : ` · backtracked ${fmt(c.backtrackDist)}`) +
-      ` \u{1F389}`;
-    banner.style.display = "block";
+    clock.stop(performance.now());
+    const timeMs = clock.elapsed(performance.now());
+    const efficiency = efficiencyOf(c.walk.optimalLength, c.pathLength);
+    const backtrack = params.pathViz === "trail" ? null : c.backtrackDist;
+    const deadEnds = params.deadEnds ? c.deadEndTips.size : null;
+    const moves = c.moveLog.join("");
+    const daily =
+      attemptDaily !== null && attemptDaily === dailyN ? attemptDaily : null;
+    if (daily !== null && efficiency !== null) {
+      const result: DailyResult = {
+        at: Date.now(),
+        day: attemptDay,
+        timeMs: Math.round(timeMs),
+        path: c.pathLength,
+        optimal: c.walk.optimalLength,
+        efficiency,
+        backtrack: c.backtrackDist,
+        junctions: c.visitedJunctions.size,
+        deadEnds,
+        moves,
+        viz: params.pathViz,
+        def: dailyDefinition(daily).version,
+      };
+      attemptRecord = dailyStore.recordSolve(daily, result);
+    }
+    const replay = attemptRecord === "replay";
+    lastWin = {
+      text: shareText({ daily, replay, timeMs, efficiency, moves }),
+      url: daily !== null ? dailyUrl(daily) : location.href,
+    };
+    banner.show({
+      heading:
+        daily === null
+          ? "Solved!"
+          : replay
+            ? `Daily #${daily} replay solved`
+            : `Daily #${daily} solved!`,
+      timeMs,
+      efficiency,
+      path: c.pathLength,
+      optimal: c.walk.optimalLength,
+      backtrack,
+      junctions: c.visitedJunctions.size,
+      deadEnds,
+      stats: daily !== null,
+    });
+    updateHud();
   };
+
+  // Native share sheet on phones, the clipboard elsewhere (ui/share.ts).
+  const shareResult = async (
+    what: { text: string; url: string } | null
+  ): Promise<void> => {
+    if (!what) return;
+    const outcome = await shareOrCopy(what.text, what.url);
+    if (outcome === "copied") showToast("Result copied - paste it anywhere");
+    else if (outcome === "failed") showToast("Couldn't share or copy here");
+  };
+  const showDailyStats = (): void =>
+    openDailyStats({
+      store: dailyStore,
+      today: todayNumber(),
+      // The view's Play button is today's daily; a history row a day.
+      onPlay: (n, today) => playDaily(n, today),
+      onShare: (n) => {
+        const r = dailyStore.day(n)?.official;
+        if (!r) return;
+        void shareResult({
+          text: shareText({
+            daily: n,
+            replay: false,
+            timeMs: r.timeMs,
+            efficiency: r.efficiency,
+            moves: r.moves,
+          }),
+          url: dailyUrl(n),
+        });
+      },
+    });
+
+  // Load daily n's pinned design (the panel's Daily button, the stats
+  // view; `floating` = asked for as TODAY's daily). Already on it: say so -
+  // reloading would wipe the attempt.
+  const playDaily = (n: number, floating = false): void => {
+    if (dailyN === n && sameMaze(params, dailyParams(n))) {
+      showToast(`Already playing Daily #${n}`);
+      return;
+    }
+    Object.assign(params, dailyParams(n));
+    dailyN = n;
+    dailyFloating = floating;
+    panel.syncFromParams();
+    dailyChanged();
+    rebuild();
+    app.canvas.style.cursor = "default";
+    wake();
+  };
+
+  // The panel's daily button names TODAY's daily (it turns at midnight).
+  let labelDay = 0;
+  const updateDailyLabel = (): void => {
+    const t = todayNumber();
+    if (t === labelDay) return;
+    labelDay = t;
+    panel.setDailyLabel(
+      `Daily #${t}`,
+      `Play today's daily maze, #${t} (${formatDayDate(t)}): the same maze for everyone today. Your results are kept in your daily stats (the chart button).`
+    );
+  };
+  // The daily on screen changed (entered or left): HUD title, tab title.
+  const dailyChanged = (): void => {
+    document.title = dailyN !== null ? `KnotMaze · Daily #${dailyN}` : "KnotMaze";
+    updateDailyLabel();
+    updateHud();
+  };
+  dailyChanged();
+  // The ticking clock and the midnight turn, independent of the render loop.
+  window.setInterval(() => {
+    if (clock.state === "running") hud.setTime(clock.elapsed(performance.now()));
+    if (todayNumber() !== labelDay) {
+      updateDailyLabel();
+      updateHud(); // A daily on screen gains its date once it isn't today's.
+    }
+  }, 250);
 
   // Fabric maze: a tap on a run incident to the current branch point is a
   // move (advance or backtrack); anywhere else falls through to grab/tug,
@@ -1227,6 +1431,7 @@ async function main(): Promise<void> {
     // The game state moved instantly; the dot + gold front animate along
     // the thread to catch up. The win banner waits for the arrival.
     if (result === "advance" || result === "backtrack" || result === "win") {
+      noteMove();
       fabric.beginMove(
         eid,
         result === "backtrack" ? "backtrack" : "advance",
@@ -2149,6 +2354,24 @@ async function main(): Promise<void> {
   (window as unknown as Record<string, unknown>).__knotParams = () => ({
     ...params,
   });
+  // K19/K20 probes: the daily on screen, the attempt, the clock and the
+  // stored records (as the stats view reads them).
+  (window as unknown as Record<string, unknown>).__knotDaily = () => ({
+    daily: dailyN,
+    today: todayNumber(),
+    attemptDaily,
+    attemptDay,
+    attemptRecord,
+    clock: { state: clock.state, ms: clock.elapsed(performance.now()) },
+    junctions: fabricController ? [...fabricController.visitedJunctions] : [],
+    deadEnds: fabricController ? [...fabricController.deadEndTips] : [],
+    moves: fabricController ? fabricController.moveLog.join("") : "",
+    share: lastWin,
+    storeStatus: dailyStore.status,
+    store: dailyStore.data(),
+  });
+  (window as unknown as Record<string, unknown>).__knotPlayDaily = (n: number) =>
+    playDaily(n);
   // Diagnostic hooks for the automated crossing scanner.
   (window as unknown as Record<string, unknown>).__knotDiag = () =>
     renderer ? Array.from(renderer.getDiag().data) : [];
@@ -2243,6 +2466,12 @@ async function main(): Promise<void> {
         return {
           edge: eid,
           far,
+          // The far vertex is a dead-end tip (an END that is neither the
+          // start nor the exit) - probes steer into dead ends with it.
+          farDeadEnd:
+            (wg.vertices.get(far)?.isEnd ?? false) &&
+            far !== wg.start &&
+            far !== wg.exit,
           cost: e.length + (wg.distToExit.get(far) ?? Infinity),
           screen: toScreen(out[0], out[1]),
         };
@@ -2250,6 +2479,41 @@ async function main(): Promise<void> {
       vertexScreen: (id: string) => {
         fb.vertexWorld(id, out, 0);
         return toScreen(out[0], out[1]);
+      },
+      // Probe helper: the walk-edge ids of a fewest-runs route from the
+      // head to the nearest dead-end tip not in `exclude` (BFS, never
+      // through the exit), or null when there is none.
+      routeToDeadEnd: (exclude: string[] = []): number[] | null => {
+        const skip = new Set(exclude);
+        const prev = new Map<string, [string, number]>();
+        const seen = new Set([c.head]);
+        const queue = [c.head];
+        while (queue.length > 0) {
+          const v = queue.shift()!;
+          const tip =
+            v !== c.head &&
+            (wg.vertices.get(v)?.isEnd ?? false) &&
+            v !== wg.start &&
+            !skip.has(v);
+          if (tip) {
+            const route: number[] = [];
+            for (let u = v; u !== c.head; ) {
+              const [p, eid] = prev.get(u)!;
+              route.unshift(eid);
+              u = p;
+            }
+            return route;
+          }
+          for (const eid of wg.vertices.get(v)!.edges) {
+            const e = wg.edges[eid];
+            const u = e.va === v ? e.vb : e.va;
+            if (seen.has(u) || u === wg.exit) continue;
+            seen.add(u);
+            prev.set(u, [v, eid]);
+            queue.push(u);
+          }
+        }
+        return null;
       },
       // Diagnostic: everything within `r` lattice units of a LATTICE point -
       // walk vertices (live position) and walk edges (nearest sample), with
