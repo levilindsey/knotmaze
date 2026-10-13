@@ -5,8 +5,9 @@
 # G2 design: all per-sample and per-tick COLOR moves into the shaders
 
 > STATUS: IMPLEMENTED (2026-10-12; G2.0 824d561, G2.1 26a8af2, G2.2
-> c815efb, G2.3 1c56a40, on the K4 worktree branch). G2.4 (GPU particles)
-> NOT done - a follow-up, behind the fan GPU cost below. Section 7 is the
+> c815efb, G2.3 1c56a40 - SHAs before the branch was rebased onto master;
+> then the K4 fan fix, arm strips). G2.4 (GPU particles)
+> NOT done - a follow-up (K23). Section 7 is the
 > implementation log with every measurement. Deviations from this design,
 > in short:
 > - G1 retired the over-fills, the fade strip and the erase grid
@@ -1021,19 +1022,100 @@ Verify:
   ribbons 1.33 ms (master 1.24), fans 1.84 ms (master 0.57) - the fan cost
   (G2.2's per-pixel section Gouraud +1.0, G2.3's per-arm paint +0.25) is
   the open GPU item; see the follow-up (a per-arm material strip pre-pass).
+
+### K4 fan fix: arm material strips (2026-10-12, after the phone gate)
+
+The Pixel 11 (PowerVR, no GPU timer queries) ran G2 at 44 fps at rest,
+flow on or off (p90 33 ms), against master's 56-60. ATTRIBUTION by variant
+builds (`?b.c&am=instant&snd=none`, settled, medians of 2; fans removed =
+`rebuildFillets` returning at once): master 57.5 / 60.3 (fw 0), master
+without fans 60.3 / 60.3, G2 44.5 / 42.8, G2 without fans 60.3 / 60.3,
+G2 without fans or ribbon paint 60.5 / 60.3. The fans were the whole
+regression; G2's per-pixel ribbon paint fits the phone's frame.
+
+AS BUILT (`src/render/arm_strip.ts`):
+- Every junction arm (and every free-tip cap axis) gets a STRIP ROW:
+  STRIP_W = 64 RGBA8 texels of its COMPOSED material (section Gouraud,
+  burn / roots, gameplay paint, reveal glow - the old `chainMaterial`,
+  moved verbatim into the pass shader), over the arc its fans can query:
+  from the joint out to the profile's arc at the record's outermost fan
+  VERTEX (a pixel's projected radius never exceeds its distance from the
+  joint; the profile is monotone), capped by the arm's domain. Measured
+  steps at the defaults 0.009-0.029 world (median 0.016; <= 0.64 CSS px at
+  the default fit zoom), cr 1 <= 0.0095, cr 6 / tw .64 up to 0.065 (1.42
+  CSS px). Paint edges are antialiased over the row's own step.
+- A STRIP TABLE (RGBA32F FloatRows, 2 texels per row: chain, arc0,
+  arcStep, px | seed0, seedStep) is written at the end of every joinery
+  rebuild; the record's arm header carries (stripRow, texels per world
+  arc) where (closed, total) were (nothing read them), the axis record
+  (stripRow, scale, offset).
+- One quad over a 1024-wide render texture (16 rows per line) runs the
+  pass; gl_FragCoord addresses it exactly as texelFetch reads it. Fans
+  read two texels per arm with exact weights (`STRIP_LOOKUP_GLSL`) - no
+  sampler filtering, so the CPU mirror (`cpuStripAt`: the material at both
+  texels through `cpuChainMaterial`, quantized to 8 bits, lerped) quotes it
+  to the bit. The fan program now includes only the gate (PAINT_GATE_GLSL,
+  split out of PAINT_FX_GLSL; PAINT_CONST_GLSL split out of
+  PAINT_DATA_GLSL) and the strip lookup.
+- SCHEDULING: a pixi WebGL SYSTEM registered at module load (priority
+  -100, last in the prerender runner) renders the pass before any render
+  that is not its own, when DIRTY: the table, KSTATIC / KGEOM / KREVEAL /
+  KPAINT revisions (FloatRows.rev, bumped by markDirty) or any knot uniform
+  value changed. At rest in fabric mode the pulses change uniforms every
+  frame, so it runs every frame (0.06-0.07 ms main thread, 0.06 ms GPU on
+  the desktop); a static scene runs nothing. No main.ts change (the
+  proposal needed the renderer handle; the system gets it at construction).
+- For G4 (K9): the SDF webs read the same rows through the records (arm
+  header .zw) and `STRIP_LOOKUP_GLSL`.
+
+DEVIATIONS from the follow-up proposal: texelFetch + a manual lerp instead
+of LINEAR sampling (exact mirror weights); the reach comes from the fans'
+actual vertices, not `min(domain, profile reach)`; 64 texels fixed.
+
+VERIFICATION (desktop, 3200x1800 unless noted):
+- Strip texels vs the CPU mirror (extract readback, `census_strip.mjs`):
+  38,912 texels at rest, max 1/255 (8-bit rounding flips), also pinned
+  mid-reveal (burn, t 6) and with dead ends (axis rows).
+- Fan GPU vs CPU (`census_fan.mjs`, 20-75k points per run): at rest, after
+  6 moves, after a live junctionBlend change (0.88 -> 2.5), mid-reveal
+  burn at t 6 and 9 (phy=0, pinned), with dead ends: max 1.6/255, none over
+  2/255. Per-arm views (uKBase.z 3/4) at t 9: one point at rho 3.1 fillHalf
+  differs (0.13) where GPU and CPU pick the two bracketing arms in opposite
+  order (an angle tie); the blended view agrees there. PROBE FIX: the
+  census now re-evaluates the CPU reference per batch, with the transform
+  the test triangles use - plan-time values were taken before the next
+  tick refreshed the paint uniforms (false 0.27 mismatches at one joint).
+- Same-state A/B vs the G2.5 tree (phy=0 links, frozen clocks, pointer
+  parked, particles hidden): at rest 0 px over 2/255 for def / jbl0 / mono
+  / strands / depth / noise / knot / ring / user (DSF 1) and def / ring /
+  user / strands (DSF 2). After 6 moves: def 65 px (max 16), ring 151 px
+  (max 33) - gold span and cap edges inside webs, now ramped over two strip
+  steps instead of one screen pixel (crops: softer, slightly less stepped).
+  Mid-reveal: trace+burn t 6 def 75 px (max 89) / ring 39 px (max 16) - the
+  burn front's leading edge where it crosses a web, lerped over a step;
+  trace+roots 5 px (max 6); bloom+rainbow, ink+dust, draw+comet,
+  draw+burn 0 px.
+- GPU per program (`gpu_by_program.mjs`, fw 0, 3 interleaved rounds):
+  fans master 0.60 / G2.5 1.87 / strips 0.59 ms, strip pass 0.06 ms;
+  ribbons 1.59 / 1.82 / 1.79. Draw-phase GPU after 5 moves (2 rounds):
+  fw 0 master 2.07 / G2.5 3.45 / strips 2.14 ms; flow 2.34 / 3.70 / 2.42.
+  CPU at rest: tickPaint 0.01 ms (master 0.19), strip pass 0.06-0.07 ms per
+  frame, uploads 0 KB/frame (master 151); flow: update 13.9-14.0 ms
+  (master 14.2-14.4), uploads 1554 KB/frame (master 1943-1951). (That
+  run's headed Chrome was capped at 31 fps by the machine, for all builds
+  alike; per-call costs compare.)
+- PHONE (Pixel 11 over Tailscale, `?b.c&am=instant&snd=none`, settled,
+  each run interleaving master e235127 and the candidate):
+  - cool phone, WIP 8840a6b, medians of 2: 59.8 fps with flow / 60.3
+    flow-off (p90 16.7 ms) vs master 58.3 / 60.3;
+  - dc248d9, medians of 3, the phone by then in LIGHT thermal throttling
+    (thermalservice status 1, soc 42.8 C, on its charger): 50.8 / 60.3
+    vs master 50.5 / 59.8 - flow at rest is CPU work every other frame,
+    so throttling lowers both builds' flow numbers alike.
+  Raw lines: `.claude/probes/K4/results/phone_*.txt`.
+
 ### Follow-ups (not done)
 
-- FAN COST: a per-arm material STRIP pre-pass. Each frame (or when the
-  joinery rebuilds), render every fused arm's composed material (section
-  Gouraud + FX + paint) at ~32-64 arc steps over the stretch its fans
-  sample (`min(domain, profile reach)`) into an RGBA8 render target (one
-  row per arm; RGBA8 render targets and LINEAR filtering are universal),
-  and have the field read two strip texels per arm instead of evaluating
-  `chainMaterial` per pixel. Fan cost would fall below master's (master
-  read per-sample texels). The CPU mirror (`cpuJunctionField`) would quote
-  the same strip (8-bit, lerped) so the census stays exact; paint edges in
-  webs soften to the strip's step (~0.02-0.04 world). Needs the pixi
-  renderer handle in RibbonRenderer (one main.ts line).
 - G2.4 GPU particles (K23): unchanged plan (instanced quads from a KFX ring,
   closed-form motion). Particles cost 0.2-0.3 ms/frame of CPU during a
   reveal only.
@@ -1041,3 +1123,11 @@ Verify:
   to the exit marker inside the markers Graphics after a few moves
   (b.c&pv=string, 6 moves; hiding that Graphics removes it); G2.3 does not
   show it. Unattributed - worth a look if it reappears.
+- ARM STRIPS at deep zoom: the strip step is fixed per arm (64 texels over
+  its reach), so web paint / burn-front edges soften with zoom (about 4x
+  the default zoom puts a cr 3 median step near 1.5 CSS px). If that ever
+  shows, size rows from the camera's world-per-pixel (variable-length rows,
+  re-packed on zoom) rather than raising STRIP_W for everyone.
+- The fan census's per-arm views (uKBase.z 3/4) can disagree at a bracket
+  angle tie (GPU f32 vs CPU f64 pick A and B in opposite order); the
+  blended field agrees. Harmless unless a probe relies on the views there.
