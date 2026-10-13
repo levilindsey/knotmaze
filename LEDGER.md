@@ -33,7 +33,9 @@ and never reused.
   Probes `.claude/probes/K74/` (`out/scan_final.jsonl` holds the option
   tables); worktree `.claude/worktrees/agent-aeaf1e61bcecaaf0b` kept.
   Fisher's books, Abbott's essays and Buck's book-only chapters are
-  unverified (doc section 1).
+  unverified (doc section 1). K80's decision 6: dead-end BRANCHES
+  several runs behind one bridge make deeper minotaur traps; settle
+  their depth together with K80.
 - **K76** · The thread-reveal mode's decisions: the stage 1 design is in
   `docs/design/K76_reveal_mode.md` (0474300). The contact sheet of eight
   end looks is `.claude/probes/K76/out/contact.html` (desktop and phone
@@ -118,35 +120,80 @@ and never reused.
   synthetic wheel (-300 arriving as -449.99998 at DPR 1.5) did exactly
   that. If it pans, the likely fix is a tick test in physical pixels
   (deltaY x devicePixelRatio), whose trackpad side needs his laptop too.
+- **K98** · K83's placeholder markers are in (black discs, white stroked
+  glyphs; play / flag / ring-and-dot). Four calls:
+  (1) the glyphs: keep, pick alternatives from
+  `.claude/probes/K83/sheet_glyphs.png`, or send replacements (a new
+  glyph is one design entry in `src/render/marker_glyphs.ts`; try one
+  live with `__knotFabricRenderer().setMarkerStyle({start, exit, head,
+  scale})`);
+  (2) the size: 0.75x, 1x (shipped: 1.5 thread widths, about 14 CSS px on
+  the phone) or 1.25x;
+  (3) at the entrance the head marker sits above the start marker ("you
+  are here"); or the start on top;
+  (4) the head disc (0.78 world) covers the starts of the arms, so their
+  pulses begin under it.
+  Sheets: `sheet_glyphs.png`, `sheet_verify.png`.
+- **K80** · The minotaur and gameplay-additions design is on master
+  (`docs/design/K80_gameplay_additions.md`, 17b729b; the minotaur
+  simulated on 110 real walk graphs). Nine calls in its section 0: the
+  movement rule (recommended: a telegraphed "hunter", with "guard" and
+  "stalker" variants), telegraph on by default, what a catch does (back
+  to the entrance, counted), undo in free play only, a wait move (puzzle
+  modes only), dead ends as its hunting ground (depth shared with K74),
+  dailies as a modifier later, the first music and rhythm experiment,
+  and the order after the minotaur (section 5). For the implementation
+  brief: glyphs on runs need a phone minimum size (threads are 4-5 px at
+  fit scale), and fleeing critters need a simulation first (a perfect
+  fleer is uncatchable at equal speed on our looped mazes).
+  - next: Levi's section 0 calls, then an implementation brief for the
+    hunter.
+  - evidence: `.claude/probes/K80/` (copied from the worktree; doc
+    section 7 reruns it); worktree
+    `.claude/worktrees/agent-a25726c24f262b138` kept.
+- **K100** · The fog of war forgets what was explored whenever the path
+  empties: a manual backtrack to the entrance, and a daily's backtrack
+  Reset path (K47's `retreatToStart`), re-fog everything (`update()` in
+  `src/render/fabric_maze_renderer.ts` clears the stamps when
+  `pathEdges` is empty; `exploredRuns` in `src/game/daily_attempt.ts`
+  mirrors it). Stage 25's spec says "explored stays visible"
+  (`docs/history.md`), and the code's comment names Reset path as the
+  reset. Keep, or clear only on a restart (recommended; the explored
+  runs become every tap since the restart)?
+
 ## In progress
 
-- **K80** · Research and design: the minotaur mode (movement, chase
-  quality, fairness, params) and a long list of other gameplay additions
-  (locks and keys, one-way and collapsing runs, pickups, a sword,
-  patterned enemies, and more), with trade-offs. Added 2026-10-13:
-  music-centric and rhythm mechanics. No code. The minotaur's off-screen
-  marker registers with K73's indicator registry (`indicators.add`,
-  `src/ui/offscreen_indicators.ts`).
-  - owner: the K80 agent of session d8031183, started 2026-10-12 22:50.
-  - branch: `worktree-agent-a25726c24f262b138`
-    (`.claude/worktrees/agent-a25726c24f262b138`); last commit: db0abc8
-    (research notes so far, WIP).
-  - evidence: `.claude/probes/K80/` (AI simulations, if any).
-  - next: finish the research, then `docs/design/K80_gameplay_additions.md`.
-  - brief: `docs/design/K80.md`.
-- **K83** · Placeholder marker icons (Levi): the start, finish and
-  current position as black discs holding white stroked glyphs (play
-  triangle, flag, you-are-here), margin about one stroke width.
-  - owner: the K83 agent of session d8031183, started 2026-10-12 23:29.
-  - branch: `worktree-agent-a61edbbcfc17238a0`
-    (`.claude/worktrees/agent-a61edbbcfc17238a0`), rebased on 0d735bf;
-    last commit: 791b4ae (glyphs drawn per pixel, WIP).
-  - evidence: `.claude/probes/K83/` (`k83_shot.mjs`).
-  - next: the contact sheet (rest, mid-move, fog, cr 3, backgrounds) and
-    a same-state A/B showing only marker pixels change; on rebase, give
-    K73's off-screen finish indicator (an SVG waving-flag placeholder in
-    `src/main.ts`) the same finish glyph.
+- **K83** · Placeholder marker icons (Levi): black discs with white
+  stroked glyphs for the start, finish and head; the finish's off-screen
+  indicator wears the same glyph. Merged on local master, NOT pushed:
+  the phone gate is pending (Levi was using the phone at 01:25).
+  - owner: the coordinator, session d8031183 (the agent finished).
+  - branch: mainline; last commits 45aac50 (the agent's 479d178), then
+    5592f8c (the indicator hand-off). Desktop: tsc, vitest 350, build,
+    live check (`.claude/probes/K83/out/merge/`).
+  - evidence: `.claude/probes/K83/` (sheets, `k83_ab.mjs`);
+    `.claude/probes/K10/wait_phone_idle.ps1` waits for an idle phone.
+  - next: the K10 bench, 5297 (ce331bc) vs 5298 (5592f8c): flow on,
+    `fw=0`, `pv=trail`; then push (K80's doc 17b729b and K99's 0097801
+    wait behind it on local master) and move K83 to Done.
   - brief: `docs/design/K83.md`.
+  - env: `scripts/preview.ps1 -Port 5297 -Ref ce331bc` and `-Port 5298
+    -Ref 5592f8c`; `scripts/phone.ps1 -Ports 5297,5298`.
+- **K81** · The traveled highlight at junctions: a smooth gold arc from
+  the arrival arm to the departure arm instead of the angular blend's
+  flat nub (Levi's screenshot in `.claude/probes/K81/`). K75 is merged
+  (same paint code): pulses now brighten the thread's own paint, and
+  `PulseArm.onPath` is gone.
+  - owner: the K81 agent (a8c2a999e6c2d5a8e) of session d8031183,
+    started 2026-10-13 01:07.
+  - branch: `worktree-agent-a8c2a999e6c2d5a8e`
+    (`.claude/worktrees/agent-a8c2a999e6c2d5a8e`), on 457b494; last
+    commit: none yet.
+  - evidence: `.claude/probes/K81/` in its worktree (copied at merge).
+  - next: read the junction paint path (`setPaint`, the fan arm strips),
+    then prototype the arc.
+  - brief: `docs/design/K81.md`.
+  - env: its dev servers on ports 5311-5314.
 - **K77** · Plucks show sharp, wedge-like depressions where the
   vibration is strongest, maybe more on curves (Levi): a thinning should
   read smooth and rounded. Includes the 0.45 h vs 0.65 h amplitude-floor
@@ -170,11 +217,11 @@ Overnight order, 2026-10-13 (Levi: "keep running through the night until
 you've addressed all bits that you don't need my input on"). At most three
 code agents at once, research on top. Stop launching once the week
 passes about 45% (29% at 00:30).
-1. Merge the running five as they finish: K83 (code) and K80 (docs) are
-   left; K73 and K75 merged 2026-10-13 01:00, K74 in dad40f8.
-2. K77 (pluck wedges, running since 00:58); K81 (the smooth arc; K75 is
-   merged); K79 (backgrounds; codec v4 is merged); K49's 2.6 vs 2.8
-   comparison crops (small).
+1. Merge the running five as they finish: K80 (docs) is left; K73 and
+   K75 merged 2026-10-13 01:00, K83 at 01:30, K74 in dad40f8.
+2. K77 (pluck wedges, running since 00:58) and K81 (the smooth arc,
+   running since 01:07); then K79 (backgrounds; codec v4 is merged).
+   K49's comparison is done (Waiting on Levi).
 3. K90 stage 1 (measure over-tight folds, prototype a bend limit), K87
    (the plan's pickFarthest cost, same mazes), then K86 (long dead ends
    behind params that default to today's maze).
@@ -205,11 +252,6 @@ K5-K7 (split, frame loop, worker) follow.
   gets trailLength 10 unless it overrides it; the memory-trail days were
   designed around 5 (K73). Brief: `docs/design/K46.md`.
 
-- **K81** · The traveled highlight at junctions: a smooth gold arc from
-  the arrival arm to the departure arm instead of the angular blend's
-  flat nub (Levi's screenshot in `.claude/probes/K81/`). K75 is merged
-  (same paint code): pulses now brighten the thread's own paint, and
-  `PulseArm.onPath` is gone. Brief: `docs/design/K81.md`.
 - **K79** · Backgrounds: an animation speed slider (0 = static, vellum
   animated too), general and per-effect params, configurable colors, and
   an in-app Motion setting (follow system / full / reduced). New params
@@ -413,9 +455,17 @@ K5-K7 (split, frame loop, worker) follow.
   Graphics after a few moves (`?b.c&pv=string`, 6 moves; hiding that
   Graphics removes it). G2.3 does not show it, but it was never
   attributed; look again if it comes back (G2 doc section 7, Follow-ups).
+  Since K83 (45aac50) that Graphics draws only the win ring; the markers
+  are SDF quads.
 - **K95** · Below about 340 px wide, the mode badge drops below the
   hamburger and covers the header of an open panel (K73; the fit levels
   are measured in `.claude/rules/gameplay.md`, MODE BADGE).
+- **K101** · Music mode times its notes from `performance.now()` polled
+  in the render tick (`autoAudioTick`, `src/main.ts`), not the audio
+  clock, so onsets land up to one frame late (16 ms at 60 fps, about
+  100 ms during a gs-18 settle). Fix: a start time in the worklet plus a
+  look-ahead scheduler on the audio clock; any rhythm mode (K80 doc
+  section 3) needs it first.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -520,11 +570,17 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K97** · Promote K49's `kinkCensusPage` (`.claude/probes/K49/lib.mjs`,
   an in-page port of K41's kink census, within 0.009 of the node
   harness) to tracked `scripts/` for same-state browser A/Bs of eye size.
+- **K102** · `src/audio/songs.ts` holds one song (Scarborough Fair): a
+  small library of public-domain tunes would serve K80's melody path and
+  a song per day (K80 doc section 3).
 
 ## Done
 
 (items move here with the commit that resolved them)
 
+- **K99** · The fog of war lifts at fixed stations along a move's run,
+  the same at any frame rate, move speed or mid-flight tap (0097801,
+  2026-10-13; `.claude/probes/K99/`). Follow-up K100.
 - **K73** · Levi's UI batch: pathViz labels read fullPath / recentPath
   (f917282); codec v4, recentPath lights twice as far, trailLength
   5 -> 10, dailies keep 5 (a99967e); the mode badge, "Free play" off the
