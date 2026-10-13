@@ -94,6 +94,17 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
 
 ## Probe gotchas, hooks and tooling
 
+- *K75 (2026-10-12), cross-build frames:* a frozen page keeps the flow
+  undulation at whatever flow time it had when frozen (main.ts re-syncs
+  flowStrength every tick, so `freeze()`'s `flowStrength = 0` does not
+  hold), and two pages freeze at different times: a same-state A/B of
+  whole frames needs `fw=0` in the URL, or every ribbon edge and crossing
+  differs. Debug view 5 (`renderer.paintDebug = 5`) shows the visible
+  ribbon's paint terms (p, pulse v, glow); a pulse at the PULSE_MIN_V
+  floor reads G = 1, so classify bands as G >= 1. Junction webs are not
+  in it: find web pixels by re-rendering with `filletMesh` /
+  `filletTopMesh` `.mesh.renderable = false`.
+
 - *From JUNCTION CLEARANCE + TWO-LAYER FILLETS, the probe note:* Probe note: layer-toggle attribution must hide BOTH filletMesh and
   filletTopMesh.
 

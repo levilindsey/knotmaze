@@ -80,6 +80,26 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   optimizing; take the perf lock (claude-config sessions.md) and re-run
   numbers taken while other agents' scans ran.
 
+- PULSES BRIGHTEN THE THREAD'S OWN PAINT (K75, 2026-10-12; Levi: trail
+  mode's incoming-segment pulses showed "unexpected yellow banding").
+  kComposePaint = mix(mix(S, gold, p), white, K_BAND max(v, glow)). The
+  retired strip picked a band FAMILY per pulse ARM (onPath: gold -> white,
+  else S -> white; trail mode read it at the arm's junction end), and G2.3
+  kept that. Full-length crest trains run the arrival run into the trail's
+  fade, so every crest edge drew pure gold over the faded thread: the
+  mirror stepped up to 109/255 between samples and the GPU matched it (a
+  model bug, not a shader divergence). Pre-G2 too (c3ebf11, same state:
+  gold crests over the base-colored far end). K4's linear fade widened it,
+  because a span's p is linear between its two ends, so the run holding
+  the fade start fades from the head junction. ON_PATH, trailGoldAt and
+  KPaintState.famB are gone. Gold mode is unchanged (same-state A/B: 0 px
+  in 4 phases). In trail mode only band pixels over partial paint change,
+  plus the joint web they feed. LORE: a per-ARM family flag is a palette
+  coordinate in disguise; compose over the per-PIXEL paint (the
+  blend-composed-colors rule below, one level up). Debug view 5
+  (uKBase.z): the visible ribbon's (p, pulse v, glow). Probes:
+  `.claude/probes/K75/`.
+
 ## RENDER LORE
 
 RENDER LORE (2026-10-11, GPU junction field): **blend COMPOSED colors,

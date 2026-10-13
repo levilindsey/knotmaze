@@ -1121,6 +1121,20 @@ VERIFICATION (desktop, 3200x1800 unless noted):
   the same side of it (rebased G2.5 vs the fan fix: 0 px over 2/255 at rest
   on def / ring / knot / user).
 
+### K75 amendment: pulses brighten the thread's own paint (2026-10-12)
+
+Section 3.6's `kCompose` kept the strip's per-ARM band family (`famB =
+ON_PATH`, set per pulse arm; trail mode read it at the arm's junction end).
+With full-length crest trains, the head's inbound crests ran over the trail
+fade and drew pure gold crest edges over the faded thread: Levi's "yellow
+banding". The mirror reproduced it (steps up to 109/255 between samples),
+and so did master before G2 (c3ebf11, same state). The composition is now
+`mix(mix(S, gold, p), white, K_BAND max(v, glow))`: the strip's two bands
+are its p = 0 and p = 1 cases, so gold mode is unchanged (same-state A/B: 0
+px). ON_PATH, `trailGoldAt` and `famB` are retired. Census after the fix:
+ribbons max 0.0024, fans max 0.0062 (none over 2/255). The record:
+`.claude/rules/render.md` (K75) and the K75 commit.
+
 ### Follow-ups (not done)
 
 - G2.4 GPU particles (K23): unchanged plan (instanced quads from a KFX ring,

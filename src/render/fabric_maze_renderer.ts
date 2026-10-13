@@ -210,8 +210,6 @@ interface TrailSeg {
 interface TrailPaint {
   spans: PaintSpan[];
   caps: PaintCap[];
-  // Span records by walk edge, for pulse-band attribution at the head.
-  recs: { eid: number; span: PaintSpan }[];
 }
 
 export class FabricMazeRenderer {
@@ -1091,7 +1089,6 @@ export class FabricMazeRenderer {
       d <= fadeStart ? 1 : Math.max(0, (L - d) / (L - fadeStart));
 
     const spans: PaintSpan[] = [];
-    const recs: { eid: number; span: PaintSpan }[] = [];
     let d = 0; // Path distance behind the visual head.
     for (let i = segs.length - 1; i >= 0 && d < L; i--) {
       const s = segs[i];
@@ -1113,7 +1110,6 @@ export class FabricMazeRenderer {
         p1: toIsC0 ? pAt(dFar) : pAt(dNear),
       };
       spans.push(span);
-      recs.push({ eid: s.e.id, span });
       d += s.len;
     }
     // Oldest first: where consecutive runs share a junction sample, the
@@ -1159,30 +1155,7 @@ export class FabricMazeRenderer {
       const p = pAt(dv);
       if (p > 0.01) addCaps(controller.pathVertices[i], p);
     }
-    return { spans, caps, recs };
-  }
-
-  // Is this edge's given ctrl painted goldish by the trail? Picks the
-  // pulse band at the head: band B (gold side) only where the underlying
-  // ribbon actually wears gold - the palette-order invariant.
-  private trailGoldAt(
-    trail: TrailPaint,
-    eid: number,
-    ctrl: number
-  ): boolean {
-    for (const r of trail.recs) {
-      if (r.eid !== eid) continue;
-      const s = r.span;
-      if (ctrl < s.c0 - 1e-6 || ctrl > s.c1 + 1e-6) continue;
-      const t =
-        s.c1 > s.c0
-          ? (Math.min(Math.max(ctrl, s.c0), s.c1) - s.c0) / (s.c1 - s.c0)
-          : 1;
-      const p0 = s.p0 ?? 1;
-      const p1 = s.p1 ?? 1;
-      if (p0 + (p1 - p0) * t >= 0.5) return true;
-    }
-    return false;
+    return { spans, caps };
   }
 
   // Paint + markers for one animation frame: the stack minus the in-flight
@@ -1228,8 +1201,8 @@ export class FabricMazeRenderer {
   // Refresh the paint declaration (traveled spans + pulse arms) and redraw
   // the markers. While a move is animating, tickAnim owns the frame. In
   // trail mode the spans/caps come from the trailing suffix instead of the
-  // full path; the pulse machinery is identical, with the band choice
-  // following the trail's actual paint at each arm's junction end.
+  // full path; the pulse machinery is identical (a pulse brightens whatever
+  // paint its thread wears there - the shader composes it per pixel).
   update(controller: FabricMazeController): void {
     if (this.anim) {
       this.emitAnimFrame(controller);
@@ -1238,17 +1211,15 @@ export class FabricMazeRenderer {
     this.syncYarn(controller);
     // String mode: the yarn is the traversal record - no gold spans or
     // junction caps; the choice pulses/hover (choice UI, not path viz)
-    // stay, attributed to the base band.
+    // stay, over the threads' own colors.
     const stringViz = this.pathViz === "string";
     const trail =
       !stringViz && this.trailMode ? this.buildTrail(controller, null) : null;
     const spans: PaintSpan[] = trail ? trail.spans : [];
-    const onPath = new Set<number>();
     if (!trail && !stringViz) {
       for (const eid of controller.pathEdges) {
         const e = this.walk.edges[eid];
         spans.push({ chain: e.chain, c0: e.ctrlA, c1: e.ctrlB });
-        onPath.add(eid);
       }
     }
 
@@ -1269,16 +1240,7 @@ export class FabricMazeRenderer {
         const hovered = eid === this.hoverEdge;
         const inward = eid === last;
         const arm = (cJunction: number, cFar: number): void => {
-          pulses.push({
-            chain: e.chain,
-            cJunction,
-            cFar,
-            inward,
-            onPath: trail
-              ? this.trailGoldAt(trail, eid, cJunction)
-              : onPath.has(eid),
-            hovered,
-          });
+          pulses.push({ chain: e.chain, cJunction, cFar, inward, hovered });
         };
         if (e.va === e.vb) {
           // A self-loop run returns to the branch point: pulse both ends.

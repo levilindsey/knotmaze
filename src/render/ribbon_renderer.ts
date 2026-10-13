@@ -171,7 +171,6 @@ export interface PulseArm {
   cJunction: number; // Ctrl at the branch-point end of the run.
   cFar: number; // Ctrl at the far end (direction + extent).
   inward: boolean; // Crest slides INTO the junction (the arrival run).
-  onPath: boolean; // Underlying color is traveled gold (use the gold band).
   hovered: boolean; // Steady bright highlight instead of the pulse.
 }
 // A small gold disc of thread around one occurrence of a traversed
@@ -198,7 +197,10 @@ export interface PaintCap {
 // mix(gold, white, K_BAND v) on band B and mix(S, gold, p) on the gold
 // ramp. The strip's ORDER was load-bearing because per-vertex U
 // interpolated linearly between samples (the hairline lore); per pixel
-// there is no interpolation left to protect.
+// there is no interpolation left to protect. Since K75 a pulse brightens
+// the thread's OWN paint, mix(mix(S, gold, p), white, K_BAND v): the two
+// bands are its p = 0 / p = 1 cases, and the per-arm band choice (an
+// onPath flag) that drew gold crest bands over a fading trail is gone.
 // (The pulse constants live in paint_const.ts - the shaders evaluate the
 // trains; see paint_math kPulseV for their model.)
 // RENDER-ONLY PLUCK node keys (pluck_overlay.ts PluckNode.key): crossing
@@ -426,7 +428,7 @@ void main(void) {
   highp vec2 kpt = kFragPoint(kc);
   highp vec2 ksw = fwidth(vSamp);
   highp float pxArc = (ksw.y < 0.5 * ksw.x ? ksw.y : ksw.x) * float(kc.count) * kc.arcPer;
-  if (uKBase.z > 0.5) {
+  if (uKBase.z > 0.5 && uKBase.z < 4.5) {
     // DEBUG VIEW (probes): 1 = ctrl, 2 = arc - (fract(v), fract(16 v),
     // chain / 63); the census decodes 1e-4 precision through 8 bits.
     highp float kv = uKBase.z < 1.5 ? kCtrlNear(kc, kpt.x, kpt.y) : kpt.x;
@@ -444,10 +446,18 @@ void main(void) {
   if (fxHere) base = kFxColor(kc, kctrl, kpt.x / kc.arcPer, base, pRain, aM);
   if (pRain > 0.0) base = kRainbowBlend(base, pRain, vUV.y);
   // Gameplay paint + the reveal glow, composed over the section (G2.3).
-  vec3 rgb = paintHere
-    ? kComposePaint(base, kPaintAt(kc, kctrl, kpt.x, pxArc), kGlow(kc, kctrl))
-    : base;
+  highp vec4 kst = paintHere ? kPaintAt(kc, kctrl, kpt.x, pxArc) : vec4(0.0);
+  highp float kgl = paintHere ? kGlow(kc, kctrl) : 0.0;
+  vec3 rgb = paintHere ? kComposePaint(base, kst, kgl) : base;
   float gk = gapKeep(pxW, gTurn);
+  if (uKBase.z > 4.5) {
+    // DEBUG VIEW 5 (probes): the paint terms of the VISIBLE thread (gaps
+    // cut as in the normal view) - (gold amount p, the pulse band's
+    // strength v, the reveal glow).
+    if (gk <= 0.002) discard;
+    finalColor = vec4(clamp(kst.x, 0.0, 1.0), kst.y > 0.5 ? kst.z : 0.0, kgl, 1.0);
+    return;
+  }
   // Probe view (globals texel .y): masked material tinted, not removed
   // (only masked fragments read the flag).
   if (gk < 1.0 && gapProbe()) {
@@ -836,7 +846,8 @@ export class RibbonRenderer {
   // update() calls so far (probes: a render-only pluck must add none).
   updateCount = 0;
   // G2 SHADER PAINT: this scene's data-texture layout, the debug view
-  // (probes: 0 off, 1 = ctrl, 2 = arc - see SECTION_FRAG) and the probe
+  // (probes: 0 off, 1 = ctrl, 2 = arc, 3 / 4 = the fans' per-arm views,
+  // 5 = the ribbons' paint terms - see SECTION_FRAG) and the probe
   // triangle mesh (lazily built by probeTris).
   private paintScene: PaintScene;
   paintDebug = 0;
@@ -1983,6 +1994,13 @@ export class RibbonRenderer {
     shadeFx: (ch: number, arc: number, side: number, base: number[]) => number[];
     // The point's ignition (anim time; Infinity = none) and FX age.
     ignition: (ch: number, arc: number) => { tA: number; age: number };
+    // The gameplay paint state at the material point exactly at the arc's
+    // ctrl (kPaintAt, px = edge coverage) and its reveal glow (kGlow).
+    paintState: (
+      ch: number,
+      arc: number,
+      px?: number
+    ) => KPaintState & { glow: number };
   } {
     const data = kData();
     const U = knotUniformValues();
@@ -2037,6 +2055,16 @@ export class RibbonRenderer {
           tA: g.hit ? g.tA : Infinity,
           age: g.hit ? kFxAge(U, g) : -Infinity,
         };
+      },
+      paintState: (ch, arc, px = 0) => {
+        const c = kChain(data, ch);
+        const ctrl = kCtrlOfArc(data, c, arc);
+        const st = kPaintAt(data, U, c, ctrl, arc, px, {
+          p: 0,
+          band: false,
+          v: 0,
+        });
+        return { ...st, glow: kGlow(data, U, c, ctrl) };
       },
     };
   }
@@ -3703,7 +3731,7 @@ export class RibbonRenderer {
     const ctrl = kCtrlOfArc(D, c, an);
     kComposePaint(U, out, kPaintAt(D, U, c, ctrl, an, px, this.paintTmp), kGlow(D, U, c, ctrl));
   }
-  private paintTmp: KPaintState = { p: 0, band: false, famB: false, v: 0 };
+  private paintTmp: KPaintState = { p: 0, band: false, v: 0 };
 
   // The NODES a plucked chain passes (pluck_overlay.ts PluckNode): every
   // registered crossing pass (footprint = its erase extents + fade when
@@ -4003,9 +4031,7 @@ export class RibbonRenderer {
     for (const p of this.paintPulses) {
       const i = items.length / 8;
       const flags =
-        (p.inward ? ITEM_FLAG.INWARD : 0) |
-        (p.onPath ? ITEM_FLAG.ON_PATH : 0) |
-        (p.hovered ? ITEM_FLAG.HOVER : 0);
+        (p.inward ? ITEM_FLAG.INWARD : 0) | (p.hovered ? ITEM_FLAG.HOVER : 0);
       items.push(PAINT_ITEM.PULSE, p.cJunction, p.cFar, 0, 0, flags, 0, 0);
       touch(p.chain, Math.min(p.cJunction, p.cFar), Math.max(p.cJunction, p.cFar), i);
     }
