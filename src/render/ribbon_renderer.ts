@@ -79,7 +79,11 @@ import {
   kShadeFx,
   kSwell,
   kWall,
+  smoothInv,
   sourcePieces,
+  type KChain,
+  type KData,
+  type KIgn,
 } from "./paint_math";
 import { FX_STYLE, PAINT_CONST } from "./paint_const";
 import { PluckOverlay } from "./pluck_overlay";
@@ -366,6 +370,15 @@ const GOLD_FAMILY_MIN = 118 / PAL_W;
 // Every appearance FX settles within this many wall seconds of its last
 // ignition (burn's recovery, the longest, plus a margin): fxOn drops after.
 const FX_TAIL = PAINT_CONST.BURN_RECOVER_END + 0.15;
+// A gated crossing's slot is solved from this many seconds before its show
+// time (earlier it is cleared and skipped - the solve is update()'s main
+// cost, and early in a reveal most crossings are still hidden).
+const GATE_LEAD = 0.1;
+// Wall seconds after ignition the rainbow width swell lasts (progress down
+// to RAINBOW_SWELL_MIN_P: the swell factor is exactly 1 below it).
+const RAINBOW_SWELL_END =
+  PAINT_CONST.RAINBOW_HOLD +
+  PAINT_CONST.RAINBOW_FADE * smoothInv(1 - PAINT_CONST.RAINBOW_SWELL_MIN_P);
 
 function mixHex(a: number, b: number, t: number): number {
   const ar = (a >> 16) & 255;
@@ -921,6 +934,19 @@ export class RibbonRenderer {
   // bookkeeping that follows a gate - underWindows, pluck footprints -
   // catches up).
   private gateOpenAt = -Infinity;
+  // LATCHED show times (registered crossings by index; joints / lone caps
+  // by key): once a gate has opened it keeps the time it opened at. The
+  // estimate is re-solved every frame from the live arc tables, which keep
+  // moving while the knot settles under the reveal - an open gap or fan
+  // must never fade back out (master latched its fade start the same way).
+  private gateLatch = new Float64Array(0);
+  private jointLatch = new Map<string, [number, number]>();
+  // Per-frame mirror views (no allocation in the hot loops): the data
+  // texture mirrors and one KChain per chain, refreshed by update() (the
+  // chain's arc table changes every update).
+  private kd: KData = kData();
+  private kcv: KChain[] = [];
+  private ignTmp: KIgn = { hit: false, tA: 0, cFrom: 0, dir: 1, t0: 0, rate: 1, tEnd: 0, span: 0 };
   private acc4Scratch = new Float32Array(4);
   // REVEAL CLOCKS (G2.1; advanceClocks): the paint clock at reveal start
   // (fxNow = paintClock - revealWall0), the speed knot count, and the wall
@@ -1664,7 +1690,7 @@ export class RibbonRenderer {
         return out;
       });
       anim.setDuration(maxT + PAINT_CONST.INK_TAPER_WORLD / plan.inkSpeed);
-      this.paintScene.setReveal(null, tig);
+      this.paintScene.setReveal(null, tig, plan.inkSpeed);
     } else {
       const pieces = [];
       for (let c = 0; c < nCh; c++) {
@@ -1676,7 +1702,7 @@ export class RibbonRenderer {
           )
         );
       }
-      this.paintScene.setReveal(pieces, null);
+      this.paintScene.setReveal(pieces, null, plan.inkSpeed);
       if (this.paintScene.hintOverflow > 0) {
         console.warn(
           `G2 reveal: ${this.paintScene.hintOverflow} control slots are ` +
@@ -1696,6 +1722,11 @@ export class RibbonRenderer {
     this.fxLive = true;
     this.fxEnd = Infinity;
     this.gateOpenAt = Infinity;
+    if (this.gateLatch.length !== this.ps.crossings.length) {
+      this.gateLatch = new Float64Array(this.ps.crossings.length);
+    }
+    this.gateLatch.fill(Number.NaN);
+    this.jointLatch.clear();
     U.uKInk[0] = plan.inkSpeed;
     U.uKInk[1] = anim.mode === "ink" ? 1 : 0;
     U.uKFx[1] = 0;
@@ -1817,12 +1848,12 @@ export class RibbonRenderer {
   // settled (rainbow past its swell, dust/comet opaque). The GPU ramps the
   // gap in from it (paint_math kRevealTime / kFxSettleWall).
   private passShowTime(chain: number, ctrl: number): number {
-    const D = kData();
+    const D = this.kd;
     const U = knotUniformValues();
-    const c = kChain(D, chain);
+    const c = this.kcv[chain] ?? kChain(D, chain);
     const n = c.nCtrl;
     const x = c.closed ? ctrl - n * Math.floor(ctrl / n) : Math.max(0, Math.min(n - 1, ctrl));
-    const g = kIgnition(D, U, c, x);
+    const g = kIgnition(D, U, c, x, this.ignTmp);
     const fallback = this.revealAnim ? this.revealAnim.planDuration : 0;
     const tRev = kRevealTime(D, U, c, g, x, fallback);
     return Math.max(kWall(U, tRev), kFxSettleWall(U, g));
@@ -1832,24 +1863,32 @@ export class RibbonRenderer {
   // shown once every given point is revealed, fading in as the latest-
   // ignited one's appearance FX settles (paint_glsl knotFanAlpha).
   // Ungated (no reveal, FX settled): far past.
-  private jointGate(points: Array<[number, number]>): [number, number] {
+  private jointGate(
+    key: string,
+    points: Array<[number, number]>
+  ): [number, number] {
     if (!this.fxLive) return [-1e9, -1e9];
-    const D = kData();
+    const D = this.kd;
     const U = knotUniformValues();
     const fallback = this.revealAnim ? this.revealAnim.planDuration : 0;
     let tOn = -1e9;
     let tLast = -1e9;
+    // Open joints keep their times (latched; nothing left to solve).
+    const L = this.jointLatch.get(key);
+    if (L !== undefined) return L;
     for (const [chain, ctrl] of points) {
-      const c = kChain(D, chain);
+      const c = this.kcv[chain] ?? kChain(D, chain);
       const n = c.nCtrl;
       const x = c.closed
         ? ctrl - n * Math.floor(ctrl / n)
         : Math.max(0, Math.min(n - 1, ctrl));
-      const g = kIgnition(D, U, c, x);
+      const g = kIgnition(D, U, c, x, this.ignTmp);
       tOn = Math.max(tOn, kWall(U, kRevealTime(D, U, c, g, x, fallback)));
       if (g.hit) tLast = Math.max(tLast, kWall(U, g.tA));
     }
-    return [tOn, tLast];
+    const out: [number, number] = [tOn, tLast];
+    if (U.uKFx[2] >= tOn) this.jointLatch.set(key, out);
+    return out;
   }
 
   // A crossing's show time (-Infinity when no reveal / FX gates it).
@@ -1887,8 +1926,8 @@ export class RibbonRenderer {
     const reveal = this.revealOn;
     const swell = U.uKFx[0] === FX_STYLE.rainbow && U.uKFx[3] > 0.5;
     if (!reveal && !swell) return null;
-    const D = kData();
-    const c = kChain(D, chain);
+    const D = this.kd;
+    const c = this.kcv[chain];
     const count = samples.count;
     let mask = this.revealMaskPool.get(chain);
     if (!mask || mask.length !== count) {
@@ -1902,6 +1941,19 @@ export class RibbonRenderer {
     }
     const n = c.nCtrl;
     const t = U.uKFx[1];
+    // FAST PATHS from the chain's reveal window (anim seconds, from the
+    // plan): wholly revealed (and past its swell) -> null; not started ->
+    // all zero.
+    const [tStart, tDone] = this.paintScene.revealSpan(chain);
+    const swellHere =
+      swell && t >= tStart && U.uKFx[2] < kWall(U, tDone) + RAINBOW_SWELL_END;
+    const maskDone = !reveal || t >= tDone;
+    if (maskDone && !swellHere) return null;
+    if (reveal && t < tStart) {
+      mask.fill(0);
+      this.revealMask[chain] = mask;
+      return mask;
+    }
     let minM = 1;
     let anyW = false;
     let slot = 0;
@@ -1913,12 +1965,14 @@ export class RibbonRenderer {
       const a0 = kCA(D, c, slot);
       const a1 = slot < n - 1 ? kCA(D, c, slot + 1) : c.total;
       const ctrl = slot + (a1 > a0 ? Math.min(1, (a - a0) / (a1 - a0)) : 0);
-      const g = kIgnition(D, U, c, ctrl);
-      const m = reveal ? kRevealMaskAt(D, U, c, ctrl) : 1;
+      const m = maskDone ? 1 : kRevealMaskAt(D, U, c, ctrl);
       mask[k] = m;
       if (m < minM) minM = m;
       let w = m;
-      if (swell && g.hit && t >= g.tA) w *= kSwell(kFxAge(U, g));
+      if (swellHere && m > 0) {
+        const g = kIgnition(D, U, c, ctrl, this.ignTmp);
+        if (g.hit && t >= g.tA) w *= kSwell(kFxAge(U, g));
+      }
       width[k] = w;
       if (w !== 1) anyW = true;
     }
@@ -2209,6 +2263,8 @@ export class RibbonRenderer {
   update(): void {
     const { positions } = this.ps;
     this.updateCount++;
+    // Mirror arrays may have been swapped by a texture growth (ensure()).
+    this.kd = kData();
     // Joinery geometry follows (rebuildFillets rebuilds on a new revision).
     this.geomRev++;
     // Under-gap windows are rebuilt from scratch by this frame's
@@ -2252,7 +2308,8 @@ export class RibbonRenderer {
         if (fusedA || fusedB) this.tuckFusedTips(samples, fusedA, fusedB);
       }
       this.chainSamples[i] = samples;
-      // G2: this frame's arc table for the shaders (KGEOM).
+      // G2: this frame's arc table for the shaders (KGEOM), and the
+      // chain's mirror view over it.
       this.paintScene.writeGeom(
         i,
         samples.totalLength,
@@ -2260,6 +2317,7 @@ export class RibbonRenderer {
         samples.closed,
         samples.controlArcLengths
       );
+      this.kcv[i] = kChain(this.kd, i, this.kcv[i]);
       if (this.style.paletteMode && !this.rgbCacheReady) {
         this.buildRgbCacheFor(i, samples);
       } else if (
@@ -2314,7 +2372,28 @@ export class RibbonRenderer {
     for (const w of this.chainWins.values()) w.length = 0; // Pooled arrays.
     this.gaps.setEnabled(this.maskEnabled, this.maskDebug);
     this.ps.crossings.forEach((crossing, c) => {
-      const tShow = this.crossingShowTime(crossing);
+      let tShow = -Infinity;
+      if (this.fxLive) {
+        const L = this.gateLatch.length > c ? this.gateLatch[c] : Number.NaN;
+        if (!Number.isNaN(L)) {
+          tShow = L;
+        } else {
+          tShow = this.crossingShowTime(crossing);
+          if (fxNow >= tShow) this.gateLatch[c] = tShow;
+        }
+        // A gate opening well in the future skips its slot solve this frame
+        // (as master skipped hidden crossings): update() keeps running while
+        // gates are pending, so the slot is solved before its ramp starts.
+        if (fxNow < tShow - GATE_LEAD) {
+          if (tShow > this.gateOpenAt) this.gateOpenAt = tShow;
+          this.eraseExtentPos[c] = 0;
+          this.eraseExtentNeg[c] = 0;
+          this.overHalfPos[c] = 0;
+          this.overHalfNeg[c] = 0;
+          this.gaps.clearSlot(c);
+          return;
+        }
+      }
       this.computeGapSlot(
         c,
         crossing,
@@ -3931,7 +4010,8 @@ export class RibbonRenderer {
     if (!this.fxLive) return false;
     const U = knotUniformValues();
     if (U.uKFx[0] === FX_STYLE.rainbow && U.uKFx[3] > 0.5) return true;
-    return U.uKFx[2] < this.gateOpenAt;
+    // Through the last gate's ramp: the CPU then writes it at full strength.
+    return U.uKFx[2] < this.gateOpenAt + PAINT_CONST.CROSSING_FADE_IN;
   }
 
   // THE PAINT CLOCK (G2): advanced once per frame by main.ts right after
@@ -3965,8 +4045,11 @@ export class RibbonRenderer {
     U.uKFx2[2] = revealOn ? 1 : 0;
     const fxOn = revealOn || fxNow < this.fxEnd;
     U.uKFx[3] = fxOn ? 1 : 0;
+    // The burn flicker runs on the REVEAL clock (fxNow), not the absolute
+    // paint clock: an instant of the reveal then renders the same whatever
+    // happened before it (the old phase was the page's paint clock).
     const TAU = Math.PI * 2;
-    const c = this.paintClock;
+    const c = fxNow;
     U.uKFx2[0] = (13 * c) % TAU;
     U.uKFx2[1] = (29 * c) % TAU;
     U.uKFx2[3] = 0.3 * Math.sin(13 * c) + 0.2 * Math.sin(29 * c);
@@ -4758,7 +4841,8 @@ export class RibbonRenderer {
       chain: number,
       arc0: number,
       ax: number,
-      ay: number
+      ay: number,
+      ctrl0: number
     ): number => {
       rd.ensure(cursor + 4);
       const D = rd.data;
@@ -4779,11 +4863,14 @@ export class RibbonRenderer {
       D[o + 12] = arc0;
       D[o + 13] = ax;
       D[o + 14] = ay;
-      D[o + 15] = 0;
+      D[o + 15] = ctrl0; // The ctrl at arc0 (the shader's ctrl search seed).
       const base = cursor;
       cursor += 4;
       return base;
     };
+    // Gates still far off skip their fans this rebuild (the rebuild runs
+    // every frame while a reveal plays; J1 fades the rest in).
+    const fxNowJ = knotUniformValues().uKFx[2];
     // A disc fan's rim (closed: DISC_SEGS + 1 points, first repeated).
     const discRim = (cx: number, cy: number, r: number): number[] => {
       const rim: number[] = [];
@@ -4803,16 +4890,11 @@ export class RibbonRenderer {
       gateCtrl: number
     ): void => {
       // A lone cap disc (free tip / host fallback) reads its own thread -
-      // and gates on it (shown once revealed there, fading with its FX).
-      const rb = writeAxis(
-        cx,
-        cy,
-        this.jointGate([[chain, gateCtrl]]),
-        chain,
-        arc0,
-        ax,
-        ay
-      );
+      // and gates on it (shown once revealed there, fading with its FX; a
+      // gate still far off skips the cap this rebuild).
+      const j1 = this.jointGate("c" + chain + ":" + gateCtrl, [[chain, gateCtrl]]);
+      if (j1[0] > fxNowJ + GATE_LEAD) return;
+      const rb = writeAxis(cx, cy, j1, chain, arc0, ax, ay, gateCtrl);
       fm.pushFan(cx, cy, discRim(cx, cy, r), rb);
     };
     // Local thread direction at an arc (two nearby probes), into
@@ -5080,6 +5162,7 @@ export class RibbonRenderer {
       }
       arms.sort((p, q) => p.ang - q.ang);
       const j1 = this.jointGate(
+        "j" + recs.length,
         jn.arms.map((a) => [a.chain, a.slot + a.dir * 0.8] as [number, number])
       );
       let mask = this.jointMaskPool[recs.length];
@@ -5127,7 +5210,7 @@ export class RibbonRenderer {
         D[ab + 4] = a.arc0;
         D[ab + 5] = a.dir;
         D[ab + 6] = Math.min(a.domain, 1e9);
-        D[ab + 7] = 0;
+        D[ab + 7] = a.slot; // The arm's joint ctrl (the shader's search seed).
         const pth = a.pth;
         const ps = a.ps;
         for (let g = 0; g < profN; g++) {
@@ -5398,41 +5481,40 @@ export class RibbonRenderer {
         }
       }
       if (rec) {
-        {
-          fm = layerFor(rec);
-          setFanMask(rec.mask);
-          // CAP COVER (TIP_DISC_SCALE): the disc reaches the tucked cap's
-          // corners without bulging past the bridge's sides - every rim
-          // point is clamped into the bridge's own strip (|lateral| <=
-          // TIP_DISC_SIDE half-widths) and to 0.99 half-widths behind the
-          // tuck point (the old disc's reach into the host). A plain wider
-          // disc rounded into the backdrop and neighbors' casing gaps.
-          const k = tip.atEnd ? samples.count - 1 : 0;
-          let ux = samples.tangents[k * 2];
-          let uy = samples.tangents[k * 2 + 1];
-          const ul = Math.hypot(ux, uy) || 1;
-          ux /= ul;
-          uy /= ul;
-          if (tip.atEnd) {
-            // Inward, into the bridge.
-            ux = -ux;
-            uy = -uy;
-          }
-          const rim = discRim(cx, cy, fillHalf * this.tipDiscScale);
-          const side = fillHalf * TIP_DISC_SIDE;
-          const back = fillHalf * 0.99;
-          for (let i = 0; i < rim.length; i += 2) {
-            const dx = rim[i] - cx;
-            const dy = rim[i + 1] - cy;
-            const s = Math.max(-back, dx * ux + dy * uy);
-            const l = Math.max(-side, Math.min(side, dy * ux - dx * uy));
-            rim[i] = cx + ux * s - uy * l;
-            rim[i + 1] = cy + uy * s + ux * l;
-          }
-          emitFan(rec, cx, cy, rim);
-          setFanMask(null);
-          fm = fmBottom;
+        if (rec.j1[0] > fxNowJ + GATE_LEAD) continue;
+        fm = layerFor(rec);
+        setFanMask(rec.mask);
+        // CAP COVER (TIP_DISC_SCALE): the disc reaches the tucked cap's
+        // corners without bulging past the bridge's sides - every rim
+        // point is clamped into the bridge's own strip (|lateral| <=
+        // TIP_DISC_SIDE half-widths) and to 0.99 half-widths behind the
+        // tuck point (the old disc's reach into the host). A plain wider
+        // disc rounded into the backdrop and neighbors' casing gaps.
+        const k = tip.atEnd ? samples.count - 1 : 0;
+        let ux = samples.tangents[k * 2];
+        let uy = samples.tangents[k * 2 + 1];
+        const ul = Math.hypot(ux, uy) || 1;
+        ux /= ul;
+        uy /= ul;
+        if (tip.atEnd) {
+          // Inward, into the bridge.
+          ux = -ux;
+          uy = -uy;
         }
+        const rim = discRim(cx, cy, fillHalf * this.tipDiscScale);
+        const side = fillHalf * TIP_DISC_SIDE;
+        const back = fillHalf * 0.99;
+        for (let i = 0; i < rim.length; i += 2) {
+          const dx = rim[i] - cx;
+          const dy = rim[i + 1] - cy;
+          const s = Math.max(-back, dx * ux + dy * uy);
+          const l = Math.max(-side, Math.min(side, dy * ux - dx * uy));
+          rim[i] = cx + ux * s - uy * l;
+          rim[i + 1] = cy + uy * s + ux * l;
+        }
+        emitFan(rec, cx, cy, rim);
+        setFanMask(null);
+        fm = fmBottom;
         continue;
       }
       // No junction within reach (shouldn't happen): host-axis fallback.
@@ -5486,6 +5568,7 @@ export class RibbonRenderer {
       const jy = rec.jy;
       const arms = rec.arms;
       if (arms.length < 2) continue;
+      if (rec.j1[0] > fxNowJ + GATE_LEAD) continue;
       fm = layerFor(rec);
       setFanMask(rec.mask);
       const jointTop = arms.some(armTop);

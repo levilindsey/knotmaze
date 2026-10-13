@@ -11,6 +11,7 @@
 
 import { UniformGroup } from "pixi.js";
 import { FloatRows, ROW_W } from "./float_rows";
+import { PAINT_CONST } from "./paint_const";
 import type { KData, KPiece, KUniforms } from "./paint_math";
 import {
   MAX_KNOTS,
@@ -105,6 +106,9 @@ export class PaintScene {
   private srcCount: Int32Array;
   // Diagnostics: slots whose covering sources exceed the shader's scan.
   hintOverflow = 0;
+  // Per chain [first start, last finish] of its reveal (anim seconds):
+  // the CPU mask's fast paths.
+  private span: Float64Array;
 
   constructor(chains: PaintChainInfo[]) {
     this.chains = chains;
@@ -126,6 +130,7 @@ export class PaintScene {
     this.geomEnd = g;
     this.srcFirst = new Int32Array(n);
     this.srcCount = new Int32Array(n);
+    this.span = new Float64Array(2 * n);
 
     const st = kStatic();
     st.ensure(this.idxEnd);
@@ -187,10 +192,32 @@ export class PaintScene {
 
   // A reveal starts: the sources (KREVEAL) and every control's source hint
   // (CTRLIDX .y) and ink ignition time (.w; null = interval mode).
-  setReveal(pieces: KPiece[][] | null, inkTign: Float32Array[] | null): void {
+  setReveal(
+    pieces: KPiece[][] | null,
+    inkTign: Float32Array[] | null,
+    inkSpeed = 1
+  ): void {
     const st = kStatic();
     const n = this.chains.length;
     this.hintOverflow = 0;
+    for (let c = 0; c < n; c++) {
+      let a = Infinity;
+      let b = -Infinity;
+      if (pieces) {
+        for (const p of pieces[c]) {
+          a = Math.min(a, p.t0);
+          b = Math.max(b, p.tEnd);
+        }
+      } else if (inkTign) {
+        for (const v of inkTign[c]) {
+          a = Math.min(a, v);
+          b = Math.max(b, v);
+        }
+        b += PAINT_CONST.INK_TAPER_WORLD / inkSpeed;
+      }
+      this.span[2 * c] = a;
+      this.span[2 * c + 1] = b;
+    }
     if (pieces) {
       const lay = layoutSources(pieces);
       const rv = kReveal();
@@ -226,5 +253,10 @@ export class PaintScene {
     for (let c = 0; c < n; c++) this.writeHeader(c);
     st.markDirty(0, this.idxEnd);
     st.flush();
+  }
+
+  // A chain's reveal window [first start, last finish] (anim seconds).
+  revealSpan(c: number): [number, number] {
+    return [this.span[2 * c], this.span[2 * c + 1]];
   }
 }

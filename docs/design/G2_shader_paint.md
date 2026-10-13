@@ -736,3 +736,42 @@ Verify:
   0 px on def / knot / user / fat / def + 5 moves, ring 2 px at delta 1
   (shader-recompile rounding); `update()` +0.16 ms/call (the KGEOM writes),
   GPU unchanged (1.71 -> 1.69 ms/frame at 3200x1800, fw 0).
+### G2.1 reveal and appearance FX on the GPU (landed)
+
+- Every ribbon and fan pixel finds its reveal source (hint in CTRLIDX.y,
+  up to 4 pieces scanned), its ignition anim time in closed form, and its
+  wall age through the speed knots; burn / roots tint, rainbow stripes and
+  dust / comet alpha are evaluated per pixel (`kFxColor`, `kRainbowBlend`).
+  Deleted: the burn pools (ignition sweep, run dating, ping-pong colors),
+  the FX weight pools, `aFx` / `setFx`, the swell scratch, the per-crossing
+  fade clock, the FX pool scans, the fan `fx` header and the interval mask
+  loop.
+- Deviation: the sources live in their own texture (KREVEAL, `kR`), not a
+  KSTATIC region, so event-driven regions never re-lay each other out
+  (`uKBase.y` is unused).
+- Deviation: a gap slot's show time is encoded in the SIGN of its strength
+  (texel 1.w: -(1 + tShow)) rather than texel 8.w - no extra fetch on the
+  gap shader's fast path (`gapStrength`).
+- Deviation: show times are LATCHED once open (registered crossings,
+  joints, lone caps). The estimate is re-solved each frame from the live
+  arc tables, which move while the knot settles under the intro; an open
+  gap must never fade back out.
+- Deviation: fans are always emitted; their record gains the gate texel J1
+  = (tOn, tLast) at rec + 1 (arms start at rec + 2), the arm header carries
+  the chain (paintBase moved to the chain header C1.w until G2.3).
+- Deviation: the CPU width mask is the MAX over covering sources
+  (revealMaskFor's interval union), the GPU ignition the EARLIEST arrival
+  (they differ only where two fronts touch one point); a source reaching a
+  closed ring's seam exactly gets a zero-length companion piece at ctrl 0.
+- Deviation: the burn flicker phase runs on the reveal clock (fxNow), not
+  the page's paint clock, so an instant of the reveal renders the same
+  whatever preceded it.
+- K4 defaults: burn / roots on single-color threads (mono now burns); ink
+  ignition per control from reveal-start positions with an exact duration
+  (`anim.setDuration`; the latch machinery is gone); ink + burn and knot
+  mode stay FX-free.
+- `needsFxRender` keeps `update()` running only while the rainbow swell is
+  live (geometry) or a gate is pending; dust / comet / burn tails animate
+  with no CPU work. Marker gaps keep their CPU reveal gate (they popped
+  before and still do); emergent crossings now fade in like registered
+  ones.

@@ -44,23 +44,24 @@ export interface KChain {
   arcPer: number;
 }
 
-// GLSL twin: kChain.
-export function kChain(D: KData, ch: number): KChain {
+// GLSL twin: kChain. `out` (optional) is filled in place - hot CPU loops
+// keep one view per chain instead of allocating.
+export function kChain(D: KData, ch: number, out?: KChain): KChain {
   const s = D.stat;
   const o = ch * 8;
   const geom = Math.round(s[o + 4]);
-  return {
-    ch,
-    nCtrl: Math.round(s[o]),
-    closed: s[o + 1] > 0.5,
-    count: Math.round(s[o + 2]),
-    idx: Math.round(s[o + 3]),
-    geom,
-    src0: Math.round(s[o + 5]),
-    srcN: Math.round(s[o + 6]),
-    total: D.geom[geom * 4],
-    arcPer: D.geom[geom * 4 + 1],
-  };
+  const r = out ?? ({} as KChain);
+  r.ch = ch;
+  r.nCtrl = Math.round(s[o]);
+  r.closed = s[o + 1] > 0.5;
+  r.count = Math.round(s[o + 2]);
+  r.idx = Math.round(s[o + 3]);
+  r.geom = geom;
+  r.src0 = Math.round(s[o + 5]);
+  r.srcN = Math.round(s[o + 6]);
+  r.total = D.geom[geom * 4];
+  r.arcPer = D.geom[geom * 4 + 1];
+  return r;
 }
 
 // GLSL twin: kCA - control i's arc (controlArcLengths, packed 4 per texel
@@ -328,14 +329,23 @@ export interface KIgn {
 const SRC_SCAN = 4;
 
 // GLSL twin: kIgnition - the earliest-arriving source covering ctrl (ink:
-// the control ignition times, interpolated).
+// the control ignition times, interpolated). `out` (optional) is reused.
 export function kIgnition(
   D: KData,
   U: KUniforms,
   c: KChain,
-  ctrl: number
+  ctrl: number,
+  out?: KIgn
 ): KIgn {
-  const r: KIgn = { hit: false, tA: 1e9, cFrom: 0, dir: 1, t0: 0, rate: 1, tEnd: 0, span: 0 };
+  const r = out ?? ({} as KIgn);
+  r.hit = false;
+  r.tA = 1e9;
+  r.cFrom = 0;
+  r.dir = 1;
+  r.t0 = 0;
+  r.rate = 1;
+  r.tEnd = 0;
+  r.span = 0;
   const n = c.nCtrl;
   const sl = Math.max(0, Math.min(n - 1, Math.floor(ctrl)));
   const io = (c.idx + sl) * 4;
@@ -767,6 +777,9 @@ export function kShadeFx(
   return out.alpha;
 }
 
+// Scratch for kRevealMaskAt (single-threaded, not reentrant).
+const MASK_IGN: KIgn = { hit: false, tA: 0, cFrom: 0, dir: 1, t0: 0, rate: 1, tEnd: 0, span: 0 };
+
 // The reveal WIDTH mask at a point as the CPU computes it for the ribbon
 // geometry: the MAX over every covering source (revealMaskFor's union of
 // intervals), not just the earliest-arriving one - they differ only where
@@ -780,7 +793,9 @@ export function kRevealMaskAt(
   ctrl: number
 ): number {
   if (U.uKFx2[2] < 0.5) return 1;
-  if (U.uKInk[1] > 0.5) return knotRevealMask(D, U, c, kIgnition(D, U, c, ctrl), ctrl);
+  if (U.uKInk[1] > 0.5) {
+    return knotRevealMask(D, U, c, kIgnition(D, U, c, ctrl, MASK_IGN), ctrl);
+  }
   const n = c.nCtrl;
   const sl = Math.max(0, Math.min(n - 1, Math.floor(ctrl)));
   const hint = D.stat[(c.idx + sl) * 4 + 1];
@@ -793,16 +808,15 @@ export function kRevealMaskAt(
     if (s >= c.src0 + c.srcN) break;
     const A = 2 * s * 4;
     if (ctrl < R[A] - 1e-4 || ctrl > R[A + 1] + 1e-4) continue;
-    const g: KIgn = {
-      hit: true,
-      tA: R[A + 4] + Math.abs(ctrl - R[A + 2]) / R[A + 5],
-      cFrom: R[A + 2],
-      dir: R[A + 3],
-      t0: R[A + 4],
-      rate: R[A + 5],
-      tEnd: R[A + 6],
-      span: R[A + 7],
-    };
+    const g = MASK_IGN;
+    g.hit = true;
+    g.tA = R[A + 4] + Math.abs(ctrl - R[A + 2]) / R[A + 5];
+    g.cFrom = R[A + 2];
+    g.dir = R[A + 3];
+    g.t0 = R[A + 4];
+    g.rate = R[A + 5];
+    g.tEnd = R[A + 6];
+    g.span = R[A + 7];
     if (t < g.tA) continue;
     const m = knotRevealMask(D, U, c, g, ctrl);
     if (m > best) best = m;
