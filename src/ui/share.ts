@@ -63,10 +63,11 @@ export async function copyText(text: string): Promise<boolean> {
   }
 }
 
-// A short message near the bottom of the screen that fades by itself.
+// A short message near the bottom of the screen that fades by itself
+// after `ms` (longer messages - an explanation - want longer).
 let toastEl: HTMLDivElement | null = null;
 let toastTimer = 0;
-export function showToast(message: string): void {
+export function showToast(message: string, ms = 2200): void {
   if (!toastEl) {
     toastEl = document.createElement("div");
     toastEl.className = "km-toast";
@@ -79,6 +80,6 @@ export function showToast(message: string): void {
   window.clearTimeout(toastTimer);
   toastTimer = window.setTimeout(
     () => toastEl?.classList.remove("km-toast-on"),
-    2200
+    ms
   );
 }

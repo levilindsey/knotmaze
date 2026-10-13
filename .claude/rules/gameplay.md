@@ -69,6 +69,28 @@ entry is labeled with its source; the narrative is in
   in trail mode); in a replay it starts over. A finish drops the
   attempt; a tab coming into view adopts a newer one another tab saved.
 
+## Corner chrome
+
+- MODE BADGE (K73, 2026-10-12; ui/mode_badge.ts): a pill left of the
+  hamburger whenever the solve on screen does not count toward the daily
+  stats. modeBadgeFor (pure, tested) decides from the daily on screen,
+  the store's official result and this attempt's finish record: "Free
+  play" (slate, compass) off the daily, knot mode included - a tap does
+  what the panel's Daily button does (today's daily, replacing the
+  design's link like that button); "Replay · not scored" (amber, circling
+  arrow) on a daily whose official result exists, before or after this
+  run's finish - a tap explains it in a toast (touch has no hover);
+  nothing during the official attempt or once it has set the official
+  result. fit() steps the label down (long, short, bare icon, icon below
+  the hamburger) until it clears the HUD and the win banner by 8 px;
+  main.ts re-fits on every HUD update, resize and banner hide. Measured:
+  the long labels fit at 1400 and down to 700 px on desktop; a 412 px
+  phone shows "Free play" and "Replay"; at 360 px "Replay" still fits but
+  free play is the bare compass (the HUD's stats rows are ~190 px wide);
+  at 340 px both are icons, and at 300 px the icon drops below the
+  hamburger. The panel never collides (it opens below the hamburger row)
+  except at that last level.
+
 ## Links and the codec
 
 - *From COMPACT LINKS (2026-10-11), decoder details:* DETAILS beyond the spec, each for a measured reason:

@@ -113,14 +113,55 @@ export function ensureHudStyles(): void {
     "@media (max-width:900px){.km-banner{top:auto;" +
     "bottom:max(14px,env(safe-area-inset-bottom))}}" +
     // Toast (ui/share.ts).
+    // (max-content: a fixed box at left:50% would otherwise wrap at half
+    // the screen - the mode badge's explanation is a long toast.)
     ".km-toast{position:fixed;left:50%;bottom:max(18px," +
     "env(safe-area-inset-bottom));transform:translate(-50%,8px);z-index:60;" +
+    "box-sizing:border-box;width:max-content;" +
+    "max-width:min(460px,calc(100vw - 32px));text-align:center;" +
     "padding:8px 14px;border-radius:8px;background:#e4ecf8;color:#1b2233;" +
     `font:600 13px/1.3 ${sans};opacity:0;pointer-events:none;` +
     "transition:opacity .2s,transform .2s}" +
     ".km-toast.km-toast-on{opacity:1;transform:translate(-50%,0)}" +
+    // Mode badge (ui/mode_badge.ts, K73): a pill just left of the
+    // hamburger (42 px square at max(10px, safe area) from the top-right
+    // corner), vertically centered on it; fit() picks the label width.
+    ".km-mode{position:fixed;z-index:30;box-sizing:border-box;margin:0;" +
+    "top:calc(max(10px,env(safe-area-inset-top)) + 5px);" +
+    "right:calc(max(10px,env(safe-area-inset-right)) + 50px);" +
+    "height:32px;display:inline-flex;align-items:center;gap:6px;" +
+    "padding:0 12px 0 9px;border-radius:16px;white-space:nowrap;" +
+    `font:600 12px/1 ${sans};cursor:pointer;` +
+    "box-shadow:0 2px 8px #00000059;animation:km-mode-in .25s ease-out;" +
+    "-webkit-tap-highlight-color:transparent;touch-action:manipulation}" +
+    ".km-mode[hidden]{display:none}" +
+    ".km-mode svg{width:15px;height:15px;flex:0 0 auto;display:block}" +
+    ".km-mode .km-mode-s{display:none}" +
+    ".km-mode.km-fit-short .km-mode-l{display:none}" +
+    ".km-mode.km-fit-short .km-mode-s{display:inline}" +
+    ".km-mode.km-fit-icon .km-mode-l,.km-mode.km-fit-icon .km-mode-s" +
+    "{display:none}" +
+    ".km-mode.km-fit-icon{width:32px;padding:0;justify-content:center}" +
+    // Last resort on very narrow screens: the icon below the hamburger.
+    ".km-mode.km-fit-low{top:calc(max(10px,env(safe-area-inset-top)) + 50px);" +
+    "right:max(10px,env(safe-area-inset-right))}" +
+    // Not the daily: neutral slate. A replay: muted amber (the HUD's gold).
+    ".km-mode.km-free{background:#1b2233eb;color:#c8d3e8;" +
+    "border:1px solid #3a4a6a}" +
+    ".km-mode.km-free svg{color:#9fb0cf}" +
+    ".km-mode.km-free:hover{background:#26314aeb}" +
+    ".km-mode.km-replay{background:#2b2415eb;color:#e7c56f;" +
+    "border:1px solid #74602c}" +
+    ".km-mode.km-replay:hover{background:#372d19eb}" +
+    ".km-mode:focus-visible{outline:2px solid #8fe6ff;outline-offset:2px}" +
+    "@keyframes km-mode-in{from{opacity:0}to{opacity:1}}" +
+    "@media (prefers-reduced-motion:reduce){.km-mode{animation:none}}" +
     "@media (pointer:coarse){.km-hud{font-size:13px}" +
-    ".km-hud .km-title{font-size:13px}.km-btn{min-height:40px}}";
+    ".km-hud .km-title{font-size:13px}.km-btn{min-height:40px}" +
+    // Touch: the hamburger's full height, a finger-sized target.
+    ".km-mode{top:max(10px,env(safe-area-inset-top));height:42px;" +
+    "border-radius:21px;padding:0 15px 0 12px;font-size:13px}" +
+    ".km-mode.km-fit-icon{width:42px;padding:0}}";
   document.head.appendChild(style);
 }
 
@@ -210,11 +251,15 @@ export class WinBanner {
   readonly el: HTMLDivElement;
   private readonly onShare: () => void;
   private readonly onStats: () => void;
+  // Called after every hide, the close button's too (main.ts re-fits the
+  // mode badge into the room the banner leaves).
+  private readonly onHide: () => void;
 
-  constructor(onShare: () => void, onStats: () => void) {
+  constructor(onShare: () => void, onStats: () => void, onHide = (): void => {}) {
     ensureHudStyles();
     this.onShare = onShare;
     this.onStats = onStats;
+    this.onHide = onHide;
     this.el = document.createElement("div");
     this.el.id = "maze-banner";
     this.el.className = "km-banner";
@@ -271,6 +316,7 @@ export class WinBanner {
 
   hide(): void {
     this.el.hidden = true;
+    this.onHide();
   }
 
   get shown(): boolean {
