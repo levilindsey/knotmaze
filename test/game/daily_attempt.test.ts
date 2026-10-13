@@ -8,6 +8,7 @@ import { FabricMazeController } from "../../src/game/fabric_controller";
 import {
   attemptRecord,
   exploredRuns,
+  resetPathAction,
   restoreAttempt,
   walkFingerprint,
 } from "../../src/game/daily_attempt";
@@ -147,6 +148,40 @@ describe("saving and restoring an attempt", () => {
     const d = new FabricMazeController(walkFor(99));
     expect(restoreAttempt(d, attemptRecord(c, info(walk))!, walkFingerprint(walk))).toBe("ok");
     expect(d.solved).toBe(true);
+  });
+});
+
+describe("the Reset path rule (K47)", () => {
+  const rule = (dailyAttempt: boolean, official: boolean, solved: boolean, trailMode: boolean) =>
+    resetPathAction({ dailyAttempt, official, solved, trailMode });
+
+  it("backtracks inside a daily's official-to-be attempt, never restarts it", () => {
+    expect(rule(true, false, false, false)).toBe("backtrack");
+    // Memory-trail mode has no way back: nothing happens.
+    expect(rule(true, false, false, true)).toBe("refuse");
+  });
+
+  it("restarts anywhere else, as it always has", () => {
+    expect(rule(false, false, false, false)).toBe("restart"); // ordinary design
+    expect(rule(true, true, false, false)).toBe("restart"); // a replay
+    expect(rule(true, true, false, true)).toBe("restart");
+    expect(rule(true, false, true, false)).toBe("restart"); // solved
+    expect(rule(false, false, false, true)).toBe("restart");
+  });
+
+  it("as backtracking it keeps the attempt: a replay of its taps agrees", () => {
+    const walk = walkFor(5);
+    const c = new FabricMazeController(walk);
+    for (let i = 0; i < 3; i++) c.tapEdge(best(c));
+    const before = c.taps.length;
+    expect(c.retreatToStart().length).toBe(3);
+    const rec = attemptRecord(c, info(walk))!;
+    expect(rec.taps.length).toBe(before + 3);
+    expect(rec.moves.endsWith("bbb")).toBe(true);
+    const d = new FabricMazeController(walkFor(5));
+    expect(restoreAttempt(d, rec, rec.maze)).toBe("ok");
+    expect(d.head).toBe(walk.start);
+    expect(d.backtrackDist).toBeCloseTo(c.backtrackDist, 12);
   });
 });
 

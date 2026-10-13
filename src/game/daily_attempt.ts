@@ -84,6 +84,26 @@ export function restoreAttempt(
   return "ok";
 }
 
+// What the Reset path button does. Inside a daily's unfinished attempt -
+// the one that will be official - it never restarts the attempt: it is
+// backtracking to the entrance (FabricMazeController.retreatToStart),
+// the clock running on; memory-trail mode has no way back, so there it
+// does nothing. Anywhere else - an ordinary design, a replay, a finished
+// solve - it starts a fresh attempt, as it always has.
+export type ResetPathAction = "backtrack" | "refuse" | "restart";
+
+export function resetPathAction(s: {
+  // The solve on screen is the daily's own unfinished attempt.
+  dailyAttempt: boolean;
+  // That daily already has its official result (this is a replay).
+  official: boolean;
+  solved: boolean;
+  trailMode: boolean;
+}): ResetPathAction {
+  if (!s.dailyAttempt || s.official || s.solved) return "restart";
+  return s.trailMode ? "refuse" : "backtrack";
+}
+
 // The runs the head has crossed since the path was last back at the
 // entrance - what the fog of war has explored (it starts over whenever the
 // path empties, as live play does). Follows the taps' effect on the path
