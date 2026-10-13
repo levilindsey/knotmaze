@@ -118,6 +118,8 @@ export class PaintScene {
   // Per chain [first start, last finish] of its reveal (anim seconds):
   // the CPU mask's fast paths.
   private span: Float64Array;
+  // Per chain: carries gameplay paint (KGEOM G0.w).
+  private paintOn: Uint8Array;
 
   constructor(chains: PaintChainInfo[]) {
     this.chains = chains;
@@ -141,6 +143,7 @@ export class PaintScene {
     this.srcFirst = new Int32Array(n);
     this.srcCount = new Int32Array(n);
     this.span = new Float64Array(2 * n);
+    this.paintOn = new Uint8Array(n);
 
     const st = kStatic();
     st.ensure(this.idxEnd);
@@ -194,7 +197,8 @@ export class PaintScene {
       count,
       closed,
       controlArcLengths,
-      fxDone
+      fxDone,
+      this.paintOn[chain]
     );
     ge.markDirty(base, base + n);
   }
@@ -266,6 +270,28 @@ export class PaintScene {
     for (let c = 0; c < n; c++) this.writeHeader(c);
     st.markDirty(0, this.idxEnd);
     st.flush();
+  }
+
+  // Which chains carry gameplay paint items (KGEOM G0.w; the shaders skip
+  // the paint evaluation on the rest). Written now and by every writeGeom.
+  setPaintFlags(flags: Uint8Array): void {
+    const ge = kGeom();
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (let c = 0; c < this.chains.length; c++) {
+      const v = flags[c] ? 1 : 0;
+      this.paintOn[c] = v;
+      const t = this.geomBase[c];
+      if (ge.data[t * 4 + 3] !== v) {
+        ge.data[t * 4 + 3] = v;
+        if (t < lo) lo = t;
+        if (t + 1 > hi) hi = t + 1;
+      }
+    }
+    if (hi > lo) {
+      ge.markDirty(lo, hi);
+      ge.flush();
+    }
   }
 
   // A chain's reveal window [first start, last finish] (anim seconds).

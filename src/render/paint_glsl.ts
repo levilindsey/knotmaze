@@ -84,6 +84,7 @@ struct KChain {
   float total;
   float arcPer;
   float fxDone;
+  bool paintOn;
 };
 
 KChain kChainOf(int ch, highp vec4 a, highp vec4 b, highp vec4 g) {
@@ -99,6 +100,7 @@ KChain kChainOf(int ch, highp vec4 a, highp vec4 b, highp vec4 g) {
   c.total = g.x;
   c.arcPer = g.y;
   c.fxDone = g.z;
+  c.paintOn = g.w > 0.5;
   return c;
 }
 

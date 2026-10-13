@@ -427,7 +427,7 @@ void main(void) {
   // The exact ctrl, when the FX (kFxColor's own early outs hoisted: no
   // style, or this chain's FX all settled) or the paint / glow need it.
   bool fxHere = uKFx.w > 0.5 && uKFx.x > 0.5 && uKFx.z < kc.fxDone;
-  bool paintHere = uKPaint.x > 0.5 || uKFx2.z > 0.5;
+  bool paintHere = (uKPaint.x > 0.5 && kc.paintOn) || uKFx2.z > 0.5;
   highp float kctrl = fxHere || paintHere ? kCtrlNear(kc, kpt.x, kpt.y) : 0.0;
   if (fxHere) base = kFxColor(kc, kctrl, kpt.x / kc.arcPer, base, pRain, aM);
   if (pRain > 0.0) base = kRainbowBlend(base, pRain, vUV.y);
@@ -3983,6 +3983,9 @@ export class RibbonRenderer {
       this.paintOverflowWarned = true;
       console.warn(`G2 paint: ${overflow} slot references beyond the shader's 32 per slot`);
     }
+    const flags = new Uint8Array(n);
+    for (let c = 0; c < n; c++) flags[c] = slots[c] ? 1 : 0;
+    this.paintScene.setPaintFlags(flags);
     this.lastPaintUpload = this.paintScene.setPaintItems(
       Float32Array.from(items),
       items.length / 8,
