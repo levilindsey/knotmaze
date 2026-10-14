@@ -22,9 +22,12 @@
 // (266 px), and a maze that fills the width has a 40 px margin
 // (FIT_MARGIN), so it must move left by 226 px plus a gap to clear the panel.
 // That is 17% of 1400, 23% of 1000 and 29% of 800 (below 700 px the panel
-// starts closed). On a phone the open panel is 320 px of 411, which no
-// slack could clear without losing the maze, so there the slack only makes
-// room for the HUD and the banner. See gameplay.md (CAMERA, K149).
+// starts closed). Measured at 1000x800 and 800x700: the maze overlaps the
+// open panel at home and clears it at the limit. On a 411x753 phone the
+// open panel is 320 px wide (x 81-401) and runs to the bottom, so no share
+// short of about 70% clears it, which would leave the maze all but off
+// screen: 0.3 moves it 123 px there, and the panel starts closed. See
+// gameplay.md (FIT CAMERA PAN SLACK, K149).
 
 export const PAN_SLACK = 0.3;
 
