@@ -654,6 +654,19 @@ demand.
   gameplay.md` (REAL-TIME MINOTAUR); harness, tables and page probes in
   `.claude/probes/K80/rt/`.]*
 
+- STAR RATINGS (K155 stage 1, 2026-10-14; brief `docs/design/K155.md`,
+  agent under session d8031183): one to three stars for every finish,
+  from the distance walked (backtracks both ways, a catch's lost walk
+  included) over the shortest route: three within 1.5x (and never caught
+  in real time), two within 4x, one for any finish. Shown on the win
+  banner and the daily stats view, where a tap explains them, and on the
+  share text's title line; a daily's stars derive from its stored record,
+  so nothing new is stored. The thresholds come from scripted solvers
+  over 288 mazes at the defaults and 288 dailies: a careful solver earns
+  three stars 94% of the time, a greedy one exactly two 52%. *[Lore:
+  `.claude/rules/gameplay.md` (STAR RATINGS); harness, reports and page
+  probes in `.claude/probes/K155/`.]*
+
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the
   SHADER BACKGROUNDS entry above).

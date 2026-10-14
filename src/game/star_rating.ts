@@ -114,8 +114,13 @@ export function starExplanation(r: StarRating): string[] {
     `You walked ${fmtRatio(r.ratio)} the shortest route: ` +
     `${hudDist(r.walked)} against ${hudDist(r.optimal)}, ` +
     "backtracks counted both ways.";
-  if (r.catches !== null && r.catches > 0) {
-    landed += ` Caught ${r.catches === 1 ? "once" : r.catches === 2 ? "twice" : `${r.catches} times`}.`;
+  // A catch empties the path, so the HUD's path and backtrack no longer
+  // add up to the walk: say where the rest went.
+  const n = r.catches;
+  if (n !== null && n > 0) {
+    landed +=
+      ` Caught ${n === 1 ? "once" : n === 2 ? "twice" : `${n} times`}: ` +
+      `the walk before ${n === 1 ? "it" : "each catch"} counts too.`;
   }
   return [...starRules(r.catches !== null), landed];
 }

@@ -104,9 +104,9 @@ describe("star rating (K155)", () => {
       "You walked 1.3× the shortest route: 250 against 196, backtracks counted both ways.",
     ]);
     const caught = (n: number): string => starExplanation(rateRun(25, 19.6, n)!)[3];
-    expect(caught(1)).toMatch(/ Caught once\.$/);
-    expect(caught(2)).toMatch(/ Caught twice\.$/);
-    expect(caught(5)).toMatch(/ Caught 5 times\.$/);
+    expect(caught(1)).toMatch(/ways\. Caught once: the walk before it counts too\.$/);
+    expect(caught(2)).toMatch(/ways\. Caught twice: the walk before each catch counts too\.$/);
+    expect(caught(5)).toMatch(/ways\. Caught 5 times: the walk before each catch counts too\.$/);
     expect(starRules(false)).toEqual(starExplanation(rateRun(30, 20)!).slice(0, 3));
   });
 });
