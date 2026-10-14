@@ -118,8 +118,15 @@ export function licenseAllowed(
   }
 }
 
-const COPYRIGHT_LINE = /copyright|\(c\)|©/i;
+// A line that names the copyright holder: "Copyright (c) 2016 cocopon",
+// "Copyright 2024 Justin Ridgewell", "(c) 2016 cocopon". The license's own
+// sentences ("the above copyright notice", "COPYRIGHT HOLDERS BE LIABLE")
+// do not count, even when a line wrap puts them at the start of a line.
+const COPYRIGHT_LINE =
+  /^[ \t>*#-]*(?:copyright[ \t]*(?:\(c\)|©)|copyright[ \t]+\d|copyright[ \t]+(?!notice\b|holders?\b|law\b|owners?\b|statements?\b)[a-z]|\(c\)[ \t]*\d|©[ \t]*\d)/im;
 const LICENSE_FILE = /^(?:licen[cs]e|copying|unlicense|notice)(?:[-_. ].*)?$/i;
+
+export const hasCopyrightLine = (text: string): boolean => COPYRIGHT_LINE.test(text);
 
 const eol = (s: string) => s.replace(/^﻿/, "").replace(/\r\n?/g, "\n");
 
@@ -289,7 +296,7 @@ export function gatherNotices(
       const wantsLine = needsLine.some((l) =>
         license.toLowerCase().split(/[\s()]+/).includes(l.toLowerCase())
       );
-      if (wantsLine && !COPYRIGHT_LINE.test(text)) {
+      if (wantsLine && !hasCopyrightLine(text)) {
         problems.push(
           `${id}: its ${license} license text has no copyright line, so it is a template, not the notice the license requires.`
         );
