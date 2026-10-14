@@ -360,3 +360,13 @@ The restart fixed the desktop's network fault (CC39, claude-config); the coordin
 Also, after getting everything back up and running and resolved, give me a summary of where we left off, what's next, what's gone terribly wrong, and how you're going to prevent it from ever happening again. You should be verifying the subagent's are actually making expected progress periodically (but not TOO often).
 
 Filed (2026-10-13): claude-config 612a8bd (`rules/sessions.md` "Supervising agents": one stage per brief, each stopping at its first compaction or a 2 h Opus / 1 h Sonnet cap; `tools/agent_watch.mjs`, which flags agents and posts an hourly status table; CC37's Sonnet window, applied) and f9b135b (CC37, CC38 and CC39). Answered in session.
+
+### About 23:53
+
+Might be worth recording persistent memory about restarting the PC when there's network trouble. I feel like this may have happened before.
+
+We set a usage limit for 90%. Let's actually do 95%.
+
+(Quoting the coordinator's "Still waiting on you" list: CC23; K162, K152 (2) and (3), K154, K161, K169, K57, K114, K117; new tonight K171, K174, K180, K183.) No idea what this is. Elaborate and explain what I need to know to decide on each
+
+Filed (2026-10-14): claude-config 712f113 (the 95% line in `rules/sessions.md`, the memory `feedback_desktop_network_restart.md`, CC39's System log history). Each waiting item explained in session.
