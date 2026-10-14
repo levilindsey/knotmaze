@@ -1235,6 +1235,19 @@ export class FabricMazeRenderer {
     this.fogDirty = true;
   }
 
+  // K100 probes (main.ts __knotFabric): the explored stamps (world x, y
+  // pairs), the live reveal radius (renderFog's, before its canvas scale)
+  // and the solve restart the stamps belong to.
+  fogProbe(): { on: boolean; held: boolean; stamps: number[]; radius: number; restarts: number } {
+    return {
+      on: this.fogOfWar,
+      held: this.fogHeld,
+      stamps: [...this.fogStamps],
+      radius: this.fowRadius * this.fogRadiusMul(),
+      restarts: this.fogRestarts,
+    };
+  }
+
   // The head dot's last drawn world position (false before the first
   // marker pass).
   headPosition(out: Float32Array | Float64Array): boolean {
