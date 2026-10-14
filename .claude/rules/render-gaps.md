@@ -54,7 +54,11 @@ in `render.md`.
   strength ramp; the yarn and fillet armReach read underWindows; the
   render-only plucks' node footprints come from the same solve (under:
   the all-lanes casing exit; over: the over pass out to where its ribbon
-  clears the casing band, +0.12, floor 0.35). Same-state A/B toggles on
+  clears the casing band, +0.12, floor 0.35). A STILL pluck (reduced
+  motion, K104) uses no footprint and no clip: its "pluck-still" program
+  runs gapKeepAt over its ribbon's own slots (`bindPluckGap`, bound from
+  bindGap; the host's `gapIds`), so it hides exactly where the ribbon
+  beneath it hides. Same-state A/B toggles on
   the renderer: maskEnabled, gapMode, smoothMin, protect, tipDiscScale
   (then update()). THE PROTOTYPE REVIEW'S RESIDUALS: (1) PROTECT - a
   cinched cyclic triangle (a over b over c over a) squeezed below the
@@ -134,7 +138,11 @@ in `render.md`.
   byte-identical slot table per pluck; partner casing-band pixels changed
   mid-pluck 630/7543 vs master 477/7498 - both builds: the overlay's
   under-node clip quotes casing() = h + gap, the band reaches h + gap +
-  CUT_BIAS]. GPU DRAW: user 0.79 -> 1.78 ms/frame, ring 0.43 -> 0.92,
+  CUT_BIAS. Fixed by K104 (8e21538): makePluckHost's casing() is
+  casingWidth/2 + CUT_BIAS, and K77's weave probe's partner-band pixels
+  changed mid-pluck fell 3724 -> 196 of 10226 (fabric) and 3398 -> 128 of
+  10463 (knot), 8 crossings each, zoomed in]. GPU DRAW: user 0.79 -> 1.78
+  ms/frame, ring 0.43 -> 0.92,
   defaults 0.85 -> 1.94 (the prototype: 2.83 at the user URL); draw
   calls per frame 419 -> 47 (user). The protect cover is ~0.17 ms of
   that at the user URL, ~0.15 from the code's mere presence (a build
