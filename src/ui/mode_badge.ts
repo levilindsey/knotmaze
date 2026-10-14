@@ -2,9 +2,9 @@
 // left of the settings button naming what the solve on screen is:
 // - FREE PLAY: an ordinary design, not a daily. A tap does what the
 //   panel's Daily button does (today's daily). The tap LEAVES free play,
-//   so an X fades in on hover and keyboard focus (K151, Levi: without it
-//   the pill read as a button that starts free play); on coarse pointers
-//   it shows always while MODE_BADGE_X_ON_COARSE (K151 (3), open).
+//   so the pill always shows an X (K151, Levi: without it the pill read
+//   as a button that starts free play; K200, Levi 2026-10-14: always, on
+//   the desktop too, where it first faded in on hover).
 // - DAILY: the attempt that counts. K151 moved the daily's name here from
 //   the HUD's title row: "Daily #12", then " · Oct 11" for any day but
 //   today, and " · solved" once this attempt set the official result. A
@@ -25,16 +25,11 @@
 // wherever the badge would come within FIT_GAP of either, fit() steps down
 // to a shorter label, then one word, then the bare icon, then the icon
 // below the menu button. Static under reduced motion (the Motion setting;
-// otherwise a short fade-in, and the X fades).
+// otherwise a short fade-in).
 
 import { formatDayDate } from "../game/daily_calendar";
 import type { SolveRecord } from "../game/daily_store";
 import { whenReduced } from "./motion";
-
-// K151 (3), open for Levi: phones have no hover to fade the X in, so on
-// coarse pointers it shows always. false = never on touch (hover and focus
-// only).
-export const MODE_BADGE_X_ON_COARSE = true;
 
 export type ModeBadgeKind = "free" | "daily" | "replay" | "practice";
 
@@ -183,15 +178,9 @@ function ensureBadgeStyles(): void {
     "-webkit-tap-highlight-color:transparent;touch-action:manipulation}" +
     ".km-mode[hidden]{display:none}" +
     ".km-mode svg{width:15px;height:15px;flex:0 0 auto;display:block}" +
-    // K151: the X keeps its room (no shift as it fades in), so the free
-    // pill's own right padding is a little smaller.
-    ".km-mode .km-mode-x{width:11px;height:11px;margin-left:-1px;" +
-    "opacity:0;transition:opacity .15s}" +
-    "@media (hover:hover){.km-mode:hover .km-mode-x{opacity:1}}" +
-    ".km-mode:focus-visible .km-mode-x{opacity:1}" +
-    (MODE_BADGE_X_ON_COARSE
-      ? "@media (pointer:coarse){.km-mode .km-mode-x{opacity:1}}"
-      : "") +
+    // K151: the free pill ends in the X (always shown, K200), so its own
+    // right padding is a little smaller.
+    ".km-mode .km-mode-x{width:11px;height:11px;margin-left:-1px}" +
     ".km-mode.km-free{padding-right:10px}" +
     ".km-mode .km-mode-s,.km-mode .km-mode-t{display:none}" +
     ".km-mode.km-fit-short .km-mode-l{display:none}" +
@@ -227,7 +216,6 @@ function ensureBadgeStyles(): void {
     "@keyframes km-mode-in{from{opacity:0}to{opacity:1}}" +
     // Static under reduced motion (the Motion setting, ui/motion.ts).
     whenReduced(".km-mode", "animation:none") +
-    whenReduced(".km-mode .km-mode-x", "transition:none") +
     // Touch: the hamburger's full height, a finger-sized target.
     "@media (pointer:coarse){" +
     ".km-mode{top:max(10px,env(safe-area-inset-top));height:42px;" +
