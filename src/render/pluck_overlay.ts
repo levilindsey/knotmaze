@@ -61,6 +61,7 @@ import {
   softMin,
   sympatheticAmplitude,
   tapAmplitude,
+  throughStation,
   unitShift,
   visualTau,
   wholeAmplitude,
@@ -591,6 +592,7 @@ export class PluckOverlay {
   private ghostClock = 0;
   private scratch = new Float32Array(4);
   private env2 = new Float64Array(2);
+  private station3 = new Float64Array(3);
   private rgb = new Float32Array(3);
   private depthBuf = new Float32Array(0); // roundCollapse scratch.
   private roundBuf = new Float32Array(0);
@@ -1239,9 +1241,11 @@ export class PluckOverlay {
     // uE0)) over the unit, under its caps - the neighbor room ("overlap",
     // slope-limited across the whole unit so no lobe boundary steps it) and
     // the pinch at interior nodes - as a share wOf of W0. The lobe's peak
-    // and W's add up. "through" soft-caps the lobe term alone and then the
-    // sum only at W's frets (the unit's end nodes, hide zones), giving each
-    // term its own factor (fOf the lobe's; W's folded into wOf); otherwise
+    // and W's add up. "through" soft-caps the lobe term alone at the unit's
+    // interior nodes and then the sum once at W's frets (the unit's end
+    // nodes, hide zones), never under the lobe's own capped swing
+    // (throughStation), giving each term its own factor (fOf the lobe's;
+    // W's folded into wOf); otherwise
     // the soft node caps the SUM and fOf scales both terms alike. The
     // tight-bend cap below scales whatever is left.
     const W0 = p.W0;
@@ -1288,18 +1292,26 @@ export class PluckOverlay {
       m.wOf[i] = W0 > 0 && mode !== "cue" ? Math.max(0, wm) : 0;
       if (through) {
         const lobeRaw = l.A0 * peakShape(l.beta, xAt[i], l.attack);
-        const lobePk = this.peakAt(l, xAt[i], dA, dB, h);
-        const sum = lobePk + W0 * m.wOf[i];
-        let k = 0;
-        if (sum > 1e-9) {
-          const endA = !(l.s0 + l.shift > p.uE0 + 1e-6);
-          const endB = !(l.s1 + l.shift < p.uE1 - 1e-6);
-          const cap = this.capAt(l, dA, dB, h, endA, endB);
-          k = Math.max(0, Math.min(sum, softMin(sum, cap, 0.25 * h))) / sum;
-        }
-        m.pkOf[i] = k * sum;
-        m.fOf[i] = lobeRaw > 1e-9 ? (k * lobePk) / lobeRaw : 1;
-        m.wOf[i] *= k;
+        const endA = !(l.s0 + l.shift > p.uE0 + 1e-6);
+        const endB = !(l.s1 + l.shift < p.uE1 - 1e-6);
+        const capInt = this.capAt(l, dA, dB, h, !endA, !endB, false);
+        const lobeInt =
+          lobeRaw > 1e-9
+            ? Math.max(0, Math.min(lobeRaw, softMin(lobeRaw, capInt, 0.25 * h)))
+            : 0;
+        const st = this.station3;
+        throughStation(
+          lobeRaw,
+          lobeInt,
+          this.peakAt(l, xAt[i], dA, dB, h),
+          W0 * m.wOf[i],
+          this.capAt(l, dA, dB, h, endA, endB),
+          h,
+          st
+        );
+        m.pkOf[i] = st[0];
+        m.fOf[i] = st[1];
+        m.wOf[i] *= st[2];
       } else {
         // The soft-node ceiling (tight bends tighten it below).
         m.pkOf[i] = this.peakAt(l, xAt[i], dA, dB, h, W0 * m.wOf[i]);
@@ -1532,14 +1544,15 @@ export class PluckOverlay {
   // it, so a swing there would only pop in at the ramp - and a soft node
   // past that, out to its footprint (a junction's spans the fillet web).
   // softA / softB = false drops that end's crossing (soft) node; a hide-zone
-  // node always counts.
+  // node counts unless hides = false.
   private capAt(
     l: Lobe,
     dA: number,
     dB: number,
     h: number,
     softA = true,
-    softB = true
+    softB = true,
+    hides = true
   ): number {
     const one = (
       key: number,
@@ -1548,7 +1561,7 @@ export class PluckOverlay {
       hide: number,
       useSoft: boolean
     ): number => {
-      if (key < 0 || (!useSoft && hide <= 0)) return Infinity;
+      if (key < 0 || (!useSoft && hide <= 0) || (!hides && hide > 0)) return Infinity;
       const soft = nodeCap(h, d, foot + COLLAPSE_RAMP);
       if (hide > 0) {
         return Math.min(NODE_SLOPE * Math.max(0, d - hide - HIDE_RAMP), soft);
