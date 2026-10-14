@@ -365,6 +365,9 @@ describe("the daily design and its exempt preferences (K56)", () => {
       // K147, proposed with it.
       "settleBudget",
       "loadSettle",
+      // K140, proposed with it.
+      "confetti",
+      "confettiAmount",
     ]);
     for (const k of DAILY_EXEMPT_KEYS) {
       expect(Object.keys(PARAM_DEFAULTS)).toContain(k);

@@ -236,6 +236,9 @@ describe("codec tables", () => {
       ["minoRoam", "number", 30],
       ["minoWake", "number", 2], // 97
       ["minoFog", "enum", "always", ["always", "hunting", "never"]], // 98
+      // K140: finish confetti on/off and its amount (viewer preferences).
+      ["confetti", "boolean", true], // 99
+      ["confettiAmount", "number", 1], // 100
     ]);
   });
 
