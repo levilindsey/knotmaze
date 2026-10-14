@@ -298,6 +298,9 @@ the phone's viewport: plumbing only, never timings.
   reports no-preference. Emulate no-preference before load whatever the
   session. Set pluckSize only with `&psz=`: main.ts re-syncs
   `plucks.size` from the params every frame.
+- K140 (2026-10-14), CPU throttling: throttle after the load settle, not
+  from the load. A throttle from the load measures K147's slow first
+  settle instead of the effect under test.
 
 ## Census and diagnosis rules
 
