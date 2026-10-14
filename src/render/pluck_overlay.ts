@@ -48,6 +48,7 @@ import {
   ghostShape,
   nodeCap,
   peakShape,
+  rescaleSympathetic,
   roundCollapse,
   roundTau,
   segmentLobes,
@@ -668,6 +669,10 @@ export class PluckOverlay {
       };
     });
     this.capClearance(req.chain, samples, lobes, h);
+    // K105: neighbors follow the tapped lobe's capped swing.
+    const capped = lobes.map((l) => ({ k: l.k, A0: l.A0, len: l.e1 - l.e0 }));
+    rescaleSympathetic(capped, tapLen);
+    for (let i = 0; i < lobes.length; i++) lobes[i].A0 = capped[i].A0;
 
     // RE-PLUCK: a ringing unit that shares a lobe with this one is absorbed
     // - shared lobes restart their attack at max(current, new) amplitude

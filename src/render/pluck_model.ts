@@ -176,6 +176,25 @@ export function sympatheticAmplitude(
   return aTap * SYMPATHY * fall * len;
 }
 
+// K105: re-derive the sympathetic lobes from the tapped lobe's CAPPED
+// amplitude once every lobe has been clearance-capped. They were sized
+// from the pre-cap one, and the tapped lobe is capped in most fabric taps
+// (K77: 74 of 80), so a roomier neighbor could out-swing the lobe that was
+// tapped. Each lobe keeps its own cap too (the min). `len` = the lobe's
+// vibrating length, `tapLen` the tapped lobe's; k = 0 is the tapped lobe.
+export function rescaleSympathetic(
+  lobes: { k: number; A0: number; len: number }[],
+  tapLen: number
+): void {
+  let aTap = -1;
+  for (const l of lobes) if (l.k === 0) aTap = l.A0;
+  if (aTap < 0) return;
+  for (const l of lobes) {
+    if (l.k === 0) continue;
+    l.A0 = Math.min(l.A0, sympatheticAmplitude(aTap, l.k, l.len, tapLen));
+  }
+}
+
 // Soft-node amplitude ceiling at arc distance dS from a node whose
 // footprint (on this side) is `foot`.
 export function nodeCap(h: number, dS: number, foot: number): number {
