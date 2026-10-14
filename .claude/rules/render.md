@@ -138,7 +138,8 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   mist 0.27 -> 1.04 ms/pass, wash 0.36 -> 1.43, silk 0.34 -> 1.45, aurora
   0.43 -> 1.67 (the worst: x15/s = 0.42 ms per 60 Hz frame against 0.11);
   contours (1.8x the texels) 0.33 -> 0.59 (x10/s = 0.10 against 0.05).
-  Scale 2, detail 2 and silk's angle cost the default's price (0.97-1.03x).
+  Scale 2 (the max), detail 2 and silk's angle cost the default's price
+  (0.97-1.03x).
   Vellum-x at speed 1 costs the drift program's 2.1 ms/pass (x10/s = 0.35
   ms per frame) at scale 2 or fibers 3 (1.00-1.03x), and half of it at
   fibers 0 + grain 0 (0.99 ms). The blit adds ~0.2 ms (0.19-0.27) every
@@ -151,6 +152,7 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   k79b_montage.mjs and k79b_bgsd.mjs (crops, contrast by scale),
   k79b_gpu.mjs (GPU ms per program, shape params in the config),
   k79b_smoke.mjs (links, programs, panel rows, custom base and fog; 70
+  checks), k79b_k129.mjs (the scale max: links and the real slider; 17
   checks) and k79b_cases.json (the explicit-defaults A/B, 12 cases).
 
 - SHADER PAINT (G2 of the GPU migration, K4; worktree agent, 2026-10-12;
