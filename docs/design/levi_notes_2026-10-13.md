@@ -218,3 +218,9 @@ Also, in general, across all of our work in this project, are there acknowledgem
 Filed (2026-10-13): K80 and K115 to Next with their calls, K116's calls
 on its item, K80 section 4's cheap mechanisms in K137 and its costlier
 ones in K138 (waiting on Levi), and the licenses answer in K122.
+
+### About 15:10 (a new mode)
+
+Another possible gameplay mode: You cannot backtrack, segments collapse behind you; try to collapse as much of the level as possible while still reaching the finish line. Or, alternatively, without reaching the finish line
+
+Filed (2026-10-13): K139 in Next, after K137's 4.3.

@@ -298,7 +298,7 @@ or K81's (after K127). Then, as code slots free up:
 9. K76 stage 2, after K81.
 10. K80 stage 1, the turn-aligned hunter, after K79 stage B and K81
     merge (the panel and the renderer); then its real-time stage; then
-    K137's toggles.
+    K137's toggles, then K139.
 11. K74 stages 2-4, each after the one before.
 12. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
     K42. K90's spline fix touches K8: never run the two at once.
@@ -454,6 +454,21 @@ K5-K7 (split, frame loop, worker) follow.
   4.34 scent. Plus Levi's sleeper variant: an enemy that appears at a
   junction a turn or two after you leave it, then follows you, with
   some variance. The costlier ones wait in K138.
+- **K139** · Collapse mode (Levi, 2026-10-13 about 15:10, verbatim in
+  `docs/design/levi_notes_2026-10-13.md`): no backtracking, each run
+  collapses behind you; collapse as much of the maze as you can and
+  still reach the finish, or, a variant, without reaching it. It rides
+  on 4.3's one-shot snap (`fragile`, in K137) and R.3.4's "longest
+  thread" (`docs/design/K80_gameplay_additions.md`). A 3-way junction
+  can be passed only once, and its third run stays standing unless the
+  route ends there, so 100% is usually out of reach: the puzzle is which
+  run to leave at each junction. With the finish, a dead end strands
+  you; without it, a long dead end (K74's tails) is the best last move.
+  Par at generation by depth-first search (exact for a few dozen
+  junctions, R.3.4; time it on the phone). Arms that would cut you off
+  from the finish draw cracked (R.3.3's smoldering rule). Score and
+  share: thread collapsed vs par. Param `collapse` (off | finish |
+  free). S-M after 4.3.
 - **K46** · Daily variety, revisited after the feature churn (Levi,
   2026-10-12): no weekly or regular arc; THEMES, each a set of parameter
   constraints; manual per-day overrides later (K82). The measured
