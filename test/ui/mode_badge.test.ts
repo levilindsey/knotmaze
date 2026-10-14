@@ -127,6 +127,7 @@ describe("mode badge text", () => {
     const t = modeBadgeText("replay", 9, 12);
     expect(t.long).toBe("Daily #9 replay · not scored");
     expect(t.short).toBe("Daily #9 replay");
+    expect(t.tiny).toBe("Replay");
     expect(t.tip).toMatch(/first finish of Daily #9 is its official result/);
     expect(t.tip).toMatch(/won't change it/);
   });
@@ -135,12 +136,13 @@ describe("mode badge text", () => {
     const t = modeBadgeText("practice", 1, 3);
     expect(t.long).toBe("Daily #1 practice · not scored");
     expect(t.short).toBe("Daily #1 practice");
+    expect(t.tiny).toBe("Practice");
     expect(t.tip).toMatch(/^Practice, not scored/);
     expect(t.tip).toContain(`the maze for ${formatDayDate(1)}`);
     expect(t.tip).toMatch(/stays out of your daily stats/);
   });
 
-  it("keeps the short label no longer than the long one", () => {
+  it("steps down: long, then short, then one word, each no longer", () => {
     const kinds: ModeBadgeKind[] = ["free", "daily", "replay", "practice"];
     for (const kind of kinds) {
       for (const [daily, today, solved] of [
@@ -151,6 +153,8 @@ describe("mode badge text", () => {
       ] as const) {
         const t = modeBadgeText(kind, kind === "free" ? null : daily, today, solved);
         expect(t.short.length).toBeLessThanOrEqual(t.long.length);
+        expect(t.tiny.length).toBeLessThanOrEqual(t.short.length);
+        expect(t.tiny.length).toBeGreaterThan(0);
         expect(t.tip.length).toBeGreaterThan(0);
       }
     }

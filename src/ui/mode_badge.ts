@@ -23,9 +23,9 @@
 // the hamburger's height on touch screens (a finger-sized target). The
 // HUD owns the top-left and the win banner the top-center on wide screens:
 // wherever the badge would come within FIT_GAP of either, fit() steps down
-// to a shorter label, then the bare icon, then the icon below the menu
-// button. Static under reduced motion (the Motion setting; otherwise a
-// short fade-in, and the X fades).
+// to a shorter label, then one word, then the bare icon, then the icon
+// below the menu button. Static under reduced motion (the Motion setting;
+// otherwise a short fade-in, and the X fades).
 
 import { formatDayDate } from "../game/daily_calendar";
 import type { SolveRecord } from "../game/daily_store";
@@ -66,11 +66,13 @@ export function modeBadgeFor(s: ModeBadgeState): ModeBadgeKind {
 }
 
 export interface ModeBadgeText {
-  // The label, a shorter one for tight screens, and the tooltip (also the
-  // aria-label, and for the replay and practice badges the toast a tap
-  // shows).
+  // The label, a shorter one for tight screens, one word for tighter ones
+  // (a phone with the HUD's stat rows on: "Daily #3 replay" left only the
+  // icon there), and the tooltip (also the aria-label, and for the replay
+  // and practice badges the toast a tap shows).
   long: string;
   short: string;
+  tiny: string;
   tip: string;
 }
 
@@ -85,6 +87,7 @@ export function modeBadgeText(
     return {
       long: "Free play",
       short: "Free play",
+      tiny: "Free play",
       tip:
         "Free play: this isn't today's daily, so it won't count toward " +
         `your daily stats. Tap to leave it for today's daily, #${today}.`,
@@ -100,12 +103,18 @@ export function modeBadgeText(
       ? `${name}: this run is its official result.`
       : `${name}${date !== null ? `, the maze for ${date}` : ""}: ` +
         "your first finish is its official result.";
-    return { long, short: name, tip: `${what} Tap for your daily stats.` };
+    return {
+      long,
+      short: name,
+      tiny: name,
+      tip: `${what} Tap for your daily stats.`,
+    };
   }
   if (kind === "replay") {
     return {
       long: `${name} replay · not scored`,
       short: `${name} replay`,
+      tiny: "Replay",
       tip:
         `Replay, not scored: your first finish of ${name} is its official ` +
         "result, and this run won't change it.",
@@ -114,6 +123,7 @@ export function modeBadgeText(
   return {
     long: `${name} practice · not scored`,
     short: `${name} practice`,
+    tiny: "Practice",
     tip:
       `Practice, not scored: ${name} was the maze for ` +
       `${date ?? "another day"}. A run begun after its day stays out of ` +
@@ -183,11 +193,15 @@ function ensureBadgeStyles(): void {
       ? "@media (pointer:coarse){.km-mode .km-mode-x{opacity:1}}"
       : "") +
     ".km-mode.km-free{padding-right:10px}" +
-    ".km-mode .km-mode-s{display:none}" +
+    ".km-mode .km-mode-s,.km-mode .km-mode-t{display:none}" +
     ".km-mode.km-fit-short .km-mode-l{display:none}" +
     ".km-mode.km-fit-short .km-mode-s{display:inline}" +
+    ".km-mode.km-fit-tiny .km-mode-l,.km-mode.km-fit-tiny .km-mode-s" +
+    "{display:none}" +
+    ".km-mode.km-fit-tiny .km-mode-t{display:inline}" +
     ".km-mode.km-fit-icon .km-mode-l,.km-mode.km-fit-icon .km-mode-s," +
-    ".km-mode.km-fit-icon .km-mode-x{display:none}" +
+    ".km-mode.km-fit-icon .km-mode-t,.km-mode.km-fit-icon .km-mode-x" +
+    "{display:none}" +
     ".km-mode.km-fit-icon{width:32px;padding:0;justify-content:center}" +
     // Last resort on very narrow screens: the icon below the hamburger.
     ".km-mode.km-fit-low{top:calc(max(10px,env(safe-area-inset-top)) + 50px);" +
@@ -230,10 +244,11 @@ const FIT_GAP = 8;
 const LEVELS: ReadonlyArray<readonly string[]> = [
   [],
   ["km-fit-short"],
+  ["km-fit-tiny"],
   ["km-fit-icon"],
   ["km-fit-icon", "km-fit-low"],
 ];
-const LEVEL_CLASSES = ["km-fit-short", "km-fit-icon", "km-fit-low"];
+const LEVEL_CLASSES = ["km-fit-short", "km-fit-tiny", "km-fit-icon", "km-fit-low"];
 
 export interface ModeBadgeActions {
   // Free play's tap: today's daily (the panel's Daily button).
@@ -301,7 +316,10 @@ export class ModeBadge {
     const short = document.createElement("span");
     short.className = "km-mode-s";
     short.textContent = t.short;
-    this.el.append(long, short);
+    const tiny = document.createElement("span");
+    tiny.className = "km-mode-t";
+    tiny.textContent = t.tiny;
+    this.el.append(long, short, tiny);
     // The tap leaves the mode: an X says so (K151).
     if (kind === "free") this.el.insertAdjacentHTML("beforeend", X_ICON);
     this.el.hidden = false;
