@@ -113,9 +113,10 @@ const wd = CFG.dry ? "dry run: no phone, no watchdog" : trip ? `TRIPPED: ${trip.
 // The page's viewport (CSS px x CSS px @ dpr): from the bench rows, else the looks report. A noise floor is for one viewport.
 const vpArr = rows.find((r) => r.vp)?.vp ?? rep?.viewport ?? null;
 const vpText = vpArr ? `${vpArr[0]}x${vpArr[1]} @${vpArr[2]}${vpArr[0] > vpArr[1] ? " (landscape)" : " (portrait)"}` : "unknown";
-// Only the width and the dpr are compared: the height moves with Chrome's toolbar (331-387 CSS px on the landscape phone).
-const vpKey = (s) => { const m = /^(\d+)x\d+@([\d.]+)$/.exec(s || ""); return m ? `${m[1]}@${m[2]}` : null; };
-const vpNote = noise?.viewport && vpArr && vpKey(noise.viewport) !== `${vpArr[0]}@${vpArr[2]}` ? ` **The noise floor was taken at ${noise.viewport}: it may not apply here.**` : "";
+// Only the width (within 8 CSS px: it reads 809 or 810) and the dpr are compared: the height moves with Chrome's toolbar.
+const vpOf = (s) => { const m = /^(\d+)x\d+@([\d.]+)$/.exec(s || ""); return m ? [+m[1], +m[2]] : null; };
+const nv = vpOf(noise?.viewport);
+const vpNote = nv && vpArr && (Math.abs(nv[0] - vpArr[0]) > 8 || nv[1] !== vpArr[2]) ? ` **The noise floor was taken at ${noise.viewport}: it may not apply here.**` : "";
 const th = rows.map((r) => r.thermal).filter((t) => t && !t.error);
 const thLine = (t) => (t ? `status ${t.status}, ${t.temps.join(", ")}` : "-");
 
