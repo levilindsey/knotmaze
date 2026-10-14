@@ -224,3 +224,32 @@ ones in K138 (waiting on Levi), and the licenses answer in K122.
 Another possible gameplay mode: You cannot backtrack, segments collapse behind you; try to collapse as much of the level as possible while still reaching the finish line. Or, alternatively, without reaching the finish line
 
 Filed (2026-10-13): K139 in Next, after K137's 4.3.
+
+### About 15:30 (K80, K115, licenses)
+
+K80: Let's defer those M-L or L items. Let's do all the M items. Also, I really want the real-time prototype. Maybe it's not a modifier of another gameplay mode, but rather a dedicated mode itself. Do implement it.
+
+K115: What's the difference between hand-made joins and a generated connector? I want to support capitals.
+
+We can assume that text reads at phone zoom. You don't need to test that.
+
+"Their MIT, ISC and BSD licenses require their notice with every copy, and the site currently ships none." Research how other apps handle this, and put-together a system for including this in whichever way is most appropriate. Linking from the credit line sgtm.
+
+Filed (2026-10-13): K80's real-time chase as its own mode, first in the
+next free code slot; K138 now holds the M mechanisms (in Next) and K141
+the deferred M-L and L ones (Ideas); K115 without stage 1a and with
+capitals (a generated connector first, hand-made joins where needed;
+the difference answered in session); K122 in progress
+(`docs/design/K122.md`).
+
+### About 15:35 (confetti)
+
+I want a gratuitous confetti effect rainy down from the top of the screen when you finish the maze. And I want some smaller confetti effect spraying out from aruond the finish spot.
+
+Filed (2026-10-13): K140 in Next, after K80's real-time mode.
+
+### About 15:40 (accounts, later)
+
+I guess we should also plan to add, after everything else, the option for folks to login via some oauth provider, and have their stats persisted cross-device that way. Then we should also add a checkbox for opting into sharing their stats (but maybe only if logged in). Then we'll need to add some simple backend services to support this persistence in a scalable and efficient way. For opted-in folks, we'd probably want to collect and surface averages and percentile bands for various metrics across various levels, to let folks compare their performance. We'd also maybe need to consider some sort of (cheap) anti-cheat checks (maybe just silently flagging potential cheating accounts, and not including them in aggregate stats). Again, all of this is stretch goal material to do much later, after everything else
+
+Filed (2026-10-13): K144, last in Next.
