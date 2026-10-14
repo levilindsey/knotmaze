@@ -154,7 +154,11 @@ the right (orange); a pixel diff is made for single shots only, and only
 a frozen, pinned look (`phy=0&fw=0` + `pin`) can read 0 px (a live page
 always differs, as the panel shot's 14061 px did on master vs master).
 The `click` step sets `target=_self` on anchors, so Licenses opens in the
-pass's own tab, not a second one. K79's drift pauses 2.5 s after a still
+pass's own tab, not a second one. Every look starts on a CLEAN origin
+(localStorage and sessionStorage cleared first): the panel's open state
+persists, and K122's look had left the panel open over the maze in every
+look after it, so their walks tapped the panel (found on the phone, 3c).
+K79's drift pauses 2.5 s after a still
 scene, so a speed look bursts straight after a load (motion forced to
 `full` through localStorage and a reload). SUMMARY (`summary.mjs`): a
 table per scenario with base, head, delta, the A/A noise and a verdict
