@@ -10,7 +10,8 @@
 // one band per route in the junction pass (junction_field.ts ROUTES): the
 // arrival arm's centerline, a cubic turn tangent to both arms, the
 // departure arm's centerline, at thread width, wearing the arms' own
-// composed paint; everything else in the web shows the untraveled material.
+// composed paint; everything else in the web shows the untraveled material
+// (unless the path has traveled every arm: K127, below).
 //
 // This module decides WHICH arms (from the walk path and the move in
 // flight) and the band's corner geometry. RibbonRenderer resolves each
@@ -31,6 +32,19 @@
 //   glow), so it follows every fade the arms show (K93, trail mode) with
 //   no clock of its own; the rest of the web reads the arms' UNTRAVELED
 //   paint (the same without the gold amount).
+// - FULLY TRAVELED (K127, Levi 2026-10-13): a web whose arms the path has
+//   ALL traveled draws, outside its bands, what it drew before K81: the
+//   angular blend of the arms' COMPOSED paint, with the junction caps kept
+//   (the bands still draw over it). An arm is TRAVELED when a pass of the
+//   path STACK (traveledRoutes) arrives or leaves by it, whatever the trail
+//   still paints: an arm that has faded out of the trail counts, and its
+//   composed paint is then its untraveled material, which is what the web
+//   showed there before K81 (a fade-driven rule would flip the other arms'
+//   gold sectors as a pass faded). The move in flight counts at the dot:
+//   an advance's arriving arm counts on arrival, a backtracked arm stops
+//   counting at the tap, and the arm a move departs by counts at the tap.
+//   So a 3-arm joint passed twice is full; the head's joint counts its
+//   arrival arm.
 
 // A route through one junction, as junction arms: the arm it ARRIVED by
 // (A) and the arm it LEFT by (B, the out* fields; absent = a one-arm route,
@@ -151,6 +165,20 @@ export function legRoutes(
     }
     out.push(r);
   }
+  return out;
+}
+
+// K127: the passes whose arms count as TRAVELED - every route of the path
+// stack, unfiltered by the trail, except the one-arm route at the far end
+// of the move in flight (legRoutes' last; inFlight = a move is animating):
+// an advance's arriving arm counts on arrival, a backtracked arm stops
+// counting at the tap.
+export function traveledRoutes(
+  legs: readonly RouteLeg[],
+  inFlight: boolean
+): PaintRoute[] {
+  const out = legRoutes(legs);
+  if (inFlight) out.pop();
   return out;
 }
 

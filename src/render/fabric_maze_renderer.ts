@@ -38,7 +38,7 @@ import type {
   PulseArm,
   PaintCap,
 } from "./ribbon_renderer";
-import { legRoutes, pathLegs } from "./junction_routes";
+import { legRoutes, pathLegs, traveledRoutes } from "./junction_routes";
 import type { PaintRoute } from "./junction_routes";
 import type { PathViz } from "../ui/url_state";
 import { FogBackdrop } from "./background";
@@ -242,6 +242,8 @@ interface TrailPaint {
   caps: PaintCap[];
   // K81: the route bands of the joints the trail's paint still reaches.
   routes: PaintRoute[];
+  // K127: every pass of the path stack (the arms it has traveled).
+  traveled: PaintRoute[];
 }
 
 export class FabricMazeRenderer {
@@ -1275,22 +1277,35 @@ export class FabricMazeRenderer {
     }
     // K81: a band wears its arms' composed paint, so a joint's band fades
     // with the trail by itself; keep the joints the trail still reaches.
-    const routes = legRoutes(
-      pathLegs(this.walk.edges, controller.pathVertices, controller.pathEdges, anim),
-      (dvr) => dvr < L && pAt(dvr) > 0.01
+    // K127: which arms are traveled does not fade (junction_routes.ts).
+    const legs = pathLegs(
+      this.walk.edges,
+      controller.pathVertices,
+      controller.pathEdges,
+      anim
     );
-    return { spans, caps, routes };
+    const routes = legRoutes(legs, (dvr) => dvr < L && pAt(dvr) > 0.01);
+    const traveled = traveledRoutes(legs, anim !== null);
+    return { spans, caps, routes, traveled };
   }
 
   // K81: the route bands of the whole path (fullPath mode), the move in
-  // flight folded in (junction_routes.ts pathLegs).
+  // flight folded in (junction_routes.ts pathLegs), and K127's traveled
+  // passes (the same, less the far end of the move in flight).
   private pathRoutes(
     controller: FabricMazeController,
     anim: MoveAnim | null
-  ): PaintRoute[] {
-    return legRoutes(
-      pathLegs(this.walk.edges, controller.pathVertices, controller.pathEdges, anim)
+  ): { routes: PaintRoute[]; traveled: PaintRoute[] } {
+    const legs = pathLegs(
+      this.walk.edges,
+      controller.pathVertices,
+      controller.pathEdges,
+      anim
     );
+    return {
+      routes: legRoutes(legs),
+      traveled: traveledRoutes(legs, anim !== null),
+    };
   }
 
   // Paint + markers for one animation frame: the stack minus the in-flight
@@ -1312,7 +1327,13 @@ export class FabricMazeRenderer {
     }
     if (this.trailMode) {
       const trail = this.buildTrail(controller, a);
-      this.ribbons.setPaint(trail.spans, [], trail.caps, trail.routes);
+      this.ribbons.setPaint(
+        trail.spans,
+        [],
+        trail.caps,
+        trail.routes,
+        trail.traveled
+      );
       this.drawMarkers(controller, a.e.chain, a.cur, false);
       this.renderFog();
       return;
@@ -1328,11 +1349,13 @@ export class FabricMazeRenderer {
     if (hi - lo > 1e-6) {
       spans.push({ chain: a.e.chain, c0: lo, c1: hi });
     }
+    const passes = this.pathRoutes(controller, a);
     this.ribbons.setPaint(
       spans,
       [],
       this.buildCaps(controller),
-      this.pathRoutes(controller, a)
+      passes.routes,
+      passes.traveled
     );
     this.drawMarkers(controller, a.e.chain, a.cur, false);
     this.renderFog();
@@ -1369,10 +1392,10 @@ export class FabricMazeRenderer {
         ? trail.caps
         : this.buildCaps(controller);
     // K81 route bands: none in string mode (no gold to carry).
-    const routes = stringViz
-      ? []
+    const passes = stringViz
+      ? { routes: [], traveled: [] }
       : trail
-        ? trail.routes
+        ? trail
         : this.pathRoutes(controller, null);
 
     const pulses: PulseArm[] = [];
@@ -1399,7 +1422,7 @@ export class FabricMazeRenderer {
         }
       }
     }
-    this.ribbons.setPaint(spans, pulses, caps, routes);
+    this.ribbons.setPaint(spans, pulses, caps, passes.routes, passes.traveled);
     // Reset path: the fog's explored memory starts over too.
     if (controller.pathEdges.length === 0 && this.fogStamps.length > 2) {
       this.fogStamps.length = 0;

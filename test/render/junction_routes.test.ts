@@ -6,6 +6,7 @@ import {
   pickRoutes,
   routeCorner,
   routeCubic,
+  traveledRoutes,
 } from "../../src/render/junction_routes";
 import type {
   PaintRoute,
@@ -142,6 +143,58 @@ describe("legRoutes", () => {
     const kept = legRoutes(legs, (dv) => dv < 8);
     expect(kept.map((r) => r.chain)).toEqual([0, 1, 2]);
     expect(kept[0]).toEqual(route(0, 10, -1, [1, 30, -1]));
+  });
+});
+
+describe("traveledRoutes (K127)", () => {
+  // Every arm a list of routes arrives or leaves by, as "chain:ctrl:dir".
+  const arms = (rs: PaintRoute[]): string[] =>
+    rs
+      .flatMap((r) => [
+        `${r.chain}:${r.ctrl}:${r.dir}`,
+        ...(r.outChain !== undefined ? [`${r.outChain}:${r.outCtrl}:${r.outDir}`] : []),
+      ])
+      .sort();
+
+  it("is every route of the path at rest, the head's arrival arm included", () => {
+    const legs = pathLegs(E, ["S", "J1", "J2", "H"], [0, 1, 2], null);
+    expect(traveledRoutes(legs, false)).toEqual(legRoutes(legs));
+  });
+
+  it("ignores the trail: a pass the trail no longer paints still counts", () => {
+    const legs = pathLegs(E, ["S", "J1", "J2", "J1", "X"], [0, 1, 4, 5], null);
+    const trail = legRoutes(legs, (dv) => dv < 8); // J1's first pass is gone.
+    expect(arms(trail)).not.toContain("1:30:-1");
+    // J1's arms in this walk: e0's and e1's B ends (the first pass), e4's B
+    // end and e5's A end (the second) - both passes count.
+    const t = arms(traveledRoutes(legs, false));
+    for (const a of ["0:10:-1", "1:30:-1", "4:8:-1", "5:12:1"]) {
+      expect(t).toContain(a);
+    }
+  });
+
+  it("counts an advance's arriving arm only on arrival", () => {
+    const anim: RouteAnim = { e: E[2], from: 3, to: 9, cur: 5, kind: "advance" };
+    const flying = traveledRoutes(pathLegs(E, ["S", "J1", "J2", "H"], [0, 1, 2], anim), true);
+    // The departure arm at J2 counts at the tap; H's arm does not yet.
+    expect(arms(flying)).toContain("2:3:1");
+    expect(arms(flying)).not.toContain("2:9:-1");
+    const landed = traveledRoutes(pathLegs(E, ["S", "J1", "J2", "H"], [0, 1, 2], null), false);
+    expect(arms(landed)).toContain("2:9:-1");
+  });
+
+  it("stops counting a backtracked arm at the tap, its near end on landing", () => {
+    const anim: RouteAnim = { e: E[2], from: 9, to: 3, cur: 7, kind: "backtrack" };
+    const flying = traveledRoutes(pathLegs(E, ["S", "J1", "J2"], [0, 1], anim), true);
+    // H (the old head) drops at once; J2 keeps the remnant's arm meanwhile.
+    expect(arms(flying)).not.toContain("2:9:-1");
+    expect(arms(flying)).toContain("2:3:1");
+    const landed = traveledRoutes(pathLegs(E, ["S", "J1", "J2"], [0, 1], null), false);
+    expect(arms(landed)).not.toContain("2:3:1");
+  });
+
+  it("drops nothing at rest and never fails on an empty path", () => {
+    expect(traveledRoutes(pathLegs(E, ["S"], [], null), false)).toEqual([]);
   });
 });
 
