@@ -7,6 +7,7 @@ import {
   ghostShape,
   nodeCap,
   peakShape,
+  rescaleSympathetic,
   roundCollapse,
   roundTau,
   segmentLobes,
@@ -171,6 +172,35 @@ describe("decay and amplitude", () => {
     expect(sympatheticAmplitude(1, 1, 1, 1)).toBeCloseTo(0.55, 9);
     expect(sympatheticAmplitude(1, -2, 1, 1)).toBeCloseTo(0.44, 9);
     expect(sympatheticAmplitude(1, 1, 0.25, 1)).toBeCloseTo(0.275, 9);
+  });
+
+  it("K105: sympathetic lobes follow the tapped lobe's CAPPED swing", () => {
+    // Pre-cap: aTap 1; the tapped lobe is clearance-capped to 0.3 while its
+    // roomy neighbors kept their pre-cap sympathetic swings.
+    const aTap = 1;
+    const lobes = [
+      { k: -1, A0: sympatheticAmplitude(aTap, -1, 2, 2), len: 2 },
+      { k: 0, A0: 0.3, len: 2 },
+      { k: 1, A0: sympatheticAmplitude(aTap, 1, 0.5, 2), len: 0.5 },
+      { k: 2, A0: 0.05, len: 2 }, // Its own cap binds harder: kept.
+    ];
+    expect(lobes[0].A0).toBeGreaterThan(lobes[1].A0); // The K105 bug.
+    rescaleSympathetic(lobes, 2);
+    expect(lobes[1].A0).toBe(0.3);
+    expect(lobes[0].A0).toBeCloseTo(0.3 * 0.55, 9);
+    expect(lobes[2].A0).toBeCloseTo(0.3 * 0.55 * 0.5, 9);
+    expect(lobes[3].A0).toBe(0.05);
+    for (const l of lobes) expect(l.A0).toBeLessThanOrEqual(0.3 * (l.k === 0 ? 1 : 0.55));
+    // Uncapped taps are unchanged; a list without a tapped lobe too.
+    const free = [
+      { k: 0, A0: 1, len: 2 },
+      { k: 1, A0: sympatheticAmplitude(1, 1, 2, 2), len: 2 },
+    ];
+    rescaleSympathetic(free, 2);
+    expect(free[1].A0).toBeCloseTo(0.55, 9);
+    const orphan = [{ k: 1, A0: 0.7, len: 1 }];
+    rescaleSympathetic(orphan, 1);
+    expect(orphan[0].A0).toBe(0.7);
   });
 
   it("soft nodes: opaque core inside the footprint, opening beyond", () => {
