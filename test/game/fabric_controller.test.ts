@@ -362,3 +362,31 @@ describe("saved attempts (K47): taps, replay, retreat", () => {
     expect(s.solved).toBe(true);
   });
 });
+
+describe("real-time respawn (K80)", () => {
+  it("jumps back to the entrance, keeping the stats and the meters", () => {
+    const c = new FabricMazeController(walkFor(1234));
+    for (let i = 0; i < 4; i++) {
+      const eid = bestChoice(c);
+      const e = c.walk.edges[eid];
+      if ((e.va === c.head ? e.vb : e.va) === c.walk.exit) break;
+      c.tapEdge(eid);
+    }
+    expect(c.pathEdges.length).toBeGreaterThan(0);
+    const taps = [...c.taps];
+    const log = [...c.moveLog];
+    const junctions = c.visitedJunctions.size;
+    const back = c.backtrackDist;
+    c.respawn();
+    expect(c.head).toBe(c.walk.start);
+    expect(c.pathEdges).toEqual([]);
+    expect(c.pathLength).toBe(0);
+    expect(c.taps).toEqual(taps);
+    expect(c.moveLog).toEqual(log);
+    expect(c.visitedJunctions.size).toBe(junctions);
+    expect(c.backtrackDist).toBe(back);
+    // The solve goes on from the entrance.
+    expect(c.choices()).toEqual(c.walk.vertices.get(c.walk.start)!.edges);
+    expect(c.tapEdge(bestChoice(c))).not.toBe("reject");
+  });
+});
