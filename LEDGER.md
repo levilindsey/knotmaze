@@ -382,8 +382,8 @@ code agents at once, research on top. Pre-launch, nothing keeps old
 links or dailies (Levi, 2026-10-13 13:17; CLAUDE.md "Pre-launch: no
 back-compat"), so codec appends no longer wait for each other: the
 second branch to merge renumbers its appends. Usage: don't hold agents
-back until the week nears 90% (Levi, 2026-10-13 07:40; 42% at 07:17,
-54% at 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13; at 13:40 he said keep going at full speed; it resets
+back until the week nears 95% (Levi, 2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17,
+54% at 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at 23:54; at 13:40 he said keep going at full speed; it resets
 Mondays at 12:00). Long work runs in stages from committed briefs (Levi,
 2026-10-13; the coordinator oversees it): each brief names its stage
 boundary, where the agent writes a "Stage N handoff" into the brief,
