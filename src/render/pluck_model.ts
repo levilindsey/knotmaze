@@ -254,6 +254,86 @@ export function wholeShape(u: number, e0: number, e1: number): number {
 }
 
 // ---------------------------------------------------------------------------
+// PLUCK PARAMS (K180; Levi, 2026-10-14: "let's have a parameter to play
+// with" for W's size, "a dropdown param to test" for the crossings and the
+// glow). Viewer preferences, live, read by main.ts into the overlay:
+//   pluckWhole     W's amount (the overlay's wholeAmp; WHOLE_AMP default, 0
+//                  = the lobes alone, the pre-K104 pluck bit for bit), in
+//                  [0, PLUCK_WHOLE_MAX]: 1.5 is 3x the default, W0 = 2.6 h
+//                  at the default pluckSize, about where the overlap room
+//                  (a neighbor's edge + WHOLE_OVERLAP h) binds W in most of
+//                  a fabric, and still under the neighbor search's 2.2.
+//   pluckCrossings how W meets the unit's interior crossings (WholeNodes).
+//   pluckGlow      the cue (CUE_WHITE, W's shape and clock) on a full-motion
+//                  pluck: off (K104's look) | instead (K104's "cue" mode:
+//                  no W displacement, the unit brightens) | with (W and the
+//                  cue) | fallback (W, plus the cue only on a pluck that
+//                  cannot SHOW, by pluckShows - K104's census criterion).
+export type PluckCrossings = "through" | "ride" | "pinch";
+export const PLUCK_CROSSINGS: PluckCrossings[] = ["through", "ride", "pinch"];
+export type PluckGlow = "off" | "instead" | "with" | "fallback";
+export const PLUCK_GLOWS: PluckGlow[] = ["off", "instead", "with", "fallback"];
+export const PLUCK_WHOLE_MAX = 1.5;
+
+// K104's "can't tell" line: a pluck SHOWS when its largest drawn swing
+// (world) reaches SHOW_MIN_H of the half-width h AND SHOW_MIN_PX CSS px at
+// the view scale (CSS px per world unit). The census (K104's census.mjs:
+// CANT_TELL_H, CANT_TELL_PX) reads the same two numbers.
+export const SHOW_MIN_H = 0.6;
+export const SHOW_MIN_PX = 2;
+export function pluckShows(peak: number, h: number, viewScale: number): boolean {
+  return peak >= SHOW_MIN_H * h && peak * viewScale >= SHOW_MIN_PX;
+}
+
+// When the census looks, after each lobe's onset (s): K104's PEAK_DT.
+export const SHOW_DT = [0, 0.01, 0.02, 0.035, 0.05, 0.075, 0.1, 0.15, 0.2];
+
+// One station's drawn swing, exactly as the overlay's writeFrame builds the
+// envelope it hands the shader: the lobe term s (amplitude x the station's
+// factor) at overtone weight q, pulled toward side, plus W's w on both
+// sides, the concave side clamped (capL above, capR below; Infinity = the
+// convex side). Returns max(hi, -lo), the census's PEAK at that station.
+export function drawnSwing(
+  b: number,
+  x: number,
+  q: number,
+  s: number,
+  w: number,
+  side: number,
+  capL: number,
+  capR: number,
+  env: { [i: number]: number }
+): number {
+  let lo = 0;
+  let hi = 0;
+  if (!(s > 0 || w > 0)) return 0;
+  if (s > 0) {
+    envelope(b, x, q, env);
+    lo = env[0] * s;
+    hi = env[1] * s;
+    if (side < 0) {
+      const t = lo;
+      lo = -hi;
+      hi = -t;
+    }
+  }
+  if (w > 0) {
+    lo -= w;
+    hi += w;
+  }
+  if (hi > capL) hi = capL;
+  if (-lo > capR) lo = -capR;
+  return Math.max(hi, -lo);
+}
+
+// Whether a pluck carries the cue under a glow option, given whether its
+// swing shows (only "fallback" asks).
+export function glowCue(glow: PluckGlow, shows: boolean): boolean {
+  if (glow === "instead" || glow === "with") return true;
+  return glow === "fallback" && !shows;
+}
+
+// ---------------------------------------------------------------------------
 // REDUCED MOTION (K104 goal 3; the Motion setting, ui/motion.ts): the pluck
 // shows without displacement and the sound is unchanged. The plucked unit
 // BRIGHTENS toward white on the voice's decay clock instead - one instant

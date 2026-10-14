@@ -15,6 +15,8 @@ import { SHAPES, ANCHORS } from "../core/shapes";
 import type { ChaseParams, ClockMode } from "../game/minotaur";
 import { DEFAULT_CHASE_PARAMS } from "../game/minotaur";
 import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
+import type { PluckCrossings, PluckGlow } from "../render/pluck_model";
+import { PLUCK_CROSSINGS, PLUCK_GLOWS, PLUCK_WHOLE_MAX } from "../render/pluck_model";
 import type {
   BackgroundColorMode,
   BackgroundId,
@@ -380,6 +382,12 @@ export interface UrlParams {
   // CONFETTI_AMOUNT_MAX] (1 = the designed burst). Viewer preferences.
   confetti: boolean;
   confettiAmount: number;
+  // K180's pluck params (render/pluck_model.ts PLUCK PARAMS): W's amount in
+  // [0, PLUCK_WHOLE_MAX] (0 = the pre-K104 pluck), how W meets the unit's
+  // crossings, and the glow. Viewer preferences.
+  pluckWhole: number;
+  pluckCrossings: PluckCrossings;
+  pluckGlow: PluckGlow;
 }
 
 // The two load-settle sliders' tops (K147). LOAD_SETTLE_MAX is a sentinel
@@ -510,6 +518,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoFog: "always",
   confetti: true,
   confettiAmount: 1,
+  pluckWhole: 0.5,
+  pluckCrossings: "through",
+  pluckGlow: "off",
 };
 
 // The real-time chase's tuning from a design's params (K80). Negative or
@@ -585,6 +596,8 @@ export const ENUM_OPTIONS: {
   backgroundColorMode: BACKGROUND_COLOR_MODES,
   clock: CLOCK_MODES,
   minoFog: MINO_FOG_MODES,
+  pluckCrossings: PLUCK_CROSSINGS,
+  pluckGlow: PLUCK_GLOWS,
 };
 
 function clamp01(v: number): number {
@@ -619,6 +632,7 @@ function fromCodecValues(
   p.settleBudget = clampTo(p.settleBudget, SETTLE_BUDGET_MAX);
   p.loadSettle = clampTo(p.loadSettle, LOAD_SETTLE_MAX);
   p.confettiAmount = clampTo(p.confettiAmount, CONFETTI_AMOUNT_MAX);
+  p.pluckWhole = clampTo(p.pluckWhole, PLUCK_WHOLE_MAX);
   return p;
 }
 
@@ -867,6 +881,10 @@ function readLegacy(
       readNumber(query, "cfa", D.confettiAmount),
       CONFETTI_AMOUNT_MAX
     ),
+    // K180's pluck params (`&pw=1&pcx=ride&pgl=fallback`).
+    pluckWhole: clampTo(readNumber(query, "pw", D.pluckWhole), PLUCK_WHOLE_MAX),
+    pluckCrossings: readChoice(query, "pcx", PLUCK_CROSSINGS, D.pluckCrossings),
+    pluckGlow: readChoice(query, "pgl", PLUCK_GLOWS, D.pluckGlow),
   };
 }
 

@@ -239,6 +239,10 @@ describe("codec tables", () => {
       // K140: finish confetti on/off and its amount (viewer preferences).
       ["confetti", "boolean", true], // 99
       ["confettiAmount", "number", 1], // 100
+      // K180: the pluck params (viewer preferences).
+      ["pluckWhole", "number", 0.5], // 101
+      ["pluckCrossings", "enum", "through", ["through", "ride", "pinch"]], // 102
+      ["pluckGlow", "enum", "off", ["off", "instead", "with", "fallback"]], // 103
     ]);
   });
 

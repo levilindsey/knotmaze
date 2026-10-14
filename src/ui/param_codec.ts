@@ -323,6 +323,13 @@ export const CODEC_V4: CodecTable = Object.freeze({
     // render/confetti_model.ts). Viewer preferences: the dailies exempt them.
     flag("confetti", true), // 99
     num("confettiAmount", 1), // 100
+    // K180's pluck params (2026-10-14): W's amount (0 = the pre-K104
+    // pluck), how W meets the unit's crossings, and the glow (render/
+    // pluck_model.ts PLUCK PARAMS). Viewer preferences: the dailies exempt
+    // them.
+    num("pluckWhole", 0.5), // 101
+    choice("pluckCrossings", "through", ["through", "ride", "pinch"]), // 102
+    choice("pluckGlow", "off", ["off", "instead", "with", "fallback"]), // 103
   ]),
 });
 
