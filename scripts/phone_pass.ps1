@@ -171,8 +171,10 @@ function Find-Serial([string]$adb, [string]$want) {
   throw "PHONE NOT READY: no phone in adb devices (plug it in, or run scripts/phone.ps1 -Wireless once)."
 }
 function Phone-State([string]$adb, [string]$ser) {
-  $o = & $adb -s $ser shell "dumpsys power | grep -E 'mWakefulness='; dumpsys window | grep -E 'isKeyguardShowing'; dumpsys activity activities | grep -m1 topResumedActivity" 2>&1 | Out-String
+  $o = & $adb -s $ser shell "dumpsys power | grep -E 'mWakefulness='; dumpsys window | grep -E 'isKeyguardShowing'; dumpsys activity activities | grep -m1 topResumedActivity; dumpsys window displays | grep -m1 -oE 'cur=[0-9]+x[0-9]+'" 2>&1 | Out-String
   [pscustomobject]@{
+    # The display as the phone sits (2424x1080 = landscape): a docked phone is in landscape, and the pass's viewport and noise floor follow it.
+    Display = $(if ($o -match "cur=(\d+)x(\d+)") { "{0}x{1} {2}" -f $Matches[1], $Matches[2], $(if ([int]$Matches[1] -gt [int]$Matches[2]) { "landscape" } else { "portrait" }) } else { "?" })
     Reached = ($o -match "mWakefulness=")
     Awake = ($o -match "mWakefulness=Awake")
     Locked = ($o -match "isKeyguardShowing=true")
@@ -182,7 +184,7 @@ function Phone-State([string]$adb, [string]$ser) {
 # Throws "PHONE NOT READY: ..." at once (never waits, never wakes, never unlocks).
 function Assert-PhoneReady([string]$adb, [string]$ser) {
   $s = Phone-State $adb $ser
-  Say "phone ${ser}: reached=$($s.Reached) awake=$($s.Awake) locked=$($s.Locked) top=$($s.Top)"
+  Say "phone ${ser}: reached=$($s.Reached) awake=$($s.Awake) locked=$($s.Locked) top=$($s.Top) display=$($s.Display)"
   if (-not $s.Reached) { throw "PHONE NOT READY: $ser gave no state (offline?)." }
   if (-not $s.Awake -or $s.Locked) { throw "PHONE NOT READY: the phone is asleep or locked; a person must wake and unlock it first (the pass never does)." }
 }
