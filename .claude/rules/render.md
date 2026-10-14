@@ -54,7 +54,11 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   measurements): `backgroundSpeed` (bgs=, codec v4 index 70) defaults to
   AUTO (-1; any negative value, NaN or garbage reads as auto) = each
   effect's own pace; 0 = static, otherwise a multiple of the designed
-  drift, clamped to 3. Clock drift = profile drift x effectiveSpeed (auto
+  drift, clamped to BACKGROUND_SPEED_MAX = 8 (Levi, 2026-10-13: "Max
+  backgroundSpeed should be like x8"; stage A shipped 3; the one constant
+  feeds the slider, the link clamp and effectiveSpeed). The pass rate does
+  not scale with it, so at 8x each texture pass moves the pattern 8x
+  further: steppier, not costlier. Clock drift = profile drift x effectiveSpeed (auto
   = the profile's autoSpeed: vellum 0, the rest 1), so auto is
   bit-identical to K21, and the pass rate never scales. configure() zeroes
   the clock on an effect change and when an auto-static effect (vellum)
@@ -73,9 +77,10 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   k79_dstats.mjs, k79_gpu.mjs).
   SHAPE PARAMS + CUSTOM COLORS (K79 stage B, 2026-10-13; the commit
   messages hold the design notes, the panel side is in `gameplay.md`):
-  ten params appended to codec v4, indices 71-80 (not published yet, and
-  before launch nothing keeps a link's meaning: whichever branch merges
-  second renumbers its appends): backgroundScale (bgsz, [0.5, 2], 1),
+  ten params appended to codec v4, indices 72-81 (K74 stage 1 took 71 for
+  deadEndLength first, so these renumbered at their merge; before launch
+  nothing keeps a link's meaning, and whichever branch merges second
+  renumbers its appends): backgroundScale (bgsz, [0.5, 2], 1),
   backgroundDetail (bgdt, [0, 2], 1), backgroundFibers and backgroundGrain
   (bgfb, bggr, [0, 3], 1), backgroundAngle (bgan, degrees
   counterclockwise from screen right, any negative = AUTO = the seed's
