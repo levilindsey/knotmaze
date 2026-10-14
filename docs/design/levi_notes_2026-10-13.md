@@ -334,3 +334,29 @@ Stars appearing in the share text makes sense.
 
 (A reply to the coordinator's open question: stars in the daily share text.)
 Filed (2026-10-13): K155, the stars go in the share text.
+
+### About 21:24-21:37 (agents and the PC)
+
+Some of these subagents have been running for many hours. Are we sure they're stil proceding as expected? Should they be taking that long?
+
+Are you going to do something to monitor/detect and/or prevent issues with subagents acting unexpectedly like this in the future? Also, are we SURE the other subagents are all proceding as expected?
+
+Also, how is the PC generally? should i restart it?
+
+Filed (2026-10-13): CC38 (claude-config); answered in session.
+
+### About 22:53-23:07 (the restart)
+
+Back online
+
+Is it a good time to restart the machine?
+
+Back online. Restarted the machine. Resume.
+
+The restart fixed the desktop's network fault (CC39, claude-config); the coordinator's 21:55 advice not to restart was wrong.
+
+### About 23:12 (the post-mortem)
+
+Also, after getting everything back up and running and resolved, give me a summary of where we left off, what's next, what's gone terribly wrong, and how you're going to prevent it from ever happening again. You should be verifying the subagent's are actually making expected progress periodically (but not TOO often).
+
+Filed (2026-10-13): claude-config 612a8bd (`rules/sessions.md` "Supervising agents": one stage per brief, each stopping at its first compaction or a 2 h Opus / 1 h Sonnet cap; `tools/agent_watch.mjs`, which flags agents and posts an hourly status table; CC37's Sonnet window, applied) and f9b135b (CC37, CC38 and CC39). Answered in session.

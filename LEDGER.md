@@ -108,6 +108,30 @@ and never reused.
 - **K169** · K127's full web turns gold in one frame, with no fade. A
   polish call: keep it or fade it in (`docs/design/K81.md`, "Stage 3d
   results").
+- **K171** · The phone pass's retry never wakes or unlocks the phone
+  (`retry_quiet.ps1`, K156 3a), so with the phone asleep or off its
+  charger the retry exits 3 and the pass stops. Accept that (a person
+  restarts it), or should a pass wait for one?
+- **K174** · K80 stage 1's calls (`.claude/probes/K80/rt/results.md`).
+  Play it: https://levi.dev/knotmaze/?7.J&clk=realtime
+  - The minotaur's chase pace as a share of the player's: 0.7 (default)
+    or 0.8? At 0.8 a fleeing player escapes 16% of chases, at 0.7 53%.
+  - Detection starts at 15 (default) or 17.5? The greedy player's mean
+    catches go 1.26 -> 1.73.
+  - Should `minoFog` default to "always"?
+  - Should a catch re-fog the explored maze? (It doesn't now.)
+  - The caught row shows even with the stat rows off: confirm.
+  - Presence: 45% of games never meet the minotaur. Fine, or should it
+    seek the player more (K179)?
+- **K180** · K104's tuning calls, best made after a preview or the
+  merge (`docs/design/K104.md`, "Goal 1 results" and "Stage 1b handoff"):
+  WHOLE_AMP 0.35, 0.5 or 0.7; neighbors "overlap" or "free"; interior
+  crossings "through", "ride" or "pinch"; the reduced-motion cue instead
+  of W, with W, or as a fallback; the proposed `pluckWhole` slider (not
+  a codec param).
+- **K183** · The phone was asleep and locked at 23:14 (2026-10-13). K156
+  3c and the round's phone pass wait for Levi to unlock it and leave it
+  awake on its charger; the coordinator never wakes or unlocks it.
 
 ## In progress
 
@@ -156,26 +180,31 @@ and never reused.
   `COLLAPSE_ROUND`'s 1 h ("better, but still a bit too acute"; K77's
   A/B: 0.5 h left shoulders, 2 h erased most of the thinning); its own
   reduced-motion version (K79's Motion setting). K105 folds in (goal 4).
-  - owner: the stage 1b agent (af32239ceddc57129, Opus) of session
-    d8031183, started 2026-10-13 13:25 in stage 1's worktree: goal 1, the
-    whole-segment term, with the clearance-cap choice for Levi. It found
-    that the probe Chrome reports reduced motion only over Remote Desktop
-    (0a7b426). Its census helper (abd68df33b04da26c, Opus) runs a server
-    on port 5404. Stage 1 (a33278775816855b8, 11:58-13:20) set
-    `COLLAPSE_ROUND` from 1 to 1.5 h (4cebf12) and did K105 (f883c75).
+  - owner: agent a3a9ef921d014ddf5 (opus) of session d8031183, stage 1c,
+    started 2026-10-13 23:35; it stops at 01:35 or when the stage is
+    done (the brief's stop at the first compaction was lifted at 23:45,
+    claude-config CC38). The stage 1b agent
+    af32239ceddc57129 was stopped at about 21:55 after 27 compactions in
+    8.5 h (claude-config CC38). On the branch: stage 1 (4cebf12
+    `COLLAPSE_ROUND` 1 -> 1.5 h, f883c75 K105); goal 1, the whole-segment
+    term W (635b725, 3aaa702, b1e0d84, 5aa68b6, 78017c9, a9f3bc8);
+    98cde6a still plucks under reduced motion; 50b98f8 the Motion texts;
+    afbdfa2 still plucks hide by G1's `gapKeepAt` mask. tsc clean and 413
+    tests at afbdfa2.
   - branch: `worktree-agent-a33278775816855b8`
     (`.claude/worktrees/agent-a33278775816855b8`), on c521f23; last
-    commit: 0a7b426.
+    commit: fad1162 (the stage 1c brief), unpushed.
   - evidence: `.claude/probes/K104/` in its worktree (`collapse/`,
-    `census/`; copy at merge);
-    K77's kit and sheet in the main checkout's `.claude/probes/K77/`
-    (`lib.mjs`, `k77_weave.mjs`, `k77_cost.ts`, `K77_before_after.png`).
-  - next: stage 1b and its handoff; then stage 2 (reduced motion and the
-    cost), the phone gate (K10) and the merge. Idea: a whole-segment
-    amplitude slider.
-  - brief: `docs/design/K104.md` on the branch (stage 1's handoff; the
-    first brief is c521f23).
-  - env: its dev servers on ports 5401-5404.
+    `census/`, `still_probe.mjs`, `still_batch.ps1`, `out/`; copy at
+    merge); K77's kit in the main checkout's `.claude/probes/K77/`
+    (`lib.mjs`, `k77_weave.mjs`, `k77_cost.ts`).
+  - next: stage 1c (the probe's crop fix, the weave guard, the rules
+    text, the rebase onto master, the cost under the perf lock); then the
+    merge and the round's phone pass. Levi's tuning calls: K180. At the
+    merge, the `k79_motion.mjs` checks at lines 235-241 fail by design.
+  - brief: `docs/design/K104.md` ("Stage 1c", on the branch).
+  - env: master's `scripts/preview.ps1 -Root <dir> -Port <5400-5409>
+    -Ref <commit>`.
 - **K74** · Maze design, decided (Levi, 2026-10-13 13:17; his answers
   verbatim in `docs/design/levi_notes_2026-10-13.md`): every mechanism
   gets params whose neutral value turns it off, so difficulty and feel
@@ -237,24 +266,28 @@ and never reused.
   prototype. Maybe it's not a modifier of another gameplay mode, but
   rather a dedicated mode itself. Do implement it."); the turn-aligned
   hunter stays a modifier of the normal maze, later.
-  - owner: agent a9c90f15cd6a55710 (opus) of session d8031183, since
-    2026-10-13 about 18:01: stage 1, the real-time mode. Idle since
-    19:14, waiting for its helper ac1d0982c3528d0fa (wiring the chase
-    into the page). Its last note: the harness recommends approachPace 7,
-    not 8; the entrance catches come from the minotaur standing at the
-    sanctuary door where it lost the player.
-  - branch: `worktree-agent-a9c90f15cd6a55710`
-    (`.claude/worktrees/agent-a9c90f15cd6a55710`), from cf8f9d4; last
-    commit: 1698bf4 (WIP), unpushed.
-  - evidence: its worktree's `.claude/probes/K80/rt/` (untracked); the
-    research's `.claude/probes/K80/` in the main checkout (doc section 7
-    reruns it) and its kept worktree
+  - stage 1 MERGED in ae49553..5fed5c1 (2026-10-13 23:11; deployed): the
+    `clk=realtime` mode and `src/game/minotaur.ts` (a 120 Hz fixed step,
+    exact math, `replayChase`, `undoAllowed(clock)`; 15 tests); codec v4
+    appends 84-98 (clock, playerPace, minoWanderPace, minoHuntPace,
+    minoPaceJitter, minoPauseChance, minoPauseMin, minoPauseMax,
+    minoDetect, minoLose, minoCatch, minoDeadEnds, minoRoam, minoWake,
+    minoFog; legacy keys clk plp mwp mhp mpj mpc mpn mpx mdt mls mct mde
+    mrm mwk mfg); `respawn()`, the marker and its glow, the panel's
+    "Minotaur" folder, the HUD's caught row, a toast and an off-screen
+    indicator; approachPace 8 -> 7 from the simulation. `clock` is not
+    daily-exempt, so the dailies stay turn-based.
+  - owner: nobody since 2026-10-13 about 22:00 (agent a9c90f15cd6a55710
+    finished; its worktree `.claude/worktrees/agent-a9c90f15cd6a55710` is
+    kept).
+  - branch: mainline; last commit: `5fed5c1`.
+  - evidence: `.claude/probes/K80/rt/` in the main checkout (`run_rt.ps1`,
+    `results.md`, `rt_chase.mjs`, `rt_page.mjs`, `out/`); the research's
+    `.claude/probes/K80/` and its kept worktree
     `.claude/worktrees/agent-a25726c24f262b138`.
-  - next: when the helper reports, resume the agent: rebase onto master
-    with its codec appends after index 83 (K79 B took 72-81, K147 82-83),
-    set the defaults, run the browser probes; then the stage-1 report
-    (the defaults' simulation table, a playable link), and Levi plays it.
-    The turn-aligned hunter comes later (item 11 of the order).
+  - next: Levi plays it and answers K174; its phone checks join the
+    round's pass (K177); then the turn-aligned hunter (item 11 of the
+    order).
   - brief: `docs/design/K80_realtime.md`; the research brief
     `docs/design/K80.md` and its doc
     `docs/design/K80_gameplay_additions.md`.
@@ -263,28 +296,79 @@ and never reused.
   interleaved through a frame bench (knot, fabric at 0, 10 and 21 moves,
   and a load scenario for K147), then looks from a JSON list, into a
   summary table and screenshot sheets.
-  - owner: agents a262df65dcc1489a7 (3a: `cleanup.mjs`, `watchdog.ps1`,
-    `retry_quiet.ps1`, `phone_pass.ps1` with `-Dry`) and
-    a957f7f1407f5df9f (3b: `looks.mjs`, `sheet.mjs`, `summary.mjs`, the
-    PROBE LORE entry, tonight's looks), both sonnet, of session d8031183,
-    since 2026-10-13 about 19:50; desktop dry checks only. Stage 2
-    (a9d4c7cb7500cb055) stopped at its token line with 4 of 14 files; the
-    scripts/** lore costs about 25k tokens, so stage 3 budgets for it.
-  - branch: stage 2's `worktree-agent-a9d4c7cb7500cb055` at 579e00e (the
-    stage 3 plan); 3a and 3b each on their own `worktree-agent-<id>`
-    branch from 579e00e; last commit: cae89a6 (3b, WIP), unpushed.
-  - evidence: tonight's looks file in the main checkout,
-    `.claude/probes/rounds/2026-10-13/looks.json`; K81's kit in K81's
-    kept worktree (`.claude/probes/K81/phone/`); the A/A noise floor goes
-    to a tracked `scripts/phone_pass/noise.json` (one A/A run is a crude
-    floor).
-  - next: rebase 3b onto 3a and merge both; then 3c (sonnet) on the
-    phone: the A/A smoke test, fixes, `noise.json`. Then the round pass,
-    `scripts/phone_pass.ps1 -Base ab6d330 -Head master -Reps 3 -Looks
-    .claude/probes/rounds/2026-10-13/looks.json` (ab6d330 is master
-    before K79 B). First check the phone's state and the network (at
-    21:15 the desktop's pings to the router dropped 4 of 6).
-  - brief: `docs/design/K156.md` ("Stage 3 plan").
+  - 3a and 3b MERGED in 6521bb2..ae49553 (2026-10-13 about 21:50; sonnet
+    agents a262df65dcc1489a7 and a957f7f1407f5df9f, desktop dry runs
+    only).
+  - owner: nobody since 2026-10-13 about 21:30 (both agents finished; 3c
+    waits for the phone, K183).
+  - branch: mainline; last commit: `ae49553`.
+  - evidence: the 3a worktree `.claude/worktrees/agent-a262df65dcc1489a7`
+    (`.claude/probes/K156/3a/`) and the 3b worktree
+    `.claude/worktrees/agent-a957f7f1407f5df9f`
+    (`.claude/probes/rounds/3b-dry/`); tonight's looks in the main
+    checkout, `.claude/probes/rounds/2026-10-13/looks.json`; K81's kit in
+    K81's kept worktree (`.claude/probes/K81/phone/`).
+  - next: write 3c's brief section (with the stop rule) in K156.md, then
+    3c (sonnet) once the phone is awake and unlocked: the A/A smoke test
+    (`-Base master -Head master -Reps 1 -Looks
+    scripts/phone_pass/looks.example.json`), the phone-mode paths and the
+    watchdog's touch trip, `-LoadSeconds` 15 vs 30, `-Moves 0,7,14`,
+    fixes, then the tracked `scripts/phone_pass/noise.json` (3 reps) and
+    K80's looks. Then the round pass: `pwsh -NoProfile -File
+    scripts/phone_pass.ps1 -Base ab6d330 -Head master -Reps 3 -Looks
+    .claude/probes/rounds/2026-10-13/looks.json`.
+  - brief: `docs/design/K156.md` ("Stage 3 plan", "### 3c (after both)",
+    the 3a and 3b handoffs).
+- **K140** · Finish confetti (Levi, 2026-10-13 about 15:35, verbatim
+  in `docs/design/levi_notes_2026-10-13.md`): a gratuitous confetti rain
+  from the top of the screen when you finish the maze, and a smaller
+  spray from around the finish spot, on every finish. Render-only: no
+  physics wake, and the frame loop runs only while pieces live
+  (`sceneAnimating()` in `src/main.ts`; K24). With the Motion setting
+  reduced (`src/ui/motion.ts`), a small burst or none. Params: on/off
+  and amount, proposed daily-exempt (K57). The phone gate checks fps
+  during the effect. Small; Opus. After K80's real-time mode.
+  - owner: agent a0b46db1354c23e20 (opus) of session d8031183, stage 1,
+    started 2026-10-13 23:35; it stops at 01:35 or when the stage is
+    done (the brief's stop at the first compaction was lifted at 23:45,
+    claude-config CC38).
+  - branch: `worktree-agent-a0b46db1354c23e20`
+    (`.claude/worktrees/agent-a0b46db1354c23e20`), from cb532d5; last
+    commit: cb532d5 (the brief).
+  - evidence: `.claude/probes/K140/` in its worktree (copy at merge).
+  - next: stage 1 per the brief; then the merge (the second of K140 and
+    K155 to merge renumbers its codec appends) and the round's phone pass
+    (fps during the effect).
+  - brief: `docs/design/K140.md`.
+  - env: dev servers on ports 5480-5489.
+- **K155** · A star rating for each finish (Levi, 2026-10-13 about
+  18:06, verbatim in `docs/design/levi_notes_2026-10-13.md`): stars from
+  the run's time, backtracking, efficiency or a mode's own metric, with a
+  phone-friendly explanation of where they come from; efficiency alone
+  is likely clearest for the default solve. Proposed: three stars, with
+  thresholds from simulated solvers (K74's greedy solver's median is
+  3.12x the shortest route); K80's mode rates its catches; shown on the
+  win banner and in the daily stats, explained on tap (phones have no
+  hover), and in the daily share text (K20; Levi, 2026-10-13 about 21:15:
+  "Stars appearing in the share text makes sense."). With K140 (the same
+  finish screen).
+  - owner: agent aa916ee7fa628963f (opus) of session d8031183, stage 1,
+    started 2026-10-13 23:35. It stopped at its first compaction at 23:42
+    with a handoff (the measure proposed: distance walked over the
+    shortest route; no thresholds yet) and was resumed at about 23:45
+    under the lifted rule: it stops at 01:35 or when the stage is done
+    (claude-config CC38).
+  - branch: `worktree-agent-aa916ee7fa628963f`
+    (`.claude/worktrees/agent-aa916ee7fa628963f`), from cb532d5; last
+    commit: 04d03b8 (the handoff), unpushed.
+  - evidence: `.claude/probes/K155/` in its worktree (`stars_sim.ts`,
+    `rt/`, `lib.ts`; copy at merge).
+  - next: stage 1 per the brief (a measure a wandering solve can't max
+    out, thresholds from simulated solvers, the banner, the stats view,
+    the share text); then Levi reviews the thresholds; the merge and the
+    round's phone pass.
+  - brief: `docs/design/K155.md` (its "Stage 1 handoff" is on the branch).
+  - env: dev servers on ports 5470-5479.
 
 ## Next, in order
 
@@ -299,24 +383,28 @@ links or dailies (Levi, 2026-10-13 13:17; CLAUDE.md "Pre-launch: no
 back-compat"), so codec appends no longer wait for each other: the
 second branch to merge renumbers its appends. Usage: don't hold agents
 back until the week nears 90% (Levi, 2026-10-13 07:40; 42% at 07:17,
-54% at 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15; at 13:40 he said keep going at full speed; it resets
+54% at 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13; at 13:40 he said keep going at full speed; it resets
 Mondays at 12:00). Long work runs in stages from committed briefs (Levi,
 2026-10-13; the coordinator oversees it): each brief names its stage
 boundary, where the agent writes a "Stage N handoff" into the brief,
 commits and stops, and a fresh agent continues from it. K81 alone was
-about a third of the overnight spend.
+about a third of the overnight spend. From 2026-10-13 23:35 each brief
+stops at the first compaction and at a wall-clock cap (2 h Opus, 1 h
+Sonnet), and a watcher flags agents past them (claude-config CC38).
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
-13:30, 14:31-14:39 and 15:30-15:40 (he may reorder). Running at 21:26:
-K104 stage 1b and K80 stage 1 (code); K156 stages 3a and 3b (the phone
-pass kit, tooling). Then, as code slots free up:
-1. The round's phone pass (K156: 3a and 3b merge, then 3c's A/A smoke
-   test on the phone, then the pass), for K79 B, K122, K147 and K81, all
-   merged by 3c8433a.
+13:30, 14:31-14:39 and 15:30-15:40 (he may reorder). Running at 23:35:
+K104 stage 1c, K155 stage 1 and K140 stage 1 (code). Then, as code
+slots free up:
+1. The round's phone pass (K156: 3a and 3b merged in ae49553; 3c's A/A
+   smoke test on the phone next, once it is awake and unlocked (K183);
+   then the pass), for K79 B, K122, K147, K81 and K80 stage 1, all merged
+   by 5fed5c1.
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
-   want the real-time prototype... Do implement it."): stage 1 running.
+   want the real-time prototype... Do implement it."): stage 1 merged in
+   5fed5c1; Levi plays it (K174).
 3. K140, the finish confetti, with K155's star rating (the same finish
-   screen), then K146, past dailies without credit,
+   screen; stage 1 of each running), then K146, past dailies without credit,
    then K148, K149 and K151, the camera and the mode badge (all small;
    K80's minotaur indicator follows K148's).
 4. K120 (no codec).
@@ -343,26 +431,6 @@ K46, K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
-- **K140** · Finish confetti (Levi, 2026-10-13 about 15:35, verbatim
-  in `docs/design/levi_notes_2026-10-13.md`): a gratuitous confetti rain
-  from the top of the screen when you finish the maze, and a smaller
-  spray from around the finish spot, on every finish. Render-only: no
-  physics wake, and the frame loop runs only while pieces live
-  (`sceneAnimating()` in `src/main.ts`; K24). With the Motion setting
-  reduced (`src/ui/motion.ts`), a small burst or none. Params: on/off
-  and amount, proposed daily-exempt (K57). The phone gate checks fps
-  during the effect. Small; Opus. After K80's real-time mode.
-- **K155** · A star rating for each finish (Levi, 2026-10-13 about
-  18:06, verbatim in `docs/design/levi_notes_2026-10-13.md`): stars from
-  the run's time, backtracking, efficiency or a mode's own metric, with a
-  phone-friendly explanation of where they come from; efficiency alone
-  is likely clearest for the default solve. Proposed: three stars, with
-  thresholds from simulated solvers (K74's greedy solver's median is
-  3.12x the shortest route); K80's mode rates its catches; shown on the
-  win banner and in the daily stats, explained on tap (phones have no
-  hover), and in the daily share text (K20; Levi, 2026-10-13 about 21:15:
-  "Stars appearing in the share text makes sense."). With K140 (the same
-  finish screen).
 - **K146** · Past dailies, playable without credit (Levi, 2026-10-13
   about 16:15: "There should be some way to play previous dailys, but not
   get credit for them."). Today a past daily opens only by its link
@@ -469,6 +537,7 @@ K5-K7 (split, frame loop, worker) follow.
   indicator only shows a toast. Files: `src/ui/tweakpane_panel.ts`,
   `src/main.ts`, `src/ui/mode_badge.ts`, `src/ui/url_state.ts`;
   `.claude/rules/gameplay.md` (MODE BADGE). After K79 stage B merges.
+  - K80 (5fed5c1): real time has no move undo (`undoAllowed(clock)`); if K92's buttons ever reach maze moves, they consult it.
 - **K111** · Accessibility (Levi, 2026-10-13). Reduced motion also
   stills the flow undulation, but not the intros or the pulses next to
   the player. Those pulses get a dropdown of alternative highlight modes,
@@ -946,6 +1015,31 @@ K5-K7 (split, frame loop, worker) follow.
   phone rule (no key events; the phone stays awake on its charger).
   Proposed: no wake by default, a `-Wake` switch to opt in. (K156's
   `retry_quiet.ps1` drops its copy of the block.)
+  - K156 3a proposed the same fix, as a `-NoWake` switch.
+- **K172** · K156's screenshot sheets have no text labels, and its drift
+  looks show drift only inside the intro window. 3c checks that the
+  speed-8 looks show motion on the phone.
+- **K175** · K80's UI gaps (5fed5c1): a queued tap has no visual; the
+  choice pulses go quiet during a move; the bull glyph is a placeholder
+  (K98 has the glyph work); its off-screen indicator ignores
+  `finishIndicator` (K84).
+- **K176** · K80's entrance-tail trap: after losing a player on the
+  entrance tail, the minotaur pauses at that tail's junction and catches
+  them about 3 s later (`.claude/probes/K80/rt/results.md`).
+- **K177** · K80 checks not run yet: the indicator on a phone, fog at
+  `minoFog=always`, waiting out a non-instant intro, and frame time (the
+  round's phone pass takes the phone ones). Chases are not saved or
+  replayable: `replayChase` exists, and the dailies stay turn-based.
+- **K178** · Since K122, the private-cache vite wrappers of K19-K20, K79
+  and K99 (and K104's, after its rebase) fail with ERR_MODULE_NOT_FOUND.
+  K80's wrapper (`.claude/probes/K80/rt/vite.private-cache.config.ts`)
+  loads the config with `loadConfigFromFile` and works
+  (`.claude/rules/probes.md`).
+- **K181** · K104's residuals (`docs/design/K104.md`, "Stage 1b
+  handoff"): the phone "can't tell" share stays 26% in fabric and 41% in
+  dense; W deepens the raw collapse (+12% at pluckSize 1.75, +7% at 3);
+  sound-only taps in junction cores, and taps bound by hide zones, can
+  show only through a cue; the cue constants are unreviewed.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1086,6 +1180,16 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   would give the slow end room. At 8x the 10-15 Hz texture pass may look
   steppy (not checked on the phone); if it does, scale the re-render rate
   with the speed. A look for the round's phone pass (K156).
+- **K173** · Reading one `src/**` or probes file attaches 25-50k tokens
+  of `.claude/rules/` lore to an agent (K156 stage 2 measured about 25k
+  for `scripts/**`). Split the big rules files, or narrow their `paths:`,
+  so an agent pays only for its area.
+- **K179** · K80 ideas: reversing mid-run in the real-time mode; a
+  roaming bias toward the player, so fewer games pass without meeting the
+  minotaur (K174).
+- **K182** · K104 ideas: G1's exact mask for moving plucks too (today
+  only still plucks use it), the curvature-aware clip as its fallback;
+  check the still strip's concave-side clamp.
 
 ## Done
 
