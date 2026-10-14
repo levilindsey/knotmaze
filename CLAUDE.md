@@ -98,6 +98,8 @@ src/
     mode_badge.ts         # K73: "Free play" / "Replay · not scored" pill
     offscreen_indicators.ts # K73: edge indicators for off-screen targets
     motion.ts             # K53/K79: the Motion setting (viewer pref, data-motion)
+    head_indicator.ts     # K148 pure: the player's edge indicator (when it shows, what a tap does)
+    view_clamp.ts         # K149 pure: the fit camera's pan clamp (slack at every zoom)
   util/
     random.ts             # Seeded RNG
     det_math.ts           # K108: engine-exact math for generation (hypot2)
@@ -150,7 +152,7 @@ test/
     the front door, the exempt set, prefs)
     mode_badge.test.ts, offscreen_indicators.test.ts (edge layout,
     chrome avoidance), motion.test.ts (prefs, live follow, storage
-    failures)
+    failures), head_indicator.test.ts (K148), view_clamp.test.ts (K149)
   notices/
     notices.test.ts (K122: collector, license policy, page, the real build)
   quiescence.regression.test.ts  # Guards the friction dissipation channel

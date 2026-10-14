@@ -710,6 +710,30 @@ demand.
   a dense design's); the fallback leaves only the sound-only taps in
   junction cores. *[Lore: `.claude/rules/render.md` (Pluck params);
   census, sheets and the A/B in `.claude/probes/K180/`.]*
+- THE PLAYER'S OFF-SCREEN INDICATOR (K148, 2026-10-14; brief
+  `docs/design/K148_K149.md`, Sonnet agent under session d8031183; Levi,
+  2026-10-13: "When panning away from the current position, we should also
+  show an offscreen indicator for it."): the head joins the finish and the
+  minotaur as a K73 indicator client, wearing K83's head glyph on a black
+  disc. It shows whenever the head is off screen in a fabric maze (intro,
+  play, after a finish, under fog, either camera) and has no viewer setting
+  of its own. A tap centers the head in the fit camera at the player's
+  zoom, or eases the follow camera onto its framing and lets the spring
+  resume at once. Found on the way: the indicator's icon group made the
+  glyphs' filled dots inherit a 12.6 px stroke, so the head's dot and the
+  bull's eyes were disc-sized white blobs (fixed in the glyph SVG writer).
+  *[Lore: `.claude/rules/gameplay.md` (OFF-SCREEN INDICATORS, THE HEAD);
+  probes in `.claude/probes/K148_K149/`.]*
+- PAN ROOM AT THE FIT ZOOM (K149, 2026-10-14; same brief and agent; Levi:
+  "we should support panning the maze a bit more off-screen at furthest
+  zoom. Especially to get it out from under the menu."): the fit camera's
+  pan clamp is a pure function now (`ui/view_clamp.ts`) with 0.3 of the
+  screen of slack per side at every zoom, where zoom 1 had none. At
+  1000x800 and 800x700 the maze overlaps the open panel at home and clears
+  it at the limit; a phone's 320 px panel (78% of the width) cannot be
+  cleared by any such share. The reset now eases from a slack view
+  instead of snapping. *[Lore: `.claude/rules/gameplay.md` (FIT CAMERA PAN
+  SLACK); probes in `.claude/probes/K148_K149/`.]*
 
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the
