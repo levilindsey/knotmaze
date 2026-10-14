@@ -15,6 +15,15 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K152** · Leaner verification, proposed 2026-10-13 (Levi asked which
+  careful testing could be deferred or combined): (1) one scripted phone
+  pass per merge round instead of a gate per feature, so merges stop
+  queueing for the phone; (2) small UI items (K140, K146, K148, K149,
+  K151) get unit tests and a screenshot, no perf lock, phone or sleep
+  sweep, and K148, K149 and K151 share one agent; (3) render prototypes
+  skip the CPU mirror and parity tests until Levi picks a look, and the
+  merge stage adds them; (4) kept as they are: the pins and goldens,
+  sleep checks for physics and generation, parity for the GPU pipeline.
 - **K57** · (Levi, 2026-10-13: revisit after all other changes, in the
   careful daily review with K46 and K84.) Confirm the daily's exempt
   settings: the ones a player may change without leaving the daily
@@ -279,11 +288,14 @@ and never reused.
   while the load settle lasts, and the hidden pre-sim on the chunked
   loader with a cap. Both are params, so Levi's full settle-first is one
   setting away (the cap at its max), for him to compare.
-  - owner: the coordinator (session d8031183), launching its agent at
-    16:47.
-  - branch: none yet (the agent's worktree branches from origin/master).
-  - evidence: `.claude/probes/K147/` in the agent's worktree, to come.
-  - next: launch the stage from the brief.
+  - owner: the agent `a9fb11cb562c6302d` (Opus) of session d8031183,
+    since 2026-10-13 16:49.
+  - branch: `worktree-agent-a9fb11cb562c6302d`, worktree
+    `.claude/worktrees/agent-a9fb11cb562c6302d` (from 319a734); last
+    commit: none yet.
+  - evidence: `.claude/probes/K147/` in its worktree (untracked).
+  - next: the stage, then the coordinator's review, the merge and a
+    phone check.
   - brief: `docs/design/K147.md`.
 - **K122** · Third-party license notices (K117): the bundle in
   `dist/assets` carries PixiJS, Tweakpane, simplex-noise and their
