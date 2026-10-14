@@ -167,6 +167,35 @@ entry is labeled with its source; the narrative is in
   every indicator is inert and taps go through it to the maze. K76 HOOK:
   finishIndicator.gate(pred) ANDs in a predicate (the thread-reveal mode
   hides the finish's until the exit has been seen; returns its remover).
+  THE HEAD is the third client (K148, 2026-10-14; ui/head_indicator.ts holds
+  the pure decisions; registered after the finish, before the minotaur): a
+  black disc wearing K83's head glyph (`fabric.markerGlyphId("head")`, a
+  ring and a dot by default) at the marker's radius, shown whenever the
+  head is off screen in a built fabric maze - the intro, play, after a
+  finish, under fog, either camera (`headIndicatorWhy`: only knot mode or
+  no maze ("no maze") and the hidden load settle ("loading") hide it; probe
+  hook `headWhy`). NO VIEWER SETTING of its own (the brief left it open):
+  the finish's can be switched off because it gives a direction away, the
+  head's gives nothing away, the minotaur's has none either; tapToPan still
+  makes it inert. A TAP (`returnToHead`, `headReturnPlan`): the FIT camera
+  eases (0.6 s; reduced motion jumps) to center the head at the zoom the
+  player is at, as near as the pan clamp allows (a head at the maze's far
+  edge lands at the slack's limit, on screen); the FOLLOW camera eases onto
+  its own framing of the head (`followScale`) and the spring is at full
+  strength the moment the tween ends (`camTween.hold` = -(FOLLOW_DELAY +
+  FOLLOW_RAMP); the finish's tap still passes PEEK_HOLD), so the follow
+  resumes at once; mid-intro the follow target is the whole knot, so a tap
+  only pulls the spring to full strength. A follow run of 14 moves never
+  showed it at 1400x900 and flashed it once for 0.33 s at 411x753 (a long
+  run outpaced the spring, and the shared off-screen test says "off
+  screen"); a short debounce would hide that, left for Levi. GLYPH BUG
+  found here: the indicator's icon group sets its own stroke, which the
+  glyph's filled dots inherited at the default width 1 (12.6 px once
+  scaled), so the head's dot and the minotaur's bull eyes drew as
+  disc-sized white blobs; `markerGlyphSvgMarks` dots now say
+  stroke="none" (pinned in marker_glyphs.test.ts). Probe:
+  `.claude/probes/K148_K149/probe.mjs fit | follow | slack | solve |
+  reduced | fog` (each with `:phone`), flicker.mjs, both.mjs, intro.mjs.
 
 ## The real-time minotaur
 
@@ -364,6 +393,41 @@ entry is labeled with its source; the narrative is in
   (ctrl+wheel) zooms; double-click / double-tap empty space resets. The
   camera steps in EVERY ticker branch (moves and fog growth happen while
   the physics sleeps).
+
+- FIT CAMERA PAN SLACK (K149, 2026-10-14; ui/view_clamp.ts, pure and
+  tested; brief docs/design/K148_K149.md). Levi: "we should support
+  panning the maze a bit more off-screen at furthest zoom. Especially to
+  get it out from under the menu." The fit view is screen = zoom x
+  fitScreen + pan; until K149 the zoomed fit frame had to COVER the
+  screen, so zoom 1 had no pan range. Now the frame may overhang the
+  screen's edge by PAN_SLACK = 0.3 of the screen's size per side, at every
+  zoom: pan in [size (1 - zoom) - 0.3 size, 0.3 size] per axis
+  (`clampFitView`, called by main.ts's clampView). A fixed share of the
+  SCREEN, so opening or closing the panel never moves the view. WHY 0.3:
+  the desktop panel is 256 px at 10 px from the right, and a maze that
+  fills the width has FIT_MARGIN 40, so it must move left by 226 px plus a
+  gap: 17% of 1400, 23% of 1000, 29% of 800 (below 700 px the panel
+  starts closed). MEASURED (`.claude/probes/K148_K149/probe.mjs slack`):
+  at 1000x800 and 800x700 the maze overlaps the open panel at home (its
+  right edge 850 against the panel's 734; 701 against 534) and clears it
+  at the limit (550; 461); at 1400x900 it already clears it at home (1099
+  against 1134). A PHONE (411x753): the open panel is 320 px wide at x
+  81-401 (78%) and runs to the bottom, so no share short of about 70%
+  clears it; 0.3 moves the maze 123 px, and the panel starts closed
+  there. Left as is (open for Levi). WHAT FOLLOWS: zoom about a point
+  (pinch, wheel) keeps the point under the cursor, and zooming back out
+  returns to the slack view it left (at zoom 1 the pan range is no longer
+  a point, so it is not snapped home); the RESET (double-click, double-tap
+  on empty space; viewHoming) ended on |zoom - 1| alone, so from a
+  slack-panned zoom-1 view it snapped on its first frame: it now waits
+  for the pan too and eases; the FOLLOW camera has no clamp (placeWorldAt
+  clamps only its zoom), is unchanged, and returns to the head by itself
+  2.2 s after a gesture; indicators place themselves against the chrome
+  whatever the pan (both discs clear of each other and of the open panel
+  at 1400x900 and 411x753). Hooks: `__knotView()` also returns the fit
+  camera's zoom, panX and panY, `__knotIndicators()` headWhy and
+  followIdle. GOTCHA: puppeteer's `mouse.click(x, y, {clickCount: 2})`
+  gave two pointerdowns and no dblclick here; dispatch the event.
 
 - *From RENDER-ONLY PLUCKS (2026-10-11), taps and drags:* TAPS + AUTO PLUCKS touch zero physics
   (bitwise: positions/prev/zPos/pass ctrls, 0 steps, never wake); a DRAG

@@ -723,7 +723,7 @@ export function buildPanel(
   );
   const tapToPanRow = row(
     fMaze, s, "tapToPan", undefined,
-    "Tapping an edge marker (the finish's) brings what it points at into view. Off: the markers only point, and taps go through them to the maze. Remembered per browser.",
+    "Tapping an edge marker (the finish's, your own position's, the minotaur's) brings what it points at into view. Off: the markers only point, and taps go through them to the maze. Remembered per browser.",
     SETTINGS_DEFAULTS.tapToPan,
     () => callbacks.onTapToPanToggle(settings.tapToPan === true)
   );

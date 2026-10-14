@@ -1803,10 +1803,8 @@ async function main(): Promise<void> {
     // The tap-to-pan preference: off, indicators let taps through.
     tapEnabled: () => settings.tapToPan,
   });
-  // A tap on an indicator: ease the camera to frame its target - and the
-  // head, as far as the zoom allows (placeWorldAt clamps the zoom-out: the
-  // home view in fit mode, the whole knot in follow mode, which then holds
-  // the framing a moment before it eases back to the head).
+  // Start an eased move that puts world (x1, y1) at the screen's center at
+  // scale s1 (placeWorldAt clamps it every frame); see camTween.
   const startCamTween = (
     x1: number,
     y1: number,
@@ -1827,6 +1825,10 @@ async function main(): Promise<void> {
       hold,
     };
   };
+  // A tap on an indicator: ease the camera to frame its target - and the
+  // head, as far as the zoom allows (placeWorldAt clamps the zoom-out: the
+  // home view in fit mode, the whole knot in follow mode, which then holds
+  // the framing a moment before it eases back to the head).
   const frameWorld = (wx: number, wy: number): void => {
     let minX = wx;
     let maxX = wx;
