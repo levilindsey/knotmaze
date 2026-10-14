@@ -253,6 +253,59 @@ export function wholeShape(u: number, e0: number, e1: number): number {
   return Math.sin(PI * x);
 }
 
+// ---------------------------------------------------------------------------
+// REDUCED MOTION (K104 goal 3; the Motion setting, ui/motion.ts): the pluck
+// shows without displacement and the sound is unchanged. The plucked unit
+// BRIGHTENS toward white on the voice's decay clock instead - one instant
+// rise, one smooth fall, nothing that moves. Its weight along the unit is a
+// plateau CUE_UNIT over the unit's vibrating extent (W's extent; each end
+// ramps in over CUE_RAMP h, at most a third of the unit) plus CUE_TAP
+// sin(pi x) on the tapped lobe, so the lobe under the finger reads first,
+// as its larger swing does in the moving pluck.
+export const CUE_UNIT = 0.45;
+export const CUE_TAP = 0.3;
+export const CUE_RAMP = 2;
+// A cue ends once its brightest station is under this share of white.
+export const CUE_KILL = 0.01;
+
+function smooth01(x: number): number {
+  const c = x < 0 ? 0 : x > 1 ? 1 : x;
+  return c * c * (3 - 2 * c);
+}
+
+// The cue's weight at unit coordinate u over the extent [e0, e1]: ramp =
+// the end ramp (world), tap = the tapped lobe's bump there (sin(pi x) on
+// that lobe, else 0). In [0, 1]; 0 outside the extent and at its ends.
+export function cueWeight(
+  u: number,
+  e0: number,
+  e1: number,
+  ramp: number,
+  tap: number
+): number {
+  const L = e1 - e0;
+  if (!(L > 1e-6)) return 0;
+  const d0 = u - e0;
+  const d1 = e1 - u;
+  if (!(d0 > 0 && d1 > 0)) return 0;
+  const r = Math.min(Math.max(0, ramp), L / 3);
+  const plateau = r > 0 ? smooth01(d0 / r) * smooth01(d1 / r) : 1;
+  return Math.min(1, CUE_UNIT * plateau + CUE_TAP * Math.max(0, tap));
+}
+
+// The cue's strength (its weights' multiplier at onset): the request's gain
+// (tap 1; auto 0.75-1.25; drag 0.6-1.4), capped at CUE_GAIN_MAX, times
+// sqrt(pluckSize / CUE_SIZE_REF). pluckSize's default (url_state) is the
+// calibrated look; the slider still reads as stronger or weaker without
+// the swing's linear scale, and pluckSize 0 stays sound only (add()).
+export const CUE_GAIN_MAX = 1.25;
+export const CUE_SIZE_REF = 1.75;
+
+export function cueStrength(size: number, gain: number): number {
+  const g = Math.min(CUE_GAIN_MAX, Math.max(0, gain));
+  return g * Math.sqrt(Math.max(0, size) / CUE_SIZE_REF);
+}
+
 // W's room at a station whose nearest neighbor edge is `gap` away from the
 // thread's own edge ("overlap" mode).
 export function wholeRoom(gap: number, h: number): number {
