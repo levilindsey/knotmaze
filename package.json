@@ -2,6 +2,7 @@
   "name": "knotmaze",
   "private": true,
   "version": "0.4.0",
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "vite",
