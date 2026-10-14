@@ -40,6 +40,7 @@ import {
   pickHold,
 } from "./ui/key_moves";
 import type { Departure, KeyDir } from "./ui/key_moves";
+import { MOVE_PAD_KEY, MovePad, movePadPref } from "./ui/move_pad";
 import { MinotaurChase } from "./game/minotaur";
 import type { ChaseEvent } from "./game/minotaur";
 import { RevealAnimator } from "./render/reveal";
@@ -409,7 +410,11 @@ async function main(): Promise<void> {
   let mazeStatsShown = false;
   let finishIndicatorShown = true;
   let tapToPan = true;
+  // K120: the move pad, on by default for coarse pointers.
+  const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  let movePadOn = movePadPref(null, coarsePointer);
   try {
+    movePadOn = movePadPref(localStorage.getItem(MOVE_PAD_KEY), coarsePointer);
     statsShown = localStorage.getItem(STATS_KEY) === "1";
     // Opt-in since 2026-10-12 (Levi: the win banner carries the stats).
     mazeStatsShown = localStorage.getItem(MAZE_STATS_KEY) === "1";
@@ -427,6 +432,7 @@ async function main(): Promise<void> {
     showMazeStats: mazeStatsShown,
     finishIndicator: finishIndicatorShown,
     tapToPan,
+    movePad: movePadOn,
     motion: motion.pref,
   };
   const synth = new KnotSynth();
@@ -1548,6 +1554,14 @@ async function main(): Promise<void> {
         // Storage unavailable: the choice just doesn't persist.
       }
     },
+    // K120: the next frame shows or hides the move pad.
+    onMovePadToggle: (on) => {
+      try {
+        localStorage.setItem(MOVE_PAD_KEY, on ? "1" : "0");
+      } catch {
+        // Storage unavailable: the choice just doesn't persist.
+      }
+    },
     // Stored by the setting itself; the next frame's readers and the
     // stylesheets (the root attribute) follow at once.
     onMotionChange: (pref) => motion.setPref(pref),
@@ -1833,6 +1847,7 @@ async function main(): Promise<void> {
       menuButton,
       panel.pane.element.parentElement, // The panel (display none closed).
       stamp,
+      document.querySelector<HTMLElement>(".km-pad"), // K120 (hidden: none).
     ],
     // The tap-to-pan preference: off, indicators let taps through.
     tapEnabled: () => settings.tapToPan,
@@ -2860,6 +2875,18 @@ async function main(): Promise<void> {
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) dropKeys();
   });
+  // K120 Part B: the move pad (ui/move_pad.ts) - each finger on it is a
+  // held key; fabricTick shows it while the keys are live.
+  const movePad = new MovePad({
+    press: (id, dir) => {
+      if (!keysLive() || !heldKeys.press(id, dir)) return;
+      keyPress(dir);
+    },
+    release: (id) => {
+      heldKeys.release(id);
+      if (heldKeys.size === 0) endKeyHold();
+    },
+  });
 
   // Stage 19 - bounded tug + snap-back, pointer-layer only (the physics
   // grab machinery is untouched, so knot-mode byte identity holds). The
@@ -3661,6 +3688,9 @@ async function main(): Promise<void> {
           showFabricWin();
         }
       }
+      // K120: the move pad shows while the keys are live (knot mode too:
+      // there it hides).
+      movePad.setShown(settings.movePad && keysLive());
       renderer!.tickPaint(ticker.deltaMS / 1000);
       // After the paint pass: fabric pluck colors read this frame's paint.
       renderer!.tickPlucks(ticker.deltaMS / 1000);
@@ -4187,6 +4217,7 @@ async function main(): Promise<void> {
       live: keysLive(),
       hold: keyHold,
       held: heldKeys.dirs,
+      pad: movePad.isShown,
       arrival,
       scaleX: root.scale.x,
       scaleY: root.scale.y,

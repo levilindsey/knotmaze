@@ -51,6 +51,9 @@ export interface PanelSettings {
   // to its target (off: indicators let taps through to the maze).
   finishIndicator: boolean;
   tapToPan: boolean;
+  // K120 viewer preference (persisted per browser; ui/move_pad.ts): the
+  // four-way move pad, on by default for coarse pointers.
+  movePad: boolean;
   // K53 viewer preference (persisted per browser by ui/motion.ts): follow
   // the OS's reduce-motion setting, or override it either way.
   motion: MotionPref;
@@ -64,6 +67,10 @@ const SETTINGS_DEFAULTS: PanelSettings = {
   showMazeStats: false,
   finishIndicator: true,
   tapToPan: true,
+  movePad:
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(pointer: coarse)").matches,
   motion: "system",
 };
 
@@ -80,6 +87,7 @@ export interface PanelCallbacks {
   onMazeStatsToggle: (visible: boolean) => void;
   onFinishIndicatorToggle: (visible: boolean) => void;
   onTapToPanToggle: (on: boolean) => void;
+  onMovePadToggle: (on: boolean) => void;
   onMotionChange: (pref: MotionPref) => void;
   onSlackChange: () => void;
   onStyleChange: () => void;
@@ -726,6 +734,14 @@ export function buildPanel(
     "Tapping an edge marker (the finish's, your own position's, the minotaur's) brings what it points at into view. Off: the markers only point, and taps go through them to the maze. Remembered per browser.",
     SETTINGS_DEFAULTS.tapToPan,
     () => callbacks.onTapToPanToggle(settings.tapToPan === true)
+  );
+  // K120: the move pad (ui/move_pad.ts), a viewer preference like the two
+  // above.
+  const movePadRow = row(
+    fMaze, s, "movePad", undefined,
+    "A four-way pad in the bottom-right corner that moves like the arrow keys: press a direction to take the run that best matches it, and keep it pressed to keep going at each junction until nothing matches. On by default on touch screens. Remembered per browser.",
+    SETTINGS_DEFAULTS.movePad,
+    () => callbacks.onMovePadToggle(settings.movePad === true)
   );
   // K140: the finish confetti. Daily-exempt (how a finish celebrates, not
   // what was played). The amount has no step (K130: a step grid starts at
@@ -1502,6 +1518,7 @@ export function buildPanel(
     mazeStatsRow.hidden = !fab;
     finishIndicatorRow.hidden = !fab;
     tapToPanRow.hidden = !fab;
+    movePadRow.hidden = !fab;
     confettiRow.hidden = !fab;
     confettiAmountRow.hidden = !fab || !params.confetti;
     resetPathBtn.hidden = !fab;
