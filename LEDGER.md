@@ -30,6 +30,8 @@ and never reused.
   - Everything else leaves the daily, including moveSpeed, pathViz, fog,
     the intro and flow, and the physics tuning. K79's `backgroundSpeed`
     is not exempt either, like background and its intensity.
+  - Proposed exempt: K140's confetti on/off and amount (viewer
+    preferences).
 - **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
   in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
   Shortlist: the burn race (turn-based), the cut verb with an
@@ -64,16 +66,6 @@ and never reused.
   --accept-visibility-change-consequences` (reversible; hides the code,
   history, docs and this ledger from then on, not copies already made;
   the Pages deploy keeps working).
-- **K138** · Which of K80 section 4's costlier mechanisms to prototype
-  (Levi asked for the costs, 2026-10-13 14:31; the doc's sizes, sent the
-  same day). M-L or L: 4.8 sentries (call 9's "validated sentries"),
-  4.22 two-player (M hot-seat, L networked), 4.25 over-under swap. M:
-  4.1 locks and keys and 4.2 one-way runs (both in call 9's order), 4.4
-  required pickups (then 4.5 stars, S), 4.6 fleeing critters, 4.11
-  switches, 4.12 turnstiles, 4.18 color rules, 4.19 ice, 4.20 rescue,
-  4.23 the myth, 4.24 tides, 4.27 hidden runs, 4.31 more exits. The
-  ones that change generation (4.1, 4.2, 4.4, 4.11, 4.24, 4.31) also
-  need a solvability check there.
 
 ## In progress
 
@@ -129,35 +121,44 @@ and never reused.
   colors (brief items 3-4; recommended: per-effect scale, contrast and
   drift direction, vellum fiber density and grain; custom accent colors
   replacing the three gamut accents).
-  - owner: the stage B2b agent (aa480aebd402916d4, sonnet) of session
-    d8031183, started 2026-10-13 13:25 in B1's worktree: GPU ms per
-    shaped program under the perf lock, vellum's scale max 3 -> 2 (K129,
-    done in 854c366), and the re-verify. Stage B2 (ae47a194fcd2d9c76,
-    11:58-13:20): every A/B 0 px, smoke 70/70, the lore and the rebase;
-    53f3534 hides the detail row on vellum and aurora. Stage B1
-    (a4cf71c585e48612a, from 07:45) coded brief items 3-4 as ten codec
-    v4 appends at indices 71-80 (`bgsz`, `bgdt`, `bgfb`, `bggr`, `bgan`,
-    `bgcm`, `bgc0`-`bgc3`).
+  - owner: the stage B3 phone-gate agent (af4c00fad71109c41, sonnet) of
+    session d8031183, since 2026-10-13 about 15:38; it checks the phone
+    lock first. Stage B2b (aa480aebd402916d4, sonnet, 13:25-15:25) timed
+    each shaped program (GPU ms per pass at 3200x1800: vellum drift 2.08;
+    the scale-0.5 variants cost up to 4.3x their defaults, aurora's 1.67
+    the worst; scale 2, detail 2 and silk's angle are free), did K129
+    (1563a02) and re-verified: tsc, 419 tests, the build, A/B 19/19 (the
+    first run 18/19: K142), motion 38/38, explicit 12/12, smoke 70/70.
+    Stage B2 (ae47a194fcd2d9c76, 11:58-13:20): every A/B 0 px, smoke
+    70/70, the lore and the rebase; it hides the detail row on vellum and
+    aurora. Stage B1 (a4cf71c585e48612a, from 07:45) coded brief items
+    3-4 as ten codec v4 appends at indices 71-80 (`bgsz`, `bgdt`,
+    `bgfb`, `bggr`, `bgan`, `bgcm`, `bgc0`-`bgc3`).
   - branch: stage B `worktree-agent-a4cf71c585e48612a`
-    (`.claude/worktrees/agent-a4cf71c585e48612a`), on 54506a6; last
-    commit: 854c366 (B2b's GPU ms is 040c8d2; B2's handoff is 013ba7e).
-    Stage A is on mainline (9ffda8a); its phone gate passed 2026-10-13
-    12:03 (K10) and its worktree is removed.
-  - evidence: stage A's `.claude/probes/K79/` (`run_ab.ps1`,
-    `k79_sheet.mjs`, `k79_dstats.mjs`, `k79_gpu.mjs`, `k79_motion.mjs`;
-    `out/sheets/`, `out/ab_final/`, `out/motion.log`, `out/gpu_k79.log`);
-    stage B1's `k79b_smoke.mjs`, `k79b_cases.json` and `out/b1_smoke.log`,
-    copied there from its worktree; B2's sheets in the worktree's
-    `.claude/probes/K79/out/view/`.
-  - next: B2b, then B's phone gate (K10; "Stage B3: phone gate" in the
-    brief, with stage A's kit in `.claude/probes/K79/phone/`) once the
-    phone is unlocked, then the merge. File at merge: B1's probe-only
+    (`.claude/worktrees/agent-a4cf71c585e48612a`), rebased on 7f01e7e,
+    unpushed; last commit: d765731 (B2b's results; the last code change
+    is c7ad706). Stage A is on mainline (9ffda8a); its phone gate passed
+    2026-10-13 12:03 (K10) and its worktree is removed.
+  - evidence: in the main checkout, stage A's `.claude/probes/K79/`
+    (`run_ab.ps1`, `k79_sheet.mjs`, `k79_dstats.mjs`, `k79_gpu.mjs`,
+    `k79_motion.mjs`; `out/sheets/`, `out/ab_final/`, `out/motion.log`,
+    `out/gpu_k79.log`; the gate kit in `phone/`) and stage B1's
+    `k79b_smoke.mjs`, `k79b_cases.json` and `out/b1_smoke.log`; in the
+    worktree's `.claude/probes/K79/`, B2's sheets (`out/view/`) and
+    B2b's `out/gpu_b2.json`, `ab_rb*.log`, `k79b_k129.mjs` and
+    `k79b_control.json`. Copy at merge.
+  - next: B3 (the bench, the scale-0.5 costs and the panel rows on
+    touch; results to `phone/results.md`), then the merge: the
+    coordinator rebases, and the second of K79 B and K74 stage 1 to
+    merge renumbers its codec appends. File at merge: B1's probe-only
     residual (`__knotSetBackgroundParams` doesn't sanitize) and the sheet
     script's first-frame residual (B2).
-  - brief: `docs/design/K79.md` on the branch ("Stage B2 results",
+  - brief: `docs/design/K79.md` on the branch ("Stage B2b results",
     "Stage B3: phone gate").
-  - env: `.claude/probes/K79/run_ab.ps1` (its header starts servers on
-    5331/5332); stage B's servers on 5341-5344.
+  - env: `pwsh scripts/preview.ps1 -Port 5371 -Ref c7ad706` and `-Port
+    5372 -Ref 7f01e7e`, then `pwsh scripts/phone.ps1 -Ports 5371,5372`;
+    desktop A/Bs through `.claude/probes/K79/run_ab.ps1` (servers on
+    5331/5332).
 - **K90** · A physical minimum bend radius, stage 1 (Levi, 2026-10-13:
   "ideally we'd have a more physics-based constraint to prevent loops
   from becoming too tight in the first place"). No thread folds tighter
@@ -258,6 +259,28 @@ and never reused.
     param, settled with K80's brief.
   - brief: `docs/design/K74.md` ("Stages", "Stage 1 brief").
   - env: its dev servers on ports 5421-5424 (private vite cacheDir).
+- **K122** · Third-party license notices (K117): the bundle in
+  `dist/assets` carries PixiJS, Tweakpane, simplex-noise and their
+  dependencies with no license text (0 license comments), though their
+  MIT/ISC/BSD licenses require the notice with every copy. Levi, about
+  15:30: "Research how other apps handle this, and put-together a system
+  for including this in whichever way is most appropriate. Linking from
+  the credit line sgtm." Stage 1 researches it, then builds a notices
+  page generated at build time from the bundled modules, plus
+  hand-written credits (Quilez, PCG2D, Jimenez; the Hershey
+  acknowledgements, a condition of the font data, once K115 ships it),
+  linked from the panel's credit line, with a guard against an
+  unlicensed or unexpected package; it deletes the unused Vite icons.
+  No codec and no runtime change beyond the link, so no phone gate.
+  - owner: the stage 1 agent (sonnet) of session d8031183, launched
+    2026-10-13 about 15:50 in the research slot that K115's dropped
+    stage 1a freed.
+  - branch: its `worktree-agent-<id>` (`.claude/worktrees/agent-<id>`);
+    last commit: none yet.
+  - evidence: `.claude/probes/K122/` in its worktree (untracked).
+  - next: stage 1, then the coordinator's review of the page and the
+    merge.
+  - brief: `docs/design/K122.md`.
 
 ## Next, in order
 
@@ -271,66 +294,64 @@ links or dailies (Levi, 2026-10-13 13:17; CLAUDE.md "Pre-launch: no
 back-compat"), so codec appends no longer wait for each other: the
 second branch to merge renumbers its appends. Usage: don't hold agents
 back until the week nears 90% (Levi, 2026-10-13 07:40; 42% at 07:17,
-54% at 13:35; at 13:40 he said keep going at full speed; it resets
+54% at 13:35, 57% at 15:33; at 13:40 he said keep going at full speed; it resets
 Mondays at 12:00). Long work runs in stages from committed briefs (Levi,
 2026-10-13; the coordinator oversees it): each brief names its stage
 boundary, where the agent writes a "Stage N handoff" into the brief,
 commits and stops, and a fresh agent continues from it. K81 alone was
 about a third of the overnight spend.
 
-Order from 2026-10-13 14:55, after Levi's answers at 09:35, 13:17,
-13:30 and 14:31-14:39 (he may reorder). Running: K104 stage 1b, K74
-stage 1 and K127 on K81's branch (code); K79 stage B2b (measures, one
-small change). K74 runs its stages back to back in one code slot. The
-next research slot is K115 stage 1a. The phone is unlocked again (Levi,
-15:20; checked over adb) and takes one gate at a time, whichever is ready
-first: K79 B's (after B2b) or K81's (after K127). Then, as code slots free up:
+Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
+13:30, 14:31-14:39 and 15:30-15:40 (he may reorder). Running: K104
+stage 1b, K74 stage 1 and K127 on K81's branch (code); K122 stage 1 in
+the research slot (small, research first); K79 B's phone gate (B3). K74
+runs its stages back to back in one code slot. The phone takes one gate
+at a time: K79 B's now, then K81's after K127. Then, as code slots free
+up:
 1. K81's and K79 B's merges, each after its gate.
-2. K120 (no codec).
-3. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
+2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
+   want the real-time prototype... Do implement it."); it rebases over
+   K79 B and K81 if they merge first.
+3. K140, the finish confetti (small).
+4. K120 (no codec).
+5. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
    then option 3 (the spline fix) first.
-4. K122 (small).
-5. K132, after K79 stage B merges.
-6. K100, then K93, after K81 merges (the same renderer file).
-7. K92, then K111, after K79 stage B merges (both rework the panel);
+6. K132, after K79 stage B merges.
+7. K100, then K93, after K81 merges (the same renderer file).
+8. K92, then K111, after K79 stage B merges (both rework the panel);
    K111's pulse highlight modes after K81 too.
-8. K98, after K79 stage B and K81.
-9. K76 stage 2, after K81.
-10. K80 stage 1, the turn-aligned hunter, after K79 stage B and K81
-    merge (the panel and the renderer); then its real-time stage; then
-    K137's toggles, then K139.
-11. K74 stages 2-4, each after the one before.
-12. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
+9. K98, after K79 stage B and K81.
+10. K76 stage 2, after K81.
+11. K80's turn-aligned hunter, a modifier of the normal maze, after K79
+    stage B and K81 merge (the panel and the renderer); then K137's
+    toggles, K138's M mechanisms and K139.
+12. K74 stages 2-4, each after the one before.
+13. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
     K42. K90's spline fix touches K8: never run the two at once.
-13. K115's builder stages, after stage 1a's go.
-14. K116, lowest priority.
+14. K115's builder stages (no stage 1a: Levi, about 15:30).
+15. K116, lowest priority.
+16. K144, accounts and shared stats, after everything else (a stretch
+    goal).
 
-Waiting for Levi: K114 (its doc unread at 13:30), K138 (which costlier
-K80 mechanisms to build) and K117's timing; the G3-3 and G4-2 old-path
-deletions; after the churn, K46, K57 and K84.
+Waiting for Levi: K114 (its doc unread at 13:30) and K117's timing; the
+G3-3 and G4-2 old-path deletions; after the churn, K46, K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
+- **K140** · Finish confetti (Levi, 2026-10-13 about 15:35, verbatim
+  in `docs/design/levi_notes_2026-10-13.md`): a gratuitous confetti rain
+  from the top of the screen when you finish the maze, and a smaller
+  spray from around the finish spot, on every finish. Render-only: no
+  physics wake, and the frame loop runs only while pieces live
+  (`sceneAnimating()` in `src/main.ts`; K24). With the Motion setting
+  reduced (`src/ui/motion.ts`), a small burst or none. Params: on/off
+  and amount, proposed daily-exempt (K57). The phone gate checks fps
+  during the effect. Small; Opus. After K80's real-time mode.
 - **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
   key to keep advancing, taking the branch that matches the key at each
   junction it reaches; a quick control on phones too, such as
   screen-region buttons. No codec params. Compare
   `docs/design/K80_gameplay_additions.md` 4.29 (Sprint).
-- **K122** · Third-party license notices (K117): the bundle in
-  `dist/assets` carries PixiJS, Tweakpane, simplex-noise and their
-  dependencies with no license text (0 license comments), though their
-  MIT/ISC/BSD licenses require the notice with every copy. Generate a
-  notices file at build time (rollup-plugin-license, or a small Vite
-  plugin over the bundled modules' packages) and link it from the panel's
-  credit line. Small; no codec. The same file carries hand-written
-  credits from a tracked source (Levi's question, 2026-10-13 14:39): the
-  Hershey acknowledgements (A. V. Hershey, NBS; James Hurt, Cognition,
-  Inc.), a condition of the font data, once K115 ships it; and courtesy
-  credits for techniques the code comments already cite (Quilez's domain
-  warping in `src/render/background_shaders.ts`: check the terms of his
-  article's snippet; the PCG2D hash, Jarzynski and Olano; interleaved
-  gradient noise, Jimenez). Delete the unused Vite template icons
-  `src/assets/vite.svg` and `typescript.svg`.
 - **K132** · Drop link and daily back-compat (Levi, 2026-10-13: "we
   can ignore keeping support for previous url params, or preserving
   mazes from previous control combinations. Breaking changes are 100%
@@ -344,9 +365,11 @@ K5-K7 (split, frame loop, worker) follow.
   `&key=value` overrides and the `s=` / `seed=` keys that probes use
   (am, mf, psz, ms, fw), read against today's defaults (update the probe
   lore); determinism (K108); the pins as change detectors. Check that a
-  changed daily refuses its saved attempt cleanly (K47). Rewrite the
-  passages in CLAUDE.md and `.claude/rules/` (gameplay.md,
-  generation.md, probes.md). After K79 stage B merges.
+  changed daily refuses its saved attempt cleanly (K47). Drop
+  `test/ui/param_codec.test.ts`'s literal CODEC_V1 pins and the
+  per-version table pins. Rewrite the passages in CLAUDE.md (the
+  compact links decision's frozen codec tables) and `.claude/rules/`
+  (gameplay.md, generation.md, probes.md). After K79 stage B merges.
 - **K100** · The fog of war resets on a restart only (Levi,
   2026-10-13: "The fog should reset when the maze restarts. But the fog
   shouldn't reset if we just backtrack to the start."). Today `update()`
@@ -422,25 +445,32 @@ K5-K7 (split, frame loop, worker) follow.
   `docs/design/K80_gameplay_additions.md` section 0, 17b729b). The
   telegraphed hunter, with the guard and stalker variants, and Abbott's
   rule as a puzzle mode (call 1); the telegraph on by default, as a
-  param (call 2). A toggle between turn-aligned and real-time movement.
-  In real time it has a wander pace and an approach pace, randomized
-  pauses at junctions (maybe randomized paces), and detection starts and
-  ends at distances measured along the threads to the player, not in
-  runs. Every distance and speed is a param. A catch sends you back to
-  the entrance and is counted (call 3). No undo with it, even in free
-  play (call 4). A wait move only in turn-aligned mode (call 5). Dead
-  ends stay its hunting ground (call 6). Dailies later (call 7: "Let's
-  not worry yet"). The first music and rhythm experiment (call 8: "I do
-  want to be able to play with alternate modes"). Section 5's order
-  after it (call 9).
+  param (call 2). Turn-aligned and real-time movement (call 3). In real
+  time it has a wander pace and an approach pace, randomized pauses at
+  junctions (maybe randomized paces), and detection starts and ends at
+  distances measured along the threads to the player, not in runs.
+  Every distance and speed is a param. A catch sends you back to the
+  entrance and is counted (call 3). No undo with it, even in free play
+  (call 4). A wait move only in turn-aligned mode (call 5). Dead ends
+  stay its hunting ground (call 6). Dailies later (call 7: "Let's not
+  worry yet"). The first music and rhythm experiment (call 8: "I do want
+  to be able to play with alternate modes"). Section 5's order after it
+  (call 9). Real time comes first, as a dedicated mode rather than a
+  toggle on another (Levi, about 15:30: "I really want the real-time
+  prototype. Maybe it's not a modifier of another gameplay mode, but
+  rather a dedicated mode itself. Do implement it."); the turn-aligned
+  hunter stays a modifier of the normal maze, later.
   - for the brief: glyphs on runs need a phone minimum size (threads are
     4-5 px at fit scale); fleeing critters need a simulation first (a
     perfect fleer is uncatchable at equal speed on our looped mazes).
     The doc judged a smart real-time chaser not a fit (4.35: it loses the
-    telegraph's board-game clarity; R.4.2 narrows that), so the toggle
-    is the test, with turn-aligned the default. K114's proposed `clock`
-    param (turn | beat | realtime) is the same switch.
-  - next: a staged brief, the turn-aligned hunter first, then real time.
+    telegraph's board-game clarity; R.4.2 narrows that); the real-time
+    mode is the test. K114's proposed `clock` param (turn | beat |
+    realtime) is the same switch. K120's held keys help the chase.
+  - next: a staged brief (to write: `docs/design/K80.md`), the real-time
+    mode first, in the next free code slot (it rebases over K79 B and
+    K81 if they merge first); the turn-aligned hunter later (item 11 of
+    the order).
   - evidence: `.claude/probes/K80/` (copied from the worktree; doc
     section 7 reruns it); worktree
     `.claude/worktrees/agent-a25726c24f262b138` kept.
@@ -453,7 +483,18 @@ K5-K7 (split, frame loop, worker) follow.
   pluck, 4.28 hints, 4.29 sprint, 4.30 snares, 4.32 lives, 4.33 mud,
   4.34 scent. Plus Levi's sleeper variant: an enemy that appears at a
   junction a turn or two after you leave it, then follows you, with
-  some variance. The costlier ones wait in K138.
+  some variance. The M ones are K138; the M-L and L ones wait in K141.
+- **K138** · K80 section 4's M mechanisms, each behind a toggle
+  (Levi, 2026-10-13 about 15:30, verbatim in
+  `docs/design/levi_notes_2026-10-13.md`: "Let's defer those M-L or L
+  items. Let's do all the M items."), after K137: 4.1 locks and keys
+  and 4.2 one-way runs (both in call 9's order), 4.4 required pickups
+  (then 4.5 stars, S), 4.6 fleeing critters (simulate first: K80's
+  brief notes), 4.11 switches, 4.12 turnstiles, 4.18 color rules, 4.19
+  ice, 4.20 rescue, 4.23 the myth, 4.24 tides, 4.27 hidden runs, 4.31
+  more exits. The ones that change generation (4.1, 4.2, 4.4, 4.11,
+  4.24, 4.31) need a solvability check there. The M-L and L ones are
+  K141.
 - **K139** · Collapse mode (Levi, 2026-10-13 about 15:10, verbatim in
   `docs/design/levi_notes_2026-10-13.md`): no backtracking, each run
   collapses behind you; collapse as much of the maze as you can and
@@ -517,27 +558,35 @@ K5-K7 (split, frame loop, worker) follow.
 - **K115** · Cursive text and shapes, decided (Levi, 2026-10-13 14:32,
   verbatim in `docs/design/levi_notes_2026-10-13.md`; design
   `docs/design/K115_cursive_text.md`, ded57f7). Its staged plan goes
-  ahead: stage 1a, a half-day legibility go/no-go with the real renderer
-  at phone zoom; then the text builder and a standalone welcome/credits
-  scene, the title thread, text inside a maze, then shapes. Calls:
-  pinned text (1). Junction+spur where a join meets a letter's body (a
-  c d e g o q), the spur a real, travelable dead end, not decoration
-  (2). Text first in the standalone scene (3). Hershey Script Simplex
-  for Latin (4): its lowercase letters all join at mid x-height, so a
-  word is one thread; its capitals don't join (authored joins, a
-  connector, or lowercase only at first). Text inside the one link
-  token, so the codec gains a string type (5). No foreign threads inside
-  words (6).
+  ahead without stage 1a's legibility test (Levi, about 15:30: "We can
+  assume that text reads at phone zoom. You don't need to test that."):
+  the text builder and a standalone welcome/credits scene, the title
+  thread, text inside a maze, then shapes. Calls: pinned text (1).
+  Junction+spur where a join meets a letter's body (a c d e g o q), the
+  spur a real, travelable dead end, not decoration (2). Text first in
+  the standalone scene (3). Hershey Script Simplex for Latin (4): its
+  lowercase letters all join at mid x-height, so a word is one thread.
+  Its capitals don't join, and Levi wants capitals (about 15:30: "I want
+  to support capitals."): first a generated connector for every capital
+  (a curve from the capital's last stroke to the next letter's lead-in,
+  matching both directions), then hand-made joins (the capital's last
+  stroke redrawn in the glyph data) where one measures badly, which also
+  fixes the D's self-touching flourish. Text inside the one link token,
+  so the codec gains a string type (5). No foreign threads inside words
+  (6).
   - for the briefs: an explicit over-pass field on CROSSING nodes (the
     lattice keeps its path, so the golden stays byte-identical); a
     decorative walk-graph flag for dots and accents (spurs are walkable
     now); K109's piece model must count a text bridge and
     `repairTailRoute` (K110) must not cut it; `buildCellMask` keeps only
     the largest component; a TEXT run flag. Hershey's acknowledgements
-    ship with the data (K122). Evidence: `.claude/probes/K115/`
-    (Hershey data and its license; SVG-proxy measurements, not the real
-    renderer).
-  - next: the stage 1a probe, in a research slot.
+    ship with the data (K122). The connector's worst case: W to e spans
+    19 HU, about two letter widths, so the curve swoops and can cross
+    letters at shallow angles. With stage 1a dropped, the builder
+    calibrates the doc's section 3.4 thresholds as it goes. Evidence:
+    `.claude/probes/K115/` (Hershey data and its license; SVG-proxy
+    measurements, not the real renderer).
+  - next: the builder's stage 1 brief, at its place in the order.
 - **K116** · Alternate pluck instruments and accompaniment, lowest
   priority (Levi, 2026-10-13 13:30; his calls at 14:39 are verbatim in
   `docs/design/levi_notes_2026-10-13.md`; design
@@ -554,6 +603,21 @@ K5-K7 (split, frame loop, worker) follow.
   probe. Section 6's sources are unverified leads from memory (the
   VSCO-2, FluidR3_GM and MusyngKite licenses, the mode ratios, iOS
   `navigator.audioSession`, Opus on Safari). The loop length is K125.
+- **K144** · Accounts and shared stats, a stretch goal after
+  everything else (Levi, 2026-10-13 about 15:40, verbatim in
+  `docs/design/levi_notes_2026-10-13.md`): log in through an OAuth
+  provider and keep stats across devices; an opt-in checkbox to share
+  them (maybe only when logged in); simple backend services that scale
+  cheaply; averages and percentile bands per metric and level for
+  opted-in players; cheap anti-cheat that silently flags suspect
+  accounts and leaves them out of the aggregates.
+  - for the design: K108's determinism and K47's move records let the
+    server replay a submitted walk (valid moves, a plausible time for
+    `moveSpeed`), a cheap check. Backends to weigh: Cloudflare Workers +
+    D1 beside the Pages site, or the SnoringCat platform (Nakama on
+    Hetzner, hopnbop's). Accounts bring a privacy policy and account
+    deletion.
+  - next: a design doc, after everything else.
 - **K10** · Phone benchmark after every stage. Baseline (Pixel 11, Chrome
   154, 2026-10-11, default maze settled): 30 fps at rest with defaults,
   51 fps with `fw=0`. Flow at rest halves the frame rate today. Compare
@@ -778,6 +842,15 @@ K5-K7 (split, frame loop, worker) follow.
   sleeps (140 s of sim, still moving), on both 7e41a02 and ade3537, so
   not K110's doing; maybe the K13 attractor. Evidence:
   `.claude/probes/K110/sheet/results_run1_tree_awake.json`.
+- **K142** · The A/B harness's first case in a fresh browser can read
+  nonzero: 1 of 11 such runs (K79 B2b's `none_desk`, 274 px, max delta
+  46, specks on thread edges). The master frame differed and the camera
+  views matched; the cause is not found (a cold server or GPU cache is a
+  suspect). Rerun before trusting it; a warm-up case is untested
+  (`docs/design/K79.md` on K79's branch, "The 18/19 run").
+- **K143** · Vellum's fibers read as long crossing hatching near
+  scale 2, the slider's new max (K129). Worth a look before K79 B
+  merges (sheets in K79's worktree, `.claude/probes/K79/out/view/`).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -901,6 +974,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K135** · Keep the start/exit pair when a join reaches the other
   flank of an untrimmed cut: 98 tiny designs (gs 2-4) got a longer
   optimal under K110, typically 4.563 -> 5.270.
+- **K141** · K80 section 4's costlier mechanisms, deferred (Levi,
+  2026-10-13 about 15:30: "Let's defer those M-L or L items."): 4.8
+  sentries (call 9's "validated sentries"), 4.22 two-player (M
+  hot-seat, L networked), 4.25 over-under swap
+  (`docs/design/K80_gameplay_additions.md`). The M ones are K138.
 
 ## Done
 
@@ -923,7 +1001,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   would alias), and the scale's max drops from 3 to 2: at 3 the wash and
   contours are nearly empty and the fibers read as long hatching (sheets
   in K79's worktree, `.claude/probes/K79/out/view/`). Done on K79's
-  branch in 854c366; lands with K79 stage B (2026-10-13).
+  branch in 1563a02 (854c366 before its rebase); lands with K79 stage B
+  (2026-10-13).
 - **K121** · The player's disc hides the start of each move pulse
   (K98's call 4). Dropped: Levi keeps it as is (2026-10-13: "This is fine
   as-is.").
@@ -940,7 +1019,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   change; the 2.8 one-liner stays on branch
   `worktree-agent-ac664e8a9e271757a` (4fa22e2), its worktree removed.
 - **K52** · Default background: Levi kept `vellum` (2026-10-13), still
-  static at auto speed. Decided 2026-10-13, no change.
+  static at auto speed. Decided 2026-10-13, no change. Vellum's drift,
+  when on, costs 2.1 ms per pass (0.35 ms per 60 Hz frame) on the
+  desktop at 3200x1800 (K79 B2b); its phone cost comes from K79's B3
+  gate.
 - **K94** · The mouse wheel still zooms on Levi's hardware
   (2026-10-13), so the fractional-delta test in `src/main.ts` stays.
   Decided 2026-10-13, no change.
