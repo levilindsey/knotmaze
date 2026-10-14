@@ -123,19 +123,31 @@ Phases: start | frames | looks | cleanup | summary (`all` runs them in
 order). The phone must be awake and unlocked first (the pass never wakes
 it); the watchdog stops the pass on a touch, a key, a lock or another
 app in front, and `retry_quiet.ps1` retries once after 15 quiet minutes.
-FRAMES (`bench.mjs`): fabric at 0/10/21 moves and knot (`mf=0`) at rest,
+`-WaitReady <min>` (K171 b) waits for the phone read-only (a check every
+3 minutes, two ready in a row start the pass, exit 3 at the deadline);
+`retry_quiet.ps1` waits the same way (`-WaitReadyMin`) instead of
+exiting 3, and `-Phase check` is the one-shot read-only check. Never
+pipe a `-Dry -Phase start` run (its Chrome child inherits the pipe and
+the command never returns): redirect it to a file.
+FRAMES (`bench.mjs`): fabric at 0/7/13 moves and knot (`mf=0`) at rest,
 both builds interleaved per rep (fps, p95, longest frame, render ms,
 asleep), plus K147's load scenario (rAF intervals from a fresh
 navigation: time to first frame, frames over 50 ms, longest, first
-sleep; default link and the slow case `gs=18`). `?b.J` is solved in 14
-moves, so the 21-move cell stops early (the row's `made`, and the
-summary's table title, say so). LOOKS (`looks.mjs`, `sheet.mjs`): JSON
+sleep; default link and the slow case `gs=18`; 30 s, because K147 builds
+first slept at about 17.5 s on the phone). `?b.J` is solved on its 14th
+move, and since K155 and K140 a finish shows stars and throws confetti,
+which a frame cell must not time: the cells stop at 13 (the row's
+`made`; the summary flags a sample taken at the finish). LOOKS
+(`looks.mjs`, `sheet.mjs`): JSON
 `{looks:[{name, link, load: sleep|frozen|none, needs:[...], steps:[...]}]}`;
 the header of `looks.mjs` is the spec and `looks.example.json` is K81's
 arc. `needs` = `__hook`, `param:<key>` (a key of `__knotParams()`) or
 `js:<expr>`; a build without it (the feature is new) records `missing`
 and the pass goes on, and only a watchdog trip stops it. Steps: waitSleep
-wait moves tapChoice click panel scroll pin reload eval shot burst. A
+wait moves tapChoice click panel scroll pin reload eval shot burst. An
+`eval` step runs page JS (a Promise is awaited) and keeps its JSON result
+in the report (`steps[].result`, listed in the summary): K140's frame
+timing while confetti falls, K80's walk to the hunt. A
 look runs on the head first (junction crop boxes are chosen there and
 reused on base). The sheet puts base on the left (blue bar) and head on
 the right (orange); a pixel diff is made for single shots only, and only

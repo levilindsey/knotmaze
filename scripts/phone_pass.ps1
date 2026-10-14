@@ -4,7 +4,7 @@
 # Chrome, and measures both builds interleaved in ONE tab of its own:
 #   frames   the frame bench (scripts/phone_pass/bench.mjs): fps, p95, the
 #            longest frame, render ms and sleep state at rest in knot mode and
-#            in fabric mode at 0, 10 and 21 moves, plus K147's load scenario
+#            in fabric mode at 0, 7 and 13 moves, plus K147's load scenario
 #            (a fresh navigation: time to first frame, frames over 50 ms, time
 #            to first sleep) on a default link and on its slow case (gs=18)
 #   looks    a JSON list of looks (-Looks), shot on both builds, side-by-side
@@ -46,8 +46,12 @@
 #   -Head <ref>       the round's head (default master)
 #   -Looks <json>     the looks file (see looks.mjs)
 #   -Reps 3           bench repetitions, both builds interleaved in each rep
-#   -Moves 0,10,21    fabric move counts to sample
-#   -LoadSeconds 15   length of K147's load scenario
+#   -Moves 0,7,13     fabric move counts to sample. ?b.J is solved on its 14th move, and
+#                     since K155 and K140 a finish shows stars and throws confetti,
+#                     which a frame cell must not time: stop short of it (check each
+#                     row's `made`; the summary flags a cell sampled at the finish)
+#   -LoadSeconds 30   length of K147's load scenario (K147 builds first slept at
+#                     about 17.5 s on the phone, so 15 s censored first-sleep)
 #   -Out <dir>        default <repo>\.claude\probes\rounds\<yyyy-MM-dd>-<head sha>
 #                     (untracked). Later phases without -Out use that default,
 #                     else the newest folder under rounds\ that has a config.json
@@ -92,8 +96,8 @@ param(
   [string]$Looks = "",
   [int]$Reps = 3,
   [string]$Out = "",
-  [string]$Moves = "0,10,21",
-  [int]$LoadSeconds = 15,
+  [string]$Moves = "0,7,13",
+  [int]$LoadSeconds = 30,
   [int]$WaitReady = 0,
   [string]$Serial = "",
   [string]$Noise = "",

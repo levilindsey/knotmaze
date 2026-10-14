@@ -42,7 +42,8 @@ async function sample(b, rep, cell, moves, extra = {}) {
   const meta = await page.evaluate(() => {
     const k = window.__knotFabric && window.__knotFabric();
     const v = window.__knotView && window.__knotView();
-    return { fab: k ? { n: k.pathEdges.length, head: k.head, solved: k.solved } : null, view: v ? { x: +v.x.toFixed(1), y: +v.y.toFixed(1), s: +v.s.toFixed(3) } : null, vis: document.visibilityState };
+    // vp: the page's viewport (CSS px) and dpr. The phone may sit in landscape (810x331 on 2026-10-14), and a floor taken in one orientation does not carry to the other.
+    return { fab: k ? { n: k.pathEdges.length, head: k.head, solved: k.solved } : null, view: v ? { x: +v.x.toFixed(1), y: +v.y.toFixed(1), s: +v.s.toFixed(3) } : null, vp: [window.innerWidth, window.innerHeight, +window.devicePixelRatio.toFixed(3)], vis: document.visibilityState };
   });
   const row = { cell, rep, build: b.key, moves, sha: stampSha(stamp), asleep: /asleep/.test(stamp), sleptAtS: sleptAt, ...extra, k10, render, ...meta, thermal: thermal() };
   logLine(FILE, row);

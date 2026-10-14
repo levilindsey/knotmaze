@@ -3,7 +3,7 @@
   "looks": [
     {
       "name": "k81-arc",
-      "_doc": "K81's phone look: frozen layout (phy=0&fw=0: both builds settle to one layout), clocks pinned, DOM chrome hidden. Whole frame at 0 moves (base vs head should differ by 0 px), then crops around up to 5 traveled junctions after 10 and 21 cheapest moves (the same boxes on both builds, chosen on the head). A build before K81 lists every junction record; add a needs on fieldProbe.routes to skip it there.",
+      "_doc": "K81's phone look: frozen layout (phy=0&fw=0: both builds settle to one layout), clocks pinned, DOM chrome hidden. Whole frame at 0 moves (base vs head should differ by 0 px), then crops around up to 5 traveled junctions after 10 and 13 cheapest moves (the same boxes on both builds, chosen on the head). Stop short of the finish (?b.J is solved on its 14th move): since K140 a finish throws random confetti, which differs between two shots of one build. A build before K81 lists every junction record; add a needs on fieldProbe.routes to skip it there.",
       "link": "?b.J&am=instant&snd=none&phy=0&fw=0",
       "load": "frozen",
       "steps": [
@@ -12,9 +12,9 @@
         { "op": "moves", "n": 10 },
         { "op": "pin" },
         { "op": "shot", "name": "m10", "junctions": 5 },
-        { "op": "moves", "n": 11 },
+        { "op": "moves", "n": 3 },
         { "op": "pin" },
-        { "op": "shot", "name": "m21", "junctions": 5 }
+        { "op": "shot", "name": "m13", "junctions": 5 }
       ]
     }
   ]
