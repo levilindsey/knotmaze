@@ -224,7 +224,7 @@ and never reused.
     about 01:56 or when the stage is done.
   - branch: `worktree-agent-a595ec530724dbba1`
     (`.claude/worktrees/agent-a595ec530724dbba1`), from ca7d3e6; last
-    commit: ca7d3e6 (the brief).
+    commit: `a9973c6` (WIP, unpushed; 01:19).
   - evidence: `.claude/probes/K156/3c/` in its worktree (copy at merge);
     the 3a and 3b worktrees, kept until 3c merges
     (`.claude/worktrees/agent-a262df65dcc1489a7`,
@@ -247,12 +247,13 @@ and never reused.
   - owner: claude session d8031183 (the coordinator), a background
     cleanup script under the perf lock.
   - branch: mainline (no code); last commit: n/a.
-  - evidence: `.claude/probes/K161/cleanup.log`.
-  - next: run the cleanup: the Chrome profiles older than a day, then the
-    merged worktrees agent-a40b9ac956a4eaa61, a8acc04204f0e3be8,
-    a92faf33828bf0d6d, a61edbbcfc17238a0 and a9d4c7cb7500cb055, each
-    after its probes are copied to the main checkout. The probe
-    libraries' delete-on-exit goes with K150.
+  - evidence: `.claude/probes/K161/cleanup.ps1` (`-DryRun` first) and
+    `cleanup.log`. Run 2026-10-14 01:17: the five merged worktrees are
+    swept (probes copied and verified first, branches kept); no profile
+    was a day old yet (1094 of 1177 date from 10-13 13:16-16:16).
+  - next: after 16:20 on 10-14, run `cleanup.ps1` again for the
+    profiles (about 33 GB). The probe libraries' delete-on-exit goes
+    with K150.
 - **K180** · K104's tuning calls as params to play with (Levi,
   2026-10-14 about 00:22, `docs/design/levi_notes_2026-10-14.md` item
   8): `pluckWhole`, a slider for W's amount; a crossings dropdown
@@ -263,7 +264,7 @@ and never reused.
     is done.
   - branch: `worktree-agent-a5a195592e9da8700`
     (`.claude/worktrees/agent-a5a195592e9da8700`), from ca7d3e6; last
-    commit: ca7d3e6 (the brief).
+    commit: `7e0a7fd` (WIP, unpushed; 01:19).
   - evidence: `.claude/probes/K180/` in its worktree (copy at merge).
   - next: stage 1 per the brief (the params and codec appends, the
     fallback estimate, the 0 px A/B at the defaults, the census per
@@ -280,7 +281,7 @@ and never reused.
     done.
   - branch: `worktree-agent-a6caa78542c463088`
     (`.claude/worktrees/agent-a6caa78542c463088`), from ca7d3e6; last
-    commit: ca7d3e6 (the brief).
+    commit: `8b3ff1d` (WIP, unpushed; 01:19).
   - evidence: `.claude/probes/K154_K169/` in its worktree (copy at merge).
   - next: Part A of the brief (the hash, its avalanche and uniformity
     tests, the credit, the six backgrounds' before/after), then Part B
@@ -296,7 +297,7 @@ and never reused.
     done.
   - branch: `worktree-agent-a6caa78542c463088`
     (`.claude/worktrees/agent-a6caa78542c463088`), from ca7d3e6; last
-    commit: ca7d3e6 (the brief).
+    commit: `8b3ff1d` (WIP, unpushed; 01:19).
   - evidence: `.claude/probes/K154_K169/` in its worktree (copy at merge).
   - next: Part B of the brief, after K154's Part A; then the merge and
     the round's phone pass.
