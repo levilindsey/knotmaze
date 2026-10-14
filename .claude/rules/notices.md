@@ -35,8 +35,19 @@ research, the tooling choice and the verification record are in
   dependency, build once before pushing.
 - CREDITS. Hand-written entries live in `CREDITS` (credits.ts): courtesy
   credits for techniques the code borrows (Quilez, PCG2D, Jimenez, Perlin,
-  the tune) and acknowledgements a license makes us ship. A new borrowed
-  technique, tune or asset gets its entry in the commit that adds it.
+  the tune) and the notices a license makes us ship (V8's, Hershey's:
+  `notice` holds the text, `noticeSource` the URL it was copied from, which
+  the page shows under it). A new borrowed technique, tune, asset or ported
+  algorithm gets its entry in the commit that adds it.
+- V8 (hypot2). `hypot2` in `src/util/det_math.ts` (K108) follows V8's
+  FastMathHypot (`src/builtins/math.tq`) step for step. It is V8's
+  algorithm re-written from exact operations, not V8's text, but it
+  mirrors the expression it ports, so the entry "v8-math-hypot" carries
+  V8's BSD-3-Clause notice (decided 2026-10-13): the part of V8's LICENSE
+  file from its copyright line on, joined into paragraphs for a phone
+  (whitespace only; checked word for word against the file at the pinned
+  commit in the entry's URLs). test/notices fails if `hypot2` goes while
+  the credit stays, and if the credit loses a clause or stops shipping.
 - HERSHEY (K115). The Hershey fonts' license allows any use PROVIDED two
   acknowledgements are distributed with the font data (and the data is not
   converted to NTIS's format). The entry "hershey-fonts" holds the exact
