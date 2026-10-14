@@ -146,42 +146,6 @@ and never reused.
   material between the two route bands turn gold, as before K81. Built in
   K81's stage 3d (ae7919e, on K81's branch); it closes with K81's merge,
   and the handle is K81's.
-- **K79** · Backgrounds: speed, params, colors, Motion. Stage A MERGED
-  in 9ffda8a (2026-10-13 07:15): `backgroundSpeed` (codec v4 index 70,
-  `bgs=`; -1 = auto = every effect's pre-K79 pace, vellum static; 0 =
-  static; up to 3x), vellum drift through its own lazily built program,
-  and the Motion setting (`src/ui/motion.ts`, K53). Stage B: per-effect
-  params and custom colors as ten codec v4 appends (`bgsz`, `bgdt`,
-  `bgfb`, `bggr`, `bgan`, `bgcm`, `bgc0`-`bgc3`).
-  - owner: the merge agent (aea0618868e511be8, sonnet) of session
-    d8031183, since 2026-10-13 16:59: the rebase onto master, the appends
-    moved to 72-81 (K74 took 71), the speed max 3 -> 8 (Levi, about
-    16:30: "Max backgroundSpeed should be like x8"; the parser's clamp
-    too), the re-freeze, the A/B re-run and the probe copy. Stage B3
-    (af4c00fad71109c41, sonnet, 15:56-16:45) passed the phone gate:
-    defaults 59.5-60.5 fps and 0 px on both builds; the -x programs cost
-    at most 0.28 ms a frame, with no fps drop outside the noise; the
-    panel on touch 61/61. B1-B2b's record is in K79.md.
-  - branch: stage B `worktree-agent-a4cf71c585e48612a`
-    (`.claude/worktrees/agent-a4cf71c585e48612a`), on 7f01e7e, unpushed;
-    last commit: 3733f5a (B3's results; the last code change is c7ad706).
-  - evidence: in the main checkout, stage A's `.claude/probes/K79/` (its
-    scripts, `out/` and the gate kit in `phone/`) and B1's smoke files;
-    in the worktree's `.claude/probes/K79/`, B2's `out/view/`, B2b's
-    `out/gpu_b2.json` and A/B logs, and B3's `phone/` (`results.md`, the
-    bench jsonl files, `frames_results.json`, `passcost_x.json`,
-    `panel_b3.json` and its screenshots, `run_b3.ps1`). The merge agent
-    copies them over.
-  - next: the merge agent's report, then the coordinator fast-forwards
-    master and pushes (it deploys). File at merge: B1's probe-only
-    residual (`__knotSetBackgroundParams` doesn't sanitize); B2's sheet
-    first-frame residual; and B3's: accent 3's picker opens 8 px below
-    the phone's viewport until the panel scrolls; a second tap on a
-    swatch doesn't close Tweakpane's popup (check the older color rows);
-    the design-to-custom switch isn't byte-identical (max 2/255 on 5.3% of
-    a strip; suspected hex rounding); the mist A/B got 1 rep of 3.
-  - brief: `docs/design/K79.md` on the branch ("Stage B3 results").
-  - env: the merge agent's A/B servers on ports 5331-5334.
 - **K90** · A physical minimum bend radius, stage 1 (Levi, 2026-10-13:
   "ideally we'd have a more physics-based constraint to prevent loops
   from becoming too tight in the first place"). No thread folds tighter
@@ -331,7 +295,7 @@ and never reused.
     checkout before removing the worktree. Tracked: "Stage 1 results"
     and "Merge round" in `docs/design/K122.md`,
     `.claude/rules/notices.md`, `test/notices/`.
-  - next: once K79 B lands, rebase onto master, `npm test`,
+  - next: rebase onto master (K79 B landed in 58b77cf), `npm test`,
     fast-forward and push. After the deploy, check
     https://levi.dev/knotmaze/licenses.html (a 308 to
     `/knotmaze/licenses`, then 200) and the panel link; look at the V8
@@ -414,10 +378,10 @@ commits and stops, and a fresh agent continues from it. K81 alone was
 about a third of the overnight spend.
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
-13:30, 14:31-14:39 and 15:30-15:40 (he may reorder). Running at 18:06:
-K104 stage 1b, K147 and K80 stage 1 (code); K79 B's merge prep; K156's phone pass kit (tooling, with an A/A smoke
+13:30, 14:31-14:39 and 15:30-15:40 (he may reorder). Running at 18:51:
+K104 stage 1b, K147 and K80 stage 1 (code); K156's phone pass kit (tooling, with an A/A smoke
 test on the phone). Then, as code slots free up:
-1. K79 B's merge, then K122's (it rebases over K79 B), then K81's (its
+1. K122's merge (it rebases over K79 B, merged in 58b77cf), then K81's (its
    gate stopped twice; the round's phone pass covers it), then the
    round's phone pass (K156).
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
@@ -1001,10 +965,11 @@ K5-K7 (split, frame loop, worker) follow.
   46, specks on thread edges). The master frame differed and the camera
   views matched; the cause is not found (a cold server or GPU cache is a
   suspect). Rerun before trusting it; a warm-up case is untested
-  (`docs/design/K79.md` on K79's branch, "The 18/19 run").
+  (`docs/design/K79.md`, "The 18/19 run").
 - **K143** · Vellum's fibers read as long crossing hatching near
-  scale 2, the slider's new max (K129). Worth a look before K79 B
-  merges (sheets in K79's worktree, `.claude/probes/K79/out/view/`).
+  scale 2, the slider's new max (K129). K79 B merged with it (58b77cf);
+  a look for the round's phone pass (K156; sheets in
+  `.claude/probes/K79/out/view/`).
 - **K150** · Probe tooling isn't safe for concurrent agents (seen
   2026-10-13): `scripts/diag_screenshot.mjs` uses one fixed Chrome
   profile and an on-screen window, and `scripts/preview.ps1 -Ref` builds
@@ -1018,6 +983,16 @@ K5-K7 (split, frame loop, worker) follow.
   - 2026-10-13: `scripts/preview.ps1 -Root <dir>` builds into a per-run
     folder (K156 stage 1, 1f8be97). Callers that omit it still share the
     TEMP folder, and `diag_screenshot.mjs` still uses one fixed profile.
+- **K157** · K79 B's color rows on the phone (B3): accent 3's picker
+  opens 8 px below the viewport until the panel scrolls, and a second tap
+  on a swatch doesn't close Tweakpane's popup (check the older color rows
+  too). (`docs/design/K79.md`, "Stage B3 results")
+- **K158** · Switching a design to custom colors isn't
+  byte-identical: up to 2/255 on 5.3% of a strip (suspected: hex rounding
+  of the design's colors). (`docs/design/K79.md`, "Stage B3 results")
+- **K159** · K79's probe residuals: the `__knotSetBackgroundParams`
+  hook doesn't sanitize its input; B2's sheet script has a first-frame
+  wobble; B3's mist A/B got 1 rep of 3. (`.claude/probes/K79/`)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1153,11 +1128,30 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K153** · Licenses page extras (K122's ideas): list the packages in
   the dev server too (it shows a placeholder; the module graph has the
   list), and a diffable `licenses.txt` beside the page.
+- **K160** · The background speed slider is linear over 0-8 (about
+  0.09 a pixel); a curve like gridAlign's (`src/ui/grid_align_curve.ts`)
+  would give the slow end room. At 8x the 10-15 Hz texture pass may look
+  steppy (not checked on the phone); if it does, scale the re-render rate
+  with the speed. A look for the round's phone pass (K156).
 
 ## Done
 
 (items move here with the commit that resolved them)
 
+- **K79** · Backgrounds: speed, params, colors, Motion. Stage A
+  (9ffda8a, 2026-10-13 07:15): `backgroundSpeed` (codec v4 index 70,
+  `bgs=`; -1 = auto, each effect's pre-K79 pace; 0 = static), vellum
+  drift through its own lazily built program, and the Motion setting
+  (`src/ui/motion.ts`, K53). Stage B: per-effect params and custom colors
+  as ten codec v4 appends at 72-81 (`bgsz`, `bgdt`, `bgfb`, `bggr`,
+  `bgan`, `bgcm`, `bgc0`-`bgc3`), and the speed's max 3 -> 8 (Levi, about
+  16:30: "Max backgroundSpeed should be like x8"; `BACKGROUND_SPEED_MAX`,
+  larger link values clamp). The all-default token stays `.J`. Checks:
+  tsc, 421 tests, the A/B 19/19 at 0 px, the motion, smoke and speed-8
+  probes, and B3's phone gate (59.5-60.5 fps; the -x programs cost at
+  most 0.28 ms a frame). Record: `docs/design/K79.md`; probes in
+  `.claude/probes/K79/` (`_b` suffixes on the stage B copies that
+  clashed). Residuals K157-K159, idea K160. Done in 58b77cf (2026-10-13).
 - **K110** · Join every piece of the maze to the start (Levi,
   2026-10-13). One join per unreachable piece (a splice or a merge;
   splices whose bridge would cross another are skipped), else the exit
@@ -1174,9 +1168,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   #cdb17a, #aa7acd). Vellum keeps its fiber floor (shrinking the fibers
   would alias), and the scale's max drops from 3 to 2: at 3 the wash and
   contours are nearly empty and the fibers read as long hatching (sheets
-  in K79's worktree, `.claude/probes/K79/out/view/`). Done on K79's
-  branch in 1563a02 (854c366 before its rebase); lands with K79 stage B
-  (2026-10-13).
+  in `.claude/probes/K79/out/view/`). Done in 281b22b and b2ccfaf
+  (2026-10-13), with K79 stage B (58b77cf).
 - **K121** · The player's disc hides the start of each move pulse
   (K98's call 4). Dropped: Levi keeps it as is (2026-10-13: "This is fine
   as-is.").
