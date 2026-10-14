@@ -162,6 +162,48 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   checks), k79b_k129.mjs (the scale max: links and the real slider; 17
   checks) and k79b_cases.json (the explicit-defaults A/B, 12 cases).
 
+- THE BACKGROUNDS' HASH IS OUR OWN (K154, 2026-10-14; Levi: "swap in our
+  own", after K122's credit calls). `src/render/hash2d.ts` replaced PCG2D
+  (Jarzynski and Olano) in background_shaders.ts, so no credit rides on it
+  (notices.md: the `pcg2d-hash` entry is gone). `uvec2 hash2d(uvec2)`: a
+  multiply-add per lane, then three rounds of multiply, a CROSS xorshift
+  (each lane takes the other's high bits) and a SELF xorshift, all with
+  constants drawn from a seeded RNG (multipliers kept to 13-19 set bits,
+  top bit set) and picked by an avalanche search (`.claude/probes/
+  K154_K169/hash_search3.mjs`: best of 3000, then 0.0058 worst deviation
+  from an even flip chance over 4096 input-bit x output-bit cells at
+  100000 fresh inputs; the sampling noise is 0.0016 a cell). Two lanes and
+  fewer than three rounds fail hard (a one-round table never flips some
+  output bits at all). It is a bijection on the 64-bit state (odd
+  multipliers; the cross step is I + nilpotent over GF(2)), so distinct
+  cells never collide. The mirror (`hash2d(x, y)`: Math.imul, >>>) and the
+  GLSL come from ONE table (`HASH2D`, `hash2dGlsl`), so they cannot drift;
+  `test/render/hash2d.test.ts` holds the thresholds (each a multiple of its
+  test's sampling noise, with the one-round table as the negative
+  control): avalanche, neighbour-cell flips, byte and joint-bucket
+  chi-square, lag correlations, the dither's triangular mean and variance,
+  and the shader text. EFFECT ON THE LOOK: every pixel of the seven effect
+  programs differs (a new draw of the same noise: at the pinned frames one
+  frame's luma mean moved by up to 2.9 levels, its sd by up to 0.74 and
+  silk's p98 from 44 to 38, which is what a new draw does to broad
+  structure; the drift clocks are identical, and the lattice values are
+  uniform as before), and their sha256 pins moved with it; the blit, the
+  fog and the quad do not use the
+  hash and did not move (the blit's own interleaved-gradient dither is
+  unchanged, and its spectrum is the only structure in a frame: bins at
+  ratios 60-80 over their local mean in the old and the new frames alike,
+  at the same places). SPECTRA: the hash's own cell grid and the dither's
+  pixel grid read 10.9-12.3 on the spike statistic (the largest bin over
+  its 11 x 11 neighbourhood; white noise gives ln(250000) = 12.4), also at
+  a 3e6 coordinate offset. GPU PARITY (`hash_gpu.mjs`: a WebGL2 page
+  compiles HASH2D_GLSL, hashes a 256 x 256 grid at four offsets up to
+  +-2147483000 and reads both lanes back): 4 x 131072 words, 0 mismatches
+  against the mirror on the RX 6800 XT (ANGLE D3D11). Cost not measured (the hash has about 34 scalar
+  ops where PCG2D had about 20; the effect passes run at 10-15 fps).
+  Probes: `.claude/probes/K154_K169/` (bg_ab.mjs + cases_bg.json: the
+  before/after frames, `bare` hides the maze; bg_analyze.mjs and
+  hash_spectrum.mjs: histograms, spectra, `out/sheets/`).
+
 - SHADER PAINT (G2 of the GPU migration, K4; worktree agent, 2026-10-12;
   design, deviations, every measurement: docs/design/G2_shader_paint.md
   section 7). All per-sample and per-tick COLOR runs in the shaders from
@@ -652,6 +694,62 @@ coordinate lerp sweeps the hues between.
   gpu_sum.mjs (GPU A/B). Before/after builds: detach to the base commit,
   `vite build --config .claude\probes\K81\vite.private-cache.config.ts
   --outDir ...`, switch back, `vite preview` on 5312/5313.
+
+## The gold web's fade (K169)
+
+- THE FULLY TRAVELED WEB FADES IN (K169, 2026-10-14; Levi: "Fade."). K127
+  filled a web with gold the frame its last arm was traveled; now the web
+  crossfades from its untraveled material to the arms' composed paint over
+  `WEB_FADE_S` 0.25 s (smoothstep: neither end jumps). `web_fade.ts` is the
+  pure half (a per-junction clock, `webFadeLevel`); the renderer starts a
+  fade in `resolveRoutes` for each junction NEWLY in `fullJn`, writes the
+  eased level into the record's J1.z each paint tick (`tickWebFade`: a
+  texel and its row upload, no fillet rebuild), and scales the paint of the
+  junction's caps by it (`fadingArmLevels` in `writePaintItems`: a full web
+  keeps its caps, which would pop in otherwise). J1.z was K127's 0 / 1 flag
+  and is now the LEVEL: the junction shader (and its CPU mirror,
+  `cpuJunctionField`, in the same commit) blends the untraveled and the
+  composed base by it, calling the second base only for a level strictly
+  between 0 and 1, so the primary path (and every non-fading frame) is the
+  K127 code. A fading record keeps its untraveled strip rows until it
+  reaches 1. The clock is the renderer's PAINT CLOCK (`paintClock`, which
+  probes pin: a pinned clock holds a fade at its level, so a probe shows any
+  frame of it by setting `r.paintClock` and waiting two rAFs), and
+  `r.webFade.seconds = 0` turns the fade off (K127's single frame, for
+  same-state A/Bs). FADE IN ONLY: a web that stops being full (a backtrack,
+  a reset) is untraveled at once, as in K127; a web already full on the
+  FIRST declaration after a scene is built (a saved attempt restored on
+  load) shows full without a fade. `FabricMazeRenderer.webFading` feeds
+  main.ts's sceneAnimating(). REDUCED MOTION keeps the fade: it moves
+  nothing, it is a 0.25 s crossfade of colors, and ui/motion.ts gates
+  movement (the background's drift, the plucks, the camera ease), not fades
+  (the pulses and the move animation are not gated either); the code reads
+  no motion setting, and a reduced page measures the same timeline.
+  MEASURED (`.claude/probes/K154_K169/fade_page.mjs`, `?b.c&am=instant&snd=
+  none&phy=0&fw=0&bg=none`, K81's "twice" plan: the cheapest move, the
+  shortest cycle, one move forward, which makes joint 0's fourth arm
+  traveled): pinned, the joint's J1.z is 0, 0.145, 0.470, 0.809, 1, 1 at
+  0, 0.06, 0.12, 0.18, 0.25 and 0.4 s. Against the K127 build (ca7d3e6) at
+  the same state, at desktop (1400x900) and phone (411x753 at 2.625)
+  size: the frames at 0.25 s and later are 0 px different (the whole phone
+  frame, the desktop joint's crop; the full desktop frame differs by the
+  build stamp's text only) and the frame before the tap is 0 px
+  different; the web's own pixels at 0 and 0.12 s differ from K127's by
+  158 and 157 px at desktop (max delta 130 then 69 of 255) and 306 and 299
+  at phone, all inside the web's footprint. In real time (no pins) the
+  level runs 0.013 .. 1 over 226 ms in 14 frames at 60 fps (reduced motion
+  the same), and `webFading` is false after. SAME-STATE A/B of the whole
+  frame against the K127 build with `bg=none` (the hash moved the
+  background): 0 px at fabric rest, in knot mode, under fog and at phone
+  width, so no non-fading frame changed. CENSUS (GPU vs the mirror,
+  K81's census_k81.mjs patched to force a level: `r.webFade.born.set(ji,
+  r.paintClock - 0.12)` on every full web before the rebuild, level 0.470,
+  fans on a 5 px grid, strips on a 2 px grid, the six moves above): the
+  full web's 375 fan points max 0.0037 (0 over 2/255), its 420 strip
+  points 0, routed fans 1500 points max 0.0060, unrouted 73125 max 0.0062
+  (K75's fan baseline 0.0062; `census/census_k81.mjs`, the probes folder).
+  Not measured: the fan program's GPU cost (the new branch runs only for a
+  fading web).
 
 ## Finish confetti (K140)
 
