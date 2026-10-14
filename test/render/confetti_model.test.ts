@@ -13,10 +13,15 @@ import {
   RAIN_FADE,
   RAIN_LIFE_MAX,
   RAIN_PER_AMOUNT,
+  RAIN_REF_H,
+  RAIN_REF_W,
+  RAIN_SCREEN_MAX,
   RAIN_WINDOW,
   SPIN,
   SPRAY_CAP,
   SPRAY_LIFE_MAX,
+  SPRAY_LIFE_MIN,
+  SPRAY_LIFT,
   SPRAY_MIN_PX,
   SPRAY_PER_AMOUNT,
   VX,
@@ -25,11 +30,13 @@ import {
   Y,
   confettiPlan,
   pieceLook,
+  rainScreenScale,
   shadeHex,
   spawnRain,
   spawnSpray,
   sprayUnit,
   stepRain,
+  stepSpray,
   type PieceLook,
 } from "../../src/render/confetti_model";
 
@@ -66,10 +73,35 @@ describe("confettiPlan: how many pieces a finish throws", () => {
     });
     expect(confettiPlan(true, 0.5, false)).toEqual({ rain: 70, spray: 20, slow: false });
     expect(confettiPlan(true, CONFETTI_AMOUNT_MAX, false)).toEqual({
-      rain: RAIN_CAP,
+      rain: RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX,
       spray: SPRAY_CAP,
       slow: false,
     });
+  });
+
+  it("scales the rain (not the spray) with the screen, up to the cap", () => {
+    // The reference phone, portrait or landscape, and anything smaller.
+    expect(confettiPlan(true, 1, false, RAIN_REF_W, RAIN_REF_H).rain).toBe(RAIN_PER_AMOUNT);
+    expect(confettiPlan(true, 1, false, RAIN_REF_H, RAIN_REF_W).rain).toBe(RAIN_PER_AMOUNT);
+    expect(confettiPlan(true, 1, false, 320, 568).rain).toBe(RAIN_PER_AMOUNT);
+    // Desktops: the same coverage in bigger pieces.
+    expect(rainScreenScale(1400, 900)).toBeCloseTo(2.059, 3);
+    expect(rainScreenScale(1920, 1080)).toBeCloseTo(2.537, 3);
+    const desk = confettiPlan(true, 1, false, 1400, 900);
+    expect(desk).toEqual({ rain: 288, spray: SPRAY_PER_AMOUNT, slow: false });
+    // A huge screen at the top amount fills the pool exactly.
+    expect(rainScreenScale(3840, 2160)).toBe(RAIN_SCREEN_MAX);
+    expect(confettiPlan(true, CONFETTI_AMOUNT_MAX, false, 3840, 2160).rain).toBe(RAIN_CAP);
+    // No screen, or a garbage one: the phone's count.
+    for (const [w, h] of [
+      [0, 0],
+      [NaN, 900],
+      [1400, -1],
+    ]) {
+      expect(rainScreenScale(w, h)).toBe(1);
+    }
+    // Reduced motion still throws no rain on any screen.
+    expect(confettiPlan(true, 1, true, 1920, 1080).rain).toBe(0);
   });
 
   it("caps the amount and reads off, zero or garbage as none", () => {
@@ -172,8 +204,9 @@ describe("the rain (screen space)", () => {
       [3840, 2160],
     ]) {
       const sim = new ConfettiSim();
-      sim.burst(confettiPlan(true, CONFETTI_AMOUNT_MAX, false), w, h, 0, 0, 1, seeded(w));
-      expect(sim.rain.alive).toBe(RAIN_CAP);
+      const plan = confettiPlan(true, CONFETTI_AMOUNT_MAX, false, w, h);
+      sim.burst(plan, w, h, 0, 0, 1, seeded(w));
+      expect(sim.rain.alive).toBe(plan.rain);
       // The oldest live piece after every frame: a piece that dies is at
       // most one frame older than it was there.
       let maxAge = -Infinity;
@@ -211,11 +244,33 @@ describe("the spray (world space)", () => {
       mx += dx;
       my += dy;
       // Outward.
-      expect(dx * pool.data[i * F + VX] + dy * (pool.data[i * F + VY] + 1.6 * unit)).toBeGreaterThan(0);
+      expect(dx * pool.data[i * F + VX] + dy * (pool.data[i * F + VY] + SPRAY_LIFT * unit)).toBeGreaterThan(0);
     }
     // Evenly spread: the ring's centroid sits near its center.
     expect(Math.abs(mx / pool.alive)).toBeLessThan(0.15 * unit);
     expect(Math.abs(my / pool.alive)).toBeLessThan(0.15 * unit);
+  });
+
+  it("flies out a few units, in units of the marker", () => {
+    const unit = 3;
+    const pool = new ConfettiPool(SPRAY_CAP);
+    spawnSpray(pool, SPRAY_PER_AMOUNT, 0, 0, unit, false, seeded(12));
+    // The farthest each piece gets from the center before it dies.
+    const far = new Float64Array(pool.alive);
+    const n = pool.alive;
+    const steps = Math.floor(SPRAY_LIFE_MIN / DT) - 1;
+    for (let k = 0; k < steps; k++) {
+      stepSpray(pool, DT);
+      // Nothing dies before SPRAY_LIFE_MIN, so rows keep their pieces.
+      expect(pool.alive).toBe(n);
+      for (let i = 0; i < n; i++) {
+        const r = Math.hypot(pool.data[i * F + X], pool.data[i * F + Y]);
+        far[i] = Math.max(far[i], r);
+      }
+    }
+    const sorted = Array.from(far).sort((a, b) => a - b);
+    expect(sorted[0]).toBeGreaterThan(2 * unit);
+    expect(sorted[n - 1]).toBeLessThan(7 * unit);
   });
 
   it("dies within SPRAY_LIFE_MAX", () => {

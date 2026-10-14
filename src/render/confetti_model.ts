@@ -12,7 +12,9 @@
 //           screen height (a phone and a desktop both see a ~3-4.5 s
 //           fall), swaying and fluttering (a cos flip squashes each piece
 //           across its long axis and shades its back side), and die below
-//           the bottom edge.
+//           the bottom edge. The count grows with the screen
+//           (rainScreenScale), so a desktop is as densely covered as a
+//           phone.
 //   SPRAY - WORLD space: a burst from a ring around the exit marker, flung
 //           outward against drag, sinking under a light gravity and fading
 //           out within SPRAY_LIFE_MAX s. Its unit is the marker radius with
@@ -27,14 +29,20 @@
 // piece dies within RAIN_WINDOW + RAIN_LIFE_MAX (rain) or SPRAY_LIFE_MAX
 // (spray) seconds, so main.ts's sceneAnimating() returns to false.
 
-// Pieces at amount 1, and the amount's top (the panel slider and the link
-// clamp read it). The pools hold the max, so the caps are hard.
+// Pieces at amount 1 (the rain's on a phone-sized screen: rainScreenScale
+// multiplies it on bigger ones), and the amount's top (the panel slider and
+// the link clamp read it). The pools hold the max, so the caps are hard.
 export const RAIN_PER_AMOUNT = 140;
 export const SPRAY_PER_AMOUNT = 40;
 export const CONFETTI_AMOUNT_MAX = 3;
-export const RAIN_CAP = RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX;
+export const RAIN_SCREEN_MAX = 3;
+export const RAIN_CAP = RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX * RAIN_SCREEN_MAX;
 export const SPRAY_CAP = SPRAY_PER_AMOUNT * CONFETTI_AMOUNT_MAX;
 export const REDUCED_SPRAY_SHARE = 0.4;
+// The screen RAIN_PER_AMOUNT was tuned on: the Pixel 11's layout viewport,
+// CSS px, where 140 pieces read as a dense fall.
+export const RAIN_REF_W = 411;
+export const RAIN_REF_H = 753;
 
 // Rain timing: releases spread over RAIN_WINDOW s (front-loaded), a piece's
 // speed eases to its terminal speed at RAIN_EASE /s, and RAIN_LIFE_MAX s
@@ -49,10 +57,13 @@ const RAIN_EASE = 2.4;
 const RAIN_TERM_MIN = 0.24;
 const RAIN_TERM_SPAN = 0.14;
 
-// Spray: lifetimes, drag (1/s); speeds and gravity in units (sprayUnit) per
-// second; the last SPRAY_FADE share of a life fades out.
-export const SPRAY_LIFE_MIN = 1.0;
-export const SPRAY_LIFE_MAX = 1.8;
+// Spray: lifetimes, drag (1/s); speeds, the fountain's lift and gravity in
+// units (sprayUnit) per second; the last SPRAY_FADE share of a life fades
+// out. A piece flies out ~1.8-4.4 units against the drag, then sinks at a
+// unit per second while it fades.
+export const SPRAY_LIFE_MIN = 1.4;
+export const SPRAY_LIFE_MAX = 2.4;
+export const SPRAY_LIFT = 2.2;
 const SPRAY_DRAG = 3.4;
 const SPRAY_FADE = 0.4;
 // The spray's unit never drops below this many CSS px: the phone's default
@@ -116,27 +127,50 @@ export interface ConfettiPlan {
   slow: boolean;
 }
 
-// How many pieces a finish throws: `amount` scales both effects (clamped to
-// [0, CONFETTI_AMOUNT_MAX]; off, garbage or 0 = none). Reduced motion drops
-// the rain and keeps REDUCED_SPRAY_SHARE of the spray.
+// How many pieces a finish throws on a width x height CSS px screen:
+// `amount` scales both effects (clamped to [0, CONFETTI_AMOUNT_MAX]; off,
+// garbage or 0 = none), and the screen scales the rain (rainScreenScale;
+// no screen = a phone's count). Reduced motion drops the rain and keeps
+// REDUCED_SPRAY_SHARE of the spray.
 export function confettiPlan(
   on: boolean,
   amount: number,
-  reduced: boolean
+  reduced: boolean,
+  width = 0,
+  height = 0
 ): ConfettiPlan {
   const a =
     on && Number.isFinite(amount)
       ? Math.max(0, Math.min(CONFETTI_AMOUNT_MAX, amount))
       : 0;
   const spray = Math.round(SPRAY_PER_AMOUNT * a);
+  const rain = RAIN_PER_AMOUNT * a * rainScreenScale(width, height);
   return {
-    rain: reduced ? 0 : Math.min(RAIN_CAP, Math.round(RAIN_PER_AMOUNT * a)),
+    rain: reduced ? 0 : Math.min(RAIN_CAP, Math.round(rain)),
     spray: Math.min(
       SPRAY_CAP,
       reduced ? Math.round(spray * REDUCED_SPRAY_SHARE) : spray
     ),
     slow: reduced,
   };
+}
+
+// A rain piece's size factor: it follows the screen a little (phones get
+// slightly smaller pieces).
+export function rainPieceScale(width: number, height: number): number {
+  return Math.max(0.8, Math.min(1.3, Math.min(width, height) / 800));
+}
+
+// The rain count's multiplier: the same paper coverage on every screen. The
+// screen's area in piece areas (rainPieceScale squared) over the reference
+// phone's, clamped to [1, RAIN_SCREEN_MAX]: a phone or anything smaller
+// throws the base count, a 1400x900 desktop ~2.1x, 1920x1080 ~2.5x.
+export function rainScreenScale(width: number, height: number): number {
+  if (!(width > 0 && height > 0)) return 1;
+  const s = rainPieceScale(width, height);
+  const r = rainPieceScale(RAIN_REF_W, RAIN_REF_H);
+  const k = (width * height * r * r) / (RAIN_REF_W * RAIN_REF_H * s * s);
+  return Math.max(1, Math.min(RAIN_SCREEN_MAX, k));
 }
 
 // The spray's length unit in world units: the marker radius, floored at
@@ -164,8 +198,7 @@ export function spawnRain(
   rand: () => number
 ): void {
   const d = pool.data;
-  // Piece size follows the screen a little (phones get slightly smaller).
-  const s = Math.max(0.8, Math.min(1.3, Math.min(width, height) / 800));
+  const s = rainPieceScale(width, height);
   for (let k = 0; k < n; k++) {
     const i = pool.alloc();
     if (i < 0) return;
@@ -209,15 +242,16 @@ export function spawnSpray(
     const c = Math.cos(a);
     const sn = Math.sin(a);
     const r0 = unit * (0.9 + 0.3 * rand());
-    paper(d, o, unit * (0.34 + 0.22 * rand()), rand);
+    // About the rain's paper size (8-14 CSS px at the usual zooms).
+    paper(d, o, unit * (0.5 + 0.3 * rand()), rand);
     // Reduced motion has no flutter: show each piece's full face.
     if (slow) d[o + FLIP] = 0;
     d[o + X] = cx + c * r0;
     d[o + Y] = cy + sn * r0;
-    const sp = unit * (4 + rand() * 6.5) * pace;
+    const sp = unit * (6 + rand() * 9) * pace;
     // A slight fountain: everything leaves a little upward (+y is down).
     d[o + VX] = c * sp;
-    d[o + VY] = sn * sp - unit * 1.6 * pace;
+    d[o + VY] = sn * sp - unit * SPRAY_LIFT * pace;
     d[o + AGE] = 0;
     d[o + LIFE] =
       (SPRAY_LIFE_MIN + rand() * (SPRAY_LIFE_MAX - SPRAY_LIFE_MIN)) *
