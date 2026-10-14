@@ -4,7 +4,7 @@
 
 import { Buffer, BufferUsage, Mesh, MeshGeometry, Texture } from "pixi.js";
 import { GAP_SLOTS } from "./gap_mask";
-import { addFloatAttribute } from "./junction_field";
+import { STRIP_REC_TAG, addFloatAttribute } from "./junction_field";
 
 // Upload a WHOLE attribute buffer. pixi's Buffer.update(size) REMEMBERS
 // its size: a bare update() after a partial one re-sends only that prefix
@@ -410,7 +410,8 @@ export class TriFanMesh {
   // Emit one quad strip (K81 route cover strips): `pts` is flat
   // [lx, ly, rx, ry] per sample, the ribbon layout, and the quads are the
   // ribbon's own triangles (a, b, c), (b, d, c). Every vertex carries
-  // `rec` and the current maskIds, like a fan.
+  // `rec` + STRIP_REC_TAG (the field shader tells strips from fans by it)
+  // and the current maskIds, like a fan.
   pushStrip(pts: number[], rec: number): void {
     const samples = pts.length / 4;
     const verts = samples * 2;
@@ -423,7 +424,7 @@ export class TriFanMesh {
     }
     const v0 = this.vUsed;
     this.vertexData.set(pts, v0 * 2);
-    this.recData.fill(rec, v0, v0 + verts);
+    this.recData.fill(rec + STRIP_REC_TAG, v0, v0 + verts);
     for (let v = v0; v < v0 + verts; v++) {
       this.maskData.set(this.maskIds, v * GAP_SLOTS);
     }

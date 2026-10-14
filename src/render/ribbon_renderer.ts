@@ -917,15 +917,27 @@ export class RibbonRenderer {
   private filletKey = "";
   // Scratch for the junction-field composition (rebuildFillets).
   private fieldMbScratch = new Float32Array(4);
+  // K81: the band corner's two arm frames (rebuildFillets cornerCubic).
+  private routeScratch = new Float64Array(8);
   // PROBE HOOK (diagnostics only): the last rebuild's junction field -
-  // `at(ji, x, y, out, px?)` writes the composed [r, g, b] at a world
-  // point (junction index = junctionArms index); `arms(ji)` lists that
-  // joint's arms. A CPU transliteration of the GPU shader reading the SAME
-  // record + paint data the shader samples (cpuJunctionField) - the ground
-  // truth for GPU-vs-CPU and field-vs-ribbon censuses.
+  // `at(ji, x, y, out, px?, strip?)` writes the composed [r, g, b] at a
+  // world point (junction index = junctionArms index; px = world units per
+  // pixel, strip = a K81 cover-strip pixel); `arms(ji)` lists that joint's
+  // arms, `routes(ji)` its K81 route bands. A CPU transliteration of the
+  // GPU shader reading the SAME record + paint data the shader samples
+  // (cpuJunctionField) - the ground truth for GPU-vs-CPU and
+  // field-vs-ribbon censuses.
   fieldProbe: {
-    at: (ji: number, x: number, y: number, out: Float32Array, px?: number) => boolean;
+    at: (
+      ji: number,
+      x: number,
+      y: number,
+      out: Float32Array,
+      px?: number,
+      strip?: boolean
+    ) => boolean;
     arms: (ji: number) => unknown[];
+    routes: (ji: number) => unknown[];
     center: (ji: number) => [number, number] | null;
     // The joint's record texel index (-1: no field) - what a fan's aRec
     // carries.
@@ -4379,15 +4391,18 @@ export class RibbonRenderer {
   }
 
   // The composed junction-field color at (x, y) for the record at texel
-  // `rec` into out[0..2] (the arms' materials come from their strip rows;
-  // `_px` is kept for probe compatibility - the strips antialias the paint
-  // over their own step).
+  // `rec` into out[0..2] (the arms' materials come from their strip rows,
+  // which antialias the paint over their own step): FIELD_GLSL
+  // junctionField, K81 route bands included. px = world units per pixel
+  // (the shader's pxW, floored the same way); strip = the pixel belongs to
+  // a cover strip (the band's solid pad).
   private cpuJunctionField(
     rec: number,
     x: number,
     y: number,
     out: Float32Array,
-    _px = 0
+    px = 0,
+    strip = false
   ): void {
     const J = recordData().data;
     const at = (i: number): number => i * 4;
@@ -4420,13 +4435,22 @@ export class RibbonRenderer {
       compose(mA);
       return;
     }
-    const armPaint = (ab: number, s: number, m: Float32Array): void => {
+    // K81: a routed record's base reads the untraveled rows (row + 1).
+    const nr = Math.round(J[at(rec + 1) + 3]);
+    const routed = nr > 0;
+    const armPaint = (
+      ab: number,
+      s: number,
+      band: boolean,
+      untrav: boolean,
+      m: Float32Array
+    ): void => {
       const h = at(ab);
       const a = at(ab + 1);
-      const sc = Math.min(s, J[a + 2]);
+      const sc = Math.min(band ? Math.max(s, 1 / J[h + 3]) : s, J[a + 2]);
       // (Probes: the exact arc and ctrl seed the strip texel stands for.)
       this.fieldLastArm.push(Math.round(J[h]), J[a] + J[a + 1] * sc, J[a + 3] + J[a + 1] * sc * J[h + 1]);
-      this.cpuStripAt(Math.round(J[h + 2]), sc * J[h + 3], m);
+      this.cpuStripAt(Math.round(J[h + 2]) + (untrav ? 1 : 0), sc * J[h + 3], m);
     };
     const profArc = (ab: number, rp: number): number => {
       const xg = rp / FIELD_PROF_DR;
@@ -4468,35 +4492,92 @@ export class RibbonRenderer {
       }
     }
     const abA = rec + 2 + ia * stride;
-    armPaint(abA, profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0), mA);
+    const abB = rec + 2 + ib * stride;
+    const mB = this.fieldMbScratch;
     // Probe views (uKBase.z 3 / 4): one bracketing arm's material alone.
     const dbg = Math.round(knotUniformValues().uKBase[2]);
-    if (ia === ib || dbg === 3) {
+    let onlyA = ia === ib || dbg === 3;
+    let onlyB = !onlyA && dbg === 4;
+    // The blend weight first (FIELD_GLSL: a pixel inside one arm's
+    // footprint evaluates that arm alone - identical, mix at 0 / 1 is exact).
+    let t = 0;
+    if (!onlyA && !onlyB) {
+      const span = relA + relB;
+      const hw = rho > fillHalf ? Math.asin(fillHalf / rho) : Math.PI / 2;
+      let lo = hw;
+      let hi = span - hw;
+      const minW = span * FIELD_BLEND_MIN;
+      if (hi - lo < minW) {
+        lo = (span - minW) * 0.5;
+        hi = lo + minW;
+      }
+      t = hi > lo ? (relA - lo) / (hi - lo) : relA < span * 0.5 ? 0 : 1;
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      t = t * t * (3 - 2 * t);
+      if (t <= 0) onlyA = true;
+      else if (t >= 1) onlyB = true;
+    }
+    if (!onlyB) {
+      armPaint(abA, profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0), false, routed, mA);
+    }
+    if (onlyA) {
       compose(mA);
-      return;
+    } else {
+      armPaint(abB, profArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0), false, routed, mB);
+      if (onlyB) {
+        compose(mB);
+      } else {
+        // Composed colors blend (see FIELD_GLSL).
+        for (let c = 0; c < 3; c++) out[c] = mA[c] + (mB[c] - mA[c]) * t;
+        out[3] = 0;
+      }
     }
-    const mB = this.fieldMbScratch;
-    const abB = rec + 2 + ib * stride;
-    armPaint(abB, profArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0), mB);
-    if (dbg === 4) {
-      compose(mB);
-      return;
+    if (!routed || dbg === 3 || dbg === 4) return;
+    // K81 ROUTE BANDS, oldest first (FIELD_GLSL junctionField): the nearest
+    // point of each band's centerline polyline and its tau; a one-pixel
+    // ramp centered on the half-width (a cover strip: solid ROUTE_BAND_PAD
+    // pixels further first).
+    const pxW = Math.max(px, 1e-5);
+    const reach = fillHalf + (strip ? ROUTE_BAND_PAD + 1 : 0.5) * pxW;
+    let base = Math.round(J[hd + 3]);
+    const nrr = Math.min(nr, MAX_ROUTES);
+    for (let r = 0; r < nrr; r++) {
+      const r0 = at(base);
+      const nv = Math.round(J[r0]);
+      let best = 1e20;
+      let tau = 0;
+      let q0 = at(base + 1);
+      for (let k = 0; k < MAX_ROUTE_VERTS - 1 && k + 1 < nv; k++) {
+        const q1 = at(base + 2 + k);
+        const dx = J[q1] - J[q0];
+        const dy = J[q1 + 1] - J[q0 + 1];
+        const wx = x - J[q0];
+        const wy = y - J[q0 + 1];
+        const l2 = dx * dx + dy * dy;
+        const u = l2 > 1e-12 ? Math.max(0, Math.min(1, (wx * dx + wy * dy) / l2)) : 0;
+        const ox = wx - dx * u;
+        const oy = wy - dy * u;
+        const dd = ox * ox + oy * oy;
+        if (dd < best) {
+          best = dd;
+          tau = J[q0 + 2] + (J[q1 + 2] - J[q0 + 2]) * u;
+        }
+        q0 = q1;
+      }
+      const cov = Math.max(0, Math.min(1, (reach - Math.sqrt(best)) / pxW));
+      if (cov > 0) {
+        armPaint(rec + 2 + Math.round(J[r0 + 2]) * stride, -tau, true, false, mA);
+        if (J[r0 + 3] > -0.5) {
+          armPaint(rec + 2 + Math.round(J[r0 + 3]) * stride, tau, true, false, mB);
+          const m = J[r0 + 1];
+          let s = Math.max(0, Math.min(1, (tau + m) / (2 * m)));
+          s = s * s * (3 - 2 * s);
+          for (let c = 0; c < 3; c++) mA[c] = mA[c] + (mB[c] - mA[c]) * s;
+        }
+        for (let c = 0; c < 3; c++) out[c] = out[c] + (mA[c] - out[c]) * cov;
+      }
+      base += 1 + nv;
     }
-    const span = relA + relB;
-    const hw = rho > fillHalf ? Math.asin(fillHalf / rho) : Math.PI / 2;
-    let lo = hw;
-    let hi = span - hw;
-    const minW = span * FIELD_BLEND_MIN;
-    if (hi - lo < minW) {
-      lo = (span - minW) * 0.5;
-      hi = lo + minW;
-    }
-    let t = hi > lo ? (relA - lo) / (hi - lo) : relA < span * 0.5 ? 0 : 1;
-    t = t < 0 ? 0 : t > 1 ? 1 : t;
-    t = t * t * (3 - 2 * t);
-    // Composed colors blend (see FIELD_GLSL).
-    for (let c = 0; c < 3; c++) out[c] = mA[c] + (mB[c] - mA[c]) * t;
-    out[3] = 0;
   }
 
   // Positional sampling for junction joinery: before the sampleAt
@@ -5218,13 +5299,14 @@ export class RibbonRenderer {
     // the joint, the blend keeps FIELD_BLEND_MIN of the wedge angle,
     // centered. PROBE HOOK: the CPU reference over THIS rebuild's records.
     this.fieldProbe = {
-      at: (ji, x, y, out, px = 0) => {
+      at: (ji, x, y, out, px = 0, strip = false) => {
         const rec = recs[ji];
         if (!rec || rec.rb < 0) return false;
-        this.cpuJunctionField(rec.rb, x, y, out, px);
+        this.cpuJunctionField(rec.rb, x, y, out, px, strip);
         return true;
       },
       arms: (ji) => recs[ji]?.arms ?? [],
+      routes: (ji) => recs[ji]?.routes ?? [],
       center: (ji) => (recs[ji] ? [recs[ji].jx, recs[ji].jy] : null),
       record: (ji) => recs[ji]?.rb ?? -1,
       gate: (ji) => recs[ji]?.j1 ?? null,
@@ -5492,13 +5574,24 @@ export class RibbonRenderer {
         const i1 = i + 1 < profN ? i + 1 : i;
         return ps[i] + (ps[i1] - ps[i]) * (x - i);
       };
+      // K81: a routed record's bands run each arm's centerline out to
+      // bandEnd - a half-width past the farthest fan or cover-strip vertex,
+      // so no band's round end shows inside what the pass draws - and its
+      // rows must cover that far.
+      const bandEnd = (rec: JRec, a: JArm): number =>
+        Math.min(a.toEnd, profArcAt(a.ps, rec.rMax) + fillHalf);
+      const pts: number[] = [];
       for (const rec of recs) {
         if (rec.rb < 0) continue;
         const n = Math.min(rec.arms.length, MAX_ARMS);
+        const routed = rec.routes.length > 0;
         for (let i = 0; i < n; i++) {
           const a = rec.arms[i];
           const ab = (rec.rb + 2 + i * armStride) * 4;
-          const sMax = Math.max(1e-4, Math.min(a.domain, profArcAt(a.ps, rec.rMax)));
+          const sMax = Math.max(
+            1e-4,
+            Math.min(a.domain, routed ? bandEnd(rec, a) : profArcAt(a.ps, rec.rMax))
+          );
           const step = sMax / (STRIP_W - 1);
           const slope = rd.data[ab + 1];
           const row = this.writeStripRow(
@@ -5509,9 +5602,76 @@ export class RibbonRenderer {
             a.slot,
             a.dir * step * slope
           );
+          // A routed record's arms also get their UNTRAVELED row (row + 1).
+          if (routed) {
+            this.writeStripRow(a.chain, a.arc0, a.dir * step, step, a.slot, a.dir * step * slope, 1);
+          }
           rd.data[ab + 2] = row;
           rd.data[ab + 3] = 1 / step;
         }
+        if (!routed) continue;
+        // ROUTE BLOCKS (junction_field.ts ROUTES): per band R0 = (nVerts, m,
+        // armA, armB or -1), then its centerline (x, y, tau, 0) - arm A's
+        // own centerline in from bandEnd to the turn's start d, the turn,
+        // arm B's out to bandEnd (tau = -arc along A, +arc along B); a
+        // one-arm band (the head) runs in to the joint (tau 0 there).
+        const routeBase = cursor;
+        let nr = 0;
+        for (const r of rec.routes) {
+          const A = rec.arms[r.ia];
+          pts.length = 0;
+          const scratch = this.routeScratch;
+          // Centerline points of `arm` from arc s0 to s1 in at most `cap`
+          // segments of ~0.08 world, tau = sign * arc; each end included
+          // on request. Vertex budget: 24 + 15 (the turn) + 24, or 41.
+          const along = (
+            arm: JArm,
+            s0: number,
+            s1: number,
+            sign: number,
+            cap: number,
+            incStart: boolean,
+            incEnd: boolean
+          ): void => {
+            const len = Math.abs(s1 - s0);
+            const segs = len < 1e-4 ? 0 : Math.min(cap, Math.max(1, Math.ceil(len / 0.08)));
+            const k0 = incStart ? 0 : 1;
+            const k1 = incEnd ? segs : segs - 1;
+            for (let k = k0; k <= k1; k++) {
+              const s = segs > 0 ? s0 + ((s1 - s0) * k) / segs : s1;
+              armAt(arm, s, scratch, 0);
+              pts.push(scratch[0], scratch[1], sign * s);
+            }
+          };
+          if (r.ib >= 0) {
+            const B = rec.arms[r.ib];
+            along(A, Math.max(bandEnd(rec, A), r.d), r.d, -1, 24, true, false);
+            cornerCubic(A, B, r.d, pts);
+            along(B, r.d, Math.max(bandEnd(rec, B), r.d), 1, 24, false, true);
+          } else {
+            along(A, bandEnd(rec, A), 0, -1, 40, true, true);
+          }
+          const nv = Math.min(pts.length / 3, MAX_ROUTE_VERTS);
+          if (nv < 2) continue;
+          rd.ensure(cursor + 1 + nv);
+          const D = rd.data;
+          const o = cursor * 4;
+          D[o] = nv;
+          D[o + 1] = r.m;
+          D[o + 2] = r.ia;
+          D[o + 3] = r.ib;
+          for (let k = 0; k < nv; k++) {
+            D[o + 4 + k * 4] = pts[k * 3];
+            D[o + 5 + k * 4] = pts[k * 3 + 1];
+            D[o + 6 + k * 4] = pts[k * 3 + 2];
+            D[o + 7 + k * 4] = 0;
+          }
+          cursor += 1 + nv;
+          nr++;
+        }
+        const D = rd.data;
+        D[rec.rb * 4 + 3] = routeBase;
+        D[rec.rb * 4 + 7] = nr;
       }
       const tb = stripTable();
       tb.markDirty(0, this.stripRowsUsed * 2);
@@ -5545,16 +5705,163 @@ export class RibbonRenderer {
       );
     };
 
+    // K81 ROUTE GEOMETRY. COVER CAP: how far along an arm its ribbon may be
+    // re-emitted as a cover strip - short of its nearest under-gap (a fan
+    // takes only a foreign over thread's silhouette, not the casing), within
+    // its domain, and inside the pluck overlay's never-collapsed joint
+    // footprint (pluckNodes: max(fillHalf + gap + 2 CUT_BIAS, the web
+    // reach)), so a strip copied before a pluck never stands over a
+    // collapsed base.
+    const casingGap = (this.style.casingWidth - this.style.threadWidth) / 2;
+    const footCap = Math.max(
+      fillHalf + casingGap + 2 * CUT_BIAS,
+      drawWedges ? L : 0
+    );
+    const coverCap = (X: JArm): number =>
+      Math.min(gapNearOf(X) - FILLET_GAP_PAD * fillHalf, X.domain, footCap);
+    // An arm's centerline point at arc s out from its joint and its OUTWARD
+    // unit tangent, into out[o..o+3].
+    const armAt = (arm: JArm, s: number, out: Float64Array, o: number): void => {
+      this.sampleAtSafe(
+        this.chainSamples[arm.chain]!,
+        normArc(arm.arc0 + arm.dir * s, arm.total, arm.closed),
+        arm.closed,
+        this.sampleScratch,
+        0
+      );
+      out[o] = this.sampleScratch[0];
+      out[o + 1] = this.sampleScratch[1];
+      let tx = this.sampleScratch[2] * arm.dir;
+      let ty = this.sampleScratch[3] * arm.dir;
+      const tl = Math.hypot(tx, ty);
+      if (tl > 1e-6) {
+        tx /= tl;
+        ty /= tl;
+      } else {
+        tx = arm.dx;
+        ty = arm.dy;
+      }
+      out[o + 2] = tx;
+      out[o + 3] = ty;
+    };
+    // The band's turn from arm A at arc d to arm B at arc d (routeCubic:
+    // tangent to both centerlines, tau -d -> +d), appended to out as
+    // (x, y, tau) triples. routeScratch keeps the two arm frames.
+    const cornerCubic = (A: JArm, B: JArm, d: number, out: number[]): void => {
+      const q = this.routeScratch;
+      armAt(A, d, q, 0);
+      armAt(B, d, q, 4);
+      routeCubic(q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], d, d > 1e-6 ? 14 : 1, out);
+    };
+    // The web a route's turn crosses: the wedge between its two arms when
+    // they are adjacent around the joint and that wedge is the turn's inner
+    // side (narrower than a half turn); null = none drawn there.
+    const routeRim = (
+      arms: JArm[],
+      ia: number,
+      ib: number,
+      rims: Array<number[] | null> | null
+    ): number[] | null => {
+      if (!rims) return null;
+      const len = arms.length;
+      const gapAfter = (k: number): number =>
+        arms[(k + 1) % len].ang - arms[k].ang + (k === len - 1 ? Math.PI * 2 : 0);
+      if (ib === (ia + 1) % len && gapAfter(ia) < Math.PI) return rims[ia];
+      if (ia === (ib + 1) % len && gapAfter(ib) < Math.PI) return rims[ib];
+      return null;
+    };
+    // Distance from (ox, oy) along the unit ray (ux, uy) to the nearest rim
+    // segment it crosses (Infinity: none).
+    const rayToRim = (
+      ox: number,
+      oy: number,
+      ux: number,
+      uy: number,
+      rim: number[]
+    ): number => {
+      let best = Infinity;
+      for (let i = 0; i + 3 < rim.length; i += 2) {
+        const sx = rim[i + 2] - rim[i];
+        const sy = rim[i + 3] - rim[i + 1];
+        const den = ux * sy - uy * sx;
+        if (Math.abs(den) < 1e-12) continue;
+        const wx = rim[i] - ox;
+        const wy = rim[i + 1] - oy;
+        const t = (wx * sy - wy * sx) / den;
+        const s = (wx * uy - wy * ux) / den;
+        if (t > 0 && s >= 0 && s <= 1 && t < best) best = t;
+      }
+      return best;
+    };
+    // Does a turn starting at arc d keep the band's INNER edge (the side
+    // the turn cuts across) inside what the junction pass draws there? A
+    // point is covered within either arm's ribbon (a straight ray from the
+    // joint) or the seal disc; elsewhere only the web covers it - out to its
+    // rim less a quarter half-width (with no web, a 0.04 fillHalf slack).
+    const fitPts: number[] = [];
+    const turnFits = (
+      rec: JRec,
+      A: JArm,
+      B: JArm,
+      d: number,
+      rim: number[] | null
+    ): boolean => {
+      if (d <= 1e-6) return true;
+      fitPts.length = 0;
+      cornerCubic(A, B, d, fitPts);
+      const q = this.routeScratch;
+      // Turning left (CCW) when travel in (-tA) crosses travel out (tB) > 0.
+      const left = q[3] * q[6] - q[2] * q[7] > 0;
+      const np = fitPts.length / 3;
+      for (let i = 1; i < np - 1; i++) {
+        let tx = fitPts[(i + 1) * 3] - fitPts[(i - 1) * 3];
+        let ty = fitPts[(i + 1) * 3 + 1] - fitPts[(i - 1) * 3 + 1];
+        const tl = Math.hypot(tx, ty);
+        if (tl < 1e-9) continue;
+        tx /= tl;
+        ty /= tl;
+        const ex = fitPts[i * 3] + (left ? -ty : ty) * fillHalf - rec.jx;
+        const ey = fitPts[i * 3 + 1] + (left ? tx : -tx) * fillHalf - rec.jy;
+        const rr = Math.hypot(ex, ey);
+        let e = rr - 0.92 * fillHalf;
+        for (const X of [A, B]) {
+          if (ex * X.dx + ey * X.dy < 0) continue;
+          const lat = Math.abs(ex * X.dy - ey * X.dx) - fillHalf;
+          if (lat < e) e = lat;
+        }
+        if (e <= 0) continue;
+        if (rim) {
+          if (rr + Math.min(e, 0.25 * fillHalf) > rayToRim(rec.jx, rec.jy, ex / rr, ey / rr, rim)) {
+            return false;
+          }
+        } else if (e > 0.04 * fillHalf) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    // K81: a routed record's wedge rims (flank tip A, the outer bezier,
+    // flank tip B; null = a skipped wedge), kept for the route pass.
+    const rimsOf = new Map<JRec, Array<number[] | null>>();
     for (const rec of recs) {
       const jx = rec.jx;
       const jy = rec.jy;
       const arms = rec.arms;
       if (arms.length < 2) continue;
-      if (rec.j1[0] > fxNowJ + GATE_LEAD) continue;
+      if (rec.j1[0] > fxNowJ + GATE_LEAD) {
+        // Nothing of a gated joint draws this rebuild, its bands included.
+        rec.routes.length = 0;
+        continue;
+      }
       fm = layerFor(rec);
       setFanMask(rec.mask);
       const jointTop = arms.some(armTop);
-
+      const rims =
+        drawWedges && rec.routes.length > 0
+          ? new Array<number[] | null>(arms.length).fill(null)
+          : null;
+      if (rims) rimsOf.set(rec, rims);
 
       // Seal the junction center with a disc of the junction field under
       // the fillets: the concave-side miter clamp can thin a host ribbon
@@ -5731,8 +6038,115 @@ export class RibbonRenderer {
         // it poked jagged stick-outs past the edges (user report). The
         // center is always inside the joint; the corner survives only as
         // the outer rim's bezier control.
+        if (rims) rims[k] = rim.slice((nA - 1) * 2, (nA + n) * 2);
         emitFan(rec, jx, jy, rim);
       }
+    }
+
+    // K81 ROUTE PASS, per routed record: each band's corner (d, m), then
+    // the COVER STRIPS - every arm's own ribbon quads re-emitted in the
+    // junction pass out to its cover reach, so the field (the untraveled
+    // base with the bands over it) decides those pixels: the arms' own
+    // gold ribbons met in an L whose outer corner squared off the turn.
+    for (const rec of recs) {
+      if (rec.routes.length === 0 || rec.rb < 0) continue;
+      const arms = rec.arms;
+      const n = Math.min(arms.length, MAX_ARMS);
+      const rims = rimsOf.get(rec) ?? null;
+      // Per arm: the largest turn start of a band on it (-1: no band).
+      const dArm = new Float64Array(n).fill(-1);
+      let dMax = 0;
+      for (const r of rec.routes) {
+        if (r.ib < 0) {
+          // The head: a one-arm band in to the joint center.
+          r.d = 0;
+          r.m = 0.5 * fillHalf;
+          dArm[r.ia] = Math.max(dArm[r.ia], 0);
+          continue;
+        }
+        const A = arms[r.ia];
+        const B = arms[r.ib];
+        const alpha = Math.acos(
+          Math.max(-1, Math.min(1, A.dx * B.dx + A.dy * B.dy))
+        );
+        const rim = routeRim(arms, r.ia, r.ib, rims);
+        let d = routeCorner(
+          alpha,
+          drawWedges ? Math.min(armReach(A), armReach(B)) : fillHalf,
+          fillHalf,
+          coverCap(A),
+          coverCap(B)
+        ).d;
+        // The turn must stay inside what the junction pass draws: the arms'
+        // ribbons, the seal disc and the web between them (its rim, less a
+        // margin). Bisect the largest start that fits.
+        if (!turnFits(rec, A, B, d, rim)) {
+          let lo = 0;
+          let hi = d;
+          for (let it = 0; it < 6; it++) {
+            const mid = (lo + hi) / 2;
+            if (turnFits(rec, A, B, mid, rim)) lo = mid;
+            else hi = mid;
+          }
+          d = lo;
+        }
+        r.d = d;
+        r.m = Math.max(d, 0.5 * fillHalf);
+        dArm[r.ia] = Math.max(dArm[r.ia], d);
+        dArm[r.ib] = Math.max(dArm[r.ib], d);
+        if (d > dMax) dMax = d;
+      }
+      setFanMask(rec.mask);
+      const jointTop = arms.some(armTop);
+      for (let i = 0; i < n; i++) {
+        const X = arms[i];
+        // A band's arm is covered a half-width past its turn; every other
+        // arm past the farthest turn (a band's edge can cross its start).
+        const want =
+          dArm[i] >= 0
+            ? Math.max(dArm[i] + 0.5 * fillHalf, 1.5 * fillHalf)
+            : Math.max(1.25 * fillHalf, dMax + fillHalf);
+        const R = Math.min(want, coverCap(X));
+        if (!(R > 0)) continue;
+        const samples = this.chainSamples[X.chain];
+        const fill = this.fills[X.chain];
+        if (!samples || !fill || fill.sampleCount !== samples.count) continue;
+        const cnt = samples.count;
+        const sp = samples.totalLength / (X.closed ? cnt : cnt - 1);
+        if (!(sp > 0)) continue;
+        // The ribbon samples from the joint out to R (nearest first, at
+        // most COVER_STRIP_PTS), emitted in INCREASING sample order so the
+        // strip's triangles are the ribbon's own (same diagonals).
+        let kLo: number;
+        let kHi: number;
+        if (X.dir > 0) {
+          kLo = Math.floor(X.arc0 / sp);
+          kHi = Math.min(Math.ceil((X.arc0 + R) / sp), kLo + COVER_STRIP_PTS - 1);
+        } else {
+          kHi = Math.ceil(X.arc0 / sp);
+          kLo = Math.max(Math.floor((X.arc0 - R) / sp), kHi - COVER_STRIP_PTS + 1);
+        }
+        if (!X.closed) {
+          kLo = Math.max(0, kLo);
+          kHi = Math.min(cnt - 1, kHi);
+        }
+        if (kHi - kLo < 1) continue;
+        const V = fill.vertices;
+        const pts: number[] = [];
+        for (let k = kLo; k <= kHi; k++) {
+          const kk = X.closed ? ((k % cnt) + cnt) % cnt : k;
+          for (let c = 0; c < 4; c += 2) {
+            const vx = V[kk * 4 + c];
+            const vy = V[kk * 4 + c + 1];
+            pts.push(vx, vy);
+            const r = Math.hypot(vx - rec.jx, vy - rec.jy);
+            if (r > rec.rMax) rec.rMax = r;
+          }
+        }
+        fm = jointTop && !X.dives ? fmTop : fmBottom;
+        fm.pushStrip(pts, rec.rb);
+      }
+      fm = fmBottom;
     }
     setFanMask(null);
     finish();
