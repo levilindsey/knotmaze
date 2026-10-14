@@ -272,11 +272,12 @@ and never reused.
   linked from the panel's credit line, with a guard against an
   unlicensed or unexpected package; it deletes the unused Vite icons.
   No codec and no runtime change beyond the link, so no phone gate.
-  - owner: the stage 1 agent (sonnet) of session d8031183, launched
-    2026-10-13 about 15:50 in the research slot that K115's dropped
-    stage 1a freed.
-  - branch: its `worktree-agent-<id>` (`.claude/worktrees/agent-<id>`);
-    last commit: none yet.
+  - owner: the stage 1 agent (ac1153fc159e1cee4, sonnet) of session
+    d8031183, launched 2026-10-13 about 15:52 in the research slot that
+    K115's dropped stage 1a freed.
+  - branch: `worktree-agent-ac1153fc159e1cee4`
+    (`.claude/worktrees/agent-ac1153fc159e1cee4`), from dece464; last
+    commit: none yet.
   - evidence: `.claude/probes/K122/` in its worktree (untracked).
   - next: stage 1, then the coordinator's review of the page and the
     merge.
