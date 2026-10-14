@@ -111,6 +111,32 @@ and never reused.
   (`pendingWin`, `src/main.ts` about line 2079) and the Reset path during
   the winning move, or only on a live finish? (3) the colors (a festive
   set built from the gold 0xffd23f) and the default amount, 1?
+- **K198** · K148 + K149's calls (`docs/design/K148_K149.md`, "Stage 1
+  handoff"; gameplay.md THE HEAD and FIT CAMERA PAN SLACK): (1) on the
+  phone, no sane pan slack clears the open panel (it covers x 81-401 of
+  411; 0.3 moves the maze 123 px): leave it, a larger share on narrow
+  screens, or something else for the phone? (2) the follow camera's lag
+  flashed the head's indicator for about 0.3 s once in 14 moves at
+  411x753 (never at 1400x900): a short debounce, or leave it? (3)
+  confirm: the head indicator has no setting of its own, and the slack is
+  0.3 of the screen per side.
+- **K200** · K146 + K151's calls (`docs/design/K146_K151.md`, "The
+  calls" and "Open"): (1) K151 (3): free play's X always shows on coarse
+  pointers (`MODE_BADGE_X_ON_COARSE`, built on); (2) confirm: a practice
+  finish has its own banner and shares as "Knotmaze Daily #N
+  (practice)"; the daily badge's tap opens the stats; replay and practice
+  labels carry the daily number; History leaves out today (its own row)
+  and lists recorded days ahead of today; a practice row shows the first
+  practice result; v2's late official results stay official, flagged
+  late. Try: https://levi.dev/knotmaze/?daily=1 (practice, unless you
+  solved #1 on its day) and https://levi.dev/knotmaze/?b.J (the X).
+- **K203** · K120's calls (`docs/design/K120.md`, "Stage 1 handoff";
+  gameplay.md MOVES BY DIRECTION): the move pad on by default on coarse
+  pointers; its corner and size (bottom right, 132 px, about 38% of the
+  landscape height); the 15 deg tie rule (an ambiguous key takes the one
+  tied run no other key claims, else nothing); the 200 ms hold delay.
+  Try: https://levi.dev/knotmaze/?7.J (arrows or WASD; the pad on a
+  phone).
 
 ## In progress
 
@@ -125,31 +151,35 @@ and never reused.
   sleep battery, the kink-eye censuses, the gesture battery, and the
   knot-mode golden (byte-identical with the flag off). Same-chain
   collision skips +-2 ctrl, so it cannot catch folds that short.
+  - stage 1a MERGED in 6f97b92..ac5b880 (2026-10-14 07:32; no behavior
+    change; 686 tests at the merge).
   - owner: nobody since 2026-10-13 11:08 (the stage 1 agent
     a1b6fa0fe2294cd2a of session d8031183 stopped at the 1a/1b
-    boundary, as asked).
+    boundary, as asked); stage 1b launches from its brief next.
   - found (1a): maze designs average 54 windows under 1.0 half-width at
     rest, knot mode 2.9. 85% of the maze's and all of knot mode's are
     Catmull-Rom overshoot, mostly at junction hosts and kink eyes; a
     particle floor alone would need a target near 2.3 (the handoff has
     the numbers and four open checks).
-  - branch: `worktree-agent-a1b6fa0fe2294cd2a`
-    (`.claude/worktrees/agent-a1b6fa0fe2294cd2a`), on 66ee658; last
-    commit: 251f528 (the "Stage 1b handoff"; aaf5289 adds
-    `src/geometry/bend_radius.ts`, the one over-tight definition, with
-    12 tests; 69d5399 adds `scripts/fold_census.{ts,ps1,mjs}`, 79 jobs
-    in about 7 min, no server).
-  - evidence: `.claude/probes/K90/` in its worktree, untracked
-    (`out_census/`, `split.mjs`, `handoff_checks.mjs`, `cr_corner.ts`);
-    copy at merge.
-  - next: stage 1b as a fresh agent: crop the worst junction-host folds
-    with and without the junction webs (`filletMesh`, `filletTopMesh`;
-    if the webs cover them, about 54 windows per maze design drop to
-    about 16), then option 3 (fix the overshoot in the spline, Layer 2)
-    first, behind a flag that defaults off: the census met the brief's
-    trigger for it (coordinator's call, 2026-10-13). It changes every
-    ribbon and touches K8.
-  - brief: `docs/design/K90.md` ("Stage 1b handoff").
+  - branch: mainline; last commit: ac5b880 (the "Stage 1b handoff";
+    6f97b92 adds `src/geometry/bend_radius.ts`, the one over-tight
+    definition, with 12 tests; f4cb719 adds
+    `scripts/fold_census.{ts,ps1,mjs}`, 79 jobs in about 7 min, no
+    server). The 1a worktree `.claude/worktrees/agent-a1b6fa0fe2294cd2a`
+    is kept.
+  - evidence: `.claude/probes/K90/` in the main checkout, untracked,
+    copied at the merge (`out_census/`, `split.mjs`, `handoff_checks.mjs`,
+    `cr_corner.ts`, the guard harness copies).
+  - next: stage 1b as a fresh agent, from its brief: crop the worst
+    junction-host folds with and without the junction webs
+    (`filletMesh`, `filletTopMesh`; if the webs cover them, about 54
+    windows per maze design drop to about 16), then option 3 (fix the
+    overshoot in the spline, Layer 2) first, behind a flag that defaults
+    off: the census met the brief's trigger for it (coordinator's call,
+    2026-10-13). It changes every ribbon and touches K8: never alongside
+    K8.
+  - brief: `docs/design/K90.md` ("Stage 1b handoff", then "Stage 1b
+    brief").
   - env: none for the census; crops need a dev server on ports
     5351-5354.
 - **K74** · Maze design, decided (Levi, 2026-10-13 13:17; his answers
@@ -271,8 +301,15 @@ and never reused.
   - next: look over the sheets; sweep the 3a and 3b worktrees
     (`.claude/worktrees/agent-a262df65dcc1489a7`,
     `.claude/worktrees/agent-a957f7f1407f5df9f`) with
-    `.claude/probes/K161/cleanup.ps1`; the next round's pass covers
-    K146, K151, K148, K149 and K120 (with K120's look `k120-pad`).
+    `.claude/probes/K161/cleanup.ps1` (`-DryRun` first). The next round's
+    pass covers K146, K151, K148, K149, K120 and K90 1a (no behavior
+    change), on head ac5b880 or later, and adds K120's look `k120-pad`
+    (`.claude/probes/K120/looks_k120.json`). The pad is on by default on
+    the phone, so unpinned head shots and frame cells show it where the
+    base shows nothing, and `makeMoves`' choice taps could land on it
+    (0 of 50 measured): looks that don't test it set `knotmaze.movePad`
+    to `0` and reload, or `makeMoves` skips points under `.km-pad`.
+    Pinned looks hide it.
   - brief: `docs/design/K156.md` (the 3a, 3b and 3c handoffs).
 - **K161** · Disk: C: had 24.4 GB free (2026-10-13 about 19:30, before
   K81's 1.6 GB probe copy). `$env:TEMP` holds 1145 `knotmaze-*` Chrome
@@ -290,73 +327,6 @@ and never reused.
   - next: after 16:20 on 10-14, run `cleanup.ps1` again for the
     profiles (about 33 GB). The probe libraries' delete-on-exit goes
     with K150.
-- **K146** · Past dailies, playable without credit (Levi, 2026-10-13
-  about 16:15 and 16:25: "There should be some way to play previous
-  dailys, but not get credit for them." / "Stats view is enough of a way
-  in."): the stats view's History lists every past daily, unplayed ones
-  included; an attempt begun after its day records a practice result,
-  outside every aggregate, and the badge says so. One agent with K151.
-  - owner: agent acbc2283475ab72df (opus) of session d8031183, stage 1,
-    started 2026-10-14 about 01:53; it stops at about 03:53 or when the
-    stage is done.
-  - branch: `worktree-agent-acbc2283475ab72df`
-    (`.claude/worktrees/agent-acbc2283475ab72df`), from 81d31a5; last
-    commit: none yet.
-  - evidence: `.claude/probes/K146_K151/` in its worktree (copy at
-    merge).
-  - next: stage 1 per the brief; then the merge and the next round's
-    phone pass.
-  - brief: `docs/design/K146_K151.md`.
-  - env: dev servers on ports 5500-5509.
-- **K151** · The mode badge (Levi, 2026-10-13 about 16:30, verbatim in
-  `docs/design/levi_notes_2026-10-13.md`): (1) the daily's label in the
-  badge's spot (today the HUD title, `dailyTitle()` in `src/main.ts`);
-  (2) a badge a tap leaves (Free play) fades in an X on hover; (3) phones
-  have no hover: proposed, the X always shows on coarse pointers, built
-  behind a constant (Levi's call, asked 2026-10-13).
-  - owner, branch, evidence, next, brief: as K146 (the same agent and
-    branch, Part B of `docs/design/K146_K151.md`).
-- **K148** · An off-screen indicator for the player (Levi, 2026-10-13
-  about 16:25: "When panning away from the current position, we should
-  also show an offscreen indicator for it."): the head joins the finish
-  as a K73 indicator client, wearing K83's head glyph; a tap eases the
-  camera back to the head and resumes the follow. One agent with K149.
-  - owner: agent a9228d5ef5178136e (sonnet) of session d8031183, stage 1,
-    started 2026-10-14 about 01:53; it stops at about 02:53 or when the
-    stage is done.
-  - branch: `worktree-agent-a9228d5ef5178136e`
-    (`.claude/worktrees/agent-a9228d5ef5178136e`), from 81d31a5; last
-    commit: none yet.
-  - evidence: `.claude/probes/K148_K149/` in its worktree (copy at
-    merge).
-  - next: stage 1 per the brief; then the merge and the next round's
-    phone pass.
-  - brief: `docs/design/K148_K149.md`.
-  - env: dev servers on ports 5510-5519.
-- **K149** · Room to pan the maze partly off screen at the fit zoom
-  (Levi, 2026-10-13 about 16:25: "we should support panning the maze a
-  bit more off-screen at furthest zoom. Especially to get it out from
-  under the menu."): slack in `clampView` (`src/main.ts` about line 638)
-  at every zoom, enough to clear the open panel.
-  - owner, branch, evidence, next, brief: as K148 (the same agent and
-    branch, Part B of `docs/design/K148_K149.md`).
-- **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
-  key to keep advancing, taking the branch that matches the key at each
-  junction it reaches; a quick control on phones too, such as
-  screen-region buttons (the agent proposes and builds one, Levi's
-  call). No codec params. Compare `docs/design/K80_gameplay_additions.md`
-  4.29 (Sprint).
-  - owner: agent a320fe823ac44486d (opus) of session d8031183, stage 1,
-    started 2026-10-14 about 01:59; it stops at about 03:59 or when the
-    stage is done.
-  - branch: `worktree-agent-a320fe823ac44486d`
-    (`.claude/worktrees/agent-a320fe823ac44486d`), from 96320e0; last
-    commit: none yet.
-  - evidence: `.claude/probes/K120/` in its worktree (copy at merge).
-  - next: stage 1 per the brief; then the merge and the next round's
-    phone pass (with the look it proposes).
-  - brief: `docs/design/K120.md`.
-  - env: dev servers on ports 5520-5529.
 
 ## Next, in order
 
@@ -721,6 +691,22 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K205** · K120's leftovers (`docs/design/K120.md`): the follow camera
+  doesn't keep the dot clear of the move pad (a camera inset, K148's and
+  K149's area); the maze is small at the phone's fit zoom; a toast at
+  411 px wide can briefly overlap the pad; clicking the panel's empty
+  area and then pressing an arrow moves in the maze instead of scrolling
+  the panel; in principle a hold could loop around a cycle of runs that
+  all match its key (not observed). Probe gotcha: alternately tapping and
+  holding the best key can cycle forever.
+- **K202** · A bare-URL daily left open past midnight with no move
+  becomes practice when it is begun the next day (K146: begun after its
+  day). An unstarted daily the bare URL opened could roll over to the new
+  day instead (`docs/design/K146_K151.md`, "Open").
+- **K201** · History's "Played" chip counts any record, practice
+  included, so it can exceed the played tile (24 against 21 in K146's
+  history probe); a practice row's count ("Practiced K times") shows only
+  in its tooltip, which phones lack (`src/ui/daily_stats_view.ts`).
 - **K197** · The phone's load settles later over ab6d330..54a2b43
   (K156's round pass of 2026-10-14): first sleep 8.0 -> 19.3 s, and
   over the first 30 s fps 46 -> 41 and p95 33 -> 50 ms, while the
@@ -1225,11 +1211,69 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K187** · K155's History rows explain their stars only on hover, which
   phones lack; add a tap to explain (`docs/design/K155.md`, "Stage 1
   handoff").
+- **K199** · A follow camera that holds a panned-away view: today it has
+  no pan clamp and returns to the head 2.2 s after a gesture (K148's
+  handoff). A new decision for Levi, not a fix.
+- **K204** · A key press that matches nothing or ties gives no feedback
+  (K120; in its census presses match nothing 1.9% of the time and tie
+  9.4%): maybe a nudge or a toast.
 
 ## Done
 
 (items move here with the commit that resolved them)
 
+- **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
+  key to keep advancing, taking the branch that matches the key at each
+  junction, and a quick control on phones.
+  - Done in ba8b198..0acbce0 (2026-10-14): arrow keys and WASD move by
+    direction (`src/ui/key_moves.ts`: a key matches a run within 70 deg,
+    runs within 15 deg of each other tie, a hold goes on 200 ms after each
+    arrival; thresholds from a census of 4259 junctions) and the move pad
+    (`src/ui/move_pad.ts`: bottom right, 132 px, on for coarse pointers,
+    a panel row). 674 tests at the merge; the key and pad probes all
+    pass, and `pad.mjs indicator` 4/4 and `keys.mjs guards` 11/11 again
+    on the merged code. Probes `.claude/probes/K120/` (`out/`,
+    `census_report.txt`); worktree
+    `.claude/worktrees/agent-a320fe823ac44486d` kept. Calls: K203; idea:
+    K204; residuals: K205.
+- **K146** · Past dailies, playable without credit (Levi, 2026-10-13
+  about 16:15 and 16:25: "There should be some way to play previous
+  dailys, but not get credit for them." / "Stats view is enough of a way
+  in."). One agent with K151.
+  - Done in df8929c..b9cf882 (2026-10-14): daily store v3 (an attempt
+    begun after its day finishes as practice, outside every aggregate);
+    History lists every past daily, unplayed ones included (month
+    headers, All / Played / Not played chips past 10 rows); a practice
+    finish has its own banner and share title. 642 tests at the merge;
+    the free, daily, practice and history probes all OK, each also at
+    phone size. Probes `.claude/probes/K146_K151/` (`shots/`); worktree
+    `.claude/worktrees/agent-acbc2283475ab72df` kept. Calls: K200;
+    residuals: K201, K202.
+- **K151** · The mode badge (Levi, 2026-10-13 about 16:30, verbatim in
+  `docs/design/levi_notes_2026-10-13.md`).
+  - Done in df8929c..b9cf882 (2026-10-14, with K146): one badge always
+    shows (`src/ui/mode_badge.ts`: Free play, Daily #N, replay,
+    practice), the HUD's title row is gone, and free play's X fades in on
+    hover and always shows on coarse pointers (`MODE_BADGE_X_ON_COARSE`).
+    Calls: K200.
+- **K148** · An off-screen indicator for the player (Levi, 2026-10-13
+  about 16:25: "When panning away from the current position, we should
+  also show an offscreen indicator for it."). One agent with K149.
+  - Done in 2afca1d..fcc402b (2026-10-14): the head is K73's third
+    indicator client (`src/ui/head_indicator.ts`; K83's head glyph; a tap
+    returns the camera to the head), and indicator glyph dots no longer
+    inherit the icon's stroke (the head's dot and the minotaur's eyes had
+    been white blobs). 625 tests; page probes fit 22/22, follow 13/13,
+    slack 9/9, solve 7/7, fog 5/5, phone and pinch included. Probes
+    `.claude/probes/K148_K149/` (`out/*.png`); worktree
+    `.claude/worktrees/agent-a9228d5ef5178136e` kept. Calls: K198; idea:
+    K199.
+- **K149** · Room to pan the maze partly off screen at the fit zoom
+  (Levi, 2026-10-13 about 16:25).
+  - Done in 2afca1d..fcc402b (2026-10-14, with K148):
+    `src/ui/view_clamp.ts` (`PAN_SLACK`, 0.3 of the screen per side at
+    every zoom); a reset from a slack-panned view eases instead of
+    snapping. Calls: K198 (the phone's open panel).
 - **K180** · K104's tuning calls as params, so Levi can try them by
   playing: pluckWhole (`pw`, 0-1.5, default 0.5), pluckCrossings (`pcx`:
   through | ride | pinch) and pluckGlow (`pgl`: off | instead | with |
