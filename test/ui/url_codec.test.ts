@@ -422,7 +422,7 @@ describe("token + overrides", () => {
   });
 
   it("round-trips the background speed (appended to v4; -1 = auto)", () => {
-    for (const speed of [0, 0.5, 1, 2.25, 3]) {
+    for (const speed of [0, 0.5, 1, 2.25, 3, 5.5, 8]) {
       const p = withSeed(7, { background: "vellum", backgroundSpeed: speed });
       expect(parseParams("?" + encodeParams(p))).toEqual(p);
     }
@@ -431,13 +431,18 @@ describe("token + overrides", () => {
     expect(parseParams("?7.c").backgroundSpeed).toBe(-1);
     expect(parseParams("?" + USER_COMPACT).backgroundSpeed).toBe(-1);
     // A token takes it as an override (probe URLs: &bgs=2); any negative
-    // value is auto, and explicit speeds clamp to the slider's max 3.
+    // value is auto, and explicit speeds clamp to the slider's max 8
+    // (Levi, 2026-10-13: "Max backgroundSpeed should be like x8").
     expect(parseParams("?7.J&bgs=2")).toEqual(withSeed(7, { backgroundSpeed: 2 }));
+    expect(parseParams("?7.J&bgs=8")).toEqual(withSeed(7, { backgroundSpeed: 8 }));
     expect(parseParams("?7.J&bgs=-.5").backgroundSpeed).toBe(-1);
-    expect(parseParams("?7.J&bgs=9").backgroundSpeed).toBe(3);
+    expect(parseParams("?7.J&bgs=9").backgroundSpeed).toBe(8);
+    expect(parseParams("?7.J&bgs=100").backgroundSpeed).toBe(8);
     expect(parseParams("?7.J&bgs=x").backgroundSpeed).toBe(-1);
     const fast = encodeParams(withSeed(7, { backgroundSpeed: 9 }));
-    expect(parseParams("?" + fast).backgroundSpeed).toBe(3);
+    expect(parseParams("?" + fast).backgroundSpeed).toBe(8);
+    const eight = encodeParams(withSeed(7, { backgroundSpeed: 8 }));
+    expect(parseParams("?" + eight).backgroundSpeed).toBe(8);
     const neg = encodeParams(withSeed(7, { backgroundSpeed: -0.25 }));
     expect(parseParams("?" + neg).backgroundSpeed).toBe(-1);
   });

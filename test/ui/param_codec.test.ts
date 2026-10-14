@@ -353,7 +353,7 @@ describe("token format", () => {
   // sign ("-" = 11), and explicit speeds round-trip.
   it("writes the background speed: auto by omission, explicit values", () => {
     expect(numberText(-1)).toBe("-1");
-    for (const speed of [0, 0.05, 1, 1.45, 3]) {
+    for (const speed of [0, 0.05, 1, 1.45, 3, 8]) {
       const values = { ...codecDefaults(CODEC_VERSION), backgroundSpeed: speed };
       const token = encodeToken(7, values);
       expect([speed, decodeToken(token).values.backgroundSpeed]).toEqual([speed, speed]);

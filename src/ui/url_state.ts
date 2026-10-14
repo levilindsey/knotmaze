@@ -308,7 +308,7 @@ export interface UrlParams {
   backgroundIntensity: number;
   // The background's animation speed (K79; render/background_model.ts):
   // -1 = AUTO, each effect's own pace (vellum static); 0 = static; else
-  // [0, 3] x the effect's designed drift. Applies live.
+  // [0, 8] x the effect's designed drift (BACKGROUND_SPEED_MAX). Applies live.
   backgroundSpeed: number;
   // The background's SHAPE (K79 stage B; BackgroundShape in
   // render/background_model.ts), all live: pattern size [0.5, 2] for every
