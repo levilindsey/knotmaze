@@ -95,7 +95,7 @@ src/
     maze_hud.ts           # K19: maze HUD + win banner (DOM)
     daily_stats_view.ts   # K20: daily stats modal
     share.ts              # K20: native share sheet / clipboard + toast
-    mode_badge.ts         # K73: "Free play" / "Replay · not scored" pill
+    mode_badge.ts         # K151: the mode badge (free play + its X, daily, replay, practice)
     offscreen_indicators.ts # K73: edge indicators for off-screen targets
     motion.ts             # K53/K79: the Motion setting (viewer pref, data-motion)
     head_indicator.ts     # K148 pure: the player's edge indicator (when it shows, what a tap does)
