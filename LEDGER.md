@@ -253,26 +253,21 @@ and never reused.
   - branch: stage B `worktree-agent-a4cf71c585e48612a`
     (`.claude/worktrees/agent-a4cf71c585e48612a`), on 66ee658; last
     commit: e3f867f (the "Stage B2 handoff"; the code is 4cdcd1b).
-    Stage A is on mainline (9ffda8a); its worktree
-    (`.claude/worktrees/agent-a7e566f4ba72a9d2d`) is kept until its
-    phone gate passes.
+    Stage A is on mainline (9ffda8a); its phone gate passed 2026-10-13
+    12:03 (K10) and its worktree is removed.
   - evidence: stage A's `.claude/probes/K79/` (`run_ab.ps1`,
     `k79_sheet.mjs`, `k79_dstats.mjs`, `k79_gpu.mjs`, `k79_motion.mjs`;
     `out/sheets/`, `out/ab_final/`, `out/motion.log`, `out/gpu_k79.log`);
     stage B1's `k79b_smoke.mjs`, `k79b_cases.json` and `out/b1_smoke.log`,
     copied there from its worktree.
-  - next: stage A's phone gate (K10) is RUNNING since 2026-10-13 10:45
-    (agent a32615bf2a394c093, sonnet, main checkout, ports 5371-5374): it
-    follows `.claude/probes/K79/phone/results.md` (default vs e25d202,
-    vellum at `bgs=1`, the speed row, the `backgroundIntensity` reset
-    glyph at 411 px; `watchdog.ps1` stops it on any touch). B2 does the
-    handoff's steps 1-5: same-state A/Bs against master (the 19 cases
-    plus the 10 in `k79b_cases.json`, 0 px expected), contact sheets, GPU
-    ms per shaped program under the perf lock, the lore, the rebase onto
-    master; it writes a "Stage B3: phone gate" section and stops. Then
-    B's phone gate (after A's), Levi's two calls (K129), and the merge;
-    file B1's probe-only residual then (`__knotSetBackgroundParams`
-    doesn't sanitize).
+  - next: B2 does the handoff's steps 1-5: same-state A/Bs against
+    master (the 19 cases plus the 10 in `k79b_cases.json`, 0 px
+    expected), contact sheets, GPU ms per shaped program under the perf
+    lock, the lore, the rebase onto master; it writes a "Stage B3: phone
+    gate" section and stops. Then B's phone gate (K10, with stage A's
+    kit in `.claude/probes/K79/phone/`), Levi's two calls (K129), and the
+    merge; file B1's probe-only residual then
+    (`__knotSetBackgroundParams` doesn't sanitize).
   - brief: `docs/design/K79.md` on the branch ("Stage B2 handoff": `git
     show e3f867f:docs/design/K79.md`).
   - env: `.claude/probes/K79/run_ab.ps1` (its header starts servers on
@@ -374,12 +369,12 @@ boundary, where the agent writes a "Stage N handoff" into the brief,
 commits and stops, and a fresh agent continues from it. K81 alone was
 about a third of the overnight spend.
 
-Order from 2026-10-13 12:05, after Levi's decisions at 09:35 (he may
+Order from 2026-10-13 12:20, after Levi's decisions at 09:35 (he may
 reorder). Running: K104 and K110 (code), K81 stage 3c (measures only)
-and K79 stage B2 (measures and rebases, stops before its phone gate);
-K79 stage A's phone gate. The phone takes one gate at a time: K79 A,
-then K79 B, then K81. The merges of K79 B and K81 unblock most of this
-list. Then, as code slots free up:
+and K79 stage B2 (measures and rebases, stops before its phone gate).
+The phone is free (K79 stage A's gate passed at 12:03) and takes one
+gate at a time: K79 B's, then K81's. The merges of K79 B and K81
+unblock most of this list. Then, as code slots free up:
 1. K120 (no codec).
 2. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
    then option 3 (the spline fix) first.
@@ -529,11 +524,12 @@ K5-K7 (split, frame loop, worker) follow.
   - K83 (5592f8c) vs ce331bc, 2026-10-13: 60.3 vs 60 with flow, 60.3 vs
     60.3 flow off, 60.5 vs 60.5 with `pv=trail`, p90 16.7 ms everywhere;
     every run asleep by sim 5.0 s on both (`bench_2026-10-13_K83.txt`).
-  - K79 stage A (9ffda8a), PENDING: merged without the phone (off its
-    charger and locked at 07:15). Its default path issues the same GL
-    work as before (the vellum drift program is built only once a speed
-    is set; desktop A/B 0 px). Bench default vs e25d202 and vellum at
-    `bgs=1`.
+  - K79 stage A (7225930 vs e25d202, 2026-10-13 11:06-12:03, wireless
+    adb): PASS. 60.0-60.5 fps, p50 16.7 ms, on both builds at default,
+    `fw=0` and `pv=trail`, all 36 runs asleep; frames 0 px in fabric,
+    knot, mist and none; vellum at `bgs=1` costs less than the phone
+    resolves (about 0.18 ms/frame, +-2 ms); the panel row 16/16
+    (`.claude/probes/K79/phone/results.md`).
 
   Rerun after every stage: `scripts/preview.ps1` builds per ref,
   `scripts/phone.ps1 -Ports ...`, then `.claude/probes/K10/phone_bench.mjs`.
@@ -569,6 +565,15 @@ K5-K7 (split, frame loop, worker) follow.
   defaults" can write a wrong default (e.g. intensity 0.48). Existing
   behavior (`src/ui/tweakpane_panel.ts`), found by K79 stage B1,
   2026-10-13.
+- **K131** · The phone probe kit (`.claude/probes/K79/phone/`,
+  untracked): `drift.mjs` and `frames.mjs` take full-size PNG shots,
+  10-25 s each over Tailscale (frames took 10 min, drift 8; "10 s"
+  windows ran 35-65 s): use JPEG or clipped shots. `bench.mjs`'s
+  `thermal()` reads the stale "Cached temperatures" block, not "Current
+  temperatures from HAL". Untested: whether the watchdog's 2 s `dumpsys`
+  poll and the CDP traffic add to the phone's bursty frame stalls (seen
+  with no background too). The phone has no GPU timer, so a tighter
+  cost A/B needs many interleaved reps. K79 stage A's gate, 2026-10-13.
 - **K11** · Ring + gridAlign: buckles lopsided below strength ~1.8e-3,
   wanders without sleeping at 5e-4..1.6e-3, never sleeps at ga=1.
 - **K12** · Star shape, e-w anchors: 6/8 seeds sleep; 2 hover at the
