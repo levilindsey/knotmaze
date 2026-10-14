@@ -106,6 +106,16 @@ export class FabricMazeController {
     return out;
   }
 
+  // K80's real-time mode: the minotaur caught the player. Back to the
+  // entrance in one jump, not a restart: the stats, the move log, the taps
+  // and the backtrack meter stay (replay(taps) cannot reproduce a respawn;
+  // a real-time maze is never a daily, so nothing replays it).
+  respawn(): void {
+    this.pathVertices = [this.walk.start];
+    this.pathEdges = [];
+    this.solved = false;
+  }
+
   // Moves made (accepted taps) since the last reset.
   get moveCount(): number {
     return this.moveLog.length;
