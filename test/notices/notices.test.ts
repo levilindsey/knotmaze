@@ -523,6 +523,63 @@ describe("the dev server", () => {
   });
 });
 
+// The plugin's wiring, in a throwaway project (one HTML page, one module,
+// three fake packages): a bundled package without license text stops the
+// build, a package that is imported but tree-shaken away is neither listed
+// nor checked, and a good one lands on the page.
+describe("the plugin in a throwaway project", () => {
+  const root = mkdtempSync(join(tmpdir(), "knotmaze-k122-proj-"));
+  afterAll(() => rmSync(root, { recursive: true, force: true }));
+
+  const lib = (name: string, files: Record<string, string>, json: Record<string, unknown> = {}) => {
+    const d = join(root, "node_modules", name);
+    mkdirSync(d, { recursive: true });
+    writeFileSync(join(d, "package.json"), JSON.stringify({ name, version: "1.0.0", main: "index.js", ...json }));
+    for (const [f, text] of Object.entries(files)) writeFileSync(join(d, f), text);
+  };
+  const project = (main: string) => {
+    writeFileSync(join(root, "index.html"), `<!doctype html><script type="module" src="/main.js"></script>`);
+    writeFileSync(join(root, "main.js"), main);
+  };
+  const run = async () => {
+    const result = await build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [notices()],
+      build: { write: false, outDir: join(root, "out") },
+    });
+    const rolled = Array.isArray(result) ? result[0] : result;
+    return (rolled as unknown as { output: { type: string; fileName: string; source?: string; code?: string }[] }).output;
+  };
+
+  lib("good-lib", { "index.js": "export const good = () => 'good';", LICENSE: mit("Good Lib Author") }, { license: "MIT" });
+  lib("bare-lib", { "index.js": "export const bare = () => 'bare';" }, { license: "MIT" });
+  lib("shaken-lib", { "index.js": "export const shaken = () => 'shaken';" }, { license: "GPL-3.0-only", sideEffects: false });
+
+  it("fails the build for a bundled package with no license text, naming it", async () => {
+    project(`import { bare } from "bare-lib"; console.log(bare());`);
+    await expect(run()).rejects.toThrow(/bare-lib@1\.0\.0 ships no license file/);
+  });
+
+  it("fails the build for a bundled package under a license nobody approved", async () => {
+    project(`import { shaken } from "shaken-lib"; console.log(shaken());`);
+    await expect(run()).rejects.toThrow(/shaken-lib@1\.0\.0 is licensed "GPL-3\.0-only"/);
+  });
+
+  it("lists a good package, ignores one that was tree-shaken away, and banners the chunk", async () => {
+    // shaken-lib is imported and never used, and declares sideEffects: false.
+    project(`import { good } from "good-lib"; import { shaken } from "shaken-lib"; console.log(good());`);
+    const out = await run();
+    const page = out.find((o) => o.fileName === NOTICES_FILE);
+    expect(page?.source).toContain('data-package="good-lib"');
+    expect(page?.source).toContain("Copyright (c) 2020 Good Lib Author");
+    expect(page?.source).not.toContain("shaken-lib");
+    const chunk = out.find((o) => o.type === "chunk");
+    expect(chunk?.code).toContain(NOTICES_BANNER);
+  });
+});
+
 // The guard on the real thing: build the app in memory and read what it
 // would publish. A bundled package with no license text, a license outside
 // the allowed list, or an unclassified virtual module fails the build

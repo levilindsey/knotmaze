@@ -258,8 +258,10 @@ export function buildPanel(
     "color:#c8cad3;text-decoration:none;transition:color .12s}" +
     ".kp-credit a:hover,.kp-credit a:focus-visible{color:#e7c56f}" +
     ".kp-credit img{width:16px;height:16px;display:block}" +
-    ".kp-credit a.kp-licenses{margin-left:auto;opacity:.75;text-decoration:underline;" +
-    "text-underline-offset:2px}" +
+    // Far end of the line; the padding (cancelled by the negative margin)
+    // widens the tap target of 10 px text without moving it.
+    ".kp-credit a.kp-licenses{margin:-6px -4px -6px auto;padding:6px 4px;" +
+    "opacity:.75;text-decoration:underline;text-underline-offset:2px}" +
     ".kp-credit a.kp-licenses:hover,.kp-credit a.kp-licenses:focus-visible{opacity:1}" +
     // Seed row: the token field plus a square dice button beside it.
     ".kp-seed .tp-lblv_v{display:flex;align-items:center;gap:4px}" +
