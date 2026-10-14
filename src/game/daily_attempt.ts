@@ -89,7 +89,9 @@ export function restoreAttempt(
 // backtracking to the entrance (FabricMazeController.retreatToStart),
 // the clock running on; memory-trail mode has no way back, so there it
 // does nothing. Anywhere else - an ordinary design, a replay, a finished
-// solve - it starts a fresh attempt, as it always has.
+// solve - it starts a fresh attempt, as it always has. The real-time
+// minotaur mode (K80) always restarts: a free walk back to the entrance
+// would be an escape from the chase (no undo there, Levi's call 4).
 export type ResetPathAction = "backtrack" | "refuse" | "restart";
 
 export function resetPathAction(s: {
@@ -99,8 +101,9 @@ export function resetPathAction(s: {
   official: boolean;
   solved: boolean;
   trailMode: boolean;
+  realtime?: boolean;
 }): ResetPathAction {
-  if (!s.dailyAttempt || s.official || s.solved) return "restart";
+  if (s.realtime || !s.dailyAttempt || s.official || s.solved) return "restart";
   return s.trailMode ? "refuse" : "backtrack";
 }
 
