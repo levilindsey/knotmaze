@@ -334,5 +334,7 @@ describe("keyBelongsElsewhere", () => {
     expect(keyBelongsElsewhere({ ...base, target: el(["textarea"]) })).toBe(true);
     expect(keyBelongsElsewhere({ ...base, target: el([".tp-rotv"]) })).toBe(true);
     expect(keyBelongsElsewhere({ ...base, target: el(["canvas"]) })).toBe(false);
+    // A panel button (a folder title, Reset path) does not use the arrows.
+    expect(keyBelongsElsewhere({ ...base, target: el([".tp-rotv", "button"]) })).toBe(false);
   });
 });

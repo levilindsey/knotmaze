@@ -353,8 +353,10 @@ export function keyBelongsElsewhere(e: {
     if (t.closest("input, textarea, select, [contenteditable]:not([contenteditable='false'])")) {
       return true;
     }
-    // Tweakpane's rows (sliders, lists) read the arrows while focused.
-    if (t.closest(".tp-dfwv, .tp-rotv")) return true;
+    // Tweakpane's rows (sliders, lists, pads) read the arrows while
+    // focused; its buttons (folders, Reset path) do not, so a key after a
+    // panel click still moves.
+    if (t.closest(".tp-dfwv, .tp-rotv") && !t.closest("button")) return true;
   }
   // A modal dialog (the daily stats view) owns the keyboard while open.
   if (typeof document !== "undefined" && document.querySelector("[aria-modal='true']")) {
