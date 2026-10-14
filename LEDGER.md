@@ -391,20 +391,22 @@ K5-K7 (split, frame loop, worker) follow.
   `paint_math` mirror, so after K81 merges. Sheets: `.claude/probes/K75/`
   (`NOTES.txt` indexes them).
 - **K145** · A subtle hover glow on runs that aren't choices (Levi,
-  2026-10-13 about 16:00, verbatim in
+  2026-10-13 about 16:00 and 16:12, verbatim in
   `docs/design/levi_notes_2026-10-13.md`): in the maze, hovering any run
   that isn't a choice at the player's junction (the choices keep their
   stronger hover) lights a glow along both edges of the thread, inside
   its bounds, fading quickly toward the center line and fading out with
-  distance from the hover point; the reach can borrow the choices'
-  length param (`pulseReach`, which K93 makes the hover's reach). For
-  the brief: the pointer move in `src/main.ts` asks `fabric.edgeAt`,
-  which picks only choosable runs, and `setHover` tracks one run; the
-  glow is a new G2 paint term plus its `paint_math` mirror (the hovered
-  run and the hover point's arc position), measured along the thread
-  like the pulses; decide whether it stops or fades at the run's
-  junctions; a strength param (0 = off), proposed daily-exempt (K57);
-  mouse and pen only (touch has no hover). With K93, after K81 merges.
+  distance from the hover point and toward the run's junctions; the
+  reach can borrow the choices' length param (`pulseReach`, which K93
+  makes the hover's reach). A touch press shows it too, until the finger
+  lifts (the tap-pluck still fires on release) or the press becomes a
+  tug or a pan. For the brief: the pointer move in `src/main.ts` asks
+  `fabric.edgeAt`, which picks only choosable runs, `setHover` tracks
+  one run, and a touch press on a thread sets `pendingPluck` with no
+  hover at all; the glow is a new G2 paint term plus its `paint_math`
+  mirror (the hovered run and the hover point's arc position), measured
+  along the thread like the pulses; a strength param (0 = off), proposed
+  daily-exempt (K57). With K93, after K81 merges.
 - **K92** · Undo and redo for design changes (Levi, 2026-10-13). Two
   buttons beside the panel's open/close button, shown only while the
   panel is open, each enabled only when it can act; the mode badge moves

@@ -259,3 +259,17 @@ Filed (2026-10-13): K144, last in Next.
 Let's give a little on-hover highlight over any segment that is hovered, not just adjacent-to-current-junction ones. This highlight shouldn't happen on adjacent-to-current-junction segments. This highlight should be more subtle that the adjacent-to-current-junction highlight, but it can maybe borrow the same length parameter. For this, I'm envisioning a long glow along either side of the thread, but that doesn't extend past the bounds of the thread, and this glow would fade-out quickly toward the center of the thread, and this glow would fade-out at a distance from the hover position.
 
 Filed (2026-10-13): K145 in Next, with K93 after K81 merges.
+
+### About 16:12 (K145's answers)
+
+1. Touch-press shows it to. I assume touch-release is what triggers plucks?
+2. fade-out
+
+Answered: yes. A tap on a thread plucks when the finger lifts within the
+slop (touch 10 px, mouse 4, pen 6); a press that moves further tugs (or
+pans with physics off) and plucks on its release; a tap on a choice run
+moves the player on release and doesn't pluck (`src/main.ts`, the
+pointer handlers).
+
+Filed (2026-10-13): K145 updated (a touch press shows the glow until the
+lift; it fades out toward the run's junctions).
