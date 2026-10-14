@@ -8,18 +8,22 @@
 #   3. waits until the touchscreen has been quiet for -QuietMin minutes (a
 #      touch restarts the wait; gives up after -GiveUpMin);
 #   4. needs the phone STILL awake and unlocked: it never wakes it (no key
-#      events) and never unlocks it, it stops and reports (exit 3);
+#      events) and never unlocks it. If it is asleep or locked it waits for a
+#      person, read-only, like `phone_pass.ps1 -WaitReady` (a check every 3
+#      minutes, two ready in a row, up to -WaitReadyMin, default 240), and
+#      stops and reports (exit 3) only at that deadline;
 #   5. reruns `phone_pass.ps1 -Phase all` on the same -Out with the parameters
 #      stored in <Out>\config.json.
 # Run it in the background: it can take -GiveUpMin + the pass's own time.
 # Exit codes: 0 the rerun finished clean, 1 no trip to retry or bad config,
 # 3 phone not awake/unlocked, 4 already retried once, 5 no touchscreen found,
 # 2 gave up waiting; else the rerun's own code (2 = tripped again).
-# Usage: pwsh -NoProfile -File retry_quiet.ps1 -Out <pass folder> [-QuietMin 15] [-GiveUpMin 90] [-NoRun]
+# Usage: pwsh -NoProfile -File retry_quiet.ps1 -Out <pass folder> [-QuietMin 15] [-GiveUpMin 90] [-WaitReadyMin 240] [-NoRun]
 param(
   [Parameter(Mandatory)][string]$Out,
   [int]$QuietMin = 15,
   [int]$GiveUpMin = 90,
+  [int]$WaitReadyMin = 240,   # K171 (b): how long to wait for an asleep or locked phone after the quiet wait (0 = exit 3 at once)
   [switch]$NoRun   # a harness check: do everything but the rerun, which is only printed
 )
 $ErrorActionPreference = "Stop"
@@ -81,11 +85,22 @@ while ($true) {
 }
 if (-not $quiet) { Say "retry: no $QuietMin quiet minutes before $($giveUp.ToString('HH:mm')); not retrying"; exit 2 }
 
-# Never wake it and never unlock it: an asleep or locked phone is a person's call.
+# Never wake it and never unlock it: an asleep or locked phone is a person's
+# call. K171 (b): instead of giving up at once, wait the way phone_pass.ps1
+# -WaitReady does (a read-only check every 3 minutes, two ready checks in a
+# row, up to -WaitReadyMin), and exit 3 only at that deadline.
 $o = & $adb -s $dev shell "dumpsys power | grep -E 'mWakefulness='; dumpsys window | grep -E 'isKeyguardShowing'" 2>&1 | Out-String
 if ($o -notmatch 'mWakefulness=Awake' -or $o -match 'isKeyguardShowing=true') {
-  Say "retry: the phone is asleep or locked after the quiet wait; not retrying (it is never woken or unlocked by the pass)"
-  exit 3
+  if ($WaitReadyMin -le 0) {
+    Say "retry: the phone is asleep or locked after the quiet wait; not retrying (it is never woken or unlocked by the pass)"
+    exit 3
+  }
+  Say "retry: the phone is asleep or locked after the quiet wait; waiting up to $WaitReadyMin min for a person to leave it awake and unlocked (read-only checks, never woken)"
+  & pwsh -NoProfile -File $pass -Phase check -WaitReady $WaitReadyMin -Serial $dev | Out-Host
+  if ($LASTEXITCODE -ne 0) {
+    Say "retry: the phone was not ready within $WaitReadyMin min; not retrying"
+    exit 3
+  }
 }
 Say "retry: $QuietMin quiet minutes and the phone is awake; running the pass again (the one retry)"
 $argv = @("-NoProfile", "-File", $pass, "-Phase", "all", "-Base", $cfg.refA, "-Head", $cfg.refB, "-Out", $Out,

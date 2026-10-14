@@ -13,7 +13,8 @@
 //  steps  waitSleep{ms} | wait{ms} | moves{n} (more cheapest moves, touch
 //         taps) | tapChoice | click{text|selector} (anchors open in the same
 //         tab) | panel{open} | scroll{selector|text|y, block?} (scrollIntoView, block "center" by default) | pin
-//         (freeze every clock; K83's pinAll) | reload | eval{js} |
+//         (freeze every clock; K83's pinAll) | reload | eval{js, name?} (the page runs
+//         js, a Promise is awaited, and its JSON result is kept in the report's steps[].result) |
 //         shot{name, clip?{x,y,width,height}, junctions?:N} |
 //         burst{name, n, everyMs}.
 // A missing hook, element or `needs` -> status "missing" + the reason; any
@@ -142,7 +143,12 @@ async function doStep(look, b, run, st) {
     }
     case "pin": await page.evaluate(pinAll); await sleep(700); break;
     case "reload": await page.reload({ waitUntil: "load", timeout: 90000 }); await waitAsleep(st.ms ?? 30000); break;
-    case "eval": await page.evaluate((js) => (0, eval)(js), st.js); break;
+    case "eval": {
+      // Runs `js` in the page (a Promise is awaited) and keeps its JSON result in the look's report: steps[].result.
+      const result = await page.evaluate((js) => (0, eval)(js), st.js);
+      run.steps.push({ op: st.op, name: st.name ?? null, result: result === undefined ? null : result });
+      break;
+    }
     case "shot": {
       writeFileSync(out(frame(st.name)), await png(st.clip ? { clip: st.clip } : {}));
       run.shots.push({ name: st.name, kind: "shot", file: frame(st.name) });
