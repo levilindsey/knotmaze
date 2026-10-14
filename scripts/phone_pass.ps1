@@ -51,6 +51,13 @@
 #   -Out <dir>        default <repo>\.claude\probes\rounds\<yyyy-MM-dd>-<head sha>
 #                     (untracked). Later phases without -Out use that default,
 #                     else the newest folder under rounds\ that has a config.json
+#   -WaitReady <min>  (check, start, all) K171 (b): wait for the phone instead of
+#                     stopping at once. Every 3 minutes it runs the read-only check
+#                     (dumpsys reads only: it never wakes, unlocks or touches the
+#                     phone) and goes on after TWO ready checks in a row (a phone
+#                     that stays awake and unlocked for 3 quiet minutes was set
+#                     down, not picked up). Exit 3 at the deadline. Default 0 = no
+#                     wait (a phone that is not ready stops the pass at once)
 #   -Serial <serial>  the phone; default: a host:port (Tailscale) device, else the
 #                     USB one, else `adb connect` to the 'pixel-11' Tailscale peer
 #   -Noise <json>     the A/A noise floor summary.mjs reads (default
@@ -87,6 +94,7 @@ param(
   [string]$Out = "",
   [string]$Moves = "0,10,21",
   [int]$LoadSeconds = 15,
+  [int]$WaitReady = 0,
   [string]$Serial = "",
   [string]$Noise = "",
   [string]$PortRange = "5480-5489",
@@ -173,6 +181,34 @@ function Assert-PhoneReady([string]$adb, [string]$ser) {
   Say "phone ${ser}: reached=$($s.Reached) awake=$($s.Awake) locked=$($s.Locked) top=$($s.Top)"
   if (-not $s.Reached) { throw "PHONE NOT READY: $ser gave no state (offline?)." }
   if (-not $s.Awake -or $s.Locked) { throw "PHONE NOT READY: the phone is asleep or locked; a person must wake and unlock it first (the pass never does)." }
+}
+
+# K171 (b): the read-only wait. Every 3 minutes, up to -WaitReady minutes, the
+# same check as -Phase check (dumpsys reads: no wake, no unlock, no touch). It
+# returns after TWO ready checks in a row, and throws "PHONE NOT READY" (exit
+# 3) at the deadline. retry_quiet.ps1 reaches it through `-Phase check -WaitReady`.
+function Wait-PhoneReady {
+  if ($Out) { New-Item $logsDir -ItemType Directory -Force | Out-Null }
+  $deadline = (Get-Date).AddMinutes($WaitReady)
+  Say "waiting up to $WaitReady min for the phone (read-only check every 3 min; two ready checks in a row start the pass; deadline $($deadline.ToString('HH:mm')))"
+  $ready = 0
+  while ($true) {
+    $note = ""
+    try {
+      $adb = Find-Adb
+      $ser = Find-Serial $adb $Serial
+      $s = Phone-State $adb $ser
+      $ok = ($s.Reached -and $s.Awake -and -not $s.Locked)
+      $note = "$ser awake=$($s.Awake) locked=$($s.Locked) top=$($s.Top)"
+    } catch { $ok = $false; $note = $_.Exception.Message }
+    $ready = if ($ok) { $ready + 1 } else { 0 }
+    Say "wait: $(if ($ok) { "ready ($ready of 2)" } else { 'not ready' }): $note"
+    if ($ready -ge 2) { Say "wait: two ready checks in a row; the phone was set down, not picked up. Going on."; return }
+    $left = [int]($deadline - (Get-Date)).TotalSeconds
+    if ($left -le 0) { break }
+    Start-Sleep -Seconds ([Math]::Min(180, $left))
+  }
+  throw "PHONE NOT READY: no two ready checks in a row within $WaitReady min (never woken or unlocked by the pass)."
 }
 
 function Get-FreePorts([int]$n) {
@@ -506,6 +542,7 @@ function Do-Cleanup {
 # --------------------------------------------------------------- dispatch
 $problem = $null
 try {
+  if ($WaitReady -gt 0 -and -not $Dry -and $Phase -in "check", "start", "all") { Wait-PhoneReady }
   if ($Phase -eq "check") { Do-Check }
   elseif ($Phase -eq "start") { Do-Start }
   elseif ($Phase -eq "frames") { Do-Frames }
