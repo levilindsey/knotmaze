@@ -1243,11 +1243,11 @@ export class PluckOverlay {
     // the pinch at interior nodes - as a share wOf of W0. The lobe's peak
     // and W's add up. "through" soft-caps the lobe term alone at the unit's
     // interior nodes and then the sum once at W's frets (the unit's end
-    // nodes, hide zones), never under the lobe's own capped swing
-    // (throughStation), giving each term its own factor (fOf the lobe's;
-    // W's folded into wOf); otherwise
-    // the soft node caps the SUM and fOf scales both terms alike. The
-    // tight-bend cap below scales whatever is left.
+    // nodes, hide zones); the lobe's share never drops under its pre-K104
+    // swing and W draws what the cap leaves (throughStation), each term
+    // with its own factor (fOf the lobe's; W's folded into wOf), and the
+    // tight-bend cap below keeps the lobe's share first too. Otherwise the
+    // soft node caps the SUM and fOf scales both terms alike.
     const W0 = p.W0;
     const mode = this.wholeMode;
     const nodes = this.wholeNodes;
@@ -1391,9 +1391,12 @@ export class PluckOverlay {
         const c = nodeCap(h, d0, COLLAPSE_RAMP);
         if (m.pkOf[i] > c) {
           if (through) {
-            const k = c / m.pkOf[i];
-            m.fOf[i] *= k;
-            m.wOf[i] *= k;
+            // The lobe keeps its share up to c and W gets the rest
+            // (throughStation's rule: W never lowers the lobe's swing).
+            const wS = W0 * m.wOf[i];
+            const lobeS = Math.max(0, m.pkOf[i] - wS);
+            if (lobeS > c) m.fOf[i] *= c / lobeS;
+            m.wOf[i] = Math.max(0, c - Math.min(lobeS, c)) / W0;
           }
           m.pkOf[i] = c;
         }
