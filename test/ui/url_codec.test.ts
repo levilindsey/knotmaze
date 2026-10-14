@@ -462,6 +462,11 @@ describe("token + overrides", () => {
       backgroundAccent3: "#a1b2c3",
     });
     expect(parseParams("?" + encodeParams(p))).toEqual(p);
+    // Beside K74's deadEndLength (index 71; these ten start at 72): the
+    // neighbors of the join keep their own values, as tokens and as keys.
+    const joined = withSeed(7, { deadEndLength: 30, backgroundScale: 1.5, backgroundSpeed: 4 });
+    expect(parseParams("?" + encodeParams(joined))).toEqual(joined);
+    expect(parseParams("?7.J&del=30&bgsz=1.5&bgs=4")).toEqual(joined);
     // At their defaults they cost nothing: the all-default token.
     expect(encodeParams(withSeed(7))).toBe("7.J");
     // Older links read the defaults (as designed, in the design's colors).
