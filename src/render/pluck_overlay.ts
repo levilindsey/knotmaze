@@ -74,6 +74,16 @@ import {
 // "cue" = no W displacement, the unit brightens instead.
 export type WholeMode = "overlap" | "free" | "cue";
 
+// How W meets the crossings INSIDE its unit (K104; Levi's decision; the
+// unit's own end nodes and hide-zone nodes are W's frets in every mode):
+// "through" = the soft-node cap holds only the lobe term there and W adds
+// on top, so the unit's halo carries across its crossings and grows with
+// pluckSize; "ride" = the soft node caps the sum - fabric's short lobes then
+// keep W near 1 h at any pluckSize (the node cap never opens); "pinch" = W
+// itself pinches to wholePinch h at them.
+export type WholeNodes = "through" | "ride" | "pinch";
+const WHOLE_PINCH = 0.3; // "pinch": W's core at an interior node, x h.
+
 // A node the plucked thread passes (see the model's NODES AND LOBES).
 export interface PluckNode {
   arc: number; // Arc along the chain, in [0, total].
@@ -401,8 +411,9 @@ class PluckBlurMesh {
   // is under the thread's own half-width the base must stay intact.
   readonly wInOf = new Float32Array(MAX_STATIONS);
   readonly pkOf = new Float32Array(MAX_STATIONS); // Capped peak swing.
-  // The whole-segment term per station, x W0: its displacement share
-  // (shape under the room and pinch caps; 0 in cue mode) and its bare shape.
+  // The whole-segment term per station, x W0: its displacement share after
+  // every cap (the frame's W swing is aW x wOf; 0 in cue mode) and its bare
+  // shape.
   readonly wOf = new Float32Array(MAX_STATIONS);
   readonly wsOf = new Float32Array(MAX_STATIONS);
   readonly tightOf = new Uint8Array(MAX_STATIONS); // Bend tighter than the strip.
@@ -554,12 +565,13 @@ export class PluckOverlay {
   // The whole-segment term (K104): its amount (x pluckSize x gain x h; 0 =
   // the lobes alone, exactly the pre-K104 pluck), how it meets neighbors
   // (WholeMode; applies to plucks started after a change - "overlap"
-  // measures its room at pluck time), and the PINCH at interior crossings
-  // (x h; 0 = W rides through them, capped only by the soft node; set it,
-  // then flag every live pluck needsLayout).
+  // measures its room at pluck time), and how it meets the unit's interior
+  // crossings (WholeNodes, with the pinch's core x h; set them, then flag
+  // every live pluck needsLayout).
   wholeAmp = WHOLE_AMP;
   wholeMode: WholeMode = "overlap";
-  wholePinch = 0;
+  wholeNodes: WholeNodes = "through";
+  wholePinch = WHOLE_PINCH;
   // Diagnostics: plucks drawn, requests skipped (and why), merges, evictions.
   readonly stats = {
     plucks: 0,
@@ -1227,11 +1239,17 @@ export class PluckOverlay {
     // uE0)) over the unit, under its caps - the neighbor room ("overlap",
     // slope-limited across the whole unit so no lobe boundary steps it) and
     // the pinch at interior nodes - as a share wOf of W0. The lobe's peak
-    // and W's add up, and the soft node (and the tight-bend cap below) caps
-    // the SUM; fOf then scales both terms alike.
+    // and W's add up. "through" soft-caps the lobe term alone and then the
+    // sum only at W's frets (the unit's end nodes, hide zones), giving each
+    // term its own factor (fOf the lobe's; W's folded into wOf); otherwise
+    // the soft node caps the SUM and fOf scales both terms alike. The
+    // tight-bend cap below scales whatever is left.
     const W0 = p.W0;
     const mode = this.wholeMode;
-    const pinch = this.wholePinch;
+    const nodes = this.wholeNodes;
+    const pinch = nodes === "pinch" ? this.wholePinch : 0;
+    // Without a live W the pre-K104 path runs, bit for bit.
+    const through = nodes === "through" && W0 > 0 && mode !== "cue";
     if (W0 > 0 && mode === "overlap") {
       let uPrev = arcAt[0] + lobes[m.lobeOf[0]].shift;
       for (let i = 1; i < n; i++) {
@@ -1268,8 +1286,24 @@ export class PluckOverlay {
       }
       m.wsOf[i] = shape;
       m.wOf[i] = W0 > 0 && mode !== "cue" ? Math.max(0, wm) : 0;
-      // The soft-node ceiling (tight bends tighten it below).
-      m.pkOf[i] = this.peakAt(l, xAt[i], dA, dB, h, W0 * m.wOf[i]);
+      if (through) {
+        const lobeRaw = l.A0 * peakShape(l.beta, xAt[i], l.attack);
+        const lobePk = this.peakAt(l, xAt[i], dA, dB, h);
+        const sum = lobePk + W0 * m.wOf[i];
+        let k = 0;
+        if (sum > 1e-9) {
+          const endA = !(l.s0 + l.shift > p.uE0 + 1e-6);
+          const endB = !(l.s1 + l.shift < p.uE1 - 1e-6);
+          const cap = this.capAt(l, dA, dB, h, endA, endB);
+          k = Math.max(0, Math.min(sum, softMin(sum, cap, 0.25 * h))) / sum;
+        }
+        m.pkOf[i] = k * sum;
+        m.fOf[i] = lobeRaw > 1e-9 ? (k * lobePk) / lobeRaw : 1;
+        m.wOf[i] *= k;
+      } else {
+        // The soft-node ceiling (tight bends tighten it below).
+        m.pkOf[i] = this.peakAt(l, xAt[i], dA, dB, h, W0 * m.wOf[i]);
+      }
     }
 
     // Extrude with the CONCAVE-SIDE clamp (a strip wider than the local
@@ -1343,7 +1377,14 @@ export class PluckOverlay {
         const d0 = d - (TIGHT_K + 1) * m.dsOf[i];
         m.tightAllow[i] = smooth01(d0 / COLLAPSE_RAMP);
         const c = nodeCap(h, d0, COLLAPSE_RAMP);
-        if (m.pkOf[i] > c) m.pkOf[i] = c;
+        if (m.pkOf[i] > c) {
+          if (through) {
+            const k = c / m.pkOf[i];
+            m.fOf[i] *= k;
+            m.wOf[i] *= k;
+          }
+          m.pkOf[i] = c;
+        }
       }
     }
     // Toward the center of curvature the swing is capped by the local
@@ -1363,9 +1404,13 @@ export class PluckOverlay {
     slopeLimit(m.capLOf, m.arcOf, m.lobeOf, n, CAP_SLOPE);
     slopeLimit(m.capROf, m.arcOf, m.lobeOf, n, CAP_SLOPE);
     for (let i = 0; i < n; i++) {
-      const l = lobes[m.lobeOf[i]];
-      const raw = l.A0 * peakShape(l.beta, m.xOf[i], l.attack) + W0 * m.wOf[i];
-      m.fOf[i] = raw > 1e-9 ? Math.max(0, m.pkOf[i] / raw) : 1;
+      if (!through) {
+        // One factor for both terms; the frame reads W's from wOf.
+        const l = lobes[m.lobeOf[i]];
+        const raw = l.A0 * peakShape(l.beta, m.xOf[i], l.attack) + W0 * m.wOf[i];
+        m.fOf[i] = raw > 1e-9 ? Math.max(0, m.pkOf[i] / raw) : 1;
+        m.wOf[i] *= m.fOf[i];
+      }
       // Half extent of the strip, per side: the (capped) swing + the thread
       // + AA pad; a concave edge past 0.9 radius (a tight bend) is clamped.
       const pk = m.pkOf[i];
@@ -1486,9 +1531,24 @@ export class PluckOverlay {
   // rigid fret where its hide ramp ends - the overlay is invisible before
   // it, so a swing there would only pop in at the ramp - and a soft node
   // past that, out to its footprint (a junction's spans the fillet web).
-  private capAt(l: Lobe, dA: number, dB: number, h: number): number {
-    const one = (key: number, d: number, foot: number, hide: number): number => {
-      if (key < 0) return Infinity;
+  // softA / softB = false drops that end's crossing (soft) node; a hide-zone
+  // node always counts.
+  private capAt(
+    l: Lobe,
+    dA: number,
+    dB: number,
+    h: number,
+    softA = true,
+    softB = true
+  ): number {
+    const one = (
+      key: number,
+      d: number,
+      foot: number,
+      hide: number,
+      useSoft: boolean
+    ): number => {
+      if (key < 0 || (!useSoft && hide <= 0)) return Infinity;
       const soft = nodeCap(h, d, foot + COLLAPSE_RAMP);
       if (hide > 0) {
         return Math.min(NODE_SLOPE * Math.max(0, d - hide - HIDE_RAMP), soft);
@@ -1496,8 +1556,8 @@ export class PluckOverlay {
       return soft;
     };
     return Math.min(
-      one(l.keyA, dA, l.footA, l.hideA),
-      one(l.keyB, dB, l.footB, l.hideB)
+      one(l.keyA, dA, l.footA, l.hideA, softA),
+      one(l.keyB, dB, l.footB, l.hideB, softB)
     );
   }
 
@@ -1601,7 +1661,7 @@ export class PluckOverlay {
       const q = qv[li];
       const x = m.xOf[i];
       const s = a * m.fOf[i];
-      const w = aW * m.fOf[i] * m.wOf[i];
+      const w = aW * m.wOf[i];
       let lo = 0;
       let hi = 0;
       let yg = 0;
