@@ -24,6 +24,20 @@ and never reused.
   skip the CPU mirror and parity tests until Levi picks a look, and the
   merge stage adds them; (4) kept as they are: the pins and goldens,
   sleep checks for physics and generation, parity for the GPU pipeline.
+  - 2026-10-13 17:56: Levi approved (1) ("sgtm"); (2) and (3) still wait.
+    Phone checks now batch into one scripted pass per merge round; the
+    first covers tonight's round (K79 B, K122's V8 credit, K147). K81's
+    gate, already running, finishes as it is.
+- **K154** · K122's credit calls, each defaulted until Levi says
+  otherwise: keep the two credits beyond the brief (Perlin, Scarborough
+  Fair)? Keep PCG2D's (the paper is CC BY-ND 3.0; `pcg2d` is the 8-line
+  function from its supplement) or swap in a hash of our own? Give any
+  uncredited technique a line (Mulberry32, FNV-1a, Elias gamma,
+  Dijkstra, Barry-Goldman Catmull-Rom, Verlet/Jakobsen, the Wordle-style
+  share grid; K122 notes that Mulberry32, FNV-1a and Barry-Goldman
+  mirror published expressions as `hypot2` mirrors V8's)? Defaults: keep,
+  keep, none. (`notices/credits.ts`, "Merge round" in
+  `docs/design/K122.md`)
 - **K57** · (Levi, 2026-10-13: revisit after all other changes, in the
   careful daily review with K46 and K84.) Confirm the daily's exempt
   settings: the ones a player may change without leaving the daily
@@ -296,26 +310,27 @@ and never reused.
   the panel's credit line links to it ("Licenses"). The build and
   `npm test` fail on a package with no license text or outside
   `ALLOWED_LICENSES`. Hand-written credits (Quilez, PCG2D, Jimenez,
-  Perlin, Scarborough Fair; V8's for `hypot2` in the merge prep) live in
-  `notices/credits.ts`; Levi may drop Perlin or Scarborough Fair (both
-  beyond the brief).
-  - owner: the merge-prep agent (a631918f89584e038, sonnet) of session
-    d8031183, since 2026-10-13 about 17:08: the rebase onto master, V8's
-    BSD-3-Clause notice for `hypot2` (`src/util/det_math.ts` ports V8's
-    steps; the coordinator's call), CLAUDE.md kept to structure lines.
-    Stage 1 (ac1153fc159e1cee4, sonnet, to about 17:00): 439 tests (39
-    new in `test/notices/`) and a phone-width browser check, 20 of 21.
+  Perlin, Scarborough Fair, and V8's BSD notice for `hypot2`) live in
+  `notices/credits.ts`; Levi's calls on them are K154.
+  - owner: the coordinator (session d8031183), merging after K79 B. The
+    merge prep (a631918f89584e038, sonnet, 51 min, 231k tokens) rebased
+    with no conflicts, added V8's notice (credit `v8-math-hypot`, a new
+    `Credit.noticeSource` line) and kept CLAUDE.md to the structure
+    tree; 443 tests, the build and both tsc runs green at the tip's tree.
   - branch: `worktree-agent-ac1153fc159e1cee4`
-    (`.claude/worktrees/agent-ac1153fc159e1cee4`), on dece464; last
-    commit: 5d88d39, unpushed.
+    (`.claude/worktrees/agent-ac1153fc159e1cee4`), on 5f5c602; last
+    commit: 8023e2b, unpushed.
   - evidence: `.claude/probes/K122/` in its worktree, untracked
-    (`research_notes.md`, the fetched terms, `verify.mjs`,
-    `shot_page.mjs`, `shots/`); tracked: "Stage 1 results" in
-    `docs/design/K122.md`, `.claude/rules/notices.md`, `test/notices/`.
-  - next: the merge-prep report, then the merge after K79 B's (rebase
-    again if needed). After the deploy, check
+    (`research_notes.md`, the fetched terms, `verify.mjs`, `shots/`,
+    `v8/`, `v8_check.mjs`, `final_verify.ps1`); copy it to the main
+    checkout before removing the worktree. Tracked: "Stage 1 results"
+    and "Merge round" in `docs/design/K122.md`,
+    `.claude/rules/notices.md`, `test/notices/`.
+  - next: once K79 B lands, rebase onto master, `npm test`,
+    fast-forward and push. After the deploy, check
     https://levi.dev/knotmaze/licenses.html (a 308 to
-    `/knotmaze/licenses`, then 200) and the panel link.
+    `/knotmaze/licenses`, then 200) and the panel link; look at the V8
+    credit in the round's phone pass (K152).
   - brief: `docs/design/K122.md`.
 
 ## Next, in order
