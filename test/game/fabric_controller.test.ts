@@ -325,7 +325,15 @@ describe("saved attempts (K47): taps, replay, retreat", () => {
 
   it("retreats to the entrance as backtracks, logged and priced", () => {
     const c = new FabricMazeController(walkFor(1234));
-    for (let i = 0; i < 6; i++) c.tapEdge(bestChoice(c));
+    // Up to six runs along the best route, stopping short of the exit (a
+    // solved maze does not retreat).
+    for (let i = 0; i < 6; i++) {
+      const eid = bestChoice(c);
+      const e = c.walk.edges[eid];
+      if ((e.va === c.head ? e.vb : e.va) === c.walk.exit) break;
+      c.tapEdge(eid);
+    }
+    expect(c.pathEdges.length).toBeGreaterThan(1);
     const path = [...c.pathEdges];
     const length = c.pathLength;
     const back0 = c.backtrackDist;

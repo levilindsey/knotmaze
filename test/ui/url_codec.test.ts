@@ -52,8 +52,23 @@ const USER = withSeed(2430477599, {
   pathColor: "#6c644c",
   appearSpeed: 2.1,
 });
+// K74 (2026-10-13) changed v4's maze defaults IN PLACE, before launch (Levi:
+// no back-compat): long dead ends on at density 0.5, and the exit 12 u from
+// the start. v1-v3 and legacy links still read the pre-K74 maze below, so
+// the page's rewrite of one writes those three values out; a v4 link
+// written before K74 now opens with the new maze.
+const PRE_K74: Partial<UrlParams> = {
+  deadEnds: false,
+  deadEndDensity: 0.25,
+  exitClearance: 5,
+};
+// The user's design as its v1-v3 and legacy links read it...
+const USER_OLD = { ...USER, ...PRE_K74 };
+// ...and the token the page rewrites them to.
+const USER_OLD_COMPACT =
+  "1471kin.IF4l4kfj-iX0H6ZP0JeipPh-iX40K-ehjxRiXolsZEx0S-2vmD2VD6Hyr4";
 
-const warnings = (): ReturnType<typeof vi.spyOn> =>
+const warnings =(): ReturnType<typeof vi.spyOn> =>
   vi.spyOn(console, "warn").mockImplementation(() => {});
 
 afterEach(() => {
@@ -66,7 +81,8 @@ describe("links", () => {
   // ADDING a param is safe (append it to the codec table too - the codec
   // tests say so). If this fails because an EXISTING default changed on
   // purpose: that is a new codec version (see param_codec.ts), and this
-  // pin moves to the new table.
+  // pin moves to the new table. (Before launch, K74 edited v4's in place
+  // instead: deadEndDensity, deadEnds, exitClearance; see PRE_K74.)
   it("pins the defaults table", () => {
     expect(PARAM_DEFAULTS).toEqual({
       gridSize: 18, shape: "rect", startAnchor: "nw", exitAnchor: "se",
@@ -79,16 +95,16 @@ describe("links", () => {
       sustain: 0.5, shimmer: 0.4, pickPosition: 0.4, snappiness: 0.88,
       rootNote: "seed", tonicEmphasis: 0.5, pulseSpacing: 2.5, hueShift: 300,
       gamutArc: 130, palette: "pastel", pathColor: "#eccc41",
-      branchDensity: 0.35, fourWayFraction: 0.12, deadEndDensity: 0.25,
+      branchDensity: 0.35, fourWayFraction: 0.12, deadEndDensity: 0.5,
       pluckStyle: "string", pluckSize: 1.75, pluckGhost: 0.35, pluckReach: "run",
-      physics: true, mazeFabric: true, deadEnds: false, pathViz: "gold",
+      physics: true, mazeFabric: true, deadEnds: true, pathViz: "gold",
       cameraMode: "fit", trailLength: 10, tension: 0.45, fogOfWar: false,
       fowRadius: 4, fowIntro: false, colorScheme: "segments",
       junctionBlend: 0.88, appearMode: "custom", appearSequence: "trace", appearSpeed: 2.2,
       appearFx: "burn",
-      entranceClearance: 2.5, exitClearance: 5, junctionSpacing: 2,
+      entranceClearance: 2.5, exitClearance: 12, junctionSpacing: 2,
       background: "vellum", backgroundIntensity: 0.5,
-      pulseReach: 3, backgroundSpeed: -1,
+      pulseReach: 3, backgroundSpeed: -1, deadEndLength: 20,
     });
   });
 
@@ -99,10 +115,12 @@ describe("links", () => {
       entranceClearance: DEFAULT_MAZE_PARAMS.entranceClearance,
       exitClearance: DEFAULT_MAZE_PARAMS.exitClearance,
       junctionSpacing: DEFAULT_MAZE_PARAMS.junctionSpacing,
+      deadEndLength: DEFAULT_MAZE_PARAMS.deadEndLength,
     }).toEqual({
       entranceClearance: PARAM_DEFAULTS.entranceClearance,
       exitClearance: PARAM_DEFAULTS.exitClearance,
       junctionSpacing: PARAM_DEFAULTS.junctionSpacing,
+      deadEndLength: PARAM_DEFAULTS.deadEndLength,
     });
   });
 
@@ -112,11 +130,12 @@ describe("links", () => {
     // so current links name their version.
     expect(encodeParams(withSeed(2430477599))).toBe("1471kin.J");
     expect(parseParams("?1471kin.J")).toEqual(withSeed(2430477599));
-    // An all-default v3 link keeps v3's trailLength.
+    // An all-default v3 link keeps v3's trailLength (and the pre-K74 maze).
     expect(parseParams("?1471kin.c")).toEqual(
-      withSeed(2430477599, { trailLength: 5 })
+      withSeed(2430477599, { ...PRE_K74, trailLength: 5 })
     );
     const v1 = withSeed(2430477599, {
+      ...PRE_K74,
       junctionBlend: 0,
       pluckSize: 1,
       trailLength: 5,
@@ -131,10 +150,11 @@ describe("links", () => {
     expect(USER_COMPACT.length).toBe(61);
     expect(USER_LEGACY.length).toBe(121);
     expect(parseParams("?" + USER_COMPACT)).toEqual(USER);
-    expect(parseParams("?" + USER_COMPACT_V3)).toEqual(USER); // v3 keeps its look
-    expect(parseParams("?" + USER_COMPACT_V2)).toEqual(USER); // v2 keeps its look
-    expect(parseParams("?" + USER_COMPACT_V1)).toEqual(USER); // v1 keeps its look
-    expect(parseParams("?" + USER_LEGACY)).toEqual(USER);
+    expect(parseParams("?" + USER_COMPACT_V3)).toEqual(USER_OLD); // v3 keeps its look
+    expect(parseParams("?" + USER_COMPACT_V2)).toEqual(USER_OLD); // v2 keeps its look
+    expect(parseParams("?" + USER_COMPACT_V1)).toEqual(USER_OLD); // v1 keeps its look
+    expect(parseParams("?" + USER_LEGACY)).toEqual(USER_OLD);
+    expect(encodeParams(USER_OLD)).toBe(USER_OLD_COMPACT);
   });
 
   // K73: trailLength 5 -> 10 is codec v4. A v3 link at v3's default reads
@@ -142,9 +162,10 @@ describe("links", () => {
   it("keeps a v3 link's trailLength (5) through the load rewrite", () => {
     const old = parseParams("?7.c");
     expect(old.trailLength).toBe(5);
-    expect(old).toEqual(withSeed(7, { trailLength: 5 }));
+    expect(old).toEqual(withSeed(7, { ...PRE_K74, trailLength: 5 }));
     const rewritten = encodeParams(old);
-    expect(rewritten).toBe("7.IgZL4"); // v4, one entry: trailLength "5"
+    // v4, four entries: trailLength "5" and the pre-K74 maze's three values.
+    expect(rewritten).toBe("7.IUFlEvtr4QXw");
     expect(parseParams("?" + rewritten)).toEqual(old);
     // Legacy links read v1's 5; today's defaults (a v4 link, or no link)
     // are 10.
@@ -168,6 +189,7 @@ describe("links", () => {
     // Written under v3, it read back the same (with v3's trailLength).
     expect(parseParams("?1z141z3.Z0YbTfDwtYr7_9JKK")).toEqual({
       ...p,
+      ...PRE_K74,
       threadWidth: 0.6,
       trailLength: 5,
     });
@@ -198,10 +220,10 @@ describe("links", () => {
     const custom = withSeed(7, { appearFx: "dust" });
     expect(encodeParams(custom)).toBe("7.IgeE");
     expect(parseParams("?7.IgeE")).toEqual(custom);
-    // The same three as v3 links (trailLength 5 then).
-    expect(parseParams("?7.aByQ")).toEqual({ ...preset, trailLength: 5 });
-    expect(parseParams("?7.aBz")).toEqual({ ...instant, trailLength: 5 });
-    expect(parseParams("?7.aB4Q")).toEqual({ ...custom, trailLength: 5 });
+    // The same three as v3 links (trailLength 5 then, and the pre-K74 maze).
+    expect(parseParams("?7.aByQ")).toEqual({ ...preset, ...PRE_K74, trailLength: 5 });
+    expect(parseParams("?7.aBz")).toEqual({ ...instant, ...PRE_K74, trailLength: 5 });
+    expect(parseParams("?7.aB4Q")).toEqual({ ...custom, ...PRE_K74, trailLength: 5 });
     // Every preset round-trips, values implied.
     for (const id of Object.keys(APPEAR_PRESETS) as AppearPreset[]) {
       const p = withSeed(9, { appearMode: id });
@@ -237,13 +259,14 @@ describe("legacy links", () => {
     // Legacy links read the v1 defaults (junctionBlend 0, pluckSize 1,
     // trailLength 5), so they rewrite with those values explicit.
     expect(parseParams("?s=1471kin")).toEqual(
-      withSeed(2430477599, { junctionBlend: 0, pluckSize: 1, trailLength: 5 })
+      withSeed(2430477599, { ...PRE_K74, junctionBlend: 0, pluckSize: 1, trailLength: 5 })
     );
-    expect(encodeParams(parseParams("?s=1471kin"))).toBe("1471kin.IQGS-YPKPg");
-    expect(encodeParams(parseParams("?" + USER_LEGACY))).toBe(USER_COMPACT);
-    expect(encodeParams(parseParams("?s=7&am=trace-rainbow"))).toBe("7.IUGS-YPkIPg");
+    expect(encodeParams(parseParams("?s=1471kin"))).toBe("1471kin.IcFlEvtr5g8o-Vf");
+    expect(encodeParams(parseParams("?" + USER_LEGACY))).toBe(USER_OLD_COMPACT);
+    expect(encodeParams(parseParams("?s=7&am=trace-rainbow"))).toBe("7.IIBZRL7a-YPkIPlXw");
     expect(parseParams("?s=7&afx=dust")).toEqual(
       withSeed(7, {
+        ...PRE_K74,
         appearFx: "dust",
         junctionBlend: 0,
         pluckSize: 1,
@@ -255,11 +278,11 @@ describe("legacy links", () => {
   it("reads seed= links: every param written out, legacy keys", () => {
     const old =
       "?seed=2430477599&gs=18&shp=rect&sa=nw&xa=se&wd=0.35&tb=0.7&sl=0.55&sp=5&dr=0.5&rep=1.4500000000000002&bd=2&sm=0.75&st=1&ga=0.1&tw=0.52&gap=0.04&ms=1&cr=3&fl=0.14000000000000004&fw=0.3&fv=0.5000000000000001&tl=2&sb=4&snd=music&sc=chromatic&oct=3&ss=0.9999999999999996&vol=0.33&rv=0.42&brt=0.5&sus=0.5&shm=0.4&pp=0.4&snpy=0.88&rn=seed&tnc=0.5&psp=2.5&hs=300&arc=130&pal=pastel&pc=eccc41&brd=0.35&fwf=0.12&ded=0.25&pk=string&mf=1&de=0&pv=gold&cam=fit&trl=5&tn=0.45&fow=0&fr=4&fwi=0&cs=segments&ap=trace&as=2.1999999999999997&afx=burn";
-    expect(encodeParams(parseParams(old))).toBe("1471kin.IQGS-YPKPg");
+    expect(encodeParams(parseParams(old))).toBe("1471kin.IcFlEvtr5g8o-Vf");
     const user = parseParams(
       "?seed=2430477599&gs=12&shp=rect&sa=nw&xa=se&wd=0.35&tb=0.7&sl=0.55&sp=5&dr=0.5&rep=1&bd=1&sm=0.25&st=1&ga=0&tw=0.64&gap=0.12&ms=1&cr=2.4&fl=1.734723475976807e-17&fw=0.25&fv=1.1500000000000001&tl=2&sb=4&snd=music&sc=chromatic&oct=3&ss=0.9999999999999996&vol=0.18&rv=0.42&brt=0.5&sus=0.5&shm=0.4&pp=0.4&snpy=0.88&rn=seed&tnc=0.5&psp=2.5&hs=312&arc=130&pal=moss&pc=6c644c&brd=0.35&fwf=0.12&ded=0.25&pk=string&mf=1&de=0&pv=gold&cam=fit&trl=5&tn=0.45&fow=0&fr=4&fwi=0&cs=segments&ap=trace&as=2.1&afx=burn"
     );
-    expect(encodeParams(user)).toBe(USER_COMPACT);
+    expect(encodeParams(user)).toBe(USER_OLD_COMPACT);
     expect(parseParams("?seed=1&mc=1").colorScheme).toBe("strands");
     expect(parseParams("?seed=1&mc=0").colorScheme).toBe("mono");
     expect(parseParams("?seed=1&trm=1").pathViz).toBe("trail");
@@ -305,7 +328,7 @@ describe("token + overrides", () => {
 
   it("ignores unknown keys (click ids, utm tags)", () => {
     expect(parseParams(`?${USER_COMPACT}&fbclid=IwAR0x&utm_source=x`)).toEqual(USER);
-    expect(encodeParams(parseParams("?1471kin&fbclid=IwAR0x"))).toBe("1471kin.IQGS-YPKPg");
+    expect(encodeParams(parseParams("?1471kin&fbclid=IwAR0x"))).toBe("1471kin.IcFlEvtr5g8o-Vf");
   });
 
   it("reads a token re-serialized by URLSearchParams (a trailing =)", () => {
@@ -314,7 +337,7 @@ describe("token + overrides", () => {
     expect(url.search).toBe(`?${USER_COMPACT}=&ref=newsletter`);
     expect(parseParams(url.search)).toEqual(USER);
     expect(parseParams("?1471kin=")).toEqual(
-      withSeed(2430477599, { junctionBlend: 0, pluckSize: 1, trailLength: 5 })
+      withSeed(2430477599, { ...PRE_K74, junctionBlend: 0, pluckSize: 1, trailLength: 5 })
     );
   });
 
@@ -330,11 +353,12 @@ describe("token + overrides", () => {
     expect(parseParams("?" + q)).toEqual(p);
     // Links written before they existed read their defaults (a v2 link)...
     expect(parseParams("?7.U")).toEqual(
-      withSeed(7, { pluckSize: 1, trailLength: 5 })
+      withSeed(7, { ...PRE_K74, pluckSize: 1, trailLength: 5 })
     );
     // ...and a token takes them as overrides (probe URLs: &phy=0).
     expect(parseParams("?7.U&psz=1.5&pgh=0&prc=lobe&phy=0")).toEqual({
       ...p,
+      ...PRE_K74,
       trailLength: 5,
     });
   });
@@ -347,14 +371,23 @@ describe("token + overrides", () => {
     });
     const q = encodeParams(p);
     expect(parseParams("?" + q)).toEqual(p);
-    // Every older link reads the values it was always built with.
-    for (const old of ["?7", "?7.U", "?7.c", "?7.J", "?s=7"]) {
+    // Every older link reads the values it was always built with...
+    for (const old of ["?7", "?7.U", "?7.c", "?s=7"]) {
       expect(parseParams(old)).toMatchObject({
         entranceClearance: 2.5,
         exitClearance: 5,
         junctionSpacing: 2,
       });
     }
+    // ...but v4's, which K74 moved in place (pre-launch).
+    expect(parseParams("?7.J")).toMatchObject({
+      entranceClearance: 2.5,
+      exitClearance: 12,
+      junctionSpacing: 2,
+      deadEnds: true,
+      deadEndDensity: 0.5,
+      deadEndLength: 20,
+    });
     expect(parseParams("?7.J&ecl=4&xcl=0&jsp=3.25")).toEqual(p);
   });
 
@@ -370,7 +403,7 @@ describe("token + overrides", () => {
       expect(parseParams("?" + encodeParams(b))).toEqual(b);
     }
     // Links written before they existed read the defaults...
-    expect(parseParams("?7.c")).toEqual(withSeed(7, { trailLength: 5 }));
+    expect(parseParams("?7.c")).toEqual(withSeed(7, { ...PRE_K74, trailLength: 5 }));
     expect(parseParams("?" + USER_COMPACT)).toEqual(USER);
     // ...and a token takes them as overrides (probe URLs: &bg=mist&bgi=.7).
     expect(parseParams("?7.J&bg=mist&bgi=.7")).toEqual(
@@ -423,6 +456,7 @@ describe("unreadable links", () => {
     // (A legacy link reads the v1 defaults: pluckSize 1, trailLength 5.)
     expect(parseParams("?s=7&ga=5&jbl=-2")).toEqual({
       ...p,
+      ...PRE_K74,
       pluckSize: 1,
       trailLength: 5,
     });

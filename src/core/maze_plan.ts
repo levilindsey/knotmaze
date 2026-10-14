@@ -27,9 +27,12 @@
 //  3. entrance (top-left) / exit (bottom-right) edge cuts,
 //  4. reachability spanning, preferring splices and falling back to 4-way
 //     merges only where no splice reaches a strand,
-//  5. choice junctions - splices plus fourWayFraction crossing merges - and
-//     deadEndDensity stubs, placed farthest-first under a spacing floor and
-//     kept clear of both corner corridors,
+//  5. long-tail dead ends (deadEndDensity cuts, deadEndLength > 0: each at
+//     the site with the longest junction-free tail, the tail reserved),
+//     then choice junctions - splices plus fourWayFraction crossing merges -
+//     placed farthest-first under a spacing floor and kept clear of both
+//     corner corridors (deadEndLength 0: the dead-end stubs come after the
+//     choices, spread farthest-first),
 //  6. only when the finished plan needs them: a repaired route from the
 //     start to the exit (K109) and one junction per piece the start cannot
 //     reach (K110) - see buildMazePlan.
@@ -76,6 +79,16 @@ export interface MazeParams {
   // a long woven thread ending in a distant dead end). 0 = no dead ends
   // (pure braided); 1 = maximally tree-like.
   deadEndDensity: number;
+  // K74 LONG-TAIL dead ends: the junction-free length (doubled lattice
+  // units, along the thread) each dead end's free tail is guaranteed, as
+  // far as the fabric allows. > 0: dead ends are placed BEFORE the choice
+  // junctions, each at the (cut, trimmed flank) whose free flank runs
+  // longest to its first junction (capped at this length; ties spread
+  // apart), and that much of the tail is reserved so no choice junction,
+  // 4-way or later trim lands on it. 0: the older placement (after the
+  // choice junctions, cut sites spread farthest-first, the shorter stub
+  // trimmed), whose tails are often a few units long.
+  deadEndLength: number;
   // Lattice radii around the exit / entrance corners kept junction-free, so
   // the endgame isn't cluttered with choices (challenge shaping).
   exitClearance: number;
@@ -101,15 +114,17 @@ export const DEFAULT_MAZE_PARAMS: MazeParams = {
   branchDensity: 0.35,
   fourWayFraction: 0.12,
   // Dead-end stubs are OFF by default (pure braided maze: every wrong turn
-  // loops back). The UI toggle swaps in DEAD_END_DENSITY_ON.
+  // loops back). The UI's dead-ends toggle (on by default since K74) swaps
+  // in its density, DEAD_END_DENSITY_ON by default.
   deadEndDensity: 0,
-  exitClearance: 5,
+  deadEndLength: 20,
+  exitClearance: 12,
   entranceClearance: 2.5,
   junctionSpacing: 2,
 };
 
-// The stub density the "dead ends" toggle enables (the old default).
-export const DEAD_END_DENSITY_ON = 0.25;
+// The dead-end density the UI's defaults use (PARAM_DEFAULTS.deadEndDensity).
+export const DEAD_END_DENSITY_ON = 0.5;
 
 // A planned splice: a bridge from the midpoint of edgeA to the midpoint of
 // edgeB, creating a 3-way junction on each host strand.
@@ -702,6 +717,29 @@ function planTrim(
   usedEdges: Set<string>,
   wallEdges: Set<string>
 ): MazeCutTrim | undefined {
+  const { a, b } = planTrimBoth(
+    graph,
+    cut,
+    crossMap,
+    usedCrossings,
+    usedEdges,
+    wallEdges
+  );
+  // Trim the flank with the shorter stub (less material deleted); ties go
+  // to side "a" for determinism.
+  if (a && b) return a.stubEdges.length <= b.stubEdges.length ? a : b;
+  return a ?? b ?? undefined;
+}
+
+// Both flanks' trims (null where a flank has no eligible crossing).
+function planTrimBoth(
+  graph: TangleGraph,
+  cut: MazeCut,
+  crossMap: Map<string, number[]>,
+  usedCrossings: Set<string>,
+  usedEdges: Set<string>,
+  wallEdges: Set<string>
+): { a: MazeCutTrim | null; b: MazeCutTrim | null } {
   const strand = graph.strands[cut.strand];
   const m = strand.edgeIds.length;
   const c = strand.edgeIds.indexOf(cut.edgeId);
@@ -757,12 +795,7 @@ function planTrim(
     return null;
   };
 
-  // Trim the flank with the shorter stub (less material deleted); ties go
-  // to side "a" for determinism.
-  const a = walk(-1);
-  const b = walk(1);
-  if (a && b) return a.stubEdges.length <= b.stubEdges.length ? a : b;
-  return a ?? b ?? undefined;
+  return { a: walk(-1), b: walk(1) };
 }
 
 function stripKey(c: Candidate): SpliceSite {
@@ -1250,6 +1283,171 @@ function planWithExit(
   return { plan: joined, whole: planReachesAll(graph, joined) };
 }
 
+// A dead end's candidate cut site (planMaze's long dead-end threads).
+interface DeadCandidate {
+  strand: number;
+  edgeId: string;
+  mid: [number, number];
+  trim?: MazeCutTrim;
+}
+
+// K74 LONG-TAIL DEAD ENDS (MazeParams.deadEndLength > 0). A player finds a
+// dead end by walking its free flank from the junction where it leaves the
+// maze to the tip at the cut, so its length is that flank's junction-free
+// arc - the older spread placement left most of them a few units long. Each
+// pick takes, over every open (cut edge, trimmed flank) pair, the one whose
+// free flank runs farthest before its first junction (a splice host edge or
+// a merged crossing, its own trim merge included), counted up to tailLen;
+// ties go to the cut site farthest from the placed junctions and earlier
+// tips, then the shorter stub, then the edge id. The tail's first tailLen
+// is then RESERVED (edges and crossings claimed), so the choice junctions,
+// 4-ways, later trims and K110 joins all stay off it. Arcs are lattice
+// polyline lengths through hypot2 (K108: engine-exact).
+function placeLongTails(
+  graph: TangleGraph,
+  pool: DeadCandidate[],
+  nDead: number,
+  tailLen: number,
+  junctionEdges: Set<string>,
+  junctionNodes: Set<string>,
+  crossMap: Map<string, number[]>,
+  usedCrossings: Set<string>,
+  usedEdges: Set<string>,
+  wallEdges: Set<string>,
+  placed: number[],
+  cutStrands: Set<number>,
+  commit: (c: DeadCandidate, trim: MazeCutTrim) => void
+): void {
+  if (nDead <= 0) return;
+  const lenCache = new Map<string, number>();
+  const edgeLen = (eid: string): number => {
+    let l = lenCache.get(eid);
+    if (l === undefined) {
+      const pts = graph.edges.get(eid)!.latticePoints;
+      l = 0;
+      for (let i = 1; i < pts.length; i++) {
+        l += hypot2(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      }
+      lenCache.set(eid, l);
+    }
+    return l;
+  };
+  // Walk closed strand s's flank from the middle of its edge c: dir +1 runs
+  // along edge order (the flank a side-"a" trim leaves free), -1 against
+  // it. visit gets each node, then each edge at its middle, with the arc
+  // from the cut, and returns true to stop; so does passing maxArc or
+  // coming all the way around.
+  const walkFlank = (
+    s: number,
+    c: number,
+    dir: 1 | -1,
+    visit: (isNode: boolean, id: string, arc: number) => boolean,
+    maxArc: number
+  ): void => {
+    const strand = graph.strands[s];
+    const m = strand.edgeIds.length;
+    let arc = edgeLen(strand.edgeIds[c]) / 2;
+    for (let k = 0; k < m; k++) {
+      const ni = (((dir > 0 ? c + 1 + k : c - k) % m) + m) % m;
+      if (visit(true, strand.nodes[ni], arc)) return;
+      const ei = (((dir > 0 ? c + 1 + k : c - 1 - k) % m) + m) % m;
+      const eid = strand.edgeIds[ei];
+      if (eid === strand.edgeIds[c]) return;
+      const l = edgeLen(eid);
+      if (visit(false, eid, arc + l / 2)) return;
+      arc += l;
+      if (arc > maxArc) return;
+    }
+  };
+  const isJunction = (isNode: boolean, id: string, ownMerge?: string): boolean =>
+    isNode
+      ? junctionNodes.has(id) || id === ownMerge
+      : junctionEdges.has(id);
+  const freeTail = (s: number, c: number, dir: 1 | -1, ownMerge: string): number => {
+    let t = tailLen;
+    walkFlank(
+      s,
+      c,
+      dir,
+      (isNode, id, arc) => {
+        if (!isJunction(isNode, id, ownMerge)) return false;
+        t = arc;
+        return true;
+      },
+      tailLen
+    );
+    return Math.min(t, tailLen);
+  };
+
+  // Each site's squared distance to the nearest placed junction or tip
+  // (quarter-unit coordinates: exact), folded in as points arrive.
+  const room = new Float64Array(pool.length).fill(Infinity);
+  const fold = (px: number, py: number): void => {
+    for (let i = 0; i < pool.length; i++) {
+      const dx = pool[i].mid[0] - px;
+      const dy = pool[i].mid[1] - py;
+      const d = dx * dx + dy * dy;
+      if (d < room[i]) room[i] = d;
+    }
+  };
+  let seen = 0;
+  for (let k = 0; k < nDead; k++) {
+    for (; seen < placed.length; seen += 2) fold(placed[seen], placed[seen + 1]);
+    let best = -1;
+    let bestTrim: MazeCutTrim | null = null;
+    let bestT = 0;
+    let bestStub = 0;
+    let bestCi = 0;
+    for (let i = 0; i < pool.length; i++) {
+      const c = pool[i];
+      if (cutStrands.has(c.strand) || usedEdges.has(c.edgeId)) continue;
+      const both = planTrimBoth(graph, c, crossMap, usedCrossings, usedEdges, wallEdges);
+      if (!both.a && !both.b) continue;
+      const ci = graph.strands[c.strand].edgeIds.indexOf(c.edgeId);
+      for (const trim of [both.a, both.b]) {
+        if (!trim) continue;
+        const t = freeTail(c.strand, ci, trim.side === "a" ? 1 : -1, trim.mergeCrossing);
+        const stub = trim.stubEdges.length;
+        let better = best < 0 || t > bestT + 1e-9;
+        if (!better && Math.abs(t - bestT) <= 1e-9) {
+          better =
+            room[i] > room[best] ||
+            (room[i] === room[best] &&
+              (stub < bestStub ||
+                (stub === bestStub && c.edgeId < pool[best].edgeId)));
+        }
+        if (better) {
+          best = i;
+          bestTrim = trim;
+          bestT = t;
+          bestStub = stub;
+          bestCi = ci;
+        }
+      }
+    }
+    if (best < 0 || !bestTrim) break;
+    const site = pool[best];
+    commit(site, bestTrim);
+    junctionNodes.add(bestTrim.mergeCrossing);
+    fold(site.mid[0], site.mid[1]);
+    // Reserve the free flank up to tailLen (or its first junction).
+    walkFlank(
+      site.strand,
+      bestCi,
+      bestTrim.side === "a" ? 1 : -1,
+      (isNode, id, arc) => {
+        if (isJunction(isNode, id) || arc > tailLen) return true;
+        if (!isNode) usedEdges.add(id);
+        else if (graph.nodes.get(id)!.type === NODE_TYPE.CROSSING) {
+          usedCrossings.add(id);
+        }
+        return false;
+      },
+      Infinity
+    );
+  }
+}
+
 function planMaze(
   graph: TangleGraph,
   params: MazeParams,
@@ -1443,8 +1641,86 @@ function planMaze(
     );
   }
 
-  // ---- Choice junctions + dead-end stubs. ----
+  // ---- Long dead-end threads. Cut one plain edge of a closed maze strand
+  // (never the entrance/exit hosts, at most one cut per strand), fuse one
+  // flank into its first crossing via the decoy-trim machinery, and leave
+  // the other flank's tip FREE mid-fabric: the whole former loop becomes
+  // one long woven thread ending in a distant dead end - discovered by
+  // walking it, not by seeing a stub. deadEndLength picks the placement:
+  // > 0, long tails (placeLongTails), placed HERE, before the choice
+  // junctions, so their reserved tails stay junction-free; 0, the older
+  // spread placement after the choice junctions (below).
   const mazeSet = new Set(mazeStrands);
+  const cutStrands = new Set<number>([entrance.strand, exit.strand]);
+  const deadEndCuts: MazeCut[] = [];
+  // Cut sites: unclaimed, corner-clear edges of closed maze strands.
+  const deadPoolNow = (): DeadCandidate[] => {
+    const pool: DeadCandidate[] = [];
+    for (const s of mazeStrands) {
+      if (cutStrands.has(s)) continue;
+      const strand = graph.strands[s];
+      if (!strand.isClosed) continue;
+      for (const eid of strand.edgeIds) {
+        if (usedEdges.has(eid)) continue;
+        const e = graph.edges.get(eid)!;
+        const p0 = e.latticePoints[0];
+        const p1 = e.latticePoints[e.latticePoints.length - 1];
+        const mid: [number, number] = [
+          (p0[0] + p1[0]) / 2,
+          (p0[1] + p1[1]) / 2,
+        ];
+        if (!clearOf(mid)) continue;
+        pool.push({ strand: s, edgeId: eid, mid });
+      }
+    }
+    return pool;
+  };
+  const deadCountOf = (pool: DeadCandidate[]): number =>
+    Math.round(
+      params.deadEndDensity * new Set(pool.map((c) => c.strand)).size
+    );
+  const commitDead = (c: DeadCandidate, trim: MazeCutTrim): void => {
+    cutStrands.add(c.strand);
+    usedEdges.add(c.edgeId);
+    wallEdges.add(c.edgeId);
+    usedCrossings.add(trim.mergeCrossing);
+    for (const se of trim.stubEdges) usedEdges.add(se);
+    const mp = graph.nodes.get(trim.mergeCrossing)!.latticePos;
+    placed.push(mp[0], mp[1]);
+    deadEndCuts.push({ strand: c.strand, edgeId: c.edgeId, trim });
+  };
+
+  if (params.deadEndLength > 0) {
+    const pool = deadPoolNow();
+    // The junctions placed so far: splice host edges and merged crossings
+    // (spanning and K109's repair, the corner trims' merges).
+    const junctionEdges = new Set<string>();
+    for (const s of spanningSplices) {
+      junctionEdges.add(s.edgeA);
+      junctionEdges.add(s.edgeB);
+    }
+    const junctionNodes = new Set<string>(spanningMerges);
+    for (const cut of [entrance, exit]) {
+      if (cut.trim) junctionNodes.add(cut.trim.mergeCrossing);
+    }
+    placeLongTails(
+      graph,
+      pool,
+      deadCountOf(pool),
+      params.deadEndLength,
+      junctionEdges,
+      junctionNodes,
+      crossMap,
+      usedCrossings,
+      usedEdges,
+      wallEdges,
+      placed,
+      cutStrands,
+      commitDead
+    );
+  }
+
+  // ---- Choice junctions. ----
   const eligible = candidates.filter(
     (c) =>
       mazeSet.has(c.strandA) &&
@@ -1493,74 +1769,34 @@ function planMaze(
     placed
   ).map((x) => x.id);
 
-  // ---- Long dead-end threads. Cut one plain edge of a closed maze strand
-  // (never the entrance/exit hosts, at most one cut per strand), fuse the
-  // shorter flank into its first crossing via the decoy-trim machinery, and
-  // leave the other flank's tip FREE mid-fabric: the whole former loop
-  // becomes one long woven thread ending in a distant dead end - discovered
-  // by walking it, not by seeing a stub. Cut sites are placed farthest-
-  // first under the same spacing floor as the choice junctions.
-  interface DeadCandidate {
-    strand: number;
-    edgeId: string;
-    mid: [number, number];
-    trim?: MazeCutTrim;
+  if (!(params.deadEndLength > 0)) {
+    // The spread placement: cut sites farthest-first under a spacing floor,
+    // each trimming its shorter stub.
+    const deadPool = deadPoolNow();
+    pickFarthest(
+      deadPool,
+      (c) => [c.mid[0], c.mid[1]],
+      (c) => {
+        if (cutStrands.has(c.strand) || usedEdges.has(c.edgeId)) return false;
+        c.trim = planTrim(
+          graph,
+          { strand: c.strand, edgeId: c.edgeId },
+          crossMap,
+          usedCrossings,
+          usedEdges,
+          wallEdges
+        );
+        return c.trim !== undefined;
+      },
+      (c) => commitDead(c, c.trim!),
+      deadCountOf(deadPool),
+      // The cut site is a thread TIP, not a choice point (the choice lives
+      // at its trim merge), so it needs less breathing room than junctions
+      // - and the full floor saturates small dense maps to zero cuts.
+      Math.max(1, params.junctionSpacing * 0.5),
+      placed
+    );
   }
-  const cutStrands = new Set<number>([entrance.strand, exit.strand]);
-  const deadPool: DeadCandidate[] = [];
-  for (const s of mazeStrands) {
-    if (cutStrands.has(s)) continue;
-    const strand = graph.strands[s];
-    if (!strand.isClosed) continue;
-    for (const eid of strand.edgeIds) {
-      if (usedEdges.has(eid)) continue;
-      const e = graph.edges.get(eid)!;
-      const p0 = e.latticePoints[0];
-      const p1 = e.latticePoints[e.latticePoints.length - 1];
-      const mid: [number, number] = [
-        (p0[0] + p1[0]) / 2,
-        (p0[1] + p1[1]) / 2,
-      ];
-      if (!clearOf(mid)) continue;
-      deadPool.push({ strand: s, edgeId: eid, mid });
-    }
-  }
-  const eligibleStrands = new Set(deadPool.map((c) => c.strand)).size;
-  const nDead = Math.round(params.deadEndDensity * eligibleStrands);
-  const deadEndCuts: MazeCut[] = [];
-  pickFarthest(
-    deadPool,
-    (c) => [c.mid[0], c.mid[1]],
-    (c) => {
-      if (cutStrands.has(c.strand) || usedEdges.has(c.edgeId)) return false;
-      c.trim = planTrim(
-        graph,
-        { strand: c.strand, edgeId: c.edgeId },
-        crossMap,
-        usedCrossings,
-        usedEdges,
-        wallEdges
-      );
-      return c.trim !== undefined;
-    },
-    (c) => {
-      const trim = c.trim!;
-      cutStrands.add(c.strand);
-      usedEdges.add(c.edgeId);
-      wallEdges.add(c.edgeId);
-      usedCrossings.add(trim.mergeCrossing);
-      for (const se of trim.stubEdges) usedEdges.add(se);
-      const mp = graph.nodes.get(trim.mergeCrossing)!.latticePos;
-      placed.push(mp[0], mp[1]);
-      deadEndCuts.push({ strand: c.strand, edgeId: c.edgeId, trim });
-    },
-    nDead,
-    // The cut site is a thread TIP, not a choice point (the choice lives at
-    // its trim merge), so it needs less breathing room than junctions - and
-    // the full floor saturates small dense maps to zero cuts.
-    Math.max(1, params.junctionSpacing * 0.5),
-    placed
-  );
 
   if (joinPieces) {
     joinOrphanPieces(

@@ -929,6 +929,7 @@ async function main(): Promise<void> {
         branchDensity: params.branchDensity,
         fourWayFraction: params.fourWayFraction,
         deadEndDensity: params.deadEnds ? params.deadEndDensity : 0,
+        deadEndLength: params.deadEndLength,
         entranceClearance: params.entranceClearance,
         exitClearance: params.exitClearance,
         junctionSpacing: params.junctionSpacing,

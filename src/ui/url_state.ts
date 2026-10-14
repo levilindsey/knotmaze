@@ -208,6 +208,10 @@ export interface UrlParams {
   branchDensity: number; // [0, 1] extra maze junctions beyond the backbone.
   fourWayFraction: number; // [0, 1] share of junctions as 4-way merges.
   deadEndDensity: number; // [0.05, 1] strands cut into dead ends (de on).
+  // K74: [0, 40] doubled-lattice units of junction-free tail each dead end
+  // is given (core/maze_plan.ts deadEndLength); 0 = the older spread
+  // placement, whose tails are often a few units long.
+  deadEndLength: number;
   pluckStyle: PluckStyle; // Drag-release feel: soft ease vs ringing string.
   // RETIRED with the render-only plucks (2026-10-11): the old render ring's
   // frequency/decay scale - the time-exposure vibration has no visible
@@ -228,8 +232,9 @@ export interface UrlParams {
   // P4 branching maze: generate the spliced maze FABRIC (junctions, 4-way
   // merges, corner entrance/exit) and play it (branch-point taps).
   mazeFabric: boolean;
-  // Dead-end stubs in the fabric (classic wrong-turn spurs). OFF by default:
-  // a pure braided maze where every wrong turn loops back.
+  // Dead-end threads in the fabric (wrong turns that end in a tip). ON by
+  // default since K74 (off = a pure braided maze where every wrong turn
+  // loops back).
   deadEnds: boolean;
   // Traversal-path visualization (fabric gameplay). gold = the classic
   // full recolor. trail = memory mode: no backtracking concept, only a
@@ -353,14 +358,15 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   pathColor: "#eccc41",
   branchDensity: 0.35,
   fourWayFraction: 0.12,
-  deadEndDensity: 0.25,
+  deadEndDensity: 0.5, // K74 (was 0.25).
+  deadEndLength: 20, // K74.
   pluckStyle: "string",
   pluckSize: 1.75, // Since codec v3 (v2 links read 1).
   pluckGhost: 0.35,
   pluckReach: "run",
   physics: true,
   mazeFabric: true,
-  deadEnds: false,
+  deadEnds: true, // K74 (was off).
   pathViz: "gold",
   cameraMode: "fit",
   trailLength: 10, // Since codec v4 (v3 links and the dailies read 5).
@@ -375,10 +381,10 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   appearSequence: "trace",
   appearSpeed: 2.2,
   appearFx: "burn",
-  // = DEFAULT_MAZE_PARAMS (core/maze_plan.ts), the values every link read
-  // before these params existed.
+  // = DEFAULT_MAZE_PARAMS (core/maze_plan.ts). exitClearance was 5 until
+  // K74.
   entranceClearance: 2.5,
-  exitClearance: 5,
+  exitClearance: 12,
   junctionSpacing: 2,
   // K21: the subtlest backdrop - static, keeps the page's ink on average.
   background: "vellum",
@@ -644,6 +650,8 @@ function readLegacy(
     backgroundSpeed: sanitizeBackgroundSpeed(
       readNumber(query, "bgs", D.backgroundSpeed)
     ),
+    // And K74's dead-end length (&del=30; 0 = the spread placement).
+    deadEndLength: readNumber(query, "del", D.deadEndLength),
   };
 }
 
