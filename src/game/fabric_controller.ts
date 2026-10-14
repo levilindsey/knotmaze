@@ -31,6 +31,14 @@
 // replay(taps) rebuilds it exactly (path, meters, stats, move log) - that
 // is what a saved daily attempt stores. retreatToStart() is a daily's
 // Reset path: backtracks, one run at a time, to the entrance.
+//
+// K100 RESTARTS: `restarts` counts reset() calls (the constructor's and
+// replay()'s included), so a new value means the solve started over. The
+// fog of war's explored memory (render/fabric_maze_renderer.ts) starts
+// over when it moves and only then: a backtrack to the entrance, by hand
+// or by retreatToStart(), and a K80 respawn() keep it. reset() is also the
+// one thing that empties `taps`, so the taps are everything explored
+// (game/daily_attempt.ts exploredRuns).
 
 import type { WalkGraph } from "../core/walk_graph";
 import type { MoveKind } from "./maze_stats";
@@ -58,6 +66,8 @@ export class FabricMazeController {
   moveLog: MoveKind[] = [];
   // The run of every accepted tap, in order (replay() reproduces the rest).
   taps: number[] = [];
+  // reset() calls so far: a new value = a restarted solve (K100).
+  restarts = 0;
 
   // Memory-trail mode: advance-only taps (see the header comment). Set at
   // construction and freely togglable from main.ts afterwards.
@@ -79,6 +89,7 @@ export class FabricMazeController {
     this.deadEndTips = new Set();
     this.moveLog = [];
     this.taps = [];
+    this.restarts++;
   }
 
   // Rebuild the solve state from a tap list (a saved attempt): reset, then
@@ -113,9 +124,10 @@ export class FabricMazeController {
   }
 
   // K80's real-time mode: the minotaur caught the player. Back to the
-  // entrance in one jump, not a restart: the stats, the move log, the taps
-  // and the backtrack and walked meters stay (replay(taps) cannot reproduce
-  // a respawn; a real-time maze is never a daily, so nothing replays it).
+  // entrance in one jump, not a restart: the stats, the move log, the taps,
+  // the backtrack and walked meters and `restarts` (so the explored fog)
+  // stay (replay(taps) cannot reproduce a respawn; a real-time maze is
+  // never a daily, so nothing replays it).
   respawn(): void {
     this.pathVertices = [this.walk.start];
     this.pathEdges = [];

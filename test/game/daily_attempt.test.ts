@@ -190,25 +190,84 @@ describe("the Reset path rule (K47)", () => {
   });
 });
 
-describe("explored runs (the fog of war over a restore)", () => {
-  it("are the runs crossed since the path last emptied", () => {
-    const walk = walkFor(1234);
-    const c = new FabricMazeController(walk);
+describe("explored runs (the fog of war over a restore, K100)", () => {
+  // Up to n runs out along the best route, short of the exit.
+  const walkOut = (c: FabricMazeController, n: number): number[] => {
+    const runs: number[] = [];
+    for (let i = 0; i < n; i++) {
+      const eid = best(c);
+      const e = c.walk.edges[eid];
+      if ((e.va === c.head ? e.vb : e.va) === c.walk.exit) break;
+      c.tapEdge(eid);
+      runs.push(eid);
+    }
+    return runs;
+  };
+
+  it("are every run crossed since the solve restarted, repeats kept", () => {
+    const c = new FabricMazeController(walkFor(1234));
     expect(exploredRuns(c)).toEqual([]);
-    const a = best(c);
-    c.tapEdge(a);
-    const b = best(c);
-    c.tapEdge(b);
+    const [a, b] = walkOut(c, 2);
     expect(exploredRuns(c)).toEqual([a, b]);
-    // Back to the entrance: the fog's memory starts over, as in play.
-    c.retreatToStart();
+    // Walked back to the entrance by hand: the fog keeps what it saw, and
+    // the way back is a second pass over each run.
+    c.tapEdge(b);
+    c.tapEdge(a);
+    expect([c.head, c.pathEdges]).toEqual([c.walk.start, []]);
+    expect(exploredRuns(c)).toEqual([a, b, b, a]);
+    // A daily's Reset path (retreatToStart) keeps it too.
+    c.tapEdge(a);
+    expect(c.retreatToStart()).toEqual([a]);
+    expect(exploredRuns(c)).toEqual([a, b, b, a, a, a]);
+    // Only a restart starts it over.
+    c.reset();
     expect(exploredRuns(c)).toEqual([]);
     c.tapEdge(a);
     expect(exploredRuns(c)).toEqual([a]);
-    // Trail mode never empties its path.
-    const t = new FabricMazeController(walk, true);
+  });
+
+  it("come back with a saved attempt as live play left them", () => {
+    const walk = walkFor(5);
+    const c = new FabricMazeController(walk);
+    const out = walkOut(c, 4);
+    expect(out.length).toBeGreaterThan(2);
+    // A daily's Reset path, then the page reloads at the entrance.
+    c.retreatToStart();
+    const back = [...out].reverse();
+    expect(exploredRuns(c)).toEqual([...out, ...back]);
+    const s = new MemStorage();
+    const restored = (): FabricMazeController => {
+      new DailyStore(s).saveAttempt(3, attemptRecord(c, info(walk))!);
+      const d = new FabricMazeController(walkFor(5));
+      const saved = new DailyStore(s).attempt(3)!;
+      expect(restoreAttempt(d, saved, walkFingerprint(d.walk))).toBe("ok");
+      return d;
+    };
+    const d1 = restored();
+    expect([d1.head, d1.pathEdges]).toEqual([walk.start, []]);
+    expect(exploredRuns(d1)).toEqual(exploredRuns(c));
+    // Out again, and another reload.
+    walkOut(c, 1);
+    const d2 = restored();
+    expect(exploredRuns(d2)).toEqual([...out, ...back, out[0]]);
+    expect(exploredRuns(d2)).toEqual(exploredRuns(c));
+  });
+
+  it("in trail mode are every tap, as before (it has no way back)", () => {
+    const t = new FabricMazeController(walkFor(1234), true);
+    const a = t.choices()[0];
     t.tapEdge(a);
     t.tapEdge(a);
     expect(exploredRuns(t)).toEqual([a, a]);
+    expect(t.retreatToStart()).toEqual([]);
+    expect(exploredRuns(t)).toEqual([a, a]);
+  });
+
+  it("survive a K80 catch, which is not a restart", () => {
+    const c = new FabricMazeController(walkFor(1234));
+    const out = walkOut(c, 3);
+    c.respawn();
+    expect(c.head).toBe(c.walk.start);
+    expect(exploredRuns(c)).toEqual(out);
   });
 });

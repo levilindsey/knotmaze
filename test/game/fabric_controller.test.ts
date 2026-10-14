@@ -415,3 +415,32 @@ describe("real-time respawn (K80)", () => {
     expect(c.walkedDist).toBeCloseTo(walked + c.walk.edges[eid].length, 9);
   });
 });
+
+describe("restarts (K100): what the fog of war starts over on", () => {
+  it("count reset() calls, the constructor's and replay()'s included", () => {
+    for (const trail of [false, true]) {
+      const c = new FabricMazeController(walkFor(1234), trail);
+      expect(c.restarts).toBe(1);
+      // Moves, a backtrack (a plain advance in trail mode), a walk back to
+      // the entrance and a catch are not restarts.
+      const a = bestChoice(c);
+      c.tapEdge(a);
+      c.tapEdge(bestChoice(c));
+      c.tapEdge(c.pathEdges[c.pathEdges.length - 1]);
+      c.retreatToStart();
+      c.tapEdge(bestChoice(c));
+      c.respawn();
+      // Trail mode's retreat is a no-op.
+      expect(c.taps.length).toBe(trail ? 4 : 5);
+      expect(c.restarts).toBe(1);
+      c.reset();
+      expect(c.restarts).toBe(2);
+      // A replay (a restore) restarts, then plays the taps back.
+      expect(c.replay([a])).toBe(true);
+      expect([c.restarts, c.taps]).toEqual([3, [a]]);
+      // A refused one leaves a fresh solve: the count moves too.
+      expect(c.replay([a, 99999])).toBe(false);
+      expect(c.restarts).toBeGreaterThan(3);
+    }
+  });
+});

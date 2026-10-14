@@ -8,7 +8,7 @@
 
 // Station spacing in ctrl: well under FOG_STAMP_SPACING's 0.8 world at the
 // measured 0.45-0.9 lattice units per ctrl, so the spacing filter, not the
-// stations, sets the stamp density (restoreExplored samples runs the same).
+// stations, sets the stamp density (exploreRuns samples runs the same).
 export const FOG_ARC_STEP = 0.5;
 
 // The stations a dot passes moving from `prev` to `cur` on a run traveled

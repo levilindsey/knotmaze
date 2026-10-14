@@ -112,21 +112,15 @@ export function resetPathAction(s: {
   return s.trailMode ? "refuse" : "backtrack";
 }
 
-// The runs the head has crossed since the path was last back at the
-// entrance - what the fog of war has explored (it starts over whenever the
-// path empties, as live play does). Follows the taps' effect on the path
-// stack: a tap of the newest run backtracks it (outside trail mode).
+// What the fog of war has explored: every run crossed since the solve last
+// restarted, in tap order, repeats kept (live play stamps a run again each
+// time it is walked). K100: the live fog starts over only when the solve
+// restarts (FabricMazeController.reset), which is also the one thing that
+// empties the taps, so the taps are exactly what it has explored; a
+// backtrack to the entrance, by hand or by a daily's Reset path
+// (retreatToStart), keeps both. main.ts re-explores these runs when a saved
+// attempt comes back (pendingExplored), so the restored fog is the one the
+// page showed before the reload.
 export function exploredRuns(c: FabricMazeController): number[] {
-  const stack: number[] = [];
-  let since: number[] = [];
-  for (const eid of c.taps) {
-    if (!c.trailMode && stack.length > 0 && stack[stack.length - 1] === eid) {
-      stack.pop();
-    } else {
-      stack.push(eid);
-    }
-    since.push(eid);
-    if (stack.length === 0) since = [];
-  }
-  return since;
+  return [...c.taps];
 }
