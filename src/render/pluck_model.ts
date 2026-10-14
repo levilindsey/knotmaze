@@ -294,6 +294,45 @@ export function pinchCap(h: number, dS: number, foot: number, core: number): num
   return core * h + NODE_SLOPE * Math.max(0, dS - foot);
 }
 
+// "through": one station's swing when W passes the unit's interior
+// crossings. lobeRaw = the lobe's raw peak there; lobeInt = it soft-capped
+// at the lobe's INTERIOR nodes only; lobeOnly = it capped at all its nodes
+// (the pre-K104 swing); w = W's raw peak (world); capEnd = the ceiling of
+// the unit's end nodes and hide zones. The sum lobeInt + w is soft-capped
+// once at capEnd. Capping the lobe at its end nodes first and the sum there
+// again put the sum right at the cap, where softMin dips (up to h / 16), so
+// W lowered the swing near every unit end (sliver runs between junction
+// cores read 0.12 -> 0.03 CSS px). And W never lowers a station: where the
+// sum's cap would still undershoot lobeOnly, the lobe keeps its own swing
+// and W gives way there. out = [pk, f, g]: the station's swing, the lobe's
+// factor on lobeRaw and W's on w (so f lobeRaw + g w = pk).
+export function throughStation(
+  lobeRaw: number,
+  lobeInt: number,
+  lobeOnly: number,
+  w: number,
+  capEnd: number,
+  h: number,
+  out: Float64Array
+): void {
+  const sum = lobeInt + w;
+  let pk = 0;
+  let k = 0;
+  if (sum > 1e-9) {
+    pk = Math.max(0, Math.min(sum, softMin(sum, capEnd, 0.25 * h)));
+    k = pk / sum;
+  }
+  let f = lobeRaw > 1e-9 ? (k * lobeInt) / lobeRaw : 1;
+  if (lobeOnly > pk) {
+    pk = lobeOnly;
+    f = lobeRaw > 1e-9 ? lobeOnly / lobeRaw : 1;
+    k = 0;
+  }
+  out[0] = pk;
+  out[1] = f;
+  out[2] = k;
+}
+
 // THE SEAM: a closed chain's node arcs live in [0, total), so a unit that
 // crosses arc 0 is not continuous in them. Each lobe carries a shift (a
 // multiple of total) so arc + shift is continuous over the unit. Given the

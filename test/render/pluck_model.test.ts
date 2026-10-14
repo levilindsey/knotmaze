@@ -18,6 +18,7 @@ import {
   stringT60,
   sympatheticAmplitude,
   tapAmplitude,
+  throughStation,
   tri,
   unitShift,
   visualTau,
@@ -277,6 +278,43 @@ describe("whole-segment term (K104)", () => {
     const h = 0.2;
     expect(pinchCap(h, 0.1, 0.5, 0.3)).toBeCloseTo(0.06, 12);
     expect(pinchCap(h, 0.7, 0.5, 0.3)).toBeCloseTo(0.06 + 1.5 * 0.2, 12);
+  });
+
+  it("through: W never lowers a station, and the terms add up to its swing", () => {
+    const h = 0.26;
+    const capped = (v: number, cap: number) =>
+      v > 1e-9 ? Math.max(0, Math.min(v, softMin(v, cap, 0.25 * h))) : 0;
+    const out = new Float64Array(3);
+    let n = 0;
+    for (const raw of [0, 0.004, 0.02, 0.068, 0.15, 0.4, 0.8]) {
+      for (const capInt of [Infinity, 0.03, 0.12, 0.3]) {
+        for (const capEnd of [0, 0.002, 0.0054, 0.02, 0.08, 0.25, Infinity]) {
+          for (const w of [0, 0.002, 0.005, 0.05, 0.2]) {
+            // The pre-K104 swing: the lobe capped at all its nodes.
+            const lobeOnly = capped(raw, Math.min(capInt, capEnd));
+            throughStation(raw, capped(raw, capInt), lobeOnly, w, capEnd, h, out);
+            const [pk, f, g] = out;
+            expect(pk).toBeGreaterThanOrEqual(lobeOnly);
+            expect(pk).toBeLessThanOrEqual(Math.max(lobeOnly, raw + w) + 1e-12);
+            expect(f).toBeGreaterThanOrEqual(0);
+            expect(g).toBeGreaterThanOrEqual(0);
+            expect(g).toBeLessThanOrEqual(1);
+            expect(Math.abs(f * raw + g * w - pk)).toBeLessThan(1e-12);
+            // W off, every node a unit end: exactly the pre-K104 swing.
+            if (w === 0 && capInt === Infinity) expect(pk).toBe(lobeOnly);
+            n++;
+          }
+        }
+      }
+    }
+    expect(n).toBe(980);
+    // The sliver run that showed it (a 1.26-world run between two junction
+    // cores): capping the end-capped lobe again with W on top sat at the
+    // cap, where softMin dips, and drew less than the lobe alone.
+    const lobeOnly = capped(0.068, 0.0054);
+    expect(capped(lobeOnly + 0.005, 0.0054)).toBeLessThan(0.3 * lobeOnly);
+    throughStation(0.068, 0.068, lobeOnly, 0.005, 0.0054, h, out);
+    expect(out[0]).toBeGreaterThanOrEqual(lobeOnly);
   });
 
   it("the seam: arc + shift stays continuous over a closed unit", () => {
