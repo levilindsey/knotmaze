@@ -157,8 +157,8 @@ entry is labeled with its source; the narrative is in
   new knot first settles; 0 = off, i.e. real-time stepping and its
   catch-up spiral) and `loadSettle` (`lds`, seconds of hidden pre-settle
   stepping; 0 = none, the max 5 = settle first: hidden until the first
-  sleep) are APPENDED to codec v4 at indices 72 and 73 (K79's pending
-  appends: whichever merges second renumbers). Both are DAILY_EXEMPT_KEYS:
+  sleep) are APPENDED to codec v4 at indices 82 and 83 (after K79 stage
+  B's 72-81). Both are DAILY_EXEMPT_KEYS:
   they pace how a device plays a design's settle, they do not change the
   design (like physics on/off), so a daily stays the daily with either set
   and the golden dailies do not move. Panel: "Motion & intro", before

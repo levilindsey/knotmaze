@@ -1094,7 +1094,7 @@ export function buildPanel(
   // the slider while a settle is running).
   row(
     fMotion, p, "settleBudget", { min: 0, max: SETTLE_BUDGET_MAX, step: 1 },
-    "Settle budget: at most this many milliseconds of physics per frame while the knot first settles after loading, so the intro stays smooth on slow devices - the settle plays in slow motion instead of the frame rate dropping. Ends when the knot first comes to rest (or after two minutes). 0 = off: the physics keeps up with real time and the intro stutters while it settles. Applies at the next load or Replay settle.",
+    "Settle budget: at most this many milliseconds of physics per frame while the knot first settles after loading, so the intro stays smooth on slow devices - the settle plays in slow motion instead of the frame rate dropping. Ends when the knot first comes to rest (or at the latest after five minutes on screen). 0 = off: the physics keeps up with real time and the intro stutters while it settles. Applies at the next load or Replay settle.",
     D.settleBudget, () => callbacks.onSlackChange()
   );
   row(
