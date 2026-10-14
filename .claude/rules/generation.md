@@ -32,7 +32,27 @@ CLAUDE.md: the threads ARE the maze paths.
   exact ties by it. Two thirds of farthest-first picks are exact ties,
   broken by pool order; some tie between different (dx, dy) pairs at
   the same distance, where the last bit of the distance decides: V8's
-  `Math.hypot` bits, through `hypot2` since K108.
+  `Math.hypot` bits, through `hypot2` since K108. Since K74 the pin runs
+  on PRE_K74 inputs (exitClearance 5, no dead ends, deadEndLength 0), so
+  it still certifies the older path; a second test in the same file
+  ("maze plan at the K74 defaults") freezes FNV-1a hashes of whole plans
+  at today's defaults and requires each to reach every piece.
+- *K74 (2026-10-13), long-tail dead ends:* `deadEndLength` > 0 (u, half
+  lattice cells; default 20) runs `placeLongTails` before the choice
+  splices: `round(deadEndDensity × distinct strands in the pool)` tails,
+  each the free flank that runs farthest before its first junction
+  (capped at the length), whose run is then reserved so junctions,
+  4-ways, later trims and K110 joins keep off it (the header comment has
+  the tie order). `deadEndLength` 0 is the older spread placement,
+  byte-identical (the K87 pin). Defaults since K74: dead ends on at 0.5,
+  exitClearance 12. Measured on dailies 1-80: 4.1 tails per maze, tip
+  runs median 22.4 u (94% at least 20 u), the far-end greedy walk median
+  3.12x the optimal with 11% of dailies within 1.5x (before: 1.96x, 25%);
+  density 1.0 crowds the tails (61% at least 20 u, greedy 2.54x).
+  Every design slept by 5 s sim except K136, which fails the same way
+  without tails. Probes and results: `.claude/probes/K74/` (`run_scan.ps1`
+  with `spec_stage1.json`; `out/analyze_stage1.txt`, `out/phys1.jsonl`,
+  the before/after sheet `out/K74_stage1_before_after.png`).
 - *K108 (2026-10-13), engine-exact generation:* everything that decides
   the maze (`src/core/`, `src/util/`) uses only operations the spec makes
   exact (+ - * /, `Math.sqrt`, abs/floor/min/max and the like) plus
