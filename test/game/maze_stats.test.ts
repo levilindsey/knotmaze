@@ -155,6 +155,10 @@ describe("share text", () => {
     expect(
       shareText({ daily: 12, replay: true, timeMs: 5000, efficiency: null, moves: "" })
     ).toBe("Knotmaze Daily #12 (replay) \u{1F9F6}\n⏱️ 0:05");
+    // K146: a past daily played after its day.
+    expect(
+      shareText({ daily: 2, replay: false, practice: true, timeMs: 5000, efficiency: null, moves: "" })
+    ).toBe("Knotmaze Daily #2 (practice) \u{1F9F6}\n⏱️ 0:05");
     expect(
       shareText({ daily: null, replay: false, timeMs: 61_000, efficiency: 1, moves: "g" })
     ).toBe("Knotmaze \u{1F9F6}\n⏱️ 1:01 · \u{1F3AF} 100%\n\u{1F7E9}");

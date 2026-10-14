@@ -4,6 +4,7 @@ import {
   dayNumber,
   dayOfNumber,
   formatDayDate,
+  formatDayMonth,
   localDay,
   todayNumber,
 } from "../../src/game/daily_calendar";
@@ -117,5 +118,12 @@ describe("local dates across time zones", () => {
   it("formats a daily's date", () => {
     expect(formatDayDate(1, "en-US")).toBe("Oct 12");
     expect(formatDayDate(82, "en-US")).toBe("Jan 1");
+  });
+
+  it("formats a daily's month (K146: the History's headers)", () => {
+    expect(formatDayMonth(1, "en-US")).toBe("October 2026");
+    expect(formatDayMonth(20, "en-US")).toBe("October 2026");
+    expect(formatDayMonth(21, "en-US")).toBe("November 2026");
+    expect(formatDayMonth(82, "en-US")).toBe("January 2027");
   });
 });

@@ -167,6 +167,11 @@ describe("the Reset path rule (K47)", () => {
     expect(rule(true, true, false, true)).toBe("restart");
     expect(rule(true, false, true, false)).toBe("restart"); // solved
     expect(rule(false, false, false, true)).toBe("restart");
+    // K146: a practice run (a past daily begun after its day) is not the
+    // official-to-be attempt either.
+    const practice = { dailyAttempt: true, official: false, solved: false, practice: true };
+    expect(resetPathAction({ ...practice, trailMode: false })).toBe("restart");
+    expect(resetPathAction({ ...practice, trailMode: true })).toBe("restart");
   });
 
   it("as backtracking it keeps the attempt: a replay of its taps agrees", () => {

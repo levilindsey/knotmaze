@@ -83,3 +83,18 @@ export function formatDayDate(n: number, locale?: string): string {
     return `${day.y}-${String(day.m).padStart(2, "0")}-${String(day.d).padStart(2, "0")}`;
   }
 }
+
+// "October 2026" (the player's locale unless one is given): the month a
+// daily number falls in (K146: the stats History's month headers).
+export function formatDayMonth(n: number, locale?: string): string {
+  const day = dayOfNumber(n);
+  try {
+    return new Date(Date.UTC(day.y, day.m - 1, 1)).toLocaleDateString(locale, {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  } catch {
+    return `${day.y}-${String(day.m).padStart(2, "0")}`;
+  }
+}

@@ -10,6 +10,8 @@ import { starGlyphs } from "./star_rating";
 export interface ShareInfo {
   daily: number | null; // null = an ordinary design
   replay: boolean;
+  // K146: a practice run (a past daily begun after its day; not scored).
+  practice?: boolean;
   timeMs: number;
   efficiency: number | null;
   moves: string;
@@ -18,10 +20,9 @@ export interface ShareInfo {
 }
 
 export function shareText(info: ShareInfo): string {
+  const tag = info.replay ? " (replay)" : info.practice ? " (practice)" : "";
   const title =
-    info.daily === null
-      ? "Knotmaze"
-      : `Knotmaze Daily #${info.daily}${info.replay ? " (replay)" : ""}`;
+    info.daily === null ? "Knotmaze" : `Knotmaze Daily #${info.daily}${tag}`;
   const stars = info.stars != null ? ` ${starGlyphs(info.stars)}` : "";
   const eff =
     info.efficiency === null
