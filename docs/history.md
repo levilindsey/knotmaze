@@ -673,8 +673,9 @@ demand.
   the exit marker (world space, so it stays on the finish). Two codec v4
   appends at 99-100 (`cf` on, `cfa` amount 0-3), both daily-exempt
   playback preferences. Reduced motion keeps only a small, slow spray (a
-  proposal). Render-only: it never wakes the physics, and the scene goes
-  idle again when the last piece falls out. *[Lore: `.claude/rules/
+  proposal). Render-only: it never wakes the physics, and its
+  sceneAnimating() term goes false when the last piece falls out (knot
+  mode then idles; fabric's paint keeps animating). *[Lore: `.claude/rules/
   render.md` (Finish confetti); probes, screenshots and the frame-time
   A/B in `.claude/probes/K140/`.]*
 
