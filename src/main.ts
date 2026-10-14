@@ -73,6 +73,8 @@ import { rateRun, ratingForResult, walkedOf } from "./game/star_rating";
 import { MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
 import { ModeBadge, modeBadgeFor } from "./ui/mode_badge";
+import { headIndicatorWhy, headReturnPlan } from "./ui/head_indicator";
+import { clampFitView } from "./ui/view_clamp";
 import {
   DARK_DISC,
   GLYPH_R,
@@ -598,10 +600,11 @@ async function main(): Promise<void> {
   // Two modes (params.cameraMode):
   // FIT - the eased auto-fit (the whole knot, or under fog the visible
   //   region) with the user's zoom/pan composed on top in SCREEN space:
-  //   screen = zoom * fitScreen + pan. Zoom 1 is the home view and pans
-  //   clamp so the zoomed fit frame always covers the screen (at zoom 1
-  //   the pan is forced to 0 - pinching back out lands exactly on the
-  //   fit).
+  //   screen = zoom * fitScreen + pan. Zoom 1 is the home view. Pans clamp
+  //   (ui/view_clamp.ts, K149) so the zoomed fit frame covers the screen
+  //   to within PAN_SLACK of its size per side, at every zoom: the maze
+  //   can be dragged partly off screen, clear of the open panel, even at
+  //   zoom 1. A reset (double-click) eases back to zoom 1, pan 0.
   // FOLLOW - a chase camera on the player's head (maze mode): a scale +
   //   world center that gestures move freely, pulled back by a weak,
   //   critically damped spring that stays OFF for FOLLOW_DELAY after the
@@ -618,7 +621,9 @@ async function main(): Promise<void> {
   let viewHoming = false; // Fit mode: easing a reset back to the home view.
   // K73: an eased move to a framing (an off-screen indicator's tap): the
   // world point at the screen's center and the scale, from -> to. Any
-  // gesture or a reset cancels it.
+  // gesture or a reset cancels it. `hold`: how long the follow camera
+  // stays off once the move ends (negative: it is at full strength at
+  // once - K148's return to the head).
   let camTween: {
     t: number;
     dur: number;
@@ -628,6 +633,7 @@ async function main(): Promise<void> {
     s1: number;
     x1: number;
     y1: number;
+    hold: number;
   } | null = null;
   const headScratch = new Float64Array(2);
   const nowSec = (): number => performance.now() / 1000;
@@ -636,12 +642,10 @@ async function main(): Promise<void> {
     viewHoming = false;
     camTween = null;
   };
+  // The fit camera's zoom range and pan range (K149: with slack, see
+  // ui/view_clamp.ts).
   const clampView = (): void => {
-    view.zoom = Math.min(MAX_ZOOM, Math.max(1, view.zoom));
-    const w = app.screen.width;
-    const h = app.screen.height;
-    view.panX = Math.min(0, Math.max(w * (1 - view.zoom), view.panX));
-    view.panY = Math.min(0, Math.max(h * (1 - view.zoom), view.panY));
+    clampFitView(view, app.screen.width, app.screen.height, MAX_ZOOM);
   };
   const applyView = (): void => {
     root.scale.set(fitCur.scale * view.zoom);
@@ -737,7 +741,7 @@ async function main(): Promise<void> {
       s
     );
     // The follow spring stays off through the move, then for the hold.
-    camTouchedAt = nowSec() + (u >= 1 ? PEEK_HOLD : 0);
+    camTouchedAt = nowSec() + (u >= 1 ? tw.hold : 0);
     viewHoming = false;
     if (u >= 1) camTween = null;
   };
@@ -763,6 +767,9 @@ async function main(): Promise<void> {
     }
     camFollow = on;
   };
+
+  // The appearance intro is playing (the follow camera frames the knot).
+  const introPlaying = (): boolean => reveal !== null && !reveal.done;
 
   // Per-frame camera step, in EVERY ticker branch (fog reveals grow and
   // the head travels while the physics sleeps).
@@ -799,7 +806,7 @@ async function main(): Promise<void> {
     let ts = fitTarget.scale;
     let tx = (app.screen.width / 2 - fitTarget.x) / ts;
     let ty = (app.screen.height / 2 - fitTarget.y) / ts;
-    const intro = reveal !== null && !reveal.done;
+    const intro = introPlaying();
     if (!intro && fabric && fabric.headPosition(headScratch)) {
       ts = followScale();
       tx = headScratch[0];
@@ -1773,7 +1780,8 @@ async function main(): Promise<void> {
   // screen's edge points the way. The module places them (clear of the
   // chrome and of each other) and draws them; indicators.update() runs in
   // fabricTick after the camera step, so in every ticker branch. The finish
-  // is the first client (below); the minotaur (K80) is meant to be next.
+  // is the first client (below); the player's head (K148) and the minotaur
+  // (K80) follow it.
   const menuButton = document.querySelector(".kp-menu");
   const indicators = new OffscreenIndicators({
     view: () => ({ x: root.position.x, y: root.position.y, s: root.scale.x }),
@@ -1793,6 +1801,26 @@ async function main(): Promise<void> {
   // head, as far as the zoom allows (placeWorldAt clamps the zoom-out: the
   // home view in fit mode, the whole knot in follow mode, which then holds
   // the framing a moment before it eases back to the head).
+  const startCamTween = (
+    x1: number,
+    y1: number,
+    s1: number,
+    dur: number,
+    hold: number
+  ): void => {
+    const s0 = root.scale.x;
+    camTween = {
+      t: 0,
+      dur,
+      s0,
+      x0: (app.screen.width / 2 - root.position.x) / s0,
+      y0: (app.screen.height / 2 - root.position.y) / s0,
+      s1,
+      x1,
+      y1,
+      hold,
+    };
+  };
   const frameWorld = (wx: number, wy: number): void => {
     let minX = wx;
     let maxX = wx;
@@ -1813,16 +1841,13 @@ async function main(): Promise<void> {
       Math.max(1, w - 2 * margin) / (maxX - minX + 2 * pad),
       Math.max(1, h - 2 * margin) / (maxY - minY + 2 * pad)
     );
-    camTween = {
-      t: 0,
-      dur: motion.reduced ? 0 : 0.6,
-      s0,
-      x0: (w / 2 - root.position.x) / s0,
-      y0: (h / 2 - root.position.y) / s0,
-      s1: Math.min(s0, sFit),
-      x1: (minX + maxX) / 2,
-      y1: (minY + maxY) / 2,
-    };
+    startCamTween(
+      (minX + maxX) / 2,
+      (minY + maxY) / 2,
+      Math.min(s0, sFit),
+      motion.reduced ? 0 : 0.6,
+      PEEK_HOLD
+    );
   };
   // THE FINISH (the exit marker). Shown in fabric mode with the
   // finishIndicator preference on, unsolved, once the intro has revealed
@@ -1899,6 +1924,71 @@ async function main(): Promise<void> {
   //   finishIndicator.gate(() => !params.threadReveal || exitSeen);
   // (gate() returns its remover). Nothing else in the indicator changes.
   void finishIndicator;
+
+  // THE PLAYER (K148; Levi, 2026-10-13: "When panning away from the
+  // current position, we should also show an offscreen indicator for it."):
+  // the head dot, wearing K83's head glyph, whenever it is off screen in a
+  // maze - during play, after a finish, and under fog (it is where you
+  // are). No viewer setting of its own (the finish's hides a direction;
+  // this hides nothing); tapToPan alone decides whether it takes taps. A
+  // tap brings the head back (returnToHead). headWhy says why it hides
+  // (probes). Registered after the finish, before the minotaur.
+  let headWhy = "init";
+  let headIconId = "";
+  let headIconSvg = "";
+  const headIcon = (): string => {
+    const id = fabric?.markerGlyphId("head") ?? DEFAULT_GLYPHS.head;
+    if (id !== headIconId) {
+      headIconId = id;
+      headIconSvg = markerGlyphSvgFit(id, "head", GLYPH_R, DARK_DISC.ink);
+    }
+    return headIconSvg;
+  };
+  // A tap on the head's indicator (ui/head_indicator.ts holds the plan):
+  // the fit camera centers the head at the zoom the player is at (the
+  // clamp keeps what it must); the follow camera eases onto its follow
+  // framing of the head and resumes the follow the moment it lands - the
+  // pan that suspended the spring is over.
+  const returnToHead = (): void => {
+    if (!fabric || !fabric.headPosition(headScratch)) return;
+    const plan = headReturnPlan({
+      follow: camFollow,
+      head: { x: headScratch[0], y: headScratch[1] },
+      scale: root.scale.x,
+      followScale: followScale(),
+      intro: introPlaying(),
+      reduced: motion.reduced,
+      followSettle: FOLLOW_DELAY + FOLLOW_RAMP,
+    });
+    if (plan.tween) {
+      startCamTween(plan.x, plan.y, plan.s, plan.dur, plan.hold);
+    } else {
+      camTween = null;
+    }
+    if (plan.resume) camTouchedAt = -1e9; // Full-strength pull at once.
+    viewHoming = false;
+  };
+  indicators.add({
+    id: "head",
+    world: (out) => !!fabric && fabric.headPosition(out),
+    // The head marker's radius: the one K83 radius all three markers wear.
+    radius: () => fabric?.markerRadius() ?? markerRadiusFor(params.threadWidth),
+    icon: headIcon,
+    style: DARK_DISC,
+    visible: () => {
+      headWhy = headIndicatorWhy({
+        mazeFabric: params.mazeFabric,
+        built: !!fabric && !!fabricController && !!renderer,
+        shown: root.visible && physState !== "loading",
+      });
+      return headWhy === "";
+    },
+    label: () =>
+      settings.tapToPan
+        ? "Your position is off screen, this way. Tap to bring it into view."
+        : "Your position is off screen, this way.",
+    onTap: returnToHead,
+  });
 
   // THE MINOTAUR (K80, the real-time mode): a dark red disc wearing its
   // marker's glyph, once it has left its lair (in the lair it sits on the
@@ -3548,6 +3638,7 @@ async function main(): Promise<void> {
   (window as unknown as Record<string, unknown>).__knotIndicators = () => ({
     indicators: indicators.state(),
     finishWhy,
+    headWhy,
     tween: camTween !== null,
     follow: camFollow,
   });
