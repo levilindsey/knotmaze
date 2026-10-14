@@ -18,7 +18,8 @@
 // These are PLACEHOLDERS - Levi will replace them. A new glyph is one more
 // design below (the tests check its fit and that the shader can draw it).
 
-export type MarkerRole = "start" | "exit" | "head";
+// "minotaur": K80's real-time chaser (drawn only in that mode).
+export type MarkerRole = "start" | "exit" | "head" | "minotaur";
 
 // Stroke width and rim margin, in disc radii. The margin equals the stroke
 // (the brief); the outer ink therefore reaches radius 1 - MARKER_MARGIN.
@@ -304,6 +305,34 @@ const DESIGNS: GlyphDesign[] = [
     rings: [[12, 12, 7]],
     dots: [[12, 12, 2.6]],
   },
+  // THE MINOTAUR (K80, a placeholder like the rest).
+  {
+    // A bull's head: horns sweeping up from the brow, ears, a long face
+    // with a rounded muzzle, two eyes.
+    id: "bull",
+    role: "minotaur",
+    label: "bull's head",
+    lines: pen()
+      .M(8.5, 8)
+      .C(5.5, 8, 4, 6.5, 4, 3.5)
+      .M(15.5, 8)
+      .C(18.5, 8, 20, 6.5, 20, 3.5)
+      .M(8, 10)
+      .L(4.5, 11.5)
+      .M(16, 10)
+      .L(19.5, 11.5)
+      .M(8, 8)
+      .L(16, 8)
+      .L(16, 15.5)
+      .C(16, 19, 14.2, 20.5, 12, 20.5)
+      .C(9.8, 20.5, 8, 19, 8, 15.5)
+      .L(8, 8)
+      .lines(),
+    dots: [
+      [10.2, 12.5, 1.1],
+      [13.8, 12.5, 1.1],
+    ],
+  },
 ];
 
 // --- Compilation into the disc frame. ---------------------------------
@@ -404,6 +433,7 @@ export const DEFAULT_GLYPHS: Readonly<Record<MarkerRole, string>> = {
   start: DESIGNS.find((d) => d.role === "start")!.id,
   exit: DESIGNS.find((d) => d.role === "exit")!.id,
   head: DESIGNS.find((d) => d.role === "head")!.id,
+  minotaur: DESIGNS.find((d) => d.role === "minotaur")!.id,
 };
 
 // Every glyph id of a role, the default first.

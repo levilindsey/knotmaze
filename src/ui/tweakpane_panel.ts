@@ -96,6 +96,11 @@ export interface PanelCallbacks {
   // only, applied live (no scene rebuild).
   onTrailChange: () => void;
   onResetPath: () => void;
+  // K80: the maze clock (turn-based / real time): restarts the solve.
+  onClockChange: () => void;
+  // K80: the real-time chase's tuning (paces, pauses, distances) and how
+  // the minotaur shows under fog: applied live, the chase goes on.
+  onChaseChange: () => void;
   // Audio-only change (sound mode / pitch space / octaves): re-derive the
   // pitch assignment without rebuilding the scene.
   onAudioChange: () => void;
@@ -440,11 +445,20 @@ export function buildPanel(
   } catch {
     folds = {};
   }
-  const folder = (title: string, defaultExpanded: boolean): Parent => {
-    const f = pane.addFolder({
+  // `inside`: a subfolder of that folder (titles stay unique: they key the
+  // persisted folds).
+  const folder = (
+    title: string,
+    defaultExpanded: boolean,
+    inside?: Parent
+  ): Parent & { hidden: boolean } => {
+    const host = (inside ?? pane) as unknown as {
+      addFolder: (opts: { title: string; expanded: boolean }) => unknown;
+    };
+    const f = host.addFolder({
       title,
       expanded: folds[title] ?? defaultExpanded,
-    }) as unknown as Parent & {
+    }) as unknown as Parent & { hidden: boolean } & {
       on: (ev: "fold", cb: (e: { expanded: boolean }) => void) => unknown;
     };
     f.on("fold", (e) => {
@@ -577,6 +591,19 @@ export function buildPanel(
     "Branching maze: walk the thread from the green entrance to the orange exit. Tap a highlighted run at your branch point to advance (tap the gold one to backtrack); tug anywhere else.",
     D.mazeFabric, () => callbacks.onModeChange()
   );
+  // K80: the real-time minotaur mode (its tuning rows: the Minotaur
+  // subfolder at the end of this folder).
+  const clockRow = row(
+    fMaze, p, "clock",
+    { options: { "turn-based": "turn", "real time": "realtime" } },
+    "Turn-based: the maze waits for each move. Real time: you run the threads at your own pace while a minotaur roams them from the finish; it hunts you once you come close, and a catch sends you back to the entrance (counted in the stats). No undo. Restarts the solve.",
+    D.clock, () => callbacks.onClockChange()
+  );
+  const playerPaceRow = row(
+    fMaze, p, "playerPace", { min: 2, max: 30, step: 0.5 },
+    "Real time: your pace along the threads, in lattice units per second. Applies live.",
+    D.playerPace, () => callbacks.onChaseChange()
+  );
   const deadEndsRow = row(
     fMaze, p, "deadEnds", undefined,
     "Dead ends: some loops become long threads that end, somewhere far away, in a loose tip. Off = a pure braided maze where every wrong turn loops back. Regenerates the maze.",
@@ -704,6 +731,68 @@ export function buildPanel(
   resetPathBtn.on("click", callbacks.onResetPath);
   void fowRow;
   void pathVizRow;
+
+  // K80: the real-time chase's tuning (game/minotaur.ts ChaseParams; the
+  // defaults were picked by a headless simulation). All live.
+  const fMino = folder("Minotaur", false, fMaze);
+  const chaseRow = (
+    key: string,
+    opts: Record<string, unknown>,
+    tipText: string
+  ): RowApi => row(fMino, p, key, opts, tipText, D[key], () => callbacks.onChaseChange());
+  chaseRow(
+    "minoWanderPace", { min: 0, max: 30, step: 0.5 },
+    "The minotaur's pace while it roams, in lattice units per second. Applies live."
+  );
+  chaseRow(
+    "minoHuntPace", { min: 0, max: 30, step: 0.5 },
+    "Its pace while it hunts you, along the shortest way to you. Applies live."
+  );
+  chaseRow(
+    "minoPaceJitter", { min: 0, max: 0.5, step: 0.05 },
+    "Pace variety: each roaming leg runs at the wander pace times 1 ± up to this, at random. Applies live."
+  );
+  chaseRow(
+    "minoPauseChance", { min: 0, max: 1, step: 0.05 },
+    "Chance it stops for a while at a junction it roams through. Applies live."
+  );
+  chaseRow(
+    "minoPauseMin", { min: 0, max: 10, step: 0.1 },
+    "Its shortest pause, in seconds. Applies live."
+  );
+  chaseRow(
+    "minoPauseMax", { min: 0, max: 10, step: 0.1 },
+    "Its longest pause, in seconds (at least the shortest). Applies live."
+  );
+  chaseRow(
+    "minoDetect", { min: 0, max: 100, step: 1 },
+    "It starts hunting you once you are this close, measured along the threads (lattice units). Applies live."
+  );
+  chaseRow(
+    "minoLose", { min: 0, max: 150, step: 1 },
+    "It loses you once you are farther than this along the threads (never less than the distance above). Applies live."
+  );
+  chaseRow(
+    "minoCatch", { min: 0.2, max: 5, step: 0.1 },
+    "Catch distance: closer than this along the threads and it catches you, sending you back to the entrance. Applies live."
+  );
+  chaseRow(
+    "minoDeadEnds", { min: 0, max: 1, step: 0.05 },
+    "How often it roams to a dead-end tip instead of a junction: dead ends are its hunting ground. Applies live."
+  );
+  chaseRow(
+    "minoRoam", { min: 5, max: 150, step: 1 },
+    "The farthest it roams in one go, along the threads (lattice units). Applies live."
+  );
+  chaseRow(
+    "minoWake", { min: 0, max: 20, step: 0.5 },
+    "Seconds it waits in its lair at the finish, at the start and after each catch. Applies live."
+  );
+  const minoFogRow = chaseRow(
+    "minoFog",
+    { options: { always: "always", "while hunting": "hunting", never: "never" } },
+    "With fog of war: show the minotaur always, only while it hunts you, or never (only where the fog has lifted). Applies live."
+  );
 
   // --- Look ---------------------------------------------------------------
   const fLook = folder("Look", true);
@@ -1347,7 +1436,13 @@ export function buildPanel(
     fowRadiusRow.hidden = !fab || !params.fogOfWar;
     fowIntroRow.hidden =
       !fab || !params.fogOfWar || params.appearSequence === "instant";
-    moveSpeedRow.hidden = !fab;
+    // K80: in real time the dot runs at playerPace instead.
+    const realtime = fab && params.clock === "realtime";
+    clockRow.hidden = !fab;
+    playerPaceRow.hidden = !realtime;
+    fMino.hidden = !realtime;
+    minoFogRow.hidden = !params.fogOfWar;
+    moveSpeedRow.hidden = !fab || realtime;
     mazeStatsRow.hidden = !fab;
     finishIndicatorRow.hidden = !fab;
     tapToPanRow.hidden = !fab;

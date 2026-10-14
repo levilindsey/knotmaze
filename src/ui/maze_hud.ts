@@ -24,6 +24,10 @@ export interface HudSnapshot {
   backtrack: number | null; // null in trail mode (no backtracking)
   junctions: number;
   deadEnds: number | null; // null with deadEnds off
+  // K80's real-time mode (absent elsewhere): the minotaur's catches, and
+  // the time it spent hunting the player (the win banner's).
+  catches?: number | null;
+  chasedMs?: number | null;
 }
 
 // Distances read x10 as whole numbers, as the HUD always has.
@@ -34,7 +38,8 @@ export const fmtDist = (v: number): string =>
 // one order. A null field drops its row.
 type StatFields = Pick<
   HudSnapshot,
-  "timeMs" | "path" | "optimal" | "efficiency" | "backtrack" | "junctions" | "deadEnds"
+  | "timeMs" | "path" | "optimal" | "efficiency" | "backtrack" | "junctions" | "deadEnds"
+  | "catches" | "chasedMs"
 >;
 export function statRows(s: StatFields): Array<[string, string]> {
   const rows: Array<[string, string]> = [];
@@ -46,6 +51,8 @@ export function statRows(s: StatFields): Array<[string, string]> {
   if (s.backtrack !== null) rows.push(["backtracked", fmtDist(s.backtrack)]);
   rows.push(["junctions", String(s.junctions)]);
   if (s.deadEnds !== null) rows.push(["dead ends", String(s.deadEnds)]);
+  if (s.catches != null) rows.push(["caught", String(s.catches)]);
+  if (s.chasedMs != null) rows.push(["chased", formatDuration(s.chasedMs)]);
   return rows;
 }
 
@@ -245,6 +252,9 @@ export interface WinInfo {
   backtrack: number | null;
   junctions: number;
   deadEnds: number | null;
+  // K80's real-time mode: catches and time chased (absent elsewhere).
+  catches?: number | null;
+  chasedMs?: number | null;
   // Show the daily stats button.
   stats: boolean;
 }

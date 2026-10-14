@@ -80,7 +80,12 @@ describe("marker glyphs (K83)", () => {
   });
 
   it("the shipped set: play, flag, ring and dot", () => {
-    expect(DEFAULT_GLYPHS).toEqual({ start: "play", exit: "flag", head: "here" });
+    expect(DEFAULT_GLYPHS).toEqual({
+      start: "play",
+      exit: "flag",
+      head: "here",
+      minotaur: "bull",
+    });
     for (const role of ROLES) {
       const ids = glyphsForRole(role);
       expect(ids[0]).toBe(DEFAULT_GLYPHS[role]);
@@ -120,8 +125,13 @@ describe("marker glyphs (K83)", () => {
     }
   });
 
+  it("the minotaur (K80) wears a bull's head", () => {
+    expect(glyphsForRole("minotaur")).toEqual(["bull"]);
+    expect(markerGlyph("here", "minotaur").id).toBe("bull");
+  });
+
   it("fits a glyph's outer ink to any radius (the off-screen indicator's box)", () => {
-    for (const role of ROLES) {
+    for (const role of [...ROLES, "minotaur" as const]) {
       const id = DEFAULT_GLYPHS[role];
       const svg = markerGlyphSvgFit(id, role, 10.75);
       const k = Number(svg.match(/^<g transform="scale\(([\d.]+)\)">/)![1]);
