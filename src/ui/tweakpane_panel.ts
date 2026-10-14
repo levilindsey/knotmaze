@@ -243,7 +243,7 @@ export function buildPanel(
     "transform:rotate(-90deg);transition:transform .2s ease}" +
     ".tp-fldv.tp-fldv-expanded>.tp-fldv_b::before{transform:rotate(0deg)}" +
     // Header: name left, the version de-emphasized in the corner; under
-    // it the credit line (the studio link).
+    // it the credit line (the studio link, the licenses link at the far end).
     ".kp-head{padding:7px 10px 6px;" +
     "font:600 11px var(--tp-base-font-family,'Roboto Mono',Menlo,monospace);" +
     "color:var(--tp-label-foreground-color,#bbbcc4);" +
