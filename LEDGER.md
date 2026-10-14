@@ -83,94 +83,80 @@ and never reused.
   flat nub (Levi's screenshot in `.claude/probes/K81/`). K75 is merged
   (same paint code): pulses now brighten the thread's own paint, and
   `PulseArm.onPath` is gone.
-  - owner: the K127 agent (a4e2e9ab9650bd95b, Opus) of session d8031183,
-    started 2026-10-13 14:20 in the same worktree (stage 3d). The phone
-    gate agent (a3ab8389716d52322, sonnet, 13:19-14:07) could not run:
-    the phone was locked (its power button turned the screen off at
-    about 12:47); its kit is ready. Stage 3c (a49a1a574758ad6dc, sonnet,
-    11:58-13:20) timed the fan: +0.055 ms with no routed records, +0.19
-    at 5, +0.27 at 10, +0.34 (about 9%) at 15-20. The growth flattens
-    after 10, so 3d's early-out is deferred. Stage 3b
-    (aa54da056f1b58d79) rebased onto d9a7d47 and wrote the lore; 3a
-    passed; all eight decisions stand.
+  - owner: the coordinator (session d8031183), running the phone gate
+    since 2026-10-13 16:59 (`phone/run_gate.ps1 -Phase all` in the
+    background: master cd5b123 vs 3d88820, about 40 min). Stage 3d (K127,
+    a4e2e9ab9650bd95b, Opus, 14:20-16:55) built the gold fill: in 20
+    same-state cases only full webs change, a full web matches master
+    outside its bands (0 px in 10 of 11), the GPU matches the CPU mirror
+    (max 0), and the fan cost is unmeasurable (within 0.011 ms). Stage 3c
+    timed K81's fan: +0.055 ms floor, +0.34 ms (about 9%) at 15-20 moves.
   - branch: `worktree-agent-a8c2a999e6c2d5a8e`
-    (`.claude/worktrees/agent-a8c2a999e6c2d5a8e`), on d9a7d47; last
-    commit: b4dd91c (the "Stage 3d brief: K127"; 3c's results are
-    2d20a2a).
-  - evidence: `.claude/probes/K81/` in its worktree, untracked
-    (`census_k81.mjs`, `k81_ab.mjs`, `mk_k81_sheet.mjs`, `k81lib.mjs`,
-    `smoke.mjs`, `gpu_k81.ps1`, `gpu_sum.mjs`, `gpu_by_program.mjs`,
-    `results/` with 3c's `gpu/3c_*` (`3c_summary.txt`),
-    `3c_explore.txt` and `ab/zoom.png`, `sheet.png`, and the gate kit
-    with its `results.md` in `phone/`); copy at merge.
-  - next: K127 (the gold fill, its 0 px proof, the cost, a sheet, the
-    rebase onto master and the gate kit readied), then the phone gate on
-    its tip once the phone is unlocked (`phone/run_gate.ps1 -Phase all`,
-    about 40 min), then the merge. File at merge: 3b's residuals (among
-    them, the pluck overlay draws over the band), the +0.055 ms floor
-    and the deferred early-out and strip trim, and the untested ranges
-    (more than 20 routed records, zoomed in).
-  - brief: `docs/design/K81.md` ("Stage 3d brief: K127", with "Stage 3c
-    results", "Stage 3b results", stage 2's list and "Probes and
+    (`.claude/worktrees/agent-a8c2a999e6c2d5a8e`), rebased on cd5b123;
+    last commit: 2556294 (the code is ae7919e, titled WIP but complete;
+    the gate's build is 3d88820), unpushed.
+  - evidence: `.claude/probes/K81/` in its worktree, untracked: 3d's
+    `results/3d/` (`sheet_3d.png`) and `results/gpu/3d_*`, 3c's
+    `results/gpu/3c_*`, the scripts (`k81d_ab.mjs`, `attr_inband.mjs`,
+    `sum_3d.mjs`, `sheet_3d.mjs`, `gpu_k81d.ps1`, `census_k81.mjs`,
+    `k81_ab.mjs`, `k81lib.mjs`, `gpu_k81.ps1`), the builds, and the gate
+    kit with `results.md` and `run_gate.log` in `phone/`. Copy at merge.
+  - next: read the gate (`phone/results.md`, `run_gate.log`), then rebase
+    onto master after K79 B lands (no shared render files; reword
+    ae7919e's title), re-run tsc and the tests, and merge. File at merge:
+    3b's residuals (among them, the pluck overlay draws over the band);
+    the +0.055 ms floor and the deferred early-out and strip trim; the
+    untested ranges (more than 20 routed records, zoomed in); and 3d's:
+    the gate walks the cheapest route, so a full web is certified on the
+    desktop only and was never timed; a web turns full in one frame with
+    no fade (a polish call for Levi); at j62, where two routes share an
+    arm, K81's band shade differs from master by up to 19 (by design).
+  - brief: `docs/design/K81.md` ("Stage 3d results", "Probes and
     commands").
-  - env: ports 5311-5314; the commands are in K81.md "Probes and
-    commands".
+  - env: the gate starts and stops its own servers (5312/5313) and
+    tunnels; the other builds are in `.claude/probes/K81/build-*`.
 - **K127** · Fill a web with gold when every arm is traveled (K81's
   decision 4; Levi, 2026-10-13: "Your recommendation seems right."): at
   a joint passed twice whose arms are all gold, the slivers of untraveled
-  material between the two route bands turn gold, as before K81. It runs
-  as K81's stage 3d, on K81's branch; the handle is K81's.
+  material between the two route bands turn gold, as before K81. Built in
+  K81's stage 3d (ae7919e, on K81's branch); it closes with K81's merge,
+  and the handle is K81's.
 - **K79** · Backgrounds: speed, params, colors, Motion. Stage A MERGED
   in 9ffda8a (2026-10-13 07:15): `backgroundSpeed` (codec v4 index 70,
   `bgs=`; -1 = auto = every effect's pre-K79 pace, vellum static; 0 =
   static; up to 3x), vellum drift through its own lazily built program,
-  and the Motion setting (`src/ui/motion.ts`, K53). Same-state A/B vs
-  master: 19 of 19 cases 0 px; GPU at 3200x1800: vellum speed 1 costs
-  0.37 ms/frame. Stage B, another agent: per-effect params and custom
-  colors (brief items 3-4; recommended: per-effect scale, contrast and
-  drift direction, vellum fiber density and grain; custom accent colors
-  replacing the three gamut accents).
-  - owner: the stage B3 phone-gate agent (af4c00fad71109c41, sonnet) of
-    session d8031183, since 2026-10-13 about 15:38; it checks the phone
-    lock first. Stage B2b (aa480aebd402916d4, sonnet, 13:25-15:25) timed
-    each shaped program (GPU ms per pass at 3200x1800: vellum drift 2.08;
-    the scale-0.5 variants cost up to 4.3x their defaults, aurora's 1.67
-    the worst; scale 2, detail 2 and silk's angle are free), did K129
-    (1563a02) and re-verified: tsc, 419 tests, the build, A/B 19/19 (the
-    first run 18/19: K142), motion 38/38, explicit 12/12, smoke 70/70.
-    Stage B2 (ae47a194fcd2d9c76, 11:58-13:20): every A/B 0 px, smoke
-    70/70, the lore and the rebase; it hides the detail row on vellum and
-    aurora. Stage B1 (a4cf71c585e48612a, from 07:45) coded brief items
-    3-4 as ten codec v4 appends at indices 71-80 (`bgsz`, `bgdt`,
-    `bgfb`, `bggr`, `bgan`, `bgcm`, `bgc0`-`bgc3`).
+  and the Motion setting (`src/ui/motion.ts`, K53). Stage B: per-effect
+  params and custom colors as ten codec v4 appends (`bgsz`, `bgdt`,
+  `bgfb`, `bggr`, `bgan`, `bgcm`, `bgc0`-`bgc3`).
+  - owner: the merge agent (aea0618868e511be8, sonnet) of session
+    d8031183, since 2026-10-13 16:59: the rebase onto master, the appends
+    moved to 72-81 (K74 took 71), the speed max 3 -> 8 (Levi, about
+    16:30: "Max backgroundSpeed should be like x8"; the parser's clamp
+    too), the re-freeze, the A/B re-run and the probe copy. Stage B3
+    (af4c00fad71109c41, sonnet, 15:56-16:45) passed the phone gate:
+    defaults 59.5-60.5 fps and 0 px on both builds; the -x programs cost
+    at most 0.28 ms a frame, with no fps drop outside the noise; the
+    panel on touch 61/61. B1-B2b's record is in K79.md.
   - branch: stage B `worktree-agent-a4cf71c585e48612a`
-    (`.claude/worktrees/agent-a4cf71c585e48612a`), rebased on 7f01e7e,
-    unpushed; last commit: d765731 (B2b's results; the last code change
-    is c7ad706). Stage A is on mainline (9ffda8a); its phone gate passed
-    2026-10-13 12:03 (K10) and its worktree is removed.
-  - evidence: in the main checkout, stage A's `.claude/probes/K79/`
-    (`run_ab.ps1`, `k79_sheet.mjs`, `k79_dstats.mjs`, `k79_gpu.mjs`,
-    `k79_motion.mjs`; `out/sheets/`, `out/ab_final/`, `out/motion.log`,
-    `out/gpu_k79.log`; the gate kit in `phone/`) and stage B1's
-    `k79b_smoke.mjs`, `k79b_cases.json` and `out/b1_smoke.log`; in the
-    worktree's `.claude/probes/K79/`, B2's sheets (`out/view/`) and
-    B2b's `out/gpu_b2.json`, `ab_rb*.log`, `k79b_k129.mjs` and
-    `k79b_control.json`. Copy at merge.
-  - next: B3 (the bench, the scale-0.5 costs and the panel rows on
-    touch; results to `phone/results.md`), then the merge: rebase onto
-    master, where K74 stage 1 took codec v4 index 71 (`deadEndLength`),
-    so B's ten appends move from 71-80 to 72-81, and re-freeze the golden
-    dailies over both. At the merge the background speed slider's max
-    becomes 8 (Levi, 2026-10-13 about 16:30: "Max backgroundSpeed should
-    be like x8"; check the link parser's range clamp too). File at merge: B1's probe-only
-    residual (`__knotSetBackgroundParams` doesn't sanitize) and the sheet
-    script's first-frame residual (B2).
-  - brief: `docs/design/K79.md` on the branch ("Stage B2b results",
-    "Stage B3: phone gate").
-  - env: `pwsh scripts/preview.ps1 -Port 5371 -Ref c7ad706` and `-Port
-    5372 -Ref 7f01e7e`, then `pwsh scripts/phone.ps1 -Ports 5371,5372`;
-    desktop A/Bs through `.claude/probes/K79/run_ab.ps1` (servers on
-    5331/5332).
+    (`.claude/worktrees/agent-a4cf71c585e48612a`), on 7f01e7e, unpushed;
+    last commit: 3733f5a (B3's results; the last code change is c7ad706).
+  - evidence: in the main checkout, stage A's `.claude/probes/K79/` (its
+    scripts, `out/` and the gate kit in `phone/`) and B1's smoke files;
+    in the worktree's `.claude/probes/K79/`, B2's `out/view/`, B2b's
+    `out/gpu_b2.json` and A/B logs, and B3's `phone/` (`results.md`, the
+    bench jsonl files, `frames_results.json`, `passcost_x.json`,
+    `panel_b3.json` and its screenshots, `run_b3.ps1`). The merge agent
+    copies them over.
+  - next: the merge agent's report, then the coordinator fast-forwards
+    master and pushes (it deploys). File at merge: B1's probe-only
+    residual (`__knotSetBackgroundParams` doesn't sanitize); B2's sheet
+    first-frame residual; and B3's: accent 3's picker opens 8 px below
+    the phone's viewport until the panel scrolls; a second tap on a
+    swatch doesn't close Tweakpane's popup (check the older color rows);
+    the design-to-custom switch isn't byte-identical (max 2/255 on 5.3% of
+    a strip; suspected hex rounding); the mist A/B got 1 rep of 3.
+  - brief: `docs/design/K79.md` on the branch ("Stage B3 results").
+  - env: the merge agent's A/B servers on ports 5331-5334.
 - **K90** · A physical minimum bend radius, stage 1 (Levi, 2026-10-13:
   "ideally we'd have a more physics-based constraint to prevent loops
   from becoming too tight in the first place"). No thread folds tighter
