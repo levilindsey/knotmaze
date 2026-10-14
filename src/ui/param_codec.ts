@@ -261,15 +261,25 @@ export const CODEC_V3: CodecTable = Object.freeze({
 // units of recent path lit); an edited copy of V3, nothing else differs.
 // V3 links keep trailLength 5, and so do the dailies (DAILY_V1 pins codec
 // v3's defaults). New params since are APPENDED below.
+// K74 (2026-10-13, pre-launch, edited in place - no new version): dead ends
+// on by default, at density 0.5 with 20-unit long tails, and exitClearance
+// 5 -> 12. v4 links written before it now read these defaults too.
+const K74_V4_DEFAULTS: Readonly<Record<string, CodecParam>> = Object.freeze({
+  trailLength: num("trailLength", 10),
+  deadEndDensity: num("deadEndDensity", 0.5),
+  deadEnds: flag("deadEnds", true),
+  exitClearance: num("exitClearance", 12),
+});
 export const CODEC_V4: CodecTable = Object.freeze({
   version: 4,
   params: Object.freeze([
-    ...CODEC_V3.params.map((p) =>
-      p.name === "trailLength" ? num("trailLength", 10) : p
-    ),
+    ...CODEC_V3.params.map((p) => K74_V4_DEFAULTS[p.name] ?? p),
     // The background's animation speed (K79, 2026-10-13): -1 = auto, each
     // effect's own pace - the drift every earlier link had (vellum static).
     num("backgroundSpeed", -1), // 70
+    // K74's long-tail dead ends: the junction-free tail length, doubled
+    // lattice units (0 = the older spread placement).
+    num("deadEndLength", 20), // 71
   ]),
 });
 

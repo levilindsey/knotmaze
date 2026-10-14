@@ -60,6 +60,10 @@ function buildScene(query: string): {
       branchDensity: params.branchDensity,
       fourWayFraction: params.fourWayFraction,
       deadEndDensity: params.deadEnds ? params.deadEndDensity : 0,
+      deadEndLength: params.deadEndLength,
+      entranceClearance: params.entranceClearance,
+      exitClearance: params.exitClearance,
+      junctionSpacing: params.junctionSpacing,
       ...planAnchors(
         params.shape,
         params.gridSize,

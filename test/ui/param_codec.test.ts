@@ -188,14 +188,23 @@ describe("codec tables", () => {
     ]);
   });
 
-  it("pins CODEC_V4: v3 with trailLength defaulting to 10", () => {
+  // v4's default edits: trailLength (K73), then K74's maze defaults, made
+  // IN PLACE before launch (no back-compat: an all-default v4 link written
+  // before K74 now opens with long dead ends and the far exit).
+  const V4_EDITS: Readonly<Record<string, readonly unknown[]>> = {
+    trailLength: ["trailLength", "number", 10],
+    deadEndDensity: ["deadEndDensity", "number", 0.5], // K74 (was 0.25)
+    deadEnds: ["deadEnds", "boolean", true], // K74 (was false)
+    exitClearance: ["exitClearance", "number", 12], // K74 (was 5)
+  };
+
+  it("pins CODEC_V4: v3 with trailLength 10 and K74's maze defaults", () => {
     expect(CODEC_V4.version).toBe(4);
     expect(CODEC_V4.params.map(asPin)).toEqual([
-      ...CODEC_V3.params
-        .map(asPin)
-        .map((p) => (p[0] === "trailLength" ? ["trailLength", "number", 10] : p)),
+      ...CODEC_V3.params.map(asPin).map((p) => V4_EDITS[p[0] as string] ?? p),
       // Params appended to v4 go here (older links read their defaults).
       ["backgroundSpeed", "number", -1], // 70 (K79: -1 = auto)
+      ["deadEndLength", "number", 20], // 71 (K74: the long-tail reserve, u)
     ]);
   });
 
@@ -277,8 +286,11 @@ describe("token format", () => {
     for (const v of [1, 2, 3, 4]) {
       expect(codecDefaults(v)).toMatchObject({
         entranceClearance: 2.5,
-        exitClearance: 5,
+        exitClearance: v < 4 ? 5 : 12, // K74 moved v4's in place
         junctionSpacing: 2,
+        // K74's long-tail reserve. Every earlier link has dead ends off
+        // (v1-v3), so the 20 it reads there changes nothing.
+        deadEndLength: 20,
         // K79: every earlier link animates its background at auto - the
         // pace it always had.
         backgroundSpeed: -1,
@@ -308,13 +320,19 @@ describe("token format", () => {
       const rewritten = encodeToken(7, v3.values);
       expect(decodeToken(rewritten).values).toEqual(v3.values);
     }
-    // All v3 defaults but trailLength: a one-entry v4 token.
+    // v3's defaults where v4's differ: trailLength (K73), and K74's
+    // deadEndDensity, deadEnds and exitClearance - a four-entry v4 token.
     expect(encodeToken(7, decodeToken("7.c").values)).toBe(
       `7.${bitsToBlob(
         [
           "00100", // version 4
-          "010", // 1 entry = gamma(1 + 1)
-          gamma(49 + 1), // index 49 trailLength
+          "00101", // 4 entries = gamma(4 + 1)
+          gamma(43 + 1), // index 43 deadEndDensity
+          "1010 0010 0101 1111", // ".25", end
+          gamma(46 - 43), // index 46 deadEnds (a flip: no value bits)
+          gamma(49 - 46), // index 49 trailLength
+          "0101 1111", // "5", end
+          gamma(65 - 49), // index 65 exitClearance
           "0101 1111", // "5", end
         ].join(" ")
       )}`
@@ -347,16 +365,19 @@ describe("token format", () => {
     expect(back.values).toEqual(values);
     // The same design written under v3, v2 and v1 still reads back - with
     // those versions' defaults.
+    // (K74 edited v4 in place: every older version reads the pre-K74 maze.)
+    const preK74 = { deadEndDensity: 0.25, deadEnds: false, exitClearance: 5 };
     const v3 = decodeToken("7.ZR9MnhklsZEwo");
     expect(v3.error).toBeNull();
-    expect(v3.values).toEqual({ ...values, trailLength: 5 });
+    expect(v3.values).toEqual({ ...values, ...preK74, trailLength: 5 });
     const v2 = decodeToken("7.RR9MnhklsZEwo");
     expect(v2.error).toBeNull();
-    expect(v2.values).toEqual({ ...values, pluckSize: 1, trailLength: 5 });
+    expect(v2.values).toEqual({ ...values, ...preK74, pluckSize: 1, trailLength: 5 });
     const v1 = decodeToken("7.lH0yeGSWxkTCg");
     expect(v1.error).toBeNull();
     expect(v1.values).toEqual({
       ...values,
+      ...preK74,
       junctionBlend: 0,
       pluckSize: 1,
       trailLength: 5,

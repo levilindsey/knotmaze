@@ -546,6 +546,11 @@ export function buildPanel(
     "Fraction of eligible loops cut into dead-end threads. 1 = maximally tree-like. Regenerates the maze.",
     D.deadEndDensity, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
+  const deadEndLengthRow = row(
+    fMaze, p, "deadEndLength", { min: 0, max: 40, step: 1 },
+    "How far each dead end runs before it ends (half lattice cells of thread with no junction on it): longer tails take longer to find out. 0 = the older placement, spread out and mostly short. Regenerates the maze.",
+    D.deadEndLength, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
   const branchDensityRow = row(
     fMaze, p, "branchDensity", { min: 0, max: 1, step: 0.05 },
     "How many extra choice junctions the maze adds beyond the minimum needed to connect everything. Regenerates the maze.",
@@ -567,7 +572,7 @@ export function buildPanel(
     D.entranceClearance, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const exitClearanceRow = row(
-    fMaze, p, "exitClearance", { min: 0, max: 12, step: 0.5 },
+    fMaze, p, "exitClearance", { min: 0, max: 20, step: 0.5 },
     "Junction-free radius around the exit (half lattice cells), so the endgame isn't cluttered with choices. Regenerates the maze.",
     D.exitClearance, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
@@ -1115,6 +1120,7 @@ export function buildPanel(
     exitAnchorRow.hidden = !fab;
     deadEndsRow.hidden = !fab;
     deadEndDensityRow.hidden = !fab || !params.deadEnds;
+    deadEndLengthRow.hidden = !fab || !params.deadEnds;
     branchDensityRow.hidden = !fab;
     fourWayRow.hidden = !fab;
     junctionSpacingRow.hidden = !fab;

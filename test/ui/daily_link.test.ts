@@ -50,6 +50,7 @@ function walkOf(p: UrlParams) {
     branchDensity: p.branchDensity,
     fourWayFraction: p.fourWayFraction,
     deadEndDensity: p.deadEnds ? p.deadEndDensity : 0,
+    deadEndLength: p.deadEndLength,
     entranceClearance: p.entranceClearance,
     exitClearance: p.exitClearance,
     junctionSpacing: p.junctionSpacing,
@@ -66,7 +67,9 @@ describe("the daily definition (frozen)", () => {
       version: 1,
       fromDay: 1,
       codecVersion: 3,
-      overrides: {},
+      // K74 (2026-10-13), edited in place before launch: long dead ends
+      // and the far exit.
+      overrides: { exitClearance: 12, deadEnds: true, deadEndDensity: 0.5, deadEndLength: 20 },
       salt: 0x6b6e6f74,
     });
     expect(DAILY_DEFINITIONS[0]).toBe(DAILY_V1);
@@ -151,9 +154,11 @@ describe("maze identity", () => {
       pathViz: "trail",
       fogOfWar: true,
       appearMode: "instant",
-      deadEndDensity: 0.9, // inert while deadEnds is off
     };
     expect(sameMaze(a, { ...a, ...look })).toBe(true);
+    // The dead-end knobs are inert while dead ends are off.
+    const off = { ...a, deadEnds: false };
+    expect(sameMaze(off, { ...off, deadEndDensity: 0.9, deadEndLength: 33 })).toBe(true);
     const maze: Array<Partial<UrlParams>> = [
       { seed: a.seed + 1 },
       { gridSize: 12 },
@@ -161,15 +166,14 @@ describe("maze identity", () => {
       { startAnchor: "n" },
       { weaveDensity: 0.5 },
       { branchDensity: 0.5 },
-      { deadEnds: true },
+      { deadEnds: false },
+      { deadEndDensity: 0.9 },
+      { deadEndLength: 30 },
       { junctionSpacing: 3 },
       { exitClearance: 2 },
       { mazeFabric: false },
     ];
     for (const m of maze) expect([m, sameMaze(a, { ...a, ...m })]).toEqual([m, false]);
-    expect(
-      sameMaze({ ...a, deadEnds: true }, { ...a, deadEnds: true, deadEndDensity: 0.5 })
-    ).toBe(false);
     expect(MAZE_PARAM_KEYS).toContain("seed");
     expect(mazeKey(a)).toBe(mazeKey({ ...a, gridSize: 18.0000000001 }));
   });

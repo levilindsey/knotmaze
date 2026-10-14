@@ -64,12 +64,19 @@ export interface DailyDefinition {
 
 // V1 (2026-10-12): the v3 default design - the one Levi picked as the
 // app's defaults on 2026-10-11 (gs 18 braided fabric, segments colors,
-// trace + burn intro, music) - on a seed per day.
+// trace + burn intro, music) - on a seed per day. K74 (2026-10-13,
+// pre-launch, changed in place): the maze plan's new defaults - a far
+// exit and long-tail dead ends.
 export const DAILY_V1: DailyDefinition = Object.freeze({
   version: 1,
   fromDay: 1,
   codecVersion: 3,
-  overrides: Object.freeze({}),
+  overrides: Object.freeze({
+    exitClearance: 12,
+    deadEnds: true,
+    deadEndDensity: 0.5,
+    deadEndLength: 20,
+  }),
   salt: 0x6b6e6f74, // "knot"
 });
 
@@ -111,8 +118,8 @@ export function dailyParams(n: number): UrlParams {
 // The params that decide the MAZE - the walk graph, its start/exit and its
 // optimal length: the lattice (seed, size, shape, growth), the anchors and
 // every maze-plan knob. Everything else (look, sound, physics, path display,
-// camera, fog) leaves the maze as it is. deadEndDensity matters only with
-// deadEnds on (main.ts passes 0 otherwise).
+// camera, fog) leaves the maze as it is. deadEndDensity and deadEndLength
+// matter only with deadEnds on (main.ts passes density 0 otherwise).
 export const MAZE_PARAM_KEYS = [
   "seed",
   "mazeFabric",
@@ -126,6 +133,7 @@ export const MAZE_PARAM_KEYS = [
   "fourWayFraction",
   "deadEnds",
   "deadEndDensity",
+  "deadEndLength",
   "entranceClearance",
   "exitClearance",
   "junctionSpacing",
@@ -134,7 +142,9 @@ export const MAZE_PARAM_KEYS = [
 // A design's maze identity as text (numbers at link precision).
 export function mazeKey(p: UrlParams): string {
   return MAZE_PARAM_KEYS.map((k) => {
-    if (k === "deadEndDensity" && !p.deadEnds) return "-";
+    if ((k === "deadEndDensity" || k === "deadEndLength") && !p.deadEnds) {
+      return "-";
+    }
     const v = p[k];
     return typeof v === "number" ? (numberText(v) ?? "NaN") : String(v);
   }).join("|");
