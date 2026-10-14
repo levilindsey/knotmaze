@@ -12,6 +12,8 @@ import type { AppearSequence, AppearFxMode } from "../core/reveal_plan";
 import { APPEAR_SEQUENCES, APPEAR_FX_MODES } from "../core/reveal_plan";
 import type { ShapeId, AnchorId } from "../core/shapes";
 import { SHAPES, ANCHORS } from "../core/shapes";
+import type { ChaseParams, ClockMode } from "../game/minotaur";
+import { DEFAULT_CHASE_PARAMS } from "../game/minotaur";
 import type {
   BackgroundColorMode,
   BackgroundId,
@@ -52,6 +54,16 @@ export const PATH_VIZ_MODES: PathViz[] = ["gold", "trail", "string"];
 // follow = chase the player's head (maze mode).
 export type CameraMode = "fit" | "follow";
 export const CAMERA_MODES: CameraMode[] = ["fit", "follow"];
+
+// The maze clock (K80; game/minotaur.ts ClockMode): turn = the turn-based
+// maze, realtime = the real-time minotaur mode. K114's beat clock would
+// append an option.
+export const CLOCK_MODES: ClockMode[] = ["turn", "realtime"];
+
+// How the real-time minotaur shows under the fog of war (K80): always, only
+// while it hunts the player, or never (only where the fog has cleared).
+export type MinoFog = "always" | "hunting" | "never";
+export const MINO_FOG_MODES: MinoFog[] = ["always", "hunting", "never"];
 
 // Scale root for manual/random sound modes ("seed" derives it from the
 // design seed, the long-standing default).
@@ -339,6 +351,30 @@ export interface UrlParams {
   // until the knot sleeps). Both apply at the next load or Replay settle.
   settleBudget: number;
   loadSettle: number;
+  // THE MAZE CLOCK (K80): turn = the turn-based maze; realtime = the
+  // real-time minotaur mode (game/minotaur.ts): the player runs at
+  // playerPace with no undo, and a minotaur that starts at the finish roams
+  // the threads, hunts the player from within minoDetect (arc length along
+  // the threads) until they are beyond minoLose, and a catch (within
+  // minoCatch) sends the player back to the entrance. Restarts the solve.
+  clock: ClockMode;
+  // The chase's tuning (chaseParamsOf; lattice units, u/s, seconds). Each
+  // applies live.
+  playerPace: number;
+  minoWanderPace: number;
+  minoHuntPace: number;
+  minoPaceJitter: number;
+  minoPauseChance: number;
+  minoPauseMin: number;
+  minoPauseMax: number;
+  minoDetect: number;
+  minoLose: number;
+  minoCatch: number;
+  minoDeadEnds: number;
+  minoRoam: number;
+  minoWake: number;
+  // How the minotaur shows under the fog of war (MINO_FOG_MODES).
+  minoFog: MinoFog;
 }
 
 // The two load-settle sliders' tops (K147). LOAD_SETTLE_MAX is a sentinel
@@ -450,7 +486,48 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K147 (appended to codec v4): see the LOAD SETTLE comment in main.ts.
   settleBudget: 12,
   loadSettle: 0.45,
+  // K80: the turn-based maze. The chase's tuning is the simulation-picked
+  // DEFAULT_CHASE_PARAMS (game/minotaur.ts); all appended to codec v4.
+  clock: "turn",
+  playerPace: DEFAULT_CHASE_PARAMS.playerPace,
+  minoWanderPace: DEFAULT_CHASE_PARAMS.wanderPace,
+  minoHuntPace: DEFAULT_CHASE_PARAMS.approachPace,
+  minoPaceJitter: DEFAULT_CHASE_PARAMS.paceJitter,
+  minoPauseChance: DEFAULT_CHASE_PARAMS.pauseChance,
+  minoPauseMin: DEFAULT_CHASE_PARAMS.pauseMin,
+  minoPauseMax: DEFAULT_CHASE_PARAMS.pauseMax,
+  minoDetect: DEFAULT_CHASE_PARAMS.detectStart,
+  minoLose: DEFAULT_CHASE_PARAMS.detectEnd,
+  minoCatch: DEFAULT_CHASE_PARAMS.catchDist,
+  minoDeadEnds: DEFAULT_CHASE_PARAMS.deadEndBias,
+  minoRoam: DEFAULT_CHASE_PARAMS.roamRange,
+  minoWake: DEFAULT_CHASE_PARAMS.wake,
+  minoFog: "always",
 };
+
+// The real-time chase's tuning from a design's params (K80). Negative or
+// non-finite values read as 0; the chase keeps detectEnd >= detectStart
+// and pauseMax >= pauseMin itself.
+export function chaseParamsOf(
+  p: Omit<UrlParams, "seed">
+): ChaseParams {
+  const pos = (v: number): number => (Number.isFinite(v) && v > 0 ? v : 0);
+  return {
+    playerPace: pos(p.playerPace),
+    wanderPace: pos(p.minoWanderPace),
+    approachPace: pos(p.minoHuntPace),
+    paceJitter: Math.min(0.5, pos(p.minoPaceJitter)),
+    pauseChance: clamp01(pos(p.minoPauseChance)),
+    pauseMin: pos(p.minoPauseMin),
+    pauseMax: pos(p.minoPauseMax),
+    detectStart: pos(p.minoDetect),
+    detectEnd: pos(p.minoLose),
+    catchDist: pos(p.minoCatch),
+    deadEndBias: clamp01(pos(p.minoDeadEnds)),
+    roamRange: pos(p.minoRoam),
+    wake: pos(p.minoWake),
+  };
+}
 
 export function newSeed(): number {
   return (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
@@ -499,6 +576,8 @@ export const ENUM_OPTIONS: {
   appearFx: APPEAR_FX_MODES,
   background: BACKGROUNDS,
   backgroundColorMode: BACKGROUND_COLOR_MODES,
+  clock: CLOCK_MODES,
+  minoFog: MINO_FOG_MODES,
 };
 
 function clamp01(v: number): number {
@@ -758,6 +837,22 @@ function readLegacy(
       SETTLE_BUDGET_MAX
     ),
     loadSettle: clampTo(readNumber(query, "lds", D.loadSettle), LOAD_SETTLE_MAX),
+    // And K80's real-time mode (`&clk=realtime&mhp=9`).
+    clock: readChoice(query, "clk", CLOCK_MODES, D.clock),
+    playerPace: readNumber(query, "plp", D.playerPace),
+    minoWanderPace: readNumber(query, "mwp", D.minoWanderPace),
+    minoHuntPace: readNumber(query, "mhp", D.minoHuntPace),
+    minoPaceJitter: readNumber(query, "mpj", D.minoPaceJitter),
+    minoPauseChance: readNumber(query, "mpc", D.minoPauseChance),
+    minoPauseMin: readNumber(query, "mpn", D.minoPauseMin),
+    minoPauseMax: readNumber(query, "mpx", D.minoPauseMax),
+    minoDetect: readNumber(query, "mdt", D.minoDetect),
+    minoLose: readNumber(query, "mls", D.minoLose),
+    minoCatch: readNumber(query, "mct", D.minoCatch),
+    minoDeadEnds: readNumber(query, "mde", D.minoDeadEnds),
+    minoRoam: readNumber(query, "mrm", D.minoRoam),
+    minoWake: readNumber(query, "mwk", D.minoWake),
+    minoFog: readChoice(query, "mfg", MINO_FOG_MODES, D.minoFog),
   };
 }
 

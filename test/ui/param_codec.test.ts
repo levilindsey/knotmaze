@@ -219,6 +219,23 @@ describe("codec tables", () => {
       ["backgroundAccent3", "color", "#aa7acd"], // 81
       ["settleBudget", "number", 12], // 82 (K147: physics ms a frame, 0 = off)
       ["loadSettle", "number", 0.45], // 83 (K147: physics s before the knot shows)
+      // K80: the maze clock, the real-time chase's tuning (u, u/s, s) and
+      // how the minotaur shows under fog.
+      ["clock", "enum", "turn", ["turn", "realtime"]], // 84
+      ["playerPace", "number", 10], // 85
+      ["minoWanderPace", "number", 5],
+      ["minoHuntPace", "number", 8], // 87
+      ["minoPaceJitter", "number", 0.2],
+      ["minoPauseChance", "number", 0.3], // 89
+      ["minoPauseMin", "number", 0.5],
+      ["minoPauseMax", "number", 2], // 91
+      ["minoDetect", "number", 15],
+      ["minoLose", "number", 25], // 93
+      ["minoCatch", "number", 1],
+      ["minoDeadEnds", "number", 0.4], // 95
+      ["minoRoam", "number", 30],
+      ["minoWake", "number", 2], // 97
+      ["minoFog", "enum", "always", ["always", "hunting", "never"]], // 98
     ]);
   });
 
@@ -328,6 +345,8 @@ describe("token format", () => {
         // K147: every earlier link loads with the K147 settle defaults.
         settleBudget: 12,
         loadSettle: 0.45,
+        // K80: every earlier link is a turn-based maze.
+        clock: "turn",
       });
     }
   });

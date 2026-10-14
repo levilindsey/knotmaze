@@ -4,6 +4,7 @@ import {
   ENUM_OPTIONS,
   PARAM_DEFAULTS,
   applyAppearMode,
+  chaseParamsOf,
   encodeParams,
   parseParams,
   writeParams,
@@ -11,6 +12,7 @@ import {
 import type { AppearPreset, UrlParams } from "../../src/ui/url_state";
 import { CODEC_V1, numberText } from "../../src/ui/param_codec";
 import { DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
+import { DEFAULT_CHASE_PARAMS } from "../../src/game/minotaur";
 
 const withSeed = (seed: number, over: Partial<UrlParams> = {}): UrlParams => ({
   ...PARAM_DEFAULTS,
@@ -110,7 +112,34 @@ describe("links", () => {
       backgroundBase: "#151b28", backgroundAccent1: "#7ab8cd",
       backgroundAccent2: "#cdb17a", backgroundAccent3: "#aa7acd",
       settleBudget: 12, loadSettle: 0.45,
+      clock: "turn", playerPace: 10, minoWanderPace: 5, minoHuntPace: 8,
+      minoPaceJitter: 0.2, minoPauseChance: 0.3, minoPauseMin: 0.5,
+      minoPauseMax: 2, minoDetect: 15, minoLose: 25, minoCatch: 1,
+      minoDeadEnds: 0.4, minoRoam: 30, minoWake: 2, minoFog: "always",
     });
+  });
+
+  // K80: the chase's defaults are the simulation-picked tuning; a retune
+  // edits DEFAULT_CHASE_PARAMS, the codec v4 appends and the pins above.
+  it("reads the chase tuning as DEFAULT_CHASE_PARAMS", () => {
+    expect(chaseParamsOf(PARAM_DEFAULTS)).toEqual({ ...DEFAULT_CHASE_PARAMS });
+  });
+
+  it("reads the real-time mode from legacy override keys", () => {
+    const p = parseParams(
+      "?7.J&clk=realtime&plp=12&mwp=4&mhp=9&mpj=0.1&mpc=0.5&mpn=1&mpx=3" +
+        "&mdt=10&mls=20&mct=1.5&mde=0.6&mrm=40&mwk=3&mfg=hunting"
+    );
+    expect(p.clock).toBe("realtime");
+    expect(chaseParamsOf(p)).toEqual({
+      playerPace: 12, wanderPace: 4, approachPace: 9, paceJitter: 0.1,
+      pauseChance: 0.5, pauseMin: 1, pauseMax: 3, detectStart: 10,
+      detectEnd: 20, catchDist: 1.5, deadEndBias: 0.6, roamRange: 40, wake: 3,
+    });
+    expect(p.minoFog).toBe("hunting");
+    // An unknown clock reads as the default; the token round-trips the mode.
+    expect(parseParams("?7.J&clk=beat").clock).toBe("turn");
+    expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
   });
 
   it("keeps the maze-plan knobs equal to DEFAULT_MAZE_PARAMS", () => {

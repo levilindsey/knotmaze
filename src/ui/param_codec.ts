@@ -300,6 +300,24 @@ export const CODEC_V4: CodecTable = Object.freeze({
     // until it sleeps). Playback preferences: the dailies exempt them.
     num("settleBudget", 12), // 82
     num("loadSettle", 0.45), // 83
+    // K80's real-time minotaur mode (2026-10-13): the maze clock, then the
+    // chase's tuning at game/minotaur.ts DEFAULT_CHASE_PARAMS (the tests
+    // hold the two equal), then how the minotaur shows under fog.
+    choice("clock", "turn", ["turn", "realtime"]), // 84
+    num("playerPace", 10), // 85
+    num("minoWanderPace", 5), // 86
+    num("minoHuntPace", 8), // 87
+    num("minoPaceJitter", 0.2), // 88
+    num("minoPauseChance", 0.3), // 89
+    num("minoPauseMin", 0.5), // 90
+    num("minoPauseMax", 2), // 91
+    num("minoDetect", 15), // 92
+    num("minoLose", 25), // 93
+    num("minoCatch", 1), // 94
+    num("minoDeadEnds", 0.4), // 95
+    num("minoRoam", 30), // 96
+    num("minoWake", 2), // 97
+    choice("minoFog", "always", ["always", "hunting", "never"]), // 98
   ]),
 });
 
