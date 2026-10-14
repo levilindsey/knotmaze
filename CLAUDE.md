@@ -96,7 +96,7 @@ src/
     det_math.ts           # K108: engine-exact math for generation (hypot2)
   build_info.ts           # Build identity (git SHA, build time; vite defines)
   main.ts                 # Entry point
-notices/                  # K122 build-time Node code (own tsconfig), not app code
+notices/                  # K122 build-time Node code (own tsconfig), not app code; lore: .claude/rules/notices.md
   credits.ts              # Tracked credits, license fallbacks, license policy
   notices.ts, page.ts     # Collect + check the bundled packages; render the page
   vite_plugin.ts          # Emits licenses.html, fails the build on an unlicensed package
@@ -252,10 +252,6 @@ to this file (claude-config `rules/context-budget.md`).
   `src/main.ts`, `test/game/**`, `test/ui/**`, `test/audio/**`): the MAZE
   STATS and DAILY MAZE entry (the binding daily rules), link-codec
   details, panel, camera, gesture and pluck rules, and the audio gate.
-- `.claude/rules/notices.md` (`notices/**`, `test/notices/**`,
-  `vite.config.ts`): the licenses.html page and its guard (K122), the
-  credits file, what to do when the build rejects a package, and the rule
-  that Hershey font data ships with its acknowledgements (K115).
 - `.claude/rules/probes.md` (`scripts/**`, `.claude/probes/**`): the PROBE
   LORE blocks, census and diagnosis rules, probe gotchas, hooks and
   recipes. Read it before probing: a bare URL is today's daily (intro,
