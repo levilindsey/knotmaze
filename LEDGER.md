@@ -20,6 +20,25 @@ and never reused.
   Motion keeps the 0.25 s fade (a colour crossfade; `src/ui/motion.ts`
   gates movement only). Say if either should change
   (`docs/design/K154_K169.md`, "Stage 1 handoff").
+- **K193** · The docked phone sits in LANDSCAPE (K156 3c: display
+  2424x1080, pages 810x331-387 CSS px at dpr 2.625, not 411x753), so the
+  phone pass and its A/A floor measure landscape. Pick one: (a) a person
+  stands it upright before a round; (b) `-Viewport 411x753` emulation
+  (CDP) with a new A/A floor; (c) the pass locks the rotation (`adb shell
+  cmd window user-rotation lock 0`) and restores it after, which changes
+  a phone setting, so it needs your OK. The 2026-10-14 round pass runs in
+  landscape (still a fair A/B: its floor is landscape too).
+- **K194** · K180's calls (`docs/design/K180.md`, "Stage 1 handoff";
+  play: https://levi.dev/knotmaze/?7.J&pw=1&pcx=ride&pgl=fallback): (1)
+  the defaults once you have played: crossings `through` (built; the
+  census favours it), and the glow `off` (built) or `fallback`; (2)
+  should sound-only taps in junction cores glow under fallback (21 of 284
+  fabric taps get none now)? Its agent's calls: the 0-1.5 range; fallback
+  decides once, at pluck time and zoom, and keeps W; `instead` and `with`
+  light the glow even at pw 0; still plucks ignore all three params.
+  - if fallback becomes a default: time `peakEstimate` under the perf
+    lock and on the Pixel (0.79-1.17 ms a tap on the desktop;
+    deduplicating its times halves the work).
 - **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
   in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
   Shortlist: the burn race (turn-based), the cut verb with an
@@ -55,6 +74,9 @@ and never reused.
     whether the web worker changes this; answered in session: K7's worker
     would keep frames smooth whatever the physics costs, and K7 is not
     scheduled.
+  - On the phone (K156 3c, 2026-10-14): the first sleep came at 17.5-21.6
+    s on both load links, the default and `gs=18`, so the settle budget,
+    not the maze, sets it.
 - **K174** · K80 stage 1's calls (`.claude/probes/K80/rt/results.md`).
   Play it: https://levi.dev/knotmaze/?7.J&clk=realtime
   - The minotaur's chase pace as a share of the player's: 0.7 (default)
@@ -223,27 +245,32 @@ and never reused.
   summary table and screenshot sheets.
   - 3a and 3b MERGED in 6521bb2..ae49553 (2026-10-13 about 21:50; sonnet
     agents a262df65dcc1489a7 and a957f7f1407f5df9f, desktop dry runs
-    only).
-  - owner: agent a595ec530724dbba1 (sonnet) of session d8031183, stage
-    3c, started 2026-10-14 about 00:56 (the phone ready, K183); it stops at
-    about 01:56 or when the stage is done.
-  - branch: `worktree-agent-a595ec530724dbba1`
-    (`.claude/worktrees/agent-a595ec530724dbba1`), from ca7d3e6; last
-    commit: `a9973c6` (WIP, unpushed; 01:19).
-  - evidence: `.claude/probes/K156/3c/` in its worktree (copy at merge);
-    the 3a and 3b worktrees, kept until 3c merges
-    (`.claude/worktrees/agent-a262df65dcc1489a7`,
-    `.claude/worktrees/agent-a957f7f1407f5df9f`); the round's looks in the
-    main checkout, `.claude/probes/rounds/2026-10-13/looks.json` (3c
-    appends K80's real-time mode, K104, K155 and K140 after a backup).
-  - next: 3c per its brief (the A/A smoke test, the defaults, K171's
-    read-only wait, the noise floor, the new looks); then the merge,
-    K192 for the looks (the gold web's final look, not fade level 0) and
-    the round pass: `pwsh -NoProfile -File scripts/phone_pass.ps1 -Base
+    only). 3c MERGED in 74ce373..de5f39e (2026-10-14 01:46; sonnet agent
+    a595ec530724dbba1, on the phone): the A/A smoke test, `-WaitReady`
+    (K171 b: a read-only check every 3 min, two ready in a row start the
+    pass; `retry_quiet.ps1` waits up to 240 min), the tracked noise floor
+    (`scripts/phone_pass/noise.json`, landscape, K193), defaults `-Moves
+    0,7,13` and `-LoadSeconds 30`, clean-origin looks, and the round's
+    new looks. Its worktree is kept.
+  - owner: claude session d8031183 (the coordinator): the round pass
+    runs in the background from 2026-10-14 01:53 (`phone_pass.ps1 -Base
     ab6d330 -Head master -Reps 3 -Looks
-    .claude/probes/rounds/2026-10-13/looks.json` (`-Phase check` first).
-  - brief: `docs/design/K156.md` ("Stage 3c brief"; the 3a and 3b
-    handoffs above it).
+    .claude/probes/rounds/2026-10-13/looks.json -WaitReady 30`; head
+    81d31a5; about 40 min), in landscape (K193).
+  - branch: mainline (no code); last commit: `81d31a5` (K192's pin in
+    `walk.mjs`).
+  - evidence: the pass's folder `.claude/probes/rounds/2026-10-14-81d31a5/`
+    (`summary.md`, `sheets/`, `logs/run.log`) and its console log
+    `.claude/probes/rounds/pass-2026-10-14.log`; 3c's
+    `.claude/probes/K156/3c/`; the round's looks
+    `.claude/probes/rounds/2026-10-13/looks.json`.
+  - next: read the summary and the sheets and file the results here;
+    then sweep the 3a and 3b worktrees
+    (`.claude/worktrees/agent-a262df65dcc1489a7`,
+    `.claude/worktrees/agent-a957f7f1407f5df9f`) with
+    `.claude/probes/K161/cleanup.ps1`. If the pass stopped (a touch, a
+    lock), rerun it with `-WaitReady 30`.
+  - brief: `docs/design/K156.md` (the 3a, 3b and 3c handoffs).
 - **K161** · Disk: C: had 24.4 GB free (2026-10-13 about 19:30, before
   K81's 1.6 GB probe copy). `$env:TEMP` holds 1145 `knotmaze-*` Chrome
   profiles (about 36.5 GB) that probe runs never delete; the worktrees
@@ -260,24 +287,56 @@ and never reused.
   - next: after 16:20 on 10-14, run `cleanup.ps1` again for the
     profiles (about 33 GB). The probe libraries' delete-on-exit goes
     with K150.
-- **K180** · K104's tuning calls as params to play with (Levi,
-  2026-10-14 about 00:22, `docs/design/levi_notes_2026-10-14.md` item
-  8): `pluckWhole`, a slider for W's amount; a crossings dropdown
-  (through, ride, pinch); a glow dropdown (off, instead, with, fallback);
-  all daily-exempt. Neighbors stay "overlap" ("current is good").
-  - owner: agent a5a195592e9da8700 (opus) of session d8031183, stage 1,
-    started 2026-10-14 about 00:56; it stops at about 02:56 or when the stage
-    is done.
-  - branch: `worktree-agent-a5a195592e9da8700`
-    (`.claude/worktrees/agent-a5a195592e9da8700`), from ca7d3e6; last
-    commit: `7e0a7fd` (WIP, unpushed; 01:19).
-  - evidence: `.claude/probes/K180/` in its worktree (copy at merge).
-  - next: stage 1 per the brief (the params and codec appends, the
-    fallback estimate, the 0 px A/B at the defaults, the census per
-    option, the sheet, the `k79_motion.mjs` update); then the merge, the
-    round's phone pass, and Levi plays with the params.
-  - brief: `docs/design/K180.md`.
-  - env: dev servers on ports 5490-5499.
+- **K146** · Past dailies, playable without credit (Levi, 2026-10-13
+  about 16:15 and 16:25: "There should be some way to play previous
+  dailys, but not get credit for them." / "Stats view is enough of a way
+  in."): the stats view's History lists every past daily, unplayed ones
+  included; an attempt begun after its day records a practice result,
+  outside every aggregate, and the badge says so. One agent with K151.
+  - owner: agent acbc2283475ab72df (opus) of session d8031183, stage 1,
+    started 2026-10-14 about 01:53; it stops at about 03:53 or when the
+    stage is done.
+  - branch: `worktree-agent-acbc2283475ab72df`
+    (`.claude/worktrees/agent-acbc2283475ab72df`), from 81d31a5; last
+    commit: none yet.
+  - evidence: `.claude/probes/K146_K151/` in its worktree (copy at
+    merge).
+  - next: stage 1 per the brief; then the merge and the next round's
+    phone pass.
+  - brief: `docs/design/K146_K151.md`.
+  - env: dev servers on ports 5500-5509.
+- **K151** · The mode badge (Levi, 2026-10-13 about 16:30, verbatim in
+  `docs/design/levi_notes_2026-10-13.md`): (1) the daily's label in the
+  badge's spot (today the HUD title, `dailyTitle()` in `src/main.ts`);
+  (2) a badge a tap leaves (Free play) fades in an X on hover; (3) phones
+  have no hover: proposed, the X always shows on coarse pointers, built
+  behind a constant (Levi's call, asked 2026-10-13).
+  - owner, branch, evidence, next, brief: as K146 (the same agent and
+    branch, Part B of `docs/design/K146_K151.md`).
+- **K148** · An off-screen indicator for the player (Levi, 2026-10-13
+  about 16:25: "When panning away from the current position, we should
+  also show an offscreen indicator for it."): the head joins the finish
+  as a K73 indicator client, wearing K83's head glyph; a tap eases the
+  camera back to the head and resumes the follow. One agent with K149.
+  - owner: agent a9228d5ef5178136e (sonnet) of session d8031183, stage 1,
+    started 2026-10-14 about 01:53; it stops at about 02:53 or when the
+    stage is done.
+  - branch: `worktree-agent-a9228d5ef5178136e`
+    (`.claude/worktrees/agent-a9228d5ef5178136e`), from 81d31a5; last
+    commit: none yet.
+  - evidence: `.claude/probes/K148_K149/` in its worktree (copy at
+    merge).
+  - next: stage 1 per the brief; then the merge and the next round's
+    phone pass.
+  - brief: `docs/design/K148_K149.md`.
+  - env: dev servers on ports 5510-5519.
+- **K149** · Room to pan the maze partly off screen at the fit zoom
+  (Levi, 2026-10-13 about 16:25: "we should support panning the maze a
+  bit more off-screen at furthest zoom. Especially to get it out from
+  under the menu."): slack in `clampView` (`src/main.ts` about line 638)
+  at every zoom, enough to clear the open panel.
+  - owner, branch, evidence, next, brief: as K148 (the same agent and
+    branch, Part B of `docs/design/K148_K149.md`).
 
 ## Next, in order
 
@@ -297,7 +356,7 @@ longer wait for each other: the second branch to merge renumbers its
 appends. Usage: don't hold agents back until the week nears 95% (Levi,
 2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17, 54% at
 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
-23:54, 69% at 00:25 on 10-14; at 13:40 he said keep going at full
+23:54, 69% at 00:25 and 72% at 01:49 on 10-14; at 13:40 he said keep going at full
 speed; it resets Mondays at 12:00). Long work runs in stages from
 committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
 brief names its stage boundary, where the agent writes a "Stage N
@@ -310,20 +369,17 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running at 00:56 on 10-14: K156 stage 3c (the
-phone), K180 stage 1 and K154+K169 (code). Then, as code slots free
-up:
-1. The round's phone pass (K156: 3a and 3b merged in ae49553, 3c
-   running), for K79 B, K122, K147, K81, K80 stage 1, K104 stage 1c,
-   K155 and K140, all merged by bb55c9a, then K154 and K169 (aaa3dda),
-   and whatever merges before it runs. Before it runs, K192 (the looks
-   would show the gold web at fade level 0).
+(he may reorder). Running at 01:55 on 10-14: the round's phone pass
+(K156), K146+K151 (opus) and K148+K149 (sonnet). Then, as code slots
+free up:
+1. The round's phone pass (K156), running from 01:53 on head 81d31a5:
+   K79 B, K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154,
+   K169 and K180 against base ab6d330.
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
    5fed5c1; Levi plays it (K174).
-3. K146, past dailies without credit, then K148, K149 and K151, the
-   camera and the mode badge (all small; K80's minotaur indicator
-   follows K148's).
+3. K146 + K151 and K148 + K149, running (the camera, the mode badge and
+   past dailies; K80's minotaur indicator follows K148's).
 4. K120 (no codec).
 5. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
    then option 3 (the spline fix) first.
@@ -348,45 +404,6 @@ call); near launch, K117; after the churn, K46, K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
-- **K146** · Past dailies, playable without credit (Levi, 2026-10-13
-  about 16:15: "There should be some way to play previous dailys, but not
-  get credit for them."). Today a past daily opens only by its link
-  (`?daily=<n>`): the stats view's History lists only days with a record
-  (`src/ui/daily_stats_view.ts`), so a missed day has no way in. And a
-  late first finish becomes the OFFICIAL result, counted in solved and
-  best time but not streaks (`onTime`, `src/game/daily_store.ts`).
-  (1) The way in is the stats view alone (Levi, about 16:25: "Stats view
-  is enough of a way in."): its History lists every past daily from #1,
-  unplayed days included (tap to play). Proposed: (2) no credit: an attempt
-  that begins after its day records a practice result (shown in History,
-  outside every aggregate, and K144's shared stats), never the official
-  one, and the mode badge says so (K73's `modeBadgeFor`, like "Replay ·
-  not scored"). An attempt begun on its day and finished later still
-  counts (K47). No codec, no renderer.
-- **K148** · An off-screen indicator for the player (Levi, 2026-10-13
-  about 16:25: "When panning away from the current position, we should
-  also show an offscreen indicator for it."): the head joins the finish
-  as a K73 indicator client (`src/ui/offscreen_indicators.ts`, registered
-  in `src/main.ts`), wearing K83's head glyph (`marker_glyphs.ts`);
-  proposed, a tap eases the camera back to the head and resumes the
-  follow. In the maze whenever the head is off screen. Small, no codec.
-- **K149** · Room to pan the maze partly off screen at the fit zoom
-  (Levi, 2026-10-13 about 16:25: "we should support panning the maze a
-  bit more off-screen at furthest zoom. Especially to get it out from
-  under the menu."): `clampView` (`src/main.ts:543`) leaves no pan range
-  at zoom 1. Allow slack at every zoom, a share of the screen per side,
-  enough to clear the open panel; check the follow camera (`applyCam`)
-  and the fit reset. Small, no codec.
-- **K151** · The mode badge (Levi, 2026-10-13 about 16:30, verbatim in
-  `docs/design/levi_notes_2026-10-13.md`): (1) the daily's label shows in
-  the badge's spot, where "Free play" shows off the daily (today it is
-  the HUD title, `dailyTitle()` in `src/main.ts`, and `modeBadgeFor`
-  shows nothing during the official attempt); (2) a badge a tap acts on
-  (Free play opens today's daily) fades in an X on hover, so it reads as
-  leaving the mode rather than as a button naming its action; (3) phones
-  have no hover: proposed, the X always shows on coarse pointers (asked
-  2026-10-13). Files: `src/ui/mode_badge.ts`, `src/ui/maze_hud.ts`,
-  `src/main.ts`. Small, no codec.
 - **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
   key to keep advancing, taking the branch that matches the key at each
   junction it reaches; a quick control on phones too, such as
@@ -697,11 +714,18 @@ K5-K7 (split, frame loop, worker) follow.
   first. If the phone pays, a cheaper hash needs another shape (three
   multiplies per lane fail the avalanche test) that avoids PCG2D's
   structure (`docs/design/K154_K169.md`, "Stage 1 handoff").
-- **K192** · Since K169, a probe that pins `paintClock` sees a fully
-  traveled web at fade level 0 (the untraveled colour) unless it sets
-  `webFade.seconds = 0` on the fabric renderer or moves the clock. K81's
-  census and A/B kits and the phone pass's looks need it to show the
-  gold web's final look (`docs/design/K154_K169.md`, "Stage 1 handoff").
+- **K195** · The phone pass's gaps (K156 3c, `docs/design/K156.md`,
+  "Stage 3c handoff"): the watchdog's touch trip is untested (it needs a
+  person); the noise floor is one 3-rep A/A pass, in landscape, for
+  `-Moves 0,7,13` only (rerun A/A when the orientation, the phone or the
+  load changes); every phone frame carries a blank white strip at the
+  bottom (the screenshot is 387 CSS px high, the page 331); knot-mode
+  render ms swings 7.5-20.5 ms in A/A, no use at rest; K80's indicator
+  look shows the indicator but never taps it.
+- **K196** · K180's crossings options at phone scale: `ride` and `pinch`
+  leave most taps unreadable in the census (dense `ride` 93.8%, fabric
+  `pinch` 71.1%); `through` reads best (`docs/design/K180.md`, "Stage 1
+  handoff"; `.claude/probes/K180/`).
 - **K123** · `.claude/probes/K10/phone_bench.mjs` drives the first
   visible `http://localhost:` tab on any port, so it can navigate one of
   Levi's own tabs. Use `.claude/probes/K79/phone/bench.mjs` (ports
@@ -947,8 +971,9 @@ K5-K7 (split, frame loop, worker) follow.
   `retry_quiet.ps1` drops its copy of the block.)
   - K156 3a proposed the same fix, as a `-NoWake` switch.
 - **K172** · K156's screenshot sheets have no text labels, and its drift
-  looks show drift only inside the intro window. 3c checks that the
-  speed-8 looks show motion on the phone.
+  looks show drift only inside the intro window. (3c checked the speed-8
+  looks on the phone: they show motion, consecutive frames differing by
+  8k-190k of 2.16M px.)
 - **K175** · K80's UI gaps (5fed5c1): a queued tap has no visual; the
   choice pulses go quiet during a move; the bull glyph is a placeholder
   (K98 has the glyph work); its off-screen indicator ignores
@@ -1179,6 +1204,19 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 (items move here with the commit that resolved them)
 
+- **K180** · K104's tuning calls as params, so Levi can try them by
+  playing: pluckWhole (`pw`, 0-1.5, default 0.5), pluckCrossings (`pcx`:
+  through | ride | pinch) and pluckGlow (`pgl`: off | instead | with |
+  fallback); codec v4 appends 101-103, daily-exempt.
+  - Done in 048e06c..0250564 (2026-10-14): 0 px against master at the
+    defaults in 8 A/B cases; 605 tests. Probes `.claude/probes/K180/`
+    (sheets `sheet/sheet_desktop.png`, `sheet_phone.png`); worktree
+    `.claude/worktrees/agent-a5a195592e9da8700` kept. Calls: K194;
+    residual: K196.
+- **K192** · Probes that pin `paintClock` saw K169's gold web at fade
+  level 0. Done in 81d31a5 (`scripts/phone_pass/walk.mjs` `pinAll()` sets
+  `webFade.seconds = 0`; K81's untracked kits `g2lib.mjs`, `k83_ab.mjs`
+  and `phone/k81phone.mjs` got the same line).
 - **K154** · Our own hash in place of PCG2D, whose credit goes (Levi,
   2026-10-14 about 00:22, `docs/design/levi_notes_2026-10-14.md` item 10:
   "a, yes. b, swap in our own. c, none."): the Perlin and Scarborough Fair
