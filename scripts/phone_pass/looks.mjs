@@ -175,6 +175,11 @@ async function runLook(look, b) {
   const mode = look.load || "sleep";
   try {
     assertFree();
+    // Every look starts on a clean origin. The panel's open state and K79's motion preference persist in localStorage,
+    // and K122's look (it opens the panel) left it open over the maze in every look after it: the next look's walk
+    // then tapped the panel, not the threads (K156 3c, on the phone).
+    await page.goto(`${b.host}/favicon.svg`, { waitUntil: "load", timeout: 30000 }).catch(() => {});
+    await page.evaluate(() => { try { localStorage.clear(); sessionStorage.clear(); } catch { /* none */ } }).catch(() => {});
     const url = `${b.host}/${look.link}`;
     if (mode === "none") await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90000 });
     else {
