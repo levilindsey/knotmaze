@@ -132,23 +132,26 @@ and never reused.
   flat nub (Levi's screenshot in `.claude/probes/K81/`). K75 is merged
   (same paint code): pulses now brighten the thread's own paint, and
   `PulseArm.onPath` is gone.
-  - owner: the K81 stage 2 agent (a39652e94a3fbc4d9) of session
-    d8031183, started 2026-10-13 10:15. Stage 1 (agent
-    a8c2a999e6c2d5a8e, 01:07-10:10, 764 tool calls) stopped at its
-    boundary.
+  - owner: the K81 stage 3a agent (ae555243bc7175214) of session
+    d8031183, started 2026-10-13 10:21. Stage 1 (agent
+    a8c2a999e6c2d5a8e, 01:07-10:10) and stage 2 (a39652e94a3fbc4d9,
+    10:15-10:20: the band shader compiles and draws on the GPU, then its
+    context ran out) stopped at their boundaries.
   - branch: `worktree-agent-a8c2a999e6c2d5a8e`
     (`.claude/worktrees/agent-a8c2a999e6c2d5a8e`), on 4deeda1; last
-    commit: 499a0e3 (stage 1 done: route bands wired into
-    `fabric_maze_renderer`, 27 unit tests, suite green; the band shader
-    has never run on a GPU).
-  - evidence: `.claude/probes/K81/` in its worktree (copied at merge).
-  - next: stage 2 per the brief's "Stage 2 handoff": the GPU smoke test
-    of the band shader, the census, same-state crops, GPU ms, the build,
-    the lore, `sheet.png`, the rebase. Then the phone gate (K10), Levi's
-    review of the handoff's eight decisions with the sheet, and the
-    merge; file the handoff's residuals then (among them, the pluck
-    overlay draws over the band).
-  - brief: `docs/design/K81.md` ("Stage 2 handoff").
+    commit: c3f83b5 (the "Stage 3 handoff"; the code is d27355e: route
+    bands wired into `fabric_maze_renderer`, 27 unit tests, suite green).
+  - evidence: `.claude/probes/K81/` in its worktree (`k81lib.mjs`,
+    `smoke.mjs`, `results/smoke/`; copied at merge).
+  - next: stage 3a: the census (fans and cover strips, gold and trail),
+    same-state crops against 4deeda1, 0 px outside traveled joints,
+    whether the three PixiJS "Attribute aUV is not present" warnings are
+    new, and `sheet.png`; it writes a "Stage 3b handoff" and stops. Stage
+    3b: GPU ms, the build, the lore, the rebase onto master. Then the
+    phone gate (K10), Levi's review of the eight decisions with the
+    sheet, and the merge; file the handoff's residuals then (among them,
+    the pluck overlay draws over the band).
+  - brief: `docs/design/K81.md` ("Stage 2 handoff", "Stage 3 handoff").
   - env: its dev servers on ports 5311-5314.
 - **K79** · Backgrounds: speed, params, colors, Motion. Stage A MERGED
   in 9ffda8a (2026-10-13 07:15): `backgroundSpeed` (codec v4 index 70,
@@ -172,10 +175,18 @@ and never reused.
     `k79_sheet.mjs`, `k79_dstats.mjs`, `k79_gpu.mjs`; `out/sheets/`,
     `out/ab_final/`, `out/motion.log`, `out/gpu_k79.log`); stage B's
     `k79b_*` files in its worktree's `.claude/probes/K79/`.
-  - next: stage A's phone gate (K10) is RUNNING since 2026-10-13 09:20
-    (agent ad54065d4cfbccf9c, sonnet, in the main checkout; results in
-    `.claude/probes/K79/phone/`): default vs e25d202, vellum at `bgs=1`
-    (412x915 texture at 6 passes/s), the speed row. Stage B in two
+  - next: stage A's phone gate (K10) did NOT run: its agent
+    (ad54065d4cfbccf9c) stopped before measuring because the phone was
+    in use (09:48, 10:02). Re-run it from `.claude/probes/K79/phone/`
+    (`results.md` has the commands, dry-run on desktop; `watchdog.ps1`
+    stops on any touch) once the phone can sit untouched for about 30
+    min, charging, unlocked, Do Not Disturb on: default vs e25d202,
+    vellum at `bgs=1` (a 411x753 texture with the toolbar showing), the
+    speed row, and whether the `backgroundIntensity` reset glyph wraps
+    at 411 px (it does in desktop emulation; K21). Close its leftover
+    tab first (DevTools target 980; Chrome was frozen in the background
+    at 10:30) and clear the 5371/5372 origins (`cleanup_origins.mjs`).
+    Stage B in two
     halves (asked 2026-10-13 10:05): B1 codes brief items 3-4 (params,
     custom colors) with their codec appends, commits, writes a "Stage B2
     handoff" into `docs/design/K79.md` and stops; B2, a fresh agent,
@@ -269,10 +280,10 @@ boundary, where the agent writes a "Stage N handoff" into the brief,
 commits and stops, and a fresh agent continues from it. K81 alone was
 about a third of the overnight spend.
 
-Order from 2026-10-13 10:15, after Levi's decisions at 09:35 (he may
-reorder). Running: K81 stage 2, plus K79 stage B and K90 stage 1, each
-asked to stop at a stage boundary; research K114 + K116 and K115; K79
-stage A's phone gate. Then, as code slots free up:
+Order from 2026-10-13 10:30, after Levi's decisions at 09:35 (he may
+reorder). Running: K81 stage 3a, plus K79 stage B and K90 stage 1, each
+asked to stop at a stage boundary; research K114 + K116 and K115. Then,
+as code slots free up:
 1. K79 stage B2, after B1's handoff. Its merge and K81's unblock most
    of this list.
 2. K110 (generation only; moves about 55 shaped links, no daily).
@@ -290,8 +301,9 @@ stage A's phone gate. Then, as code slots free up:
     K42.
 
 Waiting for Levi: K74, K80, K76's five calls, K93, K121 and K117's
-timing; the G3-3 and G4-2 old-path deletions; after the churn, K46,
-K57 and K84.
+timing; 30 minutes with the phone untouched (K79 stage A's gate, and
+every later phone gate); the G3-3 and G4-2 old-path deletions; after
+the churn, K46, K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
@@ -463,6 +475,13 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K123** · `.claude/probes/K10/phone_bench.mjs` drives the first
+  visible `http://localhost:` tab on any port, so it can navigate one of
+  Levi's own tabs. Use `.claude/probes/K79/phone/bench.mjs` (ports
+  5371-5374 only), or filter by port (K79 stage A's gate, 2026-10-13).
+- **K124** · Marker gaps keep their CPU reveal gate, so they still pop
+  during the reveal (pre-existing; G2 agent a7d1f998's report,
+  2026-10-12 18:43; from the LEDGERS inbox).
 - **K11** · Ring + gridAlign: buckles lopsided below strength ~1.8e-3,
   wanders without sleeping at 5e-4..1.6e-3, never sleeps at ga=1.
 - **K12** · Star shape, e-w anchors: 6/8 seeds sleep; 2 hover at the
