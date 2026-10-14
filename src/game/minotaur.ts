@@ -86,10 +86,16 @@ export interface ChaseParams {
   wake: number; // s in its lair, at the start and after each catch.
 }
 
+// The defaults come from a headless simulation (2026-10-13, 288 default
+// mazes, scripted greedy and fleeing players; the table and how to rerun it
+// are in .claude/rules/gameplay.md, REAL-TIME MINOTAUR). approachPace 7 =
+// 0.7 x playerPace: a player who keeps moving away outruns a hunt. A retune
+// edits these, the codec v4 appends (param_codec.ts 85-97) and the pins
+// in test/ui together.
 export const DEFAULT_CHASE_PARAMS: Readonly<ChaseParams> = Object.freeze({
   playerPace: 10,
   wanderPace: 5,
-  approachPace: 8,
+  approachPace: 7,
   paceJitter: 0.2,
   pauseChance: 0.3,
   pauseMin: 0.5,
