@@ -51,12 +51,15 @@
 //          quads near a routed joint in this pass (COVER STRIPS, tagged by
 //          a fractional aRec: STRIP_REC_TAG) and drops the paint caps
 //          there, so the field and the bands decide those pixels.
-//          FULLY TRAVELED (K127): J1.z = 1 marks a routed record whose arms
+//          FULLY TRAVELED (K127): J1.z > 0 marks a routed record whose arms
 //          the path has ALL traveled (junction_routes.ts traveledRoutes).
 //          Its base reads the COMPOSED rows instead - the pre-K81 angular
 //          blend of the arms' paint, trail fade and pulses included - its
-//          caps stay, it has no untraveled rows, and the bands still draw
-//          over it.
+//          caps stay, and the bands still draw over it. K169: J1.z is the
+//          LEVEL the web has faded in to (web_fade.ts, eased, rewritten in
+//          place each paint tick): 0 = the untraveled rows, 1 = the composed
+//          ones, and between the two bases blend; a fading record keeps its
+//          untraveled rows until it reaches 1.
 //
 // Float data is read with texelFetch + manual interpolation only (NEAREST
 // sampling): float LINEAR filtering needs OES_texture_float_linear, which
@@ -278,7 +281,8 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
 // The junction pass's color at p (pxW: world units per pixel; strip: the
 // fragment belongs to a cover strip): the base field (a routed record's
 // untraveled rows, unless J1.z marks it fully traveled - K127: then the
-// composed rows, as before K81), then each K81 route band through this
+// composed rows, as before K81; K169: J1.z in (0, 1) is a web fading in, the
+// two bases blended by it), then each K81 route band through this
 // junction composed over it, oldest first (a revisit's newer pass wins
 // where two cross). A band pixel takes its nearest point on the band's
 // centerline polyline (and that point's tau). In a web the band edge is a
@@ -292,7 +296,13 @@ vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   vec4 hd = jAt(rec);
   int nr = int(j1.w + 0.5);
   bool routed = nr > 0 && hd.z > 0.5;
-  vec3 c = junctionBase(rec, p, hd, routed && j1.z < 0.5);
+  float fz = routed ? j1.z : 0.0;
+  vec3 c = junctionBase(rec, p, hd, routed && fz < 0.5);
+  if (routed && fz > 0.0 && fz < 1.0) {
+    // K169: a web fading in blends its two bases (c is the side below 0.5).
+    vec3 o = junctionBase(rec, p, hd, fz >= 0.5);
+    c = fz < 0.5 ? mix(c, o, fz) : mix(o, c, fz);
+  }
   if (!routed || (uKBase.z > 2.5 && uKBase.z < 4.5)) return c;
   int base = int(hd.w + 0.5);
   int stride = 2 + int(uJParams.y + 0.5);
