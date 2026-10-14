@@ -27,6 +27,7 @@ import {
   isAutoSpeed,
   needsShapeProgram,
   parseHexColor,
+  readsDetail,
   rgbHex,
   sanitizeBackgroundAngle,
   sanitizeBackgroundDetail,
@@ -301,7 +302,11 @@ describe("shape params (K79 stage B)", () => {
     const all = BACKGROUNDS.filter((id) => id !== "none");
     expect(shaped({ scale: 2 })).toEqual(all);
     expect(shaped({ scale: 0.5 })).toEqual(all);
-    expect(shaped({ detail: 0 })).toEqual(all);
+    // Detail: only the effects with an fbm that carries their look (the
+    // B2 sheets: vellum and aurora moved 0.4 levels, the rest 1-3).
+    expect(shaped({ detail: 0 })).toEqual(["mist", "wash", "silk", "contours"]);
+    expect(shaped({ detail: 2 })).toEqual(["mist", "wash", "silk", "contours"]);
+    expect(BACKGROUNDS.filter(readsDetail)).toEqual(["mist", "wash", "silk", "contours"]);
     expect(shaped({ fibers: 0 })).toEqual(["vellum"]);
     expect(shaped({ grain: 3 })).toEqual(["vellum"]);
     expect(shaped({ angle: 0 })).toEqual(["silk"]);

@@ -8,6 +8,8 @@ import {
   effectFragment,
   effectProgram,
 } from "../../src/render/background_shaders";
+import { readsDetail } from "../../src/render/background_model";
+import type { BackgroundId } from "../../src/render/background_model";
 
 const sha256 = (text: string): string =>
   createHash("sha256").update(text).digest("hex");
@@ -81,10 +83,16 @@ describe("background shader sources (K79 stage B)", () => {
     );
     expect(silk).not.toContain("  float a = uParams.y * 0.3;\n");
     expect(effectFragment("silk")).toContain("  float a = uParams.y * 0.3;\n");
+    // Only the effects that read detail get the roughness fbm; vellum and
+    // aurora keep the designed fbm in their shaped programs.
     for (const id of EFFECTS) {
-      expect(effectFragment(`${id}-x`), id).toContain("a *= uShape.y;");
+      expect(effectFragment(`${id}-x`).includes("a *= uShape.y;"), id).toBe(
+        readsDetail(id as BackgroundId)
+      );
       expect(effectFragment(id), id).not.toContain("a *= uShape.y;");
     }
+    expect(effectFragment("vellum-x")).not.toContain("a *= uShape.y;");
+    expect(effectFragment("aurora-x")).not.toContain("a *= uShape.y;");
     expect(effectFragment("vellum-x")).toContain("uShape.z");
     expect(effectFragment("vellum-x")).toContain("uShape.w");
   });
