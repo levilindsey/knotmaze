@@ -117,6 +117,7 @@ import {
   setFieldParams,
 } from "./junction_field";
 import { pickRoutes, routeCorner, routeCubic } from "./junction_routes";
+import { WebFade } from "./web_fade";
 import type { PaintRoute } from "./junction_routes";
 import {
   STRIP_STATS,
@@ -744,6 +745,11 @@ export class RibbonRenderer {
   private routeKey = "";
   private routedArms = new Set<string>();
   private fullJn = new Set<number>();
+  // K169: the fully traveled webs fading in (web_fade.ts), and each record's
+  // base texel by junction index (the fade rewrites J1.z there without a
+  // fillet rebuild). `webFade.seconds = 0` turns the fade off (probes).
+  webFade = new WebFade();
+  private recBaseByJn = new Map<number, number>();
   // The routes resolved to junctions (junctionArms index -> its passes,
   // oldest first, at most MAX_ROUTES; b null = a one-arm route), and the
   // lookup that resolves them ("chain:slot:dir" -> junctionArms index;
@@ -954,6 +960,9 @@ export class RibbonRenderer {
     lastArms: () => number[];
     // K127: the joint is fully traveled (its routed web reads composed).
     full: (ji: number) => boolean;
+    // K169: the record's J1.z, how far the fully traveled web has faded in
+    // (0 untraveled .. 1 composed; -1: no record).
+    fade: (ji: number) => number;
   } | null = null;
   private fieldLastArm: number[] = [];
   // ARM STRIPS (arm_strip.ts): rows written by the current rebuild, and
@@ -3611,6 +3620,9 @@ export class RibbonRenderer {
         this.routedArms.add(a.chain + ":" + a.slot);
       }
     }
+    // K169: a newly full web starts its fade; one that stopped being full
+    // loses its fade (untraveled at once).
+    this.webFade.retarget(this.fullJn, this.paintClock);
   }
 
   // The light per-frame paint pass: advances the pulse clock and rewrites
@@ -4135,6 +4147,39 @@ export class RibbonRenderer {
     U.uKPaint[3] = 0.5 + 0.3 * Math.sin(clock * PAINT_CONST.HOVER_PULSE_W);
     // Junction fillets ride the same tick: live positions, live paint.
     this.rebuildFillets();
+    this.tickWebFade();
+  }
+
+  // K169: the arms ("chain:slot") of the webs fading in, with their level.
+  private fadingArmLevels(): Map<string, number> {
+    const out = new Map<string, number>();
+    for (const ji of this.fullJn) {
+      if (!this.webFade.has(ji)) continue;
+      const lv = this.webFade.level(ji, this.paintClock);
+      for (const a of this.junctionArms[ji].arms) out.set(a.chain + ":" + a.slot, lv);
+    }
+    return out;
+  }
+
+  // K169: advance the fully traveled webs' fade-in. Each fading web's J1.z
+  // (the level the junction shader blends its two bases by) is rewritten in
+  // place - a texel and its row upload, no fillet rebuild - and the caps'
+  // paint is rewritten at the same level. The step that reaches 1 writes it
+  // once; the fade is then forgotten and the record is the K127 one.
+  private tickWebFade(): void {
+    if (!this.webFade.active) return;
+    const steps = this.webFade.step(this.paintClock);
+    const rd = recordData();
+    let wrote = false;
+    for (const [ji, lv] of steps) {
+      const rb = this.recBaseByJn.get(ji);
+      if (rb === undefined) continue;
+      rd.data[(rb + 1) * 4 + 2] = lv;
+      rd.markDirty(rb + 1, rb + 2);
+      wrote = true;
+    }
+    if (wrote) rd.flush();
+    if (this.style.paletteMode) this.writePaintItems();
   }
 
   // The path color as the uKGold uniform (0xRRGGBB -> 0..1 floats).
@@ -4202,18 +4247,27 @@ export class RibbonRenderer {
       items.push(PAINT_ITEM.SPAN, s.c0, s.c1, s.p0 ?? 1, s.p1 ?? 1, 0, 0, 0);
       touch(s.chain, Math.min(s.c0, s.c1), Math.max(s.c0, s.c1), i);
     }
+    // K169: the caps of a web that is fading in wear its level.
+    const fadeArms = this.webFade.active ? this.fadingArmLevels() : null;
     for (const cp of this.paintCaps) {
       // K81: a routed junction's band and untraveled web decide its
       // pixels; a cap there would paint gold down every arm's ribbon. A
       // fully traveled one (K127) is not in routedArms: it keeps its caps.
-      if (
-        this.routedArms.size > 0 &&
-        this.routedArms.has(cp.chain + ":" + this.routeArmSlot(cp.chain, cp.ctrl))
-      ) {
+      const armKey = cp.chain + ":" + this.routeArmSlot(cp.chain, cp.ctrl);
+      if (this.routedArms.size > 0 && this.routedArms.has(armKey)) {
         continue;
       }
       const i = items.length / 8;
-      items.push(PAINT_ITEM.CAP, cp.ctrl, cp.ctrl, cp.p ?? 1, 0, 0, cp.radius, 0);
+      items.push(
+        PAINT_ITEM.CAP,
+        cp.ctrl,
+        cp.ctrl,
+        (cp.p ?? 1) * (fadeArms?.get(armKey) ?? 1),
+        0,
+        0,
+        cp.radius,
+        0
+      );
       const r = (2 * cp.radius) / minArcPerCtrl(cp.chain);
       touch(cp.chain, cp.ctrl - r, cp.ctrl + r, i);
     }
@@ -4471,10 +4525,11 @@ export class RibbonRenderer {
       return;
     }
     // K81: a routed record's base reads the untraveled rows (row + 1),
-    // unless J1.z marks it fully traveled (K127).
+    // unless J1.z marks it fully traveled (K127); K169: J1.z is the level it
+    // has faded in to, and in between the two bases blend.
     const nr = Math.round(J[at(rec + 1) + 3]);
     const routed = nr > 0;
-    const untrav = routed && J[at(rec + 1) + 2] < 0.5;
+    const fz = routed ? J[at(rec + 1) + 2] : 0;
     const armPaint = (
       ab: number,
       s: number,
@@ -4554,20 +4609,40 @@ export class RibbonRenderer {
       if (t <= 0) onlyA = true;
       else if (t >= 1) onlyB = true;
     }
-    if (!onlyB) {
-      armPaint(abA, profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0), false, untrav, mA);
-    }
-    if (onlyA) {
-      compose(mA);
-    } else {
-      armPaint(abB, profArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0), false, untrav, mB);
-      if (onlyB) {
-        compose(mB);
-      } else {
-        // Composed colors blend (see FIELD_GLSL).
-        for (let c = 0; c < 3; c++) out[c] = mA[c] + (mB[c] - mA[c]) * t;
-        out[3] = 0;
+    const baseField = (untravSide: boolean): void => {
+      if (!onlyB) {
+        armPaint(abA, profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0), false, untravSide, mA);
       }
+      if (onlyA) {
+        compose(mA);
+      } else {
+        armPaint(abB, profArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0), false, untravSide, mB);
+        if (onlyB) {
+          compose(mB);
+        } else {
+          // Composed colors blend (see FIELD_GLSL).
+          for (let c = 0; c < 3; c++) out[c] = mA[c] + (mB[c] - mA[c]) * t;
+          out[3] = 0;
+        }
+      }
+    };
+    baseField(routed && fz < 0.5);
+    if (routed && fz > 0 && fz < 1) {
+      // K169, mid-fade (FIELD_GLSL junctionField): the other side's base,
+      // blended by the level. (lastArms then lists that second pass's arms.)
+      const p0 = out[0];
+      const p1 = out[1];
+      const p2 = out[2];
+      this.fieldLastArm.length = 0;
+      baseField(fz >= 0.5);
+      // The first pass was untraveled below 0.5 and composed from there on.
+      const lo = fz < 0.5;
+      const o0 = out[0];
+      const o1 = out[1];
+      const o2 = out[2];
+      out[0] = lo ? p0 + (o0 - p0) * fz : o0 + (p0 - o0) * fz;
+      out[1] = lo ? p1 + (o1 - p1) * fz : o1 + (p1 - o1) * fz;
+      out[2] = lo ? p2 + (o2 - p2) * fz : o2 + (p2 - o2) * fz;
     }
     if (!routed || dbg === 3 || dbg === 4) return;
     // K81 ROUTE BANDS, oldest first (FIELD_GLSL junctionField): the nearest
@@ -5201,6 +5276,7 @@ export class RibbonRenderer {
     // radius step carrying both ends of a lookup.
     setFieldParams(fillHalf, profN);
     const armStride = 2 + profN;
+    this.recBaseByJn.clear();
     for (const rec of recs) {
       const n = Math.min(rec.arms.length, MAX_ARMS);
       if (n < 2) continue;
@@ -5213,8 +5289,9 @@ export class RibbonRenderer {
       D[o + 3] = 0;
       D[o + 4] = rec.j1[0];
       D[o + 5] = rec.j1[1];
-      // K127: 1 = fully traveled (a routed base reads the composed rows).
-      D[o + 6] = this.fullJn.has(rec.jn) ? 1 : 0;
+      // K127: > 0 = fully traveled; K169: the level it has faded in to (0 =
+      // the untraveled rows, 1 = the composed rows, between = their blend).
+      D[o + 6] = this.fullJn.has(rec.jn) ? this.webFade.level(rec.jn, this.paintClock) : 0;
       D[o + 7] = 0;
       for (let i = 0; i < n; i++) {
         const a = rec.arms[i];
@@ -5246,6 +5323,7 @@ export class RibbonRenderer {
         }
       }
       rec.rb = cursor;
+      this.recBaseByJn.set(rec.jn, cursor);
       cursor += 2 + n * armStride;
     }
     // K81 ROUTES: each record's resolved routes as indexes into its arms
@@ -5350,6 +5428,10 @@ export class RibbonRenderer {
       gate: (ji) => recs[ji]?.j1 ?? null,
       lastArms: () => [...this.fieldLastArm],
       full: (ji) => this.fullJn.has(ji),
+      fade: (ji) => {
+        const r = recs[ji];
+        return r && r.rb >= 0 ? recordData().data[(r.rb + 1) * 4 + 2] : -1;
+      },
     };
 
     // (The over-fill "fills wear the joint field" pass is gone with the
@@ -5624,8 +5706,9 @@ export class RibbonRenderer {
         if (rec.rb < 0) continue;
         const n = Math.min(rec.arms.length, MAX_ARMS);
         const routed = rec.routes.length > 0;
-        // K127: a fully traveled record's base reads the composed rows.
-        const untrav = routed && !this.fullJn.has(rec.jn);
+        // K127: a fully traveled record's base reads the composed rows;
+        // K169: while it fades in, it still blends from the untraveled ones.
+        const untrav = routed && (!this.fullJn.has(rec.jn) || this.webFade.has(rec.jn));
         for (let i = 0; i < n; i++) {
           const a = rec.arms[i];
           const ab = (rec.rb + 2 + i * armStride) * 4;

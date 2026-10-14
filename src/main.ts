@@ -3171,6 +3171,8 @@ async function main(): Promise<void> {
     if (moved || !ps || !renderer) return true;
     // K140: confetti in the air (false again once its last piece is gone).
     if (confetti.active) return true;
+    // K169: a fully traveled gold web fading in (0.25 s).
+    if (fabric !== null && fabric.webFading) return true;
     if (physState === "loading" || physState === "settling" || !asleep) {
       return true;
     }

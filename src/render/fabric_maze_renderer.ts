@@ -553,6 +553,11 @@ export class FabricMazeRenderer {
   // gold front travel the thread's actual curve to catch up (ctrl-space
   // interpolation through pointOnChain, so the motion follows every bend).
 
+  // K169: a fully traveled web is still fading in (main.ts sceneAnimating()).
+  get webFading(): boolean {
+    return this.ribbons.webFade.active;
+  }
+
   get animating(): boolean {
     return this.anim !== null;
   }
