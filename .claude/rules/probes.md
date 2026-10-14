@@ -159,10 +159,21 @@ scene, so a speed look bursts straight after a load (motion forced to
 `full` through localStorage and a reload). SUMMARY (`summary.mjs`): a
 table per scenario with base, head, delta, the A/A noise and a verdict
 ("within noise" when |delta| <= the noise). An A/A pass writes
-`noise.json`; the tracked `scripts/phone_pass/noise.json` is the floor
-every later summary reads, and a one-rep floor is weak (one |difference|
-per cell). `-Dry` runs the same scripts against a desktop Chrome with
-the phone's viewport: plumbing only, never timings.
+`noise.json`; the tracked `scripts/phone_pass/noise.json` (3 reps of
+master vs master, 2026-10-14) is the floor every later summary reads. A
+cell's floor is the largest of the medians' |difference|, the largest
+single-rep |head - base| and one unit of the printed digit (a vsync-locked
+p95 of 16.8 both ways would otherwise flag every 0.1 ms). That floor, in
+A/A: fps +-1.2, p95 0.1 ms, longest frame 16-33 ms (one dropped frame),
+frames over 25 ms +-3-5, fabric render ms +-2-5 (18 samples spanned
+19.6-27.9 ms: K81's 20-29 vs 24-31 is noise), knot render ms +-8 (7.5-20.5,
+the GPU clock), load first sleep +-1.3 s (17.5-21.6 s), frames over 50 ms
++-11-26. It is one pass: weak, and for ONE viewport. The docked phone sits
+in LANDSCAPE (display 2424x1080, the page 810x331 CSS px at dpr 2.625, not
+the 411x753 of the lessons), the summary prints the viewport and warns when
+the floor's differs, and `-Phase check` prints the display: rerun an A/A
+pass when the orientation changes. `-Dry` runs the same scripts against a
+desktop Chrome with the phone's viewport: plumbing only, never timings.
 ## Probe gotchas, hooks and tooling
 
 - *K75 (2026-10-12), cross-build frames:* a frozen page keeps the flow
