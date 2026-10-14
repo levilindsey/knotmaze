@@ -445,7 +445,7 @@ describe("token + overrides", () => {
   it("round-trips the background shape and colors (appended to v4)", () => {
     const p = withSeed(7, {
       background: "silk",
-      backgroundScale: 2.5,
+      backgroundScale: 1.75,
       backgroundDetail: 0,
       backgroundFibers: 3,
       backgroundGrain: 0.25,
@@ -485,7 +485,7 @@ describe("token + overrides", () => {
       })
     );
     expect(parseParams("?" + wild)).toMatchObject({
-      backgroundScale: 3,
+      backgroundScale: 2,
       backgroundDetail: 0,
       backgroundFibers: 3,
       backgroundGrain: 0,
@@ -527,6 +527,8 @@ describe("token + overrides", () => {
       backgroundGrain: 3,
       backgroundAngle: 10,
     });
+    // The slider's old top (3, before K129) clamps to the new one (2).
+    expect(parseParams("?7.J&bgsz=3").backgroundScale).toBe(2);
     expect(
       parseParams("?7.J&bgsz=x&bgdt=1e999&bgan=-30&bgcm=plaid&bgc0=%23101820&bgc1=fff&bgc2=zzzzzz")
     ).toEqual(withSeed(7));

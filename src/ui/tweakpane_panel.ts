@@ -850,7 +850,7 @@ export function buildPanel(
     );
   const backgroundScaleRow = shapeRow(
     "backgroundScale", BACKGROUND_SCALE_MIN, BACKGROUND_SCALE_MAX,
-    "Backdrop pattern size: 1 = as designed, 0.5 = half as large (finer), up to 3x larger. Applies live."
+    "Backdrop pattern size: 1 = as designed, 0.5 = half as large (finer), up to 2x larger. Applies live."
   );
   const backgroundDetailRow = shapeRow(
     "backgroundDetail", 0, BACKGROUND_DETAIL_MAX,

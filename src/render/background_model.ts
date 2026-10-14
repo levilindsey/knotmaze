@@ -142,7 +142,11 @@ export const BACKGROUND_SHAPE_DEFAULTS: Readonly<BackgroundShape> = Object.freez
   angle: -1,
 });
 export const BACKGROUND_SCALE_MIN = 0.5;
-export const BACKGROUND_SCALE_MAX = 3;
+// 2, not 3 (K129, Levi 2026-10-13): at 3 wash and contours are nearly empty
+// (luma sd 2.4 and 1.1 against 4.4 and 2.6 at 1) and vellum's fibers read as
+// long crossing hatching. Vellum's fibers still never shrink below their
+// designed size (a texel per CSS px cannot draw them finer).
+export const BACKGROUND_SCALE_MAX = 2;
 export const BACKGROUND_DETAIL_MAX = 2;
 // fibers and grain
 export const BACKGROUND_TEXTURE_MAX = 3;
