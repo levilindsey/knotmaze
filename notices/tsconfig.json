@@ -1,0 +1,10 @@
+{
+  // Build-time Node code: the notices plugin, its tests and the Vite config.
+  // The root tsconfig covers src/ (browser code, no Node types); this one
+  // covers the tooling. `npm run build` runs both.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": [".", "../test/notices", "../vite.config.ts"]
+}
