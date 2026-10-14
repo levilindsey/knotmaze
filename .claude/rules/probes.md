@@ -213,6 +213,16 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   once on the other app. Tweakpane's color popup (`.tp-popv`) closes on a
   tap elsewhere, not on a second tap of its swatch.
 
+- K79 stage B merge (2026-10-13), panel probes: a row's reset glyph
+  (`.kp-reset`) listens for `pointerdown`, not `click`, so a probe's
+  `.click()` leaves the value alone (dispatch a PointerEvent, or press the
+  glyph with the mouse). `k79b_smoke.mjs` imports `/src/render/*.ts` inside
+  the page, so it needs a Vite DEV server (the private-cache config,
+  `.claude/probes/K79/vite.private-cache.config.ts`); against a
+  `vite preview` build it dies at its first import. `k79b_speed8.mjs`
+  (speed links, the 8x drift clock, the real slider's ends, the tooltip,
+  reset) runs on a build.
+
 ## Census and diagnosis rules
 
 - *From the open artifact queue (2026-10-11), census lore:* Census lore from

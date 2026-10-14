@@ -182,7 +182,9 @@ entry is labeled with its source; the narrative is in
   vellum's 0) and writes backgroundSpeed only when the slider leaves that
   value (2 decimals); the reset glyph writes auto through row()'s custom
   {modified, reset}. No step (it would snap an off-step link speed on the
-  next refresh). Hidden while background is none.
+  next refresh). Range [0, BACKGROUND_SPEED_MAX] = [0, 8] (Levi,
+  2026-10-13; the link clamp reads the same constant). Hidden while
+  background is none.
 
 - BACKGROUND SHAPE + COLOR ROWS (K79 stage B, 2026-10-13): the render
   side is in `render.md` (SHAPE PARAMS + CUSTOM COLORS). SCALE, DETAIL,
