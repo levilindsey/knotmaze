@@ -999,6 +999,15 @@ export class FabricMazeRenderer {
     this.renderFog();
   }
 
+  // The flat fog's color = the page color, which a custom background base
+  // color (K79) changes live.
+  setFogColor(hex: number): void {
+    if (hex === this.fogColor) return;
+    this.fogColor = hex;
+    this.fogDirty = true;
+    this.renderFog();
+  }
+
   // Drift the displacement map so the fog edges breathe. Called every
   // ticker frame (all branches) - cheap: one sprite transform; the GPU
   // filter does the rest even while the physics sleeps.

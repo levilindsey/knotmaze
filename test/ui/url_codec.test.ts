@@ -105,6 +105,10 @@ describe("links", () => {
       entranceClearance: 2.5, exitClearance: 12, junctionSpacing: 2,
       background: "vellum", backgroundIntensity: 0.5,
       pulseReach: 3, backgroundSpeed: -1, deadEndLength: 20,
+      backgroundScale: 1, backgroundDetail: 1, backgroundFibers: 1,
+      backgroundGrain: 1, backgroundAngle: -1, backgroundColorMode: "gamut",
+      backgroundBase: "#151b28", backgroundAccent1: "#7ab8cd",
+      backgroundAccent2: "#cdb17a", backgroundAccent3: "#aa7acd",
     });
   });
 
@@ -436,6 +440,96 @@ describe("token + overrides", () => {
     expect(parseParams("?" + fast).backgroundSpeed).toBe(3);
     const neg = encodeParams(withSeed(7, { backgroundSpeed: -0.25 }));
     expect(parseParams("?" + neg).backgroundSpeed).toBe(-1);
+  });
+
+  it("round-trips the background shape and colors (appended to v4)", () => {
+    const p = withSeed(7, {
+      background: "silk",
+      backgroundScale: 2.5,
+      backgroundDetail: 0,
+      backgroundFibers: 3,
+      backgroundGrain: 0.25,
+      backgroundAngle: 90,
+      backgroundColorMode: "custom",
+      backgroundBase: "#203040",
+      backgroundAccent1: "#ffcc66",
+      backgroundAccent2: "#0a0b0c",
+      backgroundAccent3: "#a1b2c3",
+    });
+    expect(parseParams("?" + encodeParams(p))).toEqual(p);
+    // At their defaults they cost nothing: the all-default token.
+    expect(encodeParams(withSeed(7))).toBe("7.J");
+    // Older links read the defaults (as designed, in the design's colors).
+    for (const q of ["?7.c", "?" + USER_COMPACT, "?s=7"]) {
+      expect(parseParams(q)).toMatchObject({
+        backgroundScale: 1,
+        backgroundDetail: 1,
+        backgroundFibers: 1,
+        backgroundGrain: 1,
+        backgroundAngle: -1,
+        backgroundColorMode: "gamut",
+        backgroundBase: "#151b28",
+        backgroundAccent1: "#7ab8cd",
+        backgroundAccent2: "#cdb17a",
+        backgroundAccent3: "#aa7acd",
+      });
+    }
+    // Out-of-range values clamp (a hand-edited or future link), in tokens...
+    const wild = encodeParams(
+      withSeed(7, {
+        backgroundScale: 9,
+        backgroundDetail: -1,
+        backgroundFibers: 7,
+        backgroundGrain: -2,
+        backgroundAngle: 450,
+      })
+    );
+    expect(parseParams("?" + wild)).toMatchObject({
+      backgroundScale: 3,
+      backgroundDetail: 0,
+      backgroundFibers: 3,
+      backgroundGrain: 0,
+      backgroundAngle: 90,
+    });
+    const tiny = encodeParams(withSeed(7, { backgroundScale: 0.1, backgroundAngle: -7 }));
+    expect(parseParams("?" + tiny)).toMatchObject({
+      backgroundScale: 0.5,
+      backgroundAngle: -1,
+    });
+  });
+
+  it("takes the background shape and colors as overrides", () => {
+    // Probe URLs: &bgsz=2&bgdt=0&bgfb=3&bggr=0&bgan=90&bgcm=custom&bgc0=...
+    expect(
+      parseParams(
+        "?7.J&bgsz=2&bgdt=0&bgfb=3&bggr=0&bgan=90&bgcm=custom" +
+          "&bgc0=101820&bgc1=FFCC66&bgc2=000000&bgc3=a1b2c3"
+      )
+    ).toEqual(
+      withSeed(7, {
+        backgroundScale: 2,
+        backgroundDetail: 0,
+        backgroundFibers: 3,
+        backgroundGrain: 0,
+        backgroundAngle: 90,
+        backgroundColorMode: "custom",
+        backgroundBase: "#101820",
+        backgroundAccent1: "#ffcc66",
+        backgroundAccent2: "#000000",
+        backgroundAccent3: "#a1b2c3",
+      })
+    );
+    // Clamps, wraps, auto and garbage.
+    expect(parseParams("?7.J&bgsz=.1&bgdt=5&bgfb=-1&bggr=9&bgan=370")).toMatchObject({
+      backgroundScale: 0.5,
+      backgroundDetail: 2,
+      backgroundFibers: 0,
+      backgroundGrain: 3,
+      backgroundAngle: 10,
+    });
+    expect(
+      parseParams("?7.J&bgsz=x&bgdt=1e999&bgan=-30&bgcm=plaid&bgc0=%23101820&bgc1=fff&bgc2=zzzzzz")
+    ).toEqual(withSeed(7));
   });
 });
 

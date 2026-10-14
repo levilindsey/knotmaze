@@ -205,6 +205,18 @@ describe("codec tables", () => {
       // Params appended to v4 go here (older links read their defaults).
       ["backgroundSpeed", "number", -1], // 70 (K79: -1 = auto)
       ["deadEndLength", "number", 20], // 71 (K74: the long-tail reserve, u)
+      // K79 stage B: the backdrop's shape (1 = as designed; angle -1 = auto)
+      ["backgroundScale", "number", 1], // 72
+      ["backgroundDetail", "number", 1],
+      ["backgroundFibers", "number", 1],
+      ["backgroundGrain", "number", 1],
+      ["backgroundAngle", "number", -1], // 76
+      // ... and its colors (gamut = the design's own, as before)
+      ["backgroundColorMode", "enum", "gamut", ["gamut", "custom"]], // 77
+      ["backgroundBase", "color", "#151b28"],
+      ["backgroundAccent1", "color", "#7ab8cd"],
+      ["backgroundAccent2", "color", "#cdb17a"],
+      ["backgroundAccent3", "color", "#aa7acd"], // 81
     ]);
   });
 
@@ -250,9 +262,15 @@ describe("codec tables", () => {
         expect(p.options).toContain(p.def);
       }
     }
-    // Every string param is an enum except the one color.
+    // Every string param is an enum except the colors.
     const stringParams = Object.keys(D).filter((k) => typeof D[k] === "string");
-    expect(stringParams.filter((k) => !enumNames.includes(k))).toEqual(["pathColor"]);
+    expect(stringParams.filter((k) => !enumNames.includes(k))).toEqual([
+      "pathColor",
+      "backgroundBase",
+      "backgroundAccent1",
+      "backgroundAccent2",
+      "backgroundAccent3",
+    ]);
   });
 
   it("defaults of a version cover every param of the current table", () => {
@@ -294,8 +312,41 @@ describe("token format", () => {
         // K79: every earlier link animates its background at auto - the
         // pace it always had.
         backgroundSpeed: -1,
+        // K79 stage B: ... and draws it as designed, in the design's colors.
+        backgroundScale: 1,
+        backgroundDetail: 1,
+        backgroundFibers: 1,
+        backgroundGrain: 1,
+        backgroundAngle: -1,
+        backgroundColorMode: "gamut",
+        backgroundBase: "#151b28",
+        backgroundAccent1: "#7ab8cd",
+        backgroundAccent2: "#cdb17a",
+        backgroundAccent3: "#aa7acd",
       });
     }
+  });
+
+  // K79 stage B: the shape params and custom colors round-trip, and the
+  // all-default token is still "7.J" (they are all omitted at defaults).
+  it("writes the background shape and custom colors", () => {
+    const values = {
+      ...codecDefaults(CODEC_VERSION),
+      backgroundScale: 0.55,
+      backgroundDetail: 2,
+      backgroundFibers: 0,
+      backgroundGrain: 2.75,
+      backgroundAngle: 135,
+      backgroundColorMode: "custom",
+      backgroundBase: "#0a0b0c",
+      backgroundAccent1: "#ffffff",
+      backgroundAccent2: "#000000",
+      backgroundAccent3: "#12ab9f",
+    };
+    const decoded = decodeToken(encodeToken(7, values));
+    expect(decoded.error).toBeNull();
+    expect(decoded.values).toEqual(values);
+    expect(encodeToken(7, { ...codecDefaults(CODEC_VERSION) })).toBe("7.J");
   });
 
   // backgroundSpeed's AUTO default is negative: the number codes carry the

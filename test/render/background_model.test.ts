@@ -1,17 +1,39 @@
 import { describe, expect, it } from "vitest";
 import {
   BACKGROUNDS,
+  BACKGROUND_ACCENTS_USED,
+  BACKGROUND_ANGLE_AUTO,
+  BACKGROUND_COLOR_MODES,
+  BACKGROUND_DETAIL_MAX,
   BACKGROUND_PAUSE_GRACE,
   BACKGROUND_PROFILES,
+  BACKGROUND_SCALE_MAX,
+  BACKGROUND_SCALE_MIN,
+  BACKGROUND_SHAPE_DEFAULTS,
   BACKGROUND_SPEED_AUTO,
   BACKGROUND_SPEED_MAX,
+  BACKGROUND_TEXTURE_MAX,
   BackgroundClock,
+  accentHexes,
+  autoSilkAngle,
   backgroundColors,
   backgroundDrift,
   backgroundSeedOffset,
+  customBackgroundColors,
+  detailGain,
   effectiveSpeed,
   hexRgb,
+  isAutoAngle,
   isAutoSpeed,
+  needsShapeProgram,
+  parseHexColor,
+  rgbHex,
+  sanitizeBackgroundAngle,
+  sanitizeBackgroundDetail,
+  sanitizeBackgroundScale,
+  sanitizeBackgroundShape,
+  sanitizeBackgroundTexture,
+  silkAngleUniform,
 } from "../../src/render/background_model";
 import { gamutRgb, setGamutConfig } from "../../src/core/section_colors";
 import { codecTable, CODEC_VERSION } from "../../src/ui/param_codec";
@@ -240,5 +262,138 @@ describe("animation speed (K79)", () => {
     const s = new BackgroundClock();
     expect(run(s, 10, backgroundDrift("wash", 0), 15, true)).toBe(1);
     expect(s.time).toBe(0);
+  });
+});
+
+describe("shape params (K79 stage B)", () => {
+  const D = BACKGROUND_SHAPE_DEFAULTS;
+
+  it("clamps every shape param to its slider; garbage reads as the default", () => {
+    expect([0.1, 0.5, 1.25, 3, 9, NaN, Infinity].map(sanitizeBackgroundScale)).toEqual([
+      BACKGROUND_SCALE_MIN, 0.5, 1.25, BACKGROUND_SCALE_MAX, 3, 1, 1,
+    ]);
+    expect([-1, 0, 1.5, 2, 5, NaN].map(sanitizeBackgroundDetail)).toEqual([
+      0, 0, 1.5, BACKGROUND_DETAIL_MAX, 2, 1,
+    ]);
+    expect([-1, 0, 2.5, 3, 7, NaN].map(sanitizeBackgroundTexture)).toEqual([
+      0, 0, 2.5, BACKGROUND_TEXTURE_MAX, 3, 1,
+    ]);
+    // The angle: negative and garbage = AUTO; anything else wraps.
+    expect([-1, -30, NaN, Infinity, 0, 90, 359, 360, 450].map(sanitizeBackgroundAngle)).toEqual([
+      BACKGROUND_ANGLE_AUTO, -1, -1, -1, 0, 90, 359, 0, 90,
+    ]);
+    expect(isAutoAngle(BACKGROUND_ANGLE_AUTO)).toBe(true);
+    expect(isAutoAngle(0)).toBe(false);
+    expect(sanitizeBackgroundShape({ scale: 9, detail: -1, fibers: 4, grain: NaN, angle: 400 }))
+      .toEqual({ scale: 3, detail: 0, fibers: 3, grain: 1, angle: 40 });
+    expect(sanitizeBackgroundShape({ ...D })).toEqual(D);
+  });
+
+  it("uses each effect's own program at the defaults", () => {
+    for (const id of BACKGROUNDS) {
+      expect([id, needsShapeProgram(id, { ...D })]).toEqual([id, false]);
+    }
+  });
+
+  it("switches to the shaped program only for params the effect reads", () => {
+    const shaped = (s: Partial<typeof D>): string[] =>
+      BACKGROUNDS.filter((id) => needsShapeProgram(id, { ...D, ...s }));
+    const all = BACKGROUNDS.filter((id) => id !== "none");
+    expect(shaped({ scale: 2 })).toEqual(all);
+    expect(shaped({ scale: 0.5 })).toEqual(all);
+    expect(shaped({ detail: 0 })).toEqual(all);
+    expect(shaped({ fibers: 0 })).toEqual(["vellum"]);
+    expect(shaped({ grain: 3 })).toEqual(["vellum"]);
+    expect(shaped({ angle: 0 })).toEqual(["silk"]);
+    expect(shaped({ angle: 270 })).toEqual(["silk"]);
+  });
+
+  it("maps detail to fbm's octave gain (0.5 = the designed fbm)", () => {
+    expect(detailGain(1)).toBe(0.5);
+    expect(detailGain(0)).toBe(0.25);
+    expect(detailGain(BACKGROUND_DETAIL_MAX)).toBe(0.75);
+  });
+
+  it("shows silk's auto angle as the direction its shader draws", () => {
+    // The shader turns the streaks by uParams.y * 0.3 (y-down) at AUTO; the
+    // panel shows autoSilkAngle, and setting that angle must draw the same
+    // streaks (equal mod 2 pi: the shader only takes its cos and sin).
+    for (let s = 0; s < 200; s++) {
+      const seed = (s * 2654435761) >>> 0;
+      const shown = autoSilkAngle(seed);
+      expect(shown >= 0 && shown < 360).toBe(true);
+      const auto = backgroundSeedOffset(seed)[1] * 0.3;
+      const set = silkAngleUniform(shown);
+      expect(set >= 0 && set < 2 * Math.PI).toBe(true);
+      expect(Math.cos(set)).toBeCloseTo(Math.cos(auto), 9);
+      expect(Math.sin(set)).toBeCloseTo(Math.sin(auto), 9);
+    }
+    // Counterclockwise on screen = clockwise in the shader's y-down frame:
+    // 90 = upward (0, -1).
+    expect(silkAngleUniform(0)).toBe(0);
+    expect(Math.cos(silkAngleUniform(90))).toBeCloseTo(0, 12);
+    expect(Math.sin(silkAngleUniform(90))).toBeCloseTo(-1, 12);
+    expect(silkAngleUniform(BACKGROUND_ANGLE_AUTO)).toBe(-1);
+    expect(silkAngleUniform(NaN)).toBe(-1);
+  });
+});
+
+describe("custom colors (K79 stage B)", () => {
+  it("keeps the codec's option order for the color mode", () => {
+    const p = codecTable(CODEC_VERSION)!.params.find((q) => q.name === "backgroundColorMode");
+    expect(p && p.type === "enum" ? [...p.options] : null).toEqual([...BACKGROUND_COLOR_MODES]);
+    expect(BACKGROUND_COLOR_MODES[0]).toBe("gamut");
+  });
+
+  it("converts between hex text and RGB", () => {
+    expect(parseHexColor("#ABcdef", 7)).toBe(0xabcdef);
+    for (const bad of ["abcdef", "#abc", "#abcdeg", "", "#abcdef0"]) {
+      expect([bad, parseHexColor(bad, 7)]).toEqual([bad, 7]);
+    }
+    expect(rgbHex([1, 128 / 255, 0])).toBe("#ff8000");
+    expect(rgbHex([-1, 2, 0.2])).toBe("#00ff33");
+    for (const hex of ["#000000", "#ffffff", "#151b28", "#7ab8cd"]) {
+      expect(rgbHex(hexRgb(parseHexColor(hex, 0)))).toBe(hex);
+    }
+  });
+
+  it("puts accent 1 in the main slot (the gamut's middle color)", () => {
+    const c = customBackgroundColors("#102030", "#ff0000", "#00ff00", "#0000ff", 0x151b28);
+    expect(c.ink).toEqual(hexRgb(0x102030));
+    expect(c.accents).toEqual([[0, 1, 0], [1, 0, 0], [0, 0, 1]]);
+    expect(accentHexes(c)).toEqual(["#ff0000", "#00ff00", "#0000ff"]);
+    // Garbage: the base reads as the page ink, an accent as black.
+    const g = customBackgroundColors("nope", "#ff0000", "", "#12", 0x151b28);
+    expect(g.ink).toEqual(hexRgb(0x151b28));
+    expect(g.accents).toEqual([[0, 0, 0], [1, 0, 0], [0, 0, 0]]);
+  });
+
+  it("starts custom from the design's own colors (8-bit exact)", () => {
+    setGamutConfig(130, "pastel");
+    const design = backgroundColors(0x151b28, 210);
+    const [a1, a2, a3] = accentHexes(design);
+    expect([a1, a2, a3]).toEqual([
+      rgbHex(gamutRgb(210, 0.5)),
+      rgbHex(gamutRgb(210, 0.12)),
+      rgbHex(gamutRgb(210, 0.88)),
+    ]);
+    const custom = customBackgroundColors("#151b28", a1, a2, a3, 0x151b28);
+    expect(custom.ink).toEqual(design.ink);
+    for (let k = 0; k < 3; k++) {
+      for (let ch = 0; ch < 3; ch++) {
+        expect(Math.abs(custom.accents[k][ch] - design.accents[k][ch])).toBeLessThanOrEqual(
+          0.5 / 255 + 1e-12
+        );
+      }
+    }
+  });
+
+  it("lists the accents each effect reads", () => {
+    expect(Object.keys(BACKGROUND_ACCENTS_USED).sort()).toEqual([...BACKGROUNDS].sort());
+    expect(BACKGROUND_ACCENTS_USED.none).toEqual([]);
+    expect(BACKGROUND_ACCENTS_USED.vellum).toEqual([1]);
+    for (const used of Object.values(BACKGROUND_ACCENTS_USED)) {
+      for (const n of used) expect([1, 2, 3]).toContain(n);
+    }
   });
 });

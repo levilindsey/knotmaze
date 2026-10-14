@@ -16,7 +16,12 @@ import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
 import { FabricMazeController } from "./game/fabric_controller";
 import { RevealAnimator } from "./render/reveal";
 import { BackgroundLayer } from "./render/background";
-import { backgroundColors } from "./render/background_model";
+import {
+  accentHexes,
+  backgroundColors,
+  customBackgroundColors,
+  parseHexColor,
+} from "./render/background_model";
 import {
   writeParams as writeTokenParams,
   newSeed,
@@ -883,18 +888,61 @@ async function main(): Promise<void> {
     wake();
   }
 
+  // The page color: the shared ink, or a custom background's base color
+  // (K79), which then shows behind none and under the flat fog too.
+  function pageInk(): number {
+    return params.backgroundColorMode === "custom"
+      ? parseHexColor(params.backgroundBase, BACKGROUND)
+      : BACKGROUND;
+  }
+  let canvasInk = BACKGROUND;
+
+  // The design's own background accents in the panel's order (accent 1 =
+  // the main one): what switching the colors to custom starts from.
+  function gamutAccentHexes(): [string, string, string] {
+    const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
+    setGamutConfig(params.gamutArc, params.palette);
+    return accentHexes(backgroundColors(BACKGROUND, effHue));
+  }
+
   // The background follows the design: effect + intensity + animation
-  // speed, the page ink and the design's gamut accents, the seed - and the
-  // fog of war (when on) draws as the background instead of a flat color.
+  // speed + shape, the page ink and the design's gamut accents (or the
+  // custom colors), the seed - and the fog of war (when on) draws as the
+  // background instead of a flat color.
   function syncBackground(): void {
     const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
     setGamutConfig(params.gamutArc, params.palette);
+    const ink = pageInk();
+    if (ink !== canvasInk) {
+      canvasInk = ink;
+      app.canvas.style.background = `#${ink.toString(16).padStart(6, "0")}`;
+    }
+    // Shape first: an effect that turns on below lays out at its scale.
+    background.setShape({
+      scale: params.backgroundScale,
+      detail: params.backgroundDetail,
+      fibers: params.backgroundFibers,
+      grain: params.backgroundGrain,
+      angle: params.backgroundAngle,
+    });
     background.configure(
       params.background,
       params.backgroundIntensity,
       params.backgroundSpeed
     );
-    background.setDesign(backgroundColors(BACKGROUND, effHue), params.seed);
+    background.setDesign(
+      params.backgroundColorMode === "custom"
+        ? customBackgroundColors(
+            params.backgroundBase,
+            params.backgroundAccent1,
+            params.backgroundAccent2,
+            params.backgroundAccent3,
+            BACKGROUND
+          )
+        : backgroundColors(BACKGROUND, effHue),
+      params.seed
+    );
+    fabric?.setFogColor(ink);
     fabric?.setFogBackdrop(background.texture);
   }
 
@@ -1011,7 +1059,7 @@ async function main(): Promise<void> {
       fabric.trailLength = params.trailLength;
       fabric.fogOfWar = params.fogOfWar;
       fabric.fowRadius = params.fowRadius;
-      fabric.fogColor = BACKGROUND;
+      fabric.fogColor = pageInk();
       fabric.update(fabricController);
     } else {
       fabricController = null;
@@ -1300,11 +1348,13 @@ async function main(): Promise<void> {
       writeParams(params);
       wake();
     },
-    // Background effect / intensity: the layer only - no scene change.
+    // Background effect / intensity / speed / shape / colors: the layer
+    // (and the page color) only - no scene change.
     onBackgroundChange: () => {
       syncBackground();
       writeParams(params);
     },
+    backgroundGamutColors: () => gamutAccentHexes(),
     onModeChange: () => {
       // Mode changes alter the graph TOPOLOGY (fabric surgery, color
       // field), which is baked in at build time, so a full rebuild is
@@ -3298,6 +3348,8 @@ async function main(): Promise<void> {
   (window as unknown as Record<string, unknown>).__knotBackground = () => ({
     id: background.id,
     active: background.active,
+    // The last texture pass's program (bg-<program> in GPU timings).
+    program: background.programId,
     speed: params.backgroundSpeed,
     stats: { ...background.stats },
     time: background.clock.time,
@@ -3317,6 +3369,21 @@ async function main(): Promise<void> {
     syncBackground();
     writeParams(params);
     return background.id;
+  };
+  // Any background params at once (K79 stage B: shape + colors), e.g.
+  // {backgroundScale: 2, backgroundColorMode: "custom"}; unknown keys are
+  // ignored. Returns the program the next texture pass will use.
+  (window as unknown as Record<string, unknown>).__knotSetBackgroundParams = (
+    values: Partial<UrlParams>
+  ) => {
+    const p = params as unknown as Record<string, unknown>;
+    for (const [k, v] of Object.entries(values)) {
+      if (k.startsWith("background") && Object.hasOwn(p, k)) p[k] = v;
+    }
+    syncBackground();
+    writeParams(params);
+    background.renderTexture();
+    return background.programId;
   };
   // THE MOTION SETTING probe: the choice, the OS's answer, the result and
   // the root attribute the stylesheets read.
