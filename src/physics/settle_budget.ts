@@ -100,3 +100,29 @@ export function recordStepCost(b: SettleBudget, ms: number, substeps: number): v
   const x = ms / substeps;
   b.costMs = Number.isFinite(b.costMs) ? b.costMs + COST_EMA * (x - b.costMs) : x;
 }
+
+// A gap between frames longer than this is a hidden tab (no frames run
+// there), not settling time.
+export const FRAME_GAP_MS = 1000;
+
+// The wall time the settle's caps count: what passed between frames, less
+// any gap over FRAME_GAP_MS. A load opened in a background tab must not
+// reach its caps (the settle-first wall cap, the budget's last-resort cap,
+// the loader's show delay) before anyone has seen it. A long task (a
+// shader compile) over the threshold is skipped too, harmlessly: these
+// are last-resort caps.
+export class VisibleClock {
+  private last = 0;
+  private ms = 0;
+  start(now: number): void {
+    this.last = now;
+    this.ms = 0;
+  }
+  // Call at least once a frame; returns the visible ms since start().
+  tick(now: number): number {
+    const d = now - this.last;
+    this.last = now;
+    if (d > 0 && d <= FRAME_GAP_MS) this.ms += d;
+    return this.ms;
+  }
+}

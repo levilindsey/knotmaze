@@ -152,6 +152,19 @@ entry is labeled with its source; the narrative is in
   OFF (`?12l.IS3ygt`). DAILY_V1 takes the same four values as overrides
   on codec v3's defaults (its trailLength stays 5).
 
+- LOAD SETTLE PARAMS (K147, 2026-10-13; the mechanism is physics.md's
+  "The load settle"): `settleBudget` (`stb`, ms of physics a frame while a
+  new knot first settles; 0 = off, i.e. real-time stepping and its
+  catch-up spiral) and `loadSettle` (`lds`, seconds of hidden pre-settle
+  stepping; 0 = none, the max 5 = settle first: hidden until the first
+  sleep) are APPENDED to codec v4 at indices 72 and 73 (K79's pending
+  appends: whichever merges second renumbers). Both are DAILY_EXEMPT_KEYS:
+  they pace how a device plays a design's settle, they do not change the
+  design (like physics on/off), so a daily stays the daily with either set
+  and the golden dailies do not move. Panel: "Motion & intro", before
+  Replay settle. url_state.ts clamps both (SETTLE_BUDGET_MAX 30,
+  LOAD_SETTLE_MAX 5); legacy override keys `stb` / `lds`.
+
 ## The panel
 
 - pathViz LABELS ARE NOT ITS VALUES (K73, 2026-10-12): the panel shows

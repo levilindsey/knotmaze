@@ -601,6 +601,17 @@ demand.
   *[Moved to `.claude/rules/probes.md`: daily probes and dev servers.]*
 - *[Moved to `.claude/rules/render.md`: SHADER BACKGROUNDS (K21).]*
 - *[Moved to `.claude/rules/render.md`: SHADER PAINT (G2, K4).]*
+- THE LOAD SETTLE (K147, 2026-10-13): the few-fps intro was the physics
+  catch-up spiral (every frame ran 12 substeps of ~12 ms at gs 18). A
+  per-frame physics budget (`settleBudget`, 12 ms, at least one substep a
+  frame) now paces a new knot's settle from the first visible frame to the
+  first sleep and drops what a frame cannot afford, and the blocking
+  pre-sim became a chunked pre-settle behind a trefoil loader
+  (`loadSettle`, 0.45 s; its max 5 settles first). gs 18 intro p95 164 ->
+  32 ms at 1x, 744 -> 189 ms at 4x; the first sleep moves 11.6 -> 21 s
+  (1x) and 40 -> 98 s (4x), a slow-motion settle. *[Lore: `.claude/rules/
+  physics.md` (The load settle) and `gameplay.md` (LOAD SETTLE PARAMS);
+  measurements in `.claude/probes/K147/results.md`.]*
 
 *[Stays in `CLAUDE.md`: the Architecture audit.]*
 
