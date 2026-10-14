@@ -314,3 +314,16 @@ Filed (2026-10-13): on K79, applied at stage B's merge.
 Hmm, let's show the Daily overlay in the same spot as the free play overlay. Also, when this overlay is clickable--to reset back to the other mode-- we should fade-in an X to help indicate that clicking will cancel. Right now it looks like a button that indicates what it will do when you click on it. This is still aproblem we need to solve for phones though...
 
 Filed (2026-10-13): K151 in Next; the phone question is open.
+
+### About 17:55 (K152)
+
+1. sgtm.
+
+(A reply to the coordinator's "Testing to defer or combine" list.)
+Filed (2026-10-13): K152's (1) approved; (2) and (3) still open.
+
+### About 18:06 (star rating)
+
+Let's give a star rating (1 through 3 or 5 or something) based for the run. This can be calculated on time, backtracking, and/or efficiency, and/or other game mode specific metrics. We should give a tooltip/phone-friendly description of where the stars come from. I suppose basing it off of efficiency alone might be the clearest for the default maze solve.
+
+Filed (2026-10-13): K155 in Next, with K140.
