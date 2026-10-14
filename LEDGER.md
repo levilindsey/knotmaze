@@ -377,17 +377,20 @@ and never reused.
   interleaved through a frame bench (knot, fabric at 0, 10 and 21 moves,
   and a load scenario for K147), then looks from a JSON list, into a
   summary table and screenshot sheets.
-  - owner: agent a643f74a71764b250 (sonnet) of session d8031183, since
-    2026-10-13 18:27: the kit, an A/A smoke test on the phone (Levi, about
-    18:20: the phone is back) and a draft of tonight's looks.
-  - branch: `worktree-agent-a643f74a71764b250`
-    (`.claude/worktrees/agent-a643f74a71764b250`), from afd8ee5; last
+  - owner: agent a9d4c7cb7500cb055 (sonnet) of session d8031183, since
+    2026-10-13 18:39: stage 2 builds the pass from the brief's "Stage 1
+    handoff", runs the A/A smoke test on the phone (Levi, about 18:20:
+    the phone is back) and drafts tonight's looks. Stage 1
+    (a643f74a71764b250) stopped at its token line after
+    `preview.ps1 -Root/-BuildOnly` and the handoff (1f8be97).
+  - branch: `worktree-agent-a9d4c7cb7500cb055`
+    (`.claude/worktrees/agent-a9d4c7cb7500cb055`), from 1f8be97; last
     commit: none yet.
   - evidence: its worktree's `.claude/probes/rounds/` (untracked); K81's
-    kit in K81's worktree (`.claude/probes/K81/phone/`).
-  - next: read the A/A report (the noise floor per metric), merge the
-    kit, then run tonight's pass once K79 B, K122 and K81 land (K147 if
-    it is ready).
+    kit in K81's worktree (`.claude/probes/K81/phone/`); the A/A noise
+    floor goes to a tracked `scripts/phone_pass/noise.json`.
+  - next: read the A/A report, merge the kit, then run tonight's pass
+    once K79 B, K122 and K81 land (K147 if it is ready).
   - brief: `docs/design/K156.md`.
 
 ## Next, in order
@@ -1012,6 +1015,9 @@ K5-K7 (split, frame loop, worker) follow.
     port (5431); give each agent a disjoint port range. A probe that
     releases and re-takes the perf lock between samples leaves gaps
     another agent's builds can land in (K122 saw one in K81 3d's run).
+  - 2026-10-13: `scripts/preview.ps1 -Root <dir>` builds into a per-run
+    folder (K156 stage 1, 1f8be97). Callers that omit it still share the
+    TEMP folder, and `diag_screenshot.mjs` still uses one fixed profile.
 
 ## Approved, to schedule (2026-10-11)
 
