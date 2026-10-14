@@ -34,11 +34,17 @@ research, the tooling choice and the verification record are in
   ALLOWED_LICENSES only after he decides). After adding or upgrading a
   dependency, build once before pushing.
 - CREDITS. Hand-written entries live in `CREDITS` (credits.ts): courtesy
-  credits for techniques the code borrows (Quilez, PCG2D, Jimenez, Perlin,
-  the tune) and the notices a license makes us ship (V8's, Hershey's:
+  credits for techniques the code borrows (Quilez, Jimenez, Perlin, the
+  tune) and the notices a license makes us ship (V8's, Hershey's:
   `notice` holds the text, `noticeSource` the URL it was copied from, which
   the page shows under it). A new borrowed technique, tune, asset or ported
   algorithm gets its entry in the commit that adds it.
+- PCG2D IS GONE (K154, Levi 2026-10-14: "swap in our own"; the other calls
+  were to keep the Perlin and Scarborough Fair credits and to credit no
+  other technique). The backgrounds' integer hash is `src/render/hash2d.ts`,
+  designed here (see render.md), so nothing about it is credited. test/notices
+  fails if the page names PCG, Jarzynski or Olano again; a hash taken from a
+  paper or a library needs its credit back in the commit that takes it.
 - V8 (hypot2). `hypot2` in `src/util/det_math.ts` (K108) follows V8's
   FastMathHypot (`src/builtins/math.tq`) step for step. It is V8's
   algorithm re-written from exact operations, not V8's text, but it

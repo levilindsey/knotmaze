@@ -5,12 +5,13 @@
 //     layer of the main canvas, dithered;
 //   - the FOG BACKDROP: the fog of war, drawn as the same background (see
 //     background.ts) with the fog canvas as its coverage.
-// All effects are noise built from one integer hash (PCG2D, Jarzynski and
-// Olano 2020) - no sin() hashes, so the patterns hold at any coordinate.
+// All effects are noise built from one integer hash of our own (hash2d.ts,
+// K154) - no sin() hashes, so the patterns hold at any coordinate.
 // Every effect returns the design's INK plus a small, intensity-scaled
 // share of its accents: dark, low-contrast, the threads' own colors.
 
 import { readsDetail } from "./background_model";
+import { HASH2D_GLSL } from "./hash2d";
 import type { BackgroundId } from "./background_model";
 
 // Uniforms every effect reads (one shared UniformGroup, background.ts):
@@ -37,23 +38,13 @@ uniform vec4 uA3;
 // Hashes and noise. gnoise: gradient (Perlin) noise, about [-0.7, 0.7];
 // fbm: rotated octaves (each x2 frequency, half amplitude).
 const NOISE_GLSL = /* glsl */ `
-uvec2 pcg2d(uvec2 v) {
-  v = v * 1664525u + 1013904223u;
-  v.x += v.y * 1664525u;
-  v.y += v.x * 1664525u;
-  v = v ^ (v >> 16u);
-  v.x += v.y * 1664525u;
-  v.y += v.x * 1664525u;
-  v = v ^ (v >> 16u);
-  return v;
-}
-vec2 rnd2(ivec2 c) {
-  return vec2(pcg2d(uvec2(c))) * (1.0 / 4294967296.0);
+${HASH2D_GLSL}vec2 rnd2(ivec2 c) {
+  return vec2(hash2d(uvec2(c))) * (1.0 / 4294967296.0);
 }
 // Triangular-PDF noise in (-1, 1) per pixel: +-1 LSB dither hides 8-bit
 // banding in dark, slow gradients.
 float tpdf(vec2 fc) {
-  uvec2 h = pcg2d(uvec2(ivec2(fc)) + uvec2(40503u, 9137u));
+  uvec2 h = hash2d(uvec2(ivec2(fc)) + uvec2(40503u, 9137u));
   return (float(h.x >> 8u) + float(h.y >> 8u)) * (1.0 / 16777216.0) - 1.0;
 }
 float gnoise(vec2 p) {
@@ -82,7 +73,7 @@ float fbm(vec2 p, int oct) {
 `;
 
 // Interleaved gradient noise (Jimenez 2014) in [0, 1): a three-multiply
-// dither for the FULL-resolution passes (blit, fog) - the PCG hash cost
+// dither for the FULL-resolution passes (blit, fog) - an integer hash cost
 // 0.06 ms a frame there at 3200x1800. The blit and the fog backdrop must
 // share it exactly: fully fogged pixels are then the background's pixels.
 const IGN_GLSL = /* glsl */ `

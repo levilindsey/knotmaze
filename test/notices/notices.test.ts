@@ -444,8 +444,12 @@ describe("the page", () => {
 
   it("shows the shipped credits, with the sources the code comments cite", () => {
     const html = renderPage({ ...base, packages: [], credits: CREDITS.filter((c) => c.shipped) });
-    for (const who of ["Inigo Quilez", "Jarzynski", "Olano", "Jimenez", "Perlin", "The V8 project authors"]) {
+    for (const who of ["Inigo Quilez", "Jimenez", "Perlin", "The V8 project authors"]) {
       expect(html, who).toContain(who);
+    }
+    // K154: the backgrounds' hash is our own now; PCG2D's credit is gone.
+    for (const gone of ["Jarzynski", "Olano", "PCG"]) {
+      expect(html, gone).not.toContain(gone);
     }
     expect(html).not.toContain("Hershey");
   });

@@ -165,10 +165,10 @@ export interface Credit {
 }
 
 // Courtesy credits owe the authors a mention rather than a license: the
-// shaders use published techniques (a warp of a warp, an integer hash of a
-// few lines, a three-multiply expression, a fade curve), not anyone's files.
-// (The PCG2D paper is CC BY-ND 3.0 as a document; its supplement lists the
-// hash as code.) Each entry names the source the code comments cite. Order
+// shaders use published techniques (a warp of a warp, a three-multiply
+// expression, a fade curve), not anyone's files. (The backgrounds' integer
+// hash was PCG2D until K154, 2026-10-14; it is our own now, hash2d.ts, so it
+// has no entry.) Each entry names the source the code comments cite. Order
 // is the page's order. The entries that carry a `notice` (V8's, Hershey's)
 // are different: their licenses require the text to travel with what we
 // took, so the text is the project's own and goes last.
@@ -179,14 +179,6 @@ export const CREDITS: readonly Credit[] = [
     by: "Inigo Quilez",
     note: "The mist background feeds noise through more noise, the technique of his article on warping.",
     url: "https://iquilezles.org/articles/warp/",
-    shipped: true,
-  },
-  {
-    id: "pcg2d-hash",
-    title: "PCG2D hash",
-    by: "Mark Jarzynski and Marc Olano",
-    note: "The background effects' noise is built on this integer hash, from “Hash Functions for GPU Rendering” (Journal of Computer Graphics Techniques 9(3), 2020), which builds on Melissa O'Neill's PCG generators.",
-    url: "https://jcgt.org/published/0009/03/02/",
     shipped: true,
   },
   {
