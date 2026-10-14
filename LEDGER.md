@@ -92,60 +92,25 @@ and never reused.
   --accept-visibility-change-consequences` (reversible; hides the code,
   history, docs and this ledger from then on, not copies already made;
   the Pages deploy keeps working).
+- **K161** · Disk: C: had 24.4 GB free (2026-10-13 about 19:30, before
+  K81's 1.6 GB probe copy). `$env:TEMP` holds 1145 `knotmaze-*` Chrome
+  profiles (about 36.5 GB) that probe runs never delete; the worktrees
+  take 3.8 GB and the probes 2.7 GB. Proposed: delete the profiles older
+  than a day, sweep the stale worktrees, and have the probe libraries
+  delete their profile on exit (with K150). Waits for Levi's OK.
+- **K162** · K147's calls (`docs/design/K147.md`): (1) the trade: the
+  first settle now plays in slow motion (first sleep 11.6 -> 21 s; at 4x
+  CPU throttle 40 -> about 100 s) for a smooth intro (p95 159 -> 31 ms;
+  719 -> 159 ms at 4x) with the knot on screen at 2.6 s instead of 4.3 s;
+  (2) the defaults, `settleBudget` 12 ms and `loadSettle` 0.45 s (its max,
+  5, settles first); (3) whether both stay daily-exempt; (4) whether drags
+  at gs 18 get a budget too (165-170 ms frames, sim/wall 0.6).
+- **K169** · K127's full web turns gold in one frame, with no fade. A
+  polish call: keep it or fade it in (`docs/design/K81.md`, "Stage 3d
+  results").
 
 ## In progress
 
-- **K81** · The traveled highlight at junctions: a smooth gold arc from
-  the arrival arm to the departure arm instead of the angular blend's
-  flat nub (Levi's screenshot in `.claude/probes/K81/`). K75 is merged
-  (same paint code): pulses now brighten the thread's own paint, and
-  `PulseArm.onPath` is gone.
-  - owner: nobody since 2026-10-13 18:06; the coordinator (session
-    d8031183) merges it after K79 B and K122. Its phone gate (master
-    cd5b123 vs 3d88820) stopped twice: at 17:04 a home swipe
-    (`phone/*_trip.*`), and the retry at 18:05, when the power button was
-    pressed (a KEY_POWER press in `phone/getevent.out`, no touches) and
-    the screen dozed. The retry got rep 0 and half of rep 1
-    (`phone/gate.out.txt`, `bench_g1.jsonl`): both builds asleep at about
-    60 fps, p95 16.8 ms at 0, 10 and 21 moves; the "render" column 20-29
-    ms on master and 24-31 ms on the branch, too few samples to read.
-    Under K152 (1) it merges on its desktop results, and the round's phone
-    pass takes over its frame check and looks. Stage 3d (K127,
-    a4e2e9ab9650bd95b, Opus, 14:20-16:55) built the gold fill: in 20
-    same-state cases only full webs change, a full web matches master
-    outside its bands (0 px in 10 of 11), the GPU matches the CPU mirror
-    (max 0), and the fan cost is unmeasurable (within 0.011 ms). Stage 3c
-    timed K81's fan: +0.055 ms floor, +0.34 ms (about 9%) at 15-20 moves.
-  - branch: `worktree-agent-a8c2a999e6c2d5a8e`
-    (`.claude/worktrees/agent-a8c2a999e6c2d5a8e`), rebased on cd5b123;
-    last commit: 2556294 (the code is ae7919e, titled WIP but complete;
-    the gate's build is 3d88820), unpushed.
-  - evidence: `.claude/probes/K81/` in its worktree, untracked: 3d's
-    `results/3d/` (`sheet_3d.png`) and `results/gpu/3d_*`, 3c's
-    `results/gpu/3c_*`, the scripts (`k81d_ab.mjs`, `attr_inband.mjs`,
-    `sum_3d.mjs`, `sheet_3d.mjs`, `gpu_k81d.ps1`, `census_k81.mjs`,
-    `k81_ab.mjs`, `k81lib.mjs`, `gpu_k81.ps1`), the builds, and the gate
-    kit with `results.md` and `run_gate.log` in `phone/`. Copy at merge.
-  - next: rebase onto master after K79 B and K122 land (no shared
-    render files; reword
-    ae7919e's title), re-run tsc and the tests, and merge. File at merge:
-    3b's residuals (among them, the pluck overlay draws over the band);
-    the +0.055 ms floor and the deferred early-out and strip trim; the
-    untested ranges (more than 20 routed records, zoomed in); and 3d's:
-    the gate walks the cheapest route, so a full web is certified on the
-    desktop only and was never timed; a web turns full in one frame with
-    no fade (a polish call for Levi); at j62, where two routes share an
-    arm, K81's band shade differs from master by up to 19 (by design).
-  - brief: `docs/design/K81.md` ("Stage 3d results", "Probes and
-    commands").
-  - env: the gate starts and stops its own servers (5312/5313) and
-    tunnels; the other builds are in `.claude/probes/K81/build-*`.
-- **K127** · Fill a web with gold when every arm is traveled (K81's
-  decision 4; Levi, 2026-10-13: "Your recommendation seems right."): at
-  a joint passed twice whose arms are all gold, the slivers of untraveled
-  material between the two route bands turn gold, as before K81. Built in
-  K81's stage 3d (ae7919e, on K81's branch); it closes with K81's merge,
-  and the handle is K81's.
 - **K90** · A physical minimum bend radius, stage 1 (Levi, 2026-10-13:
   "ideally we'd have a more physics-based constraint to prevent loops
   from becoming too tight in the first place"). No thread folds tighter
@@ -252,55 +217,6 @@ and never reused.
     one bridge, would make deeper traps: a later K74 param, settled with
     K80's brief.
   - brief: `docs/design/K74.md` ("Stages", "Stage 1 handoff").
-- **K147** · A smooth intro on load (Levi, 2026-10-13 about 16:15,
-  verbatim in `docs/design/levi_notes_2026-10-13.md`: "Should we show a
-  loading indicator during the initial physics simulation...?"). The
-  stepper keeps physics on real time, so once a substep costs near its
-  1/120 s of wall time, each slow frame asks for more substeps on the
-  next, and the intro collapses toward the cap until the knot first
-  sleeps (about 5 fps for 14 s at gs 18). The interim before K7's worker
-  (it reopens K28's "wait for the worker"): a per-frame physics budget
-  while the load settle lasts, and the hidden pre-sim on the chunked
-  loader with a cap. Both are params, so Levi's full settle-first is one
-  setting away (the cap at its max), for him to compare.
-  - owner: the agent `a9fb11cb562c6302d` (Opus) of session d8031183,
-    since 2026-10-13 16:49.
-  - branch: `worktree-agent-a9fb11cb562c6302d`, worktree
-    `.claude/worktrees/agent-a9fb11cb562c6302d` (from 319a734); last
-    commit: none yet.
-  - evidence: `.claude/probes/K147/` in its worktree (untracked).
-  - next: the stage, then the coordinator's review, the merge and a
-    phone check.
-  - brief: `docs/design/K147.md`.
-- **K122** · Third-party license notices (K117): the build emits
-  `licenses.html` ("Credits and licenses") from the packages the bundle
-  really contains (8 today: pixi.js, tweakpane, @pixi/colord,
-  simplex-noise, earcut, eventemitter3, ismobilejs, parse-svg-path), and
-  the panel's credit line links to it ("Licenses"). The build and
-  `npm test` fail on a package with no license text or outside
-  `ALLOWED_LICENSES`. Hand-written credits (Quilez, PCG2D, Jimenez,
-  Perlin, Scarborough Fair, and V8's BSD notice for `hypot2`) live in
-  `notices/credits.ts`; Levi's calls on them are K154.
-  - owner: the coordinator (session d8031183), merging after K79 B. The
-    merge prep (a631918f89584e038, sonnet, 51 min, 231k tokens) rebased
-    with no conflicts, added V8's notice (credit `v8-math-hypot`, a new
-    `Credit.noticeSource` line) and kept CLAUDE.md to the structure
-    tree; 443 tests, the build and both tsc runs green at the tip's tree.
-  - branch: `worktree-agent-ac1153fc159e1cee4`
-    (`.claude/worktrees/agent-ac1153fc159e1cee4`), on 5f5c602; last
-    commit: 8023e2b, unpushed.
-  - evidence: `.claude/probes/K122/` in its worktree, untracked
-    (`research_notes.md`, the fetched terms, `verify.mjs`, `shots/`,
-    `v8/`, `v8_check.mjs`, `final_verify.ps1`); copy it to the main
-    checkout before removing the worktree. Tracked: "Stage 1 results"
-    and "Merge round" in `docs/design/K122.md`,
-    `.claude/rules/notices.md`, `test/notices/`.
-  - next: rebase onto master (K79 B landed in 58b77cf), `npm test`,
-    fast-forward and push. After the deploy, check
-    https://levi.dev/knotmaze/licenses.html (a 308 to
-    `/knotmaze/licenses`, then 200) and the panel link; look at the V8
-    credit in the round's phone pass (K152).
-  - brief: `docs/design/K122.md`.
 - **K80** · The minotaur, decided (Levi, 2026-10-13 14:31, verbatim in
   `docs/design/levi_notes_2026-10-13.md`; design
   `docs/design/K80_gameplay_additions.md` section 0, 17b729b). The
@@ -322,17 +238,23 @@ and never reused.
   rather a dedicated mode itself. Do implement it."); the turn-aligned
   hunter stays a modifier of the normal maze, later.
   - owner: agent a9c90f15cd6a55710 (opus) of session d8031183, since
-    2026-10-13 about 18:01: stage 1, the real-time mode.
+    2026-10-13 about 18:01: stage 1, the real-time mode. Idle since
+    19:14, waiting for its helper ac1d0982c3528d0fa (wiring the chase
+    into the page). Its last note: the harness recommends approachPace 7,
+    not 8; the entrance catches come from the minotaur standing at the
+    sanctuary door where it lost the player.
   - branch: `worktree-agent-a9c90f15cd6a55710`
     (`.claude/worktrees/agent-a9c90f15cd6a55710`), from cf8f9d4; last
-    commit: none yet.
+    commit: 1698bf4 (WIP), unpushed.
   - evidence: its worktree's `.claude/probes/K80/rt/` (untracked); the
     research's `.claude/probes/K80/` in the main checkout (doc section 7
     reruns it) and its kept worktree
     `.claude/worktrees/agent-a25726c24f262b138`.
-  - next: the stage-1 report (the defaults' simulation table, a playable
-    link), then Levi plays it. The turn-aligned hunter comes later (item
-    11 of the order).
+  - next: when the helper reports, resume the agent: rebase onto master
+    with its codec appends after index 83 (K79 B took 72-81, K147 82-83),
+    set the defaults, run the browser probes; then the stage-1 report
+    (the defaults' simulation table, a playable link), and Levi plays it.
+    The turn-aligned hunter comes later (item 11 of the order).
   - brief: `docs/design/K80_realtime.md`; the research brief
     `docs/design/K80.md` and its doc
     `docs/design/K80_gameplay_additions.md`.
@@ -341,21 +263,28 @@ and never reused.
   interleaved through a frame bench (knot, fabric at 0, 10 and 21 moves,
   and a load scenario for K147), then looks from a JSON list, into a
   summary table and screenshot sheets.
-  - owner: agent a9d4c7cb7500cb055 (sonnet) of session d8031183, since
-    2026-10-13 18:39: stage 2 builds the pass from the brief's "Stage 1
-    handoff", runs the A/A smoke test on the phone (Levi, about 18:20:
-    the phone is back) and drafts tonight's looks. Stage 1
-    (a643f74a71764b250) stopped at its token line after
-    `preview.ps1 -Root/-BuildOnly` and the handoff (1f8be97).
-  - branch: `worktree-agent-a9d4c7cb7500cb055`
-    (`.claude/worktrees/agent-a9d4c7cb7500cb055`), from 1f8be97; last
-    commit: none yet.
-  - evidence: its worktree's `.claude/probes/rounds/` (untracked); K81's
-    kit in K81's worktree (`.claude/probes/K81/phone/`); the A/A noise
-    floor goes to a tracked `scripts/phone_pass/noise.json`.
-  - next: read the A/A report, merge the kit, then run tonight's pass
-    once K79 B, K122 and K81 land (K147 if it is ready).
-  - brief: `docs/design/K156.md`.
+  - owner: agents a262df65dcc1489a7 (3a: `cleanup.mjs`, `watchdog.ps1`,
+    `retry_quiet.ps1`, `phone_pass.ps1` with `-Dry`) and
+    a957f7f1407f5df9f (3b: `looks.mjs`, `sheet.mjs`, `summary.mjs`, the
+    PROBE LORE entry, tonight's looks), both sonnet, of session d8031183,
+    since 2026-10-13 about 19:50; desktop dry checks only. Stage 2
+    (a9d4c7cb7500cb055) stopped at its token line with 4 of 14 files; the
+    scripts/** lore costs about 25k tokens, so stage 3 budgets for it.
+  - branch: stage 2's `worktree-agent-a9d4c7cb7500cb055` at 579e00e (the
+    stage 3 plan); 3a and 3b each on their own `worktree-agent-<id>`
+    branch from 579e00e; last commit: cae89a6 (3b, WIP), unpushed.
+  - evidence: tonight's looks file in the main checkout,
+    `.claude/probes/rounds/2026-10-13/looks.json`; K81's kit in K81's
+    kept worktree (`.claude/probes/K81/phone/`); the A/A noise floor goes
+    to a tracked `scripts/phone_pass/noise.json` (one A/A run is a crude
+    floor).
+  - next: rebase 3b onto 3a and merge both; then 3c (sonnet) on the
+    phone: the A/A smoke test, fixes, `noise.json`. Then the round pass,
+    `scripts/phone_pass.ps1 -Base ab6d330 -Head master -Reps 3 -Looks
+    .claude/probes/rounds/2026-10-13/looks.json` (ab6d330 is master
+    before K79 B). First check the phone's state and the network (at
+    21:15 the desktop's pings to the router dropped 4 of 6).
+  - brief: `docs/design/K156.md` ("Stage 3 plan").
 
 ## Next, in order
 
@@ -370,7 +299,7 @@ links or dailies (Levi, 2026-10-13 13:17; CLAUDE.md "Pre-launch: no
 back-compat"), so codec appends no longer wait for each other: the
 second branch to merge renumbers its appends. Usage: don't hold agents
 back until the week nears 90% (Levi, 2026-10-13 07:40; 42% at 07:17,
-54% at 13:35, 57% at 15:33, 61% at 17:48; at 13:40 he said keep going at full speed; it resets
+54% at 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15; at 13:40 he said keep going at full speed; it resets
 Mondays at 12:00). Long work runs in stages from committed briefs (Levi,
 2026-10-13; the coordinator oversees it): each brief names its stage
 boundary, where the agent writes a "Stage N handoff" into the brief,
@@ -378,12 +307,12 @@ commits and stops, and a fresh agent continues from it. K81 alone was
 about a third of the overnight spend.
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
-13:30, 14:31-14:39 and 15:30-15:40 (he may reorder). Running at 18:51:
-K104 stage 1b, K147 and K80 stage 1 (code); K156's phone pass kit (tooling, with an A/A smoke
-test on the phone). Then, as code slots free up:
-1. K122's merge (it rebases over K79 B, merged in 58b77cf), then K81's (its
-   gate stopped twice; the round's phone pass covers it), then the
-   round's phone pass (K156).
+13:30, 14:31-14:39 and 15:30-15:40 (he may reorder). Running at 21:26:
+K104 stage 1b and K80 stage 1 (code); K156 stages 3a and 3b (the phone
+pass kit, tooling). Then, as code slots free up:
+1. The round's phone pass (K156: 3a and 3b merge, then 3c's A/A smoke
+   test on the phone, then the pass), for K79 B, K122, K147 and K81, all
+   merged by 3c8433a.
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 running.
 3. K140, the finish confetti, with K155's star rating (the same finish
@@ -393,16 +322,13 @@ test on the phone). Then, as code slots free up:
 4. K120 (no codec).
 5. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
    then option 3 (the spline fix) first.
-6. K132, after K79 stage B merges.
-7. K100, then K93 with K145 (the same hover code), after K81 merges
-   (the same renderer file).
-8. K92, then K111, after K79 stage B merges (both rework the panel);
-   K111's pulse highlight modes after K81 too.
-9. K98, after K79 stage B and K81.
-10. K76 stage 2, after K81.
-11. K80's turn-aligned hunter, a modifier of the normal maze, after K79
-    stage B and K81 merge (the panel and the renderer); then K137's
-    toggles, K138's M mechanisms and K139.
+6. K132.
+7. K100, then K93 with K145 (the same hover code).
+8. K92, then K111 (both rework the panel).
+9. K98.
+10. K76 stage 2.
+11. K80's turn-aligned hunter, a modifier of the normal maze; then
+    K137's toggles, K138's M mechanisms and K139.
 12. K74 stages 2-4, each after the one before.
 13. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
     K42. K90's spline fix touches K8: never run the two at once.
@@ -434,7 +360,8 @@ K5-K7 (split, frame loop, worker) follow.
   thresholds from simulated solvers (K74's greedy solver's median is
   3.12x the shortest route); K80's mode rates its catches; shown on the
   win banner and in the daily stats, explained on tap (phones have no
-  hover). Open: stars in the daily share text (K20). With K140 (the same
+  hover), and in the daily share text (K20; Levi, 2026-10-13 about 21:15:
+  "Stars appearing in the share text makes sense."). With K140 (the same
   finish screen).
 - **K146** · Past dailies, playable without credit (Levi, 2026-10-13
   about 16:15: "There should be some way to play previous dailys, but not
@@ -797,7 +724,7 @@ K5-K7 (split, frame loop, worker) follow.
   row's first value: after a link with an off-grid value, "Reset to
   defaults" can write a wrong default (e.g. intensity 0.48). Existing
   behavior (`src/ui/tweakpane_panel.ts`), found by K79 stage B1,
-  2026-10-13.
+  2026-10-13. K147's `settleBudget` and `loadSettle` rows are stepped too.
 - **K131** · The phone probe kit (`.claude/probes/K79/phone/`,
   untracked): `drift.mjs` and `frames.mjs` take full-size PNG shots,
   10-25 s each over Tailscale (frames took 10 min, drift 8; "10 s"
@@ -993,6 +920,32 @@ K5-K7 (split, frame loop, worker) follow.
 - **K159** · K79's probe residuals: the `__knotSetBackgroundParams`
   hook doesn't sanitize its input; B2's sheet script has a first-frame
   wobble; B3's mist A/B got 1 rep of 3. (`.claude/probes/K79/`)
+- **K163** · A first-frame hitch after load: two long tasks of about
+  1.6 s, likely shader compilation; compile behind the loader instead.
+  Found by K147 (`docs/design/K147.md`).
+- **K164** · At 4x CPU throttle, rendering alone costs about 76 ms a
+  frame, so the intro stays slow there whatever physics does. Found by
+  K147 (`docs/design/K147.md`).
+- **K165** · Two pre-existing loader bugs: `loadingTick` overwrites the
+  HALTED stamp with " | loading", and the physics-off loader's
+  `loadWall0` counts hidden-tab time. Found by K147.
+- **K166** · K81's render residuals (`docs/design/K81.md`, "Residuals
+  to report"): the pluck overlay draws over the gold band; band edge
+  cases (a ribbon patch past a non-route arm's cover cap, a fixed-width
+  band on a ribbon whose width varies, clipping at non-adjacent routes
+  and skipped wedges, caps dropped past MAX_ROUTES and MAX_ARMS); and at
+  a tap, setPaint runs a frame ahead of tickPaint.
+- **K167** · K81's fan costs a +0.055 ms floor (+0.34 ms, about 9%, at
+  15-20 moves); the early-out and the strip trim were deferred
+  (`docs/design/K81.md`).
+- **K168** · K81's untested ranges: more than 20 routed records,
+  zoomed in, and a full web on the phone (the gate walks the cheapest
+  route, so a full web was certified on the desktop only and never
+  timed). The round's looks can cover some (K156).
+- **K170** · `scripts/phone.ps1` sends KEYCODE_WAKEUP, against the
+  phone rule (no key events; the phone stays awake on its charger).
+  Proposed: no wake by default, a `-Wake` switch to opt in. (K156's
+  `retry_quiet.ps1` drops its copy of the block.)
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1137,6 +1090,49 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 (items move here with the commit that resolved them)
+
+- **K81** · The traveled highlight at junctions: a smooth gold arc from
+  the arrival arm to the departure arm instead of the angular blend's flat
+  nub (`src/render/junction_routes.ts`), and K127's fully traveled web.
+  Checks: same-state A/Bs (only full webs change; a full web matches
+  master outside its bands, 0 px in 10 of 11), the GPU against its CPU
+  mirror (max 0), the fan's cost (+0.055 ms floor, +0.34 ms or about 9%
+  at 15-20 moves), and 504 tests on master. Its phone gate stopped twice
+  (a home swipe, then a power-button press); the round's phone pass
+  (K156) takes over its frame check and looks. At j62, where two routes
+  share an arm, the band's shade differs from master by up to 19, by
+  design. Record: `docs/design/K81.md`; probes in `.claude/probes/K81/`.
+  Residuals K166-K168, Levi's call K169. Done in 3c8433a (2026-10-13).
+- **K127** · Fill a web with gold when every arm is traveled (K81's
+  decision 4): built in K81's stage 3d. Done in 5d3170d (2026-10-13), with
+  K81 (3c8433a).
+- **K147** · A smooth intro on load. The first settle's catch-up spiral
+  (each slow frame asked for more substeps on the next) is gone: a
+  per-frame physics budget (`src/physics/settle_budget.ts`) holds from
+  the first visible frame to the first sleep, and the hidden pre-settle
+  runs in chunks behind the loader. Params `settleBudget` (`stb`, 12 ms,
+  0 = off) and `loadSettle` (`lds`, 0.45 s; its max, 5, settles first),
+  codec v4 indices 82-83, daily-exempt; `VisibleClock` caps; the
+  `window.__knotSettle()` hook. On the desktop: intro p95 159 -> 31 ms
+  (719 -> 159 ms at 4x CPU throttle), the knot on screen at 2.6 s instead
+  of 4.3 s, and the first sleep later (11.6 -> 21 s; at 4x, 40 -> about
+  100 s). Fixed in passing: `root.visible` after an interrupted
+  physics-off load. Its phone probe (`phone_k147.mjs`) was written, not
+  run; the round pass's load scenario covers it (K156). Levi's calls
+  K162; residuals K163-K165; its two stepped panel rows join K130.
+  Record: `docs/design/K147.md`; probes in `.claude/probes/K147/`. Done in
+  97293e7 (2026-10-13).
+- **K122** · Third-party license notices (K117): the build emits
+  `licenses.html` ("Credits and licenses") from the packages the bundle
+  really contains, the panel's credit line links to it ("Licenses"), and
+  the build and `npm test` fail on a package with no license text or
+  outside `ALLOWED_LICENSES`. Hand-written credits, V8's BSD notice for
+  `hypot2` among them, live in `notices/credits.ts`; Levi's calls on them
+  are K154. Live: https://levi.dev/knotmaze/licenses.html redirects (308)
+  to `/knotmaze/licenses` (200, with the V8 credit). The panel link and
+  the page get a look in the round's phone pass (K156). Record:
+  `docs/design/K122.md`, `.claude/rules/notices.md`; probes in
+  `.claude/probes/K122/`. Done in f0ef0e4 (2026-10-13).
 
 - **K79** · Backgrounds: speed, params, colors, Motion. Stage A
   (9ffda8a, 2026-10-13 07:15): `backgroundSpeed` (codec v4 index 70,
