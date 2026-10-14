@@ -41,7 +41,7 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(String(e.message).slice(0, 200)));
 const png = (opts = {}) => page.screenshot({ type: "png", captureBeyondViewport: false, ...opts });
 const boxes = {}; // "look/shot" -> junction boxes chosen on the head build
-const report = { looksFile, started: new Date().toISOString(), looks: [], errors };
+const report = { looksFile, started: new Date().toISOString(), viewport: await page.evaluate(() => [window.innerWidth, window.innerHeight, +window.devicePixelRatio.toFixed(3)]), looks: [], errors };
 
 async function checkNeeds(needs = []) {
   for (const n of needs) {
