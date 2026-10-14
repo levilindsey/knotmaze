@@ -327,3 +327,10 @@ Filed (2026-10-13): K152's (1) approved; (2) and (3) still open.
 Let's give a star rating (1 through 3 or 5 or something) based for the run. This can be calculated on time, backtracking, and/or efficiency, and/or other game mode specific metrics. We should give a tooltip/phone-friendly description of where the stars come from. I suppose basing it off of efficiency alone might be the clearest for the default maze solve.
 
 Filed (2026-10-13): K155 in Next, with K140.
+
+### About 21:15 (K155, the share text)
+
+Stars appearing in the share text makes sense.
+
+(A reply to the coordinator's open question: stars in the daily share text.)
+Filed (2026-10-13): K155, the stars go in the share text.
