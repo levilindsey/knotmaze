@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
+import { notices } from "./notices/vite_plugin";
 
 // BUILD IDENTITY for the version readouts (src/build_info.ts): the
 // package.json version, the git short SHA ("+" = built with uncommitted
@@ -44,6 +45,8 @@ export default defineConfig({
   // resolve against whichever path the page loaded from). The dev server
   // still serves at /.
   base: "./",
+  // K122: emits licenses.html (third-party notices) from the bundled modules.
+  plugins: [notices()],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_SHA__: JSON.stringify(dirty ? `${sha}+` : sha),
