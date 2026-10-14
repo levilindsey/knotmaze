@@ -302,10 +302,16 @@ export function pinchCap(h: number, dS: number, foot: number, core: number): num
 // once at capEnd. Capping the lobe at its end nodes first and the sum there
 // again put the sum right at the cap, where softMin dips (up to h / 16), so
 // W lowered the swing near every unit end (sliver runs between junction
-// cores read 0.12 -> 0.03 CSS px). And W never lowers a station: where the
-// sum's cap would still undershoot lobeOnly, the lobe keeps its own swing
-// and W gives way there. out = [pk, f, g]: the station's swing, the lobe's
-// factor on lobeRaw and W's on w (so f lobeRaw + g w = pk).
+// cores read 0.12 -> 0.03 CSS px). And W never lowers the LOBE: its share
+// is never under lobeOnly, and W draws what the cap leaves above it, so
+// the drawn swing is at least the pre-K104 one at every instant (W only
+// widens [lo, hi]). Splitting the capped sum by its ratio let the lobe's
+// share fall under lobeOnly wherever the end cap held the sum, which
+// lowered the swing whenever W's time factor ran below the lobe's, and
+// switching to the lobe alone where the sum undershot stepped both shares
+// along the strip. out = [pk, f, g]: the station's swing, the lobe's
+// factor on lobeRaw and W's on w (f lobeRaw + g w = pk); both shares are
+// continuous in the inputs.
 export function throughStation(
   lobeRaw: number,
   lobeInt: number,
@@ -322,15 +328,13 @@ export function throughStation(
     pk = Math.max(0, Math.min(sum, softMin(sum, capEnd, 0.25 * h)));
     k = pk / sum;
   }
-  let f = lobeRaw > 1e-9 ? (k * lobeInt) / lobeRaw : 1;
-  if (lobeOnly > pk) {
-    pk = lobeOnly;
-    f = lobeRaw > 1e-9 ? lobeOnly / lobeRaw : 1;
-    k = 0;
-  }
+  // k lobeInt <= pk, so the lobe's share never exceeds the swing, and W's
+  // (pk - lobe) never exceeds k w (the min only absorbs rounding).
+  const lobe = Math.max(k * lobeInt, lobeOnly);
+  if (lobeOnly > pk) pk = lobeOnly;
   out[0] = pk;
-  out[1] = f;
-  out[2] = k;
+  out[1] = lobeRaw > 1e-9 ? lobe / lobeRaw : 1;
+  out[2] = w > 1e-9 ? Math.min(k, Math.max(0, pk - lobe) / w) : 0;
 }
 
 // THE SEAM: a closed chain's node arcs live in [0, total), so a unit that

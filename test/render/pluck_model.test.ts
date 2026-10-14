@@ -300,6 +300,9 @@ describe("whole-segment term (K104)", () => {
             expect(g).toBeGreaterThanOrEqual(0);
             expect(g).toBeLessThanOrEqual(1);
             expect(Math.abs(f * raw + g * w - pk)).toBeLessThan(1e-12);
+            // The lobe's own share never drops under the pre-K104 swing (W
+            // only widens the envelope, so no instant draws less).
+            if (raw > 1e-9) expect(f * raw).toBeGreaterThanOrEqual(lobeOnly - 1e-12);
             // W off, every node a unit end: exactly the pre-K104 swing.
             if (w === 0 && capInt === Infinity) expect(pk).toBe(lobeOnly);
             n++;
@@ -308,6 +311,20 @@ describe("whole-segment term (K104)", () => {
       }
     }
     expect(n).toBe(980);
+    // Along the strip the caps vary smoothly, and so must both shares: a
+    // station where the end cap holds the sum just under lobeOnly (capEnd
+    // ~0.12 here) once switched W off and the lobe up by k w (0.035) in
+    // one step.
+    let prev: number[] | null = null;
+    for (let capEnd = 0.1; capEnd <= 0.16; capEnd += 0.0005) {
+      throughStation(0.4, capped(0.4, 0.12), capped(0.4, Math.min(0.12, capEnd)), 0.05, capEnd, h, out);
+      const shares = [out[1] * 0.4, out[2] * 0.05];
+      if (prev) {
+        expect(Math.abs(shares[0] - prev[0])).toBeLessThan(2e-3);
+        expect(Math.abs(shares[1] - prev[1])).toBeLessThan(2e-3);
+      }
+      prev = shares;
+    }
     // The sliver run that showed it (a 1.26-world run between two junction
     // cores): capping the end-capped lobe again with W on top sat at the
     // cap, where softMin dips, and drew less than the lobe alone.
