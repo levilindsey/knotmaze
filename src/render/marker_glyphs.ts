@@ -455,7 +455,11 @@ const f = (v: number): string => {
 };
 
 // The glyph's marks as SVG elements in the DISC frame (viewBox -1 -1 2 2,
-// disc radius 1): white round-capped strokes, white dots. No disc.
+// disc radius 1): white round-capped strokes, white dots. No disc. The dots
+// say stroke="none": the off-screen indicators (K73, K148) draw the marks
+// inside a group that sets its own stroke, which a bare filled dot would
+// inherit (at the default width 1 in this frame: a blob the size of the
+// disc - the head's dot, the bull's eyes).
 export function markerGlyphSvgMarks(
   id: string,
   role: MarkerRole,
@@ -489,7 +493,7 @@ export function markerGlyphSvgMarks(
   return (
     `<g fill="none" stroke="${color}" stroke-width="${f(MARKER_STROKE)}" ` +
     `stroke-linecap="round" stroke-linejoin="round">${paths.join("")}${rings.join("")}</g>` +
-    (dots.length ? `<g fill="${color}">${dots.join("")}</g>` : "")
+    (dots.length ? `<g fill="${color}" stroke="none">${dots.join("")}</g>` : "")
   );
 }
 
