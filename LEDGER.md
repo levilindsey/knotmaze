@@ -84,8 +84,13 @@ and never reused.
   (same paint code): pulses now brighten the thread's own paint, and
   `PulseArm.onPath` is gone.
   - owner: the coordinator (session d8031183), running the phone gate
-    since 2026-10-13 16:59 (`phone/run_gate.ps1 -Phase all` in the
-    background: master cd5b123 vs 3d88820, about 40 min). Stage 3d (K127,
+    (master cd5b123 vs 3d88820). The first run (16:57) tripped the
+    watchdog at 17:04, after 4 samples: a home swipe on the phone (a
+    touch at the bottom edge, then the launcher in front); its outputs
+    are `phone/*_trip.*`. The one retry started at 17:41, when Levi said
+    the phone was ready (`run_gate.ps1 -Phase all` in the background,
+    about 40 min; `phone/retry_quiet.ps1` waits for 15 min without a
+    touch first, for a retry nobody announces). Stage 3d (K127,
     a4e2e9ab9650bd95b, Opus, 14:20-16:55) built the gold fill: in 20
     same-state cases only full webs change, a full web matches master
     outside its bands (0 px in 10 of 11), the GPU matches the CPU mirror
@@ -101,7 +106,8 @@ and never reused.
     `sum_3d.mjs`, `sheet_3d.mjs`, `gpu_k81d.ps1`, `census_k81.mjs`,
     `k81_ab.mjs`, `k81lib.mjs`, `gpu_k81.ps1`), the builds, and the gate
     kit with `results.md` and `run_gate.log` in `phone/`. Copy at merge.
-  - next: read the gate (`phone/results.md`, `run_gate.log`), then rebase
+  - next: read the gate (`phone/run_gate.log`, `summary_g1.txt`,
+    `gate.out.txt`, `looks.out.txt`, `frames/`), then rebase
     onto master after K79 B lands (no shared render files; reword
     ae7919e's title), re-run tsc and the tests, and merge. File at merge:
     3b's residuals (among them, the pluck overlay draws over the band);
@@ -283,28 +289,33 @@ and never reused.
   - next: the stage, then the coordinator's review, the merge and a
     phone check.
   - brief: `docs/design/K147.md`.
-- **K122** · Third-party license notices (K117): the bundle in
-  `dist/assets` carries PixiJS, Tweakpane, simplex-noise and their
-  dependencies with no license text (0 license comments), though their
-  MIT/ISC/BSD licenses require the notice with every copy. Levi, about
-  15:30: "Research how other apps handle this, and put-together a system
-  for including this in whichever way is most appropriate. Linking from
-  the credit line sgtm." Stage 1 researches it, then builds a notices
-  page generated at build time from the bundled modules, plus
-  hand-written credits (Quilez, PCG2D, Jimenez; the Hershey
-  acknowledgements, a condition of the font data, once K115 ships it),
-  linked from the panel's credit line, with a guard against an
-  unlicensed or unexpected package; it deletes the unused Vite icons.
-  No codec and no runtime change beyond the link, so no phone gate.
-  - owner: the stage 1 agent (ac1153fc159e1cee4, sonnet) of session
-    d8031183, launched 2026-10-13 about 15:52 in the research slot that
-    K115's dropped stage 1a freed.
+- **K122** · Third-party license notices (K117): the build emits
+  `licenses.html` ("Credits and licenses") from the packages the bundle
+  really contains (8 today: pixi.js, tweakpane, @pixi/colord,
+  simplex-noise, earcut, eventemitter3, ismobilejs, parse-svg-path), and
+  the panel's credit line links to it ("Licenses"). The build and
+  `npm test` fail on a package with no license text or outside
+  `ALLOWED_LICENSES`. Hand-written credits (Quilez, PCG2D, Jimenez,
+  Perlin, Scarborough Fair; V8's for `hypot2` in the merge prep) live in
+  `notices/credits.ts`; Levi may drop Perlin or Scarborough Fair (both
+  beyond the brief).
+  - owner: the merge-prep agent (a631918f89584e038, sonnet) of session
+    d8031183, since 2026-10-13 about 17:08: the rebase onto master, V8's
+    BSD-3-Clause notice for `hypot2` (`src/util/det_math.ts` ports V8's
+    steps; the coordinator's call), CLAUDE.md kept to structure lines.
+    Stage 1 (ac1153fc159e1cee4, sonnet, to about 17:00): 439 tests (39
+    new in `test/notices/`) and a phone-width browser check, 20 of 21.
   - branch: `worktree-agent-ac1153fc159e1cee4`
-    (`.claude/worktrees/agent-ac1153fc159e1cee4`), from dece464; last
-    commit: none yet.
-  - evidence: `.claude/probes/K122/` in its worktree (untracked).
-  - next: stage 1, then the coordinator's review of the page and the
-    merge.
+    (`.claude/worktrees/agent-ac1153fc159e1cee4`), on dece464; last
+    commit: 5d88d39, unpushed.
+  - evidence: `.claude/probes/K122/` in its worktree, untracked
+    (`research_notes.md`, the fetched terms, `verify.mjs`,
+    `shot_page.mjs`, `shots/`); tracked: "Stage 1 results" in
+    `docs/design/K122.md`, `.claude/rules/notices.md`, `test/notices/`.
+  - next: the merge-prep report, then the merge after K79 B's (rebase
+    again if needed). After the deploy, check
+    https://levi.dev/knotmaze/licenses.html (a 308 to
+    `/knotmaze/licenses`, then 200) and the panel link.
   - brief: `docs/design/K122.md`.
 
 ## Next, in order
@@ -674,6 +685,9 @@ K5-K7 (split, frame loop, worker) follow.
     `.claude/probes/K115/` (Hershey data and its license; SVG-proxy
     measurements, not the real renderer).
   - next: the builder's stage 1 brief, at its place in the order.
+  - K122: in the commit that adds the Hershey data, set `shipped: true`
+    on `hershey-fonts` in `notices/credits.ts` (a test fails while
+    `src/` or `public/` names Hershey and the flag is false).
 - **K116** · Alternate pluck instruments and accompaniment, lowest
   priority (Levi, 2026-10-13 13:30; his calls at 14:39 are verbatim in
   `docs/design/levi_notes_2026-10-13.md`; design
@@ -946,6 +960,10 @@ K5-K7 (split, frame loop, worker) follow.
   into fixed TEMP folders per commit (`src-<sha>`, `<sha>`), so two
   agents probing at once collide. Fix: per-run profiles and folders,
   off-screen windows (claude-config `rules/lessons.md`).
+  - 2026-10-13: the coordinator gave K122's and K147's briefs the same
+    port (5431); give each agent a disjoint port range. A probe that
+    releases and re-takes the perf lock between samples leaves gaps
+    another agent's builds can land in (K122 saw one in K81 3d's run).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -972,6 +990,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K36** · Add to home screen: a web app manifest and icons. Blocked on
   icon art (Levi has the prompt for another model). The same art fixes
   the `/favicon.ico` 404 on every load.
+  - K122 found the Vite template's leftovers: `public/favicon.svg` (the
+    Vite logo, shipped but never referenced), `public/icons.svg` and
+    `src/assets/hero.png` (unreferenced). Delete them, or wire up the
+    real favicon.
 - **K37** · Fog-of-war edge wobble: stronger, or a slider (Stage 25b wobbles
   about 14 screen px).
 - **K38** · Focus fade: softer, longer gap fades near the player's dot
@@ -1074,6 +1096,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   sentries (call 9's "validated sentries"), 4.22 two-player (M
   hot-seat, L networked), 4.25 over-under swap
   (`docs/design/K80_gameplay_additions.md`). The M ones are K138.
+- **K153** · Licenses page extras (K122's ideas): list the packages in
+  the dev server too (it shows a placeholder; the module graph has the
+  list), and a diffable `licenses.txt` beside the page.
 
 ## Done
 
