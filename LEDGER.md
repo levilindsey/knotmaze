@@ -252,11 +252,15 @@ and never reused.
     (`scripts/phone_pass/noise.json`, landscape, K193), defaults `-Moves
     0,7,13` and `-LoadSeconds 30`, clean-origin looks, and the round's
     new looks. Its worktree is kept.
-  - owner: claude session d8031183 (the coordinator): the round pass
-    runs in the background from 2026-10-14 01:53 (`phone_pass.ps1 -Base
-    ab6d330 -Head master -Reps 3 -Looks
-    .claude/probes/rounds/2026-10-13/looks.json -WaitReady 30`; head
-    81d31a5; about 40 min), in landscape (K193).
+  - the round pass of 2026-10-14 01:55-02:20 (base ab6d330, head
+    54a2b43 = 81d31a5's code; 3 reps, landscape, no watchdog trip):
+    every at-rest cell (fabric at 0, 7 and 13 moves, knot) is within
+    noise. Load: the longest frame fell 684 -> 167 ms (`?b.J`) and
+    667 -> 150 ms (`gs=18`); first sleep rose 8.0 -> 19.3 s and
+    9.3 -> 22.5 s, fps fell 46 -> 41 and 44 -> 35, p95 33 -> 50 ms, and
+    `gs=18`'s frames over 50 ms 48 -> 84 (K197). Looks: all 18 ran on
+    head (base lacks the new features).
+  - owner: claude session d8031183 (the coordinator).
   - branch: mainline (no code); last commit: `81d31a5` (K192's pin in
     `walk.mjs`).
   - evidence: the pass's folder `.claude/probes/rounds/2026-10-14-81d31a5/`
@@ -264,12 +268,11 @@ and never reused.
     `.claude/probes/rounds/pass-2026-10-14.log`; 3c's
     `.claude/probes/K156/3c/`; the round's looks
     `.claude/probes/rounds/2026-10-13/looks.json`.
-  - next: read the summary and the sheets and file the results here;
-    then sweep the 3a and 3b worktrees
+  - next: look over the sheets; sweep the 3a and 3b worktrees
     (`.claude/worktrees/agent-a262df65dcc1489a7`,
     `.claude/worktrees/agent-a957f7f1407f5df9f`) with
-    `.claude/probes/K161/cleanup.ps1`. If the pass stopped (a touch, a
-    lock), rerun it with `-WaitReady 30`.
+    `.claude/probes/K161/cleanup.ps1`; the next round's pass covers
+    K146, K151, K148, K149 and K120 (with K120's look `k120-pad`).
   - brief: `docs/design/K156.md` (the 3a, 3b and 3c handoffs).
 - **K161** · Disk: C: had 24.4 GB free (2026-10-13 about 19:30, before
   K81's 1.6 GB probe copy). `$env:TEMP` holds 1145 `knotmaze-*` Chrome
@@ -718,6 +721,14 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K197** · The phone's load settles later over ab6d330..54a2b43
+  (K156's round pass of 2026-10-14): first sleep 8.0 -> 19.3 s, and
+  over the first 30 s fps 46 -> 41 and p95 33 -> 50 ms, while the
+  longest frame fell 684 -> 167 ms. K147's settle budget (b0a1c49..97293e7)
+  is in the range and trades frame time for settle time (its own phone
+  measure: first sleep about 17.5 s); the likely cause, unconfirmed.
+  To attribute: the pass's frames phase with `-Base b0a1c49~1 -Head
+  97293e7`; then whether 19 s is acceptable is Levi's call.
 - **K190** · Unmeasured costs from K154+K169 (aaa3dda). The new hash
   costs the drifting backgrounds' programs 37-60% more on the desktop
   (vellum-drift 0.352 -> 0.50 ms a frame at 3200x1800; static vellum
@@ -1166,6 +1177,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
     attachments (82 records, 1.12M characters).
   - K156 3c and K154+K169 (Sonnet, 2026-10-14) reached 205k and 298k of
     context within 12 minutes, uncompacted (claude-config CC45).
+  - K180 (Opus, 2026-10-14): 9 compactions in its first 44 minutes.
+    Split after the 01:53 batch merges: its three agents all append to
+    `gameplay.md`.
 - **K179** · K80 ideas: reversing mid-run in the real-time mode; a
   roaming bias toward the player, so fewer games pass without meeting the
   minotaur (K174).
