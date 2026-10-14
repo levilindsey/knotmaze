@@ -38,6 +38,8 @@ import type {
   PulseArm,
   PaintCap,
 } from "./ribbon_renderer";
+import { legRoutes, pathLegs } from "./junction_routes";
+import type { PaintRoute } from "./junction_routes";
 import type { PathViz } from "../ui/url_state";
 import { FogBackdrop } from "./background";
 import { FOG_ARC_STEP, fogArcStations } from "./fog_arc";
@@ -238,6 +240,8 @@ interface TrailSeg {
 interface TrailPaint {
   spans: PaintSpan[];
   caps: PaintCap[];
+  // K81: the route bands of the joints the trail's paint still reaches.
+  routes: PaintRoute[];
 }
 
 export class FabricMazeRenderer {
@@ -1269,7 +1273,24 @@ export class FabricMazeRenderer {
       const p = pAt(dv);
       if (p > 0.01) addCaps(controller.pathVertices[i], p);
     }
-    return { spans, caps };
+    // K81: a band wears its arms' composed paint, so a joint's band fades
+    // with the trail by itself; keep the joints the trail still reaches.
+    const routes = legRoutes(
+      pathLegs(this.walk.edges, controller.pathVertices, controller.pathEdges, anim),
+      (dvr) => dvr < L && pAt(dvr) > 0.01
+    );
+    return { spans, caps, routes };
+  }
+
+  // K81: the route bands of the whole path (fullPath mode), the move in
+  // flight folded in (junction_routes.ts pathLegs).
+  private pathRoutes(
+    controller: FabricMazeController,
+    anim: MoveAnim | null
+  ): PaintRoute[] {
+    return legRoutes(
+      pathLegs(this.walk.edges, controller.pathVertices, controller.pathEdges, anim)
+    );
   }
 
   // Paint + markers for one animation frame: the stack minus the in-flight
@@ -1283,7 +1304,7 @@ export class FabricMazeRenderer {
     if (this.pathViz === "string") {
       // The yarn is the record: no gold spans or caps; pulses stay quiet
       // mid-move exactly like the other modes.
-      this.ribbons.setPaint([], [], []);
+      this.ribbons.setPaint([], [], [], []);
       this.drawMarkers(controller, a.e.chain, a.cur, false);
       this.drawYarn();
       this.renderFog();
@@ -1291,7 +1312,7 @@ export class FabricMazeRenderer {
     }
     if (this.trailMode) {
       const trail = this.buildTrail(controller, a);
-      this.ribbons.setPaint(trail.spans, [], trail.caps);
+      this.ribbons.setPaint(trail.spans, [], trail.caps, trail.routes);
       this.drawMarkers(controller, a.e.chain, a.cur, false);
       this.renderFog();
       return;
@@ -1307,7 +1328,12 @@ export class FabricMazeRenderer {
     if (hi - lo > 1e-6) {
       spans.push({ chain: a.e.chain, c0: lo, c1: hi });
     }
-    this.ribbons.setPaint(spans, [], this.buildCaps(controller));
+    this.ribbons.setPaint(
+      spans,
+      [],
+      this.buildCaps(controller),
+      this.pathRoutes(controller, a)
+    );
     this.drawMarkers(controller, a.e.chain, a.cur, false);
     this.renderFog();
   }
@@ -1342,6 +1368,12 @@ export class FabricMazeRenderer {
       : trail
         ? trail.caps
         : this.buildCaps(controller);
+    // K81 route bands: none in string mode (no gold to carry).
+    const routes = stringViz
+      ? []
+      : trail
+        ? trail.routes
+        : this.pathRoutes(controller, null);
 
     const pulses: PulseArm[] = [];
     if (!controller.solved) {
@@ -1367,7 +1399,7 @@ export class FabricMazeRenderer {
         }
       }
     }
-    this.ribbons.setPaint(spans, pulses, caps);
+    this.ribbons.setPaint(spans, pulses, caps, routes);
     // Reset path: the fog's explored memory starts over too.
     if (controller.pathEdges.length === 0 && this.fogStamps.length > 2) {
       this.fogStamps.length = 0;
