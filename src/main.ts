@@ -84,6 +84,8 @@ import {
   markerGlyphSvgFit,
   markerRadiusFor,
 } from "./render/marker_glyphs";
+import { ConfettiLayer } from "./render/confetti";
+import { confettiPlan, sprayUnit } from "./render/confetti_model";
 import { openDailyStats } from "./ui/daily_stats_view";
 import { shareOrCopy, showToast } from "./ui/share";
 import { buildPanel } from "./ui/tweakpane_panel";
@@ -423,6 +425,13 @@ async function main(): Promise<void> {
 
   const root = new Container();
   app.stage.addChild(root);
+
+  // K140 FINISH CONFETTI (render/confetti.ts): two particle layers over the
+  // world root - the world-space spray around the exit, then the
+  // screen-space rain on top. Render-only (never wakes the physics), no
+  // pointer events, and the win banner and HUD are DOM above the canvas.
+  const confetti = new ConfettiLayer();
+  app.stage.addChild(confetti.sprayContainer, confetti.rainContainer);
 
   let ps: ParticleSystem | null = null;
   let renderer: RibbonRenderer | null = null;
@@ -1185,6 +1194,8 @@ async function main(): Promise<void> {
     // to restore it into the new scene below.
     syncDaily();
     saveAttempt();
+    // K140: the old maze's finish is gone, and so is its confetti.
+    confetti.clear();
     renderer?.destroy();
     debug?.container.destroy({ children: true });
     fabric?.destroy();
@@ -1648,6 +1659,12 @@ async function main(): Promise<void> {
     // K80: the chase's tuning, live (the chase goes on).
     onChaseChange: () => {
       chase?.setParams(chaseParamsOf(params));
+      writeParams(params);
+    },
+    // K140: the finish confetti (render-only, live; off drops the pieces
+    // still in the air).
+    onConfettiChange: () => {
+      if (!params.confetti) confetti.clear();
       writeParams(params);
     },
     onPlayDaily: () => playDaily(todayNumber(), true),
@@ -2225,6 +2242,40 @@ async function main(): Promise<void> {
       rating,
     });
     updateHud();
+    throwConfetti();
+  };
+
+  // K140: a finish's confetti, with its banner (every finish: dailies, free
+  // play, replays, real time) - the rain over the screen and the spray
+  // around the exit marker, in units of the marker's radius with a CSS px
+  // floor (sprayUnit). Reduced motion keeps only a small, slow spray.
+  const throwConfetti = (): void => {
+    const plan = confettiPlan(
+      params.confetti,
+      params.confettiAmount,
+      motion.reduced
+    );
+    if (plan.rain === 0 && plan.spray === 0) return;
+    let cx = NaN;
+    let cy = NaN;
+    const v = exitVertex();
+    if (v && renderer) {
+      // Where fabric draws the exit marker: the renderer's own sample.
+      renderer.markerWorld(v.chain, v.ctrl, exitScratch);
+      cx = exitScratch[0];
+      cy = exitScratch[1];
+    }
+    const radius =
+      fabric?.markerRadius() ?? markerRadiusFor(params.threadWidth);
+    confetti.burst(
+      plan,
+      app.screen.width,
+      app.screen.height,
+      cx,
+      cy,
+      sprayUnit(radius, root.scale.x),
+      root
+    );
   };
 
   // K80 REAL-TIME MODE (params.clock "realtime", game/minotaur.ts). The
@@ -3116,6 +3167,8 @@ async function main(): Promise<void> {
     lastViewY = root.position.y;
     lastViewS = root.scale.x;
     if (moved || !ps || !renderer) return true;
+    // K140: confetti in the air (false again once its last piece is gone).
+    if (confetti.active) return true;
     if (physState === "loading" || physState === "settling" || !asleep) {
       return true;
     }
@@ -3129,14 +3182,21 @@ async function main(): Promise<void> {
     // wobble) animates continuously.
     return params.mazeFabric && fabric !== null;
   };
+  // The last frame's sceneAnimating() (probes read it; calling it again
+  // would move its view bookkeeping).
+  let sceneWasAnimating = false;
   const backgroundTick = (dt: number): void => {
     background.reducedMotion = motion.reduced;
-    background.tick(dt, sceneAnimating());
+    sceneWasAnimating = sceneAnimating();
+    background.tick(dt, sceneWasAnimating);
   };
 
   app.ticker.add((ticker) => {
     const c0 = performance.now();
     tick(ticker);
+    // K140: the confetti steps in every branch (asleep, paused, loading);
+    // a single early return once nothing is in the air.
+    confetti.tick(ticker.deltaMS / 1000, app.screen.height, root);
     // After the scene's frame (the background's render-texture pass, when
     // due, precedes the stage render either way).
     backgroundTick(ticker.deltaMS / 1000);
@@ -3834,6 +3894,23 @@ async function main(): Promise<void> {
   });
   (window as unknown as Record<string, unknown>).__knotBackgroundLayer = () =>
     background;
+  // K140 probes: the confetti's state (pieces alive, bursts thrown, frames
+  // stepped - frozen once idle - the plan a finish would throw, and the last
+  // frame's sceneAnimating()), and a finish's burst on demand.
+  (window as unknown as Record<string, unknown>).__knotConfetti = () => ({
+    active: confetti.active,
+    rain: confetti.sim.rain.alive,
+    spray: confetti.sim.spray.alive,
+    stats: { ...confetti.stats },
+    plan: confettiPlan(params.confetti, params.confettiAmount, motion.reduced),
+    sceneAnimating: sceneWasAnimating,
+    rainVisible: confetti.rainContainer.visible,
+    sprayVisible: confetti.sprayContainer.visible,
+  });
+  (window as unknown as Record<string, unknown>).__knotConfettiBurst = () => {
+    throwConfetti();
+    return confetti.active;
+  };
   (window as unknown as Record<string, unknown>).__knotSetBackground = (
     id: UrlParams["background"],
     intensity?: number,
