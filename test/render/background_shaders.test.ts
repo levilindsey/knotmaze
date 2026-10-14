@@ -14,21 +14,23 @@ import type { BackgroundId } from "../../src/render/background_model";
 const sha256 = (text: string): string =>
   createHash("sha256").update(text).digest("hex");
 
-// The shader sources of master 66ee658 (K21 + K79 stage A). At their
+// The shader sources of master 66ee658 (K21 + K79 stage A), re-pinned by
+// K154 (2026-10-14) for the effects' own integer hash (hash2d.ts replaced
+// PCG2D: the noise differs, the blit, the fog and the quad do not). At their
 // defaults every effect draws its K21 / stage-A program byte for byte:
 // the stage-B shape params switch an effect to its shaped `<id>-x`
 // program only when one of them leaves its default. A changed hash here
 // changes every default frame - take a same-state A/B against the
 // previous build (probes/K79 run_ab.ps1) before re-pinning it.
 const DEFAULT_PROGRAMS: Record<string, string> = {
-  vellum: "c12b86646beffc2d76a643bd1d84a63dd3e305ec7d5535063be5baea462b2ea8",
+  vellum: "b297f87cc67f9d21ca4d7d933c8fee5c0ba1c66a7a4bbd14c44df2ae81561a0b",
   "vellum-drift":
-    "71fdf3786a48c265b6e6376a97344eb13cf16d5dd5ca3fda7947db03a5470758",
-  mist: "db2b1f593b6eefad37ed7fe50105f8212902bdce8646483ff06648a7502c3f82",
-  wash: "0d0a2b232b5452a24a1109e7a4eae776c4b1e2c46d62bf346fd4f2f84d388894",
-  silk: "99ad5edaf5c096608933985a34193582b21ff71372ef5d1eab48cc002cb6e617",
-  aurora: "81c625bdaeb997f2c957827390a0b1ac4a73fbd6b31d3de6d38efd6e22d7786e",
-  contours: "6be77259776c50f8a5111ab806f2b4ae8dc3782e4b225f80ce76ca507cbcb08f",
+    "6a9213a17f803824aa93af3a0b0588179724430f12871cf40a7491ac870c6631",
+  mist: "b853589320cf4a59c8d432914bfb69d8eb608ad3bb447393b47c8d44b2997136",
+  wash: "b57fe2536128eec13048f61ac182c6d5074d08679a737dd478dda896dfef9fc2",
+  silk: "b0edde84bf825719122484e531d938734e720b1a81e04b5fe2d80ca11b4afd3f",
+  aurora: "b49f2bb5e1980d67530827183d241a8b84541c35a04bc9be41470f4d2294ccff",
+  contours: "b866eef661eedbe0d81f346aab6a125208a22b709a97c0d1b069deeb6fdcf956",
 };
 const SHARED_SOURCES: Record<string, [string, string]> = {
   QUAD_VERT: [
