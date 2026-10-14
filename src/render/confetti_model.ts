@@ -210,6 +210,8 @@ export function spawnSpray(
     const sn = Math.sin(a);
     const r0 = unit * (0.9 + 0.3 * rand());
     paper(d, o, unit * (0.34 + 0.22 * rand()), rand);
+    // Reduced motion has no flutter: show each piece's full face.
+    if (slow) d[o + FLIP] = 0;
     d[o + X] = cx + c * r0;
     d[o + Y] = cy + sn * r0;
     const sp = unit * (4 + rand() * 6.5) * pace;
@@ -221,8 +223,11 @@ export function spawnSpray(
       (SPRAY_LIFE_MIN + rand() * (SPRAY_LIFE_MAX - SPRAY_LIFE_MIN)) *
       (slow ? 0.8 : 1);
     d[o + TERM] = unit * 3.4 * pace;
-    d[o + SPIN] = slow ? 0 : (rand() - 0.5) * 14;
-    d[o + FLIP_RATE] = slow ? 0 : 6 + rand() * 8;
+    // Drawn either way, so a reduced burst is the same burst, slowed.
+    const spin = (rand() - 0.5) * 14;
+    const flipRate = 6 + rand() * 8;
+    d[o + SPIN] = slow ? 0 : spin;
+    d[o + FLIP_RATE] = slow ? 0 : flipRate;
     d[o + SWAY] = 0;
     d[o + SWAY_RATE] = 0;
     d[o + SWAY_AMP] = 0;
@@ -324,4 +329,57 @@ export function shadeHex(c: number, k: number): number {
   const g = Math.round(((c >> 8) & 255) * k);
   const b = Math.round((c & 255) * k);
   return (r << 16) | (g << 8) | b;
+}
+
+// The longest step the pieces take in one frame: after a stall (a hidden
+// tab's first frame back) they resume instead of jumping.
+export const CONFETTI_MAX_DT = 0.1;
+
+// Both effects' pools and their clock, with no pixi (render/confetti.ts
+// mirrors the pools into particles). `active` is the term main.ts's
+// sceneAnimating() reads: true from a burst until the last piece dies.
+export class ConfettiSim {
+  readonly rain = new ConfettiPool(RAIN_CAP);
+  readonly spray = new ConfettiPool(SPRAY_CAP);
+
+  get active(): boolean {
+    return this.rain.alive > 0 || this.spray.alive > 0;
+  }
+
+  // Throw a finish's confetti: plan.rain over a width x height CSS px
+  // screen, and plan.spray around the world point (cx, cy) in `unit`s
+  // (sprayUnit). Returns whether anything was thrown.
+  burst(
+    plan: ConfettiPlan,
+    width: number,
+    height: number,
+    cx: number,
+    cy: number,
+    unit: number,
+    rand: () => number = Math.random
+  ): boolean {
+    let thrown = false;
+    if (plan.rain > 0 && width > 0 && height > 0) {
+      spawnRain(this.rain, plan.rain, width, height, rand);
+      thrown = true;
+    }
+    if (plan.spray > 0 && unit > 0 && Number.isFinite(cx + cy)) {
+      spawnSpray(this.spray, plan.spray, cx, cy, unit, plan.slow, rand);
+      thrown = true;
+    }
+    return thrown;
+  }
+
+  // Advance both effects by dt seconds (clamped to CONFETTI_MAX_DT;
+  // garbage steps 0) over a screen `height` CSS px tall.
+  step(dt: number, height: number): void {
+    const s = dt > 0 ? Math.min(dt, CONFETTI_MAX_DT) : 0;
+    if (this.rain.alive > 0) stepRain(this.rain, s, height);
+    if (this.spray.alive > 0) stepSpray(this.spray, s);
+  }
+
+  clear(): void {
+    this.rain.clear();
+    this.spray.clear();
+  }
 }

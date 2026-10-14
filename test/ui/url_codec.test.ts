@@ -116,7 +116,26 @@ describe("links", () => {
       minoPaceJitter: 0.2, minoPauseChance: 0.3, minoPauseMin: 0.5,
       minoPauseMax: 2, minoDetect: 15, minoLose: 25, minoCatch: 1,
       minoDeadEnds: 0.4, minoRoam: 30, minoWake: 2, minoFog: "always",
+      confetti: true, confettiAmount: 1,
     });
+  });
+
+  // K140: the finish confetti's legacy keys, the amount's clamp, and the
+  // token round trip.
+  it("reads the finish confetti from legacy override keys", () => {
+    const off = parseParams("?7.J&cf=0");
+    expect([off.confetti, off.confettiAmount]).toEqual([false, 1]);
+    const lots = parseParams("?7.J&cfa=2.5");
+    expect([lots.confetti, lots.confettiAmount]).toEqual([true, 2.5]);
+    expect(parseParams(`?${encodeParams(lots)}`)).toEqual(lots);
+    expect(parseParams(`?${encodeParams(off)}`)).toEqual(off);
+    // The amount clamps to [0, 3]; garbage reads as the default.
+    expect(parseParams("?7.J&cfa=9").confettiAmount).toBe(3);
+    expect(parseParams("?7.J&cfa=-1").confettiAmount).toBe(0);
+    expect(parseParams("?7.J&cfa=x").confettiAmount).toBe(1);
+    expect(
+      parseParams(`?${encodeParams(withSeed(7, { confettiAmount: 7 }))}`).confettiAmount
+    ).toBe(3);
   });
 
   // K80: the chase's defaults are the simulation-picked tuning; a retune

@@ -14,6 +14,7 @@ import type { ShapeId, AnchorId } from "../core/shapes";
 import { SHAPES, ANCHORS } from "../core/shapes";
 import type { ChaseParams, ClockMode } from "../game/minotaur";
 import { DEFAULT_CHASE_PARAMS } from "../game/minotaur";
+import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
 import type {
   BackgroundColorMode,
   BackgroundId,
@@ -375,6 +376,10 @@ export interface UrlParams {
   minoWake: number;
   // How the minotaur shows under the fog of war (MINO_FOG_MODES).
   minoFog: MinoFog;
+  // K140's finish confetti: on/off, and the amount in [0,
+  // CONFETTI_AMOUNT_MAX] (1 = the designed burst). Viewer preferences.
+  confetti: boolean;
+  confettiAmount: number;
 }
 
 // The two load-settle sliders' tops (K147). LOAD_SETTLE_MAX is a sentinel
@@ -503,6 +508,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoRoam: DEFAULT_CHASE_PARAMS.roamRange,
   minoWake: DEFAULT_CHASE_PARAMS.wake,
   minoFog: "always",
+  confetti: true,
+  confettiAmount: 1,
 };
 
 // The real-time chase's tuning from a design's params (K80). Negative or
@@ -611,6 +618,7 @@ function fromCodecValues(
   p.backgroundAngle = sanitizeBackgroundAngle(p.backgroundAngle);
   p.settleBudget = clampTo(p.settleBudget, SETTLE_BUDGET_MAX);
   p.loadSettle = clampTo(p.loadSettle, LOAD_SETTLE_MAX);
+  p.confettiAmount = clampTo(p.confettiAmount, CONFETTI_AMOUNT_MAX);
   return p;
 }
 
@@ -853,6 +861,12 @@ function readLegacy(
     minoRoam: readNumber(query, "mrm", D.minoRoam),
     minoWake: readNumber(query, "mwk", D.minoWake),
     minoFog: readChoice(query, "mfg", MINO_FOG_MODES, D.minoFog),
+    // K140's finish confetti (`&cf=0`, `&cfa=2`).
+    confetti: readBool(query, "cf", D.confetti),
+    confettiAmount: clampTo(
+      readNumber(query, "cfa", D.confettiAmount),
+      CONFETTI_AMOUNT_MAX
+    ),
   };
 }
 

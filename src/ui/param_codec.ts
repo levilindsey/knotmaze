@@ -318,6 +318,11 @@ export const CODEC_V4: CodecTable = Object.freeze({
     num("minoRoam", 30), // 96
     num("minoWake", 2), // 97
     choice("minoFog", "always", ["always", "hunting", "never"]), // 98
+    // K140's finish confetti (2026-10-13): on/off, then the amount (1 = 140
+    // falling + 40 spraying pieces, render/confetti_model.ts). Viewer
+    // preferences: the dailies exempt them.
+    flag("confetti", true), // 99
+    num("confettiAmount", 1), // 100
   ]),
 });
 

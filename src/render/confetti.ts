@@ -2,11 +2,11 @@
 // each) over the scene - the RAIN in screen space and the SPRAY in world
 // space (it copies the world root's transform every frame it draws, so the
 // burst stays on the finish as the camera moves). The motion and the counts
-// are render/confetti_model.ts; this file only mirrors pool rows into pixi
-// Particles, appear_fx.ts's pattern: slot i renders pool row i, dead slots
-// collapse to scale 0, and once both pools drain the containers hide and
-// tick() is a single early return - no per-frame work, and `active` (which
-// main.ts's sceneAnimating() reads) is false again.
+// are render/confetti_model.ts (ConfettiSim); this file only mirrors pool
+// rows into pixi Particles, appear_fx.ts's pattern: slot i renders pool row
+// i, dead slots collapse to scale 0, and once both pools drain the
+// containers hide and tick() is a single early return - no per-frame work,
+// and `active` (which main.ts's sceneAnimating() reads) is false again.
 //
 // Both containers sit ABOVE the world root on the stage (the rain topmost)
 // and take no pointer events; the win banner and the HUD are DOM over the
@@ -18,18 +18,13 @@
 
 import { Particle, ParticleContainer, Texture, type Container } from "pixi.js";
 import {
-  ConfettiPool,
+  ConfettiSim,
   F,
   X,
   Y,
-  RAIN_CAP,
-  SPRAY_CAP,
   pieceLook,
-  spawnRain,
-  spawnSpray,
-  stepRain,
-  stepSpray,
   type ConfettiPlan,
+  type ConfettiPool,
   type PieceLook,
 } from "./confetti_model";
 
@@ -56,22 +51,19 @@ function paperTexture(): Texture {
   return PAPER;
 }
 
-// The longest frame step the pieces take: after a stall (a hidden tab's
-// first frame back) they resume instead of jumping.
-const MAX_DT = 0.1;
-
+// One pool's particles: slot i draws pool row i.
 class PieceLayer {
   readonly container: ParticleContainer;
-  readonly pool: ConfettiPool;
+  private readonly pool: ConfettiPool;
   private readonly spray: boolean;
   private slots: Particle[] = [];
   private shown = 0;
   private look: PieceLook = { alpha: 0, long: 0, short: 0, rotation: 0, tint: 0 };
 
-  constructor(capacity: number, spray: boolean) {
+  constructor(pool: ConfettiPool, spray: boolean) {
+    this.pool = pool;
     this.spray = spray;
     const tex = paperTexture();
-    this.pool = new ConfettiPool(capacity);
     this.container = new ParticleContainer({
       texture: tex,
       dynamicProperties: {
@@ -83,7 +75,7 @@ class PieceLayer {
     });
     this.container.eventMode = "none";
     this.container.visible = false;
-    for (let i = 0; i < capacity; i++) {
+    for (let i = 0; i < pool.capacity; i++) {
       this.slots.push(
         new Particle({
           texture: tex,
@@ -103,11 +95,6 @@ class PieceLayer {
     kids.length = 0;
     for (let i = 0; i < this.pool.alive; i++) kids.push(this.slots[i]);
     this.container.update();
-    this.container.visible = this.pool.alive > 0;
-  }
-
-  clear(): void {
-    this.pool.clear();
     this.sync();
   }
 
@@ -134,18 +121,22 @@ class PieceLayer {
       p.scaleY = 0;
     }
     this.shown = n;
-    if (n === 0 && this.container.visible) {
-      this.container.visible = false;
-      this.container.particleChildren.length = 0;
-      this.container.update();
+    const show = n > 0;
+    if (this.container.visible !== show) {
+      this.container.visible = show;
+      if (!show) {
+        this.container.particleChildren.length = 0;
+        this.container.update();
+      }
     }
   }
 }
 
 export class ConfettiLayer {
-  private readonly rain = new PieceLayer(RAIN_CAP, false);
-  private readonly spray = new PieceLayer(SPRAY_CAP, true);
-  // Probe counters: bursts thrown, and frames drawn with pieces alive.
+  readonly sim = new ConfettiSim();
+  private readonly rain = new PieceLayer(this.sim.rain, false);
+  private readonly spray = new PieceLayer(this.sim.spray, true);
+  // Probe counters: bursts thrown, and frames stepped with pieces alive.
   readonly stats = { bursts: 0, frames: 0 };
 
   // Add these to the stage above the world root, in this order.
@@ -156,20 +147,14 @@ export class ConfettiLayer {
     return this.rain.container;
   }
 
-  get rainAlive(): number {
-    return this.rain.pool.alive;
-  }
-  get sprayAlive(): number {
-    return this.spray.pool.alive;
-  }
   // Pieces alive (rain pieces waiting for their release count): while true,
   // the scene is animating.
   get active(): boolean {
-    return this.rain.pool.alive > 0 || this.spray.pool.alive > 0;
+    return this.sim.active;
   }
 
-  // Throw a finish's confetti: plan.rain over a width x height screen, and
-  // plan.spray around the world point (cx, cy) in `unit`s (sprayUnit).
+  // Throw a finish's confetti (ConfettiSim.burst); `world` is the root
+  // whose transform the spray copies.
   burst(
     plan: ConfettiPlan,
     width: number,
@@ -177,43 +162,40 @@ export class ConfettiLayer {
     cx: number,
     cy: number,
     unit: number,
+    world: Container,
     rand: () => number = Math.random
   ): void {
-    if (plan.rain > 0) {
-      spawnRain(this.rain.pool, plan.rain, width, height, rand);
-      this.rain.attach();
-    }
-    if (plan.spray > 0 && unit > 0) {
-      spawnSpray(this.spray.pool, plan.spray, cx, cy, unit, plan.slow, rand);
-      this.spray.attach();
-    }
-    if (plan.rain > 0 || plan.spray > 0) this.stats.bursts++;
+    if (!this.sim.burst(plan, width, height, cx, cy, unit, rand)) return;
+    this.stats.bursts++;
+    this.rain.attach();
+    this.spray.attach();
+    this.follow(world);
   }
 
   // Drop every piece (a rebuild, the setting turned off).
   clear(): void {
-    this.rain.clear();
-    this.spray.clear();
+    this.sim.clear();
+    this.rain.sync();
+    this.spray.sync();
   }
 
-  // One frame: step and mirror the live pieces; `world` is the root whose
-  // transform the spray copies. A single early return when nothing lives.
+  // One frame: step and mirror the live pieces. A single early return when
+  // nothing lives.
   tick(dt: number, height: number, world: Container): void {
-    if (!this.active) return;
-    const step = Math.min(Math.max(dt, 0), MAX_DT);
+    if (!this.sim.active) return;
     this.stats.frames++;
-    if (this.rain.pool.alive > 0) {
-      stepRain(this.rain.pool, step, height);
-      this.rain.sync();
-    }
-    if (this.spray.pool.alive > 0) {
-      stepSpray(this.spray.pool, step);
-      this.spray.sync();
-      const c = this.spray.container;
-      c.position.copyFrom(world.position);
-      c.scale.copyFrom(world.scale);
-      c.pivot.copyFrom(world.pivot);
-      c.rotation = world.rotation;
-    }
+    this.sim.step(dt, height);
+    this.rain.sync();
+    this.spray.sync();
+    this.follow(world);
+  }
+
+  private follow(world: Container): void {
+    const c = this.spray.container;
+    if (!c.visible) return;
+    c.position.copyFrom(world.position);
+    c.scale.copyFrom(world.scale);
+    c.pivot.copyFrom(world.pivot);
+    c.rotation = world.rotation;
   }
 }
