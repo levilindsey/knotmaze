@@ -7,16 +7,26 @@ import {
   ghostShape,
   nodeCap,
   peakShape,
+  pinchCap,
   rescaleSympathetic,
+  roomAt,
   roundCollapse,
   roundTau,
   segmentLobes,
+  slopeLimitUniform,
   softMin,
   stringT60,
   sympatheticAmplitude,
   tapAmplitude,
   tri,
+  unitShift,
   visualTau,
+  WHOLE_AMP,
+  WHOLE_FLOOR,
+  WHOLE_OVERLAP,
+  wholeAmplitude,
+  wholeRoom,
+  wholeShape,
   yInst,
 } from "../../src/render/pluck_model";
 
@@ -215,6 +225,68 @@ describe("decay and amplitude", () => {
       expect(softMin(a, b, 0.05)).toBeLessThanOrEqual(Math.min(a, b));
     }
     expect(softMin(0.1, 0.5, 0.05)).toBe(0.1);
+  });
+});
+
+describe("whole-segment term (K104)", () => {
+  it("a set amount: size x gain x h, independent of length", () => {
+    const h = 0.26;
+    expect(wholeAmplitude(h, 1.75, 1)).toBeCloseTo(WHOLE_AMP * 1.75 * h, 12);
+    expect(wholeAmplitude(h, 3, 0.8, 0.7)).toBeCloseTo(0.7 * 3 * 0.8 * h, 12);
+    expect(wholeAmplitude(h, 0, 1)).toBe(0);
+    expect(wholeAmplitude(h, 1, 1, -1)).toBe(0);
+  });
+
+  it("the fundamental over the vibrating extent, zero outside it", () => {
+    expect(wholeShape(2, 1, 3)).toBeCloseTo(1, 12);
+    expect(wholeShape(1.5, 1, 3)).toBeCloseTo(Math.SQRT1_2, 12);
+    expect(wholeShape(1, 1, 3)).toBe(0);
+    expect(wholeShape(3, 1, 3)).toBe(0);
+    expect(wholeShape(0.5, 1, 3)).toBe(0);
+    expect(wholeShape(3.5, 1, 3)).toBe(0);
+    expect(wholeShape(1, 1, 1)).toBe(0); // Degenerate extent.
+  });
+
+  it("overlap room: gap + overlap, never under the floor", () => {
+    const h = 0.2;
+    expect(wholeRoom(0.3, h)).toBeCloseTo(0.3 + WHOLE_OVERLAP * h, 12);
+    expect(wholeRoom(-0.5, h)).toBeCloseTo(
+      Math.max(WHOLE_FLOOR, WHOLE_OVERLAP) * h,
+      12
+    );
+    expect(WHOLE_FLOOR).toBeLessThanOrEqual(WHOLE_OVERLAP);
+  });
+
+  it("room profiles: slope-limited, read between samples", () => {
+    const v = new Float32Array([Infinity, 1, Infinity, Infinity, 0.2, Infinity]);
+    slopeLimitUniform(v, 0.1, 1);
+    expect(Array.from(v).map((x) => +x.toFixed(6))).toEqual([
+      0.6, 0.5, 0.4, 0.3, 0.2, 0.3,
+    ]);
+    const all = new Float32Array([Infinity, Infinity]);
+    slopeLimitUniform(all, 0.1, 1);
+    expect(all[0]).toBe(Infinity);
+    expect(roomAt(new Float32Array([1, 0.5]), 0.5)).toBeCloseTo(0.75, 6);
+    expect(roomAt(new Float32Array([1, 0.5, 0.25]), 1)).toBeCloseTo(0.25, 6);
+    expect(roomAt(new Float32Array([1, Infinity]), 0.3)).toBe(1);
+    expect(roomAt(new Float32Array([Infinity, Infinity]), 0.3)).toBe(Infinity);
+    expect(roomAt(new Float32Array([0.4]), 0.9)).toBeCloseTo(0.4, 6);
+  });
+
+  it("pinch: W's own soft node at an interior crossing", () => {
+    const h = 0.2;
+    expect(pinchCap(h, 0.1, 0.5, 0.3)).toBeCloseTo(0.06, 12);
+    expect(pinchCap(h, 0.7, 0.5, 0.3)).toBeCloseTo(0.06 + 1.5 * 0.2, 12);
+  });
+
+  it("the seam: arc + shift stays continuous over a closed unit", () => {
+    // A lobe that started at -1 (left of the seam) resolves to 9 on a
+    // 10-long loop: shift -10 keeps it at -1.
+    expect(unitShift(-1, 9, 10, true)).toBe(-10);
+    expect(unitShift(9.02, 9, 10, true)).toBe(0);
+    expect(unitShift(10.5, 0.4, 10, true)).toBe(10);
+    // Open chains never shift.
+    expect(unitShift(-1, 9, 10, false)).toBe(0);
   });
 });
 
