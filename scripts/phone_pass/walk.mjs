@@ -81,13 +81,16 @@ export function renderLoop(ITER) {
 }
 
 // In the page: freeze every clock of a same-state frame (K83's pins + the
-// background's drift clock) and hide the DOM chrome.
+// background's drift clock), turn off K169's gold-web fade (with the paint
+// clock pinned, a fading web would hold at level 0; K192) and hide the DOM
+// chrome.
 export function pinAll() {
   const r = window.__knotRenderer(), proto = Object.getPrototypeOf(r);
   if (window.__knotPS && window.__knotPS()) window.__knotPS().step = function () {};
   r.flowStrength = 0;
   r.paintClock = 100;
   r.pulseBorn = 0;
+  if (r.webFade) r.webFade.seconds = 0; // K169's web fade off (K192)
   if (typeof proto.advanceClocks === "function") r.advanceClocks = function () {};
   r.tickPaint = function () { return proto.tickPaint.call(this, 0); };
   const L = window.__knotBackgroundLayer && window.__knotBackgroundLayer();
