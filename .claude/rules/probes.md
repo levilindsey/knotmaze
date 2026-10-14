@@ -280,6 +280,17 @@ the phone's viewport: plumbing only, never timings.
   `--throttle N`, `--drag`); `run_batch.ps1` runs a batch under the perf
   lock.
 
+- K80 (2026-10-13), the real-time chase: `.claude/probes/K80/rt/` holds
+  the headless simulation (`run_rt.ps1 -Sweep <name> -Seeds 288`,
+  results.md) and the page probes: `rt_chase.mjs <base> <outDir>
+  caught|escape|indicator[:phone] [seeds]` (real taps; EXTRA adds link
+  keys) and `rt_page.mjs`. Probe links: `?<seed>.J&am=instant&clk=realtime`.
+  GOTCHA: since K122 vite.config.ts imports the extensionless
+  `notices/vite_plugin`, so the older private-cache wrappers (K19-K20,
+  K79, K99), which import() the config natively, fail with
+  ERR_MODULE_NOT_FOUND; K80's wrapper loads it through vite's
+  `loadConfigFromFile` instead.
+
 ## Census and diagnosis rules
 
 - *From the open artifact queue (2026-10-11), census lore:* Census lore from

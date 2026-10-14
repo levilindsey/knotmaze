@@ -52,6 +52,7 @@ src/
     daily_store.ts        # K20: versioned localStorage records + aggregates
     daily_attempt.ts      # K47: saved attempts - record, walk fingerprint, replay
     share_text.ts         # K20: Wordle-style share text
+    minotaur.ts           # K80: the real-time chase (minotaur, fixed-step clock)
   render/
     ribbon_renderer.ts    # PixiJS ribbon meshes
     ribbon_mesh.ts        # Triangle strip extrusion
@@ -122,7 +123,8 @@ test/
     maze_stats.test.ts,
     daily_calendar.test.ts (zones, DST), daily_store.test.ts (schema,
     v1 migration, attempts, prefs, corrupt/newer data, quota, no storage,
-    streaks), daily_attempt.test.ts (fingerprints, save/restore, refusals)
+    streaks), daily_attempt.test.ts (fingerprints, save/restore, refusals),
+    minotaur.test.ts (K80: lair, wander, hunt, sanctuary, catch, replay)
   render/
     pluck_model.test.ts  # String math vs a modal sum, coverage, lobes
     background_model.test.ts  # K21 drift clock (K24 hook), colors, order

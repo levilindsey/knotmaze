@@ -641,6 +641,19 @@ demand.
   its `-x` program. Same-state A/B against master: 0 px in every default
   case. The phone gate (B3) held 60 fps at rest on the Pixel 11.
 
+- THE REAL-TIME MINOTAUR (K80 stage 1, 2026-10-13; brief
+  `docs/design/K80_realtime.md`, agent under session d8031183): a
+  dedicated maze mode (`clock` = realtime) in which a minotaur roams the
+  walk graph on a fixed 120 Hz clock while the player taps one run at a
+  time at `playerPace`; it hunts within a thread distance, a catch sends
+  the player back to the entrance and counts, and the solve goes on. No
+  undo, no wait move, the two tails a sanctuary. Fifteen codec v4 appends
+  at 84-98. The defaults come from a headless simulation of 288 mazes
+  (greedy and fleeing scripted players): the only change from the
+  provisional set was the hunting pace 8 -> 7. *[Lore: `.claude/rules/
+  gameplay.md` (REAL-TIME MINOTAUR); harness, tables and page probes in
+  `.claude/probes/K80/rt/`.]*
+
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the
   SHADER BACKGROUNDS entry above).
