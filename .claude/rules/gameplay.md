@@ -164,10 +164,9 @@ entry is labeled with its source; the narrative is in
   practice run's tap explains it in a toast (touch has no hover). THE X
   (Levi: without it the free pill read as a button that STARTS free
   play): free play only, the one tap that leaves a mode (the daily's
-  leaves nothing; replay and practice only explain). It keeps its room
-  at opacity 0 (nothing shifts as it fades in), fades in on hover
-  (`@media (hover:hover)`) and keyboard focus, shows always on coarse
-  pointers while `MODE_BADGE_X_ON_COARSE` (K151 (3), open for Levi), and
+  leaves nothing; replay and practice only explain). It always shows,
+  on the desktop too (K200, Levi 2026-10-14; it had faded in on hover
+  and shown always only on coarse pointers), brightens on hover, and
   drops out at the icon levels. FIT: fit() steps the label down (long;
   short = "Daily #N", "Daily #N replay", "Daily #N practice"; one word =
   "Replay", "Practice"; the bare icon; the icon below the hamburger)
