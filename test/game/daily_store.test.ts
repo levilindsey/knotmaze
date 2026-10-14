@@ -3,9 +3,11 @@ import {
   DAILY_CORRUPT_KEY,
   DAILY_STORE_KEY,
   DailyStore,
+  MAX_PRACTICE,
   MAX_REPLAYS,
   browserStorage,
   dailyAggregates,
+  dailyHistory,
   parseDailyData,
   validAttempt,
   validPrefs,
@@ -41,9 +43,11 @@ class FakeStorage implements StorageLike {
   }
 }
 
+// Both factories begin on Daily #1, so a test's attempt counts on any day
+// it records it under; practice (K146) tests set a later day.
 const result = (over: Partial<DailyResult> = {}): DailyResult => ({
   at: 1_790_000_000_000,
-  day: 5,
+  day: 1,
   timeMs: 83_000,
   path: 52,
   optimal: 45.6,
@@ -59,7 +63,7 @@ const result = (over: Partial<DailyResult> = {}): DailyResult => ({
 
 const attempt = (over: Partial<DailyAttempt> = {}): DailyAttempt => ({
   startedAt: 1_790_000_000_000,
-  day: 5,
+  day: 1,
   elapsedMs: 41_500,
   taps: [0, 4, 9, 9, 7],
   path: [0, 4, 7],
@@ -85,7 +89,7 @@ describe("recording", () => {
     const s = new FakeStorage();
     const store = new DailyStore(s);
     expect(store.status).toBe("ok");
-    store.markPlayed(5, 1000);
+    store.markPlayed(5, 1000, 5);
     expect(store.hasOfficial(5)).toBe(false);
     expect(store.recordSolve(5, result({ timeMs: 90_000 }))).toBe("official");
     expect(store.recordSolve(5, result({ timeMs: 40_000 }))).toBe("replay");
@@ -97,14 +101,14 @@ describe("recording", () => {
     // It is all in storage: a new store (a reload) reads the same.
     const again = new DailyStore(s);
     expect(again.data()).toEqual(store.data());
-    expect(JSON.parse(s.map.get(DAILY_STORE_KEY)!).v).toBe(2);
+    expect(JSON.parse(s.map.get(DAILY_STORE_KEY)!).v).toBe(3);
   });
 
   it("keeps the earliest played time", () => {
     const store = new DailyStore(new FakeStorage());
-    store.markPlayed(3, 5000);
-    store.markPlayed(3, 9000);
-    store.markPlayed(3, 4000);
+    store.markPlayed(3, 5000, 3);
+    store.markPlayed(3, 9000, 3);
+    store.markPlayed(3, 4000, 2);
     expect(store.day(3)!.played).toBe(4000);
   });
 
@@ -193,7 +197,7 @@ describe("damaged, foreign and missing storage", () => {
   it("never overwrites records from a newer schema", () => {
     quiet();
     const s = new FakeStorage();
-    const newer = JSON.stringify({ v: 3, everything: "else" });
+    const newer = JSON.stringify({ v: 4, everything: "else" });
     s.map.set(DAILY_STORE_KEY, newer);
     const store = new DailyStore(s);
     expect(store.status).toBe("newer");
@@ -227,7 +231,7 @@ describe("damaged, foreign and missing storage", () => {
   it("works without storage at all", () => {
     const store = new DailyStore(null);
     expect(store.status).toBe("unavailable");
-    store.markPlayed(1, 5);
+    store.markPlayed(1, 5, 1);
     expect(store.recordSolve(1, result())).toBe("official");
     expect(store.recordSolve(1, result())).toBe("replay");
     expect(dailyAggregates(store.data(), 1).solved).toBe(1);
@@ -276,17 +280,17 @@ describe("saved attempts and prefs (K47, K56: schema v2)", () => {
     const store = new DailyStore(s);
     expect(store.status).toBe("ok");
     const d = store.data();
-    expect(d.v).toBe(2);
+    expect(d.v).toBe(3);
     expect(Object.keys(d.days).sort()).toEqual(["1", "2", "3"]);
     expect(d.days["1"].official).toEqual(result({ day: 1 }));
     expect(d.days["1"].replays).toEqual([result()]);
     expect(d.days["3"].attempt).toBeUndefined();
     expect(d.prefs).toEqual({});
-    // Nothing is written until something changes; then it is v2.
+    // Nothing is written until something changes; then it is v3.
     expect(s.sets).toBe(0);
     store.saveAttempt(2, attempt());
     const raw = JSON.parse(s.map.get(DAILY_STORE_KEY)!);
-    expect(raw.v).toBe(2);
+    expect(raw.v).toBe(3);
     expect(raw.days["1"].official.timeMs).toBe(result().timeMs);
     expect(new DailyStore(s).attempt(2)).toEqual(attempt());
   });
@@ -402,7 +406,7 @@ describe("saved attempts and prefs (K47, K56: schema v2)", () => {
     expect(mem.attempt(1)).toEqual(attempt());
     expect(mem.prefs()).toEqual({ volume: 0 });
     const s = new FakeStorage();
-    const newer = JSON.stringify({ v: 3, days: {} });
+    const newer = JSON.stringify({ v: 4, days: {} });
     s.map.set(DAILY_STORE_KEY, newer);
     const store = new DailyStore(s);
     store.saveAttempt(1, attempt());
@@ -414,7 +418,7 @@ describe("saved attempts and prefs (K47, K56: schema v2)", () => {
 
 describe("aggregates", () => {
   const data = (days: Record<number, Partial<{ official: DailyResult; replays: DailyResult[] }>>): DailyData => {
-    const out: DailyData = { v: 2, days: {}, prefs: {} };
+    const out: DailyData = { v: 3, days: {}, prefs: {} };
     for (const [n, d] of Object.entries(days)) {
       out.days[n] = { played: 1, replays: d.replays ?? [], ...(d.official ? { official: d.official } : {}) };
     }
@@ -462,7 +466,9 @@ describe("aggregates", () => {
   it("does not count late solves toward streaks; early ones count", () => {
     const d = data({
       1: solvedOn(1),
-      2: solvedOn(4), // caught up two days late
+      // A late official result from before K146 (since then a late first
+      // finish is practice): solved, but no streak day.
+      2: solvedOn(4),
       3: solvedOn(3),
       4: solvedOn(3), // a friend's link from a zone a day ahead
     });
@@ -470,5 +476,205 @@ describe("aggregates", () => {
     expect(a.solved).toBe(4);
     expect(a.currentStreak).toBe(2); // 3, 4
     expect(a.maxStreak).toBe(2);
+  });
+});
+
+describe("practice (K146: schema v3)", () => {
+  const none = { played: 0, solved: 0, currentStreak: 0, maxStreak: 0, bestTimeMs: null };
+
+  it("records an attempt begun after its day as practice, never official", () => {
+    const store = new DailyStore(new FakeStorage());
+    // Today is Daily #5; Daily #2 opened from the History.
+    store.markPlayed(2, 1000, 5);
+    expect(store.day(2)).toBeUndefined(); // practice marks nothing played
+    store.saveAttempt(2, attempt({ day: 5 }));
+    expect(store.day(2)!.played).toBeUndefined();
+    expect(store.recordSolve(2, result({ day: 5, timeMs: 10_000 }))).toBe("practice");
+    expect(store.recordSolve(2, result({ day: 6, timeMs: 9_000 }))).toBe("practice");
+    const day = store.day(2)!;
+    expect(day.official).toBeUndefined();
+    expect(day.attempt).toBeUndefined();
+    expect(day.played).toBeUndefined();
+    expect(day.practice!.map((r) => r.timeMs)).toEqual([10_000, 9_000]);
+    expect(store.hasOfficial(2)).toBe(false);
+    // Outside every aggregate, played included.
+    expect(dailyAggregates(store.data(), 6)).toEqual(none);
+  });
+
+  it("counts an attempt begun on its day and finished later (K47 resume)", () => {
+    const store = new DailyStore(new FakeStorage());
+    store.markPlayed(4, 1000, 4);
+    store.saveAttempt(4, attempt({ day: 4, startedAt: 1000 }));
+    // The next morning (Daily #5) a reload resumes it and finishes.
+    expect(store.recordSolve(4, result({ day: 4, at: 90_000_000 }))).toBe("official");
+    expect(store.day(4)!.played).toBe(1000);
+    expect(dailyAggregates(store.data(), 5)).toMatchObject({
+      played: 1,
+      solved: 1,
+      currentStreak: 1,
+      maxStreak: 1,
+    });
+  });
+
+  it("makes a late run a replay once the official result exists", () => {
+    const store = new DailyStore(new FakeStorage());
+    expect(store.recordSolve(3, result({ day: 3 }))).toBe("official");
+    expect(store.recordSolve(3, result({ day: 9 }))).toBe("replay");
+    expect(store.day(3)!.practice).toBeUndefined();
+    expect(store.day(3)!.replays.length).toBe(1);
+  });
+
+  it("leaves aggregates and streaks untouched", () => {
+    const store = new DailyStore(new FakeStorage());
+    store.recordSolve(1, result({ day: 1, timeMs: 70_000 }));
+    store.recordSolve(2, result({ day: 2, timeMs: 60_000 }));
+    const before = dailyAggregates(store.data(), 4);
+    expect(before).toEqual({ played: 2, solved: 2, currentStreak: 0, maxStreak: 2, bestTimeMs: 60_000 });
+    // Daily #3 was missed; practiced on day 4, faster than any official
+    // time: no solve, no best time, and the gap in the streak stays.
+    store.saveAttempt(3, attempt({ day: 4 }));
+    store.recordSolve(3, result({ day: 4, timeMs: 1_000 }));
+    expect(dailyAggregates(store.data(), 4)).toEqual(before);
+    expect(dailyAggregates(store.data(), 3)).toMatchObject({ currentStreak: 2 });
+  });
+
+  it("reads v2 records as they are: a late official result stays official", () => {
+    const s = new FakeStorage();
+    s.map.set(
+      DAILY_STORE_KEY,
+      JSON.stringify({
+        v: 2,
+        days: {
+          // v2 never had practice: a stray list is not read as one.
+          "2": { played: 10, official: result({ day: 4 }), replays: [], practice: [result()] },
+        },
+        prefs: {},
+      })
+    );
+    const store = new DailyStore(s);
+    const d = store.day(2)!;
+    expect(d.official).toEqual(result({ day: 4 }));
+    expect(d.practice).toBeUndefined();
+    expect(store.recordSolve(2, result({ day: 5 }))).toBe("replay");
+    expect(JSON.parse(s.map.get(DAILY_STORE_KEY)!).v).toBe(3);
+    expect(dailyAggregates(store.data(), 5)).toMatchObject({ played: 1, solved: 1, currentStreak: 0 });
+  });
+
+  it("validates practice finishes and keeps practice-only days", () => {
+    const good = result({ day: 9 });
+    const parsed = parseDailyData(
+      JSON.stringify({
+        v: 3,
+        days: {
+          "2": { practice: [good, { at: "x" }], replays: [] },
+          "3": { practice: "nope", replays: [] }, // nothing at all
+          "4": { attempt: attempt({ day: 9 }), replays: [] }, // a practice attempt
+        },
+        prefs: {},
+      })
+    );
+    expect(parsed.kind).toBe("ok");
+    if (parsed.kind !== "ok") return;
+    expect(Object.keys(parsed.data.days).sort()).toEqual(["2", "4"]);
+    expect(parsed.data.days["2"].practice).toEqual([good]);
+    expect(parsed.data.days["2"].played).toBeUndefined();
+    // A practice attempt marks nothing played.
+    expect(parsed.data.days["4"].played).toBeUndefined();
+    expect(parsed.data.days["4"].attempt).toEqual(attempt({ day: 9 }));
+    // The bad practice entry and day 3.
+    expect(parsed.dropped).toBe(2);
+    expect(dailyAggregates(parsed.data, 9)).toEqual(none);
+  });
+
+  it("caps practice finishes, and prunes them over quota", () => {
+    quiet();
+    const store = new DailyStore(new FakeStorage());
+    for (let i = 0; i <= MAX_PRACTICE + 2; i++) {
+      store.recordSolve(1, result({ day: 3, timeMs: i }));
+    }
+    expect(store.day(1)!.practice!.length).toBe(MAX_PRACTICE);
+    expect(store.day(1)!.practice![0].timeMs).toBe(3);
+    const s = new FakeStorage();
+    const tight = new DailyStore(s);
+    for (let i = 0; i < 10; i++) tight.recordSolve(1, result({ day: 3, timeMs: i }));
+    s.quota = s.map.get(DAILY_STORE_KEY)!.length - 10;
+    tight.recordSolve(1, result({ day: 3, timeMs: 99 }));
+    expect(tight.status).toBe("ok");
+    const saved = JSON.parse(s.map.get(DAILY_STORE_KEY)!);
+    expect(saved.days["1"].practice.map((r: DailyResult) => r.timeMs)).toEqual([8, 9, 99]);
+  });
+
+  it("drops a practice run started over, and its empty day", () => {
+    const store = new DailyStore(new FakeStorage());
+    store.saveAttempt(2, attempt({ day: 5 }));
+    expect(store.day(2)).toEqual({ replays: [], attempt: attempt({ day: 5 }) });
+    store.clearAttempt(2);
+    expect(store.day(2)).toBeUndefined();
+    // A day with a record keeps it.
+    store.saveAttempt(5, attempt({ day: 5 }));
+    store.clearAttempt(5);
+    expect(store.day(5)).toEqual({ played: attempt().startedAt, replays: [] });
+  });
+});
+
+describe("history (K146)", () => {
+  const empty = (): DailyData => ({ v: 3, days: {}, prefs: {} });
+
+  it("lists every past daily, newest first, today left out", () => {
+    const h = dailyHistory(empty(), 5);
+    expect(h.map((e) => e.n)).toEqual([4, 3, 2, 1]);
+    for (const e of h) {
+      expect(e).toMatchObject({ status: "unplayed", result: null, practice: true });
+    }
+    // Daily #1's own day has no past.
+    expect(dailyHistory(empty(), 1)).toEqual([]);
+    // A year on, every day is there.
+    expect(dailyHistory(empty(), 366).length).toBe(365);
+  });
+
+  it("says what each day holds", () => {
+    const store = new DailyStore(new FakeStorage());
+    // Today is Daily #8.
+    store.recordSolve(7, result({ day: 7 })); // official
+    store.recordSolve(7, result({ day: 8 })); // and a replay
+    store.recordSolve(6, result({ day: 8, timeMs: 5 })); // practice
+    store.recordSolve(6, result({ day: 8, timeMs: 4 })); // practice again
+    store.saveAttempt(5, attempt({ day: 5 })); // begun on its day, unfinished
+    store.saveAttempt(4, attempt({ day: 8 })); // a practice run, unfinished
+    store.markPlayed(3, 1000, 3); // moves made, nothing saved
+    store.recordSolve(9, result({ day: 8 })); // a day ahead (early: official)
+    store.saveAttempt(8, attempt({ day: 8 })); // today: the view's own row
+    const h = dailyHistory(store.data(), 8);
+    expect(h.map((e) => [e.n, e.status])).toEqual([
+      [9, "official"],
+      [7, "official"],
+      [6, "practice"],
+      [5, "resume"],
+      [4, "resume"],
+      [3, "played"],
+      [2, "unplayed"],
+      [1, "unplayed"],
+    ]);
+    const by = new Map(h.map((e) => [e.n, e]));
+    expect(by.get(9)).toMatchObject({ practice: false, late: false });
+    expect(by.get(7)).toMatchObject({ more: 1, late: false, practice: false });
+    // The first practice finish shows; the second is "more".
+    expect(by.get(6)!.result!.timeMs).toBe(5);
+    expect(by.get(6)).toMatchObject({ more: 1, practice: true });
+    // Resuming an attempt begun on its day still counts...
+    expect(by.get(5)).toMatchObject({ practice: false });
+    expect(by.get(5)!.attempt).toEqual(attempt({ day: 5 }));
+    // ...a practice run's does not.
+    expect(by.get(4)).toMatchObject({ practice: true });
+    expect(by.get(3)).toMatchObject({ practice: true });
+  });
+
+  it("flags an official result from before K146 that began late", () => {
+    const parsed = parseDailyData(
+      JSON.stringify({ v: 2, days: { "2": { played: 1, official: result({ day: 4 }), replays: [] } }, prefs: {} })
+    );
+    if (parsed.kind !== "ok") throw new Error("unreadable");
+    const e = dailyHistory(parsed.data, 5).find((x) => x.n === 2)!;
+    expect(e).toMatchObject({ status: "official", late: true, practice: false });
   });
 });

@@ -58,8 +58,13 @@ import {
   parseLaunch,
 } from "./ui/daily_link";
 import { formatDayDate, todayNumber } from "./game/daily_calendar";
-import { DailyStore, browserStorage } from "./game/daily_store";
-import type { DailyResult } from "./game/daily_store";
+import {
+  DailyStore,
+  begunLate,
+  browserStorage,
+  dailyHistory,
+} from "./game/daily_store";
+import type { DailyResult, SolveRecord } from "./game/daily_store";
 import {
   attemptRecord as savedAttemptOf,
   exploredRuns,
@@ -1640,6 +1645,8 @@ async function main(): Promise<void> {
         trailMode: fabricController?.trailMode ?? false,
         // K80: a real-time solve always starts over (a fresh chase).
         realtime: chase !== null,
+        // K146: so does a practice run (a past daily, not scored).
+        practice: attemptLate(),
       });
       if (action === "refuse") {
         showToast("recentPath mode has no way back: keep exploring.");
@@ -1657,7 +1664,8 @@ async function main(): Promise<void> {
         }
         return;
       }
-      // Anywhere else a fresh attempt (a daily's replay starts over).
+      // Anywhere else a fresh attempt (a daily's replay or practice run
+      // starts over).
       if (dailyN !== null && attemptDaily === dailyN && attemptRecord === null) {
         dailyStore.clearAttempt(dailyN);
       }
@@ -1733,12 +1741,12 @@ async function main(): Promise<void> {
   const clock = new SolveClock();
   // The current attempt: the daily it counts for (fixed at its first move;
   // null = none, or a daily since left), the player's local daily number
-  // and the time at that first move (streaks count a result whose attempt
-  // began by its day), and what its finish recorded.
+  // and the time at that first move (an attempt begun after its day is
+  // practice, K146), and what its finish recorded.
   let attemptDaily: number | null = null;
   let attemptDay = 0;
   let attemptStartedAt = 0;
-  let attemptRecord: "official" | "replay" | null = null;
+  let attemptRecord: SolveRecord | null = null;
   // A restored attempt's explored runs, for the fog of war once the scene
   // is on screen (null = nothing pending).
   let pendingExplored: number[] | null = null;
@@ -1751,21 +1759,34 @@ async function main(): Promise<void> {
   // The last finish, for the banner's Share button.
   let lastWin: { text: string; url: string } | null = null;
 
-  const hud = new MazeHud(() => showDailyStats());
+  // K146: is the solve on screen a PRACTICE run - a daily begun after its
+  // day? An attempt under way (restored ones included) began on its own
+  // attemptDay; before the first move, playing on would begin today.
+  const attemptLate = (): boolean => {
+    if (dailyN === null) return false;
+    const began =
+      attemptDaily === dailyN && clock.started ? attemptDay : todayNumber();
+    return begunLate(dailyN, began);
+  };
+
+  const hud = new MazeHud();
   const banner = new WinBanner(
     () => void shareResult(lastWin),
     () => showDailyStats(),
     () => fitModeBadge()
   );
   const hideWin = (): void => banner.hide();
-  // K73 MODE BADGE (ui/mode_badge.ts): "Free play" off the daily (a tap =
-  // the panel's Daily button), "Replay · not scored" on a daily whose
-  // official result is recorded (a tap explains it), nothing during the
-  // official attempt. It keeps clear of the HUD and the banner (fit).
-  const modeBadge = new ModeBadge(
-    () => playDaily(todayNumber(), true),
-    (tip) => showToast(tip, 4500)
-  );
+  // K73 + K151 MODE BADGE (ui/mode_badge.ts): what the solve on screen is,
+  // left of the hamburger. "Free play" off the daily (a tap = the panel's
+  // Daily button, so an X fades in), "Daily #N" on the attempt that counts
+  // (a tap opens the daily stats - the HUD title's job before K151),
+  // "Replay" and "Practice" on runs that don't (a tap explains). It keeps
+  // clear of the HUD and the banner (fit).
+  const modeBadge = new ModeBadge({
+    free: () => playDaily(todayNumber(), true),
+    daily: () => showDailyStats(),
+    explain: (tip) => showToast(tip, 4500),
+  });
   const fitModeBadge = (): void => modeBadge.fit([hud.el, banner.el]);
   window.addEventListener("resize", fitModeBadge);
   const syncModeBadge = (): void => {
@@ -1774,9 +1795,11 @@ async function main(): Promise<void> {
         daily: dailyN,
         official: dailyN !== null && dailyStore.hasOfficial(dailyN),
         record: attemptRecord,
+        late: attemptLate(),
       }),
       dailyN,
-      todayNumber()
+      todayNumber(),
+      attemptRecord === "official"
     );
     fitModeBadge();
   };
@@ -2039,22 +2062,12 @@ async function main(): Promise<void> {
     },
   });
 
-  // "Daily #12", then " · Oct 11" for any day but today, and " · solved"
-  // (this attempt set the official result) or " · replay" (an earlier one
-  // did).
-  const dailyTitle = (): string | null => {
-    if (dailyN === null || !params.mazeFabric) return null;
-    let t = `Daily #${dailyN}`;
-    if (dailyN !== todayNumber()) t += ` · ${formatDayDate(dailyN)}`;
-    if (attemptRecord === "official") t += " · solved";
-    else if (dailyStore.hasOfficial(dailyN)) t += " · replay";
-    return t;
-  };
+  // (K151: the daily's name, date and state moved from the HUD's title row
+  // to the mode badge - ui/mode_badge.ts modeBadgeText.)
   const hudSnapshot = (): HudSnapshot | null => {
     if (!params.mazeFabric || !fabricController) return null;
     const c = fabricController;
     return {
-      title: dailyTitle(),
       showStats: settings.showMazeStats,
       timeMs: clock.elapsed(performance.now()),
       path: c.pathLength,
@@ -2196,8 +2209,8 @@ async function main(): Promise<void> {
   };
 
   // An accepted move. The attempt's first starts the clock and, on a
-  // daily, marks that day played; a restored clock runs on from its first.
-  // Every move of a daily attempt is saved.
+  // daily, marks that day played (not a practice run's, K146); a restored
+  // clock runs on from its first. Every move of a daily attempt is saved.
   const noteMove = (): void => {
     if (clock.state === "paused") {
       clock.resume(performance.now(), document.hidden);
@@ -2206,7 +2219,11 @@ async function main(): Promise<void> {
       attemptDay = todayNumber();
       attemptStartedAt = Date.now();
       attemptDaily = dailyN;
-      if (dailyN !== null) dailyStore.markPlayed(dailyN, attemptStartedAt);
+      if (dailyN !== null) {
+        dailyStore.markPlayed(dailyN, attemptStartedAt, attemptDay);
+      }
+      // The badge may turn: a past daily's first move begins practice.
+      syncModeBadge();
     }
     saveAttempt();
   };
@@ -2217,8 +2234,8 @@ async function main(): Promise<void> {
       savePrefsNow();
     } else {
       adoptOtherTab();
-      // Another tab may have finished this daily meanwhile: the HUD title
-      // and the mode badge then read "replay".
+      // Another tab may have finished this daily meanwhile: the mode badge
+      // then reads "replay".
       updateHud();
     }
   });
@@ -2279,7 +2296,8 @@ async function main(): Promise<void> {
   // animation delivers the dot to the exit.
   let pendingWin = false;
   // The ARRIVAL: stop the clock, record a daily's result (the first finish
-  // is official, later ones replays), show the banner.
+  // is official, later ones replays; one begun after its day practice,
+  // K146), show the banner.
   const showFabricWin = (): void => {
     if (!fabricController) return;
     const c = fabricController;
@@ -2309,6 +2327,9 @@ async function main(): Promise<void> {
       attemptRecord = dailyStore.recordSolve(daily, result);
     }
     const replay = attemptRecord === "replay";
+    // K146: a practice finish shares too, titled as practice (like a
+    // replay); the banner says so.
+    const practice = attemptRecord === "practice";
     // K155: the stars. Turn-based walks rate from path + 2 x backtrack, as
     // a stored daily result does (the stats view agrees to the bit); a
     // chase rates from the walked meter (a catch's re-walk) and its catches.
@@ -2317,7 +2338,15 @@ async function main(): Promise<void> {
       : rateRun(walkedOf(c.pathLength, c.backtrackDist), c.walk.optimalLength);
     const stars = rating?.stars ?? null;
     lastWin = {
-      text: shareText({ daily, replay, timeMs, efficiency, moves, stars }),
+      text: shareText({
+        daily,
+        replay,
+        practice,
+        timeMs,
+        efficiency,
+        moves,
+        stars,
+      }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
     banner.show({
@@ -2326,7 +2355,9 @@ async function main(): Promise<void> {
           ? "Solved!"
           : replay
             ? `Daily #${daily} replay solved`
-            : `Daily #${daily} solved!`,
+            : practice
+              ? `Daily #${daily} practice solved`
+              : `Daily #${daily} solved!`,
       timeMs,
       efficiency,
       path: c.pathLength,
@@ -2487,7 +2518,8 @@ async function main(): Promise<void> {
     openDailyStats({
       store: dailyStore,
       today: todayNumber(),
-      // The view's Play button is today's daily; a history row a day.
+      // The view's Play button is today's daily; a history row a day (a
+      // past one plays as practice unless it has an attempt that counts).
       onPlay: (n, today) => playDaily(n, today),
       onShare: (n) => {
         const r = dailyStore.day(n)?.official;
@@ -2539,7 +2571,7 @@ async function main(): Promise<void> {
       `Play today's daily maze, #${t} (${formatDayDate(t)}): the same maze for everyone today. An unfinished attempt picks up where you left it; results are kept in your daily stats (the chart button).`
     );
   };
-  // The daily on screen changed (entered or left): HUD title, tab title.
+  // The daily on screen changed (entered or left): mode badge, tab title.
   const dailyChanged = (): void => {
     document.title = dailyN !== null ? `KnotMaze · Daily #${dailyN}` : "KnotMaze";
     updateDailyLabel();
@@ -2564,7 +2596,9 @@ async function main(): Promise<void> {
     }
     if (todayNumber() !== labelDay) {
       updateDailyLabel();
-      updateHud(); // A daily on screen gains its date once it isn't today's.
+      // A daily on screen gains its date once it isn't today's (its badge),
+      // and one not begun yet would now begin as practice.
+      updateHud();
     }
   }, 250);
 
@@ -3635,8 +3669,13 @@ async function main(): Promise<void> {
     share: lastWin,
     storeStatus: dailyStore.status,
     store: dailyStore.data(),
-    // K73: the mode badge on screen ("free" | "replay" | null).
+    // K73/K151: the mode badge on screen ("free" | "daily" | "replay" |
+    // "practice"), its label, and K146's practice test for this attempt.
     badge: modeBadge.kind,
+    badgeText: modeBadge.el.hidden ? "" : modeBadge.el.innerText.trim(),
+    late: attemptLate(),
+    // K146: the stats view's History as it reads it.
+    history: dailyHistory(dailyStore.data(), todayNumber()),
   });
   (window as unknown as Record<string, unknown>).__knotPlayDaily = (n: number) =>
     playDaily(n);

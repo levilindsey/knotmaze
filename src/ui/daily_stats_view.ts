@@ -6,11 +6,16 @@
 // history scrolls inside the card. K155: today's stars (a tap explains
 // them), each history row's stars (hover explains), a count of the
 // official results' stars by the History heading, and a legend line.
+// K146: the History lists EVERY past daily (game/daily_store.ts
+// dailyHistory), unplayed days included - a tap plays one, as practice
+// (begun after its day: never scored) - under sticky month headers, with
+// All / Played / Not played chips once it is long. Practice results show
+// muted, in violet.
 
 import { efficiencyPercent, formatDuration } from "../game/maze_stats";
-import { dailyAggregates, onTime } from "../game/daily_store";
-import type { DailyStore } from "../game/daily_store";
-import { formatDayDate } from "../game/daily_calendar";
+import { dailyAggregates, dailyHistory } from "../game/daily_store";
+import type { DailyStore, HistoryEntry } from "../game/daily_store";
+import { formatDayDate, formatDayMonth } from "../game/daily_calendar";
 import {
   ratingForResult,
   starExplanation,
@@ -81,7 +86,7 @@ function ensureStyles(): void {
     `font-family:${sans}}` +
     ".km-hist .st .off{color:#4a5672}" +
     ".km-hist button{box-sizing:border-box;width:100%;display:grid;" +
-    "grid-template-columns:3.4em 4.6em 1fr 3.8em 3.4em 4.6em;gap:4px;" +
+    "grid-template-columns:3.4em 4.6em 1fr 3.8em 3.4em 5.6em;gap:4px;" +
     "align-items:center;padding:7px 4px;border:0;" +
     "border-bottom:1px solid #222b40;background:none;color:inherit;" +
     `font:12px/1.3 ${mono};text-align:left;cursor:pointer;` +
@@ -92,12 +97,115 @@ function ensureStyles(): void {
     ".km-hist .n{color:#e7c56f}.km-hist .r{text-align:right}" +
     ".km-hist .s{text-align:right;color:#8ea0c0}" +
     ".km-hist .ok{color:#39d353}" +
+    // K146: practice (violet, muted stars), and the quiet unplayed days.
+    ".km-hist .pr,.km-hist .st .pr{color:#a898e0}" +
+    ".km-hist button.km-un{color:#7d8cab}" +
+    ".km-hist button.km-un .n{color:#8d7c4c}" +
+    ".km-hist button.km-un .s{color:#66738f}" +
+    ".km-hist li[hidden]{display:none}" +
+    // Month headers stick to the top of the scrolling list.
+    ".km-hist .km-month{position:sticky;top:0;z-index:1;padding:7px 4px 4px;" +
+    "background:#1b2233;color:#8ea0c0;border-bottom:1px solid #2c3a55;" +
+    `font:650 11px/1.2 ${sans};letter-spacing:.06em;text-transform:uppercase}` +
+    ".km-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}" +
+    ".km-chip{min-height:26px;padding:0 10px;border-radius:13px;" +
+    "border:1px solid #3a4a6a;background:none;color:#c8d3e8;" +
+    `font:600 12px/1 ${sans};cursor:pointer;` +
+    "-webkit-tap-highlight-color:transparent;touch-action:manipulation}" +
+    ".km-chip:hover{background:#222b40}" +
+    ".km-chip[aria-pressed=true]{background:#2f3d5c;border-color:#8ea0c0;" +
+    "color:#e4ecf8}" +
+    ".km-chip:focus-visible{outline:2px solid #8fe6ff;outline-offset:2px}" +
+    // Narrow phones: the efficiency column goes (the stars stay).
+    "@media (max-width:400px){.km-hist button{grid-template-columns:" +
+    "3em 4.2em 1fr 3.8em 5.6em}.km-hist .e{display:none}}" +
     ".km-empty{padding:10px 4px;color:#8ea0c0}" +
     ".km-note{margin-top:10px;font-size:11.5px;color:#8ea0c0}" +
     ".km-note.km-warn{color:#e7c56f}" +
     ".km-foot{display:flex;justify-content:center;margin-top:12px}" +
-    "@media (pointer:coarse){.km-hist button{padding:10px 4px}}";
+    "@media (pointer:coarse){.km-hist button{padding:10px 4px}" +
+    ".km-chip{min-height:34px;padding:0 13px}}";
   document.head.appendChild(style);
+}
+
+// K146: the History gets its filter chips past this many days.
+const HISTORY_CHIPS_AFTER = 10;
+
+// One History row (K146): number, date, time, stars, efficiency, status.
+// A tap plays the day, or resumes its saved attempt; the title says which,
+// and whether it will be scored.
+function historyRow(e: HistoryEntry, play: () => void): HTMLLIElement {
+  const li = document.createElement("li");
+  const b = document.createElement("button");
+  b.type = "button";
+  let title = `${e.attempt ? "Resume" : "Play"} Daily #${e.n} (${formatDayDate(e.n)})`;
+  if (e.status === "official") title += ", a replay, not scored";
+  else if (e.practice) title += " as practice, not scored";
+  if (e.status === "practice" && e.more > 0) {
+    title += `. Practiced ${e.more + 1} times`;
+  }
+  b.title = title;
+  const cell = (text: string, cls: string): HTMLSpanElement => {
+    const s = document.createElement("span");
+    s.className = cls;
+    s.textContent = text;
+    b.appendChild(s);
+    return s;
+  };
+  cell(`#${e.n}`, "n");
+  cell(formatDayDate(e.n), "");
+  const r = e.result;
+  const pr = e.status === "practice" ? " pr" : "";
+  if (r) {
+    cell(formatDuration(r.timeMs), `r${pr}`);
+    // K155: the stars, with their explanation on hover (the legend
+    // below the list says what each needs; the row's tap plays).
+    const rating = ratingForResult(r);
+    const st = cell("", "st");
+    if (rating) {
+      const glyphs = starGlyphs(rating.stars);
+      const on = document.createElement("span");
+      on.className = `on${pr}`;
+      on.textContent = glyphs.slice(0, rating.stars);
+      const off = document.createElement("span");
+      off.className = "off";
+      off.textContent = glyphs.slice(rating.stars);
+      st.append(on, off);
+      st.title =
+        (pr ? "Practice, not scored. " : "") +
+        starExplanation(rating).join("\n");
+      st.setAttribute("aria-label", starLabel(rating.stars));
+    }
+    cell(`${efficiencyPercent(r.efficiency)}%`, `r e${pr}`);
+    if (pr) {
+      cell("practice", "s pr");
+    } else {
+      const late = e.late ? " late" : "";
+      const extra = e.more > 0 ? ` +${e.more}` : "";
+      cell(`✓${late}${extra}`, `s${late ? "" : " ok"}`);
+    }
+  } else if (e.attempt) {
+    // K47: unfinished and saved - tapping the row resumes it (practice
+    // when it began after its day).
+    const p = e.practice ? " pr" : "";
+    cell(formatDuration(e.attempt.elapsedMs), `r${p}`);
+    cell("", "st");
+    cell("", "r e");
+    cell("resume", `s${p}`);
+  } else {
+    cell("—", "r");
+    cell("", "st");
+    cell("", "r e");
+    if (e.status === "unplayed") {
+      b.className = "km-un";
+      cell("play", "s");
+    } else {
+      cell("played", "s");
+    }
+  }
+  b.addEventListener("click", play);
+  li.appendChild(b);
+  return li;
 }
 
 // The open view's teardown (null = closed).
@@ -136,7 +244,10 @@ export function openDailyStats(o: DailyStatsOptions): void {
       return;
     }
     if (e.key !== "Tab") return;
-    const focusable = [...card.querySelectorAll<HTMLElement>("button")];
+    // (Rows a History filter hides are not focusable.)
+    const focusable = [
+      ...card.querySelectorAll<HTMLElement>("button:not(:disabled)"),
+    ].filter((el) => el.offsetParent !== null);
     if (focusable.length === 0) return;
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
@@ -251,16 +362,15 @@ export function openDailyStats(o: DailyStatsOptions): void {
   card.append(h3t, today);
   if (todayWhy) card.appendChild(todayWhy);
 
-  // History, newest first, under a count of the official results' stars.
+  // History: every past daily, newest first (K146), under a count of the
+  // official results' stars (practice never counts).
   const h3h = document.createElement("h3");
   h3h.className = "km-h3row";
   h3h.append("History");
-  const days = Object.keys(data.days)
-    .map(Number)
-    .sort((a, b) => b - a);
+  const entries = dailyHistory(data, o.today);
   const starCounts = [0, 0, 0, 0];
-  for (const n of days) {
-    const rating = ratingForResult(data.days[String(n)].official);
+  for (const d of Object.values(data.days)) {
+    const rating = ratingForResult(d.official);
     if (rating) starCounts[rating.stars]++;
   }
   if (starCounts[1] + starCounts[2] + starCounts[3] > 0) {
@@ -280,71 +390,78 @@ export function openDailyStats(o: DailyStatsOptions): void {
     h3h.appendChild(sum);
   }
   card.appendChild(h3h);
-  if (days.length === 0) {
+  if (entries.length === 0) {
     const empty = document.createElement("div");
     empty.className = "km-empty";
-    empty.textContent = "Solve a daily to start your history.";
+    empty.textContent = "No past dailies yet.";
     card.appendChild(empty);
   } else {
     const list = document.createElement("ul");
     list.className = "km-hist";
-    for (const n of days) {
-      const d = data.days[String(n)];
-      const r = d.official;
-      const li = document.createElement("li");
-      const b = document.createElement("button");
-      b.type = "button";
-      b.title = `${!r && d.attempt ? "Resume" : "Play"} Daily #${n}`;
-      const cell = (text: string, cls: string): void => {
-        const s = document.createElement("span");
-        s.className = cls;
-        s.textContent = text;
-        b.appendChild(s);
-      };
-      cell(`#${n}`, "n");
-      cell(formatDayDate(n), "");
-      if (r) {
-        cell(formatDuration(r.timeMs), "r");
-        // K155: the stars, with their explanation on hover (the legend
-        // below the list says what each needs; the row's tap plays).
-        const rating = ratingForResult(r);
-        const st = document.createElement("span");
-        st.className = "st";
-        if (rating) {
-          const glyphs = starGlyphs(rating.stars);
-          const on = document.createElement("span");
-          on.className = "on";
-          on.textContent = glyphs.slice(0, rating.stars);
-          const off = document.createElement("span");
-          off.className = "off";
-          off.textContent = glyphs.slice(rating.stars);
-          st.append(on, off);
-          st.title = starExplanation(rating).join("\n");
-          st.setAttribute("aria-label", starLabel(rating.stars));
-        }
-        b.appendChild(st);
-        cell(`${efficiencyPercent(r.efficiency)}%`, "r");
-        const late = onTime(n, r) ? "" : " late";
-        const extra = d.replays.length > 0 ? ` +${d.replays.length}` : "";
-        cell(`✓${late}${extra}`, `s${late ? "" : " ok"}`);
-      } else if (d.attempt) {
-        // K47: unfinished and saved - tapping the row resumes it.
-        cell(formatDuration(d.attempt.elapsedMs), "r");
-        cell("", "st");
-        cell("", "r");
-        cell("resume", "s");
-      } else {
-        cell("—", "r");
-        cell("", "st");
-        cell("", "r");
-        cell("played", "s");
+    // Rows under sticky month headers; the filter chips hide rows, and a
+    // month header with no row left showing.
+    const rows: { li: HTMLLIElement; played: boolean; month: HTMLLIElement }[] =
+      [];
+    const months: HTMLLIElement[] = [];
+    let month: HTMLLIElement | null = null;
+    for (const e of entries) {
+      const label = formatDayMonth(e.n);
+      if (month === null || month.textContent !== label) {
+        month = document.createElement("li");
+        month.className = "km-month";
+        month.textContent = label;
+        months.push(month);
+        list.appendChild(month);
       }
-      b.addEventListener("click", () => {
+      const li = historyRow(e, () => {
         close();
-        o.onPlay(n, false);
+        o.onPlay(e.n, false);
       });
-      li.appendChild(b);
       list.appendChild(li);
+      rows.push({ li, played: e.status !== "unplayed", month });
+    }
+    // A long history (a year of dailies) gets All / Played / Not played.
+    if (rows.length > HISTORY_CHIPS_AFTER) {
+      const nPlayed = rows.filter((r) => r.played).length;
+      const chips = document.createElement("div");
+      chips.className = "km-chips";
+      chips.setAttribute("role", "group");
+      chips.setAttribute("aria-label", "Show days");
+      const buttons: HTMLButtonElement[] = [];
+      const chip = (
+        label: string,
+        count: number,
+        keep: (r: (typeof rows)[number]) => boolean
+      ): void => {
+        const c = document.createElement("button");
+        c.type = "button";
+        c.className = "km-chip";
+        c.textContent = label;
+        c.disabled = count === 0;
+        c.setAttribute("aria-pressed", String(buttons.length === 0));
+        c.addEventListener("click", () => {
+          for (const x of buttons) {
+            x.setAttribute("aria-pressed", String(x === c));
+          }
+          const shown = new Set<HTMLLIElement>();
+          for (const r of rows) {
+            r.li.hidden = !keep(r);
+            if (!r.li.hidden) shown.add(r.month);
+          }
+          for (const m of months) m.hidden = !shown.has(m);
+          list.scrollTop = 0;
+        });
+        buttons.push(c);
+        chips.appendChild(c);
+      };
+      chip("All", rows.length, () => true);
+      chip(`Played ${nPlayed}`, nPlayed, (r) => r.played);
+      chip(
+        `Not played ${rows.length - nPlayed}`,
+        rows.length - nPlayed,
+        (r) => !r.played
+      );
+      card.appendChild(chips);
     }
     card.appendChild(list);
   }
@@ -364,7 +481,7 @@ export function openDailyStats(o: DailyStatsOptions): void {
   switch (o.store.status) {
     case "ok":
       note.textContent =
-        "Saved in this browser only, unfinished attempts included. A day's first finish is its official result; later ones count as replays.";
+        "Saved in this browser only, unfinished attempts included. A daily's first finish is its official result; later ones are replays. An attempt begun after its day is practice, kept out of your stats.";
       break;
     case "unavailable":
       note.className = "km-note km-warn";

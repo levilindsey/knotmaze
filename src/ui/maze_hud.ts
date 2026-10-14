@@ -2,11 +2,11 @@
 // corner and the win banner. Plain DOM over the canvas; main.ts owns the
 // game state and hands these a snapshot.
 //
-// HUD: an optional title row (the daily on screen - a button that opens
-// the daily stats), then label/value rows. Rows appear only where they
-// mean something: efficiency once solved, backtracked outside trail mode,
-// dead ends with deadEnds on. The container ignores the pointer (taps on
-// the maze underneath still land); only the title takes clicks.
+// HUD: label/value rows. Rows appear only where they mean something:
+// efficiency once solved, backtracked outside trail mode, dead ends with
+// deadEnds on. It ignores the pointer (taps on the maze underneath still
+// land). The daily's title row, a button that opened the daily stats, moved
+// to the mode badge (K151, ui/mode_badge.ts).
 //
 // The win banner shows K155's stars under its heading (starsWidget: a tap
 // opens what each star needs and where the run landed; hover shows it too).
@@ -14,11 +14,8 @@
 import { efficiencyPercent, formatDuration } from "../game/maze_stats";
 import { starExplanation, starLabel } from "../game/star_rating";
 import type { StarRating } from "../game/star_rating";
-import { whenReduced } from "./motion";
 
 export interface HudSnapshot {
-  // Title row text (the daily on screen), or null for none.
-  title: string | null;
   // The stats rows (the showMazeStats setting).
   showStats: boolean;
   timeMs: number;
@@ -80,16 +77,6 @@ export function ensureHudStyles(): void {
     ".km-hud .k{color:#8ea0c0;white-space:nowrap}" +
     ".km-hud .v{color:#e4ecf8;text-align:right;white-space:nowrap;" +
     "font-variant-numeric:tabular-nums}" +
-    ".km-hud .km-title{grid-column:1/-1;pointer-events:auto;cursor:pointer;" +
-    "display:flex;align-items:center;gap:6px;margin:0;padding:1px 0 2px;" +
-    "border:0;background:none;color:#e7c56f;text-align:left;" +
-    `font:600 12px/1.5 ${mono};-webkit-tap-highlight-color:transparent}` +
-    ".km-hud .km-title.km-solo{padding:0}" +
-    ".km-hud .km-title:not(.km-solo){border-bottom:1px solid #2c3a55;" +
-    "margin-bottom:3px;padding-bottom:4px}" +
-    ".km-hud .km-title svg{width:12px;height:12px;flex:0 0 auto;opacity:.8}" +
-    ".km-hud .km-title:focus-visible{outline:2px solid #8ea0c0;" +
-    "outline-offset:2px}" +
     // Win banner: top-center on wide screens, bottom-center on narrow ones
     // (clear of the HUD in the top-left and the menu in the top-right).
     ".km-banner{position:fixed;left:50%;transform:translateX(-50%);" +
@@ -151,52 +138,10 @@ export function ensureHudStyles(): void {
     `font:600 13px/1.3 ${sans};opacity:0;pointer-events:none;` +
     "transition:opacity .2s,transform .2s}" +
     ".km-toast.km-toast-on{opacity:1;transform:translate(-50%,0)}" +
-    // Mode badge (ui/mode_badge.ts, K73): a pill just left of the
-    // hamburger (42 px square at max(10px, safe area) from the top-right
-    // corner), vertically centered on it; fit() picks the label width.
-    ".km-mode{position:fixed;z-index:30;box-sizing:border-box;margin:0;" +
-    "top:calc(max(10px,env(safe-area-inset-top)) + 5px);" +
-    "right:calc(max(10px,env(safe-area-inset-right)) + 50px);" +
-    "height:32px;display:inline-flex;align-items:center;gap:6px;" +
-    "padding:0 12px 0 9px;border-radius:16px;white-space:nowrap;" +
-    `font:600 12px/1 ${sans};cursor:pointer;` +
-    "box-shadow:0 2px 8px #00000059;animation:km-mode-in .25s ease-out;" +
-    "-webkit-tap-highlight-color:transparent;touch-action:manipulation}" +
-    ".km-mode[hidden]{display:none}" +
-    ".km-mode svg{width:15px;height:15px;flex:0 0 auto;display:block}" +
-    ".km-mode .km-mode-s{display:none}" +
-    ".km-mode.km-fit-short .km-mode-l{display:none}" +
-    ".km-mode.km-fit-short .km-mode-s{display:inline}" +
-    ".km-mode.km-fit-icon .km-mode-l,.km-mode.km-fit-icon .km-mode-s" +
-    "{display:none}" +
-    ".km-mode.km-fit-icon{width:32px;padding:0;justify-content:center}" +
-    // Last resort on very narrow screens: the icon below the hamburger.
-    ".km-mode.km-fit-low{top:calc(max(10px,env(safe-area-inset-top)) + 50px);" +
-    "right:max(10px,env(safe-area-inset-right))}" +
-    // Not the daily: neutral slate. A replay: muted amber (the HUD's gold).
-    ".km-mode.km-free{background:#1b2233eb;color:#c8d3e8;" +
-    "border:1px solid #3a4a6a}" +
-    ".km-mode.km-free svg{color:#9fb0cf}" +
-    ".km-mode.km-free:hover{background:#26314aeb}" +
-    ".km-mode.km-replay{background:#2b2415eb;color:#e7c56f;" +
-    "border:1px solid #74602c}" +
-    ".km-mode.km-replay:hover{background:#372d19eb}" +
-    ".km-mode:focus-visible{outline:2px solid #8fe6ff;outline-offset:2px}" +
-    "@keyframes km-mode-in{from{opacity:0}to{opacity:1}}" +
-    // Static under reduced motion (the Motion setting, ui/motion.ts).
-    whenReduced(".km-mode", "animation:none") +
-    "@media (pointer:coarse){.km-hud{font-size:13px}" +
-    ".km-hud .km-title{font-size:13px}.km-btn{min-height:40px}" +
-    // Touch: the hamburger's full height, a finger-sized target.
-    ".km-mode{top:max(10px,env(safe-area-inset-top));height:42px;" +
-    "border-radius:21px;padding:0 15px 0 12px;font-size:13px}" +
-    ".km-mode.km-fit-icon{width:42px;padding:0}}";
+    // (The mode badge styles itself: ui/mode_badge.ts.)
+    "@media (pointer:coarse){.km-hud{font-size:13px}.km-btn{min-height:40px}}";
   document.head.appendChild(style);
 }
-
-const CHART_ICON =
-  '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" ' +
-  'd="M2 13h12v1.5H2zM3 8h2.4v4H3zm3.8-4h2.4v8H6.8zm3.8 2H13v6h-2.4z"/></svg>';
 
 // An "i" in a circle: the stars explain themselves when tapped.
 const INFO_ICON =
@@ -245,22 +190,15 @@ export function starsWidget(r: StarRating): [HTMLButtonElement, HTMLDivElement] 
 
 export class MazeHud {
   readonly el: HTMLDivElement;
-  private readonly title: HTMLButtonElement;
-  private readonly onTitle: () => void;
   private timeCell: HTMLElement | null = null;
   private lastSig = "";
 
-  constructor(onTitle: () => void) {
+  constructor() {
     ensureHudStyles();
-    this.onTitle = onTitle;
     this.el = document.createElement("div");
     this.el.id = "maze-hud";
     this.el.className = "km-hud";
     this.el.hidden = true;
-    this.title = document.createElement("button");
-    this.title.type = "button";
-    this.title.className = "km-title";
-    this.title.addEventListener("click", () => this.onTitle());
     document.body.appendChild(this.el);
   }
 
@@ -270,31 +208,20 @@ export class MazeHud {
     // K80: the real-time mode's catch count is part of the game, not a
     // stat: its row shows with the stat rows off too.
     const chase = s?.catches != null;
-    if (!s || (!s.title && !s.showStats && !chase)) {
+    if (!s || (!s.showStats && !chase)) {
       this.el.hidden = true;
       this.lastSig = "";
       return;
     }
     const rows: Array<[string, string]> = s.showStats
       ? statRows(s)
-      : chase
-        ? [["caught", String(s.catches)]]
-        : [];
-    const sig = JSON.stringify([s.title, rows]);
+      : [["caught", String(s.catches)]];
+    const sig = JSON.stringify(rows);
     this.el.hidden = false;
     if (sig === this.lastSig) return;
     this.lastSig = sig;
     this.el.textContent = "";
     this.timeCell = null;
-    if (s.title) {
-      this.title.innerHTML = "";
-      this.title.append(s.title);
-      this.title.insertAdjacentHTML("beforeend", CHART_ICON);
-      this.title.title = "Your daily stats";
-      this.title.setAttribute("aria-label", `${s.title} - open your daily stats`);
-      this.title.classList.toggle("km-solo", rows.length === 0);
-      this.el.appendChild(this.title);
-    }
     for (const [k, v] of rows) {
       const kEl = document.createElement("span");
       kEl.className = "k";
