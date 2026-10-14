@@ -29,8 +29,9 @@ entry is labeled with its source; the narrative is in
   solved, rounded down; distinct junctions; distinct dead-end tips, only
   with deadEnds on; a g/d/b move log for sharing).
   DAILY - binding rules: (1) a daily's design comes ONLY from its frozen
-  definition (ui/daily_link.ts DAILY_V1 = codec v3's defaults + a seed
-  from the day number), never PARAM_DEFAULTS; to change the daily, append
+  definition (ui/daily_link.ts DAILY_V1 = codec v3's defaults + K74's
+  maze overrides + a seed from the day number; K74 edited it in place,
+  pre-launch), never PARAM_DEFAULTS; to change the daily, append
   DAILY_V<n+1> with fromDay a few days ahead (open tabs cannot learn
   it), never edit a published one; test/ui/daily_link.test.ts pins
   dailies #1-#3 (a failure there means generation code moved every
@@ -143,6 +144,13 @@ entry is labeled with its source; the narrative is in
   codec v3's defaults. A future DAILY_V<n> built on codec v4 gets 10
   unless its overrides say otherwise - K46's memory-trail days were
   designed around 5 (docs/design/K46_daily_variety.md).
+  K74 (2026-10-13, pre-launch) EDITED V4 IN PLACE (`K74_V4_DEFAULTS` in
+  param_codec.ts): exitClearance 5 -> 12, deadEnds on, deadEndDensity
+  0.25 -> 0.5, and appended deadEndLength (index 71, default 20). v1-v3
+  links still read the old values. A listed boolean is a flip of the
+  default, so a pre-K74 v4 link that turned dead ends ON now turns them
+  OFF (`?12l.IS3ygt`). DAILY_V1 takes the same four values as overrides
+  on codec v3's defaults (its trailLength stays 5).
 
 ## The panel
 
