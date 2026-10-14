@@ -4098,6 +4098,9 @@ async function main(): Promise<void> {
       optimal: wg.optimalLength,
       backtrack: c.backtrackDist,
       walked: c.walkedDist, // K155
+      // K100: the solve's restarts, and the fog's explored stamps.
+      restarts: c.restarts,
+      fog: fb.fogProbe(),
       trailMode: c.trailMode,
       pathViz: params.pathViz,
       trailLength: params.trailLength,
