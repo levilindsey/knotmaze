@@ -3,20 +3,28 @@
 #
 #   pwsh scripts/preview.ps1 -Port 5175                   # the working tree
 #   pwsh scripts/preview.ps1 -Port 5176 -Ref 31c3c91      # any commit
+#   pwsh scripts/preview.ps1 -Ref 31c3c91 -Root <dir> -BuildOnly
+#                                                          # build, don't serve
 #
 # A -Ref build checks the commit out into a temporary git worktree first,
 # so the working tree is never touched. Builds land in
-# $env:TEMP\knotmaze-previews\<ref>; each one carries its commit in the
-# build stamp, so check the stamp before trusting an A/B. The server runs
+# $env:TEMP\knotmaze-previews\<ref> unless -Root names a per-run folder
+# (K150: that shared folder is where concurrent agents overwrite each
+# other's builds; scripts/phone_pass.ps1 passes its own); each one carries
+# its commit in the build stamp, so check the stamp before trusting an A/B.
+# -BuildOnly builds into <Root>\<ref> and exits. Otherwise the server runs
 # in the foreground (--host: reachable over the LAN, Tailscale, or the
 # phone via scripts/phone.ps1 -Ports <port>).
 param(
-  [Parameter(Mandatory = $true)][int]$Port,
-  [string]$Ref = ""
+  [int]$Port = 0,
+  [string]$Ref = "",
+  [string]$Root = "",
+  [switch]$BuildOnly
 )
 $ErrorActionPreference = "Stop"
+if (-not $BuildOnly -and $Port -le 0) { throw "-Port is required unless -BuildOnly." }
 $repo = Split-Path $PSScriptRoot -Parent
-$root = Join-Path $env:TEMP "knotmaze-previews"
+$root = if ($Root) { $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Root) } else { Join-Path $env:TEMP "knotmaze-previews" }
 $source = $repo
 $worktree = $null
 
@@ -47,6 +55,7 @@ try {
   }
 }
 
+if ($BuildOnly) { Write-Host "Built $label into $out"; return }
 Write-Host "Serving $label on http://localhost:$Port (Ctrl+C stops)"
 Push-Location $repo
 try { npx vite preview --outDir $out --host --port $Port --strictPort }
