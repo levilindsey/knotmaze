@@ -291,6 +291,14 @@ the phone's viewport: plumbing only, never timings.
   ERR_MODULE_NOT_FOUND; K80's wrapper loads it through vite's
   `loadConfigFromFile` instead.
 
+- K104 (2026-10-13), motion and size: while the desktop's session is
+  attached over Remote Desktop (or left disconnected after one), probe
+  Chrome reports `prefers-reduced-motion: reduce`, so Motion "follow
+  system" runs reduced plucks and still backgrounds; at the console it
+  reports no-preference. Emulate no-preference before load whatever the
+  session. Set pluckSize only with `&psz=`: main.ts re-syncs
+  `plucks.size` from the params every frame.
+
 ## Census and diagnosis rules
 
 - *From the open artifact queue (2026-10-11), census lore:* Census lore from
