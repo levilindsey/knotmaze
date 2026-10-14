@@ -3,6 +3,13 @@ import {
   a1,
   band,
   coverage,
+  CUE_GAIN_MAX,
+  CUE_RAMP,
+  CUE_SIZE_REF,
+  CUE_TAP,
+  CUE_UNIT,
+  cueStrength,
+  cueWeight,
   envelope,
   ghostShape,
   nodeCap,
@@ -342,6 +349,85 @@ describe("whole-segment term (K104)", () => {
     expect(unitShift(10.5, 0.4, 10, true)).toBe(10);
     // Open chains never shift.
     expect(unitShift(-1, 9, 10, false)).toBe(0);
+  });
+});
+
+describe("reduced-motion cue (K104)", () => {
+  it("stays in [0, 1], and is 0 outside the extent and at its ends", () => {
+    let n = 0;
+    for (const [e0, e1] of [[0, 0.06], [1, 1.4], [-2, 3], [5, 25]]) {
+      for (const ramp of [0, 0.2, 0.52, 5]) {
+        for (const tap of [0, 0.4, 1, 2]) {
+          for (let k = -10; k <= 110; k++) {
+            const u = e0 + ((e1 - e0) * k) / 100;
+            const w = cueWeight(u, e0, e1, ramp, tap);
+            expect(w).toBeGreaterThanOrEqual(0);
+            expect(w).toBeLessThanOrEqual(1);
+            if (k <= 0 || k >= 100) expect(w).toBe(0);
+            n++;
+          }
+        }
+      }
+    }
+    expect(n).toBe(4 * 4 * 4 * 121);
+    // A degenerate extent draws nothing.
+    expect(cueWeight(1, 1, 1, 0.5, 1)).toBe(0);
+    expect(cueWeight(1, 2, 1, 0.5, 1)).toBe(0);
+  });
+
+  it("a plateau over the unit, the tapped lobe's bump on top", () => {
+    const ramp = CUE_RAMP * 0.26;
+    // Away from the ends: exactly the plateau, or plateau + bump.
+    expect(cueWeight(5, 0, 10, ramp, 0)).toBeCloseTo(CUE_UNIT, 12);
+    expect(cueWeight(5, 0, 10, ramp, 1)).toBeCloseTo(CUE_UNIT + CUE_TAP, 12);
+    expect(CUE_UNIT + CUE_TAP).toBeLessThanOrEqual(1);
+    // Inside an end ramp the plateau eases in (smoothstep).
+    expect(cueWeight(ramp / 2, 0, 10, ramp, 0)).toBeCloseTo(CUE_UNIT * 0.5, 12);
+    // A short unit still reaches the plateau mid-unit (the ramp shrinks
+    // to a third of it).
+    expect(cueWeight(0.15, 0, 0.3, ramp, 0)).toBeCloseTo(CUE_UNIT, 12);
+    expect(cueWeight(0.05, 0, 0.3, ramp, 0)).toBeCloseTo(0.5 * CUE_UNIT, 12);
+    // No ramp: the plateau starts at the ends.
+    expect(cueWeight(0.001, 0, 10, 0, 0)).toBeCloseTo(CUE_UNIT, 12);
+  });
+
+  it("continuous along the unit (no step a pixel could show)", () => {
+    for (const [e0, e1, ramp] of [[0, 0.3, 0.52], [0, 4, 0.52], [2, 9, 0.1]]) {
+      const N = 20000;
+      let prev = 0;
+      let maxStep = 0;
+      for (let k = 0; k <= N; k++) {
+        const u = e0 + ((e1 - e0) * k) / N;
+        // The tapped lobe: the middle third of the unit.
+        const x = (k / N - 1 / 3) * 3;
+        const tap = x > 0 && x < 1 ? Math.sin(Math.PI * x) : 0;
+        const w = cueWeight(u, e0, e1, ramp, tap);
+        if (k > 0) maxStep = Math.max(maxStep, Math.abs(w - prev));
+        prev = w;
+      }
+      expect(maxStep).toBeLessThan(0.01);
+    }
+  });
+
+  it("strength: 1 at the default size and a tap, monotone, gain capped", () => {
+    expect(cueStrength(CUE_SIZE_REF, 1)).toBe(1);
+    expect(cueStrength(0, 1)).toBe(0);
+    expect(cueStrength(CUE_SIZE_REF, 0)).toBe(0);
+    expect(cueStrength(CUE_SIZE_REF, -1)).toBe(0);
+    expect(cueStrength(CUE_SIZE_REF, 9)).toBe(CUE_GAIN_MAX);
+    expect(cueStrength(3, 1)).toBeCloseTo(Math.sqrt(3 / CUE_SIZE_REF), 12);
+    let prev = -1;
+    for (let s = 0; s <= 3.001; s += 0.05) {
+      const v = cueStrength(s, 1);
+      expect(v).toBeGreaterThan(prev);
+      prev = v;
+    }
+    prev = -1;
+    for (let g = 0; g <= CUE_GAIN_MAX + 1e-9; g += 0.05) {
+      const v = cueStrength(CUE_SIZE_REF, g);
+      expect(v).toBeGreaterThan(prev);
+      prev = v;
+    }
   });
 });
 

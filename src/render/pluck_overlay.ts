@@ -22,6 +22,14 @@
 //     (At over-nodes the overlay is SUPPOSED to draw over the partner.)
 // Soft nodes keep the overlay's core opaque inside footprints (amplitude
 // under 0.9 h there), where the static thread is still drawn beneath.
+//
+// REDUCED MOTION (K104 goal 3): a pluck started under the Motion setting's
+// reduced mode is STILL - the same strip at zero amplitude (exactly the
+// thread's own anti-aliased band), drawn in WHITE at a per-station alpha
+// that brightens the unit and fades on the voice's clock (pluck_model's
+// cueWeight; writeStill). Nothing moves, so nothing is collapsed and no
+// neighbor is measured; the weave rules hold as they do for any swing of
+// zero. The sound is main.ts's and does not change.
 
 import {
   Buffer,
@@ -36,7 +44,11 @@ import {
 import type { SplineSamples } from "../geometry/spline_generator";
 import {
   ATTACK_MIX,
+  CUE_KILL,
+  CUE_RAMP,
   CUE_WHITE,
+  cueStrength,
+  cueWeight,
   GHOST_HZ,
   GHOST_JITTER,
   GHOST_TINT,
@@ -417,6 +429,7 @@ class PluckBlurMesh {
   // shape.
   readonly wOf = new Float32Array(MAX_STATIONS);
   readonly wsOf = new Float32Array(MAX_STATIONS);
+  readonly cueOf = new Float32Array(MAX_STATIONS); // A still pluck's cueWeight.
   readonly tightOf = new Uint8Array(MAX_STATIONS); // Bend tighter than the strip.
   readonly tightAllow = new Float32Array(MAX_STATIONS); // Collapse allowance.
   used = 0;
@@ -545,6 +558,11 @@ interface ActivePluck {
   wPhase: number;
   uE0: number;
   uE1: number;
+  // Reduced motion: no displacement, the unit brightens (writeStill) at
+  // cueGain (the request's gain, capped) x its brightest station's weight.
+  still: boolean;
+  cueGain: number;
+  cuePeak: number;
 }
 
 const smooth01 = (x: number): number => {
@@ -559,6 +577,9 @@ export class PluckOverlay {
   ghost = 0.35; // pluckGhost: strobe-ghost strength.
   sustain = 0.5; // The voice's sustain (decay clock).
   // Reduced motion: set each frame from the Motion setting (ui/motion.ts).
+  // Plucks started under it are still (the unit brightens, nothing moves);
+  // plucks already ringing when it turns on keep moving, without their
+  // ghost and attack.
   reducedMotion = false;
   // The collapse's edge radius, x h (COLLAPSE_ROUND; 0 = the raw profile,
   // for same-state A/Bs - set it, then flag every live pluck needsLayout).
@@ -629,6 +650,9 @@ export class PluckOverlay {
       side: p.side,
       evicting: p.evicting,
       stations: p.mesh.used,
+      still: p.still,
+      // [gain, brightest station's cueWeight] of a still pluck's cue.
+      cue: p.still ? [+p.cueGain.toFixed(3), +p.cuePeak.toFixed(3)] : null,
       W0: +p.W0.toFixed(4),
       unit: [+p.uE0.toFixed(3), +p.uE1.toFixed(3)],
       lobes: p.lobes.map((l) => ({
@@ -690,7 +714,9 @@ export class PluckOverlay {
       return false;
     }
     const h = host.halfWidth();
-    const reduced = this.reducedMotion;
+    // Reduced motion: a STILL pluck - the unit brightens instead of moving
+    // (writeStill); the sound is main.ts's and does not change.
+    const still = this.reducedMotion;
     // Vibrating spans (hide zones trimmed) set the shape and amplitude.
     const span = (s: { a: number; b: number; s0: number; s1: number }): [number, number] =>
       vibratingSpan(
@@ -708,11 +734,9 @@ export class PluckOverlay {
       return false;
     }
     const beta = clampBeta(req.beta ?? (req.arc - t0) / tapLen);
-    const aTap =
-      tapAmplitude(tapLen, h, this.size, req.gain) * (reduced ? 0.6 : 1);
+    const aTap = tapAmplitude(tapLen, h, this.size, req.gain);
     // The whole-segment term: a set amount, whatever the unit's length.
-    let W0 =
-      wholeAmplitude(h, this.size, req.gain, this.wholeAmp) * (reduced ? 0.6 : 1);
+    let W0 = still ? 0 : wholeAmplitude(h, this.size, req.gain, this.wholeAmp);
     const lobes: Lobe[] = spans.map((s) => {
       const nA = s.a >= 0 ? nodes[s.a] : null;
       const nB = s.b >= 0 ? nodes[s.b] : null;
@@ -729,7 +753,7 @@ export class PluckOverlay {
         k: s.k,
         A0: len >= LOBE_MIN_LEN ? sympatheticAmplitude(aTap, s.k, len, tapLen) : 0,
         beta: isTap ? beta : 0.5,
-        attack: isTap && !reduced,
+        attack: isTap && !still,
         onset: Math.abs(s.k) * ONSET_STAGGER,
         phase: Math.random() * Math.PI * 2,
         footA: nA ? nA.footPos : 0,
@@ -746,25 +770,37 @@ export class PluckOverlay {
         room: null,
       };
     });
-    const cand = this.neighbors(samples, lobes, h);
-    this.capClearance(req.chain, samples, lobes, h, cand);
-    if (W0 > 0) this.wholeRooms(req.chain, samples, lobes, h, cand);
-    // K105: neighbors follow the tapped lobe's capped swing.
-    const capped = lobes.map((l) => ({ k: l.k, A0: l.A0, len: l.e1 - l.e0 }));
-    rescaleSympathetic(capped, tapLen);
-    for (let i = 0; i < lobes.length; i++) lobes[i].A0 = capped[i].A0;
+    if (!still) {
+      // (A still pluck never leaves its band: no neighbor to measure.)
+      const cand = this.neighbors(samples, lobes, h);
+      this.capClearance(req.chain, samples, lobes, h, cand);
+      if (W0 > 0) this.wholeRooms(req.chain, samples, lobes, h, cand);
+      // K105: neighbors follow the tapped lobe's capped swing.
+      const capped = lobes.map((l) => ({ k: l.k, A0: l.A0, len: l.e1 - l.e0 }));
+      rescaleSympathetic(capped, tapLen);
+      for (let i = 0; i < lobes.length; i++) lobes[i].A0 = capped[i].A0;
+    }
 
     // RE-PLUCK: a ringing unit that shares a lobe with this one is absorbed
     // - shared lobes restart their attack at max(current, new) amplitude
     // (a harp re-pluck damps and re-excites), its other lobes ride along
     // at their current amplitude, and so does its whole-segment term.
+    // Still plucks never merge: white over white compounds in either draw
+    // order, each cue on its own clock. A still and a moving pluck never
+    // share a lobe either - the cue would hide under the moving core or
+    // sit on its blur, by pool order - so the newer one takes over.
     for (let i = this.active.length - 1; i >= 0; i--) {
       const old = this.active[i];
       if (old.chain !== req.chain || old.evicting) continue;
+      if (still && old.still) continue;
       const shares = old.lobes.some((ol) =>
         lobes.some((nl) => nl.keyA === ol.keyA && nl.keyB === ol.keyB && ol.keyA >= 0)
       );
       if (!shares) continue;
+      if (old.still !== still) {
+        this.release(i, false);
+        continue;
+      }
       // The old unit's coordinates may sit a whole loop away from this
       // one's on a closed chain: align them through a shared lobe.
       let delta = 0;
@@ -804,7 +840,7 @@ export class PluckOverlay {
       live[0].evicting = true;
       this.stats.evicted++;
     }
-    const tau = visualTau(req.freq, this.sustain) * (reduced ? 0.7 : 1);
+    const tau = visualTau(req.freq, this.sustain);
     const pl: ActivePluck = {
       id: this.nextId++,
       chain: req.chain,
@@ -829,6 +865,9 @@ export class PluckOverlay {
       wPhase: W0 > 0 ? Math.random() * Math.PI * 2 : 0,
       uE0: 0,
       uE1: 0,
+      still,
+      cueGain: still ? cueStrength(this.size, req.gain) : 0,
+      cuePeak: 0,
     };
     lobes.sort((p, q) => p.s0 + p.shift - (q.s0 + q.shift));
     this.active.push(pl);
@@ -1185,6 +1224,10 @@ export class PluckOverlay {
       l.segs = segs;
       // Under-node clip reach along the partner: past the swing + thread.
       const reach = Math.min(CLIP_REACH, host.casing() + l.A0 + p.W0 + h + 0.1);
+      // A still pluck's band meets the partner's casing band over the
+      // crossing's whole parallelogram, however oblique (stillReach).
+      const reachA = p.still && l.lineA ? this.stillReach(samples, l.s0, l.lineA, h) : reach;
+      const reachB = p.still && l.lineB ? this.stillReach(samples, l.s1, l.lineB, h) : reach;
       const eL = l.e1 - l.e0;
       for (let i = 0; i <= segs; i++) {
         const arc = l.s0 + (L * i) / segs;
@@ -1228,8 +1271,8 @@ export class PluckOverlay {
           } else {
             m.clipB.fill(0, o4, o4 + 4);
           }
-          m.clipF[o2] = la ? reach : 0;
-          m.clipF[o2 + 1] = lb ? reach : 0;
+          m.clipF[o2] = la ? reachA : 0;
+          m.clipF[o2 + 1] = lb ? reachB : 0;
         }
         n++;
       }
@@ -1269,9 +1312,28 @@ export class PluckOverlay {
         uPrev = u;
       }
     }
+    let cuePeak = 0;
     for (let i = 0; i < n; i++) {
       const l = lobes[m.lobeOf[i]];
       const arc = arcAt[i];
+      if (p.still) {
+        // Nothing swings: the strip is the thread's own band, and cueOf
+        // carries how much of the cue each station shows (cueWeight).
+        m.pkOf[i] = 0;
+        m.wOf[i] = 0;
+        m.wsOf[i] = 0;
+        m.fOf[i] = 0;
+        const c = cueWeight(
+          arc + l.shift,
+          p.uE0,
+          p.uE1,
+          CUE_RAMP * h,
+          l.k === 0 ? Math.sin(Math.PI * xAt[i]) : 0
+        );
+        m.cueOf[i] = c;
+        if (c > cuePeak) cuePeak = c;
+        continue;
+      }
       const dA = arc - l.s0;
       const dB = l.s1 - arc;
       const shape = wholeShape(arc + l.shift, p.uE0, p.uE1);
@@ -1317,6 +1379,8 @@ export class PluckOverlay {
         m.pkOf[i] = this.peakAt(l, xAt[i], dA, dB, h, W0 * m.wOf[i]);
       }
     }
+    p.cuePeak = cuePeak;
+    if (p.still && cuePeak <= 0) return false;
 
     // Extrude with the CONCAVE-SIDE clamp (a strip wider than the local
     // turn radius folds over itself - the P3.34 lesson, which RibbonMesh
@@ -1460,13 +1524,21 @@ export class PluckOverlay {
     m.upload(["aPosition", "aUV", "aClipA", "aClipB", "aClipF"]);
     m.writeQuads();
 
-    // Static colors (knot mode): once per layout.
-    if (host.staticColors()) this.writeColors(p);
+    if (p.still) {
+      // The cue is white at zero swing: the strip draws exactly the band.
+      m.col.fill(1);
+      m.env.fill(0);
+      m.upload(["aCol", "aEnv"]);
+    } else if (host.staticColors()) {
+      // Static colors (knot mode): once per layout.
+      this.writeColors(p);
+    }
 
     // This pluck's base collapse: inside lobes, outside footprints, the
-    // base narrows to what the overlay's opaque core always covers.
+    // base narrows to what the overlay's opaque core always covers. A
+    // still pluck's band covers the thread exactly: nothing to collapse.
     const count = host.baseSampleCount(p.chain);
-    if (count > 1) {
+    if (count > 1 && !p.still) {
       if (!p.mask || p.mask.length !== count) p.mask = new Float32Array(count);
       const mask = p.mask;
       mask.fill(1);
@@ -1606,6 +1678,25 @@ export class PluckOverlay {
     return vis;
   }
 
+  // A still pluck's under-node clip reach (rule 4): its band (half-width h)
+  // meets the partner's casing band (casing()) in a parallelogram reaching
+  // (casing cos + h) / sin along the partner, theta the crossing angle at
+  // the node - past the moving reach at oblique crossings. sin is floored
+  // at 0.25 (G1's oblique-crossing floor) and +0.25 clears the shader's
+  // 0.2 fade; CLIP_REACH caps it where the partner stops being straight.
+  private stillReach(
+    samples: SplineSamples,
+    arc: number,
+    line: [number, number, number, number],
+    h: number
+  ): number {
+    const sc = this.scratch;
+    this.host.sampleAt(samples, arc, sc, 0);
+    const sin = Math.max(0.25, Math.abs(sc[2] * line[3] - sc[3] * line[2]));
+    const cos = Math.abs(sc[2] * line[2] + sc[3] * line[3]);
+    return Math.min(CLIP_REACH, (this.host.casing() * cos + h) / sin + 0.25);
+  }
+
   // Station colors: the thread's own, brightened toward white by the
   // whole-segment cue (cue = this frame's CUE_WHITE share; x its shape).
   private writeColors(p: ActivePluck, cue = 0): void {
@@ -1633,6 +1724,7 @@ export class PluckOverlay {
   // Per-frame attributes: the swept envelope, attack mix, ghost, colors.
   // Returns false once the pluck has died away.
   private writeFrame(p: ActivePluck): boolean {
+    if (p.still) return this.writeStill(p);
     const host = this.host;
     const m = p.mesh;
     const h = host.halfWidth();
@@ -1735,6 +1827,32 @@ export class PluckOverlay {
     const cue =
       this.wholeMode === "cue" && p.W0 > 0 ? CUE_WHITE * (aW / p.W0) : 0;
     if (!host.staticColors() || cue > 0) this.writeColors(p, cue);
+    return true;
+  }
+
+  // A still pluck's frame (reduced motion): no envelope, no ghost, no
+  // attack - only the cue's alpha, the voice's decay on the same clock as
+  // a moving pluck's (instant rise; the eviction fade included). Returns
+  // false once the cue's brightest station drops under CUE_KILL.
+  private writeStill(p: ActivePluck): boolean {
+    const m = p.mesh;
+    const level =
+      p.t < 0
+        ? 0
+        : p.cueGain * Math.exp(-p.t / p.tau) * (p.evicting ? Math.max(0, p.fade) : 1);
+    if (p.t >= 0 && level * p.cuePeak < CUE_KILL) return false;
+    for (let i = 0; i < m.used; i++) {
+      const a = m.visOf[i] * Math.min(1, level * m.cueOf[i]);
+      for (let v = 0; v < 2; v++) {
+        const o4 = (i * 2 + v) * 4;
+        m.aux[o4] = 0;
+        m.aux[o4 + 1] = 0;
+        m.aux[o4 + 2] = 0;
+        m.aux[o4 + 3] = a;
+      }
+    }
+    p.ghostArea = 0;
+    m.upload(["aAux"]);
     return true;
   }
 
