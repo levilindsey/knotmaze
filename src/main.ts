@@ -19,6 +19,7 @@ import {
   budgetedStep,
   newSettleBudget,
   recordStepCost,
+  VisibleClock,
 } from "./physics/settle_budget";
 import type { SettleBudget, StepLimits } from "./physics/settle_budget";
 import { RibbonRenderer } from "./render/ribbon_renderer";
@@ -149,14 +150,19 @@ const CAM_MAX_DT = 1;
 // whole intro). It stands aside while a thread is grabbed, and ends at the
 // first sleep or at LOAD_SIM_CAP simulated seconds - a SIMULATED cap like
 // the loader's: a wall cap would hand a slow device back to the spiral
-// mid-settle - or, last resort, BUDGET_WALL_CAP_MS.
+// mid-settle - or, last resort, BUDGET_WALL_CAP_MS. Both phases' wall caps
+// count VISIBLE time (VisibleClock): a hidden tab's gap does not count.
 const PRESETTLE_SIM = 1.2;
 const LOADER_DELAY_MS = 300;
 const LOADER_MIN_MS = 400;
 // Sim seconds a settle-first load is predicted to run (K63: every design
 // sleeps ~5.0 sim-s in), for the loader's show-or-not call.
 const NOMINAL_SLEEP_SIM = 5;
-const BUDGET_WALL_CAP_MS = 120000;
+// Last resort only. Under 4x CPU throttle a gs 18 settle's budget ran 96-
+// 106 s to its first sleep (.claude/probes/K147/results.md), and with one
+// substep a frame LOAD_SIM_CAP ends even a never-sleeper's budget within
+// 1200 frames, before this on any device rendering under 250 ms a frame.
+const BUDGET_WALL_CAP_MS = 300000;
 // At least one substep every frame, even when one costs more than the
 // budget (measured against one every k frames: .claude/probes/K147).
 const SETTLE_MIN_ONE = true;
@@ -451,6 +457,7 @@ async function main(): Promise<void> {
   // branch); presettleEnd says why it may end ("" = still settling).
   let presettle = false;
   let presettleWall0 = 0;
+  const presettleClock = new VisibleClock();
   let presettleSim0 = 0;
   let presettleWorkMs = 0; // Wall ms inside its step() slices.
   let presettleEnd = "";
@@ -459,6 +466,7 @@ async function main(): Promise<void> {
   // sleep (null = not armed).
   let armedBudget: SettleBudget | null = null;
   let budgetWall0 = 0;
+  const budgetClock = new VisibleClock();
   // The last pre-settle and budgeted settle (probes: __knotSettle).
   const settleInfo = {
     presettle: { ms: 0, workMs: 0, sim: 0, loader: false, endedBy: "" },
@@ -977,6 +985,7 @@ async function main(): Promise<void> {
     physState = "loading";
     presettle = true;
     presettleWall0 = performance.now();
+    presettleClock.start(presettleWall0);
     presettleSim0 = ps.simTime;
     presettleWorkMs = 0;
     presettleEnd = "";
@@ -1032,12 +1041,12 @@ async function main(): Promise<void> {
       } else if (presettleEnd === "") {
         if (ps.simTime - presettleSim0 >= simCap) presettleEnd = "sim";
         else if (settleFirst) {
-          if (performance.now() - presettleWall0 > LOAD_WALL_CAP_MS) presettleEnd = "wall";
+          if (presettleClock.tick(performance.now()) > LOAD_WALL_CAP_MS) presettleEnd = "wall";
         } else if (presettleWorkMs >= workCap) presettleEnd = "work";
       }
       if (performance.now() - t0 >= SETTLE_CHUNK_MS) break;
     }
-    const elapsed = performance.now() - presettleWall0;
+    const elapsed = presettleClock.tick(performance.now());
     if (presettleEnd === "" && loaderShownAt < 0) {
       // Show the loader for a settle that will run past LOADER_DELAY_MS.
       const simDone = ps.simTime - presettleSim0;
@@ -1085,6 +1094,7 @@ async function main(): Promise<void> {
   function armBudget(): void {
     armedBudget = newSettleBudget(params.settleBudget, SETTLE_MIN_ONE);
     budgetWall0 = performance.now();
+    budgetClock.start(budgetWall0);
   }
   function endBudget(by: string): void {
     if (!armedBudget || !ps) return;
@@ -1098,15 +1108,16 @@ async function main(): Promise<void> {
     armedBudget = null;
   }
   // This live frame's settle budget, or null. Ends it once the physics is
-  // not live, after LOAD_SIM_CAP simulated seconds or BUDGET_WALL_CAP_MS
-  // (the first sleep ends it in the ticker); stands aside, still armed,
-  // while a thread is grabbed or the slider is at 0.
+  // not live, after LOAD_SIM_CAP simulated seconds or BUDGET_WALL_CAP_MS of
+  // visible time (the first sleep ends it in the ticker); stands aside,
+  // still armed, while a thread is grabbed or the slider is at 0.
   function activeBudget(): SettleBudget | null {
     const b = armedBudget;
     if (!b || !ps) return null;
+    const visibleMs = budgetClock.tick(performance.now());
     if (physState !== "live") endBudget("mode");
     else if (ps.simTime > LOAD_SIM_CAP) endBudget("sim");
-    else if (performance.now() - budgetWall0 > BUDGET_WALL_CAP_MS) endBudget("wall");
+    else if (visibleMs > BUDGET_WALL_CAP_MS) endBudget("wall");
     if (!armedBudget || ps.grabbedParticle >= 0 || params.settleBudget <= 0) {
       return null;
     }

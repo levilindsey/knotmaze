@@ -12,6 +12,8 @@ import {
   recordStepCost,
   substepsFor,
   COST_EMA,
+  FRAME_GAP_MS,
+  VisibleClock,
 } from "../../src/physics/settle_budget";
 
 const LIM = {
@@ -121,5 +123,20 @@ describe("K147 settle budget", () => {
     expect(b.costMs).toBeCloseTo(10 + COST_EMA * 10, 12);
     recordStepCost(b, 50, 0);
     expect(b.costMs).toBeCloseTo(10 + COST_EMA * 10, 12);
+  });
+
+  it("the caps' clock skips a hidden tab's gap between frames", () => {
+    const c = new VisibleClock();
+    c.start(1000);
+    expect(c.tick(1016)).toBe(16);
+    expect(c.tick(1016 + FRAME_GAP_MS)).toBe(16 + FRAME_GAP_MS);
+    // An hour in the background, then frames again: only the frames count.
+    expect(c.tick(1016 + FRAME_GAP_MS + 3_600_000)).toBe(16 + FRAME_GAP_MS);
+    expect(c.tick(1016 + FRAME_GAP_MS + 3_600_033)).toBe(49 + FRAME_GAP_MS);
+    // Several ticks in one frame add up to the frame.
+    c.start(0);
+    c.tick(5);
+    c.tick(12);
+    expect(c.tick(12)).toBe(12);
   });
 });
