@@ -619,6 +619,17 @@ demand.
 
 *[Moved to `.claude/rules/render.md`: the RENDER LORE blocks of 2026-10-09 and 2026-10-10.]*
 
+- K79 STAGE B (2026-10-13; agents B1, B2, B2b and B3 under session
+  d8031183; the record is `docs/design/K79.md`, the lore is in
+  `.claude/rules/render.md` and `gameplay.md`): the backdrop's shape
+  (pattern scale, fbm detail, vellum's fibers and grain, silk's angle) and
+  custom colors (a base plus three accents), as ten codec v4 appends at
+  indices 72-81 after K74's `deadEndLength` (71), and the speed slider's
+  max 3 -> 8 (Levi). An effect keeps its own K21 / stage-A program, byte
+  for byte, until a param it reads leaves its default; then it draws with
+  its `-x` program. Same-state A/B against master: 0 px in every default
+  case. The phone gate (B3) held 60 fps at rest on the Pixel 11.
+
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the
   SHADER BACKGROUNDS entry above).

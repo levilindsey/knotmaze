@@ -200,6 +200,19 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   gain (aTap is linear in gain, every lobe in aTap, and capClearance
   does not depend on it).
 
+- K79 stage B3 (2026-10-13), phone gate probes (`.claude/probes/K79/phone/`:
+  `run_b3.ps1`, `panel_b3.mjs`, `passcost_x.mjs`, `watchdog.ps1`). (1) A
+  "nothing jumps" pixel strip (the same strip of the page, compared before
+  and after a panel action) needs `fw=0` in the URL AND a stopped drift
+  (backgroundSpeed 0): the ribbons' undulation and mist's drift both move
+  it, and the first desktop dry run read both as jumps. Add a control (the
+  same grab, no change) to show the 0. (2) To launch Chrome over another
+  app (Messages was in front), start the phone watchdog with `expect.txt` =
+  `any` (its top-activity check is then off), launch Chrome, and switch
+  `expect.txt` to `com.android.chrome` right after; the default trips at
+  once on the other app. Tweakpane's color popup (`.tp-popv`) closes on a
+  tap elsewhere, not on a second tap of its swatch.
+
 ## Census and diagnosis rules
 
 - *From the open artifact queue (2026-10-11), census lore:* Census lore from
