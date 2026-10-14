@@ -28,12 +28,9 @@ and never reused.
     Phone checks now batch into one scripted pass per merge round; the
     first covers tonight's round (K79 B, K122's V8 credit, K147). K81's
     gate, already running, finishes as it is.
-  - next for (1): build the round pass from K81's gate kit
-    (`.claude/probes/K81/phone/`: `run_gate.ps1`, the watchdog,
-    `gate.mjs`; copy it out at K81's merge): the last deploy against the
-    new master, frame stats and looks. The first round is tonight's: K79
-    B, K122's licenses page, K81's arc and K147's intro. The phone must be
-    awake and unlocked; it dozed at 18:05.
+  - next for (1): K156 builds the round pass from K81's gate kit and
+    runs tonight's round (K79 B, K122's licenses page, K81's arc, and
+    K147's intro if it is ready).
 - **K154** · K122's credit calls, each defaulted until Levi says
   otherwise: keep the two credits beyond the brief (Perlin, Scarborough
   Fair)? Keep PCG2D's (the paper is CC BY-ND 3.0; `pcg2d` is the 8-line
@@ -375,6 +372,23 @@ and never reused.
   - brief: `docs/design/K80_realtime.md`; the research brief
     `docs/design/K80.md` and its doc
     `docs/design/K80_gameplay_additions.md`.
+- **K156** · The round phone pass (K152 (1)): `scripts/phone_pass.ps1`,
+  built from K81's gate kit. Two builds (the round's base and head) run
+  interleaved through a frame bench (knot, fabric at 0, 10 and 21 moves,
+  and a load scenario for K147), then looks from a JSON list, into a
+  summary table and screenshot sheets.
+  - owner: agent a643f74a71764b250 (sonnet) of session d8031183, since
+    2026-10-13 18:27: the kit, an A/A smoke test on the phone (Levi, about
+    18:20: the phone is back) and a draft of tonight's looks.
+  - branch: `worktree-agent-a643f74a71764b250`
+    (`.claude/worktrees/agent-a643f74a71764b250`), from afd8ee5; last
+    commit: none yet.
+  - evidence: its worktree's `.claude/probes/rounds/` (untracked); K81's
+    kit in K81's worktree (`.claude/probes/K81/phone/`).
+  - next: read the A/A report (the noise floor per metric), merge the
+    kit, then run tonight's pass once K79 B, K122 and K81 land (K147 if
+    it is ready).
+  - brief: `docs/design/K156.md`.
 
 ## Next, in order
 
@@ -398,11 +412,11 @@ about a third of the overnight spend.
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40 (he may reorder). Running at 18:06:
-K104 stage 1b, K147 and K80 stage 1 (code); K79 B's merge prep. Then, as code slots
-free up:
+K104 stage 1b, K147 and K80 stage 1 (code); K79 B's merge prep; K156's phone pass kit (tooling, with an A/A smoke
+test on the phone). Then, as code slots free up:
 1. K79 B's merge, then K122's (it rebases over K79 B), then K81's (its
    gate stopped twice; the round's phone pass covers it), then the
-   round's phone pass (K152).
+   round's phone pass (K156).
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 running.
 3. K140, the finish confetti, with K155's star rating (the same finish
