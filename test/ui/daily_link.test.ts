@@ -124,11 +124,13 @@ describe("the daily definition (frozen)", () => {
   // GOLDEN: dailies #1-#3 as built today. A failure here means the
   // generation code (or the definition) changed and EVERY daily moved -
   // publish a new definition for future days instead (daily_link.ts).
+  // Re-frozen by K74 (2026-10-13, pre-launch: every daily moved on purpose;
+  // before: 85.647/200/302, 75.359/194/294, 85.433/194/295).
   it("builds the same mazes it always has (golden)", () => {
     const golden = [
-      { n: 1, optimal: 85.64700062285216, vertices: 200, edges: 302 },
-      { n: 2, optimal: 75.35894361088211, vertices: 194, edges: 294 },
-      { n: 3, optimal: 85.43304600279566, vertices: 194, edges: 295 },
+      { n: 1, optimal: 86.67740703883709, vertices: 189, edges: 283 },
+      { n: 2, optimal: 68.42320533659392, vertices: 183, edges: 270 },
+      { n: 3, optimal: 103.73421402479009, vertices: 182, edges: 271 },
     ];
     for (const g of golden) {
       const w = walkOf(dailyParams(g.n));

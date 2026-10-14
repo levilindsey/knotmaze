@@ -26,6 +26,11 @@ import { buildMazePlan as buildMazePlanV1 } from "./fixtures/maze_plan_v1";
 // junction appended to the plan, or moves the exit when no junction can.
 // .claude/probes/K110/verify.ts runs the same checks over 3780 designs
 // against the frozen K109 module.
+// K74 moved the defaults (exit clearance 12, long-tail dead ends on); the
+// K110 cases keep the knobs they were found with (PRE_K74), and the last
+// test repeats the checks at the new defaults.
+
+const PRE_K74: Partial<UrlParams> = { exitClearance: 5, deadEndDensity: 0.25, deadEndLength: 0 };
 
 function design(
   shape: ShapeName,
@@ -34,7 +39,7 @@ function design(
   deadEnds: boolean,
   knobs: Partial<UrlParams> = {}
 ): UrlParams {
-  return { ...PARAM_DEFAULTS, shape, gridSize, seed, deadEnds, ...knobs };
+  return { ...PARAM_DEFAULTS, ...PRE_K74, shape, gridSize, seed, deadEnds, ...knobs };
 }
 
 function graphOf(p: UrlParams): TangleGraph {
@@ -315,5 +320,37 @@ describe("maze plan: every piece reachable from the start (K110)", () => {
       }
     }
     expect([oldNoRoute, oldOrphaned]).toEqual([8, 24]);
+  });
+
+  it("leaves no piece unreached with long-tail dead ends (K74 defaults)", () => {
+    // The sweep above and the listed designs at today's defaults, dead ends
+    // on, plus the densest and longest tails the sliders allow. Long tails
+    // are placed before the choices; K110's joins still make every plan
+    // whole (.claude/probes/K74/verify_reach.ts: 0 of 3780 designs fail).
+    const tails: Partial<UrlParams>[] = [{}, { deadEndDensity: 1 }, { deadEndLength: 40 }];
+    const designs: UrlParams[] = [];
+    let seed = 109000;
+    for (const shape of SHAPES) {
+      for (let gridSize = 3; gridSize <= 10; gridSize++) {
+        for (let k = 0; k < 3; k++) {
+          designs.push({ ...PARAM_DEFAULTS, shape, gridSize, seed: seed++, ...tails[k] });
+        }
+      }
+    }
+    for (const p of [...JOINED, ...EXIT_MOVED]) {
+      designs.push({ ...PARAM_DEFAULTS, shape: p.shape, gridSize: p.gridSize, seed: p.seed });
+    }
+    let cuts = 0;
+    for (const p of designs) {
+      expect(p.deadEnds).toBe(true);
+      const plan = buildMazePlan(graphOf(p), mazeParamsOf(p));
+      cuts += plan.deadEndCuts.length;
+      const label = `${p.shape} gs${p.gridSize} seed ${p.seed}`;
+      expect(planReachesAll(graphOf(p), plan), label).toBe(true);
+      const [, walk] = walkOf(p, plan);
+      expect(Number.isFinite(walk.optimalLength), `${label}: route`).toBe(true);
+      expect(unreached(walk), label).toEqual([]);
+    }
+    expect(cuts).toBeGreaterThan(0);
   });
 });
