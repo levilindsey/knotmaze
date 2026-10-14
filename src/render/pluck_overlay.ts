@@ -36,6 +36,7 @@ import {
 import type { SplineSamples } from "../geometry/spline_generator";
 import {
   ATTACK_MIX,
+  CUE_WHITE,
   GHOST_HZ,
   GHOST_JITTER,
   GHOST_TINT,
@@ -43,20 +44,35 @@ import {
   NODE_SLOPE,
   ONSET_STAGGER,
   CLEAR_OVERLAP,
+  WHOLE_AMP,
+  WHOLE_NODE_ZONE,
   clampBeta,
   envelope,
   ghostShape,
   nodeCap,
   peakShape,
+  pinchCap,
   rescaleSympathetic,
+  roomAt,
   roundCollapse,
   roundTau,
   segmentLobes,
+  slopeLimitUniform,
   softMin,
   sympatheticAmplitude,
   tapAmplitude,
+  unitShift,
   visualTau,
+  wholeAmplitude,
+  wholeRoom,
+  wholeShape,
 } from "./pluck_model";
+
+// How the whole-segment term W meets the rest of the weave (K104; the pick
+// is Levi's decision): "overlap" = W displaces the unit, running into a
+// neighbor's edge by at most WHOLE_OVERLAP h; "free" = no neighbor cap;
+// "cue" = no W displacement, the unit brightens instead.
+export type WholeMode = "overlap" | "free" | "cue";
 
 // A node the plucked thread passes (see the model's NODES AND LOBES).
 export interface PluckNode {
@@ -166,6 +182,11 @@ const TIGHT_K = 2;
 // rim around the loop's eye. Limiting only ever LOWERS a cap, and the cap
 // exists only to keep the strip from folding, so this is always safe.
 const CAP_SLOPE = 1.0;
+// W's neighbor room ("overlap") is measured every WHOLE_ROOM_DS of arc at
+// pluck time and may change by at most WHOLE_ROOM_SLOPE per unit of arc, so
+// a close neighbor dents the envelope gently instead of notching it.
+const WHOLE_ROOM_DS = 0.15;
+const WHOLE_ROOM_SLOPE = 0.3;
 
 // In place, per lobe: v[i] = min over j of v[j] + slope * |arc[i] - arc[j]|
 // (a two-pass running min; Infinity stays Infinity until a finite value
@@ -380,6 +401,10 @@ class PluckBlurMesh {
   // is under the thread's own half-width the base must stay intact.
   readonly wInOf = new Float32Array(MAX_STATIONS);
   readonly pkOf = new Float32Array(MAX_STATIONS); // Capped peak swing.
+  // The whole-segment term per station, x W0: its displacement share
+  // (shape under the room and pinch caps; 0 in cue mode) and its bare shape.
+  readonly wOf = new Float32Array(MAX_STATIONS);
+  readonly wsOf = new Float32Array(MAX_STATIONS);
   readonly tightOf = new Uint8Array(MAX_STATIONS); // Bend tighter than the strip.
   readonly tightAllow = new Float32Array(MAX_STATIONS); // Collapse allowance.
   used = 0;
@@ -463,6 +488,13 @@ interface Lobe {
   // (triangle, lens, ghost) is laid over this span, not node to node.
   e0: number;
   e1: number;
+  // UNIT COORDINATE: arc + shift is continuous over the whole unit, across
+  // a closed chain's seam (layout re-resolves s0 into [0, total); the model's
+  // unitShift). The whole-segment term is laid out over it.
+  shift: number;
+  // W's neighbor room ("overlap"), sampled uniformly node to node at pluck
+  // time; Infinity = unmeasured (near a node). null = uncapped.
+  room: Float32Array | null;
 }
 
 // The vibrating span of a node-to-node lobe [s0, s1] (see Lobe.e0/e1).
@@ -495,6 +527,12 @@ interface ActivePluck {
   ghostArea: number; // Last frame's on-screen ghost area (px^2).
   amp: Float64Array; // Per-lobe scratch: this frame's amplitude...
   qv: Float64Array; // ...and overtone weight.
+  // The whole-segment term: initial amplitude (world; 0 = none), its ghost
+  // phase, and the unit's vibrating extent in unit coordinates (per layout).
+  W0: number;
+  wPhase: number;
+  uE0: number;
+  uE1: number;
 }
 
 const smooth01 = (x: number): number => {
@@ -513,6 +551,15 @@ export class PluckOverlay {
   // The collapse's edge radius, x h (COLLAPSE_ROUND; 0 = the raw profile,
   // for same-state A/Bs - set it, then flag every live pluck needsLayout).
   collapseRound = COLLAPSE_ROUND;
+  // The whole-segment term (K104): its amount (x pluckSize x gain x h; 0 =
+  // the lobes alone, exactly the pre-K104 pluck), how it meets neighbors
+  // (WholeMode; applies to plucks started after a change - "overlap"
+  // measures its room at pluck time), and the PINCH at interior crossings
+  // (x h; 0 = W rides through them, capped only by the soft node; set it,
+  // then flag every live pluck needsLayout).
+  wholeAmp = WHOLE_AMP;
+  wholeMode: WholeMode = "overlap";
+  wholePinch = 0;
   // Diagnostics: plucks drawn, requests skipped (and why), merges, evictions.
   readonly stats = {
     plucks: 0,
@@ -535,6 +582,11 @@ export class PluckOverlay {
   private rgb = new Float32Array(3);
   private depthBuf = new Float32Array(0); // roundCollapse scratch.
   private roundBuf = new Float32Array(0);
+  // Layout scratch per station: W's room, and the arc and shape coordinate
+  // in float64 (the peak is computed from these exactly as before K104).
+  private wRoomBuf = new Float32Array(MAX_STATIONS);
+  private arcBuf = new Float64Array(MAX_STATIONS);
+  private xBuf = new Float64Array(MAX_STATIONS);
   // Per-chain combined collapse (min over that chain's plucks).
   private collapseOf = new Map<number, Float32Array>();
   // SHADER WARM-UP: the first pluck used to land ~100 ms late while the
@@ -563,10 +615,13 @@ export class PluckOverlay {
       side: p.side,
       evicting: p.evicting,
       stations: p.mesh.used,
+      W0: +p.W0.toFixed(4),
+      unit: [+p.uE0.toFixed(3), +p.uE1.toFixed(3)],
       lobes: p.lobes.map((l) => ({
         k: l.k,
         s0: +l.s0.toFixed(3),
         s1: +l.s1.toFixed(3),
+        shift: +l.shift.toFixed(3),
         A0: +l.A0.toFixed(4),
         beta: +l.beta.toFixed(3),
         attack: l.attack,
@@ -641,6 +696,9 @@ export class PluckOverlay {
     const beta = clampBeta(req.beta ?? (req.arc - t0) / tapLen);
     const aTap =
       tapAmplitude(tapLen, h, this.size, req.gain) * (reduced ? 0.6 : 1);
+    // The whole-segment term: a set amount, whatever the unit's length.
+    let W0 =
+      wholeAmplitude(h, this.size, req.gain, this.wholeAmp) * (reduced ? 0.6 : 1);
     const lobes: Lobe[] = spans.map((s) => {
       const nA = s.a >= 0 ? nodes[s.a] : null;
       const nB = s.b >= 0 ? nodes[s.b] : null;
@@ -670,9 +728,13 @@ export class PluckOverlay {
         drawn: false,
         st0: 0,
         segs: 0,
+        shift: 0,
+        room: null,
       };
     });
-    this.capClearance(req.chain, samples, lobes, h);
+    const cand = this.neighbors(samples, lobes, h);
+    this.capClearance(req.chain, samples, lobes, h, cand);
+    if (W0 > 0) this.wholeRooms(req.chain, samples, lobes, h, cand);
     // K105: neighbors follow the tapped lobe's capped swing.
     const capped = lobes.map((l) => ({ k: l.k, A0: l.A0, len: l.e1 - l.e0 }));
     rescaleSympathetic(capped, tapLen);
@@ -681,7 +743,7 @@ export class PluckOverlay {
     // RE-PLUCK: a ringing unit that shares a lobe with this one is absorbed
     // - shared lobes restart their attack at max(current, new) amplitude
     // (a harp re-pluck damps and re-excites), its other lobes ride along
-    // at their current amplitude.
+    // at their current amplitude, and so does its whole-segment term.
     for (let i = this.active.length - 1; i >= 0; i--) {
       const old = this.active[i];
       if (old.chain !== req.chain || old.evicting) continue;
@@ -689,6 +751,18 @@ export class PluckOverlay {
         lobes.some((nl) => nl.keyA === ol.keyA && nl.keyB === ol.keyB && ol.keyA >= 0)
       );
       if (!shares) continue;
+      // The old unit's coordinates may sit a whole loop away from this
+      // one's on a closed chain: align them through a shared lobe.
+      let delta = 0;
+      if (closed) {
+        for (const ol of old.lobes) {
+          if (ol.keyA < 0) continue;
+          const nl = lobes.find((q) => q.keyA === ol.keyA && q.keyB === ol.keyB);
+          if (!nl) continue;
+          delta = Math.round((nl.s0 + nl.shift - (ol.s0 + ol.shift)) / total) * total;
+          break;
+        }
+      }
       for (const ol of old.lobes) {
         if (ol.dead) continue;
         const cur = this.amplitudeOf(old, ol);
@@ -701,9 +775,11 @@ export class PluckOverlay {
             A0: cur,
             onset: 0,
             attack: false,
+            shift: ol.shift + delta,
           });
         }
       }
+      W0 = Math.max(W0, this.wholeNow(old));
       this.stats.merged++;
       this.release(i, false);
     }
@@ -733,8 +809,14 @@ export class PluckOverlay {
       ghostArea: 0,
       amp: new Float64Array(lobes.length),
       qv: new Float64Array(lobes.length),
+      W0,
+      // (No draw without a term: wholeAmp 0 keeps the RNG stream, and so
+      // every same-state A/B, exactly pre-K104.)
+      wPhase: W0 > 0 ? Math.random() * Math.PI * 2 : 0,
+      uE0: 0,
+      uE1: 0,
     };
-    lobes.sort((p, q) => p.s0 - q.s0);
+    lobes.sort((p, q) => p.s0 + p.shift - (q.s0 + q.shift));
     this.active.push(pl);
     if (!this.layout(pl)) {
       this.release(this.active.length - 1, true);
@@ -821,21 +903,17 @@ export class PluckOverlay {
     return l.A0 * Math.exp(-tl / p.tau) * (p.evicting ? Math.max(0, p.fade) : 1);
   }
 
-  // Cap each lobe's amplitude by its lateral room: the swing may run into
-  // its nearest neighbor's edge by at most CLEAR_OVERLAP * h. Measured once
-  // at pluck time over each lobe's middle 60%. Crossing partners and
-  // junction arms are not neighbors: a point closer to an end node than
-  // the station itself is (a cone around the node) is ignored, as is the
-  // plucked thread's own nearby material.
-  private capClearance(
-    chain: number,
-    samples: SplineSamples,
-    lobes: Lobe[],
-    h: number
-  ): void {
+  // The whole-segment term's current amplitude (same clock, onset 0).
+  private wholeNow(p: ActivePluck): number {
+    if (p.W0 <= 0 || p.t < 0) return 0;
+    return p.W0 * Math.exp(-p.t / p.tau) * (p.evicting ? Math.max(0, p.fade) : 1);
+  }
+
+  // Candidate neighbor samples around a unit, [x, y, chain, arc] each: the
+  // unit's bounding box grown by the largest possible swing.
+  private neighbors(samples: SplineSamples, lobes: Lobe[], h: number): number[] {
     const host = this.host;
     const sc = this.scratch;
-    // Bounding box of the unit, grown by the largest possible swing.
     let x0 = Infinity;
     let y0 = Infinity;
     let x1 = -Infinity;
@@ -849,12 +927,11 @@ export class PluckOverlay {
         if (sc[1] > y1) y1 = sc[1];
       }
     }
-    const grow = 2.2 * h * this.size + 2 * h + CLEAR_MARGIN;
+    const grow = Math.max(2.2, this.wholeAmp) * h * this.size + 2 * h + CLEAR_MARGIN;
     x0 -= grow;
     y0 -= grow;
     x1 += grow;
     y1 += grow;
-    // Candidate samples: [x, y, chain, arc].
     const cand: number[] = [];
     const all = host.allSamples();
     for (let c = 0; c < all.length; c++) {
@@ -869,6 +946,64 @@ export class PluckOverlay {
         cand.push(x, y, c, k * per);
       }
     }
+    return cand;
+  }
+
+  // Squared distance from the point (px, py) at `arc` of a lobe to its
+  // nearest NEIGHBOR among `cand`. Crossing partners and junction arms are
+  // not neighbors: a point closer to an end node (at a / b) than the
+  // station itself is (dA / dB; a cone around the node) is ignored, as is
+  // the plucked thread's own material within ownWindow of the arc.
+  private nearest2(
+    cand: number[],
+    chain: number,
+    closed: boolean,
+    total: number,
+    arc: number,
+    px: number,
+    py: number,
+    a: Float32Array,
+    b: Float32Array,
+    dA: number,
+    dB: number,
+    ownWindow: number
+  ): number {
+    let best = Infinity;
+    for (let q = 0; q < cand.length; q += 4) {
+      const qx = cand[q];
+      const qy = cand[q + 1];
+      const dx = qx - px;
+      const dy = qy - py;
+      const d2 = dx * dx + dy * dy;
+      if (d2 >= best) continue;
+      if (cand[q + 2] === chain) {
+        let da = Math.abs(cand[q + 3] - (((arc % total) + total) % total));
+        if (closed) da = Math.min(da, total - da);
+        if (da < ownWindow) continue;
+      }
+      const ex = qx - a[0];
+      const ey = qy - a[1];
+      if (ex * ex + ey * ey < dA * dA) continue;
+      const fx = qx - b[0];
+      const fy = qy - b[1];
+      if (fx * fx + fy * fy < dB * dB) continue;
+      best = d2;
+    }
+    return best;
+  }
+
+  // Cap each lobe's amplitude by its lateral room: the swing may run into
+  // its nearest neighbor's edge by at most CLEAR_OVERLAP * h. Measured once
+  // at pluck time over each lobe's middle 60% (nearest2's neighbors).
+  private capClearance(
+    chain: number,
+    samples: SplineSamples,
+    lobes: Lobe[],
+    h: number,
+    cand: number[]
+  ): void {
+    const host = this.host;
+    const sc = this.scratch;
     const total = samples.totalLength;
     const closed = host.closed(chain);
     const ownWindow = 0.6 + 2 * h;
@@ -891,37 +1026,66 @@ export class PluckOverlay {
         if (env < 0.15) continue;
         const arc = l.e0 + x * L;
         host.sampleAt(samples, arc, sc, 0);
-        const px = sc[0];
-        const py = sc[1];
-        // The cone around each END NODE (partners and junction arms).
-        const dA = arc - l.s0;
-        const dB = l.s1 - arc;
-        let best = Infinity;
-        for (let q = 0; q < cand.length; q += 4) {
-          const qx = cand[q];
-          const qy = cand[q + 1];
-          const dx = qx - px;
-          const dy = qy - py;
-          const d2 = dx * dx + dy * dy;
-          if (d2 >= best) continue;
-          if (cand[q + 2] === chain) {
-            let da = Math.abs(cand[q + 3] - (((arc % total) + total) % total));
-            if (closed) da = Math.min(da, total - da);
-            if (da < ownWindow) continue;
-          }
-          const ex = qx - ax[0];
-          const ey = qy - ax[1];
-          if (ex * ex + ey * ey < dA * dA) continue;
-          const fx = qx - bx[0];
-          const fy = qy - bx[1];
-          if (fx * fx + fy * fy < dB * dB) continue;
-          best = d2;
-        }
+        const best = this.nearest2(
+          cand, chain, closed, total, arc, sc[0], sc[1], ax, bx,
+          arc - l.s0, l.s1 - arc, ownWindow
+        );
         if (!Number.isFinite(best)) continue;
         const gap = Math.sqrt(best) - 2 * h;
         cap = Math.min(cap, (Math.max(0, gap) + CLEAR_OVERLAP * h) / env);
       }
       l.A0 = Math.max(0, Math.min(l.A0, cap));
+    }
+  }
+
+  // The whole-segment term's neighbor room ("overlap"), per lobe, sampled
+  // uniformly node to node: wholeRoom of the gap to nearest2's neighbor,
+  // unmeasured (Infinity) within WHOLE_NODE_ZONE h + 0.1 of a keyed node -
+  // there the crossing machinery (rules 3-4, the soft node) decides - and
+  // slope-limited along the lobe. Layout limits it again across the unit.
+  private wholeRooms(
+    chain: number,
+    samples: SplineSamples,
+    lobes: Lobe[],
+    h: number,
+    cand: number[]
+  ): void {
+    const host = this.host;
+    const sc = this.scratch;
+    const total = samples.totalLength;
+    const closed = host.closed(chain);
+    const ownWindow = 0.6 + 2 * h;
+    const zone = WHOLE_NODE_ZONE * h + 0.1;
+    const ax = new Float32Array(2);
+    const bx = new Float32Array(2);
+    for (const l of lobes) {
+      const L = l.s1 - l.s0;
+      if (!(L > 0)) continue;
+      host.sampleAt(samples, l.s0, sc, 0);
+      ax[0] = sc[0];
+      ax[1] = sc[1];
+      host.sampleAt(samples, l.s1, sc, 0);
+      bx[0] = sc[0];
+      bx[1] = sc[1];
+      const N = Math.max(2, Math.ceil(L / WHOLE_ROOM_DS));
+      const room = new Float32Array(N + 1).fill(Infinity);
+      let measured = false;
+      for (let j = 0; j <= N; j++) {
+        const dA = (L * j) / N;
+        const dB = L - dA;
+        if ((l.keyA >= 0 && dA < zone) || (l.keyB >= 0 && dB < zone)) continue;
+        const arc = l.s0 + dA;
+        host.sampleAt(samples, arc, sc, 0);
+        const best = this.nearest2(
+          cand, chain, closed, total, arc, sc[0], sc[1], ax, bx, dA, dB, ownWindow
+        );
+        if (!Number.isFinite(best)) continue;
+        room[j] = wholeRoom(Math.sqrt(best) - 2 * h, h);
+        measured = true;
+      }
+      if (!measured) continue;
+      slopeLimitUniform(room, L / N, WHOLE_ROOM_SLOPE);
+      l.room = room;
     }
   }
 
@@ -955,6 +1119,8 @@ export class PluckOverlay {
         l.dead = true;
         continue;
       }
+      // Keep the unit coordinate (arc + shift) continuous across the seam.
+      l.shift = unitShift(l.s0 + l.shift, s0, total, closed);
       l.s0 = s0;
       l.s1 = s1;
       l.footA = a.footPos;
@@ -968,10 +1134,15 @@ export class PluckOverlay {
     const lobes = p.lobes;
     let unitLen = 0;
     let liveLobes = 0;
+    p.uE0 = Infinity;
+    p.uE1 = -Infinity;
     for (const l of lobes) {
       if (l.dead) continue;
       unitLen += l.s1 - l.s0;
       liveLobes++;
+      // The whole-segment term spans the unit's vibrating extent.
+      p.uE0 = Math.min(p.uE0, l.e0 + l.shift);
+      p.uE1 = Math.max(p.uE1, l.e1 + l.shift);
     }
     if (liveLobes === 0) return false;
     // Spacing: the target, widened when the unit would overflow the strip
@@ -984,6 +1155,9 @@ export class PluckOverlay {
 
     const m = p.mesh;
     const sc = this.scratch;
+    const wRoom = this.wRoomBuf;
+    const arcAt = this.arcBuf;
+    const xAt = this.xBuf;
     let n = 0;
     for (let li = 0; li < lobes.length; li++) {
       const l = lobes[li];
@@ -996,12 +1170,11 @@ export class PluckOverlay {
       l.st0 = n;
       l.segs = segs;
       // Under-node clip reach along the partner: past the swing + thread.
-      const reach = Math.min(CLIP_REACH, host.casing() + l.A0 + h + 0.1);
+      const reach = Math.min(CLIP_REACH, host.casing() + l.A0 + p.W0 + h + 0.1);
       const eL = l.e1 - l.e0;
       for (let i = 0; i <= segs; i++) {
         const arc = l.s0 + (L * i) / segs;
         const dA = arc - l.s0;
-        const dB = l.s1 - arc;
         // Shape coordinate over the vibrating span (0 / 1 at its frets).
         const x = eL > 1e-6 ? Math.max(0, Math.min(1, (arc - l.e0) / eL)) : 0;
         m.lobeOf[n] = li;
@@ -1009,8 +1182,10 @@ export class PluckOverlay {
         m.arcOf[n] = arc;
         m.dsOf[n] = L / segs;
         m.visOf[n] = this.visAt(p.chain, l, arc);
-        // Amplitude-free soft-node ceiling (tight bends tighten it below).
-        m.pkOf[n] = this.peakAt(l, x, dA, dB, h);
+        // The whole-segment term's neighbor room here (the W pass below).
+        wRoom[n] = l.room ? roomAt(l.room, dA / L) : Infinity;
+        arcAt[n] = arc;
+        xAt[n] = x;
         host.sampleAt(samples, arc, sc, 0);
         m.pos[n * 4] = sc[0];
         m.pos[n * 4 + 1] = sc[1];
@@ -1047,6 +1222,55 @@ export class PluckOverlay {
     }
     if (n < 2) return false;
     m.used = n;
+
+    // THE WHOLE-SEGMENT TERM (K104): W(u) = W0 sin(pi (u - uE0) / (uE1 -
+    // uE0)) over the unit, under its caps - the neighbor room ("overlap",
+    // slope-limited across the whole unit so no lobe boundary steps it) and
+    // the pinch at interior nodes - as a share wOf of W0. The lobe's peak
+    // and W's add up, and the soft node (and the tight-bend cap below) caps
+    // the SUM; fOf then scales both terms alike.
+    const W0 = p.W0;
+    const mode = this.wholeMode;
+    const pinch = this.wholePinch;
+    if (W0 > 0 && mode === "overlap") {
+      let uPrev = arcAt[0] + lobes[m.lobeOf[0]].shift;
+      for (let i = 1; i < n; i++) {
+        const u = arcAt[i] + lobes[m.lobeOf[i]].shift;
+        const c = wRoom[i - 1] + WHOLE_ROOM_SLOPE * Math.abs(u - uPrev);
+        if (c < wRoom[i]) wRoom[i] = c;
+        uPrev = u;
+      }
+      for (let i = n - 2; i >= 0; i--) {
+        const u = arcAt[i] + lobes[m.lobeOf[i]].shift;
+        const c = wRoom[i + 1] + WHOLE_ROOM_SLOPE * Math.abs(uPrev - u);
+        if (c < wRoom[i]) wRoom[i] = c;
+        uPrev = u;
+      }
+    }
+    for (let i = 0; i < n; i++) {
+      const l = lobes[m.lobeOf[i]];
+      const arc = arcAt[i];
+      const dA = arc - l.s0;
+      const dB = l.s1 - arc;
+      const shape = wholeShape(arc + l.shift, p.uE0, p.uE1);
+      let wm = shape;
+      if (W0 > 0 && shape > 0) {
+        if (mode === "overlap") wm = Math.min(wm, wRoom[i] / W0);
+        if (pinch > 0) {
+          // Interior nodes only: the unit's own ends are W's frets.
+          if (l.keyA >= 0 && l.s0 + l.shift > p.uE0 + 1e-6) {
+            wm = Math.min(wm, pinchCap(h, dA, l.footA + COLLAPSE_RAMP, pinch) / W0);
+          }
+          if (l.keyB >= 0 && l.s1 + l.shift < p.uE1 - 1e-6) {
+            wm = Math.min(wm, pinchCap(h, dB, l.footB + COLLAPSE_RAMP, pinch) / W0);
+          }
+        }
+      }
+      m.wsOf[i] = shape;
+      m.wOf[i] = W0 > 0 && mode !== "cue" ? Math.max(0, wm) : 0;
+      // The soft-node ceiling (tight bends tighten it below).
+      m.pkOf[i] = this.peakAt(l, xAt[i], dA, dB, h, W0 * m.wOf[i]);
+    }
 
     // Extrude with the CONCAVE-SIDE clamp (a strip wider than the local
     // turn radius folds over itself - the P3.34 lesson, which RibbonMesh
@@ -1140,7 +1364,7 @@ export class PluckOverlay {
     slopeLimit(m.capROf, m.arcOf, m.lobeOf, n, CAP_SLOPE);
     for (let i = 0; i < n; i++) {
       const l = lobes[m.lobeOf[i]];
-      const raw = l.A0 * peakShape(l.beta, m.xOf[i], l.attack);
+      const raw = l.A0 * peakShape(l.beta, m.xOf[i], l.attack) + W0 * m.wOf[i];
       m.fOf[i] = raw > 1e-9 ? Math.max(0, m.pkOf[i] / raw) : 1;
       // Half extent of the strip, per side: the (capped) swing + the thread
       // + AA pad; a concave edge past 0.9 radius (a tight bend) is clamped.
@@ -1277,9 +1501,17 @@ export class PluckOverlay {
     );
   }
 
-  // The lobe's capped peak swing at a station (x = position in the lobe).
-  private peakAt(l: Lobe, x: number, dA: number, dB: number, h: number): number {
-    const raw = l.A0 * peakShape(l.beta, x, l.attack);
+  // The capped peak swing at a station (x = position in the lobe): the
+  // lobe's plus the whole-segment term's (wRaw, world), capped as one.
+  private peakAt(
+    l: Lobe,
+    x: number,
+    dA: number,
+    dB: number,
+    h: number,
+    wRaw = 0
+  ): number {
+    const raw = l.A0 * peakShape(l.beta, x, l.attack) + wRaw;
     if (raw <= 1e-9) return 0;
     return Math.max(
       0,
@@ -1298,11 +1530,19 @@ export class PluckOverlay {
     return vis;
   }
 
-  private writeColors(p: ActivePluck): void {
+  // Station colors: the thread's own, brightened toward white by the
+  // whole-segment cue (cue = this frame's CUE_WHITE share; x its shape).
+  private writeColors(p: ActivePluck, cue = 0): void {
     const m = p.mesh;
     const rgb = this.rgb;
     for (let i = 0; i < m.used; i++) {
       this.host.color(p.chain, m.arcOf[i], rgb);
+      if (cue > 0) {
+        const k = cue * m.wsOf[i];
+        rgb[0] += (1 - rgb[0]) * k;
+        rgb[1] += (1 - rgb[1]) * k;
+        rgb[2] += (1 - rgb[2]) * k;
+      }
       const o = i * 6;
       m.col[o] = rgb[0];
       m.col[o + 1] = rgb[1];
@@ -1347,7 +1587,12 @@ export class PluckOverlay {
       qv[li] = l.attack && !reduced ? Math.exp(-tl / p.tauR) : 0;
       if (a * scale >= KILL_PX) alive = true;
     }
+    // The whole-segment term: a lens (no attack) on the same clock, with
+    // its own ghost phase.
+    const aW = this.wholeNow(p);
+    if (aW * scale >= KILL_PX) alive = true;
     if (!alive) return false;
+    const wGhost = Math.cos(this.ghostPhase + p.wPhase);
     const env = this.env2;
     for (let i = 0; i < m.used; i++) {
       const li = m.lobeOf[i];
@@ -1356,32 +1601,41 @@ export class PluckOverlay {
       const q = qv[li];
       const x = m.xOf[i];
       const s = a * m.fOf[i];
+      const w = aW * m.fOf[i] * m.wOf[i];
       let lo = 0;
       let hi = 0;
       let yg = 0;
       let gA = 0;
-      if (s > 0) {
-        envelope(l.beta, x, q, env);
-        lo = env[0] * s;
-        hi = env[1] * s;
-        if (p.side < 0) {
-          const t = lo;
-          lo = -hi;
-          hi = -t;
+      if (s > 0 || w > 0) {
+        if (s > 0) {
+          envelope(l.beta, x, q, env);
+          lo = env[0] * s;
+          hi = env[1] * s;
+          if (p.side < 0) {
+            const t = lo;
+            lo = -hi;
+            hi = -t;
+          }
+          yg = p.side * s * ghostShape(l.beta, x, q, this.ghostPhase + l.phase);
+        }
+        if (w > 0) {
+          lo -= w;
+          hi += w;
+          yg += w * wGhost;
         }
         // Concave side: the strip is clamped there, so is the swing.
         const cL = m.capLOf[i];
         const cR = m.capROf[i];
         if (hi > cL) hi = cL;
         if (-lo > cR) lo = -cR;
-        yg = p.side * s * ghostShape(l.beta, x, q, this.ghostPhase + l.phase);
         if (yg > cL) yg = cL;
         if (-yg > cR) yg = -cR;
-        if (ghost > 0 && l.A0 > 0) {
+        const decay = s > 0 && l.A0 > 0 ? a / l.A0 : p.W0 > 0 ? aW / p.W0 : 0;
+        if (ghost > 0 && decay > 0) {
           const span = 0.5 * (hi - lo);
           gA =
             ghost *
-            Math.sqrt(Math.min(1, a / l.A0)) *
+            Math.sqrt(Math.min(1, decay)) *
             smooth01((span - 0.15 * h) / (0.45 * h));
           if (gA > 0.004) area += 2 * h * m.dsOf[i] * scale * scale;
           gA *= areaScale;
@@ -1401,7 +1655,10 @@ export class PluckOverlay {
     }
     p.ghostArea = area;
     m.upload(["aEnv", "aAux"]);
-    if (!host.staticColors()) this.writeColors(p);
+    // The cue: the unit brightens instead of moving, on W's clock.
+    const cue =
+      this.wholeMode === "cue" && p.W0 > 0 ? CUE_WHITE * (aW / p.W0) : 0;
+    if (!host.staticColors() || cue > 0) this.writeColors(p, cue);
     return true;
   }
 

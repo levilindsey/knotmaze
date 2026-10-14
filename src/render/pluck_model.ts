@@ -210,6 +210,105 @@ export function softMin(a: number, b: number, k: number): number {
 }
 
 // ---------------------------------------------------------------------------
+// THE WHOLE-SEGMENT TERM W (K104 goal 1). Levi, 2026-10-13: the pluck was
+// "way too subtle ... Even maxing pluckSize to 3, I can't tell when some
+// segments are plucked", asking for "a set-amount of whole-segment
+// vibration" that the local lobes build on. The tapped lobe is clearance-
+// capped in 90-100% of taps, mostly by the crossing partner through its own
+// end node, at a floor pluckSize cannot raise, so lobes alone peak at 2-3
+// CSS px. W is the plucked UNIT's fundamental at a set amount:
+//   W(u) = AW0 sin(pi (u - E0) / (E1 - E0)),  AW0 = WHOLE_AMP size gain h,
+// over the unit's vibrating extent [E0, E1] (its outer frets, past any hide
+// zone), independent of length, on the lobes' decay clock from onset 0 and
+// as a lens (no attack double image). The soft-node and tight-bend caps
+// apply to the SUM lobe + W, so footprints and kinks keep their limits.
+export const WHOLE_AMP = 0.5;
+// "overlap" mode: W may run into a neighbor's edge (crossing partners and
+// junction arms are not neighbors) by WHOLE_OVERLAP h, and its room never
+// drops under WHOLE_FLOOR h. Stations within WHOLE_NODE_ZONE h + 0.1 of a
+// node are not measured: the soft node rules there.
+export const WHOLE_OVERLAP = 0.6;
+export const WHOLE_FLOOR = 0.5;
+export const WHOLE_NODE_ZONE = 2;
+// "cue" mode (no W displacement): the unit brightens toward white by up to
+// this much, on the same shape and clock.
+export const CUE_WHITE = 0.6;
+
+export function wholeAmplitude(
+  h: number,
+  size: number,
+  gain: number,
+  amp: number = WHOLE_AMP
+): number {
+  return Math.max(0, amp * size * gain * h);
+}
+
+// W's shape at unit coordinate u over the vibrating extent [e0, e1]; 0
+// outside it.
+export function wholeShape(u: number, e0: number, e1: number): number {
+  const L = e1 - e0;
+  if (!(L > 1e-6)) return 0;
+  const x = (u - e0) / L;
+  if (x <= 0 || x >= 1) return 0;
+  return Math.sin(PI * x);
+}
+
+// W's room at a station whose nearest neighbor edge is `gap` away from the
+// thread's own edge ("overlap" mode).
+export function wholeRoom(gap: number, h: number): number {
+  return Math.max(WHOLE_FLOOR * h, Math.max(0, gap) + WHOLE_OVERLAP * h);
+}
+
+// In place: v[i] = min over j of v[j] + slope * spacing * |i - j| (uniform
+// samples; Infinity stays Infinity until a finite value spreads in).
+export function slopeLimitUniform(
+  v: Float32Array,
+  spacing: number,
+  slope: number
+): void {
+  const step = slope * spacing;
+  for (let i = 1; i < v.length; i++) {
+    if (v[i - 1] + step < v[i]) v[i] = v[i - 1] + step;
+  }
+  for (let i = v.length - 2; i >= 0; i--) {
+    if (v[i + 1] + step < v[i]) v[i] = v[i + 1] + step;
+  }
+}
+
+// A room profile sampled uniformly over a lobe, read at fraction f in [0, 1]
+// (linear between finite samples; an unmeasured Infinity yields the other).
+export function roomAt(room: Float32Array, f: number): number {
+  const n = room.length - 1;
+  if (n < 1) return n === 0 ? room[0] : Infinity;
+  const x = clamp(f, 0, 1) * n;
+  const i = Math.min(n - 1, Math.floor(x));
+  const a = room[i];
+  const b = room[i + 1];
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return Math.min(a, b);
+  return a + (b - a) * (x - i);
+}
+
+// "pinch": W's own ceiling near an INTERIOR node of the unit (a crossing
+// inside the run): core * h inside the footprint, opening at NODE_SLOPE.
+export function pinchCap(h: number, dS: number, foot: number, core: number): number {
+  return core * h + NODE_SLOPE * Math.max(0, dS - foot);
+}
+
+// THE SEAM: a closed chain's node arcs live in [0, total), so a unit that
+// crosses arc 0 is not continuous in them. Each lobe carries a shift (a
+// multiple of total) so arc + shift is continuous over the unit. Given the
+// lobe's previous continuous start `cont` and its newly resolved start s0,
+// the shift that keeps s0 + shift nearest `cont`.
+export function unitShift(
+  cont: number,
+  s0: number,
+  total: number,
+  closed: boolean
+): number {
+  return closed && total > 0 ? Math.round((cont - s0) / total) * total : 0;
+}
+
+// ---------------------------------------------------------------------------
 // The rounded base collapse (K77).
 //
 // The plucked thread's base ribbon narrows by a per-sample DEPTH D (its
