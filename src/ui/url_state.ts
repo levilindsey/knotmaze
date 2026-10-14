@@ -311,10 +311,11 @@ export interface UrlParams {
   // [0, 3] x the effect's designed drift. Applies live.
   backgroundSpeed: number;
   // The background's SHAPE (K79 stage B; BackgroundShape in
-  // render/background_model.ts), all live: pattern size [0.5, 3] and fbm
-  // roughness [0, 2] for every effect (1 = as designed), vellum's fiber
-  // and grain strengths [0, 3], silk's streak direction in degrees
-  // counterclockwise from screen right (-1 = AUTO, the seed's).
+  // render/background_model.ts), all live: pattern size [0.5, 2] for every
+  // effect (K129: it was 3), fbm roughness [0, 2] for mist, wash, silk and
+  // contours (1 = as designed), vellum's fiber and grain strengths [0, 3],
+  // silk's streak direction in degrees counterclockwise from screen right
+  // (-1 = AUTO, the seed's).
   backgroundScale: number;
   backgroundDetail: number;
   backgroundFibers: number;
