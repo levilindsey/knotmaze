@@ -721,9 +721,10 @@ coordinate lerp sweeps the hues between.
   awake 100 s in (about 200 ms frames), so that run measured the settle.
   The dt clamp (0.1 s) slows the pieces below 10 fps.
 - PROBES (`.claude/probes/K140/`, untracked): k140_page.mjs `<url> <out>
-  desk|phone|reduced|reduced:phone|knot` (screenshots mid-spray, mid-rain
-  and idle, the plan, the idle time, banner hit-test, zoom, the knot
-  rest checks); k140_ab.mjs + run_ab.ps1 (the frame A/B, takes the perf
+  desk|phone|reduced|reduced:phone|realtime|knot` (a real finish by
+  mouse, or K80's greedy chase; screenshots mid-spray, mid-rain and idle,
+  the plan, the idle time, banner hit-test, zoom, the knot rest checks);
+  k140_ab.mjs + run_ab.ps1 (the frame A/B, takes the perf
   lock; `-Runs desk:1,desk:4`); bench_sim.mjs (the sim's own cost);
   builds/<sha> served by `vite preview` on 5481/5482. Hooks:
   `__knotConfetti()` (pieces alive, bursts, frames stepped - frozen when
