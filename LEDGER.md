@@ -337,6 +337,23 @@ and never reused.
   at every zoom, enough to clear the open panel.
   - owner, branch, evidence, next, brief: as K148 (the same agent and
     branch, Part B of `docs/design/K148_K149.md`).
+- **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
+  key to keep advancing, taking the branch that matches the key at each
+  junction it reaches; a quick control on phones too, such as
+  screen-region buttons (the agent proposes and builds one, Levi's
+  call). No codec params. Compare `docs/design/K80_gameplay_additions.md`
+  4.29 (Sprint).
+  - owner: agent a320fe823ac44486d (opus) of session d8031183, stage 1,
+    started 2026-10-14 about 01:59; it stops at about 03:59 or when the
+    stage is done.
+  - branch: `worktree-agent-a320fe823ac44486d`
+    (`.claude/worktrees/agent-a320fe823ac44486d`), from 96320e0; last
+    commit: none yet.
+  - evidence: `.claude/probes/K120/` in its worktree (copy at merge).
+  - next: stage 1 per the brief; then the merge and the next round's
+    phone pass (with the look it proposes).
+  - brief: `docs/design/K120.md`.
+  - env: dev servers on ports 5520-5529.
 
 ## Next, in order
 
@@ -369,9 +386,9 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running at 01:55 on 10-14: the round's phone pass
-(K156), K146+K151 (opus) and K148+K149 (sonnet). Then, as code slots
-free up:
+(he may reorder). Running at 02:00 on 10-14: the round's phone pass
+(K156), K146+K151 (opus), K148+K149 (sonnet) and K120 (opus). Then, as
+code slots free up:
 1. The round's phone pass (K156), running from 01:53 on head 81d31a5:
    K79 B, K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154,
    K169 and K180 against base ab6d330.
@@ -380,7 +397,7 @@ free up:
    5fed5c1; Levi plays it (K174).
 3. K146 + K151 and K148 + K149, running (the camera, the mode badge and
    past dailies; K80's minotaur indicator follows K148's).
-4. K120 (no codec).
+4. K120 (no codec), running.
 5. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
    then option 3 (the spline fix) first.
 6. K132.
@@ -404,11 +421,6 @@ call); near launch, K117; after the churn, K46, K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
-- **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
-  key to keep advancing, taking the branch that matches the key at each
-  junction it reaches; a quick control on phones too, such as
-  screen-region buttons. No codec params. Compare
-  `docs/design/K80_gameplay_additions.md` 4.29 (Sprint).
 - **K132** · Drop link and daily back-compat (Levi, 2026-10-13: "we
   can ignore keeping support for previous url params, or preserving
   mazes from previous control combinations. Breaking changes are 100%
