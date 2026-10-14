@@ -33,7 +33,7 @@ const LOAD = [
   ["first sleep s", (r) => r.firstSleepS, -1, 1], ["asleep at end (share)", (r) => (r.asleepAtEnd ? 1 : 0), 1, 2],
 ];
 const cells = [
-  ...(CFG.moves || [0, 10, 21]).map((m) => ({ id: `fabric@${m}`, title: `Fabric mode, ${m} moves, at rest`, pick: (r) => r.cell === "fabric" && r.moves === m, metrics: FRAME })),
+  ...(CFG.moves || [0, 10, 21]).map((m) => ({ id: `fabric@${m}`, moves: m, title: `Fabric mode, ${m} moves, at rest`, pick: (r) => r.cell === "fabric" && r.moves === m, metrics: FRAME })),
   { id: "knot", title: "Knot mode (mf=0), at rest", pick: (r) => r.cell === "knot", metrics: FRAME },
   { id: "load-default", title: "Load (K147), default link ?b.J: a fresh navigation, rAF for the first seconds", pick: (r) => r.cell === "load" && r.link === "default", metrics: LOAD },
   { id: "load-slow", title: "Load (K147), the slow case gs=18", pick: (r) => r.cell === "load" && r.link === "slow", metrics: LOAD },
@@ -55,7 +55,8 @@ for (const c of cells) {
   const rs = rows.filter(c.pick);
   if (!rs.length) { L.push(`### ${c.title}`, "", "No samples.", ""); continue; }
   const side = (k) => rs.filter((r) => r.build === k);
-  L.push(`### ${c.title}`, "", `Samples: base ${side("base").length}, head ${side("head").length}.`, "", "| metric | base | head | delta | noise | verdict |", "|---|---|---|---|---|---|");
+  const made = c.moves === undefined ? null : median(rs.map((r) => r.made));
+  L.push(`### ${c.title}${made !== null && made !== c.moves ? ` (the walk made only ${made}: the maze ended)` : ""}`, "", `Samples: base ${side("base").length}, head ${side("head").length}.`, "", "| metric | base | head | delta | noise | verdict |", "|---|---|---|---|---|---|");
   for (const [label, get, dir, d] of c.metrics) {
     const bv = median(side("base").map(get)), hv = median(side("head").map(get));
     const delta = bv === null || hv === null ? null : +(hv - bv).toFixed(4);

@@ -112,6 +112,45 @@ works on default-shader meshes such as erases); and the URL-state
 rewrite drops `#hash` on load (pass probe args through page.evaluate).
 Three "no effect" toggles in a row meant the probe, not the renderer.
 
+PROBE LORE (2026-10-13, K156, the round phone pass): **one scripted
+phone pass per merge round** (`scripts/phone_pass.ps1`, parts in
+`scripts/phone_pass/`, record in `docs/design/K156.md`) instead of a
+phone gate per feature: `-Base <ref> -Head <ref>` (head defaults to
+master) are built once each into `<Out>\builds` (`preview.ps1 -Root`,
+K150), served on two ports from 5480-5489, and every sample checks its
+page's stamp SHA (an A/A pass builds once and serves it on both ports).
+Phases: start | frames | looks | cleanup | summary (`all` runs them in
+order). The phone must be awake and unlocked first (the pass never wakes
+it); the watchdog stops the pass on a touch, a key, a lock or another
+app in front, and `retry_quiet.ps1` retries once after 15 quiet minutes.
+FRAMES (`bench.mjs`): fabric at 0/10/21 moves and knot (`mf=0`) at rest,
+both builds interleaved per rep (fps, p95, longest frame, render ms,
+asleep), plus K147's load scenario (rAF intervals from a fresh
+navigation: time to first frame, frames over 50 ms, longest, first
+sleep; default link and the slow case `gs=18`). `?b.J` is solved in 14
+moves, so the 21-move cell stops early (the row's `made`, and the
+summary's table title, say so). LOOKS (`looks.mjs`, `sheet.mjs`): JSON
+`{looks:[{name, link, load: sleep|frozen|none, needs:[...], steps:[...]}]}`;
+the header of `looks.mjs` is the spec and `looks.example.json` is K81's
+arc. `needs` = `__hook`, `param:<key>` (a key of `__knotParams()`) or
+`js:<expr>`; a build without it (the feature is new) records `missing`
+and the pass goes on, and only a watchdog trip stops it. Steps: waitSleep
+wait moves tapChoice click panel scroll pin reload eval shot burst. A
+look runs on the head first (junction crop boxes are chosen there and
+reused on base). The sheet puts base on the left (blue bar) and head on
+the right (orange); a pixel diff is made for single shots only, and only
+a frozen, pinned look (`phy=0&fw=0` + `pin`) can read 0 px (a live page
+always differs, as the panel shot's 14061 px did on master vs master).
+The `click` step sets `target=_self` on anchors, so Licenses opens in the
+pass's own tab, not a second one. K79's drift pauses 2.5 s after a still
+scene, so a speed look bursts straight after a load (motion forced to
+`full` through localStorage and a reload). SUMMARY (`summary.mjs`): a
+table per scenario with base, head, delta, the A/A noise and a verdict
+("within noise" when |delta| <= the noise). An A/A pass writes
+`noise.json`; the tracked `scripts/phone_pass/noise.json` is the floor
+every later summary reads, and a one-rep floor is weak (one |difference|
+per cell). `-Dry` runs the same scripts against a desktop Chrome with
+the phone's viewport: plumbing only, never timings.
 ## Probe gotchas, hooks and tooling
 
 - *K75 (2026-10-12), cross-build frames:* a frozen page keeps the flow
