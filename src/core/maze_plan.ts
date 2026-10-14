@@ -1091,9 +1091,10 @@ function repairTailRoute(
 // go to pool order. A link is an unused splice candidate or an unused
 // crossing whose two passes both keep an edge. Same-strand splices and
 // self-crossings qualify: their two sides lie on different pieces, so on
-// different chains after surgery (neither a hairpin nor a kink eyelet). The
-// joins are appended to the spanning lists, after everything else is
-// placed. Returns whether one piece is left.
+// different chains after surgery (neither a hairpin nor a kink eyelet); a
+// splice whose bridge would cross another bridge does not. The joins are
+// appended to the spanning lists, after everything else is placed. Returns
+// whether one piece is left.
 function joinOrphanPieces(
   graph: TangleGraph,
   cuts: MazeCut[], // Entrance, exit, then the dead-end cuts.
@@ -1134,6 +1135,11 @@ function joinOrphanPieces(
   for (;;) {
     const region = p.find(start);
     if (live.every((o) => p.find(o) === region)) return true;
+    // Bridges already placed. A splice candidate's bridge crosses no edge,
+    // but two bridges can cross each other: choice placement keeps them
+    // apart by its spacing floor, which joins do not use, so a join skips
+    // any candidate whose bridge would cross one.
+    const bridges = [...spanningSplices, ...choiceSplices];
     const links: Link[] = [];
     for (const c of candidates) {
       if (usedEdges.has(c.edgeA) || usedEdges.has(c.edgeB)) continue;
@@ -1141,6 +1147,13 @@ function joinOrphanPieces(
       const u = p.find(p.edgeOcc.get(c.edgeA)!) === region;
       const v = p.find(p.edgeOcc.get(c.edgeB)!) === region;
       if (u === v) continue;
+      if (
+        bridges.some((s) =>
+          properIntersect(c.a[0], c.a[1], c.b[0], c.b[1], s.a[0], s.a[1], s.b[0], s.b[1])
+        )
+      ) {
+        continue;
+      }
       const pts = [c.a[0], c.a[1], c.b[0], c.b[1]];
       links.push({ splice: c, pts, clear: clearOf(c.a) && clearOf(c.b) });
     }
