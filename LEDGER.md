@@ -30,8 +30,8 @@ and never reused.
   - Everything else leaves the daily, including moveSpeed, pathViz, fog,
     the intro and flow, and the physics tuning. K79's `backgroundSpeed`
     is not exempt either, like background and its intensity.
-  - Proposed exempt: K140's confetti on/off and amount (viewer
-    preferences).
+  - Proposed exempt: K140's confetti on/off and amount, and K145's
+    hover glow strength (viewer preferences).
 - **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
   in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
   Shortlist: the burn race (turn-based), the cut verb with an
@@ -318,7 +318,8 @@ up:
 5. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
    then option 3 (the spline fix) first.
 6. K132, after K79 stage B merges.
-7. K100, then K93, after K81 merges (the same renderer file).
+7. K100, then K93 with K145 (the same hover code), after K81 merges
+   (the same renderer file).
 8. K92, then K111, after K79 stage B merges (both rework the panel);
    K111's pulse highlight modes after K81 too.
 9. K98, after K79 stage B and K81.
@@ -389,6 +390,21 @@ K5-K7 (split, frame loop, worker) follow.
   `src/render/fabric_maze_renderer.ts` and the G2 paint and its
   `paint_math` mirror, so after K81 merges. Sheets: `.claude/probes/K75/`
   (`NOTES.txt` indexes them).
+- **K145** · A subtle hover glow on runs that aren't choices (Levi,
+  2026-10-13 about 16:00, verbatim in
+  `docs/design/levi_notes_2026-10-13.md`): in the maze, hovering any run
+  that isn't a choice at the player's junction (the choices keep their
+  stronger hover) lights a glow along both edges of the thread, inside
+  its bounds, fading quickly toward the center line and fading out with
+  distance from the hover point; the reach can borrow the choices'
+  length param (`pulseReach`, which K93 makes the hover's reach). For
+  the brief: the pointer move in `src/main.ts` asks `fabric.edgeAt`,
+  which picks only choosable runs, and `setHover` tracks one run; the
+  glow is a new G2 paint term plus its `paint_math` mirror (the hovered
+  run and the hover point's arc position), measured along the thread
+  like the pulses; decide whether it stops or fades at the run's
+  junctions; a strength param (0 = off), proposed daily-exempt (K57);
+  mouse and pen only (touch has no hover). With K93, after K81 merges.
 - **K92** · Undo and redo for design changes (Levi, 2026-10-13). Two
   buttons beside the panel's open/close button, shown only while the
   panel is open, each enabled only when it can act; the mode badge moves
