@@ -666,6 +666,17 @@ demand.
   three stars 94% of the time, a greedy one exactly two 52%. *[Lore:
   `.claude/rules/gameplay.md` (STAR RATINGS); harness, reports and page
   probes in `.claude/probes/K155/`.]*
+- FINISH CONFETTI (K140 stage 1, 2026-10-14; brief `docs/design/K140.md`,
+  agent under session d8031183): every finish's banner now throws a rain
+  of paper over the screen (screen space, 140 pieces on a phone, scaled
+  by the screen's area to 288 at 1400x900) and a spray of 40 pieces from
+  the exit marker (world space, so it stays on the finish). Two codec v4
+  appends at 99-100 (`cf` on, `cfa` amount 0-3), both daily-exempt
+  playback preferences. Reduced motion keeps only a small, slow spray (a
+  proposal). Render-only: it never wakes the physics, and the scene goes
+  idle again when the last piece falls out. *[Lore: `.claude/rules/
+  render.md` (Finish confetti); probes, screenshots and the frame-time
+  A/B in `.claude/probes/K140/`.]*
 
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the

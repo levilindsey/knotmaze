@@ -68,6 +68,8 @@ src/
     float_rows.ts         # Row-partial RGBA32F data textures + uploader
     reveal.ts             # Appearance reveal: per-sample width masks
     appear_fx.ts          # Reveal-front particles (rainbow, comet, dust, burn, roots)
+    confetti.ts           # K140: finish confetti view (two ParticleContainers)
+    confetti_model.ts     # K140 pure: rain + spray counts, spawn and motion
     pluck_overlay.ts      # Render-only pluck: time-exposure strip + base collapse
     pluck_model.ts        # Pure plucked-string math (modes, envelope, lobes)
     background.ts         # K21 shader backdrop: low-res texture + blit, fog backdrop
@@ -133,6 +135,7 @@ test/
     marker_glyphs.test.ts  # K83 glyph fit (margin = stroke), shader capacity, SVG
     fog_arc.test.ts  # K99 the same stations whatever the frame split
     junction_routes.test.ts  # K81 which arms a route joins, the band's corner and fit
+    confetti_model.test.ts  # K140 counts, screen scale, reduced motion, falls out
     paint_math / paint_fx / paint_section / paint_gameplay .test.ts  # G2
       mirror vs frozen pre-G2 code (fixtures/), exact skips, parity
   ui/
