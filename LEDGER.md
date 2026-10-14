@@ -282,9 +282,9 @@ Order from 2026-10-13 14:55, after Levi's answers at 09:35, 13:17,
 13:30 and 14:31-14:39 (he may reorder). Running: K104 stage 1b, K74
 stage 1 and K127 on K81's branch (code); K79 stage B2b (measures, one
 small change). K74 runs its stages back to back in one code slot. The
-next research slot is K115 stage 1a. The phone is locked (since about
-12:47) and takes one gate at a time, whichever is ready first: K79 B's
-or K81's (after K127). Then, as code slots free up:
+next research slot is K115 stage 1a. The phone is unlocked again (Levi,
+15:20; checked over adb) and takes one gate at a time, whichever is ready
+first: K79 B's (after B2b) or K81's (after K127). Then, as code slots free up:
 1. K81's and K79 B's merges, each after its gate.
 2. K120 (no codec).
 3. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
