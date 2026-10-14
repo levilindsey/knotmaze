@@ -169,9 +169,10 @@ frames over 25 ms +-3-5, fabric render ms +-2-5 (18 samples spanned
 19.6-27.9 ms: K81's 20-29 vs 24-31 is noise), knot render ms +-8 (7.5-20.5,
 the GPU clock), load first sleep +-1.3 s (17.5-21.6 s), frames over 50 ms
 +-11-26. It is one pass: weak, and for ONE viewport. The docked phone sits
-in LANDSCAPE (display 2424x1080, the page 810x331 CSS px at dpr 2.625, not
-the 411x753 of the lessons), the summary prints the viewport and warns when
-the floor's differs, and `-Phase check` prints the display: rerun an A/A
+in LANDSCAPE (display 2424x1080, the page 810 CSS px wide at dpr 2.625 and
+331-387 high with Chrome's toolbar, not the 411x753 of the lessons), the
+summary prints the viewport and warns when the floor's width or dpr
+differs, and `-Phase check` prints the display: rerun an A/A
 pass when the orientation changes. `-Dry` runs the same scripts against a
 desktop Chrome with the phone's viewport: plumbing only, never timings.
 ## Probe gotchas, hooks and tooling
