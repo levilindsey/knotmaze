@@ -148,9 +148,12 @@ and never reused.
     B2b's `out/gpu_b2.json`, `ab_rb*.log`, `k79b_k129.mjs` and
     `k79b_control.json`. Copy at merge.
   - next: B3 (the bench, the scale-0.5 costs and the panel rows on
-    touch; results to `phone/results.md`), then the merge: the
-    coordinator rebases, and the second of K79 B and K74 stage 1 to
-    merge renumbers its codec appends. File at merge: B1's probe-only
+    touch; results to `phone/results.md`), then the merge: rebase onto
+    master, where K74 stage 1 took codec v4 index 71 (`deadEndLength`),
+    so B's ten appends move from 71-80 to 72-81, and re-freeze the golden
+    dailies over both. At the merge the background speed slider's max
+    becomes 8 (Levi, 2026-10-13 about 16:30: "Max backgroundSpeed should
+    be like x8"; check the link parser's range clamp too). File at merge: B1's probe-only
     residual (`__knotSetBackgroundParams` doesn't sanitize) and the sheet
     script's first-frame residual (B2).
   - brief: `docs/design/K79.md` on the branch ("Stage B2b results",
@@ -230,9 +233,14 @@ and never reused.
   stay adjustable. Design: `docs/design/K74_maze_design.md` (dad40f8).
   Four stages from `docs/design/K74.md`, each re-freezing the pins it
   moves and running the K63 sleep checks:
-  - stage 1: `exitClearance` 12 by default (decision 3) and long-tail
-    dead ends (option F) with length and density sliders (decision 5; K86
-    folded in), on by default at a measured density;
+  - stage 1 MERGED in fbf5b5c..8ba0c32 (2026-10-13 about 16:25; it
+    deploys): `exitClearance` 12; long-tail dead ends (`deadEndLength`
+    20, codec v4 index 71; 0 = the old placement, byte for byte), on at
+    density 0.5 for links and the daily. Greedy median 1.96x -> 3.12x
+    optimal; every daily moved (saved attempts refuse cleanly). Results
+    and pins: the brief's "Stage 1 handoff"; the delegated pick, for
+    Levi to review if he wants:
+    `.claude/probes/K74/out/K74_stage1_before_after.png`;
   - stage 2: H1, the fused arm cut, with a slider for the share of H's it
     cuts (decision 4; the free-tip cut breaks sleep);
   - stage 3: the trap-zone finish (corridor and taper, away flank) beside
@@ -242,23 +250,41 @@ and never reused.
     greedy bands as difficulty params (decision 7), then the target band
     (greedy >= 2.5x optimal, <= 15% within 1.5x; decision 1) checked at
     the defaults.
-  - owner: the stage 1 agent `afe7e8d13a4b8112b` (Opus) of session
-    d8031183, since 2026-10-13 14:41.
-  - branch: `worktree-agent-afe7e8d13a4b8112b`, worktree
-    `.claude/worktrees/agent-afe7e8d13a4b8112b` (from 7f01e7e); last
-    commit: none yet.
-  - evidence: `.claude/probes/K74/` in the main checkout
-    (`out/scan_final.jsonl`, the hooked plan copy `proto_plan_src.ts`);
-    the design agent's worktree `.claude/worktrees/agent-aeaf1e61bcecaaf0b`
-    is kept. Fisher's books, Abbott's essays and Buck's book-only
-    chapters are unverified (doc section 1).
-  - next: stage 1, then its "Stage 1 handoff" in the brief; stages 2-4
-    follow as fresh agents. K80's call 6 (Levi, 14:31: "Absolutely"):
-    dead ends are the minotaur's hunting ground. Dead-end branches,
-    several runs behind one bridge, would make deeper traps: a later K74
-    param, settled with K80's brief.
-  - brief: `docs/design/K74.md` ("Stages", "Stage 1 brief").
-  - env: its dev servers on ports 5421-5424 (private vite cacheDir).
+  - owner: nobody since 2026-10-13 16:20 (stage 1's agent
+    `afe7e8d13a4b8112b` finished; its worktree
+    `.claude/worktrees/agent-afe7e8d13a4b8112b` is kept for follow-ups).
+  - branch: mainline; last commit: `8ba0c32`.
+  - evidence: `.claude/probes/K74/` (stage 1: `out/analyze_stage1.txt`,
+    `out/phys1.jsonl`, `out/verify_*.txt`, `out/k47_refuse.txt`, the
+    sheet; the design's `out/scan_final.jsonl` and the hooked plan copy
+    `proto_plan_src.ts`); the design agent's worktree
+    `.claude/worktrees/agent-aeaf1e61bcecaaf0b` is kept. Fisher's books,
+    Abbott's essays and Buck's book-only chapters are unverified (doc
+    section 1).
+  - next: write stage 2's brief in `docs/design/K74.md` from the
+    handoff's "For stage 2" notes, then launch it (item 12 of the
+    order). K80's call 6 (Levi, 14:31: "Absolutely"): dead ends are the
+    minotaur's hunting ground. Dead-end branches, several runs behind
+    one bridge, would make deeper traps: a later K74 param, settled with
+    K80's brief.
+  - brief: `docs/design/K74.md` ("Stages", "Stage 1 handoff").
+- **K147** · A smooth intro on load (Levi, 2026-10-13 about 16:15,
+  verbatim in `docs/design/levi_notes_2026-10-13.md`: "Should we show a
+  loading indicator during the initial physics simulation...?"). The
+  stepper keeps physics on real time, so once a substep costs near its
+  1/120 s of wall time, each slow frame asks for more substeps on the
+  next, and the intro collapses toward the cap until the knot first
+  sleeps (about 5 fps for 14 s at gs 18). The interim before K7's worker
+  (it reopens K28's "wait for the worker"): a per-frame physics budget
+  while the load settle lasts, and the hidden pre-sim on the chunked
+  loader with a cap. Both are params, so Levi's full settle-first is one
+  setting away (the cap at its max), for him to compare.
+  - owner: the coordinator (session d8031183), launching its agent at
+    16:47.
+  - branch: none yet (the agent's worktree branches from origin/master).
+  - evidence: `.claude/probes/K147/` in the agent's worktree, to come.
+  - next: launch the stage from the brief.
+  - brief: `docs/design/K147.md`.
 - **K122** · Third-party license notices (K117): the bundle in
   `dist/assets` carries PixiJS, Tweakpane, simplex-noise and their
   dependencies with no license text (0 license comments), though their
@@ -313,8 +339,9 @@ up:
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."); it rebases over
    K79 B and K81 if they merge first.
-3. K140, the finish confetti, then K146, past dailies without credit
-   (both small).
+3. K140, the finish confetti, then K146, past dailies without credit,
+   then K148, K149 and K151, the camera and the mode badge (all small;
+   K80's minotaur indicator follows K148's).
 4. K120 (no codec).
 5. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
    then option 3 (the spline fix) first.
@@ -337,7 +364,8 @@ up:
     goal).
 
 Waiting for Levi: K114 (its doc unread at 13:30) and K117's timing; the
-G3-3 and G4-2 old-path deletions; after the churn, K46, K57 and K84.
+G3-3 and G4-2 old-path deletions; K151's X on phones; after the churn,
+K46, K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
@@ -357,13 +385,38 @@ K5-K7 (split, frame loop, worker) follow.
   (`src/ui/daily_stats_view.ts`), so a missed day has no way in. And a
   late first finish becomes the OFFICIAL result, counted in solved and
   best time but not streaks (`onTime`, `src/game/daily_store.ts`).
-  Proposed: (1) a way in, every past daily from #1 listed in the stats
-  view, unplayed days included (tap to play); (2) no credit: an attempt
+  (1) The way in is the stats view alone (Levi, about 16:25: "Stats view
+  is enough of a way in."): its History lists every past daily from #1,
+  unplayed days included (tap to play). Proposed: (2) no credit: an attempt
   that begins after its day records a practice result (shown in History,
   outside every aggregate, and K144's shared stats), never the official
   one, and the mode badge says so (K73's `modeBadgeFor`, like "Replay ·
   not scored"). An attempt begun on its day and finished later still
   counts (K47). No codec, no renderer.
+- **K148** · An off-screen indicator for the player (Levi, 2026-10-13
+  about 16:25: "When panning away from the current position, we should
+  also show an offscreen indicator for it."): the head joins the finish
+  as a K73 indicator client (`src/ui/offscreen_indicators.ts`, registered
+  in `src/main.ts`), wearing K83's head glyph (`marker_glyphs.ts`);
+  proposed, a tap eases the camera back to the head and resumes the
+  follow. In the maze whenever the head is off screen. Small, no codec.
+- **K149** · Room to pan the maze partly off screen at the fit zoom
+  (Levi, 2026-10-13 about 16:25: "we should support panning the maze a
+  bit more off-screen at furthest zoom. Especially to get it out from
+  under the menu."): `clampView` (`src/main.ts:543`) leaves no pan range
+  at zoom 1. Allow slack at every zoom, a share of the screen per side,
+  enough to clear the open panel; check the follow camera (`applyCam`)
+  and the fit reset. Small, no codec.
+- **K151** · The mode badge (Levi, 2026-10-13 about 16:30, verbatim in
+  `docs/design/levi_notes_2026-10-13.md`): (1) the daily's label shows in
+  the badge's spot, where "Free play" shows off the daily (today it is
+  the HUD title, `dailyTitle()` in `src/main.ts`, and `modeBadgeFor`
+  shows nothing during the official attempt); (2) a badge a tap acts on
+  (Free play opens today's daily) fades in an X on hover, so it reads as
+  leaving the mode rather than as a button naming its action; (3) phones
+  have no hover: proposed, the X always shows on coarse pointers (asked
+  2026-10-13). Files: `src/ui/mode_badge.ts`, `src/ui/maze_hud.ts`,
+  `src/main.ts`. Small, no codec.
 - **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
   key to keep advancing, taking the branch that matches the key at each
   junction it reaches; a quick control on phones too, such as
@@ -571,7 +624,9 @@ K5-K7 (split, frame loop, worker) follow.
 - **K7** · Physics in a Web Worker, with render-side interpolation between
   physics steps (after K6). Smooths the UI; it does not speed up physics.
   Acceptance includes K28: the intro runs at full frame rate WHILE
-  physics settles (no settle-first loader wait).
+  physics settles (no settle-first loader wait). K147's per-frame budget
+  is the main-thread interim (a smooth intro over a slow-motion settle);
+  the worker gives the settle a whole core.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). Defaults: anchored tails keep
   flat caps, phones stay at a 2x resolution cap. Over-tight folds keep
@@ -872,9 +927,11 @@ K5-K7 (split, frame loop, worker) follow.
   moves those plans and dailies, which the pre-launch policy allows;
   look first at whether a crossing reads wrong. Found by K110
   (`.claude/probes/K110/verify_run3.txt`).
-- **K136** · Tree gs6 1389 with dead ends (`?12l.IS3ygt`) never
-  sleeps (140 s of sim, still moving), on both 7e41a02 and ade3537, so
-  not K110's doing; maybe the K13 attractor. Evidence:
+- **K136** · Tree gs6 1389 with dead ends never sleeps (140 s of sim,
+  still moving), on both 7e41a02 and ade3537, so not K110's doing; maybe
+  the K13 attractor. The repro was `?12l.IS3ygt`; since K74 stage 1 it is
+  `?12l.J&gs=6&shp=tree`, and K74's agent saw it at the new defaults and
+  with the old placement too. Evidence:
   `.claude/probes/K110/sheet/results_run1_tree_awake.json`.
 - **K142** · The A/B harness's first case in a fresh browser can read
   nonzero: 1 of 11 such runs (K79 B2b's `none_desk`, 274 px, max delta
@@ -885,6 +942,12 @@ K5-K7 (split, frame loop, worker) follow.
 - **K143** · Vellum's fibers read as long crossing hatching near
   scale 2, the slider's new max (K129). Worth a look before K79 B
   merges (sheets in K79's worktree, `.claude/probes/K79/out/view/`).
+- **K150** · Probe tooling isn't safe for concurrent agents (seen
+  2026-10-13): `scripts/diag_screenshot.mjs` uses one fixed Chrome
+  profile and an on-screen window, and `scripts/preview.ps1 -Ref` builds
+  into fixed TEMP folders per commit (`src-<sha>`, `<sha>`), so two
+  agents probing at once collide. Fix: per-run profiles and folders,
+  off-screen windows (claude-config `rules/lessons.md`).
 
 ## Approved, to schedule (2026-10-11)
 

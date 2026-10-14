@@ -279,3 +279,38 @@ lift; it fades out toward the run's junctions).
 There should be some way to play previous dailys, but not get credit for them.
 
 Filed (2026-10-13): K146 in Next, after K140.
+
+### About 16:15 (the load framerate)
+
+Hmm, I notice when loading the page, the animations run at a very low framerate. I assume it's when things sleep and physics calms down that things tick way back up. Should we show a loading indicator during the initial physics simulation, and then only render the maze screen and initial animaitons after physics calms-down?
+
+Filed (2026-10-13): K147, in progress, with the diagnosis and the
+recommendation in `docs/design/K147.md` (K28 had chosen to wait for K7's
+worker).
+
+### About 16:25 (past dailies, the way in)
+
+Stats view is enough of a way in.
+
+Filed (2026-10-13): K146 updated.
+
+### About 16:25 (camera)
+
+When panning away from the current position, we should also show an offscreen indicator for it.
+
+Also, we should support panning the maze a bit more off-screen at furthest zoom. Especially to get it out from under the menu.
+
+Filed (2026-10-13): K148 (the player's indicator) and K149 (pan room at
+the fit zoom), in Next.
+
+### About 16:30 (background speed)
+
+Max backgroundSpeed should be like x8
+
+Filed (2026-10-13): on K79, applied at stage B's merge.
+
+### About 16:30 (the mode badge)
+
+Hmm, let's show the Daily overlay in the same spot as the free play overlay. Also, when this overlay is clickable--to reset back to the other mode-- we should fade-in an X to help indicate that clicking will cancel. Right now it looks like a button that indicates what it will do when you click on it. This is still aproblem we need to solve for phones though...
+
+Filed (2026-10-13): K151 in Next; the phone question is open.
