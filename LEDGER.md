@@ -313,7 +313,8 @@ up:
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."); it rebases over
    K79 B and K81 if they merge first.
-3. K140, the finish confetti (small).
+3. K140, the finish confetti, then K146, past dailies without credit
+   (both small).
 4. K120 (no codec).
 5. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
    then option 3 (the spline fix) first.
@@ -349,6 +350,20 @@ K5-K7 (split, frame loop, worker) follow.
   reduced (`src/ui/motion.ts`), a small burst or none. Params: on/off
   and amount, proposed daily-exempt (K57). The phone gate checks fps
   during the effect. Small; Opus. After K80's real-time mode.
+- **K146** · Past dailies, playable without credit (Levi, 2026-10-13
+  about 16:15: "There should be some way to play previous dailys, but not
+  get credit for them."). Today a past daily opens only by its link
+  (`?daily=<n>`): the stats view's History lists only days with a record
+  (`src/ui/daily_stats_view.ts`), so a missed day has no way in. And a
+  late first finish becomes the OFFICIAL result, counted in solved and
+  best time but not streaks (`onTime`, `src/game/daily_store.ts`).
+  Proposed: (1) a way in, every past daily from #1 listed in the stats
+  view, unplayed days included (tap to play); (2) no credit: an attempt
+  that begins after its day records a practice result (shown in History,
+  outside every aggregate, and K144's shared stats), never the official
+  one, and the mode badge says so (K73's `modeBadgeFor`, like "Replay ·
+  not scored"). An attempt begun on its day and finished later still
+  counts (K47). No codec, no renderer.
 - **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
   key to keep advancing, taking the branch that matches the key at each
   junction it reaches; a quick control on phones too, such as
