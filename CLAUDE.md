@@ -56,6 +56,7 @@ src/
     ribbon_renderer.ts    # PixiJS ribbon meshes
     ribbon_mesh.ts        # Triangle strip extrusion
     junction_field.ts     # GPU junction field: records + fan shader
+    junction_routes.ts    # K81: route bands - which arms the path joins, the band's corner
     arm_strip.ts          # Per-arm material strips the fans read (K4 fan fix)
     gap_mask.ts           # Per-pixel crossing gaps: slot table + shader lib
     paint_glsl.ts         # G2 shader paint: GLSL library (section, FX, paint)
@@ -127,6 +128,7 @@ test/
     background_model.test.ts  # K21 drift clock (K24 hook), colors, order
     marker_glyphs.test.ts  # K83 glyph fit (margin = stroke), shader capacity, SVG
     fog_arc.test.ts  # K99 the same stations whatever the frame split
+    junction_routes.test.ts  # K81 which arms a route joins, the band's corner and fit
     paint_math / paint_fx / paint_section / paint_gameplay .test.ts  # G2
       mirror vs frozen pre-G2 code (fixtures/), exact skips, parity
   ui/
