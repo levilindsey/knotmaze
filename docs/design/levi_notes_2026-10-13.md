@@ -77,3 +77,50 @@ I probably want to make native mobile apps eventually; but that's not something 
 I definitely want to add i18n support. There shouldn't be _too_ much text in here. I'm going to want an llm to automatically handle translations and other i18n support for me. But that's also something we don't need to implement until the end. Just record a note for now.
 
 We should definitely add support for a faster smoother input control, like pressing/holding arrow keys to auto progress along the next corresponding branch when arriving at the next intersection. Maybe there could be some sort of quick control input support for mobile too, like screen-region buttons?
+
+## Decisions (09:35 and 09:55 PDT)
+
+Levi's answers to the items waiting on him, verbatim below. A message
+on the repo's visibility and license is recorded as LEDGER K117 (the
+GitHub link is gone and the code is all rights reserved, a756ca5).
+
+| Item | Decision | Ledger |
+|---|---|---|
+| K49 | keep 2.6 | Done |
+| K52 | keep vellum | Done |
+| K94 | the wheel still zooms | Done |
+| K110 | join every piece to the start | Next |
+| K104 | a fixed whole-segment vibration under the local lobes; a rounder collapse | Next |
+| K100 | the fog resets on a restart, not on a backtrack | Next |
+| K92 | undo/redo beside the panel button; the badge below; the indicator call stands | Next |
+| K111 | reduced motion covers the flow; pulse highlight modes; an Accessibility group | Next |
+| K98 | glyphs kept; a dot-diameter slider; icons fit their discs; colored end dots; minotaur and spider glyphs | Next |
+| K76 | an end-look dropdown, default beacon | Waiting on Levi (five calls) |
+| K93 | asked what the calls mean | Waiting on Levi |
+| K78 | public, Markdown, later a devlog post | Next |
+
+### The answers (verbatim)
+
+K76 end markers: Let's have a dropdown to select which treatment is used. Default to beacon. Options include: fade, halo, glow, dots, fray, beacon
+
+K98: I like all your icons. THe defaults are good. The icons should be scaled down to fit within the current position dot. Let's also add a new slider that scales the position dot diameter, relative to the thread width, from 0.25 to 3. The default diameter should match the preexisting current-position dot diameter. I want the start/finish/minotaur/other in-game icons to match the size of the player/current-position icon. Also, it's good that there is a black dot behind the white icon. This dot is actually what should match the width-diameter ratio slider. The icon should be scaled accordingly to fit within the dot, with a slight margin. I still want colored dots at the start and end, and with the default diameter showing some of the colored dot around the icon dot. Idk what you mean by "the head disc covering the starts of the arms". Please also generate simple minotaur and spider icons.
+
+K49: 2.6.
+
+K52: vellum.
+
+K92: Ooh, good point. Let's add undo/redo buttons above the settings panel, next to the close/open button. I guess the daily-vs-replay-vs-custom notificaton would then go below this row. Then we'll need to maintain an undo stack. And handle auto-toggling enablement/visibility for the undo/redo buttons. The undo/redo buttons would only be visible when the settings panel is open. The fog finish indiactor tap decision sgtm.
+
+K93: I'm not sure what you mean about the trail fade and the hover/pulseReach. Elaborate.
+
+K100: The fog should reset when the maze restarts. But the fog shouldn't reset if we just backtrack to the start.
+
+K104: Hmm, the pluck is still not good, in general. The main problem is that it's way to subtle. Even maxing pluckSize to 3, I can't tell when some segments are plucked. Can we modify this to include a set-amount of whole-segment vibration effect? I do like the spatial locality emphasis too though, but this should build on the rest. And, as to the requested problem, the sharp kink collapse is better, but still a bit too acute.
+
+K110: Yeah, we should join pieces as needed to ensure everything is reachable.
+
+K111: Not the intro animation or the current-position-adjacent-segment-highlight-pulses, but it should cover the maze undulations. We could add an alternate highlight modes for current-position-adjacent-segment-highlight-pulses, along with a dropdown to change them. This could probably also help for high-contrast accessibility. Maybe there could also be some high-level checkboxes for setting high-contrast mode and reduced-motion mode, which then override all other relevant settings. Maybe these would go in an accessibility group near the top.
+
+K94: Yes, the mouse wheel still zooms.
+
+K78: Public. Markdown is fine--eventually this will likely also be published as a post on my Blogger devlog at devlog.levi.dev.

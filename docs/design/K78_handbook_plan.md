@@ -10,14 +10,19 @@ make it until we're done with all the churn." He also noted that the
 half-lattice units "would be more clear with a diagram, or annotated
 screenshot".
 
-## Open questions for Levi (ask before writing)
+## Levi's answers (2026-10-13)
 
-- **Audience.** Levi and future contributors only, or also public (a
-  levi.dev post via the `levi-dev-post` skill)? This sets the depth of
-  the math and how much history to include.
-- **Format.** A repo Markdown file (`docs/handbook.md`, never imported
-  into CLAUDE.md) with static images, or an HTML page with interactive
-  figures (live param sliders over a small maze)?
+"Public. Markdown is fine--eventually this will likely also be
+published as a post on my Blogger devlog at devlog.levi.dev."
+
+- **Audience: public.** Write for a curious outside reader: explain the
+  math, and keep history only where it explains a decision.
+- **Format: Markdown** (`docs/handbook.md`, never imported into
+  CLAUDE.md), written to survive the move to a Blogger post: figures are
+  standalone images (PNG or SVG, with alt text and captions), and the
+  text has no repo-relative links and no internal IDs (K-numbers, stage
+  names), so nothing needs the repo to make sense. No interactive
+  figures.
 
 ## Outline
 
