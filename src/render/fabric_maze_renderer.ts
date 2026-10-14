@@ -40,7 +40,9 @@ import type {
 } from "./ribbon_renderer";
 import { legRoutes, pathLegs, traveledRoutes } from "./junction_routes";
 import type { PaintRoute } from "./junction_routes";
-import type { PathViz } from "../ui/url_state";
+import type { MinoFog, PathViz } from "../ui/url_state";
+import { spotCtrl } from "../game/minotaur";
+import type { MinotaurChase, MinotaurMode } from "../game/minotaur";
 import { FogBackdrop } from "./background";
 import { FOG_ARC_STEP, fogArcStations } from "./fog_arc";
 import { MarkerMesh } from "./marker_mesh";
@@ -57,8 +59,26 @@ const EXIT_COLOR = 0xff6b3d;
 // thread width).
 const WIN_RING_R = 1.32;
 
-// The three marker meshes live for the page (each scene's overlay borrows
-// them; destroy() hands them back undestroyed - the PALETTE_CACHE lore).
+// THE MINOTAUR (K80, the real-time mode): a K83 marker wearing the bull
+// over a red highlight, a little larger than the other markers and never
+// smaller than MINO_MIN_CSS_R CSS px in radius (main.ts converts that to
+// world units every frame through minoMinRadius): threads are 4-5 px wide
+// at a phone's fit scale, where a marker is about 7 px in radius.
+const MINO_SCALE = 1.15; // Marker radii.
+export const MINO_MIN_CSS_R = 10;
+// The highlight's diameter in minotaur radii, and its opacity by mode: dim
+// in the lair, plain while it roams, larger and full while it hunts.
+const MINO_GLOW_DIAM = 3;
+const MINO_GLOW_DIAM_HUNT = 3.8;
+const MINO_GLOW_ALPHA: Record<MinotaurMode, number> = {
+  lair: 0.4,
+  wander: 0.65,
+  pause: 0.65,
+  hunt: 1,
+};
+
+// The marker meshes live for the page (each scene's overlay borrows them;
+// destroy() hands them back undestroyed - the PALETTE_CACHE lore).
 let MARKER_MESHES: Record<MarkerRole, MarkerMesh> | null = null;
 function markerMeshes(): Record<MarkerRole, MarkerMesh> {
   if (!MARKER_MESHES) {
@@ -66,6 +86,7 @@ function markerMeshes(): Record<MarkerRole, MarkerMesh> {
       start: new MarkerMesh(),
       head: new MarkerMesh(),
       exit: new MarkerMesh(),
+      minotaur: new MarkerMesh(),
     };
   }
   return MARKER_MESHES;
@@ -171,6 +192,25 @@ function headGlowTexture(): Texture {
   ctx.fillRect(0, 0, N, N);
   HEAD_GLOW_TEX = Texture.from(canvas);
   return HEAD_GLOW_TEX;
+}
+
+// The minotaur's red highlight (K80), page-lifetime like the head's halo.
+let MINO_GLOW_TEX: Texture | null = null;
+function minoGlowTexture(): Texture {
+  if (MINO_GLOW_TEX) return MINO_GLOW_TEX;
+  const N = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = N;
+  canvas.height = N;
+  const ctx = canvas.getContext("2d")!;
+  const grad = ctx.createRadialGradient(N / 2, N / 2, 0, N / 2, N / 2, N / 2);
+  grad.addColorStop(0, "rgba(255,46,30,0.95)");
+  grad.addColorStop(0.45, "rgba(230,24,16,0.55)");
+  grad.addColorStop(1, "rgba(200,0,0,0)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, N, N);
+  MINO_GLOW_TEX = Texture.from(canvas);
+  return MINO_GLOW_TEX;
 }
 
 let FOG_DISP_TEX: Texture | null = null;
@@ -314,6 +354,20 @@ export class FabricMazeRenderer {
   // until its thread is revealed. Null / fully-revealed = everything
   // draws. Gameplay input is never gated.
   revealQuery: ((chain: number, ctrl: number) => number) | null = null;
+  // K80: the minotaur (syncMinotaur): its marker over its red highlight,
+  // one layer above the other markers, moved above or below the fog.
+  private minoLayer: Container;
+  private minoGlow: Sprite;
+  // The smallest radius it draws at (world units; main.ts keeps it at
+  // MINO_MIN_CSS_R CSS px for the current zoom).
+  minoMinRadius = 0;
+  // Where syncMinotaur last drew it (world), and whether a fog of war
+  // covers it there; minoShown false = not drawn.
+  private minoShown = false;
+  private minoUnderFog = false;
+  private minoX = 0;
+  private minoY = 0;
+  private minoR = 0;
 
   constructor(
     ps: ParticleSystem,
@@ -341,6 +395,14 @@ export class FabricMazeRenderer {
       this.markers.exit.mesh,
       this.gfx
     );
+    // K80: the minotaur above them all (on the player's dot, a catch shows
+    // the bull). Hidden until a real-time chase syncs it.
+    this.minoGlow = new Sprite(minoGlowTexture());
+    this.minoGlow.anchor.set(0.5);
+    this.minoLayer = new Container();
+    this.minoLayer.addChild(this.minoGlow, this.markers.minotaur.mesh);
+    this.minoLayer.visible = false;
+    this.overContainer.addChild(this.minoLayer);
     for (const m of Object.values(this.markers)) m.hide();
     this.syncMarkerOccluders();
     this.underContainer = new Container();
@@ -380,9 +442,10 @@ export class FabricMazeRenderer {
     start?: string;
     exit?: string;
     head?: string;
+    minotaur?: string;
     scale?: number;
   }): void {
-    for (const role of ["start", "exit", "head"] as const) {
+    for (const role of ["start", "exit", "head", "minotaur"] as const) {
       const id = style[role];
       if (id === undefined) continue;
       this.markerGlyphIds[role] = id;
@@ -597,6 +660,106 @@ export class FabricMazeRenderer {
       return;
     }
     this.emitAnimFrame(controller);
+  }
+
+  // K80: the real-time mode drives the in-flight move from the chase's
+  // clock instead of tickAnim's own pace. `frac` is the player's progress
+  // along the run, 0..1 (MinotaurChase.playerProgress: linear in ctrl, the
+  // way spotCtrl places the minotaur, and in beginMove's travel direction).
+  // At 1 the dot lands and the full refresh runs.
+  setMoveProgress(frac: number, controller: FabricMazeController): void {
+    const a = this.anim;
+    if (!a) return;
+    const f = Math.max(0, Math.min(1, frac));
+    const cur = a.from + (a.to - a.from) * f;
+    // Forward only: K99's stations are stamped once, in travel order.
+    if ((cur - a.cur) * (Math.sign(a.to - a.from) || 1) > 0) {
+      const prev = a.cur;
+      a.cur = cur;
+      this.stampFogArc(a, prev, cur);
+    }
+    if (f >= 1) {
+      this.anim = null;
+      this.update(controller);
+      return;
+    }
+    this.emitAnimFrame(controller);
+  }
+
+  // --- The minotaur (K80). Drawn from the chase every frame by main.ts.
+
+  // Place the minotaur where `chase` has it (null: no chase, hidden).
+  // `fog` decides whether it shows through the fog of war: "always",
+  // "hunting" (only while it hunts) or "never" (only where the fog has
+  // lifted). Like the exit marker, it waits for the intro to draw its
+  // thread.
+  syncMinotaur(chase: MinotaurChase | null, fog: MinoFog): void {
+    this.minoShown = false;
+    if (!chase) {
+      this.minoLayer.visible = false;
+      return;
+    }
+    const at = spotCtrl(this.walk, chase.g, chase.mino);
+    const ctrl = this.ctrlMod(at.chain, at.ctrl);
+    if (this.revealQuery && this.revealQuery(at.chain, ctrl) < 0.98) {
+      this.minoLayer.visible = false;
+      return;
+    }
+    const m = chase.mino;
+    if (m.edge < 0 && m.vertex === chase.g.exit) {
+      // In its lair: concentric with the exit marker it covers.
+      this.ribbons.markerWorld(at.chain, at.ctrl, this.scratch);
+    } else {
+      this.pointFlowed(at.chain, ctrl, this.scratch, 0);
+    }
+    const x = this.scratch[0];
+    const y = this.scratch[1];
+    const r = Math.max(this.markerRadius() * MINO_SCALE, this.minoMinRadius);
+    const d =
+      r * (chase.mode === "hunt" ? MINO_GLOW_DIAM_HUNT : MINO_GLOW_DIAM);
+    this.minoGlow.position.set(x, y);
+    this.minoGlow.width = d;
+    this.minoGlow.height = d;
+    this.minoGlow.alpha = MINO_GLOW_ALPHA[chase.mode];
+    const mk = this.markers.minotaur;
+    mk.setGlyph(markerGlyph(this.markerGlyphIds.minotaur, "minotaur"));
+    mk.place(x, y, r);
+    this.minoLayer.visible = true;
+    // Over the fog, or right under it (the fog sprite and its twins are
+    // the overlay's topmost children once ensureFog has run).
+    const over = fog === "always" || (fog === "hunting" && chase.mode === "hunt");
+    const kids = this.overContainer.children;
+    const li = kids.indexOf(this.minoLayer);
+    const fi = this.fogSprite ? kids.indexOf(this.fogSprite) : -1;
+    if (over && fi > li) {
+      this.overContainer.setChildIndex(this.minoLayer, kids.length - 1);
+    } else if (!over && fi >= 0 && li > fi) {
+      this.overContainer.setChildIndex(this.minoLayer, fi);
+    }
+    this.minoShown = true;
+    this.minoUnderFog = this.fogOfWar && !over;
+    this.minoX = x;
+    this.minoY = y;
+    this.minoR = r;
+  }
+
+  // Where the minotaur was last drawn (world), for its off-screen
+  // indicator; false when it is not drawn.
+  minotaurWorld(out: Float32Array | Float64Array): boolean {
+    if (!this.minoShown) return false;
+    out[0] = this.minoX;
+    out[1] = this.minoY;
+    return true;
+  }
+
+  minotaurRadius(): number {
+    return this.minoR > 0 ? this.minoR : this.markerRadius() * MINO_SCALE;
+  }
+
+  // True while a fog of war covers the minotaur (minoFog "never", or
+  // "hunting" while it is not hunting): only lifted fog shows it.
+  get minotaurUnderFog(): boolean {
+    return this.minoShown && this.minoUnderFog;
   }
 
   // --- Ariadne string (Stage 24). See the YARN block up top.
@@ -1559,9 +1722,9 @@ export class FabricMazeRenderer {
 
   destroy(): void {
     // The marker meshes outlive the scene (markerMeshes): hand them back
-    // before the containers go.
+    // before the containers go (the minotaur's sits in minoLayer).
     for (const mk of Object.values(this.markers)) {
-      this.overContainer.removeChild(mk.mesh);
+      mk.mesh.removeFromParent();
       mk.hide();
     }
     this.overContainer.destroy({ children: true });
