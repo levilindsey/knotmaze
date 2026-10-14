@@ -30,23 +30,6 @@ and never reused.
   - Everything else leaves the daily, including moveSpeed, pathViz, fog,
     the intro and flow, and the physics tuning. K79's `backgroundSpeed`
     is not exempt either, like background and its intensity.
-- **K80** · The minotaur and gameplay-additions design is on master
-  (`docs/design/K80_gameplay_additions.md`, 17b729b; the minotaur
-  simulated on 110 real walk graphs). Nine calls in its section 0: the
-  movement rule (recommended: a telegraphed "hunter", with "guard" and
-  "stalker" variants), telegraph on by default, what a catch does (back
-  to the entrance, counted), undo in free play only, a wait move (puzzle
-  modes only), dead ends as its hunting ground (depth shared with K74),
-  dailies as a modifier later, the first music and rhythm experiment,
-  and the order after the minotaur (section 5). For the implementation
-  brief: glyphs on runs need a phone minimum size (threads are 4-5 px at
-  fit scale), and fleeing critters need a simulation first (a perfect
-  fleer is uncatchable at equal speed on our looped mazes).
-  - next: Levi's section 0 calls, then an implementation brief for the
-    hunter.
-  - evidence: `.claude/probes/K80/` (copied from the worktree; doc
-    section 7 reruns it); worktree
-    `.claude/worktrees/agent-a25726c24f262b138` kept.
 - **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
   in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
   Shortlist: the burn race (turn-based), the cut verb with an
@@ -66,29 +49,6 @@ and never reused.
     Pac-Man speed figures among them). K80 sections 1 and 3.2 are stale
     since K101 (bracket notes added).
   - next: Levi's calls, then the burn-race brief.
-- **K115** · Cursive text and shapes, designed in
-  `docs/design/K115_cursive_text.md` (ded57f7). Text can't live on the
-  lattice: every open midpoint carries both diagonals, so lattice
-  lettering is a braid that reads only at banner size. Cursive needs
-  free-form strands from a single-line stroke font (Hershey Script for
-  Latin), emitted as a TangleGraph and pinned (plucks still sound,
-  K77). Stages: 1a a half-day legibility go/no-go with the real
-  renderer at phone zoom; then the text builder and a standalone
-  welcome/credits scene, a title thread, text inside a maze, shapes,
-  and other scripts one at a time (section 0 has the efforts). Six
-  calls in section 0: pinned or live text (pinned), spurs as decoration
-  or dead ends (decoration), where text appears first (the standalone
-  scene), the font per script (Hershey for Latin), text in links (a
-  readable `&t=` key), and foreign threads inside words (none).
-  - for the briefs: an explicit over-pass field on CROSSING nodes (the
-    lattice keeps its path, so the golden stays byte-identical); a
-    decorative walk-graph flag for spurs, dots and accents; K109's piece
-    model must count a text bridge and `repairTailRoute` (K110) must not
-    cut it; `buildCellMask` keeps only the largest component; a TEXT run
-    flag; DAILY_V2 only if dailies get a title thread. Evidence:
-    `.claude/probes/K115/` (Hershey data and its license; SVG-proxy
-    measurements, not the real renderer).
-  - next: Levi's calls, then the stage 1a probe.
 - **K117** · Repo visibility (Levi's notes, 2026-10-13;
   `docs/design/levi_notes_2026-10-13.md`). Levi: private later, on his
   word; he won't share it for a while. Done in a756ca5: the panel's
@@ -104,6 +64,16 @@ and never reused.
   --accept-visibility-change-consequences` (reversible; hides the code,
   history, docs and this ledger from then on, not copies already made;
   the Pages deploy keeps working).
+- **K138** · Which of K80 section 4's costlier mechanisms to prototype
+  (Levi asked for the costs, 2026-10-13 14:31; the doc's sizes, sent the
+  same day). M-L or L: 4.8 sentries (call 9's "validated sentries"),
+  4.22 two-player (M hot-seat, L networked), 4.25 over-under swap. M:
+  4.1 locks and keys and 4.2 one-way runs (both in call 9's order), 4.4
+  required pickups (then 4.5 stars, S), 4.6 fleeing critters, 4.11
+  switches, 4.12 turnstiles, 4.18 color rules, 4.19 ice, 4.20 rescue,
+  4.23 the myth, 4.24 tides, 4.27 hidden runs, 4.31 more exits. The
+  ones that change generation (4.1, 4.2, 4.4, 4.11, 4.24, 4.31) also
+  need a solvability check there.
 
 ## In progress
 
@@ -271,18 +241,21 @@ and never reused.
     greedy bands as difficulty params (decision 7), then the target band
     (greedy >= 2.5x optimal, <= 15% within 1.5x; decision 1) checked at
     the defaults.
-  - owner: the stage 1 agent (Opus) of session d8031183, launched from
-    the brief once this push lands (its id follows in the next commit).
-  - branch: its own worktree from master (named at launch); last commit:
-    none yet.
+  - owner: the stage 1 agent `afe7e8d13a4b8112b` (Opus) of session
+    d8031183, since 2026-10-13 14:41.
+  - branch: `worktree-agent-afe7e8d13a4b8112b`, worktree
+    `.claude/worktrees/agent-afe7e8d13a4b8112b` (from 7f01e7e); last
+    commit: none yet.
   - evidence: `.claude/probes/K74/` in the main checkout
     (`out/scan_final.jsonl`, the hooked plan copy `proto_plan_src.ts`);
     the design agent's worktree `.claude/worktrees/agent-aeaf1e61bcecaaf0b`
     is kept. Fisher's books, Abbott's essays and Buck's book-only
     chapters are unverified (doc section 1).
   - next: stage 1, then its "Stage 1 handoff" in the brief; stages 2-4
-    follow as fresh agents. K80's decision 6 (dead-end branches behind
-    one bridge make deeper minotaur traps): settle the depth with K80.
+    follow as fresh agents. K80's call 6 (Levi, 14:31: "Absolutely"):
+    dead ends are the minotaur's hunting ground. Dead-end branches,
+    several runs behind one bridge, would make deeper traps: a later K74
+    param, settled with K80's brief.
   - brief: `docs/design/K74.md` ("Stages", "Stage 1 brief").
   - env: its dev servers on ports 5421-5424 (private vite cacheDir).
 
@@ -305,12 +278,13 @@ boundary, where the agent writes a "Stage N handoff" into the brief,
 commits and stops, and a fresh agent continues from it. K81 alone was
 about a third of the overnight spend.
 
-Order from 2026-10-13 14:20, after Levi's answers at 09:35, 13:17 and
-13:30 (he may reorder). Running: K104 stage 1b, K74 stage 1 and K127 on
-K81's branch (code); K79 stage B2b (measures, one small change). K74
-runs its stages back to back in one code slot. The phone is locked
-(since about 12:47) and takes one gate at a time, whichever is ready
-first: K79 B's or K81's (after K127). Then, as code slots free up:
+Order from 2026-10-13 14:55, after Levi's answers at 09:35, 13:17,
+13:30 and 14:31-14:39 (he may reorder). Running: K104 stage 1b, K74
+stage 1 and K127 on K81's branch (code); K79 stage B2b (measures, one
+small change). K74 runs its stages back to back in one code slot. The
+next research slot is K115 stage 1a. The phone is locked (since about
+12:47) and takes one gate at a time, whichever is ready first: K79 B's
+or K81's (after K127). Then, as code slots free up:
 1. K81's and K79 B's merges, each after its gate.
 2. K120 (no codec).
 3. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
@@ -322,13 +296,17 @@ first: K79 B's or K81's (after K127). Then, as code slots free up:
    K111's pulse highlight modes after K81 too.
 8. K98, after K79 stage B and K81.
 9. K76 stage 2, after K81.
-10. K74 stages 2-4, each after the one before.
-11. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
+10. K80 stage 1, the turn-aligned hunter, after K79 stage B and K81
+    merge (the panel and the renderer); then its real-time stage; then
+    K137's toggles.
+11. K74 stages 2-4, each after the one before.
+12. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
     K42. K90's spline fix touches K8: never run the two at once.
-12. K116, lowest priority.
+13. K115's builder stages, after stage 1a's go.
+14. K116, lowest priority.
 
-Waiting for Levi: K80, K114 and K115 (he has yet to read K114's and
-K115's docs, 13:30), and K117's timing; the G3-3 and G4-2 old-path
+Waiting for Levi: K114 (its doc unread at 13:30), K138 (which costlier
+K80 mechanisms to build) and K117's timing; the G3-3 and G4-2 old-path
 deletions; after the churn, K46, K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
@@ -344,7 +322,15 @@ K5-K7 (split, frame loop, worker) follow.
   MIT/ISC/BSD licenses require the notice with every copy. Generate a
   notices file at build time (rollup-plugin-license, or a small Vite
   plugin over the bundled modules' packages) and link it from the panel's
-  credit line. Small; no codec.
+  credit line. Small; no codec. The same file carries hand-written
+  credits from a tracked source (Levi's question, 2026-10-13 14:39): the
+  Hershey acknowledgements (A. V. Hershey, NBS; James Hurt, Cognition,
+  Inc.), a condition of the font data, once K115 ships it; and courtesy
+  credits for techniques the code comments already cite (Quilez's domain
+  warping in `src/render/background_shaders.ts`: check the terms of his
+  article's snippet; the PCG2D hash, Jarzynski and Olano; interleaved
+  gradient noise, Jimenez). Delete the unused Vite template icons
+  `src/assets/vite.svg` and `typescript.svg`.
 - **K132** · Drop link and daily back-compat (Levi, 2026-10-13: "we
   can ignore keeping support for previous url params, or preserving
   mazes from previous control combinations. Breaking changes are 100%
@@ -431,6 +417,43 @@ K5-K7 (split, frame loop, worker) follow.
   - env: the prototype server is in the doc's handle (port 5276, private
     cacheDir).
   - brief: `docs/design/K76.md`, then `docs/design/K76_reveal_mode.md`.
+- **K80** · The minotaur, decided (Levi, 2026-10-13 14:31, verbatim in
+  `docs/design/levi_notes_2026-10-13.md`; design
+  `docs/design/K80_gameplay_additions.md` section 0, 17b729b). The
+  telegraphed hunter, with the guard and stalker variants, and Abbott's
+  rule as a puzzle mode (call 1); the telegraph on by default, as a
+  param (call 2). A toggle between turn-aligned and real-time movement.
+  In real time it has a wander pace and an approach pace, randomized
+  pauses at junctions (maybe randomized paces), and detection starts and
+  ends at distances measured along the threads to the player, not in
+  runs. Every distance and speed is a param. A catch sends you back to
+  the entrance and is counted (call 3). No undo with it, even in free
+  play (call 4). A wait move only in turn-aligned mode (call 5). Dead
+  ends stay its hunting ground (call 6). Dailies later (call 7: "Let's
+  not worry yet"). The first music and rhythm experiment (call 8: "I do
+  want to be able to play with alternate modes"). Section 5's order
+  after it (call 9).
+  - for the brief: glyphs on runs need a phone minimum size (threads are
+    4-5 px at fit scale); fleeing critters need a simulation first (a
+    perfect fleer is uncatchable at equal speed on our looped mazes).
+    The doc judged a smart real-time chaser not a fit (4.35: it loses the
+    telegraph's board-game clarity; R.4.2 narrows that), so the toggle
+    is the test, with turn-aligned the default. K114's proposed `clock`
+    param (turn | beat | realtime) is the same switch.
+  - next: a staged brief, the turn-aligned hunter first, then real time.
+  - evidence: `.claude/probes/K80/` (copied from the worktree; doc
+    section 7 reruns it); worktree
+    `.claude/worktrees/agent-a25726c24f262b138` kept.
+- **K137** · K80 section 4's cheap mechanisms, each behind a toggle
+  (Levi, 2026-10-13 14:31: "I'd love to prototype all of these and have
+  controls to toggle them"), after the minotaur. Sized S or S-M in the
+  doc: 4.3 crack-then-break, 4.7 the sword, 4.9 sleepers, 4.10 lure
+  plucks, 4.13 tunnels, 4.14 par, 4.15 Ariadne's spool, 4.16 chalk
+  marks, 4.17 the lantern, 4.21 ghost race (after K85), 4.26 sonar
+  pluck, 4.28 hints, 4.29 sprint, 4.30 snares, 4.32 lives, 4.33 mud,
+  4.34 scent. Plus Levi's sleeper variant: an enemy that appears at a
+  junction a turn or two after you leave it, then follows you, with
+  some variance. The costlier ones wait in K138.
 - **K46** · Daily variety, revisited after the feature churn (Levi,
   2026-10-12): no weekly or regular arc; THEMES, each a set of parameter
   constraints; manual per-day overrides later (K82). The measured
@@ -476,14 +499,41 @@ K5-K7 (split, frame loop, worker) follow.
   (`.claude/rules/render-gaps.md`), which K74's H3 (`fourWayFraction`
   0.9+) would multiply. From K81 (2026-10-13): the webs should carry the
   traveled route as the smooth union of the traveled pieces only.
+- **K115** · Cursive text and shapes, decided (Levi, 2026-10-13 14:32,
+  verbatim in `docs/design/levi_notes_2026-10-13.md`; design
+  `docs/design/K115_cursive_text.md`, ded57f7). Its staged plan goes
+  ahead: stage 1a, a half-day legibility go/no-go with the real renderer
+  at phone zoom; then the text builder and a standalone welcome/credits
+  scene, the title thread, text inside a maze, then shapes. Calls:
+  pinned text (1). Junction+spur where a join meets a letter's body (a
+  c d e g o q), the spur a real, travelable dead end, not decoration
+  (2). Text first in the standalone scene (3). Hershey Script Simplex
+  for Latin (4): its lowercase letters all join at mid x-height, so a
+  word is one thread; its capitals don't join (authored joins, a
+  connector, or lowercase only at first). Text inside the one link
+  token, so the codec gains a string type (5). No foreign threads inside
+  words (6).
+  - for the briefs: an explicit over-pass field on CROSSING nodes (the
+    lattice keeps its path, so the golden stays byte-identical); a
+    decorative walk-graph flag for dots and accents (spurs are walkable
+    now); K109's piece model must count a text bridge and
+    `repairTailRoute` (K110) must not cut it; `buildCellMask` keeps only
+    the largest component; a TEXT run flag. Hershey's acknowledgements
+    ship with the data (K122). Evidence: `.claude/probes/K115/`
+    (Hershey data and its license; SVG-proxy measurements, not the real
+    renderer).
+  - next: the stage 1a probe, in a research slot.
 - **K116** · Alternate pluck instruments and accompaniment, lowest
-  priority (Levi, 2026-10-13: "Let's proceed and add these to the
-  queue--probably a lower priority than almost everything else atm.
-  Breaking changes are fine."): the doc's recommendations go ahead
-  (`docs/design/K116_instruments.md`, 2e60b00): first the band skeleton
-  (buses, ducking, a limiter, one clock), a drone and bass, and 3-4
-  `pluckVoice` presets (3-4 days); `accompaniment` off by default
-  (changeable in place later). For the brief: `pluckVoice` (pvc),
+  priority (Levi, 2026-10-13 13:30; his calls at 14:39 are verbatim in
+  `docs/design/levi_notes_2026-10-13.md`; design
+  `docs/design/K116_instruments.md`, 2e60b00). First the band skeleton
+  (buses, ducking, a limiter, one clock), a drone and bass, and four
+  `pluckVoice` presets: harp, koto-like, muted pizzicato and a bright
+  12-string-like voice (3-4 days; calls 1-2); then marimba and bells on
+  the modal engine. The band is on by default at first (call 3), about
+  10-14 dB under the pluck (call 4); samples are deferred (call 5); a
+  song's loop is whole bars, so Scarborough Fair's closing rest grows
+  from 2 beats to 3 (call 6). For the brief: `pluckVoice` (pvc),
   `accompaniment` (acc: off|drone|band) and `accompLevel` (acl) are
   daily-exempt codec appends; first a Pixel 11 audio-CPU and voice-count
   probe. Section 6's sources are unverified leads from memory (the

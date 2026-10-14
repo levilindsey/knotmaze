@@ -9,9 +9,9 @@ visibility, which is LEDGER K117.
 
 | Note | Ledger | Work |
 |---|---|---|
-| Other game mode ideas | K114, In progress | a round-2 part of `docs/design/K80_gameplay_additions.md` |
-| Cursive text, embedded shapes | K115, In progress | `docs/design/K115_cursive_text.md` |
-| Alternate pluck instruments, accompaniment | K116, In progress | `docs/design/K116_instruments.md` |
+| Other game mode ideas | K114, Waiting on Levi | a round-2 part of `docs/design/K80_gameplay_additions.md` |
+| Cursive text, embedded shapes | K115, Next (decided 14:32) | `docs/design/K115_cursive_text.md` |
+| Alternate pluck instruments, accompaniment | K116, Next (decided 14:39) | `docs/design/K116_instruments.md` |
 | Repo visibility | K117, Waiting on Levi | |
 | Native mobile apps, eventually | K118, Ideas | |
 | i18n, at the end | K119, Ideas | |
@@ -177,3 +177,44 @@ Filed (2026-10-13): K74 (four stages) and K127 to In progress; K76, K93
 and K116 to Next; K121 dropped, K129 done and K86 folded into K74; the
 no-back-compat policy in CLAUDE.md and K132; the copyright in 7a63ec4
 (K117). Traversal speed was already a slider (`moveSpeed`, Maze folder).
+
+## Later answers (verbatim)
+
+Levi's messages from later in the afternoon of 2026-10-13.
+
+### About 14:31 (K80)
+
+Reviewed the K80 doc:
+- Minotaur: telegraphing sounds good. I think we should have a toggle control to flip whether the minotaur moves in realtime in turn-aligned. With the former, they should have a wander pace and a separate approach pace, and there should be randomization to pauses at junctions and maybe to the paces too. And with the former, we should probably judge detection-start and detection-end distances based on actual distance along threads to the player, rather than on number of segments. Distances and speeds should also be params. No undo after being caught, even in free play.
+- 1. I like the movement model variants.
+- 2. Yes. A param for this is good though.
+- 3. Ooh, yeah, I like counting captures.
+- 4. No undo.
+- 5. Good point. Only needed when in the synced-turns mode.
+- 6. Absolutely.
+- 7. Let's not worry yet.
+- 8. Sounds good. I do want to be able to play with alternate modes.
+- 9. sgtm
+- I love all of the design mechasims explored in section 4! I'd love to prototype all of these and have controls to toggle them. lmk which would be more expensive, and we can discuss what actually makes sense for those ones. One type of sleeper could also be an enemy that appears at a junction a turn or two after you leave it and then follows you, with some variance.
+
+### About 14:32 (K115)
+
+K115 cursive doc notes:
+- Recommendation steps look good.
+- Decisions:
+  - 1. pinned makes sense.
+  - 2. Junction+spur makes the most sense. I'd like the spur to be travelable as a dead-end.
+  - 3. Yeah, that makes sense.
+  - 4. sgtm. But is this a _cursive_ font? This thread-text scheme is meant to work as a continuous thread in a cursive word.
+  - 5. One token.
+  - 6. sgtm.
+
+### About 14:39 (K116, and licenses)
+
+K116: I read the doc: Notes: "**Your decisions:**": 1. "first step above" yes. 2. Your proposal is good. 3. Let's default to on at first. 4. sgtm. 5. Yeah, let's defer this. 6. sgtm.
+
+Also, in general, across all of our work in this project, are there acknowledgements or licences we need to reference anywhere, and where should those references be?
+
+Filed (2026-10-13): K80 and K115 to Next with their calls, K116's calls
+on its item, K80 section 4's cheap mechanisms in K137 and its costlier
+ones in K138 (waiting on Levi), and the licenses answer in K122.
