@@ -15,49 +15,6 @@ and never reused.
 
 ## Waiting on Levi
 
-- **K152** · Leaner verification, proposed 2026-10-13 (Levi asked which
-  careful testing could be deferred or combined): (1) one scripted phone
-  pass per merge round instead of a gate per feature, so merges stop
-  queueing for the phone; (2) small UI items (K140, K146, K148, K149,
-  K151) get unit tests and a screenshot, no perf lock, phone or sleep
-  sweep, and K148, K149 and K151 share one agent; (3) render prototypes
-  skip the CPU mirror and parity tests until Levi picks a look, and the
-  merge stage adds them; (4) kept as they are: the pins and goldens,
-  sleep checks for physics and generation, parity for the GPU pipeline.
-  - 2026-10-13 17:56: Levi approved (1) ("sgtm"); (2) and (3) still wait.
-    Phone checks now batch into one scripted pass per merge round; the
-    first covers tonight's round (K79 B, K122's V8 credit, K147). K81's
-    gate, already running, finishes as it is.
-  - next for (1): K156 builds the round pass from K81's gate kit and
-    runs tonight's round (K79 B, K122's licenses page, K81's arc, and
-    K147's intro if it is ready).
-- **K154** · K122's credit calls, each defaulted until Levi says
-  otherwise: keep the two credits beyond the brief (Perlin, Scarborough
-  Fair)? Keep PCG2D's (the paper is CC BY-ND 3.0; `pcg2d` is the 8-line
-  function from its supplement) or swap in a hash of our own? Give any
-  uncredited technique a line (Mulberry32, FNV-1a, Elias gamma,
-  Dijkstra, Barry-Goldman Catmull-Rom, Verlet/Jakobsen, the Wordle-style
-  share grid; K122 notes that Mulberry32, FNV-1a and Barry-Goldman
-  mirror published expressions as `hypot2` mirrors V8's)? Defaults: keep,
-  keep, none. (`notices/credits.ts`, "Merge round" in
-  `docs/design/K122.md`)
-- **K57** · (Levi, 2026-10-13: revisit after all other changes, in the
-  careful daily review with K46 and K84.) Confirm the daily's exempt
-  settings: the ones a player may change without leaving the daily
-  (`DAILY_EXEMPT_KEYS` in `src/ui/daily_link.ts`, persisted across
-  dailies).
-  - Levi's list: volume, soundMode, cameraMode, showStats, panel
-    open/close/scroll.
-  - The agent added: the rest of the Sound folder (pitchSpace, octaves,
-    rootNote, tonicEmphasis, soundSpeed, reverb, brightness, sustain,
-    shimmer, pickPosition), Touch & feel (pluckSize, pluckGhost,
-    pluckReach, pluckStyle, tugLimit, snapBack), and physics on/off (the
-    settled layout is the same).
-  - Everything else leaves the daily, including moveSpeed, pathViz, fog,
-    the intro and flow, and the physics tuning. K79's `backgroundSpeed`
-    is not exempt either, like background and its intensity.
-  - Proposed exempt: K140's confetti on/off and amount, and K145's
-    hover glow strength (viewer preferences).
 - **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
   in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
   Shortlist: the burn race (turn-based), the cut verb with an
@@ -76,28 +33,12 @@ and never reused.
     store v3). R.7's sources are unverified leads from memory (the
     Pac-Man speed figures among them). K80 sections 1 and 3.2 are stale
     since K101 (bracket notes added).
-  - next: Levi's calls, then the burn-race brief.
-- **K117** · Repo visibility (Levi's notes, 2026-10-13;
-  `docs/design/levi_notes_2026-10-13.md`). Levi: private later, on his
-  word; he won't share it for a while. Done in a756ca5: the panel's
-  GitHub link is gone, `LICENSE` says all rights reserved (Snoring Cat
-  LLC. holds them: 7a63ec4, Levi 2026-10-13), package.json
-  says UNLICENSED, and a push touching only the ledger, docs, `.claude/`,
-  README or LICENSE skips the deploy (Actions minutes count against the
-  plan once private; deploys used about 330 minutes in the last 7 days,
-  and the free plan has 2,000 a month). Obfuscating the bundle: not worth
-  it (answered 2026-10-13; it is minified and ships no sourcemaps). K122
-  (the bundled packages' license notices) is needed either way. On his
-  word: `gh repo edit --visibility private
-  --accept-visibility-change-consequences` (reversible; hides the code,
-  history, docs and this ledger from then on, not copies already made;
-  the Pages deploy keeps working).
-- **K161** · Disk: C: had 24.4 GB free (2026-10-13 about 19:30, before
-  K81's 1.6 GB probe copy). `$env:TEMP` holds 1145 `knotmaze-*` Chrome
-  profiles (about 36.5 GB) that probe runs never delete; the worktrees
-  take 3.8 GB and the probes 2.7 GB. Proposed: delete the profiles older
-  than a day, sweep the stale worktrees, and have the probe libraries
-  delete their profile on exit (with K150). Waits for Levi's OK.
+  - 2026-10-14 about 00:22: Levi took the recommendations for calls 1-6
+    and 8-10 (`docs/design/levi_notes_2026-10-14.md` item 12: "Recs,
+    plus a spider answer"). Call 7 waits: the spider's form (a
+    `minotaur=spider` mode or its own enemy), its look, and an
+    arachnophobia option (R.0 and R.3.2 of the design).
+  - next: Levi's spider answer, then the burn-race brief.
 - **K162** · K147's calls (`docs/design/K147.md`): (1) the trade: the
   first settle now plays in slow motion (first sleep 11.6 -> 21 s; at 4x
   CPU throttle 40 -> about 100 s) for a smooth intro (p95 159 -> 31 ms;
@@ -105,13 +46,10 @@ and never reused.
   (2) the defaults, `settleBudget` 12 ms and `loadSettle` 0.45 s (its max,
   5, settles first); (3) whether both stay daily-exempt; (4) whether drags
   at gs 18 get a budget too (165-170 ms frames, sim/wall 0.6).
-- **K169** · K127's full web turns gold in one frame, with no fade. A
-  polish call: keep it or fade it in (`docs/design/K81.md`, "Stage 3d
-  results").
-- **K171** · The phone pass's retry never wakes or unlocks the phone
-  (`retry_quiet.ps1`, K156 3a), so with the phone asleep or off its
-  charger the retry exits 3 and the pass stops. Accept that (a person
-  restarts it), or should a pass wait for one?
+  - 2026-10-14 about 00:22: Levi will test it later (item 7). He asked
+    whether the web worker changes this; answered in session: K7's worker
+    would keep frames smooth whatever the physics costs, and K7 is not
+    scheduled.
 - **K174** · K80 stage 1's calls (`.claude/probes/K80/rt/results.md`).
   Play it: https://levi.dev/knotmaze/?7.J&clk=realtime
   - The minotaur's chase pace as a share of the player's: 0.7 (default)
@@ -123,15 +61,29 @@ and never reused.
   - The caught row shows even with the stat rows off: confirm.
   - Presence: 45% of games never meet the minotaur. Fine, or should it
     seek the player more (K179)?
-- **K180** · K104's tuning calls, best made after a preview or the
-  merge (`docs/design/K104.md`, "Goal 1 results" and "Stage 1b handoff"):
-  WHOLE_AMP 0.35, 0.5 or 0.7; neighbors "overlap" or "free"; interior
-  crossings "through", "ride" or "pinch"; the reduced-motion cue instead
-  of W, with W, or as a fallback; the proposed `pluckWhole` slider (not
-  a codec param).
-- **K183** · The phone was asleep and locked at 23:14 (2026-10-13). K156
-  3c and the round's phone pass wait for Levi to unlock it and leave it
-  awake on its charger; the coordinator never wakes or unlocks it.
+  - 2026-10-14 about 00:22: Levi will test it later ("Remind me
+    tomorrow.", item 6). A reminder is set for 11:07 on 2026-10-14; if the
+    coordinator session is gone by then, remind him that day.
+- **K184** · K155's star calls (`docs/design/K155.md`, "Stage 1
+  handoff"; play: https://levi.dev/knotmaze/?7.J): (1) greedy solves:
+  exactly two stars (built: two up to 4x, which 52-53% of greedy solves
+  earn) or at least two (the line moves to about 2.5x)? (2) catches cap a
+  finish at two stars (built), or each catch takes one star off (the
+  real-time two-star share goes 47% -> 33%)? (3) the banner shows "2.2×
+  the shortest route" (built) or a percent?
+- **K185** · The still pluck's cold-link stall: the first time reduced
+  motion is switched on in a fresh profile, the still pluck's shader
+  program links on the spot, about 340 ms. (a) Accept it (recommended),
+  (b) `KHR_parallel_shader_compile`, or (c) warm it at load (+340 ms to
+  the load)? (`docs/design/K104.md`, "Stage 1c handoff" step 6)
+- **K186** · K140's confetti calls (`docs/design/K140.md`, "Stage 1
+  handoff"; play: https://levi.dev/knotmaze/?7.J, `&cfa=3` for the most):
+  (1) reduced motion: no rain and a 40% slow spray
+  (`reduced_phone_1b_spray.png` in K140's probes), or no confetti? (2)
+  confetti on every win banner, including a reload of a solved attempt
+  (`pendingWin`, `src/main.ts` about line 2079) and the Reset path during
+  the winning move, or only on a live finish? (3) the colors (a festive
+  set built from the gold 0xffd23f) and the default amount, 1?
 
 ## In progress
 
@@ -173,38 +125,6 @@ and never reused.
   - brief: `docs/design/K90.md` ("Stage 1b handoff").
   - env: none for the census; crops need a dev server on ports
     5351-5354.
-- **K104** · Plucks you can see at a glance (Levi, 2026-10-13: "Even
-  maxing pluckSize to 3, I can't tell when some segments are plucked"):
-  a set-amount vibration of the whole plucked segment with today's local
-  lobes on top (he likes the locality); a gentler collapse than
-  `COLLAPSE_ROUND`'s 1 h ("better, but still a bit too acute"; K77's
-  A/B: 0.5 h left shoulders, 2 h erased most of the thinning); its own
-  reduced-motion version (K79's Motion setting). K105 folds in (goal 4).
-  - owner: agent a3a9ef921d014ddf5 (opus) of session d8031183, stage 1c,
-    started 2026-10-13 23:35; it stops at 01:35 or when the stage is
-    done (the brief's stop at the first compaction was lifted at 23:45,
-    claude-config CC38). The stage 1b agent
-    af32239ceddc57129 was stopped at about 21:55 after 27 compactions in
-    8.5 h (claude-config CC38). On the branch: stage 1 (4cebf12
-    `COLLAPSE_ROUND` 1 -> 1.5 h, f883c75 K105); goal 1, the whole-segment
-    term W (635b725, 3aaa702, b1e0d84, 5aa68b6, 78017c9, a9f3bc8);
-    98cde6a still plucks under reduced motion; 50b98f8 the Motion texts;
-    afbdfa2 still plucks hide by G1's `gapKeepAt` mask. tsc clean and 413
-    tests at afbdfa2.
-  - branch: `worktree-agent-a33278775816855b8`
-    (`.claude/worktrees/agent-a33278775816855b8`), on c521f23; last
-    commit: fad1162 (the stage 1c brief), unpushed.
-  - evidence: `.claude/probes/K104/` in its worktree (`collapse/`,
-    `census/`, `still_probe.mjs`, `still_batch.ps1`, `out/`; copy at
-    merge); K77's kit in the main checkout's `.claude/probes/K77/`
-    (`lib.mjs`, `k77_weave.mjs`, `k77_cost.ts`).
-  - next: stage 1c (the probe's crop fix, the weave guard, the rules
-    text, the rebase onto master, the cost under the perf lock); then the
-    merge and the round's phone pass. Levi's tuning calls: K180. At the
-    merge, the `k79_motion.mjs` checks at lines 235-241 fail by design.
-  - brief: `docs/design/K104.md` ("Stage 1c", on the branch).
-  - env: master's `scripts/preview.ps1 -Root <dir> -Port <5400-5409>
-    -Ref <commit>`.
 - **K74** · Maze design, decided (Levi, 2026-10-13 13:17; his answers
   verbatim in `docs/design/levi_notes_2026-10-13.md`): every mechanism
   gets params whose neutral value turns it off, so difficulty and feel
@@ -299,114 +219,134 @@ and never reused.
   - 3a and 3b MERGED in 6521bb2..ae49553 (2026-10-13 about 21:50; sonnet
     agents a262df65dcc1489a7 and a957f7f1407f5df9f, desktop dry runs
     only).
-  - owner: nobody since 2026-10-13 about 21:30 (both agents finished; 3c
-    waits for the phone, K183).
-  - branch: mainline; last commit: `ae49553`.
-  - evidence: the 3a worktree `.claude/worktrees/agent-a262df65dcc1489a7`
-    (`.claude/probes/K156/3a/`) and the 3b worktree
-    `.claude/worktrees/agent-a957f7f1407f5df9f`
-    (`.claude/probes/rounds/3b-dry/`); tonight's looks in the main
-    checkout, `.claude/probes/rounds/2026-10-13/looks.json`; K81's kit in
-    K81's kept worktree (`.claude/probes/K81/phone/`).
-  - next: write 3c's brief section (with the stop rule) in K156.md, then
-    3c (sonnet) once the phone is awake and unlocked: the A/A smoke test
-    (`-Base master -Head master -Reps 1 -Looks
-    scripts/phone_pass/looks.example.json`), the phone-mode paths and the
-    watchdog's touch trip, `-LoadSeconds` 15 vs 30, `-Moves 0,7,14`,
-    fixes, then the tracked `scripts/phone_pass/noise.json` (3 reps) and
-    K80's looks. Then the round pass: `pwsh -NoProfile -File
-    scripts/phone_pass.ps1 -Base ab6d330 -Head master -Reps 3 -Looks
-    .claude/probes/rounds/2026-10-13/looks.json`.
-  - brief: `docs/design/K156.md` ("Stage 3 plan", "### 3c (after both)",
-    the 3a and 3b handoffs).
-- **K140** · Finish confetti (Levi, 2026-10-13 about 15:35, verbatim
-  in `docs/design/levi_notes_2026-10-13.md`): a gratuitous confetti rain
-  from the top of the screen when you finish the maze, and a smaller
-  spray from around the finish spot, on every finish. Render-only: no
-  physics wake, and the frame loop runs only while pieces live
-  (`sceneAnimating()` in `src/main.ts`; K24). With the Motion setting
-  reduced (`src/ui/motion.ts`), a small burst or none. Params: on/off
-  and amount, proposed daily-exempt (K57). The phone gate checks fps
-  during the effect. Small; Opus. After K80's real-time mode.
-  - owner: agent a0b46db1354c23e20 (opus) of session d8031183, stage 1,
-    started 2026-10-13 23:35; it stops at 01:35 or when the stage is
-    done (the brief's stop at the first compaction was lifted at 23:45,
-    claude-config CC38).
-  - branch: `worktree-agent-a0b46db1354c23e20`
-    (`.claude/worktrees/agent-a0b46db1354c23e20`), from cb532d5; last
-    commit: cb532d5 (the brief).
-  - evidence: `.claude/probes/K140/` in its worktree (copy at merge).
-  - next: stage 1 per the brief; then the merge (the second of K140 and
-    K155 to merge renumbers its codec appends) and the round's phone pass
-    (fps during the effect).
-  - brief: `docs/design/K140.md`.
-  - env: dev servers on ports 5480-5489.
-- **K155** · A star rating for each finish (Levi, 2026-10-13 about
-  18:06, verbatim in `docs/design/levi_notes_2026-10-13.md`): stars from
-  the run's time, backtracking, efficiency or a mode's own metric, with a
-  phone-friendly explanation of where they come from; efficiency alone
-  is likely clearest for the default solve. Proposed: three stars, with
-  thresholds from simulated solvers (K74's greedy solver's median is
-  3.12x the shortest route); K80's mode rates its catches; shown on the
-  win banner and in the daily stats, explained on tap (phones have no
-  hover), and in the daily share text (K20; Levi, 2026-10-13 about 21:15:
-  "Stars appearing in the share text makes sense."). With K140 (the same
-  finish screen).
-  - owner: agent aa916ee7fa628963f (opus) of session d8031183, stage 1,
-    started 2026-10-13 23:35. It stopped at its first compaction at 23:42
-    with a handoff (the measure proposed: distance walked over the
-    shortest route; no thresholds yet) and was resumed at about 23:45
-    under the lifted rule: it stops at 01:35 or when the stage is done
-    (claude-config CC38).
-  - branch: `worktree-agent-aa916ee7fa628963f`
-    (`.claude/worktrees/agent-aa916ee7fa628963f`), from cb532d5; last
-    commit: 04d03b8 (the handoff), unpushed.
-  - evidence: `.claude/probes/K155/` in its worktree (`stars_sim.ts`,
-    `rt/`, `lib.ts`; copy at merge).
-  - next: stage 1 per the brief (a measure a wandering solve can't max
-    out, thresholds from simulated solvers, the banner, the stats view,
-    the share text); then Levi reviews the thresholds; the merge and the
-    round's phone pass.
-  - brief: `docs/design/K155.md` (its "Stage 1 handoff" is on the branch).
+  - owner: agent a595ec530724dbba1 (sonnet) of session d8031183, stage
+    3c, started 2026-10-14 about 00:56 (the phone ready, K183); it stops at
+    about 01:56 or when the stage is done.
+  - branch: `worktree-agent-a595ec530724dbba1`
+    (`.claude/worktrees/agent-a595ec530724dbba1`), from ca7d3e6; last
+    commit: ca7d3e6 (the brief).
+  - evidence: `.claude/probes/K156/3c/` in its worktree (copy at merge);
+    the 3a and 3b worktrees, kept until 3c merges
+    (`.claude/worktrees/agent-a262df65dcc1489a7`,
+    `.claude/worktrees/agent-a957f7f1407f5df9f`); the round's looks in the
+    main checkout, `.claude/probes/rounds/2026-10-13/looks.json` (3c
+    appends K80's real-time mode, K104, K155 and K140 after a backup).
+  - next: 3c per its brief (the A/A smoke test, the defaults, K171's
+    read-only wait, the noise floor, the new looks); then the merge and
+    the round pass: `pwsh -NoProfile -File scripts/phone_pass.ps1 -Base
+    ab6d330 -Head master -Reps 3 -Looks
+    .claude/probes/rounds/2026-10-13/looks.json` (`-Phase check` first).
+  - brief: `docs/design/K156.md` ("Stage 3c brief"; the 3a and 3b
+    handoffs above it).
+- **K161** · Disk: C: had 24.4 GB free (2026-10-13 about 19:30, before
+  K81's 1.6 GB probe copy). `$env:TEMP` holds 1145 `knotmaze-*` Chrome
+  profiles (about 36.5 GB) that probe runs never delete; the worktrees
+  take 3.8 GB and the probes 2.7 GB. Proposed: delete the profiles older
+  than a day, sweep the stale worktrees, and have the probe libraries
+  delete their profile on exit (with K150). Levi approved it on 2026-10-14 at about 00:22 ("Yes.", item 2); C: had 19.6 GB free at 00:32.
+  - owner: claude session d8031183 (the coordinator), a background
+    cleanup script under the perf lock.
+  - branch: mainline (no code); last commit: n/a.
+  - evidence: `.claude/probes/K161/cleanup.log`.
+  - next: run the cleanup: the Chrome profiles older than a day, then the
+    merged worktrees agent-a40b9ac956a4eaa61, a8acc04204f0e3be8,
+    a92faf33828bf0d6d, a61edbbcfc17238a0 and a9d4c7cb7500cb055, each
+    after its probes are copied to the main checkout. The probe
+    libraries' delete-on-exit goes with K150.
+- **K180** · K104's tuning calls as params to play with (Levi,
+  2026-10-14 about 00:22, `docs/design/levi_notes_2026-10-14.md` item
+  8): `pluckWhole`, a slider for W's amount; a crossings dropdown
+  (through, ride, pinch); a glow dropdown (off, instead, with, fallback);
+  all daily-exempt. Neighbors stay "overlap" ("current is good").
+  - owner: agent a5a195592e9da8700 (opus) of session d8031183, stage 1,
+    started 2026-10-14 about 00:56; it stops at about 02:56 or when the stage
+    is done.
+  - branch: `worktree-agent-a5a195592e9da8700`
+    (`.claude/worktrees/agent-a5a195592e9da8700`), from ca7d3e6; last
+    commit: ca7d3e6 (the brief).
+  - evidence: `.claude/probes/K180/` in its worktree (copy at merge).
+  - next: stage 1 per the brief (the params and codec appends, the
+    fallback estimate, the 0 px A/B at the defaults, the census per
+    option, the sheet, the `k79_motion.mjs` update); then the merge, the
+    round's phone pass, and Levi plays with the params.
+  - brief: `docs/design/K180.md`.
+  - env: dev servers on ports 5490-5499.
+- **K154** · Our own hash in place of PCG2D, whose credit goes (Levi,
+  2026-10-14 about 00:22, `docs/design/levi_notes_2026-10-14.md` item 10:
+  "a, yes. b, swap in our own. c, none."): the Perlin and Scarborough Fair
+  credits stay, and no technique gets a line. One agent with K169.
+  - owner: agent a6caa78542c463088 (sonnet) of session d8031183, started
+    2026-10-14 about 00:56; it stops at about 01:56 or when the stage is
+    done.
+  - branch: `worktree-agent-a6caa78542c463088`
+    (`.claude/worktrees/agent-a6caa78542c463088`), from ca7d3e6; last
+    commit: ca7d3e6 (the brief).
+  - evidence: `.claude/probes/K154_K169/` in its worktree (copy at merge).
+  - next: Part A of the brief (the hash, its avalanche and uniformity
+    tests, the credit, the six backgrounds' before/after), then Part B
+    (K169); then the merge and the round's phone pass.
+  - brief: `docs/design/K154_K169.md`.
+  - env: dev servers on ports 5470-5479.
+- **K169** · Fade K127's gold web in over about 0.25 s instead of
+  turning it gold in one frame (Levi, 2026-10-14 about 00:22,
+  `docs/design/levi_notes_2026-10-14.md` item 9: "Fade.";
+  `docs/design/K81.md`, "Stage 3d results"). One agent with K154.
+  - owner: agent a6caa78542c463088 (sonnet) of session d8031183, started
+    2026-10-14 about 00:56; it stops at about 01:56 or when the stage is
+    done.
+  - branch: `worktree-agent-a6caa78542c463088`
+    (`.claude/worktrees/agent-a6caa78542c463088`), from ca7d3e6; last
+    commit: ca7d3e6 (the brief).
+  - evidence: `.claude/probes/K154_K169/` in its worktree (copy at merge).
+  - next: Part B of the brief, after K154's Part A; then the merge and
+    the round's phone pass.
+  - brief: `docs/design/K154_K169.md`.
   - env: dev servers on ports 5470-5479.
 
 ## Next, in order
 
 Every stage merges after desktop verification, and the phone checks
 each merge round in one scripted pass instead of a gate per feature
-(K152 (1), Levi 2026-10-13 about 17:55: "sgtm"). The phone stays on its
+(K152 (1), Levi 2026-10-13 about 17:55: "sgtm"). Small UI items get
+unit tests and a screenshot only, and render prototypes skip the CPU
+mirror and parity tests until Levi picks a look (K152 (2) and (3),
+Levi 2026-10-14 about 00:22: "Yes to both."). The phone stays on its
 charger, awake and unlocked (Levi, 2026-10-13 10:40), and a pass's
-watchdog stops it on any touch. A pass checks the lock first and stops at once if the phone is locked
-(K81's gate waited 47 min on a locked phone, 2026-10-13). At most three
-code agents at once, research on top. Pre-launch, nothing keeps old
-links or dailies (Levi, 2026-10-13 13:17; CLAUDE.md "Pre-launch: no
-back-compat"), so codec appends no longer wait for each other: the
-second branch to merge renumbers its appends. Usage: don't hold agents
-back until the week nears 95% (Levi, 2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17,
-54% at 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at 23:54; at 13:40 he said keep going at full speed; it resets
-Mondays at 12:00). Long work runs in stages from committed briefs (Levi,
-2026-10-13; the coordinator oversees it): each brief names its stage
-boundary, where the agent writes a "Stage N handoff" into the brief,
-commits and stops, and a fresh agent continues from it. K81 alone was
-about a third of the overnight spend. From 2026-10-13 23:35 each brief
-stops at the first compaction and at a wall-clock cap (2 h Opus, 1 h
-Sonnet), and a watcher flags agents past them (claude-config CC38).
+watchdog stops it on any touch. A pass checks the lock first and stops
+at once if the phone is locked (K81's gate waited 47 min on a locked
+phone, 2026-10-13). At most three code agents at once, research on
+top. Pre-launch, nothing keeps old links or dailies (Levi, 2026-10-13
+13:17; CLAUDE.md "Pre-launch: no back-compat"), so codec appends no
+longer wait for each other: the second branch to merge renumbers its
+appends. Usage: don't hold agents back until the week nears 95% (Levi,
+2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17, 54% at
+13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
+23:54, 69% at 00:25 on 10-14; at 13:40 he said keep going at full
+speed; it resets Mondays at 12:00). Long work runs in stages from
+committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
+brief names its stage boundary, where the agent writes a "Stage N
+handoff" into the brief, commits and stops, and a fresh agent continues
+from it. K81 alone was about a third of the overnight spend. From
+2026-10-13 23:35 each brief stops at a wall-clock cap (2 h Opus, 1 h
+Sonnet; a compaction is not a stop), and a watcher flags agents past it
+(claude-config CC38). Sonnet agents don't compact at 200k yet
+(claude-config CC45), so the cap is what bounds them.
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
-13:30, 14:31-14:39 and 15:30-15:40 (he may reorder). Running at 23:35:
-K104 stage 1c, K155 stage 1 and K140 stage 1 (code). Then, as code
-slots free up:
-1. The round's phone pass (K156: 3a and 3b merged in ae49553; 3c's A/A
-   smoke test on the phone next, once it is awake and unlocked (K183);
-   then the pass), for K79 B, K122, K147, K81 and K80 stage 1, all merged
-   by 5fed5c1.
+13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
+(he may reorder). Running at 00:56 on 10-14: K156 stage 3c (the
+phone), K180 stage 1 and K154+K169 (code). Then, as code slots free
+up:
+1. The round's phone pass (K156: 3a and 3b merged in ae49553, 3c
+   running), for K79 B, K122, K147, K81, K80 stage 1, K104 stage 1c,
+   K155 and K140, all merged by bb55c9a, and whatever merges before it
+   runs.
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
    5fed5c1; Levi plays it (K174).
-3. K140, the finish confetti, with K155's star rating (the same finish
-   screen; stage 1 of each running), then K146, past dailies without credit,
-   then K148, K149 and K151, the camera and the mode badge (all small;
-   K80's minotaur indicator follows K148's).
+3. K146, past dailies without credit, then K148, K149 and K151, the
+   camera and the mode badge (all small; K80's minotaur indicator
+   follows K148's).
 4. K120 (no codec).
 5. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
    then option 3 (the spline fix) first.
@@ -425,9 +365,9 @@ slots free up:
 16. K144, accounts and shared stats, after everything else (a stretch
     goal).
 
-Waiting for Levi: K114 (its doc unread at 13:30) and K117's timing; the
-G3-3 and G4-2 old-path deletions; K151's X on phones; after the churn,
-K46, K57 and K84.
+Waiting for Levi: K114's spider (call 7); the G3-3 and G4-2 old-path
+deletions; K151's X on phones; K162, K174 and K184-K186 (play, then
+call); near launch, K117; after the churn, K46, K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
@@ -1040,6 +980,17 @@ K5-K7 (split, frame loop, worker) follow.
   dense; W deepens the raw collapse (+12% at pluckSize 1.75, +7% at 3);
   sound-only taps in junction cores, and taps bound by hide zones, can
   show only through a cue; the cue constants are unreviewed.
+  - K104 stage 1c (`docs/design/K104.md`, "Stage 1c handoff"): G1's soft
+    edge shows the under ribbon inside casing + CUT_BIAS at fabric and
+    dense crossings of about 80-90 degrees, and still plucks brighten
+    it; the census's outlier knot c3@523.23 (+2.87 px).
+- **K188** · K140's residuals (`docs/design/K140.md`, "Stage 1 handoff"):
+  `restartSolve()` leaves pieces in the air; the open desktop panel covers
+  the spray when the exit is at the lower right; the rain takes 5.5-6.2 s
+  to fall out, longer below 10 fps.
+- **K189** · Fabric mode's `sceneAnimating()` is always true, so K24's
+  ticker stop never fires in fabric: about 10 ms of JS a frame at 1x CPU,
+  64 ms at 4x (K140's measurement, `docs/design/K140.md`).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1184,17 +1135,134 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   of `.claude/rules/` lore to an agent (K156 stage 2 measured about 25k
   for `scripts/**`). Split the big rules files, or narrow their `paths:`,
   so an agent pays only for its area.
+  - K140 (2026-10-14): its first compaction came 9 minutes in, from rules
+    attachments (82 records, 1.12M characters).
+  - K156 3c and K154+K169 (Sonnet, 2026-10-14) reached 205k and 298k of
+    context within 12 minutes, uncompacted (claude-config CC45).
 - **K179** · K80 ideas: reversing mid-run in the real-time mode; a
   roaming bias toward the player, so fewer games pass without meeting the
   minotaur (K174).
 - **K182** · K104 ideas: G1's exact mask for moving plucks too (today
   only still plucks use it), the curvature-aware clip as its fallback;
   check the still strip's concave-side clamp.
+- **K57** · Confirm the daily's exempt settings: the ones a player may
+  change without leaving the daily (`DAILY_EXEMPT_KEYS` in
+  `src/ui/daily_link.ts`, persisted across dailies). Parked for the
+  late-stage review with K46 and K84 (Levi, 2026-10-14 about 00:22,
+  `docs/design/levi_notes_2026-10-14.md` item 13: "Let's review this
+  list later, after all the other gameplay and system churn, when we're
+  doing all the other late-stage wrap-up stuff.").
+  - Levi's list: volume, soundMode, cameraMode, showStats, panel
+    open/close/scroll.
+  - The agent added: the rest of the Sound folder (pitchSpace, octaves,
+    rootNote, tonicEmphasis, soundSpeed, reverb, brightness, sustain,
+    shimmer, pickPosition), Touch & feel (pluckSize, pluckGhost,
+    pluckReach, pluckStyle, tugLimit, snapBack), and physics on/off (the
+    settled layout is the same).
+  - Everything else leaves the daily, including moveSpeed, pathViz, fog,
+    the intro and flow, and the physics tuning. K79's `backgroundSpeed`
+    is not exempt either, like background and its intensity.
+  - Exempt since: K140's confetti on/off and amount (`cf`, `cfa`), and K147's `settleBudget` and `loadSettle` (K162 (3) asks whether they stay); K180 adds its pluck params. Proposed: K145's hover glow
+    strength.
+- **K117** · Repo visibility (Levi's notes, 2026-10-13;
+  `docs/design/levi_notes_2026-10-13.md`). Levi: private later, on his
+  word; he won't share it for a while. Done in a756ca5: the panel's
+  GitHub link is gone, `LICENSE` says all rights reserved (Snoring Cat
+  LLC. holds them: 7a63ec4, Levi 2026-10-13), package.json
+  says UNLICENSED, and a push touching only the ledger, docs, `.claude/`,
+  README or LICENSE skips the deploy (Actions minutes count against the
+  plan once private; deploys used about 330 minutes in the last 7 days,
+  and the free plan has 2,000 a month). Obfuscating the bundle: not worth
+  it (answered 2026-10-13; it is minified and ships no sourcemaps). K122
+  (the bundled packages' license notices) is needed either way. On his
+  word: `gh repo edit --visibility private
+  --accept-visibility-change-consequences` (reversible; hides the code,
+  history, docs and this ledger from then on, not copies already made;
+  the Pages deploy keeps working).
+  - Parked until near launch (Levi, 2026-10-14 about 00:22, item 11:
+    "wait until we're closer to done to save on CI churn cost.").
+- **K187** · K155's History rows explain their stars only on hover, which
+  phones lack; add a tap to explain (`docs/design/K155.md`, "Stage 1
+  handoff").
 
 ## Done
 
 (items move here with the commit that resolved them)
 
+- **K140** · Finish confetti (Levi, 2026-10-13 about 15:35, verbatim
+  in `docs/design/levi_notes_2026-10-13.md`): a gratuitous confetti rain
+  from the top of the screen when you finish the maze, and a smaller
+  spray from around the finish spot, on every finish. Render-only: no
+  physics wake, and the frame loop runs only while pieces live
+  (`sceneAnimating()` in `src/main.ts`; K24). With the Motion setting
+  reduced (`src/ui/motion.ts`), a small burst or none. Params: on/off
+  and amount, proposed daily-exempt (K57). The phone gate checks fps
+  during the effect. Small; Opus. After K80's real-time mode.
+  - Done in 99b7161..bb55c9a (2026-10-14; deployed with ca7d3e6): a rain
+    from the top plus a spray from the finish, render-only; `cf` and
+    `cfa` at codec 99-100, daily-exempt; 574 tests. Desktop frame cost
+    within noise (amount 1: 9.71 ms of JS a frame, master 9.79); the
+    phone's fps goes to the round pass (K156). Probes in
+    `.claude/probes/K140/`; worktree
+    `.claude/worktrees/agent-a0b46db1354c23e20` kept. Levi's calls: K186;
+    residuals: K188 and K189. Play: https://levi.dev/knotmaze/?7.J
+    (`&cfa=3` for the most, `&cf=0` for none).
+- **K155** · A star rating for each finish (Levi, 2026-10-13 about
+  18:06, verbatim in `docs/design/levi_notes_2026-10-13.md`): stars from
+  the run's time, backtracking, efficiency or a mode's own metric, with a
+  phone-friendly explanation of where they come from; efficiency alone
+  is likely clearest for the default solve. Proposed: three stars, with
+  thresholds from simulated solvers (K74's greedy solver's median is
+  3.12x the shortest route); K80's mode rates its catches; shown on the
+  win banner and in the daily stats, explained on tap (phones have no
+  hover), and in the daily share text (K20; Levi, 2026-10-13 about 21:15:
+  "Stars appearing in the share text makes sense."). With K140 (the same
+  finish screen).
+  - Done in 18c9a2e..edfb65f (2026-10-14): stars from the distance walked
+    over the shortest route: three at 1.5x or less and never caught, two
+    at 4x or less, one for any finish. 551 tests. Probes in
+    `.claude/probes/K155/`; worktree
+    `.claude/worktrees/agent-aa916ee7fa628963f` kept. Levi's calls: K184;
+    the History rows' hover-only explanation: K187.
+- **K104** · Plucks you can see at a glance (Levi, 2026-10-13: "Even
+  maxing pluckSize to 3, I can't tell when some segments are plucked"):
+  a set-amount vibration of the whole plucked segment with today's local
+  lobes on top (he likes the locality); a gentler collapse than
+  `COLLAPSE_ROUND`'s 1 h ("better, but still a bit too acute"; K77's
+  A/B: 0.5 h left shoulders, 2 h erased most of the thinning); its own
+  reduced-motion version (K79's Motion setting). K105 folds in (goal 4).
+  - Done in 5d672ec (2026-10-14): stage 1c merged as c3dbe0c..5d672ec on
+    788bd85 (539 tests). Probes in `.claude/probes/K104/` (3595 files);
+    worktree `.claude/worktrees/agent-a33278775816855b8` kept for
+    follow-ups. The tuning calls went to K180 (with the `k79_motion.mjs`
+    checks), the still pluck's cold-link stall to K185, its residuals to
+    K181.
+- **K183** · The phone was asleep and locked at 23:14 (2026-10-13). K156
+  3c and the round's phone pass wait for Levi to unlock it and leave it
+  awake on its charger; the coordinator never wakes or unlocks it.
+  - Done 2026-10-14: Levi left the phone awake and unlocked on its
+    charger; read-only checks found it ready at 00:44 and 00:47
+    (`.claude/probes/K183/phone_wait.log`), and K156 3c launched at about
+    00:56.
+- **K152** · Leaner verification (proposed 2026-10-13, when Levi asked
+  which careful testing could be deferred or combined): (1) one scripted
+  phone pass per merge round instead of a gate per feature (K156); (2)
+  small UI items (K140, K146, K148, K149, K151) get unit tests and a
+  screenshot, no perf lock, phone or sleep sweep, and K148, K149 and K151
+  share one agent; (3) render prototypes skip the CPU mirror and parity
+  tests until Levi picks a look, and the merge stage adds them; (4) the
+  pins and goldens, sleep checks for physics and generation, and parity
+  for the GPU pipeline stay. Levi approved (1) on 2026-10-13 at 17:56
+  ("sgtm"), and (2) and (3) on 2026-10-14 at about 00:22 ("Yes to
+  both.", `docs/design/levi_notes_2026-10-14.md` item 4); the Next intro
+  carries them. Decided 2026-10-14 (no code).
+- **K171** · The phone pass's retry never wakes or unlocks the phone
+  (`retry_quiet.ps1`, K156 3a), so with the phone asleep or off its
+  charger the retry exits 3 and the pass stops. Accept that (a person
+  restarts it), or should a pass wait for one?
+  - Dropped: folded into K156 3c, which builds a read-only wait for the
+    phone (Levi chose (b), a pass that waits, 2026-10-14 about 00:22,
+    item 5).
 - **K81** · The traveled highlight at junctions: a smooth gold arc from
   the arrival arm to the departure arm instead of the angular blend's flat
   nub (`src/render/junction_routes.ts`), and K127's fully traveled web.
