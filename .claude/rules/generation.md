@@ -80,8 +80,23 @@ CLAUDE.md: the threads ARE the maze paths.
   with one splice; K108's snapshot moved only its 29 Infinity entries.
   The identity pin names its one repaired case. Probes:
   `.claude/probes/K109/` (`verify.ts`, `diag.ts`, `links.ts`,
-  `orphans.ts`); test: `test/core/maze_solvable.test.ts`. Still open
-  (K110): a solvable plan can leave pieces the start never reaches.
+  `orphans.ts`); test: `test/core/maze_solvable.test.ts`. Resolved by
+  K110 (below).
+- *K110 (2026-10-13), every piece reachable from the start:*
+  `planReachesAll` runs K109's piece model over the finished plan (tail
+  anchors included) and predicts unreachable pieces before surgery. A
+  plan without them is kept as built. Otherwise `buildMazePlan` appends
+  one join per piece to the spanning lists, after everything else:
+  Prim-style from the start's region, splices before merges,
+  corner-clear sites, most room, then pool order; a splice whose bridge
+  would cross a placed bridge is skipped. The old plan stays a prefix and
+  the fabric route is unchanged. When no join can make the plan whole,
+  the exit moves to the next-nearest edge (up to 16 tries). The walk
+  optimal can still move: a different start/exit pair, or a rerouted
+  escape tail. Measured over 3780 designs: 331 had unreachable pieces,
+  0 after; every plan that was already whole is byte-identical. Older
+  plans can hold crossed join bridges (K133). Test:
+  `test/core/maze_reachable.test.ts`; probes: `.claude/probes/K110/`.
 
 ## Shapes, anchors and escape tails
 

@@ -124,3 +124,56 @@ K111: Not the intro animation or the current-position-adjacent-segment-highlight
 K94: Yes, the mouse wheel still zooms.
 
 K78: Public. Markdown is fine--eventually this will likely also be published as a post on my Blogger devlog at devlog.levi.dev.
+
+## Afternoon answers (verbatim)
+
+Levi sent three more messages on the afternoon of 2026-10-13.
+
+### 13:17
+
+Is traversal speed a slider? It should be.
+
+I've reviewed the K74 doc. Here are my notes:
+- In general, with our good-maze-design mechanisms, I'd love to parameterize most of them, so it's easy to later adjust things like difficulty and flavor/feel.
+- "**Recommended first step.**" these sgtm.
+- "Decisions for Levi":
+  - 1. Yes. Any worthwhile control params here too?
+  - 2. All of these sound good. Can we implement each, and have parameters to control which is used and/or to what degree?
+  - 3. Yes and yes.
+  - 4. H1. But let's also have a slider to control what ratio of Hs are affected.
+  - 5. Yes. Let's have the length and density be sliders.
+  - 6. This doesn't seem that expensive to run at load, right?
+  - 7. Sure, if this is a good thing to do. Is it another place a control param would be good?
+
+And, in general, we can ignore keeping support for previous url params, or preserving mazes from previous control combinations. Breaking changes are 100% fine. We are not launched. We are still iterating a LOT.
+
+### 13:30
+
+K93: Trail fade, yes; Hover vs pulseReach, hover should stop at pulseReach (and fade-out toward the end, same as pulseReach)
+
+"The head disc covering the starts of the arms" This is fine as-is.
+
+"K76: do the design doc's recommendations stand for the other five calls?" Yes. #2, should they be separate options from a single dropdown?
+
+Copyright should name "Snoring Cat LLC.", which is a legal entity.
+
+K127, look call: Your recommendation seems right.
+
+K114: I still need to read the doc.
+
+K116: Let's proceed and add these to the queue--probably a lower priority than almost everything else atm. Breaking changes are fine.
+
+K115: I still need to read the doc.
+
+### About 13:40
+
+Network: I've been running RDP to this machine occasionally throughout the day (to and from separate machines on the same network). I bet that's a factor.
+
+"1. Pace: your rule says full speed until about 90%, which would be tonight. Should I keep going, or slow down to stretch the week?" Keep going.
+
+"2. K129 blocks K79 B's merge, because these become link defaults that can't change later:" I don't care about breaking changes at this stage. For color defaults, sure. For vellum scale, whatever is best.
+
+Filed (2026-10-13): K74 (four stages) and K127 to In progress; K76, K93
+and K116 to Next; K121 dropped, K129 done and K86 folded into K74; the
+no-back-compat policy in CLAUDE.md and K132; the copyright in 7a63ec4
+(K117). Traversal speed was already a slider (`moveSpeed`, Maze folder).
