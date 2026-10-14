@@ -2253,7 +2253,9 @@ async function main(): Promise<void> {
     const plan = confettiPlan(
       params.confetti,
       params.confettiAmount,
-      motion.reduced
+      motion.reduced,
+      app.screen.width,
+      app.screen.height
     );
     if (plan.rain === 0 && plan.spray === 0) return;
     let cx = NaN;
@@ -3902,7 +3904,13 @@ async function main(): Promise<void> {
     rain: confetti.sim.rain.alive,
     spray: confetti.sim.spray.alive,
     stats: { ...confetti.stats },
-    plan: confettiPlan(params.confetti, params.confettiAmount, motion.reduced),
+    plan: confettiPlan(
+      params.confetti,
+      params.confettiAmount,
+      motion.reduced,
+      app.screen.width,
+      app.screen.height
+    ),
     sceneAnimating: sceneWasAnimating,
     rainVisible: confetti.rainContainer.visible,
     sprayVisible: confetti.sprayContainer.visible,
