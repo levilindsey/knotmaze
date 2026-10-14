@@ -114,9 +114,11 @@ const COLLISION_STIFFNESS = 0.5;
 // the sim at a few percent of real time - the knot freezes mid-settle,
 // which reads as kinked threads and notched crossings. A large cap lets
 // throttled tabs catch up in bursts.
-const SUBSTEP = 1 / 120;
-const MAX_SUBSTEPS_PER_FRAME = 30;
-const MAX_FRAME_DT = 0.25;
+// Exported for K147's settle budget (physics/settle_budget.ts), which
+// computes the dt that runs a chosen number of these substeps.
+export const SUBSTEP = 1 / 120;
+export const MAX_SUBSTEPS_PER_FRAME = 30;
+export const MAX_FRAME_DT = 0.25;
 const CONSTRAINT_ITERATIONS = 2;
 // Verlet velocity retention maps from the drag tuning: drag 0 keeps 99.5%
 // per substep (waves ring), drag 1 keeps 80% (heavily damped).
@@ -1514,6 +1516,13 @@ export class ParticleSystem {
 
   get simTime(): number {
     return this.time;
+  }
+
+  // The step accumulator: simulated time requested but not yet run, under
+  // one SUBSTEP between frames unless MAX_SUBSTEPS_PER_FRAME cut a frame
+  // short (K147's budget reads it, read-only).
+  get pendingTime(): number {
+    return this.accumulator;
   }
 
   get maxMove(): number {

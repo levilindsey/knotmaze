@@ -295,6 +295,11 @@ export const CODEC_V4: CodecTable = Object.freeze({
     color("backgroundAccent1", "#7ab8cd"),
     color("backgroundAccent2", "#cdb17a"),
     color("backgroundAccent3", "#aa7acd"), // 81
+    // K147's load settle (2026-10-13): the per-frame physics budget, ms
+    // (0 = off), and the physics seconds run before the knot appears (5 =
+    // until it sleeps). Playback preferences: the dailies exempt them.
+    num("settleBudget", 12), // 82
+    num("loadSettle", 0.45), // 83
   ]),
 });
 

@@ -109,6 +109,7 @@ describe("links", () => {
       backgroundGrain: 1, backgroundAngle: -1, backgroundColorMode: "gamut",
       backgroundBase: "#151b28", backgroundAccent1: "#7ab8cd",
       backgroundAccent2: "#cdb17a", backgroundAccent3: "#aa7acd",
+      settleBudget: 12, loadSettle: 0.45,
     });
   });
 
@@ -542,6 +543,32 @@ describe("token + overrides", () => {
     expect(
       parseParams("?7.J&bgsz=x&bgdt=1e999&bgan=-30&bgcm=plaid&bgc0=%23101820&bgc1=fff&bgc2=zzzzzz")
     ).toEqual(withSeed(7));
+  });
+
+  it("round-trips the load settle (K147, appended to v4)", () => {
+    for (const [settleBudget, loadSettle] of [[0, 0], [8, 1.25], [30, 5]]) {
+      const p = withSeed(7, { settleBudget, loadSettle });
+      expect(parseParams("?" + encodeParams(p))).toEqual(p);
+    }
+    // Beside K79's backgroundAccent3 (index 81; these two are 82 and 83):
+    // the neighbors of the join keep their own values.
+    const joined = withSeed(7, {
+      backgroundColorMode: "custom",
+      backgroundAccent3: "#a1b2c3",
+      settleBudget: 8,
+      loadSettle: 1.25,
+    });
+    expect(parseParams("?" + encodeParams(joined))).toEqual(joined);
+    // Older links read the defaults.
+    expect(parseParams("?7.c")).toMatchObject({ settleBudget: 12, loadSettle: 0.45 });
+    // Override keys for probes (&stb=0 = real-time stepping, &lds=5 =
+    // settle until asleep); both clamp to their sliders, garbage reads 0.
+    expect(parseParams("?7.J&stb=0&lds=5")).toEqual(
+      withSeed(7, { settleBudget: 0, loadSettle: 5 })
+    );
+    expect(parseParams("?7.J&stb=99&lds=-1")).toMatchObject({ settleBudget: 30, loadSettle: 0 });
+    const big = encodeParams(withSeed(7, { settleBudget: 99, loadSettle: 9 }));
+    expect(parseParams("?" + big)).toMatchObject({ settleBudget: 30, loadSettle: 5 });
   });
 });
 

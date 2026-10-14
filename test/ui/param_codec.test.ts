@@ -217,6 +217,8 @@ describe("codec tables", () => {
       ["backgroundAccent1", "color", "#7ab8cd"],
       ["backgroundAccent2", "color", "#cdb17a"],
       ["backgroundAccent3", "color", "#aa7acd"], // 81
+      ["settleBudget", "number", 12], // 82 (K147: physics ms a frame, 0 = off)
+      ["loadSettle", "number", 0.45], // 83 (K147: physics s before the knot shows)
     ]);
   });
 
@@ -323,6 +325,9 @@ describe("token format", () => {
         backgroundAccent1: "#7ab8cd",
         backgroundAccent2: "#cdb17a",
         backgroundAccent3: "#aa7acd",
+        // K147: every earlier link loads with the K147 settle defaults.
+        settleBudget: 12,
+        loadSettle: 0.45,
       });
     }
   });

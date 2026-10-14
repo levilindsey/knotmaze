@@ -8,8 +8,19 @@ import { applyMazePlan, applyMazeCuts } from "./core/maze_apply";
 import { buildWalkGraph } from "./core/walk_graph";
 import type { WalkGraph } from "./core/walk_graph";
 import { checkStructure, checkAlternation } from "./core/tangle_graph";
-import { ParticleSystem } from "./physics/particle_system";
+import {
+  ParticleSystem,
+  SUBSTEP,
+  MAX_FRAME_DT,
+  MAX_SUBSTEPS_PER_FRAME,
+} from "./physics/particle_system";
 import { SleepGate, physicsQuiet } from "./physics/sleep_gate";
+import {
+  budgetedStep,
+  newSettleBudget,
+  recordStepCost,
+} from "./physics/settle_budget";
+import type { SettleBudget, StepLimits } from "./physics/settle_budget";
 import { RibbonRenderer } from "./render/ribbon_renderer";
 import { DebugRenderer } from "./render/debug_renderer";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
@@ -26,6 +37,7 @@ import {
   writeParams as writeTokenParams,
   newSeed,
   ROOT_NOTES,
+  LOAD_SETTLE_MAX,
 } from "./ui/url_state";
 import type { UrlParams } from "./ui/url_state";
 import {
@@ -116,13 +128,41 @@ const FOLLOW_W = 2.4;
 const CAM_STEP = 0.05;
 const CAM_MAX_DT = 1;
 
-// Appearance pre-sim: with any non-instant appear mode the sim settles
-// briefly BEFORE the first rendered frame, so the reveal plays over a
-// calm fabric instead of the violent initial snap. Bounded by sim time
-// AND wall time, whichever first (normal step() calls in a loop - the
-// physics numerics are untouched).
-const PRE_SIM_SECONDS = 1.2;
-const PRE_SIM_WALL_MS = 450;
+// THE LOAD SETTLE (K147, docs/design/K147.md). With physics on, a new or
+// replayed knot settles in two phases, both through the normal step():
+// (1) THE PRE-SETTLE: with any non-instant appear mode the knot first
+// settles HIDDEN, in the physics-off loader's SETTLE_CHUNK_MS slices, so the
+// reveal plays over a calmer fabric than the initial snap. It ends after
+// PRESETTLE_SIM simulated seconds or `loadSettle` wall seconds, whichever
+// first (until K147 a blocking loop with these two caps froze the page for
+// them); at loadSettle's max it lasts until the first sleep (LOAD_SIM_CAP /
+// LOAD_WALL_CAP_MS as for the physics-off load): settle first, then the
+// intro. The trefoil shows only for a settle predicted past
+// LOADER_DELAY_MS, and then for at least LOADER_MIN_MS (no flash).
+// (2) THE BUDGETED SETTLE: from the first visible frame until the first
+// sleep, the physics gets at most `settleBudget` ms a frame
+// (physics/settle_budget.ts) and the rest of a frame's request is DROPPED,
+// so the settle plays in slow motion at the render's frame rate instead of
+// the catch-up spiral (a gs 18 settle ran ~12 ms a substep, 5 fps for the
+// whole intro). It stands aside while a thread is grabbed, and ends at the
+// first sleep or at LOAD_SIM_CAP simulated seconds - a SIMULATED cap like
+// the loader's: a wall cap would hand a slow device back to the spiral
+// mid-settle - or, last resort, BUDGET_WALL_CAP_MS.
+const PRESETTLE_SIM = 1.2;
+const LOADER_DELAY_MS = 300;
+const LOADER_MIN_MS = 400;
+// Sim seconds a settle-first load is predicted to run (K63: every design
+// sleeps ~5.0 sim-s in), for the loader's show-or-not call.
+const NOMINAL_SLEEP_SIM = 5;
+const BUDGET_WALL_CAP_MS = 120000;
+// At least one substep every frame, even when one costs more than the
+// budget (measured against one every k frames: .claude/probes/K147).
+const SETTLE_MIN_ONE = true;
+const STEP_LIMITS: StepLimits = {
+  substep: SUBSTEP,
+  maxFrameDt: MAX_FRAME_DT,
+  maxSubsteps: MAX_SUBSTEPS_PER_FRAME,
+};
 
 // PHYSICS OFF (the `physics` param unchecked): every build settles HIDDEN
 // behind the loading indicator - normal step() calls at a virtual 60 fps,
@@ -404,6 +444,24 @@ async function main(): Promise<void> {
   let frozenSig = "";
   // ps.step() calls ever made (probes: physics off must add none).
   let stepCount = 0;
+  // K147 LOAD SETTLE (see the note at the top). The hidden pre-settle runs
+  // while `presettle` is set (physState "loading", the loader's ticker
+  // branch); presettleEnd says why it may end ("" = still settling).
+  let presettle = false;
+  let presettleWall0 = 0;
+  let presettleSim0 = 0;
+  let presettleWorkMs = 0; // Wall ms inside its step() slices.
+  let presettleEnd = "";
+  let loaderShownAt = -1;
+  // The budgeted settle, armed from the first visible frame until the first
+  // sleep (null = not armed).
+  let armedBudget: SettleBudget | null = null;
+  let budgetWall0 = 0;
+  // The last pre-settle and budgeted settle (probes: __knotSettle).
+  const settleInfo = {
+    presettle: { ms: 0, workMs: 0, sim: 0, loader: false, endedBy: "" },
+    budget: { ms: 0, sim: 0, lagS: 0, costMs: 0, endedBy: "" },
+  };
   const physicsTuning = (): {
     temperature: number;
     slack: number;
@@ -752,30 +810,17 @@ async function main(): Promise<void> {
     else applyView();
   }
 
-  // Stage 22: (re)start the appearance animation. Pre-settles the sim
-  // (hidden - nothing has rendered yet on a rebuild, and the reveal masks
-  // start collapsed), then hands the renderer a fresh animator. Instant
-  // mode detaches everything: the render path is byte-identical to the
-  // pre-Stage-22 build. With physics off the hidden load already settled
-  // the layout completely (preSim false).
-  function startAppearance(preSim = true): void {
+  // Stage 22: (re)start the appearance animation: hand the renderer a
+  // fresh animator. Instant mode detaches everything: the render path is
+  // byte-identical to the pre-Stage-22 build. The settle before the reveal
+  // is the caller's (K147: the hidden pre-settle, or the physics-off load).
+  function startAppearance(): void {
     if (!ps || !renderer) return;
     if (params.appearSequence === "instant") {
       reveal = null;
       renderer.beginReveal(null);
       if (fabric) fabric.revealQuery = null;
       return;
-    }
-    const tuning = physicsTuning();
-    const wall0 = performance.now();
-    const simTarget = ps.simTime + PRE_SIM_SECONDS;
-    while (
-      preSim &&
-      ps.simTime < simTarget &&
-      performance.now() - wall0 < PRE_SIM_WALL_MS
-    ) {
-      ps.step(0.1, tuning);
-      stepCount++;
     }
     reveal = new RevealAnimator(
       params.appearSequence,
@@ -799,6 +844,9 @@ async function main(): Promise<void> {
   function beginLoading(): void {
     if (!ps || !renderer) return;
     physState = "loading";
+    presettle = false;
+    armedBudget = null;
+    settleInfo.budget = { ms: 0, sim: 0, lagS: 0, costMs: 0, endedBy: "" };
     loadWall0 = performance.now();
     sleepGate.reset();
     loadStepMs = 0;
@@ -857,7 +905,7 @@ async function main(): Promise<void> {
     loadMs = performance.now() - loadWall0;
     // Reveal first, so the very first visible frame already wears its
     // (collapsed) masks - no one-frame flash of the finished knot.
-    startAppearance(false);
+    startAppearance();
     renderer.update();
     if (fabric && fabricController) fabric.update(fabricController);
     fitToScreen();
@@ -883,8 +931,8 @@ async function main(): Promise<void> {
       beginLoading();
       return;
     }
-    // Replay the appearance too: fresh pre-roll, fresh reveal clock.
-    startAppearance();
+    // Replay the appearance too: fresh pre-settle, fresh reveal clock.
+    beginSettle();
     wake();
   }
 
@@ -903,6 +951,165 @@ async function main(): Promise<void> {
     const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
     setGamutConfig(params.gamutArc, params.palette);
     return accentHexes(backgroundColors(BACKGROUND, effHue));
+  }
+
+  // K147, PHYSICS ON: settle a new (or replayed) knot. A non-instant
+  // appear mode with loadSettle > 0 first settles it HIDDEN (the ticker's
+  // loading branch runs presettleTick); otherwise the scene shows at once.
+  // Either way the budgeted settle then runs from the first visible frame
+  // to the first sleep.
+  function beginSettle(): void {
+    if (!ps || !renderer) return;
+    presettle = false;
+    armedBudget = null;
+    settleInfo.budget = { ms: 0, sim: 0, lagS: 0, costMs: 0, endedBy: "" };
+    if (params.appearSequence === "instant" || params.loadSettle <= 0) {
+      physState = "live";
+      startAppearance();
+      // A physics-off load cut short by this rebuild left these behind.
+      root.visible = true;
+      loader.hide();
+      armBudget();
+      return;
+    }
+    physState = "loading";
+    presettle = true;
+    presettleWall0 = performance.now();
+    presettleSim0 = ps.simTime;
+    presettleWorkMs = 0;
+    presettleEnd = "";
+    loaderShownAt = -1;
+    sleepGate.reset();
+    reveal = null;
+    renderer.beginReveal(null);
+    if (fabric) fabric.revealQuery = null;
+    root.visible = false;
+    indicators.hideAll();
+    loader.hide();
+  }
+
+  // One slice of the hidden pre-settle: virtual 60 fps frames through the
+  // normal step() and the normal sleep gate, for SETTLE_CHUNK_MS. It may
+  // end at the first sleep, after PRESETTLE_SIM simulated seconds or
+  // loadSettle seconds of stepping (at loadSettle's max: LOAD_SIM_CAP or
+  // LOAD_WALL_CAP_MS); it does end once the loader, if it showed, has
+  // shown for LOADER_MIN_MS, and steps on meanwhile unless asleep.
+  function presettleTick(): void {
+    if (!ps) return;
+    if (!params.physics) {
+      // Physics went off meanwhile: the physics-off load takes over.
+      beginLoading();
+      return;
+    }
+    const settleFirst = params.loadSettle >= LOAD_SETTLE_MAX;
+    const simCap = settleFirst ? LOAD_SIM_CAP : PRESETTLE_SIM;
+    const workCap = params.loadSettle * 1000;
+    const canFinish = (): boolean =>
+      presettleEnd !== "" &&
+      (loaderShownAt < 0 || performance.now() - loaderShownAt >= LOADER_MIN_MS);
+    const tuning = physicsTuning();
+    const t0 = performance.now();
+    while (presettleEnd !== "sleep" && !canFinish()) {
+      const s0 = performance.now();
+      const sim0 = ps.simTime;
+      ps.step(1 / 60, tuning);
+      stepCount++;
+      presettleWorkMs += performance.now() - s0;
+      if (!Number.isFinite(ps.maxMove)) {
+        halted = true;
+        presettle = false;
+        physState = "live"; // Keeps the HALTED line on the stamp.
+        loader.hide();
+        root.visible = true;
+        perfLine = " | HALTED: physics went non-finite (regenerate to reset)";
+        console.error("KnotMaze: physics state went non-finite; simulation halted.");
+        return;
+      }
+      if (sleepGate.frame(quietNow(false), ps.simTime - sim0)) {
+        presettleEnd = "sleep";
+      } else if (presettleEnd === "") {
+        if (ps.simTime - presettleSim0 >= simCap) presettleEnd = "sim";
+        else if (settleFirst) {
+          if (performance.now() - presettleWall0 > LOAD_WALL_CAP_MS) presettleEnd = "wall";
+        } else if (presettleWorkMs >= workCap) presettleEnd = "work";
+      }
+      if (performance.now() - t0 >= SETTLE_CHUNK_MS) break;
+    }
+    const elapsed = performance.now() - presettleWall0;
+    if (presettleEnd === "" && loaderShownAt < 0) {
+      // Show the loader for a settle that will run past LOADER_DELAY_MS.
+      const simDone = ps.simTime - presettleSim0;
+      const simLeft = (settleFirst ? NOMINAL_SLEEP_SIM : simCap) - simDone;
+      let workLeft = simDone > 0 ? (simLeft * presettleWorkMs) / simDone : Infinity;
+      if (!settleFirst) workLeft = Math.min(workLeft, workCap - presettleWorkMs);
+      if (elapsed + workLeft > LOADER_DELAY_MS || elapsed > LOADER_DELAY_MS) {
+        loader.show();
+        loaderShownAt = performance.now();
+      }
+    }
+    if (canFinish()) finishPresettle();
+  }
+
+  // The pre-settle is over: start the appearance over the settled layout,
+  // show the scene and go live - asleep if the sleep gate already tripped,
+  // else under the settle budget.
+  function finishPresettle(): void {
+    if (!ps || !renderer) return;
+    presettle = false;
+    settleInfo.presettle = {
+      ms: performance.now() - presettleWall0,
+      workMs: presettleWorkMs,
+      sim: ps.simTime,
+      loader: loaderShownAt >= 0,
+      endedBy: presettleEnd,
+    };
+    // Reveal first, so the very first visible frame already wears its
+    // (collapsed) masks - no one-frame flash of the finished knot.
+    startAppearance();
+    renderer.update();
+    if (fabric && fabricController) fabric.update(fabricController);
+    fitToScreen();
+    root.visible = true;
+    loader.hide();
+    physState = "live";
+    if (presettleEnd === "sleep") {
+      asleep = true;
+    } else {
+      asleep = false;
+      armBudget();
+    }
+  }
+
+  function armBudget(): void {
+    armedBudget = newSettleBudget(params.settleBudget, SETTLE_MIN_ONE);
+    budgetWall0 = performance.now();
+  }
+  function endBudget(by: string): void {
+    if (!armedBudget || !ps) return;
+    settleInfo.budget = {
+      ms: performance.now() - budgetWall0,
+      sim: ps.simTime,
+      lagS: armedBudget.lagS,
+      costMs: armedBudget.costMs,
+      endedBy: by,
+    };
+    armedBudget = null;
+  }
+  // This live frame's settle budget, or null. Ends it once the physics is
+  // not live, after LOAD_SIM_CAP simulated seconds or BUDGET_WALL_CAP_MS
+  // (the first sleep ends it in the ticker); stands aside, still armed,
+  // while a thread is grabbed or the slider is at 0.
+  function activeBudget(): SettleBudget | null {
+    const b = armedBudget;
+    if (!b || !ps) return null;
+    if (physState !== "live") endBudget("mode");
+    else if (ps.simTime > LOAD_SIM_CAP) endBudget("sim");
+    else if (performance.now() - budgetWall0 > BUDGET_WALL_CAP_MS) endBudget("wall");
+    if (!armedBudget || ps.grabbedParticle >= 0 || params.settleBudget <= 0) {
+      return null;
+    }
+    b.budgetMs = params.settleBudget;
+    return b;
   }
 
   // The background follows the design: effect + intensity + animation
@@ -1071,13 +1278,11 @@ async function main(): Promise<void> {
     hideWin();
     rebuildAudioMap();
 
-    // Appearance animation: pre-settle + attach the reveal BEFORE the
-    // first frame renders (and before the viewport fit below, which then
-    // frames the calmer pre-rolled bounds). Physics off: settle the whole
-    // layout hidden first (finishLoading starts the reveal).
+    // Appearance animation: settle hidden first, then attach the reveal
+    // (K147: beginSettle's pre-settle, finishPresettle; physics off: the
+    // whole layout, finishLoading) - or, instant, show and settle at once.
     if (params.physics) {
-      physState = "live";
-      startAppearance();
+      beginSettle();
     } else {
       beginLoading();
     }
@@ -2759,7 +2964,8 @@ async function main(): Promise<void> {
     if (halted) return;
 
     if (physState === "loading") {
-      loadingTick();
+      if (presettle) presettleTick();
+      else loadingTick();
       if (physState === "loading") perfLine = " | loading";
       updateStamp();
       return;
@@ -2937,8 +3143,21 @@ async function main(): Promise<void> {
     }
     const t0 = performance.now();
     const sim0 = ps.simTime;
-    ps.step((ticker.deltaMS / 1000) * speedMult, physicsTuning());
-    stepCount++;
+    const requestDt = (ticker.deltaMS / 1000) * speedMult;
+    // K147: while the load settle's budget is armed, this frame steps only
+    // the substeps the budget affords (none: no step() call at all).
+    const budget = activeBudget();
+    if (budget) {
+      const s = budgetedStep(budget, requestDt, ps.pendingTime, STEP_LIMITS);
+      if (s.dt > 0) {
+        ps.step(s.dt, physicsTuning());
+        stepCount++;
+        recordStepCost(budget, performance.now() - t0, s.n);
+      }
+    } else {
+      ps.step(requestDt, physicsTuning());
+      stepCount++;
+    }
     const t1 = performance.now();
     if (!Number.isFinite(ps.maxMove)) {
       halted = true;
@@ -2965,6 +3184,7 @@ async function main(): Promise<void> {
     if (sleepGate.frame(quietNow(settling), ps.simTime - sim0)) {
       asleep = true;
       if (settling) freeze();
+      endBudget("sleep");
     }
     if (
       settling &&
@@ -3010,8 +3230,12 @@ async function main(): Promise<void> {
   const updateStamp = (): void => {
     const wall = (performance.now() - wallStart) / 1000;
     const sim = ps?.simTime ?? 0;
+    // K147: simulated time the load settle's budget dropped (slow motion),
+    // while it runs or after it ended; sim trails wall by at least this.
+    const lag = armedBudget ? armedBudget.lagS : settleInfo.budget.lagS;
     stamp.textContent =
       `${BUILD_STAMP} | sim ${sim.toFixed(1)}s / wall ${wall.toFixed(1)}s` +
+      (lag > 0.05 ? ` | settle lag ${lag.toFixed(1)}s` : "") +
       perfLine;
   };
   updateStamp();
@@ -3323,6 +3547,17 @@ async function main(): Promise<void> {
       plucks: renderer?.plucks.activeCount ?? 0,
     };
   };
+  // K147 load-settle probe: the phase now (presettle | budget | off), the
+  // armed budget's state, and the last pre-settle and budgeted settle.
+  (window as unknown as Record<string, unknown>).__knotSettle = () => ({
+    phase: presettle ? "presettle" : armedBudget ? "budget" : "off",
+    budgetMs: armedBudget?.budgetMs ?? null,
+    costMs: armedBudget?.costMs ?? null,
+    lagS: armedBudget ? armedBudget.lagS : settleInfo.budget.lagS,
+    loaderShown: presettle && loaderShownAt >= 0,
+    presettle: { ...settleInfo.presettle },
+    budget: { ...settleInfo.budget },
+  });
   // The physics checkbox, as the panel drives it (probe scripting).
   (window as unknown as Record<string, unknown>).__knotSetPhysics = (
     on: boolean

@@ -187,6 +187,11 @@ export const DAILY_EXEMPT_KEYS = [
   "snapBack",
   // Physics on/off: a device-speed choice; the settled layout is the same.
   "physics",
+  // K147's load settle: the same device-speed kind of choice (how the
+  // first settle is paced and how much of it runs before the knot shows).
+  // Proposed for Levi's review with K147.
+  "settleBudget",
+  "loadSettle",
 ] as const satisfies readonly (keyof UrlParams)[];
 
 const EXEMPT: ReadonlySet<string> = new Set(DAILY_EXEMPT_KEYS);
