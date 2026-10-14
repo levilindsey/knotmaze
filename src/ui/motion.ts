@@ -4,9 +4,10 @@
 // showMazeStats), never a design param: links and dailies do not carry it.
 //
 // The ONE source of truth for every reduced-motion behavior. main.ts reads
-// `reduced` each frame (the background's drift, the pluck overlay's smaller
-// swing and missing ghost, the camera's jump instead of its ease to an edge
-// marker's target), and the stylesheets key their reduced variants on the
+// `reduced` each frame (the background's drift, the pluck overlay's still
+// plucks - the plucked segment brightens instead of moving (K104) - the
+// camera's jump instead of its ease to an edge marker's target), and the
+// stylesheets key their reduced variants on the
 // root's data-motion attribute (REDUCED_ROOT / whenReduced) instead of on
 // `@media (prefers-reduced-motion)`, so the in-app choice reaches CSS too.
 //

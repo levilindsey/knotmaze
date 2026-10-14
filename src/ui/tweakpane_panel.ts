@@ -1087,7 +1087,7 @@ export function buildPanel(
   row(
     fMotion, s, "motion",
     { options: { "follow system": "system", full: "full", reduced: "reduced" } },
-    "How much the page moves. follow system = your device's reduce-motion setting (it switches live); full = all motion; reduced = backdrops hold still, plucked threads swing less with no speed ghost, the camera jumps to an edge marker's target instead of easing there, and the loading knot, the mode badge and the edge markers stop breathing and fading. Remembered per browser.",
+    "How much the page moves. follow system = your device's reduce-motion setting (it switches live); full = all motion; reduced = backdrops hold still, a plucked thread brightens briefly instead of vibrating (the sound is the same), the camera jumps to an edge marker's target instead of easing there, and the loading knot, the mode badge and the edge markers stop breathing and fading. Remembered per browser.",
     SETTINGS_DEFAULTS.motion,
     () => callbacks.onMotionChange(settings.motion)
   );
