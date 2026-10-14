@@ -27,8 +27,9 @@
 // THE MINOTAUR (Levi's calls 3 and 6):
 // - LAIR: it starts at the exit END and stays there `wake` seconds, then
 //   walks out along the exit tail. It never returns: the exit tail and the
-//   entrance tail are barred to it (the sanctuary; a player on either tail
-//   is invisible to it).
+//   entrance tail are barred to it: the sanctuary. A player on either tail
+//   is safe, unseen and uncatchable (so a run onto the exit tail is a
+//   win nothing can take back).
 // - WANDER: it picks a destination and walks there by the shortest route
 //   at the leg's pace (wanderPace x (1 +- paceJitter)), pausing at a
 //   junction it passes with chance pauseChance and always at the
@@ -43,7 +44,7 @@
 //   run that starts the shortest path; mid-run it turns back only when that
 //   is shorter by more than REVERSE_MARGIN (no dithering on near-ties).
 //   Losing the player, it walks to where it last saw them, then roams.
-// - CATCH: contact within catchDist (thread distance over the WHOLE graph)
+// - CATCH: contact within catchDist (thread distance, off the tails)
 //   sends the player back to the entrance and the minotaur back to its
 //   lair, and counts it; the solve continues (main.ts keeps the clock).
 
@@ -327,17 +328,24 @@ export class MinotaurChase {
   constructor(walk: WalkGraph, params: ChaseParams, seed: number) {
     this.g = new ChaseGraph(walk);
     this.params = { ...params };
-    if (this.params.detectEnd < this.params.detectStart) {
-      this.params.detectEnd = this.params.detectStart;
-    }
-    if (this.params.pauseMax < this.params.pauseMin) {
-      this.params.pauseMax = this.params.pauseMin;
-    }
+    this.setParams(params);
     this.rng = new SeededRNG(seedMix(seed));
     this.player = { edge: -1, pos: 0, dir: 1, vertex: this.g.start };
     this.mino = { edge: -1, pos: 0, dir: 1, vertex: this.g.exit };
     this.timer = ticksOf(this.params.wake);
     this.legPace = this.params.wanderPace;
+  }
+
+  // Live panel edits: read from the next tick on. (A replay needs the
+  // params a chase ran with, so only free play edits mid-chase.)
+  setParams(p: ChaseParams): void {
+    Object.assign(this.params, p);
+    if (!(this.params.detectEnd >= this.params.detectStart)) {
+      this.params.detectEnd = this.params.detectStart;
+    }
+    if (!(this.params.pauseMax >= this.params.pauseMin)) {
+      this.params.pauseMax = this.params.pauseMin;
+    }
   }
 
   get seconds(): number {
@@ -414,7 +422,11 @@ export class MinotaurChase {
   step(out: ChaseEvent[] = []): ChaseEvent[] {
     this.movePlayer(out);
     this.moveMinotaur();
-    if (!this.finished && this.contactDistance() <= this.params.catchDist) {
+    if (
+      !this.finished &&
+      !this.invisible() &&
+      this.contactDistance() <= this.params.catchDist
+    ) {
       this.catches++;
       out.push({ kind: "caught" });
       this.respawn();

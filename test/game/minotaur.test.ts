@@ -166,14 +166,17 @@ describe("MinotaurChase: detection", () => {
     expect(sim.mode).toBe("wander");
   });
 
-  it("cannot see a player on a tail (the sanctuary), though contact still counts", () => {
+  it("a player on a tail is safe: unseen and uncatchable (the sanctuary)", () => {
     const sim = new MinotaurChase(G1, still, 1);
     sim.place("minotaur", "A", "pause", 100);
-    sim.place("player", { edge: 0, pos: 3, dir: 1 }); // 2 from A, on the entrance tail
+    sim.place("player", { edge: 0, pos: 4.8, dir: 1 }); // 0.2 from A, on the entrance tail
     expect(sim.huntDistance()).toBe(Infinity);
-    expect(sim.contactDistance()).toBe(2);
+    expect(sim.contactDistance()).toBeCloseTo(0.2, 12);
     expect(run(sim, 1)).toEqual([]);
     expect(sim.mode).toBe("pause");
+    expect(sim.catches).toBe(0);
+    sim.place("player", "A"); // Off the tail: caught.
+    expect(run(sim, 1)).toEqual([{ kind: "caught" }]);
   });
 });
 
