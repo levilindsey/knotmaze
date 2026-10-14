@@ -332,20 +332,56 @@ and never reused.
     `/knotmaze/licenses`, then 200) and the panel link; look at the V8
     credit in the round's phone pass (K152).
   - brief: `docs/design/K122.md`.
+- **K80** · The minotaur, decided (Levi, 2026-10-13 14:31, verbatim in
+  `docs/design/levi_notes_2026-10-13.md`; design
+  `docs/design/K80_gameplay_additions.md` section 0, 17b729b). The
+  telegraphed hunter, with the guard and stalker variants, and Abbott's
+  rule as a puzzle mode (call 1); the telegraph on by default, as a
+  param (call 2). Turn-aligned and real-time movement (call 3). In real
+  time it has a wander pace and an approach pace, randomized pauses at
+  junctions (maybe randomized paces), and detection starts and ends at
+  distances measured along the threads to the player, not in runs.
+  Every distance and speed is a param. A catch sends you back to the
+  entrance and is counted (call 3). No undo with it, even in free play
+  (call 4). A wait move only in turn-aligned mode (call 5). Dead ends
+  stay its hunting ground (call 6). Dailies later (call 7: "Let's not
+  worry yet"). The first music and rhythm experiment (call 8: "I do want
+  to be able to play with alternate modes"). Section 5's order after it
+  (call 9). Real time comes first, as a dedicated mode rather than a
+  toggle on another (Levi, about 15:30: "I really want the real-time
+  prototype. Maybe it's not a modifier of another gameplay mode, but
+  rather a dedicated mode itself. Do implement it."); the turn-aligned
+  hunter stays a modifier of the normal maze, later.
+  - owner: agent a9c90f15cd6a55710 (opus) of session d8031183, since
+    2026-10-13 about 18:01: stage 1, the real-time mode.
+  - branch: `worktree-agent-a9c90f15cd6a55710`
+    (`.claude/worktrees/agent-a9c90f15cd6a55710`), from cf8f9d4; last
+    commit: none yet.
+  - evidence: its worktree's `.claude/probes/K80/rt/` (untracked); the
+    research's `.claude/probes/K80/` in the main checkout (doc section 7
+    reruns it) and its kept worktree
+    `.claude/worktrees/agent-a25726c24f262b138`.
+  - next: the stage-1 report (the defaults' simulation table, a playable
+    link), then Levi plays it. The turn-aligned hunter comes later (item
+    11 of the order).
+  - brief: `docs/design/K80_realtime.md`; the research brief
+    `docs/design/K80.md` and its doc
+    `docs/design/K80_gameplay_additions.md`.
 
 ## Next, in order
 
-Every stage merges only after desktop verification AND the phone gate
-(K10); the phone stays on its charger, awake and unlocked (Levi,
-2026-10-13 10:40), and a gate's watchdog stops it on any touch. A gate
-agent checks the lock first and stops at once if the phone is locked
+Every stage merges after desktop verification, and the phone checks
+each merge round in one scripted pass instead of a gate per feature
+(K152 (1), Levi 2026-10-13 about 17:55: "sgtm"). The phone stays on its
+charger, awake and unlocked (Levi, 2026-10-13 10:40), and a pass's
+watchdog stops it on any touch. A pass checks the lock first and stops at once if the phone is locked
 (K81's gate waited 47 min on a locked phone, 2026-10-13). At most three
 code agents at once, research on top. Pre-launch, nothing keeps old
 links or dailies (Levi, 2026-10-13 13:17; CLAUDE.md "Pre-launch: no
 back-compat"), so codec appends no longer wait for each other: the
 second branch to merge renumbers its appends. Usage: don't hold agents
 back until the week nears 90% (Levi, 2026-10-13 07:40; 42% at 07:17,
-54% at 13:35, 57% at 15:33; at 13:40 he said keep going at full speed; it resets
+54% at 13:35, 57% at 15:33, 61% at 17:48; at 13:40 he said keep going at full speed; it resets
 Mondays at 12:00). Long work runs in stages from committed briefs (Levi,
 2026-10-13; the coordinator oversees it): each brief names its stage
 boundary, where the agent writes a "Stage N handoff" into the brief,
@@ -353,17 +389,15 @@ commits and stops, and a fresh agent continues from it. K81 alone was
 about a third of the overnight spend.
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
-13:30, 14:31-14:39 and 15:30-15:40 (he may reorder). Running: K104
-stage 1b, K74 stage 1 and K127 on K81's branch (code); K122 stage 1 in
-the research slot (small, research first); K79 B's phone gate (B3). K74
-runs its stages back to back in one code slot. The phone takes one gate
-at a time: K79 B's now, then K81's after K127. Then, as code slots free
-up:
-1. K81's and K79 B's merges, each after its gate.
+13:30, 14:31-14:39 and 15:30-15:40 (he may reorder). Running at 18:06:
+K104 stage 1b, K147 and K80 stage 1 (code); K79 B's merge prep; K81's
+phone gate, the last gate per feature. Then, as code slots free up:
+1. K79 B's merge, then K122's (it rebases over K79 B), then K81's after
+   its gate.
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
-   want the real-time prototype... Do implement it."); it rebases over
-   K79 B and K81 if they merge first.
-3. K140, the finish confetti, then K146, past dailies without credit,
+   want the real-time prototype... Do implement it."): stage 1 running.
+3. K140, the finish confetti, with K155's star rating (the same finish
+   screen), then K146, past dailies without credit,
    then K148, K149 and K151, the camera and the mode badge (all small;
    K80's minotaur indicator follows K148's).
 4. K120 (no codec).
@@ -402,6 +436,16 @@ K5-K7 (split, frame loop, worker) follow.
   reduced (`src/ui/motion.ts`), a small burst or none. Params: on/off
   and amount, proposed daily-exempt (K57). The phone gate checks fps
   during the effect. Small; Opus. After K80's real-time mode.
+- **K155** · A star rating for each finish (Levi, 2026-10-13 about
+  18:06, verbatim in `docs/design/levi_notes_2026-10-13.md`): stars from
+  the run's time, backtracking, efficiency or a mode's own metric, with a
+  phone-friendly explanation of where they come from; efficiency alone
+  is likely clearest for the default solve. Proposed: three stars, with
+  thresholds from simulated solvers (K74's greedy solver's median is
+  3.12x the shortest route); K80's mode rates its catches; shown on the
+  win banner and in the daily stats, explained on tap (phones have no
+  hover). Open: stars in the daily share text (K20). With K140 (the same
+  finish screen).
 - **K146** · Past dailies, playable without credit (Levi, 2026-10-13
   about 16:15: "There should be some way to play previous dailys, but not
   get credit for them."). Today a past daily opens only by its link
@@ -551,40 +595,6 @@ K5-K7 (split, frame loop, worker) follow.
   - env: the prototype server is in the doc's handle (port 5276, private
     cacheDir).
   - brief: `docs/design/K76.md`, then `docs/design/K76_reveal_mode.md`.
-- **K80** · The minotaur, decided (Levi, 2026-10-13 14:31, verbatim in
-  `docs/design/levi_notes_2026-10-13.md`; design
-  `docs/design/K80_gameplay_additions.md` section 0, 17b729b). The
-  telegraphed hunter, with the guard and stalker variants, and Abbott's
-  rule as a puzzle mode (call 1); the telegraph on by default, as a
-  param (call 2). Turn-aligned and real-time movement (call 3). In real
-  time it has a wander pace and an approach pace, randomized pauses at
-  junctions (maybe randomized paces), and detection starts and ends at
-  distances measured along the threads to the player, not in runs.
-  Every distance and speed is a param. A catch sends you back to the
-  entrance and is counted (call 3). No undo with it, even in free play
-  (call 4). A wait move only in turn-aligned mode (call 5). Dead ends
-  stay its hunting ground (call 6). Dailies later (call 7: "Let's not
-  worry yet"). The first music and rhythm experiment (call 8: "I do want
-  to be able to play with alternate modes"). Section 5's order after it
-  (call 9). Real time comes first, as a dedicated mode rather than a
-  toggle on another (Levi, about 15:30: "I really want the real-time
-  prototype. Maybe it's not a modifier of another gameplay mode, but
-  rather a dedicated mode itself. Do implement it."); the turn-aligned
-  hunter stays a modifier of the normal maze, later.
-  - for the brief: glyphs on runs need a phone minimum size (threads are
-    4-5 px at fit scale); fleeing critters need a simulation first (a
-    perfect fleer is uncatchable at equal speed on our looped mazes).
-    The doc judged a smart real-time chaser not a fit (4.35: it loses the
-    telegraph's board-game clarity; R.4.2 narrows that); the real-time
-    mode is the test. K114's proposed `clock` param (turn | beat |
-    realtime) is the same switch. K120's held keys help the chase.
-  - next: a staged brief (to write: `docs/design/K80.md`), the real-time
-    mode first, in the next free code slot (it rebases over K79 B and
-    K81 if they merge first); the turn-aligned hunter later (item 11 of
-    the order).
-  - evidence: `.claude/probes/K80/` (copied from the worktree; doc
-    section 7 reruns it); worktree
-    `.claude/worktrees/agent-a25726c24f262b138` kept.
 - **K137** · K80 section 4's cheap mechanisms, each behind a toggle
   (Levi, 2026-10-13 14:31: "I'd love to prototype all of these and have
   controls to toggle them"), after the minotaur. Sized S or S-M in the
