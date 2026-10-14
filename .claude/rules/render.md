@@ -482,6 +482,33 @@ coordinate lerp sweeps the hues between.
   rounded): a dark spike inside a hook's tight bend (the ribbon's inner
   corner) and a dark X at the center of big knot attack-lobe blurs.
 
+## Still plucks (K104)
+
+- COST (K104 stage 1c, 2026-10-14; the mechanism is render-gaps.md's G1
+  entry, the numbers are docs/design/K104.md's stage 1c handoff). Master
+  cb532d5 vs 8e21538 at 3200x1800 (RX 6800 XT, ANGLE D3D11), fabric
+  `?b.J&am=instant&snd=none&fw=0`, 3 interleaved rounds of 5 strums of 12
+  plucks per phase, other agents' probes running. FULL MOTION is unchanged
+  within noise (GPU 2.62 -> 2.59 ms/f, pluck-blur 0.024 -> 0.035, layout
+  0.34 -> 0.38 ms per pluck, overlay tick 0.47 -> 0.46 ms/f). REDUCED
+  MOTION drops the overlay's per-frame CPU (tick 0.44 -> 0.03 ms/f: a
+  still pluck is laid out once) and its GPU rises 0.024 -> 0.061 ms/f
+  (pluck-still runs gapKeepAt per fragment). THE COMPILE: pluck-still links
+  in ~340 ms cold (pluck-blur 36 ms; it carries G1's gap library, as
+  section-rgb does at 1.46 s; which part costs the most is not measured).
+  `warmStill` builds it the first frame reduced motion is on,
+  so a reduced load folds it into the first frame, which already holds
+  every link (3.45 -> 3.84 s cold), and a switch mid-session stalls ONE
+  frame 317-367 ms. Chrome's program cache keeps it per profile (a reload
+  or later switch: 5-8 ms, no long frame), so it recurs only when the still
+  shader changes; the first still pluck compiles nothing on either path.
+  COLLAPSE_ROUND 1.5 costs roundCollapse ~1.2x (sqrt 1.5) in the synthetic
+  worst case (the whole chain at full depth; 8000 samples at 16 per h:
+  8.4 -> 10.0 ms per layout) and 0-15% on typical windows; in the page
+  refreshCollapse stays ~0.10 ms per call. Probes: `.claude/probes/K104/`
+  (cost_probe.mjs, load_reduce_probe.mjs, cost_batch.ps1, cost_table.mjs,
+  k77_cost.ts + k77_cost_batch.ps1).
+
 ## Marker icons (K83)
 
 - MARKER ICONS (K83, 2026-10-13; worktree agent). Levi: "placeholder
