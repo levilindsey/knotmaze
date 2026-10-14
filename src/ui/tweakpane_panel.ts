@@ -29,6 +29,7 @@ import {
   effectiveSpeed,
   isAutoAngle,
   isAutoSpeed,
+  readsDetail,
 } from "../render/background_model";
 import type { MotionPref } from "./motion";
 
@@ -853,7 +854,7 @@ export function buildPanel(
   );
   const backgroundDetailRow = shapeRow(
     "backgroundDetail", 0, BACKGROUND_DETAIL_MAX,
-    "Backdrop roughness: 0 = smooth, soft shapes; 1 = as designed; 2 = rough, the fine detail loud. The contrast stays the same. Applies live."
+    "Backdrop roughness (mist, wash, silk and contours): 0 = smooth, soft shapes; 1 = as designed; 2 = rough, the fine detail loud. The contrast stays the same. Applies live."
   );
   const backgroundFibersRow = shapeRow(
     "backgroundFibers", 0, BACKGROUND_TEXTURE_MAX,
@@ -1356,7 +1357,7 @@ export function buildPanel(
     backgroundIntensityRow.hidden = bg === "none";
     backgroundSpeedRow.hidden = bg === "none";
     backgroundScaleRow.hidden = bg === "none";
-    backgroundDetailRow.hidden = bg === "none";
+    backgroundDetailRow.hidden = bg === "none" || !readsDetail(bg);
     backgroundFibersRow.hidden = bg !== "vellum";
     backgroundGrainRow.hidden = bg !== "vellum";
     backgroundAngleRow.hidden = bg !== "silk";

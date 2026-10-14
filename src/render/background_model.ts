@@ -116,9 +116,11 @@ export function backgroundDrift(id: BackgroundId, speed: number): number {
 export const BACKGROUND_PAUSE_GRACE = 2.5;
 
 // THE SHAPE PARAMS (K79 stage B): how the pattern is drawn, on top of the
-// effect's designed look. Two apply to every effect, three to one each:
+// effect's designed look. Scale applies to every effect, detail to four,
+// and fibers, grain and angle to one each:
 //   scale  - pattern size, x the designed size (backgroundScale)
-//   detail - fbm roughness: 0 smooth, 1 designed, 2 rough (backgroundDetail)
+//   detail - fbm roughness: 0 smooth, 1 designed, 2 rough (backgroundDetail;
+//            BACKGROUND_DETAIL_EFFECTS: mist, wash, silk, contours)
 //   fibers, grain - vellum's fiber and grain strength, x designed
 //   angle  - silk's streak (and flow) direction, degrees counterclockwise
 //            from screen right; negative = AUTO, the seed's own direction
@@ -186,12 +188,29 @@ export function detailGain(detail: number): number {
   return 0.25 + 0.25 * detail;
 }
 
+// The effects that read `detail`. Vellum and aurora do not: their fbm
+// octaves are few and dim next to what carries their look (vellum's fibers
+// and grain, aurora's rays), so 0 / 1 / 2 moved their background pixels by
+// 0.4 levels on average (mist 1.6-2.6, wash 1.6-2.1, silk 2.1-2.4, contours
+// 0.9-1.9; the stage B2 sheets), nothing the eye finds. Their shaped
+// programs keep the designed fbm and the panel hides the row.
+export const BACKGROUND_DETAIL_EFFECTS: readonly BackgroundId[] = [
+  "mist",
+  "wash",
+  "silk",
+  "contours",
+];
+export function readsDetail(id: BackgroundId): boolean {
+  return BACKGROUND_DETAIL_EFFECTS.includes(id);
+}
+
 // Whether effect `id` needs its shaped program for `shape` (sanitized):
 // only the params it reads count, so a link that sets vellum's fibers
 // draws mist with mist's own program.
 export function needsShapeProgram(id: BackgroundId, shape: BackgroundShape): boolean {
   if (id === "none") return false;
-  if (shape.scale !== 1 || shape.detail !== 1) return true;
+  if (shape.scale !== 1) return true;
+  if (shape.detail !== 1 && readsDetail(id)) return true;
   if (id === "vellum") return shape.fibers !== 1 || shape.grain !== 1;
   if (id === "silk") return !isAutoAngle(shape.angle);
   return false;

@@ -10,6 +10,9 @@
 // Every effect returns the design's INK plus a small, intensity-scaled
 // share of its accents: dark, low-contrast, the threads' own colors.
 
+import { readsDetail } from "./background_model";
+import type { BackgroundId } from "./background_model";
+
 // Uniforms every effect reads (one shared UniformGroup, background.ts):
 //   uView   = (screen w, screen h in CSS px, 1 / min(w, h), drift time s)
 //   uParams = (seed offset x, seed offset y, intensity [0, 1], unused)
@@ -293,6 +296,8 @@ const BODIES: Record<string, string> = {
 // generalizes, even where the math is the same.
 //   uShape  = (1 / scale, fbm gain, fiber strength, grain strength)
 //   uShape2 = (silk's streak angle, radians; < 0 = the seed's; unused x3)
+// The fbm gain is read only by mist, wash, silk and contours (readsDetail):
+// vellum's and aurora's shaped programs use the designed fbm.
 // gScreen / gWall hand an effect the UNSCALED screen position and drift
 // time, for what must not scale (vellum's vignette and fibers).
 const SHAPE_HEAD = /* glsl */ `uniform vec4 uShape;
@@ -417,9 +422,13 @@ export function effectProgram(id: string, t: number, shaped = false): string {
 
 export function effectFragment(id: string): string {
   if (id.endsWith("-x")) {
-    const shaped = SHAPED_BODIES[id.slice(0, -2)];
+    const effect = id.slice(0, -2);
+    const shaped = SHAPED_BODIES[effect];
     if (!shaped) throw new Error(`no background effect "${id}"`);
-    return EFFECT_HEAD + SHAPE_HEAD + NOISE_SHAPED + shaped + EFFECT_MAIN_SHAPED;
+    // Detail (the fbm's octave gain) reaches only the effects that read it
+    // (BACKGROUND_DETAIL_EFFECTS); vellum and aurora keep the designed fbm.
+    const noise = readsDetail(effect as BackgroundId) ? NOISE_SHAPED : NOISE_GLSL;
+    return EFFECT_HEAD + SHAPE_HEAD + noise + shaped + EFFECT_MAIN_SHAPED;
   }
   const body = BODIES[id];
   if (!body) throw new Error(`no background effect "${id}"`);
