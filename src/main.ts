@@ -24,8 +24,13 @@ import {
 import type { SettleBudget, StepLimits } from "./physics/settle_budget";
 import { RibbonRenderer } from "./render/ribbon_renderer";
 import { DebugRenderer } from "./render/debug_renderer";
-import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
+import {
+  FabricMazeRenderer,
+  MINO_MIN_CSS_R,
+} from "./render/fabric_maze_renderer";
 import { FabricMazeController } from "./game/fabric_controller";
+import { MinotaurChase } from "./game/minotaur";
+import type { ChaseEvent } from "./game/minotaur";
 import { RevealAnimator } from "./render/reveal";
 import { BackgroundLayer } from "./render/background";
 import {
@@ -35,6 +40,7 @@ import {
   parseHexColor,
 } from "./render/background_model";
 import {
+  chaseParamsOf,
   writeParams as writeTokenParams,
   newSeed,
   ROOT_NOTES,
@@ -71,6 +77,7 @@ import {
   GLYPH_R,
   OffscreenIndicators,
 } from "./ui/offscreen_indicators";
+import type { IndicatorStyle } from "./ui/offscreen_indicators";
 import {
   DEFAULT_GLYPHS,
   markerGlyphSvgFit,
@@ -425,6 +432,11 @@ async function main(): Promise<void> {
   let buildHueGroup: number[] | undefined;
   let buildStrandCount = 0;
   let fabric: FabricMazeRenderer | null = null;
+  // K80's real-time mode (params.clock "realtime"): the chase over the walk
+  // graph (game/minotaur.ts), built with the fabric. Its clock starts at the
+  // player's first accepted tap (chaseRunning) and stops at the finish.
+  let chase: MinotaurChase | null = null;
+  let chaseRunning = false;
   let fabricController: FabricMazeController | null = null;
   // Stage 22: the running appearance animation (null = instant / done
   // long ago). Rebuilds and "Replay settle" restart it.
@@ -1287,6 +1299,7 @@ async function main(): Promise<void> {
     }
     syncBackground();
     pendingWin = false;
+    restartChase();
     resetAttempt();
     hideWin();
     rebuildAudioMap();
@@ -1599,6 +1612,8 @@ async function main(): Promise<void> {
         official: dailyN !== null && dailyStore.hasOfficial(dailyN),
         solved: fabricController?.solved ?? false,
         trailMode: fabricController?.trailMode ?? false,
+        // K80: a real-time solve always starts over (a fresh chase).
+        realtime: chase !== null,
       });
       if (action === "refuse") {
         showToast("recentPath mode has no way back: keep exploring.");
@@ -1620,14 +1635,19 @@ async function main(): Promise<void> {
       if (dailyN !== null && attemptDaily === dailyN && attemptRecord === null) {
         dailyStore.clearAttempt(dailyN);
       }
-      fabricController?.reset();
-      fabric?.cancelMove();
-      fabric?.clearYarn();
-      pendingWin = false;
-      hideWin();
-      if (fabric && fabricController) fabric.update(fabricController);
-      resetAttempt();
-      wake();
+      restartSolve();
+    },
+    // K80: the maze clock. The graph is the same, so no rebuild: the solve
+    // starts over in the new mode (a fresh chase, or none).
+    onClockChange: () => {
+      writeParams(params);
+      restartSolve();
+      updateHud();
+    },
+    // K80: the chase's tuning, live (the chase goes on).
+    onChaseChange: () => {
+      chase?.setParams(chaseParamsOf(params));
+      writeParams(params);
     },
     onPlayDaily: () => playDaily(todayNumber(), true),
     onShowDailyStats: () => showDailyStats(),
@@ -1861,6 +1881,47 @@ async function main(): Promise<void> {
   // (gate() returns its remover). Nothing else in the indicator changes.
   void finishIndicator;
 
+  // THE MINOTAUR (K80, the real-time mode): a dark red disc wearing its
+  // marker's glyph, once it has left its lair (in the lair it sits on the
+  // finish, which has an indicator of its own) and only where fabric draws
+  // it over the fog (minoFog): an indicator must not give away a hidden
+  // minotaur. A tap frames it with the head. Not tied to the
+  // finishIndicator preference (K84 sorts the viewer prefs).
+  const MINO_DISC: IndicatorStyle = { disc: "#7a0c0c", ink: "#fff" };
+  const minoScratch = new Float32Array(2);
+  let minoIconSvg = "";
+  indicators.add({
+    id: "minotaur",
+    world: (out) => !!chase && !!fabric && fabric.minotaurWorld(out),
+    radius: () =>
+      fabric?.minotaurRadius() ?? markerRadiusFor(params.threadWidth),
+    icon: () =>
+      minoIconSvg ||
+      (minoIconSvg = markerGlyphSvgFit(
+        DEFAULT_GLYPHS.minotaur,
+        "minotaur",
+        GLYPH_R,
+        MINO_DISC.ink
+      )),
+    style: MINO_DISC,
+    visible: () =>
+      chase !== null &&
+      !chase.finished &&
+      chase.mode !== "lair" &&
+      !!fabric &&
+      !fabric.minotaurUnderFog &&
+      fabric.minotaurWorld(minoScratch),
+    label: () =>
+      settings.tapToPan
+        ? "The minotaur is off screen, this way. Tap to bring it into view."
+        : "The minotaur is off screen, this way.",
+    onTap: () => {
+      if (fabric?.minotaurWorld(minoScratch)) {
+        frameWorld(minoScratch[0], minoScratch[1]);
+      }
+    },
+  });
+
   // "Daily #12", then " · Oct 11" for any day but today, and " · solved"
   // (this attempt set the official result) or " · replay" (an earlier one
   // did).
@@ -1890,6 +1951,8 @@ async function main(): Promise<void> {
       backtrack: params.pathViz === "trail" ? null : c.backtrackDist,
       junctions: c.visitedJunctions.size,
       deadEnds: params.deadEnds ? c.deadEndTips.size : null,
+      // K80: times caught so far (null: turn-based).
+      catches: chase ? chase.catches : null,
     };
   };
   // The HUD and the mode badge (it re-fits around the HUD's new size).
@@ -2148,8 +2211,106 @@ async function main(): Promise<void> {
       junctions: c.visitedJunctions.size,
       deadEnds,
       stats: daily !== null,
+      // K80: a chase's catches and time hunted (null: turn-based).
+      catches: chase ? chase.catches : null,
+      chasedMs: chase ? chase.huntSeconds * 1000 : null,
     });
     updateHud();
+  };
+
+  // K80 REAL-TIME MODE (params.clock "realtime", game/minotaur.ts). The
+  // chase owns the clock: its first accepted tap starts it (chaseRunning),
+  // fabricTick advances it by each frame's wall time (a fixed 120 Hz sim,
+  // at most 0.25 s a frame), never while the page is hidden, and it stops
+  // at the finish. The controller follows the chase's departures (one
+  // tapEdge each: path, stats, move log, paint) and the dot rides the
+  // chase's progress (setMoveProgress) instead of tickAnim's pace. A catch
+  // sends the player back to the entrance: the clock and the stats run on,
+  // the path and the string start over (and so does the fog, which follows
+  // an empty path).
+  const restartChase = (): void => {
+    chase =
+      params.mazeFabric && params.clock === "realtime" && walkGraph && fabric
+        ? new MinotaurChase(walkGraph, chaseParamsOf(params), params.seed)
+        : null;
+    chaseRunning = false;
+    fabric?.syncMinotaur(chase, params.minoFog);
+  };
+
+  // A fresh solve on the same maze (Reset path, a clock change): a new
+  // chase or none, nothing recorded.
+  const restartSolve = (): void => {
+    fabricController?.reset();
+    fabric?.cancelMove();
+    fabric?.clearYarn();
+    pendingWin = false;
+    restartChase();
+    hideWin();
+    if (fabric && fabricController) fabric.update(fabricController);
+    resetAttempt();
+    wake();
+  };
+
+  // A tap queues a run from the decision vertex (where the player stands,
+  // or the end of the run under way; the latest tap wins); the chase sets
+  // off along it on its next tick. Returns true when the tap was taken.
+  const handleChaseTap = (x: number, y: number): boolean => {
+    if (!chase || !fabric || !fabricController) return false;
+    const eid = fabric.edgeAt(x, y, fabricController);
+    if (eid < 0 || chase.tap(eid) === "reject") return false;
+    chaseRunning = true;
+    if (fabric.setHover(-1)) fabric.update(fabricController);
+    return true;
+  };
+
+  const chaseEvents: ChaseEvent[] = [];
+  let chaseWarned = false;
+  const tickChase = (dt: number): void => {
+    if (!chase || !fabric || !fabricController) return;
+    const fc = fabricController;
+    if (chaseRunning && !chase.finished && !document.hidden) {
+      chaseEvents.length = 0;
+      chase.advance(dt, chaseEvents);
+      for (const ev of chaseEvents) {
+        if (ev.kind === "depart") {
+          const result = fc.tapEdge(ev.edge);
+          if (result === "reject" || result === "noop") {
+            if (!chaseWarned) {
+              chaseWarned = true;
+              console.warn(`K80: the controller refused run ${ev.edge} (${result})`);
+            }
+            continue;
+          }
+          noteMove();
+          fabric.setHover(-1);
+          fabric.beginMove(
+            ev.edge,
+            result === "backtrack" ? "backtrack" : "advance",
+            fc
+          );
+          // The finish is the exit tail's far end: the banner waits for it.
+          if (result === "win") pendingWin = true;
+          updateHud();
+        } else if (ev.kind === "caught") {
+          fc.respawn();
+          fabric.cancelMove();
+          fabric.clearYarn();
+          pendingWin = false;
+          fabric.update(fc);
+          updateHud();
+          showToast(
+            chase.catches === 1
+              ? "Caught! Back to the entrance."
+              : `Caught ${chase.catches} times. Back to the entrance.`,
+            2500
+          );
+        }
+      }
+    }
+    if (chase.playerMoving) fabric.setMoveProgress(chase.playerProgress, fc);
+    else if (fabric.animating) fabric.setMoveProgress(1, fc);
+    fabric.minoMinRadius = MINO_MIN_CSS_R / Math.max(1e-6, root.scale.x);
+    fabric.syncMinotaur(chase, params.minoFog);
   };
 
   // Native share sheet on phones, the clipboard elsewhere (ui/share.ts).
@@ -2250,6 +2411,8 @@ async function main(): Promise<void> {
   // which stays live in fabric mode. Returns true when the tap was a move.
   const handleFabricTap = (x: number, y: number): boolean => {
     if (!fabric || !fabricController) return false;
+    // K80: the real-time mode queues the run with the chase instead.
+    if (chase) return handleChaseTap(x, y);
     const eid = fabric.edgeAt(x, y, fabricController);
     if (eid < 0) return false;
     const result = fabricController.tapEdge(eid);
@@ -3046,7 +3209,9 @@ async function main(): Promise<void> {
         fabric.setFogHold(params.fogOfWar && params.fowIntro && revealing);
         fabric.tickFog(ticker.deltaMS / 1000);
         fabricController.trailMode = params.pathViz === "trail";
-        fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
+        // K80: in the real-time mode the chase moves the dot (tickChase).
+        if (chase) tickChase(ticker.deltaMS / 1000);
+        else fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
         if (pendingWin && !fabric.animating) {
           pendingWin = false;
           showFabricWin();
@@ -3367,6 +3532,57 @@ async function main(): Promise<void> {
   // Raw renderer access for probe scripting (patch visibility/tinting).
   (window as unknown as Record<string, unknown>).__knotRenderer = () =>
     renderer;
+  // K80 real-time chase diagnostics (null outside the real-time mode): the
+  // chase's state, with the minotaur's SCREEN point while fabric draws it.
+  // __knotChaseTap(edge) queues a run as a tap on it would (and starts the
+  // chase); __knotChaseObj() is the live MinotaurChase.
+  (window as unknown as Record<string, unknown>).__knotChase = () => {
+    if (!chase) return null;
+    const ch = chase;
+    const out = new Float32Array(2);
+    const shown = !!fabric && fabric.minotaurWorld(out);
+    const at = (s: { edge: number; vertex: number }): string | null =>
+      s.edge < 0 ? ch.g.ids[s.vertex] : null;
+    return {
+      running: chaseRunning,
+      tick: ch.tick,
+      seconds: ch.seconds,
+      catches: ch.catches,
+      huntSeconds: ch.huntSeconds,
+      finished: ch.finished,
+      mode: ch.mode,
+      player: { ...ch.player },
+      playerAt: at(ch.player),
+      mino: { ...ch.mino },
+      minoAt: at(ch.mino),
+      decisionVertex: ch.decisionVertex,
+      playerMoving: ch.playerMoving,
+      playerProgress: ch.playerProgress,
+      // Infinity (the player is on a tail) serializes as null.
+      huntDistance: ch.huntDistance(),
+      contactDistance: ch.contactDistance(),
+      params: { ...ch.params },
+      inputs: ch.inputs.map((i) => ({ ...i })),
+      minoShown: shown,
+      minoUnderFog: fabric?.minotaurUnderFog ?? false,
+      minoRadius: fabric?.minotaurRadius() ?? 0,
+      minoScreen: shown
+        ? {
+            x: out[0] * root.scale.x + root.position.x,
+            y: out[1] * root.scale.y + root.position.y,
+          }
+        : null,
+    };
+  };
+  (window as unknown as Record<string, unknown>).__knotChaseTap = (
+    edge: number
+  ): "queued" | "reject" | null => {
+    if (!chase) return null;
+    const r = chase.tap(edge);
+    if (r === "queued") chaseRunning = true;
+    return r;
+  };
+  (window as unknown as Record<string, unknown>).__knotChaseObj = () => chase;
   // Fabric-maze diagnostics: solve state, metrics, and each current choice
   // with a tappable SCREEN point (via the live root transform) plus its
   // cost-to-exit, for scripted solve verification.
