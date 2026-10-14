@@ -184,6 +184,18 @@ and never reused.
   ghost), the camera tween and CSS. The flow undulation, the appearance
   intros and the path pulses still move under "reduced". Cover them too
   (which, and how: off or slowed)?
+- **K117** · Repo visibility and license (Levi's notes, 2026-10-13;
+  `docs/design/levi_notes_2026-10-13.md`). The repo is public with no
+  LICENSE file: anyone may read and fork it on GitHub, but nobody has a
+  license to reuse it. Stay public (add a license, or keep none), or go
+  private (`gh repo edit --visibility private
+  --accept-visibility-change-consequences`, reversible)? Private hides
+  the code, history, design docs and this ledger from then on, but not
+  copies already made; the Pages deploy keeps working; the shipped
+  bundle (minified, no sourcemaps) stays public either way. Actions
+  minutes would then count against the plan's quota: deploys used about
+  330 minutes in the last 7 days (about 1,400 a month; the free plan
+  has 2,000). Which, and when?
 
 ## In progress
 
@@ -229,10 +241,12 @@ and never reused.
     `k79_sheet.mjs`, `k79_dstats.mjs`, `k79_gpu.mjs`; `out/sheets/`,
     `out/ab_final/`, `out/motion.log`, `out/gpu_k79.log`); stage B's
     `k79b_*` files in its worktree's `.claude/probes/K79/`.
-  - next: stage A's phone gate (K10; waits for Levi's phone): default vs
-    e25d202, vellum at `bgs=1` (412x915 texture at 6 passes/s), the
-    speed row. Stage B: brief items 3-4 (params, custom colors) with
-    their codec appends and GPU cost; then its merge and phone gate.
+  - next: stage A's phone gate (K10) is RUNNING since 2026-10-13 09:20
+    (agent ad54065d4cfbccf9c, sonnet, in the main checkout; results in
+    `.claude/probes/K79/phone/`): default vs e25d202, vellum at `bgs=1`
+    (412x915 texture at 6 passes/s), the speed row. Stage B: brief
+    items 3-4 (params, custom colors) with their codec appends and GPU
+    cost; then its merge and phone gate.
   - brief: `docs/design/K79.md` (stage B: items 3, 4, 6 and 7).
   - env: `.claude/probes/K79/run_ab.ps1` (its header starts servers on
     5331/5332); stage B's servers on 5341-5344.
@@ -256,6 +270,56 @@ and never reused.
   - next: stage 1a's census, then 1b's prototypes in the brief's order.
   - brief: `docs/design/K90.md`.
   - env: its dev servers, if any, on ports 5351-5354.
+- **K114** · Gameplay round 2 (Levi's notes, 2026-10-13): real-time
+  enemies (a mode or a mode parameter), a spider, threads that burn
+  away behind a race to the exit, cutting or deleting segments (down to
+  one unbranched route, or to escape monsters), points for long runs,
+  plucks that cut threads toward a goal melody (up to a rhythm mode: a
+  scrolling staff, a maze built from the notes, an AI walker the player
+  must not strand), and steering an auto-solver by blocking or cutting.
+  Research stage, no code.
+  - owner: the K114+K116 agent (a50bc6f1ee8fc4abb) of session d8031183,
+    started 2026-10-13 09:21.
+  - branch: `worktree-agent-a50bc6f1ee8fc4abb`
+    (`.claude/worktrees/agent-a50bc6f1ee8fc4abb`), on 7225930; last
+    commit: none yet.
+  - evidence: `.claude/probes/K114/` in its worktree, if any.
+  - next: the round-2 part of `docs/design/K80_gameplay_additions.md`
+    (section 0's nine decisions untouched); then its idea list to Levi.
+  - brief: `docs/design/levi_notes_2026-10-13.md` (the notes and the
+    ask).
+  - env: its servers, if any, on ports 5381-5384.
+- **K115** · Cursive text and embedded shapes (Levi's notes,
+  2026-10-13): threads that trace arbitrary text, in any script, inside
+  a maze, joined to it and colored as one, with junctions or crossings
+  chosen for legibility; a standalone fallback that progress still
+  plays across (welcome, intro, credits); stars, wreaths and other
+  shapes by the same means. Research stage, no code.
+  - owner: the K115 agent (addea8f896840f12c) of session d8031183,
+    started 2026-10-13 09:21.
+  - branch: `worktree-agent-addea8f896840f12c`
+    (`.claude/worktrees/agent-addea8f896840f12c`), on 7225930; last
+    commit: none yet.
+  - evidence: `.claude/probes/K115/` in its worktree (copied at merge).
+  - next: `docs/design/K115_cursive_text.md`: a recommendation, a staged
+    plan, and whether it scales to other scripts.
+  - brief: `docs/design/levi_notes_2026-10-13.md` (the notes and the
+    ask).
+  - env: its servers, if any, on ports 5361-5364.
+- **K116** · Alternate pluck instruments, and accompaniment parts
+  with the pluck kept on top (Levi's notes, 2026-10-13). Research stage,
+  no code. First read: more plucked timbres are parameters of today's
+  Karplus-Strong voice (small); bells, marimba, pads or samples need new
+  voice types (medium); accompaniment needs a lookahead scheduler, parts
+  (authored or derived) and a mix that ducks under the pluck (medium).
+  - owner: the K114 agent (a50bc6f1ee8fc4abb), its second document.
+  - branch: K114's; last commit: none yet.
+  - evidence: `.claude/probes/K116/` in its worktree, if any.
+  - next: `docs/design/K116_instruments.md`: the options with effort,
+    and a first step.
+  - brief: `docs/design/levi_notes_2026-10-13.md` (the notes and the
+    ask).
+  - env: K114's ports.
 
 ## Next, in order
 
@@ -273,18 +337,24 @@ and resets Mondays at 12:00.
 1. The running five merged: K73 and K75 at 01:00, K83 at 01:30, K74 in
    dad40f8, K80 in 17b729b.
 2. K77 merged (eec4854). K81 (the smooth arc, running since 01:07);
-   K79 stage A merged (9ffda8a), its phone gate pending; stage B
-   running since 07:45. K49's comparison is done (Waiting on Levi).
+   K79 stage A merged (9ffda8a), its phone gate running since 09:20;
+   stage B running since 07:45. K49's comparison is done (Waiting on
+   Levi).
 3. K87 done (62dd16d), K108 done (b62cea3), K109 done (b722a12; K110
    waits on Levi). K90 stage 1 running since 07:45. Then K86 (long dead
    ends behind params that default to today's maze), after K79 stage B
    merges, since both append codec params.
-4. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
+4. K120 (held-arrow advance, phone quick controls) takes the next free
+   code-agent slot: it appends no codec params, so it need not wait for
+   K79 stage B.
+5. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
    K42.
 
 From 07:45, three code agents again (K81, K79 stage B, K90 stage 1),
 with the 5-hour window at 7%. From 00:45 to 07:45 it was two, for a
-gentler rate on the 5-hour window.
+gentler rate on the 5-hour window. From 09:20, on top of them: K79
+stage A's phone gate (sonnet) and two research agents, K114 + K116 and
+K115.
 
 Waiting for Levi (not started overnight):
 - decisions: K74, K76 stage 2, K52, K49, K78;
@@ -293,6 +363,11 @@ Waiting for Levi (not started overnight):
 
 K5-K7 (split, frame loop, worker) follow.
 
+- **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
+  key to keep advancing, taking the branch that matches the key at each
+  junction it reaches; a quick control on phones too, such as
+  screen-region buttons. No codec params. Compare
+  `docs/design/K80_gameplay_additions.md` 4.29 (Sprint).
 - **K46** · Daily variety, revisited after the feature churn (Levi,
   2026-10-12): no weekly or regular arc; THEMES, each a set of parameter
   constraints; manual per-day overrides later (K82). The measured
@@ -635,6 +710,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   static texture (1 texel per CSS px) and drift only the mottling in a
   low-res pass; the drift pass costs about 2.1 ms at 1600x900 today
   (K79, `.claude/probes/K79/out/gpu_k79.log`).
+- **K118** · Native mobile apps, eventually (Levi, 2026-10-13): not
+  before everything else is iterated and finished. The mobile web app
+  stays alongside them.
+- **K119** · i18n, at the end (Levi, 2026-10-13): there is little
+  text, and an LLM will drive the translations and other i18n work. The
+  strings are mostly in `src/ui/` and `src/game/share_text.ts`; text
+  drawn as threads is K115's question.
 
 ## Done
 
