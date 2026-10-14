@@ -3,13 +3,22 @@
 // result with a Share button (or a Play / Resume button: K47 keeps an
 // unfinished attempt), and the per-day history, newest first (tap a day to
 // play or resume it). Phone-sized: one column, finger-sized targets, the
-// history scrolls inside the card.
+// history scrolls inside the card. K155: today's stars (a tap explains
+// them), each history row's stars (hover explains), a count of the
+// official results' stars by the History heading, and a legend line.
 
 import { efficiencyPercent, formatDuration } from "../game/maze_stats";
 import { dailyAggregates, onTime } from "../game/daily_store";
 import type { DailyStore } from "../game/daily_store";
 import { formatDayDate } from "../game/daily_calendar";
-import { ensureHudStyles } from "./maze_hud";
+import {
+  ratingForResult,
+  starExplanation,
+  starGlyphs,
+  starLabel,
+  starRules,
+} from "../game/star_rating";
+import { ensureHudStyles, starsWidget } from "./maze_hud";
 
 export interface DailyStatsOptions {
   store: DailyStore;
@@ -58,8 +67,21 @@ function ensureStyles(): void {
     `.km-today .km-tx div{font-family:${mono};font-size:12px}` +
     ".km-hist{list-style:none;margin:0;padding:0;" +
     "max-height:min(38vh,300px);overflow:auto;border-top:1px solid #2c3a55}" +
+    // K155: the stars' small form in the today row and the history.
+    ".km-today .km-stars{font-size:16px;margin:0 0 0 6px;padding:0 4px;" +
+    "letter-spacing:1px;vertical-align:-1px}" +
+    ".km-today .km-stars svg{width:13px;height:13px}" +
+    ".km-today+.km-why{margin:6px 0 0}" +
+    ".km-h3row{display:flex;justify-content:space-between;align-items:baseline;" +
+    "gap:8px}" +
+    ".km-h3row .km-sum{text-transform:none;letter-spacing:0;font-weight:400;" +
+    "color:#c8d3e8;white-space:nowrap}" +
+    ".km-sum .on,.km-hist .st .on{color:#e7c56f}" +
+    ".km-hist .st{text-align:center;white-space:nowrap;letter-spacing:1px;" +
+    `font-family:${sans}}` +
+    ".km-hist .st .off{color:#4a5672}" +
     ".km-hist button{box-sizing:border-box;width:100%;display:grid;" +
-    "grid-template-columns:3.4em 4.6em 1fr 3.4em 4.6em;gap:4px;" +
+    "grid-template-columns:3.4em 4.6em 1fr 3.8em 3.4em 4.6em;gap:4px;" +
     "align-items:center;padding:7px 4px;border:0;" +
     "border-bottom:1px solid #222b40;background:none;color:inherit;" +
     `font:12px/1.3 ${mono};text-align:left;cursor:pointer;` +
@@ -187,10 +209,18 @@ export function openDailyStats(o: DailyStatsOptions): void {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "km-btn km-primary";
+  // K155: today's stars explain themselves below the row when tapped.
+  let todayWhy: HTMLDivElement | null = null;
   if (tday?.official) {
     const r = tday.official;
     const b = document.createElement("b");
     b.textContent = "Solved";
+    const rating = ratingForResult(r);
+    if (rating) {
+      const [stars, why] = starsWidget(rating);
+      b.appendChild(stars);
+      todayWhy = why;
+    }
     const line = document.createElement("div");
     line.textContent =
       formatDuration(r.timeMs) +
@@ -219,14 +249,37 @@ export function openDailyStats(o: DailyStatsOptions): void {
   }
   today.append(tx, btn);
   card.append(h3t, today);
+  if (todayWhy) card.appendChild(todayWhy);
 
-  // History, newest first.
+  // History, newest first, under a count of the official results' stars.
   const h3h = document.createElement("h3");
-  h3h.textContent = "History";
-  card.appendChild(h3h);
+  h3h.className = "km-h3row";
+  h3h.append("History");
   const days = Object.keys(data.days)
     .map(Number)
     .sort((a, b) => b - a);
+  const starCounts = [0, 0, 0, 0];
+  for (const n of days) {
+    const rating = ratingForResult(data.days[String(n)].official);
+    if (rating) starCounts[rating.stars]++;
+  }
+  if (starCounts[1] + starCounts[2] + starCounts[3] > 0) {
+    const sum = document.createElement("span");
+    sum.className = "km-sum";
+    const parts: string[] = [];
+    for (const s of [3, 2, 1]) {
+      if (starCounts[s] === 0) continue;
+      const on = document.createElement("span");
+      on.className = "on";
+      on.textContent = "★".repeat(s);
+      if (sum.childNodes.length > 0) sum.append(" · ");
+      sum.append(on, ` ${starCounts[s]}`);
+      parts.push(`${starCounts[s]} with ${s} star${s === 1 ? "" : "s"}`);
+    }
+    sum.title = `Official results: ${parts.join(", ")}`;
+    h3h.appendChild(sum);
+  }
+  card.appendChild(h3h);
   if (days.length === 0) {
     const empty = document.createElement("div");
     empty.className = "km-empty";
@@ -252,6 +305,24 @@ export function openDailyStats(o: DailyStatsOptions): void {
       cell(formatDayDate(n), "");
       if (r) {
         cell(formatDuration(r.timeMs), "r");
+        // K155: the stars, with their explanation on hover (the legend
+        // below the list says what each needs; the row's tap plays).
+        const rating = ratingForResult(r);
+        const st = document.createElement("span");
+        st.className = "st";
+        if (rating) {
+          const glyphs = starGlyphs(rating.stars);
+          const on = document.createElement("span");
+          on.className = "on";
+          on.textContent = glyphs.slice(0, rating.stars);
+          const off = document.createElement("span");
+          off.className = "off";
+          off.textContent = glyphs.slice(rating.stars);
+          st.append(on, off);
+          st.title = starExplanation(rating).join("\n");
+          st.setAttribute("aria-label", starLabel(rating.stars));
+        }
+        b.appendChild(st);
         cell(`${efficiencyPercent(r.efficiency)}%`, "r");
         const late = onTime(n, r) ? "" : " late";
         const extra = d.replays.length > 0 ? ` +${d.replays.length}` : "";
@@ -259,10 +330,12 @@ export function openDailyStats(o: DailyStatsOptions): void {
       } else if (d.attempt) {
         // K47: unfinished and saved - tapping the row resumes it.
         cell(formatDuration(d.attempt.elapsedMs), "r");
+        cell("", "st");
         cell("", "r");
         cell("resume", "s");
       } else {
         cell("—", "r");
+        cell("", "st");
         cell("", "r");
         cell("played", "s");
       }
@@ -274,6 +347,16 @@ export function openDailyStats(o: DailyStatsOptions): void {
       list.appendChild(li);
     }
     card.appendChild(list);
+  }
+
+  // K155: what the stars need, for every screen (phones have no hover).
+  if (starCounts[1] + starCounts[2] + starCounts[3] > 0) {
+    const legend = document.createElement("div");
+    legend.className = "km-note";
+    legend.textContent =
+      `Stars: ${starRules(false).join(" · ")}. ` +
+      "Every step counts, backtracks both ways.";
+    card.appendChild(legend);
   }
 
   const note = document.createElement("div");
