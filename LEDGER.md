@@ -103,6 +103,73 @@ and never reused.
   - evidence: `.claude/probes/K80/` (copied from the worktree; doc
     section 7 reruns it); worktree
     `.claude/worktrees/agent-a25726c24f262b138` kept.
+- **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
+  in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
+  Shortlist: the burn race (turn-based), the cut verb with an
+  auto-walker ("Lead the walker" first), the beat rider, the spider, a
+  Pluck Hero MVP. Ten calls in R.0: the first prototype (burn race), a
+  `clock` param (turn | beat | realtime; with the beat rider), what a
+  cut does (deletes the whole run), render + walk-graph cuts rather than
+  splitting the thread, the cut gesture (a scissors button), healing
+  cuts against monsters, the spider's form and an arachnophobia option,
+  Pluck Hero as an MVP first, round 2 in free play first (the burn race
+  as the first K46 modifier), and flow as a separate stat.
+  - for the briefs: balance probes for "Keep it in" and burn-race
+    tension; hiding runs needs an inverted reveal mask or per-run hiding
+    (a new G2 term and its paint_math mirror, shared with K76), plus the
+    cut's render details; `clock` brings timed, typed attempts (daily
+    store v3). R.7's sources are unverified leads from memory (the
+    Pac-Man speed figures among them). K80 sections 1 and 3.2 are stale
+    since K101 (bracket notes added).
+  - next: Levi's calls, then the burn-race brief.
+- **K115** · Cursive text and shapes, designed in
+  `docs/design/K115_cursive_text.md` (ded57f7). Text can't live on the
+  lattice: every open midpoint carries both diagonals, so lattice
+  lettering is a braid that reads only at banner size. Cursive needs
+  free-form strands from a single-line stroke font (Hershey Script for
+  Latin), emitted as a TangleGraph and pinned (plucks still sound,
+  K77). Stages: 1a a half-day legibility go/no-go with the real
+  renderer at phone zoom; then the text builder and a standalone
+  welcome/credits scene, a title thread, text inside a maze, shapes,
+  and other scripts one at a time (section 0 has the efforts). Six
+  calls in section 0: pinned or live text (pinned), spurs as decoration
+  or dead ends (decoration), where text appears first (the standalone
+  scene), the font per script (Hershey for Latin), text in links (a
+  readable `&t=` key), and foreign threads inside words (none).
+  - for the briefs: an explicit over-pass field on CROSSING nodes (the
+    lattice keeps its path, so the golden stays byte-identical); a
+    decorative walk-graph flag for spurs, dots and accents; K109's piece
+    model must count a text bridge and `repairTailRoute` (K110) must not
+    cut it; `buildCellMask` keeps only the largest component; a TEXT run
+    flag; DAILY_V2 only if dailies get a title thread. Evidence:
+    `.claude/probes/K115/` (Hershey data and its license; SVG-proxy
+    measurements, not the real renderer).
+  - next: Levi's calls, then the stage 1a probe.
+- **K116** · Alternate pluck instruments and accompaniment, designed
+  in `docs/design/K116_instruments.md` (2e60b00). String presets take
+  hours (0.5-2 days with new string options); a modal engine (marimba,
+  bells) S-M; FM sounds synthy; PeriodicWave drones and pads S; samples
+  last or never. A band skeleton (buses, ducking, a limiter, one clock)
+  is 2-3 days, then parts from a chord chart per song, with the pluck
+  kept on top (the band 10-14 dB down, registers, an EQ dip, ducking).
+  Six calls in its section 0: the first step (recommended: the skeleton,
+  a drone and bass, and 3-4 `pluckVoice` presets, 3-4 days), the preset
+  set, `accompaniment` off by default (turning it on later is a new
+  codec version unless sound defaults count as playback preferences),
+  `accompLevel`'s default, samples, and the loop length (K125).
+  - for the brief: `pluckVoice` (pvc), `accompaniment` (acc:
+    off|drone|band) and `accompLevel` (acl) are daily-exempt, appended
+    to the codec at merge after K79 stage B; first a Pixel 11 audio-CPU
+    and voice-count probe. Section 6's sources are unverified leads from
+    memory (the VSCO-2, FluidR3_GM and MusyngKite licenses, the mode
+    ratios, iOS `navigator.audioSession`, Opus on Safari).
+  - next: Levi's calls, then the first-step brief.
+- **K127** · K81's decision 4, a look question: at a joint passed
+  twice whose arms are all gold, small slivers of untraveled material
+  show between the two bands (before K81 that web was all gold). Leave
+  it, or fill outside the bands with gold when every arm of a web is
+  traveled? Sheet row 2 and `results/ab/zoom.png` in
+  `.claude/probes/K81/` (in K81's worktree until the merge).
 - **K117** · Repo visibility (Levi's notes, 2026-10-13;
   `docs/design/levi_notes_2026-10-13.md`). Levi: private later, on his
   word; he won't share it for a while. Done in a756ca5: the panel's
@@ -132,27 +199,30 @@ and never reused.
   flat nub (Levi's screenshot in `.claude/probes/K81/`). K75 is merged
   (same paint code): pulses now brighten the thread's own paint, and
   `PulseArm.onPath` is gone.
-  - owner: the K81 stage 3a agent (ae555243bc7175214) of session
-    d8031183, started 2026-10-13 10:21. Stage 1 (agent
-    a8c2a999e6c2d5a8e, 01:07-10:10) and stage 2 (a39652e94a3fbc4d9,
-    10:15-10:20: the band shader compiles and draws on the GPU, then its
-    context ran out) stopped at their boundaries.
+  - owner: the K81 stage 3b agent (aa54da056f1b58d79, sonnet) of
+    session d8031183, started 2026-10-13 11:20 in the same worktree.
+    Stage 3a (ae555243bc7175214, 10:21-11:10) passed every check with no
+    code change: the GPU matches the CPU mirror (0 points over 2/255 in
+    four states), 0 px change outside each traveled joint's footprint +
+    2 px, untraveled joints unchanged. All eight decisions stand, with
+    one look question (K127).
   - branch: `worktree-agent-a8c2a999e6c2d5a8e`
     (`.claude/worktrees/agent-a8c2a999e6c2d5a8e`), on 4deeda1; last
-    commit: c3f83b5 (the "Stage 3 handoff"; the code is d27355e: route
-    bands wired into `fabric_maze_renderer`, 27 unit tests, suite green).
-  - evidence: `.claude/probes/K81/` in its worktree (`k81lib.mjs`,
-    `smoke.mjs`, `results/smoke/`; copied at merge).
-  - next: stage 3a: the census (fans and cover strips, gold and trail),
-    same-state crops against 4deeda1, 0 px outside traveled joints,
-    whether the three PixiJS "Attribute aUV is not present" warnings are
-    new, and `sheet.png`; it writes a "Stage 3b handoff" and stops. Stage
-    3b: GPU ms, the build, the lore, the rebase onto master. Then the
-    phone gate (K10), Levi's review of the eight decisions with the
-    sheet, and the merge; file the handoff's residuals then (among them,
-    the pluck overlay draws over the band).
-  - brief: `docs/design/K81.md` ("Stage 2 handoff", "Stage 3 handoff").
-  - env: its dev servers on ports 5311-5314.
+    commit: 3c1b02b (the "Stage 3b handoff"; the code is 2fc0ec2 +
+    d27355e).
+  - evidence: `.claude/probes/K81/` in its worktree, untracked
+    (`census_k81.mjs`, `k81_ab.mjs`, `mk_k81_sheet.mjs`, `k81lib.mjs`,
+    `smoke.mjs`, `results/`, `sheet.png`); copy at merge.
+  - next: stage 3b: the rebase onto master and one `smoke.mjs` run,
+    tsc/vitest/build, GPU ms per program under the perf lock, the lore
+    (render.md "Route bands (K81)", the CLAUDE.md map lines). Then the
+    phone gate (K10), Levi's look at `sheet.png` (K127), and the merge;
+    file the handoff's residuals then (among them, the pluck overlay
+    draws over the band).
+  - brief: `docs/design/K81.md` ("Stage 3b handoff", with stage 2's
+    list and "Probes and commands").
+  - env: ports 5311-5314; the commands are in K81.md "Probes and
+    commands".
 - **K79** · Backgrounds: speed, params, colors, Motion. Stage A MERGED
   in 9ffda8a (2026-10-13 07:15): `backgroundSpeed` (codec v4 index 70,
   `bgs=`; -1 = auto = every effect's pre-K79 pace, vellum static; 0 =
@@ -175,12 +245,13 @@ and never reused.
     `k79_sheet.mjs`, `k79_dstats.mjs`, `k79_gpu.mjs`; `out/sheets/`,
     `out/ab_final/`, `out/motion.log`, `out/gpu_k79.log`); stage B's
     `k79b_*` files in its worktree's `.claude/probes/K79/`.
-  - next: stage A's phone gate (K10) did NOT run: its agent
-    (ad54065d4cfbccf9c) stopped before measuring because the phone was
-    in use (09:48, 10:02). Re-run it from `.claude/probes/K79/phone/`
-    (`results.md` has the commands, dry-run on desktop; `watchdog.ps1`
-    stops on any touch) once the phone can sit untouched for about 30
-    min, charging, unlocked, Do Not Disturb on: default vs e25d202,
+  - next: stage A's phone gate (K10) is RUNNING again since 2026-10-13
+    10:45 (agent a32615bf2a394c093, sonnet, in the main checkout, ports
+    5371-5374): Levi said at 10:40 that the phone stays plugged in and
+    unlocked. The first run (ad54065d4cfbccf9c) stopped unmeasured
+    because the phone was in use (09:48, 10:02). It follows
+    `.claude/probes/K79/phone/results.md` (`watchdog.ps1` stops it on
+    any touch): default vs e25d202,
     vellum at `bgs=1` (a 411x753 texture with the toolbar showing), the
     speed row, and whether the `backgroundIntensity` reset glyph wraps
     at 411 px (it does in desktop emulation; K21). Close its leftover
@@ -205,72 +276,60 @@ and never reused.
   sleep battery, the kink-eye censuses, the gesture battery, and the
   knot-mode golden (byte-identical with the flag off). Same-chain
   collision skips +-2 ctrl, so it cannot catch folds that short.
-  - owner: the K90 stage 1 agent (a1b6fa0fe2294cd2a) of session
-    d8031183, started 2026-10-13 07:45.
+  - owner: nobody since 2026-10-13 11:08 (the stage 1 agent
+    a1b6fa0fe2294cd2a of session d8031183 stopped at the 1a/1b
+    boundary, as asked).
+  - found (1a): maze designs average 54 windows under 1.0 half-width at
+    rest, knot mode 2.9. 85% of the maze's and all of knot mode's are
+    Catmull-Rom overshoot, mostly at junction hosts and kink eyes; a
+    particle floor alone would need a target near 2.3 (the handoff has
+    the numbers and four open checks).
   - branch: `worktree-agent-a1b6fa0fe2294cd2a`
     (`.claude/worktrees/agent-a1b6fa0fe2294cd2a`), on 66ee658; last
-    commit: aaf5289 (WIP: the shared over-tight fold definition).
-  - evidence: `.claude/probes/K90/` in its worktree (copied at merge).
-  - next: stage 1a's census, then (asked 2026-10-13 10:05) a "Stage 1b
-    handoff" in `docs/design/K90.md`, commit, stop. Stage 1b's prototypes
-    run as a fresh agent from it (Next, item 5).
-  - brief: `docs/design/K90.md`.
-  - env: its dev servers, if any, on ports 5351-5354.
-- **K114** · Gameplay round 2 (Levi's notes, 2026-10-13): real-time
-  enemies (a mode or a mode parameter), a spider, threads that burn
-  away behind a race to the exit, cutting or deleting segments (down to
-  one unbranched route, or to escape monsters), points for long runs,
-  plucks that cut threads toward a goal melody (up to a rhythm mode: a
-  scrolling staff, a maze built from the notes, an AI walker the player
-  must not strand), and steering an auto-solver by blocking or cutting.
-  Research stage, no code.
-  - owner: the K114+K116 agent (a50bc6f1ee8fc4abb) of session d8031183,
-    started 2026-10-13 09:21.
-  - branch: `worktree-agent-a50bc6f1ee8fc4abb`
-    (`.claude/worktrees/agent-a50bc6f1ee8fc4abb`), on 7225930; last
+    commit: 251f528 (the "Stage 1b handoff"; aaf5289 adds
+    `src/geometry/bend_radius.ts`, the one over-tight definition, with
+    12 tests; 69d5399 adds `scripts/fold_census.{ts,ps1,mjs}`, 79 jobs
+    in about 7 min, no server).
+  - evidence: `.claude/probes/K90/` in its worktree, untracked
+    (`out_census/`, `split.mjs`, `handoff_checks.mjs`, `cr_corner.ts`);
+    copy at merge.
+  - next: stage 1b as a fresh agent: crop the worst junction-host folds
+    with and without the junction webs (`filletMesh`, `filletTopMesh`;
+    if the webs cover them, about 54 windows per maze design drop to
+    about 16), then option 3 (fix the overshoot in the spline, Layer 2)
+    first, behind a flag that defaults off: the census met the brief's
+    trigger for it (coordinator's call, 2026-10-13). It changes every
+    ribbon and touches K8.
+  - brief: `docs/design/K90.md` ("Stage 1b handoff").
+  - env: none for the census; crops need a dev server on ports
+    5351-5354.
+- **K110** · Join every piece of the maze to the start (Levi,
+  2026-10-13: "join pieces as needed to ensure everything is
+  reachable"). A solvable maze can hold walk-graph pieces the start never
+  reaches, only when the entrance and exit share a strand: 55 of 630
+  default designs (24 of 546 at the panel's gs 4-24; heart, star, fish,
+  tree, ring and circle up to gs 8, never rect), 0 of dailies 1-400.
+  Extend K109's `repairTailRoute` (`src/core/maze_plan.ts`) to join
+  each piece at one place. It moves those designs' links, no daily and
+  no rect: re-freeze the K87 identity pin in a commit that names the
+  mazes that moved.
+  - owner: the K110 agent (aaf7c3f05e4b74d9c, Opus) of session
+    d8031183, started 2026-10-13 11:12.
+  - branch: `worktree-agent-aaf7c3f05e4b74d9c`
+    (`.claude/worktrees/agent-aaf7c3f05e4b74d9c`), on 7e41a02; last
     commit: none yet.
-  - evidence: `.claude/probes/K114/` in its worktree, if any.
-  - next: the round-2 part of `docs/design/K80_gameplay_additions.md`
-    (section 0's nine decisions untouched); then its idea list to Levi.
-  - brief: `docs/design/levi_notes_2026-10-13.md` (the notes and the
-    ask).
-  - env: its servers, if any, on ports 5381-5384.
-- **K115** · Cursive text and embedded shapes (Levi's notes,
-  2026-10-13): threads that trace arbitrary text, in any script, inside
-  a maze, joined to it and colored as one, with junctions or crossings
-  chosen for legibility; a standalone fallback that progress still
-  plays across (welcome, intro, credits); stars, wreaths and other
-  shapes by the same means. Research stage, no code.
-  - owner: the K115 agent (addea8f896840f12c) of session d8031183,
-    started 2026-10-13 09:21.
-  - branch: `worktree-agent-addea8f896840f12c`
-    (`.claude/worktrees/agent-addea8f896840f12c`), on 7225930; last
-    commit: none yet.
-  - evidence: `.claude/probes/K115/` in its worktree (copied at merge).
-  - next: `docs/design/K115_cursive_text.md`: a recommendation, a staged
-    plan, and whether it scales to other scripts.
-  - brief: `docs/design/levi_notes_2026-10-13.md` (the notes and the
-    ask).
-  - env: its servers, if any, on ports 5361-5364.
-- **K116** · Alternate pluck instruments, and accompaniment parts
-  with the pluck kept on top (Levi's notes, 2026-10-13). Research stage,
-  no code. First read: more plucked timbres are parameters of today's
-  Karplus-Strong voice (small); bells, marimba, pads or samples need new
-  voice types (medium); accompaniment needs a lookahead scheduler, parts
-  (authored or derived) and a mix that ducks under the pluck (medium).
-  - owner: the K114 agent (a50bc6f1ee8fc4abb), its second document.
-  - branch: K114's; last commit: none yet.
-  - evidence: `.claude/probes/K116/` in its worktree, if any.
-  - next: `docs/design/K116_instruments.md`: the options with effort,
-    and a first step.
-  - brief: `docs/design/levi_notes_2026-10-13.md` (the notes and the
-    ask).
-  - env: K114's ports.
+  - evidence: `.claude/probes/K110/` in its worktree (copied at merge);
+    K109's probe `.claude/probes/K109/orphans.ts` (b722a12).
+  - next: the join, the bit-identity proof for every other design, the
+    re-frozen pin, a before/after sheet; then the merge.
+  - brief: `docs/design/K110.md`.
+  - env: its dev servers on ports 5391-5394.
 
 ## Next, in order
 
 Every stage merges only after desktop verification AND the phone gate
-(K10); the phone stays on its charger, awake, over Tailscale. At most
+(K10); the phone stays on its charger, awake and unlocked (Levi,
+2026-10-13 10:40), and a gate's watchdog stops it on any touch. At most
 three code agents at once, research on top, and one agent appending
 codec params at a time. Usage (Levi, 2026-10-13 07:40): don't hold
 agents back for usage until the week nears 90% (42% at 07:17; it resets
@@ -280,44 +339,32 @@ boundary, where the agent writes a "Stage N handoff" into the brief,
 commits and stops, and a fresh agent continues from it. K81 alone was
 about a third of the overnight spend.
 
-Order from 2026-10-13 10:30, after Levi's decisions at 09:35 (he may
-reorder). Running: K81 stage 3a, plus K79 stage B and K90 stage 1, each
-asked to stop at a stage boundary; research K114 + K116 and K115. Then,
-as code slots free up:
+Order from 2026-10-13 11:15, after Levi's decisions at 09:35 (he may
+reorder). Running: K81 stage 3b, K79 stage B (asked to stop at a stage
+boundary) and K110; K79 stage A's phone gate. Then, as code slots free
+up:
 1. K79 stage B2, after B1's handoff. Its merge and K81's unblock most
    of this list.
-2. K110 (generation only; moves about 55 shaped links, no daily).
-3. K104 (render only).
-4. K120 (no codec).
-5. K90 stage 1b (the prototypes), from stage 1a's handoff.
-6. K122 (small).
-7. K100, after K81 merges (the same renderer file).
-8. K92, then K111, after K79 stage B merges (both rework the panel);
+2. K104 (render only).
+3. K120 (no codec).
+4. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
+   then option 3 (the spline fix) first.
+5. K122 (small).
+6. K100, after K81 merges (the same renderer file).
+7. K92, then K111, after K79 stage B merges (both rework the panel);
    K111's pulse highlight modes after K81 too.
-9. K98, after K79 stage B and K81.
-10. K86, after K79 stage B.
-11. K76 stage 2, after K81 and Levi's five calls.
-12. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
-    K42.
+8. K98, after K79 stage B and K81.
+9. K86, after K79 stage B.
+10. K76 stage 2, after K81 and Levi's five calls.
+11. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
+    K42. K90's spline fix touches K8: never run the two at once.
 
-Waiting for Levi: K74, K80, K76's five calls, K93, K121 and K117's
-timing; 30 minutes with the phone untouched (K79 stage A's gate, and
-every later phone gate); the G3-3 and G4-2 old-path deletions; after
-the churn, K46, K57 and K84.
+Waiting for Levi: K74, K80, K114, K115, K116, K127, K76's five calls,
+K93, K121 and K117's timing; the G3-3 and G4-2 old-path deletions; after the
+churn, K46, K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
-- **K110** · Join every piece of the maze to the start (Levi,
-  2026-10-13: "join pieces as needed to ensure everything is
-  reachable"). A solvable maze can hold walk-graph pieces the start never
-  reaches, only when the entrance and exit share a strand: 55 of 630
-  default designs (24 of 546 at the panel's gs 4-24; heart, star, fish,
-  tree, ring and circle up to gs 8, never rect), 0 of dailies 1-400.
-  Extend K109's `repairTailRoute` (`src/core/maze_plan.ts`) to join them.
-  It moves those designs' links, no daily and no rect: re-freeze the K87
-  identity pin in a commit that names the mazes that moved, with K108's
-  engine-exact math (`.claude/rules/generation.md`). Probe:
-  `.claude/probes/K109/orphans.ts` (b722a12).
 - **K104** · Plucks are too subtle (Levi, 2026-10-13: "Even maxing
   pluckSize to 3, I can't tell when some segments are plucked"). Add a
   fixed-amount vibration of the whole plucked segment, with today's local
@@ -482,6 +529,15 @@ K5-K7 (split, frame loop, worker) follow.
 - **K124** · Marker gaps keep their CPU reveal gate, so they still pop
   during the reveal (pre-existing; G2 agent a7d1f998's report,
   2026-10-12 18:43; from the LEDGERS inbox).
+- **K125** · Scarborough Fair's loop is 50 beats
+  (`src/audio/songs.ts`; K116 found it), not whole 3/4 bars, so a part
+  that keeps bars would slip each loop. Grow its closing rest from 2
+  beats to 3 before any band part (K116's call 6).
+- **K128** · `src/render/marker_mesh.ts:32` declares `in vec2 aUV;`
+  but never reads it while the marker geometry carries it, so PixiJS
+  warns "Attribute aUV is not present" for each of the three marker
+  meshes on every load (K83; found by K81 stage 3a). Read it in the
+  shader or drop it from the geometry.
 - **K11** · Ring + gridAlign: buckles lopsided below strength ~1.8e-3,
   wanders without sleeping at 5e-4..1.6e-3, never sleeps at ga=1.
 - **K12** · Star shape, e-w anchors: 6/8 seeds sleep; 2 hover at the
@@ -530,7 +586,9 @@ K5-K7 (split, frame loop, worker) follow.
   fat seeds awake. See "KINK EYES" in `.claude/rules/physics.md`. Since K41's chord law they
   rest a little smaller, because the flat law had pried their crossings
   open: five at 0.64-0.74 at tw .64, and X304 (seed 3zz2a1) at 0.78-0.80
-  at the default width (was 0.83-0.86). K49 is the size decision.
+  at the default width (was 0.83-0.86). K49 is the size decision. K90's
+  census (2026-10-13): the boxed kink in `t64_1471kin` falls to 0.767
+  widths after the r 2.5 drags.
 - **K30** · Very wide threads (tw >= 0.72) never sleep - standing riders;
   the same counts as before the kink fix (2/4 seeds at 0.72, 0/4 at 0.8).
   After K41, 7/8 seeds sleep at tw .72 (was 4/8). Seed 1q2w3e's kink X360
@@ -737,6 +795,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   text, and an LLM will drive the translations and other i18n work. The
   strings are mostly in `src/ui/` and `src/game/share_text.ts`; text
   drawn as threads is K115's question.
+- **K126** · The K21 background breathes with the band's bass, gated
+  by the Motion setting, once K116's accompaniment exists
+  (`docs/design/K116_instruments.md`).
 
 ## Done
 
