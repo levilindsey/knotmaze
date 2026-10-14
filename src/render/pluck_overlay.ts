@@ -67,12 +67,16 @@ import {
   WHOLE_AMP,
   WHOLE_NODE_ZONE,
   clampBeta,
+  drawnSwing,
   envelope,
   gapTurn,
   ghostShape,
+  glowCue,
   nodeCap,
   peakShape,
   pinchCap,
+  pluckShows,
+  SHOW_DT,
   rescaleSympathetic,
   roomAt,
   roundCollapse,
@@ -90,6 +94,7 @@ import {
   wholeRoom,
   wholeShape,
 } from "./pluck_model";
+import type { PluckCrossings, PluckGlow } from "./pluck_model";
 
 // How the whole-segment term W meets the rest of the weave (K104; the pick
 // is Levi's decision): "overlap" = W displaces the unit, running into a
@@ -103,8 +108,8 @@ export type WholeMode = "overlap" | "free" | "cue";
 // on top, so the unit's halo carries across its crossings and grows with
 // pluckSize; "ride" = the soft node caps the sum - fabric's short lobes then
 // keep W near 1 h at any pluckSize (the node cap never opens); "pinch" = W
-// itself pinches to wholePinch h at them.
-export type WholeNodes = "through" | "ride" | "pinch";
+// itself pinches to wholePinch h at them. (The pluckCrossings param, K180.)
+export type WholeNodes = PluckCrossings;
 const WHOLE_PINCH = 0.3; // "pinch": W's core at an interior node, x h.
 
 // A node the plucked thread passes (see the model's NODES AND LOBES).
@@ -697,6 +702,13 @@ interface ActivePluck {
   still: boolean;
   cueGain: number;
   cuePeak: number;
+  // K180, resolved at pluck time from the glow option: how W meets the
+  // weave for this pluck ("cue" under glow "instead"), whether the moving
+  // pluck carries the cue, and (glow "fallback" only, else -1) its drawn
+  // peak in world units as K104's census measures it.
+  wMode: WholeMode;
+  cue: boolean;
+  peakEst: number;
 }
 
 const smooth01 = (x: number): number => {
@@ -728,6 +740,12 @@ export class PluckOverlay {
   wholeMode: WholeMode = "overlap";
   wholeNodes: WholeNodes = "through";
   wholePinch = WHOLE_PINCH;
+  // The cue on a full-motion pluck (K180's pluckGlow; pluck_model's PLUCK
+  // PARAMS): applies to plucks started after a change. "instead" lays the
+  // pluck out in wholeMode "cue"; "fallback" measures the pluck's drawn
+  // peak at pluck time (peakEstimate) and cues it only when that cannot
+  // show. A still pluck (reduced motion) ignores it.
+  glow: PluckGlow = "off";
   // Diagnostics: plucks drawn, requests skipped (and why), merges, evictions.
   readonly stats = {
     plucks: 0,
@@ -784,6 +802,17 @@ export class PluckOverlay {
     return this.active.length;
   }
 
+  // K180's pluck params (main.ts syncs them every frame, like size). W's
+  // amount and the glow apply to plucks started after a change; a new
+  // crossings rule re-lays the live plucks out (it is read by layout()).
+  setWhole(amp: number, nodes: WholeNodes, glow: PluckGlow): void {
+    this.wholeAmp = amp;
+    this.glow = glow;
+    if (nodes === this.wholeNodes) return;
+    this.wholeNodes = nodes;
+    for (const p of this.active) p.needsLayout = true;
+  }
+
   // Diagnostic snapshot (probes): one row per live pluck.
   state(): Array<Record<string, unknown>> {
     return this.active.map((p) => ({
@@ -797,6 +826,11 @@ export class PluckOverlay {
       still: p.still,
       // [gain, brightest station's cueWeight] of a still pluck's cue.
       cue: p.still ? [+p.cueGain.toFixed(3), +p.cuePeak.toFixed(3)] : null,
+      // K180: W's mode, whether the moving pluck glows, and the fallback
+      // estimate (world units; -1 = not measured).
+      wMode: p.wMode,
+      glow: p.cue,
+      peakEst: +p.peakEst.toFixed(5),
       W0: +p.W0.toFixed(4),
       unit: [+p.uE0.toFixed(3), +p.uE1.toFixed(3)],
       lobes: p.lobes.map((l) => ({
@@ -985,6 +1019,10 @@ export class PluckOverlay {
       this.stats.evicted++;
     }
     const tau = visualTau(req.freq, this.sustain);
+    // K180's glow: "instead" lays this pluck out in wholeMode "cue" (the
+    // probes' wholeMode "cue" still works: it cues every moving pluck).
+    const glow: PluckGlow = still ? "off" : this.glow;
+    const wMode: WholeMode = glow === "instead" ? "cue" : this.wholeMode;
     const pl: ActivePluck = {
       id: this.nextId++,
       chain: req.chain,
@@ -1012,6 +1050,9 @@ export class PluckOverlay {
       still,
       cueGain: still ? cueStrength(this.size, req.gain) : 0,
       cuePeak: 0,
+      wMode,
+      cue: false,
+      peakEst: -1,
     };
     lobes.sort((p, q) => p.s0 + p.shift - (q.s0 + q.shift));
     this.active.push(pl);
@@ -1020,6 +1061,14 @@ export class PluckOverlay {
       this.stats.skipped++;
       this.stats.skipOther++;
       return false;
+    }
+    if (!still) {
+      let shows = true;
+      if (glow === "fallback") {
+        pl.peakEst = this.peakEstimate(pl);
+        shows = pluckShows(pl.peakEst, h, host.viewScale());
+      }
+      pl.cue = glowCue(glow, shows) || wMode === "cue";
     }
     this.refreshCollapse(pl.chain);
     this.writeFrame(pl);
@@ -1474,7 +1523,7 @@ export class PluckOverlay {
     // tight-bend cap below keeps the lobe's share first too. Otherwise the
     // soft node caps the SUM and fOf scales both terms alike.
     const W0 = p.W0;
-    const mode = this.wholeMode;
+    const mode = p.wMode;
     const nodes = this.wholeNodes;
     const pinch = nodes === "pinch" ? this.wholePinch : 0;
     // Without a live W the pre-K104 path runs, bit for bit.
@@ -1949,6 +1998,15 @@ export class PluckOverlay {
     // its own ghost phase.
     const aW = this.wholeNow(p);
     if (aW * scale >= KILL_PX) alive = true;
+    // The cue (K180's glow; K104's "cue" mode): the unit brightens toward
+    // white by up to CUE_WHITE on W's shape and clock, whatever W's amount,
+    // and keeps the pluck alive until it fades under CUE_KILL.
+    const cue = p.cue
+      ? p.t < 0
+        ? 0
+        : CUE_WHITE * Math.exp(-p.t / p.tau) * (p.evicting ? Math.max(0, p.fade) : 1)
+      : 0;
+    if (cue >= CUE_KILL) alive = true;
     if (!alive) return false;
     const wGhost = Math.cos(this.ghostPhase + p.wPhase);
     const env = this.env2;
@@ -2013,11 +2071,46 @@ export class PluckOverlay {
     }
     p.ghostArea = area;
     m.upload(["aEnv", "aAux"]);
-    // The cue: the unit brightens instead of moving, on W's clock.
-    const cue =
-      this.wholeMode === "cue" && p.W0 > 0 ? CUE_WHITE * (aW / p.W0) : 0;
     if (!host.staticColors() || cue > 0) this.writeColors(p, cue);
     return true;
+  }
+
+  // K180's fallback estimate: the pluck's largest DRAWN swing (world units)
+  // as K104's census measures it - writeFrame's envelope (drawnSwing) at
+  // each lobe onset plus SHOW_DT, over the stations at least half visible.
+  // Run once at pluck time, after layout(); reads nothing writeFrame
+  // writes, so the pluck's own frames are untouched.
+  private peakEstimate(p: ActivePluck): number {
+    const m = p.mesh;
+    const lobes = p.lobes;
+    const env = this.env2;
+    const times: number[] = [];
+    for (const l of lobes) for (const dt of SHOW_DT) times.push(l.onset + dt);
+    let peak = 0;
+    for (const T of times) {
+      const aW = p.W0 > 0 ? p.W0 * Math.exp(-T / p.tau) : 0;
+      for (let i = 0; i < m.used; i++) {
+        if (m.visOf[i] < 0.5) continue;
+        const l = lobes[m.lobeOf[i]];
+        const tl = T - l.onset;
+        if (l.dead) continue;
+        const a = tl < 0 ? 0 : l.A0 * Math.exp(-tl / p.tau);
+        const q = tl >= 0 && l.attack ? Math.exp(-tl / p.tauR) : 0;
+        const v = drawnSwing(
+          l.beta,
+          m.xOf[i],
+          q,
+          a * m.fOf[i],
+          aW * m.wOf[i],
+          p.side,
+          m.capLOf[i],
+          m.capROf[i],
+          env
+        );
+        if (v > peak) peak = v;
+      }
+    }
+    return peak;
   }
 
   // A still pluck's frame (reduced motion): no envelope, no ghost, no
