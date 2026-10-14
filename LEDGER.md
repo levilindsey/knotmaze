@@ -39,9 +39,9 @@ and never reused.
 - **K76** · The thread-reveal mode's decisions: the stage 1 design is in
   `docs/design/K76_reveal_mode.md` (0474300). The contact sheet of eight
   end looks is `.claude/probes/K76/out/contact.html` (desktop and phone
-  PNGs beside it). Decisions:
-  - the end look (recommended "Beacon": a round cap continuing as fading
-    dots over a soft halo);
+  PNGs beside it). Levi chose the end look (2026-10-13): a dropdown of
+  fade, halo, glow, dots, fray and beacon, defaulting to beacon. Asked
+  2026-10-13 whether the doc's recommendations stand for the other five:
   - the params (`threadReveal`, `revealDistance` 2.5, `revealFade` 1,
     and an exploration dropdown off | fog | threads);
   - exclusive with fog;
@@ -49,7 +49,7 @@ and never reused.
   - the literal reveal rule;
   - hiding the exit indicator until the exit is seen.
 
-  Stage 2 (doc section 7) follows K73, K75 and K81. It must build the
+  Stage 2 (doc section 7) waits for K81 and the five calls. It must build the
   mode as a separate shader variant: compiled in, it costs mode-off
   frames 2.3 -> 2.8 ms on the desktop (two of K74's CPU scans ran during
   that measurement; re-time in stage 2).
@@ -62,31 +62,6 @@ and never reused.
   - env: the prototype server is in the doc's handle (port 5276, private
     cacheDir).
   - brief: `docs/design/K76.md`, then `docs/design/K76_reveal_mode.md`.
-- **K49** · Kink eye size after K41's chord-law pressure: keep 2.6
-  widths (shipped), or 2.8? The side-by-side is done (2026-10-13, 87
-  kinks on five links, deterministic same-state A/B): 2.8 opens every
-  eye, by +0.05 to +0.31 widths (mean +0.14; median 1.25 -> 1.43; knot
-  mode most, 1.26 -> 1.47), but it widens the whole population rather
-  than closing the tail: each link's smallest eye gains only +0.07 to
-  +0.10 (tw .64 0.85 -> 0.94; the boxed X304 0.74 -> 0.84, which
-  measures 0.74 at 2.6 on e7d43f4, not the 0.78 recorded earlier). No
-  artifact in any crop pair; all five designs slept at 2.8.
-  - Look at `.claude/probes/K49/sheet.png` (12 pairs, 2.6 left),
-    `full_pair.png` and `notes.md`; extras there: `sheet_rings.png`,
-    `full_pair_marked.png`, `all_L1..L5.png`, raw frames in `out/`.
-  - The 2.8 one-liner is `4fa22e2` on `worktree-agent-ac664e8a9e271757a`
-    (keep it until the call). If 2.8: rerun K41's sleep sweep (8 seeds x
-    default, tw .64, fat fabric, fat knot; flat-law 2.8 pumped on 2/8
-    fat seeds, chord-law 2.8 has only these five) and the gesture
-    battery, regenerate the knot-mode golden, and update the KINK EYES
-    lore and the constant's comment.
-- **K52** · Default background: K21 shipped `vellum` at intensity 0.5
-  (static parchment grain plus vignette; the page stays navy on average),
-  so every existing link and every daily shows it. Keep it, or default
-  to `none`? Changing the default later needs codec v4. Since K79
-  (9ffda8a) vellum can drift, but stays still at auto; making it move by
-  default means changing its `autoSpeed` (`src/render/background_model.ts`,
-  no codec change), which starts every vellum link and daily drifting.
 - **K57** · (Levi, 2026-10-13: revisit after all other changes, in the
   careful daily review with K46 and K84.) Confirm the daily's exempt
   settings: the ones a player may change without leaving the daily
@@ -102,14 +77,8 @@ and never reused.
   - Everything else leaves the daily, including moveSpeed, pathViz, fog,
     the intro and flow, and the physics tuning. K79's `backgroundSpeed`
     is not exempt either, like background and its intensity.
-- **K92** · Two calls the K73 agent made (merged 2026-10-13): (1) a tap on
-  the "Free play" badge does what the Daily button does and REPLACES the
-  design's link, so an unshared custom design is lost; alternatives: an
-  undo toast, or pushState + a popstate handler so Back returns to it.
-  (2) Under fog of war, a tap on the finish indicator only shows a toast
-  and does not pan (direction only, like the indicator itself).
-  `.claude/rules/gameplay.md` (MODE BADGE, OFF-SCREEN INDICATORS).
-- **K93** · Two calls from K75 (merged 2026-10-13): (1) the trail fade is
+- **K93** · Two calls from K75 (merged 2026-10-13); Levi asked what they
+  mean, explained 2026-10-13. (1) The trail fade is
   not "linear over the oldest 30%" as K4 decided: a span's gold is linear
   between its two ends, so the run holding the fade start fades all the
   way from the head junction; splitting it in `buildTrail` (gold up to
@@ -117,27 +86,6 @@ and never reused.
   changes the look. (2) Hover is exempt from `pulseReach` (it lights the
   whole run a tap would take); keep that, or limit hover too? Sheets:
   `.claude/probes/K75/` (`NOTES.txt` indexes them).
-- **K94** · Check on real hardware: does the mouse wheel still ZOOM at a
-  browser zoom other than 100%, or at fractional display scaling? The
-  wheel test in `src/main.ts` (`Number.isInteger(e.deltaY)`, about line
-  2182) reads a fractional delta as a two-finger trackpad pan, and K73's
-  synthetic wheel (-300 arriving as -449.99998 at DPR 1.5) did exactly
-  that. If it pans, the likely fix is a tick test in physical pixels
-  (deltaY x devicePixelRatio), whose trackpad side needs his laptop too.
-- **K98** · K83's placeholder markers are in (black discs, white stroked
-  glyphs; play / flag / ring-and-dot). Four calls:
-  (1) the glyphs: keep, pick alternatives from
-  `.claude/probes/K83/sheet_glyphs.png`, or send replacements (a new
-  glyph is one design entry in `src/render/marker_glyphs.ts`; try one
-  live with `__knotFabricRenderer().setMarkerStyle({start, exit, head,
-  scale})`);
-  (2) the size: 0.75x, 1x (shipped: 1.5 thread widths, about 14 CSS px on
-  the phone) or 1.25x;
-  (3) at the entrance the head marker sits above the start marker ("you
-  are here"); or the start on top;
-  (4) the head disc (0.78 world) covers the starts of the arms, so their
-  pulses begin under it.
-  Sheets: `sheet_glyphs.png`, `sheet_verify.png`.
 - **K80** · The minotaur and gameplay-additions design is on master
   (`docs/design/K80_gameplay_additions.md`, 17b729b; the minotaur
   simulated on 110 real walk graphs). Nine calls in its section 0: the
@@ -155,47 +103,27 @@ and never reused.
   - evidence: `.claude/probes/K80/` (copied from the worktree; doc
     section 7 reruns it); worktree
     `.claude/worktrees/agent-a25726c24f262b138` kept.
-- **K100** · The fog of war forgets what was explored whenever the path
-  empties: a manual backtrack to the entrance, and a daily's backtrack
-  Reset path (K47's `retreatToStart`), re-fog everything (`update()` in
-  `src/render/fabric_maze_renderer.ts` clears the stamps when
-  `pathEdges` is empty; `exploredRuns` in `src/game/daily_attempt.ts`
-  mirrors it). Stage 25's spec says "explored stays visible"
-  (`docs/history.md`), and the code's comment names Reset path as the
-  reset. Keep, or clear only on a restart (recommended; the explored
-  runs become every tap since the restart)?
-- **K104** · K77's look, live since eec4854: the rounded pluck collapse
-  bends no tighter than a radius of 1 h (the A/B's 0.5 h left shoulders,
-  2 h erased most of the thinning), and the tap amplitude floor stays at
-  0.65 h. Both were the recommendation; confirm, or pick another radius
-  (`COLLAPSE_ROUND` in `src/render/pluck_overlay.ts`). Sheet:
-  `.claude/probes/K77/K77_before_after.png`.
-- **K110** · A solvable maze can hold pieces the start never reaches:
-  walk-graph vertices with no route from the start (drawn, never
-  explorable). Only when the entrance and exit share a strand: 55 of
-  630 default designs (24 of 546 at the panel's gs 4-24; heart, star,
-  fish, tree, ring and circle up to gs 8, never rect), 0 of dailies
-  1-400. Fix: extend K109's repair (`repairTailRoute`,
-  `src/core/maze_plan.ts`) to join every piece to the start; that moves
-  those designs' links, no daily. Join them (recommended), or leave
-  orphans as decoration? (`.claude/probes/K109/orphans.ts`; b722a12)
-- **K111** · Reduced motion's reach: K79's Motion setting (9ffda8a)
-  stills the background drift, the pluck (no attack, smaller lobes, no
-  ghost), the camera tween and CSS. The flow undulation, the appearance
-  intros and the path pulses still move under "reduced". Cover them too
-  (which, and how: off or slowed)?
-- **K117** · Repo visibility and license (Levi's notes, 2026-10-13;
-  `docs/design/levi_notes_2026-10-13.md`). The repo is public with no
-  LICENSE file: anyone may read and fork it on GitHub, but nobody has a
-  license to reuse it. Stay public (add a license, or keep none), or go
-  private (`gh repo edit --visibility private
-  --accept-visibility-change-consequences`, reversible)? Private hides
-  the code, history, design docs and this ledger from then on, but not
-  copies already made; the Pages deploy keeps working; the shipped
-  bundle (minified, no sourcemaps) stays public either way. Actions
-  minutes would then count against the plan's quota: deploys used about
-  330 minutes in the last 7 days (about 1,400 a month; the free plan
-  has 2,000). Which, and when?
+- **K117** · Repo visibility (Levi's notes, 2026-10-13;
+  `docs/design/levi_notes_2026-10-13.md`). Levi: private later, on his
+  word; he won't share it for a while. Done in a756ca5: the panel's
+  GitHub link is gone, `LICENSE` says all rights reserved, package.json
+  says UNLICENSED, and a push touching only the ledger, docs, `.claude/`,
+  README or LICENSE skips the deploy (Actions minutes count against the
+  plan once private; deploys used about 330 minutes in the last 7 days,
+  and the free plan has 2,000 a month). Obfuscating the bundle: not worth
+  it (answered 2026-10-13; it is minified and ships no sourcemaps). K122
+  (the bundled packages' license notices) is needed either way. On his
+  word: `gh repo edit --visibility private
+  --accept-visibility-change-consequences` (reversible; hides the code,
+  history, docs and this ledger from then on, not copies already made;
+  the Pages deploy keeps working).
+- **K121** · The player's disc hides the start of each move pulse
+  (K98's call 4; Levi asked what it meant, explained 2026-10-13). The
+  runs leaving the player's junction start at its center, so the first
+  stretch of each pulse is under the disc and the pulses seem to come out
+  from under the marker; K98's bigger dots (up to 3 widths) hide more.
+  Leave it, or start the pulses at the dot's rim?
+  (`src/render/fabric_maze_renderer.ts`, K75's pulses.)
 
 ## In progress
 
@@ -204,20 +132,23 @@ and never reused.
   flat nub (Levi's screenshot in `.claude/probes/K81/`). K75 is merged
   (same paint code): pulses now brighten the thread's own paint, and
   `PulseArm.onPath` is gone.
-  - owner: the K81 agent (a8c2a999e6c2d5a8e) of session d8031183,
-    started 2026-10-13 01:07.
+  - owner: the K81 stage 2 agent (a39652e94a3fbc4d9) of session
+    d8031183, started 2026-10-13 10:15. Stage 1 (agent
+    a8c2a999e6c2d5a8e, 01:07-10:10, 764 tool calls) stopped at its
+    boundary.
   - branch: `worktree-agent-a8c2a999e6c2d5a8e`
     (`.claude/worktrees/agent-a8c2a999e6c2d5a8e`), on 4deeda1; last
-    commit: 2fc0ec2 (WIP 07:35: route bands - the pure module, the
-    record layout, the shader's band pass; untraveled strip rows and
-    route resolution work).
+    commit: 499a0e3 (stage 1 done: route bands wired into
+    `fabric_maze_renderer`, 27 unit tests, suite green; the band shader
+    has never run on a GPU).
   - evidence: `.claude/probes/K81/` in its worktree (copied at merge).
-  - next (the agent's estimate at 07:35: 60-90 turns): the wedge-loop
-    rims and cover strips, `finish()`'s route blocks, the CPU mirror,
-    wiring `fabric_maze_renderer`, unit tests; then the census,
-    same-state crops and GPU ms, the lore, the rebase. Then its phone
-    gate (K10).
-  - brief: `docs/design/K81.md`.
+  - next: stage 2 per the brief's "Stage 2 handoff": the GPU smoke test
+    of the band shader, the census, same-state crops, GPU ms, the build,
+    the lore, `sheet.png`, the rebase. Then the phone gate (K10), Levi's
+    review of the handoff's eight decisions with the sheet, and the
+    merge; file the handoff's residuals then (among them, the pluck
+    overlay draws over the band).
+  - brief: `docs/design/K81.md` ("Stage 2 handoff").
   - env: its dev servers on ports 5311-5314.
 - **K79** · Backgrounds: speed, params, colors, Motion. Stage A MERGED
   in 9ffda8a (2026-10-13 07:15): `backgroundSpeed` (codec v4 index 70,
@@ -244,9 +175,11 @@ and never reused.
   - next: stage A's phone gate (K10) is RUNNING since 2026-10-13 09:20
     (agent ad54065d4cfbccf9c, sonnet, in the main checkout; results in
     `.claude/probes/K79/phone/`): default vs e25d202, vellum at `bgs=1`
-    (412x915 texture at 6 passes/s), the speed row. Stage B: brief
-    items 3-4 (params, custom colors) with their codec appends and GPU
-    cost; then its merge and phone gate.
+    (412x915 texture at 6 passes/s), the speed row. Stage B in two
+    halves (asked 2026-10-13 10:05): B1 codes brief items 3-4 (params,
+    custom colors) with their codec appends, commits, writes a "Stage B2
+    handoff" into `docs/design/K79.md` and stops; B2, a fresh agent,
+    measures (same-state A/B, GPU ms), merges and runs the phone gate.
   - brief: `docs/design/K79.md` (stage B: items 3, 4, 6 and 7).
   - env: `.claude/probes/K79/run_ab.ps1` (its header starts servers on
     5331/5332); stage B's servers on 5341-5344.
@@ -265,9 +198,11 @@ and never reused.
     d8031183, started 2026-10-13 07:45.
   - branch: `worktree-agent-a1b6fa0fe2294cd2a`
     (`.claude/worktrees/agent-a1b6fa0fe2294cd2a`), on 66ee658; last
-    commit: none yet.
+    commit: aaf5289 (WIP: the shared over-tight fold definition).
   - evidence: `.claude/probes/K90/` in its worktree (copied at merge).
-  - next: stage 1a's census, then 1b's prototypes in the brief's order.
+  - next: stage 1a's census, then (asked 2026-10-13 10:05) a "Stage 1b
+    handoff" in `docs/design/K90.md`, commit, stop. Stage 1b's prototypes
+    run as a fresh agent from it (Next, item 5).
   - brief: `docs/design/K90.md`.
   - env: its dev servers, if any, on ports 5351-5354.
 - **K114** · Gameplay round 2 (Levi's notes, 2026-10-13): real-time
@@ -323,51 +258,114 @@ and never reused.
 
 ## Next, in order
 
-Overnight order, 2026-10-12 (Levi: proceed through the night with the
-remaining shader work). Every stage merges only after desktop
-verification AND the phone gate (K10); the phone stays on its charger,
-awake, over Tailscale.
-Overnight order, 2026-10-13 (Levi: "keep running through the night until
-you've addressed all bits that you don't need my input on"). At most three
-code agents at once, research on top. Usage (Levi, 2026-10-13 07:40):
-an agent costs no more than the same work done in the coordinator, so
-don't hold agents back for usage until the week nears 90%. The earlier
-45% stop was the coordinator's own pacing; the week was at 42% at 07:17
-and resets Mondays at 12:00.
-1. The running five merged: K73 and K75 at 01:00, K83 at 01:30, K74 in
-   dad40f8, K80 in 17b729b.
-2. K77 merged (eec4854). K81 (the smooth arc, running since 01:07);
-   K79 stage A merged (9ffda8a), its phone gate running since 09:20;
-   stage B running since 07:45. K49's comparison is done (Waiting on
-   Levi).
-3. K87 done (62dd16d), K108 done (b62cea3), K109 done (b722a12; K110
-   waits on Levi). K90 stage 1 running since 07:45. Then K86 (long dead
-   ends behind params that default to today's maze), after K79 stage B
-   merges, since both append codec params.
-4. K120 (held-arrow advance, phone quick controls) takes the next free
-   code-agent slot: it appends no codec params, so it need not wait for
-   K79 stage B.
-5. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
-   K42.
+Every stage merges only after desktop verification AND the phone gate
+(K10); the phone stays on its charger, awake, over Tailscale. At most
+three code agents at once, research on top, and one agent appending
+codec params at a time. Usage (Levi, 2026-10-13 07:40): don't hold
+agents back for usage until the week nears 90% (42% at 07:17; it resets
+Mondays at 12:00). Long work runs in stages from committed briefs (Levi,
+2026-10-13; the coordinator oversees it): each brief names its stage
+boundary, where the agent writes a "Stage N handoff" into the brief,
+commits and stops, and a fresh agent continues from it. K81 alone was
+about a third of the overnight spend.
 
-From 07:45, three code agents again (K81, K79 stage B, K90 stage 1),
-with the 5-hour window at 7%. From 00:45 to 07:45 it was two, for a
-gentler rate on the 5-hour window. From 09:20, on top of them: K79
-stage A's phone gate (sonnet) and two research agents, K114 + K116 and
-K115.
+Order from 2026-10-13 10:15, after Levi's decisions at 09:35 (he may
+reorder). Running: K81 stage 2, plus K79 stage B and K90 stage 1, each
+asked to stop at a stage boundary; research K114 + K116 and K115; K79
+stage A's phone gate. Then, as code slots free up:
+1. K79 stage B2, after B1's handoff. Its merge and K81's unblock most
+   of this list.
+2. K110 (generation only; moves about 55 shaped links, no daily).
+3. K104 (render only).
+4. K120 (no codec).
+5. K90 stage 1b (the prototypes), from stage 1a's handoff.
+6. K122 (small).
+7. K100, after K81 merges (the same renderer file).
+8. K92, then K111, after K79 stage B merges (both rework the panel);
+   K111's pulse highlight modes after K81 too.
+9. K98, after K79 stage B and K81.
+10. K86, after K79 stage B.
+11. K76 stage 2, after K81 and Levi's five calls.
+12. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
+    K42.
 
-Waiting for Levi (not started overnight):
-- decisions: K74, K76 stage 2, K52, K49, K78;
-- deletions: the G3-3 and G4-2 old paths;
-- after the churn: K46, K57, K84.
+Waiting for Levi: K74, K80, K76's five calls, K93, K121 and K117's
+timing; the G3-3 and G4-2 old-path deletions; after the churn, K46,
+K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
+- **K110** · Join every piece of the maze to the start (Levi,
+  2026-10-13: "join pieces as needed to ensure everything is
+  reachable"). A solvable maze can hold walk-graph pieces the start never
+  reaches, only when the entrance and exit share a strand: 55 of 630
+  default designs (24 of 546 at the panel's gs 4-24; heart, star, fish,
+  tree, ring and circle up to gs 8, never rect), 0 of dailies 1-400.
+  Extend K109's `repairTailRoute` (`src/core/maze_plan.ts`) to join them.
+  It moves those designs' links, no daily and no rect: re-freeze the K87
+  identity pin in a commit that names the mazes that moved, with K108's
+  engine-exact math (`.claude/rules/generation.md`). Probe:
+  `.claude/probes/K109/orphans.ts` (b722a12).
+- **K104** · Plucks are too subtle (Levi, 2026-10-13: "Even maxing
+  pluckSize to 3, I can't tell when some segments are plucked"). Add a
+  fixed-amount vibration of the whole plucked segment, with today's local
+  lobes layered on top (he likes the locality). The collapse is "better,
+  but still a bit too acute": round it past `COLLAPSE_ROUND`'s 1 h
+  (`src/render/pluck_overlay.ts`; K77's A/B: 0.5 h left shoulders, 2 h
+  erased most of the thinning), so A/B about 1.25-1.5 h. Reduced motion
+  (K79's setting) needs its own version. `pluck_model.ts`; K105 may fold
+  in. Sheet: `.claude/probes/K77/K77_before_after.png`.
 - **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
   key to keep advancing, taking the branch that matches the key at each
   junction it reaches; a quick control on phones too, such as
   screen-region buttons. No codec params. Compare
   `docs/design/K80_gameplay_additions.md` 4.29 (Sprint).
+- **K122** · Third-party license notices (K117): the bundle in
+  `dist/assets` carries PixiJS, Tweakpane, simplex-noise and their
+  dependencies with no license text (0 license comments), though their
+  MIT/ISC/BSD licenses require the notice with every copy. Generate a
+  notices file at build time (rollup-plugin-license, or a small Vite
+  plugin over the bundled modules' packages) and link it from the panel's
+  credit line. Small; no codec.
+- **K100** · The fog of war resets on a restart only (Levi,
+  2026-10-13: "The fog should reset when the maze restarts. But the fog
+  shouldn't reset if we just backtrack to the start."). Today `update()`
+  in `src/render/fabric_maze_renderer.ts` clears the stamps whenever
+  `pathEdges` empties, and `exploredRuns` in `src/game/daily_attempt.ts`
+  mirrors it. A daily's backtrack Reset path (K47's `retreatToStart`)
+  is a backtrack, so it keeps the fog; the explored runs become every tap
+  since the restart, and K47's saves and replays must agree. After K81
+  merges (the same renderer file).
+- **K92** · Undo and redo for design changes (Levi, 2026-10-13). Two
+  buttons beside the panel's open/close button, shown only while the
+  panel is open, each enabled only when it can act; the mode badge moves
+  to a row below them. An undo stack of design changes, including the
+  "Free play" badge's tap (today it replaces the link, so an unshared
+  design is lost). His call (2) stands: under fog, a tap on the finish
+  indicator only shows a toast. Files: `src/ui/tweakpane_panel.ts`,
+  `src/main.ts`, `src/ui/mode_badge.ts`, `src/ui/url_state.ts`;
+  `.claude/rules/gameplay.md` (MODE BADGE). After K79 stage B merges.
+- **K111** · Accessibility (Levi, 2026-10-13). Reduced motion also
+  stills the flow undulation, but not the intros or the pulses next to
+  the player. Those pulses get a dropdown of alternative highlight modes,
+  which also serves high contrast. An Accessibility group near the top of
+  the panel holds "High contrast" and "Reduced motion" master checkboxes
+  that override every relevant setting (today's Motion setting is
+  `src/ui/motion.ts`, K79). The panel part after K79 stage B merges and
+  after K92 (both rework the panel); the highlight modes after K81.
+- **K98** · Marker sizes and two new glyphs (Levi, 2026-10-13: "I
+  like all your icons. The defaults are good."). A slider for the
+  player's dot diameter relative to the thread width, 0.25-3, defaulting
+  to the pre-K83 head dot (radius 0.54 tw, so 1.08 tw across; K83's
+  discs are 3 tw, `markerRadiusFor`). The black disc is what the slider
+  sizes; each white icon fits inside its disc with a slight margin. The
+  start, finish, minotaur and every other in-game icon match the
+  player's. Colored dots return at the start and finish, larger than the
+  icon disc, so a colored ring shows at the default (the pre-K83 discs
+  were 0.95 tw in radius). Simple minotaur and spider glyphs
+  (`src/render/marker_glyphs.ts` and its fit test). Call (3) unanswered:
+  the head stays on top. Call (4) is K121. A codec append: after K79
+  stage B and K81.
 - **K46** · Daily variety, revisited after the feature churn (Levi,
   2026-10-12): no weekly or regular arc; THEMES, each a set of parameter
   constraints; manual per-day overrides later (K82). The measured
@@ -392,8 +390,10 @@ K5-K7 (split, frame loop, worker) follow.
   prototype is the hooked plan copy in `.claude/probes/K74/`.
 - **K78** · The Knotmaze handbook: algorithms, architecture, decisions
   and trade-offs, and a per-param reference with figures (the
-  half-lattice units diagram first). Write it once the churn settles;
-  the plan and Levi's open questions (audience, format) are in
+  half-lattice units diagram first). Write it once the churn settles.
+  Levi (2026-10-13): public; Markdown, later also posted on his Blogger
+  devlog (devlog.levi.dev), so figures are standalone images and the text
+  needs no repo links or internal IDs. Plan:
   `docs/design/K78_handbook_plan.md`.
 
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along the new data
@@ -420,7 +420,8 @@ K5-K7 (split, frame loop, worker) follow.
   closes G1's x160 leftover: a faint tick where a wedge flank meets a
   tucked bridge, and the merge-core hairline dashes at 4-way merges
   (`.claude/rules/render-gaps.md`), which K74's H3 (`fourWayFraction`
-  0.9+) would multiply.
+  0.9+) would multiply. From K81 (2026-10-13): the webs should carry the
+  traveled route as the smooth union of the traveled pieces only.
 - **K10** · Phone benchmark after every stage. Baseline (Pixel 11, Chrome
   154, 2026-10-11, default maze settled): 30 fps at rest with defaults,
   51 fps with `fw=0`. Flow at rest halves the frame rate today. Compare
@@ -722,6 +723,16 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 (items move here with the commit that resolved them)
 
+- **K49** · Kink eye size: Levi kept 2.6 widths (2026-10-13) over 2.8,
+  which opened every eye but widened the whole population instead of
+  closing the tail (`.claude/probes/K49/`). Decided 2026-10-13, no
+  change; the 2.8 one-liner stays on branch
+  `worktree-agent-ac664e8a9e271757a` (4fa22e2), its worktree removed.
+- **K52** · Default background: Levi kept `vellum` (2026-10-13), still
+  static at auto speed. Decided 2026-10-13, no change.
+- **K94** · The mouse wheel still zooms on Levi's hardware
+  (2026-10-13), so the fractional-delta test in `src/main.ts` stays.
+  Decided 2026-10-13, no change.
 - **K109** · Every maze has a route from the start to the exit. Small
   shaped designs could be built without one (K108's snapshot: 29 of
   3355 plans, optimal length Infinity): the exit's cut also split the
