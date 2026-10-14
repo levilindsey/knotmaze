@@ -224,7 +224,7 @@ describe("codec tables", () => {
       ["clock", "enum", "turn", ["turn", "realtime"]], // 84
       ["playerPace", "number", 10], // 85
       ["minoWanderPace", "number", 5],
-      ["minoHuntPace", "number", 8], // 87
+      ["minoHuntPace", "number", 7], // 87
       ["minoPaceJitter", "number", 0.2],
       ["minoPauseChance", "number", 0.3], // 89
       ["minoPauseMin", "number", 0.5],

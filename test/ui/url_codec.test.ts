@@ -112,7 +112,7 @@ describe("links", () => {
       backgroundBase: "#151b28", backgroundAccent1: "#7ab8cd",
       backgroundAccent2: "#cdb17a", backgroundAccent3: "#aa7acd",
       settleBudget: 12, loadSettle: 0.45,
-      clock: "turn", playerPace: 10, minoWanderPace: 5, minoHuntPace: 8,
+      clock: "turn", playerPace: 10, minoWanderPace: 5, minoHuntPace: 7,
       minoPaceJitter: 0.2, minoPauseChance: 0.3, minoPauseMin: 0.5,
       minoPauseMax: 2, minoDetect: 15, minoLose: 25, minoCatch: 1,
       minoDeadEnds: 0.4, minoRoam: 30, minoWake: 2, minoFog: "always",

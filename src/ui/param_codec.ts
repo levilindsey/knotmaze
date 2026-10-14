@@ -306,7 +306,7 @@ export const CODEC_V4: CodecTable = Object.freeze({
     choice("clock", "turn", ["turn", "realtime"]), // 84
     num("playerPace", 10), // 85
     num("minoWanderPace", 5), // 86
-    num("minoHuntPace", 8), // 87
+    num("minoHuntPace", 7), // 87
     num("minoPaceJitter", 0.2), // 88
     num("minoPauseChance", 0.3), // 89
     num("minoPauseMin", 0.5), // 90
