@@ -28,6 +28,12 @@ and never reused.
     Phone checks now batch into one scripted pass per merge round; the
     first covers tonight's round (K79 B, K122's V8 credit, K147). K81's
     gate, already running, finishes as it is.
+  - next for (1): build the round pass from K81's gate kit
+    (`.claude/probes/K81/phone/`: `run_gate.ps1`, the watchdog,
+    `gate.mjs`; copy it out at K81's merge): the last deploy against the
+    new master, frame stats and looks. The first round is tonight's: K79
+    B, K122's licenses page, K81's arc and K147's intro. The phone must be
+    awake and unlocked; it dozed at 18:05.
 - **K154** · K122's credit calls, each defaulted until Levi says
   otherwise: keep the two credits beyond the brief (Perlin, Scarborough
   Fair)? Keep PCG2D's (the paper is CC BY-ND 3.0; `pcg2d` is the 8-line
@@ -97,14 +103,17 @@ and never reused.
   flat nub (Levi's screenshot in `.claude/probes/K81/`). K75 is merged
   (same paint code): pulses now brighten the thread's own paint, and
   `PulseArm.onPath` is gone.
-  - owner: the coordinator (session d8031183), running the phone gate
-    (master cd5b123 vs 3d88820). The first run (16:57) tripped the
-    watchdog at 17:04, after 4 samples: a home swipe on the phone (a
-    touch at the bottom edge, then the launcher in front); its outputs
-    are `phone/*_trip.*`. The one retry started at 17:41, when Levi said
-    the phone was ready (`run_gate.ps1 -Phase all` in the background,
-    about 40 min; `phone/retry_quiet.ps1` waits for 15 min without a
-    touch first, for a retry nobody announces). Stage 3d (K127,
+  - owner: nobody since 2026-10-13 18:06; the coordinator (session
+    d8031183) merges it after K79 B and K122. Its phone gate (master
+    cd5b123 vs 3d88820) stopped twice: at 17:04 a home swipe
+    (`phone/*_trip.*`), and the retry at 18:05, when the power button was
+    pressed (a KEY_POWER press in `phone/getevent.out`, no touches) and
+    the screen dozed. The retry got rep 0 and half of rep 1
+    (`phone/gate.out.txt`, `bench_g1.jsonl`): both builds asleep at about
+    60 fps, p95 16.8 ms at 0, 10 and 21 moves; the "render" column 20-29
+    ms on master and 24-31 ms on the branch, too few samples to read.
+    Under K152 (1) it merges on its desktop results, and the round's phone
+    pass takes over its frame check and looks. Stage 3d (K127,
     a4e2e9ab9650bd95b, Opus, 14:20-16:55) built the gold fill: in 20
     same-state cases only full webs change, a full web matches master
     outside its bands (0 px in 10 of 11), the GPU matches the CPU mirror
@@ -120,9 +129,8 @@ and never reused.
     `sum_3d.mjs`, `sheet_3d.mjs`, `gpu_k81d.ps1`, `census_k81.mjs`,
     `k81_ab.mjs`, `k81lib.mjs`, `gpu_k81.ps1`), the builds, and the gate
     kit with `results.md` and `run_gate.log` in `phone/`. Copy at merge.
-  - next: read the gate (`phone/run_gate.log`, `summary_g1.txt`,
-    `gate.out.txt`, `looks.out.txt`, `frames/`), then rebase
-    onto master after K79 B lands (no shared render files; reword
+  - next: rebase onto master after K79 B and K122 land (no shared
+    render files; reword
     ae7919e's title), re-run tsc and the tests, and merge. File at merge:
     3b's residuals (among them, the pluck overlay draws over the band);
     the +0.055 ms floor and the deferred early-out and strip trim; the
@@ -390,10 +398,11 @@ about a third of the overnight spend.
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40 (he may reorder). Running at 18:06:
-K104 stage 1b, K147 and K80 stage 1 (code); K79 B's merge prep; K81's
-phone gate, the last gate per feature. Then, as code slots free up:
-1. K79 B's merge, then K122's (it rebases over K79 B), then K81's after
-   its gate.
+K104 stage 1b, K147 and K80 stage 1 (code); K79 B's merge prep. Then, as code slots
+free up:
+1. K79 B's merge, then K122's (it rebases over K79 B), then K81's (its
+   gate stopped twice; the round's phone pass covers it), then the
+   round's phone pass (K152).
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 running.
 3. K140, the finish confetti, with K155's star rating (the same finish
