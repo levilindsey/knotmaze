@@ -125,9 +125,23 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   BACKGROUND_ACCENTS_USED lists what each effect reads (vellum 1; silk
   and contours 2 and 3; mist, wash, aurora 1-3), and `k79b_sheet.mjs
   accents` holds it to the pixel (an unread accent changes 0 px).
-  COST: TODO (stage B2b, docs/design/K79.md) - GPU ms per pass, passes
-  per second and ms per frame of each -x program against its default, at
-  3200x1800, under the perf lock.
+  COST (stage B2b, 2026-10-13, perf lock held; RX 6800 XT, 3200x1800 =
+  1600x900 CSS at dpr 2; k79b_gpu.mjs, a TIME_ELAPSED query per draw, 3
+  rounds x 5 s per config on one settled page, so the page ran at 46-51
+  fps; ms per pass repeats within ~5%, compare only inside one run): a
+  -x program costs what its texels cost. Scale 0.5 quadruples them (mist
+  1088x612, wash and aurora 1280x720, silk 1600x900) and the pass 3.9-4.3x:
+  mist 0.27 -> 1.04 ms/pass, wash 0.36 -> 1.43, silk 0.34 -> 1.45, aurora
+  0.43 -> 1.67 (the worst: x15/s = 0.42 ms per 60 Hz frame against 0.11);
+  contours (1.8x the texels) 0.33 -> 0.59 (x10/s = 0.10 against 0.05).
+  Scale 2, detail 2 and silk's angle cost the default's price (0.97-1.03x).
+  Vellum-x at speed 1 costs the drift program's 2.1 ms/pass (x10/s = 0.35
+  ms per frame) at scale 2 or fibers 3 (1.00-1.03x), and half of it at
+  fibers 0 + grain 0 (0.99 ms). The blit adds ~0.2 ms (0.19-0.27) every
+  frame under any effect, static vellum included; `none` draws nothing.
+  These are desktop numbers: the phone's texel scales are 0.3-0.4 per CSS
+  px (scale 0.5 doubles them), and the phone gate (B3) measures its cost.
+  Full table: docs/design/K79.md, "Stage B2b results".
   Probes (untracked, `.claude/probes/K79/`): k79b_sheet.mjs (the sheets,
   the accent check and the contours crawl; desk or phone viewport),
   k79b_montage.mjs and k79b_bgsd.mjs (crops, contrast by scale),
