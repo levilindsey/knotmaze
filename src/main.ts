@@ -791,7 +791,13 @@ async function main(): Promise<void> {
         view.zoom += (1 - view.zoom) * 0.15;
         view.panX -= view.panX * 0.15;
         view.panY -= view.panY * 0.15;
-        if (Math.abs(view.zoom - 1) < 1e-3) {
+        // K149: zoom 1 has a pan range now, so the pan must settle too (a
+        // reset from a slack-panned zoom-1 view used to snap on frame one).
+        if (
+          Math.abs(view.zoom - 1) < 1e-3 &&
+          Math.abs(view.panX) < 0.5 &&
+          Math.abs(view.panY) < 0.5
+        ) {
           view.zoom = 1;
           view.panX = 0;
           view.panY = 0;
@@ -3641,6 +3647,9 @@ async function main(): Promise<void> {
     headWhy,
     tween: camTween !== null,
     follow: camFollow,
+    // Seconds since the last gesture: the follow spring is at full strength
+    // from FOLLOW_DELAY + FOLLOW_RAMP (K148's return to the head sets it).
+    followIdle: nowSec() - camTouchedAt,
   });
   // Diagnostic hooks for the automated crossing scanner.
   (window as unknown as Record<string, unknown>).__knotDiag = () =>
@@ -3649,6 +3658,11 @@ async function main(): Promise<void> {
     x: root.position.x,
     y: root.position.y,
     s: root.scale.x,
+    // The fit camera's own state (K149 probes; stale under the follow
+    // camera): the zoom on top of the auto-fit and its screen-space pan.
+    zoom: view.zoom,
+    panX: view.panX,
+    panY: view.panY,
   });
   // K101: the music notes handed out lately (start time on their clock,
   // lead = how far ahead of the tick that scheduled them) and the clocks.

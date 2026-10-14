@@ -153,7 +153,15 @@ describe("marker glyphs (K83)", () => {
     // A closed polyline closes with Z; dots are filled circles.
     expect(markerGlyphSvgMarks("play", "start")).toMatch(/Z"\/>/);
     const here = markerGlyphSvgMarks("here", "head");
-    expect(here).toMatch(/<g fill="#fff"><circle /);
+    expect(here).toMatch(/<g fill="#fff" stroke="none"><circle /);
     expect(here.match(/<circle /g)?.length).toBe(2);
+    // K148: a dot never inherits a stroke from the group it is drawn in
+    // (the indicator's icon group sets one): the head's dot and the bull's
+    // eyes were disc-sized white blobs without this.
+    for (const [id, role] of [["here", "head"], ["bull", "minotaur"]] as const) {
+      const marks = markerGlyphSvgMarks(id, role);
+      const dotsGroup = marks.match(/<g fill="#fff"[^>]*>/)![0];
+      expect(dotsGroup).toContain('stroke="none"');
+    }
   });
 });
