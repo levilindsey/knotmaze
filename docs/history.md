@@ -758,6 +758,30 @@ demand.
   "Daily #3 replay" did not fit and the badge fell to its icon. *[Lore:
   `.claude/rules/gameplay.md` (MODE BADGE); probes and shots in
   `.claude/probes/K146_K151/`.]*
+- ARROW KEYS (K120 stage 1 Part A, 2026-10-14; brief
+  `docs/design/K120.md`, agent under session d8031183): the arrow keys
+  and WASD move by direction. A press takes the run at the junction whose
+  start best matches the key on screen (its chord half a lattice unit
+  out, within 70 degrees; an ambiguous key takes the near-tied run no
+  other key claims, else nothing) and is a tap on it to everything that
+  records one; a held key goes on at each junction until nothing matches
+  (never straight back, stopping at forks, dead-end tips and the finish),
+  the next run lit while the dot travels; in real time a press while
+  running queues. The thresholds come from a census of 4259 junctions in
+  24 mazes: every run has a key at 98.9% of them. Panel rows, text
+  fields, the stats modal and modifier chords keep their keys. *[Lore:
+  `.claude/rules/gameplay.md` (MOVES BY DIRECTION); census and key probes
+  in `.claude/probes/K120/`.]*
+- THE MOVE PAD (K120 stage 1 Part B, same brief and agent): a four-way pad
+  in the bottom-right corner moves like the keys on touch screens (press,
+  hold, slide between arms), shown while a maze is playable. A viewer
+  preference (localStorage and a panel checkbox), on by default for coarse
+  pointers, never in a link. Chosen over swipe-to-pick (it fights the
+  one-finger pan and thread tugs) and long-press on a choice (it fights
+  the press slop, and the finger hides the run). Its default and place are
+  K120's call, open for Levi. *[Lore: `.claude/rules/gameplay.md` (MOVES
+  BY DIRECTION); pad probes and phone-width screenshots in
+  `.claude/probes/K120/`.]*
 
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the

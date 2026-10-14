@@ -100,6 +100,8 @@ src/
     motion.ts             # K53/K79: the Motion setting (viewer pref, data-motion)
     head_indicator.ts     # K148 pure: the player's edge indicator (when it shows, what a tap does)
     view_clamp.ts         # K149 pure: the fit camera's pan clamp (slack at every zoom)
+    key_moves.ts          # K120: moves by direction (arrows, WASD; picker, hold)
+    move_pad.ts           # K120: the touch move pad (viewer pref, same picker)
   util/
     random.ts             # Seeded RNG
     det_math.ts           # K108: engine-exact math for generation (hypot2)
@@ -152,7 +154,9 @@ test/
     the front door, the exempt set, prefs)
     mode_badge.test.ts, offscreen_indicators.test.ts (edge layout,
     chrome avoidance), motion.test.ts (prefs, live follow, storage
-    failures), head_indicator.test.ts (K148), view_clamp.test.ts (K149)
+    failures), head_indicator.test.ts (K148), view_clamp.test.ts (K149),
+    key_moves.test.ts (K120: picker, ties, holds, guards),
+    move_pad.test.ts (pref, arms)
   notices/
     notices.test.ts (K122: collector, license policy, page, the real build)
   quiescence.regression.test.ts  # Guards the friction dissipation channel
