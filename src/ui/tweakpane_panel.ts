@@ -33,6 +33,7 @@ import {
   isAutoSpeed,
   readsDetail,
 } from "../render/background_model";
+import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
 import type { MotionPref } from "./motion";
 
 export interface PanelSettings {
@@ -101,6 +102,8 @@ export interface PanelCallbacks {
   // K80: the real-time chase's tuning (paces, pauses, distances) and how
   // the minotaur shows under fog: applied live, the chase goes on.
   onChaseChange: () => void;
+  // K140: the finish confetti (on/off, amount): render-only, applied live.
+  onConfettiChange: () => void;
   // Audio-only change (sound mode / pitch space / octaves): re-derive the
   // pitch assignment without rebuilding the scene.
   onAudioChange: () => void;
@@ -722,6 +725,29 @@ export function buildPanel(
     "Tapping an edge marker (the finish's) brings what it points at into view. Off: the markers only point, and taps go through them to the maze. Remembered per browser.",
     SETTINGS_DEFAULTS.tapToPan,
     () => callbacks.onTapToPanToggle(settings.tapToPan === true)
+  );
+  // K140: the finish confetti. Daily-exempt (how a finish celebrates, not
+  // what was played). The amount has no step (K130: a step grid starts at
+  // the row's first value); an edit keeps 2 decimals.
+  const confettiRow = row(
+    fMaze, p, "confetti", undefined,
+    "Celebrate the finish: confetti rains from the top of the screen and bursts from around the exit. With reduced motion (the Motion setting), only a small, slow burst at the exit.",
+    D.confetti, () => callbacks.onConfettiChange()
+  );
+  const confettiAmountRow = row(
+    fMaze, p, "confettiAmount",
+    {
+      min: 0,
+      max: CONFETTI_AMOUNT_MAX,
+      keyScale: 0.05,
+      pointerScale: 0.01,
+      format: (v: number) => v.toFixed(2),
+    },
+    "How much confetti a finish throws: 1 = the default, 0 = none, up to 3x.",
+    D.confettiAmount, () => {
+      params.confettiAmount = Math.round(params.confettiAmount * 100) / 100;
+      callbacks.onConfettiChange();
+    }
   );
   const resetPathBtn = button(
     fMaze,
@@ -1446,6 +1472,8 @@ export function buildPanel(
     mazeStatsRow.hidden = !fab;
     finishIndicatorRow.hidden = !fab;
     tapToPanRow.hidden = !fab;
+    confettiRow.hidden = !fab;
+    confettiAmountRow.hidden = !fab || !params.confetti;
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;
     pulseReachRow.hidden = !fab;
