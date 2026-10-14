@@ -12,7 +12,7 @@
 //         (a key of __knotParams()) or "js:<expression>" (truthy in the page).
 //  steps  waitSleep{ms} | wait{ms} | moves{n} (more cheapest moves, touch
 //         taps) | tapChoice | click{text|selector} (anchors open in the same
-//         tab) | panel{open} | scroll{selector|text|y} (scrollIntoView) | pin
+//         tab) | panel{open} | scroll{selector|text|y, block?} (scrollIntoView, block "center" by default) | pin
 //         (freeze every clock; K83's pinAll) | reload | eval{js} |
 //         shot{name, clip?{x,y,width,height}, junctions?:N} |
 //         burst{name, n, everyMs}.
@@ -134,7 +134,7 @@ async function doStep(look, b, run, st) {
       const to = st.to, y = typeof to === "number" ? to : st.y;
       const sel = st.selector ?? (typeof to === "string" ? to : undefined);
       const el = sel || st.text ? (await findEl({ selector: sel, text: st.text }, "a,button,li,p,span,div,h1,h2,h3")).asElement() : null;
-      if (el) await el.evaluate((e) => e.scrollIntoView({ block: "center" }));
+      if (el) await el.evaluate((e, block) => e.scrollIntoView({ block }), st.block || "center");
       else if (typeof y === "number") await page.evaluate((y) => window.scrollTo(0, y), y);
       else throw new Missing(`nothing to scroll to: ${sel || st.text}`);
       await sleep(st.after ?? 500);
