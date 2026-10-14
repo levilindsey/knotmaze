@@ -142,8 +142,12 @@ const COLLAPSE_RAMP = 0.3;
 // profile met its limits in min()s, and where two limits (a footprint
 // ramp, a tight bend's ramp, a gap fade) closed in on a short window the
 // edge dipped to a V that read through the translucent fringe as a sharp
-// wedge cut into the thread (K77).
-const COLLAPSE_ROUND = 1;
+// wedge cut into the thread (K77). 1 h until Levi found it "still a bit
+// too acute" (K104, 2026-10-13); 1.5 h since. Same-state A/B on K77's 14
+// sites (.claude/probes/K104/collapse/): worst second difference
+// -0.98 -> -0.66 K, keeping 88% of 1 h's integrated thinning; 1.25 was
+// the timid step, 1.75 the next one if 1.5 still reads acute.
+const COLLAPSE_ROUND = 1.5;
 const HIDE_RAMP = 0.1; // Arc over which a hide zone fades back in.
 // Ghost flash guard (WCAG 2.3.1): the ghost's on-screen area is capped.
 const GHOST_AREA_PX = 15000;

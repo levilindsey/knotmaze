@@ -444,7 +444,12 @@ coordinate lerp sweeps the hues between.
   its second difference stays >= -K*per^2, so a full pinch ends in an edge
   of curvature radius collapseRound*h. Narrow windows become shallow
   round dips; wide smooth profiles pass unchanged. COLLAPSE_ROUND = 1: in
-  the A/B 0.5 left shoulders and 2 erased most of the thinning.
+  the A/B 0.5 left shoulders and 2 erased most of the thinning. K104
+  (2026-10-13; Levi: "still a bit too acute") raised it to 1.5: worst
+  second difference -0.98 -> -0.66 K on K77's 14 sites, 88% of 1's
+  integrated thinning kept, no cliff between 1 and 1.75
+  (`.claude/probes/K104/collapse/results.md`). A larger radius also
+  widens the full-depth window, pi h sqrt(2 r).
   `PluckOverlay.collapseRound` is a live field, and 0 is the pre-K77 raw
   path, for same-state A/Bs (set it, then mark the active plucks
   needsLayout).
