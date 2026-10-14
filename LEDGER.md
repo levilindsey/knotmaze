@@ -153,31 +153,28 @@ and never reused.
   collision skips +-2 ctrl, so it cannot catch folds that short.
   - stage 1a MERGED in 6f97b92..ac5b880 (2026-10-14 07:32; no behavior
     change; 686 tests at the merge).
-  - owner: nobody since 2026-10-13 11:08 (the stage 1 agent
-    a1b6fa0fe2294cd2a of session d8031183 stopped at the 1a/1b
-    boundary, as asked); stage 1b launches from its brief next.
+  - owner: agent a15ef7bcac0582272 (opus) of session d8031183, stage 1b,
+    started 2026-10-14 07:38; it stops at about 09:38 or when the stage
+    is done. (Stage 1a's agent a1b6fa0fe2294cd2a stopped 2026-10-13 11:08
+    at the 1a/1b boundary, as asked.)
   - found (1a): maze designs average 54 windows under 1.0 half-width at
     rest, knot mode 2.9. 85% of the maze's and all of knot mode's are
     Catmull-Rom overshoot, mostly at junction hosts and kink eyes; a
     particle floor alone would need a target near 2.3 (the handoff has
     the numbers and four open checks).
-  - branch: mainline; last commit: ac5b880 (the "Stage 1b handoff";
-    6f97b92 adds `src/geometry/bend_radius.ts`, the one over-tight
-    definition, with 12 tests; f4cb719 adds
-    `scripts/fold_census.{ts,ps1,mjs}`, 79 jobs in about 7 min, no
-    server). The 1a worktree `.claude/worktrees/agent-a1b6fa0fe2294cd2a`
-    is kept.
-  - evidence: `.claude/probes/K90/` in the main checkout, untracked,
-    copied at the merge (`out_census/`, `split.mjs`, `handoff_checks.mjs`,
-    `cr_corner.ts`, the guard harness copies).
-  - next: stage 1b as a fresh agent, from its brief: crop the worst
-    junction-host folds with and without the junction webs
-    (`filletMesh`, `filletTopMesh`; if the webs cover them, about 54
-    windows per maze design drop to about 16), then option 3 (fix the
-    overshoot in the spline, Layer 2) first, behind a flag that defaults
-    off: the census met the brief's trigger for it (coordinator's call,
-    2026-10-13). It changes every ribbon and touches K8: never alongside
-    K8.
+  - branch: `worktree-agent-a15ef7bcac0582272`
+    (`.claude/worktrees/agent-a15ef7bcac0582272`), from c8ad399; last
+    commit: none yet. Stage 1a is on master (6f97b92 adds
+    `src/geometry/bend_radius.ts`, the one over-tight definition, with 12
+    tests; f4cb719 adds `scripts/fold_census.{ts,ps1,mjs}`, 79 jobs in
+    about 7 min, no server); its worktree
+    `.claude/worktrees/agent-a1b6fa0fe2294cd2a` is kept.
+  - evidence: `.claude/probes/K90/` in its worktree, seeded from the main
+    checkout's copy of the 1a evidence (copy back at merge).
+  - next: stage 1b per its brief (the junction-web crop check, then
+    option 3, the spline fix, behind a flag that defaults off); then the
+    merge and Levi's look at the crops. It changes every ribbon and
+    touches K8: never alongside K8.
   - brief: `docs/design/K90.md` ("Stage 1b handoff", then "Stage 1b
     brief").
   - env: none for the census; crops need a dev server on ports
@@ -327,6 +324,52 @@ and never reused.
   - next: after 16:20 on 10-14, run `cleanup.ps1` again for the
     profiles (about 33 GB). The probe libraries' delete-on-exit goes
     with K150.
+- **K132** · Drop link and daily back-compat (Levi, 2026-10-13: "we
+  can ignore keeping support for previous url params, or preserving
+  mazes from previous control combinations. Breaking changes are 100%
+  fine. We are not launched."; CLAUDE.md "Pre-launch: no back-compat").
+  One live codec table: new params append; a reorder or removal bumps
+  the version, and an older link falls back to its seed and today's
+  defaults with one warning. Remove the frozen v1-v3 tables,
+  `LEGACY_BASE` (`src/ui/url_state.ts`), the `?daily=<n>.<delta>`
+  reader, and DAILY_V1's frozen v3 base: a daily becomes today's
+  defaults, the day's seed and the exempt preferences. Keep the
+  `&key=value` overrides and the `s=` / `seed=` keys that probes use
+  (am, mf, psz, ms, fw), read against today's defaults (update the probe
+  lore); determinism (K108); the pins as change detectors. Check that a
+  changed daily refuses its saved attempt cleanly (K47). Drop
+  `test/ui/param_codec.test.ts`'s literal CODEC_V1 pins and the
+  per-version table pins. Rewrite the passages in CLAUDE.md (the
+  compact links decision's frozen codec tables) and `.claude/rules/`
+  (gameplay.md, generation.md, probes.md).
+  - owner: agent a340d1375525098a9 (opus) of session d8031183, started
+    2026-10-14 07:38; it stops at about 09:38 or when the stage is done.
+  - branch: `worktree-agent-a340d1375525098a9`
+    (`.claude/worktrees/agent-a340d1375525098a9`), from c8ad399; last
+    commit: none yet.
+  - evidence: `.claude/probes/K132/` in its worktree (copy at merge).
+  - next: the brief's stage; then the merge (it moves the pins: name what
+    moved in the commit) and the next round's phone pass.
+  - brief: `docs/design/K132.md`.
+  - env: dev servers on ports 5530-5539.
+- **K100** · The fog of war resets on a restart only (Levi,
+  2026-10-13: "The fog should reset when the maze restarts. But the fog
+  shouldn't reset if we just backtrack to the start."). Today `update()`
+  in `src/render/fabric_maze_renderer.ts` clears the stamps whenever
+  `pathEdges` empties, and `exploredRuns` in `src/game/daily_attempt.ts`
+  mirrors it. A daily's backtrack Reset path (K47's `retreatToStart`)
+  is a backtrack, so it keeps the fog; the explored runs become every tap
+  since the restart, and K47's saves and replays must agree.
+  - owner: agent a4c4c1df6bad339a1 (opus) of session d8031183, started
+    2026-10-14 07:38; it stops at about 09:38 or when the stage is done.
+  - branch: `worktree-agent-a4c4c1df6bad339a1`
+    (`.claude/worktrees/agent-a4c4c1df6bad339a1`), from c8ad399; last
+    commit: none yet.
+  - evidence: `.claude/probes/K100/` in its worktree (copy at merge).
+  - next: the brief's stage; then the merge and the next round's phone
+    pass. K93 and K145 share its renderer file: not alongside it.
+  - brief: `docs/design/K100.md`.
+  - env: dev servers on ports 5540-5549.
 
 ## Next, in order
 
@@ -346,8 +389,9 @@ longer wait for each other: the second branch to merge renumbers its
 appends. Usage: don't hold agents back until the week nears 95% (Levi,
 2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17, 54% at
 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
-23:54, 69% at 00:25 and 72% at 01:49 on 10-14; at 13:40 he said keep going at full
-speed; it resets Mondays at 12:00). Long work runs in stages from
+23:54; on 10-14 69% at 00:25, 72% at 01:49 and 76% at 07:38; at 13:40
+on 10-13 he said keep going at full speed; it resets Mondays at 12:00).
+Long work runs in stages from
 committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
 brief names its stage boundary, where the agent writes a "Stage N
 handoff" into the brief, commits and stops, and a fresh agent continues
@@ -359,22 +403,22 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running at 02:00 on 10-14: the round's phone pass
-(K156), K146+K151 (opus), K148+K149 (sonnet) and K120 (opus). Then, as
-code slots free up:
-1. The round's phone pass (K156), running from 01:53 on head 81d31a5:
-   K79 B, K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154,
-   K169 and K180 against base ab6d330.
+(he may reorder). Running at 07:38 on 10-14: K90 stage 1b, K132 and K100
+(all opus, 2 h caps). Then, as code slots free up:
+1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
+   K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
+   and K180 against base ab6d330) is done (K197 filed); the next pass
+   covers K146, K151, K148, K149, K120 and K90 1a.
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
    5fed5c1; Levi plays it (K174).
-3. K146 + K151 and K148 + K149, running (the camera, the mode badge and
-   past dailies; K80's minotaur indicator follows K148's).
-4. K120 (no codec), running.
-5. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
-   then option 3 (the spline fix) first.
-6. K132.
-7. K100, then K93 with K145 (the same hover code).
+3. K146 + K151 and K148 + K149: merged 2026-10-14 (b9cf882, fcc402b).
+4. K120: merged 2026-10-14 (0acbce0).
+5. K90 stage 1b, running from 07:38 (stage 1a merged in ac5b880): the
+   junction-web crop check, then option 3 (the spline fix) first.
+6. K132, running from 07:38.
+7. K100, running from 07:38; then K93 with K145 (the same hover code;
+   K93 shares K100's renderer file, so not alongside it).
 8. K92, then K111 (both rework the panel).
 9. K98.
 10. K76 stage 2.
@@ -389,38 +433,12 @@ code slots free up:
     goal).
 
 Waiting for Levi: K114's spider (call 7); the G3-3 and G4-2 old-path
-deletions; K151's X on phones; K162, K174 and K184-K186 (play, then
-call); near launch, K117; after the churn, K46, K57 and K84.
+deletions; K162, K174 and K184-K186 (play, then call); the merged
+round's calls (K198, K200, K203); near launch, K117; after the churn,
+K46, K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
-- **K132** · Drop link and daily back-compat (Levi, 2026-10-13: "we
-  can ignore keeping support for previous url params, or preserving
-  mazes from previous control combinations. Breaking changes are 100%
-  fine. We are not launched."; CLAUDE.md "Pre-launch: no back-compat").
-  One live codec table: new params append; a reorder or removal bumps
-  the version, and an older link falls back to its seed and today's
-  defaults with one warning. Remove the frozen v1-v3 tables,
-  `LEGACY_BASE` (`src/ui/url_state.ts`), the `?daily=<n>.<delta>`
-  reader, and DAILY_V1's frozen v3 base: a daily becomes today's
-  defaults, the day's seed and the exempt preferences. Keep the
-  `&key=value` overrides and the `s=` / `seed=` keys that probes use
-  (am, mf, psz, ms, fw), read against today's defaults (update the probe
-  lore); determinism (K108); the pins as change detectors. Check that a
-  changed daily refuses its saved attempt cleanly (K47). Drop
-  `test/ui/param_codec.test.ts`'s literal CODEC_V1 pins and the
-  per-version table pins. Rewrite the passages in CLAUDE.md (the
-  compact links decision's frozen codec tables) and `.claude/rules/`
-  (gameplay.md, generation.md, probes.md). After K79 stage B merges.
-- **K100** · The fog of war resets on a restart only (Levi,
-  2026-10-13: "The fog should reset when the maze restarts. But the fog
-  shouldn't reset if we just backtrack to the start."). Today `update()`
-  in `src/render/fabric_maze_renderer.ts` clears the stamps whenever
-  `pathEdges` empties, and `exploredRuns` in `src/game/daily_attempt.ts`
-  mirrors it. A daily's backtrack Reset path (K47's `retreatToStart`)
-  is a backtrack, so it keeps the fog; the explored runs become every tap
-  since the restart, and K47's saves and replays must agree. After K81
-  merges (the same renderer file).
 - **K93** · Trail fade and hover reach, decided (Levi, 2026-10-13:
   "Trail fade, yes; Hover vs pulseReach, hover should stop at pulseReach
   (and fade-out toward the end, same as pulseReach)"). (1) The trail
