@@ -84,10 +84,12 @@ export const BACKGROUND_PROFILES: Record<
 // AUTO (any negative value; the default, -1) = each effect's own pace
 // (autoSpeed: its designed drift, or static for vellum) - exactly the
 // drift every link had before the param existed. 0 = static, any other
-// value a multiple of the designed drift, up to BACKGROUND_SPEED_MAX. The
-// re-render rate (fps) does not scale with it.
+// value a multiple of the designed drift, up to BACKGROUND_SPEED_MAX (the
+// slider's max, the link parser's clamp and effectiveSpeed's clamp all read
+// it; 8 since Levi's 2026-10-13 "Max backgroundSpeed should be like x8",
+// stage A shipped 3). The re-render rate (fps) does not scale with it.
 export const BACKGROUND_SPEED_AUTO = -1;
-export const BACKGROUND_SPEED_MAX = 3;
+export const BACKGROUND_SPEED_MAX = 8;
 
 // Whether a backgroundSpeed value means AUTO (NaN does too).
 export function isAutoSpeed(speed: number): boolean {
