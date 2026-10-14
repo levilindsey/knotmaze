@@ -734,10 +734,14 @@ export class RibbonRenderer {
   // junctions, oldest first; routeKey keys the fillet rebuild that draws
   // them, routedArms holds every arm ("chain:slot") of a junction holding
   // at least one resolved route - the paint caps there are dropped (the
-  // band and the untraveled web decide those pixels).
+  // band and the untraveled web decide those pixels) - unless the junction
+  // is FULLY TRAVELED (K127: fullJn, every arm on a traveled pass), which
+  // keeps its caps and the pre-K81 composed web under its bands.
   private paintRoutes: PaintRoute[] = [];
+  private paintTraveled: PaintRoute[] = [];
   private routeKey = "";
   private routedArms = new Set<string>();
+  private fullJn = new Set<number>();
   // The routes resolved to junctions (junctionArms index -> its passes,
   // oldest first, at most MAX_ROUTES; b null = a one-arm route), and the
   // lookup that resolves them ("chain:slot:dir" -> junctionArms index;
@@ -946,6 +950,8 @@ export class RibbonRenderer {
     gate: (ji: number) => [number, number] | null;
     // The arms the last at() sampled: [chain, arc, seed] per arm (probes).
     lastArms: () => number[];
+    // K127: the joint is fully traveled (its routed web reads composed).
+    full: (ji: number) => boolean;
   } | null = null;
   private fieldLastArm: number[] = [];
   // ARM STRIPS (arm_strip.ts): rows written by the current rebuild, and
@@ -3468,7 +3474,8 @@ export class RibbonRenderer {
 
 
   // Declare the current gameplay paint (traveled spans + branch-point
-  // pulse arms + junction caps + K81 route bands). Called every awake
+  // pulse arms + junction caps + K81 route bands, and K127's traveled
+  // passes: junction_routes.ts traveledRoutes). Called every awake
   // frame; KPAINT is rewritten only when the declaration's content changed
   // (a traversal move changes its swept span every frame - a few texels),
   // the routes re-resolve only when they changed (a tap, a move's end).
@@ -3476,18 +3483,21 @@ export class RibbonRenderer {
     spans: PaintSpan[],
     pulses: PulseArm[],
     caps: PaintCap[],
-    routes: PaintRoute[] = []
+    routes: PaintRoute[] = [],
+    traveled: PaintRoute[] = []
   ): void {
     this.paintSpans = spans;
     this.paintPulses = pulses;
     this.paintCaps = caps;
-    const rk = JSON.stringify(routes);
+    const rk = JSON.stringify(routes) + "|" + JSON.stringify(traveled);
     if (rk !== this.routeKey) {
       this.routeKey = rk;
       this.paintRoutes = routes;
+      this.paintTraveled = traveled;
       this.resolveRoutes();
     }
-    // The routes key the caps too: a routed junction drops its caps.
+    // The routes key the caps too: a routed junction drops its caps
+    // (unless fully traveled, K127).
     const declKey = JSON.stringify([spans, pulses, caps]) + "|" + rk;
     if (declKey !== this.paintKey && this.style.paletteMode) {
       this.paintKey = declKey;
@@ -3527,6 +3537,9 @@ export class RibbonRenderer {
   // Each junction keeps its newest MAX_ROUTES passes over distinct arm
   // pairs (junction_routes pickRoutes), and every arm of a routed junction
   // is listed in routedArms: its paint caps are dropped (writePaintItems).
+  // K127: a routed junction whose every arm a traveled pass arrives or
+  // leaves by is FULLY TRAVELED (fullJn): it keeps its caps, and its
+  // record's base reads the composed rows (J1.z = 1).
   private resolveRoutes(): void {
     if (!this.armJunction) {
       const m = new Map<string, number>();
@@ -3563,8 +3576,21 @@ export class RibbonRenderer {
       }
       list.push({ a, b });
     }
+    // K127: the arms the traveled passes arrive or leave by.
+    const covered = new Set<string>();
+    const cover = (chain: number, ctrl: number, dir: 1 | -1): void => {
+      const s = this.routeArmSlot(chain, ctrl);
+      if (s >= 0) covered.add(chain + ":" + s + ":" + dir);
+    };
+    for (const r of this.paintTraveled) {
+      cover(r.chain, r.ctrl, r.dir);
+      if (r.outChain !== undefined && r.outCtrl !== undefined && r.outDir) {
+        cover(r.outChain, r.outCtrl, r.outDir);
+      }
+    }
     this.routesByJn = new Map();
     this.routedArms = new Set();
+    this.fullJn = new Set();
     for (const [ji, list] of perJn) {
       this.routesByJn.set(
         ji,
@@ -3574,7 +3600,12 @@ export class RibbonRenderer {
           MAX_ROUTES
         )
       );
-      for (const a of this.junctionArms[ji].arms) {
+      const arms = this.junctionArms[ji].arms;
+      if (arms.every((a) => covered.has(a.chain + ":" + a.slot + ":" + a.dir))) {
+        this.fullJn.add(ji);
+        continue;
+      }
+      for (const a of arms) {
         this.routedArms.add(a.chain + ":" + a.slot);
       }
     }
@@ -4170,7 +4201,8 @@ export class RibbonRenderer {
     }
     for (const cp of this.paintCaps) {
       // K81: a routed junction's band and untraveled web decide its
-      // pixels; a cap there would paint gold down every arm's ribbon.
+      // pixels; a cap there would paint gold down every arm's ribbon. A
+      // fully traveled one (K127) is not in routedArms: it keeps its caps.
       if (
         this.routedArms.size > 0 &&
         this.routedArms.has(cp.chain + ":" + this.routeArmSlot(cp.chain, cp.ctrl))
@@ -4435,9 +4467,11 @@ export class RibbonRenderer {
       compose(mA);
       return;
     }
-    // K81: a routed record's base reads the untraveled rows (row + 1).
+    // K81: a routed record's base reads the untraveled rows (row + 1),
+    // unless J1.z marks it fully traveled (K127).
     const nr = Math.round(J[at(rec + 1) + 3]);
     const routed = nr > 0;
+    const untrav = routed && J[at(rec + 1) + 2] < 0.5;
     const armPaint = (
       ab: number,
       s: number,
@@ -4518,12 +4552,12 @@ export class RibbonRenderer {
       else if (t >= 1) onlyB = true;
     }
     if (!onlyB) {
-      armPaint(abA, profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0), false, routed, mA);
+      armPaint(abA, profArc(abA, relA < Math.PI / 2 ? rho * Math.cos(relA) : 0), false, untrav, mA);
     }
     if (onlyA) {
       compose(mA);
     } else {
-      armPaint(abB, profArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0), false, routed, mB);
+      armPaint(abB, profArc(abB, relB < Math.PI / 2 ? rho * Math.cos(relB) : 0), false, untrav, mB);
       if (onlyB) {
         compose(mB);
       } else {
@@ -5176,7 +5210,8 @@ export class RibbonRenderer {
       D[o + 3] = 0;
       D[o + 4] = rec.j1[0];
       D[o + 5] = rec.j1[1];
-      D[o + 6] = 0;
+      // K127: 1 = fully traveled (a routed base reads the composed rows).
+      D[o + 6] = this.fullJn.has(rec.jn) ? 1 : 0;
       D[o + 7] = 0;
       for (let i = 0; i < n; i++) {
         const a = rec.arms[i];
@@ -5311,6 +5346,7 @@ export class RibbonRenderer {
       record: (ji) => recs[ji]?.rb ?? -1,
       gate: (ji) => recs[ji]?.j1 ?? null,
       lastArms: () => [...this.fieldLastArm],
+      full: (ji) => this.fullJn.has(ji),
     };
 
     // (The over-fill "fills wear the joint field" pass is gone with the
@@ -5585,6 +5621,8 @@ export class RibbonRenderer {
         if (rec.rb < 0) continue;
         const n = Math.min(rec.arms.length, MAX_ARMS);
         const routed = rec.routes.length > 0;
+        // K127: a fully traveled record's base reads the composed rows.
+        const untrav = routed && !this.fullJn.has(rec.jn);
         for (let i = 0; i < n; i++) {
           const a = rec.arms[i];
           const ab = (rec.rb + 2 + i * armStride) * 4;
@@ -5603,7 +5641,7 @@ export class RibbonRenderer {
             a.dir * step * slope
           );
           // A routed record's arms also get their UNTRAVELED row (row + 1).
-          if (routed) {
+          if (untrav) {
             this.writeStripRow(a.chain, a.arc0, a.dir * step, step, a.slot, a.dir * step * slope, 1);
           }
           rd.data[ab + 2] = row;

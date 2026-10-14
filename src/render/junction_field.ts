@@ -51,6 +51,12 @@
 //          quads near a routed joint in this pass (COVER STRIPS, tagged by
 //          a fractional aRec: STRIP_REC_TAG) and drops the paint caps
 //          there, so the field and the bands decide those pixels.
+//          FULLY TRAVELED (K127): J1.z = 1 marks a routed record whose arms
+//          the path has ALL traveled (junction_routes.ts traveledRoutes).
+//          Its base reads the COMPOSED rows instead - the pre-K81 angular
+//          blend of the arms' paint, trail fade and pulses included - its
+//          caps stay, it has no untraveled rows, and the bands still draw
+//          over it.
 //
 // Float data is read with texelFetch + manual interpolation only (NEAREST
 // sampling): float LINEAR filtering needs OES_texture_float_linear, which
@@ -271,21 +277,22 @@ vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {
 
 // The junction pass's color at p (pxW: world units per pixel; strip: the
 // fragment belongs to a cover strip): the base field (a routed record's
-// untraveled rows), then each K81 route band through this junction
-// composed over it, oldest first (a revisit's newer pass wins where two
-// cross). A band pixel takes its nearest point on the band's centerline
-// polyline (and that point's tau). In a web the band edge is a one-pixel
-// ramp CENTERED on the thread half-width, like a ribbon's MSAA edge, so
-// the band is the thread's width. On a cover strip the band stays solid
-// ROUTE_BAND_PAD pixels past the half-width before its ramp: the strip's
-// own edge is the ribbon's MSAA edge (4x samples sit within 0.4 px of the
-// pixel center, where this runs), and the pad keeps the untraveled
+// untraveled rows, unless J1.z marks it fully traveled - K127: then the
+// composed rows, as before K81), then each K81 route band through this
+// junction composed over it, oldest first (a revisit's newer pass wins
+// where two cross). A band pixel takes its nearest point on the band's
+// centerline polyline (and that point's tau). In a web the band edge is a
+// one-pixel ramp CENTERED on the thread half-width, like a ribbon's MSAA
+// edge, so the band is the thread's width. On a cover strip the band stays
+// solid ROUTE_BAND_PAD pixels past the half-width before its ramp: the
+// strip's own edge is the ribbon's MSAA edge (4x samples sit within 0.4 px
+// of the pixel center, where this runs), and the pad keeps the untraveled
 // material out of it. The probe views (uKBase.z 3 / 4) show the base alone.
 vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {
   vec4 hd = jAt(rec);
   int nr = int(j1.w + 0.5);
   bool routed = nr > 0 && hd.z > 0.5;
-  vec3 c = junctionBase(rec, p, hd, routed);
+  vec3 c = junctionBase(rec, p, hd, routed && j1.z < 0.5);
   if (!routed || (uKBase.z > 2.5 && uKBase.z < 4.5)) return c;
   int base = int(hd.w + 0.5);
   int stride = 2 + int(uJParams.y + 0.5);
