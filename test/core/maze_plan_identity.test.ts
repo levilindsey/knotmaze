@@ -3,6 +3,7 @@ import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import {
   buildMazePlan,
   DEFAULT_MAZE_PARAMS,
+  planReachesAll,
   planTailsJoined,
 } from "../../src/core/maze_plan";
 import type { MazeParams, MazePlan } from "../../src/core/maze_plan";
@@ -23,8 +24,9 @@ import { buildMazePlan as buildMazePlanV1 } from "./fixtures/maze_plan_v1";
 // A DELIBERATE plan change (K86's dead-end placement, a new daily version)
 // moves mazes on purpose: it must keep its default path equal to this pin,
 // or re-freeze the fixture from the new module and say so in its commit.
-// K109 is the one standing exception: a plan whose start cannot reach its
-// exit is rebuilt (one such case here, listed below).
+// Two standing exceptions, each case listed below: K109 rebuilds a plan
+// whose start cannot reach its exit, and K110 appends joins to a plan whose
+// start cannot reach every piece, or moves its exit when no join can.
 
 function graphOf(p: UrlParams): TangleGraph {
   return generateLatticeKnotwork({
@@ -125,20 +127,33 @@ describe("maze plan identity (K87)", () => {
   it("builds the same plan as the frozen pre-K87 module", () => {
     const diffs: string[] = [];
     const repaired: string[] = [];
+    const joined: string[] = [];
     for (const [label, p] of cases()) {
       const params = mazeParamsOf(p);
       const old = buildMazePlanV1(graphOf(p), params) as MazePlan;
       const plan = buildMazePlan(graphOf(p), params);
       if (JSON.stringify(old) === JSON.stringify(plan)) continue;
       // K109 rebuilds a plan on purpose only when its start has no route to
-      // its exit (the model agrees with the walk graph: maze_solvable).
+      // its exit (the model agrees with the walk graph: maze_solvable), and
+      // K110 only when its start cannot reach every piece (maze_reachable).
+      const name = `${label} seed ${p.seed}`;
       if (!planTailsJoined(graphOf(p), old) && planTailsJoined(graphOf(p), plan)) {
-        repaired.push(`${label} seed ${p.seed}`);
+        repaired.push(name);
+      } else if (!planReachesAll(graphOf(p), old) && planReachesAll(graphOf(p), plan)) {
+        joined.push(name);
       } else {
-        diffs.push(`${label} seed ${p.seed}`);
+        diffs.push(name);
       }
     }
     expect(diffs).toEqual([]);
     expect(repaired).toEqual(["defaults gs 6 tree seed 85281462"]);
+    // fish gs6, rect gs4 (anchors s/e) and ring gs11 gain one splice; fish
+    // gs5 (anchors nw/nw) moves its exit.
+    expect(joined).toEqual([
+      "random 4 seed 328166740",
+      "random 11 seed 1965927457",
+      "random 19 seed 1754180087",
+      "random 22 seed 951815187",
+    ]);
   });
 });
