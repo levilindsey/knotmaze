@@ -352,6 +352,26 @@ describe("saved attempts (K47): taps, replay, retreat", () => {
     expect(c.retreatToStart()).toEqual([]);
   });
 
+  it("meters every run walked (K155): path + 2 x backtrack, rebuilt by replay", () => {
+    for (const seed of [5, 42, 1234]) {
+      const a = play(seed);
+      expect(a.backtrackDist).toBeGreaterThan(0);
+      expect(a.walkedDist).toBeCloseTo(a.pathLength + 2 * a.backtrackDist, 9);
+      const b = new FabricMazeController(a.walk);
+      expect(b.replay(a.taps)).toBe(true);
+      expect(b.walkedDist).toBe(a.walkedDist);
+      b.reset();
+      expect(b.walkedDist).toBe(0);
+    }
+    // Trail mode: every tap is an advance, so walked is the path.
+    const t = new FabricMazeController(walkFor(5), true);
+    const first = t.choices()[0];
+    t.tapEdge(first);
+    t.tapEdge(first);
+    expect(t.walkedDist).toBeCloseTo(t.pathLength, 9);
+    expect(t.walkedDist).toBeCloseTo(2 * t.walk.edges[first].length, 9);
+  });
+
   it("does not retreat in trail mode or once solved", () => {
     const t = new FabricMazeController(walkFor(5), true);
     t.tapEdge(t.choices()[0]);
@@ -377,6 +397,8 @@ describe("real-time respawn (K80)", () => {
     const log = [...c.moveLog];
     const junctions = c.visitedJunctions.size;
     const back = c.backtrackDist;
+    const walked = c.walkedDist;
+    expect(walked).toBeGreaterThan(0);
     c.respawn();
     expect(c.head).toBe(c.walk.start);
     expect(c.pathEdges).toEqual([]);
@@ -385,8 +407,11 @@ describe("real-time respawn (K80)", () => {
     expect(c.moveLog).toEqual(log);
     expect(c.visitedJunctions.size).toBe(junctions);
     expect(c.backtrackDist).toBe(back);
-    // The solve goes on from the entrance.
+    expect(c.walkedDist).toBe(walked);
+    // The solve goes on from the entrance, and the re-walk adds on (K155).
     expect(c.choices()).toEqual(c.walk.vertices.get(c.walk.start)!.edges);
-    expect(c.tapEdge(bestChoice(c))).not.toBe("reject");
+    const eid = bestChoice(c);
+    expect(c.tapEdge(eid)).not.toBe("reject");
+    expect(c.walkedDist).toBeCloseTo(walked + c.walk.edges[eid].length, 9);
   });
 });

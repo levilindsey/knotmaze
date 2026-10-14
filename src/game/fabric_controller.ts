@@ -9,6 +9,10 @@
 //    compared against walk.optimalLength.
 //  - backtrackDist: cumulative distance retracted via backtracking, summed
 //    forever (a separate price-paid meter; never decreases).
+//  - walkedDist (K155, the star rating's measure): every run walked,
+//    forward and back. It equals pathLength + 2 x backtrackDist until a K80
+//    respawn empties the path; the walk from the entrance after a catch
+//    adds on.
 //
 // MEMORY-TRAIL MODE (Stage 23, `trailMode`): backtracking does not exist -
 // EVERY legal tap is an advance, including re-tapping the run just arrived
@@ -43,6 +47,7 @@ export class FabricMazeController {
   pathVertices: string[] = [];
   pathEdges: number[] = [];
   backtrackDist = 0;
+  walkedDist = 0;
   solved = false;
   // Distinct JUNCTION vertices (not END) the head has arrived at.
   visitedJunctions = new Set<string>();
@@ -68,6 +73,7 @@ export class FabricMazeController {
     this.pathVertices = [this.walk.start];
     this.pathEdges = [];
     this.backtrackDist = 0;
+    this.walkedDist = 0;
     this.solved = false;
     this.visitedJunctions = new Set();
     this.deadEndTips = new Set();
@@ -108,8 +114,8 @@ export class FabricMazeController {
 
   // K80's real-time mode: the minotaur caught the player. Back to the
   // entrance in one jump, not a restart: the stats, the move log, the taps
-  // and the backtrack meter stay (replay(taps) cannot reproduce a respawn;
-  // a real-time maze is never a daily, so nothing replays it).
+  // and the backtrack and walked meters stay (replay(taps) cannot reproduce
+  // a respawn; a real-time maze is never a daily, so nothing replays it).
   respawn(): void {
     this.pathVertices = [this.walk.start];
     this.pathEdges = [];
@@ -152,6 +158,7 @@ export class FabricMazeController {
       this.pathEdges.pop();
       this.pathVertices.pop();
       this.backtrackDist += e.length;
+      this.walkedDist += e.length;
       this.moveLog.push("b");
       this.taps.push(edgeId);
       return "backtrack";
@@ -161,6 +168,7 @@ export class FabricMazeController {
     const far = e.va === head ? e.vb : e.va;
     this.moveLog.push(this.onShortestRoute(head, e.length, far) ? "g" : "d");
     this.taps.push(edgeId);
+    this.walkedDist += e.length;
     this.pathEdges.push(edgeId);
     this.pathVertices.push(far);
     this.arrive(far);
