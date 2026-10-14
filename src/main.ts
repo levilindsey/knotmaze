@@ -29,6 +29,17 @@ import {
   MINO_MIN_CSS_R,
 } from "./render/fabric_maze_renderer";
 import { FabricMazeController } from "./game/fabric_controller";
+import {
+  HOLD_DELAY_MS,
+  HeldKeys,
+  KEY_REACH,
+  departureVectors,
+  keyBelongsElsewhere,
+  keyDirOf,
+  pickDeparture,
+  pickHold,
+} from "./ui/key_moves";
+import type { Departure, KeyDir } from "./ui/key_moves";
 import { MinotaurChase } from "./game/minotaur";
 import type { ChaseEvent } from "./game/minotaur";
 import { RevealAnimator } from "./render/reveal";
@@ -2448,7 +2459,11 @@ async function main(): Promise<void> {
   // off along it on its next tick. Returns true when the tap was taken.
   const handleChaseTap = (x: number, y: number): boolean => {
     if (!chase || !fabric || !fabricController) return false;
-    const eid = fabric.edgeAt(x, y, fabricController);
+    return chaseAlong(fabric.edgeAt(x, y, fabricController));
+  };
+  // Queue run `eid` as a tap on it would (K120's keys share it).
+  const chaseAlong = (eid: number): boolean => {
+    if (!chase || !fabric || !fabricController) return false;
     if (eid < 0 || chase.tap(eid) === "reject") return false;
     chaseRunning = true;
     if (fabric.setHover(-1)) fabric.update(fabricController);
@@ -2611,6 +2626,12 @@ async function main(): Promise<void> {
     if (chase) return handleChaseTap(x, y);
     const eid = fabric.edgeAt(x, y, fabricController);
     if (eid < 0) return false;
+    return moveAlong(eid);
+  };
+  // One move along run `eid` from the head, as a tap on it (K120's keys
+  // share it). Returns true when the move was taken.
+  const moveAlong = (eid: number): boolean => {
+    if (!fabric || !fabricController) return false;
     const result = fabricController.tapEdge(eid);
     fabric.setHover(-1);
     // The game state moved instantly; the dot + gold front animate along
@@ -2633,6 +2654,212 @@ async function main(): Promise<void> {
     // settings), for nothing.
     return result !== "reject";
   };
+
+  // K120: moves by direction - the arrow keys, WASD and the move pad (the
+  // rules are in ui/key_moves.ts). A press moves at once along the run its
+  // key picks, through moveAlong / chaseAlong, so it is a tap on that run
+  // to everything that records one (the move log, the saved attempt, the
+  // stats, the chase's inputs). A key still down when the dot arrives
+  // takes the next matching run (keyStep, every frame after the move
+  // animation), and the choice hover shows that run while the dot travels.
+  const heldKeys = new HeldKeys();
+  let keyHold = false; // A press moved and its key may still be down.
+  let keyHoldSince = 0; // performance.now() of that press.
+  // What the hold moved in: a tap, a reset, a catch or a rebuild ends it.
+  let keyHoldFc: FabricMazeController | null = null;
+  let keyHoldTaps = 0;
+  let keyHoldChase: MinotaurChase | null = null;
+  let keyHoldInputs = 0;
+  let keyHoldCatches = 0;
+  let keyHoldTick = 0;
+  // Real time: a press while running queues its run for the arrival; the
+  // hover shows it until the player leaves the run it was queued on.
+  let keyQueued = -1;
+  let keyQueuedOn = -1;
+  let keyQueuedDir = 0;
+  let keyHover = false; // The choice hover is the hold's.
+  const keyPt = new Float32Array(2);
+  const keyFlow = new Float32Array(2);
+  // A chain's world position as the ribbons draw it (with the flow field).
+  const keyPointAt = (chain: number, ctrl: number, out: Float32Array): void => {
+    ps!.pointOnChain(chain, ctrl, out, 0);
+    renderer!.flowOffset(out[0], out[1], keyFlow);
+    out[0] += keyFlow[0];
+    out[1] += keyFlow[1];
+  };
+  // The junction a key move leaves from: the head (the destination while a
+  // move animates), or in real time the chase's decision vertex.
+  const keyVertex = (): string | null => {
+    if (!fabricController || fabricController.solved) return null;
+    if (chase) return chase.finished ? null : chase.decisionVertex;
+    return fabricController.head;
+  };
+  const keyDepartures = (v: string, reach = KEY_REACH): Departure[] => {
+    const wv = walkGraph?.vertices.get(v);
+    if (!wv || !walkGraph || !fabric) return [];
+    fabric.vertexWorld(v, keyPt, 0);
+    return departureVectors(
+      walkGraph.edges,
+      wv.edges,
+      v,
+      keyPt[0],
+      keyPt[1],
+      keyPointAt,
+      reach
+    );
+  };
+  // Keys play only a maze on screen and still open: not in knot mode,
+  // during the intro, once solved or while the finish lands.
+  const keysLive = (): boolean =>
+    params.mazeFabric &&
+    fabric !== null &&
+    fabricController !== null &&
+    walkGraph !== null &&
+    ps !== null &&
+    renderer !== null &&
+    sceneReady() &&
+    !fabricController.solved &&
+    !pendingWin &&
+    !(chase?.finished ?? false);
+  const setKeyHover = (eid: number): void => {
+    if (!fabric || !fabricController) return;
+    keyHover = eid >= 0;
+    if (fabric.setHover(eid)) fabric.update(fabricController);
+  };
+  const endKeyHold = (): void => {
+    keyHold = false;
+    keyQueued = -1;
+    if (keyHover) setKeyHover(-1);
+  };
+  const noteKeyMove = (): void => {
+    keyHold = true;
+    keyHoldFc = fabricController;
+    keyHoldTaps = fabricController?.taps.length ?? 0;
+    keyHoldChase = chase;
+    if (chase) {
+      keyHoldInputs = chase.inputs.length;
+      keyHoldCatches = chase.catches;
+      keyHoldTick = chase.tick;
+    }
+  };
+  // One move by direction; true when it moved (queued, in real time).
+  const keyMoveAlong = (eid: number): boolean => {
+    if (!fabricController) return false;
+    if (chase) {
+      const p = chase.player;
+      if (!chaseAlong(eid)) return false;
+      keyQueued = p.edge >= 0 ? eid : -1;
+      keyQueuedOn = p.edge;
+      keyQueuedDir = p.dir;
+      return true;
+    }
+    const before = fabricController.taps.length;
+    moveAlong(eid);
+    return fabricController.taps.length > before;
+  };
+  // A fresh press (or a pad press): the best match, as a tap. No match
+  // does nothing; a hold already running keeps going.
+  const keyPress = (dir: KeyDir): void => {
+    const v = keyVertex();
+    if (v === null) return;
+    const p = pickDeparture(keyDepartures(v), dir, { hold: false });
+    if (p.edge < 0) return;
+    if (keyMoveAlong(p.edge)) {
+      keyHoldSince = performance.now();
+      noteKeyMove();
+    }
+  };
+  // Every frame, after the move animation (or the chase) stepped.
+  const keyStep = (): void => {
+    if (!keyHold) return;
+    const fc = fabricController;
+    if (
+      heldKeys.size === 0 ||
+      !keysLive() ||
+      !fc ||
+      fc !== keyHoldFc ||
+      chase !== keyHoldChase
+    ) {
+      endKeyHold();
+      return;
+    }
+    if (chase) {
+      if (chase.catches !== keyHoldCatches) {
+        // Caught and back at the entrance: the keys must come up first.
+        heldKeys.clear();
+        endKeyHold();
+        return;
+      }
+      if (chase.inputs.length !== keyHoldInputs) {
+        endKeyHold(); // A tap took over.
+        return;
+      }
+    } else if (fc.taps.length !== keyHoldTaps) {
+      endKeyHold(); // A tap, Reset path or a restore moved the solve.
+      return;
+    }
+    const v = keyVertex();
+    if (v === null) {
+      endKeyHold();
+      return;
+    }
+    const taps = fc.taps;
+    const arrival = taps.length > 0 ? taps[taps.length - 1] : -1;
+    if (chase && keyQueued >= 0) {
+      const p = chase.player;
+      if (p.edge === keyQueuedOn && p.dir === keyQueuedDir) {
+        setKeyHover(keyQueued); // Still on the run it was queued from.
+        return;
+      }
+      keyQueued = -1;
+    }
+    const pick = pickHold(keyDepartures(v), heldKeys.dirs, arrival);
+    const moving = chase
+      ? chase.playerMoving || chase.tick === keyHoldTick
+      : fabric!.animating;
+    if (moving || performance.now() - keyHoldSince < HOLD_DELAY_MS) {
+      setKeyHover(pick.edge); // What the hold takes next.
+      return;
+    }
+    // Arrived: the next run, or the hold stops here (no match, a tie, a
+    // dead-end tip - its only run is the arrival).
+    if (pick.edge < 0 || !keyMoveAlong(pick.edge)) {
+      endKeyHold();
+      return;
+    }
+    noteKeyMove();
+  };
+  window.addEventListener("keydown", (e) => {
+    const dir = keyDirOf(e);
+    if (dir === null) return;
+    const id = e.code || e.key;
+    if (e.repeat) {
+      // The browser's own repeat: the hold does the repeating.
+      if (heldKeys.has(id)) e.preventDefault();
+      return;
+    }
+    if (keyBelongsElsewhere(e) || !keysLive()) return;
+    e.preventDefault();
+    if (!heldKeys.press(id, dir)) return;
+    keyPress(dir);
+  });
+  // Capture: a keyup always lands, whoever handles it.
+  window.addEventListener(
+    "keyup",
+    (e) => {
+      heldKeys.release(e.code || e.key);
+      if (heldKeys.size === 0) endKeyHold();
+    },
+    true
+  );
+  const dropKeys = (): void => {
+    heldKeys.clear();
+    endKeyHold();
+  };
+  window.addEventListener("blur", dropKeys);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) dropKeys();
+  });
 
   // Stage 19 - bounded tug + snap-back, pointer-layer only (the physics
   // grab machinery is untouched, so knot-mode byte identity holds). The
@@ -3427,6 +3654,8 @@ async function main(): Promise<void> {
         // K80: in the real-time mode the chase moves the dot (tickChase).
         if (chase) tickChase(ticker.deltaMS / 1000);
         else fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
+        // K120: a held key's next move, once the dot has arrived.
+        keyStep();
         if (pendingWin && !fabric.animating) {
           pendingWin = false;
           showFabricWin();
@@ -3941,6 +4170,46 @@ async function main(): Promise<void> {
           }
         }
         return { verts, edges };
+      },
+    };
+  };
+  // K120 probes: the key-move state at the junction the keys leave from
+  // (its departures and what each key picks, for a press and a hold), and
+  // census(reaches): every junction's departure directions at each reach.
+  (window as unknown as Record<string, unknown>).__knotKeyMoves = () => {
+    const v = keyVertex();
+    const taps = fabricController?.taps ?? [];
+    const arrival = taps.length > 0 ? taps[taps.length - 1] : -1;
+    const deps = v !== null && keysLive() ? keyDepartures(v) : [];
+    const dirs: KeyDir[] = ["up", "down", "left", "right"];
+    return {
+      vertex: v,
+      live: keysLive(),
+      hold: keyHold,
+      held: heldKeys.dirs,
+      arrival,
+      scaleX: root.scale.x,
+      scaleY: root.scale.y,
+      departures: deps,
+      press: Object.fromEntries(
+        dirs.map((d) => [d, pickDeparture(deps, d, { hold: false })])
+      ),
+      holdPick: Object.fromEntries(
+        dirs.map((d) => [d, pickHold(deps, [d], arrival)])
+      ),
+      census: (reaches: number[]) => {
+        if (!walkGraph || !fabric || !ps || !renderer) return null;
+        const out: Array<Record<string, unknown>> = [];
+        for (const [id, wv] of walkGraph.vertices) {
+          if (wv.isEnd) continue;
+          out.push({
+            id,
+            edges: [...wv.edges],
+            lengths: wv.edges.map((e) => walkGraph!.edges[e].length),
+            deps: reaches.map((r) => keyDepartures(id, r)),
+          });
+        }
+        return { start: walkGraph.start, exit: walkGraph.exit, junctions: out };
       },
     };
   };
