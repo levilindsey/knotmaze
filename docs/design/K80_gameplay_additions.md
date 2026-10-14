@@ -93,6 +93,12 @@ with a cycle rank of about 100. Section 2.1 has the tables.
    - the melody path;
    - validated sentries.
 
+**Round 2 (K114, 2026-10-13):** your further notes (real time, the
+spider, fire, cutting, long runs, Pluck Hero, the auto-solver), with
+their exploration, a ranked shortlist and ten more decisions, are in
+section R, between 4.35 and section 5. The nine decisions above are
+unchanged.
+
 ## 1. Our medium (facts this design builds on)
 
 - The threads ARE the paths. A move is one tap at a branch point that
@@ -141,6 +147,9 @@ with a cycle rank of about 100. Section 2.1 has the tables.
   - Music mode times its notes with `performance.now()`, polled in the
     render tick (`autoAudioTick`). Onsets jitter by up to a frame: 16 ms
     at 60 fps, up to 100 ms during a gs-18 settle.
+  - [Stale since K101 (e9e01ae), which landed while this was written:
+    `pluck` takes a start time and music mode schedules ahead on the
+    audio clock. See R.2.]
 
 ## 2. The minotaur
 
@@ -684,6 +693,9 @@ and more dissonant when out of rhythm.
   - A lookahead scheduler (25 ms tick, 100 ms horizon) on
     `currentTime` replaces `autoAudioTick`'s `performance.now()`
     polling. That also fixes music mode's frame jitter today.
+  - [Built since by K101 (e9e01ae), in a different shape: a 0.3 s
+    lookahead polled from the render tick, with sample-accurate starts
+    in the worklet. See R.2.]
 - Missing piece 2: **the input clock.**
   - Judge a tap by its pointer event's `timeStamp` (the performance
     clock), mapped to audio time through `getOutputTimestamp()`, minus
@@ -1380,6 +1392,763 @@ All params are appended with off defaults.
 - **Real-time chases** (an animated monster on a clock, outside turns)
   would lose the board-game clarity that makes the telegraph work. The
   beat-locked mode (3.3 H) is the only real-time form worth trying.
+  (Round 2 narrows this: it holds for smart chasers, not for fronts and
+  stimulus-driven enemies. See R.4.2.)
+
+## R. Round 2 (K114, 2026-10-13): cutting, real time, fire and auto-solvers
+
+Levi's second batch of gameplay notes (R.1, verbatim), explored the way
+sections 2-4 explore round 1. No code changes. Where round 1 already
+covers a piece, an entry points to it instead of repeating it. Labels as
+in the rest of this doc: **Measured** (reused from sections 1-4 unless it
+says otherwise), **Research** (a source; round 2's are leads from memory,
+listed in R.7 and not re-checked in this session), **Opinion** (my design
+judgment). Sizes: S is a day or less, M a few days, L one to two weeks,
+XL more.
+
+### R.0 Summary, shortlist and your decisions
+
+**In one paragraph (opinion).** Round 2's notes share three ideas: a new
+verb (cutting), a new clock (real time) and a new role (you act on the
+maze while something else walks it). They fit the medium best when the
+threat is a FRONT or a STIMULUS rather than a mind: fire that spreads
+along the threads, a spider that feels your moves through them, a walker
+that follows its strand. Each of those reads at a glance, and two of them
+keep thinking free. A smart real-time chaser is the one form that still
+fights the medium (R.4.2). Start with the burn race: it is provably
+fair, needs no AI and no new gesture, and builds the blocked-run
+machinery that every cutting mode reuses.
+
+**The ideas** (R.3 has Levi's, R.5 mine):
+
+| Entry | Idea | Verdict (opinion) |
+|---|---|---|
+| R.3.1 | Real time as a mode parameter (`clock`) | Yes, for fronts and stimulus enemies; always with a turn fallback |
+| R.3.2 | The spider | Yes, after the minotaur: stillness is safe |
+| R.3.3 | Burn race | **Shortlist 1** |
+| R.3.4 | One thread (unbraid) | As a win finale; as a puzzle only on small mazes |
+| R.3.5 | Cutting threads to avoid monsters | Yes, with healing cuts and the Trapdoor |
+| R.3.6 | Points for long runs (flow) | A separate stat first; the cut economy later |
+| R.3.7 | Pluck-to-cut melody | As Pluck Hero's turn-based form |
+| R.3.8 | Pluck Hero | **Shortlist 5**, as an MVP on the standard maze |
+| R.3.9 | The auto-solver inversion (stop, slow, guide, show) | **Shortlist 2**, guide first |
+| R.5.1 | Beat rider | **Shortlist 3** |
+| R.5.2 | Firebreak | After the burn race |
+| R.5.3 | Strand wave | After the minotaur |
+| R.5.4 | Resonance shatter | Maybe |
+| R.5.5 | Your echo | After the minotaur; also a musical canon |
+| R.5.6 | Short versus Cut (two players) | Cheap once cutting exists |
+| R.5.7 | Race the solver | Cheap once the walker exists |
+
+**Ranked shortlist** (opinion; R.6 says what each prototype must answer):
+1. **Burn race, turn-based** (R.3.3), S-M. Fair by construction, with
+   no AI and no new gesture. It reuses the trace reveal's flood and the
+   burn FX, and builds the blocked-run set.
+2. **The cut verb and the auto-walker** (R.4.1, R.4.3), M, tried first
+   as **Lead the walker** (a deterministic daily puzzle with a computable
+   par), then **Delay it** (always finite), then **Keep it in** after a
+   balance probe. One investment serves R.3.4 to R.3.9.
+3. **Beat rider** (R.5.1), M: the first `clock` beyond turns. Rhythm with
+   no timing judgment, so Bluetooth cannot break it. It builds the game
+   clock that real time needs.
+4. **The spider** (R.3.2), S-M after the minotaur ships: the real-time
+   enemy that keeps thinking free.
+5. **Pluck Hero MVP** (R.3.8), M on top of item 2: the standard maze, no
+   scroller. The scroller and its strip generator only if the MVP is fun.
+
+Then: healing cuts against the minotaur (R.3.5), the one-thread win
+finale (R.3.4, nearly free after item 2) and the flow stat (R.3.6).
+
+**Decisions for you (round 2).**
+1. **The first round-2 prototype.** Recommended: the burn race,
+   turn-based.
+2. **A `clock` param** (turn | beat | realtime) that every enemy and
+   front reads; it narrows 4.35. It brings timed taps into attempts (a
+   store version bump) and a pause that hides the board. Recommended:
+   yes, built with the beat rider.
+3. **What a cut does.** Recommended: delete the whole run, and let a
+   junction left with two runs stop being a decision (R.4.1). The
+   alternative snips the run into two dead-end stubs.
+4. **Render-only cuts plus walk-graph cuts** (recommended), or a physical
+   split of the thread (L: `ParticleSystem.openChain` refuses after
+   junction fusion).
+5. **The cut gesture.** Recommended: a scissors button that arms the next
+   tap, as 4.10's lure button arms a pluck. Alternatives: a swipe across
+   a thread, a long press.
+6. **Cuts against monsters: healing or permanent?** Recommended: healing
+   (a cut closes again after a few moves). Permanent cuts need 4.3's
+   strand detector to refuse cuts that strand you.
+7. **The spider:** a `minotaur` option or an enemy of its own; its
+   glyph, and an arachnophobia alternative.
+8. **Pluck Hero:** an MVP on the standard maze before any strip
+   generator. Recommended: yes.
+9. **Dailies:** all of round 2 in free play first. Recommended first K46
+   modifier from it: the burn race.
+10. **The flow score** stays a separate stat, never part of efficiency.
+    Recommended: yes.
+
+### R.1 Levi's notes (verbatim, 2026-10-13)
+
+> Other game mode ideas:
+> - Real-time enemy movement would also be a great mode and/or a parameter for modes.
+> - A spider enemy might be good, since it conceptually fits with the webs of threads.
+> - A mode where threads burn away steadily and you have to race to the end ahead of them.
+> - You can delete segments somehow. Then you want to end up with a single unbranched thread from start to end.
+> - Or you can cut threads to avoid monsters.
+> - Or you somehow get more points for choosing longer segments, which can feel satisfying to slide through. Cutting threads could contribute to getting to a long segment. Or not.
+> - Maybe plucking could cut threads, and you have a goal to pluck a particular melody, and segments are color-coded to music notes, but then you still want to leave a path through the maze. Ooooh, this could potentially be extended to something a bit more involved, like a Guitar Hero UI (or just a side-scrolling custom lined music staff) with pluck note colors corresponding to segments, and then we also have a procedurally generated sidescrolling chunk of maze threads that is built to correspond to the music notes; then, their is an AI auto-progressing the maze navigation, but the player gets to pluck segments in time with the music, but needs to carefully and quickly choose which segments are safe to pluck while still letting the AI player proceed through the maze.
+> - The maze is being auto solved, and you are trying to stop it or show it or guide it indirectly in a particular way by adding obstacles or cutting segments.
+> - Again, include these with the other gameplay exploration notes, and please explore some possible gameplay modes/mechanics/concepts and pros/cons, and give me a list of ideas and descriptions.
+
+### R.2 What round 2 changes in our medium (facts)
+
+From the code on 2026-10-13, beyond section 1:
+
+- **A move has no middle.** `FabricMazeController.tapEdge` moves the
+  head at once; the dot's travel is render-only (`fabric_maze_renderer.ts`
+  `beginMove`). A tap mid-flight snaps the previous move ("its dot lands
+  at once"). In real time that is a speed exploit, so a realtime clock
+  must queue the next tap until the dot arrives.
+- **Travel time grows with length.** The dot moves at `MOVE_CTRL_PER_S`
+  (34 ctrl/s) × `moveSpeed`, slowed in bends (`MOVE_CURVE_SLOWDOWN` 2.2),
+  "deliberately independent of the run's length", so a long run takes
+  proportionally longer. Real time needs a game clock that this animation
+  FOLLOWS, never one it defines: K103 already records that the move
+  animation slows below 10 fps.
+- **An attempt is a pure tap list** (`daily_attempt.ts`: `taps: number[]`
+  plus `elapsedMs`), stored in `knotmaze.daily` as `{v: 2, days, prefs}`.
+  A cut is a new kind of action and a timed tap a new field. Either is a
+  shape change, so the store's `v` goes to 3 (gameplay.md, daily rule 5).
+- **Every tap already means something.** A tap on a choice arm moves. A
+  tap on any other thread is a free, render-only tap-pluck (zero
+  physics). A press waits for a slop (mouse 4, pen 6, touch 10 CSS px),
+  then tugs. An empty-space drag pans, and touch resolves on release. A
+  new verb on a tap must be ARMED (4.10's pattern) or it takes the free
+  instrument away.
+- **Threads cannot be split at runtime.** `ParticleSystem.openChain`
+  throws after junction fusion, and fabric tails are carved at graph
+  level (`applyMazeCuts`) before physics exists. Round 2's cuts are
+  therefore render-only plus walk-graph changes, as 4.3's collapsing runs
+  are.
+- **Distances are a closure.** `buildWalkGraph` runs its Dijkstra (O(V²),
+  about 40,000 steps at 199 vertices) inside itself. Every idea here that
+  removes runs at runtime needs it exported with a removed-run set, and
+  `distToExit` recomputed per cut.
+- **The fire front already exists.** `reveal_plan.ts`'s trace sequence
+  floods from the walk start over the walk graph by lattice length, as
+  per-chain directional fronts (`intervalsAt`, `tipsAt`). The G2 shaders
+  compute every pixel's ignition from KREVEAL, and `appear_fx.ts` has a
+  `burn` frontier style (smoke). A burn-away is that front with the mask
+  inverted.
+- **Strands and notes are indexed.** Every run lives on one chain
+  (`WalkEdge.chain`), main.ts's `audioRuns` maps a chain to its runs, and
+  every run owns one pitch (`audioAssign.segFreq`).
+- **The beat clock exists (K101, e9e01ae).** Music mode schedules its
+  notes 0.3 s ahead on the AudioContext clock (`song_scheduler.ts`,
+  `MUSIC_LOOKAHEAD` in main.ts), and the worklet starts each one
+  sample-accurately (`startFrame`). `autoAudioTick` still polls in the
+  render tick; the lookahead absorbs the frame jitter. This supersedes
+  section 1's "`synth.pluck` sounds NOW" and "Music mode times its notes
+  with `performance.now()`", and 3.2's missing piece 1 (built in this
+  different shape). Those passages are left as written.
+- **Measured** (section 1, 4.1): a median gs-18 daily has 199 vertices,
+  302 runs, cycle rank 103 and 3 bridges (both tails plus one). The
+  optimal route is 18 runs and 80 lattice units; the fewest-runs route
+  is 15. Fencing off the exit takes 5, 10 and 14 runs at radius 2, 3 and
+  4. A median run is about 3.7 lattice units, p90 11-15 (render.md,
+  junction blend distance).
+
+### R.3 Levi's ideas
+
+Each entry: how it plays, how it fits the medium, for and against, cost,
+and what it shares with round 1.
+
+#### R.3.1 Real-time enemies, and real time as a parameter
+
+- **Plays:** enemies and fronts move on a continuous clock while you
+  think. You still move junction to junction; the clock decides what
+  happens meanwhile.
+- **Fit:** 2.2's contact rule is already continuous along runs (you and
+  the minotaur animate over the same duration), so contact needs no new
+  model. What changes is thinking time: free in turns, the danger in real
+  time. R.4.2 makes it a `clock` param for every mode.
+- **For:** tension and Pac-Man energy; fire and spiders feel alive; a
+  difficulty lever that needs no new content.
+- **Against:** a smart chaser at your speed punishes reading the maze,
+  which is the game. Phones mis-tap thin threads under pressure, and a
+  mis-tap is a catch. An attempt stops being a pure tap list.
+- **Opinion:** real time suits threats you read at a glance (a front,
+  the beat, a walker, a spider that only feels motion). A realtime
+  minotaur should be slower than you, as Pac-Man's ghosts are, and
+  always telegraphed. (Research, from memory and not among section 8's
+  quotes: the Pac-Man Dossier gives level 1 Pac-Man 80% of top speed and
+  the ghosts 75%.)
+- **Cost:** M once (R.4.2), then S per enemy policy.
+- **Overlaps:** 2.2 (contact), 2.7 (telegraph), 3.3 H (the beat-locked
+  world is `clock=beat`), 4.35 (narrowed here).
+
+#### R.3.2 The spider
+
+- **Plays:** a spider waits at the hub of its web, a junction near the
+  exit. It cannot see; it FEELS. Each move rings the runs you walk, each
+  pluck rings its run, and the vibration travels along the threads,
+  fading with thread distance. When it feels something in range it darts
+  there, fast, then waits again. Standing still is silent.
+- **Fit:**
+  - It is the hunter (2.3d) with sight replaced by feeling along the walk
+    graph: the walk distance to each vibration, the strongest in range
+    wins (Brogue's sounds, 4.10).
+  - Lures are native: a tap-pluck on a far thread draws it (4.10). With
+    the spider on, every pluck is felt; that is the mode.
+  - Silk: the spider mends cut runs (healing cuts, R.3.5, with a reason)
+    and lays sticky runs that take two moves to cross (4.33's muddy
+    runs). Spinning NEW runs costs more. Between two existing junctions a
+    short distance apart it is a render-only strand plus a walk run (M).
+    Mid-run, at maze_plan's unused splice candidates
+    (`findSpliceCandidates`), it splits runs at runtime like 4.25 (M-L).
+  - Its glyph is a K83 marker; an arachnophobia setting swaps it
+    (Research: Grounded and Satisfactory ship such settings).
+- **For:** the most on-theme enemy (a web of threads). Vibration makes
+  the instrument tactical. In real time stillness is safe, so thinking
+  stays free (opinion: the best answer to real time on phones).
+- **Against:** arachnophobia. Accidental tap-plucks on phones become
+  summons (bigger choice hit targets help). It overlaps the minotaur
+  heavily, so only one should ship first.
+- **Research leads:** orb-weaving spiders locate prey through web
+  vibrations (Mortimer et al. 2016); Spider: The Secret of Bryce Manor
+  (2009) is a phone game about a spider on its webs.
+- **Cost:** S as a minotaur policy (`minotaur=spider`); M with spinning;
+  realtime darting needs R.4.2.
+- **Overlaps:** 2.3 (models), 2.10 (footsteps: here you make the
+  noise), 3.3 K (sympathetic resonance is the vibration made audible), 4.9
+  (sleepers), 4.10 (lures), 4.33 (muddy runs).
+
+#### R.3.3 Burn race
+
+- **Plays:** a fuse is lit at the entrance. Fire runs along every thread
+  from there, slower than you, and burnt runs are gone. Reach the exit
+  ahead of it. Backtracking feeds the fire.
+- **Fairness (exact, from the definition):** let d(v) be a junction's
+  walk distance from the entrance, r < 1 the fire's speed as a share of
+  yours, and h its head start. Fire reaches v at h + d(v)/r; you reach v
+  after walking L(v). Fire behind you can never catch you on a run (it
+  is slower), so you are safe exactly while L(v) < h + d(v)/r at each
+  junction you reach.
+  - On the shortest route L(v) = d(v), always less: **the optimal route
+    always escapes.** Every burn race is winnable without a solver
+    (compare 4.8's 7% unwinnable sentries).
+  - The detour you can afford by v is h + d(v)(1/r − 1). It grows with
+    distance: early wandering is deadly, late wandering cheap. At the
+    exit of a median daily (d = 80) it is h + 27 lattice units at
+    r = 0.75 (about seven median runs) and h + 9 at r = 0.9.
+  - Opinion: on an open board a careful player rarely feels it; with fog
+    of war (2.10) or r near 0.9 it bites. Measure before tuning (R.6).
+  - Fire follows the walk graph and never jumps a crossing: there the
+    threads pass over and under, they do not touch.
+- **Turn-based first:** the fire's clock is the length you have walked,
+  so each move advances it by the run's length. That keeps the attempt a
+  pure function of its taps (saved attempts and replays stay exact), and
+  thinking is free. `clock=realtime` burns "steadily", as the note says.
+- **Readable:** an arm whose far end the fire reaches before you would is
+  drawn smoldering and refuses the tap, so you never walk into fire
+  unknowingly. You lose only when no safe arm is left, and a loss always
+  traces back to your own detours.
+- **Fit:** the walk start is the trace flood's origin, so the fire front
+  IS `reveal_plan`'s trace sequence, and the `burn` frontier FX rides its
+  tips. Burnt runs leave `choices()` (R.4.1's blocked-run set). Fire is
+  light: under fog, burning threads show branches the fire has reached
+  and you have not.
+- **For:** fair by construction; no AI, no new gesture; reuses the reveal
+  machinery; a strong look (the burn intro played backwards). One param
+  makes it a daily modifier.
+- **Against:** the inverted mask is new G2 shader work, with its
+  `paint_math` mirror and a census. Without fog it may be tension-free
+  (the measurement question).
+- **Variants:** sparks (fires lit at telegraphed junctions and times;
+  Firebreak, R.5.2); a wick (the fire follows only YOUR path: R.5.5's
+  echo, burning); collapse behind you (4.3, as fire).
+- **Daily and share:** "🔥 escaped by 9.2" (the closest call: the least
+  fire-minus-you margin along your route, in lattice units).
+- **Params:** `fire` (off | fuse | sparks; off), `fireSpeed` (r,
+  [0.3, 0.95]; 0.75), `fireDelay` (h, lattice units; 0).
+- **Cost:** S-M: the logic S, the look M (inverted mask, a char band at
+  the front, embers).
+- **Precedent:** Pipe Dream (1989): stay ahead of a front.
+- **Overlaps:** 2.10 (fog), 4.3 (collapsing runs, the strand detector),
+  4.24 (tides), 4.29 (sprint), K76 (thread reveal: the same per-run
+  visibility, reversed).
+
+#### R.3.4 One thread (unbraid)
+
+- **Plays:** cut runs until the entrance and the exit are joined by ONE
+  unbranched thread. Everything you cut loose falls away. What is left is
+  a single run, and the dot slides it end to end in one long move,
+  playing its notes in order: the maze's song.
+- **Fit:** the cut verb with contraction (R.4.1). Debris is every run no
+  longer connected to the entrance-exit thread.
+- **Against (inferred):** once you choose the route, the cuts are forced.
+  Every other run touching a junction on it must go: k − 2 cuts for a
+  junction of k runs. "Fewest cuts" therefore means "the route through
+  the fewest, smallest junctions", and the cutting is busywork after
+  that. Par is a shortest path weighted (k − 2) per junction, exact
+  unless a run joins two junctions of the same route (one cut then
+  counts for both).
+- **Better forms (opinion):**
+  - **The finale:** after any solve, everything off your route falls
+    away and your route plays as one thread. S after R.4.1's render
+    work, with no puzzle needed.
+  - **The longest thread:** score the final thread's length, so the
+    puzzle is choosing the longest route that never revisits a junction.
+    Longest simple path is NP-hard in general (Garey and Johnson), so par
+    is exact only on small mazes (a depth-first search copes with a few
+    dozen junctions).
+- **For:** an ending only a thread maze has: the song of your route.
+- **Against:** weak as a standalone puzzle at gs 18.
+- **Cost:** S after R.4.1 (the finale); S for a small-maze par.
+- **Name:** "One thread" or "Unbraid" (Untangle is the planarity
+  puzzle's name).
+- **Overlaps:** 3.3 C (the melody path: the finale plays it), 4.14
+  (par), 4.15 (Ariadne's spool).
+
+#### R.3.5 Cutting threads to avoid monsters
+
+- **Plays:** you carry scissors with a few charges. A cut run is closed
+  to the minotaur too, so it must route around. **Trapdoor:** with the
+  telegraph on (2.7), cut the run it has committed to while it is on it,
+  and it falls (stunned, or back to its lair).
+- **Fit (measured, section 0):** a careful player who can see the
+  minotaur is almost never caught on the braided core (2 catches in 9,000
+  telegraphed games). Cuts matter where the danger is: under fog (11% of
+  the lapsing explorer's daily games end in a catch), against a two-run
+  charge, at a pocket's mouth.
+- **Healing or permanent (decision 6):** a healing cut closes again
+  after a few moves (or the spider mends it), so you cannot strand
+  yourself and the maze never degrades into a tree. Permanent cuts need
+  4.3's strand detector to refuse a cut that leaves you no route.
+- **For:** agency against the chase; the Trapdoor turns the telegraph
+  into a weapon.
+- **Against:** snares (4.30) are nearly the same verb (pick one); with
+  charges, players hoard them.
+- **Daily and share:** "✂️ 2 🕳️ 1".
+- **Cost:** S after the minotaur and R.4.1.
+- **Overlaps:** 4.7 (the sword), 4.11 (switches), 4.23 (the myth: the
+  minotaur cutting YOUR thread is the mirror image), 4.30 (snares).
+
+#### R.3.6 Points for long runs (flow)
+
+- **Plays:** each run scores the first time you cross it, more than in
+  proportion to its length (say length^1.5): long runs are prizes. The
+  flow score sits beside efficiency, not inside it. A flow mode gives a
+  move budget (par plus half) and asks for the best score at the exit.
+- **The slide:** today a long run just takes longer (R.2). To feel like a
+  slide: ease in, cruise faster on long runs, ease out; let the run's
+  note swell (re-pluck it as a tremolo); lead the camera. All
+  render-only, S.
+- **Cutting makes long runs:** cutting a branch at a three-run junction
+  fuses its other two runs into one (contraction). With a superlinear
+  score, runs a and b score more fused than apart, so a cut budget
+  becomes an economy: cut to fuse, then slide. That is the link the note
+  suspects. Opinion: elegant on paper, at risk of feeling like a
+  spreadsheet; ship the stat first.
+- **Fit:** efficiency (optimal / your route) punishes detours and flow
+  rewards them, so keep them apart (decision 10). A budgeted flow mode is
+  orienteering (NP-hard in general): par is a heuristic except on small
+  mazes.
+- **For:** rewards the most satisfying motion in the game; cheap.
+- **Against:** two scores compete for attention, and flow contradicts
+  "solve efficiently" on dailies.
+- **Daily and share:** "🌊 412".
+- **Cost:** S (the stat and the slide); M with the cut economy.
+- **Overlaps:** 4.4 (required pickups), 4.5 (bonus stars), 4.14 (par),
+  4.19 (ice runs, the other slide).
+
+#### R.3.7 Pluck-to-cut melody
+
+- **Plays:** a short melody shows as colored notes. Pluck a run of the
+  next note's color: it sounds, and it is cut. Finish the melody with the
+  entrance still joined to the exit, then walk out.
+- **Fit:** every run owns one pitch, and music mode buckets runs onto
+  the song's pitches, so every note has runs to choose from; 3.3 B's
+  notes scheme colors them. Plucks are the free instrument today, so this
+  needs an armed mode (R.2).
+- **The difficulty problem (inferred from measured counts):** a gs-18
+  daily can lose up to 103 runs (its cycle rank) without disconnecting
+  anything, and at about seven pitches each note has some 40 runs. Almost
+  any choice is safe. To make it a puzzle: the run must be near your head
+  (within 2-3 runs, and you walk between notes); a small maze; a route
+  within par plus x must survive, not just any route; or the clock (that
+  is Pluck Hero).
+- **For:** music and maze become one puzzle; the song survives in the
+  maze you leave behind.
+- **Against:** too easy without one of those constraints; pitch colors
+  at phone thread widths (6.2).
+- **Cost:** S-M after R.4.1 and the notes scheme.
+- **Opinion:** best as Pluck Hero's turn-based form, which is also its
+  accessibility fallback (3.6).
+- **Overlaps:** 3.3 B (notes colors), C (the melody path: walk the song;
+  here you cut it), I (musical locks), K (resonance: hear where a note
+  is), 4.27 (hidden runs).
+
+#### R.3.8 Pluck Hero
+
+- **Plays (the note's full version):** a note highway, or a scrolling
+  staff, shows the song's coming notes in pitch colors. Beside it a long
+  strip of maze scrolls, and an AI walker makes its way through. On each
+  note you pluck a run of that note's color: you play the melody, and
+  the pluck cuts the run. Cut one the walker needs and it reroutes; leave
+  it no route and it sticks. Every note is a fast choice: which red run
+  is safe?
+- **Fit:**
+  - Already there: per-run pitches; K101's scheduler plays a song on the
+    audio clock with lookahead; the walker (R.4.3); cuts (R.4.1).
+  - New: a strip generator (a long, thin lattice made in chunks and
+    stitched; maze_plan is global today, so this is a generation project,
+    behind a param that defaults off so links and dailies keep their
+    mazes). Physics off on the strip (opinion: a 6 by 200 strip holds
+    about four times a gs-18 maze's material). An audio-clock camera:
+    scroll = audio time minus output latency, so what you see is what
+    you hear. A chart generator that puts runs of the right pitch where
+    the walker will be when each note is due ("built to correspond to
+    the music notes").
+  - Timing: judged timing needs 3.5's calibration and breaks over
+    Bluetooth (lab averages of about 170-370 ms, 3.1). Quantized plucks
+    (Rez, 3.3 F)
+    avoid judging: any pluck inside a wide window sounds on the beat.
+- **MVP (opinion, recommended):** the standard maze, no scroller. The
+  walker takes one run per beat (or bar) along its route; the song plays;
+  runs of the next note within three runs of the walker glow; you pluck
+  one, quantized. A cut on its planned route makes it replan; stuck, it
+  waits and the song goes on (no fail). M on top of shortlist item 2.
+- **For:** a real music game only this medium could make; you become
+  the band's soloist (K116's accompaniment is the band).
+- **Against:** the biggest build here; panic choices on a small screen;
+  judged timing is a calibration project.
+- **Precedent:** Guitar Hero (2005; the highway); Patapon (2007: you drum
+  commands in rhythm and never move anyone directly, the closest model);
+  Lumines (the sweep); Rez (quantizing).
+- **Cost:** the MVP M; the full strip L-XL.
+- **Overlaps:** 3.3 F, G, H; 3.5 (calibration); 3.6 (the no-rhythm
+  fallback is R.3.7); 6.3 (more songs).
+
+#### R.3.9 The auto-solver inversion
+
+"The maze is being auto solved, and you are trying to stop it or show it
+or guide it": four verbs, one walker (R.4.3). "Show it" may be a typo for
+"slow it"; both are covered.
+
+- **Stop it (Keep it in; Chat Noir).** Turn-based: the walker takes one
+  run per turn along its current shortest route, you cut one run per
+  turn, and you win when the exit is out of its reach.
+  - The exit tail is a bridge, so cutting it wins at once: protect the
+    tail and a moat around the exit.
+  - Balance (inferred from 4.1's counts, not simulated). 4.1's radius
+    counts runs from the exit junction. The walker crosses into the
+    radius-r ball after roughly 14 − r to 17 − r runs (the fewest-runs
+    and the shortest routes, less the exit tail), and fencing that ball
+    takes 5, 10 and 14 cuts at r = 2, 3 and 4. With no moat the naive
+    fence wins easily (5 cuts against 12 or more turns). A moat of radius
+    2 makes it close (10 cuts against 11-14 turns). A moat of radius 3
+    tips it to the walker (14 cuts against 10-13 turns), unless the
+    cutter makes it detour. Every cut on its route also makes it replan
+    longer, which buys turns. Other knobs: a two-run walker, a cut every
+    other turn. The balance probe (R.6) decides.
+  - Variant: play the spider (R.3.2) catching a fly that flees for the
+    exit (4.6's critter), with your body as one more blocker.
+- **Slow it (Delay it).** Cuts may never disconnect the walker from the
+  exit (refused, as the strand detector would). The score is the length
+  of its walk.
+  - Always finite: a cut that lengthens its route must break a cycle (a
+    bridge elsewhere is on no route of its), and a median daily has 103
+    (the measured cycle rank). Once they are gone, it walks home.
+  - It is close to shortest-path interdiction (Israeli and Wood 2002),
+    played online, and to the Canadian traveller problem (Papadimitriou
+    and Yannakakis 1991), where a traveller learns of blocked roads only
+    on reaching them.
+  - A fine daily: the same walker for everyone; share "🐢 61 runs (it
+    wanted 18)".
+- **Guide it (Lead the walker; Lemmings, ChuChu Rocket).** The walker
+  does not solve; it follows rules. It goes straight on along its strand
+  through each junction (the next run of the same chain, from
+  `WalkEdge.chain` and the ctrl spans), turns a fixed way where its
+  strand ends, and turns back at an END. You place cuts to steer it to
+  the exit: before it starts (a puzzle) or while it walks (action).
+  - Par: a shortest path over (run, direction) states, where going on is
+    free and turning off costs the cuts it takes; exact unless the walker
+    re-enters a junction where it was turned.
+  - Deterministic and readable, so a daily puzzle ("✂️ 4, par 3").
+- **Show it.** The walker demonstrates: an attract mode on the title,
+  the optimal route played as a melody after you finish, or R.5.5's
+  canon.
+- **For:** four modes from one walker and one verb, each a pure function
+  of (walk graph, seed, params, your cuts), so attempts and replays stay
+  exact.
+- **Against:** puzzle modes start slower; the walker's rule must read on
+  a phone (show its next run, 2.7, and its route as a faint dotted
+  thread).
+- **Cost:** the walker S-M; each verb S; each par solver S.
+- **Overlaps:** 2.3 (the hunter's planner is the solver), 2.7
+  (telegraph), 4.6 (fleeing critters), 4.20 (rescue: the walker is an
+  escort), 4.21 (ghost race).
+
+### R.4 The shared pieces
+
+#### R.4.1 Cutting as a verb
+
+- **What a cut is (decision 3):**
+  - **Delete the run (recommended).** It leaves `choices()`. A junction
+    left with two runs stops being a decision, and a move through it
+    carries on (contraction).
+  - **Snip** at the tap point into two dead-end stubs: more physical,
+    but new END vertices mid-run are runtime walk-graph surgery (4.25,
+    M-L), and they make new pockets where the minotaur catches.
+- **Contraction without renumbering:** keep the original walk graph and
+  its run ids, and let `tapEdge` carry on through two-run junctions (one
+  move becomes a chain of original runs). Taps stay original ids, so
+  `walkFingerprint`, replay and saved attempts keep working.
+- **Distances:** export the Dijkstra with a removed-run set and recompute
+  `distToExit` per cut (instant at this size). The g/d/b move log then
+  reads against the current maze.
+- **Safety:** 4.3's strand detector (can the head still reach the exit?)
+  refuses, warns or allows, per mode.
+- **Render (render-only, like 4.3):** the run fades or burns away and
+  the physics is untouched. Three details:
+  1. A per-run hide in the G2 paint, beside KREVEAL. K76's thread-reveal
+     layer needs the same thing; whichever lands first builds it.
+  2. Crossing gaps: G1 cuts a gap in an under-thread where an
+     over-thread passes. When the over-thread's run is cut, that gap
+     slot must close, or the under-thread shows a gap with nothing over
+     it.
+  3. Junction fans: the cut arm must leave its junction's fan
+     (`arm_strip.ts`, `junction_field.ts`), or a stub of fan color stays.
+
+  A flourish: the render-only pluck overlay (K77) snaps the two cut ends
+  back, with 4.3's short, bright snapped-string pluck.
+- **Gesture (decision 5):**
+  - **A scissors button (recommended)** arms the next tap, as 4.10's lure
+    button arms a pluck. One extra tap per cut, unambiguous on phones.
+  - **A swipe across a thread** (Cut the Rope) is fast and satisfying.
+    But a press on a thread waits for its slop and then TUGS, and an
+    empty-space drag pans. Only a quick swipe that starts in empty space
+    and crosses a thread could cut, and it would steal pans.
+  - **A long press:** 4.16's chalk claims it, and it fights the tug.
+- **Attempts:** a cut is an action, so taps become typed (move or cut):
+  store `v: 3`.
+- **Cost:** M once (walk graph and controller S, render M, attempts S);
+  every cutting mode after it S.
+
+#### R.4.2 Real time as a mode parameter
+
+- **The param:** `clock` = turn (today) | beat (3.3 F and H: moves and
+  enemies step on the beat) | realtime. Every enemy and front reads it:
+  minotaur, spider, fire, walker.
+- **Where real time fits (opinion; narrows 4.35):** threats you read at a
+  glance (a front, the beat, a walker, an enemy driven by a stimulus).
+  Where it fights: a smart chaser at your speed that you must out-think.
+  4.35's verdict holds for SMART chasers only.
+- **Thinking time is the lever.** The spider (stillness is silent) and
+  the turn-based fire keep it free; a realtime minotaur makes it a cost.
+  Pause must hide the board, or pausing is free thinking.
+- **Determinism:** game time is a fixed-step clock (say 120 ticks a
+  second, accumulated from wall time and paused while hidden, as
+  SolveClock is), never the animation clock (K103: below 10 fps the move
+  animation slows). The renderer animates toward the game state.
+- **Attempts:** timed taps (a tick per tap): store `v: 3`, and K85's
+  replay links carry the timings.
+- **Mid-flight taps queue** instead of snapping (R.2).
+- **Phones:** touch resolves on release, and threads are 4-5 px wide
+  (6.2). Realtime modes want generous hit targets (a tap near a choice
+  arm snaps to it) and slower defaults. Bluetooth delays only the sound,
+  so real time without rhythm is unaffected.
+- **Accessibility:** as with rhythm (3.6), no mode may require real time:
+  each keeps `clock=turn` (Cadence of Hyrule's Fixed-Beat Mode, section
+  8).
+- **Cost:** M once (the clock, timed taps, the queue, pause, the store
+  bump); S per enemy policy.
+
+#### R.4.3 The auto-walker
+
+- **One walker:** a policy plus a clock that taps its own
+  `FabricMazeController`. Policies: a replanning shortest route (the
+  minotaur's planner), a strand follower (Lead the walker), a fogged
+  explorer (Race the solver; the K80 harness's explorer policies are the
+  reference), a song follower (Pluck Hero).
+- **Determinism:** its taps derive from (walk graph, seed, params, your
+  actions), so an attempt stores only yours.
+- **Readability:** show its next run (2.7) and its route as a faint
+  dotted thread. A second dot with a glow is what the minotaur needs
+  anyway (2.8).
+- **Cost:** S-M; each verb S on top.
+
+#### R.4.4 The rhythm mode
+
+- **The clock is there:** K101 schedules on the audio clock (R.2).
+  Gameplay on the beat maps the visual clock from the audio clock minus
+  output latency (3.5), never the reverse.
+- **Three intensities (opinion):**
+  1. No judgment: the beat moves you, you only choose (Beat rider,
+     R.5.1).
+  2. Quantized: any tap inside a wide window lands on the beat (Rez;
+     3.3 F; the Pluck Hero MVP).
+  3. Judged: Guitar Hero windows. It needs calibration (3.5): an opt-in
+     hard mode, like 3.3 H.
+- **The band:** a drone or bass that keeps the beat while the player is
+  quiet is K116's accompaniment (`docs/design/K116_instruments.md`).
+- **Songs:** one tune today (6.3). Rhythm modes want five to ten
+  public-domain tunes in different meters and tempos.
+
+### R.5 More ideas in the same spirit
+
+#### R.5.1 Beat rider
+
+- **Plays:** the dot never stops. It moves on the beat, each run taking
+  max(1, round(length / L)) beats (L the lattice length of one beat), and
+  plucks its run's note as it goes. Before each junction you tap the arm
+  you want; with no tap it goes straight on along its strand, and an END
+  turns it back. Your route IS the rhythm.
+- **For:** music without judgment: you choose and the beat moves you, so
+  latency and Bluetooth cannot hurt. Every route sounds like a song. It
+  builds the game clock R.4.2 needs.
+- **Against:** no stopping to think (a slower tempo and open mazes help);
+  long runs mean long waits (cap a run at four beats?). It still needs a
+  turn fallback (3.6).
+- **Cost:** M (the beat clock, a queued choice, and the straight-on rule
+  it shares with R.3.9).
+- **Overlaps:** 3.3 A (traversal plucks), F (quantizing), H; 4.19 (ice
+  runs); R.3.9's strand follower.
+
+#### R.5.2 Firebreak
+
+- **Plays:** a spark lights at a telegraphed junction. Each turn the fire
+  spreads one run in every direction and you cut k runs. Save the exit,
+  or as many runs as you can. It is a cousin of the firefighter problem
+  (Hartnell 1995; Finbow and MacGillivray 2009), which protects vertices
+  where this cuts edges.
+- **For:** a pure turn-based puzzle; it combines with the burn race
+  (race AND cut).
+- **Against:** abstract; NP-hard in general, so an exact par only on
+  small mazes.
+- **Cost:** S after the burn race and R.4.1.
+
+#### R.5.3 Strand wave
+
+- **Plays:** a pluck sends a wave along its WHOLE strand, through every
+  crossing, and stuns any enemy on that strand's runs. You must know
+  which threads are one strand as they weave across the maze.
+- **For:** only a woven maze can do this. It teaches strands and gives
+  the instrument teeth (`audioRuns` already maps a chain to its runs).
+- **Against:** strands are hard to follow at phone widths; light the
+  whole strand while a finger presses it.
+- **Cost:** S after the minotaur.
+- **Overlaps:** 3.3 K, 4.10, 4.26.
+
+#### R.5.4 Resonance shatter
+
+- **Plays:** a charge shatters every run of one pitch at once, like a
+  glass harp. Block the minotaur by sacrificing all the D runs, if your
+  own route survives it.
+- **For:** a big, readable musical move with the notes scheme (3.3 B):
+  one choice among about seven pitches.
+- **Against:** blunt; it can wreck your own route (the strand detector
+  warns).
+- **Cost:** S after R.4.1 and the notes scheme.
+
+#### R.5.5 Your echo
+
+- **Plays:** your own path, replayed N moves behind you, walks the maze.
+  As an enemy, touching it is a catch, so backtracking and short loops
+  turn dangerous: with N = 2 every dead-end poke meets it at the mouth,
+  with N = 3 you slip past (unless you turn back into it). As music, it
+  replays your notes N beats
+  later: a canon.
+- **For:** a pure function of your taps, cheap after the minotaur. The
+  canon is a lovely free gift in music mode. Lit, it is the burn race's
+  wick.
+- **Against:** mild in a braided maze (going forward never meets it); it
+  bites in dead ends and under fog.
+- **Cost:** S after the minotaur's contact rule.
+
+#### R.5.6 Short versus Cut
+
+- **Plays:** two players on one phone. Short claims runs (they glow) to
+  join the entrance to the exit; Cut deletes runs to stop it. One run
+  each per turn. A bridge would hand Cut a one-move win (a median daily
+  has 3: both tails plus one, section 1), so the bridges start claimed
+  for Short.
+- **For:** it is the Shannon switching game, which Lehman solved (1964):
+  the perfect-play winner is computable in polynomial time, so the
+  generator can check a maze before offering it and pick who starts. It
+  needs only the cut verb, and Gale's Bridg-It shows the game is fun.
+- **Against:**
+  - Inferred, not measured: our mazes are probably too sparse for a fair
+    game. Short wins even moving second only if some subgraph holding
+    both ends has two edge-disjoint spanning trees (Lehman's criterion,
+    from memory): at least 2(n - 1) runs on its n junctions, nearly four
+    runs per junction. A median daily has about three (302 runs on 199
+    vertices; two trees over all of them need 396). So Cut is probably
+    favored, and a fair game may need a denser maze or two claims per
+    Short turn. Lehman's test on 30 dailies would settle it cheaply.
+  - Two players on a phone is a niche, and a solved game fades once a
+    player learns the strategy.
+- **Cost:** S after R.4.1.
+- **Overlaps:** 4.22 (two-player minotaur).
+
+#### R.5.7 Race the solver
+
+- **Plays:** a fogged AI explorer solves the same maze at the same time;
+  beat it to the exit.
+- **For:** an opponent every day, with tunable skill; the K80 harness
+  already has explorer policies.
+- **Against:** an AI that knows the maze is unbeatable, and one that
+  does not must look clever enough to matter.
+- **Cost:** S after R.4.3.
+- **Overlaps:** 4.21 (ghost race).
+
+### R.6 What each shortlisted prototype must answer
+
+1. **Burn race:** at r 0.75-0.9, with and without fog, what is the
+   closest call for the K80 harness's explorer policies on 30 dailies,
+   and how often is an explorer trapped? If careful players never come
+   within a run of the fire, drop it or make fog part of the mode.
+2. **The cut verb with Lead the walker:** do daily pars land at 2-5 cuts
+   (not 0, not 15)? Can a first-time phone player predict the walker's
+   next run? Then the Keep it in balance probe: naive fencing against a
+   replanning walker at one and two runs per turn, by moat radius.
+3. **Beat rider:** is never stopping fun or stressful, at 132 bpm and
+   slower? Do long runs need a beat cap?
+4. **Spider:** does "stillness is safe" make real time comfortable on a
+   phone, and are accidental plucks a problem?
+5. **Pluck Hero MVP:** is choosing a safe same-note run inside a beat
+   window fun or panic, and how wide must the window be?
+
+### R.7 Round 2 sources (leads)
+
+From memory and not re-checked in this session: verify before quoting.
+Round 1's sources are in section 8.
+- Pac-Man speeds: the Pac-Man Dossier (section 8 cites it, but not
+  these speed figures, which are from memory).
+- M. R. Garey and D. S. Johnson, Computers and Intractability (1979):
+  longest path is NP-complete.
+- Pipe Dream (The Assembly Line, published by Lucasfilm Games, 1989).
+- Chat Noir (also known as Circle the Cat), a web game.
+- Lemmings (DMA Design, 1991); ChuChu Rocket! (Sonic Team, 1999).
+- Guitar Hero (Harmonix, 2005); Patapon (Pyramid and Japan Studio,
+  2007); Cut the Rope (ZeptoLab, 2010).
+- Spider: The Secret of Bryce Manor (Tiger Style, 2009).
+- B. Mortimer et al., "Tuning the instrument: sonic properties in the
+  spider's web", J. R. Soc. Interface 13 (2016).
+- Arachnophobia settings: Grounded (Obsidian, 2020); Satisfactory
+  (Coffee Stain Studios).
+- A. Lehman, "A solution of the Shannon switching game", J. SIAM 12
+  (1964) 687-725; David Gale's Bridg-It.
+- B. Hartnell, "Firefighter! An application of domination" (1995); S.
+  Finbow and G. MacGillivray, "The firefighter problem: a survey of
+  results, directions and questions", Australas. J. Combin. 43 (2009)
+  57-77.
+- C. H. Papadimitriou and M. Yannakakis, "Shortest paths without a map",
+  Theoret. Comput. Sci. 84 (1991) 127-150 (the Canadian traveller
+  problem).
+- E. Israeli and R. K. Wood, "Shortest-path network interdiction",
+  Networks 40 (2002) 97-111.
 
 ## 5. Suggested order
 
@@ -1397,6 +2166,12 @@ All params are appended with off defaults.
 6. Crack-then-break runs (4.3): S-M.
 7. The melody path (3.3 C): M.
 8. Validated sentries (4.8): M-L, with the time-expanded solver.
+
+(Item 3's scheduled plucks are done: K101, e9e01ae.)
+
+**Round 2** (section R) has its own ranked shortlist (R.0). The burn race
+and the cut verb need no minotaur, so they can run beside this order; the
+spider and cutting against monsters come after the minotaur.
 
 **What composes:**
 - Minotaur, fog and footsteps: the horror mode.
