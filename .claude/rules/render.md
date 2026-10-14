@@ -42,9 +42,11 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   can sample it. REJECTED: cells (Voronoi seams form a dark network that
   competes with the maze's faces), dither (a screen door that crawls
   under drift), linen (a 4.5 px weave that moires at fractional DPRs).
-  LORE: this desktop's Chrome reports prefers-reduced-motion: reduce
-  (Windows animation effects are off), so backgrounds never drift here -
-  probes emulate no-preference; a warp of a warp amplifies its time
+  LORE: this desktop's probe Chrome reports prefers-reduced-motion:
+  reduce only while the session is attached over Remote Desktop (or left
+  disconnected after one), and no-preference at the console (K104,
+  probes.md), so backgrounds may not drift here - probes emulate
+  no-preference; a warp of a warp amplifies its time
   offsets (mist's clock runs at 0.35) and contour lines that move faster
   than ~1 CSS px/s read as crawling; calibrate contrast as the p2-p98
   luma spread of a knot-free margin (about 9-13 levels at 0.5). Cost:
@@ -463,8 +465,11 @@ coordinate lerp sweeps the hues between.
   casing bands are identical raw vs rounded (checked at 3.3x zoom). The
   band pixels that change from before a pluck to mid-pluck are the
   overlay's under-node clip (render-gaps.md G1 PLUCKS), the same in raw
-  and rounded. The overlay never reads the mask, so the hook blurs of the
-  rejected-cap cases are untouched by construction.
+  and rounded; K104's clip fix (casing() = casingWidth/2 + CUT_BIAS,
+  8e21538) cut them from 3724 to 196 of 10226 band px (fabric) and 3398
+  to 128 of 10463 (knot), every other weave check unchanged. The overlay
+  never reads the mask, so the hook blurs of the rejected-cap cases are
+  untouched by construction.
 - AMPLITUDE FLOOR (44885f3 raised tapAmplitude's floor from 0.45 h to
   0.65 h): it did not create the wedges (raw worst -3.45..-4.15 already at
   0.45 h) but deepened them by up to about 1.4x at floor-bound taps,
