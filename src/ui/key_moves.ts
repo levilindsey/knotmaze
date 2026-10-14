@@ -4,36 +4,47 @@
 //
 // THE DIRECTION OF A RUN (departureVectors): the chord from the junction
 // to the point KEY_REACH world units of arc along the run (its far end when
-// it is shorter). Not the tangent at the head: every arm of a junction
-// coincides there (the junction cover; edgeAt skips HEAD_EXCLUDE ctrl of it
-// for the same reason) and the threads bend within the first world unit. The
-// camera only scales and translates, so a world direction IS the screen
-// direction (y down).
+// it is shorter). The camera only scales and translates, so a world
+// direction IS the screen direction (y down).
 //
-// THE PICK (pickDeparture): the run whose direction is nearest the key's,
-// if it lies within KEY_TOLERANCE of it.
-//  - A PRESS takes that best match whatever the runner-up: a press must do
-//    something, and the player sees the result at once. Like a tap, it may
-//    advance, backtrack (the run the player came along, when it matches) or
-//    win.
-//  - A HOLD (the key kept down) fires its next move when the dot arrives,
-//    with the hold rules: never the run it just arrived on (it would
-//    ping-pong), and a TIE stops it - when the runner-up lies within
-//    KEY_TIE of the best, the hold waits at the junction for the player to
-//    choose, rather than guess. It also stops when nothing matches, at a
-//    dead-end tip (its only run is the arrival) and at the finish.
-// The thresholds come from a census of junctions over settled mazes
-// (.claude/probes/K120/, docs/history.md K120).
+// THE PICK (keyMap): each key takes the run whose direction is nearest its
+// own, within KEY_TOLERANCE. When the runner-up lies within KEY_TIE of that
+// best, the key is AMBIGUOUS: it takes, of the runs near-tied for it, the
+// one run that no unambiguous key already reaches, and does nothing when
+// that leaves none or several. So at a fork of up-right, down-right and
+// left, up and down take the two right-hand runs and right does nothing,
+// while at up-right, down-right and down-left, right and down both take the
+// down-right run (up and left have the others): every run has a key.
+//  - A PRESS moves along its key's run at once. Like a tap, it may
+//    advance, backtrack (the run the player came along, when it is the
+//    key's) or win.
+//  - A HOLD (the key kept down) takes its key's next run when the dot
+//    arrives, from the runs other than the one it arrived on (it would
+//    ping-pong). It stops where its key has no run: nothing within the
+//    tolerance, an ambiguous fork, a dead-end tip (its only run is the
+//    arrival) and the finish.
+// THE CENSUS (K120: 24 settled mazes at codec v4's defaults, 4259
+// junctions, 96% of degree 3; .claude/probes/K120/census*.txt): runs leave
+// a junction mostly DIAGONALLY (half of them within 9 degrees of a
+// diagonal). Their chords separate best close to the junction - the
+// smallest angle between two runs of a junction, 1st percentile: 62
+// degrees at a 0.5 reach, 48 at 1, 21 at 1.5, 0 at the far ends (runs bend
+// toward each other). At reach 0.5, tolerance 70 and tie 15, four keys
+// reach every run at 98.9% of junctions; a press does nothing for 1.9% of
+// key-junction pairs (no run within 70) and 9.4% (ambiguous); a hold that
+// arrived moving its key's way goes on 83%, stops at a fork 15% and finds
+// nothing 2%. Tie 10 would go on 87% at the price of taking forks whose
+// two branches differ by less than 15 degrees; tie 0 (the best always)
+// leaves a run of 5% of junctions on no key.
 //
 // KEYS (keyDirOf): the arrows by `key`, WASD by `code` - the physical
 // positions, so AZERTY's ZQSD and every layout's WASD cluster work. Each
 // press moves at once in its own direction. TWO KEYS HELD are not a
 // diagonal: they are an order of preference, newest first (HeldKeys.dirs,
 // pickHold) - hold right, then add up, and the hold takes an up run where
-// one matches and goes on right where none does; let go of up and right
+// up has one and goes on right where it has none; let go of up and right
 // steers alone again. A diagonal vector would need a chord window (a delay
-// on every press) and would split the maze's mostly square runs between
-// two keys.
+// on every press), and the tie rule already gives each diagonal run a key.
 
 export type KeyDir = "up" | "down" | "left" | "right";
 
@@ -46,10 +57,11 @@ export const KEY_VECTORS: Readonly<Record<KeyDir, readonly [number, number]>> = 
 };
 
 // World units of arc along a run to the point its direction is read at.
-export const KEY_REACH = 1.5;
+export const KEY_REACH = 0.5;
 // The widest angle a match may lie off the key (radians).
 export const KEY_TOLERANCE = (70 * Math.PI) / 180;
-// A hold stops when the runner-up lies within this of the best (radians).
+// A key is ambiguous when its runner-up lies within this of the best
+// (radians).
 export const KEY_TIE = (15 * Math.PI) / 180;
 // A hold's first follow-up move waits until its key has been down this
 // long (ms), so a quick press on a short run stays one move: the dot can
@@ -193,42 +205,75 @@ export function angleOff(d: Departure, kx: number, ky: number): number {
   return Math.acos(Math.max(-1, Math.min(1, c)));
 }
 
-// The run a key picks among `deps` (see the header for the rules).
+export const KEY_DIRS: readonly KeyDir[] = ["up", "down", "left", "right"];
+
+// Every key's run at a junction (see the header for the rules): each key's
+// best match within the tolerance; a key whose runner-up lies within the
+// tie margin takes, of those near-tied runs, the one run no unambiguous key
+// already reaches, and stops ("tie") when that leaves none or several.
+export function keyMap(
+  deps: readonly Departure[],
+  o: { exclude?: number; tolerance?: number; tie?: number } = {}
+): Record<KeyDir, KeyPick> {
+  const tol = o.tolerance ?? KEY_TOLERANCE;
+  const tie = o.tie ?? KEY_TIE;
+  const exclude = o.exclude ?? -1;
+  // Each run's error for each key, from its best departure (a self-loop
+  // leaves twice).
+  const errs = new Map<number, number[]>();
+  for (const d of deps) {
+    if (d.edge === exclude) continue;
+    const e = KEY_DIRS.map((k) => angleOff(d, KEY_VECTORS[k][0], KEY_VECTORS[k][1]));
+    const prev = errs.get(d.edge);
+    errs.set(d.edge, prev ? prev.map((p, i) => Math.min(p, e[i])) : e);
+  }
+  const out = {} as Record<KeyDir, KeyPick>;
+  const near = new Map<KeyDir, number[]>();
+  const claimed = new Set<number>();
+  KEY_DIRS.forEach((k, i) => {
+    let best = Infinity;
+    for (const e of errs.values()) best = Math.min(best, e[i]);
+    if (!(best <= tol)) {
+      out[k] = { edge: -1, stop: "none" };
+      return;
+    }
+    const ids: number[] = [];
+    for (const [id, e] of errs) if (e[i] <= tol && e[i] - best <= tie) ids.push(id);
+    if (ids.length === 1) {
+      out[k] = { edge: ids[0], err: best };
+      claimed.add(ids[0]);
+    } else {
+      near.set(k, ids);
+    }
+  });
+  // Resolving one key can settle another (its run is claimed now).
+  for (let pass = 0; pass < KEY_DIRS.length && near.size > 0; pass++) {
+    const taken = new Set(claimed);
+    for (const [k, ids] of near) {
+      const free = ids.filter((id) => !taken.has(id));
+      if (free.length !== 1) continue;
+      out[k] = { edge: free[0], err: errs.get(free[0])![KEY_DIRS.indexOf(k)] };
+      claimed.add(free[0]);
+      near.delete(k);
+    }
+    if (claimed.size === taken.size) break;
+  }
+  for (const k of near.keys()) out[k] = { edge: -1, stop: "tie" };
+  return out;
+}
+
+// The run one key picks among `deps`: a press, or with `hold` a hold's
+// next move (the arrival run excluded).
 export function pickDeparture(
   deps: readonly Departure[],
   dir: KeyDir,
   o: PickOptions
 ): KeyPick {
-  const tol = o.tolerance ?? KEY_TOLERANCE;
-  const tie = o.tie ?? KEY_TIE;
-  const exclude = o.hold ? (o.exclude ?? -1) : -1;
-  const [kx, ky] = KEY_VECTORS[dir];
-  // Each run's best departure (a self-loop has two).
-  const errs = new Map<number, number>();
-  for (const d of deps) {
-    if (d.edge === exclude) continue;
-    const a = angleOff(d, kx, ky);
-    const prev = errs.get(d.edge);
-    if (prev === undefined || a < prev) errs.set(d.edge, a);
-  }
-  let best = -1;
-  let bestErr = Infinity;
-  let second = Infinity;
-  for (const [eid, a] of errs) {
-    // Ties in the angle itself break to the lower run id (deterministic).
-    if (a < bestErr || (a === bestErr && eid < best)) {
-      second = bestErr;
-      bestErr = a;
-      best = eid;
-    } else if (a < second) {
-      second = a;
-    }
-  }
-  if (best < 0 || bestErr > tol) return { edge: -1, stop: "none" };
-  if (o.hold && second <= tol && second - bestErr < tie) {
-    return { edge: -1, stop: "tie" };
-  }
-  return { edge: best, err: bestErr };
+  return keyMap(deps, {
+    exclude: o.hold ? (o.exclude ?? -1) : -1,
+    tolerance: o.tolerance,
+    tie: o.tie,
+  })[dir];
 }
 
 // The directions held down, newest last, by source (a key, a pad pointer):

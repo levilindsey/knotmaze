@@ -8,6 +8,7 @@ import {
   KEY_TOLERANCE,
   keyBelongsElsewhere,
   keyDirOf,
+  keyMap,
   pickDeparture,
   pickHold,
 } from "../../src/ui/key_moves";
@@ -82,26 +83,41 @@ describe("pickDeparture", () => {
     if (p.edge >= 0 && "err" in p) expect(p.err).toBeCloseTo(20 * DEG, 9);
   });
 
-  it("a press takes the best even on a near tie; a hold stops there", () => {
+  it("an ambiguous key takes the near-tied run no other key reaches", () => {
+    // Up-right, down-right, down-left: right and down are each torn
+    // between two runs; up and left take theirs, so both take down-right.
+    const m = keyMap([dep(1, -45), dep(2, 45), dep(3, 135)]);
+    expect(m.up).toMatchObject({ edge: 1 });
+    expect(m.left).toMatchObject({ edge: 3 });
+    expect(m.right).toMatchObject({ edge: 2 });
+    expect(m.down).toMatchObject({ edge: 2 });
+  });
+
+  it("an ambiguous key whose runs other keys reach does nothing", () => {
+    // Up-right, down-right, left: right is a fork that up and down settle.
+    const deps = [dep(1, -40), dep(2, 48), dep(3, 180)];
+    expect(pickDeparture(deps, "right", { hold: false })).toEqual({ edge: -1, stop: "tie" });
+    expect(pickDeparture(deps, "right", { hold: true })).toEqual({ edge: -1, stop: "tie" });
+    expect(pickDeparture(deps, "up", { hold: false })).toMatchObject({ edge: 1 });
+    expect(pickDeparture(deps, "down", { hold: false })).toMatchObject({ edge: 2 });
+    // Clear of the tie margin, right takes the nearer.
     const tieDeg = KEY_TIE / DEG;
-    // Two runs either side of "right", the second just inside the tie.
-    const fork = [dep(5, -20), dep(6, 20 + tieDeg * 0.5)];
-    expect(pickDeparture(fork, "right", { hold: false })).toMatchObject({ edge: 5 });
-    expect(pickDeparture(fork, "right", { hold: true })).toEqual({ edge: -1, stop: "tie" });
-    // Clear of the tie margin, the hold goes on.
-    const clear = [dep(5, -10), dep(6, 10 + tieDeg + 1)];
-    expect(pickDeparture(clear, "right", { hold: true })).toMatchObject({ edge: 5 });
+    const clear = [dep(1, -10), dep(2, 10 + tieDeg + 1), dep(3, 180)];
+    expect(pickDeparture(clear, "right", { hold: true })).toMatchObject({ edge: 1 });
     // A runner-up beyond the tolerance is no rival, however close.
     const tolDeg = KEY_TOLERANCE / DEG;
     const far = [dep(5, -(tolDeg - 2)), dep(6, tolDeg + 1)];
     expect(pickDeparture(far, "right", { hold: true })).toMatchObject({ edge: 5 });
   });
 
-  it("an exact tie in angle breaks to the lower run id", () => {
+  it("an exact tie is ambiguous too", () => {
     const sym = [dep(9, -30), dep(4, 30)];
-    expect(pickDeparture(sym, "right", { hold: false })).toMatchObject({ edge: 4 });
+    expect(pickDeparture(sym, "right", { hold: false })).toEqual({ edge: -1, stop: "tie" });
+    // Two near-tied runs that no other key reaches: still nothing.
+    const m = keyMap([dep(9, -30), dep(4, 30)], { tolerance: 50 * DEG });
+    expect(m.right).toEqual({ edge: -1, stop: "tie" });
+    expect(m.up).toEqual({ edge: -1, stop: "none" });
   });
-
   it("a hold never turns straight back on the run it arrived on", () => {
     // Arrived along run 7 from the left; the key is still left.
     const deps = [dep(7, 180), dep(8, -60), dep(9, 60)];
@@ -164,12 +180,12 @@ describe("chordDirection / departureVectors", () => {
     expect(fromB[0]).toBeCloseTo(-1, 9);
   });
 
-  it("aims the chord KEY_REACH along the arc, not at the tangent", () => {
-    // From (0,0) along the hook: 1 right, then KEY_REACH - 1 down.
+  it("aims the chord the reach along the arc, not at the tangent", () => {
+    // From (0,0) along the hook: 1 right, then 0.5 down.
     const hook: RunEnds = { va: "J", vb: "K", chain: 1, ctrlA: 0, ctrlB: 5 };
-    const d = chordDirection(hook, true, 0, 0, pointAt)!;
+    const d = chordDirection(hook, true, 0, 0, pointAt, 1.5)!;
     const ex = 1;
-    const ey = KEY_REACH - 1;
+    const ey = 0.5;
     const n = Math.hypot(ex, ey);
     expect(d[0]).toBeCloseTo(ex / n, 1);
     expect(d[1]).toBeCloseTo(ey / n, 1);
@@ -200,6 +216,13 @@ describe("chordDirection / departureVectors", () => {
     const near = departureVectors([loop], [0], "J", 0, 0, pointAt, 0.5);
     expect(near[0].dx).toBeGreaterThan(0.5);
     expect(near[1].dx).toBeLessThan(-0.5);
+  });
+
+  it("reads at KEY_REACH by default", () => {
+    const hook: RunEnds = { va: "J", vb: "K", chain: 1, ctrlA: 0, ctrlB: 5 };
+    const d = chordDirection(hook, true, 0, 0, pointAt)!;
+    const e = chordDirection(hook, true, 0, 0, pointAt, KEY_REACH)!;
+    expect(d).toEqual(e);
   });
 
   it("lists one departure per run end at the junction", () => {
