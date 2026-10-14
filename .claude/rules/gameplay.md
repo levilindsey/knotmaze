@@ -345,9 +345,10 @@ entry is labeled with its source; the narrative is in
   throwing or full: the page boots following the system and a choice
   lasts the session. NOT gated (left for Levi): flow, the intros, the
   pulses. No cross-tab sync; K84 sorts it with the other viewer prefs.
-  Probe: `.claude/probes/K79/k79_motion.mjs` (38 checks; its tau x0.7
-  and lobes x0.6 pluck checks predate K104's still plucks and fail by
-  design until updated); after
+  Probe: `.claude/probes/K79/k79_motion.mjs` (38 checks; K180 rewrote
+  its four pluck checks for K104's still plucks: full motion moves,
+  reduced stays still, attack and ghost only at full motion, the same
+  decay clock, the still unit's cue scaled by its gain); after
   emulateMediaFeatures, wait two rAFs before reading the change.
 
 ## Camera, gestures and plucks

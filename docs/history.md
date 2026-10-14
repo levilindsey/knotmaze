@@ -697,6 +697,19 @@ demand.
   K127 look once the fade ends, at desktop and phone width. *[Lore:
   `.claude/rules/render.md` (The gold web's fade); probes and frames in
   `.claude/probes/K154_K169/`.]*
+- PLUCK PARAMS (K180 stage 1, 2026-10-14; brief `docs/design/K180.md`,
+  agent under session d8031183): K104's whole-segment pluck gets three
+  viewer preferences for Levi to play with, codec v4 appends 101-103,
+  daily-exempt: the amount (`pw`, 0-1.5, default 0.5; 0 = the pre-K104
+  pluck), how W meets the crossings along its segment (`pcx`: through,
+  K104's look, or ride or pinch) and the glow (`pgl`: off, instead of W,
+  with it, or a fallback that lights only for taps whose W cannot show,
+  estimated at pluck time). The defaults are K104's look, 0 px in a
+  same-state A/B. The census: ride and pinch leave far more taps that
+  cannot be told at phone scale (pinch 71% of fabric taps, ride 94% of
+  a dense design's); the fallback leaves only the sound-only taps in
+  junction cores. *[Lore: `.claude/rules/render.md` (Pluck params);
+  census, sheets and the A/B in `.claude/probes/K180/`.]*
 
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the

@@ -565,6 +565,92 @@ coordinate lerp sweeps the hues between.
   (cost_probe.mjs, load_reduce_probe.mjs, cost_batch.ps1, cost_table.mjs,
   k77_cost.ts + k77_cost_batch.ps1).
 
+## Pluck params (K180)
+
+- PLUCK PARAMS (K180 stage 1, 2026-10-14; worktree agent; brief
+  `docs/design/K180.md`). Levi, on K104's whole-segment pluck: "size:
+  idk, let's have a parameter to play with ... crossings along the
+  segment: I think I'd like to have a dropdown param to test this. glow:
+  again, let's have a dropdown param to test. panel slider: Definitely!"
+  Three viewer preferences in Touch & feel, appended to codec v4 at
+  101-103 (after K140's 99-100) and listed in DAILY_EXEMPT_KEYS:
+  `pluckWhole` (pw, [0, 1.5], default 0.5 = K104's WHOLE_AMP),
+  `pluckCrossings` (pcx, through | ride | pinch, default through) and
+  `pluckGlow` (pgl, off | instead | with | fallback, default off). The
+  defaults are K104's look, pixel for pixel. How W meets NEIGHBORING
+  threads stays "overlap" (Levi: "current is good"), not a param. main.ts
+  re-syncs all three into `plucks.setWhole(amp, crossings, glow)` every
+  frame (as it does the size), so a probe sets them with the link keys,
+  never the overlay's fields. The amount and the glow apply to plucks
+  started after a change; a crossings change re-lays out live plucks.
+- AMOUNT. W0 = pluckWhole x pluckSize x gain x h (`wholeAmplitude`); 0 is
+  the pre-K104 pluck bit for bit (no W, no RNG draw for its phase, and
+  every crossings option then runs the pre-K104 path, so the panel hides
+  the crossings row at 0). MAX 1.5 (PLUCK_WHOLE_MAX: slider and link
+  clamp): 3x the default, W0 2.6 h at pluckSize 1.75, about where the
+  overlap room (the neighbor's edge + WHOLE_OVERLAP h) binds W in most of
+  a fabric, so more would mostly flatten against it; the neighbor search
+  keeps K104's radius (it grows only past 2.2).
+- CROSSINGS: how W meets the crossings INSIDE its unit (the unit's end
+  nodes and hide zones are W's frets under every option). THROUGH
+  (K104's look): the soft node cap holds the lobe term alone at interior
+  nodes and the sum once at the frets; the lobe never drops under its
+  pre-K104 swing and W draws what the cap leaves (throughStation). RIDE:
+  the soft node cap holds the SUM at every node, both terms scaled alike
+  (fOf), so W follows the lobes' dips. PINCH: ride, and W itself held to
+  WHOLE_PINCH 0.3 h at each interior node, rising at NODE_SLOPE past the
+  node's foot + COLLAPSE_RAMP (`pinchCap`).
+- GLOW (the cue: the unit brightens toward white by up to CUE_WHITE on
+  W's sine shape `wsOf` and the pluck's clock, whatever W's amount, so
+  instead and with light it at pluckWhole 0 too). OFF; INSTEAD = K104's
+  wholeMode "cue" (lobes + cue, no W); WITH = W + cue; FALLBACK = W, plus
+  the cue only for a tap whose W cannot show by K104's census criterion
+  (drawn peak under SHOW_MIN_H 0.6 h or SHOW_MIN_PX 2 CSS px at the
+  current zoom, `pluckShows`). STILL PLUCKS (reduced motion) ignore all
+  three: K104's still cue, unchanged.
+- THE FALLBACK ESTIMATE (`peakEstimate`, once at pluck time after
+  layout(), only under fallback; it reads nothing writeFrame writes): the
+  largest DRAWN swing, writeFrame's envelope mirrored in `drawnSwing`
+  (pluck_model), at each lobe onset + SHOW_DT (= K104's census PEAK_DT),
+  over the stations at least half visible. A later zoom or move does not
+  re-decide. Against the census (which measures the drawn swing at the
+  same times from the same frozen layout): 100% agreement on every
+  design, option and viewport, error 0.000, the cue lit exactly where the
+  estimate says. Exact by construction: it validates the mirror, and
+  K104's pixel calibration of the criterion ties it to what shows. COST:
+  0.79-1.17 ms per fallback tap on the desktop, 1.75 ms with the phone's
+  viewport emulated (unlocked, other agents probing: indicative). Lobes
+  with the same |k| share an onset, so a Set of times would halve it
+  exactly.
+- SOUND-ONLY TAPS (skipCore: the tapped span minus hide zones is under
+  LOBE_MIN_LEN, i.e. inside junction cores) make no pluck, so fallback
+  gives them no cue, though K104's criterion counts them as can't tell
+  (21 of 284 fabric taps, 51 of 564 dense). The web covers the thread
+  there; a cue would have to be drawn on the web or the arms. Open.
+- CENSUS (`.claude/probes/K180/census/`: K104's census per option,
+  can't-tell share with sound-only taps, pluckSize 1.75, pluckWhole 0.5;
+  fabric `?b.J`, dense `?b.J&gs=24&wd=0.6&brd=0.6`, knot `?7k.J&mf=0`;
+  desktop 1400x900, phone 411x753 at 2.625), fabric / dense / knot:
+  desktop through 19.7 / 24.3 / 0%, ride the same, pinch 22.2 / 26.1 /
+  0%; phone through 26.1 / 42.2 / 0%, ride 26.1 / 93.8 / 0%, pinch 71.1 /
+  93.8 / 32.8%; fallback leaves 7.4 / 9.0 / 0% showing nothing on both
+  (the sound-only taps; the cue lights 12.3 / 15.2 / 0% desktop, 18.7 /
+  33.2 / 0% phone). Ride caps the sum near 1 h, and the phone's dense h
+  is 1.73 px, under the 2 px line; pinch takes W from short lobes (the
+  knot's, the dense design's). Through, the default, reads best.
+- VERIFIED: same-state A/B against master ca7d3e6 (`k180_ab.mjs`, 20
+  frames, 6 plucks each): 0 px in all 8 cases (fabric desktop and phone,
+  knot, explicit defaults `&pw=0.5&pcx=through&pgl=off` in fabric and
+  knot, reduced motion, reduced with pw 1.5 + pinch + with, pluckSize 3).
+  Unit tests: pluck_model "pluck params (K180)", the codec pins,
+  url_codec, daily_link's exempt set. K79's motion probe 38/38
+  (gameplay.md). Sheets (`k180_sheet.mjs`: one frozen state, pinned lobe
+  phases, t 0.05 and 0.25 s; crossings, glow, amount, and fallback at a
+  can't-show tap): `.claude/probes/K180/sheet/sheet_desktop.png`,
+  `sheet_phone.png` (+ .html). Probes there too: census/census.mjs +
+  k180_table.mjs + table.md, k79_motion.mjs, png.mjs; builds through
+  `scripts/preview.ps1 -Root .claude\probes\K180\builds`.
+
 ## Marker icons (K83)
 
 - MARKER ICONS (K83, 2026-10-13; worktree agent). Levi: "placeholder
