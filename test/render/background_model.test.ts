@@ -270,8 +270,11 @@ describe("shape params (K79 stage B)", () => {
   const D = BACKGROUND_SHAPE_DEFAULTS;
 
   it("clamps every shape param to its slider; garbage reads as the default", () => {
-    expect([0.1, 0.5, 1.25, 3, 9, NaN, Infinity].map(sanitizeBackgroundScale)).toEqual([
-      BACKGROUND_SCALE_MIN, 0.5, 1.25, BACKGROUND_SCALE_MAX, 3, 1, 1,
+    // The scale slider ends at 2 (K129: at 3 wash and contours are nearly
+    // empty and vellum's fibers read as long hatching); 2 and below pass.
+    expect(BACKGROUND_SCALE_MAX).toBe(2);
+    expect([0.1, 0.5, 1.25, 2, 3, 9, NaN, Infinity].map(sanitizeBackgroundScale)).toEqual([
+      BACKGROUND_SCALE_MIN, 0.5, 1.25, BACKGROUND_SCALE_MAX, 2, 2, 1, 1,
     ]);
     expect([-1, 0, 1.5, 2, 5, NaN].map(sanitizeBackgroundDetail)).toEqual([
       0, 0, 1.5, BACKGROUND_DETAIL_MAX, 2, 1,
@@ -286,7 +289,7 @@ describe("shape params (K79 stage B)", () => {
     expect(isAutoAngle(BACKGROUND_ANGLE_AUTO)).toBe(true);
     expect(isAutoAngle(0)).toBe(false);
     expect(sanitizeBackgroundShape({ scale: 9, detail: -1, fibers: 4, grain: NaN, angle: 400 }))
-      .toEqual({ scale: 3, detail: 0, fibers: 3, grain: 1, angle: 40 });
+      .toEqual({ scale: 2, detail: 0, fibers: 3, grain: 1, angle: 40 });
     expect(sanitizeBackgroundShape({ ...D })).toEqual(D);
   });
 

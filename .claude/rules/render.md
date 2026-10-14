@@ -73,8 +73,9 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   k79_dstats.mjs, k79_gpu.mjs).
   SHAPE PARAMS + CUSTOM COLORS (K79 stage B, 2026-10-13; the commit
   messages hold the design notes, the panel side is in `gameplay.md`):
-  ten params appended to codec v4, indices 71-80 (unpublished until the
-  merge, then frozen): backgroundScale (bgsz, [0.5, 3], 1),
+  ten params appended to codec v4, indices 71-80 (not published yet, and
+  before launch nothing keeps a link's meaning: whichever branch merges
+  second renumbers its appends): backgroundScale (bgsz, [0.5, 2], 1),
   backgroundDetail (bgdt, [0, 2], 1), backgroundFibers and backgroundGrain
   (bgfb, bggr, [0, 3], 1), backgroundAngle (bgan, degrees
   counterclockwise from screen right, any negative = AUTO = the seed's
@@ -103,19 +104,22 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   the drift time at t / S, so a drift crosses the screen at its designed
   CSS px per second at any S (contours 1.04 px/s at S 0.5, 1, 2 and 3 on
   the desktop viewport, 0.475 on the phone's, by cross-correlating two
-  frames; the crawl limit is about 1). Below 1 the render texture gets
+  frames, before the max came down to 2; the crawl limit is about 1).
+  Below 1 the render texture gets
   max(base, min(1, base / S)) texels per CSS px (mist, wash, silk and
   aurora reach 4x the texels at 0.5, contours 1.8x, vellum is at 1
   already): the same sharpness, and no blockiness in the sheets on
   either viewport (1x crops, and gain 4 at 3x zoom on the phone's
   0.6-0.8 texels per CSS px). Above 1 the pattern
-  gets sparse and the margins quiet: the background's luma sd falls from
+  gets sparse and the margins quiet: the background's luma sd fell from
   3.4 to 2.6 (mist), 4.4 to 2.4 (wash) and 2.6 to 1.1 (contours, one or
-  two lines on screen) from S 1 to 3. VELLUM's mottling scales and its
-  vignette stays on the screen, but its fibers grow with S above 1 and
-  never shrink below their designed size (a texel per CSS px cannot draw
-  them finer): at S 2-3 they read as long crossing hatching, not speckle.
-  Whether they should scale both ways is Levi's call (K129). FBM DETAIL:
+  two lines on screen) from S 1 to 3. THE MAX IS 2 for that reason (K129,
+  Levi 2026-10-13; BACKGROUND_SCALE_MAX, it was 3 through B2). VELLUM's
+  mottling scales and its vignette stays on the screen, but its fibers
+  grow with S above 1 and never shrink below their designed size (a texel
+  per CSS px cannot draw them finer): at S 2-3 they read as long crossing
+  hatching, not speckle. K129 kept that floor and cut the max instead
+  (Levi left the vellum choice open: "whatever is best"). FBM DETAIL:
   octave gain 0.25 + 0.25 d (0.5 = designed), the sum rescaled to the
   designed fbm's RMS so contrast holds. CUSTOM COLORS: the BASE IS THE
   PAGE - the shaders' ink, the canvas's CSS background and
