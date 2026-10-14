@@ -22,7 +22,10 @@
 // rounded ones (on the plan grid Firefox's are, and V8's are an ulp off on
 // those 7074 pairs), but the shipped mazes were built with them. Checked bit
 // for bit against V8 on 320k inputs, cold and optimized, and against Firefox
-// running this same code.
+// running this same code. This port follows V8's FastMathHypot step for step,
+// so V8's BSD-3-Clause notice ships with the app (K122): the "v8-math-hypot"
+// credit in notices/credits.ts, shown on licenses.html. Keep it while this
+// function ports V8's.
 export function hypot2(x: number, y: number): number {
   const ax = Math.abs(x);
   const ay = Math.abs(y);

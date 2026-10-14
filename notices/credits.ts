@@ -10,11 +10,13 @@
 //      and permission notice with every copy, so the text must come from
 //      somewhere);
 //   3. CREDITS: courtesy credits for techniques the code borrows, and the
-//      acknowledgements a license makes us ship with data (Hershey fonts).
+//      notices a license makes us ship with what we took from it (V8's
+//      Math.hypot, the Hershey fonts).
 //
-// Adding a credit: append to CREDITS. Adding data under a license that
-// needs an acknowledgement (K115's Hershey font data): set its entry's
-// `shipped` to true in the same commit (test/notices guards it).
+// Adding a credit: add it to CREDITS (courtesy credits above the entries
+// that carry a license's notice, which come last). Adding data under a
+// license that needs an acknowledgement (K115's Hershey font data): set its
+// entry's `shipped` to true in the same commit (test/notices guards it).
 
 // ---------------------------------------------------------------------------
 // 1. License policy
@@ -149,8 +151,14 @@ export interface Credit {
   // Where to read more (https).
   url?: string;
   // Text a license makes us ship verbatim (shown as a quotation). Blank
-  // lines separate paragraphs; single newlines are kept as line breaks.
+  // lines separate paragraphs; single newlines are kept as line breaks, so
+  // a license copied from a hard-wrapped file is joined into one line per
+  // paragraph or list item first (whitespace only: the words stay the
+  // project's own).
   notice?: string;
+  // Where `notice` was copied from (https); the page shows it under the
+  // text, as it does for a package whose tarball ships no license file.
+  noticeSource?: string;
   // false = what it credits is not in the app yet, so the page leaves it
   // out. Flip it in the commit that adds the thing.
   shipped: boolean;
@@ -161,7 +169,9 @@ export interface Credit {
 // few lines, a three-multiply expression, a fade curve), not anyone's files.
 // (The PCG2D paper is CC BY-ND 3.0 as a document; its supplement lists the
 // hash as code.) Each entry names the source the code comments cite. Order
-// is the page's order.
+// is the page's order. The entries that carry a `notice` (V8's, Hershey's)
+// are different: their licenses require the text to travel with what we
+// took, so the text is the project's own and goes last.
 export const CREDITS: readonly Credit[] = [
   {
     id: "quilez-domain-warping",
@@ -200,6 +210,40 @@ export const CREDITS: readonly Credit[] = [
     title: "Scarborough Fair",
     by: "Traditional English ballad",
     note: "The tune music mode plays.",
+    shipped: true,
+  },
+  // V8's Math.hypot. hypot2 in src/util/det_math.ts (K108) follows the
+  // two-argument path of V8's Math.hypot step for step (FastMathHypot, which
+  // MathHypot calls, in src/builtins/math.tq): scale by the larger magnitude,
+  // square and add the scaled terms, take the root, rescale. That is V8's
+  // algorithm re-written from exact operations rather than V8's text, but
+  // it mirrors the expression it ports, so V8's BSD-3-Clause license is
+  // honored as if it were a copy (decided 2026-10-13): binary
+  // redistributions reproduce its copyright notice, conditions and
+  // disclaimer. The text is the V8 project's own, the half of its LICENSE
+  // file that covers V8's code (the file opens with a list of externally
+  // maintained libraries - PCRE tests, Strongtalk, Valgrind, the Wasm API -
+  // none of them involved here), joined into one line per paragraph and
+  // bullet for a phone: only whitespace changed. Fetched 2026-10-13 from
+  // v8/v8 commit c518b1c (main's head that day). Keep this entry while
+  // hypot2 follows V8; test/notices checks that it ships and that
+  // det_math.ts still defines hypot2.
+  {
+    id: "v8-math-hypot",
+    title: "Math.hypot",
+    by: "The V8 project authors",
+    note: "The maze generator measures distances with hypot2, which follows V8's Math.hypot step for step (FastMathHypot in V8's src/builtins/math.tq), so every browser builds the same maze from the same link. V8's license asks that its notice come with the code:",
+    url: "https://github.com/v8/v8/blob/c518b1c983fa8e005c8c1c4c80b2d83db6dc0904/src/builtins/math.tq",
+    notice: `Copyright 2014, the V8 project authors. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+* Neither the name of Google Inc. nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`,
+    noticeSource: "https://github.com/v8/v8/blob/c518b1c983fa8e005c8c1c4c80b2d83db6dc0904/LICENSE",
     shipped: true,
   },
   // K115 (cursive text) ships Hershey Script Simplex data. The Hershey

@@ -424,9 +424,27 @@ describe("the page", () => {
     expect(html).toContain("<blockquote><p>First paragraph.</p><p>Second:\nline a\nline b</p></blockquote>");
   });
 
+  it("says where a credit's notice was copied from, when it has a source", () => {
+    const plain = { id: "n", title: "Code", by: "Someone", note: "N.", shipped: true };
+    const withNotice = { ...plain, notice: "Copyright (c) Someone." };
+    const withSource = renderPage({
+      ...base,
+      packages: [],
+      credits: [{ ...withNotice, noticeSource: "https://up.example/LICENSE?a=1&b=2" }],
+    });
+    expect(withSource).toContain(
+      '<p class="src">The text above was copied from <a href="https://up.example/LICENSE?a=1&amp;b=2" rel="noopener">',
+    );
+    // No source, or a source without a notice: no line.
+    expect(renderPage({ ...base, packages: [], credits: [withNotice] })).not.toContain("was copied from");
+    expect(
+      renderPage({ ...base, packages: [], credits: [{ ...plain, noticeSource: "https://up.example/LICENSE" }] }),
+    ).not.toContain("was copied from");
+  });
+
   it("shows the shipped credits, with the sources the code comments cite", () => {
     const html = renderPage({ ...base, packages: [], credits: CREDITS.filter((c) => c.shipped) });
-    for (const who of ["Inigo Quilez", "Jarzynski", "Olano", "Jimenez", "Perlin"]) {
+    for (const who of ["Inigo Quilez", "Jarzynski", "Olano", "Jimenez", "Perlin", "The V8 project authors"]) {
       expect(html, who).toContain(who);
     }
     expect(html).not.toContain("Hershey");
@@ -441,7 +459,45 @@ describe("the tracked credits", () => {
     for (const c of CREDITS) {
       expect(c.title && c.by && c.note, c.id).toBeTruthy();
       if (c.url) expect(c.url, c.id).toMatch(/^https:\/\//);
+      if (c.noticeSource) {
+        expect(c.noticeSource, c.id).toMatch(/^https:\/\//);
+        expect(c.notice, `${c.id} cites a source for a notice it does not have`).toBeTruthy();
+      }
     }
+  });
+
+  it("carry V8's BSD-3-Clause notice for the hypot2 port, with its sources", () => {
+    // src/util/det_math.ts hypot2 follows V8's FastMathHypot step for step
+    // (decided 2026-10-13: V8's license travels with it).
+    const v8 = CREDITS.find((c) => c.id === "v8-math-hypot");
+    expect(v8, "the v8-math-hypot credit").toBeDefined();
+    expect(v8?.shipped).toBe(true);
+    const notice = (v8?.notice ?? "").replace(/\s+/g, " ");
+    for (const part of [
+      "Copyright 2014, the V8 project authors. All rights reserved.",
+      "Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:",
+      "* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.",
+      "* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.",
+      "* Neither the name of Google Inc. nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.",
+      'THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"',
+      "EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.",
+    ]) {
+      expect(notice, part).toContain(part);
+    }
+    // Where the text and the ported code live: V8's repo, pinned to a commit.
+    expect(v8?.noticeSource).toMatch(/^https:\/\/github\.com\/v8\/v8\/blob\/[0-9a-f]{40}\/LICENSE$/);
+    expect(v8?.url).toMatch(/^https:\/\/github\.com\/v8\/v8\/blob\/[0-9a-f]{40}\/src\/builtins\/math\.tq$/);
+    // The credit names what is ported (V8's function and file).
+    for (const named of ["hypot2", "FastMathHypot", "src/builtins/math.tq"]) {
+      expect(v8?.note, named).toContain(named);
+    }
+    // The credited code is still there, and points at its credit.
+    const detMath = readFileSync(join(repoRoot, "src/util/det_math.ts"), "utf8");
+    expect(
+      /export function hypot2\(/.test(detMath),
+      "src/util/det_math.ts no longer defines hypot2: drop the v8-math-hypot credit and this test",
+    ).toBe(true);
+    expect(detMath).toContain("v8-math-hypot");
   });
 
   it("carry the Hershey acknowledgements the font license requires", () => {
@@ -630,8 +686,11 @@ describe("the real build", () => {
     for (const [, name, body] of html.matchAll(/data-package="([^"]+)"[\s\S]*?<div class="lic">([\s\S]*?)<\/div>/g)) {
       expect(body, name).toMatch(/copyright/i);
     }
-    // Credits ship; the Hershey acknowledgement waits for K115's data.
+    // Credits ship, V8's notice for hypot2 among them; the Hershey
+    // acknowledgement waits for K115's data.
     expect(html).toContain("Inigo Quilez");
+    expect(html).toContain("Copyright 2014, the V8 project authors. All rights reserved.");
+    expect(html).toContain("THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS");
     expect(html).not.toContain("Hershey");
     // Nothing from the deleted Vite template icons.
     expect(out.some((o) => /vite\.svg|typescript\.svg/.test(o.fileName))).toBe(false);

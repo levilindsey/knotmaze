@@ -148,6 +148,9 @@ export function renderPage(m: PageModel): string {
         `<li id="credit-${slug(c.id)}"><h3>${title} <span class="by">· ${escapeHtml(c.by)}</span></h3>` +
         `<p class="note">${escapeHtml(c.note)}</p>` +
         (c.notice ? `<blockquote>${paragraphs(c.notice)}</blockquote>` : "") +
+        (c.notice && c.noticeSource
+          ? `<p class="src">The text above was copied from <a href="${escapeHtml(c.noticeSource)}" rel="noopener">${escapeHtml(c.noticeSource)}</a>.</p>`
+          : "") +
         `</li>`
       );
     })
