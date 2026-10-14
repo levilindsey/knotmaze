@@ -273,3 +273,9 @@ pointer handlers).
 
 Filed (2026-10-13): K145 updated (a touch press shows the glow until the
 lift; it fades out toward the run's junctions).
+
+### About 16:15 (past dailies)
+
+There should be some way to play previous dailys, but not get credit for them.
+
+Filed (2026-10-13): K146 in Next, after K140.
