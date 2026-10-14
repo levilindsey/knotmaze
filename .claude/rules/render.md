@@ -198,8 +198,22 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   a 3e6 coordinate offset. GPU PARITY (`hash_gpu.mjs`: a WebGL2 page
   compiles HASH2D_GLSL, hashes a 256 x 256 grid at four offsets up to
   +-2147483000 and reads both lanes back): 4 x 131072 words, 0 mismatches
-  against the mirror on the RX 6800 XT (ANGLE D3D11). Cost not measured (the hash has about 34 scalar
-  ops where PCG2D had about 20; the effect passes run at 10-15 fps).
+  against the mirror on the RX 6800 XT (ANGLE D3D11). COST (perf lock held;
+  RX 6800 XT, 3200x1800, `bg_gpu.mjs` = K79's per-program TIME_ELAPSED
+  probe, 4 s x 2 rounds a config, the two builds interleaved A B A B on
+  separate pages, so compare the pairs, not the runs; ms per frame as that
+  probe sums them): the effect pass costs 37-60% more, PCG2D -> this hash,
+  mean of two runs each: vellum-drift 0.352 -> 0.50, mist 0.068 -> 0.105,
+  wash 0.089 -> 0.143, silk 0.094 -> 0.129, aurora 0.106 -> 0.159,
+  contours 0.052 -> 0.082 (+0.03 .. +0.15 ms a frame; the whole frame
+  2.5-2.8 ms, the ribbons' 1.5 .. 1.7 ms moved between runs by more than
+  that). It has 8 integer multiplies a call where PCG2D had 6 and about 34
+  scalar ops where it had 20. The blit, fan and strip programs did not
+  move. Static vellum (the default, one pass per change) pays nothing per
+  frame. The phone's price is unmeasured: K79's phone gate (K52) read
+  vellum-drift as the pass to watch, and it is the one that grew most. A
+  lighter hash is not a tuning of this one (three multiplies per lane fail
+  the avalanche test by a wide margin, 0.33); it would be a different shape.
   Probes: `.claude/probes/K154_K169/` (bg_ab.mjs + cases_bg.json: the
   before/after frames, `bare` hides the maze; bg_analyze.mjs and
   hash_spectrum.mjs: histograms, spectra, `out/sheets/`).
