@@ -88,7 +88,7 @@ async function loadSample(b, rep, name, query) {
       cell: "load", link: name, rep, build: b.key, sha: stampSha(last.stamp),
       frames: rec.t.length, fps: +(rec.t.length / CFG.loadSeconds).toFixed(1), over50: dts.filter((d) => d > 50).length,
       max: r1(s[s.length - 1]), p95: r1(s[Math.floor(0.95 * (s.length - 1))]),
-      firstFrameMs: r1(rec.t[0]), ttff: r1(rec.firstCanvas), firstSleepS, asleepAtEnd: /asleep/.test(last.stamp), thermal: thermal(),
+      firstFrameMs: r1(rec.t[0]), ttff: r1(rec.firstCanvas), firstSleepS, asleepAtEnd: /asleep/.test(last.stamp), stampEnd: last.stamp.slice(0, 110), thermal: thermal(),
     };
     logLine(FILE, row);
     console.log(`rep${rep} ${b.key.padEnd(4)} load ${name.padEnd(7)} ${row.sha} frames ${row.frames} >50:${row.over50} max ${row.max} ttff ${row.ttff} sleep ${firstSleepS ?? "-"} s`);

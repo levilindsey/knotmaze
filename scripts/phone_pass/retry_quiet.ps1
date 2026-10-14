@@ -15,11 +15,12 @@
 # Exit codes: 0 the rerun finished clean, 1 no trip to retry or bad config,
 # 3 phone not awake/unlocked, 4 already retried once, 5 no touchscreen found,
 # 2 gave up waiting; else the rerun's own code (2 = tripped again).
-# Usage: pwsh -NoProfile -File retry_quiet.ps1 -Out <pass folder> [-QuietMin 15] [-GiveUpMin 90]
+# Usage: pwsh -NoProfile -File retry_quiet.ps1 -Out <pass folder> [-QuietMin 15] [-GiveUpMin 90] [-NoRun]
 param(
   [Parameter(Mandatory)][string]$Out,
   [int]$QuietMin = 15,
-  [int]$GiveUpMin = 90
+  [int]$GiveUpMin = 90,
+  [switch]$NoRun   # a harness check: do everything but the rerun, which is only printed
 )
 $ErrorActionPreference = "Stop"
 $Out = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Out)
@@ -93,6 +94,7 @@ if ($cfg.portRange) { $argv += @("-PortRange", $cfg.portRange) }
 if ($cfg.looks) { $argv += @("-Looks", $cfg.looks) }
 if ($cfg.noise) { $argv += @("-Noise", $cfg.noise) }
 if ($cfg.serial) { $argv += @("-Serial", $cfg.serial) }
+if ($NoRun) { Say "retry: -NoRun, so the rerun is only printed: pwsh $($argv -join ' ')"; exit 0 }
 & pwsh @argv
 $code = $LASTEXITCODE
 Say "retry: phone_pass.ps1 exit $code"

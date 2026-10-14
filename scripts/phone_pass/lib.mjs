@@ -51,7 +51,7 @@ export async function myPage(browser) {
   if (!page) {
     if (!DRY) throw new Error("no pass tab on " + BUILDS.map((b) => b.host).join(" / ") + " (phone_pass.ps1 -Phase start opens one)");
     page = await browser.newPage();
-    await page.goto(`${CFG.hostB}/robots.txt`, { waitUntil: "load" }).catch(() => {});
+    await page.goto(`${CFG.hostB}/favicon.svg`, { waitUntil: "load" }).catch(() => {}); // a static file: a bare page URL would boot today's daily
   }
   if (DRY) {
     await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "no-preference" }]);

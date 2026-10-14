@@ -178,7 +178,8 @@ function Assert-PhoneReady([string]$adb, [string]$ser) {
 function Get-FreePorts([int]$n) {
   if ($PortRange -match '^(\d+)-(\d+)$') { $lo = [int]$Matches[1]; $hi = [int]$Matches[2] }
   else { throw "-PortRange must look like 5480-5489" }
-  $busy = @(Get-NetTCPConnection -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -ge $lo -and $_.LocalPort -le $hi } | ForEach-Object LocalPort | Sort-Object -Unique)
+  # TimeWait leftovers of an earlier pass (the server side of closed connections, up to 2 min) do not block a listener.
+  $busy = @(Get-NetTCPConnection -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -ge $lo -and $_.LocalPort -le $hi -and $_.State -ne "TimeWait" } | ForEach-Object LocalPort | Sort-Object -Unique)
   $free = @($lo..$hi | Where-Object { $busy -notcontains $_ })
   if ($free.Count -lt $n) { throw "need $n free ports in $PortRange, found $($free.Count) (busy: $($busy -join ', '))" }
   return @($free | Select-Object -First $n)
@@ -368,6 +369,7 @@ function Do-Start {
   foreach ($port in $portA, $portB) {
     & $adb -s $ser reverse "tcp:$port" "tcp:$port" | Out-Null
     $cfg.tunnels = @($cfg.tunnels) + $port
+    Save-Cfg $cfg   # recorded at once, so cleanup removes it even if a later step fails
   }
   $fwd = @(& $adb forward --list)
   $mine9222 = @($fwd | Where-Object { $_ -match "^$([regex]::Escape($ser))\s+tcp:9222\s+localabstract:chrome_devtools_remote" })
