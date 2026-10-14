@@ -138,8 +138,10 @@ interface YarnEvent {
 // destination-out holes at every explored stamp. Stamps land where the
 // head rests and, during a move, at fixed stations along its run
 // (fog_arc.ts, K99: the same at any frame rate or move speed), at least
-// the world spacing below apart, and persist until the path empties
-// (Reset path); the radius slider re-renders every hole (a retroactive
+// the world spacing below apart, and persist for the whole solve: K100
+// clears them only when it restarts (the controller's `restarts` moves),
+// never on a backtrack to the entrance (by hand or a daily's Reset path)
+// or a K80 catch. The radius slider re-renders every hole (a retroactive
 // view setting).
 // The canvas redraws only when a stamp lands or settings change, so
 // the steady per-frame cost is one static sprite. Fog is a SPATIAL
@@ -330,6 +332,8 @@ export class FabricMazeRenderer {
   private fogTexture: Texture | null = null;
   private fogRect = { x0: 0, y0: 0, span: 1 };
   private fogStamps: number[] = []; // Flat explored world [x, y, ...].
+  // The controller's `restarts` the stamps belong to (K100).
+  private fogRestarts = -1;
   private fogDirty = true;
   private fogLastRadius = -1;
   private fogDispSprite: Sprite | null = null;
@@ -598,6 +602,14 @@ export class FabricMazeRenderer {
 
   cancelMove(): void {
     this.finishFogArc();
+    this.anim = null;
+  }
+
+  // K80's catch: the move ends where the dot is, and the fog (which a
+  // catch keeps, K100) lifts only as far as the dot got. cancelMove would
+  // uncover the rest of the run, right for a move the controller made in
+  // full; a caught player never got there.
+  stopMove(): void {
     this.anim = null;
   }
 
@@ -876,10 +888,14 @@ export class FabricMazeRenderer {
     }
   }
 
-  // K47 RESTORE: the fog of war explores along runs crossed before the
-  // page was reloaded (main.ts calls this once the restored scene is on
-  // screen, so the stamps land where the settled threads lie).
-  restoreExplored(runs: readonly number[]): void {
+  // The fog of war explores along whole runs, without a dot. K47 RESTORE:
+  // the runs crossed before the page was reloaded (main.ts calls this once
+  // the restored scene is on screen, so the stamps land where the settled
+  // threads lie). K100: a daily's Reset path, whose way back to the
+  // entrance jumps instead of animating, explores the runs it retraced, so
+  // the live fog is the one a restore of the same taps draws (each pass of
+  // a run deepens its soft edge, by hand or restored).
+  exploreRuns(runs: readonly number[]): void {
     if (!this.fogOfWar) return;
     for (const eid of runs) {
       const e = this.walk.edges[eid];
@@ -1591,8 +1607,14 @@ export class FabricMazeRenderer {
       }
     }
     this.ribbons.setPaint(spans, pulses, caps, passes.routes, passes.traveled);
-    // Reset path: the fog's explored memory starts over too.
-    if (controller.pathEdges.length === 0 && this.fogStamps.length > 2) {
+    // K100: the fog's explored memory belongs to one solve. It starts over
+    // when the solve restarts (Reset path's restart, a clock change, a
+    // restore's replay: the controller's `restarts` moved) and only then -
+    // an empty path (a backtrack to the entrance, a K80 catch) keeps it.
+    // Keyed on the event, not on the state it leaves, so a reset followed
+    // by taps before this runs (replay) still reads as a restart.
+    if (controller.restarts !== this.fogRestarts) {
+      this.fogRestarts = controller.restarts;
       this.fogStamps.length = 0;
       this.fogDirty = true;
     }

@@ -1679,7 +1679,12 @@ async function main(): Promise<void> {
       }
       if (action === "backtrack" && fabric && fabricController) {
         fabric.cancelMove();
-        if (fabricController.retreatToStart().length > 0) {
+        const retraced = fabricController.retreatToStart();
+        if (retraced.length > 0) {
+          // The fog stays (K100) and lifts along the way back again, as
+          // walking it back by hand would and as a restore of these taps
+          // will (exploreRuns).
+          fabric.exploreRuns(retraced);
           // The Ariadne string keeps every pass, the way back included.
           fabric.restoreYarn(fabricController.taps);
           fabric.update(fabricController);
@@ -1772,8 +1777,8 @@ async function main(): Promise<void> {
   let attemptDay = 0;
   let attemptStartedAt = 0;
   let attemptRecord: SolveRecord | null = null;
-  // A restored attempt's explored runs, for the fog of war once the scene
-  // is on screen (null = nothing pending).
+  // A restored attempt's explored runs (every tap since its restart, K100),
+  // for the fog of war once the scene is on screen (null = nothing pending).
   let pendingExplored: number[] | null = null;
   // The savedAt of the attempt record this tab last wrote or restored: a
   // newer one was written by another tab (adoptOtherTab).
@@ -2228,7 +2233,7 @@ async function main(): Promise<void> {
     if (!sceneReady()) return;
     if (clock.state === "paused") clock.resume(performance.now(), document.hidden);
     if (pendingExplored !== null && fabric) {
-      fabric.restoreExplored(pendingExplored);
+      fabric.exploreRuns(pendingExplored);
       pendingExplored = null;
     }
     updateHud();
@@ -2444,8 +2449,8 @@ async function main(): Promise<void> {
   // tapEdge each: path, stats, move log, paint) and the dot rides the
   // chase's progress (setMoveProgress) instead of tickAnim's pace. A catch
   // sends the player back to the entrance: the clock and the stats run on,
-  // the path and the string start over (and so does the fog, which follows
-  // an empty path).
+  // the path and the string start over, and the fog keeps what was
+  // explored, up to where the catch stopped the dot (K100).
   const restartChase = (): void => {
     chase =
       params.mazeFabric && params.clock === "realtime" && walkGraph && fabric
@@ -2515,7 +2520,7 @@ async function main(): Promise<void> {
           updateHud();
         } else if (ev.kind === "caught") {
           fc.respawn();
-          fabric.cancelMove();
+          fabric.stopMove();
           fabric.clearYarn();
           pendingWin = false;
           fabric.update(fc);
