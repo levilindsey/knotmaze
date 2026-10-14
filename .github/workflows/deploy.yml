@@ -1,9 +1,13 @@
 name: Deploy to Cloudflare Pages
 
 # Every push to master builds and deploys https://knotmaze.pages.dev,
-# which https://levi.dev/knots redirects to (see levi.dev's
-# functions/[[catchall]].js). Tests gate the deploy: a red test suite
+# which https://levi.dev/knotmaze/ proxies (levi.dev's
+# functions/knotmaze/[[path]].js). Tests gate the deploy: a red test suite
 # leaves the previous deployment live.
+#
+# A push that touches only the ledger, docs, lore, README or LICENSE
+# changes nothing deployed and skips the run (K117: Actions minutes count
+# against the plan's quota once the repo is private).
 #
 # Secrets: CLOUDFLARE_API_TOKEN (Pages:Edit) and CLOUDFLARE_ACCOUNT_ID
 # (Levi's personal account, the same pair levi.dev uses).
@@ -11,6 +15,13 @@ name: Deploy to Cloudflare Pages
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - "LEDGER.md"
+      - "CLAUDE.md"
+      - "README.md"
+      - "LICENSE"
+      - "docs/**"
+      - ".claude/**"
   workflow_dispatch:
 
 jobs:
