@@ -71,6 +71,69 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   (bg-vellum-drift), which is how a GPU probe times each one. Probes:
   `.claude/probes/K79/` (run_ab.ps1 + k79_ab.mjs, k79_sheet.mjs,
   k79_dstats.mjs, k79_gpu.mjs).
+  SHAPE PARAMS + CUSTOM COLORS (K79 stage B, 2026-10-13; the commit
+  messages hold the design notes, the panel side is in `gameplay.md`):
+  ten params appended to codec v4, indices 71-80 (unpublished until the
+  merge, then frozen): backgroundScale (bgsz, [0.5, 3], 1),
+  backgroundDetail (bgdt, [0, 2], 1), backgroundFibers and backgroundGrain
+  (bgfb, bggr, [0, 3], 1), backgroundAngle (bgan, degrees
+  counterclockwise from screen right, any negative = AUTO = the seed's
+  own direction, -1), backgroundColorMode (bgcm, gamut | custom) and
+  backgroundBase / backgroundAccent1-3 (bgc0-bgc3, #rrggbb, defaults
+  #151b28 #7ab8cd #cdb17a #aa7acd). What reads what: scale every effect;
+  detail mist, wash, silk and contours only (BACKGROUND_DETAIL_EFFECTS:
+  vellum and aurora moved 0.4 luma levels at detail 0 and 2 against 1,
+  the others 0.9-2.6, so those two keep the designed fbm and no row);
+  fibers and grain vellum; angle silk; the colors every effect. None of
+  them is daily-exempt, and the dailies stand (DAILY_V1 pins codec v3's
+  defaults). SHAPED PROGRAMS: an effect draws with its own K21 /
+  stage-A program, byte for byte, until a param IT READS leaves its
+  default (needsShapeProgram); then with bg-<id>-x, which reads uShape
+  (1 / scale, fbm gain, fibers, grain) and uShape2 (silk's angle). Pixi
+  skips group uniforms a program does not declare, so the defaults never
+  see them. Two programs per effect, not one: a generalized program does
+  not reproduce the bits of the one it generalizes (the VELLUM_DRIFT
+  lesson). `test/render/background_shaders.test.ts` pins the default
+  sources by sha256 (all seven programs, the blit, the fog, the quad);
+  re-pin only after a same-state A/B against the previous build
+  (run_ab.ps1 over cases_all.json, then k79b_cases.json: explicit
+  defaults, unread params, custom colors in gamut mode, none with shape
+  params, fog and knot mode, all 0 px). SCALE zooms about the screen
+  center (where the knot hides it): the pattern is evaluated at p / S and
+  the drift time at t / S, so a drift crosses the screen at its designed
+  CSS px per second at any S (contours 1.04 px/s at S 0.5, 1, 2 and 3 on
+  the desktop viewport, 0.475 on the phone's, by cross-correlating two
+  frames; the crawl limit is about 1). Below 1 the render texture gets
+  max(base, min(1, base / S)) texels per CSS px (mist, wash, silk and
+  aurora reach 4x the texels at 0.5, contours 1.8x, vellum is at 1
+  already): the same sharpness, and no blockiness in the sheets on
+  either viewport (1x crops, and gain 4 at 3x zoom on the phone's
+  0.6-0.8 texels per CSS px). Above 1 the pattern
+  gets sparse and the margins quiet: the background's luma sd falls from
+  3.4 to 2.6 (mist), 4.4 to 2.4 (wash) and 2.6 to 1.1 (contours, one or
+  two lines on screen) from S 1 to 3. VELLUM's mottling scales and its
+  vignette stays on the screen, but its fibers grow with S above 1 and
+  never shrink below their designed size (a texel per CSS px cannot draw
+  them finer): at S 2-3 they read as long crossing hatching, not speckle.
+  Whether they should scale both ways is Levi's call (K129). FBM DETAIL:
+  octave gain 0.25 + 0.25 d (0.5 = designed), the sum rescaled to the
+  designed fbm's RMS so contrast holds. CUSTOM COLORS: the BASE IS THE
+  PAGE - the shaders' ink, the canvas's CSS background and
+  `fabric.setFogColor` (so none, intensity 0 and the flat fog show it,
+  and the fog still matches the backdrop). Accent 1 feeds uA2 (the
+  gamut's middle color, vellum's tint), 2 feeds uA1 and 3 feeds uA3.
+  BACKGROUND_ACCENTS_USED lists what each effect reads (vellum 1; silk
+  and contours 2 and 3; mist, wash, aurora 1-3), and `k79b_sheet.mjs
+  accents` holds it to the pixel (an unread accent changes 0 px).
+  COST: TODO (stage B2b, docs/design/K79.md) - GPU ms per pass, passes
+  per second and ms per frame of each -x program against its default, at
+  3200x1800, under the perf lock.
+  Probes (untracked, `.claude/probes/K79/`): k79b_sheet.mjs (the sheets,
+  the accent check and the contours crawl; desk or phone viewport),
+  k79b_montage.mjs and k79b_bgsd.mjs (crops, contrast by scale),
+  k79b_gpu.mjs (GPU ms per program, shape params in the config),
+  k79b_smoke.mjs (links, programs, panel rows, custom base and fog; 70
+  checks) and k79b_cases.json (the explicit-defaults A/B, 12 cases).
 
 - SHADER PAINT (G2 of the GPU migration, K4; worktree agent, 2026-10-12;
   design, deviations, every measurement: docs/design/G2_shader_paint.md
