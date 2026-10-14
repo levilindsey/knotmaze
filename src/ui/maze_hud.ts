@@ -7,8 +7,13 @@
 // mean something: efficiency once solved, backtracked outside trail mode,
 // dead ends with deadEnds on. The container ignores the pointer (taps on
 // the maze underneath still land); only the title takes clicks.
+//
+// The win banner shows K155's stars under its heading (starsWidget: a tap
+// opens what each star needs and where the run landed; hover shows it too).
 
 import { efficiencyPercent, formatDuration } from "../game/maze_stats";
+import { starExplanation, starLabel } from "../game/star_rating";
+import type { StarRating } from "../game/star_rating";
 import { whenReduced } from "./motion";
 
 export interface HudSnapshot {
@@ -118,6 +123,21 @@ export function ensureHudStyles(): void {
     "border:0;border-radius:6px;background:none;color:#8ea0c0;" +
     "font:18px/1 sans-serif;cursor:pointer}" +
     ".km-x:hover{color:#e4ecf8;background:#ffffff12}" +
+    // K155 stars: a button (a tap explains them; phones have no hover)
+    // and the explanation it opens. Shared by the banner and the stats.
+    ".km-stars{display:inline-flex;align-items:center;gap:6px;margin:0 0 6px;" +
+    "padding:2px 8px;border:0;border-radius:7px;background:none;" +
+    `cursor:pointer;color:#e7c56f;font:22px/1.1 ${sans};letter-spacing:2px;` +
+    "-webkit-tap-highlight-color:transparent;touch-action:manipulation}" +
+    ".km-stars:hover{background:#ffffff0d}" +
+    ".km-stars .off{color:#4a5672}" +
+    ".km-stars svg{width:15px;height:15px;color:#8ea0c0;flex:0 0 auto}" +
+    ".km-stars:focus-visible{outline:2px solid #8fe6ff;outline-offset:2px}" +
+    ".km-why{margin:0 0 8px;padding:7px 10px;border-radius:7px;" +
+    `background:#222b40;text-align:left;font:12px/1.5 ${sans};color:#8ea0c0}` +
+    ".km-why[hidden]{display:none}" +
+    ".km-why .km-hit{color:#e7c56f;font-weight:650}" +
+    ".km-why .km-you{color:#e4ecf8;margin-top:4px}" +
     "@media (max-width:900px){.km-banner{top:auto;" +
     "bottom:max(14px,env(safe-area-inset-bottom))}}" +
     // Toast (ui/share.ts).
@@ -177,6 +197,51 @@ export function ensureHudStyles(): void {
 const CHART_ICON =
   '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" ' +
   'd="M2 13h12v1.5H2zM3 8h2.4v4H3zm3.8-4h2.4v8H6.8zm3.8 2H13v6h-2.4z"/></svg>';
+
+// An "i" in a circle: the stars explain themselves when tapped.
+const INFO_ICON =
+  '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.8" ' +
+  'fill="none" stroke="currentColor" stroke-width="1.4"/><path ' +
+  'fill="currentColor" d="M7.2 7h1.6v4.6H7.2zM8 4.1a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>';
+
+let whyIds = 0;
+
+// K155: a run's stars as a button that opens its explanation (what each
+// star needs, where this run landed; the tier earned is highlighted), with
+// the same text on hover. Returns the button and the panel, to place.
+export function starsWidget(r: StarRating): [HTMLButtonElement, HTMLDivElement] {
+  const lines = starExplanation(r);
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "km-stars";
+  const on = document.createElement("span");
+  on.textContent = "★".repeat(r.stars);
+  const off = document.createElement("span");
+  off.className = "off";
+  off.textContent = "☆".repeat(3 - r.stars);
+  btn.append(on, off);
+  btn.insertAdjacentHTML("beforeend", INFO_ICON);
+  btn.title = lines.join("\n");
+  btn.setAttribute("aria-label", `${starLabel(r.stars)} - how stars work`);
+  const why = document.createElement("div");
+  why.className = "km-why";
+  why.id = `km-why-${++whyIds}`;
+  why.hidden = true;
+  lines.forEach((text, i) => {
+    const d = document.createElement("div");
+    // The rules come first, best tier first; the last line is this run.
+    d.className = i === lines.length - 1 ? "km-you" : i === 3 - r.stars ? "km-hit" : "";
+    d.textContent = text;
+    why.appendChild(d);
+  });
+  btn.setAttribute("aria-expanded", "false");
+  btn.setAttribute("aria-controls", why.id);
+  btn.addEventListener("click", () => {
+    why.hidden = !why.hidden;
+    btn.setAttribute("aria-expanded", String(!why.hidden));
+  });
+  return [btn, why];
+}
 
 export class MazeHud {
   readonly el: HTMLDivElement;
@@ -262,6 +327,8 @@ export interface WinInfo {
   // K80's real-time mode: catches and time chased (absent elsewhere).
   catches?: number | null;
   chasedMs?: number | null;
+  // K155: the run's stars (null or absent: no rating, no stars).
+  rating?: StarRating | null;
   // Show the daily stats button.
   stats: boolean;
 }
@@ -293,6 +360,9 @@ export class WinBanner {
     const head = document.createElement("div");
     head.className = "km-head";
     head.textContent = `${w.heading} \u{1F389}`;
+    el.appendChild(head);
+    // K155: the stars under the heading; a tap opens their explanation.
+    if (w.rating) el.append(...starsWidget(w.rating));
     // One stat per row, label at the left edge and value at the right, as
     // in the HUD.
     const rows = document.createElement("div");
@@ -329,7 +399,7 @@ export class WinBanner {
     x.title = "Close";
     x.setAttribute("aria-label", "Close");
     x.addEventListener("click", () => this.hide());
-    el.append(head, rows, btns, x);
+    el.append(rows, btns, x);
     el.hidden = false;
   }
 

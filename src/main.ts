@@ -69,6 +69,7 @@ import {
 } from "./game/daily_attempt";
 import { SolveClock, efficiencyOf } from "./game/maze_stats";
 import { shareText } from "./game/share_text";
+import { rateRun, ratingForResult, walkedOf } from "./game/star_rating";
 import { MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
 import { ModeBadge, modeBadgeFor } from "./ui/mode_badge";
@@ -2192,8 +2193,15 @@ async function main(): Promise<void> {
       attemptRecord = dailyStore.recordSolve(daily, result);
     }
     const replay = attemptRecord === "replay";
+    // K155: the stars. Turn-based walks rate from path + 2 x backtrack, as
+    // a stored daily result does (the stats view agrees to the bit); a
+    // chase rates from the walked meter (a catch's re-walk) and its catches.
+    const rating = chase
+      ? rateRun(c.walkedDist, c.walk.optimalLength, chase.catches)
+      : rateRun(walkedOf(c.pathLength, c.backtrackDist), c.walk.optimalLength);
+    const stars = rating?.stars ?? null;
     lastWin = {
-      text: shareText({ daily, replay, timeMs, efficiency, moves }),
+      text: shareText({ daily, replay, timeMs, efficiency, moves, stars }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
     banner.show({
@@ -2214,6 +2222,7 @@ async function main(): Promise<void> {
       // K80: a chase's catches and time hunted (null: turn-based).
       catches: chase ? chase.catches : null,
       chasedMs: chase ? chase.huntSeconds * 1000 : null,
+      rating,
     });
     updateHud();
   };
@@ -2338,6 +2347,7 @@ async function main(): Promise<void> {
             timeMs: r.timeMs,
             efficiency: r.efficiency,
             moves: r.moves,
+            stars: ratingForResult(r)?.stars ?? null,
           }),
           url: dailyUrl(n),
         });
@@ -3605,6 +3615,7 @@ async function main(): Promise<void> {
       pathLength: c.pathLength,
       optimal: wg.optimalLength,
       backtrack: c.backtrackDist,
+      walked: c.walkedDist, // K155
       trailMode: c.trailMode,
       pathViz: params.pathViz,
       trailLength: params.trailLength,
