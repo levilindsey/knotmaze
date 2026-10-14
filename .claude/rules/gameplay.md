@@ -285,8 +285,10 @@ entry is labeled with its source; the narrative is in
   intro. A viewer preference like showMazeStats: localStorage
   `knotmaze.motion` (anything else reads as follow system), never in a
   link or a daily, kept by Reset to defaults. MotionSetting.reduced is
-  the ONE answer: the background's drift, the render-only plucks (no
-  attack, tau x0.7, no ghost, lobes x0.6) and the camera tween to an edge
+  the ONE answer: the background's drift, the render-only plucks (K104:
+  a pluck started while reduced is STILL - its unit brightens toward
+  white and fades, nothing moves, the sound is unchanged; one already
+  ringing finishes without attack and ghost) and the camera tween to an edge
   marker's target (a jump) read it every frame, and CSS keys on the
   root's data-motion through whenReduced() - a new `@media
   (prefers-reduced-motion)` rule would miss the in-app choice. Follow
@@ -294,7 +296,9 @@ entry is labeled with its source; the narrative is in
   throwing or full: the page boots following the system and a choice
   lasts the session. NOT gated (left for Levi): flow, the intros, the
   pulses. No cross-tab sync; K84 sorts it with the other viewer prefs.
-  Probe: `.claude/probes/K79/k79_motion.mjs` (38 checks); after
+  Probe: `.claude/probes/K79/k79_motion.mjs` (38 checks; its tau x0.7
+  and lobes x0.6 pluck checks predate K104's still plucks and fail by
+  design until updated); after
   emulateMediaFeatures, wait two rAFs before reading the change.
 
 ## Camera, gestures and plucks

@@ -3182,9 +3182,10 @@ async function main(): Promise<void> {
       renderer!.plucks.size = Math.max(0, Math.min(3, params.pluckSize));
       renderer!.plucks.ghost = Math.max(0, Math.min(1, params.pluckGhost));
       renderer!.plucks.sustain = params.sustain;
-      // Reduced motion (the Motion setting, live): render-only plucks drop
-      // the strobe ghost and the attack, swing smaller and settle sooner
-      // (WCAG 2.3.3).
+      // Reduced motion (the Motion setting, live; WCAG 2.3.3): a pluck
+      // started under it is STILL - the plucked segment brightens briefly
+      // and nothing moves (K104); the sound is unchanged. Plucks already
+      // ringing when it turns on finish without the ghost and the attack.
       renderer!.plucks.reducedMotion = motion.reduced;
       // Applies to knot mode too: the erase grids re-read it in the next
       // renderer.update(), and the slider's onSlackChange wakes the sim.
