@@ -101,7 +101,7 @@ import {
   type KIgn,
 } from "./paint_math";
 import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM } from "./paint_const";
-import { PluckOverlay } from "./pluck_overlay";
+import { PluckOverlay, bindPluckGap } from "./pluck_overlay";
 import type { PluckHost, PluckNode } from "./pluck_overlay";
 import {
   FIELD_BLEND_MIN,
@@ -519,11 +519,13 @@ function sectionShader(): SectionShader {
   return SECTION_SHADER;
 }
 
-// Point both gap readers - the shared section shader (ribbons) and the
-// junction-field shader (fans) - at a scene's gap-slot table (gap tables
-// are page-lifetime and sized per scene - see gap_mask.ts).
+// Point every gap reader - the shared section shader (ribbons), the
+// junction-field shader (fans) and the still-pluck program - at a scene's
+// gap-slot table (gap tables are page-lifetime and sized per scene - see
+// gap_mask.ts).
 function bindGap(tex: Texture): void {
   bindFieldGap(tex);
+  bindPluckGap(tex);
   const sh = sectionShader();
   if (sh.resources.uGapData !== tex.source) sh.resources.uGapData = tex.source;
 }
@@ -3821,7 +3823,7 @@ export class RibbonRenderer {
   private makePluckHost(): PluckHost {
     return {
       halfWidth: () => this.style.threadWidth / 2,
-      casing: () => this.style.casingWidth / 2,
+      casing: () => this.style.casingWidth / 2 + CUT_BIAS,
       samples: (c) => this.chainSamples[c] ?? null,
       allSamples: () => this.chainSamples,
       closed: (c) => this.ps.chainBreakAfter[c] < 0,
@@ -3846,6 +3848,7 @@ export class RibbonRenderer {
       },
       geomRev: () => this.geomRev,
       baseSampleCount: (c) => this.fills[c].sampleCount,
+      gapIds: (c) => this.idScratch.get(c) ?? null,
     };
   }
 

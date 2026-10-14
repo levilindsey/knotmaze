@@ -306,6 +306,77 @@ export function cueStrength(size: number, gain: number): number {
   return g * Math.sqrt(Math.max(0, size) / CUE_SIZE_REF);
 }
 
+// A still pluck takes its crossing gaps from G1's own mask (gap_mask.ts
+// gapKeepAt), which reads a fragment's place along its chain as a TURN: the
+// ribbon's per-sample encoding (ribbon_mesh.ts: i / count on rings, 0.45 i
+// / (count - 1) on open chains) times the slot's arcScale (the chain's
+// length, or length / 0.45) gives the arc back. On rings the mask wraps by
+// the period, so any whole number of turns names the same place: callers
+// keep a lobe's arcs unwrapped (one smooth varying across the seam) and
+// offset by whole lengths to stay >= 0 (a turn under -0.5 reads as a fan).
+export function gapTurn(arc: number, total: number, closed: boolean): number {
+  if (!(total > 0)) return 0;
+  if (closed) return arc / total;
+  return (0.45 * Math.max(0, Math.min(total, arc))) / total;
+}
+
+const UNION_SEEN = new Float64Array(64);
+
+// The gap slots whose windows touch the arc span [a0, a1] of a chain whose
+// ribbon samples carry `ids` (count samples x `slots` lanes, -1 = none;
+// ribbon_renderer's assignGapIds, every window already padded by a sample):
+// the distinct ids over samples floor(a0 per)..ceil(a1 per) - wrapped on
+// rings (a0, a1 unwrapped), clamped into the chain on open ones (as gapTurn
+// clamps) - written to out[o..o +
+// slots) in first-seen order and padded with -1. Returns how many distinct
+// ids there were; more than `slots` = overflow (the extras are dropped).
+export function unionGapIds(
+  ids: Float32Array,
+  count: number,
+  slots: number,
+  closed: boolean,
+  total: number,
+  a0: number,
+  a1: number,
+  out: Float32Array,
+  o: number
+): number {
+  out.fill(-1, o, o + slots);
+  if (count < 2 || !(total > 0) || ids.length < count * slots) return 0;
+  const per = (closed ? count : count - 1) / total;
+  let k0 = Math.floor(Math.min(a0, a1) * per);
+  let k1 = Math.ceil(Math.max(a0, a1) * per);
+  if (!closed) {
+    // Both ends into the chain, as gapTurn clamps the arc.
+    k0 = Math.min(count - 1, Math.max(0, k0));
+    k1 = Math.min(count - 1, Math.max(0, k1));
+  } else if (k1 - k0 + 1 >= count) {
+    k0 = 0;
+    k1 = count - 1;
+  }
+  let n = 0;
+  for (let k = k0; k <= k1; k++) {
+    const kk = closed ? ((k % count) + count) % count : k;
+    for (let s = 0; s < slots; s++) {
+      const id = ids[kk * slots + s];
+      if (!(id >= 0)) continue;
+      let seen = false;
+      for (let j = 0; j < n; j++) {
+        if (UNION_SEEN[j] === id) {
+          seen = true;
+          break;
+        }
+      }
+      if (seen) continue;
+      if (n >= UNION_SEEN.length) return n;
+      UNION_SEEN[n] = id;
+      if (n < slots) out[o + n] = id;
+      n++;
+    }
+  }
+  return n;
+}
+
 // W's room at a station whose nearest neighbor edge is `gap` away from the
 // thread's own edge ("overlap" mode).
 export function wholeRoom(gap: number, h: number): number {

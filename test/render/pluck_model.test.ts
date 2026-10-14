@@ -11,6 +11,7 @@ import {
   cueStrength,
   cueWeight,
   envelope,
+  gapTurn,
   ghostShape,
   nodeCap,
   peakShape,
@@ -27,6 +28,7 @@ import {
   tapAmplitude,
   throughStation,
   tri,
+  unionGapIds,
   unitShift,
   visualTau,
   WHOLE_AMP,
@@ -669,5 +671,91 @@ describe("rounded base collapse", () => {
     expect(f[0]).toBeGreaterThan(0);
     const same = round(d, per, true, 0);
     for (let k = 0; k < n; k++) expect(same[k]).toBe(d[k]);
+  });
+});
+
+describe("still-pluck gap lookups (G1's encoding)", () => {
+  it("gapTurn inverts the ribbon's turn x arcScale on rings and open chains", () => {
+    const total = 37.5;
+    // Rings: turn x total (and any whole number of turns) is the arc.
+    for (const arc of [0, 1.25, 20, 37.4, 40, 70]) {
+      expect(gapTurn(arc, total, true) * total).toBeCloseTo(arc, 9);
+    }
+    // Open: the ribbon's sample i of count carries 0.45 i / (count - 1);
+    // x total / 0.45 gives the arc back, clamped to the chain.
+    const count = 101;
+    for (const i of [0, 1, 50, 100]) {
+      const arc = (total * i) / (count - 1);
+      expect(gapTurn(arc, total, false)).toBeCloseTo((0.45 * i) / (count - 1), 12);
+      expect((gapTurn(arc, total, false) * total) / 0.45).toBeCloseTo(arc, 9);
+    }
+    expect(gapTurn(-1, total, false)).toBe(0);
+    expect(gapTurn(total + 1, total, false)).toBeCloseTo(0.45, 12);
+    expect(gapTurn(5, 0, true)).toBe(0);
+  });
+
+  // ids: sample-major, 4 lanes; one slot per lane over its window.
+  const lanes = (count: number, wins: Array<[number, number, number, number]>) => {
+    const ids = new Float32Array(count * 4).fill(-1);
+    for (const [slot, lane, k0, k1] of wins) {
+      for (let k = k0; k <= k1; k++) ids[(((k % count) + count) % count) * 4 + lane] = slot;
+    }
+    return ids;
+  };
+
+  it("unions the slots of every sample the span touches, first seen first", () => {
+    const count = 20; // Open chain, total 19: one sample per unit arc.
+    const ids = lanes(count, [
+      [7, 0, 2, 5],
+      [3, 1, 4, 9],
+      [11, 0, 8, 12],
+    ]);
+    const out = new Float32Array(6).fill(9);
+    expect(unionGapIds(ids, count, 4, false, 19, 4.2, 4.8, out, 1)).toBe(2);
+    expect(Array.from(out)).toEqual([9, 7, 3, -1, -1, 9]);
+    // floor / ceil: 5.5 .. 8.1 reaches samples 5..9.
+    expect(unionGapIds(ids, count, 4, false, 19, 5.5, 8.1, out, 0)).toBe(3);
+    expect(Array.from(out.subarray(0, 4))).toEqual([7, 3, 11, -1]);
+    // Reversed spans read the same; nothing near: all -1, 0.
+    expect(unionGapIds(ids, count, 4, false, 19, 8.1, 5.5, out, 0)).toBe(3);
+    expect(unionGapIds(ids, count, 4, false, 19, 14, 18, out, 0)).toBe(0);
+    expect(Array.from(out.subarray(0, 4))).toEqual([-1, -1, -1, -1]);
+  });
+
+  it("wraps rings across the seam (unwrapped arcs), clamps open chains", () => {
+    const count = 20; // Ring of total 20: sample k sits at arc k.
+    const ids = lanes(count, [
+      [5, 0, 18, 21], // Across the seam: samples 18, 19, 0, 1.
+      [6, 1, 10, 11],
+    ]);
+    const out = new Float32Array(4);
+    expect(unionGapIds(ids, count, 4, true, 20, 20.5, 20.9, out, 0)).toBe(1);
+    expect(out[0]).toBe(5);
+    expect(unionGapIds(ids, count, 4, true, 20, -1.5, -0.5, out, 0)).toBe(1);
+    expect(out[0]).toBe(5);
+    // A span of a whole ring or more reads every sample once.
+    expect(unionGapIds(ids, count, 4, true, 20, 3, 40, out, 0)).toBe(2);
+    // Open: past either end clamps to the end samples.
+    const open = lanes(count, [[8, 2, 0, 0], [9, 3, 19, 19]]);
+    expect(unionGapIds(open, count, 4, false, 19, -3, -1, out, 0)).toBe(1);
+    expect(out[0]).toBe(8);
+    expect(unionGapIds(open, count, 4, false, 19, 25, 30, out, 0)).toBe(1);
+    expect(out[0]).toBe(9);
+  });
+
+  it("reports overflow past the slots and refuses short id arrays", () => {
+    const count = 10;
+    const ids = lanes(count, [
+      [1, 0, 0, 3],
+      [2, 1, 0, 3],
+      [3, 2, 0, 3],
+      [4, 3, 0, 3],
+      [5, 0, 4, 6], // Lane 0 again, once slot 1's window ended.
+    ]);
+    const out = new Float32Array(4);
+    expect(unionGapIds(ids, count, 4, false, 9, 3, 4, out, 0)).toBe(5);
+    expect(Array.from(out)).toEqual([1, 2, 3, 4]);
+    expect(unionGapIds(ids.subarray(0, 8), count, 4, false, 9, 3, 4, out, 0)).toBe(0);
+    expect(Array.from(out)).toEqual([-1, -1, -1, -1]);
   });
 });

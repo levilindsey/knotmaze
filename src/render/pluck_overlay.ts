@@ -28,8 +28,13 @@
 // thread's own anti-aliased band), drawn in WHITE at a per-station alpha
 // that brightens the unit and fades on the voice's clock (pluck_model's
 // cueWeight; writeStill). Nothing moves, so nothing is collapsed and no
-// neighbor is measured; the weave rules hold as they do for any swing of
-// zero. The sound is main.ts's and does not change.
+// neighbor is measured. Its crossing gaps are not rules 3 and 4: it draws
+// with its own program ("pluck-still"), which hides exactly what the
+// ribbon beneath hides - G1's gapKeepAt over the ribbon's own slots, at
+// the band's turn and tangent - so the brightening never reaches into a
+// partner's casing (the straight clip line left a sliver past h + gap,
+// ticks where the partner curves, and a fade that differed from the
+// mask's). The sound is main.ts's and does not change.
 
 import {
   Buffer,
@@ -42,6 +47,9 @@ import {
   UniformGroup,
 } from "pixi.js";
 import type { SplineSamples } from "../geometry/spline_generator";
+import { GAP_FRAG_LIB, GAP_SLOTS, defaultGapTexture } from "./gap_mask";
+import { KNOT_UNIFORMS_GLSL, PAINT_CONST_GLSL } from "./paint_glsl";
+import { knotUniforms } from "./paint_model";
 import {
   ATTACK_MIX,
   CUE_KILL,
@@ -60,6 +68,7 @@ import {
   WHOLE_NODE_ZONE,
   clampBeta,
   envelope,
+  gapTurn,
   ghostShape,
   nodeCap,
   peakShape,
@@ -74,6 +83,7 @@ import {
   sympatheticAmplitude,
   tapAmplitude,
   throughStation,
+  unionGapIds,
   unitShift,
   visualTau,
   wholeAmplitude,
@@ -115,8 +125,13 @@ export interface PluckNode {
 // What the overlay needs from the ribbon renderer.
 export interface PluckHost {
   halfWidth(): number;
-  // Partner band the under-node clip hides: partner half-width + gap.
+  // Partner band the under-node clip hides: partner half-width + gap +
+  // G1's CUT_BIAS (the casing G1 hides the under ribbon in).
   casing(): number;
+  // The chain's ribbon gap-slot ids (G1): sample-major, GAP_SLOTS lanes per
+  // sample (-1 = none), as of the last update(); null = none yet. Read by
+  // still plucks, never written.
+  gapIds(chain: number): Float32Array | null;
   samples(chain: number): SplineSamples | null;
   allSamples(): ReadonlyArray<SplineSamples | null>;
   closed(chain: number): boolean;
@@ -386,6 +401,119 @@ function pluckShader(): PluckShader {
   return PLUCK_SHADER;
 }
 
+// REDUCED MOTION's program ("pluck-still"): the strip at zero swing is the
+// thread's own band (the moving program's cover() at lo = hi = 0), white at
+// aAux.w, and it hides exactly where the ribbon beneath hides: G1's
+// gapKeepAt over the ribbon's own gap slots, read at the band's arc turn
+// and tangent (aGap = turn, tx, ty) with the slot ids of the quad's stations
+// (aGapId, flat like the ribbon's). No clip lines, no envelope, no color.
+const PLUCK_STILL_VERT = /* glsl */ `#version 300 es
+precision highp float;
+
+in vec2 aPosition;
+in vec2 aUV;
+in vec4 aAux;
+in vec4 aGap;
+in vec4 aGapId;
+
+out float vLat;
+out float vA;
+out vec2 vPos;
+out float vTurn;
+out vec2 vTan;
+flat out vec4 vMaskId;
+out vec4 vColor;
+
+uniform mat3 uProjectionMatrix;
+uniform mat3 uWorldTransformMatrix;
+uniform vec4 uWorldColorAlpha;
+uniform mat3 uTransformMatrix;
+uniform vec4 uColor;
+
+void main(void) {
+  mat3 mvp = uProjectionMatrix * uWorldTransformMatrix * uTransformMatrix;
+  gl_Position = vec4((mvp * vec3(aPosition, 1.0)).xy, 0.0, 1.0);
+  vLat = aUV.x;
+  vA = aAux.w;
+  vPos = aPosition;
+  vTurn = aGap.x;
+  vTan = aGap.yz;
+  vMaskId = aGapId;
+  vColor = uColor * uWorldColorAlpha;
+}
+`;
+
+const PLUCK_STILL_FRAG = /* glsl */ `#version 300 es
+precision highp float;
+precision highp int;
+precision highp sampler2D;
+${KNOT_UNIFORMS_GLSL}
+${PAINT_CONST_GLSL}
+in float vLat;
+in float vA;
+in vec2 vPos;
+in float vTurn;
+in vec2 vTan;
+flat in vec4 vMaskId;
+in vec4 vColor;
+
+out vec4 finalColor;
+
+// (half-width h, partner casing band, ghost tint, unused)
+uniform vec4 uPluck;
+${GAP_FRAG_LIB}
+// The band [-h, h] box-filtered over a pixel of width p.
+float bandCover(float u, float h, float p) {
+  return clamp((min(u + 0.5 * p, h) - max(u - 0.5 * p, -h)) / p, 0.0, 1.0);
+}
+
+void main(void) {
+  // Derivatives first, in uniform control flow (gap_mask.ts).
+  vec2 gfw = fwidth(vPos);
+  float pxW = max(max(gfw.x, gfw.y), 1e-5);
+  float p = max(length(vec2(dFdx(vLat), dFdy(vLat))), 1e-4);
+  float c = bandCover(vLat, uPluck.x, p) * vA;
+  if (c <= 0.002) discard;
+  vec3 rgb = vec3(1.0);
+  float gk = gapKeepAt(pxW, vPos, vTurn, vTan, vMaskId);
+  if (gk < 1.0 && gapProbe()) {
+    rgb = mix(rgb, vec3(1.0, 0.0, 0.85), (1.0 - gk) * 0.75);
+    gk = 1.0;
+  }
+  float a = c * gk;
+  if (a <= 0.002) discard;
+  finalColor = vec4(rgb, 1.0) * a * vColor;
+}
+`;
+
+let PLUCK_STILL_SHADER: PluckShader | null = null;
+// The current scene's gap-slot table (bindPluckGap): the still program is
+// built lazily, maybe before the renderer binds one.
+let STILL_GAP_TEX: Texture | null = null;
+function pluckStillShader(): PluckShader {
+  if (!PLUCK_STILL_SHADER) {
+    const sh = Shader.from({
+      gl: { vertex: PLUCK_STILL_VERT, fragment: PLUCK_STILL_FRAG, name: "pluck-still" },
+      resources: {
+        uGapData: (STILL_GAP_TEX ?? defaultGapTexture()).source,
+        knotUniforms: knotUniforms(),
+        pluckUniforms: pluckUniforms(),
+      },
+    }) as PluckShader;
+    sh.texture = Texture.WHITE;
+    PLUCK_STILL_SHADER = sh;
+  }
+  return PLUCK_STILL_SHADER;
+}
+
+// Point the still program at a scene's gap-slot table (ribbon_renderer's
+// bindGap, beside the section and junction shaders).
+export function bindPluckGap(tex: Texture): void {
+  STILL_GAP_TEX = tex;
+  const sh = PLUCK_STILL_SHADER;
+  if (sh && sh.resources.uGapData !== tex.source) sh.resources.uGapData = tex.source;
+}
+
 function vertexBuffer(data: Float32Array, label: string): Buffer {
   return new Buffer({
     data,
@@ -410,6 +538,10 @@ class PluckBlurMesh {
   readonly clipA = new Float32Array(MAX_STATIONS * 8);
   readonly clipB = new Float32Array(MAX_STATIONS * 8);
   readonly clipF = new Float32Array(MAX_STATIONS * 4);
+  // Still plucks only ("pluck-still"): the station's arc turn and tangent
+  // (turn, tx, ty, 0) and the gap-slot ids its quads read (-1 = none).
+  readonly gap = new Float32Array(MAX_STATIONS * 8);
+  readonly gapId = new Float32Array(MAX_STATIONS * 8).fill(-1);
   // Per-station layout state (CPU only).
   readonly lobeOf = new Int16Array(MAX_STATIONS);
   readonly xOf = new Float32Array(MAX_STATIONS);
@@ -454,6 +586,8 @@ class PluckBlurMesh {
     add("aClipA", this.clipA, 4);
     add("aClipB", this.clipB, 4);
     add("aClipF", this.clipF, 2);
+    add("aGap", this.gap, 4);
+    add("aGapId", this.gapId, 4);
     this.mesh = new Mesh({ geometry, shader: pluckShader(), texture: Texture.WHITE });
     this.mesh.visible = false;
   }
@@ -604,6 +738,9 @@ export class PluckOverlay {
     skipCore: 0, // The plucked stretch lies inside junction cores.
     skipHeld: 0, // The unit holds a particle the user is dragging.
     skipOther: 0, // No samples / no lobes / pluckSize 0.
+    // Still-pluck stations whose quads touch more than GAP_SLOTS gap slots
+    // (the extras are dropped: their gaps would show the cue).
+    gapOverflow: 0,
   };
   private host: PluckHost;
   private active: ActivePluck[] = [];
@@ -629,6 +766,13 @@ export class PluckOverlay {
   // indices) is drawn for the first few frames to compile it up front.
   private warm: PluckBlurMesh | null = null;
   private warmFrames = 3;
+  // The still program likewise, the first frame reduced motion is on (its
+  // gap library makes it the costlier compile; never paid without it).
+  private warmStill: PluckBlurMesh | null = null;
+  private warmStillFrames = 0;
+  private stillWarmed = false;
+  // Per-station gap-slot union scratch (still plucks).
+  private idBuf = new Float32Array(GAP_SLOTS);
 
   constructor(host: PluckHost) {
     this.host = host;
@@ -850,7 +994,7 @@ export class PluckOverlay {
       side: req.side >= 0 ? 1 : -1,
       freq: req.freq,
       lobes,
-      mesh: this.free.pop() ?? this.newMesh(),
+      mesh: this.takeMesh(still),
       evicting: false,
       fade: 1,
       layoutRev: -1,
@@ -891,6 +1035,20 @@ export class PluckOverlay {
       this.warm.mesh.visible = false;
       this.free.push(this.warm);
       this.warm = null;
+    }
+    if (this.reducedMotion && !this.stillWarmed) {
+      this.stillWarmed = true;
+      // A fresh mesh: its indices are all zero (a pool mesh keeps its last
+      // pluck's quads).
+      this.warmStill = this.newMesh();
+      this.warmStill.mesh.shader = pluckStillShader();
+      this.warmStill.mesh.visible = true;
+      this.warmStillFrames = 3;
+    }
+    if (this.warmStill && --this.warmStillFrames <= 0) {
+      this.warmStill.mesh.visible = false;
+      this.free.push(this.warmStill);
+      this.warmStill = null;
     }
     if (this.active.length === 0) return;
     const host = this.host;
@@ -937,6 +1095,14 @@ export class PluckOverlay {
   private newMesh(): PluckBlurMesh {
     const m = new PluckBlurMesh();
     this.layer.addChild(m.mesh);
+    return m;
+  }
+
+  // A pool mesh with the program its pluck draws with (pixi caches a VAO
+  // per program, and each program reads only its own attributes).
+  private takeMesh(still: boolean): PluckBlurMesh {
+    const m = this.free.pop() ?? this.newMesh();
+    m.mesh.shader = still ? pluckStillShader() : pluckShader();
     return m;
   }
 
@@ -1150,6 +1316,8 @@ export class PluckOverlay {
     if (!samples || samples.totalLength <= 0) return false;
     const total = samples.totalLength;
     const closed = host.closed(p.chain);
+    // The ribbon's own flag, for everything read against its gap slots.
+    const gClosed = samples.closed;
     const h = host.halfWidth();
     p.layoutRev = host.geomRev();
     p.needsLayout = false;
@@ -1224,10 +1392,9 @@ export class PluckOverlay {
       l.segs = segs;
       // Under-node clip reach along the partner: past the swing + thread.
       const reach = Math.min(CLIP_REACH, host.casing() + l.A0 + p.W0 + h + 0.1);
-      // A still pluck's band meets the partner's casing band over the
-      // crossing's whole parallelogram, however oblique (stillReach).
-      const reachA = p.still && l.lineA ? this.stillReach(samples, l.s0, l.lineA, h) : reach;
-      const reachB = p.still && l.lineB ? this.stillReach(samples, l.s1, l.lineB, h) : reach;
+      // A still pluck's arc turns (pluck_model gapTurn): one whole number
+      // of ring lengths off per lobe keeps them >= 0 and smooth.
+      const base = gClosed ? Math.floor(l.s0 / total) * total : 0;
       const eL = l.e1 - l.e0;
       for (let i = 0; i <= segs; i++) {
         const arc = l.s0 + (L * i) / segs;
@@ -1238,7 +1405,9 @@ export class PluckOverlay {
         m.xOf[n] = x;
         m.arcOf[n] = arc;
         m.dsOf[n] = L / segs;
-        m.visOf[n] = this.visAt(p.chain, l, arc);
+        // A still pluck's gaps are the shader's exact mask: here only the
+        // hide zones.
+        m.visOf[n] = this.visAt(p.chain, l, arc, !p.still);
         // The whole-segment term's neighbor room here (the W pass below).
         wRoom[n] = l.room ? roomAt(l.room, dA / L) : Infinity;
         arcAt[n] = arc;
@@ -1249,6 +1418,18 @@ export class PluckOverlay {
         // Stash the unit normal for the extrude pass below.
         m.pos[n * 4 + 2] = -sc[3];
         m.pos[n * 4 + 3] = sc[2];
+        if (p.still) {
+          const tn = gapTurn(arc - base, total, gClosed);
+          for (let v = 0; v < 2; v++) {
+            const o4 = (n * 2 + v) * 4;
+            m.gap[o4] = tn;
+            m.gap[o4 + 1] = sc[2];
+            m.gap[o4 + 2] = sc[3];
+            m.gap[o4 + 3] = 0;
+          }
+          n++;
+          continue;
+        }
         // Clip lines (rule 4); the flag carries the reach (0 = no clip).
         const la = l.lineA;
         const lb = l.lineB;
@@ -1271,14 +1452,15 @@ export class PluckOverlay {
           } else {
             m.clipB.fill(0, o4, o4 + 4);
           }
-          m.clipF[o2] = la ? reachA : 0;
-          m.clipF[o2 + 1] = lb ? reachB : 0;
+          m.clipF[o2] = la ? reach : 0;
+          m.clipF[o2 + 1] = lb ? reach : 0;
         }
         n++;
       }
     }
     if (n < 2) return false;
     m.used = n;
+    if (p.still) this.writeGapIds(p, gClosed, total);
 
     // THE WHOLE-SEGMENT TERM (K104): W(u) = W0 sin(pi (u - uE0) / (uE1 -
     // uE0)) over the unit, under its caps - the neighbor room ("overlap",
@@ -1521,18 +1703,16 @@ export class PluckOverlay {
       m.pos.copyWithin(i * 4, (n - 1) * 4, n * 4);
       m.uv.copyWithin(i * 4, (n - 1) * 4, n * 4);
     }
-    m.upload(["aPosition", "aUV", "aClipA", "aClipB", "aClipF"]);
+    m.upload(
+      p.still
+        ? ["aPosition", "aUV", "aGap", "aGapId"]
+        : ["aPosition", "aUV", "aClipA", "aClipB", "aClipF"]
+    );
     m.writeQuads();
 
-    if (p.still) {
-      // The cue is white at zero swing: the strip draws exactly the band.
-      m.col.fill(1);
-      m.env.fill(0);
-      m.upload(["aCol", "aEnv"]);
-    } else if (host.staticColors()) {
-      // Static colors (knot mode): once per layout.
-      this.writeColors(p);
-    }
+    // Static colors (knot mode): once per layout. (The still program draws
+    // white.)
+    if (!p.still && host.staticColors()) this.writeColors(p);
 
     // This pluck's base collapse: inside lobes, outside footprints, the
     // base narrows to what the overlay's opaque core always covers. A
@@ -1667,10 +1847,11 @@ export class PluckOverlay {
     );
   }
 
-  // Overlay visibility at an arc of a lobe: the chain's under-gaps (rule 3)
-  // times the end nodes' hide zones (junction cores, marker gaps).
-  private visAt(chain: number, l: Lobe, arc: number): number {
-    let vis = this.host.visibility(chain, arc);
+  // Overlay visibility at an arc of a lobe: the chain's under-gaps (rule 3;
+  // gaps false: none) times the end nodes' hide zones (junction cores,
+  // marker gaps).
+  private visAt(chain: number, l: Lobe, arc: number, gaps = true): number {
+    let vis = gaps ? this.host.visibility(chain, arc) : 1;
     const dA = arc - l.s0;
     const dB = l.s1 - arc;
     if (l.hideA > 0) vis *= smooth01((dA - l.hideA) / HIDE_RAMP);
@@ -1678,23 +1859,32 @@ export class PluckOverlay {
     return vis;
   }
 
-  // A still pluck's under-node clip reach (rule 4): its band (half-width h)
-  // meets the partner's casing band (casing()) in a parallelogram reaching
-  // (casing cos + h) / sin along the partner, theta the crossing angle at
-  // the node - past the moving reach at oblique crossings. sin is floored
-  // at 0.25 (G1's oblique-crossing floor) and +0.25 clears the shader's
-  // 0.2 fade; CLIP_REACH caps it where the partner stops being straight.
-  private stillReach(
-    samples: SplineSamples,
-    arc: number,
-    line: [number, number, number, number],
-    h: number
-  ): number {
-    const sc = this.scratch;
-    this.host.sampleAt(samples, arc, sc, 0);
-    const sin = Math.max(0.25, Math.abs(sc[2] * line[3] - sc[3] * line[2]));
-    const cos = Math.abs(sc[2] * line[2] + sc[3] * line[3]);
-    return Math.min(CLIP_REACH, (this.host.casing() * cos + h) / sin + 0.25);
+  // A still pluck's gap-slot ids: each station carries every slot whose
+  // ribbon window touches the arc from its previous to its next station of
+  // the same lobe, so a quad's flat ids cover it whichever vertex provokes
+  // them (the shader's arc test does the real windowing, as on the ribbon).
+  private writeGapIds(p: ActivePluck, closed: boolean, total: number): void {
+    const m = p.mesh;
+    const host = this.host;
+    const ids = host.gapIds(p.chain);
+    const count = host.baseSampleCount(p.chain);
+    const buf = this.idBuf;
+    for (let i = 0; i < m.used; i++) {
+      const li = m.lobeOf[i];
+      const a0 = i > 0 && m.lobeOf[i - 1] === li ? m.arcOf[i - 1] : m.arcOf[i];
+      const a1 = i + 1 < m.used && m.lobeOf[i + 1] === li ? m.arcOf[i + 1] : m.arcOf[i];
+      let k = 0;
+      if (ids) {
+        k = unionGapIds(ids, count, GAP_SLOTS, closed, total, a0, a1, buf, 0);
+      } else {
+        buf.fill(-1);
+      }
+      if (k > GAP_SLOTS) this.stats.gapOverflow++;
+      for (let v = 0; v < 2; v++) {
+        const o4 = (i * 2 + v) * 4;
+        for (let s = 0; s < 4; s++) m.gapId[o4 + s] = s < GAP_SLOTS ? buf[s] : -1;
+      }
+    }
   }
 
   // Station colors: the thread's own, brightened toward white by the
