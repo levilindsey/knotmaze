@@ -170,6 +170,12 @@ and never reused.
   it, or fill outside the bands with gold when every arm of a web is
   traveled? Sheet row 2 and `results/ab/zoom.png` in
   `.claude/probes/K81/` (in K81's worktree until the merge).
+- **K129** · K79 stage B's two calls, needed before its merge (the
+  codec freezes them; `docs/design/K79.md` "Stage B2 handoff" on K79's
+  branch). 1) The custom background colors' defaults: base #151b28,
+  accents #7ab8cd, #cdb17a and #aa7acd. 2) Vellum's fibers grow when the
+  pattern is enlarged and never shrink below their designed size when it
+  is reduced: keep that, or scale them both ways?
 - **K117** · Repo visibility (Levi's notes, 2026-10-13;
   `docs/design/levi_notes_2026-10-13.md`). Levi: private later, on his
   word; he won't share it for a while. Done in a756ca5: the panel's
@@ -199,28 +205,32 @@ and never reused.
   flat nub (Levi's screenshot in `.claude/probes/K81/`). K75 is merged
   (same paint code): pulses now brighten the thread's own paint, and
   `PulseArm.onPath` is gone.
-  - owner: the K81 stage 3b agent (aa54da056f1b58d79, sonnet) of
-    session d8031183, started 2026-10-13 11:20 in the same worktree.
-    Stage 3a (ae555243bc7175214, 10:21-11:10) passed every check with no
-    code change: the GPU matches the CPU mirror (0 points over 2/255 in
-    four states), 0 px change outside each traveled joint's footprint +
-    2 px, untraveled joints unchanged. All eight decisions stand, with
-    one look question (K127).
+  - owner: the K81 stage 3c agent (a49a1a574758ad6dc, sonnet) of
+    session d8031183, started 2026-10-13 11:58 in the same worktree; it
+    only measures. Stage 3b (aa54da056f1b58d79, 11:20-11:55) rebased onto
+    d9a7d47 (tsc, vitest 424 and the build green) and wrote the lore
+    (render.md "Route bands (K81)", the CLAUDE.md map lines). GPU at
+    3200x1800 with 5 moves: the fan 0.577 -> 0.778 ms (+0.20, +35%), the
+    frame's total 2.662 -> 2.793 ms. Stage 3a passed every check with no
+    code change; all eight decisions stand, with one look question
+    (K127).
   - branch: `worktree-agent-a8c2a999e6c2d5a8e`
-    (`.claude/worktrees/agent-a8c2a999e6c2d5a8e`), on 4deeda1; last
-    commit: 3c1b02b (the "Stage 3b handoff"; the code is 2fc0ec2 +
-    d27355e).
+    (`.claude/worktrees/agent-a8c2a999e6c2d5a8e`), on d9a7d47; last
+    commit: c6ef41b (the "Stage 3c brief"; stage 3b's tip is 5daa39a).
   - evidence: `.claude/probes/K81/` in its worktree, untracked
     (`census_k81.mjs`, `k81_ab.mjs`, `mk_k81_sheet.mjs`, `k81lib.mjs`,
-    `smoke.mjs`, `results/`, `sheet.png`); copy at merge.
-  - next: stage 3b: the rebase onto master and one `smoke.mjs` run,
-    tsc/vitest/build, GPU ms per program under the perf lock, the lore
-    (render.md "Route bands (K81)", the CLAUDE.md map lines). Then the
-    phone gate (K10), Levi's look at `sheet.png` (K127), and the merge;
-    file the handoff's residuals then (among them, the pluck overlay
-    draws over the band).
-  - brief: `docs/design/K81.md` ("Stage 3b handoff", with stage 2's
-    list and "Probes and commands").
+    `smoke.mjs`, `gpu_k81.ps1`, `gpu_sum.mjs`, `gpu_by_program.mjs`,
+    `results/`, `sheet.png`); copy at merge.
+  - next: stage 3c times the fan against master at Moves 0, 20 and 50,
+    counting routed records in view. If the cost grows more than about
+    +0.1 ms per 10 routed records in view, stage 3d (Opus, same
+    worktree) adds the bounding-circle early-out and trims the cover
+    strips with a 0 px proof, together with K127; if it stays flat, no
+    3d. Then the phone gate (K10, after K79's two), Levi's look at
+    `sheet.png` (K127), and the merge; file 3b's residuals then (among
+    them, the pluck overlay draws over the band).
+  - brief: `docs/design/K81.md` ("Stage 3c brief", with "Stage 3b
+    results", stage 2's list and "Probes and commands").
   - env: ports 5311-5314; the commands are in K81.md "Probes and
     commands".
 - **K79** · Backgrounds: speed, params, colors, Motion. Stage A MERGED
@@ -233,36 +243,38 @@ and never reused.
   colors (brief items 3-4; recommended: per-effect scale, contrast and
   drift direction, vellum fiber density and grain; custom accent colors
   replacing the three gamut accents).
-  - owner: the stage B agent (a4cf71c585e48612a) of session d8031183,
-    started 2026-10-13 07:45 (stage A's agent a7e566f4ba72a9d2d finished
-    and merged).
+  - owner: the stage B2 agent (ae47a194fcd2d9c76, sonnet) of session
+    d8031183, started 2026-10-13 11:58 in B1's worktree. Stage B1
+    (a4cf71c585e48612a, from 07:45) coded brief items 3-4, per-effect
+    params and custom colors, as ten codec v4 appends at indices 71-80
+    (`bgsz`, `bgdt`, `bgfb`, `bggr`, `bgan`, `bgcm`, `bgc0`-`bgc3`):
+    tsc, vitest 416 and the build pass, smoke 50/50. Its two calls wait
+    on Levi (K129).
   - branch: stage B `worktree-agent-a4cf71c585e48612a`
     (`.claude/worktrees/agent-a4cf71c585e48612a`), on 66ee658; last
-    commit: none yet. Stage A is on mainline (9ffda8a); its worktree
+    commit: e3f867f (the "Stage B2 handoff"; the code is 4cdcd1b).
+    Stage A is on mainline (9ffda8a); its worktree
     (`.claude/worktrees/agent-a7e566f4ba72a9d2d`) is kept until its
     phone gate passes.
   - evidence: stage A's `.claude/probes/K79/` (`run_ab.ps1`,
-    `k79_sheet.mjs`, `k79_dstats.mjs`, `k79_gpu.mjs`; `out/sheets/`,
-    `out/ab_final/`, `out/motion.log`, `out/gpu_k79.log`); stage B's
-    `k79b_*` files in its worktree's `.claude/probes/K79/`.
-  - next: stage A's phone gate (K10) is RUNNING again since 2026-10-13
-    10:45 (agent a32615bf2a394c093, sonnet, in the main checkout, ports
-    5371-5374): Levi said at 10:40 that the phone stays plugged in and
-    unlocked. The first run (ad54065d4cfbccf9c) stopped unmeasured
-    because the phone was in use (09:48, 10:02). It follows
-    `.claude/probes/K79/phone/results.md` (`watchdog.ps1` stops it on
-    any touch): default vs e25d202,
-    vellum at `bgs=1` (a 411x753 texture with the toolbar showing), the
-    speed row, and whether the `backgroundIntensity` reset glyph wraps
-    at 411 px (it does in desktop emulation; K21). Close its leftover
-    tab first (DevTools target 980; Chrome was frozen in the background
-    at 10:30) and clear the 5371/5372 origins (`cleanup_origins.mjs`).
-    Stage B in two
-    halves (asked 2026-10-13 10:05): B1 codes brief items 3-4 (params,
-    custom colors) with their codec appends, commits, writes a "Stage B2
-    handoff" into `docs/design/K79.md` and stops; B2, a fresh agent,
-    measures (same-state A/B, GPU ms), merges and runs the phone gate.
-  - brief: `docs/design/K79.md` (stage B: items 3, 4, 6 and 7).
+    `k79_sheet.mjs`, `k79_dstats.mjs`, `k79_gpu.mjs`, `k79_motion.mjs`;
+    `out/sheets/`, `out/ab_final/`, `out/motion.log`, `out/gpu_k79.log`);
+    stage B1's `k79b_smoke.mjs`, `k79b_cases.json` and `out/b1_smoke.log`,
+    copied there from its worktree.
+  - next: stage A's phone gate (K10) is RUNNING since 2026-10-13 10:45
+    (agent a32615bf2a394c093, sonnet, main checkout, ports 5371-5374): it
+    follows `.claude/probes/K79/phone/results.md` (default vs e25d202,
+    vellum at `bgs=1`, the speed row, the `backgroundIntensity` reset
+    glyph at 411 px; `watchdog.ps1` stops it on any touch). B2 does the
+    handoff's steps 1-5: same-state A/Bs against master (the 19 cases
+    plus the 10 in `k79b_cases.json`, 0 px expected), contact sheets, GPU
+    ms per shaped program under the perf lock, the lore, the rebase onto
+    master; it writes a "Stage B3: phone gate" section and stops. Then
+    B's phone gate (after A's), Levi's two calls (K129), and the merge;
+    file B1's probe-only residual then (`__knotSetBackgroundParams`
+    doesn't sanitize).
+  - brief: `docs/design/K79.md` on the branch ("Stage B2 handoff": `git
+    show e3f867f:docs/design/K79.md`).
   - env: `.claude/probes/K79/run_ab.ps1` (its header starts servers on
     5331/5332); stage B's servers on 5341-5344.
 - **K90** · A physical minimum bend radius, stage 1 (Levi, 2026-10-13:
@@ -324,6 +336,29 @@ and never reused.
     re-frozen pin, a before/after sheet; then the merge.
   - brief: `docs/design/K110.md`.
   - env: its dev servers on ports 5391-5394.
+- **K104** · Plucks you can see at a glance (Levi, 2026-10-13: "Even
+  maxing pluckSize to 3, I can't tell when some segments are plucked"):
+  a set-amount vibration of the whole plucked segment with today's local
+  lobes on top (he likes the locality); a gentler collapse than
+  `COLLAPSE_ROUND`'s 1 h ("better, but still a bit too acute"; K77's
+  A/B: 0.5 h left shoulders, 2 h erased most of the thinning); its own
+  reduced-motion version (K79's Motion setting). K105 folds in (goal 4).
+  - owner: the K104 agent (a33278775816855b8, Opus) of session
+    d8031183, started 2026-10-13 11:58.
+  - branch: `worktree-agent-a33278775816855b8`
+    (`.claude/worktrees/agent-a33278775816855b8`), on c521f23; last
+    commit: none yet.
+  - evidence: `.claude/probes/K104/` in its worktree (copy at merge);
+    K77's kit and sheet in the main checkout's `.claude/probes/K77/`
+    (`lib.mjs`, `k77_weave.mjs`, `k77_cost.ts`, `K77_before_after.png`).
+  - next: stage 1 (goals 1, 2 and 4): the visibility census on desktop
+    and a 412x915 phone viewport, the whole-segment term with a choice
+    for the clearance cap (a decision for Levi), the `COLLAPSE_ROUND`
+    A/B at 1-1.75 h, K105; then a "Stage 2 handoff" in the brief. Stage
+    2: reduced motion and the cost. Then the phone gate (K10) and the
+    merge.
+  - brief: `docs/design/K104.md` (c521f23).
+  - env: its dev servers on ports 5401-5404.
 
 ## Next, in order
 
@@ -339,41 +374,31 @@ boundary, where the agent writes a "Stage N handoff" into the brief,
 commits and stops, and a fresh agent continues from it. K81 alone was
 about a third of the overnight spend.
 
-Order from 2026-10-13 11:15, after Levi's decisions at 09:35 (he may
-reorder). Running: K81 stage 3b, K79 stage B (asked to stop at a stage
-boundary) and K110; K79 stage A's phone gate. Then, as code slots free
-up:
-1. K79 stage B2, after B1's handoff. Its merge and K81's unblock most
-   of this list.
-2. K104 (render only).
-3. K120 (no codec).
-4. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
+Order from 2026-10-13 12:05, after Levi's decisions at 09:35 (he may
+reorder). Running: K104 and K110 (code), K81 stage 3c (measures only)
+and K79 stage B2 (measures and rebases, stops before its phone gate);
+K79 stage A's phone gate. The phone takes one gate at a time: K79 A,
+then K79 B, then K81. The merges of K79 B and K81 unblock most of this
+list. Then, as code slots free up:
+1. K120 (no codec).
+2. K90 stage 1b, from stage 1a's handoff: the junction-web crop check,
    then option 3 (the spline fix) first.
-5. K122 (small).
-6. K100, after K81 merges (the same renderer file).
-7. K92, then K111, after K79 stage B merges (both rework the panel);
+3. K122 (small).
+4. K100, after K81 merges (the same renderer file).
+5. K92, then K111, after K79 stage B merges (both rework the panel);
    K111's pulse highlight modes after K81 too.
-8. K98, after K79 stage B and K81.
-9. K86, after K79 stage B.
-10. K76 stage 2, after K81 and Levi's five calls.
-11. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
-    K42. K90's spline fix touches K8: never run the two at once.
+6. K98, after K79 stage B and K81.
+7. K86, after K79 stage B.
+8. K76 stage 2, after K81 and Levi's five calls.
+9. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
+   K42. K90's spline fix touches K8: never run the two at once.
 
-Waiting for Levi: K74, K80, K114, K115, K116, K127, K76's five calls,
+Waiting for Levi: K74, K80, K114, K115, K116, K127, K129, K76's five calls,
 K93, K121 and K117's timing; the G3-3 and G4-2 old-path deletions; after the
 churn, K46, K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
-- **K104** · Plucks are too subtle (Levi, 2026-10-13: "Even maxing
-  pluckSize to 3, I can't tell when some segments are plucked"). Add a
-  fixed-amount vibration of the whole plucked segment, with today's local
-  lobes layered on top (he likes the locality). The collapse is "better,
-  but still a bit too acute": round it past `COLLAPSE_ROUND`'s 1 h
-  (`src/render/pluck_overlay.ts`; K77's A/B: 0.5 h left shoulders, 2 h
-  erased most of the thinning), so A/B about 1.25-1.5 h. Reduced motion
-  (K79's setting) needs its own version. `pluck_model.ts`; K105 may fold
-  in. Sheet: `.claude/probes/K77/K77_before_after.png`.
 - **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
   key to keep advancing, taking the branch that matches the key at each
   junction it reaches; a quick control on phones too, such as
@@ -538,6 +563,12 @@ K5-K7 (split, frame loop, worker) follow.
   warns "Attribute aUV is not present" for each of the three marker
   meshes on every load (K83; found by K81 stage 3a). Read it in the
   shader or drop it from the geometry.
+- **K130** · Panel rows with a slider step (`backgroundIntensity`,
+  `pulseReach`, ...) snap to Tweakpane's step grid, which starts at the
+  row's first value: after a link with an off-grid value, "Reset to
+  defaults" can write a wrong default (e.g. intensity 0.48). Existing
+  behavior (`src/ui/tweakpane_panel.ts`), found by K79 stage B1,
+  2026-10-13.
 - **K11** · Ring + gridAlign: buckles lopsided below strength ~1.8e-3,
   wanders without sleeping at 5e-4..1.6e-3, never sleeps at ga=1.
 - **K12** · Star shape, e-w anchors: 6/8 seeds sleep; 2 hover at the
@@ -778,12 +809,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K102** · `src/audio/songs.ts` holds one song (Scarborough Fair): a
   small library of public-domain tunes would serve K80's melody path and
   a song per day (K80 doc section 3).
-- **K105** · Scale a pluck's sympathetic lobes from the tapped lobe's
-  CAPPED amplitude. They scale from the pre-cap tap amplitude, while the
-  tapped lobe is usually clearance-capped (74 of 80 fabric taps), so a
-  neighbor can out-swing the lobe that was tapped
-  (`src/render/pluck_overlay.ts`, the `sympatheticAmplitude` callers;
-  K77 finding).
 - **K113** · Two-layer vellum: render the fibers and grain once into a
   static texture (1 texel per CSS px) and drift only the mottling in a
   low-res pass; the drift pass costs about 2.1 ms at 1600x900 today
@@ -803,6 +828,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 (items move here with the commit that resolved them)
 
+- **K105** · Scale a pluck's sympathetic lobes from the tapped lobe's
+  capped amplitude (K77 finding). Dropped: folded into K104 (its goal 4),
+  2026-10-13.
 - **K49** · Kink eye size: Levi kept 2.6 widths (2026-10-13) over 2.8,
   which opened every eye but widened the whole population instead of
   closing the tail (`.claude/probes/K49/`). Decided 2026-10-13, no
