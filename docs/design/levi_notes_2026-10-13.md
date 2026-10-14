@@ -253,3 +253,9 @@ Filed (2026-10-13): K140 in Next, after K80's real-time mode.
 I guess we should also plan to add, after everything else, the option for folks to login via some oauth provider, and have their stats persisted cross-device that way. Then we should also add a checkbox for opting into sharing their stats (but maybe only if logged in). Then we'll need to add some simple backend services to support this persistence in a scalable and efficient way. For opted-in folks, we'd probably want to collect and surface averages and percentile bands for various metrics across various levels, to let folks compare their performance. We'd also maybe need to consider some sort of (cheap) anti-cheat checks (maybe just silently flagging potential cheating accounts, and not including them in aggregate stats). Again, all of this is stretch goal material to do much later, after everything else
 
 Filed (2026-10-13): K144, last in Next.
+
+### About 16:00 (a hover glow)
+
+Let's give a little on-hover highlight over any segment that is hovered, not just adjacent-to-current-junction ones. This highlight shouldn't happen on adjacent-to-current-junction segments. This highlight should be more subtle that the adjacent-to-current-junction highlight, but it can maybe borrow the same length parameter. For this, I'm envisioning a long glow along either side of the thread, but that doesn't extend past the bounds of the thread, and this glow would fade-out quickly toward the center of the thread, and this glow would fade-out at a distance from the hover position.
+
+Filed (2026-10-13): K145 in Next, with K93 after K81 merges.
