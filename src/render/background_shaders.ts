@@ -13,7 +13,9 @@
 // Uniforms every effect reads (one shared UniformGroup, background.ts):
 //   uView   = (screen w, screen h in CSS px, 1 / min(w, h), drift time s)
 //   uParams = (seed offset x, seed offset y, intensity [0, 1], unused)
-//   uInk, uA1-uA3 = the design's ink and gamut accents (rgb, .w unused)
+//   uInk, uA1-uA3 = the design's ink and accents (rgb, .w unused): the
+//     gamut's 0.12 / 0.5 / 0.88 colors, or the custom accents 2 / 1 / 3
+// (the shaped programs add uShape and uShape2: SHAPE_HEAD).
 const EFFECT_HEAD = /* glsl */ `#version 300 es
 precision highp float;
 precision highp int;
@@ -281,13 +283,144 @@ const BODIES: Record<string, string> = {
   contours: CONTOURS,
 };
 
+// THE SHAPED PROGRAMS (K79 stage B; `<id>-x`): every effect once more,
+// reading the shape params (background_model.ts BackgroundShape) as
+// uniforms. An effect switches to its shaped program only when a param it
+// reads leaves its default, so every default frame still comes from the
+// programs above, untouched (their sources are pinned by hash in
+// test/render/background_shaders.test.ts) - the VELLUM_DRIFT lesson: a
+// generalized program does not reproduce the bits of the one it
+// generalizes, even where the math is the same.
+//   uShape  = (1 / scale, fbm gain, fiber strength, grain strength)
+//   uShape2 = (silk's streak angle, radians; < 0 = the seed's; unused x3)
+// gScreen / gWall hand an effect the UNSCALED screen position and drift
+// time, for what must not scale (vellum's vignette and fibers).
+const SHAPE_HEAD = /* glsl */ `uniform vec4 uShape;
+uniform vec4 uShape2;
+
+vec2 gScreen;
+float gWall;
+`;
+
+function replaceOnce(src: string, from: string, to: string): string {
+  const i = src.indexOf(from);
+  if (i < 0 || src.indexOf(from, i + 1) >= 0) {
+    throw new Error(`background shader: expected one "${from.trim()}"`);
+  }
+  return src.slice(0, i) + to + src.slice(i + from.length);
+}
+
+// fbm with the octave gain uShape.y (detail; 0.5 = the designed fbm),
+// rescaled to the designed fbm's RMS amplitude: detail changes how rough
+// the field is, not how strong - thresholds and contrast hold.
+const FBM_DESIGNED = /* glsl */ `float fbm(vec2 p, int oct) {
+  float s = 0.0;
+  float a = 0.5;
+  for (int i = 0; i < 6; i++) {
+    if (i >= oct) break;
+    s += a * gnoise(p);
+    p = OCT * p + vec2(3.17, 1.39);
+    a *= 0.5;
+  }
+  return s;
+}`;
+const FBM_SHAPED = /* glsl */ `float fbm(vec2 p, int oct) {
+  float s = 0.0;
+  float a = 0.5;
+  float v = 0.0;
+  float a0 = 0.5;
+  float v0 = 0.0;
+  for (int i = 0; i < 6; i++) {
+    if (i >= oct) break;
+    s += a * gnoise(p);
+    v += a * a;
+    v0 += a0 * a0;
+    p = OCT * p + vec2(3.17, 1.39);
+    a *= uShape.y;
+    a0 *= 0.5;
+  }
+  return s * sqrt(v0 / v);
+}`;
+const NOISE_SHAPED = replaceOnce(NOISE_GLSL, FBM_DESIGNED, FBM_SHAPED);
+
+// Scale zooms the pattern about the screen center (p / scale). The drift
+// time scales with it, so a drift still crosses the screen at its designed
+// speed in CSS px (the contours' ~1 px/s): bigger patterns evolve slower.
+const EFFECT_MAIN_SHAPED = /* glsl */ `
+void main(void) {
+  vec2 px = vUV * uView.xy;
+  gScreen = (px - 0.5 * uView.xy) * uView.z;
+  gWall = uView.w;
+  vec3 c = effect(gScreen * uShape.x, uView.w * uShape.x, uParams.z);
+  c += tpdf(gl_FragCoord.xy) * (1.0 / 255.0);
+  finalColor = vec4(c, 1.0);
+}
+`;
+
+// VELLUM, SHAPED: VELLUM_DRIFT (it is VELLUM at t = 0) with fiber and
+// grain strengths. The fibers scale up with the pattern but never shrink
+// below their designed size (one texel per CSS px cannot draw them finer);
+// at strength 0 their loop is skipped. The vignette is the screen's.
+const VELLUM_SHAPED = /* glsl */ `
+vec3 effect(vec2 p, float t, float I) {
+  vec2 s = p + uParams.xy;
+  float m1 = fbm(s * 2.1 + t * vec2(0.006, -0.004), 5);
+  float m2 = fbm(s * 7.5 + 11.3 + t * vec2(-0.012, 0.009), 4);
+  float fib = 0.0;
+  if (uShape.z > 0.0) {
+    vec2 sf = gScreen * min(uShape.x, 1.0) + uParams.xy;
+    for (int k = 0; k < 5; k++) {
+      float a = 0.4 + 1.2566 * float(k) + uParams.y;
+      vec2 dir = vec2(cos(a), sin(a));
+      vec2 q = vec2(dot(sf, dir), dot(sf, vec2(-dir.y, dir.x)));
+      float n = gnoise(q * vec2(28.0, 520.0) + float(k) * 17.0);
+      float dens = 0.55 + 0.45 * gnoise(q * 6.0 + float(k) * 5.3);
+      fib += pow(max(0.0, 1.0 - abs(n) * 4.0), 4.0) * dens;
+    }
+  }
+  float grain = tpdf(gl_FragCoord.xy + 31.0);
+  float lift = I * (0.55 * m1 + 0.28 * m2 + 0.2 * uShape.z * (fib - 0.12)
+    + 0.08 * uShape.w * grain);
+  vec3 c = lift > 0.0
+    ? mix(uInk.rgb, mix(uInk.rgb, uA2.rgb, 0.55), min(lift, 1.0))
+    : uInk.rgb * (1.0 + 0.9 * max(lift, -0.6));
+  float vig = smoothstep(0.35, 1.3,
+    length(gScreen - 0.08 * vec2(sin(0.05 * gWall), sin(0.037 * gWall))));
+  return c * (1.0 - 0.34 * I * vig);
+}
+`;
+
+// SILK, SHAPED: a set streak (and flow) direction replaces the seed's.
+const SILK_SHAPED = replaceOnce(
+  SILK,
+  "  float a = uParams.y * 0.3;\n",
+  "  float a = uShape2.x < 0.0 ? uParams.y * 0.3 : uShape2.x;\n"
+);
+
+// Keyed by EFFECT id (the program id without "-x").
+const SHAPED_BODIES: Record<string, string> = {
+  vellum: VELLUM_SHAPED,
+  mist: MIST,
+  wash: WASH,
+  silk: SILK_SHAPED,
+  aurora: AURORA,
+  contours: CONTOURS,
+};
+
 // The program an effect renders with at drift time t: its own, except
-// vellum away from t = 0 (VELLUM's comment).
-export function effectProgram(id: string, t: number): string {
+// vellum away from t = 0 (VELLUM's comment) - or, when its shape params
+// leave their defaults (shaped; needsShapeProgram), its shaped program.
+export function effectProgram(id: string, t: number, shaped = false): string {
+  if (shaped) return `${id}-x`;
   return id === "vellum" && t !== 0 ? "vellum-drift" : id;
 }
 
 export function effectFragment(id: string): string {
+  if (id.endsWith("-x")) {
+    const shaped = SHAPED_BODIES[id.slice(0, -2)];
+    if (!shaped) throw new Error(`no background effect "${id}"`);
+    return EFFECT_HEAD + SHAPE_HEAD + NOISE_SHAPED + shaped + EFFECT_MAIN_SHAPED;
+  }
   const body = BODIES[id];
   if (!body) throw new Error(`no background effect "${id}"`);
   return EFFECT_HEAD + NOISE_GLSL + body + EFFECT_MAIN;

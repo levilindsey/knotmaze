@@ -12,12 +12,21 @@ import type { AppearSequence, AppearFxMode } from "../core/reveal_plan";
 import { APPEAR_SEQUENCES, APPEAR_FX_MODES } from "../core/reveal_plan";
 import type { ShapeId, AnchorId } from "../core/shapes";
 import { SHAPES, ANCHORS } from "../core/shapes";
-import type { BackgroundId } from "../render/background_model";
+import type {
+  BackgroundColorMode,
+  BackgroundId,
+} from "../render/background_model";
 import {
   BACKGROUNDS,
+  BACKGROUND_ANGLE_AUTO,
+  BACKGROUND_COLOR_MODES,
   BACKGROUND_SPEED_AUTO,
   BACKGROUND_SPEED_MAX,
   isAutoSpeed,
+  sanitizeBackgroundAngle,
+  sanitizeBackgroundDetail,
+  sanitizeBackgroundScale,
+  sanitizeBackgroundTexture,
 } from "../render/background_model";
 
 // Pluck audio behavior: silent | user plucks only | ambient random plucks
@@ -301,6 +310,25 @@ export interface UrlParams {
   // -1 = AUTO, each effect's own pace (vellum static); 0 = static; else
   // [0, 3] x the effect's designed drift. Applies live.
   backgroundSpeed: number;
+  // The background's SHAPE (K79 stage B; BackgroundShape in
+  // render/background_model.ts), all live: pattern size [0.5, 3] and fbm
+  // roughness [0, 2] for every effect (1 = as designed), vellum's fiber
+  // and grain strengths [0, 3], silk's streak direction in degrees
+  // counterclockwise from screen right (-1 = AUTO, the seed's).
+  backgroundScale: number;
+  backgroundDetail: number;
+  backgroundFibers: number;
+  backgroundGrain: number;
+  backgroundAngle: number;
+  // Background colors (K79 stage B): "gamut" = the design's own (the page
+  // ink + three accents from its gamut), "custom" = backgroundBase (the
+  // page color itself - also behind none and under the flat fog) plus
+  // three accents ("#rrggbb"; accent 1 is the main one). Applies live.
+  backgroundColorMode: BackgroundColorMode;
+  backgroundBase: string;
+  backgroundAccent1: string;
+  backgroundAccent2: string;
+  backgroundAccent3: string;
 }
 
 // COMPLETE per-param defaults (everything but seed): the panel's per-row
@@ -391,6 +419,19 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   backgroundIntensity: 0.5,
   // K79: auto - every effect's pre-K79 pace (appended to codec v4).
   backgroundSpeed: BACKGROUND_SPEED_AUTO,
+  // K79 stage B (appended to codec v4): the designed pattern and the
+  // design's gamut colors - the look every earlier link had. The custom
+  // colors start as the page ink and the default design's accents.
+  backgroundScale: 1,
+  backgroundDetail: 1,
+  backgroundFibers: 1,
+  backgroundGrain: 1,
+  backgroundAngle: BACKGROUND_ANGLE_AUTO,
+  backgroundColorMode: "gamut",
+  backgroundBase: "#151b28",
+  backgroundAccent1: "#7ab8cd",
+  backgroundAccent2: "#cdb17a",
+  backgroundAccent3: "#aa7acd",
 };
 
 export function newSeed(): number {
@@ -439,6 +480,7 @@ export const ENUM_OPTIONS: {
   appearSequence: APPEAR_SEQUENCES,
   appearFx: APPEAR_FX_MODES,
   background: BACKGROUNDS,
+  backgroundColorMode: BACKGROUND_COLOR_MODES,
 };
 
 function clamp01(v: number): number {
@@ -465,6 +507,11 @@ function fromCodecValues(
   p.junctionBlend = Math.max(0, p.junctionBlend);
   p.backgroundIntensity = clamp01(p.backgroundIntensity);
   p.backgroundSpeed = sanitizeBackgroundSpeed(p.backgroundSpeed);
+  p.backgroundScale = sanitizeBackgroundScale(p.backgroundScale);
+  p.backgroundDetail = sanitizeBackgroundDetail(p.backgroundDetail);
+  p.backgroundFibers = sanitizeBackgroundTexture(p.backgroundFibers);
+  p.backgroundGrain = sanitizeBackgroundTexture(p.backgroundGrain);
+  p.backgroundAngle = sanitizeBackgroundAngle(p.backgroundAngle);
   return p;
 }
 
@@ -652,6 +699,33 @@ function readLegacy(
     ),
     // And K74's dead-end length (&del=30; 0 = the spread placement).
     deadEndLength: readNumber(query, "del", D.deadEndLength),
+    // Its shape and colors (K79 stage B: `&bgsz=2&bgan=90&bgcm=custom
+    // &bgc0=101820&bgc1=ffcc66`; colors as pc= takes them, no "#").
+    backgroundScale: sanitizeBackgroundScale(
+      readNumber(query, "bgsz", D.backgroundScale)
+    ),
+    backgroundDetail: sanitizeBackgroundDetail(
+      readNumber(query, "bgdt", D.backgroundDetail)
+    ),
+    backgroundFibers: sanitizeBackgroundTexture(
+      readNumber(query, "bgfb", D.backgroundFibers)
+    ),
+    backgroundGrain: sanitizeBackgroundTexture(
+      readNumber(query, "bggr", D.backgroundGrain)
+    ),
+    backgroundAngle: sanitizeBackgroundAngle(
+      readNumber(query, "bgan", D.backgroundAngle)
+    ),
+    backgroundColorMode: readChoice(
+      query,
+      "bgcm",
+      BACKGROUND_COLOR_MODES,
+      D.backgroundColorMode
+    ),
+    backgroundBase: readHexColor(query, "bgc0", D.backgroundBase),
+    backgroundAccent1: readHexColor(query, "bgc1", D.backgroundAccent1),
+    backgroundAccent2: readHexColor(query, "bgc2", D.backgroundAccent2),
+    backgroundAccent3: readHexColor(query, "bgc3", D.backgroundAccent3),
   };
 }
 

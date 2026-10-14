@@ -17,9 +17,17 @@ import {
 } from "./url_state";
 import { gridAlignSlider, gridAlignStrength } from "./grid_align_curve";
 import {
+  BACKGROUND_ACCENTS_USED,
+  BACKGROUND_ANGLE_AUTO,
+  BACKGROUND_DETAIL_MAX,
+  BACKGROUND_SCALE_MAX,
+  BACKGROUND_SCALE_MIN,
   BACKGROUND_SPEED_AUTO,
   BACKGROUND_SPEED_MAX,
+  BACKGROUND_TEXTURE_MAX,
+  autoSilkAngle,
   effectiveSpeed,
+  isAutoAngle,
   isAutoSpeed,
 } from "../render/background_model";
 import type { MotionPref } from "./motion";
@@ -75,8 +83,12 @@ export interface PanelCallbacks {
   // Color-only Look change (scheme / hue / gamut / palette / path color):
   // recolors the live scene in place - no rebuild, progress survives.
   onRecolor: () => void;
-  // Shader background effect / intensity: the background layer only.
+  // Shader background effect / intensity / speed / shape / colors: the
+  // background layer (and the page color) only.
   onBackgroundChange: () => void;
+  // The design's own background accents as "#rrggbb", accent 1 (the main
+  // one) first: what switching the background colors to custom starts from.
+  backgroundGamutColors: () => [string, string, string];
   // Memory-trail mode + trail length: gameplay interpretation and paint
   // only, applied live (no scene rebuild).
   onTrailChange: () => void;
@@ -388,7 +400,15 @@ export function buildPanel(
   // own pace (see its row).
   const shownSpeed = (): number =>
     effectiveSpeed(params.background, params.backgroundSpeed);
-  const bgView: Record<string, unknown> = { backgroundSpeed: shownSpeed() };
+  // The silk angle row's shown angle: AUTO (-1) shows the seed's own.
+  const shownAngle = (): number =>
+    isAutoAngle(params.backgroundAngle)
+      ? autoSilkAngle(params.seed)
+      : params.backgroundAngle;
+  const bgView: Record<string, unknown> = {
+    backgroundSpeed: shownSpeed(),
+    backgroundAngle: shownAngle(),
+  };
 
   // Folder open/closed state persists across sessions (localStorage),
   // keyed by folder title.
@@ -479,6 +499,9 @@ export function buildPanel(
     "The design's seed - the first part of the link. Type a seed (or any word) and press Enter to load that design; the dice rolls a random one.";
   seedApi.element.classList.add("kp-row", "kp-seed");
   const syncSeed = (): void => {
+    // The silk angle row shows an AUTO angle, which the seed picks (the row
+    // is built later; syncSeed only runs once the panel exists).
+    syncAngleView();
     const t = seedText(params.seed);
     if (seedView.seed === t) return;
     seedView.seed = t;
@@ -791,6 +814,164 @@ export function buildPanel(
       },
     }
   );
+  // K79 stage B: the backdrop's SHAPE. Scale and detail apply to every
+  // effect, fibers and grain to vellum, the angle to silk (each row hides
+  // where it does nothing). At their defaults every effect draws exactly as
+  // designed (its own program, byte for byte). NO STEP on these sliders:
+  // Tweakpane's step grid starts at the row's FIRST value, so after a link
+  // with an off-step value a refresh snaps others onto that grid (Reset to
+  // defaults would write 0.98 for 1). An edit keeps 2 decimals.
+  const round2 = (v: number): number => Math.round(v * 100) / 100;
+  const shapeRow = (
+    key:
+      | "backgroundScale"
+      | "backgroundDetail"
+      | "backgroundFibers"
+      | "backgroundGrain",
+    min: number,
+    max: number,
+    tipText: string
+  ): RowApi =>
+    row(
+      fLook, p, key,
+      {
+        min,
+        max,
+        keyScale: 0.05,
+        pointerScale: 0.01,
+        format: (v: number) => v.toFixed(2),
+      },
+      tipText,
+      D[key], () => {
+        params[key] = round2(params[key]);
+        callbacks.onBackgroundChange();
+      }
+    );
+  const backgroundScaleRow = shapeRow(
+    "backgroundScale", BACKGROUND_SCALE_MIN, BACKGROUND_SCALE_MAX,
+    "Backdrop pattern size: 1 = as designed, 0.5 = half as large (finer), up to 3x larger. Applies live."
+  );
+  const backgroundDetailRow = shapeRow(
+    "backgroundDetail", 0, BACKGROUND_DETAIL_MAX,
+    "Backdrop roughness: 0 = smooth, soft shapes; 1 = as designed; 2 = rough, the fine detail loud. The contrast stays the same. Applies live."
+  );
+  const backgroundFibersRow = shapeRow(
+    "backgroundFibers", 0, BACKGROUND_TEXTURE_MAX,
+    "Vellum's paper fibers: 0 = none, 1 = as designed, up to 3x stronger. Applies live."
+  );
+  const backgroundGrainRow = shapeRow(
+    "backgroundGrain", 0, BACKGROUND_TEXTURE_MAX,
+    "Vellum's fine grain: 0 = none, 1 = as designed, up to 3x stronger. Applies live."
+  );
+  // Silk's streak direction: the speed row's view pattern. AUTO (-1, the
+  // default) is the seed's own direction, so the row shows that angle and
+  // writes the param only when the slider moves off it (whole degrees,
+  // counterclockwise from screen right); the reset glyph returns to auto.
+  const backgroundAngleRow = row(
+    fLook, bgView, "backgroundAngle",
+    {
+      min: 0,
+      max: 360,
+      keyScale: 1,
+      pointerScale: 0.5,
+      format: (v: number) => v.toFixed(0),
+    },
+    "Silk's streak direction, in degrees counterclockwise from pointing right (0 = left to right, 90 = upward). Each design picks its own until you set one; the reset glyph returns to it. Applies live.",
+    0, () => {
+      const v = bgView.backgroundAngle as number;
+      if (Math.abs(v - shownAngle()) > 1e-9) {
+        params.backgroundAngle = ((Math.round(v) % 360) + 360) % 360;
+      }
+      callbacks.onBackgroundChange();
+    },
+    {
+      modified: () => !isAutoAngle(params.backgroundAngle),
+      reset: () => {
+        params.backgroundAngle = BACKGROUND_ANGLE_AUTO;
+        bgView.backgroundAngle = shownAngle();
+      },
+    }
+  );
+  // A new seed moves an AUTO angle: re-show it without running the row.
+  const syncAngleView = (): void => {
+    const a = shownAngle();
+    if (bgView.backgroundAngle === a) return;
+    bgView.backgroundAngle = a;
+    const was = syncing;
+    syncing = true;
+    try {
+      backgroundAngleRow.refresh?.();
+    } finally {
+      syncing = was;
+    }
+  };
+
+  // K79 stage B: the backdrop's COLORS. design = the page ink plus three
+  // accents from the design's own gamut (they follow its hue, gamut arc
+  // and palette); custom = a base color (the page itself - behind none and
+  // under the flat fog too) plus three accents. Switching to custom with
+  // the custom colors untouched starts them from the design's, so nothing
+  // jumps; switching back with them still untouched returns them to their
+  // defaults, so the link stays short.
+  const customKeys = [
+    "backgroundBase",
+    "backgroundAccent1",
+    "backgroundAccent2",
+    "backgroundAccent3",
+  ] as const;
+  const colorRows: RowApi[] = [];
+  const setCustomColors = (accents: readonly string[]): void => {
+    params.backgroundAccent1 = accents[0];
+    params.backgroundAccent2 = accents[1];
+    params.backgroundAccent3 = accents[2];
+    const was = syncing;
+    syncing = true;
+    try {
+      for (const r of colorRows) r.refresh?.();
+    } finally {
+      syncing = was;
+    }
+    markAll();
+  };
+  const customColorsAre = (accents: readonly string[]): boolean =>
+    params.backgroundBase === PARAM_DEFAULTS.backgroundBase &&
+    params.backgroundAccent1 === accents[0] &&
+    params.backgroundAccent2 === accents[1] &&
+    params.backgroundAccent3 === accents[2];
+  const defaultAccents = [
+    PARAM_DEFAULTS.backgroundAccent1,
+    PARAM_DEFAULTS.backgroundAccent2,
+    PARAM_DEFAULTS.backgroundAccent3,
+  ];
+  row(
+    fLook, p, "backgroundColorMode",
+    { options: { design: "gamut", custom: "custom" } },
+    "Backdrop colors: design = the page color plus the design's own colors (they follow hue, gamut and palette); custom = choose the page color and the accent colors yourself (they start from the design's). Applies live.",
+    D.backgroundColorMode, () => {
+      if (params.backgroundColorMode === "custom") {
+        if (customColorsAre(defaultAccents)) {
+          setCustomColors(callbacks.backgroundGamutColors());
+        }
+      } else if (customColorsAre(callbacks.backgroundGamutColors())) {
+        setCustomColors(defaultAccents);
+      }
+      callbacks.onBackgroundChange();
+    }
+  );
+  const colorTips = [
+    "The page color: the backdrop's darkest tone, and the plain page behind the knot when there is no backdrop (and the fog of war over it). Applies live.",
+    "Accent 1, the backdrop's main color: vellum's tint, mist's glow, aurora's bright crests, one of wash's blooms. Applies live.",
+    "Accent 2: one end of the backdrop's color range (mist's smoke, silk's streaks, the contour lines, an aurora curtain, a wash bloom). Applies live.",
+    "Accent 3: the other end of the backdrop's color range. Applies live.",
+  ];
+  customKeys.forEach((key, i) => {
+    colorRows.push(
+      row(
+        fLook, p, key, { view: "color" }, colorTips[i],
+        D[key], () => callbacks.onBackgroundChange()
+      )
+    );
+  });
 
   // --- Motion & intro -----------------------------------------------------
   const fMotion = folder("Motion & intro", false);
@@ -1106,6 +1287,7 @@ export function buildPanel(
     settings.temperature = SETTINGS_DEFAULTS.temperature;
     gaView.gridAlign = gridAlignSlider(params.gridAlign);
     bgView.backgroundSpeed = shownSpeed();
+    bgView.backgroundAngle = shownAngle();
     pane.refresh();
     markAll();
     callbacks.onRegenerate();
@@ -1170,8 +1352,22 @@ export function buildPanel(
     junctionBlendRow.hidden =
       !fab ||
       (params.colorScheme !== "segments" && params.colorScheme !== "strands");
-    backgroundIntensityRow.hidden = params.background === "none";
-    backgroundSpeedRow.hidden = params.background === "none";
+    const bg = params.background;
+    backgroundIntensityRow.hidden = bg === "none";
+    backgroundSpeedRow.hidden = bg === "none";
+    backgroundScaleRow.hidden = bg === "none";
+    backgroundDetailRow.hidden = bg === "none";
+    backgroundFibersRow.hidden = bg !== "vellum";
+    backgroundGrainRow.hidden = bg !== "vellum";
+    backgroundAngleRow.hidden = bg !== "silk";
+    // Custom colors: the base always (it is the page), each accent only
+    // where the effect uses it.
+    const custom = params.backgroundColorMode === "custom";
+    colorRows.forEach((r, i) => {
+      r.hidden =
+        !custom ||
+        (i > 0 && !BACKGROUND_ACCENTS_USED[bg].includes(i));
+    });
   };
   refreshCond();
 
@@ -1232,6 +1428,7 @@ export function buildPanel(
       try {
         gaView.gridAlign = gridAlignSlider(params.gridAlign);
         bgView.backgroundSpeed = shownSpeed();
+        bgView.backgroundAngle = shownAngle();
         pane.refresh();
       } finally {
         syncing = false;

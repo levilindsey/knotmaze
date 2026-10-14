@@ -196,7 +196,10 @@ function otherValue(key: string, v: unknown): unknown {
   if (options) return options.find((o) => o !== v);
   if (typeof v === "boolean") return !v;
   if (typeof v === "number") return v + 0.25;
-  if (key === "pathColor") return v === "#123456" ? "#654321" : "#123456";
+  // pathColor and the custom background colors (K79).
+  if (typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v)) {
+    return v === "#123456" ? "#654321" : "#123456";
+  }
   throw new Error(`no other value for ${key}`);
 }
 

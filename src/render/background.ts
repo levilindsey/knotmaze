@@ -35,13 +35,22 @@ import type { Renderer } from "pixi.js";
 import {
   BACKGROUNDS,
   BACKGROUND_PROFILES,
+  BACKGROUND_SHAPE_DEFAULTS,
   BACKGROUND_SPEED_AUTO,
   BackgroundClock,
   backgroundDrift,
   backgroundSeedOffset,
+  detailGain,
   isAutoSpeed,
+  needsShapeProgram,
+  sanitizeBackgroundShape,
+  silkAngleUniform,
 } from "./background_model";
-import type { BackgroundColors, BackgroundId } from "./background_model";
+import type {
+  BackgroundColors,
+  BackgroundId,
+  BackgroundShape,
+} from "./background_model";
 import {
   BLIT_FRAG,
   FOG_FRAG,
@@ -57,7 +66,9 @@ type TexShader = Shader & { texture: Texture };
 // huge window stays bounded).
 const RT_MAX = 4096;
 
-// Effect uniforms, shared by every effect program (see EFFECT_HEAD).
+// Effect uniforms, shared by every effect program (see EFFECT_HEAD). Only
+// the shaped programs (SHAPE_HEAD) declare uShape/uShape2; pixi's uniform
+// sync skips a group member a program does not have.
 let BG_UNIFORMS: UniformGroup | null = null;
 function bgUniforms(): UniformGroup {
   if (!BG_UNIFORMS) {
@@ -68,6 +79,8 @@ function bgUniforms(): UniformGroup {
       uA1: { value: new Float32Array(4), type: "vec4<f32>" },
       uA2: { value: new Float32Array(4), type: "vec4<f32>" },
       uA3: { value: new Float32Array(4), type: "vec4<f32>" },
+      uShape: { value: new Float32Array([1, 0.5, 1, 1]), type: "vec4<f32>" },
+      uShape2: { value: new Float32Array([-1, 0, 0, 0]), type: "vec4<f32>" },
     });
   }
   return BG_UNIFORMS;
@@ -79,6 +92,8 @@ interface BgUniformValues {
   uA1: Float32Array;
   uA2: Float32Array;
   uA3: Float32Array;
+  uShape: Float32Array;
+  uShape2: Float32Array;
 }
 const bgValues = (): BgUniformValues =>
   bgUniforms().uniforms as unknown as BgUniformValues;
@@ -94,7 +109,8 @@ function screenUniforms(): UniformGroup {
   return SCREEN_UNIFORMS;
 }
 
-// Keyed by program id (effectProgram: an effect, or "vellum-drift").
+// Keyed by program id (effectProgram: an effect, "vellum-drift", or an
+// effect's shaped program "<id>-x").
 const EFFECT_SHADERS = new Map<string, TexShader>();
 function effectShader(id: string): TexShader {
   let sh = EFFECT_SHADERS.get(id);
@@ -152,6 +168,8 @@ export class BackgroundLayer {
   // the effect static at auto (vellum).
   private speed = BACKGROUND_SPEED_AUTO;
   private autoStatic = false;
+  // The shape params (K79 stage B; sanitized - see setShape).
+  private shape: BackgroundShape = { ...BACKGROUND_SHAPE_DEFAULTS };
   // The program the quad draws with (renderTexture picks it per pass).
   private program = "";
   private readonly phone: boolean;
@@ -172,6 +190,12 @@ export class BackgroundLayer {
 
   get id(): BackgroundId {
     return this.effect;
+  }
+
+  // The program of the last render-texture pass (probes: GPU timings are
+  // per program, bg-<program>).
+  get programId(): string {
+    return this.program;
   }
 
   // Drawing at all: an effect at a non-zero intensity. Intensity 0 IS the
@@ -238,6 +262,34 @@ export class BackgroundLayer {
     this.clock.dirty = true;
   }
 
+  // The shape params (K79 stage B): scale and detail for every effect,
+  // fibers and grain for vellum, the angle for silk. Garbage reads as the
+  // defaults (sanitizeBackgroundShape). At the defaults every effect draws
+  // with its own K21 program; see needsShapeProgram.
+  setShape(shape: BackgroundShape): void {
+    const s = sanitizeBackgroundShape(shape);
+    const o = this.shape;
+    if (
+      s.scale === o.scale &&
+      s.detail === o.detail &&
+      s.fibers === o.fibers &&
+      s.grain === o.grain &&
+      s.angle === o.angle
+    ) {
+      return;
+    }
+    const rescaled = s.scale !== o.scale;
+    this.shape = s;
+    const v = bgValues();
+    v.uShape[0] = 1 / s.scale;
+    v.uShape[1] = detailGain(s.detail);
+    v.uShape[2] = s.fibers;
+    v.uShape[3] = s.grain;
+    v.uShape2[0] = silkAngleUniform(s.angle);
+    this.clock.dirty = true;
+    if (rescaled && this.active) this.layout();
+  }
+
   // The screen (CSS px) changed.
   resize(w: number, h: number): void {
     this.screenW = Math.max(1, w);
@@ -279,7 +331,7 @@ export class BackgroundLayer {
   renderTexture(): void {
     if (!this.active) return;
     this.ensure();
-    const program = effectProgram(this.effect, this.clock.time);
+    const program = this.currentProgram();
     if (program !== this.program) {
       this.quad!.shader = effectShader(program);
       this.program = program;
@@ -305,7 +357,7 @@ export class BackgroundLayer {
         scaleMode: "linear",
         autoGenerateMipmaps: false,
       });
-      this.program = effectProgram(this.active ? this.effect : "mist", this.clock.time);
+      this.program = this.currentProgram();
       this.quad = quadMesh(effectShader(this.program));
       this.scene = new Container();
       this.scene.addChild(this.quad);
@@ -326,11 +378,25 @@ export class BackgroundLayer {
     return this.rt;
   }
 
+  // The program for the current effect, drift time and shape.
+  private currentProgram(): string {
+    if (!this.active) return effectProgram("mist", this.clock.time);
+    return effectProgram(
+      this.effect,
+      this.clock.time,
+      needsShapeProgram(this.effect, this.shape)
+    );
+  }
+
   // Size the render texture for the current effect + screen, and the blit.
+  // A pattern drawn smaller than designed (backgroundScale < 1) gets
+  // proportionally more texels, up to one per CSS px: the same sharpness.
   private layout(): void {
     if (!this.rt || !this.quad || !this.blit || !this.active) return;
     const prof = BACKGROUND_PROFILES[this.effect as Exclude<BackgroundId, "none">];
-    const scale = this.phone ? prof.phoneScale : prof.scale;
+    const base = this.phone ? prof.phoneScale : prof.scale;
+    const scale =
+      this.shape.scale < 1 ? Math.max(base, Math.min(1, base / this.shape.scale)) : base;
     const w = Math.max(1, Math.min(RT_MAX, Math.ceil(this.screenW * scale)));
     const h = Math.max(1, Math.min(RT_MAX, Math.ceil(this.screenH * scale)));
     if (this.rt.width !== w || this.rt.height !== h) this.rt.resize(w, h, 1);

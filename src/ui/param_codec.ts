@@ -280,6 +280,21 @@ export const CODEC_V4: CodecTable = Object.freeze({
     // K74's long-tail dead ends: the junction-free tail length, doubled
     // lattice units (0 = the older spread placement).
     num("deadEndLength", 20), // 71
+    // The background's shape params and custom colors (K79 stage B,
+    // 2026-10-13). Defaults = the look every earlier link had: scale,
+    // detail, fibers and grain 1 (the designed pattern), angle -1 (auto,
+    // the seed's), colors from the design's gamut. The custom defaults are
+    // the page ink and the gamut accents at the default design's hue (195).
+    num("backgroundScale", 1), // 72
+    num("backgroundDetail", 1),
+    num("backgroundFibers", 1),
+    num("backgroundGrain", 1),
+    num("backgroundAngle", -1), // 76
+    choice("backgroundColorMode", "gamut", ["gamut", "custom"]),
+    color("backgroundBase", "#151b28"),
+    color("backgroundAccent1", "#7ab8cd"),
+    color("backgroundAccent2", "#cdb17a"),
+    color("backgroundAccent3", "#aa7acd"), // 81
   ]),
 });
 
