@@ -52,13 +52,36 @@ entry is labeled with its source; the narrative is in
   after it keep the daily only for exempt keys; ANY other query is an
   ordinary design; K20's `?daily=<n>.<delta>` opens as the design it
   describes and is no longer written. (5) Records: localStorage
-  `knotmaze.daily`, ONE document `{v: 2, days, prefs}` (v1 reads as v2
-  without attempts) - bump `v` for any shape change, never overwrite a
-  newer one; every access is wrapped and the page must boot and play
-  without storage (then all of it is session-only). The first finish is
-  official, later ones replays; streaks count results whose attempt
-  began on or before their day. Share = a Wordle-style move grid + the
-  `?daily=<n>` link, native sheet on coarse pointers. (6) SAVED ATTEMPTS
+  `knotmaze.daily`, ONE document `{v: 3, days, prefs}` (K146; v1 reads
+  without attempts, v2 without practice) - bump `v` for any shape
+  change, never overwrite a newer one; every access is wrapped and the
+  page must boot and play without storage (then all of it is
+  session-only). The first finish is official, later ones replays;
+  streaks count results whose attempt began on or before their day (a
+  result's and an attempt's `day` is the local day the attempt BEGAN).
+  PRACTICE (K146, 2026-10-14; brief docs/design/K146_K151.md): an
+  attempt begun after its day (`begunLate(n, day)`: day > n) finishes
+  into that day's `practice` list (the newest MAX_PRACTICE 20), never
+  official, even with no official result yet; it stays outside every
+  aggregate (played, solved, streaks, best time, the star counts) and
+  outside K144's future shared stats, and its moves never set `played`.
+  A day that already has an official result records every later finish
+  as a replay, practice or not. An attempt begun ON its day and finished
+  later is still the official result, streaks included. Old records are
+  read as they are: a v2 official result whose attempt began late (a
+  past daily's first finish was official before K146) stays official,
+  flagged late in History, counting toward solved and best time but not
+  streaks. HISTORY (the stats view, `dailyHistory`): every past daily
+  from #1 to yesterday, newest first, unplayed days included, plus any
+  recorded day ahead of today (a link from a time zone ahead); today
+  keeps its own row above. A row's tap plays or resumes the day, and its
+  title says whether that will be a replay or practice; past 10 rows,
+  All / Played / Not played chips filter it (Played = any record,
+  practice included, so it can exceed the played tile), under sticky
+  month headers. Share = a Wordle-style move grid + the `?daily=<n>`
+  link, native sheet on coarse pointers; a practice finish's banner
+  reads `Daily #N practice solved` and its share title
+  `Knotmaze Daily #N (practice)`. (6) SAVED ATTEMPTS
   (K47, game/daily_attempt.ts): an attempt IS its tap list
   (FabricMazeController.taps; replay() rebuilds path, meters, stats, move
   log) plus active time, start time + day, and a walk-graph fingerprint
@@ -121,26 +144,46 @@ entry is labeled with its source; the narrative is in
 
 ## Corner chrome
 
-- MODE BADGE (K73, 2026-10-12; ui/mode_badge.ts): a pill left of the
-  hamburger whenever the solve on screen does not count toward the daily
-  stats. modeBadgeFor (pure, tested) decides from the daily on screen,
-  the store's official result and this attempt's finish record: "Free
-  play" (slate, compass) off the daily, knot mode included - a tap does
-  what the panel's Daily button does (today's daily, replacing the
-  design's link like that button); "Replay · not scored" (amber, circling
-  arrow) on a daily whose official result exists, before or after this
-  run's finish - a tap explains it in a toast (touch has no hover);
-  nothing during the official attempt or once it has set the official
-  result. fit() steps the label down (long, short, bare icon, icon below
-  the hamburger) until it clears the HUD and the win banner by 8 px;
-  main.ts re-fits on every HUD update, resize and banner hide. Measured
-  (2026-10-13, HUD stat rows opt-in): free play has no HUD beside it and
-  shows "Free play" down to 300 px; a replay's HUD title row ("Daily #1 ·
-  Oct 12 · replay", 228 px on a phone) leaves room for "Replay · not
-  scored" down to 700 px on desktop, "Replay" on a 412 px phone, the bare
-  icon at 360 px and the icon below the hamburger at 340 px and less. The
-  panel never collides (it opens below the hamburger row) except at that
-  last level.
+- MODE BADGE (K73, 2026-10-12; K151 stage 1, 2026-10-14, brief
+  docs/design/K146_K151.md; ui/mode_badge.ts): a pill left of the
+  hamburger naming what the solve on screen is. Since K151 it is ALWAYS
+  shown: the daily's name moved here from the HUD's title row, which is
+  gone (the HUD shows only with its stat rows on or a real-time chase).
+  modeBadgeFor (pure, tested) decides from the daily on screen, the
+  store's official result, this attempt's finish record and `late`
+  (K146: the attempt began, or unstarted would begin, after its day).
+  KINDS: "Free play" (slate, compass) off the daily, knot mode included
+  - a tap does what the panel's Daily button does (today's daily,
+  replacing the design's link); "Daily #N" (the HUD's gold on navy, a
+  chart; ` · <date>` for any day but today's, ` · solved` once this
+  attempt set the official result) during the attempt that counts - a
+  tap opens the daily stats (the title row's old job); "Daily #N replay
+  · not scored" (amber, circling arrow) on a daily whose official result
+  exists, before or after this run's finish; "Daily #N practice · not
+  scored" (violet, calendar) on one begun after its day. A replay's or
+  practice run's tap explains it in a toast (touch has no hover). THE X
+  (Levi: without it the free pill read as a button that STARTS free
+  play): free play only, the one tap that leaves a mode (the daily's
+  leaves nothing; replay and practice only explain). It keeps its room
+  at opacity 0 (nothing shifts as it fades in), fades in on hover
+  (`@media (hover:hover)`) and keyboard focus, shows always on coarse
+  pointers while `MODE_BADGE_X_ON_COARSE` (K151 (3), open for Levi), and
+  drops out at the icon levels. FIT: fit() steps the label down (long;
+  short = "Daily #N", "Daily #N replay", "Daily #N practice"; one word =
+  "Replay", "Practice"; the bare icon; the icon below the hamburger)
+  until it clears the HUD and the win banner by 8 px and stays on
+  screen; main.ts re-fits on every HUD update, resize and banner hide.
+  Measured (2026-10-14, `.claude/probes/K146_K151/`): desktop 1400x900, a
+  32 px pill, "Free play" 1233..1340 with its X's room. Phone 411x753
+  (touch, a 42 px pill ending at x 351): with stat rows off every label
+  shows whole ("Free play" 233..351, "Daily #3" 253..351, "Daily #3 ·
+  solved" 205..351 beside the win banner, the replay's long label
+  140..351, practice's 132..351); with stat rows on (the HUD ends near x
+  207) "Daily #3" keeps 46 px clear, solved under the banner it steps to
+  "Daily #3" (24 px clear), and the replay and practice step to one word
+  ("Replay" 262..351 and "Practice" 255..351, both 55 px clear) - before
+  the one-word level they fell to the bare icon. The panel never collides (it opens
+  below the hamburger row) except at the last level.
 
 - OFF-SCREEN INDICATORS (K73, 2026-10-13; ui/offscreen_indicators.ts):
   a disc at the screen's edge, with its target's icon and a chevron

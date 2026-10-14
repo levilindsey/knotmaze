@@ -329,6 +329,16 @@ desktop Chrome with the phone's viewport: plumbing only, never timings.
 - K140 (2026-10-14), CPU throttling: throttle after the load settle, not
   from the load. A throttle from the load measures K147's slow first
   settle instead of the effect under test.
+- K146 + K151 (2026-10-14), past dailies and the mode badge:
+  `.claude/probes/K146_K151/probe_k146.mjs <base> <outDir>
+  free|daily|practice|history[:phone][:hud]` (real taps; `history`
+  shifts Date a year ahead over a seeded v3 store, `:hud` turns the HUD's
+  stat rows on) and the hooks `__knotDaily().badge`, `.badgeText` (the
+  label on screen), `.late` (whether this attempt is practice) and
+  `.history` (dailyHistory as the stats view reads it). A Date shift
+  needs `evaluateOnNewDocument` (a `Date` subclass whose `now()` and
+  no-argument constructor add the offset), and a seeded store must be
+  written only when absent, or every reload resets it.
 
 ## Census and diagnosis rules
 

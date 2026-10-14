@@ -71,7 +71,9 @@ function ensureStyles(): void {
     ".km-today .km-tx b{color:#e4ecf8;font-weight:650}" +
     `.km-today .km-tx div{font-family:${mono};font-size:12px}` +
     ".km-hist{list-style:none;margin:0;padding:0;" +
-    "max-height:min(38vh,300px);overflow:auto;border-top:1px solid #2c3a55}" +
+    "max-height:min(38vh,300px);overflow:auto;border-top:1px solid #2c3a55;" +
+    // K146: a year of rows scrolls; a dark scrollbar to match the card.
+    "scrollbar-color:#3d4b6a transparent}" +
     // K155: the stars' small form in the today row and the history.
     ".km-today .km-stars{font-size:16px;margin:0 0 0 6px;padding:0 4px;" +
     "letter-spacing:1px;vertical-align:-1px}" +

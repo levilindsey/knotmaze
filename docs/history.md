@@ -734,6 +734,30 @@ demand.
   cleared by any such share. The reset now eases from a slack view
   instead of snapping. *[Lore: `.claude/rules/gameplay.md` (FIT CAMERA PAN
   SLACK); probes in `.claude/probes/K148_K149/`.]*
+- PAST DAILIES AS PRACTICE (K146 stage 1, 2026-10-14; brief
+  `docs/design/K146_K151.md`, agent under session d8031183): the daily
+  stats' History lists every past daily from #1 to yesterday, newest
+  first under sticky month headers, with All / Played / Not played chips
+  past 10 days, and a tap plays one. An attempt begun after its day is
+  PRACTICE: its finish goes to the day's `practice` list (store v3), shows
+  in History in violet, and stays out of every aggregate; its banner reads
+  "Daily #N practice solved" and its share title "(practice)". An attempt
+  begun on its day still counts when it finishes later, and old late
+  official results stay official, flagged late. *[Lore:
+  `.claude/rules/gameplay.md` (binding rule 5); probes and shots in
+  `.claude/probes/K146_K151/`.]*
+- THE MODE BADGE NAMES EVERY MODE (K151 stage 1, same brief and agent):
+  the daily's label left the HUD's title row (gone) for the badge's spot:
+  "Daily #N" (a tap opens the daily stats), "Daily #N replay · not
+  scored", "Daily #N practice · not scored" (violet) and "Free play". The
+  free badge, whose tap leaves free play for today's daily, fades in an X
+  on hover and keyboard focus and always shows it on touch screens
+  (`MODE_BADGE_X_ON_COARSE`, Levi's open question K151 (3)). The fit
+  gained a one-word level ("Replay", "Practice") between the short label
+  and the bare icon: on a 411 px phone with the HUD's stat rows on,
+  "Daily #3 replay" did not fit and the badge fell to its icon. *[Lore:
+  `.claude/rules/gameplay.md` (MODE BADGE); probes and shots in
+  `.claude/probes/K146_K151/`.]*
 
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the
