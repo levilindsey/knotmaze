@@ -9,7 +9,9 @@ import { Pane } from "tweakpane";
 import { APP_VERSION, BUILD_SHA, BUILD_TIME } from "../build_info";
 import type { UrlParams } from "./url_state";
 import {
+  LOAD_SETTLE_MAX,
   PARAM_DEFAULTS,
+  SETTLE_BUDGET_MAX,
   appearModeFor,
   applyAppearMode,
   seedFromText,
@@ -1087,6 +1089,19 @@ export function buildPanel(
     D.appearFx, appearEdited(() => callbacks.onSlackChange())
   );
   appearRows.push(appearSequenceRow, appearSpeedRow, appearFxRow);
+  // THE LOAD SETTLE (K147, main.ts): how the first settle is paced. Both
+  // take effect at the next load or Replay settle (the budget also follows
+  // the slider while a settle is running).
+  row(
+    fMotion, p, "settleBudget", { min: 0, max: SETTLE_BUDGET_MAX, step: 1 },
+    "Settle budget: at most this many milliseconds of physics per frame while the knot first settles after loading, so the intro stays smooth on slow devices - the settle plays in slow motion instead of the frame rate dropping. Ends when the knot first comes to rest (or after two minutes). 0 = off: the physics keeps up with real time and the intro stutters while it settles. Applies at the next load or Replay settle.",
+    D.settleBudget, () => callbacks.onSlackChange()
+  );
+  row(
+    fMotion, p, "loadSettle", { min: 0, max: LOAD_SETTLE_MAX, step: 0.05 },
+    "Load settle: seconds of physics to run before the knot appears, so it starts its intro already partly relaxed. A loading knot shows if this takes a noticeable moment. 0 = appear at once; the max = wait until the knot is fully at rest (settle first, then the intro). Applies at the next load or Replay settle.",
+    D.loadSettle, () => callbacks.onSlackChange()
+  );
   button(
     fMotion,
     "Replay settle",

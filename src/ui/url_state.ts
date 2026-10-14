@@ -330,7 +330,21 @@ export interface UrlParams {
   backgroundAccent1: string;
   backgroundAccent2: string;
   backgroundAccent3: string;
+  // THE LOAD SETTLE (K147, main.ts). settleBudget: [0, SETTLE_BUDGET_MAX]
+  // wall ms of physics a frame may spend from the intro's start until the
+  // first sleep; the rest of the settle plays in slow motion instead of
+  // dropping the frame rate (0 = off: every frame steps all the time it
+  // asks for, today's stepping). loadSettle: [0, LOAD_SETTLE_MAX] seconds
+  // of physics the page runs before the knot appears (0 = none; the max =
+  // until the knot sleeps). Both apply at the next load or Replay settle.
+  settleBudget: number;
+  loadSettle: number;
 }
+
+// The two load-settle sliders' tops (K147). LOAD_SETTLE_MAX is a sentinel
+// as well: there the page waits for the first sleep (or main.ts's wall cap).
+export const SETTLE_BUDGET_MAX = 30;
+export const LOAD_SETTLE_MAX = 5;
 
 // COMPLETE per-param defaults (everything but seed): the panel's per-row
 // reset buttons + modified indicators, and the Reset-to-defaults button.
@@ -433,6 +447,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   backgroundAccent1: "#7ab8cd",
   backgroundAccent2: "#cdb17a",
   backgroundAccent3: "#aa7acd",
+  // K147 (appended to codec v4): see the LOAD SETTLE comment in main.ts.
+  settleBudget: 12,
+  loadSettle: 0.45,
 };
 
 export function newSeed(): number {
@@ -513,7 +530,14 @@ function fromCodecValues(
   p.backgroundFibers = sanitizeBackgroundTexture(p.backgroundFibers);
   p.backgroundGrain = sanitizeBackgroundTexture(p.backgroundGrain);
   p.backgroundAngle = sanitizeBackgroundAngle(p.backgroundAngle);
+  p.settleBudget = clampTo(p.settleBudget, SETTLE_BUDGET_MAX);
+  p.loadSettle = clampTo(p.loadSettle, LOAD_SETTLE_MAX);
   return p;
+}
+
+// [0, max]; garbage reads 0.
+function clampTo(v: number, max: number): number {
+  return v > 0 ? Math.min(max, v) : 0;
 }
 
 // backgroundSpeed: any negative value (or garbage) is AUTO, anything else
@@ -727,6 +751,13 @@ function readLegacy(
     backgroundAccent1: readHexColor(query, "bgc1", D.backgroundAccent1),
     backgroundAccent2: readHexColor(query, "bgc2", D.backgroundAccent2),
     backgroundAccent3: readHexColor(query, "bgc3", D.backgroundAccent3),
+    // And K147's load settle (`&stb=0` = today's real-time stepping for
+    // probes that time the sim; `&lds=5` = settle until the knot sleeps).
+    settleBudget: clampTo(
+      readNumber(query, "stb", D.settleBudget),
+      SETTLE_BUDGET_MAX
+    ),
+    loadSettle: clampTo(readNumber(query, "lds", D.loadSettle), LOAD_SETTLE_MAX),
   };
 }
 
