@@ -15,6 +15,11 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K191** · K169's two calls (its agent's, 2026-10-14): a backtrack
+  turns a gold web back at once, with no fade-out (as K127), and reduced
+  Motion keeps the 0.25 s fade (a colour crossfade; `src/ui/motion.ts`
+  gates movement only). Say if either should change
+  (`docs/design/K154_K169.md`, "Stage 1 handoff").
 - **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
   in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
   Shortlist: the burn race (turn-based), the cut verb with an
@@ -232,7 +237,8 @@ and never reused.
     main checkout, `.claude/probes/rounds/2026-10-13/looks.json` (3c
     appends K80's real-time mode, K104, K155 and K140 after a backup).
   - next: 3c per its brief (the A/A smoke test, the defaults, K171's
-    read-only wait, the noise floor, the new looks); then the merge and
+    read-only wait, the noise floor, the new looks); then the merge,
+    K192 for the looks (the gold web's final look, not fade level 0) and
     the round pass: `pwsh -NoProfile -File scripts/phone_pass.ps1 -Base
     ab6d330 -Head master -Reps 3 -Looks
     .claude/probes/rounds/2026-10-13/looks.json` (`-Phase check` first).
@@ -272,37 +278,6 @@ and never reused.
     round's phone pass, and Levi plays with the params.
   - brief: `docs/design/K180.md`.
   - env: dev servers on ports 5490-5499.
-- **K154** · Our own hash in place of PCG2D, whose credit goes (Levi,
-  2026-10-14 about 00:22, `docs/design/levi_notes_2026-10-14.md` item 10:
-  "a, yes. b, swap in our own. c, none."): the Perlin and Scarborough Fair
-  credits stay, and no technique gets a line. One agent with K169.
-  - owner: agent a6caa78542c463088 (sonnet) of session d8031183, started
-    2026-10-14 about 00:56; it stops at about 01:56 or when the stage is
-    done.
-  - branch: `worktree-agent-a6caa78542c463088`
-    (`.claude/worktrees/agent-a6caa78542c463088`), from ca7d3e6; last
-    commit: `8b3ff1d` (WIP, unpushed; 01:19).
-  - evidence: `.claude/probes/K154_K169/` in its worktree (copy at merge).
-  - next: Part A of the brief (the hash, its avalanche and uniformity
-    tests, the credit, the six backgrounds' before/after), then Part B
-    (K169); then the merge and the round's phone pass.
-  - brief: `docs/design/K154_K169.md`.
-  - env: dev servers on ports 5470-5479.
-- **K169** · Fade K127's gold web in over about 0.25 s instead of
-  turning it gold in one frame (Levi, 2026-10-14 about 00:22,
-  `docs/design/levi_notes_2026-10-14.md` item 9: "Fade.";
-  `docs/design/K81.md`, "Stage 3d results"). One agent with K154.
-  - owner: agent a6caa78542c463088 (sonnet) of session d8031183, started
-    2026-10-14 about 00:56; it stops at about 01:56 or when the stage is
-    done.
-  - branch: `worktree-agent-a6caa78542c463088`
-    (`.claude/worktrees/agent-a6caa78542c463088`), from ca7d3e6; last
-    commit: `8b3ff1d` (WIP, unpushed; 01:19).
-  - evidence: `.claude/probes/K154_K169/` in its worktree (copy at merge).
-  - next: Part B of the brief, after K154's Part A; then the merge and
-    the round's phone pass.
-  - brief: `docs/design/K154_K169.md`.
-  - env: dev servers on ports 5470-5479.
 
 ## Next, in order
 
@@ -340,8 +315,9 @@ phone), K180 stage 1 and K154+K169 (code). Then, as code slots free
 up:
 1. The round's phone pass (K156: 3a and 3b merged in ae49553, 3c
    running), for K79 B, K122, K147, K81, K80 stage 1, K104 stage 1c,
-   K155 and K140, all merged by bb55c9a, and whatever merges before it
-   runs.
+   K155 and K140, all merged by bb55c9a, then K154 and K169 (aaa3dda),
+   and whatever merges before it runs. Before it runs, K192 (the looks
+   would show the gold web at fade level 0).
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
    5fed5c1; Levi plays it (K174).
@@ -713,6 +689,19 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K190** · Unmeasured costs from K154+K169 (aaa3dda). The new hash
+  costs the drifting backgrounds' programs 37-60% more on the desktop
+  (vellum-drift 0.352 -> 0.50 ms a frame at 3200x1800; static vellum
+  pays nothing); the phone, and the junction fan program during a web
+  fade, are unmeasured. Measure at K79's K52 phone gate, vellum-drift
+  first. If the phone pays, a cheaper hash needs another shape (three
+  multiplies per lane fail the avalanche test) that avoids PCG2D's
+  structure (`docs/design/K154_K169.md`, "Stage 1 handoff").
+- **K192** · Since K169, a probe that pins `paintClock` sees a fully
+  traveled web at fade level 0 (the untraveled colour) unless it sets
+  `webFade.seconds = 0` on the fabric renderer or moves the clock. K81's
+  census and A/B kits and the phone pass's looks need it to show the
+  gold web's final look (`docs/design/K154_K169.md`, "Stage 1 handoff").
 - **K123** · `.claude/probes/K10/phone_bench.mjs` drives the first
   visible `http://localhost:` tab on any port, so it can navigate one of
   Levi's own tabs. Use `.claude/probes/K79/phone/bench.mjs` (ports
@@ -1190,6 +1179,29 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 (items move here with the commit that resolved them)
 
+- **K154** · Our own hash in place of PCG2D, whose credit goes (Levi,
+  2026-10-14 about 00:22, `docs/design/levi_notes_2026-10-14.md` item 10:
+  "a, yes. b, swap in our own. c, none."): the Perlin and Scarborough Fair
+  credits stay, and no technique gets a line. One agent with K169.
+  - Done in 64d3296..aaa3dda (2026-10-14): `src/render/hash2d.ts` (a
+    multiply-add per lane, then three multiply and xorshift rounds, its
+    constants from a seeded search) replaces PCG2D, and the `pcg2d-hash`
+    credit is gone. Avalanche, uniformity, lag, bijection and spectral
+    tests in `test/render/hash2d.test.ts`; GPU parity 0 of 524288 words
+    off; 598 tests. Desktop cost: the drifting backgrounds' programs
+    +37-60% (K190). Probes in `.claude/probes/K154_K169/`
+    (`out/sheets/sheet_bare.png`); worktree
+    `.claude/worktrees/agent-a6caa78542c463088` kept.
+- **K169** · Fade K127's gold web in over about 0.25 s instead of
+  turning it gold in one frame (Levi, 2026-10-14 about 00:22,
+  `docs/design/levi_notes_2026-10-14.md` item 9: "Fade.";
+  `docs/design/K81.md`, "Stage 3d results"). One agent with K154.
+  - Done in 64d3296..aaa3dda (2026-10-14): `src/render/web_fade.ts`, a
+    0.25 s smoothstep from the untraveled base to the gold one (written
+    into the junction record, no fillet rebuild); from 0.25 s on, 0 px
+    against K127. Its two calls: K191; probes that pin `paintClock`:
+    K192. Sheets: `.claude/probes/K154_K169/out/fade_zoom_desk.png` and
+    `fade_zoom_phone.png`. Play: https://levi.dev/knotmaze/?7.J
 - **K140** · Finish confetti (Levi, 2026-10-13 about 15:35, verbatim
   in `docs/design/levi_notes_2026-10-13.md`): a gratuitous confetti rain
   from the top of the screen when you finish the maze, and a smaller
