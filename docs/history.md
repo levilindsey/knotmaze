@@ -678,6 +678,25 @@ demand.
   mode then idles; fabric's paint keeps animating). *[Lore: `.claude/rules/
   render.md` (Finish confetti); probes, screenshots and the frame-time
   A/B in `.claude/probes/K140/`.]*
+- OUR OWN HASH (K154, 2026-10-14; brief `docs/design/K154_K169.md`, agent
+  under session d8031183): the backgrounds' noise runs on a two-lane
+  integer hash of our own design (`src/render/hash2d.ts`: a multiply-add,
+  then three multiply / cross-xorshift / self-xorshift rounds, constants
+  from a seeded search) instead of PCG2D, whose credit is gone (Levi:
+  "swap in our own"; the Perlin and Scarborough Fair credits stay and none
+  is added). Tested for avalanche, uniformity, correlation and
+  collisions; all six effects look the same in kind and show no tile, row
+  or diagonal. The effect programs' pixels differ and their sha256 pins
+  moved. *[Lore: `.claude/rules/render.md` (THE BACKGROUNDS' HASH IS OUR
+  OWN), `.claude/rules/notices.md`; probes and the before/after sheets in
+  `.claude/probes/K154_K169/`.]*
+- THE GOLD WEB FADES IN (K169, 2026-10-14; same brief and agent): K127's
+  fully traveled web turned gold in one frame; it now crossfades over 0.25
+  s, caps included, and its fade keeps running under reduced motion (a
+  color crossfade moves nothing). Fade in only. Pixel-identical to the
+  K127 look once the fade ends, at desktop and phone width. *[Lore:
+  `.claude/rules/render.md` (The gold web's fade); probes and frames in
+  `.claude/probes/K154_K169/`.]*
 
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the
