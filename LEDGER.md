@@ -121,15 +121,15 @@ and never reused.
   confirm: the head indicator has no setting of its own, and the slack is
   0.3 of the screen per side.
 - **K200** · K146 + K151's calls (`docs/design/K146_K151.md`, "The
-  calls" and "Open"): (1) K151 (3): free play's X always shows on coarse
-  pointers (`MODE_BADGE_X_ON_COARSE`, built on); (2) confirm: a practice
+  calls" and "Open"): (1) answered 2026-10-14: free play's X always
+  shows, on the desktop too (done in 7950c7f); (2) confirm: a practice
   finish has its own banner and shares as "Knotmaze Daily #N
   (practice)"; the daily badge's tap opens the stats; replay and practice
   labels carry the daily number; History leaves out today (its own row)
   and lists recorded days ahead of today; a practice row shows the first
   practice result; v2's late official results stay official, flagged
   late. Try: https://levi.dev/knotmaze/?daily=1 (practice, unless you
-  solved #1 on its day) and https://levi.dev/knotmaze/?b.J (the X).
+  solved #1 on its day).
 - **K203** · K120's calls (`docs/design/K120.md`, "Stage 1 handoff";
   gameplay.md MOVES BY DIRECTION): the move pad on by default on coarse
   pointers; its corner and size (bottom right, 132 px, about 38% of the
