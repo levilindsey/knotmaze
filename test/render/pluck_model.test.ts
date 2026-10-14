@@ -10,17 +10,26 @@ import {
   CUE_UNIT,
   cueStrength,
   cueWeight,
+  drawnSwing,
   envelope,
   gapTurn,
   ghostShape,
+  glowCue,
   nodeCap,
   peakShape,
   pinchCap,
+  PLUCK_CROSSINGS,
+  PLUCK_GLOWS,
+  PLUCK_WHOLE_MAX,
+  pluckShows,
   rescaleSympathetic,
   roomAt,
   roundCollapse,
   roundTau,
   segmentLobes,
+  SHOW_DT,
+  SHOW_MIN_H,
+  SHOW_MIN_PX,
   slopeLimitUniform,
   softMin,
   stringT60,
@@ -757,5 +766,87 @@ describe("still-pluck gap lookups (G1's encoding)", () => {
     expect(Array.from(out)).toEqual([1, 2, 3, 4]);
     expect(unionGapIds(ids.subarray(0, 8), count, 4, false, 9, 3, 4, out, 0)).toBe(0);
     expect(Array.from(out)).toEqual([-1, -1, -1, -1]);
+  });
+});
+
+describe("pluck params (K180)", () => {
+  it("lists the dropdown options, default first, and the pluckWhole max", () => {
+    expect(PLUCK_CROSSINGS).toEqual(["through", "ride", "pinch"]);
+    expect(PLUCK_GLOWS).toEqual(["off", "instead", "with", "fallback"]);
+    // 3x the default W, still under the neighbor search's 2.2 grow.
+    expect(PLUCK_WHOLE_MAX).toBe(1.5);
+    expect(PLUCK_WHOLE_MAX / WHOLE_AMP).toBe(3);
+    expect(PLUCK_WHOLE_MAX).toBeLessThan(2.2);
+  });
+
+  it("shows a pluck by K104's census line: 0.6 h and 2 CSS px, both", () => {
+    expect(SHOW_MIN_H).toBe(0.6);
+    expect(SHOW_MIN_PX).toBe(2);
+    const h = 0.25;
+    // Exactly on either edge shows; a hair under either does not.
+    expect(pluckShows(0.6 * h, h, 1000)).toBe(true);
+    expect(pluckShows(0.6 * h * (1 - 1e-9), h, 1000)).toBe(false);
+    expect(pluckShows(h, h, (2 / h) * (1 - 1e-9))).toBe(false);
+    expect(pluckShows(h, h, 2 / h)).toBe(true);
+    // Zoomed out, a full-h swing can still be too small to see.
+    expect(pluckShows(h, h, 4)).toBe(false);
+    expect(pluckShows(0, h, 1e6)).toBe(false);
+  });
+
+  it("samples at the census's peak times", () => {
+    expect(SHOW_DT).toEqual([0, 0.01, 0.02, 0.035, 0.05, 0.075, 0.1, 0.15, 0.2]);
+  });
+
+  it("builds a station's swing the way the overlay's envelope does", () => {
+    const env = [0, 0];
+    const ref = [0, 0];
+    const b = 0.3;
+    const q = 0.7;
+    for (const x of [0.1, 0.3, 0.55, 0.9]) {
+      envelope(b, x, q, ref);
+      const s = 0.4;
+      // Uncapped: the larger side of the lobe, plus W on both sides.
+      const want = Math.max(ref[1] * s, -ref[0] * s) + 0.1;
+      expect(drawnSwing(b, x, q, s, 0.1, 1, Infinity, Infinity, env)).toBeCloseTo(want, 12);
+      // The side flip swaps which edge is which, not the larger excursion.
+      expect(drawnSwing(b, x, q, s, 0.1, -1, Infinity, Infinity, env)).toBeCloseTo(want, 12);
+    }
+    // W alone: w on both sides.
+    expect(drawnSwing(b, 0.5, q, 0, 0.3, 1, Infinity, Infinity, env)).toBe(0.3);
+    // Nothing moving: 0.
+    expect(drawnSwing(b, 0.5, q, 0, 0, 1, 0.1, 0.1, env)).toBe(0);
+  });
+
+  it("clamps the concave side by its cap, either side", () => {
+    const env = [0, 0];
+    const b = 0.5;
+    const x = 0.5;
+    const q = 1; // The triangle: hi = s at its apex, lo = -s.
+    // Both sides capped under the swing: the larger cap wins.
+    expect(drawnSwing(b, x, q, 1, 0, 1, 0.2, 0.3, env)).toBeCloseTo(0.3, 12);
+    expect(drawnSwing(b, x, q, 1, 0, 1, 0.3, 0.2, env)).toBeCloseTo(0.3, 12);
+    // One side free: the free side's full swing.
+    expect(drawnSwing(b, x, q, 1, 0, 1, 0.2, Infinity, env)).toBeCloseTo(1, 12);
+    // An off-center lobe (b 0.2: up 1, down 0.25). A side flip moves the
+    // big excursion to the other edge, so the cap that clipped it before
+    // now clips the small one.
+    const tapped = [0, 0];
+    envelope(0.2, 0.2, 1, tapped);
+    const up = tapped[1];
+    const down = -tapped[0];
+    expect(up).toBeGreaterThan(down);
+    expect(drawnSwing(0.2, 0.2, 1, 1, 0, 1, Infinity, 0, env)).toBeCloseTo(up, 12);
+    expect(drawnSwing(0.2, 0.2, 1, 1, 0, -1, Infinity, 0, env)).toBeCloseTo(down, 12);
+    expect(drawnSwing(0.2, 0.2, 1, 1, 0, -1, 0, Infinity, env)).toBeCloseTo(up, 12);
+  });
+
+  it("cues by the glow option: never, always, always, only when it cannot show", () => {
+    for (const shows of [true, false]) {
+      expect(glowCue("off", shows)).toBe(false);
+      expect(glowCue("instead", shows)).toBe(true);
+      expect(glowCue("with", shows)).toBe(true);
+    }
+    expect(glowCue("fallback", true)).toBe(false);
+    expect(glowCue("fallback", false)).toBe(true);
   });
 });
