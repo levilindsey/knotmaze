@@ -183,6 +183,10 @@ export const DAILY_EXEMPT_KEYS = [
   "pluckGhost",
   "pluckReach",
   "pluckStyle",
+  // K180's pluck params (W's amount, how W meets crossings, the glow).
+  "pluckWhole",
+  "pluckCrossings",
+  "pluckGlow",
   "tugLimit",
   "snapBack",
   // Physics on/off: a device-speed choice; the settled layout is the same.

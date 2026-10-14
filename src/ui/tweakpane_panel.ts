@@ -34,6 +34,7 @@ import {
   readsDetail,
 } from "../render/background_model";
 import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
+import { PLUCK_WHOLE_MAX } from "../render/pluck_model";
 import type { MotionPref } from "./motion";
 
 export interface PanelSettings {
@@ -1241,6 +1242,35 @@ export function buildPanel(
     "What a pluck sets vibrating: run = the whole maze segment you hear, each stretch between crossings humming (in knot mode, the plucked stretch and two either side); lobe = only the stretch between the two nearest crossings. Applies to the next pluck.",
     D.pluckReach, () => callbacks.onSlackChange()
   );
+  // K180's pluck params: W's amount (no step, K130; an edit keeps 2
+  // decimals), how W meets the segment's crossings, and the glow.
+  const pluckWholeRow = row(
+    fFeel, p, "pluckWhole",
+    {
+      min: 0,
+      max: PLUCK_WHOLE_MAX,
+      keyScale: 0.05,
+      pointerScale: 0.01,
+      format: (v: number) => v.toFixed(2),
+    },
+    "How far the whole plucked segment swings as one string, on top of the stretch you tapped (scales with pluckSize). 0 = only the tapped stretch and its neighbors move; 0.5 = the default; up to 1.5. Applies to the next pluck.",
+    D.pluckWhole, () => {
+      params.pluckWhole = Math.round(params.pluckWhole * 100) / 100;
+      callbacks.onSlackChange();
+    }
+  );
+  const pluckCrossingsRow = row(
+    fFeel, p, "pluckCrossings",
+    { options: { through: "through", ride: "ride", pinch: "pinch" } },
+    "How the whole segment's swing meets the crossings inside it: through = it carries across them, so the segment's blur stays one piece; ride = it stays within each crossing's soft limit (short stretches keep it near a thread width); pinch = it narrows to a waist at every crossing. Applies live.",
+    D.pluckCrossings, () => callbacks.onSlackChange()
+  );
+  const pluckGlowRow = row(
+    fFeel, p, "pluckGlow",
+    { options: { off: "off", instead: "instead", with: "with", fallback: "fallback" } },
+    "A glow on the plucked segment, brightening toward white as it rings: off = movement only; instead = the glow replaces the whole segment's swing (the tapped stretch still moves); with = the swing and the glow; fallback = the glow only on plucks whose movement is too small to see (zoomed out, or hemmed in by other threads). Reduced motion always glows instead of moving. Applies to the next pluck.",
+    D.pluckGlow, () => callbacks.onSlackChange()
+  );
   const tugLimitRow = row(
     fFeel, p, "tugLimit", { min: 0.5, max: 6, step: 0.1 },
     "Dragging a thread tugs it (taps pluck instead). How far a thread can be tugged, in thread widths; the stretch resists more as it nears the limit (drag further, move less). Applies live.",
@@ -1498,6 +1528,14 @@ export function buildPanel(
     temperatureRow.hidden = !live;
     simSpeedRow.hidden = !live;
     pluckGhostRow.hidden = params.pluckSize <= 0;
+    // K180: nothing to see without a drawn pluck; the crossings rule only
+    // shapes a whole-segment swing that exists.
+    pluckWholeRow.hidden = params.pluckSize <= 0;
+    pluckGlowRow.hidden = params.pluckSize <= 0;
+    pluckCrossingsRow.hidden =
+      params.pluckSize <= 0 ||
+      params.pluckWhole <= 0 ||
+      params.pluckGlow === "instead";
     appearSpeedRow.hidden = params.appearSequence === "instant";
     appearFxRow.hidden = params.appearSequence === "instant";
     flowSpeedRow.hidden = params.flowStrength <= 0;

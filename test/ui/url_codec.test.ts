@@ -117,6 +117,7 @@ describe("links", () => {
       minoPauseMax: 2, minoDetect: 15, minoLose: 25, minoCatch: 1,
       minoDeadEnds: 0.4, minoRoam: 30, minoWake: 2, minoFog: "always",
       confetti: true, confettiAmount: 1,
+      pluckWhole: 0.5, pluckCrossings: "through", pluckGlow: "off",
     });
   });
 
@@ -136,6 +137,36 @@ describe("links", () => {
     expect(
       parseParams(`?${encodeParams(withSeed(7, { confettiAmount: 7 }))}`).confettiAmount
     ).toBe(3);
+  });
+
+  // K180: the pluck params' legacy keys, the whole amount's clamp, the
+  // option lists, and the token round trip.
+  it("reads the pluck params from legacy override keys", () => {
+    const p = parseParams("?7.J&pw=1&pcx=ride&pgl=fallback");
+    expect([p.pluckWhole, p.pluckCrossings, p.pluckGlow]).toEqual([
+      1, "ride", "fallback",
+    ]);
+    expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    for (const pcx of ["through", "ride", "pinch"]) {
+      expect(parseParams(`?7.J&pcx=${pcx}`).pluckCrossings).toBe(pcx);
+    }
+    for (const pgl of ["off", "instead", "with", "fallback"]) {
+      const q = parseParams(`?7.J&pgl=${pgl}`);
+      expect(q.pluckGlow).toBe(pgl);
+      expect(parseParams(`?${encodeParams(q)}`)).toEqual(q);
+    }
+    // Defaults stay out of the token; unknown options read as the default.
+    expect(encodeParams(parseParams("?7.J&pw=0.5&pcx=through&pgl=off"))).toBe("7.J");
+    expect(parseParams("?7.J&pcx=wobble").pluckCrossings).toBe("through");
+    expect(parseParams("?7.J&pgl=bright").pluckGlow).toBe("off");
+    // The amount clamps to [0, 1.5]; garbage reads as the default.
+    expect(parseParams("?7.J&pw=9").pluckWhole).toBe(1.5);
+    expect(parseParams("?7.J&pw=-1").pluckWhole).toBe(0);
+    expect(parseParams("?7.J&pw=x").pluckWhole).toBe(0.5);
+    expect(parseParams("?7.J&pw=0").pluckWhole).toBe(0);
+    expect(
+      parseParams(`?${encodeParams(withSeed(7, { pluckWhole: 4 }))}`).pluckWhole
+    ).toBe(1.5);
   });
 
   // K80: the chase's defaults are the simulation-picked tuning; a retune

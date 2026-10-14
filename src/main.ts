@@ -86,6 +86,7 @@ import {
 } from "./render/marker_glyphs";
 import { ConfettiLayer } from "./render/confetti";
 import { confettiPlan, sprayUnit } from "./render/confetti_model";
+import { PLUCK_WHOLE_MAX } from "./render/pluck_model";
 import { openDailyStats } from "./ui/daily_stats_view";
 import { shareOrCopy, showToast } from "./ui/share";
 import { buildPanel } from "./ui/tweakpane_panel";
@@ -3255,6 +3256,13 @@ async function main(): Promise<void> {
       // clamp left at 2 made its top third do nothing).
       renderer!.plucks.size = Math.max(0, Math.min(3, params.pluckSize));
       renderer!.plucks.ghost = Math.max(0, Math.min(1, params.pluckGhost));
+      // K180's pluck params: W's amount and the glow reach the next pluck,
+      // a crossings change re-lays the ringing ones out.
+      renderer!.plucks.setWhole(
+        Math.max(0, Math.min(PLUCK_WHOLE_MAX, params.pluckWhole)),
+        params.pluckCrossings,
+        params.pluckGlow
+      );
       renderer!.plucks.sustain = params.sustain;
       // Reduced motion (the Motion setting, live; WCAG 2.3.3): a pluck
       // started under it is STILL - the plucked segment brightens briefly
