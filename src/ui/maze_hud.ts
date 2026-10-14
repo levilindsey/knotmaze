@@ -202,12 +202,19 @@ export class MazeHud {
   // Draw a snapshot (null hides the HUD). Rebuilds the rows only when
   // their set or values change; the ticking time takes setTime().
   render(s: HudSnapshot | null): void {
-    if (!s || (!s.title && !s.showStats)) {
+    // K80: the real-time mode's catch count is part of the game, not a
+    // stat: its row shows with the stat rows off too.
+    const chase = s?.catches != null;
+    if (!s || (!s.title && !s.showStats && !chase)) {
       this.el.hidden = true;
       this.lastSig = "";
       return;
     }
-    const rows = s.showStats ? statRows(s) : [];
+    const rows: Array<[string, string]> = s.showStats
+      ? statRows(s)
+      : chase
+        ? [["caught", String(s.catches)]]
+        : [];
     const sig = JSON.stringify([s.title, rows]);
     this.el.hidden = false;
     if (sig === this.lastSig) return;
@@ -220,7 +227,7 @@ export class MazeHud {
       this.title.insertAdjacentHTML("beforeend", CHART_ICON);
       this.title.title = "Your daily stats";
       this.title.setAttribute("aria-label", `${s.title} - open your daily stats`);
-      this.title.classList.toggle("km-solo", !s.showStats);
+      this.title.classList.toggle("km-solo", rows.length === 0);
       this.el.appendChild(this.title);
     }
     for (const [k, v] of rows) {
