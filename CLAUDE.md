@@ -222,8 +222,10 @@ an early mid-settle state, not equilibrium — an entire debugging session
 chased "fixed" artifacts that only existed at true equilibrium. Use
 `node scripts/diag_screenshot.mjs <url> <out.png> [settleMs]` instead: it
 drives a headed, hardware-GPU Chrome in real time and reports the page's
-build stamp plus `sim/wall` seconds (which must match; the on-page
-bottom-left stamp shows the same counters).
+build stamp, the `sim/wall` seconds (the on-page bottom-left stamp's
+counters; since K147 sim trails wall while the knot settles, see
+`probes.md`) and the frame rate (a ~1000 ms median frame = a throttled,
+mid-settle capture).
 
 ## Lore and history: where things live
 

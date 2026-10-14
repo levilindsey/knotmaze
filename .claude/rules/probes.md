@@ -223,6 +223,24 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   (speed links, the 8x drift clock, the real slider's ends, the tooltip,
   reset) runs on a build.
 
+- K147 (2026-10-13), the load settle: **sim and wall no longer match**
+  while a knot settles, by design. The hidden pre-settle runs ahead of
+  wall, and the settle budget drops what a frame cannot afford (slow
+  motion; the stamp appends ` | settle lag X.Xs`, the simulated seconds
+  dropped). `window.__knotSettle()` reports the phase (presettle |
+  budget | free), the budget's cost estimate and lag, and how each phase
+  ended (`endedBy`: sim | work | sleep | wall | mode). A probe that times
+  the sim against wall passes `&stb=0` (no budget: today's real-time
+  stepping and its catch-up spiral); `&lds=5` is settle-first (hidden
+  until the first sleep); `&lds=0` skips the pre-settle.
+  `scripts/diag_screenshot.mjs` reports `timing` (sim, wall, lag, phase)
+  and `frames` (rAF interval median, p95, max) instead of expecting
+  sim = wall: a ~1000 ms median is an occluded, frozen capture. The
+  measuring harness is `.claude/probes/K147/k147_measure.mjs` (intro
+  frame intervals, intro end, first sleep, sim/wall, frame sheets,
+  `--throttle N`, `--drag`); `run_batch.ps1` runs a batch under the perf
+  lock.
+
 ## Census and diagnosis rules
 
 - *From the open artifact queue (2026-10-11), census lore:* Census lore from

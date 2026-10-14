@@ -133,9 +133,11 @@ const CAM_MAX_DT = 1;
 // (1) THE PRE-SETTLE: with any non-instant appear mode the knot first
 // settles HIDDEN, in the physics-off loader's SETTLE_CHUNK_MS slices, so the
 // reveal plays over a calmer fabric than the initial snap. It ends after
-// PRESETTLE_SIM simulated seconds or `loadSettle` wall seconds, whichever
-// first (until K147 a blocking loop with these two caps froze the page for
-// them); at loadSettle's max it lasts until the first sleep (LOAD_SIM_CAP /
+// PRESETTLE_SIM simulated seconds or `loadSettle` seconds of STEPPING WORK
+// (the time inside step(), so a device's speed, not the frame overhead
+// between chunks, sets it), whichever first (until K147 a blocking loop
+// with these two caps froze the page for them); at loadSettle's max it
+// lasts until the first sleep (LOAD_SIM_CAP /
 // LOAD_WALL_CAP_MS as for the physics-off load): settle first, then the
 // intro. The trefoil shows only for a settle predicted past
 // LOADER_DELAY_MS, and then for at least LOADER_MIN_MS (no flash).
