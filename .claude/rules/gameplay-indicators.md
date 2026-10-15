@@ -49,7 +49,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   makes it inert. A TAP (`returnToHead`, `headReturnPlan`): the FIT camera
   eases (0.6 s; reduced motion jumps) to center the head at the zoom the
   player is at, as near as the pan clamp allows (a head at the maze's far
-  edge lands at the slack's limit, on screen); the FOLLOW camera eases onto
+  edge lands at the range's limit, on screen); the FOLLOW camera eases onto
   its own framing of the head (`followScale`) and the spring is at full
   strength the moment the tween ends (`camTween.hold` = -(FOLLOW_DELAY +
   FOLLOW_RAMP); the finish's tap still passes PEEK_HOLD), so the follow
