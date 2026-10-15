@@ -810,3 +810,77 @@ export function segmentLobes(
   out.sort((p, q) => p.s0 - q.s0);
   return out;
 }
+
+// ---------------------------------------------------------------------------
+// The tapped lobe, and whether the tap fell inside a junction core (K235).
+
+export const LOBE_MIN_LEN = 0.05; // Shorter node pairs are not lobes.
+export const HIDE_RAMP = 0.1; // Arc over which a hide zone fades back in.
+
+// The vibrating span of a node-to-node lobe [s0, s1]: the lobe minus its hide
+// zones (a junction core or a marker gap hides the overlay, so the string's
+// effective fret sits where its hide ramp ends). hideA / hideB = the hide
+// radius at the lobe's two end nodes, 0 = none.
+export function vibratingSpan(
+  s0: number,
+  s1: number,
+  hideA: number,
+  hideB: number
+): [number, number] {
+  const e0 = s0 + (hideA > 0 ? hideA + HIDE_RAMP : 0);
+  const e1 = s1 - (hideB > 0 ? hideB + HIDE_RAMP : 0);
+  return [e0, Math.max(e0, e1)];
+}
+
+export interface TapLobes {
+  // The pluck unit's lobes at least LOBE_MIN_LEN long, ascending.
+  spans: LobeSpan[];
+  // The one holding the tap (k 0), or null when it is shorter than
+  // LOBE_MIN_LEN (or the chain has no lobes at all).
+  tapped: LobeSpan | null;
+  // Its vibrating span (hide zones trimmed); null with `tapped`.
+  vibrating: [number, number] | null;
+  // The tap fell inside a junction core: it holds a lobe, but that lobe minus
+  // its hide zones is under LOBE_MIN_LEN, so nothing vibrates. This is the
+  // decision behind the overlay's `skipCore`, and K235's: such a tap draws no
+  // pluck and so makes no sound either (main.ts tapPluck).
+  core: boolean;
+}
+
+// The unit's lobes for a tap, and the tapped lobe's verdict. `nodes` = the
+// chain's nodes ascending by arc (an open chain's list includes its two ends)
+// with each one's hide radius; the rest is segmentLobes'. One function for
+// the overlay's add() and its tests, so the decision exists once.
+export function tapLobes(
+  nodes: ReadonlyArray<{ readonly arc: number; readonly hide: number }>,
+  total: number,
+  closed: boolean,
+  tapArc: number,
+  reach: number,
+  span: [number, number] | null = null
+): TapLobes {
+  const spans = segmentLobes(
+    nodes.map((n) => n.arc),
+    total,
+    closed,
+    tapArc,
+    reach,
+    span
+  ).filter((s) => s.s1 - s.s0 >= LOBE_MIN_LEN);
+  const tapped = spans.find((s) => s.k === 0) ?? null;
+  if (!tapped) {
+    return { spans, tapped: null, vibrating: null, core: false };
+  }
+  const vibrating = vibratingSpan(
+    tapped.s0,
+    tapped.s1,
+    tapped.a >= 0 ? nodes[tapped.a].hide : 0,
+    tapped.b >= 0 ? nodes[tapped.b].hide : 0
+  );
+  return {
+    spans,
+    tapped,
+    vibrating,
+    core: vibrating[1] - vibrating[0] < LOBE_MIN_LEN,
+  };
+}

@@ -15,6 +15,8 @@ import {
   gapTurn,
   ghostShape,
   glowCue,
+  HIDE_RAMP,
+  LOBE_MIN_LEN,
   nodeCap,
   peakShape,
   pinchCap,
@@ -35,10 +37,12 @@ import {
   stringT60,
   sympatheticAmplitude,
   tapAmplitude,
+  tapLobes,
   throughStation,
   tri,
   unionGapIds,
   unitShift,
+  vibratingSpan,
   visualTau,
   WHOLE_AMP,
   WHOLE_FLOOR,
@@ -848,5 +852,114 @@ describe("pluck params (K180)", () => {
     }
     expect(glowCue("fallback", true)).toBe(false);
     expect(glowCue("fallback", false)).toBe(true);
+  });
+});
+
+// K235: a tap whose lobe, minus its hide zones, is under LOBE_MIN_LEN draws no
+// pluck (the overlay's skipCore) and so makes no sound either. tapLobes is
+// the decision both read.
+describe("a tap inside a junction core (K235)", () => {
+  const node = (arc: number, hide = 0) => ({ arc, hide });
+
+  it("trims a lobe by its hide zones plus the ramp, never past the far end", () => {
+    expect(vibratingSpan(3, 6, 0, 0)).toEqual([3, 6]);
+    const [a, b] = vibratingSpan(3, 6, 0.5, 0.25);
+    expect(a).toBeCloseTo(3 + 0.5 + HIDE_RAMP, 12);
+    expect(b).toBeCloseTo(6 - 0.25 - HIDE_RAMP, 12);
+    // The zones overlap: an empty span at the near end, never negative.
+    const [c, d] = vibratingSpan(3, 3.5, 0.5, 0.5);
+    expect(c).toBeCloseTo(3.6, 12);
+    expect(d).toBe(c);
+  });
+
+  it("a lobe with room to vibrate is not a core", () => {
+    const nodes = [node(1), node(3, 0.5), node(6), node(8)];
+    const t = tapLobes(nodes, 10, true, 4, 1);
+    expect(t.core).toBe(false);
+    expect(t.tapped).toMatchObject({ s0: 3, s1: 6, k: 0 });
+    expect(t.vibrating?.[0]).toBeCloseTo(3 + 0.5 + HIDE_RAMP, 12);
+    expect(t.vibrating?.[1]).toBeCloseTo(6, 12);
+    // The unit keeps its neighbors (reach 1) for the overlay to lay out.
+    expect(t.spans.map((s) => s.k)).toEqual([-1, 0, 1]);
+  });
+
+  it("no hide zones: the whole lobe vibrates, so a plain tap is never a core", () => {
+    const nodes = [node(1), node(3), node(6), node(8)];
+    for (const arc of [1.01, 2, 3, 4.5, 5.99, 7, 9, 0.5]) {
+      expect(tapLobes(nodes, 10, true, arc, 2).core).toBe(false);
+    }
+  });
+
+  it("two hide zones that meet leave nothing to vibrate: a core", () => {
+    // A junction's two arms: nodes 0.9 apart, each hiding 0.5 + the ramp.
+    const nodes = [node(1), node(3, 0.5), node(3.9, 0.5), node(8)];
+    const t = tapLobes(nodes, 10, true, 3.4, 0);
+    expect(t.tapped?.k).toBe(0);
+    expect(t.tapped?.s0).toBeCloseTo(3, 9);
+    expect(t.tapped?.s1).toBeCloseTo(3.9, 9);
+    expect(t.core).toBe(true);
+    expect(t.vibrating![1] - t.vibrating![0]).toBe(0);
+    // The lobes either side of the core still vibrate.
+    expect(tapLobes(nodes, 10, true, 2, 0).core).toBe(false);
+    expect(tapLobes(nodes, 10, true, 6, 0).core).toBe(false);
+  });
+
+  it("one wide hide zone is enough", () => {
+    const nodes = [node(1), node(3, 0.5), node(3.55), node(8)];
+    expect(tapLobes(nodes, 10, true, 3.2, 0).core).toBe(true);
+  });
+
+  it("the cut is LOBE_MIN_LEN of vibrating arc, with nothing for the ramp to hide", () => {
+    // Nodes 1.16 apart, hides 0.4 + 0.5 and two ramps: 1.16 - 1.1 = 0.06 left.
+    const long = [node(3, 0.4), node(4.16, 0.5)];
+    const wide = tapLobes(long, 10, true, 3.5, 0);
+    expect(wide.vibrating![1] - wide.vibrating![0]).toBeCloseTo(0.06, 9);
+    expect(wide.core).toBe(false);
+    // 0.04 left: a core.
+    const short = [node(3, 0.4), node(4.14, 0.5)];
+    const narrow = tapLobes(short, 10, true, 3.5, 0);
+    expect(narrow.vibrating![1] - narrow.vibrating![0]).toBeCloseTo(0.04, 9);
+    expect(narrow.core).toBe(true);
+    expect(LOBE_MIN_LEN).toBe(0.05);
+  });
+
+  it("a lobe under LOBE_MIN_LEN does not exist: no tapped lobe, and not a core", () => {
+    // The overlay counts it skipOther, not skipCore (K235 keeps its sound).
+    const nodes = [node(1), node(3), node(3.04), node(8)];
+    const t = tapLobes(nodes, 10, true, 3.02, 1);
+    expect(t.tapped).toBeNull();
+    expect(t.vibrating).toBeNull();
+    expect(t.core).toBe(false);
+    expect(t.spans.some((s) => s.k === 0)).toBe(false);
+  });
+
+  it("open chains: the end nodes carry hide zones (a marker's gap) too", () => {
+    const nodes = [node(0, 0.3), node(1.0), node(5, 0.3)];
+    // The first lobe loses its start; it still vibrates.
+    const near = tapLobes(nodes, 5, false, 0.5, 1);
+    expect(near.core).toBe(false);
+    expect(near.vibrating![0]).toBeCloseTo(0.3 + HIDE_RAMP, 12);
+    // A start node whose gap swallows the whole first lobe.
+    const gap = [node(0, 0.6), node(0.5), node(5)];
+    expect(tapLobes(gap, 5, false, 0.2, 0).core).toBe(true);
+    expect(tapLobes(gap, 5, false, 3, 0).core).toBe(false);
+  });
+
+  it("the walk-run span restricts the neighbors, never the verdict", () => {
+    const nodes = [node(1), node(3, 0.5), node(3.9, 0.5), node(8)];
+    const free = tapLobes(nodes, 10, true, 3.4, 2);
+    const run = tapLobes(nodes, 10, true, 3.4, 2, [3, 3.9]);
+    expect(free.core).toBe(true);
+    expect(run.core).toBe(true);
+    expect(run.spans.map((s) => s.k)).toEqual([0]);
+    expect(free.spans.length).toBeGreaterThan(1);
+  });
+
+  it("a closed chain with no nodes is one long pseudo lobe: never a core", () => {
+    const t = tapLobes([], 10, true, 4, 2);
+    expect(t.tapped).toMatchObject({ a: -1, b: -1, k: 0 });
+    expect(t.core).toBe(false);
+    // A loop too short to hold a lobe has no tapped lobe at all.
+    expect(tapLobes([], 0.04, true, 0.02, 1).tapped).toBeNull();
   });
 });

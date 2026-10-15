@@ -1075,6 +1075,7 @@ async function main(): Promise<void> {
     // Reveal first, so the very first visible frame already wears its
     // (collapsed) masks - no one-frame flash of the finished knot.
     startAppearance();
+    handRendererLook(); // K239: the first frame wears the worn fade and flow.
     renderer.update();
     if (fabric && fabricController) fabric.update(fabricController);
     fitToScreen();
@@ -1240,6 +1241,7 @@ async function main(): Promise<void> {
     // Reveal first, so the very first visible frame already wears its
     // (collapsed) masks - no one-frame flash of the finished knot.
     startAppearance();
+    handRendererLook(); // K239: the first frame wears the worn fade and flow.
     renderer.update();
     if (fabric && fabricController) fabric.update(fabricController);
     fitToScreen();
@@ -1886,20 +1888,32 @@ async function main(): Promise<void> {
     }
     syncBackground();
     if (fabric) fabric.markerSize = look("markerSize");
-    // The renderer takes these three from fabricTick, which runs AFTER an
-    // asleep or paused frame's update(): the one forced pass below would
-    // solve the crossing cuts and the flow with the OLD values and nothing
-    // would redo it (a slider wakes the physics, which keeps updating for
-    // several frames; this does not). Hand them over now.
-    if (renderer) {
-      renderer.fadeLength = look("fadeLength");
-      renderer.flowStrength = look("flowStrength");
-      renderer.flowSpeed = look("flowSpeed");
-    }
     panel.markOverridden(overriddenKeys(a11y));
     // One render pass for an asleep or frozen scene (the flow standing still
-    // or coming back, the new gap and palette).
+    // or coming back, the new gap and palette). Every pass hands the
+    // renderer the worn fade and flow first (handRendererLook, K239), so the
+    // pass solves the crossing cuts with the NEW values.
     renderDirty = true;
+  }
+
+  // K239 (the K111 finding, "A renderer finding" part 2): the renderer takes
+  // its fade length and flow from the page's params, and the crossing cuts
+  // (fade) and the flow displacement are solved INSIDE update(). They used
+  // to be handed over by fabricTick, which runs AFTER the frame's update():
+  // the first pass of a STATIC page (physics off, or paused, no flow, no
+  // reveal - nothing ever redoes it) solved the cuts at the constructor's
+  // fade 0, about 28k px off a refreshed frame. This is the one place that
+  // does it, and it runs before EVERY update() - the load's first frame, the
+  // asleep, frozen and paused passes (an Accessibility toggle's forced pass
+  // among them) and the awake step - and in fabricTick for the readers
+  // between passes (tickPaint, the pluck footprints, the flow clock). The
+  // values are the WORN ones (`look`: Reduced motion holds the flow still,
+  // High contrast cuts the crossings crisp).
+  function handRendererLook(): void {
+    if (!renderer) return;
+    renderer.fadeLength = look("fadeLength");
+    renderer.flowStrength = look("flowStrength");
+    renderer.flowSpeed = look("flowSpeed");
   }
   motion.subscribe(applyAccessibility);
   contrast.subscribe(applyAccessibility);
@@ -3243,11 +3257,10 @@ async function main(): Promise<void> {
     const hit = renderer.pickThread(x, y, GRAB_RADIUS);
     if (!hit) return;
     const freq = freqForCtrl(hit.chain, hit.ctrl);
-    if (!settings.muted && params.soundMode !== "none") {
-      synth.pluck(freq, TAP_STRENGTH);
-    }
     const unit = pluckUnit(hit.chain, hit.ctrl);
-    renderer.pluck({
+    // (renderer.pluck can return before the overlay runs: clear its verdict.)
+    renderer.plucks.resetSkip();
+    const drawn = renderer.pluck({
       chain: hit.chain,
       arc: hit.arc,
       side: hit.side,
@@ -3256,6 +3269,14 @@ async function main(): Promise<void> {
       reach: unit.reach,
       spanCtrl: unit.spanCtrl,
     });
+    // K235 (Levi, on K194: "Do we trigger pluck sounds for this? Probably
+    // shouldn't."): a tap inside a junction core draws no pluck, so it makes
+    // no sound either. Every other tap sounds as before, drawn or not (a
+    // chain mid-reveal, pluckSize 0, a degenerate lobe).
+    if (!drawn && renderer.plucks.lastSkip === "core") return;
+    if (!settings.muted && params.soundMode !== "none") {
+      synth.pluck(freq, TAP_STRENGTH);
+    }
   };
 
   app.canvas.style.touchAction = "none";
@@ -3954,9 +3975,8 @@ async function main(): Promise<void> {
       // renderer.update(), and the slider's onSlackChange wakes the sim.
       // K111: the flow holds still under Reduced motion (the intro and the
       // pulses keep playing) and the crossings cut crisp under High contrast.
-      renderer!.fadeLength = look("fadeLength");
-      renderer!.flowStrength = look("flowStrength");
-      renderer!.flowSpeed = look("flowSpeed");
+      // K239: handRendererLook, which also runs before every update().
+      handRendererLook();
       renderer!.pulseSpacing = params.pulseSpacing;
       renderer!.pulseReach = params.pulseReach;
       renderer!.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
@@ -4021,6 +4041,7 @@ async function main(): Promise<void> {
       ) {
         return;
       }
+      handRendererLook(); // K239: before the update(), not after it.
       renderer!.update();
       if (params.mazeFabric && fabric && fabricController) {
         fabric.update(fabricController);
@@ -4120,6 +4141,7 @@ async function main(): Promise<void> {
       );
       return;
     }
+    handRendererLook(); // K239: a toggle between frames is worn at once.
     renderer.update();
     renderDirty = false;
     // Keep the gameplay overlay locked to the deforming knot.

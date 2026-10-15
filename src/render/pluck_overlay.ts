@@ -60,7 +60,9 @@ import {
   GHOST_HZ,
   GHOST_JITTER,
   GHOST_TINT,
+  HIDE_RAMP,
   KILL_PX,
+  LOBE_MIN_LEN,
   NODE_SLOPE,
   ONSET_STAGGER,
   CLEAR_OVERLAP,
@@ -81,14 +83,15 @@ import {
   roomAt,
   roundCollapse,
   roundTau,
-  segmentLobes,
   slopeLimitUniform,
   softMin,
   sympatheticAmplitude,
   tapAmplitude,
+  tapLobes,
   throughStation,
   unionGapIds,
   unitShift,
+  vibratingSpan,
   visualTau,
   wholeAmplitude,
   wholeRoom,
@@ -165,6 +168,12 @@ export interface PluckHost {
   baseSampleCount(chain: number): number;
 }
 
+// Why an add() drew nothing (PluckOverlay.lastSkip): the chain is mid-reveal
+// ("hot"), the tapped stretch lies inside a junction core ("core"), the unit
+// holds a dragged particle ("held"), or anything else ("other": no samples,
+// a lobe too short to exist, pluckSize 0, a failed layout).
+export type PluckSkip = "none" | "hot" | "core" | "held" | "other";
+
 export interface PluckRequest {
   chain: number;
   arc: number; // Where along the chain it was plucked.
@@ -185,7 +194,7 @@ export interface PluckRequest {
 const MAX_STATIONS = 480;
 const STATION_DS = 0.07; // Target station spacing, world arc.
 const MIN_LOBE_STATIONS = 8;
-const LOBE_MIN_LEN = 0.05; // Shorter node pairs are not lobes.
+// (LOBE_MIN_LEN and HIDE_RAMP live in pluck_model.ts with the tap's verdict.)
 const POOL_MAX = 8; // Simultaneous live plucks; the oldest is evicted.
 const EVICT_TIME = 0.05; // Seconds an evicted pluck takes to damp out.
 const STRIP_PAD = 0.04; // World margin past the swept edge (AA ramp).
@@ -207,7 +216,6 @@ const COLLAPSE_RAMP = 0.3;
 // -0.98 -> -0.66 K, keeping 88% of 1 h's integrated thinning; 1.25 was
 // the timid step, 1.75 the next one if 1.5 still reads acute.
 const COLLAPSE_ROUND = 1.5;
-const HIDE_RAMP = 0.1; // Arc over which a hide zone fades back in.
 // Ghost flash guard (WCAG 2.3.1): the ghost's on-screen area is capped.
 const GHOST_AREA_PX = 15000;
 // Under-node clip reach along the partner (world).
@@ -661,17 +669,8 @@ interface Lobe {
   room: Float32Array | null;
 }
 
-// The vibrating span of a node-to-node lobe [s0, s1] (see Lobe.e0/e1).
-function vibratingSpan(
-  s0: number,
-  s1: number,
-  hideA: number,
-  hideB: number
-): [number, number] {
-  const e0 = s0 + (hideA > 0 ? hideA + HIDE_RAMP : 0);
-  const e1 = s1 - (hideB > 0 ? hideB + HIDE_RAMP : 0);
-  return [e0, Math.max(e0, e1)];
-}
+// (A node-to-node lobe's vibrating span, Lobe.e0/e1, is pluck_model's
+// vibratingSpan.)
 
 interface ActivePluck {
   id: number;
@@ -760,6 +759,14 @@ export class PluckOverlay {
     // (the extras are dropped: their gaps would show the cue).
     gapOverflow: 0,
   };
+  // Why the last add() drew nothing ("none": it drew a pluck). Set by every
+  // add(); main.ts calls resetSkip() before renderer.pluck(), which can
+  // return before add() runs, then reads it when that returns false (K235: a
+  // tap inside a junction core, "core", makes no sound either).
+  lastSkip: PluckSkip = "none";
+  resetSkip(): void {
+    this.lastSkip = "none";
+  }
   private host: PluckHost;
   private active: ActivePluck[] = [];
   private free: PluckBlurMesh[] = [];
@@ -846,33 +853,37 @@ export class PluckOverlay {
     }));
   }
 
-  // Start a pluck. Returns false when it is sound-only (a chain mid-
-  // reveal, no samples yet, nothing vibrates, or pluckSize 0).
+  // Start a pluck. Returns false when it draws nothing (a chain mid-
+  // reveal, no samples yet, nothing vibrates, or pluckSize 0); `lastSkip`
+  // says why. Whether the sound still plays is the caller's: main.ts keeps
+  // it for every reason but "core".
   add(req: PluckRequest): boolean {
+    this.lastSkip = "none";
     const host = this.host;
     const samples = host.samples(req.chain);
     if (host.hot(req.chain)) {
       this.stats.skipped++;
       this.stats.skipHot++;
+      this.lastSkip = "hot";
       return false;
     }
     if (!samples || samples.totalLength <= 0 || this.size <= 0) {
       this.stats.skipped++;
       this.stats.skipOther++;
+      this.lastSkip = "other";
       return false;
     }
     const closed = host.closed(req.chain);
     const total = samples.totalLength;
     const nodes = host.nodes(req.chain);
-    const spans = segmentLobes(
-      nodes.map((n) => n.arc),
+    const { spans, tapped, vibrating, core } = tapLobes(
+      nodes,
       total,
       closed,
       req.arc,
       Math.max(0, Math.round(req.reach)),
       req.span ?? null
-    ).filter((s) => s.s1 - s.s0 >= LOBE_MIN_LEN);
-    const tapped = spans.find((s) => s.k === 0);
+    );
     const avoid = req.avoidArc;
     const holds = (s0: number, s1: number): boolean => {
       if (avoid === undefined) return false;
@@ -881,14 +892,16 @@ export class PluckOverlay {
       }
       return false;
     };
-    if (!tapped) {
+    if (!tapped || !vibrating) {
       this.stats.skipped++;
       this.stats.skipOther++;
+      this.lastSkip = "other";
       return false;
     }
     if (spans.some((s) => holds(s.s0, s.s1))) {
       this.stats.skipped++;
       this.stats.skipHeld++;
+      this.lastSkip = "held";
       return false;
     }
     const h = host.halfWidth();
@@ -903,12 +916,15 @@ export class PluckOverlay {
         s.a >= 0 ? nodes[s.a].hide : 0,
         s.b >= 0 ? nodes[s.b].hide : 0
       );
-    const [t0, t1] = span(tapped);
+    const [t0, t1] = vibrating;
     const tapLen = t1 - t0;
-    if (tapLen < LOBE_MIN_LEN) {
-      // The whole plucked stretch sits inside a junction core: sound only.
+    if (core) {
+      // The whole plucked stretch sits inside a junction core: nothing to
+      // draw, and (K235) nothing to sound - main.ts's tapPluck reads
+      // lastSkip. (Before K235 this stayed sound-only.)
       this.stats.skipped++;
       this.stats.skipCore++;
+      this.lastSkip = "core";
       return false;
     }
     const beta = clampBeta(req.beta ?? (req.arc - t0) / tapLen);
@@ -1060,6 +1076,7 @@ export class PluckOverlay {
       this.release(this.active.length - 1, true);
       this.stats.skipped++;
       this.stats.skipOther++;
+      this.lastSkip = "other";
       return false;
     }
     if (!still) {
