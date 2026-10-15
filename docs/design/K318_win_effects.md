@@ -72,6 +72,11 @@ sounds.
   proportional to speed squared times curvature (the centrifugal
   force), so tighter curves bulge more. Built as a `PhysicsHost`
   command, so it works in K7's worker; best after K7's stage 3.
+- **Partial braking** (added 2026-10-14 22:02): a runner that brakes all
+  the way to the curvature cap, v = sqrt(a_lat / kappa), pushes v^2 kappa
+  = a_lat at every curve, so tight curves would not bulge more. Braking
+  only partway, with speed proportional to kappa^(-1/4), keeps the push
+  growing as sqrt(kappa).
 - **The background wake** (Levi's ripple): a ripple runs out
   perpendicular to the route. Emitted all at once it is one band;
   emitted as the runner passes, it forms a boat's V-wake. It needs the
@@ -94,6 +99,11 @@ sounds.
   runner passes each move.
 - **The minotaur (K80)** is knocked tumbling, or bursts into confetti.
 - **Streak milestones** get a bigger show.
+- **A wave by walk distance** (added 2026-10-14 22:02): a pulse spreads
+  through the whole maze from the finish, timed by each sample's walk
+  distance from it.
+- **A postcard** (added 2026-10-14 22:02): an image of the solved maze
+  with the route lit, attached to the share sheet.
 
 ## Where it plugs in
 
