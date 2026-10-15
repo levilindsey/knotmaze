@@ -24,10 +24,13 @@
 
 import {
   Container,
+  ExtensionType,
   Graphics,
   Shader,
   Texture,
+  extensions,
 } from "pixi.js";
+import type { Renderer } from "pixi.js";
 import { createNoise2D, createNoise3D } from "simplex-noise";
 import type { ParticleSystem, CrossingPass } from "../physics/particle_system";
 import type { ColorScheme, SectionRuns } from "../core/section_colors";
@@ -158,6 +161,86 @@ import {
   GapMaskTable,
   defaultGapTexture,
 } from "./gap_mask";
+import { FloatRows, ROW_W } from "./float_rows";
+import {
+  RANGE_FLOATS,
+  SAMP_UPLOAD_STATS,
+  assignWindowLanes,
+  chainCaps,
+  g3Layout,
+  maxRangeEntries,
+  packRadii,
+  packRanges,
+  packSamp,
+  writeChainTexels,
+} from "./samp_table";
+import type { G3Layout } from "./samp_table";
+
+// G3-0 DATA PLANE (K8 stage 2; samp_table.ts is the format): the four
+// page-lifetime tables the SDF ribbons will read - SAMP, RADII, G3 CHAIN,
+// RANGES. Nothing samples them yet, so no shader binds them: G3DataSystem
+// makes each one GPU-resident on the current context (initSource:
+// allocate + full upload) and uploads dirty rows before every render.
+// RibbonRenderer.update() writes the mirrors and flushes (dirty rows only;
+// nothing while asleep, when update() does not run). One live renderer at
+// a time writes them (like the G2 paint tables).
+interface G3Tables {
+  samp: FloatRows;
+  radii: FloatRows;
+  chain: FloatRows;
+  ranges: FloatRows;
+  // RANGES entries in use (a shorter frame zeroes the stale tail).
+  rangeCount: number;
+}
+let G3: G3Tables | null = null;
+function g3Tables(): G3Tables {
+  if (!G3) {
+    G3 = {
+      samp: new FloatRows(ROW_W, 1, SAMP_UPLOAD_STATS),
+      radii: new FloatRows(ROW_W, 1, SAMP_UPLOAD_STATS),
+      chain: new FloatRows(ROW_W, 1, SAMP_UPLOAD_STATS),
+      ranges: new FloatRows(ROW_W, 1, SAMP_UPLOAD_STATS),
+      rangeCount: 0,
+    };
+  }
+  return G3;
+}
+function g3List(t: G3Tables): FloatRows[] {
+  return [t.samp, t.radii, t.chain, t.ranges];
+}
+function g3Flush(): void {
+  if (G3) for (const t of g3List(G3)) t.flush();
+}
+class G3DataSystem {
+  static extension = {
+    type: [ExtensionType.WebGLSystem],
+    name: "knotG3Data",
+    priority: 0,
+  };
+  private readonly renderer: Renderer;
+  // Tables with a GL texture on the current context.
+  private readonly resident = new Set<FloatRows>();
+  constructor(renderer: Renderer) {
+    this.renderer = renderer;
+  }
+  prerender(): void {
+    if (!G3) return;
+    for (const t of g3List(G3)) {
+      if (!this.resident.has(t)) {
+        this.renderer.texture.initSource(t.source);
+        this.resident.add(t);
+      } else {
+        t.flush();
+      }
+    }
+  }
+  // A restored context starts without textures: re-create and re-upload.
+  contextChange(): void {
+    this.resident.clear();
+  }
+  destroy(): void {}
+}
+extensions.add(G3DataSystem);
 
 export interface RibbonStyle {
   threadWidth: number; // In lattice units.
@@ -1035,6 +1118,19 @@ export class RibbonRenderer {
   private collapseScratch = new Map<number, Float32Array>();
   // update() calls so far (probes: a render-only pluck must add none).
   updateCount = 0;
+  // G3-0 DATA PLANE (module G3 above): this scene's layout in the tables,
+  // each chain's cap kinds (2 per chain), its RADII base or -1 (unit
+  // width) as last written, its RANGES slot windows (base, count), and
+  // the frame's RANGES scratch. `g3Data` false skips every G3 write (A/B
+  // probes: the cost of the data plane in one page).
+  g3Data = true;
+  private g3: G3Layout;
+  private g3Caps: Int32Array;
+  private g3Rad: Int32Array;
+  private g3WinBase: Int32Array;
+  private g3NWin: Int32Array;
+  private g3Accepted: number[] = [];
+  private g3RangeScratch = new Float32Array(256 * RANGE_FLOATS);
   // G2 SHADER PAINT: this scene's data-texture layout, the debug view
   // (probes: 0 off, 1 = ctrl, 2 = arc, 3 / 4 = the fans' per-arm views,
   // 5 = the ribbons' paint terms - see SECTION_FRAG) and the probe
@@ -1385,6 +1481,169 @@ export class RibbonRenderer {
         }
       }
     }
+
+    // G3-0: the scene's table layout and its static per-chain records.
+    const n = ps.chains.length;
+    const closedOf = ps.chains.map((_, i) => ps.chainBreakAfter[i] < 0);
+    this.g3 = g3Layout(
+      this.fills.map((f) => f.sampleCount),
+      closedOf
+    );
+    this.g3Caps = new Int32Array(n * 2);
+    this.g3Rad = new Int32Array(n).fill(-1);
+    this.g3WinBase = new Int32Array(n);
+    this.g3NWin = new Int32Array(n);
+    // Caps from each end's kind, as the joinery classifies them (fused:
+    // a tucked round end; else anchored: Stage 7b's square cap; else a
+    // free round tip), whatever the palette mode.
+    const fusedP = new Set<number>();
+    for (const grp of ps.fusedJunctions) for (const p of grp) fusedP.add(p);
+    ps.chains.forEach((chain, i) => {
+      const a = chain[0];
+      const b = chain[chain.length - 1];
+      const [cs, ce] = chainCaps(
+        closedOf[i],
+        fusedP.has(a),
+        ps.isAnchored(a),
+        fusedP.has(b),
+        ps.isAnchored(b)
+      );
+      this.g3Caps[i * 2] = cs;
+      this.g3Caps[i * 2 + 1] = ce;
+    });
+    this.initG3Tables();
+  }
+
+  // Size the G3 tables for this scene and clear its regions (a previous
+  // scene's data must not survive in padding or in an unwritten RADII
+  // region); the CHAIN records start with no windows.
+  private initG3Tables(): void {
+    const T = g3Tables();
+    const L = this.g3;
+    T.samp.ensure(L.sampTexels);
+    T.radii.ensure(L.radTexels);
+    T.chain.ensure(L.chains * 2);
+    T.samp.data.fill(0, 0, L.sampTexels * 4);
+    T.samp.markDirty(0, L.sampTexels);
+    T.radii.data.fill(0, 0, L.radTexels * 4);
+    T.radii.markDirty(0, L.radTexels);
+    T.chain.data.fill(0, 0, L.chains * 2 * 4);
+    this.g3WriteChainRecords();
+    T.chain.markDirty(0, L.chains * 2);
+    if (T.rangeCount > 0) {
+      T.ranges.data.fill(0, 0, T.rangeCount * RANGE_FLOATS);
+      T.ranges.markDirty(0, T.rangeCount);
+      T.rangeCount = 0;
+    }
+  }
+
+  // SAMP and RADII of chain c from this frame's samples and the width
+  // multiplier its strip ribbon received; dirty only where values changed.
+  private g3WriteChain(
+    c: number,
+    samples: SplineSamples,
+    mul: Float32Array | null
+  ): void {
+    const T = G3;
+    const L = this.g3;
+    if (!T || samples.count !== L.count[c]) return;
+    const d = T.samp.data;
+    const p = samples.positions;
+    const base = L.sampBase[c] * 2;
+    const nf = L.count[c] * 2;
+    let f0 = 0;
+    while (f0 < nf && d[base + f0] === p[f0]) f0++;
+    if (f0 < nf) {
+      let f1 = nf - 1;
+      while (f1 > f0 && d[base + f1] === p[f1]) f1--;
+      d.set(p.subarray(f0, f1 + 1), base + f0);
+      T.samp.markDirty((base + f0) >> 2, ((base + f1) >> 2) + 1);
+    }
+    this.g3WriteRadii(c, mul);
+  }
+
+  private g3WriteRadii(c: number, mul: Float32Array | null): void {
+    const T = G3;
+    const L = this.g3;
+    if (!T) return;
+    if (!mul) {
+      this.g3Rad[c] = -1;
+      return;
+    }
+    this.g3Rad[c] = L.radBase[c];
+    const rd = T.radii.data;
+    const rb = L.radBase[c];
+    const h = this.style.threadWidth / 2;
+    const count = L.count[c];
+    let k0 = -1;
+    let k1 = -1;
+    for (let k = 0; k < count; k++) {
+      const v = Math.fround(h * mul[k]);
+      if (rd[rb + k] !== v) {
+        rd[rb + k] = v;
+        if (k0 < 0) k0 = k;
+        k1 = k;
+      }
+    }
+    if (k0 >= 0) T.radii.markDirty((rb + k0) >> 2, ((rb + k1) >> 2) + 1);
+  }
+
+  // Every chain's two G3 CHAIN texels; marks the changed span.
+  private g3WriteChainRecords(): void {
+    const T = G3;
+    const L = this.g3;
+    if (!T) return;
+    const cd = T.chain.data;
+    let c0 = -1;
+    let c1 = -1;
+    for (let c = 0; c < L.chains; c++) {
+      const wb = this.g3WinBase[c];
+      const nw = this.g3NWin[c];
+      if (
+        writeChainTexels(
+          cd,
+          c,
+          L.sampBase[c],
+          this.g3Rad[c],
+          this.g3Caps[c * 2],
+          this.g3Caps[c * 2 + 1],
+          wb,
+          nw,
+          wb + nw,
+          0
+        )
+      ) {
+        if (c0 < 0) c0 = c;
+        c1 = c;
+      }
+    }
+    if (c0 >= 0) T.chain.markDirty(c0 * 2, c1 * 2 + 2);
+  }
+
+  // This frame's RANGES (the scratch, `entries` long) into the table:
+  // copies and marks only the changed span, zeroes a shorter frame's stale
+  // tail; then the CHAIN records.
+  private g3WriteRanges(entries: number): void {
+    const T = G3;
+    if (!T) return;
+    T.ranges.ensure(Math.max(entries, T.rangeCount));
+    const d = T.ranges.data;
+    const s = this.g3RangeScratch;
+    const nf = entries * RANGE_FLOATS;
+    let f0 = 0;
+    while (f0 < nf && d[f0] === s[f0]) f0++;
+    if (f0 < nf) {
+      let f1 = nf - 1;
+      while (f1 > f0 && d[f1] === s[f1]) f1--;
+      d.set(s.subarray(f0, f1 + 1), f0);
+      T.ranges.markDirty(f0 >> 2, (f1 >> 2) + 1);
+    }
+    if (T.rangeCount > entries) {
+      d.fill(0, nf, T.rangeCount * RANGE_FLOATS);
+      T.ranges.markDirty(entries, T.rangeCount);
+    }
+    T.rangeCount = entries;
+    this.g3WriteChainRecords();
   }
 
   // Knot-mode chain color: the historic per-strand tint (hue by hueGroup
@@ -2524,13 +2783,15 @@ export class RibbonRenderer {
       this.kcv[i] = kChain(this.kd, i, this.kcv[i]);
       const width = this.widthMulFor(i, samples);
       this.widthLast[i] = width;
+      const mul = this.withPluckCollapse(i, samples.count, width);
       this.fills[i].update(
         samples.positions,
         samples.tangents,
         this.style.threadWidth / 2,
         0,
-        this.withPluckCollapse(i, samples.count, width)
+        mul
       );
+      if (this.g3Data) this.g3WriteChain(i, samples, mul);
     });
     const fillHalf = this.style.threadWidth / 2;
     const gap = (this.style.casingWidth - this.style.threadWidth) / 2;
@@ -2616,6 +2877,7 @@ export class RibbonRenderer {
     this.exploreUpdatePending = false;
     this.gaps.upload();
     this.paintScene.flushGeom();
+    if (this.g3Data) g3Flush();
     this.drawRevealTips();
   }
 
@@ -3477,8 +3739,12 @@ export class RibbonRenderer {
   // both ends - the fragment's exact arc test does the real windowing,
   // independent of the flat-varying provoking-vertex convention) get the
   // slot in ONE component, free across the whole range, so the per-quad
-  // value is consistent. Uploads only chains whose ids changed.
+  // value is consistent. Uploads only chains whose ids changed. The lane
+  // packing is samp_table.ts assignWindowLanes (moved verbatim); G3-0 also
+  // packs each chain's kept windows into the frame's RANGES.
   private assignGapIds(): void {
+    const g3 = this.g3Data && G3 !== null;
+    let entries = 0;
     for (let c = 0; c < this.fills.length; c++) {
       const fill = this.fills[c];
       const count = fill.sampleCount;
@@ -3487,49 +3753,42 @@ export class RibbonRenderer {
         ids = new Float32Array(count * GAP_SLOTS);
         this.idScratch.set(c, ids);
       }
-      ids.fill(-1);
-      const wins = this.chainWins.get(c);
       const samples = this.chainSamples[c];
-      if (wins && samples && samples.totalLength > 0) {
-        const closed = samples.closed;
-        const per = (closed ? count : count - 1) / samples.totalLength;
-        for (let w = 0; w < wins.length; w += 4) {
-          const slot = wins[w];
-          // Samples are uniform in arc, so floor/ceil already cover every
-          // quad the window touches; one sample of padding absorbs rounding.
-          let k0 = Math.floor((wins[w + 1] - wins[w + 2]) * per) - 1;
-          let k1 = Math.ceil((wins[w + 1] + wins[w + 3]) * per) + 1;
-          if (!closed) {
-            k0 = Math.max(0, k0);
-            k1 = Math.min(count - 1, k1);
-          } else if (k1 - k0 + 1 >= count) {
-            k0 = 0;
-            k1 = count - 1;
-          }
-          let comp = -1;
-          for (let cc = 0; cc < GAP_SLOTS && comp < 0; cc++) {
-            let free = true;
-            for (let k = k0; k <= k1; k++) {
-              const kk = closed ? ((k % count) + count) % count : k;
-              if (ids[kk * GAP_SLOTS + cc] >= 0) {
-                free = false;
-                break;
-              }
-            }
-            if (free) comp = cc;
-          }
-          if (comp < 0) {
-            this.gapOverflow++;
-            continue;
-          }
-          for (let k = k0; k <= k1; k++) {
-            const kk = closed ? ((k % count) + count) % count : k;
-            ids[kk * GAP_SLOTS + comp] = slot;
-          }
+      const closed = samples ? samples.closed : false;
+      this.gapOverflow += assignWindowLanes(
+        this.chainWins.get(c),
+        count,
+        closed,
+        samples ? samples.totalLength : 0,
+        GAP_SLOTS,
+        ids,
+        g3 ? this.g3Accepted : null
+      );
+      if (g3) {
+        const need =
+          (entries + maxRangeEntries(this.g3Accepted.length / 4)) *
+          RANGE_FLOATS;
+        if (need > this.g3RangeScratch.length) {
+          const next = new Float32Array(
+            Math.max(need, this.g3RangeScratch.length * 2)
+          );
+          next.set(this.g3RangeScratch);
+          this.g3RangeScratch = next;
         }
+        const n = packRanges(
+          this.g3Accepted,
+          count,
+          closed,
+          this.g3RangeScratch,
+          entries
+        );
+        this.g3WinBase[c] = entries;
+        this.g3NWin[c] = n;
+        entries += n;
       }
       fill.setMaskIds(ids);
     }
+    if (g3) this.g3WriteRanges(entries);
   }
 
   // Install a scheme's section runs (core/section_colors buildSectionRuns)
@@ -4210,13 +4469,24 @@ export class RibbonRenderer {
   private reextrude(chain: number): void {
     const samples = this.chainSamples[chain];
     if (!samples) return;
+    const mul = this.withPluckCollapse(
+      chain,
+      samples.count,
+      this.widthLast[chain] ?? null
+    );
     this.fills[chain].update(
       samples.positions,
       samples.tangents,
       this.style.threadWidth / 2,
       0,
-      this.withPluckCollapse(chain, samples.count, this.widthLast[chain] ?? null)
+      mul
     );
+    // G3-0: the collapse is part of the chain's radii.
+    if (this.g3Data && G3) {
+      this.g3WriteRadii(chain, mul);
+      this.g3WriteChainRecords();
+      g3Flush();
+    }
   }
 
   // The thread's composed color at an arc, 0..1 RGB: the section color,
@@ -4835,6 +5105,124 @@ export class RibbonRenderer {
       uploadBytes: GAP_UPLOAD_STATS.bytes,
       uploadCalls: GAP_UPLOAD_STATS.calls,
       shapedSlots,
+    };
+  }
+
+  // G3-0 probes: the data plane's state and its upload accounting
+  // (SAMP_UPLOAD_STATS: every byte and call the four G3 tables sent).
+  g3DataState(): {
+    on: boolean;
+    uploadBytes: number;
+    uploadCalls: number;
+    chains: number;
+    sampTexels: number;
+    radTexels: number;
+    rangeEntries: number;
+    rows: number[];
+    radOn: number;
+  } {
+    const T = G3;
+    let radOn = 0;
+    for (let c = 0; c < this.g3.chains; c++) if (this.g3Rad[c] >= 0) radOn++;
+    return {
+      on: this.g3Data,
+      uploadBytes: SAMP_UPLOAD_STATS.bytes,
+      uploadCalls: SAMP_UPLOAD_STATS.calls,
+      chains: this.g3.chains,
+      sampTexels: this.g3.sampTexels,
+      radTexels: this.g3.radTexels,
+      rangeEntries: T ? T.rangeCount : 0,
+      rows: T ? g3List(T).map((t) => t.rows) : [],
+      radOn,
+    };
+  }
+
+  // G3-0 probes: the four tables (mirror `data`, GPU `source`).
+  g3TableRows(): FloatRows[] {
+    return G3 ? g3List(G3) : [];
+  }
+
+  // G3-0 probes: every table packed afresh from the renderer's current
+  // state by samp_table.ts's packers - what the incrementally written
+  // mirrors and the GPU textures must hold (RADII only for chains whose
+  // CHAIN record names a radius region, `radOn`).
+  g3Expected(): {
+    samp: Float32Array;
+    radii: Float32Array;
+    radOn: number[];
+    chain: Float32Array;
+    ranges: Float32Array;
+    entries: number;
+  } {
+    const L = this.g3;
+    const samp = new Float32Array(L.sampTexels * 4);
+    const radii = new Float32Array(L.radTexels * 4);
+    const chain = new Float32Array(L.chains * 2 * 4);
+    const radOn: number[] = [];
+    const winBase = new Int32Array(L.chains);
+    const nWin = new Int32Array(L.chains);
+    const radB = new Int32Array(L.chains).fill(-1);
+    let ranges = new Float32Array(1024);
+    let entries = 0;
+    const acc: number[] = [];
+    const h = this.style.threadWidth / 2;
+    for (let c = 0; c < L.chains; c++) {
+      const s = this.chainSamples[c];
+      const count = L.count[c];
+      if (s && s.count === count) {
+        packSamp(samp, L.sampBase[c], s.positions, count);
+        const mul = this.withPluckCollapse(
+          c,
+          count,
+          this.widthLast[c] ?? null
+        );
+        if (mul) {
+          packRadii(radii, L.radBase[c], h, mul, count);
+          radB[c] = L.radBase[c];
+          radOn.push(c);
+        }
+      }
+      const ids = new Float32Array(count * GAP_SLOTS);
+      assignWindowLanes(
+        this.chainWins.get(c),
+        count,
+        s ? s.closed : false,
+        s ? s.totalLength : 0,
+        GAP_SLOTS,
+        ids,
+        acc
+      );
+      const need = (entries + maxRangeEntries(acc.length / 4)) * RANGE_FLOATS;
+      if (need > ranges.length) {
+        const next = new Float32Array(need * 2);
+        next.set(ranges);
+        ranges = next;
+      }
+      winBase[c] = entries;
+      nWin[c] = packRanges(acc, count, s ? s.closed : false, ranges, entries);
+      entries += nWin[c];
+    }
+    for (let c = 0; c < L.chains; c++) {
+      writeChainTexels(
+        chain,
+        c,
+        L.sampBase[c],
+        radB[c],
+        this.g3Caps[c * 2],
+        this.g3Caps[c * 2 + 1],
+        winBase[c],
+        nWin[c],
+        winBase[c] + nWin[c],
+        0
+      );
+    }
+    return {
+      samp,
+      radii,
+      radOn,
+      chain,
+      ranges: ranges.slice(0, entries * RANGE_FLOATS),
+      entries,
     };
   }
 
