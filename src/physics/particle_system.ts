@@ -557,7 +557,7 @@ export class ParticleSystem {
   private jnCoverId: Int32Array = new Int32Array(0);
   private jnCoverCov: Float32Array = new Float32Array(0);
   private jnCover: JunctionCover | null = null;
-  protected topology!: SegmentTopology;
+  private topology!: SegmentTopology;
   private emergentCollector = {
     data: new Float32Array(EMERGENT_MAX * 4),
     n: 0,
