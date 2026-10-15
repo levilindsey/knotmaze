@@ -15,6 +15,16 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K264** · The hover rim's width (K248, merged 6588ec0): `RIM_EDGE`
+  0.7 / 0.85 (built) / 1.0 of the thread's half-width. 0.7 is thinner;
+  at 1.0 the two rims meet on the center line and the thread reads as
+  whitened. Sheets `.claude/probes/K111/stage3/sheet/` (sent 2026-10-14
+  about 14:56); `docs/design/K111.md` ("Stage 3 handoff").
+- **K265** · High contrast's highlight now that the modes are gone
+  (K248): keep the pulses on the choices (built), or give it a look of
+  its own (stage 2's contrast mode was flat white with a black center
+  line)? Asked 2026-10-14 about 14:56; `docs/design/K111.md` ("Stage 3
+  handoff").
 - **K261** · K74 stage 2's two calls (stage 2 builds the recommended
   defaults unless Levi answers first): (1) the H-cut share's default:
   the largest measured share that keeps decision 1's greedy bar, 1 if
@@ -97,11 +107,15 @@ and never reused.
   `.claude/probes/K111/out/` (`desktop_hc_off_panel_open.png`,
   `desktop_hc_on_panel_open.png`, the `_panel_closed` and `_canvas`
   pairs, `desktop_both_on_panel_open.png`, and the same with `phone_`).
-- **K237** · K145's hover glow (merged 2026-10-14 11:55, 56b6f2d): keep
-  `hoverGlow` at 0.4, and keep it daily-exempt (K57) as built? Sheet
-  `.claude/probes/K145/sheet2/sheet_b.png` (mouse and touch at 0, 0.25,
-  0.4 and 0.6), zooms `sheet2/zoom_s0.png`, `zoom_s0.4.png` and
-  `zoom_s0.6.png`.
+- **K237** · The hover rim's strength (K145's `hoverGlow`, reshaped by
+  K248 in 6588ec0): keep the default at 0.4, and keep it daily-exempt
+  (K57) as built? The new rim is about 1.3x brighter at the edge on
+  desktop and 1.5x on the phone, and wider, so 0.4 now reads like the
+  old 0.5-0.6; 0.3 restores K145's brightness, and from 0.6 up it reads
+  as a white outline. Sheets
+  `.claude/probes/K111/stage3/sheet/K111_rim_desktop.png` and
+  `K111_rim_phone.png` (strengths 0.25-1; sent to Levi 2026-10-14 about
+  14:56); K145's `.claude/probes/K145/sheet2/sheet_b.png`.
 - **K229** · K92 put the mode badge on its own row below the undo
   buttons while the panel is open (his spec), so the open panel now
   starts 90 px from the top on the desktop and 100 on phones (was 50):
@@ -231,21 +245,24 @@ and never reused.
     greedy bands as difficulty params (decision 7), then the target band
     (greedy >= 2.5x optimal, <= 15% within 1.5x; decision 1) checked at
     the defaults.
-  - owner: nobody since 2026-10-13 16:20 (stage 1's agent
-    `afe7e8d13a4b8112b` finished; its worktree
-    `.claude/worktrees/agent-afe7e8d13a4b8112b` is kept for follow-ups).
-  - branch: mainline; last commit: `8ba0c32`.
+  - owner: claude agent a2c61932e9e358104 (opus) of session d8031183,
+    stage 2, started 2026-10-14 15:00 with a 2 h cap (about 17:00; ports
+    5710-5719). Stage 1's agent `afe7e8d13a4b8112b` finished; its
+    worktree `.claude/worktrees/agent-afe7e8d13a4b8112b` is kept.
+  - branch: `worktree-agent-a2c61932e9e358104`
+    (`.claude/worktrees/agent-a2c61932e9e358104`), from 6588ec0; last
+    commit: none yet (unpushed).
   - evidence: `.claude/probes/K74/` (stage 1: `out/analyze_stage1.txt`,
     `out/phys1.jsonl`, `out/verify_*.txt`, `out/k47_refuse.txt`, the
     sheet; the design's `out/scan_final.jsonl` and the hooked plan copy
     `proto_plan_src.ts`); the design agent's worktree
     `.claude/worktrees/agent-aeaf1e61bcecaaf0b` is kept. Fisher's books,
     Abbott's essays and Buck's book-only chapters are unverified (doc
-    section 1).
-  - next: launch stage 2 (H1 with its share slider; opus, 2 h, ports
-    5710-5719, probes `.claude/probes/K74/stage2/`) at the next free
-    code slot. Its brief (7a8aa1b) was reviewed and merged 2026-10-14
-    14:38; its two calls are K261. K80's call 6 (Levi, 14:31:
+    section 1). Stage 2 writes `.claude/probes/K74/stage2/`.
+  - next: the brief's stage 2 (the fused arm cut in `applyMazeCuts`
+    behind `hCutShare`; shares 0, 0.5 and 1 measured on dailies 1-80; a
+    new pin of the applied maze). Its two calls are K261, built at the
+    recommendations until Levi answers. K80's call 6 (Levi, 14:31:
     "Absolutely"): dead ends are the
     minotaur's hunting ground. Dead-end branches, several runs behind
     one bridge, would make deeper traps: a later K74 param, settled with
@@ -465,26 +482,6 @@ and never reused.
     program; the gap and joint censuses).
   - brief: `docs/design/K76.md` ("Stage 2b"), then
     `docs/design/K76_reveal_mode.md`.
-- **K248** · Levi's highlight pick (2026-10-14 about 13:28, answering
-  which of K111 stage 2's modes stay): the choices keep the pulses and a
-  hovered choice keeps today's look; `highlightMode` and its glow, rims
-  and contrast modes go (a codec removal, so CODEC_VERSION bumps); a
-  hover away from the choices (K145's hover glow) gets a new rim,
-  brightest at the thread's edge and fading toward its center, wider,
-  nothing outside the thread or the run. Stage 3 builds it with K236's
-  (c) and (d), and sheets `hoverGlow` 0.25-1 for K237's default.
-  - owner: claude agent a39facd348b84a113 (opus) of session d8031183, stage 3,
-    started 2026-10-14 14:04 with a 2 h cap (about 16:05; ports
-    5700-5709). Stages 1 and 2 were agent a98c345abb522e151 (its
-    worktree is kept).
-  - branch: `worktree-agent-a39facd348b84a113`
-    (`.claude/worktrees/agent-a39facd348b84a113`), from af0f054; last commit:
-    none yet (unpushed).
-  - evidence: stage 2's `.claude/probes/K111/stage2/` and K145's
-    `.claude/probes/K145/`; stage 3 writes `.claude/probes/K111/stage3/`.
-  - next: the brief's stage 3 (remove the modes, the new hover rim and
-    its mirror, K236 (c) and (d), the hoverGlow sheet).
-  - brief: `docs/design/K111.md` ("Stage 3").
 
 ## Next, in order
 
@@ -520,17 +517,17 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K111 stage 3 (K248) from 14:04 (opus, 2 h),
-K80 turns stage 1 from 14:06 (opus, 2 h) and K76 stage 2b from 14:17
-(opus, 2 h). At about 10:57 Levi lifted
+(he may reorder). Running: K80 turns stage 1 from 14:06 (opus, 2 h),
+K76 stage 2b from 14:17 (opus, 2 h) and K74 stage 2 from 15:00 (opus,
+2 h). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
 (the rules split), K93, K198 stage 1, K98 and K92 merged at
 08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, K191 at 12:04,
 K235 + K239 at 12:44, K174 at 12:53, K111 stage 2 at 13:03, K198
-stage 2 at 14:03, K193 at 14:10, K76 stage 2a at 14:15 and the
-burn-race and K74 stage 2 briefs at 14:38; the
+stage 2 at 14:03, K193 at 14:10, K76 stage 2a at 14:15, the
+burn-race and K74 stage 2 briefs at 14:38 and K111 stage 3 at 14:58; the
 coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -554,7 +551,8 @@ files at their merges. Then, as code slots free up:
 8. K92 + K224: merged 2026-10-14 (e78ddcc). K111 stage 1 (the panel):
    merged 2026-10-14 (0e5a138..9c6cab3), and its stage 2, the highlight
    modes, at 13:03 (36d280a..5438a60); Levi picked at about 13:28, and
-   stage 3 builds the pick (K248).
+   stage 3 built the pick (K248), merged at 14:58 (365bc45..6588ec0);
+   its calls are K264, K265 and K237.
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
     coordinator; Levi may reorder): K174's controls (merged 2026-10-14
@@ -567,7 +565,9 @@ files at their merges. Then, as code slots free up:
 11. K76 stage 2, in four stages (`docs/design/K76.md`, bcb969e): 2a (the
     re-base, the model, the paint variant) merged at 14:15; 2b (crossing
     gaps and junction joints, brief c45a894) runs from 14:17; 2c and 2d
-    follow, each from the handoff before it.
+    follow, each from the handoff before it. 2c's codec removal is
+    version 6, since K111 stage 3 took 5 (the codec note in
+    `docs/design/K76_reveal_mode.md` still says 5).
 12. K80's turn-aligned hunter, a modifier of the normal maze, in three
     stages (`docs/design/K80_turns.md`, 7699995): stage 1 (the model and
     the mode) runs from 14:06; then K137's toggles, K138's M mechanisms
@@ -577,9 +577,8 @@ files at their merges. Then, as code slots free up:
     turns stage 1 merges, and never alongside another agent changing
     how a tap becomes a turn. Then the spider (its own enemy; Levi,
     2026-10-14 about 11:10).
-14. K74 stages 2-4, each after the one before. Stage 2's brief
-    (`docs/design/K74.md`, 7a8aa1b) launches at the next free code
-    slot.
+14. K74 stages 2-4, each after the one before. Stage 2
+    (`docs/design/K74.md`, 7a8aa1b) runs from 15:00 (opus, 2 h).
 15. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
     K42. K90's spline fix touches K8: never run the two at once.
 16. K115's builder stages (no stage 1a: Levi, about 15:30).
@@ -837,6 +836,18 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K266** · The hover rim's short-run limits (K248): runs shorter than
+  2 x rimGap (1.95 world at the defaults) never glow, because the end
+  gaps meet, and a short run whose lit window sits under a crossing's
+  over thread shows nothing (seen on run 187). Probe note:
+  `census_rim.mjs`'s open-chain terminal sample (k = 235, inside the end
+  gap) reads a probe triangle on both builds; the rim is 0 there.
+  `docs/design/K111.md` ("Stage 3 handoff").
+- **K267** · Stale highlight-mode mentions after K248: `highlightMode`
+  and "highlight modes" in `docs/design/` (K76, K76_reveal_mode, K174,
+  K193, K198, levi_notes_2026-10-13), and the rules files' historical
+  `.J` probe links (gameplay-motion, probes-phone, render-pluck,
+  probes.md's K80 bullet), v4 links that now load with a warning.
 - **K263** · `minotaur.ts` exports `undoAllowed`, but nothing in `src`
   calls it and no move undo exists for it to turn off, while
   `docs/design/K80_turns.md` step 2 cites it as real time's behavior.
@@ -874,11 +885,6 @@ K5-K7 (split, frame loop, worker) follow.
   time-based since stage 2); (b) the head's 0.45 s show delay rests on
   five measured blips, the longest 0.33 s; the next phone pass (K156)
   can check more. `docs/design/K198.md` ("Stage 2 handoff").
-- **K249** · K111's rims and contrast modes stop hard at junction webs
-  and fans: the arm strips carry no across coordinate and there is no
-  K145-style end-gap fade, so rims leave the webs unlit and contrast
-  paints them flat white. Overlaps K236 (b). `docs/design/K111.md`
-  ("Stage 2 handoff").
 - **K246** · K174's residuals (`docs/design/K174.md`, "Stage 1
   handoff"): pace links aren't clamped, so an old probe link like
   `mhp=25` now means 25x the player's pace; the K80 rt probes in the
@@ -901,14 +907,15 @@ K5-K7 (split, frame loop, worker) follow.
   passed twice, the head on the second arrival) and a full web restored
   on load are unit-tested only; the knot and fog A/B against stage 1 was
   not rerun (byte identity covers it; no shader change).
-- **K236** · K145's hover glow misses four places
-  (`docs/design/K93_K145.md`, "Stage 2 handoff (resumed)"): (a) a
-  pluck's overlay hides it on the plucked run (`composedAtArc` has no
-  coordinate across the width); (b) webs, fans and arm strips never
-  glow; (c) runs shorter than about 2.5 world units glow weakly (the end
-  gap and fade are fixed lengths; an end fade scaled to the run would
-  fix it); (d) debug view 5 doesn't show the rim. A fifth gap, undo not
-  applying it live (`LIVE_EFFECTS`), was fixed in 5438a60 (K111 stage 2).
+- **K236** · K145's hover glow, now K248's rim: a pluck's overlay hides
+  it on the plucked run (`pluckColor` composes one color per arc with no
+  coordinate across the width; the fix needs an across varying in the
+  overlay strip and an across-aware compose in the mirror). Of its other
+  gaps, (b) webs, fans and arm strips never glowing is now the design
+  (Levi: "clipped to not show anything outside the segment bounds"), and
+  (c) the short-run fade and (d) view 5 were done in 3321592 (K111 stage
+  3). `docs/design/K111.md` ("Stage 3 handoff"),
+  `docs/design/K93_K145.md`.
 - **K234** · `scripts/phone_pass.ps1`'s `-Phase check` and `-WaitReady`
   treat a phone in use as ready. Round 2026-10-14b's agent saw Gmail in
   front at 10:10 and waited by hand for 120 s without user activity
@@ -1343,9 +1350,6 @@ K5-K7 (split, frame loop, worker) follow.
   warm-up before the bench, or a temperature column in the summary,
   would separate heat from noise (`docs/design/K193.md`, "Stage 1
   handoff").
-- **K250** · The steady highlight modes (glow, rims, contrast) repaint
-  every frame after their fade-in; an idle-render check could skip those
-  frames (K111 stage 2; `docs/design/K111.md`, "Stage 2 handoff").
 - **K247** · K174's ideas: readable labels in the Minotaur folder (the
   `mino*` keys clip, K246); a catch toast that says the fog came back;
   for more than about 2/3 of games to meet the minotaur, homing or the
@@ -1556,6 +1560,24 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K248** · Levi's highlight pick (2026-10-14 about 13:28): the choices
+  keep the pulses and a hovered choice keeps today's look;
+  `highlightMode` and its glow, rims and contrast modes went (codec
+  index 108 `hm` removed, CODEC_VERSION 5); a hover away from the
+  choices gets K145's rim reshaped, brightest at the thread's edge and
+  fading toward its center (`RIM_EDGE` 0.85), with K236's (c) short-run
+  fade and (d) view 5. Done in 365bc45..6588ec0 (2026-10-14 14:58, K111
+  stage 3; 835 tests, same-state A/B 0 px, census max 0.61/255, no GPU
+  cost). Its calls are K264 (width), K265 (High contrast) and K237
+  (strength). Lore `render-paint.md` (HOVER GLOW); brief
+  `docs/design/K111.md` ("Stage 3 handoff"); evidence
+  `.claude/probes/K111/stage3/`; the worktree
+  `.claude/worktrees/agent-a39facd348b84a113` is kept.
+- **K249** · K111's rims and contrast modes stopped hard at junction
+  webs and fans. Dropped 2026-10-14: the modes were removed in 365bc45
+  (K111 stage 3), and the rim stays inside its run by design (K248).
+- **K250** · An idle-render skip for the steady highlight modes.
+  Dropped 2026-10-14: the modes were removed in 365bc45 (K111 stage 3).
 - **K198** · The fit camera's pan and the off-screen indicators, decided
   (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
   just want to be able to pan such that the right edge of the maze is
