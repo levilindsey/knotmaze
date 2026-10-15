@@ -71,7 +71,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
       spray: SPRAY_PER_AMOUNT,
       slow: false,
     });
-    expect(confettiPlan(true, 0.5, false)).toEqual({ rain: 70, spray: 20, slow: false });
+    expect(confettiPlan(true, 0.5, false)).toEqual({ rain: 140, spray: 80, slow: false });
     expect(confettiPlan(true, CONFETTI_AMOUNT_MAX, false)).toEqual({
       rain: RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX,
       spray: SPRAY_CAP,
@@ -88,7 +88,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
     expect(rainScreenScale(1400, 900)).toBeCloseTo(2.059, 3);
     expect(rainScreenScale(1920, 1080)).toBeCloseTo(2.537, 3);
     const desk = confettiPlan(true, 1, false, 1400, 900);
-    expect(desk).toEqual({ rain: 288, spray: SPRAY_PER_AMOUNT, slow: false });
+    expect(desk).toEqual({ rain: 576, spray: SPRAY_PER_AMOUNT, slow: false });
     // A huge screen at the top amount fills the pool exactly.
     expect(rainScreenScale(3840, 2160)).toBe(RAIN_SCREEN_MAX);
     expect(confettiPlan(true, CONFETTI_AMOUNT_MAX, false, 3840, 2160).rain).toBe(RAIN_CAP);
@@ -118,7 +118,7 @@ describe("confettiPlan: how many pieces a finish throws", () => {
     }
   });
 
-  it("drops the rain and keeps a slow 40% spray with reduced motion", () => {
+  it("drops the rain and keeps a slow 10% spray with reduced motion", () => {
     expect(confettiPlan(true, 1, true)).toEqual({ rain: 0, spray: 16, slow: true });
     expect(confettiPlan(true, CONFETTI_AMOUNT_MAX, true)).toEqual({
       rain: 0,

@@ -28,12 +28,15 @@ only with the files it is about; `render.md` lists the area's other files.
   fountain lift, sinking and fading within 1.4-2.4 s; its container
   copies the world root's transform, so the burst stays on the finish
   as the camera moves.
-- COUNTS. Amount 1 (`cfa`, 0-3; `cf` turns it off) = 140 rain pieces on
-  the Pixel 11's 411x753 viewport plus 40 spray pieces. rainScreenScale
+- COUNTS. Amount 1 (`cfa`, 0-3; `cf` turns it off) = 280 rain pieces on
+  the Pixel 11's 411x753 viewport plus 160 spray pieces. K317 (Levi,
+  2026-10-14: "more confetti by default, both from the top, but
+  especially from the finish marker") doubled K140's 140 rain and
+  quadrupled its 40 spray. rainScreenScale
   multiplies the rain by the screen's area in piece areas over the
-  phone's, clamped to [1, 3] (1400x900 -> 288 pieces, 1920x1080 -> 355),
+  phone's, clamped to [1, 3] (1400x900 -> 576 pieces, 1920x1080 -> 710),
   so a desktop is as densely covered as a phone. The pools hold the max
-  (RAIN_CAP 1260, SPRAY_CAP 120), allocated once, with page-lifetime
+  (RAIN_CAP 2520, SPRAY_CAP 480), allocated once, with page-lifetime
   particles and paper texture. The spray's unit is the marker radius
   floored at 16 CSS px (sprayUnit): at the phone's default zoom the
   marker radius is ~7 px, and unit-sized pieces were specks.
@@ -41,8 +44,8 @@ only with the files it is about; `render.md` lists the area's other files.
   saturated hues and a warm white. Not the design's palette: a design's
   gamut is a narrow hue arc that melts into its own threads.
 - REDUCED MOTION (`motion.reduced`): no rain (a full-screen fall is the
-  large-area motion WCAG 2.3.3 asks to avoid), and 40% of the spray (16
-  pieces) at half speed with no spin or flutter. A proposal for Levi
+  large-area motion WCAG 2.3.3 asks to avoid), and 10% of the spray (16
+  pieces at amount 1, as K140 had) at half speed with no spin or flutter. A proposal for Levi
   (`.claude/probes/K140/results/reduced_phone_1b_spray.png`).
 - ANIMATING. Render-only: nothing touches the physics. `confetti.active`
   is a term of sceneAnimating() and goes false when the last piece dies
@@ -64,7 +67,7 @@ only with the files it is about; `render.md` lists the area's other files.
   with eventMode none; the banner and HUD are DOM over the canvas. The
   page probe checks a banner hit-test over the confetti and a ctrl+wheel
   zoom mid-rain.
-- COST (2026-10-14, desktop at 1400x900 dpr 1, K104 and K155 agents
+- COST (2026-10-14, K140's counts, desktop at 1400x900 dpr 1, K104 and K155 agents
   busy; master cb532d5 vs 42f047d, interleaved, 5 reps of 6 s from the
   burst, medians of the rep means). Below the noise floor. At 1x every
   case holds 60 fps (16.67 ms intervals) with frame JS of 9.8 (master),
