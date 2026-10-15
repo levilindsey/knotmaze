@@ -27,7 +27,7 @@
 // open panel is 320 px wide (x 81-401) and runs to the bottom, so no share
 // short of about 70% clears it, which would leave the maze all but off
 // screen: 0.3 moves it 123 px there, and the panel starts closed. See
-// gameplay.md (FIT CAMERA PAN SLACK, K149).
+// gameplay-camera.md (FIT CAMERA PAN SLACK, K149).
 
 export const PAN_SLACK = 0.3;
 

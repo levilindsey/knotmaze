@@ -11,8 +11,8 @@ Lore for the per-pixel crossing gaps (casing masks in the ribbon
 fragment shader), moved verbatim from CLAUDE.md by K45 (2026-10-12).
 The census numbers below are G1's baselines (K42 must hold them). The
 matching probe lore (the implementation-independent census, slot
-attribution, same-state proofs) is in `probes.md`; general render lore
-in `render.md`.
+attribution, same-state proofs) is in `probes-census.md` and
+`probes.md`; general render lore in `render.md`.
 
 ## PER-PIXEL CROSSING GAPS
 

@@ -17,7 +17,7 @@
 // flight) and the band's corner geometry. RibbonRenderer resolves each
 // route against its junction records (rebuildFillets) and draws it.
 //
-// DECISIONS (K81; also in .claude/rules/render.md "Route bands"):
+// DECISIONS (K81; also in .claude/rules/render-routes.md "Route bands"):
 // - A route exists at every vertex of the path's legs, the move in flight
 //   included: both ends of an advancing or retracting run carry the band,
 //   so the gold slides into and out of a junction along the band instead
