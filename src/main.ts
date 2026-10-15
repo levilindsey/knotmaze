@@ -16,16 +16,25 @@ import { FabricMazeController } from "./game/fabric_controller";
 import { buildFire } from "./game/fire";
 import type { Fire } from "./game/fire";
 import {
-  HOLD_DELAY_MS,
+  DIAGONALS,
   HeldKeys,
   KEY_REACH,
+  MoveWait,
+  absorbsChord,
+  chordEdges,
+  chordMap,
+  chordMatters,
   departureVectors,
+  holdDue,
   keyBelongsElsewhere,
   keyDirOf,
+  keyMap,
+  pickChord,
   pickDeparture,
   pickHold,
+  pickMove,
 } from "./ui/key_moves";
-import type { Departure, KeyDir } from "./ui/key_moves";
+import type { Departure, KeyDir, LastPress, WaitingMove } from "./ui/key_moves";
 import { MOVE_PAD_KEY, MovePad, movePadPref } from "./ui/move_pad";
 import { MinotaurChase } from "./game/minotaur";
 import type { ChaseEvent } from "./game/minotaur";
@@ -3141,6 +3150,10 @@ async function main(): Promise<void> {
     if (turnMino && onHead(x, y)) return waitTurn();
     const eid = fabric.edgeAt(x, y, fabricController, pickRadius(pt, true));
     if (eid < 0) return false;
+    // K334: with tapsWait a tap while the dot travels waits for the
+    // arrival, as a key press does; off (the default for now), it snaps
+    // the dot to the run's end.
+    if (tapsWait && fabric.animating) return queueTap(eid);
     return moveAlong(eid);
   };
   // K114: a refused (smoldering) tap's toast, at most once per 1.5 s (a
@@ -3195,6 +3208,10 @@ async function main(): Promise<void> {
   // stats, the chase's inputs). A key still down when the dot arrives
   // takes the next matching run (keyStep, every frame after the move
   // animation), and the choice hover shows that run while the dot travels.
+  // K333: two keys beside each other pressed together are a chord (a
+  // diagonal); a lone key that is ambiguous at its junction waits
+  // CHORD_WINDOW_MS for one. K334: a press while the dot travels waits for
+  // the arrival (the latest press wins) instead of snapping the dot.
   const heldKeys = new HeldKeys();
   let keyHold = false; // A press moved and its key may still be down.
   let keyHoldSince = 0; // performance.now() of that press.
@@ -3212,6 +3229,34 @@ async function main(): Promise<void> {
   let keyQueuedOn = -1;
   let keyQueuedDir = 0;
   let keyHover = false; // The choice hover is the hold's.
+  // What a waiting press was pressed in: a tap, a reset, a catch or a
+  // rebuild since drops it.
+  const keyStamp = () => ({
+    fc: fabricController,
+    chase,
+    turnMino,
+    taps: fabricController?.taps.length ?? 0,
+    inputs: chase?.inputs.length ?? 0,
+    catches: chase?.catches ?? turnMino?.catches ?? 0,
+  });
+  type KeyStamp = ReturnType<typeof keyStamp>;
+  const sameStamp = (a: KeyStamp, b: KeyStamp): boolean =>
+    a.fc === b.fc &&
+    a.chase === b.chase &&
+    a.turnMino === b.turnMino &&
+    a.taps === b.taps &&
+    a.inputs === b.inputs &&
+    a.catches === b.catches;
+  // K333/K334: the move not taken yet (ui/key_moves.ts MoveWait), and the
+  // solve it was made in (keyStep drops it when that changes).
+  const moveWait = new MoveWait();
+  let moveWaitStamp: KeyStamp | null = null;
+  // K333: the last lone press that moved at once (absorbsChord).
+  let keyLast: LastPress | null = null;
+  // K334 (Levi, 2026-10-14: every input waits, so every move animates): a
+  // tap while the dot travels waits for the arrival too. The hook
+  // `__knotKeyMoves().setTapsWait(false)` brings back the snap, for A/Bs.
+  let tapsWait = true;
   const keyPt = new Float32Array(2);
   const keyFlow = new Float32Array(2);
   // A chain's world position as the ribbons draw it (with the flow field).
@@ -3267,10 +3312,12 @@ async function main(): Promise<void> {
     keyHover = eid >= 0;
     if (fabric.setHover(eid)) fabric.update(fabricController);
   };
+  // A waiting press outlives the hold (a quick press mid-move is still
+  // taken on arrival); keyStep drops it when its stamp changes.
   const endKeyHold = (): void => {
     keyHold = false;
     keyQueued = -1;
-    if (keyHover) setKeyHover(-1);
+    if (keyHover && moveWait.waiting === null) setKeyHover(-1);
   };
   const noteKeyMove = (): void => {
     keyHold = true;
@@ -3309,20 +3356,100 @@ async function main(): Promise<void> {
     }
     return fabricController.taps.length > before;
   };
-  // A fresh press (or a pad press): the best match, as a tap. No match
-  // does nothing; a hold already running keeps going.
-  const keyPress = (dir: KeyDir): void => {
+  // A press taken: one key, or a chord (two keys beside each other, oldest
+  // first), from the junction the keys leave from, as a tap. No match does
+  // nothing; a hold already running keeps going. `at`: when its first key
+  // went down.
+  const pressMove = (dirs: readonly KeyDir[], at: number): void => {
     const v = keyVertex();
     if (v === null) return;
-    const p = pickDeparture(keyDepartures(v), dir, { hold: false });
+    const deps = keyDepartures(v);
+    const p = pickMove(deps, dirs, { hold: false });
     if (p.edge < 0) return;
+    const lone = dirs.length === 1 ? dirs[0] : null;
+    const chords = lone ? chordEdges(deps, lone) : {};
+    if (keyHover) setKeyHover(-1);
     if (keyMoveAlong(p.edge)) {
-      keyHoldSince = performance.now();
+      keyHoldSince = at;
       noteKeyMove();
+      keyLast = lone ? { dir: lone, at, edge: p.edge, chords } : null;
     }
+  };
+  // Take a waiting move: keys along what they pick now, or a tap's run.
+  const takeWaiting = (w: WaitingMove | null): void => {
+    if (w === null) return;
+    if (w.edge >= 0) {
+      if (keyHover) setKeyHover(-1);
+      moveAlong(w.edge); // K334: the tap, on the arrival.
+      return;
+    }
+    pressMove(w.dirs, w.at);
+  };
+  // K334: the dot travels (turn by turn; real time queues in the chase, so
+  // nothing waits for it here).
+  const dotMoving = (): boolean => !chase && (fabric?.animating ?? false);
+  // K334: a tap's run while the dot travels waits for the arrival (the
+  // latest press or tap wins). True when it waits.
+  const queueTap = (eid: number): boolean => {
+    if (!moveWait.tap(eid, performance.now(), dotMoving())) return false;
+    moveWaitStamp = keyStamp();
+    return true;
+  };
+  // A fresh press (or a pad press) at `at` (performance.now()).
+  const keyPress = (dir: KeyDir, at: number): void => {
+    if (keyVertex() === null) return;
+    // A press waiting out its window that this key does not join goes
+    // first.
+    takeWaiting(moveWait.before(dir, at));
+    const v = keyVertex();
+    if (v === null) return;
+    const action = moveWait.press(dir, at, {
+      moving: dotMoving(),
+      absorbed:
+        keyLast !== null && absorbsChord(keyLast, dir, at, heldKeys.holds(keyLast.dir)),
+      ambiguous: () => chordMatters(keyDepartures(v), dir),
+    });
+    if (action === "chord") {
+      if (!moveWait.waiting?.queued) takeWaiting(moveWait.takeNow());
+    } else if (action === "queue" || action === "window") {
+      moveWaitStamp = keyStamp();
+    } else if (action === "now") {
+      pressMove([dir], at);
+    }
+  };
+  // K333/K334: the waiting move, every frame. True while it waits (a hold
+  // waits with it) or when it was taken this frame.
+  const stepWaiting = (now: number): boolean => {
+    const w = moveWait.waiting;
+    if (w === null) return false;
+    const v = keyVertex();
+    if (
+      v === null ||
+      !keysLive() ||
+      moveWaitStamp === null ||
+      !sameStamp(moveWaitStamp, keyStamp())
+    ) {
+      moveWait.clear();
+      if (keyHover) setKeyHover(-1);
+      return false;
+    }
+    const moving = dotMoving();
+    const due = moveWait.step(now, moving, (d) => chordMatters(keyDepartures(v), d));
+    if (due === "wait") {
+      // While the dot travels the hover shows what the move takes.
+      if (moving) {
+        setKeyHover(
+          w.edge >= 0 ? w.edge : pickMove(keyDepartures(v), w.dirs, { hold: false }).edge
+        );
+      }
+      return true;
+    }
+    takeWaiting(due);
+    return true;
   };
   // Every frame, after the move animation (or the chase) stepped.
   const keyStep = (): void => {
+    if (stepWaiting(performance.now())) return;
     if (!keyHold) return;
     const fc = fabricController;
     if (
@@ -3376,11 +3503,12 @@ async function main(): Promise<void> {
     const moving = chase
       ? chase.playerMoving || chase.tick === keyHoldTick
       : fabric!.animating;
-    if (moving || performance.now() - keyHoldSince < HOLD_DELAY_MS) {
+    if (!holdDue({ moving, now: performance.now(), since: keyHoldSince })) {
       setKeyHover(pick.edge); // What the hold takes next.
       return;
     }
-    // Arrived: the next run, or the hold stops here (no match, a tie, a
+    // Arrived: the next run on this same frame (a held key chains with no
+    // pause and no snap), or the hold stops here (no match, a tie, a
     // dead-end tip - its only run is the arrival).
     if (pick.edge < 0 || !keyMoveAlong(pick.edge)) {
       endKeyHold();
@@ -3399,20 +3527,22 @@ async function main(): Promise<void> {
     }
     if (keyBelongsElsewhere(e) || !keysLive()) return;
     e.preventDefault();
-    if (!heldKeys.press(id, dir)) return;
-    keyPress(dir);
+    const at = performance.now();
+    if (!heldKeys.press(id, dir, at)) return;
+    keyPress(dir, at);
   });
+  // K333: a key that comes up ends its press's chord window: no second key
+  // is coming.
+  const releaseKey = (id: string): void => {
+    heldKeys.release(id);
+    takeWaiting(moveWait.release((d) => heldKeys.holds(d)));
+    if (heldKeys.size === 0) endKeyHold();
+  };
   // Capture: a keyup always lands, whoever handles it.
-  window.addEventListener(
-    "keyup",
-    (e) => {
-      heldKeys.release(e.code || e.key);
-      if (heldKeys.size === 0) endKeyHold();
-    },
-    true
-  );
+  window.addEventListener("keyup", (e) => releaseKey(e.code || e.key), true);
   const dropKeys = (): void => {
     heldKeys.clear();
+    moveWait.clear();
     endKeyHold();
   };
   window.addEventListener("blur", dropKeys);
@@ -3421,15 +3551,15 @@ async function main(): Promise<void> {
   });
   // K120 Part B: the move pad (ui/move_pad.ts) - each finger on it is a
   // held key; fabricTick shows it while the keys are live.
+  // K333: two fingers on arms beside each other within the window are a
+  // chord, as two keys are.
   const movePad = new MovePad({
     press: (id, dir) => {
-      if (!keysLive() || !heldKeys.press(id, dir)) return;
-      keyPress(dir);
+      const at = performance.now();
+      if (!keysLive() || !heldKeys.press(id, dir, at)) return;
+      keyPress(dir, at);
     },
-    release: (id) => {
-      heldKeys.release(id);
-      if (heldKeys.size === 0) endKeyHold();
-    },
+    release: (id) => releaseKey(id),
   });
 
   // Stage 19 - bounded tug + snap-back, pointer-layer only (the physics
@@ -4982,6 +5112,65 @@ async function main(): Promise<void> {
       holdPick: Object.fromEntries(
         dirs.map((d) => [d, pickHold(deps, [d], arrival)])
       ),
+      // K333: what each chord picks; K333/K334: the move waiting, if any.
+      chord: Object.fromEntries(
+        DIAGONALS.map((g) => [g, pickChord(deps, g, { hold: false })])
+      ),
+      waiting: moveWait.waiting ? { ...moveWait.waiting } : null,
+      tapsWait,
+      setTapsWait: (on: boolean) => {
+        tapsWait = on;
+      },
+      // K329: every junction's lone keys and chords. summary: junctions
+      // where no lone key moves; runs no lone key picks; runs neither a
+      // key nor a chord picks; key-junction pairs that wait the chord
+      // window (chordMatters), and that a wider rule (any chord beside the
+      // key picks another run) would delay.
+      censusPress: () => {
+        if (!walkGraph || !fabric || !ps || !renderer) return null;
+        let junctions = 0;
+        let deadJunctions = 0;
+        let runs = 0;
+        let keyless = 0;
+        let unreachable = 0;
+        let pairs = 0;
+        let waits = 0;
+        let wideWaits = 0;
+        const dead: string[] = [];
+        for (const [id, wv] of walkGraph.vertices) {
+          if (wv.isEnd || wv.edges.length < 2) continue;
+          const jd = keyDepartures(id);
+          if (jd.length < 2) continue;
+          junctions++;
+          const km = keyMap(jd);
+          const cm = chordMap(jd);
+          const byKey = new Set<number>();
+          const byChord = new Set<number>();
+          for (const d of dirs) if (km[d].edge >= 0) byKey.add(km[d].edge);
+          for (const g of DIAGONALS) if (cm[g].edge >= 0) byChord.add(cm[g].edge);
+          if (byKey.size === 0) {
+            deadJunctions++;
+            dead.push(id);
+          }
+          for (const dep of jd) {
+            runs++;
+            if (!byKey.has(dep.edge)) keyless++;
+            if (!byKey.has(dep.edge) && !byChord.has(dep.edge)) unreachable++;
+          }
+          for (const d of dirs) {
+            pairs++;
+            if (chordMatters(jd, d)) waits++;
+            const ce = chordEdges(jd, d);
+            if (Object.values(ce).some((e) => e !== undefined && e >= 0 && e !== km[d].edge)) {
+              wideWaits++;
+            }
+          }
+        }
+        return {
+          summary: { junctions, deadJunctions, runs, keyless, unreachable, pairs, waits, wideWaits },
+          dead,
+        };
+      },
       census: (reaches: number[]) => {
         if (!walkGraph || !fabric || !ps || !renderer) return null;
         const out: Array<Record<string, unknown>> = [];

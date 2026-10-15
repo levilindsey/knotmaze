@@ -1,16 +1,27 @@
 import { describe, expect, it } from "vitest";
 import {
+  absorbsChord,
+  CHORD_WINDOW_MS,
   chordDirection,
+  chordEdges,
+  chordMap,
+  chordMatters,
+  chordOf,
   departureVectors,
   HeldKeys,
+  holdDue,
+  joinsChord,
   KEY_REACH,
   KEY_TIE,
   KEY_TOLERANCE,
   keyBelongsElsewhere,
   keyDirOf,
   keyMap,
+  MoveWait,
+  pickChord,
   pickDeparture,
   pickHold,
+  pickMove,
 } from "../../src/ui/key_moves";
 import type { Departure, PointAt, RunEnds } from "../../src/ui/key_moves";
 
@@ -336,5 +347,319 @@ describe("keyBelongsElsewhere", () => {
     expect(keyBelongsElsewhere({ ...base, target: el(["canvas"]) })).toBe(false);
     // A panel button (a folder title, Reset path) does not use the arrows.
     expect(keyBelongsElsewhere({ ...base, target: el([".tp-rotv", "button"]) })).toBe(false);
+  });
+});
+
+// K329: Levi's link ?qoietk.KaIeBFFfBGVG3x8Mj4, the junction right after the
+// entrance (node_2), as the live maze measured it: four arms near the
+// diagonals. Every key tied between the two arms beside it, nothing was
+// unambiguous, and no key moved.
+const NODE_2 = [dep(15, -50.8), dep(54, 41.9), dep(18, 147.4), dep(53, -138)];
+const keysOf = (m: ReturnType<typeof keyMap>) => [
+  m.up.edge,
+  m.right.edge,
+  m.down.edge,
+  m.left.edge,
+];
+
+describe("K329 tie cycles", () => {
+  it("every key moves at Levi's X (no key did before K329)", () => {
+    const m = keyMap(NODE_2);
+    // Each key the arm clockwise of it: up the up-right arm, right the
+    // down-right, down the down-left, left the up-left (the way back).
+    expect(m.up).toMatchObject({ edge: 15, tied: true, cycle: true });
+    expect(m.right).toMatchObject({ edge: 54, tied: true, cycle: true });
+    expect(m.down).toMatchObject({ edge: 18, tied: true, cycle: true });
+    expect(m.left).toMatchObject({ edge: 53, tied: true, cycle: true });
+    for (const dir of ["up", "right", "down", "left"] as const) {
+      expect(pickDeparture(NODE_2, dir, { hold: false }).edge).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("an X deals its arms clockwise while every key is tied", () => {
+    for (const tilt of [-7, -3, 0, 3, 7]) {
+      const x = [dep(1, -45 + tilt), dep(2, 45 + tilt), dep(3, 135 + tilt), dep(4, -135 + tilt)];
+      expect(keysOf(keyMap(x))).toEqual([1, 2, 3, 4]);
+    }
+    // Past the tie margin each key simply takes the nearer arm.
+    const ccw = [dep(1, -45 + 9), dep(2, 45 + 9), dep(3, 135 + 9), dep(4, -135 + 9)];
+    expect(keysOf(keyMap(ccw))).toEqual([4, 1, 2, 3]);
+    const cw = [dep(1, -45 - 20), dep(2, 45 - 20), dep(3, 135 - 20), dep(4, -135 - 20)];
+    expect(keysOf(keyMap(cw))).toEqual([1, 2, 3, 4]);
+  });
+
+  it("a narrow fork between two keys gives each key the branch on its side", () => {
+    // Two branches 14 degrees apart between up and right, and a run left.
+    const fork = [dep(1, -52), dep(2, -38), dep(3, 180)];
+    const m = keyMap(fork);
+    expect(m.up).toMatchObject({ edge: 1, cycle: true });
+    expect(m.right).toMatchObject({ edge: 2, cycle: true });
+    expect(m.left).toMatchObject({ edge: 3 });
+    expect(m.down).toEqual({ edge: -1, stop: "none" });
+  });
+
+  it("a hold stops where only a tie cycle picked", () => {
+    expect(pickDeparture(NODE_2, "up", { hold: true })).toEqual({ edge: -1, stop: "tie" });
+    expect(pickHold(NODE_2, ["right"], -1)).toEqual({ edge: -1, stop: "tie" });
+    // Arrived along the way back (53): up and left are clear now, and right
+    // and down both take the down-right arm, as before K329.
+    expect(keysOf(keyMap(NODE_2, { exclude: 53 }))).toEqual([15, 54, 54, 18]);
+    expect(pickHold(NODE_2, ["up"], 53)).toMatchObject({ edge: 15 });
+  });
+});
+
+describe("K333 chords", () => {
+  const tee = [dep(0, 0), dep(1, -90), dep(2, 180)];
+
+  it("names a diagonal for two adjacent keys, in either order", () => {
+    expect(chordOf("up", "right")).toBe("upRight");
+    expect(chordOf("right", "up")).toBe("upRight");
+    expect(chordOf("down", "right")).toBe("downRight");
+    expect(chordOf("left", "down")).toBe("downLeft");
+    expect(chordOf("up", "left")).toBe("upLeft");
+    expect(chordOf("up", "down")).toBeNull();
+    expect(chordOf("left", "right")).toBeNull();
+    expect(chordOf("up", "up")).toBeNull();
+  });
+
+  it("picks along the diagonal by the keys' rules", () => {
+    const c = chordMap(NODE_2);
+    expect(c.upRight).toMatchObject({ edge: 15 });
+    expect(c.downRight).toMatchObject({ edge: 54 });
+    expect(c.downLeft).toMatchObject({ edge: 18 });
+    expect(c.upLeft).toMatchObject({ edge: 53 });
+    // A plain T (right, up, left): down + right and down + left take the
+    // side runs, so up + right and up + left, each torn between a side run
+    // and up, take up.
+    expect(pickChord(tee, "downRight", { hold: false })).toMatchObject({ edge: 0 });
+    expect(pickChord(tee, "downLeft", { hold: false })).toMatchObject({ edge: 2 });
+    expect(pickChord(tee, "upRight", { hold: false })).toMatchObject({ edge: 1, tied: true });
+    expect(pickChord(tee, "upLeft", { hold: false })).toMatchObject({ edge: 1, tied: true });
+  });
+
+  it("a press is a chord of two adjacent keys, else the newer key", () => {
+    expect(pickMove(NODE_2, ["up", "left"], { hold: false })).toMatchObject({ edge: 53 });
+    expect(pickMove(NODE_2, ["left", "up"], { hold: false })).toMatchObject({ edge: 53 });
+    expect(pickMove(NODE_2, ["down", "right"], { hold: false })).toMatchObject({ edge: 54 });
+    expect(pickMove(NODE_2, ["up", "down"], { hold: false })).toMatchObject({ edge: 18 });
+    expect(pickMove(NODE_2, ["left"], { hold: false })).toMatchObject({ edge: 53 });
+    expect(pickMove(NODE_2, [], { hold: false })).toEqual({ edge: -1, stop: "none" });
+  });
+
+  it("lists what each chord of a key picks", () => {
+    expect(chordEdges(NODE_2, "up")).toEqual({ left: 53, right: 15 });
+    expect(chordEdges(NODE_2, "right")).toEqual({ up: 15, down: 54 });
+  });
+
+  it("a lone press waits for a chord only where the key alone is unclear", () => {
+    // The X: up alone is a tie cycle's pick, and up + left picks another arm.
+    expect(chordMatters(NODE_2, "up")).toBe(true);
+    // A plain T: every key with a run is clear.
+    for (const k of ["up", "right", "left"] as const) expect(chordMatters(tee, k)).toBe(false);
+    // Nothing goes down, and down's chords find the side runs.
+    expect(chordMatters(tee, "down")).toBe(true);
+    // Up-right, down-right, left: right ties, and its chords pick the
+    // branches.
+    const fork = [dep(1, -40), dep(2, 48), dep(3, 180)];
+    expect(chordMatters(fork, "right")).toBe(true);
+    expect(chordMatters(fork, "up")).toBe(false);
+    // A dead-end tip: no chord picks anything but the one run.
+    expect(chordMatters([dep(3, 0)], "right")).toBe(false);
+  });
+
+  it("joins a second key inside the window", () => {
+    const p = { dirs: ["up"] as const, at: 1000 };
+    expect(joinsChord(p, "right", 1050)).toBe(true);
+    expect(joinsChord(p, "left", 1000 + CHORD_WINDOW_MS)).toBe(true);
+    expect(joinsChord(p, "right", 1001 + CHORD_WINDOW_MS)).toBe(false);
+    expect(joinsChord(p, "down", 1010)).toBe(false); // Opposite.
+    expect(joinsChord(p, "up", 1010)).toBe(false); // The same key.
+    expect(joinsChord({ dirs: ["up", "right"], at: 1000 }, "left", 1010)).toBe(false);
+    expect(joinsChord(null, "up", 0)).toBe(false);
+  });
+
+  it("absorbs a late second key whose chord took the run already taken", () => {
+    const last = { dir: "right" as const, at: 1000, edge: 5, chords: { up: 5, down: 7 } };
+    expect(absorbsChord(last, "up", 1040, true)).toBe(true);
+    expect(absorbsChord(last, "down", 1040, true)).toBe(false); // Another run.
+    expect(absorbsChord(last, "up", 1001 + CHORD_WINDOW_MS, true)).toBe(false);
+    expect(absorbsChord(last, "up", 1040, false)).toBe(false); // First key up.
+    expect(absorbsChord(last, "left", 1040, true)).toBe(false);
+    expect(absorbsChord(null, "up", 1040, true)).toBe(false);
+  });
+
+  it("holds a chord of two keys that went down together", () => {
+    const h = new HeldKeys();
+    h.press("ArrowUp", "up", 1000);
+    expect(h.chord()).toBeNull();
+    h.press("ArrowRight", "right", 1050);
+    expect(h.chord()).toBe("upRight");
+    expect(h.holds("up")).toBe(true);
+    expect(h.holds("down")).toBe(false);
+    h.release("ArrowUp");
+    expect(h.chord()).toBeNull();
+    h.press("KeyW", "up", 1050 + CHORD_WINDOW_MS + 1); // Too late: no chord.
+    expect(h.chord()).toBeNull();
+    const o = new HeldKeys();
+    o.press("ArrowUp", "up", 0);
+    o.press("ArrowDown", "down", 10);
+    expect(o.chord()).toBeNull();
+  });
+
+  it("a held chord steers the hold, and falls back to the keys", () => {
+    // Arrived along 53: up + right goes up-right, down + right down-right.
+    expect(pickHold(NODE_2, ["right", "up"], 53, { chord: "upRight" })).toMatchObject({
+      edge: 15,
+    });
+    expect(pickHold(NODE_2, ["right", "down"], 53, { chord: "downRight" })).toMatchObject({
+      edge: 54,
+    });
+    // Up + left would go back the way it came: excluded, so the keys steer.
+    expect(pickHold(NODE_2, ["left", "up"], 53, { chord: "upLeft" })).toMatchObject({
+      edge: 18,
+    });
+    // A tie cycle on the chord stops the hold.
+    const four = [dep(0, 0), dep(1, -90), dep(2, 180), dep(3, 90)];
+    expect(pickHold(four, ["up", "right"], -1, { chord: "upRight" })).toEqual({
+      edge: -1,
+      stop: "tie",
+    });
+  });
+});
+
+describe("K334 the move wait", () => {
+  const still = { moving: false, absorbed: false, ambiguous: () => false };
+  const travels = { moving: true, absorbed: false, ambiguous: () => false };
+
+  it("a press while the dot travels waits for the arrival, the latest winning", () => {
+    const w = new MoveWait();
+    expect(w.press("up", 0, travels)).toBe("queue");
+    expect(w.press("down", 300, travels)).toBe("queue");
+    expect(w.step(320, true, () => false)).toBe("wait");
+    // Taken on the arrival frame, never before (no snap).
+    expect(w.step(400, false, () => false)).toMatchObject({ dirs: ["down"], edge: -1 });
+    expect(w.waiting).toBeNull();
+  });
+
+  it("a tap while the dot travels waits too, in the same slot", () => {
+    const w = new MoveWait();
+    expect(w.tap(7, 0, false)).toBe(false); // At rest: the tap moves at once.
+    expect(w.tap(7, 10, true)).toBe(true);
+    expect(w.waiting).toMatchObject({ edge: 7, queued: true });
+    // A later key press wins, and a later tap wins over it.
+    w.press("left", 20, travels);
+    expect(w.waiting).toMatchObject({ dirs: ["left"], edge: -1 });
+    w.tap(9, 30, true);
+    expect(w.step(40, true, () => true)).toBe("wait");
+    // A tap's run goes on the arrival frame, chord window or not.
+    expect(w.step(50, false, () => true)).toMatchObject({ edge: 9 });
+  });
+
+  it("a key beside a queued key, inside the window, makes a chord on arrival", () => {
+    const w = new MoveWait();
+    w.press("up", 0, travels);
+    expect(w.press("right", 40, travels)).toBe("chord");
+    expect(w.waiting).toMatchObject({ dirs: ["up", "right"], queued: true });
+    expect(w.step(60, true, () => true)).toBe("wait");
+    expect(w.step(90, false, () => true)).toMatchObject({ dirs: ["up", "right"] });
+    // Too late, or not beside it: the newer key replaces it.
+    w.press("up", 0, travels);
+    w.press("right", CHORD_WINDOW_MS + 1, travels);
+    expect(w.waiting).toMatchObject({ dirs: ["right"] });
+    w.press("left", CHORD_WINDOW_MS + 10, travels);
+    expect(w.waiting).toMatchObject({ dirs: ["left"] });
+  });
+
+  it("on the arrival, a lone key unclear there waits out the rest of its window", () => {
+    const w = new MoveWait();
+    w.press("up", 0, travels);
+    expect(w.step(30, false, () => true)).toBe("wait");
+    expect(w.waiting).toMatchObject({ queued: false });
+    expect(w.step(79, false, () => true)).toBe("wait");
+    expect(w.step(CHORD_WINDOW_MS, false, () => true)).toMatchObject({ dirs: ["up"] });
+    // Clear there: taken on the arrival frame.
+    w.press("up", 0, travels);
+    expect(w.step(30, false, () => false)).toMatchObject({ dirs: ["up"] });
+  });
+
+  it("an unclear press at rest waits the window for a key beside it", () => {
+    const w = new MoveWait();
+    const unclear = { ...still, ambiguous: () => true };
+    expect(w.press("up", 0, unclear)).toBe("window");
+    expect(w.step(40, false, () => true)).toBe("wait");
+    expect(w.press("left", 50, unclear)).toBe("chord");
+    expect(w.takeNow()).toMatchObject({ dirs: ["up", "left"] });
+    // Alone, it goes when the window ends...
+    w.press("up", 0, unclear);
+    expect(w.step(CHORD_WINDOW_MS, false, () => true)).toMatchObject({ dirs: ["up"] });
+    // ...or as soon as its key comes up...
+    w.press("up", 0, unclear);
+    expect(w.release(() => true)).toBeNull();
+    expect(w.release(() => false)).toMatchObject({ dirs: ["up"] });
+    // ...or before any key that does not join it.
+    w.press("up", 0, unclear);
+    expect(w.before("left", 20)).toBeNull(); // It joins.
+    expect(w.before("down", 20)).toMatchObject({ dirs: ["up"] });
+    expect(w.waiting).toBeNull();
+  });
+
+  it("a clear press at rest moves at once; an absorbed key does nothing", () => {
+    const w = new MoveWait();
+    expect(w.press("up", 0, still)).toBe("now");
+    expect(w.press("right", 20, { ...still, absorbed: true })).toBe("absorb");
+    expect(w.waiting).toBeNull();
+  });
+});
+
+describe("K334 a held key chains its moves", () => {
+  const FRAME = 1000 / 60;
+  // main.ts's frame order: the move animation steps, then the keys (the
+  // waiting move first, then the hold). Runs after the first take 12
+  // frames (200 ms). `held`: the frames the key is down.
+  const run = (firstFrames: number, held: number, pressAt = -1) => {
+    const w = new MoveWait();
+    let left = firstFrames; // Frames left in the move in flight.
+    const rest: number[] = [];
+    let moves = 1;
+    const start = (): void => {
+      left = 12;
+      moves++;
+    };
+    for (let f = 1; f <= 90; f++) {
+      const now = f * FRAME;
+      if (f === pressAt) {
+        w.press("up", now, { moving: left > 0, absorbed: false, ambiguous: () => false });
+      }
+      if (left > 0) left--;
+      const moving = left > 0;
+      const due = w.step(now, moving, () => false);
+      if (due !== null && due !== "wait") start();
+      else if (due === null && f <= held && holdDue({ moving, now, since: 0 })) start();
+      if (left === 0) rest.push(f);
+    }
+    return { rest, moves };
+  };
+
+  it("takes the next run on the arrival frame: no frame at rest", () => {
+    const r = run(12, 60);
+    expect(r.rest.filter((f) => f <= 60)).toEqual([]);
+    expect(r.moves).toBe(6);
+  });
+
+  it("a first run shorter than HOLD_DELAY_MS waits for it (a quick press stays one move)", () => {
+    const r = run(6, 60);
+    // Frames 6-11 at rest, then the chain runs on with none.
+    expect(r.rest.filter((f) => f <= 60)).toEqual([6, 7, 8, 9, 10, 11]);
+    expect(holdDue({ moving: false, now: 199, since: 0 })).toBe(false);
+    expect(holdDue({ moving: false, now: 200, since: 0 })).toBe(true);
+    expect(holdDue({ moving: true, now: 900, since: 0 })).toBe(false);
+  });
+
+  it("a press while the dot travels starts on the arrival frame", () => {
+    const r = run(12, 0, 4);
+    // The first move ends on frame 12 and the press's move starts there,
+    // running to frame 24, where the dot comes to rest.
+    expect(r.rest.filter((f) => f <= 30)).toEqual([24, 25, 26, 27, 28, 29, 30]);
+    expect(r.moves).toBe(2);
   });
 });
