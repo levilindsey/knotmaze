@@ -465,28 +465,30 @@ and never reused.
     coordinator checked the K198, K100 and K151 sheets. The looks'
     `storage` field and the walk's `pick` option merged in 8d672ee..b72b3e9
     (10:50).
-  - owner: nobody since 2026-10-14 10:47 (agent ad24cee1cd83ebe88
-    (sonnet) of claude session d8031183, ended at its deadline; its
-    worktree is kept).
-  - branch: mainline (merged in 8d672ee..b72b3e9); last commit: b72b3e9 (the
-    round's handoff in `docs/design/K156.md`).
-  - evidence: `.claude/probes/rounds/2026-10-14-48da84d/` (`pass/summary.md`,
+  - owner: agent a04122e6bc4e56b02 (sonnet) of claude session d8031183,
+    round 2026-10-14c's pass from 18:41 (cap 19:41, or the watchdog's
+    trip) on the phone Levi lent at about 18:35 "for a bit". Round
+    2026-10-14b's agent ad24cee1cd83ebe88 ended 10:47; worktree kept.
+  - branch: worktree `.claude/worktrees/agent-a04122e6bc4e56b02` (from
+    0e865bf); last commit: 0e865bf (the round's brief).
+  - evidence: this round's `.claude/probes/rounds/2026-10-14c-0e865bf/`;
+    round b's `.claude/probes/rounds/2026-10-14-48da84d/` (`pass/summary.md`,
     `pass/looks_report.json`, `pass/sheets/`, its `looks.json`,
     `looks_run.json`, `make_looks.mjs` and the adb recovery logs); the
     morning's `.claude/probes/rounds/2026-10-14-81d31a5/`; 3c's
     `.claude/probes/K156/3c/`.
-  - next: K193's portrait emulation merged 2026-10-14 14:10; its A/A
-    floor waits for a quiet phone (K193's next, K253); then the two
-    borderline load cells again
-    with 3 reps (K232). The next round's pass covers K98 and K92 (K230),
-    runs k140-confetti and the 14 looks dropped for time, and fits its
-    length (K233). Fix the k198
-    `gap` in the round's `make_looks.mjs` (it ignores panX; the real
-    gap is panelLeft - (mazeRight + panX), 9.9 px). Sweep the 3a and 3b
+  - next: round 2026-10-14c runs its brief: looks first (K279's ripple
+    looks, K268's gaps, K98 and K92 (K230), k140-confetti, the 14
+    dropped looks (K233), with the k198 `gap` fixed), then K279's tap
+    and wake cost on the phone, then frames against 48da84d. K253's
+    portrait A/A floor (K193's next) runs only if Levi leaves the phone
+    untouched for 30 minutes (asked at 18:44); then the two borderline load
+    cells again with 3 reps (K232). Sweep the 3a and 3b
     worktrees (`.claude/worktrees/agent-a262df65dcc1489a7`,
     `.claude/worktrees/agent-a957f7f1407f5df9f`) with
     `.claude/probes/K161/cleanup.ps1` (`-DryRun` first).
-  - brief: `docs/design/K156.md`, "Round 2026-10-14b handoff".
+  - brief: `docs/design/K156.md`, "Round 2026-10-14c: the evening
+    window" (0e865bf).
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489). Check that nobody is using the phone first (K234).
 - **K161** · Disk: C: had 24.4 GB free (2026-10-13 about 19:30, before
@@ -739,7 +741,8 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
 (he may reorder). Running: K80 turns stage 2 from 17:40 (cap 19:40)
-and K111 stage 4 from 17:53 (cap 19:53), each opus. K279's stage 2
+and K111 stage 4 from 17:53 (cap 19:53), each opus, and K156's round
+2026-10-14c phone pass from 18:41 (cap 19:41, sonnet). K279's stage 2
 waits for Levi's picks (K288). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
@@ -1077,6 +1080,20 @@ K5-K7 (split, frame loop, worker) follow.
   sheet shows both. The default is gone (Levi, 2026-10-14 about 18:27,
   verbatim: "Gone should be the burnt away dedault").
   `docs/design/K114_burn.md` ("The stages", stage 3).
+- **K292** · Mark the panel's personal settings (Levi, 2026-10-14 about
+  18:40, verbatim: "For local-specific personal preferences vs
+  maze-instance-specific gamemode-altering settings, I was originally
+  thinking it'd be good to keep them in separate sections. But in
+  retrospect, I guess it makes more sense to keep each setting param
+  grouped with its concept. Let's instead give some sort of UI indicator
+  to differentiate between one param type vs the other."). Every row
+  stays in its concept's folder. A personal setting (`DAILY_EXEMPT_KEYS`
+  plus the localStorage prefs: Motion, High contrast, `finishIndicator`,
+  `tapToPan`, the move pad) carries a small mark that a key at the top
+  of the panel and the row's tooltip explain. A sheet of two or three
+  marks for Levi (recommended: a small person glyph after the label).
+  Runs after K111 stage 4 and K80 turns stage 2 merge (both add rows);
+  it replaces K84's separate section, and K57 settles the edge cases.
 
 ## Residuals (known, not fixed)
 
@@ -1750,7 +1767,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K84** · After the churn: a pass over EVERY param (Levi, 2026-10-13).
   - Classify each as a viewer preference (localStorage) or a design param
     (the link).
-  - Move the preferences into their own panel section.
+  - Keep each param in its concept's folder and mark the preferences
+    instead (K292): Levi dropped the separate section on 2026-10-14 at
+    about 18:40.
   - Re-evaluate each param's worth and grouping, and audit names and
     tooltips.
   - Place K73's two viewer preferences, `finishIndicator` and
