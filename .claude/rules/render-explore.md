@@ -441,7 +441,21 @@ gameplay-links.md's EXPLORATION PARAMS.
   and 3 cannot be read: at rest the flow's half-rate update() runs 30
   times a second with the mode OFF too (main thread 9.8 ms a frame, p95
   20.8), and the mode on adds 0.2 ms mean and one update() in 4 s.
-  @@FW0LORE@@ The phone has no GPU timer (PowerVR). THE
+  With `&fw=0` (`phonekit/gate2.mjs`: mode off, then on in a fresh page,
+  6 moves each) the rest is 0 update() calls in both modes (0.3-0.7 ms a
+  frame), so those were the flow's. A move costs 0.5-0.8 ms a frame mean
+  with the mode off and no update(); with it on, 1.5-2.5 ms (p95 2.0-3.5)
+  but 1 to 5 update() calls a move (the first 0.36-0.41 s into a window
+  opened just before the tap, 0.76 s in one move) and a worst frame of
+  23.5-38.8 ms (11.2-20.5 off): 2 FAILS on "no update()" (inferred: the
+  worst frames are those calls; likely source, read from the code and not
+  traced: `applyExploreGaps` sets `exploreUpdatePending` at every slot
+  flip, K76.md's stage 2d handoff). No rAF interval
+  over 33.4 ms; four over 20 ms in the first move, none in the other
+  five. So 3 shows no doubled interval at the arrivals, but the arrival
+  frame's own cost was not isolated, and Chrome can keep vsync-aligned
+  rAF stamps through a late main-thread frame (inferred). The phone has
+  no GPU timer (PowerVR). THE
   HELD FRAME (`k76c_probe.mjs` D, HELD_T 9 and 12.5): the hold lasts
   about 7 s before the 1.6 s close-in (7.0 s desktop, 6.9 s phone-size,
   6.7 s on the phone), most of it on the whole-maze fit while the
