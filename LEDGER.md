@@ -15,6 +15,12 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K229** · K92 put the mode badge on its own row below the undo
+  buttons while the panel is open (his spec), so the open panel now
+  starts 90 px from the top on the desktop and 100 on phones (was 50):
+  about 1.5 fewer visible rows on a phone. Accept it, or put the badge
+  somewhere else while the panel is open? Screenshots:
+  `.claude/probes/K92/out/phone_open.png`, `desktop_open_load.png`.
 - **K225** · The markers' default size (K98, merged 2026-10-14 10:03;
   sheet sent to Levi at 10:04): at `markerSize` 1.08 the markers are
   about 5 CSS px across on the phone (K83's were 14) and 12 on the
@@ -386,28 +392,6 @@ and never reused.
     fade to the run); debug view 5 doesn't show it.
   - brief: `docs/design/K93_K145.md` (Stage 2 and its Stage 2 handoff).
   - env: none.
-- **K92** · Undo and redo for design changes (Levi, 2026-10-13). Two
-  buttons beside the panel's open/close button, shown only while the
-  panel is open, each enabled only when it can act; the mode badge moves
-  to a row below them. An undo stack of design changes, including the
-  "Free play" badge's tap (today it replaces the link, so an unshared
-  design is lost). His call (2) stands: under fog, a tap on the finish
-  indicator only shows a toast. Files: `src/ui/tweakpane_panel.ts`,
-  `src/main.ts`, `src/ui/mode_badge.ts`, `src/ui/url_state.ts`;
-  `.claude/rules/gameplay-badge.md` (MODE BADGE). Brief
-  `docs/design/K92.md` (one stage), plus K224 (the move pad over the open panel).
-  - K80 (5fed5c1): real time has no move undo (`undoAllowed(clock)`); if K92's buttons ever reach maze moves, they consult it.
-  - owner: agent a6841236edfc5caa5 (opus) of session d8031183, started
-    2026-10-14 09:37; told at 10:02 to wrap up and report by 10:30 (usage).
-  - branch: `worktree-agent-a6841236edfc5caa5`
-    (`.claude/worktrees/agent-a6841236edfc5caa5`), from 582b081; last
-    commit: none yet.
-  - evidence: `.claude/probes/K92/` in its worktree (copy at merge).
-  - next: its one stage plus K224 (the panel above the pad, or the pad
-    hidden while the panel is open: its call). At merge, carry its lore
-    edits into `gameplay-badge.md` (MODE BADGE) and `gameplay-panel.md`.
-  - brief: `docs/design/K92.md`.
-  - env: dev servers on ports 5600-5609.
 
 ## Next, in order
 
@@ -442,11 +426,10 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running on 10-14, from 09:37: K92 with K224 (opus; told at 10:02 to
-stop by 10:30 for the usage cap) and the round's phone pass (K156,
-sonnet, 1 h cap). K145 (stage 2 of K93 + K145) stopped at 10:06 on the
+(he may reorder). Running on 10-14, from 09:37: the round's phone pass (K156, sonnet,
+1 h cap). K145 (stage 2 of K93 + K145) stopped at 10:06 on the
 usage cap, unmerged (its handle says what's left). K100, K132, K90 stage 1b, K173 (the rules
-split), K93, K198 stage 1 and K98 merged at 08:39-10:03; the coordinator carries the running agents' rules edits
+split), K93, K198 stage 1, K98 and K92 merged at 08:39-10:08; the coordinator carries the running agents' rules edits
 into the topic files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
    K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
@@ -463,7 +446,7 @@ into the topic files at their merges. Then, as code slots free up:
 6. K132 and K100: merged 2026-10-14 (402eb4b, 458e1e5).
 7. K93 + K145 (`docs/design/K93_K145.md`): stage 1 (K93) merged
    2026-10-14 (ed8f284); stage 2 (K145) stopped at 10:06 on the usage cap, unmerged; it resumes from its handoff.
-8. K92, running from 09:37 with K224; then K111 (both rework the panel).
+8. K92 + K224: merged 2026-10-14 (e78ddcc); K111 next (the panel).
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. K76 stage 2.
 11. K80's turn-aligned hunter, a modifier of the normal maze; then
@@ -708,14 +691,14 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K230** · K92 did not check the badge's last fit level (the bare icon
+  below the hamburger) with the panel open; its phone checks were desktop
+  emulation, so the next phone pass covers K92 (`gameplay-badge.md`).
 - **K228** · A choice's hover stays lit after the mouse leaves the canvas
   (`src/main.ts`; seen by K145's agent, whose glow clears there).
 - **K226** · K98's spider glyph and role have no mesh (`MeshRole` excludes
   it in `src/render/marker_glyphs.ts`) until K114's call 7 decides what
   the spider marks.
-- **K224** · On the phone (411x753) the K120 move pad (z-index 18) draws
-  over the open panel (seen in K198's phone probe). K92's agent takes
-  the fix (launched 2026-10-14 09:37).
 - **K223** · Tooling after K198: K149's `.claude/probes/K148_K149/probe.mjs
   slack` checks the old 0.3-screen rule and now fails by design (K198's
   `.claude/probes/K198/pan.mjs` replaces it), and K173's
@@ -1103,6 +1086,9 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Ideas (not scheduled)
 
+- **K231** · Keyboard shortcuts for K92's undo and redo (Ctrl+Z,
+  Ctrl+Shift+Z / Ctrl+Y), proposed by K92's agent (`src/main.ts`,
+  `src/ui/undo_buttons.ts`).
 - **K227** · The head's glow stays a fixed 4.2 world units across; it
   could follow K98's `markerSize`, so a small player dot doesn't sit in
   a large glow (`render-markers.md`, K98).
@@ -1293,6 +1279,28 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K92** · Undo and redo for design changes (Levi, 2026-10-13). Two
+  buttons beside the panel's open/close button, shown only while the
+  panel is open, each enabled only when it can act; the mode badge moves
+  to a row below them. An undo stack of design changes, including the
+  "Free play" badge's tap (today it replaces the link, so an unshared
+  design is lost). His call (2) stands: under fog, a tap on the finish
+  indicator only shows a toast. Files: `src/ui/tweakpane_panel.ts`,
+  `src/main.ts`, `src/ui/mode_badge.ts`, `src/ui/url_state.ts`;
+  `.claude/rules/gameplay-badge.md` (MODE BADGE). Brief
+  `docs/design/K92.md` (one stage), plus K224 (the move pad over the open panel).
+  - K80 (5fed5c1): real time has no move undo (`undoAllowed(clock)`); if K92's buttons ever reach maze moves, they consult it.
+  - Done in d707bc1..e78ddcc (2026-10-14 10:08), with K224: a 100-step in-memory
+    history (`src/ui/undo_stack.ts`), the buttons on the hamburger's row
+    (`src/ui/undo_buttons.ts`), the badge on its own row below them, and
+    the move pad hidden while the panel is open. Lore:
+    `gameplay-panel.md`, `gameplay-badge.md`, `gameplay-moves.md`;
+    handoff `docs/design/K92.md`; probe `.claude/probes/K92/undo.mjs`
+    (desktop 27/27, daily 7/7, phone emulation 9/9). The panel's lower
+    top is K229.
+- **K224** · On the phone (411x753) the K120 move pad drew over the open
+  panel. K92 hides the pad while the panel is open (the keyboard still
+  moves the player). Done in d707bc1..e78ddcc (2026-10-14 10:08).
 - **K98** · Marker sizes and two new glyphs (Levi, 2026-10-13). A
   `markerSize` slider (`mks`, codec index 104, daily-exempt): the black
   disc's diameter in thread widths, 0.25-3, default 1.08 (the pre-K83
