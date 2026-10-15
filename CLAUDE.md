@@ -117,9 +117,11 @@ src/
     key_moves.ts          # K120: moves by direction (arrows, WASD; picker, hold)
     move_pad.ts           # K120: the touch move pad (viewer pref, same picker)
     snore_link.ts         # K325: the credit link's snore and its touch delay
+    loader.ts             # K5: the loading trefoil (createLoader)
   util/
     random.ts             # Seeded RNG
     det_math.ts           # K108: engine-exact math for generation (hypot2)
+  app/                    # K5: main.ts's parts (scene_ref, stamp, probe_hooks); headers map each file
   build_info.ts           # Build identity (git SHA, build time; vite defines)
   main.ts                 # Entry point
 notices/                  # K122 build-time Node code (own tsconfig), not app code; lore: .claude/rules/notices.md
@@ -143,7 +145,7 @@ test/
     settle_budget.test.ts (K147), tug.test.ts (K279),
     physics_host.test.ts (K7: both hosts in lockstep, bit for bit),
     worker_host.test.ts (fake Worker: ready, fallbacks, the gate),
-    snapshot.test.ts, host_seam.test.ts (main writes only via the host)
+    snapshot.test.ts, host_seam.test.ts (main + src/app write only via the host)
   audio/
     pitch_space.test.ts, snore_sfx.test.ts (K325)
   game/

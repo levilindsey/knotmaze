@@ -6,7 +6,7 @@ files whose read attaches it. Written by K173's split
 rules file or its `paths:` change. Not auto-loaded.
 
 - `gameplay.md`: gameplay and UI: the intro and the list of the topic files
-  paths: `src/game/**`, `src/ui/**`, `src/audio/**`, `src/main.ts`, `test/game/**`, `test/ui/**`, `test/audio/**`
+  paths: `src/game/**`, `src/ui/**`, `src/audio/**`, `src/main.ts`, `src/app/**`, `test/game/**`, `test/ui/**`, `test/audio/**`
 - `gameplay-daily.md`: MAZE STATS + DAILY MAZE (K19, K20, K47, K56; the binding daily rules)
   paths: `src/game/daily_attempt.ts`, `src/game/daily_calendar.ts`, `src/game/daily_store.ts`, `src/game/maze_stats.ts`, `src/game/share_text.ts`, `src/ui/daily_link.ts`, `src/ui/daily_stats_view.ts`, `src/ui/share.ts`, `src/ui/maze_hud.ts`, `test/game/daily_attempt.test.ts`, `test/game/daily_calendar.test.ts`, `test/game/daily_store.test.ts`, `test/game/maze_stats.test.ts`, `test/ui/daily_link.test.ts`
 - `gameplay-stars.md`: STAR RATINGS (K155)
@@ -56,7 +56,7 @@ rules file or its `paths:` change. Not auto-loaded.
 - `physics-collision.md`: the P3 saga's invariants, mechanisms, lessons and negative results; the open loud attractor (K13)
   paths: `src/physics/particle_system.ts`, `src/physics/forces.ts`, `test/physics/particle_system.test.ts`, `test/quiescence.regression.test.ts`
 - `probes.md`: probing: a bare URL is the daily, same-state A/Bs, the scratchpad, gotchas, hooks, recipes, the general diagnosis rules
-  paths: `.claude/probes/**`, `scripts/*.mjs`, `scripts/*.ps1`, `scripts/*.ts`
+  paths: `.claude/probes/**`, `scripts/*.mjs`, `scripts/*.ps1`, `scripts/*.ts`, `src/app/probe_hooks.ts`
 - `probes-census.md`: the per-pixel gaps census, the census and scanner rules from P3
   paths: `scripts/diag_scan.mjs`, `scripts/fold_census.mjs`, `scripts/fold_census.ps1`, `scripts/fold_census.ts`, `scripts/fold_census.vite.config.mjs`
 - `probes-phone.md`: the round phone pass (K156), phone gate probes (K79 B3), the physics worker on the phone (K7 stage 5)
