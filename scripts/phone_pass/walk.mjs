@@ -89,10 +89,14 @@ export function renderLoop(ITER) {
 // In the page: freeze every clock of a same-state frame (K83's pins + the
 // background's drift clock), turn off K169's gold-web fade (with the paint
 // clock pinned, a fading web would hold at level 0; K192) and hide the DOM
-// chrome.
-export function pinAll() {
+// chrome. Async: K7 stage 4's freeze hook is a Promise (page.evaluate awaits
+// it); on a build without the hook the step patch freezes, as before.
+export async function pinAll() {
   const r = window.__knotRenderer(), proto = Object.getPrototypeOf(r);
-  if (window.__knotPS && window.__knotPS()) window.__knotPS().step = function () {};
+  // With phw=1 the physics runs in a Web Worker, whose mirror refuses a step
+  // patch; in-thread, __knotPhysFreeze(true) IS the patch.
+  if (window.__knotPhysFreeze) await window.__knotPhysFreeze(true);
+  else if (window.__knotPS && window.__knotPS()) window.__knotPS().step = function () {};
   r.flowStrength = 0;
   r.paintClock = 100;
   r.pulseBorn = 0;
