@@ -120,6 +120,9 @@ import {
 } from "./junction_field";
 import { pickRoutes, routeCorner, routeCubic } from "./junction_routes";
 import { WebFade } from "./web_fade";
+import { EXPLORE_ITEM_VIS, chainWhole, visItem, visRange, withExplore } from "./explore_glsl";
+import { pieceVis } from "../game/explore_view";
+import type { ExplorePiece } from "../game/explore_view";
 import type { PaintRoute } from "./junction_routes";
 import {
   STRIP_STATS,
@@ -536,6 +539,50 @@ function sectionShader(): SectionShader {
   return SECTION_SHADER;
 }
 
+// K76 THREAD REVEAL: the section program's explore variant (the master
+// fragment text plus explore_glsl.ts's insertions; the same resources).
+// Built the first time the mode turns on: with the mode off no ribbon binds
+// it, so every frame runs master's program exactly.
+let SECTION_EXPLORE_SHADER: SectionShader | null = null;
+function sectionShaderExplore(): SectionShader {
+  if (!SECTION_EXPLORE_SHADER) {
+    const sh = Shader.from({
+      gl: { vertex: SECTION_VERT, fragment: withExplore(SECTION_FRAG), name: "section-rgb-explore" },
+      resources: {
+        uGapData: sectionShader().resources.uGapData,
+        uKStatic: kStatic().source,
+        uKGeom: kGeom().source,
+        uKReveal: kReveal().source,
+        uKPaintData: kPaint().source,
+        knotUniforms: knotUniforms(),
+      },
+    }) as SectionShader;
+    sh.texture = Texture.WHITE;
+    SECTION_EXPLORE_SHADER = sh;
+  }
+  return SECTION_EXPLORE_SHADER;
+}
+
+function samePieces(a: readonly ExplorePiece[], b: readonly ExplorePiece[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const p = a[i];
+    const q = b[i];
+    if (
+      p.chain !== q.chain ||
+      p.c0 !== q.c0 ||
+      p.c1 !== q.c1 ||
+      p.f0 !== q.f0 ||
+      p.f1 !== q.f1 ||
+      p.tip0 !== q.tip0 ||
+      p.tip1 !== q.tip1
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // Point every gap reader - the shared section shader (ribbons), the
 // junction-field shader (fans) and the still-pluck program - at a scene's
 // gap-slot table (gap tables are page-lifetime and sized per scene - see
@@ -545,6 +592,8 @@ function bindGap(tex: Texture): void {
   bindPluckGap(tex);
   const sh = sectionShader();
   if (sh.resources.uGapData !== tex.source) sh.resources.uGapData = tex.source;
+  const ex = SECTION_EXPLORE_SHADER;
+  if (ex && ex.resources.uGapData !== tex.source) ex.resources.uGapData = tex.source;
 }
 
 // Dense enough that tight bends near crossings (low slack) stay resolved.
@@ -4311,7 +4360,11 @@ export class RibbonRenderer {
     const n = this.ps.chains.length;
     const slots: Array<Array<number[] | undefined> | null> = new Array(n).fill(null);
     let overflow = 0;
+    // The chains carrying gameplay paint (KGEOM G0.w): K76's VIS items set
+    // none, so the paint evaluation stays gated on real paint.
+    const painted = new Uint8Array(n);
     const touch = (chain: number, lo: number, hi: number, item: number): void => {
+      if (items[item * 8] !== EXPLORE_ITEM_VIS) painted[chain] = 1;
       const len = this.ps.chains[chain].length;
       const closed = this.ps.chainBreakAfter[chain] < 0;
       let s0 = Math.floor(lo) - 1;
@@ -4391,6 +4444,17 @@ export class RibbonRenderer {
       items.push(PAINT_ITEM.PULSE, p.cJunction, p.cFar, 0, 0, flags, 0, 0);
       touch(p.chain, Math.min(p.cJunction, p.cFar), Math.max(p.cJunction, p.cFar), i);
     }
+    // K76: the thread reveal's visibility pieces (explore_glsl.ts), but
+    // none on a whole chain (its flag answers without a scan).
+    if (this.explorePieces) {
+      for (const p of this.explorePieces) {
+        if (p.chain >= n || this.exploreWhole[p.chain]) continue;
+        const i = items.length / 8;
+        items.push(...visItem(p));
+        const [lo, hi] = visRange(p);
+        touch(p.chain, lo, hi, i);
+      }
+    }
     // K145: the hover glow's run, (RIM, c0, c1, end gap).
     this.rimKey = this.rimItemKey();
     const rim = this.paintRim;
@@ -4403,14 +4467,85 @@ export class RibbonRenderer {
       this.paintOverflowWarned = true;
       console.warn(`G2 paint: ${overflow} slot references beyond the shader's 32 per slot`);
     }
-    const flags = new Uint8Array(n);
-    for (let c = 0; c < n; c++) flags[c] = slots[c] ? 1 : 0;
-    this.paintScene.setPaintFlags(flags);
+    this.paintScene.setPaintFlags(painted);
     this.lastPaintUpload = this.paintScene.setPaintItems(
       Float32Array.from(items),
       items.length / 8,
       slots
     );
+  }
+
+  // ---- K76 THREAD REVEAL (stage 2a; docs/design/K76_reveal_mode.md) -----
+
+  // The visible pieces (null = the mode is off), per chain, and the chains
+  // they cover whole (KPAINT texel `chain` .x).
+  private explorePieces: ExplorePiece[] | null = null;
+  private readonly exploreByChain = new Map<number, ExplorePiece[]>();
+  private exploreWhole = new Uint8Array(0);
+  // Set when the declaration changed (probes; 2b's gates and fans read it).
+  exploreUpdatePending = false;
+
+  // Declare the visible pieces (null = the mode off: every chain draws on
+  // master's program again). With the mode on, the ribbons draw with the
+  // explore program, a chain with no piece is not drawn at all, and the
+  // pieces ride the paint declaration as VIS items. look = an
+  // EXPLORE_LOOKS index, breath = the glow look's strength.
+  setExplore(pieces: ExplorePiece[] | null, look = 0, breath = 1): void {
+    const E = knotUniformValues().uKExplore!;
+    E[0] = pieces ? 1 : 0;
+    E[1] = look;
+    E[2] = breath;
+    E[3] = this.style.threadWidth;
+    const prev = this.explorePieces;
+    if (prev === pieces || (prev && pieces && samePieces(prev, pieces))) return;
+    this.explorePieces = pieces;
+    this.exploreByChain.clear();
+    for (const p of pieces ?? []) {
+      let l = this.exploreByChain.get(p.chain);
+      if (!l) {
+        l = [];
+        this.exploreByChain.set(p.chain, l);
+      }
+      l.push(p);
+    }
+    const n = this.ps.chains.length;
+    const whole = new Uint8Array(n);
+    for (const [c, l] of this.exploreByChain) {
+      if (c < n && chainWhole(l, this.ps.chains[c].length, this.ps.chainBreakAfter[c] < 0)) {
+        whole[c] = 1;
+      }
+    }
+    this.exploreWhole = whole;
+    const sh = pieces ? sectionShaderExplore() : sectionShader();
+    for (let c = 0; c < this.fills.length; c++) {
+      const m = this.fills[c].mesh;
+      if (m.shader !== sh) m.shader = sh;
+      m.renderable = !pieces || this.exploreByChain.has(c);
+    }
+    this.paintScene.setExploreFlags(pieces ? whole : null);
+    if (this.style.paletteMode) this.writePaintItems();
+    this.exploreUpdatePending = true;
+  }
+
+  get exploreOn(): boolean {
+    return this.explorePieces !== null;
+  }
+
+  // The CPU twin of kExploreAt's visibility (explore_view.ts chainVis): a
+  // chain point's visibility, 1 with the mode off.
+  exploreVisAt(chain: number, ctrl: number): number {
+    if (!this.explorePieces) return 1;
+    if (this.exploreWhole[chain]) return 1;
+    const l = this.exploreByChain.get(chain);
+    if (!l) return 0;
+    const n = this.ps.chains[chain].length;
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    let best = 0;
+    for (const p of l) {
+      const v = pieceVis(p, ctrl, n, closed);
+      if (v > best) best = v;
+    }
+    return best;
   }
 
   // Texels the last paint declaration change uploaded (probes).

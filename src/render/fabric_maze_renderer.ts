@@ -50,6 +50,16 @@ import type { MinotaurChase, MinotaurMode } from "../game/minotaur";
 import { FogBackdrop } from "./background";
 import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
 import { MarkerMesh } from "./marker_mesh";
+import { exploreView } from "../game/explore_view";
+import type { ExploreView } from "../game/explore_view";
+import { EXPLORE_LOOK_DEFAULT, exploreLookHasHalo } from "./explore_glsl";
+
+// K76 THREAD REVEAL (stage 2a; docs/design/K76.md): a newly visited
+// vertex's arms grow out over this many seconds (eased), and the halo
+// look's sprite (beneath the weave at the middle of each frontier fade).
+const EXPLORE_GROW_S = 0.45;
+const HALO_TINT = 0xa8e4ff;
+const HALO_ALPHA = 0.8;
 import {
   DEFAULT_GLYPHS,
   MARKER_SIZE_DEFAULT,
@@ -382,6 +392,20 @@ export class FabricMazeRenderer {
   // until its thread is revealed. Null / fully-revealed = everything
   // draws. Gameplay input is never gated.
   revealQuery: ((chain: number, ctrl: number) => number) | null = null;
+  // K76 THREAD REVEAL (stage 2a: driven by the __knotExplore probe hook
+  // only; params, panel and the event-fed model are stage 2c): the switch,
+  // reach and fade (lattice units) and the look (an EXPLORE_LOOKS index);
+  // the vertices seen (-> the clock when first reached, -Infinity = shown
+  // grown) and runs walked, the restart they belong to, the clock, the last
+  // view and the halo sprites.
+  explore = { on: false, reach: 2.5, fade: 1, look: EXPLORE_LOOK_DEFAULT };
+  private seenV = new Map<string, number>();
+  private seenRuns = new Set<number>();
+  private seenRestart = -1;
+  private exploreClock = 0;
+  private exploreLast: ExploreView | null = null;
+  private haloLayer: Container;
+  private haloSprites: Sprite[] = [];
   // K80: the minotaur (syncMinotaur): its marker over its red highlight,
   // one layer above the other markers, moved above or below the fog.
   private minoLayer: Container;
@@ -431,6 +455,8 @@ export class FabricMazeRenderer {
     for (const m of Object.values(this.markers)) m.hide();
     this.syncMarkerOccluders();
     this.underContainer = new Container();
+    this.haloLayer = new Container();
+    this.underContainer.addChild(this.haloLayer);
     this.glowSprite = new Sprite(headGlowTexture());
     this.glowSprite.anchor.set(0.5);
     this.glowSprite.width = HEAD_GLOW_DIAM;
@@ -709,6 +735,10 @@ export class FabricMazeRenderer {
   // The rate slows through bends (natural motion): local turn measured
   // from three points one ctrl apart around the dot.
   tickAnim(dt: number, controller: FabricMazeController): void {
+    // K76: the explore clock, and a re-declaration every frame while a newly
+    // visited vertex's arms grow (a move in flight re-declares anyway).
+    this.exploreClock += dt;
+    if (this.explore.on && !this.anim && this.exploreGrowing(dt)) this.syncExplore();
     const a = this.anim;
     if (!a) return;
     const dir = Math.sign(a.to - a.from) || 1;
@@ -1582,6 +1612,7 @@ export class FabricMazeRenderer {
   // with the in-flight partial as the newest material.
   private emitAnimFrame(controller: FabricMazeController): void {
     const a = this.anim!;
+    this.syncExplore(); // K76: the dot uncovers its run.
     this.syncYarn(controller);
     this.ribbons.setRim(this.rimDecl(controller));
     if (this.pathViz === "string") {
@@ -1639,6 +1670,8 @@ export class FabricMazeRenderer {
       this.emitAnimFrame(controller);
       return;
     }
+    if (this.explore.on) this.syncExploreSeen(controller); // K76.
+    this.syncExplore();
     this.syncYarn(controller);
     // String mode: the yarn is the traversal record - no gold spans or
     // junction caps; the choice pulses/hover (choice UI, not path viz)
@@ -1839,6 +1872,131 @@ export class FabricMazeRenderer {
         alpha: 0.9,
       });
     }
+  }
+
+  // --- K76 THREAD REVEAL (stage 2a) -----------------------------------------
+
+  // The vertices reached and runs walked, as of the controller's state
+  // (called with no move in flight - an arriving dot lands here). A restart
+  // (the controller's reset(), K100's signal) forgets everything; several
+  // new vertices at once (the mode turned on mid-solve, a restore or a
+  // replay) appear grown, without the animation. PROBE-ONLY MODEL: the
+  // controller records taps (and the head) when a move starts, and a catch
+  // keeps them; stage 2c feeds the model from move events instead.
+  private syncExploreSeen(c: FabricMazeController): void {
+    if (this.seenRestart !== c.restarts) {
+      this.seenRestart = c.restarts;
+      this.seenV.clear();
+      this.seenRuns.clear();
+    }
+    if (!this.seenV.has(this.walk.start)) this.seenV.set(this.walk.start, -Infinity);
+    const now: string[] = [...c.visitedJunctions, ...c.deadEndTips, c.head];
+    if (c.solved) now.push(this.walk.exit);
+    const fresh = now.filter((v) => !this.seenV.has(v));
+    const t = fresh.length > 1 ? -Infinity : this.exploreClock;
+    for (const v of fresh) this.seenV.set(v, t);
+    for (const e of c.taps) this.seenRuns.add(e);
+  }
+
+  // Whether a visited vertex's arms are still growing (this frame's dt
+  // included, so the last step lands at full growth).
+  private exploreGrowing(dt: number): boolean {
+    for (const t of this.seenV.values()) {
+      if (t > this.exploreClock - EXPLORE_GROW_S - dt) return true;
+    }
+    return false;
+  }
+
+  // Declare what is visible to the ribbons (or the mode off) and place the
+  // halo sprites.
+  private syncExplore(): void {
+    if (!this.explore.on) {
+      if (this.exploreLast || this.ribbons.exploreOn) {
+        this.exploreLast = null;
+        this.ribbons.setExplore(null);
+        this.drawFrontierMarks();
+      }
+      return;
+    }
+    const visited = new Map<string, number>();
+    for (const [v, t] of this.seenV) {
+      const p =
+        t === -Infinity ? 1 : Math.max(0, Math.min(1, (this.exploreClock - t) / EXPLORE_GROW_S));
+      visited.set(v, 1 - (1 - p) * (1 - p) * (1 - p));
+    }
+    const a = this.anim;
+    const inflight =
+      a && a.kind === "advance" && !this.seenRuns.has(a.e.id)
+        ? { edge: a.e.id, from: a.from, cur: a.cur }
+        : null;
+    // A junction's web domain along its arms: the fillet reach (ribbon
+    // renderer: fillHalf * FILLET_REACH_PER_HALF 1.25 * cuspRadius), at
+    // least the seal and tip discs, plus a margin (world ~ lattice units).
+    const fillHalf = this.threadWidth / 2;
+    const web = 1.15 * Math.max(fillHalf * 1.25 * this.ribbons.cuspRadius, fillHalf * 2);
+    this.exploreLast = exploreView({
+      walk: this.walk,
+      visited,
+      explored: this.seenRuns,
+      inflight,
+      reach: this.explore.reach,
+      fade: this.explore.fade,
+      web,
+    });
+    this.ribbons.setExplore(this.exploreLast.pieces, this.explore.look, 1);
+    this.drawFrontierMarks();
+  }
+
+  // The looks drawn BESIDE the thread: the halo (halo, beacon) - a soft
+  // glow beneath the weave at the middle of each frontier fade.
+  private drawFrontierMarks(): void {
+    const fr = this.exploreLast?.frontiers ?? [];
+    const halo = this.explore.on && exploreLookHasHalo(this.explore.look);
+    const want = halo ? fr.length : 0;
+    while (this.haloSprites.length < want) {
+      const sp = new Sprite(headGlowTexture());
+      sp.anchor.set(0.5);
+      sp.tint = HALO_TINT;
+      sp.alpha = HALO_ALPHA;
+      this.haloLayer.addChild(sp);
+      this.haloSprites.push(sp);
+    }
+    for (let i = 0; i < this.haloSprites.length; i++) {
+      this.haloSprites[i].visible = i < want;
+    }
+    const d = Math.max(1.8, this.threadWidth * 3.8);
+    for (let i = 0; i < want; i++) {
+      const f = fr[i];
+      const c = f.cSolid + (f.cEnd - f.cSolid) * 0.5;
+      this.pointFlowed(f.chain, this.ctrlMod(f.chain, c), this.scratch, 0);
+      const sp = this.haloSprites[i];
+      sp.position.set(this.scratch[0], this.scratch[1]);
+      sp.width = d;
+      sp.height = d;
+    }
+  }
+
+  // PROBE (the GPU cost bound): every vertex counts as visited (grown), so
+  // every run shows whole. The next update() declares it.
+  exploreVisitAll(): void {
+    for (const id of this.walk.vertices.keys()) {
+      if (!this.seenV.has(id)) this.seenV.set(id, -Infinity);
+    }
+  }
+
+  // Probe view of the mode and the last declaration.
+  exploreState(): {
+    explore: { on: boolean; reach: number; fade: number; look: number };
+    view: ExploreView | null;
+    seen: string[];
+    runs: number[];
+  } {
+    return {
+      explore: { ...this.explore },
+      view: this.exploreLast,
+      seen: [...this.seenV.keys()],
+      runs: [...this.seenRuns],
+    };
   }
 
   destroy(): void {
