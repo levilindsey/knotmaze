@@ -176,8 +176,9 @@ export const LIVE_EFFECTS = {
     "volume", "reverb", "brightness", "sustain", "shimmer", "pickPosition",
   ],
   // Last: the solve starts over in the new clock mode (or with the turn
-  // minotaur switched or swapped, K80 turns).
-  onClockChange: ["clock", "minotaur"],
+  // minotaur switched or swapped, K80 turns, or K114's fire changed: a
+  // new speed or delay moves every vertex's burn time).
+  onClockChange: ["clock", "minotaur", "fire", "fireSpeed", "fireDelay"],
 } as const satisfies Record<string, readonly string[]>;
 
 export type LiveEffect = keyof typeof LIVE_EFFECTS;

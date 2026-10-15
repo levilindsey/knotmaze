@@ -237,6 +237,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("minoSleep"), // 116
   // K74 stage 2's H1 share (the fused arm cut).
   num("hCutShare"), // 117
+  // K114 stage 1: the burn race (game/fire.ts).
+  choice("fire", ["off", "fuse"]), // 118
+  num("fireSpeed"), // 119
+  num("fireDelay"), // 120
 ]);
 
 // The format version a blob names first. Bump it for anything but an
