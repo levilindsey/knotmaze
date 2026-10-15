@@ -2410,3 +2410,53 @@ Observed unless marked inferred.
   and `de22867` (observed); on the desktop it holds main's `ready` back to
   about 600 ms. Which merge grew it is not known (K279 stage 2's ripple
   warm-up is a guess).
+
+## Stage 6 brief: the flip (call F6)
+
+The stage 5 handoff left the flip to the lever or to Levi. The
+coordinator made it overnight as call F6, for Levi to review in the
+morning and easy to reverse: the worker becomes the default now,
+despite the 250 ms gate miss, for the phone numbers in "For the next
+stage". The lever, the phone pass again and the spike page become stage
+7, after K5 stage M1 (both edit main.ts's boot). Stage 6 does not edit
+`src/main.ts`.
+
+One stage: sonnet, 1 h cap, ports 5850-5859.
+
+1. **The flip.** `src/ui/url_state.ts`: `physicsWorker: true` (line 679
+   at `988be6a`). Re-freeze the pins it moves
+   (`test/ui/url_codec.test.ts:89`, and any other that pins the
+   default), and name each in the commit. `phw` must not change the
+   maze: the K87 pin, the golden dailies and the byte-identity golden
+   must not move; if one does, stop and report. `npm test` and
+   `npm run build` green, under the perf lock.
+2. **The lore.** Every line that says the worker is off by default or
+   opt-in: `gameplay-links.md`'s PHYSICS WORKER PARAM ("a flag, default
+   off"), `probes.md`'s K7 stage 4 entry ("phw=0, or no phw (the
+   default)"), `physics-worker.md`, `CLAUDE.md`. Grep `phw`,
+   `physicsWorker`, `default off`, `off by default` and `opt-in` in
+   `.claude/rules/`, `docs/` and `CLAUDE.md`; leave the records alone
+   (`docs/history.md`, `docs/ledger_*.md`, past handoffs). `probes.md`
+   says what a prober needs now: a probe that patches `ps.step` throws
+   on the default build, so it takes `&phw=0` or the one-line port
+   (`FREEZE_PATCH_FILES.md`).
+3. **The shared probe libraries (K374).** The main checkout's
+   `.claude/probes/K7/stage4/ports/FREEZE_PATCH_FILES.md` lists 21
+   shared-library copies (`g2lib.mjs`, `lib.mjs`) that 95 probes import.
+   Port each in place with its port 1 (feature-detect
+   `__knotPhysFreeze`, else the old line, so an in-thread build behaves
+   as before; `ports\g2lib\g2lib.mjs` is a ported g2lib). They are
+   untracked files in the MAIN checkout, and other agents may be running
+   probes that import them: change only the freeze and unfreeze lines,
+   `node --check` each file, and list each file with its old and new
+   lines in `.claude/probes/K7/stage6/ported.md` (in your worktree; the
+   merge copies it). Run one importer of each kind (a `g2lib` `freeze`,
+   a `lib.mjs` `openFrozen`) on your build twice, default and `&phw=0`.
+   The other 31 freeze-patch files and the timing wrappers stay with
+   K374.
+4. **The check.** `node scripts/diag_screenshot.mjs` on the bare URL of
+   your build (`scripts/preview.ps1 -Port 5850`): the stamp reads
+   ` | lag` and the page logs no error. Then with `&phw=0`: no ` | lag`.
+
+Commit WIP after each item. The handoff goes at the end of this file as
+"## Stage 6 handoff".
