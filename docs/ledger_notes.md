@@ -2646,3 +2646,13 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   deploy that changes a shader costs every player one cold compile (the
   browser caches programs by their source), so a smaller or split
   program shortens every such load, not only the first.
+
+## K353 (2026-10-15, closed)
+
+- **K353** · The ledger diet: shorten every item over three lines and
+  archive the originals (`docs/ledger_notes.md`, `docs/ledger_done.md`).
+  - owner: agent `a18f9a57206d9475d` (sonnet) of claude session d8031183, from 2026-10-15 00:13 (cap 01:13; scripts and docs only)
+  - branch: `worktree-agent-a18f9a57206d9475d` (`.claude/worktrees/agent-a18f9a57206d9475d`); last commit: none yet (base `d741412`)
+  - evidence: its worktree's `scripts/ledger_diet.mjs`, `docs/ledger_diet/map.jsonl` and `.claude/probes/K353/`
+  - next: when it reports, apply the map to master at a quiet point (`apply --dry-run`, then `apply`, then `verify` against the pre-apply copy); tomorrow with Levi, the same diet for claude-config's and the other repos' ledgers, plus the claude-config side (the `rules/ledger.md` convention, a shared `tools/ledger.mjs`, the merge script closing items, a nightly hygiene job), filed in claude-config's ledger (Levi, 2026-10-15 00:05)
+  - brief: `docs/design/K353_ledger_diet.md`

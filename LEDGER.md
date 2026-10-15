@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K360.
+Next free ID: K361.
 
 ## Waiting on Levi
 
@@ -278,13 +278,6 @@ Next free ID: K360.
   - evidence: its worktree's `docs/design/G3G4_sdf_geometry.md` and `docs/design/K8_stage1.md`
   - next: stage 1 re-bases the doc's plan on today's master and writes the "Stage 2 (G3-0)" brief; then G3-0 takes the next free code slot
   - brief: `docs/design/K8_stage1.md`
-- **K353** · The ledger diet: shorten every item over three lines and
-  archive the originals (`docs/ledger_notes.md`, `docs/ledger_done.md`).
-  - owner: agent `a18f9a57206d9475d` (sonnet) of claude session d8031183, from 2026-10-15 00:13 (cap 01:13; scripts and docs only)
-  - branch: `worktree-agent-a18f9a57206d9475d` (`.claude/worktrees/agent-a18f9a57206d9475d`); last commit: none yet (base `d741412`)
-  - evidence: its worktree's `scripts/ledger_diet.mjs`, `docs/ledger_diet/map.jsonl` and `.claude/probes/K353/`
-  - next: when it reports, apply the map to master at a quiet point (`apply --dry-run`, then `apply`, then `verify` against the pre-apply copy); tomorrow with Levi, the same diet for claude-config's and the other repos' ledgers, plus the claude-config side (the `rules/ledger.md` convention, a shared `tools/ledger.mjs`, the merge script closing items, a nightly hygiene job), filed in claude-config's ledger (Levi, 2026-10-15 00:05)
-  - brief: `docs/design/K353_ledger_diet.md`
 
 ## Next, in order
 
@@ -1200,6 +1193,7 @@ Every other item below waits on the trigger it names.
 - **K227** · The head's glow stays a fixed 4.2 world units across; it
   could follow K98's `markerSize`, so a small player dot doesn't sit in
   a large glow (`render-markers.md`, K98).
+
 Offers from 2026-10-10 that Levi hasn't answered yet (filed from the
 audit inbox; the first-tap sound offer is done, 82b6b6b).
 
@@ -1388,8 +1382,15 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K359** · Replace the pre-settle's spent-prediction shim
   (`presettleFrame`, K7 stage 3) with an explicit "settling in the worker"
   signal from the physics host.
+- **K360** · Ledger diet pass 2 (K353's handoff): the 152 open items over three
+  lines, the skipped K7, K8 and K279, Done one-liners to ~160 bytes; then drop
+  `docs/ledger_diet/` (keep `scripts/ledger_diet.mjs`, the shared CLI's base).
 
 ## Done
+
+- **K353** · The ledger diet: `scripts/ledger_diet.mjs` shortened the open
+  items and made Done one-liners; the originals are in `docs/ledger_notes.md`
+  and `docs/ledger_done.md`. Done in 300c995..c4a0280, applied in 6c85a38 (2026-10-15).
 
 - **K344** · The pluck blur's sharp cusp in a self-crossing loop: an
   under node's clip now stops short of the loop's own over pass. Done in
