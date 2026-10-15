@@ -361,3 +361,68 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     it against K344's pluck-overlay fix first. Phone: 60 fps in every
     look; `ptg=0.3` stutters, so the tug stays off.
   - brief: `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
+
+## K7 (2026-10-15, stage 3 merged, stage 4 launched)
+
+- **K7** · Physics in a Web Worker, with render-side interpolation between
+  physics steps. Smooths the UI; it does not speed up physics. Acceptance
+  includes K28: the intro runs at full frame rate WHILE physics settles
+  (no settle-first loader wait). K147's per-frame budget is the
+  main-thread interim (a smooth intro over a slow-motion settle); the
+  worker gives the settle a whole core. Levi asked when it lands
+  (2026-10-14 about 18:56), approved it as the next build at about 19:00
+  ("1. Yes."), ahead of K76 2c and K268 stage 2, and asked at about 19:01
+  whether the intro will then run at normal frame rates; the design
+  answers that with numbers.
+  - The design (merged 2026-10-14 20:10, 0c3c694..eab4287; desktop,
+    measured on 0d88091): the daily's intro at about 56 fps instead of
+    22.7, smooth but not a locked 60; its two freezes (2.7 s at 1.1 s,
+    2.0 s at 3.8 s) stay, since they happen with physics paused too
+    (cold shader compiles, traced by K307); the first sleep at about 12 s
+    instead of 20.7; drags at gs 18 at 55-60 fps instead of 7, in 0.76x
+    real time; dense render-bound at about 30 fps (K8); the phone likely
+    40-60 fps, unproven until stage 5. Transferred buffers (no SAB, no
+    COOP/COEP), a mirror ParticleSystem on main, fallbacks on error or a
+    3 s timeout. Levi's 11 calls: K302, all yes (2026-10-14 21:18).
+  - stage 1 (the in-thread physics host) merged at 22:04
+    (67c0604..e0980b5, deployed): `PhysicsHost`, `PhysicsCore` and
+    `InThreadHost` in
+    `src/physics/physics_host.ts`, `grabAt`, `buildSceneGraph` in
+    `src/core/scene_graph.ts`, every physics write in `main.ts` through
+    `host` (`ps` is a read alias), and the guard
+    `test/physics/host_seam.test.ts`. 941 tests pass, no snapshot moved,
+    and the hidden loads end bit-identical to master's. The A/B matched:
+    the daily's first sleep 20.96/20.68 s against master's 20.68/20.66,
+    drags 7.0 fps on both, the knot's first sleep 16.69 s against 16.56.
+    Residuals K314 and K315.
+  - stage 2 (the worker core, in Node) merged at 23:21 (86708b4..472ef83): the
+    step split into `beginFrame` and `runSubstep` (identical bits, the
+    same speed within noise), `src/physics/snapshot.ts` (40,936 bytes at
+    `?7`), `MirrorSystem` (`src/physics/mirror_system.ts`) and
+    `PhysicsWorkerCore` (`src/physics/physics_worker_core.ts`), its clock
+    per Design 4. 973 tests pass and no snapshot moved; the worker core
+    and `InThreadHost` run bit-identical in lockstep on every frame. Its
+    departures from the brief and its "For stage 3" list are in the
+    brief's "Stage 2 handoff". Residual K346, idea K347.
+  - owner: agent a9f593eca9038e6d3 (opus) of claude session d8031183, stage 3
+    from 23:22 (cap 01:22; ports 5792-5795).
+  - branch: `worktree-agent-a9f593eca9038e6d3`
+    (`.claude/worktrees/agent-a9f593eca9038e6d3`, from 472ef83); last
+    commit: `472ef83` (master) until its first WIP commit.
+  - evidence: the design's `.claude/probes/K7/design/`
+    (`k7_results.jsonl`, `frames/`, `summarize.mjs`, `run_k7.ps1`,
+    `k7_frames.mjs`, `transport/`, `spike/`); stage 1's
+    `.claude/probes/K7/stage1/` (`load_probe.mjs`, `input_probe.mjs`,
+    the A/B); stage 2's `.claude/probes/K7/stage2/` (`results.md`, the
+    split timing) and `test/physics/physics_host.test.ts`,
+    `snapshot.test.ts` and `fabric_scene.ts`; stage 3's probes under
+    `.claude/probes/K7/stage3/` in its worktree.
+  - next: stage 3 (the worker in the browser behind `phw`, off by
+    default), then 4 and 5. Stage 3 checks that pre-settle slices
+    answered from a `settled` message arrive a frame late. Stage 4 also
+    attributes the main-thread JS that K307's trace left unexplained
+    (about 86 ms in the first freeze, 47 ms in the second, and an
+    80-96 ms frame at about 6.1 s). Stages 1 and 4 own `main.ts`; stage 5
+    needs the phone.
+  - brief: `docs/design/K7_worker.md`, "Stage 2 handoff" and "Stage 3:
+    the worker in the browser, behind `phw`".
