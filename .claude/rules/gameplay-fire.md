@@ -59,18 +59,18 @@ files.
   not daily-exempt, and a daily plays with the fire off (the default).
   `fireSettingsOf` is null unless fire is fuse, the clock is turn-based
   and the turn minotaur is off: FIRE AND THE MINOTAUR ARE EXCLUSIVE (call
-  3, open). The panel's "Burn race" folder (in the maze folder, before the
-  minotaur's, turn clock only) hides each while the other is on, and a
-  link setting both plays the minotaur. Fog stays a separate setting
-  (call 4, open). UNDO: onClockChange covers the fire keys (a change
-  restarts the solve). HOOK: `__knotFabric().fire` {speed, delay, lead,
-  closest, lost, pendingLoss, banner, smoldering}. MEASURED (R.6.1,
-  `.claude/probes/K114/burn/`: burn_sim.ts over dailies 1-30, results.md,
-  results_tuning.md): the optimal route is never trapped; at r 0.75, h 0
-  an explorer that sees only the runs it walked is trapped on 90% of
-  dailies and sighted wanderers
-  (p 0.1 / 0.2 / 0.3 of a misstep) on 38 / 66 / 83%; r 0.6 with h 20 gives
-  4 / 22 / 48%. At h = 0 the closest call is set at the first junction
+  3, open). In the panel's "Burn race" folder (in the maze folder, before
+  the minotaur's, turn clock only), turning one on turns the other off;
+  speed and delay hide while the fire is off. A link setting both plays
+  the minotaur. Fog stays a separate setting (call 4, open). UNDO:
+  onClockChange covers the fire keys (a change restarts the solve). HOOK:
+  `__knotFabric().fire` {speed, delay, lead, closest, lost, pendingLoss,
+  banner, smoldering}. MEASURED (R.6.1, `.claude/probes/K114/burn/`:
+  burn_sim.ts over dailies 1-30, results.md, results_tuning.md): the
+  optimal route is never trapped; at r 0.75, h 0 an explorer that sees
+  only the runs it walked is trapped on 90% of dailies, and sighted
+  wanderers (p 0.1 / 0.2 / 0.3 of a misstep) on 38 / 66 / 83%; r 0.6 with
+  h 20 gives 4 / 22 / 48%. At h = 0 the closest call is set at the first junction
   (the margin there is h + d(v)(1/r - 1)). PAGE PROBE: `burn_page.mjs
   <base> <outDir> race|loss [seeds]` (real clicks; EXTRA appends link
   keys, e.g. `&fsp=0.9`).
