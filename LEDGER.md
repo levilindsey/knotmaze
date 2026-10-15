@@ -33,7 +33,7 @@ and never reused.
   tweakpane_panel.ts: not alongside K92 or K111 (the panel). Records:
   `docs/design/K148_K149.md` ("Stage 1 handoff"), `gameplay-indicators.md`
   THE HEAD and `gameplay-camera.md` FIT CAMERA PAN RANGE.
-  - stage 1 MERGED in 5f6ceb9..d7373a4 (2026-10-14 09:29): the pan range
+  - stage 1 MERGED in 5f6ceb9..d7373a4 (2026-10-14 09:31): the pan range
     (`src/ui/view_clamp.ts`: `panRange`, `clampFitView`,
     `easeIntoRange`; 16 tests). With the panel open, the maze's right
     edge (its threads, or a shown start, head or exit disc) may reach
@@ -295,28 +295,31 @@ and never reused.
     9.3 -> 22.5 s, fps fell 46 -> 41 and 44 -> 35, p95 33 -> 50 ms, and
     `gs=18`'s frames over 50 ms 48 -> 84 (K197). Looks: all 18 ran on
     head (base lacks the new features).
-  - owner: claude session d8031183 (the coordinator).
-  - branch: mainline (no code); last commit: `81d31a5` (K192's pin in
-    `walk.mjs`).
-  - evidence: the pass's folder `.claude/probes/rounds/2026-10-14-81d31a5/`
-    (`summary.md`, `sheets/`, `logs/run.log`) and its console log
-    `.claude/probes/rounds/pass-2026-10-14.log`; 3c's
-    `.claude/probes/K156/3c/`; the round's looks
-    `.claude/probes/rounds/2026-10-13/looks.json`.
-  - next: look over the sheets; sweep the 3a and 3b worktrees
-    (`.claude/worktrees/agent-a262df65dcc1489a7`,
+  - owner: agent ad24cee1cd83ebe88 (sonnet) of session d8031183, started
+    2026-10-14 09:37; it stops at about 10:37 or when the round is done:
+    looks for K146, K151, K148, K198, K100 and K93 plus K120's
+    `k120-pad`, a desktop dry run, then the pass on the phone (base
+    54a2b43, head master at 582b081's code; the phone is on Tailscale).
+  - branch: `worktree-agent-ad24cee1cd83ebe88`
+    (`.claude/worktrees/agent-ad24cee1cd83ebe88`), from 582b081; last
+    commit: none yet.
+  - evidence: its worktree's `.claude/probes/K156/round-10-14b/` (copy at
+    merge); the last pass's folder
+    `.claude/probes/rounds/2026-10-14-81d31a5/` and its looks
+    `.claude/probes/rounds/2026-10-13/looks.json`; 3c's
+    `.claude/probes/K156/3c/`.
+  - next: the round's looks and pass; then look over its sheets and send
+    Levi the ones worth his eye. The move pad is on by default on the
+    phone, so head's frame cells include it where base has none, and
+    `makeMoves`' choice taps could land on it (0 of 50 measured); looks
+    that don't test it set `knotmaze.movePad` to `0`. Sweep the 3a and 3b
+    worktrees (`.claude/worktrees/agent-a262df65dcc1489a7`,
     `.claude/worktrees/agent-a957f7f1407f5df9f`) with
-    `.claude/probes/K161/cleanup.ps1` (`-DryRun` first). The next round's
-    pass runs after K198 and K93 merge and covers K146, K151, K148, K149,
-    K120, K90 1a and 1b (no behavior change), K100, K132, K198 and K93,
-    and adds K120's look `k120-pad`
-    (`.claude/probes/K120/looks_k120.json`). The pad is on by default on
-    the phone, so unpinned head shots and frame cells show it where the
-    base shows nothing, and `makeMoves`' choice taps could land on it
-    (0 of 50 measured): looks that don't test it set `knotmaze.movePad`
-    to `0` and reload, or `makeMoves` skips points under `.km-pad`.
-    Pinned looks hide it.
-  - brief: `docs/design/K156.md` (the 3a, 3b and 3c handoffs).
+    `.claude/probes/K161/cleanup.ps1` (`-DryRun` first).
+  - brief: `docs/design/K156.md`, section "Round 2026-10-14b: the looks
+    and the pass".
+  - env: none; the pass builds and serves both builds itself (ports
+    5480-5489).
 - **K161** · Disk: C: had 24.4 GB free (2026-10-13 about 19:30, before
   K81's 1.6 GB probe copy). `$env:TEMP` holds 1145 `knotmaze-*` Chrome
   profiles (about 36.5 GB) that probe runs never delete; the worktrees
@@ -357,6 +360,58 @@ and never reused.
     K83), where K173 moved them.
   - brief: `docs/design/K98.md`.
   - env: dev servers on ports 5590-5599.
+- **K145** · A subtle hover glow on runs that aren't choices (Levi,
+  2026-10-13 about 16:00 and 16:12, verbatim in
+  `docs/design/levi_notes_2026-10-13.md`): in the maze, hovering any run
+  that isn't a choice at the player's junction (the choices keep their
+  stronger hover) lights a glow along both edges of the thread, inside
+  its bounds, fading quickly toward the center line and fading out with
+  distance from the hover point and toward the run's junctions; the
+  reach can borrow the choices' length param (`pulseReach`, which K93
+  makes the hover's reach). A touch press shows it too, until the finger
+  lifts (the tap-pluck still fires on release) or the press becomes a
+  tug or a pan. For the brief: the pointer move in `src/main.ts` asks
+  `fabric.edgeAt`, which picks only choosable runs, `setHover` tracks
+  one run, and a touch press on a thread sets `pendingPluck` with no
+  hover at all; the glow is a new G2 paint term plus its `paint_math`
+  mirror (the hovered run and the hover point's arc position), measured
+  along the thread like the pulses; a strength param (0 = off), proposed
+  daily-exempt (K57). Stage 2 of `docs/design/K93_K145.md` (K93's stage 1
+  merged in ed8f284).
+  - owner: agent ad81d903c987ef01d (opus) of session d8031183, started
+    2026-10-14 09:37; it stops at about 11:37 or when stage 2 is done.
+  - branch: `worktree-agent-ad81d903c987ef01d`
+    (`.claude/worktrees/agent-ad81d903c987ef01d`), from 582b081; last
+    commit: none yet.
+  - evidence: `.claude/probes/K145/` in its worktree (copy at merge).
+  - next: stage 2 (the glow, its strength param, the touch press). K98
+    and K92 run alongside; whichever of K98 and K145 merges second
+    renumbers its codec append. At merge, carry its lore edits into the
+    topic files (`render-paint.md` and the gameplay files, since K173).
+  - brief: `docs/design/K93_K145.md` (stage 2).
+  - env: dev servers on ports 5580-5589.
+- **K92** · Undo and redo for design changes (Levi, 2026-10-13). Two
+  buttons beside the panel's open/close button, shown only while the
+  panel is open, each enabled only when it can act; the mode badge moves
+  to a row below them. An undo stack of design changes, including the
+  "Free play" badge's tap (today it replaces the link, so an unshared
+  design is lost). His call (2) stands: under fog, a tap on the finish
+  indicator only shows a toast. Files: `src/ui/tweakpane_panel.ts`,
+  `src/main.ts`, `src/ui/mode_badge.ts`, `src/ui/url_state.ts`;
+  `.claude/rules/gameplay-badge.md` (MODE BADGE). Brief
+  `docs/design/K92.md` (one stage), plus K224 (the move pad over the open panel).
+  - K80 (5fed5c1): real time has no move undo (`undoAllowed(clock)`); if K92's buttons ever reach maze moves, they consult it.
+  - owner: agent a6841236edfc5caa5 (opus) of session d8031183, started
+    2026-10-14 09:37; it stops at about 11:37 or when the stage is done.
+  - branch: `worktree-agent-a6841236edfc5caa5`
+    (`.claude/worktrees/agent-a6841236edfc5caa5`), from 582b081; last
+    commit: none yet.
+  - evidence: `.claude/probes/K92/` in its worktree (copy at merge).
+  - next: its one stage plus K224 (the panel above the pad, or the pad
+    hidden while the panel is open: its call). At merge, carry its lore
+    edits into `gameplay-badge.md` (MODE BADGE) and `gameplay-panel.md`.
+  - brief: `docs/design/K92.md`.
+  - env: dev servers on ports 5600-5609.
 
 ## Next, in order
 
@@ -377,7 +432,7 @@ appends. Usage: don't hold agents back until the week nears 95% (Levi,
 2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17, 54% at
 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
 23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38, 78% at 08:05,
-80% at 08:37, 82% at 09:04 and 83% at 09:28; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
+80% at 08:37, 82% at 09:04, 83% at 09:28 and 84% at 09:36; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
 at about 07:53 "Keep going at full pace."; it resets Mondays at 12:00).
 Long work runs in stages from
 committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
@@ -391,16 +446,16 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running on 10-14: K198 stage 1 from 08:37, K93 (stage
-1 of K93 + K145) from 08:45 and K98 from 09:07 (all opus, 2 h caps).
-K100, K132, K90 stage 1b and K173 (the rules split) merged at
-08:39-09:17; the coordinator carries the running agents' rules edits
+(he may reorder). Running on 10-14: K98 from 09:07 and, from 09:37, K145 (stage 2 of
+K93 + K145) and K92 with K224 (opus, 2 h caps) and the round's phone
+pass (K156, sonnet, 1 h cap). K100, K132, K90 stage 1b, K173 (the rules
+split), K93 and K198 stage 1 merged at 08:39-09:31; the coordinator carries the running agents' rules edits
 into the topic files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
    K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
    and K180 against base ab6d330) is done (K197 filed); the next pass
-   runs after K198 and K93 merge and covers K146, K151, K148, K149,
-   K120, K90 1a and 1b, K100, K132, K198 and K93.
+   (round 2026-10-14b, running from 09:37) covers K146, K151, K148,
+   K149, K120, K90 1a and 1b, K100, K132, K198 and K93.
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
    5fed5c1; Levi plays it (K174).
@@ -409,9 +464,9 @@ into the topic files at their merges. Then, as code slots free up:
 5. K90 stage 1b: merged 2026-10-14 (feb12a0, flag off); Levi's call
    (ship, tune or stop) is in Waiting on Levi.
 6. K132 and K100: merged 2026-10-14 (402eb4b, 458e1e5).
-7. K93 + K145 (`docs/design/K93_K145.md`): stage 1 (K93) running from
-   08:45; stage 2 (K145) from master after it.
-8. K92, then K111 (both rework the panel).
+7. K93 + K145 (`docs/design/K93_K145.md`): stage 1 (K93) merged
+   2026-10-14 (ed8f284); stage 2 (K145) running from 09:37.
+8. K92, running from 09:37 with K224; then K111 (both rework the panel).
 9. K98, running from 09:07 (`docs/design/K98.md`).
 10. K76 stage 2.
 11. K80's turn-aligned hunter, a modifier of the normal maze; then
@@ -435,35 +490,6 @@ settings, 6.2 flash) and claude-config's CC39 (7.1); the draft is in
 
 K5-K7 (split, frame loop, worker) follow.
 
-- **K145** · A subtle hover glow on runs that aren't choices (Levi,
-  2026-10-13 about 16:00 and 16:12, verbatim in
-  `docs/design/levi_notes_2026-10-13.md`): in the maze, hovering any run
-  that isn't a choice at the player's junction (the choices keep their
-  stronger hover) lights a glow along both edges of the thread, inside
-  its bounds, fading quickly toward the center line and fading out with
-  distance from the hover point and toward the run's junctions; the
-  reach can borrow the choices' length param (`pulseReach`, which K93
-  makes the hover's reach). A touch press shows it too, until the finger
-  lifts (the tap-pluck still fires on release) or the press becomes a
-  tug or a pan. For the brief: the pointer move in `src/main.ts` asks
-  `fabric.edgeAt`, which picks only choosable runs, `setHover` tracks
-  one run, and a touch press on a thread sets `pendingPluck` with no
-  hover at all; the glow is a new G2 paint term plus its `paint_math`
-  mirror (the hovered run and the hover point's arc position), measured
-  along the thread like the pulses; a strength param (0 = off), proposed
-  daily-exempt (K57). Stage 2 of `docs/design/K93_K145.md`, a fresh agent
-  from master after K93's stage 1 merges.
-- **K92** · Undo and redo for design changes (Levi, 2026-10-13). Two
-  buttons beside the panel's open/close button, shown only while the
-  panel is open, each enabled only when it can act; the mode badge moves
-  to a row below them. An undo stack of design changes, including the
-  "Free play" badge's tap (today it replaces the link, so an unshared
-  design is lost). His call (2) stands: under fog, a tap on the finish
-  indicator only shows a toast. Files: `src/ui/tweakpane_panel.ts`,
-  `src/main.ts`, `src/ui/mode_badge.ts`, `src/ui/url_state.ts`;
-  `.claude/rules/gameplay-badge.md` (MODE BADGE). Brief
-  `docs/design/K92.md` (one stage); it launches after K198 stage 1 merges.
-  - K80 (5fed5c1): real time has no move undo (`undoAllowed(clock)`); if K92's buttons ever reach maze moves, they consult it.
 - **K111** · Accessibility (Levi, 2026-10-13). Reduced motion also
   stills the flow undulation, but not the intros or the pulses next to
   the player. Those pulses get a dropdown of alternative highlight modes,
@@ -686,8 +712,8 @@ K5-K7 (split, frame loop, worker) follow.
 ## Residuals (known, not fixed)
 
 - **K224** · On the phone (411x753) the K120 move pad (z-index 18) draws
-  over the open panel (seen in K198's phone probe). K92 reworks that
-  chrome, so its launch takes the fix.
+  over the open panel (seen in K198's phone probe). K92's agent takes
+  the fix (launched 2026-10-14 09:37).
 - **K223** · Tooling after K198: K149's `.claude/probes/K148_K149/probe.mjs
   slack` checks the old 0.3-screen rule and now fails by design (K198's
   `.claude/probes/K198/pan.mjs` replaces it), and K173's
