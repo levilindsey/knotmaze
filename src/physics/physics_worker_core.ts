@@ -156,7 +156,15 @@ export type WorkerToMain =
       genMs: number;
       ctorMs: number;
       bytes: number;
+      // K7 stage 5: when the worker took the init and when it answered, as
+      // epoch ms (performance.timeOrigin + now), so main can place both on
+      // its own clock (stats().host initAt, readyAt).
+      initAt: number;
+      readyAt: number;
     }
+  // K7 stage 5: posted once the worker's module has run (physics_worker.ts),
+  // at epoch ms `at`: the start gate's probe (stats().host helloAt).
+  | { type: "hello"; at: number }
   | { type: "snap"; gen: number; buf: ArrayBuffer }
   | {
       type: "settled";
@@ -173,6 +181,12 @@ export type WorkerToMain =
   | ({ type: "dumped"; id: number } & PhysicsDump);
 
 export type Post = (msg: WorkerToMain, transfer?: Transferable[]) => void;
+
+// A performance.now() reading as epoch ms, comparable across threads (each
+// has its own time origin). Node's performance has a timeOrigin too.
+export function epochMs(now: number): number {
+  return performance.timeOrigin + now;
+}
 
 interface SettleJob {
   kind: "presettle" | "load";
@@ -362,6 +376,8 @@ export class PhysicsWorkerCore {
       genMs: t1 - t0,
       ctorMs: t2 - t1,
       bytes: this.bytes,
+      initAt: epochMs(t0),
+      readyAt: epochMs(performance.now()),
     });
     this.dirty = true;
     this.flush();

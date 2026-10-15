@@ -1,4 +1,4 @@
-import { ChannelScheduler, PhysicsWorkerCore } from "./physics_worker_core";
+import { ChannelScheduler, PhysicsWorkerCore, epochMs } from "./physics_worker_core";
 import type { MainToWorker, WorkerToMain } from "./physics_worker_core";
 
 // THE PHYSICS WORKER (K7 stage 3, docs/design/K7_worker.md): the module
@@ -25,3 +25,6 @@ const core = new PhysicsWorkerCore(
 scope.onmessage = (e: MessageEvent<MainToWorker>): void => {
   core.onMessage(e.data);
 };
+
+// K7 stage 5: the module has run (the start gate's probe; main records it).
+scope.postMessage({ type: "hello", at: epochMs(performance.now()) }, { transfer: [] });
