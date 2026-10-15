@@ -162,7 +162,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
 
 - PHYSICS WORKER PARAM (K7 stage 3, 2026-10-14; brief
   `docs/design/K7_worker.md`): `physicsWorker` (`phw`, a flag, default
-  off) is APPENDED to codec v5 (v6 since K76 stage 2c) at index 135, after K298's 131-134. A
+  off) is APPENDED to codec v5 (v6 since K76 stage 2c) at index 135,
+  after K298's 131-134. A
   DAILY_EXEMPT_KEY (it changes where the physics runs, not the design,
   like `stb` / `lds`), so the golden dailies do not move. No panel row
   and no LIVE_EFFECTS entry: main.ts reads it ONCE, when it creates the
