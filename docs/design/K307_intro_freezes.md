@@ -761,3 +761,96 @@ What changed since the design above, and what rides this stage:
   `.claude/probes/K307/stage2/` (not `builds/`), and leave the
   originals alone.
 - **No phone.** Its measures ride K156's next pass (6.).
+
+## Stage 2 handoff (2026-10-15, the K307 stage 2 agent)
+
+**Done** on branch `worktree-agent-a11d7ce60428b687d` (worktree
+`.claude/worktrees/agent-a11d7ce60428b687d`), rebased on master 326eabb:
+- `c46d152`: the registry (`src/render/program_registry.ts`: every
+  program site, `PROGRAM_SITES`, the wave-1 rules), factory exports in
+  the seven site files (no shader edits), the warm-up
+  (`src/render/shader_warmup.ts`), the main.ts gate (8.'s list, plus
+  wave 2's start and the ripple's warm after wave 1) and both test files.
+- `915ec69`: the burn rule (a fire race warms the explore variants in
+  wave 1).
+- `9e19e15`: the warm-up links BLOCKING by default (`PARALLEL_DEFAULT`).
+- `4a1e474`: the lore (`render-shaders.md`, THE WARM-UP) and its index row.
+
+**Departures from the design:**
+- **3. ships blocking, not parallel.** The parallel path works and keeps
+  the trefoil turning, but in Chrome on D3D11 the programs it links never
+  reach the GPU program cache on disk, only the in-memory one, so EVERY
+  later load was cold: 3.0-3.5 s to first visible with the loader, where
+  master's restart is visible at 0.806 s. The blocking path persists. The
+  parallel code stays behind `PARALLEL_DEFAULT`; the experiments are in
+  render-shaders.md, THE WARM-UP.
+- **The cost, against 10.:** on a cold cache, the warm-up's single status
+  read blocks the first frame (2.77 s here), and no trefoil shows during
+  it: it comes up only after, at 3.41 s.
+- **5. does not hold:** wave 2 runs only on the parallel path, so it is
+  skipped. A program first drawn later links blocking at its first draw,
+  as on master, and persists.
+- **2.:** the design's "pixi-program" is the ParticleContainer's program
+  (`particles`, in wave 1 in every mode). Pixi's Graphics program is not
+  registered: only the private
+  `renderer.renderPipes.graphics._adaptor.shader.glProgram` reaches it,
+  and it costs under 45 ms cold.
+- **The burn** (K290 landed after the design): a fire race puts the
+  explore variants of section-rgb, arm-strip and junction-field in wave 1,
+  and pluck-still-explore under reduced motion. The fire's clock is the
+  distance walked, so the first burn can come at the first move.
+- **K366's ripple:** its program is on the registry (`pluck-ripple`, wave
+  1 when ripples are on); `PluckRipples.warm(stage)` still runs, now after
+  wave 1, for its texture pool.
+- **10.'s last point** (creating Pixi's GL programs in the pre-settle) is
+  not done: the cache-hit links cost section-rgb 20-26 ms, arm-strip 13,
+  junction-field 8.
+
+**Verification.** Observed: the desktop (D3D11, RX 6800 XT, 2400x1350),
+the daily (`?daily&phw=1`), a fresh profile per run, `trace_intro.mjs`
+with `--restart` for the warm load (the same profile).
+
+| Build | Cold: first visible | Cold: that frame's callback, then the worst after | Warm restart: first visible | Warm: first sleep |
+|---|---|---|---|---|
+| master 97d7c31 | 1.04 s | 2906 ms, then 2204 ms at 3.93 s | 0.806 s | 6.93 s |
+| parallel path (7fa6305, c46d152 before the rebase) | 3.30-3.43 s, trefoil turning | 86-92 ms, then 84-86 ms | 3.0-3.5 s: cold again | - |
+| blocking, shipped (4a1e474) | 3.69 s; frozen 0.40-3.19 s, no trefoil until 3.41 s | 65 ms, then 64 ms | 0.826 s (trefoil 0.54-0.81 s) | 6.89 s |
+
+- Every Pixi link after the warm-up was 30 ms or less, cold and warm; no
+  failures and no unregistered programs (the dev check, the probe hook).
+- Also observed on the parallel path: `phw=0` visible at 3.23 s, worst
+  72 ms after; cold first sleep 10.95-11.14 s (master 12.1 s); the
+  instant link (`?b&am=instant&snd=none`) visible at 3.24 s (`phw=1`) and
+  3.41 s (`phw=0`), with 131 ms and 212 ms frames after it, not from GL
+  (gl 35-37 ms) and not attributed; knot mode visible at 3.06 s.
+- Not measured on the blocking build: `phw=0`, the instant link, knot
+  mode, a cold first sleep (the run stopped at 7 s), a fire link.
+- `tsc` clean and the suite green (84 files, 1148 tests) at 4a1e474.
+- Inferred: why Chrome keeps parallel links off the disk; the burn's
+  cold cost (about 0.4-0.7 s more to first visible, from source sizes).
+
+**Not done:**
+- K366's first-tap residual: not started.
+  `.claude/probes/K307/stage2/k366_firsttap.mjs` is K279's probe with
+  `&phw=1`, ready.
+- The phone pass (rides K156): persistence and timing on Android.
+- `report()`'s `gateOpenAt` and `wave1.doneAt` are the blocking poll's
+  START (0.42 s on the cold load above); `firstPollMs` carries the 2.77 s.
+
+**What the next stage needs:**
+- **The cold freeze before the trefoil.** Cheapest: let the blocking
+  read wait until the trefoil is up (the pre-settle runs about 0.5 s
+  anyway, so a warm load loses nothing; inferred); the trefoil then
+  shows, frozen, through the read.
+- **A cold load that keeps turning AND persists.** Untested idea: link
+  without the extension (ANGLE compiled concurrently even then: the
+  blocking wait is the longest compile, not the sum) and read the
+  statuses late, once the compiles are likely done. First check whether
+  a link without the extension stops `CrGpuMain` at the link or only at
+  the status read. If it works, wave 2 can come back the same way.
+- The merge: K7 stage 6 (the worker default), K76 2d and K5 M1 touch
+  main.ts, ribbon_renderer.ts and arm_strip.ts beside this branch.
+- Evidence: the worktree's `.claude/probes/K307/stage2/` (untracked:
+  `trace_intro.mjs` with `--restart` and `--inject`, `run_s2.ps1`,
+  batches 1-7, `runs/`). Copy it to the main checkout's
+  `.claude/probes/K307/` before the worktree goes.
