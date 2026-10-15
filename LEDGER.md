@@ -333,6 +333,22 @@ and never reused.
   - evidence: `.claude/probes/K111/` in that worktree.
   - next: stage 1 of the brief; stage 2 after K145 merges.
   - brief: `docs/design/K111.md`.
+- **K191** · K169's two calls, decided (Levi, 2026-10-14 about 11:10,
+  email 3.x): 3.1 "fade out": a web that stops being full (a backtrack
+  or a reset) fades its gold out over the same 0.25 s instead of losing
+  it at once; 3.2 "yes": reduced Motion keeps the fade (as built). A
+  full web restored on load still appears without a fade (not asked).
+  It shares `ribbon_renderer.ts` with K145, whose nearest edit sits three
+  lines from the fade's tick: expect at most a small rebase at the merge.
+  - owner: claude agent aa7dbec9cbe592155 (sonnet) of session d8031183,
+    started 2026-10-14 11:21 with a 1 h cap (about 12:21).
+  - branch: `worktree-agent-aa7dbec9cbe592155`
+    (`.claude/worktrees/agent-aa7dbec9cbe592155`), from e2f96b8; last
+    commit: none yet (unpushed).
+  - evidence: `.claude/probes/K191/` in that worktree; stage 1's in the
+    main checkout's `.claude/probes/K154_K169/`.
+  - next: the brief's stage 2.
+  - brief: `docs/design/K154_K169.md` ("Stage 2 (K191): fade out too").
 
 ## Next, in order
 
@@ -368,8 +384,9 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
 (he may reorder). Running: K145 (stage 2 of K93 + K145), resumed at
-10:59 from its handoff (opus, 90 min), and K111 stage 1 from 11:01
-(sonnet, 1 h). At about 10:57 Levi lifted the usage hold: launches go on
+10:59 from its handoff (opus, 90 min), K111 stage 1 from 11:01
+(sonnet, 1 h) and K191's fade-out from 11:21 (sonnet, 1 h). At about
+10:57 Levi lifted the usage hold: launches go on
 until the week reaches 97% (it resets Mon 2026-10-19 12:00). K100, K132,
 K90 stage 1b, K173 (the rules split), K93, K198 stage 1, K98 and K92
 merged at 08:39-10:08; the coordinator carries the running agents' rules
@@ -397,7 +414,7 @@ edits into the topic files at their merges. Then, as code slots free up:
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
     coordinator; Levi may reorder): K198 stage 2 and K174's controls
-    (both after K111 stage 1, the panel), K191's fade-out, K193's
+    (both after K111 stage 1, the panel), K191's fade-out (running from 11:21), K193's
     portrait emulation and then K195's A/A floor, and K235 (after K145,
     main.ts).
 11. K76 stage 2.
@@ -482,15 +499,6 @@ K5-K7 (split, frame loop, worker) follow.
   exist; the brief checks which the panel shows and as what. Records:
   `.claude/probes/K80/rt/results.md`; K177's unchecked items ride along.
   Brief to write; after K111 stage 1 (the panel).
-- **K191** · K169's two calls, decided (Levi, 2026-10-14 about 11:10,
-  email 3.x): 3.1 "fade out": a web that stops being full (a backtrack
-  or a reset) fades its gold out over the same 0.25 s instead of losing
-  it at once; 3.2 "yes": reduced Motion keeps the fade (as built). A
-  full web restored on load still appears without a fade (not asked).
-  Small: `src/render/web_fade.ts` and its test, applied in
-  `junction_field.ts` and `ribbon_renderer.ts`; check those files
-  against the running agents' branches before launching
-  (`docs/design/K154_K169.md`, "Stage 1 handoff").
 - **K193** · The phone pass's orientation, decided (Levi, 2026-10-14
   about 11:10, email 4.1: "b seems best"): the pass emulates a 411x753
   portrait viewport over CDP and leaves the phone as it sits, and a
