@@ -79,7 +79,7 @@
 // that wore this field is gone with the over-fills: no thread is copied
 // over the webs any more.)
 
-import { Buffer, BufferUsage, Shader, Texture, UniformGroup } from "pixi.js";
+import { Buffer, BufferUsage, GlProgram, Shader, Texture, UniformGroup } from "pixi.js";
 import type { MeshGeometry } from "pixi.js";
 import { GAP_FRAG_LIB, defaultGapTexture } from "./gap_mask";
 import { FloatRows, ROW_SHIFT } from "./float_rows";
@@ -491,13 +491,25 @@ let JUNCTION_SHADER_EX: FieldShader | null = null;
 // lazily, after the renderer bound it.
 let GAP_TEX: Texture | null = null;
 
-function makeShader(
-  vertex: string,
-  fragment: string,
-  name: string
-): FieldShader {
-  const sh = Shader.from({
-    gl: { vertex, fragment, name },
+// K307 WARM-UP: the fan programs, for the warm-up registry
+// (program_registry.ts). GlProgram.from caches by source, so this is the
+// very program the fans draw with.
+let JUNCTION_EXPLORE_FRAG: string | null = null;
+export function junctionProgram(explore: boolean): GlProgram {
+  if (!explore) {
+    return GlProgram.from({ vertex: JUNCTION_VERT, fragment: JUNCTION_FRAG, name: "junction-field" });
+  }
+  JUNCTION_EXPLORE_FRAG ??= withExploreField(JUNCTION_FRAG);
+  return GlProgram.from({
+    vertex: JUNCTION_VERT,
+    fragment: JUNCTION_EXPLORE_FRAG,
+    name: "junction-field-explore",
+  });
+}
+
+function makeShader(glProgram: GlProgram): FieldShader {
+  const sh = new Shader({
+    glProgram,
     resources: {
       uJData: recordData().source,
       uGapData: (GAP_TEX ?? defaultGapTexture()).source,
@@ -514,7 +526,7 @@ function makeShader(
 
 export function junctionShader(): FieldShader {
   if (!JUNCTION_SHADER) {
-    JUNCTION_SHADER = makeShader(JUNCTION_VERT, JUNCTION_FRAG, "junction-field");
+    JUNCTION_SHADER = makeShader(junctionProgram(false));
   }
   return JUNCTION_SHADER;
 }
@@ -523,11 +535,7 @@ export function junctionShader(): FieldShader {
 // mode turns on; setExplore swaps the fan meshes onto it.
 export function junctionShaderExplore(): FieldShader {
   if (!JUNCTION_SHADER_EX) {
-    JUNCTION_SHADER_EX = makeShader(
-      JUNCTION_VERT,
-      withExploreField(JUNCTION_FRAG),
-      "junction-field-explore"
-    );
+    JUNCTION_SHADER_EX = makeShader(junctionProgram(true));
   }
   return JUNCTION_SHADER_EX;
 }

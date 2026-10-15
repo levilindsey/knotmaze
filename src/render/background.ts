@@ -24,6 +24,7 @@
 
 import {
   Container,
+  GlProgram,
   Mesh,
   MeshGeometry,
   RenderTexture,
@@ -109,14 +110,55 @@ function screenUniforms(): UniformGroup {
   return SCREEN_UNIFORMS;
 }
 
+// K307 WARM-UP: the layer's programs, for the warm-up registry
+// (program_registry.ts). GlProgram.from caches by source, so these are the
+// very programs the layer draws with. `id` is a program id (effectProgram).
+export function backgroundProgram(id: string): GlProgram {
+  return GlProgram.from({ vertex: QUAD_VERT, fragment: effectFragment(id), name: `bg-${id}` });
+}
+export function blitProgram(): GlProgram {
+  return GlProgram.from({ vertex: QUAD_VERT, fragment: BLIT_FRAG, name: "bg-blit" });
+}
+export function fogProgram(): GlProgram {
+  return GlProgram.from({ vertex: FOG_VERT, fragment: FOG_FRAG, name: "bg-fog" });
+}
+// Every program id a layer can draw with: each effect's own and its shaped
+// program, and vellum's drift program.
+export function allBackgroundProgramIds(): string[] {
+  const ids: string[] = [];
+  for (const id of BACKGROUNDS) {
+    if (id === "none") continue;
+    ids.push(effectProgram(id, 0), effectProgram(id, 0, true));
+    if (effectProgram(id, 1) !== id) ids.push(effectProgram(id, 1));
+  }
+  return ids;
+}
+// The program ids a layer configured with these settings draws first:
+// none while it is inactive (none, or intensity 0), else the program at
+// drift time 0, plus vellum's drift program when it will move.
+export function backgroundWarmIds(
+  effect: BackgroundId,
+  intensity: number,
+  speed: number,
+  shape: BackgroundShape
+): string[] {
+  const id = BACKGROUNDS.includes(effect) ? effect : "none";
+  if (id === "none" || !(intensity > 0)) return [];
+  const shaped = needsShapeProgram(id, sanitizeBackgroundShape(shape));
+  const ids = [effectProgram(id, 0, shaped)];
+  const drift = effectProgram(id, 1, shaped);
+  if (drift !== ids[0] && backgroundDrift(id, speed) !== 0) ids.push(drift);
+  return ids;
+}
+
 // Keyed by program id (effectProgram: an effect, "vellum-drift", or an
 // effect's shaped program "<id>-x").
 const EFFECT_SHADERS = new Map<string, TexShader>();
 function effectShader(id: string): TexShader {
   let sh = EFFECT_SHADERS.get(id);
   if (!sh) {
-    sh = Shader.from({
-      gl: { vertex: QUAD_VERT, fragment: effectFragment(id), name: `bg-${id}` },
+    sh = new Shader({
+      glProgram: backgroundProgram(id),
       resources: { bgUniforms: bgUniforms() },
     }) as TexShader;
     // Mesh wants a texture-carrying shader; this one samples none.
@@ -361,8 +403,8 @@ export class BackgroundLayer {
       this.quad = quadMesh(effectShader(this.program));
       this.scene = new Container();
       this.scene.addChild(this.quad);
-      const blitShader = Shader.from({
-        gl: { vertex: QUAD_VERT, fragment: BLIT_FRAG, name: "bg-blit" },
+      const blitShader = new Shader({
+        glProgram: blitProgram(),
         resources: {
           uBgTex: this.rt.source,
           uBgSampler: this.rt.source.style,
@@ -438,8 +480,8 @@ export class FogBackdrop {
       uFogRect: Float32Array;
       uFogDisp: Float32Array;
     };
-    this.shader = Shader.from({
-      gl: { vertex: FOG_VERT, fragment: FOG_FRAG, name: "bg-fog" },
+    this.shader = new Shader({
+      glProgram: fogProgram(),
       resources: {
         uFogTex: fogTex.source,
         uFogSampler: fogTex.source.style,

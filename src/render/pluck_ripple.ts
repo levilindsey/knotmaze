@@ -135,6 +135,12 @@ void main(void) {
 }
 `;
 
+// K307 WARM-UP: the ripple's program, for the warm-up registry
+// (program_registry.ts). GlProgram.from caches by source.
+export function rippleProgram(): GlProgram {
+  return GlProgram.from({ vertex: VERT, fragment: FRAG, name: "pluck-ripple" });
+}
+
 interface Ripple {
   // World point (the world container's local coordinates).
   x: number;
@@ -209,7 +215,7 @@ export class PluckRipples {
     return new Filter({
       // GlProgram.from caches by source: the warm-up's copy links the very
       // program the ripples draw with.
-      glProgram: GlProgram.from({ vertex: VERT, fragment: FRAG, name: "pluck-ripple" }),
+      glProgram: rippleProgram(),
       resources: { rippleUniforms: uniforms },
       // The world is drawn into the filter's texture: at the canvas's own
       // resolution and MSAA, or a ripple would blur and alias the threads.
