@@ -9,11 +9,10 @@
 // only while the head is off screen: the indicator module decides that).
 // The head sits in any fabric maze, so unlike the finish's there is no
 // "solved" or "unrevealed" condition: it shows during play and after a
-// finish alike, and under fog of war (it is where you are). There is no
-// viewer setting for it either (K148's call): the finish's can be turned
-// off to take the direction to the exit away; your own position gives
-// nothing away.
-export type HeadWhy = "" | "no maze" | "loading";
+// finish alike, and under fog of war (it is where you are). Since K198
+// stage 2 (Levi, 2026-10-14) the viewer can switch it off (the Maze
+// folder's headIndicator, remembered per browser, default on).
+export type HeadWhy = "" | "no maze" | "loading" | "setting off";
 
 export interface HeadScene {
   // The fabric maze mode (not the knot).
@@ -22,13 +21,24 @@ export interface HeadScene {
   built: boolean;
   // The world is on screen: not the hidden load settle.
   shown: boolean;
+  // The viewer's headIndicator setting (absent = on).
+  enabled?: boolean;
 }
 
 export function headIndicatorWhy(s: HeadScene): HeadWhy {
+  if (s.enabled === false) return "setting off";
   if (!s.mazeFabric || !s.built) return "no maze";
   if (!s.shown) return "loading";
   return "";
 }
+
+// K198 stage 2 (6.2): the head's indicator shows only once the head has
+// been off screen this long (offscreen_indicators.ts showDelay; hiding is
+// never delayed). Measured at 411x753 in follow play, the blips where a
+// long run outpaces the follow spring last up to 0.33 s (K148 saw 0.33 s,
+// K198's before-run 0.326 s and 0.141 s); 0.45 s hides them with a third
+// to spare and still shows a head that really left the screen promptly.
+export const HEAD_SHOW_DELAY_S = 0.45;
 
 // A tap's tween takes this long (the finish's tap eases its framing in the
 // same 0.6 s); reduced motion jumps.

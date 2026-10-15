@@ -19,8 +19,14 @@
 // PAN_SLACK (0.3 of the screen per side, at every zoom) is gone.
 //
 // Opening the panel only widens the range, so it never moves the view.
-// Closing it, a resize or the fit drifting can leave the view outside: it
-// eases back in (easeIntoRange, once a frame), never snaps, and a gesture
+// THE PANEL'S EDGE IS TWEENED (K198 stage 2): the panel itself snaps open
+// and shut (setOpen toggles its display), but the range sees it through an
+// openness in [0, 1] that eases over PANEL_TWEEN_S on a time-based clock
+// (stepPanelTween, easePanel; 0 under reduced motion), and the widening is
+// scaled by it. Closing at the limit, the view rides the edge home in
+// PANEL_TWEEN_S at any frame rate, starting and stopping smoothly.
+// A resize or the fit drifting can still leave the view outside: it eases
+// back in (easeIntoRange, once a frame), never snaps, and a gesture
 // meanwhile is clamped to where the ease has got to. See gameplay-camera.md
 // (FIT CAMERA PAN RANGE).
 
@@ -39,13 +45,40 @@ export interface FitView {
   panY: number;
 }
 
+// How long the range's panel edge takes to follow the panel open or shut.
+export const PANEL_TWEEN_S = 0.25;
+
 // The open panel as the range needs it (null while it is closed).
 export interface OpenPanel {
-  // The panel's left edge, screen px.
+  // The panel's left edge, screen px (the last open one while it closes).
   left: number;
   // The framed maze's drawn right edge in fit-screen px.
   mazeRight: number;
+  // The eased openness (easePanel): the share of the widening in force.
+  // Absent = 1, fully open.
+  open?: number;
 }
+
+// One step of the panel's clock: its linear progress u (0 closed, 1 open)
+// moves toward `open` by dt / dur. A reversal mid-way turns back from where
+// it is. dur 0 (reduced motion) jumps.
+export function stepPanelTween(
+  u: number,
+  open: boolean,
+  dt: number,
+  dur: number = PANEL_TWEEN_S
+): number {
+  if (!(dur > 0)) return open ? 1 : 0;
+  const d = Math.max(0, dt) / dur;
+  return open ? Math.min(1, u + d) : Math.max(0, u - d);
+}
+
+// The openness the range uses for progress u: smoothstep, so the edge (and
+// a view riding it) starts and stops smoothly.
+export const easePanel = (u: number): number => {
+  const c = u < 0 ? 0 : u > 1 ? 1 : u;
+  return c * c * (3 - 2 * c);
+};
 
 // Pan bounds per axis (px). The ease's allowance has the same shape: how
 // far past each bound the view may still sit (>= 0).
@@ -67,9 +100,12 @@ export function panRange(
 ): PanBounds {
   const loX = w * (1 - zoom);
   // NaN (no maze edge yet) compares false: no widening.
-  const open = panel ? panel.left - gap - zoom * panel.mazeRight : NaN;
+  const edge = panel ? panel.left - gap - zoom * panel.mazeRight : NaN;
+  const wide = edge < loX ? edge : loX;
+  // The tweened panel (K198 stage 2): the share of the widening in force.
+  const k = panel?.open ?? 1;
   return {
-    loX: open < loX ? open : loX,
+    loX: k >= 1 ? wide : loX + (wide - loX) * Math.max(0, k),
     hiX: 0,
     loY: h * (1 - zoom),
     hiY: 0,
@@ -123,4 +159,25 @@ export function easeIntoRange(
   view.panX = clampTo(view.panX, r.loX - allow.loX, r.hiX + allow.hiX);
   view.panY = clampTo(view.panY, r.loY - allow.loY, r.hiY + allow.hiY);
   return allow.loX + allow.hiX + allow.loY + allow.hiY > 0;
+}
+
+// One frame of the fit camera's range (main.ts easeView, K198 stage 2): the
+// ease back into range is measured against the range as it stood at the
+// panel's previous openness (`before`), then the view is clamped to this
+// frame's (`now`) with that allowance. A view at the limit therefore rides
+// the tweened panel edge exactly (no lag on top of the tween), while a view
+// a resize or the fit's drift left outside still eases in at `rate` a frame.
+export function stepRange(
+  view: FitView,
+  w: number,
+  h: number,
+  maxZoom: number,
+  before: OpenPanel | null,
+  now: OpenPanel | null,
+  allow: PanBounds,
+  rate: number = RANGE_EASE,
+  gap: number = PANEL_GAP
+): void {
+  easeIntoRange(view, w, h, before, allow, rate, gap);
+  clampFitView(view, w, h, maxZoom, now, allow, gap);
 }

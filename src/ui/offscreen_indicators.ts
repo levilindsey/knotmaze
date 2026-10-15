@@ -37,6 +37,22 @@
 //   along the frame's edge to the nearest free point. Indicators placed
 //   earlier in a frame are boxes to avoid for later ones. The chevron
 //   always aims at the target from wherever its disc ends up.
+//
+// K198 stage 2 (Levi, 2026-10-14):
+// - SIZE: one viewer setting scales every indicator (env.scale(), a
+//   multiplier on INDICATOR_SIZE; the placement, the gaps and the chrome's
+//   grown boxes follow it).
+// - SHOW DELAY: a target may ask for one (showDelay(), seconds). Its
+//   indicator then shows only once the marker has stayed off screen that
+//   long (status "pending" meanwhile, and it pushes nothing aside); hiding
+//   stays immediate. The head's hides the blips of a follow camera that a
+//   long run outpaces.
+// - THE PANEL: env.panel() hands over the panel's box and its tweened
+//   openness (the camera's clock, view_clamp.ts). The indicators the panel
+//   displaces slide along the frame between the layout without the panel
+//   and the one with it on that clock, so they move to their new place as
+//   the range's edge does, instead of jumping; their other moves stay
+//   instant.
 
 import { whenReduced } from "./motion";
 
@@ -223,17 +239,13 @@ export function layoutIndicators(
   vw: number,
   vh: number,
   safe: Rect,
-  avoid: readonly Rect[]
+  avoid: readonly Rect[],
+  size: number = INDICATOR_SIZE
 ): Map<string, Placement> {
   const out = new Map<string, Placement>();
-  const half = INDICATOR_SIZE / 2;
+  const half = size / 2;
   const grow = half + INDICATOR_GAP;
-  const frame: Rect = {
-    left: safe.left + INDICATOR_EDGE + half,
-    top: safe.top + INDICATOR_EDGE + half,
-    right: vw - safe.right - INDICATOR_EDGE - half,
-    bottom: vh - safe.bottom - INDICATOR_EDGE - half,
-  };
+  const frame = indicatorFrame(vw, vh, safe, size);
   const boxes = [...avoid];
   for (const c of candidates) {
     if (!offscreen(c.at, c.radius, vw, vh, c.shown)) continue;
@@ -243,6 +255,120 @@ export function layoutIndicators(
     boxes.push({ left: p.x - half - grow, top: p.y - half - grow, right: p.x + half + grow, bottom: p.y + half + grow });
   }
   return out;
+}
+
+// The frame indicator centers go on (the safe area inset by the edge and
+// the half-size).
+export function indicatorFrame(
+  vw: number,
+  vh: number,
+  safe: Rect,
+  size: number = INDICATOR_SIZE
+): Rect {
+  const half = size / 2;
+  return {
+    left: safe.left + INDICATOR_EDGE + half,
+    top: safe.top + INDICATOR_EDGE + half,
+    right: vw - safe.right - INDICATOR_EDGE - half,
+    bottom: vh - safe.bottom - INDICATOR_EDGE - half,
+  };
+}
+
+// A point's coordinate along the frame's perimeter (clockwise from the
+// top-left corner, as pointAt): the edge it is nearest to.
+function perimeterOf(f: Rect, p: Point): number {
+  const w = f.right - f.left;
+  const h = f.bottom - f.top;
+  const dTop = Math.abs(p.y - f.top);
+  const dRight = Math.abs(p.x - f.right);
+  const dBottom = Math.abs(p.y - f.bottom);
+  const dLeft = Math.abs(p.x - f.left);
+  const m = Math.min(dTop, dRight, dBottom, dLeft);
+  const cx = Math.min(f.right, Math.max(f.left, p.x));
+  const cy = Math.min(f.bottom, Math.max(f.top, p.y));
+  if (m === dTop) return cx - f.left;
+  if (m === dRight) return w + (cy - f.top);
+  if (m === dBottom) return w + h + (f.right - cx);
+  return 2 * w + h + (f.bottom - cy);
+}
+
+// K198 stage 2: an indicator part way between its place without the panel
+// (`a`) and with it (`b`): `t` of the way along the frame's perimeter, the
+// shorter way round, so it slides along the screen's edge. The chevron
+// aims at `target` from there.
+export function blendPlacement(
+  frame: Rect,
+  a: Placement,
+  b: Placement,
+  t: number,
+  target: Point
+): Placement {
+  if (t <= 0) return a;
+  if (t >= 1) return b;
+  const per = 2 * (frame.right - frame.left + frame.bottom - frame.top);
+  if (!(per > 0)) {
+    const x = a.x + (b.x - a.x) * t;
+    const y = a.y + (b.y - a.y) * t;
+    return { x, y, angle: Math.atan2(target.y - y, target.x - x) };
+  }
+  const sa = perimeterOf(frame, a);
+  let ds = perimeterOf(frame, b) - sa;
+  ds = ((ds % per) + per) % per;
+  if (ds > per / 2) ds -= per;
+  const p = pointAt(frame, sa + ds * t);
+  return { x: p.x, y: p.y, angle: Math.atan2(target.y - p.y, target.x - p.x) };
+}
+
+// K198 stage 2: a show delay's clock, one frame. `pending` = how long the
+// marker has been off screen while its indicator waits (seconds; null =
+// not waiting). A marker on screen resets it; a shown indicator needs
+// none. The first frame off screen starts it at 0, so a blip shorter than
+// `delay` never shows.
+export function stepShowDelay(
+  pending: number | null,
+  off: boolean,
+  shown: boolean,
+  dt: number,
+  delay: number
+): { pending: number | null; show: boolean } {
+  if (!off) return { pending: null, show: false };
+  if (shown || !(delay > 0)) return { pending: null, show: true };
+  const p = pending === null ? 0 : pending + Math.max(0, dt);
+  return p >= delay - 1e-9 ? { pending: null, show: true } : { pending: p, show: false };
+}
+
+// K198 stage 2: the indicators' viewer settings (localStorage, never in a
+// link; panel checkboxes and a slider in the Maze folder). The finish's
+// switch is K73's own (main.ts FINISH_INDICATOR_KEY).
+export const HEAD_INDICATOR_KEY = "knotmaze.headIndicator";
+export const MINOTAUR_INDICATOR_KEY = "knotmaze.minotaurIndicator";
+export const INDICATOR_SIZE_KEY = "knotmaze.indicatorSize";
+// The size slider: a multiplier on INDICATOR_SIZE (50 px).
+export const INDICATOR_SCALE_MIN = 0.6;
+export const INDICATOR_SCALE_MAX = 1.8;
+
+export interface IndicatorPrefs {
+  head: boolean;
+  minotaur: boolean;
+  scale: number;
+}
+
+// A stored size: clamped to the slider's range, 2 decimals; anything
+// unreadable is the default 1.
+export function parseIndicatorScale(raw: string | null): number {
+  const v = raw === null || raw.trim() === "" ? NaN : Number(raw);
+  if (!Number.isFinite(v)) return 1;
+  const c = Math.min(INDICATOR_SCALE_MAX, Math.max(INDICATOR_SCALE_MIN, v));
+  return Math.round(c * 100) / 100;
+}
+
+// The stored settings (both switches default on, the size 1).
+export function indicatorPrefs(get: (key: string) => string | null): IndicatorPrefs {
+  return {
+    head: get(HEAD_INDICATOR_KEY) !== "0",
+    minotaur: get(MINOTAUR_INDICATOR_KEY) !== "0",
+    scale: parseIndicatorScale(get(INDICATOR_SIZE_KEY)),
+  };
 }
 
 // ---- Styles and glyphs ----------------------------------------------------
@@ -321,6 +447,9 @@ export interface IndicatorTarget {
   label: () => string;
   // What a tap does (only while the environment's tapEnabled()).
   onTap?: () => void;
+  // K198 stage 2: seconds the marker must stay off screen before the
+  // indicator shows (absent or 0: at once). Hiding is never delayed.
+  showDelay?: () => number;
 }
 
 export interface IndicatorHandle {
@@ -341,6 +470,12 @@ export interface IndicatorEnv {
   avoid: () => ReadonlyArray<Element | null>;
   // Taps act (the tap-to-pan preference); otherwise indicators are inert.
   tapEnabled: () => boolean;
+  // K198 stage 2: the size setting, a multiplier on INDICATOR_SIZE.
+  scale?: () => number;
+  // K198 stage 2: the panel's box (its last open one while it closes; null
+  // = never opened) and its tweened openness in [0, 1]. Keep the panel out
+  // of avoid(): this is how it is avoided.
+  panel?: () => { box: Rect | null; open: number };
 }
 
 // Why an indicator is not showing, or "shown" (probes).
@@ -348,6 +483,8 @@ export type IndicatorStatus =
   | "hidden"
   | "no position"
   | "on screen"
+  // K198 stage 2: off screen, waiting out its show delay.
+  | "pending"
   | "shown";
 
 interface Entry {
@@ -366,6 +503,8 @@ interface Entry {
   lastTip: string;
   lastIcon: string;
   inert: boolean | null;
+  // The show delay's clock (stepShowDelay; null = not waiting).
+  pending: number | null;
 }
 
 // Re-read the chrome's boxes every this many frames while anything shows
@@ -379,6 +518,8 @@ export class OffscreenIndicators {
   private avoidBoxes: Rect[] = [];
   private avoidAge = Infinity;
   private safe: Rect = { left: 0, top: 0, right: 0, bottom: 0 };
+  // The size the elements and the avoid boxes were last made for.
+  private size = INDICATOR_SIZE;
 
   constructor(env: IndicatorEnv) {
     ensureStyles();
@@ -418,6 +559,7 @@ export class OffscreenIndicators {
       lastTip: "",
       lastIcon: icon,
       inert: null,
+      pending: null,
     };
     el.addEventListener("click", () => {
       if (e.on && this.env.tapEnabled()) e.target.onTap?.();
@@ -441,57 +583,127 @@ export class OffscreenIndicators {
     };
   }
 
-  // One frame: decide, place and draw every indicator.
-  update(): void {
+  // One frame: decide, place and draw every indicator. dt = seconds since
+  // the last frame (the show delays' clock).
+  update(dt: number = 1 / 60): void {
     const { x: vx, y: vy, s } = this.env.view();
     const { w, h } = this.env.size();
+    const size = this.sizeNow();
     const candidates: Candidate[] = [];
     for (const e of this.entries) {
       e.at = null;
       if (!e.target.visible() || !e.gates.every((g) => g())) {
         e.status = "hidden";
+        e.pending = null;
         continue;
       }
       if (!e.target.world(this.scratch)) {
         e.status = "no position";
+        e.pending = null;
         continue;
       }
       e.at = { x: vx + this.scratch[0] * s, y: vy + this.scratch[1] * s };
-      candidates.push({
+      const c: Candidate = {
         id: e.target.id,
         at: e.at,
         radius: e.target.radius() * s,
         shown: e.on,
-      });
+      };
+      // A show delay holds an indicator back (out of the layout: it pushes
+      // nothing aside) until its marker has been off screen long enough.
+      const delay = e.target.showDelay?.() ?? 0;
+      const off = offscreen(c.at, c.radius, w, h, c.shown);
+      const d = stepShowDelay(e.pending, off, e.on, dt, delay);
+      e.pending = d.pending;
+      if (d.pending !== null) continue;
+      candidates.push(c);
     }
     // The chrome's boxes: only needed while something is off screen.
     const anyOff = candidates.some((c) => offscreen(c.at, c.radius, w, h, c.shown));
     if (anyOff && (++this.avoidAge >= AVOID_REFRESH_FRAMES || !this.entries.some((e) => e.on))) {
-      this.avoidBoxes = this.readAvoid();
+      this.avoidBoxes = this.readAvoid(size);
       this.avoidAge = 0;
     }
     const layout = anyOff
-      ? layoutIndicators(candidates, w, h, this.safe, this.avoidBoxes)
+      ? this.layoutWithPanel(candidates, w, h, size)
       : new Map<string, Placement>();
     const tapOn = this.env.tapEnabled();
     for (const e of this.entries) {
       const p = layout.get(e.target.id);
       if (!p) {
-        if (e.at) e.status = "on screen";
+        if (e.pending !== null) e.status = "pending";
+        else if (e.at) e.status = "on screen";
         e.placed = null;
         this.hideEntry(e);
         continue;
       }
       e.status = "shown";
       e.placed = p;
-      this.showEntry(e, p, tapOn && !!e.target.onTap);
+      this.showEntry(e, p, tapOn && !!e.target.onTap, size);
     }
+  }
+
+  // The size setting, applied: a change resizes the elements and re-reads
+  // the chrome's boxes (they are grown by the half-size).
+  private sizeNow(): number {
+    const k = this.env.scale?.() ?? 1;
+    const size = INDICATOR_SIZE * (Number.isFinite(k) && k > 0 ? k : 1);
+    if (size !== this.size) {
+      this.size = size;
+      this.avoidAge = Infinity;
+      const css = size === INDICATOR_SIZE ? "" : `${size}px`;
+      for (const e of this.entries) {
+        e.el.style.width = css;
+        e.el.style.height = css;
+        e.lastX = NaN;
+      }
+    }
+    return size;
+  }
+
+  // The layout, with the panel avoided as far as it is open (env.panel):
+  // between closed and open, each indicator slides from its place without
+  // the panel to its place with it (blendPlacement).
+  private layoutWithPanel(
+    candidates: readonly Candidate[],
+    w: number,
+    h: number,
+    size: number
+  ): Map<string, Placement> {
+    const pnl = this.env.panel?.();
+    const box = pnl?.box ?? null;
+    const t = box ? Math.min(1, Math.max(0, pnl!.open)) : 0;
+    const without =
+      t >= 1 ? null : layoutIndicators(candidates, w, h, this.safe, this.avoidBoxes, size);
+    if (without && t <= 0) return without;
+    const grow = size / 2 + INDICATOR_GAP;
+    const panelBox: Rect = {
+      left: box!.left - grow,
+      top: box!.top - grow,
+      right: box!.right + grow,
+      bottom: box!.bottom + grow,
+    };
+    const withPanel = layoutIndicators(
+      candidates, w, h, this.safe, [...this.avoidBoxes, panelBox], size
+    );
+    if (!without) return withPanel;
+    const frame = indicatorFrame(w, h, this.safe, size);
+    const out = new Map<string, Placement>();
+    for (const c of candidates) {
+      const a = without.get(c.id);
+      const b = withPanel.get(c.id);
+      if (a && b) out.set(c.id, blendPlacement(frame, a, b, t, c.at));
+      else if (b) out.set(c.id, b);
+      else if (a) out.set(c.id, a);
+    }
+    return out;
   }
 
   hideAll(): void {
     for (const e of this.entries) {
       e.status = "hidden";
       e.placed = null;
+      e.pending = null;
       this.hideEntry(e);
     }
   }
@@ -515,8 +727,8 @@ export class OffscreenIndicators {
     }));
   }
 
-  private readAvoid(): Rect[] {
-    const grow = INDICATOR_SIZE / 2 + INDICATOR_GAP;
+  private readAvoid(size: number): Rect[] {
+    const grow = size / 2 + INDICATOR_GAP;
     const out: Rect[] = [];
     for (const el of this.env.avoid()) {
       if (!el) continue;
@@ -533,13 +745,13 @@ export class OffscreenIndicators {
   }
 
   // Writes the DOM only where something changed.
-  private showEntry(e: Entry, p: Placement, interactive: boolean): void {
+  private showEntry(e: Entry, p: Placement, interactive: boolean, size: number): void {
     const x = Math.round(p.x * 2) / 2;
     const y = Math.round(p.y * 2) / 2;
     if (x !== e.lastX || y !== e.lastY) {
       e.lastX = x;
       e.lastY = y;
-      const h = INDICATOR_SIZE / 2;
+      const h = size / 2;
       e.el.style.transform = `translate3d(${x - h}px,${y - h}px,0)`;
     }
     const deg = Math.round((p.angle * 180) / Math.PI);

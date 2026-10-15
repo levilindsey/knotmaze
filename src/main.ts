@@ -87,20 +87,31 @@ import { rateRun, ratingForResult, walkedOf } from "./game/star_rating";
 import { MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
 import { ModeBadge, modeBadgeFor } from "./ui/mode_badge";
-import { headIndicatorWhy, headReturnPlan } from "./ui/head_indicator";
 import {
+  HEAD_SHOW_DELAY_S,
+  headIndicatorWhy,
+  headReturnPlan,
+} from "./ui/head_indicator";
+import {
+  PANEL_TWEEN_S,
   clampFitView,
-  easeIntoRange,
+  easePanel,
   noAllowance,
   panRange,
+  stepPanelTween,
+  stepRange,
   type OpenPanel,
 } from "./ui/view_clamp";
 import {
   DARK_DISC,
   GLYPH_R,
+  HEAD_INDICATOR_KEY,
+  INDICATOR_SIZE_KEY,
+  MINOTAUR_INDICATOR_KEY,
   OffscreenIndicators,
+  indicatorPrefs,
 } from "./ui/offscreen_indicators";
-import type { IndicatorStyle } from "./ui/offscreen_indicators";
+import type { IndicatorStyle, Rect } from "./ui/offscreen_indicators";
 import {
   DEFAULT_GLYPHS,
   markerDotRadiusFor,
@@ -466,6 +477,8 @@ async function main(): Promise<void> {
   let mazeStatsShown = false;
   let finishIndicatorShown = true;
   let tapToPan = true;
+  // K198 stage 2: the head's and the minotaur's switches and the size.
+  let indPrefs = indicatorPrefs(() => null);
   // K120: the move pad, on by default for coarse pointers.
   const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
   let movePadOn = movePadPref(null, coarsePointer);
@@ -476,6 +489,7 @@ async function main(): Promise<void> {
     mazeStatsShown = localStorage.getItem(MAZE_STATS_KEY) === "1";
     finishIndicatorShown = localStorage.getItem(FINISH_INDICATOR_KEY) !== "0";
     tapToPan = localStorage.getItem(TAP_TO_PAN_KEY) !== "0";
+    indPrefs = indicatorPrefs((k) => localStorage.getItem(k));
   } catch {
     // Storage unavailable: the defaults (both stats readouts hidden, the
     // finish indicator shown and tappable).
@@ -487,6 +501,9 @@ async function main(): Promise<void> {
     showStats: statsShown,
     showMazeStats: mazeStatsShown,
     finishIndicator: finishIndicatorShown,
+    headIndicator: indPrefs.head,
+    minotaurIndicator: indPrefs.minotaur,
+    indicatorSize: indPrefs.scale,
     tapToPan,
     movePad: movePadOn,
     motion: motion.pref,
@@ -737,12 +754,38 @@ async function main(): Promise<void> {
   // back in (ui/view_clamp.ts), and the panel's wrapper once it exists.
   const panAllow = noAllowance();
   let panelWrap: HTMLElement | null = null;
-  // The open panel as the pan range needs it (null while it is closed).
-  const openPanel = (): OpenPanel | null => {
+  // K198 stage 2: the panel as the range and the indicators see it. The
+  // panel snaps open and shut; its edge reaches them through a time-based
+  // tween (panelU, linear progress, stepped in updateCamera; panelT, its
+  // eased openness, this frame's and the last). While it closes, the box
+  // is the last open one (a closed panel has none).
+  let panelU = 0;
+  let panelT = 0;
+  let panelTPrev = 0;
+  let panelBox: Rect | null = null;
+  const readPanel = (): boolean => {
     const r = panelWrap?.getBoundingClientRect();
-    if (!r || r.width <= 0) return null;
-    return { left: r.left, mazeRight: fitCur.x + fitRight * fitCur.scale };
+    if (!r || r.width <= 0) return false;
+    panelBox = { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+    return true;
   };
+  const stepPanel = (dt: number): void => {
+    const open = readPanel();
+    panelTPrev = panelT;
+    panelU = stepPanelTween(panelU, open, dt, motion.reduced ? 0 : PANEL_TWEEN_S);
+    panelT = easePanel(panelU);
+  };
+  // The open panel as the pan range needs it, at openness t (null while
+  // it is shut).
+  const openPanelAt = (t: number): OpenPanel | null =>
+    t > 0 && panelBox
+      ? {
+          left: panelBox.left,
+          mazeRight: fitCur.x + fitRight * fitCur.scale,
+          open: t,
+        }
+      : null;
+  const openPanel = (): OpenPanel | null => openPanelAt(panelT);
   // The fit camera's zoom range and pan range (ui/view_clamp.ts).
   const clampView = (): void => {
     clampFitView(
@@ -754,12 +797,16 @@ async function main(): Promise<void> {
       panAllow
     );
   };
-  // One frame of the ease back into range (rate 0: hold where it is).
+  // One frame of the range: the ease back into it (rate 0: hold where it
+  // is), measured at last frame's openness, then the clamp at this one's,
+  // so a view at the limit rides the tweened edge (stepRange).
   const easeView = (rate?: number): void => {
-    easeIntoRange(
+    stepRange(
       view,
       app.screen.width,
       app.screen.height,
+      MAX_ZOOM,
+      openPanelAt(panelTPrev),
       openPanel(),
       panAllow,
       rate
@@ -893,6 +940,7 @@ async function main(): Promise<void> {
   // the head travels while the physics sleeps).
   let fitFrames = 0;
   const updateCamera = (dt: number): void => {
+    stepPanel(dt);
     if (fitFrames++ % 3 === 0) computeFitTarget();
     fitCur.scale += (fitTarget.scale - fitCur.scale) * 0.08;
     fitCur.x += (fitTarget.x - fitCur.x) * 0.08;
@@ -1684,6 +1732,29 @@ async function main(): Promise<void> {
         // Storage unavailable: the choice just doesn't persist.
       }
     },
+    // K198 stage 2: the head's and the minotaur's switches and the size
+    // (the next frame reads them).
+    onHeadIndicatorToggle: (visible) => {
+      try {
+        localStorage.setItem(HEAD_INDICATOR_KEY, visible ? "1" : "0");
+      } catch {
+        // Storage unavailable: the choice just doesn't persist.
+      }
+    },
+    onMinotaurIndicatorToggle: (visible) => {
+      try {
+        localStorage.setItem(MINOTAUR_INDICATOR_KEY, visible ? "1" : "0");
+      } catch {
+        // Storage unavailable: the choice just doesn't persist.
+      }
+    },
+    onIndicatorSizeChange: (scale) => {
+      try {
+        localStorage.setItem(INDICATOR_SIZE_KEY, String(scale));
+      } catch {
+        // Storage unavailable: the choice just doesn't persist.
+      }
+    },
     onTapToPanToggle: (on) => {
       try {
         localStorage.setItem(TAP_TO_PAN_KEY, on ? "1" : "0");
@@ -2057,12 +2128,16 @@ async function main(): Promise<void> {
       modeBadge.el,
       menuButton,
       undoButtons.el, // K92 (display none closed).
-      panel.pane.element.parentElement, // The panel (display none closed).
+      // (The panel: env.panel below, K198 stage 2.)
       stamp,
       document.querySelector<HTMLElement>(".km-pad"), // K120 (hidden: none).
     ],
     // The tap-to-pan preference: off, indicators let taps through.
     tapEnabled: () => settings.tapToPan,
+    // K198 stage 2: the size setting, and the panel on the camera's clock
+    // (displaced indicators slide to their new place as its edge moves).
+    scale: () => settings.indicatorSize,
+    panel: () => ({ box: panelBox, open: panelT }),
   });
   // Start an eased move that puts world (x1, y1) at the screen's center at
   // scale s1 (placeWorldAt clamps it every frame); see camTween.
@@ -2255,9 +2330,12 @@ async function main(): Promise<void> {
         mazeFabric: params.mazeFabric,
         built: !!fabric && !!fabricController && !!renderer,
         shown: root.visible && physState !== "loading",
+        enabled: settings.headIndicator,
       });
       return headWhy === "";
     },
+    // K198 stage 2: no blips (a follow camera a long run outpaces).
+    showDelay: () => HEAD_SHOW_DELAY_S,
     label: () =>
       settings.tapToPan
         ? "Your position is off screen, this way. Tap to bring it into view."
@@ -2290,6 +2368,7 @@ async function main(): Promise<void> {
       )),
     style: MINO_DISC,
     visible: () =>
+      settings.minotaurIndicator && // K198 stage 2: the viewer's switch.
       chase !== null &&
       !chase.finished &&
       chase.mode !== "lair" &&
@@ -4024,9 +4103,11 @@ async function main(): Promise<void> {
       renderer!.tickPaint(ticker.deltaMS / 1000);
       // After the paint pass: fabric pluck colors read this frame's paint.
       renderer!.tickPlucks(ticker.deltaMS / 1000);
-      updateCamera(Math.min(ticker.elapsedMS / 1000, CAM_MAX_DT));
-      // After the camera step: the indicators read this frame's framing.
-      indicators.update();
+      const camDt = Math.min(ticker.elapsedMS / 1000, CAM_MAX_DT);
+      updateCamera(camDt);
+      // After the camera step: the indicators read this frame's framing
+      // (and the head's show delay runs on the same clock).
+      indicators.update(camDt);
     };
 
     // Flow undulation is RENDER-side only: while the physics is paused or
@@ -4301,6 +4382,8 @@ async function main(): Promise<void> {
     mazeRight: fitCur.x + fitRight * fitCur.scale,
     range: panRange(app.screen.width, app.screen.height, view.zoom, openPanel()),
     allow: { ...panAllow },
+    // K198 stage 2: the panel's tweened openness (0 shut, 1 open).
+    panelT,
   });
   // K101: the music notes handed out lately (start time on their clock,
   // lead = how far ahead of the tick that scheduled them) and the clocks.
