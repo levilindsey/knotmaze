@@ -480,8 +480,16 @@ function cmdPack(srcs, opt) {
       if (!it) { console.error(`${src}: ${id} is not in the snapshot`); errors++; continue; }
       if (seen.has(id)) { console.error(`${src}: ${id} appears twice in the sources`); errors++; continue; }
       seen.add(id);
-      const text = wrapBlock(b, width);
+      // a Done entry is ONE line (not wrapped); open items wrap at `width`
+      const text = wrapBlock(b, isDoneSection(it.section) ? Infinity : width);
       out.push({ id, sha: it.sha, text });
+      const tl = text.split('\n');
+      const desc = tl.findIndex((l) => /^\s{2}- /.test(l));
+      const n = desc < 0 ? tl.length : desc;
+      if (isDoneSection(it.section) && tl.length > 1) console.error(`  note: ${id} (Done) is ${tl.length} lines`);
+      else if (!isDoneSection(it.section) && n > 3) console.error(`  note: ${id} has ${n} description lines`);
+      if (!isDoneSection(it.section) && tl.some((l) => l.length > width + 12)) console.error(`  note: ${id} has a line over ${width + 12} columns`);
+      if (!/^in progress/i.test(it.section) && !isDoneSection(it.section) && desc >= 0) console.error(`  note: ${id} (${it.section}) has sub-bullets`);
     }
   }
   if (errors) process.exit(1);
