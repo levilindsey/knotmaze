@@ -564,3 +564,206 @@ contact sheet moved to stage 3 ("The stages").
   - the verification results, with the retune table;
   - a `Ledger items` list: follow-ups, residuals, decisions for Levi;
   - the handle fields: branch, last commit, evidence, next.
+
+## Stage 2 handoff
+
+2026-10-14, the K80 turns stage 2 agent; branch
+`worktree-agent-a1579d5c460af2d20` (c9529c6, c540aef, 496c64d, 60e60ae,
+bbc333e and this commit), rebased onto master 2409cb9, never pushed. The
+stage is done: items 1-6.
+
+Done:
+- The retune (K269): `DEFAULT_TURN_MINO` (`src/game/minotaur_turns.ts`)
+  goes from sight 4 and accuracy 0.9 to sight 2 and accuracy 0.3. Pause
+  0.1, roam 8, territory 6 and sleep 0 stay. The defaults pin
+  (`test/ui/url_codec.test.ts`) moved by minoSight and minoAccuracy only.
+- Real time on H1 mazes (K278 (c)): `test/game/minotaur.test.ts` runs
+  K174's tests on today's mazes, without the `hCutShare: 0` pin.
+  roamPull stays 0.5. The still-player test keeps its 0.8 bound on a
+  wider sample: mazes 100-119 x 6 seeds instead of mazes 3, 17 and 42.
+  K80_DIGESTS are re-frozen on today's mazes; the roamPull 0 path is
+  unchanged.
+- Catch resets (K273), on both clocks. Two params, appended to the codec
+  and not daily-exempt:
+
+  | Param | Key | Codec | Default | Changed |
+  |---|---|---|---|---|
+  | `minoRestart` | `mrs` | 128 | off | on: a catch restarts the level |
+  | `minoLair` | `mlr` | 129 | on | off: the minotaur stays where it caught you |
+
+  - minoRestart on: a catch runs `restartSolve(true)` and then
+    `updateHud()` (main.ts `turnCaught` and `tickChase`). The path, the
+    fog and the fuse reset, and a new minotaur starts in its lair with
+    the old one's tallies (`carry()`: catches, close calls, seen,
+    chased, restarts). The toast reads "Caught! Starting over." ("Caught
+    N times." after the first). `__knotFabric().restarts` rises by one,
+    since restartSolve calls `fabricController.reset()`.
+  - THE CLOCK RESTARTS with the level: restartSolve calls resetAttempt,
+    whose clock.reset leaves it idle until the next move. A banner's time
+    after such a catch is the last life's.
+  - minoRestart off is today's respawn: `fc.markCaught`, then
+    `fc.respawn(minoRefog)`, and the toast "Caught! Back to the
+    entrance.". A respawn does not count a restart.
+  - minoLair off, on the turn clock: the minotaur stays at the vertex
+    where its turn ended, out of its lair (`left` true), wandering (mode
+    0), with lifeTurn 0, so minoSleep applies again there. On real time
+    it keeps its Spot, even mid-run, and waits `wake` seconds there.
+  - Panel, the Minotaur folder: both rows show while either clock's
+    minotaur runs. minoLair and minoRefog hide while minoRestart is on.
+- Edge values (K272): minoRoamRuns and minoTerritory start at 1
+  (`MINO_RUNS_MIN`, url_state.ts) in the panel, the codec reader and the
+  key=value readers; garbage reads 1. Zero got no meaning.
+- Stats and share (section 2.9):
+  - The turn minotaur counts close calls and seen. A close call is a move
+    (no catch, no win) that ends off the start, one run from a minotaur
+    out of its lair. Seen counts the turns it spent hunting you, the
+    turns its marker glows red. Real time keeps caught and chased; it
+    has no close calls and no seen.
+  - A Reset path under either clock's minotaur, after a move and with the
+    run unsolved, counts a restart, not a catch. The restarts row shows
+    only above 0.
+  - `STATS` gained close calls, seen and restarts, so the banner's "What
+    the numbers mean" explains each. Caught's line now names the level
+    reset.
+  - The move log's fourth kind, `x` (the move you were caught on), is
+    🐂 (U+1F402) in the share grid. The share title adds the minotaur
+    tag (`share_text.ts` `minotaurTag`): `· 🐂 N`, or `· 🐂 0 · N close
+    calls` when it never caught you (turn clock only).
+  - The stars rate walkedDist with the catches whenever a minotaur runs:
+    the rules line adds ", never caught", and any catch caps the stars at
+    two.
+- Tests: the retuned defaults; seen and close calls on scripted turn
+  games; lair off on both clocks; the tallies carried to a restart on
+  both clocks; the `x` move; the share tag with 🐂; roam and territory
+  of at least 1; the new rows' `STATS` lines (`maze_hud.test.ts`). The
+  level restart itself lives in main.ts, so the page probe checks it
+  (item 6).
+- Lore: `gameplay-minotaur.md` (STAGE 2'S RETUNE, RE-MEASURED ON H1,
+  CATCH RESETS), `gameplay-links.md` (CATCH RESET PARAMS),
+  `gameplay-stars.md`, `gameplay-daily.md` and `probes.md`.
+- The codec: the rows were 121-122 until the rebase onto K279 (2409cb9),
+  which appended 121-127 first. The messages of 496c64d and 60e60ae
+  still say 121-122. The table pin is re-frozen at 128-129. K111 stage 4
+  also appends from 128, so whichever branch merges second renumbers.
+
+Calls:
+- The retune moved sight and accuracy only. Sight 1 with accuracy 0.65
+  came close (1.6% and 11.8%), but at sight 1 the hunter hunts only when
+  you are adjacent, so I rejected it. Sight 2 with accuracy 0.3 lands on
+  both targets: 1.0% and 13.1% at 64 reps (`sweep_fine64.md`).
+- The cost of the retune: sight and accuracy are shared by the three
+  models. The hunter falls below section 0 on the treelike and dead-ends
+  sets (treelike, explorer80: 8% against 27%), and the stalker lost the
+  most (dailies, explorer: 20% to 1%). Per-model accuracy would give each
+  model its own teeth, a decision for Levi.
+- Real time: I re-derived the bound's sample rather than retuning
+  minoToward. On today's mazes K174's sim moves as it did before H1, so
+  roamPull 0.5 still does its job. The test's three mazes read 0.81 on
+  H1 mazes by maze-to-maze noise: one maze's ratio ranges 0.40-1.06.
+- The clock follows `restartSolve()`: it restarts.
+- Roam and territory: a minimum of 1, not a meaning for 0.
+- The 🐂 shows only in the share grid: the win banner has no move grid.
+
+Verification (on the rebased branch):
+- tsc is clean. `npm test`: 71 files passed, 1 skipped; 934 tests
+  passed, 1 skipped. `npm run build` exits 0.
+- The research comparison (`compare_after.ts`): the harness and the
+  module play 9600 games with 0 trace mismatches at the new defaults.
+  % caught at 8 reps, the module's column: section 0 / this stage's
+  start (H1 on, `compare_before.md`) / after (`compare_after.md`).
+  chase1/T does not move: its overrides are accuracy 1 and pause 0.
+  `compare_rebased.md` is stage 1's table, from before H1.
+
+  | config | set | explorer | explorer80 | explorerFog4 |
+  |---|---|---|---|---|
+  | hunter/T | daily | 1 / 18 / 2 | 13 / 36 / 13 | 11 / 35 / 13 |
+  | hunter/T | treelike | 11 / 9 / 2 | 27 / 23 / 8 | 18 / 21 / 8 |
+  | hunter/T | deadends | 3 / 13 / 2 | 18 / 26 / 10 | 13 / 29 / 13 |
+  | hunterBurst/T | daily | 3 / 32 / 2 | 19 / 46 / 18 | 16 / 44 / 15 |
+  | hunterBurst/T | treelike | 19 / 23 / 2 | 31 / 35 / 13 | 27 / 34 / 12 |
+  | hunterBurst/T | deadends | 9 / 33 / 3 | 23 / 43 / 13 | 25 / 47 / 13 |
+  | guard/T | daily | 1 / 18 / 3 | 18 / 39 / 19 | 13 / 39 / 22 |
+  | guard/T | treelike | 10 / 13 / 1 | 23 / 33 / 16 | 21 / 24 / 11 |
+  | guard/T | deadends | 4 / 14 / 3 | 23 / 30 / 15 | 19 / 30 / 16 |
+  | chase1/T | daily | 3 / 50 / 50 | 20 / 60 / 60 | 12 / 62 / 62 |
+  | chase1/T | treelike | 23 / 18 / 18 | 43 / 33 / 33 | 33 / 36 / 36 |
+  | chase1/T | deadends | 8 / 29 / 29 | 23 / 42 / 42 | 28 / 45 / 45 |
+  | stalker/T | daily | - / 20 / 1 | - / 43 / 20 | - / 41 / 22 |
+  | stalker/T | treelike | - / 15 / 1 | - / 37 / 13 | - / 29 / 17 |
+  | stalker/T | deadends | - / 16 / 1 | - / 36 / 18 | - / 36 / 17 |
+
+- Real time on today's mazes (K174's sim, 288 seeds x 3 reps,
+  `rt/results.md`), by roamPull 0 / 0.25 / 0.5 / 0.75 / 1:
+  - the greedy player's catches: 1.29 / 1.47 / 1.66 / 1.73 / 2.02 (K174
+    before H1: 1.32 at 0, 1.68 at 0.5, 1.94 at 1);
+  - the greedy player spotted: 57 / 61 / 61 / 65 / 65%;
+  - fleers escape 54-58%, and 75-77% with queued taps.
+  - The still player (`rt/still.md`): pull 1 finds them in 0.69 of pull
+    0's time on 40 mazes x 12 seeds, with H1 on or off. Windows of 20
+    mazes x 6 seeds read 0.60-0.74 (`rt/still_windows.md`). The test's
+    sample reads 65.6 s against 43.9 s (0.67).
+- The banner check (K283), under the perf lock: `banner/probe_stars.mjs`
+  in a headed, off-screen, hardware-GPU Chrome with real taps, against
+  the worktree's dev server. Checks passed, by run: design 16, design at
+  411x753 touch 16, daily 32, caught 18, realtime 17, turnmino 21 and
+  turnmino with `&mrs=1` 21; no page errors.
+  - The first daily run failed one check that has been stale since K146:
+    it expected today among the History rows, but today keeps its own
+    row above them. The probe now expects History without today and
+    counts today in the aggregate; the re-run passed.
+    `daily_first_run.log` keeps the failure.
+  - turnmino (seed 7, the hunter): caught once, with the toast "Caught!
+    Back to the entrance.", and the restart count unchanged (1 -> 1).
+    The banner rows read caught 1, close calls 0 and seen 11. The stars
+    are two (3.0x the shortest route, capped by the catch). The title is
+    `Knotmaze 🧶 ★★☆ · 🐂 1`, and the grid shows 🐂 on the catch move.
+  - turnmino with `&mrs=1`: the toast "Caught! Starting over.", and the
+    restart count goes 1 -> 2. The banner keeps caught 1 and seen 3
+    (carried) and shows time 0:10, the last life's. The grid starts over
+    with no 🐂. The stars rate only the last life's walk (900 against
+    886) capped at two, while the popover says "the walk before it
+    counts too" (see For stage 3).
+  - Screenshots in `banner/shots/`: `<run>_1_banner.png` (the banner;
+    `_crop` beside it), `<run>_2_banner_why.png` (the popover open),
+    `turnmino_0_caught.png` and `turnmino_restart_0_caught.png` (the
+    frame after the catch), `daily_3_stats.png` to `daily_5_stats_
+    history.png`, and each run's `report.json`.
+
+Next:
+- Stage 3, per "The stages".
+- A decision for Levi: per-model accuracy (Calls).
+
+For stage 3:
+- The win banner has no move grid, so the 🐂 shows only in the share
+  grid, and only with minoRestart off: under it a catch restarts the
+  level, whose reset empties the log. The title's tag counts either way.
+- Under minoRestart the stars rate only the last life's walk (reset()
+  zeroes the walked meter), so the popover's "the walk before it counts
+  too" is wrong there (the `&mrs=1` banner run shows it).
+- With minoLair off the minotaur can camp the first junction past the
+  entrance (the start is a sanctuary, so it waits there).
+- markCaught on an empty move log pushes `x`, so the move count reads 1.
+- The minoSleep tooltip ("in its lair … after each catch") is wrong with
+  minoLair off.
+- Real time has no close calls or seen; nothing maps cleanly yet.
+- A Reset path restart has no toast.
+- Roam 0 as a "sentry" (stands guard while it roams) is an idea, not
+  built.
+- K155's probe expects 4 rules lines in the stars popover, stale since
+  K274 appended the stat lines; this stage's copy splits at
+  `km-lines-head`.
+
+Evidence (untracked, `.claude/probes/K80/turns2/`; also copied to the
+main checkout):
+- The retune: `sweep.ts`, `sweep_coarse.md`, `sweep_fine.md`,
+  `sweep_fine64.md`; `full_before.md`, `full_s2a03.md` (the pick) and the
+  rejected `full_s1a06.md`, `full_s1a065.md`, `full_s2a04.md`,
+  `full_s2a05.md`; `compare.ts`, `compare_after.ts`, `compare_before.md`,
+  `compare_rebased.md`, `compare_after.md`, with `sim.ts`, `lib.ts` and
+  `vite.node.config.mjs` (run commands in the headers).
+- Real time: `rt/` (`results.md`, `still.md`, `still_windows.md`, the
+  jsonl rows, `still.ts`, `still_windows.ts`).
+- The banner check: `banner/` (`probe_stars.mjs`, `run_batch.ps1`, the
+  logs, `shots/` with each run's report.json).
+- `npmtest.log`, `build.log`, `tsc.log`; `vite.private-cache.config.ts`
+  serves the worktree.
