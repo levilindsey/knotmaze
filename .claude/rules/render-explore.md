@@ -112,24 +112,43 @@ modes and the mode off is master's frame by construction.
   drawMarkers), and a marker disc's gap slot is on or off by the same
   test, so neither shows on hidden thread.
 - JOINT GATE (`syncExploreJoints`, recomputed when `exploreRev` moves): a
-  junction's web and fans draw only when EVERY arm is solid (vis >=
-  EXPLORE_JOINT_VIS 0.98) at its slot and EXPLORE_JOINT_OUT (0.25 ctrl, at
-  most 0.45 of the run) out. The model holds a visited junction's arms
-  solid through its web domain and fades a stub INTO an unvisited
-  junction (vis 0 at its slot), so the rule hides exactly the unvisited
-  junctions. Not the design's 0.8 ctrl: at thin threads the web domain is
-  shorter. A free tip's cap draws when its thread is solid at the tip
-  (the host-axis fallback disc checks both threads). A hidden joint emits
-  no fan, wedge or fused-tip record. The gates are binary: a cap or web
-  pops in at 0.98 rather than fading (strip alpha was deferred).
+  junction's web and fans draw unless an arm is hidden at its slot (vis
+  <= EXPLORE_JOINT_MIN 0.002). K268 stage 2 (2026-10-15) replaced 2b's
+  rule, every arm solid (EXPLORE_JOINT_VIS 0.98) at the slot and
+  EXPLORE_JOINT_OUT (0.25 ctrl) out, under which a web popped in whole.
+  The model holds a visited junction's arms solid through its web domain
+  and fades a stub INTO an unvisited junction (vis 0 at its slot), so
+  both rules hide exactly the unvisited junctions. A free tip's cap draws
+  unless its thread is hidden at the tip (the host-axis fallback disc
+  checks both threads). A hidden joint emits no fan, wedge or fused-tip
+  record. What draws fades with its threads: THE JOINT FADE, below.
 - WHEN IT REBUILDS: rebuildFillets appends the hidden set
   (`exploreJointsKey`) to its cache key, so the fans rebuild when the SET
-  changes (an arrival, a fade crossing 0.98), not on growth frames.
+  changes (an arrival, an arm's vis at a slot crossing 0.002), not on
+  growth frames.
   setExplore applies the gap gate and uploads the slot table at once (the
   declaration and the gaps change in the same frame), update() re-applies
   it after each solve, and needsFxRender stays true while
   `exploreUpdatePending`, so a declaration change gets its update() while
   the knot sleeps.
+- THE JOINT FADE (K268 stage 2, K275, 2026-10-15): under the reveal the
+  arm strips write the thread's visibility as premultiplied alpha
+  (`arm-strip-explore`, withExploreStrip: chainMaterial x vis, alpha vis;
+  vis is kExploreAt at the strip sample, the plain visibility, not the
+  end look), and the fans read them premultiplied (`junction-field-explore`,
+  withExploreField: stripAtP; armPaint, junctionBase and junctionField
+  return vec4 through the angular blend, the K169 web fade and the K81
+  band mixes; finalColor = exC x vColor x aM x gk, discarded at alpha <=
+  0.002). A web fades with its arms and a cap with its thread; over solid
+  arms the color is master's. The strip quad still draws with blendMode
+  none, so its texels are exact. setExplore swaps the strip pass and both
+  fan meshes onto these programs, and fan meshes made under the reveal
+  take them. CPU twins: cpuChainMaterial's out[3], cpuStripAt
+  (premultiplied texels, lerped alpha), cpuJunctionField's alpha. Mode
+  off draws master's programs (`explore_strip.test.ts` undoes every edit
+  and gets master's text back). In the model's states a fade shows where
+  arms are partly visible at a slot (the intro's close-in), not on
+  growth frames.
 - TESTS: `test/render/explore_gates.test.ts` (setVis on a solved slot;
   the joint census on seeds 5, 42 and 777 at arrival, the entrance, two
   moves and ten: a junction is hidden exactly when its walk vertex is
@@ -217,8 +236,9 @@ slot. Design and calls: `docs/design/K268.md` ("Stage 1 design", "Stage
   terminal never does). No end: hidden. One or two: shaped. More: 2b's
   scalar (fallback). Hidden, solid and fallback slots take 2b's setVis
   path EXACTLY. A shaped slot keeps its solved reject radii (never
-  rejected), and its texel 1.w carries 2b's scalar, so the fans and the
-  still pluck see 2b's gate unchanged (stage 2 shapes them).
+  rejected), and its texel 1.w still carries 2b's scalar, which no
+  program reads under the reveal since stage 2 gave the fans and the
+  still pluck the shaped cut (THE CUT IN THE FANS, below).
   underWindows and `slotExploreHid` stay binary (0.5), as in 2b.
 - ROW-PARTIAL UPLOAD: the gap texture is a row-dirty source with its own
   uploader, `knot-gap-rows` (registered at module load, as float_rows'),
@@ -252,14 +272,34 @@ slot. Design and calls: `docs/design/K268.md` ("Stage 1 design", "Stage
   2 shaped slots); visitAll (about 162 shaped, 57 fallback), the explore
   program 1.830 against 1.773 with 2b's scalar everywhere and master's
   1.760, total 2.712 against master's 2.632 (+3%).
-- MAX MEASURED, AND BROKEN (K76 2c's census walk, 2026-10-15; not
-  fixed): at a MAX slot whose two threads are both walked (crossing 275,
-  flags 19, P0 = P1 = [5.7462, ~0, 1, 1]) mode off cuts 1010 px and mode
-  on cuts 0 px, so the two threads fuse. Its MAX slots with a hidden
-  under thread cut 0 px, as they should. The CPU twin reads as covering
-  at least one side, so the GPU branch or the written profile is the
-  suspect. Record and next check: `docs/design/K76.md`, "Stage 2c
-  handoff" (For K268 stage 2).
+- MAX MEASURED, BROKEN AND FIXED (K76 2c's census walk found it; K268
+  stage 2 fixed it in 711c34f, 2026-10-15): at a MAX slot whose two
+  threads are both walked (crossing 275, flags 19, P0 = P1 = [5.7462, ~0,
+  1, 1]) mode off cut 1010 px and mode on 0 px, so the two threads fused.
+  The written profile was wrong, not the GPU branch: classifyExploreCut's
+  ramp read the side off the signed fade (`fs < 0`), and a HARD low end
+  passes -0, so every hard low end got F = +1e-6 (hidden above the end)
+  instead of -1e-6. The ramp takes the side as an argument now
+  (`explore_cut.test.ts` fails on the old code). GPU, the same walk
+  (`.claude/probes/K268/stage2/max_probe.mjs`): c275's second ramp went
+  from F = +1e-6 and 0 px to -1e-6 and 1010 px, mode off's own count; the
+  walk's other MAX slots (c101, c214, c277, c279: hidden under threads)
+  cut 0 px in both builds.
+- THE CUT IN THE FANS (K268 stage 2, 2026-10-15): `exploreGapEdits(fan,
+  decl)` (explore_glsl.ts) puts the end looks (EXPLORE_LOOK_GLSL, split
+  out of EXPLORE_DECL_GLSL byte for byte) before gapKeepAt and the shaped
+  cut into its slot loop, in any program. The junction field (the last
+  three FIELD_EXPLORE_EDITS) takes the FAN texts: the search runs
+  without the early stop (the true nearest point), and once the shaped
+  strength is known the fan re-applies master's inside-silhouette branch
+  (`best < exSure2`, master's own sure2, so exactly master's condition).
+  A junction fan keeps its one-pixel-inset foreign silhouette and a
+  free-tip cap its full mask, each scaled by the over thread's coverage.
+  The still pluck (`pluck-still-explore`, withExploreStill) draws a
+  ribbon, so it takes the ribbons' texts, plus uKExplore and paint_glsl's
+  kSmooth, which its fragment lacks; PluckOverlay.setExplore (from the
+  renderer's setExplore) moves live still plucks onto it. No new CPU twin:
+  nothing mirrors gapKeepAt, and the coverage has exploreCutCoverCpu.
 
 ## In the game (stage 2c, 2026-10-15)
 
@@ -321,8 +361,8 @@ gameplay-links.md's EXPLORATION PARAMS.
   it at 1 in pure white (`exploreStill`, `exploreContrast`, set by
   main.ts each fabric tick). The dots under High contrast are still the
   look's (stage 2d: an explore-program change plus its CPU twin).
-- KEPT AS 2b BUILT, calls for Levi: the joints' binary pop at 0.98 (the
-  strip alpha) and K268's draw order (K286).
+- KEPT AS 2b BUILT, calls for Levi: K268's draw order (K286). (The
+  joints' binary pop at 0.98 became THE JOINT FADE in K268 stage 2.)
 - MEASURED (2026-10-15, 53a161f, `.claude/probes/K76/stage2c/`;
   desktop 1400x900, phone 411x753). Mode off: master 2c81a92 and the
   branch drew 0 px apart in the same state (pulse phases 0-3, after an
