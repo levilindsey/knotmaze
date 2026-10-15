@@ -40,6 +40,7 @@ function scanSites(): Record<string, number> {
 const DAILY: WarmContext = {
   fabric: true,
   explore: false,
+  burn: false,
   fog: false,
   reduced: false,
   ripple: true,
@@ -106,6 +107,22 @@ describe("program registry (K307)", () => {
     expect(fog).toContain("bg-fog");
     expect(fog).toContain("bg-mist");
     expect(fog).not.toContain("bg-vellum");
+  });
+
+  it("warms both sets for a burn race (K290: the first burn switches to -explore)", () => {
+    const burn = wave1Names({ ...DAILY, burn: true });
+    for (const n of ["section-rgb", "arm-strip", "junction-field"]) {
+      expect(burn).toContain(n);
+      expect(burn).toContain(`${n}-explore`);
+    }
+    expect(burn).not.toContain("pluck-still-explore");
+    const still = wave1Names({ ...DAILY, burn: true, reduced: true, ripple: false });
+    expect(still).toContain("pluck-still");
+    expect(still).toContain("pluck-still-explore");
+    // Knot mode has no maze, so no strips or fans; the burn flag is fabric-only.
+    const knot = wave1Names({ ...DAILY, fabric: false, burn: true, bgIds: [] });
+    expect(knot).not.toContain("arm-strip-explore");
+    expect(knot).not.toContain("junction-field-explore");
   });
 
   it("has an entry for every program a background can start with", () => {

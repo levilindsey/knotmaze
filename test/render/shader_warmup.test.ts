@@ -304,6 +304,7 @@ describe("shader warm-up (K307)", () => {
     const daily = {
       mazeFabric: true,
       exploration: "off",
+      fire: "off",
       pluckRipple: "glint",
       backgroundIntensity: 0.5,
       backgroundSpeed: -1,
@@ -316,6 +317,7 @@ describe("shader warm-up (K307)", () => {
     expect(warmContextFor(daily, "vellum", false, 16)).toEqual({
       fabric: true,
       explore: false,
+      burn: false,
       fog: false,
       reduced: false,
       ripple: true,
@@ -330,6 +332,8 @@ describe("shader warm-up (K307)", () => {
       fog: false,
       bgIds: ["mist"],
     });
+    expect(warmContextFor({ ...daily, fire: "fuse" }, "vellum", false, 16).burn).toBe(true);
+    expect(warmContextFor({ ...daily, fire: "fuse", mazeFabric: false }, "vellum", false, 16).burn).toBe(false);
     expect(warmContextFor({ ...daily, backgroundSpeed: 1 }, "vellum", false, 16).bgIds).toEqual([
       "vellum",
       "vellum-drift",
