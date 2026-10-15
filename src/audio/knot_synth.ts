@@ -322,6 +322,13 @@ export class KnotSynth {
 
   // False until the autoplay gate opens (an injected context needs none).
   private unlocked: boolean;
+  // K325: callbacks waiting for the gate (whenUnlocked).
+  private unlockWaiters: Array<() => void> = [];
+  // K325: one-shot samples (playSample) reach the output on their own bus.
+  // It follows the master volume but skips the harp's body EQ and hall,
+  // which would color a recorded sound.
+  private sfxBus: GainNode | null = null;
+  private sfxAnalyser: AnalyserNode | null = null;
 
   constructor(provided: BaseAudioContext | null = null) {
     this.provided = provided;
@@ -354,9 +361,30 @@ export class KnotSynth {
       }
       this.unlocked = true;
       this.ensure();
+      this.runUnlockWaiters();
     };
     for (const t of UNLOCK_EVENTS) {
       window.addEventListener(t, onInput, { capture: true, passive: true });
+    }
+  }
+
+  // Runs cb once the autoplay gate is open: at once if it already is, else
+  // from the gate's own handler, inside the unlocking gesture and after the
+  // context exists (K325: the snore decodes then).
+  whenUnlocked(cb: () => void): void {
+    if (this.unlocked) cb();
+    else this.unlockWaiters.push(cb);
+  }
+
+  private runUnlockWaiters(): void {
+    const waiting = this.unlockWaiters;
+    this.unlockWaiters = [];
+    for (const cb of waiting) {
+      try {
+        cb();
+      } catch {
+        // One waiter's failure must not stop the others or the gate.
+      }
     }
   }
 
@@ -364,12 +392,13 @@ export class KnotSynth {
   // and a master-bus analyser so probes can verify notes are actually
   // AUDIBLE, not just scheduled (the music-mode silent-note report).
   private analyser: AnalyserNode | null = null;
-  private stats = { plucks: 0, lastFreq: 0 };
+  private stats = { plucks: 0, lastFreq: 0, samples: 0 };
 
   // Live master volume; safe before the context exists (applied at ensure).
   setVolume(v: number): void {
     this.volume = Math.max(0, Math.min(1, v));
     if (this.master) this.master.gain.value = this.volume;
+    if (this.sfxBus) this.sfxBus.gain.value = this.volume;
   }
 
   // K279: auto plucks' level [0, 1], live (safe pre-context).
@@ -446,6 +475,38 @@ export class KnotSynth {
     return this.readyPromise ?? Promise.resolve();
   }
 
+  // K325: decodes an encoded sound (MP3 and the like) for playSample, at the
+  // context's own sample rate. Resolves null while the autoplay gate is
+  // closed (no context yet: retry from whenUnlocked); rejects on bytes the
+  // browser cannot decode. The buffer is detached by the decode.
+  decodeSample(bytes: ArrayBuffer): Promise<AudioBuffer | null> {
+    const ctx = this.ensure();
+    return ctx ? ctx.decodeAudioData(bytes) : Promise.resolve(null);
+  }
+
+  // K325: plays a decoded sample once on the sample bus, at `gain` [0, 1]
+  // before the master volume. False (and silent) while the gate is closed or
+  // the context is not running. Overlapping calls overlap; the caller keeps
+  // a sample from stacking on itself.
+  playSample(buf: AudioBuffer, gain = 1): boolean {
+    const ctx = this.ensure();
+    if (!ctx || !this.sfxBus) return false;
+    if (ctx !== this.provided && ctx.state !== "running") return false;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const g = ctx.createGain();
+    g.gain.value = Math.max(0, Math.min(1, gain));
+    src.connect(g);
+    g.connect(this.sfxBus);
+    src.onended = (): void => {
+      src.disconnect();
+      g.disconnect();
+    };
+    src.start();
+    this.stats.samples++;
+    return true;
+  }
+
   // Null until the autoplay gate opens; the gate's own handler makes the
   // first call, inside the unlocking gesture.
   private ensure(): BaseAudioContext | null {
@@ -501,23 +562,35 @@ export class KnotSynth {
       this.analyser = this.ctx.createAnalyser();
       this.analyser.fftSize = 2048;
       this.master.connect(this.analyser);
+      // K325: the sample bus, straight to the output (not through the body
+      // EQ or the hall) at the master volume, with its own analyser.
+      this.sfxBus = this.ctx.createGain();
+      this.sfxBus.gain.value = this.volume;
+      this.sfxBus.connect(this.ctx.destination);
+      this.sfxAnalyser = this.ctx.createAnalyser();
+      this.sfxAnalyser.fftSize = 2048;
+      this.sfxBus.connect(this.sfxAnalyser);
       const self = this;
-      (window as unknown as Record<string, unknown>).__knotSynth = () => {
-        const buf = new Float32Array(self.analyser!.fftSize);
-        self.analyser!.getFloatTimeDomainData(buf);
+      const peakOf = (an: AnalyserNode): number => {
+        const buf = new Float32Array(an.fftSize);
+        an.getFloatTimeDomainData(buf);
         let peak = 0;
         for (let i = 0; i < buf.length; i++) {
           const a = Math.abs(buf[i]);
           if (a > peak) peak = a;
         }
-        return {
-          plucks: self.stats.plucks,
-          lastFreq: self.stats.lastFreq,
-          state: self.ctx ? self.ctx.state : "none",
-          engine: self.engine,
-          peak,
-        };
+        return peak;
       };
+      (window as unknown as Record<string, unknown>).__knotSynth = () => ({
+        plucks: self.stats.plucks,
+        lastFreq: self.stats.lastFreq,
+        samples: self.stats.samples,
+        state: self.ctx ? self.ctx.state : "none",
+        engine: self.engine,
+        peak: peakOf(self.analyser!),
+        sfxPeak: peakOf(self.sfxAnalyser!),
+        currentTime: self.ctx ? self.ctx.currentTime : 0,
+      });
       // Kick off the string-engine load exactly once per context.
       const aw = this.ctx.audioWorklet;
       if (aw && typeof AudioWorkletNode !== "undefined") {

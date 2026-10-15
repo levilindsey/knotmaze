@@ -142,6 +142,8 @@ import {
   type A11yKey,
 } from "./ui/accessibility";
 import { KnotSynth } from "./audio/knot_synth";
+import { SnoreSfx, fetchSnore } from "./audio/snore_sfx";
+import { attachSnoreLink } from "./ui/snore_link";
 import {
   assignPitches,
   assignPitchesFromList,
@@ -477,6 +479,16 @@ async function main(): Promise<void> {
     highContrast: contrast.high,
   };
   const synth = new KnotSynth();
+  // K325: the snoring cat's snore, played by the panel's "Made by Snoring
+  // Cat" link on hover and touch-down. Silent when the game is (muted, sound
+  // mode none, volume 0); the file loads when the panel shows, not at page
+  // load (.claude/rules/gameplay-audio.md).
+  const snore = new SnoreSfx({
+    host: synth,
+    enabled: () =>
+      !settings.muted && params.soundMode !== "none" && params.volume > 0,
+    load: () => fetchSnore(`${import.meta.env.BASE_URL}snoring-cat-snore.mp3`),
+  });
 
   // SHADER BACKGROUND (K21): a screen-fixed layer drawn FIRST, beneath the
   // world root (crossing gaps show it). Phones get the cheaper profile
@@ -1993,6 +2005,20 @@ async function main(): Promise<void> {
   };
   panelMidDrag = () => panel.midDrag();
   panel.onOpenChange(() => fitModeBadge());
+  // K325: the credit link snores on hover and touch-down, and a touch tap
+  // opens it a beat later. The file loads when the panel shows; a panel that
+  // starts open (the desktop default) waits for an idle moment first.
+  attachSnoreLink(panel.studioLink, snore);
+  panel.onOpenChange((open) => {
+    if (open) snore.preload();
+  });
+  if (panel.isOpen()) {
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(() => snore.preload(), { timeout: 4000 });
+    } else {
+      window.setTimeout(() => snore.preload(), 2000);
+    }
+  }
   const syncModeBadge = (): void => {
     modeBadge.set(
       modeBadgeFor({
@@ -4541,6 +4567,11 @@ async function main(): Promise<void> {
   // token (ui/param_codec.ts), so probes read settings here, not the URL.
   (window as unknown as Record<string, unknown>).__knotParams = () => ({
     ...params,
+  });
+  // K325 probes: the snore's load counts and its clock.
+  (window as unknown as Record<string, unknown>).__knotSnore = () => ({
+    ...snore.stats,
+    sinceStartMs: snore.sinceStartMs(),
   });
   // K19/K20 probes: the daily on screen, the attempt, the clock and the
   // stored records (as the stats view reads them).
