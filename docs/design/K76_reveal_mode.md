@@ -618,8 +618,8 @@ the current path, which is always explored.
 differences from today's PARAM_DEFAULTS. The last index is 108
 (highlightMode), so the mode's params append at 109+. Replacing the
 fogOfWar checkbox with an `exploration` dropdown is a removal (version
-5 and a re-pin, allowed pre-launch); keeping fogOfWar and appending a
-threadReveal checkbox avoids it (question 7). 2c checklist:
+5 and a re-pin, allowed pre-launch), and it is what Levi chose (question
+7). 2c checklist:
 `param_codec.ts`; `url_state.ts` (UrlParams, PARAM_DEFAULTS,
 ENUM_OPTIONS, fromCodecValues, the key=value keys);
 `test/ui/param_codec.test.ts` (the pin); `test/ui/url_codec.test.ts`
@@ -700,10 +700,12 @@ see K81 above.
 5. Clamp pulseReach to revealDistance? (Recommend yes.)
 6. Explored runs keep their section colors while the K93 gold trail
    fades on its own? (Recommend yes.)
-7. The `exploration` dropdown (CODEC_VERSION 5), or keep fogOfWar and
-   append threadReveal?
-8. Default off and never daily-exempt (Decision 4)?
+7. Decided 2026-10-13 (`docs/design/K76.md`, Stage 2): the `exploration`
+   dropdown replaces fogOfWar in place. For 2c that is a type change, so
+   CODEC_VERSION 5 and a re-pin of the codec tests.
+8. Decided 2026-10-13: the mode defaults off and is never daily-exempt
+   (dailies get it later as a theme).
 9. Reduced motion stills the beacon's breath; what does high contrast
    do to the halo and the dots?
-10. The finish indicator hidden until the exit is seen, with no toast
-    before then?
+10. Decided 2026-10-13 (decision 6): the finish indicator stays hidden
+    until the exit has been seen, so it has no label or tap before then.
