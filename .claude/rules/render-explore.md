@@ -59,16 +59,17 @@ declaration it rides: `render-paint.md`.
   master vs branch 0 px at four pulse phases and a hovered choice; on then
   off again 0 px. Turning it on with every chain whole (`visitAll`, reach
   1000) also draws master's frame exactly (the flag path).
-- PROBE HOOK (stage 2a only; params, panel and codec are stage 2c):
-  `__knotExplore({on, reach, fade, look (name or index), visitAll})`
-  returns `fabric.exploreState()` (the switch, the last view, the seen
-  vertices and walked runs). Its model is PROBE-ONLY: it reads the
-  controller's visited sets, which record a tap when the move STARTS and
-  survive a catch, so stage 2c feeds the model from move events instead
-  (section 10). It forgets on a restart (`c.restarts`, K100's signal).
+- PROBE HOOK: `__knotExplore({on, reach, fade, look (name or index),
+  visitAll})` returns `fabric.exploreState()` (the switch, the last view,
+  the seen vertices and walked runs; since 2c also `held`, `hold` and
+  `partial`). Since stage 2c it writes the params (`exploration`,
+  `revealDistance`, `revealFade`, `revealLook`; the numbers raw, past the
+  panel's ranges) and the model is fed by move events (below). In 2a it
+  read the controller's visited sets, which record a tap when the move
+  STARTS and survive a catch.
 - NOT IN 2a: the crossing gaps, the junction webs and fans and the
-  markers (stage 2b, below). Still open after 2b (stage 2c): hit-testing
-  of hidden runs, the move-event model, params, panel and codec.
+  markers (stage 2b, below). Hit-testing of hidden runs, the move-event
+  model, params, panel and codec: stage 2c, at the end.
 - GPU (`gpu_batch.ps1`, 3200x1800, RX 6800 XT, 3 interleaved rounds of
   286 frames under the perf lock; ms/frame mean [range], `gpu_summary.mjs`):
   MODE OFF COSTS NOTHING, master's ribbon program 1.978 [1.948-2.004] vs the
@@ -251,3 +252,93 @@ slot. Design and calls: `docs/design/K268.md` ("Stage 1 design", "Stage
   2 shaped slots); visitAll (about 162 shaped, 57 fallback), the explore
   program 1.830 against 1.773 with 2b's scalar everywhere and master's
   1.760, total 2.712 against master's 2.632 (+3%).
+
+## In the game (stage 2c, 2026-10-15)
+
+Brief and handoff: `docs/design/K76.md`, "Stage 2c". Params and codec:
+gameplay-links.md's EXPLORATION PARAMS.
+
+- PARAMS TO RENDERER: main.ts `syncExploration` runs every tick:
+  `exploration` fog sets `fogOfWar`, threads sets `explore.on` (the two
+  never coexist), `explore.fade` = min(revealFade, revealDistance).
+- THE MODEL IS FED BY MOVE EVENTS (fabric `exploreArrive`, stopMove),
+  recorded with the mode off too, so turning it on mid-solve shows the
+  real walk. A dot that LANDS (tickAnim or setMoveProgress arrival, a
+  move snapped by the next, a cancel) walked its run and saw its far end.
+  A CAUGHT dot (stopMove, K80) saw its run only up to the dot: a PARTIAL
+  `{edge, from, cur}`, drawn from the departure end to the dot with a
+  lead fade and a frontier there. The controller's taps (recorded when a
+  move STARTS) feed only a K47 restore (`exploreRestore`, grown at once;
+  a restored caught partial shows its run whole) and a daily's Reset path
+  (`exploreRuns`). EPOCH (`exploreEpoch`): a restart (`c.restarts`) or a
+  re-fogging catch (`c.refogs`: minoRefog, one setting for both modes)
+  forgets everything; the entrance and the head at rest are always seen.
+- THE INTRO (fowIntro on and an intro playing; fowIntro defaults to off):
+  the reveal HOLDS (every run whole), then CLOSES IN over EXPLORE_CLOSE_S
+  1.6 s (the fog's FOG_INTRO_DUR) as a front contracting by walk distance
+  from the seen set (`exploreDistances`, `exploreHoldRadius`, a smoothstep
+  level), never a dissolve: no thread draws two translucent copies, so
+  the brief's doubled-alpha transient cannot arise. `tickExplore` runs
+  every frame in every clock mode (clk=realtime runs tickChase, never
+  tickAnim).
+- HIDDEN THREAD IS EMPTY SPACE for input. `ribbons.exploreShownAt` =
+  vis >= EXPLORE_PICK_VIS 0.5 (a fading stub answers to its half-fade;
+  the markers and the minotaur use 0.98). pickThread skips hidden
+  samples, and fabric `shownAt` gates edgeAt and runDistance, so hover,
+  the cursor, taps, presses and tugs all see empty space there: a drag
+  pans, a double-tap resets, and main.ts `grabAt` grabs through
+  pickThread (the particle at the rounded ctrl). `onThread` asks only
+  pickThread under the reveal (ps.nearest knows nothing of visibility).
+  A PLUCK clips its unit to the shown interval (`exploreShownSpan`,
+  0.25-ctrl steps); one that lands on hidden thread (an auto pluck) is
+  sound-only. Key moves need no filter: they pick runs at the head, which
+  always show.
+- THE FIT CAMERA frames `fogVisibleBounds() ?? exploreVisibleBounds()`:
+  each piece's solid part and half its fades, sampled every
+  EXPLORE_FIT_STEP 2 ctrl, grown by EXPLORE_FIT_PAD 1 world (plus main's
+  0.3), cached per declaration (syncExplore runs on every update() and
+  move frame). Master's 90 px/world cap binds at the start (the fog's
+  start view sits at the same cap). While the intro holds it frames the
+  whole maze, and the close-in zooms onto what was seen. Follow mode
+  keeps FOLLOW_SPAN 13.
+- MARKERS, THE MINOTAUR, PULSES: the exit's K73 indicator follows the
+  exit marker's own rule (solid at vis 0.98; not sticky). A minotaur that
+  `minoFog` keeps under the fog (never, or hunting while it is not
+  hunting) hides while its thread point's vis < 0.98, and
+  `minotaurUnderFog` withholds its indicator; its telegraph can still
+  draw over hidden thread while it shows. pulseReach is capped at
+  revealDistance.
+- THE HALO BREATHES between 0.6 and 0.85 over 2.5 s (`styleHalos`, every
+  frame from tickExplore); Reduced motion holds 0.8; High contrast draws
+  it at 1 in pure white (`exploreStill`, `exploreContrast`, set by
+  main.ts each fabric tick). The dots under High contrast are still the
+  look's (stage 2d: an explore-program change plus its CPU twin).
+- KEPT AS 2b BUILT, calls for Levi: the joints' binary pop at 0.98 (the
+  strip alpha) and K268's draw order (K286).
+- MEASURED (2026-10-15, 53a161f, `.claude/probes/K76/stage2c/`;
+  desktop 1400x900, phone 411x753). Mode off: master 2c81a92 and the
+  branch drew 0 px apart in the same state (pulse phases 0-3, after an
+  on/off round trip, with a hovered choice; A/A 0 px); the mode on
+  changed 382,333 px. Fit at the start: s 90 (the cap) against 21.9 off
+  (desktop) and 8.9 (phone); mid-walk s 42.0 (desktop, fill y 0.81) and
+  32.2 (phone, fill x 0.60, y 0.74). Eight hidden points: pickThread
+  null with the mode on, a hit at all eight with it off; six clicks
+  there moved nothing, plucked nothing and kept the default cursor; six
+  press-drags grabbed nothing, while a press on shown thread grabbed
+  (cursor "grab"); no page errors. A catch (desktop, 6.8 s) left the
+  partial {edge 8, from 0, cur 8.60}; a re-fogging catch (mrf) forgot
+  all but the entrance. The intro's hold reached 1 by 6.2 s, and its
+  close-in took 1.59 s, monotone, ending at s 90. The intro camera
+  opens at s 90 on the start stub, pulls out to the whole maze (s 21.0)
+  1.1 s after the hold starts and zooms straight in during the close-in;
+  master's fog intro opens and pulls out the same way, but its close-in
+  first zooms OUT to s 11.7 for about a second (`introcam.mjs`).
+- PROBE GOTCHAS: the fit camera now moves with the mode and after every
+  move, so a same-state on/off probe waits for `__knotView()` to hold
+  still after each toggle (k76_probe.mjs's viewStill) or pins
+  `cam=follow`, and a choice's screen point read before the camera
+  settles goes stale. fowIntro defaults to off: an intro probe passes
+  `fwi=1`. Probes: `.claude/probes/K76/stage2c/` (`k76c_probe.mjs <host>
+  <outDir> desktop|phone [ABCD]`: A fit and hidden input, B a catch's
+  partial, C a re-fogging catch, D the intro; `k76_probe.mjs ab`;
+  `run_2c.ps1`, under the perf lock).

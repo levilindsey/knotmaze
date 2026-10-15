@@ -162,7 +162,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
 
 - PHYSICS WORKER PARAM (K7 stage 3, 2026-10-14; brief
   `docs/design/K7_worker.md`): `physicsWorker` (`phw`, a flag, default
-  off) is APPENDED to codec v5 at index 135, after K298's 131-134. A
+  off) is APPENDED to codec v5 (v6 since K76 stage 2c) at index 135, after K298's 131-134. A
   DAILY_EXEMPT_KEY (it changes where the physics runs, not the design,
   like `stb` / `lds`), so the golden dailies do not move. No panel row
   and no LIVE_EFFECTS entry: main.ts reads it ONCE, when it creates the
@@ -173,3 +173,19 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   within 3 s or reports another fingerprint falls back to the in-thread
   host and rebuilds, and `__knotPerf().host` says which host runs and
   why (`kind`, `reason`).
+
+- EXPLORATION PARAMS (K76 stage 2c, 2026-10-15; brief
+  `docs/design/K76.md`, "Stage 2c"). Index 51's flag `fogOfWar` became
+  the choice `exploration` (`xp`: off | fog | threads; default off). A
+  type change, so CODEC_VERSION is 6: a v5 token (`?<seed>.L...`) reads
+  as its seed at today's defaults with a warning, and the empty v6 blob
+  is `.N`. Old keys still read (url_state `readExploration`): `xp` wins,
+  then `trv=1` (threads), then `fow=1` (fog) or `fow=0` (off). APPENDED
+  at 136-138, after K7 stage 3's `phw` (135): `revealDistance` (`rvd`,
+  2.5, clamped to [1, 12]), `revealFade` (`rvf`, 1, [0.35, 4]; used as
+  min(rvf, rvd)) and `revealLook` (`rvl`: fade | halo | glow | dots |
+  fray | beacon; default beacon). None is DAILY-EXEMPT or a MAZE key, as
+  the fog's flag was not: turning the fog or the reveal on leaves a
+  daily (`test/ui/daily_link.test.ts`). All four are LIVE_EFFECTS under
+  onTrailChange. Panel: gameplay-panel.md; the mode: render-explore.md's
+  "In the game".

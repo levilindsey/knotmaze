@@ -62,5 +62,11 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   later 0.991), and 0.957 across a reload: live stamps land over seconds
   while the threads move, a restore's right after the intro. DAILIES
   have the fog off today (a daily is `PARAM_DEFAULTS` on the day's seed,
-  `fogOfWar` defaults to false, and it is not exempt), so the daily
+  `exploration` defaults to off, and it is not exempt), so the daily
   paths run only on a probe's fogged daily.
+
+- THE FOG'S SWITCH is `exploration: "fog"` since K76 stage 2c
+  (2026-10-15; `fow=1` still reads as fog). The thread reveal is the
+  third option (`threads`, render-explore.md) and shares the fog's
+  restart and re-fog signals, its intro switch (fowIntro) and its fit
+  camera slot (the fog's box wins when present).

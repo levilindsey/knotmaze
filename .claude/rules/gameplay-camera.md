@@ -133,3 +133,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   - OPEN: a touch press on a choice lights no glow until the finger
     moves (the pendingTap path), and whether the ratio should reach touch
     is Levi's call.
+
+- THE THREAD REVEAL (K76 stage 2c, 2026-10-15): hidden thread is empty
+  space for every press, tap, hover and tug (a drag pans, a double-tap
+  resets), and the fit camera frames the shown thread; the rules and
+  numbers are render-explore.md's "In the game".
