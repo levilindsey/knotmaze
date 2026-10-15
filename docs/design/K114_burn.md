@@ -976,3 +976,52 @@ compile), `lock_take.ps1`, `lock_release.ps1`; results in `ab/`,
 `master`); the sheet in `sheet/` (`K290_3a_sheet_full.png`,
 `K290_3a_sheet_crop.png`, the per-arrival `aNN_{off,on}_{gone,char}`
 frames and crops, `shots.json`, `sheet_run.log`).
+
+## Stage 3b brief: the fire's look
+
+One stage: opus, 2 h cap. Written 2026-10-15 about 07:30 by coordinator
+session 05e60da0, from "The stages" (stage 3) and the Stage 3a handoff.
+Stage 1's "Setup" and "Process" apply, except: your branch starts from
+master; ports 5830-5839; probes in `.claude/probes/K290/stage3b/`; the
+handoff is a "Stage 3b handoff" at the end of this file (done, not done,
+evidence, your calls, "For the next stage"). 3a's tools are in the main
+checkout's `.claude/probes/K290/stage3a/` (`k290_ab.mjs`, `sheet.mjs`,
+`warn_check.mjs`); copy what you use.
+
+1. **The front.** R.3.3's char band and embers at the fire front, drawn
+   in the explore programs, so a thread blackens before it vanishes under
+   gone, and the band respects the crossing gaps. They replace stage 1's
+   ember, smolder and fuse Graphics: delete those.
+2. **The `burn` frontier FX** on the flood tips (`tipsAt`; `appear_fx.ts`).
+3. **The lit fuse** burns in place at the entrance until the first move.
+4. **The fire's light under fog:** burning threads show the branches the
+   fire has reached and you have not.
+5. **Unseen fronts draw as nothing,** as char does (K383's rec; Levi may
+   overturn it, so keep it one switch).
+6. **The first burn's cold compile** (3a's first residual): K307's
+   warm-up covers the explore variants on fire links (`section-rgb`'s
+   explore variant, `arm-strip-explore`, `junction-field-explore`,
+   probably `pluck-still-explore`; `render-shaders.md`, "THE WARM-UP").
+   Show that the first burn no longer links a program cold.
+7. **A race's frames** with the reveal off (`burn_page.mjs perf`, your
+   build against master, under the perf lock): K382.
+8. **The contact sheet,** desktop and phone: gone and char, the reveal
+   off and on, fog on, early, mid and late in a race, a lit fuse, an
+   unseen front. The phone half comes after 08:30, under the phone lock.
+9. **Checks.** Fire off stays 0 px against master (3a's `k290_ab.mjs ab`);
+   `npm test` and `npm run build` are green; the golden, the K87 pin and
+   the golden dailies don't move. As a render prototype, the stage still
+   skips the `paint_math` mirror and the parity tests (K152 item 3).
+10. **Lore:** `render-explore.md` (THE BURN) and `gameplay-fire.md`.
+
+- **The phone.** Levi has it until 08:30: don't touch it before then.
+  After that, take the phone lock with
+  `pwsh C:\Users\lsl\Repositories\knotmaze\.claude\probes\agents\phone_lock_take.ps1
+  -Owner "K290 3b <your agent id>" -What "<what>"` (it waits inside the
+  call), run `scripts/phone.ps1`, shoot, and release it with
+  `phone_lock_release.ps1 -Owner "K290 3b <your agent id>"`. Hold it at
+  most 20 minutes at a time: K7 stage 7 and K395 need the phone too.
+  Never print the phone's IP address.
+- **Running alongside:** K7 stage 7 (`main.ts`'s boot, the physics
+  worker) and K395 (the pluck files, and pluckNodes in
+  `ribbon_renderer.ts`). Keep `main.ts` edits small and out of the boot.
