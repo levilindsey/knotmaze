@@ -220,6 +220,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   choice("pluckGlow", ["off", "instead", "with", "fallback"]), // 103
   // K98's marker size.
   num("markerSize"), // 104
+  // K145's hover glow.
+  num("hoverGlow"), // 105
 ]);
 
 // The format version a blob names first. Bump it for anything but an

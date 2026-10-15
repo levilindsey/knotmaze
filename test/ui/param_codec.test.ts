@@ -140,6 +140,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["pluckCrossings", "enum", ["through", "ride", "pinch"]],
   ["pluckGlow", "enum", ["off", "instead", "with", "fallback"]],
   ["markerSize", "number"], // 104, K98
+  ["hoverGlow", "number"], // 105, K145
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

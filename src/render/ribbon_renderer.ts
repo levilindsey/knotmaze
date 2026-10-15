@@ -93,6 +93,7 @@ import {
   kComposePaint,
   kGlow,
   kPaintAt,
+  kRimAcross,
   knotSection,
   smoothInv,
   sourcePieces,
@@ -192,6 +193,16 @@ export interface PaintCap {
   // DARKEN: they write max(existing, their own U), which is identical to
   // the old unconditional gold write whenever p is 1.
   p?: number;
+}
+// K145: the hover glow's run - a walk run that is not a choice, under the
+// pointer (or a touch press). Its ctrl span is unwrapped (c1 >= c0, a
+// closed chain's c1 may pass its length), and `at` is the hover point as
+// an unwrapped ctrl inside it.
+export interface PaintRim {
+  chain: number;
+  c0: number;
+  c1: number;
+  at: number;
 }
 // K81: a route (junction_routes.ts PaintRoute) resolved against the static
 // junction arms: the arm it arrived by and the arm it left by (null = a
@@ -474,7 +485,10 @@ void main(void) {
   // Gameplay paint + the reveal glow, composed over the section (G2.3).
   highp vec4 kst = paintHere ? kPaintAt(kc, kctrl, kpt.x, pxArc) : vec4(0.0);
   highp float kgl = paintHere ? kGlow(kc, kctrl) : 0.0;
-  vec3 rgb = paintHere ? kComposePaint(base, kst, kgl) : base;
+  // The hover glow (K145): kst.w is its strength along the thread, shaped
+  // across the ribbon here (only the ribbons have an across coordinate).
+  highp float krim = kst.w > 0.0 ? kst.w * kRimAcross(vUV.y) : 0.0;
+  vec3 rgb = paintHere ? kComposePaint(base, kst, max(kgl, krim)) : base;
   float gk = gapKeep(pxW, gTurn);
   if (uKBase.z > 4.5) {
     // DEBUG VIEW 5 (probes): the paint terms of the VISIBLE thread (gaps
@@ -733,6 +747,11 @@ export class RibbonRenderer {
   private pulseKey = "";
   private pulseBorn = -1e9;
   private paintCaps: PaintCap[] = [];
+  // K145: the hover glow's run (setRim) and the key of the KPAINT item it
+  // last wrote; the hover point rides a uniform (setRimAt).
+  private paintRim: PaintRim | null = null;
+  private rimKey = "";
+  private rimAt = 0;
   private paintClock = 0;
   // K81 route bands (junction_routes.ts): the path's passes through
   // junctions, oldest first; routeKey keys the fillet rebuild that draws
@@ -776,6 +795,10 @@ export class RibbonRenderer {
   // PULSE_REACH_FADE of it (at most half). Infinity = whole arms (the
   // pre-K75 trains).
   pulseReach = Infinity;
+  // Live strength of the hover glow (the hoverGlow panel param, K145;
+  // main.ts syncs it every tick): 0 = off. The glow's run comes from
+  // setRim, its reach is pulseReach's.
+  hoverGlow = 0;
   // Live flow-undulation controls (sliders; main.ts syncs them every tick
   // like cuspRadius). See the FLOW_* constants: render-side displacement
   // only, never the physics state.
@@ -2129,7 +2152,10 @@ export class RibbonRenderer {
         const rgb = [0, 0, 0];
         knotSection(data, U, c, ctrl, rgb);
         const a = kShadeFx(data, U, c, ctrl, arc / c.arcPer, side, rgb);
-        kComposePaint(U, rgb, kPaintAt(data, U, c, ctrl, arc, px, this.paintTmp), kGlow(data, U, c, ctrl));
+        const st = kPaintAt(data, U, c, ctrl, arc, px, this.paintTmp);
+        // The hover glow (K145), shaped across at `side` as SECTION_FRAG does.
+        const rim = st.rim > 0 ? st.rim * kRimAcross(side) : 0;
+        kComposePaint(U, rgb, st, Math.max(kGlow(data, U, c, ctrl), rim));
         return [rgb[0], rgb[1], rgb[2], a];
       },
       shadeFx: (ch, arc, side, base) => {
@@ -2161,6 +2187,7 @@ export class RibbonRenderer {
           p: 0,
           band: false,
           v: 0,
+          rim: 0,
         });
         return { ...st, glow: kGlow(data, U, c, ctrl) };
       },
@@ -3557,6 +3584,44 @@ export class RibbonRenderer {
     }
   }
 
+  // K145: declare the hover glow's run (null = none). KPAINT is rewritten
+  // only when the run or its end gap changes, or the glow turns on or off
+  // (hoverGlow 0 writes no item, so the paint is exactly the glow-less
+  // one); a pointer moving along the run only moves the hover point, a
+  // uniform (setRimAt).
+  setRim(rim: PaintRim | null): void {
+    this.paintRim = rim;
+    if (rim) this.rimAt = rim.at;
+    this.syncRimItem();
+  }
+
+  setRimAt(at: number): void {
+    this.rimAt = at;
+  }
+
+  // The KPAINT key of the hover glow's item ("" = no item).
+  private rimItemKey(): string {
+    const r = this.paintRim;
+    return r && this.hoverGlow > 0
+      ? `${r.chain}|${r.c0}|${r.c1}|${this.rimGap()}`
+      : "";
+  }
+
+  private syncRimItem(): void {
+    if (!this.style.paletteMode) return;
+    if (this.rimItemKey() !== this.rimKey) this.writePaintItems();
+  }
+
+  // K145: the stretch at each end of a glowing run that stays dark - the
+  // junction web's reach along an arm (its wedge flanks, else the tip-disc
+  // rims). The webs draw over the ribbons there from arm strips, which
+  // carry no across coordinate, so a glow reaching under them would end
+  // at their silhouettes.
+  private rimGap(): number {
+    const fillHalf = this.style.threadWidth / 2;
+    return Math.max(fillHalf * FILLET_REACH_PER_HALF * this.cuspRadius, 2 * fillHalf);
+  }
+
   // K81: a walk ctrl's particle slot on its chain (walk ctrls are particle
   // slots; a closed chain's may be unwrapped past its length), -1 for a
   // chain that does not exist.
@@ -3948,7 +4013,7 @@ export class RibbonRenderer {
     const ctrl = kCtrlOfArc(D, c, an);
     kComposePaint(U, out, kPaintAt(D, U, c, ctrl, an, px, this.paintTmp), kGlow(D, U, c, ctrl));
   }
-  private paintTmp: KPaintState = { p: 0, band: false, v: 0 };
+  private paintTmp: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
 
   // The NODES a plucked chain passes (pluck_overlay.ts PluckNode): every
   // registered crossing pass (footprint = its erase extents + fade when
@@ -4175,6 +4240,11 @@ export class RibbonRenderer {
     U.uKReach[1] = Math.min(PAINT_CONST.PULSE_REACH_FADE, 0.5 * reach);
     // Hover: a slow breath between 0.2 and 0.8 strength, out to the reach.
     U.uKPaint[3] = 0.5 + 0.3 * Math.sin(clock * PAINT_CONST.HOVER_PULSE_W);
+    // K145, the hover glow: its strength (steady, no breath) and the hover
+    // point; its item follows the strength turning on or off.
+    this.syncRimItem();
+    U.uKReach[2] = this.paintRim ? Math.max(0, this.hoverGlow) : 0;
+    U.uKReach[3] = this.rimAt;
     // Junction fillets ride the same tick: live positions, live paint.
     this.rebuildFillets();
     this.tickWebFade();
@@ -4307,6 +4377,14 @@ export class RibbonRenderer {
         (p.inward ? ITEM_FLAG.INWARD : 0) | (p.hovered ? ITEM_FLAG.HOVER : 0);
       items.push(PAINT_ITEM.PULSE, p.cJunction, p.cFar, 0, 0, flags, 0, 0);
       touch(p.chain, Math.min(p.cJunction, p.cFar), Math.max(p.cJunction, p.cFar), i);
+    }
+    // K145: the hover glow's run, (RIM, c0, c1, end gap).
+    this.rimKey = this.rimItemKey();
+    const rim = this.paintRim;
+    if (this.rimKey !== "" && rim) {
+      const i = items.length / 8;
+      items.push(PAINT_ITEM.RIM, rim.c0, rim.c1, this.rimGap(), 0, 0, 0, 0);
+      touch(rim.chain, rim.c0, rim.c1, i);
     }
     if (overflow > 0 && !this.paintOverflowWarned) {
       this.paintOverflowWarned = true;

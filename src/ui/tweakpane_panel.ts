@@ -745,6 +745,12 @@ export function buildPanel(
     "How far the current junction's pulses, and the hover highlight on a choice, reach along each arm, in lattice units, before fading out. Applies live.",
     D.pulseReach, () => callbacks.onTrailChange()
   );
+  // K145: the subtle glow on a run that is not a choice.
+  const hoverGlowRow = row(
+    fMaze, p, "hoverGlow", { min: 0, max: 1, step: 0.05 },
+    "Hover glow: a run that is not one of your choices glows softly along both edges near the pointer (or under a touch press), fading toward its junctions. 0 turns it off. Applies live.",
+    D.hoverGlow, () => callbacks.onTrailChange()
+  );
   const mazeStatsRow = row(
     fMaze, s, "showMazeStats", undefined,
     "Show the maze readout in the top-left corner: solve time (from your first move to arriving at the exit), your path vs the optimal route, efficiency once solved, the distance you backtracked, junctions visited and (with dead ends on) dead ends entered. Remembered per browser.",
@@ -1571,6 +1577,7 @@ export function buildPanel(
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;
     pulseReachRow.hidden = !fab;
+    hoverGlowRow.hidden = !fab;
     // The gold recolor paints in gold/trail modes; the yarn replaces it.
     pathColorRow.hidden = !fab || params.pathViz === "string";
     // Music mode derives its pitch set from the song itself; manual and

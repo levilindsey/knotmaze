@@ -140,6 +140,9 @@ export const DAILY_EXEMPT_KEYS = [
   "pluckGlow",
   "tugLimit",
   "snapBack",
+  // K145's hover glow: how a run under the pointer answers, like the
+  // pluck's glow. Proposed for Levi's review with K145.
+  "hoverGlow",
   // Physics on/off: a device-speed choice; the settled layout is the same.
   "physics",
   // K147's load settle: the same device-speed kind of choice (how the

@@ -65,6 +65,15 @@ export const PAINT_CONST = {
   // end - at most half the reach. A fixed length rather than a share: a
   // share of a long reach dimmed the crests over its whole second half.
   PULSE_REACH_FADE: 1.0,
+  // HOVER GLOW (K145): a run that is not a choice glows along both rims
+  // around the hover point. Along the thread it falls off smoothly to 0 at
+  // the pulseReach param (world arc from the hover point); toward each end
+  // of the run it is gone within the item's end gap (the junction web's
+  // reach there: the webs carry no across coordinate) and back in full
+  // RIM_END_FADE further on. Across, it is 1 at either edge and falls as a
+  // square to 0 at RIM_EDGE of the half-width in from it.
+  RIM_END_FADE: 0.75,
+  RIM_EDGE: 0.6,
 
   // COMPOSITION (the retired accent strip in closed form): both bands
   // converge to 0.94 toward white at full strength, band texels spanning
@@ -90,8 +99,8 @@ export const FX_STYLE = {
 // traveled spans, junction caps, pulse arms - as records the shaders read
 // per pixel (T0.x = the type; pulse flags in T1.y). Bit 2 was ON_PATH, the
 // per-arm band family retired by K75 (a crest brightens the pixel's own
-// paint now - see kComposePaint).
-export const PAINT_ITEM = { SPAN: 1, CAP: 2, PULSE: 3 } as const;
+// paint now - see kComposePaint). RIM (K145) is the hover glow's run.
+export const PAINT_ITEM = { SPAN: 1, CAP: 2, PULSE: 3, RIM: 4 } as const;
 export const ITEM_FLAG = { INWARD: 1, HOVER: 4 } as const;
 
 // RUNS flags (R1.w).
