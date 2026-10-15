@@ -265,6 +265,49 @@ describe("K268 the shaped cut: the classifier", () => {
     expect(cut2.shape!.ramps[0].aS).toBeCloseTo(cut.shape!.ramps[0].aS, 9);
   });
 
+  // K268 stage 2's first defect (crossing 275 of K76 2c's census walk): a
+  // hard LOW end's fade is -0, and the classifier read the side off its sign
+  // (-0 < 0 is false), so a low hard end hid ABOVE itself. Two walked runs
+  // meeting at a vertex inside a footprint then both cut only below it, and
+  // the threads fused wherever the under thread passed above.
+  it("a hard low end hides below it; two runs meeting at a vertex cut the whole footprint", () => {
+    const arc = exploreArcMap(open.cal, open.total, false, 5, 0);
+    const [lo, hi] = [arc(3), arc(7)];
+    // A stub up from a vertex at 5: a hard low end, its fade past the footprint.
+    const up = classifyExploreCut([piece(0, 5, 9, 0, 0.5, false, true)], false, n, false, 5, lo, hi, arc, 1);
+    expect(up.kind).toBe("shaped");
+    expect(up.shape!.ramps.length).toBe(1);
+    expect(up.shape!.ramps[0].F).toBe(-1e-6);
+    const pUp = profileOf(up.shape!, 1);
+    expect(exploreCutCoverCpu(pUp, Math.fround(arc(4.9)), 0, 0.2, 0.01)).toBe(0);
+    expect(exploreCutCoverCpu(pUp, Math.fround(arc(5.1)), 0, 0.2, 0.01)).toBe(1);
+    // Its mirror: a stub down to the vertex (a hard high end).
+    const down = classifyExploreCut([piece(0, 1, 5, 0.5, 0, true, false)], false, n, false, 5, lo, hi, arc, 1);
+    expect(down.shape!.ramps[0].F).toBe(1e-6);
+    // Two walked runs meeting there (f = 0 at every end): best-of, one ramp
+    // per side, and the cut covers every point of the footprint.
+    const runs = [piece(0, 1, 5, 0, 0, false, false), piece(0, 5, 9, 0, 0, false, false)];
+    const meet = classifyExploreCut(runs, false, n, false, 5, lo, hi, arc, 1);
+    expect(meet.kind).toBe("shaped");
+    expect(meet.shape!.max).toBe(true);
+    expect(meet.shape!.ramps.map((R) => Math.sign(R.F))).toEqual([1, -1]);
+    const pMeet = profileOf(meet.shape!, 1);
+    for (let i = 0; i <= 64; i++) {
+      const A = Math.fround(lo + ((hi - lo) * i) / 64);
+      expect(exploreCutCoverCpu(pMeet, A, 0, 0.2, 0.01)).toBe(1);
+    }
+    // The same on a ring, the vertex at the seam (the copies k - 1 and k).
+    const ra = exploreArcMap(ring.cal, ring.total, true, 0.25, 3);
+    const seam = [piece(0, 8, 12, 0, 0, false, false), piece(0, 0, 3, 0, 0, false, false)];
+    const rc = classifyExploreCut(seam, false, n, true, 0.25, ra(-1), ra(1), ra, 1);
+    expect(rc.kind).toBe("shaped");
+    expect(rc.shape!.ramps.map((R) => Math.sign(R.F))).toEqual([1, -1]);
+    const pr = profileOf(rc.shape!, 1);
+    for (let i = 0; i <= 32; i++) {
+      expect(exploreCutCoverCpu(pr, Math.fround(ra(-1 + i / 16)), 0, 0.2, 0.01)).toBe(1);
+    }
+  });
+
   it("keeps one interior knot (exact) and flags a fade holding several (approx)", () => {
     const arc = exploreArcMap(open.cal, open.total, false, 5, 0);
     const lo = arc(2);
@@ -325,6 +368,70 @@ describe("K268 the shaped cut: exploreCutCoverCpu vs the model's chainVis (look 
       }
     }
     expect(checked).toBeGreaterThan(2000);
+    expect(worst).toBeLessThan(1e-4);
+  });
+
+  // The trials above never drew a hard end (every fade >= 0.35), which hid
+  // the -0 defect. Here a quarter of the ends are hard (explore_view's
+  // walked runs and a stub's vertex end) and a third of the second pieces
+  // start where the first ends (two runs meeting at a vertex).
+  it("agrees with hard ends and pieces that meet (K268 stage 2)", () => {
+    const r = rng(2682);
+    let checked = 0;
+    let meetings = 0;
+    let worst = 0;
+    const fade = (): number => (r() < 0.25 ? 0 : 0.35 + r() * 0.65);
+    for (let trial = 0; trial < 600; trial++) {
+      const n = 6 + Math.floor(r() * 14);
+      const closed = r() < 0.5;
+      const { cal, total } = chainArcs(n, r, closed);
+      const pieces: ExplorePiece[] = [];
+      const np = 1 + Math.floor(r() * 2);
+      let at = r() * 2;
+      let met = false;
+      for (let k = 0; k < np; k++) {
+        const c0 = at;
+        const c1 = Math.min(closed ? n * 0.9 : n - 1, c0 + r() * 3);
+        const meet = k === 0 && r() < 0.35;
+        pieces.push(piece(0, c0, c1, fade(), meet ? 0 : fade(), r() < 0.5, r() < 0.5));
+        if (meet) {
+          at = c1;
+          met = true;
+          // The next piece's low end is the same vertex: hard too.
+          const c1b = Math.min(closed ? n * 0.9 : n - 1, at + r() * 3);
+          pieces.push(piece(0, at, c1b, 0, fade(), false, r() < 0.5));
+          break;
+        }
+        at = c1 + 1.5 + r() * 3;
+        if (at > (closed ? n * 0.9 : n - 1.5)) break;
+      }
+      const overCtrl = r() * (closed ? n : n - 1);
+      const overArc = 2 + r() * 5;
+      const arc = exploreArcMap(cal, total, closed, overCtrl, overArc);
+      const reach = 0.5 + r() * 2.5;
+      const cLo = closed ? overCtrl - reach : Math.max(0, overCtrl - reach);
+      const cHi = closed ? overCtrl + reach : Math.min(n - 1, overCtrl + reach);
+      const cut = classifyExploreCut(pieces, false, n, closed, overCtrl, arc(cLo), arc(cHi), arc, 1);
+      if (cut.kind !== "shaped") continue;
+      if (met) meetings++;
+      const prof = profileOf(cut.shape!, 1);
+      // pieceVis's 1e-3 solid tolerance reaches past a hard end on either
+      // side, where the cut steps: skip points that near an end (sub-pixel).
+      const near = (c: number, e: number): boolean => {
+        const d = (((c - e) % n) + n) % n;
+        return Math.min(d, n - d) < 2e-3;
+      };
+      for (let i = 0; i <= 64; i++) {
+        const c = cLo + ((cHi - cLo) * i) / 64;
+        if (pieces.some((p) => near(c, p.c0) || near(c, p.c1))) continue;
+        const want = chainVis(pieces, 0, c, n, closed);
+        const got = exploreCutCoverCpu(prof, Math.fround(arc(c)), 0, 0.2, 0.01);
+        worst = Math.max(worst, Math.abs(got - want));
+        checked++;
+      }
+    }
+    expect(meetings).toBeGreaterThan(20);
+    expect(checked).toBeGreaterThan(3000);
     expect(worst).toBeLessThan(1e-4);
   });
 
