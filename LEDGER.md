@@ -770,6 +770,21 @@ Next free ID: K354.
     geometry, fix the general case with a test that fails first, the
     after sheet, lore and the handoff; then the merge.
   - brief: `docs/design/K344_pluck_cusp.md`.
+- **K8** · G3: SDF ribbons drawn from one shared sample texture
+  (`docs/design/G3G4_sdf_geometry.md`). Decided: flat caps on anchored
+  tails, a 2x phone cap, today's fold pinch, and G1's GPU levers fold in.
+  - owner: agent `a35a43cee74c92b93` (opus) of claude session d8031183, from 2026-10-15 00:13 (cap 02:13; docs only, ports 5880-5889)
+  - branch: `worktree-agent-a35a43cee74c92b93` (`.claude/worktrees/agent-a35a43cee74c92b93`); last commit: none yet (base `d741412`)
+  - evidence: its worktree's `docs/design/G3G4_sdf_geometry.md` and `docs/design/K8_stage1.md`
+  - next: stage 1 re-bases the doc's plan on today's master and writes the "Stage 2 (G3-0)" brief; then G3-0 takes the next free code slot
+  - brief: `docs/design/K8_stage1.md`
+- **K353** · The ledger diet: shorten every item over three lines and
+  archive the originals (`docs/ledger_notes.md`, `docs/ledger_done.md`).
+  - owner: agent `a18f9a57206d9475d` (sonnet) of claude session d8031183, from 2026-10-15 00:13 (cap 01:13; scripts and docs only)
+  - branch: `worktree-agent-a18f9a57206d9475d` (`.claude/worktrees/agent-a18f9a57206d9475d`); last commit: none yet (base `d741412`)
+  - evidence: its worktree's `scripts/ledger_diet.mjs`, `docs/ledger_diet/map.jsonl` and `.claude/probes/K353/`
+  - next: when it reports, apply the map to master at a quiet point (`apply --dry-run`, then `apply`, then `verify` against the pre-apply copy); tomorrow with Levi, the same diet for claude-config's and the other repos' ledgers, plus the claude-config side (the `rules/ledger.md` convention, a shared `tools/ledger.mjs`, the merge script closing items, a nightly hygiene job), filed in claude-config's ledger (Levi, 2026-10-15 00:05)
+  - brief: `docs/design/K353_ledger_diet.md`
 
 ## Next, in order
 
@@ -942,14 +957,6 @@ Every other item below waits on the trigger it names.
   render-on-demand loop (K24) asks `background.needsFrame()`. K7's
   design: not needed first; after K7's stage 5. First in line with K5
   (Levi, 2026-10-14 23:46).
-- **K8** · G3: SDF ribbons drawn from one shared sample texture
-  (`docs/design/G3G4_sdf_geometry.md`). Stage 1 (docs only) re-bases the
-  doc's plan on today's master and writes G3-0's brief
-  (`docs/design/K8_stage1.md`); G3-0, the data plane, takes the next free
-  code slot. Decided: anchored tails keep flat caps, phones keep a 2x
-  resolution cap, over-tight folds keep today's pinch (Levi, 2026-10-13:
-  "Pinching is probably better"), and G1's GPU levers fold in. Dense
-  (5448 particles) is render-bound at about 30 fps, which K7 doesn't fix.
 - **K9** · G4: smooth-union SDF junction webs (cuspRadius = blend
   radius); A/B crops at cr 1, 3, 6 before the fans are deleted. Also
   closes G1's x160 leftover: a faint tick where a wedge flank meets a
