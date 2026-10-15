@@ -91,6 +91,11 @@ export interface SplineBend {
   // A run turning more than this many radians is left alone.
   maxTurn: number;
   iterations: number;
+  // The most samples either side of a run that may take its turn.
+  marginMax: number;
+  // Detect-and-relax passes: a later pass catches a turn that the first
+  // pushed onto the edge of its range.
+  passes: number;
   // Diagnostics, accumulated until the caller zeroes them: samples moved,
   // the largest shift (world), runs relaxed and runs left alone.
   moved: number;
@@ -99,13 +104,18 @@ export interface SplineBend {
   skipped: number;
 }
 
+// The values are census r2's pick (K90_bend_radius.md): 1.05 left w115
+// where it was, a maxShift of 1.0 h bought nothing over 0.5, and three
+// passes with room for 24 samples a side cut what one pass left by 3-4x.
 export const splineBend: SplineBend = {
   enabled: false,
-  ratio: 1.05,
+  ratio: 1.2,
   halfWidth: 0,
   maxShift: 0.5,
   maxTurn: (200 * Math.PI) / 180,
   iterations: 48,
+  marginMax: 24,
+  passes: 3,
   moved: 0,
   shiftMax: 0,
   runs: 0,
@@ -114,7 +124,6 @@ export const splineBend: SplineBend = {
 
 // The fewest samples beside an over-tight run that may take its turn.
 const BEND_MARGIN_MIN = 3;
-const BEND_MARGIN_MAX = 12;
 // A sample moving less than this (world) has converged.
 const BEND_STILL = 1e-6;
 let bendOrig = new Float32Array(0);
@@ -160,7 +169,7 @@ export function boundBend(pos: Float32Array, count: number, closed: boolean): vo
   const b = splineBend;
   const R = b.ratio * b.halfWidth;
   if (!(R > 0) || count < 5) return;
-  const wins = overTightWindows(pos, count, closed, b.halfWidth, b.ratio);
+  let wins = overTightWindows(pos, count, closed, b.halfWidth, b.ratio);
   if (wins.length === 0) return;
   if (bendOrig.length < count * 2) bendOrig = new Float32Array(count * 2);
   bendOrig.set(pos.subarray(0, count * 2));
@@ -169,70 +178,78 @@ export function boundBend(pos: Float32Array, count: number, closed: boolean): vo
   const wrap = (j: number): number => ((j % count) + count) % count;
   let lo = count;
   let hi = -1;
-  for (const w of wins) {
-    if (w.length >= count) {
-      b.skipped++;
-      continue;
+  const passes = Math.max(1, b.passes);
+  const marginMax = Math.max(BEND_MARGIN_MIN, b.marginMax);
+  for (let pass = 0; pass < passes; pass++) {
+    if (pass > 0) {
+      wins = overTightWindows(pos, count, closed, b.halfWidth, b.ratio);
+      if (wins.length === 0) break;
     }
-    let turn = 0;
-    let arc = 0;
-    let legs = 0;
-    for (let j = w.start - 2; j < w.start + w.length + 2; j++) {
-      const k = closed ? wrap(j) : j;
-      if (k < 0 || k >= count) continue;
-      turn += bendTurnAt(pos, count, closed, k);
-      if (closed || k + 1 < count) {
-        const n = wrap(k + 1);
-        arc += Math.sqrt(
-          (pos[n * 2] - pos[k * 2]) * (pos[n * 2] - pos[k * 2]) +
-            (pos[n * 2 + 1] - pos[k * 2 + 1]) * (pos[n * 2 + 1] - pos[k * 2 + 1])
-        );
-        legs++;
+    for (const w of wins) {
+      if (w.length >= count) {
+        if (pass === 0) b.skipped++;
+        continue;
       }
-    }
-    if (Math.abs(turn) > b.maxTurn) {
-      b.skipped++;
-      continue;
-    }
-    b.runs++;
-    // Room for the turn at radius R: arc R |turn|, shared by both sides.
-    const spacing = legs > 0 ? arc / legs : 0;
-    const need = spacing > 0 ? Math.ceil((R * Math.abs(turn)) / spacing / 2) : 0;
-    const margin = Math.min(BEND_MARGIN_MAX, Math.max(BEND_MARGIN_MIN, need));
-    const j0 = w.start - margin;
-    const j1 = w.start + w.length - 1 + margin;
-    for (let it = 0; it < b.iterations; it++) {
-      let movedAny = false;
-      for (let j = j0; j <= j1; j++) {
+      let turn = 0;
+      let arc = 0;
+      let legs = 0;
+      for (let j = w.start - 2; j < w.start + w.length + 2; j++) {
         const k = closed ? wrap(j) : j;
-        if (!closed && (k <= 0 || k >= count - 1)) continue;
-        if (!(bendRadiusAt(pos, count, closed, k) < R)) continue;
-        const p = wrap(k - 1) * 2;
-        const n = wrap(k + 1) * 2;
-        const c = k * 2;
-        let x = pos[c] + ((pos[p] + pos[n]) * 0.5 - pos[c]) * 0.5;
-        let y = pos[c + 1] + ((pos[p + 1] + pos[n + 1]) * 0.5 - pos[c + 1]) * 0.5;
-        const dx = x - bendOrig[c];
-        const dy = y - bendOrig[c + 1];
-        const d2 = dx * dx + dy * dy;
-        if (d2 > maxD2) {
-          const f = maxD / Math.sqrt(d2);
-          x = bendOrig[c] + dx * f;
-          y = bendOrig[c + 1] + dy * f;
-        }
-        if (Math.abs(x - pos[c]) + Math.abs(y - pos[c + 1]) < BEND_STILL) continue;
-        pos[c] = x;
-        pos[c + 1] = y;
-        movedAny = true;
-        if (closed) {
-          lo = 0;
-          hi = count - 1;
-        } else {
-          if (k < lo) lo = k;
-          if (k > hi) hi = k;
+        if (k < 0 || k >= count) continue;
+        turn += bendTurnAt(pos, count, closed, k);
+        if (closed || k + 1 < count) {
+          const n = wrap(k + 1);
+          arc += Math.sqrt(
+            (pos[n * 2] - pos[k * 2]) * (pos[n * 2] - pos[k * 2]) +
+              (pos[n * 2 + 1] - pos[k * 2 + 1]) * (pos[n * 2 + 1] - pos[k * 2 + 1])
+          );
+          legs++;
         }
       }
-      if (!movedAny) break;
+      if (Math.abs(turn) > b.maxTurn) {
+        if (pass === 0) b.skipped++;
+        continue;
+      }
+      b.runs++;
+      // Room for the turn at radius R: arc R |turn|, shared by both sides.
+      const spacing = legs > 0 ? arc / legs : 0;
+      const need = spacing > 0 ? Math.ceil((R * Math.abs(turn)) / spacing / 2) : 0;
+      const margin = Math.min(marginMax, Math.max(BEND_MARGIN_MIN, need));
+      const j0 = w.start - margin;
+      const j1 = w.start + w.length - 1 + margin;
+      for (let it = 0; it < b.iterations; it++) {
+        let movedAny = false;
+        for (let j = j0; j <= j1; j++) {
+          const k = closed ? wrap(j) : j;
+          if (!closed && (k <= 0 || k >= count - 1)) continue;
+          if (!(bendRadiusAt(pos, count, closed, k) < R)) continue;
+          const p = wrap(k - 1) * 2;
+          const n = wrap(k + 1) * 2;
+          const c = k * 2;
+          let x = pos[c] + ((pos[p] + pos[n]) * 0.5 - pos[c]) * 0.5;
+          let y = pos[c + 1] + ((pos[p + 1] + pos[n + 1]) * 0.5 - pos[c + 1]) * 0.5;
+          const dx = x - bendOrig[c];
+          const dy = y - bendOrig[c + 1];
+          const d2 = dx * dx + dy * dy;
+          if (d2 > maxD2) {
+            const f = maxD / Math.sqrt(d2);
+            x = bendOrig[c] + dx * f;
+            y = bendOrig[c + 1] + dy * f;
+          }
+          if (Math.abs(x - pos[c]) + Math.abs(y - pos[c + 1]) < BEND_STILL) continue;
+          pos[c] = x;
+          pos[c + 1] = y;
+          movedAny = true;
+          if (closed) {
+            lo = 0;
+            hi = count - 1;
+          } else {
+            if (k < lo) lo = k;
+            if (k > hi) hi = k;
+          }
+        }
+        if (!movedAny) break;
+      }
     }
   }
   for (let k = lo; k <= hi; k++) {
