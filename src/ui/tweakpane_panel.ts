@@ -818,13 +818,6 @@ export function buildPanel(
     "Hover glow: a run that is not one of your choices glows softly along both edges near the pointer (or under a touch press), fading toward its junctions. 0 turns it off. Applies live.",
     D.hoverGlow, () => callbacks.onTrailChange()
   );
-  // K111 stage 2: how the choices are lit.
-  const highlightModeRow = row(
-    fMaze, p, "highlightMode",
-    { options: { pulses: "pulses", glow: "glow", rims: "rims", contrast: "contrast" } },
-    "How the runs next to you (your choices) are lit, out to the reach above: pulses = light travels along them; glow = a steady glow, no motion; rims = a bright band along both edges; contrast = white with a black center line, whatever the thread's color (what High contrast uses). The run under the pointer shows brighter (glow), filled (rims) or without its line (contrast). Applies live.",
-    D.highlightMode, () => callbacks.onTrailChange()
-  );
   const mazeStatsRow = row(
     fMaze, s, "showMazeStats", undefined,
     "Show the maze readout in the top-left corner: solve time (from your first move to arriving at the exit), your path vs the optimal route, efficiency once solved, the distance you backtracked, junctions visited and (with dead ends on) dead ends entered. Remembered per browser.",
@@ -1706,7 +1699,6 @@ export function buildPanel(
     pulseSpacingRow.hidden = !fab;
     pulseReachRow.hidden = !fab;
     hoverGlowRow.hidden = !fab;
-    highlightModeRow.hidden = !fab;
     // The gold recolor paints in gold/trail modes; the yarn replaces it.
     pathColorRow.hidden = !fab || params.pathViz === "string";
     // Music mode derives its pitch set from the song itself; manual and

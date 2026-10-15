@@ -5,7 +5,6 @@ import {
   CONTRAST_QUERY,
   ContrastSetting,
   HIGH_CONTRAST_GAP_MIN,
-  HIGH_CONTRAST_HIGHLIGHT,
   HIGH_CONTRAST_MARKER_MIN,
   HIGH_CONTRAST_OVERRIDES,
   HIGH_CONTRAST_ROOT,
@@ -30,7 +29,6 @@ import {
   BACKGROUND_COLOR_MODES,
 } from "../../src/render/background_model";
 import { PARAM_DEFAULTS } from "../../src/ui/url_state";
-import { HIGHLIGHT_MODES } from "../../src/render/paint_const";
 
 // An in-memory Storage that can refuse reads and/or writes (motion.test.ts).
 class FakeStorage implements StorageLike {
@@ -296,7 +294,6 @@ const viewer = {
   fadeLength: 0.5,
   gap: 0.05,
   markerSize: 0.8,
-  highlightMode: "glow" as const,
 };
 
 describe("effectiveParams", () => {
@@ -334,8 +331,6 @@ describe("effectiveParams", () => {
     expect(e.fadeLength).toBe(0);
     expect(e.gap).toBe(HIGH_CONTRAST_GAP_MIN);
     expect(e.markerSize).toBe(HIGH_CONTRAST_MARKER_MIN);
-    // K111 stage 2: the choices wear the contrast highlight.
-    expect(e.highlightMode).toBe("contrast");
     // The flow is Reduced motion's.
     expect(e.flowStrength).toBe(viewer.flowStrength);
     expect(e.flowSpeed).toBe(viewer.flowSpeed);
@@ -414,26 +409,6 @@ describe("the override values are real choices", () => {
     expect(hc("gap") as number).toBeGreaterThanOrEqual(0.04);
     expect(hc("gap") as number).toBeLessThanOrEqual(0.5);
     expect(hc("fadeLength") as number).toBeGreaterThanOrEqual(0);
-    expect(HIGHLIGHT_MODES).toContain(hc("highlightMode"));
-    expect(HIGH_CONTRAST_HIGHLIGHT).toBe("contrast");
-  });
-
-  it("Reduced motion keeps the viewer's highlight mode (K111 stage 2)", () => {
-    for (const mode of HIGHLIGHT_MODES) {
-      const stored = { ...viewer, highlightMode: mode };
-      expect(
-        effectiveParam(stored, on({ reducedMotion: true }), "highlightMode")
-      ).toBe(mode);
-      expect(effectiveParams(stored, on({ reducedMotion: true })).highlightMode).toBe(
-        mode
-      );
-      // High contrast wins over both, and off restores the stored mode.
-      expect(
-        effectiveParam(stored, { reducedMotion: true, highContrast: true }, "highlightMode")
-      ).toBe("contrast");
-      expect(effectiveParam(stored, NO_A11Y, "highlightMode")).toBe(mode);
-    }
-    expect(overriddenKeys(on({ reducedMotion: true }))).not.toContain("highlightMode");
   });
 
   it("raise a default that is below the floor", () => {
