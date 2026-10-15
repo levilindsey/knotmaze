@@ -89,6 +89,7 @@ src/
     knot_synth.ts         # Web Audio pluck/strum
     pitch_space.ts        # Scales; segment pitch by length bucket
     songs.ts              # Music mode's songs ({note, beats})
+    snore_sfx.ts          # K325: the credit link's snore (fetch, decode, play)
   ui/
     tweakpane_panel.ts    # Control panel
     grid_align_curve.ts   # gridAlign's exponential slider curve
@@ -105,6 +106,7 @@ src/
     view_clamp.ts         # K198 pure: the fit camera's pan range (clears the open panel)
     key_moves.ts          # K120: moves by direction (arrows, WASD; picker, hold)
     move_pad.ts           # K120: the touch move pad (viewer pref, same picker)
+    snore_link.ts         # K325: the credit link's snore and its touch delay
   util/
     random.ts             # Seeded RNG
     det_math.ts           # K108: engine-exact math for generation (hypot2)
@@ -129,7 +131,7 @@ test/
     open_chain.test.ts, junction.test.ts, maze_fabric.test.ts,
     sleep_gate.test.ts, sleep.regression.test.ts (K41 links, K63 fps)
   audio/
-    pitch_space.test.ts
+    pitch_space.test.ts, snore_sfx.test.ts (K325)
   game/
     fabric_controller.test.ts (+ K19 stats), fabric_trail.test.ts,
     maze_stats.test.ts,
@@ -162,7 +164,7 @@ test/
     chrome avoidance), motion.test.ts (prefs, live follow, storage
     failures), head_indicator.test.ts (K148), view_clamp.test.ts (K198),
     key_moves.test.ts (K120: picker, ties, holds, guards),
-    move_pad.test.ts (pref, arms)
+    move_pad.test.ts (pref, arms), snore_link.test.ts (K325: the delay rule)
   notices/
     notices.test.ts (K122: collector, license policy, page, the real build)
   quiescence.regression.test.ts  # Guards the friction dissipation channel

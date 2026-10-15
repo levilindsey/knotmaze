@@ -253,14 +253,24 @@ and never reused.
   (`pendingWin`, `src/main.ts` about line 2079) and the Reset path during
   the winning move, or only on a live finish? (3) the colors (a festive
   set built from the gold 0xffd23f) and the default amount, 1?
-- **K331** · Should touch get K298's pick margins? Touch keeps today's
-  world-unit radii (0.7, and max(0.9, 1.6 x threadWidth) on a choice),
-  which have no margin term for `pickChoiceRatio` to scale. Moving touch
-  to the mouse's form (half-width plus a px margin, times the ratio on a
-  choice) with its own margin would keep today's zones at the default
-  zoom (about 3.9 / 5.7 px past the edge; 4 px nearly matches) but stop
-  them growing under a pinch zoom. Asked 2026-10-14 at 22:23
-  (`docs/design/K298_hover_glow.md`, "Notes").
+- **K323** · A Game folder (Levi, 2026-10-14 about 22:05: "I was
+  expecting something like "gameMode" with dropdown values like
+  classic/minotaur/..., and then with a additional conditionally-shown
+  mode-specific controls like a realtime checkbox... Probably "Game" or
+  "Gameplay" or "Game mode" should be a separate group."). Designed
+  22:14-22:44 (`docs/design/K323_game_mode.md`, merged as 091e4dc): a
+  `gameMode` param (`gm`: classic, minotaur, burn) heads a new Game
+  folder after Design, each mode's rows shown only under it; `clk` is
+  read through `clockOf(p)`; one codec bump, 5 -> 6 (7 if K76 2c bumps
+  first), in which `mt` loses `off`, `fire`, `mazeFabric` and
+  `snappiness` leave, and `mtw` becomes K324's `minoPull`; old key=value
+  links infer the mode; K263's `undoAllowed` goes or takes the mode.
+  Section 6's questions 1, 3 and 4 (the folder's place, fog into Game,
+  the labels) moved into K339's audit; 2 and 5-8 (real time as a
+  checkbox, burn race as one option, the models in real time, dailies
+  stay classic, knot mode gone) were sent at 23:22. Stage 1 (the codec,
+  the folder, the labels) is built with K339's rebuild after the
+  answers, and coordinates its bump with K76 2c.
 
 ## In progress
 
@@ -701,27 +711,37 @@ and never reused.
     the daily's first sleep 20.96/20.68 s against master's 20.68/20.66,
     drags 7.0 fps on both, the knot's first sleep 16.69 s against 16.56.
     Residuals K314 and K315.
-  - owner: agent ad436f128119f6c81 (opus) of claude session d8031183,
-    stage 2 from 22:14 (cap 00:14; Node only; ports 5830-5839).
-  - branch: `worktree-agent-ad436f128119f6c81`
-    (`.claude/worktrees/agent-ad436f128119f6c81`, from b72d5dd); last
-    commit: `b72d5dd` (master) until its first WIP commit.
+  - stage 2 (the worker core, in Node) merged at 23:21 (86708b4..472ef83): the
+    step split into `beginFrame` and `runSubstep` (identical bits, the
+    same speed within noise), `src/physics/snapshot.ts` (40,936 bytes at
+    `?7`), `MirrorSystem` (`src/physics/mirror_system.ts`) and
+    `PhysicsWorkerCore` (`src/physics/physics_worker_core.ts`), its clock
+    per Design 4. 973 tests pass and no snapshot moved; the worker core
+    and `InThreadHost` run bit-identical in lockstep on every frame. Its
+    departures from the brief and its "For stage 3" list are in the
+    brief's "Stage 2 handoff". Residual K346, idea K347.
+  - owner: agent a9f593eca9038e6d3 (opus) of claude session d8031183, stage 3
+    from 23:22 (cap 01:22; ports 5792-5795).
+  - branch: `worktree-agent-a9f593eca9038e6d3`
+    (`.claude/worktrees/agent-a9f593eca9038e6d3`, from 472ef83); last
+    commit: `472ef83` (master) until its first WIP commit.
   - evidence: the design's `.claude/probes/K7/design/`
     (`k7_results.jsonl`, `frames/`, `summarize.mjs`, `run_k7.ps1`,
     `k7_frames.mjs`, `transport/`, `spike/`); stage 1's
     `.claude/probes/K7/stage1/` (`load_probe.mjs`, `input_probe.mjs`,
-    the A/B); stage 2's probes under `.claude/probes/K7/` in its
-    worktree.
-  - next: stage 2 (the worker core, the snapshot and the mirror, in Node
-    only, on maze designs since knot mode goes, K326), then 3-5 in
-    order. Stage 3 checks that
-    pre-settle slices answered from a `settled` message arrive a frame
-    late. Stage 4 also attributes the main-thread JS that K307's trace
-    left unexplained (about 86 ms in the first freeze, 47 ms in the
-    second, and an 80-96 ms frame at about 6.1 s). Stages 1 and 4 own
-    `main.ts`; stage 5 needs the phone.
-  - brief: `docs/design/K7_worker.md`, "Stage 1 handoff" and "Stage 2:
-    the worker core, the snapshot and the mirror, in Node".
+    the A/B); stage 2's `.claude/probes/K7/stage2/` (`results.md`, the
+    split timing) and `test/physics/physics_host.test.ts`,
+    `snapshot.test.ts` and `fabric_scene.ts`; stage 3's probes under
+    `.claude/probes/K7/stage3/` in its worktree.
+  - next: stage 3 (the worker in the browser behind `phw`, off by
+    default), then 4 and 5. Stage 3 checks that pre-settle slices
+    answered from a `settled` message arrive a frame late. Stage 4 also
+    attributes the main-thread JS that K307's trace left unexplained
+    (about 86 ms in the first freeze, 47 ms in the second, and an
+    80-96 ms frame at about 6.1 s). Stages 1 and 4 own `main.ts`; stage 5
+    needs the phone.
+  - brief: `docs/design/K7_worker.md`, "Stage 2 handoff" and "Stage 3:
+    the worker in the browser, behind `phw`".
 - **K307** · The daily intro's freezes are cold shader compiles (stage
   1's trace, 2026-10-14 21:39; the desktop's RX 6800 XT, ANGLE D3D11):
   bg-vellum about 0.28 s at 0.3 s, section-rgb about 2.8 s at 1.0 s,
@@ -757,47 +777,6 @@ and never reused.
     presents during the waits, and the first frame.
   - brief: `docs/design/K307_intro_freezes.md`, "Stage 1 handoff" and
     "Stage 2: the warm-up".
-- **K323** · A Game folder (Levi, 2026-10-14 about 22:05: "I was
-  expecting something like "gameMode" with dropdown values like
-  classic/minotaur/..., and then with a additional conditionally-shown
-  mode-specific controls like a realtime checkbox... Probably "Game" or
-  "Gameplay" or "Game mode" should be a separate group."): a top-level
-  Game folder with a Game mode dropdown (Classic, Minotaur, Burn race)
-  and rows shown per mode (under Minotaur a Real time checkbox, the model
-  and its controls), folding `clk`, `mt` and `fi` into it. Codec 5 -> 6
-  (K76 2c also plans a 6; whichever merges first takes it). Built with
-  K326 and K327; K324's controls land in it.
-  - owner: agent a806933f7eb6fb661 (opus) of claude session d8031183,
-    the design from 22:14 (cap 23:44; docs only), with K324's.
-  - branch: `worktree-agent-a806933f7eb6fb661`
-    (`.claude/worktrees/agent-a806933f7eb6fb661`, from b72d5dd); last
-    commit: `b72d5dd` (master) until its first commit.
-  - evidence: none (a docs stage).
-  - next: the two design docs, then Levi's calls on the layout, then the
-    build in stages that never collide on `main.ts`, the panel or
-    `src/ui/url_state.ts`.
-  - brief: `docs/design/K323_game_mode.md` (being written: the
-    inventory, the panel, K326's removal, the codec, stages, questions).
-- **K325** · The snoring cat on the panel's credit link (Levi,
-  2026-10-14 about 22:05: "I'd like to play the snoring cat sound on
-  hover or touch-down of the snoring cat link in the panel. On mobile
-  (and on desktop too, if the sound would otherwise get cut-off), we
-  should then delay the link traversal by a tiny bit, to give the sfx
-  longer to play."): the snore plays on hover and on touch-down, and a
-  touch opens the link about 300 ms later. The image is
-  `public/snoring-cat.png`; the sound is hopnbop's
-  `assets/audio/old/single_cat_snore.wav` (80,844 B), compressed into
-  `public/`. Levi was asked whether the snore is his or a library's (a
-  credit line, K321).
-  - owner: agent a3d16d9ddc55c5eda (sonnet) of claude session d8031183,
-    from 22:14 (cap 23:14; ports 5840-5849).
-  - branch: `worktree-agent-a3d16d9ddc55c5eda`
-    (`.claude/worktrees/agent-a3d16d9ddc55c5eda`, from b72d5dd); last
-    commit: `b72d5dd` (master) until its first WIP commit.
-  - evidence: `.claude/probes/K325/` in its worktree.
-  - next: the build (the asset, hover and pointerdown play, the touch
-    delay, tests, a probe, lore in `gameplay-audio.md`), then the merge.
-  - brief: this item (no design doc).
 - **K329** · The arrow keys don't move the player at a 4-way
   intersection (Levi, 2026-10-14 about 22:15, on the LAN dev server at
   b72d5dd: `?qoietk.KaIeBFFfBGVG3x8Mj4`; his inspect named crossing 34,
@@ -815,6 +794,47 @@ and never reused.
     onto 813e098 or later, then the merge. Its report says where K332's
     hints hook in.
   - brief: this item and K332-K334 (no design doc).
+- **K335** · The confetti rain's top edge (Levi, 2026-10-14 about 22:22:
+  "I like the abrupt wave of confetti at the start, but then we also have
+  an abrupt cut-off stopping the confetti, and we see an abrupt line at
+  the top of the wave of confetti that I don't like. Can we more of a
+  fade-out of confetti particles along the top?"): keep the sudden start,
+  and thin the wave out toward its top so it ends in a ragged fade
+  instead of a line. K140's `src/render/confetti_model.ts` (K317 doubled
+  the rain at 21:53). Narrowed at 23:01 to K335 alone (K336 and K337
+  deferred, Levi 23:00).
+  - owner: agent a5a499658319bedf9 (opus) of claude session d8031183,
+    from 22:54 (cap 00:54; ports 5860-5869).
+  - branch: `worktree-agent-a5a499658319bedf9`
+    (`.claude/worktrees/agent-a5a499658319bedf9`, from 7effaae); last
+    commit: `70854ee` (the rain's releases taper, its top edge thins).
+  - evidence: `.claude/probes/K335/` in its worktree.
+  - next: the rain's edge with its tests and sheet, K336/K337's partial
+    work saved as a patch in `.claude/probes/K335/deferred/`, the
+    handoff, then the merge.
+  - brief: `docs/design/K335_confetti.md`.
+- **K339** · Audit and reorganize the settings panel (Levi, 2026-10-14
+  about 22:48: "We should also audit the current list of settings in
+  this panel, and reorganize them now. We should also consider whether
+  any properties are worth removing now, or combining/refactoring. We
+  should also plan to do this again when we're all done iterating
+  through all these designs."): an inventory of every row from a tracked
+  script (K341 reruns it), findings, a proposed tree, removals and
+  merges with their codec cost (folded into K323 stage 1's bump), and
+  K340's nested-folder look. Design only; the rebuild ships with K323
+  stage 1.
+  - owner: agent a2f8f74cd5425c4ef (opus) of claude session d8031183,
+    from 22:54 (cap 00:54; ports 5880-5889; docs and scripts only),
+    with a sonnet helper.
+  - branch: `worktree-agent-a2f8f74cd5425c4ef`
+    (`.claude/worktrees/agent-a2f8f74cd5425c4ef`, from 7effaae); last
+    commit: `9aeb7bb` (WIP: the inventory script and table).
+  - evidence: `.claude/probes/K339/` in its worktree (the looks' sheet
+    in `sheet/`).
+  - next: findings, the tree, the codec cost, the nested-folder sheet,
+    questions and the build plan; then Levi's calls; then the rebuild
+    with K323 stage 1.
+  - brief: `docs/design/K339_panel_audit.md`.
 
 ## Next, in order
 
@@ -850,16 +870,24 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K7's stage 2 from 22:14 (cap 00:14, opus,
-Node only), K325 (the snoring cat) from 22:14 (cap 23:14, sonnet), the
-K323/K324 design from 22:14 (cap 23:44, opus, docs only) and K329 (the
-arrow keys, with K333 and K334) from 22:16 (cap 00:16, opus). K298
-merged at 22:20, K307's stage 1 at 22:06 and K7's stage 1 at 22:04.
-The next code slots: the confetti stage (K335-K337), then K321 (the
-credits page, sonnet), K111 stage 5 (K265, K328) and K307's warm-up
-(after K329), then K318's stage 1 (after the confetti stage and K111
-stage 5) and K332 (the key hints, after K329); K313's loader follows
-K307's warm-up. K317 (more confetti) shipped at
+(he may reorder). Running: K7's stage 3 from 23:22 (cap 01:22, opus),
+K329 (the arrow keys, with K333 and K334) from 22:16 (cap 00:16, opus),
+the confetti stage (K335 only since 23:01) from 22:54 (cap 00:54, opus)
+and K339's panel audit from 22:54 (cap 00:54, opus, docs only). K7's
+stage 2 merged at 23:21, K325 at 22:53, the K323/K324 design at 22:44,
+K298 at 22:20, K307's stage 1 at 22:06 and K7's stage 1 at 22:04. The order
+from 2026-10-14 23:00 (Levi, verbatim: "Let's defer the more-complex
+celebratory effects to after other tasks. ... I think I'd like to get
+thread appear/disappear support working as a close second priority
+after the web worker."; at about 23:09, going to bed: "I'll leave the
+phone available. Proceed through the night."): K7's stages 3-5 in turn;
+then thread appear/disappear, one at a time since all four edit the
+paint shaders: K76 2c (after K329), K268 stage 2, K290 (burn stage 3)
+and K76 2d. K344 (the pluck cusp) takes the confetti stage's slot. Then
+K321 (the credits page, sonnet), K307's warm-up (K313's loader follows
+it), K331 with K330, K111 stage 5 with K265, K328 and K345, K332 (the
+key hints), K323 stage 1 with K339's rebuild (one codec bump, shared
+with 2c's), K326 stage A, and last K318, K336 and K337. K317 (more confetti) shipped at
 21:53. K253's portrait A/A finished at 21:02 (the floor installed at
 21:24), K299 merged at 20:45, K7's design at 20:10, K111 stage 4 at
 19:11 and K156's round 2026-10-14c pass at 19:48. K279's
@@ -964,9 +992,9 @@ questions for stage 2c); K260 and K261
 (the burn race's
 calls 2-4, and K74 stage 2's calls, built as recommended); K280 (the
 fire's heat); K282 (an explanation for the HUD's stats during play);
-K331 (touch
-pick margins); K334 (whether taps and clicks wait too); K325's snore
-(his or a library's);
+K323 and K324 (the game modes'
+fourteen questions, sent at 23:22 with K257, K286 and K288 in one
+questions file);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -996,6 +1024,42 @@ are designed together first (K323's handle), then built in stages that
 never collide on `main.ts`, the panel or `src/ui/url_state.ts`. K80
 turns stage 3 follows that design, since it shares the minotaur's rows.
 
+- **K290** · Burnt threads, a toggle (Levi, 2026-10-14 about 18:08,
+  verbatim: "Ooh, with the burn away, I'd like to support toggling how
+  burnt segments are treated--leave the threads rendered but with burnt
+  coloring vs actually stop rendering the threads (and then update how
+  gaps are rendered for other threads that used to be on the underside
+  of a crossing with a now-burnt thread--just the opposite of the
+  appear-as-you-go thread rendering)."). A `burnt` dropdown: char (drawn
+  in a burnt coloring, stage 1's char moved into the shader) or gone
+  (not drawn; the under threads' gaps close, K268's shaped cut in
+  reverse; fans drop the arm). Burn stage 3 builds both on K76's
+  visibility and K268's shaped gaps, so it follows K76 2c and K268 stage
+  2, whose briefs must not assume a thread's visibility only grows. Its
+  sheet shows both. The default is gone (Levi, 2026-10-14 about 18:27,
+  verbatim: "Gone should be the burnt away dedault").
+  `docs/design/K114_burn.md` ("The stages", stage 3).
+- **K344** · A sharp cusp in the pluck vibration on a self-crossing loop
+  (Levi, 2026-10-14 about 23:04: "There's a sharp discontinuous cusp
+  with the vibration effect on this loop along the bottom of the loop.
+  Can we fix this general problem?"; on the LAN dev server,
+  `?qoietk.KIiHgRRXwRlRt8fGrST4sf`; his inspect: crossing 104, chain 21
+  crossing itself, over at ctrl 102 and under at ctrl 110.205). The fix
+  covers the general case, not this loop alone. One opus stage in the
+  confetti stage's slot: `docs/design/K344_pluck_cusp.md`.
+- **K345** · The hover rim through the junction fillets (Levi,
+  2026-10-14 about 23:06: "Why do we not render the hover rim
+  hightlight closer to junctions? Does this have to do with the filets?
+  Can we make these edge-rim hightlights instead work with and follow
+  the curve of the fillets?"): the rim stops at `rimGap`, the junction
+  web's reach along an arm (0.975 world at defaults), because the webs
+  draw over the ribbons from arm strips that carry no across coordinate,
+  and K145 kept it off webs, fans and arm strips by design (Levi then:
+  "clipped to not show anything outside the segment bounds";
+  `render-paint.md`, the hover rim entry). Following the fillets means an
+  edge-distance term in the fan shader and a rule for where the rim ends
+  on the web. Built with K328 in K111 stage 5's slot, after the reveal
+  shaders (the same paint and fan shaders).
 - **K294** · Per-model minotaur tuning, for K80 turns stage 3 (Levi,
   2026-10-14 about 19:00: "Yes."): the hunter, guard and stalker share
   sight and accuracy, so the retune aimed at the hunter on the dailies
@@ -1076,6 +1140,17 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   average user."). Most rows move behind an advanced view, and a short
   set stays in front. Which rows, and how the advanced view opens, come
   later, after the churn; K292's marks and K84 / K57 feed it.
+- **K340** · Nested folders that look distinct from their parents (Levi,
+  2026-10-14 about 22:48: "Ohhh, I didn't notice the nested folders
+  before in the settings panel. We should do something to make these
+  look more distinct from parent folders. Not sure what."): looks
+  prototyped in K339's stage (its section 5 and sheet), built with K339's
+  rebuild.
+- **K341** · The second panel audit, once the design iteration is done
+  (Levi, 2026-10-14 about 22:48: "We should also plan to do this again
+  when we're all done iterating through all these designs."): rerun
+  K339's inventory script and findings checklist, then feed K297's
+  pared-down set (`docs/design/K339_panel_audit.md`, item 8).
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along the new data
   lines (K1-K3 are done). K7's design: not needed first; after K7's
   stage 5 (it conflicts with stages 1, 3 and 4, and the host makes it
@@ -1211,21 +1286,6 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   (`.claude/probes/K4/phone_blank.mjs`). Vsync-capped fps cannot show the
   headroom left; a load-amplified bench (a higher render resolution)
   would.
-- **K290** · Burnt threads, a toggle (Levi, 2026-10-14 about 18:08,
-  verbatim: "Ooh, with the burn away, I'd like to support toggling how
-  burnt segments are treated--leave the threads rendered but with burnt
-  coloring vs actually stop rendering the threads (and then update how
-  gaps are rendered for other threads that used to be on the underside
-  of a crossing with a now-burnt thread--just the opposite of the
-  appear-as-you-go thread rendering)."). A `burnt` dropdown: char (drawn
-  in a burnt coloring, stage 1's char moved into the shader) or gone
-  (not drawn; the under threads' gaps close, K268's shaped cut in
-  reverse; fans drop the arm). Burn stage 3 builds both on K76's
-  visibility and K268's shaped gaps, so it follows K76 2c and K268 stage
-  2, whose briefs must not assume a thread's visibility only grows. Its
-  sheet shows both. The default is gone (Levi, 2026-10-14 about 18:27,
-  verbatim: "Gone should be the burnt away dedault").
-  `docs/design/K114_burn.md` ("The stages", stage 3).
 - **K292** · Mark the panel's personal settings (Levi, 2026-10-14 about
   18:40, verbatim: "For local-specific personal preferences vs
   maze-instance-specific gamemode-altering settings, I was originally
@@ -1299,17 +1359,33 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   its destination, and at a passing junction with chance 0.3, for 0.5-2 s
   (`DEFAULT_CHASE_PARAMS` in `src/game/minotaur.ts`; `mpc`, `mpn`,
   `mpx`); it has no real-time telegraph. Relates to K80 turns stage 3
-  (K293, K294, K270), K245, K247 and K296. Design:
-  `docs/design/K324_realtime_minotaur.md`, written with K323's.
+  (K293, K294, K270), K245, K247 and K296. Designed with K323's
+  (`docs/design/K324_realtime_minotaur.md`, merged as 091e4dc): a
+  read-only `MinotaurChase.plan(reach)` drives a live telegraph (the
+  current run plus `minoTelegraphRuns`, faint roaming, bright hunting);
+  junction stops of 0.2-0.6 s roaming and half that hunting, from their
+  own counter-based stream (a range of 0 replays K80 bit for bit); the
+  next roam target picked on arrival; ten new knobs. Section 7's nine
+  questions were sent at 23:22. Stage 1 (the sim) follows K323 stage 1;
+  stage 2 (the render) follows stage 1, K7 stage 2, K307 stage 2 and
+  K329, and checks K270's band at a real-time catch (K271 applies to its
+  telegraph); stage 3 (guard and stalker in real time) follows stage 1.
+  The turn rules' LOSE_MARGIN and ROAM_MIN become knobs with K294.
 - **K326** · Remove knot mode (`mazeFabric`, `mf=0`) entirely (Levi,
   2026-10-14 about 22:10: "mazeFabric should go away and become another
   "gameMode" option. And it should be renamed to be clearer that it's
   just the threads, with no actual game. Actually, let's get rid of it
   entirely"). The golden byte-identity test
   (`test/physics/byte_identity.test.ts`) moves to a maze design, probes
-  that pass `mf=0` go stale, and CLAUDE.md's knot-mode lines go. About 51
-  references in 12 files; the inventory is in K323's design. Built with
-  K323.
+  that pass `mf=0` go stale, and CLAUDE.md's knot-mode lines go. The
+  inventory and stages are in K323's design (sections 4-5): stage A
+  freezes a maze golden (after K7 stage 2); stage B deletes knot mode
+  (after K323 stage 1, stage A, K7 stage 2, K307 stage 2 and K329) and
+  retargets or drops the tracked knot cells (`scripts/fold_census.*`,
+  the phone pass's bench, emulation and summary); an optional stage C
+  reworks the knot paint path at paletteMode 0, the G2 fixtures and a
+  closed-chain census (after stage B and K111 stage 5). About 346 stale
+  `mf=0` probe files stay stale by design.
 - **K327** · Labels that say what they size (Levi, 2026-10-14 about
   22:11: "indicatorSize and markerSize sound the same"): `indicatorSize`
   sizes the edge arrows (a viewer preference) and `markerSize` the maze's
@@ -1347,36 +1423,18 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   I think we should turn that off, and force the player to wait to see
   the position movement animation."): a direction press during a move no
   longer snaps the head to the run's end. Built in K329's stage for the
-  keys (and the move pad); whether taps and clicks wait too was asked of
-  Levi at 22:23.
-- **K335** · The confetti rain's top edge (Levi, 2026-10-14 about 22:22:
-  "I like the abrupt wave of confetti at the start, but then we also have
-  an abrupt cut-off stopping the confetti, and we see an abrupt line at
-  the top of the wave of confetti that I don't like. Can we more of a
-  fade-out of confetti particles along the top?"): keep the sudden start,
-  and thin the wave out toward its top so it ends in a ragged fade
-  instead of a line. K140's `src/render/confetti_model.ts` (K317 doubled
-  the rain at 21:53). Built with K336 and K337 in one confetti stage
-  (opus; `docs/design/K335_confetti.md`) at the next free code slot.
-- **K336** · Side cannons (Levi, 2026-10-14 about 22:24: "Let's also add
-  some blasts of confetti and streamers from specific points just outside
-  the left and rigth sides of the screen, angled in and up, and then
-  apply gravity to make these fall in an arc"): at the finish, blasts of
-  confetti and streamers (new: long curling strips) from points just off
-  the left and right edges, fired inward and upward, falling in arcs
-  under gravity. Reduced motion keeps its 16 pieces; the phone's frame
-  rate at the finish rides K156's next pass. Built with K335 and K337
-  (`docs/design/K335_confetti.md`).
-- **K337** · Confetti shine (Levi, 2026-10-14 at 22:32: "Also, with the
-  confetti, I'd like to explore adding a shimmer/shine reflection effect
-  to them, so some flash as they rotate the right way. I bet we make make
-  this even resemble vaguely realistic directional light physics without
-  too much effort or perf cost?"): each piece's spin and flip give it a
-  3D normal, lit by one directional light from the upper left: a diffuse
-  term plus a Blinn-Phong flash, sharp on foil and soft on paper,
-  computed on the CPU into the tint the view already sets (no new shader,
-  no cold compile). Reduced motion keeps the diffuse term only. Built
-  with K335 and K336 (`docs/design/K335_confetti.md`).
+  keys (and the move pad); taps and clicks wait too (Levi, 22:50: "Yes.
+  But held-down arrows when reaching the next junction can
+  immediately/seamlessly trigger the next move."; relayed to K329's
+  stage at 22:50).
+- **K331** · Touch gets K298's pick margins (Levi, 2026-10-14 about
+  22:50: "yes and yes."): touch moves from today's world-unit radii
+  (0.7, and max(0.9, 1.6 x threadWidth) on a choice) to the mouse's form
+  (half-width plus a px margin, times `pickChoiceRatio` on a choice),
+  with its own margin row beside `pickMargin` at about 4 px (today's
+  zones at the default zoom reach about 3.9 / 5.7 px past the edge), so
+  the zones stop growing under a pinch zoom. Built with K330 after K329
+  (`docs/design/K298_hover_glow.md`, "Notes").
 - **K321** · The credits page (Levi, 2026-10-14 21:47: "In the credits
   section, we can also reference Claude Code." and "We should also list
   me in the credits."; at 22:40, "Proceed, with my above notes"). The
@@ -1405,6 +1463,30 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   the default; conditional rows), in twelve stages run one at a time.
   Stage 1, the show and Party, follows the confetti stage and K111 stage
   5. `docs/design/K318_win_effects.md` ("Build stages").
+- **K336** · Side cannons (Levi, 2026-10-14 about 22:24: "Let's also add
+  some blasts of confetti and streamers from specific points just outside
+  the left and rigth sides of the screen, angled in and up, and then
+  apply gravity to make these fall in an arc"): at the finish, blasts of
+  confetti and streamers (new: long curling strips) from points just off
+  the left and right edges, fired inward and upward, falling in arcs
+  under gravity. Reduced motion keeps its 16 pieces; the phone's frame
+  rate at the finish rides K156's next pass. Designed with K335 and K337
+  (`docs/design/K335_confetti.md`). Deferred to after the other tasks
+  (Levi, 2026-10-14 about 23:00: "Let's defer the more-complex
+  celebratory effects to after other tasks."); the confetti stage was
+  narrowed to K335 at 23:01, any partial work saved under
+  `.claude/probes/K335/deferred/`.
+- **K337** · Confetti shine (Levi, 2026-10-14 at 22:32: "Also, with the
+  confetti, I'd like to explore adding a shimmer/shine reflection effect
+  to them, so some flash as they rotate the right way. I bet we make make
+  this even resemble vaguely realistic directional light physics without
+  too much effort or perf cost?"): each piece's spin and flip give it a
+  3D normal, lit by one directional light from the upper left: a diffuse
+  term plus a Blinn-Phong flash, sharp on foil and soft on paper,
+  computed on the CPU into the tint the view already sets (no new shader,
+  no cold compile). Reduced motion keeps the diffuse term only. Designed
+  with K335 and K336 (`docs/design/K335_confetti.md`). Deferred with
+  K336 (Levi, 23:00).
 
 ## Residuals (known, not fixed)
 
@@ -2072,7 +2154,23 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   (K307's measures).
 - **K330** · A touch press on a choice lights no hover glow until the
   finger moves: the `pendingTap` path in `src/main.ts` sets no glow run
-  (K298's stage 1).
+  (K298's stage 1). Built with K331 (touch picks), after K329.
+- **K342** · The snore link (K325) is verified on desktop Chrome only:
+  Android Chrome and Safari/iOS on a device are unchecked (the touch
+  delay's feel, and whether Android cuts the sound when the tab
+  switches), as are other desktop browsers. Android rides K156's next
+  phone pass. `gameplay-audio.md`, THE SNORING CAT LINK.
+- **K343** · The snore's first-input limit (K325): no AudioContext
+  exists before the first activation, so a hover before any click or key
+  is silent, and the gesture that opens the audio gate plays nothing
+  (the MP3 is not decoded yet). The fix: decode on an
+  OfflineAudioContext before the gate, so a first touch can play.
+  `gameplay-audio.md`, THE SNORING CAT LINK.
+- **K346** · The physics halt misses NaN: the check
+  `Number.isFinite(maxMove)` (`src/physics/particle_system.ts`, about
+  lines 2281-2287) only catches an infinite move, and a NaN displacement
+  fails `d * d > max`, so a state that turns NaN without an infinite move
+  never halts. Predates K7; found by K7's stage 2 (2026-10-14).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2342,8 +2440,23 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   deploy that changes a shader costs every player one cold compile (the
   browser caches programs by their source), so a smaller or split
   program shortens every such load, not only the first.
+- **K338** · K324's side ideas (`docs/design/K324_realtime_minotaur.md`):
+  a real-time close-calls stat (section 5), a Search speed knob (4.4),
+  and a real-time sentry (roam 0, K296's analog).
+- **K347** · Type-check the tests in `npm test` or CI: the root tsconfig
+  includes only `src`, so a test's type errors go unseen. K7 stage 2's
+  `.claude/probes/K7/stage2/tsconfig.tests.json` shows how.
 
 ## Done
+
+- **K325** · The snoring cat on the panel's credit link (Levi,
+  2026-10-14 about 22:05): the snore (Levi's own recording, 22:50: "It's
+  a recording I made.", from hopnbop's `single_cat_snore.wav` as a
+  64 kbps mono MP3, 7.8 KB) plays on hover and on touch-down, and a touch
+  holds the link open briefly so it can play (desktop Chrome needs no
+  delay). `src/audio/snore_sfx.ts`, `src/ui/snore_link.ts`; lore: THE
+  SNORING CAT LINK in `gameplay-audio.md`. Leftovers: K342, K343. Done
+  in b8ee851..33f7a38 (2026-10-14 22:53).
 
 - **K298** · The hover glow, its own stage (Levi, 2026-10-14 about 19:13
   and 20:25): `hoverGlowLength` (`hgl`, codec 131, default 3, master's

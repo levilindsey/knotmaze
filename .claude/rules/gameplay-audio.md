@@ -42,8 +42,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   - ASSET: `public/snoring-cat-snore.mp3`, mono 44.1 kHz 64 kbps CBR MP3,
     0.915 s, 7,984 bytes, metadata stripped. Cut from hopnbop's
     `assets/audio/old/single_cat_snore.wav` (80,844 B PCM; the same bytes
-    sit in scaffolder). Its provenance is unknown, so there is NO credit
-    line; Levi decides. Unhashed in `public/`: a replacement needs a new
+    sit in scaffolder). It is Levi's own recording (2026-10-14
+    22:50: "It's a recording I made."), so it needs no credit line. Unhashed in `public/`: a replacement needs a new
     name, or browsers and Cloudflare keep the old one. Envelope: quiet for
     the first 50 ms (-37 dB), swell to -14 dB by 200 ms, loud 200-450 ms,
     fade 500-850 ms, silent by 900 ms.
