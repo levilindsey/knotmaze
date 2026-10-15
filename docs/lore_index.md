@@ -17,9 +17,11 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/ui/offscreen_indicators.ts`, `src/ui/head_indicator.ts`, `test/ui/offscreen_indicators.test.ts`, `test/ui/head_indicator.test.ts`
 - `gameplay-minotaur.md`: REAL-TIME MINOTAUR (K80), THE MINOTAUR'S CONTROLS (K174), TURN-ALIGNED MINOTAUR (K80 turns)
   paths: `src/game/minotaur.ts`, `test/game/minotaur.test.ts`, `src/game/minotaur_turns.ts`, `test/game/minotaur_turns.test.ts`
+- `gameplay-fire.md`: BURN RACE (K114)
+  paths: `src/game/fire.ts`, `test/game/fire.test.ts`
 - `gameplay-fog.md`: THE FOG RESETS ON A RESTART ONLY (K100), a catch's re-fog (K174)
   paths: `src/game/fabric_controller.ts`, `src/game/daily_attempt.ts`, `src/render/fabric_maze_renderer.ts`, `src/render/fog_arc.ts`, `test/render/fog_arc.test.ts`, `test/game/fabric_controller.test.ts`, `test/game/daily_attempt.test.ts`
-- `gameplay-links.md`: link decoder details, codec v4, LOAD SETTLE PARAMS (K147), MARKER SIZE PARAM (K98)
+- `gameplay-links.md`: link decoder details, codec v4, LOAD SETTLE PARAMS (K147), MARKER SIZE PARAM (K98), BURN RACE PARAMS (K114)
   paths: `src/ui/param_codec.ts`, `src/ui/url_state.ts`, `src/ui/daily_link.ts`, `test/ui/param_codec.test.ts`, `test/ui/url_codec.test.ts`, `test/ui/seed_text.test.ts`, `test/ui/appear_mode.test.ts`
 - `gameplay-panel.md`: pathViz labels, live recolor, panel rules, gridAlign, the background rows (K79), the Accessibility folder (K111)
   paths: `src/ui/tweakpane_panel.ts`, `src/ui/grid_align_curve.ts`, `test/ui/grid_align_curve.test.ts`

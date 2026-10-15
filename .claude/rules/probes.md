@@ -256,6 +256,16 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   Hooks: `__knotFabric().restarts` (the controller's reset() count) and
   `.fog` (FabricMazeRenderer.fogProbe: on, held, stamps, radius and the
   restart the stamps belong to).
+- K114 (2026-10-14), the burn race: `.claude/probes/K114/burn/` holds
+  `burn_sim.ts` (R.6.1: scripted players over dailies 1-30 against the
+  shipped controller; run `node node_modules\vite-node\vite-node.mjs
+  --config <that folder>\vite.node.config.mjs <that folder>\burn_sim.ts
+  <out.md> "rs=0.75,0.9" "hs=0"`; results.md, results_tuning.md) and
+  `burn_page.mjs <base> <outDir> race|loss [seeds]` (real clicks: the lit
+  fuse, a near miss, a refused smoldering arm and its toast, the escape's
+  closest call; or a wander to the Burnt banner, its x and re-show, Try
+  again and Reset path; EXTRA appends link keys). Probe links:
+  `?<seed>&am=instant&fi=fuse`. Hook: `__knotFabric().fire`.
 
 ## Census and diagnosis rules
 

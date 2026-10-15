@@ -77,3 +77,10 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   (the mechanism is generation-plan.md's H1 entry). Panel: the maze
   folder, after deadEndLength, fabric mode only. A link that lists
   `hcs` keeps its share when the default changes.
+
+- BURN RACE PARAMS (K114 stage 1, 2026-10-14): `fire` (`fi`, off | fuse),
+  `fireSpeed` (`fsp`, 0.75) and `fireDelay` (`fdl`, 0) are APPENDED to
+  codec v5 at 118-120, after K74's `hCutShare` (117); CODEC_VERSION stays
+  5. Not daily-exempt. They were 117-119 on their branch until it rebased
+  onto K74 stage 2, which renumbered them and re-froze the table pin
+  (`test/ui/param_codec.test.ts`). The race itself is gameplay-fire.md.
