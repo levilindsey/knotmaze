@@ -44,9 +44,9 @@ rules file or its `paths:` change. Not auto-loaded.
 - `physics.md`: physics: the intro, the sweep test, the Web Worker plan
   paths: `src/physics/**`, `test/physics/**`, `test/*.regression.test.ts`, `test/sweep.manual.test.ts`
 - `physics-sleep.md`: the sleep gate counts sim time (K63)
-  paths: `src/physics/sleep_gate.ts`, `test/physics/sleep_gate.test.ts`, `test/physics/sleep.regression.test.ts`, `test/quiescence.regression.test.ts`
-- `physics-settle.md`: a new knot's first settle is paced (K147)
-  paths: `src/physics/settle_budget.ts`, `test/physics/settle_budget.test.ts`
+  paths: `src/physics/sleep_gate.ts`, `test/physics/sleep_gate.test.ts`, `test/physics/sleep.regression.test.ts`, `test/quiescence.regression.test.ts`, `src/physics/physics_host.ts`
+- `physics-settle.md`: a new knot's first settle is paced (K147); its code lives in the physics host (K7)
+  paths: `src/physics/settle_budget.ts`, `test/physics/settle_budget.test.ts`, `src/physics/physics_host.ts`
 - `physics-kinks.md`: KINK EYES (with K41): the eye ratchet, across-eye pressure, the fairing exemption
   paths: `src/physics/particle_system.ts`, `src/physics/forces.ts`, `test/physics/sleep.regression.test.ts`
 - `physics-fabric.md`: the junction cover, junction spacing, open-chain terminals
