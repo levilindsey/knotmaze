@@ -16,7 +16,8 @@ import type { SnapshotView } from "./snapshot";
 // passNeighbors, fusedJunctions, anchors, initial) comes from the
 // constructor, as in the worker. What the mirror does NOT have: prev, zPos,
 // the contact state and the slide stats, which stay in the worker
-// (readSlideStats and the phase probe read nothing here; stage 4's bridge).
+// (readSlideStats and the phase probe read nothing here; stage 4's bridge,
+// __knotPhysDump, fetches prev, zPos and the passes from the worker).
 //
 // Input: grabAt and dragTo record the grab as in the live class, so main
 // reads grabbedParticle right after its own call; release clears it. The
@@ -151,3 +152,23 @@ export class MirrorSystem extends ParticleSystem {
     throw new Error("MirrorSystem.reset: post reset to the worker");
   }
 }
+
+// K7 stage 4 (design 8): the probes' freeze patch (`__knotPS().step =
+// function(){}`) and step-timing wrappers assign to `step`. On the mirror
+// that would freeze nothing, silently, so the assignment throws and says
+// what to use instead. (An accessor, which a class body cannot declare
+// over the base class's method.)
+const mirrorStep = MirrorSystem.prototype.step;
+Object.defineProperty(MirrorSystem.prototype, "step", {
+  configurable: true,
+  get() {
+    return mirrorStep;
+  },
+  set() {
+    throw new Error(
+      "KnotMaze: physics runs in a Web Worker (phw=1), so ps.step cannot be " +
+        "patched: freeze with __knotPhysFreeze(true) (a Promise), or load the " +
+        "page with &phw=0 for the in-thread system."
+    );
+  },
+});

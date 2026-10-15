@@ -10,6 +10,7 @@ import type { ParticleSystem, PhysicsTuning } from "./physics/particle_system";
 import { InThreadHost, LOAD_SIM_CAP } from "./physics/physics_host";
 import type { PhysicsHost } from "./physics/physics_host";
 import { WorkerHost } from "./physics/worker_host";
+import { hashDump } from "./physics/probe_dump";
 import { RibbonRenderer } from "./render/ribbon_renderer";
 import { DebugRenderer } from "./render/debug_renderer";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
@@ -4373,6 +4374,11 @@ async function main(): Promise<void> {
   const frameCost = new Float32Array(600);
   let frameCostN = 0;
   let frameCostTotal = 0;
+  // K7 stage 4: the appearance reveal's own share of each callback
+  // (reveal.tick), on the same ring (probes: __knotPerf, __knotReveal).
+  const revealCost = new Float32Array(600);
+  let revealMs = 0;
+  let revealMsTotal = 0;
 
   // K24/K6 HOOK (approximate until K6's what-changed flags): is anything
   // besides the background moving this frame? The background's drift
@@ -4425,6 +4431,7 @@ async function main(): Promise<void> {
 
   app.ticker.add((ticker) => {
     const c0 = performance.now();
+    revealMs = 0;
     tick(ticker);
     // K279: the pluck ripples, after the camera's step (they read its view).
     ripples.tick(ticker.deltaMS / 1000);
@@ -4435,6 +4442,8 @@ async function main(): Promise<void> {
     // due, precedes the stage render either way).
     backgroundTick(ticker.deltaMS / 1000);
     const c = performance.now() - c0;
+    revealCost[frameCostN % revealCost.length] = revealMs;
+    revealMsTotal += revealMs;
     frameCost[frameCostN++ % frameCost.length] = c;
     frameCostTotal += c;
   });
@@ -4469,7 +4478,9 @@ async function main(): Promise<void> {
     const revealing = reveal !== null && !reveal.done;
     if (revealing && reveal) {
       reveal.speed = params.appearSpeed;
+      const r0 = performance.now();
       reveal.tick(ticker.deltaMS / 1000);
+      revealMs = performance.now() - r0;
     }
     // G2: the paint clock advances here, BEFORE any update() this frame
     // (the shader uniforms and update()'s CPU mirror read one clock).
@@ -4876,8 +4887,46 @@ async function main(): Promise<void> {
       slide: sys.readSlideStats(),
     };
   };
-  // Raw system access for probe scripting (phase probe, slide stats).
+  // Raw system access for probe scripting (phase probe, slide stats). With
+  // phw=1 it is the worker's mirror: readable, and assigning its `step`
+  // throws (use the bridge below).
   (window as unknown as Record<string, unknown>).__knotPS = () => ps;
+  // K7 STAGE 4, THE PROBE BRIDGE (design 8; .claude/rules/probes.md): the
+  // same Promises on both physics hosts. __knotPhysFreeze(on) stops the
+  // live clock (in-thread: the old `__knotPS().step = function(){}` patch
+  // itself); __knotStepUntil(t) steps 1/60 s frames to sim time t, frozen
+  // or not; __knotPhysDump() hashes (and with {arrays: true} returns)
+  // positions, prev, zPos and the pass ctrls. Each requests a render, and
+  // the state is in `__knotPS()` once the Promise resolves.
+  (window as unknown as Record<string, unknown>).__knotPhysFreeze = (on = true) =>
+    host.freeze(on).then((r) => {
+      renderDirty = true;
+      return { ...r, kind: host.kind };
+    });
+  (window as unknown as Record<string, unknown>).__knotStepUntil = (simTime: number) =>
+    host.stepUntil(simTime, physicsTuning()).then((t) => {
+      renderDirty = true;
+      return t;
+    });
+  (window as unknown as Record<string, unknown>).__knotPhysDump = (
+    o: { arrays?: boolean } = {}
+  ) =>
+    host.dump().then((d) => ({
+      gen: d.gen,
+      simTime: d.simTime,
+      n: d.zPos.length,
+      c: d.passes.length / 4,
+      kind: host.kind,
+      hashes: hashDump(d),
+      ...(o.arrays
+        ? {
+            positions: Array.from(d.positions),
+            prev: Array.from(d.prev),
+            zPos: Array.from(d.zPos),
+            passes: Array.from(d.passes),
+          }
+        : {}),
+    }));
   // Appearance-reveal diagnostics: mode, clock, completion, frontier FX.
   (window as unknown as Record<string, unknown>).__knotReveal = () =>
     reveal
@@ -4888,6 +4937,9 @@ async function main(): Promise<void> {
           duration: reveal.planDuration,
           fx: params.appearFx,
           fxAlive: renderer?.appearFxAlive() ?? 0,
+          // K7 stage 4: reveal.tick's ms in the last frame and since load.
+          tickMs: revealCost[(frameCostN - 1 + revealCost.length) % revealCost.length],
+          tickMsTotal: revealMsTotal,
         }
       : null;
   // Raw renderer access for probe scripting (patch visibility/tinting).
@@ -5280,7 +5332,7 @@ async function main(): Promise<void> {
       startRipple(chain, { ctrl }, opts.ripple, opts.delay ?? 0, opts.rippleLook);
     }
     if (opts.tug) tugAt(chain, { ctrl }, opts.side ?? 1, opts.tug);
-    return renderer.pluck({
+    const plucked = renderer.pluck({
       chain,
       ctrl,
       side: opts.side ?? 1,
@@ -5291,6 +5343,9 @@ async function main(): Promise<void> {
       beta: opts.beta,
       delay: opts.delay,
     });
+    // K7 stage 4: with a tug, a Promise on both hosts that resolves once
+    // the physics holds the tug (the worker's snapshot after it arrived).
+    return opts.tug ? host.sync().then(() => plucked) : plucked;
   };
   // K279: the live ripples.
   // `paused` holds the ripples' clock, `t` sets every live ripple's time.
@@ -5319,6 +5374,11 @@ async function main(): Promise<void> {
     }
     xs.sort((a, b) => a - b);
     const mean = xs.reduce((s, v) => s + v, 0) / Math.max(1, xs.length);
+    const rs: number[] = [];
+    for (let i = 0; i < k; i++) {
+      rs.push(revealCost[(frameCostN - 1 - i + revealCost.length * 4) % revealCost.length]);
+    }
+    rs.sort((a, b) => a - b);
     const st = host.stats();
     return {
       frames: k,
@@ -5337,6 +5397,17 @@ async function main(): Promise<void> {
       totalFrames: frameCostN,
       totalCostMs: frameCostTotal,
       plucks: renderer?.plucks.activeCount ?? 0,
+      // K7 stage 4: live stepping since the build, on either host (ms and
+      // substeps; difference them), the dropped backlog and the freeze.
+      physMs: st.physMs,
+      substeps: st.liveSubsteps,
+      lagS: host.settleLagS,
+      frozen: st.frozen,
+      // reveal.tick's ms over the same frames, and since load.
+      revealMean: rs.reduce((s, v) => s + v, 0) / Math.max(1, rs.length),
+      revealP95: rs[Math.floor(rs.length * 0.95)] ?? 0,
+      revealMax: rs[rs.length - 1] ?? 0,
+      revealMsTotal,
       host: st.host,
     };
   };
@@ -5352,6 +5423,11 @@ async function main(): Promise<void> {
       loaderShown: st.presettle && loaderShownAt >= 0,
       presettle: st.settleInfo.presettle,
       budget: st.settleInfo.budget,
+      // K7 stage 4: on either host.
+      asleep: host.asleep,
+      physMs: st.physMs,
+      substeps: st.liveSubsteps,
+      kind: host.kind,
     };
   };
   // The physics checkbox, as the panel drives it (probe scripting).

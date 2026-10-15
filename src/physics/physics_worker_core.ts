@@ -5,6 +5,8 @@ import { buildSceneGraph } from "../core/scene_graph";
 import type { SceneParams } from "../core/scene_graph";
 import { fingerprintOf, snapshotBytes, writeSnapshot } from "./snapshot";
 import type { Fingerprint } from "./snapshot";
+import { dumpOf } from "./probe_dump";
+import type { PhysicsDump } from "./probe_dump";
 
 // THE PHYSICS WORKER'S CORE (K7 stage 2, docs/design/K7_worker.md, designs
 // 1, 4, 5 and 6). Everything the physics worker runs, minus the Worker
@@ -138,10 +140,12 @@ export type MainToWorker =
   | { type: "pause" }
   | { type: "resume" }
   | { type: "give"; buf: ArrayBuffer }
-  // Probes (design 8).
-  | { type: "freeze"; on: boolean }
+  // Probes (design 8). freeze and stepUntil count as inputs, so main can
+  // wait for the snapshot written after them (K7 stage 4); a dump answers
+  // with its id.
+  | { type: "freeze"; gen: number; on: boolean }
   | { type: "stepUntil"; gen: number; simTime: number }
-  | { type: "dump" };
+  | { type: "dump"; id: number };
 
 // Worker to main.
 export type WorkerToMain =
@@ -166,15 +170,7 @@ export type WorkerToMain =
     }
   | { type: "tugged"; gen: number; id: number; count: number }
   | { type: "error"; message: string; stack?: string }
-  | {
-      type: "dumped";
-      gen: number;
-      simTime: number;
-      positions: Float32Array;
-      prev: Float32Array;
-      zPos: Float32Array;
-      passes: Float64Array;
-    };
+  | ({ type: "dumped"; id: number } & PhysicsDump);
 
 export type Post = (msg: WorkerToMain, transfer?: Transferable[]) => void;
 
@@ -184,12 +180,6 @@ interface SettleJob {
   simCap: number;
   workCap: number;
   t0: number;
-}
-
-// The fields a dump reads that the class keeps private.
-interface Internals {
-  prev: Float32Array;
-  zPos: Float32Array;
 }
 
 export class PhysicsWorkerCore {
@@ -208,6 +198,7 @@ export class PhysicsWorkerCore {
   private lag = 0;
   private inputs = 0;
   private frames = 0;
+  private stepMs = 0;
   // The clock: allowance not yet in a batch, and the batch in flight.
   private queued = 0;
   private inBatch = false;
@@ -245,6 +236,8 @@ export class PhysicsWorkerCore {
     inputs: number;
     frames: number;
     halted: boolean;
+    frozen: boolean;
+    stepMs: number;
   } {
     return {
       seq: this.seq,
@@ -256,6 +249,8 @@ export class PhysicsWorkerCore {
       inputs: this.inputs,
       frames: this.frames,
       halted: this.halted,
+      frozen: this.frozen,
+      stepMs: this.stepMs,
     };
   }
 
@@ -279,12 +274,8 @@ export class PhysicsWorkerCore {
         this.paused = false;
         this.kick();
         return;
-      case "freeze":
-        this.frozen = msg.on;
-        if (msg.on) this.abortBatch();
-        return;
       case "dump":
-        this.dump();
+        this.dump(msg.id);
         return;
       case "init":
         if (msg.gen > this.core.gen) this.init(msg.gen, msg.params, msg.tuning);
@@ -296,12 +287,17 @@ export class PhysicsWorkerCore {
       this.frame(msg.dt, msg.ignoreTemp === true);
       return;
     }
-    if (msg.type === "stepUntil") {
-      this.stepUntil(msg.simTime);
-      return;
-    }
     this.inputs++;
     switch (msg.type) {
+      case "freeze":
+        // The live clock stops: frames are counted and discarded (a settle
+        // in flight runs to its end).
+        this.frozen = msg.on;
+        if (msg.on) this.abortBatch();
+        break;
+      case "stepUntil":
+        this.stepUntil(msg.simTime);
+        break;
       case "grab":
         this.core.grab(msg.particle, msg.x, msg.y);
         break;
@@ -355,6 +351,7 @@ export class PhysicsWorkerCore {
     this.lag = 0;
     this.inputs = 0;
     this.frames = 0;
+    this.stepMs = 0;
     this.bytes = snapshotBytes(ps.particleCount, ps.crossings.length);
     this.pool = [];
     for (let k = 0; k < SNAPSHOT_POOL; k++) this.pool.push(new ArrayBuffer(this.bytes));
@@ -424,7 +421,9 @@ export class PhysicsWorkerCore {
     } else if (this.inBatch) {
       const ps = this.core.ps;
       if (ps && this.remaining > 0) {
+        const t0 = performance.now();
         ps.runSubstep(this.tuning);
+        this.stepMs += performance.now() - t0;
         this.remaining--;
         this.substeps++;
         this.dirty = true;
@@ -527,8 +526,8 @@ export class PhysicsWorkerCore {
     this.flush();
   }
 
-  // Probe: frames of 1/60 s until simTime is reached, no gate, then a
-  // snapshot (design 8's stepUntil).
+  // Probe: frames of 1/60 s until simTime is reached, no gate (design 8's
+  // stepUntil; frozen or not). The input path posts the snapshot after it.
   private stepUntil(simTime: number): void {
     const ps = this.core.ps;
     if (!ps || this.halted) return;
@@ -536,8 +535,6 @@ export class PhysicsWorkerCore {
     while (ps.simTime < simTime && Number.isFinite(ps.maxMove)) {
       ps.step(1 / 60, this.tuning);
     }
-    this.dirty = true;
-    this.flush();
   }
 
   private give(buf: ArrayBuffer): void {
@@ -565,32 +562,15 @@ export class PhysicsWorkerCore {
       asleep: this.core.asleep,
       inputs: this.inputs,
       frames: this.frames,
+      stepMs: this.stepMs,
     });
     this.post({ type: "snap", gen: this.core.gen, buf }, [buf]);
   }
 
-  private dump(): void {
+  private dump(id: number): void {
     const ps = this.core.ps;
     if (!ps) return;
-    const raw = ps as unknown as Internals;
-    const c = ps.crossings.length;
-    const passes = new Float64Array(4 * c);
-    for (let k = 0; k < c; k++) {
-      const x = ps.crossings[k];
-      passes[k * 4] = x.over.ctrl;
-      passes[k * 4 + 1] = x.over.displayF ?? NaN;
-      passes[k * 4 + 2] = x.under.ctrl;
-      passes[k * 4 + 3] = x.under.displayF ?? NaN;
-    }
-    this.post({
-      type: "dumped",
-      gen: this.core.gen,
-      simTime: ps.simTime,
-      positions: ps.positions.slice(0, 2 * ps.particleCount),
-      prev: raw.prev.slice(),
-      zPos: raw.zPos.slice(),
-      passes,
-    });
+    this.post({ type: "dumped", id, ...dumpOf(ps, this.core.gen) });
   }
 
   private fail(e: unknown): void {
