@@ -61,6 +61,7 @@ function buildScene(query: string): {
       fourWayFraction: params.fourWayFraction,
       deadEndDensity: params.deadEnds ? params.deadEndDensity : 0,
       deadEndLength: params.deadEndLength,
+      hCutShare: params.hCutShare,
       entranceClearance: params.entranceClearance,
       exitClearance: params.exitClearance,
       junctionSpacing: params.junctionSpacing,

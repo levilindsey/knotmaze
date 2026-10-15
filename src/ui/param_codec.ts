@@ -235,6 +235,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("minoAccuracy"), // 114
   num("minoPause"), // 115
   num("minoSleep"), // 116
+  // K74 stage 2's H1 share (the fused arm cut).
+  num("hCutShare"), // 117
 ]);
 
 // The format version a blob names first. Bump it for anything but an

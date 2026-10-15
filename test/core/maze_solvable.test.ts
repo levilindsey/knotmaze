@@ -44,6 +44,7 @@ function mazeParamsOf(p: UrlParams): MazeParams {
     fourWayFraction: p.fourWayFraction,
     deadEndDensity: p.deadEnds ? p.deadEndDensity : 0,
     deadEndLength: p.deadEndLength,
+    hCutShare: p.hCutShare,
     entranceClearance: p.entranceClearance,
     exitClearance: p.exitClearance,
     junctionSpacing: p.junctionSpacing,

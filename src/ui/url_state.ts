@@ -252,6 +252,9 @@ export interface UrlParams {
   // is given (core/maze_plan.ts deadEndLength); 0 = the older spread
   // placement, whose tails are often a few units long.
   deadEndLength: number;
+  // K74 stage 2, H1: [0, 1] share of splice H's whose junction moves to a
+  // crossing (core/maze_plan.ts hCutShare); 0 = off.
+  hCutShare: number;
   pluckStyle: PluckStyle; // Drag-release feel: soft ease vs ringing string.
   // RETIRED with the render-only plucks (2026-10-11): the old render ring's
   // frequency/decay scale - the time-exposure vibration has no visible
@@ -504,6 +507,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   fourWayFraction: 0.12,
   deadEndDensity: 0.5, // K74 (was 0.25).
   deadEndLength: 20, // K74.
+  hCutShare: 0, // K74 stage 2 (H1).
   pluckStyle: "string",
   pluckSize: 1.75, // Was 1 until 2026-10-11.
   pluckGhost: 0.35,
@@ -721,6 +725,7 @@ function fromCodecValues(
   p.markerSize = sanitizeMarkerSize(p.markerSize);
   p.hoverGlow = clampTo(p.hoverGlow, 1);
   clampTurnMino(p);
+  p.hCutShare = clamp01(p.hCutShare);
   return p;
 }
 
@@ -909,6 +914,8 @@ function readLegacy(
     ),
     // And K74's dead-end length (&del=30; 0 = the spread placement).
     deadEndLength: readNumber(query, "del", D.deadEndLength),
+    // And K74 stage 2's H1 share (&hcs=0.5; 0 = off).
+    hCutShare: clamp01(readNumber(query, "hcs", D.hCutShare)),
     // Its shape and colors (K79 stage B: `&bgsz=2&bgan=90&bgcm=custom
     // &bgc0=101820&bgc1=ffcc66`; colors as pc= takes them, no "#").
     backgroundScale: sanitizeBackgroundScale(

@@ -39,6 +39,7 @@ const PRE_K74: Partial<UrlParams> = {
   deadEnds: false,
   deadEndDensity: 0.25,
   deadEndLength: 0,
+  hCutShare: 0,
 };
 const BASE: UrlParams = { ...PARAM_DEFAULTS, ...PRE_K74 };
 
@@ -59,6 +60,7 @@ function mazeParamsOf(p: UrlParams): MazeParams {
     fourWayFraction: p.fourWayFraction,
     deadEndDensity: p.deadEnds ? p.deadEndDensity : 0,
     deadEndLength: p.deadEndLength,
+    hCutShare: p.hCutShare,
     entranceClearance: p.entranceClearance,
     exitClearance: p.exitClearance,
     junctionSpacing: p.junctionSpacing,

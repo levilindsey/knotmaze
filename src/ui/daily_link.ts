@@ -85,6 +85,7 @@ export const MAZE_PARAM_KEYS = [
   "deadEnds",
   "deadEndDensity",
   "deadEndLength",
+  "hCutShare",
   "entranceClearance",
   "exitClearance",
   "junctionSpacing",

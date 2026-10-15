@@ -89,6 +89,12 @@ export interface MazeParams {
   // choice junctions, cut sites spread farthest-first, the shorter stub
   // trimmed), whose tails are often a few units long.
   deadEndLength: number;
+  // H1, THE FUSED ARM CUT (K74 stage 2; maze_apply fuseHCuts): the share
+  // (0..1) of splice bridges whose H is cut after the cuts - one of a
+  // junction's host arms trimmed back to its first crossing, which becomes
+  // the junction. 0 = off: the plan carries no hCutShare and the maze is
+  // the older one, byte for byte.
+  hCutShare: number;
   // Lattice radii around the exit / entrance corners kept junction-free, so
   // the endgame isn't cluttered with choices (challenge shaping).
   exitClearance: number;
@@ -118,6 +124,7 @@ export const DEFAULT_MAZE_PARAMS: MazeParams = {
   // in its density, DEAD_END_DENSITY_ON by default.
   deadEndDensity: 0,
   deadEndLength: 20,
+  hCutShare: 0,
   exitClearance: 12,
   entranceClearance: 2.5,
   junctionSpacing: 2,
@@ -157,6 +164,9 @@ export interface MazePlan {
   // Long dead-end threads: closed maze strands cut open with a trimmed
   // flank (always present) and a FREE tip - see deadEndDensity.
   deadEndCuts: MazeCut[];
+  // H1's share (MazeParams.hCutShare), read by applyMazeCuts. Present only
+  // when > 0, so a plan without it is the older plan, JSON and all.
+  hCutShare?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -1830,5 +1840,6 @@ function planMaze(
     choiceSplices,
     fourWayMerges,
     deadEndCuts,
+    ...(params.hCutShare > 0 ? { hCutShare: params.hCutShare } : {}),
   };
 }
