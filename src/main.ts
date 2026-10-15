@@ -10,7 +10,6 @@ import type { ParticleSystem, PhysicsTuning } from "./physics/particle_system";
 import { InThreadHost, LOAD_SIM_CAP } from "./physics/physics_host";
 import type { PhysicsHost } from "./physics/physics_host";
 import { WorkerHost } from "./physics/worker_host";
-import { hashDump } from "./physics/probe_dump";
 import { RibbonRenderer } from "./render/ribbon_renderer";
 import { DebugRenderer } from "./render/debug_renderer";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
@@ -19,21 +18,16 @@ import { FabricMazeController } from "./game/fabric_controller";
 import { buildFire } from "./game/fire";
 import type { Fire } from "./game/fire";
 import {
-  DIAGONALS,
   HeldKeys,
   KEY_REACH,
   MoveWait,
   absorbsChord,
   chordEdges,
-  chordMap,
   chordMatters,
   departureVectors,
   holdDue,
   keyBelongsElsewhere,
   keyDirOf,
-  keyMap,
-  pickChord,
-  pickDeparture,
   pickHold,
   pickMove,
 } from "./ui/key_moves";
@@ -65,7 +59,6 @@ import {
 import type { UrlParams } from "./ui/url_state";
 import {
   DAILY_DEF,
-  DAILY_EXEMPT_KEYS,
   applyDailyPrefs,
   dailyParams,
   dailyQuery,
@@ -78,7 +71,6 @@ import {
   DailyStore,
   begunLate,
   browserStorage,
-  dailyHistory,
 } from "./game/daily_store";
 import type { DailyResult, SolveRecord } from "./game/daily_store";
 import {
@@ -104,7 +96,6 @@ import {
   clampFitView,
   easePanel,
   noAllowance,
-  panRange,
   stepPanelTween,
   stepRange,
   type OpenPanel,
@@ -169,6 +160,7 @@ import { SongScheduler } from "./audio/song_scheduler";
 import { createLoader } from "./ui/loader";
 import type { SceneRef } from "./app/scene_ref";
 import { createStamp } from "./app/stamp";
+import { installProbeHooks } from "./app/probe_hooks";
 
 const BACKGROUND = 0x151b28;
 const FIT_MARGIN = 40;
@@ -4723,869 +4715,153 @@ async function main(): Promise<void> {
     scene
   );
 
-  // The live design params (a copy). The address bar holds one compact
-  // token (ui/param_codec.ts), so probes read settings here, not the URL.
-  (window as unknown as Record<string, unknown>).__knotParams = () => ({
-    ...params,
-  });
-  // K325 probes: the snore's load counts and its clock.
-  (window as unknown as Record<string, unknown>).__knotSnore = () => ({
-    ...snore.stats,
-    sinceStartMs: snore.sinceStartMs(),
-  });
-  // K19/K20 probes: the daily on screen, the attempt, the clock and the
-  // stored records (as the stats view reads them).
-  (window as unknown as Record<string, unknown>).__knotDaily = () => ({
-    daily: dailyN,
-    floating: dailyFloating,
-    today: todayNumber(),
-    attemptDaily,
-    attemptDay,
-    attemptStartedAt,
-    attemptRecord,
-    clock: { state: clock.state, ms: clock.elapsed(performance.now()) },
-    junctions: fabricController ? [...fabricController.visitedJunctions] : [],
-    deadEnds: fabricController ? [...fabricController.deadEndTips] : [],
-    moves: fabricController ? fabricController.moveLog.join("") : "",
-    taps: fabricController ? [...fabricController.taps] : [],
-    path: fabricController ? [...fabricController.pathEdges] : [],
-    head: fabricController?.head ?? null,
-    backtrack: fabricController?.backtrackDist ?? 0,
-    // K47/K56: the saved attempt of the daily on screen, and the prefs.
-    saved: dailyN !== null ? (dailyStore.attempt(dailyN) ?? null) : null,
-    exempt: [...DAILY_EXEMPT_KEYS],
-    prefs: dailyStore.prefs(),
-    share: lastWin,
-    storeStatus: dailyStore.status,
-    store: dailyStore.data(),
-    // K73/K151: the mode badge on screen ("free" | "daily" | "replay" |
-    // "practice"), its label, and K146's practice test for this attempt.
-    badge: modeBadge.kind,
-    badgeText: modeBadge.el.hidden ? "" : modeBadge.el.innerText.trim(),
-    late: attemptLate(),
-    // K146: the stats view's History as it reads it.
-    history: dailyHistory(dailyStore.data(), todayNumber()),
-  });
-  (window as unknown as Record<string, unknown>).__knotPlayDaily = (n: number) =>
-    playDaily(n);
-  // K73 probes: every off-screen indicator's last decision (status, the
-  // target's screen point, its placement), why the finish's hides, and the
-  // camera tween a tap runs.
-  (window as unknown as Record<string, unknown>).__knotIndicators = () => ({
-    indicators: indicators.state(),
-    finishWhy,
-    headWhy,
-    tween: camTween !== null,
-    follow: camFollow,
-    // Seconds since the last gesture: the follow spring is at full strength
-    // from FOLLOW_DELAY + FOLLOW_RAMP (K148's return to the head sets it).
-    followIdle: nowSec() - camTouchedAt,
-  });
-  // Diagnostic hooks for the automated crossing scanner.
-  (window as unknown as Record<string, unknown>).__knotDiag = () =>
-    renderer ? Array.from(renderer.getDiag().data) : [];
-  (window as unknown as Record<string, unknown>).__knotView = () => ({
-    x: root.position.x,
-    y: root.position.y,
-    s: root.scale.x,
-    // The fit camera's own state (K149 probes; stale under the follow
-    // camera): the zoom on top of the auto-fit and its screen-space pan.
-    zoom: view.zoom,
-    panX: view.panX,
-    panY: view.panY,
-    // K198 probes: the open panel (left edge, the maze's fit-screen right
-    // edge), the pan range at this zoom and the ease's allowance.
-    panel: openPanel(),
-    mazeRight: fitCur.x + fitRight * fitCur.scale,
-    range: panRange(app.screen.width, app.screen.height, view.zoom, openPanel()),
-    allow: { ...panAllow },
-    // K198 stage 2: the panel's tweened openness (0 shut, 1 open).
-    panelT,
-  });
-  // K101: the music notes handed out lately (start time on their clock,
-  // lead = how far ahead of the tick that scheduled them) and the clocks.
-  (window as unknown as Record<string, unknown>).__knotSong = () => ({
-    notes: songLog.slice(),
-    audioTime: synth.audioTime(),
-    wallTime: performance.now() / 1000,
-  });
-  (window as unknown as Record<string, unknown>).__knotInspect = (
-    x: number,
-    y: number
-  ) => renderer?.requestInspect(x, y);
-  // Physics-side twin of __knotDiag: binding state per crossing (world
-  // position, ctrls, separation), contact regime, emergent count.
-  (window as unknown as Record<string, unknown>).__knotPhys = () => {
-    const sys = ps;
-    if (!sys) return null;
-    const scratch = new Float32Array(4);
-    return {
-      sticky: sys.contactsStatic,
-      simTime: sys.simTime,
-      emergent: sys.emergentCrossings.length,
-      emergentList: sys.emergentCrossings.map((em) => {
-        sys.bindingPoint(em.over, scratch, 0);
-        return { x: scratch[0], y: scratch[1] };
-      }),
-      crossings: sys.crossings.map((c) => {
-        sys.bindingPoint(c.over, scratch, 0);
-        sys.bindingPoint(c.under, scratch, 2);
-        return {
-          x: (scratch[0] + scratch[2]) / 2,
-          y: (scratch[1] + scratch[3]) / 2,
-          over: `${c.over.chain}:${c.over.ctrl.toFixed(2)}`,
-          under: `${c.under.chain}:${c.under.ctrl.toFixed(2)}`,
-          sep: sys.crossingSeparation(c),
-        };
-      }),
-      slide: sys.readSlideStats(),
-    };
-  };
-  // Raw system access for probe scripting (phase probe, slide stats). With
-  // phw=1 it is the worker's mirror: readable, and assigning its `step`
-  // throws (use the bridge below).
-  (window as unknown as Record<string, unknown>).__knotPS = () => ps;
-  // K7 STAGE 4, THE PROBE BRIDGE (design 8; .claude/rules/probes.md): the
-  // same Promises on both physics hosts. __knotPhysFreeze(on) stops the
-  // live clock (in-thread: the old `__knotPS().step = function(){}` patch
-  // itself); __knotStepUntil(t) steps 1/60 s frames to sim time t, frozen
-  // or not; __knotPhysDump() hashes (and with {arrays: true} returns)
-  // positions, prev, zPos and the pass ctrls. Each requests a render, and
-  // the state is in `__knotPS()` once the Promise resolves.
-  (window as unknown as Record<string, unknown>).__knotPhysFreeze = (on = true) =>
-    host.freeze(on).then((r) => {
+  // The probe hooks (window.__knot*): src/app/probe_hooks.ts.
+  installProbeHooks({
+    scene,
+    a11y,
+    app,
+    background,
+    clock,
+    confetti,
+    contrast,
+    dailyStore,
+    fitCur,
+    frameCost,
+    heldKeys,
+    host,
+    indicators,
+    lossBanner,
+    modeBadge,
+    motion,
+    movePad,
+    moveWait,
+    panAllow,
+    params,
+    revealCost,
+    ripples,
+    root,
+    snore,
+    songLog,
+    synth,
+    view,
+    applyPhysicsMode,
+    attemptLate,
+    freqForCtrl,
+    handRendererLook,
+    keyDepartures,
+    keysLive,
+    keyVertex,
+    look,
+    moveAlong,
+    nowSec,
+    openPanel,
+    physicsInputsChanged,
+    physicsTuning,
+    playDaily,
+    pluckUnit,
+    replaySettle,
+    startRipple,
+    syncBackground,
+    syncExploration,
+    throwConfetti,
+    tugAt,
+    waitTurn,
+    wake,
+    writeParams,
+    get attemptDaily() {
+      return attemptDaily;
+    },
+    get attemptDay() {
+      return attemptDay;
+    },
+    get attemptRecord() {
+      return attemptRecord;
+    },
+    get attemptStartedAt() {
+      return attemptStartedAt;
+    },
+    get camFollow() {
+      return camFollow;
+    },
+    get camTouchedAt() {
+      return camTouchedAt;
+    },
+    get camTween() {
+      return camTween;
+    },
+    get canvasInk() {
+      return canvasInk;
+    },
+    get dailyFloating() {
+      return dailyFloating;
+    },
+    get dailyN() {
+      return dailyN;
+    },
+    get finishWhy() {
+      return finishWhy;
+    },
+    get fitRight() {
+      return fitRight;
+    },
+    get frameCostN() {
+      return frameCostN;
+    },
+    get frameCostTotal() {
+      return frameCostTotal;
+    },
+    get headWhy() {
+      return headWhy;
+    },
+    get keyHold() {
+      return keyHold;
+    },
+    get lastWin() {
+      return lastWin;
+    },
+    get loaderShownAt() {
+      return loaderShownAt;
+    },
+    get panelT() {
+      return panelT;
+    },
+    get pendingLoss() {
+      return pendingLoss;
+    },
+    get physState() {
+      return physState;
+    },
+    get revealMsTotal() {
+      return revealMsTotal;
+    },
+    get sceneWasAnimating() {
+      return sceneWasAnimating;
+    },
+    get turnWait() {
+      return turnWait;
+    },
+    get chaseRunning() {
+      return chaseRunning;
+    },
+    set chaseRunning(v) {
+      chaseRunning = v;
+    },
+    get hcLookChoice() {
+      return hcLookChoice;
+    },
+    set hcLookChoice(v) {
+      hcLookChoice = v;
+    },
+    get tapsWait() {
+      return tapsWait;
+    },
+    set tapsWait(v) {
+      tapsWait = v;
+    },
+    invalidate: () => {
       renderDirty = true;
-      return { ...r, kind: host.kind };
-    });
-  (window as unknown as Record<string, unknown>).__knotStepUntil = (simTime: number) =>
-    host.stepUntil(simTime, physicsTuning()).then((t) => {
-      renderDirty = true;
-      return t;
-    });
-  (window as unknown as Record<string, unknown>).__knotPhysDump = (
-    o: { arrays?: boolean } = {}
-  ) =>
-    host.dump().then((d) => ({
-      gen: d.gen,
-      simTime: d.simTime,
-      n: d.zPos.length,
-      c: d.passes.length / 4,
-      kind: host.kind,
-      hashes: hashDump(d),
-      ...(o.arrays
-        ? {
-            positions: Array.from(d.positions),
-            prev: Array.from(d.prev),
-            zPos: Array.from(d.zPos),
-            passes: Array.from(d.passes),
-          }
-        : {}),
-    }));
-  // Appearance-reveal diagnostics: mode, clock, completion, frontier FX.
-  (window as unknown as Record<string, unknown>).__knotReveal = () =>
-    reveal
-      ? {
-          mode: reveal.mode,
-          done: reveal.done,
-          clock: reveal.clock,
-          duration: reveal.planDuration,
-          fx: params.appearFx,
-          fxAlive: renderer?.appearFxAlive() ?? 0,
-          // K7 stage 4: reveal.tick's ms in the last frame and since load.
-          tickMs: revealCost[(frameCostN - 1 + revealCost.length) % revealCost.length],
-          tickMsTotal: revealMsTotal,
-        }
-      : null;
-  // Raw renderer access for probe scripting (patch visibility/tinting).
-  (window as unknown as Record<string, unknown>).__knotRenderer = () =>
-    renderer;
-  // K80 real-time chase diagnostics (null outside the real-time mode): the
-  // chase's state, with the minotaur's SCREEN point while fabric draws it.
-  // __knotChaseTap(edge) queues a run as a tap on it would (and starts the
-  // chase); __knotChaseObj() is the live MinotaurChase.
-  (window as unknown as Record<string, unknown>).__knotChase = () => {
-    if (!chase) return null;
-    const ch = chase;
-    const out = new Float32Array(2);
-    const shown = !!fabric && fabric.minotaurWorld(out);
-    const at = (s: { edge: number; vertex: number }): string | null =>
-      s.edge < 0 ? ch.g.ids[s.vertex] : null;
-    return {
-      running: chaseRunning,
-      tick: ch.tick,
-      seconds: ch.seconds,
-      catches: ch.catches,
-      restarts: ch.restarts,
-      moves: fabricController ? fabricController.moveLog.join("") : "",
-      huntSeconds: ch.huntSeconds,
-      finished: ch.finished,
-      mode: ch.mode,
-      player: { ...ch.player },
-      playerAt: at(ch.player),
-      mino: { ...ch.mino },
-      minoAt: at(ch.mino),
-      decisionVertex: ch.decisionVertex,
-      playerMoving: ch.playerMoving,
-      playerProgress: ch.playerProgress,
-      // Infinity (the player is on a tail) serializes as null.
-      huntDistance: ch.huntDistance(),
-      contactDistance: ch.contactDistance(),
-      params: { ...ch.params },
-      inputs: ch.inputs.map((i) => ({ ...i })),
-      minoShown: shown,
-      minoUnderFog: fabric?.minotaurUnderFog ?? false,
-      minoRadius: fabric?.minotaurRadius() ?? 0,
-      minoScreen: shown
-        ? {
-            x: out[0] * root.scale.x + root.position.x,
-            y: out[1] * root.scale.y + root.position.y,
-          }
-        : null,
-    };
-  };
-  (window as unknown as Record<string, unknown>).__knotChaseTap = (
-    edge: number
-  ): "queued" | "reject" | null => {
-    if (!chase) return null;
-    const r = chase.tap(edge);
-    if (r === "queued") chaseRunning = true;
-    return r;
-  };
-  (window as unknown as Record<string, unknown>).__knotChaseObj = () => chase;
-  // K80 turns diagnostics (null without the turn minotaur): its state, the
-  // committed move the telegraph shows, and the minotaur's SCREEN point while
-  // fabric draws it. __knotTurnMove(edge) moves along run `edge` as a tap on
-  // it would; __knotTurnWait() is a tap on your own junction;
-  // __knotTurnMinoObj() is the live TurnMinotaur.
-  (window as unknown as Record<string, unknown>).__knotTurnMino = () => {
-    if (!turnMino) return null;
-    const tm = turnMino;
-    const out = new Float32Array(2);
-    const shown = !!fabric && fabric.minotaurWorld(out);
-    const ids = tm.g.ids;
-    const tel = tm.telegraph();
-    return {
-      model: params.minotaur,
-      config: { ...tm.cfg },
-      catches: tm.catches,
-      closeCalls: tm.closeCalls,
-      seen: tm.seen,
-      restarts: tm.restarts,
-      moves: fabricController ? fabricController.moveLog.join("") : "",
-      turns: tm.turns,
-      lifeTurn: tm.lifeTurn,
-      finished: tm.finished,
-      mode: tm.mode,
-      hunting: tm.hunting,
-      player: ids[tm.player],
-      head: fabricController?.head ?? null,
-      minoAt: ids[tm.state.v],
-      state: { ...tm.state },
-      progress: tm.progress,
-      lastPath: tm.lastPath.map(([e, b]) => [e, ids[b]]),
-      telegraph: tel
-        ? {
-            from: ids[tel.from],
-            steps: tel.steps.map(([e, b]) => [e, ids[b]]),
-            dest: ids[tel.dest],
-          }
-        : null,
-      inputs: [...tm.inputs],
-      waiting: turnWait,
-      minoShown: shown,
-      minoUnderFog: fabric?.minotaurUnderFog ?? false,
-      minoScreen: shown
-        ? {
-            x: out[0] * root.scale.x + root.position.x,
-            y: out[1] * root.scale.y + root.position.y,
-          }
-        : null,
-    };
-  };
-  (window as unknown as Record<string, unknown>).__knotTurnMove = (
-    edge: number
-  ): boolean => moveAlong(edge);
-  (window as unknown as Record<string, unknown>).__knotTurnWait = (): boolean =>
-    waitTurn();
-  (window as unknown as Record<string, unknown>).__knotTurnMinoObj = () =>
-    turnMino;
-  // Fabric-maze diagnostics: solve state, metrics, and each current choice
-  // with a tappable SCREEN point (via the live root transform) plus its
-  // cost-to-exit, for scripted solve verification.
-  (window as unknown as Record<string, unknown>).__knotFabric = () => {
-    if (!fabric || !fabricController || !walkGraph) return null;
-    const c = fabricController;
-    const wg = walkGraph;
-    const fb = fabric;
-    const out = new Float32Array(2);
-    const toScreen = (wx: number, wy: number): { x: number; y: number } => ({
-      x: wx * root.scale.x + root.position.x,
-      y: wy * root.scale.y + root.position.y,
-    });
-    const sys = ps!;
-    return {
-      head: c.head,
-      solved: c.solved,
-      animating: fb.animating,
-      pathLength: c.pathLength,
-      optimal: wg.optimalLength,
-      backtrack: c.backtrackDist,
-      walked: c.walkedDist, // K155
-      // K114: the burn race (null: no fire). `smoldering`: the head's arms
-      // whose tap the fire refuses; `banner`: the Burnt banner shows.
-      fire: c.fire
-        ? {
-            speed: c.fire.speed,
-            delay: c.fire.delay,
-            lead: c.fireLeadHere,
-            closest: c.fireClosest,
-            lost: c.fireLost,
-            pendingLoss,
-            banner: lossBanner.shown,
-            smoldering: c.choices().filter((eid) => c.smoldering(eid)),
-          }
-        : null,
-      // K100: the solve's restarts, and the fog's explored stamps.
-      restarts: c.restarts,
-      fog: fb.fogProbe(),
-      trailMode: c.trailMode,
-      pathViz: params.pathViz,
-      trailLength: params.trailLength,
-      pathEdges: [...c.pathEdges],
-      choices: c.choices().map((eid) => {
-        const e = wg.edges[eid];
-        const far = e.va === c.head ? e.vb : e.va;
-        const f =
-          e.va === c.head
-            ? Math.min(e.ctrlA + 1.5, (e.ctrlA + e.ctrlB) / 2)
-            : Math.max(e.ctrlB - 1.5, (e.ctrlA + e.ctrlB) / 2);
-        const len = sys.chains[e.chain].length;
-        sys.pointOnChain(e.chain, ((f % len) + len) % len, out, 0);
-        return {
-          edge: eid,
-          far,
-          // The far vertex is a dead-end tip (an END that is neither the
-          // start nor the exit) - probes steer into dead ends with it.
-          farDeadEnd:
-            (wg.vertices.get(far)?.isEnd ?? false) &&
-            far !== wg.start &&
-            far !== wg.exit,
-          cost: e.length + (wg.distToExit.get(far) ?? Infinity),
-          screen: toScreen(out[0], out[1]),
-        };
-      }),
-      vertexScreen: (id: string) => {
-        fb.vertexWorld(id, out, 0);
-        return toScreen(out[0], out[1]);
-      },
-      // Probe helper: the walk-edge ids of a fewest-runs route from the
-      // head to the nearest dead-end tip not in `exclude` (BFS, never
-      // through the exit), or null when there is none.
-      routeToDeadEnd: (exclude: string[] = []): number[] | null => {
-        const skip = new Set(exclude);
-        const prev = new Map<string, [string, number]>();
-        const seen = new Set([c.head]);
-        const queue = [c.head];
-        while (queue.length > 0) {
-          const v = queue.shift()!;
-          const tip =
-            v !== c.head &&
-            (wg.vertices.get(v)?.isEnd ?? false) &&
-            v !== wg.start &&
-            !skip.has(v);
-          if (tip) {
-            const route: number[] = [];
-            for (let u = v; u !== c.head; ) {
-              const [p, eid] = prev.get(u)!;
-              route.unshift(eid);
-              u = p;
-            }
-            return route;
-          }
-          for (const eid of wg.vertices.get(v)!.edges) {
-            const e = wg.edges[eid];
-            const u = e.va === v ? e.vb : e.va;
-            if (seen.has(u) || u === wg.exit) continue;
-            seen.add(u);
-            prev.set(u, [v, eid]);
-            queue.push(u);
-          }
-        }
-        return null;
-      },
-      // Diagnostic: everything within `r` lattice units of a LATTICE point -
-      // walk vertices (live position) and walk edges (nearest sample), with
-      // chains and path membership. Attribution beats speculation.
-      near: (x: number, y: number, r = 1.2) => {
-        const verts: Array<Record<string, unknown>> = [];
-        for (const [id, v] of wg.vertices) {
-          fb.vertexWorld(id, out, 0);
-          const d = Math.hypot(out[0] - x, out[1] - y);
-          if (d <= r) {
-            verts.push({
-              id,
-              d: +d.toFixed(3),
-              isEnd: v.isEnd,
-              chain: v.chain,
-              ctrl: v.ctrl,
-              edges: [...v.edges],
-            });
-          }
-        }
-        const edges: Array<Record<string, unknown>> = [];
-        for (const e of wg.edges) {
-          const len = sys.chains[e.chain].length;
-          let bd = Infinity;
-          for (let f = e.ctrlA; f <= e.ctrlB; f += 0.5) {
-            sys.pointOnChain(e.chain, ((f % len) + len) % len, out, 0);
-            const d = Math.hypot(out[0] - x, out[1] - y);
-            if (d < bd) bd = d;
-          }
-          if (bd <= r) {
-            edges.push({
-              edge: e.id,
-              d: +bd.toFixed(3),
-              va: e.va,
-              vb: e.vb,
-              chain: e.chain,
-              ctrlA: e.ctrlA,
-              ctrlB: e.ctrlB,
-              onPath: c.pathEdges.includes(e.id),
-            });
-          }
-        }
-        return { verts, edges };
-      },
-    };
-  };
-  // K120 probes: the key-move state at the junction the keys leave from
-  // (its departures and what each key picks, for a press and a hold), and
-  // census(reaches): every junction's departure directions at each reach.
-  (window as unknown as Record<string, unknown>).__knotKeyMoves = () => {
-    const v = keyVertex();
-    const taps = fabricController?.taps ?? [];
-    const arrival = taps.length > 0 ? taps[taps.length - 1] : -1;
-    const deps = v !== null && keysLive() ? keyDepartures(v) : [];
-    const dirs: KeyDir[] = ["up", "down", "left", "right"];
-    return {
-      vertex: v,
-      live: keysLive(),
-      hold: keyHold,
-      held: heldKeys.dirs,
-      pad: movePad.isShown,
-      arrival,
-      scaleX: root.scale.x,
-      scaleY: root.scale.y,
-      departures: deps,
-      press: Object.fromEntries(
-        dirs.map((d) => [d, pickDeparture(deps, d, { hold: false })])
-      ),
-      holdPick: Object.fromEntries(
-        dirs.map((d) => [d, pickHold(deps, [d], arrival)])
-      ),
-      // K333: what each chord picks; K333/K334: the move waiting, if any.
-      chord: Object.fromEntries(
-        DIAGONALS.map((g) => [g, pickChord(deps, g, { hold: false })])
-      ),
-      waiting: moveWait.waiting ? { ...moveWait.waiting } : null,
-      tapsWait,
-      setTapsWait: (on: boolean) => {
-        tapsWait = on;
-      },
-      // K329: every junction's lone keys and chords. summary: junctions
-      // where no lone key moves; runs no lone key picks; runs neither a
-      // key nor a chord picks; key-junction pairs that wait the chord
-      // window (chordMatters), and that a wider rule (any chord beside the
-      // key picks another run) would delay.
-      censusPress: () => {
-        if (!walkGraph || !fabric || !ps || !renderer) return null;
-        let junctions = 0;
-        let deadJunctions = 0;
-        let runs = 0;
-        let keyless = 0;
-        let unreachable = 0;
-        let pairs = 0;
-        let waits = 0;
-        let wideWaits = 0;
-        const dead: string[] = [];
-        for (const [id, wv] of walkGraph.vertices) {
-          if (wv.isEnd || wv.edges.length < 2) continue;
-          const jd = keyDepartures(id);
-          if (jd.length < 2) continue;
-          junctions++;
-          const km = keyMap(jd);
-          const cm = chordMap(jd);
-          const byKey = new Set<number>();
-          const byChord = new Set<number>();
-          for (const d of dirs) if (km[d].edge >= 0) byKey.add(km[d].edge);
-          for (const g of DIAGONALS) if (cm[g].edge >= 0) byChord.add(cm[g].edge);
-          if (byKey.size === 0) {
-            deadJunctions++;
-            dead.push(id);
-          }
-          for (const dep of jd) {
-            runs++;
-            if (!byKey.has(dep.edge)) keyless++;
-            if (!byKey.has(dep.edge) && !byChord.has(dep.edge)) unreachable++;
-          }
-          for (const d of dirs) {
-            pairs++;
-            if (chordMatters(jd, d)) waits++;
-            const ce = chordEdges(jd, d);
-            if (Object.values(ce).some((e) => e !== undefined && e >= 0 && e !== km[d].edge)) {
-              wideWaits++;
-            }
-          }
-        }
-        return {
-          summary: { junctions, deadJunctions, runs, keyless, unreachable, pairs, waits, wideWaits },
-          dead,
-        };
-      },
-      census: (reaches: number[]) => {
-        if (!walkGraph || !fabric || !ps || !renderer) return null;
-        const out: Array<Record<string, unknown>> = [];
-        for (const [id, wv] of walkGraph.vertices) {
-          if (wv.isEnd) continue;
-          out.push({
-            id,
-            edges: [...wv.edges],
-            lengths: wv.edges.map((e) => walkGraph!.edges[e].length),
-            deps: reaches.map((r) => keyDepartures(id, r)),
-          });
-        }
-        return { start: walkGraph.start, exit: walkGraph.exit, junctions: out };
-      },
-    };
-  };
-  // The fabric overlay itself (K83 probes: setMarkerStyle swaps the marker
-  // glyphs and size, markerStyle reads them).
-  (window as unknown as Record<string, unknown>).__knotFabricRenderer = () =>
-    fabric;
-  // RENDER-ONLY PLUCK probes: fire a pluck on a chain at a ctrl (as a tap
-  // there would, unless opts override), and read the live plucks + stats.
-  (window as unknown as Record<string, unknown>).__knotPluck = (
-    chain: number,
-    ctrl: number,
-    opts: {
-      side?: number;
-      gain?: number;
-      beta?: number;
-      delay?: number;
-      // K279: a ripple at this strength (0 = none), and a tug (pluckTug's
-      // units; 0 = none) - what a tap there would start.
-      ripple?: number;
-      tug?: number;
-      // The ripple's look (default: pluckRipple's).
-      rippleLook?: PluckRipple;
-    } = {}
-  ) => {
-    if (!renderer || !ps) return false;
-    const unit = pluckUnit(chain, ctrl);
-    if (opts.ripple) {
-      startRipple(chain, { ctrl }, opts.ripple, opts.delay ?? 0, opts.rippleLook);
-    }
-    if (opts.tug) tugAt(chain, { ctrl }, opts.side ?? 1, opts.tug);
-    const plucked = renderer.pluck({
-      chain,
-      ctrl,
-      side: opts.side ?? 1,
-      gain: opts.gain ?? 1,
-      freq: freqForCtrl(chain, ctrl),
-      reach: unit.reach,
-      spanCtrl: unit.spanCtrl,
-      beta: opts.beta,
-      delay: opts.delay,
-    });
-    // K7 stage 4: with a tug, a Promise on both hosts that resolves once
-    // the state main shows holds the tug (with the worker, the first
-    // snapshot after it, shown exactly: host.sync()).
-    return opts.tug ? host.sync().then(() => plucked) : plucked;
-  };
-  // K279: the live ripples.
-  // `paused` holds the ripples' clock, `t` sets every live ripple's time.
-  (window as unknown as Record<string, unknown>).__knotRipple = (
-    o: { paused?: boolean; t?: number } = {}
-  ) => {
-    if (o.paused !== undefined) ripples.paused = o.paused;
-    if (o.t !== undefined) ripples.setTime(o.t);
-    return { count: ripples.activeCount, look: ripples.look };
-  };
-  (window as unknown as Record<string, unknown>).__knotPluckState = () =>
-    renderer
-      ? {
-          active: renderer.plucks.state(),
-          stats: { ...renderer.plucks.stats },
-          updates: renderer.updateCount,
-        }
-      : null;
-  // Frame-cost + physics-mode probe: main-thread ms per ticker callback
-  // over the last `n` frames, renderer.update() and ps.step() call counts.
-  (window as unknown as Record<string, unknown>).__knotPerf = (n = 120) => {
-    const k = Math.min(n, frameCostN, frameCost.length);
-    const xs: number[] = [];
-    for (let i = 0; i < k; i++) {
-      xs.push(frameCost[(frameCostN - 1 - i + frameCost.length * 4) % frameCost.length]);
-    }
-    xs.sort((a, b) => a - b);
-    const mean = xs.reduce((s, v) => s + v, 0) / Math.max(1, xs.length);
-    const rs: number[] = [];
-    for (let i = 0; i < k; i++) {
-      rs.push(revealCost[(frameCostN - 1 - i + revealCost.length * 4) % revealCost.length]);
-    }
-    rs.sort((a, b) => a - b);
-    const st = host.stats();
-    return {
-      frames: k,
-      mean,
-      p50: xs[Math.floor(xs.length * 0.5)] ?? 0,
-      p95: xs[Math.floor(xs.length * 0.95)] ?? 0,
-      max: xs[xs.length - 1] ?? 0,
-      updates: renderer?.updateCount ?? 0,
-      steps: st.steps,
-      state: physState,
-      asleep: host.asleep,
-      loadMs: st.loadMs,
-      loadStepMs: st.loadStepMs,
-      loadSteps: st.loadSteps,
-      loadFrames: st.loadFrames,
-      totalFrames: frameCostN,
-      totalCostMs: frameCostTotal,
-      plucks: renderer?.plucks.activeCount ?? 0,
-      // K7 stage 4: live stepping since the build, on either host (ms and
-      // substeps; difference them), the dropped backlog and the freeze.
-      physMs: st.physMs,
-      substeps: st.liveSubsteps,
-      lagS: host.settleLagS,
-      frozen: st.frozen,
-      // reveal.tick's ms over the same frames, and since load.
-      revealMean: rs.reduce((s, v) => s + v, 0) / Math.max(1, rs.length),
-      revealP95: rs[Math.floor(rs.length * 0.95)] ?? 0,
-      revealMax: rs[rs.length - 1] ?? 0,
-      revealMsTotal,
-      host: st.host,
-    };
-  };
-  // K147 load-settle probe: the phase now (presettle | budget | off), the
-  // armed budget's state, and the last pre-settle and budgeted settle.
-  (window as unknown as Record<string, unknown>).__knotSettle = () => {
-    const st = host.stats();
-    return {
-      phase: st.presettle ? "presettle" : st.budget ? "budget" : "off",
-      budgetMs: st.budget?.budgetMs ?? null,
-      costMs: st.budget?.costMs ?? null,
-      lagS: host.settleLagS,
-      loaderShown: st.presettle && loaderShownAt >= 0,
-      presettle: st.settleInfo.presettle,
-      budget: st.settleInfo.budget,
-      // K7 stage 4: on either host.
-      asleep: host.asleep,
-      physMs: st.physMs,
-      substeps: st.liveSubsteps,
-      kind: host.kind,
-    };
-  };
-  // The physics checkbox, as the panel drives it (probe scripting).
-  (window as unknown as Record<string, unknown>).__knotSetPhysics = (
-    on: boolean
-  ) => {
-    params.physics = on;
-    writeParams(params);
-    applyPhysicsMode();
-    return physState;
-  };
-  // A Physics-folder slider, as the panel drives it (probe scripting).
-  (window as unknown as Record<string, unknown>).__knotSetPhysicsParam = (
-    key: "slack" | "drag" | "repulsion" | "bend" | "smooth" | "stiffness" | "gridAlign",
-    value: number
-  ) => {
-    params[key] = value;
-    writeParams(params);
-    physicsInputsChanged();
-    wake();
-    return physState;
-  };
-  // SHADER BACKGROUND probes: state, the raw layer (pin its clock, force a
-  // texture pass), and the panel's dropdown + slider.
-  (window as unknown as Record<string, unknown>).__knotBackground = () => ({
-    id: background.id,
-    active: background.active,
-    // The last texture pass's program (bg-<program> in GPU timings).
-    program: background.programId,
-    speed: params.backgroundSpeed,
-    stats: { ...background.stats },
-    time: background.clock.time,
-    drifting: background.clock.isDrifting,
-    needsFrame: background.needsFrame(),
-  });
-  (window as unknown as Record<string, unknown>).__knotBackgroundLayer = () =>
-    background;
-  // K140 probes: the confetti's state (pieces alive, bursts thrown, frames
-  // stepped - frozen once idle - the plan a finish would throw, and the last
-  // frame's sceneAnimating()), and a finish's burst on demand.
-  (window as unknown as Record<string, unknown>).__knotConfetti = () => ({
-    active: confetti.active,
-    rain: confetti.sim.rain.alive,
-    spray: confetti.sim.spray.alive,
-    stats: { ...confetti.stats },
-    plan: confettiPlan(
-      params.confetti,
-      params.confettiAmount,
-      motion.reduced,
-      app.screen.width,
-      app.screen.height
-    ),
-    sceneAnimating: sceneWasAnimating,
-    rainVisible: confetti.rainContainer.visible,
-    sprayVisible: confetti.sprayContainer.visible,
-  });
-  (window as unknown as Record<string, unknown>).__knotConfettiBurst = () => {
-    throwConfetti();
-    return confetti.active;
-  };
-  (window as unknown as Record<string, unknown>).__knotSetBackground = (
-    id: UrlParams["background"],
-    intensity?: number,
-    speed?: number
-  ) => {
-    params.background = id;
-    if (intensity !== undefined) params.backgroundIntensity = intensity;
-    if (speed !== undefined) params.backgroundSpeed = speed;
-    syncBackground();
-    writeParams(params);
-    return background.id;
-  };
-  // Any background params at once (K79 stage B: shape + colors), e.g.
-  // {backgroundScale: 2, backgroundColorMode: "custom"}; unknown keys are
-  // ignored. Returns the program the next texture pass will use.
-  (window as unknown as Record<string, unknown>).__knotSetBackgroundParams = (
-    values: Partial<UrlParams>
-  ) => {
-    const p = params as unknown as Record<string, unknown>;
-    for (const [k, v] of Object.entries(values)) {
-      if (k.startsWith("background") && Object.hasOwn(p, k)) p[k] = v;
-    }
-    syncBackground();
-    writeParams(params);
-    background.renderTexture();
-    return background.programId;
-  };
-  // THE MOTION SETTING probe: the choice, the OS's answer, the result and
-  // the root attribute the stylesheets read.
-  (window as unknown as Record<string, unknown>).__knotMotion = () => ({
-    pref: motion.pref,
-    system: motion.system,
-    reduced: motion.reduced,
-    attr: document.documentElement.dataset.motion ?? null,
-  });
-  // K111 probe: the two Accessibility switches, the OS answers, the root
-  // attributes the stylesheets read, the keys overridden, and the values the
-  // scene wears right now next to the stored ones.
-  // K111 stage 4 probe: switch High contrast's highlight prototype (0 today's
-  // pulses, 1 contrast, 2 outline, 3 chevrons; worn only while High
-  // contrast is on). Returns the look the renderer now wears.
-  (window as unknown as Record<string, unknown>).__knotHcLook = (n: number) => {
-    hcLookChoice = n === 1 || n === 2 || n === 3 ? n : 0;
-    handRendererLook();
-    return renderer?.hcLook ?? null;
-  };
-  (window as unknown as Record<string, unknown>).__knotA11y = () => ({
-    reducedMotion: a11y.reducedMotion,
-    highContrast: a11y.highContrast,
-    motion: {
-      pref: motion.pref,
-      system: motion.system,
-      attr: document.documentElement.dataset.motion ?? null,
     },
-    contrast: {
-      pref: contrast.pref,
-      system: contrast.system,
-      high: contrast.high,
-      attr: document.documentElement.dataset.contrast ?? null,
-    },
-    overridden: overriddenKeys(a11y),
-    stored: {
-      flowStrength: params.flowStrength,
-      flowSpeed: params.flowSpeed,
-      background: params.background,
-      backgroundColorMode: params.backgroundColorMode,
-      backgroundBase: params.backgroundBase,
-      palette: params.palette,
-      pathColor: params.pathColor,
-      fadeLength: params.fadeLength,
-      gap: params.gap,
-      markerSize: params.markerSize,
-    },
-    worn: {
-      flowStrength: renderer?.flowStrength ?? null,
-      flowSpeed: renderer?.flowSpeed ?? null,
-      fadeLength: renderer?.fadeLength ?? null,
-      background: look("background"),
-      backgroundColorMode: look("backgroundColorMode"),
-      backgroundBase: look("backgroundBase"),
-      palette: look("palette"),
-      pathColor: look("pathColor"),
-      gap: look("gap"),
-      markerSize: look("markerSize"),
-      fabricMarkerSize: fabric?.markerSize ?? null,
-      pageInk: canvasInk,
-      canvasBackground: app.canvas.style.background,
-    },
-    asleep: host.asleep,
-    animating: sceneWasAnimating,
   });
-  // The "Replay settle" button (probe scripting).
-  (window as unknown as Record<string, unknown>).__knotReplay = () => {
-    replaySettle();
-    return physState;
-  };
-  // K76 THREAD REVEAL, stage 2a's PROBE HOOK: on (exploration threads or
-  // off), reach and fade (lattice units), look (an EXPLORE_LOOKS name or
-  // index), visitAll (every vertex visited: the GPU cost bound). Returns
-  // the fabric's explore state (null outside fabric).
-  (window as unknown as Record<string, unknown>).__knotExplore = (
-    o: {
-      on?: boolean;
-      reach?: number;
-      fade?: number;
-      look?: string | number;
-      visitAll?: boolean;
-      burnt?: string; // K290: the burnt thread's look, "gone" or "char"
-    } = {}
-  ) => {
-    if (!fabric || !fabricController) return null;
-    if (o.burnt === "gone" || o.burnt === "char") params.burnt = o.burnt;
-    // Stage 2c: through the params (the frame loop syncs them every tick).
-    // The numbers go in raw, past the panel's ranges (a reach of 1000 shows
-    // every stub whole).
-    if (o.on !== undefined) params.exploration = o.on ? "threads" : "off";
-    if (o.reach !== undefined) params.revealDistance = o.reach;
-    if (o.fade !== undefined) params.revealFade = o.fade;
-    const looks = EXPLORE_LOOKS as readonly string[];
-    const lk = typeof o.look === "number" ? looks[o.look] : o.look;
-    if (lk !== undefined && looks.includes(lk)) {
-      params.revealLook = lk as UrlParams["revealLook"];
-    }
-    syncExploration(fabric);
-    fabric.update(fabricController);
-    if (o.visitAll) {
-      fabric.exploreVisitAll();
-      fabric.update(fabricController);
-    }
-    renderDirty = true;
-    return fabric.exploreState();
-  };
-  // World point at a fractional ctrl along a chain (probe scripting).
-  (window as unknown as Record<string, unknown>).__knotPoint = (
-    chain: number,
-    f: number
-  ) => {
-    const sys = ps;
-    if (!sys) return null;
-    const scratch = new Float32Array(2);
-    sys.pointOnChain(chain, f, scratch, 0);
-    return { x: scratch[0], y: scratch[1] };
-  };
 
   rebuild();
 }
