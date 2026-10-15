@@ -61,8 +61,8 @@ export interface MinotaurView {
 import { FogBackdrop } from "./background";
 import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
 import { MarkerMesh } from "./marker_mesh";
-import { exploreDistances, exploreView } from "../game/explore_view";
-import type { ExploreView } from "../game/explore_view";
+import { exploreDistances, exploreView, subtractBurnt, wholePieces } from "../game/explore_view";
+import type { BurntSpan, ExplorePiece, ExploreView } from "../game/explore_view";
 import { EXPLORE_LOOK_DEFAULT, exploreLookHasHalo } from "./explore_glsl";
 
 // K76 THREAD REVEAL (stage 2a; docs/design/K76.md): a newly visited
@@ -133,17 +133,12 @@ const TELEGRAPH_RING_W = 0.32;
 const TELEGRAPH_STEP = 0.5;
 
 // K114 burn race, the first look (stage 1; stage 3 builds the real one,
-// brief docs/design/K114_burn.md): burnt thread charred dark around an ash
-// core, an ember at each fire front, a flame-red line along each
-// smoldering arm at the head, and the lit fuse (an ember in a ring) at the
-// entrance until the fire spreads. Widths and radii in thread widths;
-// sampled every FIRE_STEP ctrl.
-const FIRE_CHAR_COLOR = 0x22140e;
-const FIRE_CHAR_ALPHA = 0.9;
-const FIRE_CHAR_WIDTH = 1.1;
-const FIRE_ASH_COLOR = 0x7a3a22;
-const FIRE_ASH_ALPHA = 0.75;
-const FIRE_ASH_WIDTH = 0.3;
+// brief docs/design/K114_burn.md): an ember at each fire front, a
+// flame-red line along each smoldering arm at the head, and the lit fuse
+// (an ember in a ring) at the entrance until the fire spreads. Burnt
+// thread itself draws in the ribbon shaders since K290 stage 3a (the
+// `burnt` param: gone or char; syncExplore). Widths and radii in thread
+// widths; sampled every FIRE_STEP ctrl.
 const FIRE_EMBER_COLOR = 0xff7a1a;
 const FIRE_EMBER_CORE = 0xffe08a;
 const FIRE_EMBER_R = 0.7;
@@ -457,6 +452,9 @@ export class FabricMazeRenderer {
   // K290 (burn stage 3a): how burnt thread draws, the `burnt` param (main.ts
   // syncExploration): gone (not drawn) or char (a burnt coloring).
   burntLook: "gone" | "char" = "gone";
+  // K290: the burnt stretches drawFire last found (null = nothing burnt or
+  // the fire off), declared to the ribbons by syncExplore.
+  private burnSpans: BurntSpan[] | null = null;
   private seenV = new Map<string, number>();
   private seenRuns = new Set<number>();
   private seenRestart = -1;
@@ -813,9 +811,10 @@ export class FabricMazeRenderer {
   }
 
   // K76 stage 2c: under the thread reveal, hidden thread is empty space
-  // for every tap and hover (the ribbons' exploreShownAt).
+  // for every tap and hover (the ribbons' exploreShownAt). K290: so is
+  // burnt thread under the `burnt` param's "gone", reveal on or off.
   private shownAt(chain: number, ctrl: number): boolean {
-    if (!this.explore.on) return true;
+    if (!this.ribbons.exploreOn) return true;
     return this.ribbons.exploreShownAt(chain, this.ctrlMod(chain, ctrl));
   }
 
@@ -1150,9 +1149,12 @@ export class FabricMazeRenderer {
   // state moved: update() rides every ribbon render) or the fire's clock or
   // state changed; at rest that is never (half the frames under flow). A
   // redraw with every run burnt cost 1.0 ms here plus 3.8 ms of tessellation
-  // in the pixi render (desktop; `.claude/probes/K114/burn/`). Cleared once
-  // when the fire is off. Every run's fire is drawn, seen or not: the fog
-  // sprite covers it, but K76's thread reveal does not (stage 3 owns that).
+  // in the pixi render (desktop; `.claude/probes/K114/burn/`; stage 1, with
+  // the char strokes). Cleared once when the fire is off. Every run's fire
+  // is drawn, seen or not: the fog sprite covers it, but K76's thread
+  // reveal does not (burn stage 3b owns the front's look). K290 stage 3a:
+  // the burnt stretches go to the ribbons as a visibility declaration
+  // (syncExplore), which composes with the reveal's.
   drawFire(controller: FabricMazeController): void {
     const gfx = this.fireGfx;
     const fire = controller.fire;
@@ -1161,6 +1163,7 @@ export class FabricMazeRenderer {
         gfx.clear();
         this.fireDrawn = false;
       }
+      this.setBurnSpans(null);
       return;
     }
     const a = this.anim;
@@ -1168,24 +1171,27 @@ export class FabricMazeRenderer {
     const key =
       `${L}|${controller.head}|${controller.solved}|${controller.fireLost}|` +
       `${a ? 1 : 0}|${this.threadWidth}`;
-    if (this.fireDrawn && !this.fireDirty && key === this.fireKey && fire === this.fireLast) return;
+    if (this.fireDrawn && !this.fireDirty && key === this.fireKey && fire === this.fireLast) {
+      if (this.burnLookDeclared !== this.burntLook) this.setBurnSpans(this.burnSpans, true);
+      return;
+    }
     this.fireDirty = false;
     this.fireKey = key;
     this.fireLast = fire;
     gfx.clear();
     this.fireDrawn = true;
-    const char: number[][] = [];
+    const spans: BurntSpan[] = [];
     const embers: number[] = [];
     for (let eid = 0; eid < this.walk.edges.length; eid++) {
       const e = this.walk.edges[eid];
       const b = runBurnAt(this.walk, fire, eid, L);
       if (b.state === "unburnt") continue;
       if (b.state === "burnt") {
-        char.push(this.runPoints(e, 0, e.length));
+        spans.push(this.burnSpan(e, 0, e.length));
         continue;
       }
       for (const [x0, x1] of b.burnt) {
-        if (x1 > x0) char.push(this.runPoints(e, x0, x1));
+        if (x1 > x0) spans.push(this.burnSpan(e, x0, x1));
       }
       for (const x of b.front) {
         const p = this.runPoints(e, x, x);
@@ -1224,8 +1230,7 @@ export class FabricMazeRenderer {
       }
       if (any) gfx.stroke({ color, width: w * width, alpha, cap: "round", join: "round" });
     };
-    strokeAll(char, FIRE_CHAR_COLOR, FIRE_CHAR_WIDTH, FIRE_CHAR_ALPHA);
-    strokeAll(char, FIRE_ASH_COLOR, FIRE_ASH_WIDTH, FIRE_ASH_ALPHA);
+    this.setBurnSpans(spans.length > 0 ? spans : null);
     strokeAll(smolder, FIRE_SMOLDER_COLOR, FIRE_SMOLDER_WIDTH, FIRE_SMOLDER_ALPHA);
     const ember = (x: number, y: number) => {
       this.polyCircle(gfx, x, y, w * FIRE_EMBER_R, 24);
@@ -1261,6 +1266,53 @@ export class FabricMazeRenderer {
       pts.push(this.scratch[0], this.scratch[1]);
     }
     return pts;
+  }
+
+  // K290: run `e` from lattice distance x0 to x1 as a burnt span of its
+  // chain (unwrapped ctrls, as the reveal's pieces; runPoints' mapping).
+  private burnSpan(e: WalkEdge, x0: number, x1: number): BurntSpan {
+    const k = e.length > 0 ? (e.ctrlB - e.ctrlA) / e.length : 0;
+    const c0 = e.ctrlA + x0 * k;
+    const c1 = e.ctrlA + x1 * k;
+    return { chain: e.chain, b0: Math.min(c0, c1), b1: Math.max(c0, c1) };
+  }
+
+  // K290: record the burnt stretches (null = none) and re-declare the
+  // ribbons' visibility when they or the look changed (`force`: the look).
+  private burnLookDeclared: "gone" | "char" = "gone";
+  private setBurnSpans(spans: BurntSpan[] | null, force = false): void {
+    const prev = this.burnSpans;
+    let same = !force && this.burnLookDeclared === this.burntLook;
+    if (same) {
+      if (!prev || !spans) same = prev === spans;
+      else if (prev.length !== spans.length) same = false;
+      else {
+        for (let i = 0; i < prev.length && same; i++) {
+          const a = prev[i];
+          const b = spans[i];
+          same = a.chain === b.chain && a.b0 === b.b0 && a.b1 === b.b1;
+        }
+      }
+    }
+    this.burnSpans = spans;
+    if (same) return;
+    this.burnLookDeclared = this.burntLook;
+    this.syncExplore();
+  }
+
+  // K290: a chain's ctrl count if it is a ring, 0 if open (subtractBurnt).
+  private readonly ringN = (chain: number): number =>
+    this.ps.chainBreakAfter[chain] < 0 ? this.ps.chains[chain].length : 0;
+
+  // K290: the burn's visibility with the reveal off: every chain whole,
+  // less what burnt under "gone".
+  private burnOnlyPieces(spans: BurntSpan[], gone: boolean): ExplorePiece[] {
+    const chains: { n: number; closed: boolean }[] = [];
+    for (let c = 0; c < this.ps.chains.length; c++) {
+      chains.push({ n: this.ps.chains[c].length, closed: this.ps.chainBreakAfter[c] < 0 });
+    }
+    const base = wholePieces(chains);
+    return gone ? subtractBurnt(base, spans, this.ringN) : base;
   }
 
   // Where the minotaur was last drawn (world), for its off-screen
@@ -2424,9 +2476,25 @@ export class FabricMazeRenderer {
   }
 
   // Declare what is visible to the ribbons (or the mode off) and place the
-  // halo sprites.
+  // halo sprites. K290 (burn stage 3a): a burn composes with it. Under
+  // "gone" the burnt stretches are cut out of the pieces (the reveal's own
+  // pieces still decide which junctions hide: `gate`); under "char" they
+  // ride as char spans. With the reveal off and something burnt, every
+  // chain is declared whole (less the burnt stretches), so the explore
+  // programs draw the burn; nothing burnt keeps master's path.
   private syncExplore(): void {
+    const spans = this.burnSpans;
+    const gone = this.burntLook === "gone";
     if (!this.explore.on) {
+      if (spans) {
+        this.exploreLast = null;
+        this.ribbons.setExplore(this.burnOnlyPieces(spans, gone), this.explore.look, 1, {
+          gate: null,
+          char: gone ? null : spans,
+        });
+        this.drawFrontierMarks();
+        return;
+      }
       if (this.exploreLast || this.ribbons.exploreOn) {
         this.exploreLast = null;
         this.ribbons.setExplore(null);
@@ -2467,14 +2535,42 @@ export class FabricMazeRenderer {
       hold,
       holdDist: hold > 0 ? this.holdDist ?? undefined : undefined,
     });
-    this.ribbons.setExplore(this.exploreLast.pieces, this.explore.look, 1);
+    const pieces = this.exploreLast.pieces;
+    if (spans) {
+      this.ribbons.setExplore(
+        gone ? subtractBurnt(pieces, spans, this.ringN) : pieces,
+        this.explore.look,
+        1,
+        { gate: pieces, char: gone ? null : spans }
+      );
+    } else {
+      this.ribbons.setExplore(pieces, this.explore.look, 1);
+    }
     this.drawFrontierMarks();
+  }
+
+  // K290: whether a chain point lies in a burnt stretch that is not drawn
+  // ("gone"): a frontier there gets no halo.
+  private burntGoneAt(chain: number, ctrl: number): boolean {
+    const spans = this.burnSpans;
+    if (!spans || this.burntLook !== "gone") return false;
+    const n = this.ringN(chain);
+    for (const s of spans) {
+      if (s.chain !== chain) continue;
+      for (let k = n > 0 ? -2 : 0; k <= (n > 0 ? 2 : 0); k++) {
+        if (ctrl >= s.b0 + k * n && ctrl <= s.b1 + k * n) return true;
+      }
+    }
+    return false;
   }
 
   // The looks drawn BESIDE the thread: the halo (halo, beacon) - a soft
   // glow beneath the weave at the middle of each frontier fade.
   private drawFrontierMarks(): void {
-    const fr = this.exploreLast?.frontiers ?? [];
+    let fr = this.exploreLast?.frontiers ?? [];
+    if (this.burnSpans && this.burntLook === "gone") {
+      fr = fr.filter((f) => !this.burntGoneAt(f.chain, f.cSolid + (f.cEnd - f.cSolid) * 0.5));
+    }
     const halo = this.explore.on && exploreLookHasHalo(this.explore.look);
     const want = halo ? fr.length : 0;
     while (this.haloSprites.length < want) {

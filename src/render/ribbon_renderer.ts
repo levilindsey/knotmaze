@@ -130,8 +130,11 @@ import {
 import { pickRoutes, routeCorner, routeCubic } from "./junction_routes";
 import { WebFade } from "./web_fade";
 import {
+  EXPLORE_ITEM_CHAR,
   EXPLORE_ITEM_VIS,
   chainWhole,
+  charItem,
+  charRange,
   classifyExploreCut,
   exploreArcMap,
   visItem,
@@ -140,7 +143,7 @@ import {
 } from "./explore_glsl";
 import type { ExploreCut } from "./explore_glsl";
 import { pieceVis } from "../game/explore_view";
-import type { ExplorePiece } from "../game/explore_view";
+import type { ExploreBurn, ExplorePiece } from "../game/explore_view";
 import type { PaintRoute } from "./junction_routes";
 import {
   STRIP_STATS,
@@ -712,6 +715,22 @@ function samePieces(a: readonly ExplorePiece[], b: readonly ExplorePiece[]): boo
     ) {
       return false;
     }
+  }
+  return true;
+}
+
+// K290: whether two burn declarations are the same (null = no burn).
+function sameBurn(a: ExploreBurn | null, b: ExploreBurn | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  const g = a.gate === b.gate || (!!a.gate && !!b.gate && samePieces(a.gate, b.gate));
+  if (!g) return false;
+  if (a.char === b.char) return true;
+  if (!a.char || !b.char || a.char.length !== b.char.length) return false;
+  for (let i = 0; i < a.char.length; i++) {
+    const p = a.char[i];
+    const q = b.char[i];
+    if (p.chain !== q.chain || p.b0 !== q.b0 || p.b1 !== q.b1) return false;
   }
   return true;
 }
@@ -4840,7 +4859,8 @@ export class RibbonRenderer {
     // none, so the paint evaluation stays gated on real paint.
     const painted = new Uint8Array(n);
     const touch = (chain: number, lo: number, hi: number, item: number): void => {
-      if (items[item * 8] !== EXPLORE_ITEM_VIS) painted[chain] = 1;
+      const type = items[item * 8];
+      if (type !== EXPLORE_ITEM_VIS && type !== EXPLORE_ITEM_CHAR) painted[chain] = 1;
       const len = this.ps.chains[chain].length;
       const closed = this.ps.chainBreakAfter[chain] < 0;
       let s0 = Math.floor(lo) - 1;
@@ -4930,6 +4950,14 @@ export class RibbonRenderer {
         const [lo, hi] = visRange(p);
         touch(p.chain, lo, hi, i);
       }
+      // K290: the char look's burnt stretches (kCharAt), whole chains too.
+      for (const s of this.exploreBurn?.char ?? []) {
+        if (s.chain >= n || !(s.b1 > s.b0)) continue;
+        const i = items.length / 8;
+        items.push(...charItem(s));
+        const [lo, hi] = charRange(s);
+        touch(s.chain, lo, hi, i);
+      }
     }
     // K145: the hover glow's run, (RIM, c0, c1, end gap).
     this.rimKey = this.rimItemKey();
@@ -4958,6 +4986,10 @@ export class RibbonRenderer {
   private explorePieces: ExplorePiece[] | null = null;
   private readonly exploreByChain = new Map<number, ExplorePiece[]>();
   private exploreWhole = new Uint8Array(0);
+  // K290: the fire's part of the declaration, and its gate's pieces per
+  // chain (null: no burn, or the reveal off).
+  private exploreBurn: ExploreBurn | null = null;
+  private exploreGateByChain: Map<number, ExplorePiece[]> | null = null;
   // K76 2b: update() must re-run (needsFxRender) because the declaration
   // changed what update() derives from it: a crossing's over thread crossed
   // vis 0.5 (its under window and pluck footprint) or a marker's gap turned
@@ -4972,15 +5004,31 @@ export class RibbonRenderer {
   // explore program, a chain with no piece is not drawn at all, and the
   // pieces ride the paint declaration as VIS items. look = an
   // EXPLORE_LOOKS index, breath = the glow look's strength.
-  setExplore(pieces: ExplorePiece[] | null, look = 0, breath = 1): void {
+  // K290 (burn stage 3a): `burn` = the fire's part (explore_view
+  // ExploreBurn; null = none): under "gone" the pieces already lack the
+  // burnt thread and `burn.gate` (the reveal's own pieces) decides which
+  // junctions hide; under "char" `burn.char` lists the stretches to darken.
+  setExplore(
+    pieces: ExplorePiece[] | null,
+    look = 0,
+    breath = 1,
+    burn: ExploreBurn | null = null
+  ): void {
     const E = knotUniformValues().uKExplore!;
     E[0] = pieces ? 1 : 0;
     E[1] = look;
     E[2] = breath;
     E[3] = this.style.threadWidth;
+    if (!pieces) burn = null;
     const prev = this.explorePieces;
-    if (prev === pieces || (prev && pieces && samePieces(prev, pieces))) return;
+    if (
+      (prev === pieces || (prev && pieces && samePieces(prev, pieces))) &&
+      sameBurn(this.exploreBurn, burn)
+    ) {
+      return;
+    }
     this.explorePieces = pieces;
+    this.exploreBurn = burn;
     this.exploreByChain.clear();
     for (const p of pieces ?? []) {
       let l = this.exploreByChain.get(p.chain);
@@ -4990,6 +5038,16 @@ export class RibbonRenderer {
       }
       l.push(p);
     }
+    this.exploreGateByChain = null;
+    if (burn?.gate) {
+      const g = new Map<number, ExplorePiece[]>();
+      for (const p of burn.gate) {
+        let l = g.get(p.chain);
+        if (!l) g.set(p.chain, (l = []));
+        l.push(p);
+      }
+      this.exploreGateByChain = g;
+    }
     const n = this.ps.chains.length;
     const whole = new Uint8Array(n);
     for (const [c, l] of this.exploreByChain) {
@@ -4998,6 +5056,11 @@ export class RibbonRenderer {
       }
     }
     this.exploreWhole = whole;
+    let charred: Uint8Array | null = null;
+    if (burn?.char && burn.char.length > 0) {
+      charred = new Uint8Array(n);
+      for (const s of burn.char) if (s.chain < n && s.b1 > s.b0) charred[s.chain] = 1;
+    }
     const sh = pieces ? sectionShaderExplore() : sectionShader();
     for (let c = 0; c < this.fills.length; c++) {
       const m = this.fills[c].mesh;
@@ -5013,7 +5076,7 @@ export class RibbonRenderer {
     const fsh = pieces ? junctionShaderExplore() : junctionShader();
     if (this.filletMesh) this.filletMesh.mesh.shader = fsh;
     if (this.filletTopMesh) this.filletTopMesh.mesh.shader = fsh;
-    this.paintScene.setExploreFlags(pieces ? whole : null);
+    this.paintScene.setExploreFlags(pieces ? whole : null, charred);
     if (this.style.paletteMode) this.writePaintItems();
     this.exploreRev++;
     // The gap gate follows at once (the slots keep their last solve).
@@ -5450,14 +5513,36 @@ export class RibbonRenderer {
   // Whether a junction draws under the reveal (the joint gate): every arm
   // visible past EXPLORE_JOINT_MIN at its slot. An unvisited junction, whose
   // stubs fade out into it, hides; a drawn web fades with its arms.
+  // K290 (burn stage 3a): under a burn the reveal's own pieces (the gate)
+  // apply that rule, and the declared pieces (which lack the burnt thread)
+  // hide a junction only when every arm is gone; otherwise the web draws
+  // and a burnt arm's lobe fades out with its strip (the joint fade).
+  // Without a burn the two are the same pieces: the rule above, exactly.
   private exploreJointShown(jn: number): boolean {
+    let any = false;
     for (const a of this.junctionArms[jn].arms) {
       const n = this.ps.chains[a.chain].length;
       const closed = this.ps.chainBreakAfter[a.chain] < 0;
       const c = closed ? a.slot : Math.max(0, Math.min(n - 1, a.slot));
-      if (this.exploreVisAt(a.chain, c) <= EXPLORE_JOINT_MIN) return false;
+      if (this.exploreGateVisAt(a.chain, c) <= EXPLORE_JOINT_MIN) return false;
+      if (this.exploreVisAt(a.chain, c) > EXPLORE_JOINT_MIN) any = true;
     }
-    return true;
+    return any || this.junctionArms[jn].arms.length === 0;
+  }
+
+  // K290: the reveal's own visibility at a chain point (exploreVisAt with
+  // no burn; 1 with a burn and the reveal off).
+  private exploreGateVisAt(chain: number, ctrl: number): number {
+    if (!this.exploreBurn) return this.exploreVisAt(chain, ctrl);
+    const g = this.exploreGateByChain;
+    if (!g) return 1;
+    const l = g.get(chain);
+    if (!l) return 0;
+    const n = this.ps.chains[chain].length;
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    let best = 0;
+    for (const p of l) best = Math.max(best, pieceVis(p, ctrl, n, closed));
+    return best;
   }
 
   // Probe view of the joint gate: hidden junctionArms / freeTips indices

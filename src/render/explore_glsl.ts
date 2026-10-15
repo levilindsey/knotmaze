@@ -43,6 +43,33 @@ import {
 
 // The VIS item type (T0.x). PAINT_ITEM uses 1-4.
 export const EXPLORE_ITEM_VIS = 5;
+// K290 (burn stage 3a): the CHAR item type, a burnt stretch the `char` look
+// darkens: T0 = (CHAR, b0, b1, -), T1 unused. Like VIS, not a PAINT_ITEM:
+// kPaintAt skips it and it sets no chain's paint flag.
+export const EXPLORE_ITEM_CHAR = 6;
+// The char look (stage 1's Graphics strokes, now per pixel in the ribbon's
+// own fragment, so a crossing gap cuts it like the thread): char over the
+// thread, a thin ash core along the centerline (half-width in vUV.y), each
+// end ramped over EXPLORE_CHAR_EDGE ctrl centered on the span's end (two
+// abutting spans sum to exactly 1 there: no seam).
+export const EXPLORE_CHAR_RGB = [0x22 / 255, 0x14 / 255, 0x0e / 255] as const;
+export const EXPLORE_CHAR_ALPHA = 0.9;
+export const EXPLORE_ASH_RGB = [0x7a / 255, 0x3a / 255, 0x22 / 255] as const;
+export const EXPLORE_ASH_ALPHA = 0.75;
+export const EXPLORE_ASH_HALF = 0.15;
+export const EXPLORE_CHAR_EDGE = 0.08;
+
+// One burnt stretch as a CHAR item, and the unwrapped ctrl range its slot
+// references must cover.
+export function charItem(s: { b0: number; b1: number }): number[] {
+  return [EXPLORE_ITEM_CHAR, s.b0, s.b1, 0, 0, 0, 0, 0];
+}
+export function charRange(s: { b0: number; b1: number }): [number, number] {
+  return [s.b0 - EXPLORE_CHAR_EDGE, s.b1 + EXPLORE_CHAR_EDGE];
+}
+
+const glslF = (x: number): string => x.toFixed(5);
+const glslV3 = (v: readonly number[]): string => `vec3(${v.map(glslF).join(", ")})`;
 
 // The end-marker looks (uKExplore.y = the index), section 3 of the design.
 // fade: the stub fades out. halo: the fade, plus a soft halo sprite at the
@@ -307,6 +334,46 @@ highp float kExploreAt(KChain c, highp float ctrl) {
   }
   return best;
 }
+// K290 (burn stage 3a): how charred a chain point is, 0..1: the CHAR items
+// (burnt stretches, unwrapped ctrls) its slot references, each a linear
+// ramp of EXPLORE_CHAR_EDGE ctrl centered on either end, summed (abutting
+// spans make exactly 1 at their shared end). Only chains whose KPAINT flag
+// .y is set scan. No CPU twin (K152 item 3).
+const int PI_CHAR = ${EXPLORE_ITEM_CHAR};
+highp float kCharAt(KChain c, highp float ctrl) {
+  if (kP(c.ch).y < 0.5) return 0.0;
+  int n = c.nCtrl;
+  highp float nf = float(n);
+  int sl = clamp(int(floor(ctrl)), 0, n - 1);
+  highp vec4 I = kP(c.idx + sl);
+  int first = int(I.x + 0.5);
+  int cnt = int(I.y + 0.5);
+  int refBase = int(uKPaint.y + 0.5);
+  int itemBase = int(uKPaint.z + 0.5);
+  highp float sum = 0.0;
+  for (int k = 0; k < 32; k++) {
+    if (k >= cnt) break;
+    int r = first + k;
+    highp vec4 rt = kP(refBase + (r >> 2));
+    int j = r & 3;
+    int item = int((j == 0 ? rt.x : j == 1 ? rt.y : j == 2 ? rt.z : rt.w) + 0.5);
+    highp vec4 T0 = kP(itemBase + 2 * item);
+    if (int(T0.x + 0.5) != PI_CHAR) continue;
+    highp float c0 = T0.y;
+    highp float c1 = T0.z;
+    highp float x = ctrl;
+    if (c.closed) x += nf * floor((0.5 * (c0 + c1) - x) / nf + 0.5);
+    sum += clamp((x - c0) * ${glslF(1 / EXPLORE_CHAR_EDGE)} + 0.5, 0.0, 1.0) *
+      clamp((c1 - x) * ${glslF(1 / EXPLORE_CHAR_EDGE)} + 0.5, 0.0, 1.0);
+  }
+  return min(sum, 1.0);
+}
+// K290: the char look over a composed thread color; ash = the centerline
+// core's coverage (0 off the ribbon, as in the arm strips).
+vec3 kCharLook(vec3 rgb, highp float ch, highp float ash) {
+  rgb = mix(rgb, ${glslV3(EXPLORE_CHAR_RGB)}, ${glslF(EXPLORE_CHAR_ALPHA)} * ch);
+  return mix(rgb, ${glslV3(EXPLORE_ASH_RGB)}, ${glslF(EXPLORE_ASH_ALPHA)} * ash * ch);
+}
 `;
 
 // The end looks and the shaped cut's coverage (K268), which need kSmooth,
@@ -452,6 +519,12 @@ export const EXPLORE_MAIN_GLSL = /* glsl */ `
     if (uKBase.z > 5.5) {
       finalColor = vec4(evRaw, kExTip >= 0.0 ? kExTip : 0.0, ev, 1.0);
       return;
+    }
+    // K290: burnt thread under the char look.
+    highp float exCh = kCharAt(kc, kctrl);
+    if (exCh > 0.0) {
+      highp float exAsh = clamp((${glslF(EXPLORE_ASH_HALF)} - abs(vUV.y - 0.5)) / max(kSideFw, 1e-4) + 0.5, 0.0, 1.0);
+      rgb = kCharLook(rgb, exCh, exAsh);
     }
     aM *= ev;
     if (aM <= 0.002) discard;

@@ -407,6 +407,16 @@ export function subtractBurnt(
   return out;
 }
 
+// K290: the burn's part of a visibility declaration (ribbon_renderer
+// setExplore). `gate`: the thread reveal's own pieces (null with the reveal
+// off), which alone decide which junctions hide (a burnt arm only drops its
+// lobe from the web); `char`: the burnt stretches the char look darkens
+// (null under "gone", whose pieces lack them instead).
+export interface ExploreBurn {
+  gate: ExplorePiece[] | null;
+  char: BurntSpan[] | null;
+}
+
 // K290: every chain whole, as pieces (the burn's visibility with the
 // reveal off): a ring [0, n], an open chain [0, n - 1], hard ends.
 export function wholePieces(chains: readonly { n: number; closed: boolean }[]): ExplorePiece[] {
