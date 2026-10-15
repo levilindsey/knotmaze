@@ -15,6 +15,14 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K244** · Should auto plucks and a drag's release go silent in
+  junction cores too (K235's call)? K235 silenced taps there, but the
+  random and music modes' plucks and a drag's release can still land in
+  a core and sound with nothing drawn. Its agent left them: auto plucks
+  are the instrument and sound whatever the geometry, and a release is a
+  real tug with its own snap-back. A tap on a degenerate lobe
+  (`skipOther`) also still sounds (none in 7752 probe taps).
+  `render-pluck.md` (K235).
 - **K241** · Should a reset's gold webs fade out too (K191's call 1)?
   As merged, a backtrack fades a web out over 0.25 s, but a web that
   leaves the routes as it stops being full (a reset, a string-mode
@@ -109,7 +117,8 @@ and never reused.
   - 2026-10-14 about 11:10 (email 5.x): 5.1 "haven't tried yet" (still
     open); 5.2 "I think nothing makes sense": junction-core taps get no
     glow, as built. Levi asked whether those taps sound ("Probably
-    shouldn't"): they do, and K235 silences them.
+    shouldn't"): K235 silenced them (merged 2026-10-14 12:44), so
+    call (2) is moot.
 - **K162** · K147's calls (`docs/design/K147.md`): (1) the trade: the
   first settle now plays in slow motion (first sleep 11.6 -> 21 s; at 4x
   CPU throttle 40 -> about 100 s) for a smooth intro (p95 159 -> 31 ms;
@@ -329,35 +338,6 @@ and never reused.
     in the main checkout's `.claude/probes/K111/`.
   - next: the brief's stage 2 (the dropdown, the modes, the sheets).
   - brief: `docs/design/K111.md` ("Stage 2: the highlight modes").
-- **K235** · Taps inside junction cores make no sound (Levi, 2026-10-14
-  about 11:10, on K194's 5.2: "Do we trigger pluck sounds for this?
-  Probably shouldn't."). They play the pluck sound and draw nothing
-  today (K180's census: 21 of 284 maze taps; `render-pluck.md`
-  SOUND-ONLY TAPS, `skipCore`). Small; one agent with K239.
-  - owner: claude agent a7165f67497869b47 (sonnet) of session d8031183,
-    started 2026-10-14 11:59 with a 1 h cap (about 12:59), with K239.
-  - branch: `worktree-agent-a7165f67497869b47`
-    (`.claude/worktrees/agent-a7165f67497869b47`), from f5207d1; last
-    commit: none yet (unpushed).
-  - evidence: `.claude/probes/K235/` in that worktree.
-  - next: the brief's one stage (K235, then K239).
-  - brief: `docs/design/K235_K239.md`.
-- **K239** · A fresh static page (`phy=0&fw=0`, or paused at load) draws
-  its first frame with the crossing cuts solved at fade 0, about 28k px
-  off a refreshed frame: in the asleep and paused branches
-  `flowRender(force)` calls `renderer.update()` before `fabricTick` hands
-  the renderer `fadeLength`, `flowStrength` and `flowSpeed`. Older than
-  K111, which found it (`docs/design/K111.md`, "Stage 1 handoff") and
-  fixed the same order for its own toggles. The fix changes those
-  frames, which pre-launch allows.
-  - owner: claude agent a7165f67497869b47 (sonnet) of session d8031183,
-    started 2026-10-14 11:59 with a 1 h cap (about 12:59), with K235.
-  - branch: `worktree-agent-a7165f67497869b47`
-    (`.claude/worktrees/agent-a7165f67497869b47`), from f5207d1; last
-    commit: none yet (unpushed).
-  - evidence: `.claude/probes/K235/` in that worktree.
-  - next: the brief's one stage (K235, then K239).
-  - brief: `docs/design/K235_K239.md`.
 - **K174** · K80 stage 1's calls, decided (Levi, 2026-10-14 about
   11:10, email 2.x; play: https://levi.dev/knotmaze/?7.J&clk=realtime):
   2.1 the chase pace stays 0.7 of the player's, "let's try 0.7, but this
@@ -381,6 +361,60 @@ and never reused.
     main checkout's `.claude/probes/K80/rt/`.
   - next: the brief's one stage.
   - brief: `docs/design/K174.md`.
+- **K198** · The fit camera's pan and the off-screen indicators, decided
+  (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
+  just want to be able to pan such that the right edge of the maze is
+  shown to the left of the left edge of the panel. Flash: not sure what
+  you're describing. Markers should have settings, and I guess we should
+  prevent the excess pan." The coordinator's reading, emailed to him
+  2026-10-14 to correct: (1) the pan clamp (K149, `src/ui/view_clamp.ts`)
+  lets the maze's right edge reach the open panel's left edge (on the
+  phone the panel covers x 81-401 of 411), in place of 0.3 of the screen
+  on every side, and allows no more; with the panel closed the pan stops
+  at the maze's edges, as before 10-13; (3) the edge indicators (finish,
+  head, minotaur) get panel settings: show/hide, a size or both is email
+  call 6.1 (K98 plans marker sizes); (2) the head indicator's flash in
+  follow mode, a short delay or not, is call 6.2. Parts (2) and (3)
+  touch main.ts, offscreen_indicators.ts, head_indicator.ts and
+  tweakpane_panel.ts (stage 2 runs beside K111 stage 2 and K174, in
+  other panel folders). Records:
+  `docs/design/K148_K149.md` ("Stage 1 handoff"), `gameplay-indicators.md`
+  THE HEAD and `gameplay-camera.md` FIT CAMERA PAN RANGE. Since K98
+  (merged 2026-10-14) `markerSize` sizes the in-game markers; the edge
+  indicators keep their own sizes until part (3).
+  - stage 1 MERGED in 5f6ceb9..d7373a4 (2026-10-14 09:31): the pan range
+    (`src/ui/view_clamp.ts`: `panRange`, `clampFitView`,
+    `easeIntoRange`; 16 tests). With the panel open, the maze's right
+    edge (its threads, or a shown start, head or exit disc) may reach
+    10 px left of the panel's left edge and no further; closing the
+    panel, a resize or fit drift eases back in at 0.15 a frame and never
+    snaps. Checked at 1000x800, 800x700, 1400x900 and 411x753. Lore
+    `gameplay-camera.md` (FIT CAMERA PAN RANGE); handoff
+    `docs/design/K198.md`; probes `.claude/probes/K198/`; follow-ups
+    K221-K224.
+  - parts (2) and (3), decided (Levi, 2026-10-14 about 11:10, email 6):
+    6.1 "both": each edge indicator (finish, head, minotaur) gets a
+    show/hide switch and a size; 6.2 "yes": the head's disc shows only
+    once the head has been off screen for a moment. Added in the same
+    reply: "The panel limit should tween as the panel is toggled.
+    Similarly, I want displaced off-screen indicators to also have their
+    panel-offset positions tween as needed." (Stage 1 already eases the
+    view back into range at 0.15 a frame when the panel closes; whether
+    the range itself follows the panel's slide is for the brief to
+    check.) The reading of part (1) stands: Levi corrected nothing.
+  - stage 2 brief: `docs/design/K198.md` ("Stage 2", f06dfd9): a
+    show/hide switch for the head and minotaur indicators beside the
+    finish's, one size slider for all three, the head's delay, and
+    time-based tweens for the panel limit and the displaced indicators.
+  - owner: claude agent a66866a0c356fc083 (opus) of session d8031183,
+    started 2026-10-14 12:45 with a 2 h cap (about 14:45).
+  - branch: `worktree-agent-a66866a0c356fc083`
+    (`.claude/worktrees/agent-a66866a0c356fc083`), from 05e6d4d; last
+    commit: none yet (unpushed).
+  - evidence: `.claude/probes/K198/stage2/` in that worktree; stage 1's
+    in the main checkout's `.claude/probes/K198/`.
+  - next: the brief's stage 2.
+  - brief: `docs/design/K198.md` ("Stage 2").
 
 ## Next, in order
 
@@ -416,15 +450,15 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K235 + K239 from 11:59 (sonnet, 1 h), K111
-stage 2 from 12:02 (opus, 2 h) and K174's controls from 12:08 (opus,
-2 h). At about 10:57 Levi lifted
+(he may reorder). Running: K111 stage 2 from 12:02 (opus, 2 h),
+K174's controls from 12:08 (opus, 2 h) and K198 stage 2 from 12:45
+(opus, 2 h). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
 (the rules split), K93, K198 stage 1, K98 and K92 merged at
-08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, and K191 at
-12:04; the
+08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, K191 at 12:04
+and K235 + K239 at 12:44; the
 coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -450,10 +484,11 @@ files at their merges. Then, as code slots free up:
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
     coordinator; Levi may reorder): K174's controls (running from
-    12:08), then K198 stage 2 (the panel and main.ts: after K235 merges,
-    one panel agent at a time), K191's fade-out (merged 2026-10-14
-    12:04, fafa340..3467117), K193's portrait emulation and then K195's
-    A/A floor, and K235 (running from 11:59, with K239).
+    12:08), K198 stage 2 (running from 12:45, beside K174 and K111
+    stage 2 in other panel folders), K191's fade-out (merged 2026-10-14
+    12:04, fafa340..3467117), K235 with K239 (merged 2026-10-14
+    12:44, 08d1383..05e6d4d), then K193's portrait emulation and then
+    K195's A/A floor.
 11. K76 stage 2.
 12. K80's turn-aligned hunter, a modifier of the normal maze; then
     K137's toggles, K138's M mechanisms and K139.
@@ -479,48 +514,6 @@ K198 and CC39); 9.1 (K225) and 10.1 (K229) are still open.
 
 K5-K7 (split, frame loop, worker) follow.
 
-- **K198** · The fit camera's pan and the off-screen indicators, decided
-  (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
-  just want to be able to pan such that the right edge of the maze is
-  shown to the left of the left edge of the panel. Flash: not sure what
-  you're describing. Markers should have settings, and I guess we should
-  prevent the excess pan." The coordinator's reading, emailed to him
-  2026-10-14 to correct: (1) the pan clamp (K149, `src/ui/view_clamp.ts`)
-  lets the maze's right edge reach the open panel's left edge (on the
-  phone the panel covers x 81-401 of 411), in place of 0.3 of the screen
-  on every side, and allows no more; with the panel closed the pan stops
-  at the maze's edges, as before 10-13; (3) the edge indicators (finish,
-  head, minotaur) get panel settings: show/hide, a size or both is email
-  call 6.1 (K98 plans marker sizes); (2) the head indicator's flash in
-  follow mode, a short delay or not, is call 6.2. Parts (2) and (3)
-  touch main.ts, offscreen_indicators.ts, head_indicator.ts and
-  tweakpane_panel.ts: not alongside K92 or K111 (the panel). Records:
-  `docs/design/K148_K149.md` ("Stage 1 handoff"), `gameplay-indicators.md`
-  THE HEAD and `gameplay-camera.md` FIT CAMERA PAN RANGE. Since K98
-  (merged 2026-10-14) `markerSize` sizes the in-game markers; the edge
-  indicators keep their own sizes until part (3).
-  - stage 1 MERGED in 5f6ceb9..d7373a4 (2026-10-14 09:31): the pan range
-    (`src/ui/view_clamp.ts`: `panRange`, `clampFitView`,
-    `easeIntoRange`; 16 tests). With the panel open, the maze's right
-    edge (its threads, or a shown start, head or exit disc) may reach
-    10 px left of the panel's left edge and no further; closing the
-    panel, a resize or fit drift eases back in at 0.15 a frame and never
-    snaps. Checked at 1000x800, 800x700, 1400x900 and 411x753. Lore
-    `gameplay-camera.md` (FIT CAMERA PAN RANGE); handoff
-    `docs/design/K198.md`; probes `.claude/probes/K198/`; follow-ups
-    K221-K224.
-  - parts (2) and (3), decided (Levi, 2026-10-14 about 11:10, email 6):
-    6.1 "both": each edge indicator (finish, head, minotaur) gets a
-    show/hide switch and a size; 6.2 "yes": the head's disc shows only
-    once the head has been off screen for a moment. Added in the same
-    reply: "The panel limit should tween as the panel is toggled.
-    Similarly, I want displaced off-screen indicators to also have their
-    panel-offset positions tween as needed." (Stage 1 already eases the
-    view back into range at 0.15 a frame when the panel closes; whether
-    the range itself follows the panel's slide is for the brief to
-    check.) The reading of part (1) stands: Levi corrected nothing.
-  - next: stage 2's brief (parts 2 and 3 and the two tweens), after K111
-    stage 1 merges (the panel).
 - **K193** · The phone pass's orientation, decided (Levi, 2026-10-14
   about 11:10, email 4.1: "b seems best"): the pass emulates a 411x753
   portrait viewport over CDP and leaves the phone as it sits, and a
@@ -780,6 +773,14 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K243** · A paused page with the instant intro draws no threads at
+  load (`?b.J&am=instant&fw=0&sp=0`, 393k px off a refreshed frame; the
+  same on master): `beginSettle()`'s instant branch shows the root
+  without an `update()`, and a paused page never runs the awake step.
+  One manual `update()` brings it to 1.7k px. Likely fix:
+  `handRendererLook(); renderer.update(); fabric.update(...)` in that
+  branch, after a physics-on pinned-frame A/B. `docs/design/K235_K239.md`
+  ("Stage 1 handoff"); probe `.claude/probes/K235/k239_paused.mjs`.
 - **K242** · K191's residuals (`docs/design/K154_K169.md`, "Stage 2
   handoff"): the fan program's GPU cost during fades and stage 1's phone
   hash cost are unmeasured; the tap-time fade-out (a 3-arm junction
@@ -1409,6 +1410,27 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K235** · Taps inside junction cores make no sound (Levi, 2026-10-14
+  about 11:10, on K194's 5.2: "Probably shouldn't.").
+  - Done in 08d1383..05e6d4d (2026-10-14 12:44): `tapLobes()`
+    (`pluck_model.ts`) finds the tapped lobe; a core tap (its vibrating
+    span under `LOBE_MIN_LEN`) draws nothing and `tapPluck` returns
+    before the synth. Real mouse and touch taps, master vs branch: every
+    core tap is silent (21 of 1124 fabric taps, 51 of 2336 dense, at
+    1400x900 and 411x753) and every thread tap sounds once. Auto plucks
+    and a drag's release are unchanged (K244). Lore `render-pluck.md`;
+    brief `docs/design/K235_K239.md` ("Stage 1 handoff").
+- **K239** · A fresh static page drew its first frame before the
+  renderer had its fade and flow (about 28k px off a refreshed frame;
+  found by K111 stage 1).
+  - Done in 08d1383..05e6d4d (2026-10-14 12:44): `handRendererLook()`
+    (main.ts) hands the renderer every look param `update()` reads
+    (fade, flow, cusp radius, the pulse and glow params, the FX style)
+    before every `renderer.update()`. Static first frames now match a
+    refreshed frame (0 px in five cases, from 18-31k px); physics-on
+    pages are unchanged (0 px, six cases). Lore `gameplay-motion.md`
+    (the rule for new renderer fields). A paused page with the instant
+    intro is K243.
 - **K191** · K169's two calls, decided (Levi, 2026-10-14 about 11:10,
   email 3.x): 3.1 "fade out": a web that stops being full fades its gold
   out over the same 0.25 s instead of losing it at once; 3.2 "yes":
