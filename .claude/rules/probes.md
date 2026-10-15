@@ -226,8 +226,10 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   sets compare by IoU and revealed area, not pixels). DAILIES HAVE THE
   FOG OFF, so the daily modes need `vite.fogdaily.config.ts`: the
   checkout's own config plus an in-memory transform that adds
-  `fogOfWar: true` to DAILY_V1 (the source on disk is untouched), and
-  env `K100_DAILY_EXTRA` appends more overrides (`flowStrength: 0,`
+  `fogOfWar: true` to DAILY_V1 (the source on disk is untouched). K132
+  (41e81b5) removed DAILY_V1, so the transform is BROKEN until it
+  targets `PARAM_DEFAULTS`' `fogOfWar` (K262). Its env
+  `K100_DAILY_EXTRA` appends more overrides (`flowStrength: 0,`
   with `?daily&phy=0` is a static daily, where a restore must reproduce
   the live stamps exactly). `simRestore` (in k100_fog.mjs) lays, on the
   geometry on screen, the stamps a restore of the attempt's taps would

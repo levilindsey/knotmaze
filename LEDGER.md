@@ -15,6 +15,24 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K261** · K74 stage 2's two calls (stage 2 builds the recommended
+  defaults unless Levi answers first): (1) the H-cut share's default:
+  the largest measured share that keeps decision 1's greedy bar, 1 if
+  share 1 keeps it (rec.), or 1 regardless; (2) which H's a partial
+  share cuts: an even stride in strand order (rec.), smoothest corners
+  first, or nearest the exit first. `docs/design/K74.md` ("Stage 2
+  brief", "Calls for Levi").
+- **K260** · The burn race's seven calls (K114; stage 1 builds each
+  recommended default unless Levi answers first): (1) a loss shows a
+  "Burnt" banner, then restarts with the fuse relit (a respawn can't
+  work: the entrance burns first); (2) Reset path with the fire on
+  restarts; (3) the fire and the turn-aligned minotaur are mutually
+  exclusive in stage 1; (4) fog stays its own param until the balance
+  measurement says the fire needs it; (5) the HUD shows the fire's lead
+  in its own units (x10, so 9.2 reads 92; the share line is stage 3's);
+  (6) `sparks` waits for stage 3; (7) under `clk=realtime` the fire is
+  off and its rows hidden until stage 3. `docs/design/K114_burn.md`
+  ("Calls for Levi").
 - **K257** · K76 section 10's questions, for stage 2c (none blocks 2b;
   2c builds the recommendation where no answer has come): (1) a catch
   under thread reveal re-hides explored thread as `minoRefog` says, one
@@ -219,15 +237,16 @@ and never reused.
     `.claude/worktrees/agent-aeaf1e61bcecaaf0b` is kept. Fisher's books,
     Abbott's essays and Buck's book-only chapters are unverified (doc
     section 1).
-  - next: stage 2's brief in `docs/design/K74.md`, from the handoff's
-    "For stage 2" notes, drafted from 2026-10-14 14:12 by the same docs
-    agent as K114's (branch `worktree-agent-a660c49b14be609c5`); the
-    coordinator reviews and merges it, then launches stage 2 (item 14 of
-    the order). K80's call 6 (Levi, 14:31: "Absolutely"): dead ends are the
+  - next: launch stage 2 (H1 with its share slider; opus, 2 h, ports
+    5710-5719, probes `.claude/probes/K74/stage2/`) at the next free
+    code slot. Its brief (7a8aa1b) was reviewed and merged 2026-10-14
+    14:38; its two calls are K261. K80's call 6 (Levi, 14:31:
+    "Absolutely"): dead ends are the
     minotaur's hunting ground. Dead-end branches, several runs behind
     one bridge, would make deeper traps: a later K74 param, settled with
     K80's brief.
-  - brief: `docs/design/K74.md` ("Stages", "Stage 1 handoff").
+  - brief: `docs/design/K74.md` ("Stage 2 brief"; "Stages" and "Stage 1
+    handoff" before it).
 - **K80** · The minotaur, decided (Levi, 2026-10-13 14:31, verbatim in
   `docs/design/levi_notes_2026-10-13.md`; design
   `docs/design/K80_gameplay_additions.md` section 0, 17b729b). The
@@ -497,16 +516,16 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
 (he may reorder). Running: K111 stage 3 (K248) from 14:04 (opus, 2 h),
-K80 turns stage 1 from 14:06 (opus, 2 h), K76 stage 2b from 14:17
-(opus, 2 h) and a docs agent drafting the K114 burn-race and K74 stage
-2 briefs from 14:12 (opus, 1 h). At about 10:57 Levi lifted
+K80 turns stage 1 from 14:06 (opus, 2 h) and K76 stage 2b from 14:17
+(opus, 2 h). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
 (the rules split), K93, K198 stage 1, K98 and K92 merged at
 08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, K191 at 12:04,
 K235 + K239 at 12:44, K174 at 12:53, K111 stage 2 at 13:03, K198
-stage 2 at 14:03, K193 at 14:10 and K76 stage 2a at 14:15; the
+stage 2 at 14:03, K193 at 14:10, K76 stage 2a at 14:15 and the
+burn-race and K74 stage 2 briefs at 14:38; the
 coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -548,9 +567,14 @@ files at their merges. Then, as code slots free up:
     stages (`docs/design/K80_turns.md`, 7699995): stage 1 (the model and
     the mode) runs from 14:06; then K137's toggles, K138's M mechanisms
     and K139.
-13. K114's round 2, free play first: the burn-race brief, then the
-    spider (its own enemy; Levi, 2026-10-14 about 11:10).
-14. K74 stages 2-4, each after the one before.
+13. K114's round 2, free play first: the burn race in three stages
+    (`docs/design/K114_burn.md`, 1e468ad). Stage 1 starts after K80
+    turns stage 1 merges, and never alongside another agent changing
+    how a tap becomes a turn. Then the spider (its own enemy; Levi,
+    2026-10-14 about 11:10).
+14. K74 stages 2-4, each after the one before. Stage 2's brief
+    (`docs/design/K74.md`, 7a8aa1b) launches at the next free code
+    slot.
 15. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
     K42. K90's spline fix touches K8: never run the two at once.
 16. K115's builder stages (no stage 1a: Levi, about 15:30).
@@ -564,7 +588,8 @@ defaults (after playing); K225 (the markers' size); K229 (the open
 panel's top); K237 (the hover glow's default); K238 (K111's calls);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
 K251 (the displaced disc's slide across the panel); K253 (a quiet phone
-for K193's A/A); K257 (K76's questions for stage 2c);
+for K193's A/A); K257 (K76's questions for stage 2c); K260 and K261
+(the burn race's and K74 stage 2's calls);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -592,8 +617,9 @@ K5-K7 (split, frame loop, worker) follow.
     tension; hiding runs needs an inverted reveal mask or per-run hiding
     (a new G2 term and its paint_math mirror, shared with K76), plus the
     cut's render details; `clock` brings timed, typed attempts (daily
-    store v3). R.7's sources are unverified leads from memory (the
-    Pac-Man speed figures among them). K80 sections 1 and 3.2 are stale
+    store v4; v3 since K146). R.7's sources are unverified leads from
+    memory (the Pac-Man speed figures among them). K80 sections 1 and
+    3.2 are stale
     since K101 (bracket notes added).
   - 2026-10-14 about 00:22: Levi took the recommendations for calls 1-6
     and 8-10 (`docs/design/levi_notes_2026-10-14.md` item 12: "Recs,
@@ -606,12 +632,13 @@ K5-K7 (split, frame loop, worker) follow.
     have a toggle in settings for no spiders, and then swap the icon to
     something else that makes sense" (an arachnophobia setting swaps its
     icon; the brief designs both icons).
-  - next: the burn-race brief (call 1's first prototype), drafted from
-    2026-10-14 14:12 by a docs agent (claude agent a660c49b14be609c5
-    (opus) of session d8031183, 1 h cap; branch
-    `worktree-agent-a660c49b14be609c5`, new `docs/design/K114_burn.md`);
-    the coordinator reviews and merges it, then launches stage 1. The
-    spider after the minotaur's controls (K174).
+  - next: the burn race's stage 1 (the fire model, the R.6.1 balance
+    measurement, the params and the mode; opus, 2 h, ports 5720-5729,
+    probes `.claude/probes/K114/burn/`), launched after K80 turns stage
+    1 merges, since both change how a tap becomes a turn. Brief
+    `docs/design/K114_burn.md` (1e468ad, reviewed and merged
+    2026-10-14 14:38); its seven calls are K260. The spider after the
+    minotaur's controls (K174).
 - **K137** · K80 section 4's cheap mechanisms, each behind a toggle
   (Levi, 2026-10-13 14:31: "I'd love to prototype all of these and have
   controls to toggle them"), after the minotaur. Sized S or S-M in the
@@ -803,6 +830,19 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K263** · `minotaur.ts` exports `undoAllowed`, but nothing in `src`
+  calls it and no move undo exists for it to turn off, while
+  `docs/design/K80_turns.md` step 2 cites it as real time's behavior.
+  Delete it, or wire it when an undo lands. Found by the docs agent
+  that drafted the burn-race brief (2026-10-14).
+- **K262** · Two probe harnesses K132 (41e81b5) broke, both untracked in
+  the main checkout: K80's research harness (`.claude/probes/K80/lib.ts`
+  `designParams` calls the removed `codecDefaults(3)`, so `run.ts`
+  throws before playing; the fix is `paramsFromValues(seed, {...})`, as
+  in `.claude/probes/K174/rt/rt_lib.ts`), and K100's
+  `vite.fogdaily.config.ts`, which patches the removed `DAILY_V1` (to
+  fog a daily now, set `fogOfWar` in the design). The burn race's agent
+  fixes its own copy of the first (`docs/design/K114_burn.md`).
 - **K258** · K76 stage 2a's residuals: (a) while a move is in flight, the
   in-flight piece re-declares the KPAINT items every frame and the
   per-slot refs shift (check the upload size, `lastPaintUpload`, in 2d);
