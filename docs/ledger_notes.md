@@ -2732,3 +2732,29 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - brief: `docs/design/K268.md` ("Stage 1 handoff (2026-10-14 17:41)",
     "For stage 2"); the design is in `docs/design/K76.md` ("Shaped gaps
     (Levi, 15:16)")
+
+## K279 (2026-10-15, closed: stage 2 merged)
+
+- **K279** · Plucks you can see, feel and hear (Levi, 2026-10-14): a
+  ripple at pluck points (glint by default, K288), more vibration, a tug
+  (off: its wake cost is K7's), quieter auto plucks. Stage 1: ad2618a.
+  - owner: agent `a910830b0197dd699` (opus) of claude session d8031183, from 2026-10-15 00:42 (cap 02:42; ports 5900-5909)
+  - branch: `worktree-agent-a910830b0197dd699` (`.claude/worktrees/agent-a910830b0197dd699`); last commit: none yet (base `9b977d8`)
+  - evidence: `.claude/probes/K279/` (stage 1: `sheet2/`, `k279_wake.mjs`); stage 2's in its worktree's `.claude/probes/K279/stage2/`
+  - next: stage 2 makes glint the default `prp`, bounds and warms the ripple filter, checks glint's phone size and K289 (j, k); then the merge and the next phone round
+  - brief: `docs/design/K279.md`, "Stage 2: glint by default"
+
+## K289 (2026-10-15, K279 stage 2 closed a, c, d, i, j, k)
+
+- **K289** · K279 stage 1's open residuals: (a, i) the first ripple
+  costs a 10 ms spike and the first tap's first frame 30-36 ms more on
+  the desktop (likely the ripple filter's compile: warm it at load; no
+  stall on the phone); (c) the ripple filter covers the whole root
+  (bound its filterArea to the live discs, most of all for phones); (d)
+  the ripple is sized in world units, so it shrinks on a phone (a CSS-px
+  floor?); (e) no High contrast tie-in (ring off, or glint only?); (g)
+  no webm clips; (j) `render-pluck.md` and K279.md cite pre-rebase SHAs
+  (0f08f68, 2d905d0, da1333a, 4eb20a7) that exist only on the local
+  branch `k279-stage1-prerebase`: re-cite them as 50c1aab; (k)
+  `k279_phone.mjs` reads `ripples` 1.9 s after the tap, so always 0.
+  `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
