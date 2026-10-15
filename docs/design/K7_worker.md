@@ -1784,7 +1784,7 @@ in this stage), fabric designs.
 
 ## Stage 4 handoff
 
-Stage 4 ended 2026-10-15 at [[END]], inside its two-hour cap (it started
+Stage 4 ended 2026-10-15 at 02:27, inside its two-hour cap (it started
 at 00:48). The branch is `worktree-agent-abee0faca59fb8636`, from
 `7f4c1bd` (stage 3's handoff): `681cd3d` (the bridge), `02357d4` (the
 two tracked ports), `d4fbf26` (the lore and a first draft of this
@@ -2130,7 +2130,12 @@ Observed unless marked inferred. Desktop only.
   - `k279_live` found the one defect: after `await __knotPluck(...,
     {tug})` the worker's mirror still showed the pre-tug positions (maxD
     0 against 0.14 in-thread), because `sync()` held its snapshot for a
-    later frame's interpolation. Fixed in `0b16814`. [[SYNC]]
+    later frame's interpolation. Fixed in `0b16814`, and re-checked in a
+    browser (`ports/K279/sync_check.mjs` by `run_sync_s4b.ps1`, on build
+    s4b of `f4c1d5f`, under the lock at 02:24): read right after the
+    await, the view holds the tug on both hosts, maxD 0.148 / 0.149 with
+    the worker against 0.147 / 0.156 in-thread
+    (`ports/K279/out/sync_check_s4b_phw*.json`).
   - Not run: `livefabric` (a real click with a tug on the fabric).
   - `sheet_desktop.html` in `ports/K279/out/sheet_phw*/` is 20 MB each
     and need not be kept.
@@ -2183,11 +2188,11 @@ Observed unless marked inferred. Desktop only.
   interpolation while a thread is grabbed (saves D, about 11 ms), and
   let the worker run more substeps per frame while dragging (it runs
   about 1.6 at 10.7 ms each on the daily).
-- **Re-run under the lock:** `g2_smoke.mjs` (loosened console check),
-  `sync_check.mjs` [[SYNC_NEXT]] and `livefabric`
-  (`ports/run_batch2.ps1`; its `-Cutoff` and `-GiveUp` defaults are
-  tonight's clock times, so pass later ones, and point it at a build of
-  this branch's last commit).
+- **Re-run under the lock:** `g2_smoke.mjs` (loosened console check)
+  and `livefabric` (`ports/run_batch2.ps1 -Only g2smoke2,livefabric`;
+  its `-Cutoff` and `-GiveUp` defaults are tonight's clock times, so pass
+  later ones, and point its `$build` at a build with `0b16814`, such as
+  `builds/s4b`: s4a predates the awaited tug's fix).
 - **Port the freeze-patch probes when each is next needed**, `k279_ab`
   first (K279's same-state A/B); refreshing the 21 library copies from
   `ports/g2lib/g2lib.mjs` ports their 95 importers at once.
