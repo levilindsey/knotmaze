@@ -487,6 +487,24 @@ export function exploreGapEdits(fan: boolean, decl: string): [string, string][] 
   ];
 }
 
+// A fragment with [anchor, replacement] edits applied in order, each anchor
+// occurring exactly once (`what` names the variant in the error).
+export function applyEdits(
+  frag: string,
+  edits: ReadonlyArray<readonly [string, string]>,
+  what: string,
+): string {
+  let s = frag;
+  for (const [anchor, to] of edits) {
+    const i = s.indexOf(anchor);
+    if (i < 0 || s.indexOf(anchor, i + 1) >= 0) {
+      throw new Error(`${what}: anchor not found exactly once: ${anchor.slice(0, 48)}`);
+    }
+    s = s.slice(0, i) + to + s.slice(i + anchor.length);
+  }
+  return s;
+}
+
 function once(src: string, anchor: string): number {
   const i = src.indexOf(anchor);
   if (i < 0 || src.indexOf(anchor, i + 1) >= 0) {

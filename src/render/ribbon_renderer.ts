@@ -4710,8 +4710,10 @@ export class RibbonRenderer {
     }
     // K268 stage 2 (K275): the arm strips write the visibility as
     // premultiplied alpha, and the fans read them so (a web fades with its
-    // arms, a cap with its thread).
+    // arms, a cap with its thread). The fans and the still plucks also take
+    // the shaped crossing cut (a cut fades with its over thread).
     setStripExplore(!!pieces);
+    this.plucks.setExplore(!!pieces);
     const fsh = pieces ? junctionShaderExplore() : junctionShader();
     if (this.filletMesh) this.filletMesh.mesh.shader = fsh;
     if (this.filletTopMesh) this.filletTopMesh.mesh.shader = fsh;
