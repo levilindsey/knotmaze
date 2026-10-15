@@ -12,6 +12,7 @@
 // mirror runs in f64. Censuses compare at <= 2/255.
 
 import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, RUN_FLAG } from "./paint_const";
+import { EXPLORE_ITEM_VIS } from "./explore_glsl";
 
 const SHIFT = PAINT_CONST.K_ROW_SHIFT;
 
@@ -261,6 +262,9 @@ export interface KUniforms {
   uKPulse: Float32Array; // (travelIn, travelOut, spacing, fadeIn)
   uKReach: Float32Array; // (reach, fade, rim, rimAt) pulse trains (K75), hover glow (K145)
   uKGold: Float32Array; // (gold rgb, -)
+  // K76 thread reveal (on, look, breath, threadWidth): read only by the
+  // explore program (explore_glsl.ts); absent = the mode is off.
+  uKExplore?: Float32Array;
 }
 
 export const MAX_KNOTS = 8;
@@ -1342,6 +1346,86 @@ export function kPaintAt(
       if (g > out.rim) out.rim = g;
     }
   }
+  return out;
+}
+
+// K76 THREAD REVEAL: a point's visibility and the frontier fade it lies in
+// (kExploreAt's globals: tip = progress 0 -> 1 through the fade, -1 when
+// none; solid = the ctrl where the fade starts and x = the point's ctrl,
+// both unwrapped toward the piece).
+export interface KExploreState {
+  v: number;
+  tip: number;
+  solid: number;
+  x: number;
+}
+
+// GLSL twin: kExploreAt (explore_glsl.ts) - the VIS items of the point's
+// control slot, or 1 on a whole chain (KPAINT texel `chain` .x).
+export function kExploreAt(
+  D: KData,
+  U: KUniforms,
+  c: KChain,
+  ctrl: number,
+  out: KExploreState
+): KExploreState {
+  out.v = 0;
+  out.tip = -1;
+  out.solid = 0;
+  out.x = ctrl;
+  const P = D.paint;
+  if (P[c.ch * 4] > 0.5) {
+    out.v = 1;
+    return out;
+  }
+  const n = c.nCtrl;
+  const sl = Math.max(0, Math.min(n - 1, Math.floor(ctrl)));
+  const io = (c.idx + sl) * 4;
+  const first = Math.round(P[io]);
+  const cnt = Math.min(32, Math.round(P[io + 1]));
+  const refBase = Math.round(U.uKPaint[1]);
+  const itemBase = Math.round(U.uKPaint[2]);
+  let best = 0;
+  for (let k = 0; k < cnt; k++) {
+    const r = first + k;
+    const item = Math.round(P[(refBase + (r >> 2)) * 4 + (r & 3)]);
+    const o = (itemBase + 2 * item) * 4;
+    if (Math.round(P[o]) !== EXPLORE_ITEM_VIS) continue;
+    const c0 = P[o + 1];
+    const c1 = P[o + 2];
+    const f0 = P[o + 3];
+    const f1 = P[o + 4];
+    const tips = Math.round(P[o + 5]);
+    let x = ctrl;
+    if (c.closed) x += n * Math.floor((0.5 * (c0 + c1) - x) / n + 0.5);
+    let v = 1;
+    let u = -1;
+    let cs = 0;
+    if (x < c0 - 1e-3) {
+      if (f0 <= 1e-4) continue;
+      const t = Math.min(1, (c0 - x) / f0);
+      v = 1 - t * t * (3 - 2 * t);
+      if ((tips & 1) !== 0) {
+        u = t;
+        cs = c0;
+      }
+    } else if (x > c1 + 1e-3) {
+      if (f1 <= 1e-4) continue;
+      const t = Math.min(1, (x - c1) / f1);
+      v = 1 - t * t * (3 - 2 * t);
+      if ((tips & 2) !== 0) {
+        u = t;
+        cs = c1;
+      }
+    }
+    if (v > best || (v === best && u < 0)) {
+      best = v;
+      out.tip = u;
+      out.solid = cs;
+      out.x = x;
+    }
+  }
+  out.v = best;
   return out;
 }
 
