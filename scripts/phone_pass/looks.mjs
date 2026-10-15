@@ -7,11 +7,16 @@
 //  load   "sleep" (default: wait for the knot to sleep), "frozen" (a phy=0
 //         link: wait for the frozen state) or "none" (just navigate, e.g. for
 //         an intro burst; the stamp is checked after the steps).
+//  storage  localStorage entries set after the clean-up and before the look's
+//         page loads ({ "knotmaze.movePad": "0" }); a spec-level "storage" is
+//         the default for every look, and a look's own "storage" replaces it
+//         (K156, round 2026-10-14b: the touch move pad is on by default on the
+//         phone, so the looks that don't test it turn it off, no extra reload).
 //  needs  what the build must have, else the look records status "missing"
 //         (and goes on): "__hook" (a window function/object), "param:<key>"
 //         (a key of __knotParams()) or "js:<expression>" (truthy in the page).
-//  steps  waitSleep{ms} | wait{ms} | moves{n} (more cheapest moves, touch
-//         taps) | tapChoice | click{text|selector} (anchors open in the same
+//  steps  waitSleep{ms} | wait{ms} | moves{n, pick?} (more cheapest moves, touch
+//         taps; pick "forward" walks out, "back" backtracks) | tapChoice | click{text|selector} (anchors open in the same
 //         tab) | panel{open} | scroll{selector|text|y, block?} (scrollIntoView, block "center" by default) | pin
 //         (freeze every clock; K83's pinAll) | reload | eval{js, name?} (the page runs
 //         js, a Promise is awaited, and its JSON result is kept in the report's steps[].result) |
@@ -106,7 +111,9 @@ async function doStep(look, b, run, st) {
     case "wait": await sleep(st.ms ?? 1000); break;
     case "moves": case "tapChoice": {
       if (!(await page.evaluate(() => typeof window.__knotFabric === "function" && !!window.__knotFabric()))) throw new Missing("no fabric (knot mode or no __knotFabric)");
-      const r = await makeMoves(page, st.op === "tapChoice" ? 1 : st.n, (run.walk ??= {}));
+      const walk = (run.walk ??= {});
+      walk.pick = st.pick || "cheapest";
+      const r = await makeMoves(page, st.op === "tapChoice" ? 1 : st.n, walk);
       run.steps.push({ op: st.op, ...r });
       break;
     }
@@ -179,7 +186,8 @@ async function runLook(look, b) {
     // and K122's look (it opens the panel) left it open over the maze in every look after it: the next look's walk
     // then tapped the panel, not the threads (K156 3c, on the phone).
     await page.goto(`${b.host}/favicon.svg`, { waitUntil: "load", timeout: 30000 }).catch(() => {});
-    await page.evaluate(() => { try { localStorage.clear(); sessionStorage.clear(); } catch { /* none */ } }).catch(() => {});
+    const store = look.storage ?? spec.storage ?? {};
+    await page.evaluate((store) => { try { localStorage.clear(); sessionStorage.clear(); for (const [k, v] of Object.entries(store)) localStorage.setItem(k, String(v)); } catch { /* none */ } }, store).catch(() => {});
     const url = `${b.host}/${look.link}`;
     if (mode === "none") await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90000 });
     else {
