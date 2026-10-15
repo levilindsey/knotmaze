@@ -372,6 +372,32 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   or port it (the list and the one-line ports: the stage 4 handoff and
   `ports/FREEZE_PATCH_FILES.md`). With the worker,
   `__knotSettle().phase` reads `off`: K147's budget runs only in-thread.
+- K8 stage 2 (2026-10-15), G3-0's data plane: `.claude/probes/K8/stage2/`
+  holds `g3_probe.mjs` (its header lists the modes: `ab`, a cross-build
+  same-state A/B; `readback`, the four G3 tables on the GPU against their
+  CPU mirrors and a fresh pack, `intro` sampling mid-reveal for RADII
+  rows; `upload`, texture bytes per update(); `cpu` and `cpuloop`,
+  update() ms across builds and with `g3Data` toggled in one page;
+  `roundtrip`, capture and restore) and `batch3.ps1`..`batch5.ps1` (runs
+  under the perf lock). A THREAD-REVEAL A/B also pins the fabric's
+  explore clock: `F = __knotFabricRenderer(); F.exploreClock = 1000;`
+  and `F.tickExplore` forwarded with 0. With only k83's pins the reveal's
+  halo breath differed by 22050 px between two builds, with it 2 px
+  (maxΔ 1); k83_ab and the older PIN recipes do not pin it. A ROUND
+  TRIP'S CONTROL MUST DIFFER: the physics is deterministic, so two loads
+  of one link sleep in the same state, and batch4's six capture/restore
+  round trips passed with controls of 0 px, proving nothing. Perturb the
+  restoring page before its control shot (every particle by 0.06 sin/cos,
+  every displayF by 0.02) and require control > 0. Hooks:
+  `__knotRenderer().captureScene()` and `.restoreScene(s)` (freeze the
+  restoring page first: `__knotPS().step = function () {}` in-thread,
+  `__knotPhysFreeze(true)` with a worker), `g3DataState()`,
+  `g3TableRows()`, `g3Expected()` (render-ribbon.md, G3-0 DATA PLANE).
+  `scripts/bench_frame.mjs <url>... [--cdp <browserURL>]` is the
+  gl.finish() frame bench of G3G4 section 5.0: it loads the links A B A B
+  over `--rounds`, times each frame from its first draw to after
+  gl.finish() (frameMs, split into submit and finish), counts draws and
+  update() ms per call, records the caps and exits 1 on a lost context.
 
 ## Census and diagnosis rules
 

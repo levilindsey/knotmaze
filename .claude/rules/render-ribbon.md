@@ -5,6 +5,8 @@ paths:
   - "src/render/arm_strip.ts"
   - "src/render/junction_field.ts"
   - "test/render/fixtures/chains.ts"
+  - "src/render/samp_table.ts"
+  - "test/render/samp_table.test.ts"
 ---
 
 # Render lore: ribbons and junctions
@@ -144,3 +146,61 @@ certifies (the P3.24 probe rule again, render edition).
   set (`exploreJointsKey`) to its cache key, so the fans rebuild when the
   set changes, not on growth frames. The rule and its census:
   `render-explore.md`.
+
+## G3-0 DATA PLANE (K8 stage 2, 2026-10-15)
+
+- **Four page-lifetime tables that nothing samples yet** (G3G4_sdf_geometry.md
+  sections 2.2 and 5.1; the header of `src/render/samp_table.ts` is the
+  format spec). SAMP: two samples per RGBA32F texel, every chain's sampBase
+  even, so a chain's floats are exactly its `chainSamples[c].positions`.
+  RADII: four `fround(h * widthMul)` per texel, a region per chain padded
+  to 4, filled only while the chain's multiplier is not null. G3 CHAIN: two
+  texels per chain (sampBase, radBase or -1 for unit width, the two cap
+  kinds; winBase, nWin, rangeBase, nRange). RANGES: one texel per slot
+  window (slot, kLo, kHi, flags), sorted by kLo, the one sample of padding
+  each side included, a closed chain's seam-split window as two entries
+  (flag bit 2). RANGES reproduce `assignGapIds`' per-sample `idScratch`
+  exactly: `assignWindowLanes` feeds both. FOLD (G3-2) and CLUSTER (G4-0)
+  ranges will start at rangeBase; nRange is 0 until then. CHAIN is its own
+  table so that G3-0 changes no shader text (KSTATIC and KGEOM untouched,
+  K307's warm-up unaffected).
+- **Residency.** The module-level `G3` (`g3Tables()`) holds four
+  `FloatRows` (1024 texels wide, grown in place). No shader binds them, so
+  the WebGLSystem `G3DataSystem` (`knotG3Data`) makes each one resident on
+  its first prerender (`renderer.texture.initSource`: allocate plus a full
+  upload) and flushes dirty rows before every render after that.
+  `contextChange` forgets residency, so a restored context re-creates
+  them. One live renderer writes them at a time, like the G2 paint tables.
+- **Writes, changed spans only.** `initG3Tables` (scene build) sizes the
+  tables and zeroes this scene's regions. update()'s chain loop calls
+  `g3WriteChain`: for SAMP, the first and last changed float bound the
+  dirty texels; RADII does the same per radius. `assignGapIds` fills
+  `g3RangeScratch`, and `g3WriteRanges` copies the changed span, zeroes a
+  shorter frame's stale tail and rewrites the CHAIN records
+  (`writeChainTexels` reports whether a record changed). The pluck
+  collapse writes RADII as well, and update() ends with `g3Flush()`.
+  Nothing writes while the knot sleeps, because update() does not run.
+  `renderer.g3Data = false` skips every write and flush: one page can time
+  the cost on and off in alternation.
+- **Accounting and probes.** `FloatRows` takes an optional per-instance
+  `UploadCounter` (its third constructor argument, `float_rows.ts`).
+  `SAMP_UPLOAD_STATS` (`samp_table.ts`) counts the four G3 tables;
+  `ROW_UPLOAD_STATS` still counts every FloatRows. `renderer.g3DataState()`
+  reports on, uploadBytes/Calls, chains, sampTexels, radTexels,
+  rangeEntries, rows per table and radOn. `g3TableRows()` returns the four
+  FloatRows (the mirror `data`, the GPU `source`). `g3Expected()` packs
+  every table afresh with the pure packers: what the mirrors and the GPU
+  must hold.
+- **SAME-STATE CAPTURE** (G3G4 section 5.0). `renderer.captureScene()`
+  returns a `SceneCapture`: plain JSON, typed arrays in base64, so NaN and
+  Infinity survive. It carries the positions, each crossing's pass ctrl
+  and displayF, the emergent rows, 16 renderer scalars (flowTime,
+  paintClock, pulseBorn, gateRev, fxLive, gateOpenAt, the reveal flags,
+  its wall, FX and rim times, the appearance reveal's clock), gateLatch,
+  gateCache, every `knotUniformValues()` key and the thread reveal's
+  pieces. `restoreScene(s)` checks the particle and crossing counts,
+  writes all of it and runs update(). NOT captured: the paint declaration
+  and the hover (main re-declares them from the fabric every frame),
+  plucks (none at rest), the camera, velocities. The restoring page keeps
+  its physics frozen, and `ps.emergentCrossings` stays a getter over the
+  captured rows until the page reloads: probe-only.
