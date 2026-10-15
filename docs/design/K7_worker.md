@@ -1540,3 +1540,244 @@ Every work item.
 - **The A/B** compares outcomes (the first sleep, the sim at it,
   endedBy), as stage 1's did: async batches are not bit-identical to
   in-thread frames.
+
+## Stage 3 handoff
+
+Stage 3 ended 2026-10-15 at 00:34, inside its two-hour cap (it started
+2026-10-14 at 23:22). The branch is `worktree-agent-a9f593eca9038e6d3`,
+from `472ef83` (stage 2's handoff): three commits, `5fcee42` to
+`6bbd300`, and this handoff the commit after. Master (`2753a29`) has
+changed `src/main.ts` since (`2c81a92`, K329/K333/K334's key moves); a
+trial merge (`git merge-tree`) combines the two without a conflict, and
+no other file changed on both sides. The evidence is in
+`.claude/probes/K7/stage3/` (untracked, for the coordinator to copy).
+Everything was built and probed on fabric (maze) designs, and nothing
+that only knot mode needs was built (K326).
+
+### What is done
+
+Every work item.
+
+1. **`src/physics/physics_worker.ts`,** the entry: `self.onmessage` into
+   `PhysicsWorkerCore` with a `ChannelScheduler`, its posts carrying the
+   transfer list. The worker scope is typed by hand: the DOM lib and the
+   webworker lib collide in one tsconfig.
+2. **`src/physics/worker_host.ts`:** `WorkerHost` implements
+   `PhysicsHost`.
+   - The mirror, built from main's own graph; `ready` is checked against
+     `fingerprintOf(mirror)` and `snapshotBytes`.
+   - The snapshots: the worker's pool is 4 (stage 2's `SNAPSHOT_POOL`);
+     main keeps the two newest and gives the rest back at once, and gives
+     back another gen's and stale ones (written before a reset) unread.
+   - Interpolation (design 4): a frame draws the state at now - D, D the
+     median of the last 16 snapshot intervals clamped to 8-50 ms
+     (`interpDelay`); positions and pass positions are lerped between the
+     two newest snapshots by their wall times (`lerpInto`; a closed
+     chain's seam or an undefined displayF takes the newer value), the
+     discrete state comes from the newer. On by default
+     (`opts.interpolate`); a probe sets `window.__knotHostOpts =
+     { interpolate: false }`, read every frame.
+   - Input: grab, drag and release act on the mirror first (main reads
+     `grabbedParticle` right after its own call), then post; the pick
+     runs on the mirror. A reset or a rebuild clears main's grab, and a
+     reset drops the snapshots written before it.
+   - The gate: asleep once the newest snapshot says the worker slept and
+     has seen every input main posted (`snapshotInputs >= inputsPosted`);
+     the asleep frame shows that snapshot exactly, not interpolated.
+   - Gen ids on every message; `visibilitychange` posts pause and resume.
+   - The settles: the pre-settle and the physics-off load are one
+     `settle` message each; progress comes from the snapshots, and each
+     ends on `settled` plus the snapshot after it.
+   - The fallback to an `InThreadHost`: a spawn that throws
+     (`construct: <message>`) or no `Worker` (`no-worker`), `onerror`,
+     `messageerror`, a `postMessage` that throws, a worker `error`
+     message, an unreadable snapshot, no `ready` within
+     `READY_TIMEOUT_MS` (3000) of ticks, or a size or fingerprint
+     mismatch. A fallback after a scene exists calls `onFallback` (main's
+     `rebuild()`) from a `setTimeout(0)`, never inside a host call, and
+     logs one console warning.
+   - `stats().host` (`HostInfo` in `physics_host.ts`, also
+     `__knotPerf().host`): the kind, the fallback's reason and the
+     worker's counters (ready, readyMs, snapshots, given, frames, inputs,
+     delayMs, lastT, snapAgeMs, snapSim, lagS and more).
+3. **The build:** `worker: { format: "es", plugins: () =>
+   [noticesWorker()] }` in `vite.config.ts`. The worker chunk
+   (`physics_worker-*.js`, 87.7 KB) carries the notices banner, as the
+   main chunk does: `notices()`'s config hook now sets the worker's
+   output options too. `noticesWorker()` (`notices/vite_plugin.ts`)
+   records the worker chunk's modules for `notices()`'s page. The page
+   kept its size (27.58 KB) and lists simplex-noise, which the main chunk
+   bundles too (`InThreadHost` and the mirror both import
+   `ParticleSystem`), so it is covered either way. That the worker's
+   modules reach the collector before main's `generateBundle` is
+   inferred (Vite bundles a worker during main's transform), not
+   observed.
+   **The dev server serves the module worker:** `dev_http.mjs` (no
+   browser) read the dev transform's worker URL
+   (`/src/physics/physics_worker.ts?worker_file&type=module`) and fetched
+   it and its whole import graph: 20 modules, all 200, simplex-noise from
+   the optimized deps. The browser half (`dev_check.mjs`: the worker's
+   URL, the host's kind and reason, snapshots arriving) did not run: other
+   agents' GPU probes held the perf lock.
+4. **`phw`** (`physicsWorker`, a flag, default false) in `url_state.ts`,
+   appended to `CODEC_PARAMS` at index 135 (codec v5 unchanged; the
+   key-order pin re-frozen), exempt from the daily in `daily_link.ts`
+   after `stb` and `lds`, and the PHYSICS WORKER PARAM entry in
+   `.claude/rules/gameplay-links.md`. No panel row: main reads it once.
+5. **`main.ts`:** `params.physicsWorker ? new WorkerHost(() => rebuild())
+   : new InThreadHost()`, and `host` in `__knotPerf()`. Nothing else.
+6. **`test/physics/worker_host.test.ts`,** 9 tests against a fake Worker
+   that runs the stage 2 core synchronously (its messages wait for
+   `deliver()`): `interpDelay`; a build going ready and showing the
+   newest snapshot delivered; the grab cleared on a reset and a rebuild;
+   the asleep flag trusted only from a snapshot that saw every input;
+   the spawn failures (a throw, "no-worker", and the default spawn where
+   Node has no Worker); a fingerprint mismatch (the fallback,
+   `onFallback` after the call, the rebuild in-thread); a worker error;
+   the ready timeout's ticks; and a main-thread stall past the whole
+   timeout that does not fail a working worker. The codec, link and
+   daily tests gain the new key.
+7. **Probes** in `.claude/probes/K7/stage3/`: `lib.mjs` (a static server
+   for a build under `/knotmaze/` and an off-screen headed Chrome with
+   its own profile), `run_s3.ps1 -Batch <file> [-Build <dir>] [-Port
+   <p>]` (a batch's lines under the perf lock), `smoke.mjs`,
+   `fallback.mjs`, `interp_ab.mjs`, `k7_frames.mjs`,
+   `instant_check.mjs`, `dev_check.mjs`, `dev_http.mjs` and
+   `summarize.mjs`. Results are in `*_results.jsonl` and the
+   `batch_*.log` files; the builds in `builds/` (s3a at `5fcee42+`, s3b
+   with the tick timeout, s3c at `b8515f8+`).
+
+### Where it departs from the brief
+
+- **The ready timeout counts ticks,** not wall time: 12 ticks of
+  `READY_TICK_MS` (250 ms), each worth its nominal time however late it
+  fires. `5fcee42`'s wall-time timer failed a working worker on a
+  cold-profile `am=instant` load: the first frame compiles every shader
+  at once, main stalled 5.25 s (a rAF gap from 379 ms), and the timer
+  fired with the worker's `ready` still queued behind the stall. With
+  ticks (`b8515f8`) the same load stays on the worker (ready at 5.8 s,
+  `readyMs` 5412).
+- **`presettleFrame` reports a spent prediction** (`simDone: simCap`,
+  `workMs: 0`) until the settle's first snapshot arrives. Main's loader
+  check (the pre-settle loop in `main.ts`, near line 1184) would read a
+  `simDone` of 0 as an endless settle and show the loader on the first
+  frame; with this it shows only past `LOADER_DELAY_MS` (300), as
+  in-thread.
+- **`stats().budget` is null** on the worker: the worker's clock (the
+  backlog past `LAG_MAX_S` dropped) replaces K147's budget. `armBudget`
+  and `endBudget` only record the first sleep after going live, in
+  `settleInfo.budget` (ms, sim, lagS, endedBy; costMs 0).
+- **`tug()` answers 0:** the worker wakes itself, and its `tugged` clears
+  main's asleep flag, so main skips its own `wake()`.
+- **`noticesWorker()`** is a second, small plugin: Vite runs only
+  `worker.plugins` in a worker's build, so `notices()` alone never sees
+  the worker's modules.
+- **`given` can exceed `snapshots`** in `HostInfo`: another gen's and
+  stale buffers are given back without counting as received.
+- **No `typeof Worker` guard in `main.ts`** (`6bbd300`): `phw=1` always
+  constructs a `WorkerHost`, whose own spawn falls back with the reason
+  "no-worker", so the reason always says why it runs in-thread.
+
+### Verification
+
+Observed unless marked inferred. Desktop only (the phone was off-limits
+in this stage), fabric designs.
+
+- `npm test` at `6bbd300`: 78 files passed and 1 skipped; 1039 tests
+  passed and 1 skipped, in 110 s (`full_suite_s3.out.txt`). No snapshot
+  or fixture changed: the golden, the K87 pin and the golden dailies
+  hold. `npx tsc --noEmit` is clean, and so are the tests
+  (`tsconfig.test.json` in the probes folder); `npm run build` passes.
+- **The smoke** (`smoke.mjs`, build s3a, `?7k&snd=none&phw=1`, 3034
+  particles, `smoke_results.jsonl`), with 0 page errors:
+  - the load: ready in 331 ms, live at 3.8 s, the first sleep at
+    12.8 s (the same link in-thread: 21.0 s; not under the lock);
+  - a tap at ptg 0 left the positions bit-identical and the knot
+    asleep; a tug at ptg .3 woke it in 23 ms and it re-slept in 3.3 s;
+  - a drag (a 1.5 s circle, then a 500 ms hold): the grabbed particle
+    sat 59.96 px from the pointer (in-thread 59.91), the grab cleared on
+    release, and it re-slept in 3.56 s;
+  - a rebuild mid-drag: a new system, grab -1, the new gen ready in
+    37 ms, asleep after;
+  - hidden and shown at `lds=5`: snapSim held at 0.2667 while hidden and
+    went on when shown;
+  - `phy=0`: frozen, loadMs 7005; `am=instant` (a warm profile): the
+    first sleep at 7.2 s (in-thread 16.5 s); the daily (#3): badge
+    "daily", the first sleep at 8.2 s.
+- **The fallback** (`fallback.mjs`, `fallback_results.jsonl`): every
+  case ended in-thread, settled, took a drag and re-slept, with 0 page
+  errors and the reason set:
+  - Worker overridden to throw: `construct: probe: Worker blocked`;
+  - a worker that never answers: `no ready within 3000 ms` (3 posts,
+    then terminated);
+  - a worker that throws while loading: `onerror: Uncaught Error: probe
+    boom`;
+  - a forged fingerprint: `fingerprint 3034/345/91/34298777 vs mirror
+    3034/345/91/34298776`;
+  - no Worker at all (build s3c): `no-worker`, with one console warning.
+  - `phw=0` reports in-thread with no reason.
+- **The interpolation A/B** under the perf lock (`interp_ab.mjs`, build
+  s3b, `interp_results.jsonl`, `interp/`; D about 11 ms at about
+  56 fps). Per frame, d is the mean particle displacement since the last
+  frame (the grabbed particle left out); jerk is mean |d_i - d_(i-1)| /
+  mean d, and cv is std d / mean d (lower is smoother):
+  - the settle (fresh `am=instant` loads, 4 s from the first live
+    frame): jerk on 0.184 / 0.199, off 0.451 / 0.415; cv on 2.17 /
+    2.26, off 2.32 / 2.39;
+  - a drag (a 60 px circle at 1 rev/s, the mode alternating every
+    1.5 s, 2 runs of 6 segments): jerk on 0.334 / 0.298, off 0.646 /
+    0.722; cv on 0.33, off 0.46-0.48; the same fps (56.0-56.7) and no
+    frame without motion (zeroFrac 0).
+  - Interpolation stays on. Inferred cost: the drawn state trails the
+    newest snapshot by about D.
+- **A first k7_frames look** on the daily (build s3a, under the lock,
+  2988 particles, `k7_results.jsonl`, `frames/`):
+
+  | | phw=0 (2 runs) | phw=1 (2 runs) |
+  |---|---|---|
+  | drag fps | 7.0 (interval p50 141, p95 159 ms) | 55.1 / 54.8 (p50 17.6, p95 18.5, max 36 ms) |
+  | physics on main during the drag | 124.8 ms a frame (12 substeps of 10.45 ms) | 0 |
+  | wake fps | 9.6 | 55.4 / 55.7 |
+  | first sleep | 21.07 / 21.02 s | 12.48 / 12.17 s |
+
+  On phw=1 the intro ran at 28 fps, with freezes of 3.1 s and 2.2 s
+  (56.7 fps after it); the pre-settle took 834 ms (ended by work), and
+  the first sleep came 11.3 s after going live (5.0 sim-s, 1.41 s of
+  lag dropped). These meet stage 4's desktop targets at a first look.
+  **The drag in `k7_frames.mjs` is move-count paced** (188 moves with a
+  16 ms sleep each), so its length follows the frame rate: 27.1 s of
+  wall in-thread (189 frames), 6.6 s on the worker (about 360). Sim per
+  wall second was about equal (0.70 and 0.75); the in-thread drag
+  advanced more sim only because it lasted four times longer.
+- **Cold-profile `am=instant`** (`instant_check.mjs`,
+  `instant_results.jsonl`): the 5.3 s main-thread stall of the first
+  departure. Inferred: the first frame's shader compiles on a cold GPU
+  cache (K307).
+
+### Not done
+
+- The phone (off-limits in this stage): the worker's substep cost and
+  the frame rate there are unknown.
+- The dev server in a browser (`dev_check.mjs`, in `batch_s3d.txt` with
+  the 404 check below): held up by the perf lock. Its HTTP half passed.
+
+### For stage 4
+
+- **The diagnostic bridge:** on the worker `ps` is the mirror, so the
+  probe hooks that reach into `ParticleSystem` read snapshots, and a
+  probe's freeze patch on `ps` never reaches the worker's system. The
+  mirror has no prev, zPos, contact state or slide stats.
+- **Desktop acceptance under the lock.** Make `k7_frames`' drag a fixed
+  wall-time drag first, or compare drags by sim per wall second.
+- **The interpolation's latency** (about D, 11 ms at 56 fps) sits inside
+  the 50 ms target, but nothing measured pointer-to-pixels end to end.
+- **Cold shader-compile freezes on both hosts** (K307): 5.3 s on a
+  cold-profile `am=instant` load, 2.2-3.1 s in the daily's intro.
+- **PixiJS "Attribute not present" warnings** on these loads (the probes
+  filter them out): check whether phw=0 shows them too.
+- **A 404 on every probe load** (one or two "Failed to load resource"
+  lines, on both hosts). Inferred: `/favicon.ico`, which Chrome asks for
+  because `index.html` names no icon, and which the probe server answers
+  with 404 outside `/knotmaze/`; a probe-server artifact, then.
+  `instant_check.mjs` now records the paths it answered 404 (`missing`).
+- **The phone.**
