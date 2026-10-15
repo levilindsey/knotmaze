@@ -15,17 +15,6 @@ and never reused.
 
 ## Waiting on Levi
 
-- **K248** · Which highlight modes stay (K111 stage 2, merged 2026-10-14
-  13:03)? `highlightMode` offers pulses (today's look), glow (0.75, a
-  steady whitening of the thread's color), rims (a white edge band) and
-  contrast (pure white with a black center line). Also confirm
-  `highlightMode` as daily-exempt, a playback preference that keeps the
-  daily (the agent's proposal). After the pick, the kept modes go into
-  the CPU mirror (`paint_math`) with parity tests; until then the pluck
-  overlay, fieldProbe, paintProbe and debug view 5 show the pulses look
-  in every mode. Removing an option bumps CODEC_VERSION. Sheets
-  `.claude/probes/K111/stage2/out/sheets/`; `docs/design/K111.md`
-  ("Stage 2 handoff").
 - **K245** · How hard should the minotaur roam toward the player
   (K174's call)? `minoToward` (on) sets roamPull 0.5: on the K80 sim 63%
   of games meet it and a game averages 1.68 catches; 0.25 gives 60% and
@@ -439,6 +428,22 @@ and never reused.
     master's frames).
   - brief: `docs/design/K76.md` ("Stage 2a"), then
     `docs/design/K76_reveal_mode.md`.
+- **K248** · Levi's highlight pick (2026-10-14 about 13:28, answering
+  which of K111 stage 2's modes stay): the choices keep the pulses and a
+  hovered choice keeps today's look; `highlightMode` and its glow, rims
+  and contrast modes go (a codec removal, so CODEC_VERSION bumps); a
+  hover away from the choices (K145's hover glow) gets a new rim,
+  brightest at the thread's edge and fading toward its center, wider,
+  nothing outside the thread or the run. Stage 3 builds it with K236's
+  (c) and (d), and sheets `hoverGlow` 0.25-1 for K237's default.
+  - owner: nobody yet; the brief was written 2026-10-14 13:40 and the
+    agent launches at the next free code slot (about 13:55, when K193
+    reports), ahead of K80 turns stage 1.
+  - branch: none yet (it starts from master); last commit: none.
+  - evidence: stage 2's `.claude/probes/K111/stage2/` and K145's
+    `.claude/probes/K145/`; stage 3 writes `.claude/probes/K111/stage3/`.
+  - next: launch stage 3 (opus, 2 h, ports 5700-5709).
+  - brief: `docs/design/K111.md` ("Stage 3").
 
 ## Next, in order
 
@@ -504,7 +509,8 @@ files at their merges. Then, as code slots free up:
    06edef4..56b6f2d).
 8. K92 + K224: merged 2026-10-14 (e78ddcc). K111 stage 1 (the panel):
    merged 2026-10-14 (0e5a138..9c6cab3), and its stage 2, the highlight
-   modes, at 13:03 (36d280a..5438a60); which modes stay is K248.
+   modes, at 13:03 (36d280a..5438a60); Levi picked at about 13:28, and
+   stage 3 builds the pick (K248).
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
     coordinator; Levi may reorder): K174's controls (merged 2026-10-14
@@ -532,7 +538,7 @@ G4-2 old-path deletions; K162 and K184-K186 (play, then call); K194's
 defaults (after playing); K225 (the markers' size); K229 (the open
 panel's top); K237 (the hover glow's default); K238 (K111's calls);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
-K248 (which highlight modes stay); near launch, K117 and K210; after the churn, K46, K57 and
+near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
 about 11:10 for calls 1-7 (K114 call 7, K174, K191, K193, K194's 5.2,
