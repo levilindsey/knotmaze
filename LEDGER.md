@@ -240,6 +240,20 @@ and never reused.
   (`pendingWin`, `src/main.ts` about line 2079) and the Reset path during
   the winning move, or only on a live finish? (3) the colors (a festive
   set built from the gold 0xffd23f) and the default amount, 1?
+- **K265** · High contrast's own highlight (Levi, 2026-10-14 about
+  15:46: "Maybe the high contrast highlights should get new
+  treatment"). K111 stage 4 (a47642d..f294247, merged at 19:11) built
+  three looks behind a probe param: 1 white with a black center line
+  (about 2 device px on the phone), 2 a dark core outlined in white, 3
+  chevrons pointing away from the junction; 0 keeps the pulses (K248).
+  Levi picks one and confirms the width default 0.85 and range 0.3-1
+  (K264). Sheets `.claude/probes/K111/stage4/sheet/` (sent at 19:20);
+  live: High contrast on, then `?k111&hcl=1` (2, 3) and `?k111&hgw=0.3`
+  (up to 1). Then stage 5 builds the pick (`docs/design/K111.md`, "For
+  stage 5": the CPU mirror and parity, a High contrast census, removing
+  the unpicked looks, `hcl` and `__knotHcLook`, the pluck overlay's
+  `composedAtArc`, a Pixel 11 check, maybe hiding the width row at
+  strength 0). K298 may change what the width slider means. Asked at 19:21.
 
 ## In progress
 
@@ -644,9 +658,11 @@ and never reused.
     0.016), the census (hidden 405, solid 5, shaped 2), the GPU timings
     (+3% in total with every vertex visited) and the partial sheet.
   - next: stage 2 ("For stage 2" in the brief, with K275's fade: joints
-    and caps fade with the premultiplied strip alpha), after K111 stage 4
-    merges and never alongside K76 stage 2c (all three change the explore
-    and paint shaders). Residuals are K287; the draw order waits on Levi
+    and caps fade with the premultiplied strip alpha), after the physics
+    worker and never alongside K76 stage 2c, K298 or K299 (all change the
+    paint shaders). K111 stage 4 merged at 19:11 and took `uKBase.y` (High
+    contrast's look) and `uKGold.w` (the rim's width scale). Residuals are
+    K287; the draw order waits on Levi
     (K286). Burn stage 3 runs the shaped cut in reverse (K290), so drive
     it by a visibility that can also shrink.
   - brief: `docs/design/K268.md` ("Stage 1 design", "Stage 1 handoff
@@ -684,39 +700,6 @@ and never reused.
   - next: Levi's picks (K288), then stage 2 builds them; the phone pass
     after 20:00 (K289 (h)).
   - brief: `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
-- **K264** · The hover rim's width becomes a slider (Levi, 2026-10-14
-  about 15:46, verbatim: "Rim width,0.4 is good, make it a slider., and
-  personal setting."; read as a width slider, `hoverGlow` staying 0.4,
-  both personal): a daily-exempt param (K57) beside `hoverGlow` that
-  sets the rim's `RIM_EDGE` (0.85 built and the default; a range of
-  about 0.3-1.0, so 0.4 is there if he meant the width). Small: a codec
-  append, a panel row, a uniform. K111 stage 4 with K265; sheets
-  `.claude/probes/K111/stage3/sheet/`, `docs/design/K111.md` ("Stage 3
-  handoff").
-  - owner: claude d8031183-cd9e-4b70-9968-661d70634c84, agent
-    a026ef520ab80d530 (opus): K111 stage 4, K264 with K265, from
-    2026-10-14 17:53 with a 2 h cap (about 19:53; ports 5770-5779).
-  - branch: `worktree-agent-a026ef520ab80d530`
-    (`.claude/worktrees/agent-a026ef520ab80d530`); last commit: `0faad0e`
-    (its base, the stage 4 brief on master).
-  - evidence: `.claude/probes/K111/stage4/` in that worktree (copied to
-    the main checkout at the merge); stage 3's `.claude/probes/K111/stage3/`.
-  - next: stage 4 (the width param beside `hoverGlow` with its CPU mirror
-    and parity at three widths, two or three High contrast looks behind a
-    probe hook, the same-state A/B at 0 px, the sheets); its codec rows
-    start at 130, since K80 turns stage 2 merged 128-129 (told at 18:49;
-    renumber at its merge if they don't); then Levi picks
-    a High contrast look and a stage 5 builds it (the mirror, parity, the
-    census).
-  - brief: `docs/design/K111.md` ("Stage 4: the rim's width slider and
-    High contrast's own highlight", 0faad0e).
-- **K265** · High contrast's own highlight (Levi, 2026-10-14 about
-  15:46: "Maybe the high contrast highlights should get new
-  treatment"): today High contrast keeps the pulses on the choices
-  (K248). Prototype two or three looks of its own (stage 2's contrast
-  mode was flat white with a black center line) and show them on a
-  sheet, desktop and phone, for Levi to pick. K111 stage 4 with K264;
-  `docs/design/K111.md` ("Stage 3 handoff"). Running with K264 in K111 stage 4 from 17:53; the handle is K264's.
 - **K7** · Physics in a Web Worker, with render-side interpolation between
   physics steps. Smooths the UI; it does not speed up physics. Acceptance
   includes K28: the intro runs at full frame rate WHILE physics settles
@@ -740,6 +723,24 @@ and never reused.
     targets, the build stages' briefs); then the build stages, each with
     `main.ts` to itself.
   - brief: `docs/design/K7_worker.md` ("Stage 0: the design", 0d88091).
+- **K299** · The choice pulses and the trail misdrawn at one junction
+  (Levi, 2026-10-14 about 19:15, on `?qoietk.KSIeBoGlf4-`): the up-right
+  choice's pulse draws doubled and backward with an artifact mid-run,
+  the down-left choice has none, and walking down-left leaves trail
+  paint on the up-right run. Cause unknown; the brief's arc-wrap idea is
+  a hypothesis.
+  - owner: claude d8031183-cd9e-4b70-9968-661d70634c84, agent
+    a6d727eb21ef341d5 (opus), stage 1 (diagnose and fix) from 19:19 with
+    a 2 h cap (about 21:19; ports 5790-5799).
+  - branch: `worktree-agent-a6d727eb21ef341d5`
+    (`.claude/worktrees/agent-a6d727eb21ef341d5`); last commit: `7a87cae`
+    (its base, the brief on master).
+  - evidence: `.claude/probes/K299/` in that worktree (copied to the main
+    checkout at the merge).
+  - next: stage 1 reproduces his two states, attributes the bad pixels,
+    fixes the root in the shader and `paint_math.ts` together, and adds a
+    regression test, a census and before/after sheets. K298 follows.
+  - brief: `docs/design/K299_choice_pulse_bug.md` (7a87cae).
 
 ## Next, in order
 
@@ -775,9 +776,10 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K111 stage 4 from 17:53 (cap 19:53, opus),
-K156's round 2026-10-14c phone pass from 18:41 (cap 19:58 for K253's
-floor, sonnet) and K7's design stage from 19:05 (cap 21:05, opus). K279's stage 2
+(he may reorder). Running: K156's round 2026-10-14c phone pass from
+18:41 (cap 19:58 for K253's floor, sonnet), K7's design stage from 19:05
+(cap 21:05, opus) and K299 from 19:19 (cap 21:19, opus); K298 follows
+K299. K111 stage 4 merged at 19:11. K279's stage 2
 waits for Levi's picks (K288). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
@@ -832,8 +834,9 @@ files at their merges. Then, as code slots free up:
     K268 stage 1, the shaped gaps Levi asked for at 15:16, merged at
     17:50 (1e55365..61c8859; `docs/design/K268.md`). 2c and K268 stage 2
     come after the physics worker (K5-K7, below this list), one at a time
-    and after K111 stage 4, since all three change the explore and paint
-    shaders; then 2d, each from the handoff before it. 2c's codec removal
+    and never alongside K298 or K299, since all of them change the paint
+    shaders (K111 stage 4 merged at 19:11 and took `uKBase.y` and
+    `uKGold.w`); then 2d, each from the handoff before it. 2c's codec removal
     is version 6, since
     K111 stage 3 took 5 (the codec note in
     `docs/design/K76_reveal_mode.md` still says 5).
@@ -867,7 +870,7 @@ files at their merges. Then, as code slots free up:
 Waiting for Levi: K90's bend bound (Levi tests it live); the G3-3 and
 G4-2 old-path deletions; K162 and K184-K186 (play, then call); K194's
 defaults (after playing); K225 (the markers' size); K229 (the open
-panel's top); K238 (K111's calls);
+panel's top); K238 (K111's calls); K265 (High contrast's look, the width default);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
 K251 (the displaced disc's slide across the panel); K257 (K76's
 questions for stage 2c); K260 and K261
@@ -1131,10 +1134,29 @@ before the worker, and each build stage has `main.ts` to itself.
   localStorage prefs: Motion, High contrast, `finishIndicator`,
   `tapToPan`, the move pad) stay unmarked. A sheet for Levi: the
   dog-ear's size and color, on every maze row, against a variant that
-  marks only the rows changed from the link or the daily. Runs after
-  K111 stage 4 merges (it adds rows); it replaces K84's separate
+  marks only the rows changed from the link or the daily. K111 stage 4
+  merged at 19:11; K298 adds rows too, so run after it or keep the mark
+  in its own module. It replaces K84's separate
   section, K57 settles the edge cases, and K297 is the pared-down panel
   this leads to.
+- **K298** · The hover glow, its own stage (Levi, 2026-10-14 about 19:13,
+  verbatim: "Ok, I take it back. Let's give hoverGlow it's own length
+  setting. Also, let's make the length of its fade-out near the end of
+  the segment be much shorter--give this a slider too. It should also
+  have a slider for its thickness. Let's also render it in-addition to
+  the adjacent-to-current-juction highlight for those segments. Can we
+  also reduce the amount of mouse margin we allow for clicking/hovering
+  over a thread? And add a slider to control this."). One Opus stage of
+  daily-exempt params appended from codec 131: (1) a glow length, so the
+  glow no longer borrows `pulseReach` (K219); (2) an end-fade length,
+  much shorter by default, replacing `RIM_END_FADE` / `RIM_END_SHARE`;
+  (3) thickness is `hgw` (K264), relabeled; (4) the glow also on a
+  hovered choice, on top of its pulses; (5) a pick margin for the mouse,
+  below today's `GRAB_RADIUS` 0.7 (`src/main.ts`), touch unchanged unless
+  Levi says otherwise. The mirror, parity, a census, a same-state A/B
+  and sheets. Runs after K299 merges (the same shader code). Asked Levi
+  at 19:21: does touch keep its margin, and does a hovered choice keep its
+  own hover look under the glow? Lore: `render-paint.md` ("HOVER GLOW").
 
 ## Residuals (known, not fixed)
 
@@ -1982,6 +2004,15 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K264** · The hover rim's width becomes a slider (Levi, 2026-10-14
+  about 15:46, verbatim: "Rim width,0.4 is good, make it a slider., and
+  personal setting."; read as a width slider, `hoverGlow` staying 0.4,
+  both personal). Done in a47642d..f294247 (2026-10-14, K111 stage 4):
+  `hoverGlowWidth` (`hgw`, codec v5 index 130, daily-exempt), default
+  0.85, range 0.3-1 in steps of 0.05, the "Hover glow width" row under
+  "Hover glow". `docs/design/K111.md` ("Stage 4 handoff"). Levi's 19:13
+  follow-up (its own length, a shorter end fade, thickness, the glow on
+  choices, a pick margin) is K298.
 - **K273** · What a minotaur catch resets (Levi, 2026-10-14 about
   15:46, verbatim: "We should also have a toggle to conditionally reset
   the level/Minotaur/fog when dying to the Minotaur."). Done in
