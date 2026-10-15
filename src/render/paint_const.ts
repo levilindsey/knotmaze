@@ -83,9 +83,11 @@ export const PAINT_CONST = {
   // hovered choice also fills its core to HI_RIM_HOVER_CORE. CONTRAST: the
   // choice turns pure white with a black center line (inside HI_LINE of the
   // half-width, a HI_LINE_SOFT ramp); the hovered choice drops the line.
-  HI_GLOW: 0.55,
-  HI_GLOW_HOVER: 0.9,
-  HI_RIM_EDGE: 0.45,
+  // Glow and rims were raised from 0.55 / 0.9 and 0.45 after the first
+  // phone sheets, where both read too faintly at a glance.
+  HI_GLOW: 0.75,
+  HI_GLOW_HOVER: 1.0,
+  HI_RIM_EDGE: 0.55,
   HI_RIM_SOFT: 0.12,
   HI_RIM_HOVER_CORE: 0.45,
   HI_LINE: 0.3,
