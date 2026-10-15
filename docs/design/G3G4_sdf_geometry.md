@@ -415,7 +415,7 @@ Notes on the layout:
    - Arm angle profile: 8 radii, angles only, replacing the 23-texel `FIELD_PROF_DR` profile.
    - wedgeGain per angularly adjacent arm pair, default 1. Reduced near a diving arm: k_wedge ≤ max(0.3·k, gapNear − h·`FILLET_GAP_PAD`). This keeps "JOINERY HONORS THE WEAVE" (today's `armReach`).
    - rootWMul per arm (reveal).
-8. **Slots** (up to 8). Slots whose under chain is a piece chain and whose window meets the range inside a disk get mode CASING (applied to that piece). If the over chain is foreign (not a piece chain within reach — G1's `ownArm`, `ribbon_renderer.ts:4641-4655`), the slot also gets mode SILHOUETTE (applied to the web).
+8. **Slots** (up to 8). Slots whose under chain is a piece chain and whose window meets the range inside a disk get mode CASING (applied to that piece). If the over chain is foreign (not a piece chain within reach: G1's `ownArm` in `ribbon_renderer.ts`), the slot also gets mode SILHOUETTE (applied to the web).
 9. **RANGES.** CLUSTER entries (chain, kLo, kHi, rec) for the ribbon gate.
 
 **Record layout:**
@@ -450,8 +450,8 @@ void main() {
   //     edge-aware blend between nearest m and its sector partner q; envelope -> 0 at R_out
   float g = max(ac_m + ac_q, C.beta);
   float tb = smoothstep(-1., 1., (ac_m - ac_q) / g) * (1. - smoothstep(Rin, Rout, rhoNearest));
-  vec4 col = mix(threadColor(m...), threadColor(q...), tb);   // composed colours (RENDER LORE)
-  finalColor = vec4(col.rgb, 1.) * vColor * (col.a * cov);
+  vec4 col = mix(paintAt(m...), paintAt(q...), tb);   // G2's paint library per piece: composed colours (RENDER LORE)
+  finalColor = vec4(col.rgb, 1.) * (col.a * cov);
 }
 ```
 
@@ -464,8 +464,24 @@ Notes on the joint shader:
 - **The blend formula.** g = max(a_m + a_q, β) turns the transition into "across the gap between ribbon edges" when both pieces are outside, and a β-wide band in the overlap core. Inside a piece away from others it is pure that piece. This is the edge-aware field's intent, now in SDF form.
 - **End-piece clip.** It reproduces the fused-tip lore: the bridge's material never paints the host's face, so a traveled gold host is not bitten at junctions.
 - **Case coverage.** 3-way splice and corner fused 3-way = through + end. 4-way merge = 2 through. Self-crossing merge = 2 through pieces on one chain.
-- **Reveal and FX.** An unrevealed arm has r → 0 and k scales by rootW, so the web vanishes with its arm. Materialize alpha and stripes come from each piece's own material. This replaces `fanFx` and the arm-reveal gate.
-- **smin choice.** Polynomial quadratic first; a circular-profile smin is the alternative. Decide by crop A/B at cr 1, 3, 6.
+- **Reveal and FX.** An unrevealed arm has r → 0 and k scales by rootW, so the web vanishes with its arm. Materialize alpha and stripes come from each piece's own material, per pixel through G2's library. This replaces what the arm strips carry today (per-frame RGBA8 rows of composed colour, read by the fans) and the fans' `PAINT_GATE_GLSL` gate.
+- **smin choice.** Polynomial quadratic first; a circular-profile smin is the alternative. Decide by crop A/B at cr 1, 3, 6 (K9).
+
+**What the joint program carries (K8 s1).** Since the snapshot, the fans have gained features, and G4-1 ports each of them. Each gets its own check in G4-1's acceptance (section 5).
+- **K81 route bands.**
+  - What it is: the route block (R0 = nv, m, ia, ib; MAX_ROUTES 4), which arms the path joins, and the band's corner (`junction_routes.ts`). It reads the composed and untraveled strip rows today.
+  - Carrying it: the bands become a term in the colour step. The route block moves into the cluster record.
+  - Kept: `cpuJunctionField` and `fieldProbe.at` / `.routes` stay as the CPU mirror and probe hooks. G4-0 brings them to records v2.
+- **K127, fully traveled webs:** a web whose arms are all traveled paints traveled. "Webs carry the route as the union of the traveled pieces" (K9).
+- **K169, the gold web's fade-in** (`web_fade.ts`, 0.25 s): a per-cluster clock, unchanged.
+- **K345, the hover rim through the webs.** The piece SDFs give a lateral coordinate inside a web, so `kRimAcross` can run there. Today's `rimGap` 0.975 exists only because webs and arm strips have no across coordinate. It becomes 0 in webs, and the rim continues through the junction. This is confirmed for G4-1; fan work on K345 now would be thrown away at G4-2.
+- **K76 2b, the thread reveal's joint gate:** `exploreHideJn`, `exploreHideFree` and `exploreJointsKey` gate each cluster as they gate each fan today.
+- **K268 s2 and K290.**
+  - K268 s2 fades a joint and its cap through premultiplied strip alpha, and puts the shaped-cut anchors in the fans and the still pluck.
+  - K290's burn reverses the shaped cut, makes the fans drop an arm, and shrinks the visibility (`docs/design/K114_burn.md`, "The stages").
+  - Both land on the fans first. G4-1 ports them as the piece and web terms of a hidden or burnt arm (rootW → 0, the shaped cut in `pieceKeep`).
+- **The high-contrast looks (K111 s5 / K265, `kHcCompose`)** go through the same library calls, so the joint program gets them with no extra work.
+
 
 ### 3.6 Yarn pass (host frame)
 
@@ -476,13 +492,16 @@ Notes on the joint shader:
   - Pass texels (arc0, arc1, clipArc, lane, f1..f3, p1..p3) evaluate today's `pushYarnEvent` wander analytically: `o(arc)` and `o'(arc)` with the end window.
   - Band: dist = |lat − o| / sqrt(1 + o'²) → `aaCov(dist − w/2)`.
   - Shadow: the same at (arc − S·T, lat − S·N).
-  - Compose shadow then yarn, then multiply by `gapKeepArc` with the **host's** slot windows at that arc.
+  - Compose shadow then yarn, then multiply by `gapKeepAt` with the **host's** slot windows at that arc.
 - **Junctions.**
   - U-turns get a "turn" instance: a half-ring SDF in (arc, lat) at arc_end + overshoot/2.
   - Pass-through continuations taper the lane bias to 0 at pass ends (a small look change) so the round end caps of consecutive passes meet at the junction.
 - **CPU side.** The CPU keeps only the event list (chain, c0, c1, seed params). Ctrl → arc via `arcForCtrl` each frame.
 - **Tension.** Tension changes amp/laneAmp uniforms only (live).
-- The pass also rides the pluck ring and the exact spline, which today's physics-polyline yarn does not.
+- **Today's yarn (K8 s1)** is a pixi `Graphics` (`fabric_maze_renderer.ts` `drawYarn`): Chaikin-smoothed points from `pointFlowed`, cut on the CPU by `ribbons.underGapVisibility`.
+  - The SDF pass rides the drawn samples instead: the flow and the exact spline. It gets the GPU's exact cut.
+  - There is no pluck ring to ride any more. Plucks are render-only (`pluck_overlay.ts`), and the yarn does not follow them today either.
+  - `pointFlowed` stays for the fog, the markers and the hit tests. This is K23's "yarn as a gap-masked ribbon".
 
 ### 3.7 Fragment-cost model and levers
 
@@ -491,53 +510,72 @@ Notes on the joint shader:
 - Ribbon-pass fragments ≈ 0.73 × region: 1.05× pad, +13% crossing double-raster, plus gated domain pixels.
 - Joint fragments at cr 3 ≈ 0.31 × region: ~90 octagons, R ≈ 1.15. At cr 1 this is about 0.12.
 
+The phone is Levi's Pixel 11 (K8 s1; the snapshot assumed an iPhone). It has a PowerVR CXTP-48 GPU and runs Chrome 154. Its layout viewport is 411×753 at DSF 2.625. The app's renderer runs at min(dpr, 2) (`main.ts` init), so the canvas is 822×1506.
+
 | Screen | Canvas | px/world | Region | Ribbon frags | Joint frags |
 |---|---|---|---|---|---|
 | Desktop probe | 3200×1800 | ~46 | 2.7 MP | 2.0 M | 0.85 M |
-| iPhone 3x DSF at the app's 2x cap | 780×1688 | ~20 | 0.52 MP | 0.38 M | 0.16 M |
-| iPhone native 3x (cap lifted) | 1170×2532 | ~30 | 1.17 MP | 0.85 M | 0.36 M |
+| Pixel 11 at the app's 2x cap | 822×1506 | ~21 | 0.57 MP | 0.42 M | 0.18 M |
+| Pixel 11 native 2.625x (cap lifted, K22) | 1079×1977 | ~28 | 1.02 MP | 0.74 M | 0.32 M |
 
 **Per-fragment work** (fetch = one 8-16 B `texelFetch`; ALU ≈ scalar ops):
 
 | Pass part | Share of fragments | Fetches | ALU |
 |---|---|---|---|
 | Ribbon base: 3 cones, caps, gate, AA | 100% | 0 | ~80 |
-| Ribbon colour (pre-G2) | ~75% | 3-5 | ~40 |
+| Ribbon colour: G2's paint library | ~75% | as today's strip shader | as today's strip shader |
 | Ribbon gap (chunk-pruned, 1.2 slots avg) | ~45% | ~18 per slot | ~200 per slot |
-| Ribbon fold argmin | <1% | ≤30 | ≤400 |
-| **Ribbon average** | | **~10** | **~190** |
+| Ribbon fold argmin and pinch | <1% | ≤30 | ≤400 |
+| **Ribbon average, excluding colour** | | **~10** | **~190** |
 | Joint: disk test | 100% | 1-2 | ~15 |
 | Joint: 2-3 piece SDFs (~10 segments each) | ~90% | ~25 | ~300 |
 | Joint: brackets + smin | ~90% | ~4 | ~90 |
 | Joint: masks + 2 colours + blend | ~60% | ~18 | ~210 |
 | **Joint average** | | **~40** | **~490** |
-| Ribbon VS (88k vertices) | | ~15 per vertex | ~150 per vertex |
+| Ribbon VS (~88k vertices at gs 18) | | ~18 per vertex | ~150 per vertex |
 
-**Totals per frame.**
+The colour row is the same library code that the strip's fragment shader runs today, per covered pixel. It is a constant in the G3-2 A/B, not a new cost. Only the SDF terms are new.
+
+**Totals per frame, excluding colour.**
 
 | Screen | Fetches | ALU |
 |---|---|---|
 | Desktop | ≈ 55 M | ≈ 0.8 G |
-| iPhone at 2x | ≈ 11.5 M | ≈ 165 M |
-| iPhone at 3x | ≈ 26 M | ≈ 370 M |
+| Pixel at 2x | ≈ 11.5 M | ≈ 170 M |
+| Pixel at 2.625x | ≈ 20 M | ≈ 300 M |
 
-**Calibration.** G1 measured 2.83 ms on the desktop for an estimated ~55 M fetches + ~1.15 G ALU. Its 68-point brute-force loops dominate. So:
-- G3+G4 ≈ **2.2-2.8 ms desktop.** About G1's cost, while deleting the CPU geometry work and the artifact classes.
-- iPhone ≈ **1.6-2.5 ms at 2x** and **3.5-5 ms at 3x**, assuming an A15-A17 GPU runs this mix 3-4x slower than the desktop GPU. That ratio is a guess and must be measured: WebKit has no timer queries; see G3-2.
-- **Budget:** at most 4 ms GPU at 2x for the whole fabric at cr 3 on the user's iPhone.
+**Calibration (re-based, K8 s1).** Today's fabric GPU cost on the desktop at 3200×1800:
+- the ribbon program, 1.59-1.71 ms (K81, K298);
+- the fans, 0.58 ms, or 0.78 ms with 5 routed webs (K81);
+- the strip pass, 0.06 ms (G2);
+- in all about 2.3-2.5 ms, in a 2.6-2.8 ms frame.
+
+G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
+- G3+G4 ≈ **2.2-2.8 ms desktop.** That is about today's cost, while deleting the CPU geometry work (update() 5.7 ms on the desktop and 15 ms on the phone after G1) and the artifact classes.
+- **Pixel ≈ 2-3 ms at 2x**, if its PowerVR runs this mix 4-5x slower than the desktop GPU. The ratio is a guess:
+  - Chrome on the Pixel exposes no GPU timer query, so it is measured as frame time, with G3-0's `__knotBench(n)` (`gl.finish` around n renders).
+  - The baseline is today's 60 fps at rest at defaults. The dense preset is render-bound at about 30 fps.
+- **Budget:** at most 4 ms GPU at the 2x cap for the whole fabric at cr 3 on the Pixel, and 60 fps held at defaults.
 
 **Optimization levers, by expected payoff:**
 1. Joint early-outs: octagon per member; chunk lower bounds before full piece SDFs; skip colour and masks for discarded pixels. Expected −30-40% of joint cost.
-2. Chunk-pruned exact nearest search for slots and pieces (built into G3-1/G4-1). Expected −60-75% of the gap loop vs G1.
-3. `mediump` (fp16, 2x ALU rate on Apple) for colour, compose and blend math. Distances and positions stay `highp`.
-4. Skip AUX and radius fetches on chains with no active reveal or FX (CHAIN flag).
-5. Slot header packing (7 → 4 texels).
+2. Chunk-pruned exact nearest search for slots and pieces (built into G3-1/G4-1). Expected −60-75% of the gap loop vs G1's brute force.
+3. `mediump` (fp16; most mobile GPUs, PowerVR included, run it at a higher rate) for colour, compose and blend math. Distances and positions stay `highp`. Verify the rate on the Pixel before relying on it.
+4. Skip RADII fetches on unit-width chains (the G3 CHAIN flag; already in the data model, section 2.2).
+5. Slot header packing (9 → about 5 texels).
 6. Asleep-flow round-robin re-solve (CPU; G3-4).
 7. Render-on-demand when fully static: asleep, fw 0, no paint animation, camera still.
-8. Resolution policy: keep the 2x cap. An optional frame-time-driven 2 → 2.5 → 3x scaler, since analytic AA makes extra resolution pure crispness.
+   - This is K24, part of K6, not G3's work. The hook exists: `main.ts`'s "K24/K6 HOOK", with `sceneAnimating()` and `background.needsFrame()`.
+   - The loop that stops drawing waits on K6's what-changed flags.
+8. Resolution policy: keep the 2x cap. K22's frame-time-driven scaler (2 → 2.5 → 3x) comes after G3, since analytic AA makes extra resolution pure crispness.
 9. Smaller R at small cr; cap R_sep.
+10. K259, the thread reveal: the vertex shader collapses segments outside every VIS piece (section 3.2, G3-4).
 
-**MSAA.** Keep `antialias: true` (cheap on TBDR; markers and Graphics need it). Ribbon and joint quad edges sit in zero-coverage pad, so MSAA neither helps nor hurts them.
+**Not levers (K8 s1).**
+- Moving the flow to the GPU (displacing SAMP in the vertex shader) stays deferred. The CPU flow runs at half rate at rest, and an A/B would have to track the gaps.
+- G5 (moving the physics to the GPU) is still not recommended. K7's worker took the physics off the main thread instead.
+
+**MSAA.** Keep `antialias: true`: it is cheap on tile-based GPUs (PowerVR is one), and the markers and Graphics need it. Ribbon and joint quad edges sit in zero-coverage pad, so MSAA neither helps nor hurts them.
 
 ---
 
