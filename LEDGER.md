@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K390.
+Next free ID: K394.
 
 ## Waiting on Levi
 
@@ -232,7 +232,7 @@ Next free ID: K390.
   - owner: nobody since 2026-10-15 04:37 (stage 6 done; agent `a6023a3244ff623cc` of claude session d8031183, worktree kept)
   - branch: mainline; last commit: `4d9c9f5`
   - evidence: `.claude/probes/K7/` (`stage6/`: `ported.md`, the ported libraries' originals in `ported/orig/`; `stage5/`: the phone tooling, `s5_gate.txt`; `stage4/`, `stage3/`)
-  - next: stage 7 (opus) after K5 M1, since both edit main.ts's boot: the start-gate lever (scene params and tuning in the Worker's `name`, main adopts generation 0), the phone pass again (the phone half of `stage5/s5_gate.txt`), the spike page `?d=gs18`
+  - next: stage 7 (opus), unblocked since K5 M1 merged (K5 M2 edits main.ts too, so one at a time): the start-gate lever (scene params and tuning in the Worker's `name`, main adopts generation 0), the phone pass again (the phone half of `stage5/s5_gate.txt`), the spike page `?d=gs18`
   - brief: `docs/design/K7_worker.md`, "Stage 6 handoff"; stage 7 from "Stage 5 handoff" ("For the next stage")
   - env: the phone: `.claude/probes/K7/stage5/phone_setup.ps1` and `phone_teardown.ps1`, under the phone lock
 - **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
@@ -252,13 +252,13 @@ Next free ID: K390.
   - next: the phone's dense bench again at rest (`phone6.ps1`, its 30000 ms rest raised to 90000); then G3-1 after K290 (R1-R2 first if Levi takes K377 q3); G3-1's textures must fit the Pixel's 8192 max; check capture/restore under the worker (default from K7 s6); Levi's calls: K361
   - brief: `docs/design/K8_stage1.md` (its stage 2 handoff, at the end); G3-1 still needs a brief, from `docs/design/G3G4_sdf_geometry.md`
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
-  with seams so G3 becomes a module swap; K6 rides it. Design merged:
-  `docs/design/K5_K6_split.md` (its calls: K377). Stage M1 running.
-  - owner: agent `a871cd9d98d4f1bf0` (opus) of claude session d8031183, stage M1 from 04:46 (cap 06:46; ports 5840-5849); the design's worktree `aa60ed52201f75682` kept
-  - branch: `worktree-agent-a871cd9d98d4f1bf0` (`.claude/worktrees/agent-a871cd9d98d4f1bf0`, from `1646491`); last commit: `1646491` (master) until its first WIP commit
-  - evidence: `.claude/probes/K5/stage1/` (in the main checkout, as the brief says); the design's region maps in `.claude/probes/K5/design/`
-  - next: stage M1: the re-map, `src/app/scene_ref.ts`, the loader, stamp and probe hooks moved, host_seam over `src/app/**`, the lore paths; then section 5's stages (M2-M8, R1-R5; section 6 orders them)
-  - brief: `docs/design/K5_K6_split.md`, "7. Stage 1 brief" and "Stage 1 launch notes"
+  with seams so G3 becomes a module swap; K6 rides it. Design: `docs/design/K5_K6_split.md`
+  (calls: K377). M1 merged (baa0847..12709e5): main.ts 5709 → 4869 lines, no logic changes.
+  - owner: nobody since 2026-10-15 06:13 (stage M1 done; agent `a871cd9d98d4f1bf0` of claude session d8031183, worktree kept; the design's `aa60ed52201f75682` too)
+  - branch: mainline; last commit: `12709e5`
+  - evidence: `.claude/probes/K5/stage1/` (`checks.ps1`, `rebased_checks.ps1` and their `checks/`, `checks_rebased/`, `rebased/`; `fog_bisect.ps1`, `fogbisect/`; `diff_regions.mjs`, `remap_*.md`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
+  - next: M2, the camera to `src/app/camera.ts` (section 5.2; re-map first from `anchors_c49f63f.json`); M3/M4 export PhysState, M7a moves `__knotUndo` (the handoff's "What is left")
+  - brief: `docs/design/K5_K6_split.md` section 5.2, "7. Stage 1 brief" and "Stage 1 handoff"
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
   char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b next.
@@ -1172,6 +1172,16 @@ Every other item below waits on the trigger it names.
 - **K388** · K76 2d's probe residuals: gate2's in-page `arriveS` races the tap (use CDP
   arrivals; rAF stamps can hide a late Android frame); census2d says PROOF FAILED when off; k290_ab
   compares stamps, not SHAs; k111.L's shaped-slot count varied; `restoreScene` may keep HC's x = 2.
+- **K390** · The fog A/B recipe (`probes.md`, `k83_ab`) is not deterministic: K5 M1's same-build
+  controls differ by 4054-7979 px (maxΔ up to 49), the start marker flipping between two states
+  (exactly 148 px). Unexplained; try `&phw=0` first. `.claude/probes/K5/stage1/fogbisect/`
+- **K391** · K5 M1's probe residuals: `k83_ab` has no knot-mode path (exits 1 at :149); diag's 12 s
+  capture vs the worker's first sleep (about 9.9 s; recheck); `probe_daily` `front` fails 10/14
+  (expects `#maze-hud .km-title`; its `?daily=1.aBMge` and `?1471kin.c` predate K132).
+- **K392** · K5 M1's code residuals: `host_seam.test.ts` matches names and misses nested
+  binding patterns and element access; 25 lines of `src/app/probe_hooks.ts` pass 80 columns.
+- **K393** · Nothing type-checks `test/`: tsconfig includes `src` only and vitest strips types,
+  so a test's type error goes unseen (K5 M1). Fix: a tsconfig over `test/`, run by `npm test`.
 
 ## Approved, to schedule (2026-10-11)
 

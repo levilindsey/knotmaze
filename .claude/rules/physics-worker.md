@@ -114,11 +114,11 @@ in `probes.md` (the K7 stage 4 entry).
   lockstep on scripted inputs; the probe dump's FNV-1a hashes compare
   across hosts in the browser). The golden byte identity and every Node
   harness construct `ParticleSystem` directly.
-- **main.ts writes physics only through the host.** With the worker,
-  `host.view` (alias `ps`) is the mirror, where a write silently does
-  nothing; `host_seam.test.ts` parses main.ts and fails on any mutator
-  call, reference or assignment on the system outside the host. Reads
-  are fine.
+- **main.ts and `src/app/` write physics only through the host.** With
+  the worker, `host.view` (alias `ps`) is the mirror, where a write
+  silently does nothing; `host_seam.test.ts` parses main.ts and the files
+  under `src/app/` (K5 M1) and fails on any mutator call, reference or
+  assignment on the system outside the host. Reads are fine.
 - `phw=0`, or no module Worker, must behave exactly as before K7: it is the
   fallback and the escape hatch for every probe that patches `ps.step`.
 - Assigning `__knotPS().step` THROWS with the worker (a setter cannot tell

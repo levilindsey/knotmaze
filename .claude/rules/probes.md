@@ -61,7 +61,8 @@ stamps fixed stations along its run (`src/render/fog_arc.ts`), the same
 at any speed, frame rate or mid-flight tap (`.claude/probes/K99/
 k99_fog.mjs` checks four timings; builds before K99 still need
 `ms=100000`). With those, master vs
-master is 0 px (under fog + mist, 76 px of dither). Recipe:
+master was 0 px (under fog + mist, 76 px of dither); K5 M1's same-build
+controls differed by 4054-7979 px (K390), so run one first. Recipe:
 `.claude/probes/K83/k83_ab.mjs` (phy=0 for a deterministic layout, then
 every differing pixel attributed to a marker footprint).
 
