@@ -2973,3 +2973,14 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - next: stage 2d: High contrast dots, step 8 (the phone gate, GPU per program, the final sheets), the census on K268's shaped slots, the held frame; the start zoom stays Levi's (K362)
   - brief: `docs/design/K76.md`, "Stage 2c handoff" ("For stage 2d") and "Stage 2d launch notes"; design `docs/design/K76_reveal_mode.md`
   - env: the phone: `scripts/phone_pass.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
+
+## K5 (2026-10-15, stage M1 merged)
+
+- **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
+  with seams so G3 becomes a module swap; K6 rides it. Design merged:
+  `docs/design/K5_K6_split.md` (its calls: K377). Stage M1 running.
+  - owner: agent `a871cd9d98d4f1bf0` (opus) of claude session d8031183, stage M1 from 04:46 (cap 06:46; ports 5840-5849); the design's worktree `aa60ed52201f75682` kept
+  - branch: `worktree-agent-a871cd9d98d4f1bf0` (`.claude/worktrees/agent-a871cd9d98d4f1bf0`, from `1646491`); last commit: `1646491` (master) until its first WIP commit
+  - evidence: `.claude/probes/K5/stage1/` (in the main checkout, as the brief says); the design's region maps in `.claude/probes/K5/design/`
+  - next: stage M1: the re-map, `src/app/scene_ref.ts`, the loader, stamp and probe hooks moved, host_seam over `src/app/**`, the lore paths; then section 5's stages (M2-M8, R1-R5; section 6 orders them)
+  - brief: `docs/design/K5_K6_split.md`, "7. Stage 1 brief" and "Stage 1 launch notes"
