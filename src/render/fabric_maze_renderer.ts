@@ -1294,6 +1294,16 @@ export class FabricMazeRenderer {
     return { minX: minX - r, minY: minY - r, maxX: maxX + r, maxY: maxY + r };
   }
 
+  // K198: the right edge (world x) of the start, head and exit discs on
+  // show (-Infinity with none); the fit camera's pan range reads it.
+  markersRight(): number {
+    let x = -Infinity;
+    for (const mk of [this.markers.start, this.markers.head, this.markers.exit]) {
+      if (mk.mesh.visible) x = Math.max(x, mk.mesh.position.x + mk.mesh.scale.x);
+    }
+    return x;
+  }
+
   private renderFog(): void {
     if (!this.fogOfWar || this.fogHeld) {
       if (this.fogSprite) this.fogSprite.visible = false;
