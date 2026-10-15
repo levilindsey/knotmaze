@@ -25,6 +25,7 @@ import type { SettleBudget, StepLimits } from "./physics/settle_budget";
 import { RibbonRenderer } from "./render/ribbon_renderer";
 import { DebugRenderer } from "./render/debug_renderer";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
+import { EXPLORE_LOOKS } from "./render/explore_glsl";
 import { FabricMazeController } from "./game/fabric_controller";
 import {
   HOLD_DELAY_MS,
@@ -4889,6 +4890,37 @@ async function main(): Promise<void> {
   (window as unknown as Record<string, unknown>).__knotReplay = () => {
     replaySettle();
     return physState;
+  };
+  // K76 THREAD REVEAL, stage 2a's PROBE HOOK (no params, panel or codec
+  // until stage 2c): on, reach and fade (lattice units), look (an
+  // EXPLORE_LOOKS name or index), visitAll (every vertex visited: the GPU
+  // cost bound). Returns the fabric's explore state (null outside fabric).
+  (window as unknown as Record<string, unknown>).__knotExplore = (
+    o: {
+      on?: boolean;
+      reach?: number;
+      fade?: number;
+      look?: string | number;
+      visitAll?: boolean;
+    } = {}
+  ) => {
+    if (!fabric || !fabricController) return null;
+    const ex = fabric.explore;
+    if (o.on !== undefined) ex.on = o.on;
+    if (o.reach !== undefined) ex.reach = o.reach;
+    if (o.fade !== undefined) ex.fade = o.fade;
+    if (typeof o.look === "number") ex.look = o.look;
+    else if (typeof o.look === "string") {
+      const i = (EXPLORE_LOOKS as readonly string[]).indexOf(o.look);
+      if (i >= 0) ex.look = i;
+    }
+    fabric.update(fabricController);
+    if (o.visitAll) {
+      fabric.exploreVisitAll();
+      fabric.update(fabricController);
+    }
+    renderDirty = true;
+    return fabric.exploreState();
   };
   // World point at a fractional ctrl along a chain (probe scripting).
   (window as unknown as Record<string, unknown>).__knotPoint = (
