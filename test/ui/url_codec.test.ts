@@ -6,6 +6,7 @@ import {
   applyAppearMode,
   chaseParamsOf,
   encodeParams,
+  fireSettingsOf,
   parseParams,
   writeParams,
 } from "../../src/ui/url_state";
@@ -98,6 +99,7 @@ describe("links", () => {
       minotaur: "off", minoSpeed: "one", minoTelegraph: true, minoSight: 4,
       minoRoamRuns: 8, minoTerritory: 6, minoAccuracy: 0.9, minoPause: 0.1,
       minoSleep: 0,
+      fire: "off", fireSpeed: 0.75, fireDelay: 0,
     });
   });
 
@@ -119,6 +121,29 @@ describe("links", () => {
     expect(
       parseParams(`?${encodeParams(withSeed(7, { markerSize: 0.1 }))}`).markerSize
     ).toBe(0.25);
+  });
+
+  // K114: the burn race's override keys, its clamps, the token round trip,
+  // and when it plays (turn clock, no turn minotaur).
+  it("reads the burn race from its override keys", () => {
+    const p = parseParams("?7&fi=fuse&fsp=0.6&fdl=12.5");
+    expect([p.fire, p.fireSpeed, p.fireDelay]).toEqual(["fuse", 0.6, 12.5]);
+    expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    expect(fireSettingsOf(p)).toEqual({ speed: 0.6, delay: 12.5 });
+    // Clamps: speed to [0.3, 0.95] (garbage = the default), delay to [0, 40].
+    expect(parseParams("?7&fsp=2").fireSpeed).toBe(0.95);
+    expect(parseParams("?7&fsp=0").fireSpeed).toBe(0.3);
+    expect(parseParams("?7&fsp=x").fireSpeed).toBe(0.75);
+    expect(parseParams("?7&fdl=99").fireDelay).toBe(40);
+    expect(parseParams("?7&fdl=-3").fireDelay).toBe(0);
+    expect(
+      parseParams(`?${encodeParams(withSeed(7, { fireSpeed: 3, fireDelay: 77 }))}`)
+    ).toMatchObject({ fireSpeed: 0.95, fireDelay: 40 });
+    // Off by default; never in real time or with the turn minotaur.
+    expect(fireSettingsOf(PARAM_DEFAULTS)).toBeNull();
+    expect(fireSettingsOf({ ...p, clock: "realtime" })).toBeNull();
+    expect(fireSettingsOf({ ...p, minotaur: "hunter" })).toBeNull();
+    expect(fireSettingsOf(parseParams("?7&fi=fuse"))).toEqual({ speed: 0.75, delay: 0 });
   });
 
   // K140: the finish confetti's override keys, the amount's clamp, and the
@@ -424,6 +449,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minotaur: "mt", minoSpeed: "msp", minoTelegraph: "mtg", minoSight: "msi",
   minoRoamRuns: "mro", minoTerritory: "mtr", minoAccuracy: "mac",
   minoPause: "mpa", minoSleep: "msl", hCutShare: "hcs",
+  fire: "fi", fireSpeed: "fsp", fireDelay: "fdl",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -446,6 +472,7 @@ function otherValue(name: keyof typeof PARAM_DEFAULTS): string | number | boolea
   if (name === "minoSleep") return 2; // K80 turns: its default is 0
   // A share whose default could be 0 (off), where halving changes nothing.
   if (name === "hCutShare") return d === 0.5 ? 0.25 : 0.5;
+  if (name === "fireDelay") return 12; // K114: its default is 0
   return (d as number) * 0.5;
 }
 // As a link writes it: booleans 0/1, colors without the "#".

@@ -154,6 +154,9 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["minoPause", "number"],
   ["minoSleep", "number"], // 116
   ["hCutShare", "number"], // 117, K74 stage 2 (H1)
+  ["fire", "enum", ["off", "fuse"]], // 118, K114
+  ["fireSpeed", "number"],
+  ["fireDelay", "number"], // 120
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

@@ -79,6 +79,12 @@ export const CAMERA_MODES: CameraMode[] = ["fit", "follow"];
 // append an option.
 export const CLOCK_MODES: ClockMode[] = ["turn", "realtime"];
 
+// K114's burn race (game/fire.ts): off, or a fuse lit at the entrance that
+// burns the maze behind you. The turn clock only until stage 2's fireClock,
+// and never with the turn-aligned minotaur (fireSettingsOf).
+export type FireMode = "off" | "fuse";
+export const FIRE_MODES: FireMode[] = ["off", "fuse"];
+
 // How the real-time minotaur shows under the fog of war (K80): always, only
 // while it hunts the player, or never (only where the fog has cleared).
 export type MinoFog = "always" | "hunting" | "never";
@@ -439,6 +445,15 @@ export interface UrlParams {
   minoAccuracy: number;
   minoPause: number;
   minoSleep: number;
+  // K114 burn race (game/fire.ts, brief docs/design/K114_burn.md): the
+  // fire, off | fuse; its speed r (fire distance per unit walked, in
+  // [FIRE_SPEED_MIN, FIRE_SPEED_MAX]) and its delay h (units walked before
+  // it spreads, [0, FIRE_DELAY_MAX]). It plays only on the turn clock and
+  // never with the turn minotaur (fireSettingsOf). Every change restarts
+  // the solve.
+  fire: FireMode;
+  fireSpeed: number;
+  fireDelay: number;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
@@ -446,6 +461,11 @@ export const MINO_SIGHT_MAX = 20;
 export const MINO_ROAM_RUNS_MAX = 30;
 export const MINO_TERRITORY_MAX = 20;
 export const MINO_SLEEP_MAX = 99;
+
+// The burn race's ranges (K114; url_state clamps, the panel's sliders).
+export const FIRE_SPEED_MIN = 0.3;
+export const FIRE_SPEED_MAX = 0.95;
+export const FIRE_DELAY_MAX = 40;
 
 // The two load-settle sliders' tops (K147). LOAD_SETTLE_MAX is a sentinel
 // as well: there the page waits for the first sleep (or main.ts's wall cap).
@@ -591,7 +611,36 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoAccuracy: DEFAULT_TURN_MINO.accuracy,
   minoPause: DEFAULT_TURN_MINO.pause,
   minoSleep: DEFAULT_TURN_MINO.sleep,
+  // K114: off; the brief's speed and delay. R.6.1 measured them hot (one
+  // wrong branch in ten traps 38% of careful players); r 0.6 or a delay of
+  // 10-20 is Levi's call (the brief's stage 1 handoff).
+  fire: "off",
+  fireSpeed: 0.75,
+  fireDelay: 0,
 };
+
+// The burn race a design plays (K114), or null without one. The fire runs
+// on the turn clock only (stage 2's fireClock brings it to real time) and
+// never with the turn-aligned minotaur (call 3: one antagonist at a time;
+// the panel switches the other off, and a link that sets both plays the
+// minotaur).
+export function fireSettingsOf(
+  p: Omit<UrlParams, "seed">
+): { speed: number; delay: number } | null {
+  if (p.fire !== "fuse" || p.clock === "realtime" || p.minotaur !== "off") {
+    return null;
+  }
+  return {
+    speed: clampFireSpeed(p.fireSpeed),
+    delay: clampTo(p.fireDelay, FIRE_DELAY_MAX),
+  };
+}
+
+// [FIRE_SPEED_MIN, FIRE_SPEED_MAX]; garbage reads as the default.
+function clampFireSpeed(v: number): number {
+  if (!Number.isFinite(v)) return PARAM_DEFAULTS.fireSpeed;
+  return Math.min(FIRE_SPEED_MAX, Math.max(FIRE_SPEED_MIN, v));
+}
 
 // The turn-aligned minotaur's settings from a design's params (K80 turns).
 export function turnMinoParamsOf(p: Omit<UrlParams, "seed">): TurnMinoParams {
@@ -687,6 +736,7 @@ export const ENUM_OPTIONS: {
   pluckGlow: PLUCK_GLOWS,
   minotaur: MINOTAUR_SETTINGS,
   minoSpeed: TURN_SPEEDS,
+  fire: FIRE_MODES,
 };
 
 function clamp01(v: number): number {
@@ -726,6 +776,8 @@ function fromCodecValues(
   p.hoverGlow = clampTo(p.hoverGlow, 1);
   clampTurnMino(p);
   p.hCutShare = clamp01(p.hCutShare);
+  p.fireSpeed = clampFireSpeed(p.fireSpeed);
+  p.fireDelay = clampTo(p.fireDelay, FIRE_DELAY_MAX);
   return p;
 }
 
@@ -999,6 +1051,10 @@ function readLegacy(
     minoAccuracy: clampTo(readNumber(query, "mac", D.minoAccuracy), 1),
     minoPause: clampTo(readNumber(query, "mpa", D.minoPause), 1),
     minoSleep: clampTo(readNumber(query, "msl", D.minoSleep), MINO_SLEEP_MAX),
+    // K114's burn race (`&fi=fuse&fsp=0.6&fdl=15`).
+    fire: readChoice(query, "fi", FIRE_MODES, D.fire),
+    fireSpeed: clampFireSpeed(readNumber(query, "fsp", D.fireSpeed)),
+    fireDelay: clampTo(readNumber(query, "fdl", D.fireDelay), FIRE_DELAY_MAX),
   };
 }
 

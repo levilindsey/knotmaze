@@ -9,6 +9,9 @@ import { Pane } from "tweakpane";
 import { APP_VERSION, BUILD_SHA, BUILD_TIME } from "../build_info";
 import type { UrlParams } from "./url_state";
 import {
+  FIRE_DELAY_MAX,
+  FIRE_SPEED_MAX,
+  FIRE_SPEED_MIN,
   LOAD_SETTLE_MAX,
   MINO_ROAM_RUNS_MAX,
   MINO_SIGHT_MAX,
@@ -936,6 +939,54 @@ export function buildPanel(
   void fowRow;
   void pathVizRow;
 
+  // A programmatic refresh that runs no row effects (the change handler
+  // still re-tints the row).
+  const quietRefresh = (r: RowApi): void => {
+    const was = syncing;
+    syncing = true;
+    try {
+      r.refresh?.();
+    } finally {
+      syncing = was;
+    }
+  };
+  // K114: the burn race (game/fire.ts), a modifier of the turn clock like
+  // the turn minotaur and exclusive with it (call 3: switching one on
+  // switches the other off). Every row restarts the solve. No slider steps
+  // (a step snaps a link's off-grid value on the next refresh, K130); an
+  // edit keeps 2 decimals of speed, 1 of delay.
+  const fFire = folder("Burn race", false, fMaze);
+  const fireRow = row(
+    fFire, p, "fire",
+    { options: { off: "off", fuse: "fuse" } },
+    "Turn-based: a fuse lit at the entrance burns along every thread behind you, slower than you walk, and burnt threads are gone. A run whose far end the fire reaches first smolders and refuses your tap. Trapped with no way left, you burn and the race starts over. Backtracking feeds the fire. Not with the minotaur: turning one on turns the other off. Restarts the solve.",
+    D.fire, () => {
+      if (params.fire !== "off" && params.minotaur !== "off") {
+        params.minotaur = "off";
+        quietRefresh(minotaurRow);
+      }
+      callbacks.onClockChange();
+    }
+  );
+  const fireSpeedRow = row(
+    fFire, p, "fireSpeed",
+    { min: FIRE_SPEED_MIN, max: FIRE_SPEED_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2) },
+    "The fire's speed as a fraction of yours: at 0.75 it burns 3 units of thread while you walk 4. Restarts the solve.",
+    D.fireSpeed, () => {
+      params.fireSpeed = Math.round(params.fireSpeed * 100) / 100;
+      callbacks.onClockChange();
+    }
+  );
+  const fireDelayRow = row(
+    fFire, p, "fireDelay",
+    { min: 0, max: FIRE_DELAY_MAX, pointerScale: 0.1, format: (v: number) => v.toFixed(1) },
+    "How far you walk before the fire starts to spread, in lattice units (a run is about 4). Restarts the solve.",
+    D.fireDelay, () => {
+      params.fireDelay = Math.round(params.fireDelay * 10) / 10;
+      callbacks.onClockChange();
+    }
+  );
+
   // K80: the real-time chase's tuning (game/minotaur.ts ChaseParams; the
   // defaults were picked by a headless simulation). All live. Since K80
   // turns the folder also holds the turn-aligned minotaur's rows, first;
@@ -961,7 +1012,14 @@ export function buildPanel(
     fMino, p, "minotaur",
     { options: { off: "off", hunter: "hunter", guard: "guard", stalker: "stalker" } },
     "Turn-based: a minotaur that moves when you move, from its lair at the finish. Hunter: roams, hunts you once you come within sight, then checks where it last saw you. Guard: the hunter, keeping to the ground around the finish. Stalker: always hunts you. Running into it, or it into you, sends you back to the entrance (counted); the entrance tail is a sanctuary. Tap your own position to wait a turn. No undo while it is on. Restarts the solve.",
-    D.minotaur, () => callbacks.onClockChange()
+    D.minotaur, () => {
+      // K114: one antagonist at a time (call 3).
+      if (params.minotaur !== "off" && params.fire !== "off") {
+        params.fire = "off";
+        quietRefresh(fireRow);
+      }
+      callbacks.onClockChange();
+    }
   );
   const turnRow = (
     parent: Parent,
@@ -1777,6 +1835,11 @@ export function buildPanel(
     fMinoBehavior.hidden = !turnMinoOn;
     minoRoamRunsRow.hidden = params.minotaur !== "hunter";
     minoTerritoryRow.hidden = params.minotaur !== "guard";
+    // K114: the burn race plays on the turn clock (stage 2 brings it to
+    // real time); its tuning shows while it is on.
+    fFire.hidden = !turnClock;
+    fireSpeedRow.hidden = params.fire === "off";
+    fireDelayRow.hidden = params.fire === "off";
     minoFogRow.hidden = !minoOn || !params.fogOfWar;
     minoRefogRow.hidden = !minoOn || !params.fogOfWar;
     moveSpeedRow.hidden = !fab || realtime;
