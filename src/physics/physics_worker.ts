@@ -1,4 +1,4 @@
-import { ChannelScheduler, PhysicsWorkerCore, epochMs } from "./physics_worker_core";
+import { ChannelScheduler, PhysicsWorkerCore } from "./physics_worker_core";
 import type { MainToWorker, WorkerToMain } from "./physics_worker_core";
 
 // THE PHYSICS WORKER (K7 stage 3, docs/design/K7_worker.md): the module
@@ -26,5 +26,7 @@ scope.onmessage = (e: MessageEvent<MainToWorker>): void => {
   core.onMessage(e.data);
 };
 
-// K7 stage 5: the module has run (the start gate's probe; main records it).
-scope.postMessage({ type: "hello", at: epochMs(performance.now()) }, { transfer: [] });
+// The module has run: hello (K7 stage 5, the start gate's probe), then the
+// scene the Worker's name carries, built before main's first message (K7
+// stage 7, the lever: THE NAME BUILD in physics_worker_core.ts).
+core.start((self as { name?: unknown }).name);

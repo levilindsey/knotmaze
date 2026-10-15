@@ -285,9 +285,12 @@ async function main(): Promise<void> {
   // and main hears the worker is up before the first frame's long task; made
   // after it, the `init` waited behind that task with the worker idle
   // (stage 4: about 300 ms on the desktop). A fallback before the first
-  // build never calls rebuild().
+  // build never calls rebuild(). K7 stage 7, THE LEVER: the Worker's name
+  // carries this design's scene params (`prebuild`), so the worker builds it
+  // while main boots, and the first rebuild() adopts that build when the
+  // params still match (__knotPerf().host.prebuild).
   const host: PhysicsHost = params.physicsWorker
-    ? new WorkerHost(() => rebuild())
+    ? new WorkerHost(() => rebuild(), { prebuild: params })
     : new InThreadHost();
 
   await app.init({
