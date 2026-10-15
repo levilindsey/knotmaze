@@ -363,18 +363,29 @@ and never reused.
   along the thread like the pulses; a strength param (0 = off), proposed
   daily-exempt (K57). Stage 2 of `docs/design/K93_K145.md` (K93's stage 1
   merged in ed8f284).
-  - owner: agent ad81d903c987ef01d (opus) of session d8031183, started
-    2026-10-14 09:37; told at 10:02 to wrap up and report by 10:30 (usage).
+  - owner: nobody since 2026-10-14 10:06 (agent ad81d903c987ef01d of
+    session d8031183, stopped early on the weekly usage cap). The glow is
+    built, tsc, the suite and the build are green, but nothing has been
+    verified in a browser or tuned, so it stays unmerged.
   - branch: `worktree-agent-ad81d903c987ef01d`
-    (`.claude/worktrees/agent-ad81d903c987ef01d`), from 582b081; last
-    commit: none yet.
-  - evidence: `.claude/probes/K145/` in its worktree (copy at merge).
-  - next: stage 2 (the glow, its strength param, the touch press). K92
-    runs alongside. K98 merged first (codec index 104), so K145's codec
-    append renumbers after it. At merge, carry its lore edits into the
-    topic files (`render-paint.md` and the gameplay files, since K173).
-  - brief: `docs/design/K93_K145.md` (stage 2).
-  - env: dev servers on ports 5580-5589.
+    (`.claude/worktrees/agent-ad81d903c987ef01d`), from 582b081, master
+    not merged; last commit: 0036256 (the Stage 2 handoff, on WIP
+    a28e0ea; unpushed).
+  - evidence: `.claude/probes/K145/` in that worktree (`npm_test.txt`,
+    `build.txt`).
+  - next: merge master (K98 took codec index 104, so `hoverGlow` becomes
+    105: the `param_codec.ts` comment, the table pin and the exempt-list
+    pin in `daily_link.test.ts`); the rim's mirror tests in
+    `paint_gameplay.test.ts`; the GPU census with the side varied (1.2/255
+    limit); the strength-0 A/B against master (expect 0 px); the mouse
+    and touch-press sheets, tuning RIM_EDGE, RIM_END_FADE and the default
+    (0.4, untuned); GPU time at rest and mid-hover under the perf lock;
+    the `render-paint.md` lore. Known on the branch: a pluck's overlay
+    hides the glow (`composedAtArc` has no across coordinate); runs under
+    about 2.5 world glow weakly (the end gap and fade are fixed; scale the
+    fade to the run); debug view 5 doesn't show it.
+  - brief: `docs/design/K93_K145.md` (Stage 2 and its Stage 2 handoff).
+  - env: none.
 - **K92** · Undo and redo for design changes (Levi, 2026-10-13). Two
   buttons beside the panel's open/close button, shown only while the
   panel is open, each enabled only when it can act; the mode badge moves
@@ -431,9 +442,10 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running on 10-14, from 09:37: K145 (stage 2 of
-K93 + K145) and K92 with K224 (opus; told at 10:02 to stop by 10:30 for the usage cap) and the round's phone
-pass (K156, sonnet, 1 h cap). K100, K132, K90 stage 1b, K173 (the rules
+(he may reorder). Running on 10-14, from 09:37: K92 with K224 (opus; told at 10:02 to
+stop by 10:30 for the usage cap) and the round's phone pass (K156,
+sonnet, 1 h cap). K145 (stage 2 of K93 + K145) stopped at 10:06 on the
+usage cap, unmerged (its handle says what's left). K100, K132, K90 stage 1b, K173 (the rules
 split), K93, K198 stage 1 and K98 merged at 08:39-10:03; the coordinator carries the running agents' rules edits
 into the topic files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -450,7 +462,7 @@ into the topic files at their merges. Then, as code slots free up:
    (ship, tune or stop) is in Waiting on Levi.
 6. K132 and K100: merged 2026-10-14 (402eb4b, 458e1e5).
 7. K93 + K145 (`docs/design/K93_K145.md`): stage 1 (K93) merged
-   2026-10-14 (ed8f284); stage 2 (K145) running from 09:37.
+   2026-10-14 (ed8f284); stage 2 (K145) stopped at 10:06 on the usage cap, unmerged; it resumes from its handoff.
 8. K92, running from 09:37 with K224; then K111 (both rework the panel).
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. K76 stage 2.
@@ -696,6 +708,8 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K228** · A choice's hover stays lit after the mouse leaves the canvas
+  (`src/main.ts`; seen by K145's agent, whose glow clears there).
 - **K226** · K98's spider glyph and role have no mesh (`MeshRole` excludes
   it in `src/render/marker_glyphs.ts`) until K114's call 7 decides what
   the spider marks.
