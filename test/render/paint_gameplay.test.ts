@@ -16,6 +16,7 @@ import {
   kPulseV,
   kReachWin,
   kRimAcross,
+  kRimScale,
   writeChainHeader,
   writeGeomTable,
   type KData,
@@ -60,7 +61,7 @@ function uniforms(k: OldClock): KUniforms {
     uKPulse: new Float32Array([mod(k.clock * 1.6), mod((k.clock + 0.3) * 1.6), s, fi * fi * (3 - 2 * fi)]),
     // Whole arms (the retired pass had no reach window), unless a test sets one.
     uKReach: new Float32Array([1e6, 1, 0, 0]),
-    uKGold: new Float32Array([((GOLD >> 16) & 255) / 255, ((GOLD >> 8) & 255) / 255, (GOLD & 255) / 255, 0]),
+    uKGold: new Float32Array([((GOLD >> 16) & 255) / 255, ((GOLD >> 8) & 255) / 255, (GOLD & 255) / 255, 1]),
   };
 }
 
@@ -438,27 +439,56 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
   // unwrapped ctrl span and its end gap; uKReach.zw the strength and the
   // hover point. kPaintAt's `rim` is the strength along the thread and
   // kRimAcross shapes it across the ribbon.
+  // K111 stage 4 (K264): the width is a viewer's slider (hoverGlowWidth,
+  // [0.3, 1]); it reaches kRimAcross as a scale on RIM_EDGE (uKGold.w,
+  // kRimScale), exactly 1 at the default. The scale goes through a
+  // Float32Array as the uniform does.
+  const rimScale = (w: number): number => new Float32Array([kRimScale(w)])[0];
+  it("K111 stage 4: the hover glow's width scale is exactly 1 at the default", () => {
+    expect(rimScale(PAINT_CONST.RIM_EDGE)).toBe(1);
+    expect(kRimScale(0)).toBe(1); // garbage reads as the default
+    expect(kRimScale(-1)).toBe(1);
+    expect(kRimScale(2)).toBeCloseTo(PAINT_CONST.RIM_EDGE, 12); // clamped to 1
+  });
+  it("K111 stage 4: at any width the mirror is 1 - smoothstep((1 - e) / width)", () => {
+    for (const W of [0.3, 0.5, 0.7, 0.85, 1]) {
+      const k = rimScale(W);
+      for (let i = 0; i <= 400; i++) {
+        const s = i / 400;
+        const e = Math.abs(2 * s - 1);
+        const x = Math.min(1, Math.max(0, (1 - e) / W));
+        expect(kRimAcross(s, k)).toBeCloseTo(1 - x * x * (3 - 2 * x), 6);
+      }
+      // Half strength halfway through the fade, at every width.
+      expect(kRimAcross(0.5 + 0.5 * (1 - W / 2), k)).toBeCloseTo(0.5, 6);
+    }
+  });
   it("K145, K111 stage 3: the hover glow peaks at both edges and fades out toward the middle", () => {
-    const W = PAINT_CONST.RIM_EDGE;
-    expect(kRimAcross(0)).toBe(1);
-    expect(kRimAcross(1)).toBe(1);
-    let prev = kRimAcross(0.5);
-    expect(prev).toBe(0);
+   for (const W of [0.3, PAINT_CONST.RIM_EDGE, 1]) {
+    const k = rimScale(W);
+    const kRimAt = (s: number): number => kRimAcross(s, k);
+    expect(kRimAt(0)).toBe(1);
+    expect(kRimAt(1)).toBe(1);
+    let prev = kRimAt(0.5);
+    expect(prev).toBeLessThan(1e-6);
     for (let i = 0; i <= 2000; i++) {
       const s = 0.5 + (0.5 * i) / 2000; // From the center line to an edge.
-      const v = kRimAcross(s);
-      expect(kRimAcross(1 - s)).toBeCloseTo(v, 12);
-      if (Math.abs(2 * s - 1) <= 1 - W) expect(v).toBe(0);
-      else expect(v).toBeGreaterThan(0);
+      const v = kRimAt(s);
+      expect(kRimAt(1 - s)).toBeCloseTo(v, 12);
+      if (Math.abs(2 * s - 1) <= 1 - W - 1e-9) expect(v).toBe(0);
+      else if (Math.abs(2 * s - 1) > 1 - W + 1e-6) expect(v).toBeGreaterThan(0);
       expect(v).toBeGreaterThanOrEqual(prev);
-      expect(v - prev).toBeLessThan(0.01);
+      expect(v - prev).toBeLessThan(0.01 / Math.max(0.5, W));
       prev = v;
     }
+   }
+    const W = PAINT_CONST.RIM_EDGE;
+    const kRimAt = (s: number): number => kRimAcross(s, rimScale(W));
     // Levi's look (K248): high at the edge, half strength halfway through the
     // fade, and wider than K145's square over the outer 0.6 (half strength
     // 0.18 of the half-width in from the edge). `inside` is the depth from
     // the edge, in half-widths.
-    const at = (inside: number): number => kRimAcross(0.5 + 0.5 * (1 - inside));
+    const at = (inside: number): number => kRimAt(0.5 + 0.5 * (1 - inside));
     expect(at(W / 2)).toBeCloseTo(0.5, 12);
     expect(at(0.1 * W)).toBeGreaterThan(0.95);
     expect(at(0.3)).toBeGreaterThan(0.5);

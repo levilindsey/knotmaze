@@ -200,6 +200,12 @@ describe("restorePlan", () => {
       rebuild: false,
       effects: ["onTrailChange"],
     });
+    // K111 stage 4: its width too.
+    expect(restorePlan(a, { ...a, hoverGlowWidth: 0.5 }, false)).toEqual({
+      changed: ["hoverGlowWidth"],
+      rebuild: false,
+      effects: ["onTrailChange"],
+    });
   });
 
   it("lists only real params, each under one effect", () => {

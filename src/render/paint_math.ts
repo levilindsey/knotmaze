@@ -262,7 +262,7 @@ export interface KUniforms {
   uKPaint: Float32Array; // (on, refBase, itemBase, hover)
   uKPulse: Float32Array; // (travelIn, travelOut, spacing, fadeIn)
   uKReach: Float32Array; // (reach, fade, rim, rimAt) pulse trains (K75), hover glow (K145)
-  uKGold: Float32Array; // (gold rgb, -)
+  uKGold: Float32Array; // (gold rgb, rimScale) rimScale: kRimScale (K111 stage 4)
   // K76 thread reveal (on, look, breath, threadWidth): read only by the
   // explore program (explore_glsl.ts); absent = the mode is off.
   uKExplore?: Float32Array;
@@ -1167,7 +1167,8 @@ export function writeRunTexels(
 // rim, rimAt), the trains' reach window in world arc from the junction
 // (K75: the pulseReach param; a train used to run its whole arm), then the
 // hover glow's strength and its hover point, an unwrapped ctrl on the RIM
-// item's run (K145); uKGold = (gold rgb, -).
+// item's run (K145); uKGold = (gold rgb, rimScale), rimScale the hover
+// glow's width as kRimScale gives it (K111 stage 4).
 // ======================================================================
 
 // The retired strip's gold-ramp U (ordering only - the caps' never-darken
@@ -1215,12 +1216,22 @@ export interface KPaintState {
   rim: number;
 }
 
+// The hover glow's width (the hoverGlowWidth param, in half-widths) as the
+// scale uKGold.w carries (K111 stage 4): RIM_EDGE / width, exactly 1 at the
+// default. A width at or below 0 reads as the default; the floor keeps the
+// scale finite.
+export function kRimScale(width: number): number {
+  const w = width > 0 ? Math.min(1, Math.max(0.05, width)) : PAINT_CONST.RIM_EDGE;
+  return PAINT_CONST.RIM_EDGE / w;
+}
+
 // GLSL twin: kRimAcross - the hover glow across the ribbon (K145, K111
 // stage 3; side = the ribbon's vUV.y, the edges at 0 and 1): 1 at either
-// edge, fading out smoothly to 0 at RIM_EDGE of the half-width in from it.
-export function kRimAcross(side: number): number {
+// edge, fading out smoothly to 0 at the glow's width in from it (K111
+// stage 4: scale = uKGold.w, kRimScale(width)).
+export function kRimAcross(side: number, scale: number): number {
   const e = Math.abs(2 * side - 1);
-  return 1 - smooth01((1 - e) / PAINT_CONST.RIM_EDGE);
+  return 1 - smooth01(((1 - e) / PAINT_CONST.RIM_EDGE) * scale);
 }
 
 // Ring distance on a closed chain (|a - b| folded), plain on open ones.
@@ -1593,7 +1604,7 @@ export function kShadeAll(
 ): number {
   const a = kShadeFx(D, U, c, ctrl, arc / c.arcPer, side, S);
   const st = kPaintAt(D, U, c, ctrl, arc, px, PAINT_TMP);
-  const rim = st.rim > 0 ? st.rim * kRimAcross(side) : 0;
+  const rim = st.rim > 0 ? st.rim * kRimAcross(side, U.uKGold[3]) : 0;
   kComposePaint(U, S, st, Math.max(kGlow(D, U, c, ctrl), rim));
   return a;
 }

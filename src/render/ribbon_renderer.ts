@@ -94,6 +94,7 @@ import {
   kGlow,
   kPaintAt,
   kRimAcross,
+  kRimScale,
   knotSection,
   smoothInv,
   sourcePieces,
@@ -875,6 +876,9 @@ export class RibbonRenderer {
   // main.ts syncs it every tick): 0 = off. The glow's run comes from
   // setRim, its reach is pulseReach's.
   hoverGlow = 0;
+  // Its width, how far in from each edge it reaches in half-widths (the
+  // hoverGlowWidth panel param, K111 stage 4; main.ts syncs it every tick).
+  hoverGlowWidth: number = PAINT_CONST.RIM_EDGE;
   // Live flow-undulation controls (sliders; main.ts syncs them every tick
   // like cuspRadius). See the FLOW_* constants: render-side displacement
   // only, never the physics state.
@@ -2233,7 +2237,7 @@ export class RibbonRenderer {
         const a = kShadeFx(data, U, c, ctrl, arc / c.arcPer, side, rgb);
         const st = kPaintAt(data, U, c, ctrl, arc, px, this.paintTmp);
         // The hover glow (K145), shaped across at `side` as SECTION_FRAG does.
-        const rim = st.rim > 0 ? st.rim * kRimAcross(side) : 0;
+        const rim = st.rim > 0 ? st.rim * kRimAcross(side, U.uKGold[3]) : 0;
         kComposePaint(U, rgb, st, Math.max(kGlow(data, U, c, ctrl), rim));
         return [rgb[0], rgb[1], rgb[2], a];
       },
@@ -4420,6 +4424,8 @@ export class RibbonRenderer {
     this.syncRimItem();
     U.uKReach[2] = this.paintRim ? Math.max(0, this.hoverGlow) : 0;
     U.uKReach[3] = this.rimAt;
+    // K111 stage 4: its width, as the scale kRimAcross reads (1 at the default).
+    U.uKGold[3] = kRimScale(this.hoverGlowWidth);
     // Junction fillets ride the same tick: live positions, live paint.
     this.rebuildFillets();
     this.tickWebFade();

@@ -252,6 +252,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // K80 turns stage 2 (K273): what a minotaur's catch resets.
   flag("minoRestart"), // 128
   flag("minoLair"), // 129
+  // K111 stage 4: the hover glow's width (K264).
+  num("hoverGlowWidth"), // 130
 ]);
 
 // The format version a blob names first. Bump it for anything but an

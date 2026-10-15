@@ -56,7 +56,7 @@ function uniforms(): KUniforms {
     uKPaint: new Float32Array([1, 0, 0, 0.5]),
     uKPulse: new Float32Array([0, 0.3, 1.5, 1]),
     uKReach: new Float32Array([1e6, 1, 0, 0]),
-    uKGold: new Float32Array([1, 0.8235, 0.2902, 0]),
+    uKGold: new Float32Array([1, 0.8235, 0.2902, 1]),
   };
 }
 

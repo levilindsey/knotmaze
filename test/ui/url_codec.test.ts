@@ -103,7 +103,25 @@ describe("links", () => {
       minoSleep: 0,
       fire: "off", fireSpeed: 0.75, fireDelay: 0,
       minoRestart: false, minoLair: true,
+      hoverGlowWidth: 0.85,
     });
+  });
+
+  // K111 stage 4: the hover glow width's override key, its clamp to
+  // [0.3, 1], and the token round trip (a viewer preference like hg=).
+  it("reads the hover glow width from its override key", () => {
+    const p = parseParams("?7&hgw=0.6");
+    expect(p.hoverGlowWidth).toBe(0.6);
+    expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    // The default stays out of the token.
+    expect(encodeParams(parseParams("?7&hgw=0.85"))).toBe("7");
+    expect(parseParams("?7&hgw=2").hoverGlowWidth).toBe(1);
+    expect(parseParams("?7&hgw=0").hoverGlowWidth).toBe(0.3);
+    expect(parseParams("?7&hgw=-1").hoverGlowWidth).toBe(0.3);
+    expect(parseParams("?7&hgw=x").hoverGlowWidth).toBe(0.85);
+    expect(
+      parseParams(`?${encodeParams(withSeed(7, { hoverGlowWidth: 0.1 }))}`).hoverGlowWidth
+    ).toBe(0.3);
   });
 
   // K98: the marker size's override key, its clamp to [0.25, 3], and the
@@ -485,7 +503,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", minoToward: "mtw",
   minoRefog: "mrf", confetti: "cf",
   confettiAmount: "cfa", pluckWhole: "pw", pluckCrossings: "pcx",
-  pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg",
+  pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg", hoverGlowWidth: "hgw",
   minotaur: "mt", minoSpeed: "msp", minoTelegraph: "mtg", minoSight: "msi",
   minoRoamRuns: "mro", minoTerritory: "mtr", minoAccuracy: "mac",
   minoPause: "mpa", minoSleep: "msl", hCutShare: "hcs",
