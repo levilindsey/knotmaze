@@ -63,6 +63,24 @@ and never reused.
   (K274). Options: an info button in the panel, a long press on the HUD,
   or leave it (rec.: leave it; the banner that ends a run explains every
   row the HUD showed). `docs/design/K274_K277.md` ("Stage 1 handoff").
+- **K286** · K268's draw order in a fading crossing (thread reveal):
+  stage 1 cuts the under thread by the over thread's coverage everywhere,
+  so while a crossing fades, whichever thread was drawn first shows
+  through the partial cut, as 2b's fade and the intro already do. The
+  alternative keeps the full over/under silhouette once the over thread
+  is more than half visible and fades only its casing. Built: the first
+  (rec.: keep it, the proof's ideal). `docs/design/K268.md` ("Stage 1
+  design", Calls).
+- **K288** · K279's picks from the plucks sheet (sent 2026-10-14 17:52;
+  `.claude/probes/K279/sheet2/`): the ripple look (off, wave, glint,
+  ring; built default wave) and its strengths (a tap's `prs` 1, an auto
+  pluck's `pra` 0.35), the sheen (`psh` 0.5), the tug (`ptg` 0.3, after
+  the wake check in K279's handle), the vibration (`psz` 2, `pgh` .5,
+  `pw` .75 against master's 1.75 / .35 / .5) and the auto-pluck volume
+  (`pag` 0.5, -6 dB); and whether the wave keeps bending the markers,
+  trail and fog or bends the ribbon layer only. Live once merged:
+  `?7&prp=wave` (glint, ring, off), `?7&prs=2&pra=1`, `?7&psh=1`,
+  `?7&ptg=1`, `?7&pag=1`. `docs/design/K279.md` ("Stage 1 handoff").
 - **K257** · K76 section 10's questions, for stage 2c (none blocks 2b;
   2c builds the recommendation where no answer has come): (1) a catch
   under thread reveal re-hides explored thread as `minoRefog` says, one
@@ -396,8 +414,8 @@ and never reused.
     `k174_page.mjs`); real time's `.claude/probes/K80/rt/` and K174's
     `.claude/probes/K174/rt/`; the research's `.claude/probes/K80/` and
     its kept worktree `.claude/worktrees/agent-a25726c24f262b138`.
-  - next: merge stage 2 after K268 and K279 (it appends to the codec
-    from 121, as K279 does; the second to merge renumbers). Then stage
+  - next: merge stage 2 after K279 (it appends to the codec from 121, as
+    K279 and K111 stage 4 do; each later merge renumbers). Then stage
     3's brief from its handoff: the final telegraph (2.7), the catch
     feedback (2.8, K270), sound and fog (2.10), the wait key, the pad's
     wait and a hover cue, a turn minoToward and the contact sheet.
@@ -562,7 +580,7 @@ and never reused.
   master's frame. Sheet `.claude/probes/K76/stage2b/out/K76_2b_sheet.png`;
   handoff `docs/design/K76.md` ("Stage 2b handoff"). Joints and caps fade
   with their thread (K275, answered 16:50); 2b's residuals are K276. Levi's shaped
-  gaps (2026-10-14 15:16) are K268, running now.
+  gaps (2026-10-14 15:16) are K268 (stage 1 merged 17:50).
   - owner: nobody since 2026-10-14 16:04 (stage 2b merged). Its agent
     ac6e354b85922e7aa of session d8031183 finished; its worktree is
     kept, as are 2a's (a5d63452980ed9fa3) and stage 1's
@@ -596,19 +614,26 @@ and never reused.
   (2b's handoff, "Shaped gaps (Levi, 15:16)" in `docs/design/K76.md`)
   cuts each under-thread pixel by the over thread's drawn coverage at
   its projection onto the over pass. Stage 1 builds the ribbon's shaped
-  cut with its proof and a desktop sheet; stage 2 the fans, pluck-still,
-  protect, the smooth-min, the underWindows and the caps (fading with their thread, K275).
-  - owner: claude agent ab65d913a3b9a3dcb (opus) of session d8031183,
-    stage 1, started 2026-10-14 16:11 with a 2 h cap (about 18:11;
-    ports 5730-5739).
-  - branch: `worktree-agent-ab65d913a3b9a3dcb`
-    (`.claude/worktrees/agent-ab65d913a3b9a3dcb`), from 4d3efe6; last
-    commit: `a65a271` (WIP; unpushed).
-  - evidence: `.claude/probes/K268/` in that worktree.
-  - next: stage 1 (the design section, the row-partial gap upload, the
-    classifier, the profile and the shaped cut, the over thread's own
-    tip, the CPU mirror, the proof sweep, the sheet); then stage 2.
-  - brief: `docs/design/K268.md` ("Stage 1"; 4d3efe6).
+  cut with its proof and a desktop sheet (merged 2026-10-14 17:50,
+  1e55365..61c8859); stage 2 the fans, pluck-still, protect, the
+  smooth-min, the underWindows and the caps (fading with their thread,
+  K275).
+  - owner: nobody since 2026-10-14 17:50 (stage 1 merged). Its agent
+    ab65d913a3b9a3dcb's worktree `.claude/worktrees/agent-ab65d913a3b9a3dcb`
+    is kept.
+  - branch: mainline; last commit: `61c8859` (stage 1 is
+    1e55365..61c8859, rebased from 36fe894 on 4d3efe6; 921 tests).
+  - evidence: `.claude/probes/K268/` (copied to the main checkout at the
+    merge, 171 files): the proof (0 ghosts, 0 under-cuts, max error
+    0.016), the census (hidden 405, solid 5, shaped 2), the GPU timings
+    (+3% in total with every vertex visited) and the partial sheet.
+  - next: stage 2 ("For stage 2" in the brief, with K275's fade: joints
+    and caps fade with the premultiplied strip alpha), after K111 stage 4
+    merges and never alongside K76 stage 2c (all three change the explore
+    and paint shaders). Residuals are K287; the draw order waits on Levi
+    (K286).
+  - brief: `docs/design/K268.md` ("Stage 1 design", "Stage 1 handoff
+    (2026-10-14 17:41)", "For stage 2").
 - **K279** · Plucks you can see, feel and hear (Levi, 2026-10-14 about
   16:11 and 16:12, verbatim: "I want to make plucks visualizations more
   emphasized. Can we add a new non-physics-based shock-wave/ripple sort
@@ -621,18 +646,60 @@ and never reused.
   prototypes each ask behind params (a ripple dropdown with a weaker
   auto-pluck strength, more vibration looks, a physics tug for player
   plucks, a stronger default vibration, an auto-pluck gain) and shows
-  Levi a sheet; stage 2 finishes what he picks.
-  - owner: claude agent abf68d906aaae3609 (opus) of session d8031183,
-    stage 1, started 2026-10-14 16:16 with a 2 h cap (about 18:16;
-    ports 5740-5749).
+  Levi a sheet; stage 2 finishes what he picks. Stage 1 built all six
+  behind ten daily-exempt params (seven codec appends; the vibration
+  defaults rose to `psz` 2, `pgh` .5, `pw` .75) and the sheet, sent to
+  Levi at 17:52 (his picks are K288, the residuals K289).
+  - owner: claude d8031183-cd9e-4b70-9968-661d70634c84, agent
+    abf68d906aaae3609 (opus), stage 1 done at 17:42 and resumed at 17:50
+    for the merge follow-up (cap 18:40): rebase onto master (its seven
+    codec rows at 121-127, after K114's 118-120), time a tap's wake on
+    screen at `ptg` 0.3 against 0 (its off-screen probe window ran each
+    wake at 4-10 fps for 3-7 s, likely the window's own throttling), then
+    keep 0.3, fix the wake path, or default `ptg` to 0.
   - branch: `worktree-agent-abf68d906aaae3609`
     (`.claude/worktrees/agent-abf68d906aaae3609`), from 8ab25d0; last
-    commit: `0f08f68` (WIP; unpushed).
-  - evidence: `.claude/probes/K279/` in that worktree.
-  - next: stage 1 (the design section, the prototypes, the neutral-value
-    A/B, the ripple's frame cost and the tug's sleep time, the sheet);
-    then Levi picks.
-  - brief: `docs/design/K279.md` ("Stage 1"; 8ab25d0).
+    commit: `88ae781` (stage 1, 9 commits; the rebase is under way).
+  - evidence: `.claude/probes/K279/` in that worktree (`k279_ab.mjs`,
+    `k279_live.mjs`, `k279_sheet.mjs`, `run_locked.ps1`, the logs and the
+    sheet in `sheet2/`); stage 1's neutral A/B was 0 px in 6 cases, 887
+    tests.
+  - next: after the follow-up reports, merge with
+    `.claude/probes/agents/merge_agent.ps1 -Id abf68d906aaae3609 -Probes
+    K279` (it deploys); then Levi picks from the sheet (K288) and stage 2
+    builds his picks.
+  - brief: `docs/design/K279.md` ("Stage 1", "Stage 1 handoff"; 8ab25d0).
+- **K264** · The hover rim's width becomes a slider (Levi, 2026-10-14
+  about 15:46, verbatim: "Rim width,0.4 is good, make it a slider., and
+  personal setting."; read as a width slider, `hoverGlow` staying 0.4,
+  both personal): a daily-exempt param (K57) beside `hoverGlow` that
+  sets the rim's `RIM_EDGE` (0.85 built and the default; a range of
+  about 0.3-1.0, so 0.4 is there if he meant the width). Small: a codec
+  append, a panel row, a uniform. K111 stage 4 with K265; sheets
+  `.claude/probes/K111/stage3/sheet/`, `docs/design/K111.md` ("Stage 3
+  handoff").
+  - owner: claude d8031183-cd9e-4b70-9968-661d70634c84, agent
+    a026ef520ab80d530 (opus): K111 stage 4, K264 with K265, from
+    2026-10-14 17:53 with a 2 h cap (about 19:53; ports 5770-5779).
+  - branch: `worktree-agent-a026ef520ab80d530`
+    (`.claude/worktrees/agent-a026ef520ab80d530`); last commit: `0faad0e`
+    (its base, the stage 4 brief on master).
+  - evidence: `.claude/probes/K111/stage4/` in that worktree (copied to
+    the main checkout at the merge); stage 3's `.claude/probes/K111/stage3/`.
+  - next: stage 4 (the width param beside `hoverGlow` with its CPU mirror
+    and parity at three widths, two or three High contrast looks behind a
+    probe hook, the same-state A/B at 0 px, the sheets); then Levi picks
+    a High contrast look and a stage 5 builds it (the mirror, parity, the
+    census).
+  - brief: `docs/design/K111.md` ("Stage 4: the rim's width slider and
+    High contrast's own highlight", 0faad0e).
+- **K265** · High contrast's own highlight (Levi, 2026-10-14 about
+  15:46: "Maybe the high contrast highlights should get new
+  treatment"): today High contrast keeps the pulses on the choices
+  (K248). Prototype two or three looks of its own (stage 2's contrast
+  mode was flat white with a black center line) and show them on a
+  sheet, desktop and phone, for Levi to pick. K111 stage 4 with K264;
+  `docs/design/K111.md` ("Stage 3 handoff"). Running with K264 in K111 stage 4 from 17:53; the handle is K264's.
 
 ## Next, in order
 
@@ -655,7 +722,7 @@ appends. Usage: don't hold agents back until the week nears 97% (Levi,
 23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38, 78% at 08:05,
 80% at 08:37, 82% at 09:04, 83% at 09:28, 84% at 09:36, 88% at 10:01 (the 09:37 batch was told to wrap up by 10:30 and launches stopped) and 91% at 10:56, when Levi said "Let's ignore the usage limits until 97%. Proceed"; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
 at about 07:53 "Keep going at full pace."; 95% at 11:54, and at about
-11:59 Levi reset the week to 0%; it resets Mondays at about 12:00).
+11:59 Levi reset the week to 0%; 17% at 17:55; it resets Mondays at about 12:00).
 Long work runs in stages from
 committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
 brief names its stage boundary, where the agent writes a "Stage N
@@ -668,8 +735,9 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K268 stage 1 from 16:11, K279 stage 1 from
-16:16 and K80 turns stage 2 from 17:40 (each opus, 2 h). K279's stage 2 waits for Levi's pick. At about 10:57 Levi lifted
+(he may reorder). Running: K80 turns stage 2 from 17:40 (cap 19:40),
+K279's merge follow-up from 17:50 (cap 18:40) and K111 stage 4 from
+17:53 (cap 19:53), each opus. K279's stage 2 waits for Levi's pick (K288). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
@@ -679,8 +747,8 @@ K235 + K239 at 12:44, K174 at 12:53, K111 stage 2 at 13:03, K198
 stage 2 at 14:03, K193 at 14:10, K76 stage 2a at 14:15, the
 burn-race and K74 stage 2 briefs at 14:38, K111 stage 3 at 14:58, K80
 turns stage 1 at 15:19, K76 stage 2b at 16:04, K74 stage 2 at 16:13,
-the burn race's stage 1 at 16:35 and K274 with K277 at 17:37; the
-coordinator carries the running agents' rules edits into the topic
+the burn race's stage 1 at 16:35, K274 with K277 at 17:37 and K268
+stage 1 at 17:50; the coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
    K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
@@ -704,9 +772,9 @@ files at their merges. Then, as code slots free up:
    merged 2026-10-14 (0e5a138..9c6cab3), and its stage 2, the highlight
    modes, at 13:03 (36d280a..5438a60); Levi picked at about 13:28, and
    stage 3 built the pick (K248), merged at 14:58 (365bc45..6588ec0).
-   Levi answered its calls at 15:46: K237 as built, and a stage 4 builds
-   K264's width slider and prototypes K265's High contrast looks, at
-   the next free code slot (K279 took the one K74 stage 2 freed).
+   Levi answered its calls at 15:46: K237 as built, and stage 4 (K264's
+   width slider, K265's High contrast prototypes) runs from 17:53
+   (`docs/design/K111.md`, 0faad0e; K264's handle).
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
     coordinator; Levi may reorder): K174's controls (merged 2026-10-14
@@ -719,9 +787,11 @@ files at their merges. Then, as code slots free up:
 11. K76 stage 2, in four stages (`docs/design/K76.md`, bcb969e): 2a (the
     re-base, the model, the paint variant) merged at 14:15 and 2b
     (crossing gaps and junction joints) at 16:04 (3ffed34..8d671ba).
-    K268 stage 1, the shaped gaps Levi asked for at 15:16, runs from
-    16:11 (`docs/design/K268.md`). 2c is next (the burn race merged at
-    16:35), then 2d, each from the handoff before it. 2c's codec removal
+    K268 stage 1, the shaped gaps Levi asked for at 15:16, merged at
+    17:50 (1e55365..61c8859; `docs/design/K268.md`). 2c and K268 stage 2
+    come next, one at a time and after K111 stage 4, since all three
+    change the explore and paint shaders; then 2d, each from the handoff
+    before it. 2c's codec removal
     is version 6, since
     K111 stage 3 took 5 (the codec note in
     `docs/design/K76_reveal_mode.md` still says 5).
@@ -773,22 +843,6 @@ answered by number.
 
 K5-K7 (split, frame loop, worker) follow.
 
-- **K264** · The hover rim's width becomes a slider (Levi, 2026-10-14
-  about 15:46, verbatim: "Rim width,0.4 is good, make it a slider., and
-  personal setting."; read as a width slider, `hoverGlow` staying 0.4,
-  both personal): a daily-exempt param (K57) beside `hoverGlow` that
-  sets the rim's `RIM_EDGE` (0.85 built and the default; a range of
-  about 0.3-1.0, so 0.4 is there if he meant the width). Small: a codec
-  append, a panel row, a uniform. K111 stage 4 with K265; sheets
-  `.claude/probes/K111/stage3/sheet/`, `docs/design/K111.md` ("Stage 3
-  handoff").
-- **K265** · High contrast's own highlight (Levi, 2026-10-14 about
-  15:46: "Maybe the high contrast highlights should get new
-  treatment"): today High contrast keeps the pulses on the choices
-  (K248). Prototype two or three looks of its own (stage 2's contrast
-  mode was flat white with a black center line) and show them on a
-  sheet, desktop and phone, for Levi to pick. K111 stage 4 with K264;
-  `docs/design/K111.md` ("Stage 3 handoff").
 - **K273** · What a minotaur catch resets (Levi, 2026-10-14 about
   15:46, verbatim: "We should also have a toggle to conditionally reset
   the level/Minotaur/fog when dying to the Minotaur."). Today a catch
@@ -1062,8 +1116,8 @@ K5-K7 (split, frame loop, worker) follow.
   unexplained and did not reproduce (lead: the pinned backdrop changing
   under load; the census now saves both frames); (e) not investigated:
   with the mode on, the strip costs 0.082 ms against 0.066, and at the
-  bound 2b's fans 0.58 against 0.55. The whole-texture gap upload is
-  K268 stage 1's. `docs/design/K76.md` ("Stage 2b handoff",
+  bound 2b's fans 0.58 against 0.55. The whole-texture gap upload went
+  row-partial in K268 stage 1 (5.42 MB against 30.9 MB a move). `docs/design/K76.md` ("Stage 2b handoff",
   "Residuals").
 - **K278** · K74 stage 2's residuals: (a) H1 ignores the exit
   clearance: on dailies 1-80 it puts 36 new junctions inside the 12 u
@@ -1550,6 +1604,30 @@ K5-K7 (split, frame loop, worker) follow.
 - **K189** · Fabric mode's `sceneAnimating()` is always true, so K24's
   ticker stop never fires in fabric: about 10 ms of JS a frame at 1x CPU,
   64 ms at 4x (K140's measurement, `docs/design/K140.md`).
+- **K287** · K268 stage 1's residuals: (a) the brief's full proof sweep
+  (0.05 ctrl reach steps over perpendicular, shallow and kink-eye
+  crossings, growth 0.1-0.9, over-thread tips around a footprint) is not
+  run: the proof ran 11 configurations on one state and exercised one
+  slot; (b) the two-piece (MAX) case is unmeasured on the GPU
+  (unit-tested only); (c) an over thread's own tip inside a footprint
+  (item 5) has no GPU check; (d) the contact sheet is the proof's crops
+  only; (e) fray's cut follows its wandering center fiber, so it
+  flickers along the fiber's sine; (f) the mode-off A/B was not re-run
+  after the rebase onto K114 (the coordinator's call: master's only
+  `src/render` change since 4d3efe6 was K114's 157 lines in
+  `fabric_maze_renderer.ts`, none on the gaps, and the A/B before the
+  rebase was 25/25 at 0 px); (g) the phone check, with the next phone
+  pass. `docs/design/K268.md` ("Not done in stage 1", Calls).
+- **K289** · K279 stage 1's residuals: (a) the first ripple costs a
+  10.3 ms spike; (b) fabric's real click drew no ripple in the sleep
+  probe (check its aim in `k279_live.mjs` before calling it a bug); (c)
+  the ripple filter covers the whole root (bound its filterArea to the
+  live discs, most of all for phones); (d) the ripple is sized in world
+  units, so it shrinks on a phone (a CSS-px floor?); (e) no High
+  contrast tie-in (ring off, or glint only?); (f) flash safety: an area
+  guard like GHOST_AREA_PX if the phone shows a need; (g) no webm clips;
+  (h) the phone pass: every look, the cost and the tug's sleep.
+  `docs/design/K279.md` ("Stage 1 handoff").
 
 ## Approved, to schedule (2026-10-11)
 
