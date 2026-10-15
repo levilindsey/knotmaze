@@ -14,7 +14,13 @@ import type { PhysicsDump } from "./probe_dump";
 import { MirrorSystem } from "./mirror_system";
 import { fingerprintOf, readSnapshot, snapshotBytes } from "./snapshot";
 import type { Fingerprint, SnapshotView } from "./snapshot";
-import type { MainToWorker, WorkerToMain } from "./physics_worker_core";
+import {
+  readWorkerName,
+  sameSceneParams,
+  sameTuning,
+  workerNameOf,
+} from "./physics_worker_core";
+import type { MainToWorker, NameBuild, WorkerToMain } from "./physics_worker_core";
 import { VisibleClock } from "./settle_budget";
 import type { TangleGraph } from "../core/types";
 import type { SceneParams } from "../core/scene_graph";
@@ -49,6 +55,14 @@ import type { SceneParams } from "../core/scene_graph";
 //   module Worker. A fallback after a scene was built calls onFallback
 //   (main rebuilds the design in-thread, a fresh settle; a K47 attempt
 //   lives in localStorage and survives). stats().host says which and why.
+// - THE LEVER (K7 stage 7): with opts.prebuild, the Worker's name carries
+//   that scene and the tuning, and the worker builds it as gen 0 at start
+//   (physics_worker_core's NAME BUILD), without waiting for main. The first
+//   build adopts it when its scene and tuning are the name's (the read
+//   back name, exactly), keeping gen 0; a ready heard before that build is
+//   kept for it. That build still posts init, at gen 0: the worker drops it
+//   over its name build, or builds from it if it could not read the name.
+//   A first build of another scene posts init at gen 1, as without a name.
 
 export const READY_TIMEOUT_MS = 3000;
 // The ready timeout counts main-thread chances to hear the worker, not wall
@@ -74,9 +88,13 @@ export interface WorkerPort {
 }
 
 export interface WorkerHostOptions {
-  // Starts the worker; the default is the module worker. Throwing (or no
+  // Starts the worker under `name` (the Worker's name: the lever's scene,
+  // or a plain label); the default is the module worker. Throwing (or no
   // Worker) falls back at once.
-  spawn?: () => WorkerPort;
+  spawn?: (name: string) => WorkerPort;
+  // The scene the first build is expected to be (THE LEVER above): the
+  // worker builds it at start, from the Worker's name.
+  prebuild?: SceneParams;
   readyTimeoutMs?: number;
   // Interpolation when no probe override is set.
   interpolate?: boolean;
@@ -98,12 +116,18 @@ function mainMs(epoch: number | undefined): number {
     : -1;
 }
 
-function spawnModuleWorker(): WorkerPort {
+function spawnModuleWorker(name: string): WorkerPort {
   if (typeof Worker === "undefined") throw new Error("no-worker");
   return new Worker(new URL("./physics_worker.ts", import.meta.url), {
     type: "module",
+    name,
   }) as unknown as WorkerPort;
 }
+
+// The Worker's name without a prebuild: a label the worker reads as no scene.
+const PLAIN_NAME = "knotmaze-physics";
+
+type ReadyMsg = Extract<WorkerToMain, { type: "ready" }>;
 
 // The structured-cloneable SceneParams the worker regenerates the graph
 // from (main's params object carries much more).
@@ -233,7 +257,17 @@ export class WorkerHost implements PhysicsHost {
     initAt: -1,
     readyAt: -1,
     heardAt: -1,
+    // K7 stage 7: when main took the first ready (heardAt, or the first
+    // build when the name build's ready came before it).
+    acceptAt: -1,
   };
+  // THE LEVER (K7 stage 7): the scene the Worker's name carries, as the
+  // worker reads it, until the first build; that build's verdict; a ready
+  // heard before it; what the accepted build came from.
+  private named: NameBuild | null = null;
+  private prebuildState: "" | "adopted" | "differs" = "";
+  private early: { msg: ReadyMsg; heard: number } | null = null;
+  private readySrc = "";
   // Inputs posted for this gen (every gen message but frame), against the
   // snapshot's count of inputs the worker had handled.
   private inputsPosted = 0;
@@ -285,10 +319,15 @@ export class WorkerHost implements PhysicsHost {
     this.onFallback = onFallback;
     this.readyTimeoutMs = opts.readyTimeoutMs ?? READY_TIMEOUT_MS;
     this.interpolateDefault = opts.interpolate ?? true;
+    const name = opts.prebuild
+      ? workerNameOf(sceneParamsOf(opts.prebuild), this.lastTuning)
+      : PLAIN_NAME;
+    // Read back, so the first build compares against what the worker builds.
+    this.named = readWorkerName(name);
     let w: WorkerPort;
     try {
       this.gate.spawnAt = performance.now();
-      w = (opts.spawn ?? spawnModuleWorker)();
+      w = (opts.spawn ?? spawnModuleWorker)(name);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       this.fallBack(msg === "no-worker" ? "no-worker" : `construct: ${msg}`);
@@ -340,9 +379,22 @@ export class WorkerHost implements PhysicsHost {
     this.frozenFlag = false;
     this.snapStepMs = 0;
     this.snapSubsteps = 0;
+    const scene = sceneParamsOf(params);
+    // THE LEVER: the first build adopts the worker's name build (gen 0)
+    // when it is this scene with this tuning.
+    const named = this.named;
+    this.named = null;
+    const adopt =
+      named !== null &&
+      this.genN === 0 &&
+      sameSceneParams(scene, named.params) &&
+      sameTuning(this.lastTuning, named.tuning);
+    if (named) this.prebuildState = adopt ? "adopted" : "differs";
+    const early = adopt ? this.early : null;
+    this.early = null;
     const mirror = new MirrorSystem(graph);
     this.mirror = mirror;
-    this.genN++;
+    if (!adopt) this.genN++;
     // As in-thread, the asleep flag carries over: main's settle or a wake
     // follows every build.
     this.expect = {
@@ -364,13 +416,16 @@ export class WorkerHost implements PhysicsHost {
     this.buildWall0 = performance.now();
     if (this.gate.postAt < 0) this.gate.postAt = this.buildWall0;
     this.armReadyTimer();
+    // Adopting, this init is gen 0: the worker drops it over its name build,
+    // or builds from it when it could not read the name.
     this.postRaw({
       type: "init",
       gen: this.genN,
-      params: sceneParamsOf(params),
+      params: scene,
       tuning: { ...this.lastTuning },
     });
     this.tuningPosted = true;
+    if (early) this.acceptReady(early.msg, early.heard);
     return mirror;
   }
 
@@ -662,6 +717,11 @@ export class WorkerHost implements PhysicsHost {
       initAt: this.gate.initAt,
       readyAt: this.gate.readyAt,
       heardAt: this.gate.heardAt,
+      acceptAt: this.gate.acceptAt,
+      // K7 stage 7: "adopted" / "differs" ("" without a name build), and
+      // what the accepted build came from ("name" / "init").
+      prebuild: this.prebuildState,
+      readySrc: this.readySrc,
       snapAgeMs: newest ? wallNow() - newest.wallAt : -1,
       // The newest snapshot's sim time (the mirror shows it on a frame).
       snapSim: newest ? newest.simTime : 0,
@@ -785,32 +845,14 @@ export class WorkerHost implements PhysicsHost {
     }
     switch (msg.type) {
       case "ready": {
-        if (msg.gen !== this.genN || !this.expect) return;
-        this.clearReadyTimer();
-        if (msg.bytes !== this.expect.bytes) {
-          this.fallBack(`snapshot size ${msg.bytes} B, mirror wants ${this.expect.bytes}`);
-          return;
-        }
-        if (!sameFingerprint(msg.fingerprint, this.expect.fp)) {
-          const a = msg.fingerprint;
-          const b = this.expect.fp;
-          this.fallBack(
-            `fingerprint ${a.n}/${a.c}/${a.chains}/${a.hash} vs mirror ${b.n}/${b.c}/${b.chains}/${b.hash}`
-          );
-          return;
-        }
-        this.ready = true;
         const heard = performance.now();
-        this.readyInfo = {
-          ms: heard - this.buildWall0,
-          genMs: msg.genMs,
-          ctorMs: msg.ctorMs,
-        };
-        if (this.gate.heardAt < 0) {
-          this.gate.heardAt = heard;
-          this.gate.initAt = mainMs(msg.initAt);
-          this.gate.readyAt = mainMs(msg.readyAt);
+        if (!this.expect) {
+          // The name build's, before the first build: kept for it.
+          if (msg.gen === 0 && this.named) this.early = { msg, heard };
+          return;
         }
+        if (msg.gen !== this.genN) return;
+        this.acceptReady(msg, heard);
         return;
       }
       case "hello":
@@ -844,6 +886,39 @@ export class WorkerHost implements PhysicsHost {
         });
         return;
       }
+    }
+  }
+
+  // The current gen's ready, heard at `heard`: checked against the mirror.
+  private acceptReady(msg: ReadyMsg, heard: number): void {
+    const expect = this.expect;
+    if (!expect) return;
+    this.clearReadyTimer();
+    if (msg.bytes !== expect.bytes) {
+      this.fallBack(`snapshot size ${msg.bytes} B, mirror wants ${expect.bytes}`);
+      return;
+    }
+    if (!sameFingerprint(msg.fingerprint, expect.fp)) {
+      const a = msg.fingerprint;
+      const b = expect.fp;
+      this.fallBack(
+        `fingerprint ${a.n}/${a.c}/${a.chains}/${a.hash} vs mirror ${b.n}/${b.c}/${b.chains}/${b.hash}`
+      );
+      return;
+    }
+    this.ready = true;
+    this.readySrc = msg.src;
+    this.readyInfo = {
+      // 0 for a name build's ready heard before the build.
+      ms: Math.max(0, heard - this.buildWall0),
+      genMs: msg.genMs,
+      ctorMs: msg.ctorMs,
+    };
+    if (this.gate.heardAt < 0) {
+      this.gate.heardAt = heard;
+      this.gate.acceptAt = performance.now();
+      this.gate.initAt = mainMs(msg.initAt);
+      this.gate.readyAt = mainMs(msg.readyAt);
     }
   }
 

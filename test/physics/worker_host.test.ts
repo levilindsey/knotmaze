@@ -8,7 +8,14 @@ import {
   INTERP_MAX_MS,
 } from "../../src/physics/worker_host";
 import type { WorkerPort, WorkerHostOptions } from "../../src/physics/worker_host";
-import { PhysicsWorkerCore, SyncScheduler } from "../../src/physics/physics_worker_core";
+import {
+  PhysicsWorkerCore,
+  SyncScheduler,
+  readWorkerName,
+  sameSceneParams,
+  sameTuning,
+  workerNameOf,
+} from "../../src/physics/physics_worker_core";
 import type { MainToWorker, WorkerToMain } from "../../src/physics/physics_worker_core";
 import { MirrorSystem } from "../../src/physics/mirror_system";
 import { InThreadHost } from "../../src/physics/physics_host";
@@ -55,7 +62,7 @@ class FakePort implements WorkerPort {
   }
 }
 
-function makeHost(spawn: () => WorkerPort, opts: WorkerHostOptions = {}) {
+function makeHost(spawn: (name: string) => WorkerPort, opts: WorkerHostOptions = {}) {
   const onFallback = vi.fn();
   const host = new WorkerHost(onFallback, { spawn, watchVisibility: false, ...opts });
   return { host, onFallback };
@@ -196,6 +203,191 @@ describe("WorkerHost on a fake worker", () => {
     port.onerror!({ message: "boom", preventDefault() {} } as unknown as ErrorEvent);
     expect(host.kind).toBe("in-thread");
     expect(host.reason).toBe("onerror: boom");
+  });
+});
+
+// K7 stage 7, THE LEVER: the Worker's name carries the first scene, and the
+// worker builds it at start (physics_worker.ts calls core.start(self.name)).
+describe("the name build (K7 stage 7)", () => {
+  // A spawn that starts the fake as physics_worker.ts does; `read` is the
+  // name the worker sees (a browser could lose or mangle it).
+  function named(read: (name: string) => unknown = (n) => n) {
+    const ports: FakePort[] = [];
+    const spawn = (name: string): WorkerPort => {
+      const port = new FakePort();
+      port.core.start(read(name));
+      ports.push(port);
+      return port;
+    };
+    return { spawn, port: () => ports[0] };
+  }
+
+  it("round-trips a scene and its tuning through a name, and reads nothing else", () => {
+    const name = workerNameOf(scene.params, scene.tuning);
+    const nb = readWorkerName(name);
+    expect(nb).not.toBeNull();
+    expect(sameSceneParams(nb!.params, scene.params)).toBe(true);
+    expect(sameTuning(nb!.tuning, scene.tuning)).toBe(true);
+    // Only the scene's fields travel (main's params carry many more).
+    expect(Object.keys(nb!.params).length).toBe(17);
+    const json = JSON.parse(name.slice(name.indexOf(" ") + 1));
+    const without = { ...json, params: { ...json.params } };
+    delete without.params.seed;
+    const tag = name.slice(0, name.indexOf(" ") + 1);
+    for (const bad of [
+      undefined,
+      42,
+      "",
+      "knotmaze-physics",
+      name.slice(0, -3),
+      name.replace(/^knotmaze-physics /, "other "),
+      tag + JSON.stringify({ ...json, v: 2 }),
+      tag + JSON.stringify(without),
+      tag + JSON.stringify({ ...json, params: { ...json.params, gridSize: "8" } }),
+      tag + JSON.stringify({ ...json, params: { ...json.params, gridSize: null } }),
+      tag + JSON.stringify({ ...json, tuning: { ...json.tuning, slack: "x" } }),
+    ]) {
+      expect(readWorkerName(bad)).toBeNull();
+    }
+    // -0 reads back as 0, so main compares against the read, never its own.
+    const negZero = { ...scene.params, turnBias: -0 };
+    const back = readWorkerName(workerNameOf(negZero, scene.tuning))!;
+    expect(sameSceneParams(back.params, negZero)).toBe(false);
+  });
+
+  it("adopts the name build when the first build is its scene, its ready heard first", () => {
+    const w = named();
+    const { host, onFallback } = makeHost(w.spawn, { prebuild: scene.params });
+    // The worker built at start, as gen 0, before any message from main.
+    const built = w.port().core.ps;
+    expect(built).not.toBeNull();
+    expect(w.port().core.gen).toBe(0);
+    w.port().deliver();
+    expect(host.stats().host?.ready).toBe(false);
+    build(host);
+    const h = host.stats().host!;
+    expect(h.prebuild).toBe("adopted");
+    expect(h.ready).toBe(true);
+    expect(h.readySrc).toBe("name");
+    expect(h.readyMs).toBe(0);
+    expect(host.gen).toBe(0);
+    // Main's gen-0 init was dropped over the name build.
+    expect(w.port().core.ps).toBe(built);
+    for (let k = 0; k < 3; k++) {
+      frame(host);
+      w.port().deliver();
+    }
+    expect(w.port().core.ps!.simTime).toBeGreaterThan(0);
+    expect(host.view!.simTime).toBeGreaterThan(0);
+    // A later build is a new gen, from an init.
+    build(host);
+    expect(host.gen).toBe(1);
+    w.port().deliver();
+    expect(host.stats().host?.ready).toBe(true);
+    expect(host.stats().host?.readySrc).toBe("init");
+    expect(w.port().core.ps).not.toBe(built);
+    expect(onFallback).not.toHaveBeenCalled();
+    expect(host.kind).toBe("worker");
+  });
+
+  it("adopts the name build when its ready arrives after the first build", () => {
+    const w = named();
+    const { host, onFallback } = makeHost(w.spawn, { prebuild: scene.params });
+    build(host);
+    expect(host.stats().host?.ready).toBe(false);
+    w.port().deliver();
+    const h = host.stats().host!;
+    expect(h.prebuild).toBe("adopted");
+    expect(h.ready).toBe(true);
+    expect(h.readySrc).toBe("name");
+    expect(host.gen).toBe(0);
+    frame(host);
+    w.port().deliver();
+    expect(onFallback).not.toHaveBeenCalled();
+    expect(host.kind).toBe("worker");
+  });
+
+  it("steps the adopted build as an init-built one, bit for bit", () => {
+    const w = named();
+    const a = makeHost(w.spawn, { prebuild: scene.params }).host;
+    const port = new FakePort();
+    const b = makeHost(() => port).host;
+    w.port().deliver();
+    build(a);
+    build(b);
+    port.deliver();
+    for (let k = 0; k < 20; k++) {
+      frame(a);
+      frame(b);
+      w.port().deliver();
+      port.deliver();
+    }
+    const pa = w.port().core.ps!;
+    const pb = port.core.ps!;
+    expect(pa.simTime).toBeGreaterThan(0);
+    expect(pa.simTime).toBe(pb.simTime);
+    expect(hashDump(w.port().core.core.dump()!)).toEqual(hashDump(port.core.core.dump()!));
+  });
+
+  it("posts init at gen 1 when the first build is another scene", () => {
+    const other = fabricScene("?9&gs=8");
+    const w = named();
+    const { host, onFallback } = makeHost(w.spawn, { prebuild: other.params });
+    w.port().deliver();
+    build(host);
+    expect(host.stats().host?.prebuild).toBe("differs");
+    expect(host.gen).toBe(1);
+    // The name build's ready (gen 0) is not this build's.
+    expect(host.stats().host?.ready).toBe(false);
+    expect(w.port().core.gen).toBe(1);
+    w.port().deliver();
+    expect(host.stats().host?.ready).toBe(true);
+    expect(host.stats().host?.readySrc).toBe("init");
+    frame(host);
+    w.port().deliver();
+    expect(onFallback).not.toHaveBeenCalled();
+    expect(host.kind).toBe("worker");
+  });
+
+  it.each([
+    ["lost", () => undefined],
+    ["truncated", (n: string) => n.slice(0, -5)],
+    ["of another version", (n: string) => n.replace('"v":1', '"v":9')],
+  ])("builds from the gen-0 init when the worker's name is %s", (_what, read) => {
+    const w = named(read);
+    const { host, onFallback } = makeHost(w.spawn, { prebuild: scene.params });
+    expect(w.port().core.ps).toBeNull();
+    w.port().deliver();
+    build(host);
+    // Main read its own name, so it adopted; the worker built from the init.
+    expect(host.stats().host?.prebuild).toBe("adopted");
+    expect(w.port().core.gen).toBe(0);
+    expect(w.port().core.ps).not.toBeNull();
+    w.port().deliver();
+    expect(host.stats().host?.ready).toBe(true);
+    expect(host.stats().host?.readySrc).toBe("init");
+    frame(host);
+    w.port().deliver();
+    expect(w.port().core.ps!.simTime).toBeGreaterThan(0);
+    expect(onFallback).not.toHaveBeenCalled();
+    expect(host.kind).toBe("worker");
+  });
+
+  it("names the worker plainly without a prebuild, and builds from init as before", () => {
+    const names: string[] = [];
+    const port = new FakePort();
+    const { host } = makeHost((name) => {
+      names.push(name);
+      port.core.start(name);
+      return port;
+    });
+    expect(readWorkerName(names[0])).toBeNull();
+    expect(port.core.ps).toBeNull();
+    build(host);
+    expect(host.gen).toBe(1);
+    port.deliver();
+    expect(host.stats().host?.prebuild).toBe("");
+    expect(host.stats().host?.readySrc).toBe("init");
   });
 });
 

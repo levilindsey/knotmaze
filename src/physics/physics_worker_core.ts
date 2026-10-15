@@ -33,6 +33,14 @@ import type { PhysicsDump } from "./probe_dump";
 // regenerated here; generation is deterministic, K108) and takes main's
 // gen. Every other gen-carrying message of another gen is dropped.
 //
+// THE NAME BUILD (K7 stage 7, the lever): the Worker's `name` carries the
+// first scene's params and tuning (workerNameOf), and start() builds them as
+// generation 0 while the module evaluates, before any message: main's
+// messages reach a dedicated worker only once main has handled its start,
+// which main's boot delays (stage 5's miss). Main adopts that build at its
+// first build when the params match, and still posts init at gen 0, which
+// builds only where nothing was built (a name the worker could not read).
+//
 // Departures from the in-thread host, by design: a drag applies when it
 // arrives (between substeps), the tuning too; the gate runs at batch ends,
 // not after main's render; the pre-settle ends at its end condition
@@ -161,6 +169,8 @@ export type WorkerToMain =
       // its own clock (stats().host initAt, readyAt).
       initAt: number;
       readyAt: number;
+      // K7 stage 7: what the build came from, the Worker's name or an init.
+      src: "name" | "init";
     }
   // K7 stage 5: posted once the worker's module has run (physics_worker.ts),
   // at epoch ms `at`: the start gate's probe (stats().host helloAt).
@@ -181,6 +191,93 @@ export type WorkerToMain =
   | ({ type: "dumped"; id: number } & PhysicsDump);
 
 export type Post = (msg: WorkerToMain, transfer?: Transferable[]) => void;
+
+// The scene a Worker's name carries (THE NAME BUILD, above).
+export interface NameBuild {
+  params: SceneParams;
+  tuning: PhysicsTuning;
+}
+
+const NAME_TAG = "knotmaze-physics ";
+const NAME_VERSION = 1;
+// Every SceneParams field and its type: what a name must carry, in order.
+// Typed as a full Record, so a new SceneParams field fails to compile here.
+const SCENE_FIELDS: Record<keyof SceneParams, "number" | "boolean" | "string"> = {
+  gridSize: "number",
+  weaveDensity: "number",
+  turnBias: "number",
+  seed: "number",
+  shape: "string",
+  mazeFabric: "boolean",
+  branchDensity: "number",
+  fourWayFraction: "number",
+  deadEnds: "boolean",
+  deadEndDensity: "number",
+  deadEndLength: "number",
+  hCutShare: "number",
+  entranceClearance: "number",
+  exitClearance: "number",
+  junctionSpacing: "number",
+  startAnchor: "string",
+  exitAnchor: "string",
+};
+const SCENE_KEYS = Object.keys(SCENE_FIELDS) as (keyof SceneParams)[];
+const TUNING_KEYS = Object.keys(DEFAULT_TUNING) as (keyof PhysicsTuning)[];
+
+// The Worker name that asks the worker to build this scene at start.
+export function workerNameOf(params: SceneParams, tuning: PhysicsTuning): string {
+  const p: Record<string, unknown> = {};
+  for (const k of SCENE_KEYS) p[k] = params[k];
+  const t: Record<string, unknown> = {};
+  for (const k of TUNING_KEYS) t[k] = tuning[k];
+  return NAME_TAG + JSON.stringify({ v: NAME_VERSION, params: p, tuning: t });
+}
+
+// The scene a Worker name asks for, or null when it asks for none or cannot
+// be read: another tag or version, bad JSON, or a field missing, of the
+// wrong type or not finite. JSON keeps every finite double exactly (but -0
+// reads back 0, so main compares against this read, never its own params).
+export function readWorkerName(name: unknown): NameBuild | null {
+  if (typeof name !== "string" || !name.startsWith(NAME_TAG)) return null;
+  let o: unknown;
+  try {
+    o = JSON.parse(name.slice(NAME_TAG.length));
+  } catch {
+    return null;
+  }
+  if (typeof o !== "object" || o === null) return null;
+  const r = o as { v?: unknown; params?: unknown; tuning?: unknown };
+  if (r.v !== NAME_VERSION) return null;
+  if (typeof r.params !== "object" || r.params === null) return null;
+  if (typeof r.tuning !== "object" || r.tuning === null) return null;
+  const src = r.params as Record<string, unknown>;
+  const params: Record<string, unknown> = {};
+  for (const k of SCENE_KEYS) {
+    const v = src[k];
+    if (typeof v !== SCENE_FIELDS[k]) return null;
+    if (typeof v === "number" && !Number.isFinite(v)) return null;
+    params[k] = v;
+  }
+  const tsrc = r.tuning as Record<string, unknown>;
+  const tuning: Record<string, unknown> = {};
+  for (const k of TUNING_KEYS) {
+    const v = tsrc[k];
+    if (typeof v !== "number" || !Number.isFinite(v)) return null;
+    tuning[k] = v;
+  }
+  return {
+    params: params as unknown as SceneParams,
+    tuning: tuning as unknown as PhysicsTuning,
+  };
+}
+
+// Field by field, exactly (Object.is): the same scene graph.
+export function sameSceneParams(a: SceneParams, b: SceneParams): boolean {
+  return SCENE_KEYS.every((k) => Object.is(a[k], b[k]));
+}
+export function sameTuning(a: PhysicsTuning, b: PhysicsTuning): boolean {
+  return TUNING_KEYS.every((k) => Object.is(a[k], b[k]));
+}
 
 // A performance.now() reading as epoch ms, comparable across threads (each
 // has its own time origin). Node's performance has a timeOrigin too.
@@ -268,6 +365,20 @@ export class PhysicsWorkerCore {
     };
   }
 
+  // The worker's first act, at module evaluation (physics_worker.ts): hello,
+  // then the scene the Worker's name asks for, as generation 0 (THE NAME
+  // BUILD), before any message can arrive.
+  start(name: unknown): void {
+    this.post({ type: "hello", at: epochMs(performance.now()) });
+    const nb = readWorkerName(name);
+    if (!nb) return;
+    try {
+      this.init(0, nb.params, nb.tuning, "name");
+    } catch (e) {
+      this.fail(e);
+    }
+  }
+
   onMessage(msg: MainToWorker): void {
     try {
       this.handle(msg);
@@ -292,7 +403,10 @@ export class PhysicsWorkerCore {
         this.dump(msg.id);
         return;
       case "init":
-        if (msg.gen > this.core.gen) this.init(msg.gen, msg.params, msg.tuning);
+        // A newer gen, or main's gen-0 init when the name built nothing.
+        if (msg.gen > this.core.gen || (msg.gen === this.core.gen && !this.core.ps)) {
+          this.init(msg.gen, msg.params, msg.tuning, "init");
+        }
         return;
     }
     if (this.broken || !this.core.ps || msg.gen !== this.core.gen) return;
@@ -348,7 +462,12 @@ export class PhysicsWorkerCore {
     this.flush();
   }
 
-  private init(gen: number, params: SceneParams, tuning: PhysicsTuning): void {
+  private init(
+    gen: number,
+    params: SceneParams,
+    tuning: PhysicsTuning,
+    src: "name" | "init"
+  ): void {
     const t0 = performance.now();
     const { graph } = buildSceneGraph(params);
     const t1 = performance.now();
@@ -378,6 +497,7 @@ export class PhysicsWorkerCore {
       bytes: this.bytes,
       initAt: epochMs(t0),
       readyAt: epochMs(performance.now()),
+      src,
     });
     this.dirty = true;
     this.flush();
