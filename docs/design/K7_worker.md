@@ -327,18 +327,20 @@ buffers, no SharedArrayBuffer.**
 
 ### 3. Cross-origin isolation
 
-Moot without SAB. Reasons not to take it anyway:
+Moot without SAB. For the record, if it is ever wanted:
 
 - `require-corp` blocks every cross-origin subresource that lacks a
   `Cross-Origin-Resource-Policy` header. The page's only one is the Web
-  Analytics beacon Cloudflare injects on levi.dev
-  (`static.cloudflareinsights.com`); whether it sends that header is
-  unverified, so isolation could silently cost the analytics.
-- `credentialless` avoids that, but Safari lacked it when last known
-  (not re-checked tonight).
-- It needs a `_headers` file on knotmaze.pages.dev, the levi.dev proxy
-  passing the headers through, and the dev server's config, for a
-  transport that saves under 0.1 ms a frame.
+  Analytics beacon Cloudflare injects on levi.dev. Its script
+  (`static.cloudflareinsights.com/beacon.min.js`) answers with
+  `Cross-Origin-Resource-Policy: cross-origin` and
+  `Access-Control-Allow-Origin: *` (a HEAD request, 2026-10-14), so
+  `require-corp` would not block it, and `credentialless` (which Safari
+  lacked when last known; not re-checked) is not needed.
+- It needs COOP and COEP on knotmaze.pages.dev (a `_headers` file), the
+  levi.dev proxy passing them through, and the dev server's config. That
+  is three places to keep right, for a transport that saves under 0.1 ms
+  a frame.
 
 ### 4. The frame loop
 
@@ -434,10 +436,12 @@ replaced by `host.frame(dt)`.
   gen.
 - **The worker regenerates the graph** from the params with
   `buildSceneGraph(params)`, a pure function extracted from `main.ts`'s
-  build. Stage 1 lists every input that build reads; none should be DOM.
-  Regenerating is deterministic (K108). `ready` carries a fingerprint
-  (counts and a hash of the initial positions); a mismatch falls back to
-  in-thread.
+  build (about lines 1452-1491). That build reads only `params`:
+  `generateLatticeKnotwork`, then for the fabric `buildMazePlan` with
+  `DEFAULT_MAZE_PARAMS` and `planAnchors`, `applyMazePlan` and
+  `applyMazeCuts`. The spike's `scene.ts` is the same code. Regenerating
+  is deterministic (K108). `ready` carries a fingerprint (counts and a
+  hash of the initial positions); a mismatch falls back to in-thread.
 - **Startup** (the spike): ready in 19 ms (knot), 48 (fabric), 71 (gs 18)
   and 137 (dense), mostly graph generation (3.9 / 32.7 / 47.7 / 116.4 ms)
   plus the constructor (5-9 ms). Main builds its own graph and mirror at
@@ -707,10 +711,10 @@ needs `main.ts` to itself. Ports 5790-5791; probes in
    becomes `grabAt(nearest(x, y, r), x, y)`. Main picks the particle
    with `nearest` on `host.view` and calls `host.grab(p, x, y)`.
 3. **`src/core/scene_graph.ts`: `buildSceneGraph(params, ...)`,** the
-   pure part of `main.ts`'s build (generation, the maze plan and apply),
-   which main and later the worker both call. List every input it reads
-   in the handoff. None may be DOM or live state; pass any that is
-   through the params.
+   pure part of `main.ts`'s build (generation, the maze plan and apply,
+   about lines 1452-1491), which main and later the worker both call.
+   On master it reads only `params`; keep it so (no DOM, no live state),
+   and return the hue groups with the graph.
 4. **Every write in `main.ts` goes through the host:** grab, dragTo
    (about 3608 and the snap-back at 4578), release (3616, 3692, 3697,
    3784, 4587), tug (3654; the delayed tug at 4177-4181 checks
@@ -1038,3 +1042,94 @@ Ports 5798-5799; probes in `.claude/probes/K7/stage5/`.
   context size is a stop; after one, re-read this brief and `git log`.
 - At the stop, append "Stage 5 handoff", commit and report. Start
   nothing beyond this stage.
+
+## Design handoff
+
+Stage 0 ended 2026-10-14 at about 20:15, inside its cap. The branch is
+`worktree-agent-a70e8b39f6fe8c19d`; no `src/` change. The evidence is in
+`.claude/probes/K7/design/` (untracked, for the coordinator to copy).
+
+### What was measured
+
+- **Baselines** on master `0d88091` under the perf lock (`k7_frames.mjs`
+  through `run_k7.ps1`; `k7_results.jsonl`, `frames/*.json`,
+  `summarize.mjs`): the daily's front door twice, the daily with physics
+  paused twice, gs 18, the knot, the fabric and dense, each with a drag
+  and a bare wake.
+- **Transport** (`transport/`): clone, transfer, SAB and round trips at
+  the design sizes and at 400 KB.
+- **The worker spike** (`spike/`): the real `ParticleSystem` in a module
+  worker built with the app's base `./`, served under `/knotmaze/`, for
+  four designs with main idle and busy. Bit-identical to main.
+- **The beacon's headers** (a HEAD request): CORP cross-origin.
+- **Not measured:** the phone (busy tonight; the plan is in Design 10);
+  the reveal's own share (no hook; stage 4 adds one); the cause of the
+  two freezes (not traced); input latency (estimated; stage 4 measures
+  it); interpolation's effect (stage 3's A/B). Unresolved: in the daily's
+  intro the frame callback's p50 (24.7 ms) exceeds the rAF interval's
+  (18 ms), so the summaries report fps, interval p95 and render alone,
+  not per-frame callback figures.
+
+### Levi's calls
+
+1. **The worker becomes the default** after the phone pass, with `phw=0`
+   and an automatic fallback to in-thread. Recommend yes.
+2. **No SharedArrayBuffer and no COOP/COEP:** transferred snapshots cost
+   under 0.1 ms a frame. Recommend yes.
+3. **No pointer-led grabbed point at first:** the grab trails the
+   pointer by about 40-50 ms instead of 140-280. Recommend yes; revisit
+   only if a drag feels laggy on the phone.
+4. **Keep the hidden pre-settle and the trefoil,** moved into the
+   worker. Recommend yes.
+5. **Physics pauses while main is frozen** (allowances from main's
+   frames): no jump after a freeze, but the daily sleeps at about 12 s
+   rather than 7-8. Recommend yes; moot once K9 removes the freezes.
+6. **Dense stays render-bound at about 30 fps;** its fix is K8, not K7.
+   FYI, or a priority call on K8.
+7. **The phone pass gates the default.** Recommend yes.
+8. **K8/K9's warm-up next, beside stage 2:** the 2.7 s and 2.0 s
+   freezes are the intro's remaining stutter, and the worker cannot fix
+   them. Recommend yes, starting with a trace.
+9. **`phw` as a link param,** exempt from the daily, like `stb` and
+   `lds`. Recommend yes.
+10. **Five stages instead of the brief's four.** Recommend yes.
+11. **FYI: physics runs at 0.76x real time at gs 18 in the worker** (1.0x
+    for the knot, 0.4x dense): the settle and drags move in mild slow
+    motion, as drags do today (0.70x), but at 55-60 fps instead of 7.
+
+Stage 1 needs none of these answered; stage 2 assumes 5 and 10.
+
+### Ledger items
+
+- **K7 handle:** design done (this file); next is stage 1.
+- **K9:** trace the two intro freezes (2.7 s at 1.1 s, 2.0 s at 3.8 s,
+  also with physics paused) before warming shaders; the worker cannot
+  remove them.
+- **K8:** dense (5448 particles) is render-bound at about 30 fps (render
+  alone 31-34 ms).
+- **K156:** the phone plan in Design 10, run in stage 5. The phone's
+  worker substep cost (big.LITTLE placement) is unknown until then.
+- **K162 (4):** budgets for drags become moot when the worker ships;
+  close it then.
+- **K147:** its budget retires in worker mode at stage 5; `stb` stays
+  for the fallback.
+- **K24 and K5:** after stage 5; K24 reads `host.asleep`.
+- **Probes:** 48 files use the freeze patch `__knotPS().step = ...`;
+  stage 4 ports the load-bearing ones, the rest need
+  `__knotPhysFreeze` or `&phw=0` when next used (a residual).
+- **Cleanup idea:** `particle_system.ts` carries dead surface
+  (`twistFillBias`, `hasCarve`, `chainArcLength` used only by tests).
+- **Residual:** `.claude/probes/K73/probe_follow.mjs` calls
+  `__knotExitPointer`, which no build defines.
+- **Residual:** k7_frames' callback p50 above its interval p50 in the
+  daily's intro (see What was measured).
+
+### For stage 1
+
+- The boundary table's line numbers are from `0d88091`; search for
+  `ps.` after other merges.
+- `ps.grabbedParticle` is read at about 1361 (K147's budget), 3662,
+  3783 and 3963; the host must keep it current on the mirror later, so
+  route those reads through `host.view` now.
+- The spike's `scene.ts` and `spike_worker.ts` are a working reference
+  for the graph build and the snapshot pool.
