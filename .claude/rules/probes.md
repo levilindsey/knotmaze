@@ -288,6 +288,19 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   `__knotPluckState().active` to empty. Probes:
   `.claude/probes/K111/stage4/` (`hm_probe.mjs ab|looks`,
   `rim_sheet.mjs`, `ab_all.ps1`, `census_widths.ps1`, `sheets.ps1`).
+- K299 (2026-10-14), injected paint: a probe that declares its own
+  spans, pulses or rim (`renderer.setPaint` / `setRim`, with `paintKey`
+  cleared) loads with `fw=0&snd=manual`. Music mode's auto plucks draw in
+  normal colors and ignore paintDebug (a pink band in debug view 5 was
+  one), so wait until `__knotPerf().plucks` reads 0 before shooting. A
+  sleeping knot never calls setPaint, so a probe that records the paint
+  by wrapping setPaint starts from the renderer's live declaration
+  (`paintSpans`, `paintPulses`, `paintCaps`, `paintRoutes`,
+  `paintTraveled`) and re-declares with `paintKey = ""`. Shoot two
+  pulse phases (t 100 and 100.45): at one phase a run can have no crest,
+  and a broken pulse matched the good one. Recipes:
+  `.claude/probes/K299/` (`ab_nudge.mjs`, `inject.mjs`,
+  `inject_rim.mjs`, `inject_hits.mjs`; `notes.md`).
 
 ## Census and diagnosis rules
 
