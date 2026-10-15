@@ -2842,3 +2842,20 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 - **K24** · Render on demand when the scene is fully static (battery);
   part of K6. An animated background (K21) must not defeat it. After
   K7's stage 5; it reads `host.asleep`.
+
+## K7 (2026-10-15, stage 5 merged)
+
+- **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
+  calls K302). Stages 1-4 merged: the worker behind `phw`, the probe bridge and
+  desktop acceptance (4d39a1f..de22867). Stage 5: the phone, then the default.
+  - owner: agent `adf244f47f53e8230` (opus) of claude session d8031183, stage 5 from 02:35 (cap 04:35; ports 5798-5799; owns `main.ts`; the phone first, under the phone lock); stage 4's worktree `abee0faca59fb8636` kept
+  - branch: `worktree-agent-adf244f47f53e8230` (`.claude/worktrees/agent-adf244f47f53e8230`, from `de22867`); last commit: `de22867` (master) until its first WIP commit
+  - evidence: `.claude/probes/K7/` (`stage3/`; `stage4/` with `k7_frames.mjs`, `k7_latency.mjs`, `run_s4.ps1`, `table_s4.mjs`, `k307/`, `ports/`); stage 5's in its worktree's `.claude/probes/K7/stage5/`
+  - next: stage 5: the worker start gate, the phone pass (Design 10's criteria, plus touch latency), then `phw` on by default if it passes, K147's budget bypass and the lore; then K5 and K6
+  - brief: `docs/design/K7_worker.md`, "Stage 5" and the stage 4 handoff's "For stage 5"
+
+## K370 (2026-10-15, the phone numbers)
+
+- **K370** · The worker's input latency (K7 s4): p50 105 ms on the daily, 70 on
+  the knot (in-thread 285), against a 50 ms target. Measure each stage first
+  (`k7_latency.mjs`); levers: newest snapshot while grabbed, more drag substeps.
