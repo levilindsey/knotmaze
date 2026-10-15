@@ -225,6 +225,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // K174's minotaur controls: it roams toward the player, a catch re-fogs.
   flag("minoToward"), // 106
   flag("minoRefog"), // 107
+  // K111 stage 2's highlight mode.
+  choice("highlightMode", ["pulses", "glow", "rims", "contrast"]), // 108
 ]);
 
 // The format version a blob names first. Bump it for anything but an

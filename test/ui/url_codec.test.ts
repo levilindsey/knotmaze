@@ -95,6 +95,7 @@ describe("links", () => {
       pluckWhole: 0.5, pluckCrossings: "through", pluckGlow: "off",
       markerSize: 1.08,
       hoverGlow: 0.4,
+      highlightMode: "pulses",
     });
   });
 
@@ -412,7 +413,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", minoToward: "mtw",
   minoRefog: "mrf", confetti: "cf",
   confettiAmount: "cfa", pluckWhole: "pw", pluckCrossings: "pcx",
-  pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg",
+  pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg", highlightMode: "hm",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

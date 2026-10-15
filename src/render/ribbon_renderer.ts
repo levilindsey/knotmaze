@@ -488,7 +488,8 @@ void main(void) {
   // The hover glow (K145): kst.w is its strength along the thread, shaped
   // across the ribbon here (only the ribbons have an across coordinate).
   highp float krim = kst.w > 0.0 ? kst.w * kRimAcross(vUV.y) : 0.0;
-  vec3 rgb = paintHere ? kComposePaint(base, kst, max(kgl, krim)) : base;
+  // The highlight mode shapes a choice across the ribbon (K111 stage 2).
+  vec3 rgb = paintHere ? kComposePaintAcross(base, kst, max(kgl, krim), vUV.y) : base;
   float gk = gapKeep(pxW, gTurn);
   if (uKBase.z > 4.5) {
     // DEBUG VIEW 5 (probes): the paint terms of the VISIBLE thread (gaps
@@ -800,6 +801,10 @@ export class RibbonRenderer {
   // main.ts syncs it every tick): 0 = off. The glow's run comes from
   // setRim, its reach is pulseReach's.
   hoverGlow = 0;
+  // How the choices are lit (the highlightMode param, K111 stage 2; main.ts
+  // syncs it every tick): a HIGHLIGHT_MODE id, sent as uKGold.w. 0 = the
+  // pulses.
+  highlightMode = 0;
   // Live flow-undulation controls (sliders; main.ts syncs them every tick
   // like cuspRadius). See the FLOW_* constants: render-side displacement
   // only, never the physics state.
@@ -4247,6 +4252,8 @@ export class RibbonRenderer {
     this.syncRimItem();
     U.uKReach[2] = this.paintRim ? Math.max(0, this.hoverGlow) : 0;
     U.uKReach[3] = this.rimAt;
+    // K111 stage 2: the highlight mode (syncGold writes only the rgb).
+    U.uKGold[3] = this.highlightMode;
     // Junction fillets ride the same tick: live positions, live paint.
     this.rebuildFillets();
     this.tickWebFade();

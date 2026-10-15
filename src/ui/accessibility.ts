@@ -15,7 +15,8 @@
 //   background drift, the plucks, the camera ease and the CSS); what this
 //   file adds is the flow (the maze's undulation), which that setting did
 //   not cover before. The intro animation and the pulses on the runs next
-//   to the player are NOT stilled (Levi's note).
+//   to the player are NOT stilled (Levi's note), and the highlight mode
+//   (K111 stage 2) stays the viewer's own under reduced motion.
 // - HIGH CONTRAST is its own preference, "follow system" by default: the
 //   OS's prefers-contrast: more or forced-colors: active turn it on until
 //   the viewer chooses.
@@ -199,6 +200,7 @@ export interface A11yTargets {
   fadeLength: number;
   gap: number;
   markerSize: number;
+  highlightMode: string;
 }
 export type A11yKey = keyof A11yTargets;
 
@@ -221,11 +223,15 @@ export const HIGH_CONTRAST_GAP_MIN = 0.12;
 export const HIGH_CONTRAST_MARKER_MIN = 1.5;
 export const HIGH_CONTRAST_PAGE = "#000000";
 export const HIGH_CONTRAST_PATH = "#ffff00";
+// The highlight mode High contrast wears (K111 stage 2, one of the
+// highlightMode options): white choices with a black center line.
+export const HIGH_CONTRAST_HIGHLIGHT = "contrast";
 
 // HIGH CONTRAST: the page is flat black (no backdrop texture behind or
 // through the crossing gaps, the fog follows it), the threads wear the
 // lightest palette, the gold route is pure yellow, crossings are cut crisp
-// with a wider dark gap, and the markers are larger.
+// with a wider dark gap, the markers are larger, and the choices are lit
+// flat white with a black center line, whatever their hue.
 export const HIGH_CONTRAST_OVERRIDES: Readonly<OverrideTable> = {
   background: () => "none",
   backgroundColorMode: () => "custom",
@@ -235,6 +241,7 @@ export const HIGH_CONTRAST_OVERRIDES: Readonly<OverrideTable> = {
   fadeLength: () => 0,
   gap: (v) => Math.max(v, HIGH_CONTRAST_GAP_MIN),
   markerSize: (v) => Math.max(v, HIGH_CONTRAST_MARKER_MIN),
+  highlightMode: () => HIGH_CONTRAST_HIGHLIGHT,
 };
 
 function tablesFor(flags: A11yFlags): Array<Readonly<OverrideTable>> {
