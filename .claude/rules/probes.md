@@ -339,6 +339,24 @@ desktop Chrome with the phone's viewport: plumbing only, never timings.
   needs `evaluateOnNewDocument` (a `Date` subclass whose `now()` and
   no-argument constructor add the offset), and a seeded store must be
   written only when absent, or every reload resets it.
+- K100 (2026-10-14), the fog over backtracks and restores:
+  `.claude/probes/K100/k100_fog.mjs <base> <outDir> free | daily |
+  dailyoff | dailystatic | realtime` (real taps and panel buttons; its
+  header says what each mode walks and checks; `lib.mjs` rebuilds the
+  fog's explored field from the stamps on a world grid, so two stamp
+  sets compare by IoU and revealed area, not pixels). DAILIES HAVE THE
+  FOG OFF, so the daily modes need `vite.fogdaily.config.ts`: the
+  checkout's own config plus an in-memory transform that adds
+  `fogOfWar: true` to DAILY_V1 (the source on disk is untouched), and
+  env `K100_DAILY_EXTRA` appends more overrides (`flowStrength: 0,`
+  with `?daily&phy=0` is a static daily, where a restore must reproduce
+  the live stamps exactly). `simRestore` (in k100_fog.mjs) lays, on the
+  geometry on screen, the stamps a restore of the attempt's taps would
+  make, by the K100 travel rule or the pre-K100 A -> B one, then puts the
+  live stamps back: a same-state live-vs-restore check without a reload.
+  Hooks: `__knotFabric().restarts` (the controller's reset() count) and
+  `.fog` (FabricMazeRenderer.fogProbe: on, held, stamps, radius and the
+  restart the stamps belong to).
 
 ## Census and diagnosis rules
 
