@@ -698,6 +698,10 @@ const MARKER_SLOTS = 4;
 // ctrl out (applyExploreGaps, exploreJointShown).
 const EXPLORE_MARKER_VIS = 0.98;
 const EXPLORE_JOINT_VIS = 0.98;
+// K76 stage 2c: hidden thread is empty space for input below this
+// visibility (pickThread, exploreShownAt: taps, hover, plucks, the tug's
+// grab).
+const EXPLORE_PICK_VIS = 0.5;
 const EXPLORE_JOINT_OUT = 0.25;
 // Fillet layer-vote reach terms (rebuildFillets): how much of the wedge
 // reach (fillHalf * FILLET_REACH_PER_HALF * cuspRadius) counts as a
@@ -3868,6 +3872,8 @@ export class RibbonRenderer {
   // its own under-gap (the visible thread there is its partner). Returns
   // the chain, its arc + fractional ctrl, the side of the thread the point
   // lies on (+1 = the left normal (-ty, tx)), and the centerline distance.
+  // K76 stage 2c: under the thread reveal a hidden sample (visibility below
+  // EXPLORE_PICK_VIS) is empty space, so hidden thread is never picked.
   pickThread(
     x: number,
     y: number,
@@ -3881,9 +3887,15 @@ export class RibbonRenderer {
   } | null {
     const r2 = radius * radius;
     const hits: Array<{ chain: number; k: number; d2: number }> = [];
+    const reveal = this.explorePieces !== null;
     for (let c = 0; c < this.chainSamples.length; c++) {
       const s = this.chainSamples[c];
       if (!s) continue;
+      // The reveal: a chain with no piece is hidden whole, a whole one
+      // shown whole; any other is gated per sample.
+      if (reveal && !this.exploreWhole[c] && !this.exploreByChain.has(c)) continue;
+      const gate = reveal && !this.exploreWhole[c];
+      const per = s.totalLength / (s.closed ? s.count : s.count - 1);
       let best = r2;
       let bk = -1;
       for (let k = 0; k < s.count; k++) {
@@ -3891,6 +3903,7 @@ export class RibbonRenderer {
         const dy = s.positions[k * 2 + 1] - y;
         const d2 = dx * dx + dy * dy;
         if (d2 < best) {
+          if (gate && this.exploreVisAt(c, this.ctrlAtArc(s, k * per)) < EXPLORE_PICK_VIS) continue;
           best = d2;
           bk = k;
         }
@@ -3991,7 +4004,9 @@ export class RibbonRenderer {
   // Start a render-only pluck on a chain at a ctrl (or an arc). spanCtrl =
   // the unit's ctrl span (the fabric walk run, unwrapped c1 >= c0); reach =
   // lobes kept each side. Returns false when it is sound-only (a chain
-  // mid-reveal, or nothing to vibrate).
+  // mid-reveal, or nothing to vibrate). K76 stage 2c: under the thread
+  // reveal the unit is clipped to the thread that shows around the plucked
+  // point (exploreShownSpan), and a pluck on hidden thread is sound-only.
   pluck(req: {
     chain: number;
     ctrl?: number;
@@ -4018,12 +4033,18 @@ export class RibbonRenderer {
         closed
       );
     const arc = req.arc ?? ctrlArc(req.ctrl ?? 0);
+    let sc = req.spanCtrl ?? null;
+    if (this.explorePieces && !this.exploreWhole[req.chain]) {
+      const at = req.ctrl ?? this.ctrlAtArc(samples, arc);
+      sc = this.exploreShownSpan(req.chain, at, sc, len, closed);
+      if (!sc) return false;
+    }
     let span: [number, number] | null = null;
-    if (req.spanCtrl) {
-      const a0 = ctrlArc(req.spanCtrl[0]);
-      let a1 = ctrlArc(req.spanCtrl[1]);
+    if (sc) {
+      const a0 = ctrlArc(sc[0]);
+      let a1 = ctrlArc(sc[1]);
       // A wrap run on a closed chain (c1 past the seam) or a whole loop.
-      if (closed && (a1 < a0 || req.spanCtrl[1] - req.spanCtrl[0] >= len)) {
+      if (closed && (a1 < a0 || sc[1] - sc[0] >= len)) {
         a1 += samples.totalLength;
       }
       span = [a0, a1];
@@ -4904,6 +4925,56 @@ export class RibbonRenderer {
       if (v > best) best = v;
     }
     return best;
+  }
+
+  // K76 stage 2c: whether input may touch a chain point (always with the
+  // reveal off).
+  exploreShownAt(chain: number, ctrl: number): boolean {
+    return this.exploreVisAt(chain, ctrl) >= EXPLORE_PICK_VIS;
+  }
+
+  // K76 stage 2c: the shown stretch (unwrapped ctrls, found in 0.25 ctrl
+  // steps) around a chain ctrl, inside `lim` (a pluck unit's span; else
+  // half a loop each way, or the open chain); null when the point itself
+  // is hidden. A pluck's unit is clipped to it.
+  private exploreShownSpan(
+    chain: number,
+    ctrl: number,
+    lim: [number, number] | null,
+    len: number,
+    closed: boolean
+  ): [number, number] | null {
+    const STEP = 0.25;
+    let u = ctrl;
+    let lo0: number;
+    let hi0: number;
+    if (lim) {
+      [lo0, hi0] = lim;
+      if (closed && u < lo0) u += len;
+      u = Math.max(lo0, Math.min(hi0, u));
+    } else if (closed) {
+      lo0 = u - len / 2;
+      hi0 = u + len / 2;
+    } else {
+      lo0 = 0;
+      hi0 = len - 1;
+    }
+    const at = (c: number): boolean =>
+      this.exploreShownAt(chain, closed ? ((c % len) + len) % len : Math.max(0, Math.min(len - 1, c)));
+    if (!at(u)) return null;
+    let lo = u;
+    while (lo > lo0) {
+      const n = Math.max(lo0, lo - STEP);
+      if (!at(n)) break;
+      lo = n;
+    }
+    let hi = u;
+    while (hi < hi0) {
+      const n = Math.min(hi0, hi + STEP);
+      if (!at(n)) break;
+      hi = n;
+    }
+    return [lo, hi];
   }
 
   // Texels the last paint declaration change uploaded (probes).

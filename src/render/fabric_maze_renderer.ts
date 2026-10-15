@@ -71,6 +71,10 @@ import { EXPLORE_LOOK_DEFAULT, exploreLookHasHalo } from "./explore_glsl";
 const EXPLORE_GROW_S = 0.45;
 // K76 stage 2c: the intro's close-in, as long as the fog's (FOG_INTRO_DUR).
 const EXPLORE_CLOSE_S = 1.6;
+// The fit camera's box: sampled every 2 ctrl, grown by 1 world (context
+// around what shows; main.ts adds its 0.3 on top).
+const EXPLORE_FIT_STEP = 2;
+const EXPLORE_FIT_PAD = 1;
 const HALO_TINT = 0xa8e4ff;
 const HALO_ALPHA = 0.8;
 import {
@@ -459,6 +463,9 @@ export class FabricMazeRenderer {
   private exploreHoldT = -1;
   private holdDist: Map<string, number> | null = null;
   private holdDistN = -1;
+  // The fit camera's box and the declaration it was measured for.
+  private exploreBox: { minX: number; minY: number; maxX: number; maxY: number } | null = null;
+  private exploreBoxFor: ExploreView | null = null;
   private haloLayer: Container;
   private haloSprites: Sprite[] = [];
   // K80: the minotaur (syncMinotaur): its marker over its red highlight,
@@ -780,7 +787,7 @@ export class FabricMazeRenderer {
         const nearHead =
           (exA && ff - e.ctrlA <= HEAD_EXCLUDE) ||
           (exB && e.ctrlB - ff <= HEAD_EXCLUDE);
-        if (!nearHead || e.ctrlB - e.ctrlA <= 2 * HEAD_EXCLUDE) {
+        if ((!nearHead || e.ctrlB - e.ctrlA <= 2 * HEAD_EXCLUDE) && this.shownAt(e.chain, ff)) {
           this.pointFlowed(e.chain, this.ctrlMod(e.chain, ff), this.scratch, 0);
           const dx = this.scratch[0] - x;
           const dy = this.scratch[1] - y;
@@ -794,6 +801,13 @@ export class FabricMazeRenderer {
       }
     }
     return best;
+  }
+
+  // K76 stage 2c: under the thread reveal, hidden thread is empty space
+  // for every tap and hover (the ribbons' exploreShownAt).
+  private shownAt(chain: number, ctrl: number): boolean {
+    if (!this.explore.on) return true;
+    return this.ribbons.exploreShownAt(chain, this.ctrlMod(chain, ctrl));
   }
 
   // K80 turns: the distance from a world point to the nearest tappable
@@ -811,7 +825,7 @@ export class FabricMazeRenderer {
         const nearHead =
           (exA && ff - e.ctrlA <= HEAD_EXCLUDE) ||
           (exB && e.ctrlB - ff <= HEAD_EXCLUDE);
-        if (!nearHead) {
+        if (!nearHead && this.shownAt(e.chain, ff)) {
           this.pointFlowed(e.chain, this.ctrlMod(e.chain, ff), this.scratch, 0);
           const dx = this.scratch[0] - x;
           const dy = this.scratch[1] - y;
@@ -1783,6 +1797,46 @@ export class FabricMazeRenderer {
     }
     const r = this.fowRadius * this.fogRadiusMul();
     return { minX: minX - r, minY: minY - r, maxX: maxX + r, maxY: maxY + r };
+  }
+
+  // K76 stage 2c: world bounds of the thread the reveal shows (each piece's
+  // solid part and half its fades, sampled every EXPLORE_FIT_STEP ctrl),
+  // grown by EXPLORE_FIT_PAD; null with the reveal off. Cached per
+  // declaration (syncExplore runs on every update() and move frame).
+  // main.ts fits the camera to it, as to the fog's box; while the intro
+  // holds everything shows, so it frames the whole maze, and the close-in
+  // zooms in onto what was seen.
+  exploreVisibleBounds(): {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+  } | null {
+    const v = this.exploreLast;
+    if (!this.explore.on || !v || v.pieces.length === 0) return null;
+    if (this.exploreBoxFor === v) return this.exploreBox;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const p of v.pieces) {
+      const a = p.c0 - 0.5 * p.f0;
+      const b = p.c1 + 0.5 * p.f1;
+      const n = Math.max(1, Math.ceil((b - a) / EXPLORE_FIT_STEP));
+      for (let i = 0; i <= n; i++) {
+        this.pointFlowed(p.chain, this.ctrlMod(p.chain, a + ((b - a) * i) / n), this.scratch, 0);
+        const x = this.scratch[0];
+        const y = this.scratch[1];
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+    const r = EXPLORE_FIT_PAD;
+    this.exploreBox = { minX: minX - r, minY: minY - r, maxX: maxX + r, maxY: maxY + r };
+    this.exploreBoxFor = v;
+    return this.exploreBox;
   }
 
   // K198: the right edge (world x) of the start, head and exit discs on
