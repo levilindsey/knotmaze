@@ -693,7 +693,7 @@ Placement of related work:
 
 Put every main-thread touch of physics behind one interface, still on
 the main thread, with nothing on screen and no number changing. Stage 1
-needs `main.ts` to itself. Ports 5790-5791; probes in
+needs `main.ts` nearly to itself (see Setup). Ports 5810-5811; probes in
 `.claude/probes/K7/stage1/`.
 
 ### The work
@@ -765,8 +765,14 @@ needs `main.ts` to itself. Ports 5790-5791; probes in
 
 ### Setup
 
-- The shared setup above; ports 5790-5791.
-- Nothing else that edits `main.ts` runs alongside.
+- The shared setup above; ports 5810-5811 (5790-5799 belong to K299
+  until it merges, 5800-5809 to K298).
+- Alongside: K298 (the hover glow, `docs/design/K298_hover_glow.md`)
+  makes small `main.ts` edits: param syncs next to `hoverGlowWidth`'s,
+  and a mouse pick radius in place of `GRAB_RADIUS` at the pick call
+  sites (hover, click, the thread cursor, the drag grab). Keep the radius
+  a plain argument at those sites so the second merge stays mechanical.
+  Nothing else that edits `main.ts` runs alongside.
 
 ### Process
 
