@@ -93,8 +93,9 @@ export function renderLoop(ITER) {
 // it); on a build without the hook the step patch freezes, as before.
 export async function pinAll() {
   const r = window.__knotRenderer(), proto = Object.getPrototypeOf(r);
-  // With phw=1 the physics runs in a Web Worker, whose mirror refuses a step
-  // patch; in-thread, __knotPhysFreeze(true) IS the patch.
+  // With the worker (the default since K7 stage 6) the physics runs in a Web
+  // Worker, whose mirror refuses a step patch; in-thread (phw=0),
+  // __knotPhysFreeze(true) IS the patch.
   if (window.__knotPhysFreeze) await window.__knotPhysFreeze(true);
   else if (window.__knotPS && window.__knotPS()) window.__knotPS().step = function () {};
   r.flowStrength = 0;

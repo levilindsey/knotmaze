@@ -47,9 +47,9 @@ export default defineConfig({
   base: "./",
   // K122: emits licenses.html (third-party notices) from the bundled modules.
   plugins: [notices()],
-  // K7 stage 3: the physics worker (src/physics/physics_worker.ts, behind
-  // `phw`) is an ES module worker, bundled on its own; noticesWorker() hands
-  // its modules to the notices page.
+  // K7 stage 3: the physics worker (src/physics/physics_worker.ts, the
+  // default host; `phw=0` opts out) is an ES module worker, bundled on its
+  // own; noticesWorker() hands its modules to the notices page.
   worker: { format: "es", plugins: () => [noticesWorker()] },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),

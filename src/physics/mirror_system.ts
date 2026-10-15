@@ -166,7 +166,7 @@ Object.defineProperty(MirrorSystem.prototype, "step", {
   },
   set() {
     throw new Error(
-      "KnotMaze: physics runs in a Web Worker (phw=1), so ps.step cannot be " +
+      "KnotMaze: physics runs in a Web Worker (the default), so ps.step cannot be " +
         "patched: freeze with __knotPhysFreeze(true) (a Promise), or load the " +
         "page with &phw=0 for the in-thread system."
     );

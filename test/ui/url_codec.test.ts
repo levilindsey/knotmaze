@@ -86,7 +86,7 @@ describe("links", () => {
       backgroundGrain: 1, backgroundAngle: -1, backgroundColorMode: "gamut",
       backgroundBase: "#151b28", backgroundAccent1: "#7ab8cd",
       backgroundAccent2: "#cdb17a", backgroundAccent3: "#aa7acd",
-      settleBudget: 12, loadSettle: 0.45, physicsWorker: false,
+      settleBudget: 12, loadSettle: 0.45, physicsWorker: true,
       clock: "turn", playerPace: 10, minoWanderPace: 0.5, minoHuntPace: 0.7,
       minoPaceJitter: 0.2, minoPauseChance: 0.3, minoPauseMin: 0.5,
       minoPauseMax: 2, minoDetect: 15, minoLose: 25, minoCatch: 1,

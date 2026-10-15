@@ -161,7 +161,8 @@ describe("WorkerHost on a fake worker", () => {
     });
     expect(none.host.reason).toBe("no-worker");
     // The default spawn where there is no Worker at all (Node has none):
-    // main.ts constructs a WorkerHost for phw=1 whatever the browser.
+    // main.ts constructs a WorkerHost whenever phw is on (the default since
+    // K7 stage 6), whatever the browser.
     expect(typeof Worker).toBe("undefined");
     const bare = new WorkerHost(vi.fn(), { watchVisibility: false });
     expect(bare.kind).toBe("in-thread");

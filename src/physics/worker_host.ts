@@ -23,7 +23,8 @@ import type { SceneParams } from "../core/scene_graph";
 // and 6): the physics runs in a module worker (physics_worker.ts, the stage
 // 2 core) and main reads a MIRROR (mirror_system.ts) built from its own
 // graph, which this host fills from the worker's snapshots. Behind `phw`
-// (default off); main.ts picks the host once, at page start.
+// (on by default since stage 6; `&phw=0` runs the in-thread host); main.ts
+// picks the host once, at page start.
 //
 // - INPUT is marshaled: grab/dragTo/release also record the grab on the
 //   mirror, so main reads grabbedParticle right after its own call; tug
