@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K365.
+Next free ID: K370.
 
 ## Waiting on Levi
 
@@ -103,6 +103,9 @@ Next free ID: K365.
 - **K362** · K76 2c's calls (`K76.md` "Stage 2c handoff"). Recs: the intro
   stays off by default; 2d widens the start view (at the 90 cap) to a ~2 x
   (revealDistance + 2) span. Called: the mode stays in the panel before the MAX fix.
+- **K368** · High contrast's ripple (K289 e): rec ring under High contrast
+  (`HIGH_CONTRAST_OVERRIDES`, `src/ui/accessibility.ts`); glint has little room
+  on light threads over black. Inferred, not shot; fallback a stronger glint.
 
 ## In progress
 
@@ -216,14 +219,6 @@ Next free ID: K365.
   - evidence: `.claude/probes/K268/` (stage 1's); stage 2's in its worktree's `.claude/probes/K268/stage2/`
   - next: first the MAX defect K76 2c found (crossing 275, both threads walked: the mode on cuts 0 px of gap against 1010 px off, so the threads fuse; `.claude/probes/K76/stage2c/out/census_new2/shaped_c275.png`), then K275's fade, the fans and still pluck, protect, smooth-min, underWindows; never alongside K298, K299 or K111 s5; K290 next in the chain
   - brief: `docs/design/K268.md` ("For stage 2"); `docs/design/K76.md` ("Stage 2c handoff", "For K268 stage 2")
-- **K279** · Plucks you can see, feel and hear (Levi, 2026-10-14): a
-  ripple at pluck points (glint by default, K288), more vibration, a tug
-  (off: its wake cost is K7's), quieter auto plucks. Stage 1: ad2618a.
-  - owner: agent `a910830b0197dd699` (opus) of claude session d8031183, from 2026-10-15 00:42 (cap 02:42; ports 5900-5909)
-  - branch: `worktree-agent-a910830b0197dd699` (`.claude/worktrees/agent-a910830b0197dd699`); last commit: none yet (base `9b977d8`)
-  - evidence: `.claude/probes/K279/` (stage 1: `sheet2/`, `k279_wake.mjs`); stage 2's in its worktree's `.claude/probes/K279/stage2/`
-  - next: stage 2 makes glint the default `prp`, bounds and warms the ripple filter, checks glint's phone size and K289 (j, k); then the merge and the next phone round
-  - brief: `docs/design/K279.md`, "Stage 2: glint by default"
 - **K7** · Physics in a Web Worker with render-side interpolation, so the
   intro runs at full frame rate while physics settles (K28). Levi's calls:
   K302. Stages 1-3 merged; stage 3 put the worker behind `phw` (63603bd..7f4c1bd).
@@ -254,10 +249,10 @@ Next free ID: K365.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`, re-based by stage 1, 05aac8e..cbeb963). G3-1
   waits for K268 s2 and K290, G3-2 for the reveal chain (K76 2c to 2d).
-  - owner: nobody since 2026-10-15 01:08 (stage 1's docs agent `a35a43cee74c92b93` of claude session d8031183 finished; G3-0 waits for a free code slot)
-  - branch: mainline; last commit: `cbeb963` (stage 1's handoff)
-  - evidence: `docs/design/G3G4_sdf_geometry.md`, `docs/design/K8_stage1.md` ("Stage 1 handoff"); stage 1's notes in `.claude/probes/K8/stage1/notes.md`; stage 2's probes go to `.claude/probes/K8/stage2/`
-  - next: G3-0 (stage 2) at the next free code slot, from current master, never alongside K90; Levi's calls are K361 (none blocks G3-0)
+  - owner: agent `af653fa7f942f2f1e` (opus) of claude session d8031183, stage 2 (G3-0) from 02:04 (cap 04:04; ports 5830-5839); stage 1's docs worktree `a35a43cee74c92b93` kept
+  - branch: `worktree-agent-af653fa7f942f2f1e` (`.claude/worktrees/agent-af653fa7f942f2f1e`, from `fa7f9dc`); last commit: `fa7f9dc` (master) until its first WIP commit
+  - evidence: `docs/design/G3G4_sdf_geometry.md`, `docs/design/K8_stage1.md` ("Stage 1 handoff"); stage 1's notes in `.claude/probes/K8/stage1/notes.md`; stage 2's in its worktree's `.claude/probes/K8/stage2/`
+  - next: G3-0 (the capture/restore hook, the sample table, the frame bench, the pixel A/B, a phone pass if reachable), never alongside K90; Levi's calls are K361 (none blocks G3-0)
   - brief: `docs/design/K8_stage1.md`, "Stage 2 (G3-0)"
 
 ## Next, in order
@@ -523,6 +518,12 @@ Every other item below waits on the trigger it names.
   tint (no new shader); reduced motion keeps the diffuse term. Designed
   with K335, K336 (`docs/design/K335_confetti.md`); deferred with K336,
   its draft is in K336's patch.
+- **K365** · K279's phone round: run the fixed `k279_phone.mjs`, pick the
+  ripple's CSS floor (56 or 68; rec 56 unless it reads small), and only if the
+  phone drops frames, a bbox replay (K279.md "Stage 2 handoff").
+- **K366** · With K307 stage 2 (K279 s2): move the ripple's `warm()` onto the
+  program registry, and take the first-tap residual: one 35-54 ms frame among
+  tap 1's first five, on both builds, ripple or not.
 
 ## Residuals (known, not fixed)
 
@@ -994,18 +995,9 @@ Every other item below waits on the trigger it names.
   the phone needs `__knotExplore` to expose slot positions (the K156
   2026-10-14c phone census itself passed). `docs/design/K268.md` ("Not
   done in stage 1", Calls).
-- **K289** · K279 stage 1's open residuals: (a, i) the first ripple
-  costs a 10 ms spike and the first tap's first frame 30-36 ms more on
-  the desktop (likely the ripple filter's compile: warm it at load; no
-  stall on the phone); (c) the ripple filter covers the whole root
-  (bound its filterArea to the live discs, most of all for phones); (d)
-  the ripple is sized in world units, so it shrinks on a phone (a CSS-px
-  floor?); (e) no High contrast tie-in (ring off, or glint only?); (g)
-  no webm clips; (j) `render-pluck.md` and K279.md cite pre-rebase SHAs
-  (0f08f68, 2d905d0, da1333a, 4eb20a7) that exist only on the local
-  branch `k279-stage1-prerebase`: re-cite them as 50c1aab; (k)
-  `k279_phone.mjs` reads `ripples` 1.9 s after the tap, so always 0.
-  `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
+- **K289** · K279 stage 1's last residual: (g) no webm clips of the plucks.
+  Stage 2 closed a, c (a cull, not a bounded filterArea), d, i, j and k; (e)
+  is K368. `docs/design/K279.md` ("Stage 2 handoff").
 - **K291** · CI: the deploy run of ad2618a carried two annotations:
   checkout@v4, setup-node@v4 and wrangler-action@v3 target Node 20
   (forced on Node 24), and `ubuntu-latest` moves to Ubuntu 26 on
@@ -1127,6 +1119,12 @@ Every other item below waits on the trigger it names.
   telegraph can draw over hidden thread; the fit box is cached per declaration.
 - **K364** · Master's fog intro (`fow=1&fwi=1`) zooms out to s 11.7 before
   it closes in (seen in K76 2c's probes; not investigated).
+- **K367** · Ripple burst oddities (K279 s2): the wave phase reads +0.4-0.5 ms
+  outside the ripple's draws (one unpinned run per build; rerun interleaved),
+  and every ripple phase has a 9.5-10.7 ms worst frame (4.2-5.1 without).
+- **K369** · `index.html` links no icon while `public/favicon.svg` ships
+  unlinked, so Chrome asks for `/favicon.ico` (a 404 in every probe log; K279
+  s2, unchecked). The link must be relative (the levi.dev proxy).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1367,6 +1365,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   bytes; then drop `docs/ledger_diet/` (keep `scripts/ledger_diet.mjs`).
 
 ## Done
+
+- **K279** · Plucks you can see, feel and hear: the ripple (glint by default), vibration, an optional tug, quieter auto plucks. Done in 50c1aab, ad2618a and b1524de..810af10 (2026-10-15); follow-ups K365-K369.
 
 - **K353** · The ledger diet: `scripts/ledger_diet.mjs` shortened the open items and made Done one-liners; the originals are in `docs/ledger_notes.md` and `docs/ledger_done.md`. Done in 300c995..c4a0280, applied in 6c85a38 (2026-10-15).
 
