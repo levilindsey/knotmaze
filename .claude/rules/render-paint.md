@@ -11,6 +11,7 @@ paths:
   - "test/render/paint_gameplay.test.ts"
   - "test/render/paint_math.test.ts"
   - "test/render/paint_section.test.ts"
+  - "test/render/paint_ring_lap.test.ts"
   - "test/render/fixtures/pre_g2.ts"
   - "test/render/fixtures/pre_g23.ts"
 ---
@@ -160,6 +161,37 @@ only with the files it is about; `render.md` lists the area's other files.
   (rim_sheet.mjs). Probes: `.claude/probes/K145/`,
   `.claude/probes/K111/stage3/`, `.claude/probes/K111/stage4/`
   (rim_sheet.mjs WIDTHS=..., census_widths.ps1).
+
+- RING LAPS ARE INTEGER-CORRECTED (K299, 2026-10-14; Levi: a choice's
+  pulse missing, another drawn backward, a gold sliver on the next run
+  after a move; brief and handoff `docs/design/K299_choice_pulse_bug.md`).
+  GPU float division is approximate: on ANGLE D3D11 (RX 6800 XT)
+  floor(float(k n) / float(n)) came out k - 1 in 3275 of 16384 pairs
+  (k -4..59, n 1..256; k = 1 fails at n 3, 6, 7, 12, 13, 14, 15, 24, 26,
+  28, ...). Master's kArcOfCtrl wrapped a closed chain's ctrl with that
+  division, so any paint ctrl in [k n, k n + 1), k != 0, read one past
+  the chain's arc table: the next chain's header total (a garbage arc)
+  for n % 4 == 0, padding 0 for n % 4 == 2. A seam run (a closed strand
+  whose first walk vertex is node 0) stores ctrlB = n, and a seam-crossing
+  run's in-flight span and hover point pass [n, n + 1). The float64
+  mirror is exact, so parity never saw it. Lap math now goes through
+  `kLapOf(fl, n)` (an integer-corrected floor quotient) and `kWrap(x, m)`
+  (a result in [0, m)) in paint_glsl.ts and paint_math.ts (whose versions
+  take the quotient as an optional argument, to test GPU-like rounding);
+  PULSE spans the unwrapped run, so a full-lap (self-loop) run's pulse
+  now draws (span total; master's x mod total gave 0 on every GPU).
+  `test/render/paint_ring_lap.test.ts` scans every `src/render/*.ts` for
+  a rounder (floor, mod, fract, int, ...) of a quotient: a new site fails
+  until it uses kLapOf/kWrap or joins `ROUNDED_QUOTIENTS` with the reason
+  it is benign, and a listed site that is gone fails too. The contours'
+  `mod(floor(v + 0.5), 5.0)` is the listed residual (exact on this GPU,
+  unfixed: the background programs are sha256-pinned). Same state on
+  this GPU, each case vs the same points one lap down: master 356-6967 px
+  per case, the fix 0 (seam pulses and trail, mid-move spans, the hover
+  rim, two other mazes; at most 42 px of 1/255 against a 1e-4-ctrl
+  nudge, the nudge's own rounding). A single pulse phase can hide the
+  pulse case (no crest on the run at t 100): shoot two. Probes and
+  census: `.claude/probes/K299/` (`notes.md`).
 
 - HIGH CONTRAST LOOKS (K111 stage 4, PROTOTYPES for Levi's pick, K265;
   the what and why: gameplay-motion.md's HIGH CONTRAST): the look id
