@@ -15,16 +15,6 @@ and never reused.
 
 ## Waiting on Levi
 
-- **K264** · The hover rim's width (K248, merged 6588ec0): `RIM_EDGE`
-  0.7 / 0.85 (built) / 1.0 of the thread's half-width. 0.7 is thinner;
-  at 1.0 the two rims meet on the center line and the thread reads as
-  whitened. Sheets `.claude/probes/K111/stage3/sheet/` (sent 2026-10-14
-  about 14:56); `docs/design/K111.md` ("Stage 3 handoff").
-- **K265** · High contrast's highlight now that the modes are gone
-  (K248): keep the pulses on the choices (built), or give it a look of
-  its own (stage 2's contrast mode was flat white with a black center
-  line)? Asked 2026-10-14 about 14:56; `docs/design/K111.md` ("Stage 3
-  handoff").
 - **K261** · K74 stage 2's two calls (stage 2 builds the recommended
   defaults unless Levi answers first): (1) the H-cut share's default:
   the largest measured share that keeps decision 1's greedy bar, 1 if
@@ -32,15 +22,18 @@ and never reused.
   share cuts: an even stride in strand order (rec.), smoothest corners
   first, or nearest the exit first. `docs/design/K74.md` ("Stage 2
   brief", "Calls for Levi").
-- **K260** · The burn race's calls (K114; stage 1 builds each
-  recommended default unless Levi answers first): (1) a loss shows a
-  "Burnt" banner, then restarts with the fuse relit (a respawn can't
-  work: the entrance burns first); (2) Reset path with the fire on
-  restarts; (3) the fire and the turn-aligned minotaur are mutually
-  exclusive in stage 1; (4) fog stays its own param until the balance
-  measurement says the fire needs it; (5) the HUD shows the fire's lead
-  in its own units (x10, so 9.2 reads 92; the share line is stage 4's);
-  (6) `sparks` waits for stage 4. Levi answered call 7 on 2026-10-14 at
+- **K260** · The burn race's calls 2-4 (K114; stage 1 builds each
+  recommended default unless Levi answers first): (2) Reset path with
+  the fire on restarts; (3) the fire and the turn-aligned minotaur are
+  mutually exclusive in stage 1; (4) fog stays its own param until the
+  balance measurement says the fire needs it. Levi answered 1, 5 and 6
+  on 2026-10-14 at about 15:46 as recommended (verbatim: "Burn race:
+  banne is good. Reset the level when burnt." and "5 and 6 sound
+  good."): (1) a loss shows a "Burnt" banner, then restarts with the
+  fuse relit; (5) the HUD shows the fire's lead in its own units (x10,
+  so 9.2 reads 92; the share line is stage 4's); (6) `sparks` waits for
+  stage 4. His catch-reset toggle for the minotaur is K273. He answered
+  call 7 on 2026-10-14 at
   about 14:46 (verbatim): "Burn race: we should probably have a fire
   effect show at the start, but only actually start moving it after the
   player makes their first move. Will we have a toggle for turn-aligned
@@ -107,15 +100,6 @@ and never reused.
   `.claude/probes/K111/out/` (`desktop_hc_off_panel_open.png`,
   `desktop_hc_on_panel_open.png`, the `_panel_closed` and `_canvas`
   pairs, `desktop_both_on_panel_open.png`, and the same with `phone_`).
-- **K237** · The hover rim's strength (K145's `hoverGlow`, reshaped by
-  K248 in 6588ec0): keep the default at 0.4, and keep it daily-exempt
-  (K57) as built? The new rim is about 1.3x brighter at the edge on
-  desktop and 1.5x on the phone, and wider, so 0.4 now reads like the
-  old 0.5-0.6; 0.3 restores K145's brightness, and from 0.6 up it reads
-  as a white outline. Sheets
-  `.claude/probes/K111/stage3/sheet/K111_rim_desktop.png` and
-  `K111_rim_phone.png` (strengths 0.25-1; sent to Levi 2026-10-14 about
-  14:56); K145's `.claude/probes/K145/sheet2/sheet_b.png`.
 - **K229** · K92 put the mode badge on its own row below the undo
   buttons while the panel is open (his spec), so the open panel now
   starts 90 px from the top on the desktop and 100 on phones (was 50):
@@ -378,7 +362,8 @@ and never reused.
     interplay, sound and the Reset-path log (2.10); a wait key, a
     move-pad wait button and a hover cue; a turn-based minoToward; and
     the retune (K269; Levi, 15:34: "Retune."): the hunter's defaults back
-    to the research's 1% / 13% on today's mazes. Before any daily pins a minotaur,
+    to the research's 1% / 13% on today's mazes; and K273's catch resets.
+    Before any daily pins a minotaur,
     waits enter `fc.taps` and the attempt saves, and K47's fingerprint
     covers the minotaur params. Real time's phone check is K177.
   - brief: `docs/design/K80_turns.md` ("Stage 1 handoff"; three stages,
@@ -622,8 +607,10 @@ files at their merges. Then, as code slots free up:
 8. K92 + K224: merged 2026-10-14 (e78ddcc). K111 stage 1 (the panel):
    merged 2026-10-14 (0e5a138..9c6cab3), and its stage 2, the highlight
    modes, at 13:03 (36d280a..5438a60); Levi picked at about 13:28, and
-   stage 3 built the pick (K248), merged at 14:58 (365bc45..6588ec0);
-   its calls are K264, K265 and K237.
+   stage 3 built the pick (K248), merged at 14:58 (365bc45..6588ec0).
+   Levi answered its calls at 15:46: K237 as built, and a stage 4 builds
+   K264's width slider and prototypes K265's High contrast looks, at
+   the next free code slot after K268.
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
     coordinator; Levi may reorder): K174's controls (merged 2026-10-14
@@ -645,7 +632,8 @@ files at their merges. Then, as code slots free up:
     stages (`docs/design/K80_turns.md`, 7699995): stage 1 (the model and
     the mode) merged at 15:19 (0047148..68524e1); stage 2, its brief
     written from stage 1's handoff, after the burn race's stage 1 merges
-    (both change how a tap becomes a turn); then K137's toggles, K138's
+    (both change how a tap becomes a turn), with K269's retune and
+    K273's catch resets; then K137's toggles, K138's
     M mechanisms and K139.
 13. K114's round 2, free play first: the burn race in four stages
     (`docs/design/K114_burn.md`, 1e468ad). Stage 1 runs from 15:23
@@ -664,11 +652,11 @@ files at their merges. Then, as code slots free up:
 Waiting for Levi: K90's bend bound (Levi tests it live); the G3-3 and
 G4-2 old-path deletions; K162 and K184-K186 (play, then call); K194's
 defaults (after playing); K225 (the markers' size); K229 (the open
-panel's top); K237 (the hover glow's default); K238 (K111's calls);
+panel's top); K238 (K111's calls);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
 K251 (the displaced disc's slide across the panel); K253 (a quiet phone
 for K193's A/A); K257 (K76's questions for stage 2c); K260 and K261
-(the burn race's and K74 stage 2's calls);
+(the burn race's calls 2-4 and K74 stage 2's calls);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -700,6 +688,31 @@ K5-K7 (split, frame loop, worker) follow.
   (render only): the design first, a per-pixel census, a contact sheet
   for Levi on desktop and phone. Brief: from 2b's "Shaped gaps" handoff
   section (`docs/design/K76.md`).
+- **K264** · The hover rim's width becomes a slider (Levi, 2026-10-14
+  about 15:46, verbatim: "Rim width,0.4 is good, make it a slider., and
+  personal setting."; read as a width slider, `hoverGlow` staying 0.4,
+  both personal): a daily-exempt param (K57) beside `hoverGlow` that
+  sets the rim's `RIM_EDGE` (0.85 built and the default; a range of
+  about 0.3-1.0, so 0.4 is there if he meant the width). Small: a codec
+  append, a panel row, a uniform. K111 stage 4 with K265; sheets
+  `.claude/probes/K111/stage3/sheet/`, `docs/design/K111.md` ("Stage 3
+  handoff").
+- **K265** · High contrast's own highlight (Levi, 2026-10-14 about
+  15:46: "Maybe the high contrast highlights should get new
+  treatment"): today High contrast keeps the pulses on the choices
+  (K248). Prototype two or three looks of its own (stage 2's contrast
+  mode was flat white with a black center line) and show them on a
+  sheet, desktop and phone, for Levi to pick. K111 stage 4 with K264;
+  `docs/design/K111.md` ("Stage 3 handoff").
+- **K273** · What a minotaur catch resets (Levi, 2026-10-14 about
+  15:46, verbatim: "We should also have a toggle to conditionally reset
+  the level/Minotaur/fog when dying to the Minotaur."). Today a catch
+  sends you back to the entrance and counts it, and the fog starts over
+  under `minoRefog` (K174, on by default). Add the level (a restart, as
+  Reset path and the burn race's loss do) and the minotaur (back to its
+  start), as toggles beside `minoRefog` or one dropdown, for both
+  clocks. In K80 turns stage 2, after the burn race's restart lands;
+  `docs/design/K80_turns.md`.
 - **K240** · High contrast for the DOM chrome (a K111 follow-up): a CSS
   layer on `:root[data-contrast="high"]`, which K111 already sets, for
   the panel, the HUD and the badge (their styles live in TS-injected
@@ -1630,6 +1643,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K237** · The hover rim's strength: Levi, 2026-10-14 about 15:46:
+  "0.4 is good ... and personal setting." `hoverGlow` stays 0.4 and
+  daily-exempt (K57), as built in 6588ec0.
 - **K269** · The turn hunter's catch rates on today's mazes (K80 turns
   stage 1: 14% of dailies for an attentive explorer, 32% at 80%, against
   the research's 1% and 13%). Levi, 2026-10-14 about 15:34: "Retune." K80
