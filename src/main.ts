@@ -655,9 +655,12 @@ async function main(): Promise<void> {
     }
     let pad = params.threadWidth / 2 + 0.3;
     // FOG OF WAR: frame only what the fog lets you see (the explored
-    // region grown by the reveal radius) - it widens as you explore.
+    // region grown by the reveal radius) - it widens as you explore. K76
+    // stage 2c: the thread reveal frames the thread it shows the same way.
     const fogBox =
-      params.mazeFabric && fabric ? fabric.fogVisibleBounds() : null;
+      params.mazeFabric && fabric
+        ? (fabric.fogVisibleBounds() ?? fabric.exploreVisibleBounds())
+        : null;
     if (fogBox) {
       minX = fogBox.minX;
       minY = fogBox.minY;
@@ -1944,9 +1947,29 @@ async function main(): Promise<void> {
   // rendered ribbon between particles: particles sit up to ~0.64 world
   // apart, so at a tight mouse margin a point on the ribbon's edge can be
   // ~0.4 world from both of its particles.
+  // K76 stage 2c: under the thread reveal only pickThread asks (it skips
+  // hidden thread; a particle knows nothing of the reveal).
   const onThread = (x: number, y: number, pt: string): boolean => {
     const r = pickRadius(pt);
-    return (!!ps && ps.nearest(x, y, r) >= 0) || !!renderer?.pickThread(x, y, r);
+    return (
+      (!renderer?.exploreOn && !!ps && ps.nearest(x, y, r) >= 0) ||
+      !!renderer?.pickThread(x, y, r)
+    );
+  };
+  // The particle a press grabs: the nearest one, or under the thread reveal
+  // the particle at the shown thread point pickThread finds (a particle's
+  // ctrl is its index in its chain), so a tug never grabs hidden thread.
+  const grabAt = (x: number, y: number, pt: string): number => {
+    if (!ps) return -1;
+    const r = grabRadius(pt);
+    if (!renderer?.exploreOn) return ps.nearest(x, y, r);
+    const hit = renderer.pickThread(x, y, r);
+    if (!hit) return -1;
+    const arr = ps.chains[hit.chain];
+    if (!arr || arr.length === 0) return -1;
+    const closed = ps.chainBreakAfter[hit.chain] < 0;
+    const k = Math.round(hit.ctrl);
+    return arr[closed ? ((k % arr.length) + arr.length) % arr.length : Math.max(0, Math.min(arr.length - 1, k))];
   };
   // The tug's grab radius: touch's as before; for a mouse, wide enough
   // that a press onThread accepted always finds a particle (the press may
@@ -3988,7 +4011,8 @@ async function main(): Promise<void> {
     cancelSnap();
     // K7: main picks on the view, the host grabs (a miss clears the grab).
     // K298: at the pointer's grab radius.
-    if (host.grab(ps.nearest(pp.x, pp.y, grabRadius(pp.pt)), pp.x, pp.y) < 0) {
+    // K76 stage 2c: never hidden thread (grabAt).
+    if (host.grab(grabAt(pp.x, pp.y, pp.pt), pp.x, pp.y) < 0) {
       dragPan = { id: pp.id, x: pp.sx, y: pp.sy, moved: pp.slop + 1 };
       return;
     }
