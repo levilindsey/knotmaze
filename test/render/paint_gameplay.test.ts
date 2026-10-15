@@ -21,6 +21,7 @@ import {
   type KPaintState,
   type KUniforms,
 } from "../../src/render/paint_math";
+import { TRAIL_FADE_FRAC, trailFade, trailSpans, type TrailPiece } from "../../src/render/trail_paint";
 import { randomChain } from "./fixtures/chains";
 import {
   oldCompose,
@@ -285,36 +286,143 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
 
   // K75 (Levi: the pulses should "only extend a set distance away from the
   // junction along the segment ... and fade out at the end"): uKReach =
-  // (reach, fade) windows the trains; hover still lights the whole run.
-  it("K75: pulse trains end at the reach, fading over its end; hover is whole-run", () => {
-    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
-    const U0 = uniforms(k); // Whole arms.
-    const U = uniforms(k);
-    const R = 3;
-    const F = Math.min(PAINT_CONST.PULSE_REACH_FADE, 0.5 * R); // The renderer's rule.
-    U.uKReach[0] = R;
-    U.uKReach[1] = F;
-    expect(kReachWin(U, R - F)).toBe(1);
-    expect(kReachWin(U, R - F / 2)).toBeCloseTo(0.5, 12);
-    expect(kReachWin(U, R)).toBe(0);
-    for (const inward of [true, false]) {
-      let prev = kPulseV(U, 0, 12, inward, false);
-      let maxStep = 0;
-      let lit = 0;
-      for (let i = 0; i <= 12000; i++) {
-        const d = i / 1000;
-        const v = kPulseV(U, d, 12, inward, false);
-        const whole = kPulseV(U0, d, 12, inward, false);
-        if (d <= R - F) expect(v).toBe(whole);
-        if (d >= R) expect(v).toBe(0);
-        expect(v).toBeLessThanOrEqual(whole);
-        if (v > PAINT_CONST.PULSE_MIN_V) lit++;
-        maxStep = Math.max(maxStep, Math.abs(v - prev));
-        prev = v;
-        expect(kPulseV(U, d, 12, inward, true)).toBe(kPulseV(U0, d, 12, inward, true));
+  // (reach, fade) windows the trains. K93 (Levi, 2026-10-13: "hover should
+  // stop at pulseReach (and fade-out toward the end, same as pulseReach)"):
+  // the hover takes the same window; it used to light the whole run.
+  it("K75 + K93: pulse trains and the hover end at the reach, fading over its end", () => {
+    for (const R of [3, 15]) {
+      const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+      const U0 = uniforms(k); // Whole arms.
+      const U = uniforms(k);
+      const F = Math.min(PAINT_CONST.PULSE_REACH_FADE, 0.5 * R); // The renderer's rule.
+      U.uKReach[0] = R;
+      U.uKReach[1] = F;
+      const span = R + 9; // An arm longer than the reach.
+      const steps = span * 1000;
+      expect(U.uKPaint[3]).toBeGreaterThan(0.2);
+      expect(kReachWin(U, R - F)).toBe(1);
+      expect(kReachWin(U, R - F / 2)).toBeCloseTo(0.5, 12);
+      expect(kReachWin(U, R)).toBe(0);
+      for (const inward of [true, false]) {
+        let prev = kPulseV(U, 0, span, inward, false);
+        let prevH = kPulseV(U, 0, span, inward, true);
+        let maxStep = 0;
+        let maxStepH = 0;
+        let lit = 0;
+        let litH = 0;
+        for (let i = 0; i <= steps; i++) {
+          const d = i / 1000;
+          const v = kPulseV(U, d, span, inward, false);
+          const whole = kPulseV(U0, d, span, inward, false);
+          if (d <= R - F) expect(v).toBe(whole);
+          if (d >= R) expect(v).toBe(0);
+          expect(v).toBeLessThanOrEqual(whole);
+          if (v > PAINT_CONST.PULSE_MIN_V) lit++;
+          maxStep = Math.max(maxStep, Math.abs(v - prev));
+          prev = v;
+          // The hover: the old whole-run breath, inside the same window.
+          const h = kPulseV(U, d, span, inward, true);
+          const hWhole = kPulseV(U0, d, span, inward, true);
+          // The breath (0.40 at this clock), out to the run's end window.
+          if (d < span - PAINT_CONST.PULSE_END_WINDOW - 1e-6) expect(hWhole).toBe(U.uKPaint[3]);
+          expect(h).toBeCloseTo(hWhole * kReachWin(U, d), 12);
+          if (d <= R - F) expect(h).toBe(hWhole);
+          if (d >= R) expect(h).toBe(0);
+          if (h > PAINT_CONST.PULSE_MIN_V) litH++;
+          maxStepH = Math.max(maxStepH, Math.abs(h - prevH));
+          prevH = h;
+        }
+        expect(lit).toBeGreaterThan(2000); // The floor + crests near the joint.
+        expect(maxStep).toBeLessThan(0.01); // No step at the window.
+        // The hover lights the reach less the end of its fade (where it
+        // drops under PULSE_MIN_V), and fades out smoothly.
+        expect(litH / 1000).toBeGreaterThan(R - F / 2);
+        expect(litH / 1000).toBeLessThan(R);
+        expect(maxStepH).toBeLessThan(0.01);
       }
-      expect(lit).toBeGreaterThan(2000); // The floor + crests near the joint.
-      expect(maxStep).toBeLessThan(0.01); // No step at the window.
     }
+  });
+
+  // K93 (Levi, 2026-10-13: "Trail fade, yes"): the memory trail is solid
+  // gold out to its fade start and fades linearly after it. The run holding
+  // the fade start is two spans (trail_paint.ts): a solid one reaching past
+  // the fade start and a fading one written after it, so the per-pixel paint
+  // has no seam at the split; the single pre-K93 span faded that run from
+  // its head junction on.
+  it("K93: the trail's fade starts at the fade start, with no seam at the split", () => {
+    const r = rng(93);
+    const ch = randomChain(r, 60, false);
+    // The arrival run 10..30 (head junction at 30, lattice length 5), the
+    // run before it 4..10 (lattice length 1.5), a 6-long trail: the fade
+    // start (4.2 behind the head) lies inside the arrival run, the trail's
+    // end inside the older one.
+    const L = 6;
+    const pieces: TrailPiece[] = [
+      { chain: 0, from: 4, to: 10, len: 1.5 },
+      { chain: 0, from: 10, to: 30, len: 5 },
+    ];
+    const spans = trailSpans(pieces, L);
+    expect(spans.length).toBe(3); // The older run's, then the split pair.
+    const pAt = trailFade(L);
+    // The cap buildTrail lays at the junction between the runs.
+    const caps: OldCap[] = [{ ctrl: 10, radius: 0.31, p: pAt(5) }];
+    // The pre-K93 single span over the arrival run.
+    const oldSpans: OldSpan[] = [spans[0], { c0: 10, c1: 30, p0: pAt(5), p1: 1 }];
+    const cS = 30 - 20 * (L * (1 - TRAIL_FADE_FRAC) / 5); // The fade start's ctrl.
+    const PX = 0.02; // World arc per pixel.
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const U = uniforms(k);
+    const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, spans, caps, [], U);
+    const Uo = uniforms(k);
+    const Do = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, oldSpans, caps, [], Uo);
+    const c = kChain(D, 0);
+    const co = kChain(Do, 0);
+    const arcOf = (x: number): number => kArcOfCtrl(D, c, x);
+    const aJ = arcOf(10);
+    const aS = arcOf(cS);
+    const aH = arcOf(30);
+    const farP = pAt(5);
+    const st: KPaintState = { p: 0, band: false, v: 0 };
+    let prev = -1;
+    let maxStep = 0;
+    let solid = 0;
+    let fading = 0;
+    let oldAtSplit = 1;
+    // Along the arrival run, clear of the junction cap and the head's edge.
+    for (let a = aJ + 0.31 + PX; a <= aH - PX; a += 0.005) {
+      let lo = 0;
+      let hi = 59;
+      for (let it = 0; it < 50; it++) {
+        const m = (lo + hi) / 2;
+        if (arcOf(m) < a) lo = m;
+        else hi = m;
+      }
+      const ctrl = (lo + hi) / 2;
+      const p = kPaintAt(D, U, c, ctrl, a, PX, st).p;
+      // Exact away from the fade start's pixel (inside it the fading span's
+      // edge ramp blends the two, both near 1).
+      if (a >= aS + PX) {
+        // Head side of the fade start: solid gold.
+        expect(p).toBe(1);
+        solid++;
+      } else if (a <= aS - PX) {
+        // The fading part: linear in arc from 1 at the fade start down to
+        // the trail's paint at the junction.
+        expect(p).toBeCloseTo(farP + ((1 - farP) * (a - aJ)) / (aS - aJ), 5);
+        fading++;
+      } else {
+        // Between the fading paint a pixel short of the fade start and 1.
+        expect(p).toBeGreaterThan(farP + ((1 - farP) * (aS - PX - aJ)) / (aS - aJ) - 1e-6);
+        expect(p).toBeLessThanOrEqual(1);
+      }
+      if (prev >= 0) maxStep = Math.max(maxStep, Math.abs(p - prev));
+      prev = p;
+      if (Math.abs(a - aS) < 0.003) oldAtSplit = kPaintAt(Do, Uo, co, ctrl, a, PX, st).p;
+    }
+    expect(solid).toBeGreaterThan(100);
+    expect(fading).toBeGreaterThan(50);
+    expect(maxStep).toBeLessThan(0.02); // No seam (a seam dips by 0.25).
+    // The old span had already faded by the fade start.
+    expect(oldAtSplit).toBeLessThan(0.95);
   });
 });

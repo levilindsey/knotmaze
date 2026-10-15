@@ -1179,13 +1179,14 @@ export function kReachWin(U: KUniforms, d: number): number {
 
 // GLSL twin: kPulseV - the pulse field at distance d along an arm of length
 // span (RibbonRenderer's pulseValueAt with its clocks as uniforms), inside
-// the reach window. Hover lights the whole run (it shows the run a tap
-// would take).
+// the reach window. Hover lights the run a tap would take out to the same
+// reach, fading over its end as the trains do (K93; Levi: "hover should
+// stop at pulseReach (and fade-out toward the end, same as pulseReach)").
 export function kPulseV(U: KUniforms, d: number, span: number, inward: boolean, hovered: boolean): number {
   const C = PAINT_CONST;
   if (d < 0 || d > span) return 0;
   const endWin = Math.min(1, Math.max(0, (span - d) / C.PULSE_END_WINDOW));
-  if (hovered) return endWin * U.uKPaint[3];
+  if (hovered) return endWin * U.uKPaint[3] * kReachWin(U, d);
   const s = U.uKPulse[2];
   const raw = inward ? d + U.uKPulse[0] : d - U.uKPulse[1];
   const ph = raw - s * Math.floor(raw / s);
