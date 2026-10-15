@@ -850,6 +850,82 @@ export function vibratingSpan(
   return [e0, Math.max(e0, e1)];
 }
 
+// ---------------------------------------------------------------------------
+// The under-node clip on a self-crossing (K344).
+//
+// At an UNDER node the overlay hides its blur inside the partner's casing
+// band, the partner taken as a straight line through the crossing out to a
+// reach along it (pluck_overlay.ts, rule 4). On a SELF-crossing the partner
+// is this same chain's over pass, and a kink loop is ONE lobe from that over
+// pass to the under node: the over pass's own material lies on the line, so
+// a clip over the whole lobe cut a straight, hard-edged band out of the
+// loop's blur where it leaves the crossing (Levi's cusp, 2026-10-14). The
+// rule is G1's self split (ribbon_renderer.ts): the arc between the two
+// passes splits at its midpoint less a guard, and the under node's clip acts
+// only on its own side of it. A foreign over thread keeps the clip over the
+// whole lobe, as before.
+
+export const CLIP_SELF_GUARD = 0.08; // G1's guard before the midpoint (arc).
+export const CLIP_SELF_MIN = 0.12; // G1's floor on the split (arc).
+export const CLIP_SELF_RAMP = 0.3; // The weight's fall, at most (arc).
+
+// The arc from an under node at `arc`, moving INTO its lobe (dir +1: the
+// lobe starts at the node, -1: it ends there), to the crossing's over pass
+// at `other` on the same chain. Infinity when there is none (`other` not
+// finite: a foreign over thread) or an open chain never reaches it that way.
+export function selfPassAhead(
+  arc: number,
+  other: number,
+  dir: 1 | -1,
+  total: number,
+  closed: boolean
+): number {
+  if (!Number.isFinite(other)) return Infinity;
+  let d = dir > 0 ? other - arc : arc - other;
+  if (closed && total > 0) d = ((d % total) + total) % total;
+  return d > 1e-6 ? d : Infinity;
+}
+
+// The weight of an under node's clip on a station `d` arc into the lobe from
+// that node, when the crossing's over pass lies `ahead` arc further on that
+// way (selfPassAhead; Infinity = none): 1 near the node, falling smoothly to
+// 0 at the split (G1's: half the arc between the passes less the guard),
+// and 1 everywhere for a foreign crossing.
+export function underClipWeight(d: number, ahead: number): number {
+  if (!(ahead < Infinity)) return 1;
+  const end = Math.max(CLIP_SELF_MIN, 0.5 * ahead - CLIP_SELF_GUARD);
+  const ramp = Math.min(CLIP_SELF_RAMP, 0.5 * end);
+  const t = clamp((d - (end - ramp)) / ramp, 0, 1);
+  return 1 - t * t * (3 - 2 * t);
+}
+
+// CPU mirror of PLUCK_FRAG's clip (clipAt, weighted by clipW): the factor on
+// the overlay's coverage at world point (x, y) from one under-node clip line
+// L = [x, y, dx, dy] (unit direction), its reach along L (0 = no clip), its
+// weight w, the partner's casing half-band and the pixel size px (world).
+export function clipKeep(
+  L: readonly number[],
+  reach: number,
+  w: number,
+  x: number,
+  y: number,
+  casing: number,
+  px: number
+): number {
+  if (!(reach > 0)) return 1;
+  const dx = x - L[0];
+  const dy = y - L[1];
+  const along = Math.abs(dx * L[2] + dy * L[3]);
+  let k = 1;
+  if (!(along > reach)) {
+    const perp = Math.abs(dx * L[3] - dy * L[2]);
+    const kk = clamp((perp - casing) / px + 0.5, 0, 1);
+    const s = clamp((along - (reach - 0.2)) / 0.2, 0, 1);
+    k = kk + (1 - kk) * (s * s * (3 - 2 * s));
+  }
+  return w >= 1 ? k : 1 - w * (1 - k);
+}
+
 export interface TapLobes {
   // The pluck unit's lobes at least LOBE_MIN_LEN long, ascending.
   spans: LobeSpan[];
