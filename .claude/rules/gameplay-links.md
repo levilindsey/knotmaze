@@ -60,3 +60,14 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   reviews the exempt list). Panel: the maze folder, after the confetti
   rows, fabric mode only. The render side is render-markers.md's K98
   entry.
+
+- HIGHLIGHT MODE PARAM (K111 stage 2, 2026-10-14): `highlightMode`
+  (`hm`; pulses | glow | rims | contrast, default pulses) is APPENDED to
+  codec v4 at index 106, after K145's hoverGlow at 105 (if another branch
+  appends first, the second to merge renumbers). It is a DAILY_EXEMPT_KEY,
+  PROPOSED for Levi's call: like hoverGlow it changes how the choices
+  look, never what they are, so the golden dailies do not move. Panel: the
+  maze folder, after the hover glow row, fabric mode only; undo runs it
+  live (LIVE_EFFECTS onTrailChange). High contrast wears "contrast";
+  reduced motion keeps the stored mode. The render side is
+  render-paint.md's HIGHLIGHT MODES entry.
