@@ -14,7 +14,9 @@
 //           across its long axis and shades its back side), and die below
 //           the bottom edge. The count grows with the screen
 //           (rainScreenScale), so a desktop is as densely covered as a
-//           phone.
+//           phone. K335: the releases start at full density but taper to
+//           nothing (rainDelay), and the release heights spread, so the
+//           wave's top thins out instead of ending in a straight line.
 //   SPRAY - WORLD space: a burst from a ring around the exit marker, flung
 //           outward against drag, sinking under a light gravity and fading
 //           out within SPRAY_LIFE_MAX s. Its unit is the marker radius with
@@ -48,13 +50,27 @@ export const REDUCED_SPRAY_SHARE = 0.1;
 export const RAIN_REF_W = 411;
 export const RAIN_REF_H = 753;
 
-// Rain timing: releases spread over RAIN_WINDOW s (front-loaded), a piece's
-// speed eases to its terminal speed at RAIN_EASE /s, and RAIN_LIFE_MAX s
-// after its release a piece that has not fallen out yet fades over
-// RAIN_FADE s and dies (a backstop: at the terminal speeds below every
-// piece leaves the screen first).
-export const RAIN_WINDOW = 1.1;
-export const RAIN_LIFE_MAX = 6;
+// Rain timing (K335; Levi, 2026-10-14: "I like the abrupt wave of confetti
+// at the start, but then we also have an abrupt cut-off stopping the
+// confetti, and we see an abrupt line at the top of the wave"). Releases
+// start at full density and taper to nothing over RAIN_WINDOW s: their
+// density falls as (1 - t / RAIN_WINDOW)^RAIN_TAPER (rainReleaseDensity),
+// with no step anywhere. K140's front-loaded 1.1 s window stopped dead at
+// its end, and those last releases fell as a line. The start heights
+// spread with the release time: a piece released d s in may start up to
+// RAIN_TOP_SPREAD * d / RAIN_WINDOW screen heights higher, so the first
+// wave leaves from the edge (as dense as K140's in its first 0.1 s) and the
+// thinning top is ragged. A piece's speed eases to its terminal speed at
+// RAIN_EASE /s, and RAIN_LIFE_MAX s after its release a piece that has not
+// fallen out yet fades over RAIN_FADE s and dies (a backstop: at the
+// terminal speeds below every piece leaves the screen first: the highest
+// and slowest at most about 5.5 s after its release, 5.1 s at the most in
+// a 360-burst census). The census that chose these:
+// `.claude/probes/K335/variants.mjs`.
+export const RAIN_WINDOW = 2.2;
+export const RAIN_TAPER = 4;
+export const RAIN_TOP_SPREAD = 0.12;
+export const RAIN_LIFE_MAX = 6.5;
 export const RAIN_FADE = 0.5;
 const RAIN_EASE = 2.4;
 // Terminal speed, screen heights per second.
@@ -193,6 +209,22 @@ function paper(d: Float32Array, o: number, len: number, rand: () => number): voi
   d[o + COLOR] = CONFETTI_COLORS[Math.floor(rand() * CONFETTI_COLORS.length)];
 }
 
+// K335: a rain piece's release delay for a uniform u in [0, 1): the inverse
+// of the tapered release's CDF, 1 - (1 - t / RAIN_WINDOW)^(RAIN_TAPER + 1).
+// 21% of the pieces leave in the first 0.1 s and 52% by 0.3 s (K140: 20%
+// and 42%), so the opening wave keeps its density.
+export function rainDelay(u: number): number {
+  return RAIN_WINDOW * (1 - Math.pow(1 - u, 1 / (RAIN_TAPER + 1)));
+}
+
+// The release density rainDelay draws from, per second (it integrates to 1
+// over [0, RAIN_WINDOW]): highest at the start, falling smoothly to 0 at
+// the window's end, where its slope is 0 too.
+export function rainReleaseDensity(t: number): number {
+  if (!(t >= 0 && t <= RAIN_WINDOW)) return 0;
+  return ((RAIN_TAPER + 1) / RAIN_WINDOW) * Math.pow(1 - t / RAIN_WINDOW, RAIN_TAPER);
+}
+
 // Queue `n` rain pieces over a width x height CSS px screen.
 export function spawnRain(
   pool: ConfettiPool,
@@ -209,9 +241,13 @@ export function spawnRain(
     const o = i * F;
     paper(d, o, (9 + rand() * 7) * s, rand);
     d[o + X] = -0.04 * width + rand() * 1.08 * width;
-    d[o + Y] = -2 * d[o + LEN] - rand() * 0.05 * height;
-    // Front-loaded releases: a dense opening that thins out.
-    d[o + AGE] = -RAIN_WINDOW * Math.pow(rand(), 1.5);
+    // A dense opening that tapers to nothing; the later the release, the
+    // higher a piece may start (K335).
+    const delay = rainDelay(rand());
+    d[o + AGE] = -delay;
+    d[o + Y] =
+      -2 * d[o + LEN] -
+      height * (0.05 * rand() + RAIN_TOP_SPREAD * rand() * (delay / RAIN_WINDOW));
     d[o + LIFE] = RAIN_LIFE_MAX;
     const term = height * (RAIN_TERM_MIN + RAIN_TERM_SPAN * rand());
     d[o + TERM] = term;

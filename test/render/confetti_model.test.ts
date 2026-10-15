@@ -8,6 +8,7 @@ import {
   F,
   FLIP,
   FLIP_RATE,
+  LEN,
   LIFE,
   RAIN_CAP,
   RAIN_FADE,
@@ -16,6 +17,8 @@ import {
   RAIN_REF_H,
   RAIN_REF_W,
   RAIN_SCREEN_MAX,
+  RAIN_TAPER,
+  RAIN_TOP_SPREAD,
   RAIN_WINDOW,
   SPIN,
   SPRAY_CAP,
@@ -30,6 +33,8 @@ import {
   Y,
   confettiPlan,
   pieceLook,
+  rainDelay,
+  rainReleaseDensity,
   rainScreenScale,
   shadeHex,
   spawnRain,
@@ -165,20 +170,110 @@ describe("ConfettiPool", () => {
 });
 
 describe("the rain (screen space)", () => {
+  // The tapered release's CDF (K335): P(delay < t).
+  const releasedBy = (t: number): number =>
+    1 - Math.pow(1 - t / RAIN_WINDOW, RAIN_TAPER + 1);
+
   it("releases over RAIN_WINDOW, front-loaded, from above the top edge", () => {
     const pool = new ConfettiPool(RAIN_CAP);
-    spawnRain(pool, RAIN_PER_AMOUNT, 1400, 900, seeded(2));
-    let early = 0;
+    spawnRain(pool, RAIN_CAP, 1400, 900, seeded(2));
+    const delays: number[] = [];
     for (let i = 0; i < pool.alive; i++) {
       const o = i * F;
       expect(pool.data[o + AGE]).toBeLessThanOrEqual(0);
       expect(pool.data[o + AGE]).toBeGreaterThanOrEqual(-RAIN_WINDOW);
       expect(pool.data[o + Y]).toBeLessThan(0);
-      if (pool.data[o + AGE] > -RAIN_WINDOW / 4) early++;
+      delays.push(-pool.data[o + AGE]);
     }
-    // Delay = window * r^1.5: P(delay < window / 4) = 0.25^(2/3), about 40%.
-    expect(early / pool.alive).toBeGreaterThan(0.3);
-    expect(early / pool.alive).toBeLessThan(0.5);
+    // The sampled delays follow the CDF (2520 draws: a share's sd ~0.01).
+    for (const t of [0.1, 0.3, 0.6, 1, 1.5]) {
+      const share = delays.filter((d) => d < t).length / delays.length;
+      expect(Math.abs(share - releasedBy(t)), `share by ${t} s`).toBeLessThan(0.04);
+    }
+    // The opening keeps K140's density: about a fifth of the pieces leave
+    // in the first 0.1 s (K140's window * r^1.5 released (0.1/1.1)^(2/3),
+    // 20%), half by 0.3 s.
+    expect(releasedBy(0.1)).toBeGreaterThan(0.2);
+    expect(releasedBy(0.3)).toBeGreaterThan(0.5);
+  });
+
+  it("tapers the releases to nothing, with no step (K335)", () => {
+    // rainDelay inverts the CDF, from 0 to the window's end.
+    expect(rainDelay(0)).toBe(0);
+    expect(rainDelay(1)).toBeCloseTo(RAIN_WINDOW, 12);
+    for (const u of [0.05, 0.3, 0.5, 0.9, 0.99]) {
+      expect(releasedBy(rainDelay(u))).toBeCloseTo(u, 9);
+    }
+    // The density integrates to 1, falls monotonically from its start to 0
+    // at the window's end, and never jumps: no 1 ms step moves it by more
+    // than 0.5% of its start (K140's window ended on a drop from 0.6 /s to 0).
+    const n = 2200;
+    const h = RAIN_WINDOW / n;
+    const start = rainReleaseDensity(0);
+    expect(start).toBeCloseTo((RAIN_TAPER + 1) / RAIN_WINDOW, 12);
+    let area = 0;
+    let prev = start;
+    for (let k = 1; k <= n; k++) {
+      const v = rainReleaseDensity(k * h);
+      expect(v).toBeLessThanOrEqual(prev);
+      expect(prev - v).toBeLessThan(0.005 * start);
+      area += 0.5 * (prev + v) * h;
+      prev = v;
+    }
+    expect(area).toBeCloseTo(1, 5);
+    expect(rainReleaseDensity(RAIN_WINDOW)).toBe(0);
+    expect(rainReleaseDensity(RAIN_WINDOW + 0.1)).toBe(0);
+    expect(rainReleaseDensity(-0.1)).toBe(0);
+    // The last tenth of the window releases almost nothing.
+    expect(rainReleaseDensity(0.9 * RAIN_WINDOW)).toBeLessThan(0.001 * start);
+    // And spawnRain's releases follow it: tenth-of-a-second bins fall off
+    // (up to sampling noise) and the window's tail is near empty.
+    const pool = new ConfettiPool(RAIN_CAP);
+    spawnRain(pool, RAIN_CAP, 1400, 900, seeded(5));
+    const bins = new Array(Math.ceil(RAIN_WINDOW / 0.1)).fill(0);
+    for (let i = 0; i < pool.alive; i++) {
+      bins[Math.min(bins.length - 1, Math.floor(-pool.data[i * F + AGE] / 0.1))]++;
+    }
+    for (let b = 1; b < bins.length; b++) {
+      // A Poisson count's sd is sqrt(n): allow 3 sd of noise.
+      expect(bins[b]).toBeLessThanOrEqual(bins[b - 1] + 3 * Math.sqrt(bins[b - 1] + 1));
+    }
+    expect(bins[bins.length - 1] + bins[bins.length - 2]).toBeLessThan(0.01 * bins[0]);
+  });
+
+  it("starts the later releases higher, the first wave at the edge (K335)", () => {
+    const [w, h] = [1400, 900];
+    const pool = new ConfettiPool(RAIN_CAP);
+    spawnRain(pool, RAIN_CAP, w, h, seeded(6));
+    let [early, earlySum, earlyMax] = [0, 0, 0];
+    let [late, lateSum, lateMax] = [0, 0, 0];
+    for (let i = 0; i < pool.alive; i++) {
+      const o = i * F;
+      const delay = -pool.data[o + AGE];
+      // Height above the edge beyond the piece's own 2 lengths, in heights.
+      const extra = (-pool.data[o + Y] - 2 * pool.data[o + LEN]) / h;
+      expect(extra).toBeGreaterThanOrEqual(0);
+      expect(extra).toBeLessThanOrEqual(
+        0.05 + RAIN_TOP_SPREAD * (delay / RAIN_WINDOW) + 1e-6
+      );
+      if (delay < 0.1) {
+        early++;
+        earlySum += extra;
+        earlyMax = Math.max(earlyMax, extra);
+      }
+      if (delay > 0.5 * RAIN_WINDOW) {
+        late++;
+        lateSum += extra;
+        lateMax = Math.max(lateMax, extra);
+      }
+    }
+    // The first 0.1 s leaves from just above the edge, as K140's did...
+    expect(earlyMax).toBeLessThan(0.05 + RAIN_TOP_SPREAD * (0.1 / RAIN_WINDOW));
+    // ... and the tail (about 1 piece in 32) starts higher and ragged: on
+    // average about twice as far up (0.025 + 0.06 * 0.58 h against 0.026 h).
+    expect(late).toBeGreaterThan(20);
+    expect(lateSum / late).toBeGreaterThan(1.8 * (earlySum / early));
+    expect(lateMax).toBeGreaterThan(earlyMax + 0.25 * RAIN_TOP_SPREAD);
   });
 
   it("holds an unreleased piece still and invisible", () => {
@@ -221,9 +316,10 @@ describe("the rain (screen space)", () => {
       expect([w, h, sim.rain.alive]).toEqual([w, h, 0]);
       // Every piece fell out before the backstop's fade began.
       expect(maxAge + DT).toBeLessThan(RAIN_LIFE_MAX - RAIN_FADE);
-      // A ~3-5 s fall after a ~1 s release window.
+      // A ~3-5 s fall after a release that tapers out by about 1.8 s (the
+      // window's last fifth releases next to nothing).
       expect(t).toBeGreaterThan(3);
-      expect(t).toBeLessThan(RAIN_WINDOW + 5.2);
+      expect(t).toBeLessThan(7);
     }
   });
 });
