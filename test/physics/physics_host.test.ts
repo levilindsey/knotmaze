@@ -334,6 +334,21 @@ describe("the worker core in lockstep with the in-thread host (K7)", () => {
     expect(stateDiff(ls.live, ls.worker.ps as ParticleSystem)).not.toBe("");
   });
 
+  it("matches bit for bit with the temperature on, and both sleep once it is off", () => {
+    const ls = new Lockstep();
+    ls.init("?7&gs=6");
+    const dt = 1 / 60;
+    // The agitation (seeded simplex noise of simTime) runs in each substep,
+    // and a temperature above 0 holds both gates awake.
+    ls.setTuning({ ...ls.t, temperature: 0.6 });
+    for (let f = 0; f < 90; f++) ls.frame(dt);
+    expect(ls.host.asleep).toBe(false);
+    expect(ls.m.contactsStatic).toBe(false);
+    ls.setTuning({ ...ls.t, temperature: 0 });
+    expect(ls.untilAsleep(dt, 900)).toBeGreaterThan(0);
+    expect(ls.m.workerAsleep).toBe(true);
+  });
+
   it("pre-settles as the in-thread loop does, to its sim cap, then goes live", () => {
     const ls = new Lockstep();
     ls.init("?7&gs=6");
