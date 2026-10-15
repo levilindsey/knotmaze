@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K375.
+Next free ID: K377.
 
 ## Waiting on Levi
 
@@ -211,14 +211,14 @@ Next free ID: K375.
   - evidence: `.claude/probes/K76/stage2c/` (2a's and 2b's beside it); lore `render-explore.md`
   - next: stage 2d ("For stage 2d": High contrast dots, the census on K268's shaped slots, the held frame, step 8's phone gate and GPU, the final sheets) after K268 s2 and K290; Levi's calls are K362
   - brief: `docs/design/K76.md`, "Stage 2c handoff"; design `docs/design/K76_reveal_mode.md`
-- **K268** · Shaped crossing gaps under thread reveal (K76; Levi,
-  2026-10-14): no gap until the over thread is seen, and a dynamic gap for
-  a stub's overlap and dead ends. Stage 1 merged; stage 2 runs.
-  - owner: agent `a42c63c2db0401edb` (opus) of claude session d8031183, stage 2 from 01:15 (cap 03:15; ports 5820-5829); stage 1's worktree `ab65d913a3b9a3dcb` kept
-  - branch: `worktree-agent-a42c63c2db0401edb` (`.claude/worktrees/agent-a42c63c2db0401edb`, from `82c1f23`); last commit: `82c1f23` (master) until its first WIP commit
-  - evidence: `.claude/probes/K268/` (stage 1's); stage 2's in its worktree's `.claude/probes/K268/stage2/`
-  - next: first the MAX defect K76 2c found (crossing 275, both threads walked: the mode on cuts 0 px of gap against 1010 px off, so the threads fuse; `.claude/probes/K76/stage2c/out/census_new2/shaped_c275.png`), then K275's fade, the fans and still pluck, protect, smooth-min, underWindows; never alongside K298, K299 or K111 s5; K290 next in the chain
-  - brief: `docs/design/K268.md` ("For stage 2"); `docs/design/K76.md` ("Stage 2c handoff", "For K268 stage 2")
+- **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
+  no gap until the over thread is seen, a dynamic gap for a stub's overlap and
+  dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
+  - owner: nobody since 2026-10-15 02:42 (stage 2 done, item 4 not started; agent `a42c63c2db0401edb` of claude session d8031183; worktrees kept: stage 2's, stage 1's `ab65d913a3b9a3dcb`)
+  - branch: mainline; last commit: `f799991`
+  - evidence: `.claude/probes/K268/stage2/` (probes, `run_batch2.ps1` to `run_batch5.ps1`, `out/`, builds); stage 1's beside it
+  - next: stage 3: the census fixes first (`census.mjs`: judge shaped slots by S/R/F, skip rather than fail when no crossing shows both threads, a fading joint scales by vis; attribute junctions 56-58 and 161, which mismatch on master too), then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip); never alongside K290 (both edit `gap_mask.ts`, `explore_glsl.ts`)
+  - brief: `docs/design/K268.md`, "Stage 2 handoff" ("For the next stage")
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-4 merged: the worker behind `phw`, the probe bridge and
   desktop acceptance (4d39a1f..de22867). Stage 5: the phone, then the default.
@@ -233,7 +233,7 @@ Next free ID: K375.
   - owner: nobody since 2026-10-14 21:39 (stage 1 merged at 22:06; agent a119ffbc187f24aad (opus) of claude d8031183); stage 2 waits for a code slot
   - branch: mainline; last commit: `b72d5dd`; the local `k307-proto` (51f7480) holds throwaway prototypes and is never merged
   - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches); K7 s4's traces in `.claude/probes/K7/stage4/k307/`; lore `.claude/rules/render-shaders.md`
-  - next: stage 2, the warm-up (`program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2), not alongside K7 s5 (both edit `main.ts`); K366 rides it; the phone's measures ride K156's next pass
+  - next: stage 2, the warm-up (`program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2), not alongside K7 s5 (both edit `main.ts`); K366 rides it, and so do K268 s2's three explore variants (`render-shaders.md`); the phone's measures ride K156's next pass
   - brief: `docs/design/K307_intro_freezes.md` ("Stage 1 handoff", "Stage 2: the warm-up"); K7's in `docs/design/K7_worker.md` ("Stage 4 handoff")
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`, re-based by stage 1, 05aac8e..cbeb963). G3-1
@@ -251,6 +251,14 @@ Next free ID: K375.
   - evidence: its worktree's `.claude/probes/K5/design/`
   - next: the design and stage 1's brief in `docs/design/K5_K6_split.md`; stage 1 starts after K7 stage 5 merges (about 04:40)
   - brief: this item, K6's and `docs/design/K7_worker.md` (lines 20-35); the design doc once merged
+- **K290** · Burnt threads, a toggle (Levi, 2026-10-14): a `burnt` dropdown,
+  gone (default: not drawn, under threads' gaps close, fans drop the arm) or
+  char (a burnt coloring in the shader). Burn stage 3a; 3b is the front's FX.
+  - owner: agent `adb9f09e19dfd0c55` (opus) of claude session d8031183, stage 3a from 03:27 (cap 05:27; ports 5820-5829)
+  - branch: `worktree-agent-adb9f09e19dfd0c55` (`.claude/worktrees/agent-adb9f09e19dfd0c55`, from `f799991`); last commit: `f799991` (master) until its first WIP commit
+  - evidence: its worktree's `.claude/probes/K290/stage3a/`; burn stage 1's `.claude/probes/K114/`
+  - next: stage 3a: the param, gone through the explore VIS machinery reversed, char in the shader, a desktop sheet of both looks; then 3b (the front's char band and embers, the `burn` FX on `tipsAt`, the fuse, the fire's light under fog, the phone sheet)
+  - brief: `docs/design/K114_burn.md`, "The stages" (Stage 3) and "Stage 1 handoff"; the stage 3a handoff once written
 
 ## Next, in order
 
@@ -290,12 +298,6 @@ free slots (Levi, 2026-10-14 23:00-23:55):
 
 Every other item below waits on the trigger it names.
 
-- **K290** · Burnt threads, a toggle (Levi, 2026-10-14): a `burnt`
-  dropdown, char (drawn in a burnt coloring) or gone (not drawn; the
-  under threads' gaps close, K268's shaped cut in reverse; fans drop the
-  arm); default gone. Burn stage 3 builds both on K76's visibility and
-  K268's shaped gaps, so those briefs must not assume visibility only
-  grows. `docs/design/K114_burn.md` (stage 3).
 - **K345** · The hover rim stops `rimGap` (0.975 world) short of junctions;
   Levi (2026-10-14) wants it to follow the fillets. Goes in K9's G4-1 (K8
   s1: piece SDFs give webs an across coordinate; fan work now is wasted).
@@ -523,6 +525,9 @@ Every other item below waits on the trigger it names.
 - **K373** · Two cheap boot fixes from K7 s4's trace: the `safeAreaInsets`
   forced layout (`offscreen_indicators.ts` 797-809, ~35 ms) and `formatDayDate`
   (`daily_calendar.ts:75`, ~8 ms). Rec: do both.
+- **K376** · Look at the reveal's intro close-in, joints now fading with their
+  arms (K268 s2, desktop only so far), on the desktop and the phone; fix any of
+  the stage's four small residuals that show (`docs/design/K268.md`, "Stage 2 handoff").
 
 ## Residuals (known, not fixed)
 
@@ -1130,6 +1135,9 @@ Every other item below waits on the trigger it names.
 - **K374** · 52 freeze-patch probes and 5 timing wrappers still patch `ps.step`
   and run only with `&phw=0` (`.claude/probes/K7/stage4/ports/FREEZE_PATCH_FILES.md`):
   port each when next needed, `k279_ab` first; re-run g2_smoke and livefabric.
+- **K375** · The reveal's sheet probe (`k76_probe.mjs`): pin the halo breath as
+  `census.mjs` now does, and find the 192 px by which a mode-off frame differs
+  from the frame before it, master too (K268 s2). Rec: a small sonnet probe.
 
 ## Approved, to schedule (2026-10-11)
 

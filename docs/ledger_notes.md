@@ -2798,3 +2798,23 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   lines (K1-K3 done). After K7's stage 5 (it conflicts with stages 1, 3
   and 4; the host makes it smaller); first in line once that merges
   (Levi, 2026-10-14 23:46, would like it sooner).
+
+## K268 (2026-10-15, stage 2 merged)
+
+- **K268** · Shaped crossing gaps under thread reveal (K76; Levi,
+  2026-10-14): no gap until the over thread is seen, and a dynamic gap for
+  a stub's overlap and dead ends. Stage 1 merged; stage 2 runs.
+  - owner: agent `a42c63c2db0401edb` (opus) of claude session d8031183, stage 2 from 01:15 (cap 03:15; ports 5820-5829); stage 1's worktree `ab65d913a3b9a3dcb` kept
+  - branch: `worktree-agent-a42c63c2db0401edb` (`.claude/worktrees/agent-a42c63c2db0401edb`, from `82c1f23`); last commit: `82c1f23` (master) until its first WIP commit
+  - evidence: `.claude/probes/K268/` (stage 1's); stage 2's in its worktree's `.claude/probes/K268/stage2/`
+  - next: first the MAX defect K76 2c found (crossing 275, both threads walked: the mode on cuts 0 px of gap against 1010 px off, so the threads fuse; `.claude/probes/K76/stage2c/out/census_new2/shaped_c275.png`), then K275's fade, the fans and still pluck, protect, smooth-min, underWindows; never alongside K298, K299 or K111 s5; K290 next in the chain
+  - brief: `docs/design/K268.md` ("For stage 2"); `docs/design/K76.md` ("Stage 2c handoff", "For K268 stage 2")
+
+## K290 (2026-10-15, burn stage 3a started)
+
+- **K290** · Burnt threads, a toggle (Levi, 2026-10-14): a `burnt`
+  dropdown, char (drawn in a burnt coloring) or gone (not drawn; the
+  under threads' gaps close, K268's shaped cut in reverse; fans drop the
+  arm); default gone. Burn stage 3 builds both on K76's visibility and
+  K268's shaped gaps, so those briefs must not assume visibility only
+  grows. `docs/design/K114_burn.md` (stage 3).
