@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
@@ -18,8 +19,33 @@ import ts from "typescript";
 // alias assigned from one of those (`const sys = ps!`). Not caught: a
 // system reached through an unannotated callback parameter, or handed to a
 // helper that writes it; `view` is read-only by contract there.
+//
+// K5 (docs/design/K5_K6_split.md) moves main.ts's code into src/app/, which
+// reaches the system through fields declared in another file: the
+// SceneRef's `ps` (`scene.ps`, `ctx.scene.ps`) and the probe context's
+// `host` (`ctx.host.view`). So the scan covers main.ts and every file under
+// src/app/, and collects the fields annotated with ParticleSystem or a host
+// type across all of them: an access to such a field, or a destructured
+// copy of one (`const { host } = deps`), names the system or the host in
+// every scanned file. Fields match by name, so an unrelated `.ps` or
+// `.host` counts too; nothing writes through one today.
 
-const MAIN = fileURLToPath(new URL("../../src/main.ts", import.meta.url));
+const SRC = fileURLToPath(new URL("../../src/", import.meta.url));
+const MAIN = join(SRC, "main.ts");
+const APP = join(SRC, "app");
+
+// The scanned files, keyed by their path under src/ ("main.ts",
+// "app/probe_hooks.ts"): main.ts and every .ts file under src/app/.
+function scannedFiles(): Map<string, string> {
+  const files = new Map([["main.ts", readFileSync(MAIN, "utf8")]]);
+  const app = readdirSync(APP, { recursive: true, encoding: "utf8" })
+    .filter((f) => f.endsWith(".ts"))
+    .sort();
+  for (const f of app) {
+    files.set(`app/${f.replace(/\\/g, "/")}`, readFileSync(join(APP, f), "utf8"));
+  }
+  return files;
+}
 
 // ParticleSystem's mutators: the input, the step, the reset, the build-time
 // surgery. A reference counts, not only a call (`ps.step.call(...)`,
@@ -90,21 +116,61 @@ function walk(node: ts.Node, visit: (n: ts.Node) => void): void {
   node.forEachChild((c) => walk(c, visit));
 }
 
-// Every violation of the seam in `source`, as "line: what: code".
-function seamViolations(source: string): string[] {
-  const sf = ts.createSourceFile(
+function parse(source: string): ts.SourceFile {
+  return ts.createSourceFile(
     "main.ts",
     source,
     ts.ScriptTarget.Latest,
     true,
     ts.ScriptKind.TS
   );
+}
+
+// The names of the fields annotated with a system or a host type.
+interface Fields {
+  systems: Set<string>;
+  hosts: Set<string>;
+}
+
+// The annotated fields across `sources`: interface and type-literal
+// members, class fields and getters (`readonly ps: ParticleSystem | null`
+// in the SceneRef, `host: PhysicsHost` in the probe context).
+function annotatedFields(sources: Iterable<string>): Fields {
+  const fields: Fields = { systems: new Set(), hosts: new Set() };
+  for (const source of sources) {
+    const sf = parse(source);
+    walk(sf, (n) => {
+      if (
+        !ts.isPropertySignature(n) &&
+        !ts.isPropertyDeclaration(n) &&
+        !ts.isGetAccessorDeclaration(n)
+      ) {
+        return;
+      }
+      const name = n.name;
+      if (!n.type || !(ts.isIdentifier(name) || ts.isStringLiteral(name))) return;
+      const type = n.type.getText(sf);
+      if (SYSTEM_TYPE.test(type)) fields.systems.add(name.text);
+      if (HOST_TYPE.test(type)) fields.hosts.add(name.text);
+    });
+  }
+  return fields;
+}
+
+// Every violation of the seam in `source`, as "line: what: code". `fields`
+// are the annotated fields of every scanned file (by default, this one's).
+function seamViolations(
+  source: string,
+  fields: Fields = annotatedFields([source])
+): string[] {
+  const sf = parse(source);
   const systems = new Set<string>();
   const hosts = new Set<string>();
 
   const isHost = (e: ts.Expression): boolean => {
     const s = strip(e);
     if (ts.isIdentifier(s)) return hosts.has(s.text);
+    if (ts.isPropertyAccessExpression(s)) return fields.hosts.has(s.name.text);
     if (ts.isNewExpression(s)) {
       const c = strip(s.expression);
       return ts.isIdentifier(c) && HOST_TYPE.test(c.text);
@@ -115,7 +181,10 @@ function seamViolations(source: string): string[] {
     const s = strip(e);
     if (ts.isIdentifier(s)) return systems.has(s.text);
     if (ts.isPropertyAccessExpression(s)) {
-      return s.name.text === "view" && isHost(s.expression);
+      return (
+        fields.systems.has(s.name.text) ||
+        (s.name.text === "view" && isHost(s.expression))
+      );
     }
     if (ts.isCallExpression(s)) {
       const c = strip(s.expression);
@@ -178,16 +247,17 @@ function seamViolations(source: string): string[] {
           if (HOST_TYPE.test(type) || (n.initializer && isHost(n.initializer))) {
             add(hosts, n.name.text);
           }
-        } else if (
-          ts.isObjectBindingPattern(n.name) &&
-          n.initializer &&
-          isHost(n.initializer)
-        ) {
+        } else if (ts.isObjectBindingPattern(n.name)) {
+          // `const { view } = host`, and a destructured field:
+          // `const { ps } = scene`, `const { host } = deps`, `({ ps }: SceneRef)`.
+          const fromHost = n.initializer !== undefined && isHost(n.initializer);
           for (const el of n.name.elements) {
             const key = el.propertyName ?? el.name;
-            if (ts.isIdentifier(key) && key.text === "view" && ts.isIdentifier(el.name)) {
+            if (!ts.isIdentifier(key) || !ts.isIdentifier(el.name)) continue;
+            if ((fromHost && key.text === "view") || fields.systems.has(key.text)) {
               add(systems, el.name.text);
             }
+            if (fields.hosts.has(key.text)) add(hosts, el.name.text);
           }
         }
       }
@@ -280,23 +350,104 @@ function seamViolations(source: string): string[] {
   return out;
 }
 
-describe("K7 host seam: main.ts writes the physics only through the host", () => {
-  it("main.ts has no write to the system outside the host", () => {
-    expect(seamViolations(readFileSync(MAIN, "utf8"))).toEqual([]);
+// The scan: every scanned file against the fields of all of them, as
+// "file:line: what: code".
+function scan(files: Map<string, string>): string[] {
+  const fields = annotatedFields(files.values());
+  const out: string[] = [];
+  for (const [name, source] of files) {
+    for (const v of seamViolations(source, fields)) out.push(`${name}:${v}`);
+  }
+  return out;
+}
+
+// `files` with `line` appended to `name`.
+function planted(files: Map<string, string>, name: string, line: string) {
+  return new Map(files).set(name, `${files.get(name)}\n${line}\n`);
+}
+
+describe("K7 host seam: main.ts and src/app write the physics only through the host", () => {
+  it("main.ts and src/app have no write to the system outside the host", () => {
+    expect(scan(scannedFiles())).toEqual([]);
   });
 
   it("the scan sees main's system and host (it is not scanning nothing)", () => {
-    const src = readFileSync(MAIN, "utf8");
+    const files = scannedFiles();
     // Re-run the name collection through a probe: a write planted at the end
     // of main.ts on each of main's names must be reported.
-    for (const planted of [
+    for (const line of [
       "ps.step(1);",
       "host.view!.grab(1, 2);",
       "ps!.positions[0] = 1;",
     ]) {
-      const v = seamViolations(`${src}\n${planted}\n`);
-      expect(v.length, planted).toBe(1);
+      expect(scan(planted(files, "main.ts", line)).length, line).toBe(1);
     }
+  });
+
+  it("the scan covers src/app and sees the SceneRef's and the probe context's fields", () => {
+    const files = scannedFiles();
+    expect([...files.keys()]).toEqual(
+      expect.arrayContaining([
+        "main.ts",
+        "app/scene_ref.ts",
+        "app/stamp.ts",
+        "app/probe_hooks.ts",
+      ])
+    );
+    const fields = annotatedFields(files.values());
+    expect(fields.systems.has("ps"), "SceneRef.ps").toBe(true);
+    expect(fields.hosts.has("host"), "ProbeCtx.host").toBe(true);
+    // A write planted at the end of the probe hooks, through each field.
+    for (const line of [
+      "ctx.scene.ps!.step(1);",
+      "ctx.host.view!.grab(1, 2);",
+      "ctx.scene.ps!.positions[0] = 1;",
+    ]) {
+      expect(scan(planted(files, "app/probe_hooks.ts", line)).length, line).toBe(1);
+    }
+  });
+
+  it("reports writes through a SceneRef or probe-context field (src/app)", () => {
+    // The fields are declared in one file and used in another, as in src/app.
+    const fields = annotatedFields([
+      'import type { ParticleSystem } from "../physics/particle_system";\n' +
+        'import type { PhysicsHost } from "../physics/physics_host";\n' +
+        "export interface SceneRef { readonly ps: ParticleSystem | null; }\n" +
+        "export interface ProbeCtx {\n" +
+        "  ps: ParticleSystem;\n" +
+        "  host: PhysicsHost;\n" +
+        "  scene: SceneRef;\n" +
+        "}\n",
+    ]);
+    const bad = [
+      "ctx.ps.step = () => {};",
+      "scene.ps!.positions.set(other);",
+      "ctx.scene.ps?.grab(1, 2);",
+      "ctx.ps.simTime += 1;",
+      "ctx.host.view!.release();",
+      "ctx.host.build(graph, params).reset();",
+      "const { ps } = ctx; ps.dragTo(1, 2);",
+      "const { host } = deps; host.view!.tug(0, 0, 1, 0, 1, 1);",
+      "function f3({ ps }: SceneRef) { ps!.chains.push([]); }",
+      "const sys = ctx.scene.ps!; sys.crossings[0].over.f = 2;",
+    ];
+    for (const line of bad) {
+      const source =
+        'import type { ProbeCtx } from "./probe_hooks";\n' +
+        'import type { SceneRef } from "./scene_ref";\n' +
+        "export function hooks(ctx: ProbeCtx, scene: SceneRef): void {\n" +
+        `  ${line}\n` +
+        "}\n";
+      expect(seamViolations(source, fields).length, line).toBeGreaterThan(0);
+    }
+    // Reads, and the host's own calls, through the same fields.
+    const ok =
+      "const t = scene.ps?.simTime ?? 0; const n = ctx.scene.ps!.chains.length;\n" +
+      "const sys = ctx.scene.ps; if (sys) out.set(sys.positions);\n" +
+      "ctx.host.freeze(true); ctx.host.stepUntil(1, tuning); ctx.host.sync();\n" +
+      "ctx.host.reset(); ctx.host.release(); ctx.host.tug(0, 0, 1, 0, 1, 1);\n" +
+      "const { host } = deps; host.grab(1, 2, 3); const k = host.stats().host;\n";
+    expect(seamViolations(ok, fields)).toEqual([]);
   });
 
   it("reports each kind of write", () => {
