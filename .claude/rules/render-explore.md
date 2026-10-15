@@ -132,7 +132,23 @@ modes and the mode off is master's frame by construction.
   the joint census on seeds 5, 42 and 777 at arrival, the entrance, two
   moves and ten: a junction is hidden exactly when its walk vertex is
   unvisited, CPU only).
-- MEASURED: MEASURED_2B
+- MEASURED (desktop, `.claude/probes/K76/stage2b/`): mode off against
+  master 6588ec0 is 0 px at four pulse phases, a hovered choice and on
+  then off again (`k76_probe.mjs ab`); `visitAll` at reach 1000 matches
+  the mode-off frame at 0 px. THE CENSUS (`census.mjs <base> <out>
+  <moves>`: each crossing's cut = the frame minus the frame with its slot
+  rejected, in a clip; each joint's pixels = the frame minus the frame
+  without the fan meshes), two moves in: 405 hidden over threads cut
+  nothing (643 px of cut kept off visible under threads), the 2 crossings
+  visible on both threads keep their gaps exactly, 181 of 181 junctions
+  hidden exactly when unvisited, the 179 hidden paint no fan pixel and the
+  2 shown paint mode-off's exactly. CENSUS_M10_LORE
+  GPU (`gpu_batch.ps1` as in 2a, 3200x1800): mode off costs nothing
+  (master's ribbon program 1.975 vs 1.960, fans 0.552 vs 0.548, frame
+  2.769 vs 2.762). Mode on, two moves in: the fans 0.56 -> 0.088 (the
+  joint gate), frame 1.566 -> 1.154. The bound (`visitAll`) is 1.766
+  against master's 1.975 in the same batch, while 2a's measured them
+  equal (BOUND_CHECK_LORE).
 - PROBE LESSON (2026-10-14): never run two GPU probes at once. Observed:
   with another agent's GPU batch running, two contact sheets of the 2b
   build lost the vellum backdrop in 10 of 12 frames (black behind a
