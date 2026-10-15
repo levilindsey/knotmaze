@@ -2991,7 +2991,8 @@ async function main(): Promise<void> {
   // progress, tickTurnMino), a wait's over the time the player's dot would
   // take over the same thread. A CATCH happens at the tap that makes it
   // (stage 1 shows no catching move: the frame after it has the player at
-  // the entrance and the minotaur in its lair, stage 2 adds the feedback)
+  // the entrance and the minotaur in its lair, or where it caught you with
+  // minoLair off; the feedback moved to stage 3)
   // and goes through real time's path: respawn (re-fog under minoRefog),
   // the counter, the HUD's caught row and the toast. K273: with the level
   // reset on a catch (minoRestart) it is the level restart instead, the
