@@ -2984,3 +2984,20 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - evidence: `.claude/probes/K5/stage1/` (in the main checkout, as the brief says); the design's region maps in `.claude/probes/K5/design/`
   - next: stage M1: the re-map, `src/app/scene_ref.ts`, the loader, stamp and probe hooks moved, host_seam over `src/app/**`, the lore paths; then section 5's stages (M2-M8, R1-R5; section 6 orders them)
   - brief: `docs/design/K5_K6_split.md`, "7. Stage 1 brief" and "Stage 1 launch notes"
+
+## K161 (2026-10-15, the hand-off)
+
+- **K161** · Disk: `$env:TEMP` held about 1100 `knotmaze-*` Chrome
+  profiles (about 33 GB) that probe runs never delete, plus stale
+  worktrees (C: had 19.6 GB free, 2026-10-14). Levi approved the cleanup
+  (item 2): delete profiles older than a day, sweep stale worktrees,
+  probe libraries delete their profile on exit (K150).
+  - owner: claude session d8031183 (the coordinator), a background
+    cleanup script under the perf lock
+  - branch: mainline (no code); last commit: n/a
+  - evidence: `.claude/probes/K161/cleanup.ps1` (`-DryRun` first) and
+    `cleanup.log`; the 2026-10-14 01:17 run swept the five merged
+    worktrees
+  - next: run `cleanup.ps1` again for the profiles (it was due after
+    16:20 on 10-14, none was a day old at 01:17); the libraries'
+    delete-on-exit goes with K150
