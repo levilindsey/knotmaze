@@ -15,14 +15,6 @@ and never reused.
 
 ## Waiting on Levi
 
-- **K269** · The turn-aligned hunter's catch rates on today's mazes (K80
-  turns stage 1): at the defaults it catches an attentive explorer on 14%
-  of dailies and an 80%-attentive one on 32%, against the research's 1%
-  and 13% on the older mazes (K74 stage 1's dead ends: 2.0 -> 5.9 ends a
-  maze). Retune the defaults (sight, accuracy) to the research's targets
-  in stage 2 (rec.), tune on other designs, or accept the new rates.
-  Asked in session 2026-10-14 at about 15:23. `docs/design/K80_turns.md`
-  ("Stage 1 handoff"), `.claude/probes/K80/turns/compare_rebased.md`.
 - **K264** · The hover rim's width (K248, merged 6588ec0): `RIM_EDGE`
   0.7 / 0.85 (built) / 1.0 of the thread's half-width. 0.7 is thinner;
   at 1.0 the two rims meet on the center line and the thread reads as
@@ -385,7 +377,8 @@ and never reused.
     today's line is about one thread wide); stats and share (2.9); fog
     interplay, sound and the Reset-path log (2.10); a wait key, a
     move-pad wait button and a hover cue; a turn-based minoToward; and
-    K269's retune if Levi picks it. Before any daily pins a minotaur,
+    the retune (K269; Levi, 15:34: "Retune."): the hunter's defaults back
+    to the research's 1% / 13% on today's mazes. Before any daily pins a minotaur,
     waits enter `fc.taps` and the attempt saves, and K47's fingerprint
     covers the minotaur params. Real time's phone check is K177.
   - brief: `docs/design/K80_turns.md` ("Stage 1 handoff"; three stages,
@@ -675,8 +668,7 @@ panel's top); K237 (the hover glow's default); K238 (K111's calls);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
 K251 (the displaced disc's slide across the panel); K253 (a quiet phone
 for K193's A/A); K257 (K76's questions for stage 2c); K260 and K261
-(the burn race's and K74 stage 2's calls); K269 (the turn hunter's
-catch rates);
+(the burn race's and K74 stage 2's calls);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -1638,6 +1630,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K269** · The turn hunter's catch rates on today's mazes (K80 turns
+  stage 1: 14% of dailies for an attentive explorer, 32% at 80%, against
+  the research's 1% and 13%). Levi, 2026-10-14 about 15:34: "Retune." K80
+  turns stage 2 retunes the defaults (sight, accuracy) to the research's
+  targets on today's mazes.
 - **K248** · Levi's highlight pick (2026-10-14 about 13:28): the choices
   keep the pulses and a hovered choice keeps today's look;
   `highlightMode` and its glow, rims and contrast modes went (codec
