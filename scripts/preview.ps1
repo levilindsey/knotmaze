@@ -31,7 +31,14 @@ $worktree = $null
 if ($Ref) {
   $sha = (git -C $repo rev-parse --short $Ref).Trim()
   $worktree = Join-Path $root "src-$sha"
-  if (Test-Path $worktree) { git -C $repo worktree remove --force $worktree | Out-Null }
+  if (Test-Path $worktree) {
+    # A leftover worktree still has its junction: unlink it first, since
+    # `git worktree remove --force` follows a junction into its target
+    # (git 2.33; on 2026-10-14 it emptied the main checkout's .bin).
+    $nm = Get-Item (Join-Path $worktree "node_modules") -Force -ErrorAction SilentlyContinue
+    if ($nm -and $nm.LinkType) { $nm.Delete() }
+    git -C $repo worktree remove --force $worktree | Out-Null
+  }
   git -C $repo worktree add --detach $worktree $sha | Out-Null
   # Reuse the main checkout's packages: a directory junction, removed
   # with .Delete() below (a recursive delete would follow it).
