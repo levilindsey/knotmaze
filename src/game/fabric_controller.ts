@@ -41,16 +41,28 @@
 // (game/daily_attempt.ts exploredRuns). K174: `refogs` counts respawn(true)
 // calls, a catch that returns the fog to the solve's start (minoRefog);
 // the fog starts over when either counter moves.
+//
+// K114 BURN RACE (game/fire.ts): with a `fire`, the fire's clock is
+// walkedDist. A tap on a smoldering arm (the fire reaches its far end
+// first) is refused with "smolder": not logged, not a turn, nothing
+// changes. Every arrival lowers `fireClosest` (the closest call, T(v) - L);
+// an arrival with no safe arm left sets `fireLost`, after which every tap
+// is a "noop" and choices() is empty until reset() relights the fuse
+// (main.ts shows the Burnt banner, then restarts). replay(taps) rebuilds
+// all of it; a refused tap in a tap list fails the replay.
 
 import type { WalkGraph } from "../core/walk_graph";
 import type { MoveKind } from "./maze_stats";
+import type { Fire } from "./fire";
+import { armSafe, fireLead, fireTrapped, runBurnAt } from "./fire";
 
 export type FabricTapResult =
   | "advance" // stepped across a run to its far vertex
   | "backtrack" // retracted the last run
   | "reject" // the run is not incident to the current head
-  | "noop" // after solving
-  | "win"; // advanced onto the exit tail
+  | "noop" // after solving (or after a K114 burn-race loss)
+  | "win" // advanced onto the exit tail
+  | "smolder"; // K114: refused, the fire reaches the arm's far end first
 
 export class FabricMazeController {
   readonly walk: WalkGraph;
@@ -78,13 +90,25 @@ export class FabricMazeController {
   // construction and freely togglable from main.ts afterwards.
   trailMode: boolean;
 
-  constructor(walk: WalkGraph, trailMode = false) {
+  // K114 burn race: the fire (null = off). Change it only with a reset()
+  // after (main.ts restarts the solve).
+  fire: Fire | null;
+  // No safe arm was left at the head: the race is lost.
+  fireLost = false;
+  // The closest call so far, T(v) - L over every arrival (Infinity before
+  // the first move).
+  fireClosest = Infinity;
+
+  constructor(walk: WalkGraph, trailMode = false, fire: Fire | null = null) {
     this.walk = walk;
     this.trailMode = trailMode;
+    this.fire = fire;
     this.reset();
   }
 
   reset(): void {
+    this.fireLost = false;
+    this.fireClosest = Infinity;
     this.pathVertices = [this.walk.start];
     this.pathEdges = [];
     this.backtrackDist = 0;
@@ -105,7 +129,7 @@ export class FabricMazeController {
     this.reset();
     for (const eid of taps) {
       const r = Number.isInteger(eid) ? this.tapEdge(eid) : "reject";
-      if (r === "reject" || r === "noop") {
+      if (r === "reject" || r === "noop" || r === "smolder") {
         this.reset();
         return false;
       }
@@ -157,17 +181,38 @@ export class FabricMazeController {
   }
 
   // Walk-edge ids tappable right now: every run incident to the head (the
-  // last traversed one among them means "backtrack").
+  // last traversed one among them means "backtrack"). K114: none after a
+  // loss, and never a burnt run (smoldering arms stay: their tap is
+  // refused with "smolder", so the caller can say why).
   choices(): number[] {
-    if (this.solved) return [];
-    return this.walk.vertices.get(this.head)!.edges;
+    if (this.solved || this.fireLost) return [];
+    const edges = this.walk.vertices.get(this.head)!.edges;
+    const fire = this.fire;
+    if (!fire) return edges;
+    const L = this.walkedDist;
+    return edges.filter((eid) => runBurnAt(this.walk, fire, eid, L).state !== "burnt");
+  }
+
+  // K114: the fire's lead at the head, T(head) - L (lattice units; null
+  // without a fire).
+  get fireLeadHere(): number | null {
+    return this.fire ? fireLead(this.fire, this.head, this.walkedDist) : null;
+  }
+
+  // K114: would the fire refuse this arm from the head now?
+  smoldering(edgeId: number): boolean {
+    const fire = this.fire;
+    if (!fire || !this.walk.edges[edgeId]) return false;
+    return !armSafe(this.walk, fire, this.walkedDist, this.head, edgeId);
   }
 
   tapEdge(edgeId: number): FabricTapResult {
-    if (this.solved) return "noop";
+    if (this.solved || this.fireLost) return "noop";
     const e = this.walk.edges[edgeId];
     const head = this.head;
     if (!e || (e.va !== head && e.vb !== head)) return "reject";
+    // K114: a smoldering arm refuses the tap before anything changes.
+    if (this.smoldering(edgeId)) return "smolder";
 
     if (
       !this.trailMode &&
@@ -180,6 +225,7 @@ export class FabricMazeController {
       this.walkedDist += e.length;
       this.moveLog.push("b");
       this.taps.push(edgeId);
+      this.fireArrive(this.head);
       return "backtrack";
     }
 
@@ -191,11 +237,22 @@ export class FabricMazeController {
     this.pathEdges.push(edgeId);
     this.pathVertices.push(far);
     this.arrive(far);
+    this.fireArrive(far);
     if (far === this.walk.exit) {
       this.solved = true;
       return "win";
     }
     return "advance";
+  }
+
+  // K114: an arrival's margin lowers the closest call; no safe arm left
+  // loses the race (the exit wins instead).
+  private fireArrive(at: string): void {
+    const fire = this.fire;
+    if (!fire) return;
+    const lead = fireLead(fire, at, this.walkedDist);
+    if (lead < this.fireClosest) this.fireClosest = lead;
+    if (fireTrapped(this.walk, fire, this.walkedDist, at)) this.fireLost = true;
   }
 
   // Does stepping from `from` across a run of `len` to `to` stay on a

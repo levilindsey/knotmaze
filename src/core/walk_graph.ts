@@ -56,6 +56,42 @@ export interface WalkGraph {
   distToExit: Map<string, number>;
 }
 
+// Deterministic Dijkstra over the walk multigraph: the walk distance from
+// `source` to every vertex (Infinity where unreachable). O(V^2) scan with
+// id tie-breaking; the walk graph is small. buildWalkGraph's start/exit
+// choice and distToExit use it, and so does the burn race's fire (K114,
+// game/fire.ts: distances from WalkGraph.start).
+export function walkDistances(
+  vertices: ReadonlyMap<string, WalkVertex>,
+  edges: readonly WalkEdge[],
+  source: string
+): Map<string, number> {
+  const dist = new Map<string, number>();
+  const done = new Set<string>();
+  for (const id of vertices.keys()) dist.set(id, Infinity);
+  dist.set(source, 0);
+  for (;;) {
+    let cur: string | null = null;
+    let curD = Infinity;
+    for (const [id, d] of dist) {
+      if (done.has(id) || d === Infinity) continue;
+      if (d < curD || (d === curD && cur !== null && id < cur)) {
+        curD = d;
+        cur = id;
+      }
+    }
+    if (cur === null) break;
+    done.add(cur);
+    for (const eid of vertices.get(cur)!.edges) {
+      const e = edges[eid];
+      const other = e.va === cur ? e.vb : e.va;
+      const nd = curD + e.length;
+      if (nd < dist.get(other)!) dist.set(other, nd);
+    }
+  }
+  return dist;
+}
+
 // Build the walk graph and pick the start/exit tails. Returns null when the
 // graph carries no cut ends (not an applied maze fabric).
 export function buildWalkGraph(graph: TangleGraph): WalkGraph | null {
@@ -155,34 +191,8 @@ export function buildWalkGraph(graph: TangleGraph): WalkGraph | null {
   const exits = EXIT_END_IDS.filter((id) => vertices.has(id));
   if (entrances.length === 0 || exits.length === 0) return null;
 
-  // Deterministic Dijkstra over the multigraph (O(V^2) scan with id
-  // tie-breaking; the walk graph is small).
-  const dijkstra = (source: string): Map<string, number> => {
-    const dist = new Map<string, number>();
-    const done = new Set<string>();
-    for (const id of vertices.keys()) dist.set(id, Infinity);
-    dist.set(source, 0);
-    for (;;) {
-      let cur: string | null = null;
-      let curD = Infinity;
-      for (const [id, d] of dist) {
-        if (done.has(id) || d === Infinity) continue;
-        if (d < curD || (d === curD && cur !== null && id < cur)) {
-          curD = d;
-          cur = id;
-        }
-      }
-      if (cur === null) break;
-      done.add(cur);
-      for (const eid of vertices.get(cur)!.edges) {
-        const e = edges[eid];
-        const other = e.va === cur ? e.vb : e.va;
-        const nd = curD + e.length;
-        if (nd < dist.get(other)!) dist.set(other, nd);
-      }
-    }
-    return dist;
-  };
+  const dijkstra = (source: string): Map<string, number> =>
+    walkDistances(vertices, edges, source);
 
   // The real start/exit pair is the one with the LONGEST optimal solve
   // among the four tail combinations (deterministic difficulty maximizer);
