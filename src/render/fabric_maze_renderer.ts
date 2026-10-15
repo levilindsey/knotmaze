@@ -746,9 +746,15 @@ export class FabricMazeRenderer {
 
   // Nearest tappable run to a world point among the current choices, or -1.
   // Samples each run's full span, excluding the neighborhood of the branch
-  // point where all arms coincide.
-  edgeAt(x: number, y: number, controller: FabricMazeController): number {
-    const maxD = Math.max(0.9, this.threadWidth * 1.6);
+  // point where all arms coincide. maxD is the pick radius from the
+  // centerline (world): main.ts pickRadius (K298), touch's max(0.9, 1.6 x
+  // threadWidth), the mouse's half-width plus its choice margin.
+  edgeAt(
+    x: number,
+    y: number,
+    controller: FabricMazeController,
+    maxD: number
+  ): number {
     let best = -1;
     let bestD = maxD * maxD;
     for (const eid of controller.choices()) {

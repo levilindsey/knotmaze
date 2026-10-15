@@ -459,6 +459,13 @@ export interface UrlParams {
   // until K298). Viewer preferences.
   hoverGlowLength: number;
   hoverGlowFade: number;
+  // K298, the MOUSE's pick margins (a pen's too; touch keeps today's
+  // radii, main.ts pickRadius): how far past a thread's edge a pointer
+  // still picks it, in CSS px ([0, PICK_MARGIN_MAX]; hover, click, the
+  // thread cursor, the grab), and a choice's margin as a multiple of it
+  // ([PICK_CHOICE_RATIO_MIN, PICK_CHOICE_RATIO_MAX]). Viewer preferences.
+  pickMargin: number;
+  pickChoiceRatio: number;
   // K80 turns: the TURN-ALIGNED minotaur (game/minotaur_turns.ts), a
   // modifier of the turn clock (clk=realtime runs real time's own model and
   // ignores these): off | hunter | guard | stalker; the runs it takes a
@@ -519,6 +526,11 @@ export const HOVER_GLOW_WIDTH_MAX = 1;
 export const HOVER_GLOW_LENGTH_MIN = 0.5;
 export const HOVER_GLOW_LENGTH_MAX = 15;
 export const HOVER_GLOW_FADE_MAX = 1.5;
+// The mouse's pick margins (K298): CSS px past the edge, and the choices'
+// multiple of it.
+export const PICK_MARGIN_MAX = 20;
+export const PICK_CHOICE_RATIO_MIN = 1;
+export const PICK_CHOICE_RATIO_MAX = 4;
 
 // The two load-settle sliders' tops (K147). LOAD_SETTLE_MAX is a sentinel
 // as well: there the page waits for the first sleep (or main.ts's wall cap).
@@ -670,6 +682,11 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   hoverGlowWidth: PAINT_CONST.RIM_EDGE, // 0.85 (K111 stage 3's width)
   hoverGlowLength: 3, // K298: pulseReach's default, the length it had
   hoverGlowFade: 0.2, // K298: was RIM_END_FADE 0.75 (the fade sheet)
+  // K298: the mouse picked 0.7 world from the centerline (9.6 CSS px past
+  // the edge at 1400x900) and a choice 0.9 (14 px, 1.45x as far past the
+  // edge); now 4 px, and a choice 1.5x that (6 px).
+  pickMargin: 4,
+  pickChoiceRatio: 1.5,
   minotaur: DEFAULT_TURN_MINO.model,
   minoSpeed: DEFAULT_TURN_MINO.speed,
   minoTelegraph: DEFAULT_TURN_MINO.telegraph,
@@ -722,6 +739,16 @@ export function clampHoverGlowLength(v: number): number {
 export function clampHoverGlowFade(v: number): number {
   if (!Number.isFinite(v)) return PARAM_DEFAULTS.hoverGlowFade;
   return Math.min(HOVER_GLOW_FADE_MAX, Math.max(0, v));
+}
+// K298: [0, PICK_MARGIN_MAX] and [PICK_CHOICE_RATIO_MIN,
+// PICK_CHOICE_RATIO_MAX]; garbage reads as the default.
+export function clampPickMargin(v: number): number {
+  if (!Number.isFinite(v)) return PARAM_DEFAULTS.pickMargin;
+  return Math.min(PICK_MARGIN_MAX, Math.max(0, v));
+}
+export function clampPickChoiceRatio(v: number): number {
+  if (!Number.isFinite(v)) return PARAM_DEFAULTS.pickChoiceRatio;
+  return Math.min(PICK_CHOICE_RATIO_MAX, Math.max(PICK_CHOICE_RATIO_MIN, v));
 }
 
 // [FIRE_SPEED_MIN, FIRE_SPEED_MAX]; garbage reads as the default.
@@ -868,6 +895,8 @@ function fromCodecValues(
   p.hoverGlowWidth = clampHoverGlowWidth(p.hoverGlowWidth);
   p.hoverGlowLength = clampHoverGlowLength(p.hoverGlowLength);
   p.hoverGlowFade = clampHoverGlowFade(p.hoverGlowFade);
+  p.pickMargin = clampPickMargin(p.pickMargin);
+  p.pickChoiceRatio = clampPickChoiceRatio(p.pickChoiceRatio);
   clampTurnMino(p);
   p.hCutShare = clamp01(p.hCutShare);
   p.fireSpeed = clampFireSpeed(p.fireSpeed);
@@ -1161,6 +1190,9 @@ function readLegacy(
     // K298's hover glow length and end fade (`&hgl=5&hgf=0.1`).
     hoverGlowLength: clampHoverGlowLength(readNumber(query, "hgl", D.hoverGlowLength)),
     hoverGlowFade: clampHoverGlowFade(readNumber(query, "hgf", D.hoverGlowFade)),
+    // K298's mouse pick margins (`&pkm=2&pkr=3`).
+    pickMargin: clampPickMargin(readNumber(query, "pkm", D.pickMargin)),
+    pickChoiceRatio: clampPickChoiceRatio(readNumber(query, "pkr", D.pickChoiceRatio)),
     // K80 turns' turn-aligned minotaur (`&mt=hunter&msp=two&mtg=0`).
     minotaur: readChoice(query, "mt", MINOTAUR_SETTINGS, D.minotaur),
     minoSpeed: readChoice(query, "msp", TURN_SPEEDS, D.minoSpeed),

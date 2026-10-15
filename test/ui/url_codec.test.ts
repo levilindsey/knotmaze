@@ -105,6 +105,7 @@ describe("links", () => {
       minoRestart: false, minoLair: true,
       hoverGlowWidth: 0.85,
       hoverGlowLength: 3, hoverGlowFade: 0.2,
+      pickMargin: 4, pickChoiceRatio: 1.5,
     });
   });
 
@@ -142,6 +143,24 @@ describe("links", () => {
     expect(parseParams("?7&hgf=x").hoverGlowFade).toBe(0.2);
     const q = parseParams(`?${encodeParams(withSeed(7, { hoverGlowLength: 99, hoverGlowFade: -3 }))}`);
     expect([q.hoverGlowLength, q.hoverGlowFade]).toEqual([15, 0]);
+  });
+
+  // K298: the mouse pick margin ([0, 20] CSS px past a thread's edge) and
+  // the choices' ratio to it ([1, 4]), viewer preferences like hgl=.
+  it("reads the pick margin and the choice ratio from their override keys", () => {
+    const p = parseParams("?7&pkm=2.5&pkr=2");
+    expect([p.pickMargin, p.pickChoiceRatio]).toEqual([2.5, 2]);
+    expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    expect(encodeParams(parseParams("?7&pkm=4&pkr=1.5"))).toBe("7");
+    expect(parseParams("?7&pkm=30").pickMargin).toBe(20);
+    expect(parseParams("?7&pkm=-1").pickMargin).toBe(0);
+    expect(parseParams("?7&pkm=0").pickMargin).toBe(0);
+    expect(parseParams("?7&pkm=x").pickMargin).toBe(4);
+    expect(parseParams("?7&pkr=9").pickChoiceRatio).toBe(4);
+    expect(parseParams("?7&pkr=0.5").pickChoiceRatio).toBe(1);
+    expect(parseParams("?7&pkr=x").pickChoiceRatio).toBe(1.5);
+    const q = parseParams(`?${encodeParams(withSeed(7, { pickMargin: 99, pickChoiceRatio: -3 }))}`);
+    expect([q.pickMargin, q.pickChoiceRatio]).toEqual([20, 1]);
   });
 
   // K98: the marker size's override key, its clamp to [0.25, 3], and the
@@ -525,6 +544,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   confettiAmount: "cfa", pluckWhole: "pw", pluckCrossings: "pcx",
   pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg", hoverGlowWidth: "hgw",
   hoverGlowLength: "hgl", hoverGlowFade: "hgf",
+  pickMargin: "pkm", pickChoiceRatio: "pkr",
   minotaur: "mt", minoSpeed: "msp", minoTelegraph: "mtg", minoSight: "msi",
   minoRoamRuns: "mro", minoTerritory: "mtr", minoAccuracy: "mac",
   minoPause: "mpa", minoSleep: "msl", hCutShare: "hcs",
@@ -556,6 +576,7 @@ function otherValue(name: keyof typeof PARAM_DEFAULTS): string | number | boolea
   if (name === "hCutShare") return d === 0.5 ? 0.25 : 0.5;
   if (name === "fireDelay") return 12; // K114: its default is 0
   if (name === "pluckTug") return 0.3; // K279 wake follow-up: default 0
+  if (name === "pickChoiceRatio") return 2; // K298: half of 1.5 is under its floor 1
   return (d as number) * 0.5;
 }
 // As a link writes it: booleans 0/1, colors without the "#".

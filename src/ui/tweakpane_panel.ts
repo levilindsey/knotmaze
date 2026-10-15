@@ -24,6 +24,9 @@ import {
   MINO_SLEEP_MAX,
   MINO_TERRITORY_MAX,
   PARAM_DEFAULTS,
+  PICK_CHOICE_RATIO_MAX,
+  PICK_CHOICE_RATIO_MIN,
+  PICK_MARGIN_MAX,
   SETTLE_BUDGET_MAX,
   appearModeFor,
   applyAppearMode,
@@ -1688,6 +1691,40 @@ export function buildPanel(
     "How loud auto plucks play (the random and music sound modes) next to your own: 1 = as loud as a tap; 0.5 = the default, half the level (-6 dB); 0 = silent. Applies to the next pluck.",
     D.autoPluckGain, round2Feel("autoPluckGain")
   );
+  // K298: how near a thread the MOUSE picks it (a pen's too; touch keeps
+  // its own wider reach). No step (K130); an edit keeps 2 decimals.
+  row(
+    fFeel, p, "pickMargin",
+    {
+      min: 0,
+      max: PICK_MARGIN_MAX,
+      keyScale: 0.5,
+      pointerScale: 0.05,
+      format: (v: number) => v.toFixed(2),
+      label: "Mouse pick margin",
+    },
+    "Mouse pick margin: how far past a thread's edge, in screen pixels, the mouse still hovers, clicks or grabs it (a pen too; touch keeps its own wider reach). 0 = only on the thread itself. Applies live.",
+    D.pickMargin, () => {
+      params.pickMargin = Math.round(params.pickMargin * 100) / 100;
+      callbacks.onSlackChange();
+    }
+  );
+  const pickChoiceRatioRow = row(
+    fFeel, p, "pickChoiceRatio",
+    {
+      min: PICK_CHOICE_RATIO_MIN,
+      max: PICK_CHOICE_RATIO_MAX,
+      keyScale: 0.1,
+      pointerScale: 0.01,
+      format: (v: number) => v.toFixed(2),
+      label: "Choice pick ratio",
+    },
+    "Choice pick ratio: the mouse pick margin of your next moves (the runs out of your current junction), as a multiple of the margin above, so a choice is easier to hit than other threads. 1 = the same margin. Applies live.",
+    D.pickChoiceRatio, () => {
+      params.pickChoiceRatio = Math.round(params.pickChoiceRatio * 100) / 100;
+      callbacks.onSlackChange();
+    }
+  );
   const tugLimitRow = row(
     fFeel, p, "tugLimit", { min: 0.5, max: 6, step: 0.1 },
     "Dragging a thread tugs it (taps pluck instead). How far a thread can be tugged, in thread widths; the stretch resists more as it nears the limit (drag further, move less). Applies live.",
@@ -1954,6 +1991,8 @@ export function buildPanel(
     hoverGlowLengthRow.hidden = !fab;
     hoverGlowFadeRow.hidden = !fab;
     hoverGlowWidthRow.hidden = !fab;
+    // K298: knot mode has no choices (the mouse margin row always shows).
+    pickChoiceRatioRow.hidden = !fab;
     // The gold recolor paints in gold/trail modes; the yarn replaces it.
     pathColorRow.hidden = !fab || params.pathViz === "string";
     // Music mode derives its pitch set from the song itself; manual and

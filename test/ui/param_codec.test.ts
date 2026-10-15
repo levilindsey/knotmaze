@@ -170,6 +170,8 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["hoverGlowWidth", "number"], // 130, K111 stage 4
   ["hoverGlowLength", "number"], // 131, K298
   ["hoverGlowFade", "number"], // 132
+  ["pickMargin", "number"], // 133, K298
+  ["pickChoiceRatio", "number"], // 134
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

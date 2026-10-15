@@ -1877,6 +1877,38 @@ async function main(): Promise<void> {
     (e.clientY - root.position.y) / root.scale.y,
   ];
   const GRAB_RADIUS = 0.7;
+  // K298, PICK MARGINS (Levi: "reduce the amount of mouse margin we allow
+  // for clicking/hovering over a thread ... And add a slider"). The pick
+  // radius from a thread's centerline (world) for a pointer type. A MOUSE
+  // (a pen too) reaches the half-width plus `pickMargin` CSS px past the
+  // ribbon's edge, and a CHOICE (edgeAt: a run from the current junction)
+  // `pickChoiceRatio` times that margin. Screen px, because aim error is
+  // in screen px; a world margin balloons when zoomed in. TOUCH keeps its
+  // world radii exactly: GRAB_RADIUS for threads, max(0.9, 1.6 tw) for
+  // choices. Hover, click, the thread cursor and the tug's grab all read
+  // these, so the cursor never promises a grab that the click then misses.
+  const pickRadius = (pt: string, choice = false): number => {
+    if (pt === "touch") {
+      return choice ? Math.max(0.9, 1.6 * params.threadWidth) : GRAB_RADIUS;
+    }
+    const px = params.pickMargin * (choice ? params.pickChoiceRatio : 1);
+    return 0.5 * params.threadWidth + px / Math.max(1e-6, root.scale.x);
+  };
+  // Is a thread within the pointer's pick radius? A particle, or the
+  // rendered ribbon between particles: particles sit up to ~0.64 world
+  // apart, so at a tight mouse margin a point on the ribbon's edge can be
+  // ~0.4 world from both of its particles.
+  const onThread = (x: number, y: number, pt: string): boolean => {
+    const r = pickRadius(pt);
+    return (!!ps && ps.nearest(x, y, r) >= 0) || !!renderer?.pickThread(x, y, r);
+  };
+  // The tug's grab radius: touch's as before; for a mouse, wide enough
+  // that a press onThread accepted always finds a particle (the press may
+  // sit on the ribbon between two of them).
+  const grabRadius = (pt: string): number => {
+    const r = pickRadius(pt);
+    return pt === "touch" ? r : Math.sqrt(r * r + GRAB_RADIUS * GRAB_RADIUS);
+  };
 
   // ---- K19 MAZE STATS + K20 DAILY + K47 SAVED ATTEMPTS + K56 ------------
   // The HUD (top-left) and the win banner live in ui/maze_hud.ts; the
@@ -2712,9 +2744,11 @@ async function main(): Promise<void> {
   // A tap queues a run from the decision vertex (where the player stands,
   // or the end of the run under way; the latest tap wins); the chase sets
   // off along it on its next tick. Returns true when the tap was taken.
-  const handleChaseTap = (x: number, y: number): boolean => {
+  const handleChaseTap = (x: number, y: number, pt: string): boolean => {
     if (!chase || !fabric || !fabricController) return false;
-    return chaseAlong(fabric.edgeAt(x, y, fabricController));
+    return chaseAlong(
+      fabric.edgeAt(x, y, fabricController, pickRadius(pt, true))
+    );
   };
   // Queue run `eid` as a tap on it would (K120's keys share it).
   const chaseAlong = (eid: number): boolean => {
@@ -3062,10 +3096,10 @@ async function main(): Promise<void> {
   // Fabric maze: a tap on a run incident to the current branch point is a
   // move (advance or backtrack); anywhere else falls through to grab/tug,
   // which stays live in fabric mode. Returns true when the tap was a move.
-  const handleFabricTap = (x: number, y: number): boolean => {
+  const handleFabricTap = (x: number, y: number, pt: string): boolean => {
     if (!fabric || !fabricController) return false;
     // K80: the real-time mode queues the run with the chase instead.
-    if (chase) return handleChaseTap(x, y);
+    if (chase) return handleChaseTap(x, y, pt);
     // K114: a lost race takes no moves. A tap on the maze brings the Burnt
     // banner (and its Try again) back if it was closed; otherwise the tap
     // plucks as anywhere else.
@@ -3079,7 +3113,7 @@ async function main(): Promise<void> {
     // junction, and the head disc sits over it; onHead leaves the runs'
     // arms to the runs).
     if (turnMino && onHead(x, y)) return waitTurn();
-    const eid = fabric.edgeAt(x, y, fabricController);
+    const eid = fabric.edgeAt(x, y, fabricController, pickRadius(pt, true));
     if (eid < 0) return false;
     return moveAlong(eid);
   };
@@ -3501,9 +3535,9 @@ async function main(): Promise<void> {
   // RELEASE (how a real pluck works, and what tells a tap from a drag).
   // Re-picks at the press point so a knot that moved meanwhile still
   // plucks the thread that is there now.
-  const tapPluck = (x: number, y: number): void => {
+  const tapPluck = (x: number, y: number, pt: string): void => {
     if (!ps || !renderer) return;
-    const hit = renderer.pickThread(x, y, GRAB_RADIUS);
+    const hit = renderer.pickThread(x, y, pickRadius(pt));
     if (!hit) return;
     const freq = freqForCtrl(hit.chain, hit.ctrl);
     const unit = pluckUnit(hit.chain, hit.ctrl);
@@ -3563,6 +3597,8 @@ async function main(): Promise<void> {
   // or a pan with physics off) or lifts (a render-only tap-pluck).
   let pendingPluck: {
     id: number;
+    // The pointer type: its pick and grab radii (K298).
+    pt: string;
     slop: number;
     sx: number;
     sy: number;
@@ -3616,15 +3652,15 @@ async function main(): Promise<void> {
   // can only be plucked (physics off).
   const threadCursor = (): string => (physicsLive() ? "grab" : "pointer");
   // Nothing to tap or tug at this lattice point (where empty-space
-  // gestures - pan, double-tap reset - may take over).
-  const emptyAt = (x: number, y: number): boolean =>
+  // gestures - pan, double-tap reset - may take over), for pointer `pt`.
+  const emptyAt = (x: number, y: number, pt: string): boolean =>
     !!ps &&
-    ps.nearest(x, y, GRAB_RADIUS) < 0 &&
+    !onThread(x, y, pt) &&
     !(
       params.mazeFabric &&
       fabric &&
       fabricController &&
-      fabric.edgeAt(x, y, fabricController) >= 0
+      fabric.edgeAt(x, y, fabricController, pickRadius(pt, true)) >= 0
     );
   // K145, the hover glow: the run under the pointer lights subtly along
   // both rims. Over a choice (eid >= 0, edgeAt's pick) it lights that run
@@ -3632,11 +3668,17 @@ async function main(): Promise<void> {
   // it in-addition to the adjacent-to-current-juction highlight"); else
   // the thread under the pointer. A touch press shows it until the
   // finger lifts or the press becomes a tug or a pan. Returns true when
-  // the paint declaration needs a refresh.
-  const setGlowAt = (x: number, y: number, eid: number): boolean => {
+  // the paint declaration needs a refresh. `pt`: the pointer type, whose
+  // pick radius finds the thread (K298).
+  const setGlowAt = (
+    x: number,
+    y: number,
+    eid: number,
+    pt: string
+  ): boolean => {
     if (!params.mazeFabric || !fabric) return false;
     if (eid >= 0) return fabric.setGlowRun(eid, x, y);
-    const hit = renderer?.pickThread(x, y, GRAB_RADIUS);
+    const hit = renderer?.pickThread(x, y, pickRadius(pt));
     return fabric.setGlow(hit ? hit.chain : -1, hit ? hit.ctrl : 0);
   };
   const clearGlow = (): void => {
@@ -3670,7 +3712,10 @@ async function main(): Promise<void> {
   );
   app.canvas.addEventListener("dblclick", (e) => {
     const [x, y] = toLattice(e as unknown as PointerEvent);
-    if (emptyAt(x, y)) resetCamera();
+    // (dblclick is a MouseEvent: no pointerType, the mouse's radii.)
+    if (emptyAt(x, y, (e as Partial<PointerEvent>).pointerType || "mouse")) {
+      resetCamera();
+    }
   });
 
   app.canvas.addEventListener("pointerdown", (e) => {
@@ -3710,22 +3755,20 @@ async function main(): Promise<void> {
         if (
           fabric &&
           fabricController &&
-          fabric.edgeAt(x, y, fabricController) >= 0
+          fabric.edgeAt(x, y, fabricController, pickRadius("touch", true)) >= 0
         ) {
           pendingTap = { id: e.pointerId, sx: e.clientX, sy: e.clientY, x, y };
           return;
         }
-      } else if (handleFabricTap(x, y)) {
+      } else if (handleFabricTap(x, y, e.pointerType)) {
         return;
       }
     }
-    if (
-      ps.nearest(x, y, GRAB_RADIUS) >= 0 ||
-      renderer?.pickThread(x, y, GRAB_RADIUS)
-    ) {
+    if (onThread(x, y, e.pointerType)) {
       // A thread: undecided until it moves past the slop or lifts.
       pendingPluck = {
         id: e.pointerId,
+        pt: e.pointerType,
         slop: TAP_SLOP_PX[e.pointerType] ?? TAP_SLOP,
         sx: e.clientX,
         sy: e.clientY,
@@ -3734,7 +3777,7 @@ async function main(): Promise<void> {
       };
       app.canvas.setPointerCapture(e.pointerId);
       // The press shows the hover glow (a touch has no hover before it).
-      if (setGlowAt(x, y, -1) && fabric && fabricController) {
+      if (setGlowAt(x, y, -1, e.pointerType) && fabric && fabricController) {
         fabric.update(fabricController);
       }
     } else {
@@ -3759,7 +3802,8 @@ async function main(): Promise<void> {
     }
     cancelSnap();
     // K7: main picks on the view, the host grabs (a miss clears the grab).
-    if (host.grab(ps.nearest(pp.x, pp.y, GRAB_RADIUS), pp.x, pp.y) < 0) {
+    // K298: at the pointer's grab radius.
+    if (host.grab(ps.nearest(pp.x, pp.y, grabRadius(pp.pt)), pp.x, pp.y) < 0) {
       dragPan = { id: pp.id, x: pp.sx, y: pp.sy, moved: pp.slop + 1 };
       return;
     }
@@ -3839,18 +3883,24 @@ async function main(): Promise<void> {
       // Hover: light the choosable run under the pointer (the paint pass
       // animates it even while the physics sleeps - no wake needed), or
       // glow subtly along any other run under it (K145).
-      const eid = fabric.edgeAt(x, y, fabricController);
-      const glow = setGlowAt(x, y, eid);
+      const eid = fabric.edgeAt(
+        x,
+        y,
+        fabricController,
+        pickRadius(e.pointerType, true)
+      );
+      const glow = setGlowAt(x, y, eid, e.pointerType);
       if (fabric.setHover(eid) || glow) fabric.update(fabricController);
       app.canvas.style.cursor =
         eid >= 0
           ? "pointer"
-          : ps.nearest(x, y, GRAB_RADIUS) >= 0
+          : onThread(x, y, e.pointerType)
             ? threadCursor()
             : "default";
     } else {
-      app.canvas.style.cursor =
-        ps.nearest(x, y, GRAB_RADIUS) >= 0 ? threadCursor() : "default";
+      app.canvas.style.cursor = onThread(x, y, e.pointerType)
+        ? threadCursor()
+        : "default";
     }
   });
   const endDrag = (e: PointerEvent): void => {
@@ -3881,7 +3931,7 @@ async function main(): Promise<void> {
         const tap = pendingTap;
         pendingTap = null;
         if (e.type === "pointerup" && !touchLocked) {
-          handleFabricTap(tap.x, tap.y);
+          handleFabricTap(tap.x, tap.y, "touch");
         }
       }
       // A lifted finger leaves no hover or glow behind (touch has no
@@ -3897,7 +3947,7 @@ async function main(): Promise<void> {
       // beginPinch drops pendingPluck) never pluck.
       const pp = pendingPluck;
       pendingPluck = null;
-      if (e.type === "pointerup") tapPluck(pp.x, pp.y);
+      if (e.type === "pointerup") tapPluck(pp.x, pp.y, pp.pt);
     } else if (ps.grabbedParticle >= 0 && snapMode === "none") {
       wake();
       const chain = ps.chainOfParticle(ps.grabbedParticle);

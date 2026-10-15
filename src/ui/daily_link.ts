@@ -157,6 +157,9 @@ export const DAILY_EXEMPT_KEYS = [
   // K298: its own length and end fade.
   "hoverGlowLength",
   "hoverGlowFade",
+  // K298: how near a thread the mouse picks it (Touch & feel).
+  "pickMargin",
+  "pickChoiceRatio",
   // Physics on/off: a device-speed choice; the settled layout is the same.
   "physics",
   // K147's load settle: the same device-speed kind of choice (how the
