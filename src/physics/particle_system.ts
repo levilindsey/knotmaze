@@ -119,6 +119,11 @@ const COLLISION_STIFFNESS = 0.5;
 export const SUBSTEP = 1 / 120;
 export const MAX_SUBSTEPS_PER_FRAME = 30;
 export const MAX_FRAME_DT = 0.25;
+// The emergent-crossing collector's capacity in rows (forces.ts stops
+// collecting when it is full), and the floats per row of the K7 snapshot's
+// copy of it: i, u, j, v and the over flag (writeEmergentRows).
+export const EMERGENT_MAX = 256;
+export const EMERGENT_ROW = 5;
 const CONSTRAINT_ITERATIONS = 2;
 // Verlet velocity retention maps from the drag tuning: drag 0 keeps 99.5%
 // per substep (waves ring), drag 1 keeps 80% (heavily damped).
@@ -552,8 +557,11 @@ export class ParticleSystem {
   private jnCoverId: Int32Array = new Int32Array(0);
   private jnCoverCov: Float32Array = new Float32Array(0);
   private jnCover: JunctionCover | null = null;
-  private topology!: SegmentTopology;
-  private emergentCollector = { data: new Float32Array(256 * 4), n: 0 };
+  protected topology!: SegmentTopology;
+  private emergentCollector = {
+    data: new Float32Array(EMERGENT_MAX * 4),
+    n: 0,
+  };
   private homeX = 0;
   private homeY = 0;
 
@@ -1686,22 +1694,59 @@ export class ParticleSystem {
       const u = data[k * 4 + 1];
       const j = data[k * 4 + 2];
       const v = data[k * 4 + 3];
-      const a: CrossingPass = {
-        chain: this.topology.chainOf[i],
-        ctrl: this.topology.ctrlOf[i] + u,
-      };
-      const b: CrossingPass = {
-        chain: this.topology.chainOf[j],
-        ctrl: this.topology.ctrlOf[j] + v,
-      };
-      // Over/under from REAL z: with the simulated third coordinate, the
-      // thread that rides higher at the overlap genuinely is the over
-      // thread (collision separated them in z).
-      const za = this.zPos[i] + (this.zPos[this.topology.next[i]] - this.zPos[i]) * u;
-      const zb = this.zPos[j] + (this.zPos[this.topology.next[j]] - this.zPos[j]) * v;
-      out.push(za >= zb ? { over: a, under: b } : { over: b, under: a });
+      out.push(this.emergentPair(i, u, j, v, this.emergentAOver(i, u, j, v)));
     }
     return out;
+  }
+
+  // One emergent crossing from its collector row: segment i at fraction u
+  // and segment j at fraction v, `aOver` = the first thread rides higher.
+  protected emergentPair(
+    i: number,
+    u: number,
+    j: number,
+    v: number,
+    aOver: boolean
+  ): { over: CrossingPass; under: CrossingPass } {
+    const a: CrossingPass = {
+      chain: this.topology.chainOf[i],
+      ctrl: this.topology.ctrlOf[i] + u,
+    };
+    const b: CrossingPass = {
+      chain: this.topology.chainOf[j],
+      ctrl: this.topology.ctrlOf[j] + v,
+    };
+    return aOver ? { over: a, under: b } : { over: b, under: a };
+  }
+
+  // Over/under from REAL z: with the simulated third coordinate, the
+  // thread that rides higher at the overlap genuinely is the over thread
+  // (collision separated them in z).
+  private emergentAOver(i: number, u: number, j: number, v: number): boolean {
+    const za = this.zPos[i] + (this.zPos[this.topology.next[i]] - this.zPos[i]) * u;
+    const zb = this.zPos[j] + (this.zPos[this.topology.next[j]] - this.zPos[j]) * v;
+    return za >= zb;
+  }
+
+  // K7 snapshot: the emergent collector as EMERGENT_ROW floats a row
+  // (i, u, j, v, aOver 1/0) from out[at]; returns the row count. The
+  // over flag is the same test the getter makes, so a mirror rebuilds
+  // emergentCrossings bit for bit without zPos.
+  writeEmergentRows(out: Float32Array, at: number): number {
+    const { data, n } = this.emergentCollector;
+    for (let k = 0; k < n; k++) {
+      const i = data[k * 4];
+      const u = data[k * 4 + 1];
+      const j = data[k * 4 + 2];
+      const v = data[k * 4 + 3];
+      const o = at + k * EMERGENT_ROW;
+      out[o] = i;
+      out[o + 1] = u;
+      out[o + 2] = j;
+      out[o + 3] = v;
+      out[o + 4] = this.emergentAOver(i, u, j, v) ? 1 : 0;
+    }
+    return n;
   }
 
   // Current arc length of a chain, for mapping loop size to pluck pitch.
@@ -1720,15 +1765,29 @@ export class ParticleSystem {
   }
 
   step(dt: number, tuning: PhysicsTuning = DEFAULT_TUNING): void {
+    const substeps = this.beginFrame(dt);
+    for (let s = 0; s < substeps; s++) {
+      this.substep(tuning);
+    }
+  }
+
+  // K7: step() in two halves, so the worker can run a frame's substeps one
+  // task at a time (a drag lands between substeps). beginFrame does the
+  // accumulator arithmetic and returns how many substeps the frame owes;
+  // runSubstep runs one. step(dt) is exactly beginFrame(dt) then that many
+  // runSubstep calls: the same float operations in the same order.
+  beginFrame(dt: number): number {
     this.accumulator += Math.min(dt, MAX_FRAME_DT);
     let substeps = Math.floor(this.accumulator / SUBSTEP);
     substeps = Math.min(substeps, MAX_SUBSTEPS_PER_FRAME);
     this.accumulator = Math.max(0, this.accumulator - substeps * SUBSTEP);
 
     if (substeps > 0) this.frameMaxMoveSq = 0;
-    for (let s = 0; s < substeps; s++) {
-      this.substep(tuning);
-    }
+    return substeps;
+  }
+
+  runSubstep(tuning: PhysicsTuning = DEFAULT_TUNING): void {
+    this.substep(tuning);
   }
 
   // Re-project a crossing's bindings onto their local chain geometry so
