@@ -322,13 +322,9 @@ a second path.
   - `src/ui/tweakpane_panel.ts`.
 - The lore that attaches with these files: `gameplay-minotaur.md`,
   `gameplay-fog.md`, `gameplay-daily.md`, `gameplay-links.md` and
-  `probes.md`. Two lines there are stale since K132:
-  - `gameplay-fog.md` says the dailies' fog is off because "DAILY_V1
-    pins codec v3's defaults". It is off because `fogOfWar` defaults
-    false.
-  - `probes.md`'s K100 `vite.fogdaily.config.ts` patches `DAILY_V1`,
-    which no longer exists, so that transform is broken. To play a daily
-    under fog, set `fogOfWar` in the design you build.
+  `probes.md`. K100's `vite.fogdaily.config.ts` (in `probes.md`) is
+  broken since K132 (K262): to play a daily under fog, set `fogOfWar` in
+  the design you build.
 - The research harness in the main checkout's `.claude/probes/K80/`:
   - `lib.ts`: `buildMaze`, `designParams`, `toSimGraph`;
   - `sim.ts`: `TurnRng`, `PlayerKind`, `play`;

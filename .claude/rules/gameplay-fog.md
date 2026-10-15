@@ -61,6 +61,6 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   page has fog IoU 0.977 (the A -> B rule 0.947; the same restore 1.2 s
   later 0.991), and 0.957 across a reload: live stamps land over seconds
   while the threads move, a restore's right after the intro. DAILIES
-  have the fog off today (DAILY_V1 pins codec v3's defaults plus K74's
-  overrides, and fogOfWar is not exempt), so the daily paths run only on
-  a probe's fogged daily.
+  have the fog off today (a daily is `PARAM_DEFAULTS` on the day's seed,
+  `fogOfWar` defaults to false, and it is not exempt), so the daily
+  paths run only on a probe's fogged daily.
