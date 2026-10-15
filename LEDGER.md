@@ -15,6 +15,14 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K269** · The turn-aligned hunter's catch rates on today's mazes (K80
+  turns stage 1): at the defaults it catches an attentive explorer on 14%
+  of dailies and an 80%-attentive one on 32%, against the research's 1%
+  and 13% on the older mazes (K74 stage 1's dead ends: 2.0 -> 5.9 ends a
+  maze). Retune the defaults (sight, accuracy) to the research's targets
+  in stage 2 (rec.), tune on other designs, or accept the new rates.
+  Asked in session 2026-10-14 at about 15:26. `docs/design/K80_turns.md`
+  ("Stage 1 handoff"), `.claude/probes/K80/turns/compare_rebased.md`.
 - **K264** · The hover rim's width (K248, merged 6588ec0): `RIM_EDGE`
   0.7 / 0.85 (built) / 1.0 of the thread's half-width. 0.7 is thinner;
   at 1.0 the two rims meet on the center line and the thread reads as
@@ -222,6 +230,52 @@ and never reused.
 
 ## In progress
 
+- **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
+  in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
+  Shortlist: the burn race (turn-based), the cut verb with an
+  auto-walker ("Lead the walker" first), the beat rider, the spider, a
+  Pluck Hero MVP. Ten calls in R.0: the first prototype (burn race), a
+  `clock` param (turn | beat | realtime; with the beat rider), what a
+  cut does (deletes the whole run), render + walk-graph cuts rather than
+  splitting the thread, the cut gesture (a scissors button), healing
+  cuts against monsters, the spider's form and an arachnophobia option,
+  Pluck Hero as an MVP first, round 2 in free play first (the burn race
+  as the first K46 modifier), and flow as a separate stat.
+  - for the briefs: balance probes for "Keep it in" and burn-race
+    tension; hiding runs needs an inverted reveal mask or per-run hiding
+    (a new G2 term and its paint_math mirror, shared with K76), plus the
+    cut's render details; `clock` brings timed, typed attempts (daily
+    store v4; v3 since K146). R.7's sources are unverified leads from
+    memory (the Pac-Man speed figures among them). K80 sections 1 and
+    3.2 are stale
+    since K101 (bracket notes added).
+  - 2026-10-14 about 00:22: Levi took the recommendations for calls 1-6
+    and 8-10 (`docs/design/levi_notes_2026-10-14.md` item 12: "Recs,
+    plus a spider answer"). Call 7 waits: the spider's form (a
+    `minotaur=spider` mode or its own enemy), its look, and an
+    arachnophobia option (R.0 and R.3.2 of the design).
+  - 2026-10-14 about 11:10, call 7 (email 1.x): 1.1 "yes" (build the
+    spider; the design recommends it after the minotaur); 1.2 "separate"
+    (its own enemy, not a `minotaur=spider` mode); 1.3 "sure, we could
+    have a toggle in settings for no spiders, and then swap the icon to
+    something else that makes sense" (an arachnophobia setting swaps its
+    icon; the brief designs both icons).
+  - owner: claude agent af79edbe2a4677ff5 (opus) of session d8031183,
+    the burn race's stage 1, started 2026-10-14 15:23 with a 2 h cap
+    (ports 5720-5729).
+  - branch: `worktree-agent-af79edbe2a4677ff5`
+    (`.claude/worktrees/agent-af79edbe2a4677ff5`), from 68524e1; last
+    commit: none yet (unpushed).
+  - evidence: `.claude/probes/K114/burn/` in that worktree.
+  - next: the burn race's stage 1 (the fire model, the R.6.1 balance
+    measurement, the params and the mode, a cheap first look with the
+    lit fuse). Its calls are K260; Levi's answer to call 7 (about
+    14:46) adds real-time burning as stage 2, so the look is stage 3
+    and the daily stage 4. K80 turns stage 2 waits for this stage's
+    merge. The spider after the minotaur's controls (K174).
+  - brief: `docs/design/K114_burn.md` ("Stage 1: the model, the
+    measurement and the mode"; 1e468ad, reviewed and merged 2026-10-14
+    14:38, updated in edf53ef).
 - **K74** · Maze design, decided (Levi, 2026-10-13 13:17; his answers
   verbatim in `docs/design/levi_notes_2026-10-13.md`): every mechanism
   gets params whose neutral value turns it off, so difficulty and feel
@@ -251,7 +305,9 @@ and never reused.
     worktree `.claude/worktrees/agent-afe7e8d13a4b8112b` is kept.
   - branch: `worktree-agent-a2c61932e9e358104`
     (`.claude/worktrees/agent-a2c61932e9e358104`), from 6588ec0; last
-    commit: none yet (unpushed).
+    commit: `1c130e3` (WIP, the H1 fused arm cut and `hCutShare`;
+    unpushed). At 15:20 it was asked to rebase onto 68524e1 and move
+    `hCutShare` to 117.
   - evidence: `.claude/probes/K74/` (stage 1: `out/analyze_stage1.txt`,
     `out/phys1.jsonl`, `out/verify_*.txt`, `out/k47_refuse.txt`, the
     sheet; the design's `out/scan_final.jsonl` and the hooked plan copy
@@ -300,22 +356,40 @@ and never reused.
     "Minotaur" folder, the HUD's caught row, a toast and an off-screen
     indicator; approachPace 8 -> 7 from the simulation. `clock` is not
     daily-exempt, so the dailies stay turn-based.
-  - owner: claude agent af5995f5900f0f945 (opus) of session d8031183,
-    turns stage 1, started 2026-10-14 14:06 with a 2 h cap (about 16:06;
-    ports 5690-5699). The real-time stage was agent a9c90f15cd6a55710
+  - turns stage 1 MERGED in 0047148..68524e1 (2026-10-14 15:19;
+    deployed): the turn-aligned minotaur behind `minotaur` (`mt`: off |
+    hunter | guard | stalker; off by default) and eight tuning params
+    (`msp mtg msi mro mtr mac mpa msl`; codec v5 108-116), in
+    `src/game/minotaur_turns.ts`, an exact port of the research harness
+    (0 trace mismatches in 9600 games). One accepted tap is one turn, a
+    tap on your own junction waits, a catch respawns you at that tap,
+    there is no undo (Reset path restarts), and a first-look telegraph
+    draws a red line and a ring (`drawTelegraph`). 865 tests. Its catch
+    rates on today's mazes are K269, its residuals K270-K272.
+  - owner: nobody since 2026-10-14 15:15: turns stage 1 is done and
+    merged (agent af5995f5900f0f945 of claude session d8031183; its
+    worktree `.claude/worktrees/agent-af5995f5900f0f945` is kept). Stage
+    2 waits for the burn race's stage 1 (K114), since both change how a
+    tap becomes a turn. The real-time stage was agent a9c90f15cd6a55710
     (its worktree `.claude/worktrees/agent-a9c90f15cd6a55710` is kept).
-  - branch: `worktree-agent-af5995f5900f0f945`
-    (`.claude/worktrees/agent-af5995f5900f0f945`), from c36b57c; last
-    commit: none yet (unpushed). Real time is on mainline (`5fed5c1`;
-    its controls, K174, in ecf2169..6ec8275).
-  - evidence: the turns stage writes `.claude/probes/K80/turns/` in that
-    worktree; real time's `.claude/probes/K80/rt/` is in the main
-    checkout (`run_rt.ps1`, `results.md`, `rt_chase.mjs`, `rt_page.mjs`,
-    `out/`); the research's `.claude/probes/K80/` and its kept worktree
+  - branch: mainline; last commit: `68524e1` (turns stage 1's handoff).
+    Real time is `5fed5c1`; its controls, K174, ecf2169..6ec8275.
+  - evidence: `.claude/probes/K80/turns/` (`compare.ts` with the
+    harness copies and `compare_rebased.md`; `turns_page.mjs`, its logs
+    and `shots/`; `k174_page.mjs`); real time's `.claude/probes/K80/rt/`
+    (`run_rt.ps1`, `results.md`, `rt_chase.mjs`, `rt_page.mjs`, `out/`);
+    the research's `.claude/probes/K80/` and its kept worktree
     `.claude/worktrees/agent-a25726c24f262b138`.
-  - next: the turns brief's stage 1 (the model and the mode); real
-    time's phone checks join the round's pass (K177).
-  - brief: `docs/design/K80_turns.md` (three stages, 7699995); real
+  - next: write turns stage 2's brief from the stage 1 handoff: catch
+    feedback (2.8); the final telegraph, tuned at phone fit scale (2.7;
+    today's line is about one thread wide); stats and share (2.9); fog
+    interplay, sound and the Reset-path log (2.10); a wait key, a
+    move-pad wait button and a hover cue; a turn-based minoToward; and
+    K269's retune if Levi picks it. Before any daily pins a minotaur,
+    waits enter `fc.taps` and the attempt saves, and K47's fingerprint
+    covers the minotaur params. Real time's phone check is K177.
+  - brief: `docs/design/K80_turns.md` ("Stage 1 handoff"; three stages,
+    7699995); real
     time's `docs/design/K80_realtime.md`; the research brief
     `docs/design/K80.md` and its doc
     `docs/design/K80_gameplay_additions.md`.
@@ -465,6 +539,7 @@ and never reused.
   `render-explore.md`; handoff `docs/design/K76.md` ("Stage 2a
   handoff"). Section 10's questions are K257, 2a's residuals K258. 2c
   also gates input: hidden thread still takes taps, tugs and hover.
+  Levi's shaped gaps (2026-10-14 15:16) are K268, a stage after 2b.
   - owner: claude agent ac6e354b85922e7aa (opus) of session d8031183,
     stage 2b, started 2026-10-14 14:17 with a 2 h cap (about 16:17;
     ports 5680-5689). Stage 2a was agent a5d63452980ed9fa3 and stage 1
@@ -472,14 +547,16 @@ and never reused.
     1fbc0d2 and 23907a5).
   - branch: `worktree-agent-ac6e354b85922e7aa`
     (`.claude/worktrees/agent-ac6e354b85922e7aa`), from c45a894; last commit:
-    none yet (unpushed).
+    `10fe8ce` (WIP, the lore for the gates; unpushed).
   - evidence: `.claude/probes/K76/stage2b/` in that worktree; stage
     2a's in the main checkout's `.claude/probes/K76/stage2a/` (copied
     at the merge), stage 1's in `.claude/probes/K76/`.
   - next: stage 2b (re-run 2a's mode-off A/B on master; gate the
     crossing gaps, the markers and the junction webs and fans by
     visibility, rebuilt on arrivals; mode off stays master's in every
-    program; the gap and joint censuses).
+    program; the gap and joint censuses). At 15:20 it was asked to add a
+    "Shaped gaps" section to its handoff (K268) and to rebase onto
+    68524e1.
   - brief: `docs/design/K76.md` ("Stage 2b"), then
     `docs/design/K76_reveal_mode.md`.
 
@@ -517,9 +594,9 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K80 turns stage 1 from 14:06 (opus, 2 h),
-K76 stage 2b from 14:17 (opus, 2 h) and K74 stage 2 from 15:00 (opus,
-2 h). At about 10:57 Levi lifted
+(he may reorder). Running: K76 stage 2b from 14:17 (opus, 2 h), K74
+stage 2 from 15:00 (opus, 2 h) and the burn race's stage 1 (K114) from
+15:23 (opus, 2 h). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
@@ -527,7 +604,8 @@ K90 stage 1b, K173
 08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, K191 at 12:04,
 K235 + K239 at 12:44, K174 at 12:53, K111 stage 2 at 13:03, K198
 stage 2 at 14:03, K193 at 14:10, K76 stage 2a at 14:15, the
-burn-race and K74 stage 2 briefs at 14:38 and K111 stage 3 at 14:58; the
+burn-race and K74 stage 2 briefs at 14:38, K111 stage 3 at 14:58 and
+K80 turns stage 1 at 15:19; the
 coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -564,17 +642,21 @@ files at their merges. Then, as code slots free up:
     waits for a quiet phone, K253).
 11. K76 stage 2, in four stages (`docs/design/K76.md`, bcb969e): 2a (the
     re-base, the model, the paint variant) merged at 14:15; 2b (crossing
-    gaps and junction joints, brief c45a894) runs from 14:17; 2c and 2d
-    follow, each from the handoff before it. 2c's codec removal is
-    version 6, since K111 stage 3 took 5 (the codec note in
+    gaps and junction joints, brief c45a894) runs from 14:17; then K268,
+    the shaped gaps Levi asked for at 15:16, from 2b's handoff (render
+    only, so it can run beside the burn race); 2c and 2d follow, each
+    from the handoff before it. 2c's codec removal is version 6, since
+    K111 stage 3 took 5 (the codec note in
     `docs/design/K76_reveal_mode.md` still says 5).
 12. K80's turn-aligned hunter, a modifier of the normal maze, in three
     stages (`docs/design/K80_turns.md`, 7699995): stage 1 (the model and
-    the mode) runs from 14:06; then K137's toggles, K138's M mechanisms
-    and K139.
+    the mode) merged at 15:19 (0047148..68524e1); stage 2, its brief
+    written from stage 1's handoff, after the burn race's stage 1 merges
+    (both change how a tap becomes a turn); then K137's toggles, K138's
+    M mechanisms and K139.
 13. K114's round 2, free play first: the burn race in four stages
-    (`docs/design/K114_burn.md`, 1e468ad). Stage 1 starts after K80
-    turns stage 1 merges, and never alongside another agent changing
+    (`docs/design/K114_burn.md`, 1e468ad). Stage 1 runs from 15:23
+    (opus, 2 h, from 68524e1), never alongside another agent changing
     how a tap becomes a turn. Then the spider (its own enemy; Levi,
     2026-10-14 about 11:10).
 14. K74 stages 2-4, each after the one before. Stage 2
@@ -593,7 +675,8 @@ panel's top); K237 (the hover glow's default); K238 (K111's calls);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
 K251 (the displaced disc's slide across the panel); K253 (a quiet phone
 for K193's A/A); K257 (K76's questions for stage 2c); K260 and K261
-(the burn race's and K74 stage 2's calls);
+(the burn race's and K74 stage 2's calls); K269 (the turn hunter's
+catch rates);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -602,49 +685,33 @@ K198 and CC39); 9.1 (K225) and 10.1 (K229) are still open.
 
 K5-K7 (split, frame loop, worker) follow.
 
+- **K268** · Shaped crossing gaps under thread reveal (K76; Levi,
+  2026-10-14 15:16, verbatim): "For the mode where threads only appear as
+  you travel along them, we should make sure we handle gaps well. If
+  there is a crossing, and we travel the thread along the bottom of the
+  crossing, but we've not explored the upper thread of the crossing yet
+  (and that part of the upper thread isn't yet visible from the stub
+  indicators we should from adjacent traveled intersections), then we
+  shouldn't show the gap yet. I suspect This means we'll need to revisit
+  how gaps are rendered for this. Also, stubs from adjacent traveled
+  intersections could have a variable amount over overlap over
+  crossings, and we'd ideally be able to handle that variable and
+  dynamic gap shape accordingly. There's probably a similar edgecase
+  problem with dead ends. We should put some care into designing this
+  gap treatment correctly". Stage 2b's gate (one strength per slot,
+  vis(over) at the crossing; `docs/design/K76_reveal_mode.md` 2.3)
+  covers a hidden over thread, not a stub's fade, end or growth front
+  inside a crossing's footprint. Proposed (reply at about 15:23): cut
+  each under-thread pixel by vis(over) at its projection onto the over
+  pass, keeping strength 0 and 1 on today's paths, with dead ends (tips
+  and caps near a crossing) designed alongside. Its own stage after 2b
+  (render only): the design first, a per-pixel census, a contact sheet
+  for Levi on desktop and phone. Brief: from 2b's "Shaped gaps" handoff
+  section (`docs/design/K76.md`).
 - **K240** · High contrast for the DOM chrome (a K111 follow-up): a CSS
   layer on `:root[data-contrast="high"]`, which K111 already sets, for
   the panel, the HUD and the badge (their styles live in TS-injected
   strings). Small; after K238's review.
-- **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
-  in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
-  Shortlist: the burn race (turn-based), the cut verb with an
-  auto-walker ("Lead the walker" first), the beat rider, the spider, a
-  Pluck Hero MVP. Ten calls in R.0: the first prototype (burn race), a
-  `clock` param (turn | beat | realtime; with the beat rider), what a
-  cut does (deletes the whole run), render + walk-graph cuts rather than
-  splitting the thread, the cut gesture (a scissors button), healing
-  cuts against monsters, the spider's form and an arachnophobia option,
-  Pluck Hero as an MVP first, round 2 in free play first (the burn race
-  as the first K46 modifier), and flow as a separate stat.
-  - for the briefs: balance probes for "Keep it in" and burn-race
-    tension; hiding runs needs an inverted reveal mask or per-run hiding
-    (a new G2 term and its paint_math mirror, shared with K76), plus the
-    cut's render details; `clock` brings timed, typed attempts (daily
-    store v4; v3 since K146). R.7's sources are unverified leads from
-    memory (the Pac-Man speed figures among them). K80 sections 1 and
-    3.2 are stale
-    since K101 (bracket notes added).
-  - 2026-10-14 about 00:22: Levi took the recommendations for calls 1-6
-    and 8-10 (`docs/design/levi_notes_2026-10-14.md` item 12: "Recs,
-    plus a spider answer"). Call 7 waits: the spider's form (a
-    `minotaur=spider` mode or its own enemy), its look, and an
-    arachnophobia option (R.0 and R.3.2 of the design).
-  - 2026-10-14 about 11:10, call 7 (email 1.x): 1.1 "yes" (build the
-    spider; the design recommends it after the minotaur); 1.2 "separate"
-    (its own enemy, not a `minotaur=spider` mode); 1.3 "sure, we could
-    have a toggle in settings for no spiders, and then swap the icon to
-    something else that makes sense" (an arachnophobia setting swaps its
-    icon; the brief designs both icons).
-  - next: the burn race's stage 1 (the fire model, the R.6.1 balance
-    measurement, the params and the mode; opus, 2 h, ports 5720-5729,
-    probes `.claude/probes/K114/burn/`), launched after K80 turns stage
-    1 merges, since both change how a tap becomes a turn. Brief
-    `docs/design/K114_burn.md` (1e468ad, reviewed and merged
-    2026-10-14 14:38); its calls are K260, and Levi's answer to call 7
-    (about 14:46) adds real-time burning as stage 2, so the look is
-    stage 3 and the daily stage 4. The spider after the minotaur's
-    controls (K174).
 - **K137** · K80 section 4's cheap mechanisms, each behind a toggle
   (Levi, 2026-10-13 14:31: "I'd love to prototype all of these and have
   controls to toggle them"), after the minotaur. Sized S or S-M in the
@@ -836,6 +903,16 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K270** · After a turn-aligned catch, a lavender band shows at the
+  catch site in the next frame (K80 turns stage 1; undiagnosed, probably
+  a fade). `.claude/probes/K80/turns/shots/`.
+- **K271** · The turn telegraph is unchecked under K76's thread reveal:
+  `syncMinotaur` hides the minotaur until `revealQuery` >= 0.98, but the
+  telegraph's line may still draw over hidden thread. For K76 2c, which
+  settles the minotaur under thread reveal (K257 (2)).
+- **K272** · The turn minotaur's sliders at 0: roam 0 stands still while
+  roaming, and territory 0 is a random walk (K80 turns stage 1). Set the
+  minimums to 1 or define 0, in stage 2.
 - **K266** · The hover rim's short-run limits (K248): runs shorter than
   2 x rimGap (1.95 world at the defaults) never glow, because the end
   gaps meet, and a short run whose lit window sits under a crossing's
@@ -848,8 +925,9 @@ K5-K7 (split, frame loop, worker) follow.
   K193, K198, levi_notes_2026-10-13), and the rules files' historical
   `.J` probe links (gameplay-motion, probes-phone, render-pluck,
   probes.md's K80 bullet), v4 links that now load with a warning.
-- **K263** · `minotaur.ts` exports `undoAllowed`, but nothing in `src`
-  calls it and no move undo exists for it to turn off, while
+- **K263** · `minotaur.ts` exports `undoAllowed` (K80 turns stage 1 added
+  its `minotaur` argument and tests it), but nothing in `src` calls it
+  and no move undo exists for it to turn off, while
   `docs/design/K80_turns.md` step 2 cites it as real time's behavior.
   Delete it, or wire it when an undo lands. Found by the docs agent
   that drafted the burn-race brief (2026-10-14).
