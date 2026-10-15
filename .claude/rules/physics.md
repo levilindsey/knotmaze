@@ -27,7 +27,8 @@ the end), not to CLAUDE.md.
 
 **THE PHYSICS WORKER (K7, built 2026-10-14..15; the CANDIDATE perf
 follow-up recorded 2026-07-24).** The sim runs in a Web Worker behind
-`phw` (PHW_DEFAULT_PLACEHOLDER): `physics-worker.md` is its lore (the
+`phw` (off by default: stage 5's phone pass missed only the start gate,
+see `physics-worker.md`'s Measured): `physics-worker.md` is its lore (the
 hosts, the mirror, the clock, the fallback, the invariants) and
 `docs/design/K7_worker.md` its design, measurements and stage handoffs.
 The candidate's costs were superseded: no SharedArrayBuffer and no
