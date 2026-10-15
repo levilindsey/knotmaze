@@ -2460,3 +2460,196 @@ One stage: sonnet, 1 h cap, ports 5850-5859.
 
 Commit WIP after each item. The handoff goes at the end of this file as
 "## Stage 6 handoff".
+
+## Stage 6 handoff
+
+Written 2026-10-15 by the stage 6 agent (sonnet, 1 h cap, started 03:48:50)
+on `worktree-agent-a6023a3244ff623cc`, forked from master `8b3b401`. Master
+has moved (`8bcfb9f` at 04:35; K8 stage 2 and others touched `probes.md`,
+`CLAUDE.md`, `LEDGER.md`, `render-ribbon.md`, `docs/lore_index.md` and
+`src/render/*`). This branch was not rebased; see "The merge".
+
+### What is done
+
+- **1. The flip, `ff37863`.** `src/ui/url_state.ts`: `physicsWorker: true`.
+  `phw=0` reads false, in a `key=value` link and after a token
+  (`?<token>&phw=0`). **One pin re-frozen:** `test/ui/url_codec.test.ts:89`,
+  the defaults table (`physicsWorker: false` to `true`). **Did not move:**
+  the K87 maze-plan pin, the golden dailies (`physicsWorker` stays a
+  `DAILY_EXEMPT_KEY`, so a daily is the same maze on either host), the
+  byte-identity golden and the codec table pin (`physicsWorker` stays at
+  index 135 of `CODEC_PARAMS`: a link depends on the order, not the
+  default). Also in the commit, comments and one message only:
+  `worker_host.ts`, `mirror_system.ts` (the step-setter error now says "(the
+  default)"; the tested regex still matches), `vite.config.ts`,
+  `scripts/diag_screenshot.mjs`, `scripts/phone_pass/walk.mjs` and a comment
+  in `worker_host.test.ts`.
+- **To reverse the flip:** `git revert 13f051d ff37863` (newest first). By
+  hand it is `physicsWorker: false` in `PARAM_DEFAULTS` and the
+  `url_codec.test.ts:89` pin, plus undoing the lore commit; nothing else pins
+  the value.
+- **2. The lore, `13f051d`.** Seven files: `CLAUDE.md` (the physics-worker
+  sentence in Layer 3), `gameplay-links.md` (PHYSICS WORKER PARAM),
+  `physics.md`, `physics-settle.md`, `physics-worker.md` (its Measured bullet
+  is now "THE DEFAULT IS ON": the phone numbers, the 250 ms miss and the
+  reversal), `probes.md` (the K7 stage 4 entry's opening and tail: a probe
+  that patches `ps.step` throws on a default build, so it takes `&phw=0` or
+  the one-line port) and `docs/design/G3G4_sdf_geometry.md` (three prober
+  instructions, and line 55). **Left alone on purpose:** `K8_stage1.md`
+  lines 263-268, `K5_K6_split.md`, `K76.md`, `K279.md`,
+  `K339_panel_audit.md`, `docs/history.md`, `docs/ledger_*.md`,
+  `docs/lore_index.md`, `probes-phone.md` and the earlier sections of this
+  file (they are records).
+- **3. The shared probe libraries (K374),** in the MAIN checkout's
+  `.claude/probes/` (untracked files, so nothing in a commit): the 21
+  libraries ported in place, 95 importers. Each file changed by exactly 2
+  lines removed and 4 added: the `page.evaluate` callback that holds the
+  freeze became `async`, and the one freeze line became three (a comment,
+  `if (typeof window.__knotPhysFreeze === "function") await
+  window.__knotPhysFreeze(true);`, then the old patch under `else if`).
+  In-thread the hook IS the old `ps.step` patch; with a worker it stops the
+  worker's clock. `ported.md` (in `.claude/probes/K7/stage6/`, untracked in
+  the worktree: the merge copies it) lists each file with its header line
+  and freeze line; the originals are in `ported/orig/`; `port_libs.ps1
+  -DryRun` re-validates. The files: `g2/g2lib.mjs`, `K104/collapse/lib.mjs`,
+  `K104/lib.mjs`, `K111/stage2/g2lib.mjs`, `K111/stage3/g2lib.mjs`,
+  `K111/stage4/g2lib.mjs`, `K145/g2lib.mjs`, `K154_K169/census/g2lib.mjs`,
+  `K191/g2lib.mjs`, `K268/g2lib.mjs`, `K298/g2lib.mjs`, `K344/lib.mjs`,
+  `K4/g2lib.mjs`, `K75/g2lib.mjs`, `K76/stage2a/g2lib.mjs`,
+  `K76/stage2b/g2lib.mjs`, `K76/stage2c/g2lib.mjs`, `K77/lib.mjs`,
+  `K79/g2lib.mjs`, `K81/g2lib.mjs`, `K93/g2lib.mjs`. No library holds an
+  unfreeze line or a second `ps.step` patch (those live in the importers).
+  `freeze()` still returns nothing.
+- **4. The check:** see Verification.
+
+### Where it departs from the brief
+
+- **Edits beyond the brief:** the comment and message edits named in item 1;
+  `physics.md` and `physics-settle.md` (both called the worker opt-in); the
+  three prober instructions and line 55 of `G3G4_sdf_geometry.md`.
+- **`probes.md`'s K7 stage 4 entry keeps its last line byte for byte**
+  ("`__knotSettle().phase` reads `off`: K147's budget runs only in-thread.").
+  Master's K8 stage 2 commit (`f6d10e3`) appended a bullet right after it, so
+  an unchanged last line is what lets the two edits merge without a conflict.
+- **Item 3 also made each callback `async`,** which the brief's "change only
+  the freeze lines" does not name; `await` needs it. Every file carries the
+  extra comment line.
+- **A link that lists `phw` now inverts.** The codec writes a changed
+  boolean as its default flipped (`param_codec.ts`, line 17). A link made
+  before the flip that lists `phw` (so, on) now reads as off, and a link that
+  did not list it (so, off, the default then) now reads as on. Accepted
+  pre-launch (K132).
+
+### Verification
+
+**Observed**
+
+- Item 1, on `ff37863`, under the perf lock: `tsc` exit 0 (4 s); `npm test`
+  exit 0 (108 s), 80 files passed and 1 skipped, 1109 tests passed and 1
+  skipped; `npm run build` exit 0. Logs: `.claude/probes/K7/stage6/item1/`.
+  One comment in `worker_host.test.ts` was edited after that run; it still
+  parses (an esbuild transform).
+- `git diff --stat ff37863 13f051d` over `test/`, `src/`, `scripts/` and
+  `vite.config.ts` is empty, and no test reads docs, `CLAUDE.md`, `.claude/`
+  or `LEDGER.md` (a grep for `readFileSync` found none).
+- Items 3 and 4 ran on a build of `13f051d` (vite built in 288 ms, 801
+  modules), served on port 5850 and stopped, in one perf-lock hold from
+  04:27:12 to about 04:30:05. Logs: `.claude/probes/K7/stage6/item34/`.
+- The ported `K298/g2lib.mjs` (launch, waitAsleep, freeze, then the bridge
+  twice 1.5 s apart; `item34/g2lib_check.mjs`) on
+  `?k111&am=instant&snd=none&fw=0`. Default: host worker, stamp
+  `... sim 5.0s / wall 12.6s | lag 2.0s | asleep`, bridge `frozen: true`,
+  simTime 5.008333 on both reads. With `&phw=0`: in-thread, stamp
+  `... settle lag 10.1s | asleep`, simTime 5.000000 on both reads. Both exit
+  0 with no errors, and `hasBridge` is true on both hosts.
+- The ported `K104/lib.mjs` (launch, openFrozen, the bridge twice,
+  lobeTable, pluckArc; `item34/openfrozen_check.mjs`) on
+  `b.c&am=instant&snd=none&fw=0&pgh=0`. Default: worker, `lag 1.8s |
+  asleep`, simTime 5.016667 twice. With `&phw=0`: in-thread, simTime 5.000000
+  twice. Both hosts: 988 lobes and the same 7 pluck lobes for chain 2 at
+  150.783 side 1. `site3` is null on both, because K104's old design
+  coordinates no longer exist at today's defaults (not the port).
+- A real importer, `K298/census_rim.mjs` (through the ported g2lib): exit 0
+  on both hosts, with identical splits. Inner: n 820, max 0.57/255, over2 0.
+  Terminal: n 20, max 131.92/255, over2 20 (K111 stage 3's handoff calls the
+  terminal samples a known probe residual). They match
+  `K298/census/census_branch_default.txt` exactly. The hover run sits at
+  (565.52904, 105.74638) on the worker and (565.52907, 105.74636) in-thread;
+  the baseline is (565.52907, 105.74636).
+- `node --check` passes on all 21 libraries, and each diff is exactly 2
+  lines out and 4 in.
+- Item 4, `scripts/diag_screenshot.mjs` on the same build. Bare URL (today's
+  daily, "Daily #4", seed 148971763, 1001 nodes): stamp `P4 v0.4.0 13f051d
+  2026-10-15 11:27 | sim 5.0s / wall 11.9s | lag 1.4s | asleep`;
+  `timing.host` worker, phase `off`, physMs 6040 over 565 substeps; frames
+  median 17.9 ms, p95 18.1 ms, max 2891.8 ms (the first-frame hitch); the
+  log holds only a favicon 404 and Pixi's aGap/aGapId/aUV warnings, no
+  PAGEERROR; the screenshot (`item34/diag_default.png`) shows the settled
+  daily maze with the panel. With `?phw=0`: stamp `... sim 2.3s / wall 11.9s
+  | settle lag 3.8s | phys 10.97ms render 14.84ms 37fps mv 1.8e-3` (no
+  ` | lag`, only `settle lag`); `timing.host` in-thread, phase `budget`, not
+  asleep at 12 s; frames median 18.0 ms, p95 36.1 ms, max 2894.4 ms; the same
+  logs, no errors. **These two runs are different mazes:** `?phw=0` alone is
+  not the daily (seed 3876707250, 1024 nodes), so their sim/wall figures are
+  not an A/B. The same-design pair is the g2lib one above: `lag 2.0s` on the
+  worker against `settle lag 10.1s` in-thread, on this desktop.
+- A master-side check at the end: master's new `scripts/bench_frame.mjs`
+  has no `ps.step`, `__knotPS` or `PhysFreeze` in it (a grep).
+
+**Inferred**
+
+- The lore commit cannot move a test (the diff and grep above), so the suite
+  was not re-run on `13f051d`.
+- The `else if` fallback in the ported libraries (a build without the
+  bridge) behaves as the old line. Not run: every build has the bridge now.
+- The other 19 libraries behave like the two I ran. They carry the same
+  2-line change over 9 distinct pre-port contents (5 `g2lib` variants and 4
+  `lib.mjs` variants); I ran the K298 `g2lib` variant, the K104 `lib.mjs`
+  variant and one importer.
+- `?daily&phw=0` stays today's daily on the in-thread host: `parseLaunch`
+  applies the override and `isDailyDesign` skips `DAILY_EXEMPT_KEYS`, which
+  holds `physicsWorker`. Not run.
+
+### The merge
+
+**Observed:** a trial merge by `git merge-tree` (git 2.33's three-argument
+form, which touches no worktree) of this branch at `13f051d` with master
+`8bcfb9f`. The only files changed on both sides are `.claude/rules/probes.md`
+and `CLAUDE.md`, and the output holds no conflict marker. This handoff
+changes only this file, which master has not touched since `8b3b401`.
+**Not run:** the suite on a merged tree. My code edits (`url_state.ts`,
+`worker_host.ts`, `mirror_system.ts`, `vite.config.ts`, two scripts, two
+tests) share no file with master's changes since `8b3b401`.
+
+### Not done
+
+- **K374's other probe files.** The 31 freeze-patch files and the 6 timing
+  wrappers that `.claude/probes/K7/stage4/ports/FREEZE_PATCH_FILES.md` lists
+  (each takes `&phw=0` or the one-line port). A grep of `.claude/probes/K8`
+  at the end also found `K8/stage2/g3_probe.mjs` (lines 496 and 553) and
+  `g3_probe_batch4.mjs` (line 470) setting `__knotPS().step = function () {}`,
+  which throws on a default build; I did not check whether the list names
+  them.
+- **The lever** (scene params and tuning in the Worker's `name`, main adopts
+  generation 0).
+- **The phone pass again** (the phone half of
+  `.claude/probes/K7/stage5/s5_gate.txt`).
+- **The spike page** `?d=gs18`.
+- **The suite on `13f051d` and on a merged tree.**
+
+### For the next stage (stage 7)
+
+- **Order.** After K5 stage M1: both edit main.ts's boot (this stage did not
+  touch `main.ts`).
+- **Scope.** The lever, then the phone pass again, then the spike page.
+- **Baselines.** The worker is the default, so an in-thread baseline needs
+  `&phw=0`, and a cross-build A/B against a build from before the flip needs
+  `&phw=0` on the new build (or `&phw=1` on the old). Observed: `?phw=0`
+  alone is not the daily, so compare one design on both hosts (a `?k111` or
+  seeded link with and without `&phw=0`, as the g2lib checks did).
+- **Probers.** A probe that patches or wraps `ps.step` throws on a default
+  build. A probe that reads state the mirror lacks (prev, zPos, contact
+  state, slide stats; maybe `ps.crossings` and `bindingPoint`, unchecked)
+  may need `&phw=0` too; `await __knotPhysDump({arrays})` returns prev and
+  zPos from the worker.
+- **Levi reviews F6** in the morning. Reversing it is the recipe under item 1.
