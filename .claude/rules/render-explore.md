@@ -4,6 +4,7 @@ paths:
   - "src/game/explore_view.ts"
   - "test/render/paint_explore.test.ts"
   - "test/render/explore_gates.test.ts"
+  - "test/render/explore_cut.test.ts"
   - "test/game/explore_view.test.ts"
 ---
 
@@ -171,3 +172,82 @@ modes and the mode off is master's frame by construction.
   the background (`L.tick = () => false`) never renders it again. The
   stage 2b probes record `webglcontextlost` (`window.__ctxLost`) and fail
   on it.
+
+## THE SHAPED CUT, K268 stage 1 (2026-10-14)
+
+A crossing whose over thread FADES inside the gap's footprint cuts by
+the fade's coverage at each point of the cut, not by 2b's one scalar per
+slot. Design and calls: `docs/design/K268.md` ("Stage 1 design", "Stage
+1 handoff").
+
+- PROFILE (`gap_mask.ts`): three texels end every slot row (GAP_PROF_BASE
+  111, GAP_TEX_W 114; master's GLSL never reads them). P0 and P1, one per
+  ramp, `[aS, F, dK, tK]`: the arc where the solid part ends (in the slot
+  polyline's frame, through `exploreArcMap`'s unwrapped arc), the fade's
+  SIGNED arc length (its sign says which side is hidden; a hard end is
+  +-1e-6), and one interior knot of the ctrl-linear fade in arc ((1, 1)
+  for none; a fade over more than one knot keeps the middle one and
+  counts as approx). P2: `[solved strength, flags, 0, 0]`, flags
+  GAP_PROF_R0 1, R1 2 (ramp present), F0 4, F1 8 (a frontier: the end
+  look applies), MAX 16 (two pieces: best-of; else MIN). `setShape(slot,
+  shape | null)` writes it and the GATE BIT, texel 3.w's bit 4
+  (GAP_FLAG_SHAPED; 1 perp and 2 self are master's), not 8.w: 3.w is
+  fetched before the search in every program. null clears both and
+  hands the slot back to setVis; noteSolved (a re-solve) clears them.
+- THE CUT (the explore program only): two more exact-once anchors in
+  gapKeepAt, placed by `withExplore`. EXPLORE_GAP_SURE: a full ribbon
+  slot (not a fan) with the bit, mode on, sets `sure2 = 0`, so the search
+  finds the TRUE nearest segment (no early stop inside the silhouette,
+  which misplaces the projection by up to the half-width). EXPLORE_GAP_CUT,
+  after `if (bk < 0) continue;`: `A = polyStart + min(bk + bt, kLast) *
+  polyStep` (texel 4, self-exclusion's formula) and `gst =
+  gapStrength(P2.x) * exploreCutCover(row, A, pxW)`; 0 skips the slot.
+  The look is ONE function, `kExploreLook(look, v, u, s, lat, sideFw,
+  pxW)`, called by the thread's main and by the cut at lat 0 (dots and
+  beacon cut a casing per dot; fray cuts by its center fiber, so its cut
+  flickers along the fiber). The glow look's tint stays in main. CPU
+  twins: `paint_math.ts` kExploreLookCpu, exploreCutCoverCpu.
+- THE CLASSIFIER (`classifyExploreCut`; `applyExploreGaps` runs it on
+  every declaration change and after every solve, live crossing slots
+  only, mode on): the footprint is the polyline's arc range. A whole
+  chain is solid, a chain with no piece hidden; per piece, its ring copy
+  nearest the over pass; a piece whose solid part covers the range makes
+  the slot solid; an end inside the range matters (an open chain's
+  terminal never does). No end: hidden. One or two: shaped. More: 2b's
+  scalar (fallback). Hidden, solid and fallback slots take 2b's setVis
+  path EXACTLY. A shaped slot keeps its solved reject radii (never
+  rejected), and its texel 1.w carries 2b's scalar, so the fans and the
+  still pluck see 2b's gate unchanged (stage 2 shapes them).
+  underWindows and `slotExploreHid` stay binary (0.5), as in 2b.
+- ROW-PARTIAL UPLOAD: the gap texture is a row-dirty source with its own
+  uploader, `knot-gap-rows` (registered at module load, as float_rows'),
+  so every write marks its row and `upload()` sends each dirty run with
+  texSubImage2D, or nothing while clean. `GAP_UPLOAD_STATS` counts bytes
+  and calls. The probe hook's `gaps` reports them with the slot kinds:
+  hidden, solid, shaped, fallback, approx, mismatch (classifier vs
+  table), uploadBytes, uploadCalls, shapedSlots.
+- TESTS: `test/render/explore_cut.test.ts` (the encoding, the hand-back
+  to setVis, a re-solve clears, the classifier's cases, exploreCutCoverCpu
+  against the model's chainVis through every fade, the end looks against
+  kExploreLookCpu, the row-dirty uploader); `paint_explore.test.ts` pins
+  the two anchors.
+- MEASURED (2026-10-14, k111 two moves in; `.claude/probes/K268/`
+  `run_k268.ps1`): mode off is master's frame exactly (0 px at four pulse
+  phases, after on then off, hovered). Census (beacon): 412/412 slots; the
+  405 hidden over threads cut nothing; both crossings seen on both threads
+  keep mode-off's cut exactly; hidden 405, solid 5, shaped 2, fallback 0,
+  approx 1, mismatch 0; joints 181/181; visitAll at reach 1000 is mode
+  off's frame. THE PROOF (`census.mjs`: each shaped slot drawn as shaped
+  S, with no cut R and with the full cut F; coverage (S-R)/(F-R) against
+  exploreCutCoverCpu at the pixel's projection arc), 11 look x reach
+  configurations: 1540 px, 0 ghosts, 0 under-cuts, error p95 <= 0.011,
+  max 0.016 (halo). Only the one-ramp slot carried pixels: the two-piece
+  (MAX) slot cut nothing, so MAX is unmeasured on the GPU. Upload, one
+  move: 5.4 MB in 91 texSubImage2D calls (master: 34 whole-table uploads,
+  30.9 MB); upload() ran 85 times, since setShape reports every move of a
+  profile. GPU by program (ms/frame, 3200x1800, 2 rounds): mode off,
+  ribbon 1.971 against master's 1.965, total 2.772 both; mode on, the
+  explore program 0.724 (master 0.732; 2b's scalar on every slot 0.715;
+  2 shaped slots); visitAll (about 162 shaped, 57 fallback), the explore
+  program 1.830 against 1.773 with 2b's scalar everywhere and master's
+  1.760, total 2.712 against master's 2.632 (+3%).
