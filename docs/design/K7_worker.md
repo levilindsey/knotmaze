@@ -211,85 +211,411 @@ branch.
   - a `Ledger items` list;
   - the handle fields: branch, last commit, evidence and next.
 
-## Design (WIP, rough: being written 2026-10-14 19:30)
+## Design
 
-Evidence: `.claude/probes/K7/design/` (untracked). `k7_frames.mjs` +
-`run_k7.ps1` (the frame batches, under the perf lock), `k7_results.jsonl`
-(`node summarize.mjs` prints it), `transport/` (the transfer microbench),
-`spike/` (a real module Worker running `ParticleSystem`).
+Measured 2026-10-14 on master `0d88091`: the desktop (Ryzen 9 5900X, 24
+threads; RX 6800 XT; Chrome 155), a 1600x900 window at dsf 1.5 (a
+2400x1350 canvas), under the perf lock. The probes, raw results and the
+spike are in `.claude/probes/K7/design/` (`node summarize.mjs daily`
+there prints the baseline tables).
 
-### Measured today (master 0d88091, desktop, under the perf lock)
+### The answer to Levi's question
 
-5900X (24 threads), RX 6800 XT, Chrome 155, 1600x900 at dsf 1.5 (canvas
-2400x1350). "Render-alone" = the rAF callback minus `ps.step`.
+"And with the web worker, the intro animation will run at normal frame
+rates?"
 
-| Run | particles | fps | rAF p50 / p95 ms | physics ms/frame | render-alone p50 / p95 | sim/wall | first sleep |
+- **Desktop: mostly yes.** The daily's intro runs at 22.7 fps today, and
+  about 40 fps between its two long freezes. With physics in a worker a
+  frame costs only the render. The daily with physics paused, which is
+  that render alone, runs at 56 fps (frame interval p95 18 ms): smooth,
+  but not a locked 60.
+- **The two freezes stay.** The intro stalls for 2.7 s at 1.1 s and for
+  2.0 s at 3.8 s. Both happen with physics paused too, so a worker cannot
+  remove them. They are inferred to be shader compiles (not traced):
+  K8/K9's warm-up is that fix.
+- **The knot settles sooner.** The worker runs the gs 18 settle at 0.76x
+  real time, against 0.19x during today's intro. The daily's first sleep
+  moves from 20.7 s to about 12 s, and to about 7.3 s once K9 removes the
+  freezes.
+- **Phone: likely better, not proven.** The phone holds 60 fps at rest
+  and 38-42 fps under today's settle, where K147 gives physics about 12
+  ms of each frame. Without physics its intro frame rate is set by its
+  render cost, which is unmeasured during the intro (its bench's render
+  ms is 15-27, so roughly 40-60 fps). The phone pass below measures it
+  before the worker becomes the default. Where the render is the limit,
+  the next lever is K8/K9's GPU pipeline, not the worker.
+
+### 1. The boundary map
+
+The worker owns the live `ParticleSystem`. Main keeps a second one,
+built from the same graph: the MIRROR. It never steps. Each snapshot
+overwrites its positions and pass state, so every reader below keeps
+reading the same object and fields it reads today. Writes become
+messages. `ParticleSystem` appears in five `src/` files: `main.ts`,
+`ribbon_renderer.ts`, `fabric_maze_renderer.ts`, `reveal.ts` and
+`sleep_gate.ts`. Everything else reads the renderer's samples or the
+graph.
+
+| Area | Touches | How often | Under the worker |
+|---|---|---|---|
+| Ribbons, gaps, junction fans, fillets (`ribbon_renderer.ts:725`) | reads positions, chains, chainBreakAfter, crossings (each pass's ctrl and displayF, sign), emergentCrossings, pointOnChain, bindingPoint; at build passNeighbors, fusedJunctions, isAnchored | every frame | the mirror. Pass objects stay the same objects (its passInfo Map is keyed by them, 2595-2597); emergentCrossings becomes an override filled from the snapshot |
+| Debug overlay, junction_field, arm_strip, gap_mask, pluck_overlay | the renderer's samples or the graph | every frame | unchanged |
+| Fabric renderer: markers, trail, fog (`fabric_maze_renderer.ts:363/482`) | positions | every frame | the mirror |
+| Fabric controller, edge indicators, HUD (`src/game`, `src/ui`) | the walk graph and the renderer's samples | every frame | unchanged |
+| Reveal (`reveal.ts:45`) | chain layout, constructor only | per build | the mirror |
+| Grab (commitPendingDrag, `main.ts` 3959-3965) | `grab(x, y, r)` picks the nearest particle and pins it; main reads `grabbedParticle` (1361, 3662, 3783, 3963) | per press | main picks the particle on the mirror with `nearest` (what is on screen) and posts `grab{particle, x, y}`; the worker grabs by index (a new `grabAt(p, x, y)`, which `grab` calls). The mirror records `grabbedParticle` |
+| Drag (3608; the soft snap-back 4578) | `dragTo` | per move, per frame | `drag{x, y}`, coalesced to the latest |
+| Release (3616, 3692, 3697, 3784, 4587) | `release()`; the return is discarded. beginRelease and endDrag (3661-3699, 4098-4103) read the chain and positions first | per lift | `release{}`; the reads use the mirror |
+| Tap tug, K279 (3654; the delayed tug 4177-4181 checks `ps === scene`) | `tug()` writes positions and prev; its count wakes the gate | per tap | `tug{...}`; the worker wakes its own gate on a nonzero count; the delayed tug checks the host's gen |
+| Camera (`computeFitTarget`, 681-730) | bounds | every third frame | the mirror |
+| Centroid centering (particle_system 2550-2567) | inside the substep | every substep | moves with the sim |
+| Pluck and audio | the renderer's samples and the graph | per pluck | unchanged |
+| Sleep gate, K63 (`sleep_gate.ts:54`; `main.ts` 4625-4643) | maxMove, contactsStatic, ridersPending, simTime | every frame | runs in the worker at batch ends; `asleep` and the flags ride in the snapshot |
+| K147 load settle (pre-settle loops 1109-1141 and 1247-1301, finishPresettle 1148, finishLoading 1307-1332, the step path 4598-4614) | steps, simTime, the flags | load, every frame | the pre-settle becomes a worker command; the budget is bypassed in worker mode and kept for the in-thread fallback |
+| K47 resume (2592, 2599-2606) | initial and settled positions | per resume | the mirror, after the worker's `settled` |
+| Rebuilds: seed, params, mode, undo's live effects, physics on/off (`new ParticleSystem` 1493, reset 1172) | the whole system | per rebuild | `init{gen, params, tuning}`; main builds the mirror from its own graph |
+| Temperature and physics sliders | tuning, 9 numbers, every step | per change | `tuning{t}` on change |
+| Probe hooks (`__knotPS` 4818, `__knotPoint`, `__knotRenderer`, the stamp, `diag_*`) | any of the above | per call | the mirror; see 8 |
+
+**What changes every substep** (worker only): positions (8N bytes),
+prev (8N), zPos (4N), the z targets, contact state, the accumulator and
+slide stats. Of these the render needs positions, each pass's ctrl and
+displayF, the emergent crossings and a few flags. **Built once per
+rebuild and never sent**, since both sides build them from the same
+graph: initial and anchor positions, chains, chainBreakAfter, rest
+lengths, the crossing topology, passNeighbors, fusedJunctions and the
+anchors, about 34N bytes.
+
+**The snapshot:** a header of f64s (gen, seq, simTime, substeps run,
+lag, wallAt = `performance.timeOrigin + performance.now()`, maxMove, and
+the flags asleep, settleComplete, contactsStatic, ridersPending);
+positions as f32 (8N); each pass's ctrl and displayF as f64, NaN meaning
+undefined (32 bytes per crossing); the emergent crossings' rows with
+their over/under (at most about 4 KB).
+
+| Design | Particles | Crossings | Positions | Passes | Snapshot |
+|---|---|---|---|---|---|
+| knot `?7k&mf=0` | 2592 | 416 | 20,736 B | 13,312 B | about 38 KB |
+| fabric `?b` | 3011 | 352 | 24,088 B | 11,264 B | about 39.5 KB |
+| daily, gs 18 | 2977 | 347 | 23,816 B | 11,104 B | about 39 KB |
+| dense `?b&gs=24&wd=0.6&brd=0.6` | 5448 | 728 | 43,584 B | 23,296 B | about 71 KB |
+
+### 2. Transport
+
+Measured with a module worker (`transport/`, results in
+`transport_results.jsonl`):
+
+- a structured clone of a typed array: 0.035-0.045 ms (p95 at most
+  0.065) at 72-106 KB, 0.15-0.17 ms at 400 KB;
+- a transferred buffer: 0.005 ms at any size;
+- round trips: an empty ping 0.025 ms, a transfer 0.03-0.04, a clone
+  0.075-0.115, a SharedArrayBuffer 0.03;
+- copying 100 KB out of a SAB 0.002-0.003 ms; posting a small input
+  0.0016 ms.
+
+Every option costs under 0.1 ms a frame. **The call: transferred
+buffers, no SharedArrayBuffer.**
+
+- A pool of 4 buffers. The worker writes a snapshot into a free one after
+  each substep and transfers it. With none free it skips that snapshot,
+  which is harmless: a newer one supersedes it.
+- Main keeps the two newest, for interpolation, and gives the rest back
+  at once.
+- The spike ran this with 3 buffers: main's handler and copy took under
+  0.1 ms; the snapshot on screen was 4.6-8.9 ms old at p50 with main
+  idle, and 20-24 ms with a 15 ms busy-wait in every frame.
+
+### 3. Cross-origin isolation
+
+Moot without SAB. Reasons not to take it anyway:
+
+- `require-corp` blocks every cross-origin subresource that lacks a
+  `Cross-Origin-Resource-Policy` header. The page's only one is the Web
+  Analytics beacon Cloudflare injects on levi.dev
+  (`static.cloudflareinsights.com`); whether it sends that header is
+  unverified, so isolation could silently cost the analytics.
+- `credentialless` avoids that, but Safari lacked it when last known
+  (not re-checked tonight).
+- It needs a `_headers` file on knotmaze.pages.dev, the levi.dev proxy
+  passing the headers through, and the dev server's config, for a
+  transport that saves under 0.1 ms a frame.
+
+### 4. The frame loop
+
+**The clock: allowances.** Each frame main posts `frame{dt}` with the
+frame's capped dt, the dt `ps.step` gets today. The worker:
+
+- adds the queued allowances into a batch of at most 0.25 s or 30
+  substeps, with `ps.step`'s accumulator math;
+- runs the batch one substep per macrotask, yielding through a
+  MessageChannel, so inputs apply between substeps (drags coalesce to
+  the latest);
+- posts a snapshot after each substep;
+- drops backlog beyond about 0.05 s as lag instead of spiraling,
+  reported like K147's lag.
+
+No allowance arrives while main is frozen (a shader compile, a hidden
+tab), so physics pauses with the picture and nothing jumps forward after
+a freeze (call 5). A clock in the worker would settle the daily sooner
+(about 7-8 s instead of 12) but jump the knot after each freeze. Once K9
+removes the freezes the two converge.
+
+`ps.step` splits into `beginFrame(dt): number` (the accumulator math,
+returning the substep count) and `runSubstep(tuning)`. `step()` stays
+beginFrame plus the loop, numerically identical, and the golden guards
+the split. There is no per-frame work after the substeps to move.
+
+**Interpolation.** Render at `now - D`, with D the median snapshot
+interval clamped to 8-50 ms, and lerp positions between the two
+snapshots that bracket it by wallAt. Pass ctrl and displayF lerp too,
+unless either is undefined or the pair wraps a closed chain's seam; then
+the newer value wins. Discrete state (the emergent crossings, the flags)
+comes from the newer snapshot. At rest both snapshots are equal and the
+frame is exact.
+
+- The caveat: an interpolated frame is not a substep-end state, and
+  P3.26 makes the substep end the state collision certifies. Inferred,
+  not measured: the width floor then holds to within one substep's
+  motion.
+- Stage 3 A/Bs interpolation against newest-only (judder, which comes
+  from showing one or two substeps per frame, against that risk) and
+  keeps interpolation only if it measurably helps.
+
+**The grabbed point.** The exact grabbed chase still holds: in the
+worker the grabbed particle sits on the drag target at every substep
+end. On screen it trails the pointer by the input latency. No
+pointer-led override at first (call 3): drawing the grabbed point at the
+pointer bends the ribbon away from the physics state near the grab, the
+render-physics mismatch the lore warns against.
+
+**Input latency, estimated:** posting (under 0.01 ms), then the rest of
+the current substep (about 5 ms), one substep (10.5 ms at gs 18), the
+snapshot's age plus D (10-20 ms) and the next render (up to 16.7 ms):
+about 40-50 ms typical, 65 ms worst. A drag frame today takes 141 ms
+(interval p50), so the picture trails the pointer by 140-280 ms.
+
+**K24 and K6.** K24's render on demand is independent. The fabric
+always animates (flow, pulses), so its ticker could not stop anyway; when
+K24 lands it reads `host.asleep` instead of the sleep gate. The worker
+needs nothing from K6: the frame loop keeps its shape, with `ps.step`
+replaced by `host.frame(dt)`.
+
+### 5. The settle and wakes
+
+- **K147's budget is replaced** by the allowance clock: the worker steps
+  flat out, capped at real time, dropping backlog past 0.05 s. The budget
+  stays for the in-thread fallback (`phw=0`, or no Worker).
+- **Wakes:** a drag, a tap's tug or a bare wake costs the main thread
+  nothing. Physics runs at the worker's speed: 1.0x real time for the
+  knot (8.2 ms per 8.3 ms substep), 0.76x at gs 18 (10.5 ms), 0.4x
+  dense (20 ms). Today a gs 18 drag runs at 7 fps and 0.70x, so the
+  motion keeps its speed while the picture goes from 7 fps to 55-60.
+  K162 (4), a budget for drags, becomes moot.
+- **The hidden pre-settle and the trefoil stay** (call 4).
+  `settle{maxSim, maxWall}` runs flat out in the worker behind the
+  trefoil and ends as today's does (by sim, work or wall); `lds` stays
+  0.45. Main is idle meanwhile, which is room for K9's shader warm-up.
+- **The reveal stays on wall time.** Sim time at the reveal's end (11.8
+  s) becomes about 4.9 s, against about 2.3 s today, so the knot is
+  mostly settled when the reveal finishes.
+- **The sleep gate runs in the worker** at each batch's end, with the
+  same sim-time quiet window (K63). Asleep, the worker discards
+  allowances and posts nothing.
+- **The first-frame hitch** (2.7 s at 1.09 s) and the second (2.0 s at
+  3.78 s) appear in the physics-paused runs too (2574/1934 and 2809/2035
+  ms), so they are not physics. K9 should trace them first (a DevTools
+  performance trace), then warm the shaders behind the trefoil.
+
+### 6. Lifecycle
+
+- **One long-lived module worker** per page. Every rebuild (a seed, a
+  param change, a mode change, undo's live effects, a resume) posts
+  `init{gen, params, tuning}`, and both sides drop messages of an older
+  gen.
+- **The worker regenerates the graph** from the params with
+  `buildSceneGraph(params)`, a pure function extracted from `main.ts`'s
+  build. Stage 1 lists every input that build reads; none should be DOM.
+  Regenerating is deterministic (K108). `ready` carries a fingerprint
+  (counts and a hash of the initial positions); a mismatch falls back to
+  in-thread.
+- **Startup** (the spike): ready in 19 ms (knot), 48 (fabric), 71 (gs 18)
+  and 137 (dense), mostly graph generation (3.9 / 32.7 / 47.7 / 116.4 ms)
+  plus the constructor (5-9 ms). Main builds its own graph and mirror at
+  the same time (generation 5.9-125 ms, constructor 5.6-9.5 ms), so a
+  rebuild takes about the same wall time as today.
+- **Tab hide and show:** a hidden tab gets no rAF, so no allowances;
+  `pause` and `resume` on visibilitychange also stop a batch in flight.
+- **Fallback to the in-thread host** on `onerror`, `messageerror`, no
+  `ready` within 3 s, a fingerprint mismatch, or no module Worker
+  (Safari before 15). `__knotPerf().host = {kind, reason}` says which. A
+  crash mid-session rebuilds the design in-thread with a fresh settle; a
+  K47 attempt survives (it lives in localStorage).
+- **Vite:** `worker: { format: "es" }` and `new Worker(new URL(
+  "./physics_worker.ts", import.meta.url), { type: "module" })`. The
+  spike built so under base `./` and ran under the sub-path `/knotmaze/`,
+  as the levi.dev proxy serves it, with no COOP/COEP: the chunk loaded
+  from `/knotmaze/assets/spike_worker-<hash>.js`, same origin. Hashed
+  names are safe under the proxy's 4-hour cache. The worker chunk
+  bundles simplex-noise, which the main chunk also bundles (the mirror);
+  stage 3 checks that the K122 notices plugin sees the worker build.
+
+### 7. Determinism and tests
+
+- **The numerics do not change.** The spike stepped 600 substeps from
+  fresh in the worker and on main for all four designs: positions, prev,
+  zPos and simTime matched bit for bit, with main idle and busy.
+- The golden, every physics test and the Node harnesses keep
+  constructing `ParticleSystem` directly.
+- **New tests:**
+  - a shared `PhysicsCore` (the step loop, the sleep gate, the settle,
+    applying inputs) used by both hosts, and `PhysicsWorkerCore.onMessage
+    (msg, post)` with a pluggable scheduler (synchronous in tests), so
+    Node drives the worker's code without a Worker;
+  - `test/physics/physics_host.test.ts`: InThreadHost and WorkerCore in
+    lockstep on scripted inputs (grab, drag, release, tug, tuning,
+    reset, a re-init at gen 2, a stale-gen message dropped), comparing
+    the state bit for bit after every frame, and the mirror's readers
+    (positions, pass ctrl and displayF, emergentCrossings, the flags)
+    against the live system's;
+  - `test/physics/snapshot.test.ts`: the round trip, NaN as undefined,
+    the sizes;
+  - a real-Worker browser probe in stages 3 and 4, on the spike's
+    pattern.
+- **Generation reads nothing from physics** and stays on main:
+  `generateLatticeKnotwork` and the maze plan and apply take the params
+  and a seeded RNG only (K108). The golden dailies and the K87 pin stay
+  unchanged.
+
+### 8. The diagnostic bridge
+
+**Served by the mirror, unchanged:** `__knotPS` (now the mirror),
+`__knotPoint`, `__knotRenderer`, `__knotFabric`, `__knotView`,
+`__knotReveal`, `__knotDiag`, the chase hooks, `__knotPhys`, the sim/wall
+stamp, `__knotSettle` (plus worker fields) and `__knotPerf` (plus the
+worker's step stats and `asleep`). `scripts/diag_screenshot.mjs`'s stamp
+and frame stats keep working.
+
+**Needs a new form:**
+
+- **The freeze patch** `__knotPS().step = function(){}` is in 48 probe
+  files (15 copies of `g2lib.mjs`, `scripts/phone_pass/walk.mjs:95`,
+  `K83/k83_shot.mjs:123`, ...). On the mirror it would silently do
+  nothing. In worker mode, assigning `step` throws, naming
+  `__knotPhysFreeze(on)` (a Promise that resolves once a snapshot shows
+  the freeze) and `&phw=0`. It throws for timing wrappers too (k7_frames
+  and K279 wrap `step`), since a setter cannot tell them apart. In-thread
+  (stage 1), InThreadHost calls `this.ps.step` through the instance, so
+  the patch still works there.
+- **K279:** `k279_sheet.mjs` needs `stepUntil(simTime)`; `k279_wake.mjs`
+  and g1's probe_perf need the worker's step stats; `k279_live.mjs` needs
+  a tug Promise and an async dump (or hash) of prev, zPos and the pass
+  ctrls.
+- `__knotPluck({tug})`, `__knotSetPhysics`, `__knotSetPhysicsParam` and
+  `__knotReplay` forward to the host.
+
+**Node, unaffected:** fold_census, the K63, K41 and K90 harnesses, the
+11 test files that construct `ParticleSystem`, the vite-node scene
+harnesses.
+
+**Probes that stop testing the shipping path** once the worker is the
+default, unless ported to the new hooks: K147's `k147_measure.mjs`,
+K63/b, K279, K174's and K114's perf modes, the phone_pass bench and
+diag_screenshot's frame stats. Real-input probes (template:
+`scripts/diag_tug.mjs`) keep testing it. So the worker becomes the
+default only after stage 4 ports them, with `phw=0` as the in-thread
+escape hatch.
+
+### 9. Prerequisites
+
+Neither K5 nor K6 is needed. A narrow `PhysicsHost` seam is enough: the
+renderers only read, and every write is in `main.ts` (about 25 call
+sites: the writes, the two settle loops and the step path).
+
+- the host seam, in-thread: one stage, `main.ts` to itself;
+- the worker core, snapshot and mirror: one stage, Node only;
+- the browser worker and its host: one stage, a brief `main.ts` edit;
+- the bridge and desktop acceptance: one stage, `main.ts` to itself;
+- the phone pass, default on, lore: one stage.
+
+K5 (splitting `main.ts`) conflicts with stages 1, 3 and 4, and is easier
+after them (the host takes physics out of `main.ts`). K6 and K24 fit
+after stage 5.
+
+### 10. Acceptance
+
+**Baselines** (`k7_results.jsonl`; iv is the rAF interval, vsync
+quantized at 16.7 and 33.3 ms; "render alone" is the frame callback
+minus `ps.step`, p50 / p95):
+
+| Daily front door, gs 18 (2977 particles), runs a / b | |
+|---|---|
+| visible; intro ends; first sleep | 1.09 / 1.08 s; 11.8 / 11.76 s; 20.74 / 20.89 s (sim 5.0) |
+| the two freezes | 2675 / 2686 ms at 1.09 s; 1978 / 1939 ms at 3.78 s; about 300 ms at 0.4 s |
+| intro | 22.7 / 22.6 fps; iv p50 18, p95 36.1; physics p50 10.5 ms (one substep a frame); render alone 14.1 / 17.2; sim/wall 0.189 |
+| intro after its last freeze (5.75-11.8 s) | 39.8 fps; render alone 14.1 / 16.8; sim/wall 0.332 |
+| after the intro, until sleep | 36.1 fps; iv p50 34.7; render alone 16.0 / 17.6; sim/wall 0.30 |
+| K147 phases | pre-settle 734 ms wall, 0.28 sim-s, ended by work; budget 19.6 s, 5.0 sim-s, 9.6 s of lag dropped, 10.73 ms a substep, ended by sleep |
+| drag | 7.0 fps; iv p50 141, p95 158; physics 125 ms (12 substeps); render alone 16.4 / 18.1; sim/wall 0.70 |
+| bare wake | 9.3 / 8.9 fps |
+| physics paused (the render-only ceiling) | 32.4 / 31.4 fps overall; after the freezes 56.2 fps, iv p50 17.5, p95 18.1 |
+
+| Design | First sleep | Settle fps | ms a substep | Render alone | sim/wall | Drag | Wake |
 |---|---|---|---|---|---|---|---|
-| daily front door, intro (1.1-11.8 s) | 2977 | 22.7 | 18 / 36 | 10.5 (1 substep) | 14.1 / 17.2 | 0.19 | 20.7-20.9 s |
-| daily intro after its last hitch (5.75-11.8 s) | 2977 | 39.8 | 18 / 36 | 10.5 | 14.1 / 16.8 | 0.33 | |
-| daily, intro over to sleep | 2977 | 36.1 | 35 / 36 | 10.7 | 16.0 / 17.6 | 0.30 | |
-| daily intro, physics paused (render alone) | 2977 | 32.4 (56.2 after the hitches) | 17.5 / 18.1 | 0 | 14.9 / 17-18 | 0 | |
-| daily drag (60 px circle, 3 s) | 2977 | 7.0 | 141 / 158 | 125 (12 substeps) | 16.4 / 18.1 | 0.70 | |
-| daily bare wake | 2977 | 9.3 | 140 / 158 | 125 | 16.0 / 17.1 | 0.67 | |
-| knot `?7k&mf=0`, settle | 2592 | 36.8 | 18 / 36 | 8.2 | 13.5 / 14.6 | 0.31 | 16.5 s |
-| knot drag / wake | 2592 | 8.9 / 10.7 | 107 / 125 | 98 | 13.4 | 0.89 | |
-| fabric `?b`, settle | 3011 | 28.2 | 35 / 36 | 10.8 | 15.7 / 17.4 | 0.24 | 21.5 s |
-| fabric drag / wake | 3011 | 6.9 / 9.3 | 141 / 159 | 126 | 15.7 | 0.69 | |
-| dense `?b&gs=24&wd=0.6&brd=0.6`, settle | 5448 | 16.5 | 53 / 54 | 20.0 | **31.0 / 33.8** | 0.14 | 36.5 s |
-| dense drag / wake | 5448 | 3.7 / 5.1 | 266 / 299 | 237 | 31.5 | 0.37 | |
+| gs 18 `?1471kin.J` | 20.77 s | 22.1 intro, 39.7 between freezes | | | | 7.0 fps | |
+| knot `?7k&mf=0` | 16.51 s | 36.8 | 8.2 | 13.5 / 14.6 | 0.31 | 8.9 fps (physics 98 ms) | 10.7 fps |
+| fabric `?b` | 21.48 s | 28.2 | 10.8 | 15.7 / 17.4 | 0.235 | 6.9 fps | 9.3 fps |
+| dense | 36.49 s | 16.5 | 20.0 | 31 / 33.8 | 0.138 | 3.7 fps (physics 237 ms) | 5.1 fps |
 
-- The daily's intro also carries two shader-compile hitches: 2675 ms at
-  1.09 s and 1978 ms at 3.78 s (both runs, paused or not). The worker
-  cannot touch them (K8/K9's GPU pipeline, or a warm-up).
-- K147's numbers: pre-settle 734 ms wall (467 ms work, 0.28 sim-s), then
-  the budget phase for 19.6 s, 9.6 sim-s dropped, 10.7 ms/substep.
-- The reveal's own share is inside render-alone: render-alone during the
-  intro (14.1-15.0 ms) is BELOW render-alone after it (16.0 ms), because
-  the reveal hides geometry; `reveal.tick` is not exposed to time alone.
+The reveal's own share is not exposed (`__knotReveal()` has no timing,
+and `reveal.tick` runs inside the frame at `main.ts` 4416). Render alone
+is lower during the intro (14.1) than after it (16.0) because the reveal
+hides geometry. Stage 4 adds a reveal timing field.
 
-### Transport (measured, `transport/`)
+**The worker spike** (`spike/`, 600 substeps from fresh, a pool of 3
+transferred buffers; "busy" is a 15 ms busy-wait in every frame):
 
-- Per message on the main thread: structured clone 0.035-0.045 ms (p95
-  <= 0.065) at 72-106 KB, 0.15-0.17 ms at 400 KB; a transferred buffer
-  0.005 ms at every size; a SAB copy 0.002-0.003 ms per 100 KB.
-- Every option costs under 0.1 ms a frame. **SAB, and the COOP/COEP it
-  needs, is unnecessary.** Call: transferred ping-pong buffers (a pool of
-  3); a clone would also do.
-
-### The spike (measured, `spike/`; a real module Worker, Vite's relative
-base, served under `/knotmaze/` with NO COOP/COEP)
-
-| design | worker startup ms (gen + ctor) | ms/substep main / worker | worker sim/wall (free-running) | worker ms/substep with a 15 ms main busy-wait | snapshot age p50 / p95 ms (idle / busy main) | bit-identical to main |
+| Design | Ready (gen + ctor) | Main ms a substep | Worker p50, idle / busy | sim/wall, idle / busy | Snapshot age p50/p95, idle; busy | Identical |
 |---|---|---|---|---|---|---|
-| knot | 14-19 (3-4 + 4-5) | 8.2 / 8.1 | 1.00 | 8.1 | 4.6 / 8.2, 19.9 / 23.7 | yes |
-| fabric | 44-48 (32 + 5) | 10.5 / 10.5 | 0.78 | 10.6 | 5.4 / 10.3, 19.9 / 24.7 | yes |
+| knot | 19.3 ms (3.9 + 4.9) | 8.2 | 8.1 / 8.1 | 1.002 / 1.011 | 4.6/8.2; 19.9/23.7 | yes |
+| fabric | 47.7 ms (32.7 + 5.2) | 10.5 | 10.5 / 10.6 | 0.779 / 0.777 | 5.4/10.3; 19.9/24.7 | yes |
+| gs 18 | 71 ms (47.7 + 7.3) | 10.6 | 10.5 / 10.5 | 0.758 / 0.733 | 5.4/10.4; 20.3/26.2 | yes |
+| dense | 136.9 ms (116.4 + 9.4) | 20.2 | 19.5 / 21.3 | 0.415 / 0.381 | 8.9/16.8; 23.7/31.7 | yes |
 
-- Snapshot (positions + zPos f32) 31-36 KB; handler and copy cost on main
-  under 0.1 ms.
-- The worker steps exactly as fast as the main thread and does not slow
-  when the main thread is busy (12 cores).
+A worker substep costs what a main-thread one does. A busy main thread
+slowed the dense worker by about 9% (mean) and gs 18 by about 3.5%,
+inferred to be shared caches or memory bandwidth.
 
-### Calls (rough)
+**What limits the frame rate** once physics leaves main: the render, 14-
+17 ms a frame at gs 18. Dense is render-bound at about 30 fps (31-34
+ms), which is K8's, not K7's.
 
-1. Transport: transferred buffers, no SAB, no COOP/COEP.
-2. Main keeps a mirror `ParticleSystem` built from the same graph (same
-   topology, stable `CrossingPass` objects); each snapshot's dynamic
-   arrays are copied into it. Renderer, fabric, camera, plucks, audio and
-   most probes keep reading it synchronously. Writes become messages
-   (`grabParticle(i, x, y)` resolves the grab on main's mirror).
-3. The worker owns the step, K147's accumulator/budget, the sleep gate's
-   quiet signal and the pre-settle; it steps flat out at up to real time,
-   dropping backlog beyond about one frame. Main interpolates the two
-   newest snapshots.
-4. Worker is the default once accepted; an in-thread host stays behind a
-   param for A/Bs and as the fallback.
-5. K5 and K6 are not prerequisites; a narrow PhysicsHost boundary is.
+**Targets for stage 4** (desktop, phw=1 against phw=0 on one build):
 
-### Expected with the worker (desktop)
+- the intro at 50 fps or more between the freezes;
+- the daily's first sleep by 13 s;
+- a gs 18 drag at 50 fps or more;
+- input latency p50 of 50 ms or less;
+- at rest and with phw=0, today's numbers within noise.
 
-- The daily intro: about 56 fps (the measured render-alone rate) once the
-  two shader hitches are past; first sleep about 7 s after load instead
-  of 20.7 s (sim/wall about 0.78 instead of 0.24).
-- Drags and wakes: render at 55-60 fps, physics at about 0.78x real time
-  (knot 1.0x, dense 0.4x).
-- Dense: about 30 fps, render-bound (render-alone 31 ms).
+**Expected,** inferred from the spike and the paused runs: the intro at
+about 56 fps between the freezes; the first sleep at 1.09 + 4.65
+(freezes) + (5.0 - 0.28) / 0.76, about 11.9 s (about 7.3 s without the
+freezes); sim time 4.9 s at the reveal's end; drags and wakes at 55-60
+fps with physics at 0.76x real time; dense at about 30 fps.
+
+**The phone plan (K156)**, for a phone pass after stage 4, on one build:
+
+- `scripts/phone_pass/` with `phw=0` against `phw=1`: the daily's and
+  gs 18's loads (intro fps and p95, first sleep, sim/wall), 3 runs each
+  for thermal spread;
+- render alone with k7_frames' `--pause` (physics paused);
+- the spike page (`?d=gs18`) for the phone's worker against main
+  ms a substep, which shows whether the worker lands on a slow core
+  (big.LITTLE);
+- drag and wake fps;
+- a cold worker start over levi.dev.
+
+Pass: an intro p95 of 33 ms or less, no later first sleep than phw=0,
+drags at 30 fps or more, no errors, and the worker ready within 250 ms
+of the main chunk. The phone's worker substep cost is unknown until
+then; the numbers above for the phone are inference.
