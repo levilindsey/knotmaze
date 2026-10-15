@@ -20,7 +20,7 @@
 // hidden path, and cannot fail the build.
 
 import type { Plugin } from "vite";
-import { CREDITS } from "./credits";
+import { CREDITS, RESEARCH } from "./credits";
 import { gatherNotices } from "./notices";
 import type { BundledModule } from "./notices";
 import { renderPage } from "./page";
@@ -78,7 +78,7 @@ export function notices(): Plugin {
       this.emitFile({
         type: "asset",
         fileName: NOTICES_FILE,
-        source: renderPage({ packages, credits: shippedCredits(), build }),
+        source: renderPage({ packages, credits: shippedCredits(), research: RESEARCH, build }),
       });
     },
 
@@ -94,6 +94,7 @@ export function notices(): Plugin {
           renderPage({
             packages: [],
             credits: shippedCredits(),
+            research: RESEARCH,
             build,
             note: "This is the development server. The open-source licenses are listed by a production build (npm run build), from the modules it bundles.",
           })

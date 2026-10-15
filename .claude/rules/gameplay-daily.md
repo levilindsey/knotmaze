@@ -29,7 +29,32 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   game/maze_stats.ts (time = first move to the dot's arrival, hidden time
   excluded; efficiency = optimal / the route you ended on, shown once
   solved, rounded down; distinct junctions; distinct dead-end tips, only
-  with deadEnds on; a g/d/b move log for sharing).
+  with deadEnds on; a g/d/b move log for sharing). WHAT EACH FIGURE MEANS
+  (K274, 2026-10-14; brief docs/design/K274_K277.md): the `STATS` table in
+  game/maze_stats.ts holds the label and one plain line for every stat id
+  (time, path / optimal, efficiency, backtracked, junctions, dead ends,
+  caught, chased, fire lead, closest call, walked), each written from the
+  definition named in the comment beside it. ui/maze_hud.ts builds every
+  row of the win banner, the Burnt banner and the HUD through
+  `entry(id, value)`, which takes its label from the table (gameEntries,
+  statEntries, lossEntries), so a row cannot name a stat without a line;
+  test/ui/maze_hud.test.ts fails when a row has no line or a line has no
+  row. A stage that adds a stat adds its STATS entry in the same commit.
+  WHERE THE LINES SHOW: the stars' info popover (`starsWidget(r, stats)`)
+  appends them under the stars' rules ("What the numbers mean"); a win
+  with no rating, and the Burnt banner, get the plain `statsInfoWidget`
+  button; the daily stats view's legend (time, efficiency, best time)
+  reuses time's and efficiency's lines and BEST_TIME_LINE;
+  `explainedStats` adds the fire lead's line to a banner that shows the
+  closest call (the lead is a HUD row, the closest call is its smallest
+  value). `.km-why` scrolls (max-height min(40vh, 320px)) so a phone
+  reads the whole list. The HUD itself has pointer-events:none, so its
+  rows are explained only in the banners and the legend (open for Levi: a
+  HUD popover surface). THE PREMISE THE EFFICIENCY LINE RESTS ON, checked
+  against the code: efficiency reads the CURRENT route (a backtrack pops
+  the stack), so a wander walked back reads 100% while the stars
+  (walkedOf) count every step, backtracks twice; the test replays it with
+  the real efficiencyOf and rateRun.
   DAILY - binding rules: (1) a daily's design is today's PARAM_DEFAULTS
   on the day's seed (ui/daily_link.ts `dailyParams`; K132 dropped the
   frozen DAILY_V1, pre-launch), so a default or generation change moves

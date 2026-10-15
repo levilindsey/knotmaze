@@ -2,13 +2,16 @@
 // (inline CSS, no script, no requests), readable on a phone and in a
 // dark theme. Pure: vite_plugin.ts passes in what notices.ts gathered.
 
-import type { Credit } from "./credits";
+import type { Credit, ResearchCredit } from "./credits";
 import type { PackageNotice } from "./notices";
 
 export interface PageModel {
   packages: readonly PackageNotice[];
   // Only the credits that ship (shipped: true); the caller filters.
   credits: readonly Credit[];
+  // K277: the published techniques the code follows (credits.ts RESEARCH).
+  // The section sits after the packages and is left out when there are none.
+  research?: readonly ResearchCredit[];
   // Which build this page describes (the panel header shows the same).
   build: { version: string; sha: string };
   // A line above the licenses; the dev server's placeholder says why the
@@ -134,6 +137,15 @@ blockquote{margin:.5rem 0 0;padding:.65rem .9rem;background:var(--card);border-l
 blockquote p{margin:0 0 .6rem}
 blockquote p:last-child{margin:0}
 .foot{margin-top:2.5rem;border-top:1px solid var(--rule);padding-top:1rem}
+.jump{font-size:.9rem}
+.research{list-style:none;padding:0;margin:0}
+.research>li{background:var(--card);border-radius:8px;padding:.75rem .9rem .2rem;margin:0 0 .8rem;overflow-wrap:anywhere}
+.research .by{margin:0 0 .5rem}
+.research .refs{list-style:none;padding:0;margin:0 0 .6rem;font-size:.9rem}
+.research .refs li{margin:0 0 .3rem}
+.research .row{font-size:.9rem;margin:0 0 .6rem}
+.research .lbl{display:block;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.research code{display:inline-block;margin:0 .4rem .15rem 0;font:.78rem/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 `;
 
 export function renderPage(m: PageModel): string {
@@ -193,6 +205,49 @@ ${index}
 ${articles}`
     : `<p class="muted">${escapeHtml(m.note ?? "No third-party software is bundled into this build.")}</p>`;
 
+  // K277: one card per technique, stacked for a phone. Wording is fixed in
+  // credits.ts (uses / follows / after; nothing that reads as endorsement
+  // or affiliation; no legal claims).
+  const research = m.research ?? [];
+  const researchCards = research
+    .map((r) => {
+      const refs = r.sources
+        .map((s) =>
+          s.url
+            ? `<li><a href="${escapeHtml(s.url)}" rel="noopener">${escapeHtml(s.text)}</a></li>`
+            : `<li>${escapeHtml(s.text)}</li>`
+        )
+        .join("");
+      const files = [...new Set(r.files.map((f) => f.path))]
+        .map((p) => `<code>${escapeHtml(p)}</code>`)
+        .join(" ");
+      return (
+        `<li id="research-${slug(r.id)}"><h3>${escapeHtml(r.technique)}</h3>` +
+        `<p class="by">${escapeHtml(r.by)}</p>` +
+        `<ul class="refs">${refs}</ul>` +
+        `<p class="row"><span class="lbl">Used for</span>${escapeHtml(r.use)}</p>` +
+        `<p class="row"><span class="lbl">Where</span>${files}</p></li>`
+      );
+    })
+    .join("\n");
+  const researchSection = research.length
+    ? `<h2 id="research">Research and techniques</h2>
+<p>Knotmaze uses these published techniques. Each entry names who described the technique and when, where to read about it, what Knotmaze uses it for, and the source files that do. A name here credits an idea; it does not mean its author has reviewed or endorsed Knotmaze.</p>
+<ul class="research">
+${researchCards}
+</ul>
+`
+    : "";
+  const jump = research.length
+    ? `<p class="jump">${[
+        m.credits.length ? `<a href="#credits">Credits</a>` : "",
+        `<a href="#software">Open-source software</a>`,
+        `<a href="#research">Research and techniques</a>`,
+      ]
+        .filter(Boolean)
+        .join(" · ")}</p>\n`
+    : "";
+
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -207,10 +262,10 @@ ${articles}`
 <a class="home" href="./">← Knotmaze</a>
 <h1>Credits and licenses</h1>
 <p>Knotmaze is made by <a href="https://snoringcat.games" rel="noopener">Snoring Cat</a>. It stands on other people's work, credited here.</p>
-${m.credits.length ? `<h2 id="credits">Credits</h2>\n<ul class="credits">\n${credits}\n</ul>` : ""}
+${jump}${m.credits.length ? `<h2 id="credits">Credits</h2>\n<ul class="credits">\n${credits}\n</ul>` : ""}
 <h2 id="software">Open-source software</h2>
 ${software}
-<p class="foot">Generated from the modules bundled into this build (Knotmaze v${escapeHtml(m.build.version)} · ${escapeHtml(m.build.sha)}).</p>
+${researchSection}<p class="foot">Generated from the modules bundled into this build (Knotmaze v${escapeHtml(m.build.version)} · ${escapeHtml(m.build.sha)}).</p>
 </main>
 </body>
 </html>

@@ -62,4 +62,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   append, no store version. PROBE: `.claude/probes/K155/probe_stars.mjs
   <base> <shotsDir> design|daily|realtime|caught[:phone]` (real taps;
   Share captured through navigator.share and the clipboard); hook
-  `__knotFabric().walked`.
+  `__knotFabric().walked`. K274 (2026-10-14) appends the plain line of
+  every stat the banner shows to this same popover (`starsWidget(r,
+  stats)`; gameplay-daily.md), so the button's aria-label then reads "how
+  stars and stats work" and the probe's old check of "how stars work"
+  needs updating.

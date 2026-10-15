@@ -3,7 +3,7 @@
 //
 // The page itself is built by vite_plugin.ts from the modules that really
 // end up in the bundle (notices.ts), so a new dependency shows up by itself.
-// This file holds the three things a build cannot work out:
+// This file holds the four things a build cannot work out:
 //   1. the LICENSE POLICY: which licenses may ship without asking Levi;
 //   2. LICENSE_FALLBACKS: the license text of a bundled package whose npm
 //      tarball ships none (the MIT and ISC licenses require the copyright
@@ -11,12 +11,17 @@
 //      somewhere);
 //   3. CREDITS: courtesy credits for techniques the code borrows, and the
 //      notices a license makes us ship with what we took from it (V8's
-//      Math.hypot, the Hershey fonts).
+//      Math.hypot, the Hershey fonts);
+//   4. RESEARCH (K277): the published techniques the code follows, each
+//      with its citation, what it is used for and the files that use it.
 //
 // Adding a credit: add it to CREDITS (courtesy credits above the entries
 // that carry a license's notice, which come last). Adding data under a
 // license that needs an acknowledgement (K115's Hershey font data): set its
 // entry's `shipped` to true in the same commit (test/notices guards it).
+// Adding a technique from a paper or a book: add it to RESEARCH in the
+// commit that adds the code (test/notices greps every listed file for its
+// mark, so an entry cannot outlive the code that earned it).
 
 // ---------------------------------------------------------------------------
 // 1. License policy
@@ -261,5 +266,233 @@ Cognition, Inc.
 Billerica, MA 01821
 (mit-eddie!ci-dandelion!hurt)`,
     shipped: false,
+  },
+];
+
+// ---------------------------------------------------------------------------
+// 4. Research and techniques (K277)
+// ---------------------------------------------------------------------------
+
+export interface ResearchSource {
+  // Title and venue or book, as plain text. Only what a record confirmed
+  // (a DBLP or publisher page, the paper itself): leave out a detail you
+  // could not check, such as a page range.
+  text: string;
+  // https link to that record, when one is confirmed.
+  url?: string;
+}
+
+export interface ResearchFile {
+  // Repo-relative with forward slashes, under src/ or notices/.
+  path: string;
+  // Text the file must contain, in any case. test/notices greps for it, so
+  // an entry cannot outlive the code that earned it. The code comment or the
+  // import that names the technique is the usual mark.
+  mark: string;
+}
+
+export interface ResearchCredit {
+  // Stable key (tests and diffs); never reused.
+  id: string;
+  // What the technique is called.
+  technique: string;
+  // Who described it, and when.
+  by: string;
+  // Where to read it.
+  sources: readonly ResearchSource[];
+  // One sentence: what Knotmaze uses it for.
+  use: string;
+  // The files that use it.
+  files: readonly ResearchFile[];
+}
+
+// The wording is fixed (Levi, 2026-10-14): "uses", "follows", "after", and
+// nothing that reads as an endorsement or an affiliation. No legal claims
+// and never the words "public domain". A game's title is named only to say
+// where an idea came from. Credit only what a file in src/ or notices/ does
+// today: a source for work that is not built (K80's puzzle rules, K74's
+// maze-psychology reading) waits until the code is. Order is the page's.
+export const RESEARCH: readonly ResearchCredit[] = [
+  {
+    id: "mulberry32",
+    technique: "Mulberry32 random numbers",
+    by: "Tommy Ettinger, 2017",
+    sources: [
+      {
+        text: "“Mulberry32”, a small seeded random number generator, published as mulberry32.c in a GitHub gist",
+        url: "https://gist.github.com/tommyettinger/46a874533244883189143505d203312c",
+      },
+    ],
+    use: "Draws the random numbers behind every maze, so the same link builds the same maze on every device, and the noise in each plucked string.",
+    files: [
+      { path: "src/util/random.ts", mark: "Mulberry32" },
+      { path: "src/core/param_field.ts", mark: "mulberry32" },
+      { path: "src/audio/knot_synth.ts", mark: "mulberry32" },
+    ],
+  },
+  {
+    id: "fnv-1a",
+    technique: "FNV-1a hash",
+    by: "Glenn Fowler, Landon Curt Noll and Phong Vo, from 1991",
+    sources: [
+      {
+        text: "“The FNV Non-Cryptographic Hash Algorithm”, RFC 9923, February 2026",
+        url: "https://www.rfc-editor.org/rfc/rfc9923.html",
+      },
+    ],
+    use: "Turns the text typed into the seed row into a seed number, and fingerprints a maze's shape so a saved daily attempt can tell when the maze has moved.",
+    files: [
+      { path: "src/ui/url_state.ts", mark: "FNV-1a" },
+      { path: "src/game/daily_attempt.ts", mark: "FNV-1a" },
+    ],
+  },
+  {
+    id: "elias-gamma",
+    technique: "Elias gamma code",
+    by: "Peter Elias, 1975",
+    sources: [
+      {
+        text: "“Universal codeword sets and representations of the integers”, IEEE Transactions on Information Theory 21(2), 194–203",
+      },
+    ],
+    use: "Writes the whole numbers in a link (how many settings changed, which ones, and their values) in as few bits as it can, so links stay short.",
+    files: [{ path: "src/ui/param_codec.ts", mark: "Elias gamma" }],
+  },
+  {
+    id: "dijkstra",
+    technique: "Shortest paths through a graph",
+    by: "Edsger W. Dijkstra, 1959",
+    sources: [
+      {
+        text: "“A note on two problems in connexion with graphs”, Numerische Mathematik 1, 269–271",
+        url: "https://doi.org/10.1007/BF01386390",
+      },
+    ],
+    use: "Measures the shortest route from the entrance to the exit (what the efficiency and the stars are measured against), how far every junction is from the exit, when each part of the maze appears, where a cut is routed and how deep each run lies for the section colors.",
+    files: [
+      { path: "src/core/walk_graph.ts", mark: "Dijkstra" },
+      { path: "src/core/reveal_plan.ts", mark: "Dijkstra" },
+      { path: "src/core/maze_apply.ts", mark: "Dijkstra" },
+      { path: "src/core/section_colors.ts", mark: "Dijkstra" },
+    ],
+  },
+  {
+    id: "catmull-rom",
+    technique: "Centripetal Catmull-Rom splines",
+    by: "Edwin Catmull and Raphael Rom, 1974; Phillip J. Barry and Ronald N. Goldman, 1988; Cem Yuksel, Scott Schaefer and John Keyser, 2011",
+    sources: [
+      {
+        text: "“A class of local interpolating splines”, in Computer Aided Geometric Design, edited by R. E. Barnhill and R. F. Riesenfeld, Academic Press, 1974, pp. 317–326",
+      },
+      {
+        text: "“A recursive evaluation algorithm for a class of Catmull-Rom splines”, Computer Graphics (SIGGRAPH '88) 22, August 1988, pp. 199–204",
+      },
+      {
+        text: "“Parameterization and applications of Catmull-Rom curves”, Computer-Aided Design 43, 2011, pp. 747–755",
+        url: "https://cemyuksel.com/research/catmullrom_param/",
+      },
+    ],
+    use: "Draws every thread as a smooth curve through its lattice points: the centripetal form of the curve, evaluated by the recursive method of the second paper.",
+    files: [
+      { path: "src/geometry/spline_generator.ts", mark: "Catmull-Rom" },
+      { path: "src/geometry/spline_generator.ts", mark: "Barry-Goldman" },
+      { path: "src/geometry/bend_radius.ts", mark: "Catmull-Rom" },
+    ],
+  },
+  {
+    id: "chaikin",
+    technique: "Corner cutting for curves",
+    by: "George Merrill Chaikin, 1974",
+    sources: [
+      {
+        text: "“An algorithm for high speed curve generation”, Computer Graphics and Image Processing 3(4), 346–349, December 1974",
+      },
+    ],
+    use: "Rounds the corners of the yarn laid along the path you have walked, by cutting each corner off in a pass or two.",
+    files: [{ path: "src/render/fabric_maze_renderer.ts", mark: "Chaikin" }],
+  },
+  {
+    id: "verlet",
+    technique: "Verlet integration",
+    by: "Loup Verlet, 1967",
+    sources: [
+      {
+        text: "“Computer ‘experiments’ on classical fluids. I. Thermodynamical properties of Lennard-Jones molecules”, Physical Review 159(1), 98–103",
+        url: "https://doi.org/10.1103/PhysRev.159.98",
+      },
+    ],
+    use: "Moves the particles each thread is made of: a particle steps from its last two positions, with no stored velocity.",
+    files: [{ path: "src/physics/particle_system.ts", mark: "Verlet" }],
+  },
+  {
+    id: "position-based-constraints",
+    technique: "Position-based constraints",
+    by: "Thomas Jakobsen, 2003; Matthias Müller, Bruno Heidelberger, Marcus Hennix and John Ratcliff, 2006–2007",
+    sources: [
+      {
+        text: "“Advanced Character Physics”, Game Developer, 21 January 2003",
+        url: "https://gamedeveloper.com/programming/advanced-character-physics",
+      },
+      {
+        text: "“Position based dynamics”, Journal of Visual Communication and Image Representation, 2007 (first presented at VRIPHYS 2006)",
+        url: "https://doi.org/10.1016/j.jvcir.2007.01.005",
+      },
+    ],
+    use: "Holds the threads together: springs, bending, crossings and collisions are solved by moving positions directly, pass after pass, in the manner of the first article and after the second.",
+    files: [
+      { path: "src/physics/forces.ts", mark: "Jakobsen" },
+      { path: "src/physics/particle_system.ts", mark: "PBD" },
+    ],
+  },
+  {
+    id: "simplex-noise",
+    technique: "Simplex noise",
+    by: "Ken Perlin, 2001",
+    sources: [
+      {
+        text: "“Noise hardware”, in Real-Time Shading, SIGGRAPH 2001 course notes",
+      },
+    ],
+    use: "Supplies the smooth random drift behind the threads' agitation, the flow along them, the varied parameter fields and the ragged edge of the reveal, through the simplex-noise package listed above.",
+    files: [
+      { path: "src/physics/particle_system.ts", mark: "simplex" },
+      { path: "src/render/ribbon_renderer.ts", mark: "simplex" },
+      { path: "src/core/param_field.ts", mark: "simplex" },
+      { path: "src/render/reveal.ts", mark: "simplex" },
+    ],
+  },
+  {
+    id: "karplus-strong",
+    technique: "Plucked-string synthesis",
+    by: "Kevin Karplus and Alex Strong, 1983; David A. Jaffe and Julius O. Smith, 1983",
+    sources: [
+      {
+        text: "“Digital synthesis of plucked-string and drum timbres”, Computer Music Journal 7(2), 43–55, Summer 1983",
+      },
+      {
+        text: "“Extensions of the Karplus-Strong plucked-string algorithm”, Computer Music Journal 7(2), Summer 1983",
+      },
+    ],
+    use: "Sounds each plucked thread as a string: a delay loop after the first paper, with extensions of the second such as its pick-position comb, pitched by the thread's length.",
+    files: [
+      { path: "src/audio/knot_synth.ts", mark: "Karplus-Strong" },
+      { path: "src/audio/knot_synth.ts", mark: "Jaffe-Smith" },
+    ],
+  },
+  {
+    id: "share-grid",
+    technique: "The shared result grid",
+    by: "After the way Wordle's players share a result, 2021 on",
+    sources: [
+      {
+        text: "Wordle, the daily word game (Josh Wardle, October 2021)",
+        url: "https://en.wikipedia.org/wiki/Wordle",
+      },
+    ],
+    use: "The text a finished daily shares: one colored square per move (green for a step along a shortest route, yellow for a detour, red for a backtrack) shows how the run went, not where it went.",
+    files: [
+      { path: "src/game/maze_stats.ts", mark: "Wordle" },
+      { path: "src/game/share_text.ts", mark: "Wordle" },
+    ],
   },
 ];
