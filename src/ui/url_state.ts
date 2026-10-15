@@ -449,8 +449,8 @@ export interface UrlParams {
   hoverGlow: number;
   // K111 stage 4 (K264): how far in from each edge that glow reaches, in
   // half-widths ([HOVER_GLOW_WIDTH_MIN, HOVER_GLOW_WIDTH_MAX]; 1 = the two
-  // rims meet in the middle). The shader's kRimAcross divisor (uKGold.w).
-  // A viewer preference.
+  // rims meet in the middle). The shader reads it as a scale, uKGold.w =
+  // kRimScale(width) = 0.85 / width (paint_math.ts). A viewer preference.
   hoverGlowWidth: number;
   // K80 turns: the TURN-ALIGNED minotaur (game/minotaur_turns.ts), a
   // modifier of the turn clock (clk=realtime runs real time's own model and
