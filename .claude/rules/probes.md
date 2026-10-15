@@ -382,4 +382,4 @@ K173 (2026-10-14) moved each topic to a file that attaches only with the
 files it is about; `docs/lore_index.md` lists every rules file and its paths.
 - `probes-census.md`: the pixel census and the census and scanner rules (`scripts/diag_scan.mjs`, `scripts/fold_census.*`)
 - `probes-phone.md`: the phone pass (K156) and phone gate probes (K79)
-- `probes-pluck.md`: K77's pluck profile probes, K279's pluck emphasis probes
+- `probes-pluck.md`: K77's pluck profile probes, K279's pluck emphasis probes, K344's pluck cusp probes

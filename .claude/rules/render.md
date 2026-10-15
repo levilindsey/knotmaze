@@ -51,7 +51,7 @@ files it is about; `docs/lore_index.md` lists every rules file and its paths.
 - `render-backgrounds.md`: shader backgrounds (K21, K79)
 - `render-hash.md`: the backgrounds' hash (K154)
 - `render-ribbon.md`: ribbons and junctions: the junction field, fills, arc-wrap, wedges, fans
-- `render-pluck.md`: plucks: the concave-side cap, base collapse (K77), still plucks (K104), pluck params (K180), pluck emphasis (K279)
+- `render-pluck.md`: plucks: the concave-side cap, base collapse (K77), still plucks (K104), pluck params (K180), pluck emphasis (K279), pluck cusp (K344)
 - `render-markers.md`: marker icons (K83), marker size and colored dots (K98)
 - `render-routes.md`: route bands (K81)
 - `render-web-fade.md`: the gold web's fade (K169)

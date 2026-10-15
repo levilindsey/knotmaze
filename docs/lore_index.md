@@ -59,8 +59,8 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `scripts/diag_scan.mjs`, `scripts/fold_census.mjs`, `scripts/fold_census.ps1`, `scripts/fold_census.ts`, `scripts/fold_census.vite.config.mjs`
 - `probes-phone.md`: the round phone pass (K156), phone gate probes (K79 B3)
   paths: `scripts/phone.ps1`, `scripts/phone_pass.ps1`, `scripts/phone_pass/**`, `.claude/probes/K79/**`, `.claude/probes/K156/**`
-- `probes-pluck.md`: K77's pluck profile probes (`.claude/probes/K77/`), K279's pluck emphasis probes (`.claude/probes/K279/`)
-  paths: `.claude/probes/K77/**`, `.claude/probes/K279/**`
+- `probes-pluck.md`: K77's pluck profile probes (`.claude/probes/K77/`), K279's pluck emphasis probes (`.claude/probes/K279/`), K344's pluck cusp probes (`.claude/probes/K344/`)
+  paths: `.claude/probes/K77/**`, `.claude/probes/K279/**`, `.claude/probes/K344/**`
 - `render.md`: render: the intro, custom shaders and mesh.texture, palette textures, the P3.40 lessons
   paths: `src/render/**`, `test/render/**`
 - `render-backgrounds.md`: SHADER BACKGROUNDS (K21), SHAPE PARAMS + CUSTOM COLORS (K79)
@@ -71,7 +71,7 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/render/paint_glsl.ts`, `src/render/paint_math.ts`, `src/render/paint_model.ts`, `src/render/paint_const.ts`, `src/render/float_rows.ts`, `src/render/trail_paint.ts`, `test/render/trail_paint.test.ts`, `test/render/paint_fx.test.ts`, `test/render/paint_gameplay.test.ts`, `test/render/paint_math.test.ts`, `test/render/paint_section.test.ts`, `test/render/fixtures/pre_g2.ts`, `test/render/fixtures/pre_g23.ts`
 - `render-ribbon.md`: the GPU junction field, overlay width, flat fills, arc-wrap, the arcAt gotcha, wedge flanks, fan indices, blend distance, miter clamp, displayF, the thread reveal's joint gate (K76 2b)
   paths: `src/render/ribbon_renderer.ts`, `src/render/ribbon_mesh.ts`, `src/render/arm_strip.ts`, `src/render/junction_field.ts`, `test/render/fixtures/chains.ts`
-- `render-pluck.md`: the concave-side cap, base collapse (K77), still plucks (K104), pluck params (K180), pluck emphasis (K279)
+- `render-pluck.md`: the concave-side cap, base collapse (K77), still plucks (K104), pluck params (K180), pluck emphasis (K279), pluck cusp (K344)
   paths: `src/render/pluck_overlay.ts`, `src/render/pluck_model.ts`, `test/render/pluck_model.test.ts`, `src/render/pluck_ripple.ts`, `test/physics/tug.test.ts`
 - `render-markers.md`: MARKER ICONS (K83), MARKER SIZE, COLORED DOTS, TWO GLYPHS (K98)
   paths: `src/render/marker_glyphs.ts`, `src/render/marker_mesh.ts`, `test/render/marker_glyphs.test.ts`
