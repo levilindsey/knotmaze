@@ -30,38 +30,6 @@ and never reused.
   slider means the same at every zoom)? Sheet:
   `.claude/probes/K98/sheet_k98.png`; lore: `render-markers.md`.
   Emailed 2026-10-14 10:11 as 9.1.
-- **K198** · The fit camera's pan and the off-screen indicators, decided
-  (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
-  just want to be able to pan such that the right edge of the maze is
-  shown to the left of the left edge of the panel. Flash: not sure what
-  you're describing. Markers should have settings, and I guess we should
-  prevent the excess pan." The coordinator's reading, emailed to him
-  2026-10-14 to correct: (1) the pan clamp (K149, `src/ui/view_clamp.ts`)
-  lets the maze's right edge reach the open panel's left edge (on the
-  phone the panel covers x 81-401 of 411), in place of 0.3 of the screen
-  on every side, and allows no more; with the panel closed the pan stops
-  at the maze's edges, as before 10-13; (3) the edge indicators (finish,
-  head, minotaur) get panel settings: show/hide, a size or both is email
-  call 6.1 (K98 plans marker sizes); (2) the head indicator's flash in
-  follow mode, a short delay or not, is call 6.2. Parts (2) and (3)
-  touch main.ts, offscreen_indicators.ts, head_indicator.ts and
-  tweakpane_panel.ts: not alongside K92 or K111 (the panel). Records:
-  `docs/design/K148_K149.md` ("Stage 1 handoff"), `gameplay-indicators.md`
-  THE HEAD and `gameplay-camera.md` FIT CAMERA PAN RANGE. Since K98
-  (merged 2026-10-14) `markerSize` sizes the in-game markers; the edge
-  indicators keep their own sizes until part (3).
-  - stage 1 MERGED in 5f6ceb9..d7373a4 (2026-10-14 09:31): the pan range
-    (`src/ui/view_clamp.ts`: `panRange`, `clampFitView`,
-    `easeIntoRange`; 16 tests). With the panel open, the maze's right
-    edge (its threads, or a shown start, head or exit disc) may reach
-    10 px left of the panel's left edge and no further; closing the
-    panel, a resize or fit drift eases back in at 0.15 a frame and never
-    snaps. Checked at 1000x800, 800x700, 1400x900 and 411x753. Lore
-    `gameplay-camera.md` (FIT CAMERA PAN RANGE); handoff
-    `docs/design/K198.md`; probes `.claude/probes/K198/`; follow-ups
-    K221-K224.
-  - parts (2) and (3) wait on Levi's email answers 6.1 (the indicators'
-    settings) and 6.2 (the flash).
 - **K90** · A physical minimum bend radius, stage 1 (Levi, 2026-10-13:
   "ideally we'd have a more physics-based constraint to prevent loops
   from becoming too tight in the first place"). No thread folds tighter
@@ -99,22 +67,6 @@ and never reused.
   and a fresh load differ; saved attempts are refused, results stay).
   Re-pin the daily to a frozen definition at launch, or accept it
   (`docs/design/K132.md`, Stage 1 handoff).
-- **K191** · K169's two calls (its agent's, 2026-10-14): a backtrack
-  turns a gold web back at once, with no fade-out (as K127), and reduced
-  Motion keeps the 0.25 s fade (a colour crossfade; `src/ui/motion.ts`
-  gates movement only). Say if either should change
-  (`docs/design/K154_K169.md`, "Stage 1 handoff").
-- **K193** · The docked phone sits in LANDSCAPE (K156 3c: display
-  2424x1080, pages 810x331-387 CSS px at dpr 2.625, not 411x753), so the
-  phone pass and its A/A floor measure landscape. Pick one: (a) a person
-  stands it upright before a round; (b) `-Viewport 411x753` emulation
-  (CDP) with a new A/A floor; (c) the pass locks the rotation (`adb shell
-  cmd window user-rotation lock 0`) and restores it after, which changes
-  a phone setting, so it needs your OK. The 2026-10-14 round pass runs in
-  landscape (still a fair A/B: its floor is landscape too).
-  Round 2026-10-14b's pass (10:12-10:42) ran in PORTRAIT, 411x753: the
-  phone was off its dock and in use (Gmail in front at 10:10 and 10:44),
-  so its A/B against the landscape floor is weak (K232).
 - **K194** · K180's calls (`docs/design/K180.md`, "Stage 1 handoff";
   play: https://levi.dev/knotmaze/?7.J&pw=1&pcx=ride&pgl=fallback): (1)
   the defaults once you have played: crossings `through` (built; the
@@ -127,30 +79,10 @@ and never reused.
     lock and on the Pixel (unlocked on the desktop: 0.79-1.17 ms a tap at
     desktop size, 1.75 ms at phone size, `.claude/probes/K180/sheet*.log`;
     deduplicating its times halves the work).
-- **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
-  in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
-  Shortlist: the burn race (turn-based), the cut verb with an
-  auto-walker ("Lead the walker" first), the beat rider, the spider, a
-  Pluck Hero MVP. Ten calls in R.0: the first prototype (burn race), a
-  `clock` param (turn | beat | realtime; with the beat rider), what a
-  cut does (deletes the whole run), render + walk-graph cuts rather than
-  splitting the thread, the cut gesture (a scissors button), healing
-  cuts against monsters, the spider's form and an arachnophobia option,
-  Pluck Hero as an MVP first, round 2 in free play first (the burn race
-  as the first K46 modifier), and flow as a separate stat.
-  - for the briefs: balance probes for "Keep it in" and burn-race
-    tension; hiding runs needs an inverted reveal mask or per-run hiding
-    (a new G2 term and its paint_math mirror, shared with K76), plus the
-    cut's render details; `clock` brings timed, typed attempts (daily
-    store v3). R.7's sources are unverified leads from memory (the
-    Pac-Man speed figures among them). K80 sections 1 and 3.2 are stale
-    since K101 (bracket notes added).
-  - 2026-10-14 about 00:22: Levi took the recommendations for calls 1-6
-    and 8-10 (`docs/design/levi_notes_2026-10-14.md` item 12: "Recs,
-    plus a spider answer"). Call 7 waits: the spider's form (a
-    `minotaur=spider` mode or its own enemy), its look, and an
-    arachnophobia option (R.0 and R.3.2 of the design).
-  - next: Levi's spider answer, then the burn-race brief.
+  - 2026-10-14 about 11:10 (email 5.x): 5.1 "haven't tried yet" (still
+    open); 5.2 "I think nothing makes sense": junction-core taps get no
+    glow, as built. Levi asked whether those taps sound ("Probably
+    shouldn't"): they do, and K235 silences them.
 - **K162** · K147's calls (`docs/design/K147.md`): (1) the trade: the
   first settle now plays in slow motion (first sleep 11.6 -> 21 s; at 4x
   CPU throttle 40 -> about 100 s) for a smooth intro (p95 159 -> 31 ms;
@@ -165,21 +97,6 @@ and never reused.
   - On the phone (K156 3c, 2026-10-14): the first sleep came at 17.5-21.6
     s on both load links, the default and `gs=18`, so the settle budget,
     not the maze, sets it.
-- **K174** · K80 stage 1's calls (`.claude/probes/K80/rt/results.md`).
-  Play it: https://levi.dev/knotmaze/?7.J&clk=realtime
-  - The minotaur's chase pace as a share of the player's: 0.7 (default)
-    or 0.8? At 0.8 a player who stops to think at junctions escapes 16%
-    of chases (53% at 0.7); one who queues taps mid-run, 67% (75%).
-  - Detection starts at 15 (default) or 17.5? The greedy player's mean
-    catches go 1.26 -> 1.73.
-  - Should `minoFog` default to "always"?
-  - Should a catch re-fog the explored maze? (It doesn't now.)
-  - The caught row shows even with the stat rows off: confirm.
-  - Presence: 45% of games never meet the minotaur. Fine, or should it
-    seek the player more (K179)?
-  - 2026-10-14 about 00:22: Levi will test it later ("Remind me
-    tomorrow.", item 6). Reminded 2026-10-14 11:07 by push
-    notification.
 - **K184** · K155's star calls (`docs/design/K155.md`, "Stage 1
   handoff"; play: https://levi.dev/knotmaze/?7.J): (1) greedy solves:
   exactly two stars (built: two up to 4x, which 52-53% of greedy solves
@@ -465,7 +382,8 @@ edits into the topic files at their merges. Then, as code slots free up:
    K98 and K92 and needs a floor in the phone's orientation (K193, K195).
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
-   5fed5c1; Levi plays it (K174).
+   5fed5c1; K174's answers (2026-10-14 about 11:10) queue its controls
+   (item 10).
 3. K146 + K151 and K148 + K149: merged 2026-10-14 (b9cf882, fcc402b).
 4. K120: merged 2026-10-14 (0acbce0).
 5. K90 stage 1b: merged 2026-10-14 (feb12a0, flag off); Levi's call
@@ -477,28 +395,150 @@ edits into the topic files at their merges. Then, as code slots free up:
 8. K92 + K224: merged 2026-10-14 (e78ddcc). K111 stage 1 (the panel)
    runs from 11:01 (brief 3f011fa); its stage 2 waits for K145.
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
-10. K76 stage 2.
-11. K80's turn-aligned hunter, a modifier of the normal maze; then
+10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
+    coordinator; Levi may reorder): K198 stage 2 and K174's controls
+    (both after K111 stage 1, the panel), K191's fade-out, K193's
+    portrait emulation and then K195's A/A floor, and K235 (after K145,
+    main.ts).
+11. K76 stage 2.
+12. K80's turn-aligned hunter, a modifier of the normal maze; then
     K137's toggles, K138's M mechanisms and K139.
-12. K74 stages 2-4, each after the one before.
-13. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
+13. K114's round 2, free play first: the burn-race brief, then the
+    spider (its own enemy; Levi, 2026-10-14 about 11:10).
+14. K74 stages 2-4, each after the one before.
+15. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
     K42. K90's spline fix touches K8: never run the two at once.
-14. K115's builder stages (no stage 1a: Levi, about 15:30).
-15. K116, lowest priority.
-16. K144, accounts and shared stats, after everything else (a stretch
+16. K115's builder stages (no stage 1a: Levi, about 15:30).
+17. K116, lowest priority.
+18. K144, accounts and shared stats, after everything else (a stretch
     goal).
 
-Waiting for Levi: K90's bend bound (he tests it live); K114's spider (call 7); the G3-3 and G4-2 old-path
-deletions; K162, K174 and K184-K186 (play, then call); K191, K193 and
-K194; K198's indicator settings and flash; K225 (the markers' size); K229 (the open panel's top); near launch, K117 and K210;
-after the churn, K46, K57 and K84. Emailed 2026-10-14 about 08:25, each with
-enough detail to decide and numbered for a reply by number: K114 call 7
-(1.x), K174 (2.x), K191 (3.x), K193 (4.1), K194 (5.x), K198 (6.1
-settings, 6.2 flash) and claude-config's CC39 (7.1); added at 10:11: K219 (8.1, since answered), K225 (9.1) and K229 (10.1); the draft is in
-`.claude/probes/levi_email/` (untracked).
+Waiting for Levi: K90's bend bound (Levi tests it live); the G3-3 and
+G4-2 old-path deletions; K162 and K184-K186 (play, then call); K194's
+defaults (after playing); K225 (the markers' size); K229 (the open
+panel's top); near launch, K117 and K210; after the churn, K46, K57 and
+K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
+`.claude/probes/levi_email/`, untracked) was answered in session at
+about 11:10 for calls 1-7 (K114 call 7, K174, K191, K193, K194's 5.2,
+K198 and CC39); 9.1 (K225) and 10.1 (K229) are still open.
 
 K5-K7 (split, frame loop, worker) follow.
 
+- **K198** · The fit camera's pan and the off-screen indicators, decided
+  (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
+  just want to be able to pan such that the right edge of the maze is
+  shown to the left of the left edge of the panel. Flash: not sure what
+  you're describing. Markers should have settings, and I guess we should
+  prevent the excess pan." The coordinator's reading, emailed to him
+  2026-10-14 to correct: (1) the pan clamp (K149, `src/ui/view_clamp.ts`)
+  lets the maze's right edge reach the open panel's left edge (on the
+  phone the panel covers x 81-401 of 411), in place of 0.3 of the screen
+  on every side, and allows no more; with the panel closed the pan stops
+  at the maze's edges, as before 10-13; (3) the edge indicators (finish,
+  head, minotaur) get panel settings: show/hide, a size or both is email
+  call 6.1 (K98 plans marker sizes); (2) the head indicator's flash in
+  follow mode, a short delay or not, is call 6.2. Parts (2) and (3)
+  touch main.ts, offscreen_indicators.ts, head_indicator.ts and
+  tweakpane_panel.ts: not alongside K92 or K111 (the panel). Records:
+  `docs/design/K148_K149.md` ("Stage 1 handoff"), `gameplay-indicators.md`
+  THE HEAD and `gameplay-camera.md` FIT CAMERA PAN RANGE. Since K98
+  (merged 2026-10-14) `markerSize` sizes the in-game markers; the edge
+  indicators keep their own sizes until part (3).
+  - stage 1 MERGED in 5f6ceb9..d7373a4 (2026-10-14 09:31): the pan range
+    (`src/ui/view_clamp.ts`: `panRange`, `clampFitView`,
+    `easeIntoRange`; 16 tests). With the panel open, the maze's right
+    edge (its threads, or a shown start, head or exit disc) may reach
+    10 px left of the panel's left edge and no further; closing the
+    panel, a resize or fit drift eases back in at 0.15 a frame and never
+    snaps. Checked at 1000x800, 800x700, 1400x900 and 411x753. Lore
+    `gameplay-camera.md` (FIT CAMERA PAN RANGE); handoff
+    `docs/design/K198.md`; probes `.claude/probes/K198/`; follow-ups
+    K221-K224.
+  - parts (2) and (3), decided (Levi, 2026-10-14 about 11:10, email 6):
+    6.1 "both": each edge indicator (finish, head, minotaur) gets a
+    show/hide switch and a size; 6.2 "yes": the head's disc shows only
+    once the head has been off screen for a moment. Added in the same
+    reply: "The panel limit should tween as the panel is toggled.
+    Similarly, I want displaced off-screen indicators to also have their
+    panel-offset positions tween as needed." (Stage 1 already eases the
+    view back into range at 0.15 a frame when the panel closes; whether
+    the range itself follows the panel's slide is for the brief to
+    check.) The reading of part (1) stands: Levi corrected nothing.
+  - next: stage 2's brief (parts 2 and 3 and the two tweens), after K111
+    stage 1 merges (the panel).
+- **K174** · K80 stage 1's calls, decided (Levi, 2026-10-14 about
+  11:10, email 2.x; play: https://levi.dev/knotmaze/?7.J&clk=realtime):
+  2.1 the chase pace stays 0.7 of the player's, "let's try 0.7, but this
+  should be a slider"; 2.2 detection stays 15 (the coordinator's reading
+  of "fine, slider"); 2.3 the minotaur shows through fog always, as
+  built (the reading of "fine, drop-down"); 2.4 a catch re-fogs the
+  explored maze, "yes, but checkbox toggle control"; 2.5 the caught row
+  stays visible with the stat rows off, "yes" (as built); 2.6 the
+  minotaur roams toward the player (K179's bias), "roam toward, but
+  again, add a control to toggle". The work: sliders for the pace and
+  the detection range, a fog dropdown (always | hunting | never), a
+  re-fog-on-catch checkbox (on) and a roam-toward toggle (on). Params
+  `minoPace`, `minoHuntPace`, `minoDetect`, `minoFog` and `minoRoam`
+  exist; the brief checks which the panel shows and as what. Records:
+  `.claude/probes/K80/rt/results.md`; K177's unchecked items ride along.
+  Brief to write; after K111 stage 1 (the panel).
+- **K191** · K169's two calls, decided (Levi, 2026-10-14 about 11:10,
+  email 3.x): 3.1 "fade out": a web that stops being full (a backtrack
+  or a reset) fades its gold out over the same 0.25 s instead of losing
+  it at once; 3.2 "yes": reduced Motion keeps the fade (as built). A
+  full web restored on load still appears without a fade (not asked).
+  Small: `src/render/web_fade.ts` and its test, applied in
+  `junction_field.ts` and `ribbon_renderer.ts`; check those files
+  against the running agents' branches before launching
+  (`docs/design/K154_K169.md`, "Stage 1 handoff").
+- **K193** · The phone pass's orientation, decided (Levi, 2026-10-14
+  about 11:10, email 4.1: "b seems best"): the pass emulates a 411x753
+  portrait viewport over CDP and leaves the phone as it sits, and a
+  fresh A/A floor at that viewport replaces the landscape one (K195)
+  before the next round's pass (K98, K92, k140-confetti) and K232's
+  rerun. `scripts/phone_pass.ps1` follows the phone's orientation today
+  (its display check, about line 176). Background: the docked phone
+  sits in landscape (K156 3c: display 2424x1080, pages 810x331-387 CSS
+  px at dpr 2.625); round 2026-10-14b's pass ran in portrait because the
+  phone was off its dock and in use, so its A/B against the landscape
+  floor is weak (K232).
+- **K235** · Taps inside junction cores make no sound (Levi, 2026-10-14
+  about 11:10, on K194's 5.2: "Do we trigger pluck sounds for this?
+  Probably shouldn't."). They play the pluck sound and draw nothing
+  today (K180's census: 21 of 284 maze taps). The brief finds where such
+  a tap reaches the synth; K145 is editing main.ts's pointer and touch
+  handlers, so after K145 merges. Small.
+- **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
+  in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
+  Shortlist: the burn race (turn-based), the cut verb with an
+  auto-walker ("Lead the walker" first), the beat rider, the spider, a
+  Pluck Hero MVP. Ten calls in R.0: the first prototype (burn race), a
+  `clock` param (turn | beat | realtime; with the beat rider), what a
+  cut does (deletes the whole run), render + walk-graph cuts rather than
+  splitting the thread, the cut gesture (a scissors button), healing
+  cuts against monsters, the spider's form and an arachnophobia option,
+  Pluck Hero as an MVP first, round 2 in free play first (the burn race
+  as the first K46 modifier), and flow as a separate stat.
+  - for the briefs: balance probes for "Keep it in" and burn-race
+    tension; hiding runs needs an inverted reveal mask or per-run hiding
+    (a new G2 term and its paint_math mirror, shared with K76), plus the
+    cut's render details; `clock` brings timed, typed attempts (daily
+    store v3). R.7's sources are unverified leads from memory (the
+    Pac-Man speed figures among them). K80 sections 1 and 3.2 are stale
+    since K101 (bracket notes added).
+  - 2026-10-14 about 00:22: Levi took the recommendations for calls 1-6
+    and 8-10 (`docs/design/levi_notes_2026-10-14.md` item 12: "Recs,
+    plus a spider answer"). Call 7 waits: the spider's form (a
+    `minotaur=spider` mode or its own enemy), its look, and an
+    arachnophobia option (R.0 and R.3.2 of the design).
+  - 2026-10-14 about 11:10, call 7 (email 1.x): 1.1 "yes" (build the
+    spider; the design recommends it after the minotaur); 1.2 "separate"
+    (its own enemy, not a `minotaur=spider` mode); 1.3 "sure, we could
+    have a toggle in settings for no spiders, and then swap the icon to
+    something else that makes sense" (an arachnophobia setting swaps its
+    icon; the brief designs both icons).
+  - next: the burn-race brief (call 1's first prototype); the spider
+    after the minotaur's controls (K174).
 - **K76** · The thread-reveal mode, stage 2 (doc section 7), decided
   (Levi, 2026-10-13): the end look is a dropdown (fade, halo, glow, dots,
   fray, beacon; default beacon); the doc's other recommendations stand
@@ -1259,9 +1299,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   would give the slow end room. At 8x the 10-15 Hz texture pass may look
   steppy (not checked on the phone); if it does, scale the re-render rate
   with the speed. A look for the round's phone pass (K156).
-- **K179** · K80 ideas: reversing mid-run in the real-time mode; a
-  roaming bias toward the player, so fewer games pass without meeting the
-  minotaur (K174).
+- **K179** · K80 ideas: reversing mid-run in the real-time mode. (The
+  roaming bias toward the player was decided on 2026-10-14 and is part
+  of K174's work.)
 - **K182** · K104 ideas: G1's exact mask for moving plucks too (today
   only still plucks use it), the curvature-aware clip as its fallback;
   check the still strip's concave-side clamp.
