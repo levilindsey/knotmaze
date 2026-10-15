@@ -75,3 +75,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   press on a thread waits for a per-pointer slop (mouse 4 / pen 6 / touch
   10 CSS px): lift = tap-pluck on pointerup, move = tug grabbed at the
   PRESS point (physics off: a pan).
+  K279 (2026-10-14) is Levi's exception ("maybe add a bit of the
+  physics-based tug to it as well"): the zero-physics rule now holds at
+  `pluckTug` 0. At the default 0.3, a tap displaces the tapped stretch
+  (positions and prev together) and wakes the knot. Auto plucks tug only
+  with `tugAuto`. Never with physics off or under reduced motion. The
+  mechanism is the K279 entry in render-pluck.md.

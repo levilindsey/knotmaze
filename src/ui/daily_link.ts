@@ -139,6 +139,14 @@ export const DAILY_EXEMPT_KEYS = [
   "pluckWhole",
   "pluckCrossings",
   "pluckGlow",
+  // K279's pluck emphasis (ripple, sheen, tug, auto plucks' volume).
+  "pluckRipple",
+  "rippleStrength",
+  "rippleAuto",
+  "pluckSheen",
+  "pluckTug",
+  "tugAuto",
+  "autoPluckGain",
   "tugLimit",
   "snapBack",
   // K145's hover glow: how a run under the pointer answers, like the

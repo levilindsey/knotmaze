@@ -275,6 +275,23 @@ export type PluckGlow = "off" | "instead" | "with" | "fallback";
 export const PLUCK_GLOWS: PluckGlow[] = ["off", "instead", "with", "fallback"];
 export const PLUCK_WHOLE_MAX = 1.5;
 
+// K279's pluck emphasis params (stage 1 prototypes; docs/design/K279.md).
+// Viewer preferences, live, read by main.ts:
+//   pluckRipple     the render-only ripple from the pluck point
+//                   (render/pluck_ripple.ts): off | wave (bends what it
+//                   crosses) | glint (brightens it) | ring (a soft ring).
+//   rippleStrength  the player's ripple, [0, RIPPLE_STRENGTH_MAX]; 0 = none.
+//   rippleAuto      auto plucks' ripple (random and music modes), same range.
+//   pluckSheen      bright turning-point edges on the time exposure, [0, 1];
+//                   0 = the pre-K279 strip bit for bit.
+//   pluckTug        a small physics displace-and-release of the plucked lobe,
+//                   [0, 1]; 0 = render-only plucks (K3).
+//   tugAuto         auto plucks tug too (default off: they never wake the knot).
+//   autoPluckGain   auto plucks' volume, [0, 1]; 1 = a manual pluck's level.
+export type PluckRipple = "off" | "wave" | "glint" | "ring";
+export const PLUCK_RIPPLES: PluckRipple[] = ["off", "wave", "glint", "ring"];
+export const RIPPLE_STRENGTH_MAX = 2;
+
 // K104's "can't tell" line: a pluck SHOWS when its largest drawn swing
 // (world) reaches SHOW_MIN_H of the half-width h AND SHOW_MIN_PX CSS px at
 // the view scale (CSS px per world unit). The census (K104's census.mjs:

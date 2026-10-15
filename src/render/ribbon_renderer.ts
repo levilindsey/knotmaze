@@ -4018,6 +4018,80 @@ export class RibbonRenderer {
     });
   }
 
+  // K279: the drawn thread's world point at an arc (or a ctrl) of a chain,
+  // where a pluck's ripple starts. Null when the chain has no samples.
+  pluckPoint(chain: number, at: { ctrl?: number; arc?: number }): { x: number; y: number } | null {
+    const samples = this.chainSamples[chain];
+    if (!samples) return null;
+    const out = this.sampleScratch;
+    this.sampleAt(samples, this.arcOfPluck(chain, samples, at), out, 0);
+    return { x: out[0], y: out[1] };
+  }
+
+  // A pluck's arc: `at.arc`, or the arc of `at.ctrl` (pluck()'s ctrlArc).
+  private arcOfPluck(
+    chain: number,
+    samples: SplineSamples,
+    at: { ctrl?: number; arc?: number }
+  ): number {
+    if (at.arc !== undefined) return at.arc;
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    const len = this.ps.chains[chain].length;
+    const c = at.ctrl ?? 0;
+    return this.paintArcAt(
+      samples,
+      closed ? ((c % len) + len) % len : Math.max(0, Math.min(len - 1, c)),
+      closed
+    );
+  }
+
+  // K279 TUG: the stretch a tap's physical tug may move, as fractional ctrls
+  // c0 < tap < c1 (unwrapped past the seam of a closed chain): from the
+  // tapped arc out to the nearest pluck node on each side (a crossing pass,
+  // a joint, a marker, an open end), at most `maxCtrl` ctrl each way - a
+  // string stopped at its contacts. The crest sits at the tap, kept to the
+  // middle half of the stretch (a crest beside a crossing would kink the
+  // thread at it). Null when the tap sits inside a node's hide zone (a
+  // junction core, a marker disc) or the stretch holds no particle. Stage 1
+  // first stopped the stretch at the nodes' FOOTPRINTS (the overlay's lobe
+  // bounds): that left most fabric spans, 1.2-2 world between crossings,
+  // with no particle to move (one tug in four fabric taps).
+  tugSpan(
+    chain: number,
+    at: { ctrl?: number; arc?: number },
+    maxCtrl: number
+  ): { c0: number; c1: number; tap: number } | null {
+    const samples = this.chainSamples[chain];
+    if (!samples) return null;
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    const len = this.ps.chains[chain].length;
+    const total = samples.totalLength;
+    if (!(total > 0) || len < 3) return null;
+    const a = normArc(this.arcOfPluck(chain, samples, at), total, closed);
+    let lo = closed ? a - total / 2 : 0;
+    let hi = closed ? a + total / 2 : total;
+    for (const n of this.pluckNodes(chain)) {
+      let d = n.arc - a;
+      if (closed) d -= total * Math.round(d / total);
+      if (Math.abs(d) <= n.hide) return null;
+      if (d > 0) hi = Math.min(hi, a + d);
+      else lo = Math.max(lo, a + d);
+    }
+    const at0 = this.ctrlAtArc(samples, a);
+    let c0 = this.ctrlAtArc(samples, normArc(lo, total, closed));
+    let c1 = this.ctrlAtArc(samples, normArc(hi, total, closed));
+    if (closed) {
+      if (c0 > at0) c0 -= len;
+      if (c1 < at0) c1 += len;
+    }
+    c0 = Math.max(c0, at0 - maxCtrl);
+    c1 = Math.min(c1, at0 + maxCtrl);
+    if (!(c0 < at0 && at0 < c1) || Math.ceil(c1) - Math.floor(c0) < 2) return null;
+    const q = 0.25 * (c1 - c0);
+    const tap = Math.max(c0 + q, Math.min(c1 - q, at0));
+    return { c0, c1, tap };
+  }
+
   // Per-frame pluck pass (every ticker branch, after tickPaint so fabric
   // colors read this frame's paint). Never calls update().
   tickPlucks(dt: number): void {

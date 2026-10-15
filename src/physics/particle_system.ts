@@ -1621,6 +1621,51 @@ export class ParticleSystem {
     };
   }
 
+  // K279 TUG: a tap-pluck's small physical kick. Displaces the chain's
+  // slots strictly between ctrls c0 and c1 (cTap between them) by a sine
+  // bump of peak `amp` world units along the thread's normal (side +1 =
+  // (-ty, tx), beginRelease's convention), the bump's crest at cTap. The
+  // move goes into positions AND prev, so it starts at rest and the springs
+  // pull it back; the caller wakes the solver. A closed chain wraps, an
+  // open one never moves its two ends (joints and tips), and the grabbed
+  // particle stays put. Returns how many particles moved.
+  tug(chain: number, c0: number, c1: number, cTap: number, side: number, amp: number): number {
+    const arr = this.chains[chain];
+    if (!arr || arr.length < 3 || !(amp > 0) || !(c1 > c0)) return 0;
+    const len = arr.length;
+    const closed = this.chainBreakAfter[chain] < 0;
+    const tap = Math.max(c0 + 1e-6, Math.min(c1 - 1e-6, cTap));
+    const pos = this.positions;
+    const prev = this.prev;
+    // Displacements first, from the unmoved shape.
+    const moves: number[] = [];
+    for (let k = Math.floor(c0) + 1; k < c1; k++) {
+      let s = k;
+      if (closed) s = ((k % len) + len) % len;
+      else if (k <= 0 || k >= len - 1) continue;
+      const p = arr[s];
+      if (p === this.grabbed) continue;
+      const u = k <= tap ? (0.5 * (k - c0)) / (tap - c0) : 0.5 + (0.5 * (k - tap)) / (c1 - tap);
+      const d = amp * Math.sin(Math.PI * Math.max(0, Math.min(1, u)));
+      if (!(d > 0)) continue;
+      const a = arr[closed ? (s - 1 + len) % len : Math.max(0, s - 1)];
+      const b = arr[closed ? (s + 1) % len : Math.min(len - 1, s + 1)];
+      const tx = pos[b * 2] - pos[a * 2];
+      const ty = pos[b * 2 + 1] - pos[a * 2 + 1];
+      const tl = Math.sqrt(tx * tx + ty * ty);
+      if (!(tl > 1e-9)) continue;
+      moves.push(p, (-ty / tl) * side * d, (tx / tl) * side * d);
+    }
+    for (let i = 0; i < moves.length; i += 3) {
+      const p = moves[i];
+      pos[p * 2] += moves[i + 1];
+      pos[p * 2 + 1] += moves[i + 2];
+      prev[p * 2] += moves[i + 1];
+      prev[p * 2 + 1] += moves[i + 2];
+    }
+    return moves.length / 3;
+  }
+
   // Thread pairs that tunneled through each other during motion: real
   // visual crossings absent from the graph. Over/under is assigned
   // deterministically (coarse ctrl compare, so it doesn't flap frame to

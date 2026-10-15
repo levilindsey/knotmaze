@@ -84,3 +84,34 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   5. Not daily-exempt. They were 117-119 on their branch until it rebased
   onto K74 stage 2, which renumbered them and re-froze the table pin
   (`test/ui/param_codec.test.ts`). The race itself is gameplay-fire.md.
+- PLUCK EMPHASIS PARAMS (K279 stage 1, 2026-10-14; brief
+  `docs/design/K279.md`). Seven viewer preferences, APPENDED to codec v5
+  at 121-127, after the burn race's 118-120 (K114):
+  - `pluckRipple` (`prp`: off, wave, glint or ring; default wave);
+  - `rippleStrength` (`prs`, [0, 2], default 1);
+  - `rippleAuto` (`pra`, [0, 2], default 0.35);
+  - `pluckSheen` (`psh`, [0, 1], default 0.5);
+  - `pluckTug` (`ptg`, [0, 1] thread widths, default 0.3);
+  - `tugAuto` (`pta`, a flag, default off);
+  - `autoPluckGain` (`pag`, [0, 1], default 0.5).
+
+  They sat at 118-124 on their branch until it rebased onto K114
+  (61c8859), which put them at 121-127 and re-froze the table pin
+  (`test/ui/param_codec.test.ts`).
+- All seven are in DAILY_EXEMPT_KEYS, so a daily keeps the player's own.
+  The strengths clamp to [0, 2] (RIPPLE_STRENGTH_MAX) and the rest to
+  [0, 1]. An unknown look reads the default.
+- The same round raised three existing defaults: `pluckSize` 1.75 -> 2,
+  `pluckGhost` 0.35 -> 0.5 and `pluckWhole` 0.5 -> 0.75. That moved the
+  pins in `url_codec.test.ts` (the full-defaults table and the `?7&pw=`
+  round trips). A link that lists `psz`, `pgh` or `pw` keeps its value.
+- Panel: Touch & feel, after pluckGlow and ahead of tugLimit.
+  - The two strengths hide while the look is off.
+  - The sheen hides at pluckSize 0.
+  - The tug rows hide unless physics is live, and tugAuto also at tug 0.
+
+  All seven are listed under onSlackChange in undo_stack.ts's
+  LIVE_EFFECTS, the callback their rows run, so an undo of one applies
+  it live instead of rebuilding.
+- Neutral (master's look and sound):
+  `&prp=off&psh=0&ptg=0&pag=1&psz=1.75&pgh=.35&pw=.5`.

@@ -241,6 +241,14 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   choice("fire", ["off", "fuse"]), // 118
   num("fireSpeed"), // 119
   num("fireDelay"), // 120
+  // K279 stage 1's pluck emphasis (render/pluck_model.ts K279 params).
+  choice("pluckRipple", ["off", "wave", "glint", "ring"]), // 121
+  num("rippleStrength"), // 122
+  num("rippleAuto"), // 123
+  num("pluckSheen"), // 124
+  num("pluckTug"), // 125
+  flag("tugAuto"), // 126
+  num("autoPluckGain"), // 127
 ]);
 
 // The format version a blob names first. Bump it for anything but an
