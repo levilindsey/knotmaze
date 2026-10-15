@@ -821,9 +821,9 @@ export interface GapRamp {
   front: boolean;
 }
 
-// A shaped slot: k2b = 2b's scalar factor (texel 1.w for the fans and the
-// still pluck), up to two ramps, combined by MAX (two pieces) or MIN (one
-// piece's two ends).
+// A shaped slot: k2b = 2b's scalar factor (texel 1.w, which the explore
+// programs replace by the profile on a shaped slot), up to two ramps,
+// combined by MAX (two pieces) or MIN (one piece's two ends).
 export interface GapShape {
   k2b: number;
   ramps: readonly GapRamp[];
@@ -1135,11 +1135,13 @@ export class GapMaskTable {
   }
 
   // K268 THE SHAPED CUT: give a slot a visibility profile (the explore
-  // ribbon program cuts by the over thread's visibility at each fragment's
-  // projection), or take it away (null). A shaped slot keeps its solved
-  // reject radii (never rejected); texel 1.w gets 2b's scalar k2b (0 when
-  // the over pass is hidden), which the fans, the still pluck and the
-  // master program read; the profile texels keep the solved strength.
+  // programs - ribbons, fans and caps, still plucks - cut by the over
+  // thread's visibility at each fragment's projection), or take it away
+  // (null). A shaped slot keeps its solved reject radii (never rejected);
+  // texel 1.w gets 2b's scalar k2b (0 when the over pass is hidden), which
+  // the explore programs fetch but replace on a shaped slot, so only a
+  // master program would read it; the profile texels keep the solved
+  // strength.
   // Writes only what differs. Returns whether the table changed. null on
   // an unshaped slot is a no-op; after it, setVis restores the 2b encoding.
   setShape(slot: number, shape: GapShape | null): boolean {
