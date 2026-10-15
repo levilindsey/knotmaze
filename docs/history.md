@@ -812,6 +812,23 @@ demand.
   against 10, render-only), so no daily maze moved: the golden dailies
   and the K87 pin held. *[Lore: CLAUDE.md (URL-as-complete-state, Daily
   maze), `.claude/rules/gameplay.md`; probes in `.claude/probes/K132/`.]*
+- THE BEND BOUND (K90 stage 1b, 2026-10-14; brief `docs/design/K90.md`,
+  agent under session d8031183): crops with and without the junction webs
+  showed the webs cover junction-host folds within 0.92 half-widths of a
+  fused junction's center and nothing beyond, so the fold census counts
+  those under a `web` holder; outside the webs the maze designs keep 0-13
+  folds at rest (tw .64: 61). The folds are the Catmull-Rom's own overshoot
+  at corners of the particle polyline (its radius at a corner is at most
+  half the polyline's), not the arc-length resampling. A render-side bound
+  relaxes the resampled samples back to 1.2 half-widths (each moved at most
+  0.5 h, three passes): all sets, fresh 2357/4045 folds (under 1.0 / 1.15
+  h) -> 10/13 and after the gestures 7423/12315 -> 44/55, every holder
+  down, +0.6-1.1 ms per ribbon rebuild. It never reaches the physics. OFF
+  by default behind `window.__knotSplineBend`, awaiting Levi's look and a
+  tune: the tightest single window got tighter on one tw .64 design (0.299
+  -> 0.132 h). *[Record: `docs/design/K90_bend_radius.md`; lore:
+  `.claude/rules/generation.md` (K90, the bend bound); census, crops and
+  sheet in `.claude/probes/K90/out_1b/`.]*
 
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the
