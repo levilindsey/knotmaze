@@ -53,7 +53,8 @@ import {
 } from "pixi.js";
 import type { SplineSamples } from "../geometry/spline_generator";
 import { GAP_FRAG_LIB, GAP_SLOTS, defaultGapTexture } from "./gap_mask";
-import { KNOT_UNIFORMS_GLSL, PAINT_CONST_GLSL } from "./paint_glsl";
+import { applyEdits, exploreGapEdits } from "./explore_glsl";
+import { KNOT_UNIFORMS_GLSL, PAINT_CONST_GLSL, PAINT_GATE_GLSL } from "./paint_glsl";
 import { knotUniforms } from "./paint_model";
 import {
   ATTACK_MIX,
@@ -486,7 +487,7 @@ void main(void) {
 }
 `;
 
-const PLUCK_STILL_FRAG = /* glsl */ `#version 300 es
+export const PLUCK_STILL_FRAG = /* glsl */ `#version 300 es
 precision highp float;
 precision highp int;
 precision highp sampler2D;
@@ -529,32 +530,63 @@ void main(void) {
 }
 `;
 
+// K268 stage 2: under the thread reveal a still pluck takes the shaped
+// crossing cut, so it keeps hiding exactly where the ribbon beneath it hides
+// while an over thread fades. It draws a ribbon (turn >= 0, full), so it
+// takes the ribbons' texts (explore_glsl.ts exploreGapEdits); its fragment
+// lacks uKExplore and kSmooth, so the edits declare them (kSmooth is
+// paint_glsl.ts's own text).
+const KSMOOTH_GLSL = ((): string => {
+  const i = PAINT_GATE_GLSL.indexOf("highp float kSmooth(");
+  return PAINT_GATE_GLSL.slice(i, PAINT_GATE_GLSL.indexOf("}\n", i) + 2);
+})();
+export const PLUCK_STILL_EXPLORE_EDITS = exploreGapEdits(
+  false,
+  "uniform vec4 uKExplore;\n" + KSMOOTH_GLSL,
+);
+export function withExploreStill(frag: string): string {
+  return applyEdits(frag, PLUCK_STILL_EXPLORE_EDITS, "still pluck explore variant");
+}
+
 let PLUCK_STILL_SHADER: PluckShader | null = null;
-// The current scene's gap-slot table (bindPluckGap): the still program is
+let PLUCK_STILL_EXPLORE_SHADER: PluckShader | null = null;
+// Whether the thread reveal is on (PluckOverlay.setExplore): still plucks
+// then draw with the explore variant.
+let STILL_EXPLORE = false;
+// The current scene's gap-slot table (bindPluckGap): the still programs are
 // built lazily, maybe before the renderer binds one.
 let STILL_GAP_TEX: Texture | null = null;
+function makeStillShader(fragment: string, name: string): PluckShader {
+  const sh = Shader.from({
+    gl: { vertex: PLUCK_STILL_VERT, fragment, name },
+    resources: {
+      uGapData: (STILL_GAP_TEX ?? defaultGapTexture()).source,
+      knotUniforms: knotUniforms(),
+      pluckUniforms: pluckUniforms(),
+    },
+  }) as PluckShader;
+  sh.texture = Texture.WHITE;
+  return sh;
+}
 function pluckStillShader(): PluckShader {
-  if (!PLUCK_STILL_SHADER) {
-    const sh = Shader.from({
-      gl: { vertex: PLUCK_STILL_VERT, fragment: PLUCK_STILL_FRAG, name: "pluck-still" },
-      resources: {
-        uGapData: (STILL_GAP_TEX ?? defaultGapTexture()).source,
-        knotUniforms: knotUniforms(),
-        pluckUniforms: pluckUniforms(),
-      },
-    }) as PluckShader;
-    sh.texture = Texture.WHITE;
-    PLUCK_STILL_SHADER = sh;
+  if (STILL_EXPLORE) {
+    PLUCK_STILL_EXPLORE_SHADER ??= makeStillShader(
+      withExploreStill(PLUCK_STILL_FRAG),
+      "pluck-still-explore",
+    );
+    return PLUCK_STILL_EXPLORE_SHADER;
   }
+  PLUCK_STILL_SHADER ??= makeStillShader(PLUCK_STILL_FRAG, "pluck-still");
   return PLUCK_STILL_SHADER;
 }
 
-// Point the still program at a scene's gap-slot table (ribbon_renderer's
+// Point the still programs at a scene's gap-slot table (ribbon_renderer's
 // bindGap, beside the section and junction shaders).
 export function bindPluckGap(tex: Texture): void {
   STILL_GAP_TEX = tex;
-  const sh = PLUCK_STILL_SHADER;
-  if (sh && sh.resources.uGapData !== tex.source) sh.resources.uGapData = tex.source;
+  for (const sh of [PLUCK_STILL_SHADER, PLUCK_STILL_EXPLORE_SHADER]) {
+    if (sh && sh.resources.uGapData !== tex.source) sh.resources.uGapData = tex.source;
+  }
 }
 
 function vertexBuffer(data: Float32Array, label: string): Buffer {
@@ -1192,6 +1224,15 @@ export class PluckOverlay {
       }
       if (!this.writeFrame(p)) this.release(i, true);
     }
+  }
+
+  // The thread reveal turned on or off (ribbon_renderer's setExplore, K268
+  // stage 2): still plucks draw with the explore variant while it is on (the
+  // shaped crossing cut), live ones from the next frame.
+  setExplore(on: boolean): void {
+    STILL_EXPLORE = on;
+    for (const p of this.active) if (p.still) p.mesh.mesh.shader = pluckStillShader();
+    if (this.warmStill) this.warmStill.mesh.shader = pluckStillShader();
   }
 
   // Drop everything (scene rebuild / destroy): meshes die with the layer.

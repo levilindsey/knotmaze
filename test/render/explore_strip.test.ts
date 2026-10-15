@@ -16,8 +16,23 @@ import {
   STRIP_LOOKUP_P_GLSL,
   withExploreStrip,
 } from "../../src/render/arm_strip";
-import { EXPLORE_DECL_GLSL, EXPLORE_VIS_GLSL } from "../../src/render/explore_glsl";
+import {
+  EXPLORE_DECL_GLSL,
+  EXPLORE_FAN_CUT_GLSL,
+  EXPLORE_FAN_SURE_GLSL,
+  EXPLORE_GAP_CUT_GLSL,
+  EXPLORE_GAP_SURE_GLSL,
+  EXPLORE_LOOK_GLSL,
+  EXPLORE_VIS_GLSL,
+} from "../../src/render/explore_glsl";
+import { GAP_FRAG_LIB } from "../../src/render/gap_mask";
 import { FIELD_EXPLORE_EDITS, JUNCTION_FRAG, withExploreField } from "../../src/render/junction_field";
+import { PAINT_GATE_GLSL } from "../../src/render/paint_glsl";
+import {
+  PLUCK_STILL_EXPLORE_EDITS,
+  PLUCK_STILL_FRAG,
+  withExploreStill,
+} from "../../src/render/pluck_overlay";
 
 function count(s: string, sub: string): number {
   let n = 0;
@@ -103,5 +118,95 @@ describe("K268 stage 2: the fan variant", () => {
       back = back.replace(to, anchor);
     }
     expect(back).toBe(JUNCTION_FRAG);
+  });
+});
+
+// K268 stage 2 (item 3): the fans and the still pluck take the shaped cut.
+// Master's inside-silhouette branch, as gapKeepAt runs it.
+const MASTER_EARLY =
+  "    if (best < sure2) {\n" +
+  "      keep = min(keep, 1.0 - (full ? inWin * inFoot : 1.0) * gst);\n" +
+  "      continue;\n" +
+  "    }\n";
+// The fan's copy of it, inside the shaped branch, against the true nearest
+// point (sure2 is 0 there; exSure2 keeps master's value).
+const FAN_EARLY =
+  "      if (best < exSure2) {\n" +
+  "        keep = min(keep, 1.0 - (full ? inWin * inFoot : 1.0) * gst);\n" +
+  "        continue;\n" +
+  "      }\n";
+
+describe("K268 stage 2: the shaped cut's texts", () => {
+  it("splits the section variant's declarations byte for byte", () => {
+    expect(EXPLORE_DECL_GLSL).toBe(EXPLORE_VIS_GLSL + EXPLORE_LOOK_GLSL);
+    expect(EXPLORE_LOOK_GLSL).toContain("highp float kExploreLook(");
+    expect(EXPLORE_LOOK_GLSL).toContain("highp float exploreCutCover(");
+  });
+
+  it("gives a fan the ribbon's cut plus master's inside-silhouette branch", () => {
+    expect(count(GAP_FRAG_LIB, MASTER_EARLY)).toBe(1);
+    expect(count(EXPLORE_FAN_CUT_GLSL, FAN_EARLY)).toBe(1);
+    expect(EXPLORE_FAN_CUT_GLSL.replace(FAN_EARLY, "")).toBe(EXPLORE_GAP_CUT_GLSL);
+    // The branch follows the shaped strength's own early out.
+    expect(EXPLORE_FAN_CUT_GLSL.indexOf(FAN_EARLY)).toBeGreaterThan(
+      EXPLORE_FAN_CUT_GLSL.indexOf("if (gst <= 0.0) continue;"),
+    );
+    // A fan's search keeps master's sure2 before it drops the early stop.
+    expect(EXPLORE_FAN_SURE_GLSL).toContain("highp float exSure2 = sure2;\n    if (exShaped) sure2 = 0.0;");
+    expect(EXPLORE_FAN_SURE_GLSL).not.toContain("!fan");
+    expect(EXPLORE_GAP_SURE_GLSL).toContain("full && !fan");
+  });
+});
+
+describe("K268 stage 2: the fans' shaped cut", () => {
+  const ex = withExploreField(JUNCTION_FRAG);
+
+  it("lands the fan texts once, after kSmooth and before gapKeepAt", () => {
+    expect(count(ex, EXPLORE_FAN_SURE_GLSL)).toBe(1);
+    expect(count(ex, EXPLORE_FAN_CUT_GLSL)).toBe(1);
+    expect(count(ex, EXPLORE_GAP_SURE_GLSL)).toBe(0);
+    expect(count(ex, "uniform vec4 uKExplore;")).toBe(1);
+    expect(count(ex, EXPLORE_LOOK_GLSL)).toBe(1);
+    expect(ex.indexOf("highp float kSmooth(")).toBeLessThan(ex.indexOf(EXPLORE_LOOK_GLSL));
+    expect(ex.indexOf(EXPLORE_LOOK_GLSL)).toBeLessThan(ex.indexOf("highp float gapKeepAt("));
+    // Master's own branch is still there: the mode off and unshaped slots
+    // take it as before.
+    expect(count(ex, MASTER_EARLY)).toBe(1);
+  });
+});
+
+describe("K268 stage 2: the still pluck's shaped cut", () => {
+  const ex = withExploreStill(PLUCK_STILL_FRAG);
+  const kSmooth = PAINT_GATE_GLSL.slice(
+    PAINT_GATE_GLSL.indexOf("highp float kSmooth("),
+    PAINT_GATE_GLSL.indexOf("}\n", PAINT_GATE_GLSL.indexOf("highp float kSmooth(")) + 2,
+  );
+
+  it("declares what master's still fragment lacks, once", () => {
+    expect(count(PLUCK_STILL_FRAG, "kSmooth(")).toBe(0);
+    expect(count(PLUCK_STILL_FRAG, "uKExplore")).toBe(0);
+    expect(count(ex, kSmooth)).toBe(1);
+    expect(count(ex, "uniform vec4 uKExplore;")).toBe(1);
+    expect(count(ex, EXPLORE_LOOK_GLSL)).toBe(1);
+    expect(ex.indexOf(kSmooth)).toBeLessThan(ex.indexOf(EXPLORE_LOOK_GLSL));
+    expect(ex.indexOf(EXPLORE_LOOK_GLSL)).toBeLessThan(ex.indexOf("highp float gapKeepAt("));
+  });
+
+  it("takes the ribbons' texts (a still pluck draws a ribbon)", () => {
+    expect(count(ex, EXPLORE_GAP_SURE_GLSL)).toBe(1);
+    expect(count(ex, EXPLORE_GAP_CUT_GLSL)).toBe(1);
+    expect(count(ex, EXPLORE_FAN_CUT_GLSL)).toBe(0);
+  });
+
+  it("is master's text once its edits are undone", () => {
+    for (const [anchor] of PLUCK_STILL_EXPLORE_EDITS) {
+      expect(count(PLUCK_STILL_FRAG, anchor), anchor).toBe(1);
+    }
+    let back = ex;
+    for (const [anchor, to] of [...PLUCK_STILL_EXPLORE_EDITS].reverse()) {
+      expect(count(back, to), to).toBe(1);
+      back = back.replace(to, anchor);
+    }
+    expect(back).toBe(PLUCK_STILL_FRAG);
   });
 });
