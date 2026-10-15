@@ -74,11 +74,12 @@ and never reused.
 - **K288** · K279's picks from the plucks sheet (sent 2026-10-14 17:52;
   `.claude/probes/K279/sheet2/`): the ripple look (off, wave, glint,
   ring; built default wave) and its strengths (a tap's `prs` 1, an auto
-  pluck's `pra` 0.35), the sheen (`psh` 0.5), the tug (`ptg` 0.3, after
-  the wake check in K279's handle), the vibration (`psz` 2, `pgh` .5,
+  pluck's `pra` 0.35), the sheen (`psh` 0.5), the tug (`ptg`, off by
+  default since the wake check, K279; built at 0.3), the vibration
+  (`psz` 2, `pgh` .5,
   `pw` .75 against master's 1.75 / .35 / .5) and the auto-pluck volume
   (`pag` 0.5, -6 dB); and whether the wave keeps bending the markers,
-  trail and fog or bends the ribbon layer only. Live once merged:
+  trail and fog or bends the ribbon layer only. Live since 18:20:
   `?7&prp=wave` (glint, ring, off), `?7&prs=2&pra=1`, `?7&psh=1`,
   `?7&ptg=1`, `?7&pag=1`. `docs/design/K279.md` ("Stage 1 handoff").
 - **K257** · K76 section 10's questions, for stage 2c (none blocks 2b;
@@ -415,8 +416,9 @@ and never reused.
     `k174_page.mjs`); real time's `.claude/probes/K80/rt/` and K174's
     `.claude/probes/K174/rt/`; the research's `.claude/probes/K80/` and
     its kept worktree `.claude/worktrees/agent-a25726c24f262b138`.
-  - next: merge stage 2 after K279 (it appends to the codec from 121, as
-    K279 and K111 stage 4 do; each later merge renumbers). Then stage
+  - next: merge stage 2. K279 took codec rows 121-127 (18:20), so stage 2
+    renumbers its appends from 128 before it merges, as K111 stage 4
+    does; whichever of the two merges second renumbers again. Then stage
     3's brief from its handoff: the final telegraph (2.7), the catch
     feedback (2.8, K270), sound and fog (2.10), the wait key, the pad's
     wait and a hover cue, a turn minoToward and the contact sheet.
@@ -652,26 +654,24 @@ and never reused.
   Levi a sheet; stage 2 finishes what he picks. Stage 1 built all six
   behind ten daily-exempt params (seven codec appends; the vibration
   defaults rose to `psz` 2, `pgh` .5, `pw` .75) and the sheet, sent to
-  Levi at 17:52 (his picks are K288, the residuals K289).
-  - owner: claude d8031183-cd9e-4b70-9968-661d70634c84, agent
-    abf68d906aaae3609 (opus), stage 1 done at 17:42 and resumed at 17:50
-    for the merge follow-up (cap 18:40): rebase onto master (its seven
-    codec rows at 121-127, after K114's 118-120), time a tap's wake on
-    screen at `ptg` 0.3 against 0 (its off-screen probe window ran each
-    wake at 4-10 fps for 3-7 s, likely the window's own throttling), then
-    keep 0.3, fix the wake path, or default `ptg` to 0.
-  - branch: `worktree-agent-abf68d906aaae3609`
-    (`.claude/worktrees/agent-abf68d906aaae3609`), from 8ab25d0; last
-    commit: `88ae781` (stage 1, 9 commits; the rebase is under way).
-  - evidence: `.claude/probes/K279/` in that worktree (`k279_ab.mjs`,
-    `k279_live.mjs`, `k279_sheet.mjs`, `run_locked.ps1`, the logs and the
-    sheet in `sheet2/`); stage 1's neutral A/B was 0 px in 6 cases, 887
-    tests.
-  - next: after the follow-up reports, merge with
-    `.claude/probes/agents/merge_agent.ps1 -Id abf68d906aaae3609 -Probes
-    K279` (it deploys); then Levi picks from the sheet (K288) and stage 2
-    builds his picks.
-  - brief: `docs/design/K279.md` ("Stage 1", "Stage 1 handoff"; 8ab25d0).
+  Levi at 17:52 (his picks are K288, the residuals K289). Merged
+  2026-10-14 18:20 (50c1aab..ad2618a, 925 tests; codec rows 121-127) with the
+  tug off by default (`ptg` 0; `&ptg=0.3` is the built strength): the
+  follow-up timed a tap with the tug, a drag and a bare wake at the same
+  7-9 fps on an idle desktop, the physics' own wake cost (K16), with no
+  wake-path bug.
+  - owner: nobody since 2026-10-14 18:20 (stage 1 merged; stage 2 waits on
+    Levi's picks, K288). Its agent abf68d906aaae3609 of session d8031183
+    finished; its worktree is kept, and the pre-rebase history is the
+    local branch `k279-stage1-prerebase` (88ae781).
+  - branch: mainline; last commit: `ad2618a`.
+  - evidence: `.claude/probes/K279/` (copied at the merge): the sheet in
+    `sheet2/`, the wake probe `k279_wake.mjs` with `wake.log` and
+    `wake/wake_1400x900x2.json`, `test_run5.txt`; stage 1's neutral A/B
+    was 0 px in 6 cases.
+  - next: Levi's picks (K288), then stage 2 builds them; the phone pass
+    after 20:00 (K289 (h)).
+  - brief: `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
 - **K264** · The hover rim's width becomes a slider (Levi, 2026-10-14
   about 15:46, verbatim: "Rim width,0.4 is good, make it a slider., and
   personal setting."; read as a width slider, `hoverGlow` staying 0.4,
@@ -738,9 +738,9 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K80 turns stage 2 from 17:40 (cap 19:40),
-K279's merge follow-up from 17:50 (cap 18:40) and K111 stage 4 from
-17:53 (cap 19:53), each opus. K279's stage 2 waits for Levi's pick (K288). At about 10:57 Levi lifted
+(he may reorder). Running: K80 turns stage 2 from 17:40 (cap 19:40)
+and K111 stage 4 from 17:53 (cap 19:53), each opus. K279's stage 2
+waits for Levi's picks (K288). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
@@ -750,8 +750,8 @@ K235 + K239 at 12:44, K174 at 12:53, K111 stage 2 at 13:03, K198
 stage 2 at 14:03, K193 at 14:10, K76 stage 2a at 14:15, the
 burn-race and K74 stage 2 briefs at 14:38, K111 stage 3 at 14:58, K80
 turns stage 1 at 15:19, K76 stage 2b at 16:04, K74 stage 2 at 16:13,
-the burn race's stage 1 at 16:35, K274 with K277 at 17:37 and K268
-stage 1 at 17:50; the coordinator carries the running agents' rules edits into the topic
+the burn race's stage 1 at 16:35, K274 with K277 at 17:37, K268
+stage 1 at 17:50 and K279 stage 1 at 18:20; the coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
    K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
@@ -1406,7 +1406,15 @@ K5-K7 (split, frame loop, worker) follow.
   gate rather than the design; since K63 it is about 5.0 (phone: 8.8 s
   wall instead of 13), so settle cost is particles x thread width.
   Thread width costs +25% per substep at 0.58 and +47% at 0.64. Intro
-  wall time also stretches with slow settle frames.
+  wall time also stretches with slow settle frames. K279's wake check
+  (2026-10-14, an idle desktop, `.claude/probes/K279/wake/`): a drag, a
+  tap with the tug and a bare wake cost the same, 8.2 / 10.5 / 20-23 ms
+  per 1/120 s substep (knot `?7k&mf=0`, 2592 particles; fabric `?b`,
+  3011; dense, 5448), so every wake spirals to the 100 ms cap (12
+  substeps a frame) and runs at 7-9 fps (3-4 dense) for 3-8 s. K162 (4)
+  asks whether drags get K147's budget; K7's worker is the full fix.
+  K279 suspected a regression since the 2026-10-10 audit (40 fps
+  mid-drag), unconfirmed: the audit timed a different design.
 - **K65** · Low-gridAlign knots (`ga=0`, e.g. Levi's rect link) creep
   under the quiet threshold: a fresh settle drifts about 1.5 world over
   about 50 s, and a cinch up to about 0.9 world/s. Every sleep gate, old
@@ -1637,15 +1645,20 @@ K5-K7 (split, frame loop, worker) follow.
   rebase was 25/25 at 0 px); (g) the phone check, with the next phone
   pass. `docs/design/K268.md` ("Not done in stage 1", Calls).
 - **K289** · K279 stage 1's residuals: (a) the first ripple costs a
-  10.3 ms spike; (b) fabric's real click drew no ripple in the sleep
-  probe (check its aim in `k279_live.mjs` before calling it a bug); (c)
+  10.3 ms spike; (b) closed by the follow-up: fabric's real click was a
+  move (`handleFabricTap`), not a pluck; (c)
   the ripple filter covers the whole root (bound its filterArea to the
   live discs, most of all for phones); (d) the ripple is sized in world
   units, so it shrinks on a phone (a CSS-px floor?); (e) no High
   contrast tie-in (ring off, or glint only?); (f) flash safety: an area
   guard like GHOST_AREA_PX if the phone shows a need; (g) no webm clips;
-  (h) the phone pass: every look, the cost and the tug's sleep.
-  `docs/design/K279.md` ("Stage 1 handoff").
+  (h) the phone pass: every look, the cost and the tug's wake; (i) once
+  per load, the first tap's first frame spends 30-36 ms more in pixi's
+  tick (likely the ripple filter's compile: warm it at load); (j) the
+  pre-rebase SHAs cited in `render-pluck.md` and K279.md (0f08f68,
+  2d905d0, da1333a, 4eb20a7) exist only on the local branch
+  `k279-stage1-prerebase`: re-cite them as 50c1aab.
+  `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
 
 ## Approved, to schedule (2026-10-11)
 
