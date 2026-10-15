@@ -13,7 +13,7 @@
 // synchronous render timer (the phone has no GPU timer). One row per sample
 // in <out>/bench.jsonl; summary.mjs makes the tables.
 // Usage: node bench.mjs <config.json>      (env SCENARIOS=fabric,knot,load)
-import { CFG, BUILDS, connect, myPage, load, rafWindow, sleep, logLine, thermal, assertFree, stampOf, stampSha, checkBuild } from "./lib.mjs";
+import { CFG, BUILDS, connect, myPage, load, rafWindow, sleep, logLine, thermal, assertFree, stampOf, stampSha, checkBuild, ensureViewport, EMU_READ } from "./lib.mjs";
 import { makeMoves, waitView, renderLoop } from "./walk.mjs";
 
 const SCEN = (process.env.SCENARIOS || "fabric,knot,load").split(",");
@@ -45,7 +45,9 @@ async function sample(b, rep, cell, moves, extra = {}) {
     // vp: the page's viewport (CSS px) and dpr. The phone may sit in landscape (810x331 on 2026-10-14), and a floor taken in one orientation does not carry to the other.
     return { fab: k ? { n: k.pathEdges.length, head: k.head, solved: k.solved } : null, view: v ? { x: +v.x.toFixed(1), y: +v.y.toFixed(1), s: +v.s.toFixed(3) } : null, vp: [window.innerWidth, window.innerHeight, +window.devicePixelRatio.toFixed(3)], vis: document.visibilityState };
   });
-  const row = { cell, rep, build: b.key, moves, sha: stampSha(stamp), asleep: /asleep/.test(stamp), sleptAtS: sleptAt, ...extra, k10, render, ...meta, thermal: thermal() };
+  // emu (K193): what the page says about the viewport it measured in (EMU_READ: orientation, canvas backing size ...).
+  const emu = await page.evaluate(EMU_READ).catch(() => null);
+  const row = { cell, rep, build: b.key, moves, sha: stampSha(stamp), asleep: /asleep/.test(stamp), sleptAtS: sleptAt, ...extra, k10, render, ...meta, emu, thermal: thermal() };
   logLine(FILE, row);
   console.log(`rep${rep} ${b.key.padEnd(4)} ${cell.padEnd(6)} m${String(moves).padStart(2)} ${row.sha} ${row.asleep ? "asleep" : "AWAKE "} fps ${k10.fps} p50 ${k10.p50} p95 ${k10.p95} max ${k10.max} >25:${k10.over25} render ${render?.median ?? "-"} ms th ${row.thermal?.status}`);
 }
@@ -66,6 +68,7 @@ async function loadSample(b, rep, name, query) {
   assertFree();
   await page.goto("about:blank"); // release the last build's page first
   await sleep(800);
+  await ensureViewport(page); // K193: the portrait override is in place before the app's first byte
   const reg = await page.evaluateOnNewDocument(RECORDER);
   try {
     await page.goto(`${b.host}/?${query}`, { waitUntil: "load", timeout: 90000 });
@@ -81,6 +84,7 @@ async function loadSample(b, rep, name, query) {
       await sleep(500);
     }
     const rec = await page.evaluate(() => { window.__rafRec.on = false; return { t: window.__rafRec.t, firstCanvas: window.__rafRec.firstCanvas }; });
+    const emu = await page.evaluate(EMU_READ).catch(() => null); // K193: the viewport this fresh load ran in
     checkBuild(b, last.stamp);
     const dts = rec.t.slice(1).map((v, i) => v - rec.t[i]);
     const s = [...dts].sort((x, y) => x - y);
@@ -89,7 +93,7 @@ async function loadSample(b, rep, name, query) {
       cell: "load", link: name, rep, build: b.key, sha: stampSha(last.stamp),
       frames: rec.t.length, fps: +(rec.t.length / CFG.loadSeconds).toFixed(1), over50: dts.filter((d) => d > 50).length,
       max: r1(s[s.length - 1]), p95: r1(s[Math.floor(0.95 * (s.length - 1))]),
-      firstFrameMs: r1(rec.t[0]), ttff: r1(rec.firstCanvas), firstSleepS, asleepAtEnd: /asleep/.test(last.stamp), stampEnd: last.stamp.slice(0, 110), thermal: thermal(),
+      firstFrameMs: r1(rec.t[0]), ttff: r1(rec.firstCanvas), firstSleepS, asleepAtEnd: /asleep/.test(last.stamp), stampEnd: last.stamp.slice(0, 110), emu, thermal: thermal(),
     };
     logLine(FILE, row);
     console.log(`rep${rep} ${b.key.padEnd(4)} load ${name.padEnd(7)} ${row.sha} frames ${row.frames} >50:${row.over50} max ${row.max} ttff ${row.ttff} sleep ${firstSleepS ?? "-"} s`);

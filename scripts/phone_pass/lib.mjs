@@ -20,7 +20,53 @@ export const BUILDS = [
 ];
 // The phone's Chrome with the toolbar showing (measured 2026-10-13).
 export const PHONE_VP = { width: 411, height: 753, deviceScaleFactor: 2.625, isMobile: true, hasTouch: true };
+// K193 (2026-10-14): the viewport the pass measures at. "portrait" (the default, cfg.viewport) emulates the
+// phone's portrait viewport (411x753 CSS px at dpr 2.625) over CDP in the pass's own tab, whatever way the
+// phone sits (docked in landscape, 2424x1080, or off the dock); "native" leaves the tab at the phone's own
+// viewport (an old landscape pass reproduces with -Viewport native). No phone setting changes: a DevTools
+// override lives with the session that set it, so every script sets it again (myPage) and it ends with that
+// script's connection.
+export const VIEWPORT = CFG.viewport === "native" ? "native" : "portrait";
+export const EMU_VP = { width: PHONE_VP.width, height: PHONE_VP.height, deviceScaleFactor: CFG.dpr || PHONE_VP.deviceScaleFactor };
 const isMine = (url) => BUILDS.some((b) => url.startsWith(b.host + "/"));
+
+// The CDP session that holds each page's override (kept so it stays attached while the script runs).
+const emuSessions = new WeakMap();
+// Sets (or re-sets: idempotent and cheap) the pass tab's viewport override. A viewport `vp` other than the pass's
+// own (emulation.mjs asks for a size the phone does not have) is applied even in native mode. Returns the session.
+export async function emulate(page, vp = EMU_VP) {
+  if (VIEWPORT === "native" && vp === EMU_VP) return null;
+  let cdp = emuSessions.get(page);
+  if (!cdp) { cdp = await page.createCDPSession(); emuSessions.set(page, cdp); }
+  await cdp.send("Emulation.setDeviceMetricsOverride", {
+    width: vp.width, height: vp.height, deviceScaleFactor: vp.deviceScaleFactor, mobile: true,
+    screenOrientation: vp.width > vp.height ? { type: "landscapePrimary", angle: 90 } : { type: "portraitPrimary", angle: 0 },
+  });
+  if (DRY) await cdp.send("Emulation.setTouchEmulationEnabled", { enabled: true, maxTouchPoints: 5 }); // a real phone has touch already
+  return cdp;
+}
+// Called before every navigation of a script (the override survives a navigation in the same session, but a
+// page that loads under it must find it already set: mobile emulation keeps the layout width it loaded with).
+export const ensureViewport = (page) => emulate(page);
+
+// What the page itself says about its viewport (page.evaluate(EMU_READ)): innerWidth x innerHeight x dpr, the
+// orientation media query, the visual viewport, the document's client size, the screen, and the biggest canvas
+// (backing size and CSS box). The proof that the emulation is real, not merely accepted.
+export const EMU_READ = () => {
+  const cs = [...document.querySelectorAll("canvas")].map((c) => {
+    const r = c.getBoundingClientRect();
+    return { w: c.width, h: c.height, cw: +r.width.toFixed(1), ch: +r.height.toFixed(1) };
+  }).sort((a, b) => b.w * b.h - a.w * a.h);
+  const vv = window.visualViewport;
+  return {
+    vp: [window.innerWidth, window.innerHeight, +window.devicePixelRatio.toFixed(3)],
+    portrait: matchMedia("(orientation: portrait)").matches,
+    doc: [document.documentElement.clientWidth, document.documentElement.clientHeight],
+    vv: vv ? [+vv.width.toFixed(1), +vv.height.toFixed(1), +vv.scale.toFixed(3)] : null,
+    screen: [screen.width, screen.height, screen.orientation ? screen.orientation.type : null],
+    canvas: cs[0] || null, canvases: cs.length,
+  };
+};
 
 // Output path under the pass's folder (parents created).
 export function out(...parts) {
@@ -43,7 +89,8 @@ export const connect = () => puppeteer.connect({ browserURL: CFG.cdp, defaultVie
 
 // The pass's own tab (the visible one on its hosts). Throws when there is
 // none on a phone: never opens or touches anything else. DRY opens one.
-export async function myPage(browser) {
+// Sets the tab's viewport override first (K193), unless { raw: true } (emulation.mjs reads the tab as it sits).
+export async function myPage(browser, { raw = false } = {}) {
   const mine = (await browser.pages()).filter((p) => isMine(p.url()));
   let page = null;
   for (const p of mine) if ((await p.evaluate(() => document.visibilityState)) === "visible") { page = p; break; }
@@ -53,10 +100,8 @@ export async function myPage(browser) {
     page = await browser.newPage();
     await page.goto(`${CFG.hostB}/favicon.svg`, { waitUntil: "load" }).catch(() => {}); // a static file: a bare page URL would boot today's daily
   }
-  if (DRY) {
-    await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "no-preference" }]);
-    await page.setViewport(PHONE_VP);
-  }
+  if (DRY) await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "no-preference" }]);
+  if (!raw) await emulate(page);
   return page;
 }
 
@@ -78,6 +123,7 @@ export function checkBuild(build, stamp) {
 // Load a link in the tab and wait until the knot sleeps (or settleMs).
 export async function load(page, url, settleMs = 30000, { wake = true } = {}) {
   assertFree();
+  await ensureViewport(page);
   await page.goto(url, { waitUntil: "load", timeout: 90000 });
   if (wake) await page.evaluate(() => navigator.wakeLock?.request("screen").catch(() => {})); // keeps the screen on; wakes nothing
   const t0 = Date.now();
@@ -94,6 +140,7 @@ export async function load(page, url, settleMs = 30000, { wake = true } = {}) {
 // Wait for a frozen layout (phy=0 links): a deterministic, pinned frame.
 export async function loadFrozen(page, url) {
   assertFree();
+  await ensureViewport(page);
   await page.goto(url, { waitUntil: "load", timeout: 90000 });
   await page.waitForFunction(() => typeof window.__knotPerf === "function" && window.__knotPerf().state === "frozen", { timeout: 90000, polling: 250 });
   await sleep(1200);

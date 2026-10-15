@@ -66,6 +66,17 @@
 #                     USB one, else `adb connect` to the 'pixel-11' Tailscale peer
 #   -Noise <json>     the A/A noise floor summary.mjs reads (default
 #                     scripts/phone_pass/noise.json)
+#   -Viewport portrait|native   (K193) what the pass's tab measures at. portrait (the
+#                     default) emulates the phone's portrait viewport, 411x753 CSS px at
+#                     dpr 2.625, over CDP in the pass's own tab, whatever way the phone
+#                     sits (docked in landscape or not): no phone setting changes, the
+#                     override ends with each script's connection. -Phase frames first
+#                     runs emulation.mjs, which proves the emulation is REAL (the page's
+#                     own innerWidth x innerHeight, dpr, orientation, canvas backing size
+#                     and a screenshot) and stops the pass if it is not. native leaves the
+#                     tab at the phone's own viewport, so an old landscape pass
+#                     reproduces. config.json and summary.md record the phone's display as
+#                     it sits AND the viewport. A noise floor is for one viewport.
 #   -PortRange 5480-5489   ports for the servers (and -Dry's Chrome)
 #   -Dry             a HARNESS check on the desktop: no phone, no adb, no
 #                     watchdog; a desktop Chrome (its profile inside -Out, deleted
@@ -101,6 +112,7 @@ param(
   [int]$WaitReady = 0,
   [string]$Serial = "",
   [string]$Noise = "",
+  [ValidateSet("portrait", "native")][string]$Viewport = "portrait",
   [string]$PortRange = "5480-5489",
   [switch]$Dry
 )
@@ -173,7 +185,7 @@ function Find-Serial([string]$adb, [string]$want) {
 function Phone-State([string]$adb, [string]$ser) {
   $o = & $adb -s $ser shell "dumpsys power | grep -E 'mWakefulness='; dumpsys window | grep -E 'isKeyguardShowing'; dumpsys activity activities | grep -m1 topResumedActivity; dumpsys window displays | grep -m1 -oE 'cur=[0-9]+x[0-9]+'" 2>&1 | Out-String
   [pscustomobject]@{
-    # The display as the phone sits (2424x1080 = landscape): a docked phone is in landscape, and the pass's viewport and noise floor follow it.
+    # The display as the phone sits (2424x1080 = landscape): a docked phone is in landscape. K193: the pass records it (config.json `display`) but measures in the emulated portrait viewport whatever it says.
     Display = $(if ($o -match "cur=(\d+)x(\d+)") { "{0}x{1} {2}" -f $Matches[1], $Matches[2], $(if ([int]$Matches[1] -gt [int]$Matches[2]) { "landscape" } else { "portrait" }) } else { "?" })
     Reached = ($o -match "mWakefulness=")
     Awake = ($o -match "mWakefulness=Awake")
@@ -252,6 +264,7 @@ function Apply-Params($c) {
   if ($bound.ContainsKey("LoadSeconds")) { $c.loadSeconds = $LoadSeconds }
   if ($bound.ContainsKey("Looks")) { $c.looks = Resolve-Looks }
   if ($bound.ContainsKey("Noise")) { $c.noise = Full $Noise }
+  if ($bound.ContainsKey("Viewport")) { $c.viewport = $Viewport }
 }
 function Parse-Moves { @($Moves -split '[,\s]+' | Where-Object { $_ -ne "" } | ForEach-Object { [int]$_ }) }
 function Resolve-Looks {
@@ -307,6 +320,7 @@ function Do-Check {
   Say "tunnels already there (left alone): $((& $adb -s $ser reverse --list) -join '; ')"
   Say "forwards: $((& $adb forward --list) -join '; ')"
   Say "phone is ready ($ser, adb $adb)"
+  Say "a pass would measure at: $(if ($Viewport -eq 'native') { 'the tab''s own viewport (-Viewport native)' } else { '411x753 CSS px at dpr 2.625, portrait, emulated over CDP in the pass''s own tab (-Viewport portrait)' })"
 }
 
 function Do-Start {
@@ -321,13 +335,15 @@ function Do-Start {
   Say "phone pass: base $Base, head $Head, reps $Reps$(if ($Dry) { ', DRY (desktop Chrome, no phone)' }), out $Out"
 
   # 1. the phone, before anything is started
-  $adb = ""; $ser = ""
+  $adb = ""; $ser = ""; $display = "dry run: a desktop Chrome"
   if (-not $Dry) {
     $adb = Find-Adb
     $ser = Find-Serial $adb $Serial
     Assert-PhoneReady $adb $ser
+    $display = (Phone-State $adb $ser).Display   # K193: the display as the phone sits, recorded beside the viewport the pass measures at
     Say "others' tunnels (left alone): $((& $adb -s $ser reverse --list) -join '; ')"
   }
+  Say "viewport: $(if ($Viewport -eq 'native') { 'native (the tab''s own)' } else { '411x753 CSS px at dpr 2.625, portrait, emulated over CDP' }); the phone's display as it sits: $display"
 
   # 2. refs and builds
   $refA = $Base; $refB = $Head
@@ -362,6 +378,7 @@ function Do-Start {
     buildA = $buildDir[$shaA]; buildB = $buildDir[$shaB]
     reps = $Reps; moves = @(Parse-Moves); loadSeconds = $LoadSeconds; looks = $looksFull
     noise = $(if ($Noise) { Full $Noise } else { Join-Path $passDir "noise.json" })
+    viewport = $Viewport; display = $display
     portRange = $PortRange
     serverPids = @(); watchdogPid = 0; chromePid = 0; tabId = ""; tunnels = @(); forwardAdded = $false
   }
@@ -461,6 +478,14 @@ function Do-Frames {
   }
   Apply-Params $c
   Save-Cfg $c
+  # K193: prove the emulation is REAL before anything is timed (the page's own numbers, a screenshot); exit 4 = not real.
+  if ($c.viewport -ne "native") {
+    $ecode = Run-Node "emulation.mjs" "emulation.out.txt" 300
+    Say "emulation.mjs exit $ecode$(if (Tripped) { ' (tripped: ' + (Tripped) + ')' })"
+    if (Tripped) { return }
+    if ($ecode -eq 4) { throw "the portrait emulation is NOT real in the pass's tab (see emulation.json and logs\emulation.out.txt); not measuring" }
+    if ($ecode -ne 0) { throw "emulation.mjs failed ($ecode); see logs\emulation.out.txt" }
+  }
   $bench = Join-Path $Out "bench.jsonl"
   if (Test-Path $bench) { Move-Item $bench (Join-Path $Out ("bench.{0}.jsonl" -f (Get-Date -Format "yyyyMMdd-HHmmss"))) }
   $code = Run-Node "bench.mjs" "bench.out.txt" 7200

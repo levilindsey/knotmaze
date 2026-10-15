@@ -21,8 +21,19 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const text = (f) => (existsSync(f) ? readFileSync(f, "utf8") : null);
 const json = (f) => { const t = text(f); try { return t ? JSON.parse(t) : null; } catch { return null; } };
 const rows = (text(join(CFG.out, "bench.jsonl")) || "").split("\n").filter(Boolean).map((l) => JSON.parse(l));
-const noiseFile = CFG.noise || join(HERE, "noise.json");
-const noise = json(noiseFile);
+const vpOf = (s) => { const m = /^(\d+)x\d+@([\d.]+)$/.exec(s || ""); return m ? [+m[1], +m[2]] : null; };
+// K193: a floor is for ONE viewport. The tracked noise.json is the emulated portrait one (411x753 @2.625); the docked
+// phone's landscape floor (810 wide) is kept beside it as noise.landscape.json. With the default floor (no -Noise), a
+// pass that ran at another viewport (-Viewport native on a docked phone) reads the landscape one when that matches.
+const noiseDefault = join(HERE, "noise.json");
+let noiseFile = CFG.noise || noiseDefault;
+let noise = json(noiseFile);
+{
+  const vpNow = rows.find((r) => r.vp)?.vp ?? json(join(CFG.out, "looks_report.json"))?.viewport ?? null;
+  const fits = (n) => { const v = vpOf(n?.viewport); return !!v && !!vpNow && Math.abs(v[0] - vpNow[0]) <= 8 && v[1] === vpNow[2]; };
+  const alt = join(HERE, "noise.landscape.json");
+  if (noiseFile === noiseDefault && !fits(noise) && fits(json(alt))) { noiseFile = alt; noise = json(alt); }
+}
 
 // [label, getter, direction (+1 higher is better, -1 lower is better), digits]
 const FRAME = [
@@ -53,7 +64,7 @@ const verdictOf = (delta, nz, dir) => {
 
 const L = [];
 const vpRow = rows.find((r) => r.vp)?.vp ?? null;
-const aaNoise = { from: `${new Date().toISOString().slice(0, 16)}Z, ${CFG.shaA}`, reps: CFG.reps, viewport: vpRow ? `${vpRow[0]}x${vpRow[1]}@${vpRow[2]}` : null, rule: "max(|median head - median base|, largest per-rep |head - base|, one unit of the printed digit)", cells: {} };
+const aaNoise = { from: `${new Date().toISOString().slice(0, 16)}Z, ${CFG.shaA}`, reps: CFG.reps, viewport: vpRow ? `${vpRow[0]}x${vpRow[1]}@${vpRow[2]}` : null, emulated: CFG.viewport === "native" ? false : !CFG.dry, display: CFG.display ?? null, rule: "max(|median head - median base|, largest per-rep |head - base|, one unit of the printed digit)", cells: {} };
 const verdicts = { better: 0, worse: 0, within: 0 };
 for (const c of cells) {
   const rs = rows.filter(c.pick);
@@ -114,8 +125,15 @@ const wd = CFG.dry ? "dry run: no phone, no watchdog" : trip ? `TRIPPED: ${trip.
 const vpArr = rows.find((r) => r.vp)?.vp ?? rep?.viewport ?? null;
 const vpText = vpArr ? `${vpArr[0]}x${vpArr[1]} @${vpArr[2]}${vpArr[0] > vpArr[1] ? " (landscape)" : " (portrait)"}` : "unknown";
 // Only the width (within 8 CSS px: it reads 809 or 810) and the dpr are compared: the height moves with Chrome's toolbar.
-const vpOf = (s) => { const m = /^(\d+)x\d+@([\d.]+)$/.exec(s || ""); return m ? [+m[1], +m[2]] : null; };
 const nv = vpOf(noise?.viewport);
+// K193: the phone's display as it sits, the viewport the pass measured at, and whether the emulation was REAL (emulation.mjs, before the bench) and held (the page's own numbers in every sample).
+const emuMode = CFG.viewport === "native" ? "native (no emulation: the tab's own viewport)" : "emulated over CDP (-Viewport portrait: 411x753 CSS px at dpr 2.625)";
+const pre = json(join(CFG.out, "emulation.json"));
+const holds = (e) => !!e && Math.abs(e.vp[0] - 411) <= 1 && Math.abs(e.vp[1] - 753) <= 1 && Math.abs(e.vp[2] - 2.625) <= 0.01 && e.portrait === true;
+const emuRows = rows.filter((r) => r.emu);
+const canvasSizes = [...new Set(emuRows.map((r) => (r.emu.canvas ? `${r.emu.canvas.w}x${r.emu.canvas.h}` : "no canvas")))];
+const preText = CFG.viewport === "native" ? "not run (native)" : !pre ? "not run" : `${pre.pass ? "REAL" : "NOT REAL"}: page ${pre.final?.vp?.join("x") ?? "?"} (want 411x753x2.625), ${pre.final?.portrait ? "portrait" : "NOT portrait"}, canvas backing ${pre.final?.canvas ? `${pre.final.canvas.w}x${pre.final.canvas.h}` : "?"}, screenshot ${pre.shot ? `${pre.shot.w}x${pre.shot.h} px, ${pre.shot.blankRowsAtBottom} blank rows at the bottom` : "?"}; the override survives a navigation: ${pre.survivesGoto}, a reload: ${pre.survivesReload}; the tab as it sat: ${pre.native?.vp?.join("x") ?? "?"}`;
+const heldText = CFG.viewport === "native" ? "n/a" : `${emuRows.filter((r) => holds(r.emu)).length} of ${emuRows.length} samples read 411x753 @2.625 portrait from the page itself; canvas backing ${canvasSizes.join(", ") || "-"}`;
 const vpNote = nv && vpArr && (Math.abs(nv[0] - vpArr[0]) > 8 || nv[1] !== vpArr[2]) ? ` **The noise floor was taken at ${noise.viewport}: it may not apply here.**` : "";
 const th = rows.map((r) => r.thermal).filter((t) => t && !t.error);
 const thLine = (t) => (t ? `status ${t.status}, ${t.temps.join(", ")}` : "-");
@@ -127,7 +145,10 @@ const head = [
   CFG.aa ? `**A/A pass** (one build, both ports): the deltas below are the noise floor, ${CFG.reps} rep(s) (a single rep is one |difference| per cell, a weak floor). Written to \`noise.json\` in this folder.` : `Noise floor: \`${noise ? noiseFile : "none found"}\`${noise ? ` (${noise.from}, ${noise.reps} rep(s) of A/A)` : ""}.`,
   `Reps: ${CFG.reps}. Medians over the reps. Verdicts: ${verdicts.better} better, ${verdicts.worse} worse, ${verdicts.within} within noise.`,
   `Watchdog: ${wd}`,
-  `Viewport: ${vpText}.${vpNote}`,
+  `Phone display as it sits: ${CFG.display ?? "not recorded (a pass before K193)"}.`,
+  `Viewport: ${vpText}; ${emuMode}.${vpNote}`,
+  `Emulation check (before the bench): ${preText}.`,
+  `Emulation held while it measured: ${heldText}.`,
   `Thermal at start / end: ${thLine(th[0])} / ${thLine(th.at(-1))}`,
   "",
   "## Frames and load",
