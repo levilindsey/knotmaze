@@ -263,13 +263,19 @@ only with the files it is about; `render.md` lists the area's other files.
   under container, the ribbons, the fabric's over container and the
   debug layer, so the wave bends the markers, trail and fog with the
   threads; the backdrop (K21) is outside it. The filter is attached only
-  while a ripple lives; its filterArea is the whole screen (resolution
-  and antialias "inherit", padding 0). RIPPLE_MAX 8 at once (a ninth
+  while a live ripple's disc (front + REACH_BANDS 3 bands) reaches the
+  screen (stage 2's cull: a disc wholly off-screen changes no pixel);
+  its filterArea is the whole screen (resolution and antialias
+  "inherit", padding 0; why not the discs: STAGE 2 below). `warm(stage)`,
+  main.ts's one call once the stage is built, links the program and
+  pools the filter's texture at load. RIPPLE_MAX 8 at once (a ninth
   replaces the oldest). Each lives RIPPLE_LIFE 0.9 s, fades in over 0.06
   s, and its front travels RIPPLE_RADIUS 3.6 world (ease-out) in a band
   whose half width grows 0.45 -> 0.9 world. World units, so it scales
   with the maze: about 80 CSS px at the fabric default on 1400x900 (22.3
-  px/world), smaller on a phone (not measured). LOOKS at strength 1:
+  px/world) but 32 CSS px (5.6 mm) at a phone's default (8.8-9.0
+  px/world), so since stage 2 RIPPLE_FLOOR_CSS 56 scales the whole
+  ripple up below that (STAGE 2 below). LOOKS at strength 1:
   `wave` displaces the picture radially across the band by up
   to RIPPLE_DISP 0.18 world, with a faint crest glint (0.3 of glint's);
   `glint` (the default since stage 2, Levi's K288 pick; wave before)
@@ -325,8 +331,9 @@ only with the files it is about; `render.md` lists the area's other files.
   3.88 (its pass 0.185 + blit 0.377), glint 3.70, ring 3.90; 8 plucks
   2.74, with 8 waves 3.81. So about +1.1-1.2 ms while any ripple lives,
   nearly independent of the count; CPU unchanged, no context loss. The
-  worst frame was 10.3 ms against 5.3-5.9 (probably the filter's first
-  frame; not checked). SLEEP after a tugged pluck: every span tugged
+  worst frame was 10.3 ms against 5.3-5.9 (not attributed: stage 2's
+  bursts saw 9.5-10.7 ms against 4.2-5.1 in every ripple phase on both
+  builds, warm-up or not). SLEEP after a tugged pluck: every span tugged
   (`.claude/probes/K279/k279_live.mjs` on 50c1aab: four scripted taps per
   design at spans of L 1.2-2.7 ctrl, then one real click). At pluckTug 0
   nothing stepped and positions stayed bitwise. At 0.3 the peak shift was
@@ -368,7 +375,70 @@ only with the files it is about; `render.md` lists the area's other files.
   One tap-only cost, ONCE per page: the first tap's first frame spends
   30-36 ms more in pixi's tick than a later tap's (knot 67 vs 31 ms,
   fabric 60 vs 38, dense 104 vs 72) and reaches the cap a frame or two
-  sooner. Probably the ripple filter's first compile (not tested).
+  sooner. It was the ripple filter's first use, gone since stage 2's
+  warm-up (next entry).
+- STAGE 2 (K279 stage 2, 2026-10-15; worktree agent; brief and handoff
+  in `docs/design/K279.md`). Glint is the default ripple (Levi's K288
+  pick). THE FILTER'S AREA STAYS THE SCREEN: pixi 8.19 draws a filtered
+  container's children ONLY into the filter's texture, which covers the
+  filterArea, so an area bounded to the live discs clips every thread
+  outside them. Also rejected: replaying `root` into a disc-sized
+  texture (a second draw of the world each frame), sampling the back
+  buffer (it holds the backdrop, so glint would lose its content alpha)
+  and an overlay (ring only). Kept: the whole screen, plus the CULL
+  (`discOnScreen`, 1 px of slack). COST (k279_live.mjs burst, 3200x1800,
+  `?7`, GPU ms/frame, master 9b977d8 vs f41de80, fabric / knot): 8
+  plucks 2.69 / 2.28 vs 2.56 / 2.34; with 8 glints 4.06 / 3.73 vs 4.12 /
+  3.58; with 8 waves 3.98 / 3.46 vs 4.47 / 3.86; 1 pluck + 1 glint 3.53 /
+  3.17 vs 3.66 / 3.20. The ripple pass takes 0.18-0.19 ms for one ripple
+  and 0.60-0.62 for eight (the shader loops over the live ripples), the
+  blit 0.34-0.42.
+  So an on-screen ripple costs what it did, +1.0-1.5 ms while any lives.
+  The branch's wave phase read +0.4-0.5 ms in both designs, outside the
+  ripple's own draws (one run per build, lobe phases not pinned: not
+  separated from noise). WARM-UP (`warm()`): an EMPTY box on the stage
+  under a copy of the filter (the same GlProgram, by source; uCount 0)
+  with a screen-sized filterArea, for WARM_FRAMES 3 ticks: pixi links
+  the program and pools a screen-sized MSAA texture, keyed as the first
+  ripple's. The box's input is transparent and the shader returns it
+  unchanged. The cost: that pooled texture is held from load (3200x1800
+  takes a 4096x2048 one), and a resize before the first ripple allocates
+  again. FIRST TAP (k279_firsttap.mjs: fresh profile, 1400x900 at DSF 2,
+  four real clicks, ms of rAF callbacks over the tap's first 10 frames;
+  knot / fabric / dense): master glint 113 / 116 / 206 against ripple off
+  80 / 100 / 181; branch glint 85 / 102 / 184 against off 81 / 112 / 181.
+  The ripple's first-use share (15-33 ms) is gone. Left on both builds,
+  ripple or not: one frame interval of 35-54 ms among tap 1's first
+  five, against 18 ms on later taps (dense 18-36: its frames often take
+  two vsyncs). Not attributed; the pluck overlay's first draw and
+  first-event JIT are candidates. PHONE SIZE (k279_phone_size.mjs on
+  f41de80, before the floor; the Pixel 11's 411x753 at DSF 2.625
+  emulated on the desktop): 8.8-9.0 CSS px/world, thread 4.6 CSS px,
+  front at the end 32 CSS px = 5.6 mm, band half 4 -> 8 CSS px; glint's
+  footprint (p50 of the changed pixels' distance from the site) follows
+  just outside the front: 23 CSS px at t 0.25 s (front 20), 32 at 0.5 s
+  (front 29). Desktop 1400x900: 22 px/world, front 80 CSS px.
+  FLOOR (`RIPPLE_FLOOR_CSS` 56): below it one factor scales the front,
+  the band and the wave's bend, and so the reach and the cull; it is
+  exactly 1 at and above the floor, so a default desktop view writes
+  bit-for-bit the uniforms it did. Why 56: the desktop ripple's visual
+  angle (80 CSS px of about 0.25 mm at about 60 cm; a phone CSS px is
+  0.177 mm at about 30 cm, about 1.4x the angle), and the front clears a
+  5 mm fingertip at 0.19 s at 63% strength (unfloored 0.47 s and 23%);
+  the front then ends at 9.9 mm. Not seen on the phone yet; 68 is the
+  upper candidate. WAVE A/B
+  (k279_ab2.mjs, `&prp=wave`, same state, master vs f41de80): 0 px on
+  the daily, `?7` knot and the kink loop (11-14 frames each, plucks 4/4),
+  and on 13 of `?7` fabric's 14. The 14th (`oz_far`: zoomed to 176
+  px/world, the far ripple 5.5 world off-screen) differs by 112,741 px,
+  exactly master's own oz_far-vs-no-ripple diff: master still filters,
+  the branch culls, and its frame equals its no-ripple frame. Those
+  pixels are not at a disc's edge: 103,058 at |d| 1 (the filter pass's
+  8-bit rounding) and 9,535 at |d| >= 4 (36-46 levels) over 305 of 504
+  100-px cells, single thread-edge AA pixels where one MSAA sample of
+  four flips, since the filter draws the world again into its own MSAA
+  texture (`ab2_where.mjs`). Every ripple frame differs so from its
+  no-ripple frame, on both builds.
 
 ## Pluck cusp (K344)
 

@@ -72,6 +72,11 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
 - **A new program site** (`GlProgram.from`, `Shader.from`, a Filter, a
   ParticleContainer) freezes its first draw on a cold cache. Once stage 2
   lands it must go on the warm-up registry.
+- **The pluck ripple warms itself** (K279 stage 2, 2026-10-15):
+  `PluckRipples.warm(stage)`, one main.ts call once the stage is built,
+  draws an empty box under a copy of the ripple filter for 3 ticks, which
+  links its program and pools its screen-sized texture (render-pluck.md
+  STAGE 2). Move it onto the registry when that lands.
 - **Growing a shader costs compile time.** section-rgb is the intro's
   critical path. After a large shader change, time a cold link:
   `trace_intro.mjs` on a fresh profile.
