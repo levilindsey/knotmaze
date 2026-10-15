@@ -91,7 +91,13 @@ import { MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
 import { ModeBadge, modeBadgeFor } from "./ui/mode_badge";
 import { headIndicatorWhy, headReturnPlan } from "./ui/head_indicator";
-import { clampFitView } from "./ui/view_clamp";
+import {
+  clampFitView,
+  easeIntoRange,
+  noAllowance,
+  panRange,
+  type OpenPanel,
+} from "./ui/view_clamp";
 import {
   DARK_DISC,
   GLYPH_R,
@@ -575,6 +581,8 @@ async function main(): Promise<void> {
   // The unanchored knot finds its own shape, so the viewport fit follows
   // the live particle bounds, easing toward the target to avoid popping.
   const fitTarget = { scale: 1, x: 0, y: 0 };
+  // K198: the framed maze's drawn right edge, world x (the pan range's).
+  let fitRight = 0;
   function computeFitTarget(): void {
     if (!ps) return;
     let minX = Infinity;
@@ -601,6 +609,14 @@ async function main(): Promise<void> {
       maxY = fogBox.maxY;
       pad = 0.3;
     }
+    // The threads' edge, or a start/head/exit disc poking past it; under
+    // fog, the visible region's.
+    fitRight = fogBox
+      ? maxX
+      : Math.max(
+          maxX + params.threadWidth / 2,
+          params.mazeFabric && fabric ? fabric.markersRight() : -Infinity
+        );
     minX -= pad;
     minY -= pad;
     maxX += pad;
@@ -623,10 +639,11 @@ async function main(): Promise<void> {
   // FIT - the eased auto-fit (the whole knot, or under fog the visible
   //   region) with the user's zoom/pan composed on top in SCREEN space:
   //   screen = zoom * fitScreen + pan. Zoom 1 is the home view. Pans clamp
-  //   (ui/view_clamp.ts, K149) so the zoomed fit frame covers the screen
-  //   to within PAN_SLACK of its size per side, at every zoom: the maze
-  //   can be dragged partly off screen, clear of the open panel, even at
-  //   zoom 1. A reset (double-click) eases back to zoom 1, pan 0.
+  //   (ui/view_clamp.ts, K198) so the zoomed fit frame covers the screen,
+  //   except that while the panel is open the maze may go left until its
+  //   right edge clears the panel; out of range (the panel closed, a
+  //   resize), the view eases back in. A reset (double-click) eases back to
+  //   zoom 1, pan 0.
   // FOLLOW - a chase camera on the player's head (maze mode): a scale +
   //   world center that gestures move freely, pulled back by a weak,
   //   critically damped spring that stays OFF for FOLLOW_DELAY after the
@@ -664,10 +681,37 @@ async function main(): Promise<void> {
     viewHoming = false;
     camTween = null;
   };
-  // The fit camera's zoom range and pan range (K149: with slack, see
-  // ui/view_clamp.ts).
+  // K198: how far outside its range the view may still sit while it eases
+  // back in (ui/view_clamp.ts), and the panel's wrapper once it exists.
+  const panAllow = noAllowance();
+  let panelWrap: HTMLElement | null = null;
+  // The open panel as the pan range needs it (null while it is closed).
+  const openPanel = (): OpenPanel | null => {
+    const r = panelWrap?.getBoundingClientRect();
+    if (!r || r.width <= 0) return null;
+    return { left: r.left, mazeRight: fitCur.x + fitRight * fitCur.scale };
+  };
+  // The fit camera's zoom range and pan range (ui/view_clamp.ts).
   const clampView = (): void => {
-    clampFitView(view, app.screen.width, app.screen.height, MAX_ZOOM);
+    clampFitView(
+      view,
+      app.screen.width,
+      app.screen.height,
+      MAX_ZOOM,
+      openPanel(),
+      panAllow
+    );
+  };
+  // One frame of the ease back into range (rate 0: hold where it is).
+  const easeView = (rate?: number): void => {
+    easeIntoRange(
+      view,
+      app.screen.width,
+      app.screen.height,
+      openPanel(),
+      panAllow,
+      rate
+    );
   };
   const applyView = (): void => {
     root.scale.set(fitCur.scale * view.zoom);
@@ -804,6 +848,9 @@ async function main(): Promise<void> {
     setCamFollow(
       params.cameraMode === "follow" && params.mazeFabric && fabric !== null
     );
+    // K198: a view the range left behind (the panel closed, a resize, the
+    // fit drifting) eases back in, every frame, whatever else runs.
+    if (!camFollow) easeView();
     if (camTween) {
       stepCamTween(dt);
       return;
@@ -813,8 +860,9 @@ async function main(): Promise<void> {
         view.zoom += (1 - view.zoom) * 0.15;
         view.panX -= view.panX * 0.15;
         view.panY -= view.panY * 0.15;
-        // K149: zoom 1 has a pan range now, so the pan must settle too (a
-        // reset from a slack-panned zoom-1 view used to snap on frame one).
+        // K149: zoom 1 can have a pan range (the panel open, K198), so the
+        // pan must settle too (else a reset from a panned zoom-1 view snaps
+        // on frame one).
         if (
           Math.abs(view.zoom - 1) < 1e-3 &&
           Math.abs(view.panX) < 0.5 &&
@@ -873,7 +921,9 @@ async function main(): Promise<void> {
     fitCur.scale = fitTarget.scale;
     fitCur.x = fitTarget.x;
     fitCur.y = fitTarget.y;
-    clampView();
+    // K198: a resize can leave the view out of range: hold it here, and
+    // let the next frames ease it in (never a snap).
+    easeView(0);
     if (camFollow) applyCam();
     else applyView();
   }
@@ -1738,6 +1788,7 @@ async function main(): Promise<void> {
       });
     },
   });
+  panelWrap = panel.pane.element.parentElement; // K198 (display none closed).
   synth.setVolume(params.volume);
   synth.setReverb(params.reverb);
   synth.setVoice({
@@ -3969,6 +4020,12 @@ async function main(): Promise<void> {
     zoom: view.zoom,
     panX: view.panX,
     panY: view.panY,
+    // K198 probes: the open panel (left edge, the maze's fit-screen right
+    // edge), the pan range at this zoom and the ease's allowance.
+    panel: openPanel(),
+    mazeRight: fitCur.x + fitRight * fitCur.scale,
+    range: panRange(app.screen.width, app.screen.height, view.zoom, openPanel()),
+    allow: { ...panAllow },
   });
   // K101: the music notes handed out lately (start time on their clock,
   // lead = how far ahead of the tick that scheduled them) and the clocks.
