@@ -21,6 +21,7 @@ and never reused.
   about 1.5 fewer visible rows on a phone. Accept it, or put the badge
   somewhere else while the panel is open? Screenshots:
   `.claude/probes/K92/out/phone_open.png`, `desktop_open_load.png`.
+  Emailed 2026-10-14 10:11 as 10.1.
 - **K225** · The markers' default size (K98, merged 2026-10-14 10:03;
   sheet sent to Levi at 10:04): at `markerSize` 1.08 the markers are
   about 5 CSS px across on the phone (K83's were 14) and 12 on the
@@ -28,6 +29,7 @@ and never reused.
   default, or add a minimum on-screen size (K98 has no floor, so the
   slider means the same at every zoom)? Sheet:
   `.claude/probes/K98/sheet_k98.png`; lore: `render-markers.md`.
+  Emailed 2026-10-14 10:11 as 9.1.
 - **K198** · The fit camera's pan and the off-screen indicators, decided
   (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
   just want to be able to pan such that the right edge of the maze is
@@ -60,10 +62,6 @@ and never reused.
     K221-K224.
   - parts (2) and (3) wait on Levi's email answers 6.1 (the indicators'
     settings) and 6.2 (the flash).
-- **K219** · Since K93 the choice hover stops at `pulseReach` in every
-  path mode, and at reach 0.5 it lights very little: does it need a
-  floor? Asked 2026-10-14 about 09:33 with
-  `.claude/probes/K93/K93_hover_sheet.png`.
 - **K90** · A physical minimum bend radius, stage 1 (Levi, 2026-10-13:
   "ideally we'd have a more physics-based constraint to prevent loops
   from becoming too tight in the first place"). No thread folds tighter
@@ -114,6 +112,9 @@ and never reused.
   cmd window user-rotation lock 0`) and restores it after, which changes
   a phone setting, so it needs your OK. The 2026-10-14 round pass runs in
   landscape (still a fair A/B: its floor is landscape too).
+  Round 2026-10-14b's pass (10:12-10:42) ran in PORTRAIT, 411x753: the
+  phone was off its dock and in use (Gmail in front at 10:10 and 10:44),
+  so its A/B against the landscape floor is weak (K232).
 - **K194** · K180's calls (`docs/design/K180.md`, "Stage 1 handoff";
   play: https://levi.dev/knotmaze/?7.J&pw=1&pcx=ride&pgl=fallback): (1)
   the defaults once you have played: crossings `through` (built; the
@@ -310,31 +311,41 @@ and never reused.
     9.3 -> 22.5 s, fps fell 46 -> 41 and 44 -> 35, p95 33 -> 50 ms, and
     `gs=18`'s frames over 50 ms 48 -> 84 (K197). Looks: all 18 ran on
     head (base lacks the new features).
-  - owner: agent ad24cee1cd83ebe88 (sonnet) of session d8031183, started
-    2026-10-14 09:37; it stops at about 10:37 or when the round is done:
-    looks for K146, K151, K148, K198, K100 and K93 plus K120's
-    `k120-pad`, a desktop dry run, then the pass on the phone (base
-    54a2b43, head master at 582b081's code; the phone is on Tailscale).
-  - branch: `worktree-agent-ad24cee1cd83ebe88`
-    (`.claude/worktrees/agent-ad24cee1cd83ebe88`), from 582b081; last
-    commit: none yet.
-  - evidence: its worktree's `.claude/probes/K156/round-10-14b/` (copy at
-    merge); the last pass's folder
-    `.claude/probes/rounds/2026-10-14-81d31a5/` and its looks
-    `.claude/probes/rounds/2026-10-13/looks.json`; 3c's
+  - round 2026-10-14b's pass, 10:12-10:42 (base 54a2b43, head 48da84d,
+    master at 09:37; 2 reps, in PORTRAIT 411x753 against the landscape
+    floor, on a hot phone; stopped at its deadline before k140-confetti):
+    fabric fps holds about 59.5 on head where base falls 57.3 -> 49.0
+    from 0 to 13 moves (better at 0, 7 and 13 moves); knot render ms
+    19.8 -> 11.0 (better, marginal); the default link's load fps
+    29.4 -> 34.5 and frames 882 -> 1035 (better), but its p95 and first
+    sleep came out worse, borderline (K232); `gs=18` within noise. 11 of
+    12 looks ran clean, 8 of them new (K151 free play and a daily's
+    replay, K146 practice, K148, K198, K100, K93, K120's pad); the
+    coordinator checked the K198, K100 and K151 sheets. The looks'
+    `storage` field and the walk's `pick` option merged in 8d672ee..b72b3e9
+    (10:50).
+  - owner: nobody since 2026-10-14 10:47 (agent ad24cee1cd83ebe88
+    (sonnet) of claude session d8031183, ended at its deadline; its
+    worktree is kept).
+  - branch: mainline (merged in 8d672ee..b72b3e9); last commit: b72b3e9 (the
+    round's handoff in `docs/design/K156.md`).
+  - evidence: `.claude/probes/rounds/2026-10-14-48da84d/` (`pass/summary.md`,
+    `pass/looks_report.json`, `pass/sheets/`, its `looks.json`,
+    `looks_run.json`, `make_looks.mjs` and the adb recovery logs); the
+    morning's `.claude/probes/rounds/2026-10-14-81d31a5/`; 3c's
     `.claude/probes/K156/3c/`.
-  - next: the round's looks and pass; then look over its sheets and send
-    Levi the ones worth his eye. The move pad is on by default on the
-    phone, so head's frame cells include it where base has none, and
-    `makeMoves`' choice taps could land on it (0 of 50 measured); looks
-    that don't test it set `knotmaze.movePad` to `0`. Sweep the 3a and 3b
+  - next: once K193 settles the orientation, an A/A floor in it (K195),
+    then the two borderline load cells again with 3 reps (K232). The next
+    round's pass covers K98 and K92 (K230), runs k140-confetti and the 14
+    looks dropped for time, and fits its length (K233). Fix the k198
+    `gap` in the round's `make_looks.mjs` (it ignores panX; the real
+    gap is panelLeft - (mazeRight + panX), 9.9 px). Sweep the 3a and 3b
     worktrees (`.claude/worktrees/agent-a262df65dcc1489a7`,
     `.claude/worktrees/agent-a957f7f1407f5df9f`) with
     `.claude/probes/K161/cleanup.ps1` (`-DryRun` first).
-  - brief: `docs/design/K156.md`, section "Round 2026-10-14b: the looks
-    and the pass".
+  - brief: `docs/design/K156.md`, "Round 2026-10-14b handoff".
   - env: none; the pass builds and serves both builds itself (ports
-    5480-5489).
+    5480-5489). Check that nobody is using the phone first (K234).
 - **K161** · Disk: C: had 24.4 GB free (2026-10-13 about 19:30, before
   K81's 1.6 GB probe copy). `$env:TEMP` holds 1145 `knotmaze-*` Chrome
   profiles (about 36.5 GB) that probe runs never delete; the worktrees
@@ -408,11 +419,11 @@ phone, 2026-10-13). At most three code agents at once, research on
 top. Pre-launch, nothing keeps old links or dailies (Levi, 2026-10-13
 13:17; CLAUDE.md "Pre-launch: no back-compat"), so codec appends no
 longer wait for each other: the second branch to merge renumbers its
-appends. Usage: don't hold agents back until the week nears 95% (Levi,
-2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17, 54% at
+appends. Usage: don't hold agents back until the week nears 97% (Levi,
+2026-10-13 07:40, raised from 90% at about 23:53 and to 97% on 10-14 at about 10:57; 42% at 07:17, 54% at
 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
 23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38, 78% at 08:05,
-80% at 08:37, 82% at 09:04, 83% at 09:28, 84% at 09:36 and 88% at 10:01, when the 09:37 batch was told to wrap up by 10:30 and launches stopped until the reset; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
+80% at 08:37, 82% at 09:04, 83% at 09:28, 84% at 09:36, 88% at 10:01 (the 09:37 batch was told to wrap up by 10:30 and launches stopped) and 91% at 10:56, when Levi said "Let's ignore the usage limits until 97%. Proceed"; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
 at about 07:53 "Keep going at full pace."; it resets Mondays at 12:00).
 Long work runs in stages from
 committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
@@ -426,16 +437,18 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running on 10-14, from 09:37: the round's phone pass (K156, sonnet,
-1 h cap). K145 (stage 2 of K93 + K145) stopped at 10:06 on the
+(he may reorder). Nothing runs since 10:47, when the round's phone pass (K156) ended. At
+about 10:57 Levi lifted the usage hold: launches go on until the week
+reaches 97% (it resets Mon 2026-10-19 12:00). K145 (stage 2 of K93 + K145) stopped at 10:06 on the
 usage cap, unmerged (its handle says what's left). K100, K132, K90 stage 1b, K173 (the rules
 split), K93, K198 stage 1, K98 and K92 merged at 08:39-10:08; the coordinator carries the running agents' rules edits
 into the topic files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
    K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
-   and K180 against base ab6d330) is done (K197 filed); the next pass
-   (round 2026-10-14b, running from 09:37) covers K146, K151, K148,
-   K149, K120, K90 1a and 1b, K100, K132, K198 and K93.
+   and K180 against base ab6d330) is done (K197 filed), and so is round
+   2026-10-14b's (10:12-10:42, head 48da84d, with looks for K146, K151,
+   K148, K198, K100, K93 and K120; K232-K234 filed). The next pass covers
+   K98 and K92 and needs a floor in the phone's orientation (K193, K195).
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
    5fed5c1; Levi plays it (K174).
@@ -461,11 +474,11 @@ into the topic files at their merges. Then, as code slots free up:
 
 Waiting for Levi: K90's bend bound (he tests it live); K114's spider (call 7); the G3-3 and G4-2 old-path
 deletions; K162, K174 and K184-K186 (play, then call); K191, K193 and
-K194; K198's indicator settings and flash; K219 (a floor for the hover); near launch, K117 and K210;
+K194; K198's indicator settings and flash; K225 (the markers' size); K229 (the open panel's top); near launch, K117 and K210;
 after the churn, K46, K57 and K84. Emailed 2026-10-14 about 08:25, each with
 enough detail to decide and numbered for a reply by number: K114 call 7
 (1.x), K174 (2.x), K191 (3.x), K193 (4.1), K194 (5.x), K198 (6.1
-settings, 6.2 flash) and claude-config's CC39 (7.1); the draft is in
+settings, 6.2 flash) and claude-config's CC39 (7.1); added at 10:11: K219 (8.1, since answered), K225 (9.1) and K229 (10.1); the draft is in
 `.claude/probes/levi_email/` (untracked).
 
 K5-K7 (split, frame loop, worker) follow.
@@ -691,9 +704,25 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K234** · `scripts/phone_pass.ps1`'s `-Phase check` and `-WaitReady`
+  treat a phone in use as ready. Round 2026-10-14b's agent saw Gmail in
+  front at 10:10 and waited by hand for 120 s without user activity
+  (`dumpsys power` activity ages) before starting; the check should do
+  the same (`docs/design/K156.md`, "Round 2026-10-14b handoff").
+- **K232** · Round 2026-10-14b's pass (K156) found two borderline worse
+  cells, both in the default link's load (`?b.J`, base 54a2b43 vs head
+  48da84d): p95 33.4 -> 50.0 ms (floor 0.1) and first sleep
+  18.4 -> 19.6 s (floor 1.2). Two reps, late in the pass on a hot phone
+  (skin 31 -> 39 C), in portrait against the landscape floor; `gs=18`
+  and the fabric cells don't echo them. Rerun with 3 reps once the floor
+  matches the phone's orientation (K193, K195); K197 is the morning's
+  load shift (`.claude/probes/rounds/2026-10-14-48da84d/pass/summary.md`).
 - **K230** · K92 did not check the badge's last fit level (the bare icon
   below the hamburger) with the panel open; its phone checks were desktop
   emulation, so the next phone pass covers K92 (`gameplay-badge.md`).
+  No phone look reaches the badge's fit levels (shorter label, one word,
+  the icon) at 411 px (round 2026-10-14b): check them in an emulated
+  narrower viewport.
 - **K228** · A choice's hover stays lit after the mouse leaves the canvas
   (`src/main.ts`; seen by K145's agent, whose glow clears there).
 - **K226** · K98's spider glyph and role have no mesh (`MeshRole` excludes
@@ -1086,6 +1115,11 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Ideas (not scheduled)
 
+- **K233** · The phone pass's length: the full spec (26 looks, 3 reps)
+  takes about 55-60 min (frames about 6.7 min a rep, looks about 80 s
+  each; round 2026-10-14b). Trim it per round, or add a spec `deadline`
+  so no look starts after it (`pass/state/watchdog.trip` already stops a
+  pass gracefully; `docs/design/K156.md`, "Round 2026-10-14b handoff").
 - **K231** · Keyboard shortcuts for K92's undo and redo (Ctrl+Z,
   Ctrl+Shift+Z / Ctrl+Y), proposed by K92's agent (`src/main.ts`,
   `src/ui/undo_buttons.ts`).
@@ -1279,6 +1313,14 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K219** · Since K93 the choice hover stops at `pulseReach` in every
+  path mode, and at reach 0.5 it lights very little: does it need a
+  floor? Asked 2026-10-14 about 09:33 with
+  `.claude/probes/K93/K93_hover_sheet.png`.
+  - Answered 2026-10-14 about 10:57, in session: "Hover should honor the
+    slider." No floor and nothing to change: since K93 the hover stops at
+    `pulseReach` in every path mode. (Emailed at 10:11 as 8.1, just
+    before.)
 - **K92** · Undo and redo for design changes (Levi, 2026-10-13). Two
   buttons beside the panel's open/close button, shown only while the
   panel is open, each enabled only when it can act; the mode badge moves

@@ -28,7 +28,13 @@ app in front, and `retry_quiet.ps1` retries once after 15 quiet minutes.
 `retry_quiet.ps1` waits the same way (`-WaitReadyMin`) instead of
 exiting 3, and `-Phase check` is the one-shot read-only check. Never
 pipe a `-Dry -Phase start` run (its Chrome child inherits the pipe and
-the command never returns): redirect it to a file.
+the command never returns): redirect it to a file. Nor let a background
+or piped task be the one that starts the adb server: the server is the
+task's child and dies with it (round 2026-10-14b: started at 09:56 under
+a background `-Phase check`, it died at about 10:43 when that task was
+reaped; `adb connect <phone>:5555` brought the phone back, and other
+sessions' `adb reverse` tunnels survived). Start it first from a
+file-redirected foreground command (`adb start-server > <file> 2>&1`).
 FRAMES (`bench.mjs`): fabric at 0/7/13 moves and knot (`mf=0`) at rest,
 both builds interleaved per rep (fps, p95, longest frame, render ms,
 asleep), plus K147's load scenario (rAF intervals from a fresh
