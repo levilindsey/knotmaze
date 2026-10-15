@@ -14,8 +14,6 @@
 
 - **K278** · K74 stage 2's residuals: (a) H1 ignores the exit clearance (dailies 1-80: 36 new junctions inside the 12 u radius, 23 more turn plain); guard it with stage 3's corridor guard; (b) the pass costs a median 8.9 ms (max 13.5) at gs 18, about +30% on generation (per-strand caches, a node -> strand map); (d) most skipped cuts hit a host self-crossing or a same-strand splice, so dense heart and ring designs cut no bridges (a lever for stage 3 or 4); (e) H1 can shorten the optimal route (tree `1l6e`, 89.6 -> 78.3); (f) 494f2fe's message says codec index 108, it is 117; (c) is done (86d404e..02194b4). `docs/design/K74.md` ("Stage 2 handoff").
 
-- **K285** · Citation details K277 left out until a record confirms them: Jakobsen's venue, Müller et al.'s volume and pages, Jaffe and Smith's pages, the Elias DOI, the editor of Perlin's course notes. `docs/design/K274_K277.md` ("Stage 1 handoff").
-
 - **K281** · The burn race's stage 1 residuals (K114): (a) `drawFire` costs about 2.5 ms a frame on the desktop (11 ms at 4x throttle) once all is burnt; (b) it ignores K76's thread reveal; (c) the char stroke draws over crossing gaps ((a)-(c) go with stage 3's shader look); (d) `runPoints` is approximate on mixed diagonal runs; (e) at h 0 the HUD's fire lead reads 0 until the first move; (f) a backtrack right after a move is refused as smouldering, with odd toast wording; (g) a link setting both fire and minotaur silently plays the minotaur; (h) c014a83's subject says codec 117-119 (it is 118-120). `docs/design/K114_burn.md` ("Stage 1 handoff").
 
 - **K254** · K193 stage 1's residuals in the phone pass: (a) the looks phase is unexercised with the new code (`shotViewport`, `report.viewport`, `emu`, `shotStats`): run a desktop `-Dry -Looks scripts/phone_pass/looks.example.json` and check `looks_report.json` and the sheet; (b) the docked-landscape case is unverified (one `-Viewport portrait` pass from a docked phone); (c) `-Phase check` counts an awake, unlocked phone as ready with another app in front or a person using it: also require the launcher or Chrome in front and a quiet touchscreen for a few seconds. `docs/design/K193.md` ("Stage 1 handoff").
@@ -40,19 +38,9 @@
 
 - **K222** · K198's maze edge leaves out the win ring (about 5 px past the disc), the head's glow and the minotaur, and the range ignores the panel's height, so a maze lower than a short panel still has to clear it (`docs/design/K198.md`, The calls).
 
-- **K221** · K198's range reads the maze's right edge, which creeps while the knot settles (about 0.3 fit px per 200 ms), so the gap to the open panel at the left limit shrinks by zoom times the creep (0.2-1.2 px measured; `docs/design/K198.md`).
-
-- **K220** · Tooling: K75's `census_fan.mjs` misreads routed joints since K81 (it calls `fieldProbe.at` without `px` and `strip`: 0.21 where the fans agree to 0.006). Use K169's `census_k81.mjs` or K93's `census_k81h.mjs` (`.claude/probes/K93/`); fix or retire it.
-
 - **K217** · K93's trail split is placed linearly in ctrl, but the trail measures lattice length and the paint is linear in arc, so the fade start sits slightly off (pre-existing), and a fading part narrower than a pixel blends sub-pixel at the split (`docs/design/K93_K145.md`, Stage 1 handoff).
 
-- **K213** · Before K90's bend bound ships (if Levi ships it): the min regression (the hard clamp tightens the worst window in 24 of 585 scans, the soft one in 4; done when `k90_minrows.mjs` reports 0), `controlArcLengths`, unit tests and a CPU mirror, hit tests on the moved samples, the phone's rebuild cost (`docs/design/K90.md`, Stage 1b handoff).
-
-- **K207** · Fog stamps grow without bound within a solve: the spacing filter checks only the last stamp, and `renderFog` redraws every stamp. A spatial dedupe fixes both (`src/render/fabric_maze_renderer.ts`; `docs/design/K100.md`, Stage 1 handoff).
-
 - **K206** · A restored attempt stamps its fog right after the intro, while the threads re-settle, so with physics it differs from the live fog (IoU about 0.96). Option: stamp after the first sleep (`docs/design/K100.md`, Stage 1 handoff).
-
-- **K205** · K120's leftovers (`docs/design/K120.md`): the follow camera doesn't keep the dot clear of the move pad (a camera inset, K148's and K149's area); the maze is small at the phone's fit zoom; a toast at 411 px can overlap the pad; clicking the panel's empty area then pressing an arrow moves in the maze instead of scrolling the panel; a hold could in principle loop around a cycle of runs matching its key (not observed; a probe that alternately taps and holds the best key can cycle forever).
 
 - **K202** · A bare-URL daily left open past midnight with no move becomes practice when begun the next day (K146). An unstarted daily the bare URL opened could roll over to the new day instead (`docs/design/K146_K151.md`, "Open").
 
@@ -64,13 +52,7 @@
 
 - **K195** · The phone pass's gaps (K156 3c, `docs/design/K156.md`, "Stage 3c handoff"): the noise floor is one 3-rep A/A pass for `-Moves 0,7,13` only (rerun A/A when the orientation, the phone or the load changes); knot-mode render ms swings 7.5-20.5 ms in A/A, no use at rest; K80's indicator look shows the indicator but never taps it. Fixed since: the white strip (K193), the portrait floor (K253, 459cc11), and the watchdog's touch trip works (2026-10-14 19:37).
 
-- **K196** · K180's crossings options at phone scale: `ride` and `pinch` leave most taps unreadable in the census (dense `ride` 93.8%, fabric `pinch` 71.1%); `through` reads best (`docs/design/K180.md`, "Stage 1 handoff"; `.claude/probes/K180/`).
-
 - **K123** · `.claude/probes/K10/phone_bench.mjs` drives the first visible `http://localhost:` tab on any port, so it can navigate one of Levi's own tabs. Use `.claude/probes/K79/phone/bench.mjs` (ports 5371-5374 only), or filter by port.
-
-- **K125** · Scarborough Fair's loop is 50 beats (`src/audio/songs.ts`), not whole 3/4 bars, so a band part that keeps bars would slip each loop. Grow its closing rest from 2 beats to 3 before any band part (K116's call 6).
-
-- **K128** · `src/render/marker_mesh.ts:32` declares `in vec2 aUV;` but never reads it while the geometry carries it, so PixiJS warns "Attribute aUV is not present" for each of the three marker meshes on every load (K83; found by K81 stage 3a). Read it in the shader or drop it from the geometry.
 
 - **K130** · Panel rows with a slider step (`backgroundIntensity`, `pulseReach`, `settleBudget`, `loadSettle`, ...) snap to Tweakpane's step grid, which starts at the row's first value: after a link with an off-grid value, "Reset to defaults" can write a wrong default (e.g. intensity 0.48). Existing behavior (`src/ui/tweakpane_panel.ts`), found by K79 stage B1.
 
@@ -79,8 +61,6 @@
 - **K12** · Shaped-lattice sleep failures: star with e-w anchors sleeps on 6/8 seeds; K46's scans at gs 20-24: star 4/60 never sleep, tree 4/60, fish 2/60 (some thrash about 1 unit per substep); heart, ring and rect are clean. The circle at gs 18 is clean on its default and w/e anchors, but with n/s anchors 3 of 7 seeds never sleep (seeds 1 and 4 thrash, seed 7 holds a standing rider). Repro: `?4.c&shp=circle&sa=n&xa=s&am=instant`.
 
 - **K62** · The `branchDensity` and `fourWayFraction` panel rows do nothing at the default `junctionSpacing` 2 (K46 finding; K74: `branchDensity` 0.2-0.6 and `fourWayFraction` 0.4-0.7 build the identical maze, 0.1, 0 and 0.8+ change it). They look broken; rescale, relabel or hide them. `junctionSpacing` is the real density knob.
-
-- **K15** · During a reveal, a joint's fan can turn opaque while a fill beside it is still striped (K4 fixes it by construction; may be moot since G1 99443cb deleted the over-fills). Re-check fan vs base ribbon during a reveal.
 
 - **K16** · Physics settle is slow: 100-190 ms/frame at gs 18 on a loaded desktop, 7 sim-seconds in 14 s on the phone; it matters more since the daily's 18x18 design is the front door (sleep at sim about 5.0 s since K63; cost is particles x thread width). K279's wake check (`.claude/probes/K279/wake/`): a drag, a tap with the tug and a bare wake cost the same (8.2 / 10.5 / 20-23 ms per substep at 2592 / 3011 / 5448 particles), so every wake spirals to the 100 ms cap and runs at 7-9 fps (3-4 dense) for 3-8 s. K162 (4) asks whether drags get K147's budget; K7's worker is the full fix. A regression since the 2026-10-10 audit (40 fps mid-drag) is unconfirmed; a bare-wake probe on that commit would settle it (offered to Levi, 2026-10-14 18:25).
 

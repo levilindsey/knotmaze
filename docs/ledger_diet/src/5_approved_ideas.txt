@@ -2,8 +2,6 @@
 
 - **K259** · With the explore mode on, a chain with any visible piece draws its whole mesh, so hidden fragments still run the shader; drawing only the visible index range would make it cheaper. Not needed yet (2a's cost never exceeds master's program; `docs/design/K76.md`, "Stage 2a handoff").
 
-- **K255** · Fold K193's `wait_then_aa.ps1` (`.claude/probes/K193/`) into `scripts/phone_pass.ps1` as `-WaitQuiet`: it tolerates touches until a full quiet window can no longer end before a deadline, unlike `retry_quiet.ps1` (runs only after a trip; gives up at the first touch that leaves less than a full window).
-
 - **K256** · The phone warms about 6 C in a pass's first rep, so cells run at different temperatures (K193's A/A). A warm-up before the bench, or a temperature column in the summary, would separate heat from noise (`docs/design/K193.md`, "Stage 1 handoff").
 
 - **K247** · K174's ideas: readable labels in the Minotaur folder (the `mino*` keys clip, K246); a catch toast that says the fog came back; homing or the rejected "closest" roam pick, if more than about 2/3 of games should meet the minotaur. `docs/design/K174.md` ("Stage 1 handoff").
@@ -26,11 +24,7 @@
 
 - **K68** · If junction-web edges look soft at deep zoom (about 4x), size the arm material strip rows from the camera's world-per-pixel (re-packed on zoom) instead of raising the 64-texel width for everyone (K4 agent idea).
 
-- **K70** · A more dramatic hero settle (P2 polish): the splines round the lattice corners from the first frame, so the settle reads as a gentle tightening, not zigzags turning into curves. Blend sampled positions toward the control polyline while settle progress is low (`docs/history.md`, Follow-ups).
-
 - **K71** · Wobbly threads at slack ~0 (P2 polish): waviness along runs and rope-tight twist chains. Candidate knobs: constraint iterations, pullOnly bending, repulsion/structural balance (`docs/history.md`, Follow-ups).
-
-- **K113** · Two-layer vellum: render the fibers and grain once into a static texture (1 texel per CSS px) and drift only the mottling in a low-res pass (today's drift pass is about 2.1 ms at 1600x900; K79, `.claude/probes/K79/out/gpu_k79.log`).
 
 - **K119** · i18n, at the end (Levi, 2026-10-13): there is little text, and an LLM will drive the translations. Strings are mostly in `src/ui/` and `src/game/share_text.ts`; text drawn as threads is K115's question.
 
