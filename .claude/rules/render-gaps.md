@@ -229,3 +229,12 @@ never run.
   renderer sets k only while the reveal is on (the over thread's
   visibility at the over pass; a marker disc's 0 or 1) and restores 1
   when it turns off. The rule and its census: `render-explore.md`.
+- K268 stage 1 (2026-10-14), the shaped cut: `setShape(slot, shape |
+  null)` writes a slot's fade profile into three texels at the end of its
+  row (GAP_PROF_BASE 111, so GAP_TEX_W 111 -> 114) and sets texel 3.w's
+  bit 4 (GAP_FLAG_SHAPED), which only the explore program's gapKeepAt
+  reads; null, writeSlot and clearSlot clear both. The texture uploads
+  ROW-PARTIAL now: its own uploader `knot-gap-rows` sends only the rows
+  written since the last upload (`GAP_UPLOAD_STATS`), not the whole
+  table. The rule, the classifier and the census:
+  `render-explore.md`.
