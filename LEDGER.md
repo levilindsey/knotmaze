@@ -15,13 +15,15 @@ and never reused.
 
 ## Waiting on Levi
 
-- **K261** · K74 stage 2's two calls (stage 2 builds the recommended
-  defaults unless Levi answers first): (1) the H-cut share's default:
-  the largest measured share that keeps decision 1's greedy bar, 1 if
-  share 1 keeps it (rec.), or 1 regardless; (2) which H's a partial
-  share cuts: an even stride in strand order (rec.), smoothest corners
-  first, or nearest the exit first. `docs/design/K74.md` ("Stage 2
-  brief", "Calls for Levi").
+- **K261** · K74 stage 2's two calls, built as recommended (merged
+  2026-10-14 16:13; Levi may change either): (1) the H-cut share's
+  default is 1, the largest share that keeps decision 1's greedy bar on
+  dailies 1-80 (exactly: 15.0% within 1.5x; taps per solve 4.76 ->
+  1.31), which is also the "1 regardless" option; dailies 81-240 miss
+  the bar at every share, share 0 included; (2) a partial share cuts an
+  even stride in strand order (not smoothest corners first, or nearest
+  the exit first; at share 1 the order doesn't matter).
+  `docs/design/K74.md` ("Stage 2 handoff", "Calls for Levi").
 - **K260** · The burn race's calls 2-4 (K114; stage 1 builds each
   recommended default unless Levi answers first): (2) Reset path with
   the fire on restarts; (3) the fire and the turn-aligned minotaur are
@@ -54,6 +56,14 @@ and never reused.
   motion stills the beacon's breath; under High contrast the halo and
   the dots draw at full strength in pure white (rec.). Asked in session
   2026-10-14 14:19. `docs/design/K76_reveal_mode.md` section 10.
+- **K275** · Should junction joints and dead-end caps fade with their
+  thread under thread reveal (K76)? Stage 2b pops a joint in once every
+  arm is solid (vis 0.98), and the cap gate is binary at 0.98, while
+  K268's shaped cut follows the fade. Fading them with the thread (rec.;
+  section 10's premultiplied strip alpha) lets a cap and the shaped cut
+  read one coverage; popping keeps 2b's simpler gate. It gates K268
+  stage 2's caps. `docs/design/K76.md` ("Stage 2b handoff", "For stage
+  2c", "Shaped gaps (Levi, 15:16)").
 - **K253** · A quiet phone for K193's portrait A/A floor: the phone
   untouched, awake and plugged in for about 30 minutes (3 reps of about
   9 min). The 2026-10-14 13:47 attempt tripped on a touch at 13:59
@@ -241,7 +251,8 @@ and never reused.
     (ports 5720-5729).
   - branch: `worktree-agent-af79edbe2a4677ff5`
     (`.claude/worktrees/agent-af79edbe2a4677ff5`), from 68524e1; last
-    commit: none yet (unpushed).
+    commit: `7e4a022` (WIP; unpushed). At 16:15 it was asked to rebase onto
+    faa9a52 and move its codec appends to 118-120 (K74 took 117).
   - evidence: `.claude/probes/K114/burn/` in that worktree.
   - next: the burn race's stage 1 (the fire model, the R.6.1 balance
     measurement, the params and the mode, a cheap first look with the
@@ -266,8 +277,15 @@ and never reused.
     and pins: the brief's "Stage 1 handoff"; the delegated pick, for
     Levi to review if he wants:
     `.claude/probes/K74/out/K74_stage1_before_after.png`;
-  - stage 2: H1, the fused arm cut, with a slider for the share of H's it
-    cuts (decision 4; the free-tip cut breaks sleep);
+  - stage 2 MERGED in 4d3efe6..faa9a52 (2026-10-14 16:13; it deploys):
+    H1, the fused arm cut (decision 4), on at `hCutShare` 1 (codec index
+    117, not daily-exempt). On dailies 1-80, taps per solve 4.76 -> 1.31
+    and the greedy median 3.12x -> 2.65x optimal, 15.0% within 1.5x
+    (decision 1's bar, exactly); dailies 81-240 miss the bar at every
+    share, share 0 included, so stage 4's trap search is needed either
+    way. Every daily moved (#1 86.68 -> 97.11); saved attempts refuse
+    cleanly. Its calls are K261, its residuals K278; results in the
+    brief's "Stage 2 handoff";
   - stage 3: the trap-zone finish (corridor and taper, away flank) beside
     the empty zone, with params for which and how much (decision 2);
   - stage 4: the greedy-trap search at load (decision 6: about 60 ms
@@ -275,32 +293,28 @@ and never reused.
     greedy bands as difficulty params (decision 7), then the target band
     (greedy >= 2.5x optimal, <= 15% within 1.5x; decision 1) checked at
     the defaults.
-  - owner: claude agent a2c61932e9e358104 (opus) of session d8031183,
-    stage 2, started 2026-10-14 15:00 with a 2 h cap (about 17:00; ports
-    5710-5719). Stage 1's agent `afe7e8d13a4b8112b` finished; its
-    worktree `.claude/worktrees/agent-afe7e8d13a4b8112b` is kept.
-  - branch: `worktree-agent-a2c61932e9e358104`
-    (`.claude/worktrees/agent-a2c61932e9e358104`), from 6588ec0; last
-    commit: `1c130e3` (WIP, the H1 fused arm cut and `hCutShare`;
-    unpushed). At 15:20 it was asked to rebase onto 68524e1 and move
-    `hCutShare` to 117.
+  - owner: nobody since 2026-10-14 16:13 (stage 2 merged). Its agent
+    a2c61932e9e358104 of session d8031183 finished; its worktree is
+    kept, as is stage 1's (`afe7e8d13a4b8112b`).
+  - branch: mainline; last commit: `faa9a52`.
   - evidence: `.claude/probes/K74/` (stage 1: `out/analyze_stage1.txt`,
     `out/phys1.jsonl`, `out/verify_*.txt`, `out/k47_refuse.txt`, the
     sheet; the design's `out/scan_final.jsonl` and the hooked plan copy
     `proto_plan_src.ts`); the design agent's worktree
     `.claude/worktrees/agent-aeaf1e61bcecaaf0b` is kept. Fisher's books,
     Abbott's essays and Buck's book-only chapters are unverified (doc
-    section 1). Stage 2 writes `.claude/probes/K74/stage2/`.
-  - next: the brief's stage 2 (the fused arm cut in `applyMazeCuts`
-    behind `hCutShare`; shares 0, 0.5 and 1 measured on dailies 1-80; a
-    new pin of the applied maze). Its two calls are K261, built at the
-    recommendations until Levi answers. K80's call 6 (Levi, 14:31:
+    section 1). Stage 2's are in `.claude/probes/K74/stage2/` (sheets
+    `out/K74_stage2_before_after.png`, `out/K74_stage2_closeups.png`).
+  - next: stage 3, the trap-zone finish, with H1 at 1 and measured on
+    dailies 1-240, plus H1's exit-clearance guard beside its corridor
+    guard (K278 (a)); its brief comes from stage 2's handoff. K80's
+    call 6 (Levi, 14:31:
     "Absolutely"): dead ends are the
     minotaur's hunting ground. Dead-end branches, several runs behind
     one bridge, would make deeper traps: a later K74 param, settled with
     K80's brief.
-  - brief: `docs/design/K74.md` ("Stage 2 brief"; "Stages" and "Stage 1
-    handoff" before it).
+  - brief: `docs/design/K74.md` ("Stage 2 handoff"; stage 3's brief is
+    to be written there).
 - **K80** · The minotaur, decided (Levi, 2026-10-13 14:31, verbatim in
   `docs/design/levi_notes_2026-10-13.md`; design
   `docs/design/K80_gameplay_additions.md` section 0, 17b729b). The
@@ -362,7 +376,8 @@ and never reused.
     interplay, sound and the Reset-path log (2.10); a wait key, a
     move-pad wait button and a hover cue; a turn-based minoToward; and
     the retune (K269; Levi, 15:34: "Retune."): the hunter's defaults back
-    to the research's 1% / 13% on today's mazes; and K273's catch resets.
+    to the research's 1% / 13% on today's mazes, now H1 mazes (K278
+    (c)); and K273's catch resets.
     Before any daily pins a minotaur,
     waits enter `fc.taps` and the attempt saves, and K47's fingerprint
     covers the minotaur params. Real time's phone check is K177.
@@ -517,26 +532,84 @@ and never reused.
   `render-explore.md`; handoff `docs/design/K76.md` ("Stage 2a
   handoff"). Section 10's questions are K257, 2a's residuals K258. 2c
   also gates input: hidden thread still takes taps, tugs and hover.
-  Levi's shaped gaps (2026-10-14 15:16) are K268, a stage after 2b.
-  - owner: claude agent ac6e354b85922e7aa (opus) of session d8031183,
-    stage 2b, started 2026-10-14 14:17 with a 2 h cap (about 16:17;
-    ports 5680-5689). Stage 2a was agent a5d63452980ed9fa3 and stage 1
-    aea102de995e1ce30 (both worktrees kept; stage 1's prototype WIP is
-    1fbc0d2 and 23907a5).
-  - branch: `worktree-agent-ac6e354b85922e7aa`
-    (`.claude/worktrees/agent-ac6e354b85922e7aa`), from c45a894; last commit:
-    `10fe8ce` (WIP, the lore for the gates; unpushed).
-  - evidence: `.claude/probes/K76/stage2b/` in that worktree; stage
-    2a's in the main checkout's `.claude/probes/K76/stage2a/` (copied
-    at the merge), stage 1's in `.claude/probes/K76/`.
-  - next: stage 2b (re-run 2a's mode-off A/B on master; gate the
-    crossing gaps, the markers and the junction webs and fans by
-    visibility, rebuilt on arrivals; mode off stays master's in every
-    program; the gap and joint censuses). At 15:20 it was asked to add a
-    "Shaped gaps" section to its handoff (K268) and to rebase onto
-    68524e1.
-  - brief: `docs/design/K76.md` ("Stage 2b"), then
-    `docs/design/K76_reveal_mode.md`.
+  Stage 2b merged 2026-10-14 16:04 (`3ffed34..8d671ba`, 880 tests): the
+  gap gate (one strength per gap slot: vis(over) at the over pass),
+  markers that show once their point is solid (vis 0.98) and the joint
+  gate (unvisited junctions hide); no shader change, so mode off is
+  master's frame. Sheet `.claude/probes/K76/stage2b/out/K76_2b_sheet.png`;
+  handoff `docs/design/K76.md` ("Stage 2b handoff"). Whether joints and
+  caps fade with their thread is K275, 2b's residuals K276. Levi's shaped
+  gaps (2026-10-14 15:16) are K268, running now.
+  - owner: nobody since 2026-10-14 16:04 (stage 2b merged). Its agent
+    ac6e354b85922e7aa of session d8031183 finished; its worktree is
+    kept, as are 2a's (a5d63452980ed9fa3) and stage 1's
+    (aea102de995e1ce30; its prototype WIP is 1fbc0d2 and 23907a5).
+  - branch: mainline; last commit: `8d671ba`.
+  - evidence: the main checkout's `.claude/probes/K76/stage2b/` and
+    `stage2a/` (copied at the merges); stage 1's in
+    `.claude/probes/K76/`.
+  - next: stage 2c after the burn race merges (main.ts, params, codec
+    version 6, the panel, hit-testing, the model fed from move events),
+    its brief written from both "For stage 2c" sections of
+    `docs/design/K76.md` and K257; then 2d.
+  - brief: `docs/design/K76.md` (the 2a and 2b handoffs; 2c's brief is
+    to be written), then `docs/design/K76_reveal_mode.md`.
+- **K268** · Shaped crossing gaps under thread reveal (K76; Levi,
+  2026-10-14 15:16, verbatim): "For the mode where threads only appear as
+  you travel along them, we should make sure we handle gaps well. If
+  there is a crossing, and we travel the thread along the bottom of the
+  crossing, but we've not explored the upper thread of the crossing yet
+  (and that part of the upper thread isn't yet visible from the stub
+  indicators we should from adjacent traveled intersections), then we
+  shouldn't show the gap yet. I suspect This means we'll need to revisit
+  how gaps are rendered for this. Also, stubs from adjacent traveled
+  intersections could have a variable amount over overlap over
+  crossings, and we'd ideally be able to handle that variable and
+  dynamic gap shape accordingly. There's probably a similar edgecase
+  problem with dead ends. We should put some care into designing this
+  gap treatment correctly". Stage 2b's gate (one strength per slot,
+  vis(over) at the crossing) covers a hidden over thread, not a stub's
+  fade, end or growth front inside a crossing's footprint. The design
+  (2b's handoff, "Shaped gaps (Levi, 15:16)" in `docs/design/K76.md`)
+  cuts each under-thread pixel by the over thread's drawn coverage at
+  its projection onto the over pass. Stage 1 builds the ribbon's shaped
+  cut with its proof and a desktop sheet; stage 2 the fans, pluck-still,
+  protect, the smooth-min, the underWindows and the caps (per K275).
+  - owner: claude agent ab65d913a3b9a3dcb (opus) of session d8031183,
+    stage 1, started 2026-10-14 16:11 with a 2 h cap (about 18:11;
+    ports 5730-5739).
+  - branch: `worktree-agent-ab65d913a3b9a3dcb`
+    (`.claude/worktrees/agent-ab65d913a3b9a3dcb`), from 4d3efe6; last
+    commit: none yet (unpushed).
+  - evidence: `.claude/probes/K268/` in that worktree.
+  - next: stage 1 (the design section, the row-partial gap upload, the
+    classifier, the profile and the shaped cut, the over thread's own
+    tip, the CPU mirror, the proof sweep, the sheet); then stage 2.
+  - brief: `docs/design/K268.md` ("Stage 1"; 4d3efe6).
+- **K279** · Plucks you can see, feel and hear (Levi, 2026-10-14 about
+  16:11 and 16:12, verbatim: "I want to make plucks visualizations more
+  emphasized. Can we add a new non-physics-based shock-wave/ripple sort
+  of undulation sort of effect around pluck points? This should be made
+  more subtle around autoplucks than player plucks. Also, I wonder if
+  there is something else more we can do to show the plucked segment
+  vibrating. Maybe add a bit of the physics-based tug to it as
+  well,.and also increase the default visual vibration effect?" and
+  "Also, I want manual plucks to be louder than auto plucks"). Stage 1
+  prototypes each ask behind params (a ripple dropdown with a weaker
+  auto-pluck strength, more vibration looks, a physics tug for player
+  plucks, a stronger default vibration, an auto-pluck gain) and shows
+  Levi a sheet; stage 2 finishes what he picks.
+  - owner: claude agent abf68d906aaae3609 (opus) of session d8031183,
+    stage 1, started 2026-10-14 16:16 with a 2 h cap (about 18:16;
+    ports 5740-5749).
+  - branch: `worktree-agent-abf68d906aaae3609`
+    (`.claude/worktrees/agent-abf68d906aaae3609`), from 8ab25d0; last
+    commit: none yet (unpushed).
+  - evidence: `.claude/probes/K279/` in that worktree.
+  - next: stage 1 (the design section, the prototypes, the neutral-value
+    A/B, the ripple's frame cost and the tug's sleep time, the sheet);
+    then Levi picks.
+  - brief: `docs/design/K279.md` ("Stage 1"; 8ab25d0).
 
 ## Next, in order
 
@@ -572,9 +645,10 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K76 stage 2b from 14:17 (opus, 2 h), K74
-stage 2 from 15:00 (opus, 2 h) and the burn race's stage 1 (K114) from
-15:23 (opus, 2 h). At about 10:57 Levi lifted
+(he may reorder). Running: the burn race's stage 1 (K114) from 15:23,
+K268 stage 1 from 16:11 and K279 stage 1 from 16:16 (each opus, 2 h).
+K274 and K277 follow as one small Sonnet stage after the burn race
+merges; K279's stage 2 waits for Levi's pick. At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
@@ -582,8 +656,9 @@ K90 stage 1b, K173
 08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, K191 at 12:04,
 K235 + K239 at 12:44, K174 at 12:53, K111 stage 2 at 13:03, K198
 stage 2 at 14:03, K193 at 14:10, K76 stage 2a at 14:15, the
-burn-race and K74 stage 2 briefs at 14:38, K111 stage 3 at 14:58 and
-K80 turns stage 1 at 15:19; the
+burn-race and K74 stage 2 briefs at 14:38, K111 stage 3 at 14:58, K80
+turns stage 1 at 15:19, K76 stage 2b at 16:04 and K74 stage 2 at 16:13;
+the
 coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -610,7 +685,7 @@ files at their merges. Then, as code slots free up:
    stage 3 built the pick (K248), merged at 14:58 (365bc45..6588ec0).
    Levi answered its calls at 15:46: K237 as built, and a stage 4 builds
    K264's width slider and prototypes K265's High contrast looks, at
-   the next free code slot after K268.
+   the next free code slot (K279 took the one K74 stage 2 freed).
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
     coordinator; Levi may reorder): K174's controls (merged 2026-10-14
@@ -621,11 +696,12 @@ files at their merges. Then, as code slots free up:
     emulation (merged 2026-10-14 14:10, c36b57c..763067a; its A/A floor
     waits for a quiet phone, K253).
 11. K76 stage 2, in four stages (`docs/design/K76.md`, bcb969e): 2a (the
-    re-base, the model, the paint variant) merged at 14:15; 2b (crossing
-    gaps and junction joints, brief c45a894) runs from 14:17; then K268,
-    the shaped gaps Levi asked for at 15:16, from 2b's handoff (render
-    only, so it can run beside the burn race); 2c and 2d follow, each
-    from the handoff before it. 2c's codec removal is version 6, since
+    re-base, the model, the paint variant) merged at 14:15 and 2b
+    (crossing gaps and junction joints) at 16:04 (3ffed34..8d671ba).
+    K268 stage 1, the shaped gaps Levi asked for at 15:16, runs from
+    16:11 (`docs/design/K268.md`). 2c follows after the burn race
+    merges, then 2d, each from the handoff before it. 2c's codec removal
+    is version 6, since
     K111 stage 3 took 5 (the codec note in
     `docs/design/K76_reveal_mode.md` still says 5).
 12. K80's turn-aligned hunter, a modifier of the normal maze, in three
@@ -640,8 +716,9 @@ files at their merges. Then, as code slots free up:
     (opus, 2 h, from 68524e1), never alongside another agent changing
     how a tap becomes a turn. Then the spider (its own enemy; Levi,
     2026-10-14 about 11:10).
-14. K74 stages 2-4, each after the one before. Stage 2
-    (`docs/design/K74.md`, 7a8aa1b) runs from 15:00 (opus, 2 h).
+14. K74 stages 3 and 4, each after the one before. Stage 2 merged at
+    16:13 (4d3efe6..faa9a52); stage 3's brief comes from its handoff
+    (`docs/design/K74.md`).
 15. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
     K42. K90's spline fix touches K8: never run the two at once.
 16. K115's builder stages (no stage 1a: Levi, about 15:30).
@@ -655,8 +732,9 @@ defaults (after playing); K225 (the markers' size); K229 (the open
 panel's top); K238 (K111's calls);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
 K251 (the displaced disc's slide across the panel); K253 (a quiet phone
-for K193's A/A); K257 (K76's questions for stage 2c); K260 and K261
-(the burn race's calls 2-4 and K74 stage 2's calls);
+for K193's A/A); K257 (K76's questions for stage 2c); K275 (whether
+joints and caps fade with their thread); K260 and K261 (the burn race's
+calls 2-4, and K74 stage 2's calls, built as recommended);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -665,29 +743,6 @@ K198 and CC39); 9.1 (K225) and 10.1 (K229) are still open.
 
 K5-K7 (split, frame loop, worker) follow.
 
-- **K268** · Shaped crossing gaps under thread reveal (K76; Levi,
-  2026-10-14 15:16, verbatim): "For the mode where threads only appear as
-  you travel along them, we should make sure we handle gaps well. If
-  there is a crossing, and we travel the thread along the bottom of the
-  crossing, but we've not explored the upper thread of the crossing yet
-  (and that part of the upper thread isn't yet visible from the stub
-  indicators we should from adjacent traveled intersections), then we
-  shouldn't show the gap yet. I suspect This means we'll need to revisit
-  how gaps are rendered for this. Also, stubs from adjacent traveled
-  intersections could have a variable amount over overlap over
-  crossings, and we'd ideally be able to handle that variable and
-  dynamic gap shape accordingly. There's probably a similar edgecase
-  problem with dead ends. We should put some care into designing this
-  gap treatment correctly". Stage 2b's gate (one strength per slot,
-  vis(over) at the crossing; `docs/design/K76_reveal_mode.md` 2.3)
-  covers a hidden over thread, not a stub's fade, end or growth front
-  inside a crossing's footprint. Proposed (reply at about 15:23): cut
-  each under-thread pixel by vis(over) at its projection onto the over
-  pass, keeping strength 0 and 1 on today's paths, with dead ends (tips
-  and caps near a crossing) designed alongside. Its own stage after 2b
-  (render only): the design first, a per-pixel census, a contact sheet
-  for Levi on desktop and phone. Brief: from 2b's "Shaped gaps" handoff
-  section (`docs/design/K76.md`).
 - **K264** · The hover rim's width becomes a slider (Levi, 2026-10-14
   about 15:46, verbatim: "Rim width,0.4 is good, make it a slider., and
   personal setting."; read as a width slider, `hoverGlow` staying 0.4,
@@ -713,6 +768,32 @@ K5-K7 (split, frame loop, worker) follow.
   start), as toggles beside `minoRefog` or one dropdown, for both
   clocks. In K80 turns stage 2, after the burn race's restart lands;
   `docs/design/K80_turns.md`.
+- **K274** · Explain each stat behind the win banner's info button
+  (Levi, 2026-10-14 about 16:01, verbatim: "With the info button in the
+  end of level stats panel, let's explain what each of the various
+  metrics represent, like efficiency."). Today the button explains the
+  stars (`starsWidget`, `src/ui/maze_hud.ts`). Add a one-line
+  definition per row `statRows` shows (time, path / optimal,
+  efficiency, backtracked, junctions, dead ends, caught, chased), from
+  the formulas in `src/game/maze_stats.ts` and `star_rating.ts`:
+  efficiency is optimal over the route you ended on, backtracks erased,
+  so a wander can show 100% on two stars, and its line says why. The
+  daily stats view too, if it shows the same metrics. Stages that add a
+  stat add its line (the fire's lead, K80 turns stage 2). One small
+  Sonnet stage with K277, after the burn race merges.
+- **K277** · Credit the research and techniques on the credits page
+  (Levi, 2026-10-14 about 16:07, verbatim: "Also, I changed my mind
+  about referencing the researchers/algorithms we used on the credits,
+  unless there's any copyright/legal reason not to"). It reverses
+  K154's "c, none" (`docs/design/levi_notes_2026-10-14.md` item 10).
+  Naming people and methods raises no copyright issue (methods aren't
+  copyrightable): word each as what the code uses or follows, never as
+  an endorsement, and name a game only to describe it. Add a "Research
+  and techniques" section to `notices/credits.ts` and the page (K122),
+  starting from `docs/design/K122.md`'s "Not credited" list and the code
+  comments, plus the research the design docs cite (K80's minotaur
+  rule, K74's sources), each checked against what the code does. One
+  small Sonnet stage with K274.
 - **K240** · High contrast for the DOM chrome (a K111 follow-up): a CSS
   layer on `:root[data-contrast="high"]`, which K111 already sets, for
   the panel, the HUD and the badge (their styles live in TS-injected
@@ -950,6 +1031,34 @@ K5-K7 (split, frame loop, worker) follow.
   (b) for 0.45 s after each arrival, the growth re-declares every frame;
   (c) the model is probe-only until 2c feeds it from move events.
   `docs/design/K76.md` ("Stage 2a handoff", "Residuals").
+- **K276** · K76 stage 2b's residuals: (a) a visited END at growth 0
+  shows nothing at its tip (the model gives an END no web domain; the
+  game never produces that state); (b) the census clips a fixed window
+  per crossing, so it may miss the far end of a long shallow crossing's
+  gap; (c) the ten-move census covered only two moves' ground (its away
+  filter is fixed; 2c's census walks somewhere new); (d) the first
+  ten-move census's mode-off-again failure (77% of the frame) is
+  unexplained and did not reproduce (lead: the pinned backdrop changing
+  under load; the census now saves both frames); (e) not investigated:
+  with the mode on, the strip costs 0.082 ms against 0.066, and at the
+  bound 2b's fans 0.58 against 0.55. The whole-texture gap upload is
+  K268 stage 1's. `docs/design/K76.md` ("Stage 2b handoff",
+  "Residuals").
+- **K278** · K74 stage 2's residuals: (a) H1 ignores the exit
+  clearance: on dailies 1-80 it puts 36 new junctions inside the 12 u
+  radius and turns 23 there into plain turns (135 -> 148 inside; share
+  0 already has 135, the nearest 2.24 u from the exit; which joins, not
+  checked); guard it with stage 3's corridor guard; (b) the pass costs a
+  median 8.9 ms (at most 13.5) at gs 18, about +30% on generation:
+  per-strand caches and a node -> strand map, checked by the walk pins;
+  (c) K174's minotaur test fails on H1 mazes (45.11 against its 44.57
+  limit) and is pinned to share 0, and K80 turns' deadliness numbers
+  predate H1: both go with K80 turns stage 2's retune; (d) most skipped
+  cuts hit a host self-crossing or a same-strand splice, so the dense
+  heart and ring designs cut no bridges (a lever for stage 3 or 4); (e)
+  H1 can shorten the optimal route (tree `1l6e`, 89.6 -> 78.3); (f)
+  494f2fe's message says codec index 108; it is 117.
+  `docs/design/K74.md` ("Stage 2 handoff").
 - **K254** · K193 stage 1's residuals in the phone pass: (a) the looks
   phase is unexercised with the new code (`shotViewport`,
   `report.viewport`, `emu`, `shotStats`): run a desktop `-Dry -Looks
