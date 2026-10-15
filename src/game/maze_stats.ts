@@ -26,6 +26,141 @@
 
 export type MoveKind = "g" | "d" | "b";
 
+// WHAT EACH FIGURE MEANS (K274): the label and one plain line for every row
+// the win banner, the Burnt banner and the HUD can show, keyed by the row's
+// id (ui/maze_hud.ts builds every row from this table, so a row cannot name
+// a stat that has no line). The banners' info popover prints the lines of
+// the rows it shows, under the stars' rules, and the daily stats view's
+// legend reuses time's and efficiency's. test/ui/maze_hud.test.ts fails when
+// a row has no line or a line has no row: a stage that adds a stat adds it
+// here, with the line, in the same commit. Each line is written from the
+// definition named beside it - change one only with the other.
+export type StatId =
+  | "time"
+  | "path"
+  | "efficiency"
+  | "backtracked"
+  | "junctions"
+  | "deadEnds"
+  | "caught"
+  | "chased"
+  | "fireLead"
+  | "closestCall"
+  | "walked";
+
+export const STATS: Record<StatId, { label: string; line: string }> = {
+  // TIME above (SolveClock). The Burnt banner shows it too, for a run the
+  // fire ended, so it says "the end of the run".
+  time: {
+    label: "time",
+    line: "From your first move to the end of the run. Time the page spends hidden does not count.",
+  },
+  // path = FabricMazeController.pathLength (the stack from the entrance to
+  // the head, a backed-out run popped); optimal = WalkGraph.optimalLength.
+  path: {
+    label: "path / optimal",
+    line:
+      "The length of the route you ended on, then of the shortest route " +
+      "from the entrance to the exit, in the game's own units. A run you " +
+      "backed out of is not part of your route.",
+  },
+  // EFFICIENCY above (efficiencyOf, efficiencyPercent): optimal / the route
+  // you ended on, so a wander that was walked back reads 100% while the
+  // stars (star_rating.ts walkedOf) count every step, backtracks twice.
+  efficiency: {
+    label: "efficiency",
+    line:
+      "The shortest route divided by the route you ended on, rounded down. " +
+      "Backing out of a wrong turn erases it from your route, so a wander " +
+      "you walked back can still read 100%, while the stars count every " +
+      "step. With the memory trail on nothing is erased.",
+  },
+  // FabricMazeController.backtrackDist: the length of every retracted run,
+  // summed over the attempt (a K80 catch keeps it; reset() zeroes it).
+  backtracked: {
+    label: "backtracked",
+    line:
+      "The total length of the runs you walked back out of, added up over " +
+      "the attempt. The stars count each of them twice, out and back.",
+  },
+  // JUNCTIONS above (FabricMazeController.visitedJunctions).
+  junctions: {
+    label: "junctions",
+    line:
+      "How many different junctions you have reached. Coming back to one " +
+      "does not count it again, and the entrance and exit are not junctions.",
+  },
+  // DEAD ENDS above (FabricMazeController.deadEndTips).
+  deadEnds: {
+    label: "dead ends",
+    line:
+      "How many different dead ends you have reached. The entrance and the " +
+      "exit are not dead ends.",
+  },
+  // MinotaurChase.catches / MinotaurTurns' catches (K80); the cap is
+  // star_rating.ts rateRun (any catch: at most two stars).
+  caught: {
+    label: "caught",
+    line:
+      "How many times the minotaur has caught you. Each catch sends you " +
+      "back to the entrance. The walk before it still counts toward the " +
+      "stars, and any catch caps them at two.",
+  },
+  // MinotaurChase.huntSeconds (real time only): the ticks spent in "hunt",
+  // which begins within detectStart and ends beyond detectEnd (thread
+  // distance) or at a catch.
+  chased: {
+    label: "chased",
+    line:
+      "How long the minotaur spent hunting you: from when you came close " +
+      "enough along the threads for it to notice you, until you got clear " +
+      "of it or it caught you.",
+  },
+  // game/fire.ts fireLead: T(v) - L, with T(v) = delay + d(v) / speed and
+  // L = walkedDist. HUD only while the race runs (the banners show the
+  // closest call), so the closest call's popover carries this line too
+  // (explainedStats).
+  fireLead: {
+    label: "fire lead",
+    line:
+      "How much further you can walk before the fire reaches the junction " +
+      "you stand at. The fire spreads only as you walk, backing up included.",
+  },
+  // FabricMazeController.fireClosest: the least lead over every arrival.
+  closestCall: {
+    label: "closest call",
+    line:
+      "The smallest fire lead you had on any arrival, the exit included. " +
+      "The nearer to 0, the closer the fire came.",
+  },
+  // FabricMazeController.walkedDist: every run walked, forward and back; it
+  // is the fire's clock (game/fire.ts) and the stars' measure.
+  walked: {
+    label: "walked",
+    line:
+      "Every run you walked this attempt, forward and back. The fire's " +
+      "clock runs on it, not on time.",
+  },
+};
+
+// The daily stats view's "best time" tile aggregates `time` (daily_store.ts
+// dailyAggregates: the fastest OFFICIAL result; replays and practice never
+// count).
+export const BEST_TIME_LINE =
+  "The fastest time among your official results. Replays and practice do not count.";
+
+// The ids whose lines a set of rows needs. The fire's lead is a HUD row (a
+// banner means the race is over), and the closest call is its smallest
+// value, so a banner showing the closest call explains both.
+export function explainedStats(ids: readonly StatId[]): StatId[] {
+  const out: StatId[] = [];
+  for (const id of ids) {
+    if (id === "closestCall" && !ids.includes("fireLead")) out.push("fireLead");
+    out.push(id);
+  }
+  return out;
+}
+
 // optimal / path in (0, 1], or null when undefined (no path yet, or a maze
 // with no finite optimal).
 export function efficiencyOf(optimal: number, path: number): number | null {

@@ -10,8 +10,12 @@
 //
 // The win banner shows K155's stars under its heading (starsWidget: a tap
 // opens what each star needs and where the run landed; hover shows it too).
+// K274: the same popover goes on to say what each number in the banner's
+// rows means, from game/maze_stats.ts's STATS table; every row is built as a
+// StatEntry keyed by that table, so a row cannot exist without its line.
 
-import { efficiencyPercent, formatDuration } from "../game/maze_stats";
+import { efficiencyPercent, explainedStats, formatDuration, STATS } from "../game/maze_stats";
+import type { StatId } from "../game/maze_stats";
 import { starExplanation, starLabel } from "../game/star_rating";
 import type { StarRating } from "../game/star_rating";
 
@@ -49,33 +53,50 @@ type StatFields = Pick<
   | "catches" | "chasedMs" | "fireLead" | "closestCall"
 >;
 
+// A row (K274): its id names its line in STATS (game/maze_stats.ts), which
+// also holds the label, so the label shown and the line explaining it never
+// part. Every row the HUD and the banners show is built through `entry`.
+export interface StatEntry {
+  id: StatId;
+  label: string;
+  value: string;
+}
+
+const entry = (id: StatId, value: string): StatEntry => ({ id, label: STATS[id].label, value });
+
 // The rows that are part of the game, not stats (K80's catches, K114's
 // fire): the HUD shows them with the stat rows off too.
 type GameFields = Pick<HudSnapshot, "catches" | "fireLead" | "closestCall">;
-export function gameRows(s: GameFields): Array<[string, string]> {
-  const rows: Array<[string, string]> = [];
-  if (s.catches != null) rows.push(["caught", String(s.catches)]);
-  if (s.fireLead != null) rows.push(["fire lead", fmtDist(s.fireLead)]);
-  if (s.closestCall != null) rows.push(["closest call", fmtDist(s.closestCall)]);
+export function gameEntries(s: GameFields): StatEntry[] {
+  const rows: StatEntry[] = [];
+  if (s.catches != null) rows.push(entry("caught", String(s.catches)));
+  if (s.fireLead != null) rows.push(entry("fireLead", fmtDist(s.fireLead)));
+  if (s.closestCall != null) rows.push(entry("closestCall", fmtDist(s.closestCall)));
   return rows;
 }
 
-export function statRows(s: StatFields): Array<[string, string]> {
-  const rows: Array<[string, string]> = [];
-  rows.push(["time", formatDuration(s.timeMs)]);
-  rows.push(["path / optimal", `${fmtDist(s.path)} / ${fmtDist(s.optimal)}`]);
+export function statEntries(s: StatFields): StatEntry[] {
+  const rows: StatEntry[] = [];
+  rows.push(entry("time", formatDuration(s.timeMs)));
+  rows.push(entry("path", `${fmtDist(s.path)} / ${fmtDist(s.optimal)}`));
   if (s.efficiency !== null) {
-    rows.push(["efficiency", `${efficiencyPercent(s.efficiency)}%`]);
+    rows.push(entry("efficiency", `${efficiencyPercent(s.efficiency)}%`));
   }
-  if (s.backtrack !== null) rows.push(["backtracked", fmtDist(s.backtrack)]);
-  rows.push(["junctions", String(s.junctions)]);
-  if (s.deadEnds !== null) rows.push(["dead ends", String(s.deadEnds)]);
-  if (s.catches != null) rows.push(["caught", String(s.catches)]);
-  if (s.chasedMs != null) rows.push(["chased", formatDuration(s.chasedMs)]);
-  if (s.fireLead != null) rows.push(["fire lead", fmtDist(s.fireLead)]);
-  if (s.closestCall != null) rows.push(["closest call", fmtDist(s.closestCall)]);
+  if (s.backtrack !== null) rows.push(entry("backtracked", fmtDist(s.backtrack)));
+  rows.push(entry("junctions", String(s.junctions)));
+  if (s.deadEnds !== null) rows.push(entry("deadEnds", String(s.deadEnds)));
+  if (s.catches != null) rows.push(entry("caught", String(s.catches)));
+  if (s.chasedMs != null) rows.push(entry("chased", formatDuration(s.chasedMs)));
+  if (s.fireLead != null) rows.push(entry("fireLead", fmtDist(s.fireLead)));
+  if (s.closestCall != null) rows.push(entry("closestCall", fmtDist(s.closestCall)));
   return rows;
 }
+
+const pairs = (rows: readonly StatEntry[]): Array<[string, string]> =>
+  rows.map((r) => [r.label, r.value]);
+
+export const gameRows = (s: GameFields): Array<[string, string]> => pairs(gameEntries(s));
+export const statRows = (s: StatFields): Array<[string, string]> => pairs(statEntries(s));
 
 let styled = false;
 export function ensureHudStyles(): void {
@@ -143,11 +164,28 @@ export function ensureHudStyles(): void {
     ".km-stars .off{color:#4a5672}" +
     ".km-stars svg{width:15px;height:15px;color:#8ea0c0;flex:0 0 auto}" +
     ".km-stars:focus-visible{outline:2px solid #8fe6ff;outline-offset:2px}" +
+    // (K274: the popover also lists what the rows mean; on a short or
+    // narrow screen it scrolls inside the banner rather than growing past it.)
     ".km-why{margin:0 0 8px;padding:7px 10px;border-radius:7px;" +
-    `background:#222b40;text-align:left;font:12px/1.5 ${sans};color:#8ea0c0}` +
+    `background:#222b40;text-align:left;font:12px/1.5 ${sans};color:#8ea0c0;` +
+    "max-height:min(40vh,320px);overflow-y:auto;overscroll-behavior:contain}" +
     ".km-why[hidden]{display:none}" +
     ".km-why .km-hit{color:#e7c56f;font-weight:650}" +
     ".km-why .km-you{color:#e4ecf8;margin-top:4px}" +
+    ".km-why .km-lines-head{margin-top:8px;padding-top:7px;" +
+    "border-top:1px solid #39466a;color:#c8d3e8;font-weight:650}" +
+    ".km-why .km-lines-head:first-child{margin-top:0;padding-top:0;border-top:0}" +
+    ".km-why .km-stat{margin-top:4px}" +
+    ".km-why .km-stat b{color:#c8d3e8;font-weight:650}" +
+    // The info button of a banner with no stars to hang the popover on (the
+    // Burnt banner): the stars button's icon and focus ring, as a text label.
+    ".km-info{display:inline-flex;align-items:center;gap:6px;margin:0 0 6px;" +
+    "padding:0 10px;min-height:32px;border:0;border-radius:7px;background:none;" +
+    `cursor:pointer;color:#8ea0c0;font:12px/1.2 ${sans};` +
+    "-webkit-tap-highlight-color:transparent;touch-action:manipulation}" +
+    ".km-info:hover{background:#ffffff0d}" +
+    ".km-info svg{width:15px;height:15px;flex:0 0 auto}" +
+    ".km-info:focus-visible{outline:2px solid #8fe6ff;outline-offset:2px}" +
     "@media (max-width:900px){.km-banner{top:auto;" +
     "bottom:max(14px,env(safe-area-inset-bottom))}}" +
     // Toast (ui/share.ts).
@@ -162,7 +200,7 @@ export function ensureHudStyles(): void {
     "transition:opacity .2s,transform .2s}" +
     ".km-toast.km-toast-on{opacity:1;transform:translate(-50%,0)}" +
     // (The mode badge styles itself: ui/mode_badge.ts.)
-    "@media (pointer:coarse){.km-hud{font-size:13px}.km-btn{min-height:40px}}";
+    "@media (pointer:coarse){.km-hud{font-size:13px}.km-btn,.km-info{min-height:40px}}";
   document.head.appendChild(style);
 }
 
@@ -174,10 +212,50 @@ const INFO_ICON =
 
 let whyIds = 0;
 
+// A popover's panel, hidden until its button is tapped (the button flips
+// aria-expanded with it).
+function popover(btn: HTMLButtonElement): HTMLDivElement {
+  const why = document.createElement("div");
+  why.className = "km-why";
+  why.id = `km-why-${++whyIds}`;
+  why.hidden = true;
+  btn.setAttribute("aria-expanded", "false");
+  btn.setAttribute("aria-controls", why.id);
+  btn.addEventListener("click", () => {
+    why.hidden = !why.hidden;
+    btn.setAttribute("aria-expanded", String(!why.hidden));
+  });
+  return why;
+}
+
+// K274: "What the numbers mean", one line per row, in the rows' order. The
+// fire's lead is not a banner row (the HUD shows it while the race runs),
+// but the closest call is its smallest value, so explainedStats adds it.
+function appendStatLines(why: HTMLElement, rows: readonly StatEntry[]): void {
+  if (rows.length === 0) return;
+  const head = document.createElement("div");
+  head.className = "km-lines-head";
+  head.textContent = "What the numbers mean";
+  why.appendChild(head);
+  for (const id of explainedStats(rows.map((r) => r.id))) {
+    const d = document.createElement("div");
+    d.className = "km-stat";
+    const name = document.createElement("b");
+    name.textContent = STATS[id].label;
+    d.append(name, ` ${STATS[id].line}`);
+    why.appendChild(d);
+  }
+}
+
 // K155: a run's stars as a button that opens its explanation (what each
 // star needs, where this run landed; the tier earned is highlighted), with
-// the same text on hover. Returns the button and the panel, to place.
-export function starsWidget(r: StarRating): [HTMLButtonElement, HTMLDivElement] {
+// the same text on hover. K274: given the banner's rows, the same popover
+// goes on to say what each of them means. Returns the button and the panel,
+// to place.
+export function starsWidget(
+  r: StarRating,
+  stats: readonly StatEntry[] = []
+): [HTMLButtonElement, HTMLDivElement] {
   const lines = starExplanation(r);
   const btn = document.createElement("button");
   btn.type = "button";
@@ -189,12 +267,13 @@ export function starsWidget(r: StarRating): [HTMLButtonElement, HTMLDivElement] 
   off.textContent = "☆".repeat(3 - r.stars);
   btn.append(on, off);
   btn.insertAdjacentHTML("beforeend", INFO_ICON);
+  // (The hover text stays the stars' rules; the lines below are for a tap.)
   btn.title = lines.join("\n");
-  btn.setAttribute("aria-label", `${starLabel(r.stars)} - how stars work`);
-  const why = document.createElement("div");
-  why.className = "km-why";
-  why.id = `km-why-${++whyIds}`;
-  why.hidden = true;
+  btn.setAttribute(
+    "aria-label",
+    `${starLabel(r.stars)} - how stars ${stats.length > 0 ? "and stats " : ""}work`
+  );
+  const why = popover(btn);
   lines.forEach((text, i) => {
     const d = document.createElement("div");
     // The rules come first, best tier first; the last line is this run.
@@ -202,13 +281,39 @@ export function starsWidget(r: StarRating): [HTMLButtonElement, HTMLDivElement] 
     d.textContent = text;
     why.appendChild(d);
   });
-  btn.setAttribute("aria-expanded", "false");
-  btn.setAttribute("aria-controls", why.id);
-  btn.addEventListener("click", () => {
-    why.hidden = !why.hidden;
-    btn.setAttribute("aria-expanded", String(!why.hidden));
-  });
+  appendStatLines(why, stats);
   return [btn, why];
+}
+
+// K274: the same popover for a banner with no stars (the Burnt banner, a win
+// with no rating): an info button labelled for what it explains, and only
+// the rows' lines.
+export function statsInfoWidget(stats: readonly StatEntry[]): [HTMLButtonElement, HTMLDivElement] {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "km-info";
+  btn.insertAdjacentHTML("beforeend", INFO_ICON);
+  btn.append("What the numbers mean");
+  const why = popover(btn);
+  appendStatLines(why, stats);
+  return [btn, why];
+}
+
+// A banner's rows: label at the left edge and value at the right, as in the
+// HUD.
+function rowsEl(rows: readonly StatEntry[]): HTMLDivElement {
+  const el = document.createElement("div");
+  el.className = "km-rows";
+  for (const r of rows) {
+    const kEl = document.createElement("span");
+    kEl.className = "k";
+    kEl.textContent = r.label;
+    const vEl = document.createElement("span");
+    vEl.className = "v";
+    vEl.textContent = r.value;
+    el.append(kEl, vEl);
+  }
+  return el;
 }
 
 export class MazeHud {
@@ -311,21 +416,13 @@ export class WinBanner {
     head.className = "km-head";
     head.textContent = `${w.heading} \u{1F389}`;
     el.appendChild(head);
-    // K155: the stars under the heading; a tap opens their explanation.
-    if (w.rating) el.append(...starsWidget(w.rating));
-    // One stat per row, label at the left edge and value at the right, as
-    // in the HUD.
-    const rows = document.createElement("div");
-    rows.className = "km-rows";
-    for (const [k, v] of statRows(w)) {
-      const kEl = document.createElement("span");
-      kEl.className = "k";
-      kEl.textContent = k;
-      const vEl = document.createElement("span");
-      vEl.className = "v";
-      vEl.textContent = v;
-      rows.append(kEl, vEl);
-    }
+    // K155: the stars under the heading; a tap opens their explanation,
+    // and (K274) what each row below means. No stars (no rating): the same
+    // lines behind a plain info button.
+    const entries = statEntries(w);
+    el.append(...(w.rating ? starsWidget(w.rating, entries) : statsInfoWidget(entries)));
+    // One stat per row.
+    const rows = rowsEl(entries);
     const btns = document.createElement("div");
     btns.className = "km-btns";
     const share = document.createElement("button");
@@ -371,6 +468,15 @@ export interface LossInfo {
   closest: number;
 }
 
+// The Burnt banner's rows (K274: built through `entry`, like every row).
+export function lossEntries(l: LossInfo): StatEntry[] {
+  return [
+    entry("time", formatDuration(l.timeMs)),
+    entry("walked", fmtDist(l.walked)),
+    entry("closestCall", fmtDist(l.closest)),
+  ];
+}
+
 // The Burnt banner: where the win banner sits, an ember border, one
 // primary button (Try again: main.ts restarts with the fuse relit) and the
 // close button.
@@ -397,25 +503,11 @@ export class LossBanner {
     const head = document.createElement("div");
     head.className = "km-head";
     head.textContent = "Burnt \u{1F525}";
-    const why = document.createElement("div");
-    why.className = "km-sub";
-    why.textContent = "The fire reaches the end of every way on before you.";
-    const rows = document.createElement("div");
-    rows.className = "km-rows";
-    const pairs: Array<[string, string]> = [
-      ["time", formatDuration(l.timeMs)],
-      ["walked", fmtDist(l.walked)],
-      ["closest call", fmtDist(l.closest)],
-    ];
-    for (const [k, v] of pairs) {
-      const kEl = document.createElement("span");
-      kEl.className = "k";
-      kEl.textContent = k;
-      const vEl = document.createElement("span");
-      vEl.className = "v";
-      vEl.textContent = v;
-      rows.append(kEl, vEl);
-    }
+    const sub = document.createElement("div");
+    sub.className = "km-sub";
+    sub.textContent = "The fire reaches the end of every way on before you.";
+    const entries = lossEntries(l);
+    const rows = rowsEl(entries);
     const btns = document.createElement("div");
     btns.className = "km-btns";
     const retry = document.createElement("button");
@@ -434,7 +526,9 @@ export class LossBanner {
     x.title = "Close";
     x.setAttribute("aria-label", "Close");
     x.addEventListener("click", () => this.hide());
-    el.append(head, why, rows, btns, x);
+    // K274: the info button sits under the sentence, as the stars do on the
+    // win banner.
+    el.append(head, sub, ...statsInfoWidget(entries), rows, btns, x);
     el.hidden = false;
   }
 
