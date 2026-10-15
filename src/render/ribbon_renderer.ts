@@ -765,9 +765,10 @@ export class RibbonRenderer {
   private routeKey = "";
   private routedArms = new Set<string>();
   private fullJn = new Set<number>();
-  // K169: the fully traveled webs fading in (web_fade.ts), and each record's
-  // base texel by junction index (the fade rewrites J1.z there without a
-  // fillet rebuild). `webFade.seconds = 0` turns the fade off (probes).
+  // K169: the fully traveled webs fading in, and (K191) the ones that stopped
+  // being full fading out (web_fade.ts), and each record's base texel by
+  // junction index (the fade rewrites J1.z there without a fillet rebuild).
+  // `webFade.seconds = 0` turns the fades off (probes).
   webFade = new WebFade();
   private recBaseByJn = new Map<number, number>();
   // The routes resolved to junctions (junctionArms index -> its passes,
@@ -3644,7 +3645,8 @@ export class RibbonRenderer {
   // is listed in routedArms: its paint caps are dropped (writePaintItems).
   // K127: a routed junction whose every arm a traveled pass arrives or
   // leaves by is FULLY TRAVELED (fullJn): it keeps its caps, and its
-  // record's base reads the composed rows (J1.z = 1).
+  // record's base reads the composed rows (J1.z = 1). K191: one that stops
+  // being full while it holds a route fades its gold back out (webFade).
   private resolveRoutes(): void {
     if (!this.armJunction) {
       const m = new Map<string, number>();
@@ -3714,9 +3716,9 @@ export class RibbonRenderer {
         this.routedArms.add(a.chain + ":" + a.slot);
       }
     }
-    // K169: a newly full web starts its fade; one that stopped being full
-    // loses its fade (untraveled at once).
-    this.webFade.retarget(this.fullJn, this.paintClock);
+    // K169: a newly full web starts its fade in; K191: one that stopped being
+    // full fades out, if it still holds a route (perJn) to blend over.
+    this.webFade.retarget(this.fullJn, this.paintClock, perJn);
   }
 
   // The light per-frame paint pass: advances the pulse clock and rewrites
@@ -4250,22 +4252,22 @@ export class RibbonRenderer {
     this.tickWebFade();
   }
 
-  // K169: the arms ("chain:slot") of the webs fading in, with their level.
+  // K169: the arms ("chain:slot") of the webs fading, in or (K191) out, with
+  // their level.
   private fadingArmLevels(): Map<string, number> {
     const out = new Map<string, number>();
-    for (const ji of this.fullJn) {
-      if (!this.webFade.has(ji)) continue;
-      const lv = this.webFade.level(ji, this.paintClock);
+    for (const [ji, lv] of this.webFade.levels(this.paintClock)) {
       for (const a of this.junctionArms[ji].arms) out.set(a.chain + ":" + a.slot, lv);
     }
     return out;
   }
 
-  // K169: advance the fully traveled webs' fade-in. Each fading web's J1.z
-  // (the level the junction shader blends its two bases by) is rewritten in
-  // place - a texel and its row upload, no fillet rebuild - and the caps'
-  // paint is rewritten at the same level. The step that reaches 1 writes it
-  // once; the fade is then forgotten and the record is the K127 one.
+  // K169: advance the fully traveled webs' fades, in and (K191) out. Each
+  // fading web's J1.z (the level the junction shader blends its two bases
+  // by) is rewritten in place - a texel and its row upload, no fillet
+  // rebuild - and the caps' paint is rewritten at the same level. The step
+  // that reaches 1 (or 0) writes it once; the fade is then forgotten and the
+  // record is the K127 one (full) or an untraveled one.
   private tickWebFade(): void {
     if (!this.webFade.active) return;
     const steps = this.webFade.step(this.paintClock);
@@ -4347,14 +4349,18 @@ export class RibbonRenderer {
       items.push(PAINT_ITEM.SPAN, s.c0, s.c1, s.p0 ?? 1, s.p1 ?? 1, 0, 0, 0);
       touch(s.chain, Math.min(s.c0, s.c1), Math.max(s.c0, s.c1), i);
     }
-    // K169: the caps of a web that is fading in wear its level.
+    // K169: the caps of a web that is fading wear its level (K191: out as
+    // well as in).
     const fadeArms = this.webFade.active ? this.fadingArmLevels() : null;
     for (const cp of this.paintCaps) {
       // K81: a routed junction's band and untraveled web decide its
       // pixels; a cap there would paint gold down every arm's ribbon. A
       // fully traveled one (K127) is not in routedArms: it keeps its caps.
+      // K191: nor is one fading out (routed, no longer full): its caps stay
+      // at its level until the fade ends.
       const armKey = cp.chain + ":" + this.routeArmSlot(cp.chain, cp.ctrl);
-      if (this.routedArms.size > 0 && this.routedArms.has(armKey)) {
+      const lvl = fadeArms?.get(armKey);
+      if (lvl === undefined && this.routedArms.size > 0 && this.routedArms.has(armKey)) {
         continue;
       }
       const i = items.length / 8;
@@ -4362,7 +4368,7 @@ export class RibbonRenderer {
         PAINT_ITEM.CAP,
         cp.ctrl,
         cp.ctrl,
-        (cp.p ?? 1) * (fadeArms?.get(armKey) ?? 1),
+        (cp.p ?? 1) * (lvl ?? 1),
         0,
         0,
         cp.radius,
@@ -5411,8 +5417,9 @@ export class RibbonRenderer {
       D[o + 4] = rec.j1[0];
       D[o + 5] = rec.j1[1];
       // K127: > 0 = fully traveled; K169: the level it has faded in to (0 =
-      // the untraveled rows, 1 = the composed rows, between = their blend).
-      D[o + 6] = this.fullJn.has(rec.jn) ? this.webFade.level(rec.jn, this.paintClock) : 0;
+      // the untraveled rows, 1 = the composed rows, between = their blend);
+      // K191: a web that stopped being full fades back down through it.
+      D[o + 6] = this.webFade.level(rec.jn, this.paintClock);
       D[o + 7] = 0;
       for (let i = 0; i < n; i++) {
         const a = rec.arms[i];
@@ -5828,7 +5835,8 @@ export class RibbonRenderer {
         const n = Math.min(rec.arms.length, MAX_ARMS);
         const routed = rec.routes.length > 0;
         // K127: a fully traveled record's base reads the composed rows;
-        // K169: while it fades in, it still blends from the untraveled ones.
+        // K169: while it fades in, it still blends from the untraveled ones
+        // (K191: and while it fades out, down to them).
         const untrav = routed && (!this.fullJn.has(rec.jn) || this.webFade.has(rec.jn));
         for (let i = 0; i < n; i++) {
           const a = rec.arms[i];
