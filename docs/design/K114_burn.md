@@ -468,3 +468,276 @@ handoff says so.
    behind the fire's own toggle, `fireClock`, since `clk=realtime`
    is the real-time chase. Stage 1 still hides the fire rows under
    `clk=realtime`.
+
+## Stage 1 handoff
+
+2026-10-14, about 16:40. Agent af79edbe2a4677ff5 of coordinator session
+d8031183, on branch `worktree-agent-af79edbe2a4677ff5` (worktree
+`.claude/worktrees/agent-af79edbe2a4677ff5`), rebased onto master faa9a52
+(K74 stage 2). Master has since gained only docs and the ledger (8ab25d0,
+37446df, 9c04e0c), so the branch merges without another rebase. Stage 1
+is done: the model, the measurement and the mode are built, verified and
+committed. Nothing is pushed.
+
+### Done
+
+The commits, oldest first (the SHAs change if the merge rebases):
+
+| Commit | What |
+|---|---|
+| c9cca80 | the fire model, the exported walk Dijkstra, the controller's refusal and loss |
+| c014a83 | the fire params, their panel rows and the undo entries (its subject says 117-119; 0cd35f7 renumbered them) |
+| b0e02af | the race on the page: the Burnt banner, the smolder toast, the HUD rows, the first look |
+| 12da60c | the smolder mark spares the char; the race's lore |
+| da177fe | the fire lore names the panel's exclusivity as built |
+| 7e4a022 | drawFire redraws only when the threads or the fire move |
+| 0cd35f7 | the fire params renumbered to codec v5 118-120 |
+| (last) | this handoff; the fire lore's numbers after the rebase |
+
+Where things are:
+- `src/game/fire.ts`: the model, whose header is the spec. The fire
+  reaches vertex v at T(v) = h + d(v)/r, a run burns from both ends, and
+  an arm is safe when L + len < T(far), where L is the length walked.
+- `src/core/walk_graph.ts`: `walkDistances`, the walk Dijkstra, exported
+  so the fire and the solver share it.
+- `src/game/fabric_controller.ts`: `fire`, `fireLost`, `fireClosest`,
+  `fireLeadHere` and `smoldering(eid)`. `tap()` returns "smolder" for a
+  refused arm: not logged, not a turn, and skipped by replay().
+  choices() drops burnt runs.
+- `src/ui/url_state.ts`: the params, `fireSettingsOf` and the ranges.
+  `fire` is off | fuse. `fireSpeed` is 0.75 in [0.3, 0.95]. `fireDelay`
+  is 0 in [0, 40] lattice units: half of R.2's 80-unit median route,
+  since a longer delay leaves a careful player nothing to race.
+- `src/ui/param_codec.ts`: codec v5 indices 118-120, after K74's
+  `hCutShare` (117). `CODEC_VERSION` stays 5.
+- `src/ui/tweakpane_panel.ts`: the "Burn race" folder, in the maze folder
+  before the minotaur's, on the turn clock only.
+- `src/ui/undo_stack.ts`: a change to a fire key restarts the solve
+  through onClockChange.
+- `src/main.ts`:
+  - `fireOf` builds the fire;
+  - `pendingLoss` makes the loss wait for the dot, then `showFireLoss`
+    shows the banner;
+  - the smolder toast and the HUD rows;
+  - `restartSolve()`, the one restart;
+  - the `__knotFabric().fire` hook.
+- `src/ui/maze_hud.ts`: `gameRows` and the `LossBanner` (`#maze-loss`).
+- `src/render/fabric_maze_renderer.ts`: the first look. `drawFire` draws
+  on `fireGfx`, with the FIRE_* constants and a redraw cache.
+- Lore:
+  - `.claude/rules/gameplay-fire.md` is new, with its line in
+    `gameplay.md` and its row in `docs/lore_index.md`;
+  - the codec rows are in `gameplay-links.md`;
+  - the probes are in `probes.md`.
+- Tests: `test/game/fire.test.ts` (10) and `test/ui/maze_hud.test.ts` (4),
+  plus the codec appends in `test/ui/param_codec.test.ts` and
+  `test/ui/url_codec.test.ts`.
+
+### Verification
+
+On the rebased branch:
+- **Checks.** `tsc` is clean. `npm test` passes 69 files and 898 tests,
+  with 1 skipped. `npm run build` exits 0; its chunk-size warning was
+  already there.
+- **Pins.** The fire-off pins pass untouched: the byte-identity golden,
+  K87, the golden dailies and daily_attempt. The codec table pin gained
+  only the three rows.
+- **Page probes.** `burn_page.mjs` drives a headed real-time Chrome with
+  real clicks; `diag_screenshot.mjs` cannot tap. The shots are in
+  `shots_rebased/`.
+  - The race, on seed 7 with `fsp=0.9`:
+    - the lit fuse;
+    - a near miss: a lead of 2.076 at the first arrival, 21 on the HUD;
+    - a smoldering arm refused, with its toast;
+    - the escape along the optimal route, after walking 88.6, with a
+      closest call of 21 on the win banner.
+  - The loss, on seed 7 at the defaults:
+    - trapped after 11 taps, having walked 73.2;
+    - the Burnt banner reads time 0:11, walked 732, closest call 23;
+    - the clock stops and taps do nothing;
+    - × closes the banner and a tap re-shows it;
+    - Try again and Reset path each relight the fuse and count a
+      restart.
+  - Phone-viewport shots (412x915) are in `shots/race_7_phone_*`.
+
+drawFire's cost, on seed 7 with `fsp=0.95` and every run burnt, at rest
+after the exit. Not measured on a real phone.
+
+| Condition | Cost a frame |
+|---|---|
+| Redrawn every frame (before the cache) | about 4.8 ms: drawFire 1.0 + pixi's tessellation 3.8 |
+| With the cache, default flow (half-rate re-renders) | about 2.5 ms mean (render p95 5.8 ms) |
+| With the cache, flow off (`fw=0`) | about 0 |
+| With the cache, 4x CDP CPU throttle (a phone proxy) | about 11 ms: drawFire 1.95 + render 12.4, against a 3.0 ms render without the fire. The frame interval's median rose from 68.7 to 86.8 ms. |
+
+### R.6.1: the measurement and the verdict
+
+`burn_sim.ts` plays dailies 1-30, after K74 stage 2's H1, against the
+shipped controller. The optimal routes' median is 94.6 lattice units
+(p10 77.9, p90 107.5), and the median run is 3.7. The players:
+- **route:** the optimal route, the model check;
+- **explorer (fog):** knows only the runs it walked and the exit's
+  direction;
+- **sighted p:** sees the whole maze and takes a wrong arm with
+  probability p at each junction, 8 seeds a maze.
+
+Every player refuses smoldering arms and is trapped when none is left.
+The fire's light under fog is not modeled.
+
+How to read the tables:
+- "trapped" is the share (count) of 30 games for route and explorer, and
+  of 240 for each sighted p.
+- The closest calls are over wins, in lattice units and, in brackets, in
+  median runs.
+- At r 0.85 and 0.9 the explorer's closest-call figures rest on one or
+  two wins.
+
+At h = 0 (`results_rebased.md`):
+
+| player | r | trapped | wins | closest median (runs) | closest p10 (runs) | wins < 1 run | turns median | walked median |
+|---|---|---|---|---|---|---|---|---|
+| route | 0.75 | 0% (0) | 30 | 1.7 (0.45) | 1.0 (0.28) | 80% | 17 | 94.6 |
+| explorer (fog) | 0.75 | 90% (27) | 3 | 2.5 (0.67) | 1.5 (0.41) | 67% | 15 | 86.1 |
+| sighted p=0.1 | 0.75 | 33% (80) | 160 | 1.5 (0.42) | 0.8 (0.22) | 86% | 18 | 94.6 |
+| sighted p=0.2 | 0.75 | 61% (147) | 93 | 1.5 (0.42) | 0.7 (0.20) | 92% | 18 | 92.3 |
+| sighted p=0.3 | 0.75 | 80% (193) | 47 | 1.5 (0.41) | 0.5 (0.13) | 85% | 16 | 85.8 |
+| route | 0.85 | 0% (0) | 30 | 0.9 (0.24) | 0.5 (0.15) | 100% | 17 | 94.6 |
+| explorer (fog) | 0.85 | 93% (28) | 2 | 0.6 (0.16) | 0.6 (0.15) | 100% | 12 | 64.0 |
+| sighted p=0.1 | 0.85 | 50% (120) | 120 | 0.8 (0.22) | 0.4 (0.10) | 100% | 17 | 84.0 |
+| sighted p=0.2 | 0.85 | 77% (184) | 56 | 1.0 (0.26) | 0.4 (0.11) | 100% | 15.5 | 79.1 |
+| sighted p=0.3 | 0.85 | 87% (209) | 31 | 0.8 (0.21) | 0.2 (0.06) | 100% | 12 | 59.7 |
+| route | 0.9 | 0% (0) | 30 | 0.6 (0.15) | 0.3 (0.09) | 100% | 17 | 94.6 |
+| explorer (fog) | 0.9 | 97% (29) | 1 | 0.1 (0.02) | 0.1 (0.02) | 100% | 11 | 60.8 |
+| sighted p=0.1 | 0.9 | 54% (130) | 110 | 0.5 (0.14) | 0.3 (0.09) | 100% | 16 | 78.5 |
+| sighted p=0.2 | 0.9 | 81% (194) | 46 | 0.6 (0.16) | 0.4 (0.10) | 100% | 14 | 72.3 |
+| sighted p=0.3 | 0.9 | 91% (218) | 22 | 0.5 (0.14) | 0.3 (0.09) | 100% | 11 | 56.6 |
+
+With the fire off everyone solves. The median turns are 17 for route, 38
+for the explorer, and 21, 25 and 34.5 for sighted p 0.1, 0.2 and 0.3.
+
+Tuning, r against h (`results_tuning_rebased.md`):
+
+| r | h | sighted 0.1 / 0.2 / 0.3 trapped | explorer trapped | route closest median | route wins < 1 run | sighted 0.1 wins < 1 run |
+|---|---|---|---|---|---|---|
+| 0.5 | 0 | 7% / 28% / 55% | 73% | 5.0 | 13% | 22% |
+| 0.6 | 0 | 16% / 43% / 64% | 87% | 3.4 | 53% | 56% |
+| 0.75 | 0 | 33% / 61% / 80% | 90% | 1.7 | 80% | 86% |
+| 0.9 | 0 | 54% / 81% / 91% | 97% | 0.6 | 100% | 100% |
+| 0.5 | 10 | 3% / 18% / 48% | 77% | 15.0 | 0% | 5% |
+| 0.6 | 10 | 7% / 31% / 56% | 70% | 13.4 | 0% | 6% |
+| 0.75 | 10 | 18% / 47% / 73% | 87% | 11.7 | 0% | 14% |
+| 0.9 | 10 | 33% / 65% / 82% | 90% | 10.6 | 0% | 21% |
+| 0.5 | 20 | 3% / 17% / 45% | 73% | 25.0 | 0% | 2% |
+| 0.6 | 20 | 5% / 23% / 57% | 73% | 23.4 | 0% | 3% |
+| 0.75 | 20 | 11% / 41% / 63% | 87% | 21.7 | 0% | 8% |
+| 0.9 | 20 | 21% / 53% / 76% | 87% | 20.6 | 0% | 12% |
+
+**Verdict: keep the mode as it is, with fog separate.** R.6.1's drop rule
+("if careful players never come within a run of the fire") does not hold.
+80-100% of careful wins come within a run, and mistakes are punished:
+sighted p 0.1 is trapped in 33-54% of games.
+
+Caveats:
+- **The closest call is set at the start.** At h = 0 it is set at the
+  first junction: along the optimal route the margin is
+  h + d(v)(1/r - 1), which only grows. So "within a run" mostly measures
+  the start, and the trap rates are the real evidence that the fire bites.
+- **Fog as part of the mode: no.** The fogged explorer is trapped on
+  90-97% of dailies. That figure is pessimistic, since the fire's light
+  under fog is not modeled; stage 3 does that.
+- **The built defaults (r 0.75, h 0) are hot.** r 0.6 at h 0 roughly
+  halves the sighted trap rates and keeps the near miss: 53% of the
+  route's wins come within a run. With h >= 10, the optimal route's
+  closest call is h plus its h = 0 value, so careful players lose the
+  near miss. Retuning is a new call for Levi; I recommend r 0.6, h 0.
+
+### The calls as built
+
+| Call | Status | Built |
+|---|---|---|
+| 1. What a loss does | Levi answered, as recommended | The Burnt banner. Try again and Reset path call `restartSolve()`, then `updateHud()`: the fuse is relit and it counts as a restart. There is no auto-restart: × closes the banner and a tap re-shows it. |
+| 2. Reset path with the fire on | open; the default is built | a restart, with the fuse relit |
+| 3. The fire with the turn minotaur | open; the default is built | Exclusive. In the panel, turning one on turns the other off. `fireSettingsOf` is null while `minotaur` is not off, so a link that sets both plays the minotaur. |
+| 4. Fog | open; the default is built | separate; R.6.1 says the fire bites without it |
+| 5. The margin's units | Levi answered | x10 in the HUD: "fire lead" while racing and "closest call" after. Both show with the stats off, and both banners show the closest call. |
+| 6. `sparks` | Levi answered | deferred to stage 4 |
+| 7. `clk=realtime` | Levi answered | The rows hide under `clk=realtime`, and `fireSettingsOf` is null there. |
+
+Other choices made in stage 1:
+- **The toast.** The smolder toast shows at most once per 1.5 s. The key
+  picker keeps smoldering arms, so a key press toasts as well.
+- **The loss.** It waits for the dot's arrival (`pendingLoss`).
+- **The drawn clock.** It rides the move animation,
+  L = walkedDist - (1 - moveProgress) * runLength, so the fronts advance
+  with the dot.
+- **The smolder mark.** It runs from the head to the first burnt stretch.
+- **No paint-shader change.** The first look is Graphics strokes on
+  `fireGfx`, redrawn only when update() ran or the fire's key changed.
+
+### Next: stage 2
+
+Stage 2 is real-time burning behind `fireClock` (turn | realtime).
+
+For stage 2:
+- **One clock getter.** fire.ts takes the clock L as an input
+  everywhere. The controller reads `this.walkedDist` as L in four
+  places: choices(), fireLeadHere, smoldering() and the arrival check.
+  Give it one clock getter first.
+- **Two new losses.** Real time adds two that turn play cannot produce:
+  - the fire reaching the head's junction while the player stands
+    (T(head) <= L);
+  - the fire catching the dot mid-run (the dot inside the run's burnt
+    interval).
+
+  The arrival-only check covers neither.
+- **The restart.** `restartSolve()` then `updateHud()` is the one restart.
+  K80 turns stage 2's catch toggle builds on it too.
+- **The redraw cache.** Its key, `fireKey`, holds L, the head, solved,
+  fireLost, the move animation and the thread width; it must include the
+  new clock. A real-time clock redraws every frame. With everything burnt
+  that costs about 11 ms a frame at 4x CPU throttling, so stage 3's
+  shader look may have to come first or alongside.
+- **The codec.** `fireClock` appends after master's last index; 118-120
+  are the fire's.
+- **The renderer.** `fireGfx` is created in the renderer's constructor
+  next to K76's markers, over the yarn and under the markers. `drawFire`
+  runs every frame in main.ts's fabricTick.
+- **The exclusivity.** It lives in `fireSettingsOf` (url_state.ts) and in
+  the panel's Burn race handlers.
+- **The chase clock.** The real-time chase's fixed-step clock is in
+  `src/game/minotaur.ts`.
+
+### Known residuals
+
+- **The fire ignores the thread reveal.** drawFire draws every run's fire,
+  so K76's thread reveal does not hide unseen fire. The fog sprite does
+  cover it.
+- **The char covers the gaps.** The char stroke draws over crossing gaps.
+- **runPoints is approximate.** It maps lattice distance to ctrl
+  linearly, which is approximate on mixed diagonal runs.
+- **A zero lead at the start.** At h = 0 the HUD's fire lead reads 0
+  until the first move.
+- **Backtracks are refused.** Right after a move, the run just walked is
+  usually smoldering, so a backtrack is refused, and the toast's wording
+  reads oddly there.
+- **The share line's margin.** At h = 0 the closest call is the first
+  junction's. Stage 4's share line could use the exit margin instead
+  (h + opt/r - walked).
+
+### Evidence
+
+All in `.claude/probes/K114/burn/` (untracked):
+- **The harness:** `burn_sim.ts`, `lib.ts` and `vite.node.config.mjs`.
+  probes.md has the run line.
+- **The results:**
+  - `results_rebased.md` and `results_tuning_rebased.md` are current;
+  - `results.md` and `results_tuning.md` are from before H1;
+  - the logs are `burn_sim*.log`.
+- **The page probe:** `burn_page.mjs` and its `page_*.log` files.
+- **The shots:**
+  - `shots_rebased/` is current;
+  - `shots/` is from before the rebase, with the phone viewport;
+  - `shots_cached/`, `shots_fw0/` and `shots_throttle/` hold the drawFire
+    cost runs.
+- **The checks:** `test_full_rebased.log` and `build_rebased.log`.
+- **The dev server config:** `vite.private-cache.config.ts`.
