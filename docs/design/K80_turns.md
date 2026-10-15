@@ -4,7 +4,7 @@ K80's minotaur exists today only as its own real-time mode
 (`clk=realtime`, stage 1 in 5fed5c1, K174's controls in
 ecf2169..6ec8275). Levi also wants it as a modifier of the normal,
 turn-based maze: it moves when you move. This brief plans that build in
-three stages, one agent each, and details stage 1.
+four stages, one agent each, and details stages 1 and 2.
 
 ## What Levi decided
 
@@ -32,21 +32,31 @@ section 0 (verbatim in `docs/design/levi_notes_2026-10-13.md`, "About
 
 ## The stages
 
-- **Stage 1** (below): the model and the mode, playable on the desktop.
-  The hunter, guard and stalker; the contact rule; the sanctuary and the
-  lair; the telegraph in a first, legible look; the wait move; catches;
-  no undo; the params and the panel rows.
-- **Stage 2**: the final telegraph look (section 2.7: chevrons, the
-  destination ring, the second run at speed two), the catch feedback
-  (section 2.8: the flare, the ring burst, the dull pluck, `vibrate`),
-  the sound cues (section 2.10), stats and share (section 2.9: catches,
-  close calls, the `x` move kind and 🐂), fog interplay (section 2.10),
-  and a contact sheet on desktop and phone for Levi.
-- **Stage 3**: Abbott's rule as a puzzle mode, where waiting is part of
-  the design (decision 5), with a solvability check at generation.
+- **Stage 1** (merged 2026-10-14 15:19): the model and the mode,
+  playable on the desktop. The hunter, guard and stalker; the contact
+  rule; the sanctuary and the lair; the telegraph in a first, legible
+  look; the wait move; catches; no undo; the params and the panel rows.
+- **Stage 2** ("Stage 2: the retune, the catch resets and the stats", at
+  the end): Levi's retune (K269) and catch resets (K273), the sliders'
+  edge values (K272), real time on today's mazes (K278 (c)), and stats
+  and share (section 2.9: catches, close calls, the `x` move kind and
+  🐂), with the banner check (K283).
+- **Stage 3**: the final telegraph look (section 2.7: chevrons, the
+  destination ring, the second run at speed two, tuned at phone fit
+  scale), the catch feedback (section 2.8: the flare, the ring burst,
+  the dull pluck, `vibrate`; and K270's lavender band after a catch),
+  the sound cues and fog interplay (section 2.10), a wait key, the move
+  pad's wait and a hover cue for the wait zone, a turn analogue of
+  `minoToward` (off by default, so stage 2's rates hold), and a contact
+  sheet on desktop and phone for Levi.
+- **Stage 4**: Abbott's rule as a puzzle mode, where waiting is part of
+  the design (decision 5), with a solvability check at generation and
+  Abbott's credit in `RESEARCH` (`notices/credits.ts`, K277).
 
-Dailies come later (decision 7). The coordinator writes each stage's
-brief from the handoff of the stage before it.
+Dailies come later (decision 7): before one pins a minotaur, waits enter
+`fc.taps` and the attempt saves, and K47's fingerprint covers the
+minotaur params. The coordinator writes each stage's brief from the
+handoff of the stage before it.
 
 ## Stage 1: the model and the mode
 
@@ -389,3 +399,168 @@ it):
   `.J` is a v4 token), `k174_rt_*.log`, `k174_rt/`, `k174_rt_rebased/`.
 - `npm_test*.log`, `build*.log`; `vite.private-cache.config.ts` serves
   the worktree.
+
+## Stage 2: the retune, the catch resets and the stats
+
+Written 2026-10-14 by the coordinator from the stage 1 handoff and
+Levi's answers since. Stage 2 took Levi's retune and catch resets, so
+the telegraph's final look, the catch feedback, the sound and the
+contact sheet moved to stage 3 ("The stages").
+
+### What Levi decided since stage 1
+
+- About 15:34, on stage 1's catch rates (ledger K269): "Retune."
+- About 15:46 (K273): "We should also have a toggle to conditionally
+  reset the level/Minotaur/fog when dying to the Minotaur."
+- About 16:01 (K274, merged): the end banner's info button explains
+  each stat. Every stat row now needs its line in `STATS`
+  (`src/game/maze_stats.ts`); a test fails without one.
+
+### The work
+
+1. **The retune (K269).** On today's mazes the default hunter catches
+   an attentive explorer on 14% of dailies and an 80% one on 32%,
+   against section 0's 1% and 13%. Retune the turn defaults (sight and
+   accuracy first; pause or roam only if those two cannot get there)
+   until the default hunter on today's dailies lands near 1% and 13%
+   again, with `compare.ts`'s players. Measure on the mazes
+   `PARAM_DEFAULTS` builds at your start (K74 stage 2's H1 is on).
+   Sight, accuracy and pause are shared by the three models, so report
+   the full table after the retune (every config, set and player, as
+   stage 1's) with the guard and the stalker at the new defaults. If a
+   target costs the hunter its teeth elsewhere (treelike, deadends),
+   stop at the best compromise and say what it costs.
+2. **Real time on H1 mazes (K278 (c)).** `test/game/minotaur.test.ts`
+   builds K174's mazes with `hCutShare: 0`: on H1 mazes roamPull's gain
+   (a still player found 0.8x as fast) misses its bound, 45.11 against
+   44.57. Measure the pull on today's default mazes with K174's sim
+   (`.claude/probes/K174/rt/`), then retune `minoToward`'s strength or
+   re-derive the bound from the measurement, and lift the pin. The
+   K80_DIGESTS may be re-frozen on today's mazes (pre-launch; name it in
+   the commit). Say which you did and why.
+3. **Catch resets (K273), on both clocks.** Today a catch sends you to
+   the entrance with an empty path (counted; the clock runs on), the
+   minotaur to its lair, and the fog back to the solve's start under
+   `minoRefog` (on). Make each of the three a toggle in the Minotaur
+   folder:
+   - the level: off is today's respawn; on is the burn race's restart
+     (`restartSolve()` in `src/main.ts`, then `updateHud()`);
+   - the minotaur: on is today's lair; off leaves it where it caught
+     you;
+   - the fog: `minoRefog`, as today.
+   While the level row is on, a restart resets everything, so the other
+   two rows hide. The catch count must survive a level restart (section
+   2.8's "the catch count is the sting"); whether the clock restarts
+   follows `restartSolve()`, and the handoff says which. Defaults keep
+   today's behavior. Each new param is appended to the codec (below).
+4. **Edge values (K272).** Roam 0 stands still while roaming, and
+   territory 0 is a random walk. Make each slider's minimum 1, or define
+   0 on purpose, and say which.
+5. **Stats and share (section 2.9).** On the turn clock: catches, close
+   calls (moves ending one run from it) and seen (moves it spent hunting
+   you); on real time, whatever of these maps (it has caught and chased
+   today). A Reset path under the minotaur is a restart, counted and
+   not a catch (section 2.10). The move log's fourth kind, `x` (the move
+   you were caught on), shows as 🐂 wherever the move grid shows (the
+   banner, a share), and the title line adds "🐂 2" or "🐂 0 · 5 close
+   calls". Efficiency stays optimal / your final route. Each new stat
+   gets its `STATS` line, so the banner's "What the numbers mean" list
+   explains it.
+6. **The banner check (K283).** After item 5, the real game's end
+   banners from live solves: `.claude/probes/K155/probe_stars.mjs`
+   (design, design:phone, daily, caught, realtime; its aria check
+   expects "how stars and stats work"), plus a turn-minotaur solve with
+   a catch. Copy the probe into your folder. Run it under the perf lock
+   and put the screenshots in the handoff.
+
+### What must not change
+
+- With `minotaur` off on the turn clock, everything is today's: knot
+  mode's golden snapshot (`test/physics/byte_identity.test.ts`), the
+  K87 pin, the golden dailies and the daily's design. The codec pin
+  changes only by appended rows, and the defaults pin only by the
+  retune's values (name each in the commit).
+- No undo while a minotaur runs, on either clock (Levi, decision 4).
+- The paint shader: if a stat needs a shader change, stop and say so in
+  the handoff instead.
+
+### What exists (read first)
+
+- This brief's "Stage 1 handoff" (above). In
+  `docs/design/K80_gameplay_additions.md`: section 0, then sections 2.8
+  to 2.11.
+- `docs/design/K274_K277.md` ("Stage 1 handoff"): the `STATS` table
+  and the banner's list.
+- `src/game/minotaur_turns.ts`, `src/game/minotaur.ts`,
+  `src/game/maze_stats.ts`, `src/game/share_text.ts`,
+  `src/ui/maze_hud.ts`, the Minotaur folder in
+  `src/ui/tweakpane_panel.ts`, and `restartSolve()` in `src/main.ts`.
+  The minotaur, fire and fog lore attach with them.
+- In the main checkout: `.claude/probes/K80/turns/` (`compare.ts` and
+  its harness copies; the run command is in its header) and
+  `.claude/probes/K174/rt/` (`rt_lib.ts`, `rt_sweeps.ts`,
+  `results.md`). Copy what you reuse into your own probes folder.
+
+### Verification
+
+- `npm test` and `npm run build`.
+- Unit tests: each reset toggle on both clocks (what moves and what
+  stays, the catch count across a level restart), the edge values, each
+  new stat on scripted turn games, the `x` move kind and the share text
+  with 🐂.
+- The retune table, before and after, and real time's pull measurement
+  on today's mazes, in the handoff.
+- K283's banner shots (item 6), under the perf lock.
+
+### Setup
+
+- Your branch starts from master. Run `git log -1 --oneline` first: if
+  this section is missing, `git merge --ff-only origin/master`.
+- Link `node_modules` to the main checkout's with a junction
+  (`New-Item -ItemType Junction node_modules -Target
+  C:\Users\lsl\Repositories\knotmaze\node_modules`).
+- Ports 5760-5769. Give your vite server a private cacheDir (see
+  `probes.md`; K80's wrapper loads the config through vite's
+  `loadConfigFromFile`).
+- Any Chrome you launch gets its own `--user-data-dir` inside your probes
+  folder. Delete it when you are done (K161).
+- Probes, logs and notes go in `.claude/probes/K80/turns2/` (untracked;
+  the coordinator copies them at the merge).
+- Hold the perf lock (`$env:TEMP\claude-perf.lock`) for any frame-time
+  measurement and any pixel-exact GPU probe, waiting for it inside one
+  blocking command.
+- The codec: append after the last index on master at your start. K279
+  (plucks) appends from 121 in parallel; whoever merges second
+  renumbers and re-freezes the table pin.
+- Running alongside you: K268 stage 1 (the gap mask and paint), K279
+  stage 1 (plucks: the pluck overlay, the synth, the panel and the
+  codec). Both should merge before you do; rebase on master before your
+  final `npm test`.
+- If you start helpers, give each `model: sonnet` and this brief's stop
+  rule.
+
+### Process
+
+- One stage. Run `Get-Date` at the start and at each milestone. Commit
+  WIP on your branch at every milestone, and never push. Don't edit
+  `LEDGER.md`.
+- Lore goes in `gameplay-minotaur.md` (the retune's numbers, the reset
+  toggles, the new stats), `gameplay-stars.md` or `gameplay-daily.md`
+  if the share text changes there.
+- Stop when the stage is done or at your time cap, whichever comes
+  first. The cap is two hours on Opus. Neither a compaction nor context
+  size is a stop. After a compaction, re-read this brief and `git log`,
+  then go on.
+- At the stop:
+  - commit WIP;
+  - append a "Stage 2 handoff" section to this brief, covering what is
+    done, what is next, evidence paths and "For stage 3" notes;
+  - commit it and report.
+
+  Start nothing beyond this stage.
+- The final report covers:
+  - what changed and where;
+  - your calls;
+  - the verification results, with the retune table;
+  - a `Ledger items` list: follow-ups, residuals, decisions for Levi;
+  - the handle fields: branch, last commit, evidence, next.
