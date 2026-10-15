@@ -157,6 +157,12 @@ describe("WorkerHost on a fake worker", () => {
       throw new Error("no-worker");
     });
     expect(none.host.reason).toBe("no-worker");
+    // The default spawn where there is no Worker at all (Node has none):
+    // main.ts constructs a WorkerHost for phw=1 whatever the browser.
+    expect(typeof Worker).toBe("undefined");
+    const bare = new WorkerHost(vi.fn(), { watchVisibility: false });
+    expect(bare.kind).toBe("in-thread");
+    expect(bare.reason).toBe("no-worker");
   });
 
   it("falls back on a fingerprint mismatch and asks main to rebuild, after the call", async () => {
