@@ -19,13 +19,16 @@ export async function waitView(page, maxMs = 8000) {
 // `M` cheapest moves (the lowest cost-to-exit choice: the optimal route, 22
 // moves on ?b.c, the 22nd solves it), each tap verified (pathEdges or the head
 // must change). Taps are touches; after 6 misses it falls back to mouse clicks.
+// opt.pick (K156, round 2026-10-14b, for K100's walk out and back): "cheapest"
+// (the default), "forward" (the cheapest choice that is not the way back) or
+// "back" (the choice whose edge is the path's last edge: a backtrack of one run).
 export async function makeMoves(page, M, opt = {}) {
   const t0 = Date.now();
   let made = 0, misses = 0, stop = "";
   const state = () =>
     page.evaluate(() => {
       const k = window.__knotFabric();
-      return k && { solved: k.solved, n: k.pathEdges.length, head: k.head, choices: k.choices };
+      return k && { solved: k.solved, n: k.pathEdges.length, head: k.head, last: k.pathEdges.length ? k.pathEdges[k.pathEdges.length - 1] : null, choices: k.choices };
     });
   while (made < M) {
     await waitView(page, 6000);
@@ -33,7 +36,10 @@ export async function makeMoves(page, M, opt = {}) {
     if (!f) { stop = "no fabric"; break; }
     if (f.solved) { stop = "solved"; break; }
     if (!f.choices.length) { stop = "no choices"; break; }
-    const best = f.choices.reduce((a, b) => (b.cost < a.cost ? b : a));
+    const pick = opt.pick || "cheapest";
+    const pool = pick === "forward" ? f.choices.filter((c) => c.edge !== f.last) : f.choices;
+    const best = pick === "back" ? f.choices.find((c) => c.edge === f.last) : pool.length ? pool.reduce((a, b) => (b.cost < a.cost ? b : a)) : null;
+    if (!best) { stop = pick === "back" ? "no way back" : "no choices"; break; }
     assertFree();
     if (opt.mouse) await page.mouse.click(best.screen.x, best.screen.y);
     else await page.touchscreen.tap(best.screen.x, best.screen.y);
