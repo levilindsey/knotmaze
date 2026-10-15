@@ -388,6 +388,36 @@ async function main(): Promise<void> {
   // param: stage 5 builds the picked look and removes the key and the hook.
   const hclAsked = Number(new URLSearchParams(window.location.search).get("hcl"));
   let hcLookChoice = hclAsked === 1 || hclAsked === 2 || hclAsked === 3 ? hclAsked : 0;
+
+  // K20/K56: the bare page is today's daily and `?daily...` a daily link
+  // (ui/daily_link.ts), opening with the player's stored daily prefs;
+  // anything else reads as an ordinary design link.
+  const dailyStore = new DailyStore(browserStorage());
+  const launch = parseLaunch(
+    window.location.search,
+    todayNumber(),
+    dailyStore.prefs()
+  );
+  const params = launch.params;
+
+  // K7: the physics host owns the ParticleSystem and every write to it;
+  // `ps` is its read view (host.view, reassigned on each build): the
+  // renderers, picks and probe hooks read it, and nothing steps, grabs,
+  // drags, releases, tugs or resets through it (test/physics/
+  // host_seam.test.ts). K7 stage 3: `phw=1` (params.physicsWorker, read
+  // once here) runs it in a Web Worker; a worker that cannot start, answer
+  // or match falls back in-thread and rebuilds (__knotPerf().host.reason).
+  // A browser without Worker gets the WorkerHost's own fallback, so the
+  // reason reads "no-worker". K7 stage 5, THE START GATE: the host is made
+  // here, before app.init, so the worker's module loads while Pixi starts
+  // and main hears the worker is up before the first frame's long task; made
+  // after it, the `init` waited behind that task with the worker idle
+  // (stage 4: about 300 ms on the desktop). A fallback before the first
+  // build never calls rebuild().
+  const host: PhysicsHost = params.physicsWorker
+    ? new WorkerHost(() => rebuild())
+    : new InThreadHost();
+
   await app.init({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -407,16 +437,6 @@ async function main(): Promise<void> {
   document.body.appendChild(app.canvas);
   app.canvas.style.background = `#${BACKGROUND.toString(16).padStart(6, "0")}`;
 
-  // K20/K56: the bare page is today's daily and `?daily...` a daily link
-  // (ui/daily_link.ts), opening with the player's stored daily prefs;
-  // anything else reads as an ordinary design link.
-  const dailyStore = new DailyStore(browserStorage());
-  const launch = parseLaunch(
-    window.location.search,
-    todayNumber(),
-    dailyStore.prefs()
-  );
-  const params = launch.params;
   // K111: a design param as the scene WEARS it under the Accessibility
   // switches (the stored value itself while both are off). Every visual read
   // of a param a switch overrides goes through this; `params`, the link, the
@@ -527,18 +547,8 @@ async function main(): Promise<void> {
   const confetti = new ConfettiLayer();
   app.stage.addChild(confetti.sprayContainer, confetti.rainContainer);
 
-  // K7: the physics host owns the ParticleSystem and every write to it;
-  // `ps` is its read view (host.view, reassigned on each build): the
-  // renderers, picks and probe hooks read it, and nothing steps, grabs,
-  // drags, releases, tugs or resets through it (test/physics/
-  // host_seam.test.ts). K7 stage 3: `phw=1` (params.physicsWorker, read
-  // once here) runs it in a Web Worker; a worker that cannot start, answer
-  // or match falls back in-thread and rebuilds (__knotPerf().host.reason).
-  // A browser without Worker gets the WorkerHost's own fallback, so the
-  // reason reads "no-worker".
-  const host: PhysicsHost = params.physicsWorker
-    ? new WorkerHost(() => rebuild())
-    : new InThreadHost();
+  // The physics host (`host`) is made before app.init (K7 stage 5's start
+  // gate, above).
   let ps: ParticleSystem | null = null;
   let renderer: RibbonRenderer | null = null;
   let debug: DebugRenderer | null = null;

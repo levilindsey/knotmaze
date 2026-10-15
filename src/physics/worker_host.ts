@@ -89,6 +89,14 @@ interface ProbeOpts {
   interpolate?: boolean;
 }
 
+// An epoch-ms time from the worker (physics_worker_core's epochMs) on
+// main's performance.now() clock; -1 if the message had none.
+function mainMs(epoch: number | undefined): number {
+  return typeof epoch === "number" && Number.isFinite(epoch)
+    ? epoch - performance.timeOrigin
+    : -1;
+}
+
 function spawnModuleWorker(): WorkerPort {
   if (typeof Worker === "undefined") throw new Error("no-worker");
   return new Worker(new URL("./physics_worker.ts", import.meta.url), {
@@ -214,6 +222,17 @@ export class WorkerHost implements PhysicsHost {
   private readyTimer: ReturnType<typeof setTimeout> | null = null;
   private buildWall0 = 0;
   private readyInfo = { ms: 0, genMs: 0, ctorMs: 0 };
+  // K7 stage 5, the start gate on main's clock (performance.now() ms; -1
+  // until it happens): the worker made, its module run (hello), the first
+  // init posted, the worker taking it and answering, main hearing ready.
+  private readonly gate = {
+    spawnAt: -1,
+    helloAt: -1,
+    postAt: -1,
+    initAt: -1,
+    readyAt: -1,
+    heardAt: -1,
+  };
   // Inputs posted for this gen (every gen message but frame), against the
   // snapshot's count of inputs the worker had handled.
   private inputsPosted = 0;
@@ -267,6 +286,7 @@ export class WorkerHost implements PhysicsHost {
     this.interpolateDefault = opts.interpolate ?? true;
     let w: WorkerPort;
     try {
+      this.gate.spawnAt = performance.now();
       w = (opts.spawn ?? spawnModuleWorker)();
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -341,6 +361,7 @@ export class WorkerHost implements PhysicsHost {
     this.presettleFlag = false;
     this.liveWall0 = -1;
     this.buildWall0 = performance.now();
+    if (this.gate.postAt < 0) this.gate.postAt = this.buildWall0;
     this.armReadyTimer();
     this.postRaw({
       type: "init",
@@ -634,6 +655,12 @@ export class WorkerHost implements PhysicsHost {
       readyMs: this.readyInfo.ms,
       genMs: this.readyInfo.genMs,
       ctorMs: this.readyInfo.ctorMs,
+      spawnAt: this.gate.spawnAt,
+      helloAt: this.gate.helloAt,
+      postAt: this.gate.postAt,
+      initAt: this.gate.initAt,
+      readyAt: this.gate.readyAt,
+      heardAt: this.gate.heardAt,
       snapAgeMs: newest ? wallNow() - newest.wallAt : -1,
       // The newest snapshot's sim time (the mirror shows it on a frame).
       snapSim: newest ? newest.simTime : 0,
@@ -772,13 +799,22 @@ export class WorkerHost implements PhysicsHost {
           return;
         }
         this.ready = true;
+        const heard = performance.now();
         this.readyInfo = {
-          ms: performance.now() - this.buildWall0,
+          ms: heard - this.buildWall0,
           genMs: msg.genMs,
           ctorMs: msg.ctorMs,
         };
+        if (this.gate.heardAt < 0) {
+          this.gate.heardAt = heard;
+          this.gate.initAt = mainMs(msg.initAt);
+          this.gate.readyAt = mainMs(msg.readyAt);
+        }
         return;
       }
+      case "hello":
+        if (this.gate.helloAt < 0) this.gate.helloAt = mainMs(msg.at);
+        return;
       case "snap":
         this.receive(msg.gen, msg.buf);
         return;
