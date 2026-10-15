@@ -252,6 +252,14 @@ slot. Design and calls: `docs/design/K268.md` ("Stage 1 design", "Stage
   2 shaped slots); visitAll (about 162 shaped, 57 fallback), the explore
   program 1.830 against 1.773 with 2b's scalar everywhere and master's
   1.760, total 2.712 against master's 2.632 (+3%).
+- MAX MEASURED, AND BROKEN (K76 2c's census walk, 2026-10-15; not
+  fixed): at a MAX slot whose two threads are both walked (crossing 275,
+  flags 19, P0 = P1 = [5.7462, ~0, 1, 1]) mode off cuts 1010 px and mode
+  on cuts 0 px, so the two threads fuse. Its MAX slots with a hidden
+  under thread cut 0 px, as they should. The CPU twin reads as covering
+  at least one side, so the GPU branch or the written profile is the
+  suspect. Record and next check: `docs/design/K76.md`, "Stage 2c
+  handoff" (For K268 stage 2).
 
 ## In the game (stage 2c, 2026-10-15)
 
