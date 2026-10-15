@@ -15,6 +15,10 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K253** · A quiet phone for K193's portrait A/A floor: the phone
+  untouched, awake and plugged in for about 30 minutes (3 reps of about
+  9 min). The 2026-10-14 13:47 attempt tripped on a touch at 13:59
+  after one rep. Say when; nothing else is needed (K193's next).
 - **K251** · On the phone, a displaced edge indicator crosses the open
   panel during its 0.25 s slide to its panel-offset place (K198 stage 2,
   merged 2026-10-14). Keep the slide, or fade the disc out and back in
@@ -240,18 +244,23 @@ and never reused.
     "Minotaur" folder, the HUD's caught row, a toast and an off-screen
     indicator; approachPace 8 -> 7 from the simulation. `clock` is not
     daily-exempt, so the dailies stay turn-based.
-  - owner: nobody since 2026-10-13 about 22:00 (agent a9c90f15cd6a55710
-    finished; its worktree `.claude/worktrees/agent-a9c90f15cd6a55710` is
-    kept).
-  - branch: mainline; last commit: `5fed5c1`.
-  - evidence: `.claude/probes/K80/rt/` in the main checkout (`run_rt.ps1`,
-    `results.md`, `rt_chase.mjs`, `rt_page.mjs`, `out/`); the research's
-    `.claude/probes/K80/` and its kept worktree
+  - owner: claude agent af5995f5900f0f945 (opus) of session d8031183,
+    turns stage 1, started 2026-10-14 14:06 with a 2 h cap (about 16:06;
+    ports 5690-5699). The real-time stage was agent a9c90f15cd6a55710
+    (its worktree `.claude/worktrees/agent-a9c90f15cd6a55710` is kept).
+  - branch: `worktree-agent-af5995f5900f0f945`
+    (`.claude/worktrees/agent-af5995f5900f0f945`), from c36b57c; last
+    commit: none yet (unpushed). Real time is on mainline (`5fed5c1`;
+    its controls, K174, in ecf2169..6ec8275).
+  - evidence: the turns stage writes `.claude/probes/K80/turns/` in that
+    worktree; real time's `.claude/probes/K80/rt/` is in the main
+    checkout (`run_rt.ps1`, `results.md`, `rt_chase.mjs`, `rt_page.mjs`,
+    `out/`); the research's `.claude/probes/K80/` and its kept worktree
     `.claude/worktrees/agent-a25726c24f262b138`.
-  - next: Levi plays it and answers K174; its phone checks join the
-    round's pass (K177); then the turn-aligned hunter (item 11 of the
-    order).
-  - brief: `docs/design/K80_realtime.md`; the research brief
+  - next: the turns brief's stage 1 (the model and the mode); real
+    time's phone checks join the round's pass (K177).
+  - brief: `docs/design/K80_turns.md` (three stages, 7699995); real
+    time's `docs/design/K80_realtime.md`; the research brief
     `docs/design/K80.md` and its doc
     `docs/design/K80_gameplay_additions.md`.
 - **K156** · The round phone pass (K152 (1)): `scripts/phone_pass.ps1`,
@@ -299,8 +308,9 @@ and never reused.
     `looks_run.json`, `make_looks.mjs` and the adb recovery logs); the
     morning's `.claude/probes/rounds/2026-10-14-81d31a5/`; 3c's
     `.claude/probes/K156/3c/`.
-  - next: K193 (running from 12:54) emulates portrait in the pass and
-    takes its A/A floor (K195); then the two borderline load cells again
+  - next: K193's portrait emulation merged 2026-10-14 14:10; its A/A
+    floor waits for a quiet phone (K193's next, K253); then the two
+    borderline load cells again
     with 3 reps (K232). The next round's pass covers K98 and K92 (K230),
     runs k140-confetti and the 14 looks dropped for time, and fits its
     length (K233). Fix the k198
@@ -339,16 +349,40 @@ and never reused.
   px at dpr 2.625); round 2026-10-14b's pass ran in portrait because the
   phone was off its dock and in use, so its A/B against the landscape
   floor is weak (K232). Brief `docs/design/K193.md` (2b6389c).
-  - owner: claude agent a092bd665532db806 (sonnet) of session d8031183,
-    started 2026-10-14 12:54 with a 1 h cap (about 13:54).
-  - branch: `worktree-agent-a092bd665532db806`
-    (`.claude/worktrees/agent-a092bd665532db806`), from 2b6389c; last
-    commit: none yet (unpushed).
-  - evidence: `.claude/probes/K193/` and the passes' output under
-    `.claude/probes/rounds/`, both in that worktree.
-  - next: the brief's one stage (the emulation and its proof, a one-rep
-    smoke pass, then the 3-rep A/A floor).
+  - stage 1 MERGED in c36b57c..763067a (2026-10-14 14:10): `-Viewport
+    portrait|native` (default portrait) sets CDP's device-metrics
+    override (411x753 at dpr 2.625, mobile) before each navigation; a
+    pre-flight proof (`scripts/phone_pass/emulation.mjs`, with an odd
+    360x640@3 size the phone lacks) gates the frames phase; screenshots
+    clip to the viewport (`shotViewport`), which fixes K195's strip
+    (the capture surface is 808.7 CSS px tall: 148 flat rows; verified
+    on the phone, 1079x1977, 0 flat rows); the summary prints the
+    display, the viewport and the emulation check. The emulation proved
+    real on the phone twice (13:11, 13:47) and held in 15 of 15 samples.
+    The canvas backing is 822x1506 (the app caps dpr at 2), not the
+    brief's 1079x1977, which is the clipped screenshot's size. The
+    3-rep portrait A/A (`aa3`, master 96fa13a, 13:47-13:59) tripped on
+    a touch after one rep, so `scripts/phone_pass/noise.json` is still
+    the landscape floor; the one-rep table is in `rep0_table.txt`.
+    Residuals K254, ideas K255 and K256.
+  - owner: nobody since 2026-10-14 14:05 (agent a092bd665532db806
+    (sonnet) of claude session d8031183, stopped at its 1 h cap after
+    the A/A tripped; its worktree is kept).
+  - branch: mainline (merged in c36b57c..763067a); last commit: `763067a`.
+  - evidence: `.claude/probes/K193/` in the main checkout: `aa3/`
+    (the tripped A/A: `summary.md`, `bench.jsonl`, `logs/`; its
+    `noise.json` is NOT a floor), `rep0_table.txt`,
+    `wait_then_aa.ps1`, `smoke/`, `smoke2/` and `dry/`.
+  - next: when the phone can sit untouched and awake for about 30 min
+    (K253), rerun the 3-rep portrait A/A (about 27 min; a rep is about
+    9), then `git mv scripts/phone_pass/noise.json
+    noise.landscape.json`, copy the new `noise.json` in with a
+    handwritten `note`, replace the "NOT TAKEN YET" passage in
+    `probes-phone.md` and report the table (`docs/design/K193.md`,
+    "Stage 1 handoff", Next 1-2). Sonnet, 1 h.
   - brief: `docs/design/K193.md`.
+  - env: none; the pass builds and serves both builds itself. Check that
+    nobody is using the phone first (K234).
 - **K76** · The thread-reveal mode, stage 2 (doc section 7), decided
   (Levi, 2026-10-13): the end look is a dropdown (fade, halo, glow, dots,
   fray, beacon; default beacon); the doc's other recommendations stand
@@ -434,16 +468,16 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K193 from 12:54 (sonnet, 1 h),
-K76 stage 2a from 13:04 (opus, 2 h) and K111 stage 3 (K248) from
-14:04 (opus, 2 h). At about 10:57 Levi lifted
+(he may reorder). Running: K76 stage 2a from 13:04 (opus, 2 h),
+K111 stage 3 (K248) from 14:04 (opus, 2 h) and K80 turns stage 1 from
+14:06 (opus, 2 h). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
 (the rules split), K93, K198 stage 1, K98 and K92 merged at
 08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, K191 at 12:04,
-K235 + K239 at 12:44, K174 at 12:53, K111 stage 2 at 13:03 and K198
-stage 2 at 14:03; the
+K235 + K239 at 12:44, K174 at 12:53, K111 stage 2 at 13:03, K198
+stage 2 at 14:03 and K193 at 14:10; the
 coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -451,8 +485,8 @@ files at their merges. Then, as code slots free up:
    and K180 against base ab6d330) is done (K197 filed), and so is round
    2026-10-14b's (10:12-10:42, head 48da84d, with looks for K146, K151,
    K148, K198, K100, K93 and K120; K232-K234 filed). The next pass covers
-   K98 and K92 and needs the portrait floor (K193 with K195, running
-   from 12:54).
+   K98 and K92 and needs the portrait floor: K193's emulation merged at
+   14:10, and its A/A waits for a quiet phone (K253).
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
    5fed5c1, and its controls (K174, Levi's answers of 2026-10-14 about
@@ -475,12 +509,15 @@ files at their merges. Then, as code slots free up:
     96fa13a..af0f054), K191's
     fade-out (merged 2026-10-14 12:04, fafa340..3467117), K235 with K239
     (merged 2026-10-14 12:44, 08d1383..05e6d4d), and K193's portrait
-    emulation with K195's A/A floor (running from 12:54).
+    emulation (merged 2026-10-14 14:10, c36b57c..763067a; its A/A floor
+    waits for a quiet phone, K253).
 11. K76 stage 2, in four stages (`docs/design/K76.md`, bcb969e): 2a (the
     re-base, the model, the paint variant) runs from 13:04; 2b, 2c and
     2d follow, each from the handoff before it.
-12. K80's turn-aligned hunter, a modifier of the normal maze; then
-    K137's toggles, K138's M mechanisms and K139.
+12. K80's turn-aligned hunter, a modifier of the normal maze, in three
+    stages (`docs/design/K80_turns.md`, 7699995): stage 1 (the model and
+    the mode) runs from 14:06; then K137's toggles, K138's M mechanisms
+    and K139.
 13. K114's round 2, free play first: the burn-race brief, then the
     spider (its own enemy; Levi, 2026-10-14 about 11:10).
 14. K74 stages 2-4, each after the one before.
@@ -496,7 +533,8 @@ G4-2 old-path deletions; K162 and K184-K186 (play, then call); K194's
 defaults (after playing); K225 (the markers' size); K229 (the open
 panel's top); K237 (the hover glow's default); K238 (K111's calls);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
-K251 (the displaced disc's slide across the panel);
+K251 (the displaced disc's slide across the panel); K253 (a quiet phone
+for K193's A/A);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -731,6 +769,18 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K254** · K193 stage 1's residuals in the phone pass: (a) the looks
+  phase is unexercised with the new code (`shotViewport`,
+  `report.viewport`, `emu`, `shotStats`): run a desktop `-Dry -Looks
+  scripts/phone_pass/looks.example.json` (output to a file) and check
+  `looks_report.json` and the sheet; (b) the docked-landscape case is
+  unverified (the phone sat off the dock in portrait all stage): one
+  `-Viewport portrait` pass from a docked phone, where the proof is the
+  check; (c) `-Phase check` counts an awake, unlocked phone as ready
+  with another app in front or a person using it, and the start then
+  trips (13:21): it should also require the launcher or Chrome in front
+  and a quiet touchscreen for a few seconds. `docs/design/K193.md`
+  ("Stage 1 handoff").
 - **K252** · K198 stage 2's residuals: (a) `RANGE_EASE` is still a
   per-frame ease (0.15 a frame) for a resize and the fit's drift, so
   those settle faster at higher frame rates (the panel's edge is
@@ -887,6 +937,9 @@ K5-K7 (split, frame loop, worker) follow.
   bottom (the screenshot is 387 CSS px high, the page 331); knot-mode
   render ms swings 7.5-20.5 ms in A/A, no use at rest; K80's indicator
   look shows the indicator but never taps it.
+  - 2026-10-14: the white strip is fixed by K193 (c36b57c..763067a: screenshots
+    clip to the viewport). The portrait floor is not taken yet: K193's
+    A/A tripped on a touch after one rep (K193's next, K253).
 - **K196** · K180's crossings options at phone scale: `ride` and `pinch`
   leave most taps unreadable in the census (dense `ride` 93.8%, fabric
   `pinch` 71.1%); `through` reads best (`docs/design/K180.md`, "Stage 1
@@ -1187,6 +1240,17 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Ideas (not scheduled)
 
+- **K255** · Fold K193's `wait_then_aa.ps1` (`.claude/probes/K193/`) into
+  `scripts/phone_pass.ps1` as `-WaitQuiet`: it tolerates touches until a
+  full quiet window can no longer end before a deadline, where
+  `retry_quiet.ps1` only runs after a trip and gives up at the first
+  touch that leaves less than a full window.
+- **K256** · The phone warms about 6 C in a pass's first rep, so cells
+  run at different temperatures (K193's A/A: rep 0's base fabric at
+  32-34 C, head at 35-36.5 C, and the next rep reverses the order). A
+  warm-up before the bench, or a temperature column in the summary,
+  would separate heat from noise (`docs/design/K193.md`, "Stage 1
+  handoff").
 - **K250** · The steady highlight modes (glow, rims, contrast) repaint
   every frame after their fade-in; an idle-render check could skip those
   frames (K111 stage 2; `docs/design/K111.md`, "Stage 2 handoff").
