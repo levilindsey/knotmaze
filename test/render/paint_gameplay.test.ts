@@ -15,6 +15,7 @@ import {
   kPaintAt,
   kPulseV,
   kReachWin,
+  kRimAcross,
   writeChainHeader,
   writeGeomTable,
   type KData,
@@ -74,7 +75,9 @@ function scene(
   spans: OldSpan[],
   caps: OldCap[],
   pulses: OldPulse[],
-  U: KUniforms
+  U: KUniforms,
+  // K145: hover-glow runs (RIM items: unwrapped ctrl span and end gap).
+  rims: { c0: number; c1: number; gap: number }[] = []
 ): KData {
   const n = cal.length;
   const idxBase = 2;
@@ -91,6 +94,7 @@ function scene(
     const f = (p.inward ? ITEM_FLAG.INWARD : 0) | (p.hovered ? ITEM_FLAG.HOVER : 0);
     items.push(PAINT_ITEM.PULSE, p.cJunction, p.cFar, 0, 0, f, 0, 0);
   }
+  for (const m of rims) items.push(PAINT_ITEM.RIM, m.c0, m.c1, m.gap, 0, 0, 0, 0);
   const nItems = items.length / 8;
   const refBase = idxBase + n;
   const itemBase = refBase + Math.ceil((n * nItems) / 4) + 1;
@@ -425,4 +429,179 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     // The old span had already faded by the fade start.
     expect(oldAtSplit).toBeLessThan(0.95);
   });
+
+  // K145 (Levi, 2026-10-13: "a long glow along either side of the thread,
+  // but that doesn't extend past the bounds of the thread, and this glow
+  // would fade-out quickly toward the center of the thread, and this glow
+  // would fade-out at a distance from the hover position"; about 16:12: it
+  // fades out toward the run's junctions). A RIM item holds the run's
+  // unwrapped ctrl span and its end gap; uKReach.zw the strength and the
+  // hover point. kPaintAt's `rim` is the strength along the thread and
+  // kRimAcross shapes it across the ribbon.
+  it("K145: the hover glow lights both edges and nothing over the middle", () => {
+    const W = PAINT_CONST.RIM_EDGE;
+    expect(kRimAcross(0)).toBe(1);
+    expect(kRimAcross(1)).toBe(1);
+    let prev = kRimAcross(0.5);
+    expect(prev).toBe(0);
+    for (let i = 0; i <= 2000; i++) {
+      const s = 0.5 + (0.5 * i) / 2000; // From the center line to an edge.
+      const v = kRimAcross(s);
+      expect(kRimAcross(1 - s)).toBeCloseTo(v, 12);
+      if (Math.abs(2 * s - 1) <= 1 - W) expect(v).toBe(0);
+      else expect(v).toBeGreaterThan(0);
+      expect(v).toBeGreaterThanOrEqual(prev);
+      expect(v - prev).toBeLessThan(0.01);
+      prev = v;
+    }
+  });
+
+  // The ctrl at an arc (a binary search over the mirror's own map).
+  const ctrlAt = (D: KData, a: number, top: number): number => {
+    const c = kChain(D, 0);
+    let lo = 0;
+    let hi = top;
+    for (let it = 0; it < 60; it++) {
+      const m = (lo + hi) / 2;
+      if (kArcOfCtrl(D, c, m) < a) lo = m;
+      else hi = m;
+    }
+    return (lo + hi) / 2;
+  };
+
+  it("K145: the glow peaks at the hover point, ends at the reach and fades toward the run's ends", () => {
+    const r = rng(145);
+    const ch = randomChain(r, 90, false);
+    const n = ch.controlArcLengths.length;
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const pulses: OldPulse[] = [{ cJunction: 10, cFar: 30, inward: false, onPath: false, hovered: false }];
+    const spans: OldSpan[] = [{ c0: 40, c1: 70 }];
+    const G = 0.45;
+    const EF = PAINT_CONST.RIM_END_FADE;
+    const PX = 0.02;
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const st0: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    // The sample arcs and their ctrls, found once (the tables are shared).
+    const samples: [number, number][] = [];
+    {
+      const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], uniforms(k));
+      for (let a = 0; a <= ch.totalLength; a += 0.002) samples.push([a, ctrlAt(D, a, n - 1)]);
+    }
+    for (const R of [0.5, 3, 15]) {
+      for (const hoverAt of [50, 22, 12]) {
+        const U = uniforms(k);
+        const c0 = 10;
+        const c1 = 80;
+        const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, spans, [], pulses, U, [{ c0, c1, gap: G }]);
+        const U0 = uniforms(k);
+        const D0 = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, spans, [], pulses, U0);
+        U.uKReach[0] = U0.uKReach[0] = R;
+        U.uKReach[1] = U0.uKReach[1] = Math.min(PAINT_CONST.PULSE_REACH_FADE, 0.5 * R);
+        U.uKReach[2] = 0.4;
+        U.uKReach[3] = hoverAt;
+        const S = U.uKReach[2];
+        const c = kChain(D, 0);
+        const c00 = kChain(D0, 0);
+        const u0 = kArcOfCtrl(D, c, c0);
+        const u1 = kArcOfCtrl(D, c, c1);
+        const uh = kArcOfCtrl(D, c, hoverAt);
+        let prev = 0;
+        let maxStep = 0;
+        let lit = 0;
+        // Violations, counted (an expect per sample is slow): the rest of
+        // the paint differs from the glow-less paint, the glow leaves [0, S],
+        // it is lit off the run, inside an end gap or past the reach, or,
+        // clear of the ends' fade, it is not the distance falloff alone.
+        let otherPaint = 0;
+        let range = 0;
+        let darkLit = 0;
+        let falloff = 0;
+        for (const [a, ctrl] of samples) {
+          const g = kPaintAt(D, U, c, ctrl, a, PX, st).rim;
+          const s0 = kPaintAt(D0, U0, c00, ctrl, a, PX, st0);
+          if (st.p !== s0.p || st.band !== s0.band || st.v !== s0.v || s0.rim !== 0) otherPaint++;
+          if (!(g >= 0 && g <= S)) range++;
+          const dEnd = Math.min(a - u0, u1 - a);
+          if ((a < u0 || a > u1 || dEnd <= G || Math.abs(a - uh) >= R) && g !== 0) darkLit++;
+          if (dEnd >= G + EF && Math.abs(g - S * (1 - smoothstep(Math.abs(a - uh) / R))) > 1e-6) falloff++;
+          if (g > 0.01) lit++;
+          maxStep = Math.max(maxStep, Math.abs(g - prev));
+          prev = g;
+        }
+        expect([otherPaint, range, darkLit, falloff]).toEqual([0, 0, 0, 0]);
+        // Full strength at a hover point clear of the ends' fade.
+        const dEndH = Math.min(uh - u0, u1 - uh);
+        const atH = kPaintAt(D, U, c, hoverAt, uh, PX, st).rim;
+        if (dEndH >= G + EF) expect(atH).toBeCloseTo(S, 6);
+        else expect(atH).toBeLessThan(S);
+        // A smooth glow: no step between samples 0.002 apart.
+        expect(maxStep).toBeLessThan(0.005);
+        expect(lit).toBeGreaterThan(0);
+        expect(lit * 0.002).toBeLessThan(2 * R);
+      }
+    }
+  });
+
+  it("K145: the glow wraps across a closed chain's seam, and strength 0 draws nothing", () => {
+    const r = rng(1450);
+    const ch = randomChain(r, 70, true);
+    const n = ch.controlArcLengths.length;
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const G = 0.45;
+    const PX = 0.02;
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    // A run across the seam (slots n - 12 .. n + 12, unwrapped), hovered just
+    // past the seam (unwrapped too, as FabricMazeRenderer.setGlow gives it).
+    const c0 = n - 12;
+    const c1 = n + 12;
+    for (const strength of [0.4, 0]) {
+      const U = uniforms(k);
+      const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, true, [], [], [], U, [{ c0, c1, gap: G }]);
+      U.uKReach[0] = 3;
+      U.uKReach[1] = 1;
+      U.uKReach[2] = strength;
+      U.uKReach[3] = n + 1;
+      const c = kChain(D, 0);
+      const total = ch.totalLength;
+      const uh = kArcOfCtrl(D, c, 1); // The hover point's arc (wrapped).
+      let prev = -1;
+      let maxStep = 0;
+      let lit = 0;
+      let peak = 0;
+      // Walk the ring once from the middle of the far side, across the seam.
+      for (let i = 0; i <= 20000; i++) {
+        const a = (total / 2 + (total * i) / 20000) % total;
+        const ctrl = ctrlAt(D, a, n - 1e-9);
+        const g = kPaintAt(D, U, c, ctrl, a, PX, st).rim;
+        if (strength === 0) expect(g).toBe(0);
+        // The ring distance to the hover point.
+        const dd = Math.abs(a - uh);
+        const ring = Math.min(dd, total - dd);
+        if (ring >= 3) expect(g).toBe(0);
+        if (g > 0.01) lit++;
+        peak = Math.max(peak, g);
+        if (prev >= 0) maxStep = Math.max(maxStep, Math.abs(g - prev));
+        prev = g;
+      }
+      if (strength > 0) {
+        expect(peak).toBeCloseTo(Math.fround(strength), 3);
+        // Lit on both sides of the seam: arcs just under the total and just
+        // over 0 both glow.
+        const before = kPaintAt(D, U, c, ctrlAt(D, total - 0.05, n - 1e-9), total - 0.05, PX, st).rim;
+        const after = kPaintAt(D, U, c, ctrlAt(D, 0.05, n - 1e-9), 0.05, PX, st).rim;
+        expect(before).toBeGreaterThan(0.2);
+        expect(after).toBeGreaterThan(0.2);
+        expect(lit).toBeGreaterThan(0);
+      } else {
+        expect(lit).toBe(0);
+      }
+      expect(maxStep).toBeLessThan(0.01);
+    }
+  });
 });
+
+// The mirror's smoothstep on [0, 1] (3x^2 - 2x^3, clamped).
+function smoothstep(x: number): number {
+  const t = Math.min(1, Math.max(0, x));
+  return t * t * (3 - 2 * t);
+}
