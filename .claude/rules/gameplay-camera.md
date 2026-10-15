@@ -39,19 +39,32 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   default `se` exit's disc pokes past the threads); under fog the fog
   box's. Not counted: the win ring (about 5 px past the disc, inside the
   gap), the head's glow, the minotaur. PANEL: the Tweakpane wrapper's
-  rect, closed at width 0, height ignored. Opening only widens the range,
-  so it never moves the view. Closing, a resize or fit drift (the edge
-  creeps a few px while the knot settles) EASE the view back: each
-  fit-mode frame `easeIntoRange` keeps a per-side allowance of 0.85 of how
-  far it is out (RANGE_EASE 0.15, the reset's rate), and gestures clamp
-  to range + allowance, so nothing snaps. MEASURED (`.claude/probes/K198/
-  pan.mjs <base> <out> 1000x800|800x700|1400x900|phone`): the zoom-1 left
+  rect, closed at width 0, height ignored. The panel snaps open and shut,
+  but the range sees its edge through a TIME-BASED TWEEN (K198 stage 2):
+  `stepPanelTween` (linear, PANEL_TWEEN_S 0.25 s on the camera's dt;
+  reduced motion 0, a jump) and `easePanel` (smoothstep) give `panelT`,
+  and `panRange` scales the panel's widening by it (`OpenPanel.open`).
+  Each fit-mode frame `stepRange` eases against LAST frame's openness and
+  then clamps to this frame's, so a view at the limit rides the tweened
+  edge home in 0.25 s at any frame rate. Opening only widens the range,
+  so it never moves the view. A resize or fit drift (the edge creeps a
+  few px while the knot settles) EASES the view back: `easeIntoRange`
+  keeps a per-side allowance of 0.85 of how far it is out (RANGE_EASE
+  0.15 a frame, the reset's rate, so frame-rate dependent), and gestures
+  clamp to range + allowance, so nothing snaps. MEASURED
+  (`.claude/probes/K198/pan.mjs <base> <out>
+  1000x800|800x700|1400x900|phone`): the zoom-1 left
   limit puts the edge 9-10 px left of the panel (725 vs 734, 525 vs 534,
-  phone 71 vs 81; 1400x900 clears it at home, 1122 vs 1134); closing eases
-  home in 36-40 frames. Reset, zoom about a point and the FOLLOW camera
+  phone 71 vs 81; 1400x900 clears it at home, 1122 vs 1134). Closing at
+  the limit rides home in 0.24-0.28 s, 8-9 frames in the probe window (143
+  px at 1000x800, 192 at 800x700, 298 on phone; `.claude/probes/K198/
+  stage2/pan.mjs`, whose closing check expects the glide on a build with
+  `panelT`); before stage 2 it eased for 35 frames, about 1.05-1.1 s.
+  Reset, zoom about a point and the FOLLOW camera
   (unclamped) are unchanged; zooming out with the panel closed slides the
   view in a little each step (64 px a 0.9x step at 1000x800, as before
-  K149). Hooks: `__knotView()` adds panel, mazeRight, range, allow;
+  K149). Hooks: `__knotView()` adds panel, mazeRight, range, allow and
+  panelT (stage 2);
   K149's `probe.mjs slack` checks the old rule. GOTCHA: puppeteer's
   `mouse.click(x, y, {clickCount: 2})` gave no dblclick; dispatch the
   event.

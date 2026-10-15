@@ -18,10 +18,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   in the GLYPH_R box), style, visibility predicate, label and tap; the
   module owns the off-screen test (EDGE_MARGIN, HYSTERESIS), the edge
   placement inside the safe area, keeping clear of the chrome (HUD,
-  badge, hamburger, banner, open panel, stats stamp) and of the targets
-  placed before it (layoutIndicators, pure and tested), the DOM and the
-  per-frame update - main.ts calls indicators.update() in fabricTick
-  after the camera step, so in every ticker branch. THE FINISH is the
+  badge, hamburger, banner, stats stamp; the open panel through
+  `env.panel`, see PANEL SLIDE) and of the targets placed before it
+  (layoutIndicators, pure and tested), the DOM and the per-frame update -
+  main.ts calls indicators.update(camDt) in fabricTick after the camera
+  step (the camera's dt, for the head's show delay), so in every ticker
+  branch. THE FINISH is the
   first client (main.ts; the minotaur is the second, see REAL-TIME
   MINOTAUR): a
   black disc wearing the exit marker's own glyph and radius (K83:
@@ -44,10 +46,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   head is off screen in a built fabric maze - the intro, play, after a
   finish, under fog, either camera (`headIndicatorWhy`: only knot mode or
   no maze ("no maze") and the hidden load settle ("loading") hide it; probe
-  hook `headWhy`). NO VIEWER SETTING of its own (the brief left it open):
-  the finish's can be switched off because it gives a direction away, the
-  head's gives nothing away, the minotaur's has none either; tapToPan still
-  makes it inert. A TAP (`returnToHead`, `headReturnPlan`): the FIT camera
+  hook `headWhy`; "setting off" while the viewer switched it off). A
+  TAP (`returnToHead`, `headReturnPlan`): the FIT camera
   eases (0.6 s; reduced motion jumps) to center the head at the zoom the
   player is at, as near as the pan clamp allows (a head at the maze's far
   edge lands at the range's limit, on screen); the FOLLOW camera eases onto
@@ -58,7 +58,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   only pulls the spring to full strength. A follow run of 14 moves never
   showed it at 1400x900 and flashed it once for 0.33 s at 411x753 (a long
   run outpaced the spring, and the shared off-screen test says "off
-  screen"); a short debounce would hide that, left for Levi. GLYPH BUG
+  screen"); K198 stage 2's show delay hides that (below). GLYPH BUG
   found here: the indicator's icon group sets its own stroke, which the
   glyph's filled dots inherited at the default width 1 (12.6 px once
   scaled), so the head's dot and the minotaur's bull eyes drew as
@@ -66,3 +66,46 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   stroke="none" (pinned in marker_glyphs.test.ts). Probe:
   `.claude/probes/K148_K149/probe.mjs fit | follow | slack | solve |
   reduced | fog` (each with `:phone`), flicker.mjs, both.mjs, intro.mjs.
+
+- INDICATOR SETTINGS, SHOW DELAY, PANEL SLIDE (K198 stage 2, 2026-10-14;
+  brief docs/design/K198.md). SETTINGS (Levi: settings for these, never
+  link params): `headIndicator` and `minotaurIndicator` switches
+  (localStorage `knotmaze.headIndicator` / `knotmaze.minotaurIndicator`,
+  "0" = off, default on; Maze-folder checkboxes after finishIndicator, the
+  minotaur's row only while `clock === "realtime"`; it sits in the Maze
+  folder, not K174's Minotaur folder). Off = hidden (`headWhy` "setting
+  off"; the minotaur's `visible` ANDs it in), so a hidden indicator has no
+  element and takes no taps; tapToPan still makes a shown one inert. ONE
+  SIZE for all three, `indicatorSize` (`knotmaze.indicatorSize`, a
+  multiplier on INDICATOR_SIZE 50 px, INDICATOR_SCALE_MIN 0.6 to MAX 1.8,
+  2 decimals; `parseIndicatorScale` clamps a stored value,
+  `indicatorPrefs` reads all three): disc, glyph and chevron scale
+  together (`sizeNow()`), the disc keeps INDICATOR_EDGE from the screen
+  edge (`indicatorFrame`) and the layout spaces discs by size +
+  INDICATOR_GAP. K98's `markerSize` (the markers in the maze) stays
+  separate. SHOW DELAY: the head's indicator shows only after
+  HEAD_SHOW_DELAY_S 0.45 s of continuous off-screen time
+  (`IndicatorTarget.showDelay`, `stepShowDelay` on the camera's dt; status
+  "pending" meanwhile, left out of the layout so nothing makes room for
+  it) and hides at once. Blips measured: 0.33 s (K148), 0.326 s and
+  0.141 s before stage 2 (`.claude/probes/K198/stage2/blips.mjs`, seeds
+  7-9 at 411x753); after it, the blips the same runs met (0.28 s and
+  0.04 s; play is chaotic, so not the same episodes) stayed pending and
+  never showed, and a head panned off screen showed 0.48 s after the pan
+  (desk 475 ms, phone 483 ms; 0 before). Only showing waits: a tap's
+  plan (`headReturnPlan`) is unchanged, and the finish's and the
+  minotaur's have no delay. PANEL SLIDE: the open panel is no longer an
+  avoid box; `env.panel()` hands its box and the camera's tweened
+  openness (`panelT`, gameplay-camera.md's FIT CAMERA PAN RANGE), and
+  `layoutWithPanel` places each indicator without and with the panel and
+  blends the two (`blendPlacement`: along the frame's perimeter by arc
+  length, the shorter way, the chevron re-aimed), so a displaced disc
+  slides to its place in the panel's 0.25 s instead of jumping (319 px at
+  1400x900, 399 px at 411x753, one frame about 0.1 s late, since the avoid
+  boxes refresh every 10 frames). Measured (`stage2/strip.mjs`): 8-10
+  frames, at most 89-107 px a frame, done by 0.22-0.25 s after the
+  toggle. On phone the sliding disc crosses OVER the open panel while
+  it slides (the indicators sit above the panel; a fade would hide it,
+  left for Levi). Probes: `.claude/probes/K198/stage2/` (rows.mjs: the
+  rows, the size at 0.6/1/1.5/1.8, a hidden indicator and its taps;
+  strip.mjs, blips.mjs + run_blips.ps1, prompt_check.mjs, pan.mjs).
