@@ -72,6 +72,16 @@ TIME_ELAPSED query also counts GPU idle between a mid-tick GL upload and
 the render (10-12 ms phantom "spikes" at rest): start the query at the
 frame's first draw call (probe_gpudraw).
 
+PROBE LORE (2026-10-14, K76 2b): **hold the perf lock for every
+pixel-exact GPU probe** (censuses, contact sheets, same-state A/Bs), not
+only for timings. While another agent's GPU batch ran, two sheets of
+one build lost the vellum backdrop in 10 of 12 frames, and a census's
+mode-off-again check failed on 77% of the frame. Alone, the same build
+passed both. Inferred, not caught: a WebGL context loss under the load.
+After one, a RenderTexture comes back empty, and a probe that pins the
+background never renders it again. Record `webglcontextlost` and fail
+on it (`render-explore.md`, the probe lesson).
+
 PROBE LORE, same round: the renderer resets every fill/erase mesh's
 `visible` each frame (hide with `renderable = false`, or per layer);
 the custom section shader ignores `mesh.tint` (tint attribution only
