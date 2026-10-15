@@ -191,6 +191,22 @@ describe("restorePlan", () => {
     ).toBe(true);
   });
 
+  // K145's hover glow and K111's highlight mode: their rows run
+  // onTrailChange, so undoing either keeps the solve on screen.
+  it("applies the choices' look live", () => {
+    const a = design();
+    expect(restorePlan(a, { ...a, hoverGlow: 0.9 }, false)).toEqual({
+      changed: ["hoverGlow"],
+      rebuild: false,
+      effects: ["onTrailChange"],
+    });
+    expect(restorePlan(a, { ...a, highlightMode: "rims" }, false)).toEqual({
+      changed: ["highlightMode"],
+      rebuild: false,
+      effects: ["onTrailChange"],
+    });
+  });
+
   it("lists only real params, each under one effect", () => {
     const seen = new Set<string>();
     for (const keys of Object.values(LIVE_EFFECTS)) {
