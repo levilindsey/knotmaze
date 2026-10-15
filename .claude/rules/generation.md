@@ -12,10 +12,11 @@ Lore for the lattice, the maze plan and its graph surgery, moved
 verbatim from CLAUDE.md by K45 (2026-10-12). The core insight stays in
 CLAUDE.md: the threads ARE the maze paths.
 
-- Generation changes move every daily and every link:
-  `test/ui/daily_link.test.ts` pins dailies #1-#3, and a saved daily
-  attempt refuses to replay on a moved walk graph. The daily rules are
-  in `gameplay.md`.
+- Generation changes move every daily and every link, and since K132 (no
+  frozen daily) so does a default change that reaches the maze:
+  `test/ui/daily_link.test.ts` pins dailies #1-#3 (re-freeze them and
+  name what moved), and a saved daily attempt refuses to replay on a
+  moved walk graph. The daily rules are in `gameplay.md`.
 - The plan's design history (splices, merges, corner cuts, long dead
   ends, shaped lattices) is in `docs/history.md`: Stages 5a–5d, 9 and
   11, SHAPED LATTICES and SHAPED START/EXIT CLEARANCE.

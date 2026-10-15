@@ -28,14 +28,11 @@ entry is labeled with its source; the narrative is in
   excluded; efficiency = optimal / the route you ended on, shown once
   solved, rounded down; distinct junctions; distinct dead-end tips, only
   with deadEnds on; a g/d/b move log for sharing).
-  DAILY - binding rules: (1) a daily's design comes ONLY from its frozen
-  definition (ui/daily_link.ts DAILY_V1 = codec v3's defaults + K74's
-  maze overrides + a seed from the day number; K74 edited it in place,
-  pre-launch), never PARAM_DEFAULTS; to change the daily, append
-  DAILY_V<n+1> with fromDay a few days ahead (open tabs cannot learn
-  it), never edit a published one; test/ui/daily_link.test.ts pins
-  dailies #1-#3 (a failure there means generation code moved every
-  daily and every link). (2) Day numbers are the player's LOCAL date
+  DAILY - binding rules: (1) a daily's design is today's PARAM_DEFAULTS
+  on the day's seed (ui/daily_link.ts `dailyParams`; K132 dropped the
+  frozen DAILY_V1, pre-launch), so a default or generation change moves
+  every daily; test/ui/daily_link.test.ts pins dailies #1-#3 to catch
+  that (re-freeze them and name what moved). (2) Day numbers are the player's LOCAL date
   counted in UTC calendar days (game/daily_calendar.ts), Daily #1 =
   2026-10-12. (3) A page is the daily only while every param but
   DAILY_EXEMPT_KEYS (playback preferences: the Sound folder, cameraMode,
@@ -50,8 +47,8 @@ entry is labeled with its source; the narrative is in
   NO query = today's daily, the bar stays bare; `?daily` = the same
   (rewritten bare); `?daily=<n>` (1..today+2) stays in the bar; `&k=v`
   after it keep the daily only for exempt keys; ANY other query is an
-  ordinary design; K20's `?daily=<n>.<delta>` opens as the design it
-  describes and is no longer written. (5) Records: localStorage
+  ordinary design; anything after the day's number (`?daily=<n>.<x>`,
+  K20's old delta links) is ignored with one warning. (5) Records: localStorage
   `knotmaze.daily`, ONE document `{v: 3, days, prefs}` (K146; v1 reads
   without attempts, v2 without practice) - bump `v` for any shape
   change, never overwrite a newer one; every access is wrapped and the
@@ -276,11 +273,11 @@ entry is labeled with its source; the narrative is in
   markerRadius x 1.15 with a MINO_MIN_CSS_R 10 CSS px floor, over a red
   glow (dim in the lair, larger and full while it hunts), and like the
   exit marker waits for the intro to draw its thread. Live panel edits reach a running chase through
-  setParams. CODEC: v4 appends 84-98 (clock, playerPace, the minotaur's
+  setParams. CODEC: appended at 84-98 (clock, playerPace, the minotaur's
   paces, jitter and pauses, detect, lose, catch, deadEnds, roam, wake,
-  minoFog; legacy keys clk plp mwp mhp mpj mpc mpn mpx mdt mls mct mde
-  mrm mwk mfg). A retune edits DEFAULT_CHASE_PARAMS, the codec literals
-  and the pins in param_codec.test.ts and url_codec.test.ts together.
+  minoFog; keys clk plp mwp mhp mpj mpc mpn mpx mdt mls mct mde mrm mwk
+  mfg). A retune edits DEFAULT_CHASE_PARAMS (PARAM_DEFAULTS reads it) and
+  url_codec.test.ts's defaults pin.
   `clock` is not a DAILY_EXEMPT_KEY: the dailies stay turn-based.
   DEFAULTS come from a headless simulation of 288 mazes with scripted
   players (`.claude/probes/K80/rt/`, results.md): only approachPace
@@ -345,33 +342,25 @@ entry is labeled with its source; the narrative is in
   a TRAILING "=" on the token is tolerated (`new URL(link).searchParams
   .append(...)` re-serializes `?<token>` as `?<token>=&...`), as are
   trailing dots (sentence punctuation after a pasted link); `&key=value`
-  pairs after a token apply as legacy overrides, so probes keep writing
+  pairs after a token apply as overrides, so probes keep writing
   `&am=instant` / `&mf=0`, and unknown keys (fbclid, utm_*) drop on the
   rewrite. The decoder is strict otherwise: an invalid char, truncation,
-  unknown version, out-of-range index/option, reserved number code, or
-  leftover bits beyond the zero padding rejects the whole blob (seed kept,
-  defaults, one console.warn) - all-or-nothing, never a partial design.
-  Legacy readers now fall back to the frozen v1 defaults (LEGACY_BASE), so
-  a future default change (codec v2) leaves old s= links' meaning alone.
+  a version other than CODEC_VERSION (K132), out-of-range index/option,
+  reserved number code, or leftover bits beyond the zero padding rejects
+  the whole blob (seed kept, today's defaults, one console.warn) -
+  all-or-nothing, never a partial design. A listed boolean flips TODAY's
+  default, so flipping a boolean default inverts every link that lists it
+  (K74's deadEnds: `?12l.IS3ygt` turned dead ends on before it, off
+  since).
 
 - *From COMPACT LINKS, a query without a seed:* A query WITHOUT a seed (`?am=instant`) is no link at all: a fresh
   design at TODAY's defaults (the bare page too, until K56 made it the
   daily).
 
-- CODEC V4 (K73, 2026-10-12): trailLength's default went 5 -> 10 (Levi:
-  recentPath should light "about twice as far"; the panel slider's max
-  went 15 -> 30). v1-v3 links read 5, and the token the page rewrites
-  them to on load writes that 5 out. The dailies keep 5: DAILY_V1 pins
-  codec v3's defaults. A future DAILY_V<n> built on codec v4 gets 10
-  unless its overrides say otherwise - K46's memory-trail days were
-  designed around 5 (docs/design/K46_daily_variety.md).
-  K74 (2026-10-13, pre-launch) EDITED V4 IN PLACE (`K74_V4_DEFAULTS` in
-  param_codec.ts): exitClearance 5 -> 12, deadEnds on, deadEndDensity
-  0.25 -> 0.5, and appended deadEndLength (index 71, default 20). v1-v3
-  links still read the old values. A listed boolean is a flip of the
-  default, so a pre-K74 v4 link that turned dead ends ON now turns them
-  OFF (`?12l.IS3ygt`). DAILY_V1 takes the same four values as overrides
-  on codec v3's defaults (its trailLength stays 5).
+- trailLength's default is 10 (K73, 2026-10-12; Levi: recentPath should
+  light "about twice as far"; slider max 30). The dailies read 5 until
+  K132 and 10 since; K46's memory-trail days were designed around 5
+  (docs/design/K46_daily_variety.md).
 
 - LOAD SETTLE PARAMS (K147, 2026-10-13; the mechanism is physics.md's
   "The load settle"): `settleBudget` (`stb`, ms of physics a frame while a
@@ -384,15 +373,14 @@ entry is labeled with its source; the narrative is in
   design (like physics on/off), so a daily stays the daily with either set
   and the golden dailies do not move. Panel: "Motion & intro", before
   Replay settle. url_state.ts clamps both (SETTLE_BUDGET_MAX 30,
-  LOAD_SETTLE_MAX 5); legacy override keys `stb` / `lds`.
+  LOAD_SETTLE_MAX 5); override keys `stb` / `lds`.
 
 ## The panel
 
 - pathViz LABELS ARE NOT ITS VALUES (K73, 2026-10-12): the panel shows
   fullPath / recentPath / string for the values gold / trail / string.
   Rename labels freely; never the values - links store the option's
-  index in the frozen codec tables, legacy `pv=` links name the values,
-  `trm=1` reads as trail, and daily results record the value.
+  index, `pv=` names the value, and daily results record the value.
 
 - *From APPEARANCE FX round 3 (2026-10-10), live recolor:* Look color controls (scheme/hue/gamut/palette/pathColor)
   now RECOLOR IN PLACE (renderer.recolor) - the rebuild they used to

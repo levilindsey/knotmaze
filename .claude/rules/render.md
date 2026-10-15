@@ -93,8 +93,7 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   vellum and aurora moved 0.4 luma levels at detail 0 and 2 against 1,
   the others 0.9-2.6, so those two keep the designed fbm and no row);
   fibers and grain vellum; angle silk; the colors every effect. None of
-  them is daily-exempt, and the dailies stand (DAILY_V1 pins codec v3's
-  defaults). SHAPED PROGRAMS: an effect draws with its own K21 /
+  them is daily-exempt. SHAPED PROGRAMS: an effect draws with its own K21 /
   stage-A program, byte for byte, until a param IT READS leaves its
   default (needsShapeProgram); then with bg-<id>-x, which reads uShape
   (1 / scale, fbm gain, fibers, grain) and uShape2 (silk's angle). Pixi
@@ -283,7 +282,6 @@ without a dark line, ever. Add new render lore here, not to CLAUDE.md.
   (`reach_sheet.mjs`): at 2.5 the floor glow (PULSE_FLOOR_REACH 2.0,
   renamed from PULSE_REACH) swallows the crests; at 3 one crest emerges
   past the glow and dissolves, clearly short of a median run (3.7).
-  Links written before it read 3.
 
 ## RENDER LORE
 
@@ -435,7 +433,7 @@ coordinate lerp sweeps the hues between.
   probes forcing several rebuilds per frame hit it).
 
 - *From the 2026-10-11 small round 2, junction blend distance:* JUNCTION BLEND DISTANCE (`junctionBlend`, jbl=,
-  lattice units, panel [0, 6], default 0.88 since codec v2 - 0 = the
+  lattice units, panel [0, 6], default 0.88 - 0 = the
   historic look; live via recolor): extends the segments/strands junction ramps by a FIXED distance
   (user correction: not a ratio of the run's length - every junction bleeds
   the same distance; converted to ctrl per run through its lattice length,
