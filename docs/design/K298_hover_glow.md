@@ -212,3 +212,105 @@ glow's rows sit under "Hover glow"; item 5 says where the margins go.
   - the lore you added;
   - a `Ledger items` list;
   - the handle fields: branch, last commit, evidence and next.
+
+## Stage 1 handoff (2026-10-14, 22:00 PDT)
+
+The stage is done and verified, inside the cap (started 20:49).
+
+**Done: items 1-9.**
+- `7f680a8`, items 1-4 and 6. `hoverGlowLength` (`hgl=`, codec 131,
+  default 3, [0.5, 15] world) replaces `pulseReach` in ALONG.
+  `hoverGlowFade` (`hgf=`, 132, default 0.2, [0, 1.5] world) replaces
+  `RIM_END_FADE` (0.75, removed); `RIM_END_SHARE` stays as the short-run
+  guard. Both ride `uKSect.zw` (render-paint.md records the slots). The
+  width row reads "Hover glow thickness" (the param and `hgw=` keep their
+  names). A hovered choice draws the glow too: `fabric.setGlowRun(eid, x,
+  y)`, and `kRimOver` whitens the composed paint after
+  `kComposePaintAcross` (GLSL and mirror), because master's max with the
+  breath band hid a 0.4 glow at most phases. Parity tests in
+  `paint_gameplay.test.ts`.
+- `1d52029`, item 5. `pickMargin` (`pkm=`, 133, default 4 CSS px past the
+  drawn edge, [0, 20]) and `pickChoiceRatio` (`pkr=`, 134, default 1.5,
+  [1, 4]), mouse and pen only. Touch keeps 0.7 and `max(0.9, 1.6 tw)`
+  exactly. In `main.ts`, `pickRadius(pointerType, choice)` feeds every
+  pick site, `onThread` = `ps.nearest` or `renderer.pickThread`, and
+  `grabRadius` keeps an accepted press grabbing; `edgeAt` takes its
+  radius from the caller.
+- `b0e720c`, lore: render-paint.md (HOVER GLOW, K298), gameplay-links.md
+  (131-134), gameplay-camera.md (PICK MARGINS), gameplay-panel.md (K298
+  ROWS), probes.md (the pick probe).
+- Items 7-9: the evidence below.
+
+**Defaults.**
+- Length 3: master's effective length (`pulseReach` 3), so it moves no
+  default frame. `sheet/K298_len.png`: 0.5, 1.5, 3, 6 and 15.
+- End fade 0.2: about 4.4 CSS px at 1400x900 (0.75 was about 16), under
+  the ribbon's half-width (5.7). `sheet/K298_fade.png` shows 0.1, 0.2 and
+  0.3 close together at the default zoom (1930, 1925 and 1914 px lit, 1856
+  at 0.75). 0.2 is the middle of the three short ones: a judgment, not a
+  measured threshold.
+- Margin 4 CSS px. It hugs the ribbon: the thread cursor holds to 3.5 px
+  past the drawn edge. Master's 0.7 world was 9.6 px nominal at 1400x900.
+  The unit is screen px because aim error is screen px; a world margin
+  balloons when zoomed (master's reached 77 px nominal at 8x).
+- Ratio 1.5: master's choice-over-thread ratio in margin terms, (0.9 -
+  0.26) / (0.7 - 0.26) = 1.45. It scales only the margin, so a choice's
+  zone still grows with the thread's width; a max with `1.6 tw` would
+  leave the slider inert at the defaults. `sheet/K298_pick.png` draws the
+  old and new zones over a thread and a choice, at 1400x900 and 411x753.
+
+**Verification (observed).**
+- Tests: `npx vitest run` 953 passed, 1 skipped (954); `npx tsc
+  --noEmit` 0 errors; `npm run build` green. The knot-mode golden and the
+  golden dailies are untouched; `param_codec.test.ts`'s pin grew by the
+  four appended keys only.
+- Census (`census_rim.mjs`; master, branch, lengths 0.5 and 15, fades 0.1
+  and 0.75, a 4-ctrl run, a hovered choice): inner max 0.55-0.62/255,
+  none over 2/255. The terminal class reads 131.92/255 on master and
+  branch alike: the known open-chain terminal-sample residual.
+- Same-state A/B at the defaults (`hm_probe.mjs ab`): desktop 22/24
+  cases 0 px, phone 20/21, phonemouse 22/24. What moved: the hovered
+  choice (desktop 331 px, max 29/255; phonemouse 219 px, max 26), which
+  is the glow on it, and the rim case (18-29 px, max 1/255), which is the
+  end fade. Nothing else.
+- GPU (`gpu_by_program.mjs`, perf lock, ribbon ms/frame, two rounds): at
+  rest master 1.622/1.624, branch 1.592/1.634; hovering master
+  1.601/1.616, branch 1.627/1.655. Within noise.
+- Pick (`pick_probe.mjs`, the real cursor, `?k111&am=instant&fw=0`): at
+  1400x900 the thread cursor holds to 3.5 px past the drawn edge and is
+  gone from 4.5 (master: 9 / 10); a choice 5.5 / 6.5 (master about 14). A
+  click 8 px out no longer moves and 5 px does; a press-drag 3 px out
+  grabs and 6 px pans. At 8x zoom the thread edge stays 3.5 / 4.5 px. A
+  411x753 mouse matches master (old 3.9 / 5.7 px, new 4 / 6).
+
+**Notes.**
+- The brief's "`fabric.runDistance` uses the same radius" is not so:
+  `runDistance` returns the plain distance to the nearest tappable sample
+  (no radius), and `onHead`'s radius is `max(1.5 head discs, 0.9)`. So
+  `runDistance` is unchanged.
+- Should the ratio reach touch? Not on its own: touch's radii are world
+  units with no margin term for it to scale. If Levi wants it, move touch
+  to the mouse's form (half-width + margin px, times the ratio on a
+  choice) with its own margin. Inferred from the measured phone numbers:
+  a 4 px default would nearly reproduce today's touch zones at the phone's
+  default zoom (today 3.9 / 5.7 px past the edge). It would change them
+  under a pinch zoom, where today's grow with the world.
+- Open: a touch press on a choice lights no glow until the finger moves
+  (the `pendingTap` path sets no glow run).
+- The panel's label style is mixed: the pick rows use words, while the
+  rest of Touch & feel shows camelCase keys (`pluckRipple`, `tugLimit`).
+- The hover glow's rows (length, end fade, thickness) still show at
+  strength 0 (K111's stage 5 candidate).
+
+**Evidence.** `.claude/probes/K298/` (untracked): `batch_k298.ps1` and
+`out/batch.log` (census, A/B and GPU), `census/`, `ab/`,
+`out/gpu/results.jsonl`, `out/pick/*.json`,
+`sheet/K298_{len,fade,choice,pick}.png` and the scripts that make them
+(`sheets_k298.ps1`, `sheet_k298.mjs`, `mksheet.mjs`, `pick_sheet.mjs`,
+`pick_compose.mjs`, `pick_probe.mjs`, `pick_batch.ps1`), and
+`lock_take.ps1` / `lock_release.ps1`.
+
+**Next.** Coordinator review and merge. If K7's stage 1 has reached
+master by then, rebase onto it. Inferred: the conflicts should stay in
+`main.ts`'s pick sites, each of which now calls `pickRadius`,
+`grabRadius` or `onThread`.
