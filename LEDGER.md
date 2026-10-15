@@ -21,7 +21,7 @@ and never reused.
   and 13% on the older mazes (K74 stage 1's dead ends: 2.0 -> 5.9 ends a
   maze). Retune the defaults (sight, accuracy) to the research's targets
   in stage 2 (rec.), tune on other designs, or accept the new rates.
-  Asked in session 2026-10-14 at about 15:26. `docs/design/K80_turns.md`
+  Asked in session 2026-10-14 at about 15:23. `docs/design/K80_turns.md`
   ("Stage 1 handoff"), `.claude/probes/K80/turns/compare_rebased.md`.
 - **K264** · The hover rim's width (K248, merged 6588ec0): `RIM_EDGE`
   0.7 / 0.85 (built) / 1.0 of the thread's half-width. 0.7 is thinner;
