@@ -415,6 +415,14 @@ async function main(): Promise<void> {
     reducedMotion: motion.reduced,
     highContrast: contrast.high,
   };
+  // K111 stage 4 (K265): High contrast's highlight prototype while Levi
+  // picks one: 1 contrast, 2 outline, 3 chevrons, anything else today's
+  // pulses. Read once from the TEMPORARY link key `hcl` (`?<token>&hcl=2`)
+  // before the page rewrites the address bar; the probe hook __knotHcLook
+  // switches it live. It shows only while High contrast is on. Not a codec
+  // param: stage 5 builds the picked look and removes the key and the hook.
+  const hclAsked = Number(new URLSearchParams(window.location.search).get("hcl"));
+  let hcLookChoice = hclAsked === 1 || hclAsked === 2 || hclAsked === 3 ? hclAsked : 0;
   await app.init({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -2055,6 +2063,7 @@ async function main(): Promise<void> {
     renderer.pulseReach = params.pulseReach;
     renderer.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
     renderer.hoverGlowWidth = clampHoverGlowWidth(params.hoverGlowWidth);
+    renderer.hcLook = a11y.highContrast ? hcLookChoice : 0;
     renderer.appearFx = params.appearFx;
   }
   motion.subscribe(applyAccessibility);
@@ -5326,6 +5335,14 @@ async function main(): Promise<void> {
   // K111 probe: the two Accessibility switches, the OS answers, the root
   // attributes the stylesheets read, the keys overridden, and the values the
   // scene wears right now next to the stored ones.
+  // K111 stage 4 probe: switch High contrast's highlight prototype (0 today's
+  // pulses, 1 contrast, 2 outline, 3 chevrons; worn only while High
+  // contrast is on). Returns the look the renderer now wears.
+  (window as unknown as Record<string, unknown>).__knotHcLook = (n: number) => {
+    hcLookChoice = n === 1 || n === 2 || n === 3 ? n : 0;
+    handRendererLook();
+    return renderer?.hcLook ?? null;
+  };
   (window as unknown as Record<string, unknown>).__knotA11y = () => ({
     reducedMotion: a11y.reducedMotion,
     highContrast: a11y.highContrast,

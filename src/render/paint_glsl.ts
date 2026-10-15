@@ -30,7 +30,8 @@ const W1 = (1 << PAINT_CONST.K_ROW_SHIFT) - 1;
 const S = PAINT_CONST.K_ROW_SHIFT;
 
 // The shared uniform block (paint_model.ts knotUniforms()).
-//   uKBase  = (runBase, -, debugView, paletteMode)
+//   uKBase  = (runBase, hcLook, debugView, paletteMode)  hcLook: High
+//             contrast's highlight prototype (K111 stage 4; 0 = the pulses)
 //   uKFx    = (style, animT, fxNow, fxOn)   style: FX_STYLE ids; animT =
 //             the reveal clock (anim s); fxNow = wall s since reveal start
 //   uKFx2   = (phase13, phase29, revealOn, flTime)  burn flicker phases
@@ -653,9 +654,25 @@ highp float kReachWin(highp float d) {
   return 1.0 - kSmooth((d - (uKReach.x - f)) / f);
 }
 
+// K111 stage 4 (K265): High contrast's highlight prototype, uKBase.y. 0 =
+// today's pulses: every prototype branch is skipped and the paint is
+// master's. 1 contrast, 2 outline, 3 chevrons (kComposePaintAcross). The
+// CPU mirror draws the pulses whatever the id (prototypes skip parity,
+// K152 (3); the picked look gets its mirror in stage 5).
+int kHcLook() {
+  return int(uKBase.y + 0.5);
+}
+// The choice band's pulse distance (world arc from the junction) and pixel
+// size at this pixel, for the chevrons (kPaintAt sets them with st.z).
+highp float kHcD;
+highp float kHcPx;
+
 highp float kPulseV(highp float d, highp float span, bool inward, bool hovered) {
   if (d < 0.0 || d > span) return 0.0;
   highp float endWin = clamp((span - d) / PULSE_END_WINDOW, 0.0, 1.0);
+  // A prototype: no trains and no breath, one steady level out to the
+  // reach, faded in after a move like the trains; the look shapes it.
+  if (kHcLook() != 0) return endWin * uKPulse.w * kReachWin(d);
   if (hovered) return endWin * uKPaint.w * kReachWin(d);
   highp float s = uKPulse.z;
   highp float raw = inward ? d + uKPulse.x : d - uKPulse.y;
@@ -757,8 +774,12 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
       }
       highp float v = kPulseV(d, span, (flags & IF_INWARD) != 0, (flags & IF_HOVER) != 0);
       if (v > PULSE_MIN_V) {
-        st.y = 1.0;
+        // 2 = a hovered choice under a High contrast prototype (K111 stage
+        // 4), which the looks draw apart; anything over 0.5 is a band.
+        st.y = kHcLook() != 0 && (flags & IF_HOVER) != 0 ? 2.0 : 1.0;
         st.z = v;
+        kHcD = d;
+        kHcPx = px;
       }
     } else if (type == PI_RIM) {
       highp float u0 = kArcU(c, T0.y);
@@ -828,5 +849,48 @@ vec3 kComposePaint(vec3 S, highp vec4 st, highp float glow) {
   vec3 under = S + (uKGold.rgb - S) * clamp(st.x, 0.0, 1.0);
   highp float v = max(st.y > 0.5 ? st.z : 0.0, glow);
   return under + (vec3(1.0) - under) * (K_BAND * clamp(v, 0.0, 1.0));
+}
+
+// A High contrast prototype's choice (K111 stage 4): the paint goes toward
+// the pattern's gray "white" (0 black, 1 white) by the band's strength,
+// whatever its hue, and the reveal glow brightens the result as in
+// kComposePaint.
+vec3 kHcCompose(vec3 S, highp vec4 st, highp float glow, highp float white) {
+  vec3 under = S + (uKGold.rgb - S) * clamp(st.x, 0.0, 1.0);
+  highp float v = clamp(st.z, 0.0, 1.0);
+  vec3 c = under + (vec3(white) - under) * v;
+  return c + (vec3(1.0) - c) * (K_BAND * clamp(glow, 0.0, 1.0));
+}
+
+// The paint on a RIBBON (side = vUV.y, the edges at 0 and 1):
+// kComposePaint, except a choice under a High contrast prototype (K111
+// stage 4). 1 CONTRAST: white with a black center line. 2 OUTLINE: a black
+// core between white edges. 3 CHEVRONS: black and white chevrons pointing
+// away from the junction. A hovered choice is solid white under each; a
+// hovered run that is not a choice keeps the hover rim (glow).
+vec3 kComposePaintAcross(vec3 S, highp vec4 st, highp float glow, highp float side) {
+  int look = kHcLook();
+  if (look == 0 || st.y < 0.5) return kComposePaint(S, st, glow);
+  if (st.y > 1.5) return kHcCompose(S, st, glow, 1.0);
+  highp float e = abs(2.0 * side - 1.0);
+  highp float white;
+  if (look == 1) {
+    white = clamp((e - HC_LINE) / HC_LINE_SOFT + 0.5, 0.0, 1.0);
+  } else if (look == 2) {
+    white = clamp((e - HC_CORE) / HC_CORE_SOFT + 0.5, 0.0, 1.0);
+  } else {
+    highp float u = (kHcD - HC_CHEV_LEAN * (1.0 - e)) / HC_CHEV_PERIOD;
+    highp float sd = (0.25 - abs(fract(u) - 0.5)) * HC_CHEV_PERIOD;
+    white = clamp(sd / max(kHcPx, 1e-4) + 0.5, 0.0, 1.0);
+  }
+  return kHcCompose(S, st, glow, white);
+}
+
+// The paint where there is no across coordinate (the arm strips the
+// junction webs and fans read): kComposePaint, except that a High contrast
+// prototype's choice is flat white there (K111 stage 4).
+vec3 kComposePaintFlat(vec3 S, highp vec4 st, highp float glow) {
+  if (kHcLook() == 0 || st.y < 0.5) return kComposePaint(S, st, glow);
+  return kHcCompose(S, st, glow, 1.0);
 }
 `;

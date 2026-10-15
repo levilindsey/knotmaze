@@ -208,7 +208,7 @@ vec3 chainMaterial(int ch, highp float a, highp float seedIn, bool untrav) {
   if ((uKPaint.x > 0.5 && c.paintOn) || uKFx2.z > 0.5) {
     highp vec4 st = kPaintAt(c, actrl, an, kStripPx);
     if (untrav) st.x = 0.0;
-    m = kComposePaint(m, st, kGlow(c, actrl));
+    m = kComposePaintFlat(m, st, kGlow(c, actrl));
   }
   return m;
 }
