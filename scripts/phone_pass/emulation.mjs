@@ -5,9 +5,12 @@
 //  1. the mechanism: a size the phone does not have (360x640 at dpr 3) comes back as asked, so a match to the
 //     phone's own viewport is not a coincidence (odd);
 //  2. the real size, 411x753 at dpr 2.625: innerWidth x innerHeight, devicePixelRatio, the orientation media
-//     query, and the PixiJS canvas (its CSS box fills the page, its backing store is about 1079x1977 device px);
-//  3. a screenshot of 411x753 CSS px (1079x1977 device px) that is all page, no blank strip (K195 found every
-//     landscape frame carried a white strip at the bottom: the screenshot 387 CSS px high, the page 331);
+//     query, and the PixiJS canvas (its CSS box fills the page; its backing store is reported: the app caps its
+//     resolution at dpr 2, main.ts `Math.min(window.devicePixelRatio, 2)`, so 822x1506 device px, not the
+//     uncapped 1079x1977);
+//  3. a screenshot of the whole 411x753 CSS px viewport (same aspect ratio; 1079x1977 device px on the phone,
+//     whose capture follows the emulated dpr) that is all page, no blank strip (K195 found every landscape
+//     frame carried a white strip at the bottom: the screenshot 387 CSS px high, the page 331);
 //  4. which navigations the override survives (recorded; every script sets it again before each navigation).
 // Writes emulation.json and emulation_real.png in the pass folder; exit 0 = real, 4 = not real (phone_pass.ps1
 // then stops before it measures). With cfg.viewport = native it only records what the tab shows.
@@ -84,21 +87,31 @@ try {
     };
     let strip = 0;
     while (strip < img.H && whiteRow(img.H - 1 - strip) >= 0.99) strip++;
-    res.shot = { file: shot, w: img.W, h: img.H, wantW, wantH, cssW: +(img.W / EMU_VP.deviceScaleFactor).toFixed(1), cssH: +(img.H / EMU_VP.deviceScaleFactor).toFixed(1), blankRowsAtBottom: strip, whiteShareTop: +whiteRow(0).toFixed(3), whiteShareBottom: +whiteRow(img.H - 1).toFixed(3) };
+    // The capture's CSS size: the pixel size over the capture's own scale. A whole-viewport capture has the
+    // viewport's aspect ratio whatever the scale (the phone follows the emulated dpr, 1079x1977; a headed desktop
+    // Chrome captures at its display's own scale, so a dry run reads 822x1506): that, and no blank strip, are what
+    // make it "411x753 CSS px". The strict device-pixel size is reported (shotScaleOk), not a verdict.
+    const scale = img.W / EMU_VP.width;
+    res.shot = { file: shot, w: img.W, h: img.H, wantW, wantH, scale: +scale.toFixed(3), cssW: +(img.W / scale).toFixed(1), cssH: +(img.H / scale).toFixed(1), blankRowsAtBottom: strip, whiteShareTop: +whiteRow(0).toFixed(3), whiteShareBottom: +whiteRow(img.H - 1).toFixed(3) };
 
     // verdicts
     const e = res.final, c = e?.canvas;
-    const wantBW = EMU_VP.width * EMU_VP.deviceScaleFactor, wantBH = EMU_VP.height * EMU_VP.deviceScaleFactor;
+    // main.ts caps the renderer's resolution at 2 (`resolution: Math.min(window.devicePixelRatio, 2)`): at dpr 2.625 the
+    // backing store is 822x1506, the CSS box at 2x, not the uncapped 1079x1977.
+    const capDpr = Math.min(EMU_VP.deviceScaleFactor, 2);
+    const wantBW = EMU_VP.width * capDpr, wantBH = EMU_VP.height * capDpr;
     res.checks.pageSize = vpIs(e, EMU_VP.width, EMU_VP.height, EMU_VP.deviceScaleFactor);
     res.checks.orientationPortrait = e?.portrait === true;
     res.checks.documentSize = !!e && near(e.doc[0], EMU_VP.width, 1) && near(e.doc[1], EMU_VP.height, 1);
     res.checks.canvasFillsPage = !!c && near(c.cw, EMU_VP.width, 1) && near(c.ch, EMU_VP.height, 1);
     res.checks.canvasBacking = !!c && near(c.w, wantBW, 2) && near(c.h, wantBH, 2);
-    res.checks.shotSize = near(img.W, wantW, 1) && near(img.H, wantH, 1);
+    res.checks.shotAspect = Math.abs(img.W / img.H - EMU_VP.width / EMU_VP.height) < 0.004 * (EMU_VP.width / EMU_VP.height);
+    res.checks.shotScaleOk = near(img.W, wantW, 1) && near(img.H, wantH, 1);
     res.checks.noBlankStrip = strip < 4;
-    res.pass = res.checks.oddHonored && res.checks.pageSize && res.checks.orientationPortrait && res.checks.documentSize && res.checks.canvasFillsPage && res.checks.shotSize && res.checks.noBlankStrip;
-    // The backing store is reported, not failed on its own: a game that caps its resolution is not an unreal emulation.
-    res.note = res.checks.canvasBacking ? "canvas backing matches viewport x dpr" : `canvas backing ${c ? c.w + "x" + c.h : "none"} is not ${Math.round(wantBW)}x${Math.round(wantBH)}: check whether the app caps its resolution`;
+    res.pass = res.checks.oddHonored && res.checks.pageSize && res.checks.orientationPortrait && res.checks.documentSize && res.checks.canvasFillsPage && res.checks.shotAspect && res.checks.noBlankStrip;
+    // The backing store and the capture's scale are reported, not failed on their own: an app that caps its
+    // resolution, or a browser that captures at its display's scale, is not an unreal emulation.
+    res.note = `canvas backing ${c ? c.w + "x" + c.h : "none"} ${res.checks.canvasBacking ? "= the app's cap (min(dpr, 2) = " + capDpr + "x the CSS box)" : "is NOT " + Math.round(wantBW) + "x" + Math.round(wantBH) + " (min(dpr, 2) x the CSS box): check main.ts's resolution cap"}; screenshot ${img.W}x${img.H} px is ${scale.toFixed(3)}x the CSS viewport ${res.checks.shotScaleOk ? "(the emulated dpr: " + wantW + "x" + wantH + ")" : "(the emulated dpr would give " + wantW + "x" + wantH + ")"}`;
   }
 } catch (e) {
   res.error = String(e.stack || e).slice(0, 600);
@@ -114,7 +127,7 @@ try {
   console.log(`  real, asleep        ${f(res.real)}`);
   console.log(`  real after reload   ${f(res.realAfterReload)}  survives reload: ${res.survivesReload}`);
   console.log(`  final               ${f(res.final)}  vv ${JSON.stringify(res.final?.vv)} screen ${JSON.stringify(res.final?.screen)}`);
-  if (res.shot) console.log(`  screenshot          ${res.shot.w}x${res.shot.h} px = ${res.shot.cssW}x${res.shot.cssH} css (want ${res.shot.wantW}x${res.shot.wantH}), blank rows at the bottom ${res.shot.blankRowsAtBottom}`);
+  if (res.shot) console.log(`  screenshot          ${res.shot.w}x${res.shot.h} px = ${res.shot.cssW}x${res.shot.cssH} css at scale ${res.shot.scale} (the emulated dpr: ${res.shot.wantW}x${res.shot.wantH}), blank rows at the bottom ${res.shot.blankRowsAtBottom}`);
   console.log(`  checks              ${JSON.stringify(res.checks)}`);
   if (res.note) console.log(`  note                ${res.note}`);
   if (res.error) console.log(`  ERROR               ${res.error}`);
