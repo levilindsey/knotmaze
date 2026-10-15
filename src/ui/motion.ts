@@ -58,6 +58,7 @@ export interface MotionRootLike {
 export class MotionSetting {
   private readonly storage: StorageLike | null;
   private readonly root: MotionRootLike | null;
+  private readonly listeners: Array<() => void> = [];
   private choice: MotionPref = "system";
   private systemReduced = false;
 
@@ -76,7 +77,7 @@ export class MotionSetting {
     this.systemReduced = query?.matches === true;
     const onChange = (e: MotionChange): void => {
       this.systemReduced = e.matches === true;
-      this.applyRoot();
+      this.changed();
     };
     try {
       if (typeof query?.addEventListener === "function") {
@@ -115,7 +116,24 @@ export class MotionSetting {
     } catch {
       // Storage refused (blocked or full): this session only.
     }
+    this.changed();
+  }
+
+  // K111: told after the answer may have moved (a choice, or the OS
+  // flipping), so the panel's Reduced motion box and the scene follow.
+  subscribe(fn: () => void): void {
+    this.listeners.push(fn);
+  }
+
+  private changed(): void {
     this.applyRoot();
+    for (const fn of this.listeners) {
+      try {
+        fn();
+      } catch {
+        // A listener must not break the setting.
+      }
+    }
   }
 
   private applyRoot(): void {
