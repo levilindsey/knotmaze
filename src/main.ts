@@ -1679,12 +1679,13 @@ async function main(): Promise<void> {
       }
       if (action === "backtrack" && fabric && fabricController) {
         fabric.cancelMove();
+        const depart = fabricController.head;
         const retraced = fabricController.retreatToStart();
         if (retraced.length > 0) {
-          // The fog stays (K100) and lifts along the way back again, as
-          // walking it back by hand would and as a restore of these taps
-          // will (exploreRuns).
-          fabric.exploreRuns(retraced);
+          // The fog stays (K100) and lifts along the way back again, each
+          // run stamped from the head's end as walking it back by hand
+          // would and as a restore of these taps will (exploreRuns).
+          fabric.exploreRuns(retraced, depart);
           // The Ariadne string keeps every pass, the way back included.
           fabric.restoreYarn(fabricController.taps);
           fabric.update(fabricController);

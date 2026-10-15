@@ -44,7 +44,7 @@ import type { MinoFog, PathViz } from "../ui/url_state";
 import { spotCtrl } from "../game/minotaur";
 import type { MinotaurChase, MinotaurMode } from "../game/minotaur";
 import { FogBackdrop } from "./background";
-import { FOG_ARC_STEP, fogArcStations } from "./fog_arc";
+import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
 import { MarkerMesh } from "./marker_mesh";
 import { DEFAULT_GLYPHS, markerGlyph, markerRadiusFor } from "./marker_glyphs";
 import type { MarkerRole } from "./marker_glyphs";
@@ -578,20 +578,9 @@ export class FabricMazeRenderer {
     this.finishFogArc();
     this.anim = null;
     const e = this.walk.edges[edgeId];
-    const head = controller.head;
-    let from: number;
-    let to: number;
-    if (e.va === head && e.vb === head) {
-      // Self-loop run: direction is unknowable; sweep A -> B.
-      from = e.ctrlA;
-      to = e.ctrlB;
-    } else if (e.va === head) {
-      from = e.ctrlB;
-      to = e.ctrlA;
-    } else {
-      from = e.ctrlA;
-      to = e.ctrlB;
-    }
+    // A self-loop run's direction is unknowable: it sweeps A -> B (moveEnds,
+    // shared with the fog's restore, K100).
+    const { from, to } = moveEnds(e, controller.head);
     this.anim = { e, from, to, cur: from, kind };
     // String mode: every move - advance OR backtrack - lays one new yarn
     // pass in the dot's travel direction (the backtrack pass IS the
@@ -888,23 +877,23 @@ export class FabricMazeRenderer {
     }
   }
 
-  // The fog of war explores along whole runs, without a dot. K47 RESTORE:
-  // the runs crossed before the page was reloaded (main.ts calls this once
-  // the restored scene is on screen, so the stamps land where the settled
+  // The fog of war explores along whole runs, without a dot: `runs` are
+  // taps walked from vertex `start`. K47 RESTORE: the runs crossed before
+  // the page was reloaded, from the entrance (main.ts calls this once the
+  // restored scene is on screen, so the stamps land where the settled
   // threads lie). K100: a daily's Reset path, whose way back to the
-  // entrance jumps instead of animating, explores the runs it retraced, so
-  // the live fog is the one a restore of the same taps draws (each pass of
-  // a run deepens its soft edge, by hand or restored).
-  exploreRuns(runs: readonly number[]): void {
+  // entrance jumps instead of animating, explores the runs it retraced from
+  // the head, so the live fog is the one a restore of the same taps draws.
+  // Each run is stamped as a move along it is: its departure end (where the
+  // dot rested), then fogArcStations in travel direction (travelOrder), so
+  // a run walked out and back lifts the fog at both moves' stations.
+  exploreRuns(runs: readonly number[], start: string = this.walk.start): void {
     if (!this.fogOfWar) return;
-    for (const eid of runs) {
-      const e = this.walk.edges[eid];
-      if (!e) continue;
-      for (let f = e.ctrlA; ; f += FOG_ARC_STEP) {
-        const ff = Math.min(f, e.ctrlB);
-        this.pointFlowed(e.chain, this.ctrlMod(e.chain, ff), this.scratch, 0);
+    for (const { run, from, to } of travelOrder(this.walk.edges, runs, start)) {
+      const chain = this.walk.edges[run].chain;
+      for (const f of [from, ...fogArcStations(from, to, from, to)]) {
+        this.pointFlowed(chain, this.ctrlMod(chain, f), this.scratch, 0);
         this.maybeStampFog(this.scratch[0], this.scratch[1]);
-        if (ff >= e.ctrlB) break;
       }
     }
     this.renderFog();
