@@ -1074,12 +1074,25 @@ export class FabricMazeRenderer {
         embers.push(p[0], p[1]);
       }
     }
+    // A smoldering arm is marked from the head to its first burnt stretch,
+    // so a burning arm (the run just walked, say) keeps its char and ember
+    // in view. The head's own end is never burnt (an arrival beats the fire).
     const smolder: number[][] = [];
     if (!a && !controller.solved && !controller.fireLost) {
       for (const eid of controller.choices()) {
         if (!controller.smoldering(eid)) continue;
         const e = this.walk.edges[eid];
-        smolder.push(this.runPoints(e, 0, e.length));
+        const b = runBurnAt(this.walk, fire, eid, L);
+        const fromA = e.va === controller.head;
+        let x0 = 0;
+        let x1 = e.length;
+        if (b.state === "burning") {
+          for (const [s0, s1] of b.burnt) {
+            if (fromA) x1 = Math.min(x1, s0);
+            else x0 = Math.max(x0, s1);
+          }
+        }
+        if (x1 > x0) smolder.push(this.runPoints(e, x0, x1));
       }
     }
     const w = this.threadWidth;
