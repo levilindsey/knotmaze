@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K378.
+Next free ID: K380.
 
 ## Waiting on Levi
 
@@ -223,13 +223,14 @@ Next free ID: K378.
   - next: stage 3: the census fixes first (`census.mjs`: judge shaped slots by S/R/F, skip rather than fail when no crossing shows both threads, a fading joint scales by vis; attribute junctions 56-58 and 161, which mismatch on master too), then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip); never alongside K290 (both edit `gap_mask.ts`, `explore_glsl.ts`)
   - brief: `docs/design/K268.md`, "Stage 2 handoff" ("For the next stage")
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
-  calls K302). Stages 1-4 merged: the worker behind `phw`, the probe bridge and
-  desktop acceptance (4d39a1f..de22867). Stage 5: the phone, then the default.
-  - owner: agent `adf244f47f53e8230` (opus) of claude session d8031183, stage 5 from 02:35 (cap 04:35; ports 5798-5799; owns `main.ts`; the phone first, under the phone lock); stage 4's worktree `abee0faca59fb8636` kept
-  - branch: `worktree-agent-adf244f47f53e8230` (`.claude/worktrees/agent-adf244f47f53e8230`, from `de22867`); last commit: `de22867` (master) until its first WIP commit
-  - evidence: `.claude/probes/K7/` (`stage3/`; `stage4/` with `k7_frames.mjs`, `k7_latency.mjs`, `run_s4.ps1`, `table_s4.mjs`, `k307/`, `ports/`); stage 5's in its worktree's `.claude/probes/K7/stage5/`
-  - next: stage 5: the worker start gate, the phone pass (Design 10's criteria, plus touch latency), then `phw` on by default if it passes, K147's budget bypass and the lore; then K5 and K6
-  - brief: `docs/design/K7_worker.md`, "Stage 5" and the stage 4 handoff's "For stage 5"
+  calls K302). Stages 1-5 merged (stage 5: 3e6b7c5..988be6a, the start gate and the phone
+  pass, which missed only the 250 ms gate). Call F6: the default anyway.
+  - owner: agent `a6023a3244ff623cc` (sonnet) of claude session d8031183, stage 6 (the flip) from 03:49 (cap 04:49; ports 5850-5859); stage 5's worktree `adf244f47f53e8230` kept
+  - branch: `worktree-agent-a6023a3244ff623cc` (`.claude/worktrees/agent-a6023a3244ff623cc`, from `8b3b401`); last commit: `8b3b401` (master) until its first WIP commit
+  - evidence: `.claude/probes/K7/` (`stage5/`: the phone tooling, `s5_gate.txt`, `run_s5.ps1`, `table_s5.mjs`; `stage4/`, `stage3/`)
+  - next: stage 6 (sonnet): `phw` on by default, its pins and lore, the 21 shared probe libraries ported (K374); then K5 M1; then stage 7 (opus; after M1, since both edit main.ts's boot): the start-gate lever (params and tuning in the Worker's `name`, main adopts gen 0), the phone pass again and the spike page `?d=gs18`
+  - brief: `docs/design/K7_worker.md`, "Stage 6 brief: the flip (call F6)"; stage 7 from "Stage 5 handoff" ("For the next stage")
+  - env: the phone: `.claude/probes/K7/stage5/phone_setup.ps1` and `phone_teardown.ps1`, under the phone lock
 - **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
   prioritize). K7 s4's trace: GPU compile waits (bg-vellum's 190 ms queued behind
   12-15 small links); the worker can't hide them; its 6.1 s frame is gone.
@@ -521,9 +522,9 @@ Every other item below waits on the trigger it names.
 - **K366** · With K307 stage 2 (K279 s2): move the ripple's `warm()` onto the
   program registry, and take the first-tap residual: one 35-54 ms frame among
   tap 1's first five, on both builds, ripple or not.
-- **K370** · The worker's input latency (K7 s4): p50 105 ms on the daily, 70 on
-  the knot (in-thread 285), against a 50 ms target. Measure each stage first
-  (`k7_latency.mjs`); levers: newest snapshot while grabbed, more drag substeps.
+- **K370** · Worker input latency, p50 (target 50 ms): desktop 105 on the daily,
+  70 on the knot (in-thread 285; K7 s4); phone 231, first motion 173 (in-thread
+  872; K7 s5). Measure each stage first (`k7_latency.mjs`); levers: newest snapshot while grabbed, more drag substeps.
 - **K373** · Two cheap boot fixes from K7 s4's trace: the `safeAreaInsets`
   forced layout (`offscreen_indicators.ts` 797-809, ~35 ms) and `formatDayDate`
   (`daily_calendar.ts:75`, ~8 ms). Rec: do both.
@@ -1140,6 +1141,12 @@ Every other item below waits on the trigger it names.
 - **K375** · The reveal's sheet probe (`k76_probe.mjs`): pin the halo breath as
   `census.mjs` now does, and find the 192 px by which a mode-off frame differs
   from the frame before it, master too (K268 s2). Rec: a small sonnet probe.
+- **K378** · Main's long task about 0.36 s into the load grew 30-40 ms between
+  `f4c1d5f` and `de22867` (K7 s5, observed; the merge is unknown, K279 s2's ripple
+  warm-up a guess); on the desktop main hears the worker's `ready` only at ~600 ms. Rec: bisect (K373 nearby).
+- **K379** · No phone cold start on levi.dev yet: K7 s5 skipped it, since `phone_lib`
+  clears the origin's storage and would wipe Levi's daily records. Rec: a mode
+  that keeps storage, then one cold load of the live site.
 
 ## Approved, to schedule (2026-10-11)
 
