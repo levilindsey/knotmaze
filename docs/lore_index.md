@@ -41,8 +41,10 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/core/shapes.ts`, `src/core/lattice_grower.ts`, `src/core/maze_plan.ts`, `src/core/maze_apply.ts`, `test/core/shapes.test.ts`, `test/core/lattice_grower.test.ts`
 - `generation-geometry.md`: the spline bend bound (K90)
   paths: `src/geometry/**`, `test/geometry/**`
-- `physics.md`: physics: the intro, the sweep test, the Web Worker plan
+- `physics.md`: physics: the intro, the sweep test, the physics worker's pointer and the solver rules
   paths: `src/physics/**`, `test/physics/**`, `test/*.regression.test.ts`, `test/sweep.manual.test.ts`
+- `physics-worker.md`: THE PHYSICS WORKER (K7): the two hosts, the mirror, transport, the allowance clock, interpolation, the start gate, the fallback, invariants, the measured numbers
+  paths: `src/physics/physics_host.ts`, `src/physics/worker_host.ts`, `src/physics/physics_worker.ts`, `src/physics/physics_worker_core.ts`, `src/physics/mirror_system.ts`, `src/physics/snapshot.ts`, `src/physics/probe_dump.ts`, `src/core/scene_graph.ts`, `test/physics/physics_host.test.ts`, `test/physics/worker_host.test.ts`, `test/physics/host_seam.test.ts`, `test/physics/snapshot.test.ts`
 - `physics-sleep.md`: the sleep gate counts sim time (K63)
   paths: `src/physics/sleep_gate.ts`, `test/physics/sleep_gate.test.ts`, `test/physics/sleep.regression.test.ts`, `test/quiescence.regression.test.ts`, `src/physics/physics_host.ts`
 - `physics-settle.md`: a new knot's first settle is paced (K147); its code lives in the physics host (K7)

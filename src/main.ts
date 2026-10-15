@@ -4765,10 +4765,13 @@ async function main(): Promise<void> {
     const sim = ps?.simTime ?? 0;
     // K147: simulated time the load settle's budget dropped (slow motion),
     // while it runs or after it ended; sim trails wall by at least this.
+    // K7 stage 5: with the worker no budget runs; the lag is the worker's
+    // backlog dropped past LAG_MAX_S since the build, drags included.
     const lag = host.settleLagS;
+    const lagLabel = host.kind === "worker" ? "lag" : "settle lag";
     stamp.textContent =
       `${BUILD_STAMP} | sim ${sim.toFixed(1)}s / wall ${wall.toFixed(1)}s` +
-      (lag > 0.05 ? ` | settle lag ${lag.toFixed(1)}s` : "") +
+      (lag > 0.05 ? ` | ${lagLabel} ${lag.toFixed(1)}s` : "") +
       perfLine;
   };
   updateStamp();
