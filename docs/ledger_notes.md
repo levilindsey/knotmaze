@@ -2961,3 +2961,15 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 - **K382** · A fire race's frame cost is unmeasured (K290 3a): from its first burn every
   ribbon, strip and fan draws through the explore programs, reveal off too. Rec:
   `burn_page.mjs perf` on both builds, under the lock.
+
+## K76 (2026-10-15, stage 2d merged)
+
+- **K76** · Thread-reveal mode, stage 2 (Levi, 2026-10-13): `exploration`
+  (off | fog | threads) and an end look, a separate shader variant. 2a-2c
+  merged, so the mode is in the panel (off by default); 2d running.
+  - owner: agent `adbaac6a024e6d144` (opus) of claude session d8031183, stage 2d from 04:41 (cap 06:41; ports 5820-5829)
+  - branch: `worktree-agent-adbaac6a024e6d144` (`.claude/worktrees/agent-adbaac6a024e6d144`, from `e7951cd`); last commit: `e7951cd` (master) until its first WIP commit
+  - evidence: `.claude/probes/K76/stage2c/` (2a's and 2b's beside it); stage 2d's in its worktree's `.claude/probes/K76/stage2d/`; lore `render-explore.md`
+  - next: stage 2d: High contrast dots, step 8 (the phone gate, GPU per program, the final sheets), the census on K268's shaped slots, the held frame; the start zoom stays Levi's (K362)
+  - brief: `docs/design/K76.md`, "Stage 2c handoff" ("For stage 2d") and "Stage 2d launch notes"; design `docs/design/K76_reveal_mode.md`
+  - env: the phone: `scripts/phone_pass.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)

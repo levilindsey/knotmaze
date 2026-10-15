@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K387.
+Next free ID: K390.
 
 ## Waiting on Levi
 
@@ -210,21 +210,21 @@ Next free ID: K387.
     16:20 on 10-14, none was a day old at 01:17); the libraries'
     delete-on-exit goes with K150
 - **K76** · Thread-reveal mode, stage 2 (Levi, 2026-10-13): `exploration`
-  (off | fog | threads) and an end look, a separate shader variant. 2a-2c
-  merged, so the mode is in the panel (off by default); 2d running.
-  - owner: agent `adbaac6a024e6d144` (opus) of claude session d8031183, stage 2d from 04:41 (cap 06:41; ports 5820-5829)
-  - branch: `worktree-agent-adbaac6a024e6d144` (`.claude/worktrees/agent-adbaac6a024e6d144`, from `e7951cd`); last commit: `e7951cd` (master) until its first WIP commit
-  - evidence: `.claude/probes/K76/stage2c/` (2a's and 2b's beside it); stage 2d's in its worktree's `.claude/probes/K76/stage2d/`; lore `render-explore.md`
-  - next: stage 2d: High contrast dots, step 8 (the phone gate, GPU per program, the final sheets), the census on K268's shaped slots, the held frame; the start zoom stays Levi's (K362)
-  - brief: `docs/design/K76.md`, "Stage 2c handoff" ("For stage 2d") and "Stage 2d launch notes"; design `docs/design/K76_reveal_mode.md`
-  - env: the phone: `scripts/phone_pass.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
+  (off | fog | threads) and an end look, a separate shader variant. 2a-2d merged
+  (2d: 0ac54dc..9e3befd); off by default. The phone gate fails one criterion: 1-5 `update()` calls a move.
+  - owner: nobody since 2026-10-15 06:05 (stage 2d done; agent `adbaac6a024e6d144` of claude session d8031183, worktree kept)
+  - branch: mainline; last commit: `9e3befd`
+  - evidence: `.claude/probes/K76/stage2d/` (`phonekit/gate2.mjs`, `census2d.mjs`, `out/` with `phone_gate_fw0.txt`, `sheet/final_desktop.png` and `final_phone.png`); 2a-2c's beside it; lore `render-explore.md`
+  - next: the gate's criterion 2: count `exploreUpdatePending`'s flips (`applyExploreGaps`, ribbon_renderer.ts) against the calls a move, move that re-derivation out of `update()`, re-run gate2 with `&fw=0` and add the growth frame; a High contrast shot on the phone; the start zoom stays Levi's (K362)
+  - brief: `docs/design/K76.md`, "Stage 2d handoff"; design `docs/design/K76_reveal_mode.md`
+  - env: the phone: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`); builds: `scripts/preview.ps1`
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
   - owner: nobody since 2026-10-15 02:42 (stage 2 done, item 4 not started; agent `a42c63c2db0401edb` of claude session d8031183; worktrees kept: stage 2's, stage 1's `ab65d913a3b9a3dcb`)
   - branch: mainline; last commit: `f799991`
   - evidence: `.claude/probes/K268/stage2/` (probes, `run_batch2.ps1` to `run_batch5.ps1`, `out/`, builds); stage 1's beside it
-  - next: stage 3: the census fixes first (`census.mjs`: judge shaped slots by S/R/F, skip rather than fail when no crossing shows both threads, a fading joint scales by vis; attribute junctions 56-58 and 161, which mismatch on master too), then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip); after K76 2d (both edit the explore programs)
+  - next: stage 3: the census fixes first (`census.mjs`: judge shaped slots by S/R/F, skip rather than fail when no crossing shows both threads, a fading joint scales by vis; attribute junctions 56-58 and 161, which mismatch on master too: K76 2d ruled out the underlay, the gap gate and the fan program, so compare fan records, strip rows, then geometry, mode on and off, from `census2d.mjs`'s ATTR block), then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip); unblocked since K76 2d merged
   - brief: `docs/design/K268.md`, "Stage 2 handoff" ("For the next stage")
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-6 merged: the worker is the default (stage 6: a944841..4d9c9f5,
@@ -1166,6 +1166,12 @@ Every other item below waits on the trigger it names.
 - **K386** · K307 s2's small residuals: 131/212 ms frames after visible (parallel build);
   Pixi's Graphics program unregistered (<45 ms cold); `report()` stamps the blocking read's
   start; the pre-settle relink (8-26 ms a program); stray cache entries from one run.
+- **K387** · With the flow on, its half-rate `update()` at rest costs about 20 ms a call on
+  the phone (9.8 ms a frame mean, reveal on or off; K76 2d's gate run 1). CLAUDE.md's perf
+  lever (2), now measured on the phone; the full fix is shader displacement.
+- **K388** · K76 2d's probe residuals: gate2's in-page `arriveS` races the tap (use CDP
+  arrivals; rAF stamps can hide a late Android frame); census2d says PROOF FAILED when off; k290_ab
+  compares stamps, not SHAs; k111.L's shaped-slot count varied; `restoreScene` may keep HC's x = 2.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1404,6 +1410,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K371** · Let the worker run ahead of main's frames during the pre-settle, so
   it settles through K307's compile freezes (K7 s4); watch its saturation on
   the phone (97% busy, lagS 1.04 s by 8 s).
+- **K389** · Keep comments out of shader text (K76 2d): a comment edit in `EXPLORE_VIS_GLSL`
+  changes the strip-explore program, so every returning player links it cold (K307). Move it into TS.
 
 ## Done
 
