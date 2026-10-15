@@ -68,6 +68,9 @@ export function knotUniforms(): UniformGroup {
       // subtract the fade from it).
       uKReach: v4(1e6, 1, 0, 0),
       uKGold: v4(1, 0.8235, 0.2902, 0),
+      // K76 thread reveal (on, look, breath, threadWidth): declared only by
+      // the explore program (explore_glsl.ts); programs without it skip it.
+      uKExplore: v4(0, 0, 1, 0.52),
       uKKnots: {
         value: new Float32Array(MAX_KNOTS * 4),
         type: "vec4<f32>",
@@ -295,6 +298,31 @@ export class PaintScene {
       ge.markDirty(lo, hi);
       ge.flush();
     }
+  }
+
+  // K76 THREAD REVEAL: the whole-chain flags (KPAINT texel `chain` .x, a
+  // range no slot table uses; explore_glsl.ts). null = the mode is off
+  // (zeros). Only changed texels upload. Returns the texels changed.
+  setExploreFlags(flags: Uint8Array | null): number {
+    const n = this.chains.length;
+    const pt = kPaint();
+    pt.ensure(Math.max(n, 1));
+    const d = pt.data;
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (let c = 0; c < n; c++) {
+      const v = flags && flags[c] ? 1 : 0;
+      if (d[c * 4] !== v) {
+        d[c * 4] = v;
+        if (c < lo) lo = c;
+        if (c + 1 > hi) hi = c + 1;
+      }
+    }
+    if (hi > lo) {
+      pt.markDirty(lo, hi);
+      pt.flush();
+    }
+    return hi > lo ? hi - lo : 0;
   }
 
   // A chain's reveal window [first start, last finish] (anim seconds).
