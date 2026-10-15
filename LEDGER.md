@@ -35,7 +35,7 @@ and never reused.
     sample moved at most 0.5 h, 3 passes, a hard clamp or an optional
     soft one) takes fresh windows under 1.0 h from 2357 to 10, for +5-9%
     per ribbon rebuild. Try it live: `__knotSplineBend(true)`.
-  - Levi's call (sent 2026-10-14 about 09:20 with the sheet
+  - Levi's call (sent 2026-10-14 about 09:05 with the sheet
     `.claude/probes/K90/out_1b/sheet/sheet.png`): ship, tune or stop;
     default on or off; hard or soft clamp. Before it ships: K213.
   - record `docs/design/K90_bend_radius.md`; handoff `docs/design/K90.md`
@@ -302,8 +302,8 @@ and never reused.
   redone on top of the 07:38 batch's rules edits.
   - owner: agent a363e26d8e7409480 (opus) of session d8031183. Its stage
     finished at 09:02 (the split `0eac859` on d12e245, handoff
-    `2d7438e`); resumed at 09:20 to redo it on feb12a0 with K90 1b's
-    lore (a new `generation-geometry.md`), stopping by about 10:20.
+    `2d7438e`); resumed at 09:05 to redo it on feb12a0 with K90 1b's
+    lore (a new `generation-geometry.md`), stopping by about 10:05.
   - branch: `worktree-agent-a363e26d8e7409480`
     (`.claude/worktrees/agent-a363e26d8e7409480`); last commit: `2d7438e`
     (unpushed).
@@ -378,7 +378,7 @@ and never reused.
   the head stays on top. Call (4), K121, stays as is (Levi, 2026-10-13).
   A codec append, after K79 stage B and K81.
   - owner: agent a4aa6adc47840272d (opus) of session d8031183, started
-    2026-10-14 09:31; it stops at about 11:31 or when the stage is done.
+    2026-10-14 09:07; it stops at about 11:07 or when the stage is done.
   - branch: `worktree-agent-a4aa6adc47840272d`
     (`.claude/worktrees/agent-a4aa6adc47840272d`), from e17c2a2; last
     commit: none yet.
@@ -406,7 +406,7 @@ appends. Usage: don't hold agents back until the week nears 95% (Levi,
 2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17, 54% at
 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
 23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38, 78% at 08:05,
-80% at 08:37 and 82% at 09:10; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
+80% at 08:37 and 82% at 09:04; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
 at about 07:53 "Keep going at full pace."; it resets Mondays at 12:00).
 Long work runs in stages from
 committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
@@ -421,8 +421,8 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
 (he may reorder). Running on 10-14: K198 stage 1 from 08:37, K93 (stage
-1 of K93 + K145) from 08:45 and K98 from 09:31 (all opus, 2 h caps), and
-K173's redo of the rules split from 09:20 (it lands first; the
+1 of K93 + K145) from 08:45 and K98 from 09:07 (all opus, 2 h caps), and
+K173's redo of the rules split from 09:05 (it lands first; the
 coordinator carries the others' rules edits across). K100, K132 and K90
 stage 1b merged at 08:39-09:03. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -441,7 +441,7 @@ stage 1b merged at 08:39-09:03. Then, as code slots free up:
 7. K93 + K145 (`docs/design/K93_K145.md`): stage 1 (K93) running from
    08:45; stage 2 (K145) from master after it.
 8. K92, then K111 (both rework the panel).
-9. K98, running from 09:31 (`docs/design/K98.md`).
+9. K98, running from 09:07 (`docs/design/K98.md`).
 10. K76 stage 2.
 11. K80's turn-aligned hunter, a modifier of the normal maze; then
     K137's toggles, K138's M mechanisms and K139.
