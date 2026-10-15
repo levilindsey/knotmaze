@@ -15,9 +15,9 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/ui/mode_badge.ts`, `test/ui/mode_badge.test.ts`
 - `gameplay-indicators.md`: OFF-SCREEN INDICATORS (K73) and THE HEAD (K148)
   paths: `src/ui/offscreen_indicators.ts`, `src/ui/head_indicator.ts`, `test/ui/offscreen_indicators.test.ts`, `test/ui/head_indicator.test.ts`
-- `gameplay-minotaur.md`: REAL-TIME MINOTAUR (K80)
+- `gameplay-minotaur.md`: REAL-TIME MINOTAUR (K80), THE MINOTAUR'S CONTROLS (K174)
   paths: `src/game/minotaur.ts`, `test/game/minotaur.test.ts`
-- `gameplay-fog.md`: THE FOG RESETS ON A RESTART ONLY (K100)
+- `gameplay-fog.md`: THE FOG RESETS ON A RESTART ONLY (K100), a catch's re-fog (K174)
   paths: `src/game/fabric_controller.ts`, `src/game/daily_attempt.ts`, `src/render/fabric_maze_renderer.ts`, `src/render/fog_arc.ts`, `test/render/fog_arc.test.ts`, `test/game/fabric_controller.test.ts`, `test/game/daily_attempt.test.ts`
 - `gameplay-links.md`: link decoder details, codec v4, LOAD SETTLE PARAMS (K147), MARKER SIZE PARAM (K98)
   paths: `src/ui/param_codec.ts`, `src/ui/url_state.ts`, `src/ui/daily_link.ts`, `test/ui/param_codec.test.ts`, `test/ui/url_codec.test.ts`, `test/ui/seed_text.test.ts`, `test/ui/appear_mode.test.ts`

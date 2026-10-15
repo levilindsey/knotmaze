@@ -31,7 +31,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   constructor's and replay()'s included: Reset path where
   resetPathAction says restart, restartSolve after a finish, a rebuild
   or a new design, a clock change, K80's Reset path), and
-  FabricMazeRenderer.update() clears the stamps when it moves. Keyed on
+  FabricMazeRenderer.update() clears the stamps when it moves. K174
+  (2026-10-14) made a catch re-fog after all, behind `minoRefog` (default
+  on): respawn(true) bumps a second counter, `refogs`, which clears the
+  stamps the same way while the solve goes on (`__knotFabric().fog`
+  reports the restart and refog its stamps belong to); with it off a
+  catch keeps the explored fog. Keyed on
   the event, not on the state it leaves: a level test (empty path, empty
   taps) misses a reset followed by taps before the next update(), which
   is what replay() does. reset() is also the only thing that empties

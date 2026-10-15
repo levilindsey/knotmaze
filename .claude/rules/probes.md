@@ -182,6 +182,21 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   K79, K99), which import() the config natively, fail with
   ERR_MODULE_NOT_FOUND; K80's wrapper loads it through vite's
   `loadConfigFromFile` instead.
+- K174 (2026-10-14), the minotaur's controls: `.claude/probes/K174/rt/`
+  is K80's simulation fixed for K132 (`rt_lib.ts` builds params with
+  `paramsFromValues(seed, {...overrides})`; the K80 copy, which predates
+  K132, needs the same fix) plus `-Sweep toward` (`rt_sweeps.ts`),
+  `meet_by_time.mjs` and results.md. `k174_page.mjs <base> <outDir>
+  panel|refog|fogmodes|intro|perf|perfq[:phone] [seed]` (EXTRA appends
+  link keys) checks the panel rows, a catch's re-fog, the three minoFog
+  modes, the intro wait and frame time. LESSON: a probe that polled the
+  page over CDP at 20 Hz while it walked raised a chase's p95 frame cost
+  from 19 to 34 ms; `perfq` taps from inside the page (`__knotChaseTap`
+  on a timer) and times the wrapped methods per frame, with no round
+  trips. `__knotReveal()` is null until K147's pre-settle ends, so an
+  intro probe waits for it before it samples. K80's `rt_chase.mjs` put
+  its Chrome profile in the OS temp dir; K174's copy keeps it in the
+  probes folder (K161).
 
 - K104 (2026-10-13), motion and size: while the desktop's session is
   attached over Remote Desktop (or left disconnected after one), probe
