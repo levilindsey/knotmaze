@@ -877,7 +877,7 @@ Node only), K325 (the snoring cat) from 22:14 (cap 23:14, sonnet), the
 K323/K324 design from 22:14 (cap 23:44, opus, docs only) and K329 (the
 arrow keys, with K333 and K334) from 22:16 (cap 00:16, opus). K298
 merged at 22:20, K307's stage 1 at 22:06 and K7's stage 1 at 22:04.
-The next code slots: K335 (the confetti's top edge, small), then K307's
+The next code slots: the confetti stage (K335, K336), then K307's
 warm-up, then K111 stage 5 (K265, K328) and K332 (the key hints, after
 K329); K313's loader follows K307's warm-up. K317 (more confetti) shipped at
 21:53. K253's portrait A/A finished at 21:02 (the floor installed at
@@ -1375,7 +1375,16 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   fade-out of confetti particles along the top?"): keep the sudden start,
   and thin the wave out toward its top so it ends in a ragged fade
   instead of a line. K140's `src/render/confetti_model.ts` (K317 doubled
-  the rain at 21:53). A small sonnet stage at the next free code slot.
+  the rain at 21:53). Built with K336 in one confetti stage (opus) at the
+  next free code slot.
+- **K336** · Side cannons (Levi, 2026-10-14 about 22:24: "Let's also add
+  some blasts of confetti and streamers from specific points just outside
+  the left and rigth sides of the screen, angled in and up, and then
+  apply gravity to make these fall in an arc"): at the finish, blasts of
+  confetti and streamers (new: long curling strips) from points just off
+  the left and right edges, fired inward and upward, falling in arcs
+  under gravity. Reduced motion keeps its 16 pieces; the phone's frame
+  rate at the finish rides K156's next pass. Built with K335.
 
 ## Residuals (known, not fixed)
 
