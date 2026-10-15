@@ -80,7 +80,7 @@ describe("links", () => {
       appearFx: "burn",
       entranceClearance: 2.5, exitClearance: 12, junctionSpacing: 2,
       background: "vellum", backgroundIntensity: 0.5,
-      pulseReach: 3, backgroundSpeed: -1, deadEndLength: 20, hCutShare: 0,
+      pulseReach: 3, backgroundSpeed: -1, deadEndLength: 20, hCutShare: 1,
       backgroundScale: 1, backgroundDetail: 1, backgroundFibers: 1,
       backgroundGrain: 1, backgroundAngle: -1, backgroundColorMode: "gamut",
       backgroundBase: "#151b28", backgroundAccent1: "#7ab8cd",

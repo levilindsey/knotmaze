@@ -15,13 +15,21 @@ import {
 } from "../../src/core/tangle_graph";
 import { NODE_TYPE } from "../../src/core/types";
 import type { TangleGraph } from "../../src/core/types";
+import { buildWalkGraph } from "../../src/core/walk_graph";
+import type { WalkGraph } from "../../src/core/walk_graph";
+import { hypot2 } from "../../src/util/det_math";
 
 // P4 Stage 5d: applying the maze plan to the tangle graph.
 
 const SEEDS = [5, 42, 1234, 2773729296, 99];
 
+// The cut and trim tests below find their surgery by node id and strand
+// index, which H1 (K74 stage 2, hCutShare) changes after them: it retypes
+// junctions and merges bridges into their hosts. They run with it off; the
+// H1 tests at the end run it.
 const P = (over: Partial<MazeParams>): MazeParams => ({
   ...DEFAULT_MAZE_PARAMS,
+  hCutShare: 0,
   ...over,
 });
 
@@ -129,7 +137,7 @@ describe("maze apply: graph surgery", () => {
         turnBias: 0.6,
         randSeed: seed,
       });
-      const plan = buildMazePlan(g);
+      const plan = buildMazePlan(g, P({}));
       const hueGroup = applyMazePlan(g, plan);
       applyMazeCuts(g, plan, hueGroup);
 
@@ -254,5 +262,155 @@ describe("maze apply: graph surgery", () => {
     // Tiny test knots can lack eligible strands per seed, but the seed set
     // as a whole must exercise the surgery.
     expect(totalCuts).toBeGreaterThan(0);
+  });
+});
+
+// K74 stage 2, H1: the fused arm cut (applyMazeCuts, plan.hCutShare > 0).
+
+function knot(seed: number, gridSize: number): TangleGraph {
+  return generateLatticeKnotwork({
+    gridSize,
+    weaveDensity: 0.3,
+    turnBias: 0.6,
+    randSeed: seed,
+  });
+}
+
+// Lattice arc from an END along its strand to the first junction (or the
+// strand's other end): the corridor a tail, an entrance or an exit promises.
+function endRun(g: TangleGraph, end: string): number {
+  for (const st of g.strands) {
+    const n = st.nodes.length;
+    if (st.isClosed || (st.nodes[0] !== end && st.nodes[n - 1] !== end)) continue;
+    const step = st.nodes[0] === end ? 1 : -1;
+    let len = 0;
+    for (let k = step > 0 ? 0 : n - 1; k + step >= 0 && k + step < n; k += step) {
+      const pts = g.edges.get(st.edgeIds[step > 0 ? k : k - 1])!.latticePoints;
+      for (let m = 1; m < pts.length; m++) {
+        len += hypot2(pts[m][0] - pts[m - 1][0], pts[m][1] - pts[m - 1][1]);
+      }
+      const t = g.nodes.get(st.nodes[k + step])!.type;
+      if (t === NODE_TYPE.JUNCTION || t === NODE_TYPE.END) break;
+    }
+    return len;
+  }
+  return NaN;
+}
+
+function unreachedFromStart(w: WalkGraph): number {
+  const seen = new Set<string>([w.start]);
+  const stack = [w.start];
+  while (stack.length) {
+    for (const eid of w.vertices.get(stack.pop()!)!.edges) {
+      for (const o of [w.edges[eid].va, w.edges[eid].vb]) {
+        if (!seen.has(o)) {
+          seen.add(o);
+          stack.push(o);
+        }
+      }
+    }
+  }
+  return w.vertices.size - seen.size;
+}
+
+describe("maze apply: H1 fused arm cut (K74 stage 2)", () => {
+  const CASES: Array<[number, number, Partial<MazeParams>]> = [];
+  for (const seed of SEEDS) {
+    CASES.push([seed, 8, {}], [seed, 8, { deadEndDensity: 0.6 }]);
+    CASES.push([seed, 12, { branchDensity: 0.8, fourWayFraction: 0.3 }]);
+  }
+
+  it("cuts H's and keeps every invariant, tail and vertex", () => {
+    let cut = 0;
+    for (const [seed, gs, over] of CASES) {
+      const label = `seed ${seed} gs${gs} ${JSON.stringify(over)}`;
+      const plan = buildMazePlan(knot(seed, gs), P({ ...over, hCutShare: 1 }));
+      expect(plan.hCutShare, label).toBe(1);
+      const plan0: MazePlan = { ...plan };
+      delete plan0.hCutShare;
+
+      const g0 = knot(seed, gs);
+      applyMazeCuts(g0, plan0, applyMazePlan(g0, plan0));
+      const g = knot(seed, gs);
+      const nOriginal = g.strands.length;
+      const hueGroup = applyMazePlan(g, plan);
+      const stats = applyMazeCuts(g, plan, hueGroup)!;
+      expect(stats, label).not.toBeNull();
+      expect(stats.whole, label).toBe(true);
+      expect(stats.attempted, label).toBe(stats.bridges);
+      expect(stats.cut + stats.skipped, label).toBe(stats.attempted);
+      cut += stats.cut;
+
+      expect(checkStructure(g), label).toBe(true);
+      expect(checkStrandPartition(g), label).toBe(true);
+      expect(checkAlternation(g), label).toBe(true);
+      // Edges stay in traversal order (nodeA = from), bridges included.
+      g.strands.forEach((strand) => {
+        expect(strand.edgeIds.length).toBe(strand.nodes.length - 1);
+        strand.edgeIds.forEach((eid, i) => {
+          const e = g.edges.get(eid)!;
+          expect(e.nodeA, label).toBe(strand.nodes[i]);
+          expect(e.nodeB, label).toBe(strand.nodes[i + 1]);
+        });
+      });
+      expect(hueGroup.length, label).toBe(g.strands.length);
+      hueGroup.forEach((h) => expect(h).toBeLessThan(nOriginal));
+
+      // Each cut fuses one crossing X into a 3-way junction and leaves its
+      // B a plain turn; nothing else changes type.
+      let fused = 0;
+      let turned = 0;
+      for (const [id, n0] of g0.nodes) {
+        const n = g.nodes.get(id);
+        if (!n || n.type === n0.type) continue;
+        if (n0.type === NODE_TYPE.CROSSING && n.type === NODE_TYPE.JUNCTION) {
+          expect(g.adjacency.get(id)!.length, `${label}: X ${id}`).toBe(3);
+          fused++;
+        } else if (n0.type === NODE_TYPE.JUNCTION && n.type === NODE_TYPE.TURN) {
+          expect(g.adjacency.get(id)!.length, `${label}: B ${id}`).toBe(2);
+          turned++;
+        } else {
+          throw new Error(`${label}: ${id} ${n0.type} -> ${n.type}`);
+        }
+      }
+      expect([fused, turned], label).toEqual([stats.cut, stats.cut]);
+
+      // No END loses corridor: entrance, exit and tails keep their length
+      // to the first junction (a cut can lengthen one).
+      for (const [id, n0] of g0.nodes) {
+        if (n0.type !== NODE_TYPE.END) continue;
+        expect(g.nodes.get(id)?.type, `${label}: ${id}`).toBe(NODE_TYPE.END);
+        expect(endRun(g, id), `${label}: ${id} run`).toBeGreaterThanOrEqual(
+          endRun(g0, id) - 1e-9
+        );
+      }
+
+      // Every walk vertex stays reachable from the start, with a route.
+      const w = buildWalkGraph(g);
+      expect(w, label).not.toBeNull();
+      expect(unreachedFromStart(w!), label).toBe(0);
+      expect(Number.isFinite(w!.optimalLength), label).toBe(true);
+    }
+    expect(cut).toBeGreaterThan(0);
+  });
+
+  it("cuts round(share x bridges) at a partial share, deterministically", () => {
+    for (const [seed, gs, over] of CASES.slice(0, 6)) {
+      const run = (share: number) => {
+        const g = knot(seed, gs);
+        const plan = buildMazePlan(knot(seed, gs), P({ ...over, hCutShare: share }));
+        const stats = applyMazeCuts(g, plan, applyMazePlan(g, plan));
+        return { g, stats };
+      };
+      const half = run(0.5);
+      expect(half.stats!.attempted).toBe(Math.round(0.5 * half.stats!.bridges));
+      expect(half.stats!.cut).toBeLessThanOrEqual(half.stats!.attempted);
+      const again = run(0.5);
+      expect(again.g.nodes).toEqual(half.g.nodes);
+      expect(again.g.edges).toEqual(half.g.edges);
+      expect(again.g.strands).toEqual(half.g.strands);
+      // Share 0 runs no pass.
+      expect(run(0).stats).toBeNull();
+    }
   });
 });

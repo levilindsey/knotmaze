@@ -124,7 +124,9 @@ export const DEFAULT_MAZE_PARAMS: MazeParams = {
   // in its density, DEAD_END_DENSITY_ON by default.
   deadEndDensity: 0,
   deadEndLength: 20,
-  hCutShare: 0,
+  // Every H since K74 stage 2: share 1 keeps decision 1's greedy bar on
+  // dailies 1-80 (generation-plan.md, H1).
+  hCutShare: 1,
   exitClearance: 12,
   entranceClearance: 2.5,
   junctionSpacing: 2,

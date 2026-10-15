@@ -332,10 +332,12 @@ describe("MinotaurChase: the clock", () => {
 // K174: real mazes (the UI's dead-end density) and a chase's whole course
 // as one FNV-1a digest: every tick's minotaur and player spots, mode and
 // catches, under a scripted player who taps a random run at their decision
-// vertex every 45 ticks.
+// vertex every 45 ticks. The mazes stay the ones K80_DIGESTS and the pull's
+// gain were measured on: H1 (K74 stage 2, hCutShare) off. On H1 mazes the
+// pull still finds a still player, but no longer 0.8x as fast (LEDGER).
 function mazeWalk(seed: number): WalkGraph {
   const g = generateLatticeKnotwork({ gridSize: 10, weaveDensity: 0.3, turnBias: 0.6, randSeed: seed });
-  const plan = buildMazePlan(g, { ...DEFAULT_MAZE_PARAMS, deadEndDensity: DEAD_END_DENSITY_ON });
+  const plan = buildMazePlan(g, { ...DEFAULT_MAZE_PARAMS, deadEndDensity: DEAD_END_DENSITY_ON, hCutShare: 0 });
   const hueGroup = applyMazePlan(g, plan);
   applyMazeCuts(g, plan, hueGroup);
   return buildWalkGraph(g)!;
