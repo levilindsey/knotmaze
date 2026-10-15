@@ -112,9 +112,11 @@ only with the files it is about; `render.md` lists the area's other files.
   then full again at 0.12 s, reads 0.530, then 0.598, 0.765, 0.910, 1 at
   +0.06, 0.125, 0.18, 0.25 s; in, then not full at 0.12 s (0.470), reads
   0.470, 0.402, 0.235, 0.090, 0. Real time: 14 intermediate frames over
-  248 ms (reduced motion: 14 frames, 249 ms), biggest frame step 0.107,
-  no jump, `webFading` false at the end; a reversal about 80 ms into a
-  real-time fade: 19 frames, biggest step 0.094, ends full. Against the
+  248 ms (reduced motion: 14 frames, 249 ms; phone 411x753: 14 frames,
+  247 ms), biggest frame step 0.107 (phone 0.105), no jump, `webFading`
+  false at the end; a reversal about 80 ms into a real-time fade: 19
+  frames, biggest step 0.094, ends full (phone, 95 ms in: 20 frames,
+  0.106). Against the
   stage-1 build (e2f96b8, `bg=none`), desktop 1400x900 and phone 411x753
   at 2.625: the frame before the back tap is 0 px different (desktop: the
   build stamp's text only, 189 px) and every frame from 0.25 s on is 0 px
