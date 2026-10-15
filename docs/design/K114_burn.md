@@ -138,9 +138,17 @@ Each point follows from the rules above. None is a new call.
 - **Stage 3**: the look, R.3.3's "inverted mask, a char band at the
   front, embers". It builds on K76's explore program, so it starts once
   K76's stage 2 work has merged.
-  - Burnt runs are gone through a per-run visibility in the paint
-    shader. This is R.4.1's render-only cut: crossing gap slots close,
-    and junction fans drop the arm.
+  - Burnt runs, Levi's toggle (K290, 2026-10-14 about 18:08): a `burnt`
+    dropdown with two looks.
+    - **gone** stops drawing them through a per-run visibility in the
+      paint shader (R.4.1's render-only cut). The gaps of threads that
+      ran under a burnt thread close, K268's shaped gaps in reverse, and
+      junction fans drop the arm.
+    - **char** keeps them drawn in a burnt coloring: stage 1's char
+      stroke moved into the shader, so it respects the gaps (K281 (c)).
+    - Gone keeps R.3.3's char band and embers at the fire front, so a
+      thread blackens before it vanishes. The sheet shows both looks;
+      Levi picks the default (recommended: gone).
   - Build it on K76's thread reveal, which R.3.3 calls "the same per-run
     visibility, reversed". On master that is the explore program and its
     VIS pieces (`src/render/explore_glsl.ts`, `src/game/explore_view.ts`;

@@ -295,7 +295,8 @@ and never reused.
   - next: stage 2, real-time burning behind `fireClock` (Levi's call 7),
     its brief written from stage 1's handoff, in the queue's order (item
     13). Stage 3's look belongs in a shader (per-run burn data, as K76's
-    VIS items) and models the fire's light under fog; stage 4's share
+    VIS items), carries K290's burnt toggle (char or gone) and models
+    the fire's light under fog; stage 4's share
     line could use the exit margin `h + opt/r - walked`. K80 turns stage
     2 no longer waits for this. The spider after the minotaur's controls
     (K174).
@@ -592,7 +593,8 @@ and never reused.
   - next: stage 2c (the burn race merged at 16:35; main.ts, params, codec
     version 6, the panel, hit-testing, the model fed from move events),
     its brief written from both "For stage 2c" sections of
-    `docs/design/K76.md` and K257; then 2d.
+    `docs/design/K76.md` and K257 (burn stage 3 runs this visibility in
+    reverse, K290, so it must be able to shrink); then 2d.
   - brief: `docs/design/K76.md` (the 2a and 2b handoffs; 2c's brief is
     to be written), then `docs/design/K76_reveal_mode.md`.
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi,
@@ -631,7 +633,8 @@ and never reused.
     and caps fade with the premultiplied strip alpha), after K111 stage 4
     merges and never alongside K76 stage 2c (all three change the explore
     and paint shaders). Residuals are K287; the draw order waits on Levi
-    (K286).
+    (K286). Burn stage 3 runs the shaped cut in reverse (K290), so drive
+    it by a visibility that can also shrink.
   - brief: `docs/design/K268.md` ("Stage 1 design", "Stage 1 handoff
     (2026-10-14 17:41)", "For stage 2").
 - **K279** · Plucks you can see, feel and hear (Levi, 2026-10-14 about
@@ -807,8 +810,9 @@ files at their merges. Then, as code slots free up:
     mechanisms and K139.
 13. K114's round 2, free play first: the burn race in four stages
     (`docs/design/K114_burn.md`). Stage 1 merged at 16:35
-    (801c22b..ba6d574); stages 2 (real-time burning), 3 (the look) and 4
-    (the daily) follow, each from the handoff before it and never
+    (801c22b..ba6d574); stages 2 (real-time burning), 3 (the look, with
+    K290's burnt toggle, after K76 2c and K268 stage 2) and 4 (the daily)
+    follow, each from the handoff before it and never
     alongside another agent changing how a tap becomes a turn. Then the
     spider (its own enemy; Levi, 2026-10-14 about 11:10).
 14. K74 stages 3 and 4, each after the one before. Stage 2 merged at
@@ -1058,6 +1062,20 @@ K5-K7 (split, frame loop, worker) follow.
   (`.claude/probes/K4/phone_blank.mjs`). Vsync-capped fps cannot show the
   headroom left; a load-amplified bench (a higher render resolution)
   would.
+- **K290** · Burnt threads, a toggle (Levi, 2026-10-14 about 18:08,
+  verbatim: "Ooh, with the burn away, I'd like to support toggling how
+  burnt segments are treated--leave the threads rendered but with burnt
+  coloring vs actually stop rendering the threads (and then update how
+  gaps are rendered for other threads that used to be on the underside
+  of a crossing with a now-burnt thread--just the opposite of the
+  appear-as-you-go thread rendering)."). A `burnt` dropdown: char (drawn
+  in a burnt coloring, stage 1's char moved into the shader) or gone
+  (not drawn; the under threads' gaps close, K268's shaped cut in
+  reverse; fans drop the arm). Burn stage 3 builds both on K76's
+  visibility and K268's shaped gaps, so it follows K76 2c and K268 stage
+  2, whose briefs must not assume a thread's visibility only grows. Its
+  sheet shows both; the default waits on Levi (recommended: gone).
+  `docs/design/K114_burn.md` ("The stages", stage 3).
 
 ## Residuals (known, not fixed)
 
