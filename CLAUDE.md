@@ -54,6 +54,7 @@ src/
     share_text.ts         # K20: Wordle-style share text
     minotaur.ts           # K80: the real-time chase (minotaur, fixed-step clock)
     star_rating.ts        # K155: stars from walked / optimal, their explanation
+    explore_view.ts       # K76 pure: the thread reveal's visibility pieces and frontiers
   render/
     ribbon_renderer.ts    # PixiJS ribbon meshes
     ribbon_mesh.ts        # Triangle strip extrusion
@@ -72,6 +73,7 @@ src/
     confetti_model.ts     # K140 pure: rain + spray counts, spawn and motion
     hash2d.ts             # K154: the backgrounds' own integer hash (GLSL + JS mirror)
     web_fade.ts           # K169 pure: the gold web's 0.25 s fade-in clock
+    explore_glsl.ts       # K76: the thread reveal's shader variant (VIS items, six looks)
     pluck_overlay.ts      # Render-only pluck: time-exposure strip + base collapse
     pluck_model.ts        # Pure plucked-string math (modes, envelope, lobes)
     background.ts         # K21 shader backdrop: low-res texture + blit, fog backdrop
@@ -135,7 +137,8 @@ test/
     v1 migration, attempts, prefs, corrupt/newer data, quota, no storage,
     streaks), daily_attempt.test.ts (fingerprints, save/restore, refusals),
     minotaur.test.ts (K80: lair, wander, hunt, sanctuary, catch, replay),
-    star_rating.test.ts (K155: edges, catches, display, records, share)
+    star_rating.test.ts (K155: edges, catches, display, records, share),
+    explore_view.test.ts (K76: pieces, frontiers, ends, growth)
   render/
     pluck_model.test.ts  # String math vs a modal sum, coverage, lobes
     background_model.test.ts  # K21 drift clock (K24 hook), colors, order
@@ -146,6 +149,7 @@ test/
     hash2d.test.ts  # K154 avalanche, uniformity, correlation, bijection, shader text
     web_fade.test.ts  # K169 the fade's levels at 0 / 0.12 / 0.25 s, retarget rules
     trail_paint.test.ts  # K93 the split at several trail lengths, the ideal fade, the eps skip
+    paint_explore.test.ts  # K76 kExploreAt vs pieceVis, the four anchors, master's text untouched
     paint_math / paint_fx / paint_section / paint_gameplay .test.ts  # G2
       mirror vs frozen pre-G2 code (fixtures/), exact skips, parity
   ui/

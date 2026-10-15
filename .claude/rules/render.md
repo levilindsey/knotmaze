@@ -56,3 +56,4 @@ files it is about; `docs/lore_index.md` lists every rules file and its paths.
 - `render-routes.md`: route bands (K81)
 - `render-web-fade.md`: the gold web's fade (K169)
 - `render-confetti.md`: finish confetti (K140)
+- `render-explore.md`: the thread reveal (K76): visibility pieces, the explore program, its looks

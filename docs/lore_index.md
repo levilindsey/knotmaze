@@ -79,6 +79,8 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/render/web_fade.ts`, `test/render/web_fade.test.ts`
 - `render-confetti.md`: FINISH CONFETTI (K140)
   paths: `src/render/confetti.ts`, `src/render/confetti_model.ts`, `test/render/confetti_model.test.ts`
+- `render-explore.md`: THE THREAD REVEAL (K76 stage 2a): the visibility model, VIS items and the whole-chain flag, the explore program and its looks, mode off = master's frame, the probe hook
+  paths: `src/render/explore_glsl.ts`, `src/game/explore_view.ts`, `test/render/paint_explore.test.ts`, `test/game/explore_view.test.ts`
 - `render-gaps.md`: PER-PIXEL CROSSING GAPS (G1) and its render lore, marker gaps
   paths: `src/render/gap_mask.ts`, `src/render/ribbon_renderer.ts`, `src/render/ribbon_mesh.ts`
 - `notices.md`: the credits and licenses page (K122)
