@@ -121,8 +121,9 @@ Next free ID: K397.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: nobody since 2026-10-14 16:35 (stage 1 merged; agent
-    af79edbe2a4677ff5 of session d8031183, worktree kept)
+  - owner: stage 2's brief: docs agent `ae4714d103b5fd3bf` of claude session 05e60da0 (since 07:25,
+    worktree `.claude/worktrees/agent-ae4714d103b5fd3bf`). Stage 1's agent af79edbe2a4677ff5
+    (session d8031183) finished; worktree removed by the K161 sweep 2026-10-15, branch kept
   - branch: mainline; last commit: `ba6d574` (stage 1 is
     801c22b..ba6d574)
   - evidence: main checkout `.claude/probes/K114/burn/`
@@ -132,25 +133,26 @@ Next free ID: K397.
     written from stage 1's handoff (queue item 13); stage 3's look is a
     shader and carries K290's burnt toggle; the spider follows the
     minotaur's controls (K174)
-  - brief: `docs/design/K114_burn.md` ("Stage 1 handoff"; stage 2's
-    brief goes there)
+  - brief: `docs/design/K114_burn.md` ("Stage 1 handoff"); stage 2's: `docs/design/K114_stage2.md`,
+    being written on the docs agent's branch
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
   neutral value turns it off. Stage 1 (long-tail dead ends) and stage 2
   (H1, the fused arm cut; calls K261, residuals K278) merged; stage 3 is
   the trap-zone finish, stage 4 the greedy-trap search and K46's bands.
-  - owner: nobody since 2026-10-14 16:13 (stage 2 merged; agent
-    a2c61932e9e358104 of session d8031183, worktrees kept)
+  - owner: stage 3's brief: docs agent `ae4714d103b5fd3bf` of claude session 05e60da0 (since 07:25).
+    Stage 2's agent a2c61932e9e358104 (session d8031183) finished; worktrees removed by the K161
+    sweep 2026-10-15, branches kept
   - branch: mainline; last commit: `faa9a52` (stage 1 fbf5b5c..8ba0c32,
     stage 2 4d3efe6..faa9a52)
   - evidence: `.claude/probes/K74/` (stage 2 in `stage2/`, sheets in
-    `out/`); the design agent's worktree
-    `.claude/worktrees/agent-aeaf1e61bcecaaf0b` is kept
+    `out/`); the design agent's branch `worktree-agent-aeaf1e61bcecaaf0b` (its worktree swept
+    2026-10-15, probes copied to the main checkout)
   - next: stage 3, the trap-zone finish, with H1 at 1 and measured on
     dailies 1-240, plus H1's exit-clearance guard (K278 (a)); dead-end
     branches as deeper traps are a later param, settled with K80's brief
-  - brief: `docs/design/K74.md` ("Stage 2 handoff"; stage 3's brief goes
-    there)
+  - brief: `docs/design/K74.md` ("Stage 2 handoff"); stage 3's: `docs/design/K74_stage3.md`,
+    being written on the docs agent's branch
 - **K80** · The minotaur, decided (Levi, 2026-10-13; design
   `docs/design/K80_gameplay_additions.md` section 0, his answers in
   `docs/design/levi_notes_2026-10-13.md`): a telegraphed hunter with
@@ -159,18 +161,20 @@ Next free ID: K397.
   residuals K293, per-model accuracy waits on Levi (K294).
   - owner: nobody since 2026-10-14 18:48 (turns stage 2 merged; agent
     a1579d5c460af2d20 of claude d8031183; earlier agents
-    af5995f5900f0f945 and a9c90f15cd6a55710; worktrees kept)
+    af5995f5900f0f945 and a9c90f15cd6a55710; worktrees removed by the K161 sweep 2026-10-15,
+    branches kept). Stage 3's brief: docs agent `ae4714d103b5fd3bf` of claude session 05e60da0
   - branch: mainline; last commit: `02194b4` (turns 0047148..68524e1 and
     86d404e..02194b4, K174 ecf2169..6ec8275)
   - evidence: main checkout `.claude/probes/K80/` (`turns2/`, `turns/`,
-    `rt/`) and `.claude/probes/K174/rt/`; the research's worktree
-    `.claude/worktrees/agent-a25726c24f262b138`
+    `rt/`) and `.claude/probes/K174/rt/`; the research's branch
+    `worktree-agent-a25726c24f262b138` (5 commits not on master; worktree swept 2026-10-15)
   - next: stage 3's brief from stage 2's handoff ("For stage 3": final
     telegraph 2.7, catch feedback 2.8/K270, sound and fog 2.10, wait key
     and pad, hover cue, turn minoToward), K293, K294; before a daily
     pins a minotaur, waits enter `fc.taps` and K47's fingerprint covers
     its params; real time's phone check is K177
-  - brief: `docs/design/K80_turns.md` ("The stages", "Stage 2 handoff");
+  - brief: `docs/design/K80_turns.md` ("The stages", "Stage 2 handoff"); stage 3's:
+    `docs/design/K80_turns_stage3.md`, being written;
     `docs/design/K80_realtime.md`; `docs/design/K80.md`
 - **K156** · The round phone pass, `scripts/phone_pass.ps1` (K152 (1),
   from K81's gate kit): two builds run interleaved through a frame bench
@@ -178,7 +182,7 @@ Next free ID: K397.
   (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c
   merged e6c6034..aa3cdd1).
   - owner: nobody since 2026-10-14 19:45 (round 14c's agent
-    a04122e6bc4e56b02 (sonnet) finished; worktree kept)
+    a04122e6bc4e56b02 (sonnet) finished; worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `aa3cdd1`
   - evidence: `.claude/probes/rounds/2026-10-14c-0e865bf/`,
     `.../2026-10-14-48da84d/`, `.../2026-10-14-81d31a5/`;
@@ -187,8 +191,7 @@ Next free ID: K397.
     2` on K253's portrait floor; K300's `-Moves` fix waits for the next
     A/A), K307's phone measures, the finish frame rate under K317's
     confetti, K98 and K92 (K230), the 14 dropped looks (K233), K232's
-    load cells at 3 reps; sweep the 3a/3b worktrees with
-    `.claude/probes/K161/cleanup.ps1` (`-DryRun` first); looks cope with
+    load cells at 3 reps; looks cope with
     K301's width flip
   - brief: `docs/design/K156.md` ("Round 2026-10-14c handoff"; the next
     round gets its own section); K7 stage 5's phone plan is
@@ -197,16 +200,18 @@ Next free ID: K397.
     5480-5489); check nobody is using the phone first (K234)
 - **K161** · Disk: probe runs leave `knotmaze-*` Chrome profiles in `$env:TEMP`, and stale
   worktrees pile up (79). Levi approved the cleanup (2026-10-14, item 2). Profiles: 1172 deleted
-  2026-10-15 06:56 (+36 GB; C: 50.4 GB free); they return until K150's delete-on-exit lands.
-  - owner: nobody since 2026-10-15 06:56 (the profile sweep done; claude session d8031183)
+  2026-10-15 06:56 (+36 GB); they return until K150's delete-on-exit lands. Worktrees: 75 removed
+  by the script 2026-10-15 07:24 and 3 unmerged ones by hand, probes copied first (+6.7 GB; C:
+  56.9 GB free); branches kept, except 10 dead ones deleted (every commit on master).
+  - owner: nobody since 2026-10-15 07:25 (the worktree sweep done; claude session 05e60da0)
   - branch: mainline (no code); last commit: n/a
   - evidence: `.claude/probes/K161/cleanup.ps1` (`-DryRun` first) and `cleanup.log`
-  - next: the worktree sweep: a cleared session's agents cannot be messaged, so a worktree holds only untracked probes, which the script copies first (it keeps branches): list the ids in its `$worktreeIds`. It skips unmerged ones; look at those first: K80 `a25726c24f262b138` (5 ahead), K323 `a806933f7eb6fb661` (4), K74 `aeaf1e61bcecaaf0b` (1), K76 stage 1 `aea102de995e1ce30` (26, likely pre-rebase copies). 13 branches ahead of master have no worktree. Rerun it for the profiles when C: runs low.
+  - next: three worktrees are locked by the live Claude process (pid 12264; probes copied, junctions deleted): once it exits, run `cleanup.ps1 -Ids ab65d913a3b9a3dcb,accf7e9ec87288e8a,af653fa7f942f2f1e` and delete the empty dir `.claude/worktrees/agent-a092bd665532db806`. 8 branches ahead of master have no worktree (Levi's: `backup-pp-gaps-prerebase`, `k279-stage1-prerebase`, K49's `ac664e8a`). Rerun the script for the profiles when C: runs low.
   - brief: the header of `.claude/probes/K161/cleanup.ps1`
 - **K76** · Thread-reveal mode, stage 2 (Levi, 2026-10-13): `exploration`
   (off | fog | threads) and an end look, a separate shader variant. 2a-2d merged
   (2d: 0ac54dc..9e3befd); off by default. The phone gate fails one criterion: 1-5 `update()` calls a move.
-  - owner: nobody since 2026-10-15 06:05 (stage 2d done; agent `adbaac6a024e6d144` of claude session d8031183, worktree kept)
+  - owner: nobody since 2026-10-15 06:05 (stage 2d done; agent `adbaac6a024e6d144` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `9e3befd`
   - evidence: `.claude/probes/K76/stage2d/` (`phonekit/gate2.mjs`, `census2d.mjs`, `out/` with `phone_gate_fw0.txt`, `sheet/final_desktop.png` and `final_phone.png`); 2a-2c's beside it; lore `render-explore.md`
   - next: the gate's criterion 2: count `exploreUpdatePending`'s flips (`applyExploreGaps`, ribbon_renderer.ts) against the calls a move, move that re-derivation out of `update()`, re-run gate2 with `&fw=0` and add the growth frame; a High contrast shot on the phone; the start zoom stays Levi's (K362)
@@ -215,7 +220,7 @@ Next free ID: K397.
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
-  - owner: nobody since 2026-10-15 02:42 (stage 2 done, item 4 not started; agent `a42c63c2db0401edb` of claude session d8031183; worktrees kept: stage 2's, stage 1's `ab65d913a3b9a3dcb`)
+  - owner: nobody since 2026-10-15 02:42 (stage 2 done, item 4 not started; agent `a42c63c2db0401edb` of claude session d8031183; stage 2's worktree swept 2026-10-15; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept)
   - branch: mainline; last commit: `f799991`
   - evidence: `.claude/probes/K268/stage2/` (probes, `run_batch2.ps1` to `run_batch5.ps1`, `out/`, builds); stage 1's beside it
   - next: stage 3: the census fixes first (`census.mjs`: judge shaped slots by S/R/F, skip rather than fail when no crossing shows both threads, a fading joint scales by vis; attribute junctions 56-58 and 161, which mismatch on master too: K76 2d ruled out the underlay, the gap gate and the fan program, so compare fan records, strip rows, then geometry, mode on and off, from `census2d.mjs`'s ATTR block), then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip); unblocked since K76 2d merged
@@ -223,16 +228,16 @@ Next free ID: K397.
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-6 merged: the worker is the default (stage 6: a944841..4d9c9f5,
   call F6), `&phw=0` runs in-thread. It still misses the 250 ms start gate.
-  - owner: nobody since 2026-10-15 04:37 (stage 6 done; agent `a6023a3244ff623cc` of claude session d8031183, worktree kept)
-  - branch: mainline; last commit: `4d9c9f5`
-  - evidence: `.claude/probes/K7/` (`stage6/`: `ported.md`, the ported libraries' originals in `ported/orig/`; `stage5/`: the phone tooling, `s5_gate.txt`; `stage4/`, `stage3/`)
-  - next: stage 7 (opus), unblocked since K5 M1 merged (K5 M2 edits main.ts too, so one at a time): the start-gate lever (scene params and tuning in the Worker's `name`, main adopts generation 0), the phone pass again (the phone half of `stage5/s5_gate.txt`), the spike page `?d=gs18`
-  - brief: `docs/design/K7_worker.md`, "Stage 6 handoff"; stage 7 from "Stage 5 handoff" ("For the next stage")
+  - owner: agent `a29b026fa5e2829ee` of claude session 05e60da0 (stage 7, since 2026-10-15 07:25; opus, 2 h cap). Stage 6's `a6023a3244ff623cc` (session d8031183): worktree removed by the K161 sweep 2026-10-15, branch kept
+  - branch: `worktree-agent-a29b026fa5e2829ee`, worktree `.claude/worktrees/agent-a29b026fa5e2829ee`; last commit: `21d701e` (from master; mainline holds stage 6, `4d9c9f5`)
+  - evidence: stage 7's in its worktree's `.claude/probes/K7/stage7/`; `.claude/probes/K7/` (`stage6/`: `ported.md`, the ported libraries' originals in `ported/orig/`; `stage5/`: the phone tooling, `s5_gate.txt`; `stage4/`, `stage3/`)
+  - next: stage 7 running (K5 M2 edits main.ts too, so it waits): the start-gate lever (scene params and tuning in the Worker's `name`, main adopts generation 0), the phone pass again (the phone half of `stage5/s5_gate.txt`), the spike page `?d=gs18`
+  - brief: `docs/design/K7_worker.md`, "Stage 7 brief: the lever, the phone pass, the spike page" (and "Every build stage: setup and process")
   - env: the phone: `.claude/probes/K7/stage5/phone_setup.ps1` and `phone_teardown.ps1`, under the phone lock
 - **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
   prioritize). Stage 2 merged (ce5e4d9..14d34b5): a program registry and a warm-up that links
   every program blocking (parallel links never reach Chrome's disk cache, K385; call F8).
-  - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree kept)
+  - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `14d34b5`
   - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (51f7480), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
   - next: stage 3: a cold load's still page before the trefoil (0.40-3.19 s, the warm-up's one status read: read after the trefoil shows, or K385's late reads), then K366's first tap, then the phone's measures with K156 (programs persist? Android's cache cap)
@@ -240,15 +245,15 @@ Next free ID: K397.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (b3917ca..f6d10e3): the four G3
   tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
-  - owner: nobody since 2026-10-15 03:50 (G3-0 done; agent `af653fa7f942f2f1e` of claude session d8031183, worktree kept)
+  - owner: G3-1's brief: docs agent `af87cd3a5da750759` of claude session 05e60da0 (since 07:25, worktree `.claude/worktrees/agent-af87cd3a5da750759`). G3-0's `af653fa7f942f2f1e` (session d8031183) finished; its worktree is left, locked by the live Claude process (K161)
   - branch: mainline; last commit: `f6d10e3`
   - evidence: `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
   - next: the phone's dense bench again at rest (`phone6.ps1`, its 30000 ms rest raised to 90000); then G3-1 after K290 (R1-R2 first if Levi takes K377 q3); G3-1's textures must fit the Pixel's 8192 max; check capture/restore under the worker (default from K7 s6); Levi's calls: K361
-  - brief: `docs/design/K8_stage1.md` (its stage 2 handoff, at the end); G3-1 still needs a brief, from `docs/design/G3G4_sdf_geometry.md`
+  - brief: `docs/design/K8_stage1.md` (its stage 2 handoff, at the end); G3-1's: `docs/design/K8_G3-1.md`, being written on the docs agent's branch
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
   with seams so G3 becomes a module swap; K6 rides it. Design: `docs/design/K5_K6_split.md`
   (calls: K377). M1 merged (baa0847..12709e5): main.ts 5709 → 4869 lines, no logic changes.
-  - owner: nobody since 2026-10-15 06:13 (stage M1 done; agent `a871cd9d98d4f1bf0` of claude session d8031183, worktree kept; the design's `aa60ed52201f75682` too)
+  - owner: nobody since 2026-10-15 06:13 (stage M1 done; agent `a871cd9d98d4f1bf0` of claude session d8031183; its and the design's `aa60ed52201f75682` worktrees removed by the K161 sweep 2026-10-15, branches kept)
   - branch: mainline; last commit: `12709e5`
   - evidence: `.claude/probes/K5/stage1/` (`checks.ps1`, `rebased_checks.ps1` and their `checks/`, `checks_rebased/`, `rebased/`; `fog_bisect.ps1`, `fogbisect/`; `diff_regions.mjs`, `remap_*.md`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
   - next: M2, the camera to `src/app/camera.ts` (section 5.2; re-map first from `anchors_c49f63f.json`); M3/M4 export PhysState, M7a moves `__knotUndo` (the handoff's "What is left")
@@ -256,16 +261,16 @@ Next free ID: K397.
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
   char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b next.
-  - owner: nobody since 2026-10-15 04:34 (stage 3a done; agent `adb9f09e19dfd0c55` of claude session d8031183, worktree kept)
-  - branch: mainline; last commit: `ef92a6a`
-  - evidence: `.claude/probes/K290/stage3a/` (`k290_ab.mjs`, `sheet.mjs`, `warn_check.mjs`, `ab/`, `sheet/`); burn stage 1's `.claude/probes/K114/`
-  - next: stage 3b: the front's char band and embers (replacing stage 1's ember, smolder and fuse marks), the `burn` FX on `tipsAt`, the lit fuse, the fire's light under fog, the phone sheet; Levi's calls K383
-  - brief: `docs/design/K114_burn.md`, "The stages" (Stage 3) and "Stage 3a handoff"
+  - owner: agent `a7c0069bafcb78c52` of claude session 05e60da0 (stage 3b, since 2026-10-15 07:25; opus, 2 h cap). Stage 3a's `adb9f09e19dfd0c55` (session d8031183): worktree removed by the K161 sweep 2026-10-15, branch kept
+  - branch: `worktree-agent-a7c0069bafcb78c52`, worktree `.claude/worktrees/agent-a7c0069bafcb78c52`; last commit: `21d701e` (from master; mainline holds 3a, `ef92a6a`)
+  - evidence: 3b's in its worktree's `.claude/probes/K290/stage3b/`; `.claude/probes/K290/stage3a/` (`k290_ab.mjs`, `sheet.mjs`, `warn_check.mjs`, `ab/`, `sheet/`); burn stage 1's `.claude/probes/K114/`
+  - next: stage 3b running: the front's char band and embers (replacing stage 1's ember, smolder and fuse marks), the `burn` FX on `tipsAt`, the lit fuse, the fire's light under fog, the phone sheet; Levi's calls K383
+  - brief: `docs/design/K114_burn.md`, "Stage 3b brief: the fire's look"
 - **K395** · The pluck blur at a kink loop's tip, on the phone (Levi, 2026-10-15 07:04, after
   K344's fix): a seam from the tip to an edge, and a heart-shaped pinch (a point inside, a dimple outside).
-  - owner: launching (claude session 05e60da0)
-  - branch: from master at launch; last commit: n/a
-  - evidence: `.claude/probes/K395/` (Levi's screenshot `levi_phone_2026-10-15_0704.png`)
+  - owner: agent `ac0d0267cdf7467ec` of claude session 05e60da0 (since 2026-10-15 07:25; opus, 2 h cap)
+  - branch: `worktree-agent-ac0d0267cdf7467ec`, worktree `.claude/worktrees/agent-ac0d0267cdf7467ec`; last commit: `21d701e` (from master)
+  - evidence: the main checkout's `.claude/probes/K395/` (Levi's screenshot `levi_phone_2026-10-15_0704.png`); the agent's in its worktree's `.claude/probes/K395/`
   - next: reproduce at the phone viewport and on the phone (after 08:30), measure the cause, fix the general case
   - brief: `docs/design/K395_pluck_loop_tip.md`
   - env: the phone: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
@@ -350,7 +355,7 @@ Every other item below waits on the trigger it names.
   each a set of parameter constraints; manual per-day overrides later
   (K82). Proposal `docs/design/K46_daily_variety.md` (8b1eb90), brief
   `docs/design/K46.md`, probes `.claude/probes/K46/` (the proposal
-  agent's worktree `.claude/worktrees/agent-a78c73cec4770a14d` holds no more; safe to remove).
+  agent's worktree was removed 2026-10-15 (K161), its probes copied; branch `worktree-agent-a78c73cec4770a14d` kept).
   Validation uses engine-exact math only (K108); memory-trail themes set
   trailLength 5 (K73).
 - **K78** · The Knotmaze handbook: algorithms, architecture, decisions
