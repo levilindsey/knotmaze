@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-import { notices } from "./notices/vite_plugin";
+import { notices, noticesWorker } from "./notices/vite_plugin";
 
 // BUILD IDENTITY for the version readouts (src/build_info.ts): the
 // package.json version, the git short SHA ("+" = built with uncommitted
@@ -47,6 +47,10 @@ export default defineConfig({
   base: "./",
   // K122: emits licenses.html (third-party notices) from the bundled modules.
   plugins: [notices()],
+  // K7 stage 3: the physics worker (src/physics/physics_worker.ts, behind
+  // `phw`) is an ES module worker, bundled on its own; noticesWorker() hands
+  // its modules to the notices page.
+  worker: { format: "es", plugins: () => [noticesWorker()] },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_SHA__: JSON.stringify(dirty ? `${sha}+` : sha),

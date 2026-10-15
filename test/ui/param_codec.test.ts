@@ -172,6 +172,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["hoverGlowFade", "number"], // 132
   ["pickMargin", "number"], // 133, K298
   ["pickChoiceRatio", "number"], // 134
+  ["physicsWorker", "boolean"], // 135, K7 stage 3
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

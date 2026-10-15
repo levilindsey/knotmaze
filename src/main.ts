@@ -8,6 +8,8 @@ import type { WalkGraph } from "./core/walk_graph";
 // through the PhysicsHost (physics/physics_host.ts); `ps` is its read view.
 import type { ParticleSystem, PhysicsTuning } from "./physics/particle_system";
 import { InThreadHost, LOAD_SIM_CAP } from "./physics/physics_host";
+import type { PhysicsHost } from "./physics/physics_host";
+import { WorkerHost } from "./physics/worker_host";
 import { RibbonRenderer } from "./render/ribbon_renderer";
 import { DebugRenderer } from "./render/debug_renderer";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
@@ -526,8 +528,13 @@ async function main(): Promise<void> {
   // `ps` is its read view (host.view, reassigned on each build): the
   // renderers, picks and probe hooks read it, and nothing steps, grabs,
   // drags, releases, tugs or resets through it (test/physics/
-  // host_seam.test.ts).
-  const host = new InThreadHost();
+  // host_seam.test.ts). K7 stage 3: `phw=1` (params.physicsWorker, read
+  // once here) runs it in a Web Worker; a worker that cannot start, answer
+  // or match falls back in-thread and rebuilds (__knotPerf().host.reason).
+  const host: PhysicsHost =
+    params.physicsWorker && typeof Worker !== "undefined"
+      ? new WorkerHost(() => rebuild())
+      : new InThreadHost();
   let ps: ParticleSystem | null = null;
   let renderer: RibbonRenderer | null = null;
   let debug: DebugRenderer | null = null;
@@ -5272,6 +5279,7 @@ async function main(): Promise<void> {
       totalFrames: frameCostN,
       totalCostMs: frameCostTotal,
       plucks: renderer?.plucks.activeCount ?? 0,
+      host: st.host,
     };
   };
   // K147 load-settle probe: the phase now (presettle | budget | off), the

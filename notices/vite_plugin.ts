@@ -30,6 +30,34 @@ export const NOTICES_BANNER = `/*! Third-party licenses and credits: ${NOTICES_F
 
 const shippedCredits = () => CREDITS.filter((c) => c.shipped);
 
+const OUTPUT = {
+  postBanner: NOTICES_BANNER,
+  comments: { legal: true, annotation: false, jsdoc: false },
+} as const;
+
+// K7 stage 3: a module worker (src/physics/physics_worker.ts) is bundled by
+// its own Rolldown build, during the main build's transform, and reaches the
+// main bundle as an asset whose modules generateBundle cannot see. The worker
+// build runs noticesWorker() (vite.config.ts worker.plugins), which records
+// the modules each worker chunk contains here; notices() reads them with the
+// main bundle's. The worker's output options (the banner, the legal
+// comments) are set by notices()'s config hook.
+const workerModules: BundledModule[] = [];
+
+export function noticesWorker(): Plugin {
+  return {
+    name: "knotmaze:notices-worker",
+    generateBundle(_options, bundle) {
+      for (const item of Object.values(bundle)) {
+        if (item.type !== "chunk") continue;
+        for (const [id, m] of Object.entries(item.modules)) {
+          workerModules.push({ id, renderedLength: m.renderedLength });
+        }
+      }
+    },
+  };
+}
+
 export function notices(): Plugin {
   let build = { version: "?", sha: "?" };
   return {
@@ -37,15 +65,13 @@ export function notices(): Plugin {
 
     config() {
       return {
-        build: {
-          rolldownOptions: {
-            output: {
-              postBanner: NOTICES_BANNER,
-              comments: { legal: true, annotation: false, jsdoc: false },
-            },
-          },
-        },
+        build: { rolldownOptions: { output: { ...OUTPUT } } },
+        worker: { rolldownOptions: { output: { ...OUTPUT } } },
       };
+    },
+
+    buildStart() {
+      workerModules.length = 0;
     },
 
     configResolved(config) {
@@ -62,7 +88,7 @@ export function notices(): Plugin {
     },
 
     generateBundle(_options, bundle) {
-      const modules: BundledModule[] = [];
+      const modules: BundledModule[] = [...workerModules];
       for (const item of Object.values(bundle)) {
         if (item.type !== "chunk") continue;
         for (const [id, m] of Object.entries(item.modules)) {

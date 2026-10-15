@@ -260,6 +260,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // K298: the mouse's pick margin and the choices' multiple of it.
   num("pickMargin"), // 133
   num("pickChoiceRatio"), // 134
+  // K7 stage 3: physics in a worker.
+  flag("physicsWorker"), // 135
 ]);
 
 // The format version a blob names first. Bump it for anything but an

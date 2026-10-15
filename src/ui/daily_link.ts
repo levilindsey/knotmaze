@@ -167,6 +167,8 @@ export const DAILY_EXEMPT_KEYS = [
   // Proposed for Levi's review with K147.
   "settleBudget",
   "loadSettle",
+  // K7 stage 3: which thread runs the physics, the same kind of choice.
+  "physicsWorker",
   // K140's finish confetti: how a finish celebrates, not what was played.
   // Proposed for Levi's review with K140.
   "confetti",
