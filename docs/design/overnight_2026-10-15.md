@@ -357,6 +357,13 @@ Each has a recommendation. Say "all recommended" to take them all.
   `agent_watch.mjs` prints each agent's branch from the transcript's
   recorded `gitBranch`, which was wrong for one agent tonight (it showed
   another agent's branch). `git worktree list` showed the right one.
+- **And one in the pickup skill:** `Get-WorkState.ps1` flags handle
+  fields MISSING that are there. It misreads `branch: mainline; last
+  commit: ...`, evidence sub-paths, and owner lines naming an agent, so
+  a pickup flags handles that are complete.
+- **The `LEDGERS.md` inbox:** file claude-config's line (your 23:43
+  questions, plus the diet above) in claude-config's ledger, and delete
+  knotmaze's line about `preview.ps1`'s junction (fixed in `b70936e`).
 - **The dev server on port 5173** runs from this session (on the LAN)
   and stops when it closes. It has no repo script yet; `npx vite --host
   0.0.0.0 --port 5173 --strictPort` restarts it, and a `scripts/dev.ps1`
