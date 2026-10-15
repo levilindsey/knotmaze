@@ -569,3 +569,93 @@ describe("the worker core between substeps (K7)", () => {
     }
   });
 });
+
+describe("the worker core's probe messages and failure (K7)", () => {
+  it("steps until a sim time, dumps, freezes, pauses, and stops on an error", () => {
+    const q = fabricScene("?7&gs=6");
+    const out: WorkerToMain[] = [];
+    const w = new PhysicsWorkerCore(new SyncScheduler(), (m) => {
+      out.push(m);
+      if (m.type === "snap") w.onMessage({ type: "give", buf: m.buf });
+    });
+    const last = (type: WorkerToMain["type"]): WorkerToMain | undefined =>
+      [...out].reverse().find((m) => m.type === type);
+    w.onMessage({ type: "init", gen: 1, params: q.params, tuning: q.tuning });
+    const ref = new ParticleSystem(fabricGraph(q.params));
+    const live = (): ParticleSystem => w.ps as ParticleSystem;
+
+    // stepUntil: 1/60 s frames to the sim time, then a snapshot.
+    w.onMessage({ type: "stepUntil", gen: 1, simTime: 0.5 });
+    while (ref.simTime < 0.5) ref.step(1 / 60, q.tuning);
+    expect(stateDiff(ref, live())).toBe("");
+    const snap = last("snap");
+    expect(snap?.type).toBe("snap");
+    if (snap?.type === "snap") {
+      expect(bits(readSnapshot(snap.buf).positions)).toEqual(bits(ref.positions));
+    }
+
+    // dump: the full stepping state, copied.
+    w.onMessage({ type: "dump" });
+    const d = last("dumped");
+    expect(d?.type).toBe("dumped");
+    if (d?.type === "dumped") {
+      const r = ref as unknown as Internals;
+      expect(d.simTime).toBe(ref.simTime);
+      expect(bits(d.positions)).toEqual(bits(ref.positions.subarray(0, 2 * ref.particleCount)));
+      expect(bits(d.prev)).toEqual(bits(r.prev));
+      expect(bits(d.zPos)).toEqual(bits(r.zPos));
+      expect(d.passes[0]).toBe(ref.crossings[0].over.ctrl);
+      expect(d.passes.length).toBe(4 * ref.crossings.length);
+    }
+
+    // The reference's frame, split, so the test knows its substep count.
+    const refFrame = (): number => {
+      const n = ref.beginFrame(1 / 60);
+      for (let s = 0; s < n; s++) ref.runSubstep(q.tuning);
+      return n;
+    };
+
+    // freeze: frames are counted and discarded; unfrozen, they step.
+    w.onMessage({ type: "freeze", on: true });
+    w.onMessage({ type: "frame", gen: 1, dt: 1 / 60 });
+    expect(w.stats.substeps).toBe(0);
+    expect(w.stats.frames).toBe(1);
+    w.onMessage({ type: "freeze", on: false });
+    w.onMessage({ type: "frame", gen: 1, dt: 1 / 60 });
+    const n1 = refFrame();
+    expect(n1).toBeGreaterThan(0);
+    expect(w.stats.substeps).toBe(n1);
+    expect(stateDiff(ref, live())).toBe("");
+
+    // pause: the batch begins and waits; resume runs it.
+    w.onMessage({ type: "pause" });
+    w.onMessage({ type: "frame", gen: 1, dt: 1 / 60 });
+    const n2 = refFrame();
+    expect(w.stats.substeps).toBe(n1);
+    expect(w.stats.remaining).toBe(n2);
+    w.onMessage({ type: "resume" });
+    expect(w.stats.substeps).toBe(n1 + n2);
+    expect(stateDiff(ref, live())).toBe("");
+
+    // An error posts once and stops everything but a newer init.
+    const before = { ...w.stats };
+    w.onMessage({ type: "give", buf: null as unknown as ArrayBuffer });
+    expect(last("error")?.type).toBe("error");
+    w.onMessage({ type: "frame", gen: 1, dt: 1 / 60 });
+    w.onMessage({ type: "drag", gen: 1, x: 0, y: 0 });
+    expect(w.stats.frames).toBe(before.frames);
+    expect(w.stats.inputs).toBe(before.inputs);
+    expect(w.stats.substeps).toBe(before.substeps);
+    w.onMessage({ type: "init", gen: 2, params: q.params, tuning: q.tuning });
+    expect(last("ready")).toMatchObject({ type: "ready", gen: 2 });
+    w.onMessage({ type: "frame", gen: 2, dt: 1 / 60 });
+    // A fresh system: its first frame matches a fresh reference's.
+    const ref2 = new ParticleSystem(fabricGraph(q.params));
+    const n3 = ref2.beginFrame(1 / 60);
+    for (let s = 0; s < n3; s++) ref2.runSubstep(q.tuning);
+    expect(n3).toBeGreaterThan(0);
+    expect(w.stats.substeps).toBe(n3);
+    expect(live().simTime).toBe(n3 * SUBSTEP);
+    expect(stateDiff(ref2, live())).toBe("");
+  });
+});
