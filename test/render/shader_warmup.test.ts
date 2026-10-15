@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ShaderWarmup, warmContextFor, type WarmGl } from "../../src/render/shader_warmup";
+import { PARALLEL_DEFAULT, ShaderWarmup, warmContextFor, type WarmGl } from "../../src/render/shader_warmup";
 import type { WarmSource } from "../../src/render/program_registry";
 
 // K307 stage 2: the warm-up's poll, relink, timeout, failure, no-extension
@@ -112,7 +112,9 @@ class FakeGl implements WarmGl {
   deleteProgram(p: WebGLProgram | null): void {
     if (p) (p as unknown as FakeProgram).deleted = true;
   }
+  extCalls = 0;
   getExtension(name: string): unknown {
+    this.extCalls++;
     return this.parallelExt && name === "KHR_parallel_shader_compile" ? {} : null;
   }
   isContextLost(): boolean {
@@ -133,7 +135,8 @@ function setup(parallel = true, timeoutMs = 15000) {
   const gl = new FakeGl(parallel);
   let t = 0;
   const logs: string[] = [];
-  const w = new ShaderWarmup(gl, { now: () => t, timeoutMs, log: (m) => logs.push(m) });
+  // The parallel path is asked for here; the default is tested on its own.
+  const w = new ShaderWarmup(gl, { now: () => t, timeoutMs, log: (m) => logs.push(m), parallel: true });
   return { gl, w, logs, advance: (ms: number) => (t += ms) };
 }
 
@@ -247,6 +250,23 @@ describe("shader warm-up (K307)", () => {
     w.startWave2();
     expect(gl.programs.length).toBe(2);
     expect(w.report().wave2Skipped).toContain("KHR_parallel_shader_compile");
+  });
+
+  it("by default never asks for the extension and links blocking", () => {
+    // Asking enables it on the context, and Chrome then keeps every program
+    // linked there off the disk cache (K307 stage 2).
+    expect(PARALLEL_DEFAULT).toBe(false);
+    const gl = new FakeGl(true);
+    const w = new ShaderWarmup(gl, { log: () => {} });
+    expect(gl.extCalls).toBe(0);
+    expect(w.parallel).toBe(false);
+    w.submit(1, [src("a"), src("b")]);
+    w.poll();
+    expect(gl.completionQueries).toBe(0);
+    expect(gl.statusReads).toBe(2);
+    expect(w.wave1Done).toBe(true);
+    w.startWave2();
+    expect(w.report().wave2Skipped).toContain("disk cache");
   });
 
   it("aborts on a lost context: the gate opens and no GL call follows", () => {
