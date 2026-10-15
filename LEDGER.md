@@ -15,6 +15,15 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K241** · Should a reset's gold webs fade out too (K191's call 1)?
+  As merged, a backtrack fades a web out over 0.25 s, but a web that
+  leaves the routes as it stops being full (a reset, a string-mode
+  switch, the trail aging out, a path backing off the junction
+  entirely) drops at once with its arms' gold, as before K191, and a
+  fading web that loses its last route mid-fade pops. A fade there needs
+  the shader to blend a non-routed record (a second base for it), or the
+  arms' gold kept alive through the fade. `docs/design/K154_K169.md`
+  ("Stage 2 handoff").
 - **K238** · K111 stage 1's calls (merged 2026-10-14 11:58), for review:
   (1) High contrast wears a black page (`background` none,
   `backgroundBase` #000000), the pastel palette, a yellow route
@@ -320,22 +329,6 @@ and never reused.
     in the main checkout's `.claude/probes/K111/`.
   - next: the brief's stage 2 (the dropdown, the modes, the sheets).
   - brief: `docs/design/K111.md` ("Stage 2: the highlight modes").
-- **K191** · K169's two calls, decided (Levi, 2026-10-14 about 11:10,
-  email 3.x): 3.1 "fade out": a web that stops being full (a backtrack
-  or a reset) fades its gold out over the same 0.25 s instead of losing
-  it at once; 3.2 "yes": reduced Motion keeps the fade (as built). A
-  full web restored on load still appears without a fade (not asked).
-  It shares `ribbon_renderer.ts` with K145, whose nearest edit sits three
-  lines from the fade's tick: expect at most a small rebase at the merge.
-  - owner: claude agent aa7dbec9cbe592155 (sonnet) of session d8031183,
-    started 2026-10-14 11:21 with a 1 h cap (about 12:21).
-  - branch: `worktree-agent-aa7dbec9cbe592155`
-    (`.claude/worktrees/agent-aa7dbec9cbe592155`), from e2f96b8; last
-    commit: none yet (unpushed).
-  - evidence: `.claude/probes/K191/` in that worktree; stage 1's in the
-    main checkout's `.claude/probes/K154_K169/`.
-  - next: the brief's stage 2.
-  - brief: `docs/design/K154_K169.md` ("Stage 2 (K191): fade out too").
 - **K235** · Taps inside junction cores make no sound (Levi, 2026-10-14
   about 11:10, on K194's 5.2: "Do we trigger pluck sounds for this?
   Probably shouldn't."). They play the pluck sound and draw nothing
@@ -365,6 +358,29 @@ and never reused.
   - evidence: `.claude/probes/K235/` in that worktree.
   - next: the brief's one stage (K235, then K239).
   - brief: `docs/design/K235_K239.md`.
+- **K174** · K80 stage 1's calls, decided (Levi, 2026-10-14 about
+  11:10, email 2.x; play: https://levi.dev/knotmaze/?7.J&clk=realtime):
+  2.1 the chase pace stays 0.7 of the player's, "let's try 0.7, but this
+  should be a slider"; 2.2 detection stays 15 (the coordinator's reading
+  of "fine, slider"); 2.3 the minotaur shows through fog always, as
+  built (the reading of "fine, drop-down"); 2.4 a catch re-fogs the
+  explored maze, "yes, but checkbox toggle control"; 2.5 the caught row
+  stays visible with the stat rows off, "yes" (as built); 2.6 the
+  minotaur roams toward the player (K179's bias), "roam toward, but
+  again, add a control to toggle". The pace and detection sliders and
+  the fog dropdown exist (the Minotaur folder). The work: the paces as
+  fractions of `playerPace` (hunt 0.7, wander 0.5), a re-fog-on-catch
+  checkbox (on) and a roam-toward checkbox (on) tuned on the K80 sim,
+  plus K177's open checks. Brief `docs/design/K174.md` (d644ec5).
+  - owner: claude agent a4b88d31204feef28 (opus) of session d8031183,
+    started 2026-10-14 12:08 with a 2 h cap (about 14:08).
+  - branch: `worktree-agent-a4b88d31204feef28`
+    (`.claude/worktrees/agent-a4b88d31204feef28`), from d644ec5; last
+    commit: none yet (unpushed).
+  - evidence: `.claude/probes/K174/` in that worktree; the K80 sim in the
+    main checkout's `.claude/probes/K80/rt/`.
+  - next: the brief's one stage.
+  - brief: `docs/design/K174.md`.
 
 ## Next, in order
 
@@ -400,14 +416,15 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K191's fade-out from 11:21 (sonnet, 1 h),
-K235 + K239 from 11:59 (sonnet, 1 h) and K111 stage 2 from 12:02 (opus,
+(he may reorder). Running: K235 + K239 from 11:59 (sonnet, 1 h), K111
+stage 2 from 12:02 (opus, 2 h) and K174's controls from 12:08 (opus,
 2 h). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
 (the rules split), K93, K198 stage 1, K98 and K92 merged at
-08:39-10:08, and K145 and K111 stage 1 at 11:55 and 11:58; the
+08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, and K191 at
+12:04; the
 coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -432,10 +449,11 @@ files at their merges. Then, as code slots free up:
    modes, runs from 12:02.
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
-    coordinator; Levi may reorder): K198 stage 2 and K174's controls
-    (the panel, one at a time; unblocked since K111 stage 1 merged),
-    K191's fade-out (running from 11:21), K193's portrait emulation and
-    then K195's A/A floor, and K235 (running from 11:59, with K239).
+    coordinator; Levi may reorder): K174's controls (running from
+    12:08), then K198 stage 2 (the panel and main.ts: after K235 merges,
+    one panel agent at a time), K191's fade-out (merged 2026-10-14
+    12:04, fafa340..3467117), K193's portrait emulation and then K195's
+    A/A floor, and K235 (running from 11:59, with K239).
 11. K76 stage 2.
 12. K80's turn-aligned hunter, a modifier of the normal maze; then
     K137's toggles, K138's M mechanisms and K139.
@@ -503,22 +521,6 @@ K5-K7 (split, frame loop, worker) follow.
     check.) The reading of part (1) stands: Levi corrected nothing.
   - next: stage 2's brief (parts 2 and 3 and the two tweens), after K111
     stage 1 merges (the panel).
-- **K174** · K80 stage 1's calls, decided (Levi, 2026-10-14 about
-  11:10, email 2.x; play: https://levi.dev/knotmaze/?7.J&clk=realtime):
-  2.1 the chase pace stays 0.7 of the player's, "let's try 0.7, but this
-  should be a slider"; 2.2 detection stays 15 (the coordinator's reading
-  of "fine, slider"); 2.3 the minotaur shows through fog always, as
-  built (the reading of "fine, drop-down"); 2.4 a catch re-fogs the
-  explored maze, "yes, but checkbox toggle control"; 2.5 the caught row
-  stays visible with the stat rows off, "yes" (as built); 2.6 the
-  minotaur roams toward the player (K179's bias), "roam toward, but
-  again, add a control to toggle". The work: sliders for the pace and
-  the detection range, a fog dropdown (always | hunting | never), a
-  re-fog-on-catch checkbox (on) and a roam-toward toggle (on). Params
-  `minoPace`, `minoHuntPace`, `minoDetect`, `minoFog` and `minoRoam`
-  exist; the brief checks which the panel shows and as what. Records:
-  `.claude/probes/K80/rt/results.md`; K177's unchecked items ride along.
-  Brief to write; after K111 stage 1 (the panel).
 - **K193** · The phone pass's orientation, decided (Levi, 2026-10-14
   about 11:10, email 4.1: "b seems best"): the pass emulates a 411x753
   portrait viewport over CDP and leaves the phone as it sits, and a
@@ -778,6 +780,12 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K242** · K191's residuals (`docs/design/K154_K169.md`, "Stage 2
+  handoff"): the fan program's GPU cost during fades and stage 1's phone
+  hash cost are unmeasured; the tap-time fade-out (a 3-arm junction
+  passed twice, the head on the second arrival) and a full web restored
+  on load are unit-tested only; the knot and fog A/B against stage 1 was
+  not rerun (byte identity covers it; no shader change).
 - **K236** · K145's hover glow misses four places
   (`docs/design/K93_K145.md`, "Stage 2 handoff (resumed)"): (a) a
   pluck's overlay hides it on the plucked run (`composedAtArc` has no
@@ -1401,6 +1409,17 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K191** · K169's two calls, decided (Levi, 2026-10-14 about 11:10,
+  email 3.x): 3.1 "fade out": a web that stops being full fades its gold
+  out over the same 0.25 s instead of losing it at once; 3.2 "yes":
+  reduced Motion keeps the fade (as built).
+  - Done in fafa340..3467117 (2026-10-14 12:04): `web_fade.ts` keeps a
+    ramp per junction (fade-out levels 1 / 0.53 / 0 at 0 / 0.12 / 0.25
+    s; a reversal continues from the current level and takes the full
+    0.25 s); no shader or mirror change; frames from 0.25 s on match
+    stage 1 (0 px). A web that leaves the routes too (a reset) still
+    drops at once (K241). Lore `render-web-fade.md`; brief
+    `docs/design/K154_K169.md` ("Stage 2 handoff").
 - **K145** · A subtle hover glow on runs that aren't choices (Levi,
   2026-10-13 about 16:00 and 16:12, verbatim in
   `docs/design/levi_notes_2026-10-13.md`): in the maze, hovering any run
