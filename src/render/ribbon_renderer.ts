@@ -45,6 +45,7 @@ import type { SplineSamples } from "../geometry/spline_generator";
 import {
   sampleClosedSpline,
   sampleOpenSpline,
+  splineBend,
 } from "../geometry/spline_generator";
 import { ProbeTriMesh, RibbonMesh, TriFanMesh } from "./ribbon_mesh";
 import {
@@ -1009,6 +1010,27 @@ export class RibbonRenderer {
   constructor(ps: ParticleSystem, style: RibbonStyle) {
     this.ps = ps;
     this.style = style;
+    // K90 stage 1b, a debug hook only (no link, no panel row): turn the
+    // spline's bend bound on or off, optionally retune it, and re-render.
+    // `__knotSplineBend()` with no arguments reports the state.
+    if (typeof window !== "undefined") {
+      (window as unknown as Record<string, unknown>).__knotSplineBend = (
+        on?: boolean,
+        opts?: Partial<Record<"ratio" | "maxShift" | "maxTurn" | "iterations", number>>
+      ) => {
+        if (on !== undefined || opts) {
+          if (on !== undefined) splineBend.enabled = !!on;
+          if (opts) Object.assign(splineBend, opts);
+          splineBend.moved = 0;
+          splineBend.shiftMax = 0;
+          splineBend.runs = 0;
+          splineBend.skipped = 0;
+          this.update();
+          this.rebuildFillets(true);
+        }
+        return { ...splineBend };
+      };
+    }
     this.root = new Container();
     this.baseRgb.set(gamutRgb(style.baseHue, 0.5));
 
@@ -2307,6 +2329,10 @@ export class RibbonRenderer {
     this.revealOn = ra !== null && !ra.done;
     if (!this.revealOn && this.revealWas) this.finishReveal();
     this.revealWas = this.revealOn;
+
+    // K90's bend bound (off unless the debug hook turns it on) holds the
+    // centerline's turn radius against this ribbon's half-width.
+    splineBend.halfWidth = this.style.threadWidth / 2;
 
     this.ps.chains.forEach((chain, i) => {
       const controls = this.chainControls[i];
