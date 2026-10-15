@@ -41,9 +41,11 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   minoFog (shown only under fog of war) = when the minotaur shows THROUGH
   the fog: always (default, a decision for Levi) | hunting (only while it
   hunts) | never (only where the fog has lifted). Its off-screen
-  indicator (#7a0c0c disc, the bull glyph) shows only once it has left
-  the lair. The marker (a K83 marker wearing a placeholder bull) is
-  markerRadius x 1.15 with a MINO_MIN_CSS_R 10 CSS px floor, over a red
+  indicator (#7a0c0c disc, the minotaur's default glyph) shows only once
+  it has left the lair. The marker (a K83 marker wearing a placeholder
+  glyph: the bull, since K98 the Taurus horns, which the indicator wears
+  too) is drawn at markerRadius, the player's size (K98; until then
+  markerRadius x 1.15 with a MINO_MIN_CSS_R 10 CSS px floor), over a red
   glow (dim in the lair, larger and full while it hunts), and like the
   exit marker waits for the intro to draw its thread. Live panel edits reach a running chase through
   setParams. CODEC: appended at 84-98 (clock, playerPace, the minotaur's

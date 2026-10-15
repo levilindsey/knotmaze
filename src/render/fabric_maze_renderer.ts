@@ -411,7 +411,7 @@ export class FabricMazeRenderer {
       this.gfx
     );
     // K80: the minotaur above them all (on the player's dot, a catch shows
-    // the bull). Hidden until a real-time chase syncs it.
+    // the minotaur). Hidden until a real-time chase syncs it.
     this.minoGlow = new Sprite(minoGlowTexture());
     this.minoGlow.anchor.set(0.5);
     this.minoLayer = new Container();
