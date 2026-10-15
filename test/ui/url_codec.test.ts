@@ -94,7 +94,7 @@ describe("links", () => {
       minoToward: true, minoRefog: true,
       confetti: true, confettiAmount: 1,
       pluckWhole: 0.75, pluckCrossings: "through", pluckGlow: "off",
-      pluckRipple: "wave", rippleStrength: 1, rippleAuto: 0.35,
+      pluckRipple: "glint", rippleStrength: 1, rippleAuto: 0.35,
       pluckSheen: 0.5, pluckTug: 0, tugAuto: false, autoPluckGain: 0.5,
       markerSize: 1.08,
       hoverGlow: 0.4,
@@ -279,7 +279,7 @@ describe("links", () => {
     for (const prp of ["off", "wave", "glint", "ring"]) {
       expect(parseParams(`?7&prp=${prp}`).pluckRipple).toBe(prp);
     }
-    expect(parseParams("?7&prp=splash").pluckRipple).toBe("wave");
+    expect(parseParams("?7&prp=splash").pluckRipple).toBe("glint");
     // Strengths clamp to [0, 2], the rest to [0, 1].
     expect(parseParams("?7&prs=9&pra=-1").rippleStrength).toBe(2);
     expect(parseParams("?7&prs=9&pra=-1").rippleAuto).toBe(0);

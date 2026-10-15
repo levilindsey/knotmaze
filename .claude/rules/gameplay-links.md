@@ -87,7 +87,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
 - PLUCK EMPHASIS PARAMS (K279 stage 1, 2026-10-14; brief
   `docs/design/K279.md`). Seven viewer preferences, APPENDED to codec v5
   at 121-127, after the burn race's 118-120 (K114):
-  - `pluckRipple` (`prp`: off, wave, glint or ring; default wave);
+  - `pluckRipple` (`prp`: off, wave, glint or ring; default glint since
+    K279 stage 2, wave before; `url_codec.test.ts`'s defaults table and
+    its unknown-look case moved with it);
   - `rippleStrength` (`prs`, [0, 2], default 1);
   - `rippleAuto` (`pra`, [0, 2], default 0.35);
   - `pluckSheen` (`psh`, [0, 1], default 0.5);
