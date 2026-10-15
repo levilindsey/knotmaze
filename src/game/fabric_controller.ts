@@ -38,7 +38,9 @@
 // over when it moves and only then: a backtrack to the entrance, by hand
 // or by retreatToStart(), and a K80 respawn() keep it. reset() is also the
 // one thing that empties `taps`, so the taps are everything explored
-// (game/daily_attempt.ts exploredRuns).
+// (game/daily_attempt.ts exploredRuns). K174: `refogs` counts respawn(true)
+// calls, a catch that returns the fog to the solve's start (minoRefog);
+// the fog starts over when either counter moves.
 
 import type { WalkGraph } from "../core/walk_graph";
 import type { MoveKind } from "./maze_stats";
@@ -68,6 +70,9 @@ export class FabricMazeController {
   taps: number[] = [];
   // reset() calls so far: a new value = a restarted solve (K100).
   restarts = 0;
+  // respawn(true) calls so far: a new value = the fog of war starts over,
+  // the solve goes on (K174).
+  refogs = 0;
 
   // Memory-trail mode: advance-only taps (see the header comment). Set at
   // construction and freely togglable from main.ts afterwards.
@@ -125,10 +130,12 @@ export class FabricMazeController {
 
   // K80's real-time mode: the minotaur caught the player. Back to the
   // entrance in one jump, not a restart: the stats, the move log, the taps,
-  // the backtrack and walked meters and `restarts` (so the explored fog)
-  // stay (replay(taps) cannot reproduce a respawn; a real-time maze is
-  // never a daily, so nothing replays it).
-  respawn(): void {
+  // the backtrack and walked meters and `restarts` stay (replay(taps)
+  // cannot reproduce a respawn; a real-time maze is never a daily, so
+  // nothing replays it). `refog` (K174, the minoRefog param) returns the
+  // fog of war to the solve's start; without it the explored fog stays.
+  respawn(refog = false): void {
+    if (refog) this.refogs++;
     this.pathVertices = [this.walk.start];
     this.pathEdges = [];
     this.solved = false;

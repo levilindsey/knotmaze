@@ -151,8 +151,9 @@ interface YarnEvent {
 // (fog_arc.ts, K99: the same at any frame rate or move speed), at least
 // the world spacing below apart, and persist for the whole solve: K100
 // clears them only when it restarts (the controller's `restarts` moves),
-// never on a backtrack to the entrance (by hand or a daily's Reset path)
-// or a K80 catch. The radius slider re-renders every hole (a retroactive
+// never on a backtrack to the entrance (by hand or a daily's Reset path);
+// a K80 catch clears them only under K174's minoRefog (the controller's
+// `refogs` moves). The radius slider re-renders every hole (a retroactive
 // view setting).
 // The canvas redraws only when a stamp lands or settings change, so
 // the steady per-frame cost is one static sprite. Fog is a SPATIAL
@@ -353,8 +354,10 @@ export class FabricMazeRenderer {
   private fogTexture: Texture | null = null;
   private fogRect = { x0: 0, y0: 0, span: 1 };
   private fogStamps: number[] = []; // Flat explored world [x, y, ...].
-  // The controller's `restarts` the stamps belong to (K100).
+  // The controller's `restarts` (K100) and `refogs` (K174) the stamps
+  // belong to.
   private fogRestarts = -1;
+  private fogRefogs = -1;
   private fogDirty = true;
   private fogLastRadius = -1;
   private fogDispSprite: Sprite | null = null;
@@ -1311,14 +1314,22 @@ export class FabricMazeRenderer {
 
   // K100 probes (main.ts __knotFabric): the explored stamps (world x, y
   // pairs), the live reveal radius (renderFog's, before its canvas scale)
-  // and the solve restart the stamps belong to.
-  fogProbe(): { on: boolean; held: boolean; stamps: number[]; radius: number; restarts: number } {
+  // and the solve restart (and K174 re-fog) the stamps belong to.
+  fogProbe(): {
+    on: boolean;
+    held: boolean;
+    stamps: number[];
+    radius: number;
+    restarts: number;
+    refogs: number;
+  } {
     return {
       on: this.fogOfWar,
       held: this.fogHeld,
       stamps: [...this.fogStamps],
       radius: this.fowRadius * this.fogRadiusMul(),
       restarts: this.fogRestarts,
+      refogs: this.fogRefogs,
     };
   }
 
@@ -1686,9 +1697,12 @@ export class FabricMazeRenderer {
     // restore's replay: the controller's `restarts` moved) and only then -
     // an empty path (a backtrack to the entrance, a K80 catch) keeps it.
     // Keyed on the event, not on the state it leaves, so a reset followed
-    // by taps before this runs (replay) still reads as a restart.
-    if (controller.restarts !== this.fogRestarts) {
+    // by taps before this runs (replay) still reads as a restart. K174: a
+    // catch under minoRefog (the controller's `refogs` moved) starts it
+    // over too.
+    if (controller.restarts !== this.fogRestarts || controller.refogs !== this.fogRefogs) {
       this.fogRestarts = controller.restarts;
+      this.fogRefogs = controller.refogs;
       this.fogStamps.length = 0;
       this.fogDirty = true;
     }

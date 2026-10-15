@@ -2662,8 +2662,9 @@ async function main(): Promise<void> {
   // tapEdge each: path, stats, move log, paint) and the dot rides the
   // chase's progress (setMoveProgress) instead of tickAnim's pace. A catch
   // sends the player back to the entrance: the clock and the stats run on,
-  // the path and the string start over, and the fog keeps what was
-  // explored, up to where the catch stopped the dot (K100).
+  // the path and the string start over, and the fog returns to the solve's
+  // start (K174's minoRefog) or keeps what was explored, up to where the
+  // catch stopped the dot (K100).
   const restartChase = (): void => {
     chase =
       params.mazeFabric && params.clock === "realtime" && walkGraph && fabric
@@ -2732,7 +2733,7 @@ async function main(): Promise<void> {
           if (result === "win") pendingWin = true;
           updateHud();
         } else if (ev.kind === "caught") {
-          fc.respawn();
+          fc.respawn(params.minoRefog);
           fabric.stopMove();
           fabric.clearYarn();
           pendingWin = false;

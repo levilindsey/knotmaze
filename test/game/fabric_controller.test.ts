@@ -443,4 +443,20 @@ describe("restarts (K100): what the fog of war starts over on", () => {
       expect(c.restarts).toBeGreaterThan(3);
     }
   });
+
+  // K174: a catch under minoRefog returns the fog to the solve's start (a
+  // `refogs` move); without it the explored fog stays. Neither restarts.
+  it("count re-fogging catches apart from restarts (K174)", () => {
+    const c = new FabricMazeController(walkFor(1234), false);
+    c.tapEdge(bestChoice(c));
+    c.respawn();
+    expect([c.restarts, c.refogs]).toEqual([1, 0]);
+    c.tapEdge(bestChoice(c));
+    c.respawn(true);
+    expect([c.restarts, c.refogs]).toEqual([1, 1]);
+    expect(c.taps.length).toBe(2);
+    expect(c.pathEdges).toEqual([]);
+    c.reset();
+    expect([c.restarts, c.refogs]).toEqual([2, 1]);
+  });
 });
