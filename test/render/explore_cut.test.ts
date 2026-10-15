@@ -25,7 +25,14 @@ import {
   type GapShape,
   type GapSlotParams,
 } from "../../src/render/gap_mask";
-import { classifyExploreCut, exploreArcMap } from "../../src/render/explore_glsl";
+import {
+  classifyExploreCut,
+  EXPLORE_FAN_SURE_GLSL,
+  EXPLORE_GAP_SURE_GLSL,
+  EXPLORE_LOOK_GLSL,
+  EXPLORE_MAIN_GLSL,
+  exploreArcMap,
+} from "../../src/render/explore_glsl";
 import { exploreCutCoverCpu, kExploreLookCpu } from "../../src/render/paint_math";
 import { chainVis, type ExplorePiece } from "../../src/game/explore_view";
 
@@ -453,6 +460,132 @@ describe("K268 the shaped cut: exploreCutCoverCpu vs the model's chainVis (look 
         kExploreLookCpu(look, v, t, Math.fround(A) - 1, 0, 0.01 / 0.2, 0.01, 0.2),
         6
       );
+    }
+  });
+});
+
+// K76 stage 2d (question 9): under High contrast the dots look (3, and the
+// beacon 5) draws its dots at full strength in pure white. The GLSL is
+// kExploreLook's `uKExplore.x > 1.5` branch and kExDot, which the thread's
+// main mixes to white; the CPU twin takes `hc` and reports `out.dot`.
+describe("K76 stage 2d: High contrast dots (kExploreLookCpu hc, out.dot)", () => {
+  const tw = 0.52;
+  const pxW = 0.02;
+  const sideFw = pxW / tw;
+
+  it("HC lifts only the strength: hc x (1 - 0.55 u^2) is the plain coverage", () => {
+    const o1 = { dot: -1 };
+    const o2 = { dot: -1 };
+    let lit = 0;
+    for (const look of [3, 5]) {
+      for (let iu = 0; iu <= 20; iu++) {
+        const u = iu / 20;
+        for (let is = 0; is <= 60; is++) {
+          const s = (is / 60) * 6 * tw;
+          for (const lat of [-0.45, -0.2, 0, 0.1, 0.3]) {
+            const plain = kExploreLookCpu(look, 0.7, u, s, lat, sideFw, pxW, tw, false, o1);
+            const hc = kExploreLookCpu(look, 0.7, u, s, lat, sideFw, pxW, tw, true, o2);
+            expect(o2.dot).toBe(o1.dot);
+            expect(hc * (1 - 0.55 * u * u)).toBeCloseTo(plain, 12);
+            expect(hc).toBeGreaterThanOrEqual(plain);
+            if (plain > 0) lit++;
+          }
+        }
+      }
+    }
+    expect(lit).toBeGreaterThan(500);
+  });
+
+  it("a dot's center is full under HC and dimmed without; out.dot says dot or cap", () => {
+    const sp = 0.95 * tw;
+    const o = { dot: -1 };
+    for (const look of [3, 5]) {
+      for (const kk of [1, 2, 5]) {
+        const u = 0.95;
+        expect(kExploreLookCpu(look, 0, u, kk * sp, 0, sideFw, pxW, tw, true, o)).toBe(1);
+        expect(o.dot).toBe(1);
+        expect(kExploreLookCpu(look, 0, u, kk * sp, 0, sideFw, pxW, tw, false, o)).toBeCloseTo(
+          1 - 0.55 * u * u,
+          12
+        );
+        expect(o.dot).toBe(1);
+      }
+      // The cap (the solid end's round end) is not a dot: it keeps the
+      // thread's color under HC.
+      expect(kExploreLookCpu(look, 0, 0.1, 0.1 * tw, 0, sideFw, pxW, tw, true, o)).toBe(1);
+      expect(o.dot).toBe(0);
+      expect(kExploreLookCpu(look, 0, 0.1, 0, 0.2, sideFw, pxW, tw, true, o)).toBe(1);
+      expect(o.dot).toBe(0);
+    }
+  });
+
+  it("every other look, and every point outside a frontier, ignores HC (out.dot 0)", () => {
+    const o = { dot: -1 };
+    for (const look of [0, 1, 2, 4]) {
+      for (const u of [0, 0.3, 0.7, 0.99]) {
+        for (const s of [0, 0.4, 1.3]) {
+          const plain = kExploreLookCpu(look, 0.6, u, s, 0.1, sideFw, pxW, tw, false, o);
+          expect(o.dot).toBe(0);
+          expect(kExploreLookCpu(look, 0.6, u, s, 0.1, sideFw, pxW, tw, true, o)).toBe(plain);
+          expect(o.dot).toBe(0);
+        }
+      }
+    }
+    for (const look of [3, 5]) {
+      o.dot = -1;
+      expect(kExploreLookCpu(look, 0.6, -1, 1, 0, sideFw, pxW, tw, true, o)).toBe(0.6);
+      expect(o.dot).toBe(0);
+    }
+  });
+
+  it("the shaped cut follows the dots' strength under HC (exploreCutCoverCpu hc)", () => {
+    const shape: GapShape = {
+      k2b: 1,
+      ramps: [{ aS: 1, F: 3, dK: 1, tK: 1, front: true }],
+      max: false,
+    };
+    const prof = profileOf(shape, 1);
+    let differ = 0;
+    for (let i = 0; i <= 120; i++) {
+      const A = 1 + (i / 120) * 3;
+      // aS 1 and F 3 are exact in f32, so the twin's arithmetic is this.
+      const d = (A - 1) / 3;
+      const t = Math.min(d, 1);
+      const v = 1 - t * t * (3 - 2 * t);
+      const u = t < 1 ? t : -1;
+      const s = Math.abs(A - 1);
+      for (const look of [0, 1, 2, 3, 4, 5]) {
+        const plain = exploreCutCoverCpu(prof, A, look, tw, pxW);
+        const hc = exploreCutCoverCpu(prof, A, look, tw, pxW, true);
+        expect(hc).toBeCloseTo(kExploreLookCpu(look, v, u, s, 0, pxW / tw, pxW, tw, true), 6);
+        if (look === 3 || look === 5) {
+          if (hc !== plain) differ++;
+        } else {
+          expect(hc).toBe(plain);
+        }
+      }
+    }
+    expect(differ).toBeGreaterThan(20);
+  });
+
+  it("the GLSL carries the twin's branch, and main whitens the dots before char", () => {
+    expect(EXPLORE_LOOK_GLSL).toContain("highp float kExDot;");
+    expect(EXPLORE_LOOK_GLSL).toContain("  kExDot = 0.0;\n  if (u < 0.0 || look < 2) return v;");
+    expect(EXPLORE_LOOK_GLSL).toContain("  kExDot = dDot < dCap ? 1.0 : 0.0;");
+    expect(EXPLORE_LOOK_GLSL).toContain(
+      "(uKExplore.x > 1.5 ? 1.0 : 1.0 - 0.55 * u * u)"
+    );
+    const call = EXPLORE_MAIN_GLSL.indexOf("ev = kExploreLook(look, evRaw, u, exS");
+    const white = EXPLORE_MAIN_GLSL.indexOf("if (uKExplore.x > 1.5) rgb = mix(rgb, vec3(1.0), kExDot);");
+    const debug = EXPLORE_MAIN_GLSL.indexOf("if (uKBase.z > 5.5)");
+    const char = EXPLORE_MAIN_GLSL.indexOf("kCharAt(kc, kctrl)");
+    expect(call).toBeGreaterThan(0);
+    expect(white).toBeGreaterThan(call);
+    expect(debug).toBeGreaterThan(white);
+    expect(char).toBeGreaterThan(white);
+    // Every other reader of uKExplore.x tests it against 0.5, so 2 is "on".
+    for (const g of [EXPLORE_GAP_SURE_GLSL, EXPLORE_FAN_SURE_GLSL]) {
+      expect(g).toContain("uKExplore.x > 0.5");
     }
   });
 });

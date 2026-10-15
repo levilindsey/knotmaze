@@ -277,7 +277,8 @@ export function exploreArcMap(
 // variant (K268 stage 2, arm_strip.ts withExploreStrip) needs only this
 // part; the section variant takes EXPLORE_DECL_GLSL, which starts with it.
 export const EXPLORE_VIS_GLSL = /* glsl */ `
-// K76 THREAD REVEAL: (on, look, breath, threadWidth).
+// K76 THREAD REVEAL: (on, look, breath, threadWidth); on is 2 under High
+// contrast (stage 2d), so every test of it is > 0.5.
 uniform vec4 uKExplore;
 const int PI_VIS = ${EXPLORE_ITEM_VIS};
 highp float kExTip;
@@ -386,9 +387,14 @@ export const EXPLORE_LOOK_GLSL = /* glsl */ `// The end look's coverage at a poi
 // v itself for the fade and halo looks and outside a frontier. The glow
 // look's tint is the caller's (it colors the thread; it is not coverage).
 // Shared by the thread (main) and the shaped cut (K268). CPU twin:
-// paint_math.ts kExploreLookCpu.
+// paint_math.ts kExploreLookCpu. K76 stage 2d (question 9): under High
+// contrast (uKExplore.x 2) the dots draw at full strength, and kExDot says
+// whether the point's nearest shape is a dot (1) or the cap (0; 0 in every
+// other look), which main paints pure white.
+highp float kExDot;
 highp float kExploreLook(int look, highp float v, highp float u, highp float s,
     highp float lat, highp float sideFw, highp float pxW) {
+  kExDot = 0.0;
   if (u < 0.0 || look < 2) return v;
   highp float tw = uKExplore.w;
   if (look == 2) {
@@ -416,7 +422,8 @@ highp float kExploreLook(int look, highp float v, highp float u, highp float s,
   highp float kk = max(1.0, floor(s / sp + 0.5));
   highp float dDot = length(vec2(s - kk * sp, la)) - 0.3 * tw * (1.0 - 0.4 * u);
   highp float dd = min(dCap, dDot);
-  return clamp(-dd / pxW + 0.5, 0.0, 1.0) * (1.0 - 0.55 * u * u);
+  kExDot = dDot < dCap ? 1.0 : 0.0;
+  return clamp(-dd / pxW + 0.5, 0.0, 1.0) * (uKExplore.x > 1.5 ? 1.0 : 1.0 - 0.55 * u * u);
 }
 // K268 THE SHAPED CUT: the over thread's coverage at its chain arc A (the
 // slot polyline's frame), from the slot's profile texels (gap_mask.ts
@@ -515,6 +522,9 @@ export const EXPLORE_MAIN_GLSL = /* glsl */ `
       }
       highp float exS = look == 2 ? 0.0 : abs(kArcU(kc, kExX) - kArcU(kc, kExSolid));
       ev = kExploreLook(look, evRaw, u, exS, vUV.y - 0.5, kSideFw, pxW);
+      // K76 stage 2d: High contrast paints the dots pure white (the cap keeps
+      // the thread's color; char still darkens a burnt dot, below).
+      if (uKExplore.x > 1.5) rgb = mix(rgb, vec3(1.0), kExDot);
     }
     if (uKBase.z > 5.5) {
       finalColor = vec4(evRaw, kExTip >= 0.0 ? kExTip : 0.0, ev, 1.0);

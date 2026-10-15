@@ -5015,6 +5015,19 @@ export class RibbonRenderer {
   exploreUpdatePending = false;
   // Bumped by every declaration change; the joint gate follows it.
   private exploreRev = 0;
+  // K76 stage 2d (question 9): High contrast. uKExplore.x is 2 instead of 1
+  // while the mode is on, and the dots look draws its dots at full strength
+  // in pure white (kExploreLook, kExDot).
+  private exploreContrast = false;
+
+  // High contrast for the reveal's end look (the fabric forwards a11y's
+  // setting each tick). Takes effect at the next draw: uKExplore is a
+  // uniform, no update() needed.
+  setExploreContrast(on: boolean): void {
+    this.exploreContrast = on;
+    const E = knotUniformValues().uKExplore!;
+    if (E[0] > 0.5) E[0] = on ? 2 : 1;
+  }
 
   // Declare the visible pieces (null = the mode off: every chain draws on
   // master's program again). With the mode on, the ribbons draw with the
@@ -5032,7 +5045,7 @@ export class RibbonRenderer {
     burn: ExploreBurn | null = null
   ): void {
     const E = knotUniformValues().uKExplore!;
-    E[0] = pieces ? 1 : 0;
+    E[0] = pieces ? (this.exploreContrast ? 2 : 1) : 0;
     E[1] = look;
     E[2] = breath;
     E[3] = this.style.threadWidth;
