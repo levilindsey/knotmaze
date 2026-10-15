@@ -314,3 +314,107 @@ export function chainVis(
   }
   return best;
 }
+
+// K290 (burn stage 3a): a burnt stretch of a chain, in the walk graph's
+// unwrapped ctrls (b0 <= b1).
+export interface BurntSpan {
+  chain: number;
+  b0: number;
+  b1: number;
+}
+
+// A cut that leaves less than this (ctrl) leaves nothing; a fade shorter
+// than this is a hard end.
+const CUT_EPS = 1e-4;
+
+// One piece minus [b0, b1] (one unwrapped copy of a burnt span), its
+// remnants pushed to `out`. A remnant keeps the piece's far end (its fade
+// and frontier flag). A cut through the solid part is a HARD end (fade 0,
+// no frontier: the fire's front is there). A cut through a fade shortens
+// that fade to end at the cut, so the thread never shows more than the
+// piece did; the fade tail beyond a cut (below full visibility all along)
+// goes.
+function cutPiece(p: ExplorePiece, b0: number, b1: number, out: ExplorePiece[]): void {
+  const lo = p.c0 - p.f0;
+  const hi = p.c1 + p.f1;
+  if (b1 <= lo || b0 >= hi) {
+    out.push(p);
+    return;
+  }
+  // What lies below the cut.
+  if (b0 > lo) {
+    if (b0 > p.c1) {
+      const f1 = b0 - p.c1;
+      out.push({ ...p, f1: f1 > CUT_EPS ? f1 : 0, tip1: false });
+    } else if (b0 >= p.c0) {
+      if (b0 - p.c0 > CUT_EPS || p.f0 > CUT_EPS) {
+        out.push({ ...p, c1: b0, f1: 0, tip1: false });
+      }
+    }
+  }
+  // What lies above it.
+  if (b1 < hi) {
+    if (b1 < p.c0) {
+      const f0 = p.c0 - b1;
+      out.push({ ...p, f0: f0 > CUT_EPS ? f0 : 0, tip0: false });
+    } else if (b1 <= p.c1) {
+      if (p.c1 - b1 > CUT_EPS || p.f1 > CUT_EPS) {
+        out.push({ ...p, c0: b1, f0: 0, tip0: false });
+      }
+    }
+  }
+}
+
+// K290: the pieces with every burnt span cut out (burnt thread is not
+// drawn: the `burnt` param's "gone"). `ringN(chain)` = the chain's ctrl
+// count for a ring, 0 for an open chain; a ring's span is cut at each
+// unwrapped copy that can meet a piece (pieces and spans both lie in
+// [0, 2n), so copies -2n..+2n cover every meeting, fades included).
+// Pieces of chains without a span pass through unchanged (the same
+// objects), so nothing burnt returns the pieces as they were.
+export function subtractBurnt(
+  pieces: readonly ExplorePiece[],
+  spans: readonly BurntSpan[],
+  ringN: (chain: number) => number
+): ExplorePiece[] {
+  const byChain = new Map<number, BurntSpan[]>();
+  for (const s of spans) {
+    if (!(s.b1 > s.b0)) continue;
+    let l = byChain.get(s.chain);
+    if (!l) byChain.set(s.chain, (l = []));
+    l.push(s);
+  }
+  const out: ExplorePiece[] = [];
+  for (const p of pieces) {
+    const ss = byChain.get(p.chain);
+    if (!ss || p.c1 < p.c0) {
+      out.push(p);
+      continue;
+    }
+    const n = ringN(p.chain);
+    const k0 = n > 0 ? -2 : 0;
+    const k1 = n > 0 ? 2 : 0;
+    let cur: ExplorePiece[] = [p];
+    for (const s of ss) {
+      for (let k = k0; k <= k1; k++) {
+        const next: ExplorePiece[] = [];
+        for (const q of cur) cutPiece(q, s.b0 + k * n, s.b1 + k * n, next);
+        cur = next;
+      }
+    }
+    for (const q of cur) out.push(q);
+  }
+  return out;
+}
+
+// K290: every chain whole, as pieces (the burn's visibility with the
+// reveal off): a ring [0, n], an open chain [0, n - 1], hard ends.
+export function wholePieces(chains: readonly { n: number; closed: boolean }[]): ExplorePiece[] {
+  const out: ExplorePiece[] = [];
+  for (let c = 0; c < chains.length; c++) {
+    const { n, closed } = chains[c];
+    if (n < 2) continue;
+    out.push({ chain: c, c0: 0, c1: closed ? n : n - 1, f0: 0, f1: 0, tip0: false, tip1: false });
+  }
+  return out;
+}
