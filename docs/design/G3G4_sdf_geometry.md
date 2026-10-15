@@ -698,7 +698,7 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
 
 - **Files:**
   - new `src/render/samp_table.ts`: pure packers for SAMP, RADII, G3 CHAIN and RANGES (no Pixi), and `test/render/samp_table.test.ts`;
-  - `ribbon_renderer.ts`: the textures (G2's `FloatRows`, page-lifetime), their writes in `update()`, `captureScene` / `restoreScene`;
+  - `ribbon_renderer.ts`: the textures (G2's `FloatRows`, page-lifetime), their writes in `update()`, `captureScene` / `restoreScene`, and a `g3Data` switch (default on) so one page can time the writes on and off;
   - new `scripts/bench_frame.mjs`, the frame bench (section 5.0).
 - **Stays out of:**
   - `main.ts` (K7 stages 3-4);
