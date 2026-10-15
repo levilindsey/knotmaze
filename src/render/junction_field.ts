@@ -85,7 +85,7 @@ import { GAP_FRAG_LIB, defaultGapTexture } from "./gap_mask";
 import { FloatRows, ROW_SHIFT } from "./float_rows";
 import { KNOT_UNIFORMS_GLSL, PAINT_CONST_GLSL, PAINT_GATE_GLSL } from "./paint_glsl";
 import { knotUniforms } from "./paint_model";
-import { STRIP_LOOKUP_GLSL, stripTexture } from "./arm_strip";
+import { STRIP_LOOKUP_GLSL, STRIP_LOOKUP_P_GLSL, stripTexture } from "./arm_strip";
 
 // Field geometry constants (shared with the CPU side in ribbon_renderer):
 // arm radial profiles resample the centerline (walked in FIELD_PROF_ARC
@@ -385,7 +385,7 @@ void main(void) {
 // revealed, then the latest-ignited arm's FX solidity (knotFanAlpha). The
 // gap mask (fan mode: no window, header tangent) scales the premultiplied
 // output; pxW comes from fwidth() HERE, in uniform control flow.
-const JUNCTION_FRAG = /* glsl */ `#version 300 es
+export const JUNCTION_FRAG = /* glsl */ `#version 300 es
 ${FIELD_GLSL}
 in vec2 vPos;
 flat in float vRec;
@@ -414,8 +414,75 @@ void main(void) {
 }
 `;
 
+// K268 stage 2 (K275): the thread reveal's fan program. The arm strips
+// carry the thread's visibility as premultiplied alpha there
+// (arm_strip.ts withExploreStrip), so the field reads them premultiplied
+// (stripAtP) and blends premultiplied: armPaint, junctionBase and
+// junctionField return vec4, the angular blend, the K169 web fade and the
+// K81 band mixes included. A web then fades with its arms and a free-tip
+// cap with its thread at the tip; over solid arms it is master's color.
+// Each [anchor, replacement] must occur exactly once in JUNCTION_FRAG.
+export const FIELD_EXPLORE_EDITS: ReadonlyArray<readonly [string, string]> = [
+  ["vec4 jAt(int i) {", STRIP_LOOKUP_P_GLSL + "vec4 jAt(int i) {"],
+  [
+    "vec3 armPaint(int ab, float s, bool band, bool untrav) {",
+    "vec4 armPaint(int ab, float s, bool band, bool untrav) {",
+  ],
+  [
+    "  return stripAt(int(h.z + 0.5) + (untrav ? 1 : 0), sc * h.w);",
+    "  return stripAtP(int(h.z + 0.5) + (untrav ? 1 : 0), sc * h.w);",
+  ],
+  [
+    "vec3 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {",
+    "vec4 junctionBase(int rec, vec2 p, vec4 hd, bool untrav) {",
+  ],
+  [
+    "    return stripAt(int(hx.y + 0.5), (dot(e, ax.yz) + hx.w) * hx.z);",
+    "    return stripAtP(int(hx.y + 0.5), (dot(e, ax.yz) + hx.w) * hx.z);",
+  ],
+  ["  vec3 cA = vec3(0.0);\n  vec3 cB = vec3(0.0);", "  vec4 cA = vec4(0.0);\n  vec4 cB = vec4(0.0);"],
+  [
+    "vec3 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {",
+    "vec4 junctionField(int rec, vec2 p, float pxW, vec4 j1, bool strip) {",
+  ],
+  [
+    "  vec3 c = junctionBase(rec, p, hd, routed && fz < 0.5);",
+    "  vec4 c = junctionBase(rec, p, hd, routed && fz < 0.5);",
+  ],
+  [
+    "    vec3 o = junctionBase(rec, p, hd, fz >= 0.5);",
+    "    vec4 o = junctionBase(rec, p, hd, fz >= 0.5);",
+  ],
+  ["      vec3 bm = armPaint(", "      vec4 bm = armPaint("],
+  [
+    "  vec3 rgb = junctionField(rec, vPos, pxW, j1, strip);",
+    "  vec4 exC = junctionField(rec, vPos, pxW, j1, strip);",
+  ],
+  [
+    "    rgb = mix(rgb, vec3(1.0, 0.0, 0.85), (1.0 - gk) * 0.75);",
+    "    exC.rgb = mix(exC.rgb, vec3(1.0, 0.0, 0.85) * exC.a, (1.0 - gk) * 0.75);",
+  ],
+  [
+    "  finalColor = vec4(rgb, 1.0) * vColor * (aM * gk);",
+    "  if (exC.a <= 0.002) discard;\n  finalColor = exC * vColor * (aM * gk);",
+  ],
+];
+
+export function withExploreField(frag: string): string {
+  let s = frag;
+  for (const [anchor, to] of FIELD_EXPLORE_EDITS) {
+    const i = s.indexOf(anchor);
+    if (i < 0 || s.indexOf(anchor, i + 1) >= 0) {
+      throw new Error(`field explore variant: anchor not found exactly once: ${anchor.slice(0, 48)}`);
+    }
+    s = s.slice(0, i) + to + s.slice(i + anchor.length);
+  }
+  return s;
+}
+
 type FieldShader = Shader & { texture: Texture };
 let JUNCTION_SHADER: FieldShader | null = null;
+let JUNCTION_SHADER_EX: FieldShader | null = null;
 // The current scene's gap-slot table (bindFieldGap) - the shader is built
 // lazily, after the renderer bound it.
 let GAP_TEX: Texture | null = null;
@@ -448,13 +515,27 @@ export function junctionShader(): FieldShader {
   return JUNCTION_SHADER;
 }
 
+// The thread reveal's fan program (K268 stage 2), built the first time the
+// mode turns on; setExplore swaps the fan meshes onto it.
+export function junctionShaderExplore(): FieldShader {
+  if (!JUNCTION_SHADER_EX) {
+    JUNCTION_SHADER_EX = makeShader(
+      JUNCTION_VERT,
+      withExploreField(JUNCTION_FRAG),
+      "junction-field-explore"
+    );
+  }
+  return JUNCTION_SHADER_EX;
+}
+
 // Point the field shader at a scene's gap-slot table (see bindGap in
 // ribbon_renderer; a shader built later binds the table current then).
 export function bindFieldGap(tex: Texture): void {
   GAP_TEX = tex;
-  const sh = JUNCTION_SHADER;
-  if (sh && sh.resources.uGapData !== tex.source) {
-    sh.resources.uGapData = tex.source;
+  for (const sh of [JUNCTION_SHADER, JUNCTION_SHADER_EX]) {
+    if (sh && sh.resources.uGapData !== tex.source) {
+      sh.resources.uGapData = tex.source;
+    }
   }
 }
 

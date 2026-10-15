@@ -24,7 +24,12 @@
 //   STRIP TEXTURE (RGBA8 render target, STRIP_RT_W wide): row r occupies
 //     texels [(r % STRIP_LINE) * STRIP_W, +STRIP_W) of line r / STRIP_LINE.
 //     Read with texelFetch + manual lerp (exact weights: the CPU mirror in
-//     RibbonRenderer.cpuStripAt quotes it to the bit).
+//     RibbonRenderer.cpuStripAt quotes it to the bit). Alpha is 1, except
+//     under the thread reveal (K268 stage 2, K275): its variant program
+//     (withExploreStrip) writes the material PREMULTIPLIED by the thread's
+//     visibility there, and the visibility as alpha, so the fans' variant
+//     (junction_field.ts withExploreField, stripAtP) fades a web with its
+//     arms and a cap with its thread. A solid texel is master's texel.
 //
 // SCHEDULING: a pixi WebGL SYSTEM (registered at module load, like the
 // float-rows uploader) re-renders the strips in its `prerender` hook -
@@ -48,6 +53,7 @@ import {
   extensions,
 } from "pixi.js";
 import type { Renderer } from "pixi.js";
+import { EXPLORE_VIS_GLSL } from "./explore_glsl";
 import { FloatRows, ROW_SHIFT, ROW_W } from "./float_rows";
 import {
   KNOT_UNIFORMS_GLSL,
@@ -142,6 +148,23 @@ vec3 stripAt(int row, highp float x) {
 }
 `;
 
+// K268 stage 2: the same lookup, PREMULTIPLIED - (material x visibility,
+// visibility), as the reveal's strip variant writes it. Needs
+// STRIP_LOOKUP_GLSL (uStrip) before it; only the fans' explore variant
+// declares it (withExploreField).
+export const STRIP_LOOKUP_P_GLSL = /* glsl */ `
+vec4 stripAtP(int row, highp float x) {
+  highp float xc = clamp(x, 0.0, ${STRIP_W - 1}.0);
+  int k0 = int(floor(xc));
+  int k1 = min(k0 + 1, ${STRIP_W - 1});
+  highp float f = xc - float(k0);
+  ivec2 base = ivec2((row & ${STRIP_LINE - 1}) << ${STRIP_W_SHIFT}, row >> ${STRIP_LINE_SHIFT});
+  vec4 a = texelFetch(uStrip, base + ivec2(k0, 0), 0);
+  vec4 b = texelFetch(uStrip, base + ivec2(k1, 0), 0);
+  return mix(a, b, f);
+}
+`;
+
 const MESH_UNIFORMS = /* glsl */ `
 uniform mat3 uProjectionMatrix;
 uniform mat3 uWorldTransformMatrix;
@@ -163,7 +186,7 @@ void main(void) {
 // One fragment = one strip texel: gl_FragCoord addresses the render
 // texture's memory exactly as texelFetch does on the read side (whatever
 // way the projection maps the covering quad).
-const STRIP_FRAG = /* glsl */ `#version 300 es
+export const STRIP_FRAG = /* glsl */ `#version 300 es
 precision highp float;
 precision highp int;
 precision highp sampler2D;
@@ -231,6 +254,48 @@ void main(void) {
 }
 `;
 
+// K268 stage 2 (K275), the anchors withExploreStrip inserts at (each must
+// occur exactly once in STRIP_FRAG).
+const STRIP_ANCHOR_DECL = "highp float kStripPx;\n";
+const STRIP_ANCHOR_CTRL = "  highp float actrl = kCtrlOfArcNear(c, an, kSecK0);\n";
+const STRIP_ANCHOR_OUT =
+  "  finalColor = vec4(chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z > 0.5), 1.0);\n";
+
+// The visibility the variant multiplies in: the thread's at the texel's
+// ctrl (kExploreAt, the ribbons' visibility before their end look), 1 for a
+// degenerate chain.
+export const STRIP_EXPLORE_DECL_GLSL = /* glsl */ `${EXPLORE_VIS_GLSL}
+// K268 stage 2: the texel's visibility (chainMaterial sets it).
+highp float kStripVis;
+`;
+export const STRIP_EXPLORE_CTRL_GLSL = "  if (uKExplore.x > 0.5) kStripVis = kExploreAt(c, actrl);\n";
+export const STRIP_EXPLORE_OUT_GLSL = /* glsl */ `  kStripVis = 1.0;
+  vec3 exM = chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z > 0.5);
+  finalColor = vec4(exM * kStripVis, kStripVis);
+`;
+
+function onceIn(src: string, anchor: string): number {
+  const i = src.indexOf(anchor);
+  if (i < 0 || src.indexOf(anchor, i + 1) >= 0) {
+    throw new Error(`strip explore variant: anchor not found exactly once: ${anchor.slice(0, 48)}`);
+  }
+  return i;
+}
+
+// The reveal's strip program: master's text with the visibility declared
+// before kStripPx, read after chainMaterial's ctrl, and written
+// premultiplied (rgb x vis, vis). Its texels for solid thread are master's.
+export function withExploreStrip(frag: string): string {
+  let s = frag;
+  let i = onceIn(s, STRIP_ANCHOR_DECL);
+  s = s.slice(0, i) + STRIP_EXPLORE_DECL_GLSL + s.slice(i);
+  i = onceIn(s, STRIP_ANCHOR_CTRL) + STRIP_ANCHOR_CTRL.length;
+  s = s.slice(0, i) + STRIP_EXPLORE_CTRL_GLSL + s.slice(i);
+  i = onceIn(s, STRIP_ANCHOR_OUT);
+  s = s.slice(0, i) + STRIP_EXPLORE_OUT_GLSL + s.slice(i + STRIP_ANCHOR_OUT.length);
+  return s;
+}
+
 // ---------------------------------------------------------------------------
 // The pass: one quad over the used lines of the render texture.
 
@@ -246,21 +311,48 @@ function stripInfo(): UniformGroup {
 
 let SCENE: Container | null = null;
 let QUAD: Mesh<Geometry, Shader> | null = null;
+// The pass programs: master's, and the reveal's (K268 stage 2), built the
+// first time the mode turns on.
+let STRIP_SHADER: Shader | null = null;
+let STRIP_SHADER_EX: Shader | null = null;
+let STRIP_EXPLORE = false;
+function stripShader(explore: boolean): Shader {
+  const have = explore ? STRIP_SHADER_EX : STRIP_SHADER;
+  if (have) return have;
+  const shader = Shader.from({
+    gl: explore
+      ? { vertex: STRIP_VERT, fragment: withExploreStrip(STRIP_FRAG), name: "arm-strip-explore" }
+      : { vertex: STRIP_VERT, fragment: STRIP_FRAG, name: "arm-strip" },
+    resources: {
+      uStripTable: stripTable().source,
+      stripInfo: stripInfo(),
+      uKStatic: kStatic().source,
+      uKGeom: kGeom().source,
+      uKReveal: kReveal().source,
+      uKPaintData: kPaint().source,
+      knotUniforms: knotUniforms(),
+    },
+  }) as Shader & { texture: Texture };
+  shader.texture = Texture.WHITE;
+  if (explore) STRIP_SHADER_EX = shader;
+  else STRIP_SHADER = shader;
+  return shader;
+}
+
+// K268 stage 2: the thread reveal on or off. On, the pass writes each
+// texel premultiplied by its thread's visibility (withExploreStrip); off,
+// master's program writes alpha 1. Either way every row re-renders on the
+// next frame (setExplore swaps the fans' program in the same call).
+export function setStripExplore(on: boolean): void {
+  if (STRIP_EXPLORE === on) return;
+  STRIP_EXPLORE = on;
+  if (QUAD) QUAD.shader = stripShader(on);
+  invalidateStrips();
+}
+
 function passScene(): Container {
   if (!SCENE) {
-    const shader = Shader.from({
-      gl: { vertex: STRIP_VERT, fragment: STRIP_FRAG, name: "arm-strip" },
-      resources: {
-        uStripTable: stripTable().source,
-        stripInfo: stripInfo(),
-        uKStatic: kStatic().source,
-        uKGeom: kGeom().source,
-        uKReveal: kReveal().source,
-        uKPaintData: kPaint().source,
-        knotUniforms: knotUniforms(),
-      },
-    }) as Shader & { texture: Texture };
-    shader.texture = Texture.WHITE;
+    const shader = stripShader(STRIP_EXPLORE);
     // Positions only (a MeshGeometry's aUV would be an attribute the pass
     // program lacks - a pixi warning per program).
     const geometry = new Geometry({

@@ -92,6 +92,7 @@ import {
   kWall,
   kComposePaint,
   kGlow,
+  kExploreAt,
   kPaintAt,
   kRimAcross,
   kRimOver,
@@ -102,6 +103,7 @@ import {
   sourcePieces,
   type KChain,
   type KData,
+  type KExploreState,
   type KPaintState,
   type KIgn,
 } from "./paint_math";
@@ -118,6 +120,7 @@ import {
   ROUTE_BAND_PAD,
   bindFieldGap,
   junctionShader,
+  junctionShaderExplore,
   recordData,
   setFieldParams,
 } from "./junction_field";
@@ -139,6 +142,7 @@ import type { PaintRoute } from "./junction_routes";
 import {
   STRIP_STATS,
   STRIP_W,
+  setStripExplore,
   setStripRows,
   stripTable,
   stripTexture,
@@ -692,17 +696,20 @@ const CUT_BIAS = 0.03;
 const EMERGENT_POOL = 64;
 // Gap slots for marker discs (start/exit dots).
 const MARKER_SLOTS = 4;
-// K76 2b, the thread reveal's binary gates: a marker disc's gap shows once
-// its thread point is this visible (the exit marker's own rule); a joint
-// draws when its arms are this visible at the slot and EXPLORE_JOINT_OUT
-// ctrl out (applyExploreGaps, exploreJointShown).
+// K76 2b, the thread reveal's marker gate: a marker disc's gap shows once
+// its thread point is this visible (the exit marker's own rule;
+// applyExploreGaps).
 const EXPLORE_MARKER_VIS = 0.98;
-const EXPLORE_JOINT_VIS = 0.98;
+// K268 stage 2 (K275), the joint gate: a junction's web and fans emit no
+// record once an arm's visibility at its slot is at most this, nor a free
+// tip's cap once its thread's is at the tip (exploreJointShown). Above it
+// they draw, faded with their threads by the arm strips' premultiplied
+// alpha (arm_strip.ts withExploreStrip, junction_field.ts withExploreField).
+const EXPLORE_JOINT_MIN = 0.002;
 // K76 stage 2c: hidden thread is empty space for input below this
 // visibility (pickThread, exploreShownAt: taps, hover, plucks, the tug's
 // grab).
 const EXPLORE_PICK_VIS = 0.5;
-const EXPLORE_JOINT_OUT = 0.25;
 // Fillet layer-vote reach terms (rebuildFillets): how much of the wedge
 // reach (fillHalf * FILLET_REACH_PER_HALF * cuspRadius) counts as a
 // joint's clearance, and the old erase-width pad - both kept so the vote
@@ -1097,6 +1104,8 @@ export class RibbonRenderer {
   private stripRowsUsed = 0;
   private stripK0 = new Float32Array(4);
   private stripK1 = new Float32Array(4);
+  // K268 stage 2: kExploreAt's CPU twin's scratch (cpuChainMaterial).
+  private exploreAtScratch: KExploreState = { v: 0, tip: -1, solid: 0, x: 0 };
   // Diagnostics (probes): the strip pass's counters and its render texture.
   get stripStats(): { renders: number; ms: number; rows: number; lines: number } {
     return STRIP_STATS;
@@ -4699,6 +4708,13 @@ export class RibbonRenderer {
       if (m.shader !== sh) m.shader = sh;
       m.renderable = !pieces || this.exploreByChain.has(c);
     }
+    // K268 stage 2 (K275): the arm strips write the visibility as
+    // premultiplied alpha, and the fans read them so (a web fades with its
+    // arms, a cap with its thread).
+    setStripExplore(!!pieces);
+    const fsh = pieces ? junctionShaderExplore() : junctionShader();
+    if (this.filletMesh) this.filletMesh.mesh.shader = fsh;
+    if (this.filletTopMesh) this.filletTopMesh.mesh.shader = fsh;
     this.paintScene.setExploreFlags(pieces ? whole : null);
     if (this.style.paletteMode) this.writePaintItems();
     this.exploreRev++;
@@ -4823,13 +4839,15 @@ export class RibbonRenderer {
   // K76 2b, THE JOINT GATE (K76_reveal_mode.md 2.4): which joints the
   // thread reveal hides - junction webs and fans (by junctionArms index),
   // free-tip caps (by freeTips index) - recomputed when the declaration
-  // changes, and the key rebuildFillets adds to its own (the fans rebuild on
-  // an arrival, not on growth frames). A junction shows only when every arm
-  // is solid (vis >= EXPLORE_JOINT_VIS) at its slot and EXPLORE_JOINT_OUT
-  // ctrl out (at most 0.45 of the run): the model holds a visited junction's
-  // arms solid through its web domain (at least 2.3 half-widths, at most
-  // half the run), and a stub fades out INTO an unvisited one (vis 0 at its
-  // slot). A free tip's cap shows when its thread is solid at the tip.
+  // changes, and the key rebuildFillets adds to its own (the fans rebuild
+  // when the hidden SET changes, not on growth frames). Since K268 stage 2
+  // (K275) the gate is no longer binary: a junction hides once any arm's
+  // visibility at its slot is at most EXPLORE_JOINT_MIN, a free tip's cap
+  // once its thread's is at the tip, and whatever draws fades with its
+  // threads through the arm strips' premultiplied alpha. In the model's
+  // states the hidden set is 2b's: a visited junction's arms are solid
+  // through its web domain (at least 2.3 half-widths, at most half the
+  // run), and a stub fades out INTO an unvisited one (vis 0 at its slot).
   private exploreJointRev = -1;
   private exploreHideJn: Uint8Array | null = null;
   private exploreHideFree: Uint8Array | null = null;
@@ -4855,7 +4873,7 @@ export class RibbonRenderer {
     for (let i = 0; i < this.freeTips.length; i++) {
       const tip = this.freeTips[i];
       const n = this.ps.chains[tip.chain].length;
-      if (this.exploreVisAt(tip.chain, tip.atEnd ? n - 1 : 0) < EXPLORE_JOINT_VIS) {
+      if (this.exploreVisAt(tip.chain, tip.atEnd ? n - 1 : 0) <= EXPLORE_JOINT_MIN) {
         hideFree[i] = 1;
         parts.push("t" + i);
       }
@@ -4871,25 +4889,15 @@ export class RibbonRenderer {
     return this.exploreJointKey;
   }
 
-  // Whether a junction's arms are all solid near it (the joint gate).
+  // Whether a junction draws under the reveal (the joint gate): every arm
+  // visible past EXPLORE_JOINT_MIN at its slot. An unvisited junction, whose
+  // stubs fade out into it, hides; a drawn web fades with its arms.
   private exploreJointShown(jn: number): boolean {
     for (const a of this.junctionArms[jn].arms) {
       const n = this.ps.chains[a.chain].length;
       const closed = this.ps.chainBreakAfter[a.chain] < 0;
-      const next = this.armNextJointCtrl(jn, a);
-      let run: number;
-      if (next !== null) {
-        run = (next - a.slot) * a.dir;
-        if (closed) run = ((run % n) + n) % n;
-      } else {
-        run = closed ? n : a.dir > 0 ? n - 1 - a.slot : a.slot;
-      }
-      const out = Math.max(0, Math.min(EXPLORE_JOINT_OUT, 0.45 * run));
-      for (const t of [0, out]) {
-        let c = a.slot + a.dir * t;
-        if (!closed) c = Math.max(0, Math.min(n - 1, c));
-        if (this.exploreVisAt(a.chain, c) < EXPLORE_JOINT_VIS) return false;
-      }
+      const c = closed ? a.slot : Math.max(0, Math.min(n - 1, a.slot));
+      if (this.exploreVisAt(a.chain, c) <= EXPLORE_JOINT_MIN) return false;
     }
     return true;
   }
@@ -5089,6 +5097,8 @@ export class RibbonRenderer {
   // samples; `seed` = a ctrl near the arc), burn / roots, then the gameplay
   // paint and the reveal glow with edge coverage over `px` - into out[0..2].
   // untrav (K81): the paint without its gold amount (an untraveled row).
+  // out[3]: the thread's visibility there under the thread reveal (K268
+  // stage 2, withExploreStrip's kStripVis), else 1.
   private cpuChainMaterial(
     ch: number,
     a: number,
@@ -5106,6 +5116,7 @@ export class RibbonRenderer {
     const total = c.total;
     if (!(total > 0) || c.count < 2) {
       knotSection(D, U, c, 0, out);
+      out[3] = 1;
       return;
     }
     const an = c.closed ? kWrap(a, total) : Math.max(0, Math.min(total, a));
@@ -5122,6 +5133,8 @@ export class RibbonRenderer {
       if (untrav) st.p = 0;
       kComposePaint(U, out, st, kGlow(D, U, c, actrl));
     }
+    const E = U.uKExplore;
+    out[3] = E && E[0] > 0.5 ? kExploreAt(D, U, c, actrl, this.exploreAtScratch).v : 1;
   }
   // Append one ARM STRIP row (arm_strip.ts table layout): texel k = the
   // material of `chain` at arc arc0 + arcStep * k (ctrl seed seed0 +
@@ -5169,10 +5182,16 @@ export class RibbonRenderer {
     const un = T[o + 6] > 0.5;
     this.cpuChainMaterial(T[o], T[o + 1] + T[o + 2] * k0, m0, T[o + 4] + T[o + 5] * k0, T[o + 3], un);
     this.cpuChainMaterial(T[o], T[o + 1] + T[o + 2] * k1, m1, T[o + 4] + T[o + 5] * k1, T[o + 3], un);
+    // K268 stage 2: the texels are premultiplied by the visibility (1 with
+    // the reveal off: master's texels), and out[3] is the lerped alpha.
+    const v0 = m0[3];
+    const v1 = m1[3];
     for (let c = 0; c < 3; c++) {
-      const a = q(m0[c]);
-      out[c] = a + (q(m1[c]) - a) * f;
+      const a = q(m0[c] * v0);
+      out[c] = a + (q(m1[c] * v1) - a) * f;
     }
+    const a3 = q(v0);
+    out[3] = a3 + (q(v1) - a3) * f;
   }
 
   // The composed junction-field color at (x, y) for the record at texel
@@ -5181,6 +5200,8 @@ export class RibbonRenderer {
   // junctionField, K81 route bands included. px = world units per pixel
   // (the shader's pxW, floored the same way); strip = the pixel belongs to
   // a cover strip (the band's solid pad).
+  // Under the thread reveal (K268 stage 2) the color is premultiplied and
+  // out[3] is its alpha (the strips'); with the reveal off out[3] is 0.
   private cpuJunctionField(
     rec: number,
     x: number,
@@ -5203,11 +5224,13 @@ export class RibbonRenderer {
     const ey = y - J[hd + 1];
     const mA = this.acc4Scratch;
     // (Materials arrive composed - the shader blends composed colors.)
+    const exA = (knotUniformValues().uKExplore?.[0] ?? 0) > 0.5;
+    const nc = exA ? 4 : 3;
     const compose = (m: Float32Array): void => {
       out[0] = m[0];
       out[1] = m[1];
       out[2] = m[2];
-      out[3] = 0;
+      out[3] = exA ? m[3] : 0;
     };
     if (n === 0) {
       const h = at(rec + 2);
@@ -5317,8 +5340,8 @@ export class RibbonRenderer {
           compose(mB);
         } else {
           // Composed colors blend (see FIELD_GLSL).
-          for (let c = 0; c < 3; c++) out[c] = mA[c] + (mB[c] - mA[c]) * t;
-          out[3] = 0;
+          for (let c = 0; c < nc; c++) out[c] = mA[c] + (mB[c] - mA[c]) * t;
+          if (!exA) out[3] = 0;
         }
       }
     };
@@ -5329,6 +5352,7 @@ export class RibbonRenderer {
       const p0 = out[0];
       const p1 = out[1];
       const p2 = out[2];
+      const p3 = out[3];
       this.fieldLastArm.length = 0;
       baseField(fz >= 0.5);
       // The first pass was untraveled below 0.5 and composed from there on.
@@ -5339,6 +5363,10 @@ export class RibbonRenderer {
       out[0] = lo ? p0 + (o0 - p0) * fz : o0 + (p0 - o0) * fz;
       out[1] = lo ? p1 + (o1 - p1) * fz : o1 + (p1 - o1) * fz;
       out[2] = lo ? p2 + (o2 - p2) * fz : o2 + (p2 - o2) * fz;
+      if (exA) {
+        const o3 = out[3];
+        out[3] = lo ? p3 + (o3 - p3) * fz : o3 + (p3 - o3) * fz;
+      }
     }
     if (!routed || dbg === 3 || dbg === 4) return;
     // K81 ROUTE BANDS, oldest first (FIELD_GLSL junctionField): the nearest
@@ -5380,9 +5408,9 @@ export class RibbonRenderer {
           const m = J[r0 + 1];
           let s = Math.max(0, Math.min(1, (tau + m) / (2 * m)));
           s = s * s * (3 - 2 * s);
-          for (let c = 0; c < 3; c++) mA[c] = mA[c] + (mB[c] - mA[c]) * s;
+          for (let c = 0; c < nc; c++) mA[c] = mA[c] + (mB[c] - mA[c]) * s;
         }
-        for (let c = 0; c < 3; c++) out[c] = out[c] + (mA[c] - out[c]) * cov;
+        for (let c = 0; c < nc; c++) out[c] = out[c] + (mA[c] - out[c]) * cov;
       }
       base += 1 + nv;
     }
@@ -5514,12 +5542,12 @@ export class RibbonRenderer {
           nDiscs * DISC_SEGS) *
         3;
       this.filletMesh = new TriFanMesh(verts, idx);
-      this.filletMesh.mesh.shader = junctionShader();
+      this.filletMesh.mesh.shader = this.explorePieces ? junctionShaderExplore() : junctionShader();
       this.filletLayer.addChild(this.filletMesh.mesh);
       // The top mesh gets the same capacity: any junction can flip
       // layers frame to frame as threads move.
       this.filletTopMesh = new TriFanMesh(verts, idx);
-      this.filletTopMesh.mesh.shader = junctionShader();
+      this.filletTopMesh.mesh.shader = this.explorePieces ? junctionShaderExplore() : junctionShader();
       this.filletTopLayer!.addChild(this.filletTopMesh.mesh);
     }
     const fmBottom = this.filletMesh;
@@ -6370,11 +6398,11 @@ export class RibbonRenderer {
       // No junction within reach (shouldn't happen): host-axis fallback.
       if (
         this.explorePieces &&
-        (this.exploreVisAt(tip.hostChain, tip.hostCtrl) < EXPLORE_JOINT_VIS ||
+        (this.exploreVisAt(tip.hostChain, tip.hostCtrl) <= EXPLORE_JOINT_MIN ||
           this.exploreVisAt(
             tip.chain,
             tip.atEnd ? this.ps.chains[tip.chain].length - 1 : 0
-          ) < EXPLORE_JOINT_VIS)
+          ) <= EXPLORE_JOINT_MIN)
       ) {
         continue;
       }
