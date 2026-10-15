@@ -1,15 +1,24 @@
 import { describe, expect, it } from "vitest";
 import {
   EDGE_MARGIN,
+  HEAD_INDICATOR_KEY,
   HYSTERESIS,
   INDICATOR_EDGE,
   INDICATOR_GAP,
+  INDICATOR_SCALE_MAX,
+  INDICATOR_SCALE_MIN,
   INDICATOR_SIZE,
+  INDICATOR_SIZE_KEY,
+  MINOTAUR_INDICATOR_KEY,
+  blendPlacement,
+  indicatorFrame,
+  indicatorPrefs,
   layoutIndicators,
   offscreen,
+  parseIndicatorScale,
   placeIndicator,
 } from "../../src/ui/offscreen_indicators";
-import type { Rect } from "../../src/ui/offscreen_indicators";
+import type { Placement, Rect } from "../../src/ui/offscreen_indicators";
 
 // K73: the off-screen indicators' geometry.
 const VW = 1000;
@@ -192,5 +201,117 @@ describe("a frame's layout (every registered target)", () => {
     const c = { id: "finish", at: { x, y: 300 }, radius: r };
     expect(layoutIndicators([{ ...c, shown: false }], VW, VH, SAFE, []).size).toBe(0);
     expect(layoutIndicators([{ ...c, shown: true }], VW, VH, SAFE, []).size).toBe(1);
+  });
+});
+
+// K198 stage 2: the size setting, the panel's slide and the stored prefs.
+describe("the size setting", () => {
+  const SAFE: Rect = { left: 0, top: 0, right: 0, bottom: 0 };
+
+  it("the default size keeps today's frame", () => {
+    expect(indicatorFrame(VW, VH, SAFE)).toEqual(FRAME);
+    expect(indicatorFrame(VW, VH, SAFE, INDICATOR_SIZE)).toEqual(FRAME);
+  });
+
+  it("a bigger disc sits further in, the same distance from the edge", () => {
+    for (const k of [INDICATOR_SCALE_MIN, 1, 1.5, INDICATOR_SCALE_MAX]) {
+      const size = INDICATOR_SIZE * k;
+      const out = layoutIndicators(
+        [{ id: "finish", at: { x: 1600, y: 300 }, radius: 8, shown: false }],
+        VW, VH, SAFE, [], size
+      );
+      expect(out.get("finish")!.x).toBeCloseTo(VW - INDICATOR_EDGE - size / 2, 9);
+    }
+  });
+
+  it("two indicators keep a disc and a gap apart at any size", () => {
+    for (const k of [INDICATOR_SCALE_MIN, 1, INDICATOR_SCALE_MAX]) {
+      const size = INDICATOR_SIZE * k;
+      const out = layoutIndicators(
+        [
+          { id: "finish", at: { x: 2000, y: 300 }, radius: 8, shown: false },
+          { id: "minotaur", at: { x: 2000, y: 310 }, radius: 8, shown: false },
+        ],
+        VW, VH, SAFE, [], size
+      );
+      const a = out.get("finish")!;
+      const b = out.get("minotaur")!;
+      expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThanOrEqual(size + INDICATOR_GAP - 1e-6);
+    }
+  });
+});
+
+describe("the panel's slide (blendPlacement)", () => {
+  const target = { x: 2000, y: -400 };
+  const aim = (x: number, y: number): number => Math.atan2(target.y - y, target.x - x);
+  // Without the panel: on the right edge; with it: on the top edge, near
+  // the top-right corner (the shorter way is round that corner).
+  const a: Placement = { x: FRAME.right, y: 200, angle: aim(FRAME.right, 200) };
+  const b: Placement = { x: 700, y: FRAME.top, angle: aim(700, FRAME.top) };
+
+  it("is the place without the panel at 0 and with it at 1", () => {
+    expect(blendPlacement(FRAME, a, b, 0, target)).toEqual(a);
+    expect(blendPlacement(FRAME, a, b, 1, target)).toEqual(b);
+  });
+
+  it("slides along the frame, the shorter way, at an even pace", () => {
+    const pts = [0.1, 0.25, 0.5, 0.75, 0.9].map((t) => blendPlacement(FRAME, a, b, t, target));
+    for (const p of pts) {
+      expect(onFrame(p.x, p.y)).toBe(true);
+      // Round the top-right corner, never via the bottom.
+      expect(p.x).toBeGreaterThanOrEqual(700 - 1e-6);
+      expect(p.y).toBeLessThanOrEqual(200 + 1e-6);
+      expect(near(p.angle, aim(p.x, p.y))).toBe(true);
+    }
+    // Arc length from a: (200 - 31) down the right edge, (969 - 700)
+    // along the top; t of the way.
+    const total = 200 - FRAME.top + FRAME.right - 700;
+    const at = (t: number): number => {
+      const p = blendPlacement(FRAME, a, b, t, target);
+      return near(p.x, FRAME.right) ? 200 - p.y : 200 - FRAME.top + (FRAME.right - p.x);
+    };
+    for (const t of [0.1, 0.5, 0.9]) expect(at(t)).toBeCloseTo(total * t, 6);
+  });
+
+  it("takes the shorter way across the top-left seam too", () => {
+    const l: Placement = { x: FRAME.left, y: 100, angle: 0 };
+    const r: Placement = { x: 100, y: FRAME.top, angle: 0 };
+    for (const t of [0.2, 0.5, 0.8]) {
+      const p = blendPlacement(FRAME, l, r, t, target);
+      expect(onFrame(p.x, p.y)).toBe(true);
+      expect(p.x).toBeLessThanOrEqual(100 + 1e-6);
+      expect(p.y).toBeLessThanOrEqual(100 + 1e-6);
+    }
+  });
+});
+
+describe("the stored indicator settings", () => {
+  it("defaults: both switches on, the size 1", () => {
+    expect(indicatorPrefs(() => null)).toEqual({ head: true, minotaur: true, scale: 1 });
+  });
+
+  it("reads each key on its own", () => {
+    const store: Record<string, string> = {
+      [HEAD_INDICATOR_KEY]: "0",
+      [MINOTAUR_INDICATOR_KEY]: "1",
+      [INDICATOR_SIZE_KEY]: "1.5",
+    };
+    expect(indicatorPrefs((k) => store[k] ?? null)).toEqual({ head: false, minotaur: true, scale: 1.5 });
+    expect(indicatorPrefs((k) => (k === MINOTAUR_INDICATOR_KEY ? "0" : null))).toEqual({
+      head: true,
+      minotaur: false,
+      scale: 1,
+    });
+  });
+
+  it("a stored size is clamped to the slider and kept to 2 decimals", () => {
+    expect(parseIndicatorScale(null)).toBe(1);
+    expect(parseIndicatorScale("")).toBe(1);
+    expect(parseIndicatorScale("big")).toBe(1);
+    expect(parseIndicatorScale("Infinity")).toBe(1);
+    expect(parseIndicatorScale("0.1")).toBe(INDICATOR_SCALE_MIN);
+    expect(parseIndicatorScale("9")).toBe(INDICATOR_SCALE_MAX);
+    expect(parseIndicatorScale("1.234")).toBe(1.23);
+    expect(parseIndicatorScale("0.6")).toBe(0.6);
   });
 });

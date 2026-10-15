@@ -35,6 +35,10 @@ import {
 } from "../render/background_model";
 import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
 import { MARKER_SIZE_MAX, MARKER_SIZE_MIN } from "../render/marker_glyphs";
+import {
+  INDICATOR_SCALE_MAX,
+  INDICATOR_SCALE_MIN,
+} from "./offscreen_indicators";
 import { PLUCK_WHOLE_MAX } from "../render/pluck_model";
 import type { MotionPref } from "./motion";
 
@@ -52,6 +56,12 @@ export interface PanelSettings {
   // to its target (off: indicators let taps through to the maze).
   finishIndicator: boolean;
   tapToPan: boolean;
+  // K198 stage 2 viewer preferences (persisted per browser, never link
+  // params): the head's and the minotaur's indicators, and one size for all
+  // three (a multiplier on the default size).
+  headIndicator: boolean;
+  minotaurIndicator: boolean;
+  indicatorSize: number;
   // K120 viewer preference (persisted per browser; ui/move_pad.ts): the
   // four-way move pad, on by default for coarse pointers.
   movePad: boolean;
@@ -78,6 +88,9 @@ const SETTINGS_DEFAULTS: PanelSettings = {
   showMazeStats: false,
   finishIndicator: true,
   tapToPan: true,
+  headIndicator: true,
+  minotaurIndicator: true,
+  indicatorSize: 1,
   movePad:
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
@@ -99,6 +112,10 @@ export interface PanelCallbacks {
   onStatsToggle: (visible: boolean) => void;
   onMazeStatsToggle: (visible: boolean) => void;
   onFinishIndicatorToggle: (visible: boolean) => void;
+  // K198 stage 2: the head's and the minotaur's indicators, and the size.
+  onHeadIndicatorToggle: (visible: boolean) => void;
+  onMinotaurIndicatorToggle: (visible: boolean) => void;
+  onIndicatorSizeChange: (scale: number) => void;
   onTapToPanToggle: (on: boolean) => void;
   onMovePadToggle: (on: boolean) => void;
   onMotionChange: (pref: MotionPref) => void;
@@ -820,6 +837,36 @@ export function buildPanel(
     "While the finish is off screen, a marker at the edge of the screen points the way to it (under fog of war too, as a direction only). Remembered per browser.",
     SETTINGS_DEFAULTS.finishIndicator,
     () => callbacks.onFinishIndicatorToggle(settings.finishIndicator === true)
+  );
+  // K198 stage 2: the other two indicators' switches and one size for all
+  // three (no step: an edit keeps 2 decimals).
+  const headIndicatorRow = row(
+    fMaze, s, "headIndicator", undefined,
+    "While your own position is off screen (you panned away, or a long run outpaced the camera), a marker at the edge of the screen points back to it. Remembered per browser.",
+    SETTINGS_DEFAULTS.headIndicator,
+    () => callbacks.onHeadIndicatorToggle(settings.headIndicator === true)
+  );
+  const minotaurIndicatorRow = row(
+    fMaze, s, "minotaurIndicator", undefined,
+    "In a real-time chase, while the minotaur is off screen, a marker at the edge of the screen points to it. Remembered per browser.",
+    SETTINGS_DEFAULTS.minotaurIndicator,
+    () => callbacks.onMinotaurIndicatorToggle(settings.minotaurIndicator === true)
+  );
+  const indicatorSizeRow = row(
+    fMaze, s, "indicatorSize",
+    {
+      min: INDICATOR_SCALE_MIN,
+      max: INDICATOR_SCALE_MAX,
+      keyScale: 0.05,
+      pointerScale: 0.01,
+      format: (v: number) => v.toFixed(2),
+    },
+    "The size of the edge markers (the finish's, your position's, the minotaur's): 1 = the default. The markers in the maze have their own size (markerSize). Remembered per browser.",
+    SETTINGS_DEFAULTS.indicatorSize,
+    () => {
+      settings.indicatorSize = Math.round(settings.indicatorSize * 100) / 100;
+      callbacks.onIndicatorSizeChange(settings.indicatorSize);
+    }
   );
   const tapToPanRow = row(
     fMaze, s, "tapToPan", undefined,
@@ -1647,6 +1694,9 @@ export function buildPanel(
     moveSpeedRow.hidden = !fab || realtime;
     mazeStatsRow.hidden = !fab;
     finishIndicatorRow.hidden = !fab;
+    headIndicatorRow.hidden = !fab;
+    minotaurIndicatorRow.hidden = !realtime;
+    indicatorSizeRow.hidden = !fab;
     tapToPanRow.hidden = !fab;
     movePadRow.hidden = !fab;
     confettiRow.hidden = !fab;

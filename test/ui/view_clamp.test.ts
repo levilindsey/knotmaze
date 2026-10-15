@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   PANEL_GAP,
+  PANEL_TWEEN_S,
   RANGE_EASE,
   clampFitView,
   easeIntoRange,
+  easePanel,
   noAllowance,
   panRange,
+  stepPanelTween,
+  stepRange,
 } from "../../src/ui/view_clamp";
 import type { FitView, OpenPanel, PanBounds } from "../../src/ui/view_clamp";
 
@@ -307,5 +311,154 @@ describe("easing back into range", () => {
     expect(easeIntoRange(v, DESK.w, DESK.h, DESK.panel, allow)).toBe(false);
     expect(v).toEqual(view(2, -300, -200));
     expect(allow).toEqual(noAllowance());
+  });
+});
+
+// K198 stage 2: the range sees the panel through a time-based tween.
+describe("the panel edge's tween", () => {
+  // The fit camera's frames at `hz`: the panel's clock steps, then the
+  // range (stepRange, as main.ts easeView does). Returns panX by frame,
+  // with each frame's time.
+  const run = (
+    g: Geo,
+    v: FitView,
+    open: boolean,
+    hz: number,
+    seconds: number,
+    u0: number,
+    allow: PanBounds = noAllowance(),
+    dur = PANEL_TWEEN_S
+  ): Array<{ t: number; panX: number; u: number }> => {
+    let u = u0;
+    const out = [{ t: 0, panX: v.panX, u }];
+    const dt = 1 / hz;
+    for (let i = 1; i <= Math.round(seconds * hz); i++) {
+      const before = { ...g.panel, open: easePanel(u) };
+      u = stepPanelTween(u, open, dt, dur);
+      const now = { ...g.panel, open: easePanel(u) };
+      stepRange(v, g.w, g.h, MAX, before, now, allow);
+      out.push({ t: i * dt, panX: v.panX, u });
+    }
+    return out;
+  };
+  const limit = (g: Geo): number => g.panel.left - PANEL_GAP - g.panel.mazeRight;
+
+  it("openness 1 is exactly stage 1's range, 0 the closed one, between scales the widening", () => {
+    for (const g of [...UNDER, WIDE]) {
+      for (const z of ZOOMS) {
+        expect(panRange(g.w, g.h, z, { ...g.panel, open: 1 })).toEqual(panRange(g.w, g.h, z, g.panel));
+        expect(panRange(g.w, g.h, z, { ...g.panel, open: 0 })).toEqual(panRange(g.w, g.h, z, null));
+        const a = panRange(g.w, g.h, z, null).loX;
+        const b = panRange(g.w, g.h, z, g.panel).loX;
+        expect(panRange(g.w, g.h, z, { ...g.panel, open: 0.25 }).loX).toBeCloseTo(a + (b - a) * 0.25, 9);
+      }
+    }
+  });
+
+  it("the clock is time-based: 30, 60 and 120 Hz put the view in the same place at the same time", () => {
+    for (const g of UNDER) {
+      const at = (hz: number) => run(g, view(1, limit(g), 0), false, hz, 0.5, 1);
+      const f30 = at(30);
+      const f60 = at(60);
+      const f120 = at(120);
+      for (let i = 0; i < f30.length; i++) {
+        expect(f60[i * 2].t).toBeCloseTo(f30[i].t, 9);
+        expect(f60[i * 2].panX).toBeCloseTo(f30[i].panX, 6);
+        expect(f120[i * 4].panX).toBeCloseTo(f30[i].panX, 6);
+      }
+      // Home on the first frame at or past PANEL_TWEEN_S, at every rate,
+      // and not before.
+      for (const [f, hz] of [[f30, 30], [f60, 60], [f120, 120]] as const) {
+        const home = f.find((x) => x.panX === 0)!;
+        expect(home.t).toBeGreaterThanOrEqual(PANEL_TWEEN_S - 1e-9);
+        expect(home.t).toBeLessThan(PANEL_TWEEN_S + 1 / hz + 1e-9);
+        expect(f.filter((x) => x.t < PANEL_TWEEN_S - 1e-6).every((x) => x.panX < 0)).toBe(true);
+      }
+    }
+  });
+
+  it("the view rides the edge: inward only, no snap, a smooth start and stop", () => {
+    for (const g of UNDER) {
+      const f = run(g, view(1, limit(g), 0), false, 60, 0.4, 1);
+      const steps = f.slice(1).map((x, i) => x.panX - f[i].panX);
+      for (const d of steps) expect(d).toBeGreaterThanOrEqual(0);
+      // The largest frame step: smoothstep's peak slope, 1.5x the mean.
+      const mean = -limit(g) / (PANEL_TWEEN_S * 60);
+      expect(Math.max(...steps)).toBeLessThan(1.55 * mean);
+      // Smooth ends: the first and the last moving frames are a fifth of
+      // the mean step (smoothstep's 15-frame ends at 60 Hz: 0.19).
+      const moving = steps.filter((d) => d > 0);
+      expect(moving[0]).toBeLessThan(0.2 * mean);
+      expect(moving[moving.length - 1]).toBeLessThan(0.2 * mean);
+      // On the edge every frame: exactly the tweened limit.
+      for (const x of f) {
+        const lo = panRange(g.w, g.h, 1, { ...g.panel, open: easePanel(x.u) }).loX;
+        expect(x.panX).toBeCloseTo(lo, 9);
+      }
+    }
+  });
+
+  it("opening at a limit moves nothing", () => {
+    for (const g of UNDER) {
+      // Closed: the view at the closed limit (home at zoom 1, the left limit at zoom 2).
+      for (const z of [1, 2]) {
+        const v = view(z, g.w * (1 - z), 0);
+        const f = run(g, v, true, 60, 0.4, 0);
+        for (const x of f) expect(x.panX).toBe(g.w * (1 - z));
+      }
+    }
+  });
+
+  it("reverses mid-way from where it is, and reduced motion (dur 0) jumps", () => {
+    // Closing for 0.1 s, then opening again: the clock turns back from
+    // where it is (no jump), and the edge goes back out.
+    let u = 1;
+    for (let i = 0; i < 6; i++) u = stepPanelTween(u, false, 1 / 60);
+    expect(u).toBeCloseTo(1 - 0.1 / PANEL_TWEEN_S, 9);
+    const back = stepPanelTween(u, true, 1 / 60);
+    expect(back).toBeCloseTo(u + 1 / 60 / PANEL_TWEEN_S, 9);
+    expect(stepPanelTween(0.4, false, 1 / 60, 0)).toBe(0);
+    expect(stepPanelTween(0.4, true, 1 / 60, 0)).toBe(1);
+    // A closing view at the limit under reduced motion is home on the next frame.
+    const g = PHONE;
+    const f = run(g, view(1, limit(g), 0), false, 60, 0.05, 1, noAllowance(), 0);
+    expect(f[1].panX).toBe(0);
+    expect(easePanel(0)).toBe(0);
+    expect(easePanel(1)).toBe(1);
+    expect(easePanel(0.5)).toBeCloseTo(0.5, 12);
+  });
+
+  it("a gesture mid-tween is held at the moving edge outward and free inward", () => {
+    const g = DESK;
+    const v = view(1, limit(g), 0);
+    const allow = noAllowance();
+    const f = run(g, v, false, 60, 0.1, 1, allow);
+    const u = f[f.length - 1].u;
+    const edge = panRange(g.w, g.h, 1, { ...g.panel, open: easePanel(u) }).loX;
+    expect(v.panX).toBeCloseTo(edge, 9);
+    const out = view(1, edge - 100, 0);
+    clampFitView(out, g.w, g.h, MAX, { ...g.panel, open: easePanel(u) }, allow);
+    expect(out.panX).toBeCloseTo(edge, 9);
+    const inward = view(1, edge / 2, 0);
+    clampFitView(inward, g.w, g.h, MAX, { ...g.panel, open: easePanel(u) }, allow);
+    expect(inward.panX).toBe(edge / 2);
+  });
+
+  it("a view a resize left outside still eases in at RANGE_EASE a frame on top of the edge", () => {
+    // Open, a resize: the view sits 100 px past the limit. Hold the panel
+    // open: stepRange eases exactly like easeIntoRange.
+    const g = DESK;
+    const lim = limit(g);
+    const a = view(1, lim - 100, 0);
+    const b = view(1, lim - 100, 0);
+    const allowA = noAllowance();
+    const allowB = noAllowance();
+    easeIntoRange(a, g.w, g.h, g.panel, allowA, 0);
+    easeIntoRange(b, g.w, g.h, g.panel, allowB, 0);
+    for (let i = 0; i < 20; i++) {
+      easeIntoRange(a, g.w, g.h, g.panel, allowA);
+      stepRange(b, g.w, g.h, MAX, g.panel, g.panel, allowB);
+      expect(b.panX).toBeCloseTo(a.panX, 9);
+    }
   });
 });
