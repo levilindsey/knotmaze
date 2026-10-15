@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K377.
+Next free ID: K378.
 
 ## Waiting on Levi
 
@@ -106,6 +106,9 @@ Next free ID: K377.
 - **K368** · High contrast's ripple (K289 e): rec ring under High contrast
   (`HIGH_CONTRAST_OVERRIDES`, `src/ui/accessibility.ts`); glint has little room
   on light threads over black. Inferred, not shot; fallback a stronger glint.
+- **K377** · K5/K6's seven calls (`docs/design/K5_K6_split.md` 8), each with a
+  rec: 30 fps rest cadence, idle probes, R lane before G3/G4 stages, K290 before
+  R2/R5, CLAUDE.md lines, drift pause, `@internal ribbon`. None blocks M1.
 
 ## In progress
 
@@ -244,13 +247,13 @@ Next free ID: K377.
   - next: G3-0 (the capture/restore hook, the sample table, the frame bench, the pixel A/B, a phone pass if reachable), never alongside K90; Levi's calls are K361 (none blocks G3-0)
   - brief: `docs/design/K8_stage1.md`, "Stage 2 (G3-0)"
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
-  with seams so G3 becomes a module swap; K6 (one frame loop) is designed with
-  it. Levi wants both soon (2026-10-14 23:46).
-  - owner: agent `aa60ed52201f75682` (opus) of claude session d8031183, the design (docs only) from 02:37 (cap 04:37)
-  - branch: `worktree-agent-aa60ed52201f75682` (`.claude/worktrees/agent-aa60ed52201f75682`, from `f04aa4b`); last commit: `f04aa4b` (master) until its first WIP commit
-  - evidence: its worktree's `.claude/probes/K5/design/`
-  - next: the design and stage 1's brief in `docs/design/K5_K6_split.md`; stage 1 starts after K7 stage 5 merges (about 04:40)
-  - brief: this item, K6's and `docs/design/K7_worker.md` (lines 20-35); the design doc once merged
+  with seams so G3 becomes a module swap; K6 rides it. Design merged:
+  `docs/design/K5_K6_split.md` (its calls: K377).
+  - owner: nobody since 2026-10-15 03:14 (design done and merged; agent `aa60ed52201f75682` of claude session d8031183, worktree kept)
+  - branch: mainline; last commit: `4931204`
+  - evidence: `.claude/probes/K5/design/` (eight region maps of main.ts and ribbon_renderer.ts)
+  - next: stage M1 once K7 stage 5 merges (re-map main.ts first), then section 5's stages: M1-M8, and R1-R5 (R1 after G3-0 merges); section 6 orders them against the queue
+  - brief: `docs/design/K5_K6_split.md`, "7. Stage 1 brief"
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): a `burnt` dropdown,
   gone (default: not drawn, under threads' gaps close, fans drop the arm) or
   char (a burnt coloring in the shader). Burn stage 3a; 3b is the front's FX.
@@ -364,10 +367,9 @@ Every other item below waits on the trigger it names.
   and checklist, then feed K297's pared-down set
   (`docs/design/K339_panel_audit.md`, item 8). Optionally teach the
   script to flag dead rows and cut-off labels.
-- **K6** · One frame loop driven by what-changed flags (after K5):
-  replaces K21's stand-in `sceneAnimating()` in main.ts, and the
-  render-on-demand loop (K24) asks `background.needsFrame()`. After K7's
-  stage 5; first in line with K5.
+- **K6** · One frame loop driven by what-changed flags
+  (`docs/design/K5_K6_split.md`, 4 and 5.4): K6-1, shadow flags, after M3;
+  K6-2 (skip CPU work) and K6-3 (= K24, skip the draw) after M6.
 - **K9** · G4: smooth-union SDF junction webs (cuspRadius = blend
   radius); A/B crops at cr 1, 3, 6 before the fans are deleted. Also
   closes G1's x160 leftover (a faint tick at a wedge flank, merge-core
@@ -1145,9 +1147,6 @@ Every other item below waits on the trigger it names.
   allows; down when struggling). Part of K6, refined after G3.
 - **K23** · GPU particles (G2.4), GPU fog-of-war accumulation, the yarn as
   a gap-masked ribbon (G3-5).
-- **K24** · Render on demand when the scene is fully static (battery);
-  part of K6. An animated background (K21) must not defeat it. After
-  K7's stage 5; it reads `host.asleep`.
 - **K322** · Art, sound and music by people (Levi, 2026-10-14 21:47):
   commission or license better icon art, sound effects and music before
   launch, and credit each artist on the credits page (K321) with the
@@ -1381,6 +1380,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   the phone (97% busy, lagS 1.04 s by 8 s).
 
 ## Done
+
+- **K24** · Render on demand when the scene is static. Dropped: folded into K6-3 (`docs/design/K5_K6_split.md`, 5.4), 2026-10-15.
 
 - **K279** · Plucks you can see, feel and hear: the ripple (glint by default), vibration, an optional tug, quieter auto plucks. Done in 50c1aab, ad2618a and b1524de..810af10 (2026-10-15); follow-ups K365-K369.
 

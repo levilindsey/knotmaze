@@ -2818,3 +2818,27 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   arm); default gone. Burn stage 3 builds both on K76's visibility and
   K268's shaped gaps, so those briefs must not assume visibility only
   grows. `docs/design/K114_burn.md` (stage 3).
+
+## K5 (2026-10-15, the design merged)
+
+- **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
+  with seams so G3 becomes a module swap; K6 (one frame loop) is designed with
+  it. Levi wants both soon (2026-10-14 23:46).
+  - owner: agent `aa60ed52201f75682` (opus) of claude session d8031183, the design (docs only) from 02:37 (cap 04:37)
+  - branch: `worktree-agent-aa60ed52201f75682` (`.claude/worktrees/agent-aa60ed52201f75682`, from `f04aa4b`); last commit: `f04aa4b` (master) until its first WIP commit
+  - evidence: its worktree's `.claude/probes/K5/design/`
+  - next: the design and stage 1's brief in `docs/design/K5_K6_split.md`; stage 1 starts after K7 stage 5 merges (about 04:40)
+  - brief: this item, K6's and `docs/design/K7_worker.md` (lines 20-35); the design doc once merged
+
+## K6 (2026-10-15, staged by the K5 design)
+
+- **K6** · One frame loop driven by what-changed flags (after K5):
+  replaces K21's stand-in `sceneAnimating()` in main.ts, and the
+  render-on-demand loop (K24) asks `background.needsFrame()`. After K7's
+  stage 5; first in line with K5.
+
+## K24 (2026-10-15, folded into K6-3)
+
+- **K24** · Render on demand when the scene is fully static (battery);
+  part of K6. An animated background (K21) must not defeat it. After
+  K7's stage 5; it reads `host.asleep`.
