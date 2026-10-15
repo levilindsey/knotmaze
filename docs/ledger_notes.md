@@ -2938,3 +2938,26 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - evidence: `.claude/probes/K5/design/` (eight region maps of main.ts and ribbon_renderer.ts)
   - next: stage M1 once K7 stage 5 merges (re-map main.ts first), then section 5's stages: M1-M8, and R1-R5 (R1 after G3-0 merges); section 6 orders them against the queue
   - brief: `docs/design/K5_K6_split.md`, "7. Stage 1 brief"
+
+## K307 (2026-10-15, stage 2 merged)
+
+- **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
+  prioritize). K7 s4's trace: GPU compile waits (bg-vellum's 190 ms queued behind
+  12-15 small links); the worker can't hide them. Stage 2: the warm-up.
+  - owner: agent `a11d7ce60428b687d` (opus) of claude session d8031183, stage 2 from 03:55 (cap 05:55; ports 5830-5839)
+  - branch: `worktree-agent-a11d7ce60428b687d` (`.claude/worktrees/agent-a11d7ce60428b687d`, from `97d7c31`); last commit: `97d7c31` (master) until its first WIP commit
+  - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches; the local branch `k307-proto` (51f7480) holds throwaway prototypes, never merged); K7 s4's traces in `.claude/probes/K7/stage4/k307/`; lore `.claude/rules/render-shaders.md`; stage 2's in its worktree's `.claude/probes/K307/stage2/`
+  - next: stage 2: `program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2; K366, K268 s2's three explore variants and a fire race's first burn (K290: it moves every chain onto the explore programs) ride it; the phone's measures ride K156's next pass
+  - brief: `docs/design/K307_intro_freezes.md` ("Stage 2: the warm-up", "Stage 1 handoff", "Stage 2 launch notes")
+
+## K366 (2026-10-15, the registry half done in K307 s2)
+
+- **K366** · With K307 stage 2 (K279 s2): move the ripple's `warm()` onto the
+  program registry, and take the first-tap residual: one 35-54 ms frame among
+  tap 1's first five, on both builds, ripple or not.
+
+## K382 (2026-10-15, the fire link added from K307 s2)
+
+- **K382** · A fire race's frame cost is unmeasured (K290 3a): from its first burn every
+  ribbon, strip and fan draws through the explore programs, reveal off too. Rec:
+  `burn_page.mjs perf` on both builds, under the lock.

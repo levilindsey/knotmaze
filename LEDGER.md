@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K385.
+Next free ID: K387.
 
 ## Waiting on Levi
 
@@ -236,13 +236,13 @@ Next free ID: K385.
   - brief: `docs/design/K7_worker.md`, "Stage 6 handoff"; stage 7 from "Stage 5 handoff" ("For the next stage")
   - env: the phone: `.claude/probes/K7/stage5/phone_setup.ps1` and `phone_teardown.ps1`, under the phone lock
 - **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
-  prioritize). K7 s4's trace: GPU compile waits (bg-vellum's 190 ms queued behind
-  12-15 small links); the worker can't hide them. Stage 2: the warm-up.
-  - owner: agent `a11d7ce60428b687d` (opus) of claude session d8031183, stage 2 from 03:55 (cap 05:55; ports 5830-5839)
-  - branch: `worktree-agent-a11d7ce60428b687d` (`.claude/worktrees/agent-a11d7ce60428b687d`, from `97d7c31`); last commit: `97d7c31` (master) until its first WIP commit
-  - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches; the local branch `k307-proto` (51f7480) holds throwaway prototypes, never merged); K7 s4's traces in `.claude/probes/K7/stage4/k307/`; lore `.claude/rules/render-shaders.md`; stage 2's in its worktree's `.claude/probes/K307/stage2/`
-  - next: stage 2: `program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2; K366, K268 s2's three explore variants and a fire race's first burn (K290: it moves every chain onto the explore programs) ride it; the phone's measures ride K156's next pass
-  - brief: `docs/design/K307_intro_freezes.md` ("Stage 2: the warm-up", "Stage 1 handoff", "Stage 2 launch notes")
+  prioritize). Stage 2 merged (ce5e4d9..14d34b5): a program registry and a warm-up that links
+  every program blocking (parallel links never reach Chrome's disk cache, K385; call F8).
+  - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree kept)
+  - branch: mainline; last commit: `14d34b5`
+  - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (51f7480), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
+  - next: stage 3: a cold load's still page before the trefoil (0.40-3.19 s, the warm-up's one status read: read after the trefoil shows, or K385's late reads), then K366's first tap, then the phone's measures with K156 (programs persist? Android's cache cap)
+  - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff"
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (b3917ca..f6d10e3): the four G3
   tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
@@ -523,9 +523,9 @@ Every other item below waits on the trigger it names.
 - **K365** · K279's phone round: run the fixed `k279_phone.mjs`, pick the
   ripple's CSS floor (56 or 68; rec 56 unless it reads small), and only if the
   phone drops frames, a bbox replay (K279.md "Stage 2 handoff").
-- **K366** · With K307 stage 2 (K279 s2): move the ripple's `warm()` onto the
-  program registry, and take the first-tap residual: one 35-54 ms frame among
-  tap 1's first five, on both builds, ripple or not.
+- **K366** · The first-tap residual (K279 s2): one 35-54 ms frame among tap 1's first
+  five, on both builds, ripple or not. The ripple's program is on K307's registry since
+  stage 2; the probe is ready (`.claude/probes/K307/stage2/k366_firsttap.mjs`).
 - **K370** · Worker input latency, p50 (target 50 ms): desktop 105 on the daily,
   70 on the knot (in-thread 285; K7 s4); phone 231, first motion 173 (in-thread
   872; K7 s5). Measure each stage first (`k7_latency.mjs`); levers: newest snapshot while grabbed, more drag substeps.
@@ -1154,12 +1154,18 @@ Every other item below waits on the trigger it names.
 - **K380** · G3-0's small residuals (`docs/design/K8_stage1.md`, stage 2 handoff):
   dense update() +0.2-0.3 ms, at its +0.3 limit; the desktop bench's branch means
   +0.04-0.16 ms, unattributed; uploads 0.23/0.44 MB against 0.19/0.35 estimated. Rec: only if G3-1's budget needs it.
-- **K382** · A fire race's frame cost is unmeasured (K290 3a): from its first burn every
-  ribbon, strip and fan draws through the explore programs, reveal off too. Rec:
-  `burn_page.mjs perf` on both builds, under the lock.
+- **K382** · A fire race's costs are unmeasured: its frames (K290 3a: from the first burn every
+  ribbon, strip and fan draws through the explore programs) and its programs' cold link
+  (K307 s2 warms them in wave 1; inferred +0.4-0.7 s to first visible). Rec: `burn_page.mjs perf`.
 - **K384** · K290 3a's small residuals: picking uses pickThread for the rest of a race
   once anything burns, even under char; `pieceVis`'s ring unwrap is ill-defined past
   n - 2 fade (pre-existing; a guard and a test); 13 Pixi attribute warnings at load (master too).
+- **K385** · K307 s2: links under KHR_parallel_shader_compile never reach Chrome's disk
+  cache (D3D11; why is inferred), so the warm-up links blocking and wave 2 is off. Untested:
+  no extension and late status reads; the extension on master; a draw mid-compile.
+- **K386** · K307 s2's small residuals: 131/212 ms frames after visible (parallel build);
+  Pixi's Graphics program unregistered (<45 ms cold); `report()` stamps the blocking read's
+  start; the pre-settle relink (8-26 ms a program); stray cache entries from one run.
 
 ## Approved, to schedule (2026-10-11)
 
