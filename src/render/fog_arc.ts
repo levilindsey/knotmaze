@@ -8,7 +8,8 @@
 
 // Station spacing in ctrl: well under FOG_STAMP_SPACING's 0.8 world at the
 // measured 0.45-0.9 lattice units per ctrl, so the spacing filter, not the
-// stations, sets the stamp density (exploreRuns samples runs the same).
+// stations, sets the stamp density (exploreRuns stamps the same stations,
+// K100: travelOrder below).
 export const FOG_ARC_STEP = 0.5;
 
 // The stations a dot passes moving from `prev` to `cur` on a run traveled
@@ -41,5 +42,58 @@ export function fogArcStations(
     if (d > a) out.push(from + dir * d);
   }
   if (b >= total) out.push(to);
+  return out;
+}
+
+// The two ends of a run, as core/walk_graph's WalkEdge holds them.
+export interface FogRun {
+  va: string;
+  vb: string;
+  ctrlA: number;
+  ctrlB: number;
+}
+
+// The run, departure end and arrival end (ctrl) of each tap of a walk.
+export interface FogTravel {
+  run: number;
+  from: number;
+  to: number;
+}
+
+// The ends (ctrl) of a move along `e` that arrives at vertex `arrival`
+// (the controller's head once the tap is made; beginMove): it departs the
+// other end. A self-loop's direction is unknowable, so it runs A -> B, as
+// does a run that does not touch `arrival`.
+export function moveEnds(
+  e: FogRun,
+  arrival: string
+): { from: number; to: number } {
+  if (e.va === arrival && e.vb !== arrival) return { from: e.ctrlB, to: e.ctrlA };
+  return { from: e.ctrlA, to: e.ctrlB };
+}
+
+// K100: the direction each run of a tap list was traveled, walking from
+// `start`. Every tap, advance or backtrack, moves the head to its run's
+// other end, and the direction is moveEnds', the rule a live move uses.
+// exploreRuns stamps each run from its departure end, so a restore, or a
+// daily's Reset path retreat, lifts the fog at the stations the live moves
+// did: fogArcStations counts them from the departure end, and a run walked
+// out and back has two sets of stations, not one twice. A run that does
+// not touch the head (never, in a legal tap list) is still explored, A ->
+// B, and leaves the head where it was; an unknown run ends the walk, since
+// the head is unknowable after it.
+export function travelOrder(
+  edges: readonly FogRun[],
+  runs: readonly number[],
+  start: string
+): FogTravel[] {
+  const out: FogTravel[] = [];
+  let head = start;
+  for (const run of runs) {
+    const e = edges[run];
+    if (!e) break;
+    head = e.va === head ? e.vb : e.vb === head ? e.va : head;
+    out.push({ run, ...moveEnds(e, head) });
+  }
   return out;
 }
