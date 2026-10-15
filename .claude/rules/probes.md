@@ -276,6 +276,18 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   escape, under the perf lock, with THROTTLE=n for CDP CPU throttling;
   EXTRA appends link keys, VIEWPORT=phone a 412x915 phone viewport).
   Probe links: `?<seed>&am=instant&fi=fuse`. Hook: `__knotFabric().fire`.
+- K111 stage 4 (2026-10-14), hover probes: a TOUCH press on a choice
+  lights nothing (main.ts only sets pendingTap), so a phone-size hovered
+  choice needs a MOUSE at the phone viewport (`phonemouse`: 411x753 dsf
+  2, isMobile, hasTouch false, loaded so; toggling hasTouch mid-page
+  re-lays out the frame, 1.16M px). A touch LIFT within the slop is a
+  tap, and a tap PLUCKS the run (pointerup -> tapPluck): a probe that
+  presses a thread to look and then lifts leaves a pluck moving it for
+  its next shots (the first phone width sheet's "no hover" cell). Lift
+  with a CDP `touchCancel` (a pointercancel never plucks) and wait for
+  `__knotPluckState().active` to empty. Probes:
+  `.claude/probes/K111/stage4/` (`hm_probe.mjs ab|looks`,
+  `rim_sheet.mjs`, `ab_all.ps1`, `census_widths.ps1`, `sheets.ps1`).
 
 ## Census and diagnosis rules
 

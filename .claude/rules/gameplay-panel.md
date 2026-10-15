@@ -103,3 +103,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   dataset.kpTip). The rows keep the STORED value, so a row never lies
   about the design, and `flowSpeedRow.hidden` still keys on the stored
   flowStrength.
+
+- HOVER GLOW WIDTH ROW (K111 stage 4, 2026-10-14; Levi K264): "Hover
+  glow width" (`hoverGlowWidthRow`) sits in the maze folder right under
+  "Hover glow" and hides with it (`!fab`: fabric mode only). A slider,
+  [0.3, 1] step 0.05; its tooltip says how far in from each edge the rim
+  reaches and that it applies live. Its change runs onTrailChange, and
+  undo_stack.ts lists it under that callback's LIVE_EFFECTS, so an undo
+  applies it live. It still shows at strength 0 (a stage 5 candidate).
+  Param: gameplay-links.md; shader: render-paint.md's WIDTH SLIDER.

@@ -125,3 +125,16 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   retuned minoSight (2) and minoAccuracy (0.3) in place and clamps
   minoRoamRuns / minoTerritory to at least 1 in every reader
   (MINO_RUNS_MIN). What they do: gameplay-minotaur.md's CATCH RESETS.
+
+- HOVER GLOW WIDTH PARAM (K111 stage 4, 2026-10-14; Levi K264: "Rim
+  width,0.4 is good, make it a slider., and personal setting."):
+  `hoverGlowWidth` (`hgw`: how far in from each edge the hover rim
+  reaches, in half-widths; default 0.85, RIM_EDGE; `clampHoverGlowWidth`
+  holds it to [0.3, 1]) is APPENDED to codec v5 at index 130, after K80
+  turns stage 2's 128-129. It was 121 on its branch, then 128 after a
+  rebase onto K279 (2409cb9), then 130 after one onto K80 turns stage 2
+  (02194b4); each rebase re-froze the table pin
+  (`test/ui/param_codec.test.ts`). A DAILY_EXEMPT_KEY (a viewer
+  preference: a daily keeps the player's own). `hcl` (High contrast's
+  prototype look, gameplay-motion.md) is NOT a codec param: a temporary
+  key read once at load.
