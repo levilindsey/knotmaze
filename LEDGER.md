@@ -57,6 +57,12 @@ and never reused.
   agent recommends r 0.6, h 0. `docs/design/K114_burn.md` ("Stage 1
   handoff", "R.6.1: the measurement and the verdict");
   `.claude/probes/K114/burn/results_tuning_rebased.md`.
+- **K282** · The HUD's stats have no explanation during play: the HUD is
+  `pointer-events: none`, so its rows (the fire lead among them) are
+  explained only on the end banners and in the daily stats legend
+  (K274). Options: an info button in the panel, a long press on the HUD,
+  or leave it (rec.: leave it; the banner that ends a run explains every
+  row the HUD showed). `docs/design/K274_K277.md` ("Stage 1 handoff").
 - **K257** · K76 section 10's questions, for stage 2c (none blocks 2b;
   2c builds the recommendation where no answer has come): (1) a catch
   under thread reveal re-hides explored thread as `minoRefog` says, one
@@ -625,46 +631,6 @@ and never reused.
     A/B, the ripple's frame cost and the tug's sleep time, the sheet);
     then Levi picks.
   - brief: `docs/design/K279.md` ("Stage 1"; 8ab25d0).
-- **K274** · Explain each stat behind the win banner's info button
-  (Levi, 2026-10-14 about 16:01, verbatim: "With the info button in the
-  end of level stats panel, let's explain what each of the various
-  metrics represent, like efficiency."). Today the button explains the
-  stars (`starsWidget`, `src/ui/maze_hud.ts`). Add a one-line
-  definition per row `statRows` shows (time, path / optimal,
-  efficiency, backtracked, junctions, dead ends, caught, chased), from
-  the formulas in `src/game/maze_stats.ts` and `star_rating.ts`:
-  efficiency is optimal over the route you ended on, backtracks erased,
-  so a wander can show 100% on two stars, and its line says why. The
-  daily stats view too, if it shows the same metrics. Stages that add a
-  stat add its line (the fire's lead, K80 turns stage 2). One small
-  Sonnet stage with K277.
-  - owner: claude agent ae58119bd03f5d4d0 (sonnet) of session d8031183,
-    one stage with K277, started 2026-10-14 16:38 with a 1 h cap (about
-    17:38; ports 5750-5759).
-  - branch: `worktree-agent-ae58119bd03f5d4d0`
-    (`.claude/worktrees/agent-ae58119bd03f5d4d0`), from ba6d574; last
-    commit: `df286f2` (WIP; unpushed).
-  - evidence: `.claude/probes/K274/` in that worktree.
-  - next: the stage (one line per banner stat in a table keyed by row
-    id, with a test that fails on a row without one; the daily stats
-    view if it shows the same metrics; the "Research and techniques"
-    credits; desktop and 360 px screenshots and a sheet); then the merge.
-  - brief: `docs/design/K274_K277.md` ("Stage 1").
-- **K277** · Credit the research and techniques on the credits page
-  (Levi, 2026-10-14 about 16:07, verbatim: "Also, I changed my mind
-  about referencing the researchers/algorithms we used on the credits,
-  unless there's any copyright/legal reason not to"). It reverses
-  K154's "c, none" (`docs/design/levi_notes_2026-10-14.md` item 10).
-  Naming people and methods raises no copyright issue (methods aren't
-  copyrightable): word each as what the code uses or follows, never as
-  an endorsement, and name a game only to describe it. Add a "Research
-  and techniques" section to `notices/credits.ts` and the page (K122),
-  starting from `docs/design/K122.md`'s "Not credited" list and the code
-  comments, plus the research the design docs cite (K80's minotaur
-  rule, K74's sources), each checked against what the code does. One
-  small Sonnet stage with K274.
-  - owner, branch, evidence, next and brief: K274's above (one Sonnet
-    stage builds both).
 
 ## Next, in order
 
@@ -701,8 +667,7 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
 (he may reorder). Running: K268 stage 1 from 16:11 and K279 stage 1
-from 16:16 (each opus, 2 h), and K274 with K277 from 16:38 (one Sonnet
-stage, 1 h). K279's stage 2 waits for Levi's pick. At about 10:57 Levi lifted
+from 16:16 (each opus, 2 h). K279's stage 2 waits for Levi's pick. At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
@@ -711,8 +676,8 @@ K90 stage 1b, K173
 K235 + K239 at 12:44, K174 at 12:53, K111 stage 2 at 13:03, K198
 stage 2 at 14:03, K193 at 14:10, K76 stage 2a at 14:15, the
 burn-race and K74 stage 2 briefs at 14:38, K111 stage 3 at 14:58, K80
-turns stage 1 at 15:19, K76 stage 2b at 16:04, K74 stage 2 at 16:13 and
-the burn race's stage 1 at 16:35; the
+turns stage 1 at 15:19, K76 stage 2b at 16:04, K74 stage 2 at 16:13,
+the burn race's stage 1 at 16:35 and K274 with K277 at 17:37; the
 coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -762,9 +727,11 @@ files at their merges. Then, as code slots free up:
     stages (`docs/design/K80_turns.md`, 7699995): stage 1 (the model and
     the mode) merged at 15:19 (0047148..68524e1); stage 2, its brief
     written from stage 1's handoff (the burn race's stage 1, which also
-    changes how a tap becomes a turn, merged at 16:35), with K269's retune and
-    K273's catch resets; then K137's toggles, K138's
-    M mechanisms and K139.
+    changes how a tap becomes a turn, merged at 16:35), with K269's retune,
+    K273's catch resets, a `STATS` line for each stat it adds (a K274 test
+    enforces it) and K283's banner check; then K137's toggles, K138's
+    M mechanisms and K139. The puzzle mode adds Abbott's Theseus and the
+    Minotaur rule to `RESEARCH` (K277).
 13. K114's round 2, free play first: the burn race in four stages
     (`docs/design/K114_burn.md`). Stage 1 merged at 16:35
     (801c22b..ba6d574); stages 2 (real-time burning), 3 (the look) and 4
@@ -790,7 +757,7 @@ K251 (the displaced disc's slide across the panel); K253 (a quiet phone
 for K193's A/A); K257 (K76's questions for stage 2c); K260 and K261
 (the burn race's
 calls 2-4, and K74 stage 2's calls, built as recommended); K280 (the
-fire's heat);
+fire's heat); K282 (an explanation for the HUD's stats during play);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -829,6 +796,18 @@ K5-K7 (split, frame loop, worker) follow.
   clocks. In K80 turns stage 2, reusing the burn race's restart
   (`restartSolve()` in `src/main.ts`, merged 16:35);
   `docs/design/K80_turns.md`.
+- **K283** · The real game's end banners after K274, from a live solve:
+  `.claude/probes/K155/probe_stars.mjs` (design:phone, daily, caught,
+  realtime; its aria check now expects "how stars and stats work") or
+  `.claude/probes/K274/run_banner.ps1 -Base <dev server>`, under the
+  perf lock. K274's agent checked the real HUD modules on a plain page
+  only. K80 turns stage 2 runs it, since it adds stat lines.
+- **K284** · Credit K74's sources (K277): `docs/design/K74_maze_design.md`
+  builds its goals on Pullen (*Think Labyrinth*, "Making Difficult
+  Mazes") and Zhao and Marquez 2013 (arXiv:1307.5713), but `src/` names
+  neither, and a `RESEARCH` entry needs a file that carries its mark. K74
+  stage 3 adds a comment naming each where the code follows it, then the
+  entries.
 - **K240** · High contrast for the DOM chrome (a K111 follow-up): a CSS
   layer on `:root[data-contrast="high"]`, which K111 already sets, for
   the panel, the HUD and the badge (their styles live in TS-injected
@@ -1096,6 +1075,10 @@ K5-K7 (split, frame loop, worker) follow.
   H1 can shorten the optimal route (tree `1l6e`, 89.6 -> 78.3); (f)
   494f2fe's message says codec index 108; it is 117.
   `docs/design/K74.md` ("Stage 2 handoff").
+- **K285** · Citation details K277 left out until a record confirms
+  them: Jakobsen's venue, Müller et al.'s volume and pages, Jaffe and
+  Smith's pages, the Elias DOI and the editor of Perlin's course notes.
+  `docs/design/K274_K277.md` ("Stage 1 handoff").
 - **K281** · The burn race's stage 1 residuals (K114): (a) `drawFire`
   costs about 2.5 ms a frame on the desktop and about 11 ms at 4x CPU
   throttle once everything is burnt; (b) it ignores K76's thread reveal
@@ -1800,6 +1783,20 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K274** · Explain each stat behind the win banner's info button (Levi,
+  2026-10-14 about 16:01). Done in 71a7c25..79805af (2026-10-14): a `STATS`
+  table in `src/game/maze_stats.ts` (one plain line per row id; a test
+  fails on a row without its line or a line without its row), the end
+  banners' "What the numbers mean" list (the Burnt banner and an unrated
+  win get the info button too) and the daily stats view's legend. Its
+  lines are in `docs/design/K274_K277.md` ("Stage 1 handoff") for Levi's
+  review. Follow-ups: K282, K283.
+- **K277** · Credit the research and techniques on the credits page
+  (Levi, 2026-10-14 about 16:07). Done in 71a7c25..79805af (2026-10-14): eleven
+  `RESEARCH` entries in `notices/credits.ts`, shown in the page's
+  "Research and techniques" section, each with its citation, its use and
+  the files that carry its mark (tested), worded as use, never as
+  endorsement. Follow-ups: K284, K285.
 - **K275** · Junction joints and dead-end caps fade with their thread
   under thread reveal (K76). Levi, 2026-10-14 about 16:50: "Yes" to the
   recommendation (fade, so a cap and K268's shaped cut read one
