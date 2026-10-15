@@ -101,10 +101,16 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   before a reference shot, or a pixel diff blames the feature under test.
   Probe: `.claude/probes/K235/k239_first.mjs <hostA> <hostB> <out> [cases]`
   (pins the paint, flow and background clocks, first frame, neutral
-  refresh, refreshed frame, diffs). NOT FIXED, the same on master and
+  refresh, refreshed frame, diffs). PHYSICS ON is unchanged: master vs K239
+  at rest, pinned, is 0 px in all six cases (fabric with and without flow,
+  knot with and without flow, dense, fabric phone), and two loads of one
+  build are 0 px apart (the floor), so the 0 means something. NOT FIXED,
+  the same on master and
   K239 (0 px between them): a link with sp=0 AND am=instant (or lds=0) and
   physics on (`?b.J&am=instant&fw=0&sp=0`) draws NO threads at load, 393401
   px off a refreshed frame: beginSettle's instant branch shows the root
   without an update() and leaves the first one to the awake step, which a
-  paused page never runs. A non-instant intro updates in finishPresettle,
+  paused page never runs (one manual `__knotRenderer().update()` brings
+  the frame to 1665 px of the refreshed one: `k239_paused.mjs`). A
+  non-instant intro updates in finishPresettle,
   so it is unaffected.
