@@ -4234,6 +4234,7 @@ export class RibbonRenderer {
         if (pass.chain !== chain) continue;
         const arc = this.paintArcAt(samples, this.renderCtrl(pass), closed);
         let line: [number, number, number, number] | null = null;
+        let selfArc: number | undefined;
         let footNeg: number;
         let footPos: number;
         if (isUnder) {
@@ -4242,13 +4243,11 @@ export class RibbonRenderer {
           const os = this.chainSamples[cr.over.chain];
           if (os) {
             const oc = this.ps.chainBreakAfter[cr.over.chain] < 0;
-            this.sampleAt(
-              os,
-              this.paintArcAt(os, this.renderCtrl(cr.over), oc),
-              sc,
-              0
-            );
+            const oArc = this.paintArcAt(os, this.renderCtrl(cr.over), oc);
+            this.sampleAt(os, oArc, sc, 0);
             line = [sc[0], sc[1], sc[2], sc[3]];
+            // K344: a self-crossing's clip stops short of its own over pass.
+            if (cr.over.chain === chain) selfArc = oArc;
           }
         } else {
           footNeg = this.overHalfNeg[ci];
@@ -4261,6 +4260,7 @@ export class RibbonRenderer {
           hide: 0,
           under: isUnder,
           line,
+          selfArc,
           key: ci * 2 + u,
         });
       }
@@ -4347,6 +4347,7 @@ export class RibbonRenderer {
           prev.key = n.key;
           prev.under = n.under;
           prev.line = n.line;
+          prev.selfArc = n.selfArc;
         }
         continue;
       }

@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   a1,
   band,
+  CLIP_SELF_GUARD,
+  CLIP_SELF_MIN,
+  CLIP_SELF_RAMP,
+  clipKeep,
   coverage,
   CUE_GAIN_MAX,
   CUE_RAMP,
@@ -29,6 +33,7 @@ import {
   roundCollapse,
   roundTau,
   segmentLobes,
+  selfPassAhead,
   SHOW_DT,
   SHOW_MIN_H,
   SHOW_MIN_PX,
@@ -40,6 +45,7 @@ import {
   tapLobes,
   throughStation,
   tri,
+  underClipWeight,
   unionGapIds,
   unitShift,
   vibratingSpan,
@@ -961,5 +967,147 @@ describe("a tap inside a junction core (K235)", () => {
     expect(t.core).toBe(false);
     // A loop too short to hold a lobe has no tapped lobe at all.
     expect(tapLobes([], 0.04, true, 0.02, 1).tapped).toBeNull();
+  });
+});
+
+describe("under-node clip on a self-crossing (K344)", () => {
+  // A kink loop: the nodal cubic S (t^2 - 1, t (t^2 - 1)) crosses itself at
+  // the origin, OVER at t = -1 (heading (-1, 1)/sqrt 2) and UNDER at t = +1
+  // (heading (1, 1)/sqrt 2). The lobe runs from the over pass O to the
+  // under pass U, and the under node's clip line is the over pass's own
+  // line through the crossing (ribbon_renderer pluckNodes), so the lobe's
+  // first stretch - the over pass itself - lies on it. Levi's loop
+  // (2026-10-14, crossing 104 of `?qoietk.KIiHgRRXwRlRt8fGrST4sf`) had
+  // length 3.84, A0 0.737, W0 0.39, h 0.26 and the full 1.5 reach.
+  const loop = (S: number) => {
+    const N = 3000;
+    const pts: { x: number; y: number; nx: number; ny: number; s: number }[] = [];
+    let s = 0;
+    for (let i = 0; i <= N; i++) {
+      const t = -1 + (2 * i) / N;
+      const x = S * (t * t - 1);
+      const y = S * t * (t * t - 1);
+      if (i > 0) s += Math.hypot(x - pts[i - 1].x, y - pts[i - 1].y);
+      const dx = 2 * t;
+      const dy = 3 * t * t - 1;
+      const l = Math.hypot(dx, dy);
+      pts.push({ x, y, nx: -dy / l, ny: dx / l, s });
+    }
+    return { pts, L: s };
+  };
+  const OVER_LINE = [0, 0, -Math.SQRT1_2, Math.SQRT1_2];
+  const H = 0.26;
+  const CASING = 0.36;
+  const PX = 0.02;
+  const REACH = 1.5;
+  const SWING = 0.737 + 0.39 + H; // How far the blur reaches off the rest line.
+  // Scales from a tight kink (L 1.2) past Levi's (S 1.41: L 3.83) to a wide
+  // loop (L 6.8); the loop is 2.72 S long.
+  const SCALES = [0.45, 0.8, 1.41, 2.5];
+
+  it("never hides the loop's own over pass, at any size", () => {
+    for (const S of SCALES) {
+      const { pts, L } = loop(S);
+      // The node's arcs on a closed chain of 20: O at 5, U at 5 + L.
+      const ahead = selfPassAhead(5 + L, 5, -1, 20, true);
+      expect(ahead).toBeCloseTo(L, 9);
+      let hiddenBefore = 0;
+      let hiddenAfter = 0;
+      for (const p of pts) {
+        // G1's split: the over pass's side of the midpoint, plus the guard.
+        if (L - p.s < Math.max(CLIP_SELF_MIN, L / 2 - CLIP_SELF_GUARD)) continue;
+        const w = underClipWeight(L - p.s, ahead);
+        for (let u = -SWING; u <= SWING; u += 0.05) {
+          const x = p.x + p.nx * u;
+          const y = p.y + p.ny * u;
+          // Master clipped the whole lobe at weight 1: the straight cut.
+          if (clipKeep(OVER_LINE, REACH, 1, x, y, CASING, PX) < 1) hiddenBefore++;
+          if (clipKeep(OVER_LINE, REACH, w, x, y, CASING, PX) < 1) hiddenAfter++;
+        }
+      }
+      expect(hiddenBefore).toBeGreaterThan(0);
+      expect(hiddenAfter).toBe(0);
+    }
+  });
+
+  it("still tucks the under pass under its partner", () => {
+    for (const S of SCALES) {
+      const { pts, L } = loop(S);
+      const ahead = selfPassAhead(5 + L, 5, -1, 20, true);
+      let inBand = 0;
+      for (const p of pts) {
+        const d = L - p.s;
+        if (d > 0.2) continue;
+        const w = underClipWeight(d, ahead);
+        expect(w).toBe(1);
+        for (let u = -SWING; u <= SWING; u += 0.05) {
+          const x = p.x + p.nx * u;
+          const y = p.y + p.ny * u;
+          const perp = Math.abs(x * OVER_LINE[3] - y * OVER_LINE[2]);
+          const along = Math.abs(x * OVER_LINE[2] + y * OVER_LINE[3]);
+          if (perp > CASING - PX || along > REACH - 0.2) continue;
+          inBand++;
+          expect(clipKeep(OVER_LINE, REACH, w, x, y, CASING, PX)).toBe(0);
+        }
+      }
+      expect(inBand).toBeGreaterThan(0);
+    }
+  });
+
+  it("a foreign partner keeps the clip over the whole lobe, as before", () => {
+    // ribbon_renderer gives a foreign under node no selfArc.
+    expect(selfPassAhead(3, NaN, 1, 20, true)).toBe(Infinity);
+    expect(selfPassAhead(3, NaN, -1, 20, false)).toBe(Infinity);
+    for (let d = 0; d <= 10; d += 0.01) expect(underClipWeight(d, Infinity)).toBe(1);
+    // At weight 1 the mirror is PLUCK_FRAG's clipAt exactly.
+    for (let x = -2; x <= 2; x += 0.1) {
+      for (let y = -2; y <= 2; y += 0.1) {
+        const along = Math.abs(x * OVER_LINE[2] + y * OVER_LINE[3]);
+        const perp = Math.abs(x * OVER_LINE[3] - y * OVER_LINE[2]);
+        let k = 1;
+        if (along <= REACH) {
+          const kk = Math.min(1, Math.max(0, (perp - CASING) / PX + 0.5));
+          const t = Math.min(1, Math.max(0, (along - (REACH - 0.2)) / 0.2));
+          k = kk + (1 - kk) * t * t * (3 - 2 * t);
+        }
+        expect(clipKeep(OVER_LINE, REACH, 1, x, y, CASING, PX)).toBeCloseTo(k, 12);
+      }
+    }
+    // No reach, no clip, whatever the weight.
+    expect(clipKeep(OVER_LINE, 0, 1, 0, 0, CASING, PX)).toBe(1);
+  });
+
+  it("the weight falls smoothly from 1 at the node to 0 at G1's split", () => {
+    for (const ahead of [0.3, 0.6, 1.2, 3.84, 8]) {
+      const end = Math.max(CLIP_SELF_MIN, ahead / 2 - CLIP_SELF_GUARD);
+      const ramp = Math.min(CLIP_SELF_RAMP, end / 2);
+      expect(underClipWeight(0, ahead)).toBe(1);
+      expect(underClipWeight(end - ramp, ahead)).toBe(1);
+      expect(underClipWeight(end, ahead)).toBeCloseTo(0, 12);
+      expect(underClipWeight(ahead, ahead)).toBe(0);
+      // Monotone, and no steeper than the smoothstep's 1.5 / ramp.
+      const step = 0.001;
+      let prev = 1;
+      for (let d = 0; d <= ahead; d += step) {
+        const w = underClipWeight(d, ahead);
+        expect(w).toBeLessThanOrEqual(prev + 1e-12);
+        expect(prev - w).toBeLessThanOrEqual((1.5 * step) / ramp + 1e-9);
+        prev = w;
+      }
+    }
+  });
+
+  it("selfPassAhead walks into the lobe, wrapping only a closed chain", () => {
+    // Levi's loop: over at 58.774, under at 62.615.
+    expect(selfPassAhead(62.615, 58.774, -1, 100, true)).toBeCloseTo(3.841, 9);
+    // From the under node the other way, the over pass is the long way round.
+    expect(selfPassAhead(62.615, 58.774, 1, 100, true)).toBeCloseTo(96.159, 9);
+    // Across a closed chain's seam.
+    expect(selfPassAhead(19, 2, 1, 20, true)).toBeCloseTo(3, 12);
+    // An open chain never wraps: behind the node is no pass ahead.
+    expect(selfPassAhead(19, 2, 1, 20, false)).toBe(Infinity);
+    expect(selfPassAhead(19, 2, -1, 20, false)).toBe(17);
+    // A pass at the node itself is no pass ahead.
+    expect(selfPassAhead(4, 4, 1, 20, true)).toBe(Infinity);
   });
 });

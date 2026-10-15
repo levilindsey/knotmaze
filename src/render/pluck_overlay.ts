@@ -20,6 +20,11 @@
 //     UNDER, overlay pixels inside the partner's casing band are discarded,
 //     so lateral blur tucks under the partner instead of painting over it.
 //     (At over-nodes the overlay is SUPPOSED to draw over the partner.)
+//     On a SELF-crossing the partner is this chain's own over pass, so the
+//     clip acts only on the under pass's side of G1's midpoint split and
+//     fades out before the over pass (K344: a kink loop is one lobe from
+//     its over pass to its under pass, and a lobe-wide clip cut a straight
+//     band out of the loop's own blur; pluck_model's underClipWeight).
 // Soft nodes keep the overlay's core opaque inside footprints (amplitude
 // under 0.9 h there), where the static thread is still drawn beneath.
 //
@@ -83,12 +88,14 @@ import {
   roomAt,
   roundCollapse,
   roundTau,
+  selfPassAhead,
   slopeLimitUniform,
   softMin,
   sympatheticAmplitude,
   tapAmplitude,
   tapLobes,
   throughStation,
+  underClipWeight,
   unionGapIds,
   unitShift,
   vibratingSpan,
@@ -127,6 +134,10 @@ export interface PluckNode {
   // The partner's centerline near the node, as a line [x, y, dx, dy] (unit
   // direction) - the under-node clip (rule 4). null at over / other nodes.
   line: [number, number, number, number] | null;
+  // Under nodes of a SELF-crossing only: the arc of the crossing's over pass
+  // on this same chain (K344: the clip stops short of it). Absent = the
+  // partner is another chain.
+  selfArc?: number;
   key: number; // Stable identity on the chain (re-plucks merge by it).
 }
 
@@ -271,7 +282,7 @@ in vec4 aAux;
 in vec3 aCol;
 in vec4 aClipA;
 in vec4 aClipB;
-in vec2 aClipF;
+in vec4 aClipF;
 
 out float vLat;
 out vec2 vEnv;
@@ -280,7 +291,7 @@ out vec3 vCol;
 out vec2 vPos;
 out vec4 vClipA;
 out vec4 vClipB;
-out vec2 vClipF;
+out vec4 vClipF;
 out vec4 vColor;
 
 uniform mat3 uProjectionMatrix;
@@ -319,7 +330,7 @@ in vec3 vCol;
 in vec2 vPos;
 in vec4 vClipA;
 in vec4 vClipB;
-in vec2 vClipF;
+in vec4 vClipF;
 in vec4 vColor;
 
 out vec4 finalColor;
@@ -367,6 +378,14 @@ float clipAt(vec4 L, float reach, vec2 P, float px) {
   return mix(k, 1.0, smoothstep(reach - 0.2, reach, along));
 }
 
+// K344: a clip at weight w. On a self-crossing the under node's clip fades
+// out before the arc reaches the chain's own over pass (pluck_model's
+// underClipWeight; its CPU mirror is clipKeep); w = 1 is clipAt exactly.
+float clipW(vec4 L, float reach, float w, vec2 P, float px) {
+  float k = clipAt(L, reach, P, px);
+  return w >= 1.0 ? k : mix(1.0, k, w);
+}
+
 void main(void) {
   float h = uPluck.x;
   float p = max(length(vec2(dFdx(vLat), dFdy(vLat))), 1e-4);
@@ -389,7 +408,8 @@ void main(void) {
     rgb = mix(rgb, vec3(a), clamp(uPluck.w * sw * e * SHEEN_WHITE, 0.0, 1.0));
   }
   float px = max(length(dFdx(vPos)), 1e-4);
-  float k = clipAt(vClipA, vClipF.x, vPos, px) * clipAt(vClipB, vClipF.y, vPos, px);
+  float k = clipW(vClipA, vClipF.x, vClipF.z, vPos, px)
+          * clipW(vClipB, vClipF.y, vClipF.w, vPos, px);
   finalColor = vec4(rgb, a) * (vAux.w * k) * vColor;
 }
 `;
@@ -560,7 +580,9 @@ class PluckBlurMesh {
   readonly col = new Float32Array(MAX_STATIONS * 6);
   readonly clipA = new Float32Array(MAX_STATIONS * 8);
   readonly clipB = new Float32Array(MAX_STATIONS * 8);
-  readonly clipF = new Float32Array(MAX_STATIONS * 4);
+  // Per vertex: (reach A, reach B, weight A, weight B); reach 0 = no clip,
+  // weight < 1 only on a self-crossing's lobe (K344).
+  readonly clipF = new Float32Array(MAX_STATIONS * 8);
   // Still plucks only ("pluck-still"): the station's arc turn and tangent
   // (turn, tx, ty, 0) and the gap-slot ids its quads read (-1 = none).
   readonly gap = new Float32Array(MAX_STATIONS * 8);
@@ -608,7 +630,7 @@ class PluckBlurMesh {
     add("aCol", this.col, 3);
     add("aClipA", this.clipA, 4);
     add("aClipB", this.clipB, 4);
-    add("aClipF", this.clipF, 2);
+    add("aClipF", this.clipF, 4);
     add("aGap", this.gap, 4);
     add("aGapId", this.gapId, 4);
     this.mesh = new Mesh({ geometry, shader: pluckShader(), texture: Texture.WHITE });
@@ -660,6 +682,11 @@ interface Lobe {
   hideB: number;
   lineA: [number, number, number, number] | null;
   lineB: [number, number, number, number] | null;
+  // K344: on a self-crossing, the arc from each under node, into the lobe,
+  // to that crossing's over pass (pluck_model's selfPassAhead); Infinity =
+  // the partner is another chain. The clip's weight falls to 0 halfway.
+  selfA: number;
+  selfB: number;
   dead: boolean;
   drawn: boolean; // Got stations in the last layout (only drawn lobes collapse).
   st0: number; // Its first station index in the strip...
@@ -969,6 +996,8 @@ export class PluckOverlay {
         hideB: nB ? nB.hide : 0,
         lineA: nA && nA.under ? nA.line : null,
         lineB: nB && nB.under ? nB.line : null,
+        selfA: nA && nA.under ? selfPassAhead(nA.arc, nA.selfArc ?? NaN, 1, total, closed) : Infinity,
+        selfB: nB && nB.under ? selfPassAhead(nB.arc, nB.selfArc ?? NaN, -1, total, closed) : Infinity,
         dead: false,
         drawn: false,
         st0: 0,
@@ -1431,6 +1460,8 @@ export class PluckOverlay {
       [l.e0, l.e1] = vibratingSpan(s0, s1, a.hide, b.hide);
       l.lineA = a.under ? a.line : null;
       l.lineB = b.under ? b.line : null;
+      l.selfA = a.under ? selfPassAhead(a.arc, a.selfArc ?? NaN, 1, total, closed) : Infinity;
+      l.selfB = b.under ? selfPassAhead(b.arc, b.selfArc ?? NaN, -1, total, closed) : Infinity;
     }
     const lobes = p.lobes;
     let unitLen = 0;
@@ -1510,12 +1541,16 @@ export class PluckOverlay {
           n++;
           continue;
         }
-        // Clip lines (rule 4); the flag carries the reach (0 = no clip).
+        // Clip lines (rule 4); the flag carries the reach (0 = no clip) and
+        // the weight (K344: on a self-crossing, 1 near the under node and 0
+        // from G1's midpoint split on, so the clip never reaches the
+        // chain's own over pass; 1 for a foreign partner).
         const la = l.lineA;
         const lb = l.lineB;
+        const wA = la ? underClipWeight(arc - l.s0, l.selfA) : 0;
+        const wB = lb ? underClipWeight(l.s1 - arc, l.selfB) : 0;
         for (let v = 0; v < 2; v++) {
           const o4 = (n * 2 + v) * 4;
-          const o2 = (n * 2 + v) * 2;
           if (la) {
             m.clipA[o4] = la[0];
             m.clipA[o4 + 1] = la[1];
@@ -1532,8 +1567,10 @@ export class PluckOverlay {
           } else {
             m.clipB.fill(0, o4, o4 + 4);
           }
-          m.clipF[o2] = la ? reach : 0;
-          m.clipF[o2 + 1] = lb ? reach : 0;
+          m.clipF[o4] = la ? reach : 0;
+          m.clipF[o4 + 1] = lb ? reach : 0;
+          m.clipF[o4 + 2] = wA;
+          m.clipF[o4 + 3] = wB;
         }
         n++;
       }
