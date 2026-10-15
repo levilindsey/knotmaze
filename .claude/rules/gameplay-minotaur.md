@@ -154,7 +154,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   start and it in its lair (lifeTurn 0) and re-commits. Display: lair
   until it leaves; hunt = the stalker sees you or prox mode != 0 (the
   committed state); else wander, with real time's glow alphas. PARAMS,
-  codec 109-117 after hoverGlow/minoToward/minoRefog/highlightMode:
+  codec v5 108-116, after minoRefog (107; 109-117 on the branch until
+  K111 stage 3 removed highlightMode's 108):
   minotaur `mt`, minoSpeed `msp` (one), minoTelegraph `mtg` (on),
   minoSight `msi` (4 runs), minoRoamRuns `mro` (8), minoTerritory `mtr`
   (6), minoAccuracy `mac` (0.9), minoPause `mpa` (0.1), minoSleep `msl`
