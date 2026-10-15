@@ -122,7 +122,12 @@ only with the files it is about; `render.md` lists the area's other files.
   0.7, 0.85 and 1 (paint_gameplay.test.ts). Census (strength 0.6):
   default 0.57/255 (master 0.57), 0.3 0.56, 1 0.61, a 4-ctrl run at 0.5
   0.61, none over 2/255. GPU (perf lock, 3200x1800): the ribbon program
-  1.58-1.65 ms on master and branch, at rest and mid-hover (noise). No
+  1.58-1.65 ms on master and branch, at rest and mid-hover (noise). Width
+  sheets (strength 0.4; peak luma lift / lit px, widths 0.3, 0.5, 0.7,
+  0.85, 1): 1400x900 mouse, half-width 5.7 CSS px: +24/947, +25/1512,
+  +26/2086, +27/2511, +27/2935; 411x753 touch press, half-width 2.3:
+  +15/188, +21/281, +23/381, +24/453, +25/522 (0.3 there is under one CSS
+  px wide). `.claude/probes/K111/stage4/sheet/K111_rim_widths_*.png`. No
   dark border draws along a ribbon, so the peak sits on the ribbon's own
   edge; measured, the lift peaks at ±0.92 half-width (the outermost fully
   covered pixel). Peak luma lift at 0.4: +26 at 1400x900 (K145 +20), +25
@@ -166,7 +171,15 @@ only with the files it is about; `render.md` lists the area's other files.
   band (no trains, no breath) and kPaintAt sets st.y = 2 for a hovered
   choice. The CPU mirror is untouched (K152 (3): prototypes skip parity),
   and so is the pluck overlay (composedAtArc), which still shows pulses.
-  Look 0 is master to the pixel (hm_probe.mjs ab ...  hc).
+  Look 0 is master to the pixel (hm_probe.mjs ab ...  hc). Across, e =
+  |2 side - 1|: CONTRAST is black inside HC_LINE 0.3 (ramp 0.1); OUTLINE
+  black inside HC_CORE 0.65 (ramp 0.15; the first sheet's 0.45 read as
+  CONTRAST with a wider line); CHEVRONS alternate every half HC_CHEV_PERIOD
+  (0.8 world per pair) along d, the center HC_CHEV_LEAN 0.3 world ahead
+  of the edges. Sheets `.claude/probes/K111/stage4/sheet/
+  K111_hc_looks_{desktop,phonemouse}.png` (hm_probe.mjs looks, 36/36
+  each: steady, 0 px between pulse phases; about 1680 px off look 0 at
+  1400x900, 1140 at 411x753).
 
 - HIGHLIGHT MODES: removed in K111 stage 3 (2026-10-14). Stage 2
   prototyped glow, rims and contrast looks for the choices behind

@@ -76,9 +76,23 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   palette "pastel" (the lightest preset, already the default, so a no-op
   on default designs), pathColor #ffff00, fadeLength 0 (crisp crossing
   cuts), gap max(stored, 0.12) and markerSize max(stored, 1.5). Its
-  choices keep the pulses: K111 stage 3 removed stage 2's "contrast"
-  highlight mode, and whether High contrast gets a look of its own is
-  waiting on Levi. NOT overridden (candidates):
+  choices keep the pulses (stage 3 removed stage 2's "contrast" mode)
+  until Levi picks one of three PROTOTYPE looks (K111 stage 4, K265:
+  "Maybe the high contrast highlights should get new treatment"):
+  1 CONTRAST, white with a black center line (stage 2's; the brightest,
+  but on a phone the line is about two device pixels); 2 OUTLINE, a dark
+  thread outlined in white (the most luminance contrast against the
+  light pastel threads, whatever their hue); 3 CHEVRONS, black and white
+  chevrons pointing away from the junction (a pattern rather than a
+  color, and direction without motion). All three are steady (no trains,
+  no breath: calm under reduced motion too); a hovered choice goes solid
+  white, a hovered non-choice run keeps its rim, and the choice's webs,
+  fans and arm strips go flat white. TEMPORARY switches: `&hcl=1|2|3`
+  after a link (read once at load; the address bar's rewrite then drops
+  it; not a codec param) and `window.__knotHcLook(n)`. Render side:
+  render-paint.md's HIGH CONTRAST LOOKS; sheets
+  `.claude/probes/K111/stage4/sheet/K111_hc_looks_*.png`. NOT overridden
+  (candidates):
   threadWidth (physics), colorScheme, junctionBlend, gamutArc, the fog's
   look, the DOM chrome. forced-colors recolors the DOM only, never
   canvas content. Probe: `.claude/probes/K111/k111_probe.mjs` (rm | hc |
