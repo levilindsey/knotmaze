@@ -214,8 +214,15 @@ Asleep with no flow, neither uploads anything: `update()` does not run while the
 
 ```glsl
 precision highp float; precision highp int; precision highp sampler2D;
-uniform sampler2D uSamp, uAux, uChain, uRanges;
-vec2 sampAt(int i) { return texelFetch(uSamp, ivec2(i & 1023, i >> 10), 0).xy; }
+uniform sampler2D uSamp, uRadii, uG3Chain, uRanges;     // section 2.2; G2's KSTATIC/KGEOM/KPAINT come with the paint library
+ivec2 rowXY(int t) { return ivec2(t & 1023, t >> 10); } // FloatRows ROW_W 1024
+vec2 sampAt(int i) {                                    // global sample index; 2 samples per texel
+  vec4 q = texelFetch(uSamp, rowXY(i >> 1), 0); return (i & 1) == 0 ? q.xy : q.zw;
+}
+float radAt(int radBase, int j) {                       // radBase < 0: unit width, no fetch
+  if (radBase < 0) return uHalf;
+  vec4 q = texelFetch(uRadii, rowXY(radBase + (j >> 2)), 0); return q[j & 3];
+}
 
 // Signed distance to the round cone (a,ra)->(b,rb) [iq uneven capsule];
 // t = projection param on [a,b] (arc/colour), lat = signed lateral (+ = left).
@@ -241,24 +248,39 @@ float sminQ(float a, float b, float k) {               // C1 polynomial smooth m
 
 **Shared rules.**
 - `pxW` comes from `fwidth(vPos)` at the top of `main()`, in uniform control flow (G1 lore).
-- Every `texture()` after a branch or discard uses `textureLod(..., 0.0)`, as `FIELD_GLSL composeU` already does.
-- **Colour adapter.** `vec4 threadColor(int chain, int k, float t, float side01)` returns composed RGB plus alpha.
-  - Pre-G2: lerp `PAINT[k..k+1]` by t → `textureLod` accent at U → `mix(section, acc.rgb, acc.a)`. Then rainbow stripes from AUX fx and `side01`, and materialize alpha from fx. This is the current `SECTION_FRAG` (`ribbon_renderer.ts:512-558`) moved per fragment.
-  - Post-G2: the call becomes G2's `color(...)` (ctrl from arc through G2's table).
-  - Radius adapter `threadRadius(chain, k)` = h × wMul (AUX.x pre-G2; G2's reveal-schedule function after).
+- Every `texture()` after a branch or discard uses `textureLod(..., 0.0)`, as `FIELD_GLSL composeU` already does. Every texture here is NEAREST and read with `texelFetch`, so in practice this binds only the paint library's own reads.
+- **Paint: G2's library, unchanged (K8 s1).** The ribbon and joint shaders call G2's paint library (`paint_glsl.ts`: `PAINT_FX_GLSL`, `PAINT_SECTION_GLSL`, `PAINT_PAINT_GLSL`, the CPU mirror in `paint_math.ts`). The caller contract is the strip's: chain, fractional ctrl, arc, side01 and pxArc. The SDF caller supplies them as follows.
+  - ctrl: lerped by t between the two segment ends' ctrls (section 3.2).
+  - arc = (k + t) · arcPer.
+  - side01 = 0 at the left edge, exactly as `uv.y` is today. K328's opaque outer band and G2's `kRimAcross` read it.
+  - pxArc = pxW · (|u.x| + |u.y|), with u the owning segment's direction. On a straight segment, that is exactly what `fwidth(arc)` gives the strip. It is not taken from `fwidth`, because the owner of a pixel (k−1, k or k+1) changes across a join. The residual on curves is checked in G3-2's paint census (≤ 2/255).
+  - The section RGB is G2.2's per-vertex value at both segment ends (flat varyings), lerped by t: today's linear-in-arc Gouraud.
+- **Radius:** `radAt` returns h × widthMul from RADII (the reveal mask × the pluck collapse × the swell), or `uHalf` for a chain whose G3 CHAIN texel flags it unit width.
 
 ### 3.2 Ribbon vertex shader (one instance = segment k → k+1 of one chain)
 
 - **Neighbor fetch (ARC-WRAP lore).**
   - Closed chains wrap: `(k+n-1)%n`, `(k+1)%n`, `(k+2)%n` (non-negative operands only; `%` on negatives is undefined in GLSL ES).
   - Open chains clamp. A missing neighbor (k−1 < 0, k+2 > n−1) gets radius sentinel −1. **Never form a last→first chord on an open chain** (the Stage 7b phantom miter and the fourth arc-wrap bite).
-- **Fetch per vertex.** P0..P3 from SAMP, r0..r3 via `threadRadius`, CHAIN info. Binary-search the chain's slot-window list for windows covering [k, k+1] (up to 4 ids; overflow → `gapOverflow`). Binary-search the segment-range list for a CLUSTER entry (fetch its 1-2 member disks) and a FOLD entry (window lo/hi). About 15 fetches per vertex.
+- **Fetch per vertex.**
+  - P0..P3 from SAMP: 2-3 texels, since a texel holds 2 samples. r0..r3 via `radAt`: no fetch for a unit-width chain, otherwise 1-2 texels.
+  - The G3 CHAIN texels, plus G2's KSTATIC C0/C1 and KGEOM G0 (the strip's VS fetches those three today).
+  - Binary-search the chain's slot-window list for windows covering [k, k+1]: up to 4 ids, and overflow → `gapOverflow`.
+  - Binary-search the segment-range list for a CLUSTER entry (fetch its 1-2 member disks) and a FOLD entry (window lo/hi).
+  - About 18 fetches per vertex, ×4 vertices per segment.
+- **Paint at the segment ends (K8 s1).** ctrl at both ends comes from G2's `kCtrlOfArc(k · arcPer)` and `kCtrlOfArc((k+1) · arcPer)`. On a closed chain's seam (k+1 == n), add nCtrl to the end ctrl so the lerp does not run backwards. Both ends' section RGB (G2.2) go out as flat varyings. G2's wrap-pair varyings are not needed: they exist because the strip interpolates across the seam, and a per-fragment arc never does.
+- **K259 early out (G3-4).** Under the thread reveal, a segment outside every VIS piece collapses to a degenerate quad (all four corners at P1), so the fragment shader never runs there. That is K259's "draw only the visible range" for free.
 - **Footprint.** R = max(r0..r3) + uPadPx·pxW_world.
   - **Smooth segment** (no FOLD range, not an open end): trapezoid between the bisector lines at P1 and P2. With nSeg = left normal of (P2−P1) and m1 = normalize(leftN(P1−P0) + nSeg) (m2 likewise), corner = P_e + σ·m_e·R / max(dot(m_e, nSeg), 0.5).
     - The fold criterion guarantees turn angles ≤ ~0.26 rad here, so dot ≥ 0.99.
     - Adjacent quads share bisector edges exactly, so there are no gaps and no overlaps.
   - **Fold segment or open end:** capsule box from P1 − u·R·capStart to P2 + u·R·capEnd, width ±R. capStart/capEnd = 1 for a round cap or a fold, 0 for a flat cap.
-- **Flat varyings.** vP0 = (P0, P1), vP1 = (P2, P3), vR, vIds, vSeg = (chain, k, flags, foldLo), vFoldHi, vJ0/vJ1 = (cx, cy, R, on). Plus interpolated vPos. That is 8 vec4 + 1 vec2, under the WebGL2 minimum of 15.
+- **Varyings.**
+  - Geometry: flat vP0 = (P0, P1), vP1 = (P2, P3), vR, vIds, vSeg = (chain, k, flags, foldLo), vFoldHi, vJ0/vJ1 = (cx, cy, R, on), plus interpolated vPos. That is 8 vec4 + 1 vec2.
+  - Paint: flat vCtrl (both ends), vSect0/vSect1 (RGB at both ends), and G2's vKC0/vKC1/vKG0.
+  - Total: about 13-14 of the 15 vec4 that WebGL2 guarantees, which is tight.
+  - On overflow, the fragment shader fetches KSTATIC C0/C1 and KGEOM G0 itself, 3 more fetches per fragment.
+  - G3-2 queries `MAX_VARYING_VECTORS` on the Pixel's PowerVR before it chooses.
 
 ### 3.3 Ribbon fragment shader
 
@@ -266,25 +288,39 @@ float sminQ(float a, float b, float k) {               // C1 polynomial smooth m
 void main() {
   vec2 p = vPos; vec2 fw = fwidth(p); float pxW = max(max(fw.x, fw.y), 1e-5);   // uniform flow
   float t1, l1, t0, l0, t2, l2;
+  // vP0/vP1/vR are the discs (P, h x widthMul), pinched (P', R') inside a fold window
   float a1 = sdCone(p, vP0.zw, vP1.xy, vR.y, vR.z, t1, l1);                     // own segment
   float a0 = vR.x < 0. ? 1e9 : sdCone(p, vP0.xy, vP0.zw, vR.x, vR.y, t0, l0);   // k-1
   float a2 = vR.w < 0. ? 1e9 : sdCone(p, vP1.xy, vP1.zw, vR.z, vR.w, t2, l2);   // k+1
   if (capFlatStart) a1 = max(a1, dot(vP0.zw - p, uDir));  // anchored tails keep Stage 7b's square cap
   if (capFlatEnd)   a1 = max(a1, dot(p - vP1.xy, uDir));
-  // nearest of the three -> (kn, tn, latn); the +-1 min makes width variation exact at joins
-  if (isFold) { // argmin ownership over [foldLo, foldHi] (SAMP + radius fetches)
-    for (j in window) { aj = sdCone(...); if (aj < aOwn - 1e-7 || (aj <= aOwn && j < k)) discard; }
+  float a = min(a1, min(a0, a2));           // the +-1 min makes width variation exact at joins
+  if (isFold) { // safety net: argmin ownership over [foldLo, foldHi], a sliding 3-sample window
+    for (j in window) { aj = sdCone(pinched j..j+1); if (aj < a1 - 1e-7 || (aj <= a1 && j < k)) discard; }
   }
   if (a > 0.5 * pxW) discard;                                          // cheap early out
   if ((vJ0.w > .5 && distance(p, vJ0.xy) < vJ0.z) || (vJ1.w > .5 && distance(p, vJ1.xy) < vJ1.z)) discard; // joint owns it
-  float cov = aaCov(a, pxW) * clamp(2.0 * rNear / pxW, 0.0, 1.0);     // no 1-px hairline at r -> 0
-  float arc = (float(kn) + tn) * arcPer;                               // closed: mod total
-  float side01 = 0.5 - 0.5 * clamp(latn / rNear, -1.0, 1.0);           // left vertex was uv.y 0
-  float keep = gapKeepArc(pxW, p, arc, segDir(kn), vIds);              // G1 ribbon mode, arc supplied
-  vec4 col = threadColor(chain, kn, tn, side01);
-  finalColor = vec4(col.rgb, 1.0) * vColor * (col.a * cov * keep);      // premultiplied, as G1
+  float r = mix(vR.y, vR.z, t1);
+  float cov = aaCov(a, pxW) * clamp(2.0 * r / pxW, 0.0, 1.0);          // no 1-px hairline at r -> 0
+  // Paint reads the quad's own segment: across a bisector, (k, t=0, lat) == (k-1, t=1, lat).
+  float arc = (float(k) + t1) * arcPer;                                // k < n: no wrap
+  float ctrl = mix(vCtrl.x, vCtrl.y, t1);                              // seam unwrapped in the VS
+  float side01 = 0.5 - 0.5 * clamp(l1 / r, -1.0, 1.0);                 // 0 at the left edge, as uv.y
+  float pxArc = pxW * (abs(uDir.x) + abs(uDir.y));                     // = fwidth(arc) on a straight segment
+  float keep = gapKeepAt(pxW, p, arc, uDir, vIds);                     // casings from the true SAMP centreline
+  vec3 sect = mix(vSect0, vSect1, t1);                                 // G2.2's per-vertex Gouraud
+  vec4 col = /* G2 paint library */ compose(chain, ctrl, arc, side01, pxArc, sect);
+  finalColor = vec4(col.rgb, 1.0) * (col.a * cov * keep);              // premultiplied, as G1
 }
 ```
+
+**Paint reads the owning quad's segment, not the nearest of three.** On a bisector, segment k at t = 0 and segment k−1 at t = 1 give the same arc, and the same lateral distance (a bisector is equidistant from both lines). So ctrl, arc and side01 are continuous across joins, and the varyings need only segment k's two ends. The nearest-of-three min still sets the distance, and with it the edge and the AA.
+
+**The thread reveal's port (K76).**
+- Today `withExplore(SECTION_FRAG)` splices the VIS-item code into the strip shader at exact-once anchors (`explore_glsl.ts`: ANCHOR_DECL, ANCHOR_SURE, ANCHOR_BK, ANCHOR_MAIN, ANCHOR_PXARC, ANCHOR_KCTRL, ANCHOR_GAP). `paint_explore.test.ts` pins them.
+- The SDF fragment shader either carries the same anchor strings, or `withExplore` takes a per-host anchor table. Either way, the test pins both hosts while the strip lives.
+- K268's shaped cut (gap flag 4 SHAPED, the profile texels) lives in `gapKeepAt` and ports with it.
+- This port is why G3-2 waits for the reveal chain (section 5).
 
 **Why ownership holds.**
 - For smooth segments, the bisector partition equals the nearest-segment partition as long as consecutive bisectors do not meet within R. On the concave side, the equidistant set of two lines is their angle bisector.
@@ -292,43 +328,74 @@ void main() {
 - **Fold detection (CPU, O(N), part of `update()`):**
   - Per sample, turn radius ρ = ((la+lb)/4)·cos(θ/2)/sin(θ/2) (the `RibbonMesh` formula).
   - Mark ρ < 1.2·(h·maxWMul + pad).
-  - Expand each mark to ±W, with W = min(ceil((π·ρ + 2R)/spacing), W_max), where W_max = 2 ctrl in samples (the physics same-chain collision skip is ±2 ctrl, `forces.ts:259-263`). Beyond that, collision keeps a chain at least a width apart, so only AA fringes can touch.
+  - Expand each mark to ±W, with W = min(ceil((π·ρ + 2R)/spacing), W_max), where W_max = 2 ctrl in samples (the physics same-chain collision skip is ±2 ctrl, `forces.ts`). Beyond that, collision keeps a chain at least a width apart, so only AA fringes can touch.
   - W_max must also stay below kinkSep (at least 2.6 ctrl), so a self-crossing's two passes never share a fold window and are never Voronoi-split. They stay over/under via their slot.
   - Wrapping ranges on closed chains are split in two.
-- **Caps.**
-  - Free dead-end tips: round, automatically. The free-tip disc fans and their AXIS records go away.
-  - Anchored tails: flat (keeps Stage 7b).
-  - G3-only interim for fused ends: tucked samples are zero-length cones, so the end is a round disk at the tuck point. Write AUX wMul 0.98 on the collapsed samples so G1's 0.99h fused-tip disc fully covers it until G4 deletes both.
 
-### 3.4 Gap slots referencing SAMP (`gap_mask.ts`)
+**The pinch: one-sided, as `RibbonMesh` today (K8 s1; Levi, 2026-10-13: "Pinching is probably better").** Inside a fold window, each sample's disc becomes:
+- r_in = min(h, max(0.95·ρ, 0.3·h)), the strip's concave clamp (`innerCap`), with h the sample's radius;
+- R' = (h + r_in)/2, centred at P' = P + n_convex·(h − r_in)/2.
 
-**Row layout (16 texels wide):**
-- t0 [nPts, hOver, margin, fade]
-- t1 [strength, perp, –, centerArc]
-- t2 [winNeg, winPos, underClosed, totalU]
-- t3 [underTan.xy, marginScaleNeg, marginScalePos]
-- t4 [selfExcl, overBase, kStart, overCount]
-- t5 [fadeScaleNeg, fadeScalePos, centerX, centerY]
-- t6 [overClosed, overArcPer, underChain, nChunks]
-- t7..t14: chunk bounds [cx, cy, radius, firstPoint], 8 points per chunk, up to 64 points (G1 had 68 at 0.075 spacing).
+The convex edge stays at h and the concave edge moves in to r_in, as on the strip. A symmetric shrink would pull the convex edge in by about 0.14 world at the P3.34 repro (ρ 0.13, h 0.26).
+- The vertex shader computes (P', R') for its four samples, fetching P−1 and P4 in a fold segment. The window loop slides a 3-sample window, so each ρ costs one new fetch.
+- side01 is measured about the shifted axis: 0.5 − 0.5·lat'/R'.
+- Argmin ownership stays as the safety net. Below ρ ≈ 0.316h, the 0.3h floor leaves the concave sides overlapping, and the AA pads overlap anyway.
+- Casings (section 3.4) still measure from the true SAMP centreline, as G1's do.
+- K90's boundBend (off unless `__knotSplineBend(true)`) would make fold windows rare. G3 does not depend on it.
+
+**Caps.**
+- Free dead-end tips are round, automatically. The free-tip disc fans and their AXIS records go away (G3-3).
+- Anchored tails are flat, which keeps Stage 7b.
+- Fused ends until G4:
+  - `tuckFusedTips`' tucked samples are zero-length cones, so the end is a round disk of radius h at the tuck point.
+  - Today's cap cover disc already covers it: TIP_DISC_SCALE 1.06h, its rim clamped to 0.995h, and 0.99h behind the tuck. So G3 writes no width for it, and the snapshot's AUX 0.98 trick is gone.
+  - G3-2's attributed diff checks this. G4-2 deletes both the tuck and the disc.
+
+### 3.4 Gap slots referencing SAMP (`gap_mask.ts`, G3-1)
+
+**Today's row** is GAP_TEX_W = 114 texels, and row 0 holds the globals. Writes are row-partial (`knot-gap-rows`, GAP_UPLOAD_STATS). The texels:
+- t0: bounding circle and reject.
+- t1: [arcScale, centerArc, period, strength].
+- t2: [winNeg, winPos, hOver, nPts].
+- t3: [capR, nProtNeg, nProtPos, flags (1 perp, 2 self, 4 SHAPED)].
+- t4: [selfExcl, polyStartArc, polyStepArc, farK].
+- t5: fades and center.
+- t6: [underTan, margin scales].
+- t7: protect intervals.
+- t8: [margin, fade, sminK].
+- 7 chunk chords (GAP_CHUNK 8).
+- Up to 57 copied points [x, y, u].
+- 2 protect blocks of 19 copied texels.
+- K268's profile: 3 texels at GAP_PROF_BASE 111.
+
+**New row (about 22-24 texels):**
+- t0-t8: today's header. t2's nPts and t4's polyline frame (polyStartArc, polyStepArc) become a SAMP range: overBase, kStart, nPts, overClosed and overArcPer. Point j is `SAMP[overBase + wrap(kStart + j)]`, and its arc, used for self-exclusion, is (kStart + j)·overArcPer.
+- Up to 8 chunk bounds [cx, cy, radius, firstPoint], 8 points per chunk, up to 64 points.
+- 2 protect range texels: a SAMP sample range per side, instead of 19 copied texels each.
+- K268's 3 profile texels, unchanged.
+- Row 0's globals move to `fabricUniforms` (G1's lever).
 
 Notes on the layout:
-- Point j is `SAMP[overBase + wrap(kStart + j)]`. Its arc, used for self-exclusion, is (kStart + j)·overArcPer.
-- `nPts = 0` means the marker disc: the "polyline" is (centerX, centerY), as `renderMarkerGaps` writes today.
-- The CPU stops building `fineO` and computes kStart/nPts from overCenter ± reach rounded outward. The over polyline is then the over ribbon's actual centerline, so the casing is exactly concentric with the SDF over ribbon.
+- `nPts = 0` means the marker disc: the "polyline" is the center, as `renderMarkerGaps` writes today.
+- The CPU stops copying the over polyline and computes kStart/nPts from the over center ± reach, rounded outward. The over polyline is then the over ribbon's actual centreline, so the casing is concentric with the SDF over ribbon, about its true, unpinched axis.
 - `arcScale` and the unit-circle `aArcPos` go away: the fragment supplies arc directly.
+- `setVis` (K76 2b) and `setShape` (K268 s1) keep their texels and their row-partial writes.
 
 **Search (exact, pruned):**
 1. Compute the 1-8 chunk lower bounds `length(p − c) − r`.
-2. Evaluate the smallest-bound chunk first; skip chunks whose bound is at least the current best (respecting self-exclusion; a fully excluded chunk is skipped by its arc span).
+2. Walk the chunks in INDEX order. Skip a chunk whose bound is at least the current best, respecting self-exclusion (a fully excluded chunk is skipped by its arc span). Keep today's sure2 early exit.
+   - **Correction (K8 s1):** the snapshot said to take the smallest bound first. G1 measured center-out and best-first orders 8-10% slower, because the search is ALU-bound, so index order stays.
 3. Over tangent from SAMP central differences (G1's blend).
-4. Two separated best branches (from chunks farther apart in arc than 2·(h+margin+fade)) can be combined with a soft-min. This is the G1 residual-(2) crease fix; ship it behind a flag and decide by A/B.
-5. A brute-force debug mode (uniform) must give a zero-pixel diff (section 5, G3-1).
+4. Protect intervals become loop-free: one sample range per side, read in place.
+5. The far-branch soft-min (G1 residual (2), the crease fix) belongs to K268 s2. G3-1 ports whatever lands, including its per-point far-branch gate.
+6. G1's zoom-aware tolerance lever folds in here: at low zoom, the tolerance floor becomes one SAMP stride.
+7. A brute-force debug mode (uniform) must give a 0 px diff (section 5, G3-1).
 
 **Modes.**
-- `gapKeepArc` (ribbons, joint pieces, yarn) is G1's ribbon branch.
-- `webSilhouetteKeep` is G1's junction-fan branch: `1 − clamp((d − hOver + pxW)/pxW + 0.5)`, inset 1 px.
-- G1's full fan mode (projected window + footprint for free-tip caps) is deleted.
+- `gapKeepAt` (ribbons, joint pieces, yarn) is G1's ribbon branch, with K268's shaped cut and K76 2b's VIS anchors.
+- `webSilhouetteKeep` is G1's junction-fan branch: `1 − clamp((d − hOver + pxW)/pxW + 0.5)`, inset 1 px. The fans keep it until G4-2.
+- The still pluck (`bindPluckGap`, `gapKeepAt` with its own mask ids) and the fans bind SAMP once G3-1 lands. The still pluck reads ids from `idScratch` today. After G3-1 it reads RANGES' window lists, or the CPU fills `idScratch` from them lazily (section 4.2).
+- G1's full fan mode (the projected window plus a footprint for free-tip caps) is deleted at G3-3, with the free-tip discs.
 
 ### 3.5 Joint clusters (`junction_field.ts` evolved; data + shader)
 
