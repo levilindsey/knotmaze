@@ -110,7 +110,19 @@ only with the files it is about; `render.md` lists the area's other files.
   smooth((1 - e) / RIM_EDGE), e = |2 side - 1| (ribbon uv.y), RIM_EDGE
   0.85: full on the edge, half 0.425 of the half-width in, nothing within
   0.15 of the center. K145's was x² over the outer 0.6 (half at 0.18 in).
-  Widths sheeted: 0.7, 0.85, 1.0 (the two rims meet in the middle). No
+  Widths sheeted: 0.7, 0.85, 1.0 (the two rims meet in the middle).
+  WIDTH SLIDER (K111 stage 4, Levi K264: "Rim width,0.4 is good, make it
+  a slider., and personal setting."): `hoverGlowWidth` (hgw=, a viewer
+  preference, default RIM_EDGE 0.85, [0.3, 1]; gameplay-links.md) is
+  RIM_EDGE per viewer. It rides uKGold.w as a SCALE, kRimScale(width) =
+  RIM_EDGE / width, that multiplies (1 - e) / RIM_EDGE: exactly 1 at the
+  default, so the default frame is stage 3's to the bit (a reciprocal
+  uniform, 1 / width, risked one-ulp differences). The mirror is
+  paint_math.ts kRimScale + kRimAcross(side, scale), parity at 0.3, 0.5,
+  0.7, 0.85 and 1 (paint_gameplay.test.ts). Census (strength 0.6):
+  default 0.57/255 (master 0.57), 0.3 0.56, 1 0.61, a 4-ctrl run at 0.5
+  0.61, none over 2/255. GPU (perf lock, 3200x1800): the ribbon program
+  1.58-1.65 ms on master and branch, at rest and mid-hover (noise). No
   dark border draws along a ribbon, so the peak sits on the ribbon's own
   edge; measured, the lift peaks at ±0.92 half-width (the outermost fully
   covered pixel). Peak luma lift at 0.4: +26 at 1400x900 (K145 +20), +25
@@ -141,7 +153,20 @@ only with the files it is about; `render.md` lists the area's other files.
   changed". A short run's lit window can sit under a crossing's over
   thread and show nothing (run 187): pick sheet runs by a pixel check
   (rim_sheet.mjs). Probes: `.claude/probes/K145/`,
-  `.claude/probes/K111/stage3/`.
+  `.claude/probes/K111/stage3/`, `.claude/probes/K111/stage4/`
+  (rim_sheet.mjs WIDTHS=..., census_widths.ps1).
+
+- HIGH CONTRAST LOOKS (K111 stage 4, PROTOTYPES for Levi's pick, K265;
+  the what and why: gameplay-motion.md's HIGH CONTRAST): the look id
+  rides uKBase.y (renderer `hcLook`: 0 = today's pulses, 1 contrast,
+  2 outline, 3 chevrons; main.ts sets it only while High contrast is on).
+  GLSL only (`kHcLook`, `kHcCompose`, `kComposePaintAcross` in
+  SECTION_FRAG and arm_strip.ts, `kComposePaintFlat` for webs, fans and
+  arm strips; PAINT_CONST HC_*): under a look, kPulseV returns a steady
+  band (no trains, no breath) and kPaintAt sets st.y = 2 for a hovered
+  choice. The CPU mirror is untouched (K152 (3): prototypes skip parity),
+  and so is the pluck overlay (composedAtArc), which still shows pulses.
+  Look 0 is master to the pixel (hm_probe.mjs ab ...  hc).
 
 - HIGHLIGHT MODES: removed in K111 stage 3 (2026-10-14). Stage 2
   prototyped glow, rims and contrast looks for the choices behind
