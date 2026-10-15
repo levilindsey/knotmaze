@@ -31,8 +31,8 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/main.ts`, `src/ui/view_clamp.ts`, `test/ui/view_clamp.test.ts`
 - `gameplay-moves.md`: MOVES BY DIRECTION (K120): keys, the picker, the move pad
   paths: `src/ui/key_moves.ts`, `src/ui/move_pad.ts`, `test/ui/key_moves.test.ts`, `test/ui/move_pad.test.ts`
-- `gameplay-audio.md`: the audio autoplay gate, AUTO PLUCKS' VOLUME (K279)
-  paths: `src/audio/**`, `test/audio/**`
+- `gameplay-audio.md`: the audio autoplay gate, AUTO PLUCKS' VOLUME (K279), THE SNORING CAT LINK (K325)
+  paths: `src/audio/**`, `test/audio/**`, `src/ui/snore_link.ts`, `test/ui/snore_link.test.ts`
 - `generation.md`: generation: what changes move the dailies, the plan history pointer, engine-exact generation (K108)
   paths: `src/core/**`, `src/util/**`, `test/core/**`, `test/util/**`
 - `generation-plan.md`: the plan identity pin (K87), long-tail dead ends (K74), H1 fused arm cuts (K74 stage 2), a route to the exit (K109), reachability (K110)
