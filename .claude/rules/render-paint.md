@@ -97,75 +97,60 @@ only with the files it is about; `render.md` lists the area's other files.
   renamed from PULSE_REACH) swallows the crests; at 3 one crest emerges
   past the glow and dissolves, clearly short of a median run (3.7).
 
-- HOVER GLOW (K145, 2026-10-14; brief `docs/design/K93_K145.md`): the
-  run under the pointer lights subtly along both rims when it is not a
-  choice (a choice keeps its own, stronger hover). One KPAINT item,
+- HOVER GLOW (K145, 2026-10-14; brief `docs/design/K93_K145.md`; its
+  look since K111 stage 3, `docs/design/K111.md` "Stage 3"): the run
+  under the pointer lights along both edges when it is not a choice (a
+  choice keeps its pulses and its own, stronger hover). One KPAINT item,
   `(RIM, c0, c1, gap)`, written LAST; the strength (`hoverGlow`, hg=,
   codec index 105, default 0.4, 0 = off) and the hover point (an
   unwrapped ctrl on the run) are uniforms (uKReach.z, .w), so a pointer
-  moving along one run rewrites no texel. Across: kRimAcross, x² over
-  the outer RIM_EDGE 0.6 of each half (ribbon uv.y). Along: 1 -
-  smooth(d / pulseReach) from the hover point, NO floor (K219, Levi:
-  "Hover should honor the slider."), faded in over RIM_END_FADE 0.75
-  past an end GAP at each end (rimGap: the junction web's reach along an
-  arm), because webs draw over the ribbons from arm strips, which carry
-  no across coordinate. Strength 0 writes no item: the paint is exactly
-  the glow-less one. Not shown on webs, fans or arm strips, under a pluck
-  overlay (composedAtArc has no across coordinate), or in debug view 5.
-  Touch shows it while a press lasts; a mouse leaving the canvas clears
-  it. Census (census_rim.mjs, 7 across positions): GPU vs mirror <=
-  0.6/255. Same state vs master (ab_frames.mjs + set_glow.js): no hover
-  and strength 0 with a glow forced are bit-identical; at 0.4, 367 px,
-  all on the run's rims, none on a web. GPU (gpu_by_program.mjs, perf
-  lock): the ribbon program +0.04-0.05 ms at rest and mid-hover, inside
-  master's own 0.11 ms round-to-round spread. Default from same-state
-  sheets (glow_sheet.mjs, a 9-world run): 0.25 barely visible, 0.4
-  subtle but readable, 0.6 clearly bright. PROBE LESSON: `png.mjs` decodePNG
-  returns `{W, H, ch, data}` (ch 3 for puppeteer shots); diffs that read
-  `.width`/`.height` never ran their loop and reported "0 px changed",
-  which read as a GPU that ignored the glow. Probes:
-  `.claude/probes/K145/`.
+  moving along one run rewrites no texel. ACROSS (K111 stage 3, Levi
+  K248: "the gradient start high at the edge and then fade-out as it
+  progresses toward the center", "a bit wider"): kRimAcross = 1 -
+  smooth((1 - e) / RIM_EDGE), e = |2 side - 1| (ribbon uv.y), RIM_EDGE
+  0.85: full on the edge, half 0.425 of the half-width in, nothing within
+  0.15 of the center. K145's was x² over the outer 0.6 (half at 0.18 in).
+  Widths sheeted: 0.7, 0.85, 1.0 (the two rims meet in the middle). No
+  dark border draws along a ribbon, so the peak sits on the ribbon's own
+  edge; measured, the lift peaks at ±0.92 half-width (the outermost fully
+  covered pixel). Peak luma lift at 0.4: +26 at 1400x900 (K145 +20), +25
+  at 411x753 (+17). ALONG: 1 - smooth(d / pulseReach) from the hover
+  point, NO floor (K219, Levi: "Hover should honor the slider."). ENDS:
+  an end GAP at each end (rimGap, the junction web's reach along an arm:
+  0.975 world at defaults), because webs draw over the ribbons from arm
+  strips, which carry no across coordinate; then a fade-in over
+  min(RIM_END_FADE 0.75, RIM_END_SHARE 0.6 x (half the run - gap)),
+  floor 1e-4 (K236 c: the fixed 0.75 lit a 2.6-world run to about 40%
+  mid-run; now any run past two gaps glows in full mid-run). A run under
+  two gaps (1.95 world) never glows: the webs cover it. Strength 0 writes
+  no item: the paint is exactly the glow-less one. Not on webs, fans or
+  arm strips, by design (Levi: "clipped to not show anything outside the
+  segment bounds"), and not under a pluck overlay (K236 a, left:
+  composedAtArc colors per arc, with no across coordinate). Debug view 5
+  shows it in blue (max with the gold glow). Touch shows it while a press
+  lasts; a mouse leaving the canvas clears it. CENSUS (census_rim.mjs, 7
+  across positions, strength 0.6): GPU vs mirror <= 0.56/255 on a 17-world
+  run and 0.61/255 on a 2.1-world one (rim 0.59 of 0.6 mid-run; K145's
+  fade gave it 0.025), none over 2/255. An open chain's terminal sample
+  inside the end gap reads yellow in the probe on master too (a
+  probe-triangle residual, rim 0 there). Same state vs master
+  (hm_probe.mjs ab): no hover and a hovered choice 0 px. K145's GPU cost:
+  the ribbon program +0.04-0.05 ms (perf lock). PROBE LESSONS: `png.mjs`
+  decodePNG returns `{W, H, ch, data}` (ch 3 for puppeteer shots); diffs
+  that read `.width`/`.height` never ran their loop and reported "0 px
+  changed". A short run's lit window can sit under a crossing's over
+  thread and show nothing (run 187): pick sheet runs by a pixel check
+  (rim_sheet.mjs). Probes: `.claude/probes/K145/`,
+  `.claude/probes/K111/stage3/`.
 
-- HIGHLIGHT MODES (K111 stage 2, 2026-10-14; brief `docs/design/K111.md`,
-  "Stage 2"; the param's link side is in `gameplay-links.md`): how the
-  CHOICES (the runs next to the player) are lit, `highlightMode` (hm=):
-  pulses (default) | glow | rims | contrast. RENDER PROTOTYPES waiting on
-  Levi's pick, the GLSL only: the CPU mirror (paint_math) still computes
-  the pulses in every mode, so the pluck overlay's colors (composedAtArc),
-  fieldProbe and paintProbe show the pulses look, and no parity test
-  covers the modes. The mode id rides in uKGold.w (tickPaintPalette, from
-  `renderer.highlightMode`, which main.ts's handRendererLook (K239) sets
-  from look("highlightMode") before every update() and every fabric tick,
-  so an accessibility toggle's forced pass wears it); kHiMode() reads it,
-  `HIGHLIGHT_MODE` (paint_const.ts) names the ids. PULSES (0) is master's
-  code path: every other branch sits behind kHiMode() != HM_PULSES, so
-  same state vs master is 0 px (4 pulse-clock phases and a hovered choice
-  at 1400x900, 4 phases at 411x753). The other modes replace kPulseV's
-  trains with one level, lv x endWin x uKPulse.w x kReachWin(d): out to
-  pulseReach, faded over its end, faded in after a move as the trains are,
-  then STILL (t=0 vs t=1 s: 0 px; pulses 1306 px). kPaintAt marks a
-  hovered choice st.y = 2 under them. GLOW (1): lv HI_GLOW 0.75 (hovered
-  HI_GLOW_HOVER 1.0) through kComposePaint, a steady whitening of the
-  thread's own paint. RIMS (2): kComposePaintAcross (ribbons, side =
-  vUV.y) lights a band along both edges at full strength, the outer
-  HI_RIM_EDGE 0.55 of each half-width plus a HI_RIM_SOFT 0.12 ramp
-  inward; a hovered choice also fills its core to HI_RIM_HOVER_CORE 0.45.
-  CONTRAST (3): pure white whatever the hue (not K_BAND's 0.94) with a
-  black center line (inside HI_LINE 0.3 of the half-width, a HI_LINE_SOFT
-  0.1 ramp); a hovered choice drops the line. High contrast wears it
-  (`gameplay-motion.md`). Webs and fans have no across coordinate:
-  kComposePaintFlat (the arm strips) leaves them unlit under rims, so a
-  rim starts where the web ends (no K145-style end-gap fade), and flat
-  white under contrast, so the center line stops at the web. TUNING: glow
-  0.55 / 0.9 and rims 0.45 read too faintly in the first phone sheets;
-  at 411x753 contrast is the boldest and glow the softest. GPU
-  (gpu_by_program.mjs at 3200x1800 after two moves, perf lock, two
-  interleaved rounds; indicative): the ribbon program 1.98-1.99 ms in
-  every mode (the four within 0.02 ms of each other) against master's
-  1.95 (+0.03-0.05 ms, about master's own 0.04 ms round-to-round
-  spread); fans and arm strips within 0.02 ms. Probes:
-  `.claude/probes/K111/stage2/` (hm_probe.mjs ab | sheet, recrop.mjs +
-  mksheet.mjs for the sheets, gpu_batch.ps1).
+- HIGHLIGHT MODES: removed in K111 stage 3 (2026-10-14). Stage 2
+  prototyped glow, rims and contrast looks for the choices behind
+  `highlightMode` (hm=, codec index 108). Levi (K248) kept the pulses and
+  a hovered choice's look on the choices, and a rim only for a hover away
+  from them (HOVER GLOW above). The param, its GLSL (kHiMode, HM_*, HI_*,
+  kComposePaintAcross and Flat) and High contrast's mode went;
+  CODEC_VERSION 5. Stage 2's record (modes, tuning, GPU): `docs/design/
+  K111.md` "Stage 2 handoff", probes `.claude/probes/K111/stage2/`.
 
 RENDER LORE (hard-won, 2026-10-09; the strip is RETIRED by G2.3 - paint is
  per pixel now, nothing interpolates U): **the palette strip's ORDER was
