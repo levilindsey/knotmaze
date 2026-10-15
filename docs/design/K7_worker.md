@@ -2196,3 +2196,217 @@ Observed unless marked inferred. Desktop only.
 - **Port the freeze-patch probes when each is next needed**, `k279_ab`
   first (K279's same-state A/B); refreshing the 21 library copies from
   `ports/g2lib/g2lib.mjs` ports their 95 importers at once.
+
+## Stage 5 handoff
+
+Stage 5 ended 2026-10-15 at 03:29, inside its two-hour cap (it
+started at 02:34). The branch is `worktree-agent-adf244f47f53e8230`, from
+`de22867` (master with stage 4 merged): `14424e1` (the start gate),
+`c0f1622` (the stamp and the lore drafts), `19ca8a4` (the verdict in the
+lore) and this handoff, with the phone probes' lore. Master has moved to
+`08b6064` since (K268 stage 2, the K5 + K6 design, ledgers); no file
+changed on both sides. The evidence is in `.claude/probes/K7/stage5/`
+(untracked, for the coordinator to copy): the probes (`k7_frames.mjs` and
+`k7_latency.mjs`, stage 4's with a `--phone` path; `phone_lib.mjs`,
+`phone_setup.ps1`, `phone_srv.ps1`, `phone_teardown.ps1`,
+`phone_clear.mjs`), the batch runner `run_s5.ps1`, the batches
+(`s5_gate.txt`: the desktop gate, then the phone pass, 03:05-03:18 in
+one lock hold; `s5_ab.txt`: the clean desktop A/B, tsc and the suite)
+and their logs (`run_s5_gate2.log`, `run_s5_ab.log`),
+`k7_results.jsonl`, `k7_latency.jsonl`, `frames/` and `table_s5.mjs`
+(`node table_s5.mjs p-` prints the phone runs and the latency, `g-` the
+desktop gate, `b-` the A/B). `builds/` need not be kept.
+
+**The verdict: `phw` stays off by default.** The phone met four of design
+10's five criteria and missed the start gate (the worker ready within 250
+ms of the main chunk), so the flip (work item 2) was not made (item 5),
+and no pin moved.
+
+### What is done
+
+- **The start gate** (stage 4's "For stage 5"; `14424e1`). main.ts
+  constructs the host, and with it the Worker, before `await app.init`, so
+  the worker's module loads while Pixi starts. `init` is still posted at
+  the first build. The worker posts `hello` when its module evaluates,
+  `ready` carries `initAt` and `readyAt`, and `__knotPerf().host.gate`
+  holds `spawnAt`, `helloAt`, `postAt`, `initAt`, `readyAt` and `heardAt`
+  (epoch ms; `table_s5.mjs` subtracts the main chunk's `responseEnd`,
+  `mainEnd`).
+- **K147 in worker mode** (item 3). The budget never ran with the worker
+  (`__knotSettle().phase` reads `off`, since stage 3). `c0f1622` makes the
+  stamp say ` | lag X.Xs` with the worker and keeps ` | settle lag X.Xs`
+  in-thread. `stb` and the budget stay for the in-thread host.
+- **The phone pass** (item 1), below.
+- **The lore** (item 4): `.claude/rules/physics-worker.md`, new, whose
+  paths are the hosts, the worker, its core, the mirror, the snapshot, the
+  probe dump, `scene_graph.ts` and their tests. Its Measured section holds
+  the verdict, the numbers and the lever. Also: its line in `physics.md`'s
+  list, with the CANDIDATE paragraph turned into a pointer; a bullet in
+  `physics-settle.md` (the budget is the in-thread host's); a row in
+  `docs/lore_index.md`; CLAUDE.md's Layer 3 sentence and tree lines; and a
+  K7 stage 5 entry in `probes-phone.md` (the phone tooling, its order and
+  its gotchas).
+- **The phone tooling.** `phone_lib.mjs` drives only the tab on the run's
+  origin, which `phone_setup.ps1` opened with an `am start` intent. It
+  emulates 411x753 at dpr 2.625 and no-preference motion from its own CDP
+  session, clears the origin's storage before each load, and presses by
+  touch (CDP `Input.dispatchTouchEvent`). No phone setting, key event or
+  install.
+
+### The start gate on the desktop
+
+The clean A/B (`s5_ab.txt`, 03:18-03:21 under the perf lock): s5a
+(`c0f1622`) against s5base (`de22867`, this branch's base), today's daily,
+alternating. Gate times are ms after `mainEnd`.
+
+| | s5a | s5base |
+|---|---|---|
+| `phw=1` first visible frame (s) | 1.11 / 1.38 / 1.11 | 1.19 / 1.44 / 1.21 |
+| the worker's `ready` | 312 / 414 / 317 | - |
+| main hears `ready` | 588 / 734 / 598 | 626 / 753 / 648 |
+| the worker's pre-settle done | 779 / 891 / 787 | 1093 / 1185 / 1111 |
+| `phw=1` first sleep (s) | 12.18 / 12.43 / 12.07 | 12.51 / 12.54 / 12.21 |
+| `phw=0` first visible (s) | 1.09 / 1.05 | 1.05 / 1.05 |
+| `phw=0` first sleep (s) | 20.96 / 21.02 | 21.16 / 21.14 |
+| `phw=0` intro fps, p95 ms | 21.0, 36 / 20.9, 36 | 20.7, 36.1 / 20.7, 36 |
+
+The second pair ran slow on both builds. With the gate, the pre-settle
+ends about 300 ms sooner and the first visible frame comes 0.06-0.10 s
+sooner; `phw=0` is unchanged within noise. On the desktop main hears
+`ready` 276-320 ms after the worker sends it, which lines up with the end
+of main's own long task at about 0.36 s (305-337 ms, both builds, both
+hosts). That task was 280-287 ms on stage 4's `f4c1d5f` (`s5_gate.txt`),
+so its growth came with master's merges between `f4c1d5f` and `de22867`
+(observed), not with stage 5; which merge is not known. Against s4b
+(`s5_gate.txt`, 03:05) the gate reads the same: `phw=1` first visible
+1.10-1.11 against 1.16-1.19 s, the pre-settle done at 788-801 against
+1066-1074 ms; `phw=0` first visible 1.04-1.05 against 1.02-1.04 s, first
+sleep 21.04-21.07 against 20.95-21.02 s.
+
+### The phone pass
+
+The Pixel 11 (60 Hz) over wireless adb, build s5a (`c0f1622`), with stage
+4's s4b (`f4c1d5f`) twice for the gate. Today's daily (`?daily`) and gs 18
+(`?1471kin.J`), three loads a host each, alternating, plus a touch drag and
+wake a host on each, the render alone, and the touch latency, all in one
+batch under the perf and phone locks. Each load starts with empty origin
+storage. soc_therm 44-50.5 C. No errors and no WebGL context loss on any
+load.
+
+| | worker (`phw=1`) | in-thread (`phw=0`) |
+|---|---|---|
+| first visible (s) | 0.96-1.24, median 1.11 | 0.90-1.12, median 0.95 |
+| intro fps | daily 41-50, gs 18 38-40 | 36.6 on its first load, then 23-31 |
+| intro p95 (ms) | 33.4-33.5 on all 9 loads | 33.6 on its first load, 50.1-50.3 on the other 7 |
+| first sleep (s) | daily 9.9-14.1, gs 18 11.0-16.2 | daily 19.6-28.5, gs 18 22.4-27.7 |
+| 5 s touch drag, fps (p95 ms) | gs 18 33.7 (33.7), daily 37.3 (33.4) | 4.4 (250), 4.5 (234) |
+| wake, fps (p95 ms) | gs 18 36.8 (33.4), daily 34.1 (50) | 12.1 (184), 7.6 (167) |
+| ms a substep, intro | 15.0-36.6 | 9.5-16.4 |
+| touch latency, daily, 12 steps (ms) | p50 231, p95 392, min 176 | p50 872, p95 878 |
+
+The render alone (in-thread, physics paused through the reveal): 38.9 fps,
+p95 33.4. Stage 4's build: first visible 1.26 and 1.15 s, main heard
+`ready` at 545 and 459 ms, the pre-settle done at 1007 and 932.
+
+Against design 10's criteria:
+
+| criterion | result |
+|---|---|
+| an intro p95 of 33 ms or less | met, reading 33.4 ms as one dropped 60 Hz frame (two vsyncs, 33.3 ms); missed by 0.4 ms if read literally. In-thread reads 50 after its first load. |
+| no later first sleep than `phw=0` | met: about twice as soon |
+| drags at 30 fps or more | met: 33.7 and 37.3 |
+| no errors | met |
+| the worker ready within 250 ms of the main chunk | MISSED: 309-513 ms, median 407 |
+
+The gate on the phone, ms after `mainEnd`, on the 9 s5a worker loads:
+spawn 40-83, `hello` 105-138, main posts `init` at 190-285, the worker gets
+it at 220-392, builds it in 89-121 (generation and the constructor), and
+is ready at 309-513. Main hears `ready` within 2 ms of it.
+
+**Why the gate misses.** On 14 of the 15 worker loads of s5a (desktop and
+phone) the worker gets `init` within 1 ms of main handling the worker's
+`hello`, and main handled it after posting `init`. On the 15th
+(`b-s5a-phw1-2`), main handled `hello` first (200 ms) and the worker got
+`init` the moment it was posted (371). So, observed: `init` arrives at
+max(posted, main handles `hello`). Inferred: Chrome queues messages to a
+dedicated worker until main has processed the worker's script-evaluated
+notification, which comes with the `hello`, and main does not get to it
+between its arrival (105-138 ms on the phone) and the end of the first
+build (220-392). Posting `init` sooner gains nothing while main does not
+get there.
+
+**The lever (not built).** Let the worker build without a message from
+main: put the scene params and tuning in the Worker's `name` at
+construction; the worker reads `self.name` at evaluation and builds them as
+gen 0; main adopts that build when its first build's params match and
+posts `init` only when they differ. Expected (inferred): ready at `hello`
+plus generation, 194-248 ms on these 9 loads, about 190 ms sooner
+(115-265). The pre-settle ends 462-480 ms after `ready` on both machines
+(observed), so the first visible frame would come as much sooner, near
+in-thread's. It is marginal against 250 ms, and main's own work may slow
+the worker's build. A modulepreload of the worker chunk could take a
+little off spawn-to-`hello` (55-87 ms on the phone).
+
+### Where it departs from the brief
+
+- **The pass ran on s5a**, stage 4's code plus the start gate and the
+  stamp, not on stage 4's build: the coordinator asked for the gate first.
+  Stage 4's build (s4b) ran twice for comparison. s4b predates master's
+  merges into `de22867` (K279 stage 2, K76 2c, K8 stage 1, K353), so the
+  clean desktop baseline is `de22867` (s5base), not s4b.
+- **`k7_frames.mjs` and `k7_latency.mjs` with a phone path** instead of
+  `scripts/phone_pass/`. They record design 10's cells (intro fps and p95,
+  first sleep, sim/wall, drag and wake fps, errors) plus each host's cost
+  per substep and the gate fields, which are new in this stage.
+- **Not run:** the spike page (`?d=gs18`), which would show whether the
+  worker lands on a slow core; and the levi.dev cold start, skipped by
+  decision, because `phone_lib.mjs` clears the origin's storage before
+  each load and Levi's daily records live in levi.dev's storage.
+- **Latency on the phone is only measured** (K370), not worked on.
+
+### Verification
+
+Observed unless marked inferred.
+
+- `npm test` on `c0f1622`'s code (03:21 under the lock): 79 files passed and 1
+  skipped, 1093 tests passed and 1 skipped, the golden byte identity
+  included. `npx tsc --noEmit -p .`: exit 0. The commits after `c0f1622`
+  touch only the lore and this handoff.
+- `phw=0` unchanged on the desktop (the A/B above).
+- The phone: no errors and no context loss on any of the batch's 22 loads.
+
+### Not done
+
+- The flip (item 2), the pins it would move, and the lore that names the
+  default (`gameplay-links.md`'s PHYSICS WORKER PARAM, "a flag, default
+  off"; the `probes.md` K7 stage 4 entry, "phw=0, or no phw (the
+  default)").
+- The lever above.
+- The spike page on the phone, and the levi.dev cold start.
+- Desktop latency (K370), K307's compile freezes, run-ahead (K371),
+  dense designs (K8): out of scope.
+
+### For the next stage
+
+- **Build the lever,** then re-run the phone pass on that build with the
+  same batch (`s5_gate.txt`'s phone half: setup, three loads a host on the
+  daily and gs 18, alternating, drags, latency), and flip the default if
+  the worker is ready within 250 ms. On a flip: `url_state.ts:679`
+  (`physicsWorker: false`), re-freeze `test/ui/url_codec.test.ts:89`,
+  update the two lore lines above, and give the 52 freeze-patch probes
+  `&phw=0` (K374).
+- **Or Levi accepts the miss** and flips now: on the phone the worker
+  sleeps about twice as soon, drags at 33.7-37.3 fps against 4.4-4.5,
+  wakes at 34-37 against 7.6-12, and answers a touch in 231 ms against 872 (p50),
+  for a first visible frame about 0.16 s later (median 1.11 against 0.95
+  s).
+- **The phone worker's cost per substep** (15-37 ms in the intro, often
+  above in-thread's 9.5-16.4 on the same physics; it did not follow the
+  soc temperature): run the spike page (`?d=gs18`) on the phone. Inferred:
+  the worker thread sometimes lands on a slower core (big.LITTLE).
+- **Touch latency on the phone** (231 ms p50 with the worker; the first
+  motion at 173 ms p50) belongs to K370.
+- **Main's long task at about 0.36 s** grew by 30-40 ms between `f4c1d5f`
+  and `de22867` (observed); on the desktop it holds main's `ready` back to
+  about 600 ms. Which merge grew it is not known (K279 stage 2's ripple
+  warm-up is a guess).

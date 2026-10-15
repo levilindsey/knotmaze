@@ -140,7 +140,7 @@ in `probes.md` (the K7 stage 4 entry).
     against 872;
   - no errors and no context loss on either host;
   - THE MISS: the worker is ready (its own init done) 309-513 ms after the
-    main chunk's `responseEnd` (median about 405), against 250, and the
+    main chunk's `responseEnd` (median 407), against 250, and the
     first visible frame comes 0.1-0.2 s later than in-thread (0.96-1.24 s
     against 0.90-1.12).
 - **Why the start gate misses.** The worker's module is up (`hello`)
