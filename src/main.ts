@@ -516,6 +516,8 @@ async function main(): Promise<void> {
   app.stage.addChild(root);
   // K279: pluck ripples - a filter on the world container while one lives.
   const ripples = new PluckRipples(root, () => app.screen);
+  // K279 stage 2: link its program and pool its texture now, not on a tap.
+  ripples.warm(app.stage);
 
   // K140 FINISH CONFETTI (render/confetti.ts): two particle layers over the
   // world root - the world-space spray around the exit, then the
