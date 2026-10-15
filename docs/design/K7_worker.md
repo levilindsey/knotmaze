@@ -1045,7 +1045,7 @@ Ports 5798-5799; probes in `.claude/probes/K7/stage5/`.
 
 ## Design handoff
 
-Stage 0 ended 2026-10-14 at about 20:15, inside its cap. The branch is
+Stage 0 ended 2026-10-14 at about 20:10, inside its cap. The branch is
 `worktree-agent-a70e8b39f6fe8c19d`; no `src/` change. The evidence is in
 `.claude/probes/K7/design/` (untracked, for the coordinator to copy).
 
