@@ -47,8 +47,9 @@ files.
   `fire lead` while racing, `closest call` once won or lost, both shown
   with the stats off (`gameRows`); the win banner adds the closest call.
   THE FIRST LOOK (fabric_maze_renderer.ts `drawFire`, the FIRE_*
-  constants; stage 3 builds the real one): char 0x22140e (1.1 thread
-  widths) with an ash core over burnt stretches, embers 0xff7a1a (core
+  constants; stage 3 builds the real one; K290 stage 3a moved the burnt
+  thread into the shaders, BURNT THREAD below): char 0x22140e (1.1 thread
+  widths) with an ash core over burnt stretches (removed in 3a), embers 0xff7a1a (core
   0xffe08a) at the fronts, smoldering arms 0xff3b1f, and a lit-fuse ring
   at the entrance while L <= h. Its clock rides the move animation
   (walkedDist minus the unplayed share of the run), so the fronts advance
@@ -87,3 +88,25 @@ files.
   PAGE PROBE: `burn_page.mjs <base> <outDir> race|loss|perf [seeds]` (real
   clicks; EXTRA appends link keys, e.g. `&fsp=0.9`; probes.md has the
   rest).
+
+- BURNT THREAD (K290 stage 3a, 2026-10-15; brief `docs/design/K114_burn.md`,
+  "Stage 3a plan" and "Stage 3a handoff"). The `burnt` param (`fbt`, gone |
+  char, default gone; gameplay-links.md; panel row "burnt" in the Burn race
+  folder, hidden while the fire is off) picks how a burnt stretch draws.
+  GONE: not drawn; the thread ends hard at the fire (no fade, no frontier
+  halo), an under-thread's crossing gap closes where its over thread is
+  burnt, a fan drops a burnt arm, and the exit marker hides once its point
+  is burnt (the start marker still draws). CHAR: drawn charred under the
+  crossing gaps (0x22140e at 0.9, an ash core 0x7a3a22 at 0.75 where
+  |vUV.y - 0.5| < 0.15, ramped over 0.08 ctrl at each burnt end; fans and
+  arm strips char without the ash core). Both ride the thread reveal's
+  explore programs (render-explore.md, THE BURN): `drawFire` collects each
+  run's burnt stretch as a chain-ctrl span (`burnSpan`), and `setBurnSpans`
+  re-declares only when the spans or the look change. With the reveal off,
+  nothing burnt keeps master's frame (no explore program bound); once
+  anything burns, every chain is declared whole and the burn cut from it,
+  so `ribbons.exploreOn` stays true for the rest of the race. Stage 1's
+  char and ash strokes are gone; its embers, smoldering arms and lit fuse
+  still draw as Graphics (stage 3b, with the front's char band and the
+  `burn` FX on tipsAt). Contact sheet (gone vs char, reveal off and on,
+  three moments of seed 7's race): `.claude/probes/K290/stage3a/sheet/`.

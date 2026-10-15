@@ -83,6 +83,18 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   `junction-field-explore` (32936 against 28482) and
   `pluck-still-explore` (23991 against 19958). They go on the registry
   beside the section's explore variant.
+- **The burn's char changed two of them** (K290 stage 3a, 2026-10-15):
+  the section's explore variant is 55976 characters (its fragment text
+  with `kCharAt`/`kCharLook`) and `arm-strip-explore` 37011 (`kStripChar`);
+  `junction-field-explore` and `pluck-still-explore` are unchanged. Both
+  changed texts compile cold once. No new program site: the burn reuses
+  the explore programs. But a FIRE RACE now switches every ribbon, strip
+  and fan onto them at the first burnt stretch, reveal on or off
+  (render-explore.md, THE BURN), so a fire link's warm-up must cover
+  `section-rgb`'s explore variant, `arm-strip-explore` and
+  `junction-field-explore` (likely `pluck-still-explore` too, for a still
+  pluck during a burn; not checked), or the first burn freezes the screen
+  while they link.
 - **Growing a shader costs compile time.** section-rgb is the intro's
   critical path. After a large shader change, time a cold link:
   `trace_intro.mjs` on a fresh profile.
