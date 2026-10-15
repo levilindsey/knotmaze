@@ -3001,3 +3001,14 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - next: run `cleanup.ps1` again for the profiles (it was due after
     16:20 on 10-14, none was a day old at 01:17); the libraries'
     delete-on-exit goes with K150
+
+## K161 (2026-10-15, the profile sweep done)
+
+- **K161** · Disk: probe runs leave `knotmaze-*` Chrome profiles in `$env:TEMP` (1177 on 10-15,
+  1173 a day old, about 33 GB; C: 14.5 GB free) and stale worktrees (79). Levi approved the
+  cleanup (2026-10-14, item 2); the probe libraries' delete-on-exit goes with K150.
+  - owner: nobody since 2026-10-15 06:30 (auto mode denied the coordinator's 06:24 run of `cleanup.ps1`; claude session d8031183)
+  - branch: mainline (no code); last commit: n/a
+  - evidence: `.claude/probes/K161/cleanup.ps1` (`-DryRun` first) and `cleanup.log` (the 10-14 01:17 run swept five merged worktrees)
+  - next: Levi runs `pwsh -NoProfile -File .claude/probes/K161/cleanup.ps1` (or allows it); then the worktree sweep: a cleared session's agents cannot be messaged, so a worktree holds only untracked probes, which the script copies first (it keeps branches): list the ids in its `$worktreeIds`. It skips unmerged ones; look at those first: K80 `a25726c24f262b138` (5 ahead), K323 `a806933f7eb6fb661` (4), K74 `aeaf1e61bcecaaf0b` (1), K76 stage 1 `aea102de995e1ce30` (26, likely pre-rebase copies). 13 branches ahead of master have no worktree.
+  - brief: the header of `.claude/probes/K161/cleanup.ps1`
