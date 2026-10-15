@@ -81,3 +81,37 @@ only with the files it is about; `probes.md` lists the area's other files.
   the perf lock and serves `builds/before-79c5a97` on 5891 and
   `builds/after-f4c05d5` on 5892. Pass `&psz=` and the other pluck keys in
   the link: main.ts re-syncs them every frame (K279's gotcha).
+
+- K279 stage 2 (2026-10-15), glint by default, the ripple filter's cost,
+  the first tap and glint's phone size: `.claude/probes/K279/stage2/`
+  (render-pluck.md's STAGE 2 has the numbers). `k344_lib.mjs` (K344's
+  launcher: headed hardware-GPU Chrome off-screen with its profile in
+  the folder, `openFrozen`, pinned plucks) drives `k279_ab2.mjs <A host>
+  <B host> <outDir>` (stage 1's same-state A/B with `&prp=wave` on both
+  builds; it also diffs each build's frame of an off-screen ripple
+  against its own no-ripple frame, which tells a culled ripple from a
+  real difference), `k279_phone_size.mjs <host> <outDir> [phone,desk]`
+  (the view's px/world, the ripple's sizes in CSS px, the changed
+  pixels' distance from the site and strips; read p50, since p95 and
+  max hold MSAA edge flips from across the frame) and `k279_sheet2.mjs
+  <host> <outDir>` (the glint sheet: the kink loop, a foreign crossing,
+  `?7` fabric and knot, zoom steps 0 and 2, early and late).
+  `ab2_where.mjs <A.png> <B.png> <out.png> [min] [cell]` bins where two
+  frames differ and crops the densest cell. `k279_live.mjs <host> <out>
+  burst`: per-draw GPU and CPU for 8 plucks, then with 8 glints and 8
+  waves, and 1 + 1, on `?7` and `?7&mf=0`. `k279_firsttap.mjs <host>
+  <outDir> <label> [designs] [WxHxDSF] [looks]`: a fresh profile per
+  design and look (a cold program cache) and four real clicks; per tap
+  `sum10` (ms of rAF callbacks over the first 10 frames) and `ivMax5`
+  (the longest of the first 5 frame intervals); its `downMs` is not
+  valid. `run_batch.ps1 -What <what> -Batch <file>` runs `<log> <script>
+  args` lines under ONE take of the perf lock (`s2_batch.txt`,
+  `s2_sheet.txt`). `k279_phone.mjs` (K289 k) now reads
+  `__knotRipple().count` every frame after the tap and finds the repo's
+  `scripts/phone_pass/` from its own folder; not yet run on a phone.
+  Builds: `builds/<sha>` served by `npx vite preview --outDir <dir>
+  --port <p> --strictPort`. GOTCHA: the filter draws the world again
+  into its own MSAA texture, so EVERY ripple frame differs from its
+  no-ripple frame, by 1 level across the filtered area and by 36-46 at
+  thread-edge pixels where one MSAA sample of four flips. Compare ripple
+  frames with ripple frames.
