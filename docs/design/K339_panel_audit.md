@@ -707,11 +707,11 @@ still mark design rows under "All settings".
   `spot_desktop_top.png`, `spot_desktop_maze.png`).
 - `nested.mjs` (the sheet, run under the perf lock) and `labels.mjs`
   (the label widths) ran against this checkout's dev server on ports
-  5881 and 5882, each with a private vite cache and its own Chrome
-  profile, deleted after the run.
+  5881 and 5882, each with a private vite cache (deleted at the
+  handoff) and its own Chrome profile (deleted after each run).
 - After a context compaction, every number in this section was checked
   again against the inventory, `labels.json`, `computed.json` and the
-  sources; the corrections are in this commit.
+  sources; the corrections are in `81e7e14`.
 - Line numbers are at `7effaae`. On master (2c81a92, 23:38) the
   panel's own files (`tweakpane_panel.ts`, `url_state.ts`,
   `param_codec.ts`, `daily_link.ts`, `undo_stack.ts`) are unchanged
@@ -719,3 +719,41 @@ still mark design rows under "All settings".
   inventory is still current.
 - Only `docs/` and `scripts/` changed (`git diff --stat 7effaae`), so
   `npm test` was not run.
+
+## Stage 1 handoff (2026-10-14, 23:45)
+
+The stage is done, inside its cap (started 22:54:13, cap about 00:54).
+Nothing under `src/` changed, and nothing was pushed.
+
+- owner: nobody since 23:45 (agent of claude session d8031183, stage
+  done).
+- branch: `worktree-agent-a2f8f74cd5425c4ef`, worktree
+  `.claude/worktrees/agent-a2f8f74cd5425c4ef`, from master `7effaae`.
+  Commits: `9aeb7bb` (the inventory script and table), `81e7e14` (the
+  results above), then this handoff.
+- evidence, tracked: `scripts/panel_inventory.ts`,
+  `scripts/panel_inventory_stub.ts`,
+  `scripts/panel_inventory.vite.config.mjs` and
+  `docs/design/K339_inventory.md`.
+- evidence, untracked, in the worktree's `.claude/probes/K339/`; copy
+  it to the main checkout's `.claude/probes/K339/` before the worktree
+  goes:
+  - `nested.mjs`, the looks (`node .claude/probes/K339/nested.mjs
+    [looks=all] [port=5881]`, under the perf lock), and its output:
+    `sheet/K340_sheet.png` (the sheet), `sheet/index.html`, each look's
+    PNGs, `computed.json` and `spot_rows.json`;
+  - `labels.mjs`, the label widths (`node .claude/probes/K339/labels.mjs
+    [port=5882]`), and `labels.json`;
+  - `spot_desktop_top.png` and `spot_desktop_maze.png`;
+  - `vite.private-cache.config.ts`, through which both probes serve the
+    checkout.
+- The worktree's `node_modules` is a junction to the main checkout's:
+  remove it with `(Get-Item node_modules).Delete()` before removing the
+  worktree.
+- Not done: look F with High contrast on (K340's build checks it); the
+  tree's first-load count (43) is counted by hand, for Stage A's rerun
+  to confirm.
+- next: Levi's answers to the four questions. Then K340's CSS, alone,
+  once he picks a look; then the Stage A brief (K323 stage 1 plus this
+  rebuild), after K7 stage 3 and K76 2c merge.
+- brief: this file.
