@@ -586,3 +586,124 @@ master at 0 px and the same GPU ms.
   Tailscale;
 - GPU per program (`gpu_by_program.mjs`) with the variant in place;
 - the two census probes of section 7.
+## 10. Re-based on 5438a60, 2026-10-14
+
+Master is 320 commits past the prototype's base (044abfb). Section 6's
+rows for K75, K81, K73's v4 and K80 are merged facts now. Per area: what
+landed, then what it changes for stages 2a-2d. Line numbers are at
+5438a60.
+
+**K75, K93 (pulses, trail).** Pulses brighten the thread's own paint
+(kComposePaint; the band-family flag is gone). pulseReach (pr, default
+3) windows the trains and the hover through kReachWin; uKReach is now
+(reach, fade, rim strength, rim hover ctrl), so it is full and the mode
+gets its own vec4, uKExplore. The trail is two overlapping spans
+(`trail_paint.ts`). 2a: the visibility multiplies the fragment's alpha,
+so pulses, hover and trail on a fading stub fade with it (question 4).
+2c: clamp pulseReach to revealDistance (question 5).
+
+**K81, K127, K169, K191 (webs).** Route bands (`junction_routes.ts`, the
+band loop in junctionField); each routed arm writes two strip rows
+(composed, untraveled); a fully traveled web reads composed paint; the
+gold web fades over 0.25 s (`web_fade.ts`, J1.z rewritten in place by
+tickWebFade, `ribbon_renderer.ts:4278`). 2b: the prototype's
+`arm_strip.ts` and `junction_field.ts` hunks do not apply. Add a
+premultiplied `stripAtP` beside `stripAt`; armPaint, junctionBase and
+junctionField return premultiplied vec4, the band and web-fade mixes
+included; the strip pass writes vis as alpha (its quad is blendMode
+none); mirror it in `cpuJunctionField` in the same commit. Routes follow
+the current path, which is always explored.
+
+**K73, K132 (codec).** CODEC_VERSION stays 4, and a link lists only its
+differences from today's PARAM_DEFAULTS. The last index is 108
+(highlightMode), so the mode's params append at 109+. Replacing the
+fogOfWar checkbox with an `exploration` dropdown is a removal (version
+5 and a re-pin, allowed pre-launch); keeping fogOfWar and appending a
+threadReveal checkbox avoids it (question 7). 2c checklist:
+`param_codec.ts`; `url_state.ts` (UrlParams, PARAM_DEFAULTS,
+ENUM_OPTIONS, fromCodecValues, the key=value keys);
+`test/ui/param_codec.test.ts` (the pin); `test/ui/url_codec.test.ts`
+(OVERRIDE_KEYS); `tweakpane_panel.ts` (the fog rows, their visibility);
+`undo_stack.ts` LIVE_EFFECTS. Keep the params out of
+`daily_link.ts`'s DAILY_EXEMPT_KEYS; the mode defaults off, so dailies
+stay put.
+
+**K99, K100, K145 (fog, hover).** The fog is one sprite whose stamps sit
+at fixed stations along each move. It resets on `controller.restarts`
+and (K174) `controller.refogs`. Restores and the Reset path call
+`exploreRuns(runs, start)` (renderer l.978; `main.ts:1810`, `:2450`).
+The hover glow is one RIM item written last (strength uKReach.z, point
+.w). 2a: VIS items go before the RIM item, which stays last. 2c: the
+glow fades with the alpha, and hovering hidden thread does nothing
+(edgeAt keeps the prototype's exploreVisAt gate at its point test;
+pickThread returns null on hidden thread).
+
+**K111 (highlight modes).** The mode id rides in uKGold.w (kHiMode);
+kComposePaintAcross and kComposePaintFlat carry rims and contrast.
+PULSES is master's code path. The CPU mirror computes pulses in every
+mode, and no parity test covers the modes. 2a: the variant multiplies
+alpha after the composition, so every mode fades with the thread; the
+mode-off program is master's. 2b: rims leave webs unlit and contrast
+makes them flat white, so both flat compositions carry the strip alpha.
+2d: section 9's baseline (009d508, 2.35 ms) predates K75 to K111; take a
+fresh same-state A/B against master.
+
+**K174, K80 (the minotaur).** `minoRefog` (mrf, index 107, default on):
+on a catch main.ts runs `fc.respawn(params.minoRefog)`,
+`fabric.stopMove()`, `fabric.update(fc)`. respawn keeps taps,
+visitedJunctions and deadEndTips and bumps `refogs`. The minoFog and
+minoRefog rows show only under fog. 2c, a trap: tapEdge records the tap,
+`taps` and the far vertex at TAP time, so a model derived from the
+controller's sets (the prototype's syncExploreSeen, which stage 2a keeps
+as a probe-only stand-in) shows the whole in-flight run and its far
+junction after a mid-run catch, where the fog lifts only as far as the
+dot got, and re-shows the pre-catch walk right after a refog, because
+the sets survive respawn. Feed the model by events, as the fog is fed:
+add a run and its vertex when a move completes, take restores and Reset
+through an exploreRuns-style call, clear on restarts and refogs, and on
+stopMove add only the dot's reached extent.
+
+**K198, K148, K73 (indicators, camera).** The K76 hook exists:
+`finishIndicator.gate(pred)` (main.ts ~2193) returns a remover. The
+finish indicator already hides until the intro reveals the exit; its
+label and tap branch on fogOfWar. The head indicator always shows. 2c:
+computeFitTarget takes fog's box from fogVisibleBounds and fitRight from
+markersRight (visible marker meshes only); K198's pan range uses
+fitRight, so the explored box becomes the right edge and the exit marker
+must stay invisible until seen. K198 stage 2 edits main.ts: land 2c's
+main.ts edits after it.
+
+**Other.** K239's handRendererLook (main.ts ~1920) sets the renderer's
+look before every update(): set the explore look there in 2c. K83/K98
+markers (`marker_mesh.ts`) draw start, head and exit. K108 left
+walk_graph unchanged but for hypot2. K92's undo does not cover the
+explored state. K140, K147, K155: no impact.
+
+**Prototype hunks that break.** `PAINT_ITEM.VIS = 4` collides with RIM;
+stage 2a's VIS is 5 and lives only in the explore variant (adding it to
+PAINT_ITEM would change master's program text through glslConstBlock).
+`setPaint` takes five arguments now. The prototype ORed the mode into
+paintHere, which ran kPaintAt and kGlow on every ribbon pixel; the
+variant gates only the exact-ctrl computation. The strip and fan hunks:
+see K81 above.
+
+**Questions for Levi.**
+1. A catch under thread reveal: re-hide the explored thread? (Recommend:
+   minoRefog governs both modes, and its and minoFog's rows show under
+   threads too.)
+2. Does the minotaur show through hidden thread, under minoFog's
+   setting? (Recommend yes, like a sound you hear.)
+3. A catch mid-run: show that run only up to the dot? (Recommend yes,
+   as the fog does.)
+4. Pulses, hover glow and highlight modes on a fading stub fade with the
+   thread (stage 2a multiplies alpha). Keep that? (Recommend yes.)
+5. Clamp pulseReach to revealDistance? (Recommend yes.)
+6. Explored runs keep their section colors while the K93 gold trail
+   fades on its own? (Recommend yes.)
+7. The `exploration` dropdown (CODEC_VERSION 5), or keep fogOfWar and
+   append threadReveal?
+8. Default off and never daily-exempt (Decision 4)?
+9. Reduced motion stills the beacon's breath; what does high contrast
+   do to the halo and the dots?
+10. The finish indicator hidden until the exit is seen, with no toast
+    before then?
