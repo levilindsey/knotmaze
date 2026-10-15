@@ -1214,14 +1214,12 @@ export interface KPaintState {
   rim: number;
 }
 
-// GLSL twin: kRimAcross - the hover glow across the ribbon (K145; side =
-// the ribbon's vUV.y, the edges at 0 and 1): 1 at either edge, falling as
-// a square to 0 at RIM_EDGE of the half-width in from it.
+// GLSL twin: kRimAcross - the hover glow across the ribbon (K145, K111
+// stage 3; side = the ribbon's vUV.y, the edges at 0 and 1): 1 at either
+// edge, fading out smoothly to 0 at RIM_EDGE of the half-width in from it.
 export function kRimAcross(side: number): number {
-  const W = PAINT_CONST.RIM_EDGE;
   const e = Math.abs(2 * side - 1);
-  const x = Math.min(1, Math.max(0, (e - (1 - W)) / W));
-  return x * x;
+  return 1 - smooth01((1 - e) / PAINT_CONST.RIM_EDGE);
 }
 
 // Ring distance on a closed chain (|a - b| folded), plain on open ones.
@@ -1328,7 +1326,8 @@ export function kPaintAt(
       // span) and the strength are uniforms (uKReach.w, .z): a pointer
       // moving along one run rewrites no texel. Along the thread the glow
       // falls off to 0 at the reach from the hover point, and it fades in
-      // from each end gap over RIM_END_FADE.
+      // from each end gap over RIM_END_FADE, or over RIM_END_SHARE of the
+      // stretch between the gap and the run's middle where that is shorter.
       const u0 = kArcU(D, c, cA);
       const u1 = kArcU(D, c, cB);
       let u = arc;
@@ -1339,10 +1338,14 @@ export function kPaintAt(
       if (u < u0 || u > u1) continue;
       const d = Math.abs(u - kArcU(D, c, U.uKReach[3]));
       const dEnd = Math.min(u - u0, u1 - u);
+      const fade = Math.min(
+        PAINT_CONST.RIM_END_FADE,
+        Math.max(1e-4, PAINT_CONST.RIM_END_SHARE * (0.5 * (u1 - u0) - P[o + 3])),
+      );
       const g =
         U.uKReach[2] *
         (1 - smooth01(d / Math.max(U.uKReach[0], 1e-4))) *
-        smooth01((dEnd - P[o + 3]) / PAINT_CONST.RIM_END_FADE);
+        smooth01((dEnd - P[o + 3]) / fade);
       if (g > out.rim) out.rim = g;
     }
   }

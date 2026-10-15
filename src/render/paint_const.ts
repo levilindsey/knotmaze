@@ -65,15 +65,22 @@ export const PAINT_CONST = {
   // end - at most half the reach. A fixed length rather than a share: a
   // share of a long reach dimmed the crests over its whole second half.
   PULSE_REACH_FADE: 1.0,
-  // HOVER GLOW (K145): a run that is not a choice glows along both rims
-  // around the hover point. Along the thread it falls off smoothly to 0 at
-  // the pulseReach param (world arc from the hover point); toward each end
-  // of the run it is gone within the item's end gap (the junction web's
-  // reach there: the webs carry no across coordinate) and back in full
-  // RIM_END_FADE further on. Across, it is 1 at either edge and falls as a
-  // square to 0 at RIM_EDGE of the half-width in from it.
+  // HOVER GLOW (K145; its look K111 stage 3): a run that is not a choice
+  // glows along both rims around the hover point. Along the thread it
+  // falls off smoothly to 0 at the pulseReach param (world arc from the
+  // hover point); toward each end of the run it is gone within the item's
+  // end gap (the junction web's reach there: the webs carry no across
+  // coordinate) and back in full RIM_END_FADE further on, or sooner on a
+  // short run: the fade takes at most RIM_END_SHARE of the stretch between
+  // the gap and the run's middle, so a run shorter than about 2.5 world
+  // still glows in full mid-run. Across, it peaks at either edge and fades
+  // out smoothly (1 - smoothstep) to 0 at RIM_EDGE of the half-width in
+  // from it: Levi (K248) wanted "the gradient start high at the edge and
+  // then fade-out as it progresses toward the center", wider than K145's
+  // square over the outer 0.6.
   RIM_END_FADE: 0.75,
-  RIM_EDGE: 0.6,
+  RIM_END_SHARE: 0.6,
+  RIM_EDGE: 0.85,
 
   // COMPOSITION (the retired accent strip in closed form): both bands
   // converge to 0.94 toward white at full strength, band texels spanning
