@@ -823,7 +823,7 @@ export function buildPanel(
   );
   const fowIntroRow = row(
     fMaze, p, "fowIntro", { label: "intro in the open" },
-    "Play the intro appearance animation in the open, then hide what you have not explored: the fog closes in around you (it fades in while its reveal radius contracts), or the hidden threads dissolve. Applies to the next intro.",
+    "Play the intro appearance animation in the open, then hide what you have not explored: the fog closes in around you (it fades in while its reveal radius contracts), or the threads you have not seen withdraw toward you. Applies to the next intro.",
     D.fowIntro, () => callbacks.onTrailChange()
   );
   // K76 stage 2c: the thread reveal's reach, its fade and its end look.
