@@ -1,0 +1,3 @@
+# A saved draft is applied with `git apply`: keep its bytes as written
+# (no CRLF conversion under core.autocrlf).
+*.patch -text

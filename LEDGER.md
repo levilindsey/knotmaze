@@ -794,25 +794,6 @@ and never reused.
     onto 813e098 or later, then the merge. Its report says where K332's
     hints hook in.
   - brief: this item and K332-K334 (no design doc).
-- **K335** · The confetti rain's top edge (Levi, 2026-10-14 about 22:22:
-  "I like the abrupt wave of confetti at the start, but then we also have
-  an abrupt cut-off stopping the confetti, and we see an abrupt line at
-  the top of the wave of confetti that I don't like. Can we more of a
-  fade-out of confetti particles along the top?"): keep the sudden start,
-  and thin the wave out toward its top so it ends in a ragged fade
-  instead of a line. K140's `src/render/confetti_model.ts` (K317 doubled
-  the rain at 21:53). Narrowed at 23:01 to K335 alone (K336 and K337
-  deferred, Levi 23:00).
-  - owner: agent a5a499658319bedf9 (opus) of claude session d8031183,
-    from 22:54 (cap 00:54; ports 5860-5869).
-  - branch: `worktree-agent-a5a499658319bedf9`
-    (`.claude/worktrees/agent-a5a499658319bedf9`, from 7effaae); last
-    commit: `70854ee` (the rain's releases taper, its top edge thins).
-  - evidence: `.claude/probes/K335/` in its worktree.
-  - next: the rain's edge with its tests and sheet, K336/K337's partial
-    work saved as a patch in `.claude/probes/K335/deferred/`, the
-    handoff, then the merge.
-  - brief: `docs/design/K335_confetti.md`.
 - **K339** · Audit and reorganize the settings panel (Levi, 2026-10-14
   about 22:48: "We should also audit the current list of settings in
   this panel, and reorganize them now. We should also consider whether
@@ -835,6 +816,24 @@ and never reused.
     questions and the build plan; then Levi's calls; then the rebuild
     with K323 stage 1.
   - brief: `docs/design/K339_panel_audit.md`.
+- **K344** · A sharp cusp in the pluck vibration on a self-crossing loop
+  (Levi, 2026-10-14 about 23:04: "There's a sharp discontinuous cusp
+  with the vibration effect on this loop along the bottom of the loop.
+  Can we fix this general problem?"; on the LAN dev server,
+  `?qoietk.KIiHgRRXwRlRt8fGrST4sf`; his inspect: crossing 104, chain 21
+  crossing itself, over at ctrl 102 and under at ctrl 110.205). The fix
+  covers the general case, not this loop alone. One opus stage in the
+  confetti stage's slot: `docs/design/K344_pluck_cusp.md`.
+  - owner: agent a67c6d4d11a9ea6b4 (opus) of claude session d8031183,
+    from 23:30 (cap 01:30; ports 5890-5899).
+  - branch: `worktree-agent-a67c6d4d11a9ea6b4`
+    (`.claude/worktrees/agent-a67c6d4d11a9ea6b4`, from 79c5a97); last
+    commit: `79c5a97` (master; none of its own yet).
+  - evidence: `.claude/probes/K344/` in its worktree.
+  - next: reproduce on Levi's link at 1400x900, measure the cusp's
+    geometry, fix the general case with a test that fails first, the
+    after sheet, lore and the handoff; then the merge.
+  - brief: `docs/design/K344_pluck_cusp.md`.
 
 ## Next, in order
 
@@ -872,9 +871,9 @@ Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
 (he may reorder). Running: K7's stage 3 from 23:22 (cap 01:22, opus),
 K329 (the arrow keys, with K333 and K334) from 22:16 (cap 00:16, opus),
-the confetti stage (K335 only since 23:01) from 22:54 (cap 00:54, opus)
-and K339's panel audit from 22:54 (cap 00:54, opus, docs only). K7's
-stage 2 merged at 23:21, K325 at 22:53, the K323/K324 design at 22:44,
+K344 (the pluck cusp) from 23:30 (cap 01:30, opus) and K339's panel
+audit from 22:54 (cap 00:54, opus, docs only). K335 (the confetti's top
+edge) merged at 23:32, K7's stage 2 at 23:21, K325 at 22:53, the K323/K324 design at 22:44,
 K298 at 22:20, K307's stage 1 at 22:06 and K7's stage 1 at 22:04. The order
 from 2026-10-14 23:00 (Levi, verbatim: "Let's defer the more-complex
 celebratory effects to after other tasks. ... I think I'd like to get
@@ -883,7 +882,7 @@ after the web worker."; at about 23:09, going to bed: "I'll leave the
 phone available. Proceed through the night."): K7's stages 3-5 in turn;
 then thread appear/disappear, one at a time since all four edit the
 paint shaders: K76 2c (after K329), K268 stage 2, K290 (burn stage 3)
-and K76 2d. K344 (the pluck cusp) takes the confetti stage's slot. Then
+and K76 2d. Then
 K321 (the credits page, sonnet), K307's warm-up (K313's loader follows
 it), K331 with K330, K111 stage 5 with K265, K328 and K345, K332 (the
 key hints), K323 stage 1 with K339's rebuild (one codec bump, shared
@@ -1039,14 +1038,6 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   sheet shows both. The default is gone (Levi, 2026-10-14 about 18:27,
   verbatim: "Gone should be the burnt away dedault").
   `docs/design/K114_burn.md` ("The stages", stage 3).
-- **K344** · A sharp cusp in the pluck vibration on a self-crossing loop
-  (Levi, 2026-10-14 about 23:04: "There's a sharp discontinuous cusp
-  with the vibration effect on this loop along the bottom of the loop.
-  Can we fix this general problem?"; on the LAN dev server,
-  `?qoietk.KIiHgRRXwRlRt8fGrST4sf`; his inspect: crossing 104, chain 21
-  crossing itself, over at ctrl 102 and under at ctrl 110.205). The fix
-  covers the general case, not this loop alone. One opus stage in the
-  confetti stage's slot: `docs/design/K344_pluck_cusp.md`.
 - **K345** · The hover rim through the junction fillets (Levi,
   2026-10-14 about 23:06: "Why do we not render the hover rim
   hightlight closer to junctions? Does this have to do with the filets?
@@ -1474,8 +1465,12 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   (`docs/design/K335_confetti.md`). Deferred to after the other tasks
   (Levi, 2026-10-14 about 23:00: "Let's defer the more-complex
   celebratory effects to after other tasks."); the confetti stage was
-  narrowed to K335 at 23:01, any partial work saved under
-  `.claude/probes/K335/deferred/`.
+  narrowed to K335 at 23:01. Its model-only draft of K336 and K337 is
+  `docs/design/K336_K337_draft.patch` (applies on K335's merge with `git
+  apply`); still to do: the draft's tests, the view, panel rows, codec
+  entries (`cfc`/`cfn`/`cfs`/`cfh`/`cff`, appended and daily-exempt),
+  reduced motion, the sheets and the frame A/B (the brief's items 2-7).
+  The draft gives the finish's spray no streamers, unchecked on a sheet.
 - **K337** · Confetti shine (Levi, 2026-10-14 at 22:32: "Also, with the
   confetti, I'd like to explore adding a shimmer/shine reflection effect
   to them, so some flash as they rotate the right way. I bet we make make
@@ -1486,7 +1481,7 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   computed on the CPU into the tint the view already sets (no new shader,
   no cold compile). Reduced motion keeps the diffuse term only. Designed
   with K335 and K336 (`docs/design/K335_confetti.md`). Deferred with
-  K336 (Levi, 23:00).
+  K336 (Levi, 23:00); its draft is in K336's patch.
 
 ## Residuals (known, not fixed)
 
@@ -2448,6 +2443,18 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   `.claude/probes/K7/stage2/tsconfig.tests.json` shows how.
 
 ## Done
+
+- **K335** · The confetti rain's top edge (Levi, 2026-10-14 about
+  22:22): the rain's releases taper over 2.2 s (rate
+  (m+1)/W·(1-t/W)^m, m = 4), so the opening wave keeps its weight and
+  the rain runs out with no hard stop, and a later piece starts up to
+  0.12 screen heights higher, so the wave's top thins out raggedly
+  instead of ending in a line. Counts, the spray and the sim's per-frame
+  cost are unchanged; knot mode animates 0.3-0.6 s longer after a finish
+  (median; 0.9 s at most), by design. `src/render/confetti_model.ts`;
+  lore: "The rain's taper (K335)" in `render-confetti.md`; sheets in
+  `.claude/probes/K335/sheet/`. K336 and K337 stay deferred. Done in
+  79c5a97..c7dacce (2026-10-14 23:32).
 
 - **K325** · The snoring cat on the panel's credit link (Levi,
   2026-10-14 about 22:05): the snore (Levi's own recording, 22:50: "It's
