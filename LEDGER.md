@@ -95,10 +95,6 @@ and never reused.
   motion stills the beacon's breath; under High contrast the halo and
   the dots draw at full strength in pure white (rec.). Asked in session
   2026-10-14 14:19. `docs/design/K76_reveal_mode.md` section 10.
-- **K253** · A quiet phone for K193's portrait A/A floor: the phone
-  untouched, awake and plugged in for about 30 minutes (3 reps of about
-  9 min). The 2026-10-14 13:47 attempt tripped on a touch at 13:59
-  after one rep. Say when; nothing else is needed (K193's next).
 - **K251** · On the phone, a displaced edge indicator crosses the open
   panel during its 0.25 s slide to its panel-offset place (K198 stage 2,
   merged 2026-10-14). Keep the slide, or fade the disc out and back in
@@ -244,15 +240,6 @@ and never reused.
   (`pendingWin`, `src/main.ts` about line 2079) and the Reset path during
   the winning move, or only on a live finish? (3) the colors (a festive
   set built from the gold 0xffd23f) and the default amount, 1?
-- **K294** · Per-model minotaur tuning (K80 turns stage 2's call): the
-  hunter, guard and stalker share sight and accuracy, so the retune
-  aimed at the hunter on the dailies (sight 2, accuracy 0.3) moved the
-  others too: the stalker fell from 20% to 1% (dailies, an attentive
-  explorer), and the hunter fell below section 0's rates on the treelike
-  and dead-end sets (treelike at 80% attention: 8% against 27%). Give
-  each model its own defaults, tuned to section 0's rates? Recommended:
-  yes. `docs/design/K80_turns.md` ("Stage 2 handoff": Calls, and the
-  table under Verification). Asked at 18:54.
 
 ## In progress
 
@@ -482,8 +469,8 @@ and never reused.
     `storage` field and the walk's `pick` option merged in 8d672ee..b72b3e9
     (10:50).
   - owner: agent a04122e6bc4e56b02 (sonnet) of claude session d8031183,
-    round 2026-10-14c's pass from 18:41 (cap 19:41, or the watchdog's
-    trip) on the phone Levi lent at about 18:35 "for a bit". Round
+    round 2026-10-14c's pass from 18:41 (cap 19:41, moved to 19:58 for
+    K253's floor, or the watchdog's trip) on the phone Levi lent at about 18:35 "for a bit". Round
     2026-10-14b's agent ad24cee1cd83ebe88 ended 10:47; worktree kept.
   - branch: worktree `.claude/worktrees/agent-a04122e6bc4e56b02` (from
     0e865bf); last commit: 0e865bf (the round's brief).
@@ -497,9 +484,10 @@ and never reused.
     looks, K268's gaps, K98 and K92 (K230), k140-confetti, the 14
     dropped looks (K233), with the k198 `gap` fixed), then K279's tap
     and wake cost on the phone, then frames against 48da84d. K253's
-    portrait A/A floor (K193's next) runs only if Levi leaves the phone
-    untouched for 30 minutes (asked at 18:44); then the two borderline load
-    cells again with 3 reps (K232). Sweep the 3a and 3b
+    portrait A/A floor (K193's next) runs in this window as step 7, by
+    19:22 (`-Base master -Head master -Reps 3`): Levi said yes at about
+    18:58, the phone untouched until about 19:58. Then the two borderline
+    load cells again with 3 reps (K232). Sweep the 3a and 3b
     worktrees (`.claude/worktrees/agent-a262df65dcc1489a7`,
     `.claude/worktrees/agent-a957f7f1407f5df9f`) with
     `.claude/probes/K161/cleanup.ps1` (`-DryRun` first).
@@ -507,6 +495,12 @@ and never reused.
     window" (0e865bf).
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489). Check that nobody is using the phone first (K234).
+- **K253** · A quiet phone for K193's portrait A/A floor: the phone
+  untouched, awake and plugged in for about 30 minutes (3 reps of about
+  9 min). The 2026-10-14 13:47 attempt tripped on a touch at 13:59
+  after one rep. Levi said yes at about 18:58 ("It'll be sitting here for
+  the next hour"), so the floor runs as step 7 of K156's round
+  2026-10-14c, starting by 19:22; the handle is K156's.
 - **K161** · Disk: C: had 24.4 GB free (2026-10-13 about 19:30, before
   K81's 1.6 GB probe copy). `$env:TEMP` holds 1145 `knotmaze-*` Chrome
   profiles (about 36.5 GB) that probe runs never delete; the worktrees
@@ -723,6 +717,29 @@ and never reused.
   mode was flat white with a black center line) and show them on a
   sheet, desktop and phone, for Levi to pick. K111 stage 4 with K264;
   `docs/design/K111.md` ("Stage 3 handoff"). Running with K264 in K111 stage 4 from 17:53; the handle is K264's.
+- **K7** · Physics in a Web Worker, with render-side interpolation between
+  physics steps. Smooths the UI; it does not speed up physics. Acceptance
+  includes K28: the intro runs at full frame rate WHILE physics settles
+  (no settle-first loader wait). K147's per-frame budget is the
+  main-thread interim (a smooth intro over a slow-motion settle); the
+  worker gives the settle a whole core. Levi asked when it lands
+  (2026-10-14 about 18:56), approved it as the next build at about 19:00
+  ("1. Yes."), ahead of K76 2c and K268 stage 2, and asked at about 19:01
+  whether the intro will then run at normal frame rates; the design
+  answers that with numbers.
+  - owner: agent a70e8b39f6fe8c19d (opus) of claude session d8031183,
+    the design stage from 19:05 (cap 21:05).
+  - branch: worktree `.claude/worktrees/agent-a70e8b39f6fe8c19d` (from
+    0d88091); last commit: 0d88091 (the brief).
+  - evidence: `.claude/probes/K7/design/`; the 2026-07-24 plan in
+    `.claude/rules/physics.md` ("CANDIDATE perf follow-up"); K16's wake
+    numbers; K147's settle numbers (`.claude/probes/K147/results.md`).
+  - next: the design stage runs its brief (the boundary map, SAB against
+    copied buffers, interpolation, the settle under the worker, the
+    diagnostic bridge, whether K5 and K6 come first, baselines and
+    targets, the build stages' briefs); then the build stages, each with
+    `main.ts` to itself.
+  - brief: `docs/design/K7_worker.md` ("Stage 0: the design", 0d88091).
 
 ## Next, in order
 
@@ -758,9 +775,9 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K111 stage 4 from 17:53 (cap 19:53, opus)
-and K156's round 2026-10-14c phone pass from 18:41 (cap 19:41,
-sonnet). K279's stage 2
+(he may reorder). Running: K111 stage 4 from 17:53 (cap 19:53, opus),
+K156's round 2026-10-14c phone pass from 18:41 (cap 19:58 for K253's
+floor, sonnet) and K7's design stage from 19:05 (cap 21:05, opus). K279's stage 2
 waits for Levi's picks (K288). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
@@ -780,7 +797,8 @@ files at their merges. Then, as code slots free up:
    2026-10-14b's (10:12-10:42, head 48da84d, with looks for K146, K151,
    K148, K198, K100, K93 and K120; K232-K234 filed). The next pass covers
    K98 and K92 and needs the portrait floor: K193's emulation merged at
-   14:10, and its A/A waits for a quiet phone (K253).
+   14:10, and its A/A runs in round 2026-10-14c (K253; Levi: yes at
+   about 18:58).
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
    5fed5c1, and its controls (K174, Levi's answers of 2026-10-14 about
@@ -807,15 +825,15 @@ files at their merges. Then, as code slots free up:
     fade-out (merged 2026-10-14 12:04, fafa340..3467117), K235 with K239
     (merged 2026-10-14 12:44, 08d1383..05e6d4d), and K193's portrait
     emulation (merged 2026-10-14 14:10, c36b57c..763067a; its A/A floor
-    waits for a quiet phone, K253).
+    runs in round 2026-10-14c, K253).
 11. K76 stage 2, in four stages (`docs/design/K76.md`, bcb969e): 2a (the
     re-base, the model, the paint variant) merged at 14:15 and 2b
     (crossing gaps and junction joints) at 16:04 (3ffed34..8d671ba).
     K268 stage 1, the shaped gaps Levi asked for at 15:16, merged at
     17:50 (1e55365..61c8859; `docs/design/K268.md`). 2c and K268 stage 2
-    come next, one at a time and after K111 stage 4, since all three
-    change the explore and paint shaders; then 2d, each from the handoff
-    before it. 2c's codec removal
+    come after the physics worker (K5-K7, below this list), one at a time
+    and after K111 stage 4, since all three change the explore and paint
+    shaders; then 2d, each from the handoff before it. 2c's codec removal
     is version 6, since
     K111 stage 3 took 5 (the codec note in
     `docs/design/K76_reveal_mode.md` still says 5).
@@ -851,8 +869,8 @@ G4-2 old-path deletions; K162 and K184-K186 (play, then call); K194's
 defaults (after playing); K225 (the markers' size); K229 (the open
 panel's top); K238 (K111's calls);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
-K251 (the displaced disc's slide across the panel); K253 (a quiet phone
-for K193's A/A); K257 (K76's questions for stage 2c); K260 and K261
+K251 (the displaced disc's slide across the panel); K257 (K76's
+questions for stage 2c); K260 and K261
 (the burn race's
 calls 2-4, and K74 stage 2's calls, built as recommended); K280 (the
 fire's heat); K282 (an explanation for the HUD's stats during play);
@@ -866,8 +884,20 @@ Levi listed at 16:06 (K225, K229, K238 with K240, K241, K244, K245,
 K251, K260 with K280, K261, K194, K162, K184-K186 and K90): 32 calls,
 answered by number.
 
-K5-K7 (split, frame loop, worker) follow.
+K5-K7 (split, frame loop, worker) come next, ahead of K76 2c and K268
+stage 2 (Levi, 2026-10-14 about 19:00: "1. Yes."). K7's design stage
+runs first (K7's handle); its handoff says whether K5 and K6 must come
+before the worker, and each build stage has `main.ts` to itself.
 
+- **K294** · Per-model minotaur tuning, for K80 turns stage 3 (Levi,
+  2026-10-14 about 19:00: "Yes."): the hunter, guard and stalker share
+  sight and accuracy, so the retune aimed at the hunter on the dailies
+  (sight 2, accuracy 0.3) moved the others too: the stalker fell from 20%
+  to 1% (dailies, an attentive explorer), and the hunter fell below
+  section 0's rates on the treelike and dead-end sets (treelike at 80%
+  attention: 8% against 27%). Each model gets its own defaults, tuned to
+  section 0's rates. `docs/design/K80_turns.md` ("Stage 2 handoff":
+  Calls, and the table under Verification).
 - **K284** · Credit K74's sources (K277): `docs/design/K74_maze_design.md`
   builds its goals on Pullen (*Think Labyrinth*, "Making Difficult
   Mazes") and Zhao and Marquez 2013 (arXiv:1307.5713), but `src/` names
@@ -933,21 +963,19 @@ K5-K7 (split, frame loop, worker) follow.
   needs no repo links or internal IDs. Plan:
   `docs/design/K78_handbook_plan.md`.
 
+- **K297** · A pared-down panel for most players (Levi, 2026-10-14 about
+  19:03, verbatim: "Eventually, we'll end up hiding most of these
+  settings, and exposing a more paired-down set of settings for the
+  average user."). Most rows move behind an advanced view, and a short
+  set stays in front. Which rows, and how the advanced view opens, come
+  later, after the churn; K292's marks and K84 / K57 feed it.
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along the new data
-  lines, once K1-K3 land.
+  lines (K1-K3 are done). K7's design stage says whether it must come
+  before the worker.
 - **K6** · One frame loop driven by what-changed flags (after K5).
   Replaces K21's stand-in `sceneAnimating()` in main.ts, and the
-  render-on-demand loop (K24) asks `background.needsFrame()`.
-- **K7** · Physics in a Web Worker, with render-side interpolation between
-  physics steps (after K6). Smooths the UI; it does not speed up physics.
-  Acceptance includes K28: the intro runs at full frame rate WHILE
-  physics settles (no settle-first loader wait). K147's per-frame budget
-  is the main-thread interim (a smooth intro over a slow-motion settle);
-  the worker gives the settle a whole core. Levi asked when it lands
-  (2026-10-14 about 18:56); offered, unanswered: a design stage now (the
-  physics boundary, SharedArrayBuffer against copied buffers, the stage
-  briefs; plan in .claude/rules/physics.md), then K5-K7 ahead of K76 2c
-  and K268 stage 2, each with main.ts to itself.
+  render-on-demand loop (K24) asks `background.needsFrame()`. K7's
+  design stage says what part of it the worker needs first.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). Defaults: anchored tails keep
   flat caps, phones stay at a 2x resolution cap. Over-tight folds keep
@@ -1092,13 +1120,21 @@ K5-K7 (split, frame loop, worker) follow.
   retrospect, I guess it makes more sense to keep each setting param
   grouped with its concept. Let's instead give some sort of UI indicator
   to differentiate between one param type vs the other."). Every row
-  stays in its concept's folder. A personal setting (`DAILY_EXEMPT_KEYS`
-  plus the localStorage prefs: Motion, High contrast, `finishIndicator`,
-  `tapToPan`, the move pad) carries a small mark that a key at the top
-  of the panel and the row's tooltip explain. A sheet of two or three
-  marks for Levi (recommended: a small person glyph after the label).
-  Runs after K111 stage 4 and K80 turns stage 2 merge (both add rows);
-  it replaces K84's separate section, and K57 settles the edge cases.
+  stays in its concept's folder. Then, about 19:02: "I was thinking a
+  more subtle indicator, like a dog-ear triangle in the top-right
+  corner. And maybe we should actually put the indicator on
+  non-personal-preference rows, since it's probably better to call-out
+  the ones that actually deviate the maze from the current URL/daily."
+  So the MAZE rows carry the mark, a small dog-ear triangle in the row's
+  top-right corner, which a key at the top of the panel and the row's
+  tooltip explain; the personal settings (`DAILY_EXEMPT_KEYS` plus the
+  localStorage prefs: Motion, High contrast, `finishIndicator`,
+  `tapToPan`, the move pad) stay unmarked. A sheet for Levi: the
+  dog-ear's size and color, on every maze row, against a variant that
+  marks only the rows changed from the link or the daily. Runs after
+  K111 stage 4 merges (it adds rows); it replaces K84's separate
+  section, K57 settles the edge cases, and K297 is the pared-down panel
+  this leads to.
 
 ## Residuals (known, not fixed)
 
