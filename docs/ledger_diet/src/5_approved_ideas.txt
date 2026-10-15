@@ -1,0 +1,49 @@
+- **K322** · Art, sound and music by people (Levi, 2026-10-14 21:47): commission or license better icon art, sound effects and music before launch, and credit each artist on the credits page (K321) with the terms their work ships under (`notices/credits.ts`).
+
+- **K259** · With the explore mode on, a chain with any visible piece draws its whole mesh, so hidden fragments still run the shader; drawing only the visible index range would make it cheaper. Not needed yet (2a's cost never exceeds master's program; `docs/design/K76.md`, "Stage 2a handoff").
+
+- **K255** · Fold K193's `wait_then_aa.ps1` (`.claude/probes/K193/`) into `scripts/phone_pass.ps1` as `-WaitQuiet`: it tolerates touches until a full quiet window can no longer end before a deadline, unlike `retry_quiet.ps1` (runs only after a trip; gives up at the first touch that leaves less than a full window).
+
+- **K256** · The phone warms about 6 C in a pass's first rep, so cells run at different temperatures (K193's A/A). A warm-up before the bench, or a temperature column in the summary, would separate heat from noise (`docs/design/K193.md`, "Stage 1 handoff").
+
+- **K247** · K174's ideas: readable labels in the Minotaur folder (the `mino*` keys clip, K246); a catch toast that says the fog came back; homing or the rejected "closest" roam pick, if more than about 2/3 of games should meet the minotaur. `docs/design/K174.md` ("Stage 1 handoff").
+
+- **K233** · The phone pass's full spec (26 looks, 3 reps) takes about 55-60 min. Trim it per round, or add a spec `deadline` so no look starts after it (`pass/state/watchdog.trip` already stops a pass gracefully; `docs/design/K156.md`, "Round 2026-10-14b handoff").
+
+- **K33** · A general "share this design" button that opens the phone's native share sheet with the link (the link holds the whole design); the daily's result share shipped with K20.
+
+- **K36** · Add to home screen: a web app manifest and icons. Blocked on icon art (Levi has the prompt for another model), which also fixes the `/favicon.ico` 404 on every load. K122 found the Vite template's unreferenced leftovers (`public/favicon.svg`, `public/icons.svg`, `src/assets/hero.png`): delete them or wire up the real favicon.
+
+- **K66** · Why do bridges at joints, open tails and kink neighborhoods end the settle ramp near an unstable point? They snap to a new rest 3.5-5 s in, which forces K63's 2.5 s window; fixing it could make a 0.75 s window safe (K64). K63 agent idea; harness in `.claude/probes/K63/`.
+
+- **K84** · After the churn, a pass over EVERY param (Levi, 2026-10-13): classify each as a viewer preference (localStorage) or a design param (the link); keep each in its concept's folder and mark preferences instead of a separate section (K292); re-evaluate worth and grouping; audit names and tooltips; place `finishIndicator` and `tapToPan` (K73), the Motion setting (K79) and High contrast (K111). Meets K57 (the daily's exempt keys) and feeds K78's param reference.
+
+- **K85** · Replay links (Levi, 2026-10-13): record a playthrough in a link and replay it with the path animating, for a finished session (watch) or an in-progress one (pick up where it left off). Builds on K47 (an attempt is its tap list plus a walk-graph fingerprint); a link needs the design token, the taps and per-move timing. The share link stays as it is.
+
+- **K91** · A shorter quiet window for physics-off loads (they never wake), dropping their hidden settle from 5.0 sim-s toward 3.25. Cost: about 4% of designs would lay out 1-4 px differently from physics-on, which K57's exempt physics toggle assumes is the same (K64 follow-up).
+
+- **K82** · Manually override the daily maze for a given day (Levi, 2026-10-12: "could be a follow-up thing"): a frozen per-day override table beside the versioned definitions, which a published day's entry must never change (`.claude/rules/gameplay-daily.md`, daily rule 1).
+
+- **K68** · If junction-web edges look soft at deep zoom (about 4x), size the arm material strip rows from the camera's world-per-pixel (re-packed on zoom) instead of raising the 64-texel width for everyone (K4 agent idea).
+
+- **K70** · A more dramatic hero settle (P2 polish): the splines round the lattice corners from the first frame, so the settle reads as a gentle tightening, not zigzags turning into curves. Blend sampled positions toward the control polyline while settle progress is low (`docs/history.md`, Follow-ups).
+
+- **K71** · Wobbly threads at slack ~0 (P2 polish): waviness along runs and rope-tight twist chains. Candidate knobs: constraint iterations, pullOnly bending, repulsion/structural balance (`docs/history.md`, Follow-ups).
+
+- **K113** · Two-layer vellum: render the fibers and grain once into a static texture (1 texel per CSS px) and drift only the mottling in a low-res pass (today's drift pass is about 2.1 ms at 1600x900; K79, `.claude/probes/K79/out/gpu_k79.log`).
+
+- **K119** · i18n, at the end (Levi, 2026-10-13): there is little text, and an LLM will drive the translations. Strings are mostly in `src/ui/` and `src/game/share_text.ts`; text drawn as threads is K115's question.
+
+- **K141** · K80 section 4's costlier mechanisms, deferred (Levi, 2026-10-13): 4.8 sentries (call 9's "validated sentries"), 4.22 two-player (M hot-seat, L networked), 4.25 over-under swap (`docs/design/K80_gameplay_additions.md`). The M ones are K138.
+
+- **K160** · The background speed slider is linear over 0-8; a curve like gridAlign's (`src/ui/grid_align_curve.ts`) would give the slow end room. At 8x the 10-15 Hz texture pass may look steppy (unchecked on the phone): if so, scale the re-render rate with the speed. A look for K156's phone pass.
+
+- **K57** · Confirm the daily's exempt settings (`DAILY_EXEMPT_KEYS` in `src/ui/daily_link.ts`): the ones a player may change without leaving the daily. Parked for the late-stage review with K46 and K84 (Levi, 2026-10-14; `docs/design/levi_notes_2026-10-14.md` item 13). Still open: `settleBudget`, `loadSettle` (K162 (3)), the two confetti settings and `markerSize`. The comment at `daily_link.ts:153` still calls `hoverGlow` proposed, though K237 and K264 answered it.
+
+- **K117** · Repo visibility (`docs/design/levi_notes_2026-10-13.md`): private later, on Levi's word, parked until near launch to save CI churn cost (2026-10-14). Done in a756ca5: the panel's GitHub link is gone, `LICENSE` says all rights reserved (Snoring Cat LLC.), package.json says UNLICENSED, doc-only pushes skip the deploy. No bundle obfuscation. On his word: `gh repo edit --visibility private --accept-visibility-change-consequences` (reversible; the Pages deploy keeps working). K122 is needed either way.
+
+- **K310** · K299's leftover shots: its seam sheet shows two pulse phases, not three or four, and its rim was injected rather than a real hovered choice (K298 builds that). `.claude/probes/K299/sheet/`.
+
+- **K316** · Single-threaded WASM for the collision narrow-phase: the audit's 2-4x on that slice (about 40% of a drag's physics), about enough to bring gs 18 from 0.76x to real time under K7. Only if K7 stage 5's phone numbers show physics, not rendering, is the bottleneck. Threads are ruled out (the Gauss-Seidel solver must not be colored, and SharedArrayBuffer needs COOP/COEP through every host, proxy and the beacon).
+
+- **K320** · Slim or split section-rgb: at 46,850 characters it is the cold critical path (about 2.8 s on the desktop, K307 stage 1). A deploy that changes a shader costs every player one cold compile (the browser caches programs by source), so a smaller or split program shortens every such load.
