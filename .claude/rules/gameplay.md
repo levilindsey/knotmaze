@@ -32,7 +32,7 @@ files it is about; `docs/lore_index.md` lists every rules file and its paths.
 - `gameplay-fog.md`: the fog of war resets on a restart only (K100)
 - `gameplay-links.md`: links and the codec
 - `gameplay-panel.md`: the panel
-- `gameplay-motion.md`: the Motion setting (K53, K79)
+- `gameplay-motion.md`: the Motion setting (K53, K79), the Accessibility group (K111)
 - `gameplay-camera.md`: camera, gestures and taps (with `src/main.ts`)
 - `gameplay-moves.md`: moves by direction (K120)
 - `gameplay-audio.md`: audio
