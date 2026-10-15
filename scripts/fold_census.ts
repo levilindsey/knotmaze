@@ -53,7 +53,7 @@ const { planAnchors } = await import(src("core/shapes.ts"));
 const { applyMazePlan, applyMazeCuts } = await import(src("core/maze_apply.ts"));
 const { ParticleSystem } = await import(src("physics/particle_system.ts"));
 const { parseParams } = await import(src("ui/url_state.ts"));
-const { sampleClosedSpline, sampleOpenSpline } = await import(
+const { sampleClosedSpline, sampleOpenSpline, splineBend } = await import(
   src("geometry/spline_generator.ts")
 );
 // The app's sleep gate (K63); older checkouts predate the module.
@@ -195,6 +195,129 @@ function sampleChain(ps: Any, i: number, rb: Ribbon, tw: number): Any {
   return s;
 }
 
+// ------------------------------------------------ K90 1b: variants
+// K90_VARIANTS (env, comma-separated) re-samples the SAME live state other
+// ways in the rest and gesture-end summaries (`v` in each), so a variant's
+// counts compare to the base on identical particles:
+//   on:<ratio>:<maxShift>  the bend bound on (splineBend, spline_generator);
+//   sub<N>                 the spline's fine polyline at N subdivisions per
+//                          control segment instead of 12, the same count;
+//   dense<N>x<M>           N subdivisions and M x the sample count: the
+//                          curve's own curvature, nearly free of resampling.
+interface Variant {
+  name: string;
+  kind: "on" | "sub";
+  ratio: number;
+  maxShift: number;
+  sub: number;
+  mult: number;
+}
+const VARIANTS: Variant[] = (process.env.K90_VARIANTS ?? "")
+  .split(",")
+  .map((t) => t.trim())
+  .filter((t) => t.length > 0)
+  .map((t): Variant => {
+    const on = /^on:([\d.]+):([\d.]+)$/.exec(t);
+    if (on) {
+      return { name: t, kind: "on", ratio: +on[1], maxShift: +on[2], sub: 12, mult: 1 };
+    }
+    const sub = /^sub(\d+)$/.exec(t);
+    if (sub) return { name: t, kind: "sub", ratio: 0, maxShift: 0, sub: +sub[1], mult: 1 };
+    const dense = /^dense(\d+)x(\d+)$/.exec(t);
+    if (dense) {
+      return { name: t, kind: "sub", ratio: 0, maxShift: 0, sub: +dense[1], mult: +dense[2] };
+    }
+    throw new Error(`K90_VARIANTS: unknown variant ${t}`);
+  });
+
+// spline_generator.ts's evalSegment, sampleClosedSpline and
+// sampleOpenSpline (positions and arc tables only), with the subdivision
+// count a parameter.
+function evalSeg(c: ArrayLike<number>, i0: number, i1: number, i2: number, i3: number, u: number, out: number[]): void {
+  const E = 1e-6;
+  const p0x = c[i0], p0y = c[i0 + 1];
+  const p1x = c[i1], p1y = c[i1 + 1];
+  const p2x = c[i2], p2y = c[i2 + 1];
+  const p3x = c[i3], p3y = c[i3 + 1];
+  const t1 = Math.sqrt(Math.max(Math.hypot(p1x - p0x, p1y - p0y), E));
+  const t2 = t1 + Math.sqrt(Math.max(Math.hypot(p2x - p1x, p2y - p1y), E));
+  const t3 = t2 + Math.sqrt(Math.max(Math.hypot(p3x - p2x, p3y - p2y), E));
+  const t = t1 + (t2 - t1) * u;
+  const w01 = t / t1;
+  const a1x = p0x + (p1x - p0x) * w01, a1y = p0y + (p1y - p0y) * w01;
+  const w12 = (t - t1) / (t2 - t1);
+  const a2x = p1x + (p2x - p1x) * w12, a2y = p1y + (p2y - p1y) * w12;
+  const w23 = (t - t2) / (t3 - t2);
+  const a3x = p2x + (p3x - p2x) * w23, a3y = p2y + (p3y - p2y) * w23;
+  const w02 = t / t2;
+  const b1x = a1x + (a2x - a1x) * w02, b1y = a1y + (a2y - a1y) * w02;
+  const w13 = (t - t1) / (t3 - t1);
+  const b2x = a2x + (a3x - a2x) * w13, b2y = a2y + (a3y - a2y) * w13;
+  out[0] = b1x + (b2x - b1x) * w12;
+  out[1] = b1y + (b2y - b1y) * w12;
+}
+function sampleSub(c: ArrayLike<number>, count: number, closed: boolean, brk: number, SUB: number): Any {
+  const n = c.length / 2;
+  const segCount = closed ? n : n - 1;
+  const off = brk + 1;
+  const slot = (r: number): number => (closed ? ((r % n) + n) % n : (((off + r) % n) + n) % n);
+  const fineCount = closed ? n * SUB : segCount * SUB + 1;
+  const fine = new Float64Array(fineCount * 2);
+  const pt = [0, 0];
+  for (let r = 0; r < segCount; r++) {
+    const i0 = (closed ? slot(r - 1) : slot(Math.max(0, r - 1))) * 2;
+    const i1 = slot(r) * 2;
+    const i2 = slot(r + 1) * 2;
+    const i3 = (closed ? slot(r + 2) : slot(Math.min(segCount, r + 2))) * 2;
+    for (let s = 0; s < SUB; s++) {
+      evalSeg(c, i0, i1, i2, i3, s / SUB, pt);
+      fine[(r * SUB + s) * 2] = pt[0];
+      fine[(r * SUB + s) * 2 + 1] = pt[1];
+    }
+  }
+  if (!closed) {
+    const last = slot(n - 1) * 2;
+    fine[(fineCount - 1) * 2] = c[last];
+    fine[(fineCount - 1) * 2 + 1] = c[last + 1];
+  }
+  const cum = new Float64Array(fineCount + 1);
+  const legs = closed ? fineCount : fineCount - 1;
+  for (let f = 0; f < legs; f++) {
+    const g = (f + 1) % fineCount;
+    cum[f + 1] = cum[f] + Math.hypot(fine[g * 2] - fine[f * 2], fine[g * 2 + 1] - fine[f * 2 + 1]);
+  }
+  const total = cum[legs];
+  const controlArcLengths: number[] = new Array(n).fill(0);
+  for (let r = 0; r < n; r++) {
+    controlArcLengths[slot(r)] = closed ? cum[r * SUB] : cum[Math.min(fineCount - 1, r * SUB)];
+  }
+  const positions = new Float32Array(count * 2);
+  let cursor = 0;
+  for (let k = 0; k < count; k++) {
+    const target = closed ? (k / count) * total : (k / (count - 1)) * total;
+    while (cursor < legs - 1 && cum[cursor + 1] < target) cursor++;
+    const segLen = cum[cursor + 1] - cum[cursor];
+    const frac = segLen > 1e-6 ? (target - cum[cursor]) / segLen : 0;
+    const a = cursor * 2;
+    const b = ((cursor + 1) % fineCount) * 2;
+    positions[k * 2] = fine[a] + (fine[b] - fine[a]) * frac;
+    positions[k * 2 + 1] = fine[a + 1] + (fine[b + 1] - fine[a + 1]) * frac;
+  }
+  return { count, positions, totalLength: total, controlArcLengths, closed };
+}
+function sampleChainSub(ps: Any, i: number, rb: Ribbon, tw: number, sub: number, mult: number): Any {
+  const P = ps.positions as Float32Array;
+  const chain: number[] = ps.chains[i];
+  const c = rb.controls;
+  for (let k = 0; k < chain.length; k++) {
+    c[k * 2] = P[chain[k] * 2];
+    c[k * 2 + 1] = P[chain[k] * 2 + 1];
+  }
+  const s = sampleSub(c, rb.count * mult, rb.closed, rb.brk, sub);
+  if (!rb.closed && (rb.tipA || rb.tipB)) tuck(s, rb.tipA, rb.tipB, tw);
+  return s;
+}
+
 // A sample's arc -> fractional ctrl (slot units) through the spline's
 // control arc table, in traversal order.
 function arcToCtrl(s: Any, len: number, brk: number, arc: number): number {
@@ -233,7 +356,13 @@ const segDist = (
 
 // ---------------------------------------------------------------- census
 const FEATURE_CAP = 300;
-const HOLDERS = ["grab", "jhost", "jtip", "tip", "kink", "crossing", "collision", "free"];
+// K90 1b: "web" = a window whose tightest sample lies within WEB_COVER
+// half-widths of a fused junction's center, where the junction web draws
+// over the ribbon (calibrated on page crops, docs/design/K90_bend_radius.md).
+// The holder it would have had stays in `h0`.
+const HOLDERS = ["grab", "web", "jhost", "jtip", "tip", "kink", "crossing", "collision", "free"];
+const WEB_COVER = Number(process.env.K90_WEB_COVER ?? "1.5");
+const WEB_STEPS = [0.92, 1.5, 2.5];
 
 interface Scan {
   t: number;
@@ -252,6 +381,7 @@ class Census {
   tw: number;
   rbs: Ribbon[];
   fusedSlots: number[][];
+  ctr: number[] = [];
   constructor(ps: Any, fabric: boolean, tw: number) {
     this.ps = ps;
     this.tw = tw;
@@ -267,8 +397,68 @@ class Census {
     });
   }
 
+  // The live centers of the fused junctions (the renderer's apex is the
+  // mean of its arms' samples at the joint, which the spline interpolates:
+  // the particles' mean).
+  centers(): number[] {
+    const P = this.ps.positions as Float32Array;
+    const out: number[] = [];
+    for (const g of this.ps.fusedJunctions as number[][]) {
+      let x = 0;
+      let y = 0;
+      for (const p of g) {
+        x += P[p * 2];
+        y += P[p * 2 + 1];
+      }
+      out.push(x / g.length, y / g.length);
+    }
+    return out;
+  }
+
+  // A scan and its summary, plus every K90_VARIANTS variant re-sampled
+  // from the same particles (`v`).
+  rest(detail: number): Record<string, unknown> {
+    const base = this.summary(this.scan(), detail);
+    if (VARIANTS.length === 0) return base;
+    const v: Record<string, unknown> = {};
+    for (const vr of VARIANTS) {
+      const sb = splineBend;
+      const saved = sb ? { ...sb } : null;
+      if (vr.kind === "on") {
+        if (!sb) {
+          v[vr.name] = null;
+          continue;
+        }
+        sb.enabled = true;
+        sb.ratio = vr.ratio;
+        sb.maxShift = vr.maxShift;
+        sb.halfWidth = this.tw / 2;
+        sb.moved = 0;
+        sb.shiftMax = 0;
+        sb.runs = 0;
+        sb.skipped = 0;
+      }
+      const sc = this.scan(vr);
+      const sum = this.summary(sc, 0);
+      delete sum.top;
+      delete sum.fj;
+      if (vr.kind === "on") {
+        sum.bend = {
+          moved: sb.moved,
+          shiftMax: +(sb.shiftMax / (this.tw / 2)).toFixed(4),
+          runs: sb.runs,
+          skipped: sb.skipped,
+        };
+        Object.assign(sb, saved);
+      }
+      v[vr.name] = sum;
+    }
+    base.v = v;
+    return base;
+  }
+
   // Counts and raw windows for the current state.
-  scan(): Scan {
+  scan(vr: Variant | null = null): Scan {
     const ps = this.ps;
     const h = this.tw / 2;
     const out: Scan = {
@@ -284,7 +474,10 @@ class Census {
     };
     ps.chains.forEach((_: number[], i: number) => {
       const rb = this.rbs[i];
-      const s = sampleChain(ps, i, rb, this.tw);
+      const s =
+        vr && vr.kind === "sub"
+          ? sampleChainSub(ps, i, rb, this.tw, vr.sub, vr.mult)
+          : sampleChain(ps, i, rb, this.tw);
       const r = turnRadii(s.positions, s.count, rb.closed, rb.radii);
       out.samples += s.count;
       for (let k = 0; k < s.count; k++) {
@@ -410,7 +603,15 @@ class Census {
     }
     const gp: number = ps.grabbedParticle;
     const gd = gp >= 0 ? Math.hypot(x - P[gp * 2], y - P[gp * 2 + 1]) : Infinity;
-    const holder =
+    // The nearest fused junction center, in half-widths.
+    let jw = Infinity;
+    const ctr = this.ctr;
+    for (let m = 0; m < ctr.length; m += 2) {
+      const d = Math.hypot(x - ctr[m], y - ctr[m + 1]);
+      if (d < jw) jw = d;
+    }
+    jw /= h;
+    const holder0 =
       gd <= 1
         ? "grab"
         : jd <= 1.5
@@ -426,6 +627,7 @@ class Census {
                 : fd < 1.3
                   ? "collision"
                   : "free";
+    const holder = holder0 !== "grab" && jw <= WEB_COVER ? "web" : holder0;
     const r3 = (v: number): number | null => (Number.isFinite(v) ? +v.toFixed(3) : null);
     return {
       c: i,
@@ -439,6 +641,8 @@ class Census {
       poly: r3(poly),
       cls: poly >= BEND_FLOOR_RATIO ? "spline" : "floor",
       holder,
+      h0: holder0,
+      jw: r3(jw),
       kink,
       xd: r3(xd),
       xi,
@@ -458,6 +662,7 @@ class Census {
   // FEATURE_CAP windows), and the `detail` worst in full.
   summary(sc: Scan, detail: number): Record<string, unknown> {
     sc.wins.sort((a: Any, b: Any) => a.w.minRatio - b.w.minRatio);
+    this.ctr = this.centers();
     const feats = sc.wins.slice(0, FEATURE_CAP).map((e: Any) => this.features(e));
     const table = (): Record<string, Record<string, number>> => ({
       floor: Object.fromEntries(HOLDERS.map((k) => [k, 0])),
@@ -465,11 +670,28 @@ class Census {
     });
     const agg115 = table();
     const agg1 = table();
+    // Windows within each WEB_STEPS reach of a junction center (any
+    // holder but grab), below 1.0 and below 1.15; and per featured window
+    // [r, original holder, jw] to re-count at another reach.
+    const web1 = WEB_STEPS.map(() => 0);
+    const web115 = WEB_STEPS.map(() => 0);
+    const fj: Array<[number | null, string, number | null]> = [];
     for (const d of feats) {
       agg115[d.cls][d.holder]++;
-      if (d.r !== null && d.r < OVER_TIGHT_RATIO) agg1[d.cls][d.holder]++;
+      const under1 = d.r !== null && d.r < OVER_TIGHT_RATIO;
+      if (under1) agg1[d.cls][d.holder]++;
+      WEB_STEPS.forEach((st, q) => {
+        if (d.h0 !== "grab" && d.jw !== null && d.jw <= st) {
+          web115[q]++;
+          if (under1) web1[q]++;
+        }
+      });
+      fj.push([d.r, d.h0, d.jw]);
     }
     return {
+      web1,
+      web115,
+      fj,
       t: +sc.t.toFixed(3),
       n1: sc.n1,
       n115: sc.n115,
@@ -775,6 +997,8 @@ for (let ji = from; ji < to; ji++) {
     particles: ps.particleCount,
     chains: ps.chains.length,
     crossings: ps.crossings.length,
+    variants: VARIANTS.map((v) => v.name),
+    webCover: WEB_COVER,
   };
 
   // Steps 1/60 frames until the sleep gate trips (or `cap` sim-s), calling
@@ -812,7 +1036,7 @@ for (let ji = from; ji < to; ji++) {
       series,
       cps,
       worst: worst.sum,
-      rest: census.summary(census.scan(), 40),
+      rest: census.rest(40),
       holes: holeSummary(holes),
     };
     row.samples = census.scan().samples;
@@ -845,7 +1069,7 @@ for (let ji = from; ji < to; ji++) {
       }
       const holdFrames = Math.round(holdS / FRAME);
       for (let s = 0; s < holdFrames; s++) tick();
-      const end = census.summary(census.scan(), 10);
+      const end = census.rest(10);
       ps.release();
       const free = new Worst(census, 10);
       const resleep = settle(15, () => free.see());
@@ -855,7 +1079,7 @@ for (let ji = from; ji < to; ji++) {
         held: held.sum,
         end,
         free: free.sum,
-        rest: census.summary(census.scan(), 10),
+        rest: census.rest(10),
         resleep,
       });
     };
@@ -887,7 +1111,7 @@ for (let ji = from; ji < to; ji++) {
     }
     row.gestures = gestures;
     row.afterGestures = {
-      rest: census.summary(census.scan(), 40),
+      rest: census.rest(40),
       holes: holeSummary(kinkHoles(ps, tw)),
     };
 
@@ -922,7 +1146,7 @@ for (let ji = from; ji < to; ji++) {
         held: held.sum,
         free: free.sum,
         sleepT,
-        rest: census.summary(census.scan(), 40),
+        rest: census.rest(40),
         holes: holeSummary(kinkHoles(ps, tw)),
       });
     }

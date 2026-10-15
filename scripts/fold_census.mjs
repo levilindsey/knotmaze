@@ -59,7 +59,10 @@ const rows = readFileSync(path, "utf-8")
   .map((l) => JSON.parse(l.replace(/^﻿/, "")));
 const order = [...Object.keys(SETS), ...Object.keys(SHAPES), "links"];
 const bySet = new Map(order.map((s) => [s, rows.filter((r) => r.set === s)]));
-const HOLDERS = ["grab", "jhost", "jtip", "tip", "kink", "crossing", "collision", "free"];
+// "web" (K90 1b): a window within K90_WEB_COVER half-widths of a fused
+// junction's center, where the junction web covers the ribbon. 1a rows have
+// no "web" key and read it as 0.
+const HOLDERS = ["grab", "web", "jhost", "jtip", "tip", "kink", "crossing", "collision", "free"];
 const sum = (a) => a.reduce((x, y) => x + y, 0);
 const med = (a) => {
   const s = a.filter((v) => v !== null && v !== undefined).sort((x, y) => x - y);
@@ -124,7 +127,8 @@ line("## Class x holder");
 line();
 line("Class: **floor** = the particle polyline within 1.5 ctrl is itself under 1.15 half-widths");
 line("(applyTurnRadiusFloor lost); **spline** = the particles honor the floor and the Catmull-Rom");
-line("still turns tighter. Holder priority: grab > jhost/jtip (a fused junction: host thread / bridge tip)");
+line("still turns tighter. Holder priority: grab > web (within K90_WEB_COVER h of a fused junction's");
+line("center, under its web; K90 1b) > jhost/jtip (a fused junction: host thread / bridge tip)");
 line("> tip (unfused open end) > kink > crossing > collision > free.");
 line("Counts cover the worst 300 windows per census (`feat` vs `w115` shows any truncation).");
 line();
@@ -146,7 +150,7 @@ for (const key of ["agg1", "agg115"]) {
         feat += c.featured;
         w115 += c.w115;
         c.wq.forEach((v, i) => (wq[i] += v));
-        for (const cls of ["floor", "spline"]) for (const h of HOLDERS) acc[cls][h] += c[key][cls][h];
+        for (const cls of ["floor", "spline"]) for (const h of HOLDERS) acc[cls][h] += c[key][cls][h] ?? 0;
       }
     }
     void sums;
@@ -183,7 +187,7 @@ for (const [mode, pickRows] of [["knot", isKnot], ["maze", (r) => !isKnot(r)]]) 
       for (const c of states[name](r)) {
         if (!c) continue;
         n++;
-        for (const cls of ["floor", "spline"]) for (const h of HOLDERS) acc[cls][h] = (acc[cls][h] ?? 0) + c.agg1[cls][h];
+        for (const cls of ["floor", "spline"]) for (const h of HOLDERS) acc[cls][h] = (acc[cls][h] ?? 0) + (c.agg1[cls][h] ?? 0);
       }
     if (!n) continue;
     const tot = sum(HOLDERS.map((h) => acc.floor[h] + acc.spline[h]));

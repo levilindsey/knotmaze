@@ -1,6 +1,8 @@
 // Layer 2: centripetal Catmull-Rom splines through strand control points,
 // resampled at uniform arc-length spacing for ribbon extrusion.
 
+import { legTurnRadius, overTightWindows } from "./bend_radius";
+
 export interface SplineSamples {
   count: number;
   positions: Float32Array; // 2 * count, uniformly spaced along arc.
@@ -56,6 +58,192 @@ function evalSegment(
 
   out[0] = b1x + (b2x - b1x) * w12;
   out[1] = b1y + (b2y - b1y) * w12;
+}
+
+// K90 option 3 (stage 1b), THE BEND BOUND: a render-side prototype, OFF by
+// default and switched only by the debug hook `window.__knotSplineBend`
+// (ribbon_renderer.ts), never by a link. The rendered centerline can turn
+// tighter than its ribbon's half-width where the particles do not: at a
+// corner of the particle polyline the Catmull-Rom's radius is about
+// cos(phi / 2) / 2 of the polyline's leg radius (docs/design/
+// K90_bend_radius.md), and there the strip self-overlaps. With the bound on,
+// each run of resampled samples whose turn radius (bend_radius.ts, the
+// renderer's own measure) is under ratio x halfWidth is relaxed in place:
+// Gauss-Seidel sweeps move every over-tight sample halfway to its
+// neighbors' midpoint, so the turn spreads onto the samples beside the run
+// until each holds the radius. Limits: no sample moves more than maxShift
+// half-widths from where the spline put it; a run that turns more than
+// maxTurn (two samples either side included) is a loop, which a local
+// relaxation could only shrink, and is left alone; at most `iterations`
+// sweeps; an open run keeps its two end samples. The bound runs before the
+// tangents, so they follow the moved samples. Nothing in the physics reads
+// these samples: they feed the ribbons, the gaps and the webs.
+export interface SplineBend {
+  enabled: boolean;
+  // The radius to hold, in half-widths (bend_radius's OVER_TIGHT_RATIO
+  // is 1).
+  ratio: number;
+  // The ribbon half-width in world units; the renderer sets it each
+  // update().
+  halfWidth: number;
+  // The largest displacement of any sample, in half-widths.
+  maxShift: number;
+  // A run turning more than this many radians is left alone.
+  maxTurn: number;
+  iterations: number;
+  // Diagnostics, accumulated until the caller zeroes them: samples moved,
+  // the largest shift (world), runs relaxed and runs left alone.
+  moved: number;
+  shiftMax: number;
+  runs: number;
+  skipped: number;
+}
+
+export const splineBend: SplineBend = {
+  enabled: false,
+  ratio: 1.05,
+  halfWidth: 0,
+  maxShift: 0.5,
+  maxTurn: (200 * Math.PI) / 180,
+  iterations: 48,
+  moved: 0,
+  shiftMax: 0,
+  runs: 0,
+  skipped: 0,
+};
+
+// The fewest samples beside an over-tight run that may take its turn.
+const BEND_MARGIN_MIN = 3;
+const BEND_MARGIN_MAX = 12;
+// A sample moving less than this (world) has converged.
+const BEND_STILL = 1e-6;
+let bendOrig = new Float32Array(0);
+
+function bendRadiusAt(
+  pos: Float32Array,
+  count: number,
+  closed: boolean,
+  k: number
+): number {
+  if (!closed && (k <= 0 || k >= count - 1)) return Infinity;
+  const p = ((k - 1 + count) % count) * 2;
+  const c = k * 2;
+  const n = ((k + 1) % count) * 2;
+  return legTurnRadius(
+    pos[c] - pos[p],
+    pos[c + 1] - pos[p + 1],
+    pos[n] - pos[c],
+    pos[n + 1] - pos[c + 1]
+  );
+}
+
+// The signed turn at sample k (radians), 0 at an open run's ends.
+function bendTurnAt(
+  pos: Float32Array,
+  count: number,
+  closed: boolean,
+  k: number
+): number {
+  if (!closed && (k <= 0 || k >= count - 1)) return 0;
+  const p = ((k - 1 + count) % count) * 2;
+  const c = k * 2;
+  const n = ((k + 1) % count) * 2;
+  const ax = pos[c] - pos[p];
+  const ay = pos[c + 1] - pos[p + 1];
+  const bx = pos[n] - pos[c];
+  const by = pos[n + 1] - pos[c + 1];
+  return Math.atan2(ax * by - ay * bx, ax * bx + ay * by);
+}
+
+// The bound, in place on uniformly resampled positions (before tangents).
+export function boundBend(pos: Float32Array, count: number, closed: boolean): void {
+  const b = splineBend;
+  const R = b.ratio * b.halfWidth;
+  if (!(R > 0) || count < 5) return;
+  const wins = overTightWindows(pos, count, closed, b.halfWidth, b.ratio);
+  if (wins.length === 0) return;
+  if (bendOrig.length < count * 2) bendOrig = new Float32Array(count * 2);
+  bendOrig.set(pos.subarray(0, count * 2));
+  const maxD = b.maxShift * b.halfWidth;
+  const maxD2 = maxD * maxD;
+  const wrap = (j: number): number => ((j % count) + count) % count;
+  let lo = count;
+  let hi = -1;
+  for (const w of wins) {
+    if (w.length >= count) {
+      b.skipped++;
+      continue;
+    }
+    let turn = 0;
+    let arc = 0;
+    let legs = 0;
+    for (let j = w.start - 2; j < w.start + w.length + 2; j++) {
+      const k = closed ? wrap(j) : j;
+      if (k < 0 || k >= count) continue;
+      turn += bendTurnAt(pos, count, closed, k);
+      if (closed || k + 1 < count) {
+        const n = wrap(k + 1);
+        arc += Math.sqrt(
+          (pos[n * 2] - pos[k * 2]) * (pos[n * 2] - pos[k * 2]) +
+            (pos[n * 2 + 1] - pos[k * 2 + 1]) * (pos[n * 2 + 1] - pos[k * 2 + 1])
+        );
+        legs++;
+      }
+    }
+    if (Math.abs(turn) > b.maxTurn) {
+      b.skipped++;
+      continue;
+    }
+    b.runs++;
+    // Room for the turn at radius R: arc R |turn|, shared by both sides.
+    const spacing = legs > 0 ? arc / legs : 0;
+    const need = spacing > 0 ? Math.ceil((R * Math.abs(turn)) / spacing / 2) : 0;
+    const margin = Math.min(BEND_MARGIN_MAX, Math.max(BEND_MARGIN_MIN, need));
+    const j0 = w.start - margin;
+    const j1 = w.start + w.length - 1 + margin;
+    for (let it = 0; it < b.iterations; it++) {
+      let movedAny = false;
+      for (let j = j0; j <= j1; j++) {
+        const k = closed ? wrap(j) : j;
+        if (!closed && (k <= 0 || k >= count - 1)) continue;
+        if (!(bendRadiusAt(pos, count, closed, k) < R)) continue;
+        const p = wrap(k - 1) * 2;
+        const n = wrap(k + 1) * 2;
+        const c = k * 2;
+        let x = pos[c] + ((pos[p] + pos[n]) * 0.5 - pos[c]) * 0.5;
+        let y = pos[c + 1] + ((pos[p + 1] + pos[n + 1]) * 0.5 - pos[c + 1]) * 0.5;
+        const dx = x - bendOrig[c];
+        const dy = y - bendOrig[c + 1];
+        const d2 = dx * dx + dy * dy;
+        if (d2 > maxD2) {
+          const f = maxD / Math.sqrt(d2);
+          x = bendOrig[c] + dx * f;
+          y = bendOrig[c + 1] + dy * f;
+        }
+        if (Math.abs(x - pos[c]) + Math.abs(y - pos[c + 1]) < BEND_STILL) continue;
+        pos[c] = x;
+        pos[c + 1] = y;
+        movedAny = true;
+        if (closed) {
+          lo = 0;
+          hi = count - 1;
+        } else {
+          if (k < lo) lo = k;
+          if (k > hi) hi = k;
+        }
+      }
+      if (!movedAny) break;
+    }
+  }
+  for (let k = lo; k <= hi; k++) {
+    const dx = pos[k * 2] - bendOrig[k * 2];
+    const dy = pos[k * 2 + 1] - bendOrig[k * 2 + 1];
+    if (dx !== 0 || dy !== 0) {
+      b.moved++;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d > b.shiftMax) b.shiftMax = d;
+    }
+  }
 }
 
 // Sample a closed spline through `controls` (flat [x0,y0,x1,y1,...]) at
@@ -125,6 +313,8 @@ export function sampleClosedSpline(
     positions[k * 2] = fine[a] + (fine[b] - fine[a]) * frac;
     positions[k * 2 + 1] = fine[a + 1] + (fine[b + 1] - fine[a + 1]) * frac;
   }
+
+  if (splineBend.enabled) boundBend(positions, count, true);
 
   // Tangents from centered differences over the uniform samples.
   for (let k = 0; k < count; k++) {
@@ -235,6 +425,8 @@ export function sampleOpenSpline(
     positions[k * 2] = fine[a] + (fine[b] - fine[a]) * frac;
     positions[k * 2 + 1] = fine[a + 1] + (fine[b + 1] - fine[a + 1]) * frac;
   }
+
+  if (splineBend.enabled) boundBend(positions, count, false);
 
   // Tangents from centered differences; one-sided at the two open ends.
   for (let k = 0; k < count; k++) {
