@@ -199,7 +199,13 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   run with vite-node and `vite.node.config.mjs`, output compare.md) and
   `turns_page.mjs <base> <outDir> [hunter|guard|stalker] [seeds]` (real
   clicks: roam, hunt and catch shots, the catch checks, a wait). Probe
-  links: `?<seed>&am=instant&mt=hunter`.
+  links: `?<seed>&am=instant&mt=hunter`. Stage 2 (2026-10-14):
+  `.claude/probes/K80/turns2/` holds `sweep.ts` (the retune's grid:
+  `node node_modules\vite-node\vite-node.mjs --config <that
+  folder>\vite.node.config.mjs <that folder>\sweep.ts <out.md> <grid>
+  [reps]`; full_*.md, sweep_*.md), `compare_after.ts` (module vs
+  harness at the new defaults, 0 mismatches) and `rt/` (K174's real-time
+  sim on H1 mazes, results.md, still.md).
 - K174 (2026-10-14), the minotaur's controls: `.claude/probes/K174/rt/`
   is K80's simulation fixed for K132 (`rt_lib.ts` builds params with
   `paramsFromValues(seed, {...overrides})`; the K80 copy, which predates
