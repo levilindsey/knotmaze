@@ -9,15 +9,19 @@
 //     resolution at dpr 2, main.ts `Math.min(window.devicePixelRatio, 2)`, so 822x1506 device px, not the
 //     uncapped 1079x1977);
 //  3. a screenshot of the whole 411x753 CSS px viewport (same aspect ratio; 1079x1977 device px on the phone,
-//     whose capture follows the emulated dpr) that is all page, no blank strip (K195 found every landscape
-//     frame carried a white strip at the bottom: the screenshot 387 CSS px high, the page 331);
+//     whose capture follows the emulated dpr) that is all page, no blank strip. K195 found every landscape
+//     frame carried a white strip at the bottom (the screenshot 387 CSS px high, the page 331), and the first
+//     portrait smoke showed the same: a bare page.screenshot() is 1080x2125 px = 808.7 CSS px, the page 753 and
+//     148 rows of flat off-white below it (the capture surface is taller than the emulated viewport). So two
+//     shots are taken: the bare one (emulation_unclipped.png, recorded as the finding) and the pass's own,
+//     clipped to the viewport (lib.mjs shotViewport; emulation_real.png), which the verdict is about;
 //  4. which navigations the override survives (recorded; every script sets it again before each navigation).
 // Writes emulation.json and emulation_real.png in the pass folder; exit 0 = real, 4 = not real (phone_pass.ps1
 // then stops before it measures). With cfg.viewport = native it only records what the tab shows.
 // Usage: node emulation.mjs <config.json>
 import { writeFileSync } from "node:fs";
-import { CFG, BUILDS, VIEWPORT, EMU_VP, DRY, connect, myPage, emulate, EMU_READ, sleep, out, stampOf, assertFree } from "./lib.mjs";
-import { decodePNG } from "./png.mjs";
+import { CFG, BUILDS, VIEWPORT, EMU_VP, DRY, connect, myPage, emulate, EMU_READ, sleep, out, stampOf, assertFree, shotViewport, SHOT_STATS } from "./lib.mjs";
+import { decodePNG, flatBottom } from "./png.mjs";
 
 const ODD = { width: 360, height: 640, deviceScaleFactor: 3 };
 const LINK = (b) => `${b.host}/?b.J&am=instant&snd=none&mf=0`; // knot mode: a settled page, a canvas that fills the window
@@ -74,25 +78,25 @@ try {
     await sleep(1000);
     res.final = await page.evaluate(EMU_READ);
 
-    // 3. the screenshot: size and a blank strip at the bottom
-    const buf = await page.screenshot({ type: "png", captureBeyondViewport: false });
+    // 3. the screenshots: the bare capture (the finding) and the pass's own, clipped to the viewport (the proof)
+    const wantW = Math.round(EMU_VP.width * EMU_VP.deviceScaleFactor), wantH = Math.round(EMU_VP.height * EMU_VP.deviceScaleFactor);
+    const bareFile = out("emulation_unclipped.png");
+    const bareBuf = await page.screenshot({ type: "png", captureBeyondViewport: false });
+    writeFileSync(bareFile, bareBuf);
+    const bareImg = decodePNG(bareBuf);
+    const bareScale = bareImg.W / EMU_VP.width, bareFlat = flatBottom(bareImg);
+    res.unclipped = { file: bareFile, w: bareImg.W, h: bareImg.H, scale: +bareScale.toFixed(3), cssH: +(bareImg.H / bareScale).toFixed(1), extraCssPx: +(bareImg.H / bareScale - EMU_VP.height).toFixed(1), flatRowsAtBottom: bareFlat.rows, flatColor: bareFlat.color.join(",") };
+    const buf = await shotViewport(page);
     const shot = out("emulation_real.png");
     writeFileSync(shot, buf);
     const img = decodePNG(buf);
-    const wantW = Math.round(EMU_VP.width * EMU_VP.deviceScaleFactor), wantH = Math.round(EMU_VP.height * EMU_VP.deviceScaleFactor);
-    const whiteRow = (y) => {
-      let n = 0;
-      for (let x = 0; x < img.W; x++) { const i = (y * img.W + x) * img.ch; if (img.data[i] >= 250 && img.data[i + 1] >= 250 && img.data[i + 2] >= 250) n++; }
-      return n / img.W;
-    };
-    let strip = 0;
-    while (strip < img.H && whiteRow(img.H - 1 - strip) >= 0.99) strip++;
+    const flat = flatBottom(img);
     // The capture's CSS size: the pixel size over the capture's own scale. A whole-viewport capture has the
     // viewport's aspect ratio whatever the scale (the phone follows the emulated dpr, 1079x1977; a headed desktop
     // Chrome captures at its display's own scale, so a dry run reads 822x1506): that, and no blank strip, are what
     // make it "411x753 CSS px". The strict device-pixel size is reported (shotScaleOk), not a verdict.
     const scale = img.W / EMU_VP.width;
-    res.shot = { file: shot, w: img.W, h: img.H, wantW, wantH, scale: +scale.toFixed(3), cssW: +(img.W / scale).toFixed(1), cssH: +(img.H / scale).toFixed(1), blankRowsAtBottom: strip, whiteShareTop: +whiteRow(0).toFixed(3), whiteShareBottom: +whiteRow(img.H - 1).toFixed(3) };
+    res.shot = { file: shot, w: img.W, h: img.H, wantW, wantH, scale: +scale.toFixed(3), cssW: +(img.W / scale).toFixed(1), cssH: +(img.H / scale).toFixed(1), flatRowsAtBottom: flat.rows, flatColor: flat.color.join(","), cropped: SHOT_STATS.cropped };
 
     // verdicts
     const e = res.final, c = e?.canvas;
@@ -107,11 +111,11 @@ try {
     res.checks.canvasBacking = !!c && near(c.w, wantBW, 2) && near(c.h, wantBH, 2);
     res.checks.shotAspect = Math.abs(img.W / img.H - EMU_VP.width / EMU_VP.height) < 0.004 * (EMU_VP.width / EMU_VP.height);
     res.checks.shotScaleOk = near(img.W, wantW, 1) && near(img.H, wantH, 1);
-    res.checks.noBlankStrip = strip < 4;
+    res.checks.noBlankStrip = flat.rows < 4;
     res.pass = res.checks.oddHonored && res.checks.pageSize && res.checks.orientationPortrait && res.checks.documentSize && res.checks.canvasFillsPage && res.checks.shotAspect && res.checks.noBlankStrip;
     // The backing store and the capture's scale are reported, not failed on their own: an app that caps its
     // resolution, or a browser that captures at its display's scale, is not an unreal emulation.
-    res.note = `canvas backing ${c ? c.w + "x" + c.h : "none"} ${res.checks.canvasBacking ? "= the app's cap (min(dpr, 2) = " + capDpr + "x the CSS box)" : "is NOT " + Math.round(wantBW) + "x" + Math.round(wantBH) + " (min(dpr, 2) x the CSS box): check main.ts's resolution cap"}; screenshot ${img.W}x${img.H} px is ${scale.toFixed(3)}x the CSS viewport ${res.checks.shotScaleOk ? "(the emulated dpr: " + wantW + "x" + wantH + ")" : "(the emulated dpr would give " + wantW + "x" + wantH + ")"}`;
+    res.note = `canvas backing ${c ? c.w + "x" + c.h : "none"} ${res.checks.canvasBacking ? "= the app's cap (min(dpr, 2) = " + capDpr + "x the CSS box)" : "is NOT " + Math.round(wantBW) + "x" + Math.round(wantBH) + " (min(dpr, 2) x the CSS box): check main.ts's resolution cap"}; the viewport-clipped screenshot ${img.W}x${img.H} px is ${scale.toFixed(3)}x the CSS viewport ${res.checks.shotScaleOk ? "(the emulated dpr: " + wantW + "x" + wantH + ")" : "(the emulated dpr would give " + wantW + "x" + wantH + ")"}; a bare page.screenshot() is ${bareImg.W}x${bareImg.H} px = ${res.unclipped.cssH} CSS px high (${res.unclipped.extraCssPx} more than the viewport), ${res.unclipped.flatRowsAtBottom} flat rows (${res.unclipped.flatColor}) at the bottom`;
   }
 } catch (e) {
   res.error = String(e.stack || e).slice(0, 600);
@@ -127,7 +131,8 @@ try {
   console.log(`  real, asleep        ${f(res.real)}`);
   console.log(`  real after reload   ${f(res.realAfterReload)}  survives reload: ${res.survivesReload}`);
   console.log(`  final               ${f(res.final)}  vv ${JSON.stringify(res.final?.vv)} screen ${JSON.stringify(res.final?.screen)}`);
-  if (res.shot) console.log(`  screenshot          ${res.shot.w}x${res.shot.h} px = ${res.shot.cssW}x${res.shot.cssH} css at scale ${res.shot.scale} (the emulated dpr: ${res.shot.wantW}x${res.shot.wantH}), blank rows at the bottom ${res.shot.blankRowsAtBottom}`);
+  if (res.unclipped) console.log(`  bare screenshot     ${res.unclipped.w}x${res.unclipped.h} px = ${res.unclipped.cssH} css high at scale ${res.unclipped.scale} (${res.unclipped.extraCssPx} css px more than the viewport), flat rows at the bottom ${res.unclipped.flatRowsAtBottom} (${res.unclipped.flatColor})`);
+  if (res.shot) console.log(`  clipped screenshot  ${res.shot.w}x${res.shot.h} px = ${res.shot.cssW}x${res.shot.cssH} css at scale ${res.shot.scale} (the emulated dpr: ${res.shot.wantW}x${res.shot.wantH}), flat rows at the bottom ${res.shot.flatRowsAtBottom}${res.shot.flatRowsAtBottom ? " (" + res.shot.flatColor + ")" : ""}, cropped by geometry ${res.shot.cropped}`);
   console.log(`  checks              ${JSON.stringify(res.checks)}`);
   if (res.note) console.log(`  note                ${res.note}`);
   if (res.error) console.log(`  ERROR               ${res.error}`);

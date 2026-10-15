@@ -29,7 +29,7 @@
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CFG, BUILDS, connect, myPage, load, loadFrozen, sleep, out, assertFree, stampOf, checkBuild, ensureViewport, EMU_READ } from "./lib.mjs";
+import { CFG, BUILDS, connect, myPage, load, loadFrozen, sleep, out, assertFree, stampOf, checkBuild, ensureViewport, EMU_READ, shotViewport, SHOT_STATS } from "./lib.mjs";
 import { makeMoves, pinAll, routedList } from "./walk.mjs";
 import { makeSheets } from "./sheet.mjs";
 
@@ -44,7 +44,9 @@ const page = await myPage(browser);
 await page.bringToFront();
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e.message).slice(0, 200)));
-const png = (opts = {}) => page.screenshot({ type: "png", captureBeyondViewport: false, ...opts });
+// K193: a whole-page shot is clipped to the viewport (lib.mjs shotViewport: the phone's capture surface is taller than
+// the viewport, and the rows below the page came back as a white strip); a shot with its own clip keeps it.
+const png = (opts = {}) => (opts.clip ? page.screenshot({ type: "png", captureBeyondViewport: false, ...opts }) : shotViewport(page, opts));
 const boxes = {}; // "look/shot" -> junction boxes chosen on the head build
 const emu0 = await page.evaluate(EMU_READ); // K193: myPage has set the portrait override; this is what the page says about it
 const report = { looksFile, started: new Date().toISOString(), viewport: emu0.vp, emu: emu0, looks: [], errors };
@@ -223,6 +225,7 @@ try {
   }
 } finally {
   await browser.disconnect();
+  report.shotStats = { ...SHOT_STATS };
   makeSheets(report, CFG.out);
   writeFileSync(out("looks_report.json"), JSON.stringify(report, null, 1));
   for (const l of report.looks) console.log(`sheet ${l.name}: ${l.sheet ?? "none"}`);
