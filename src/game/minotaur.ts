@@ -94,6 +94,9 @@ export interface ChaseParams {
   // [0, 1]: chance a roam leg heads toward the player (K174; 0 = K80's
   // pick, exactly).
   roamPull: number;
+  // K273 (K80 turns stage 2): a catch sends it back to its lair (true), or
+  // leaves it where it caught you, pausing `wake` s (false).
+  lair: boolean;
 }
 
 // K174: the minotaur's paces as fractions of the player's (Levi: "0.7 of
@@ -129,6 +132,7 @@ export const DEFAULT_CHASE_PARAMS: Readonly<ChaseParams> = Object.freeze({
   roamRange: 30,
   wake: 2,
   roamPull: 0.5,
+  lair: true,
 });
 
 // Where an entity stands: at a vertex (edge < 0), or on a run `pos` units
@@ -340,8 +344,12 @@ export class MinotaurChase {
   readonly g: ChaseGraph;
   readonly params: ChaseParams;
   tick = 0;
+  // The attempt's tallies: a level restart's new chase carries them over
+  // (carry), so a restart never launders a catch. restarts counts a Reset
+  // path under it (main.ts; K80 turns stage 2: logged, not a catch).
   catches = 0;
   huntTicks = 0; // Ticks spent hunted (stats: time chased).
+  restarts = 0;
   finished = false; // The player reached the exit.
   readonly inputs: ChaseInput[] = [];
   player: Spot;
@@ -375,6 +383,13 @@ export class MinotaurChase {
     if (!(this.params.pauseMax >= this.params.pauseMin)) {
       this.params.pauseMax = this.params.pauseMin;
     }
+  }
+
+  // A level restart's new chase takes over the old one's tallies.
+  carry(prev: MinotaurChase): void {
+    this.catches = prev.catches;
+    this.huntTicks = prev.huntTicks;
+    this.restarts = prev.restarts;
   }
 
   get seconds(): number {
@@ -496,11 +511,18 @@ export class MinotaurChase {
     return p.vertex === this.g.start || p.vertex === this.g.exit;
   }
 
+  // A catch: the player to the entrance; the minotaur to its lair, or
+  // (lair off, K273) where it stands, even mid-run, pausing `wake` s
+  // before it roams again from there.
   private respawn(): void {
     this.player = { edge: -1, pos: 0, dir: 1, vertex: this.g.start };
     this.queued = -1;
-    this.mino = { edge: -1, pos: 0, dir: 1, vertex: this.g.exit };
-    this.mode = "lair";
+    if (this.params.lair === false) {
+      this.mode = "pause";
+    } else {
+      this.mino = { edge: -1, pos: 0, dir: 1, vertex: this.g.exit };
+      this.mode = "lair";
+    }
     this.timer = ticksOf(this.params.wake);
     this.dest = -1;
   }

@@ -414,6 +414,22 @@ describe("real-time respawn (K80)", () => {
     expect(c.tapEdge(eid)).not.toBe("reject");
     expect(c.walkedDist).toBeCloseTo(walked + c.walk.edges[eid].length, 9);
   });
+
+  // K80 turns stage 2: the move log's "x" (the share grid's ox).
+  it("marks the move a minotaur caught you on", () => {
+    const c = new FabricMazeController(walkFor(1234));
+    c.markCaught(); // caught before any move: one "x"
+    expect(c.moveLog).toEqual(["x"]);
+    c.tapEdge(bestChoice(c));
+    c.tapEdge(bestChoice(c));
+    expect(c.moveLog).toEqual(["x", "g", "g"]);
+    const taps = [...c.taps];
+    c.markCaught(); // the run you were on becomes the catch
+    expect(c.moveLog).toEqual(["x", "g", "x"]);
+    c.markCaught(true); // a wait adds one
+    expect(c.moveLog).toEqual(["x", "g", "x", "x"]);
+    expect(c.taps).toEqual(taps);
+  });
 });
 
 describe("restarts (K100): what the fog of war starts over on", () => {

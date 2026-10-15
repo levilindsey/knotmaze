@@ -337,6 +337,50 @@ describe("TurnMinotaur", () => {
     expect(t.state.v).toBe(X); // asleep again
   });
 
+  // K80 turns stage 2 (K273, section 2.9): the catch toggle and the tallies.
+  it("tallies the turns it saw you and the close calls", () => {
+    const t = new TurnMinotaur(G1, turnConfig(params({ model: "stalker", accuracy: 1, pause: 0, sleep: 1 })), 1);
+    t.turn(0); // S -> A; it sleeps: not seen
+    expect([t.seen, t.closeCalls]).toEqual([0, 0]);
+    t.turn(-1); // X -> C while you wait at A: seen, and C is one run (5) from A
+    expect([t.seen, t.closeCalls]).toEqual([1, 1]);
+    expect(t.turn(5)).toBe("caught"); // seen again; a catch is not a close call
+    expect([t.seen, t.closeCalls, t.catches]).toEqual([2, 1, 1]);
+    t.turn(-1); // the sanctuary: in its lair, unseen
+    expect([t.seen, t.closeCalls]).toEqual([2, 1]);
+  });
+
+  it("with lair off stays where it caught you and sleeps there", () => {
+    expect(DEFAULT_TURN_MINO.lair).toBe(true);
+    expect(turnConfig(params()).lair).toBeUndefined();
+    const cfg = turnConfig(params({ model: "stalker", accuracy: 1, pause: 0, sleep: 1, lair: false }));
+    expect(cfg.lair).toBe(false);
+    const t = new TurnMinotaur(G1, cfg, 1);
+    t.turn(0);
+    t.turn(-1);
+    expect(t.turn(5)).toBe("caught"); // it took the loop head-on, C -> A
+    expect(t.catches).toBe(1);
+    expect(t.player).toBe(S);
+    expect(t.state.v).toBe(A);
+    expect(t.state.left).toBe(true);
+    expect(t.lifeTurn).toBe(0);
+    expect(t.mode).not.toBe("lair");
+    expect(t.turn(-1)).toBe("moved"); // asleep where it stands
+    expect(t.state.v).toBe(A);
+    t.turn(-1); // then it roams on from there
+    expect(t.state.v).not.toBe(X);
+  });
+
+  it("carries its tallies to a restart's new minotaur", () => {
+    const t = new TurnMinotaur(G1, turnConfig(params({ model: "stalker", accuracy: 1, pause: 0, sleep: 1 })), 1);
+    for (const e of [0, -1, 5]) t.turn(e);
+    t.restarts = 3;
+    const next = new TurnMinotaur(G1, t.cfg, 1);
+    next.carry(t);
+    expect([next.catches, next.closeCalls, next.seen, next.restarts]).toEqual([1, 1, 2, 3]);
+    expect([next.turns, next.player, next.state.v]).toEqual([0, S, X]);
+  });
+
   it("lets a turn pass on a wait", () => {
     const t = new TurnMinotaur(G1, turnConfig(params({ sleep: 99 })), 3);
     t.turn(0);

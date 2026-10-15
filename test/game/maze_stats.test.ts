@@ -6,7 +6,7 @@ import {
   formatDuration,
   moveGrid,
 } from "../../src/game/maze_stats";
-import { shareText } from "../../src/game/share_text";
+import { minotaurTag, shareText } from "../../src/game/share_text";
 
 describe("efficiency", () => {
   it("is optimal / path, defined only for a real route", () => {
@@ -132,7 +132,9 @@ describe("share text", () => {
     const g = moveGrid("g".repeat(23));
     expect(g.split("\n").map((l) => [...l].length)).toEqual([10, 10, 3]);
     // Unknown letters are skipped.
-    expect(moveGrid("gxg")).toBe("\u{1F7E9}\u{1F7E9}");
+    expect(moveGrid("gqg")).toBe("\u{1F7E9}\u{1F7E9}");
+    // K80 turns stage 2: x, a move a minotaur caught you on, is the ox.
+    expect(moveGrid("gdbx")).toBe("\u{1F7E9}\u{1F7E8}\u{1F7E5}\u{1F402}");
   });
 
   it("caps a long solve at six lines, counting what it left out", () => {
@@ -162,5 +164,24 @@ describe("share text", () => {
     expect(
       shareText({ daily: null, replay: false, timeMs: 61_000, efficiency: 1, moves: "g" })
     ).toBe("Knotmaze \u{1F9F6}\n⏱️ 1:01 · \u{1F3AF} 100%\n\u{1F7E9}");
+  });
+
+  // K80 turns stage 2 (section 2.9): a minotaur's game wears its tag.
+  it("tags a minotaur's game with its catches, or its close calls", () => {
+    expect(minotaurTag(2)).toBe("\u{1F402} 2");
+    expect(minotaurTag(2, 5)).toBe("\u{1F402} 2");
+    expect(minotaurTag(0, 5)).toBe("\u{1F402} 0 · 5 close calls");
+    expect(minotaurTag(0, 1)).toBe("\u{1F402} 0 · 1 close call");
+    expect(minotaurTag(0, 0)).toBe("\u{1F402} 0");
+    expect(minotaurTag(0, null)).toBe("\u{1F402} 0");
+    const base = { daily: null, replay: false, timeMs: 61_000, efficiency: 1, moves: "gx" };
+    expect(shareText({ ...base, stars: 2, catches: 1, closeCalls: 3 })).toBe(
+      "Knotmaze \u{1F9F6} ★★☆ · \u{1F402} 1\n⏱️ 1:01 · \u{1F3AF} 100%\n\u{1F7E9}\u{1F402}"
+    );
+    expect(shareText({ ...base, catches: 0, closeCalls: 2 }).split("\n")[0]).toBe(
+      "Knotmaze \u{1F9F6} · \u{1F402} 0 · 2 close calls"
+    );
+    // No minotaur ran: no tag.
+    expect(shareText({ ...base, catches: null }).split("\n")[0]).toBe("Knotmaze \u{1F9F6}");
   });
 });

@@ -165,6 +165,8 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["pluckTug", "number"],
   ["tugAuto", "boolean"],
   ["autoPluckGain", "number"], // 127
+  ["minoRestart", "boolean"], // 128, K80 turns stage 2 (K273)
+  ["minoLair", "boolean"], // 129
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

@@ -1929,6 +1929,17 @@ async function main(): Promise<void> {
       if (dailyN !== null && attemptDaily === dailyN && attemptRecord === null) {
         dailyStore.clearAttempt(dailyN);
       }
+      // K80 turns section 2.10 (stage 2): under a minotaur, an unsolved run
+      // with a move made restarts COUNTED, not as a catch: the tallies carry
+      // to the new minotaur and its `restarts` goes up.
+      const c = fabricController;
+      if (liveMino() && c && !c.solved && c.moveCount > 0) {
+        restartSolve(true);
+        const m = liveMino();
+        if (m) m.restarts++;
+        updateHud();
+        return;
+      }
       restartSolve();
     },
     // K80: the maze clock. The graph is the same, so no rebuild: the solve
@@ -1941,6 +1952,10 @@ async function main(): Promise<void> {
     // K80: the chase's tuning, live (the chase goes on).
     onChaseChange: () => {
       chase?.setParams(chaseParamsOf(params));
+      // K273: the shared catch rows (minoLair) reach the turn minotaur too.
+      // Re-committing its next move under unchanged settings decides the
+      // same move (its draws are counter-based).
+      turnMino?.setConfig(turnConfig(turnMinoParamsOf(params)));
       writeParams(params);
     },
     // K80 turns: the turn minotaur's tuning, live (the solve goes on; its
@@ -2460,6 +2475,11 @@ async function main(): Promise<void> {
       deadEnds: params.deadEnds ? c.deadEndTips.size : null,
       // K80: times caught so far (null: no minotaur).
       catches: liveMino()?.catches ?? null,
+      // K80 turns stage 2: the turn minotaur's close calls and turns seen
+      // (null on real time), and the Reset-path restarts on either clock.
+      closeCalls: turnMino ? turnMino.closeCalls : null,
+      seen: turnMino ? turnMino.seen : null,
+      restarts: liveMino()?.restarts ?? null,
       // K114: the fire's lead at your junction while the race runs, the
       // closest call once it is over (null: no fire).
       fireLead: c.fire && !c.solved && !c.fireLost ? c.fireLeadHere : null,
@@ -2729,6 +2749,9 @@ async function main(): Promise<void> {
         efficiency,
         moves,
         stars,
+        // K80 turns stage 2: the title's minotaur tag (🐂).
+        catches: mino ? mino.catches : null,
+        closeCalls: turnMino ? turnMino.closeCalls : null,
       }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
@@ -2753,6 +2776,11 @@ async function main(): Promise<void> {
       // minotaur has catches, no time hunted).
       catches: mino ? mino.catches : null,
       chasedMs: chase ? chase.huntSeconds * 1000 : null,
+      // K80 turns stage 2: the turn minotaur's close calls and turns seen,
+      // and the restarts under either clock's minotaur.
+      closeCalls: turnMino ? turnMino.closeCalls : null,
+      seen: turnMino ? turnMino.seen : null,
+      restarts: mino ? mino.restarts : null,
       // K114: a burn race's closest call (null: no fire).
       closestCall: c.fire ? c.fireClosest : null,
       rating,
@@ -2826,11 +2854,17 @@ async function main(): Promise<void> {
   // the path and the string start over, and the fog returns to the solve's
   // start (K174's minoRefog) or keeps what was explored, up to where the
   // catch stopped the dot (K100).
-  const restartChase = (): void => {
+  // `carry`: a level restart under the same minotaur (K273's catch toggle,
+  // or a Reset path under it) hands its tallies to the new one, so the
+  // catch count survives the restart.
+  const restartChase = (carry = false): void => {
+    const prevChase = carry ? chase : null;
+    const prevTurn = carry ? turnMino : null;
     chase =
       params.mazeFabric && params.clock === "realtime" && walkGraph && fabric
         ? new MinotaurChase(walkGraph, chaseParamsOf(params), params.seed)
         : null;
+    if (chase && prevChase) chase.carry(prevChase);
     chaseRunning = false;
     // K80 turns: the turn clock's minotaur, when one is chosen. Its stream
     // is the seed's own (turnSeed), so the same taps meet the same minotaur.
@@ -2846,23 +2880,23 @@ async function main(): Promise<void> {
             turnSeed(params.seed)
           )
         : null;
+    if (turnMino && prevTurn) turnMino.carry(prevTurn);
     turnWait = 0;
     fabric?.syncMinotaur(liveMino(), params.minoFog, turnMino?.telegraph() ?? null);
   };
 
-  // A catch's toast (K80, both clocks).
-  const showCaughtToast = (n: number): void => {
-    showToast(
-      n === 1 ? "Caught! Back to the entrance." : `Caught ${n} times. Back to the entrance.`,
-      2500
-    );
+  // A catch's toast (K80, both clocks; K273: or the level restarts).
+  const showCaughtToast = (n: number, restart = false): void => {
+    const then = restart ? "Starting over." : "Back to the entrance.";
+    showToast(n === 1 ? `Caught! ${then}` : `Caught ${n} times. ${then}`, 2500);
   };
 
   // A fresh solve on the same maze (Reset path, a clock change, K114's
-  // Burnt banner): a new chase or none, the fuse relit, nothing recorded.
-  // THE level restart: a caller follows it with updateHud(). K80 turns
-  // stage 2's catch toggle (what a catch resets) is to reuse it.
-  const restartSolve = (): void => {
+  // Burnt banner, K273's catch toggle): a new chase or none, the fuse
+  // relit, nothing recorded; the clock restarts (resetAttempt: idle until
+  // the next move). THE level restart: a caller follows it with
+  // updateHud(). `carry` keeps the minotaur's tallies (restartChase).
+  const restartSolve = (carry = false): void => {
     // K114: the fuse relit under the params on screen (a clock change may
     // have turned the fire on or off, or moved its speed or delay).
     if (fabricController) fabricController.fire = fireOf(fabricController.walk);
@@ -2871,7 +2905,7 @@ async function main(): Promise<void> {
     fabric?.clearYarn();
     pendingWin = false;
     pendingLoss = false;
-    restartChase();
+    restartChase(carry);
     hideWin();
     if (fabric && fabricController) fabric.update(fabricController);
     resetAttempt();
@@ -2923,6 +2957,16 @@ async function main(): Promise<void> {
           if (result === "win") pendingWin = true;
           updateHud();
         } else if (ev.kind === "caught") {
+          // K273: a catch that resets the level is the level restart, the
+          // tallies carried to the new chase (the rest of this advance's
+          // events belong to the old one).
+          if (params.minoRestart) {
+            restartSolve(true);
+            updateHud();
+            showCaughtToast(liveMino()?.catches ?? 1, true);
+            break;
+          }
+          fc.markCaught();
           fc.respawn(params.minoRefog);
           fabric.stopMove();
           fabric.clearYarn();
@@ -2933,6 +2977,8 @@ async function main(): Promise<void> {
         }
       }
     }
+    // A restart above swapped the chase.
+    if (!chase) return;
     if (chase.playerMoving) fabric.setMoveProgress(chase.playerProgress, fc);
     else if (fabric.animating) fabric.setMoveProgress(1, fc);
     fabric.syncMinotaur(chase, params.minoFog);
@@ -2947,10 +2993,20 @@ async function main(): Promise<void> {
   // (stage 1 shows no catching move: the frame after it has the player at
   // the entrance and the minotaur in its lair, stage 2 adds the feedback)
   // and goes through real time's path: respawn (re-fog under minoRefog),
-  // the counter, the HUD's caught row and the toast.
-  const turnCaught = (): void => {
+  // the counter, the HUD's caught row and the toast. K273: with the level
+  // reset on a catch (minoRestart) it is the level restart instead, the
+  // tallies carried; with minoLair off the model leaves the minotaur where
+  // it caught you. `wait`: caught on a wait (markCaught logs it).
+  const turnCaught = (wait = false): void => {
     if (!turnMino || !fabric || !fabricController) return;
     const fc = fabricController;
+    if (params.minoRestart) {
+      restartSolve(true);
+      updateHud();
+      showCaughtToast(liveMino()?.catches ?? 1, true);
+      return;
+    }
+    fc.markCaught(wait);
     // The move under way was made in full: its fog lifts as cancelMove's.
     fabric.cancelMove();
     fc.respawn(params.minoRefog);
@@ -3006,7 +3062,7 @@ async function main(): Promise<void> {
     if (r === "reject" || r === "noop") return false;
     noteMove();
     if (r === "caught") {
-      turnCaught();
+      turnCaught(true);
       return true;
     }
     // Its run(s) play over what the player's dot would take on them.
@@ -4790,6 +4846,8 @@ async function main(): Promise<void> {
       tick: ch.tick,
       seconds: ch.seconds,
       catches: ch.catches,
+      restarts: ch.restarts,
+      moves: fabricController ? fabricController.moveLog.join("") : "",
       huntSeconds: ch.huntSeconds,
       finished: ch.finished,
       mode: ch.mode,
@@ -4841,6 +4899,10 @@ async function main(): Promise<void> {
       model: params.minotaur,
       config: { ...tm.cfg },
       catches: tm.catches,
+      closeCalls: tm.closeCalls,
+      seen: tm.seen,
+      restarts: tm.restarts,
+      moves: fabricController ? fabricController.moveLog.join("") : "",
       turns: tm.turns,
       lifeTurn: tm.lifeTurn,
       finished: tm.finished,

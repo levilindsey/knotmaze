@@ -14,6 +14,7 @@ import {
   FIRE_SPEED_MIN,
   LOAD_SETTLE_MAX,
   MINO_ROAM_RUNS_MAX,
+  MINO_RUNS_MIN,
   MINO_SIGHT_MAX,
   MINO_SLEEP_MAX,
   MINO_TERRITORY_MAX,
@@ -1041,12 +1042,14 @@ export function buildPanel(
     fMinoBehavior, "minoSight", { min: 0, max: MINO_SIGHT_MAX, step: 1 },
     "Sight, in runs: it hunts you once you are this few runs away, and gives up beyond 3 more. It never sees you on the entrance tail. Applies live."
   );
+  // K272: roam and territory start at 1 (0 stood still, or walked at
+  // random); 1 = destinations one run away, or next to the finish.
   const minoRoamRunsRow = turnRow(
-    fMinoBehavior, "minoRoamRuns", { min: 0, max: MINO_ROAM_RUNS_MAX, step: 1 },
+    fMinoBehavior, "minoRoamRuns", { min: MINO_RUNS_MIN, max: MINO_ROAM_RUNS_MAX, step: 1 },
     "Hunter: the farthest it roams in one go, in runs (its nearest destination is 3 runs away, or this if less). Applies live."
   );
   const minoTerritoryRow = turnRow(
-    fMinoBehavior, "minoTerritory", { min: 0, max: MINO_TERRITORY_MAX, step: 1 },
+    fMinoBehavior, "minoTerritory", { min: MINO_RUNS_MIN, max: MINO_TERRITORY_MAX, step: 1 },
     "Guard: it roams only to junctions within this many runs of the finish. Applies live."
   );
   const chanceRow = (key: "minoAccuracy" | "minoPause", tipText: string): RowApi =>
@@ -1138,6 +1141,18 @@ export function buildPanel(
     "minoFog",
     { options: { always: "always", "while hunting": "hunting", never: "never" } },
     "With fog of war: show the minotaur always, only while it hunts you, or never (only where the fog has lifted). Applies live.",
+    true
+  );
+  // K80 turns stage 2 (K273): what a catch resets, on both clocks. While
+  // the level row is on a catch resets everything, so the other two hide.
+  const minoRestartRow = chaseRow(
+    "minoRestart", {},
+    "A catch restarts the level: your path, the fog and the clock start over, and the minotaur goes back to its lair. Your catches still count. Off: a catch sends you back to the entrance and the solve goes on (the rows below say what else resets). Applies from the next catch.",
+    true
+  );
+  const minoLairRow = chaseRow(
+    "minoLair", {},
+    "A catch sends the minotaur back to its lair at the finish. Off: it stays where it caught you, and roams on from there (in real time after its wake pause). Applies from the next catch.",
     true
   );
   const minoRefogRow = chaseRow(
@@ -1891,7 +1906,9 @@ export function buildPanel(
     fireSpeedRow.hidden = params.fire === "off";
     fireDelayRow.hidden = params.fire === "off";
     minoFogRow.hidden = !minoOn || !params.fogOfWar;
-    minoRefogRow.hidden = !minoOn || !params.fogOfWar;
+    minoRestartRow.hidden = !minoOn;
+    minoLairRow.hidden = !minoOn || params.minoRestart;
+    minoRefogRow.hidden = !minoOn || !params.fogOfWar || params.minoRestart;
     moveSpeedRow.hidden = !fab || realtime;
     mazeStatsRow.hidden = !fab;
     finishIndicatorRow.hidden = !fab;

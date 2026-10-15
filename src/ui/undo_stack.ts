@@ -162,7 +162,7 @@ export const LIVE_EFFECTS = {
     "playerPace", "minoWanderPace", "minoHuntPace", "minoPaceJitter",
     "minoPauseChance", "minoPauseMin", "minoPauseMax", "minoDetect",
     "minoLose", "minoCatch", "minoDeadEnds", "minoRoam", "minoWake",
-    "minoFog", "minoToward", "minoRefog",
+    "minoFog", "minoToward", "minoRefog", "minoRestart", "minoLair",
   ],
   // K80 turns: the turn-aligned minotaur's tuning.
   onTurnMinoChange: [

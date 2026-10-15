@@ -56,7 +56,10 @@ describe("what each figure means (K274)", () => {
     junctions: 3,
     deadEnds: 2,
     catches: 1,
+    closeCalls: 1,
+    seen: 3,
     chasedMs: 5_000,
+    restarts: 2,
     fireLead: 9.24,
     closestCall: 0.44,
   };
@@ -94,10 +97,19 @@ describe("what each figure means (K274)", () => {
       ["junctions", "3"],
       ["dead ends", "2"],
       ["caught", "1"],
+      ["close calls", "1"],
+      ["seen", "3"],
       ["chased", "0:05"],
+      ["restarts", "2"],
       ["fire lead", "92"],
       ["closest call", "4"],
     ]);
+    // K80 turns stage 2: no restarts, no row; real time has no close calls
+    // or turns seen.
+    const rows = statRows({ ...FULL, restarts: 0, closeCalls: null, seen: null });
+    expect(rows.map(([l]) => l)).not.toContain("restarts");
+    expect(rows.map(([l]) => l)).not.toContain("close calls");
+    expect(rows.map(([l]) => l)).not.toContain("seen");
     expect(gameRows(FULL)).toEqual([
       ["caught", "1"],
       ["fire lead", "92"],
