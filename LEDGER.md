@@ -38,6 +38,12 @@ and never reused.
   - Levi's call (sent 2026-10-14 about 09:05 with the sheet
     `.claude/probes/K90/out_1b/sheet/sheet.png`): ship, tune or stop;
     default on or off; hard or soft clamp. Before it ships: K213.
+  - Levi, 2026-10-14 about 09:20: he can't tell from the sheet and will
+    test it live later (desktop console at levi.dev/knotmaze/:
+    `__knotSplineBend(true)` / `(false)`). Told him no visible bug
+    started it: K90 came from G3's filled-lobe-or-pinch question (K8),
+    and the old seam (P3.34) stays fixed by the miter clamp. The
+    coordinator recommends stopping it.
   - record `docs/design/K90_bend_radius.md`; handoff `docs/design/K90.md`
     ("Stage 1b handoff"); evidence `.claude/probes/K90/out_1b/`. Never
     alongside K8 (the same fold definition).
@@ -293,26 +299,6 @@ and never reused.
   - next: after 16:20 on 10-14, run `cleanup.ps1` again for the
     profiles (about 33 GB). The probe libraries' delete-on-exit goes
     with K150.
-- **K173** · Split the `.claude/rules/` lore by area, so an agent pays
-  only for the files it works on (Levi, 2026-10-14 about 07:53:
-  "Splitting the rules files seems worthwhile."). One read of a
-  `src/**` or probes file attaches 25-62 KB of lore today; the
-  measurements behind it are in the brief. Passages move verbatim, by a
-  re-runnable script (`scripts/split_rules.mjs`), so the split can be
-  redone on top of the 07:38 batch's rules edits.
-  - owner: agent a363e26d8e7409480 (opus) of session d8031183. Its stage
-    finished at 09:02 (the split `0eac859` on d12e245, handoff
-    `2d7438e`); resumed at 09:05 to redo it on feb12a0 with K90 1b's
-    lore (a new `generation-geometry.md`), stopping by about 10:05.
-  - branch: `worktree-agent-a363e26d8e7409480`
-    (`.claude/worktrees/agent-a363e26d8e7409480`); last commit: `2d7438e`
-    (unpushed).
-  - evidence: `.claude/probes/K173/` in its worktree (copy at merge).
-    Lore attached per read: median 37.3 KB before, 5.8 after.
-  - next: merge the redo BEFORE K198, K93 and K98, carrying their rules
-    edits into the topic files at their merges; then rewrite this
-    ledger's old rules pointers (K198, K92, K13, K29, K95, K82).
-  - brief: `docs/design/K173.md`.
 - **K198** · The fit camera's pan and the off-screen indicators, decided
   (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
   just want to be able to pan such that the right edge of the maze is
@@ -330,8 +316,8 @@ and never reused.
   before he answers. Touches
   view_clamp.ts, main.ts, offscreen_indicators.ts, head_indicator.ts
   and tweakpane_panel.ts: not alongside K92 or K111 (the panel). Records:
-  `docs/design/K148_K149.md` ("Stage 1 handoff"), gameplay.md THE HEAD
-  and FIT CAMERA PAN SLACK.
+  `docs/design/K148_K149.md` ("Stage 1 handoff"), `gameplay-indicators.md`
+  THE HEAD and `gameplay-camera.md` FIT CAMERA PAN SLACK.
   - owner: agent aab9f7358ac73188f (opus) of session d8031183, started
     2026-10-14 08:37; it stops at about 10:37 or when stage 1 (the pan
     clamp) is done.
@@ -340,8 +326,9 @@ and never reused.
     commit: none yet.
   - evidence: `.claude/probes/K198/` in its worktree (copy at merge).
   - next: stage 1, the pan clamp; parts (2) and (3) wait on Levi's email
-    answers 6.1 and 6.2. At merge, if K173 has moved the FIT CAMERA PAN
-    SLACK entry, carry the lore edit across.
+    answers 6.1 and 6.2. At merge, carry its lore edits into
+    `gameplay-indicators.md` (THE HEAD) and `gameplay-camera.md` (FIT
+    CAMERA PAN SLACK), where K173 moved them.
   - brief: `docs/design/K198.md`.
   - env: dev servers on ports 5570-5579.
 - **K93** · Trail fade and hover reach, decided (Levi, 2026-10-13:
@@ -361,7 +348,9 @@ and never reused.
     commit: none yet.
   - evidence: `.claude/probes/K93/` in its worktree (copy at merge).
   - next: stage 1 (the trail fade's span split, the choice hover's reach);
-    then K145 as stage 2, a fresh agent from master.
+    then K145 as stage 2, a fresh agent from master. At merge, carry its
+    lore edits into the topic files (the K75 passage is in
+    `render-paint.md` since K173).
   - brief: `docs/design/K93_K145.md`.
   - env: dev servers on ports 5580-5589.
 - **K98** · Marker sizes and two new glyphs (Levi, 2026-10-13: "I
@@ -384,6 +373,8 @@ and never reused.
     commit: none yet.
   - evidence: `.claude/probes/K98/` in its worktree (copy at merge).
   - next: its one stage; the size param is a codec append, daily-exempt.
+    At merge, carry its lore edits into `render-markers.md` (Marker icons,
+    K83), where K173 moved them.
   - brief: `docs/design/K98.md`.
   - env: dev servers on ports 5590-5599.
 
@@ -421,10 +412,10 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
 (he may reorder). Running on 10-14: K198 stage 1 from 08:37, K93 (stage
-1 of K93 + K145) from 08:45 and K98 from 09:07 (all opus, 2 h caps), and
-K173's redo of the rules split from 09:05 (it lands first; the
-coordinator carries the others' rules edits across). K100, K132 and K90
-stage 1b merged at 08:39-09:03. Then, as code slots free up:
+1 of K93 + K145) from 08:45 and K98 from 09:07 (all opus, 2 h caps).
+K100, K132, K90 stage 1b and K173 (the rules split) merged at
+08:39-09:17; the coordinator carries the running agents' rules edits
+into the topic files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
    K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
    and K180 against base ab6d330) is done (K197 filed); the next pass
@@ -453,7 +444,7 @@ stage 1b merged at 08:39-09:03. Then, as code slots free up:
 16. K144, accounts and shared stats, after everything else (a stretch
     goal).
 
-Waiting for Levi: K114's spider (call 7); the G3-3 and G4-2 old-path
+Waiting for Levi: K90's bend bound (he tests it live); K114's spider (call 7); the G3-3 and G4-2 old-path
 deletions; K162, K174 and K184-K186 (play, then call); K191, K193 and
 K194; K198's marker settings and flash; near launch, K117 and K210;
 after the churn, K46, K57 and K84. Emailed 2026-10-14 about 08:25, each with
@@ -490,7 +481,7 @@ K5-K7 (split, frame loop, worker) follow.
   design is lost). His call (2) stands: under fog, a tap on the finish
   indicator only shows a toast. Files: `src/ui/tweakpane_panel.ts`,
   `src/main.ts`, `src/ui/mode_badge.ts`, `src/ui/url_state.ts`;
-  `.claude/rules/gameplay.md` (MODE BADGE). After K79 stage B merges.
+  `.claude/rules/gameplay-badge.md` (MODE BADGE). After K79 stage B merges.
   - K80 (5fed5c1): real time has no move undo (`undoAllowed(clock)`); if K92's buttons ever reach maze moves, they consult it.
 - **K111** · Accessibility (Levi, 2026-10-13). Reduced motion also
   stills the flow undulation, but not the intros or the pulses next to
@@ -835,7 +826,7 @@ K5-K7 (split, frame loop, worker) follow.
   K74 refines it: `branchDensity` 0.2-0.6 and `fourWayFraction` 0.4-0.7
   build the identical maze; 0.1, 0 and 0.8 or more change it.
 - **K13** · Post-violent-play loud attractor at fat params (the open P3
-  problem; fingerprint in `.claude/rules/physics.md`).
+  problem; fingerprint in `.claude/rules/physics-collision.md`).
 - **K14** · Latent seam-window wraps on open chains
   (applyTransversality's window, the slide/project windows,
   updatePassCover's +-12 slots): agent-measured, unfixed.
@@ -862,7 +853,7 @@ K5-K7 (split, frame loop, worker) follow.
   0.56-0.78 thread widths of eye hole - boxed in by a fused joint on one
   side and the 1.6 corridor floor on the other, they keep only lattice
   material. A stronger eye pressure (2.6) doesn't lift them; 2.8 left 2/8
-  fat seeds awake. See "KINK EYES" in `.claude/rules/physics.md`. Since K41's chord law they
+  fat seeds awake. See "KINK EYES" in `.claude/rules/physics-kinks.md`. Since K41's chord law they
   rest a little smaller, because the flat law had pried their crossings
   open: five at 0.64-0.74 at tw .64, and X304 (seed 3zz2a1) at 0.78-0.80
   at the default width (was 0.83-0.86). K49 is the size decision. K90's
@@ -932,7 +923,7 @@ K5-K7 (split, frame loop, worker) follow.
   are SDF quads.
 - **K95** · Below about 340 px wide, the mode badge drops below the
   hamburger and covers the header of an open panel (K73; the fit levels
-  are measured in `.claude/rules/gameplay.md`, MODE BADGE).
+  are measured in `.claude/rules/gameplay-badge.md`, MODE BADGE).
 - **K103** · Below 10 fps the fit camera, the move animation and the paint
   clock still slow down. The fit camera eases by a fixed fraction per
   frame (0.08 / 0.15), and `tickAnim` and the paint read the ticker's
@@ -1144,7 +1135,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   2026-10-12; "could be a follow-up thing"). It fits the pinned-daily
   model as a frozen per-day override table beside the versioned
   definitions. A published day's override must never change, like a
-  definition (`.claude/rules/gameplay.md`, daily rule 1).
+  definition (`.claude/rules/gameplay-daily.md`, daily rule 1).
 - **K68** · If junction-web edges look soft at deep zoom, size the arm
   material strip rows from the camera's world-per-pixel (re-packed on
   zoom) instead of raising the 64-texel width for everyone. About 4x the
@@ -1262,6 +1253,14 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K173** · Split the `.claude/rules/` lore by topic (Levi, 2026-10-14
+  about 07:53: "Splitting the rules files seems worthwhile."). 32 new
+  topic files with narrow `paths:` lists; the area files keep the general
+  lore. Passages moved verbatim by a re-runnable script
+  (`scripts/split_rules.mjs`), indexed in `docs/lore_index.md`. Lore
+  attached per read: median 37.3 KB before, 5.8 after. Brief and handoff
+  `docs/design/K173.md`, probes `.claude/probes/K173/`; follow-ups K214
+  and K216, idea K215. Done in 62e7d5b..1fe468d (2026-10-14).
 - **K132** · Drop link and daily back-compat (Levi, 2026-10-13; CLAUDE.md
   "Pre-launch: no back-compat"). One live codec table (`CODEC_PARAMS`,
   still version 4, defaults from `PARAM_DEFAULTS`): an all-default design
