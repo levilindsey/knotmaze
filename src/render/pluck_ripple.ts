@@ -21,9 +21,10 @@
 //
 // K279 stage 2: a ripple whose disc cannot reach the screen is not drawn
 // (it adds nothing to any pixel), so the filter detaches while every live
-// ripple is off-screen. And warm() moves the first ripple's one-time cost
-// (the program's link and the filter's pooled screen-sized texture) to
-// load: see WARM_FRAMES.
+// ripple is off-screen. warm() moves the first ripple's one-time cost (the
+// program's link and the filter's pooled screen-sized texture) to load:
+// see WARM_FRAMES. And on a small view (a phone) the whole ripple scales
+// up so that its front ends at RIPPLE_FLOOR_CSS px at least.
 import {
   Container,
   Filter,
@@ -55,6 +56,16 @@ const RING_ALPHA = 0.3;
 // The shader skips a pixel more than this many band half widths from a
 // ripple's front, so a disc reaches radius + REACH_BANDS x band.
 const REACH_BANDS = 3;
+// K279 stage 2 (K289 d): the smallest radius, CSS px, a ripple's front ends
+// at. Below it the whole ripple (front, band and the wave's displacement)
+// scales up by one factor. A phone's default view (~8.8 CSS px per world)
+// would end it at 32 px, 5.6 mm on a Pixel 11: its strong first half then
+// stays under the lifting fingertip (~5 mm), and it subtends about half the
+// angle of the desktop ripple Levi picked. 56 px matches that angle (80 CSS
+// px at ~60 cm against a phone CSS px, ~1.3-1.5x the angle at ~30 cm) and
+// clears 5 mm at 0.19 s, at 63% strength (0.47 s and 23% without). A
+// default desktop view (22 CSS px per world: 80 px) never reaches it.
+export const RIPPLE_FLOOR_CSS = 56;
 // K279 stage 2 (K289 a): ticks the warm-up box stays on the stage. main.ts
 // ticks before pixi renders in the same frame, so 3 ticks draw it twice.
 const WARM_FRAMES = 3;
@@ -285,6 +296,9 @@ export class PluckRipples {
     const ty = this.target.position.y;
     // Screen px per world unit.
     const scale = sx;
+    // RIPPLE_FLOOR_CSS's factor: exactly 1 at the floor and above, so a
+    // larger view's uniforms are bit for bit what they were without it.
+    const grow = scale > 0 ? Math.max(1, RIPPLE_FLOOR_CSS / (RIPPLE_RADIUS * scale)) : 1;
     const sc = this.screen();
     let n = 0;
     for (const r of this.live) {
@@ -296,8 +310,8 @@ export class PluckRipples {
       const s = r.strength * env;
       const cx = sx * r.x + tx;
       const cy = sy * r.y + ty;
-      const rPx = radius * scale;
-      const bPx = Math.max(1, band * scale);
+      const rPx = radius * scale * grow;
+      const bPx = Math.max(1, band * scale * grow);
       // A disc wholly off-screen changes no pixel: leave it out (it still
       // ages, and draws again if the camera brings it back).
       if (!discOnScreen(cx, cy, rPx + REACH_BANDS * bPx, sc.width, sc.height)) continue;
@@ -306,7 +320,7 @@ export class PluckRipples {
       v.uRip[k + 1] = cy;
       v.uRip[k + 2] = rPx;
       v.uRip[k + 3] = bPx;
-      v.uAmp[k] = r.look === "wave" ? RIPPLE_DISP * scale * s : 0;
+      v.uAmp[k] = r.look === "wave" ? RIPPLE_DISP * scale * grow * s : 0;
       v.uAmp[k + 1] =
         r.look === "glint" ? GLINT_MIX * s : r.look === "wave" ? GLINT_MIX * WAVE_GLINT * s : 0;
       v.uAmp[k + 2] = r.look === "ring" ? Math.min(1, RING_ALPHA * s) : 0;
