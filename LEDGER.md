@@ -227,6 +227,9 @@ and never reused.
   - On the phone (K156 3c, 2026-10-14): the first sleep came at 17.5-21.6
     s on both load links, the default and `gs=18`, so the settle budget,
     not the maze, sets it.
+  - K7's design (merged 2026-10-14 20:10): (4) becomes moot once the
+    worker ships (close it then); K147's budget retires in worker mode at
+    K7's stage 5, and `stb` stays for the in-thread fallback.
 - **K184** · K155's star calls (`docs/design/K155.md`, "Stage 1
   handoff"; play: https://levi.dev/knotmaze/?7): (1) greedy solves:
   exactly two stars (built: two up to 4x, which 52-53% of greedy solves
@@ -272,6 +275,18 @@ and never reused.
   the noise, and fabric@13 sat on the maze's finish, K300); the
   landscape floor stays until a full A/A. The steps are K193's next.
   Asked Levi at 19:54 for the next quiet half hour.
+- **K302** · K7's 11 calls (`docs/design/K7_worker.md`, "Design
+  handoff", "Levi's calls"; recommended yes on each; asked at 20:15): (1)
+  the worker becomes the default after the phone pass, with `phw=0` and
+  an automatic fallback; (2) no SharedArrayBuffer and no COOP/COEP; (3)
+  no pointer-led grab at first (the grab trails by about 40-50 ms); (4)
+  the hidden pre-settle and the trefoil move into the worker; (5) physics
+  pauses while main is frozen (the daily sleeps at about 12 s, not 7-8);
+  (6) FYI: dense stays render-bound at about 30 fps, so a priority call on
+  K8; (7) the phone pass gates the default; (8) K8/K9's warm-up next,
+  beside stage 2, starting with a trace; (9) `phw` as a daily-exempt link
+  param; (10) five stages instead of four; (11) FYI: 0.76x real time at
+  gs 18. Stage 1 needs none; stage 2 assumes 5 and 10.
 
 ## In progress
 
@@ -533,6 +548,9 @@ and never reused.
     `.claude/probes/K161/cleanup.ps1` (`-DryRun` first).
   - brief: `docs/design/K156.md`, "Round 2026-10-14c handoff" (aa3cdd1);
     the next round gets its own section.
+  - K7's stage 5 brings its own phone plan (`docs/design/K7_worker.md`,
+    Design 10): the worker's frame rates and its substep cost on the
+    phone (big.LITTLE placement unknown) before it becomes the default.
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489). Check that nobody is using the phone first (K234).
 - **K161** · Disk: C: had 24.4 GB free (2026-10-13 about 19:30, before
@@ -736,19 +754,33 @@ and never reused.
   ("1. Yes."), ahead of K76 2c and K268 stage 2, and asked at about 19:01
   whether the intro will then run at normal frame rates; the design
   answers that with numbers.
-  - owner: agent a70e8b39f6fe8c19d (opus) of claude session d8031183,
-    the design stage from 19:05 (cap 21:05).
-  - branch: worktree `.claude/worktrees/agent-a70e8b39f6fe8c19d` (from
-    0d88091); last commit: 0d88091 (the brief).
-  - evidence: `.claude/probes/K7/design/`; the 2026-07-24 plan in
-    `.claude/rules/physics.md` ("CANDIDATE perf follow-up"); K16's wake
-    numbers; K147's settle numbers (`.claude/probes/K147/results.md`).
-  - next: the design stage runs its brief (the boundary map, SAB against
-    copied buffers, interpolation, the settle under the worker, the
-    diagnostic bridge, whether K5 and K6 come first, baselines and
-    targets, the build stages' briefs); then the build stages, each with
-    `main.ts` to itself.
-  - brief: `docs/design/K7_worker.md` ("Stage 0: the design", 0d88091).
+  - The design (merged 2026-10-14 20:10, 0c3c694..eab4287; desktop,
+    measured on 0d88091): the daily's intro at about 56 fps instead of
+    22.7, smooth but not a locked 60; its two freezes (2.7 s at 1.1 s,
+    2.0 s at 3.8 s) stay, since they happen with physics paused too
+    (inferred shader compiles, K9); the first sleep at about 12 s instead
+    of 20.7; drags at gs 18 at 55-60 fps instead of 7, in 0.76x real
+    time; dense render-bound at about 30 fps (K8); the phone likely 40-60
+    fps, unproven until stage 5. Transferred buffers (no SAB, no
+    COOP/COEP), a mirror ParticleSystem on main, fallbacks on error or a
+    3 s timeout. Levi's 11 calls: K302.
+  - owner: agent a3b1bdbb421b88478 (opus) of claude session d8031183,
+    stage 1 (the in-thread physics host) from 20:12 (cap 22:12; ports
+    5810-5811).
+  - branch: `worktree-agent-a3b1bdbb421b88478`
+    (`.claude/worktrees/agent-a3b1bdbb421b88478`, from bf7f7e9); last
+    commit: `bf7f7e9` (the design and stage 1's brief, on master).
+  - evidence: the design's `.claude/probes/K7/design/`
+    (`k7_results.jsonl`, `frames/`, `summarize.mjs`, `run_k7.ps1`,
+    `k7_frames.mjs`, `transport/`, `spike/`); stage 1's
+    `.claude/probes/K7/stage1/` in its worktree.
+  - next: stage 1 (`PhysicsHost` and `InThreadHost`, `grabAt`,
+    `buildSceneGraph`, every physics write in `main.ts` through the host,
+    a seam guard test; byte-identical), then stages 2-5 in order. Stages
+    1 and 4 own `main.ts` (K298's small edits run beside stage 1); stage
+    5 needs the phone (Design 10; the phone's worker substep cost is
+    unknown).
+  - brief: `docs/design/K7_worker.md`, "Stage 1" (bf7f7e9).
 - **K299** · The choice pulses and the trail misdrawn at one junction
   (Levi, 2026-10-14 about 19:15, on `?qoietk.KSIeBoGlf4-`): the up-right
   choice's pulse draws doubled and backward with an artifact mid-run,
@@ -759,8 +791,9 @@ and never reused.
     a6d727eb21ef341d5 (opus), stage 1 (diagnose and fix) from 19:19 with
     a 2 h cap (about 21:19; ports 5790-5799).
   - branch: `worktree-agent-a6d727eb21ef341d5`
-    (`.claude/worktrees/agent-a6d727eb21ef341d5`); last commit: `7a87cae`
-    (its base, the brief on master).
+    (`.claude/worktrees/agent-a6d727eb21ef341d5`); last commit: `a2c8b5e`
+    (WIP: an exact ring lap in the paint shaders and the mirror, and its
+    tests; base `7a87cae`).
   - evidence: `.claude/probes/K299/` in that worktree (copied to the main
     checkout at the merge).
   - next: stage 1 reproduces his two states, attributes the bad pixels,
@@ -802,10 +835,11 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K7's design stage from 19:05 (cap 21:05,
-opus) and K299 from 19:19 (cap 21:19, opus); K298 follows K299. K111
-stage 4 merged at 19:11 and K156's round 2026-10-14c pass at 19:48
-(K253's floor still not taken). K279's stage 2
+(he may reorder). Running: K299 from 19:19 (cap 21:19, opus) and K7's
+stage 1 from 20:12 (cap 22:12, opus); K298 follows K299, beside K7's
+stage 1. K7's design merged at 20:10, K111 stage 4 at 19:11 and K156's
+round 2026-10-14c pass at 19:48 (K253's floor still not taken). K279's
+stage 2
 waits for Levi's picks (K288). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
@@ -859,7 +893,7 @@ files at their merges. Then, as code slots free up:
     (crossing gaps and junction joints) at 16:04 (3ffed34..8d671ba).
     K268 stage 1, the shaped gaps Levi asked for at 15:16, merged at
     17:50 (1e55365..61c8859; `docs/design/K268.md`). 2c and K268 stage 2
-    come after the physics worker (K5-K7, below this list), one at a time
+    come after the physics worker (K7, below this list), one at a time
     and never alongside K298 or K299, since all of them change the paint
     shaders (K111 stage 4 merged at 19:11 and took `uKBase.y` and
     `uKGold.w`); then 2d, each from the handoff before it. 2c's codec removal
@@ -904,6 +938,7 @@ questions for stage 2c); K260 and K261
 (the burn race's
 calls 2-4, and K74 stage 2's calls, built as recommended); K280 (the
 fire's heat); K282 (an explanation for the HUD's stats during play);
+K302 (K7's 11 calls);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -914,10 +949,12 @@ Levi listed at 16:06 (K225, K229, K238 with K240, K241, K244, K245,
 K251, K260 with K280, K261, K194, K162, K184-K186 and K90): 32 calls,
 answered by number.
 
-K5-K7 (split, frame loop, worker) come next, ahead of K76 2c and K268
-stage 2 (Levi, 2026-10-14 about 19:00: "1. Yes."). K7's design stage
-runs first (K7's handle); its handoff says whether K5 and K6 must come
-before the worker, and each build stage has `main.ts` to itself.
+K7 (the physics worker) comes next, ahead of K76 2c and K268 stage 2
+(Levi, 2026-10-14 about 19:00: "1. Yes."). Its design merged at 20:10:
+five build stages, in order (`docs/design/K7_worker.md`, "Build
+stages"). K5 and K6 are not needed first and come after stage 5, with
+K24. Stages 1 and 4 own `main.ts` (K298's small edits run beside stage
+1); K8/K9 can run beside stages 2 and 5 (K302 (8)).
 
 - **K294** · Per-model minotaur tuning, for K80 turns stage 3 (Levi,
   2026-10-14 about 19:00: "Yes."): the hunter, guard and stalker share
@@ -1000,12 +1037,13 @@ before the worker, and each build stage has `main.ts` to itself.
   set stays in front. Which rows, and how the advanced view opens, come
   later, after the churn; K292's marks and K84 / K57 feed it.
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along the new data
-  lines (K1-K3 are done). K7's design stage says whether it must come
-  before the worker.
+  lines (K1-K3 are done). K7's design: not needed first; after K7's
+  stage 5 (it conflicts with stages 1, 3 and 4, and the host makes it
+  smaller).
 - **K6** · One frame loop driven by what-changed flags (after K5).
   Replaces K21's stand-in `sceneAnimating()` in main.ts, and the
   render-on-demand loop (K24) asks `background.needsFrame()`. K7's
-  design stage says what part of it the worker needs first.
+  design: not needed first; after K7's stage 5.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). Defaults: anchored tails keep
   flat caps, phones stay at a 2x resolution cap. Over-tight folds keep
@@ -1015,14 +1053,21 @@ before the worker, and each build stage has `main.ts` to itself.
   folds physically impossible. Fold in G1's GPU levers: a loop-free protect test
   (about 0.15 ms of register pressure at 3200x1800), a zoom-aware
   polyline tolerance, a per-point far-branch gate, and dropping the
-  globals fetch.
+  globals fetch. K7's design (2026-10-14): dense (5448 particles) is
+  render-bound at about 30 fps (render alone 31-34 ms), so the worker
+  does not fix it; a priority call on K8 (K302 (6)).
 - **K9** · G4: smooth-union SDF junction webs (cuspRadius = blend
   radius); A/B crops at cr 1, 3, 6 before the fans are deleted. Also
   closes G1's x160 leftover: a faint tick where a wedge flank meets a
   tucked bridge, and the merge-core hairline dashes at 4-way merges
   (`.claude/rules/render-gaps.md`), which K74's H3 (`fourWayFraction`
   0.9+) would multiply. From K81 (2026-10-13): the webs should carry the
-  traveled route as the smooth union of the traveled pieces only.
+  traveled route as the smooth union of the traveled pieces only. K7's
+  design (2026-10-14): the daily's intro freezes for 2.7 s at 1.1 s and
+  2.0 s at 3.8 s, with physics paused too (inferred shader compiles, not
+  traced), so the worker cannot remove them: trace them before warming
+  shaders. K7 recommends this warm-up next, beside its stage 2 (K302
+  (8)).
 - **K115** · Cursive text and shapes, decided (Levi, 2026-10-13 14:32,
   verbatim in `docs/design/levi_notes_2026-10-13.md`; design
   `docs/design/K115_cursive_text.md`, ded57f7). Its staged plan goes
@@ -1185,7 +1230,9 @@ before the worker, and each build stage has `main.ts` to itself.
   at 19:21: does touch keep its margin, and does a hovered choice keep its
   own hover look under the glow? Lore: `render-paint.md` ("HOVER GLOW").
   Brief: `docs/design/K298_hover_glow.md` (written at 19:57, before his
-  answers; the two calls are marked in steps 4 and 5).
+  answers; the two calls are marked in steps 4 and 5). It runs beside
+  K7's stage 1, so the pick margin goes last, through one helper
+  (6b7676d).
 
 ## Residuals (known, not fixed)
 
@@ -1815,6 +1862,15 @@ before the worker, and each build stage has `main.ts` to itself.
   by each tile's row stride). Cause not found. The pass's looks and
   probes should cope, or re-pin the metrics after a tap
   (`docs/design/K156.md`, "Round 2026-10-14c handoff", call 6).
+- **K303** · 48 probe files freeze the sim with the `__knotPS().step`
+  patch, which a worker will not honor; K7's stage 4 ports the
+  load-bearing ones (`docs/design/K7_worker.md`, "Design handoff").
+- **K304** · `.claude/probes/K73/probe_follow.mjs` calls
+  `__knotExitPointer`, which no build defines (found by K7's design).
+- **K305** · In the daily's intro, k7_frames' frame-callback p50 (24.7
+  ms) exceeds its rAF-interval p50 (18 ms); unexplained, so K7's
+  summaries report fps, interval p95 and render alone
+  (`docs/design/K7_worker.md`, "What was measured").
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1823,7 +1879,8 @@ before the worker, and each build stage has `main.ts` to itself.
 - **K23** · GPU particles (G2.4), GPU fog-of-war accumulation, the yarn as
   a gap-masked ribbon (G3-5).
 - **K24** · Render on demand when the scene is fully static (battery);
-  part of K6. An animated background (K21) must not defeat it.
+  part of K6. An animated background (K21) must not defeat it. After
+  K7's stage 5; it reads `host.asleep`.
 
 ## Ideas (not scheduled)
 
@@ -2055,6 +2112,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K296** · Roam 0 as a "sentry": the turn minotaur stands guard while
   it roams, a meaning for 0 instead of K272's minimum of 1. K80 turns
   stage 2's handoff ("For stage 3").
+- **K306** · Dead surface in `particle_system.ts`: `twistFillBias`,
+  `hasCarve`, and `chainArcLength` (used only by tests). Found by K7's
+  design.
 
 ## Done
 
