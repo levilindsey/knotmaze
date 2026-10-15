@@ -30,8 +30,9 @@ only with the files it is about; `render.md` lists the area's other files.
   probes pin: a pinned clock holds a fade at its level, so a probe shows any
   frame of it by setting `r.paintClock` and waiting two rAFs), and
   `r.webFade.seconds = 0` turns the fade off (K127's single frame, for
-  same-state A/Bs). A web that stops being full (a backtrack, a reset) fades OUT
-  too (K191, below); a web already full on the FIRST declaration after a
+  same-state A/Bs). A web that stops being full (a backtrack) fades OUT
+  too (K191, below: a reset's webs leave with their arms); a web already
+  full on the FIRST declaration after a
   scene is built (a saved attempt restored on load) shows full without a
   fade. `FabricMazeRenderer.webFading` feeds
   main.ts's sceneAnimating(). REDUCED MOTION keeps the fade: it moves
