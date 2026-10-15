@@ -1,43 +1,32 @@
 // THE DAILY MAZE (K20): one maze per local calendar day (game/
 // daily_calendar.ts numbers them), identical for everyone playing that day.
 //
-// PINNING. A daily's design never comes from today's PARAM_DEFAULTS - Levi
-// edits those mid-day, and a player on a stale tab and one on a fresh load
-// would then get different mazes. It comes from a frozen, versioned DAILY
-// DEFINITION: a codec version whose defaults ARE the design (codec tables
-// are frozen literals, pinned by test/ui/param_codec.test.ts - a default
-// change there is a new codec version, and the old table stays forever),
-// plus optional overrides, plus a seed derived from the day number. A
-// param appended to the codec later reads the default it was introduced
-// with (codecDefaults), the same rule every old link follows - and a param
-// that shapes the maze must default to its old behavior, or every link
-// would move.
-//
-// TO CHANGE THE DAILY (a new look, harder mazes, new defaults): never edit
-// a published definition. Append DAILY_V<n+1> with fromDay at least a few
-// days ahead - an already-open tab cannot learn about it, so it would build
-// the old design for that day until reloaded.
-//
-// What can still move a daily: a change to the generation CODE (lattice
-// grower, maze plan/apply) - that moves every link too. The golden test in
-// test/ui/daily_link.test.ts pins dailies #1-#3's mazes to catch it.
+// A daily's design is TODAY's default design (url_state.ts PARAM_DEFAULTS)
+// on a seed derived from the day number, plus the player's stored playback
+// preferences. Nothing freezes it (K132, 2026-10-14, before launch, dropped
+// the versioned daily definitions): a default edit or a change to the
+// generation code (lattice grower, maze plan/apply) moves every daily, a
+// tab opened before the deploy keeps the old maze until it reloads, and
+// K47's walk fingerprint refuses a saved attempt of the old maze
+// (game/daily_attempt.ts); results stay. Within one build a day is one maze
+// on every device (K108). The golden test in test/ui/daily_link.test.ts
+// pins dailies #1-#3's mazes to catch a move.
 //
 // THE FRONT DOOR (K56, 2026-10-12). The page with NO query at all is
 // today's daily, and the address bar stays bare while it is on screen.
 // `?daily` means the same (and is rewritten to the bare address);
 // `?daily=<n>` names a day and stays in the bar. Any other query is an
-// ordinary design link with no daily treatment: a token, legacy keys,
-// seedless overrides (`?am=instant`). A daily's design is EXACTLY its
-// pinned design (isDailyDesign) - except DAILY_EXEMPT_KEYS, the player's
+// ordinary design link with no daily treatment: a token, key=value pairs,
+// seedless overrides (`?am=instant`). A daily's design is EXACTLY the
+// day's design (isDailyDesign) - except DAILY_EXEMPT_KEYS, the player's
 // playback preferences (sound, camera, touch and feel, physics on/off),
 // which a daily opens with from the stored prefs (main.ts saves the ones
 // the player sets while on a daily). Editing anything else - a panel row,
-// the seed, legacy `&k=v` overrides after `?daily` - leaves the daily: the
-// page becomes an ordinary design link. `?daily=<n>.<delta>` (K20 links
-// for a daily with a changed look - no longer written, since a changed
-// look is no longer the daily) opens as the ordinary design it describes.
+// the seed, `&k=v` overrides after `?daily` - leaves the daily: the page
+// becomes an ordinary design link. Text after a dot (`?daily=<n>.<x>`, K20's
+// retired look deltas) is ignored with a warning.
 
-import { codecDefaults, decodeDelta, numberText } from "./param_codec";
+import { numberText } from "./param_codec";
 import type { ParamValue } from "./param_codec";
 import {
   ENUM_OPTIONS,
@@ -49,51 +38,17 @@ import {
 } from "./url_state";
 import type { UrlParams } from "./url_state";
 
-export interface DailyDefinition {
-  // The definition's own version (recorded with every daily result).
-  readonly version: number;
-  // The first daily number it applies to.
-  readonly fromDay: number;
-  // The codec version whose defaults are the design...
-  readonly codecVersion: number;
-  // ...with these params changed on top.
-  readonly overrides: Readonly<Record<string, ParamValue>>;
-  // Seed derivation: dailySeed(n) = mix32(n + salt).
-  readonly salt: number;
-}
+// What a daily result or attempt records as `def` (game/daily_store.ts):
+// 1 = the frozen DAILY_V1 design (codec v3's defaults plus K74's maze
+// values) that every daily used until K132, 2 = today's defaults.
+export const DAILY_DEF = 2;
 
-// V1 (2026-10-12): the v3 default design - the one Levi picked as the
-// app's defaults on 2026-10-11 (gs 18 braided fabric, segments colors,
-// trace + burn intro, music) - on a seed per day. K74 (2026-10-13,
-// pre-launch, changed in place): the maze plan's new defaults - a far
-// exit and long-tail dead ends.
-export const DAILY_V1: DailyDefinition = Object.freeze({
-  version: 1,
-  fromDay: 1,
-  codecVersion: 3,
-  overrides: Object.freeze({
-    exitClearance: 12,
-    deadEnds: true,
-    deadEndDensity: 0.5,
-    deadEndLength: 20,
-  }),
-  salt: 0x6b6e6f74, // "knot"
-});
-
-// Every definition ever published, by fromDay (never edit or drop one).
-export const DAILY_DEFINITIONS: readonly DailyDefinition[] = Object.freeze([
-  DAILY_V1,
-]);
+// Seed derivation: dailySeed(n) = mix32(n + DAILY_SALT).
+const DAILY_SALT = 0x6b6e6f74; // "knot"
 
 // How far past today a ?daily=<n> link may reach: local dates around the
 // world differ by up to two days, so a friend's link may be "tomorrow" here.
 export const DAILY_MAX_AHEAD = 2;
-
-export function dailyDefinition(n: number): DailyDefinition {
-  let def = DAILY_DEFINITIONS[0];
-  for (const d of DAILY_DEFINITIONS) if (d.fromDay <= n) def = d;
-  return def;
-}
 
 // murmur3's 32-bit finalizer: a fixed, well-mixed bijection.
 function mix32(x: number): number {
@@ -102,17 +57,13 @@ function mix32(x: number): number {
   return (x ^ (x >>> 16)) >>> 0;
 }
 
-export function dailySeed(n: number, def = dailyDefinition(n)): number {
-  return mix32((Math.round(n) + def.salt) >>> 0);
+export function dailySeed(n: number): number {
+  return mix32((Math.round(n) + DAILY_SALT) >>> 0);
 }
 
-// Daily n's pinned design (a fresh object).
+// Daily n's design (a fresh object): today's defaults on the day's seed.
 export function dailyParams(n: number): UrlParams {
-  const def = dailyDefinition(n);
-  return paramsFromValues(dailySeed(n, def), {
-    ...codecDefaults(def.codecVersion),
-    ...def.overrides,
-  });
+  return paramsFromValues(dailySeed(n), PARAM_DEFAULTS);
 }
 
 // The params that decide the MAZE - the walk graph, its start/exit and its
@@ -306,7 +257,7 @@ export interface Launch {
 // (`?daily...`, first in the query); else whatever parseParams reads.
 // `today` = todayNumber(); a daily number outside [1, today +
 // DAILY_MAX_AHEAD] (or not a number) loads today's. `prefs` = the stored
-// daily prefs, which a daily opens with (legacy overrides after the link
+// daily prefs, which a daily opens with (`&k=v` overrides after the link
 // still win).
 export function parseLaunch(
   search: string,
@@ -334,7 +285,12 @@ export function parseLaunch(
   value = value.replace(/\.+$/, "");
   const dot = value.indexOf(".");
   const numText = dot < 0 ? value : value.slice(0, dot);
-  const deltaText = dot < 0 ? "" : value.slice(dot + 1);
+  if (dot >= 0) {
+    console.warn(
+      `KnotMaze: ignored "${value.slice(dot)}" after the daily's number ` +
+        "(daily links name only the day)."
+    );
+  }
   let n = today;
   let floating = true;
   if (numText !== "") {
@@ -349,24 +305,8 @@ export function parseLaunch(
       );
     }
   }
-  const base = dailyParams(n);
   const overrides = amp >= 0 ? query.slice(amp + 1) : "";
-  if (deltaText !== "" && n === Number(numText)) {
-    const d = decodeDelta(
-      deltaText,
-      base as unknown as Record<string, ParamValue>
-    );
-    if (d.error === null) {
-      // A K20 daily with a changed look: the ordinary design it describes.
-      let params = paramsFromValues(base.seed, d.values);
-      if (overrides !== "") params = applyLegacyOverrides(params, overrides);
-      return { params, daily: null, floating: false };
-    }
-    console.warn(
-      `KnotMaze: unreadable daily settings (${d.error}); showing the daily as published.`
-    );
-  }
-  let params = applyDailyPrefs(base, prefs);
+  let params = applyDailyPrefs(dailyParams(n), prefs);
   if (overrides !== "") params = applyLegacyOverrides(params, overrides);
   // An override of anything but a preference (`&gs=8`, `&am=instant`) is
   // an ordinary design: the day's design with that change.

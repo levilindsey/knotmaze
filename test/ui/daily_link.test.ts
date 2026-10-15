@@ -1,12 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  DAILY_DEFINITIONS,
+  DAILY_DEF,
   DAILY_EXEMPT_KEYS,
   DAILY_MAX_AHEAD,
-  DAILY_V1,
   MAZE_PARAM_KEYS,
   applyDailyPrefs,
-  dailyDefinition,
   dailyParams,
   dailyQuery,
   dailySeed,
@@ -20,12 +18,10 @@ import {
 import {
   ENUM_OPTIONS,
   PARAM_DEFAULTS,
-  impliedParams,
   paramsFromValues,
   parseParams,
 } from "../../src/ui/url_state";
 import type { UrlParams } from "../../src/ui/url_state";
-import { codecDefaults, encodeDelta } from "../../src/ui/param_codec";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { planAnchors } from "../../src/core/shapes";
@@ -61,26 +57,7 @@ function walkOf(p: UrlParams) {
   return buildWalkGraph(graph)!;
 }
 
-describe("the daily definition (frozen)", () => {
-  it("pins DAILY_V1 literally", () => {
-    expect(DAILY_V1).toEqual({
-      version: 1,
-      fromDay: 1,
-      codecVersion: 3,
-      // K74 (2026-10-13), edited in place before launch: long dead ends
-      // and the far exit.
-      overrides: { exitClearance: 12, deadEnds: true, deadEndDensity: 0.5, deadEndLength: 20 },
-      salt: 0x6b6e6f74,
-    });
-    expect(DAILY_DEFINITIONS[0]).toBe(DAILY_V1);
-    // Definitions only ever append, in fromDay order, with rising versions.
-    DAILY_DEFINITIONS.forEach((d, i) => {
-      expect(d.version).toBe(i + 1);
-      if (i > 0) expect(d.fromDay).toBeGreaterThan(DAILY_DEFINITIONS[i - 1].fromDay);
-    });
-    expect(dailyDefinition(1)).toBe(DAILY_V1);
-  });
-
+describe("the daily design", () => {
   it("pins the daily seeds", () => {
     expect([1, 2, 3, 4, 5, 6, 7, 8].map((n) => dailySeed(n))).toEqual([
       1470545611, 485302668, 1613290376, 148971763, 229430507, 147565272,
@@ -92,40 +69,30 @@ describe("the daily definition (frozen)", () => {
     expect(seen.size).toBe(5000);
   });
 
-  it("is its codec version's defaults on the day's seed", () => {
+  // K132: nothing freezes a daily. It is today's defaults on the day's
+  // seed, so a default edit moves it (accepted before launch).
+  it("is today's defaults on the day's seed", () => {
     for (const n of [1, 2, 77]) {
-      const def = dailyDefinition(n);
-      expect(dailyParams(n)).toEqual(
-        paramsFromValues(dailySeed(n), {
-          ...codecDefaults(def.codecVersion),
-          ...def.overrides,
-        })
-      );
+      expect(dailyParams(n)).toEqual(paramsFromValues(dailySeed(n), PARAM_DEFAULTS));
       expect(dailyParams(n).mazeFabric).toBe(true);
     }
-  });
-
-  it("does not follow today's defaults (a mid-day default edit)", () => {
-    const before = dailyParams(4);
     const D = PARAM_DEFAULTS as unknown as Record<string, unknown>;
     const saved = { ...D };
     try {
-      // Simulate Levi editing defaults while players are mid-daily.
       D.gridSize = 9;
-      D.branchDensity = 0.9;
-      D.hueShift = 12;
-      D.junctionSpacing = 6;
-      expect(dailyParams(4)).toEqual(before);
+      expect(dailyParams(4).gridSize).toBe(9);
     } finally {
       Object.assign(D, saved);
     }
+    // What results and attempts record (1 = the frozen DAILY_V1 era).
+    expect(DAILY_DEF).toBe(2);
   });
 
-  // GOLDEN: dailies #1-#3 as built today. A failure here means the
-  // generation code (or the definition) changed and EVERY daily moved -
-  // publish a new definition for future days instead (daily_link.ts).
-  // Re-frozen by K74 (2026-10-13, pre-launch: every daily moved on purpose;
-  // before: 85.647/200/302, 75.359/194/294, 85.433/194/295).
+  // GOLDEN: dailies #1-#3 as built today. A failure means a default or the
+  // generation code changed and EVERY daily moved: re-freeze, and name what
+  // moved in the commit. Re-frozen by K74 (2026-10-13; before:
+  // 85.647/200/302, 75.359/194/294, 85.433/194/295). K132 moved none: the
+  // frozen DAILY_V1 base differed from today's defaults only in trailLength.
   it("builds the same mazes it always has (golden)", () => {
     const golden = [
       { n: 1, optimal: 86.67740703883709, vertices: 189, edges: 283 },
@@ -247,12 +214,12 @@ describe("the front door (K56)", () => {
   });
 
   it("treats any other query as an ordinary design", () => {
-    for (const q of ["?1471kin.c", "?s=7&gs=9", "?dailyx", "?am=instant", "?am=instant&daily=3", "?&daily", "?mf=1"]) {
+    for (const q of ["?1471kin", "?1471kin.J", "?s=7&gs=9", "?dailyx", "?am=instant", "?am=instant&daily=3", "?&daily", "?mf=1"]) {
       const l = parseLaunch(q, today, { volume: 0 });
       expect([q, l.daily]).toEqual([q, null]);
       expect([q, l.params.volume]).toEqual([q, parseParams(q).volume]);
     }
-    expect(parseLaunch("?1471kin.c", today).params).toEqual(parseParams("?1471kin.c"));
+    expect(parseLaunch("?1471kin", today).params).toEqual(parseParams("?1471kin"));
   });
 
   it("writes the bare address for today's, `daily=<n>` otherwise", () => {
@@ -267,42 +234,17 @@ describe("the front door (K56)", () => {
     });
   });
 
-  it("opens K20's `?daily=<n>.<delta>` links as the design they describe", () => {
-    const p = dailyParams(7);
-    const tweaked: UrlParams = {
-      ...p,
-      hueShift: 40,
-      palette: "jewel",
-      pathViz: "string",
-      fogOfWar: true,
-      threadWidth: 0.6,
-    };
-    const delta = encodeDelta(
-      tweaked as unknown as Record<string, unknown>,
-      p as unknown as Record<string, unknown>,
-      impliedParams(tweaked)
-    );
-    expect(delta).not.toBe("");
-    expect(parseLaunch(`?daily=7.${delta}`, today, { volume: 0 })).toEqual({
-      params: tweaked,
-      daily: null,
-      floating: false,
-    });
-    // Even a delta of preferences only: no daily is written that way now.
-    const quiet = { ...p, volume: 0.1 };
-    const d2 = encodeDelta(
-      quiet as unknown as Record<string, unknown>,
-      p as unknown as Record<string, unknown>,
-      impliedParams(quiet)
-    );
-    expect(parseLaunch(`?daily=7.${d2}`, today).daily).toBeNull();
-  });
-
-  it("ignores an unreadable delta, keeping the day", () => {
-    vi.spyOn(console, "warn").mockImplementation(() => {});
+  // K20's `?daily=<n>.<delta>` look deltas are retired (K132): the day
+  // stays, the rest is ignored with one warning.
+  it("ignores text after the daily's number, keeping the day", () => {
     const pinned = { params: dailyParams(4), daily: 4, floating: false };
-    expect(parseLaunch("?daily=4.@@@", today)).toEqual(pinned);
-    expect(parseLaunch("?daily=4.Y", today)).toEqual(pinned);
+    for (const q of ["?daily=4.@@@", "?daily=4.Y", "?daily=4.IUfTJ4ZJbGRMK"]) {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      expect([q, parseLaunch(q, today)]).toEqual([q, pinned]);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(String(warn.mock.calls[0]![0])).toMatch(/after the daily's number/);
+      warn.mockRestore();
+    }
   });
 
   it("keeps the daily for preference overrides, leaves it for any other", () => {
@@ -409,7 +351,7 @@ describe("the daily design and its exempt preferences (K56)", () => {
     // A preset: its values are implied.
     const preset = paramsFromValues(77, { appearMode: "trace-rainbow" });
     expect(matchesDesign({ ...preset, appearSpeed: 9 }, preset)).toBe(true);
-    // The V1 daily is custom: all three values count.
+    // The daily is custom (today's defaults): all three values count.
     expect(isDailyDesign({ ...dailyParams(2), appearSpeed: 3 }, 2)).toBe(false);
   });
 

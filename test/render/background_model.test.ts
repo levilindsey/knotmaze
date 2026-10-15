@@ -37,7 +37,7 @@ import {
   silkAngleUniform,
 } from "../../src/render/background_model";
 import { gamutRgb, setGamutConfig } from "../../src/core/section_colors";
-import { codecTable, CODEC_VERSION } from "../../src/ui/param_codec";
+import { CODEC_PARAMS } from "../../src/ui/param_codec";
 
 const FRAME = 1 / 60;
 
@@ -67,7 +67,7 @@ describe("background effects", () => {
   });
 
   it("keeps the codec's option order (links store the index)", () => {
-    const p = codecTable(CODEC_VERSION)!.params.find((q) => q.name === "background");
+    const p = CODEC_PARAMS.find((q) => q.name === "background");
     expect(p && p.type === "enum" ? [...p.options] : null).toEqual([...BACKGROUNDS]);
   });
 
@@ -356,7 +356,7 @@ describe("shape params (K79 stage B)", () => {
 
 describe("custom colors (K79 stage B)", () => {
   it("keeps the codec's option order for the color mode", () => {
-    const p = codecTable(CODEC_VERSION)!.params.find((q) => q.name === "backgroundColorMode");
+    const p = CODEC_PARAMS.find((q) => q.name === "backgroundColorMode");
     expect(p && p.type === "enum" ? [...p.options] : null).toEqual([...BACKGROUND_COLOR_MODES]);
     expect(BACKGROUND_COLOR_MODES[0]).toBe("gamut");
   });

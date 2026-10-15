@@ -15,8 +15,9 @@
 // number when that attempt began - see begunLate), timeMs, path, optimal,
 // efficiency (optimal / path, kept for reading the record; recomputed
 // when missing), backtrack, junctions, deadEnds (null with deadEnds off),
-// moves (the g/d/b move log), viz (the pathViz it ended in), def (the
-// daily definition version) }. Aggregates are derived, never stored.
+// moves (the g/d/b move log), viz (the pathViz it ended in), def (which
+// daily rule built the maze: ui/daily_link.ts DAILY_DEF) }. Aggregates are
+// derived, never stored.
 //
 // PRACTICE (K146): an attempt BEGUN after its daily's day (a past daily,
 // opened from the stats view's History or by its link) is practice. Its
@@ -113,7 +114,7 @@ export interface DailyAttempt {
   // The maze the taps belong to (game/daily_attempt.ts walkFingerprint): a
   // replay on any other walk graph is refused.
   maze: string;
-  // The daily definition version.
+  // Which daily rule built the maze (ui/daily_link.ts DAILY_DEF).
   def: number;
   // When this record was written (epoch ms).
   savedAt: number;

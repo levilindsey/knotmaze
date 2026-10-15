@@ -109,11 +109,12 @@ async function simToSleep(
   return Number.POSITIVE_INFINITY;
 }
 
-// Legacy links read the frozen v1 defaults, exactly as the browser does.
+// Key=value links read today's defaults (K132). `de=0&ded=.25` keep the
+// maze this link has built since K74 (it read the v1 defaults then).
 const USER_RECT_LINK =
   "?s=1471kin&gs=12&rep=1&bd=1&sm=.25&ga=0&tw=.64&gap=.12&cr=2.4&fl=0" +
   "&fw=.25&fv=1.15&vol=.18&hs=312&pal=moss&pc=6c644c&as=2.1" +
-  "&am=instant&snd=none";
+  "&de=0&ded=.25&am=instant&snd=none";
 
 describe("fresh-settle sleep (K41 links)", () => {
   it("the fat knot link sleeps", { timeout: 120000 }, async () => {

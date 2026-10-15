@@ -60,9 +60,9 @@ import {
 } from "./ui/url_state";
 import type { UrlParams } from "./ui/url_state";
 import {
+  DAILY_DEF,
   DAILY_EXEMPT_KEYS,
   applyDailyPrefs,
-  dailyDefinition,
   dailyParams,
   dailyQuery,
   isDailyDesign,
@@ -2154,7 +2154,7 @@ async function main(): Promise<void> {
       day: attemptDay,
       elapsedMs: clock.elapsed(performance.now()),
       maze: walkFingerprint(walkGraph),
-      def: dailyDefinition(n).version,
+      def: DAILY_DEF,
       // Strictly after anything this tab saw (a fast double save, a clock
       // step), so another tab's later save always reads as later.
       savedAt: Math.max(Date.now(), attemptSyncedAt + 1),
@@ -2354,7 +2354,7 @@ async function main(): Promise<void> {
         deadEnds,
         moves,
         viz: params.pathViz,
-        def: dailyDefinition(daily).version,
+        def: DAILY_DEF,
       };
       attemptRecord = dailyStore.recordSolve(daily, result);
     }
