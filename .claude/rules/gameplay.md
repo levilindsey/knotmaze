@@ -28,8 +28,8 @@ files it is about; `docs/lore_index.md` lists every rules file and its paths.
 - `gameplay-stars.md`: star ratings (K155)
 - `gameplay-badge.md`: the mode badge (K73, K151)
 - `gameplay-indicators.md`: off-screen indicators and the head (K73, K148)
-- `gameplay-minotaur.md`: the real-time minotaur (K80)
-- `gameplay-fog.md`: the fog of war resets on a restart only (K100)
+- `gameplay-minotaur.md`: the real-time minotaur (K80) and its controls (K174)
+- `gameplay-fog.md`: the fog of war resets on a restart only (K100), or on a catch (K174)
 - `gameplay-links.md`: links and the codec
 - `gameplay-panel.md`: the panel
 - `gameplay-motion.md`: the Motion setting (K53, K79), the Accessibility group (K111)
