@@ -1,40 +1,47 @@
-> DESIGN SNAPSHOT (2026-10-11), written by a read-only design agent against the G1 branch (per-pixel gaps) as it stood that day; file:line citations refer to that code and will drift. What actually lands is recorded in CLAUDE.md and the commit messages; open work is tracked in LEDGER.md.
+> RE-BASED 2026-10-15 on master d741412 by K8 stage 1 (agent `agent-a35a43cee74c92b93`; docs only, nothing measured; brief `docs/design/K8_stage1.md`). Since the snapshot below, G1 (per-pixel gaps), G2 (shader paint), K76 2a/2b (the thread reveal), K268 stage 1 (the shaped cut), K81/K127/K169 (route bands, traveled webs, the web fade), the render-only plucks (K77, K104, K279), K7 (the physics worker) and K307 stage 1 (cold compiles) have landed. What changed here: sections 1-4 describe master d741412 (its line numbers), with the data model re-cut for G2's textures (SAMP packs two samples per RGBA32F texel; AUX and PAINT are gone; per-sample radii get their own texture) and the fragment programs calling G2's paint library; section 5's stages are re-cut, with the reveal chain (K76 2c, K268 stage 2, K290, K76 2d) landing first; section 6 is refreshed for the Pixel 11 on Android Chrome, with a recommendation on every question. The decisions K8 stage 1 made are marked **(K8 s1)**.
+>
+> DESIGN SNAPSHOT (2026-10-11), written by a read-only design agent against the G1 branch (per-pixel gaps) as it stood that day; file:line citations referred to that code. What actually lands is recorded in CLAUDE.md and the commit messages; open work is tracked in LEDGER.md.
 
 # G3 + G4 DESIGN: SDF ribbons and SDF junction webs (Knotmaze GPU migration)
 
-**Base.** This design builds on G1 (branch `worktree-agent-ad6a952e924609ab8`, worktree `.claude\worktrees\agent-ad6a952e924609ab8`). All `file:line` citations point at that worktree. Paths map 1:1 to `src\...` once G1 lands.
+**Base.** Master d741412 (2026-10-15), with G1 and G2 landed. All `file:line` citations point at that commit and will drift.
 
 **Terms.**
 - **sample**: one entry of `chainSamples[c]` (uniform-arc spline resampling).
 - **h**: the ribbon half-width.
 - **pxW**: world units per device pixel.
+- **side01**: the across coordinate the paint library reads, 0 at the left edge and 1 at the right (today the ribbon's `uv.y`).
 
 ## Decisions at a glance
 
-1. **One geometry source.** The GPU gets geometry from one shared RG32F texture of centerline samples (SAMP), uploaded once per `update()`.
-   - The CPU keeps producing `chainSamples` exactly as today, so every CPU consumer keeps working.
+1. **One geometry source.** The GPU gets geometry from one shared RGBA32F texture of centerline samples (SAMP), two samples per texel, written by `update()`.
+   - The CPU keeps producing `chainSamples` exactly as today, so every CPU consumer keeps working. Under K7 they are the interpolated mirror positions, the same ones the samples are built from today.
+   - Per-sample radii (the reveal taper, the pluck base collapse, the swell) live in a second texture (RADII), written only for chains whose width multiplier is not 1. **(K8 s1)**
    - There is no GPU readback anywhere.
 2. **Ribbons are one instanced draw, one instance per centerline segment.**
-   - Coverage is the exact signed distance to the union of round cones (uneven capsules) over the sample polyline, with per-sample radii (reveal taper, swell). Analytic AA.
+   - Coverage is the exact signed distance to the union of round cones (uneven capsules) over the sample polyline, with per-sample radii. Analytic AA.
    - Smooth segments draw a quad bounded by the angle bisectors at both ends. That quad is exactly the nearest-segment region, so no ownership test is needed.
    - Segments near a tight fold draw a capsule box instead, and keep a pixel only if they are the nearest segment (argmin) over a CPU-flagged fold window.
+   - Over-tight folds keep today's ONE-SIDED pinch: the concave edge pulls in to the local bend radius and the convex edge stays at h (section 3.3). **(K8 s1)**
    - Result: every pixel of a chain has exactly one writer.
-3. **Gap slots reference SAMP instead of copying 68-point polylines.**
-   - The slot header points at a sample range in SAMP plus up to 8 chunk bounding circles.
-   - The nearest-point search becomes exact and pruned (about 12 segment evaluations instead of 68).
-   - Slot ids move from per-vertex attributes to per-chain window range lists.
+3. **Gap slots reference SAMP instead of copying polylines.**
+   - The slot header points at a sample range in SAMP plus up to 8 chunk bounding circles; a row shrinks from 114 texels to about 24.
+   - The nearest-point search becomes exact and pruned (about 12 segment evaluations instead of up to 56).
+   - Slot ids move from the per-vertex `aMaskId` lanes to per-chain window range lists (RANGES).
 4. **Junctions are one instanced draw of per-CLUSTER octagons.**
    - A cluster is 1-2 fused joints whose domains touch (for example, both ends of a short bridge).
    - A PIECE is one chain's maximal arc range inside the cluster. A through-thread is one piece; a fused terminal is an "end" piece.
    - The fragment shader evaluates every piece with the same SDF and the same samples as the ribbon pass, then takes the hard union.
    - It adds a smooth-min web only between the two pieces that bracket the pixel's angular sector.
    - Pieces get the full G1 casing; the web is cut only by foreign over silhouettes.
-   - Colour uses an edge-aware SDF blend. Its envelope, and the web's radius, reach zero before the domain edge.
+   - Colour uses an edge-aware SDF blend of COMPOSED colours. Its envelope, and the web's radius, reach zero before the domain edge.
    - The ribbon pass discards its own pieces' pixels inside the domain. The hand-off is exact by construction.
-5. **Flow undulation and the pluck ring stay on the CPU** (control-copy displacement).
+   - The joint program carries what the fans carry today: K81's route bands, K127's traveled webs, K169's web fade, K76 2b's joint gate, and (once they land) K268 stage 2's anchors and K290's dropped arm. K345's hover rim runs through it, since pieces have an across coordinate. **(K8 s1)**
+5. **Paint is G2's library.** Both programs call `paint_glsl.ts` with its caller contract (chain, fractional ctrl, arc, side01, pxArc). `paint_math.ts` stays the census reference. The thread reveal (`withExplore`) and the shaped cut port into the new programs once the reveal chain has landed. **(K8 s1)**
+6. **Flow undulation stays on the CPU** (control-copy displacement). There is no pluck ring any more: plucks are render-only overlays (K77).
    - When asleep under flow, gap windows are reused round-robin. A smooth warp carries crossings with the material.
    - Spline sampling, SAMP and bounds still refresh every frame.
-6. **The yarn becomes a host-frame pass.**
+7. **The yarn becomes a host-frame pass** (K23).
    - It finds its host's nearest centerline point with the same SDF code.
    - It evaluates the analytic wander in (arc, lateral) coordinates.
    - It multiplies by the host's own gap keep, so it dips under exactly where the host does, per pixel.
@@ -43,81 +50,86 @@
 
 ## 1. CURRENT PIPELINE (what G3/G4 replace)
 
-### 1.1 What runs per frame on the G1 base
+### 1.1 What runs per frame on master d741412
 
-**`RibbonRenderer.update()`** — `ribbon_renderer.ts:1839-2015`. Per chain, in order:
-- Copy controls.
-- Flow displacement of the control copies (1863-1869).
-- Pluck waves (1876-1893).
-- `sampleClosedSpline` / `sampleOpenSpline` (1895-1898).
-  - `spline_generator.ts`: closed chains place sample k at arc k/count × total; open chains at k/(count-1) × total.
-  - count = max(48, round(initialArc / 0.09)) (`ribbon_renderer.ts:1010`).
-- `tuckFusedTips` (1903-1906, 3087-3117).
-- Cache-drift re-bake.
-- Reveal mask.
-- `RibbonMesh.update` → `ribbon_mesh.ts:216-340`.
+**The physics hand-off (K7).** The renderer reads `ps.positions` from the mirror (`physics/mirror_system.ts`). With the worker on, that is the worker's snapshot stream interpolated at now − D (D = the median snapshot interval, clamped to 8-50 ms); at rest the frame is exact. `&phw=0` runs the in-thread host. G3 reads the same positions as today's samples and never talks to the worker.
+
+**`RibbonRenderer.update()`** (`ribbon_renderer.ts:2449-2607`). Setup: `kData()`, `geomRev++`, `underWindows` cleared, the reveal lifecycle (`finishReveal`), and K90's `splineBend.halfWidth` (off unless `__knotSplineBend(true)`). Then per chain, in order:
+- Copy the controls from `ps.positions`.
+- Flow displacement of the copies (`flowOffset`, 1674).
+- `sampleClosedSpline` / `sampleOpenSpline(controls, fills[i].sampleCount)`.
+  - `spline_generator.ts`: closed chains place sample k at arc k/count × total; open chains at k/(count−1) × total.
+  - count is fixed per scene: max(MIN_SAMPLES 48, round(arc / SAMPLE_SPACING 0.09)).
+- `tuckFusedTips` (4916) for fused tips; the result is `chainSamples[i]`.
+- `paintScene.writeGeom(...)`: the chain's control arc table into KGEOM (G2), and `kChain`.
+- The width mask, `widthMulFor(i, samples)` (2061): the appearance reveal's taper, on the CPU.
+- `fills[i].update(positions, tangents, h, 0, withPluckCollapse(...))`: `RibbonMesh.update`.
+
+There are no pluck waves (plucks are render-only overlays), no cache-drift re-bake (G2.2 evaluates the section colour per vertex from a run table) and no per-vertex paint writes (G2).
+
+After the chains: the crossing gates (`gateLatch`; `gateCache` keyed on `gateRev`; `GATE_LEAD`), `computeGapSlot` per crossing (2632), `renderEmergent` (3301), `renderMarkerGaps` (3363), `assignGapIds` (3468), `applyExploreGaps` (4704; K76 2b, K268 stage 1), `gaps.upload()`, `paintScene.flushGeom()` (KGEOM's dirty rows) and `drawRevealTips()` (2135).
 
 **`RibbonMesh.update` (G3 replaces this).** It extrudes two vertices per sample and contains:
-- the miter (`halfWidth / cosHalf`, clamped at 2x);
+- the miter (`h / cosHalf`, clamped at 2x);
 - the open-tip leg duplication (Stage 7b);
 - zero-length-leg borrowing (the tucked-tip spur fix);
-- the P3.34 concave-side turn-radius clamp (`innerCap = max(0.95·radius, 0.3·h)`);
-- the rainbow-swell concave clamp.
+- the P3.34 concave-side clamp: `innerCap = max(0.95·radius, 0.3·h)`, radius = ((la + lb)/4)·cosHalf/sinHalf, applied to the CONCAVE side only;
+- the swell: a multiplier above 1 grows the convex side with the concave side capped; one at or below 1 scales both sides.
 
-It then uploads `aPosition` and `aTan` for all samples.
+It uploads `aPosition` and `aTan` for all samples. **Per-vertex attributes per chain:**
+- `aPosition`, `aUV` (`uv.y` is side01);
+- `aKey` (chain, sample index; static), which G2's vertex stage decodes;
+- `aArcPos` (the sample's arc as a unit-circle turn: closed rings go once around, open runs 0.9π; static);
+- `aTan`;
+- `aMaskId` (up to 4 gap slot ids, from `assignGapIds`).
 
-**Per-vertex buffers per chain** (`ribbon_mesh.ts:116-181`):
-- `aPosition`, `aUV`
-- `aColor` (`writePaint`, 349-373)
-- `aFx` (`setFx`, 385-402)
-- `aArcPos` (unit-circle arc, static)
-- `aTan`
-- `aMaskId` (`setMaskIds`, 186-208)
+`aColor` and `aFx` are gone (G2). The `vertices` getter (left and right edge points per sample) has one reader outside the mesh: K81's cover strips (`ribbon_renderer.ts` ~6870-6915, `COVER_STRIP_PTS` 32).
 
 **Crossings.**
-- `computeGapSlot` (2040-2523): marches against coarse polylines (`COARSE_SPACING` 0.1, at most 128 points). It then builds the fine shader polyline (`FINE_SPACING` 0.075, at most 68 points) with `buildPoly` / `sampleAt` (2366-2374). It computes the junction clearance per side (2386-2435).
-- Then `renderEmergent` (2527), `renderMarkerGaps` (2579), `assignGapIds` (2675, per-sample ids padded ±2), and `gaps.upload()`.
-- The upload sends the whole slot texture: `gap_mask.ts:440`, 40 texels per row, `GAP_MAX_PTS` 68.
+- `computeGapSlot` marches against coarse polylines (`COARSE_SPACING` 0.1), then builds the fine shader polyline (`FINE_SPACING` 0.075, at most `GAP_MAX_PTS` 57 points in 7 chunks of `GAP_CHUNK` 8), the protect polylines, the far-branch K and the junction clearance per side.
+- A slot row is `GAP_TEX_W` 114 texels: 9 header texels, 7 chunk chords, the points ([x, y, u = d/|d|²]), two protect blocks of 19 texels and K268's 3 profile texels (`GAP_PROF_BASE` 111). Row 0 holds the globals.
+- Uploads are row-partial since K268 stage 1 (the `knot-gap-rows` uploader, `GAP_UPLOAD_STATS`). `setVis` (K76 2b) and `setShape` (K268 stage 1) change a slot's strength or fade profile without a re-solve.
+- `assignGapIds` writes per-sample slot ids (`idScratch`, one lane per window, ±1 sample) into `aMaskId`.
 
-**Paint tick.** `tickPaintPalette` (3014) → `writeChainPaint` → `writeFillPaint` (3288). This writes per-vertex U/RGB and also the GPU paint texture rows. It then calls `rebuildFillets` (4013-5064), which is gated on geomRev, sliders and FX.
+**Paint (G2).** `tickPaint` (3852) → `advanceClocks` (4380) reduces the clocks into uniforms on the CPU in float64. `writePaintItems` (4507) rewrites KPAINT only when the declaration changes (`setPaint`, `setRim`, `setExplore`). At rest that is 0.01 ms and 0 KB per frame.
+- The ribbon program "section-rgb" (`SECTION_VERT/FRAG`, `ribbon_renderer.ts` ~408-534, 46850 characters) runs `PAINT_VERT_MAIN` in the vertex stage: it decodes `aKey`, binary-searches `kCtrlOfArc`, evaluates the section colour per vertex, and emits wrap-pair varyings plus flat `vKC0/vKC1/vKG0`.
+- The fragment stage runs the paint library (FX, paint, pulses, the hover rim, the High contrast looks), then `gapKeep`.
+- The explore variant "section-rgb-explore" is `withExplore(SECTION_FRAG)` (K76), built lazily when the reveal first turns on.
 
-**Joinery (G4 replaces this)** — `rebuildFillets`:
-- Records with radial profiles (4130-4548).
-- Per-arm layer votes and two `TriFanMesh` layers (4065-4128, 4570-4595).
-- Joint masks: foreign-over slots, silhouette-only (4633-4703).
-- Free-tip discs on AXIS records (4744-4787).
-- Fused-tip discs (4788-4842).
-- Seal discs (4884-4888).
-- Wedges (4892-5060):
-  - adaptive flank polylines (`FILLET_EDGE_CHORD` 0.15, up to 20 points);
-  - bezier rim with corner control;
-  - the `FILLET_MAX_WEDGE` 2.6 rad skip;
-  - the `armReach` gap clamp.
-- `TriFanMesh` itself (`ribbon_mesh.ts:422-520`), with the high-water-mark index upload.
-- The fan shader: `junction_field.ts` `JUNCTION_VERT/FRAG` (413-463) over `junctionField()` (340-398), the angular, edge-aware, curve-following field.
-- G1's fan modes in `gapKeepAt` (`gap_mask.ts:169-182, 262-268`).
+**Joinery (G4 replaces this)** — `rebuildFillets` (5406 to about 6920), gated on geomRev, the sliders, FX and the explore joints key:
+- Records with radial profiles.
+- Per-arm layer votes and two `TriFanMesh` layers (`aPosition`, `aRec`, `aMaskId`; high-water index uploads).
+- Joint masks: foreign-over slots, silhouette only, inset one pixel.
+- Free-tip discs on AXIS records, fused-tip discs (the cap cover disc, `TIP_DISC_SCALE` 1.06 h), seal discs.
+- Wedges: adaptive flank polylines (`FILLET_EDGE_CHORD` 0.15, up to 20 points), the bezier rim with corner control, the `FILLET_MAX_WEDGE` 2.6 rad skip, the `armReach` gap clamp.
+- K81's route records (route bands, at most 4 routes per web) and cover strips; K127's fully traveled webs; K76 2b's hidden joints (`exploreHideJn`, `exploreHideFree`).
+- The fan program "junction-field" (`junction_field.ts`) evaluates the angular, edge-aware junction field over ARM STRIPS: each arm's composed material, rendered once per frame into an RGBA8 row by the "arm-strip" program (`arm_strip.ts`). Per-pixel paint on the fans cost the phone 60 → 44 fps. The fans use only `PAINT_GATE_GLSL`, plus G1's fan modes in `gapKeepAt`. K169's `WebFade` fades the gold web in over 0.25 s.
 
-**Yarn.** `fabric_maze_renderer.ts:578-780`.
-- Positions come from `pointFlowed` (physics polyline plus flowOffset), not the spline samples, so they skip the pluck ring.
-- The yarn is Chaikin-smoothed and stroked by Graphics every update.
-- Visibility comes from `underGapVisibility` (`ribbon_renderer.ts:1435`) quantized to 5 alpha levels.
+**Plucks** (K77, K104, K180, K279): render-only overlays (`pluck_overlay.ts`, `pluck_model.ts`). They read the renderer through `makePluckHost` (`ribbon_renderer.ts` ~4126-4156):
+- `chainSamples` and the base sample count;
+- `underGapVisibility` (1705; the overlay's rule 3);
+- `composedAtArc` (the paint_math mirror's colour along the arc, with no across coordinate);
+- `setCollapse(c, mul)`, which re-extrudes the base ribbon with the collapse (`reextrude`, 4180) without an `update()`;
+- `gapIds` (`idScratch`): a still pluck (reduced motion, K104) runs the "pluck-still" program, `gapKeepAt` over the ribbon's own slots.
 
-### 1.2 Recorded costs (from CLAUDE.md)
+**Yarn.** `fabric_maze_renderer.ts` `drawYarn` (~1368). Positions come from `pointFlowed` (723: the physics polyline plus flowOffset), Chaikin-smoothed and stroked by a Graphics every update. Visibility comes from `underGapVisibility`, quantized.
 
-- **G1 vs master `a67b598`:**
-  - `update()` 14.9-15.2 → 5.7-6.2 ms per call at the user URL (knot: 10.8 → 4.4).
-  - CPU render per frame: 9.0 → 4.2 ms at rest; 16-21 → 8.5-10 ms mid-drag.
-  - GPU draw 0.82 → 2.83 ms per frame at 3200x1800. The per-fragment 68-point slot loop is "the cost to watch on mobile", unmeasured.
-  - Mesh count: 545 → 45 (user), 333 → 27 (ring), 514 → 6 (knot).
-- **GPU junction field round:**
-  - `rebuildFillets` 7.9-10.7 → 0.95-0.99 ms per call (forced full rebuild: 2.1).
-  - `tickPaint` 1.1-1.2 ms.
-  - Draw-phase GPU 0.34 → 0.62 ms (before G1).
-- **Architecture audit:** the flow-at-rest re-solve is the dominant idle cost (half-rate today). Its "full fix" is shader displacement, which needs a gap-tracking visual A/B.
-- **Known residuals:**
-  - G1: (1) the cyclic-triangle dark triangles; (2) the concave-side crease of the casing; (3) the merge-core fan hairline; (4) WebKit unverified.
-  - Joinery classes: crescents (chord sagitta, 12 of 41 ring joints at cr 6 before the adaptive flank fix), V-notches, flank and tucked-tip spurs, pale stars, merge-core hairlines.
-- **Rendering setup:** `main.ts:67-82` sets `antialias: true` (MSAA) and `resolution: min(dpr, 2)`. A 3x iPhone therefore renders at 2x today.
+**Not ribbon geometry, so G3/G4 leave them alone:** K93's trail spans (KPAINT items, `trail_paint.ts`), K99's fog stations (`fog_arc.ts`, placed through `pointFlowed`), K83's markers (one SDF quad each, `marker_mesh.ts`), K140's confetti and K21's backgrounds. A hidden under pixel shows the backdrop, as today.
+
+### 1.2 Recorded costs
+
+- **G1 vs its master** (desktop RX 6800 XT, 3200x1800):
+  - GPU ribbon draw: user 0.79 → 1.78 ms per frame, ring 0.43 → 0.92, defaults 0.85 → 1.94. Draw calls 419 → 47 (user).
+  - `update()` 12.0 → 5.7 ms per call at the user URL; CPU render 7.3 → 4.0 ms per frame at rest.
+  - Pixel 11 (no GPU timer): defaults 39 → 60 fps at rest under flow (`update()` 32 → 15 ms); user and ring 60 fps on both builds. The gap shader was not the phone's limit; the CPU solve it replaced was.
+- **G2:** `tickPaint` 0.13 → 0.01 ms; paint uploads 151 → 0 KB per frame at rest; fans 0.59 ms plus the arm-strip pass 0.06; the phone holds 60 fps at rest.
+- **Today's desktop frame** (3200x1800): the ribbon program 1.59-1.71 ms at rest at the default fabric (K81, K298) and about 1.97 on the K111 test maze (K76); a frame 2.6-2.8 ms; fans 0.55-0.78 ms (0.78 with 5 routed webs, K81).
+- **The dense preset** (gs 24, about 5448 particles) is render-bound at about 30 fps (K8's ledger entry).
+- **Awake physics** costs 8-23 ms per substep (K279), so a wake is physics-bound: K7's problem, not G3's.
+- **Open residuals G3/G4 inherit:**
+  - G1's open items: (a) the GPU cost, about 2.2x master's, with four levers (a loop-free protect test, a zoom-aware polyline tolerance, a per-point far-branch gate, dropping the globals fetch); (b) the x160 merge-core tick (G4); (c) a fused tail riding its host is draw-order sensitive; (d) the silhouette-level cyclic triangle.
+  - Joinery classes: V-notches, flank and tucked-tip spurs, pale stars, merge-core hairlines (the crescents went with the adaptive flanks).
+- **Rendering setup:** `main.ts:391-396` sets `antialias: true` (MSAA), `preference: "webgl"`, `resolution: min(dpr, 2)` and `autoDensity`. The Pixel 11 (DSF 2.625) therefore renders at 2x.
 
 ---
 
