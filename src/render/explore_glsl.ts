@@ -151,14 +151,19 @@ export function classifyExploreCut(
   const ramps: GapRamp[] = [];
   let copies = 0;
   let approx = false;
-  // The ramp of the end at ctrl cS whose fade runs to cS + fs (fs < 0 below
-  // the solid part). The fade is linear in ctrl and the arc map piecewise
-  // linear with knots at integer ctrls, so one interior knot makes it exact.
-  const ramp = (cS: number, fs: number, front: boolean): GapRamp => {
+  // The ramp of the end at ctrl cS whose fade of length `fade` runs to
+  // cS + dir * fade: dir -1 for a piece's LOW end (hidden below), +1 for its
+  // high end. The side is passed, never read off a signed fade: a hard low
+  // end's fade is -0, which reads as the high side (K268 stage 2: two walked
+  // runs meeting at a vertex inside a footprint both cut only below it, so
+  // crossing 275's threads fused). The fade is linear in ctrl and the arc
+  // map piecewise linear with knots at integer ctrls, so one interior knot
+  // makes it exact.
+  const ramp = (cS: number, fade: number, dir: -1 | 1, front: boolean): GapRamp => {
     const aS = arc(cS);
-    const f = Math.abs(fs);
-    const dir = fs < 0 ? -1 : 1;
+    const f = Math.abs(fade);
     if (f <= 1e-4) return { aS, F: dir * CUT_HARD_F, dK: 1, tK: 1, front };
+    const fs = dir * f;
     let F = arc(cS + fs) - aS;
     if (Math.abs(F) < CUT_HARD_F) F = dir * CUT_HARD_F;
     let dK = 1;
@@ -194,8 +199,8 @@ export function classifyExploreCut(
       const highIn = arc(c1) < aHi - CUT_ARC_EPS && (closed || c1 < n - 1 - 1e-3);
       if (!lowIn && !highIn) return CUT_SOLID;
       copies++;
-      if (lowIn) ramps.push(ramp(c0, -p.f0, p.tip0));
-      if (highIn) ramps.push(ramp(c1, p.f1, p.tip1));
+      if (lowIn) ramps.push(ramp(c0, p.f0, -1, p.tip0));
+      if (highIn) ramps.push(ramp(c1, p.f1, 1, p.tip1));
     }
   }
   if (ramps.length === 0) return CUT_HIDDEN;
