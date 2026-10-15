@@ -301,6 +301,29 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   and a broken pulse matched the good one. Recipes:
   `.claude/probes/K299/` (`ab_nudge.mjs`, `inject.mjs`,
   `inject_rim.mjs`, `inject_hits.mjs`; `notes.md`).
+- K307 (2026-10-14), shader compiles: `.claude/probes/K307/` holds
+  `trace_intro.mjs <origin> <label> <path?query|->` (a WebGL2 wrapper
+  that times every call and names each program by its source hash and
+  Pixi's `SHADER_NAME`, plus a performance trace from navigation; its
+  header lists the options: loads, restart, ANGLE backend, viewport,
+  which loads trace), `run_k307.ps1 -Batch <file>` (batch lines under
+  the perf lock), `table.mjs <label>` (a line per load),
+  `compositor.mjs` (what other threads did in each long task;
+  `--presents`, `--long`, `--window=a,b`), `who_compiles.mjs`,
+  `programs_from_run.mjs` and `spinner/` (a worker's OffscreenCanvas
+  spinner through one cold link). The findings are in
+  `render-shaders.md`. GOTCHAS: Chrome's GPU program cache lives in the
+  profile, keyed by source, and survives a restart, so a compile probe
+  needs a fresh `--user-data-dir` per load, or every link after the
+  first reads about 25 ms. For a cold load on a used profile, salt the
+  shader sources; never clear Levi's Chrome. The wrapper books a whole
+  compile on the first LINK_STATUS read. The trace puts the work on
+  GPU-process `ThreadPoolForegroundWorker` threads (`D3DCompile`) and
+  the waits on the renderer's main thread (`GetProgramiv`) and on
+  `CrGpuMain` (`MainLinkLoadEvent::wait`). A frame reaches the screen
+  at `DCompPresenter::Present`, on `CrGpuMain`. A probe build that reads
+  a `#hash` flag must read it at module load, before main.ts's URL
+  rewrite drops it (the prototype's `#seq`).
 
 ## Census and diagnosis rules
 

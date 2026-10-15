@@ -57,3 +57,4 @@ files it is about; `docs/lore_index.md` lists every rules file and its paths.
 - `render-web-fade.md`: the gold web's fade (K169)
 - `render-confetti.md`: finish confetti (K140)
 - `render-explore.md`: the thread reveal (K76): visibility pieces, the explore program, its looks
+- `render-shaders.md`: shader compiles and what they freeze, the warm-up (K307)
