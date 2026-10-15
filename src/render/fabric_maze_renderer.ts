@@ -77,6 +77,12 @@ const EXPLORE_FIT_STEP = 2;
 const EXPLORE_FIT_PAD = 1;
 const HALO_TINT = 0xa8e4ff;
 const HALO_ALPHA = 0.8;
+// K76 stage 2c (question 9): the halo BREATHES between these alphas over
+// HALO_BREATH_S; Reduced motion holds it at HALO_ALPHA, High contrast draws
+// it at full strength in pure white.
+const HALO_BREATH_LO = 0.6;
+const HALO_BREATH_HI = 0.85;
+const HALO_BREATH_S = 2.5;
 import {
   DEFAULT_GLYPHS,
   MARKER_SIZE_DEFAULT,
@@ -1027,6 +1033,14 @@ export class FabricMazeRenderer {
       this.minoLayer.visible = false;
       return;
     }
+    const over = fog === "always" || (fog === "hunting" && chase.mode === "hunt");
+    // K76 stage 2c (question 2): the thread reveal has no fog sprite to slip
+    // under, so a minotaur the rule keeps under the fog hides while its
+    // thread point is not solid (the exit marker's test).
+    if (!over && this.explore.on && this.ribbons.exploreVisAt(at.chain, ctrl) < 0.98) {
+      this.minoLayer.visible = false;
+      return;
+    }
     const m = chase.mino;
     if (m.edge < 0 && m.vertex === chase.g.exit) {
       // In its lair: concentric with the exit marker it covers.
@@ -1049,7 +1063,6 @@ export class FabricMazeRenderer {
     this.minoLayer.visible = true;
     // Over the fog, or right under it (the fog sprite and its twins are
     // the overlay's topmost children once ensureFog has run).
-    const over = fog === "always" || (fog === "hunting" && chase.mode === "hunt");
     const kids = this.overContainer.children;
     const li = kids.indexOf(this.minoLayer);
     const fi = this.fogSprite ? kids.indexOf(this.fogSprite) : -1;
@@ -1059,7 +1072,8 @@ export class FabricMazeRenderer {
       this.overContainer.setChildIndex(this.minoLayer, fi);
     }
     this.minoShown = true;
-    this.minoUnderFog = this.fogOfWar && !over;
+    // Under the reveal too: an indicator must not give it away (K73).
+    this.minoUnderFog = (this.fogOfWar || this.explore.on) && !over;
     this.minoX = x;
     this.minoY = y;
     this.minoR = r;
@@ -2372,6 +2386,7 @@ export class FabricMazeRenderer {
       }
     }
     if (this.explore.on && !this.anim && (closing || this.exploreGrowing(dt))) this.syncExplore();
+    else this.styleHalos();
   }
 
   // THE INTRO HOLD (main.ts: the reveal on, fowIntro on and the intro
@@ -2479,6 +2494,31 @@ export class FabricMazeRenderer {
       sp.position.set(this.scratch[0], this.scratch[1]);
       sp.width = d;
       sp.height = d;
+    }
+    this.styleHalos();
+  }
+
+  // K76 stage 2c (question 9), read every frame (main.ts): Reduced motion
+  // stills the halo's breath; High contrast draws it full strength, white.
+  exploreStill = false;
+  exploreContrast = false;
+
+  // The halos' breath, tint and strength (every frame, tickExplore).
+  private styleHalos(): void {
+    if (this.haloSprites.length === 0) return;
+    const hc = this.exploreContrast;
+    const a = hc
+      ? 1
+      : this.exploreStill
+        ? HALO_ALPHA
+        : HALO_BREATH_LO +
+          (HALO_BREATH_HI - HALO_BREATH_LO) *
+            (0.5 - 0.5 * Math.cos((2 * Math.PI * this.exploreClock) / HALO_BREATH_S));
+    const tint = hc ? 0xffffff : HALO_TINT;
+    for (const sp of this.haloSprites) {
+      if (!sp.visible) continue;
+      sp.alpha = a;
+      sp.tint = tint;
     }
   }
 
