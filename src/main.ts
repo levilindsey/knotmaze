@@ -143,7 +143,7 @@ import {
   type DesignState,
 } from "./ui/undo_stack";
 import { UndoButtons } from "./ui/undo_buttons";
-import { MotionSetting, browserMotionQuery, whenReduced } from "./ui/motion";
+import { MotionSetting, browserMotionQuery } from "./ui/motion";
 import {
   ContrastSetting,
   browserContrastQuery,
@@ -166,19 +166,13 @@ import {
 import type { PitchAssignment } from "./audio/pitch_space";
 import { SCARBOROUGH_FAIR } from "./audio/songs";
 import { SongScheduler } from "./audio/song_scheduler";
-import { APP_VERSION, BUILD_SHA, BUILD_TIME } from "./build_info";
+import { createLoader } from "./ui/loader";
+import type { SceneRef } from "./app/scene_ref";
+import { createStamp } from "./app/stamp";
 
 const BACKGROUND = 0x151b28;
 const FIT_MARGIN = 40;
 
-// Code-state stamp, so a tab's build is verifiable at a glance (repos sync
-// across machines with lag; stale tabs and stale checkouts happen). DERIVED
-// at build time (vite.config.ts): version + git short SHA ("+" = built with
-// uncommitted changes) + build time - it can no longer drift like the old
-// hand-bumped description did. Leads with the roadmap phase: the diag
-// scripts find the stamp by its /^P\d/ prefix.
-const BUILD_STAMP =
-  `P4 v${APP_VERSION} ${BUILD_SHA}` + (BUILD_TIME ? ` ${BUILD_TIME}` : "");
 // The stamp/perf readout's visibility persists per browser.
 const STATS_KEY = "knotmaze.showStats";
 const MAZE_STATS_KEY = "knotmaze.showMazeStats";
@@ -239,121 +233,6 @@ const LOBE_REACH = 2;
 // K101: how far ahead (seconds of audio clock) music mode schedules its
 // notes. A frame longer than this makes a note start late, never early.
 const MUSIC_LOOKAHEAD = 0.3;
-
-// The loading indicator: a trefoil knot (with real over/under gaps,
-// alternating along the strand like the app's own weave) turning slowly in
-// the middle of the screen. No text - it reads in any language. Rotation
-// and breathing are CSS transforms, which the compositor animates even
-// while a settle slice keeps the main thread busy.
-function createLoader(): { show: () => void; hide: () => void; el: HTMLElement } {
-  const N = 240;
-  const P: Array<[number, number]> = [];
-  for (let i = 0; i < N; i++) {
-    const t = (i / N) * Math.PI * 2;
-    P.push([
-      Math.sin(t) + 2 * Math.sin(2 * t),
-      -(Math.cos(t) - 2 * Math.cos(2 * t)),
-    ]);
-  }
-  // Self-intersections between non-adjacent chords -> crossing events
-  // (parameter along the strand), then over/under alternating in order.
-  const events: Array<{ s: number; id: number }> = [];
-  let id = 0;
-  for (let i = 0; i < N; i++) {
-    const [ax, ay] = P[i];
-    const [bx, by] = P[(i + 1) % N];
-    for (let j = i + 2; j < N; j++) {
-      if (i === 0 && j === N - 1) continue;
-      const [cx, cy] = P[j];
-      const [dx, dy] = P[(j + 1) % N];
-      const den = (bx - ax) * (dy - cy) - (by - ay) * (dx - cx);
-      if (Math.abs(den) < 1e-12) continue;
-      const u = ((cx - ax) * (dy - cy) - (cy - ay) * (dx - cx)) / den;
-      const v = ((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) / den;
-      if (u < 0 || u >= 1 || v < 0 || v >= 1) continue;
-      events.push({ s: i + u, id }, { s: j + v, id });
-      id++;
-    }
-  }
-  events.sort((a, b) => a.s - b.s);
-  // Every other event (along the strand) dives UNDER: cut a gap there,
-  // 0.6 units of curve each side (the strand is 0.42 wide).
-  let curve = 0;
-  for (let i = 0; i < N; i++) {
-    const [ax, ay] = P[i];
-    const [bx, by] = P[(i + 1) % N];
-    curve += Math.hypot(bx - ax, by - ay);
-  }
-  const GAP = 0.6 / (curve / N);
-  const under = events.filter((_, k) => k % 2 === 1).map((e) => e.s);
-  const inGap = (s: number): boolean =>
-    under.some((g) => {
-      const d = Math.abs(s - g);
-      return Math.min(d, N - d) < GAP;
-    });
-  const pieces: string[] = [];
-  let cur: string[] = [];
-  // Start just past a gap so no piece straddles the parameter seam.
-  const s0 = under.length > 0 ? Math.ceil(under[0] + GAP) : 0;
-  for (let k = 0; k <= N; k++) {
-    const s = (s0 + k) % N;
-    if (inGap(s)) {
-      if (cur.length > 1) pieces.push("M" + cur.join("L"));
-      cur = [];
-      continue;
-    }
-    cur.push(`${P[s][0].toFixed(3)} ${P[s][1].toFixed(3)}`);
-  }
-  if (cur.length > 1) pieces.push("M" + cur.join("L"));
-  const el = document.createElement("div");
-  el.id = "knot-loading";
-  el.setAttribute("role", "progressbar");
-  el.setAttribute("aria-busy", "true");
-  el.setAttribute("aria-label", "Loading");
-  el.style.cssText =
-    "position:fixed;inset:0;display:flex;align-items:center;" +
-    "justify-content:center;pointer-events:none;z-index:15;opacity:0;" +
-    "visibility:hidden;transition:opacity .25s ease,visibility 0s .25s";
-  const style = document.createElement("style");
-  style.textContent =
-    "@keyframes kl-spin{to{transform:rotate(360deg)}}" +
-    "@keyframes kl-breathe{0%,100%{transform:scale(.9);opacity:.75}" +
-    "50%{transform:scale(1.04);opacity:1}}" +
-    "#knot-loading .kl-b{animation:kl-breathe 1.6s ease-in-out infinite;" +
-    "will-change:transform,opacity}" +
-    "#knot-loading svg{animation:kl-spin 3.2s linear infinite;" +
-    "will-change:transform;overflow:visible}" +
-    // Reduced motion (the Motion setting): a slow spin, no breathing.
-    whenReduced("#knot-loading svg", "animation-duration:12s") +
-    whenReduced("#knot-loading .kl-b", "animation:none");
-  document.head.appendChild(style);
-  el.innerHTML =
-    '<div class="kl-b"><svg width="76" height="76" viewBox="-4 -4 8 8" ' +
-    'aria-hidden="true"><g fill="none" stroke="#e7c56f" ' +
-    'stroke-width="0.42" stroke-linecap="round" stroke-linejoin="round">' +
-    pieces.map((d) => `<path d="${d}"/>`).join("") +
-    "</g></svg></div>";
-  document.body.appendChild(el);
-  let timer = 0;
-  return {
-    el,
-    // A short delay keeps fast settles from flashing the indicator.
-    show: () => {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        el.style.transition = "opacity .25s ease,visibility 0s";
-        el.style.visibility = "visible";
-        el.style.opacity = "1";
-      }, 120);
-    },
-    hide: () => {
-      window.clearTimeout(timer);
-      el.style.transition = "opacity .25s ease,visibility 0s .25s";
-      el.style.opacity = "0";
-      el.style.visibility = "hidden";
-    },
-  };
-}
 
 const app = new Application();
 
@@ -598,6 +477,44 @@ async function main(): Promise<void> {
   // Stage 22: the running appearance animation (null = instant / done
   // long ago). Rebuilds and "Replay settle" restart it.
   let reveal: RevealAnimator | null = null;
+  // K5: the scene lets above, for code moved out of main()
+  // (src/app/scene_ref.ts). Built once; never destructure it or cache a
+  // value read through it.
+  const scene: SceneRef = {
+    get ps() {
+      return ps;
+    },
+    get renderer() {
+      return renderer;
+    },
+    get debug() {
+      return debug;
+    },
+    get walkGraph() {
+      return walkGraph;
+    },
+    get buildHueGroup() {
+      return buildHueGroup;
+    },
+    get buildStrandCount() {
+      return buildStrandCount;
+    },
+    get fabric() {
+      return fabric;
+    },
+    get chase() {
+      return chase;
+    },
+    get turnMino() {
+      return turnMino;
+    },
+    get fabricController() {
+      return fabricController;
+    },
+    get reveal() {
+      return reveal;
+    },
+  };
 
   // PHYSICS MODE. live = physics on (today's behavior: awake until the
   // sleep gate, woken by input). With the `physics` param off: loading =
@@ -4800,43 +4717,10 @@ async function main(): Promise<void> {
     updateStamp();
   };
 
-  // Verifiable code-state stamp: on screen and in the console, with the
-  // environment facts that matter when debugging rendering discrepancies.
-  // sim vs wall time exposes rAF throttling (an under-simulated knot is
-  // frozen mid-settle and looks kinked/notched).
-  // Hidden unless the panel's showStats is on (the text still updates, so
-  // probes reading it via textContent keep working either way).
-  const stamp = document.createElement("div");
-  stamp.style.cssText =
-    "position:fixed;left:max(6px,env(safe-area-inset-left));" +
-    "bottom:max(4px,env(safe-area-inset-bottom));font:10px monospace;" +
-    "color:#5a6478;pointer-events:none;z-index:10";
-  stamp.style.display = settings.showStats ? "" : "none";
-  document.body.appendChild(stamp);
-  const wallStart = performance.now();
-  // Rolling per-frame cost, flushed twice a second.
-  const perf = { physMs: 0, renderMs: 0, frames: 0, flushedAt: wallStart };
   let perfLine = "";
-  const updateStamp = (): void => {
-    const wall = (performance.now() - wallStart) / 1000;
-    const sim = ps?.simTime ?? 0;
-    // K147: simulated time the load settle's budget dropped (slow motion),
-    // while it runs or after it ended; sim trails wall by at least this.
-    // K7 stage 5: with the worker no budget runs; the lag is the worker's
-    // backlog dropped past LAG_MAX_S since the build, drags included.
-    const lag = host.settleLagS;
-    const lagLabel = host.kind === "worker" ? "lag" : "settle lag";
-    stamp.textContent =
-      `${BUILD_STAMP} | sim ${sim.toFixed(1)}s / wall ${wall.toFixed(1)}s` +
-      (lag > 0.05 ? ` | ${lagLabel} ${lag.toFixed(1)}s` : "") +
-      perfLine;
-  };
-  updateStamp();
-
-  const gl = (app.renderer as unknown as { gl?: WebGLRenderingContext }).gl;
-  console.log(
-    `KnotMaze ${BUILD_STAMP} | dpr ${window.devicePixelRatio} | ` +
-      `gpu ${gl ? gl.getParameter(gl.RENDERER) : "unknown"}`
+  const { stamp, perf, updateStamp } = createStamp(
+    { app, host, settings, perfLine: () => perfLine },
+    scene
   );
 
   // The live design params (a copy). The address bar holds one compact
