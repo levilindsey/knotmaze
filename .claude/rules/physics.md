@@ -25,8 +25,11 @@ the end), not to CLAUDE.md.
   gate." If it ever breaks against a `ParticleSystem` API change,
   delete it rather than fix it.
 
-**CANDIDATE perf follow-up — move the sim to a Web Worker (NOT taken;
-recorded 2026-07-24).** The one multi-threading win with a good
+**CANDIDATE perf follow-up — move the sim to a Web Worker (recorded
+2026-07-24; APPROVED by Levi 2026-10-14 as K7).** The design, its
+measurements and the build stages are in `docs/design/K7_worker.md`,
+which supersedes the costs below: no SAB or COOP/COEP (transferred
+snapshots cost under 0.1 ms a frame). The one multi-threading win with a good
 risk/reward, if mid-drag perf ever needs it (currently ~32fps mid-drag
 is playable; at rest the sleep gate makes it moot). Mid-drag the main
 thread runs physics (~15.8ms) THEN render (~10ms) serially → ~25ms. The
