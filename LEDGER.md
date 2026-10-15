@@ -111,32 +111,6 @@ and never reused.
   (`pendingWin`, `src/main.ts` about line 2079) and the Reset path during
   the winning move, or only on a live finish? (3) the colors (a festive
   set built from the gold 0xffd23f) and the default amount, 1?
-- **K198** · K148 + K149's calls (`docs/design/K148_K149.md`, "Stage 1
-  handoff"; gameplay.md THE HEAD and FIT CAMERA PAN SLACK): (1) on the
-  phone, no sane pan slack clears the open panel (it covers x 81-401 of
-  411; 0.3 moves the maze 123 px): leave it, a larger share on narrow
-  screens, or something else for the phone? (2) the follow camera's lag
-  flashed the head's indicator for about 0.3 s once in 14 moves at
-  411x753 (never at 1400x900): a short debounce, or leave it? (3)
-  confirm: the head indicator has no setting of its own, and the slack is
-  0.3 of the screen per side.
-- **K200** · K146 + K151's calls (`docs/design/K146_K151.md`, "The
-  calls" and "Open"): (1) answered 2026-10-14: free play's X always
-  shows, on the desktop too (done in 7950c7f); (2) confirm: a practice
-  finish has its own banner and shares as "Knotmaze Daily #N
-  (practice)"; the daily badge's tap opens the stats; replay and practice
-  labels carry the daily number; History leaves out today (its own row)
-  and lists recorded days ahead of today; a practice row shows the first
-  practice result; v2's late official results stay official, flagged
-  late. Try: https://levi.dev/knotmaze/?daily=1 (practice, unless you
-  solved #1 on its day).
-- **K203** · K120's calls (`docs/design/K120.md`, "Stage 1 handoff";
-  gameplay.md MOVES BY DIRECTION): the move pad on by default on coarse
-  pointers; its corner and size (bottom right, 132 px, about 38% of the
-  landscape height); the 15 deg tie rule (an ambiguous key takes the one
-  tied run no other key claims, else nothing); the 200 ms hold delay.
-  Try: https://levi.dev/knotmaze/?7.J (arrows or WASD; the pad on a
-  phone).
 
 ## In progress
 
@@ -370,6 +344,23 @@ and never reused.
     pass. K93 and K145 share its renderer file: not alongside it.
   - brief: `docs/design/K100.md`.
   - env: dev servers on ports 5540-5549.
+- **K173** · Split the `.claude/rules/` lore by area, so an agent pays
+  only for the files it works on (Levi, 2026-10-14 about 07:53:
+  "Splitting the rules files seems worthwhile."). One read of a
+  `src/**` or probes file attaches 25-62 KB of lore today; the
+  measurements behind it are in the brief. Passages move verbatim, by a
+  re-runnable script (`scripts/split_rules.mjs`), so the split can be
+  redone on top of the 07:38 batch's rules edits.
+  - owner: agent a363e26d8e7409480 (opus) of session d8031183, started
+    2026-10-14 08:05; it stops at about 10:05 or when the stage is done.
+  - branch: `worktree-agent-a363e26d8e7409480`
+    (`.claude/worktrees/agent-a363e26d8e7409480`), from c591c6b; last
+    commit: none yet.
+  - evidence: `.claude/probes/K173/` in its worktree (copy at merge).
+  - next: the brief's stage. It merges LAST in this batch, after K90 1b,
+    K132 and K100: redo the split on the merged master with the
+    handoff's recipe, then the suite, then merge.
+  - brief: `docs/design/K173.md`.
 
 ## Next, in order
 
@@ -389,8 +380,9 @@ longer wait for each other: the second branch to merge renumbers its
 appends. Usage: don't hold agents back until the week nears 95% (Levi,
 2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17, 54% at
 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
-23:54; on 10-14 69% at 00:25, 72% at 01:49 and 76% at 07:38; at 13:40
-on 10-13 he said keep going at full speed; it resets Mondays at 12:00).
+23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38 and 78% at
+08:05; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
+at about 07:53 "Keep going at full pace."; it resets Mondays at 12:00).
 Long work runs in stages from
 committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
 brief names its stage boundary, where the agent writes a "Stage N
@@ -404,7 +396,9 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
 (he may reorder). Running at 07:38 on 10-14: K90 stage 1b, K132 and K100
-(all opus, 2 h caps). Then, as code slots free up:
+(all opus, 2 h caps), and from 08:05 K173 (the rules split, a docs agent
+on top; it merges last). Then, as code slots free up, K198 first (Levi's
+answers of 2026-10-14 about 07:53), then:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
    K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
    and K180 against base ab6d330) is done (K197 filed); the next pass
@@ -433,12 +427,28 @@ Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
     goal).
 
 Waiting for Levi: K114's spider (call 7); the G3-3 and G4-2 old-path
-deletions; K162, K174 and K184-K186 (play, then call); the merged
-round's calls (K198, K200, K203); near launch, K117; after the churn,
-K46, K57 and K84.
+deletions; K162, K174 and K184-K186 (play, then call); K191, K193 and
+K194; K198's flash (2), which he asked to have re-explained (2026-10-14);
+near launch, K117; after the churn, K46, K57 and K84.
 
 K5-K7 (split, frame loop, worker) follow.
 
+- **K198** · The fit camera's pan and the off-screen indicators, decided
+  (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
+  just want to be able to pan such that the right edge of the maze is
+  shown to the left of the left edge of the panel. Flash: not sure what
+  you're describing. Markers should have settings, and I guess we should
+  prevent the excess pan." The coordinator's reading, sent to him to
+  correct: (1) the pan clamp (K149, `src/ui/view_clamp.ts`) lets the
+  maze's right edge reach the open panel's left edge (on the phone the
+  panel covers x 81-401 of 411), in place of 0.3 of the screen on every
+  side, and allows no more; (3) the indicators (head, start, finish,
+  minotaur) get panel settings (which ones is asked; K98 plans marker
+  sizes); (2) the head indicator's flash waits on his reply. Touches
+  view_clamp.ts, main.ts, offscreen_indicators.ts, head_indicator.ts
+  and tweakpane_panel.ts: not alongside K92 or K111 (the panel). Records:
+  `docs/design/K148_K149.md` ("Stage 1 handoff"), gameplay.md THE HEAD
+  and FIT CAMERA PAN SLACK.
 - **K93** · Trail fade and hover reach, decided (Levi, 2026-10-13:
   "Trail fade, yes; Hover vs pulseReach, hover should stop at pulseReach
   (and fade-out toward the end, same as pulseReach)"). (1) The trail
@@ -1173,17 +1183,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   would give the slow end room. At 8x the 10-15 Hz texture pass may look
   steppy (not checked on the phone); if it does, scale the re-render rate
   with the speed. A look for the round's phone pass (K156).
-- **K173** · Reading one `src/**` or probes file attaches 25-50k tokens
-  of `.claude/rules/` lore to an agent (K156 stage 2 measured about 25k
-  for `scripts/**`). Split the big rules files, or narrow their `paths:`,
-  so an agent pays only for its area.
-  - K140 (2026-10-14): its first compaction came 9 minutes in, from rules
-    attachments (82 records, 1.12M characters).
-  - K156 3c and K154+K169 (Sonnet, 2026-10-14) reached 205k and 298k of
-    context within 12 minutes, uncompacted (claude-config CC45).
-  - K180 (Opus, 2026-10-14): 9 compactions in its first 44 minutes.
-    Split after the 01:53 batch merges: its three agents all append to
-    `gameplay.md`.
 - **K179** · K80 ideas: reversing mid-run in the real-time mode; a
   roaming bias toward the player, so fewer games pass without meeting the
   minotaur (K174).
@@ -1238,6 +1237,15 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K203** · K120's calls (`docs/design/K120.md`): the move pad on by
+  default on coarse pointers, bottom right at 132 px, the 15 deg tie rule
+  and the 200 ms hold, confirmed by Levi ("ok", 2026-10-14 about 07:53).
+  Nothing to change (K120 merged in 0acbce0).
+- **K200** · K146 + K151's calls (`docs/design/K146_K151.md`): (1) free
+  play's X always shows, on the desktop too; (2) the practice banner and
+  share text, the daily badge's tap, the labels' daily numbers,
+  History's rows and v2's late results, confirmed by Levi ("ok",
+  2026-10-14 about 07:53). Done in 7950c7f (2026-10-14).
 (items move here with the commit that resolved them)
 
 - **K120** · Faster, smoother input (Levi, 2026-10-13): hold an arrow
