@@ -2859,3 +2859,25 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
 - **K370** · The worker's input latency (K7 s4): p50 105 ms on the daily, 70 on
   the knot (in-thread 285), against a 50 ms target. Measure each stage first
   (`k7_latency.mjs`); levers: newest snapshot while grabbed, more drag substeps.
+
+## K8 (2026-10-15, G3-0 merged)
+
+- **K8** · G3: SDF ribbons drawn from one shared sample texture
+  (`docs/design/G3G4_sdf_geometry.md`, re-based by stage 1, 05aac8e..cbeb963). G3-1
+  waits for K268 s2 and K290, G3-2 for the reveal chain (K76 2c to 2d).
+  - owner: agent `af653fa7f942f2f1e` (opus) of claude session d8031183, stage 2 (G3-0) from 02:04 (cap 04:04; ports 5830-5839); stage 1's docs worktree `a35a43cee74c92b93` kept
+  - branch: `worktree-agent-af653fa7f942f2f1e` (`.claude/worktrees/agent-af653fa7f942f2f1e`, from `fa7f9dc`); last commit: `fa7f9dc` (master) until its first WIP commit
+  - evidence: `docs/design/G3G4_sdf_geometry.md`, `docs/design/K8_stage1.md` ("Stage 1 handoff"); stage 1's notes in `.claude/probes/K8/stage1/notes.md`; stage 2's in its worktree's `.claude/probes/K8/stage2/`
+  - next: G3-0 (the capture/restore hook, the sample table, the frame bench, the pixel A/B, a phone pass if reachable), never alongside K90; Levi's calls are K361 (none blocks G3-0)
+  - brief: `docs/design/K8_stage1.md`, "Stage 2 (G3-0)"
+
+## K307 (2026-10-15, stage 2 launched)
+
+- **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
+  prioritize). K7 s4's trace: GPU compile waits (bg-vellum's 190 ms queued behind
+  12-15 small links); the worker can't hide them; its 6.1 s frame is gone.
+  - owner: nobody since 2026-10-14 21:39 (stage 1 merged at 22:06; agent a119ffbc187f24aad (opus) of claude d8031183); stage 2 waits for a code slot
+  - branch: mainline; last commit: `b72d5dd`; the local `k307-proto` (51f7480) holds throwaway prototypes and is never merged
+  - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches); K7 s4's traces in `.claude/probes/K7/stage4/k307/`; lore `.claude/rules/render-shaders.md`
+  - next: stage 2, the warm-up (`program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2), not alongside K7 s5 (both edit `main.ts`); K366 rides it, and so do K268 s2's three explore variants (`render-shaders.md`); the phone's measures ride K156's next pass
+  - brief: `docs/design/K307_intro_freezes.md` ("Stage 1 handoff", "Stage 2: the warm-up"); K7's in `docs/design/K7_worker.md` ("Stage 4 handoff")

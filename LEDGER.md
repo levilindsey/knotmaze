@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K380.
+Next free ID: K382.
 
 ## Waiting on Levi
 
@@ -233,20 +233,20 @@ Next free ID: K380.
   - env: the phone: `.claude/probes/K7/stage5/phone_setup.ps1` and `phone_teardown.ps1`, under the phone lock
 - **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
   prioritize). K7 s4's trace: GPU compile waits (bg-vellum's 190 ms queued behind
-  12-15 small links); the worker can't hide them; its 6.1 s frame is gone.
-  - owner: nobody since 2026-10-14 21:39 (stage 1 merged at 22:06; agent a119ffbc187f24aad (opus) of claude d8031183); stage 2 waits for a code slot
-  - branch: mainline; last commit: `b72d5dd`; the local `k307-proto` (51f7480) holds throwaway prototypes and is never merged
-  - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches); K7 s4's traces in `.claude/probes/K7/stage4/k307/`; lore `.claude/rules/render-shaders.md`
-  - next: stage 2, the warm-up (`program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2), not alongside K7 s5 (both edit `main.ts`); K366 rides it, and so do K268 s2's three explore variants (`render-shaders.md`); the phone's measures ride K156's next pass
-  - brief: `docs/design/K307_intro_freezes.md` ("Stage 1 handoff", "Stage 2: the warm-up"); K7's in `docs/design/K7_worker.md` ("Stage 4 handoff")
+  12-15 small links); the worker can't hide them. Stage 2: the warm-up.
+  - owner: agent `a11d7ce60428b687d` (opus) of claude session d8031183, stage 2 from 03:55 (cap 05:55; ports 5830-5839)
+  - branch: `worktree-agent-a11d7ce60428b687d` (`.claude/worktrees/agent-a11d7ce60428b687d`, from `97d7c31`); last commit: `97d7c31` (master) until its first WIP commit
+  - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches; the local branch `k307-proto` (51f7480) holds throwaway prototypes, never merged); K7 s4's traces in `.claude/probes/K7/stage4/k307/`; lore `.claude/rules/render-shaders.md`; stage 2's in its worktree's `.claude/probes/K307/stage2/`
+  - next: stage 2: `program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2; K366 and K268 s2's three explore variants ride it, K290's variants follow; the phone's measures ride K156's next pass
+  - brief: `docs/design/K307_intro_freezes.md` ("Stage 2: the warm-up", "Stage 1 handoff", "Stage 2 launch notes")
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
-  (`docs/design/G3G4_sdf_geometry.md`, re-based by stage 1, 05aac8e..cbeb963). G3-1
-  waits for K268 s2 and K290, G3-2 for the reveal chain (K76 2c to 2d).
-  - owner: agent `af653fa7f942f2f1e` (opus) of claude session d8031183, stage 2 (G3-0) from 02:04 (cap 04:04; ports 5830-5839); stage 1's docs worktree `a35a43cee74c92b93` kept
-  - branch: `worktree-agent-af653fa7f942f2f1e` (`.claude/worktrees/agent-af653fa7f942f2f1e`, from `fa7f9dc`); last commit: `fa7f9dc` (master) until its first WIP commit
-  - evidence: `docs/design/G3G4_sdf_geometry.md`, `docs/design/K8_stage1.md` ("Stage 1 handoff"); stage 1's notes in `.claude/probes/K8/stage1/notes.md`; stage 2's in its worktree's `.claude/probes/K8/stage2/`
-  - next: G3-0 (the capture/restore hook, the sample table, the frame bench, the pixel A/B, a phone pass if reachable), never alongside K90; Levi's calls are K361 (none blocks G3-0)
-  - brief: `docs/design/K8_stage1.md`, "Stage 2 (G3-0)"
+  (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (b3917ca..f6d10e3): the four G3
+  tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
+  - owner: nobody since 2026-10-15 03:50 (G3-0 done; agent `af653fa7f942f2f1e` of claude session d8031183, worktree kept)
+  - branch: mainline; last commit: `f6d10e3`
+  - evidence: `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
+  - next: the phone's dense bench again at rest (`phone6.ps1`, its 30000 ms rest raised to 90000); then G3-1 after K290 (R1-R2 first if Levi takes K377 q3); G3-1's textures must fit the Pixel's 8192 max; check capture/restore under the worker (default from K7 s6); Levi's calls: K361
+  - brief: `docs/design/K8_stage1.md` (its stage 2 handoff, at the end); G3-1 still needs a brief, from `docs/design/G3G4_sdf_geometry.md`
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
   with seams so G3 becomes a module swap; K6 rides it. Design merged:
   `docs/design/K5_K6_split.md` (its calls: K377).
@@ -1147,6 +1147,12 @@ Every other item below waits on the trigger it names.
 - **K379** · No phone cold start on levi.dev yet: K7 s5 skipped it, since `phone_lib`
   clears the origin's storage and would wipe Levi's daily records. Rec: a mode
   that keeps storage, then one cold load of the live site.
+- **K380** · G3-0's small residuals (`docs/design/K8_stage1.md`, stage 2 handoff):
+  dense update() +0.2-0.3 ms, at its +0.3 limit; the desktop bench's branch means
+  +0.04-0.16 ms, unattributed; uploads 0.23/0.44 MB against 0.19/0.35 estimated. Rec: only if G3-1's budget needs it.
+- **K381** · The K83 PIN recipe (`probes.md`) and `k83_ab` don't pin the fabric's
+  explore clock: a thread-reveal A/B differs by 22050 px without it (G3-0). Rec:
+  add `F.exploreClock = 1000` and `tickExplore` forwarded with 0 (probes.md's K8 bullet has it).
 
 ## Approved, to schedule (2026-10-11)
 
