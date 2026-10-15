@@ -246,8 +246,10 @@ export function exploreArcMap(
 // for the end-marker looks: kExTip = progress 0 -> 1 through it (-1 when
 // none), kExSolid = the ctrl where it starts and kExX = the point's ctrl,
 // both unwrapped toward the piece. Line-for-line twin: paint_math.ts
-// kExploreAt (and pieceVis / chainVis in explore_view.ts).
-export const EXPLORE_DECL_GLSL = /* glsl */ `
+// kExploreAt (and pieceVis / chainVis in explore_view.ts). The arm strips'
+// variant (K268 stage 2, arm_strip.ts withExploreStrip) needs only this
+// part; the section variant takes EXPLORE_DECL_GLSL, which starts with it.
+export const EXPLORE_VIS_GLSL = /* glsl */ `
 // K76 THREAD REVEAL: (on, look, breath, threadWidth).
 uniform vec4 uKExplore;
 const int PI_VIS = ${EXPLORE_ITEM_VIS};
@@ -305,7 +307,12 @@ highp float kExploreAt(KChain c, highp float ctrl) {
   }
   return best;
 }
-// The end look's coverage at a point of a FRONTIER fade: u = progress 0 -> 1
+`;
+
+// The section variant's declarations: the visibility above, then the end
+// looks and the shaped cut's coverage (K268), which need kSmooth and the
+// gap library's uGapData.
+export const EXPLORE_DECL_GLSL = EXPLORE_VIS_GLSL + /* glsl */ `// The end look's coverage at a point of a FRONTIER fade: u = progress 0 -> 1
 // through it (< 0: not in a frontier fade), s = world arc from the solid end,
 // lat = vUV.y - 0.5 (0 on the centerline), sideFw = vUV.y per pixel. Returns
 // v itself for the fade and halo looks and outside a frontier. The glow
