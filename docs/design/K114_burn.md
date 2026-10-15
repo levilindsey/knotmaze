@@ -6,9 +6,10 @@ took its recommendations. The first prototype they name is the burn race
 (section R.3.3): a fuse lit at the entrance burns along the threads,
 slower than you, and burnt runs are gone. You race it to the exit.
 
-It is turn-based (the fire's clock is the length you have walked), in
+It is turn-based first (the fire's clock is the length you have
+walked), with real-time burning behind its own toggle next. It is in
 free play first, and the first K46 daily modifier from round 2. This
-brief plans the build in three stages, one agent each, and details
+brief plans the build in four stages, one agent each, and details
 stage 1.
 
 Stage 1 starts after K80 turns stage 1 merges. Both change how a tap
@@ -62,6 +63,13 @@ becomes a turn, in the same files (see "Shared with K80 turns").
   explorer policies on 30 dailies, and how often is an explorer trapped?
   If careful players never come within a run of the fire, drop it or
   make fog part of the mode."
+- On 2026-10-14 at about 14:46, on this brief's calls (verbatim): "Burn
+  race: we should probably have a fire effect show at the start, but
+  only actually start moving it after the player makes their first move.
+  Will we have a toggle for turn-aligned vs realtime burning? I think we
+  should!" So the lit fuse shows from the load and moves only from the
+  first move, and stage 2 builds real-time burning behind the fire's own
+  toggle, `fireClock`. Call 7 below is answered.
 
 ## The model, derived from R.3.3
 
@@ -70,7 +78,10 @@ Each point follows from the rules above. None is a new call.
 - d(v) is v's walk distance from the walk start (`WalkGraph.start`, the
   trace flood's origin). The fire reaches v at `T(v) = h + d(v)/r`.
 - The clock L is the controller's `walkedDist`. A backtrack advances the
-  fire like any other move ("Backtracking feeds the fire").
+  fire like any other move ("Backtracking feeds the fire"). L is 0 until
+  the first move, so the lit fuse waits at the entrance (Levi, about
+  14:46). Under real-time burning (stage 2), L runs on from the first
+  move at a walking speed, so standing still feeds the fire too.
 - An arm from your junction u to w, of length len, is safe when
   `L + len < T(w)`. It is strict, as R.3.3's "<" reads, so an arm
   smolders when `L + len >= T(w)`.
@@ -103,8 +114,30 @@ Each point follows from the rules above. None is a new call.
 - **Stage 1** (below): the model, the balance measurement (R.6.1), the
   params, the mode in play and a first, cheap look. Playable on the
   desktop.
-- **Stage 2**: the look, R.3.3's "inverted mask, a char band at the
-  front, embers".
+- **Stage 2**: real-time burning, Levi's toggle (2026-10-14, about
+  14:46).
+  - A new param `fireClock` (turn | realtime, default turn) sits with
+    the fire rows. It is the fire's own toggle, not R.0 call 2's shared
+    `clock`: `clk=realtime` is K80's real-time chase, where the
+    minotaur always runs (`docs/design/K80_turns.md`). Folding
+    `fireClock` into `clock` later means making that minotaur
+    optional; a breaking change is fine pre-launch.
+  - Under `fireClock=realtime` the clock L starts at the first
+    accepted move and runs at a reference walking speed (the head's
+    move animation, in lattice units per second; record the value), so
+    the fire moves at r times that speed. Thinking time counts: arms
+    smolder while you stand, and the fire reaching your junction is a
+    loss where you stand.
+  - It reuses the real-time chase's fixed-step clock
+    (`src/game/minotaur.ts`, R.4.2) and pauses the way that mode
+    does. Its own balance measurement adds a thinking-time model to the
+    stage 1 players.
+  - Free play only, with no exact replay: timed taps come with the
+    daily stage and R.0 call 2's clock work. The fire and the real-time
+    chase (`clk=realtime`) stay mutually exclusive at first.
+- **Stage 3**: the look, R.3.3's "inverted mask, a char band at the
+  front, embers". It builds on K76's explore program, so it starts once
+  K76's stage 2 work has merged.
   - Burnt runs are gone through a per-run visibility in the paint
     shader. This is R.4.1's render-only cut: crossing gap slots close,
     and junction fans drop the arm.
@@ -113,14 +146,15 @@ Each point follows from the rules above. None is a new call.
     VIS pieces (`src/render/explore_glsl.ts`, `src/game/explore_view.ts`;
     K76 stages 2b-2d are extending them, with lore in
     `render-explore.md`).
-  - The `burn` frontier FX rides the flood tips (`tipsAt`).
+  - The `burn` frontier FX rides the flood tips (`tipsAt`), and the lit
+    fuse burns in place at the entrance until the first move.
   - The fire's light under fog: "burning threads show branches the fire
     has reached and you have not".
   - A contact sheet on desktop and phone for Levi.
   - As a render prototype it skips the `paint_math` mirror and the
     parity tests until Levi picks a look (K152 item 3, approved
     2026-10-14). The merge stage adds them.
-- **Stage 3**: the daily and the share, if stage 1's measurement keeps
+- **Stage 4**: the daily and the share, if stage 1's measurement keeps
   the mode.
   - The burn race as the first K46 modifier (R.0 call 9).
   - The share line ("🔥 escaped by 9.2", R.3.3).
@@ -128,9 +162,8 @@ Each point follows from the rules above. None is a new call.
   - What a loss does to an official attempt.
   - The `sparks` option (fires lit at telegraphed junctions and times,
     R.5.2's Firebreak).
-  - Once R.0 call 2's clock work lands with the beat rider: the fire
-    under `clk=realtime`, which burns "steadily", with R.4.2's
-    fixed-step clock and a pause that hides the board.
+  - The fire under the beat clock once the beat rider builds it, and
+    `fireClock` folded into `clock` then (R.0 call 2).
   - The turn-based fire keeps an attempt a pure tap list. A result
     field such as the closest call is still a shape change: bump the
     daily store's `v` (3 today, K146).
@@ -181,6 +214,9 @@ a second path.
    - each run's state at clock L (unburnt, burning with its burnt
      intervals, or burnt), by "The model";
    - the arm test, the loss test and the closest call.
+
+   The clock L is an input, so stage 2's real-time clock plugs in
+   without a second model.
 
    Tests:
    - the optimal route always escapes: a property test over seeds, r and
@@ -236,7 +272,7 @@ a second path.
    on master when you start. K80 turns stage 1 appends from 109, and
    K111 stage 3 removes 108 and bumps `CODEC_VERSION` to 5, so read the
    table rather than trusting these numbers.
-   - `fire` (off | fuse): R.3.3's `sparks` comes in stage 3 (call 6),
+   - `fire` (off | fuse): R.3.3's `sparks` comes in stage 4 (call 6),
      appended then.
    - `fireSpeed` (r, [0.3, 0.95], default 0.75).
    - `fireDelay` (h, lattice units, default 0). Pick its range and
@@ -249,8 +285,9 @@ a second path.
      not how it looks. It is off by default, so no link, daily or pin
      moves except the codec table's appended rows.
    - Panel rows, fabric mode only. Show `fireSpeed` and `fireDelay` only
-     while `fire` is on, and hide all three under `clk=realtime` (call
-     7). Where the rows sit is your call; record it.
+     while `fire` is on, and hide all three under `clk=realtime` (the
+     real-time chase; real-time burning is stage 2's `fireClock`). Where
+     the rows sit is your call; record it.
 4. **The mode in play** (with `fire` on):
    - The controller refuses a smoldering arm with a result of its own (a
      new `FabricTapResult`, "smolder" recommended), so the caller can
@@ -264,12 +301,16 @@ a second path.
      loss gets a banner (`WinBanner` is the model).
    - The HUD shows the fire's lead at your junction, `T(u) - L`, which
      reads as the closest call once solved (call 5 for its units).
-5. **A first look, cheap.** Stage 2 builds the final look. Stage 1
+5. **A first look, cheap.** Stage 3 builds the final look. Stage 1
    needs only enough to play and judge:
    - Burnt runs, burning runs and the smoldering arms at your junction,
      drawn with something the renderer already draws cheaply. K80 turns'
      telegraph overlay, if its handoff built one, is the first candidate.
      It must be legible at phone fit scale (threads 4-5 px wide).
+   - The lit fuse shows at the entrance from the load and stays put
+     until the first move (Levi, about 14:46). Recommended: during a
+     move the fire advances with the head's animation instead of
+     jumping at its end.
    - No paint-shader change: K76 is changing the shader in parallel. If
      you need one, keep it small and say so in the handoff.
 
@@ -307,7 +348,7 @@ a second path.
     `WalkGraph.start`, `distToExit`);
   - `src/core/reveal_plan.ts` (the trace flood: `buildRevealPlan`,
     `FLOOD_SPEED`, `intervalsAt`, `tipsAt`);
-  - `src/render/appear_fx.ts` (the `burn` style, for stage 2).
+  - `src/render/appear_fx.ts` (the `burn` style, for stage 3).
 - `src/main.ts`: `handleFabricTap`, `moveAlong`, `keyMoveAlong`,
   `handleChaseTap`, and Reset path (`resetPathAction`, from
   `src/game/daily_attempt.ts`).
@@ -405,7 +446,7 @@ handoff says so.
    first.
 2. **Reset path with the fire on.** Recommended: a restart (the fuse
    relit), since walking back to the entrance means walking into the
-   fire. Reset path inside a daily is stage 3's call.
+   fire. Reset path inside a daily is stage 4's call.
 3. **The fire with the turn-aligned minotaur.** Recommended: mutually
    exclusive in stage 1 (turning one on turns the other off). A catch's
    respawn at a burnt entrance and the fire's time during a wait move are
@@ -417,10 +458,13 @@ handoff says so.
 5. **The margin's units.** R.3.3's share line reads lattice units
    ("escaped by 9.2"), but the HUD reads every distance x10 as a whole
    number (`maze_hud.ts`). Recommended: the HUD's units in the HUD (92).
-   Stage 3 settles the share line.
+   Stage 4 settles the share line.
 6. **`sparks`.** R.3.3 lists it as `fire`'s third option. Recommended:
-   deferred to stage 3 and appended then (an appended option moves no
+   deferred to stage 4 and appended then (an appended option moves no
    link).
-7. **The fire under `clk=realtime`.** Recommended: ignored until stage
-   3, which waits for R.0 call 2's clock work (built with the beat
-   rider). The panel hides the fire rows under real time.
+7. **The fire under `clk=realtime`.** Answered by Levi (2026-10-14,
+   about 14:46: "Will we have a toggle for turn-aligned vs realtime
+   burning? I think we should!"): stage 2 builds real-time burning
+   behind the fire's own toggle, `fireClock`, since `clk=realtime`
+   is the real-time chase. Stage 1 still hides the fire rows under
+   `clk=realtime`.
