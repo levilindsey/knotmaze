@@ -514,7 +514,8 @@ the game: flow, pulses, the fog drift and the background drift.
     snapshots;
   - `asleep` holds once the newest snapshot says slept and main's inputs
     are acknowledged;
-  - asleep, the worker posts nothing and discards allowances (`K7_worker.md`).
+  - asleep, the worker posts nothing and discards allowances
+    (`K7_worker.md`).
 
   So stopping the rAF while the worker sleeps loses nothing. One catch:
   when `asleep` flips, the picture may still be up to D behind the
@@ -523,9 +524,10 @@ the game: flow, pulses, the fog drift and the background drift.
   screen. K6-1 reads WorkerHost and adds whatever `asleep` lacks.
 - **Wake:** input → `host.wake()` / `dragTo` / tug → push PHYS → the
   rAF starts → `host.frame` posts allowances again.
-- K7's design (`K7_worker.md`) stands: "the worker needs nothing from K6; K24
-  reads `host.asleep`". K6 adds one method to the PhysicsHost interface
-  and changes nothing in the worker.
+- K7's design stands (`K7_worker.md`, "K24 and K6"): the worker needs
+  nothing from K6, and K24 reads `host.asleep` instead of the sleep
+  gate. K6 adds one method to the PhysicsHost interface and changes
+  nothing in the worker.
 
 ### 4.5 The background (K21, K24)
 
@@ -634,18 +636,20 @@ The proposal (question 2):
   only with no canvas draw, so sim/wall stay readable.
 - `diag_screenshot.mjs` reports `idle: true` instead of a frame rate
   when the loop is stopped.
-- The probes in `probes.md` that time frames or poll rAF (`k147_measure.mjs`, `k7_frames.mjs`, `k7_latency.mjs`, `k174_page.mjs perf|perfq`, K114's `burn_page.mjs perf`, `k96_cam.mjs`) set continuous mode. K6-3 runs each
-  once.
+- The probes in `probes.md` that time frames or poll rAF set continuous
+  mode: `k147_measure.mjs`, `k7_frames.mjs`, `k7_latency.mjs`,
+  `k174_page.mjs perf|perfq`, K114's `burn_page.mjs perf` and
+  `k96_cam.mjs`. K6-3 runs each once.
 
 ### 4.11 What it saves (to measure, not assumed)
 
 - **Knot mode at rest, flow 0:** today Pixi draws 60 frames a second of
   a still scene (the 2026-10-10 audit measured the CPU 94.5% idle at
-  rest; G1 measured the fabric's draw at 1.78-1.94 ms of desktop GPU). After K24,
-  about 2.5 s of background drift, then no frames at all.
-- **Fabric at defaults:** the pulses and the flow keep PAINT and FLOW set,
-  so nothing stops. Only a rest cadence saves anything there. At 30 fps
-  it would halve the draws, while the flow pass keeps today's
+  rest; G1 measured the fabric's draw at 1.78-1.94 ms of desktop GPU).
+  After K24, about 2.5 s of background drift, then no frames at all.
+- **Fabric at defaults:** the pulses and the flow keep PAINT and FLOW
+  set, so nothing stops. Only a rest cadence saves anything there. At
+  30 fps it would halve the draws, while the flow pass keeps today's
   half rate.
 - **Every frame, everywhere:** K6-2 removes the per-frame fabricTick
   parts that have nothing to do, the camera spring at rest, the
@@ -716,9 +720,10 @@ except where marked, and is one module per commit.
    at V8's inlining before going on: a delegation adds a call, and a
    part's method sees a new receiver type.
 
-Probe outputs go in untracked `.claude/probes/K5/<stage>/` (K6 in
-`.claude/probes/K6/`), never the scratchpad. Ports **5840-5849** are
-free of K7 (5798-5799), K268 (5820-5829) and K8 (5830-5839).
+Probe scripts and outputs go in the main checkout's untracked
+`.claude/probes/K5/<stage>/` (K6: `.claude/probes/K6/`), which outlives
+a worktree; never the scratchpad. Ports **5840-5849** are free of K7
+(5798-5799), K268 (5820-5829) and K8 (5830-5839).
 
 ### 5.2 K5, the main.ts lane (after K7 stage 5 merges)
 
@@ -805,10 +810,33 @@ branches start from `origin/master`).
 **Read first:** this doc's sections 1.1, 2.1, 2.2 and 5.1. Do not read
 the whole of main.ts. Read the regions you move.
 
+**Setup** (as in `K7_worker.md`, "Every build stage: setup and
+process"):
+- **`node_modules`:** a junction to the main checkout's (`New-Item
+  -ItemType Junction node_modules -Target
+  C:\Users\lsl\Repositories\knotmaze\node_modules`). Before anything
+  removes your worktree, delete it with `(Get-Item node_modules).Delete()`,
+  never a recursive delete.
+- **Probes** live in the main checkout's `.claude/probes/`, which is
+  untracked and so absent from your worktree: run them by absolute path.
+  Keep your scripts and results in the main checkout's untracked
+  `C:\Users\lsl\Repositories\knotmaze\.claude\probes\K5\stage1\`, which
+  outlives your worktree.
+- **Servers:** ports 5840-5849, each server with a private vite cacheDir
+  (K80's wrapper, `probes.md`). Serve master and your branch with
+  `scripts/preview.ps1 -Port <p> -Ref <commit>` and check each page's
+  stamp SHA.
+- **Chrome:** a probe that launches Chrome gets its own `--user-data-dir`
+  inside your probes folder, deleted when you are done (K161).
+  `diag_screenshot.mjs` already makes one per run.
+- **The perf lock:** hold `$env:TEMP\claude-perf.lock` for every frame
+  timing and every pixel-exact GPU probe, waiting for it inside one
+  blocking command.
+
 **Scope, in order, one commit per step:**
 
 1. **Re-map main.ts** at the new master. Write a small TypeScript-parser
-   script (untracked, `.claude/probes/K5/stage1/remap.ts`) that lists:
+   script (`remap.ts`, in the probes folder above) that lists:
    - every top-level declaration inside `main()` (each `let`, `const`
      and function) with its line;
    - for each `let`, whether it is reassigned after boot, and by which
@@ -890,17 +918,14 @@ write it into the handoff instead.
 - the hook inventory;
 - three hook-heavy probes against a build of the branch:
   - `scripts/diag_screenshot.mjs` (stamp, timing, frames);
-  - `.claude/probes/K7/stage4/k7_frames.mjs` (a fixed wall-time drag, on both hosts: `phw=0` and `phw=1`);
+  - `.claude/probes/K7/stage4/k7_frames.mjs` (a fixed wall-time drag,
+    on both hosts: `phw=0` and `phw=1`);
   - `.claude/probes/K19-K20/probe_daily.mjs front`;
 - the same-state pixel A/B of three links (knot, fabric, fog) under the
   perf lock, expecting 0 px.
 
 No hot path moves in M1, so it needs no frame-time check. The stamp
 update runs every frame but only moves files.
-
-Use ports 5840-5849. Probe outputs go in
-`.claude/probes/K5/stage1/` (untracked). Hold the perf lock for every
-pixel-exact probe, and wait for it inside one blocking command.
 
 **Helpers:** only for mechanical work (the re-map script, the hook
 inventory). Run them on `model: sonnet` with a 1 h cap and this stop
@@ -950,9 +975,10 @@ At the stop:
      file.
 4. **K290 before or after R2 and R5?** K290's "gone" edits the explore
    gaps and the fans.
-   - **Recommendation:** K290 first. It is a feature you asked for (2026-10-14) and
-     builds on K268's shaped gaps (`K114_burn.md`, stage 3). R1 can run beside it, and R2 and R5
-     then move K290's code along with the rest, with no porting.
+   - **Recommendation:** K290 first. It is a feature you asked for
+     (2026-10-14) and builds on K268's shaped gaps (`K114_burn.md`,
+     stage 3). R1 can run beside it, and R2 and R5 then move K290's
+     code along with the rest, with no porting.
 5. **CLAUDE.md's Project Structure:**
    - **Recommendation:** one line for `src/app/` and one for
      `src/render/ribbon/`, naming their parts, with each file's header
@@ -962,10 +988,11 @@ At the stop:
    never pauses in fabric mode, because `sceneAnimating()` is always
    true there.
    - **Recommendation:** yes, after 2.5 s, as K21 designed. It matters
-     only in a fabric scene with no pulses, flow or fog drift. It is K24's intent.
+     only in a fabric scene with no pulses, flow or fog drift. It is
+     K24's intent.
 7. **The renderer's `private` fields:** the parts read the shared scene
-   fields through the façade, so those (R1 counts them) lose `private` and gain
-   an `@internal ribbon` tag.
+   fields through the façade, so those (R1 counts them) lose `private`
+   and gain an `@internal ribbon` tag.
    - **Recommendation:** do that.
    - The alternative is a separate RibbonScene object, which needs a
      global `this.x` → `this.s.x` rewrite that conflicts with every
