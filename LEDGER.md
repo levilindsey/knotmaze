@@ -111,7 +111,7 @@ Next free ID: K385.
   R2/R5, CLAUDE.md lines, drift pause, `@internal ribbon`. None blocks M1.
 - **K383** · K290 3a's calls (`docs/design/K114_burn.md`, "Stage 3a handoff"): `burnt`
   defaults to gone and is not daily-exempt; char shows only where the reveal does; the
-  start marker stays over burnt thread; unseen fire fronts' embers show. Rec: as built; 3b replaces the embers.
+  start marker stays over burnt thread; unseen fire fronts' embers show. Rec: as built, and 3b draws unseen fronts as nothing, like char.
 
 ## In progress
 
@@ -227,13 +227,13 @@ Next free ID: K385.
   - next: stage 3: the census fixes first (`census.mjs`: judge shaped slots by S/R/F, skip rather than fail when no crossing shows both threads, a fading joint scales by vis; attribute junctions 56-58 and 161, which mismatch on master too), then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip); after K76 2d (both edit the explore programs)
   - brief: `docs/design/K268.md`, "Stage 2 handoff" ("For the next stage")
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
-  calls K302). Stages 1-5 merged (stage 5: 3e6b7c5..988be6a, the start gate and the phone
-  pass, which missed only the 250 ms gate). Call F6: the default anyway.
-  - owner: agent `a6023a3244ff623cc` (sonnet) of claude session d8031183, stage 6 (the flip) from 03:49 (cap 04:49; ports 5850-5859); stage 5's worktree `adf244f47f53e8230` kept
-  - branch: `worktree-agent-a6023a3244ff623cc` (`.claude/worktrees/agent-a6023a3244ff623cc`, from `8b3b401`); last commit: `8b3b401` (master) until its first WIP commit
-  - evidence: `.claude/probes/K7/` (`stage5/`: the phone tooling, `s5_gate.txt`, `run_s5.ps1`, `table_s5.mjs`; `stage4/`, `stage3/`)
-  - next: stage 6 (sonnet): `phw` on by default, its pins and lore, the 21 shared probe libraries ported (K374); then K5 M1; then stage 7 (opus; after M1, since both edit main.ts's boot): the start-gate lever (params and tuning in the Worker's `name`, main adopts gen 0), the phone pass again and the spike page `?d=gs18`
-  - brief: `docs/design/K7_worker.md`, "Stage 6 brief: the flip (call F6)"; stage 7 from "Stage 5 handoff" ("For the next stage")
+  calls K302). Stages 1-6 merged: the worker is the default (stage 6: a944841..4d9c9f5,
+  call F6), `&phw=0` runs in-thread. It still misses the 250 ms start gate.
+  - owner: nobody since 2026-10-15 04:37 (stage 6 done; agent `a6023a3244ff623cc` of claude session d8031183, worktree kept)
+  - branch: mainline; last commit: `4d9c9f5`
+  - evidence: `.claude/probes/K7/` (`stage6/`: `ported.md`, the ported libraries' originals in `ported/orig/`; `stage5/`: the phone tooling, `s5_gate.txt`; `stage4/`, `stage3/`)
+  - next: stage 7 (opus) after K5 M1, since both edit main.ts's boot: the start-gate lever (scene params and tuning in the Worker's `name`, main adopts generation 0), the phone pass again (the phone half of `stage5/s5_gate.txt`), the spike page `?d=gs18`
+  - brief: `docs/design/K7_worker.md`, "Stage 6 handoff"; stage 7 from "Stage 5 handoff" ("For the next stage")
   - env: the phone: `.claude/probes/K7/stage5/phone_setup.ps1` and `phone_teardown.ps1`, under the phone lock
 - **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
   prioritize). K7 s4's trace: GPU compile waits (bg-vellum's 190 ms queued behind
@@ -253,12 +253,12 @@ Next free ID: K385.
   - brief: `docs/design/K8_stage1.md` (its stage 2 handoff, at the end); G3-1 still needs a brief, from `docs/design/G3G4_sdf_geometry.md`
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
   with seams so G3 becomes a module swap; K6 rides it. Design merged:
-  `docs/design/K5_K6_split.md` (its calls: K377).
-  - owner: nobody since 2026-10-15 03:14 (design done and merged; agent `aa60ed52201f75682` of claude session d8031183, worktree kept)
-  - branch: mainline; last commit: `4931204`
-  - evidence: `.claude/probes/K5/design/` (eight region maps of main.ts and ribbon_renderer.ts)
-  - next: stage M1 once K7 stage 5 merges (re-map main.ts first), then section 5's stages: M1-M8, and R1-R5 (R1 after G3-0 merges); section 6 orders them against the queue
-  - brief: `docs/design/K5_K6_split.md`, "7. Stage 1 brief"
+  `docs/design/K5_K6_split.md` (its calls: K377). Stage M1 running.
+  - owner: agent `a871cd9d98d4f1bf0` (opus) of claude session d8031183, stage M1 from 04:46 (cap 06:46; ports 5840-5849); the design's worktree `aa60ed52201f75682` kept
+  - branch: `worktree-agent-a871cd9d98d4f1bf0` (`.claude/worktrees/agent-a871cd9d98d4f1bf0`, from `1646491`); last commit: `1646491` (master) until its first WIP commit
+  - evidence: `.claude/probes/K5/stage1/` (in the main checkout, as the brief says); the design's region maps in `.claude/probes/K5/design/`
+  - next: stage M1: the re-map, `src/app/scene_ref.ts`, the loader, stamp and probe hooks moved, host_seam over `src/app/**`, the lore paths; then section 5's stages (M2-M8, R1-R5; section 6 orders them)
+  - brief: `docs/design/K5_K6_split.md`, "7. Stage 1 brief" and "Stage 1 launch notes"
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
   char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b next.
@@ -1139,9 +1139,9 @@ Every other item below waits on the trigger it names.
 - **K372** · Fabric `?b` doesn't sleep again within 30 s after a drag, on any
   host, master included (K7 s4). Rec: a short sonnet probe of whether and when
   it sleeps.
-- **K374** · 52 freeze-patch probes and 5 timing wrappers still patch `ps.step`
-  and run only with `&phw=0` (`.claude/probes/K7/stage4/ports/FREEZE_PATCH_FILES.md`):
-  port each when next needed, `k279_ab` first; re-run g2_smoke and livefabric.
+- **K374** · 31 freeze-patch probes and 6 timing wrappers still patch `ps.step` and run
+  only with `&phw=0` (`.claude/probes/K7/stage4/ports/FREEZE_PATCH_FILES.md`), and K8's
+  `g3_probe.mjs` (496, 553) and `g3_probe_batch4.mjs` (470) throw on a default build. Port each when next needed.
 - **K375** · The reveal's sheet probe (`k76_probe.mjs`): pin the halo breath as
   `census.mjs` now does, and find the 192 px by which a mode-off frame differs
   from the frame before it, master too (K268 s2). Rec: a small sonnet probe.
@@ -1154,9 +1154,6 @@ Every other item below waits on the trigger it names.
 - **K380** · G3-0's small residuals (`docs/design/K8_stage1.md`, stage 2 handoff):
   dense update() +0.2-0.3 ms, at its +0.3 limit; the desktop bench's branch means
   +0.04-0.16 ms, unattributed; uploads 0.23/0.44 MB against 0.19/0.35 estimated. Rec: only if G3-1's budget needs it.
-- **K381** · The K83 PIN recipe (`probes.md`) and `k83_ab` don't pin the fabric's
-  explore clock: a thread-reveal A/B differs by 22050 px without it (G3-0). Rec:
-  add `F.exploreClock = 1000` and `tickExplore` forwarded with 0 (probes.md's K8 bullet has it).
 - **K382** · A fire race's frame cost is unmeasured (K290 3a): from its first burn every
   ribbon, strip and fan draws through the explore programs, reveal off too. Rec:
   `burn_page.mjs perf` on both builds, under the lock.
@@ -1404,6 +1401,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K381** · The K83 PIN recipe (`probes.md`) and `k83_ab` pin the fabric's explore clock. Done in 7a17355 (2026-10-15).
 - **K24** · Render on demand when the scene is static. Dropped: folded into K6-3 (`docs/design/K5_K6_split.md`, 5.4), 2026-10-15.
 
 - **K279** · Plucks you can see, feel and hear: the ripple (glint by default), vibration, an optional tug, quieter auto plucks. Done in 50c1aab, ad2618a and b1524de..810af10 (2026-10-15); follow-ups K365-K369.
