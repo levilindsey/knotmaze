@@ -392,6 +392,31 @@ describe("the worker core in lockstep with the in-thread host (K7)", () => {
     expect(ls.worker.core.asleep).toBe(false);
   });
 
+  it("halts as the in-thread host does when the state goes non-finite", () => {
+    const ls = new Lockstep();
+    ls.init("?7&gs=6");
+    const dt = 1 / 60;
+    for (let f = 0; f < 5; f++) ls.frame(dt);
+    // The same blow-up on both sides (nothing in the solver makes one on
+    // demand). An infinite move is what both hosts' checks catch.
+    ls.live.positions[0] = Infinity;
+    (ls.worker.ps as ParticleSystem).positions[0] = Infinity;
+    expect(ls.host.frame(dt, ls.t, performance.now(), true, 0)).toBe(false);
+    ls.send({ type: "frame", gen: ls.gen, dt });
+    expect(ls.worker.stats.halted).toBe(true);
+    // Main reads the halt from the snapshot.
+    expect(Number.isFinite(ls.m.maxMove)).toBe(false);
+    // Halted, frames are discarded until a newer init.
+    const sub = ls.worker.stats.substeps;
+    ls.send({ type: "frame", gen: ls.gen, dt });
+    expect(ls.worker.stats.substeps).toBe(sub);
+    ls.init("?7&gs=6");
+    expect(ls.gen).toBe(2);
+    expect(ls.worker.stats.halted).toBe(false);
+    for (let f = 0; f < 5; f++) ls.frame(dt);
+    expect(ls.worker.stats.substeps).toBeGreaterThan(0);
+  });
+
   it("drops messages of another gen and rebuilds on a newer init", () => {
     const ls = new Lockstep();
     ls.init("?7&gs=6");
@@ -657,5 +682,29 @@ describe("the worker core's probe messages and failure (K7)", () => {
     expect(w.stats.substeps).toBe(n3);
     expect(live().simTime).toBe(n3 * SUBSTEP);
     expect(stateDiff(ref2, live())).toBe("");
+  });
+
+  it("posts an error thrown inside a scheduled substep and stops", () => {
+    const q = fabricScene("?7&gs=6");
+    const out: WorkerToMain[] = [];
+    const sched = new ManualScheduler();
+    const w = new PhysicsWorkerCore(sched, (m) => {
+      out.push(m);
+    });
+    w.onMessage({ type: "init", gen: 1, params: q.params, tuning: q.tuning });
+    (w.ps as ParticleSystem).runSubstep = (): void => {
+      throw new Error("substep blew up");
+    };
+    w.onMessage({ type: "frame", gen: 1, dt: 1 / 60 });
+    // The task throws inside the scheduler: its catch posts and stops.
+    expect(sched.runAll()).toBe(1);
+    expect(out.filter((m) => m.type === "error")).toEqual([
+      expect.objectContaining({ type: "error", message: "substep blew up" }),
+    ]);
+    expect(w.stats.substeps).toBe(0);
+    expect(w.stats.remaining).toBe(0);
+    w.onMessage({ type: "frame", gen: 1, dt: 1 / 60 });
+    expect(sched.queue.length).toBe(0);
+    expect(w.stats.frames).toBe(1);
   });
 });
