@@ -376,35 +376,37 @@ and never reused.
     there is no undo (Reset path restarts), and a first-look telegraph
     draws a red line and a ring (`drawTelegraph`). 865 tests. Its catch
     rates on today's mazes are K269, its residuals K270-K272.
-  - owner: nobody since 2026-10-14 15:15: turns stage 1 is done and
-    merged (agent af5995f5900f0f945 of claude session d8031183; its
-    worktree `.claude/worktrees/agent-af5995f5900f0f945` is kept). Stage
-    2 can start: the burn race's stage 1 (K114), which also changes how a
-    tap becomes a turn, merged at 16:35. The real-time stage was agent
-    a9c90f15cd6a55710 (its worktree
-    `.claude/worktrees/agent-a9c90f15cd6a55710` is kept).
-  - branch: mainline; last commit: `68524e1` (turns stage 1's handoff).
-    Real time is `5fed5c1`; its controls, K174, ecf2169..6ec8275.
-  - evidence: `.claude/probes/K80/turns/` (`compare.ts` with the
-    harness copies and `compare_rebased.md`; `turns_page.mjs`, its logs
-    and `shots/`; `k174_page.mjs`); real time's `.claude/probes/K80/rt/`
-    (`run_rt.ps1`, `results.md`, `rt_chase.mjs`, `rt_page.mjs`, `out/`);
-    the research's `.claude/probes/K80/` and its kept worktree
-    `.claude/worktrees/agent-a25726c24f262b138`.
-  - next: write turns stage 2's brief from the stage 1 handoff: catch
-    feedback (2.8); the final telegraph, tuned at phone fit scale (2.7;
-    today's line is about one thread wide); stats and share (2.9); fog
-    interplay, sound and the Reset-path log (2.10); a wait key, a
-    move-pad wait button and a hover cue; a turn-based minoToward; and
-    the retune (K269; Levi, 15:34: "Retune."): the hunter's defaults back
-    to the research's 1% / 13% on today's mazes, now H1 mazes (K278
-    (c)); and K273's catch resets.
-    Before any daily pins a minotaur,
-    waits enter `fc.taps` and the attempt saves, and K47's fingerprint
-    covers the minotaur params. Real time's phone check is K177.
-  - brief: `docs/design/K80_turns.md` ("Stage 1 handoff"; three stages,
-    7699995); real
-    time's `docs/design/K80_realtime.md`; the research brief
+  - turns stage 2 RUNNING from 17:40 (opus, cap about 19:40): K269's
+    retune to the research's 1% / 13% on today's H1 mazes, K278 (c)'s
+    real-time pull on them, K273's catch resets (the level, the minotaur
+    and the fog as toggles, both clocks), K272's edge values, section
+    2.9's stats and share (a `STATS` line each) and K283's banner check.
+  - owner: claude d8031183-cd9e-4b70-9968-661d70634c84, agent
+    a1579d5c460af2d20 (turns stage 2, from 17:40). Turns stage 1 was
+    agent af5995f5900f0f945 and real time a9c90f15cd6a55710; both
+    worktrees are kept.
+  - branch: `worktree-agent-a1579d5c460af2d20`, worktree
+    `.claude/worktrees/agent-a1579d5c460af2d20`; last commit: `67c8cb0`
+    (its base, the stage 2 brief on master). Turns stage 1 is
+    0047148..68524e1, real time `5fed5c1`, K174 ecf2169..6ec8275.
+  - evidence: stage 2's `.claude/probes/K80/turns2/` in its worktree
+    (copied to the main checkout at the merge); stage 1's
+    `.claude/probes/K80/turns/` (`compare.ts` with the harness copies
+    and `compare_rebased.md`; `turns_page.mjs`, its logs and `shots/`;
+    `k174_page.mjs`); real time's `.claude/probes/K80/rt/` and K174's
+    `.claude/probes/K174/rt/`; the research's `.claude/probes/K80/` and
+    its kept worktree `.claude/worktrees/agent-a25726c24f262b138`.
+  - next: merge stage 2 after K268 and K279 (it appends to the codec
+    from 121, as K279 does; the second to merge renumbers). Then stage
+    3's brief from its handoff: the final telegraph (2.7), the catch
+    feedback (2.8, K270), sound and fog (2.10), the wait key, the pad's
+    wait and a hover cue, a turn minoToward and the contact sheet.
+    Before any daily pins a minotaur, waits enter `fc.taps` and the
+    attempt saves, and K47's fingerprint covers the minotaur params.
+    Real time's phone check is K177.
+  - brief: `docs/design/K80_turns.md` ("Stage 2: the retune, the catch
+    resets and the stats"; four stages since 67c8cb0); real time's
+    `docs/design/K80_realtime.md`; the research brief
     `docs/design/K80.md` and its doc
     `docs/design/K80_gameplay_additions.md`.
 - **K156** · The round phone pass (K152 (1)): `scripts/phone_pass.ps1`,
@@ -666,8 +668,8 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K268 stage 1 from 16:11 and K279 stage 1
-from 16:16 (each opus, 2 h). K279's stage 2 waits for Levi's pick. At about 10:57 Levi lifted
+(he may reorder). Running: K268 stage 1 from 16:11, K279 stage 1 from
+16:16 and K80 turns stage 2 from 17:40 (each opus, 2 h). K279's stage 2 waits for Levi's pick. At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
@@ -723,15 +725,16 @@ files at their merges. Then, as code slots free up:
     is version 6, since
     K111 stage 3 took 5 (the codec note in
     `docs/design/K76_reveal_mode.md` still says 5).
-12. K80's turn-aligned hunter, a modifier of the normal maze, in three
-    stages (`docs/design/K80_turns.md`, 7699995): stage 1 (the model and
-    the mode) merged at 15:19 (0047148..68524e1); stage 2, its brief
-    written from stage 1's handoff (the burn race's stage 1, which also
-    changes how a tap becomes a turn, merged at 16:35), with K269's retune,
-    K273's catch resets, a `STATS` line for each stat it adds (a K274 test
-    enforces it) and K283's banner check; then K137's toggles, K138's
-    M mechanisms and K139. The puzzle mode adds Abbott's Theseus and the
-    Minotaur rule to `RESEARCH` (K277).
+12. K80's turn-aligned hunter, a modifier of the normal maze, in four
+    stages (`docs/design/K80_turns.md`, 7699995; four since 67c8cb0):
+    stage 1 (the model and the mode) merged at 15:19 (0047148..68524e1);
+    stage 2 (K269's retune, K278 (c), K273's catch resets, K272, section
+    2.9's stats with a `STATS` line each, K283's banner check) running
+    from 17:40; then stage 3 (the final telegraph, the catch feedback
+    with K270, sound and fog, the wait key and pad, the contact sheet)
+    and stage 4 (Abbott's puzzle mode, with Abbott's Theseus and the
+    Minotaur rule in `RESEARCH`, K277); then K137's toggles, K138's M
+    mechanisms and K139.
 13. K114's round 2, free play first: the burn race in four stages
     (`docs/design/K114_burn.md`). Stage 1 merged at 16:35
     (801c22b..ba6d574); stages 2 (real-time burning), 3 (the look) and 4
@@ -795,13 +798,14 @@ K5-K7 (split, frame loop, worker) follow.
   start), as toggles beside `minoRefog` or one dropdown, for both
   clocks. In K80 turns stage 2, reusing the burn race's restart
   (`restartSolve()` in `src/main.ts`, merged 16:35);
-  `docs/design/K80_turns.md`.
+  `docs/design/K80_turns.md`. Running from 17:40 (K80's handle).
 - **K283** · The real game's end banners after K274, from a live solve:
   `.claude/probes/K155/probe_stars.mjs` (design:phone, daily, caught,
   realtime; its aria check now expects "how stars and stats work") or
   `.claude/probes/K274/run_banner.ps1 -Base <dev server>`, under the
   perf lock. K274's agent checked the real HUD modules on a plain page
-  only. K80 turns stage 2 runs it, since it adds stat lines.
+  only. K80 turns stage 2 runs it, since it adds stat lines (running
+  from 17:40, K80's handle).
 - **K284** · Credit K74's sources (K277): `docs/design/K74_maze_design.md`
   builds its goals on Pullen (*Think Labyrinth*, "Making Difficult
   Mazes") and Zhao and Marquez 2013 (arXiv:1307.5713), but `src/` names
@@ -1005,14 +1009,15 @@ K5-K7 (split, frame loop, worker) follow.
 
 - **K270** · After a turn-aligned catch, a lavender band shows at the
   catch site in the next frame (K80 turns stage 1; undiagnosed, probably
-  a fade). `.claude/probes/K80/turns/shots/`.
+  a fade). `.claude/probes/K80/turns/shots/`. K80 turns stage 3.
 - **K271** · The turn telegraph is unchecked under K76's thread reveal:
   `syncMinotaur` hides the minotaur until `revealQuery` >= 0.98, but the
   telegraph's line may still draw over hidden thread. For K76 2c, which
   settles the minotaur under thread reveal (K257 (2)).
 - **K272** · The turn minotaur's sliders at 0: roam 0 stands still while
   roaming, and territory 0 is a random walk (K80 turns stage 1). Set the
-  minimums to 1 or define 0, in stage 2.
+  minimums to 1 or define 0, in stage 2 (running from 17:40, K80's
+  handle).
 - **K266** · The hover rim's short-run limits (K248): runs shorter than
   2 x rimGap (1.95 world at the defaults) never glow, because the end
   gaps meet, and a short run whose lit window sits under a crossing's
