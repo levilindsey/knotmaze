@@ -1184,6 +1184,8 @@ before the worker, and each build stage has `main.ts` to itself.
   and sheets. Runs after K299 merges (the same shader code). Asked Levi
   at 19:21: does touch keep its margin, and does a hovered choice keep its
   own hover look under the glow? Lore: `render-paint.md` ("HOVER GLOW").
+  Brief: `docs/design/K298_hover_glow.md` (written at 20:00, before his
+  answers; the two calls are marked in steps 4 and 5).
 
 ## Residuals (known, not fixed)
 
