@@ -76,6 +76,7 @@ src/
     paint_model.ts        # G2: data textures (KSTATIC/KGEOM/KREVEAL/KPAINT) + uniforms
     paint_const.ts        # G2: shared numeric constants (emitted into GLSL)
     float_rows.ts         # Row-partial RGBA32F data textures + uploader
+    samp_table.ts         # K8 G3-0: pure packers for the SDF data tables (SAMP, RADII, CHAIN, RANGES)
     reveal.ts             # Appearance reveal: per-sample width masks
     appear_fx.ts          # Reveal-front particles (rainbow, comet, dust, burn, roots)
     confetti.ts           # K140: finish confetti view (two ParticleContainers)
@@ -165,6 +166,7 @@ test/
     web_fade.test.ts  # K169 the fade's levels at 0 / 0.12 / 0.25 s, retarget rules
     trail_paint.test.ts  # K93 the split at several trail lengths, the ideal fade, the eps skip
     paint_explore.test.ts  # K76 kExploreAt vs pieceVis, the four anchors, master's text untouched
+    samp_table.test.ts  # K8 G3-0 packing, neighbours, RANGES = idScratch on real-scene fixtures
     paint_math / paint_fx / paint_section / paint_gameplay .test.ts  # G2
       mirror vs frozen pre-G2 code (fixtures/), exact skips, parity
   ui/
