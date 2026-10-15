@@ -1593,7 +1593,15 @@ export class ParticleSystem {
   // While grabbed, substeps pull it stiffly toward the drag target, and
   // the springs propagate the tug through the knot.
   grab(x: number, y: number, radius = 0.7): number {
-    this.grabbed = this.nearest(x, y, radius);
+    return this.grabAt(this.nearest(x, y, radius), x, y);
+  }
+
+  // Grab particle `p` (picked by the caller, e.g. with nearest()) with its
+  // drag target at (x, y); -1 or an index out of range grabs nothing.
+  // Returns the grabbed index or -1. K7: main picks on its read view and
+  // the physics host grabs by index, so a worker grabs what main picked.
+  grabAt(p: number, x: number, y: number): number {
+    this.grabbed = p >= 0 && p < this.particleCount ? p : -1;
     if (this.grabbed >= 0) {
       this.grabX = x;
       this.grabY = y;
