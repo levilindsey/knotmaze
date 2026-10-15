@@ -192,3 +192,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   daily (`test/ui/daily_link.test.ts`). All four are LIVE_EFFECTS under
   onTrailChange. Panel: gameplay-panel.md; the mode: render-explore.md's
   "In the game".
+
+- BURNT PARAM (K290 stage 3a, 2026-10-15; brief `docs/design/K114_burn.md`):
+  `burnt` (`fbt`: gone | char; default gone) is APPENDED at 139, after
+  `revealLook` (138); CODEC_VERSION stays 6, and the table pin
+  (`test/ui/param_codec.test.ts`) and url_codec's table gained the key.
+  Not daily-exempt (a daily plays with the fire off, so it never shows
+  there). A LIVE_EFFECT under onTrailChange (undo_stack); main.ts
+  `syncExploration` copies it to the fabric renderer's `burntLook` every
+  tick. The look: gameplay-fire.md's BURNT THREAD.

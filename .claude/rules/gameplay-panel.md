@@ -137,3 +137,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   "reveal distance" ([1, 12], step 0.25), "reveal fade" ([0.35, 4], step
   0.05) and "reveal end" (the six looks) only under threads. All run
   onTrailChange. Params: gameplay-links.md.
+
+- BURNT ROW (K290 stage 3a, 2026-10-15): "burnt" (gone / char) in the
+  Burn race folder, after fireDelay, hidden while the fire is off like
+  fireSpeed and fireDelay; it runs onTrailChange (live, no restart). Params:
+  gameplay-links.md; the look: gameplay-fire.md's BURNT THREAD.

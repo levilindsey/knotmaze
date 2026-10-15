@@ -5610,9 +5610,11 @@ async function main(): Promise<void> {
       fade?: number;
       look?: string | number;
       visitAll?: boolean;
+      burnt?: string; // K290: the burnt thread's look, "gone" or "char"
     } = {}
   ) => {
     if (!fabric || !fabricController) return null;
+    if (o.burnt === "gone" || o.burnt === "char") params.burnt = o.burnt;
     // Stage 2c: through the params (the frame loop syncs them every tick).
     // The numbers go in raw, past the panel's ranges (a reach of 1000 shows
     // every stub whole).

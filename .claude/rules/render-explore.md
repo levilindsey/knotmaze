@@ -401,3 +401,65 @@ gameplay-links.md's EXPLORATION PARAMS.
   <outDir> desktop|phone [ABCD]`: A fit and hidden input, B a catch's
   partial, C a re-fogging catch, D the intro; `k76_probe.mjs ab`;
   `run_2c.ps1`, under the perf lock).
+
+## THE BURN (K290 stage 3a, 2026-10-15)
+
+The burn race's burnt thread (gameplay-fire.md's BURNT THREAD) draws
+through this mode's programs. Brief and record: `docs/design/K114_burn.md`,
+"Stage 3a plan" and "Stage 3a handoff".
+
+- MODEL (`game/explore_view.ts`, tested in `test/game/explore_burn.test.ts`):
+  `BurntSpan {chain, b0, b1}` (chain ctrl, b0 < b1, a ring's span may run
+  past n); `subtractBurnt(pieces, spans, ringN)` cuts burnt stretches out
+  of declared pieces (`cutPiece`, CUT_EPS: a cut through a piece's solid
+  part is a hard end, fade 0 and no frontier; a cut through a fade
+  shortens the fade); `wholePieces(chains)` is every chain whole (the reveal-off
+  base). `ExploreBurn {gate, char}`: `gate` = the reveal's own pieces
+  (null with the reveal off), `char` = the spans to darken (null under
+  gone).
+- DECLARATION (`FabricMazeRenderer.syncExplore`): reveal on: the reveal's
+  pieces, less the burnt spans under gone; reveal off and something burnt:
+  `burnOnlyPieces` (whole chains, less the burnt spans under gone); reveal
+  off and nothing burnt: `setExplore(null)`, master's path and programs.
+  `ribbons.setExplore(pieces, look, breath, burn)` skips identical
+  declarations (`sameBurn`).
+- CHAR IN THE SHADERS: items of type `EXPLORE_ITEM_CHAR` (6) in the
+  KPAINT item rows (`charItem`; `charRange`, the span plus
+  EXPLORE_CHAR_EDGE at each end, is the unwrapped range its slot
+  references cover), like VIS not a PAINT_ITEM, and a per-chain flag in
+  the chain texel's .y (`paint_model.setExploreFlags(flags, char)`).
+  `kCharAt(chain, ctrl)` sums each span's ramp (EXPLORE_CHAR_EDGE 0.08
+  ctrl centered on each end, so abutting spans sum to 1: no seam);
+  `kCharLook` mixes char (0x22140e, 0.9) and the ash core (0x7a3a22,
+  0.75, |vUV.y - 0.5| < EXPLORE_ASH_HALF 0.15). The section program
+  recolors rgb only, just before `aM *= ev`, so the crossing gaps cut
+  char like thread; the arm strip (`kStripChar`) chars without the ash
+  core. No CPU twin (K152 item 3).
+- JOINTS: the gate decides which junctions hide (2b's rule, on the
+  reveal's own pieces through `exploreGateVisAt`); the declared pieces,
+  which lack the burnt thread, hide a junction only when every arm is gone.
+  Otherwise the web draws and a burnt arm's lobe fades with its strip (the
+  joint fade). Without a burn the two are the same pieces, so the 2b rule
+  holds exactly.
+- INPUT AND HALOS: `shownAt` (taps, hover) reads `exploreShownAt` whenever
+  `ribbons.exploreOn`, so gone thread is empty space with the reveal off
+  too, and `onThread` uses pickThread for the whole race once anything
+  burns. Frontier halos whose midpoint is burnt under gone are dropped
+  (`burntGoneAt`).
+- PROBE HOOK: `__knotExplore({burnt: "gone" | "char"})` sets the param
+  (the frame loop syncs it), alone or with `on`; the fabric renderer's
+  `burnSpans` are the declared stretches (`.claude/probes/K290/stage3a/
+  sheet.mjs` sums them into the burnt share).
+- MEASURED (desktop RX 6800 XT, D3D11, under the perf lock;
+  `.claude/probes/K290/stage3a/`): fire off, branch c7a03e0 against master
+  f799991 (`k290_ab.mjs ab`, link `k111&am=instant&snd=none&fw=0&phy=0`):
+  reveal off 0 px at four pulse phases, a hovered choice 0 px, reveal on
+  (beacon) 0 px at two phases, on-then-off 0 px, A/A floors 0. The probe's
+  PIN must hold the halo breath (`exploreClock = 1000`, tickExplore with
+  dt 0), or the halos differ by 14-18k px between pages. Fire on with
+  nothing burnt (env `LINK=` the same link plus `&fi=fuse&fdl=40`, two
+  moves in, the lit fuse drawn): the same 31 checks, all 0 px.
+  `sheet.mjs` is the contact sheet; `warn_check.mjs` showed
+  master and branch print the same 13 PixiJS "Attribute aGap / aGapId /
+  aUV is not present in the shader" warnings at load in a fire race, so
+  they predate 3a.
