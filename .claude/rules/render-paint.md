@@ -97,6 +97,35 @@ only with the files it is about; `render.md` lists the area's other files.
   renamed from PULSE_REACH) swallows the crests; at 3 one crest emerges
   past the glow and dissolves, clearly short of a median run (3.7).
 
+- HOVER GLOW (K145, 2026-10-14; brief `docs/design/K93_K145.md`): the
+  run under the pointer lights subtly along both rims when it is not a
+  choice (a choice keeps its own, stronger hover). One KPAINT item,
+  `(RIM, c0, c1, gap)`, written LAST; the strength (`hoverGlow`, hg=,
+  codec index 105, default 0.4, 0 = off) and the hover point (an
+  unwrapped ctrl on the run) are uniforms (uKReach.z, .w), so a pointer
+  moving along one run rewrites no texel. Across: kRimAcross, x² over
+  the outer RIM_EDGE 0.6 of each half (ribbon uv.y). Along: 1 -
+  smooth(d / pulseReach) from the hover point, NO floor (K219, Levi:
+  "Hover should honor the slider."), faded in over RIM_END_FADE 0.75
+  past an end GAP at each end (rimGap: the junction web's reach along an
+  arm), because webs draw over the ribbons from arm strips, which carry
+  no across coordinate. Strength 0 writes no item: the paint is exactly
+  the glow-less one. Not shown on webs, fans or arm strips, under a pluck
+  overlay (composedAtArc has no across coordinate), or in debug view 5.
+  Touch shows it while a press lasts; a mouse leaving the canvas clears
+  it. Census (census_rim.mjs, 7 across positions): GPU vs mirror <=
+  0.6/255. Same state vs master (ab_frames.mjs + set_glow.js): no hover
+  and strength 0 with a glow forced are bit-identical; at 0.4, 367 px,
+  all on the run's rims, none on a web. GPU (gpu_by_program.mjs, perf
+  lock): the ribbon program +0.04-0.05 ms at rest and mid-hover, inside
+  master's own 0.11 ms round-to-round spread. Default from same-state
+  sheets (glow_sheet.mjs, a 9-world run): 0.25 barely visible, 0.4
+  subtle but readable, 0.6 clearly bright. PROBE LESSON: `png.mjs` decodePNG
+  returns `{W, H, ch, data}` (ch 3 for puppeteer shots); diffs that read
+  `.width`/`.height` never ran their loop and reported "0 px changed",
+  which read as a GPU that ignored the glow. Probes:
+  `.claude/probes/K145/`.
+
 RENDER LORE (hard-won, 2026-10-09; the strip is RETIRED by G2.3 - paint is
  per pixel now, nothing interpolates U): **the palette strip's ORDER was
 load-bearing.** Per-vertex UVs interpolate linearly between samples, so

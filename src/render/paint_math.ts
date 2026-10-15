@@ -259,7 +259,7 @@ export interface KUniforms {
   uKSect: Float32Array; // (blendDist, ease, -, -)
   uKPaint: Float32Array; // (on, refBase, itemBase, hover)
   uKPulse: Float32Array; // (travelIn, travelOut, spacing, fadeIn)
-  uKReach: Float32Array; // (reach, fade, -, -) pulse trains (K75)
+  uKReach: Float32Array; // (reach, fade, rim, rimAt) pulse trains (K75), hover glow (K145)
   uKGold: Float32Array; // (gold rgb, -)
 }
 
