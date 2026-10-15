@@ -105,7 +105,10 @@ files.
   re-declares only when the spans or the look change. With the reveal off,
   nothing burnt keeps master's frame (no explore program bound); once
   anything burns, every chain is declared whole and the burn cut from it,
-  so `ribbons.exploreOn` stays true for the rest of the race. Stage 1's
+  so `ribbons.exploreOn` stays true for the rest of the race. Under the
+  thread reveal, char shows only the burnt thread the reveal shows, but
+  stage 1's embers still draw at every front, seen or not (sheet
+  a12_on_char: about 30 over hidden thread). Stage 1's
   char and ash strokes are gone; its embers, smoldering arms and lit fuse
   still draw as Graphics (stage 3b, with the front's char band and the
   `burn` FX on tipsAt). Contact sheet (gone vs char, reveal off and on,

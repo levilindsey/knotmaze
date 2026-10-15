@@ -422,7 +422,11 @@ through this mode's programs. Brief and record: `docs/design/K114_burn.md`,
   `burnOnlyPieces` (whole chains, less the burnt spans under gone); reveal
   off and nothing burnt: `setExplore(null)`, master's path and programs.
   `ribbons.setExplore(pieces, look, breath, burn)` skips identical
-  declarations (`sameBurn`).
+  declarations (`sameBurn`). The char items cover every burnt span, but
+  the section and strip programs scale char by the declared visibility
+  (`aM *= ev`), so under the reveal char shows only seen burnt thread
+  (the sheet's a12: the walked route only; with the reveal off, the whole
+  burnt half).
 - CHAR IN THE SHADERS: items of type `EXPLORE_ITEM_CHAR` (6) in the
   KPAINT item rows (`charItem`; `charRange`, the span plus
   EXPLORE_CHAR_EDGE at each end, is the unwrapped range its slot
