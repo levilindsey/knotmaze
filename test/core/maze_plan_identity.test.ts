@@ -12,6 +12,9 @@ import type { TangleGraph } from "../../src/core/types";
 import { PARAM_DEFAULTS } from "../../src/ui/url_state";
 import type { UrlParams } from "../../src/ui/url_state";
 import { dailyParams } from "../../src/ui/daily_link";
+import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
+import { buildWalkGraph } from "../../src/core/walk_graph";
+import { walkFingerprint } from "../../src/game/daily_attempt";
 import { buildMazePlan as buildMazePlanV1 } from "./fixtures/maze_plan_v1";
 
 // K87: the incremental pickFarthest must pick exactly what the full rescan
@@ -244,46 +247,49 @@ function k74Cases(): [string, UrlParams][] {
 }
 
 // Frozen 2026-10-13 (K74 stage 1: density 0.5, length 20, clearance 12).
+// Re-frozen 2026-10-14 by K74 stage 2: every plan now carries hCutShare 1
+// (H1 runs after the plan, in applyMazeCuts). Nothing else moved: without
+// that field each plan hashed to its stage-1 value.
 const K74_PLANS: Record<string, string> = {
-  "defaults gs 6 rect": "7b563d74",
-  "defaults gs 6 heart": "0b0fac62",
-  "defaults gs 6 star": "883b1be7",
-  "defaults gs 6 fish": "111bb54c",
-  "defaults gs 6 tree": "d23ceb71",
-  "defaults gs 6 ring": "c4fa9557",
-  "defaults gs 6 circle": "3f66e608",
-  "defaults gs 12 rect": "120f9213",
-  "defaults gs 12 heart": "4fac7bae",
-  "defaults gs 12 star": "1d556bf4",
-  "defaults gs 12 fish": "793cc31f",
-  "defaults gs 12 tree": "4922ff83",
-  "defaults gs 12 ring": "649821fd",
-  "defaults gs 12 circle": "dbd382a5",
-  "defaults gs 18 rect": "5c0d5b57",
-  "defaults gs 18 heart": "37507333",
-  "defaults gs 18 star": "7c536956",
-  "defaults gs 18 fish": "fd440c11",
-  "defaults gs 18 tree": "38f06473",
-  "defaults gs 18 ring": "6d18dee6",
-  "defaults gs 18 circle": "709917a2",
-  "random 0": "810bf278",
-  "random 1": "1f52a4ac",
-  "random 2": "f80b1c9a",
-  "random 3": "1efc8767",
-  "random 4": "62511e2b",
-  "random 5": "8fb42d01",
-  "random 6": "4f99d6a8",
-  "random 7": "a784159c",
-  "random 8": "a0c1914d",
-  "random 9": "5bc0c0a2",
-  "random 10": "874a505e",
-  "random 11": "e38cd98e",
-  "dense gs 14 rect": "18509faa",
-  "dense gs 14 heart": "4923691a",
-  "dense gs 14 ring": "5a545732",
-  "daily 1": "188d5363",
-  "daily 2": "2e0ce04e",
-  "daily 3": "fcdf8a01",
+  "defaults gs 6 rect": "ddae9088",
+  "defaults gs 6 heart": "9e5ea326",
+  "defaults gs 6 star": "9cea5f03",
+  "defaults gs 6 fish": "e5836320",
+  "defaults gs 6 tree": "9094dd95",
+  "defaults gs 6 ring": "60f099f3",
+  "defaults gs 6 circle": "43494f7c",
+  "defaults gs 12 rect": "2e17538f",
+  "defaults gs 12 heart": "10927792",
+  "defaults gs 12 star": "462d1b08",
+  "defaults gs 12 fish": "b1b322fb",
+  "defaults gs 12 tree": "7413053f",
+  "defaults gs 12 ring": "49f32ce1",
+  "defaults gs 12 circle": "2f5f7229",
+  "defaults gs 18 rect": "f879eff3",
+  "defaults gs 18 heart": "e7a96faf",
+  "defaults gs 18 star": "80dee51a",
+  "defaults gs 18 fish": "7ada7635",
+  "defaults gs 18 tree": "837e146f",
+  "defaults gs 18 ring": "108d21aa",
+  "defaults gs 18 circle": "a6a499e6",
+  "random 0": "a9323e2c",
+  "random 1": "8156c080",
+  "random 2": "cd438fbe",
+  "random 3": "a5c6de83",
+  "random 4": "09b708c7",
+  "random 5": "8cc2ee25",
+  "random 6": "525d021c",
+  "random 7": "1f5cfd30",
+  "random 8": "83a385f1",
+  "random 9": "18921ae6",
+  "random 10": "b0588982",
+  "random 11": "a89d44f2",
+  "dense gs 14 rect": "e6ce27ce",
+  "dense gs 14 heart": "023a083e",
+  "dense gs 14 ring": "11d1ec36",
+  "daily 1": "eb6a221f",
+  "daily 2": "372e2732",
+  "daily 3": "e9250325",
 };
 
 describe("maze plan at the K74 defaults", () => {
@@ -295,5 +301,116 @@ describe("maze plan at the K74 defaults", () => {
       got[label] = fnv(JSON.stringify(plan));
     }
     expect(got).toEqual(K74_PLANS);
+  });
+});
+
+// K74 stage 2: the APPLIED maze. H1 (the fused arm cut, hCutShare) runs
+// after the plan, so the plan pin above cannot see it: this pins the walk
+// graph each case builds (K47's walkFingerprint: size, start and exit, every
+// run's ends and length), with H1 off and at today's share. Share 0 is the
+// maze every link built before stage 2; a re-freeze names what moved.
+const K74_WALKS_H0: Record<string, string> = {
+  "daily 1": "w1.189.283.c10fffd3",
+  "daily 2": "w1.183.270.0f7f6cac",
+  "daily 3": "w1.182.271.4d833e44",
+  "defaults gs 12 circle": "w1.44.62.300f2310",
+  "defaults gs 12 fish": "w1.12.16.da837cbf",
+  "defaults gs 12 heart": "w1.19.26.a840cfad",
+  "defaults gs 12 rect": "w1.73.106.772a70de",
+  "defaults gs 12 ring": "w1.32.44.b5766deb",
+  "defaults gs 12 star": "w1.10.13.f14a9244",
+  "defaults gs 12 tree": "w1.22.30.70706dc6",
+  "defaults gs 18 circle": "w1.130.191.0fddd5c1",
+  "defaults gs 18 fish": "w1.51.73.a0cc803b",
+  "defaults gs 18 heart": "w1.71.103.a98c99c0",
+  "defaults gs 18 rect": "w1.179.267.049e0044",
+  "defaults gs 18 ring": "w1.87.124.6f465415",
+  "defaults gs 18 star": "w1.54.77.763c4477",
+  "defaults gs 18 tree": "w1.76.110.c55e87f9",
+  "defaults gs 6 circle": "w1.6.7.86325bb4",
+  "defaults gs 6 fish": "w1.6.7.c2983d87",
+  "defaults gs 6 heart": "w1.6.7.c8ec8c3b",
+  "defaults gs 6 rect": "w1.10.12.05c90d7d",
+  "defaults gs 6 ring": "w1.12.16.aeedd081",
+  "defaults gs 6 star": "w1.8.10.7891c05b",
+  "defaults gs 6 tree": "w1.4.4.b304cbe2",
+  "dense gs 14 heart": "w1.264.395.87a987f0",
+  "dense gs 14 rect": "w1.495.739.7421b721",
+  "dense gs 14 ring": "w1.227.352.24f2fff6",
+  "random 0": "w1.6.7.c507f54a",
+  "random 1": "w1.6.7.d9e35fd9",
+  "random 10": "w1.16.21.3cb30ebb",
+  "random 11": "w1.6.7.07dd12bd",
+  "random 2": "w1.5.4.fa474055",
+  "random 3": "w1.55.80.41299285",
+  "random 4": "w1.6.7.9e48fc99",
+  "random 5": "w1.24.33.4456e1de",
+  "random 6": "w1.26.40.141ceefd",
+  "random 7": "w1.28.48.63fe8210",
+  "random 8": "w1.24.33.ed42d0c5",
+  "random 9": "w1.18.26.5aa670f4",
+};
+// Same sizes as share 0: a fused cut moves one branch point (B becomes a
+// turn, X a junction), so only the runs' ends and lengths change.
+const K74_WALKS_DEFAULT: Record<string, string> = {
+  "daily 1": "w1.189.283.b4cb9fc4",
+  "daily 2": "w1.183.270.e3ee4fc8",
+  "daily 3": "w1.182.271.bba04938",
+  "defaults gs 12 circle": "w1.44.62.3e87bda8",
+  "defaults gs 12 fish": "w1.12.16.d0c1b1ad",
+  "defaults gs 12 heart": "w1.19.26.33630a25",
+  "defaults gs 12 rect": "w1.73.106.35515aa3",
+  "defaults gs 12 ring": "w1.32.44.26e812f5",
+  "defaults gs 12 star": "w1.10.13.584da9a4",
+  "defaults gs 12 tree": "w1.22.30.51099138",
+  "defaults gs 18 circle": "w1.130.191.136fde1d",
+  "defaults gs 18 fish": "w1.51.73.22470579",
+  "defaults gs 18 heart": "w1.71.103.de55b286",
+  "defaults gs 18 rect": "w1.179.267.5dfaf560",
+  "defaults gs 18 ring": "w1.87.124.3e973df3",
+  "defaults gs 18 star": "w1.54.77.da854630",
+  "defaults gs 18 tree": "w1.76.110.fd20a1b2",
+  "defaults gs 6 circle": "w1.6.7.0a4edf51",
+  "defaults gs 6 fish": "w1.6.7.c2983d87",
+  "defaults gs 6 heart": "w1.6.7.45ad1a1f",
+  "defaults gs 6 rect": "w1.10.12.05c90d7d",
+  "defaults gs 6 ring": "w1.12.16.95f9966c",
+  "defaults gs 6 star": "w1.8.10.1c4c6409",
+  "defaults gs 6 tree": "w1.4.4.b304cbe2",
+  "dense gs 14 heart": "w1.264.395.87a987f0",
+  "dense gs 14 rect": "w1.495.739.4510a1cf",
+  "dense gs 14 ring": "w1.227.352.24f2fff6",
+  "random 0": "w1.6.7.c507f54a",
+  "random 1": "w1.6.7.d9e35fd9",
+  "random 10": "w1.16.21.94bb0ba5",
+  "random 11": "w1.6.7.07dd12bd",
+  "random 2": "w1.5.4.fa474055",
+  "random 3": "w1.55.80.9cb4bfcd",
+  "random 4": "w1.6.7.9e48fc99",
+  "random 5": "w1.24.33.420abbed",
+  "random 6": "w1.26.40.764c0b89",
+  "random 7": "w1.28.48.054eb0a0",
+  "random 8": "w1.24.33.75ad67bd",
+  "random 9": "w1.18.26.26f2b674",
+};
+
+function appliedWalk(p: UrlParams): string {
+  const g = graphOf(p);
+  const plan = buildMazePlan(graphOf(p), mazeParamsOf(p));
+  applyMazeCuts(g, plan, applyMazePlan(g, plan));
+  return walkFingerprint(buildWalkGraph(g)!);
+}
+
+describe("applied maze at the K74 defaults (stage 2, H1)", () => {
+  it("builds the pinned walk graphs with H1 off and at the default share", () => {
+    expect(PARAM_DEFAULTS.hCutShare).toBe(1);
+    const off: Record<string, string> = {};
+    const on: Record<string, string> = {};
+    for (const [label, p] of k74Cases()) {
+      off[label] = appliedWalk({ ...p, hCutShare: 0 });
+      on[label] = appliedWalk(p);
+    }
+    expect(off).toEqual(K74_WALKS_H0);
+    expect(on).toEqual(K74_WALKS_DEFAULT);
   });
 });

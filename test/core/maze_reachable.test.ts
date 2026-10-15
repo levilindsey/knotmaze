@@ -328,6 +328,9 @@ describe("maze plan: every piece reachable from the start (K110)", () => {
     // on, plus the densest and longest tails the sliders allow. Long tails
     // are placed before the choices; K110's joins still make every plan
     // whole (.claude/probes/K74/verify_reach.ts: 0 of 3780 designs fail).
+    // Since K74 stage 2 the defaults run H1's fused arm cuts at share 1
+    // after the plan, so the walk checks below cover them too
+    // (.claude/probes/K74/stage2/verify_reach.ts: 0 of 3780 fail).
     const tails: Partial<UrlParams>[] = [{}, { deadEndDensity: 1 }, { deadEndLength: 40 }];
     const designs: UrlParams[] = [];
     let seed = 109000;

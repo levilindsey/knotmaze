@@ -926,6 +926,17 @@ function fuseHCuts(
       }
       graph.nodes.get(o.arm.x)!.type = NODE_TYPE.JUNCTION;
       graph.nodes.get(o.B)!.type = NODE_TYPE.TURN;
+      // Edges are stored in traversal order (nodeA = from): the kept strand
+      // may run the bridge from either end, so turn it round when it runs
+      // B -> A against its storage. A two-point edge, so physics (its mid
+      // particle) and the walk graph (its length) read it the same.
+      const be = graph.edges.get(bridgeEdge)!;
+      const bj = kept.edgeIds.indexOf(bridgeEdge);
+      if (be.nodeA !== kept.nodes[bj]) {
+        be.nodeA = kept.nodes[bj];
+        be.nodeB = kept.nodes[bj + 1];
+        be.latticePoints = [...be.latticePoints].reverse();
+      }
       work[o.h] = kept;
       work[bi] = null;
       if (rest) {

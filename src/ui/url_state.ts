@@ -507,7 +507,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   fourWayFraction: 0.12,
   deadEndDensity: 0.5, // K74 (was 0.25).
   deadEndLength: 20, // K74.
-  hCutShare: 0, // K74 stage 2 (H1).
+  hCutShare: 1, // K74 stage 2 (H1): every H.
   pluckStyle: "string",
   pluckSize: 1.75, // Was 1 until 2026-10-11.
   pluckGhost: 0.35,
