@@ -110,3 +110,196 @@ of this file. It covers:
     each with a recommendation;
   - the handle fields: owner, branch + last commit, evidence, next,
     brief.
+
+## Stage 2 (G3-0)
+
+Written by stage 1 on 2026-10-15. G3-0 is section 5.1 of
+`docs/design/G3G4_sdf_geometry.md`: the data plane for the SDF ribbons,
+with no visual change. `RibbonRenderer.update()` starts writing four
+page-lifetime float tables that no shader reads yet: SAMP, RADII,
+G3 CHAIN and RANGES, laid out as the doc's section 2.2 says. G3-1 and
+G3-2 will read them. G3-0 also adds the two tools later stages measure
+with: a same-state capture/restore hook and a frame bench for the phone.
+
+One opus agent, code. Ports: as the coordinator assigns. Start from
+current master, not d741412: K7 stage 3 (the worker host behind `phw`)
+and K344 (`selfArc` in the pluck host) landed after the re-base, so the
+doc's line numbers drift.
+
+### Scope and files
+
+- New `src/render/samp_table.ts`, pure packers with no Pixi and no GL:
+  - SAMP: two samples per RGBA32F texel, each chain's base even;
+  - RADII: four radii (h × widthMul) per texel, only for chains whose
+    widthMul isn't 1;
+  - G3 CHAIN: two texels per chain, with radBase −1 for unit width and
+    nRange 0;
+  - RANGES: per chain, the slot windows sorted by kLo. They must
+    reproduce what `assignGapIds` packs per sample into `idScratch`
+    today. Only the slot windows: the FOLD ranges arrive with G3-2 and
+    the CLUSTER entries with G4-0.
+- `src/render/ribbon_renderer.ts`:
+  - the four tables as G2 `FloatRows` (page-lifetime, grown in place,
+    dirty rows only), written in `update()`. Nothing writes while the
+    knot sleeps;
+  - `g3Data`, a renderer property (default on) that skips the writes,
+    so one page can time the cost with the writes on and off in
+    alternation, free of the phone's drift between two builds;
+  - `captureScene()` / `restoreScene(s)` (section 5.0). List what
+    `update()` reads besides the particle positions (the emergent list,
+    the gate latches and `gateCache`, `flowTime`, the paint clocks, the
+    reveal and explore state) and capture all of it. The physics part
+    can reuse `src/physics/snapshot.ts` (read only) or copy the arrays
+    the renderer reads from its `ps`. The capture is plain data a probe
+    carries between pages as JSON, so encode typed arrays (base64, say);
+  - `SAMP_UPLOAD_STATS`, the bytes and calls of G3's own tables.
+    `FloatRows` counts every instance into `ROW_UPLOAD_STATS`, so split
+    out G3's share (a per-instance counter in `float_rows.ts` is an
+    additive change) or measure deltas against master. Report it from a
+    renderer method of its own, the way `exploreGapState()` reports
+    `GAP_UPLOAD_STATS` (ribbon_renderer.ts ~4778), rather than inside
+    that K76 method.
+- New `scripts/bench_frame.mjs` (tracked): the `gl.finish()` frame bench
+  of section 5.0, for the desktop and, over CDP, the Pixel.
+- New `test/render/samp_table.test.ts`.
+- `CLAUDE.md`: one line each for the new module and its test under
+  Project Structure. Lore about the tables goes to the render topic file
+  that attaches with `ribbon_renderer.ts` (`docs/lore_index.md` maps
+  them), not to CLAUDE.md.
+
+**Stays out of:**
+- `src/main.ts`, which K7's stages 3-4 own. Everything hangs off
+  `__knotRenderer()` (main.ts ~4829). Stage 1's brief allows at most one
+  dev-only hook there, outside the load path; G3-0 shouldn't need it;
+- `src/physics/*`;
+- every GLSL string. No program changes, so K307's registry and warm-up
+  are untouched;
+- `pluck_overlay.ts` (K279 stage 2), `paint_*.ts` and `explore_glsl.ts`
+  (the reveal chain), `gap_mask.ts` (G3-1), and the fans (G4).
+
+### Tests
+
+- Packing: even chain bases, two samples per texel, four radii per
+  texel, the unit flag (radBase −1), row partials.
+- Neighbours: closed chains wrap and open chains clamp. An open chain
+  never gets a last-to-first chord (invariant 6).
+- RANGES reproduce `idScratch`'s per-sample ids exactly, on fixtures
+  dumped from real scenes: a daily, dense, a fat design, and G1's ring
+  link (`ring` in `.claude/probes/g1/urls.mjs`). Check them in as G2 did
+  its `test/render/fixtures/`.
+- SAMP decodes to `chainSamples` bit for bit after float32 rounding.
+- `npm test` green; `test/physics/byte_identity.test.ts` untouched.
+
+### Pixel A/B: 0 px on at least four links
+
+The recipe is section 5.0, and `.claude/rules/probes.md` attaches when
+you read a probe. The pattern to copy is `k83_ab.mjs`. The probes live
+in the main checkout's `.claude/probes/`, which is untracked and so
+absent from your worktree: run them by absolute path, e.g.
+`C:\Users\lsl\Repositories\knotmaze\.claude\probes\K83\k83_ab.mjs`.
+Serve master and your branch with
+`pwsh scripts/preview.ps1 -Port <p> -Ref <commit>` and check each page's
+stamp SHA.
+
+Master has no capture hook, so the cross-build A/B loads with `phy=0`
+(a deterministic layout), pins the clocks
+(`r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn = 0`) and
+parks the pointer. Every link but the daily ends in
+`&am=instant&fw=0&phy=0&snd=none`.
+1. A daily: `?daily=<n>&snd=none&phy=0`, captured after its intro.
+   `fw` and `am` aren't daily-exempt, so either would make it an
+   ordinary design. Zero or pin the flow at runtime instead: check
+   whether `__knotParams()` returns the live params, or whether pinning
+   `advanceClocks` also holds `flowTime`. If neither holds, use the
+   fallback `?<the day's seed>&am=instant&fw=0&phy=0&snd=none` (the same
+   maze as an ordinary design) and label it.
+2. A fat design: `?b&tw=.64`.
+3. The thread reveal on: `?b`, then `__knotExplore({ on: true })` after
+   load. Master has no link key for it until K76 2c lands.
+4. Dense: `?b&gs=24&wd=0.6&brd=0.6`.
+5. Also the default fabric `?b` and knot mode `?7k&mf=0`.
+
+Then:
+- physics on, on your build: settle, freeze the in-thread host
+  (`__knotPS().step = function () {}`; don't pass `phw=1`), capture,
+  load the same link in a second page, freeze it, restore. 0 px on the
+  same links without `phy=0`. If K7 stage 5 has made the worker the
+  default by then, add `&phw=0`, or freeze the worker with
+  `__knotPhysFreeze(true)` (K7 stage 4);
+- GL readback of the four tables against the packers: copy
+  `C:\Users\lsl\Repositories\knotmaze\.claude\probes\probe_texreadback.mjs`
+  into your probes folder and extend the copy. Max |Δ| 0, including a
+  frame mid-intro on a daily, so that RADII rows exist;
+- record `webglcontextlost` and fail on it.
+
+### Upload and CPU cost, under the perf lock
+
+Take `$env:TEMP\claude-perf.lock` before any pixel-exact or timed probe.
+It is one line: owner, start time, what. If someone else holds it, wait
+inside ONE blocking command (a loop with a timeout in a single shell
+call). A lock older than 30 min is stale. Delete it when done.
+
+- **Upload:** read `SAMP_UPLOAD_STATS` (and `ROW_UPLOAD_STATS`,
+  `GAP_UPLOAD_STATS`) over a fixed number of awake updates at the
+  default fabric and dense, against master. Expect G3's tables to add
+  about 0.19 MB per awake update at the default and about 0.35 MB dense,
+  and 0 B asleep at `fw=0`.
+- **CPU:** time `update()` the way
+  `C:\Users\lsl\Repositories\knotmaze\.claude\probes\g1\probe_perf.mjs`
+  wraps it, at the default fabric and dense: master against your build,
+  and `g3Data` off against on in one page.
+
+**Acceptance:**
+- `update()` at most +0.3 ms on the desktop and at most +1 ms on the
+  Pixel;
+- the uploads as above;
+- 0 px on every A/B, and readback max |Δ| 0.
+
+### Phone pass, if the phone is reachable
+
+Use `pwsh scripts/phone.ps1 [-Wireless] [-Ports <p>,<q>] [-Url <link>]`
+and `C:\Users\lsl\Repositories\knotmaze\.claude\probes\phone_probe.mjs`.
+Record:
+- the caps: `MAX_VARYING_VECTORS`; `getShaderPrecisionFormat` for highp
+  and mediump floats in both stages; `MAX_TEXTURE_SIZE`; the renderer
+  string (`WEBGL_debug_renderer_info`);
+- the frame bench for master and your build at the default fabric and
+  dense, alternating builds (A B A B);
+- `update()` on the phone, master against your build.
+
+If the phone isn't reachable, say so in the handoff. It becomes a
+residual, not a blocker.
+
+### Order of work
+
+Commit WIP on your branch at every milestone, broken or not. Never push,
+and don't edit `LEDGER.md`.
+1. The packers and their tests.
+2. The `update()` writes, the readback and the upload counter.
+3. The cross-build A/B, and the CPU and upload numbers.
+4. Capture/restore and its round trip.
+5. The frame bench and the phone pass.
+
+Keep probes and results in the main checkout's untracked
+`C:\Users\lsl\Repositories\knotmaze\.claude\probes\K8\stage2\`, which
+outlives your worktree, and anything reusable in tracked `scripts/`.
+
+### Stop rule
+
+- Run `Get-Date` at the start and at each milestone.
+- Stop when the stage is done or at 2 h, whichever comes first.
+- Helpers, if any: sonnet, mechanical work only (screenshots, scans),
+  under the same rule with a 1 h cap.
+- A compaction is not a stop. After one, re-read this section,
+  `git log -5` and your notes before going on.
+- On stopping:
+  1. commit;
+  2. append a "Stage 2 handoff" here (state, the numbers, what's left)
+     and commit;
+  3. report:
+     - the commits;
+     - the measurements;
+     - `Ledger items`: follow-ups, residuals and questions for Levi,
+       each with a recommendation;
+     - the handle fields: owner, branch + last commit, evidence, next,
+       brief.
