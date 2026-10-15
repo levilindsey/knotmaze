@@ -1478,7 +1478,10 @@ export function kExploreAt(
 // point of a frontier fade (u = progress through it, < 0 outside one; s =
 // world arc from the solid end; lat = vUV.y - 0.5; sideFw = vUV.y per pixel;
 // tw = uKExplore.w). The fade and halo looks, and every look outside a
-// frontier, return v.
+// frontier, return v. K76 stage 2d: `hc` is High contrast (uKExplore.x 2),
+// under which the dots draw at full strength; `out.dot` is the GLSL's kExDot
+// (1 where the point's nearest shape is a dot, which the thread's main paints
+// pure white; 0 on the cap and in every other look).
 export function kExploreLookCpu(
   look: number,
   v: number,
@@ -1487,8 +1490,11 @@ export function kExploreLookCpu(
   lat: number,
   sideFw: number,
   pxW: number,
-  tw: number
+  tw: number,
+  hc = false,
+  out?: { dot: number }
 ): number {
+  if (out) out.dot = 0;
   if (u < 0 || look < 2) return v;
   if (look === 2) return 1 - smooth01((u - 0.4) / 0.6);
   if (look === 4) {
@@ -1511,19 +1517,22 @@ export function kExploreLookCpu(
   const dx = s - kk * sp;
   const dDot = Math.sqrt(dx * dx + la * la) - 0.3 * tw * (1 - 0.4 * u);
   const dd = Math.min(dCap, dDot);
+  if (out) out.dot = dDot < dCap ? 1 : 0;
   const c = -dd / pxW + 0.5;
-  return (c < 0 ? 0 : c > 1 ? 1 : c) * (1 - 0.55 * u * u);
+  return (c < 0 ? 0 : c > 1 ? 1 : c) * (hc ? 1 : 1 - 0.55 * u * u);
 }
 
 // GLSL twin: exploreCutCover (explore_glsl.ts, K268) - the over thread's
 // coverage at arc A of a shaped slot's frame, from its 12 profile floats
-// (P0, P1 = the ramps [aS, F, dK, tK], P2 = [strength, flags, 0, 0]).
+// (P0, P1 = the ramps [aS, F, dK, tK], P2 = [strength, flags, 0, 0]). `hc`:
+// High contrast (K76 stage 2d; the dots cut at full strength).
 export function exploreCutCoverCpu(
   prof: ArrayLike<number>,
   A: number,
   look: number,
   tw: number,
-  pxW: number
+  pxW: number,
+  hc = false
 ): number {
   const fl = Math.round(prof[9]);
   const mx = (fl & GAP_PROF_MAX) !== 0;
@@ -1552,7 +1561,7 @@ export function exploreCutCoverCpu(
     }
   }
   if (best > 1) return 1;
-  return kExploreLookCpu(look, best, bu, bs, 0, pxW / Math.max(tw, 1e-6), pxW, tw);
+  return kExploreLookCpu(look, best, bu, bs, 0, pxW / Math.max(tw, 1e-6), pxW, tw, hc);
 }
 
 // GLSL twin: kGlow - the reveal frontier glow at a point (interval modes,

@@ -2598,9 +2598,17 @@ export class FabricMazeRenderer {
   }
 
   // K76 stage 2c (question 9), read every frame (main.ts): Reduced motion
-  // stills the halo's breath; High contrast draws it full strength, white.
+  // stills the halo's breath; High contrast draws it full strength, white,
+  // and (stage 2d) the dots look's dots too (the renderer's uKExplore.x).
   exploreStill = false;
-  exploreContrast = false;
+  private exploreHc = false;
+  get exploreContrast(): boolean {
+    return this.exploreHc;
+  }
+  set exploreContrast(on: boolean) {
+    this.exploreHc = on;
+    this.ribbons.setExploreContrast(on);
+  }
 
   // The halos' breath, tint and strength (every frame, tickExplore).
   private styleHalos(): void {
