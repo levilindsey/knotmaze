@@ -41,7 +41,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   it; before K100 a catch cleared the fog), the minotaur to its lair, the clock
   runs on; it counts in the HUD (the "caught N" row shows in real time
   even with stat rows off), a toast ("Caught! Back to the entrance.") and
-  the win banner (caught, chased). Reset path restarts the chase.
+  the win banner (caught, chased). Reset path restarts the chase. (K80
+  turns stage 2 made both optional and counted: CATCH RESETS below.)
   minoFog (shown only under fog of war) = when the minotaur shows THROUGH
   the fog: always (default, a decision for Levi) | hunting (only while it
   hunts) | never (only where the fog has lifted). Its off-screen
@@ -97,7 +98,14 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   1), has 0-2 catches in 82% -> 74% of games and is chased 4.7 -> 5.6 s;
   the fleers' escape rates do not move (53%, 76% with queued taps). Pull
   1 reaches 66% for 1.94 catches: most of the gain comes by 0.5, so one
-  strength and no slider. THE CEILING: a fifth of greedy solves end
+  strength and no slider. RE-MEASURED ON H1 MAZES (K278 (c), K80 turns
+  stage 2; `.claude/probes/K80/turns2/rt/`): pull 0 / 0.25 / 0.5 / 0.75
+  / 1 gives a greedy player 1.29 / 1.47 / 1.66 / 1.73 / 2.02 catches,
+  spotted in 57 / 61 / 61 / 65 / 65% of games; the fleers' escapes stay
+  near 54-58% (75-77% queued), so 0.5 stays. minotaur.test.ts's
+  still-player test now runs on H1 mazes (no `hCutShare: 0`), averaged
+  over mazes 100-119 x 6 seeds: 65.6 s to reach a still player at pull
+  0, 43.9 s at pull 1 (ratio 0.67, bound 0.8); K80_DIGESTS re-frozen. THE CEILING: a fifth of greedy solves end
   inside 30 s, before it can arrive (11-17% of those meet it at any
   pull), so meetings top out near two thirds without homing. Rejected,
   "closest" (with chance roamPull, the single candidate closest to the
@@ -157,8 +165,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   codec v5 108-116, after minoRefog (107; 109-117 on the branch until
   K111 stage 3 removed highlightMode's 108):
   minotaur `mt`, minoSpeed `msp` (one), minoTelegraph `mtg` (on),
-  minoSight `msi` (4 runs), minoRoamRuns `mro` (8), minoTerritory `mtr`
-  (6), minoAccuracy `mac` (0.9), minoPause `mpa` (0.1), minoSleep `msl`
+  minoSight `msi` (2 runs; 4 until stage 2), minoRoamRuns `mro` (8),
+  minoTerritory `mtr` (6; both 1 at least since stage 2), minoAccuracy
+  `mac` (0.3; 0.9 until stage 2), minoPause `mpa` (0.1), minoSleep `msl`
   (0). SEPARATE from real time's knobs (turn units: runs, turns,
   chances); SHARED: minoFog, minoRefog and the minotaurIndicator setting.
   Not daily-exempt. UNDO: `minotaur` restarts the solve (onClockChange
@@ -178,4 +187,42 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   TODAY'S mazes are far deadlier than section 0's: the default hunter
   catches an attentive explorer on 14% of dailies (1% then) and an
   80%-attention one on 32% (13%), since dailies now have dead ends (5.9
-  ends vs 2.0) and fewer loops (cycle rank 89 vs 102).
+  ends vs 2.0) and fewer loops (cycle rank 89 vs 102). STAGE 2'S RETUNE
+  (K269, 2026-10-14) moved sight 4 -> 2 and accuracy 0.9 -> 0.3, nothing
+  else (`.claude/probes/K80/turns2/`: sweep.ts, the sweeps, full_*.md):
+  on dailies the hunter now catches the explorer / 80%-attention / fog-4
+  players on 2 / 13 / 13% (64 reps: 1.0 / 13.1 / 13.2), the guard 3 /
+  19 / 22, the stalker 1 / 20 / 22, against section 0's 1 / 13 / 11. The
+  cost: on the treelike and dead-end sets the hunter fell below section
+  0 (treelike 80%: 8% vs 27%). Sight 1 / accuracy 0.65 was rejected: it
+  hunts only when adjacent. The table is in the brief's stage 2 handoff;
+  the stalker lost the most (per-model accuracy is open for Levi).
+
+- CATCH RESETS (K80 turns stage 2, K273, 2026-10-14; Levi: "a toggle to
+  conditionally reset the level/Minotaur/fog when dying to the
+  Minotaur"). Both clocks, shared rows after minoSleep / the real-time
+  knobs. `minoRestart` (`mrs`, default off): a catch IS the level restart
+  (main.ts `restartSolve(true)`: path, yarn, fog, fuse, a new minotaur,
+  the clock restarted by resetAttempt and idle until the next move), the
+  toast "Caught! Starting over.". `minoLair` (`mlr`, default on, hidden
+  while minoRestart is on, as minoRefog is): off, a catch leaves the
+  minotaur where it caught you instead of in its lair. Turn clock: its
+  state keeps the vertex its turn ended on (left, mode 0, nothing
+  remembered) and lifeTurn restarts, so its sleep applies again there;
+  real time: it keeps its Spot, even mid-run, and pauses `wake` s there.
+  It can camp the entrance's first junction: the start hides you, so wait
+  it out. TALLIES CARRY: a restart under a minotaur hands the old one's
+  counts to the new (`carry()`: catches, restarts, and huntTicks or
+  closeCalls and seen), so a restart never launders a catch. A Reset path
+  under a minotaur, with a move made and the run unsolved, is a COUNTED
+  restart (`restarts`, a stat row above 0). STATS (section 2.9;
+  game/maze_stats.ts STATS): close calls (turn clock: a move that ends
+  one run from it, out of its lair, off the start; real time has none)
+  and seen (turns it spent hunting you, the hunting getter's rule, with
+  the telegraph read from where you stood when it decided). The move log
+  gains `x` (fabric_controller `markCaught`: replaces the run you were
+  caught on, adds one for a wait), drawn as the ox U+1F402 in the share
+  grid; the share title wears `🐂 N`, or `🐂 0 · N close calls`. Under
+  minoRestart the move log restarts with the level, so the grid shows no
+  ox (the title still counts) and the stars rate the last life's walk.
+  The win banner has no move grid.

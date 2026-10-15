@@ -34,7 +34,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   game/maze_stats.ts holds the label and one plain line for every stat id
   (time, path / optimal, efficiency, backtracked, junctions, dead ends,
   caught, chased, fire lead, closest call, walked), each written from the
-  definition named in the comment beside it. ui/maze_hud.ts builds every
+  definition named in the comment beside it (K80 turns stage 2 added close
+  calls, seen and restarts, and the move log's `x`). ui/maze_hud.ts builds every
   row of the win banner, the Burnt banner and the HUD through
   `entry(id, value)`, which takes its label from the table (gameEntries,
   statEntries, lossEntries), so a row cannot name a stat without a line;

@@ -66,4 +66,10 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   every stat the banner shows to this same popover (`starsWidget(r,
   stats)`; gameplay-daily.md), so the button's aria-label then reads "how
   stars and stats work" and the probe's old check of "how stars work"
-  needs updating.
+  needs updating. K80 turns stage 2: the share title adds a minotaur's
+  tag after the stars (`Knotmaze 🧶 ★★☆ · 🐂 1`, or `🐂 0 · 3 close
+  calls`; share_text.ts minotaurTag) and the grid draws `x`, the move
+  you were caught on, as 🐂. Under minoRestart a catch restarts the
+  level, which zeroes walkedDist, so the stars rate the last life's walk
+  and the popover's "the walk before it counts too" does not hold there
+  (gameplay-minotaur.md's CATCH RESETS).

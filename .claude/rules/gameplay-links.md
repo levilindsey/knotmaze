@@ -116,3 +116,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   it live instead of rebuilding.
 - Neutral (master's look and sound):
   `&prp=off&psh=0&ptg=0&pag=1&psz=1.75&pgh=.35&pw=.5`.
+
+- CATCH RESET PARAMS (K80 turns stage 2, K273, 2026-10-14):
+  `minoRestart` (`mrs`, default off) and `minoLair` (`mlr`, default on)
+  are APPENDED to codec v5 at 128-129, after K279's 121-127 (they were
+  121-122 on their branch until it rebased onto K279, which renumbered
+  them and re-froze the table pin). Not daily-exempt. The same stage
+  retuned minoSight (2) and minoAccuracy (0.3) in place and clamps
+  minoRoamRuns / minoTerritory to at least 1 in every reader
+  (MINO_RUNS_MIN). What they do: gameplay-minotaur.md's CATCH RESETS.
