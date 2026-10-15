@@ -2791,3 +2791,10 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
     pass
   - brief: `docs/design/K307_intro_freezes.md` ("Stage 1 handoff",
     "Stage 2: the warm-up")
+
+## K5 (2026-10-15, the design started)
+
+- **K5** · Split `main.ts` and `ribbon_renderer.ts` along the new data
+  lines (K1-K3 done). After K7's stage 5 (it conflicts with stages 1, 3
+  and 4; the host makes it smaller); first in line once that merges
+  (Levi, 2026-10-14 23:46, would like it sooner).
