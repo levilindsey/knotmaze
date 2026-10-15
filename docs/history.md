@@ -697,6 +697,17 @@ demand.
   K127 look once the fade ends, at desktop and phone width. *[Lore:
   `.claude/rules/render-web-fade.md` (The gold web's fade); probes and frames in
   `.claude/probes/K154_K169/`.]*
+- THE GOLD WEB FADES OUT TOO (K191, 2026-10-14; brief
+  `docs/design/K154_K169.md`, Stage 2): a web that stops being fully
+  traveled (a backtrack) crossfades back to the untraveled material over
+  the same 0.25 s smoothstep, caps and strip rows with it (levels 1,
+  0.530, 0 at 0, 0.12, 0.25 s), and a web that turns around mid-fade
+  continues from its current level (no jumps). A web that leaves full and
+  the routes together (a reset, a string-mode switch) still ends at once,
+  its arms losing their gold in the same frame. Frames from 0.25 s on are
+  0 px different from the stage-1 look, at desktop and phone width.
+  *[Lore: `.claude/rules/render-web-fade.md` (The gold web fades OUT too);
+  probes and frames in `.claude/probes/K191/`.]*
 - PLUCK PARAMS (K180 stage 1, 2026-10-14; brief `docs/design/K180.md`,
   agent under session d8031183): K104's whole-segment pluck gets three
   viewer preferences for Levi to play with, codec v4 appends 101-103,
