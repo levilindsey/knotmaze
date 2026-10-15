@@ -225,6 +225,16 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // K174's minotaur controls: it roams toward the player, a catch re-fogs.
   flag("minoToward"), // 106
   flag("minoRefog"), // 107
+  // K80 turns stage 1: the turn-aligned minotaur (game/minotaur_turns.ts).
+  choice("minotaur", ["off", "hunter", "guard", "stalker"]), // 108
+  choice("minoSpeed", ["half", "one", "charge", "two"]), // 109
+  flag("minoTelegraph"), // 110
+  num("minoSight"), // 111
+  num("minoRoamRuns"), // 112
+  num("minoTerritory"), // 113
+  num("minoAccuracy"), // 114
+  num("minoPause"), // 115
+  num("minoSleep"), // 116
 ]);
 
 // The format version a blob names first. Bump it for anything but an

@@ -19,6 +19,16 @@ import {
   HUNT_PACE_FRACTION,
   WANDER_PACE_FRACTION,
 } from "../game/minotaur";
+import type {
+  TurnMinoParams,
+  TurnMinotaurSetting,
+  TurnSpeed,
+} from "../game/minotaur_turns";
+import {
+  DEFAULT_TURN_MINO,
+  MINOTAUR_SETTINGS,
+  TURN_SPEEDS,
+} from "../game/minotaur_turns";
 import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
 import type { PluckCrossings, PluckGlow } from "../render/pluck_model";
 import { PLUCK_CROSSINGS, PLUCK_GLOWS, PLUCK_WHOLE_MAX } from "../render/pluck_model";
@@ -407,7 +417,32 @@ export interface UrlParams {
   // both rims under the pointer (or a touch press), in [0, 1]; 0 = off.
   // A viewer preference.
   hoverGlow: number;
+  // K80 turns: the TURN-ALIGNED minotaur (game/minotaur_turns.ts), a
+  // modifier of the turn clock (clk=realtime runs real time's own model and
+  // ignores these): off | hunter | guard | stalker; the runs it takes a
+  // turn; whether its next move shows. Its behavior, in runs and turns
+  // (real time's knobs are in thread length and seconds): it hunts within
+  // minoSight runs (gives up beyond sight + LOSE_MARGIN), the hunter roams
+  // up to minoRoamRuns runs, the guard keeps within minoTerritory runs of
+  // the exit, a hunting step is a best one with chance minoAccuracy, it
+  // stands still a turn with chance minoPause, and sleeps minoSleep turns.
+  // Applies live except `minotaur`, which restarts the solve.
+  minotaur: TurnMinotaurSetting;
+  minoSpeed: TurnSpeed;
+  minoTelegraph: boolean;
+  minoSight: number;
+  minoRoamRuns: number;
+  minoTerritory: number;
+  minoAccuracy: number;
+  minoPause: number;
+  minoSleep: number;
 }
+
+// The turn minotaur's slider tops (url_state clamps; the panel's ranges).
+export const MINO_SIGHT_MAX = 20;
+export const MINO_ROAM_RUNS_MAX = 30;
+export const MINO_TERRITORY_MAX = 20;
+export const MINO_SLEEP_MAX = 99;
 
 // The two load-settle sliders' tops (K147). LOAD_SETTLE_MAX is a sentinel
 // as well: there the page waits for the first sleep (or main.ts's wall cap).
@@ -543,7 +578,31 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   pluckGlow: "off",
   markerSize: MARKER_SIZE_DEFAULT,
   hoverGlow: 0.4,
+  minotaur: DEFAULT_TURN_MINO.model,
+  minoSpeed: DEFAULT_TURN_MINO.speed,
+  minoTelegraph: DEFAULT_TURN_MINO.telegraph,
+  minoSight: DEFAULT_TURN_MINO.sight,
+  minoRoamRuns: DEFAULT_TURN_MINO.roam,
+  minoTerritory: DEFAULT_TURN_MINO.territory,
+  minoAccuracy: DEFAULT_TURN_MINO.accuracy,
+  minoPause: DEFAULT_TURN_MINO.pause,
+  minoSleep: DEFAULT_TURN_MINO.sleep,
 };
+
+// The turn-aligned minotaur's settings from a design's params (K80 turns).
+export function turnMinoParamsOf(p: Omit<UrlParams, "seed">): TurnMinoParams {
+  return {
+    model: p.minotaur,
+    speed: p.minoSpeed,
+    telegraph: p.minoTelegraph,
+    sight: clampTo(p.minoSight, MINO_SIGHT_MAX),
+    roam: clampTo(p.minoRoamRuns, MINO_ROAM_RUNS_MAX),
+    territory: clampTo(p.minoTerritory, MINO_TERRITORY_MAX),
+    accuracy: clampTo(p.minoAccuracy, 1),
+    pause: clampTo(p.minoPause, 1),
+    sleep: clampTo(p.minoSleep, MINO_SLEEP_MAX),
+  };
+}
 
 // The real-time chase's tuning from a design's params (K80). Negative or
 // non-finite values read as 0; the chase keeps detectEnd >= detectStart
@@ -622,6 +681,8 @@ export const ENUM_OPTIONS: {
   minoFog: MINO_FOG_MODES,
   pluckCrossings: PLUCK_CROSSINGS,
   pluckGlow: PLUCK_GLOWS,
+  minotaur: MINOTAUR_SETTINGS,
+  minoSpeed: TURN_SPEEDS,
 };
 
 function clamp01(v: number): number {
@@ -659,7 +720,18 @@ function fromCodecValues(
   p.pluckWhole = clampTo(p.pluckWhole, PLUCK_WHOLE_MAX);
   p.markerSize = sanitizeMarkerSize(p.markerSize);
   p.hoverGlow = clampTo(p.hoverGlow, 1);
+  clampTurnMino(p);
   return p;
+}
+
+// The turn minotaur's clamps, shared by both link readers.
+function clampTurnMino(p: Omit<UrlParams, "seed">): void {
+  p.minoSight = clampTo(p.minoSight, MINO_SIGHT_MAX);
+  p.minoRoamRuns = clampTo(p.minoRoamRuns, MINO_ROAM_RUNS_MAX);
+  p.minoTerritory = clampTo(p.minoTerritory, MINO_TERRITORY_MAX);
+  p.minoAccuracy = clampTo(p.minoAccuracy, 1);
+  p.minoPause = clampTo(p.minoPause, 1);
+  p.minoSleep = clampTo(p.minoSleep, MINO_SLEEP_MAX);
 }
 
 // [0, max]; garbage reads 0.
@@ -904,6 +976,22 @@ function readLegacy(
     markerSize: sanitizeMarkerSize(readNumber(query, "mks", D.markerSize)),
     // K145's hover glow (`&hg=0`), clamped to [0, 1].
     hoverGlow: clampTo(readNumber(query, "hg", D.hoverGlow), 1),
+    // K80 turns' turn-aligned minotaur (`&mt=hunter&msp=two&mtg=0`).
+    minotaur: readChoice(query, "mt", MINOTAUR_SETTINGS, D.minotaur),
+    minoSpeed: readChoice(query, "msp", TURN_SPEEDS, D.minoSpeed),
+    minoTelegraph: readBool(query, "mtg", D.minoTelegraph),
+    minoSight: clampTo(readNumber(query, "msi", D.minoSight), MINO_SIGHT_MAX),
+    minoRoamRuns: clampTo(
+      readNumber(query, "mro", D.minoRoamRuns),
+      MINO_ROAM_RUNS_MAX
+    ),
+    minoTerritory: clampTo(
+      readNumber(query, "mtr", D.minoTerritory),
+      MINO_TERRITORY_MAX
+    ),
+    minoAccuracy: clampTo(readNumber(query, "mac", D.minoAccuracy), 1),
+    minoPause: clampTo(readNumber(query, "mpa", D.minoPause), 1),
+    minoSleep: clampTo(readNumber(query, "msl", D.minoSleep), MINO_SLEEP_MAX),
   };
 }
 

@@ -144,6 +144,15 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["minoToward", "boolean"], // 106, K174
   ["minoRefog", "boolean"], // 107, K174
   // (v4 had K111 stage 2's highlightMode at 108; v5 removed it, K111 stage 3.)
+  ["minotaur", "enum", ["off", "hunter", "guard", "stalker"]], // 108, K80 turns
+  ["minoSpeed", "enum", ["half", "one", "charge", "two"]],
+  ["minoTelegraph", "boolean"],
+  ["minoSight", "number"],
+  ["minoRoamRuns", "number"],
+  ["minoTerritory", "number"],
+  ["minoAccuracy", "number"],
+  ["minoPause", "number"],
+  ["minoSleep", "number"], // 116
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

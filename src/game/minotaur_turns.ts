@@ -131,9 +131,12 @@ export function mix32(x: number): number {
 
 // Counter-based draws: next() is a pure function of (seed, turn, k).
 export class TurnRng {
+  readonly seed: number;
   private turn = 0;
   private k = 0;
-  constructor(readonly seed: number) {}
+  constructor(seed: number) {
+    this.seed = seed;
+  }
   at(turn: number): this {
     this.turn = turn;
     this.k = 0;

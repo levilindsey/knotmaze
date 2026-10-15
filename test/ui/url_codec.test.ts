@@ -95,6 +95,9 @@ describe("links", () => {
       pluckWhole: 0.5, pluckCrossings: "through", pluckGlow: "off",
       markerSize: 1.08,
       hoverGlow: 0.4,
+      minotaur: "off", minoSpeed: "one", minoTelegraph: true, minoSight: 4,
+      minoRoamRuns: 8, minoTerritory: 6, minoAccuracy: 0.9, minoPause: 0.1,
+      minoSleep: 0,
     });
   });
 
@@ -416,6 +419,9 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoRefog: "mrf", confetti: "cf",
   confettiAmount: "cfa", pluckWhole: "pw", pluckCrossings: "pcx",
   pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg",
+  minotaur: "mt", minoSpeed: "msp", minoTelegraph: "mtg", minoSight: "msi",
+  minoRoamRuns: "mro", minoTerritory: "mtr", minoAccuracy: "mac",
+  minoPause: "mpa", minoSleep: "msl",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -435,6 +441,7 @@ function otherValue(name: keyof typeof PARAM_DEFAULTS): string | number | boolea
   }
   if (name === "backgroundSpeed") return 2;
   if (name === "backgroundAngle") return 90;
+  if (name === "minoSleep") return 2; // K80 turns: its default is 0
   return (d as number) * 0.5;
 }
 // As a link writes it: booleans 0/1, colors without the "#".
