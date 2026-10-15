@@ -10,6 +10,7 @@ import puppeteer from "puppeteer-core";
 import { existsSync, readFileSync, appendFileSync, mkdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
+import { decodePNG, encodePNG, cropRows, pngSize } from "./png.mjs";
 
 export const CFG = JSON.parse(readFileSync(process.argv[2], "utf8"));
 export const DRY = !!CFG.dry;
@@ -48,6 +49,29 @@ export async function emulate(page, vp = EMU_VP) {
 // Called before every navigation of a script (the override survives a navigation in the same session, but a
 // page that loads under it must find it already set: mobile emulation keeps the layout width it loaded with).
 export const ensureViewport = (page) => emulate(page);
+
+// K193: a screenshot of the page's viewport and nothing below it. A bare page.screenshot() on the phone captures a
+// surface TALLER than the emulated viewport (1080x2125 px = 808.7 CSS px under a 753 CSS px viewport; K195's landscape
+// frames: 387 CSS px under 331), and the rows below the page come back as a flat off-white strip. A clip at the
+// viewport's own CSS size keeps only the page (puppeteer intersects it with the visual viewport). Should a capture
+// still come back taller than the viewport at its own scale, the rows below the viewport are cropped (geometry only,
+// never a color test, so a page with a flat bottom edge keeps its rows). Counts go to SHOT_STATS (the looks report).
+export const SHOT_STATS = { shots: 0, cropped: 0 };
+export async function shotViewport(page, opts = {}) {
+  const v = await page.evaluate(() => {
+    const vv = window.visualViewport;
+    return { x: vv ? vv.pageLeft : window.scrollX, y: vv ? vv.pageTop : window.scrollY, w: window.innerWidth, h: window.innerHeight };
+  });
+  let buf = await page.screenshot({ type: "png", captureBeyondViewport: false, clip: { x: v.x, y: v.y, width: v.w, height: v.h }, ...opts });
+  SHOT_STATS.shots++;
+  const { W, H } = pngSize(buf);
+  const wantH = Math.round((v.h * W) / v.w);
+  if (H > wantH + 2) {
+    buf = encodePNG(cropRows(decodePNG(buf), wantH));
+    SHOT_STATS.cropped++;
+  }
+  return buf;
+}
 
 // What the page itself says about its viewport (page.evaluate(EMU_READ)): innerWidth x innerHeight x dpr, the
 // orientation media query, the visual viewport, the document's client size, the screen, and the biggest canvas

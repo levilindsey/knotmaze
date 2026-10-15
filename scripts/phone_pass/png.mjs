@@ -42,3 +42,34 @@ export function toRGB(img) {
   for (let i = 0; i < img.W * img.H; i++) { out[i * 3] = img.data[i * 4]; out[i * 3 + 1] = img.data[i * 4 + 1]; out[i * 3 + 2] = img.data[i * 4 + 2]; }
   return { W: img.W, H: img.H, data: out };
 }
+
+// A PNG's pixel size from its IHDR, without decoding it.
+export const pngSize = (buf) => ({ W: buf.readUInt32BE(16), H: buf.readUInt32BE(20) });
+
+// K193: the top `h` rows of a decoded image, as an RGB image.
+export function cropRows(img, h) {
+  const rgb = toRGB(img);
+  return { W: rgb.W, H: h, data: rgb.data.subarray(0, h * rgb.W * 3) };
+}
+
+// K193: the rows at the bottom of a decoded image that are one flat color (every pixel within `tol` of the last
+// row's first pixel): the blank strip a capture surface taller than the viewport leaves (K195: 55.7 CSS px in
+// landscape; 148 device rows of 250/250/248 under a 411x753 portrait viewport). A DIAGNOSTIC for a page whose
+// bottom is textured (the knot page): a page with a flat bottom edge (a solid panel) reads as a strip too.
+export function flatBottom(img, tol = 2) {
+  const { W, H, ch, data } = img;
+  const o = (H - 1) * W * ch;
+  const c0 = [data[o], data[o + 1], data[o + 2]];
+  let rows = 0;
+  for (let y = H - 1; y >= 0; y--) {
+    const r = y * W * ch;
+    let flat = true;
+    for (let x = 0; x < W && flat; x++) {
+      const i = r + x * ch;
+      if (Math.abs(data[i] - c0[0]) > tol || Math.abs(data[i + 1] - c0[1]) > tol || Math.abs(data[i + 2] - c0[2]) > tol) flat = false;
+    }
+    if (!flat) break;
+    rows++;
+  }
+  return { rows, color: c0 };
+}
