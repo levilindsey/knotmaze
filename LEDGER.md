@@ -481,7 +481,8 @@ K5-K7 (split, frame loop, worker) follow.
   design is lost). His call (2) stands: under fog, a tap on the finish
   indicator only shows a toast. Files: `src/ui/tweakpane_panel.ts`,
   `src/main.ts`, `src/ui/mode_badge.ts`, `src/ui/url_state.ts`;
-  `.claude/rules/gameplay-badge.md` (MODE BADGE). After K79 stage B merges.
+  `.claude/rules/gameplay-badge.md` (MODE BADGE). Brief
+  `docs/design/K92.md` (one stage); it launches after K198 stage 1 merges.
   - K80 (5fed5c1): real time has no move undo (`undoAllowed(clock)`); if K92's buttons ever reach maze moves, they consult it.
 - **K111** · Accessibility (Levi, 2026-10-13). Reduced motion also
   stills the flow undulation, but not the intros or the pulses next to
