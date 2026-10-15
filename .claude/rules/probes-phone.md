@@ -127,33 +127,31 @@ calls an awake, unlocked phone ready even with another app in front
 activity is sh.paseo, expected com.android.chrome"; K193, 13:21) after a
 clean cleanup. `retry_quiet.ps1` then waits 15 quiet minutes and every touch
 (dozens of events a second while a finger moves) restarts the wait; it
-gives up at `-GiveUpMin`. THE PORTRAIT FLOOR IS NOT TAKEN YET (K193 stage 1):
-the 3-rep A/A (`-Base master -Head master -Reps 3`, master 96fa13a,
-`.claude/probes/K193/aa3/`) ran 13:47-13:59 and TRIPPED on a touch (13:59:08,
-BTN_TOUCH DOWN, the launcher in front; the cleanup ran clean) after rep 0 and
-the three head fabric cells of rep 1. `scripts/phone_pass/noise.json` is
-therefore STILL the landscape floor (810x331@2.625), and a portrait pass's
-summary warns that it may not apply. A rep takes about 9 minutes on the phone
-(a 3-rep A/A needs about 27 quiet minutes), and the phone warms through it
-(skin 32.0 C at the first sample, 38.4 at the end of rep 0, 38.6-38.9 in rep
-1), so one rep's cells ran at different temperatures. ONE rep (aa3 rep 0, per
-cell max(|head - base|, one unit); `.claude/probes/K193/rep0_table.mjs`)
-against the landscape floor: the 60 fps fabric and knot cells sit at or below
-it (fps 0.1-0.5 against 0.5-1.3, render ms 0.2-2.8 against 2.1-8.4, the
-longest frame 16.5-16.6 ms or 0.1 against 0.1-33.3); load-default is the same
-size (fps 2.3 against 2.4, first sleep 0.5 against 1.17 s, but p95 16.3 ms
-against 0.1 and frames over 50 ms 10 against 26); load-slow is larger (fps 2.8
-against 1.6, frames over 50 ms 24 against 11, longest frame 50 against 33 ms,
-first frame 76 against 45 ms). The three rep-1 head rows are worse (longest
-frame 100-117.5 ms, 8-17 frames over 25 ms): the heat or a person near the
-phone, which the rows cannot tell apart. TO FINISH: with the phone left alone
-and awake, `-Phase check`, then `pwsh -NoProfile -File scripts\phone_pass.ps1
+gives up at `-GiveUpMin`. THE PORTRAIT FLOOR (K253, 2026-10-14):
+`scripts/phone_pass/noise.json` is a 3-rep A/A on master 9a5eaa8 (20:37-21:02,
+`.claude/probes/K253/aa4/`), emulated 411x753 @2.625 (36 of 36 samples read
+it from the page); its `note` says how it was taken. The docked phone's
+landscape floor (810x331 @2.625, K156 3c) is kept beside it as
+`noise.landscape.json`, and the summary picks whichever matches a pass's width
+and dpr. `scripts/phone_pass/install_floor.mjs <aaDir> <noteFile>` installs a
+floor and refuses an A/A that tripped, ran at another viewport or has fewer
+than 3 base+head pairs in a cell. TO RETAKE IT: with the phone left alone and
+awake, `-Phase check`, then `pwsh -NoProfile -File scripts\phone_pass.ps1
 -Base master -Head master -Reps 3 -Out <dir>` (`.claude/probes/K193/
-wait_then_aa.ps1` waits for 15 quiet minutes first); then `git mv
-scripts/phone_pass/noise.json scripts/phone_pass/noise.landscape.json`, copy
-the pass's `noise.json` to `scripts/phone_pass/noise.json` with a handwritten
-`note`, and commit (the summary then picks whichever of the two matches a
-pass's viewport).
+wait_then_aa.ps1` waits for 15 quiet minutes first). Two tries tripped on a
+touch before it: K193/aa3 at 13:59 after one rep, K253/aa3 at 19:37 after 22
+of 36 samples. Start one only when the phone can sit untouched for about 30
+minutes (a rep takes about 9). THE PHONE WARMS THROUGH A PASS: skin 29.4 C at
+the first sample, 37.4 at the end of rep 0 and 40.0 at the end, thermal status
+1 from rep 1, and the load cells followed it (frames over 50 ms 5-8, 28-73 and
+77-117 by rep; first sleep 15.7-16.4, 18.7-21.5 and 22.4-23.7 s). Base and
+head run back to back in alternating order, so the load floors (frames over
+50 ms ±15 default and ±27 slow, first sleep ±1.98 and ±0.86 s) are mostly
+heat: compare base and head within one pass, never absolute numbers across
+passes, and read a load verdict near its floor as heat. The fabric and knot
+cells are tight (fps ±0.2-1.5). fabric@13 sat on the FINISH in 6 of 6
+samples (the walk made 12 of 13 moves, K300), so it times the stars and
+confetti; a `-Moves 0,7,11` pass has no fabric@11 floor until the next A/A.
 
 - K79 stage B3 (2026-10-13), phone gate probes (`.claude/probes/K79/phone/`:
   `run_b3.ps1`, `panel_b3.mjs`, `passcost_x.mjs`, `watchdog.ps1`). (1) A
