@@ -2,6 +2,8 @@
 paths:
   - "src/game/minotaur.ts"
   - "test/game/minotaur.test.ts"
+  - "src/game/minotaur_turns.ts"
+  - "test/game/minotaur_turns.test.ts"
 ---
 
 # Gameplay lore: the real-time minotaur
@@ -114,3 +116,65 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   passed: the three minoFog modes, the indicator at 411x753, and a
   non-instant intro (no chase tick during the pre-settle or the intro;
   it waits in its lair for the first tap).
+
+## The turn-aligned minotaur
+
+- TURN-ALIGNED MINOTAUR (K80 turns stage 1, 2026-10-14;
+  game/minotaur_turns.ts, brief docs/design/K80_turns.md). `minotaur`
+  (`mt`) = off (default) | hunter | guard | stalker, on the turn clock
+  only (ignored under clk=realtime, whose panel hides the turn rows). AN
+  EXACT PORT of the brief's research harness (section 0) on ChaseGraph
+  plus a hop matrix (TurnGraph): walk edge id === chase edge index, vertex
+  order = walk.vertices order, candidates sorted by run id. RULES: every
+  accepted move (a run, or a WAIT) is one minotaur turn; the game state
+  moves at once and the minotaur's run plays over the player's move
+  animation (`progress`, a wait's over moveSeconds of the same thread).
+  CONTACT is continuous: caught when your run ends where its turn ends,
+  or meets it head-on on one run; a wait is caught when its path passes
+  your junction. An exit END run always wins (before contact). It never
+  steps onto the start or the exit, and the start hides you (sanctuary).
+  THE TELEGRAPH (default on, forced on at charge and two): after each
+  turn the next one is decided from where you stand (`commit`) and drawn
+  as a red 0xff2418 polyline along its runs with a ring at the
+  destination; null mid-animation; on minoLayer, so minoFog covers it.
+  THE RNG is counter-based on the game's global `turns` (rng.at), so the
+  same taps replay the same game; sleep and half-speed parity count
+  `lifeTurn` (since the last spawn). MODELS: hunter = prox (roams to a
+  junction rMin = min(3, roam)..roam runs away, hunts within sight, gives
+  up beyond sight + LOSE_MARGIN 3 and checks where it last saw you);
+  guard = prox around the exit's junction, rMin 1..territory; stalker =
+  chase (a best step with chance accuracy while you are off the start,
+  random otherwise). Speed half (odd lifeTurns) | one | charge (two runs
+  a turn while it hunts or has you in sight; the stalker charges within
+  sight) | two; pause = chance it stands still a turn; sleep = turns in
+  its lair first. A CATCH happens at the tap that makes it (stage 1
+  animates no catching move): turnCaught cancels the move, respawns
+  (re-fog under minoRefog), clears the yarn, bumps the HUD's caught row,
+  toasts "Caught! Back to the entrance.", and the model puts you at the
+  start and it in its lair (lifeTurn 0) and re-commits. Display: lair
+  until it leaves; hunt = the stalker sees you or prox mode != 0 (the
+  committed state); else wander, with real time's glow alphas. PARAMS,
+  codec 109-117 after hoverGlow/minoToward/minoRefog/highlightMode:
+  minotaur `mt`, minoSpeed `msp` (one), minoTelegraph `mtg` (on),
+  minoSight `msi` (4 runs), minoRoamRuns `mro` (8), minoTerritory `mtr`
+  (6), minoAccuracy `mac` (0.9), minoPause `mpa` (0.1), minoSleep `msl`
+  (0). SEPARATE from real time's knobs (turn units: runs, turns,
+  chances); SHARED: minoFog, minoRefog and the minotaurIndicator setting.
+  Not daily-exempt. UNDO: `minotaur` restarts the solve (onClockChange
+  covers clock and minotaur), the tuning rows are live (onTurnMinoChange
+  -> setConfig); no move undo (`undoAllowed(clock, minotaur)`). THE WAIT
+  TAP: within max(1.5 head discs, 0.9) world of your junction AND nearer
+  it than any run's tappable part (renderer `runDistance`, every run's
+  HEAD_EXCLUDE neighborhood excluded), checked before run hit-testing.
+  The radius alone (the 0.9 floor at the default width) swallowed every
+  real click on a choice's tap point, 1.5 ctrl out (probe: 0 clicks, 8
+  fallbacks; with the split 30 and 0). No wait key yet, and a wait is not
+  in `fc.taps` (attempt saves miss it). HOOKS: `__knotTurnMino()` (state,
+  telegraph, minoScreen), `__knotTurnMove(edge)`, `__knotTurnWait()`,
+  `__knotTurnMinoObj()`. MEASURED (`.claude/probes/K80/turns/`, the
+  probes.md K80 entry): the module and the harness agree on 9600 games
+  (80 designs x 5 configs x 3 players x 8 reps), 0 trace mismatches.
+  TODAY'S mazes are far deadlier than section 0's: the default hunter
+  catches an attentive explorer on 14% of dailies (1% then) and an
+  80%-attention one on 32% (13%), since dailies now have dead ends (5.9
+  ends vs 2.0) and fewer loops (cycle rank 89 vs 102).

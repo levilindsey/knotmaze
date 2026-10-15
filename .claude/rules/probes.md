@@ -183,7 +183,13 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   `notices/vite_plugin`, so the older private-cache wrappers (K19-K20,
   K79, K99), which import() the config natively, fail with
   ERR_MODULE_NOT_FOUND; K80's wrapper loads it through vite's
-  `loadConfigFromFile` instead.
+  `loadConfigFromFile` instead. The turn-aligned minotaur (K80 turns
+  stage 1, 2026-10-14): `.claude/probes/K80/turns/` holds `compare.ts`
+  (the module against the research harness `sim.ts`, trace by trace;
+  run with vite-node and `vite.node.config.mjs`, output compare.md) and
+  `turns_page.mjs <base> <outDir> [hunter|guard|stalker] [seeds]` (real
+  clicks: roam, hunt and catch shots, the catch checks, a wait). Probe
+  links: `?<seed>&am=instant&mt=hunter`.
 - K174 (2026-10-14), the minotaur's controls: `.claude/probes/K174/rt/`
   is K80's simulation fixed for K132 (`rt_lib.ts` builds params with
   `paramsFromValues(seed, {...overrides})`; the K80 copy, which predates
