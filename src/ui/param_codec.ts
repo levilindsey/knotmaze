@@ -249,6 +249,9 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("pluckTug"), // 125
   flag("tugAuto"), // 126
   num("autoPluckGain"), // 127
+  // K80 turns stage 2 (K273): what a minotaur's catch resets.
+  flag("minoRestart"), // 128
+  flag("minoLair"), // 129
 ]);
 
 // The format version a blob names first. Bump it for anything but an

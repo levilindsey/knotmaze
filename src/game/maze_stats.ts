@@ -22,9 +22,13 @@
 // - MOVES (the share grid): one letter per accepted tap - "g" a step along
 //   a shortest route to the exit (run length + the far vertex's distance
 //   to the exit equals the near vertex's), "d" any other advance (a
-//   detour), "b" a backtrack.
+//   detour), "b" a backtrack; "x" (K80 turns stage 2) the move a minotaur
+//   caught you on (FabricMazeController.markCaught: it replaces that
+//   move's letter; a turn-clock wait you were caught on, otherwise not
+//   logged, adds one). replay(taps) never writes "x": a minotaur's maze is
+//   never a daily, so nothing replays it.
 
-export type MoveKind = "g" | "d" | "b";
+export type MoveKind = "g" | "d" | "b" | "x";
 
 // WHAT EACH FIGURE MEANS (K274): the label and one plain line for every row
 // the win banner, the Burnt banner and the HUD can show, keyed by the row's
@@ -43,7 +47,10 @@ export type StatId =
   | "junctions"
   | "deadEnds"
   | "caught"
+  | "closeCalls"
+  | "seen"
   | "chased"
+  | "restarts"
   | "fireLead"
   | "closestCall"
   | "walked";
@@ -97,14 +104,34 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "How many different dead ends you have reached. The entrance and the " +
       "exit are not dead ends.",
   },
-  // MinotaurChase.catches / MinotaurTurns' catches (K80); the cap is
-  // star_rating.ts rateRun (any catch: at most two stars).
+  // MinotaurChase.catches / TurnMinotaur.catches (K80); the cap is
+  // star_rating.ts rateRun (any catch: at most two stars). K273: with the
+  // level reset on a catch (minoRestart) a catch is restartSolve(true), whose
+  // reset() zeroes the walked meter, and the count carries over (carry()).
   caught: {
     label: "caught",
     line:
       "How many times the minotaur has caught you. Each catch sends you " +
-      "back to the entrance. The walk before it still counts toward the " +
-      "stars, and any catch caps them at two.",
+      "back to the entrance, or starts the maze over if a catch resets " +
+      "the level, and the count carries on. Any catch caps the stars at two.",
+  },
+  // TurnMinotaur.closeCalls (turn clock only): a move ("moved", no catch,
+  // no win) after whose minotaur turn you stand off the start exactly one
+  // run (hop) from it, once it has left its lair.
+  closeCalls: {
+    label: "close calls",
+    line:
+      "How many of your moves ended one run away from the minotaur " +
+      "without it catching you.",
+  },
+  // TurnMinotaur.seen (turn clock only): the turns it spent hunting you,
+  // the turns its marker glows red (the stalker while you are off the
+  // start, the others while their committed mode is hunt or check).
+  seen: {
+    label: "seen",
+    line:
+      "How many turns the minotaur spent hunting you, the turns it glowed " +
+      "red, added up over the run.",
   },
   // MinotaurChase.huntSeconds (real time only): the ticks spent in "hunt",
   // which begins within detectStart and ends beyond detectEnd (thread
@@ -116,6 +143,15 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
       "hunt starts when you come close enough along the threads for it to " +
       "notice you, and ends when you get clear of it, it catches you or " +
       "you finish.",
+  },
+  // MinotaurChase.restarts / TurnMinotaur.restarts (K80 turns section
+  // 2.10): Reset path while a minotaur is out and the maze unsolved, after
+  // at least one move. Shown only when above 0.
+  restarts: {
+    label: "restarts",
+    line:
+      "How many times you started the maze over with Reset path while the " +
+      "minotaur was out. A restart is not a catch.",
   },
   // game/fire.ts fireLead: T(v) - L, with T(v) = delay + d(v) / speed and
   // L = walkedDist. HUD only while the race runs (the banners show the
@@ -286,13 +322,14 @@ export class SolveClock {
 }
 
 // The Wordle-style move grid for sharing: one square per move (green = a
-// shortest-route step, yellow = a detour, red = a backtrack), `perRow` to a
-// line, at most `maxRows` lines - a longer solve ends its last line in
-// "+N" (the moves not drawn).
+// shortest-route step, yellow = a detour, red = a backtrack, the ox 🐂 = a
+// move the minotaur caught you on), `perRow` to a line, at most `maxRows`
+// lines - a longer solve ends its last line in "+N" (the moves not drawn).
 const SQUARE: Record<MoveKind, string> = {
   g: "\u{1F7E9}",
   d: "\u{1F7E8}",
   b: "\u{1F7E5}",
+  x: "\u{1F402}",
 };
 
 export function moveGrid(moves: string, perRow = 10, maxRows = 6): string {

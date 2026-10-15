@@ -63,6 +63,9 @@ export interface TurnMinoParams {
   accuracy: number; // [0, 1]: chance a hunting step is a best one
   pause: number; // [0, 1]: chance it stands still for a turn
   sleep: number; // turns in its lair before it first moves
+  // K80 turns stage 2 (K273): a catch sends it back to its lair (true), or
+  // leaves it where its turn ended (false).
+  lair: boolean;
 }
 
 // The defaults: the research's hunter (section 0: prox, stall 0.1, roam 3-8
@@ -81,6 +84,7 @@ export const DEFAULT_TURN_MINO: Readonly<TurnMinoParams> = Object.freeze({
   accuracy: 0.3,
   pause: 0.1,
   sleep: 0,
+  lair: true,
 });
 
 // ...and gives up beyond sight + LOSE_MARGIN runs (a rule, not a knob).
@@ -103,6 +107,7 @@ export interface TurnConfig {
   sleep?: number; // turns before it first moves
   home?: boolean; // roam destinations around the exit junction (the guard)
   chaseSpeed?: number; // runs per turn while it hunts you (charge)
+  lair?: boolean; // a catch sends it to its lair (default true; K273)
 }
 
 // Two runs a move, or a charge, forces the telegraph on (section 2.6).
@@ -121,6 +126,7 @@ export function turnConfig(p: TurnMinoParams): TurnConfig {
     lose: p.sight + LOSE_MARGIN,
     sleep: p.sleep,
   };
+  if (p.lair === false) base.lair = false;
   if (p.speed === "charge") base.chaseSpeed = 2;
   if (p.model === "stalker") return { ...base, policy: "chase" };
   if (p.model === "guard") return { ...base, home: true, rMin: 1, rMax: p.territory };
@@ -363,7 +369,15 @@ export class TurnMinotaur {
   readonly tg: TurnGraph;
   cfg: TurnConfig;
   private readonly rng: TurnRng;
+  // The attempt's tallies (K80 turns stage 2, section 2.9). A level restart
+  // makes a new minotaur and carries them over (carry), so a restart never
+  // launders a catch: catches; close calls (moves ending one run from it);
+  // seen (turns it spent hunting you, as its glow shows it); restarts (a
+  // Reset path under it, main.ts: logged, not a catch).
   catches = 0;
+  closeCalls = 0;
+  seen = 0;
+  restarts = 0;
   turns = 0; // Turns played this game: the RNG's counter.
   lifeTurn = 0; // Turns since the last (re)spawn: sleep and half-speed parity.
   finished = false;
@@ -398,6 +412,14 @@ export class TurnMinotaur {
     this.commit();
   }
 
+  // A level restart's new minotaur takes over the old one's tallies.
+  carry(prev: TurnMinotaur): void {
+    this.catches = prev.catches;
+    this.closeCalls = prev.closeCalls;
+    this.seen = prev.seen;
+    this.restarts = prev.restarts;
+  }
+
   // One turn: the player runs `edge` from their vertex (-1 = waits there).
   turn(edge: number): TurnResult {
     if (this.finished) return "noop";
@@ -418,9 +440,13 @@ export class TurnMinotaur {
     this.inputs.push(edge);
     const from = this.state.v;
     let path: TurnStep[];
+    // Where the player stood when this turn was decided: the telegraph
+    // decided it before the move, from p; without one it is decided now.
+    let seenAt = p2;
     if (this.cfg.telegraph && this.commitState) {
       path = this.committed;
       this.state = this.commitState;
+      seenAt = p;
     } else {
       path = decide(g, this.cfg, this.state, p2, this.lifeTurn, this.rng.at(this.turns));
     }
@@ -429,6 +455,13 @@ export class TurnMinotaur {
     this.lastFrom = from;
     this.lastPath = path;
     this.progress = 0;
+    // Seen: a turn it took hunting you (the hunting getter's rule).
+    if (
+      this.state.left &&
+      (this.cfg.policy === "chase" ? seenAt !== g.start : this.state.mode !== 0)
+    ) {
+      this.seen++;
+    }
     if (p2 === g.exit) {
       this.player = p2;
       this.finished = true;
@@ -437,13 +470,23 @@ export class TurnMinotaur {
     if (contact(p, edge, p2, from, path)) {
       this.catches++;
       this.player = g.start;
-      this.state = initMino(g);
+      // K273: back to its lair, or it stays where its turn ended (a fresh
+      // roam from there; its sleep and parity count from now, as a spawn's).
+      this.state =
+        this.cfg.lair === false
+          ? { v: this.state.v, prev: -1, dest: -1, mode: 0, lastSeen: -1, left: true }
+          : initMino(g);
       this.lifeTurn = 0;
       this.lastFrom = this.state.v;
       this.lastPath = [];
       this.progress = 1;
       this.commit();
       return "caught";
+    }
+    // A close call: the move ends one run from it (out of its lair; the
+    // start is a sanctuary).
+    if (this.state.left && p2 !== g.start && g.hopd(p2, this.state.v) === 1) {
+      this.closeCalls++;
     }
     this.player = p2;
     this.commit();

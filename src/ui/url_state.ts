@@ -474,9 +474,19 @@ export interface UrlParams {
   fire: FireMode;
   fireSpeed: number;
   fireDelay: number;
+  // K80 turns stage 2 (K273): what a minotaur's catch resets, on both
+  // clocks. minoRestart on restarts the level (main.ts restartSolve: path,
+  // fog, clock and minotaur; its tallies carry over). Off is the respawn:
+  // you to the entrance, the minotaur to its lair under minoLair (off: it
+  // stays where it caught you), the fog under minoRefog (above).
+  minoRestart: boolean;
+  minoLair: boolean;
 }
 
 // The turn minotaur's slider tops (url_state clamps; the panel's ranges).
+// Roam and territory start at MINO_RUNS_MIN (K272: 0 stood still or
+// walked at random), sight at 0 (it never hunts).
+export const MINO_RUNS_MIN = 1;
 export const MINO_SIGHT_MAX = 20;
 export const MINO_ROAM_RUNS_MAX = 30;
 export const MINO_TERRITORY_MAX = 20;
@@ -649,6 +659,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   fire: "off",
   fireSpeed: 0.75,
   fireDelay: 0,
+  // K273: today's respawn (the level goes on, the minotaur to its lair).
+  minoRestart: false,
+  minoLair: DEFAULT_TURN_MINO.lair,
 };
 
 // The burn race a design plays (K114), or null without one. The fire runs
@@ -681,11 +694,12 @@ export function turnMinoParamsOf(p: Omit<UrlParams, "seed">): TurnMinoParams {
     speed: p.minoSpeed,
     telegraph: p.minoTelegraph,
     sight: clampTo(p.minoSight, MINO_SIGHT_MAX),
-    roam: clampTo(p.minoRoamRuns, MINO_ROAM_RUNS_MAX),
-    territory: clampTo(p.minoTerritory, MINO_TERRITORY_MAX),
+    roam: clampRuns(p.minoRoamRuns, MINO_ROAM_RUNS_MAX),
+    territory: clampRuns(p.minoTerritory, MINO_TERRITORY_MAX),
     accuracy: clampTo(p.minoAccuracy, 1),
     pause: clampTo(p.minoPause, 1),
     sleep: clampTo(p.minoSleep, MINO_SLEEP_MAX),
+    lair: p.minoLair,
   };
 }
 
@@ -712,6 +726,7 @@ export function chaseParamsOf(
     roamRange: pos(p.minoRoam),
     wake: pos(p.minoWake),
     roamPull: p.minoToward ? DEFAULT_CHASE_PARAMS.roamPull : 0,
+    lair: p.minoLair,
   };
 }
 
@@ -827,8 +842,8 @@ function clampPluckEmphasis(p: Omit<UrlParams, "seed">): void {
 // The turn minotaur's clamps, shared by both link readers.
 function clampTurnMino(p: Omit<UrlParams, "seed">): void {
   p.minoSight = clampTo(p.minoSight, MINO_SIGHT_MAX);
-  p.minoRoamRuns = clampTo(p.minoRoamRuns, MINO_ROAM_RUNS_MAX);
-  p.minoTerritory = clampTo(p.minoTerritory, MINO_TERRITORY_MAX);
+  p.minoRoamRuns = clampRuns(p.minoRoamRuns, MINO_ROAM_RUNS_MAX);
+  p.minoTerritory = clampRuns(p.minoTerritory, MINO_TERRITORY_MAX);
   p.minoAccuracy = clampTo(p.minoAccuracy, 1);
   p.minoPause = clampTo(p.minoPause, 1);
   p.minoSleep = clampTo(p.minoSleep, MINO_SLEEP_MAX);
@@ -837,6 +852,11 @@ function clampTurnMino(p: Omit<UrlParams, "seed">): void {
 // [0, max]; garbage reads 0.
 function clampTo(v: number, max: number): number {
   return v > 0 ? Math.min(max, v) : 0;
+}
+
+// [MINO_RUNS_MIN, max] (K272); garbage reads MINO_RUNS_MIN.
+function clampRuns(v: number, max: number): number {
+  return Math.max(MINO_RUNS_MIN, clampTo(v, max));
 }
 
 // backgroundSpeed: any negative value (or garbage) is AUTO, anything else
@@ -1095,11 +1115,11 @@ function readLegacy(
     minoSpeed: readChoice(query, "msp", TURN_SPEEDS, D.minoSpeed),
     minoTelegraph: readBool(query, "mtg", D.minoTelegraph),
     minoSight: clampTo(readNumber(query, "msi", D.minoSight), MINO_SIGHT_MAX),
-    minoRoamRuns: clampTo(
+    minoRoamRuns: clampRuns(
       readNumber(query, "mro", D.minoRoamRuns),
       MINO_ROAM_RUNS_MAX
     ),
-    minoTerritory: clampTo(
+    minoTerritory: clampRuns(
       readNumber(query, "mtr", D.minoTerritory),
       MINO_TERRITORY_MAX
     ),
@@ -1110,6 +1130,9 @@ function readLegacy(
     fire: readChoice(query, "fi", FIRE_MODES, D.fire),
     fireSpeed: clampFireSpeed(readNumber(query, "fsp", D.fireSpeed)),
     fireDelay: clampTo(readNumber(query, "fdl", D.fireDelay), FIRE_DELAY_MAX),
+    // K273's catch resets (`&mrs=1`, `&mlr=0`).
+    minoRestart: readBool(query, "mrs", D.minoRestart),
+    minoLair: readBool(query, "mlr", D.minoLair),
   };
 }
 

@@ -102,6 +102,7 @@ describe("links", () => {
       minoRoamRuns: 8, minoTerritory: 6, minoAccuracy: 0.3, minoPause: 0.1,
       minoSleep: 0,
       fire: "off", fireSpeed: 0.75, fireDelay: 0,
+      minoRestart: false, minoLair: true,
     });
   });
 
@@ -123,6 +124,19 @@ describe("links", () => {
     expect(
       parseParams(`?${encodeParams(withSeed(7, { markerSize: 0.1 }))}`).markerSize
     ).toBe(0.25);
+  });
+
+  // K272 (K80 turns stage 2): roam and territory start at one run, from an
+  // override key or a token; K273's catch toggles round-trip.
+  it("keeps the turn minotaur's roam and territory at one run or more", () => {
+    const p = parseParams("?7&mro=0&mtr=0");
+    expect([p.minoRoamRuns, p.minoTerritory]).toEqual([1, 1]);
+    const q = parseParams(`?${encodeParams(withSeed(7, { minoRoamRuns: 0, minoTerritory: 0 }))}`);
+    expect([q.minoRoamRuns, q.minoTerritory]).toEqual([1, 1]);
+    expect(parseParams("?7&mro=3").minoRoamRuns).toBe(3);
+    const r = parseParams("?7&mrs=1&mlr=0");
+    expect([r.minoRestart, r.minoLair]).toEqual([true, false]);
+    expect(parseParams(`?${encodeParams(r)}`)).toEqual(r);
   });
 
   // K114: the burn race's override keys, its clamps, the token round trip,
@@ -241,15 +255,16 @@ describe("links", () => {
   it("reads the real-time mode from override keys", () => {
     const p = parseParams(
       "?7&clk=realtime&plp=12&mwp=0.25&mhp=0.75&mpj=0.1&mpc=0.5&mpn=1&mpx=3" +
-        "&mdt=10&mls=20&mct=1.5&mde=0.6&mrm=40&mwk=3&mfg=hunting&mtw=0&mrf=0"
+        "&mdt=10&mls=20&mct=1.5&mde=0.6&mrm=40&mwk=3&mfg=hunting&mtw=0&mrf=0&mlr=0"
     );
     expect(p.clock).toBe("realtime");
     expect(chaseParamsOf(p)).toEqual({
       playerPace: 12, wanderPace: 3, approachPace: 9, paceJitter: 0.1,
       pauseChance: 0.5, pauseMin: 1, pauseMax: 3, detectStart: 10,
       detectEnd: 20, catchDist: 1.5, deadEndBias: 0.6, roamRange: 40, wake: 3,
-      roamPull: 0,
+      roamPull: 0, lair: false,
     });
+    expect(chaseParamsOf(parseParams("?7&clk=realtime")).lair).toBe(true);
     expect(p.minoFog).toBe("hunting");
     expect(p.minoToward).toBe(false);
     expect(p.minoRefog).toBe(false);
@@ -477,6 +492,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   fire: "fi", fireSpeed: "fsp", fireDelay: "fdl",
   pluckRipple: "prp", rippleStrength: "prs", rippleAuto: "pra",
   pluckSheen: "psh", pluckTug: "ptg", tugAuto: "pta", autoPluckGain: "pag",
+  minoRestart: "mrs", minoLair: "mlr",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

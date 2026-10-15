@@ -232,6 +232,44 @@ describe("MinotaurChase: the approach and the catch", () => {
     expect(sim.tap(0)).toBe("queued");
     expect(run(sim, 1)).toEqual([{ kind: "depart", edge: 0 }]);
   });
+
+  // K273 (K80 turns stage 2): the minotaur's catch toggle.
+  it("goes back to its lair by default", () => {
+    expect(DEFAULT_CHASE_PARAMS.lair).toBe(true);
+  });
+
+  it("with lair off it stays where it caught you, pausing wake s there", () => {
+    const sim = new MinotaurChase(G1, P({ ...hunt, lair: false, wake: 2 }), 1);
+    sim.place("minotaur", "A", "hunt");
+    sim.place("player", "D");
+    runUntil(sim, "caught", 10 * CHASE_HZ);
+    expect(sim.catches).toBe(1);
+    expect(sim.g.ids[sim.player.vertex]).toBe("S");
+    // Caught 0.5 short of D on B -> D: it stays on that run.
+    expect(sim.mino.edge).toBe(4);
+    const at = { ...sim.mino };
+    expect(sim.mode).toBe("pause");
+    run(sim, 2 * CHASE_HZ - 2);
+    expect(sim.mino).toEqual(at);
+    expect(sim.mode).toBe("pause");
+  });
+
+  it("carries its tallies to a restart's new chase", () => {
+    const sim = new MinotaurChase(G1, hunt, 1);
+    sim.place("minotaur", "A", "hunt");
+    sim.place("player", "D");
+    runUntil(sim, "caught", 10 * CHASE_HZ);
+    sim.restarts = 2;
+    const next = new MinotaurChase(G1, hunt, 1);
+    next.carry(sim);
+    expect(next.catches).toBe(1);
+    expect(next.restarts).toBe(2);
+    expect(next.huntSeconds).toBe(sim.huntSeconds);
+    expect(next.huntSeconds).toBeGreaterThan(0);
+    // Everything else is a fresh chase.
+    expect(next.tick).toBe(0);
+    expect(next.mode).toBe("lair");
+  });
 });
 
 describe("MinotaurChase: the player", () => {

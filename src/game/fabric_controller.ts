@@ -165,6 +165,16 @@ export class FabricMazeController {
     this.solved = false;
   }
 
+  // K80 turns stage 2: the move log's "x", the move a minotaur caught you
+  // on. It replaces the last move's letter (the run you were on; in real
+  // time, caught standing, the run that brought you there). `wait`: a
+  // turn-clock wait, which is otherwise not logged, adds an "x" (so does an
+  // empty log). The taps keep the run: a catch is not a tap.
+  markCaught(wait = false): void {
+    if (wait || this.moveLog.length === 0) this.moveLog.push("x");
+    else this.moveLog[this.moveLog.length - 1] = "x";
+  }
+
   // Moves made (accepted taps) since the last reset.
   get moveCount(): number {
     return this.moveLog.length;

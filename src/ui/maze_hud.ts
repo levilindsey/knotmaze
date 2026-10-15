@@ -34,6 +34,12 @@ export interface HudSnapshot {
   // the time it spent hunting the player (the win banner's).
   catches?: number | null;
   chasedMs?: number | null;
+  // K80 turns stage 2 (absent or null elsewhere): the turn minotaur's close
+  // calls and turns seen; on both clocks the Reset-path restarts under a
+  // minotaur (the row shows only above 0).
+  closeCalls?: number | null;
+  seen?: number | null;
+  restarts?: number | null;
   // K114's burn race (absent elsewhere; lattice units): the fire's lead at
   // your junction while the race runs, T(v) - L, and the closest call (the
   // smallest lead at any arrival) once it is over.
@@ -50,7 +56,8 @@ export const fmtDist = (v: number): string =>
 type StatFields = Pick<
   HudSnapshot,
   | "timeMs" | "path" | "optimal" | "efficiency" | "backtrack" | "junctions" | "deadEnds"
-  | "catches" | "chasedMs" | "fireLead" | "closestCall"
+  | "catches" | "chasedMs" | "fireLead" | "closestCall" | "closeCalls" | "seen"
+  | "restarts"
 >;
 
 // A row (K274): its id names its line in STATS (game/maze_stats.ts), which
@@ -86,7 +93,12 @@ export function statEntries(s: StatFields): StatEntry[] {
   rows.push(entry("junctions", String(s.junctions)));
   if (s.deadEnds !== null) rows.push(entry("deadEnds", String(s.deadEnds)));
   if (s.catches != null) rows.push(entry("caught", String(s.catches)));
+  if (s.closeCalls != null) rows.push(entry("closeCalls", String(s.closeCalls)));
+  if (s.seen != null) rows.push(entry("seen", String(s.seen)));
   if (s.chasedMs != null) rows.push(entry("chased", formatDuration(s.chasedMs)));
+  if (s.restarts != null && s.restarts > 0) {
+    rows.push(entry("restarts", String(s.restarts)));
+  }
   if (s.fireLead != null) rows.push(entry("fireLead", fmtDist(s.fireLead)));
   if (s.closestCall != null) rows.push(entry("closestCall", fmtDist(s.closestCall)));
   return rows;
@@ -380,6 +392,11 @@ export interface WinInfo {
   // K80's real-time mode: catches and time chased (absent elsewhere).
   catches?: number | null;
   chasedMs?: number | null;
+  // K80 turns stage 2: the turn minotaur's close calls and turns seen, and
+  // the Reset-path restarts under a minotaur (absent elsewhere).
+  closeCalls?: number | null;
+  seen?: number | null;
+  restarts?: number | null;
   // K114's burn race: the closest call (absent elsewhere).
   closestCall?: number | null;
   // K155: the run's stars (null or absent: no rating, no stars).
