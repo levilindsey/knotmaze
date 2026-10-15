@@ -624,8 +624,10 @@ describe("the worker core's probe messages and failure (K7)", () => {
     const ref = new ParticleSystem(fabricGraph(q.params));
     const live = (): ParticleSystem => w.ps as ParticleSystem;
 
-    // stepUntil: 1/60 s frames to the sim time, then a snapshot.
+    // stepUntil: 1/60 s frames to the sim time, then a snapshot (an input,
+    // so main can wait for it).
     w.onMessage({ type: "stepUntil", gen: 1, simTime: 0.5 });
+    expect(w.stats.inputs).toBe(1);
     while (ref.simTime < 0.5) ref.step(1 / 60, q.tuning);
     expect(stateDiff(ref, live())).toBe("");
     const snap = last("snap");
@@ -634,11 +636,13 @@ describe("the worker core's probe messages and failure (K7)", () => {
       expect(bits(readSnapshot(snap.buf).positions)).toEqual(bits(ref.positions));
     }
 
-    // dump: the full stepping state, copied.
-    w.onMessage({ type: "dump" });
+    // dump: the full stepping state, copied, answering its id.
+    w.onMessage({ type: "dump", id: 7 });
     const d = last("dumped");
     expect(d?.type).toBe("dumped");
     if (d?.type === "dumped") {
+      expect(d.id).toBe(7);
+      expect(d.gen).toBe(1);
       const r = ref as unknown as Internals;
       expect(d.simTime).toBe(ref.simTime);
       expect(bits(d.positions)).toEqual(bits(ref.positions.subarray(0, 2 * ref.particleCount)));
@@ -656,15 +660,21 @@ describe("the worker core's probe messages and failure (K7)", () => {
     };
 
     // freeze: frames are counted and discarded; unfrozen, they step.
-    w.onMessage({ type: "freeze", on: true });
+    w.onMessage({ type: "freeze", gen: 1, on: true });
+    expect(w.stats.frozen).toBe(true);
+    expect(last("snap")?.type === "snap" && readSnapshot((last("snap") as { buf: ArrayBuffer }).buf).inputs).toBe(2);
     w.onMessage({ type: "frame", gen: 1, dt: 1 / 60 });
     expect(w.stats.substeps).toBe(0);
     expect(w.stats.frames).toBe(1);
-    w.onMessage({ type: "freeze", on: false });
+    // A freeze of another gen is dropped.
+    w.onMessage({ type: "freeze", gen: 9, on: false });
+    expect(w.stats.frozen).toBe(true);
+    w.onMessage({ type: "freeze", gen: 1, on: false });
     w.onMessage({ type: "frame", gen: 1, dt: 1 / 60 });
     const n1 = refFrame();
     expect(n1).toBeGreaterThan(0);
     expect(w.stats.substeps).toBe(n1);
+    expect(w.stats.stepMs).toBeGreaterThan(0);
     expect(stateDiff(ref, live())).toBe("");
 
     // pause: the batch begins and waits; resume runs it.

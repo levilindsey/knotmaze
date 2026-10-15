@@ -12,10 +12,10 @@ import type { ParticleSystem } from "./particle_system";
 // - the emergent crossings, f32, EMERGENT_ROW per row for EMERGENT_MAX rows
 //   (i, u, j, v, aOver; ParticleSystem.writeEmergentRows), of which the
 //   header's emergent slot counts the live ones.
-// Every section starts on its own element size (the header is 144 bytes,
+// Every section starts on its own element size (the header is 152 bytes,
 // positions 8N), so the typed-array views need no copy.
 
-export const SNAP_HEADER = 18;
+export const SNAP_HEADER = 19;
 
 // Header slots. Flags are 1 or 0.
 export const H = {
@@ -49,6 +49,9 @@ export const H = {
   inputs: 16,
   // frame messages the worker had received for this gen, run or discarded.
   frames: 17,
+  // Wall ms the worker spent inside live substeps since init (K7 stage 4:
+  // the probes' step cost; settles and stepUntil not counted).
+  stepMs: 18,
 } as const;
 
 const EMERGENT_FLOATS = EMERGENT_MAX * EMERGENT_ROW;
@@ -68,6 +71,7 @@ export interface SnapshotMeta {
   asleep: boolean;
   inputs: number;
   frames: number;
+  stepMs: number;
 }
 
 // A snapshot read back: header values plus views into the buffer (valid
@@ -91,6 +95,7 @@ export interface SnapshotView {
   pending: number;
   inputs: number;
   frames: number;
+  stepMs: number;
   positions: Float32Array;
   passes: Float64Array;
   emergent: Float32Array;
@@ -148,6 +153,7 @@ export function writeSnapshot(ps: ParticleSystem, buf: ArrayBuffer, meta: Snapsh
   h[H.pending] = ps.pendingTime;
   h[H.inputs] = meta.inputs;
   h[H.frames] = meta.frames;
+  h[H.stepMs] = meta.stepMs;
 }
 
 export function readSnapshot(buf: ArrayBuffer): SnapshotView {
@@ -177,6 +183,7 @@ export function readSnapshot(buf: ArrayBuffer): SnapshotView {
     pending: h[H.pending],
     inputs: h[H.inputs],
     frames: h[H.frames],
+    stepMs: h[H.stepMs],
     positions: v.positions,
     passes: v.passes,
     emergent: v.emergent,

@@ -15,6 +15,8 @@ import {
 import type { SettleBudget, StepLimits } from "./settle_budget";
 import type { TangleGraph } from "../core/types";
 import type { SceneParams } from "../core/scene_graph";
+import { dumpOf } from "./probe_dump";
+import type { PhysicsDump } from "./probe_dump";
 
 // THE PHYSICS HOST (K7 stage 1, docs/design/K7_worker.md). Every main-thread
 // WRITE to the physics goes through a PhysicsHost: the build, input (grab,
@@ -123,8 +125,21 @@ export interface HostStats {
   // The armed settle budget (null: not armed).
   budget: { budgetMs: number; costMs: number; lagS: number } | null;
   settleInfo: SettleInfo;
+  // K7 stage 4: wall ms spent stepping live frames and the substeps they
+  // ran, since the last build (in-thread: inside frame()'s step; worker:
+  // the worker's clock, from the newest snapshot). Probes difference them.
+  physMs: number;
+  liveSubsteps: number;
+  // freeze(true) is in force.
+  frozen: boolean;
   // Which host runs the physics (K7 stage 3; probes: __knotPerf().host).
   host?: HostInfo;
+}
+
+// What freeze() resolves with: the state it left and the sim time then.
+export interface FreezeInfo {
+  frozen: boolean;
+  simTime: number;
 }
 
 // The host's kind, why a worker host fell back to in-thread ("" while the
@@ -199,6 +214,21 @@ export interface PhysicsHost {
   goLive(budgetMs: number): void;
 
   stats(): HostStats;
+
+  // THE PROBE BRIDGE (K7 stage 4, design 8): Promises on both hosts, so a
+  // probe written against them runs on either path.
+  // freeze: the live clock stops (frames step nothing) until freeze(false)
+  // or the next build. In-thread it is the probes' own patch,
+  // `ps.step = function(){}`, and off deletes it.
+  freeze(on: boolean): Promise<FreezeInfo>;
+  // Frames of 1/60 s until simTime is reached, frozen or not, with no gate
+  // or budget; resolves with the sim time reached. view shows the state.
+  stepUntil(simTime: number, tuning: PhysicsTuning): Promise<number>;
+  // A copy of the stepping state (probe_dump.ts), with what the view lacks.
+  dump(): Promise<PhysicsDump>;
+  // Resolves once every input sent so far (a tug, a drag) is in the state
+  // view shows next.
+  sync(): Promise<void>;
 }
 
 function emptyBudgetInfo(): SettleInfo["budget"] {
@@ -246,6 +276,11 @@ export class PhysicsCore {
   // The last frame()'s start sim time and tuning, for gateFrame().
   private frameSim0 = 0;
   private frameTuning: PhysicsTuning | null = null;
+  // K7 stage 4: live stepping since the build (stats().physMs and
+  // liveSubsteps), and freeze().
+  private physMs = 0;
+  private liveSubsteps = 0;
+  private frozen = false;
 
   // gen: the generation to take (the worker takes main's); default the next.
   // The asleep flag and the gate carry over, as they always have: main
@@ -253,6 +288,9 @@ export class PhysicsCore {
   build(graph: TangleGraph, gen?: number): ParticleSystem {
     this.ps = new ParticleSystem(graph);
     this.gen = gen ?? this.gen + 1;
+    this.physMs = 0;
+    this.liveSubsteps = 0;
+    this.frozen = false;
     return this.ps;
   }
 
@@ -307,15 +345,53 @@ export class PhysicsCore {
     if (budget) {
       const s = budgetedStep(budget, requestDt, ps.pendingTime, STEP_LIMITS);
       if (s.dt > 0) {
-        ps.step(s.dt, tuning);
+        this.liveStep(ps, s.dt, tuning);
         this.stepCount++;
         recordStepCost(budget, performance.now() - now, s.n);
       }
     } else {
-      ps.step(requestDt, tuning);
+      this.liveStep(ps, requestDt, tuning);
       this.stepCount++;
     }
     return Number.isFinite(ps.maxMove);
+  }
+
+  // A live frame's step through the instance (a probe's patch applies),
+  // timed for stats().physMs and liveSubsteps.
+  private liveStep(ps: ParticleSystem, dt: number, tuning: PhysicsTuning): void {
+    const k0 = substepsOf(ps);
+    const t0 = performance.now();
+    ps.step(dt, tuning);
+    this.physMs += performance.now() - t0;
+    this.liveSubsteps += substepsOf(ps) - k0;
+  }
+
+  // K7 stage 4 (design 8): the probes' freeze patch as a call. On: an own
+  // `step` that does nothing, exactly `__knotPS().step = function(){}`
+  // (it lasts until the next build); off: deleted (a probe's patch too).
+  freeze(on: boolean): FreezeInfo {
+    const ps = this.ps;
+    if (!ps) return { frozen: false, simTime: 0 };
+    const own = ps as unknown as Record<string, unknown>;
+    if (on) own.step = function () {};
+    else delete own.step;
+    this.frozen = on;
+    return { frozen: on, simTime: ps.simTime };
+  }
+  // Frames of 1/60 s through the class's own step (bypassing a freeze or a
+  // probe's patch) until simTime is reached: no gate, no budget, and not
+  // counted as live stepping. Returns the sim time reached.
+  stepUntil(simTime: number, tuning: PhysicsTuning): number {
+    const ps = this.ps;
+    if (!ps) return 0;
+    const step = ParticleSystem.prototype.step;
+    while (ps.simTime < simTime && Number.isFinite(ps.maxMove)) {
+      step.call(ps, 1 / 60, tuning);
+    }
+    return ps.simTime;
+  }
+  dump(): PhysicsDump | null {
+    return this.ps ? dumpOf(this.ps, this.gen) : null;
   }
 
   // K7 stage 2: frame()'s unbudgeted step, split for the worker, which runs
@@ -537,8 +613,16 @@ export class PhysicsCore {
         presettle: { ...this.settleInfo.presettle },
         budget: { ...this.settleInfo.budget },
       },
+      physMs: this.physMs,
+      liveSubsteps: this.liveSubsteps,
+      frozen: this.frozen,
     };
   }
+}
+
+// The class's private substep counter (live stepping's substeps).
+function substepsOf(ps: ParticleSystem): number {
+  return (ps as unknown as { substepCount: number }).substepCount;
 }
 
 // Today's code on the main thread. Every frame calls `this.ps.step(...)`
@@ -644,5 +728,20 @@ export class InThreadHost implements PhysicsHost {
 
   stats(): HostStats {
     return { ...this.core.stats(), host: { kind: "in-thread", reason: "" } };
+  }
+
+  freeze(on: boolean): Promise<FreezeInfo> {
+    return Promise.resolve(this.core.freeze(on));
+  }
+  stepUntil(simTime: number, tuning: PhysicsTuning): Promise<number> {
+    return Promise.resolve(this.core.stepUntil(simTime, tuning));
+  }
+  dump(): Promise<PhysicsDump> {
+    const d = this.core.dump();
+    return d ? Promise.resolve(d) : Promise.reject(new Error("no scene"));
+  }
+  // In-thread every input is in the state at once.
+  sync(): Promise<void> {
+    return Promise.resolve();
   }
 }

@@ -2,6 +2,7 @@ import { DEFAULT_TUNING } from "./particle_system";
 import type { ParticleSystem, PhysicsTuning } from "./particle_system";
 import { InThreadHost } from "./physics_host";
 import type {
+  FreezeInfo,
   HostInfo,
   HostStats,
   LoadStatus,
@@ -9,6 +10,7 @@ import type {
   PresettleProgress,
   SettleInfo,
 } from "./physics_host";
+import type { PhysicsDump } from "./probe_dump";
 import { MirrorSystem } from "./mirror_system";
 import { fingerprintOf, readSnapshot, snapshotBytes } from "./snapshot";
 import type { Fingerprint, SnapshotView } from "./snapshot";
@@ -173,6 +175,20 @@ interface Held {
   buf: ArrayBuffer;
 }
 
+// A probe call waiting for the first snapshot written after `inputs`
+// inputs (exact: the mirror then shows that snapshot, not an interpolation).
+interface Fence {
+  inputs: number;
+  exact: boolean;
+  resolve: (simTime: number) => void;
+  reject: (e: Error) => void;
+}
+
+interface PendingDump {
+  resolve: (d: PhysicsDump) => void;
+  reject: (e: Error) => void;
+}
+
 type Settled = Extract<WorkerToMain, { type: "settled" }>;
 
 function wallNow(): number {
@@ -236,6 +252,14 @@ export class WorkerHost implements PhysicsHost {
   private lastDelay = 0;
   private lastT = 1;
   private visHandler: (() => void) | null = null;
+  // The probe bridge (K7 stage 4): freeze, fences, dumps, and the newest
+  // snapshot's live-stepping counters (stats().physMs, liveSubsteps).
+  private frozenFlag = false;
+  private fences: Fence[] = [];
+  private readonly dumps = new Map<number, PendingDump>();
+  private nextDumpId = 1;
+  private snapStepMs = 0;
+  private snapSubsteps = 0;
 
   constructor(onFallback: () => void, opts: WorkerHostOptions = {}) {
     this.onFallback = onFallback;
@@ -291,6 +315,10 @@ export class WorkerHost implements PhysicsHost {
   build(graph: TangleGraph, params: SceneParams): ParticleSystem {
     if (this.inThread) return this.inThread.build(graph, params);
     this.giveAll();
+    this.rejectFences("the scene was rebuilt");
+    this.frozenFlag = false;
+    this.snapStepMs = 0;
+    this.snapSubsteps = 0;
     const mirror = new MirrorSystem(graph);
     this.mirror = mirror;
     this.genN++;
@@ -330,6 +358,7 @@ export class WorkerHost implements PhysicsHost {
       return;
     }
     this.giveAll();
+    this.rejectFences("the scene was disposed");
     this.mirror = null;
     this.genN++;
     this.clearReadyTimer();
@@ -625,8 +654,45 @@ export class WorkerHost implements PhysicsHost {
         presettle: { ...this.settleInfo.presettle },
         budget: { ...this.settleInfo.budget },
       },
+      physMs: this.snapStepMs,
+      liveSubsteps: this.snapSubsteps,
+      frozen: this.frozenFlag,
       host,
     };
+  }
+
+  // --- the probe bridge (K7 stage 4, design 8) ---
+
+  // The worker stops its live clock; resolves once a snapshot written after
+  // the freeze arrived, which the mirror then shows exactly.
+  freeze(on: boolean): Promise<FreezeInfo> {
+    if (this.inThread) return this.inThread.freeze(on);
+    if (!this.mirror) return Promise.reject(new Error("no scene"));
+    this.postInput({ type: "freeze", gen: this.genN, on });
+    this.frozenFlag = on;
+    return this.fence(true).then((simTime) => ({ frozen: on, simTime }));
+  }
+  stepUntil(simTime: number, tuning: PhysicsTuning): Promise<number> {
+    if (this.inThread) return this.inThread.stepUntil(simTime, tuning);
+    if (!this.mirror) return Promise.reject(new Error("no scene"));
+    this.postTuning(tuning);
+    this.postInput({ type: "stepUntil", gen: this.genN, simTime });
+    return this.fence(true);
+  }
+  // The worker answers in order, so a dump after stepUntil holds its state.
+  dump(): Promise<PhysicsDump> {
+    if (this.inThread) return this.inThread.dump();
+    if (!this.mirror) return Promise.reject(new Error("no scene"));
+    const id = this.nextDumpId++;
+    return new Promise<PhysicsDump>((resolve, reject) => {
+      this.dumps.set(id, { resolve, reject });
+      this.postRaw({ type: "dump", id });
+    });
+  }
+  sync(): Promise<void> {
+    if (this.inThread) return this.inThread.sync();
+    if (!this.mirror) return Promise.resolve();
+    return this.fence(false).then(() => undefined);
   }
 
   // --- internals ---
@@ -724,9 +790,52 @@ export class WorkerHost implements PhysicsHost {
       case "error":
         this.fallBack(`worker error: ${msg.message}`);
         return;
-      case "dumped":
+      case "dumped": {
+        const p = this.dumps.get(msg.id);
+        if (!p) return;
+        this.dumps.delete(msg.id);
+        p.resolve({
+          gen: msg.gen,
+          simTime: msg.simTime,
+          positions: msg.positions,
+          prev: msg.prev,
+          zPos: msg.zPos,
+          passes: msg.passes,
+        });
         return;
+      }
     }
+  }
+
+  // The first snapshot written after every input posted so far (at once if
+  // the newest held one is). exact: older held snapshots go back and the
+  // mirror shows it, so a frozen scene renders that state, not a lerp.
+  private fence(exact: boolean): Promise<number> {
+    const inputs = this.inputsPosted;
+    const newest = this.held.length ? this.held[this.held.length - 1].view : null;
+    if (newest && newest.inputs >= inputs) {
+      if (exact) this.showNewest();
+      return Promise.resolve(newest.simTime);
+    }
+    return new Promise<number>((resolve, reject) => {
+      this.fences.push({ inputs, exact, resolve, reject });
+    });
+  }
+  private passFences(view: SnapshotView): void {
+    const done = this.fences.filter((f) => view.inputs >= f.inputs);
+    if (done.length === 0) return;
+    this.fences = this.fences.filter((f) => view.inputs < f.inputs);
+    if (done.some((f) => f.exact)) this.showNewest();
+    for (const f of done) f.resolve(view.simTime);
+  }
+  private rejectFences(why: string): void {
+    const fences = this.fences;
+    this.fences = [];
+    for (const f of fences) f.reject(new Error(why));
+  }
+  private showNewest(): void {
+    while (this.held.length > 1) this.give(this.held.shift()!.buf);
+    this.applyHeld(Infinity, false);
   }
 
   private receive(gen: number, buf: ArrayBuffer): void {
@@ -764,8 +873,11 @@ export class WorkerHost implements PhysicsHost {
       if (this.intervals.length > INTERVALS_KEPT) this.intervals.shift();
     }
     this.lastWallAt = view.wallAt;
+    this.snapStepMs = view.stepMs;
+    this.snapSubsteps = view.substeps;
     this.held.push({ view, buf });
     while (this.held.length > 2) this.give(this.held.shift()!.buf);
+    if (this.fences.length) this.passFences(view);
   }
 
   // Shows the newest snapshot, or (interpolating) the state at renderAt =
@@ -851,6 +963,9 @@ export class WorkerHost implements PhysicsHost {
     if (this.inThread) return;
     this.reasonText = reason;
     this.clearReadyTimer();
+    this.rejectFences(`the worker fell back (${reason})`);
+    for (const d of this.dumps.values()) d.reject(new Error(`the worker fell back (${reason})`));
+    this.dumps.clear();
     const hadScene = this.mirror !== null;
     this.held = [];
     this.mirror = null;

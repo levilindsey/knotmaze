@@ -28,6 +28,7 @@ const META: SnapshotMeta = {
   asleep: false,
   inputs: 17,
   frames: 99,
+  stepMs: 321.5,
 };
 
 // A system mid-drag: a violent circle around the centroid tunnels threads
@@ -84,15 +85,15 @@ function expectMirrors(m: MirrorSystem, ps: ParticleSystem): void {
 }
 
 describe("snapshot layout (K7)", () => {
-  it("has a 144-byte header and 8N + 32C + the emergent table after it", () => {
-    expect(SNAP_HEADER * 8).toBe(144);
+  it("has a 152-byte header and 8N + 32C + the emergent table after it", () => {
+    expect(SNAP_HEADER * 8).toBe(152);
     expect(Math.max(...Object.values(H))).toBe(SNAP_HEADER - 1);
     expect(new Set(Object.values(H)).size).toBe(SNAP_HEADER);
     const em = 4 * EMERGENT_MAX * EMERGENT_ROW;
-    expect(snapshotBytes(0, 0)).toBe(144 + em);
-    expect(snapshotBytes(563, 71)).toBe(144 + 8 * 563 + 32 * 71 + em);
+    expect(snapshotBytes(0, 0)).toBe(152 + em);
+    expect(snapshotBytes(563, 71)).toBe(152 + 8 * 563 + 32 * 71 + em);
     // Every section starts on its element size (no copies for the views).
-    expect((144 + 8 * 563) % 8).toBe(0);
+    expect((152 + 8 * 563) % 8).toBe(0);
   });
 
   it("rejects a buffer of the wrong size", () => {
