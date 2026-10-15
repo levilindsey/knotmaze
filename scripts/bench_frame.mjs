@@ -19,8 +19,10 @@
 //        [--cdp http://127.0.0.1:9222] [--size 1600x900] [--dpr 2]
 //        [--angle d3d11] [--profile-root <dir>] [--rest-ms 120000]
 //        [--settle-ms 1500] [--out <file.json>]
-// Several URLs alternate (A B A B ...) for --rounds rounds, a fresh tab
-// each, because a phone throttles over minutes. Without --cdp it launches a
+// Several URLs alternate for --rounds rounds, the order reversed every
+// other round (A B, B A, ...: ABBA cancels a linear drift; desktop
+// update() crept up about 0.3 to 0.7 ms per page over one A B A B run),
+// a fresh tab each, because a phone throttles over minutes. Without --cdp it launches a
 // headed desktop Chrome off-screen with its own profile (deleted at the
 // end); with --cdp it connects to a running Chrome (the phone over
 // `scripts/phone.ps1`: adb forward tcp:9222 localabstract:chrome_devtools_remote)
@@ -178,7 +180,7 @@ const runs = [];
 let caps = null;
 try {
   for (let round = 0; round < opt.rounds; round++) {
-    for (const url of urls) {
+    for (const url of (round % 2 ? [...urls].reverse() : urls)) {
       const page = await browser.newPage();
       const errors = [];
       page.on("pageerror", (e) => errors.push(String(e.message || e).slice(0, 200)));
