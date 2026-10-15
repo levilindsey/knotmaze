@@ -126,6 +126,46 @@ only with the files it is about; `render.md` lists the area's other files.
   which read as a GPU that ignored the glow. Probes:
   `.claude/probes/K145/`.
 
+- HIGHLIGHT MODES (K111 stage 2, 2026-10-14; brief `docs/design/K111.md`,
+  "Stage 2"; the param's link side is in `gameplay-links.md`): how the
+  CHOICES (the runs next to the player) are lit, `highlightMode` (hm=):
+  pulses (default) | glow | rims | contrast. RENDER PROTOTYPES waiting on
+  Levi's pick, the GLSL only: the CPU mirror (paint_math) still computes
+  the pulses in every mode, so the pluck overlay's colors (composedAtArc),
+  fieldProbe and paintProbe show the pulses look, and no parity test
+  covers the modes. The mode id rides in uKGold.w (tickPaintPalette, from
+  `renderer.highlightMode`, which main.ts sets from look("highlightMode")
+  every fabric tick and on an accessibility change); kHiMode() reads it,
+  `HIGHLIGHT_MODE` (paint_const.ts) names the ids. PULSES (0) is master's
+  code path: every other branch sits behind kHiMode() != HM_PULSES, so
+  same state vs master is 0 px (4 pulse-clock phases and a hovered choice
+  at 1400x900, 4 phases at 411x753). The other modes replace kPulseV's
+  trains with one level, lv x endWin x uKPulse.w x kReachWin(d): out to
+  pulseReach, faded over its end, faded in after a move as the trains are,
+  then STILL (t=0 vs t=1 s: 0 px; pulses 1306 px). kPaintAt marks a
+  hovered choice st.y = 2 under them. GLOW (1): lv HI_GLOW 0.75 (hovered
+  HI_GLOW_HOVER 1.0) through kComposePaint, a steady whitening of the
+  thread's own paint. RIMS (2): kComposePaintAcross (ribbons, side =
+  vUV.y) lights a band along both edges at full strength, the outer
+  HI_RIM_EDGE 0.55 of each half-width plus a HI_RIM_SOFT 0.12 ramp
+  inward; a hovered choice also fills its core to HI_RIM_HOVER_CORE 0.45.
+  CONTRAST (3): pure white whatever the hue (not K_BAND's 0.94) with a
+  black center line (inside HI_LINE 0.3 of the half-width, a HI_LINE_SOFT
+  0.1 ramp); a hovered choice drops the line. High contrast wears it
+  (`gameplay-motion.md`). Webs and fans have no across coordinate:
+  kComposePaintFlat (the arm strips) leaves them unlit under rims, so a
+  rim starts where the web ends (no K145-style end-gap fade), and flat
+  white under contrast, so the center line stops at the web. TUNING: glow
+  0.55 / 0.9 and rims 0.45 read too faintly in the first phone sheets;
+  at 411x753 contrast is the boldest and glow the softest. GPU
+  (gpu_by_program.mjs at 3200x1800 after two moves, perf lock, two
+  interleaved rounds; indicative): the ribbon program 1.98-1.99 ms in
+  every mode (the four within 0.02 ms of each other) against master's
+  1.95 (+0.03-0.05 ms, about master's own 0.04 ms round-to-round
+  spread); fans and arm strips within 0.02 ms. Probes:
+  `.claude/probes/K111/stage2/` (hm_probe.mjs ab | sheet, recrop.mjs +
+  mksheet.mjs for the sheets, gpu_batch.ps1).
+
 RENDER LORE (hard-won, 2026-10-09; the strip is RETIRED by G2.3 - paint is
  per pixel now, nothing interpolates U): **the palette strip's ORDER was
 load-bearing.** Per-vertex UVs interpolate linearly between samples, so
