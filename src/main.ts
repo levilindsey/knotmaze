@@ -24,10 +24,7 @@ import {
 import type { SettleBudget, StepLimits } from "./physics/settle_budget";
 import { RibbonRenderer } from "./render/ribbon_renderer";
 import { DebugRenderer } from "./render/debug_renderer";
-import {
-  FabricMazeRenderer,
-  MINO_MIN_CSS_R,
-} from "./render/fabric_maze_renderer";
+import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
 import { FabricMazeController } from "./game/fabric_controller";
 import {
   HOLD_DELAY_MS,
@@ -106,6 +103,7 @@ import {
 import type { IndicatorStyle } from "./ui/offscreen_indicators";
 import {
   DEFAULT_GLYPHS,
+  markerDotRadiusFor,
   markerGlyphSvgFit,
   markerRadiusFor,
 } from "./render/marker_glyphs";
@@ -1389,6 +1387,7 @@ async function main(): Promise<void> {
       fabric.trailLength = params.trailLength;
       fabric.fogOfWar = params.fogOfWar;
       fabric.fowRadius = params.fowRadius;
+      fabric.markerSize = params.markerSize;
       fabric.fogColor = pageInk();
       fabric.update(fabricController);
     } else {
@@ -1770,6 +1769,13 @@ async function main(): Promise<void> {
       if (!params.confetti) confetti.clear();
       writeParams(params);
     },
+    // K98: the markers' size. One render pass (the start/exit gap slots
+    // and the markers) without waking the physics.
+    onMarkerSizeChange: () => {
+      if (fabric) fabric.markerSize = params.markerSize;
+      writeParams(params);
+      renderDirty = true;
+    },
     onPlayDaily: () => playDaily(todayNumber(), true),
     onShowDailyStats: () => showDailyStats(),
     onAudioChange: () => {
@@ -1996,8 +2002,11 @@ async function main(): Promise<void> {
       renderer.markerWorld(v.chain, v.ctrl, out);
       return true;
     },
-    // The exit marker's own radius (FabricMazeRenderer.markerRadius).
-    radius: () => fabric?.markerRadius() ?? markerRadiusFor(params.threadWidth),
+    // The exit marker's own radius: its colored dot (K98), the outermost
+    // thing it draws (FabricMazeRenderer.markerDotRadius).
+    radius: () =>
+      fabric?.markerDotRadius() ??
+      markerDotRadiusFor(params.threadWidth, params.markerSize),
     icon: finishIcon,
     style: DARK_DISC,
     visible: () => {
@@ -2085,8 +2094,11 @@ async function main(): Promise<void> {
   indicators.add({
     id: "head",
     world: (out) => !!fabric && fabric.headPosition(out),
-    // The head marker's radius: the one K83 radius all three markers wear.
-    radius: () => fabric?.markerRadius() ?? markerRadiusFor(params.threadWidth),
+    // The head marker's radius: the one disc radius every marker wears
+    // (K83; sized by markerSize since K98).
+    radius: () =>
+      fabric?.markerRadius() ??
+      markerRadiusFor(params.threadWidth, params.markerSize),
     icon: headIcon,
     style: DARK_DISC,
     visible: () => {
@@ -2117,7 +2129,8 @@ async function main(): Promise<void> {
     id: "minotaur",
     world: (out) => !!chase && !!fabric && fabric.minotaurWorld(out),
     radius: () =>
-      fabric?.minotaurRadius() ?? markerRadiusFor(params.threadWidth),
+      fabric?.minotaurRadius() ??
+      markerRadiusFor(params.threadWidth, params.markerSize),
     icon: () =>
       minoIconSvg ||
       (minoIconSvg = markerGlyphSvgFit(
@@ -2480,8 +2493,10 @@ async function main(): Promise<void> {
       cx = exitScratch[0];
       cy = exitScratch[1];
     }
+    // The finish's outer edge: its colored dot (K98).
     const radius =
-      fabric?.markerRadius() ?? markerRadiusFor(params.threadWidth);
+      fabric?.markerDotRadius() ??
+      markerDotRadiusFor(params.threadWidth, params.markerSize);
     confetti.burst(
       plan,
       app.screen.width,
@@ -2588,7 +2603,6 @@ async function main(): Promise<void> {
     }
     if (chase.playerMoving) fabric.setMoveProgress(chase.playerProgress, fc);
     else if (fabric.animating) fabric.setMoveProgress(1, fc);
-    fabric.minoMinRadius = MINO_MIN_CSS_R / Math.max(1e-6, root.scale.x);
     fabric.syncMinotaur(chase, params.minoFog);
   };
 
@@ -3730,6 +3744,7 @@ async function main(): Promise<void> {
         fabric.trailLength = params.trailLength;
         fabric.fogOfWar = params.fogOfWar;
         fabric.fowRadius = params.fowRadius;
+        fabric.markerSize = params.markerSize; // K98 (a no-op unless moved).
         // fowIntro: keep the fog off while the intro animation plays; the
         // release closes it in (fade + contracting radius).
         fabric.setFogHold(params.fogOfWar && params.fowIntro && revealing);

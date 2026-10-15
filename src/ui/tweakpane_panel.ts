@@ -34,6 +34,7 @@ import {
   readsDetail,
 } from "../render/background_model";
 import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
+import { MARKER_SIZE_MAX, MARKER_SIZE_MIN } from "../render/marker_glyphs";
 import { PLUCK_WHOLE_MAX } from "../render/pluck_model";
 import type { MotionPref } from "./motion";
 
@@ -113,6 +114,9 @@ export interface PanelCallbacks {
   onChaseChange: () => void;
   // K140: the finish confetti (on/off, amount): render-only, applied live.
   onConfettiChange: () => void;
+  // K98: the markers' size (the player's dot, the start, the finish, the
+  // minotaur): render-only, applied live.
+  onMarkerSizeChange: () => void;
   // Audio-only change (sound mode / pitch space / octaves): re-derive the
   // pitch assignment without rebuilding the scene.
   onAudioChange: () => void;
@@ -764,6 +768,23 @@ export function buildPanel(
     D.confettiAmount, () => {
       params.confettiAmount = Math.round(params.confettiAmount * 100) / 100;
       callbacks.onConfettiChange();
+    }
+  );
+  // K98: the markers' diameter in thread widths. Daily-exempt (only the
+  // look). No step, like the confetti amount: an edit keeps 2 decimals.
+  const markerSizeRow = row(
+    fMaze, p, "markerSize",
+    {
+      min: MARKER_SIZE_MIN,
+      max: MARKER_SIZE_MAX,
+      keyScale: 0.05,
+      pointerScale: 0.01,
+      format: (v: number) => v.toFixed(2),
+    },
+    "Marker size: the diameter of your position marker, in thread widths. The start, the finish and the minotaur match it; the start and the finish keep a ring of their thread's color around the icon. Applies live.",
+    D.markerSize, () => {
+      params.markerSize = Math.round(params.markerSize * 100) / 100;
+      callbacks.onMarkerSizeChange();
     }
   );
   const resetPathBtn = button(
@@ -1521,6 +1542,7 @@ export function buildPanel(
     movePadRow.hidden = !fab;
     confettiRow.hidden = !fab;
     confettiAmountRow.hidden = !fab || !params.confetti;
+    markerSizeRow.hidden = !fab;
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;
     pulseReachRow.hidden = !fab;

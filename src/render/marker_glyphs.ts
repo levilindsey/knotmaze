@@ -18,8 +18,9 @@
 // These are PLACEHOLDERS - Levi will replace them. A new glyph is one more
 // design below (the tests check its fit and that the shader can draw it).
 
-// "minotaur": K80's real-time chaser (drawn only in that mode).
-export type MarkerRole = "start" | "exit" | "head" | "minotaur";
+// "minotaur": K80's real-time chaser (drawn only in that mode). "spider":
+// K114's spider (K98 landed the glyph and the role; nothing draws it yet).
+export type MarkerRole = "start" | "exit" | "head" | "minotaur" | "spider";
 
 // Stroke width and rim margin, in disc radii. The margin equals the stroke
 // (the brief); the outer ink therefore reaches radius 1 - MARKER_MARGIN.
@@ -30,16 +31,61 @@ export const MARKER_MARGIN = MARKER_STROKE;
 export const GLYPH_MAX_SEGMENTS = 64;
 export const GLYPH_MAX_CIRCLES = 8;
 
-// THE MARKER RADIUS (world units), one for all three markers: large enough
-// for a glyph to read at the phone's default zoom (~9 CSS px per lattice
-// unit at gs 18 - the old 0.95-width discs were 9 px across there), and
-// scaled with the thread so a disc always clears its own ribbon. The
-// fabric overlay draws with it; anything else that needs a marker's size
-// (the off-screen indicators) reads it here rather than copying it.
-export const MARKER_R_PER_WIDTH = 1.5;
-export const MARKER_R_MIN = 0.55;
-export function markerRadiusFor(threadWidth: number, scale = 1): number {
-  return Math.max(MARKER_R_MIN, threadWidth * MARKER_R_PER_WIDTH) * scale;
+// THE MARKER SIZE (K98; Levi, 2026-10-13: a slider for the player's dot
+// "diameter relative to the thread width", 0.25 to 3, and the start, the
+// finish and the other in-game icons the player's size). `markerSize` (the
+// mks param) is the black disc's DIAMETER in thread widths, for every
+// marker. The default is the pre-K83 head dot (radius 0.54 tw); K83's discs
+// were 3 tw across (max(0.55, 1.5 tw) in radius), so the default shrank.
+// The radius is purely relative to the thread width, with no world or
+// screen floor, so the slider means the same at every zoom. Anything that
+// needs a marker's size (the off-screen indicators, the confetti) reads
+// markerRadiusFor or the fabric renderer's markerRadius(), never a copy.
+export const MARKER_SIZE_DEFAULT = 1.08;
+export const MARKER_SIZE_MIN = 0.25;
+export const MARKER_SIZE_MAX = 3;
+
+// A size from a link or a probe: garbage reads as the default, anything
+// else clamps to [MARKER_SIZE_MIN, MARKER_SIZE_MAX].
+export function sanitizeMarkerSize(size: number): number {
+  if (!Number.isFinite(size)) return MARKER_SIZE_DEFAULT;
+  return Math.min(MARKER_SIZE_MAX, Math.max(MARKER_SIZE_MIN, size));
+}
+
+// The black disc's radius (world units). `scale` is the K83 probe hook's
+// extra multiplier (FabricMazeRenderer.setMarkerStyle).
+export function markerRadiusFor(
+  threadWidth: number,
+  size = MARKER_SIZE_DEFAULT,
+  scale = 1
+): number {
+  return (sanitizeMarkerSize(size) / 2) * threadWidth * scale;
+}
+
+// THE COLORED DOT (K98; Levi: "I still want colored dots at the start and
+// end, and with the default diameter showing some of the colored dot around
+// the icon dot"). The start and the finish sit on a dot of their thread's
+// section color, larger than the icon disc. The call: the dot's radius is
+// max(MARKER_DOT_MIN_TW, icon radius + MARKER_RING_TW) thread widths. It
+// never drops below the pre-K83 start/finish disc (0.95 tw, nearly twice
+// the thread's half-width, so the color always shows beyond the thread it
+// ends), and once the icon disc outgrows it, a constant 0.41 tw rim shows
+// around the disc. The two meet at the default (0.54 + 0.41 = 0.95), where
+// the look is exactly the pre-K83 pair: a 0.95 tw colored disc and the
+// head's 0.54 tw dot. Rim width: 0.825 tw at size 0.25, 0.41 tw from the
+// default to 3 (dot radius 1.91 tw there). A rim proportional to the icon
+// (R = 1.76 r) would sink under the thread's own width below size 0.57 and
+// grow to 1.14 tw blobs at 3.
+export const MARKER_DOT_MIN_TW = 0.95;
+export const MARKER_RING_TW = 0.41;
+export function markerDotRadiusFor(
+  threadWidth: number,
+  size = MARKER_SIZE_DEFAULT,
+  scale = 1
+): number {
+  const r = markerRadiusFor(threadWidth, size, scale);
+  const tw = threadWidth * scale;
+  return Math.max(MARKER_DOT_MIN_TW * tw, r + MARKER_RING_TW * tw);
 }
 
 interface GlyphDesign {
@@ -307,6 +353,24 @@ const DESIGNS: GlyphDesign[] = [
   },
   // THE MINOTAUR (K80, a placeholder like the rest).
   {
+    // K98 (Levi: "simple minotaur and spider icons"): the Taurus sign - a
+    // ring for the head under a crescent of horns whose tips curl in, the
+    // crescent's foot on the ring. Two marks, so it still reads at the
+    // default size, where the whole disc is about 5 CSS px across on the
+    // phone. Laid out so the horn tips and the ring's foot sit equally far
+    // from the center (the fit is radial).
+    id: "horns",
+    role: "minotaur",
+    label: "horns (Taurus)",
+    lines: [
+      pen()
+        .M(12 + 6.5 * Math.cos(-0.35), 6.3 + 6.5 * Math.sin(-0.35))
+        .A(12, 6.3, 6.5, -0.35, Math.PI + 0.35)
+        .lines()[0],
+    ],
+    rings: [[12, 17.4, 4.6]],
+  },
+  {
     // A bull's head: horns sweeping up from the brow, ears, a long face
     // with a rounded muzzle, two eyes.
     id: "bull",
@@ -333,7 +397,37 @@ const DESIGNS: GlyphDesign[] = [
       [13.8, 12.5, 1.1],
     ],
   },
+  // THE SPIDER (K98, ready for K114's spider; nothing draws it yet).
+  {
+    // A body of two dots (head and abdomen) and eight legs, four a side,
+    // each bent once at the knee: the front pair reaches up, the back pair
+    // down.
+    id: "spider",
+    role: "spider",
+    label: "spider",
+    lines: spiderLegs([
+      [10.4, 9.6, 7, 6.5, 5.5, 2.5],
+      [10.2, 11, 5.5, 9.5, 3, 6.5],
+      [10.2, 12.4, 5.5, 13.5, 3, 17],
+      [10.6, 13.6, 7, 17.5, 5.5, 21.5],
+    ]),
+    dots: [
+      [12, 9.4, 2.1],
+      [12, 14.6, 3.4],
+    ],
+  },
 ];
+
+// Legs given for the left side (hip, knee, foot), mirrored to the right
+// about the frame's center line.
+function spiderLegs(left: number[][]): number[][] {
+  const out: number[][] = [];
+  for (const [hx, hy, kx, ky, fx, fy] of left) {
+    out.push([hx, hy, kx, ky, fx, fy]);
+    out.push([24 - hx, hy, 24 - kx, ky, 24 - fx, fy]);
+  }
+  return out;
+}
 
 // --- Compilation into the disc frame. ---------------------------------
 
@@ -434,6 +528,7 @@ export const DEFAULT_GLYPHS: Readonly<Record<MarkerRole, string>> = {
   exit: DESIGNS.find((d) => d.role === "exit")!.id,
   head: DESIGNS.find((d) => d.role === "head")!.id,
   minotaur: DESIGNS.find((d) => d.role === "minotaur")!.id,
+  spider: DESIGNS.find((d) => d.role === "spider")!.id,
 };
 
 // Every glyph id of a role, the default first.

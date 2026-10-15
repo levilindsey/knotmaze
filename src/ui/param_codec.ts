@@ -218,6 +218,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("pluckWhole"), // 101
   choice("pluckCrossings", ["through", "ride", "pinch"]), // 102
   choice("pluckGlow", ["off", "instead", "with", "fallback"]), // 103
+  // K98's marker size.
+  num("markerSize"), // 104
 ]);
 
 // The format version a blob names first. Bump it for anything but an

@@ -4392,6 +4392,19 @@ export class RibbonRenderer {
     out[1] = this.sampleScratch[1];
   }
 
+  // K98: the thread's own color at a marker (its section color, burn /
+  // roots included - colorAtArc) into out[0..2], for the start and finish
+  // markers' colored dots.
+  sectionColorAt(chain: number, ctrl: number, out: Float32Array): void {
+    const samples = this.chainSamples[chain];
+    if (!samples) {
+      out.set(this.baseRgb);
+      return;
+    }
+    const closed = this.ps.chainBreakAfter[chain] < 0;
+    this.colorAtArc(chain, this.paintArcAt(samples, ctrl, closed), out);
+  }
+
   // Arc of a ctrl for PAINT purposes. arcAt's closing modulo is correct
   // for closed chains but wraps an OPEN chain's terminal arc (== total) to
   // ZERO - a traveled bridge's span [0, lastCtrl] collapsed to a point and

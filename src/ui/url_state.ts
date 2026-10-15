@@ -18,6 +18,7 @@ import { DEFAULT_CHASE_PARAMS } from "../game/minotaur";
 import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
 import type { PluckCrossings, PluckGlow } from "../render/pluck_model";
 import { PLUCK_CROSSINGS, PLUCK_GLOWS, PLUCK_WHOLE_MAX } from "../render/pluck_model";
+import { MARKER_SIZE_DEFAULT, sanitizeMarkerSize } from "../render/marker_glyphs";
 import type {
   BackgroundColorMode,
   BackgroundId,
@@ -388,6 +389,10 @@ export interface UrlParams {
   pluckWhole: number;
   pluckCrossings: PluckCrossings;
   pluckGlow: PluckGlow;
+  // K98: the markers' diameter in thread widths (render/marker_glyphs.ts,
+  // [MARKER_SIZE_MIN, MARKER_SIZE_MAX]): the player's dot, and the start,
+  // the finish and the minotaur at the same size. A viewer preference.
+  markerSize: number;
 }
 
 // The two load-settle sliders' tops (K147). LOAD_SETTLE_MAX is a sentinel
@@ -519,6 +524,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   pluckWhole: 0.5,
   pluckCrossings: "through",
   pluckGlow: "off",
+  markerSize: MARKER_SIZE_DEFAULT,
 };
 
 // The real-time chase's tuning from a design's params (K80). Negative or
@@ -631,6 +637,7 @@ function fromCodecValues(
   p.loadSettle = clampTo(p.loadSettle, LOAD_SETTLE_MAX);
   p.confettiAmount = clampTo(p.confettiAmount, CONFETTI_AMOUNT_MAX);
   p.pluckWhole = clampTo(p.pluckWhole, PLUCK_WHOLE_MAX);
+  p.markerSize = sanitizeMarkerSize(p.markerSize);
   return p;
 }
 
@@ -869,6 +876,8 @@ function readLegacy(
     pluckWhole: clampTo(readNumber(query, "pw", D.pluckWhole), PLUCK_WHOLE_MAX),
     pluckCrossings: readChoice(query, "pcx", PLUCK_CROSSINGS, D.pluckCrossings),
     pluckGlow: readChoice(query, "pgl", PLUCK_GLOWS, D.pluckGlow),
+    // K98's marker size (`&mks=2`).
+    markerSize: sanitizeMarkerSize(readNumber(query, "mks", D.markerSize)),
   };
 }
 

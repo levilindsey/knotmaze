@@ -49,7 +49,14 @@ import type { MinotaurChase, MinotaurMode } from "../game/minotaur";
 import { FogBackdrop } from "./background";
 import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
 import { MarkerMesh } from "./marker_mesh";
-import { DEFAULT_GLYPHS, markerGlyph, markerRadiusFor } from "./marker_glyphs";
+import {
+  DEFAULT_GLYPHS,
+  MARKER_SIZE_DEFAULT,
+  markerDotRadiusFor,
+  markerGlyph,
+  markerRadiusFor,
+  sanitizeMarkerSize,
+} from "./marker_glyphs";
 import type { MarkerRole } from "./marker_glyphs";
 
 // The win ring's accent around the finish marker.
@@ -57,18 +64,18 @@ const EXIT_COLOR = 0xff6b3d;
 
 // MARKERS (K83): the start, the finish and the current position are black
 // discs with a white stroked glyph (marker_glyphs.ts), drawn per pixel by
-// marker_mesh.ts, all three at markerRadiusFor(threadWidth) (world units).
-// The win ring, in marker radii (its stroke stays a fraction of the
-// thread width).
+// marker_mesh.ts, all at markerRadiusFor(threadWidth, markerSize) (world
+// units; K98's markerSize param, the disc's diameter in thread widths).
+// K98: the start and the finish sit on a dot of their thread's own color
+// (markerDotRadiusFor: a rim around the disc at every size). The win ring,
+// in radii of the finish's dot (its stroke stays a fraction of the thread
+// width).
 const WIN_RING_R = 1.32;
 
-// THE MINOTAUR (K80, the real-time mode): a K83 marker wearing the bull
-// over a red highlight, a little larger than the other markers and never
-// smaller than MINO_MIN_CSS_R CSS px in radius (main.ts converts that to
-// world units every frame through minoMinRadius): threads are 4-5 px wide
-// at a phone's fit scale, where a marker is about 7 px in radius.
-const MINO_SCALE = 1.15; // Marker radii.
-export const MINO_MIN_CSS_R = 10;
+// THE MINOTAUR (K80, the real-time mode): a K83 marker wearing its glyph
+// over a red highlight, at the player's size (K98: the brief puts every
+// marker at the head's size; until K98 it was 1.15 marker radii and never
+// under 10 CSS px).
 // The highlight's diameter in minotaur radii, and its opacity by mode: dim
 // in the lair, plain while it roams, larger and full while it hunts.
 const MINO_GLOW_DIAM = 3;
@@ -81,9 +88,11 @@ const MINO_GLOW_ALPHA: Record<MinotaurMode, number> = {
 };
 
 // The marker meshes live for the page (each scene's overlay borrows them;
-// destroy() hands them back undestroyed - the PALETTE_CACHE lore).
-let MARKER_MESHES: Record<MarkerRole, MarkerMesh> | null = null;
-function markerMeshes(): Record<MarkerRole, MarkerMesh> {
+// destroy() hands them back undestroyed - the PALETTE_CACHE lore). The
+// spider glyph has no mesh yet (K114 decides what it marks).
+type MeshRole = Exclude<MarkerRole, "spider">;
+let MARKER_MESHES: Record<MeshRole, MarkerMesh> | null = null;
+function markerMeshes(): Record<MeshRole, MarkerMesh> {
   if (!MARKER_MESHES) {
     MARKER_MESHES = {
       start: new MarkerMesh(),
@@ -300,11 +309,15 @@ export class FabricMazeRenderer {
   private ribbons: RibbonRenderer;
   // The win ring (the markers themselves are MarkerMeshes).
   private gfx: Graphics;
-  private markers: Record<MarkerRole, MarkerMesh>;
+  private markers: Record<MeshRole, MarkerMesh>;
   // The glyph each marker wears (marker_glyphs.ts ids; probes swap them
   // through setMarkerStyle) and a size multiplier on the marker radius.
   private markerGlyphIds: Record<MarkerRole, string> = { ...DEFAULT_GLYPHS };
   private markerScale = 1;
+  // K98: the markers' diameter in thread widths (see the markerSize
+  // accessors) and the dots' color scratch.
+  private size = MARKER_SIZE_DEFAULT;
+  private dotRgb = new Float32Array(3);
   private threadWidth: number;
   private hoverEdge = -1;
   private anim: MoveAnim | null = null;
@@ -363,9 +376,6 @@ export class FabricMazeRenderer {
   // one layer above the other markers, moved above or below the fog.
   private minoLayer: Container;
   private minoGlow: Sprite;
-  // The smallest radius it draws at (world units; main.ts keeps it at
-  // MINO_MIN_CSS_R CSS px for the current zoom).
-  minoMinRadius = 0;
   // Where syncMinotaur last drew it (world), and whether a fog of war
   // covers it there; minoShown false = not drawn.
   private minoShown = false;
@@ -425,13 +435,33 @@ export class FabricMazeRenderer {
     this.syncMarkerOccluders();
   }
 
+  // K98: the markers' diameter in thread widths (the markerSize param;
+  // main.ts keeps it synced). A change resizes the start/exit gap slots;
+  // the renderer re-solves them on its next update().
+  get markerSize(): number {
+    return this.size;
+  }
+
+  set markerSize(v: number) {
+    const s = sanitizeMarkerSize(v);
+    if (s === this.size) return;
+    this.size = s;
+    this.syncMarkerOccluders();
+  }
+
+  // The black disc's world radius: the head, the minotaur, and the start
+  // and finish discs (whose colored dots are markerDotRadius).
+  markerRadius(): number {
+    return markerRadiusFor(this.threadWidth, this.size, this.markerScale);
+  }
+
   // Start/exit markers are DISC OCCLUDERS in the ribbon renderer: each
-  // owns a gap slot that hides its thread inside radius (disc + gap),
-  // concentric with the disc by construction (markerWorld). The finish's
+  // owns a gap slot that hides its thread inside radius (dot + gap),
+  // concentric with the dot by construction (markerWorld). The finish's
   // off-screen indicator (main.ts) reads it too: its "on screen" test needs
   // the whole marker in view.
-  markerRadius(): number {
-    return markerRadiusFor(this.threadWidth, this.markerScale);
+  markerDotRadius(): number {
+    return markerDotRadiusFor(this.threadWidth, this.size, this.markerScale);
   }
 
   // The glyph a marker wears now; the finish's indicator draws the same.
@@ -442,7 +472,7 @@ export class FabricMazeRenderer {
   // Swap marker glyphs (marker_glyphs.ts ids) and/or scale the marker
   // radius - placeholder exploration (the K83 contact sheets). A size
   // change resizes the start/exit gap slots; the renderer re-solves them
-  // on its next update().
+  // on its next update(), and the markers take the size when next drawn.
   setMarkerStyle(style: {
     start?: string;
     exit?: string;
@@ -459,16 +489,21 @@ export class FabricMazeRenderer {
     if (style.scale !== undefined && style.scale > 0) {
       this.markerScale = style.scale;
       this.syncMarkerOccluders();
-      const r = this.markerRadius();
-      for (const mk of Object.values(this.markers)) mk.mesh.scale.set(r);
     }
   }
 
-  markerStyle(): Record<MarkerRole, string> & { scale: number; radius: number } {
+  markerStyle(): Record<MarkerRole, string> & {
+    scale: number;
+    size: number;
+    radius: number;
+    dotRadius: number;
+  } {
     return {
       ...this.markerGlyphIds,
       scale: this.markerScale,
+      size: this.size,
       radius: this.markerRadius(),
+      dotRadius: this.markerDotRadius(),
     };
   }
 
@@ -476,7 +511,7 @@ export class FabricMazeRenderer {
     const s = this.walk.vertices.get(this.walk.start);
     const e = this.walk.vertices.get(this.walk.exit);
     if (!s || !e) return;
-    const r = this.markerRadius();
+    const r = this.markerDotRadius();
     this.ribbons.setMarkerOccluders([
       { chain: s.chain, ctrl: s.ctrl, radius: r },
       { chain: e.chain, ctrl: e.ctrl, radius: r },
@@ -721,7 +756,7 @@ export class FabricMazeRenderer {
     }
     const x = this.scratch[0];
     const y = this.scratch[1];
-    const r = Math.max(this.markerRadius() * MINO_SCALE, this.minoMinRadius);
+    const r = this.markerRadius();
     const d =
       r * (chase.mode === "hunt" ? MINO_GLOW_DIAM_HUNT : MINO_GLOW_DIAM);
     this.minoGlow.position.set(x, y);
@@ -760,7 +795,7 @@ export class FabricMazeRenderer {
   }
 
   minotaurRadius(): number {
-    return this.minoR > 0 ? this.minoR : this.markerRadius() * MINO_SCALE;
+    return this.minoR > 0 ? this.minoR : this.markerRadius();
   }
 
   // True while a fog of war covers the minotaur (minoFog "never", or
@@ -1677,7 +1712,8 @@ export class FabricMazeRenderer {
   // though their thread passes UNDER them), the current position (at the
   // given chain position mid-move, at the head vertex otherwise; its
   // under-weave halo follows it), and the win ring. All three are black
-  // discs with a white glyph, one radius.
+  // discs with a white glyph, one radius; K98: the start and the finish sit
+  // on a dot of their thread's own color (radius dotR, the gap slots' too).
   private drawMarkers(
     controller: FabricMazeController,
     dotChain: number,
@@ -1687,6 +1723,7 @@ export class FabricMazeRenderer {
     const g = this.gfx;
     g.clear();
     const r = this.markerRadius();
+    const dotR = this.markerDotRadius();
     const m = this.markers;
     if (dotChain >= 0) {
       this.pointFlowed(dotChain, this.ctrlMod(dotChain, dotCtrl), this.scratch, 0);
@@ -1712,7 +1749,9 @@ export class FabricMazeRenderer {
     const startV = this.walk.vertices.get(this.walk.start)!;
     this.ribbons.markerWorld(startV.chain, startV.ctrl, this.scratch);
     m.start.setGlyph(markerGlyph(this.markerGlyphIds.start, "start"));
-    m.start.place(this.scratch[0], this.scratch[1], r);
+    this.ribbons.sectionColorAt(startV.chain, startV.ctrl, this.dotRgb);
+    m.start.setRingColor(this.dotRgb);
+    m.start.place(this.scratch[0], this.scratch[1], r, dotR);
 
     const exitV = this.walk.vertices.get(this.walk.exit)!;
     if (
@@ -1724,9 +1763,11 @@ export class FabricMazeRenderer {
     }
     this.ribbons.markerWorld(exitV.chain, exitV.ctrl, this.scratch);
     m.exit.setGlyph(markerGlyph(this.markerGlyphIds.exit, "exit"));
-    m.exit.place(this.scratch[0], this.scratch[1], r);
+    this.ribbons.sectionColorAt(exitV.chain, exitV.ctrl, this.dotRgb);
+    m.exit.setRingColor(this.dotRgb);
+    m.exit.place(this.scratch[0], this.scratch[1], r, dotR);
     if (showRing) {
-      this.polyCircle(g, this.scratch[0], this.scratch[1], r * WIN_RING_R, 72);
+      this.polyCircle(g, this.scratch[0], this.scratch[1], dotR * WIN_RING_R, 72);
       g.stroke({
         color: EXIT_COLOR,
         width: this.threadWidth * 0.25,
