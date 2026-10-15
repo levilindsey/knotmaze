@@ -407,7 +407,8 @@ only with the files it is about; `render.md` lists the area's other files.
   four real clicks, ms of rAF callbacks over the tap's first 10 frames;
   knot / fabric / dense): master glint 113 / 116 / 206 against ripple off
   80 / 100 / 181; branch glint 85 / 102 / 184 against off 81 / 112 / 181.
-  The ripple's first-use share (15-33 ms) is gone. Left on both builds,
+  The ripple's first-use share (15-33 ms; tap 1 varies about 10 ms
+  between fresh runs) is gone. Left on both builds,
   ripple or not: one frame interval of 35-54 ms among tap 1's first
   five, against 18 ms on later taps (dense 18-36: its frames often take
   two vsyncs). Not attributed; the pluck overlay's first draw and
@@ -423,10 +424,10 @@ only with the files it is about; `render.md` lists the area's other files.
   exactly 1 at and above the floor, so a default desktop view writes
   bit-for-bit the uniforms it did. Why 56: the desktop ripple's visual
   angle (80 CSS px of about 0.25 mm at about 60 cm; a phone CSS px is
-  0.177 mm at about 30 cm, about 1.4x the angle), and the front clears a
-  5 mm fingertip at 0.19 s at 63% strength (unfloored 0.47 s and 23%);
-  the front then ends at 9.9 mm. Not seen on the phone yet; 68 is the
-  upper candidate. WAVE A/B
+  0.177 mm at about 30 cm, about 1.4x the angle), and the front gets 5
+  mm from the tap, out from under a fingertip, at 0.19 s and 63%
+  strength (unfloored: 0.47 s and 23%); it ends at 9.9 mm. Not seen on
+  the phone yet; 68 is the upper candidate. WAVE A/B
   (k279_ab2.mjs, `&prp=wave`, same state, master vs f41de80): 0 px on
   the daily, `?7` knot and the kink loop (11-14 frames each, plucks 4/4),
   and on 13 of `?7` fabric's 14. The 14th (`oz_far`: zoomed to 176
