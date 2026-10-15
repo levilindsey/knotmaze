@@ -825,8 +825,9 @@ demand.
   h) -> 10/13 and after the gestures 7423/12315 -> 44/55, every holder
   down, +0.6-1.1 ms per ribbon rebuild. It never reaches the physics. OFF
   by default behind `window.__knotSplineBend`, awaiting Levi's look and a
-  tune: the tightest single window got tighter on one tw .64 design (0.299
-  -> 0.132 h). *[Record: `docs/design/K90_bend_radius.md`; lore:
+  tune: a scan's tightest window can get tighter (24 of 585 scans; tw .64
+  0.299 -> 0.132 h), and a soft clamp (an option, off) cut that to 4.
+  *[Record: `docs/design/K90_bend_radius.md`; lore:
   `.claude/rules/generation.md` (K90, the bend bound); census, crops and
   sheet in `.claude/probes/K90/out_1b/`.]*
 

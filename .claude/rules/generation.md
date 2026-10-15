@@ -133,7 +133,11 @@ CLAUDE.md: the threads ARE the maze paths.
   is not updated for them. Flag off is byte-identical. The census
   (`scripts/fold_census.ts`, `K90_VARIANTS=on:<ratio>:<maxShift>[:<marginMax>[:<passes>]]`)
   counts folds under a junction web (within 0.92 h of a fused-junction
-  center) as holder `web`. Record: `docs/design/K90_bend_radius.md`.
+  center) as holder `web`. The hard per-sample clamp can make a scan's
+  tightest window tighter (24 of 585 scans in census r3);
+  `splineBend.soft` (default false; census variant `soft:`) scales each
+  run's whole relaxation back instead, which cut that to 4. Record:
+  `docs/design/K90_bend_radius.md`.
 
 ## Shapes, anchors and escape tails
 

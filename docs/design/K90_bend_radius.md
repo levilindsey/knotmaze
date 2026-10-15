@@ -33,10 +33,18 @@ gesture's re-sleep), `after` (the rest after the gesture battery), `violent`
   the full suite is green and the golden is byte-identical.
 - **The sheet for Levi:** `out_1b/sheet/sheet.png`. Ribbon rebuild cost:
   +0.6 to +1.1 ms per `update()` (5-9%), desktop only.
-- **One regression:** the single tightest window got tighter on one tw .64
-  design (0.299 h -> 0.132 h), and the standing links' tightest moved
-  0.409 -> 0.399 h. The suspected cause is the per-sample shift clamp
-  (inferred, not attributed).
+- **One regression:** a scan's single tightest window can get tighter. At
+  fresh rest that happens on one tw .64 design (0.299 h -> 0.132 h) and
+  the standing links (0.409 -> 0.399 h); over every state it is 24 of the
+  585 scans, mostly the links' gesture scans, worst star24_1471kin after a
+  drag (0.355 -> 0.094 h).
+- **The soft clamp (census r3, an option, off):** capping each relaxed run
+  as a whole instead of each sample cuts those 24 scans to 4 on the same
+  particles (0 at fresh rest; the t64 design's min 0.132 -> 0.339 h, above
+  its base), so the per-sample clamp causes most of the regression. It
+  leaves two drag scans (star24_1471kin 0.355 -> 0.112 h, the links 0.397
+  -> 0.212 h) and costs some windows after the gestures (44/55 -> 55/61).
+  Not the default: the sheet shows the hard clamp.
 - **Recommendation: tune, then ship behind the flag once Levi has looked
   at the sheet.** Options 1 and 2 are not needed for the rendered folds.
 
@@ -274,9 +282,9 @@ Diagnostics, fresh, all rows: one pass moved 14218 samples in 4824 runs;
 the chosen variant 14283 in 4906 runs; on:1.2:1.0:24:3 14292. No run was
 skipped. The largest shift equals maxShift in each variant (0.5 h, or 1.0 h).
 
-### The tightest window gets tighter on two rows
+### The tightest window gets tighter
 
-The census also keeps each row's tightest window (min r, in h). Fresh rest,
+The census also keeps each scan's tightest window (min r, in h). Fresh rest,
 per set (base, one pass, chosen, on:1.2:1.0:24:3):
 
 | set | base | one pass | chosen | maxShift 1.0 |
@@ -299,19 +307,79 @@ per set (base, one pass, chosen, on:1.2:1.0:24:3):
 (base 0.409), fat_1q2w3e 0.722 (base 0.501), t64_1471kin 0.744 (base
 0.572).
 
-Hypothesis (inferred, NOT attributed): the per-sample clamp. A sample that
-reaches maxShift stops, its neighbors keep straightening, and the turn
-concentrates on the clamped sample, more so with more passes and with a
-larger maxShift. Attributing it needs a per-site dump of that window; the
-census stores only counts per variant, no worst windows.
-`node k90_minsite.mjs out_1b/census_r2.jsonl [variant] [n]` lists the
-rows. The counts above say these are a handful of samples; the min says
-that each of them is worse than before.
+Over every state, the scans whose min falls below the base's on the same
+particles (`node k90_minrows.mjs out_1b/census_r2.jsonl`,
+`out_1b/minrows_r2.txt`; 79 fresh, 220 gEnd, 220 gRest, 22 after and 44
+violent scans):
+
+| variant | fresh | gEnd | gRest | after | violent | worst |
+|---|---|---|---|---|---|---|
+| one pass | 2 | 9 | 10 | 1 | 2 | star24_1471kin violent 0.355 -> 0.094 |
+| chosen | 2 | 9 | 10 | 1 | 2 | the same; t64_1q2w3e fresh 0.132 |
+| maxShift 1.0 | 2 | 10 | 10 | 1 | 3 | star24_1471kin violent 0.355 -> 0.019 |
+
+Outside fresh rest every one of them is link_user_rect, except
+star24_1471kin's drag. The passes deepen the t64 case only; a larger
+maxShift deepens every case.
+
+Hypothesis: the per-sample clamp. A sample that reaches maxShift stops,
+its neighbors keep straightening, and the turn concentrates on the clamped
+sample, more so with a larger maxShift. Census r3 tested it (next
+section): it explains 20 of the 24 scans. `node k90_minsite.mjs
+<census.jsonl> [variant] [n]` lists a variant's tightest fresh rows. The
+counts above say these are a handful of samples; the min says that each
+of them is worse than before.
+
+### The soft clamp (census r3)
+
+`splineBend.soft` (default false): relax each run with no per-sample clamp,
+then blend the whole run back toward its positions before the relaxation,
+pos = pre + t (relaxed - pre), with the largest t in [0, 1] that keeps every
+sample of the run within maxShift of the spline (per sample, the larger
+root of a quadratic in t; the stable form). A sample's second difference
+is linear in the positions, so a blended run turns about no tighter than
+the tighter of its two states, and no single sample is stopped while its
+neighbors go on. The hard path is untouched: r3's `on:1.2:0.5:24:3` rows
+equal r2's in every count and min.
+
+Census r3 (`out_1b/census_r3.jsonl`, `out_1b/analyze_r3.txt`,
+`out_1b/minrows_r3.txt`), all sets, w1/w115, all | outside the webs:
+
+| state | base | on:1.2:0.5:24:3 (the default) | soft:1.2:0.5:24:3 | soft:1.2:1.0:24:3 |
+|---|---|---|---|---|
+| fresh | 2357/4045 \| 954/2189 | 10/13 \| 8/10 | 10/12 \| 8/9 | 9/11 \| 7/8 |
+| gEnd | 7474/12420 \| 3323/6911 | 46/56 \| 30/38 | 54/63 \| 32/38 | 57/67 \| 36/44 |
+| gRest | 7423/12315 \| 3292/6815 | 44/55 \| 29/37 | 55/61 \| 33/36 | 56/66 \| 36/43 |
+| after | 746/1228 \| 340/686 | 5/5 \| 3/3 | 6/5 \| 4/3 | 6/6 \| 4/4 |
+| violent | 1592/2563 \| 715/1441 | 21/25 \| 17/18 | 23/25 \| 19/19 | 21/26 \| 15/18 |
+| scans with a tighter min | | 24 of 585 | **4 of 585** | 23 of 585 |
+| min, fresh, all rows | 0.299 | 0.132 | **0.339** | 0.135 |
+
+(w1 can exceed w115: one window under 1.15 h can hold two under 1.0 h.)
+
+Soft at 0.5 h:
+- fresh rest: no scan worse than its base. The t64 design's min rose to
+  0.339 h (base 0.299), the links' to 0.648 (base 0.409), thin's to 1.165;
+- the gestures: one scan each in gEnd and gRest (link_user_rect, 0.383 ->
+  0.363 and 0.458 -> 0.441 h);
+- the drags: two, star24_1471kin 0.355 -> 0.112 h (hard 0.094) and
+  link_user_rect 0.397 -> 0.212 h (hard 0.309: worse);
+- the counts: about the same at rest, 8-11 more windows under 1.0 h in the
+  gesture states (gRest 44 -> 55), still 99.3% below the base.
+
+Soft at 1.0 h brings the regression back (23 scans, t64 0.135 h,
+star24_1471kin 0.045 h). So the per-sample clamp causes most of the
+regression, and something that grows with the allowed shift causes the
+rest. Untested candidate: the samples just outside a run's range, which
+take more turn when the run's edge sample moves and which the last pass
+never revisits. Attributing it needs the census to keep each variant's
+worst windows (it keeps counts and the min only).
 
 ## Guards (K90.md, "Guards and acceptance")
 
-- **Flag off: met.** `npx vitest run` green at 08:41 (60 files passed and
-  1 skipped, 686 tests passed and 1 skipped), the knot golden
+- **Flag off: met.** `npx vitest run` green at 08:41 and again at 08:55
+  with the soft clamp in the source (60 files passed and 1 skipped, 686
+  tests passed and 1 skipped), the knot golden
   (`test/physics/byte_identity.test.ts`) byte-identical among them: the bound is behind `if (splineBend.enabled)`, and with it
   off the samplers run the same instructions as before.
 - **Flag on, the physics guards** (the sleep regression, K63's census and
@@ -335,8 +403,8 @@ that each of them is worse than before.
   any hit-test that reads samples, all by at most maxShift (0.5 h).
 - **The fold census, flag on, per holder: met.** Below the base at fresh
   rest and after the gestures and the drags, for every holder (tables
-  above), with step 1's `web` class reported separately. The single
-  tightest window is worse on one t64 design and on the links (above).
+  above), with step 1's `web` class reported separately. A scan's single
+  tightest window can be worse (24 of 585 scans; the soft clamp, 4).
 - **The sheet:** `out_1b/sheet/sheet.png` (1485x7511; `sheet.html`,
   `sheet.json`, and the crops `desk_*` / `phone_*` with `_off`, `_on`,
   `_diff`). One settled default maze, def_1q2w3e, frozen, the flag flipped
@@ -400,6 +468,14 @@ that each of them is worse than before.
 13. **The sheet counts any changed pixel** (threshold 0), so the count
     includes the faint speckle.
 14. **The source defaults are r2's pick,** with `enabled` false.
+15. **The soft clamp is an option, off by default** (`splineBend.soft`,
+    census variant `soft:`). It fixes 20 of the 24 tighter-min scans, but
+    adds 8-11 windows in the gesture states, makes one drag scan worse
+    (the links 0.309 -> 0.212 h) and is not what the sheet shows. Levi's
+    look comes first, so the defaults stay the ones the sheet shows.
+16. **The min acceptance is read over every scan of every state**
+    (`k90_minrows.mjs`), not only fresh rest: the fresh rows hid 22 of the
+    24 scans.
 
 ## Recommendation
 
@@ -409,12 +485,16 @@ that each of them is worse than before.
   99.4% of the post-gesture windows are gone, for every holder, and it
   cannot touch the physics. Its cost is about 1 ms per ribbon rebuild on
   the desktop.
-- Before it ships, fix the min regression at t64_1q2w3e (0.299 -> 0.132 h):
-  dump that window per pass to confirm the clamp, then try a soft clamp
-  (scale the whole run's displacement back when any sample would exceed
-  maxShift, instead of clamping samples one by one), and re-run census r2
-  with the new variant beside the chosen one. Acceptance: no row's min
-  below its base, the counts no worse than the chosen variant.
+- Before it ships, finish the min regression. The soft clamp (census r3)
+  removed it at rest and in all but two gesture scans, so the per-sample
+  clamp was most of it. Left: two drag scans (star24_1471kin 0.355 ->
+  0.112 h, the links 0.397 -> 0.212 h) and the soft clamp's 8-11 extra
+  windows after the gestures. Next: let the census keep each variant's
+  worst windows, dump those two sites per pass, test the run-edge
+  candidate (the samples just outside a run's range), and re-run r3's
+  variants with the fix beside them. Acceptance: no scan's min below its
+  base in any state (`k90_minrows.mjs`), the counts no worse than the
+  default's.
 - Levi decides the look: whether the moved inner edges read better, and
   whether the bound becomes the default (flipping `enabled`, no codec
   change: the render does not enter a link).
@@ -426,8 +506,10 @@ that each of them is worse than before.
 
 ## Residuals
 
-- The tightest-window regression (t64_1q2w3e 0.132 h, links 0.399 h); the
-  clamp hypothesis is not attributed.
+- The tightest-window regression: 24 of 585 scans with the default hard
+  clamp (t64_1q2w3e 0.132 h, the links' gesture scans, star24_1471kin
+  0.094 h after a drag); 4 with the soft clamp, whose remaining cause is
+  not attributed.
 - Tails the bound leaves: t64 fresh 5/7 and gRest 10/12, links gRest 31/39
   (16/21 outside the webs), star24 violent 3/3.
 - `controlArcLengths` is not updated, so arcs measured from it are slightly
@@ -449,15 +531,20 @@ From the worktree root (`node_modules` is a junction to the main checkout):
   `$env:K90_VARIANTS='on:1.2:0.5,on:1.2:0.5:24:1,on:1.2:0.5:24:3,on:1.2:1.0:24:3'`,
   `$env:K90_WEB_COVER='0.92'`, then
   `pwsh scripts/fold_census.ps1 -Jobs .claude/probes/K90/out_census/jobs.json -Out .claude/probes/K90/out_1b/census_r2.jsonl -Parallel 10`.
-  Variants: `on:<ratio>:<maxShift>[:<marginMax>[:<passes>]]`, `sub<N>`,
-  `dense<N>x<M>`.
+  Variants: `on:<ratio>:<maxShift>[:<marginMax>[:<passes>]]`, `soft:` with
+  the same fields (the soft clamp), `sub<N>`, `dense<N>x<M>`.
+- Census r3 (about 6 minutes):
+  `$env:K90_VARIANTS='on:1.2:0.5:24:3,soft:1.2:0.5:24:3,soft:1.2:1.0:24:3'`,
+  the same web cover and command, `-Out .claude/probes/K90/out_1b/census_r3.jsonl`.
 - Tables: `node .claude/probes/K90/k90_analyze.mjs <census.jsonl>`
-  (`out_1b/analyze_r2.txt`); against 1a: `k90_cmp1a.mjs`; tightest rows:
-  `k90_minsite.mjs`.
+  (`out_1b/analyze_r2.txt`, `analyze_r3.txt`); against 1a:
+  `k90_cmp1a.mjs`; tightest rows: `k90_minsite.mjs`; scans whose min fell
+  below the base's, every state: `k90_minrows.mjs <census.jsonl> [n]`
+  (`out_1b/minrows_r2.txt`, `minrows_r3.txt`).
 - Crops, sheet and timing need a dev server with a private cache:
   `npx vite --config .claude/probes/K90/vite.private-cache.config.ts --port 5351 --strictPort --host 127.0.0.1`,
   then `node .claude/probes/K90/k90_crops.mjs cover|sheet|perf`
   (`K90_BEND_OPTS` = the options as JSON; the perf mode takes the perf lock).
 - In a page: `__knotSplineBend(true)` turns the bound on with the defaults,
-  `__knotSplineBend(true, {maxShift: 1})` retunes it, `__knotSplineBend()`
-  reports.
+  `__knotSplineBend(true, {maxShift: 1})` retunes it (`{soft: true}` for
+  the soft clamp), `__knotSplineBend()` reports.

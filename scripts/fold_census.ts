@@ -201,7 +201,9 @@ function sampleChain(ps: Any, i: number, rb: Ribbon, tw: number): Any {
 // counts compare to the base on identical particles:
 //   on:<ratio>:<maxShift>[:<marginMax>[:<passes>]]
 //                          the bend bound on (splineBend, spline_generator);
-//   sub<N>                 the spline's fine polyline at N subdivisions per
+//   soft:<same fields>     the bound with its soft clamp (splineBend.soft):
+//                          maxShift caps each run as a whole;
+//   sub<N>                the spline's fine polyline at N subdivisions per
 //                          control segment instead of 12, the same count;
 //   dense<N>x<M>           N subdivisions and M x the sample count: the
 //                          curve's own curvature, nearly free of resampling.
@@ -212,6 +214,7 @@ interface Variant {
   maxShift: number;
   marginMax?: number;
   passes?: number;
+  soft?: boolean;
   sub: number;
   mult: number;
 }
@@ -220,15 +223,16 @@ const VARIANTS: Variant[] = (process.env.K90_VARIANTS ?? "")
   .map((t) => t.trim())
   .filter((t) => t.length > 0)
   .map((t): Variant => {
-    const on = /^on:([\d.]+):([\d.]+)(?::(\d+))?(?::(\d+))?$/.exec(t);
+    const on = /^(on|soft):([\d.]+):([\d.]+)(?::(\d+))?(?::(\d+))?$/.exec(t);
     if (on) {
       return {
         name: t,
         kind: "on",
-        ratio: +on[1],
-        maxShift: +on[2],
-        marginMax: on[3] ? +on[3] : 12,
-        passes: on[4] ? +on[4] : 1,
+        ratio: +on[2],
+        maxShift: +on[3],
+        marginMax: on[4] ? +on[4] : 12,
+        passes: on[5] ? +on[5] : 1,
+        soft: on[1] === "soft",
         sub: 12,
         mult: 1,
       };
@@ -450,6 +454,7 @@ class Census {
         sb.maxShift = vr.maxShift;
         sb.marginMax = vr.marginMax ?? 12;
         sb.passes = vr.passes ?? 1;
+        sb.soft = !!vr.soft;
         sb.halfWidth = this.tw / 2;
         sb.moved = 0;
         sb.shiftMax = 0;
