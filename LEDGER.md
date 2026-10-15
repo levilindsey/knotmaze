@@ -82,6 +82,13 @@ and never reused.
   Live since 18:20:
   `?7&prp=wave` (glint, ring, off), `?7&prs=2&pra=1`, `?7&psh=1`,
   `?7&ptg=1`, `?7&pag=1`. `docs/design/K279.md` ("Stage 1 handoff").
+  The phone (round 2026-10-14c, stills at 411x753; sheets sent at 19:54,
+  `.claude/probes/rounds/2026-10-14c-0e865bf/k279_shots/` and
+  `k279_shots2/`): every look holds 60 fps through a tap; glint reads
+  best, ring faintly, the wave not at all (its ring is about 41 CSS px
+  across, its bend 1.6 px; K289 (d)), vib close to the old look, sheen a
+  paler streak; motion needs his eye on the phone. `ptg=0.3` stutters
+  3-5 s at 5-12 fps there, so the tug stays off.
 - **K257** · K76 section 10's questions, for stage 2c (none blocks 2b;
   2c builds the recommendation where no answer has come): (1) a catch
   under thread reveal re-hides explored thread as `minoRefog` says, one
@@ -254,6 +261,17 @@ and never reused.
   the unpicked looks, `hcl` and `__knotHcLook`, the pluck overlay's
   `composedAtArc`, a Pixel 11 check, maybe hiding the width row at
   strength 0). K298 may change what the width slider means. Asked at 19:21.
+- **K253** · A quiet phone for K193's portrait A/A floor: the phone
+  untouched, awake and plugged in for about 30 minutes (3 reps of about
+  9 min). The 2026-10-14 13:47 attempt tripped on a touch at 13:59
+  after one rep. Levi said yes at about 18:58 ("It'll be sitting here for
+  the next hour"); step 7 of K156's round 2026-10-14c ran it from 19:20
+  until his touch at 19:37:05: 22 of 36 samples (2 pairs a cell, 1 for
+  load-slow), nothing installed (`.claude/probes/K253/aa3/`). The
+  coordinator's call: no provisional 2-pair floor (2 pairs understate
+  the noise, and fabric@13 sat on the maze's finish, K300); the
+  landscape floor stays until a full A/A. The steps are K193's next.
+  Asked Levi at 19:54 for the next quiet half hour.
 
 ## In progress
 
@@ -482,39 +500,41 @@ and never reused.
     coordinator checked the K198, K100 and K151 sheets. The looks'
     `storage` field and the walk's `pick` option merged in 8d672ee..b72b3e9
     (10:50).
-  - owner: agent a04122e6bc4e56b02 (sonnet) of claude session d8031183,
-    round 2026-10-14c's pass from 18:41 (cap 19:41, moved to 19:58 for
-    K253's floor, or the watchdog's trip) on the phone Levi lent at about 18:35 "for a bit". Round
+  - round 2026-10-14c's pass, 18:53-19:37 (base 48da84d, head 02194b4,
+    portrait; merged e6c6034..aa3cdd1 at 19:48): K279's looks hold 60 fps
+    through a tap, with no first-tap stall and under 1% of the frame
+    flashing (K289), and `ptg=0.3` wakes the knot for 3-5 s at 5-12 fps
+    (K279); K268's shaped-gaps census shows 0 mismatches on the PowerVR
+    (K287); k140's confetti held 60 fps on head (base 54, but the two
+    builds made different mazes from `?b.J`). Frames, K98 and K92 (K230)
+    and the 14 dropped looks did not run: the window went to K253's A/A,
+    which tripped at 19:37:05 on Levi's touch. `summary.mjs` now records
+    each cell's pairs and marks a stopped A/A partial (b43ad29).
+  - owner: nobody since 2026-10-14 19:45 (round 2026-10-14c's agent
+    a04122e6bc4e56b02 (sonnet) finished; worktree kept). Round
     2026-10-14b's agent ad24cee1cd83ebe88 ended 10:47; worktree kept.
-  - branch: worktree `.claude/worktrees/agent-a04122e6bc4e56b02` (from
-    0e865bf); last commit: 0e865bf (the round's brief).
-  - evidence: this round's `.claude/probes/rounds/2026-10-14c-0e865bf/`;
-    round b's `.claude/probes/rounds/2026-10-14-48da84d/` (`pass/summary.md`,
+  - branch: mainline; last commit: `aa3cdd1`.
+  - evidence: round c's `.claude/probes/rounds/2026-10-14c-0e865bf/`
+    (`k279_tables.txt`, `k279_shots*/`, `sheets/`, `install_floor.mjs`)
+    and its A/A's `.claude/probes/K253/aa3/`; round b's
+    `.claude/probes/rounds/2026-10-14-48da84d/` (`pass/summary.md`,
     `pass/looks_report.json`, `pass/sheets/`, its `looks.json`,
     `looks_run.json`, `make_looks.mjs` and the adb recovery logs); the
     morning's `.claude/probes/rounds/2026-10-14-81d31a5/`; 3c's
     `.claude/probes/K156/3c/`.
-  - next: round 2026-10-14c runs its brief: looks first (K279's ripple
-    looks, K268's gaps, K98 and K92 (K230), k140-confetti, the 14
-    dropped looks (K233), with the k198 `gap` fixed), then K279's tap
-    and wake cost on the phone, then frames against 48da84d. K253's
-    portrait A/A floor (K193's next) runs in this window as step 7, by
-    19:22 (`-Base master -Head master -Reps 3`): Levi said yes at about
-    18:58, the phone untouched until about 19:58. Then the two borderline
-    load cells again with 3 reps (K232). Sweep the 3a and 3b
+  - next: the next phone window Levi lends: K253's portrait A/A first
+    (K300's `-Moves` fix before it), then frames (`-Phase frames -Reps
+    2`), K98's markers and K92's badge (K230), the 14 dropped looks
+    (K233; spec in round b's `looks.json`) and K232's two load cells with
+    3 reps. Looks and probes must cope with K301's width flip, and a
+    confetti A/B needs one maze on both builds. Sweep the 3a and 3b
     worktrees (`.claude/worktrees/agent-a262df65dcc1489a7`,
     `.claude/worktrees/agent-a957f7f1407f5df9f`) with
     `.claude/probes/K161/cleanup.ps1` (`-DryRun` first).
-  - brief: `docs/design/K156.md`, "Round 2026-10-14c: the evening
-    window" (0e865bf).
+  - brief: `docs/design/K156.md`, "Round 2026-10-14c handoff" (aa3cdd1);
+    the next round gets its own section.
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489). Check that nobody is using the phone first (K234).
-- **K253** · A quiet phone for K193's portrait A/A floor: the phone
-  untouched, awake and plugged in for about 30 minutes (3 reps of about
-  9 min). The 2026-10-14 13:47 attempt tripped on a touch at 13:59
-  after one rep. Levi said yes at about 18:58 ("It'll be sitting here for
-  the next hour"), so the floor runs as step 7 of K156's round
-  2026-10-14c, starting by 19:22; the handle is K156's.
 - **K161** · Disk: C: had 24.4 GB free (2026-10-13 about 19:30, before
   K81's 1.6 GB probe copy). `$env:TEMP` holds 1145 `knotmaze-*` Chrome
   profiles (about 36.5 GB) that probe runs never delete; the worktrees
@@ -567,12 +587,17 @@ and never reused.
     `noise.json` is NOT a floor), `rep0_table.txt`,
     `wait_then_aa.ps1`, `smoke/`, `smoke2/` and `dry/`.
   - next: when the phone can sit untouched and awake for about 30 min
-    (K253), rerun the 3-rep portrait A/A (about 27 min; a rep is about
-    9), then `git mv scripts/phone_pass/noise.json
-    noise.landscape.json`, copy the new `noise.json` in with a
-    handwritten `note`, replace the "NOT TAKEN YET" passage in
-    `probes-phone.md` and report the table (`docs/design/K193.md`,
-    "Stage 1 handoff", Next 1-2). Sonnet, 1 h.
+    (K253), change `phone_pass.ps1`'s `-Moves` default to 0,7,11 (K300),
+    rerun the 3-rep portrait A/A (about 27 min; a rep is about 9; the
+    19:20 try tripped after 22 of 36 samples), then `git mv
+    scripts/phone_pass/noise.json noise.landscape.json` and install the
+    new floor with `install_floor.mjs` (move it from
+    `.claude/probes/rounds/2026-10-14c-0e865bf/` to tracked
+    `scripts/phone_pass/`; it refuses a partial or tripped A/A and writes
+    the note), replace the "NOT TAKEN YET" passage in `probes-phone.md`
+    and report the table (`docs/design/K156.md`, "Round 2026-10-14c
+    handoff", Step 7; `docs/design/K193.md`, "Stage 1 handoff"). Sonnet,
+    1 h.
   - brief: `docs/design/K193.md`.
   - env: none; the pass builds and serves both builds itself. Check that
     nobody is using the phone first (K234).
@@ -697,8 +722,9 @@ and never reused.
     `sheet2/`, the wake probe `k279_wake.mjs` with `wake.log` and
     `wake/wake_1400x900x2.json`, `test_run5.txt`; stage 1's neutral A/B
     was 0 px in 6 cases.
-  - next: Levi's picks (K288), then stage 2 builds them; the phone pass
-    after 20:00 (K289 (h)).
+  - next: Levi's picks (K288), then stage 2 builds them. The phone pass
+    ran in round 2026-10-14c (K289 (h) closed): every look holds 60 fps,
+    and `ptg=0.3` stutters 3-5 s at 5-12 fps, so the tug stays off.
   - brief: `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
 - **K7** · Physics in a Web Worker, with render-side interpolation between
   physics steps. Smooths the UI; it does not speed up physics. Acceptance
@@ -776,10 +802,10 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K156's round 2026-10-14c phone pass from
-18:41 (cap 19:58 for K253's floor, sonnet), K7's design stage from 19:05
-(cap 21:05, opus) and K299 from 19:19 (cap 21:19, opus); K298 follows
-K299. K111 stage 4 merged at 19:11. K279's stage 2
+(he may reorder). Running: K7's design stage from 19:05 (cap 21:05,
+opus) and K299 from 19:19 (cap 21:19, opus); K298 follows K299. K111
+stage 4 merged at 19:11 and K156's round 2026-10-14c pass at 19:48
+(K253's floor still not taken). K279's stage 2
 waits for Levi's picks (K288). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
@@ -797,10 +823,10 @@ files at their merges. Then, as code slots free up:
    K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
    and K180 against base ab6d330) is done (K197 filed), and so is round
    2026-10-14b's (10:12-10:42, head 48da84d, with looks for K146, K151,
-   K148, K198, K100, K93 and K120; K232-K234 filed). The next pass covers
-   K98 and K92 and needs the portrait floor: K193's emulation merged at
-   14:10, and its A/A runs in round 2026-10-14c (K253; Levi: yes at
-   about 18:58).
+   K148, K198, K100, K93 and K120; K232-K234 filed), and so is round
+   2026-10-14c's (18:53-19:37, head 02194b4: K279, K268 and k140 looks;
+   merged at 19:48). The next window covers K98 and K92 and the frames,
+   after the portrait floor: its A/A tripped at 19:37 on a touch (K253).
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
    5fed5c1, and its controls (K174, Levi's answers of 2026-10-14 about
@@ -827,7 +853,7 @@ files at their merges. Then, as code slots free up:
     fade-out (merged 2026-10-14 12:04, fafa340..3467117), K235 with K239
     (merged 2026-10-14 12:44, 08d1383..05e6d4d), and K193's portrait
     emulation (merged 2026-10-14 14:10, c36b57c..763067a; its A/A floor
-    runs in round 2026-10-14c, K253).
+    tripped in round 2026-10-14c and waits for a quiet phone, K253).
 11. K76 stage 2, in four stages (`docs/design/K76.md`, bcb969e): 2a (the
     re-base, the model, the paint variant) merged at 14:15 and 2b
     (crossing gaps and junction joints) at 16:04 (3ffed34..8d671ba).
@@ -870,7 +896,8 @@ files at their merges. Then, as code slots free up:
 Waiting for Levi: K90's bend bound (Levi tests it live); the G3-3 and
 G4-2 old-path deletions; K162 and K184-K186 (play, then call); K194's
 defaults (after playing); K225 (the markers' size); K229 (the open
-panel's top); K238 (K111's calls); K265 (High contrast's look, the width default);
+panel's top); K238 (K111's calls); K253 (a quiet phone for half an hour);
+K265 (High contrast's look, the width default);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
 K251 (the displaced disc's slide across the panel); K257 (K76's
 questions for stage 2c); K260 and K261
@@ -1411,6 +1438,9 @@ before the worker, and each build stage has `main.ts` to itself.
   - 2026-10-14: the white strip is fixed by K193 (c36b57c..763067a: screenshots
     clip to the viewport). The portrait floor is not taken yet: K193's
     A/A tripped on a touch after one rep (K193's next, K253).
+  - 2026-10-14 19:37: the watchdog's touch trip works. Levi's touch
+    stopped K253's second A/A after 22 of 36 samples, and the pass's
+    cleanup ran clean (K156, "Round 2026-10-14c handoff", Step 7).
 - **K196** · K180's crossings options at phone scale: `ride` and `pinch`
   leave most taps unreadable in the census (dense `ride` 93.8%, fabric
   `pinch` 71.1%); `through` reads best (`docs/design/K180.md`, "Stage 1
@@ -1720,23 +1750,31 @@ before the worker, and each build stage has `main.ts` to itself.
   after the rebase onto K114 (the coordinator's call: master's only
   `src/render` change since 4d3efe6 was K114's 157 lines in
   `fabric_maze_renderer.ts`, none on the gaps, and the A/B before the
-  rebase was 25/25 at 0 px); (g) the phone check, with the next phone
-  pass. `docs/design/K268.md` ("Not done in stage 1", Calls).
+  rebase was 25/25 at 0 px); (g) the phone check ran (K156 round
+  2026-10-14c): the census's mismatch is 0 at every reach and look on
+  the PowerVR, with no ghost notch or missing cut by eye; the per-slot
+  cut proof there needs `__knotExplore` to expose slot positions.
+  `docs/design/K268.md` ("Not done in stage 1", Calls).
 - **K289** · K279 stage 1's residuals: (a) the first ripple costs a
-  10.3 ms spike; (b) closed by the follow-up: fabric's real click was a
-  move (`handleFabricTap`), not a pluck; (c)
-  the ripple filter covers the whole root (bound its filterArea to the
-  live discs, most of all for phones); (d) the ripple is sized in world
-  units, so it shrinks on a phone (a CSS-px floor?); (e) no High
-  contrast tie-in (ring off, or glint only?); (f) flash safety: an area
-  guard like GHOST_AREA_PX if the phone shows a need; (g) no webm clips;
-  (h) the phone pass: every look, the cost and the tug's wake; (i) once
+  10.3 ms spike on the desktop; (b) closed by the follow-up: fabric's
+  real click was a move (`handleFabricTap`), not a pluck; (c) the ripple
+  filter covers the whole root (bound its filterArea to the live discs,
+  most of all for phones); (d) the ripple is sized in world units, so it
+  shrinks on a phone (a CSS-px floor?): on the phone its ring is about
+  41 CSS px across and the wave unreadable in stills; (e) no High
+  contrast tie-in (ring off, or glint only?); (g) no webm clips; (i) once
   per load, the first tap's first frame spends 30-36 ms more in pixi's
-  tick (likely the ripple filter's compile: warm it at load); (j) the
-  pre-rebase SHAs cited in `render-pluck.md` and K279.md (0f08f68,
-  2d905d0, da1333a, 4eb20a7) exist only on the local branch
-  `k279-stage1-prerebase`: re-cite them as 50c1aab.
-  `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
+  tick on the desktop (likely the ripple filter's compile: warm it at
+  load); (j) the pre-rebase SHAs cited in `render-pluck.md` and K279.md
+  (0f08f68, 2d905d0, da1333a, 4eb20a7) exist only on the local branch
+  `k279-stage1-prerebase`: re-cite them as 50c1aab; (k) the phone probe
+  `k279_phone.mjs` reads `ripples` 1.9 s after the tap, so always 0. The
+  phone pass (K156 round 2026-10-14c) closed (f), flash safety (under 1%
+  of the frame changes in every look: no area guard), and (h) (every
+  look 60 fps, the tug's wake measured); it saw no first-tap stall on
+  the phone, so (a) and (i) are desktop-only. `docs/design/K279.md`
+  ("Stage 1 handoff", "Wake follow-up"); `docs/design/K156.md` ("Round
+  2026-10-14c handoff").
 - **K291** · CI: the deploy run of ad2618a (2026-10-14) carried two
   annotations. Its actions (checkout@v4, setup-node@v4,
   wrangler-action@v3) target Node 20 and run forced on Node 24, and
@@ -1761,6 +1799,20 @@ before the worker, and each build stage has `main.ts` to itself.
   follow them since K274) and today among the History rows (today keeps
   its own row since K146). K80 turns stage 2 fixed only its copy,
   `.claude/probes/K80/turns2/banner/probe_stars.mjs`.
+- **K300** · `scripts/phone_pass.ps1`'s `-Moves` default 0,7,13 (line
+  110; the header, line 49, says `?b.J` is solved on its 14th move) now
+  lands on the finish: master's `?b.J` is solved on its 12th move (since
+  K74 stage 2, inferred), so fabric@13 times the stars and confetti and
+  the bench only logs "made only 12 of 13". Change the default to 0,7,11
+  with K253's A/A, and have the summary drop or flag a cell whose walk
+  fell short (`docs/design/K156.md`, "Round 2026-10-14c handoff", Step 7).
+- **K301** · The phone pass tab's layout flips from 411x753 to 412x755
+  CSS px after its first real tap or move (round 2026-10-14c, under
+  K193's CDP emulation): same-state baselines and fixed-size crops shear
+  (K279's run-1 flash numbers were invalid; `k268_crops.mjs` now copies
+  by each tile's row stride). Cause not found. The pass's looks and
+  probes should cope, or re-pin the metrics after a tap
+  (`docs/design/K156.md`, "Round 2026-10-14c handoff", call 6).
 
 ## Approved, to schedule (2026-10-11)
 
