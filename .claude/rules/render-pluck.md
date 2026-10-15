@@ -367,3 +367,60 @@ only with the files it is about; `render.md` lists the area's other files.
   30-36 ms more in pixi's tick than a later tap's (knot 67 vs 31 ms,
   fabric 60 vs 38, dense 104 vs 72) and reaches the cap a frame or two
   sooner. Probably the ripple filter's first compile (not tested).
+
+## Pluck cusp (K344)
+
+- REPORT (Levi, 2026-10-14): "a sharp discontinuous cusp with the
+  vibration effect on this loop along the bottom of the loop" at
+  `?qoietk.KIiHgRRXwRlRt8fGrST4sf`, crossing 104: chain 21 over itself at
+  ctrl 102 and under at 110.205. The plucked lobe runs from that over
+  pass to that under pass (arc 58.77 to 62.62, 3.86 long).
+- CAUSE, OBSERVED: with the overlay's under-node clip off (every clipF
+  reach zeroed, same frozen page), a long straight cut through the blur
+  along the loop's lower left and bottom, ending in a sharp corner, was
+  gone and nothing else changed (`nocap` changed only the eye). The clip
+  line of an under node is its partner's position and tangent at the
+  crossing, written into every station of the lobe, and `clipAt` hides
+  what lies within a casing of that line out to its reach (1.5). On a
+  self-crossing the partner is the chain's OWN over pass, which is where
+  the lobe starts, so the clip cut the loop's own blur in a straight band
+  two casings wide. INFERRED: that cut is the cusp Levi saw (his
+  screenshot was not available; it is the only straight, sharp-cornered
+  edge in the loop's blur). RULED OUT: a fold past the evolute (measured:
+  no tight station in the lobe, and a 0.05 radius was a 3-point curvature
+  artifact); the span's ends and the collapse (the clip toggle alone
+  removes the whole cut).
+- RULE (the overlay's form of G1's same-chain arc exclusion,
+  render-gaps.md): an under node's clip acts on its own under pass only.
+  pluckNodes tags a self-crossing's under node with its over pass's arc
+  (`selfArc`), and the clip's weight falls from 1 to 0 by G1's split,
+  max(0.12, half the arc to that over pass less 0.08), through a
+  smoothstep over min(0.3, half the split) (`selfPassAhead`,
+  `underClipWeight` in pluck_model.ts; written in layout(), not per
+  frame). A foreign crossing keeps weight 1 and the shader returns
+  `clipAt` exactly. aClipF is a vec4 (reachA, reachB, wA, wB); the shader
+  text changed, so the pluck-blur program compiles cold once per player
+  (K307), with no new program.
+- CHECK: the unit test "under-node clip on a self-crossing (K344)"
+  (`clipKeep` mirrors the shader's clip; with the weight forced to 1, as
+  before the fix, "never hides the loop's own over pass" fails with
+  45266 hidden samples). In the browser, `.claude/probes/K344/sheet.mjs`
+  shoots one frozen page as built and with every weight forced to 1. The
+  forced shots equal the pre-fix build's to the pixel (`xcmp.mjs`: 0 px
+  on 15 shots), and the fixed ones differ only where the cut was (in
+  the diff panels viewed): Levi's
+  loop 6.0-6.2k px at the default zoom, 65-67k at zoom step 2, 16-20k at
+  step 1 over every knob end and look; three more kink loops of his
+  design 5.7-6.2k; `?7` two of ten loops (1955 and 414 px); crossings
+  with other chains, big loops (their weight stays 1), knot mode and
+  the fat-thread loops tried 0 px.
+- NOT FIXED, unchanged by the fix: a dark three-armed star in a kink
+  loop's eye (the uncovered middle; `nocap` shrinks it to a thin Y);
+  staircase concentric bands across the wide outer blur when zoomed in;
+  and, at a crossing with another chain, the clip's straight line
+  against a curving over thread. Zoomed in, that leaves a thin
+  straight-edged sliver of blur on top of the over thread (removed with
+  every clip reach zeroed: `.claude/probes/K344/out/nc/z2_nc_crop2.png`
+  and `z2_nc_diff2.png`).
+  The general fix would follow the over thread's curve (an arc instead
+  of a line) or draw the over passes above the blur.

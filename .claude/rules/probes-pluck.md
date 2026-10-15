@@ -2,9 +2,10 @@
 paths:
   - ".claude/probes/K77/**"
   - ".claude/probes/K279/**"
+  - ".claude/probes/K344/**"
 ---
 
-# Probe lore: pluck probes (K77, K279)
+# Probe lore: pluck probes (K77, K279, K344)
 
 Moved verbatim from `probes.md` by K173 (2026-10-14), so that it attaches
 only with the files it is about; `probes.md` lists the area's other files.
@@ -61,3 +62,22 @@ only with the files it is about; `probes.md` lists the area's other files.
   one probe under the perf lock), png.mjs and crop.mjs. Builds:
   `builds/<sha>` served by `npx vite preview --outDir <dir> --port <p>
   --strictPort`.
+
+- K344 (2026-10-15), the pluck cusp on a self-crossing loop:
+  `.claude/probes/K344/` (render-pluck.md has the mechanism). `lib.mjs`
+  opens a settled page frozen (physics, flow, paint clock, background,
+  pointer), plucks with pinned lobe phases and sets the pluck clock;
+  repro.mjs + an.mjs dump and tabulate the strip per station (step, edge
+  turn, fold flags); annot.mjs draws a lobe's stations, strip edges, blur
+  reach and clip lines over a shot (magenta dots: clip weight); tog.mjs
+  shoots base | noclip | nocap | nooverlay | nosoft; sheet.mjs `<host>
+  <outDir> <cases> [pair|single]` shoots each case's frozen page as built
+  and with every clip weight forced to 1 (the pre-fix shader) and writes
+  [forced | fixed | diff] strips plus a results JSON (`single` shoots a
+  build as it is); sheet_noclip.mjs forces every clip reach to 0 instead;
+  xcmp.mjs compares a pre-fix build's `single` shots with the fixed
+  build's on a phy=0 layout; run_sheets.ps1 `-Runs "<port> <outDir>
+  <cases> [mode]",...` (also `tog ...` and `nc ...` lines) runs them under
+  the perf lock and serves `builds/before-79c5a97` on 5891 and
+  `builds/after-f4c05d5` on 5892. Pass `&psz=` and the other pluck keys in
+  the link: main.ts re-syncs them every frame (K279's gotcha).

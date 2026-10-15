@@ -54,7 +54,10 @@ attribution, same-state proofs) is in `probes-census.md` and
   strength ramp; the yarn and fillet armReach read underWindows; the
   render-only plucks' node footprints come from the same solve (under:
   the all-lanes casing exit; over: the over pass out to where its ribbon
-  clears the casing band, +0.12, floor 0.35). A STILL pluck (reduced
+  clears the casing band, +0.12, floor 0.35). On a self-crossing the
+  plucks' under-node clip fades out by the same-chain exclusion's split,
+  max(0.12, half the arc less 0.08), short of the chain's own over pass
+  (K344, render-pluck.md). A STILL pluck (reduced
   motion, K104) uses no footprint and no clip: its "pluck-still" program
   runs gapKeepAt over its ribbon's own slots (`bindPluckGap`, bound from
   bindGap; the host's `gapIds`), so it hides exactly where the ribbon
