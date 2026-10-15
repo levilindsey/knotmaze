@@ -1118,13 +1118,16 @@ What changed since f04aa4b, for the later stages:
   state (8 besides snapMode); flowParity, the cost-ring counters,
   lastView*, sceneWasAnimating (MR14).
 
-#### The SceneRef (step 2, 163724a)
+#### The SceneRef (step 2, a829d70)
+
+(Commit SHAs in this handoff are the rebased ones; the rebase section
+below maps them to the pre-rebase SHAs that some evidence files name.)
 
 `src/app/scene_ref.ts`: `interface SceneRef`, one readonly field per scene
 `let` that `rebuild()` or a mode switch reassigns: ps, renderer, debug,
 walkGraph, buildHueGroup, buildStrandCount, fabric, chase, turnMino,
 fabricController, reveal. main.ts builds `const scene: SceneRef` once,
-one getter per field, right after `let reveal` (459-496 at c49f63f,
+one getter per field, right after `let reveal` (472-509 at 37ddbf3,
 with its comment).
 Readers so far: stamp.ts (`scene.ps`) and probe_hooks.ts
 (`ctx.scene.<field>`, 90 sites). Not in it:
@@ -1144,16 +1147,18 @@ commits, and for step 5 a mechanical undo, `verify_step5.mjs`).
 
 | Step | Commit | Old | New | Non-move edits |
 |---|---|---|---|---|
-| 3 | 4366783 | 242-355: the comment and `createLoader()` | `src/ui/loader.ts` 3-116 | `export`; loader.ts imports `whenReduced` (main.ts no longer does); main.ts imports createLoader |
-| 4 | a0dd1bd | 168 (the build_info import); 173-180 (BUILD_STAMP and its comment); 4747-4762 and 4764-4784 (the stamp, wallStart, perf, updateStamp and its first call, the gl console line) | `src/app/stamp.ts` 2; 7-14; 43-79, inside `createStamp(deps, scene)` | `ps?.simTime` → `scene.ps?.simTime`; `perfLine` → `deps.perfLine()` (main.ts keeps `let perfLine`, 4763 at 1646491, and passes a getter); `export` on BUILD_STAMP, text unchanged; StampDeps, StampPerf, Stamp; main.ts destructures `{ stamp, perf, updateStamp }` under the old names |
-| 5 | c5520b9 | 4786-5648 (MR16: the "live design params" comment and the 45 statements that set the hooks) | `src/app/probe_hooks.ts` 160-1022, the body of `installProbeHooks(ctx: ProbeCtx)` | 253 of the 863 lines: 208 `ctx.<name>`, 90 `ctx.scene.<field>`, 10 shorthand `{ x }` → `{ x: ctx.x }`, 3 `renderDirty = true` → `ctx.invalidate()`; the nine imports only MR16 used move with it; main.ts calls `installProbeHooks({...})` at the same place, before the first `rebuild()` |
+| 3 | 8af95e0 | 242-355: the comment and `createLoader()` | `src/ui/loader.ts` 3-116 | `export`; loader.ts imports `whenReduced` (main.ts no longer does); main.ts imports createLoader |
+| 4 | bf5b3e3 | 168 (the build_info import); 173-180 (BUILD_STAMP and its comment); 4747-4762 and 4764-4784 (the stamp, wallStart, perf, updateStamp and its first call, the gl console line) | `src/app/stamp.ts` 2; 7-14; 43-79, inside `createStamp(deps, scene)` | `ps?.simTime` → `scene.ps?.simTime`; `perfLine` → `deps.perfLine()` (main.ts keeps `let perfLine`, 4763 at 1646491, and passes a getter); `export` on BUILD_STAMP, text unchanged; StampDeps, StampPerf, Stamp; main.ts destructures `{ stamp, perf, updateStamp }` under the old names |
+| 5 | f0035bb | 4786-5648 (MR16: the "live design params" comment and the 45 statements that set the hooks) | `src/app/probe_hooks.ts` 160-1022, the body of `installProbeHooks(ctx: ProbeCtx)` | 253 of the 863 lines: 208 `ctx.<name>`, 90 `ctx.scene.<field>`, 10 shorthand `{ x }` → `{ x: ctx.x }`, 3 `renderDirty = true` → `ctx.invalidate()`; the nine imports only MR16 used move with it; main.ts calls `installProbeHooks({...})` at the same place, before the first `rebuild()` |
 
-main.ts went from 5653 to 4813 lines. The re-map at c49f63f is
-`remap_c49f63f.md`, made with `anchors_c49f63f.json` (env
-`ANCHORS=<file>`; the 1646491 anchors name statements that moved). At
-c49f63f: `main()` 230-4811, `scene` 462, `createLoader()`'s call 543,
-`let perfLine` 4656, `createStamp` 4657, `installProbeHooks` 4663-4809,
-the first `rebuild()` 4810.
+main.ts loses 840 lines: 5653 to 4813 before the rebase, 5709 (master
+bca7dd6) to 4869 after it. The re-map at the branch head is
+`rebased/remap_37ddbf3.md` (before the rebase, `remap_c49f63f.md`), made
+with `anchors_c49f63f.json` (env `ANCHORS=<file>`; the 1646491 anchors
+name statements that moved). At 37ddbf3: `main()` 231-4867, `scene` 475,
+`createLoader()`'s call 560, `let perfLine` 4712, `createStamp` 4713,
+`installProbeHooks` 4719-4865, the first `rebuild()` 4866 (at c49f63f:
+230-4811, 462, 543, 4656, 4657, 4663-4809, 4810).
 
 ProbeCtx (probe_hooks.ts 46-157) holds the SceneRef, 26 assigned-once
 values, 24 functions, 24 read-only `let`s as getters, 3 read-write `let`s
@@ -1162,12 +1167,16 @@ Every hook reads ctx when it runs. MR16 had no install-time read of a
 reassigned name, so moving the install changes no ordering.
 
 **Hook inventory** (observed): 48 `window.__knot*` names set and 49
-named across `src/`, at 1646491 and at c5520b9, the same sets
-(`hooks_master_1646491.txt`, `hooks_branch_step5.txt`). `__knotHostOpts`
+named across `src/`, at 1646491 and at step 5 before the rebase (c5520b9),
+the same sets (`hooks_master_1646491.txt`, `hooks_branch_step5.txt`).
+After the rebase: 49 set and 50 named at bca7dd6 and at 37ddbf3, the
+same sets (`rebased/hooks_set_*.txt`, `rebased/hooks_named_*.txt`); the
+one new name is K307's `__knotWarmup`, set in
+`src/render/shader_warmup.ts`, outside the moved code. `__knotHostOpts`
 is named (read) but never set. `__knotUndo` stays in main.ts (the undo
 region, MR11), and `__knotSplineBend` stays in the renderer.
 
-#### The host seam (step 6, 86fb67b)
+#### The host seam (step 6, 0f789b5)
 
 `test/physics/host_seam.test.ts` scans main.ts and every `.ts` under
 `src/app/` (keys `main.ts` and `app/<file>`). It collects the fields
@@ -1187,13 +1196,55 @@ matches by name across files, so an unrelated `.ps` or `.host` would count
 (nothing writes through one today); nested binding patterns and element
 access (`x["ps"]`) are not covered.
 
-#### Lore and the tree (step 7, c49f63f)
+#### Lore and the tree (step 7, c454fe9)
 
 gameplay.md's `paths:` gains `src/app/**` and probes.md's
 `src/app/probe_hooks.ts`; their `docs/lore_index.md` rows match.
 CLAUDE.md's Project Structure gains `ui/loader.ts` and one `app/` line
 (scene_ref, stamp, probe_hooks; each file's header maps it), and its
 host_seam line says main + src/app.
+
+#### The rebase onto K307 stage 2 (bca7dd6)
+
+At 05:50 the coordinator asked for a rebase onto master, where K307
+stage 2 (the shader warm-up, ce5e4d9..14d34b5, ledger bca7dd6) had
+landed, before the final checks. It was light: `git rebase master`
+applied all eight commits without a conflict. K307 adds 63 lines to
+main.ts and removes 7, in ten hunks, none inside a moved region
+(observed, `git diff 1646491 bca7dd6 -- src/main.ts`): an import (MR1),
+the `warmup` const and its wave-1 callback (MR4), `let warmHoldFrom`
+(MR5), the gate in beginLoading, loadingTick, beginSettle, presettleTick
+and the new warmHoldTick (MR7), and the ticker's background hold, wave 2
+and `warmup.poll()` (MR14). All of it stays in main.ts. The launch notes
+expected its loader rule to touch `createLoader()`. On master the rule
+is in main.ts's `loader.show()` conditions (`!warmup.wave1Done`) and
+`createLoader()` is unchanged, so the moved loader carries the gate with
+no edit and its behavior is unchanged.
+
+`test/render/program_registry.test.ts` scans `src/` for program sites
+and must match its per-file table exactly. main.ts, `src/app/` and
+`src/ui/loader.ts` have none, so the moves change no count (inferred
+from its pattern; `npm test` passes after the rebase, see Checks).
+
+| Step | Before the rebase | After |
+|---|---|---|
+| 1, the re-map | 686e5ad | 2d2b6d2 |
+| 2, SceneRef | 163724a | a829d70 |
+| 3, the loader | 4366783 | 8af95e0 |
+| 4, the stamp | a0dd1bd | bf5b3e3 |
+| 5, the probe hooks | c5520b9 | f0035bb |
+| 6, the host seam | 86fb67b | 0f789b5 |
+| 7, lore and the tree | c49f63f | c454fe9 |
+| the handoff's WIP | cbeb92f | 37ddbf3 |
+
+The commit messages' line maps and the Old column above are main.ts at
+1646491, and they stay valid: K307's lines sit outside them, and step
+5's mechanical undo matches MR16 at bca7dd6 byte for byte (observed,
+`rebased/verify_step5_vs_bca7dd6.txt`). At 37ddbf3 the re-map puts
+`warmup` in MR4 (418; read 6 times by MR7 and 4 by MR14) and
+`warmHoldFrom` in MR5 (532; written by MR7, read by MR7 and by MR14's
+ticker), so the load (M4) and the frame loop (M3) share one more `let`,
+as they share `perfLine`.
 
 #### What is left
 
@@ -1209,6 +1260,10 @@ host_seam line says main + src/app.
   `type PhysState` is not exported. Export it from its owner (M3 or M4)
   and import it in probe_hooks.ts.
 - **`__knotUndo`** moves with the undo region (M7a, `design_history.ts`).
+  `__knotWarmup` (K307) is set in `src/render/shader_warmup.ts`, so no
+  stage moves it.
+- **K307's warm-up state** (`warmup` in MR4, `warmHoldFrom` in MR5, the
+  gate in MR7 and MR14) moves with those regions; see the rebase section.
 - **Not mine to edit:** `.claude/rules/physics-worker.md`'s invariant line
   and CLAUDE.md's overview sentence say "main.ts writes physics only
   through the host (`host_seam.test.ts`)". The scan now covers src/app
@@ -1216,10 +1271,108 @@ host_seam line says main + src/app.
 
 #### Checks
 
-Paths are under `.claude/probes/K5/stage1/` (untracked). "Base" is
-master 1646491 and "ref" c49f63f, each built by `scripts/preview.ps1` and
-served on 5840 / 5841. The probes ran in one perf-lock hold, 05:38-05:46
-(`checks.ps1`; the summary is `checks/checks.log`).
+Paths are under `.claude/probes/K5/stage1/` (untracked). Two rounds, each
+in one perf-lock hold by `checks.ps1`: after the rebase (base master
+bca7dd6, ref 37ddbf3) and before it (base 1646491, ref c49f63f). Each
+build is made by `scripts/preview.ps1` and served on 5840 / 5841. 37ddbf3
+is the handoff's WIP commit; this commit changes only this document, so
+its `src/` and `test/` are what the round tested.
+
+##### After the rebase (bca7dd6 vs 37ddbf3)
+
+The checks that need no lock ran by `rebased_checks.ps1` (summary
+`rebased/rebased.log`). The rest ran in one perf-lock hold, 05:53-06:01
+(`checks.ps1 -Base bca7dd6 -DiagSettleMs 20000`; summary
+`checks_rebased/checks.log`).
+
+- **tsc at each rebased commit** (observed): exit 0 at 2d2b6d2 and at
+  every commit from bf5b3e3 to 37ddbf3. a829d70 and 8af95e0 give
+  TS6133, as they did before the rebase (Surprises;
+  `rebased/tsc_<sha>.txt`).
+- **Step 5's mechanical undo** (observed): the body equals bca7dd6's
+  MR16 byte for byte (`rebased/verify_step5_vs_bca7dd6.txt`).
+- **The hook inventory** (observed): under `src/`, 49 hooks are set and
+  50 named, and the sets are the same at bca7dd6 and at 37ddbf3
+  (`rebased/hooks_*.txt`). The one hook K307 adds is `__knotWarmup`.
+- **The re-map at 37ddbf3** (observed): `rebased/remap_37ddbf3.md`.
+- **`npm test`** (observed): exit 0, 107 s. 84 files passed and 1 was
+  skipped; 1150 tests passed and 1 was skipped
+  (`checks_rebased/npm_test.txt`).
+- **`npm run build`** (observed): exit 0, 5 s.
+- **The bare link at a 20 s settle** (`scripts/diag_screenshot.mjs`;
+  `checks_rebased/diag_*`), observed on both builds:
+  - the worker host, asleep at sim 5.0 s / wall 19.9 s, settle lag 1.35
+    and 1.36 s;
+  - the first sleep ended the budget phase after 6166 and 6197 ms (sim
+    5.03 and 5.04), and the pre-settle took 492 and 498 ms (ended by
+    work);
+  - frames: median 17.7 ms, p95 18.1, max 2818 and 2786 (n 958 and 960);
+  - no errors, and the same 12 console lines once the SHA is masked.
+
+  At 20 s the capture no longer races the first sleep, as the 12 s one
+  did before the rebase.
+- **The same-state A/B** (`checks_rebased/ab*`), observed:
+  - knot: 0 px (k83_ab exits 1 after its captures, as before);
+  - fabric, three moves: 0 px;
+  - fog, three moves: 912 px, maxΔ 43. k83_ab puts 148 in the start
+    marker's footprint, 1 in the head's and 763 outside;
+  - the fog control, base against base: 185 px, maxΔ 53, none in a
+    marker.
+
+  The start marker's 148 px looked like the one difference no control
+  shows. Later same-build controls show them too: see "The start marker
+  under fog" below.
+- **The daily's front door** (observed): 4/14 on both builds. The same
+  ten checks fail with the same values as before the rebase, and there
+  are no page errors.
+- **K7's frames** (`checks_rebased/k5m1r_*.txt`), observed: the builds
+  match within noise. K307's warm-up moved both builds against the round
+  before the rebase: the first sleep comes earlier and the intro runs
+  faster.
+
+  | | base phw=0 | ref phw=0 | base phw=1 | ref phw=1 |
+  |---|---|---|---|---|
+  | host | in-thread | in-thread | worker | worker |
+  | first sleep: wall s, sim s | 18.76, 5.0 | 18.59, 5.0 | 9.90, 5.0 | 9.88, 4.98 |
+  | intro fps; ms per substep | 39.2; 10.44 | 39.5; 10.43 | 55.7; 10.66 | 55.6; 10.69 |
+  | drag fps; frame p50 ms | 7; 141.8 | 7; 142.1 | 55.7; 17.7 | 56.2; 17.7 |
+  | errors; contexts lost | 0; 0 | 0; 0 | 0; 0 | 0; 0 |
+
+  The worker's after-intro window is 6 frames long (0.11-0.14 s), so its
+  fps (42.8 on base, 56.7 on ref) turns on one 35 ms frame. From first
+  visible to sleep they read 55.4 and 55.6 fps.
+
+##### The start marker under fog
+
+Both rounds' fog A/Bs put exactly 148 px in the start marker's
+footprint (all Δ 1 before the rebase, on the ring's and the glyph's
+anti-aliased edges), and both base-against-base controls put 0 there.
+`fog_bisect.ps1` asked whether that is M1, in two perf-lock holds
+(06:05-06:07 and, with `-Controls`, 06:09-06:11; summary
+`fogbisect/fogbisect.log`). Each pair is one k83_ab run of the same fog
+recipe, three moves:
+
+| A against B | px | maxΔ | in the start footprint |
+|---|---|---|---|
+| bca7dd6 against 2d2b6d2 (step 1: bca7dd6's `src/`, another SHA) | 7840 | 1 | 148 |
+| 37ddbf3 against itself | 7979 | 49 | 148 (and 1 in the head's) |
+| bca7dd6 against itself | 6260 | 43 | 148 |
+| 2d2b6d2 against itself | 5515 | 49 | 0 |
+| bca7dd6 against itself, again | 4054 | 1 | 148 |
+
+- Observed: the 148 px come and go between runs of one build on one
+  server. Over all nine fog runs they appear in six: every run against
+  another build and three of the six same-build controls.
+- Inferred: they are not M1's. A build with base's own `src/` shows them,
+  and so does base against itself. Every run that differs there differs
+  by exactly 148 px, which points to two discrete states of something
+  the recipe does not pin at the start marker, not to a drift; which
+  state a page lands in varies by run. What it is has not been
+  identified (ledger item).
+
+##### Before the rebase (1646491 vs c49f63f)
+
+One perf-lock hold, 05:38-05:46; the summary is `checks/checks.log`.
 
 - **tsc** (observed): `npx tsc --noEmit` exits 0 at c49f63f
   (`tsc_c49f63f.txt`, empty).
@@ -1248,8 +1401,9 @@ served on 5840 / 5841. The probes ran in one perf-lock hold, 05:38-05:46
     the first sleep lands within about 0.2 s of the 12 s capture (K7's
     frames below: 12.13 s on base, 12.12 s on ref). M1 touches neither
     the host, the worker nor the frame loop.
-  - The test is `recheck_sleep.ps1` (settle 20 s, in the order base,
-    ref, ref, base; `checks/recheck/recheck.log`): RECHECK_SLEEP.
+  - `recheck_sleep.ps1` (settle 20 s, base, ref, ref, base) was written
+    to test that but never ran: the lock was busy, and the rebased
+    round's 20 s capture (above) took its place.
 - **The same-state A/B** (`.claude/probes/K83/k83_ab.mjs`, base vs ref,
   query `k5ab&phy=0&am=instant&fw=0&snd=none`). `ab_compare.mjs` counts
   the raw pixels. Outputs: `checks/ab/`, `checks/ab_*.txt`,
@@ -1257,15 +1411,25 @@ served on 5840 / 5841. The probes ran in one perf-lock hold, 05:38-05:46
   - Knot (`&mf=0`) (observed): 0 px. k83_ab exits 1 after its captures
     (no markers, see Surprises).
   - Fabric, three moves (observed): 0 px.
-  - Fog (`&xp=fog`), three moves (observed): 1003 px, maxΔ 49. Of them,
-    855 px are Δ 1 in a top-left strip (x 135-312, y 0-14) and 148 sit
-    inside the start marker's footprint.
+  - Fog (`&xp=fog`), three moves (observed): 1003 px, maxΔ 49, spread
+    over the frame (x 135-1212, y 0-839), mostly along the fog's fringe
+    around the revealed knot (`checks/ab/fog3_diff.png`). k83_ab puts 148
+    inside the start marker's footprint: all Δ 1, on the ring's and the
+    glyph's anti-aliased edges (`diff_regions.mjs` on the box 380,245 to
+    470,335: 148 px, maxΔ 1; `checks/ab/fog3_start_box.png`; the control
+    has none there). Only 25 px lie in the top 20 rows
+    (`checks/ab_fog3_regions.txt`): k83_ab's `outPts`, which looked
+    like a top-left strip, lists just the first 20 points in scan order.
   - The fog control, base against base (`checks/abctl/`) (observed):
-    5512 px, maxΔ 43, all outside the markers, in a top-left strip
-    (x 66-137, y 0-16).
-  - Inferred: under fog the recipe leaves something unpinned in that
-    strip, so this case misses 0 px even on master against itself
-    (probes.md records 0, or 76 px with mist). FOG_RERUN
+    5512 px, maxΔ 43, none in a marker, mostly one patch in the left
+    background (x 66-1164, y 0-899; `checks/abctl/fog3_diff.png`,
+    `checks/abctl_fog3_regions.txt`).
+  - Inferred: under fog the recipe leaves a dither-level field unpinned
+    (the fog or the background it draws), so this case does not reach
+    0 px even for master against itself (probes.md records 0, or 76 px
+    with mist). The A/B differs less than the control does. Its 148
+    start-marker pixels also appear when a build is compared with
+    itself ("The start marker under fog" above), so they are not M1's.
 - **The daily's front door** (`.claude/probes/K19-K20/probe_daily.mjs
   front`; `checks/daily_front_*.txt`):
   - Observed: 4/14 on both builds. The same ten checks fail with the
@@ -1305,8 +1469,18 @@ served on 5840 / 5841. The probes ran in one perf-lock hold, 05:38-05:46
 - MR17 is new: the first `rebuild()` runs after the hooks are installed.
 - MR16 also writes hcLookChoice, chaseRunning and tapsWait; they now go
   through setters.
-- Step 2's commit fails tsc with TS6133 ('scene' unused); step 4 reads
-  it, and every commit from step 4 on is tsc-clean.
+- Steps 2 and 3 fail tsc with TS6133 ('scene' is declared but never
+  read: main.ts 605 at a829d70, 491 at 8af95e0); step 4's stamp is its
+  first reader, and every commit from step 4 on is tsc-clean (observed at
+  each rebased commit, `rebased/tsc_<sha>.txt`). `npm run build` runs tsc
+  first, so it fails at those two commits; `scripts/preview.ps1` runs
+  `vite build` alone and builds them (inferred from the scripts, not
+  run). A bisect through them uses preview.ps1 or skips them. If every
+  commit on master must pass `npm run build` (the commit policy's "no
+  partial or broken work"), squash steps 2-4 at the merge.
+- The launch notes expected K307's loader rule to edit `createLoader()`;
+  it went into main.ts's `loader.show()` conditions instead, so the
+  rebase was conflict-free.
 - 25 lines of probe_hooks.ts pass 80 columns against MR16's 12: the
   `ctx.` prefixes lengthen them, and a pure move does not reflow. Prettier
   is not installed in the checkout.
