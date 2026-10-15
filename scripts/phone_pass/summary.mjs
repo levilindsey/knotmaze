@@ -22,9 +22,10 @@ const text = (f) => (existsSync(f) ? readFileSync(f, "utf8") : null);
 const json = (f) => { const t = text(f); try { return t ? JSON.parse(t) : null; } catch { return null; } };
 const rows = (text(join(CFG.out, "bench.jsonl")) || "").split("\n").filter(Boolean).map((l) => JSON.parse(l));
 const vpOf = (s) => { const m = /^(\d+)x\d+@([\d.]+)$/.exec(s || ""); return m ? [+m[1], +m[2]] : null; };
-// K193: a floor is for ONE viewport. Until a portrait A/A is taken (stage 1 stopped at a touch), the tracked noise.json
-// is still the docked phone's LANDSCAPE floor (810 wide), so a portrait pass warns that it may not apply. When the
-// emulated portrait floor (411x753 @2.625) replaces it, the landscape one is kept beside it as noise.landscape.json.
+// K193: a floor is for ONE viewport. Until a portrait A/A completes (K193's stage 1 and K253's 2026-10-14 19:20 try both
+// stopped at a touch), the tracked noise.json is still the docked phone's LANDSCAPE floor (810 wide), so a portrait pass
+// warns that it may not apply. When the emulated portrait floor (411x753 @2.625) replaces it, the landscape one is kept
+// beside it as noise.landscape.json.
 // With the default floor (no -Noise), a pass that ran at another viewport (-Viewport native on a docked phone) reads
 // whichever of the two matches.
 const noiseDefault = join(HERE, "noise.json");
@@ -72,6 +73,8 @@ for (const c of cells) {
   const rs = rows.filter(c.pick);
   if (!rs.length) { L.push(`### ${c.title}`, "", "No samples.", ""); continue; }
   const side = (k) => rs.filter((r) => r.build === k);
+  // Pairs = reps in which BOTH builds produced a row: what an A/A pass actually sampled (a tripped one stops mid-rep).
+  (aaNoise.samples ??= {})[c.id] = [...new Set(rs.map((r) => r.rep))].filter((k) => side("base").some((r) => r.rep === k) && side("head").some((r) => r.rep === k)).length;
   const made = c.moves === undefined ? null : median(rs.map((r) => r.made));
   // A frame cell must not time the finish (K155's stars, K140's confetti): flag a fabric sample taken at it.
   const fin = c.moves === undefined ? 0 : rs.filter((r) => r.fab?.solved).length;
@@ -98,6 +101,16 @@ for (const c of cells) {
   }
   L.push("");
 }
+// -Reps is what the A/A pass was ASKED to do; the watchdog can stop it mid-rep (K253, 2026-10-14 19:20: noise.json said
+// reps 3 with 2 pairs in five cells and 1 in load-slow). noise.json records what it DID (reps = the thinnest cell's
+// pairs, `samples` per cell) and carries partial: true when that falls short, so a stopped pass is not copied as a floor.
+{
+  const n = Object.values(aaNoise.samples ?? {});
+  if (n.length) { aaNoise.reps = Math.min(...n); if (aaNoise.reps < CFG.reps) aaNoise.partial = true; }
+}
+const aaText = aaNoise.partial
+  ? `**PARTIAL: only ${aaNoise.reps} of ${CFG.reps} rep(s) in the thinnest cell** (pairs of base+head samples per cell: ${JSON.stringify(aaNoise.samples)}); this \`noise.json\` carries \`partial: true\` and is not a floor to install`
+  : `${CFG.reps} rep(s)`;
 if (CFG.aa && rows.length) writeFileSync(join(CFG.out, "noise.json"), JSON.stringify(aaNoise, null, 1));
 
 // Looks.
@@ -144,7 +157,7 @@ const head = [
   `# Phone pass: ${CFG.refA} (${CFG.shaA}) vs ${CFG.refB} (${CFG.shaB})`,
   "",
   CFG.dry ? "**DRY RUN on the desktop: this checks the plumbing, not timings. Do not read these numbers as measurements.**" : null,
-  CFG.aa ? `**A/A pass** (one build, both ports): the deltas below are the noise floor, ${CFG.reps} rep(s) (a single rep is one |difference| per cell, a weak floor). Written to \`noise.json\` in this folder.` : `Noise floor: \`${noise ? noiseFile : "none found"}\`${noise ? ` (${noise.from}, ${noise.reps} rep(s) of A/A)` : ""}.`,
+  CFG.aa ? `**A/A pass** (one build, both ports): the deltas below are the noise floor, ${aaText} (a single rep is one |difference| per cell, a weak floor). Written to \`noise.json\` in this folder.` : `Noise floor: \`${noise ? noiseFile : "none found"}\`${noise ? ` (${noise.from}, ${noise.reps} rep(s) of A/A)` : ""}.`,
   `Reps: ${CFG.reps}. Medians over the reps. Verdicts: ${verdicts.better} better, ${verdicts.worse} worse, ${verdicts.within} within noise.`,
   `Watchdog: ${wd}`,
   `Phone display as it sits: ${CFG.display ?? "not recorded (a pass before K193)"}.`,
