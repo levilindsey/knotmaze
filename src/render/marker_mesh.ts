@@ -19,7 +19,7 @@
 // scaled to the dot (uFrame.x converts quad units to disc units), so the
 // dot's rim gets the same analytic ramp as the disc's.
 
-import { Mesh, MeshGeometry, Shader, Texture, UniformGroup } from "pixi.js";
+import { GlProgram, Mesh, MeshGeometry, Shader, Texture, UniformGroup } from "pixi.js";
 import {
   GLYPH_MAX_CIRCLES,
   GLYPH_MAX_SEGMENTS,
@@ -111,6 +111,13 @@ interface MarkerUniformValues {
   uFrame: Float32Array;
 }
 
+// K307 WARM-UP: the marker program, for the warm-up registry
+// (program_registry.ts). GlProgram.from caches by source, so this is the
+// very program every MarkerMesh draws with.
+export function markerProgram(): GlProgram {
+  return GlProgram.from({ vertex: MARKER_VERT, fragment: MARKER_FRAG, name: "knot-marker" });
+}
+
 export class MarkerMesh {
   readonly mesh: Mesh<MeshGeometry, Shader>;
   private readonly values: MarkerUniformValues;
@@ -138,8 +145,8 @@ export class MarkerMesh {
       uFrame: { value: new Float32Array([1, 1, 0, 0]), type: "vec4<f32>" },
     });
     this.values = uniforms.uniforms as unknown as MarkerUniformValues;
-    const shader = Shader.from({
-      gl: { vertex: MARKER_VERT, fragment: MARKER_FRAG, name: "knot-marker" },
+    const shader = new Shader({
+      glProgram: markerProgram(),
       resources: { markerUniforms: uniforms },
     });
     const q = QUAD_HALF;

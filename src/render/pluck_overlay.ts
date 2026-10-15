@@ -45,6 +45,7 @@ import {
   Buffer,
   BufferUsage,
   Container,
+  GlProgram,
   Mesh,
   MeshGeometry,
   Shader,
@@ -433,10 +434,16 @@ function pluckUniforms(): UniformGroup {
   }
   return PLUCK_UNIFORMS;
 }
+// K307 WARM-UP: the overlay's programs, for the warm-up registry
+// (program_registry.ts). GlProgram.from caches by source, so these are the
+// very programs the plucks draw with.
+export function pluckBlurProgram(): GlProgram {
+  return GlProgram.from({ vertex: PLUCK_VERT, fragment: PLUCK_FRAG, name: "pluck-blur" });
+}
 function pluckShader(): PluckShader {
   if (!PLUCK_SHADER) {
-    const sh = Shader.from({
-      gl: { vertex: PLUCK_VERT, fragment: PLUCK_FRAG, name: "pluck-blur" },
+    const sh = new Shader({
+      glProgram: pluckBlurProgram(),
       resources: { pluckUniforms: pluckUniforms() },
     }) as PluckShader;
     sh.texture = Texture.WHITE;
@@ -556,9 +563,23 @@ let STILL_EXPLORE = false;
 // The current scene's gap-slot table (bindPluckGap): the still programs are
 // built lazily, maybe before the renderer binds one.
 let STILL_GAP_TEX: Texture | null = null;
-function makeStillShader(fragment: string, name: string): PluckShader {
-  const sh = Shader.from({
-    gl: { vertex: PLUCK_STILL_VERT, fragment, name },
+// The still programs (K307 registry): the plain one, or the thread
+// reveal's variant (its fragment built once).
+let PLUCK_STILL_EXPLORE_FRAG: string | null = null;
+export function pluckStillProgram(explore: boolean): GlProgram {
+  if (explore) {
+    PLUCK_STILL_EXPLORE_FRAG ??= withExploreStill(PLUCK_STILL_FRAG);
+    return GlProgram.from({
+      vertex: PLUCK_STILL_VERT,
+      fragment: PLUCK_STILL_EXPLORE_FRAG,
+      name: "pluck-still-explore",
+    });
+  }
+  return GlProgram.from({ vertex: PLUCK_STILL_VERT, fragment: PLUCK_STILL_FRAG, name: "pluck-still" });
+}
+function makeStillShader(glProgram: GlProgram): PluckShader {
+  const sh = new Shader({
+    glProgram,
     resources: {
       uGapData: (STILL_GAP_TEX ?? defaultGapTexture()).source,
       knotUniforms: knotUniforms(),
@@ -570,13 +591,10 @@ function makeStillShader(fragment: string, name: string): PluckShader {
 }
 function pluckStillShader(): PluckShader {
   if (STILL_EXPLORE) {
-    PLUCK_STILL_EXPLORE_SHADER ??= makeStillShader(
-      withExploreStill(PLUCK_STILL_FRAG),
-      "pluck-still-explore",
-    );
+    PLUCK_STILL_EXPLORE_SHADER ??= makeStillShader(pluckStillProgram(true));
     return PLUCK_STILL_EXPLORE_SHADER;
   }
-  PLUCK_STILL_SHADER ??= makeStillShader(PLUCK_STILL_FRAG, "pluck-still");
+  PLUCK_STILL_SHADER ??= makeStillShader(pluckStillProgram(false));
   return PLUCK_STILL_SHADER;
 }
 

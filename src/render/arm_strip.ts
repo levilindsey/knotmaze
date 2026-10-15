@@ -45,6 +45,7 @@ import {
   Container,
   ExtensionType,
   Geometry,
+  GlProgram,
   Mesh,
   RenderTexture,
   Shader,
@@ -324,13 +325,27 @@ let QUAD: Mesh<Geometry, Shader> | null = null;
 let STRIP_SHADER: Shader | null = null;
 let STRIP_SHADER_EX: Shader | null = null;
 let STRIP_EXPLORE = false;
+// K307 WARM-UP: the pass programs, for the warm-up registry
+// (program_registry.ts). GlProgram.from caches by source, so this is the
+// very program the pass draws with.
+let STRIP_EXPLORE_FRAG: string | null = null;
+export function stripProgram(explore: boolean): GlProgram {
+  if (!explore) {
+    return GlProgram.from({ vertex: STRIP_VERT, fragment: STRIP_FRAG, name: "arm-strip" });
+  }
+  STRIP_EXPLORE_FRAG ??= withExploreStrip(STRIP_FRAG);
+  return GlProgram.from({
+    vertex: STRIP_VERT,
+    fragment: STRIP_EXPLORE_FRAG,
+    name: "arm-strip-explore",
+  });
+}
+
 function stripShader(explore: boolean): Shader {
   const have = explore ? STRIP_SHADER_EX : STRIP_SHADER;
   if (have) return have;
-  const shader = Shader.from({
-    gl: explore
-      ? { vertex: STRIP_VERT, fragment: withExploreStrip(STRIP_FRAG), name: "arm-strip-explore" }
-      : { vertex: STRIP_VERT, fragment: STRIP_FRAG, name: "arm-strip" },
+  const shader = new Shader({
+    glProgram: stripProgram(explore),
     resources: {
       uStripTable: stripTable().source,
       stripInfo: stripInfo(),

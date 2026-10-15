@@ -129,6 +129,7 @@ import { ConfettiLayer } from "./render/confetti";
 import { confettiPlan, sprayUnit } from "./render/confetti_model";
 import { PLUCK_WHOLE_MAX, type PluckRipple } from "./render/pluck_model";
 import { PluckRipples } from "./render/pluck_ripple";
+import { startShaderWarmup, warmContextFor } from "./render/shader_warmup";
 import { openDailyStats } from "./ui/daily_stats_view";
 import { shareOrCopy, showToast } from "./ui/share";
 import { buildPanel } from "./ui/tweakpane_panel";
@@ -537,8 +538,20 @@ async function main(): Promise<void> {
   app.stage.addChild(root);
   // K279: pluck ripples - a filter on the world container while one lives.
   const ripples = new PluckRipples(root, () => app.screen);
-  // K279 stage 2: link its program and pool its texture now, not on a tap.
-  ripples.warm(app.stage);
+  // K307 stage 2: THE SHADER WARM-UP (render/shader_warmup.ts, lore:
+  // render-shaders.md). Wave 1, what this mode's intro draws, compiles now,
+  // in parallel with the hidden pre-settle; the first visible frame waits
+  // for it (presettleTick's mayFinish, beginSettle's instant hold). Until
+  // then the background draws nothing (pixi would link it cold), and the
+  // ripple pools its texture after (K279 stage 2; its program is wave 1's).
+  const warmup = startShaderWarmup(app.renderer, (n) =>
+    warmContextFor(params, look("background"), motion.reduced, n)
+  );
+  background.container.renderable = false;
+  warmup.afterWave1(() => {
+    background.container.renderable = true;
+    ripples.warm(app.stage);
+  });
 
   // K140 FINISH CONFETTI (render/confetti.ts): two particle layers over the
   // world root - the world-space spray around the exit, then the
@@ -604,6 +617,10 @@ async function main(): Promise<void> {
   // pre-settle runs while host.presettling (physState "loading", the
   // loader's ticker branch); main shows the loader.
   let loaderShownAt = -1;
+  // K307: a link without a pre-settle holds its first frame until the
+  // warm-up's wave 1 (beginSettle's instant branch; warmHoldTick). The
+  // hold's start, or -1.
+  let warmHoldFrom = -1;
   const physicsTuning = (): PhysicsTuning => ({
     // Physics off never agitates: temperature would keep it from settling.
     temperature: params.physics ? settings.temperature : 0,
@@ -1080,6 +1097,7 @@ async function main(): Promise<void> {
   function beginLoading(): void {
     if (!ps || !renderer) return;
     physState = "loading";
+    warmHoldFrom = -1;
     host.beginLoad();
     reveal = null;
     renderer.beginReveal(null);
@@ -1100,8 +1118,8 @@ async function main(): Promise<void> {
       root.visible = true;
       perfLine = " | HALTED: physics went non-finite (regenerate to reset)";
       console.error("KnotMaze: physics state went non-finite; simulation halted.");
-    } else if (status === "done") {
-      finishLoading();
+    } else if (status === "done" && warmup.wave1Done) {
+      finishLoading(); // K307: not before the warm-up's wave 1.
     }
   }
 
@@ -1173,7 +1191,18 @@ async function main(): Promise<void> {
   function beginSettle(): void {
     if (!ps || !renderer) return;
     host.disarm();
+    warmHoldFrom = -1;
     if (params.appearSequence === "instant" || params.loadSettle <= 0) {
+      if (!warmup.wave1Done) {
+        // K307: hidden, inputs off as in a load, until wave 1 is in.
+        physState = "loading";
+        warmHoldFrom = performance.now();
+        loaderShownAt = -1;
+        root.visible = false;
+        indicators.hideAll();
+        loader.hide();
+        return;
+      }
       physState = "live";
       startAppearance();
       // A physics-off load cut short by this rebuild left these behind.
@@ -1210,7 +1239,8 @@ async function main(): Promise<void> {
     const simCap = settleFirst ? LOAD_SIM_CAP : PRESETTLE_SIM;
     const workCap = params.loadSettle * 1000;
     const mayFinish = (): boolean =>
-      loaderShownAt < 0 || performance.now() - loaderShownAt >= LOADER_MIN_MS;
+      warmup.wave1Done &&
+      (loaderShownAt < 0 || performance.now() - loaderShownAt >= LOADER_MIN_MS);
     const pr = host.presettleFrame(physicsTuning(), settleFirst, simCap, workCap, mayFinish);
     if (pr.halted) {
       halted = true;
@@ -1232,7 +1262,26 @@ async function main(): Promise<void> {
         loaderShownAt = performance.now();
       }
     }
+    // K307: so does the warm-up's wave 1, still compiling at LOADER_DELAY_MS.
+    if (loaderShownAt < 0 && !warmup.wave1Done && pr.elapsed > LOADER_DELAY_MS) {
+      loader.show();
+      loaderShownAt = performance.now();
+    }
     if (pr.end !== "" && mayFinish()) finishPresettle();
+  }
+
+  // K307: one frame of the instant hold (see beginSettle): the trefoil after
+  // LOADER_DELAY_MS, then the first frame once wave 1 is in and a shown
+  // trefoil has had LOADER_MIN_MS.
+  function warmHoldTick(): void {
+    const now = performance.now();
+    if (loaderShownAt < 0 && !warmup.wave1Done && now - warmHoldFrom > LOADER_DELAY_MS) {
+      loader.show();
+      loaderShownAt = now;
+    }
+    if (!warmup.wave1Done) return;
+    if (loaderShownAt >= 0 && now - loaderShownAt < LOADER_MIN_MS) return;
+    beginSettle();
   }
 
   // The pre-settle is over: start the appearance over the settled layout,
@@ -4437,13 +4486,19 @@ async function main(): Promise<void> {
   const backgroundTick = (dt: number): void => {
     background.reducedMotion = motion.reduced;
     sceneWasAnimating = sceneAnimating();
-    background.tick(dt, sceneWasAnimating);
+    // K307: no texture pass before wave 1 (pixi would link the effect cold).
+    if (warmup.wave1Done) background.tick(dt, sceneWasAnimating);
   };
 
   app.ticker.add((ticker) => {
     const c0 = performance.now();
     revealMs = 0;
+    warmup.poll(); // K307: the warm-up's compiles, once a frame.
     tick(ticker);
+    // K307: wave 2 once the intro is over (the reveal done, or asleep).
+    if (warmup.wave1Done && physState !== "loading" && (host.asleep || !introPlaying())) {
+      warmup.startWave2();
+    }
     // K279: the pluck ripples, after the camera's step (they read its view).
     ripples.tick(ticker.deltaMS / 1000);
     // K140: the confetti steps in every branch (asleep, paused, loading);
@@ -4464,7 +4519,8 @@ async function main(): Promise<void> {
     if (halted) return;
 
     if (physState === "loading") {
-      if (host.presettling) presettleTick();
+      if (warmHoldFrom >= 0) warmHoldTick();
+      else if (host.presettling) presettleTick();
       else loadingTick();
       if (physState === "loading") perfLine = " | loading";
       updateStamp();

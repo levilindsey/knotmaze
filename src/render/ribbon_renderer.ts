@@ -25,6 +25,7 @@
 import {
   Container,
   ExtensionType,
+  GlProgram,
   Graphics,
   Shader,
   Texture,
@@ -649,13 +650,29 @@ void main(void) {
 }
 `;
 
+// K307 WARM-UP: the section programs, for the warm-up registry
+// (program_registry.ts). GlProgram.from caches by source, so this is the
+// very program the section shaders draw with.
+let SECTION_EXPLORE_FRAG: string | null = null;
+export function sectionProgram(explore = false): GlProgram {
+  if (!explore) {
+    return GlProgram.from({ vertex: SECTION_VERT, fragment: SECTION_FRAG, name: "section-rgb" });
+  }
+  SECTION_EXPLORE_FRAG ??= withExplore(SECTION_FRAG);
+  return GlProgram.from({
+    vertex: SECTION_VERT,
+    fragment: SECTION_EXPLORE_FRAG,
+    name: "section-rgb-explore",
+  });
+}
+
 // The ONE shared section shader. (The path color reaches it as a uniform,
 // uKGold - since G2.3 nothing samples mesh.texture, which custom shaders
 // ignore anyway: the olive-smudge lore.)
 function sectionShader(): SectionShader {
   if (!SECTION_SHADER) {
-    const sh = Shader.from({
-      gl: { vertex: SECTION_VERT, fragment: SECTION_FRAG, name: "section-rgb" },
+    const sh = new Shader({
+      glProgram: sectionProgram(false),
       resources: {
         // pixi binds every TextureSource resource to the sampler uniform of
         // the same name; bindGap swaps it per scene.
@@ -682,8 +699,8 @@ function sectionShader(): SectionShader {
 let SECTION_EXPLORE_SHADER: SectionShader | null = null;
 function sectionShaderExplore(): SectionShader {
   if (!SECTION_EXPLORE_SHADER) {
-    const sh = Shader.from({
-      gl: { vertex: SECTION_VERT, fragment: withExplore(SECTION_FRAG), name: "section-rgb-explore" },
+    const sh = new Shader({
+      glProgram: sectionProgram(true),
       resources: {
         uGapData: sectionShader().resources.uGapData,
         uKStatic: kStatic().source,
