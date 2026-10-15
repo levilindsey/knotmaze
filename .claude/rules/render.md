@@ -47,7 +47,7 @@ rebuild itself kept working while the stamp's wall clock froze.
 K173 (2026-10-14) moved each topic to a file that attaches only with the
 files it is about; `docs/lore_index.md` lists every rules file and its paths.
 - `render-gaps.md`: per-pixel crossing gaps (G1)
-- `render-paint.md`: shader paint (G2), pulses, the hover rim (K145, K111), palette order, gamut locality
+- `render-paint.md`: shader paint (G2), pulses, the hover rim (K145, K111), ring laps (K299), palette order, gamut locality
 - `render-backgrounds.md`: shader backgrounds (K21, K79)
 - `render-hash.md`: the backgrounds' hash (K154)
 - `render-ribbon.md`: ribbons and junctions: the junction field, fills, arc-wrap, wedges, fans
