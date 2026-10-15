@@ -46,7 +46,17 @@ import type { PaintRoute } from "./junction_routes";
 import { trailFade, trailSpans } from "./trail_paint";
 import type { MinoFog, PathViz } from "../ui/url_state";
 import { spotCtrl } from "../game/minotaur";
-import type { MinotaurChase, MinotaurMode } from "../game/minotaur";
+import type { ChaseGraph, MinotaurMode, Spot } from "../game/minotaur";
+import type { TurnTelegraph } from "../game/minotaur_turns";
+
+// What syncMinotaur draws: the real-time chase (MinotaurChase) or the
+// turn-aligned minotaur (K80 turns, TurnMinotaur) - where it stands on the
+// walk graph and its display mode.
+export interface MinotaurView {
+  readonly g: ChaseGraph;
+  readonly mino: Spot;
+  readonly mode: MinotaurMode;
+}
 import { FogBackdrop } from "./background";
 import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
 import { MarkerMesh } from "./marker_mesh";
@@ -97,6 +107,17 @@ const MINO_GLOW_ALPHA: Record<MinotaurMode, number> = {
   pause: 0.65,
   hunt: 1,
 };
+// K80 turns, the telegraph's FIRST LOOK (stage 2 builds the final one): the
+// run(s) the turn minotaur committed to, as a red line along the threads
+// (width in thread widths, so 2-3 px at phone fit scale over 4-5 px
+// threads), and a red ring around where it will stand (radius in minotaur
+// radii; stroke in thread widths). Sampled every TELEGRAPH_STEP ctrl.
+const TELEGRAPH_COLOR = 0xff2418;
+const TELEGRAPH_WIDTH = 0.55;
+const TELEGRAPH_ALPHA = 0.95;
+const TELEGRAPH_RING_R = 1.45;
+const TELEGRAPH_RING_W = 0.32;
+const TELEGRAPH_STEP = 0.5;
 
 // The marker meshes live for the page (each scene's overlay borrows them;
 // destroy() hands them back undestroyed - the PALETTE_CACHE lore). The
@@ -410,6 +431,8 @@ export class FabricMazeRenderer {
   // one layer above the other markers, moved above or below the fog.
   private minoLayer: Container;
   private minoGlow: Sprite;
+  // K80 turns: the telegraph (its committed next move), under the glow.
+  private teleGfx: Graphics;
   // Where syncMinotaur last drew it (world), and whether a fog of war
   // covers it there; minoShown false = not drawn.
   private minoShown = false;
@@ -448,8 +471,14 @@ export class FabricMazeRenderer {
     // the minotaur). Hidden until a real-time chase syncs it.
     this.minoGlow = new Sprite(minoGlowTexture());
     this.minoGlow.anchor.set(0.5);
+    this.teleGfx = new Graphics();
+    this.teleGfx.visible = false;
     this.minoLayer = new Container();
-    this.minoLayer.addChild(this.minoGlow, this.markers.minotaur.mesh);
+    this.minoLayer.addChild(
+      this.teleGfx,
+      this.minoGlow,
+      this.markers.minotaur.mesh
+    );
     this.minoLayer.visible = false;
     this.overContainer.addChild(this.minoLayer);
     for (const m of Object.values(this.markers)) m.hide();
@@ -680,6 +709,22 @@ export class FabricMazeRenderer {
     return this.anim !== null;
   }
 
+  // K80 turns: how far the in-flight move has got, 0..1 in ctrl along its
+  // run (1 = no move in flight). The turn minotaur's run plays over the same
+  // stretch of time.
+  get moveProgress(): number {
+    const a = this.anim;
+    if (!a || a.to === a.from) return 1;
+    const f = (a.cur - a.from) / (a.to - a.from);
+    return f <= 0 ? 0 : f >= 1 ? 1 : f;
+  }
+
+  // K80 turns: how long tickAnim takes over `ctrl` of thread at the current
+  // moveSpeed, before the slowdown through bends (a wait's own animation).
+  moveSeconds(ctrl: number): number {
+    return ctrl / (MOVE_CTRL_PER_S * Math.max(1e-3, this.moveSpeed));
+  }
+
   // Start animating the move the controller just performed. The controller
   // head is already at the destination; the dot departs the other end.
   beginMove(
@@ -812,12 +857,19 @@ export class FabricMazeRenderer {
 
   // --- The minotaur (K80). Drawn from the chase every frame by main.ts.
 
-  // Place the minotaur where `chase` has it (null: no chase, hidden).
+  // Place the minotaur where `chase` has it (null: no minotaur, hidden):
+  // the real-time chase or, K80 turns, the turn-aligned minotaur, whose
+  // committed next move `telegraph` draws (null: none to show).
   // `fog` decides whether it shows through the fog of war: "always",
   // "hunting" (only while it hunts) or "never" (only where the fog has
   // lifted). Like the exit marker, it waits for the intro to draw its
-  // thread.
-  syncMinotaur(chase: MinotaurChase | null, fog: MinoFog): void {
+  // thread. The telegraph rides the minotaur's layer, so the same fog rule
+  // covers it.
+  syncMinotaur(
+    chase: MinotaurView | null,
+    fog: MinoFog,
+    telegraph: TurnTelegraph | null = null
+  ): void {
     this.minoShown = false;
     if (!chase) {
       this.minoLayer.visible = false;
@@ -865,6 +917,65 @@ export class FabricMazeRenderer {
     this.minoX = x;
     this.minoY = y;
     this.minoR = r;
+    this.drawTelegraph(chase.g, telegraph, r);
+  }
+
+  // K80 turns, the telegraph's first look: a red line along each committed
+  // run, oriented from the junction it leaves, and a red ring where the
+  // minotaur will end its turn (around itself when it stays). Redrawn every
+  // frame: the threads move under it.
+  private drawTelegraph(
+    g: ChaseGraph,
+    t: TurnTelegraph | null,
+    r: number
+  ): void {
+    const gfx = this.teleGfx;
+    gfx.clear();
+    if (!t) {
+      gfx.visible = false;
+      return;
+    }
+    const pts: number[] = [];
+    let a = t.from;
+    for (const [e, b] of t.steps) {
+      const we = this.walk.edges[e];
+      if (!we) break;
+      const fwd = g.ea[e] === a;
+      const c0 = fwd ? we.ctrlA : we.ctrlB;
+      const c1 = fwd ? we.ctrlB : we.ctrlA;
+      const n = Math.max(1, Math.ceil(Math.abs(c1 - c0) / TELEGRAPH_STEP));
+      for (let i = pts.length === 0 ? 0 : 1; i <= n; i++) {
+        const c = c0 + ((c1 - c0) * i) / n;
+        this.pointFlowed(we.chain, this.ctrlMod(we.chain, c), this.scratch, 0);
+        pts.push(this.scratch[0], this.scratch[1]);
+      }
+      a = b;
+    }
+    const w = this.threadWidth;
+    if (pts.length >= 4) {
+      gfx.moveTo(pts[0], pts[1]);
+      for (let i = 2; i < pts.length; i += 2) gfx.lineTo(pts[i], pts[i + 1]);
+      gfx.stroke({
+        color: TELEGRAPH_COLOR,
+        width: w * TELEGRAPH_WIDTH,
+        alpha: TELEGRAPH_ALPHA,
+        cap: "round",
+        join: "round",
+      });
+    }
+    // The ring: at the destination's live position (the exit's lair spot
+    // never comes up: it never returns there).
+    const dv = this.walk.vertices.get(g.ids[t.dest]);
+    if (dv) {
+      this.pointFlowed(dv.chain, this.ctrlMod(dv.chain, dv.ctrl), this.scratch, 0);
+      this.polyCircle(gfx, this.scratch[0], this.scratch[1], r * TELEGRAPH_RING_R, 48);
+      gfx.stroke({
+        color: TELEGRAPH_COLOR,
+        width: w * TELEGRAPH_RING_W,
+        alpha: TELEGRAPH_ALPHA,
+      });
+    }
+    gfx.visible = true;
   }
 
   // Where the minotaur was last drawn (world), for its off-screen

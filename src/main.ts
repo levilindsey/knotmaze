@@ -41,6 +41,7 @@ import type { Departure, KeyDir } from "./ui/key_moves";
 import { MOVE_PAD_KEY, MovePad, movePadPref } from "./ui/move_pad";
 import { MinotaurChase } from "./game/minotaur";
 import type { ChaseEvent } from "./game/minotaur";
+import { TurnMinotaur, turnConfig, turnSeed } from "./game/minotaur_turns";
 import { RevealAnimator } from "./render/reveal";
 import { BackgroundLayer } from "./render/background";
 import {
@@ -51,6 +52,7 @@ import {
 } from "./render/background_model";
 import {
   chaseParamsOf,
+  turnMinoParamsOf,
   writeParams as writeTokenParams,
   newSeed,
   ROOT_NOTES,
@@ -547,6 +549,15 @@ async function main(): Promise<void> {
   // player's first accepted tap (chaseRunning) and stops at the finish.
   let chase: MinotaurChase | null = null;
   let chaseRunning = false;
+  // K80 TURNS: the turn-aligned minotaur (params.minotaur under the turn
+  // clock, game/minotaur_turns.ts), built with the fabric. Every accepted
+  // move is a turn, and so is a wait (a tap on your own junction); its run
+  // plays over the player's move animation, a wait's over turnWaitDur.
+  let turnMino: TurnMinotaur | null = null;
+  let turnWait = 0; // Seconds left of a wait's animation (0: none).
+  let turnWaitDur = 0;
+  // The minotaur on screen, whichever clock moves it.
+  const liveMino = (): MinotaurChase | TurnMinotaur | null => chase ?? turnMino;
   let fabricController: FabricMazeController | null = null;
   // Stage 22: the running appearance animation (null = instant / done
   // long ago). Rebuilds and "Replay settle" restart it.
@@ -1861,8 +1872,10 @@ async function main(): Promise<void> {
         official: dailyN !== null && dailyStore.hasOfficial(dailyN),
         solved: fabricController?.solved ?? false,
         trailMode: fabricController?.trailMode ?? false,
-        // K80: a real-time solve always starts over (a fresh chase).
-        realtime: chase !== null,
+        // K80: a real-time solve always starts over (a fresh chase), and so
+        // does one with the turn minotaur (K80 turns, section 2.10: backing
+        // out run by run past it would be suicide; a restart, not a catch).
+        realtime: chase !== null || turnMino !== null,
         // K146: so does a practice run (a past daily, not scored).
         practice: attemptLate(),
       });
@@ -1905,6 +1918,12 @@ async function main(): Promise<void> {
     // K80: the chase's tuning, live (the chase goes on).
     onChaseChange: () => {
       chase?.setParams(chaseParamsOf(params));
+      writeParams(params);
+    },
+    // K80 turns: the turn minotaur's tuning, live (the solve goes on; its
+    // next move is committed again under the new settings).
+    onTurnMinoChange: () => {
+      turnMino?.setConfig(turnConfig(turnMinoParamsOf(params)));
       writeParams(params);
     },
     // K140: the finish confetti (render-only, live; off drops the pieces
@@ -2352,7 +2371,7 @@ async function main(): Promise<void> {
   let minoIconSvg = "";
   indicators.add({
     id: "minotaur",
-    world: (out) => !!chase && !!fabric && fabric.minotaurWorld(out),
+    world: (out) => liveMino() !== null && !!fabric && fabric.minotaurWorld(out),
     radius: () =>
       fabric?.minotaurRadius() ??
       markerRadiusFor(params.threadWidth, look("markerSize")),
@@ -2365,11 +2384,11 @@ async function main(): Promise<void> {
         MINO_DISC.ink
       )),
     style: MINO_DISC,
+    // K80 turns: the turn minotaur's too, on the same terms.
     visible: () =>
       settings.minotaurIndicator && // K198 stage 2: the viewer's switch.
-      chase !== null &&
-      !chase.finished &&
-      chase.mode !== "lair" &&
+      (liveMino()?.finished === false) &&
+      liveMino()!.mode !== "lair" &&
       !!fabric &&
       !fabric.minotaurUnderFog &&
       fabric.minotaurWorld(minoScratch),
@@ -2403,8 +2422,8 @@ async function main(): Promise<void> {
       backtrack: params.pathViz === "trail" ? null : c.backtrackDist,
       junctions: c.visitedJunctions.size,
       deadEnds: params.deadEnds ? c.deadEndTips.size : null,
-      // K80: times caught so far (null: turn-based).
-      catches: chase ? chase.catches : null,
+      // K80: times caught so far (null: no minotaur).
+      catches: liveMino()?.catches ?? null,
     };
   };
   // The HUD and the mode badge (it re-fits around the HUD's new size).
@@ -2654,9 +2673,11 @@ async function main(): Promise<void> {
     const practice = attemptRecord === "practice";
     // K155: the stars. Turn-based walks rate from path + 2 x backtrack, as
     // a stored daily result does (the stats view agrees to the bit); a
-    // chase rates from the walked meter (a catch's re-walk) and its catches.
-    const rating = chase
-      ? rateRun(c.walkedDist, c.walk.optimalLength, chase.catches)
+    // chase rates from the walked meter (a catch's re-walk) and its catches,
+    // and so does a solve with the turn minotaur (K80 turns).
+    const mino = liveMino();
+    const rating = mino
+      ? rateRun(c.walkedDist, c.walk.optimalLength, mino.catches)
       : rateRun(walkedOf(c.pathLength, c.backtrackDist), c.walk.optimalLength);
     const stars = rating?.stars ?? null;
     lastWin = {
@@ -2688,8 +2709,9 @@ async function main(): Promise<void> {
       junctions: c.visitedJunctions.size,
       deadEnds,
       stats: daily !== null,
-      // K80: a chase's catches and time hunted (null: turn-based).
-      catches: chase ? chase.catches : null,
+      // K80: a chase's catches and time hunted (null: no minotaur; the turn
+      // minotaur has catches, no time hunted).
+      catches: mino ? mino.catches : null,
       chasedMs: chase ? chase.huntSeconds * 1000 : null,
       rating,
     });
@@ -2751,7 +2773,30 @@ async function main(): Promise<void> {
         ? new MinotaurChase(walkGraph, chaseParamsOf(params), params.seed)
         : null;
     chaseRunning = false;
-    fabric?.syncMinotaur(chase, params.minoFog);
+    // K80 turns: the turn clock's minotaur, when one is chosen. Its stream
+    // is the seed's own (turnSeed), so the same taps meet the same minotaur.
+    turnMino =
+      params.mazeFabric &&
+      params.clock === "turn" &&
+      params.minotaur !== "off" &&
+      walkGraph &&
+      fabric
+        ? new TurnMinotaur(
+            walkGraph,
+            turnConfig(turnMinoParamsOf(params)),
+            turnSeed(params.seed)
+          )
+        : null;
+    turnWait = 0;
+    fabric?.syncMinotaur(liveMino(), params.minoFog, turnMino?.telegraph() ?? null);
+  };
+
+  // A catch's toast (K80, both clocks).
+  const showCaughtToast = (n: number): void => {
+    showToast(
+      n === 1 ? "Caught! Back to the entrance." : `Caught ${n} times. Back to the entrance.`,
+      2500
+    );
   };
 
   // A fresh solve on the same maze (Reset path, a clock change): a new
@@ -2819,18 +2864,105 @@ async function main(): Promise<void> {
           pendingWin = false;
           fabric.update(fc);
           updateHud();
-          showToast(
-            chase.catches === 1
-              ? "Caught! Back to the entrance."
-              : `Caught ${chase.catches} times. Back to the entrance.`,
-            2500
-          );
+          showCaughtToast(chase.catches);
         }
       }
     }
     if (chase.playerMoving) fabric.setMoveProgress(chase.playerProgress, fc);
     else if (fabric.animating) fabric.setMoveProgress(1, fc);
     fabric.syncMinotaur(chase, params.minoFog);
+  };
+
+  // K80 TURNS (game/minotaur_turns.ts). A move the controller accepted is
+  // the minotaur's turn too (turnAfterMove); a tap on your own junction is a
+  // wait (waitTurn). The game state moves at once, as a turn-based move
+  // does; the minotaur's run plays over the player's move animation (its
+  // progress, tickTurnMino), a wait's over the time the player's dot would
+  // take over the same thread. A CATCH happens at the tap that makes it
+  // (stage 1 shows no catching move: the frame after it has the player at
+  // the entrance and the minotaur in its lair, stage 2 adds the feedback)
+  // and goes through real time's path: respawn (re-fog under minoRefog),
+  // the counter, the HUD's caught row and the toast.
+  const turnCaught = (): void => {
+    if (!turnMino || !fabric || !fabricController) return;
+    const fc = fabricController;
+    // The move under way was made in full: its fog lifts as cancelMove's.
+    fabric.cancelMove();
+    fc.respawn(params.minoRefog);
+    fabric.clearYarn();
+    pendingWin = false;
+    turnWait = 0;
+    fabric.update(fc);
+    updateHud();
+    showCaughtToast(turnMino.catches);
+  };
+  let turnWarned = false;
+  // After the controller took run `eid`: the minotaur's turn. True when
+  // the move ended in a catch (nothing left to animate).
+  const turnAfterMove = (eid: number): boolean => {
+    if (!turnMino) return false;
+    const r = turnMino.turn(eid);
+    turnWait = 0;
+    if (r === "reject" && !turnWarned) {
+      turnWarned = true;
+      console.warn(`K80 turns: the minotaur refused run ${eid} (out of step)`);
+    }
+    if (r !== "caught") return false;
+    turnCaught();
+    return true;
+  };
+  // Is world point (x, y) on the player's own junction (the head disc)?
+  const waitPt = new Float32Array(2);
+  const onHead = (x: number, y: number): boolean => {
+    if (!fabric || !fabricController) return false;
+    fabric.vertexWorld(fabricController.head, waitPt, 0);
+    const r = Math.max(fabric.markerRadius() * 1.5, 0.9);
+    const dx = waitPt[0] - x;
+    const dy = waitPt[1] - y;
+    return dx * dx + dy * dy <= r * r;
+  };
+  // The wait move: a turn passes with the player where they stand. Only
+  // while the turn minotaur is on and the maze is still open.
+  const waitTurn = (): boolean => {
+    if (!turnMino || !fabric || !fabricController) return false;
+    if (fabricController.solved || pendingWin || turnMino.finished) return false;
+    // A wait mid-flight lands the move under way first.
+    if (fabric.animating) {
+      fabric.cancelMove();
+      fabric.update(fabricController);
+    }
+    const r = turnMino.turn(-1);
+    if (r === "reject" || r === "noop") return false;
+    noteMove();
+    if (r === "caught") {
+      turnCaught();
+      return true;
+    }
+    // Its run(s) play over what the player's dot would take on them.
+    let ctrl = 0;
+    for (const [e] of turnMino.lastPath) {
+      const we = walkGraph?.edges[e];
+      if (we) ctrl += we.ctrlB - we.ctrlA;
+    }
+    turnWaitDur = ctrl > 0 ? fabric.moveSeconds(ctrl) : 0;
+    turnWait = turnWaitDur;
+    if (turnWaitDur === 0) turnMino.setProgress(1);
+    updateHud();
+    return true;
+  };
+  // Every frame: the minotaur's progress through its turn (the player's
+  // move animation, or the wait's clock), then its marker and telegraph.
+  const tickTurnMino = (dt: number): void => {
+    if (!turnMino || !fabric) return;
+    let frac = 1;
+    if (turnWait > 0) {
+      turnWait = Math.max(0, turnWait - dt);
+      frac = turnWaitDur > 0 ? 1 - turnWait / turnWaitDur : 1;
+    } else if (fabric.animating) {
+      frac = fabric.moveProgress;
+    }
+    turnMino.setProgress(frac);
+    fabric.syncMinotaur(turnMino, params.minoFog, turnMino.telegraph());
   };
 
   // Native share sheet on phones, the clipboard elsewhere (ui/share.ts).
@@ -3009,6 +3141,10 @@ async function main(): Promise<void> {
     if (!fabric || !fabricController) return false;
     // K80: the real-time mode queues the run with the chase instead.
     if (chase) return handleChaseTap(x, y);
+    // K80 turns: with the turn minotaur on, a tap on your own junction is
+    // the wait move (before the runs: a short run's tap zone reaches the
+    // junction, and the head disc sits over it).
+    if (turnMino && onHead(x, y)) return waitTurn();
     const eid = fabric.edgeAt(x, y, fabricController);
     if (eid < 0) return false;
     return moveAlong(eid);
@@ -3023,6 +3159,9 @@ async function main(): Promise<void> {
     // the thread to catch up. The win banner waits for the arrival.
     if (result === "advance" || result === "backtrack" || result === "win") {
       noteMove();
+      // K80 turns: the move is the minotaur's turn too; a catch leaves
+      // nothing to animate (the player is back at the entrance).
+      if (turnAfterMove(eid)) return true;
       fabric.beginMove(
         eid,
         result === "backtrack" ? "backtrack" : "advance",
@@ -3054,6 +3193,7 @@ async function main(): Promise<void> {
   let keyHoldFc: FabricMazeController | null = null;
   let keyHoldTaps = 0;
   let keyHoldChase: MinotaurChase | null = null;
+  let keyHoldTurnMino: TurnMinotaur | null = null;
   let keyHoldInputs = 0;
   let keyHoldCatches = 0;
   let keyHoldTick = 0;
@@ -3121,10 +3261,13 @@ async function main(): Promise<void> {
     keyHoldFc = fabricController;
     keyHoldTaps = fabricController?.taps.length ?? 0;
     keyHoldChase = chase;
+    keyHoldTurnMino = turnMino;
     if (chase) {
       keyHoldInputs = chase.inputs.length;
       keyHoldCatches = chase.catches;
       keyHoldTick = chase.tick;
+    } else if (turnMino) {
+      keyHoldCatches = turnMino.catches; // K80 turns.
     }
   };
   // One move by direction; true when it moved (queued, in real time).
@@ -3139,7 +3282,15 @@ async function main(): Promise<void> {
       return true;
     }
     const before = fabricController.taps.length;
+    const caught = turnMino?.catches ?? 0;
     moveAlong(eid);
+    // K80 turns: a move that was caught ends the hold at once (the keys
+    // must come up first, as in real time).
+    if (turnMino && turnMino.catches !== caught) {
+      heldKeys.clear();
+      endKeyHold();
+      return false;
+    }
     return fabricController.taps.length > before;
   };
   // A fresh press (or a pad press): the best match, as a tap. No match
@@ -3163,8 +3314,15 @@ async function main(): Promise<void> {
       !keysLive() ||
       !fc ||
       fc !== keyHoldFc ||
-      chase !== keyHoldChase
+      chase !== keyHoldChase ||
+      turnMino !== keyHoldTurnMino
     ) {
+      endKeyHold();
+      return;
+    }
+    // K80 turns: caught, as in real time - the keys must come up first.
+    if (turnMino && turnMino.catches !== keyHoldCatches) {
+      heldKeys.clear();
       endKeyHold();
       return;
     }
@@ -4085,7 +4243,11 @@ async function main(): Promise<void> {
         fabricController.trailMode = params.pathViz === "trail";
         // K80: in the real-time mode the chase moves the dot (tickChase).
         if (chase) tickChase(ticker.deltaMS / 1000);
-        else fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
+        else {
+          fabric.tickAnim(ticker.deltaMS / 1000, fabricController);
+          // K80 turns: the turn minotaur rides the move just stepped.
+          if (turnMino) tickTurnMino(ticker.deltaMS / 1000);
+        }
         // K120: a held key's next move, once the dot has arrived.
         keyStep();
         if (pendingWin && !fabric.animating) {
@@ -4489,6 +4651,59 @@ async function main(): Promise<void> {
     return r;
   };
   (window as unknown as Record<string, unknown>).__knotChaseObj = () => chase;
+  // K80 turns diagnostics (null without the turn minotaur): its state, the
+  // committed move the telegraph shows, and the minotaur's SCREEN point while
+  // fabric draws it. __knotTurnMove(edge) moves along run `edge` as a tap on
+  // it would; __knotTurnWait() is a tap on your own junction;
+  // __knotTurnMinoObj() is the live TurnMinotaur.
+  (window as unknown as Record<string, unknown>).__knotTurnMino = () => {
+    if (!turnMino) return null;
+    const tm = turnMino;
+    const out = new Float32Array(2);
+    const shown = !!fabric && fabric.minotaurWorld(out);
+    const ids = tm.g.ids;
+    const tel = tm.telegraph();
+    return {
+      model: params.minotaur,
+      config: { ...tm.cfg },
+      catches: tm.catches,
+      turns: tm.turns,
+      lifeTurn: tm.lifeTurn,
+      finished: tm.finished,
+      mode: tm.mode,
+      hunting: tm.hunting,
+      player: ids[tm.player],
+      head: fabricController?.head ?? null,
+      minoAt: ids[tm.state.v],
+      state: { ...tm.state },
+      progress: tm.progress,
+      lastPath: tm.lastPath.map(([e, b]) => [e, ids[b]]),
+      telegraph: tel
+        ? {
+            from: ids[tel.from],
+            steps: tel.steps.map(([e, b]) => [e, ids[b]]),
+            dest: ids[tel.dest],
+          }
+        : null,
+      inputs: [...tm.inputs],
+      waiting: turnWait,
+      minoShown: shown,
+      minoUnderFog: fabric?.minotaurUnderFog ?? false,
+      minoScreen: shown
+        ? {
+            x: out[0] * root.scale.x + root.position.x,
+            y: out[1] * root.scale.y + root.position.y,
+          }
+        : null,
+    };
+  };
+  (window as unknown as Record<string, unknown>).__knotTurnMove = (
+    edge: number
+  ): boolean => moveAlong(edge);
+  (window as unknown as Record<string, unknown>).__knotTurnWait = (): boolean =>
+    waitTurn();
+  (window as unknown as Record<string, unknown>).__knotTurnMinoObj = () =>
+    turnMino;
   // Fabric-maze diagnostics: solve state, metrics, and each current choice
   // with a tappable SCREEN point (via the live root transform) plus its
   // cost-to-exit, for scripted solve verification.

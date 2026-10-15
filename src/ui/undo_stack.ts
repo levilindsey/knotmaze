@@ -162,6 +162,11 @@ export const LIVE_EFFECTS = {
     "minoLose", "minoCatch", "minoDeadEnds", "minoRoam", "minoWake",
     "minoFog", "minoToward", "minoRefog",
   ],
+  // K80 turns: the turn-aligned minotaur's tuning.
+  onTurnMinoChange: [
+    "minoSpeed", "minoTelegraph", "minoSight", "minoRoamRuns",
+    "minoTerritory", "minoAccuracy", "minoPause", "minoSleep",
+  ],
   onConfettiChange: ["confetti", "confettiAmount"],
   onAudioChange: [
     "soundMode", "pitchSpace", "octaves", "rootNote", "tonicEmphasis",
@@ -170,8 +175,9 @@ export const LIVE_EFFECTS = {
   onVolumeChange: [
     "volume", "reverb", "brightness", "sustain", "shimmer", "pickPosition",
   ],
-  // Last: the solve starts over in the new clock mode.
-  onClockChange: ["clock"],
+  // Last: the solve starts over in the new clock mode (or with the turn
+  // minotaur switched or swapped, K80 turns).
+  onClockChange: ["clock", "minotaur"],
 } as const satisfies Record<string, readonly string[]>;
 
 export type LiveEffect = keyof typeof LIVE_EFFECTS;

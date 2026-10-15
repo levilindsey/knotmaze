@@ -10,6 +10,10 @@ import { APP_VERSION, BUILD_SHA, BUILD_TIME } from "../build_info";
 import type { UrlParams } from "./url_state";
 import {
   LOAD_SETTLE_MAX,
+  MINO_ROAM_RUNS_MAX,
+  MINO_SIGHT_MAX,
+  MINO_SLEEP_MAX,
+  MINO_TERRITORY_MAX,
   PARAM_DEFAULTS,
   SETTLE_BUDGET_MAX,
   appearModeFor,
@@ -144,6 +148,9 @@ export interface PanelCallbacks {
   // K80: the real-time chase's tuning (paces, pauses, distances) and how
   // the minotaur shows under fog: applied live, the chase goes on.
   onChaseChange: () => void;
+  // K80 turns: the turn-aligned minotaur's speed, telegraph and behavior,
+  // applied live (its `minotaur` row runs onClockChange: a restart).
+  onTurnMinoChange: () => void;
   // K140: the finish confetti (on/off, amount): render-only, applied live.
   onConfettiChange: () => void;
   // K98: the markers' size (the player's dot, the start, the finish, the
@@ -925,18 +932,83 @@ export function buildPanel(
   void pathVizRow;
 
   // K80: the real-time chase's tuning (game/minotaur.ts ChaseParams; the
-  // defaults were picked by a headless simulation). All live.
+  // defaults were picked by a headless simulation). All live. Since K80
+  // turns the folder also holds the turn-aligned minotaur's rows, first;
+  // each clock shows only its own rows (refreshCond), and minoFog,
+  // minoRefog and the indicator setting serve both.
   const fMino = folder("Minotaur", false, fMaze);
+  // Real time's own rows (hidden under the turn clock).
+  const rtRows: RowApi[] = [];
   const chaseRow = (
     key: string,
     opts: Record<string, unknown>,
+    tipText: string,
+    shared = false
+  ): RowApi => {
+    const r = row(fMino, p, key, opts, tipText, D[key], () => callbacks.onChaseChange());
+    if (!shared) rtRows.push(r);
+    return r;
+  };
+  // K80 turns: the turn-aligned minotaur (game/minotaur_turns.ts), a
+  // modifier of the turn clock. The mode restarts the solve; the rest apply
+  // live. Chances keep the pace rows' pattern (no step, 2 decimals, K130).
+  const minotaurRow = row(
+    fMino, p, "minotaur",
+    { options: { off: "off", hunter: "hunter", guard: "guard", stalker: "stalker" } },
+    "Turn-based: a minotaur that moves when you move, from its lair at the finish. Hunter: roams, hunts you once you come within sight, then checks where it last saw you. Guard: the hunter, keeping to the ground around the finish. Stalker: always hunts you. Running into it, or it into you, sends you back to the entrance (counted); the entrance tail is a sanctuary. Tap your own position to wait a turn. No undo while it is on. Restarts the solve.",
+    D.minotaur, () => callbacks.onClockChange()
+  );
+  const turnRow = (
+    parent: Parent,
+    key: string,
+    opts: Record<string, unknown>,
     tipText: string
-  ): RowApi => row(fMino, p, key, opts, tipText, D[key], () => callbacks.onChaseChange());
+  ): RowApi => row(parent, p, key, opts, tipText, D[key], () => callbacks.onTurnMinoChange());
+  const minoSpeedRow = turnRow(
+    fMino, "minoSpeed",
+    { options: { "half (every other turn)": "half", one: "one", "charge (two while hunting)": "charge", two: "two" } },
+    "Runs it takes each turn: half = one run every other turn; one; charge = one, two while it hunts you; two. Charge and two always show its next move. Applies live."
+  );
+  const minoTelegraphRow = turnRow(
+    fMino, "minoTelegraph", {},
+    "Show its next move in red: the run it will take and where it will stand, decided when your move ends (forced on at charge and two). Applies live."
+  );
+  const fMinoBehavior = folder("Minotaur behavior", false, fMino);
+  turnRow(
+    fMinoBehavior, "minoSight", { min: 0, max: MINO_SIGHT_MAX, step: 1 },
+    "Sight, in runs: it hunts you once you are this few runs away, and gives up beyond 3 more. It never sees you on the entrance tail. Applies live."
+  );
+  const minoRoamRunsRow = turnRow(
+    fMinoBehavior, "minoRoamRuns", { min: 0, max: MINO_ROAM_RUNS_MAX, step: 1 },
+    "Hunter: the farthest it roams in one go, in runs (its nearest destination is 3 runs away, or this if less). Applies live."
+  );
+  const minoTerritoryRow = turnRow(
+    fMinoBehavior, "minoTerritory", { min: 0, max: MINO_TERRITORY_MAX, step: 1 },
+    "Guard: it roams only to junctions within this many runs of the finish. Applies live."
+  );
+  const chanceRow = (key: "minoAccuracy" | "minoPause", tipText: string): RowApi =>
+    row(
+      fMinoBehavior, p, key,
+      { min: 0, max: 1, pointerScale: 0.01, format: (v: number) => v.toFixed(2) },
+      tipText, D[key], () => {
+        params[key] = Math.round(params[key] * 100) / 100;
+        callbacks.onTurnMinoChange();
+      }
+    );
+  chanceRow(
+    "minoAccuracy",
+    "While it hunts (the stalker: always), the chance each step takes a shortest way to you; otherwise it steps at random. Applies live."
+  );
+  chanceRow("minoPause", "The chance it stands still for a turn. Applies live.");
+  turnRow(
+    fMinoBehavior, "minoSleep", { min: 0, max: MINO_SLEEP_MAX, step: 1 },
+    "Turns it waits in its lair before it first moves, at the start and after each catch. Applies live."
+  );
   // K174: the minotaur's paces as multiples of yours (playerPace). No step
   // (Tweakpane's step grid would snap a link's 0.73, K130); an edit keeps
   // 2 decimals, so 0.7 x 10 stays exactly the default's 7.
-  const paceRow = (key: "minoWanderPace" | "minoHuntPace", label: string, tipText: string): RowApi =>
-    row(
+  const paceRow = (key: "minoWanderPace" | "minoHuntPace", label: string, tipText: string): RowApi => {
+    const r = row(
       fMino, p, key,
       { min: 0, max: 2, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label },
       tipText, D[key], () => {
@@ -944,6 +1016,9 @@ export function buildPanel(
         callbacks.onChaseChange();
       }
     );
+    rtRows.push(r);
+    return r;
+  };
   paceRow(
     "minoWanderPace", "minoWanderPace (x your pace)",
     "The minotaur's pace while it roams, as a multiple of your pace (playerPace): 0.5 = half as fast as you. Applies live."
@@ -999,11 +1074,13 @@ export function buildPanel(
   const minoFogRow = chaseRow(
     "minoFog",
     { options: { always: "always", "while hunting": "hunting", never: "never" } },
-    "With fog of war: show the minotaur always, only while it hunts you, or never (only where the fog has lifted). Applies live."
+    "With fog of war: show the minotaur always, only while it hunts you, or never (only where the fog has lifted). Applies live.",
+    true
   );
   const minoRefogRow = chaseRow(
     "minoRefog", {},
-    "With fog of war: a catch returns the fog to how it stood at the start of the solve. Off: what you explored stays uncovered. Applies from the next catch."
+    "With fog of war: a catch returns the fog to how it stood at the start of the solve. Off: what you explored stays uncovered. Applies from the next catch.",
+    true
   );
 
   // --- Look ---------------------------------------------------------------
@@ -1681,14 +1758,26 @@ export function buildPanel(
     const realtime = fab && params.clock === "realtime";
     clockRow.hidden = !fab;
     playerPaceRow.hidden = !realtime;
-    fMino.hidden = !realtime;
-    minoFogRow.hidden = !params.fogOfWar;
-    minoRefogRow.hidden = !params.fogOfWar;
+    // K80 turns: the folder shows in both clocks, each with its own rows;
+    // the turn minotaur's tuning only while it is on.
+    const turnClock = fab && !realtime;
+    const turnMinoOn = turnClock && params.minotaur !== "off";
+    const minoOn = realtime || turnMinoOn;
+    fMino.hidden = !fab;
+    for (const r of rtRows) r.hidden = !realtime;
+    minotaurRow.hidden = !turnClock;
+    minoSpeedRow.hidden = !turnMinoOn;
+    minoTelegraphRow.hidden = !turnMinoOn;
+    fMinoBehavior.hidden = !turnMinoOn;
+    minoRoamRunsRow.hidden = params.minotaur !== "hunter";
+    minoTerritoryRow.hidden = params.minotaur !== "guard";
+    minoFogRow.hidden = !minoOn || !params.fogOfWar;
+    minoRefogRow.hidden = !minoOn || !params.fogOfWar;
     moveSpeedRow.hidden = !fab || realtime;
     mazeStatsRow.hidden = !fab;
     finishIndicatorRow.hidden = !fab;
     headIndicatorRow.hidden = !fab;
-    minotaurIndicatorRow.hidden = !realtime;
+    minotaurIndicatorRow.hidden = !minoOn;
     indicatorSizeRow.hidden = !fab;
     tapToPanRow.hidden = !fab;
     movePadRow.hidden = !fab;
