@@ -33,7 +33,7 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/audio/**`, `test/audio/**`
 - `generation.md`: generation: what changes move the dailies, the plan history pointer, engine-exact generation (K108)
   paths: `src/core/**`, `src/util/**`, `test/core/**`, `test/util/**`
-- `generation-plan.md`: the plan identity pin (K87), long-tail dead ends (K74), a route to the exit (K109), reachability (K110)
+- `generation-plan.md`: the plan identity pin (K87), long-tail dead ends (K74), H1 fused arm cuts (K74 stage 2), a route to the exit (K109), reachability (K110)
   paths: `src/core/maze_plan.ts`, `src/core/maze_apply.ts`, `src/core/shapes.ts`, `test/core/maze_plan.test.ts`, `test/core/maze_plan_identity.test.ts`, `test/core/maze_apply.test.ts`, `test/core/maze_solvable.test.ts`, `test/core/maze_reachable.test.ts`, `test/core/shapes.test.ts`, `test/core/fixtures/maze_plan_v1.ts`
 - `generation-shapes.md`: rect identity, the start/exit anchors, escape tails
   paths: `src/core/shapes.ts`, `src/core/lattice_grower.ts`, `src/core/maze_plan.ts`, `src/core/maze_apply.ts`, `test/core/shapes.test.ts`, `test/core/lattice_grower.test.ts`

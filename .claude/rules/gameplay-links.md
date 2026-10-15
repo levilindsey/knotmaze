@@ -69,3 +69,11 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   its seed at today's defaults, with a warning, and an empty v5 blob is
   `.L`. Index 108 is free again: the next appended param takes it, and a
   branch that appended after 108 (K80's turns) renumbers when it rebases.
+
+- H1 SHARE PARAM (K74 stage 2, 2026-10-14): `hCutShare` (`hcs`, [0, 1],
+  default 1) is APPENDED to codec v5 at index 117, after K80 turns'
+  108-116. It changes the maze, so it is NOT a DAILY_EXEMPT_KEY: it is in
+  MAZE_PARAM_KEYS, and a change of its default moves the golden dailies
+  (the mechanism is generation-plan.md's H1 entry). Panel: the maze
+  folder, after deadEndLength, fabric mode only. A link that lists
+  `hcs` keeps its share when the default changes.

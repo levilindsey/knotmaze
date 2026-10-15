@@ -51,6 +51,47 @@ only with the files it is about; `generation.md` lists the area's other files.
   without tails. Probes and results: `.claude/probes/K74/` (`run_scan.ps1`
   with `spec_stage1.json`; `out/analyze_stage1.txt`, `out/phys1.jsonl`,
   the before/after sheet `out/K74_stage1_before_after.png`).
+- *K74 stage 2 (2026-10-14), H1 fused arm cuts:* a splice reads as an H
+  (a junction on each of two host threads, a one-tap bridge between).
+  `fuseHCuts` (`maze_apply.ts`; last in `applyMazeCuts`, since its guards
+  read the END runs the other cuts made) removes one of B's host arms
+  back to its first crossing X, fuses X into a 3-way junction (the trim
+  surgery the corner and dead-end cuts use) and leaves B a turn: the
+  second branch point moves to X and the bridge joins a longer run.
+  `hCutShare` (`hcs`, codec v5 index 117, a maze param, not exempt;
+  default 1 = every H; 0 = off: the plan carries no field and the maze is
+  the older one) cuts round(share × bridges) H's at an even stride in
+  strand order; each H tries the option whose kept arm runs smoothest
+  through B first. NEVER: an arm that meets a junction or an end before a
+  crossing; a crossing on an END's run up to its first junction (the
+  entrance and exit corridors and the long tails stay junction-free; the
+  set is refreshed after each cut); a self-crossing of the host; a
+  same-strand splice. Every option is checked on the strands it would
+  produce (a union-find over the walk vertices) and refused when it would
+  split the walk. When the kept strand runs B to A, the bridge edge's
+  nodes swap and its lattice points reverse. K108-exact (integer
+  strides, a cosine order normalized with `hypot2`, a stable sort).
+  Measured on dailies 1-80, shares 0 / .25 / .5 / .75 / 1: the far-end
+  greedy walk (gF) median 3.12 / 3.07 / 2.81 / 2.57 / 2.65x the optimal,
+  within 1.5x on 11 / 9 / 16 / 19 / 15% of dailies (the brief's bar was
+  15%); at 1 the heading walker (gH3) median 4.55 -> 3.66x, splice
+  bridges per maze 83 -> 26 (6644 attempted, 4562 cut, 2082 skipped, 1
+  refused by reachability), bridge taps per solve 4.76 -> 1.31, the
+  optimal route 90.4 -> 94.2 u, generation 30 -> 44 ms, no dead-end
+  tail shorter. Skips, per bridge end or arm: host self-crossing 3894,
+  same-strand splice 3594, protected END-run crossing 2002, arm meets a
+  junction 169 (dense heart and ring maps cut none). On dailies 81-240
+  the bar fails at every share (share 0: 2.30x, 23% within 1.5x; share
+  1: 2.15x, 26%), so stage 1's margin was partly sample luck. K110's
+  3780 designs: 0 failures. Every design slept by 5 s sim at shares 0
+  and 1 except K136; the last loud move moved 0.6 -> about 1.2 s.
+  The pass costs about 9 ms at gs 18 (`whole()`'s string maps and the
+  host scans). Pins: the golden dailies, and "applied maze at the K74
+  defaults" in `maze_plan_identity.test.ts` (39 walk graphs at share 0
+  and at the default; 29 move). Probes: `.claude/probes/K74/stage2/`
+  (`run_scan.ps1`, `out/analyze_stage2.txt`, `out/analyze_stage2b.txt`,
+  `why_skip.ts`, `find_fused.ts`, the sheet
+  `out/K74_stage2_before_after.png` and `out/closeups/`).
 
 - *K109 (2026-10-13), a route from start to exit:* spanning joins whole
   STRANDS, but the exit's nearest-edge search can cut the entrance's
