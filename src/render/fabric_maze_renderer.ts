@@ -696,6 +696,33 @@ export class FabricMazeRenderer {
     return best;
   }
 
+  // K80 turns: the distance from a world point to the nearest tappable
+  // sample of the current choices, every run's head neighborhood excluded
+  // (short runs too), or Infinity. The wait tap (main.ts onHead) wins only
+  // nearer the junction than this, so a tap on a run's arm stays a move.
+  runDistance(x: number, y: number, controller: FabricMazeController): number {
+    let bestD = Infinity;
+    for (const eid of controller.choices()) {
+      const e = this.walk.edges[eid];
+      const exA = e.va === controller.head;
+      const exB = e.vb === controller.head;
+      for (let f = e.ctrlA; ; f += SAMPLE_STEP) {
+        const ff = Math.min(f, e.ctrlB);
+        const nearHead =
+          (exA && ff - e.ctrlA <= HEAD_EXCLUDE) ||
+          (exB && e.ctrlB - ff <= HEAD_EXCLUDE);
+        if (!nearHead) {
+          this.pointFlowed(e.chain, this.ctrlMod(e.chain, ff), this.scratch, 0);
+          const dx = this.scratch[0] - x;
+          const dy = this.scratch[1] - y;
+          bestD = Math.min(bestD, dx * dx + dy * dy);
+        }
+        if (ff >= e.ctrlB) break;
+      }
+    }
+    return Math.sqrt(bestD);
+  }
+
   // --- Traversal animation: game state moves instantly; the dot and the
   // gold front travel the thread's actual curve to catch up (ctrl-space
   // interpolation through pointOnChain, so the motion follows every bend).

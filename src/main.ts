@@ -2911,7 +2911,12 @@ async function main(): Promise<void> {
     turnCaught();
     return true;
   };
-  // Is world point (x, y) on the player's own junction (the head disc)?
+  // Is world point (x, y) a tap on the player's own junction (the wait)?
+  // Within max(1.5 head discs, 0.9) world of it AND nearer it than any
+  // run's tappable part (runDistance, the head neighborhood excluded): the
+  // choices' arms leave the junction inside that radius (their tap points,
+  // 1.5 ctrl out, sat in it and every tap on them waited), so the space
+  // splits between the junction and the runs and a tap on an arm moves.
   const waitPt = new Float32Array(2);
   const onHead = (x: number, y: number): boolean => {
     if (!fabric || !fabricController) return false;
@@ -2919,7 +2924,8 @@ async function main(): Promise<void> {
     const r = Math.max(fabric.markerRadius() * 1.5, 0.9);
     const dx = waitPt[0] - x;
     const dy = waitPt[1] - y;
-    return dx * dx + dy * dy <= r * r;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    return d <= r && d < fabric.runDistance(x, y, fabricController);
   };
   // The wait move: a turn passes with the player where they stand. Only
   // while the turn minotaur is on and the maze is still open.
@@ -3143,7 +3149,8 @@ async function main(): Promise<void> {
     if (chase) return handleChaseTap(x, y);
     // K80 turns: with the turn minotaur on, a tap on your own junction is
     // the wait move (before the runs: a short run's tap zone reaches the
-    // junction, and the head disc sits over it).
+    // junction, and the head disc sits over it; onHead leaves the runs'
+    // arms to the runs).
     if (turnMino && onHead(x, y)) return waitTurn();
     const eid = fabric.edgeAt(x, y, fabricController);
     if (eid < 0) return false;
