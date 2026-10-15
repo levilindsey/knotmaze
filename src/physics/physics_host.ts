@@ -227,7 +227,7 @@ export interface PhysicsHost {
   // A copy of the stepping state (probe_dump.ts), with what the view lacks.
   dump(): Promise<PhysicsDump>;
   // Resolves once every input sent so far (a tug, a drag) is in the state
-  // view shows next.
+  // view shows.
   sync(): Promise<void>;
 }
 

@@ -5344,7 +5344,8 @@ async function main(): Promise<void> {
       delay: opts.delay,
     });
     // K7 stage 4: with a tug, a Promise on both hosts that resolves once
-    // the physics holds the tug (the worker's snapshot after it arrived).
+    // the state main shows holds the tug (with the worker, the first
+    // snapshot after it, shown exactly: host.sync()).
     return opts.tug ? host.sync().then(() => plucked) : plucked;
   };
   // K279: the live ripples.

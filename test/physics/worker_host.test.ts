@@ -319,7 +319,7 @@ describe("the probe bridge", () => {
     expect(hashDump(db)).toEqual(hashDump(da));
   });
 
-  it("syncs: resolves once a snapshot saw every input", async () => {
+  it("syncs: resolves once a snapshot saw every input, and shows it", async () => {
     const { port, host } = live();
     const m = host.view!;
     host.grab(5, m.positions[10], m.positions[11]);
@@ -330,6 +330,12 @@ describe("the probe bridge", () => {
     port.deliver();
     await settled();
     expect(done).toBe(true);
+    // Shown exactly, not held for a later frame's interpolation: a read
+    // right after the await sees the worker's state (the helper's live
+    // probe read the pre-tug positions with a held fence).
+    const ps = port.core.ps!;
+    expect(host.view!.simTime).toBe(ps.simTime);
+    expect(Array.from(host.view!.positions)).toEqual(Array.from(ps.positions));
     // Nothing outstanding: at once.
     await expect(host.sync()).resolves.toBeUndefined();
   });

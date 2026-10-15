@@ -689,10 +689,13 @@ export class WorkerHost implements PhysicsHost {
       this.postRaw({ type: "dump", id });
     });
   }
+  // Exact, as freeze is: the mirror shows the snapshot that saw the inputs
+  // when this resolves, so a read after the await sees them (a held one
+  // would show a frame or two later, at the interpolation's delay).
   sync(): Promise<void> {
     if (this.inThread) return this.inThread.sync();
     if (!this.mirror) return Promise.resolve();
-    return this.fence(false).then(() => undefined);
+    return this.fence(true).then(() => undefined);
   }
 
   // --- internals ---
