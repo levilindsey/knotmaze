@@ -502,7 +502,9 @@ void main(void) {
   // The hover glow (K145): kst.w is its strength along the thread, shaped
   // across the ribbon here (only the ribbons have an across coordinate).
   highp float krim = kst.w > 0.0 ? kst.w * kRimAcross(vUV.y) : 0.0;
-  vec3 rgb = paintHere ? kComposePaint(base, kst, max(kgl, krim)) : base;
+  // A High contrast prototype shapes a choice across the ribbon (K111
+  // stage 4; kComposePaint itself under today's look).
+  vec3 rgb = paintHere ? kComposePaintAcross(base, kst, max(kgl, krim), vUV.y) : base;
   float gk = gapKeep(pxW, gTurn);
   if (uKBase.z > 4.5) {
     // DEBUG VIEW 5 (probes): the paint terms of the VISIBLE thread (gaps
@@ -879,6 +881,10 @@ export class RibbonRenderer {
   // Its width, how far in from each edge it reaches in half-widths (the
   // hoverGlowWidth panel param, K111 stage 4; main.ts syncs it every tick).
   hoverGlowWidth: number = PAINT_CONST.RIM_EDGE;
+  // High contrast's highlight prototype (K111 stage 4, K265; main.ts syncs
+  // it every tick: 0 unless High contrast is on), sent as uKBase.y. 0 =
+  // today's pulses.
+  hcLook = 0;
   // Live flow-undulation controls (sliders; main.ts syncs them every tick
   // like cuspRadius). See the FLOW_* constants: render-side displacement
   // only, never the physics state.
@@ -4426,6 +4432,8 @@ export class RibbonRenderer {
     U.uKReach[3] = this.rimAt;
     // K111 stage 4: its width, as the scale kRimAcross reads (1 at the default).
     U.uKGold[3] = kRimScale(this.hoverGlowWidth);
+    // K111 stage 4: High contrast's highlight prototype (0 = the pulses).
+    U.uKBase[1] = this.hcLook;
     // Junction fillets ride the same tick: live positions, live paint.
     this.rebuildFillets();
     this.tickWebFade();

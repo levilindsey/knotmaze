@@ -87,6 +87,22 @@ export const PAINT_CONST = {
   // 110 of 111 steps -> K_BAND = 0.94 * 110 / 111.
   K_BAND: (0.94 * 110) / 111,
 
+  // HIGH CONTRAST PROTOTYPES (K111 stage 4, Levi K265: "Maybe the high
+  // contrast highlights should get new treatment"): how a choice looks under
+  // High contrast while Levi picks a look (the id in uKBase.y, 0 = today's
+  // pulses; paint_glsl kComposePaintAcross). CONTRAST (stage 2's): a black
+  // center line inside HC_LINE of the half-width, an HC_LINE_SOFT ramp.
+  // OUTLINE: a black core inside HC_CORE, an HC_CORE_SOFT ramp, white
+  // edges. CHEVRONS: HC_CHEV_PERIOD world per black + white pair, the
+  // center HC_CHEV_LEAN world ahead of the edges (pointing away from the
+  // junction). A hovered choice is solid white under all three.
+  HC_LINE: 0.3,
+  HC_LINE_SOFT: 0.1,
+  HC_CORE: 0.45,
+  HC_CORE_SOFT: 0.15,
+  HC_CHEV_PERIOD: 0.8,
+  HC_CHEV_LEAN: 0.3,
+
   // SECTION colors: junctionBlend eases fully once its extension reaches
   // this many lattice units (section_colors RAMP_EASE_FULL).
   RAMP_EASE_FULL: 1.0,
