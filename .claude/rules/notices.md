@@ -40,11 +40,29 @@ research, the tooling choice and the verification record are in
   the page shows under it). A new borrowed technique, tune, asset or ported
   algorithm gets its entry in the commit that adds it.
 - PCG2D IS GONE (K154, Levi 2026-10-14: "swap in our own"; the other calls
-  were to keep the Perlin and Scarborough Fair credits and to credit no
-  other technique). The backgrounds' integer hash is `src/render/hash2d.ts`,
+  were to keep the Perlin and Scarborough Fair credits and, that day, to
+  credit no other technique; K277 reversed that last call, see RESEARCH).
+  The backgrounds' integer hash is `src/render/hash2d.ts`,
   designed here (see render-hash.md), so nothing about it is credited. test/notices
   fails if the page names PCG, Jarzynski or Olano again; a hash taken from a
   paper or a library needs its credit back in the commit that takes it.
+- RESEARCH (K277, Levi 2026-10-14 about 16:07, reversing the K154 call to
+  credit no other technique; brief docs/design/K274_K277.md). `RESEARCH`
+  (credits.ts) lists the published techniques the code follows, and the
+  page shows them in a "Research and techniques" section after the
+  packages: the technique, who and when, the citations, what Knotmaze uses
+  it for, and the files that use it. WORDING IS FIXED: "uses", "follows",
+  "after"; nothing that reads as endorsement or affiliation; no legal
+  claims, never "public domain"; a game's title (Wordle) only to say where
+  an idea came from, no logo. CITE ONLY WHAT A RECORD CONFIRMED (a DBLP or
+  publisher page, the paper itself): leave out a page range, a venue or an
+  editor you could not check, and no entry may name Jarzynski, Olano, PCG
+  or Hershey (the page test fails on them). CREDIT ONLY WHAT A FILE DOES:
+  every entry lists its files, each with a mark (text the file must
+  contain), and test/notices fails when a file or its mark is gone, so an
+  entry cannot outlive its code; the sources of unbuilt work (K80's puzzle
+  rules, K74's maze-psychology reading, Pac-Man and Brogue) wait for the
+  code. A new borrowed technique gets its entry in the commit that adds it.
 - V8 (hypot2). `hypot2` in `src/util/det_math.ts` (K108) follows V8's
   FastMathHypot (`src/builtins/math.tq`) step for step. It is V8's
   algorithm re-written from exact operations, not V8's text, but it

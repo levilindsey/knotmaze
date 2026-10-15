@@ -17,6 +17,7 @@ import {
   CREDITS,
   LICENSE_FALLBACKS,
   NEEDS_COPYRIGHT_LINE,
+  RESEARCH,
 } from "../../notices/credits";
 import {
   gatherNotices,
@@ -453,6 +454,55 @@ describe("the page", () => {
     }
     expect(html).not.toContain("Hershey");
   });
+
+  // K277: the research section, after the packages and before the footer.
+  it("adds a research section after the packages, a card to each technique", () => {
+    const research = RESEARCH.slice(0, 3);
+    const html = renderPage({ ...base, packages: pkgs, credits: [], research });
+    expect(html).toContain('<h2 id="research">Research and techniques</h2>');
+    expect(html.indexOf('id="software"')).toBeLessThan(html.indexOf('id="research"'));
+    expect(html.indexOf('id="research"')).toBeLessThan(html.indexOf('class="foot"'));
+    for (const r of research) {
+      expect(html, r.id).toContain(`<li id="research-${r.id}"><h3>${escapeHtml(r.technique)}</h3>`);
+      expect(html, r.id).toContain(escapeHtml(r.by));
+      expect(html, r.id).toContain(escapeHtml(r.use));
+      for (const f of r.files) expect(html, r.id).toContain(`<code>${f.path}</code>`);
+    }
+    // The jump line at the top points at sections that exist.
+    expect(html).toContain('<a href="#research">Research and techniques</a>');
+    for (const [, id] of html.matchAll(/href="#([^"]+)"/g)) {
+      expect(html, id).toContain(`id="${id}"`);
+    }
+    // Without research the page has no such section and no jump line.
+    const none = renderPage({ ...base, packages: pkgs, credits: [] });
+    expect(none).not.toContain("Research and techniques");
+    expect(none).not.toContain('class="jump"');
+  });
+
+  it("escapes a research entry, links its sources and lists a repeated file once", () => {
+    const html = renderPage({
+      ...base,
+      packages: [],
+      credits: [],
+      research: [
+        {
+          id: "x",
+          technique: "T<b>",
+          by: "B&B",
+          sources: [{ text: "S<i>", url: "https://s.example/?a=1&b=2" }, { text: "plain" }],
+          use: "U<u>",
+          files: [
+            { path: "src/a<b>.ts", mark: "m" },
+            { path: "src/a<b>.ts", mark: "n" },
+          ],
+        },
+      ],
+    });
+    expect(html).not.toMatch(/<b>|<i>|<u>/);
+    expect(html).toContain('<a href="https://s.example/?a=1&amp;b=2" rel="noopener">S&lt;i&gt;</a>');
+    expect(html).toContain("<li>plain</li>");
+    expect(html.match(/<code>/g)).toHaveLength(1);
+  });
 });
 
 describe("the tracked credits", () => {
@@ -553,6 +603,67 @@ describe("the tracked credits", () => {
   });
 });
 
+// K277: the published techniques the code follows. Every file an entry
+// names must exist and still hold the text that earned the entry, so a
+// credit cannot outlive its code; a technique with no file does not belong
+// (the sources of unbuilt work wait until the code is built).
+describe("the tracked research", () => {
+  const base = { build: { version: "9.9.9", sha: "abc1234" } };
+  const read = (path: string): string => {
+    try {
+      return readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      return "";
+    }
+  };
+
+  it("has stable unique ids, and a citation, a use and a file for every entry", () => {
+    expect(RESEARCH.length).toBeGreaterThan(0);
+    expect(new Set(RESEARCH.map((r) => r.id)).size).toBe(RESEARCH.length);
+    for (const r of RESEARCH) {
+      expect(r.id, r.id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+      expect(r.technique && r.by && r.use, r.id).toBeTruthy();
+      expect(r.sources.length, r.id).toBeGreaterThan(0);
+      expect(r.files.length, r.id).toBeGreaterThan(0);
+      for (const s of r.sources) {
+        expect(s.text, r.id).toBeTruthy();
+        if (s.url) expect(s.url, r.id).toMatch(/^https:\/\//);
+      }
+    }
+  });
+
+  it("names only files that exist and still hold their mark", () => {
+    for (const r of RESEARCH) {
+      for (const f of r.files) {
+        expect(f.path, r.id).toMatch(/^(src|notices)\/[A-Za-z0-9_./-]+$/);
+        const body = read(f.path);
+        expect(body, `${r.id}: ${f.path} is missing or empty`).not.toBe("");
+        expect(
+          body.toLowerCase(),
+          `${r.id}: ${f.path} no longer mentions "${f.mark}": drop the file or the entry`,
+        ).toContain(f.mark.toLowerCase());
+      }
+    }
+  });
+
+  it("shows every entry on the page, in the wording the rules allow", () => {
+    const html = renderPage({ ...base, packages: [], credits: [], research: RESEARCH });
+    for (const r of RESEARCH) expect(html, r.id).toContain(`id="research-${r.id}"`);
+    // K154: the backgrounds' hash is our own, so nothing about PCG; K115's
+    // Hershey acknowledgement waits for its data.
+    for (const gone of ["Jarzynski", "Olano", "PCG", "Hershey"]) {
+      expect(html, gone).not.toContain(gone);
+    }
+    // No legal claims, and nothing that reads as endorsement or affiliation:
+    // an entry says what Knotmaze uses or follows, never that anyone backs it.
+    expect(html).not.toMatch(/public domain/i);
+    const words = RESEARCH.flatMap((r) => [r.technique, r.by, r.use, ...r.sources.map((s) => s.text)]).join("\n");
+    expect(words).not.toMatch(
+      /public domain|endors|sponsor|partner|affiliat|official|licen[cs]|copyright|trademark|permission|approved|authori[sz]|certified/i,
+    );
+  });
+});
+
 describe("the dev server", () => {
   it("answers /licenses.html with a placeholder and passes everything else on", () => {
     const plugin = notices();
@@ -578,6 +689,7 @@ describe("the dev server", () => {
     expect(res.statusCode).toBe(200);
     expect(res.headers["Content-Type"]).toContain("text/html");
     expect(res.body).toContain("development server");
+    expect(res.body).toContain("Research and techniques");
     middleware?.({ url: "/index.html" }, res, () => passed++);
     expect(passed).toBe(1);
   });
@@ -693,6 +805,10 @@ describe("the real build", () => {
     // Credits ship, V8's notice for hypot2 among them; the Hershey
     // acknowledgement waits for K115's data.
     expect(html).toContain("Inigo Quilez");
+    // K277: the research section ships, after the packages.
+    expect(html).toContain('<h2 id="research">Research and techniques</h2>');
+    for (const r of RESEARCH) expect(html, r.id).toContain(`id="research-${r.id}"`);
+    expect(html.indexOf('id="software"')).toBeLessThan(html.indexOf('id="research"'));
     expect(html).toContain("Copyright 2014, the V8 project authors. All rights reserved.");
     expect(html).toContain("THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS");
     expect(html).not.toContain("Hershey");
