@@ -724,3 +724,40 @@ change:
 
 **Next:** stage 2 from "Stage 2: the warm-up" above, after K7 stage 1
 and K298 land (both edit `main.ts`). Then the phone pass with K156 (6.).
+
+## Stage 2 launch notes (2026-10-15, the coordinator)
+
+What changed since the design above, and what rides this stage:
+
+- **The physics worker becomes the default** with K7 stage 6 (call F6),
+  which may land on master while you work; `&phw=0` runs the same
+  pre-settle on main. Both hosts go through `host.presettleFrame` and
+  `finishPresettle` (main.ts), so 1.'s gate is the same code either
+  way. Verify with the worker on and off: pin each with `&phw=1` and
+  `&phw=0`, whatever your branch's default.
+- **K366 rides this stage.** K279 stage 2's ripple warms itself
+  (`PluckRipples.warm(stage)`, one main.ts call once the stage is
+  built; `render-shaders.md`, "The pluck ripple warms itself"). Move it
+  onto the registry and the warm-up. Then take the first-tap residual:
+  one 35-54 ms frame among tap 1's first five, on both builds, ripple or
+  not. Attribute it before fixing it.
+- **K268 stage 2's three thread-reveal variants** (`arm-strip-explore`,
+  `junction-field-explore`, `pluck-still-explore`; `render-shaders.md`,
+  "The thread reveal's variants") go on the registry beside section-rgb's
+  explore variant, in wave 1 when the thread reveal is on.
+- **K290 (burn stage 3a) runs alongside you** and edits `gap_mask.ts`
+  and `explore_glsl.ts`; it may add programs or variants. Touch those
+  two files only where a factory export needs it. If K290 lands first,
+  the coordinator asks you to rebase; register its programs then.
+  Otherwise they are a follow-up for your report.
+- **main.ts: the gate only.** K5 stage M1 (main.ts split into
+  `scene_ref.ts`, `src/ui/loader.ts`, `stamp.ts` and `probe_hooks.ts`)
+  may run alongside you. Keep your main.ts edits to 8.'s list (the
+  early start, the two gates, the background hold, the loader rule),
+  each a few calls into `shader_warmup.ts`, where everything else
+  lives. Whichever stage lands second rebases.
+- **Stage 1's harness** is untracked, in the main checkout's
+  `.claude/probes/K307/`. Copy what you need into your worktree's
+  `.claude/probes/K307/stage2/` (not `builds/`), and leave the
+  originals alone.
+- **No phone.** Its measures ride K156's next pass (6.).
