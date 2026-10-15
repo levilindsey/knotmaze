@@ -309,18 +309,17 @@ and never reused.
   `src/ui/accessibility.ts`, the Accessibility folder first in the
   panel; lore `gameplay-motion.md` ACCESSIBILITY GROUP and
   `gameplay-panel.md` ACCESSIBILITY FOLDER; Levi's review is K238).
-  Stage 2, the highlight modes, is unblocked since K145 merged.
-  - owner: nobody since 2026-10-14 11:58 (stage 1 done by agent
-    a46b211b839cf82d1 (sonnet) of claude session d8031183 and merged;
-    stage 2 not started).
-  - branch: mainline; last commit: 9c6cab3 (stage 1's handoff).
-  - evidence: `.claude/probes/K111/` (`k111_probe.mjs`, modes rm | intro
-    | hc | os | storage | ab; `daily.mjs`; `out/` with the logs and the
-    screenshots).
-  - next: stage 2, the pulse highlight modes (render prototypes, K152);
-    High contrast then selects one, as one more row in
-    `HIGH_CONTRAST_OVERRIDES`.
-  - brief: `docs/design/K111.md` ("Goal, stage 2" and "Stage 1 handoff").
+  Stage 2, the highlight modes, runs from 12:02 (brief b6c3832).
+  - owner: claude agent a98c345abb522e151 (opus) of session d8031183,
+    started 2026-10-14 12:02 with a 2 h cap (about 14:02). Stage 1 was
+    agent a46b211b839cf82d1 (sonnet), merged in 0e5a138..9c6cab3.
+  - branch: `worktree-agent-a98c345abb522e151`
+    (`.claude/worktrees/agent-a98c345abb522e151`), from b6c3832; last
+    commit: none yet (unpushed).
+  - evidence: `.claude/probes/K111/stage2/` in that worktree; stage 1's
+    in the main checkout's `.claude/probes/K111/`.
+  - next: the brief's stage 2 (the dropdown, the modes, the sheets).
+  - brief: `docs/design/K111.md` ("Stage 2: the highlight modes").
 - **K191** · K169's two calls, decided (Levi, 2026-10-14 about 11:10,
   email 3.x): 3.1 "fade out": a web that stops being full (a backtrack
   or a reset) fades its gold out over the same 0.25 s instead of losing
@@ -401,8 +400,9 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K191's fade-out from 11:21 (sonnet, 1 h)
-and K235 + K239 from 11:59 (sonnet, 1 h). At about 10:57 Levi lifted
+(he may reorder). Running: K191's fade-out from 11:21 (sonnet, 1 h),
+K235 + K239 from 11:59 (sonnet, 1 h) and K111 stage 2 from 12:02 (opus,
+2 h). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
@@ -429,7 +429,7 @@ files at their merges. Then, as code slots free up:
    06edef4..56b6f2d).
 8. K92 + K224: merged 2026-10-14 (e78ddcc). K111 stage 1 (the panel):
    merged 2026-10-14 (0e5a138..9c6cab3); its stage 2, the highlight
-   modes, is unblocked.
+   modes, runs from 12:02.
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
     coordinator; Levi may reorder): K198 stage 2 and K174's controls
