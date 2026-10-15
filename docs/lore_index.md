@@ -85,5 +85,7 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/render/explore_glsl.ts`, `src/game/explore_view.ts`, `test/render/paint_explore.test.ts`, `test/render/explore_gates.test.ts`, `test/render/explore_cut.test.ts`, `test/game/explore_view.test.ts`
 - `render-gaps.md`: PER-PIXEL CROSSING GAPS (G1) and its render lore, marker gaps, the thread reveal's gap gate (K76 2b), the shaped cut's profile texels and row-partial upload (K268)
   paths: `src/render/gap_mask.ts`, `src/render/ribbon_renderer.ts`, `src/render/ribbon_mesh.ts`
+- `render-shaders.md`: SHADER COMPILES FREEZE THE SCREEN (K307): each program's cold cost (FXC on D3D11), where the intro's freezes are, the GPU program cache, why presents stop, parallel vs blocking warm-ups, building warm-up programs from the sites' own GlPrograms
+  paths: `src/render/ribbon_renderer.ts`, `src/render/paint_glsl.ts`, `src/render/explore_glsl.ts`, `src/render/arm_strip.ts`, `src/render/junction_field.ts`, `src/render/background.ts`, `src/render/background_shaders.ts`, `src/render/marker_mesh.ts`, `src/render/pluck_overlay.ts`, `src/render/pluck_ripple.ts`, `src/render/shader_warmup.ts`, `src/render/program_registry.ts`, `test/render/program_registry.test.ts`, `test/render/shader_warmup.test.ts`
 - `notices.md`: the credits and licenses page (K122)
   paths: `notices/**`, `test/notices/**`, `vite.config.ts`
