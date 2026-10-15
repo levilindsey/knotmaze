@@ -98,8 +98,8 @@ describe("links", () => {
       pluckSheen: 0.5, pluckTug: 0, tugAuto: false, autoPluckGain: 0.5,
       markerSize: 1.08,
       hoverGlow: 0.4,
-      minotaur: "off", minoSpeed: "one", minoTelegraph: true, minoSight: 4,
-      minoRoamRuns: 8, minoTerritory: 6, minoAccuracy: 0.9, minoPause: 0.1,
+      minotaur: "off", minoSpeed: "one", minoTelegraph: true, minoSight: 2,
+      minoRoamRuns: 8, minoTerritory: 6, minoAccuracy: 0.3, minoPause: 0.1,
       minoSleep: 0,
       fire: "off", fireSpeed: 0.75, fireDelay: 0,
     });

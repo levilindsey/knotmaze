@@ -65,16 +65,20 @@ export interface TurnMinoParams {
   sleep: number; // turns in its lair before it first moves
 }
 
-// The defaults are the research's hunter (section 0: prox, see 4, lose 7,
-// q 0.9, stall 0.1, roam 3-8 runs; the guard's territory 1-6).
+// The defaults: the research's hunter (section 0: prox, stall 0.1, roam 3-8
+// runs; the guard's territory 1-6), RETUNED for today's mazes (K80 turns
+// stage 2, K269): section 0's see 4 and q 0.9 caught an attentive explorer
+// on 18% of today's dailies and an 80% one on 36% (section 0: 1% and 13%);
+// sight 2 and accuracy 0.3 give 1.0% and 13.1% (64 reps of dailies 1-30,
+// .claude/probes/K80/turns2/sweep_fine64.md).
 export const DEFAULT_TURN_MINO: Readonly<TurnMinoParams> = Object.freeze({
   model: "off",
   speed: "one",
   telegraph: true,
-  sight: 4,
+  sight: 2,
   roam: 8,
   territory: 6,
-  accuracy: 0.9,
+  accuracy: 0.3,
   pause: 0.1,
   sleep: 0,
 });
