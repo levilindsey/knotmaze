@@ -142,13 +142,25 @@ modes and the mode off is master's frame by construction.
   nothing (643 px of cut kept off visible under threads), the 2 crossings
   visible on both threads keep their gaps exactly, 181 of 181 junctions
   hidden exactly when unvisited, the 179 hidden paint no fan pixel and the
-  2 shown paint mode-off's exactly. CENSUS_M10_LORE
+  2 shown paint mode-off's exactly. Ten moves in: the same numbers (the
+  walk bounced over the same three vertices; the away filter reads
+  `far` now), but mode off again differed from the first frame in 967414
+  of 1260000 px once, with npm test running beside it; the check alone
+  (`offagain.mjs`) passed at 0 px, and a clean rerun passed 17 of 17.
+  The changed share is about the dark backdrop's (72-73% of the frame),
+  so the probe lesson's backdrop below is the leading candidate, not
+  caught; the census now saves both frames.
   GPU (`gpu_batch.ps1` as in 2a, 3200x1800): mode off costs nothing
   (master's ribbon program 1.975 vs 1.960, fans 0.552 vs 0.548, frame
   2.769 vs 2.762). Mode on, two moves in: the fans 0.56 -> 0.088 (the
   joint gate), frame 1.566 -> 1.154. The bound (`visitAll`) is 1.766
   against master's 1.975 in the same batch, while 2a's measured them
-  equal (BOUND_CHECK_LORE).
+  equal. A same-batch check (`gpu_bound.ps1`, two interleaved rounds) put
+  master at 1.946 and 1.979, 2a at 1.965 and 1.964, and 2b at 1.757 and
+  1.761. So the drop is 2b's own, not K111 stage 3 and not the session.
+  Inferred, not counted: the gap gate rejects hidden over passes' slots in
+  texel 0, which skips their work. The same check put 2b's fans at 0.58
+  against 0.55 (not investigated).
 - PROBE LESSON (2026-10-14): never run two GPU probes at once. Observed:
   with another agent's GPU batch running, two contact sheets of the 2b
   build lost the vellum backdrop in 10 of 12 frames (black behind a
