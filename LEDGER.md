@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K394.
+Next free ID: K395.
 
 ## Waiting on Levi
 
@@ -112,6 +112,9 @@ Next free ID: K394.
 - **K383** · K290 3a's calls (`docs/design/K114_burn.md`, "Stage 3a handoff"): `burnt`
   defaults to gone and is not daily-exempt; char shows only where the reveal does; the
   start marker stays over burnt thread; unseen fire fronts' embers show. Rec: as built, and 3b draws unseen fronts as nothing, like char.
+- **K394** · The overnight of 2026-10-14/15 (`docs/design/overnight_2026-10-15.md`): eight
+  calls (F1-F8), each built as recommended (rec: keep all). Its six questions are K339, K361,
+  K362, K368, K377 and K383.
 
 ## In progress
 
@@ -195,20 +198,14 @@ Next free ID: K394.
     `docs/design/K7_worker.md` Design 10
   - env: none; the pass builds and serves both builds itself (ports
     5480-5489); check nobody is using the phone first (K234)
-- **K161** · Disk: `$env:TEMP` held about 1100 `knotmaze-*` Chrome
-  profiles (about 33 GB) that probe runs never delete, plus stale
-  worktrees (C: had 19.6 GB free, 2026-10-14). Levi approved the cleanup
-  (item 2): delete profiles older than a day, sweep stale worktrees,
-  probe libraries delete their profile on exit (K150).
-  - owner: claude session d8031183 (the coordinator), a background
-    cleanup script under the perf lock
+- **K161** · Disk: probe runs leave `knotmaze-*` Chrome profiles in `$env:TEMP` (1177 on 10-15,
+  1173 a day old, about 33 GB; C: 14.5 GB free) and stale worktrees (79). Levi approved the
+  cleanup (2026-10-14, item 2); the probe libraries' delete-on-exit goes with K150.
+  - owner: nobody since 2026-10-15 06:30 (auto mode denied the coordinator's 06:24 run of `cleanup.ps1`; claude session d8031183)
   - branch: mainline (no code); last commit: n/a
-  - evidence: `.claude/probes/K161/cleanup.ps1` (`-DryRun` first) and
-    `cleanup.log`; the 2026-10-14 01:17 run swept the five merged
-    worktrees
-  - next: run `cleanup.ps1` again for the profiles (it was due after
-    16:20 on 10-14, none was a day old at 01:17); the libraries'
-    delete-on-exit goes with K150
+  - evidence: `.claude/probes/K161/cleanup.ps1` (`-DryRun` first) and `cleanup.log` (the 10-14 01:17 run swept five merged worktrees)
+  - next: Levi runs `pwsh -NoProfile -File .claude/probes/K161/cleanup.ps1` (or allows it); then the worktree sweep: a cleared session's agents cannot be messaged, so a worktree holds only untracked probes, which the script copies first (it keeps branches): list the ids in its `$worktreeIds`. It skips unmerged ones; look at those first: K80 `a25726c24f262b138` (5 ahead), K323 `a806933f7eb6fb661` (4), K74 `aeaf1e61bcecaaf0b` (1), K76 stage 1 `aea102de995e1ce30` (26, likely pre-rebase copies). 13 branches ahead of master have no worktree.
+  - brief: the header of `.claude/probes/K161/cleanup.ps1`
 - **K76** · Thread-reveal mode, stage 2 (Levi, 2026-10-13): `exploration`
   (off | fog | threads) and an end look, a separate shader variant. 2a-2d merged
   (2d: 0ac54dc..9e3befd); off by default. The phone gate fails one criterion: 1-5 `update()` calls a move.
@@ -348,7 +345,7 @@ Every other item below waits on the trigger it names.
   each a set of parameter constraints; manual per-day overrides later
   (K82). Proposal `docs/design/K46_daily_variety.md` (8b1eb90), brief
   `docs/design/K46.md`, probes `.claude/probes/K46/` (the proposal
-  agent's worktree `.claude/worktrees/agent-a78c73cec4770a14d` is kept).
+  agent's worktree `.claude/worktrees/agent-a78c73cec4770a14d` holds no more; safe to remove).
   Validation uses engine-exact math only (K108); memory-trail themes set
   trailLength 5 (K73).
 - **K78** · The Knotmaze handbook: algorithms, architecture, decisions
