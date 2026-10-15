@@ -343,3 +343,139 @@ outlives your worktree, and anything reusable in tracked `scripts/`.
        each with a recommendation;
      - the handle fields: owner, branch + last commit, evidence, next,
        brief.
+
+## Stage 2 handoff (2026-10-15 03:50)
+
+By the stage 2 agent (af653fa7f942f2f1e of claude session d8031183),
+who stopped at 03:50, before the 04:04 cap, with the stage done.
+Branch `worktree-agent-af653fa7f942f2f1e`, worktree
+`.claude/worktrees/agent-af653fa7f942f2f1e`, from master `fa7f9dc`,
+unpushed. Probes and results: `.claude/probes/K8/stage2/`, copied to the
+main checkout (`notes.md` is the timeline, the batch scripts the recipes).
+
+**State.** G3-0 is built. The four tables are written, resident and read
+back exactly; the capture hook and the frame bench exist. Nothing samples
+the tables yet. `src/main.ts`, `src/physics/` and every GLSL string are
+untouched. The phone pass ran in the stage's last minutes: K7 stage 5
+held the phone lock from about 03:00 to about 03:41, and the perf lock
+for much of that. It covers what the brief asked of the phone (the caps,
+the frame bench and `update()`, master against the branch); readback,
+the A/Bs and the round trips ran on the desktop only.
+
+**Commits.**
+- `57fc296`: the pure packers (`src/render/samp_table.ts`, whose header
+  is the format spec) and 14 tests on fixtures dumped from a daily, dense,
+  a fat design and G1's ring link (`test/render/fixtures/g3_windows_*`).
+- `b29704a`: the writes in `update()`, residency (`G3DataSystem`),
+  `g3Data`, the per-instance upload counter in `float_rows.ts`,
+  `g3DataState()`, `g3TableRows()` and `g3Expected()`.
+- `4bba4b4`: `captureScene()` / `restoreScene(s)`.
+- `90b7f42`: `scripts/bench_frame.mjs` and the CLAUDE.md lines.
+- `2567536`: the lore (render-ribbon.md's G3-0 DATA PLANE, the probes.md
+  bullet, the lore index row).
+- The next commit: the measured bullet, this handoff, `bench_frame.mjs`'s
+  ABBA order and the phone pass's script and results.
+
+**Numbers.** Desktop RX 6800 XT, D3D11, every one under the perf lock.
+- Readback: max |Δ| 0 and no lost context on six links: b, fat, dense,
+  knot, b with physics, and daily 4 mid-intro (14 of 15 frames had RADII
+  on for all 92 chains). Default: 91 chains, 12554 SAMP texels, 357 range
+  entries, rows [13, 7, 1, 1]. Dense: 186 chains, 25919 texels, 730
+  entries, rows [26, 13, 1, 1].
+- Cross-build A/B, master `fa7f9dc` against the branch, `phy=0`, clocks
+  pinned: 0 px on six links (daily 4 as `?daily=4&snd=none&phy=0` with
+  the flow pinned at runtime, its seed as an ordinary design, fat, dense,
+  b, knot). The thread reveal differed by 22050 px until the fabric's
+  explore clock was pinned as well, then by 2 px of Δ 1 inside one
+  ribbon's gradient. Batch6 placed them: master against master and the
+  branch against itself differ by the same 2 px ((719, 432) and (717,
+  457)), and master against the branch at the same page position is 0 px
+  on both pages. They come from the probe's page order (its first page
+  against its second) in either build, not from the branch.
+- Round trips on the branch (physics on: settle, freeze, capture; a
+  second page, frozen, perturbed for the control shot, restored): 0 px on all six links (b, daily 4, dense, fat, knot, the thread reveal),
+  against controls of 99k to 222k px (max Δ 168 to 255); the captures
+  are 45 to 88 KB of JSON. Batch4 ran the same before the control was
+  perturbed: its controls were 0 px as well (two loads of a link sleep in
+  the same state), which proved nothing.
+- Upload per awake update: +229,376 B at the default (13 SAMP rows and
+  one small-table row, 2 calls) and +442,368 B dense; 0 asleep at
+  `fw=0`. The brief expected about 0.19 and 0.35 MB. The SAMP data alone
+  is 0.20 and 0.41 MB (12554 and 25919 texels of 16 B), and `FloatRows`
+  uploads whole 16 KiB rows.
+- `update()` ms per call, branch minus master: default +0.04 across
+  builds and +0.08 with `g3Data` toggled in one page; dense +0.44 across
+  builds (two rounds, +0.27 and +0.61, run-to-run noise about ±0.5) and
+  −0.05 toggled: live pages at rest, the flow moving every sample, so
+  all of SAMP uploads each update. The in-page loop (`g3_probe.mjs cpuloop`: one frozen page, every
+  particle moved by 1e-4 before each call so that all of SAMP uploads,
+  10 ABBA rounds of 5 calls; batch6) gives `g3Data` on minus off:
+  default +0.16 ms (median +0.14) of 11.0, dense +0.28 (median +0.20) of
+  21.5, and dense with nothing moving +0.13 (the compares alone, 0 B).
+  The same loop on master, where the toggle does nothing, reads +0.03 and
+  −0.15: about ±0.15 ms of noise per run. The default passes the
+  desktop's +0.3 ms; dense sits at it.
+- Frame bench (`bench_frame.mjs`, 1600x900 at dpr 2, A B A B): first draw
+  to after `gl.finish`, p50 0.5 ms at the default (master 0.5 and 0.5, the
+  branch 0.5 and 0.6) and 1.3 to 1.4 ms dense on both builds, 99 and 194
+  draws a frame, every page asleep with the flow live, no lost context.
+  The branch's means sit higher in all four pairs, and not by drift (A2
+  read below B1): 0.46 and 0.49 against 0.56 and 0.58 ms at the default,
+  1.05 and 1.06 against 1.09 and 1.22 dense. Inferred, not attributed:
+  the SAMP upload's GPU copy (every flow frame) lands in the timed window.
+  Caps: MAX_VARYING_VECTORS 30, MAX_TEXTURE_SIZE 16384 (ANGLE D3D11). Its
+  `update()` ms per call grew page by page in run order (default 11.79,
+  11.93, 12.47, 12.78; dense 23.06, 23.29, 24.36, 25.35; A1 B1 A2 B2), so
+  its cross-build deltas (+0.22, +0.61) are that drift and the in-page
+  loop above is the number. `bench_frame.mjs` now reverses the order
+  every other round (A B, then B A), which cancels a linear drift.
+- Phone (`phone6.ps1`: Pixel 11 over Tailscale, PowerVR C-Series
+  CXTP-48-1536 through ANGLE on Vulkan, Chrome 154, 411x753 at dpr 2.625;
+  `bench_frame.mjs --cdp --rounds 2` in the new order, A B then B A;
+  every page asleep with the flow live, no lost context). Caps:
+  MAX_VARYING_VECTORS 30 (120 components), MAX_TEXTURE_SIZE 8192 (the
+  desktop's is 16384), highp float in both stages (23 bits), mediump 10
+  bits, 32 texture units, 1024 fragment uniform vectors, no timer query,
+  float colour buffers yes, float LINEAR no. Default: frame p50 0.7 ms on
+  both builds (means 0.62 and 0.69 master, 0.63 and 0.68 the branch);
+  `update()` 14.74 and 14.77 ms master against 15.10 and 15.07 the
+  branch, +0.33 ms, inside the Pixel's +1 ms. Dense: no page slept within
+  the bench's 30 s rest wait (the settle ran about 32 s behind, physics
+  awake, frames about 73 ms apart), so these are mid-settle and noisier:
+  frame p50 2.5 ms on both builds (means 2.65 and 2.72 master, 2.63 and
+  2.71 the branch); `update()` 33.95 and 34.98 ms master against 35.06
+  and 35.03 the branch, +0.58 ms on the means (the two pairs +1.12 and
+  +0.05): inside +1 ms, without a clear margin.
+- `npm test` at `4bba4b4`: 79 files and 1090 tests passed, one of each
+  skipped; `test/physics/byte_identity.test.ts` among them.
+
+**Open after stage 2.**
+- To rerun the phone pass: `pwsh .claude/probes/K8/stage2/phone6.ps1`
+  (both locks, both builds served from `$env:TEMP\k8g30-previews`, which
+  `batch6.ps1` builds; it skips dense past `-DenseBy`).
+- The phone's dense numbers are mid-settle. Recommendation: before G3-1,
+  rerun dense on the phone with a longer `--rest-ms` (90000), so its
+  `update()` cost is taken at rest; the +0.58 ms mean is inside +1 ms
+  but the two pairs disagree by a millisecond.
+- Dense `update()` sits at the desktop's +0.3 ms. Recommendation: accept
+  for G3-0. If G3-1 needs the headroom, measure a compare-free copy
+  (`Float32Array.set` per chain, its whole span dirty): an awake update
+  moves every sample anyway, so the per-float compare buys nothing then.
+
+**Residuals.**
+- `restoreScene` leaves `ps.emergentCrossings` a getter over the
+  captured rows until the page reloads (probe-only, documented).
+- Capture and restore ran on the in-thread host only. With `phw=1`,
+  `__knotPS()` is main's mirror; untested.
+- k83's PIN recipe, and the older same-state probes built on it, do not
+  pin the fabric's explore clock, so a thread-reveal A/B through them
+  differs by thousands of pixels. probes.md's K8 bullet has the pin.
+- Uploads are whole `FloatRows` rows: 0.23 and 0.44 MB per awake update,
+  against the brief's 0.19 and 0.35 MB. Most of the gap is the data itself
+  (0.20 and 0.41 MB of SAMP); a sub-rectangle upload would save at most
+  part of one 16 KiB row. Recommendation: accept.
+- The thread reveal's 2 px between a probe's two pages (above) are probe
+  noise; master against master shows them too. No action.
+- `bench_frame.mjs` timed its pages A B A B, so drift favoured the earlier
+  build. Fixed in the handoff's commit (rounds alternate A B, B A); the
+  phone bench ran with it, the desktop bench was not rerun.

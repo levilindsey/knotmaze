@@ -378,12 +378,15 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   CPU mirrors and a fresh pack, `intro` sampling mid-reveal for RADII
   rows; `upload`, texture bytes per update(); `cpu` and `cpuloop`,
   update() ms across builds and with `g3Data` toggled in one page;
-  `roundtrip`, capture and restore) and `batch3.ps1`..`batch5.ps1` (runs
-  under the perf lock). A THREAD-REVEAL A/B also pins the fabric's
-  explore clock: `F = __knotFabricRenderer(); F.exploreClock = 1000;`
-  and `F.tickExplore` forwarded with 0. With only k83's pins the reveal's
+  `roundtrip`, capture and restore), `batch3.ps1`..`batch6.ps1` (runs
+  under the perf lock) and `phone6.ps1` (the phone pass under both
+  locks, each bench killed past its time budget). A THREAD-REVEAL A/B
+  also pins the fabric's explore clock:
+  `F = __knotFabricRenderer(); F.exploreClock = 1000;` and
+  `F.tickExplore` forwarded with 0. With only k83's pins the reveal's
   halo breath differed by 22050 px between two builds, with it 2 px
-  (maxΔ 1); k83_ab and the older PIN recipes do not pin it. A ROUND
+  (maxΔ 1), which master against master shows too (the probe's page
+  order); k83_ab and the older PIN recipes do not pin it. A ROUND
   TRIP'S CONTROL MUST DIFFER: the physics is deterministic, so two loads
   of one link sleep in the same state, and batch4's six capture/restore
   round trips passed with controls of 0 px, proving nothing. Perturb the
@@ -394,10 +397,12 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   `__knotPhysFreeze(true)` with a worker), `g3DataState()`,
   `g3TableRows()`, `g3Expected()` (render-ribbon.md, G3-0 DATA PLANE).
   `scripts/bench_frame.mjs <url>... [--cdp <browserURL>]` is the
-  gl.finish() frame bench of G3G4 section 5.0: it loads the links A B A B
-  over `--rounds`, times each frame from its first draw to after
-  gl.finish() (frameMs, split into submit and finish), counts draws and
-  update() ms per call, records the caps and exits 1 on a lost context.
+  gl.finish() frame bench of G3G4 section 5.0: it loads the links in
+  turn over `--rounds`, reversing the order every other round (A B, then
+  B A: on the desktop update() ms crept up page by page), times each
+  frame from its first draw to after gl.finish() (frameMs, split into
+  submit and finish), counts draws and update() ms per call, records the
+  caps and exits 1 on a lost context.
 
 ## Census and diagnosis rules
 

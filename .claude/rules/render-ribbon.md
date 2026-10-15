@@ -204,3 +204,23 @@ certifies (the P3.24 probe rule again, render edition).
   plucks (none at rest), the camera, velocities. The restoring page keeps
   its physics frozen, and `ps.emergentCrossings` stays a getter over the
   captured rows until the page reloads: probe-only.
+- **Measured** (2026-10-15, desktop RX 6800 XT, under the perf lock; the
+  numbers and recipes are in `docs/design/K8_stage1.md`'s stage 2 handoff
+  and `.claude/probes/K8/stage2/`). The GPU copies read back max |Δ| 0 on
+  six links, a daily mid-intro (RADII on) among them. Master against the
+  branch: 0 px on six links. Capture, reload and restore: 0 px on six
+  links, against perturbed controls of 99k to 222k px. An awake update
+  uploads 212,992 B at the default (91 chains, 12554 SAMP texels: 13 whole
+  rows), plus one small-table row when a range or record changes (229,376
+  B on flow frames), and 425,984 to 442,368 B dense (186 chains, 25919
+  texels). Asleep: 0. update() pays about +0.15 ms at the default and
+  +0.2 to +0.3 ms dense (in-page ABBA with every sample moving; about
+  ±0.15 ms of noise per run). The frame bench (first draw to after
+  `gl.finish`, 1600x900 at dpr 2) reads p50 0.5 ms at the default and 1.3
+  to 1.4 ms dense on both builds; the branch's means sit 0.04 to 0.16 ms
+  higher, which fits the upload's GPU copy landing in that window
+  (inferred). On the Pixel 11 (PowerVR through ANGLE on Vulkan;
+  MAX_TEXTURE_SIZE 8192, MAX_VARYING_VECTORS 30) update() pays +0.33 ms at
+  the default (of 14.7 ms) and about +0.6 ms dense (of 34.5 ms; mid-settle,
+  as the dense pages had not slept after 30 s, and noisy), and the frame
+  bench reads p50 0.7 ms (default) and 2.5 ms (dense) on both builds.
