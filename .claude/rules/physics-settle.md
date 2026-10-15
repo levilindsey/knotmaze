@@ -20,6 +20,18 @@ only with the files it is about; `physics.md` lists the area's other files.
   keeps the loader, the stamp and the UI and calls the host;
   `__knotSettle()` reads `host.stats()`.
 
+- **The budget is the in-thread host's only (K7 stage 5, 2026-10-15).**
+  With the physics worker (`phw`, `physics-worker.md`) the budget never
+  runs: the worker steps flat out on main's frame allowances and drops
+  backlog past 0.05 s as lag, so the catch-up spiral cannot start, and a
+  frame no longer pays for physics at all. `__knotSettle().phase` reads
+  `off`, `budget` is null, and the stamp reads ` | lag X.Xs` (the
+  worker's dropped backlog) instead of ` | settle lag`. The budget, `stb`
+  and the entry below still bind the in-thread host: `phw=0`, and the
+  fallback when a worker cannot start. The hidden pre-settle and the
+  trefoil (`lds`) serve both hosts; with the worker it is one `settle`
+  message.
+
 - **A new knot's first settle is paced, never caught up (K147,
   2026-10-13; `physics/settle_budget.ts`, main.ts `beginSettle` ..
   `activeBudget`, the K147 header comment; numbers in
