@@ -943,7 +943,11 @@ K5-K7 (split, frame loop, worker) follow.
   Acceptance includes K28: the intro runs at full frame rate WHILE
   physics settles (no settle-first loader wait). K147's per-frame budget
   is the main-thread interim (a smooth intro over a slow-motion settle);
-  the worker gives the settle a whole core.
+  the worker gives the settle a whole core. Levi asked when it lands
+  (2026-10-14 about 18:56); offered, unanswered: a design stage now (the
+  physics boundary, SharedArrayBuffer against copied buffers, the stage
+  briefs; plan in .claude/rules/physics.md), then K5-K7 ahead of K76 2c
+  and K268 stage 2, each with main.ts to itself.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). Defaults: anchored tails keep
   flat caps, phones stay at a 2x resolution cap. Over-tight folds keep
