@@ -1042,6 +1042,13 @@ export function buildPanel(
       callbacks.onClockChange();
     }
   );
+  // K290 (burn stage 3a): a look, so it applies live and keeps the solve.
+  const burntRow = row(
+    fFire, p, "burnt",
+    { options: { gone: "gone", char: "char" }, label: "burnt" },
+    "How burnt thread looks: gone (it is not drawn, and a thread it crossed over closes its gap) or char (a dark burnt coloring that keeps the over and under gaps). Applies live.",
+    D.burnt, () => callbacks.onTrailChange()
+  );
 
   // K80: the real-time chase's tuning (game/minotaur.ts ChaseParams; the
   // defaults were picked by a headless simulation). All live. Since K80
@@ -1999,6 +2006,7 @@ export function buildPanel(
     fFire.hidden = !turnClock;
     fireSpeedRow.hidden = params.fire === "off";
     fireDelayRow.hidden = params.fire === "off";
+    burntRow.hidden = params.fire === "off";
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);
     minoRestartRow.hidden = !minoOn;

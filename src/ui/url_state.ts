@@ -95,6 +95,13 @@ export const CLOCK_MODES: ClockMode[] = ["turn", "realtime"];
 // and never with the turn-aligned minotaur (fireSettingsOf).
 export type FireMode = "off" | "fuse";
 export const FIRE_MODES: FireMode[] = ["off", "fuse"];
+// How a burnt stretch draws (K290, burn stage 3a): gone (not drawn: the
+// paint shader hides it through the thread reveal's visibility, so its
+// crossings close their gaps and its junction fans drop it) or char (a
+// burnt coloring that keeps the crossing gaps). A look only: the fire's
+// model, its arms and the attempt never read it.
+export type BurntMode = "gone" | "char";
+export const BURNT_MODES: BurntMode[] = ["gone", "char"];
 
 // The maze's EXPLORATION mode (K76 stage 2c; the fogOfWar flag before it):
 // off (the whole maze shows), fog (the fog of war hides what you have not
@@ -530,6 +537,9 @@ export interface UrlParams {
   fire: FireMode;
   fireSpeed: number;
   fireDelay: number;
+  // K290 (burn stage 3a): how burnt runs draw, gone | char (BURNT_MODES).
+  // Live; the solve goes on.
+  burnt: BurntMode;
   // K80 turns stage 2 (K273): what a minotaur's catch resets, on both
   // clocks. minoRestart on restarts the level (main.ts restartSolve: path,
   // fog, clock and minotaur; its tallies carry over). Off is the respawn:
@@ -747,6 +757,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   revealDistance: 2.5,
   revealFade: 1,
   revealLook: "beacon",
+  // K290: burnt runs are gone (the brief's "burnt runs are gone").
+  burnt: "gone",
 };
 
 // The burn race a design plays (K114), or null without one. The fire runs
@@ -909,6 +921,7 @@ export const ENUM_OPTIONS: {
   fire: FIRE_MODES,
   exploration: EXPLORATION_MODES,
   revealLook: REVEAL_LOOKS,
+  burnt: BURNT_MODES,
 };
 
 function clamp01(v: number): number {
@@ -1280,6 +1293,8 @@ function readLegacy(
     revealDistance: clampRevealDistance(readNumber(query, "rvd", D.revealDistance)),
     revealFade: clampRevealFade(readNumber(query, "rvf", D.revealFade)),
     revealLook: readChoice(query, "rvl", REVEAL_LOOKS, D.revealLook),
+    // K290's burnt look (`&fbt=char`).
+    burnt: readChoice(query, "fbt", BURNT_MODES, D.burnt),
   };
 }
 

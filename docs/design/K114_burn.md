@@ -749,3 +749,83 @@ All in `.claude/probes/K114/burn/` (untracked):
     cost runs.
 - **The checks:** `test_full_rebased.log` and `build_rebased.log`.
 - **The dev server config:** `vite.private-cache.config.ts`.
+
+## Stage 3a plan (WIP)
+
+Agent K290 (burn stage 3a), branch `worktree-agent-adb9f09e19dfd0c55`,
+started 2026-10-15 03:27, cap 05:27. After a compaction: re-read this
+section, the brief and `git log`; read code by grep and narrow ranges.
+
+### Done (item 1, the param; committed with this section)
+
+- `url_state.ts`: `BurntMode` gone | char, `BURNT_MODES`, UrlParams
+  `burnt`, PARAM_DEFAULTS `burnt: "gone"` (last), enum table, override
+  key `fbt`. `param_codec.ts`: `choice("burnt", ...)` at index 139
+  (CODEC_VERSION stays 6). Tests: `param_codec.test.ts` pin appended,
+  `url_codec.test.ts` defaults + override tables.
+- `tweakpane_panel.ts`: `burntRow` after fireDelayRow in "Burn race",
+  onTrailChange, hidden while fire is off. `undo_stack.ts`: `burnt` under
+  onTrailChange (one word; not in the brief's file list).
+- `main.ts` wiring line 1: `syncExploration` sets `f.burntLook`.
+- Call: `burnt` is not daily-exempt (like the fire keys).
+
+### Where things are (fabric_maze_renderer.ts unless named)
+
+- `explore` 456, `exploreLast` 461, fire fields 487-491.
+- `shownAt` 814 (gates on `explore.on`; change to `ribbons.exploreOn` so
+  burnt-hidden thread is empty space). Minotaur gate 1040, exit 1076,
+  `exploreVisibleBounds` 1829: keep `explore.on` and `exploreLast` (the
+  reveal's meaning: the camera frames the reveal, not the burn).
+- `drawFire` 1152-1244: clock L (1162), key (1163), char/ash strokes
+  1224-1225 (remove for 3a; keep smolder, embers, fuse); `runPoints` 1249
+  (k = (ctrlB - ctrlA) / length, c = ctrlA + x k). main.ts calls drawFire
+  every fabric frame (~4565).
+- `syncExplore` 2425-2469 (off -> setExplore(null); on -> exploreView ->
+  `ribbons.setExplore(pieces, look, 1)` -> drawFrontierMarks). Callers:
+  update() 2050, move frames 2112, tickExplore 2388, setExploreHold 2402.
+- `ribbon_renderer.ts` explore section 4532-4990: writePaintItems 4538
+  (`touch()` sets painted[] unless type is VIS), setExplore 4679,
+  applyExploreGaps 4744, syncExploreJoints 4857, exploreOn 4919,
+  exploreVisAt 4925, exploreShownAt 4942.
+- `explore_glsl.ts`: EXPLORE_ITEM_VIS 5, visItem, chainWhole,
+  EXPLORE_VIS_GLSL 252-310 (kExploreAt; early return on KPAINT chain .x),
+  EXPLORE_MAIN_GLSL 437-459 (`if (exHere) {...}`, `aM *= ev`), before
+  `gapKeep`; withExplore 522. `arm_strip.ts` STRIP_EXPLORE_* 267-288.
+- `fire.ts` `runBurnAt(walk, fire, eid, L)`: unburnt | burning {burnt
+  [[x0,x1]] from va, front} | burnt.
+
+### Gone (item 2): compose the burn into the explore declaration
+
+- Pure `subtractBurnt(pieces, spans, ringN)` in `explore_view.ts`
+  (tested): each burnt span (unwrapped ctrls from runBurnAt at drawFire's
+  L) cut out of each piece of its chain (rings: span copies at -n, 0,
+  +n). A remnant keeps its far fade and tip; a cut end is hard (f 0, tip
+  false). Reveal off: base pieces = every chain whole. Nothing burnt and
+  reveal off -> setExplore(null) (master's frame).
+- The ribbons get the composed pieces; `exploreLast` stays the reveal's
+  view (camera, halos). syncExplore's off branch declares when the fire
+  burns something. drawFire triggers syncExplore when its key (L, burnt
+  mode) changes.
+- Reused unchanged: gap gate + K268 shaped cut (under-gaps close where the
+  over thread is burnt), joint gate (a passed junction hides), strip fans
+  (a burnt arm drops out of its fan), culling, picking.
+
+### Char (item 3)
+
+- New item `EXPLORE_ITEM_CHAR` 6 over burnt spans (not painted; kPaintAt
+  skips it). Chain flag in KPAINT texel `chain` .y: a chain with char
+  skips kExploreAt's whole-chain early return. EXPLORE_MAIN: rgb mixed to
+  the char color (0x22140e, ash core 0x7a3a22) by the char coverage,
+  before the gap mask, so the crossing gaps stay. Char mode: visibility =
+  the reveal's pieces (or every chain whole), char items over the burnt
+  spans. Fans/strips char: optional, else a residual.
+
+### Order
+
+1. Param WIP commit (this). 2. subtractBurnt + tests, wiring (syncExplore,
+drawFire trigger, shownAt), drop the char strokes; WIP commit. 3. Char
+GLSL + CHAR items; compile_glsl.mjs; WIP commit. 4. tsc, npm test (lock),
+build, fire-off 0 px vs master, sheet (seed 7, fi=fuse, gone/char x
+reveal off/on x early/mid/late) in `.claude/probes/K290/stage3a/`. 5. Lore
+(gameplay-fire, gameplay-links, gameplay-panel, render-explore,
+render-shaders), handoff here, release the lock, SubagentHandback.

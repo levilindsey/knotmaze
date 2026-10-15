@@ -850,6 +850,7 @@ async function main(): Promise<void> {
     ex.fade = Math.min(params.revealFade, params.revealDistance);
     const li = (EXPLORE_LOOKS as readonly string[]).indexOf(params.revealLook);
     if (li >= 0) ex.look = li;
+    f.burntLook = params.burnt; // K290: how burnt runs draw
   }
   const placeWorldAt = (
     wx: number,

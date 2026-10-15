@@ -107,6 +107,7 @@ describe("links", () => {
       hoverGlowLength: 3, hoverGlowFade: 0.2,
       pickMargin: 4, pickChoiceRatio: 1.5,
       revealDistance: 2.5, revealFade: 1, revealLook: "beacon",
+      burnt: "gone",
     });
   });
 
@@ -557,6 +558,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   pluckRipple: "prp", rippleStrength: "prs", rippleAuto: "pra",
   pluckSheen: "psh", pluckTug: "ptg", tugAuto: "pta", autoPluckGain: "pag",
   minoRestart: "mrs", minoLair: "mlr",
+  burnt: "fbt",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
