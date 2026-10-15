@@ -178,8 +178,8 @@ and never reused.
   - Presence: 45% of games never meet the minotaur. Fine, or should it
     seek the player more (K179)?
   - 2026-10-14 about 00:22: Levi will test it later ("Remind me
-    tomorrow.", item 6). A reminder is set for 11:07 on 2026-10-14; if the
-    coordinator session is gone by then, remind him that day.
+    tomorrow.", item 6). Reminded 2026-10-14 11:07 by push
+    notification.
 - **K184** · K155's star calls (`docs/design/K155.md`, "Stage 1
   handoff"; play: https://levi.dev/knotmaze/?7.J): (1) greedy solves:
   exactly two stars (built: two up to 4x, which 52-53% of greedy solves
