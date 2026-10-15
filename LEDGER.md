@@ -1074,7 +1074,8 @@ K5-K7 (split, frame loop, worker) follow.
   reverse; fans drop the arm). Burn stage 3 builds both on K76's
   visibility and K268's shaped gaps, so it follows K76 2c and K268 stage
   2, whose briefs must not assume a thread's visibility only grows. Its
-  sheet shows both; the default waits on Levi (recommended: gone).
+  sheet shows both. The default is gone (Levi, 2026-10-14 about 18:27,
+  verbatim: "Gone should be the burnt away dedault").
   `docs/design/K114_burn.md` ("The stages", stage 3).
 
 ## Residuals (known, not fixed)
