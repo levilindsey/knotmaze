@@ -2653,3 +2653,57 @@ tests) share no file with master's changes since `8b3b401`.
   may need `&phw=0` too; `await __knotPhysDump({arrays})` returns prev and
   zPos from the worker.
 - **Levi reviews F6** in the morning. Reversing it is the recipe under item 1.
+
+## Stage 7 brief: the lever, the phone pass, the spike page
+
+One stage: opus, 2 h cap, ports 5920-5929, probes in
+`.claude/probes/K7/stage7/`. "Every build stage: setup and process"
+applies. Written 2026-10-15 about 07:30 by coordinator session 05e60da0.
+K5 M1 has merged (`12709e5`), so `main.ts`'s boot is free.
+
+1. **The lever,** as "The lever (not built)" in the Stage 5 handoff
+   describes it: the scene params and the tuning travel in the Worker's
+   `name` at construction; the worker reads `self.name` when it
+   evaluates and builds them as generation 0; main adopts that build when
+   its first build's params match, and posts `init` only when they
+   differ. Try the worker chunk's modulepreload there too. The lever must
+   not change the maze or the physics: the K87 pin, the golden dailies,
+   the byte-identity golden and `physics_host.test.ts`'s lockstep stay
+   green. Add tests for the adoption (params match, params differ) and
+   for a `name` the worker cannot read, which falls back to `init`.
+2. **The desktop gate.** Main's `ready` and the first visible frame, the
+   lever's build against master, on the daily and gs 18, alternating
+   (stage 5's start gate and stamp; the 250 ms gate is Design 10's),
+   under the perf lock.
+3. **The phone pass again,** after 08:30 under the phone lock (below):
+   the phone half of `.claude/probes/K7/stage5/s5_gate.txt` (setup, three
+   loads a host on the daily and gs 18, alternating, drags, latency), on
+   the lever's build and on master. The worker is already the default
+   (F6), so there is no flip: report whether the gate now holds, and the
+   numbers either way.
+4. **The spike page** `?d=gs18` on the phone: the worker's cost per
+   substep against in-thread's, and whether it follows the core it lands
+   on (big.LITTLE, inferred in stage 5).
+
+Not in this stage: main's long task at about 0.36 s (stage 5's last
+note), K370's latency, K373's boot fixes.
+
+- **The phone.** Levi has it until 08:30: don't touch it before then,
+  and do items 1 and 2 first. After 08:30, take the phone lock with
+  `pwsh C:\Users\lsl\Repositories\knotmaze\.claude\probes\agents\phone_lock_take.ps1
+  -Owner "K7 s7 <your agent id>" -What "<what>"` (it waits inside the
+  call), and release it with `phone_lock_release.ps1 -Owner "K7 s7 <your
+  agent id>"` beside it when the pass is done. Stage 5's
+  `phone_setup.ps1` and `phone_teardown.ps1` run inside the lock. K290 3b
+  and K395 need the phone for shorter turns: if the lock file names one
+  of them as waiting, release it between items 3 and 4. Never print the
+  phone's IP address.
+- **Running alongside:** K290 stage 3b (the explore shaders, the fire's
+  look, `fabric_maze_renderer.ts`, `appear_fx.ts`, `ribbon_renderer.ts`)
+  and K395 (the pluck files). K5 M2 (the camera out of `main.ts`) comes
+  after you, so in `main.ts` keep to the boot.
+- **Probers** (Stage 6 handoff, "For the next stage"): an in-thread
+  baseline needs `&phw=0`, and a probe that patches `ps.step` throws on a
+  default build.
+
+The handoff goes at the end of this file as "## Stage 7 handoff".

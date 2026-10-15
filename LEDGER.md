@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K395.
+Next free ID: K397.
 
 ## Waiting on Levi
 
@@ -94,9 +94,6 @@ Next free ID: K395.
   (`docs/design/K323_game_mode.md`). Questions 2 and 5-8 taken as
   recommended; 1, 3, 4 are in K339's calls. Stage A (with K339's
   rebuild, codec 7) waits on them, K7 stage 3 and K76 2c.
-- **K357** · Is the cusp gone? Open `?qoietk.KIiHgRRXwRlRt8fGrST4sf` on
-  the live build and pluck at crossing 104 (K344's fix, 93d0e4d).
-  Recommended: close it unless the cusp still shows.
 - **K361** · G3/G4's calls (K8 stage 1; `G3G4_sdf_geometry.md` §6), none
   blocking G3-0. Recs: smin webs (sheet first), webs inset 1 px, accept the
   yarn taper, 2x until K22, drop `rp`/`jp` after the phone check; K90 by G3-2.
@@ -264,6 +261,14 @@ Next free ID: K395.
   - evidence: `.claude/probes/K290/stage3a/` (`k290_ab.mjs`, `sheet.mjs`, `warn_check.mjs`, `ab/`, `sheet/`); burn stage 1's `.claude/probes/K114/`
   - next: stage 3b: the front's char band and embers (replacing stage 1's ember, smolder and fuse marks), the `burn` FX on `tipsAt`, the lit fuse, the fire's light under fog, the phone sheet; Levi's calls K383
   - brief: `docs/design/K114_burn.md`, "The stages" (Stage 3) and "Stage 3a handoff"
+- **K395** · The pluck blur at a kink loop's tip, on the phone (Levi, 2026-10-15 07:04, after
+  K344's fix): a seam from the tip to an edge, and a heart-shaped pinch (a point inside, a dimple outside).
+  - owner: launching (claude session 05e60da0)
+  - branch: from master at launch; last commit: n/a
+  - evidence: `.claude/probes/K395/` (Levi's screenshot `levi_phone_2026-10-15_0704.png`)
+  - next: reproduce at the phone viewport and on the phone (after 08:30), measure the cause, fix the general case
+  - brief: `docs/design/K395_pluck_loop_tip.md`
+  - env: the phone: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 
 ## Next, in order
 
@@ -532,6 +537,9 @@ Every other item below waits on the trigger it names.
 - **K376** · Look at the reveal's intro close-in, joints now fading with their
   arms (K268 s2, desktop only so far), on the desktop and the phone; fix any of
   the stage's four small residuals that show (`docs/design/K268.md`, "Stage 2 handoff").
+- **K396** · A `scripts/dev.ps1` for Levi's LAN dev server on 5173 (`vite --host 0.0.0.0 --port
+  5173 --strictPort`, after checking `node_modules`), so an `env:` line names a script instead of a
+  session's memory (claude-config `rules/sessions.md`, "Environment belongs in scripts").
 
 ## Residuals (known, not fixed)
 
@@ -1422,6 +1430,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K357** · Is K344's cusp gone? Answered by Levi (2026-10-15 07:04, on the phone): not quite, a seam and a pinch remain at a loop's tip; K395 carries it.
 - **K381** · The K83 PIN recipe (`probes.md`) and `k83_ab` pin the fabric's explore clock. Done in 7a17355 (2026-10-15).
 - **K24** · Render on demand when the scene is static. Dropped: folded into K6-3 (`docs/design/K5_K6_split.md`, 5.4), 2026-10-15.
 
