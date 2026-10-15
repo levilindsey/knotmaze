@@ -46,13 +46,20 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   the same object when nothing is on), so off restores the viewer's own
   values; the overridden design rows keep their stored value, dimmed
   (`kp-overridden`, tooltip note). A toggle renders one pass
-  (renderDirty) and never calls writeParams or wake(); because of that it
-  hands the renderer fadeLength, flowStrength and flowSpeed ITSELF:
-  fabricTick sets them AFTER an asleep or paused frame's update(), a slider
-  wakes the physics (whose later frames redo the update), a toggle does
-  not, and the one forced pass solved the crossing cuts with the old fade
-  (27k px off a fresh load; found by pixel-diffing a toggled page against a
-  page loaded with the same setting). REDUCED MOTION is
+  (renderDirty) and never calls writeParams or wake(). fabricTick used to
+  set fadeLength, flowStrength and flowSpeed AFTER an asleep or paused
+  frame's update(): a slider wakes the physics (whose later frames redo the
+  update), a toggle does not, and the one forced pass solved the crossing
+  cuts with the old fade (27k px off a fresh load; found by pixel-diffing a
+  toggled page against a page loaded with the same setting). Since K239
+  EVERY pass hands the look over first, through ONE function: main.ts
+  `handRendererLook()` (worn values via look(), plus cuspRadius,
+  pulseSpacing, pulseReach, hoverGlow and appearFx, see the K239 note
+  below) runs before the load's first update (finishLoading,
+  finishPresettle), flowRender (the rest, frozen and paused passes, a
+  toggle's forced pass among them), the awake step, and in fabricTick for
+  the readers between passes; applyAccessibility no longer assigns them.
+  REDUCED MOTION is
   the Motion pref's checkbox face (one source of truth): it shows
   motion.reduced; on sets "reduced"; off sets "system" on a calm OS or
   "full" when the OS asks for reduced, so the box really clears; the
@@ -75,9 +82,29 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   os | storage | ab; rendered thread positions via
   renderer.markerWorld). GOTCHA: puppeteer's emulateMediaFeatures refuses
   prefers-contrast and forced-colors; send CDP Emulation.setEmulatedMedia.
-  PROBE GOTCHA (older than K111, not fixed): a fresh STATIC page (phy=0
-  and fw=0, or paused at load) draws its first frame with the crossing
-  cuts solved at fade 0, because the rest branches call renderer.update()
-  BEFORE fabricTick assigns fadeLength (28k px off a refreshed frame);
-  take a neutral refresh (Reduced motion on, then off) before a reference
-  shot, or a pixel diff blames the feature under test.
+  K239 (2026-10-14, fixed what K111 found older than itself): a fresh
+  STATIC page (phy=0 and fw=0) drew its first frame with the crossing cuts
+  solved at fade 0, because the rest branches called renderer.update()
+  BEFORE fabricTick assigned fadeLength. Same-state first frame vs a
+  refreshed one (Reduced motion on, off), master f5207d1 -> K239, at
+  1400x900 dsf 1: knot `?7k.J&mf=0` 31070 -> 0 px, fabric `?b.J` 29668 ->
+  0, K111's `?k111.J` 28015 -> 0 (phone 411x753: 18570 -> 0), all with
+  `&am=instant&snd=none&phy=0&fw=0`; and a link with every renderer input
+  off its default (cr=5 psp=4 pr=1.5 hg=0.9 pv=trail afx=comet) 28477 -> 0.
+  THE FIRST FIX WAS NOT ENOUGH on a fabric: the renderer's cuspRadius
+  starts at 1 (the param's default is 3), update() builds every fan and
+  web from it, and only fabricTick assigned it, so the static fabric kept
+  cusp-1 fans (3936 px, ~100 short dashes at junctions, after the fade fix
+  alone; the knot has no fused junctions and was already 0). Any renderer
+  field that update() reads and whose default is not the param's belongs
+  in handRendererLook. Builds before K239 still need a neutral refresh
+  before a reference shot, or a pixel diff blames the feature under test.
+  Probe: `.claude/probes/K235/k239_first.mjs <hostA> <hostB> <out> [cases]`
+  (pins the paint, flow and background clocks, first frame, neutral
+  refresh, refreshed frame, diffs). NOT FIXED, the same on master and
+  K239 (0 px between them): a link with sp=0 AND am=instant (or lds=0) and
+  physics on (`?b.J&am=instant&fw=0&sp=0`) draws NO threads at load, 393401
+  px off a refreshed frame: beginSettle's instant branch shows the root
+  without an update() and leaves the first one to the awake step, which a
+  paused page never runs. A non-instant intro updates in finishPresettle,
+  so it is unaffected.
