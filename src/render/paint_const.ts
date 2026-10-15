@@ -74,24 +74,6 @@ export const PAINT_CONST = {
   // square to 0 at RIM_EDGE of the half-width in from it.
   RIM_END_FADE: 0.75,
   RIM_EDGE: 0.6,
-  // HIGHLIGHT MODES (K111 stage 2): how the runs next to the player (the
-  // choices) are lit; HIGHLIGHT_MODE below, the mode id in uKGold.w. Every
-  // mode lights a choice out to pulseReach (fading over its end) and fades
-  // in after a move like the trains. GLOW: one steady level, the hovered
-  // choice brighter (no breath). RIMS: a solid band along both edges, the
-  // outer HI_RIM_EDGE of each half-width with a HI_RIM_SOFT inner ramp; the
-  // hovered choice also fills its core to HI_RIM_HOVER_CORE. CONTRAST: the
-  // choice turns pure white with a black center line (inside HI_LINE of the
-  // half-width, a HI_LINE_SOFT ramp); the hovered choice drops the line.
-  // Glow and rims were raised from 0.55 / 0.9 and 0.45 after the first
-  // phone sheets, where both read too faintly at a glance.
-  HI_GLOW: 0.75,
-  HI_GLOW_HOVER: 1.0,
-  HI_RIM_EDGE: 0.55,
-  HI_RIM_SOFT: 0.12,
-  HI_RIM_HOVER_CORE: 0.45,
-  HI_LINE: 0.3,
-  HI_LINE_SOFT: 0.1,
 
   // COMPOSITION (the retired accent strip in closed form): both bands
   // converge to 0.94 toward white at full strength, band texels spanning
@@ -112,24 +94,6 @@ export const FX_STYLE = {
   burn: 4,
   roots: 5,
 } as const;
-
-// HIGHLIGHT MODES (K111 stage 2): the highlightMode param's options and the
-// id each one sends the shaders (uKGold.w). 0 is the pulses, today's look:
-// every mode branch is skipped and the paint is exactly master's. The CPU
-// mirror (paint_math) has no modes yet and draws the pulses whatever the id.
-export const HIGHLIGHT_MODE = {
-  pulses: 0,
-  glow: 1,
-  rims: 2,
-  contrast: 3,
-} as const;
-export type HighlightMode = keyof typeof HIGHLIGHT_MODE;
-export const HIGHLIGHT_MODES: HighlightMode[] = [
-  "pulses",
-  "glow",
-  "rims",
-  "contrast",
-];
 
 // GAMEPLAY PAINT items (KPAINT, G2.3): the renderer's paint declaration -
 // traveled spans, junction caps, pulse arms - as records the shaders read
@@ -164,9 +128,6 @@ export function glslConstBlock(): string {
   }
   for (const [k, v] of Object.entries(RUN_FLAG)) {
     lines.push(`const int RF_${k} = ${v};`);
-  }
-  for (const [k, v] of Object.entries(HIGHLIGHT_MODE)) {
-    lines.push(`const int HM_${k.toUpperCase()} = ${v};`);
   }
   return lines.join("\n");
 }

@@ -18,7 +18,7 @@ const D = PARAM_DEFAULTS as unknown as Record<string, ParamValue>;
 // APPEND a new param or enum option, to the table and here. Anything else (a
 // reorder, a removal, a type, an option renamed or moved) bumps
 // CODEC_VERSION: update PIN_VERSION and this list together.
-const PIN_VERSION = 4;
+const PIN_VERSION = 5;
 const ANCHORS = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const PIN: ReadonlyArray<readonly unknown[]> = [
   ["gridSize", "number"], // 0
@@ -143,7 +143,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["hoverGlow", "number"], // 105, K145
   ["minoToward", "boolean"], // 106, K174
   ["minoRefog", "boolean"], // 107, K174
-  ["highlightMode", "enum", ["pulses", "glow", "rims", "contrast"]], // 108, K111
+  // (v4 had K111 stage 2's highlightMode at 108; v5 removed it, K111 stage 3.)
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
@@ -230,17 +230,17 @@ describe("token format", () => {
     expect(encodeToken(0, {}, D)).toBe("0");
     expect(encodeToken(4294967295, {}, D)).toBe("1z141z3");
     expect(decodeToken("1471kin", D)).toEqual({ seed: 2430477599, values: D, error: null });
-    // The all-default blob earlier builds wrote ("J" = version 4, no
-    // entries) still reads as today's defaults.
-    expect(bitsToBlob(`${V} 1`)).toBe("J");
-    expect(decodeToken("1471kin.J", D)).toEqual({ seed: 2430477599, values: D, error: null });
+    // An all-default blob ("L" = version 5, no entries; earlier builds
+    // wrote v4's "J") still reads as today's defaults.
+    expect(bitsToBlob(`${V} 1`)).toBe("L");
+    expect(decodeToken("1471kin.L", D)).toEqual({ seed: 2430477599, values: D, error: null });
   });
 
   // Defaults come from the caller: a link reads whatever defaults it is
   // given, and a listed boolean is the given default flipped.
   it("reads a link against the defaults it is given", () => {
     const moved = { ...D, gridSize: 20, mazeFabric: false };
-    const d = decodeToken("7.IUfTJ4ZJbGRMK", moved);
+    const d = decodeToken("7.KUfTJ4ZJbGRMK", moved);
     expect(d.error).toBeNull();
     expect(d.values.gridSize).toBe(20); // not listed: the given default
     expect(d.values.mazeFabric).toBe(true); // listed: the given default flipped
@@ -309,7 +309,7 @@ describe("token format", () => {
       mazeFabric: false,
     };
     const bits = [
-      V, // version 4 = gamma(4) = "00100"
+      V, // version 5 = gamma(5) = "00101"
       "00101", // 4 entries = gamma(4 + 1)
       "0001111", // index 14 threadWidth: gamma(14 - -1 = 15)
       "1010 0110 0100 1111", // ".64", then the terminator 15
@@ -320,8 +320,8 @@ describe("token format", () => {
       "00101", // index 45 mazeFabric: gamma(5); a boolean has no value bits
     ].join(" ");
     expect(encodeToken(7, values, D)).toBe(`7.${bitsToBlob(bits)}`);
-    expect(encodeToken(7, values, D)).toBe("7.IUfTJ4ZJbGRMK");
-    const back = decodeToken("7.IUfTJ4ZJbGRMK", D);
+    expect(encodeToken(7, values, D)).toBe("7.KUfTJ4ZJbGRMK");
+    const back = decodeToken("7.KUfTJ4ZJbGRMK", D);
     expect(back.error).toBeNull();
     expect(back.values).toEqual(values);
   });
@@ -357,13 +357,13 @@ describe("token format", () => {
 
   it("reads `<seed>.` (a trailing sentence period) as the bare seed", () => {
     expect(decodeToken("1471kin.", D)).toEqual(decodeToken("1471kin", D));
-    expect(decodeToken("7.IUfTJ4ZJbGRMK.", D)).toEqual(decodeToken("7.IUfTJ4ZJbGRMK", D));
+    expect(decodeToken("7.KUfTJ4ZJbGRMK.", D)).toEqual(decodeToken("7.KUfTJ4ZJbGRMK", D));
     expect(decodeToken("1471kin", D).error).toBeNull();
   });
 });
 
 describe("token robustness", () => {
-  const good = "7.IUfTJ4ZJbGRMK";
+  const good = "7.KUfTJ4ZJbGRMK";
 
   it("rejects every truncation, keeping the seed", () => {
     const blob = good.slice(2);
@@ -379,7 +379,7 @@ describe("token robustness", () => {
     // Gamma bits (gamma, above), so the cases below follow the table.
     const size = CODEC_PARAMS.length;
     const cases: Array<[string, RegExp]> = [
-      ["7.I!0y", /invalid character/], // "I" holds the version bits
+      ["7.K!0y", /invalid character/], // "K" holds the version bits
       [`7.${bitsToBlob(`${V} 1`)}A`, /trailing data/], // a whole extra char
       // gridSize 1, then a non-zero padding bit.
       [`7.${bitsToBlob(`${V} 010 1 0001 1111 1`)}`, /trailing data/],
@@ -429,8 +429,8 @@ describe("token robustness", () => {
     const alphabet = B64URL + ".=&%! é";
     for (let k = 0; k < 3000; k++) {
       let s = (Math.floor(rand() * 2 ** 32) >>> 0).toString(36) + ".";
-      // Half the cases start on a v4 header, so the parse gets past it.
-      if (rand() < 0.5) s += "I";
+      // Half the cases start on a v5 header, so the parse gets past it.
+      if (rand() < 0.5) s += "K";
       const n = Math.floor(rand() * 30);
       for (let i = 0; i < n; i++) {
         s += alphabet[Math.floor(rand() * alphabet.length)];

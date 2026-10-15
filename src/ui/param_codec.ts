@@ -225,13 +225,12 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // K174's minotaur controls: it roams toward the player, a catch re-fogs.
   flag("minoToward"), // 106
   flag("minoRefog"), // 107
-  // K111 stage 2's highlight mode.
-  choice("highlightMode", ["pulses", "glow", "rims", "contrast"]), // 108
 ]);
 
 // The format version a blob names first. Bump it for anything but an
-// append (see above). 1-3 were the frozen tables K132 dropped.
-export const CODEC_VERSION = 4;
+// append (see above). 1-3 were the frozen tables K132 dropped; 5 removed
+// K111 stage 2's highlightMode (index 108, K111 stage 3).
+export const CODEC_VERSION = 5;
 
 // The shortest decimal for a number, after rounding to 6 decimals (slider
 // steps leave float noise behind - 1.4500000000000002, or 1.7e-17 for a

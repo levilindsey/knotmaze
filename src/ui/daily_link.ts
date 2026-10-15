@@ -157,9 +157,6 @@ export const DAILY_EXEMPT_KEYS = [
   // K98's marker size: only the look of the markers. Proposed for Levi's
   // review with K98 (K57).
   "markerSize",
-  // K111 stage 2's highlight mode: how the choices are lit, never which
-  // runs they are. Proposed for Levi's review with K111.
-  "highlightMode",
 ] as const satisfies readonly (keyof UrlParams)[];
 
 const EXEMPT: ReadonlySet<string> = new Set(DAILY_EXEMPT_KEYS);
