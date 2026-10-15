@@ -52,11 +52,19 @@ files.
   0xffe08a) at the fronts, smoldering arms 0xff3b1f, and a lit-fuse ring
   at the entrance while L <= h. Its clock rides the move animation
   (walkedDist minus the unplayed share of the run), so the fronts advance
-  with the dot. Redrawn every frame; it draws every run, so K76's thread
-  reveal does not hide unseen fire (the fog sprite does). PARAMS (codec
-  v5 117-119, after K80 turns' 116): `fire` `fi` (off | fuse), `fireSpeed`
-  `fsp` (0.75, [0.3, 0.95]), `fireDelay` `fdl` (0, [0, 40] lattice units);
-  not daily-exempt, and a daily plays with the fire off (the default).
+  with the dot. Redrawn only when update() ran since the last draw (the
+  threads, the flow or the game state moved) or the fire's key changed
+  (its clock L, the head, solved, fireLost, the move animation, the
+  thread width); with every run burnt at rest it cost about 4.8 ms a
+  frame on the desktop when redrawn every frame, about 2.5 ms with the
+  cache under the default flow (half-rate re-renders) and about 0 with
+  flow off. A new clock (stage 2's fireClock) must join the key. It draws
+  every run, so K76's thread reveal does not hide unseen fire (the fog
+  sprite does). PARAMS (codec v5 118-120, after K74's `hCutShare` 117;
+  117-119 before the branch rebased onto K74 stage 2): `fire` `fi` (off |
+  fuse), `fireSpeed` `fsp` (0.75, [0.3, 0.95]), `fireDelay` `fdl` (0,
+  [0, 40] lattice units); not daily-exempt, and a daily plays with the
+  fire off (the default).
   `fireSettingsOf` is null unless fire is fuse, the clock is turn-based
   and the turn minotaur is off: FIRE AND THE MINOTAUR ARE EXCLUSIVE (call
   3, open). In the panel's "Burn race" folder (in the maze folder, before
