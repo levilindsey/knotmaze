@@ -143,6 +143,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["hoverGlow", "number"], // 105, K145
   ["minoToward", "boolean"], // 106, K174
   ["minoRefog", "boolean"], // 107, K174
+  ["highlightMode", "enum", ["pulses", "glow", "rims", "contrast"]], // 108, K111
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

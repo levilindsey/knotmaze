@@ -144,7 +144,7 @@ export const LIVE_EFFECTS = {
   onStyleChange: ["threadWidth", "gap"],
   onTrailChange: [
     "pathViz", "cameraMode", "trailLength", "tension", "fogOfWar",
-    "fowRadius", "fowIntro", "pulseReach",
+    "fowRadius", "fowIntro", "pulseReach", "highlightMode",
   ],
   onRecolor: [
     "colorScheme", "junctionBlend", "hueShift", "gamutArc", "palette",

@@ -48,7 +48,10 @@ const S = PAINT_CONST.K_ROW_SHIFT;
 //                                            hover glow's strength and its
 //                                            hover point, an unwrapped ctrl
 //                                            on the RIM item's run (K145)
-//   uKGold  = (gold rgb, -)                  the path color
+//   uKGold  = (gold rgb, mode)               the path color, and the
+//                                            highlight mode's id (K111
+//                                            stage 2, HIGHLIGHT_MODE; 0 =
+//                                            the pulses, master's paint)
 export const KNOT_UNIFORMS_GLSL = /* glsl */ `
 uniform vec4 uKBase;
 uniform vec4 uKFx;
@@ -650,9 +653,22 @@ highp float kReachWin(highp float d) {
   return 1.0 - kSmooth((d - (uKReach.x - f)) / f);
 }
 
+// The highlight mode (K111 stage 2): HM_PULSES (0) is master's paint.
+int kHiMode() {
+  return int(uKGold.w + 0.5);
+}
+
 highp float kPulseV(highp float d, highp float span, bool inward, bool hovered) {
   if (d < 0.0 || d > span) return 0.0;
   highp float endWin = clamp((span - d) / PULSE_END_WINDOW, 0.0, 1.0);
+  int hm = kHiMode();
+  if (hm != HM_PULSES) {
+    // No trains and no breath: one steady level out to the reach, faded in
+    // after a move like the trains. Glow scales it; rims and contrast shape
+    // it themselves (kComposePaintAcross) and take it whole.
+    highp float lv = hm == HM_GLOW ? (hovered ? HI_GLOW_HOVER : HI_GLOW) : 1.0;
+    return lv * endWin * uKPulse.w * kReachWin(d);
+  }
   if (hovered) return endWin * uKPaint.w * kReachWin(d);
   highp float s = uKPulse.z;
   highp float raw = inward ? d + uKPulse.x : d - uKPulse.y;
@@ -752,7 +768,9 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
       }
       highp float v = kPulseV(d, span, (flags & IF_INWARD) != 0, (flags & IF_HOVER) != 0);
       if (v > PULSE_MIN_V) {
-        st.y = 1.0;
+        // 2 = the hovered choice under a highlight mode (K111 stage 2), which
+        // rims and contrast draw differently; anything over 0.5 is a band.
+        st.y = kHiMode() != HM_PULSES && (flags & IF_HOVER) != 0 ? 2.0 : 1.0;
         st.z = v;
       }
     } else if (type == PI_RIM) {
@@ -822,5 +840,45 @@ vec3 kComposePaint(vec3 S, highp vec4 st, highp float glow) {
   vec3 under = S + (uKGold.rgb - S) * clamp(st.x, 0.0, 1.0);
   highp float v = max(st.y > 0.5 ? st.z : 0.0, glow);
   return under + (vec3(1.0) - under) * (K_BAND * clamp(v, 0.0, 1.0));
+}
+
+// CONTRAST (K111 stage 2): the choice goes to pure white (not K_BAND's 0.94)
+// whatever its hue, minus a black line where line is 1; the reveal glow
+// brightens the result as in kComposePaint.
+vec3 kHiContrast(vec3 S, highp vec4 st, highp float glow, highp float line) {
+  vec3 under = S + (uKGold.rgb - S) * clamp(st.x, 0.0, 1.0);
+  highp float v = clamp(st.z, 0.0, 1.0);
+  vec3 c = under + (vec3(1.0) - under) * v;
+  c *= 1.0 - line * v;
+  return c + (vec3(1.0) - c) * (K_BAND * clamp(glow, 0.0, 1.0));
+}
+
+// The paint on a RIBBON (side = vUV.y, the edges at 0 and 1): kComposePaint,
+// except that the rims and contrast highlight modes shape a choice across
+// the ribbon (K111 stage 2). Rims: a band along both edges (the hovered
+// choice also fills its core). Contrast: white with a black center line
+// (the hovered choice without it).
+vec3 kComposePaintAcross(vec3 S, highp vec4 st, highp float glow, highp float side) {
+  int hm = kHiMode();
+  if (hm == HM_PULSES || hm == HM_GLOW || st.y < 0.5) return kComposePaint(S, st, glow);
+  highp float e = abs(2.0 * side - 1.0);
+  bool hov = st.y > 1.5;
+  if (hm == HM_RIMS) {
+    highp float r = clamp((e - (1.0 - HI_RIM_EDGE - HI_RIM_SOFT)) / HI_RIM_SOFT, 0.0, 1.0);
+    highp float v = st.z * (hov ? max(r, HI_RIM_HOVER_CORE) : r);
+    return kComposePaint(S, vec4(st.x, 1.0, v, 0.0), glow);
+  }
+  highp float line = hov ? 0.0 : 1.0 - clamp((e - HI_LINE) / HI_LINE_SOFT + 0.5, 0.0, 1.0);
+  return kHiContrast(S, st, glow, line);
+}
+
+// The paint where there is no across coordinate (the arm strips the
+// junction webs read): kComposePaint, except that rims leave the webs
+// unlit (a rim needs the ribbon's edges) and contrast makes them flat white.
+vec3 kComposePaintFlat(vec3 S, highp vec4 st, highp float glow) {
+  int hm = kHiMode();
+  if (hm == HM_PULSES || hm == HM_GLOW || st.y < 0.5) return kComposePaint(S, st, glow);
+  if (hm == HM_RIMS) return kComposePaint(S, vec4(st.x, 0.0, 0.0, 0.0), glow);
+  return kHiContrast(S, st, glow, 0.0);
 }
 `;

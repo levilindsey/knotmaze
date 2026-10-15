@@ -23,6 +23,8 @@ import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
 import type { PluckCrossings, PluckGlow } from "../render/pluck_model";
 import { PLUCK_CROSSINGS, PLUCK_GLOWS, PLUCK_WHOLE_MAX } from "../render/pluck_model";
 import { MARKER_SIZE_DEFAULT, sanitizeMarkerSize } from "../render/marker_glyphs";
+import type { HighlightMode } from "../render/paint_const";
+import { HIGHLIGHT_MODES } from "../render/paint_const";
 import type {
   BackgroundColorMode,
   BackgroundId,
@@ -407,6 +409,11 @@ export interface UrlParams {
   // both rims under the pointer (or a touch press), in [0, 1]; 0 = off.
   // A viewer preference.
   hoverGlow: number;
+  // K111 stage 2's highlight mode: how the runs next to the player (the
+  // choices) are lit - "pulses" (the moving trains), "glow" (steady),
+  // "rims" (both edges) or "contrast" (white with a black center line, the
+  // High contrast choice). A viewer preference.
+  highlightMode: HighlightMode;
 }
 
 // The two load-settle sliders' tops (K147). LOAD_SETTLE_MAX is a sentinel
@@ -543,6 +550,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   pluckGlow: "off",
   markerSize: MARKER_SIZE_DEFAULT,
   hoverGlow: 0.4,
+  highlightMode: "pulses",
 };
 
 // The real-time chase's tuning from a design's params (K80). Negative or
@@ -622,6 +630,7 @@ export const ENUM_OPTIONS: {
   minoFog: MINO_FOG_MODES,
   pluckCrossings: PLUCK_CROSSINGS,
   pluckGlow: PLUCK_GLOWS,
+  highlightMode: HIGHLIGHT_MODES,
 };
 
 function clamp01(v: number): number {
@@ -904,6 +913,8 @@ function readLegacy(
     markerSize: sanitizeMarkerSize(readNumber(query, "mks", D.markerSize)),
     // K145's hover glow (`&hg=0`), clamped to [0, 1].
     hoverGlow: clampTo(readNumber(query, "hg", D.hoverGlow), 1),
+    // K111 stage 2's highlight mode (`&hm=rims`).
+    highlightMode: readChoice(query, "hm", HIGHLIGHT_MODES, D.highlightMode),
   };
 }
 

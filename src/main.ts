@@ -110,6 +110,7 @@ import {
 import { ConfettiLayer } from "./render/confetti";
 import { confettiPlan, sprayUnit } from "./render/confetti_model";
 import { PLUCK_WHOLE_MAX } from "./render/pluck_model";
+import { HIGHLIGHT_MODE } from "./render/paint_const";
 import { openDailyStats } from "./ui/daily_stats_view";
 import { shareOrCopy, showToast } from "./ui/share";
 import { buildPanel } from "./ui/tweakpane_panel";
@@ -1914,7 +1915,8 @@ async function main(): Promise<void> {
   // from it, and a static fabric page kept the cusp-1 fans (3936 px off a
   // refreshed frame after the fade fix alone). So the other inputs update()
   // and the paint pass read ride along: cuspRadius, the pulse spacing and
-  // reach, the hover glow and the appearance FX style.
+  // reach, the hover glow, the appearance FX style and the highlight mode
+  // (K111 stage 2: how the choices are lit; High contrast wears its own).
   function handRendererLook(): void {
     if (!renderer) return;
     renderer.fadeLength = look("fadeLength");
@@ -1925,6 +1927,7 @@ async function main(): Promise<void> {
     renderer.pulseReach = params.pulseReach;
     renderer.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
     renderer.appearFx = params.appearFx;
+    renderer.highlightMode = HIGHLIGHT_MODE[look("highlightMode")] ?? 0;
   }
   motion.subscribe(applyAccessibility);
   contrast.subscribe(applyAccessibility);
@@ -3964,8 +3967,9 @@ async function main(): Promise<void> {
     // physics or splines.
     const fabricTick = (): void => {
       autoAudioTick();
-      // K239: handRendererLook (cuspRadius, fade, flow, pulses, glow, FX) runs
-      // here too, for the readers between passes, and before every update().
+      // K239: handRendererLook (cuspRadius, fade, flow, pulses, glow, FX, the
+      // K111 highlight mode) runs here too, for the readers between passes,
+      // and before every update().
       // K111: the flow holds still under Reduced motion (the intro and the
       // pulses keep playing) and the crossings cut crisp under High contrast.
       // The FX style is consumed by the appearance-FX pass inside tickPaint
@@ -4776,6 +4780,7 @@ async function main(): Promise<void> {
       fadeLength: params.fadeLength,
       gap: params.gap,
       markerSize: params.markerSize,
+      highlightMode: params.highlightMode,
     },
     worn: {
       flowStrength: renderer?.flowStrength ?? null,
@@ -4789,6 +4794,8 @@ async function main(): Promise<void> {
       gap: look("gap"),
       markerSize: look("markerSize"),
       fabricMarkerSize: fabric?.markerSize ?? null,
+      highlightMode: look("highlightMode"),
+      rendererHighlightMode: renderer?.highlightMode ?? null,
       pageInk: canvasInk,
       canvasBackground: app.canvas.style.background,
     },
