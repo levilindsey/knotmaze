@@ -68,3 +68,11 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   alternates a tap and a hold of the best key can cycle for good (the
   hold runs past the shortest route, the taps bring it back); the pad
   probe holds on three steps only.
+
+- THE PAD HIDES UNDER THE OPEN PANEL (K224, 2026-10-14): main.ts shows
+  the pad only while the panel is closed. On a phone the open panel (x
+  81..401, y 110..743 at 411x753) covers the pad's corner (x 263..395, y
+  605..737) and nearly all of the maze, so a pad there has nothing to
+  steer, and stacking the panel over it would cut the pad in half at a
+  short panel's edge. The keys still move with the panel open. Checked by
+  `.claude/probes/K92/undo.mjs <base> <out> phone`.
