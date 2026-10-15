@@ -294,3 +294,14 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   render-bound at about 30 fps (render alone 31-34 ms), so the worker
   does not fix it. K302 (6) put that to Levi as a priority call; his
   "Yes." is read as noted, so K8 keeps its place.
+
+## K8 (2026-10-15, moved to In progress)
+
+- **K8** · G3: SDF ribbons drawn from one shared sample texture
+  (`docs/design/G3G4_sdf_geometry.md`). Stage 1 (docs only) re-bases the
+  doc's plan on today's master and writes G3-0's brief
+  (`docs/design/K8_stage1.md`); G3-0, the data plane, takes the next free
+  code slot. Decided: anchored tails keep flat caps, phones keep a 2x
+  resolution cap, over-tight folds keep today's pinch (Levi, 2026-10-13:
+  "Pinching is probably better"), and G1's GPU levers fold in. Dense
+  (5448 particles) is render-bound at about 30 fps, which K7 doesn't fix.
