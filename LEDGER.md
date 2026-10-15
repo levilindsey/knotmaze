@@ -261,7 +261,9 @@ and never reused.
   K8; (7) the phone pass gates the default; (8) K8/K9's warm-up next,
   beside stage 2, starting with a trace; (9) `phw` as a daily-exempt link
   param; (10) five stages instead of four; (11) FYI: 0.76x real time at
-  gs 18. Stage 1 needs none; stage 2 assumes 5 and 10.
+  gs 18. Stage 1 needs none; stage 2 assumes 5 and 10. Levi answered (8)
+  at about 20:43, "Let's prioritize this too.": K307 traces from 20:49,
+  beside stage 1. The others are open.
 
 ## In progress
 
@@ -756,25 +758,6 @@ and never reused.
     5 needs the phone (Design 10; the phone's worker substep cost is
     unknown).
   - brief: `docs/design/K7_worker.md`, "Stage 1" (bf7f7e9).
-- **K299** · The choice pulses and the trail misdrawn at one junction
-  (Levi, 2026-10-14 about 19:15, on `?qoietk.KSIeBoGlf4-`): the up-right
-  choice's pulse draws doubled and backward with an artifact mid-run,
-  the down-left choice has none, and walking down-left leaves trail
-  paint on the up-right run. Cause (stage 1, observed): `kArcOfCtrl`
-  wraps a closed chain's ctrl through a float division that the GPU
-  rounds (`floor(k*n/n)` = k-1 for n = 28 on ANGLE D3D11), so ctrl 28 at
-  chain 4's seam read the next chain's header as its arc; the float64
-  mirror divides exactly, so the tests missed it. Fixed with an
-  integer-corrected lap in the shaders and the mirror.
-  - owner: nobody since 2026-10-14 20:38 (agent a6d727eb21ef341d5 (opus)
-    of claude session d8031183 finished; merging).
-  - branch: `worktree-agent-a6d727eb21ef341d5`
-    (`.claude/worktrees/agent-a6d727eb21ef341d5`); last commit: `ff1f2b6`
-    (the fix 70c6385, tests, lore, handoff; base `7a87cae`).
-  - evidence: `.claude/probes/K299/` in that worktree (`notes.md`,
-    `census.md`, `sheet/`; copied to the main checkout at the merge).
-  - next: merge (`.claude/probes/agents/merge_agent.ps1`), then K298.
-  - brief: `docs/design/K299_choice_pulse_bug.md` ("Stage 1 handoff").
 - **K253** · K193's portrait A/A floor on a quiet phone. Levi lent the
   phone at about 20:33 ("The phone will be untouched for 40 minutes"):
   the 3-rep A/A (`aa4`, master 9a5eaa8 against itself) runs from 20:37
@@ -790,6 +773,62 @@ and never reused.
     fabric@13 (K300); on a trip (exit 2), report it and install nothing.
   - brief: `docs/design/K193.md` ("Stage 1 handoff");
     `docs/design/K156.md` ("Round 2026-10-14c handoff", Step 7).
+- **K298** · The hover glow, its own stage (Levi, 2026-10-14 about 19:13,
+  verbatim: "Ok, I take it back. Let's give hoverGlow it's own length
+  setting. Also, let's make the length of its fade-out near the end of
+  the segment be much shorter--give this a slider too. It should also
+  have a slider for its thickness. Let's also render it in-addition to
+  the adjacent-to-current-juction highlight for those segments. Can we
+  also reduce the amount of mouse margin we allow for clicking/hovering
+  over a thread? And add a slider to control this."). One Opus stage of
+  daily-exempt params appended from codec 131: (1) a glow length, so the
+  glow no longer borrows `pulseReach` (K219); (2) an end-fade length,
+  much shorter by default, replacing `RIM_END_FADE` (0.75) only; (3)
+  thickness is `hgw` (K264), relabeled; (4) the glow also on a hovered
+  choice, which keeps its pulses and its own hover look (Levi, about
+  20:25: "Keep both."); (5) a mouse pick margin below today's
+  `GRAB_RADIUS` 0.7 (`src/main.ts`) for every run that is not a choice,
+  and a slider for the choices' margin as a ratio of it (Levi, about
+  20:25: "do we have a wider margin for choosing adjacent segments to
+  the current junction vs other segments? We probably should? I guess we
+  should have a separate slider for that ratio."; choices already get
+  `max(0.9, 1.6 x threadWidth)` through `fabric.edgeAt`, about 1.3x);
+  touch keeps both of today's margins ("Sure"). The mirror, parity, a
+  census, a same-state A/B and sheets. Lore: `render-paint.md` ("HOVER
+  GLOW").
+  - owner: agent ab58047167d717079 (opus) of claude session d8031183,
+    stage 1 from 20:49 (cap 22:49; ports 5800-5809).
+  - branch: `worktree-agent-ab58047167d717079`
+    (`.claude/worktrees/agent-ab58047167d717079`, from 3e86fb5); last
+    commit: `3e86fb5` (master; the brief is 1c5aa4c).
+  - evidence: `.claude/probes/K298/` in its worktree (`sheet/`, the
+    census, the A/B).
+  - next: the five items, the pick margins last through one helper
+    (rebased onto K7's stage 1 if that has merged), then the merge; K111
+    stage 5 (K265) follows.
+  - brief: `docs/design/K298_hover_glow.md`.
+- **K307** · The daily intro's two freezes, 2.7 s at 1.1 s and 2.0 s at
+  3.8 s (plus about 300 ms at 0.4 s), which happen with physics paused
+  too, so the worker cannot remove them; inferred shader compiles, never
+  traced (K7's design). Levi, 2026-10-14 about 20:43, answering K302
+  (8): "Let's prioritize this too." Split from K9. Stage 1 traces and
+  attributes them, measures cold and warm shader caches and the ANGLE
+  backends, proves it with throwaway blocking and parallel-compile
+  warm-ups, and designs stage 2; it changes no tracked src. Stage 2 (the
+  warm-up) touches the load sequence and the program sites, so it
+  follows K7's stage 1.
+  - owner: agent a119ffbc187f24aad (opus) of claude session d8031183,
+    stage 1 from 20:49 (cap 22:49; ports 5820-5829).
+  - branch: `worktree-agent-a119ffbc187f24aad`
+    (`.claude/worktrees/agent-a119ffbc187f24aad`, from 3e86fb5), plus a
+    local throwaway `k307-proto` for the prototypes; last commit:
+    `3e86fb5` (the brief, on master).
+  - evidence: `.claude/probes/K307/` in its worktree
+    (`trace_intro.mjs`, traces, `builds/`, patches); K7's measurements
+    in `.claude/probes/K7/design/`.
+  - next: stage 1's seven items, then merge its handoff and lore; stage
+    2 after K7's stage 1 has merged.
+  - brief: `docs/design/K307_intro_freezes.md`.
 
 ## Next, in order
 
@@ -825,11 +864,12 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K7's stage 1 from 20:12 (cap 22:12, opus)
-and K253's portrait A/A on the phone from 20:37 (to about 21:05). K299
-finished at 20:38 and merges next; K298 follows it, beside K7's stage
-1, and K111 stage 5 (K265) follows K298. K7's design merged at 20:10,
-K111 stage 4 at 19:11 and K156's round 2026-10-14c pass at 19:48. K279's
+(he may reorder). Running: K7's stage 1 from 20:12 (cap 22:12, opus),
+K253's portrait A/A on the phone from 20:37 (to about 21:05), and from
+20:49 K298 and K307's trace (caps 22:49, opus). K111 stage 5 (K265)
+follows K298, and K307's warm-up follows its trace once K7's stage 1
+has merged. K299 merged at 20:45, K7's design at 20:10, K111 stage 4
+at 19:11 and K156's round 2026-10-14c pass at 19:48. K279's
 stage 2
 waits for Levi's picks (K288). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
@@ -928,7 +968,7 @@ questions for stage 2c); K260 and K261
 (the burn race's
 calls 2-4, and K74 stage 2's calls, built as recommended); K280 (the
 fire's heat); K282 (an explanation for the HUD's stats during play);
-K302 (K7's 11 calls);
+K302 (K7's calls; (8) answered);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -944,7 +984,8 @@ K7 (the physics worker) comes next, ahead of K76 2c and K268 stage 2
 five build stages, in order (`docs/design/K7_worker.md`, "Build
 stages"). K5 and K6 are not needed first and come after stage 5, with
 K24. Stages 1 and 4 own `main.ts` (K298's small edits run beside stage
-1); K8/K9 can run beside stages 2 and 5 (K302 (8)).
+1). K307 (the intro's freezes; Levi, about 20:43: "Let's prioritize
+this too.") traces beside stage 1, and its warm-up follows stage 1.
 
 - **K294** · Per-model minotaur tuning, for K80 turns stage 3 (Levi,
   2026-10-14 about 19:00: "Yes."): the hunter, guard and stalker share
@@ -1052,12 +1093,9 @@ K24. Stages 1 and 4 own `main.ts` (K298's small edits run beside stage
   tucked bridge, and the merge-core hairline dashes at 4-way merges
   (`.claude/rules/render-gaps.md`), which K74's H3 (`fourWayFraction`
   0.9+) would multiply. From K81 (2026-10-13): the webs should carry the
-  traveled route as the smooth union of the traveled pieces only. K7's
-  design (2026-10-14): the daily's intro freezes for 2.7 s at 1.1 s and
-  2.0 s at 3.8 s, with physics paused too (inferred shader compiles, not
-  traced), so the worker cannot remove them: trace them before warming
-  shaders. K7 recommends this warm-up next, beside its stage 2 (K302
-  (8)).
+  traveled route as the smooth union of the traveled pieces only. The
+  intro's two freezes and their shader warm-up moved to K307
+  (2026-10-14).
 - **K115** · Cursive text and shapes, decided (Levi, 2026-10-13 14:32,
   verbatim in `docs/design/levi_notes_2026-10-13.md`; design
   `docs/design/K115_cursive_text.md`, ded57f7). Its staged plan goes
@@ -1201,32 +1239,6 @@ K24. Stages 1 and 4 own `main.ts` (K298's small edits run beside stage
   in its own module. It replaces K84's separate
   section, K57 settles the edge cases, and K297 is the pared-down panel
   this leads to.
-- **K298** · The hover glow, its own stage (Levi, 2026-10-14 about 19:13,
-  verbatim: "Ok, I take it back. Let's give hoverGlow it's own length
-  setting. Also, let's make the length of its fade-out near the end of
-  the segment be much shorter--give this a slider too. It should also
-  have a slider for its thickness. Let's also render it in-addition to
-  the adjacent-to-current-juction highlight for those segments. Can we
-  also reduce the amount of mouse margin we allow for clicking/hovering
-  over a thread? And add a slider to control this."). One Opus stage of
-  daily-exempt params appended from codec 131: (1) a glow length, so the
-  glow no longer borrows `pulseReach` (K219); (2) an end-fade length,
-  much shorter by default, replacing `RIM_END_FADE` (0.75) only; (3)
-  thickness is `hgw` (K264), relabeled; (4) the glow also on a hovered
-  choice, which keeps its pulses and its own hover look (Levi, about
-  20:25: "Keep both."); (5) a mouse pick margin below today's
-  `GRAB_RADIUS` 0.7 (`src/main.ts`) for every run that is not a choice,
-  and a slider for the choices' margin as a ratio of it (Levi, about
-  20:25: "do we have a wider margin for choosing adjacent segments to
-  the current junction vs other segments? We probably should? I guess we
-  should have a separate slider for that ratio."; choices already get
-  `max(0.9, 1.6 x threadWidth)` through `fabric.edgeAt`, about 1.3x);
-  touch keeps both of today's margins ("Sure"). The mirror, parity, a
-  census, a same-state A/B and sheets. Runs after K299 merges (the same
-  shader code; master drew no rim on a seam run). Lore:
-  `render-paint.md` ("HOVER GLOW"). Brief: `docs/design/K298_hover_glow.md`
-  (the answers in items 4 and 5). It runs beside K7's stage 1, so the
-  pick margins go last, through one helper (6b7676d).
 - **K265** · High contrast's own highlight, built by K111 stage 5
   (Levi, 2026-10-14 about 15:46: "Maybe the high contrast highlights
   should get new treatment"). K111 stage 4 (a47642d..f294247, merged at
@@ -1242,6 +1254,16 @@ K24. Stages 1 and 4 own `main.ts` (K298's small edits run beside stage
   as the glow's thickness). Runs after K298, never beside K298, K299,
   K76 2c or K268 stage 2 (the paint shaders). Brief:
   `docs/design/K111.md`, "Levi's pick" and "For stage 5".
+- **K309** · Check K299's ring-lap fix on the phone: PowerVR rounds
+  float division its own way, and only the desktop GPU was checked. In
+  K156's next round: Levi's link `?qoietk.KSIeBoGlf4-` at node_2 and the
+  seam cases of K299's A/B. `docs/design/K299_choice_pulse_bug.md` ("Not
+  done").
+- **K312** · Add K299's lesson to claude-config `rules/lessons.md`
+  (WebGL): GPU float division is approximate (ANGLE D3D11 gave
+  `floor(k*n/n)` = k-1 in 3275 of 16384 pairs), so ring and lap math
+  must be integer-corrected, and a float64 CPU mirror will not catch it.
+  Held while Levi is away (claude-config edits wait for his approval).
 
 ## Residuals (known, not fixed)
 
@@ -1880,6 +1902,16 @@ K24. Stages 1 and 4 own `main.ts` (K298's small edits run beside stage
   ms) exceeds its rAF-interval p50 (18 ms); unexplained, so K7's
   summaries report fps, interval p95 and render alone
   (`docs/design/K7_worker.md`, "What was measured").
+- **K308** · The background contours' `mod(floor(v + 0.5), 5.0)` is a
+  float quotient like K299's: exact on the desktop GPU and allowlisted in
+  `ROUNDED_QUOTIENTS` (`test/render/paint_ring_lap.test.ts`), unfixed
+  because the background programs are sha256-pinned. Fix it with the
+  next change that re-pins them. `docs/design/K299_choice_pulse_bug.md`
+  ("Residuals").
+- **K311** · PixiJS warns at load: "Attribute aGap / aGapId / aUV is not
+  present in the shader" (in Levi's console, 2026-10-14; noted by K299's
+  brief). Find which mesh binds attributes its program does not declare,
+  and tidy it. `docs/design/K299_choice_pulse_bug.md`.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2124,9 +2156,28 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K306** · Dead surface in `particle_system.ts`: `twistFillBias`,
   `hasCarve`, and `chainArcLength` (used only by tests). Found by K7's
   design.
+- **K310** · K299's leftover shots: its seam sheet shows two pulse
+  phases, not three or four, and its rim was injected rather than a real
+  hovered choice (K298 builds the hovered choice).
+  `.claude/probes/K299/sheet/`.
 
 ## Done
 
+- **K299** · The choice pulses and the trail misdrawn at one junction
+  (Levi, 2026-10-14 about 19:15, on `?qoietk.KSIeBoGlf4-`). Cause:
+  `kArcOfCtrl` wrapped a closed chain's ctrl through a float division
+  that the GPU rounds (ANGLE D3D11 gave `floor(k*n/n)` = k-1 in 3275 of
+  16384 pairs, n = 28 among them), so ctrl 28 at a chain's seam read the
+  next chain's header as its arc; the float64 mirror divides exactly.
+  Fixed with integer-corrected laps (`kLapOf`, `kWrap`) in
+  `paint_glsl.ts`, `paint_math.ts`, `arm_strip.ts` and
+  `ribbon_renderer.ts`, guarded by `test/render/paint_ring_lap.test.ts`
+  (a source scan with a `ROUNDED_QUOTIENTS` allowlist). Named change: a
+  full-lap run's choice pulse now draws (such runs are in 49 of dailies
+  1-300). His link's A/B went from 6967 px off to 42 (all at 1/255).
+  Done in 74ad307..e5acafb (merged 2026-10-14 20:45). Lore:
+  `render-paint.md` ("RING LAPS"); sheets `.claude/probes/K299/sheet/`;
+  `docs/design/K299_choice_pulse_bug.md` ("Stage 1 handoff").
 - **K264** · The hover rim's width becomes a slider (Levi, 2026-10-14
   about 15:46, verbatim: "Rim width,0.4 is good, make it a slider., and
   personal setting."; read as a width slider, `hoverGlow` staying 0.4,
