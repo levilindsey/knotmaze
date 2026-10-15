@@ -88,7 +88,10 @@ and never reused.
   best, ring faintly, the wave not at all (its ring is about 41 CSS px
   across, its bend 1.6 px; K289 (d)), vib close to the old look, sheen a
   paler streak; motion needs his eye on the phone. `ptg=0.3` stutters
-  3-5 s at 5-12 fps there, so the tug stays off.
+  3-5 s at 5-12 fps there, so the tug stays off. Levi, 22:32: "What?";
+  re-explained at 22:45, recommending glint as the default look, the rest
+  as built, and the wave (when picked) still bending the markers, trail
+  and fog.
 - **K257** · K76 section 10's questions, for stage 2c (none blocks 2b;
   2c builds the recommendation where no answer has come): (1) a catch
   under thread reveal re-hides explored thread as `minoRefog` says, one
@@ -250,31 +253,6 @@ and never reused.
   (`pendingWin`, `src/main.ts` about line 2079) and the Reset path during
   the winning move, or only on a live finish? (3) the colors (a festive
   set built from the gold 0xffd23f) and the default amount, 1?
-- **K318** · Win effects (Levi, 2026-10-14 21:37-21:38: "some gratuitous
-  effect along the entire length of the path traveled" and "We could
-  probably support multiple options for gratuitous game-win effects...
-  Again, please think of a bunch of ideas, and themes"): one show in many
-  themes. A runner with momentum races the route from the start, braking
-  into tight curves, lights the path behind it, pops each junction and
-  blasts the finish. Themes: Party, Inferno, Fireworks, Storm, Water,
-  Cosmos, Garden, Frost, Gold, Neon, Ink, Dragon and Celtic, plus layers
-  for any theme (the path's song, a physics push outward from curves, a
-  background wake). Ideas sent the same evening; waiting on which themes
-  come first, one default or random each win, and whether the runner
-  follows the route with its loops cut or the whole walk.
-  `docs/design/K318_win_effects.md`.
-- **K321** · The credits page (Levi, 2026-10-14 21:47: "In the credits
-  section, we can also reference Claude Code." and "We should also list
-  me in the credits."). He also asked how a single-member LLC names the
-  company against the person, and whether to rename the page from
-  "Licenses" to "Credits". Proposed the same evening: "Created by Levi
-  Lindsey", "Built with Claude Code (Anthropic)" and "(c) 2026 Snoring
-  Cat LLC. All rights reserved." at the top; the page and the panel's
-  link renamed to Credits (`credits.html`), the license texts kept under
-  an "Open-source licenses" heading. Waiting on his yes; then a small
-  build (`notices/page.ts`, `notices/vite_plugin.ts`'s NOTICES_FILE,
-  `src/ui/tweakpane_panel.ts`'s link, `test/notices/notices.test.ts`,
-  `.claude/rules/notices.md`).
 - **K331** · Should touch get K298's pick margins? Touch keeps today's
   world-unit radii (0.7, and max(0.9, 1.6 x threadWidth) on a choice),
   which have no margin term for `pickChoiceRatio` to scale. Moving touch
@@ -877,9 +855,11 @@ Node only), K325 (the snoring cat) from 22:14 (cap 23:14, sonnet), the
 K323/K324 design from 22:14 (cap 23:44, opus, docs only) and K329 (the
 arrow keys, with K333 and K334) from 22:16 (cap 00:16, opus). K298
 merged at 22:20, K307's stage 1 at 22:06 and K7's stage 1 at 22:04.
-The next code slots: the confetti stage (K335, K336), then K307's
-warm-up, then K111 stage 5 (K265, K328) and K332 (the key hints, after
-K329); K313's loader follows K307's warm-up. K317 (more confetti) shipped at
+The next code slots: the confetti stage (K335-K337), then K321 (the
+credits page, sonnet), K111 stage 5 (K265, K328) and K307's warm-up
+(after K329), then K318's stage 1 (after the confetti stage and K111
+stage 5) and K332 (the key hints, after K329); K313's loader follows
+K307's warm-up. K317 (more confetti) shipped at
 21:53. K253's portrait A/A finished at 21:02 (the floor installed at
 21:24), K299 merged at 20:45, K7's design at 20:10, K111 stage 4 at
 19:11 and K156's round 2026-10-14c pass at 19:48. K279's
@@ -984,7 +964,7 @@ questions for stage 2c); K260 and K261
 (the burn race's
 calls 2-4, and K74 stage 2's calls, built as recommended); K280 (the
 fire's heat); K282 (an explanation for the HUD's stats during play);
-K318 (the win effects' themes); K321 (the credits page); K331 (touch
+K331 (touch
 pick margins); K334 (whether taps and clicks wait too); K325's snore
 (his or a library's);
 near launch, K117 and K210; after the churn, K46, K57 and
@@ -1276,10 +1256,11 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   `.claude/probes/K111/stage4/sheet/`). Levi's pick, about 20:25,
   verbatim: "Let's not do the black center. Instead, let's do a bit
   thicker rim, but with no fade-out, just an abrupt edge". The
-  coordinator's reading, for stage 5's sheet to confirm: a white rim on
+  coordinator's reading, confirmed by Levi at 22:32 ("Yes."): a white rim on
   both edges with the thread's own color between them, thicker than look
   2's outline (about 0.35 of the half-width), a hard inner edge, steady.
-  Looks 1-3 go, with `hcl` and `__knotHcLook`. The width default 0.85
+  The run's ends are unasked: stage 5's sheet shows them hard and with
+  K298's end fade, for Levi to pick. Looks 1-3 go, with `hcl` and `__knotHcLook`. The width default 0.85
   and range 0.3-1 stay (that part is unanswered; K298 relabels the row
   as the glow's thickness). Runs after K298, never beside K298, K299,
   K76 2c or K268 stage 2 (the paint shaders). Brief:
@@ -1375,8 +1356,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   fade-out of confetti particles along the top?"): keep the sudden start,
   and thin the wave out toward its top so it ends in a ragged fade
   instead of a line. K140's `src/render/confetti_model.ts` (K317 doubled
-  the rain at 21:53). Built with K336 in one confetti stage (opus) at the
-  next free code slot.
+  the rain at 21:53). Built with K336 and K337 in one confetti stage
+  (opus; `docs/design/K335_confetti.md`) at the next free code slot.
 - **K336** · Side cannons (Levi, 2026-10-14 about 22:24: "Let's also add
   some blasts of confetti and streamers from specific points just outside
   the left and rigth sides of the screen, angled in and up, and then
@@ -1384,7 +1365,46 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   confetti and streamers (new: long curling strips) from points just off
   the left and right edges, fired inward and upward, falling in arcs
   under gravity. Reduced motion keeps its 16 pieces; the phone's frame
-  rate at the finish rides K156's next pass. Built with K335.
+  rate at the finish rides K156's next pass. Built with K335 and K337
+  (`docs/design/K335_confetti.md`).
+- **K337** · Confetti shine (Levi, 2026-10-14 at 22:32: "Also, with the
+  confetti, I'd like to explore adding a shimmer/shine reflection effect
+  to them, so some flash as they rotate the right way. I bet we make make
+  this even resemble vaguely realistic directional light physics without
+  too much effort or perf cost?"): each piece's spin and flip give it a
+  3D normal, lit by one directional light from the upper left: a diffuse
+  term plus a Blinn-Phong flash, sharp on foil and soft on paper,
+  computed on the CPU into the tint the view already sets (no new shader,
+  no cold compile). Reduced motion keeps the diffuse term only. Built
+  with K335 and K336 (`docs/design/K335_confetti.md`).
+- **K321** · The credits page (Levi, 2026-10-14 21:47: "In the credits
+  section, we can also reference Claude Code." and "We should also list
+  me in the credits."; at 22:40, "Proceed, with my above notes"). The
+  page and the panel's link become Credits (`credits.html`). From the
+  top: "Created by Levi Lindsey" and "(c) 2026 Snoring Cat LLC. All
+  rights reserved." (he set up the LLC and assigns this IP to it;
+  LICENSE already names it); then his art, icon and music credits, still
+  to come; then "Built with Claude Code", linked like the other credits
+  ("We don't need to put the "Built with Claude Code" bit that
+  prominently at the top"); then the techniques, the open-source
+  licenses and the research. A small sonnet stage:
+  `docs/design/K321_credits.md`.
+- **K318** · Win effects (Levi, 2026-10-14 21:37-21:38: "some gratuitous
+  effect along the entire length of the path traveled" and "We could
+  probably support multiple options for gratuitous game-win effects...
+  Again, please think of a bunch of ideas, and themes"): one show in many
+  themes. A runner with momentum replays the walk, braking into tight
+  curves, lights the path behind it, pops each junction and blasts the
+  finish. Levi's answers: at 22:32, "I kinda want to prototype all of
+  these. Again, dropdown params for all these, and please add
+  appropriate conditionally-visible dependent params for each."; at
+  22:40, of the layers, "Let's implement all these too, again with param
+  controls."; the first themes and the default, "You pick."; the runner,
+  "The whole thing." (the whole walk). So: all thirteen themes and every
+  layer, behind a Win effects folder (a Theme dropdown with Random; Party
+  the default; conditional rows), in twelve stages run one at a time.
+  Stage 1, the show and Party, follows the confetti stage and K111 stage
+  5. `docs/design/K318_win_effects.md` ("Build stages").
 
 ## Residuals (known, not fixed)
 

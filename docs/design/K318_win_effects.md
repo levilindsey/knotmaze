@@ -1,8 +1,11 @@
 # K318: win effects, one show in many themes
 
-Status: ideas sent to Levi on the evening of 2026-10-14; waiting on his
-picks (the open questions at the end). Nothing is built. The confetti
-half of his first message shipped separately as K317 (ab8b78f).
+Status: Levi answered on 2026-10-14 at 22:32 and 22:40: build all
+thirteen themes and every layer as prototypes, each behind panel rows,
+with the runner replaying the whole walk; the order and the default are
+the coordinator's pick ("Levi's answers", "Decisions" and "Build stages"
+at the end). Nothing is built yet. The confetti half of his first
+message shipped separately as K317 (ab8b78f).
 
 ## The request
 
@@ -23,8 +26,9 @@ At 21:38 PDT:
 Every theme plays the same show; a theme supplies only its looks and
 sounds.
 
-- **The runner.** At the finish, a runner leaves the start and races
-  the route to the finish in about 2-3 s, whatever the maze's size.
+- **The runner.** At the finish, a runner leaves the start and replays
+  the walk to the finish: the whole walk, detours included (Levi,
+  22:40), in a few seconds that grow with the walk, up to a cap.
 - **Momentum.** It brakes into tight curves and speeds out of them, as
   Levi suggested. Its speed follows a race car's speed plan: capped by
   the route's curvature, v_max(s) = sqrt(a_lat / kappa(s)), then a
@@ -145,31 +149,91 @@ sounds.
 - **Which wins play it** is an open point for the brief: a reload that
   restores a solved attempt probably shows only the lit path.
 
-## My pick for a first build
+## Levi's answers (2026-10-14, verbatim)
 
-The shared show (the speed plan, the glow band, the lit path, the
-junction pops, the finish blast), the path's song, and three themes:
-Party, Inferno and Fireworks. Then the wake, then the physics push after
-K7's worker (stage 3).
+At 22:32, under the ideas message's lines:
 
-## Open questions for Levi
+> > Win effects (K318). Your ideas fit one shared show that each theme reskins:
+>
+> Great
+>
+> > Themes (along the path → at the finish → elsewhere):
+>
+> I kinda want to prototype all of these.
+> Again, dropdown params for all these, and please add appropriate conditionally-visible dependent params for each.
 
-1. Which themes first, and should the default be one theme or random
-   each win?
-2. Should the runner follow the route from start to finish with its
-   loops cut (short and clean) or the whole walk with its detours (a
-   replay, longer)? My pick: the loops cut, with the dead ends he
-   explored flashing as the runner passes their mouths.
+At 22:40:
 
-## Proposed stages
+> > Layers that work with any theme:
+>
+> Let's implement all these too, again with param controls.
+>
+> > Win effects: which themes should I build first? And should the default be one theme, or a random one each win?
+>
+> You pick.
+>
+> > Should the runner follow your route with its loops cut out (short and clean, my pick, with the dead ends you explored flashing as it passes them)? Or replay your whole walk with its detours?
+>
+> The whole thing.
 
-1. **The show and Party**, desktop, one Opus stage: the runner and its
-   speed plan (a pure module with tests), the glow band and the lit
-   path in the paint shader, the junction pops, the finish blast, the
-   path's song, the theme setting, reduced motion and the warm-up
-   entries; frame sheets and a recording for Levi.
-2. **Inferno and Fireworks**, with their backgrounds (dusk, night).
-3. **The phone:** each theme's frame rate at the finish (K156's pass).
-4. **The wake** (the route's distance field).
-5. **The physics push**, after K7's stage 3.
-6. More themes as Levi picks them.
+## Decisions
+
+- **Everything gets built**, as prototypes: the thirteen themes and
+  every layer above, each behind panel rows.
+- **A "Win effects" folder** in the panel:
+  - **Theme:** a dropdown of the thirteen, plus "Random each win". The
+    default is Party (the coordinator's pick); Random is worth trying as
+    the default once more themes exist.
+  - **Each theme's own rows** (its colors, densities, sizes, speeds),
+    shown only while that theme is picked.
+  - **Each layer:** an on/off, or a dropdown of its looks, with its own
+    rows shown only while it is on.
+  - **Route:** the runner replays the whole walk, detours included
+    (Levi's answer). "The route, loops cut" stays as the dropdown's other
+    option.
+  - **Length:** the show's duration grows with the walk, up to a cap (a
+    row), so a long walk doesn't blur past.
+  - Every row is a viewer preference: appended to the codec and exempt
+    from the daily (`DAILY_EXEMPT_KEYS`), like the confetti's `cf` and
+    `cfa`.
+- **The conditional rows** use one mechanism, shared with K323's Game
+  folder and the confetti stage's rows (K335-K337); whichever lands
+  first defines it.
+- **The instant replay** folds into the runner: since the runner replays
+  the whole walk, that layer becomes one of the runner's looks (the
+  player's own head marker and trail, at speed).
+- **Theme order** (the coordinator's pick): Party; then Levi's two,
+  Inferno and Fireworks, with Storm; then Water, Cosmos and Garden;
+  Frost, Gold and Neon; Ink, Dragon and Celtic.
+
+## Build stages
+
+One at a time, since codec appends and panel rows collide. Each theme
+and layer lives in its own module where it can. Every new GPU program
+joins K307's warm-up (its wave 2), and every stage ends with frame
+sheets for Levi.
+
+1. **The show and Party:** the runner over the whole walk (and the
+   loops-cut option); the speed plan with partial braking (a row for the
+   braking strength); the glow band and the lit path; the junction pops;
+   the finish blast; the Win effects folder with the Theme dropdown
+   (Random included) and the conditional-row mechanism. It runs after
+   the confetti stage (K335-K337, whose cannons and streamers Party
+   fires) and after K111 stage 5 (both it and this stage edit the paint
+   shader).
+2. **Inferno, Fireworks and Storm**, with the dusk and night
+   backgrounds.
+3. **Layers I:** the path's song, the move grid in sync, haptics, bullet
+   time, stars scale the show (K155), streak milestones.
+4. **Water, Cosmos and Garden.**
+5. **Layers II:** the shockwave, the wave by walk distance, the dead ends
+   fall away, glitter that sticks.
+6. **Frost, Gold and Neon.**
+7. **Layers III:** the victory-lap camera, the minotaur knocked
+   tumbling, the replay look.
+8. **Ink, Dragon and Celtic.**
+9. **The background wake** (the walk's distance field).
+10. **The postcard** (an image for the share sheet).
+11. **The physics push**, after K7 stage 3.
+12. **The phone:** every theme's and layer's frame rate at the finish
+    (K156's pass).
