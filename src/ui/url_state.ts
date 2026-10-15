@@ -702,7 +702,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   pluckWhole: 0.75, // K279 (was 0.5, K104's WHOLE_AMP).
   pluckCrossings: "through",
   pluckGlow: "off",
-  pluckRipple: "wave", // K279 stage 1 prototypes (neutral: off).
+  // K279 stage 2 (Levi's K288 pick; stage 1 had wave). Neutral: off.
+  pluckRipple: "glint",
   rippleStrength: 1,
   rippleAuto: 0.35,
   pluckSheen: 0.5, // Neutral: 0.

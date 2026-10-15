@@ -270,9 +270,10 @@ only with the files it is about; `render.md` lists the area's other files.
   whose half width grows 0.45 -> 0.9 world. World units, so it scales
   with the maze: about 80 CSS px at the fabric default on 1400x900 (22.3
   px/world), smaller on a phone (not measured). LOOKS at strength 1:
-  `wave` (default) displaces the picture radially across the band by up
+  `wave` displaces the picture radially across the band by up
   to RIPPLE_DISP 0.18 world, with a faint crest glint (0.3 of glint's);
-  `glint` brightens only the threads, toward white by up to 0.45; `ring`
+  `glint` (the default since stage 2, Levi's K288 pick; wave before)
+  brightens only the threads, toward white by up to 0.45; `ring`
   lays a white annulus over everything at up to 0.3 alpha. WHO RIPPLES:
   a tap-pluck and a drag release at `prs`; an auto pluck at `pra`, on
   its own delay and only when its overlay drew. Never a K235 core tap
@@ -302,19 +303,20 @@ only with the files it is about; `render.md` lists the area's other files.
   particle. tugAt then wakes the solver, the springs bring the stretch
   home and the knot sleeps again. Live physics only, never under Reduced
   motion; ptg 0 touches no physics (bitwise). `test/physics/tug.test.ts`
-  pins the motion. THE FOOTPRINT BUG (fixed in 2d905d0): the first
-  tugSpan stopped at the nodes' pluck FOOTPRINTS, the stretch the
-  overlay may swing, which leaves most spans no particle inside. On
-  0f08f68 only spans of L 2.6 and longer tugged (fabric 1 of 4 sites,
+  pins the motion. THE FOOTPRINT BUG (fixed before stage 1 landed as
+  50c1aab): the first tugSpan stopped at the nodes' pluck FOOTPRINTS,
+  the stretch the overlay may swing, which leaves most spans no particle
+  inside. Before the fix only spans of L 2.6 and longer tugged (fabric 1 of 4 sites,
   dense 2 of 4, knot 1 of 4; spans of L 1.2-2.1 never did). The
   footprint bounds what the overlay draws; a kick of the material may
   run up to the nodes, where the sine bump falls to 0.
 - MEASURED (desktop RX 6800 XT, ANGLE D3D11; `.claude/probes/K279/`).
-  NEUTRAL A/B (k279_ab.mjs, same state, master 8ab25d0 vs 0f08f68, 20
+  NEUTRAL A/B (k279_ab.mjs, same state, master 8ab25d0 vs stage 1
+  (50c1aab), 20
   frames and 6 plucks per case): 0 differing px and 0 moved positions
   in all six cases (fabric desktop, knot, fabric on the phone viewport,
   ghost .35, reduced motion, pluckSize 3; `ab2.log`), every pluck
-  fired on both builds. B predates the tugSpan fix, which ptg 0 never
+  fired on both builds. B was built before the tugSpan fix, which ptg 0 never
   reaches (tugAt returns first). The first run (`ab_forcedtug.log`)
   forced a tug through the hook, which ptg cannot refuse, and fabric
   phone then differed (20357 px), so the harness does see a tug. GPU
@@ -325,7 +327,7 @@ only with the files it is about; `render.md` lists the area's other files.
   nearly independent of the count; CPU unchanged, no context loss. The
   worst frame was 10.3 ms against 5.3-5.9 (probably the filter's first
   frame; not checked). SLEEP after a tugged pluck: every span tugged
-  (`.claude/probes/K279/k279_live.mjs` on da1333a: four scripted taps per
+  (`.claude/probes/K279/k279_live.mjs` on 50c1aab: four scripted taps per
   design at spans of L 1.2-2.7 ctrl, then one real click). At pluckTug 0
   nothing stepped and positions stayed bitwise. At 0.3 the peak shift was
   0.12-0.16 world (0.23-0.30 widths), and the knot slept again after
@@ -342,9 +344,9 @@ only with the files it is about; `render.md` lists the area's other files.
   first, and a press on a choosable run moves the player and returns, so
   nothing plucks; the probe's site was such a run. Not a bug.
   Before the node-to-node fix only spans of L >= 2.6 tugged
-  (`live_sleep.log`, 0f08f68).
+  (`live_sleep.log`).
 - WAKE COST (K279 follow-up, 2026-10-14; the table is in
-  `docs/design/K279.md`, "Wake follow-up"). `k279_wake.mjs` on 42a1684,
+  `docs/design/K279.md`, "Wake follow-up"). `k279_wake.mjs` on 50c1aab,
   under the perf lock, in one off-screen window with the occlusion-safe
   flags (1400x900 at DSF 2, CPU idle at 3-5% of 24 cores): from one
   sleeping state per design, a real click (tap at ptg 0.3), a small real
