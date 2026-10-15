@@ -164,18 +164,25 @@ only with the files it is about; `gameplay.md` lists the area's other files.
 
 - PHYSICS WORKER PARAM (K7 stage 3, 2026-10-14; brief
   `docs/design/K7_worker.md`): `physicsWorker` (`phw`, a flag, default
-  off) is APPENDED to codec v5 (v6 since K76 stage 2c) at index 135,
+  ON since K7 stage 6 / call F6, 2026-10-15; it was off through stage 5)
+  is APPENDED to codec v5 (v6 since K76 stage 2c) at index 135,
   after K298's 131-134. A
   DAILY_EXEMPT_KEY (it changes where the physics runs, not the design,
   like `stb` / `lds`), so the golden dailies do not move. No panel row
   and no LIVE_EFFECTS entry: main.ts reads it ONCE, when it creates the
-  host, so it takes effect on a reload (`&phw=1` after a token works as
-  an override key). On, the physics runs in a module Web Worker
+  host, so it takes effect on a reload (`&phw=0` after a token works as
+  an override key and runs the in-thread host). The codec lists only
+  what differs from TODAY's default (K132), so a link that lists `phw`
+  now means OFF, and a pre-flip link that listed it (on) reads as
+  in-thread; accepted pre-launch. On (the default), the physics runs in
+  a module Web Worker
   (physics/worker_host.ts + physics_worker.ts); a worker that cannot be
   constructed, errors, sends an unreadable message, gives no `ready`
   within 3 s or reports another fingerprint falls back to the in-thread
   host and rebuilds, and `__knotPerf().host` says which host runs and
-  why (`kind`, `reason`).
+  why (`kind`, `reason`). To revert the flip: `physicsWorker: false` in
+  url_state.ts's `PARAM_DEFAULTS` and the same value in
+  `test/ui/url_codec.test.ts`'s defaults table.
 
 - EXPLORATION PARAMS (K76 stage 2c, 2026-10-15; brief
   `docs/design/K76.md`, "Stage 2c"). Index 51's flag `fogOfWar` became

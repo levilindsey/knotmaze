@@ -335,13 +335,24 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   `__knotPoint`, whose curve sits 0.015-0.06 world off it (more with
   flow): gameplay-camera.md's PICK MARGINS.
 - K7 stage 4 (2026-10-15), THE PHYSICS WORKER AND THE PROBE BRIDGE
-  (`docs/design/K7_worker.md`, design 8 and the stage 4 handoff). With
-  `&phw=1` the physics runs in a Web Worker and `__knotPS()` is main's
-  MIRROR: positions, pass ctrls, flags and emergent rows from the
-  snapshots (interpolated between the newest two), and NO prev, zPos,
-  contact state or slide stats. Assigning its `step` THROWS, naming the
-  fix. `phw=0`, or no `phw` (the default), is the in-thread path,
-  unchanged: every older probe still runs there. The bridge works on both
+  (`docs/design/K7_worker.md`, design 8 and the stage 4 handoff). **THE
+  WORKER IS THE DEFAULT since K7 stage 6 (call F6, 2026-10-15)**: a bare
+  link, a token, or `&phw=1` runs the physics in a Web Worker, and
+  `__knotPS()` is main's MIRROR: positions, pass ctrls, flags and emergent
+  rows from the snapshots (interpolated between the newest two), and NO
+  prev, zPos, contact state or slide stats. Assigning its `step` THROWS,
+  naming the fix, so **a probe that patches or wraps `ps.step` throws on
+  the default build**: give it `&phw=0` (the in-thread path, unchanged:
+  every older probe still runs there) or the one-line port, which is
+  `await window.__knotPhysFreeze(true)` inside an async `page.evaluate`
+  callback in place of `__knotPS().step = function () {}` (and
+  `await window.__knotPhysFreeze(false)` in place of `delete ps.step`),
+  feature-detected (`typeof window.__knotPhysFreeze === "function"`, else
+  the old line) so a build without the hook still freezes. K7 stage 6
+  ported the 21 shared libraries that way (`g2lib.mjs`, `lib.mjs`; 95
+  probes import them), so their importers run on both hosts; a link with
+  `phw=0` after a token (`?<seed>.<blob>&phw=0`) overrides the default.
+  The bridge works on both
   hosts: `await __knotPhysFreeze(true|false)` -> `{frozen, simTime, kind}`
   (in-thread it IS the old `ps.step = function(){}` patch, an own
   property; with a worker it stops the worker's clock and resolves once
@@ -367,10 +378,14 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   never reached) and its `ports/` (`K147/k147_measure.mjs`,
   `K279/k279_sheet.mjs` (stepUntil), `k279_wake.mjs` (physMs deltas),
   `k279_live.mjs`, and `g2lib/g2lib.mjs`, the union of the two g2lib
-  lineages, freezing through the hook). Every other probe that patches
-  or wraps ps.step tests the in-thread path only: run it with `&phw=0`
-  or port it (the list and the one-line ports: the stage 4 handoff and
-  `ports/FREEZE_PATCH_FILES.md`). With the worker,
+  lineages, freezing through the hook). Every probe that patches or
+  wraps ps.step and is not ported (the 31 other freeze-patch files and the
+  timing wrappers, K374) tests the in-thread path only: run it with
+  `&phw=0` or port it (the list and the one-line ports: the stage 4
+  handoff and `ports/FREEZE_PATCH_FILES.md`). A probe OF the budget, of
+  `stb`, or of sim against wall takes `&phw=0` too, and
+  `scripts/diag_screenshot.mjs` reports `timing.host` `worker` on a bare
+  link, with ` | lag` (not ` | settle lag`) in the stamp. With the worker,
   `__knotSettle().phase` reads `off`: K147's budget runs only in-thread.
 - K8 stage 2 (2026-10-15), G3-0's data plane: `.claude/probes/K8/stage2/`
   holds `g3_probe.mjs` (its header lists the modes: `ab`, a cross-build

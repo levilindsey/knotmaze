@@ -16,7 +16,8 @@ paths:
 
 # Physics lore: the physics worker (K7)
 
-Written by K7 stage 5 (2026-10-15). The design, its measurements and every
+Written by K7 stage 5 (2026-10-15); stage 6 made the worker the DEFAULT
+(call F6, below). The design, its measurements and every
 stage's handoff are in `docs/design/K7_worker.md`; this file is what binds
 the code. `physics.md` lists the area's other files; the probe bridge is
 in `probes.md` (the K7 stage 4 entry).
@@ -30,7 +31,8 @@ in `probes.md` (the K7 stage 4 entry).
   (`physics_worker_core.ts`, Node-testable with a pluggable scheduler) in
   one long-lived module Web Worker (`physics_worker.ts`, which only wires
   the port and yields through a MessageChannel). `phw` picks the host
-  (`gameplay-links.md`, PHYSICS WORKER PARAM); main.ts reads it once, at
+  (`gameplay-links.md`, PHYSICS WORKER PARAM; the worker is the default,
+  `&phw=0` the in-thread host); main.ts reads it once, at
   boot, and every write to physics goes through the host.
 - **The worker owns the live `ParticleSystem`; main keeps a MIRROR**
   (`mirror_system.ts`), built from main's own graph, that never steps. Each
@@ -120,14 +122,28 @@ in `probes.md` (the K7 stage 4 entry).
 - `phw=0`, or no module Worker, must behave exactly as before K7: it is the
   fallback and the escape hatch for every probe that patches `ps.step`.
 - Assigning `__knotPS().step` THROWS with the worker (a setter cannot tell
-  a freeze from a timing wrapper); the bridge (`__knotPhysFreeze`,
-  `__knotStepUntil`, `__knotPhysDump`, the awaited tug) is in `probes.md`.
-  52 freeze-patch probes still run only with `&phw=0` (K374).
+  a freeze from a timing wrapper), and the worker is the DEFAULT build, so
+  a probe that patches or wraps `ps.step` throws on a bare link: it takes
+  `&phw=0` or the one-line port to the bridge (`__knotPhysFreeze`,
+  `__knotStepUntil`, `__knotPhysDump`, the awaited tug; all in
+  `probes.md`). K7 stage 6 ported the 21 shared probe libraries
+  (`g2lib.mjs`, `lib.mjs`) in place; the other 31 freeze-patch files and
+  the timing wrappers still run only with `&phw=0` (K374).
 
 ## Measured
 
-- **`phw` stays OFF by default (K7 stage 5, 2026-10-15): the phone pass
-  missed one criterion, the start gate.** Design 10's pass on the Pixel 11
+- **THE DEFAULT IS ON (K7 stage 6, call F6, 2026-10-15), THOUGH THE PHONE
+  PASS MISSED ONE CRITERION, THE START GATE.** Stage 5 left `phw` off for
+  that miss; the coordinator flipped it overnight as call F6 (for Levi to
+  review in the morning, easy to reverse) for the phone numbers below: a
+  worker page first sleeps about twice as soon, drags at 34-37 fps against
+  4.4-4.5, wakes at 34-37 against 7.6-12, and its touch latency p50 is 231
+  ms against 872; the cost is a first visible frame about 0.16 s later
+  (median 1.11 s against 0.95). To reverse: `physicsWorker: false` in
+  url_state.ts's `PARAM_DEFAULTS` and in the defaults table pinned at
+  `test/ui/url_codec.test.ts` (nothing else pins it). The lever and the
+  phone pass again are stage 7, after K5 stage M1 (both edit main.ts's
+  boot). Stage 5's measurement, which the flip rests on: design 10's pass on the Pixel 11
   (60 Hz; build `c0f1622`; `.claude/probes/K7/stage5/`, `s5_gate.txt`),
   today's daily and gs 18 (`?1471kin.J`), three loads a host each,
   alternating, under the perf lock:
@@ -156,5 +172,5 @@ in `probes.md` (the K7 stage 4 entry).
   main, for example the scene params and tuning in the Worker's `name` at
   construction (main then adopts that build when its first build's params
   match, and posts `init` only when they differ). Expected (inferred): ready
-  at hello + gen and ctor, about 195-260 ms on the phone. Then re-run the
-  phone pass, and flip the default if it passes.
+  at hello + gen and ctor, about 195-260 ms on the phone. Stage 7 builds
+  it and re-runs the phone pass (the default is already on, see above).
