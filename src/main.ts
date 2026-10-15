@@ -1909,11 +1909,22 @@ async function main(): Promise<void> {
   // between passes (tickPaint, the pluck footprints, the flow clock). The
   // values are the WORN ones (`look`: Reduced motion holds the flow still,
   // High contrast cuts the crossings crisp).
+  // The probe found the same lag in the junction rounding: the renderer's
+  // cuspRadius (1) is not the param's (3), update() builds every fan and web
+  // from it, and a static fabric page kept the cusp-1 fans (3936 px off a
+  // refreshed frame after the fade fix alone). So the other inputs update()
+  // and the paint pass read ride along: cuspRadius, the pulse spacing and
+  // reach, the hover glow and the appearance FX style.
   function handRendererLook(): void {
     if (!renderer) return;
     renderer.fadeLength = look("fadeLength");
     renderer.flowStrength = look("flowStrength");
     renderer.flowSpeed = look("flowSpeed");
+    renderer.cuspRadius = params.cuspRadius;
+    renderer.pulseSpacing = params.pulseSpacing;
+    renderer.pulseReach = params.pulseReach;
+    renderer.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
+    renderer.appearFx = params.appearFx;
   }
   motion.subscribe(applyAccessibility);
   contrast.subscribe(applyAccessibility);
@@ -3952,7 +3963,13 @@ async function main(): Promise<void> {
     // physics or splines.
     const fabricTick = (): void => {
       autoAudioTick();
-      renderer!.cuspRadius = params.cuspRadius;
+      // K239: handRendererLook (cuspRadius, fade, flow, pulses, glow, FX) runs
+      // here too, for the readers between passes, and before every update().
+      // K111: the flow holds still under Reduced motion (the intro and the
+      // pulses keep playing) and the crossings cut crisp under High contrast.
+      // The FX style is consumed by the appearance-FX pass inside tickPaint
+      // while a reveal runs.
+      handRendererLook();
       // Render-only pluck look (live; a hand-edited link cannot leave the
       // panel's ranges - pluckSize's slider has reached 3 since K25, and a
       // clamp left at 2 made its top third do nothing).
@@ -3971,18 +3988,6 @@ async function main(): Promise<void> {
       // and nothing moves (K104); the sound is unchanged. Plucks already
       // ringing when it turns on finish without the ghost and the attack.
       renderer!.plucks.reducedMotion = motion.reduced;
-      // Applies to knot mode too: the erase grids re-read it in the next
-      // renderer.update(), and the slider's onSlackChange wakes the sim.
-      // K111: the flow holds still under Reduced motion (the intro and the
-      // pulses keep playing) and the crossings cut crisp under High contrast.
-      // K239: handRendererLook, which also runs before every update().
-      handRendererLook();
-      renderer!.pulseSpacing = params.pulseSpacing;
-      renderer!.pulseReach = params.pulseReach;
-      renderer!.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
-      // Frontier particle style: live dropdown, consumed by the
-      // appearance-FX pass inside tickPaint while a reveal runs.
-      renderer!.appearFx = params.appearFx;
       if (params.mazeFabric && fabric && fabricController) {
         fabric.moveSpeed = params.moveSpeed;
         fabric.trailMode = params.pathViz === "trail";
