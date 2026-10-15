@@ -15,6 +15,13 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K225** · The markers' default size (K98, merged 2026-10-14 10:03;
+  sheet sent to Levi at 10:04): at `markerSize` 1.08 the markers are
+  about 5 CSS px across on the phone (K83's were 14) and 12 on the
+  1400x900 desktop, and the glyphs barely read. Keep 1.08, raise the
+  default, or add a minimum on-screen size (K98 has no floor, so the
+  slider means the same at every zoom)? Sheet:
+  `.claude/probes/K98/sheet_k98.png`; lore: `render-markers.md`.
 - **K198** · The fit camera's pan and the off-screen indicators, decided
   (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
   just want to be able to pan such that the right edge of the maze is
@@ -32,7 +39,9 @@ and never reused.
   touch main.ts, offscreen_indicators.ts, head_indicator.ts and
   tweakpane_panel.ts: not alongside K92 or K111 (the panel). Records:
   `docs/design/K148_K149.md` ("Stage 1 handoff"), `gameplay-indicators.md`
-  THE HEAD and `gameplay-camera.md` FIT CAMERA PAN RANGE.
+  THE HEAD and `gameplay-camera.md` FIT CAMERA PAN RANGE. Since K98
+  (merged 2026-10-14) `markerSize` sizes the in-game markers; the edge
+  indicators keep their own sizes until part (3).
   - stage 1 MERGED in 5f6ceb9..d7373a4 (2026-10-14 09:31): the pan range
     (`src/ui/view_clamp.ts`: `panRange`, `clampFitView`,
     `easeIntoRange`; 16 tests). With the panel open, the maze's right
@@ -336,30 +345,6 @@ and never reused.
   - next: after 16:20 on 10-14, run `cleanup.ps1` again for the
     profiles (about 33 GB). The probe libraries' delete-on-exit goes
     with K150.
-- **K98** · Marker sizes and two new glyphs (Levi, 2026-10-13: "I
-  like all your icons. The defaults are good."). A slider for the
-  player's dot diameter relative to the thread width, 0.25-3, defaulting
-  to the pre-K83 head dot (radius 0.54 tw, so 1.08 tw across; K83's
-  discs are 3 tw, `markerRadiusFor`). The black disc is what the slider
-  sizes; each white icon fits inside its disc with a slight margin. The
-  start, finish, minotaur and every other in-game icon match the
-  player's. Colored dots return at the start and finish, larger than the
-  icon disc, so a colored ring shows at the default (the pre-K83 discs
-  were 0.95 tw in radius). Simple minotaur and spider glyphs
-  (`src/render/marker_glyphs.ts` and its fit test). Call (3) unanswered:
-  the head stays on top. Call (4), K121, stays as is (Levi, 2026-10-13).
-  A codec append, after K79 stage B and K81.
-  - owner: agent a4aa6adc47840272d (opus) of session d8031183, started
-    2026-10-14 09:07; it stops at about 11:07 or when the stage is done.
-  - branch: `worktree-agent-a4aa6adc47840272d`
-    (`.claude/worktrees/agent-a4aa6adc47840272d`), from e17c2a2; last
-    commit: none yet.
-  - evidence: `.claude/probes/K98/` in its worktree (copy at merge).
-  - next: its one stage; the size param is a codec append, daily-exempt.
-    At merge, carry its lore edits into `render-markers.md` (Marker icons,
-    K83), where K173 moved them.
-  - brief: `docs/design/K98.md`.
-  - env: dev servers on ports 5590-5599.
 - **K145** · A subtle hover glow on runs that aren't choices (Levi,
   2026-10-13 about 16:00 and 16:12, verbatim in
   `docs/design/levi_notes_2026-10-13.md`): in the maze, hovering any run
@@ -379,14 +364,14 @@ and never reused.
   daily-exempt (K57). Stage 2 of `docs/design/K93_K145.md` (K93's stage 1
   merged in ed8f284).
   - owner: agent ad81d903c987ef01d (opus) of session d8031183, started
-    2026-10-14 09:37; it stops at about 11:37 or when stage 2 is done.
+    2026-10-14 09:37; told at 10:02 to wrap up and report by 10:30 (usage).
   - branch: `worktree-agent-ad81d903c987ef01d`
     (`.claude/worktrees/agent-ad81d903c987ef01d`), from 582b081; last
     commit: none yet.
   - evidence: `.claude/probes/K145/` in its worktree (copy at merge).
-  - next: stage 2 (the glow, its strength param, the touch press). K98
-    and K92 run alongside; whichever of K98 and K145 merges second
-    renumbers its codec append. At merge, carry its lore edits into the
+  - next: stage 2 (the glow, its strength param, the touch press). K92
+    runs alongside. K98 merged first (codec index 104), so K145's codec
+    append renumbers after it. At merge, carry its lore edits into the
     topic files (`render-paint.md` and the gameplay files, since K173).
   - brief: `docs/design/K93_K145.md` (stage 2).
   - env: dev servers on ports 5580-5589.
@@ -402,7 +387,7 @@ and never reused.
   `docs/design/K92.md` (one stage), plus K224 (the move pad over the open panel).
   - K80 (5fed5c1): real time has no move undo (`undoAllowed(clock)`); if K92's buttons ever reach maze moves, they consult it.
   - owner: agent a6841236edfc5caa5 (opus) of session d8031183, started
-    2026-10-14 09:37; it stops at about 11:37 or when the stage is done.
+    2026-10-14 09:37; told at 10:02 to wrap up and report by 10:30 (usage).
   - branch: `worktree-agent-a6841236edfc5caa5`
     (`.claude/worktrees/agent-a6841236edfc5caa5`), from 582b081; last
     commit: none yet.
@@ -432,7 +417,7 @@ appends. Usage: don't hold agents back until the week nears 95% (Levi,
 2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17, 54% at
 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
 23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38, 78% at 08:05,
-80% at 08:37, 82% at 09:04, 83% at 09:28 and 84% at 09:36; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
+80% at 08:37, 82% at 09:04, 83% at 09:28, 84% at 09:36 and 88% at 10:01, when the 09:37 batch was told to wrap up by 10:30 and launches stopped until the reset; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
 at about 07:53 "Keep going at full pace."; it resets Mondays at 12:00).
 Long work runs in stages from
 committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
@@ -446,10 +431,10 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running on 10-14: K98 from 09:07 and, from 09:37, K145 (stage 2 of
-K93 + K145) and K92 with K224 (opus, 2 h caps) and the round's phone
+(he may reorder). Running on 10-14, from 09:37: K145 (stage 2 of
+K93 + K145) and K92 with K224 (opus; told at 10:02 to stop by 10:30 for the usage cap) and the round's phone
 pass (K156, sonnet, 1 h cap). K100, K132, K90 stage 1b, K173 (the rules
-split), K93 and K198 stage 1 merged at 08:39-09:31; the coordinator carries the running agents' rules edits
+split), K93, K198 stage 1 and K98 merged at 08:39-10:03; the coordinator carries the running agents' rules edits
 into the topic files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
    K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
@@ -467,7 +452,7 @@ into the topic files at their merges. Then, as code slots free up:
 7. K93 + K145 (`docs/design/K93_K145.md`): stage 1 (K93) merged
    2026-10-14 (ed8f284); stage 2 (K145) running from 09:37.
 8. K92, running from 09:37 with K224; then K111 (both rework the panel).
-9. K98, running from 09:07 (`docs/design/K98.md`).
+9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. K76 stage 2.
 11. K80's turn-aligned hunter, a modifier of the normal maze; then
     K137's toggles, K138's M mechanisms and K139.
@@ -711,6 +696,9 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K226** · K98's spider glyph and role have no mesh (`MeshRole` excludes
+  it in `src/render/marker_glyphs.ts`) until K114's call 7 decides what
+  the spider marks.
 - **K224** · On the phone (411x753) the K120 move pad (z-index 18) draws
   over the open panel (seen in K198's phone probe). K92's agent takes
   the fix (launched 2026-10-14 09:37).
@@ -1101,6 +1089,9 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Ideas (not scheduled)
 
+- **K227** · The head's glow stays a fixed 4.2 world units across; it
+  could follow K98's `markerSize`, so a small player dot doesn't sit in
+  a large glow (`render-markers.md`, K98).
 Offers from 2026-10-10 that Levi hasn't answered yet (filed from the
 audit inbox; the first-tap sound offer is done, 82b6b6b).
 
@@ -1249,7 +1240,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   - Everything else leaves the daily, including moveSpeed, pathViz, fog,
     the intro and flow, and the physics tuning. K79's `backgroundSpeed`
     is not exempt either, like background and its intensity.
-  - Exempt since: K140's confetti on/off and amount (`cf`, `cfa`), and K147's `settleBudget` and `loadSettle` (K162 (3) asks whether they stay); K180 adds its pluck params. Proposed: K145's hover glow
+  - Exempt since: K140's confetti on/off and amount (`cf`, `cfa`), and K147's `settleBudget` and `loadSettle` (K162 (3) asks whether they stay); K180 adds its pluck params; K98 adds `markerSize` (`mks`). Proposed: K145's hover glow
     strength.
 - **K117** · Repo visibility (Levi's notes, 2026-10-13;
   `docs/design/levi_notes_2026-10-13.md`). Levi: private later, on his
@@ -1288,6 +1279,16 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K98** · Marker sizes and two new glyphs (Levi, 2026-10-13). A
+  `markerSize` slider (`mks`, codec index 104, daily-exempt): the black
+  disc's diameter in thread widths, 0.25-3, default 1.08 (the pre-K83
+  head dot), with every in-game marker at that size, the minotaur too
+  (K80's 1.15x and its floor are gone). Colored dots are back at the
+  start and finish (radius max(0.95 tw, r + 0.41 tw)); a horns glyph for
+  the minotaur, and a spider glyph with no mesh yet (K226). Lore:
+  `render-markers.md`; handoff: `docs/design/K98.md`; sheet:
+  `.claude/probes/K98/sheet_k98.png`. Done in 68a9622..f5982cd
+  (2026-10-14 10:03); the default size is K225.
 - **K93** · Trail fade and hover reach (Levi, 2026-10-13: "Trail fade,
   yes; Hover vs pulseReach, hover should stop at pulseReach (and
   fade-out toward the end, same as pulseReach)"). The trail piece that
