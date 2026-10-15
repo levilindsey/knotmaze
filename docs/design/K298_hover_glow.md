@@ -87,6 +87,13 @@ a viewer preference: daily-exempt, live, with its own panel row under
      hover (max, add or over) on the GPU and in the mirror. The glow must
      stay visible at every pulse phase without blowing out.
 5. **A mouse pick margin, with a slider.**
+   - **Do this item last.** K7's stage 1 (the physics host) runs
+     alongside you and rewrites `main.ts`'s physics call sites (`nearest`,
+     `grab`, `dragTo`, `release`). Route the radius through one helper
+     (e.g. `pickRadius(pointerType)`) that every pick site calls, so the
+     merge onto stage 1 stays mechanical. If stage 1 has reached master
+     by the time you get here (`git fetch`, then look for "K7 stage 1" in
+     `git log origin/master`), rebase onto it first.
    - Add a param for the mouse's pick radius. It covers hover, click, the
      thread cursor and the drag grab, so the cursor never promises a grab
      that the click then misses. Its default sits below today's 0.7.
@@ -148,8 +155,8 @@ a viewer preference: daily-exempt, live, with its own panel row under
 - **Files:** probes, logs and notes go in `.claude/probes/K298/`
   (untracked; the coordinator copies them at the merge).
 - **`main.ts`:** keep your edits there small (the pick radius and the
-  syncs). The physics-worker build stages (K7) will need that file to
-  themselves.
+  syncs). K7's stage 1 runs alongside and rewrites that file's physics
+  call sites; see item 5.
 - **The phone is off-limits.**
 
 ### Process
