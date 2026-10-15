@@ -48,7 +48,7 @@ import type { MinoFog, PathViz } from "../ui/url_state";
 import { spotCtrl } from "../game/minotaur";
 import type { ChaseGraph, MinotaurMode, Spot } from "../game/minotaur";
 import type { TurnTelegraph } from "../game/minotaur_turns";
-import { runBurnAt } from "../game/fire";
+import { runBurnAt, type Fire } from "../game/fire";
 
 // What syncMinotaur draws: the real-time chase (MinotaurChase) or the
 // turn-aligned minotaur (K80 turns, TurnMinotaur) - where it stands on the
@@ -458,8 +458,13 @@ export class FabricMazeRenderer {
   private teleGfx: Graphics;
   // K114: the burn race's first look (drawFire), over the yarn, under the
   // markers; fireDrawn = something is drawn (cleared once the fire is off).
+  // fireDirty: update() ran since the last draw (the threads, flow or game
+  // state moved); fireKey: the fire's clock and state at the last draw.
   private fireGfx: Graphics;
   private fireDrawn = false;
+  private fireDirty = true;
+  private fireKey = "";
+  private fireLast: Fire | null = null;
   // Where syncMinotaur last drew it (world), and whether a fog of war
   // covers it there; minoShown false = not drawn.
   private minoShown = false;
@@ -1038,10 +1043,14 @@ export class FabricMazeRenderer {
   // rides the dot: mid-move it is the clock before the move plus the share
   // of the run the dot has covered, so the fire advances with the head's
   // animation instead of jumping at its end. The smoldering arms show while
-  // the dot stands at its junction in a live race. Redrawn every frame (the
-  // threads move under it); cleared once when the fire is off. Every run's
-  // fire is drawn, seen or not: the fog sprite covers it, but K76's thread
-  // reveal does not (stage 3 owns that).
+  // the dot stands at its junction in a live race. Called every frame, it
+  // redraws only when update() ran since (the threads, the flow or the game
+  // state moved: update() rides every ribbon render) or the fire's clock or
+  // state changed; at rest that is never (half the frames under flow). A
+  // redraw with every run burnt cost 1.0 ms here plus 3.8 ms of tessellation
+  // in the pixi render (desktop; `.claude/probes/K114/burn/`). Cleared once
+  // when the fire is off. Every run's fire is drawn, seen or not: the fog
+  // sprite covers it, but K76's thread reveal does not (stage 3 owns that).
   drawFire(controller: FabricMazeController): void {
     const gfx = this.fireGfx;
     const fire = controller.fire;
@@ -1052,10 +1061,17 @@ export class FabricMazeRenderer {
       }
       return;
     }
-    gfx.clear();
-    this.fireDrawn = true;
     const a = this.anim;
     const L = controller.walkedDist - (a ? (1 - this.moveProgress) * a.e.length : 0);
+    const key =
+      `${L}|${controller.head}|${controller.solved}|${controller.fireLost}|` +
+      `${a ? 1 : 0}|${this.threadWidth}`;
+    if (this.fireDrawn && !this.fireDirty && key === this.fireKey && fire === this.fireLast) return;
+    this.fireDirty = false;
+    this.fireKey = key;
+    this.fireLast = fire;
+    gfx.clear();
+    this.fireDrawn = true;
     const char: number[][] = [];
     const embers: number[] = [];
     for (let eid = 0; eid < this.walk.edges.length; eid++) {
@@ -1944,6 +1960,7 @@ export class FabricMazeRenderer {
   // full path; the pulse machinery is identical (a pulse brightens whatever
   // paint its thread wears there - the shader composes it per pixel).
   update(controller: FabricMazeController): void {
+    this.fireDirty = true; // K114: drawFire redraws on the next frame.
     if (this.anim) {
       this.emitAnimFrame(controller);
       return;
