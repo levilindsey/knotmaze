@@ -672,6 +672,13 @@ const CUT_BIAS = 0.03;
 const EMERGENT_POOL = 64;
 // Gap slots for marker discs (start/exit dots).
 const MARKER_SLOTS = 4;
+// K76 2b, the thread reveal's binary gates: a marker disc's gap shows once
+// its thread point is this visible (the exit marker's own rule); a joint
+// draws when its arms are this visible at the slot and EXPLORE_JOINT_OUT
+// ctrl out (applyExploreGaps, exploreJointShown).
+const EXPLORE_MARKER_VIS = 0.98;
+const EXPLORE_JOINT_VIS = 0.98;
+const EXPLORE_JOINT_OUT = 0.25;
 // Fillet layer-vote reach terms (rebuildFillets): how much of the wedge
 // reach (fillHalf * FILLET_REACH_PER_HALF * cuspRadius) counts as a
 // joint's clearance, and the old erase-width pad - both kept so the vote
@@ -758,6 +765,14 @@ export class RibbonRenderer {
   // from foreign over threads with them.
   private slotOverChain = new Int32Array(0);
   private slotOverArc = new Float32Array(0);
+  // K76 2b, per gap slot: the over pass's render ctrl (its visibility gates
+  // the gap), whether update() solved the slot this frame (1) or cleared it
+  // (0: a far-future gate, an unused emergent slot), and whether the thread
+  // reveal kept the slot's CPU bookkeeping (underWindows, pluck footprints)
+  // out because its over thread was hidden (vis <= 0.5) when update() ran.
+  private slotOverCtrl = new Float64Array(0);
+  private slotLive = new Uint8Array(0);
+  private slotExploreHid = new Uint8Array(0);
   // Mask switch (probes A/B the bare base layer) and margin look:
   // "perp" (default): a constant-width CASING around the over thread -
   // the gap's edge is one level set of the distance to the over
@@ -1234,6 +1249,9 @@ export class RibbonRenderer {
     bindGap(this.gaps.tex);
     this.slotOverChain = new Int32Array(this.gaps.slots).fill(-1);
     this.slotOverArc = new Float32Array(this.gaps.slots);
+    this.slotOverCtrl = new Float64Array(this.gaps.slots);
+    this.slotLive = new Uint8Array(this.gaps.slots);
+    this.slotExploreHid = new Uint8Array(this.gaps.slots);
 
     // Junction joinery bookkeeping (fabric only; knot mode has no fused
     // junctions). Arms = directed half-threads leaving each junction.
@@ -2525,6 +2543,7 @@ export class RibbonRenderer {
           this.overHalfPos[c] = 0;
           this.overHalfNeg[c] = 0;
           this.gaps.clearSlot(c);
+          this.slotLive[c] = 0;
           return;
         }
       }
@@ -2543,6 +2562,10 @@ export class RibbonRenderer {
     this.renderEmergent(fillHalf, gap);
     this.renderMarkerGaps(fillHalf, gap);
     this.assignGapIds();
+    // K76 2b: every slot was just solved as master solves it (visibility
+    // factor 1); the thread reveal scales each by its over thread's.
+    if (this.explorePieces) this.applyExploreGaps();
+    this.exploreUpdatePending = false;
     this.gaps.upload();
     this.paintScene.flushGeom();
     this.drawRevealTips();
@@ -2587,7 +2610,8 @@ export class RibbonRenderer {
       underNbIn ?? { prev: crossing.under, next: crossing.under };
     const overSamples = this.chainSamples[crossing.over.chain]!;
     const underSamples = this.chainSamples[crossing.under.chain]!;
-    const overCenter = this.arcAt(overSamples, this.renderCtrl(crossing.over));
+    const overCtrl = this.renderCtrl(crossing.over);
+    const overCenter = this.arcAt(overSamples, overCtrl);
     const underCenter = this.arcAt(
       underSamples,
       this.renderCtrl(crossing.under)
@@ -2596,6 +2620,17 @@ export class RibbonRenderer {
     const totalU = underSamples.totalLength;
     this.slotOverChain[slot] = crossing.over.chain;
     this.slotOverArc[slot] = overCenter;
+    // K76 2b: a crossing whose over thread the reveal hides (vis <= 0.5 at
+    // the over pass) keeps nothing on the CPU side - no under window for the
+    // yarn and the fillets, no pluck footprint - as a gate not yet open.
+    // The slot itself is still solved; applyExploreGaps scales it.
+    this.slotOverCtrl[slot] = overCtrl;
+    this.slotLive[slot] = 1;
+    const exploreHid =
+      this.explorePieces !== null &&
+      this.exploreVisAt(crossing.over.chain, overCtrl) <= 0.5;
+    this.slotExploreHid[slot] = exploreHid ? 1 : 0;
+    if (exploreHid) shown = false;
 
     // SELF-crossings: the arc between the two passes splits at its
     // midpoint (less a small guard) between the over polyline and the
@@ -3282,6 +3317,7 @@ export class RibbonRenderer {
     }
     for (let k = poolUsed; k < EMERGENT_POOL; k++) {
       this.gaps.clearSlot(this.emergentBase + k);
+      this.slotLive[this.emergentBase + k] = 0;
     }
   }
 
@@ -4217,6 +4253,9 @@ export class RibbonRenderer {
   // shown gap - underWindows, pluck footprints - is written by update()).
   // Colors need nothing: they animate on the GPU from the clock uniforms.
   needsFxRender(): boolean {
+    // K76 2b: the thread reveal changed what update() derives (a gap's
+    // under window, a marker's gap - and the fabric's markers ride the pass).
+    if (this.exploreUpdatePending) return true;
     if (!this.fxLive) return false;
     const U = knotUniformValues();
     if (U.uKFx[0] === FX_STYLE.rainbow && U.uKFx[3] > 0.5) return true;
@@ -4476,8 +4515,14 @@ export class RibbonRenderer {
   private explorePieces: ExplorePiece[] | null = null;
   private readonly exploreByChain = new Map<number, ExplorePiece[]>();
   private exploreWhole = new Uint8Array(0);
-  // Set when the declaration changed (probes; 2b's gates and fans read it).
+  // K76 2b: update() must re-run (needsFxRender) because the declaration
+  // changed what update() derives from it: a crossing's over thread crossed
+  // vis 0.5 (its under window and pluck footprint) or a marker's gap turned
+  // (the fabric redraws its markers in the same pass). Growth frames that
+  // only move fades set nothing; update() clears it.
   exploreUpdatePending = false;
+  // Bumped by every declaration change; the joint gate follows it.
+  private exploreRev = 0;
 
   // Declare the visible pieces (null = the mode off: every chain draws on
   // master's program again). With the mode on, the ribbons draw with the
@@ -4518,7 +4563,127 @@ export class RibbonRenderer {
     }
     this.paintScene.setExploreFlags(pieces ? whole : null);
     if (this.style.paletteMode) this.writePaintItems();
-    this.exploreUpdatePending = true;
+    this.exploreRev++;
+    // The gap gate follows at once (the slots keep their last solve).
+    if (this.applyExploreGaps()) this.gaps.upload();
+  }
+
+  // K76 2b, THE GAP GATE (K76_reveal_mode.md 2.3, 2.5): a crossing's gap is
+  // as strong as its over thread is visible at the over pass (the slot's
+  // strength times vis; vis 0 rejects the slot in texel 0, for ribbons and
+  // fans alike), so a hidden over thread cuts nothing and a visible
+  // crossing keeps its gap exactly. A marker disc's gap shows only once its
+  // thread point is fully visible (EXPLORE_MARKER_VIS, the exit marker's own
+  // rule). With the mode off every slot is restored as solved. Flags
+  // exploreUpdatePending when update()'s bookkeeping no longer matches
+  // (see there). Returns whether the slot table changed.
+  private applyExploreGaps(): boolean {
+    const on = this.explorePieces !== null;
+    let changed = false;
+    for (let s = 0; s < this.markerBase; s++) {
+      if (!this.slotLive[s]) continue;
+      const v = on ? this.exploreVisAt(this.slotOverChain[s], this.slotOverCtrl[s]) : 1;
+      if (this.gaps.setVis(s, v)) changed = true;
+      if ((on && v <= 0.5 ? 1 : 0) !== this.slotExploreHid[s]) {
+        this.exploreUpdatePending = true;
+      }
+    }
+    for (let m = 0; m < MARKER_SLOTS; m++) {
+      const occ = this.markerOccluders[m];
+      const k =
+        on && occ && this.exploreVisAt(occ.chain, occ.ctrl) < EXPLORE_MARKER_VIS ? 0 : 1;
+      if (this.gaps.setVis(this.markerBase + m, k)) {
+        changed = true;
+        this.exploreUpdatePending = true;
+      }
+    }
+    return changed;
+  }
+
+  // K76 2b, THE JOINT GATE (K76_reveal_mode.md 2.4): which joints the
+  // thread reveal hides - junction webs and fans (by junctionArms index),
+  // free-tip caps (by freeTips index) - recomputed when the declaration
+  // changes, and the key rebuildFillets adds to its own (the fans rebuild on
+  // an arrival, not on growth frames). A junction shows only when every arm
+  // is solid (vis >= EXPLORE_JOINT_VIS) at its slot and EXPLORE_JOINT_OUT
+  // ctrl out (at most 0.45 of the run): the model holds a visited junction's
+  // arms solid through its web domain (at least 2.3 half-widths, at most
+  // half the run), and a stub fades out INTO an unvisited one (vis 0 at its
+  // slot). A free tip's cap shows when its thread is solid at the tip.
+  private exploreJointRev = -1;
+  private exploreHideJn: Uint8Array | null = null;
+  private exploreHideFree: Uint8Array | null = null;
+  private exploreJointKey = "";
+  private syncExploreJoints(): void {
+    if (this.exploreJointRev === this.exploreRev) return;
+    this.exploreJointRev = this.exploreRev;
+    if (!this.explorePieces) {
+      this.exploreHideJn = null;
+      this.exploreHideFree = null;
+      this.exploreJointKey = "";
+      return;
+    }
+    const hideJn = new Uint8Array(this.junctionArms.length);
+    const hideFree = new Uint8Array(this.freeTips.length);
+    const parts: string[] = [];
+    for (let jn = 0; jn < this.junctionArms.length; jn++) {
+      if (!this.exploreJointShown(jn)) {
+        hideJn[jn] = 1;
+        parts.push("j" + jn);
+      }
+    }
+    for (let i = 0; i < this.freeTips.length; i++) {
+      const tip = this.freeTips[i];
+      const n = this.ps.chains[tip.chain].length;
+      if (this.exploreVisAt(tip.chain, tip.atEnd ? n - 1 : 0) < EXPLORE_JOINT_VIS) {
+        hideFree[i] = 1;
+        parts.push("t" + i);
+      }
+    }
+    this.exploreHideJn = hideJn;
+    this.exploreHideFree = hideFree;
+    this.exploreJointKey = "x" + parts.join(",");
+  }
+
+  // The joint gate's part of the fillet key ("" with the mode off).
+  private exploreJointsKey(): string {
+    this.syncExploreJoints();
+    return this.exploreJointKey;
+  }
+
+  // Whether a junction's arms are all solid near it (the joint gate).
+  private exploreJointShown(jn: number): boolean {
+    for (const a of this.junctionArms[jn].arms) {
+      const n = this.ps.chains[a.chain].length;
+      const closed = this.ps.chainBreakAfter[a.chain] < 0;
+      const next = this.armNextJointCtrl(jn, a);
+      let run: number;
+      if (next !== null) {
+        run = (next - a.slot) * a.dir;
+        if (closed) run = ((run % n) + n) % n;
+      } else {
+        run = closed ? n : a.dir > 0 ? n - 1 - a.slot : a.slot;
+      }
+      const out = Math.max(0, Math.min(EXPLORE_JOINT_OUT, 0.45 * run));
+      for (const t of [0, out]) {
+        let c = a.slot + a.dir * t;
+        if (!closed) c = Math.max(0, Math.min(n - 1, c));
+        if (this.exploreVisAt(a.chain, c) < EXPLORE_JOINT_VIS) return false;
+      }
+    }
+    return true;
+  }
+
+  // Probe view of the joint gate: hidden junctionArms / freeTips indices
+  // (empty with the mode off).
+  exploreJointState(): { junctions: number[]; freeTips: number[] } {
+    this.syncExploreJoints();
+    const pick = (a: Uint8Array | null): number[] => {
+      const out: number[] = [];
+      if (a) a.forEach((v, i) => v && out.push(i));
+      return out;
+    };
+    return { junctions: pick(this.exploreHideJn), freeTips: pick(this.exploreHideFree) };
   }
 
   get exploreOn(): boolean {
@@ -5059,7 +5224,8 @@ export class RibbonRenderer {
       "|" +
       this.fadeLength +
       "|" +
-      this.routeKey;
+      this.routeKey +
+      this.exploreJointsKey();
     // A reveal moves the joint gate times (their speed extrapolation) every
     // frame; the FX fades themselves animate on the GPU from the record's
     // J1 times (G2.1), so they need no rebuild.
@@ -5833,7 +5999,11 @@ export class RibbonRenderer {
     };
     // Rounded caps: dead-end tips get a disc at the terminal wearing
     // their own live material (nothing overlaps a free tip).
-    for (const tip of this.freeTips) {
+    const hideJn = this.exploreHideJn; // K76 2b: the joint gate.
+    const hideFree = this.exploreHideFree;
+    for (let ti = 0; ti < this.freeTips.length; ti++) {
+      const tip = this.freeTips[ti];
+      if (hideFree && hideFree[ti]) continue;
       const samples = this.chainSamples[tip.chain];
       if (!samples) continue;
       tipXY(samples, tip.atEnd);
@@ -5893,6 +6063,7 @@ export class RibbonRenderer {
       }
       if (rec) {
         if (rec.j1[0] > fxNowJ + GATE_LEAD) continue;
+        if (hideJn && hideJn[rec.jn]) continue;
         fm = layerFor(rec);
         setFanMask(rec.mask);
         // CAP COVER (TIP_DISC_SCALE): the disc reaches the tucked cap's
@@ -5929,6 +6100,16 @@ export class RibbonRenderer {
         continue;
       }
       // No junction within reach (shouldn't happen): host-axis fallback.
+      if (
+        this.explorePieces &&
+        (this.exploreVisAt(tip.hostChain, tip.hostCtrl) < EXPLORE_JOINT_VIS ||
+          this.exploreVisAt(
+            tip.chain,
+            tip.atEnd ? this.ps.chains[tip.chain].length - 1 : 0
+          ) < EXPLORE_JOINT_VIS)
+      ) {
+        continue;
+      }
       const closedH = this.ps.chainBreakAfter[tip.hostChain] < 0;
       const arcH = this.paintArcAt(hostSamples, tip.hostCtrl, closedH);
       axisAt(tip.hostChain, arcH);
@@ -6238,8 +6419,9 @@ export class RibbonRenderer {
       const jy = rec.jy;
       const arms = rec.arms;
       if (arms.length < 2) continue;
-      if (rec.j1[0] > fxNowJ + GATE_LEAD) {
-        // Nothing of a gated joint draws this rebuild, its bands included.
+      if (rec.j1[0] > fxNowJ + GATE_LEAD || (hideJn && hideJn[rec.jn])) {
+        // Nothing of a gated joint draws this rebuild, its bands included
+        // (K76 2b: nor of a joint the thread reveal hides).
         rec.routes.length = 0;
         continue;
       }

@@ -1991,8 +1991,11 @@ export class FabricMazeRenderer {
 
     const exitV = this.walk.vertices.get(this.walk.exit)!;
     if (
-      this.revealQuery &&
-      this.revealQuery(exitV.chain, exitV.ctrl) < 0.98
+      (this.revealQuery &&
+        this.revealQuery(exitV.chain, exitV.ctrl) < 0.98) ||
+      // K76 2b: nor while the thread reveal hides it (the renderer gates
+      // its gap slot by the same rule, EXPLORE_MARKER_VIS).
+      this.ribbons.exploreVisAt(exitV.chain, exitV.ctrl) < 0.98
     ) {
       m.exit.hide(); // Exit still unrevealed: no marker, no gap, no ring.
       return;

@@ -681,12 +681,19 @@ export class GapMaskTable {
   readonly slots: number;
   readonly tex: Texture;
   private data: Float32Array;
+  // K76 2b, THE THREAD REVEAL'S GAP GATE: per slot, the strength and the
+  // two reject radii as writeSlot / clearSlot solved them, and the
+  // visibility factor setVis applied over them (1 = as solved).
+  private readonly solved: Float32Array;
+  private readonly visK: Float64Array;
 
   constructor(slots: number) {
     this.slots = slots;
     const hit = gapTextureFor(slots + 1);
     this.tex = hit.tex;
     this.data = hit.data;
+    this.solved = new Float32Array(slots * 3);
+    this.visK = new Float64Array(slots).fill(1);
     // A reused texture may hold another scene's slots: clear them.
     this.data.fill(0);
     for (let s = 0; s < slots; s++) this.clearSlot(s);
@@ -915,6 +922,7 @@ export class GapMaskTable {
     d[o + 1] = bcy;
     d[o + 2] = on ? br + p.hOver + p.margin + p.fade + 0.25 * p.sminK : -1;
     d[o + 3] = on ? br + p.hOver : -1;
+    this.noteSolved(slot, o);
   }
 
   // Disable a slot (negative reject radii, strength 0, no points): ids
@@ -925,6 +933,42 @@ export class GapMaskTable {
     this.data[o + 3] = -1;
     this.data[o + 7] = 0;
     this.data[o + 11] = 0;
+    this.noteSolved(slot, o);
+  }
+
+  // A slot was just solved (written or cleared): remember its strength and
+  // reject radii, unscaled.
+  private noteSolved(slot: number, o: number): void {
+    const s3 = slot * 3;
+    this.solved[s3] = this.data[o + 7];
+    this.solved[s3 + 1] = this.data[o + 2];
+    this.solved[s3 + 2] = this.data[o + 3];
+    this.visK[slot] = 1;
+  }
+
+  // K76 2b: scale a slot's solved strength by a visibility factor k in
+  // [0, 1] (a crossing's gap is as strong as its over thread is visible).
+  // k = 1 restores the slot exactly as solved. k <= 0 disables it through
+  // texel 0's reject radii, the first test gapKeepAt makes for ribbons and
+  // fans alike, so the shader needs no change. A GATED slot (an intro gate
+  // still pending, strength < 0) keeps its encoding for any k > 0
+  // (K76_reveal_mode.md section 2.3). Returns whether the table changed.
+  setVis(slot: number, k: number): boolean {
+    if (k === this.visK[slot]) return false;
+    this.visK[slot] = k;
+    const d = this.data;
+    const o = (slot + 1) * GAP_TEX_W * 4;
+    const s3 = slot * 3;
+    const s = this.solved[s3];
+    d[o + 7] = s < 0 ? s : s * Math.max(0, k);
+    d[o + 2] = k > 0 ? this.solved[s3 + 1] : -1;
+    d[o + 3] = k > 0 ? this.solved[s3 + 2] : -1;
+    return true;
+  }
+
+  // The visibility factor setVis last applied to a slot (1 = as solved).
+  visOf(slot: number): number {
+    return this.visK[slot];
   }
 
   // Read back a slot's header + polyline (diagnostics / probes).
