@@ -1787,10 +1787,12 @@ in this stage), fabric designs.
 Stage 4 ended 2026-10-15 at [[END]], inside its two-hour cap (it started
 at 00:48). The branch is `worktree-agent-abee0faca59fb8636`, from
 `7f4c1bd` (stage 3's handoff): `681cd3d` (the bridge), `02357d4` (the
-two tracked ports), [[LORE_SHA]] (the lore) and this handoff. Master
-(`fa7f9dc`) has changed `src/main.ts` since (K76 stage 2c); a trial merge
-(`git merge-tree`) combines the two without a conflict, and no other file
-changed on both sides. The evidence is in `.claude/probes/K7/stage4/`
+two tracked ports), `d4fbf26` (the lore and a first draft of this
+handoff), `70f345b` (more of it), `0b16814` (the awaited tug's fix, see
+Verification) and this handoff. Master (`df30e03`) has changed
+`src/main.ts` and `.claude/rules/probes.md` since (K76 stage 2c, K279
+stage 2); a trial merge (`git merge-tree`) combines both without a
+conflict, and no other file changed on both sides. The evidence is in `.claude/probes/K7/stage4/`
 (untracked, for the coordinator to copy): the probes, the batches
 (`s4_*.txt`) and their logs, `k7_results.jsonl`, `k7_latency.jsonl`,
 `frames/`, and the helpers' `k307/` and `ports/`. The builds
@@ -1821,7 +1823,9 @@ Every work item. The targets are under 3.
      one state (a test). The worker answers in order, so a dump after
      `stepUntil` holds its state.
    - `__knotPluck(..., {tug})` returns a Promise that resolves once the
-     tug is in the state main shows.
+     tug is in the state main shows (`host.sync()`, an exact fence since
+     `0b16814`: with the worker, the first snapshot after the tug, drawn
+     without interpolation).
    - `__knotPerf()` adds `physMs` and `substeps` (cumulative live
      stepping since the build: main's `ps.step` time in-thread, the
      worker's own with a worker), `lagS`, `frozen`, `host`, and
@@ -1912,14 +1916,39 @@ Every work item. The targets are under 3.
    The substep costs the same in the worker as on main (10.7 ms); the
    worker wins by taking it off main's frame, not by running it faster.
 
-   The other designs (one run each; [[OTHER_NOTE]]):
+   The other designs (one run each, the fabric's master and `phw=0`
+   twice; the first `phw=1` fabric run and the first `phw=0` dense run
+   overlapped another agent's unlocked probe and were re-run, and the
+   table shows the re-runs):
 
-   [[OTHER_TABLE]]
+   | | intro fps (p95 ms) | between freezes fps (p95) | first sleep s | sim/wall: intro, visible to sleep | drag fps (p95) | wake fps | ms/substep |
+   |---|---|---|---|---|---|---|---|
+   | gs 18 `?1471kin.J` (2987 particles), master | 20.9 (36) | 39.6 (36) | 21.48 | 0.17, 0.23 | 6.9 (160) | 10.7 | 10.7 |
+   | gs 18, phw=0 | 21.2 (36) | 39.3 (36) | 21.26 | 0.18, 0.23 | 7.0 (159) | 9.4 | 10.8 |
+   | gs 18, phw=1 | 30.4 (18.1) | 56.3 (18.1) | 12.21 | 0.42, 0.43 | 55.3 (18.3) | 55.8 | 10.7 |
+   | knot `?7k&mf=0` (2592), master | 32.4 (36) | 49.6 (36) | 15.93 | 0.27, 0.31 | 8.6 (125) | 10.3 | 8.5 |
+   | knot, phw=0 | 32.3 (36) | 49.7 (36) | 15.80 | 0.27, 0.31 | 8.6 (125) | 10.2 | 8.3 |
+   | knot, phw=1 | 36.3 (18.2) | 55.4 (18.1) | 9.28 | 0.56, 0.56 | 56.6 (18.1) | 56.5 | 8.5 |
+   | fabric `?b` (3011), master 1 / 2 | 21.6 / 22.9 (36) | 38.7 / 40.8 (36) | 21.48 / 21.32 | 0.18 / 0.19, 0.23 | 6.8 (160) | 6.1 / 6.7 | 10.9 |
+   | fabric, phw=0 1 / 2 | 22.5 / 22.6 (36) | 40.0 / 40.4 (36) | 21.19 / 21.16 | 0.19, 0.23 | 6.8 (159 / 160) | 6.7 / 6.7 | 10.9 / 10.8 |
+   | fabric, phw=1 (re-run) | 31.7 (18.1) | 56.4 (18.1) | 12.67 | 0.41, 0.41 | 55.0 (18.2) | 47.0 | 10.9 |
+   | dense `?b&gs=24&wd=0.6&brd=0.6` (5448), master | 12.8 (54) | 21.4 (54) | 35.66 | 0.11, 0.14 | 3.7 (284) | 5.7 | 19.8 |
+   | dense, phw=0 (re-run) | 12.8 (54) | 21.5 (54) | 35.90 | 0.11, 0.14 | 3.7 (282) | 6.0 | 19.8 |
+   | dense, phw=1 | 22.5 (36) | 37.7 (36) | 17.91 | 0.25, 0.29 | 28.1 (53) | 29.6 | 20.2 |
+
+   The loaded first runs read: fabric `phw=1` 31.6 / 56.0 fps, first
+   sleep 12.60 s, drag 53.0 (p95 34.9), wake 48.2; dense `phw=0` 12.4 /
+   21.5 fps, first sleep 36.34 s. The fabric's wake runs the whole 30 s
+   window on every host, master included (it does not sleep again inside
+   it); with the worker, main's callback there is 18.1-18.4 ms
+   (renderer.update 12.9), so 47 fps (inferred: render-bound at the
+   margin). The first visible frame comes at 1.08-1.37 s with the worker
+   against 0.98-1.15 s in-thread (the start gate, under 5).
 
    Against design 10's targets:
    - **The intro at 50 fps or more between the freezes:** met with the
      worker on every design but dense (56.2-56.3 on the daily, 56.3 at gs
-     18, 55.4 on the knot, [[FABRIC_BETW]] on the fabric). Dense runs at
+     18, 55.4 on the knot, 56.4 on the fabric). Dense runs at
      37.7: main is render-bound there, not physics-bound (the callback's
      median is 24.9 ms with no physics in it, renderer.update 16.2 of it;
      on the daily it is 13.9 and 9.4). That is K8's lever, as design 10
@@ -1937,7 +1966,12 @@ Every work item. The targets are under 3.
      matches master's default path on every column (between freezes
      40.6 / 40.5 against 40.2 / 38.9 fps, first sleep 21.16 / 21.44
      against 21.39 / 21.75 s, drag 6.9 against 6.9, wake 9.0 / 8.7
-     against 9.2 / 9.5). [[PHW0_OTHERS]]
+     against 9.2 / 9.5). At gs 18, on the knot, the fabric and dense it
+     matches too: between freezes 39.3 against 39.6, 49.7 against 49.6,
+     40.0 / 40.4 against 38.7 / 40.8 and 21.5 against 21.4 fps; first
+     sleep within 0.3 s; the drag the same; ms/substep within 2%. The
+     wake column moves run to run (gs 18: 9.4 against 10.7, single runs;
+     the daily's four in-thread runs span 8.7-9.5).
 4. **Latency** (`k7_latency.mjs`, build s4a, under the lock,
    `k7_latency.jsonl`). After the first sleep, press the thread particle
    nearest the screen centre, move past the slop, hold, then 12 single
@@ -2028,7 +2062,7 @@ Every work item. The targets are under 3.
      its clock is main's frames, one 0.25 s batch at most, so it cannot
      settle ahead while main waits on the GPU.
 6. **Lore:** `probes.md` has the freeze hook, `phw=0`, the bridge and
-   which probes test which path ([[LORE_SHA]]).
+   which probes test which path (`d4fbf26`).
 
 ### Where it departs from the brief
 
@@ -2042,14 +2076,25 @@ Every work item. The targets are under 3.
   at 90% of that displacement.
 - **The ported K147 and K279 probes and `g2lib.mjs` are copies** in the
   stage 4 folder, untracked like their originals.
-- **One acceptance run was taken under load:** the first `phw=1` fabric
-  run overlapped another agent's unlocked Chrome probe; [[RERUN_NOTE]]
+- **Two acceptance runs were taken under load:** the first `phw=1`
+  fabric run overlapped another agent's unlocked Chrome probe, and so did
+  the first 6 s of the first `phw=0` dense run. Both were re-run under
+  the lock (`a-fabric-phw1-2`, `a-dense-phw0-2`), and the table uses the
+  re-runs. K279's full vitest run (01:46:12-01:48:03, the coordinator's
+  note) overlapped only the ports helper's function checks (`g2_smoke`
+  in both modes, the `phw=0` sheet and the start of the `phw=1` one),
+  not a timing run: its wake, live and k147 runs started after 01:48:03.
 
 ### Verification
 
 Observed unless marked inferred. Desktop only.
 
-- `npm test`: [[NPM_TEST]]
+- `npm test`: 78 files passed and 1 skipped, 1075 tests passed and 1
+  skipped (105.8 s, at 02:06 under the lock, on `70f345b`). After the
+  sync fix (`0b16814`), `worker_host.test.ts` and `physics_host.test.ts`
+  pass (30 of 30), and the new assertion fails without the fix (the view
+  read sim 0.033 against the worker's 0.05). The full suite was not
+  re-run after it: nothing else calls `sync()`.
 - The bridge's tests (`test/physics/worker_host.test.ts`, "the probe
   bridge"): the worker freezes, shows the frozen state exactly and steps
   nothing until unfrozen; steps until a sim time, frozen or not; dumps
@@ -2057,8 +2102,38 @@ Observed unless marked inferred. Desktop only.
   rebuild; refuses the patch on the mirror, naming the hook; and matches
   the in-thread host on the patch, `stepUntil` and the dump.
   `physics_host.test.ts` covers the in-thread side.
-- `diag_screenshot.mjs` on `?7k&mf=0&am=instant`: [[DIAG]]
-- The ported probes in both modes: [[PORTS_SMOKE]]
+- `diag_screenshot.mjs` on `?7k&mf=0&am=instant`: with `phw=0`,
+  `timing.host` in-thread, `physMs` 2058 over 243 substeps, sim 2.0 at
+  wall 8.9 s (settle lag 3.6 s, phase `budget`), frames median 18 ms,
+  p95 36.1; with `phw=1`, host worker, `physMs` 5052 over 598 substeps,
+  asleep by 8.9 s (sim 5.0, lag 0.26 s, phase `off`), frames median
+  17.6, p95 18.1. Both logged the same console noise: a 404 (the
+  favicon) and Pixi's aGap / aGapId attribute warnings.
+- The ported probes in both modes (the ports helper's batch, 01:46-01:54
+  on build s4a under the lock; `ports/runs/summary.txt` and the logs
+  beside it):
+  - `k279_sheet`, `k279_wake`, `k279_live` and `k147_measure` exit 0 on
+    both hosts.
+  - `k279_sheet` matches across hosts: the frozen states' hashes are
+    identical, and so are all 12 tug rows, positions hash included (sim
+    5.000000000000038 on both).
+  - `k279_wake`: the cost per substep agrees within 2% (drag 8.64
+    against 8.58 ms). Its `tap1` row hit the 40 s cap with 0 frames on
+    both hosts: the knot design's `ptg` is 0, as before the port.
+  - `k147_measure`: first sleep 22.29 s in-thread and 12.42 with the
+    worker; drag frame p50 143 and 17.7 ms.
+  - `g2_smoke`: 11 of 12 checks pass on both hosts (the freeze's kind;
+    sim and hash held while frozen; substeps stop; `stepUntil` exact;
+    unfreeze resumes). The 12th, its strict console check, failed on the
+    favicon 404 and Pixi's warnings, the same on both hosts with no page
+    error; it was loosened afterwards and not re-run.
+  - `k279_live` found the one defect: after `await __knotPluck(...,
+    {tug})` the worker's mirror still showed the pre-tug positions (maxD
+    0 against 0.14 in-thread), because `sync()` held its snapshot for a
+    later frame's interpolation. Fixed in `0b16814`. [[SYNC]]
+  - Not run: `livefabric` (a real click with a tug on the fabric).
+  - `sheet_desktop.html` in `ports/K279/out/sheet_phw*/` is 20 MB each
+    and need not be kept.
 - **Not the bridge's:** with the worker, `__knotSettle().phase` reads
   `off` (K147's budget does not run there; the worker drops lag past 0.05
   s itself), so the k7_frames column of the phase is blank on `phw=1`.
@@ -2066,7 +2141,14 @@ Observed unless marked inferred. Desktop only.
 ### Not done
 
 - The phone (stage 5).
-- [[NOT_DONE]]
+- Latency's 50 ms target: 105 ms on the daily with the worker, 70 on the
+  knot (4, and "For stage 5").
+- The worker start gate (5): found, not fixed.
+- Porting the other 52 freeze-patch files (with their 2 unfreezes) and
+  the 5 other timing wrappers (listed under 2). Meanwhile each runs with
+  `&phw=0`.
+- `g2_smoke` with its loosened console check, and `livefabric`, not
+  re-run.
 
 ### For stage 5
 
@@ -2093,3 +2175,19 @@ Observed unless marked inferred. Desktop only.
 - **Dense is render-bound on main** (renderer.update 16 ms a frame):
   K8.
 - **K147's budget in worker mode** is already stage 5's item 3.
+- **Latency** (105 ms on the daily, target 50): measure where it goes
+  before changing anything (the event's queue, the input's post, the
+  substeps until the grabbed point settles, the snapshot's wait for
+  interpolation, the frame), with `k7_latency.mjs` plus per-stage
+  timestamps. Inferred levers: draw the newest snapshot without
+  interpolation while a thread is grabbed (saves D, about 11 ms), and
+  let the worker run more substeps per frame while dragging (it runs
+  about 1.6 at 10.7 ms each on the daily).
+- **Re-run under the lock:** `g2_smoke.mjs` (loosened console check),
+  `sync_check.mjs` [[SYNC_NEXT]] and `livefabric`
+  (`ports/run_batch2.ps1`; its `-Cutoff` and `-GiveUp` defaults are
+  tonight's clock times, so pass later ones, and point it at a build of
+  this branch's last commit).
+- **Port the freeze-patch probes when each is next needed**, `k279_ab`
+  first (K279's same-state A/B); refreshing the 21 library copies from
+  `ports/g2lib/g2lib.mjs` ports their 95 importers at once.
