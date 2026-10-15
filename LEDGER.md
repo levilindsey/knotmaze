@@ -243,6 +243,14 @@ Next free ID: K375.
   - evidence: `docs/design/G3G4_sdf_geometry.md`, `docs/design/K8_stage1.md` ("Stage 1 handoff"); stage 1's notes in `.claude/probes/K8/stage1/notes.md`; stage 2's in its worktree's `.claude/probes/K8/stage2/`
   - next: G3-0 (the capture/restore hook, the sample table, the frame bench, the pixel A/B, a phone pass if reachable), never alongside K90; Levi's calls are K361 (none blocks G3-0)
   - brief: `docs/design/K8_stage1.md`, "Stage 2 (G3-0)"
+- **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
+  with seams so G3 becomes a module swap; K6 (one frame loop) is designed with
+  it. Levi wants both soon (2026-10-14 23:46).
+  - owner: agent `aa60ed52201f75682` (opus) of claude session d8031183, the design (docs only) from 02:37 (cap 04:37)
+  - branch: `worktree-agent-aa60ed52201f75682` (`.claude/worktrees/agent-aa60ed52201f75682`, from `f04aa4b`); last commit: `f04aa4b` (master) until its first WIP commit
+  - evidence: its worktree's `.claude/probes/K5/design/`
+  - next: the design and stage 1's brief in `docs/design/K5_K6_split.md`; stage 1 starts after K7 stage 5 merges (about 04:40)
+  - brief: this item, K6's and `docs/design/K7_worker.md` (lines 20-35); the design doc once merged
 
 ## Next, in order
 
@@ -354,10 +362,6 @@ Every other item below waits on the trigger it names.
   and checklist, then feed K297's pared-down set
   (`docs/design/K339_panel_audit.md`, item 8). Optionally teach the
   script to flag dead rows and cut-off labels.
-- **K5** · Split `main.ts` and `ribbon_renderer.ts` along the new data
-  lines (K1-K3 done). After K7's stage 5 (it conflicts with stages 1, 3
-  and 4; the host makes it smaller); first in line once that merges
-  (Levi, 2026-10-14 23:46, would like it sooner).
 - **K6** · One frame loop driven by what-changed flags (after K5):
   replaces K21's stand-in `sceneAnimating()` in main.ts, and the
   render-on-demand loop (K24) asks `background.needsFrame()`. After K7's
