@@ -108,6 +108,7 @@ $argv = @("-NoProfile", "-File", $pass, "-Phase", "all", "-Base", $cfg.refA, "-H
 if ($cfg.portRange) { $argv += @("-PortRange", $cfg.portRange) }
 if ($cfg.looks) { $argv += @("-Looks", $cfg.looks) }
 if ($cfg.noise) { $argv += @("-Noise", $cfg.noise) }
+if ($cfg.viewport) { $argv += @("-Viewport", $cfg.viewport) }
 if ($cfg.serial) { $argv += @("-Serial", $cfg.serial) }
 if ($NoRun) { Say "retry: -NoRun, so the rerun is only printed: pwsh $($argv -join ' ')"; exit 0 }
 & pwsh @argv

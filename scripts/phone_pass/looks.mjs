@@ -29,7 +29,7 @@
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CFG, BUILDS, connect, myPage, load, loadFrozen, sleep, out, assertFree, stampOf, checkBuild } from "./lib.mjs";
+import { CFG, BUILDS, connect, myPage, load, loadFrozen, sleep, out, assertFree, stampOf, checkBuild, ensureViewport, EMU_READ } from "./lib.mjs";
 import { makeMoves, pinAll, routedList } from "./walk.mjs";
 import { makeSheets } from "./sheet.mjs";
 
@@ -46,7 +46,8 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(String(e.message).slice(0, 200)));
 const png = (opts = {}) => page.screenshot({ type: "png", captureBeyondViewport: false, ...opts });
 const boxes = {}; // "look/shot" -> junction boxes chosen on the head build
-const report = { looksFile, started: new Date().toISOString(), viewport: await page.evaluate(() => [window.innerWidth, window.innerHeight, +window.devicePixelRatio.toFixed(3)]), looks: [], errors };
+const emu0 = await page.evaluate(EMU_READ); // K193: myPage has set the portrait override; this is what the page says about it
+const report = { looksFile, started: new Date().toISOString(), viewport: emu0.vp, emu: emu0, looks: [], errors };
 
 async function checkNeeds(needs = []) {
   for (const n of needs) {
@@ -149,7 +150,7 @@ async function doStep(look, b, run, st) {
       break;
     }
     case "pin": await page.evaluate(pinAll); await sleep(700); break;
-    case "reload": await page.reload({ waitUntil: "load", timeout: 90000 }); await waitAsleep(st.ms ?? 30000); break;
+    case "reload": await ensureViewport(page); await page.reload({ waitUntil: "load", timeout: 90000 }); await waitAsleep(st.ms ?? 30000); break;
     case "eval": {
       // Runs `js` in the page (a Promise is awaited) and keeps its JSON result in the look's report: steps[].result.
       const result = await page.evaluate((js) => (0, eval)(js), st.js);
@@ -182,6 +183,7 @@ async function runLook(look, b) {
   const mode = look.load || "sleep";
   try {
     assertFree();
+    await ensureViewport(page); // K193: the portrait override is in place before every look's navigations
     // Every look starts on a clean origin. The panel's open state and K79's motion preference persist in localStorage,
     // and K122's look (it opens the panel) left it open over the maze in every look after it: the next look's walk
     // then tapped the panel, not the threads (K156 3c, on the phone).
