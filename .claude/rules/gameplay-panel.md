@@ -128,3 +128,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   the rest of Touch & feel shows camelCase keys (pluckRipple, tugLimit);
   unifying them is open. Tooltips say what each does and that it applies
   live. Params: gameplay-links.md.
+
+- EXPLORATION ROWS (K76 stage 2c, 2026-10-15): the fog's checkbox became
+  the "exploration" list (off / "fog of war" / "thread reveal"; the
+  labels differ from the values off / fog / threads, as pathViz's do).
+  The fog rows (fowRadius) show only under fog, "intro in the open"
+  (fowIntro) under fog or threads unless the appearance is instant, and
+  "reveal distance" ([1, 12], step 0.25), "reveal fade" ([0.35, 4], step
+  0.05) and "reveal end" (the six looks) only under threads. All run
+  onTrailChange. Params: gameplay-links.md.
