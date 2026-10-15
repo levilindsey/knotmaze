@@ -50,3 +50,12 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   ("Replay" 262..351 and "Practice" 255..351, both 55 px clear) - before
   the one-word level they fell to the bare icon. The panel never collides (it opens
   below the hamburger row) except at the last level.
+
+- OPEN-PANEL ROW (K92, 2026-10-14): while the panel is open the undo and
+  redo buttons take the hamburger's row and the badge drops to a row of
+  its own below, right-aligned with the hamburger (`.kp-open .km-mode` in
+  ui/mode_badge.ts; main.ts re-fits on every open and close). Closed,
+  nothing moved: "Free play" 1233..1340 at 1400x900 and 233..351 at
+  411x753, the K151 numbers. Open: desktop 1283..1390 at y 60..92 with
+  the panel from y 100; phone 283..401 at y 60..102 with the panel from
+  y 110 (`.claude/probes/K92/undo.mjs`).

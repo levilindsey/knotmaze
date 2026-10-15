@@ -17,6 +17,27 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   Rename labels freely; never the values - links store the option's
   index, `pv=` names the value, and daily results record the value.
 
+- DESIGN UNDO (K92, 2026-10-14; ui/undo_stack.ts, pure and tested;
+  ui/undo_buttons.ts; brief docs/design/K92.md): undo and redo buttons
+  left of the hamburger, shown only while the panel is open (setOpen puts
+  `kp-open` on the root element); a button that cannot act stays,
+  dimmed. A design change is every writeParams in main.ts except mid-drag
+  (a slider drag commits once, on release: the row handler's `dragging`,
+  read through `panel.midDrag()`): panel edits (playback prefs included),
+  the seed, the Daily button, the badge's tap. An entry is the params +
+  the daily on screen + its floating flag (designKey); cap 100, memory
+  only, the address bar still replaced, never pushed. Undo puts a design
+  back as its link would (restoreDesign): leaving a daily saves its
+  attempt and toasts as any edit does; entering one rebuilds and resumes
+  its saved attempt; a change of LIVE params only (LIVE_EFFECTS, keyed by
+  panel callback) runs those rows' effects and keeps the solve. A param
+  missing from LIVE_EFFECTS only costs a rebuild; never list one under an
+  effect its own row does not run. The panel's top is `--kp-top` (the
+  badge's open row sits between the hamburger and the panel). Probe:
+  `.claude/probes/K92/undo.mjs <base> <out> desktop|daily|phone`; hook
+  `__knotUndo` (state(): depth, current and live keys, flags, shown, the
+  maze's walk fingerprint, daily, search; undo(); redo()).
+
 - *From APPEARANCE FX round 3 (2026-10-10), live recolor:* Look color controls (scheme/hue/gamut/palette/pathColor)
   now RECOLOR IN PLACE (renderer.recolor) - the rebuild they used to
   trigger reset the knot, replayed the reveal and wiped progress.
