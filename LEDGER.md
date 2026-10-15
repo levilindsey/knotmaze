@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K382.
+Next free ID: K385.
 
 ## Waiting on Levi
 
@@ -109,6 +109,9 @@ Next free ID: K382.
 - **K377** · K5/K6's seven calls (`docs/design/K5_K6_split.md` 8), each with a
   rec: 30 fps rest cadence, idle probes, R lane before G3/G4 stages, K290 before
   R2/R5, CLAUDE.md lines, drift pause, `@internal ribbon`. None blocks M1.
+- **K383** · K290 3a's calls (`docs/design/K114_burn.md`, "Stage 3a handoff"): `burnt`
+  defaults to gone and is not daily-exempt; char shows only where the reveal does; the
+  start marker stays over burnt thread; unseen fire fronts' embers show. Rec: as built; 3b replaces the embers.
 
 ## In progress
 
@@ -208,19 +211,20 @@ Next free ID: K382.
     delete-on-exit goes with K150
 - **K76** · Thread-reveal mode, stage 2 (Levi, 2026-10-13): `exploration`
   (off | fog | threads) and an end look, a separate shader variant. 2a-2c
-  merged, so the mode is in the panel (off by default); 2d after K268 s2, K290.
-  - owner: nobody since 2026-10-15 01:08 (stage 2c done; agent `a58040d5b7b031c80` of claude session d8031183; worktrees kept: 2c's, 2b `ac6e354b85922e7aa`, 2a `a5d63452980ed9fa3`, stage 1 `aea102de995e1ce30`)
-  - branch: mainline; last commit: `82c1f23` (2c is `e6e151d..82c1f23`)
-  - evidence: `.claude/probes/K76/stage2c/` (2a's and 2b's beside it); lore `render-explore.md`
-  - next: stage 2d ("For stage 2d": High contrast dots, the census on K268's shaped slots, the held frame, step 8's phone gate and GPU, the final sheets) after K268 s2 and K290; Levi's calls are K362
-  - brief: `docs/design/K76.md`, "Stage 2c handoff"; design `docs/design/K76_reveal_mode.md`
+  merged, so the mode is in the panel (off by default); 2d running.
+  - owner: agent `adbaac6a024e6d144` (opus) of claude session d8031183, stage 2d from 04:41 (cap 06:41; ports 5820-5829)
+  - branch: `worktree-agent-adbaac6a024e6d144` (`.claude/worktrees/agent-adbaac6a024e6d144`, from `e7951cd`); last commit: `e7951cd` (master) until its first WIP commit
+  - evidence: `.claude/probes/K76/stage2c/` (2a's and 2b's beside it); stage 2d's in its worktree's `.claude/probes/K76/stage2d/`; lore `render-explore.md`
+  - next: stage 2d: High contrast dots, step 8 (the phone gate, GPU per program, the final sheets), the census on K268's shaped slots, the held frame; the start zoom stays Levi's (K362)
+  - brief: `docs/design/K76.md`, "Stage 2c handoff" ("For stage 2d") and "Stage 2d launch notes"; design `docs/design/K76_reveal_mode.md`
+  - env: the phone: `scripts/phone_pass.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
   - owner: nobody since 2026-10-15 02:42 (stage 2 done, item 4 not started; agent `a42c63c2db0401edb` of claude session d8031183; worktrees kept: stage 2's, stage 1's `ab65d913a3b9a3dcb`)
   - branch: mainline; last commit: `f799991`
   - evidence: `.claude/probes/K268/stage2/` (probes, `run_batch2.ps1` to `run_batch5.ps1`, `out/`, builds); stage 1's beside it
-  - next: stage 3: the census fixes first (`census.mjs`: judge shaped slots by S/R/F, skip rather than fail when no crossing shows both threads, a fading joint scales by vis; attribute junctions 56-58 and 161, which mismatch on master too), then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip); never alongside K290 (both edit `gap_mask.ts`, `explore_glsl.ts`)
+  - next: stage 3: the census fixes first (`census.mjs`: judge shaped slots by S/R/F, skip rather than fail when no crossing shows both threads, a fading joint scales by vis; attribute junctions 56-58 and 161, which mismatch on master too), then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip); after K76 2d (both edit the explore programs)
   - brief: `docs/design/K268.md`, "Stage 2 handoff" ("For the next stage")
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-5 merged (stage 5: 3e6b7c5..988be6a, the start gate and the phone
@@ -237,7 +241,7 @@ Next free ID: K382.
   - owner: agent `a11d7ce60428b687d` (opus) of claude session d8031183, stage 2 from 03:55 (cap 05:55; ports 5830-5839)
   - branch: `worktree-agent-a11d7ce60428b687d` (`.claude/worktrees/agent-a11d7ce60428b687d`, from `97d7c31`); last commit: `97d7c31` (master) until its first WIP commit
   - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches; the local branch `k307-proto` (51f7480) holds throwaway prototypes, never merged); K7 s4's traces in `.claude/probes/K7/stage4/k307/`; lore `.claude/rules/render-shaders.md`; stage 2's in its worktree's `.claude/probes/K307/stage2/`
-  - next: stage 2: `program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2; K366 and K268 s2's three explore variants ride it, K290's variants follow; the phone's measures ride K156's next pass
+  - next: stage 2: `program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2; K366, K268 s2's three explore variants and a fire race's first burn (K290: it moves every chain onto the explore programs) ride it; the phone's measures ride K156's next pass
   - brief: `docs/design/K307_intro_freezes.md` ("Stage 2: the warm-up", "Stage 1 handoff", "Stage 2 launch notes")
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (b3917ca..f6d10e3): the four G3
@@ -255,14 +259,14 @@ Next free ID: K382.
   - evidence: `.claude/probes/K5/design/` (eight region maps of main.ts and ribbon_renderer.ts)
   - next: stage M1 once K7 stage 5 merges (re-map main.ts first), then section 5's stages: M1-M8, and R1-R5 (R1 after G3-0 merges); section 6 orders them against the queue
   - brief: `docs/design/K5_K6_split.md`, "7. Stage 1 brief"
-- **K290** · Burnt threads, a toggle (Levi, 2026-10-14): a `burnt` dropdown,
-  gone (default: not drawn, under threads' gaps close, fans drop the arm) or
-  char (a burnt coloring in the shader). Burn stage 3a; 3b is the front's FX.
-  - owner: agent `adb9f09e19dfd0c55` (opus) of claude session d8031183, stage 3a from 03:27 (cap 05:27; ports 5820-5829)
-  - branch: `worktree-agent-adb9f09e19dfd0c55` (`.claude/worktrees/agent-adb9f09e19dfd0c55`, from `f799991`); last commit: `f799991` (master) until its first WIP commit
-  - evidence: its worktree's `.claude/probes/K290/stage3a/`; burn stage 1's `.claude/probes/K114/`
-  - next: stage 3a: the param, gone through the explore VIS machinery reversed, char in the shader, a desktop sheet of both looks; then 3b (the front's char band and embers, the `burn` FX on `tipsAt`, the fuse, the fire's light under fog, the phone sheet)
-  - brief: `docs/design/K114_burn.md`, "The stages" (Stage 3) and "Stage 1 handoff"; the stage 3a handoff once written
+- **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
+  (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
+  char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b next.
+  - owner: nobody since 2026-10-15 04:34 (stage 3a done; agent `adb9f09e19dfd0c55` of claude session d8031183, worktree kept)
+  - branch: mainline; last commit: `ef92a6a`
+  - evidence: `.claude/probes/K290/stage3a/` (`k290_ab.mjs`, `sheet.mjs`, `warn_check.mjs`, `ab/`, `sheet/`); burn stage 1's `.claude/probes/K114/`
+  - next: stage 3b: the front's char band and embers (replacing stage 1's ember, smolder and fuse marks), the `burn` FX on `tipsAt`, the lit fuse, the fire's light under fog, the phone sheet; Levi's calls K383
+  - brief: `docs/design/K114_burn.md`, "The stages" (Stage 3) and "Stage 3a handoff"
 
 ## Next, in order
 
@@ -1153,6 +1157,12 @@ Every other item below waits on the trigger it names.
 - **K381** · The K83 PIN recipe (`probes.md`) and `k83_ab` don't pin the fabric's
   explore clock: a thread-reveal A/B differs by 22050 px without it (G3-0). Rec:
   add `F.exploreClock = 1000` and `tickExplore` forwarded with 0 (probes.md's K8 bullet has it).
+- **K382** · A fire race's frame cost is unmeasured (K290 3a): from its first burn every
+  ribbon, strip and fan draws through the explore programs, reveal off too. Rec:
+  `burn_page.mjs perf` on both builds, under the lock.
+- **K384** · K290 3a's small residuals: picking uses pickThread for the rest of a race
+  once anything burns, even under char; `pieceVis`'s ring unwrap is ill-defined past
+  n - 2 fade (pre-existing; a guard and a test); 13 Pixi attribute warnings at load (master too).
 
 ## Approved, to schedule (2026-10-11)
 

@@ -2881,3 +2881,25 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches); K7 s4's traces in `.claude/probes/K7/stage4/k307/`; lore `.claude/rules/render-shaders.md`
   - next: stage 2, the warm-up (`program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2), not alongside K7 s5 (both edit `main.ts`); K366 rides it, and so do K268 s2's three explore variants (`render-shaders.md`); the phone's measures ride K156's next pass
   - brief: `docs/design/K307_intro_freezes.md` ("Stage 1 handoff", "Stage 2: the warm-up"); K7's in `docs/design/K7_worker.md` ("Stage 4 handoff")
+
+## K290 (2026-10-15, stage 3a merged)
+
+- **K290** · Burnt threads, a toggle (Levi, 2026-10-14): a `burnt` dropdown,
+  gone (default: not drawn, under threads' gaps close, fans drop the arm) or
+  char (a burnt coloring in the shader). Burn stage 3a; 3b is the front's FX.
+  - owner: agent `adb9f09e19dfd0c55` (opus) of claude session d8031183, stage 3a from 03:27 (cap 05:27; ports 5820-5829)
+  - branch: `worktree-agent-adb9f09e19dfd0c55` (`.claude/worktrees/agent-adb9f09e19dfd0c55`, from `f799991`); last commit: `f799991` (master) until its first WIP commit
+  - evidence: its worktree's `.claude/probes/K290/stage3a/`; burn stage 1's `.claude/probes/K114/`
+  - next: stage 3a: the param, gone through the explore VIS machinery reversed, char in the shader, a desktop sheet of both looks; then 3b (the front's char band and embers, the `burn` FX on `tipsAt`, the fuse, the fire's light under fog, the phone sheet)
+  - brief: `docs/design/K114_burn.md`, "The stages" (Stage 3) and "Stage 1 handoff"; the stage 3a handoff once written
+
+## K76 (2026-10-15, stage 2d launched)
+
+- **K76** · Thread-reveal mode, stage 2 (Levi, 2026-10-13): `exploration`
+  (off | fog | threads) and an end look, a separate shader variant. 2a-2c
+  merged, so the mode is in the panel (off by default); 2d after K268 s2, K290.
+  - owner: nobody since 2026-10-15 01:08 (stage 2c done; agent `a58040d5b7b031c80` of claude session d8031183; worktrees kept: 2c's, 2b `ac6e354b85922e7aa`, 2a `a5d63452980ed9fa3`, stage 1 `aea102de995e1ce30`)
+  - branch: mainline; last commit: `82c1f23` (2c is `e6e151d..82c1f23`)
+  - evidence: `.claude/probes/K76/stage2c/` (2a's and 2b's beside it); lore `render-explore.md`
+  - next: stage 2d ("For stage 2d": High contrast dots, the census on K268's shaped slots, the held frame, step 8's phone gate and GPU, the final sheets) after K268 s2 and K290; Levi's calls are K362
+  - brief: `docs/design/K76.md`, "Stage 2c handoff"; design `docs/design/K76_reveal_mode.md`
