@@ -166,14 +166,40 @@ import {
   RANGE_FLOATS,
   SAMP_UPLOAD_STATS,
   assignWindowLanes,
+  b64ToF32,
+  b64ToF64,
   chainCaps,
   g3Layout,
   maxRangeEntries,
   packRadii,
   packRanges,
   packSamp,
+  typedToB64,
   writeChainTexels,
 } from "./samp_table";
+import { EMERGENT_MAX, EMERGENT_ROW } from "../physics/particle_system";
+
+// K8 G3-0: the probe capture (captureScene / restoreScene): plain JSON, typed
+// arrays as base64.
+export interface SceneCapture {
+  v: 1;
+  n: number;
+  c: number;
+  positions: string;
+  passes: string;
+  emergent: string;
+  scalars: string;
+  gateLatch: string;
+  gateCache: string;
+  uniforms: Record<string, string>;
+  explore: ExplorePiece[] | null;
+}
+// The appearance reveal's clock (RevealAnimator keeps `t` private).
+interface RevealClock {
+  t: number;
+  done: boolean;
+  speed: number;
+}
 import type { G3Layout } from "./samp_table";
 
 // G3-0 DATA PLANE (K8 stage 2; samp_table.ts is the format): the four
@@ -5224,6 +5250,148 @@ export class RibbonRenderer {
       ranges: ranges.slice(0, entries * RANGE_FLOATS),
       entries,
     };
+  }
+
+  // ---- K8 G3-0: SAME-STATE CAPTURE / RESTORE (G3G4_sdf_geometry.md 5.0) --
+  //
+  // Everything update() reads that a second page of the same link does not
+  // share, as plain JSON (typed arrays in base64, so NaN and +-Infinity
+  // survive): the physics fields the renderer reads (positions, each
+  // crossing's pass ctrl and displayF, the emergent rows - what K7's
+  // snapshot carries), the renderer's clocks, gate latches and gate cache,
+  // the appearance reveal's clock, the thread reveal's pieces, and every
+  // paint uniform. restoreScene ends with an update(). Not captured: the
+  // paint declaration and hover (main re-declares them from the fabric
+  // every frame), plucks (none at rest), the camera (main's). The restoring
+  // page must keep its physics frozen (a probe no-ops ps.step): velocities
+  // are not restored, and the emergent list stays pinned to the captured
+  // rows until the page reloads.
+  captureScene(): SceneCapture {
+    const ps = this.ps;
+    const n = ps.particleCount;
+    const c = ps.crossings.length;
+    const passes = new Float64Array(4 * c);
+    for (let k = 0; k < c; k++) {
+      const x = ps.crossings[k];
+      passes[k * 4] = x.over.ctrl;
+      passes[k * 4 + 1] = x.over.displayF ?? NaN;
+      passes[k * 4 + 2] = x.under.ctrl;
+      passes[k * 4 + 3] = x.under.displayF ?? NaN;
+    }
+    const em = new Float32Array(EMERGENT_MAX * EMERGENT_ROW);
+    const emN = ps.writeEmergentRows(em, 0);
+    const U = knotUniformValues() as unknown as Record<string, Float32Array>;
+    const uniforms: Record<string, string> = {};
+    for (const k of Object.keys(U)) uniforms[k] = typedToB64(U[k]);
+    const ra = this.revealAnim as unknown as RevealClock | null;
+    const scalars = new Float64Array([
+      this.flowTime,
+      this.paintClock,
+      this.pulseBorn,
+      this.gateRev,
+      this.fxLive ? 1 : 0,
+      this.gateOpenAt,
+      this.revealOn ? 1 : 0,
+      this.revealWas ? 1 : 0,
+      this.exploreUpdatePending ? 1 : 0,
+      this.revealWall0,
+      this.fxEnd,
+      this.rimAt,
+      ra ? 1 : 0,
+      ra ? ra.t : 0,
+      ra && ra.done ? 1 : 0,
+      ra ? ra.speed : 1,
+    ]);
+    return {
+      v: 1,
+      n,
+      c,
+      positions: typedToB64(ps.positions.slice(0, 2 * n)),
+      passes: typedToB64(passes),
+      emergent: typedToB64(em.slice(0, emN * EMERGENT_ROW)),
+      scalars: typedToB64(scalars),
+      gateLatch: typedToB64(this.gateLatch),
+      gateCache: typedToB64(this.gateCache),
+      uniforms,
+      explore: this.explorePieces
+        ? (JSON.parse(JSON.stringify(this.explorePieces)) as ExplorePiece[])
+        : null,
+    };
+  }
+
+  // Restore a captureScene() from a page of the same link (same build,
+  // same scene: particle and crossing counts must match), then update().
+  restoreScene(s: SceneCapture): void {
+    const ps = this.ps;
+    if (s.n !== ps.particleCount || s.c !== ps.crossings.length) {
+      throw new Error(
+        `restoreScene: ${s.n} particles / ${s.c} crossings captured, ` +
+          `${ps.particleCount} / ${ps.crossings.length} here`
+      );
+    }
+    ps.positions.set(b64ToF32(s.positions));
+    const passes = b64ToF64(s.passes);
+    const df = (v: number) => (Number.isNaN(v) ? undefined : v);
+    for (let k = 0; k < s.c; k++) {
+      const x = ps.crossings[k];
+      x.over.ctrl = passes[k * 4];
+      x.over.displayF = df(passes[k * 4 + 1]);
+      x.under.ctrl = passes[k * 4 + 2];
+      x.under.displayF = df(passes[k * 4 + 3]);
+    }
+    const rows = b64ToF32(s.emergent);
+    const pairOf = (
+      ps as unknown as {
+        emergentPair(
+          i: number,
+          u: number,
+          j: number,
+          v: number,
+          aOver: boolean
+        ): { over: CrossingPass; under: CrossingPass };
+      }
+    ).emergentPair.bind(ps);
+    Object.defineProperty(ps, "emergentCrossings", {
+      configurable: true,
+      get: () => {
+        const out: Array<{ over: CrossingPass; under: CrossingPass }> = [];
+        for (let o = 0; o + EMERGENT_ROW <= rows.length; o += EMERGENT_ROW) {
+          out.push(
+            pairOf(rows[o], rows[o + 1], rows[o + 2], rows[o + 3], rows[o + 4] !== 0)
+          );
+        }
+        return out;
+      },
+    });
+    const S = b64ToF64(s.scalars);
+    this.flowTime = S[0];
+    this.paintClock = S[1];
+    this.pulseBorn = S[2];
+    this.gateRev = S[3];
+    this.fxLive = S[4] !== 0;
+    this.gateOpenAt = S[5];
+    this.revealOn = S[6] !== 0;
+    this.revealWas = S[7] !== 0;
+    this.exploreUpdatePending = S[8] !== 0;
+    this.revealWall0 = S[9];
+    this.fxEnd = S[10];
+    this.rimAt = S[11];
+    const ra = this.revealAnim as unknown as RevealClock | null;
+    if (ra && S[12] !== 0) {
+      ra.t = S[13];
+      ra.done = S[14] !== 0;
+      ra.speed = S[15];
+    }
+    this.gateLatch = b64ToF64(s.gateLatch).slice();
+    this.gateCache = b64ToF64(s.gateCache).slice();
+    const U = knotUniformValues() as unknown as Record<string, Float32Array>;
+    const E = b64ToF32(s.uniforms.uKExplore ?? "");
+    this.setExplore(s.explore, E.length > 2 ? E[1] : 0, E.length > 2 ? E[2] : 1);
+    for (const k of Object.keys(s.uniforms)) {
+      const v = b64ToF32(s.uniforms[k]);
+      if (U[k] && U[k].length === v.length) U[k].set(v);
+    }
+    this.update();
   }
 
   // K76 2b, THE JOINT GATE (K76_reveal_mode.md 2.4): which joints the
