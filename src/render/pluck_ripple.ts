@@ -18,12 +18,18 @@
 //   ring  - a white annulus over everything, threads and backdrop alike.
 // Strength (rippleStrength for taps and releases, rippleAuto for auto
 // plucks) scales the displacement, the glint and the ring's opacity.
+//
+// K279 stage 2: a ripple whose disc cannot reach the screen is not drawn
+// (it adds nothing to any pixel), so the filter detaches while every live
+// ripple is off-screen. And warm() moves the first ripple's one-time cost
+// (the program's link and the filter's pooled screen-sized texture) to
+// load: see WARM_FRAMES.
 import {
+  Container,
   Filter,
   GlProgram,
   Rectangle,
   UniformGroup,
-  type Container,
 } from "pixi.js";
 import type { PluckRipple } from "./pluck_model";
 
@@ -46,6 +52,12 @@ const WAVE_GLINT = 0.3;
 const GLINT_MIX = 0.45;
 // The ring look's peak opacity at strength 1 (capped at 1).
 const RING_ALPHA = 0.3;
+// The shader skips a pixel more than this many band half widths from a
+// ripple's front, so a disc reaches radius + REACH_BANDS x band.
+const REACH_BANDS = 3;
+// K279 stage 2 (K289 a): ticks the warm-up box stays on the stage. main.ts
+// ticks before pixi renders in the same frame, so 3 ticks draw it twice.
+const WARM_FRAMES = 3;
 
 const VERT = `in vec2 aPosition;
 out vec2 vTextureCoord;
@@ -94,7 +106,7 @@ void main(void) {
     vec2 d = px - r.xy;
     float dist = length(d);
     float x = (dist - r.z) / r.w;
-    if (abs(x) > 3.0) continue;
+    if (abs(x) > ${REACH_BANDS.toFixed(1)}) continue;
     float g = exp(-x * x);
     // x e^{-x^2} peaks at 0.4289 (x = 0.7071): normalized to 1.
     float wave = x * g / 0.4289;
@@ -128,6 +140,30 @@ interface RippleValues {
   uCount: number;
 }
 
+// The filter's uniforms: one ripple slot table.
+function rippleUniforms(): UniformGroup {
+  return new UniformGroup({
+    uRip: {
+      value: new Float32Array(RIPPLE_MAX * 4),
+      type: "vec4<f32>",
+      size: RIPPLE_MAX,
+    },
+    uAmp: {
+      value: new Float32Array(RIPPLE_MAX * 4),
+      type: "vec4<f32>",
+      size: RIPPLE_MAX,
+    },
+    uCount: { value: 0, type: "f32" },
+  });
+}
+
+// Whether a disc of radius `reach` px around (x, y) px touches the screen
+// rectangle [0, w] x [0, h] (one px of slack).
+export function discOnScreen(x: number, y: number, reach: number, w: number, h: number): boolean {
+  const r = reach + 1;
+  return x + r >= 0 && x - r <= w && y + r >= 0 && y - r <= h;
+}
+
 export class PluckRipples {
   // The look new ripples take; "off" adds none (live ones finish).
   look: PluckRipple = "off";
@@ -142,6 +178,10 @@ export class PluckRipples {
   private readonly area = new Rectangle();
   private readonly target: Container;
   private readonly screen: () => { width: number; height: number };
+  // The warm-up (warm()): an empty box under its own copy of the filter,
+  // on the stage for WARM_FRAMES ticks. Page-lifetime: never destroyed.
+  private warmBox: Container | null = null;
+  private warmFrames = 0;
 
   // `target`: the world container the filter goes on; `screen`: the
   // canvas's logical size (the filter covers the whole screen, so the ring
@@ -149,21 +189,15 @@ export class PluckRipples {
   constructor(target: Container, screen: () => { width: number; height: number }) {
     this.target = target;
     this.screen = screen;
-    const uniforms = new UniformGroup({
-      uRip: {
-        value: new Float32Array(RIPPLE_MAX * 4),
-        type: "vec4<f32>",
-        size: RIPPLE_MAX,
-      },
-      uAmp: {
-        value: new Float32Array(RIPPLE_MAX * 4),
-        type: "vec4<f32>",
-        size: RIPPLE_MAX,
-      },
-      uCount: { value: 0, type: "f32" },
-    });
+    const uniforms = rippleUniforms();
     this.values = uniforms.uniforms as unknown as RippleValues;
-    this.filter = new Filter({
+    this.filter = PluckRipples.newFilter(uniforms);
+  }
+
+  private static newFilter(uniforms: UniformGroup): Filter {
+    return new Filter({
+      // GlProgram.from caches by source: the warm-up's copy links the very
+      // program the ripples draw with.
       glProgram: GlProgram.from({ vertex: VERT, fragment: FRAG, name: "pluck-ripple" }),
       resources: { rippleUniforms: uniforms },
       // The world is drawn into the filter's texture: at the canvas's own
@@ -172,6 +206,27 @@ export class PluckRipples {
       antialias: "inherit",
       padding: 0,
     });
+  }
+
+  // K279 stage 2 (K289 a): pay the first ripple's one-time cost at load.
+  // The first tap's first frame spent 30-36 ms more in pixi's tick than a
+  // later tap's: the program's first link (K307: ~14.5 ms cold) and the
+  // filter's first pooled texture, screen-sized with the canvas's MSAA.
+  // An EMPTY box on `stage`, under a copy of the filter (the same program,
+  // no ripples: uCount 0) with a screen-sized filterArea, makes pixi do
+  // both for WARM_FRAMES ticks. Its input is cleared to transparent and
+  // the shader returns it unchanged, so the frame's pixels do not move.
+  // The texture goes back to pixi's pool, sized and keyed as the first
+  // ripple's (a resize before the first ripple allocates again).
+  warm(stage: Container): void {
+    if (this.warmBox) return;
+    const box = new Container();
+    const sc = this.screen();
+    box.filters = [PluckRipples.newFilter(rippleUniforms())];
+    box.filterArea = new Rectangle(0, 0, sc.width, sc.height);
+    stage.addChild(box);
+    this.warmBox = box;
+    this.warmFrames = WARM_FRAMES;
   }
 
   // Ripples alive or waiting on their delay.
@@ -203,6 +258,10 @@ export class PluckRipples {
   // Advance by dt wall seconds and write this frame's uniforms, after the
   // camera's step. Runs every frame in every ticker branch.
   tick(dt: number): void {
+    if (this.warmBox && --this.warmFrames <= 0) {
+      this.warmBox.parent?.removeChild(this.warmBox);
+      this.warmBox = null;
+    }
     if (this.live.length === 0) {
       if (this.attached) this.sync();
       return;
@@ -226,6 +285,7 @@ export class PluckRipples {
     const ty = this.target.position.y;
     // Screen px per world unit.
     const scale = sx;
+    const sc = this.screen();
     let n = 0;
     for (const r of this.live) {
       if (r.t < 0) continue;
@@ -234,11 +294,18 @@ export class PluckRipples {
       const radius = RIPPLE_RADIUS * (1 - (1 - u) ** 3);
       const band = RIPPLE_BAND0 + (RIPPLE_BAND1 - RIPPLE_BAND0) * u;
       const s = r.strength * env;
+      const cx = sx * r.x + tx;
+      const cy = sy * r.y + ty;
+      const rPx = radius * scale;
+      const bPx = Math.max(1, band * scale);
+      // A disc wholly off-screen changes no pixel: leave it out (it still
+      // ages, and draws again if the camera brings it back).
+      if (!discOnScreen(cx, cy, rPx + REACH_BANDS * bPx, sc.width, sc.height)) continue;
       const k = n * 4;
-      v.uRip[k] = sx * r.x + tx;
-      v.uRip[k + 1] = sy * r.y + ty;
-      v.uRip[k + 2] = radius * scale;
-      v.uRip[k + 3] = Math.max(1, band * scale);
+      v.uRip[k] = cx;
+      v.uRip[k + 1] = cy;
+      v.uRip[k + 2] = rPx;
+      v.uRip[k + 3] = bPx;
       v.uAmp[k] = r.look === "wave" ? RIPPLE_DISP * scale * s : 0;
       v.uAmp[k + 1] =
         r.look === "glint" ? GLINT_MIX * s : r.look === "wave" ? GLINT_MIX * WAVE_GLINT * s : 0;
@@ -249,8 +316,10 @@ export class PluckRipples {
     v.uCount = n;
     const want = n > 0;
     if (want) {
-      // Cover the whole screen, in the world container's coordinates.
-      const sc = this.screen();
+      // Cover the whole screen, in the world container's coordinates. Not
+      // the discs alone: the world is drawn ONLY into the filter's texture,
+      // so a smaller area clips every thread outside it (K279 stage 2;
+      // docs/design/K279.md, "Stage 2 handoff").
       this.area.x = -tx / sx;
       this.area.y = -ty / sy;
       this.area.width = sc.width / sx;
