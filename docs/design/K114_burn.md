@@ -750,7 +750,7 @@ All in `.claude/probes/K114/burn/` (untracked):
 - **The checks:** `test_full_rebased.log` and `build_rebased.log`.
 - **The dev server config:** `vite.private-cache.config.ts`.
 
-## Stage 3a plan (WIP)
+## Stage 3a plan
 
 Agent K290 (burn stage 3a), branch `worktree-agent-adb9f09e19dfd0c55`,
 started 2026-10-15 03:27, cap 05:27. After a compaction: re-read this
@@ -829,3 +829,150 @@ build, fire-off 0 px vs master, sheet (seed 7, fi=fuse, gone/char x
 reveal off/on x early/mid/late) in `.claude/probes/K290/stage3a/`. 5. Lore
 (gameplay-fire, gameplay-links, gameplay-panel, render-explore,
 render-shaders), handoff here, release the lock, SubagentHandback.
+
+## Stage 3a handoff
+
+2026-10-15, about 04:40. Agent adb9f09e19dfd0c55 (K290) of coordinator
+session d8031183, on branch `worktree-agent-adb9f09e19dfd0c55` (worktree
+`.claude/worktrees/agent-adb9f09e19dfd0c55`), based on master f799991.
+Stage 3a is done: brief items 1-3 and 5 are built and committed, and item
+4 is measured below. Nothing is pushed. Commits: 7d52824 (the param and
+the plan), 2231664 (`subtractBurnt`, `wholePieces`, 8 tests), c7a03e0 (the
+burn in the shaders, gone and char), f0874ed (the probe hook and the
+lore), then this handoff. The lore is in gameplay-fire.md (BURNT THREAD),
+gameplay-links.md (BURNT PARAM), gameplay-panel.md (BURNT ROW),
+render-explore.md (THE BURN) and render-shaders.md.
+
+### Done
+
+- GONE: burnt stretches are cut out of the declared visibility pieces
+  (`subtractBurnt`; a cut through a piece's solid part is a hard end, no
+  fade and no frontier). The explore machinery that already existed does
+  the rest: an under-thread's crossing gap closes where its over thread is
+  burnt, a fan drops a burnt arm, a junction whose arms are all gone
+  hides, a chain with nothing left is culled.
+- CHAR: CHAR items (type 6) in the KPAINT rows, a chain flag in the chain
+  texel's .y, `kCharAt` / `kCharLook` in the section's explore variant and
+  `kStripChar` in the arm strip's. Char 0x22140e at 0.9, an ash core
+  0x7a3a22 at 0.75 where |vUV.y - 0.5| < 0.15 (ribbons only), each end
+  ramped over 0.08 ctrl. Drawn before the gap mask, so the crossing gaps
+  cut char like thread.
+- Stage 1's char and ash Graphics strokes are removed. Its embers,
+  smoldering arms and lit fuse still draw (stage 3b).
+- Files outside the brief's list: `src/main.ts` (`f.burntLook =
+  params.burnt` in syncExploration; the hook's `burnt` key);
+  `src/ui/undo_stack.ts` (`burnt` under onTrailChange's LIVE_EFFECTS);
+  `src/render/ribbon_renderer.ts` (`sameBurn`, the CHAR items in
+  writePaintItems, `exploreBurn` and `exploreGateByChain`, setExplore's
+  `burn` argument, the joint rule and `exploreGateVisAt`);
+  `src/render/paint_model.ts` (`setExploreFlags(flags, char)`);
+  `test/render/paint_ring_lap.test.ts` (the nearest-lap formula's count
+  1 -> 2, since kCharAt reuses it); new `test/game/explore_burn.test.ts`;
+  `param_codec.test.ts` and `url_codec.test.ts` appended.
+- No CPU twin of kCharAt or kStripChar (K152 item 3, Levi 2026-10-14).
+
+### Calls made (each easy to reverse)
+
+1. DEFAULT `gone` (the brief: "burnt runs are gone"), char the option.
+   Not daily-exempt, like the fire keys; a daily plays with the fire off.
+   Alternative: exempt it as a viewer's look preference.
+2. JOINTS UNDER A BURN: the reveal's own pieces (the gate) apply 2b's hide
+   rule; the declared pieces hide a junction only when every arm is gone,
+   otherwise the web draws and a burnt arm's lobe fades with its strip.
+   Alternatives: hide the web when any arm burns; or the all-arms rule
+   everywhere, which changes K76 2b's transients.
+3. REVEAL OFF AND SOMETHING BURNT: every chain is declared whole, less the
+   burnt stretches under gone, so the explore programs draw the rest of
+   the race. Nothing burnt keeps master's path (measured 0 px). Costs:
+   `ribbons.exploreOn` stays true, so picking uses pickThread even under
+   char; the explore programs link cold at the first burn; the frame cost
+   is not measured. Alternative: a burn-only program variant, or a
+   per-chain switch onto the explore programs.
+4. CHAR UNDER THE REVEAL shows only what the reveal shows: the declared
+   visibility scales char (`aM *= ev`), so unseen burnt thread stays
+   hidden. Observed: sheet a12_on_char draws char along the walked route
+   only, a12_off_char the whole burnt half. Alternative: char every burnt
+   stretch under the reveal, as stage 1's strokes did; that shows the
+   fire's spread, and with it the maze, outside the reveal.
+5. MARKERS AND CAMERA UNDER GONE: the start marker still draws once its
+   run burns, over empty space (sheet a01_on_gone). The exit marker hides
+   once its point burns (by the code's exploreVisAt test; the exit never
+   burnt in the sheet). The fit camera keeps framing the reveal's pieces
+   (`exploreVisibleBounds` keeps `explore.on` and `exploreLast`).
+6. CUT ENDS are hard at the fire: no fade, and no frontier halo (halos at
+   gone points are filtered by `burntGoneAt`). The ash core draws on
+   ribbons only, not on fans or strips.
+7. PROBE HOOK `__knotExplore({burnt})` added to main.ts.
+
+### Verification
+
+Desktop RX 6800 XT, ANGLE on D3D11; every GPU run held the perf lock.
+
+- FIRE OFF, same state, branch c7a03e0 against master f799991
+  (`k290_ab.mjs ab http://localhost:5821/ http://localhost:5820/ <out>
+  desktop`, link `k111&am=instant&snd=none&fw=0&phy=0`): 31/31 checks at
+  0 px (reveal off at four pulse phases, a hovered choice, reveal on
+  (beacon) at two phases, on then off, A/A floors 0; `ab/run2.log`). The
+  first run differed by 14-18k px until the probe pinned the halo breath
+  (`exploreClock = 1000`, tickExplore with dt 0).
+- FIRE ON, NOTHING BURNT (`LINK=` the same link plus `&fi=fuse&fdl=40`,
+  two moves in): 31/31 at 0 px (`ab/run_fire_unburnt.log`, frames in
+  `ab_fire_unburnt/`). The fire's presence is indirect: "mode on changes
+  the frame" reads 383778 against the fire-off run's 382325 px (the lit
+  fuse), and the branch's mode-off state reads exploreOn false.
+- WARNINGS (`warn_check.mjs <base> plain`, seed 7 `fi=fuse&fsp=0.9`, the
+  optimal route): both builds print the same 13 PixiJS "Attribute aGap /
+  aGapId / aUV is not present in the shader" warnings at load and none
+  during the walk, so they predate 3a. The branch's burnt spans go from 1
+  to 273 over 14 arrivals; both builds solve.
+- `npm test`: 81 files, 1117 passed (1 file and 1 test skipped), 106 s;
+  tsc clean.
+- SwiftShader compiles all 8 variants. Fragment lengths: section 47521,
+  its explore variant 55976; strip 33023, explore 37011 (was 34987);
+  field 28482, explore 32936 (unchanged); still 19958, explore 23991
+  (unchanged).
+- CONTACT SHEET (`sheet.mjs http://localhost:5820/ <out>`, seed 7
+  `fi=fuse&fsp=0.9`, the optimal route, 14 arrivals, solved, never lost):
+  picks early #1 (1.1% burnt), mid #12 (40.5%), late #13 (77.2%); gone and
+  char, reveal off and on. Under gone with the reveal off, the culled
+  chains go 0 -> 34 -> 71 of 92. Char keeps the crossing gaps. Stage 1's
+  embers float over empty space under gone, and under the reveal they draw
+  at every front, seen or not (a12_on_char: about 30 over hidden thread).
+- Inferred, not measured: the explore programs' frame cost through a
+  race; the cold-compile freeze at the first burn; a still pluck during a
+  burn (`pluck-still-explore`).
+
+### Residuals and next
+
+- COLD COMPILE AT THE FIRST BURN: a fire race switches every ribbon, strip
+  and fan onto the explore programs at its first burnt stretch, so K307's
+  warm-up must cover `section-rgb`'s explore variant, `arm-strip-explore`
+  and `junction-field-explore` for fire links (likely
+  `pluck-still-explore` too), or the first burn freezes the screen.
+- Time a race's frames with the reveal off (`burn_page.mjs perf`, both
+  builds, under the lock).
+- STAGE 1'S EMBERS LEAK UNSEEN FIRE under the reveal (a12_on_char), and a
+  red line from the head over hidden thread there is, by its color, stage
+  1's smoldering-arm mark (not attributed). 3b replaces them; whether an
+  unseen front shows is Levi's call.
+- The start marker over empty space once its run burns (Levi's call).
+- pickThread for the rest of the race once a burn is declared, even under
+  char: check the pick feel, or gate it to gone.
+- `pieceVis`' ring unwrap is ill-defined for a piece longer than n - 2
+  fade (pre-existing): a guard and a test in explore_view.
+- The 13 PixiJS attribute warnings at load (master has them): attribute
+  the mesh and program pairs.
+- STAGE 3B (the brief's list): the front's char band and embers, the
+  `burn` FX on tipsAt, the lit fuse, fire light under fog, the phone
+  sheet; replace stage 1's ember, smolder and fuse Graphics.
+
+### Evidence
+
+`.claude/probes/K290/stage3a/`, untracked, in this worktree: copy it to
+the main checkout before the worktree is removed. `k290_ab.mjs` (ab),
+`sheet.mjs`, `warn_check.mjs`, `dump_variants.ts` (the SwiftShader
+compile), `lock_take.ps1`, `lock_release.ps1`; results in `ab/`,
+`ab_fire_unburnt/`, `warn/`, `frag/`; the builds in `builds/` (`mine`,
+`master`); the sheet in `sheet/` (`K290_3a_sheet_full.png`,
+`K290_3a_sheet_crop.png`, the per-arrival `aNN_{off,on}_{gone,char}`
+frames and crops, `shots.json`, `sheet_run.log`).
