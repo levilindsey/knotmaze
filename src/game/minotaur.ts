@@ -107,6 +107,9 @@ const PLAYER_PACE = 10;
 // mazes, scripted greedy and fleeing players; the table and how to rerun it
 // are in .claude/rules/gameplay-minotaur.md, REAL-TIME MINOTAUR). approachPace 7 =
 // 0.7 x playerPace: a player who keeps moving away outruns a hunt.
+// roamPull 0.5 (K174, the same simulation): a greedy player meets it in 63%
+// of games instead of 56%, at 1.68 catches a game (median 1), 74% of games
+// with 0 to 2; pull 1 adds only 3 points of meetings for 0.26 catches more.
 // url_state.ts PARAM_DEFAULTS reads these, so a retune edits only them (and
 // moves every link that leaves them out).
 export const DEFAULT_CHASE_PARAMS: Readonly<ChaseParams> = Object.freeze({
@@ -123,7 +126,7 @@ export const DEFAULT_CHASE_PARAMS: Readonly<ChaseParams> = Object.freeze({
   deadEndBias: 0.4,
   roamRange: 30,
   wake: 2,
-  roamPull: 0,
+  roamPull: 0.5,
 });
 
 // Where an entity stands: at a vertex (edge < 0), or on a run `pos` units
