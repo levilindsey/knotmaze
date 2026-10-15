@@ -4168,11 +4168,12 @@ export class RibbonRenderer {
     U.uKPulse[2] = spacing;
     const fi = Math.min(1, Math.max(0, (clock - this.pulseBorn) / PAINT_CONST.PULSE_FADE_IN));
     U.uKPulse[3] = fi * fi * (3 - 2 * fi);
-    // The trains' reach window (finite on the GPU: 1e6 = whole arms).
+    // The trains' and the hover's reach window (finite on the GPU: 1e6 =
+    // whole arms).
     const reach = Math.min(1e6, Math.max(0, this.pulseReach));
     U.uKReach[0] = reach;
     U.uKReach[1] = Math.min(PAINT_CONST.PULSE_REACH_FADE, 0.5 * reach);
-    // Hover: a slow whole-run breath between 0.2 and 0.8 strength.
+    // Hover: a slow breath between 0.2 and 0.8 strength, out to the reach.
     U.uKPaint[3] = 0.5 + 0.3 * Math.sin(clock * PAINT_CONST.HOVER_PULSE_W);
     // Junction fillets ride the same tick: live positions, live paint.
     this.rebuildFillets();

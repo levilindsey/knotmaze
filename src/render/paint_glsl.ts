@@ -640,8 +640,8 @@ highp float kGoldU(highp float p) {
 }
 
 // The pulse trains' reach window (K75): full strength out to reach - fade
-// from the junction, smoothly gone at reach. Hover (kPulseV) is exempt: it
-// lights the whole run a tap would take.
+// from the junction, smoothly gone at reach. The hover stops there too
+// (K93).
 highp float kReachWin(highp float d) {
   highp float f = max(uKReach.y, 1e-4);
   return 1.0 - kSmooth((d - (uKReach.x - f)) / f);
@@ -650,7 +650,7 @@ highp float kReachWin(highp float d) {
 highp float kPulseV(highp float d, highp float span, bool inward, bool hovered) {
   if (d < 0.0 || d > span) return 0.0;
   highp float endWin = clamp((span - d) / PULSE_END_WINDOW, 0.0, 1.0);
-  if (hovered) return endWin * uKPaint.w;
+  if (hovered) return endWin * uKPaint.w * kReachWin(d);
   highp float s = uKPulse.z;
   highp float raw = inward ? d + uKPulse.x : d - uKPulse.y;
   highp float ph = raw - s * floor(raw / s);

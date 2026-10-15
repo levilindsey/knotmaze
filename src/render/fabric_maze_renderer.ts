@@ -11,14 +11,16 @@
 // choosable run - while on the arrival run (the backtrack) the crest slides
 // IN, phase-synced so the flow reads as continuous through the junction.
 // The trains reach pulseReach along each arm (K75; RibbonRenderer).
-// Hovering a choosable run lights it steadily, end to end.
+// Hovering a choosable run lights it steadily out to the same reach,
+// fading over its end like the trains (K93).
 //
 // MEMORY-TRAIL MODE (Stage 23, `trailMode`): instead of the full traveled
 // path, only the trailing SUFFIX of the path stays gold - walked backward
 // from the visual head accumulating each run's deterministic lattice
 // length until `trailLength` is spent; the oldest included run gets a
 // partial ctrl span and the tail ramps gold->base over the oldest 30% of
-// the budget (fading footprints). Junction caps appear only inside the
+// the budget (fading footprints; trail_paint.ts, which splits the run
+// holding the fade start - K93). Junction caps appear only inside the
 // trail, at the trail's local intensity. The head-junction pulse/choice/
 // hover machinery is untouched.
 
@@ -40,6 +42,7 @@ import type {
 } from "./ribbon_renderer";
 import { legRoutes, pathLegs, traveledRoutes } from "./junction_routes";
 import type { PaintRoute } from "./junction_routes";
+import { trailFade, trailSpans } from "./trail_paint";
 import type { MinoFog, PathViz } from "../ui/url_state";
 import { spotCtrl } from "../game/minotaur";
 import type { MinotaurChase, MinotaurMode } from "../game/minotaur";
@@ -106,9 +109,7 @@ const HEAD_EXCLUDE = 0.7;
 const MOVE_CTRL_PER_S = 34;
 const MOVE_CURVE_SLOWDOWN = 2.2; // Per radian-per-ctrl of local turn.
 const MOVE_MIN_FACTOR = 0.3;
-// Memory-trail tail fade: the oldest fraction of the trail budget ramps
-// gold -> base (per-end PaintSpan intensities; the renderer interpolates).
-const TRAIL_FADE_FRAC = 0.3;
+// Memory-trail tail fade: trail_paint.ts (TRAIL_FADE_FRAC, the K93 split).
 
 // ARIADNE STRING (Stage 24, pathViz "string"): instead of recoloring the
 // thread, a thin white yarn UNSPOOLS along everywhere you walk - one
@@ -1378,10 +1379,11 @@ export class FabricMazeRenderer {
   }
 
   // Walk backward from the visual head accumulating lattice length until
-  // trailLength is exhausted; the oldest included segment keeps only the
-  // suffix nearest the head (ctrl span interpolated by the remaining
-  // budget). Intensity ramps gold -> base over the oldest TRAIL_FADE_FRAC
-  // of the budget. Junction caps only inside the trail, at the trail's
+  // trailLength is exhausted (trail_paint.ts trailSpans): the oldest
+  // included segment keeps only the suffix nearest the head, solid gold
+  // out to the fade start, then a linear ramp to base over the oldest
+  // TRAIL_FADE_FRAC of the budget (K93: the segment holding the fade start
+  // is split there). Junction caps only inside the trail, at the trail's
   // local intensity (a full-gold cap on a faded ribbon would float - the
   // overlays-sample-what-they-overlap rule).
   private buildTrail(
@@ -1390,37 +1392,11 @@ export class FabricMazeRenderer {
   ): TrailPaint {
     const segs = this.trailSegments(controller, anim);
     const L = Math.max(1e-6, this.trailLength);
-    const fadeStart = L * (1 - TRAIL_FADE_FRAC);
-    const pAt = (d: number): number =>
-      d <= fadeStart ? 1 : Math.max(0, (L - d) / (L - fadeStart));
-
-    const spans: PaintSpan[] = [];
-    let d = 0; // Path distance behind the visual head.
-    for (let i = segs.length - 1; i >= 0 && d < L; i--) {
-      const s = segs[i];
-      if (s.len <= 1e-9) continue;
-      const dNear = d;
-      let dFar = d + s.len;
-      let fromC = s.from;
-      if (dFar > L) {
-        const keep = (L - dNear) / s.len;
-        fromC = s.to - (s.to - s.from) * keep;
-        dFar = L;
-      }
-      const toIsC0 = s.to <= fromC;
-      const span: PaintSpan = {
-        chain: s.e.chain,
-        c0: Math.min(fromC, s.to),
-        c1: Math.max(fromC, s.to),
-        p0: toIsC0 ? pAt(dNear) : pAt(dFar),
-        p1: toIsC0 ? pAt(dFar) : pAt(dNear),
-      };
-      spans.push(span);
-      d += s.len;
-    }
-    // Oldest first: where consecutive runs share a junction sample, the
-    // newest (brightest) write wins.
-    spans.reverse();
+    const pAt = trailFade(L);
+    const spans: PaintSpan[] = trailSpans(
+      segs.map((s) => ({ chain: s.e.chain, from: s.from, to: s.to, len: s.len })),
+      L
+    );
 
     // Caps: vertex i departs segment i (segment counts mirror path-edge
     // indices in every anim case), so its distance behind the head is the

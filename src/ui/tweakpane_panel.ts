@@ -713,7 +713,7 @@ export function buildPanel(
   );
   const pulseReachRow = row(
     fMaze, p, "pulseReach", { min: 0.5, max: 15, step: 0.25 },
-    "How far the current junction's pulses travel along each arm, in lattice units, before fading out. Applies live.",
+    "How far the current junction's pulses, and the hover highlight on a choice, reach along each arm, in lattice units, before fading out. Applies live.",
     D.pulseReach, () => callbacks.onTrailChange()
   );
   const mazeStatsRow = row(
