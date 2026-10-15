@@ -2288,12 +2288,15 @@ export class FabricMazeRenderer {
     view: ExploreView | null;
     seen: string[];
     runs: number[];
+    gaps: ReturnType<RibbonRenderer["exploreGapState"]>;
   } {
     return {
       explore: { ...this.explore },
       view: this.exploreLast,
       seen: [...this.seenV.keys()],
       runs: [...this.seenRuns],
+      // K268: the gap gate's slot kinds and the slot table's uploads.
+      gaps: this.ribbons.exploreGapState(),
     };
   }
 

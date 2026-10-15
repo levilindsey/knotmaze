@@ -120,7 +120,16 @@ import {
 } from "./junction_field";
 import { pickRoutes, routeCorner, routeCubic } from "./junction_routes";
 import { WebFade } from "./web_fade";
-import { EXPLORE_ITEM_VIS, chainWhole, visItem, visRange, withExplore } from "./explore_glsl";
+import {
+  EXPLORE_ITEM_VIS,
+  chainWhole,
+  classifyExploreCut,
+  exploreArcMap,
+  visItem,
+  visRange,
+  withExplore,
+} from "./explore_glsl";
+import type { ExploreCut } from "./explore_glsl";
 import { pieceVis } from "../game/explore_view";
 import type { ExplorePiece } from "../game/explore_view";
 import type { PaintRoute } from "./junction_routes";
@@ -134,6 +143,7 @@ import {
 import {
   GAP_FRAG,
   GAP_MAX_PTS,
+  GAP_UPLOAD_STATS,
   GAP_PROT_PTS,
   GAP_SLOTS,
   GAP_VERT_DECL,
@@ -4577,13 +4587,36 @@ export class RibbonRenderer {
   // rule). With the mode off every slot is restored as solved. Flags
   // exploreUpdatePending when update()'s bookkeeping no longer matches
   // (see there). Returns whether the slot table changed.
+  //
+  // K268 stage 1, THE SHAPED CUT (docs/design/K268.md): with the mode on, a
+  // slot whose footprint holds one or two piece ends gets a visibility
+  // profile instead (GapMaskTable.setShape): the explore program cuts each
+  // under fragment by the over thread's visibility at its projection, so a
+  // fade's gap fades along the over thread exactly as the thread does.
+  // Hidden, solid and fallback slots keep 2b's scalar (setVis); a shaped
+  // slot's texel 1.w still carries it for the fans and the still pluck.
   private applyExploreGaps(): boolean {
     const on = this.explorePieces !== null;
     let changed = false;
+    const st = this.exploreGapCounts;
+    st.hidden = st.solid = st.shaped = st.fallback = st.approx = st.mismatch = 0;
     for (let s = 0; s < this.markerBase; s++) {
       if (!this.slotLive[s]) continue;
       const v = on ? this.exploreVisAt(this.slotOverChain[s], this.slotOverCtrl[s]) : 1;
-      if (this.gaps.setVis(s, v)) changed = true;
+      const cut = on ? this.exploreCutAt(s, v) : null;
+      if (cut && cut.shape) {
+        if (this.gaps.setShape(s, cut.shape)) changed = true;
+      } else {
+        if (this.gaps.setShape(s, null)) changed = true;
+        if (this.gaps.setVis(s, v)) changed = true;
+      }
+      if (cut) {
+        st[cut.kind]++;
+        if (cut.approx) st.approx++;
+        if ((cut.kind === "hidden" && v !== 0) || (cut.kind === "solid" && v !== 1)) {
+          st.mismatch++;
+        }
+      }
       if ((on && v <= 0.5 ? 1 : 0) !== this.slotExploreHid[s]) {
         this.exploreUpdatePending = true;
       }
@@ -4598,6 +4631,65 @@ export class RibbonRenderer {
       }
     }
     return changed;
+  }
+
+  // K268: how the over thread's visibility runs across slot s's footprint
+  // (the arc range its polyline spans), given 2b's scalar v at the over
+  // pass (the shaped slot's texel 1.w).
+  private exploreCutAt(s: number, v: number): ExploreCut {
+    const ch = this.slotOverChain[s];
+    const samples = this.chainSamples[ch];
+    if (ch < 0 || !samples || this.exploreWhole[ch]) {
+      return classifyExploreCut([], true, 0, false, 0, 0, 0, () => 0, v);
+    }
+    const oc = this.slotOverCtrl[s];
+    const n = this.ps.chains[ch].length;
+    const closed = this.ps.chainBreakAfter[ch] < 0;
+    const [aLo, aHi] = this.gaps.polyRange(s);
+    const arc = exploreArcMap(
+      samples.controlArcLengths,
+      samples.totalLength,
+      closed,
+      oc,
+      this.arcAt(samples, oc)
+    );
+    const pieces = this.exploreByChain.get(ch) ?? [];
+    return classifyExploreCut(pieces, false, n, closed, oc, aLo, aHi, arc, v);
+  }
+
+  // K268: what the last gap gate made of the live crossing slots (counts by
+  // kind; mismatch = a hidden slot with vis != 0 or a solid one with vis !=
+  // 1 at the over pass, which should not happen) and the slot table's
+  // upload totals (probes).
+  private readonly exploreGapCounts = {
+    hidden: 0,
+    solid: 0,
+    shaped: 0,
+    fallback: 0,
+    approx: 0,
+    mismatch: 0,
+  };
+  exploreGapState(): {
+    hidden: number;
+    solid: number;
+    shaped: number;
+    fallback: number;
+    approx: number;
+    mismatch: number;
+    uploadBytes: number;
+    uploadCalls: number;
+    shapedSlots: number[];
+  } {
+    const shapedSlots: number[] = [];
+    for (let s = 0; s < this.markerBase; s++) {
+      if (this.slotLive[s] && this.gaps.isShaped(s)) shapedSlots.push(s);
+    }
+    return {
+      ...this.exploreGapCounts,
+      uploadBytes: GAP_UPLOAD_STATS.bytes,
+      uploadCalls: GAP_UPLOAD_STATS.calls,
+      shapedSlots,
+    };
   }
 
   // K76 2b, THE JOINT GATE (K76_reveal_mode.md 2.4): which joints the
