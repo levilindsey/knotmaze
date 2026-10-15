@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K358.
+Next free ID: K360.
 
 ## Waiting on Levi
 
@@ -634,68 +634,14 @@ Next free ID: K358.
   - evidence: `.claude/probes/K279/` (stage 1: `sheet2/`, `k279_wake.mjs`); stage 2's in its worktree's `.claude/probes/K279/stage2/`
   - next: stage 2 makes glint the default `prp`, bounds and warms the ripple filter, checks glint's phone size and K289 (j, k); then the merge and the next phone round
   - brief: `docs/design/K279.md`, "Stage 2: glint by default"
-- **K7** · Physics in a Web Worker, with render-side interpolation between
-  physics steps. Smooths the UI; it does not speed up physics. Acceptance
-  includes K28: the intro runs at full frame rate WHILE physics settles
-  (no settle-first loader wait). K147's per-frame budget is the
-  main-thread interim (a smooth intro over a slow-motion settle); the
-  worker gives the settle a whole core. Levi asked when it lands
-  (2026-10-14 about 18:56), approved it as the next build at about 19:00
-  ("1. Yes."), ahead of K76 2c and K268 stage 2, and asked at about 19:01
-  whether the intro will then run at normal frame rates; the design
-  answers that with numbers.
-  - The design (merged 2026-10-14 20:10, 0c3c694..eab4287; desktop,
-    measured on 0d88091): the daily's intro at about 56 fps instead of
-    22.7, smooth but not a locked 60; its two freezes (2.7 s at 1.1 s,
-    2.0 s at 3.8 s) stay, since they happen with physics paused too
-    (cold shader compiles, traced by K307); the first sleep at about 12 s
-    instead of 20.7; drags at gs 18 at 55-60 fps instead of 7, in 0.76x
-    real time; dense render-bound at about 30 fps (K8); the phone likely
-    40-60 fps, unproven until stage 5. Transferred buffers (no SAB, no
-    COOP/COEP), a mirror ParticleSystem on main, fallbacks on error or a
-    3 s timeout. Levi's 11 calls: K302, all yes (2026-10-14 21:18).
-  - stage 1 (the in-thread physics host) merged at 22:04
-    (67c0604..e0980b5, deployed): `PhysicsHost`, `PhysicsCore` and
-    `InThreadHost` in
-    `src/physics/physics_host.ts`, `grabAt`, `buildSceneGraph` in
-    `src/core/scene_graph.ts`, every physics write in `main.ts` through
-    `host` (`ps` is a read alias), and the guard
-    `test/physics/host_seam.test.ts`. 941 tests pass, no snapshot moved,
-    and the hidden loads end bit-identical to master's. The A/B matched:
-    the daily's first sleep 20.96/20.68 s against master's 20.68/20.66,
-    drags 7.0 fps on both, the knot's first sleep 16.69 s against 16.56.
-    Residuals K314 and K315.
-  - stage 2 (the worker core, in Node) merged at 23:21 (86708b4..472ef83): the
-    step split into `beginFrame` and `runSubstep` (identical bits, the
-    same speed within noise), `src/physics/snapshot.ts` (40,936 bytes at
-    `?7`), `MirrorSystem` (`src/physics/mirror_system.ts`) and
-    `PhysicsWorkerCore` (`src/physics/physics_worker_core.ts`), its clock
-    per Design 4. 973 tests pass and no snapshot moved; the worker core
-    and `InThreadHost` run bit-identical in lockstep on every frame. Its
-    departures from the brief and its "For stage 3" list are in the
-    brief's "Stage 2 handoff". Residual K346, idea K347.
-  - owner: agent a9f593eca9038e6d3 (opus) of claude session d8031183, stage 3
-    from 23:22 (cap 01:22; ports 5792-5795).
-  - branch: `worktree-agent-a9f593eca9038e6d3`
-    (`.claude/worktrees/agent-a9f593eca9038e6d3`, from 472ef83); last
-    commit: `472ef83` (master) until its first WIP commit.
-  - evidence: the design's `.claude/probes/K7/design/`
-    (`k7_results.jsonl`, `frames/`, `summarize.mjs`, `run_k7.ps1`,
-    `k7_frames.mjs`, `transport/`, `spike/`); stage 1's
-    `.claude/probes/K7/stage1/` (`load_probe.mjs`, `input_probe.mjs`,
-    the A/B); stage 2's `.claude/probes/K7/stage2/` (`results.md`, the
-    split timing) and `test/physics/physics_host.test.ts`,
-    `snapshot.test.ts` and `fabric_scene.ts`; stage 3's probes under
-    `.claude/probes/K7/stage3/` in its worktree.
-  - next: stage 3 (the worker in the browser behind `phw`, off by
-    default), then 4 and 5. Stage 3 checks that pre-settle slices
-    answered from a `settled` message arrive a frame late. Stage 4 also
-    attributes the main-thread JS that K307's trace left unexplained
-    (about 86 ms in the first freeze, 47 ms in the second, and an
-    80-96 ms frame at about 6.1 s). Stages 1 and 4 own `main.ts`; stage 5
-    needs the phone.
-  - brief: `docs/design/K7_worker.md`, "Stage 2 handoff" and "Stage 3:
-    the worker in the browser, behind `phw`".
+- **K7** · Physics in a Web Worker with render-side interpolation, so the
+  intro runs at full frame rate while physics settles (K28). Levi's calls:
+  K302. Stages 1-3 merged; stage 3 put the worker behind `phw` (63603bd..7f4c1bd).
+  - owner: agent `abee0faca59fb8636` (opus) of claude session d8031183, from 2026-10-15 00:48 (cap 02:48; ports 5796-5797; owns `main.ts`)
+  - branch: `worktree-agent-abee0faca59fb8636` (`.claude/worktrees/agent-abee0faca59fb8636`); last commit: none yet (base `7f4c1bd`)
+  - evidence: `.claude/probes/K7/` (stage 3: `stage3/` with `run_s3.ps1`, `k7_frames.mjs`, the results); stage 4's in its worktree's `.claude/probes/K7/stage4/`
+  - next: stage 4, the diagnostic bridge and desktop acceptance under the perf lock, with K307's unexplained main-thread JS; then stage 5 (the phone, the worker by default); then K5 and K6
+  - brief: `docs/design/K7_worker.md`, "Stage 4" and the stage 3 handoff's "For stage 4"
 - **K307** · The daily intro's freezes are cold shader compiles (stage
   1's trace, 2026-10-14 21:39; the desktop's RX 6800 XT, ANGLE D3D11):
   bg-vellum about 0.28 s at 0.3 s, section-rgb about 2.8 s at 1.0 s,
@@ -1948,6 +1894,9 @@ Every other item below waits on the trigger it names.
 - **K356** · At another chain's crossing, the pluck clip's straight line
   misses a curving over thread: zoomed in, a blur sliver shows over it
   (`.claude/probes/K344/out/nc/`). Fix: an arc clip, or over passes on top.
+- **K358** · The physics worker's modules reach the notices collector
+  before main's `generateBundle` (inferred in K7 stage 3, nothing depends
+  on it yet): add a check when a worker-only package arrives.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2232,6 +2181,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   under the new rules (`censusPress()` covers one maze).
 - **K352** · Type `LIVE_EFFECTS`'s keys (`src/ui/undo_stack.ts`) as
   `keyof UrlParams`, so a renamed param fails the build (from K339).
+- **K359** · Replace the pre-settle's spent-prediction shim
+  (`presettleFrame`, K7 stage 3) with an explicit "settling in the worker"
+  signal from the physics host.
 
 ## Done
 
