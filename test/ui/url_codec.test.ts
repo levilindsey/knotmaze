@@ -10,6 +10,7 @@ import {
   writeParams,
 } from "../../src/ui/url_state";
 import type { AppearPreset, UrlParams } from "../../src/ui/url_state";
+import { parseLaunch } from "../../src/ui/daily_link";
 import { CODEC_PARAMS, numberText } from "../../src/ui/param_codec";
 import { DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { DEFAULT_CHASE_PARAMS } from "../../src/game/minotaur";
@@ -338,7 +339,124 @@ describe("key=value links", () => {
   });
 });
 
+// Every param's override key (url_state.ts readLegacy), in PARAM_DEFAULTS
+// order. Links already sent carry them after a token (`?7.J&clk=realtime`
+// went out by email), so a key is never renamed or dropped, and a new param
+// gets one here and in readLegacy.
+const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
+  gridSize: "gs", shape: "shp", startAnchor: "sa", exitAnchor: "xa",
+  weaveDensity: "wd", turnBias: "tb", slack: "sl", simSpeed: "sp", drag: "dr",
+  repulsion: "rep", bend: "bd", smooth: "sm", stiffness: "st", gridAlign: "ga",
+  threadWidth: "tw", gap: "gap", moveSpeed: "ms", cuspRadius: "cr",
+  fadeLength: "fl", flowStrength: "fw", flowSpeed: "fv", tugLimit: "tl",
+  snapBack: "sb", soundMode: "snd", pitchSpace: "sc", octaves: "oct",
+  soundSpeed: "ss", volume: "vol", reverb: "rv", brightness: "brt",
+  sustain: "sus", shimmer: "shm", pickPosition: "pp", snappiness: "snpy",
+  rootNote: "rn", tonicEmphasis: "tnc", pulseSpacing: "psp", hueShift: "hs",
+  gamutArc: "arc", palette: "pal", pathColor: "pc", branchDensity: "brd",
+  fourWayFraction: "fwf", deadEndDensity: "ded", pluckStyle: "pk",
+  pluckSize: "psz", pluckGhost: "pgh", pluckReach: "prc", physics: "phy",
+  mazeFabric: "mf", deadEnds: "de", pathViz: "pv", cameraMode: "cam",
+  trailLength: "trl", tension: "tn", fogOfWar: "fow", fowRadius: "fr",
+  fowIntro: "fwi", colorScheme: "cs", junctionBlend: "jbl", appearMode: "am",
+  appearSequence: "ap", appearSpeed: "as", appearFx: "afx",
+  entranceClearance: "ecl", exitClearance: "xcl", junctionSpacing: "jsp",
+  background: "bg", backgroundIntensity: "bgi", pulseReach: "pr",
+  backgroundSpeed: "bgs", deadEndLength: "del", backgroundScale: "bgsz",
+  backgroundDetail: "bgdt", backgroundFibers: "bgfb", backgroundGrain: "bggr",
+  backgroundAngle: "bgan", backgroundColorMode: "bgcm", backgroundBase: "bgc0",
+  backgroundAccent1: "bgc1", backgroundAccent2: "bgc2", backgroundAccent3: "bgc3",
+  settleBudget: "stb", loadSettle: "lds", clock: "clk", playerPace: "plp",
+  minoWanderPace: "mwp", minoHuntPace: "mhp", minoPaceJitter: "mpj",
+  minoPauseChance: "mpc", minoPauseMin: "mpn", minoPauseMax: "mpx",
+  minoDetect: "mdt", minoLose: "mls", minoCatch: "mct", minoDeadEnds: "mde",
+  minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", confetti: "cf",
+  confettiAmount: "cfa", pluckWhole: "pw", pluckCrossings: "pcx",
+  pluckGlow: "pgl",
+};
+const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
+
+// A value other than the default and inside every clamp: an enum's first
+// other option, a boolean flipped, another color, a number halved (the two
+// that read -1 as auto get real values). appearMode takes instant: random
+// re-rolls on every load.
+function otherValue(name: keyof typeof PARAM_DEFAULTS): string | number | boolean {
+  const d: unknown = PARAM_DEFAULTS[name];
+  if (name === "appearMode") return "instant";
+  const options = ENUM_OPTIONS[name];
+  if (options) return options.find((o) => o !== d)!;
+  if (typeof d === "boolean") return !d;
+  if (typeof d === "string") {
+    expect([name, d]).toEqual([name, expect.stringMatching(/^#[0-9a-f]{6}$/)]);
+    return d === "#123abc" ? "#abc123" : "#123abc";
+  }
+  if (name === "backgroundSpeed") return 2;
+  if (name === "backgroundAngle") return 90;
+  return (d as number) * 0.5;
+}
+// As a link writes it: booleans 0/1, colors without the "#".
+const linkText = (v: string | number | boolean): string =>
+  typeof v === "boolean" ? (v ? "1" : "0") : String(v).replace(/^#/, "");
+
 describe("token + overrides", () => {
+  // K132: links sent to Levi before K132 (an email and a reminder) carry
+  // overrides after `?7.J`, the all-default v4 token. They keep loading
+  // as seed 7 at today's defaults plus the override, as designs.
+  it("keeps the links already sent working", () => {
+    const warn = warnings();
+    const sent: Array<[string, Partial<UrlParams>]> = [
+      ["?7.J", {}],
+      ["?7.J&clk=realtime", { clock: "realtime" }],
+      ["?7.J&cam=follow", { cameraMode: "follow" }],
+      [
+        "?7.J&pw=1&pcx=ride&pgl=fallback",
+        { pluckWhole: 1, pluckCrossings: "ride", pluckGlow: "fallback" },
+      ],
+    ];
+    for (const [q, over] of sent) {
+      const p = withSeed(7, over);
+      expect([q, parseParams(q)]).toEqual([q, p]);
+      expect([q, parseLaunch(q, 3)]).toEqual([
+        q,
+        { params: p, daily: null, floating: false },
+      ]);
+      // The page rewrites it to one token, which reads back the same.
+      expect([q, parseParams("?" + encodeParams(p))]).toEqual([q, p]);
+    }
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("reads every param's override key after a token", () => {
+    const names = Object.keys(PARAM_DEFAULTS) as Array<keyof typeof PARAM_DEFAULTS>;
+    // One key per param, none shared, none the seed's own keys.
+    expect(Object.keys(OVERRIDE_KEYS).sort()).toEqual([...names].sort());
+    const keys = Object.values(OVERRIDE_KEYS);
+    expect(new Set([...keys, "s", "seed"]).size).toBe(keys.length + 2);
+    const warn = warnings();
+    const rest = (p: UrlParams) =>
+      Object.fromEntries(
+        Object.entries(p).filter(([k]) => !APPEAR_GROUP.includes(k))
+      );
+    for (const name of names) {
+      const value = otherValue(name);
+      expect([name, value]).not.toEqual([name, PARAM_DEFAULTS[name]]);
+      const q = `?7.J&${OVERRIDE_KEYS[name]}=${linkText(value)}`;
+      const p = parseParams(q);
+      // The value lands and nothing else moves (in the appearance group the
+      // mode follows the values).
+      expect([q, p[name]]).toEqual([q, value]);
+      const want = withSeed(7, { [name]: value });
+      if (APPEAR_GROUP.includes(name)) {
+        expect([q, rest(p)]).toEqual([q, rest(want)]);
+      } else {
+        expect([q, p]).toEqual([q, want]);
+      }
+      // And survives the page's rewrite to a token.
+      expect([q, parseParams("?" + encodeParams(p))]).toEqual([q, p]);
+    }
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it("applies key=value pairs after the token, then folds them in", () => {
     const p = parseParams(`?${USER_COMPACT}&am=instant&tw=.5`);
     expect(p).toEqual({
