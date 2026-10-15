@@ -999,3 +999,35 @@ At the stop:
      renderer item in flight. M8's optional SceneState is the main.ts
      version of the same choice, and the same answer holds there: it is
      optional, and it comes last.
+
+## Stage 1 launch notes (2026-10-15, the coordinator)
+
+Master has moved since the design (4931204), so the brief's line numbers
+(f04aa4b) are stale; step 1's re-map is for that.
+`git log --oneline 4931204..master -- src/main.ts` lists the merges.
+
+- **The physics worker is the default** (K7 stages 5 and 6; `url_state.ts`
+  `physicsWorker: true`), and `&phw=0` runs in-thread. A probe that
+  patches `ps.step` throws on a default build (`probes.md`, the K7
+  worker note), so run the checks' probes with an explicit `phw=0` and
+  `phw=1`, as the brief's `k7_frames.mjs` line does.
+- **K290's burnt thread** added two main.ts lines that move with their
+  regions: `f.burntLook = params.burnt` in syncExploration, and a
+  `burnt` key in the `__knotExplore` hook.
+- **Running alongside you:** K307 stage 2 (the shader warm-up) edits
+  main.ts's gate only: the early start, the two gates on
+  `finishPresettle`, the background hold and the loader rule, each a few
+  calls into `shader_warmup.ts`. The loader rule touches
+  `createLoader()`, which your step 3 moves. Whichever lands second
+  rebases; if K307 lands first, your moved loader carries its edit and
+  the hook inventory gains `__knotWarmup`. K76 stage 2d (the thread
+  reveal's phone gate and High contrast dots) may make small main.ts
+  edits. The coordinator may ask you to rebase mid-stage; do it when
+  asked, and redo the hook inventory against the new base.
+- **K7 stage 7** (the worker's start-gate lever) waits for M1: both edit
+  main.ts's boot.
+- **No helpers tonight:** write the re-map script and take the hook
+  inventory yourself (this overrides the brief's Helpers line).
+- **The perf lock** covers tests and builds too:
+  `pwsh C:\Users\lsl\Repositories\knotmaze\.claude\probes\K268\lock_take.ps1 -Owner 'K5 M1' -What '<what>'`,
+  then `lock_release.ps1 -Owner 'K5 M1'`. No phone.
