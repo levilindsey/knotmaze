@@ -210,3 +210,86 @@ branch.
   - the stage plan;
   - a `Ledger items` list;
   - the handle fields: branch, last commit, evidence and next.
+
+## Design (WIP, rough: being written 2026-10-14 19:30)
+
+Evidence: `.claude/probes/K7/design/` (untracked). `k7_frames.mjs` +
+`run_k7.ps1` (the frame batches, under the perf lock), `k7_results.jsonl`
+(`node summarize.mjs` prints it), `transport/` (the transfer microbench),
+`spike/` (a real module Worker running `ParticleSystem`).
+
+### Measured today (master 0d88091, desktop, under the perf lock)
+
+5900X (24 threads), RX 6800 XT, Chrome 155, 1600x900 at dsf 1.5 (canvas
+2400x1350). "Render-alone" = the rAF callback minus `ps.step`.
+
+| Run | particles | fps | rAF p50 / p95 ms | physics ms/frame | render-alone p50 / p95 | sim/wall | first sleep |
+|---|---|---|---|---|---|---|---|
+| daily front door, intro (1.1-11.8 s) | 2977 | 22.7 | 18 / 36 | 10.5 (1 substep) | 14.1 / 17.2 | 0.19 | 20.7-20.9 s |
+| daily intro after its last hitch (5.75-11.8 s) | 2977 | 39.8 | 18 / 36 | 10.5 | 14.1 / 16.8 | 0.33 | |
+| daily, intro over to sleep | 2977 | 36.1 | 35 / 36 | 10.7 | 16.0 / 17.6 | 0.30 | |
+| daily intro, physics paused (render alone) | 2977 | 32.4 (56.2 after the hitches) | 17.5 / 18.1 | 0 | 14.9 / 17-18 | 0 | |
+| daily drag (60 px circle, 3 s) | 2977 | 7.0 | 141 / 158 | 125 (12 substeps) | 16.4 / 18.1 | 0.70 | |
+| daily bare wake | 2977 | 9.3 | 140 / 158 | 125 | 16.0 / 17.1 | 0.67 | |
+| knot `?7k&mf=0`, settle | 2592 | 36.8 | 18 / 36 | 8.2 | 13.5 / 14.6 | 0.31 | 16.5 s |
+| knot drag / wake | 2592 | 8.9 / 10.7 | 107 / 125 | 98 | 13.4 | 0.89 | |
+| fabric `?b`, settle | 3011 | 28.2 | 35 / 36 | 10.8 | 15.7 / 17.4 | 0.24 | 21.5 s |
+| fabric drag / wake | 3011 | 6.9 / 9.3 | 141 / 159 | 126 | 15.7 | 0.69 | |
+| dense `?b&gs=24&wd=0.6&brd=0.6`, settle | 5448 | 16.5 | 53 / 54 | 20.0 | **31.0 / 33.8** | 0.14 | 36.5 s |
+| dense drag / wake | 5448 | 3.7 / 5.1 | 266 / 299 | 237 | 31.5 | 0.37 | |
+
+- The daily's intro also carries two shader-compile hitches: 2675 ms at
+  1.09 s and 1978 ms at 3.78 s (both runs, paused or not). The worker
+  cannot touch them (K8/K9's GPU pipeline, or a warm-up).
+- K147's numbers: pre-settle 734 ms wall (467 ms work, 0.28 sim-s), then
+  the budget phase for 19.6 s, 9.6 sim-s dropped, 10.7 ms/substep.
+- The reveal's own share is inside render-alone: render-alone during the
+  intro (14.1-15.0 ms) is BELOW render-alone after it (16.0 ms), because
+  the reveal hides geometry; `reveal.tick` is not exposed to time alone.
+
+### Transport (measured, `transport/`)
+
+- Per message on the main thread: structured clone 0.035-0.045 ms (p95
+  <= 0.065) at 72-106 KB, 0.15-0.17 ms at 400 KB; a transferred buffer
+  0.005 ms at every size; a SAB copy 0.002-0.003 ms per 100 KB.
+- Every option costs under 0.1 ms a frame. **SAB, and the COOP/COEP it
+  needs, is unnecessary.** Call: transferred ping-pong buffers (a pool of
+  3); a clone would also do.
+
+### The spike (measured, `spike/`; a real module Worker, Vite's relative
+base, served under `/knotmaze/` with NO COOP/COEP)
+
+| design | worker startup ms (gen + ctor) | ms/substep main / worker | worker sim/wall (free-running) | worker ms/substep with a 15 ms main busy-wait | snapshot age p50 / p95 ms (idle / busy main) | bit-identical to main |
+|---|---|---|---|---|---|---|
+| knot | 14-19 (3-4 + 4-5) | 8.2 / 8.1 | 1.00 | 8.1 | 4.6 / 8.2, 19.9 / 23.7 | yes |
+| fabric | 44-48 (32 + 5) | 10.5 / 10.5 | 0.78 | 10.6 | 5.4 / 10.3, 19.9 / 24.7 | yes |
+
+- Snapshot (positions + zPos f32) 31-36 KB; handler and copy cost on main
+  under 0.1 ms.
+- The worker steps exactly as fast as the main thread and does not slow
+  when the main thread is busy (12 cores).
+
+### Calls (rough)
+
+1. Transport: transferred buffers, no SAB, no COOP/COEP.
+2. Main keeps a mirror `ParticleSystem` built from the same graph (same
+   topology, stable `CrossingPass` objects); each snapshot's dynamic
+   arrays are copied into it. Renderer, fabric, camera, plucks, audio and
+   most probes keep reading it synchronously. Writes become messages
+   (`grabParticle(i, x, y)` resolves the grab on main's mirror).
+3. The worker owns the step, K147's accumulator/budget, the sleep gate's
+   quiet signal and the pre-settle; it steps flat out at up to real time,
+   dropping backlog beyond about one frame. Main interpolates the two
+   newest snapshots.
+4. Worker is the default once accepted; an in-thread host stays behind a
+   param for A/Bs and as the fallback.
+5. K5 and K6 are not prerequisites; a narrow PhysicsHost boundary is.
+
+### Expected with the worker (desktop)
+
+- The daily intro: about 56 fps (the measured render-alone rate) once the
+  two shader hitches are past; first sleep about 7 s after load instead
+  of 20.7 s (sim/wall about 0.78 instead of 0.24).
+- Drags and wakes: render at 55-60 fps, physics at about 0.78x real time
+  (knot 1.0x, dense 0.4x).
+- Dense: about 30 fps, render-bound (render-alone 31 ms).
