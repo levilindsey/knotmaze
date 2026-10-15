@@ -48,6 +48,13 @@ import type { SceneParams } from "../core/scene_graph";
 //   lives in localStorage and survives). stats().host says which and why.
 
 export const READY_TIMEOUT_MS = 3000;
+// The ready timeout counts main-thread chances to hear the worker, not wall
+// time: ticks of READY_TICK_MS, each worth its nominal time however late it
+// fires, so a main-thread stall costs one tick. The first frame of an
+// `am=instant` design compiles every shader at once (5.3 s on a cold GPU
+// cache in stage 3's probe) and a wall-time timer then failed a working
+// worker.
+export const READY_TICK_MS = 250;
 // Interpolation delay bounds (design 4) and the default before any
 // interval is measured.
 export const INTERP_MIN_MS = 8;
@@ -306,11 +313,7 @@ export class WorkerHost implements PhysicsHost {
     this.presettleFlag = false;
     this.liveWall0 = -1;
     this.buildWall0 = performance.now();
-    this.clearReadyTimer();
-    this.readyTimer = setTimeout(() => {
-      this.readyTimer = null;
-      if (!this.ready) this.fallBack(`no ready within ${this.readyTimeoutMs} ms`);
-    }, this.readyTimeoutMs);
+    this.armReadyTimer();
     this.postRaw({
       type: "init",
       gen: this.genN,
@@ -603,6 +606,8 @@ export class WorkerHost implements PhysicsHost {
       genMs: this.readyInfo.genMs,
       ctorMs: this.readyInfo.ctorMs,
       snapAgeMs: newest ? wallNow() - newest.wallAt : -1,
+      // The newest snapshot's sim time (the mirror shows it on a frame).
+      snapSim: newest ? newest.simTime : 0,
       substeps: newest ? newest.substeps : 0,
       workerFrames: newest ? newest.frames : 0,
       lagS: this.lastLag,
@@ -817,6 +822,22 @@ export class WorkerHost implements PhysicsHost {
       endedBy: by,
     };
     this.liveWall0 = -1;
+  }
+
+  // Counts READY_TICK_MS ticks, not wall time (see READY_TICK_MS).
+  private armReadyTimer(): void {
+    this.clearReadyTimer();
+    let left = Math.max(1, Math.ceil(this.readyTimeoutMs / READY_TICK_MS));
+    const tick = (): void => {
+      this.readyTimer = null;
+      if (this.ready || this.inThread) return;
+      if (--left <= 0) {
+        this.fallBack(`no ready within ${this.readyTimeoutMs} ms`);
+        return;
+      }
+      this.readyTimer = setTimeout(tick, READY_TICK_MS);
+    };
+    this.readyTimer = setTimeout(tick, READY_TICK_MS);
   }
 
   private clearReadyTimer(): void {
