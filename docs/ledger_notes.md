@@ -305,3 +305,59 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   resolution cap, over-tight folds keep today's pinch (Levi, 2026-10-13:
   "Pinching is probably better"), and G1's GPU levers fold in. Dense
   (5448 particles) is render-bound at about 30 fps, which K7 doesn't fix.
+
+## K344 (2026-10-15, closed)
+
+- **K344** · A sharp cusp in the pluck vibration on a self-crossing loop
+  (Levi, 2026-10-14 about 23:04: "There's a sharp discontinuous cusp
+  with the vibration effect on this loop along the bottom of the loop.
+  Can we fix this general problem?"; on the LAN dev server,
+  `?qoietk.KIiHgRRXwRlRt8fGrST4sf`; his inspect: crossing 104, chain 21
+  crossing itself, over at ctrl 102 and under at ctrl 110.205). The fix
+  covers the general case, not this loop alone. One opus stage in the
+  confetti stage's slot: `docs/design/K344_pluck_cusp.md`.
+  - owner: agent a67c6d4d11a9ea6b4 (opus) of claude session d8031183,
+    from 23:30 (cap 01:30; ports 5890-5899).
+  - branch: `worktree-agent-a67c6d4d11a9ea6b4`
+    (`.claude/worktrees/agent-a67c6d4d11a9ea6b4`, from 79c5a97); last
+    commit: `79c5a97` (master; none of its own yet).
+  - evidence: `.claude/probes/K344/` in its worktree.
+  - next: reproduce on Levi's link at 1400x900, measure the cusp's
+    geometry, fix the general case with a test that fails first, the
+    after sheet, lore and the handoff; then the merge.
+  - brief: `docs/design/K344_pluck_cusp.md`.
+
+## K279 (2026-10-15, stage 2 launched)
+
+- **K279** · Plucks you can see, feel and hear (Levi, 2026-10-14 about
+  16:11 and 16:12, verbatim: "I want to make plucks visualizations more
+  emphasized. Can we add a new non-physics-based shock-wave/ripple sort
+  of undulation sort of effect around pluck points? This should be made
+  more subtle around autoplucks than player plucks. Also, I wonder if
+  there is something else more we can do to show the plucked segment
+  vibrating. Maybe add a bit of the physics-based tug to it as
+  well,.and also increase the default visual vibration effect?" and
+  "Also, I want manual plucks to be louder than auto plucks"). Stage 1
+  prototypes each ask behind params (a ripple dropdown with a weaker
+  auto-pluck strength, more vibration looks, a physics tug for player
+  plucks, a stronger default vibration, an auto-pluck gain) and shows
+  Levi a sheet; stage 2 finishes what he picks. Stage 1 built all six
+  behind ten daily-exempt params (seven codec appends; the vibration
+  defaults rose to `psz` 2, `pgh` .5, `pw` .75) and the sheet, sent to
+  Levi at 17:52 (his picks are K288, the residuals K289). Merged
+  2026-10-14 18:20 (50c1aab..ad2618a, 925 tests; codec rows 121-127) with the
+  tug off by default (`ptg` 0; `&ptg=0.3` is the built strength): the
+  follow-up timed a tap with the tug, a drag and a bare wake at the same
+  7-9 fps on an idle desktop, the physics' own wake cost (K16), with no
+  wake-path bug.
+  - owner: nobody since 2026-10-14 23:55; stage 2 is ready to launch
+    (K288 picked). Stage 1's worktree (agent abf68d906aaae3609) is kept.
+  - branch: mainline; last commit: `ad2618a`.
+  - evidence: `.claude/probes/K279/` (copied at the merge): the sheet in
+    `sheet2/`, the wake probe `k279_wake.mjs` with `wake.log` and
+    `wake/wake_1400x900x2.json`, `test_run5.txt`; stage 1's neutral A/B
+    was 0 px in 6 cases.
+  - next: stage 2 builds K288's picks (glint the default `prp`); check
+    it against K344's pluck-overlay fix first. Phone: 60 fps in every
+    look; `ptg=0.3` stutters, so the tug stays off.
+  - brief: `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
