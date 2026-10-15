@@ -257,6 +257,9 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // K298: the hover glow's own length and its end fade.
   num("hoverGlowLength"), // 131
   num("hoverGlowFade"), // 132
+  // K298: the mouse's pick margin and the choices' multiple of it.
+  num("pickMargin"), // 133
+  num("pickChoiceRatio"), // 134
 ]);
 
 // The format version a blob names first. Bump it for anything but an

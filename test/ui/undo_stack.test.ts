@@ -214,6 +214,14 @@ describe("restorePlan", () => {
       rebuild: false,
       effects: ["onTrailChange"],
     });
+    // K298: the pick margins run Touch & feel's callback.
+    expect(
+      restorePlan(a, { ...a, pickMargin: 2, pickChoiceRatio: 2 }, false)
+    ).toEqual({
+      changed: ["pickMargin", "pickChoiceRatio"],
+      rebuild: false,
+      effects: ["onSlackChange"],
+    });
   });
 
   it("lists only real params, each under one effect", () => {
