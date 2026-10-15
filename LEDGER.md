@@ -244,6 +244,15 @@ and never reused.
   (`pendingWin`, `src/main.ts` about line 2079) and the Reset path during
   the winning move, or only on a live finish? (3) the colors (a festive
   set built from the gold 0xffd23f) and the default amount, 1?
+- **K294** · Per-model minotaur tuning (K80 turns stage 2's call): the
+  hunter, guard and stalker share sight and accuracy, so the retune
+  aimed at the hunter on the dailies (sight 2, accuracy 0.3) moved the
+  others too: the stalker fell from 20% to 1% (dailies, an attentive
+  explorer), and the hunter fell below section 0's rates on the treelike
+  and dead-end sets (treelike at 80% attention: 8% against 27%). Give
+  each model its own defaults, tuned to section 0's rates? Recommended:
+  yes. `docs/design/K80_turns.md` ("Stage 2 handoff": Calls, and the
+  table under Verification). Asked at 18:54.
 
 ## In progress
 
@@ -396,37 +405,44 @@ and never reused.
     there is no undo (Reset path restarts), and a first-look telegraph
     draws a red line and a ring (`drawTelegraph`). 865 tests. Its catch
     rates on today's mazes are K269, its residuals K270-K272.
-  - turns stage 2 RUNNING from 17:40 (opus, cap about 19:40): K269's
-    retune to the research's 1% / 13% on today's H1 mazes, K278 (c)'s
-    real-time pull on them, K273's catch resets (the level, the minotaur
-    and the fog as toggles, both clocks), K272's edge values, section
-    2.9's stats and share (a `STATS` line each) and K283's banner check.
-  - owner: claude d8031183-cd9e-4b70-9968-661d70634c84, agent
-    a1579d5c460af2d20 (turns stage 2, from 17:40). Turns stage 1 was
-    agent af5995f5900f0f945 and real time a9c90f15cd6a55710; both
+  - turns stage 2 MERGED in 86d404e..02194b4 (2026-10-14 18:50;
+    deployed): the retune (K269: sight 4 -> 2 and accuracy 0.9 -> 0.3
+    take the hunter from 18% / 36% of today's dailies, for an attentive
+    explorer and one at 80%, to 1.0% / 13.1%); K174's real-time tests on
+    H1 mazes (K278 (c)); the catch resets on both clocks (K273:
+    `minoRestart` `mrs`, off, and `minoLair` `mlr`, on; codec v5
+    128-129); roam and territory at least 1 (K272); close calls, seen and
+    restarts with their `STATS` lines, the ox emoji for a caught move in
+    the share grid and a minotaur tag in its title, and a catch caps the
+    stars at two (2.9); K283's banner check passed. 934 tests. Its
+    residuals are K293; per-model accuracy waits on Levi (K294).
+  - owner: nobody since 2026-10-14 18:48 (turns stage 2 done and merged;
+    it was agent a1579d5c460af2d20 of claude
+    d8031183-cd9e-4b70-9968-661d70634c84, worktree kept). Turns stage 1
+    was agent af5995f5900f0f945 and real time a9c90f15cd6a55710; both
     worktrees are kept.
-  - branch: `worktree-agent-a1579d5c460af2d20`, worktree
-    `.claude/worktrees/agent-a1579d5c460af2d20`; last commit: `67c8cb0`
-    (its base, the stage 2 brief on master). Turns stage 1 is
-    0047148..68524e1, real time `5fed5c1`, K174 ecf2169..6ec8275.
-  - evidence: stage 2's `.claude/probes/K80/turns2/` in its worktree
-    (copied to the main checkout at the merge); stage 1's
+  - branch: mainline; last commit: `02194b4` (turns stage 2 is
+    86d404e..02194b4; its worktree
+    `.claude/worktrees/agent-a1579d5c460af2d20` is kept). Turns stage 1
+    is 0047148..68524e1, real time `5fed5c1`, K174 ecf2169..6ec8275.
+  - evidence: stage 2's `.claude/probes/K80/turns2/` in the main checkout
+    (the retune's sweeps and `compare_after.md`, real time's `rt/`, the
+    banner check's `banner/`); stage 1's
     `.claude/probes/K80/turns/` (`compare.ts` with the harness copies
     and `compare_rebased.md`; `turns_page.mjs`, its logs and `shots/`;
     `k174_page.mjs`); real time's `.claude/probes/K80/rt/` and K174's
     `.claude/probes/K174/rt/`; the research's `.claude/probes/K80/` and
     its kept worktree `.claude/worktrees/agent-a25726c24f262b138`.
-  - next: merge stage 2. K279 took codec rows 121-127 (18:20), so stage 2
-    renumbers its appends from 128 before it merges, as K111 stage 4
-    does; whichever of the two merges second renumbers again. Then stage
-    3's brief from its handoff: the final telegraph (2.7), the catch
-    feedback (2.8, K270), sound and fog (2.10), the wait key, the pad's
-    wait and a hover cue, a turn minoToward and the contact sheet.
-    Before any daily pins a minotaur, waits enter `fc.taps` and the
-    attempt saves, and K47's fingerprint covers the minotaur params.
-    Real time's phone check is K177.
-  - brief: `docs/design/K80_turns.md` ("Stage 2: the retune, the catch
-    resets and the stats"; four stages since 67c8cb0); real time's
+  - next: stage 3's brief, written from stage 2's handoff ("Next", "For
+    stage 3"): the final telegraph (2.7), the catch feedback (2.8, K270),
+    sound and fog (2.10), the wait key, the pad's wait and a hover cue, a
+    turn minoToward and the contact sheet, plus stage 2's residuals
+    (K293) and Levi's answer on per-model accuracy (K294). Before any
+    daily pins a minotaur, waits enter `fc.taps` and the attempt saves,
+    and K47's fingerprint covers the minotaur params. Real time's phone
+    check is K177.
+  - brief: `docs/design/K80_turns.md` ("The stages"; "Stage 2 handoff",
+    where stage 3's brief goes); real time's
     `docs/design/K80_realtime.md`; the research brief
     `docs/design/K80.md` and its doc
     `docs/design/K80_gameplay_additions.md`.
@@ -693,7 +709,9 @@ and never reused.
     the main checkout at the merge); stage 3's `.claude/probes/K111/stage3/`.
   - next: stage 4 (the width param beside `hoverGlow` with its CPU mirror
     and parity at three widths, two or three High contrast looks behind a
-    probe hook, the same-state A/B at 0 px, the sheets); then Levi picks
+    probe hook, the same-state A/B at 0 px, the sheets); its codec rows
+    start at 130, since K80 turns stage 2 merged 128-129 (told at 18:49;
+    renumber at its merge if they don't); then Levi picks
     a High contrast look and a stage 5 builds it (the mirror, parity, the
     census).
   - brief: `docs/design/K111.md` ("Stage 4: the rim's width slider and
@@ -740,9 +758,9 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K80 turns stage 2 from 17:40 (cap 19:40)
-and K111 stage 4 from 17:53 (cap 19:53), each opus, and K156's round
-2026-10-14c phone pass from 18:41 (cap 19:41, sonnet). K279's stage 2
+(he may reorder). Running: K111 stage 4 from 17:53 (cap 19:53, opus)
+and K156's round 2026-10-14c phone pass from 18:41 (cap 19:41,
+sonnet). K279's stage 2
 waits for Levi's picks (K288). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
@@ -850,23 +868,6 @@ answered by number.
 
 K5-K7 (split, frame loop, worker) follow.
 
-- **K273** · What a minotaur catch resets (Levi, 2026-10-14 about
-  15:46, verbatim: "We should also have a toggle to conditionally reset
-  the level/Minotaur/fog when dying to the Minotaur."). Today a catch
-  sends you back to the entrance and counts it, and the fog starts over
-  under `minoRefog` (K174, on by default). Add the level (a restart, as
-  Reset path and the burn race's loss do) and the minotaur (back to its
-  start), as toggles beside `minoRefog` or one dropdown, for both
-  clocks. In K80 turns stage 2, reusing the burn race's restart
-  (`restartSolve()` in `src/main.ts`, merged 16:35);
-  `docs/design/K80_turns.md`. Running from 17:40 (K80's handle).
-- **K283** · The real game's end banners after K274, from a live solve:
-  `.claude/probes/K155/probe_stars.mjs` (design:phone, daily, caught,
-  realtime; its aria check now expects "how stars and stats work") or
-  `.claude/probes/K274/run_banner.ps1 -Base <dev server>`, under the
-  perf lock. K274's agent checked the real HUD modules on a plain page
-  only. K80 turns stage 2 runs it, since it adds stat lines (running
-  from 17:40, K80's handle).
 - **K284** · Credit K74's sources (K277): `docs/design/K74_maze_design.md`
   builds its goals on Pullen (*Think Labyrinth*, "Making Difficult
   Mazes") and Zhao and Marquez 2013 (arXiv:1307.5713), but `src/` names
@@ -1104,10 +1105,6 @@ K5-K7 (split, frame loop, worker) follow.
   `syncMinotaur` hides the minotaur until `revealQuery` >= 0.98, but the
   telegraph's line may still draw over hidden thread. For K76 2c, which
   settles the minotaur under thread reveal (K257 (2)).
-- **K272** · The turn minotaur's sliders at 0: roam 0 stands still while
-  roaming, and territory 0 is a random walk (K80 turns stage 1). Set the
-  minimums to 1 or define 0, in stage 2 (running from 17:40, K80's
-  handle).
 - **K266** · The hover rim's short-run limits (K248): runs shorter than
   2 x rimGap (1.95 world at the defaults) never glow, because the end
   gaps meet, and a short run whose lit window sits under a crossing's
@@ -1162,9 +1159,9 @@ K5-K7 (split, frame loop, worker) follow.
   checked); guard it with stage 3's corridor guard; (b) the pass costs a
   median 8.9 ms (at most 13.5) at gs 18, about +30% on generation:
   per-strand caches and a node -> strand map, checked by the walk pins;
-  (c) K174's minotaur test fails on H1 mazes (45.11 against its 44.57
-  limit) and is pinned to share 0, and K80 turns' deadliness numbers
-  predate H1: both go with K80 turns stage 2's retune; (d) most skipped
+  (c) done in 86d404e..02194b4 (K80 turns stage 2): K174's test runs on
+  H1 mazes over mazes 100-119 x 6 seeds, and the turn rates were
+  re-measured on them; (d) most skipped
   cuts hit a host self-crossing or a same-strand splice, so the dense
   heart and ring designs cut no bridges (a lever for stage 3 or 4); (e)
   H1 can shorten the optimal route (tree `1l6e`, 89.6 -> 78.3); (f)
@@ -1685,6 +1682,23 @@ K5-K7 (split, frame loop, worker) follow.
   to a release that runs on Node 24; if the first deploy after the 19th
   fails, pin `ubuntu-24.04` until it is fixed (a red run leaves the
   previous deployment live). `.github/workflows/deploy.yml`.
+- **K293** · K80 turns stage 2's residuals, for stage 3: (a) under
+  minoRestart the stars rate only the last life (reset() zeroes the
+  walked meter), while the popover says the walk before it counts; (b)
+  the ox emoji shows only in the share grid (the banner has no move
+  grid), and never under minoRestart, whose restart empties the move
+  log; (c) markCaught on an empty move log pushes `x`, so the moves read
+  1; (d) with minoLair off the minotaur can camp the first junction past
+  the entrance (the start is a sanctuary); (e) the minoSleep tooltip is
+  wrong with minoLair off; (f) a Reset path restart shows no toast; (g)
+  real time has no close-call or seen stats; (h) the messages of c021177
+  and e571894 say codec 121-122; the rows are 128-129.
+  `docs/design/K80_turns.md` ("Stage 2 handoff", "For stage 3").
+- **K295** · `.claude/probes/K155/probe_stars.mjs` is stale in two
+  checks: it expects 4 rules lines in the stars popover (the stat lines
+  follow them since K274) and today among the History rows (today keeps
+  its own row since K146). K80 turns stage 2 fixed only its copy,
+  `.claude/probes/K80/turns2/banner/probe_stars.mjs`.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1922,9 +1936,33 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K215** · Move the per-feature probe recipes (K73, K79 B, K80, K104,
   K140, K146 + K151, K147, K100) out of `probes.md` (15.5k chars, attached
   by every script or probe read) into narrow files (K173).
+- **K296** · Roam 0 as a "sentry": the turn minotaur stands guard while
+  it roams, a meaning for 0 instead of K272's minimum of 1. K80 turns
+  stage 2's handoff ("For stage 3").
 
 ## Done
 
+- **K273** · What a minotaur catch resets (Levi, 2026-10-14 about
+  15:46, verbatim: "We should also have a toggle to conditionally reset
+  the level/Minotaur/fog when dying to the Minotaur."). Done in
+  86d404e..02194b4 (2026-10-14), on both clocks: `minoRestart` (`mrs`,
+  off) restarts the level on a catch (the path, fog, fuse and clock; the
+  tallies carry over), `minoLair` (`mlr`, on) off leaves the minotaur
+  where it caught you, and `minoRefog` stays the fog's toggle (minoLair
+  and minoRefog hide while minoRestart is on). `docs/design/K80_turns.md`
+  ("Stage 2 handoff").
+- **K272** · The turn minotaur's sliders at 0: roam 0 stood still while
+  roaming, and territory 0 was a random walk (K80 turns stage 1). Done in
+  86d404e..02194b4 (2026-10-14): both start at 1 (`MINO_RUNS_MIN`,
+  `src/ui/url_state.ts`) in the panel, the codec reader and the
+  key=value readers. Roam 0 as a sentry is K296.
+- **K283** · The real game's end banners after K274, from a live solve.
+  Done in K80 turns stage 2 (86d404e..02194b4, 2026-10-14): its copy of
+  `probe_stars.mjs` passed every run in a headed, hardware-GPU Chrome
+  with real taps (checks by run: design 16, design at 411x753 touch 16,
+  daily 32, caught 18, realtime 17, turnmino 21, turnmino with `&mrs=1`
+  21; no page errors). `.claude/probes/K80/turns2/banner/`; the original
+  probe's two stale checks are K295.
 - **K274** · Explain each stat behind the win banner's info button (Levi,
   2026-10-14 about 16:01). Done in 71a7c25..79805af (2026-10-14): a `STATS`
   table in `src/game/maze_stats.ts` (one plain line per row id; a test
@@ -1950,9 +1988,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   daily-exempt (K57), as built in 6588ec0.
 - **K269** · The turn hunter's catch rates on today's mazes (K80 turns
   stage 1: 14% of dailies for an attentive explorer, 32% at 80%, against
-  the research's 1% and 13%). Levi, 2026-10-14 about 15:34: "Retune." K80
-  turns stage 2 retunes the defaults (sight, accuracy) to the research's
-  targets on today's mazes.
+  the research's 1% and 13%). Levi, 2026-10-14 about 15:34: "Retune."
+  Done in 86d404e..02194b4 (2026-10-14): sight 4 -> 2 and accuracy 0.9 ->
+  0.3 take the hunter from 18% / 36% on today's H1 mazes to 1.0% / 13.1%
+  (64 reps). The stalker and the treelike and dead-end sets paid for it:
+  K294.
 - **K248** · Levi's highlight pick (2026-10-14 about 13:28): the choices
   keep the pulses and a hovered choice keeps today's look;
   `highlightMode` and its glow, rims and contrast modes went (codec
