@@ -13,7 +13,7 @@ K7 stage 5 is editing main.ts now, so stage 1 begins with a re-map.
 
 - `main.ts` (5,637 lines) is one `async function main()` closure, running
   from line 359 to the end of the file, with 108 `let`s. It becomes
-  `src/app/` (about 18 modules), and `main.ts` shrinks to about 400 lines
+  `src/app/` (about 19 modules), and `main.ts` shrinks to about 400 lines
   that build those modules in order.
 - `ribbon_renderer.ts` (7,000 lines) is one class. Its largest method,
   `rebuildFillets`, is 1,515 lines. It becomes `src/render/ribbon/`, nine
@@ -38,7 +38,7 @@ K7 stage 5 is editing main.ts now, so stage 1 begins with a re-map.
   requestAnimationFrame (rAF) once everything is quiet.
 - K6 does not strictly need K5. It needs the frame loop out of main.ts
   (stage M3) to stay a small diff. Run it after the main.ts stages.
-- At defaults the fabric never idles: pulses, flow and the fog all
+- At defaults the fabric never idles: the pulses and the flow
   animate. K24's full stop helps only static scenes. At defaults, the
   battery lever is a rest cadence, which is Levi's call (question 1).
 
@@ -46,24 +46,27 @@ K7 stage 5 is editing main.ts now, so stage 1 begins with a re-map.
 
 ### 1.1 main.ts by region (f04aa4b)
 
+Region IDs name today's code: MR for main.ts, RR for
+ribbon_renderer.ts. M1-M8 and R1-R5 name the stages (section 5).
+
 | ID | Lines | Region | Owns | Reads | Writes outside itself |
 |---|---|---|---|---|---|
-| M1 | 1-168 | imports | - | - | - |
-| M2 | 170-355 | module constants (BACKGROUND, FIT_MARGIN, BUILD_STAMP 179, storage keys 182-187, MAX_ZOOM, FOLLOW_*, CAM_*, PRESETTLE_SIM, LOADER_*, NOMINAL_SLEEP_SIM, SETTLE_WALL_CAP_MS, TAP_*, RUN_REACH, LOBE_REACH, MUSIC_LOOKAHEAD); `createLoader()` 247-355 (pure DOM) | constants | - | - |
-| M3 | 357-490 | boot: `app` (357), `main()` (359), motion, contrast, a11y, hcl, `app.init` (391), the canvas, dailyStore + parseLaunch, `look` (424, `effectiveParam(params, a11y, key)`), daily state, undo, writeParams, prefs, PanelSettings | app, params, look, motion, a11y, dailyStore, undo, settings | URL, localStorage | - |
-| M4 | 493-530 | synth, snore, background (`addChild` 513), root, ripples, confetti | the layers | settings, motion | `app.stage` |
-| M5 | 539-640 | scene state: host (539: `params.physicsWorker ? new WorkerHost(() => rebuild()) : new InThreadHost()`), ps, renderer, debug, walkGraph, fabric, chase, turnMino, fabricController, reveal; physState (`live` / `loading` / `settling` / `frozen`), settleWall0, frozenSig, loaderShownAt, physicsTuning, physSig (609), physicsLive, loader, the audio map | the scene `let`s (rebuild reassigns them) | params | - |
-| M6 | 642-1026 | camera: computeFitTarget, view and cam, follow, the tween, the panel tween, clampView, easeView, applyView 808, zoomAt 875, panBy 886, resetCamera 892, updateCamera 949, fitToScreen 1026 | view, cam, follow and tween state | bounds from renderer and fabric, the head, panel open, settings | root's transform |
-| M7 | 1042-1250 | load and settle (K147): startAppearance, beginLoading, loadingTick, finishLoading, replaySettle, ink and gamut, beginSettle 1162, presettleTick 1191, finishPresettle 1230 | physState's transitions, the loader | host, reveal, params | renderer (beginReveal), background (the hold) |
-| M8 | 1250-1560 | scene build: syncBackground, recolorScene, rebuild 1315-1457; the audio map (rebuildAudioMap, runForCtrl, freqForCtrl, pluckUnit) | every M5 `let` | params, look | everything in M5 |
-| M9 | 1562-1926 | panel: the buildPanel callbacks (about 285 lines; `renderDirty = true` at 1818 and 1865), applyAccessibility 1846, handRendererLook 1887, resize 1919 | - | params, look, settings | params, renderDirty, the renderer's look fields, rebuild |
-| M10 | 1927-1993 | picking (pickRadius 1942, onThread 1955, grabAt 1965, grabRadius 1980) | - | renderer.pickThread, fabric, view | - |
-| M11 | 1993-3270 | game session, about 1,280 lines: attempts, HUD, badges, indicators 2105-2376, saves, visibility, prefs, the daily, win/loss/confetti, chase 2779-2921, turn minotaur 2922-3017, share/stats/playDaily, undo/redo, autosave, handleFabricTap 3189, moveAlong 3225 | attempt and daily state, HUD, badge, indicators | fabricController, walkGraph, fabric, dailyStore | fabric paint, params (playDaily), rebuild |
-| M12 | 3270-3635 | key moves (K120) | key state, holds | walkGraph, fabricController | moves (M11) |
-| M13 | 3635-4318 | pointer, drag and pluck input: soft snap, pinch, the canvas listeners, triggerAutoPluck, autoAudioTick | drag, pinch, soft snap | picking, view | the host (drag and tug, through the host), camera, renderer.pluck, synth |
-| M14 | 4318-4734 | the frame loop: flowParity, halted, renderDirty (4333), wake 4334, startSettling 4340, freeze 4345, applyPhysicsMode 4355, physicsInputsChanged 4368, the cost rings, sceneAnimating 4391-4422, backgroundTick, `app.ticker.add` 4432-4449, tick 4451-4734 | renderDirty, halted, flowParity | everything | everything, each frame |
-| M15 | 4736-4766 | stamp and perf readout (probes read sim/wall from it) | the stamp | host stats, the cost rings | DOM |
-| M16 | 4774-5637 | probe hooks `window.__knot*`, about 860 lines (`renderDirty = true` at 4903, 4908, 5619; `__knotRenderer` 4946; a `needsFrame` read at 5465) | - | everything | renderDirty, params, the physics (through the host) |
+| MR1 | 1-168 | imports | - | - | - |
+| MR2 | 170-355 | module constants (BACKGROUND, FIT_MARGIN, BUILD_STAMP 179, storage keys 182-187, MAX_ZOOM, FOLLOW_*, CAM_*, PRESETTLE_SIM, LOADER_*, NOMINAL_SLEEP_SIM, SETTLE_WALL_CAP_MS, TAP_*, RUN_REACH, LOBE_REACH, MUSIC_LOOKAHEAD); `createLoader()` 247-355 (pure DOM) | constants | - | - |
+| MR3 | 357-490 | boot: `app` (357), `main()` (359), motion, contrast, a11y, hcl, `app.init` (391), the canvas, dailyStore + parseLaunch, `look` (424, `effectiveParam(params, a11y, key)`), daily state, undo, writeParams, prefs, PanelSettings | app, params, look, motion, a11y, dailyStore, undo, settings | URL, localStorage | - |
+| MR4 | 493-530 | synth, snore, background (`addChild` 513), root, ripples, confetti | the layers | settings, motion | `app.stage` |
+| MR5 | 539-640 | scene state: host (539: `params.physicsWorker ? new WorkerHost(() => rebuild()) : new InThreadHost()`), ps, renderer, debug, walkGraph, fabric, chase, turnMino, fabricController, reveal; physState (`live` / `loading` / `settling` / `frozen`), settleWall0, frozenSig, loaderShownAt, physicsTuning, physSig (609), physicsLive, loader, the audio map | the scene `let`s (rebuild reassigns them) | params | - |
+| MR6 | 642-1026 | camera: computeFitTarget, view and cam, follow, the tween, the panel tween, clampView, easeView, applyView 808, zoomAt 875, panBy 886, resetCamera 892, updateCamera 949, fitToScreen 1026 | view, cam, follow and tween state | bounds from renderer and fabric, the head, panel open, settings | root's transform |
+| MR7 | 1042-1250 | load and settle (K147): startAppearance, beginLoading, loadingTick, finishLoading, replaySettle, ink and gamut, beginSettle 1162, presettleTick 1191, finishPresettle 1230 | physState's transitions, the loader | host, reveal, params | renderer (beginReveal), background (the hold) |
+| MR8 | 1250-1560 | scene build: syncBackground, recolorScene, rebuild 1315-1457; the audio map (rebuildAudioMap, runForCtrl, freqForCtrl, pluckUnit) | every MR5 `let` | params, look | everything in MR5 |
+| MR9 | 1562-1926 | panel: the buildPanel callbacks (about 285 lines; `renderDirty = true` at 1818 and 1865), applyAccessibility 1846, handRendererLook 1887, resize 1919 | - | params, look, settings | params, renderDirty, the renderer's look fields, rebuild |
+| MR10 | 1927-1993 | picking (pickRadius 1942, onThread 1955, grabAt 1965, grabRadius 1980) | - | renderer.pickThread, fabric, view | - |
+| MR11 | 1993-3270 | game session, about 1,280 lines: attempts, HUD, badges, indicators 2105-2376, saves, visibility, prefs, the daily, win/loss/confetti, chase 2779-2921, turn minotaur 2922-3017, share/stats/playDaily, undo/redo, autosave, handleFabricTap 3189, moveAlong 3225 | attempt and daily state, HUD, badge, indicators | fabricController, walkGraph, fabric, dailyStore | fabric paint, params (playDaily), rebuild |
+| MR12 | 3270-3635 | key moves (K120) | key state, holds | walkGraph, fabricController | moves (MR11) |
+| MR13 | 3635-4318 | pointer, drag and pluck input: soft snap, pinch, the canvas listeners, triggerAutoPluck, autoAudioTick | drag, pinch, soft snap | picking, view | the host (drag and tug, through the host), camera, renderer.pluck, synth |
+| MR14 | 4318-4734 | the frame loop: flowParity, halted, renderDirty (4333), wake 4334, startSettling 4340, freeze 4345, applyPhysicsMode 4355, physicsInputsChanged 4368, the cost rings, sceneAnimating 4391-4422, backgroundTick, `app.ticker.add` 4432-4449, tick 4451-4734 | renderDirty, halted, flowParity | everything | everything, each frame |
+| MR15 | 4736-4766 | stamp and perf readout (probes read sim/wall from it) | the stamp | host stats, the cost rings | DOM |
+| MR16 | 4774-5637 | probe hooks `window.__knot*`, about 860 lines (`renderDirty = true` at 4903, 4908, 5619; `__knotRenderer` 4946; a `needsFrame` read at 5465) | - | everything | renderDirty, params, the physics (through the host) |
 
 References inside `main()`, which show how the modules will couple:
 params 304, fabric 229, fabricController 132, renderer 120, ps 89,
@@ -72,7 +75,7 @@ panel 52, turnMino 49, motion 45, walkGraph 41, background 38, wake 34,
 physState 32, cam 32, rebuild 27, settings 25, writeParams 23,
 dailyStore 21, synth 20, indicators 17, renderDirty 11.
 
-### 1.2 The frame today (M14)
+### 1.2 The frame today (MR14)
 
 The frame matters to both K5's M3 stage and K6.
 
@@ -147,25 +150,25 @@ pauses there.
 
 | ID | Lines | Region | Owns | Notes |
 |---|---|---|---|---|
-| R0 | 1-735 | module level: imports; exported RibbonStyle, PaintSpan, PulseArm, PaintCap, PaintRim (158-253); constants 254-392 (pluck keys, FILLET_*, DISC, normArc, FLOW_*, FX, GATE_LEAD, RAINBOW_SWELL_END); the strip program 393-585 (SECTION_VERT/FRAG 408-534, sectionShader 539, sectionShaderExplore 567); samePieces 586; **bindGap 610, the one binding list**; gap-solver constants 620-718; hslToHex; PassNeighbors | programs, the bind list | K307 stage 2 registers the program sites (535/563) |
-| R1 | 736-1383 | 139 fields (736-1135, 114 of them `private`; getters stripStats, stripRT, stripTableData 1101-1107); the constructor (1136-1383; `rebuildFillets(true)` at 1158; installs the `__knotSplineBend` probe hook) | all state | the constructor takes `(ps, style)` |
-| R2 | 1384-1645 | sampling helpers: knotChainRgb, sampleAt, buildPoly, polyDist, protectReach, arcAt, renderCtrl, neighborGaps | - | pure reads of samples and passes |
-| R3 | 1646-1742 | small API: getDiag, requestInspect, setWidths, flowOffset, arcForCtrl, underGapVisibility | - | - |
-| R4 | 1743-2452 | reveal and appearance FX: beginReveal, syncFxStyle, addKnot, revealMulAtCtrl, revealShape, chainFxDone, passShowTime, jointGate, crossingShowTime, gateStrength, widthMulFor, finishReveal, drawRevealTips, appearFxAlive, probeTris, paintMirror 2204, revealPin, tickAppearFx, spawnTipFrontier, spawnInkFrontier | reveal state, appear FX | - |
-| R5 | 2453-2616 | **`update()`, the geometry pass** (order below) | geomRev, updateCount | the pipeline |
-| R6 | 2617-3529 | crossing gaps (K1): twinNeighbor, computeGapSlot 2636-3304 (about 670 lines), renderEmergent, renderMarkerGaps, assignGapIds | writes the slot table and underWindows | - |
-| R7 | 3530-3635 | section colors: setSectionRuns, installRuns, syncSectionUniforms, recolor | section runs | - |
-| R8 | 3636-3876 | gameplay paint: noiseV, armNextJointCtrl, setPaint, setRim, setRimAt, rimItemKey, syncRimItem, rimGap, routeArmSlot, resolveRoutes, `tickPaint` 3856 | spans, rim, routes | - |
-| R9 | 3877-4009 | picking: pickThread, ctrlAtArc | - | - |
-| R10 | 4010-4385 | plucks (K3): pluck, pluckPoint, arcOfPluck, tugSpan, tickPlucks, makePluckHost 4147, withPluckCollapse, reextrude 4201, pluckColor, composedAtArc, pluckNodes | plucks | the pluck host interface (G3 invariant 21) |
-| R11 | 4386-4669 | clocks and paint items: `needsFxRender` 4386, `advanceClocks` 4402, `tickPaintPalette` 4443 (pulse uniforms, hover breath, syncRimItem, the key-gated `rebuildFillets()`, tickWebFade), fadingArmLevels, tickWebFade, syncGold, writePaintItems 4529 | paintClock, pulseBorn, FX uniforms | probes pin `advanceClocks`, `paintClock`, `pulseBorn` |
-| R12 | 4670-4987 | thread reveal (K76, K268): setExplore, applyExploreGaps, exploreCutAt, exploreGapState, syncExploreJoints, exploreJointsKey, exploreJointShown, exploreJointState, exploreOn, exploreVisAt, exploreShownAt, exploreShownSpan | explore state | K268 stage 2 works here now |
-| R13 | 4988-5067 | tuckFusedTips, setMarkerOccluders, markerWorld, sectionColorAt | - | - |
-| R14 | 5068-5477 | material lookups and arm strips: paintArcAt, cpuChainMaterial, writeStripRow, cpuStripAt, **cpuJunctionField** 5184-5395, sampleAtSafe, colorAtArc, armCtrlSlope, sectionAtArc | the arm strips | - |
-| R15 | 5478-6993 | **`rebuildFillets`, one 1,515-line method**. Phases: layer votes; writeAxis records; discs; profiles; junction records; K81 routes; armTop and dives; jointMask; emitFan; free tips; fused tips; finish and upload; armReach; route geometry (coverCap, cornerCubic, turnFits); wedges per record (6685); the route pass and cover strips (6890) | fillet caches, fan meshes, the junction field | G4-2 deletes most of it |
-| R16 | 6994-7000 | destroy | - | - |
+| RR0 | 1-735 | module level: imports; exported RibbonStyle, PaintSpan, PulseArm, PaintCap, PaintRim (158-253); constants 254-392 (FILLET_*, DISC_*, TIP_DISC_* and more); the strip program 393-585 (SECTION_VERT/FRAG 408-534, sectionShader 539, sectionShaderExplore 567); samePieces 586; **bindGap 610, the one binding list**; gap-solver constants 620-718; hslToHex; PassNeighbors | programs, the bind list | K307 stage 2 registers the program sites (535/563) |
+| RR1 | 736-1383 | 163 fields (736-1135: 114 `private`, 48 plain, 1 `readonly`; getters stripStats, stripRT, stripTableData 1101-1107); the constructor (1136-1383; `rebuildFillets(true)` at 1158; installs the `__knotSplineBend` probe hook) | all state | the constructor takes `(ps, style)` |
+| RR2 | 1384-1645 | sampling helpers: knotChainRgb, sampleAt, buildPoly, polyDist, protectReach, arcAt, renderCtrl, neighborGaps | - | pure reads of samples and passes |
+| RR3 | 1646-1742 | small API: getDiag, requestInspect, setWidths, flowOffset, arcForCtrl, underGapVisibility | - | - |
+| RR4 | 1743-2452 | reveal and appearance FX: beginReveal, syncFxStyle, addKnot, revealMulAtCtrl, revealShape, chainFxDone, passShowTime, jointGate, crossingShowTime, gateStrength, widthMulFor, finishReveal, drawRevealTips, appearFxAlive, probeTris, paintMirror 2204, revealPin, tickAppearFx, spawnTipFrontier, spawnInkFrontier | reveal state, appear FX | - |
+| RR5 | 2453-2616 | **`update()`, the geometry pass** (order below) | geomRev, updateCount | the pipeline |
+| RR6 | 2617-3529 | crossing gaps (K1): twinNeighbor, computeGapSlot 2636-3304 (about 670 lines), renderEmergent, renderMarkerGaps, assignGapIds | writes the slot table and underWindows | - |
+| RR7 | 3530-3635 | section colors: setSectionRuns, installRuns, syncSectionUniforms, recolor | section runs | - |
+| RR8 | 3636-3876 | gameplay paint: noiseV, armNextJointCtrl, setPaint, setRim, setRimAt, rimItemKey, syncRimItem, rimGap, routeArmSlot, resolveRoutes, `tickPaint` 3856 | spans, rim, routes | - |
+| RR9 | 3877-4009 | picking: pickThread, ctrlAtArc | - | - |
+| RR10 | 4010-4385 | plucks (K3): pluck, pluckPoint, arcOfPluck, tugSpan, tickPlucks, makePluckHost 4147, withPluckCollapse, reextrude 4201, pluckColor, composedAtArc, pluckNodes | plucks | the pluck host interface (G3 invariant 21) |
+| RR11 | 4386-4669 | clocks and paint items: `needsFxRender` 4386, `advanceClocks` 4402, `tickPaintPalette` 4443 (pulse uniforms, hover breath, syncRimItem, the key-gated `rebuildFillets()`, tickWebFade), fadingArmLevels, tickWebFade, syncGold, writePaintItems 4529 | paintClock, pulseBorn, FX uniforms | probes pin `advanceClocks`, `paintClock`, `pulseBorn` |
+| RR12 | 4670-4987 | thread reveal (K76, K268): setExplore, applyExploreGaps, exploreCutAt, exploreGapState, syncExploreJoints, exploreJointsKey, exploreJointShown, exploreJointState, exploreOn, exploreVisAt, exploreShownAt, exploreShownSpan | explore state | K268 stage 2 works here now |
+| RR13 | 4988-5067 | tuckFusedTips, setMarkerOccluders, markerWorld, sectionColorAt | - | - |
+| RR14 | 5068-5477 | material lookups and arm strips: paintArcAt, cpuChainMaterial, writeStripRow, cpuStripAt, **cpuJunctionField** 5184-5395, sampleAtSafe, colorAtArc, armCtrlSlope, sectionAtArc | the arm strips | - |
+| RR15 | 5478-6993 | **`rebuildFillets`, one 1,515-line method**. Phases: layer votes; writeAxis records; discs; profiles; junction records; K81 routes; armTop and dives; jointMask; emitFan; free tips; fused tips; finish and upload; armReach; route geometry (coverCap, cornerCubic, turnFits); wedges per record (6685); the route pass and cover strips (6890) | fillet caches, fan meshes, the junction field | G4-2 deletes most of it |
+| RR16 | 6994-7000 | destroy | - | - |
 
-What `update()` (R5) does, in order:
+What `update()` (RR5) does, in order:
 1. updateCount++, geomRev++, `underWindows.clear()`, finishReveal;
 2. flowOffset, sampleClosedSpline / sampleOpenSpline, tuckFusedTips,
    `paintScene.writeGeom`, chainFxDone, widthMulFor and
@@ -201,8 +204,8 @@ Importers:
 
 ### 1.4 The data lines K1-K3 drew
 
-- **K1 (G1 per-pixel gaps, 99443cb/0f25f0f):**
-  - the gap solve (R6, R12) writes a page-lifetime RGBA32F slot table
+- **K1 (G1 per-pixel gaps, 99443cb):**
+  - the gap solve (RR6, RR12) writes a page-lifetime RGBA32F slot table
     and `underWindows`;
   - the shader reads the table through `bindGap`'s one list;
   - plucks and joinery read `underWindows`.
@@ -305,20 +308,20 @@ it. There are three kinds of capture:
 | `src/ui/loader.ts` | 242-355 | the trefoil DOM | `createLoader()` | - |
 | `src/app/stamp.ts` | 173-183 (BUILD_STAMP, STATS_KEY, MAZE_STATS_KEY), 4736-4766, and the cost rings if only perf code uses them | stamp, perf rings | `BUILD_STAMP`, `createStamp()` → update, the rings | host, settings, scene |
 | `src/app/probe_hooks.ts` | 4774-5637 | none (it installs `window.__knot*`) | `installProbeHooks(ctx: ProbeCtx)` | everything, through ctx |
-| `src/app/camera.ts` | 188-203, 642-1026, plus startCamTween and frameWorld wherever they sit | view, cam, follow, tweens | applyView, zoomAt, panBy, resetCamera, updateCamera(dt), fitToScreen, startCamTween, frameWorld, `converged()` (new in K6) | app, root, settings, scene |
+| `src/app/camera.ts` | 188-203, 642-1026 | view, cam, follow, tweens | applyView, zoomAt, panBy, resetCamera, updateCamera(dt), fitToScreen, `converged()` (new in K6) | app, root, settings, scene |
 | `src/app/frame_loop.ts` | 4318-4339 and 4391-4734 (flowParity, halted, renderDirty, wake, sceneAnimating, backgroundTick, the ticker callback, tick) | renderDirty (→ invalidate), halted, flowParity | `invalidate()`, `wake()`, `start()`, `sceneAnimating()` (until K6) | every module, as deps |
-| `src/app/lifecycle.ts` | 205-226, 1042-1250, 4340-4390 (startSettling, freeze, applyPhysicsMode, physicsInputsChanged), physState and its siblings from M5 | physState, settleWall0, frozenSig, loaderShownAt, physSig, physicsLive | beginLoading, loadingTick, finishLoading, replaySettle, beginSettle, presettleTick, finishPresettle, startSettling, freeze, applyPhysicsMode, physicsInputsChanged, `state` | host, reveal, loader, background, scene |
+| `src/app/lifecycle.ts` | 205-226, 1042-1250, 4340-4390 (startSettling, freeze, applyPhysicsMode, physicsInputsChanged), physState and its siblings from MR5 | physState, settleWall0, frozenSig, loaderShownAt, physSig, physicsLive | beginLoading, loadingTick, finishLoading, replaySettle, beginSettle, presettleTick, finishPresettle, startSettling, freeze, applyPhysicsMode, physicsInputsChanged, `state` | host, reveal, loader, background, scene |
 | `src/app/scene.ts` | 539-640 (the scene `let`s), 1250-1457 (syncBackground, recolorScene, rebuild) | the scene `let`s, the SceneRef | `createScene()` → SceneRef, rebuild, recolorScene, syncBackground | params, look, app, root |
 | `src/app/audio_map.ts` | 1458-1560 | the audio map | rebuildAudioMap, runForCtrl, freqForCtrl, pluckUnit | scene, synth, params |
 | `src/app/panel_wiring.ts` | 1562-1926 | - | `wirePanel()` → applyAccessibility, handRendererLook, resize | params, settings, scene, invalidate, rebuild |
 | `src/app/input_pointer.ts` | 1927-1993 (picking), 3635-4318 minus auto audio | drag, pinch, soft snap, pending tap | `attachPointerInput()` → softSnapStep (for the frame), grabAt, pickRadius | camera, the host, scene, session (handleFabricTap) |
 | `src/app/auto_audio.ts` | triggerAutoPluck, autoAudioTick (in 3635-4318) | music mode's schedule | autoAudioTick(dt), triggerAutoPluck | synth, scene, audio map |
 | `src/app/input_keys.ts` | 3270-3635 | key state, holds | `attachKeyMoves()` → keyStep(dt) | session moves, scene |
-| `src/app/session/daily_session.ts` | M11: attempts, saves, visibility, prefs, the daily, share/stats/playDaily, autosave | attempt and daily state | (re-mapped in M7) | dailyStore, scene, hud |
-| `src/app/session/hud_wiring.ts` | M11: HUD, badges, win/loss banners, confetti trigger | HUD, badge, banners | - | - |
+| `src/app/session/daily_session.ts` | MR11: attempts, saves, visibility, prefs, the daily, share/stats/playDaily, autosave | attempt and daily state | (re-mapped in stage M7a) | dailyStore, scene, hud |
+| `src/app/session/hud_wiring.ts` | MR11: HUD, badges, win/loss banners, confetti trigger | HUD, badge, banners | - | - |
 | `src/app/session/indicators_wiring.ts` | 2105-2376 | indicators | update | camera, scene |
 | `src/app/session/chase_wiring.ts` | 2779-3017 (chase, turn minotaur) | chase timers | tickChase etc. | scene, hud |
-| `src/app/session/design_history.ts` | M11: undo/redo | the undo stack's wiring | - | undo, params, rebuild |
+| `src/app/session/design_history.ts` | MR11: undo/redo | the undo stack's wiring | - | undo, params, rebuild |
 | `src/app/session/fabric_moves.ts` | 3189-3270 (handleFabricTap, moveAlong) | - | handleFabricTap, moveAlong | scene, session |
 | `src/app/boot.ts` | 359-530 | the boot order | `boot()` → the singletons | - |
 
@@ -329,8 +332,8 @@ folds the SceneRef getters into a `SceneState` object owned by
 `scene.ts`, so main.ts keeps no `let`s at all. That step is not needed
 for anything below.
 
-The M11 session ranges other than chase, indicators and the two move
-functions are approximate. Stage M7 re-maps them first.
+The MR11 session ranges other than chase, indicators and the two move
+functions are approximate. Stage M7a re-maps them first.
 
 ### 2.3 ribbon_renderer.ts → `src/render/ribbon/`
 
@@ -356,7 +359,7 @@ type-only cycle and fine in TypeScript.
 
 **`private`.** Parts cannot read `private` members. A shared field that
 a part reads drops `private` and gets an `/** @internal ribbon */` tag
-(about 60 to 100 of the 114). The alternative is a separate RibbonScene
+(R1 counts them). The alternative is a separate RibbonScene
 object, which would rewrite every `this.x` in the class to `this.s.x`,
 a global edit that conflicts with every renderer item in flight
 (question 7).
@@ -382,14 +385,14 @@ stays on the façade.
 | Part | From (f04aa4b) | Owns | Interface | G role |
 |---|---|---|---|---|
 | `ribbon/ribbon_shader.ts` | 393-618 (the strip program, sectionShader, sectionShaderExplore, samePieces, bindGap) | the strip program, the bind list | sectionShader, sectionShaderExplore, bindGap | G3-1 extends bindGap; G3-3 deletes the strip program |
-| `ribbon/sampling.ts` | 1384-1645, plus paintArcAt, sampleAtSafe (R14) and arcForCtrl (R3) if their callers allow | none (functions of `r`) | sampleAt, sampleAtSafe, buildPoly, polyDist, protectReach, arcAt, paintArcAt, renderCtrl, neighborGaps | reads the hub; G3-0's SAMP rows mirror it |
-| `ribbon/crossing_gaps.ts` | 620-718, R6 2617-3529 | the solve's scratch, the emergent pool | `GapSource`: `solve(fillHalf, gap)` writes slots and underWindows; renderMarkerGaps; assignGapIds | **G3-1's seam** |
-| `ribbon/explore_gaps.ts` | R12 4670-4987 | explore state | setExplore, applyExploreGaps, exploreGapState, exploreVisAt, exploreShownAt, exploreJointState, exploreOn | K268, K290 and K76 2d work here |
-| `ribbon/reveal_fx.ts` | R4 1743-2452 (paintMirror and probeTris go with paint if their callers say so) | reveal state, appear FX, the ink frontier | beginReveal, revealMulAtCtrl, revealPin, appearFxAlive, widthMulFor, the gates | - |
-| `ribbon/paint_state.ts` | R7 3530-3635, R8 3636-3876, R11 4386-4669 | spans, rim, routes, section runs, the clocks (accessors on the façade for paintClock and pulseBorn) | setPaint, setRim, setRimAt, setSectionRuns, recolor, tickPaint, advanceClocks, needsFxRender, `paintNeedsFrame()` (new in K6) | where K6's paint poll lives |
-| `ribbon/pluck_host.ts` | R10 4010-4385 | plucks | pluck, pluckPoint, tugSpan, tickPlucks, makePluckHost, withPluckCollapse, composedAtArc, pluckNodes | invariant 21; G3-2's setCollapse writes radii |
-| `ribbon/strip_pass.ts` | the fills extrusion in `update()`, reextrude 4201, R13 4988-5067 (tuckFusedTips, markers) | the fill meshes | `ThreadPass`: extrude(chain), collapse(chain, radii), tuck(), the meshes | **G3-2's seam**; G3-3 deletes this file |
-| `ribbon/joinery.ts` | R14 5068-5477 (cpuJunctionField, the arm strips, the material lookups only fans read), R15 5478-6993 | fillet caches, fan meshes, the junction field, arm strips, cover strips | `JointPass`: rebuild(force), the junction-field records | **G4-1's seam**; G4-2 deletes this file |
+| `ribbon/sampling.ts` | 1384-1645, plus paintArcAt, sampleAtSafe (RR14) and arcForCtrl (RR3) if their callers allow | none (functions of `r`) | sampleAt, sampleAtSafe, buildPoly, polyDist, protectReach, arcAt, paintArcAt, renderCtrl, neighborGaps | reads the hub; G3-0's SAMP rows mirror it |
+| `ribbon/crossing_gaps.ts` | 620-718, RR6 2617-3529 | the solve's scratch, the emergent pool | `GapSource`: `solve(fillHalf, gap)` writes slots and underWindows; renderMarkerGaps; assignGapIds | **G3-1's seam** |
+| `ribbon/explore_gaps.ts` | RR12 4670-4987 | explore state | setExplore, applyExploreGaps, exploreGapState, exploreVisAt, exploreShownAt, exploreJointState, exploreOn | K268, K290 and K76 2d work here |
+| `ribbon/reveal_fx.ts` | RR4 1743-2452 (paintMirror and probeTris go with paint if their callers say so) | reveal state, appear FX, the ink frontier | beginReveal, revealMulAtCtrl, revealPin, appearFxAlive, widthMulFor, the gates | - |
+| `ribbon/paint_state.ts` | RR7 3530-3635, RR8 3636-3876, RR11 4386-4669 | spans, rim, routes, section runs, the clocks (accessors on the façade for paintClock and pulseBorn) | setPaint, setRim, setRimAt, setSectionRuns, recolor, tickPaint, advanceClocks, needsFxRender, `paintNeedsFrame()` (new in K6) | where K6's paint poll lives |
+| `ribbon/pluck_host.ts` | RR10 4010-4385 | plucks | pluck, pluckPoint, tugSpan, tickPlucks, makePluckHost, withPluckCollapse, composedAtArc, pluckNodes | invariant 21; G3-2's setCollapse writes radii |
+| `ribbon/strip_pass.ts` | the fills extrusion in `update()`, reextrude 4201, RR13 4988-5067 (tuckFusedTips, markers) | the fill meshes | `ThreadPass`: extrude(chain), collapse(chain, radii), tuck(), the meshes | **G3-2's seam**; G3-3 deletes this file |
+| `ribbon/joinery.ts` | RR14 5068-5477 (cpuJunctionField, the arm strips, the material lookups only fans read), RR15 5478-6993 | fillet caches, fan meshes, the junction field, arm strips, cover strips | `JointPass`: rebuild(force), the junction-field records | **G4-1's seam**; G4-2 deletes this file |
 
 `rebuildFillets` moves **as one method**, with no phase refactor: G4-2
 deletes it, and a refactor would be the riskiest edit in the split for
@@ -398,7 +401,7 @@ worth doing only if G4 slips past several more fan fixes (question 3).
 
 ### 2.4 What does not move
 
-- `fabric_maze_renderer.ts` (about 2,400 lines) is not part of K5. It
+- `fabric_maze_renderer.ts` (about 2,600 lines) is not part of K5. It
   owns K6 polls (fog, fire, the dot, the web fade), and K6 adds
   `fabric.needsFrame()` to it in place.
 - `src/physics/` is K7's. K6 adds `host.needsFrame()` (4.4) there after
@@ -431,7 +434,7 @@ The parts in 2.3 make each step a module swap:
 | G step | Before K5 | After K5 |
 |---|---|---|
 | G3-0 | FloatRows writes in `update()` | lands before R1, which moves the writes with whichever region holds them |
-| G3-1 | edits inside R6 (900 lines in the big file) plus bindGap | edits `crossing_gaps.ts` and `ribbon_shader.ts` only; the GapSource contract (the slot table, underWindows, underGapVisibility) is what every reader already uses |
+| G3-1 | edits inside RR6 (900 lines in the big file) plus bindGap | edits `crossing_gaps.ts` and `ribbon_shader.ts` only; the GapSource contract (the slot table, underWindows, underGapVisibility) is what every reader already uses |
 | G3-2 | threads an `rp` switch through `update()`'s extrusion, reextrude, tuck and the pluck host | adds `ribbon_sdf.ts` implementing `ThreadPass`; the façade picks a pass by `rp` at construction; the pluck host's `collapse` goes to the pass |
 | G3-3 | carves the strip out of the class | deletes `strip_pass.ts` and the strip program in `ribbon_shader.ts` |
 | G4-1 | threads `jp=fans|sdf` through `rebuildFillets` and tickPaintPalette | adds a `JointPass` beside `joinery.ts` |
@@ -511,8 +514,7 @@ the game: flow, pulses, the fog drift and the background drift.
     snapshots;
   - `asleep` holds once the newest snapshot says slept and main's inputs
     are acknowledged;
-  - asleep, the worker posts nothing and discards allowances (K7 design,
-    sections 4-5).
+  - asleep, the worker posts nothing and discards allowances (`K7_worker.md`).
 
   So stopping the rAF while the worker sleeps loses nothing. One catch:
   when `asleep` flips, the picture may still be up to D behind the
@@ -521,7 +523,7 @@ the game: flow, pulses, the fog drift and the background drift.
   screen. K6-1 reads WorkerHost and adds whatever `asleep` lacks.
 - **Wake:** input → `host.wake()` / `dragTo` / tug → push PHYS → the
   rAF starts → `host.frame` posts allowances again.
-- K7's design (section 4) stands: "the worker needs nothing from K6; K24
+- K7's design (`K7_worker.md`) stands: "the worker needs nothing from K6; K24
   reads `host.asleep`". K6 adds one method to the PhysicsHost interface
   and changes nothing in the worker.
 
@@ -632,20 +634,19 @@ The proposal (question 2):
   only with no canvas draw, so sim/wall stay readable.
 - `diag_screenshot.mjs` reports `idle: true` instead of a frame rate
   when the loop is stopped.
-- The probes in `probes.md` that time frames or poll rAF (k147_measure,
-  k7_frames, k174 perf, k114 perf) set continuous mode. K6-3 runs each
+- The probes in `probes.md` that time frames or poll rAF (`k147_measure.mjs`, `k7_frames.mjs`, `k7_latency.mjs`, `k174_page.mjs perf|perfq`, K114's `burn_page.mjs perf`, `k96_cam.mjs`) set continuous mode. K6-3 runs each
   once.
 
 ### 4.11 What it saves (to measure, not assumed)
 
 - **Knot mode at rest, flow 0:** today Pixi draws 60 frames a second of
   a still scene (the 2026-10-10 audit measured the CPU 94.5% idle at
-  rest; the draw is about 0.8-1.9 ms of GPU on the desktop). After K24,
+  rest; G1 measured the fabric's draw at 1.78-1.94 ms of desktop GPU). After K24,
   about 2.5 s of background drift, then no frames at all.
-- **Fabric at defaults:** pulses, flow and fog keep PAINT and FLOW set,
+- **Fabric at defaults:** the pulses and the flow keep PAINT and FLOW set,
   so nothing stops. Only a rest cadence saves anything there. At 30 fps
-  it would halve the draws, while the flow pass stays at today's
-  30 Hz.
+  it would halve the draws, while the flow pass keeps today's
+  half rate.
 - **Every frame, everywhere:** K6-2 removes the per-frame fabricTick
   parts that have nothing to do, the camera spring at rest, the
   indicator layout and the param re-syncs.
@@ -655,9 +656,9 @@ The proposal (question 2):
 ### 4.12 Does K6 need K5 first?
 
 Not strictly. K6 could be built inside today's main.ts. But it touches
-the frame loop (M14) and adds a `needsFrame()` or `converged()` to the
-camera (M6), the lifecycle (M7), the session (chase, turn minotaur,
-banners in M11), key holds (M12), input (M13) and auto audio. Inside the
+the frame loop (MR14) and adds a `needsFrame()` or `converged()` to the
+camera (MR6), the lifecycle (MR7), the session (chase, turn minotaur,
+banners in MR11), key holds (MR12), input (MR13) and auto audio. Inside the
 5,600-line closure that is one diff across about ten regions, and it
 conflicts with every main.ts item in the queue. After K5's M stages,
 each module gains its poll in its own file, and `frame_loop.ts` collects
@@ -741,10 +742,10 @@ Each R stage needs ribbon_renderer.ts to itself for its duration
 | Stage | Moves | Seam | Must precede |
 |---|---|---|---|
 | **R1** | the probe-surface inventory; the part convention; `ribbon_shader.ts`; `sampling.ts`; rules `paths:` gain `src/render/ribbon/**` (render-gaps, render-ribbon, render-shaders) | - | everything |
-| **R2** | `crossing_gaps.ts` (R6); `explore_gaps.ts` (R12) | GapSource | G3-1 |
-| **R3** | `reveal_fx.ts` (R4); `paint_state.ts` (R7, R8, R11) | the paint poll | K6-2 (optional) |
-| **R4** | `pluck_host.ts` (R10); `strip_pass.ts` (the extrusion, reextrude, R13) | ThreadPass | G3-2 |
-| **R5** | `joinery.ts` (R14, R15), moved whole | JointPass | G4-1 |
+| **R2** | `crossing_gaps.ts` (RR6); `explore_gaps.ts` (RR12) | GapSource | G3-1 |
+| **R3** | `reveal_fx.ts` (RR4); `paint_state.ts` (RR7, RR8, RR11) | the paint poll | K6-2 (optional) |
+| **R4** | `pluck_host.ts` (RR10); `strip_pass.ts` (the extrusion, reextrude, RR13) | ThreadPass | G3-2 |
+| **R5** | `joinery.ts` (RR14, RR15), moved whole | JointPass | G4-1 |
 
 ### 5.4 K6 (after M3; K6-2 and K6-3 after M6)
 
@@ -764,17 +765,17 @@ file. That is mechanical, but it costs a merge round.
 
 | Item | Files it edits | Conflicts with | Advice |
 |---|---|---|---|
-| **K7 stage 5** (running, owns main.ts and `src/physics/`) | main.ts (the default, the phone), `src/physics/` | all M stages, K6 | M1 starts after it merges. The R lane does not wait for it. |
+| **K7 stage 5** (running, owns main.ts and `src/physics/`) | main.ts and `src/physics/`: the phone pass, the worker by default, the lore | all M stages, K6 | M1 starts after it merges. The R lane does not wait for it. |
 | **K8 G3-0** (running) | ribbon_renderer.ts `update()`, `samp_table.ts`, captureScene/restoreScene | R1-R5 | R1 starts after it merges. If it adds a main.ts hook, M1's re-map picks it up. |
 | **K268 stage 2** (running) | ribbon_renderer.ts (applyExploreGaps, slotOverCtrl, slotExploreHid, exploreUpdatePending), gap_mask.ts, explore_glsl.ts, paint_math.ts, explore_view.ts | R1 (the same file), R2 | R1 after it merges. |
-| **K307 stage 2** (waiting) | new `shader_warmup.ts` and `program_registry.ts`; the program sites in ribbon_renderer.ts (sectionShader 535/563), arm_strip.ts, junction_field.ts; main.ts: the early start (boot), the pre-settle gate (finishPresettle), the gate for links without a pre-settle, the background hold, the loader rule | M1 (the loader, maybe a hook), M4 (lifecycle), M8 (boot), R1 (the shader sites, two lines) | Can run alongside M1-M3: its main.ts edits sit in M3 boot and M7 lifecycle, which those stages do not move. M4 waits for it. If M1 merges first, its new hook goes in `probe_hooks.ts`. Its two renderer lines port trivially to `ribbon_shader.ts`. |
+| **K307 stage 2** (waiting) | new `shader_warmup.ts` and `program_registry.ts`; the program sites in ribbon_renderer.ts (sectionShader 535/563), arm_strip.ts, junction_field.ts; main.ts: the early start (boot), the pre-settle gate (finishPresettle), the gate for links without a pre-settle, the background hold, the loader rule | M1 (the loader, maybe a hook), M4 (lifecycle), M8 (boot), R1 (the shader sites, two lines) | Can run alongside M1-M3: its main.ts edits sit in the boot (MR3) and the load settle (MR7), which those stages do not move. M4 waits for it. If M1 merges first, its new hook goes in `probe_hooks.ts`. Its two renderer lines port trivially to `ribbon_shader.ts`. |
 | **K290 burn stage 3** (after K268 s2) | main.ts handleFabricTap, moveAlong, keyMoveAlong, fabricTick; the panel ("Burn race"), maze_hud.ts, appear_fx.ts, fabric drawFire; for "gone", the renderer's explore gaps and fans | M3 (fabricTick), M5 (panel callbacks), M6 (keys), M7b (moves); R2, R5 | Let K290 run alongside M1, M2 and R1. M3, M5, M6, M7b, R2 and R5 wait for it, or K290 lands in the new files. Recommendation: K290 before R2 and R5 (question 4). |
-| **K76 stage 2d** (after K268 s2 and K290) | explore_glsl.ts, the renderer's explore (R12), maybe the panel and look | R2, M5 | R2 after 2d, or 2d lands in `explore_gaps.ts`. |
+| **K76 stage 2d** (after K268 s2 and K290) | explore_glsl.ts, the renderer's explore (RR12), maybe the panel and look | R2, M5 | R2 after 2d, or 2d lands in `explore_gaps.ts`. |
 | **K8 G3-1** (after K268 s2 and K290) | gap_mask.ts, `fabric_sdf.ts`, computeGapSlot, renderMarkerGaps, bindGap | R1, R2 | After R1 and R2. |
 | **K8 G3-2** (after K76 2d) | `ribbon_sdf.ts`, `rp`, the pluck host's setCollapse, withExplore, one main.ts line | R4, M4 | After R4. |
 | **K9 (G4)** | the fans and the junction field | R5 | After R5. |
 | **K24** | = K6-3 | - | - |
-| main.ts gameplay items in general (K370-K374 and later) | main.ts regions | the M stage that moves their region | Schedule by region using section 1.1. Small items can run alongside any M stage that does not move their region. |
+| Other main.ts items | main.ts regions | the M stage that moves their region | Schedule by region using section 1.1. Small items can run alongside any M stage that does not move their region. |
 
 Lanes, given two or three code agents per repo:
 - **main.ts lane:** M1 → M2 → M3 → (K6-1) → M4 → M5 → M6 → M7a → M7b →
@@ -844,7 +845,7 @@ the whole of main.ts. Read the regions you move.
    - after the move, collect them on the branch;
    - the two sets must be equal.
 
-   The K90 `__knotSplineBend` hook in the renderer's constructor stays
+   The `__knotSplineBend` hook in the renderer's constructor stays
    where it is.
 6. **The host seam:** extend `test/physics/host_seam.test.ts` to scan
    `src/main.ts` plus every file under `src/app/`. The system can now
@@ -889,8 +890,7 @@ write it into the handoff instead.
 - the hook inventory;
 - three hook-heavy probes against a build of the branch:
   - `scripts/diag_screenshot.mjs` (stamp, timing, frames);
-  - `.claude/probes/K7/stage4/k7_frames.mjs` (the freeze / step / dump
-    bridge, on both hosts: `phw=0` and `phw=1`);
+  - `.claude/probes/K7/stage4/k7_frames.mjs` (a fixed wall-time drag, on both hosts: `phw=0` and `phw=1`);
   - `.claude/probes/K19-K20/probe_daily.mjs front`;
 - the same-state pixel A/B of three links (knot, fabric, fog) under the
   perf lock, expecting 0 px.
@@ -926,7 +926,7 @@ At the stop:
 ## 8. Open questions for Levi
 
 1. **A rest cadence at defaults?** The fabric never idles at defaults:
-   pulses, flow and fog always animate, so K24's full stop never
+   the pulses and the flow always animate, so K24's full stop never
    applies there.
    - **Recommendation:** run ambient-only animation at 30 fps (no input,
      physics, camera, game or overlay motion), and go back to full rate
@@ -950,8 +950,8 @@ At the stop:
      file.
 4. **K290 before or after R2 and R5?** K290's "gone" edits the explore
    gaps and the fans.
-   - **Recommendation:** K290 first. It is a feature you asked for and
-     waits only on K268 stage 2. R1 can run beside it, and R2 and R5
+   - **Recommendation:** K290 first. It is a feature you asked for (2026-10-14) and
+     builds on K268's shaped gaps (`K114_burn.md`, stage 3). R1 can run beside it, and R2 and R5
      then move K290's code along with the rest, with no porting.
 5. **CLAUDE.md's Project Structure:**
    - **Recommendation:** one line for `src/app/` and one for
@@ -962,9 +962,9 @@ At the stop:
    never pauses in fabric mode, because `sceneAnimating()` is always
    true there.
    - **Recommendation:** yes, after 2.5 s, as K21 designed. It matters
-     only when pulses, flow and fog are all off. It is K24's intent.
+     only in a fabric scene with no pulses, flow or fog drift. It is K24's intent.
 7. **The renderer's `private` fields:** the parts read the shared scene
-   fields through the façade, so 60-100 fields lose `private` and gain
+   fields through the façade, so those (R1 counts them) lose `private` and gain
    an `@internal ribbon` tag.
    - **Recommendation:** do that.
    - The alternative is a separate RibbonScene object, which needs a
