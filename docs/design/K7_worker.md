@@ -1318,3 +1318,225 @@ Every work item, and the lore line.
   look at.
 - **`gen` bumps on every build;** the auto-pluck's delayed tug checks it,
   and the worker protocol drops older gens.
+
+## Stage 2 handoff
+
+Stage 2 ended 2026-10-14 at 23:18, inside its two-hour cap (it started at
+22:15). The branch is `worktree-agent-ad436f128119f6c81`, from master
+`b72d5dd`: nine commits, `3d58fc9` to `712d07c`, and this handoff the
+commit after. Master (`7effaae`, 22:53) has changed nothing under
+`src/physics/`, `src/core/` or `test/physics/` since `b72d5dd`, and a
+trial merge (`git merge-tree`) finds no file changed on both sides. The
+evidence is in `.claude/probes/K7/stage2/` (untracked, for the
+coordinator to copy). Everything is built and tested on fabric (maze)
+designs, and nothing that only knot mode needs was built (K326 removes
+knot mode).
+
+### What is done
+
+Every work item.
+
+1. **The step split** in `particle_system.ts`: `beginFrame(dt)` does the
+   accumulator math (and resets the frame's max move when substeps are
+   owed) and returns the substep count; `runSubstep(tuning)` runs one.
+   `step()` is `beginFrame` plus its loop, the same float operations in
+   the same order, still called through the instance, so the freeze
+   patch works in-thread. `PhysicsCore` gains `beginBatch(dt, tuning)`,
+   `frame()`'s unbudgeted step for the worker (it records what
+   `gateFrame()` reads), and `build(graph, gen?)` takes main's gen.
+2. **`src/physics/snapshot.ts`:** an 18-slot f64 header (`SNAP_HEADER`;
+   `H` names the slots: gen, seq, simTime, substeps, lag, wallAt,
+   maxMove, asleep, settleComplete, contactsStatic, ridersPending,
+   grabbed, n, c, emergent, pending, inputs, frames), the positions (f32,
+   8N bytes), the passes (f64 over ctrl, over displayF, under ctrl, under
+   displayF: 32C bytes, NaN for an undefined displayF) and a fixed table
+   of `EMERGENT_MAX` (256) emergent rows of `EMERGENT_ROW` (5) f32: i, u,
+   j, v, over. `snapshotBytes(n, c)` is 144 + 8N + 32C + 5120 (40,936
+   bytes at `?7`). `writeSnapshot(ps, buf, meta)` and `readSnapshot(buf)`
+   throw on a buffer of the wrong size. `fingerprintOf(ps)` (n, c, the
+   chain count and an FNV-1a hash of the initial positions) goes in
+   `ready`. In `particle_system.ts`, `writeEmergentRows` fills the table
+   and the protected `emergentPair` turns a row into a reader's pair.
+3. **The mirror,** `MirrorSystem` in `src/physics/mirror_system.ts`, a
+   subclass. `applySnapshot(view)` writes the positions, and each pass's
+   ctrl and displayF in place on the same pass objects, and throws on
+   another build's n or c. It overrides simTime, pendingTime, maxMove,
+   settleComplete, contactsStatic, ridersPending and emergentCrossings,
+   and adds `snapshotSeq`, `snapshotWallAt`, `snapshotInputs` and
+   `workerAsleep`. `grabAt`, `dragTo` and `release` are the live class's
+   (they write only the grab), so `grabbedParticle` reads right after
+   main's call; `step`, `beginFrame`, `runSubstep`, `tug` and `reset`
+   throw.
+4. **`src/physics/physics_worker_core.ts`:** `PhysicsWorkerCore(scheduler,
+   post)` with `onMessage(msg)`, on stage 1's `PhysicsCore`, and three
+   schedulers: `SyncScheduler` (lockstep), `ManualScheduler` (a test runs
+   tasks one at a time) and `ChannelScheduler` (a MessageChannel, for the
+   worker). `MainToWorker` and `WorkerToMain` type the protocol, which is
+   the brief's with the changes below. Init takes only a newer gen; any
+   other gen message of another gen is dropped. The clock (Design 4):
+   - a frame's dt queues; a batch takes the queue through `beginFrame`
+     (so at most 0.25 s or 30 substeps) and runs one substep per task,
+     each followed by a snapshot if one of the 4 pooled buffers
+     (`SNAPSHOT_POOL`) is free; a `give` posts the latest state if it
+     changed since the last snapshot;
+   - while a batch is in flight, queued time past `LAG_MAX_S` (0.05 s) of
+     backlog (the queue plus the batch's remaining substeps) is dropped
+     and counted in the header's lag;
+   - the sleep gate runs at each batch's end, and a trip discards the
+     queue; frames are discarded while asleep, frozen, settling or
+     halted;
+   - grab, drag, release, tug and tuning apply on arrival, between
+     substeps (drags coalesce: the last before a substep wins); a tug
+     with a nonzero count wakes the gate (the core's tug);
+   - a non-finite max move at a batch's end halts stepping until the next
+     init or settle;
+   - `settle` runs the in-thread loop one `SETTLE_CHUNK_MS` slice per
+     task and posts `settled`;
+   - a throw in a message or a task posts `error`, and the core then
+     handles only give, pause, resume, freeze, dump and a newer init.
+5. **Tests,** on fabric designs: `test/physics/fabric_scene.ts` builds
+   one from a link (temperature 0 unless a test sets it; a knot link
+   throws).
+   - `test/physics/physics_host.test.ts`, 14 tests. Eight drive the
+     worker core (SyncScheduler) and an `InThreadHost` side by side and,
+     after every frame, compare positions, prev, zPos, the passes,
+     simTime, the pending remainder and asleep bit for bit, and the
+     mirror (fed the worker's snapshots) with the live system's
+     positions, passes, simTime, pendingTime, maxMove, settleComplete,
+     contactsStatic, ridersPending, grabbedParticle, asleep flag and
+     emergentCrossings. Their scripts: 60 fps through a grab, a violent
+     circling drag that makes emergent crossings, release, tug, tuning,
+     sleep and wake, reset, the two gates tripping on the same frame and
+     a tug waking both; 25 fps with the remainder carried, then a tuning
+     only the worker gets, which shows at once (the comparison can
+     fail); the temperature on for 90 frames, then off, both asleep on
+     the same frame; the pre-settle to its sim cap; settle-first; the
+     physics-off load; the halt on an injected Infinity; stale gens
+     dropped and a gen-2 init. Four run the core between substeps: a
+     drag between a frame's substeps lands on the next substep; the
+     latest state waits for a buffer and goes out on give; backlog past
+     `LAG_MAX_S` drops as lag; and, on a real `ChannelScheduler`, frames
+     that arrive mid-batch join one batch. Two cover the probe messages
+     (stepUntil, dump, freeze, pause, resume) and failures (a malformed
+     give; a throw inside a scheduled substep).
+   - `test/physics/snapshot.test.ts`, 8 tests: the layout and sizes, a
+     wrong size rejected, the round trip (positions, passes, emergent
+     rows and every header slot), NaN as undefined, the fingerprint, and
+     the mirror (the live system's readers on the same pass objects; the
+     grab recorded and stepping refused; another build's snapshot
+     refused).
+
+### Where it departs from the brief
+
+- **The mirror is a subclass in its own file,** not code in
+  `particle_system.ts`; the live class carries only the protected
+  `emergentPair` for it. Writes into its positions array cannot throw
+  (a plain Float32Array); the stepping calls, tug and reset do.
+- **`new PhysicsWorkerCore(scheduler, post)` and `onMessage(msg)`,** not
+  `onMessage(msg, post)`: the post function is fixed for the core's life.
+- **`settle` carries `presettleFrame`'s arguments** (`kind: "presettle"`,
+  settleFirst, simCap, workCap) or `kind: "load"`, not maxSim and
+  maxWall. The worker ends the pre-settle at its end condition (main's
+  loader check, `mayFinish`, is always true there) and sets asleep
+  itself when it ended on a sleep: `goLive` without K147's budget, which
+  Design 5's clock replaces. `settled` carries gen, endedBy (sleep, sim,
+  work or wall; done for the load; halted), sim, workMs and ms.
+- **Added:** the `wake` and `sleep` messages (the host's calls), `tug.id`
+  (echoed in `tugged`), `frame.ignoreTemp` (the gate's argument; a batch
+  takes its latest frame's), `ready.bytes`, `snap.gen`, and the header's
+  pending, inputs and frames.
+- **Reset, sleep, freeze, init and settle abort the batch in flight:** its
+  remaining substeps and queue are dropped, and no gate runs for it.
+- **No `halted` message:** main reads the snapshot's non-finite maxMove,
+  as it reads `frame()`'s false in-thread. The check misses NaN: a NaN
+  displacement fails `d * d > max`, so maxMove stays finite and only an
+  infinite move halts. Master does the same.
+- **The mirror has no prev, zPos, contact state or slide stats:**
+  `readSlideStats` and the phase probe wait for stage 4's bridge, and the
+  mirror's `release` returns speed 0 (main discards it). Its grab is
+  main's: neither a worker reset nor a snapshot clears it.
+- **Bit-identity holds in lockstep only.** Asynchronously, frames that
+  arrive mid-batch join the next batch (one `beginFrame` for their summed
+  dts, one gate), and inputs land between whichever substeps they arrive
+  between.
+- **A malformed message breaks the core** (it posts `error`), as a throw
+  in a task does.
+- **`stepUntil` runs inside its message** (frames of 1/60 s, no gate),
+  ignores asleep and freeze, and counts as neither a frame nor an input.
+
+### Verification (observed)
+
+- `npm test` at `712d07c`: 75 files passed and 1 skipped; 973 tests
+  passed and 1 skipped, in 111 s (`full_suite3.out.txt`). No snapshot or
+  fixture changed: the golden, the K87 pin and the golden dailies hold.
+- `npx tsc --noEmit` is clean, and so are the tests (`npx tsc --noEmit -p
+  .claude/probes/K7/stage2/tsconfig.tests.json`; the root tsconfig
+  includes only `src`, so nothing type-checks the tests today). `npm run
+  build` passes at `712d07c` (`build_head.out.txt`).
+- **The split** under the perf lock (`run_split_timing.ps1 -Reps 5`,
+  `split_timing.ts`, `results.md`): 600 substeps from a fresh build (the
+  settle, the costliest phase), `step()` against `beginFrame` plus
+  `runSubstep`, alternated, a fresh system per run. After 600 substeps
+  the bits are identical (positions, prev, zPos, passes, simTime,
+  pending), and the time is the same within noise (run-to-run spread is
+  about 5%):
+
+  | design | N | C | `step()` median | split median | ratio |
+  |---|---|---|---|---|---|
+  | `?7&gs=8` | 563 | 71 | 1115 ms (1.86 ms a substep) | 1105 ms | 0.991 |
+  | `?7` (today's defaults) | 3027 | 358 | 6608 ms (11.0 ms a substep) | 6583 ms | 0.996 |
+
+- **Lockstep:** bit-identical on every frame of every script above,
+  through the violent drag's emergent crossings, the gates tripping on
+  the same frame, and the halt on both sides.
+
+### Not done
+
+- Nothing in the stage's list.
+- Not run: a real Worker or a browser (stage 3), so not the snapshot's
+  cost there either (the spike measured under 0.1 ms a frame).
+- `frame.ignoreTemp` is passed through but not tested where it matters:
+  with the temperature above 0 the contacts never go static (the
+  temperature test checks it), so the gate cannot trip either way.
+
+### For stage 3
+
+- **`physics_worker.ts`** connects `PhysicsWorkerCore` to
+  `self.onmessage`, `postMessage` (with the transfer list) and a
+  `ChannelScheduler`; `WorkerHost` goes behind `phw`.
+- **An init keeps the previous gen's asleep flag** (`PhysicsCore.build`,
+  as in-thread), so main follows an init with its settle or a wake, as
+  `rebuild()` does.
+- **Drop snapshots of another gen** (`snap.gen`) and give their buffers
+  back; the worker lets a buffer of another size go.
+- **A stale asleep flag:** a snapshot written before the worker saw
+  main's latest input can still say asleep. Main counts the inputs it
+  posts after the init (every message carrying the gen except frame and
+  stepUntil; the worker's count restarts at 0 on init) and trusts
+  `workerAsleep` only once `snapshotInputs` has caught up.
+- **Give buffers back promptly** (4 in the pool; keep the two newest for
+  interpolation). With none free the worker holds the latest state and
+  posts it on the next give, so the last state, asleep flag included,
+  always arrives.
+- **Pick on the mirror** (`nearest` matches the live system's; tested)
+  and post `grab{particle}`, a miss (-1) too.
+- **Interpolate by `snapshotWallAt`:** the worker writes
+  `performance.timeOrigin + performance.now()`, which main reads on the
+  same clock.
+- **The fallback's checks:** `ready.fingerprint` against
+  `fingerprintOf(mirror)`, and `ready.bytes` against `snapshotBytes`.
+- **The build:** `worker: { format: "es" }` in `vite.config.ts`; check
+  that the notices plugin (K122) lists the worker chunk's packages.
+- **Init's params must be structured-cloneable** `SceneParams` (plain
+  data; the worker regenerates the graph with `buildSceneGraph`).
+- **The pre-settle answers a frame late:** main's slices become one
+  `settle` message and a wait for `settled`. The worker stops at the end
+  condition, so the loader's minimum time, and whether frames go out
+  while the loader shows, stay main's decisions.
+- **`frame{ignoreTemp}`** carries main's gate argument, and
+  `__knotSettle` can read the snapshot's lag where it read `settleLagS`.
+- **Clear main's grab** (the mirror's `grabbedParticle`) on a reset or a
+  rebuild: snapshots do not carry the worker's grab into the mirror.
+- **The A/B** compares outcomes (the first sleep, the sim at it,
+  endedBy), as stage 1's did: async batches are not bit-identical to
+  in-thread frames.
