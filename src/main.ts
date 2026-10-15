@@ -531,10 +531,11 @@ async function main(): Promise<void> {
   // host_seam.test.ts). K7 stage 3: `phw=1` (params.physicsWorker, read
   // once here) runs it in a Web Worker; a worker that cannot start, answer
   // or match falls back in-thread and rebuilds (__knotPerf().host.reason).
-  const host: PhysicsHost =
-    params.physicsWorker && typeof Worker !== "undefined"
-      ? new WorkerHost(() => rebuild())
-      : new InThreadHost();
+  // A browser without Worker gets the WorkerHost's own fallback, so the
+  // reason reads "no-worker".
+  const host: PhysicsHost = params.physicsWorker
+    ? new WorkerHost(() => rebuild())
+    : new InThreadHost();
   let ps: ParticleSystem | null = null;
   let renderer: RibbonRenderer | null = null;
   let debug: DebugRenderer | null = null;
