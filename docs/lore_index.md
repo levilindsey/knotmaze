@@ -21,10 +21,10 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/game/fabric_controller.ts`, `src/game/daily_attempt.ts`, `src/render/fabric_maze_renderer.ts`, `src/render/fog_arc.ts`, `test/render/fog_arc.test.ts`, `test/game/fabric_controller.test.ts`, `test/game/daily_attempt.test.ts`
 - `gameplay-links.md`: link decoder details, codec v4, LOAD SETTLE PARAMS (K147), MARKER SIZE PARAM (K98)
   paths: `src/ui/param_codec.ts`, `src/ui/url_state.ts`, `src/ui/daily_link.ts`, `test/ui/param_codec.test.ts`, `test/ui/url_codec.test.ts`, `test/ui/seed_text.test.ts`, `test/ui/appear_mode.test.ts`
-- `gameplay-panel.md`: pathViz labels, live recolor, panel rules, gridAlign, the background rows (K79)
+- `gameplay-panel.md`: pathViz labels, live recolor, panel rules, gridAlign, the background rows (K79), the Accessibility folder (K111)
   paths: `src/ui/tweakpane_panel.ts`, `src/ui/grid_align_curve.ts`, `test/ui/grid_align_curve.test.ts`
-- `gameplay-motion.md`: THE MOTION SETTING (K53, K79)
-  paths: `src/ui/motion.ts`, `test/ui/motion.test.ts`
+- `gameplay-motion.md`: THE MOTION SETTING (K53, K79), THE ACCESSIBILITY GROUP (K111: Reduced motion, High contrast)
+  paths: `src/ui/motion.ts`, `test/ui/motion.test.ts`, `src/ui/accessibility.ts`, `test/ui/accessibility.test.ts`
 - `gameplay-camera.md`: the camera round, FIT CAMERA PAN RANGE (K198), taps and drags
   paths: `src/main.ts`, `src/ui/view_clamp.ts`, `test/ui/view_clamp.test.ts`
 - `gameplay-moves.md`: MOVES BY DIRECTION (K120): keys, the picker, the move pad

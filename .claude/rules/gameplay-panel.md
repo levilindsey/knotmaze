@@ -90,3 +90,16 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   and 3, mist, wash and aurora 1, 2 and 3. Probe:
   `.claude/probes/K79/k79b_smoke.mjs` (rows by effect, copy and reset,
   the angle row and the dice; 70 checks).
+
+- ACCESSIBILITY FOLDER (K111, 2026-10-14): the panel's FIRST folder,
+  expanded by default (a call left to Levi), with two boolean rows,
+  "Reduced motion" and "High contrast" (their lore: `gameplay-motion.md`).
+  `PanelApi.syncAccessibility({motion, reducedMotion, highContrast})`
+  refreshes only those rows' bindings under the `syncing` guard (the
+  Motion dropdown and the box are one answer, and a refresh must not fire
+  a handler) and `PanelApi.markOverridden(keys)` dims the design rows an
+  override is hiding (class `kp-overridden`: value 0.4, label 0.6 italic,
+  the tooltip prefixed with OVERRIDDEN_NOTE, the original kept in
+  dataset.kpTip). The rows keep the STORED value, so a row never lies
+  about the design, and `flowSpeedRow.hidden` still keys on the stored
+  flowStrength.
