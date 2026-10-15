@@ -159,3 +159,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   the pick pair under onSlackChange (the callbacks their rows run), so an
   undo applies them live. Shader: render-paint.md's K298; picking:
   gameplay-camera.md's PICK MARGINS; rows: gameplay-panel.md.
+
+- PHYSICS WORKER PARAM (K7 stage 3, 2026-10-14; brief
+  `docs/design/K7_worker.md`): `physicsWorker` (`phw`, a flag, default
+  off) is APPENDED to codec v5 at index 135, after K298's 131-134. A
+  DAILY_EXEMPT_KEY (it changes where the physics runs, not the design,
+  like `stb` / `lds`), so the golden dailies do not move. No panel row
+  and no LIVE_EFFECTS entry: main.ts reads it ONCE, when it creates the
+  host, so it takes effect on a reload (`&phw=1` after a token works as
+  an override key). On, the physics runs in a module Web Worker
+  (physics/worker_host.ts + physics_worker.ts); a worker that cannot be
+  constructed, errors, sends an unreadable message, gives no `ready`
+  within 3 s or reports another fingerprint falls back to the in-thread
+  host and rebuilds, and `__knotPerf().host` says which host runs and
+  why (`kind`, `reason`).

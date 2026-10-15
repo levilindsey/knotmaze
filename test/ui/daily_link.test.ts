@@ -336,6 +336,8 @@ describe("the daily design and its exempt preferences (K56)", () => {
       // K147, proposed with it.
       "settleBudget",
       "loadSettle",
+      // K7 stage 3: which thread runs the physics.
+      "physicsWorker",
       // K140, proposed with it.
       "confetti",
       "confettiAmount",

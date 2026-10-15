@@ -123,6 +123,16 @@ export interface HostStats {
   // The armed settle budget (null: not armed).
   budget: { budgetMs: number; costMs: number; lagS: number } | null;
   settleInfo: SettleInfo;
+  // Which host runs the physics (K7 stage 3; probes: __knotPerf().host).
+  host?: HostInfo;
+}
+
+// The host's kind, why a worker host fell back to in-thread ("" while the
+// worker runs, or for the in-thread host), and a worker host's counters.
+export interface HostInfo {
+  kind: "in-thread" | "worker";
+  reason: string;
+  [counter: string]: number | boolean | string;
 }
 
 export interface PhysicsHost {
@@ -633,6 +643,6 @@ export class InThreadHost implements PhysicsHost {
   }
 
   stats(): HostStats {
-    return this.core.stats();
+    return { ...this.core.stats(), host: { kind: "in-thread", reason: "" } };
   }
 }
