@@ -22,17 +22,22 @@ and never reused.
   share cuts: an even stride in strand order (rec.), smoothest corners
   first, or nearest the exit first. `docs/design/K74.md` ("Stage 2
   brief", "Calls for Levi").
-- **K260** · The burn race's seven calls (K114; stage 1 builds each
+- **K260** · The burn race's calls (K114; stage 1 builds each
   recommended default unless Levi answers first): (1) a loss shows a
   "Burnt" banner, then restarts with the fuse relit (a respawn can't
   work: the entrance burns first); (2) Reset path with the fire on
   restarts; (3) the fire and the turn-aligned minotaur are mutually
   exclusive in stage 1; (4) fog stays its own param until the balance
   measurement says the fire needs it; (5) the HUD shows the fire's lead
-  in its own units (x10, so 9.2 reads 92; the share line is stage 3's);
-  (6) `sparks` waits for stage 3; (7) under `clk=realtime` the fire is
-  off and its rows hidden until stage 3. `docs/design/K114_burn.md`
-  ("Calls for Levi").
+  in its own units (x10, so 9.2 reads 92; the share line is stage 4's);
+  (6) `sparks` waits for stage 4. Levi answered call 7 on 2026-10-14 at
+  about 14:46 (verbatim): "Burn race: we should probably have a fire
+  effect show at the start, but only actually start moving it after the
+  player makes their first move. Will we have a toggle for turn-aligned
+  vs realtime burning? I think we should!" So stage 1 shows the lit fuse
+  from the load, and stage 2 builds real-time burning behind the fire's
+  own toggle, `fireClock` (`clk=realtime` is the real-time chase).
+  `docs/design/K114_burn.md` ("Calls for Levi").
 - **K257** · K76 section 10's questions, for stage 2c (none blocks 2b;
   2c builds the recommendation where no answer has come): (1) a catch
   under thread reveal re-hides explored thread as `minoRefog` says, one
@@ -567,7 +572,7 @@ files at their merges. Then, as code slots free up:
     stages (`docs/design/K80_turns.md`, 7699995): stage 1 (the model and
     the mode) runs from 14:06; then K137's toggles, K138's M mechanisms
     and K139.
-13. K114's round 2, free play first: the burn race in three stages
+13. K114's round 2, free play first: the burn race in four stages
     (`docs/design/K114_burn.md`, 1e468ad). Stage 1 starts after K80
     turns stage 1 merges, and never alongside another agent changing
     how a tap becomes a turn. Then the spider (its own enemy; Levi,
@@ -637,8 +642,10 @@ K5-K7 (split, frame loop, worker) follow.
     probes `.claude/probes/K114/burn/`), launched after K80 turns stage
     1 merges, since both change how a tap becomes a turn. Brief
     `docs/design/K114_burn.md` (1e468ad, reviewed and merged
-    2026-10-14 14:38); its seven calls are K260. The spider after the
-    minotaur's controls (K174).
+    2026-10-14 14:38); its calls are K260, and Levi's answer to call 7
+    (about 14:46) adds real-time burning as stage 2, so the look is
+    stage 3 and the daily stage 4. The spider after the minotaur's
+    controls (K174).
 - **K137** · K80 section 4's cheap mechanisms, each behind a toggle
   (Levi, 2026-10-13 14:31: "I'd love to prototype all of these and have
   controls to toggle them"), after the minotaur. Sized S or S-M in the
