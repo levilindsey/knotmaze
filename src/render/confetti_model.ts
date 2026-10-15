@@ -32,15 +32,19 @@
 // Pieces at amount 1 (the rain's on a phone-sized screen: rainScreenScale
 // multiplies it on bigger ones), and the amount's top (the panel slider and
 // the link clamp read it). The pools hold the max, so the caps are hard.
-export const RAIN_PER_AMOUNT = 140;
-export const SPRAY_PER_AMOUNT = 40;
+// K317 (Levi, 2026-10-14: "more confetti by default, both from the top, but
+// especially from the finish marker") doubled the rain and quadrupled the
+// spray.
+export const RAIN_PER_AMOUNT = 280;
+export const SPRAY_PER_AMOUNT = 160;
 export const CONFETTI_AMOUNT_MAX = 3;
 export const RAIN_SCREEN_MAX = 3;
 export const RAIN_CAP = RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX * RAIN_SCREEN_MAX;
 export const SPRAY_CAP = SPRAY_PER_AMOUNT * CONFETTI_AMOUNT_MAX;
-export const REDUCED_SPRAY_SHARE = 0.4;
+// Reduced motion keeps K140's 16 pieces at amount 1 (40% of its 40).
+export const REDUCED_SPRAY_SHARE = 0.1;
 // The screen RAIN_PER_AMOUNT was tuned on: the Pixel 11's layout viewport,
-// CSS px, where 140 pieces read as a dense fall.
+// CSS px, where K140's 140 pieces read as a dense fall.
 export const RAIN_REF_W = 411;
 export const RAIN_REF_H = 753;
 
