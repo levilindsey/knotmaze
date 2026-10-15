@@ -2481,6 +2481,7 @@ async function main(): Promise<void> {
     clock.restore(saved.elapsedMs);
     fabric.restoreYarn(fabricController.taps);
     pendingExplored = exploredRuns(fabricController);
+    fabric.exploreRestore(fabricController); // K76 stage 2c: the reveal too.
     fabric.update(fabricController);
     if (fabricController.solved) pendingWin = true;
     updateHud();

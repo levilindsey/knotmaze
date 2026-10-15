@@ -7,6 +7,8 @@ import type { WalkEdge, WalkGraph, WalkVertex } from "../../src/core/walk_graph"
 import {
   FADE_MIN,
   chainVis,
+  exploreDistances,
+  exploreHoldRadius,
   exploreView,
   pieceVis,
 } from "../../src/game/explore_view";
@@ -263,6 +265,112 @@ describe("explore view (K76): on generated mazes", () => {
       expect(v.frontiers).toEqual([]);
       expect(v.pieces.length).toBe(walk.edges.filter((e) => e.ctrlB > e.ctrlA).length);
       for (const p of v.pieces) expect(p).toMatchObject(WHOLE);
+    });
+  }
+});
+
+// K76 stage 2c: the event-fed model's two additions - a caught move's run
+// and the intro's close-in.
+describe("explore view (K76 stage 2c): a caught move", () => {
+  it("shows the run from where the dot left up to where it was caught, a frontier beyond", () => {
+    const v = exploreView(
+      input(LINE, { visited: new Map([["J1", 1]]), partial: [{ edge: 0, from: 0, cur: 6 }] })
+    );
+    const ps = onChain(v.pieces, 0);
+    expect(ps.length).toBe(1);
+    expect(ps[0].c0).toBe(0);
+    expect(ps[0].c1).toBeCloseTo(6, 9);
+    expect(ps[0].f1).toBeCloseTo(1, 9); // fade 1, the lead.
+    expect(ps[0].tip1).toBe(true);
+    const f = v.frontiers.filter((f) => f.edge === 0);
+    expect(f).toEqual([{ chain: 0, edge: 0, cSolid: 6, cEnd: 7 }]);
+    expect(chainVis(v.pieces, 0, 5.9, 11, false)).toBe(1);
+    expect(chainVis(v.pieces, 0, 7.5, 11, false)).toBe(0);
+  });
+
+  it("caught from the far end, it grows from that end", () => {
+    const v = exploreView(
+      input(LINE, { visited: new Map([["J2", 1]]), partial: [{ edge: 0, from: 10, cur: 3 }] })
+    );
+    const ps = onChain(v.pieces, 0);
+    expect(ps.length).toBe(1);
+    expect(ps[0].c0).toBeCloseTo(3, 9);
+    expect(ps[0].c1).toBe(10);
+    expect(ps[0].tip0).toBe(true);
+  });
+
+  it("caught inside the reach changes nothing", () => {
+    const plain = exploreView(input(LINE, { visited: new Map([["J1", 1]]) }));
+    const v = exploreView(
+      input(LINE, { visited: new Map([["J1", 1]]), partial: [{ edge: 0, from: 0, cur: 1 }] })
+    );
+    expect(v).toEqual(plain);
+  });
+
+  it("has no frontier while the dot walks that run again", () => {
+    const v = exploreView(
+      input(LINE, {
+        visited: new Map([["J1", 1]]),
+        partial: [{ edge: 0, from: 0, cur: 6 }],
+        inflight: { edge: 0, from: 0, cur: 2 },
+      })
+    );
+    expect(v.frontiers.filter((f) => f.edge === 0)).toEqual([]);
+    expect(chainVis(v.pieces, 0, 5.9, 11, false)).toBe(1);
+  });
+});
+
+describe("explore view (K76 stage 2c): the intro's close-in", () => {
+  it("exploreDistances: walk distance from the sources, the farthest for the unreached", () => {
+    const d = exploreDistances(LINE, ["J2"]);
+    expect(d.get("J2")).toBe(0);
+    expect(d.get("J1")).toBe(10);
+    expect(d.get("T")).toBe(12);
+    const two = mkWalk([
+      { va: "A", vb: "B", chain: 0, ctrlA: 0, ctrlB: 4, length: 4 },
+      { va: "C", vb: "D", chain: 1, ctrlA: 0, ctrlB: 2, length: 2 },
+    ]);
+    const d2 = exploreDistances(two, ["A"]);
+    expect([d2.get("A"), d2.get("B"), d2.get("C"), d2.get("D")]).toEqual([0, 4, 4, 4]);
+    expect(exploreHoldRadius(LINE, d)).toBe(Math.max((0 + 10 + 10) / 2, (10 + 12 + 2) / 2));
+  });
+
+  for (const seed of [5, 42]) {
+    it(`seed ${seed}: hold 1 shows every run whole, hold 0 the plain view, and the cover contracts`, () => {
+      const walk = walkFor(seed);
+      const visited = new Map([[walk.start, 1]]);
+      const holdDist = exploreDistances(walk, visited.keys());
+      const plain = exploreView(input(walk, { visited }));
+      const full = exploreView(input(walk, { visited, hold: 1, holdDist }));
+      expect(full.frontiers).toEqual([]);
+      expect(full.pieces.length).toBe(walk.edges.filter((e) => e.ctrlB > e.ctrlA).length);
+      for (const p of full.pieces) expect(p).toMatchObject(WHOLE);
+      expect(exploreView(input(walk, { visited, hold: 0, holdDist }))).toEqual(plain);
+      // Coverage (sampled visibility summed over every run) falls with the
+      // hold and never below the plain view's.
+      const cover = (h: number): number => {
+        const v = exploreView(input(walk, { visited, hold: h, holdDist }));
+        let sum = 0;
+        for (const e of walk.edges) {
+          for (let i = 0; i <= 8; i++) {
+            const c = e.ctrlA + ((e.ctrlB - e.ctrlA) * i) / 8;
+            sum += chainVis(v.pieces, e.chain, c, 1e9, false);
+          }
+        }
+        return sum;
+      };
+      const levels = [1, 0.75, 0.5, 0.25, 0.1, 0].map(cover);
+      for (let i = 1; i < levels.length; i++) {
+        expect(levels[i]).toBeLessThanOrEqual(levels[i - 1] + 1e-9);
+      }
+      expect(levels[0]).toBeGreaterThan(levels[levels.length - 1]);
+      // No frontier is drawn where the close-in still covers.
+      const mid = exploreView(input(walk, { visited, hold: 0.5, holdDist }));
+      for (const f of mid.frontiers) {
+        const e = walk.edges[f.edge];
+        expect(chainVis(mid.pieces, e.chain, f.cEnd + Math.sign(f.cEnd - f.cSolid) * 0.05, 1e9, false))
+          .toBeLessThan(1);
+      }
     });
   }
 });
