@@ -46,7 +46,10 @@ pinned, and since G2 the paint clock lives in `advanceClocks()`** - a
 probe that only overrides `tickPaint` (the older recipe below) still
 animates the pulses, and master-vs-branch differed along every choice
 arm. Pin `r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn =
-0`. Under fog, three more: the fog-fit camera eases for over a second
+0`. Under the thread reveal, one more: the fabric's explore clock
+(`F = __knotFabricRenderer(); F.exploreClock = 1000;` and `F.tickExplore`
+forwarded with 0; without it the reveal's halo breath differed by 22050
+px, G3-0). Under fog, three more: the fog-fit camera eases for over a second
 after a move (wait until `__knotView()` holds still, before each tap and
 the capture); the background drifts in probe windows (pin
 `__knotBackgroundLayer()`'s tick and clock and re-render - the fog draws
@@ -401,7 +404,7 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   `F.tickExplore` forwarded with 0. With only k83's pins the reveal's
   halo breath differed by 22050 px between two builds, with it 2 px
   (maxΔ 1), which master against master shows too (the probe's page
-  order); k83_ab and the older PIN recipes do not pin it. A ROUND
+  order); k83_ab pins it too since K381, older recipes do not. A ROUND
   TRIP'S CONTROL MUST DIFFER: the physics is deterministic, so two loads
   of one link sleep in the same state, and batch4's six capture/restore
   round trips passed with controls of 0 px, proving nothing. Perturb the
