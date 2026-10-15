@@ -61,7 +61,7 @@ export interface MinotaurView {
 import { FogBackdrop } from "./background";
 import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
 import { MarkerMesh } from "./marker_mesh";
-import { exploreView } from "../game/explore_view";
+import { exploreDistances, exploreView } from "../game/explore_view";
 import type { ExploreView } from "../game/explore_view";
 import { EXPLORE_LOOK_DEFAULT, exploreLookHasHalo } from "./explore_glsl";
 
@@ -69,6 +69,8 @@ import { EXPLORE_LOOK_DEFAULT, exploreLookHasHalo } from "./explore_glsl";
 // vertex's arms grow out over this many seconds (eased), and the halo
 // look's sprite (beneath the weave at the middle of each frontier fade).
 const EXPLORE_GROW_S = 0.45;
+// K76 stage 2c: the intro's close-in, as long as the fog's (FOG_INTRO_DUR).
+const EXPLORE_CLOSE_S = 1.6;
 const HALO_TINT = 0xa8e4ff;
 const HALO_ALPHA = 0.8;
 import {
@@ -448,6 +450,15 @@ export class FabricMazeRenderer {
   private exploreClock = 0;
   private exploreLast: ExploreView | null = null;
   private exploreHeld = false;
+  // K76 stage 2c: the refog count the seen set belongs to (K174's
+  // `refogs`), caught moves' runs, the intro close-in's clock (-1 = idle;
+  // counts up from 0 once the hold releases) and its distances (from the
+  // seen set, for that many seen vertices).
+  private seenRefogs = -1;
+  private seenPartial: { edge: number; from: number; cur: number }[] = [];
+  private exploreHoldT = -1;
+  private holdDist: Map<string, number> | null = null;
+  private holdDistN = -1;
   private haloLayer: Container;
   private haloSprites: Sprite[] = [];
   // K80: the minotaur (syncMinotaur): its marker over its red highlight,
@@ -851,6 +862,7 @@ export class FabricMazeRenderer {
     // A tap mid-flight snaps the previous move: its dot lands at once, and
     // the fog still lifts along the rest of its run (K99).
     this.finishFogArc();
+    if (this.anim) this.exploreArrive(this.anim);
     this.anim = null;
     const e = this.walk.edges[edgeId];
     // A self-loop run's direction is unknowable: it sweeps A -> B (moveEnds,
@@ -866,6 +878,7 @@ export class FabricMazeRenderer {
 
   cancelMove(): void {
     this.finishFogArc();
+    if (this.anim) this.exploreArrive(this.anim);
     this.anim = null;
   }
 
@@ -874,6 +887,11 @@ export class FabricMazeRenderer {
   // uncover the rest of the run, right for a move the controller made in
   // full; a caught player never got there.
   stopMove(): void {
+    // K76 stage 2c: the thread reveal shows the run only up to the dot.
+    const a = this.anim;
+    if (a && !this.seenRuns.has(a.e.id)) {
+      this.seenPartial.push({ edge: a.e.id, from: a.from, cur: a.cur });
+    }
     this.anim = null;
   }
 
@@ -936,6 +954,7 @@ export class FabricMazeRenderer {
     // where the frame left it (K99).
     this.stampFogArc(a, prev, arrived ? a.to : a.cur);
     if (arrived) {
+      this.exploreArrive(a);
       this.anim = null;
       this.update(controller);
       return;
@@ -960,6 +979,7 @@ export class FabricMazeRenderer {
       this.stampFogArc(a, prev, cur);
     }
     if (f >= 1) {
+      this.exploreArrive(a);
       this.anim = null;
       this.update(controller);
       return;
@@ -1351,6 +1371,7 @@ export class FabricMazeRenderer {
   // dot rested), then fogArcStations in travel direction (travelOrder), so
   // a run walked out and back lifts the fog at both moves' stations.
   exploreRuns(runs: readonly number[], start: string = this.walk.start): void {
+    this.exploreMarkRuns(runs); // K76 stage 2c: the thread reveal's too.
     if (!this.fogOfWar) return;
     for (const { run, from, to } of travelOrder(this.walk.edges, runs, start)) {
       const chain = this.walk.edges[run].chain;
@@ -1957,6 +1978,7 @@ export class FabricMazeRenderer {
   // with the in-flight partial as the newest material.
   private emitAnimFrame(controller: FabricMazeController): void {
     const a = this.anim!;
+    this.exploreEpoch(controller, false); // K76 stage 2c.
     this.syncExplore(); // K76: the dot uncovers its run.
     this.syncYarn(controller);
     this.ribbons.setRim(this.rimDecl());
@@ -2016,7 +2038,9 @@ export class FabricMazeRenderer {
       this.emitAnimFrame(controller);
       return;
     }
-    if (this.explore.on) this.syncExploreSeen(controller); // K76.
+    // K76 stage 2c: always, so turning the reveal on mid-solve shows the
+    // real walk.
+    this.exploreEpoch(controller, true);
     this.syncExplore();
     this.syncYarn(controller);
     // String mode: the yarn is the traversal record - no gold spans or
@@ -2223,43 +2247,99 @@ export class FabricMazeRenderer {
     }
   }
 
-  // --- K76 THREAD REVEAL (stage 2a) -----------------------------------------
+  // --- K76 THREAD REVEAL (stage 2a; the event-fed model is stage 2c) -----
 
-  // The vertices reached and runs walked, as of the controller's state
-  // (called with no move in flight - an arriving dot lands here). A restart
-  // (the controller's reset(), K100's signal) forgets everything; several
-  // new vertices at once (the mode turned on mid-solve, a restore or a
-  // replay) appear grown, without the animation. PROBE-ONLY MODEL: the
-  // controller records taps (and the head) when a move starts, and a catch
-  // keeps them; stage 2c feeds the model from move events instead.
-  private syncExploreSeen(c: FabricMazeController): void {
-    if (this.seenRestart !== c.restarts) {
+  // THE MODEL IS FED BY MOVE EVENTS (stage 2c), recorded whether or not the
+  // mode is on: a dot that LANDS (tickAnim / setMoveProgress arrival, a move
+  // snapped by the next or cancelled) walked its run and reached its far
+  // end; a CAUGHT dot (stopMove, K80) saw its run only up to where it was
+  // caught (a partial). The controller records a tap when its move STARTS,
+  // so the 2a probe model read moves the dot never finished.
+  private exploreArrive(a: MoveAnim): void {
+    const id = a.e.id;
+    this.seenRuns.add(id);
+    if (this.seenPartial.length) this.seenPartial = this.seenPartial.filter((p) => p.edge !== id);
+    const dest = a.to === a.e.ctrlB ? a.e.vb : a.e.va;
+    if (!this.seenV.has(dest)) this.seenV.set(dest, this.exploreClock);
+  }
+
+  // Runs walked without a dot (a restore, a daily's Reset path): both ends
+  // seen, grown at once.
+  private exploreMarkRuns(runs: Iterable<number>): void {
+    for (const id of runs) {
+      const e = this.walk.edges[id];
+      if (!e) continue;
+      this.seenRuns.add(id);
+      if (!this.seenV.has(e.va)) this.seenV.set(e.va, -Infinity);
+      if (!this.seenV.has(e.vb)) this.seenV.set(e.vb, -Infinity);
+    }
+    if (this.seenPartial.length) {
+      this.seenPartial = this.seenPartial.filter((p) => !this.seenRuns.has(p.edge));
+    }
+  }
+
+  // A restart (the controller's `restarts`, K100) or a re-fogging catch
+  // (`refogs`, K174: minoRefog) forgets everything, as the fog does; the
+  // entrance is always seen, and so is the head at rest (`head`: not while
+  // a move is in flight, whose head is already its destination).
+  private exploreEpoch(c: FabricMazeController, head: boolean): void {
+    if (this.seenRestart !== c.restarts || this.seenRefogs !== c.refogs) {
       this.seenRestart = c.restarts;
+      this.seenRefogs = c.refogs;
       this.seenV.clear();
       this.seenRuns.clear();
+      this.seenPartial = [];
     }
     if (!this.seenV.has(this.walk.start)) this.seenV.set(this.walk.start, -Infinity);
-    const now: string[] = [...c.visitedJunctions, ...c.deadEndTips, c.head];
-    if (c.solved) now.push(this.walk.exit);
-    const fresh = now.filter((v) => !this.seenV.has(v));
-    const t = fresh.length > 1 ? -Infinity : this.exploreClock;
-    for (const v of fresh) this.seenV.set(v, t);
-    for (const e of c.taps) this.seenRuns.add(e);
+    if (head && !this.seenV.has(c.head)) this.seenV.set(c.head, -Infinity);
   }
 
-  // K76 stage 2c: the explore clock, called every frame by main.ts in every
-  // clock mode (the real-time chase never runs tickAnim): a re-declaration
-  // every frame while a newly visited vertex's arms grow (a move in flight
-  // re-declares anyway, emitAnimFrame).
+  // K47 RESTORE: rebuild the reveal from the replayed controller (its taps
+  // from the entrance), grown at once. main.ts calls it before the
+  // restore's update().
+  exploreRestore(c: FabricMazeController): void {
+    this.exploreEpoch(c, false);
+    this.exploreMarkRuns(c.taps);
+  }
+
+  // The explore clock, called every frame by main.ts in every clock mode
+  // (the real-time chase never runs tickAnim): a re-declaration every frame
+  // while a newly visited vertex's arms grow or the intro closes in (a move
+  // in flight re-declares anyway, emitAnimFrame).
   tickExplore(dt: number): void {
     this.exploreClock += dt;
-    if (this.explore.on && !this.anim && this.exploreGrowing(dt)) this.syncExplore();
+    let closing = false;
+    if (!this.exploreHeld && this.exploreHoldT >= 0) {
+      this.exploreHoldT += dt;
+      closing = true; // The last step declares hold 0.
+      if (this.exploreHoldT >= EXPLORE_CLOSE_S) {
+        this.exploreHoldT = -1;
+        this.holdDist = null;
+      }
+    }
+    if (this.explore.on && !this.anim && (closing || this.exploreGrowing(dt))) this.syncExplore();
   }
 
-  // K76 stage 2c: the intro hold (main.ts: the mode on, fowIntro on and the
-  // intro playing). Stage 2c's model reads it.
+  // THE INTRO HOLD (main.ts: the reveal on, fowIntro on and the intro
+  // playing): every run shows whole; releasing it starts the CLOSE-IN, a
+  // front contracting onto the plain view over EXPLORE_CLOSE_S (the fog's
+  // FOG_INTRO_DUR), never a dissolve (a dissolve would cross-fade two
+  // translucent layers of the same thread).
   setExploreHold(hold: boolean): void {
+    if (hold === this.exploreHeld) return;
     this.exploreHeld = hold;
+    this.exploreHoldT = hold ? -1 : 0;
+    this.holdDist = null;
+    if (this.explore.on && !this.anim) this.syncExplore();
+  }
+
+  // The close-in's level: 1 held, falling through a smoothstep once
+  // released, 0 at rest.
+  private exploreHoldLevel(): number {
+    if (this.exploreHeld) return 1;
+    if (this.exploreHoldT < 0) return 0;
+    const u = Math.min(1, this.exploreHoldT / EXPLORE_CLOSE_S);
+    return 1 - u * u * (3 - 2 * u);
   }
 
   // Whether a visited vertex's arms are still growing (this frame's dt
@@ -2298,6 +2378,11 @@ export class FabricMazeRenderer {
     // least the seal and tip discs, plus a margin (world ~ lattice units).
     const fillHalf = this.threadWidth / 2;
     const web = 1.15 * Math.max(fillHalf * 1.25 * this.ribbons.cuspRadius, fillHalf * 2);
+    const hold = this.exploreHoldLevel();
+    if (hold > 0 && (!this.holdDist || this.holdDistN !== this.seenV.size)) {
+      this.holdDist = exploreDistances(this.walk, this.seenV.keys());
+      this.holdDistN = this.seenV.size;
+    }
     this.exploreLast = exploreView({
       walk: this.walk,
       visited,
@@ -2306,6 +2391,9 @@ export class FabricMazeRenderer {
       reach: this.explore.reach,
       fade: this.explore.fade,
       web,
+      partial: this.seenPartial,
+      hold,
+      holdDist: hold > 0 ? this.holdDist ?? undefined : undefined,
     });
     this.ribbons.setExplore(this.exploreLast.pieces, this.explore.look, 1);
     this.drawFrontierMarks();
@@ -2355,6 +2443,8 @@ export class FabricMazeRenderer {
     seen: string[];
     runs: number[];
     held: boolean;
+    hold: number;
+    partial: { edge: number; from: number; cur: number }[];
     gaps: ReturnType<RibbonRenderer["exploreGapState"]>;
   } {
     return {
@@ -2363,6 +2453,8 @@ export class FabricMazeRenderer {
       seen: [...this.seenV.keys()],
       runs: [...this.seenRuns],
       held: this.exploreHeld,
+      hold: this.exploreHoldLevel(),
+      partial: this.seenPartial.map((p) => ({ ...p })),
       // K268: the gap gate's slot kinds and the slot table's uploads.
       gaps: this.ribbons.exploreGapState(),
     };
