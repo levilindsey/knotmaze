@@ -138,3 +138,24 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   preference: a daily keeps the player's own). `hcl` (High contrast's
   prototype look, gameplay-motion.md) is NOT a codec param: a temporary
   key read once at load.
+
+- HOVER GLOW AND PICK PARAMS (K298, 2026-10-14; brief
+  `docs/design/K298_hover_glow.md`). Four viewer preferences, APPENDED to
+  codec v5 at 131-134, after K111 stage 4's `hoverGlowWidth` (130); all
+  four are DAILY_EXEMPT_KEYS, so the golden dailies do not move:
+  - `hoverGlowLength` (`hgl`, default 3, [0.5, 15] world): how far the
+    hover glow reaches from the hover point (pulseReach before);
+  - `hoverGlowFade` (`hgf`, default 0.2, [0, 1.5] world): its fade-in
+    from each end gap (the fixed 0.75 before);
+  - `pickMargin` (`pkm`, default 4, [0, 20] CSS px): how far past a
+    thread's drawn edge a mouse or pen still picks it;
+  - `pickChoiceRatio` (`pkr`, default 1.5, [1, 4]): a choice's margin
+    over that one.
+
+  url_state.ts clamps each (`clampHoverGlowLength`, `clampHoverGlowFade`,
+  `clampPickMargin`, `clampPickChoiceRatio`; a non-finite value reads as
+  the default) in the codec path and the override keys alike. The glow
+  pair is listed under onTrailChange in undo_stack.ts's LIVE_EFFECTS,
+  the pick pair under onSlackChange (the callbacks their rows run), so an
+  undo applies them live. Shader: render-paint.md's K298; picking:
+  gameplay-camera.md's PICK MARGINS; rows: gameplay-panel.md.

@@ -84,3 +84,52 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   probe: any wake runs at 7-9 fps at default sizes on the desktop, 3-4
   in a dense maze (render-pluck.md's K279 WAKE COST). The mechanism is the K279 entry in
   render-pluck.md.
+
+- PICK MARGINS (K298, 2026-10-14; brief and handoff
+  `docs/design/K298_hover_glow.md`; Levi: "reduce the amount of mouse
+  margin we allow for clicking/hovering over a thread ... And add a
+  slider", then a wider margin for the current junction's runs with "a
+  separate slider for that ratio", and touch kept as it is).
+  - UNIT: `pickMargin` (pkm, default 4) is CSS px PAST THE DRAWN EDGE,
+    for a mouse or pen: radius = 0.5 tw + margin / scale (world). Screen
+    px, because aim error is screen px and a world margin balloons when
+    zoomed in. A CHOICE (edgeAt: a run out of the current junction)
+    gets `pickChoiceRatio` (pkr, default 1.5) times the MARGIN only, so
+    the zone still grows with the thread's width (a max with 1.6 tw
+    would leave the slider inert at the defaults). 1.5 is about master's
+    choice-over-thread ratio in margin terms, (0.9 - 0.26) / (0.7 - 0.26)
+    = 1.45. TOUCH is unchanged: GRAB_RADIUS 0.7 world for a thread,
+    max(0.9, 1.6 tw) for a choice.
+  - main.ts: `pickRadius(pointerType, choice)` feeds every pick (hover
+    and the cursor in both modes, chase and fabric taps, tapPluck, the
+    press, commitPendingDrag, setGlowAt, the touch pendingTap release
+    and emptyAt, which only the dblclick reset reads); `onThread` =
+    `ps.nearest` OR `renderer.pickThread` (particles sit up to ~0.64
+    world apart, so at a tight margin a point on the ribbon's edge can be
+    ~0.4 from both); `grabRadius` keeps touch's r and gives a mouse
+    sqrt(r² + 0.7²), so a press onThread accepted always finds a
+    particle to grab. `edgeAt(x, y, controller, maxD)` takes its radius
+    from the caller. runDistance is untouched (no radius cap there;
+    onHead uses max(1.5 head discs, 0.9)).
+  - MEASURED (`.claude/probes/K298/pick_probe.mjs`, the real cursor
+    scanning d px past the drawn edge, `?k111&am=instant&fw=0`): at
+    1400x900 (21.9 px/world, half-width 5.7 px) the thread cursor holds
+    to 3.5 px and is gone from 4.5 (master: to 9, gone from 10; nominal
+    9.6); a choice to 5.5, gone from 6.5 (master about 14); a click 8 px
+    out no longer moves and 5 px does; a press-drag 3 px out grabs and 6
+    px pans (master grabbed). At 8x zoom (175 px/world) the thread edge
+    stays 3.5 / 4.5 px (master: grabs at every d to 17 px, nominal 77).
+    A phone-size mouse (411x753, 8.95 px/world) matches master: old 3.9
+    / 5.7 px, new 4 / 6. Zoomed far out, 4 px is wider than master's 0.7
+    world. Sheet: `.claude/probes/K298/sheet/K298_pick.png` (old and new
+    zones over a thread and a choice, both viewports; pick_sheet.mjs,
+    pick_compose.mjs).
+  - PROBE GOTCHAS: measure from the DRAWN centerline (renderer
+    `chainSamples`, what the ribbon and pickThread read), not
+    `__knotPoint`: the physics curve sits 0.015 world off it at fw=0 and
+    0.059 with flow, which read as 7 and 11 px in early zoomed scans.
+    Zoom with ctrl + wheel (probes.md K73). A click that moves the head
+    changes the choices, so later choice spots land elsewhere.
+  - OPEN: a touch press on a choice lights no glow until the finger
+    moves (the pendingTap path), and whether the ratio should reach touch
+    is Levi's call.
