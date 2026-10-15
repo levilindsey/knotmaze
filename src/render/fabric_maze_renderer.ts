@@ -48,6 +48,7 @@ import type { MinoFog, PathViz } from "../ui/url_state";
 import { spotCtrl } from "../game/minotaur";
 import type { ChaseGraph, MinotaurMode, Spot } from "../game/minotaur";
 import type { TurnTelegraph } from "../game/minotaur_turns";
+import { runBurnAt } from "../game/fire";
 
 // What syncMinotaur draws: the real-time chase (MinotaurChase) or the
 // turn-aligned minotaur (K80 turns, TurnMinotaur) - where it stands on the
@@ -118,6 +119,28 @@ const TELEGRAPH_ALPHA = 0.95;
 const TELEGRAPH_RING_R = 1.45;
 const TELEGRAPH_RING_W = 0.32;
 const TELEGRAPH_STEP = 0.5;
+
+// K114 burn race, the first look (stage 1; stage 3 builds the real one,
+// brief docs/design/K114_burn.md): burnt thread charred dark around an ash
+// core, an ember at each fire front, a flame-red line along each
+// smoldering arm at the head, and the lit fuse (an ember in a ring) at the
+// entrance until the fire spreads. Widths and radii in thread widths;
+// sampled every FIRE_STEP ctrl.
+const FIRE_CHAR_COLOR = 0x22140e;
+const FIRE_CHAR_ALPHA = 0.9;
+const FIRE_CHAR_WIDTH = 1.1;
+const FIRE_ASH_COLOR = 0x7a3a22;
+const FIRE_ASH_ALPHA = 0.75;
+const FIRE_ASH_WIDTH = 0.3;
+const FIRE_EMBER_COLOR = 0xff7a1a;
+const FIRE_EMBER_CORE = 0xffe08a;
+const FIRE_EMBER_R = 0.7;
+const FIRE_SMOLDER_COLOR = 0xff3b1f;
+const FIRE_SMOLDER_WIDTH = 0.45;
+const FIRE_SMOLDER_ALPHA = 0.9;
+const FIRE_FUSE_RING_R = 1.5;
+const FIRE_FUSE_RING_W = 0.28;
+const FIRE_STEP = 0.75;
 
 // The marker meshes live for the page (each scene's overlay borrows them;
 // destroy() hands them back undestroyed - the PALETTE_CACHE lore). The
@@ -433,6 +456,10 @@ export class FabricMazeRenderer {
   private minoGlow: Sprite;
   // K80 turns: the telegraph (its committed next move), under the glow.
   private teleGfx: Graphics;
+  // K114: the burn race's first look (drawFire), over the yarn, under the
+  // markers; fireDrawn = something is drawn (cleared once the fire is off).
+  private fireGfx: Graphics;
+  private fireDrawn = false;
   // Where syncMinotaur last drew it (world), and whether a fog of war
   // covers it there; minoShown false = not drawn.
   private minoShown = false;
@@ -453,6 +480,7 @@ export class FabricMazeRenderer {
     this.threadWidth = threadWidth;
     this.overContainer = new Container();
     this.yarnGfx = new Graphics();
+    this.fireGfx = new Graphics();
     this.gfx = new Graphics();
     this.markers = markerMeshes();
     // Yarn under the markers: the markers stay readable on top of the
@@ -462,6 +490,7 @@ export class FabricMazeRenderer {
     // owned by the ribbon renderer - see syncMarkerOccluders.)
     this.overContainer.addChild(
       this.yarnGfx,
+      this.fireGfx,
       this.markers.start.mesh,
       this.markers.head.mesh,
       this.markers.exit.mesh,
@@ -1003,6 +1032,104 @@ export class FabricMazeRenderer {
       });
     }
     gfx.visible = true;
+  }
+
+  // K114 burn race, the first look (the FIRE_* constants). The fire's clock
+  // rides the dot: mid-move it is the clock before the move plus the share
+  // of the run the dot has covered, so the fire advances with the head's
+  // animation instead of jumping at its end. The smoldering arms show while
+  // the dot stands at its junction in a live race. Redrawn every frame (the
+  // threads move under it); cleared once when the fire is off. Every run's
+  // fire is drawn, seen or not: the fog sprite covers it, but K76's thread
+  // reveal does not (stage 3 owns that).
+  drawFire(controller: FabricMazeController): void {
+    const gfx = this.fireGfx;
+    const fire = controller.fire;
+    if (!fire) {
+      if (this.fireDrawn) {
+        gfx.clear();
+        this.fireDrawn = false;
+      }
+      return;
+    }
+    gfx.clear();
+    this.fireDrawn = true;
+    const a = this.anim;
+    const L = controller.walkedDist - (a ? (1 - this.moveProgress) * a.e.length : 0);
+    const char: number[][] = [];
+    const embers: number[] = [];
+    for (let eid = 0; eid < this.walk.edges.length; eid++) {
+      const e = this.walk.edges[eid];
+      const b = runBurnAt(this.walk, fire, eid, L);
+      if (b.state === "unburnt") continue;
+      if (b.state === "burnt") {
+        char.push(this.runPoints(e, 0, e.length));
+        continue;
+      }
+      for (const [x0, x1] of b.burnt) {
+        if (x1 > x0) char.push(this.runPoints(e, x0, x1));
+      }
+      for (const x of b.front) {
+        const p = this.runPoints(e, x, x);
+        embers.push(p[0], p[1]);
+      }
+    }
+    const smolder: number[][] = [];
+    if (!a && !controller.solved && !controller.fireLost) {
+      for (const eid of controller.choices()) {
+        if (!controller.smoldering(eid)) continue;
+        const e = this.walk.edges[eid];
+        smolder.push(this.runPoints(e, 0, e.length));
+      }
+    }
+    const w = this.threadWidth;
+    const strokeAll = (lines: number[][], color: number, width: number, alpha: number) => {
+      let any = false;
+      for (const pts of lines) {
+        if (pts.length < 4) continue;
+        gfx.moveTo(pts[0], pts[1]);
+        for (let i = 2; i < pts.length; i += 2) gfx.lineTo(pts[i], pts[i + 1]);
+        any = true;
+      }
+      if (any) gfx.stroke({ color, width: w * width, alpha, cap: "round", join: "round" });
+    };
+    strokeAll(char, FIRE_CHAR_COLOR, FIRE_CHAR_WIDTH, FIRE_CHAR_ALPHA);
+    strokeAll(char, FIRE_ASH_COLOR, FIRE_ASH_WIDTH, FIRE_ASH_ALPHA);
+    strokeAll(smolder, FIRE_SMOLDER_COLOR, FIRE_SMOLDER_WIDTH, FIRE_SMOLDER_ALPHA);
+    const ember = (x: number, y: number) => {
+      this.polyCircle(gfx, x, y, w * FIRE_EMBER_R, 24);
+      gfx.fill({ color: FIRE_EMBER_COLOR });
+      this.polyCircle(gfx, x, y, w * FIRE_EMBER_R * 0.45, 16);
+      gfx.fill({ color: FIRE_EMBER_CORE });
+    };
+    for (let i = 0; i < embers.length; i += 2) ember(embers[i], embers[i + 1]);
+    // The lit fuse: at the entrance from the load until the fire spreads
+    // (the clock within the delay; at h = 0, until the first move).
+    if (L <= fire.delay) {
+      this.vertexWorld(this.walk.start, this.scratch, 0);
+      const x = this.scratch[0];
+      const y = this.scratch[1];
+      this.polyCircle(gfx, x, y, w * FIRE_FUSE_RING_R, 40);
+      gfx.stroke({ color: FIRE_EMBER_COLOR, width: w * FIRE_FUSE_RING_W, alpha: 0.95 });
+      ember(x, y);
+    }
+  }
+
+  // World points along run `e` from lattice distance x0 to x1 (from its va
+  // end; ctrl taken as linear in distance along a run), every FIRE_STEP
+  // ctrl, both ends included (one point when x0 = x1).
+  private runPoints(e: WalkEdge, x0: number, x1: number): number[] {
+    const k = e.length > 0 ? (e.ctrlB - e.ctrlA) / e.length : 0;
+    const c0 = e.ctrlA + x0 * k;
+    const c1 = e.ctrlA + x1 * k;
+    const n = c1 > c0 ? Math.max(1, Math.ceil((c1 - c0) / FIRE_STEP)) : 0;
+    const pts: number[] = [];
+    for (let i = 0; i <= n; i++) {
+      const c = n === 0 ? c0 : c0 + ((c1 - c0) * i) / n;
+      this.pointFlowed(e.chain, this.ctrlMod(e.chain, c), this.scratch, 0);
+      pts.push(this.scratch[0], this.scratch[1]);
+    }
+    return pts;
   }
 
   // Where the minotaur was last drawn (world), for its off-screen

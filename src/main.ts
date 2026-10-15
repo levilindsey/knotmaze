@@ -27,6 +27,8 @@ import { DebugRenderer } from "./render/debug_renderer";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
 import { EXPLORE_LOOKS } from "./render/explore_glsl";
 import { FabricMazeController } from "./game/fabric_controller";
+import { buildFire } from "./game/fire";
+import type { Fire } from "./game/fire";
 import {
   HOLD_DELAY_MS,
   HeldKeys,
@@ -52,6 +54,7 @@ import {
 } from "./render/background_model";
 import {
   chaseParamsOf,
+  fireSettingsOf,
   turnMinoParamsOf,
   writeParams as writeTokenParams,
   newSeed,
@@ -87,7 +90,7 @@ import {
 import { SolveClock, efficiencyOf } from "./game/maze_stats";
 import { shareText } from "./game/share_text";
 import { rateRun, ratingForResult, walkedOf } from "./game/star_rating";
-import { MazeHud, WinBanner } from "./ui/maze_hud";
+import { LossBanner, MazeHud, WinBanner } from "./ui/maze_hud";
 import type { HudSnapshot } from "./ui/maze_hud";
 import { ModeBadge, modeBadgeFor } from "./ui/mode_badge";
 import {
@@ -559,6 +562,15 @@ async function main(): Promise<void> {
   // The minotaur on screen, whichever clock moves it.
   const liveMino = (): MinotaurChase | TurnMinotaur | null => chase ?? turnMino;
   let fabricController: FabricMazeController | null = null;
+  // K114 BURN RACE (game/fire.ts): the fire for walk graph `w` under the
+  // params on screen, or null (off, real time, or the turn minotaur on:
+  // fireSettingsOf). The controller's `fire`; a change restarts the solve.
+  const fireOf = (w: WalkGraph): Fire | null => {
+    const s = params.mazeFabric ? fireSettingsOf(params) : null;
+    return s ? buildFire(w, s.speed, s.delay) : null;
+  };
+  // Set when a losing move lands; the Burnt banner waits for the dot.
+  let pendingLoss = false;
   // Stage 22: the running appearance animation (null = instant / done
   // long ago). Rebuilds and "Replay settle" restart it.
   let reveal: RevealAnimator | null = null;
@@ -1521,7 +1533,8 @@ async function main(): Promise<void> {
     if (params.mazeFabric && walkGraph) {
       fabricController = new FabricMazeController(
         walkGraph,
-        params.pathViz === "trail"
+        params.pathViz === "trail",
+        fireOf(walkGraph) // K114: null with the fire off.
       );
       fabric = new FabricMazeRenderer(
         ps,
@@ -1544,6 +1557,7 @@ async function main(): Promise<void> {
     }
     syncBackground();
     pendingWin = false;
+    pendingLoss = false;
     restartChase();
     resetAttempt();
     hideWin();
@@ -1876,7 +1890,10 @@ async function main(): Promise<void> {
         // K80: a real-time solve always starts over (a fresh chase), and so
         // does one with the turn minotaur (K80 turns, section 2.10: backing
         // out run by run past it would be suicide; a restart, not a catch).
-        realtime: chase !== null || turnMino !== null,
+        // K114 call 2: and a burn race (the fuse relit): the way back to the
+        // entrance is the way into the fire.
+        realtime:
+          chase !== null || turnMino !== null || fabricController?.fire != null,
         // K146: so does a practice run (a past daily, not scored).
         practice: attemptLate(),
       });
@@ -2089,7 +2106,19 @@ async function main(): Promise<void> {
     () => showDailyStats(),
     () => fitModeBadge()
   );
-  const hideWin = (): void => banner.hide();
+  // K114 call 1: a lost burn race's banner; its button (and a tap on the
+  // maze) restarts with the fuse relit.
+  const lossBanner = new LossBanner(
+    () => {
+      restartSolve();
+      updateHud();
+    },
+    () => fitModeBadge()
+  );
+  const hideWin = (): void => {
+    banner.hide();
+    if (lossBanner.shown) lossBanner.hide();
+  };
   // K73 + K151 MODE BADGE (ui/mode_badge.ts): what the solve on screen is,
   // left of the hamburger. "Free play" off the daily (a tap = the panel's
   // Daily button, so an X fades in), "Daily #N" on the attempt that counts
@@ -2101,7 +2130,8 @@ async function main(): Promise<void> {
     daily: () => showDailyStats(),
     explain: (tip) => showToast(tip, 4500),
   });
-  const fitModeBadge = (): void => modeBadge.fit([hud.el, banner.el]);
+  const fitModeBadge = (): void =>
+    modeBadge.fit([hud.el, banner.el, lossBanner.el]);
   window.addEventListener("resize", fitModeBadge);
   // K92 UNDO AND REDO (ui/undo_buttons.ts): beside the hamburger while the
   // panel is open, the badge on the row below them then (so it re-fits).
@@ -2425,6 +2455,10 @@ async function main(): Promise<void> {
       deadEnds: params.deadEnds ? c.deadEndTips.size : null,
       // K80: times caught so far (null: no minotaur).
       catches: liveMino()?.catches ?? null,
+      // K114: the fire's lead at your junction while the race runs, the
+      // closest call once it is over (null: no fire).
+      fireLead: c.fire && !c.solved && !c.fireLost ? c.fireLeadHere : null,
+      closestCall: c.fire && (c.solved || c.fireLost) ? c.fireClosest : null,
     };
   };
   // The HUD and the mode badge (it re-fits around the HUD's new size).
@@ -2714,10 +2748,29 @@ async function main(): Promise<void> {
       // minotaur has catches, no time hunted).
       catches: mino ? mino.catches : null,
       chasedMs: chase ? chase.huntSeconds * 1000 : null,
+      // K114: a burn race's closest call (null: no fire).
+      closestCall: c.fire ? c.fireClosest : null,
       rating,
     });
     updateHud();
     throwConfetti();
+  };
+
+  // K114 call 1: a lost burn race's ARRIVAL (or a tap on the maze after
+  // its banner was closed): stop the clock, show the Burnt banner. Its Try
+  // again restarts with the fuse relit (restartSolve: a reset, counted in
+  // `restarts`); so does Reset path (call 2). A burn race is never a daily
+  // (fire is no exempt key), so nothing is recorded.
+  const showFireLoss = (): void => {
+    if (!fabricController) return;
+    const c = fabricController;
+    if (clock.state === "running") clock.stop(performance.now());
+    lossBanner.show({
+      timeMs: clock.elapsed(performance.now()),
+      walked: c.walkedDist,
+      closest: c.fireClosest,
+    });
+    updateHud();
   };
 
   // K140: a finish's confetti, with its banner (every finish: dailies, free
@@ -2800,13 +2853,19 @@ async function main(): Promise<void> {
     );
   };
 
-  // A fresh solve on the same maze (Reset path, a clock change): a new
-  // chase or none, nothing recorded.
+  // A fresh solve on the same maze (Reset path, a clock change, K114's
+  // Burnt banner): a new chase or none, the fuse relit, nothing recorded.
+  // THE level restart: a caller follows it with updateHud(). K80 turns
+  // stage 2's catch toggle (what a catch resets) is to reuse it.
   const restartSolve = (): void => {
+    // K114: the fuse relit under the params on screen (a clock change may
+    // have turned the fire on or off, or moved its speed or delay).
+    if (fabricController) fabricController.fire = fireOf(fabricController.walk);
     fabricController?.reset();
     fabric?.cancelMove();
     fabric?.clearYarn();
     pendingWin = false;
+    pendingLoss = false;
     restartChase();
     hideWin();
     if (fabric && fabricController) fabric.update(fabricController);
@@ -3148,6 +3207,14 @@ async function main(): Promise<void> {
     if (!fabric || !fabricController) return false;
     // K80: the real-time mode queues the run with the chase instead.
     if (chase) return handleChaseTap(x, y);
+    // K114: a lost race takes no moves. A tap on the maze brings the Burnt
+    // banner (and its Try again) back if it was closed; otherwise the tap
+    // plucks as anywhere else.
+    if (fabricController.fireLost) {
+      if (pendingLoss || lossBanner.shown) return false;
+      showFireLoss();
+      return true;
+    }
     // K80 turns: with the turn minotaur on, a tap on your own junction is
     // the wait move (before the runs: a short run's tap zone reaches the
     // junction, and the head disc sits over it; onHead leaves the runs'
@@ -3156,6 +3223,15 @@ async function main(): Promise<void> {
     const eid = fabric.edgeAt(x, y, fabricController);
     if (eid < 0) return false;
     return moveAlong(eid);
+  };
+  // K114: a refused (smoldering) tap's toast, at most once per 1.5 s (a
+  // held key retries every frame).
+  let smolderToastAt = -Infinity;
+  const smolderToast = (): void => {
+    const t = performance.now();
+    if (t - smolderToastAt < 1500) return;
+    smolderToastAt = t;
+    showToast("Smoldering: the fire gets to the end of that run first.", 2500);
   };
   // One move along run `eid` from the head, as a tap on it (K120's keys
   // share it). Returns true when the move was taken.
@@ -3176,8 +3252,14 @@ async function main(): Promise<void> {
         fabricController
       );
       if (result === "win") pendingWin = true;
+      // K114: no safe arm at the new junction loses the race; the Burnt
+      // banner waits for the dot, as the win's does.
+      else if (fabricController.fireLost) pendingLoss = true;
     } else {
       fabric.update(fabricController);
+      // K114: the fire reaches that arm's far end first. Say why nothing
+      // moved (the tap is taken: no tug).
+      if (result === "smolder") smolderToast();
     }
     updateHud();
     // No wake(): a move touches markers, paint and the yarn only, and the
@@ -3231,9 +3313,13 @@ async function main(): Promise<void> {
     const wv = walkGraph?.vertices.get(v);
     if (!wv || !walkGraph || !fabric) return [];
     fabric.vertexWorld(v, keyPt, 0);
+    // K114: a burnt run is no choice (choices() drops it); a smoldering arm
+    // stays, its refusal toasts as a tap's does.
+    const fc = fabricController;
+    const edges = fc?.fire && v === fc.head ? fc.choices() : wv.edges;
     return departureVectors(
       walkGraph.edges,
-      wv.edges,
+      edges,
       v,
       keyPt[0],
       keyPt[1],
@@ -3253,6 +3339,9 @@ async function main(): Promise<void> {
     sceneReady() &&
     !fabricController.solved &&
     !pendingWin &&
+    // K114: a lost burn race (or one whose loss is landing) takes no moves.
+    !fabricController.fireLost &&
+    !pendingLoss &&
     !(chase?.finished ?? false);
   const setKeyHover = (eid: number): void => {
     if (!fabric || !fabricController) return;
@@ -4262,6 +4351,13 @@ async function main(): Promise<void> {
           pendingWin = false;
           showFabricWin();
         }
+        if (pendingLoss && !fabric.animating) {
+          pendingLoss = false;
+          showFireLoss();
+        }
+        // K114: the fire's look rides the dot (the cheap first look; a no-op
+        // without a fire once cleared).
+        fabric.drawFire(fabricController);
       }
       // K120: the move pad shows while the keys are live (knot mode too:
       // there it hides). K224: and the panel is closed (an open panel is
@@ -4734,6 +4830,20 @@ async function main(): Promise<void> {
       optimal: wg.optimalLength,
       backtrack: c.backtrackDist,
       walked: c.walkedDist, // K155
+      // K114: the burn race (null: no fire). `smoldering`: the head's arms
+      // whose tap the fire refuses; `banner`: the Burnt banner shows.
+      fire: c.fire
+        ? {
+            speed: c.fire.speed,
+            delay: c.fire.delay,
+            lead: c.fireLeadHere,
+            closest: c.fireClosest,
+            lost: c.fireLost,
+            pendingLoss,
+            banner: lossBanner.shown,
+            smoldering: c.choices().filter((eid) => c.smoldering(eid)),
+          }
+        : null,
       // K100: the solve's restarts, and the fog's explored stamps.
       restarts: c.restarts,
       fog: fb.fogProbe(),
