@@ -4,6 +4,7 @@ paths:
   - "src/ui/**"
   - "src/audio/**"
   - "src/main.ts"
+  - "src/app/**"
   - "test/game/**"
   - "test/ui/**"
   - "test/audio/**"

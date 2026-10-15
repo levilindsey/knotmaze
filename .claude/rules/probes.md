@@ -4,6 +4,7 @@ paths:
   - "scripts/*.mjs"
   - "scripts/*.ps1"
   - "scripts/*.ts"
+  - "src/app/probe_hooks.ts"
 ---
 
 # Probe and verification lore
