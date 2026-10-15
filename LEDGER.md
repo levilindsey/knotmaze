@@ -250,20 +250,31 @@ and never reused.
   (`pendingWin`, `src/main.ts` about line 2079) and the Reset path during
   the winning move, or only on a live finish? (3) the colors (a festive
   set built from the gold 0xffd23f) and the default amount, 1?
-- **K302** · K7's 11 calls (`docs/design/K7_worker.md`, "Design
-  handoff", "Levi's calls"; recommended yes on each; asked at 20:15): (1)
-  the worker becomes the default after the phone pass, with `phw=0` and
-  an automatic fallback; (2) no SharedArrayBuffer and no COOP/COEP; (3)
-  no pointer-led grab at first (the grab trails by about 40-50 ms); (4)
-  the hidden pre-settle and the trefoil move into the worker; (5) physics
-  pauses while main is frozen (the daily sleeps at about 12 s, not 7-8);
-  (6) FYI: dense stays render-bound at about 30 fps, so a priority call on
-  K8; (7) the phone pass gates the default; (8) K8/K9's warm-up next,
-  beside stage 2, starting with a trace; (9) `phw` as a daily-exempt link
-  param; (10) five stages instead of four; (11) FYI: 0.76x real time at
-  gs 18. Stage 1 needs none; stage 2 assumes 5 and 10. Levi answered (8)
-  at about 20:43, "Let's prioritize this too.": K307 traces from 20:49,
-  beside stage 1. The others are open.
+- **K318** · Win effects (Levi, 2026-10-14 21:37-21:38: "some gratuitous
+  effect along the entire length of the path traveled" and "We could
+  probably support multiple options for gratuitous game-win effects...
+  Again, please think of a bunch of ideas, and themes"): one show in many
+  themes. A runner with momentum races the route from the start, braking
+  into tight curves, lights the path behind it, pops each junction and
+  blasts the finish. Themes: Party, Inferno, Fireworks, Storm, Water,
+  Cosmos, Garden, Frost, Gold, Neon, Ink, Dragon and Celtic, plus layers
+  for any theme (the path's song, a physics push outward from curves, a
+  background wake). Ideas sent the same evening; waiting on which themes
+  come first, one default or random each win, and whether the runner
+  follows the route with its loops cut or the whole walk.
+  `docs/design/K318_win_effects.md`.
+- **K321** · The credits page (Levi, 2026-10-14 21:47: "In the credits
+  section, we can also reference Claude Code." and "We should also list
+  me in the credits."). He also asked how a single-member LLC names the
+  company against the person, and whether to rename the page from
+  "Licenses" to "Credits". Proposed the same evening: "Created by Levi
+  Lindsey", "Built with Claude Code (Anthropic)" and "(c) 2026 Snoring
+  Cat LLC. All rights reserved." at the top; the page and the panel's
+  link renamed to Credits (`credits.html`), the license texts kept under
+  an "Open-source licenses" heading. Waiting on his yes; then a small
+  build (`notices/page.ts`, `notices/vite_plugin.ts`'s NOTICES_FILE,
+  `src/ui/tweakpane_panel.ts`'s link, `test/notices/notices.test.ts`,
+  `.claude/rules/notices.md`).
 
 ## In progress
 
@@ -468,9 +479,9 @@ and never reused.
     a595ec530724dbba1, on the phone): the A/A smoke test, `-WaitReady`
     (K171 b: a read-only check every 3 min, two ready in a row start the
     pass; `retry_quiet.ps1` waits up to 240 min), the tracked noise floor
-    (`scripts/phone_pass/noise.json`, landscape, K193), defaults `-Moves
-    0,7,13` and `-LoadSeconds 30`, clean-origin looks, and the round's
-    new looks. Its worktree is kept.
+    (landscape then, now `noise.landscape.json` beside K253's portrait
+    floor), defaults `-Moves 0,7,13` and `-LoadSeconds 30`, clean-origin
+    looks, and the round's new looks. Its worktree is kept.
   - the round pass of 2026-10-14 01:55-02:20 (base ab6d330, head
     54a2b43 = 81d31a5's code; 3 reps, landscape, no watchdog trip):
     every at-rest cell (fabric at 0, 7 and 13 moves, knot) is within
@@ -514,9 +525,11 @@ and never reused.
     `looks_run.json`, `make_looks.mjs` and the adb recovery logs); the
     morning's `.claude/probes/rounds/2026-10-14-81d31a5/`; 3c's
     `.claude/probes/K156/3c/`.
-  - next: the next phone window Levi lends: K253's portrait A/A first
-    (K300's `-Moves` fix before it), then frames (`-Phase frames -Reps
-    2`), K98's markers and K92's badge (K230), the 14 dropped looks
+  - next: the next phone window Levi lends: frames (`-Phase frames -Reps
+    2`, on K253's portrait floor; K300's `-Moves` fix waits for the next
+    A/A), K307's phone measures (its "Stage 1 handoff"), the frame
+    rate at the finish under K317's confetti, K98's markers and K92's
+    badge (K230), the 14 dropped looks
     (K233; spec in round b's `looks.json`) and K232's two load cells with
     3 reps. Looks and probes must cope with K301's width flip, and a
     confetti A/B needs one maze on both builds. Sweep the 3a and 3b
@@ -546,56 +559,6 @@ and never reused.
   - next: after 16:20 on 10-14, run `cleanup.ps1` again for the
     profiles (about 33 GB). The probe libraries' delete-on-exit goes
     with K150.
-- **K193** · The phone pass's orientation, decided (Levi, 2026-10-14
-  about 11:10, email 4.1: "b seems best"): the pass emulates a 411x753
-  portrait viewport over CDP and leaves the phone as it sits, and a
-  fresh A/A floor at that viewport replaces the landscape one (K195)
-  before the next round's pass (K98, K92, k140-confetti) and K232's
-  rerun. `scripts/phone_pass.ps1` follows the phone's orientation today
-  (its display check, about line 176). Background: the docked phone
-  sits in landscape (K156 3c: display 2424x1080, pages 810x331-387 CSS
-  px at dpr 2.625); round 2026-10-14b's pass ran in portrait because the
-  phone was off its dock and in use, so its A/B against the landscape
-  floor is weak (K232). Brief `docs/design/K193.md` (2b6389c).
-  - stage 1 MERGED in c36b57c..763067a (2026-10-14 14:10): `-Viewport
-    portrait|native` (default portrait) sets CDP's device-metrics
-    override (411x753 at dpr 2.625, mobile) before each navigation; a
-    pre-flight proof (`scripts/phone_pass/emulation.mjs`, with an odd
-    360x640@3 size the phone lacks) gates the frames phase; screenshots
-    clip to the viewport (`shotViewport`), which fixes K195's strip
-    (the capture surface is 808.7 CSS px tall: 148 flat rows; verified
-    on the phone, 1079x1977, 0 flat rows); the summary prints the
-    display, the viewport and the emulation check. The emulation proved
-    real on the phone twice (13:11, 13:47) and held in 15 of 15 samples.
-    The canvas backing is 822x1506 (the app caps dpr at 2), not the
-    brief's 1079x1977, which is the clipped screenshot's size. The
-    3-rep portrait A/A (`aa3`, master 96fa13a, 13:47-13:59) tripped on
-    a touch after one rep, so `scripts/phone_pass/noise.json` is still
-    the landscape floor; the one-rep table is in `rep0_table.txt`.
-    Residuals K254, ideas K255 and K256.
-  - owner: nobody since 2026-10-14 14:05 (agent a092bd665532db806
-    (sonnet) of claude session d8031183, stopped at its 1 h cap after
-    the A/A tripped; its worktree is kept).
-  - branch: mainline (merged in c36b57c..763067a); last commit: `763067a`.
-  - evidence: `.claude/probes/K193/` in the main checkout: `aa3/`
-    (the tripped A/A: `summary.md`, `bench.jsonl`, `logs/`; its
-    `noise.json` is NOT a floor), `rep0_table.txt`,
-    `wait_then_aa.ps1`, `smoke/`, `smoke2/` and `dry/`.
-  - next: when the phone can sit untouched and awake for about 30 min
-    (K253), change `phone_pass.ps1`'s `-Moves` default to 0,7,11 (K300),
-    rerun the 3-rep portrait A/A (about 27 min; a rep is about 9; the
-    19:20 try tripped after 22 of 36 samples), then `git mv
-    scripts/phone_pass/noise.json noise.landscape.json` and install the
-    new floor with `install_floor.mjs` (move it from
-    `.claude/probes/rounds/2026-10-14c-0e865bf/` to tracked
-    `scripts/phone_pass/`; it refuses a partial or tripped A/A and writes
-    the note), replace the "NOT TAKEN YET" passage in `probes-phone.md`
-    and report the table (`docs/design/K156.md`, "Round 2026-10-14c
-    handoff", Step 7; `docs/design/K193.md`, "Stage 1 handoff"). Sonnet,
-    1 h.
-  - brief: `docs/design/K193.md`.
-  - env: none; the pass builds and serves both builds itself. Check that
-    nobody is using the phone first (K234).
 - **K76** · The thread-reveal mode, stage 2 (doc section 7), decided
   (Levi, 2026-10-13): the end look is a dropdown (fade, halo, glow, dots,
   fray, beacon; default beacon); the doc's other recommendations stand
@@ -735,44 +698,43 @@ and never reused.
     measured on 0d88091): the daily's intro at about 56 fps instead of
     22.7, smooth but not a locked 60; its two freezes (2.7 s at 1.1 s,
     2.0 s at 3.8 s) stay, since they happen with physics paused too
-    (inferred shader compiles, K9); the first sleep at about 12 s instead
-    of 20.7; drags at gs 18 at 55-60 fps instead of 7, in 0.76x real
-    time; dense render-bound at about 30 fps (K8); the phone likely 40-60
-    fps, unproven until stage 5. Transferred buffers (no SAB, no
+    (cold shader compiles, traced by K307); the first sleep at about 12 s
+    instead of 20.7; drags at gs 18 at 55-60 fps instead of 7, in 0.76x
+    real time; dense render-bound at about 30 fps (K8); the phone likely
+    40-60 fps, unproven until stage 5. Transferred buffers (no SAB, no
     COOP/COEP), a mirror ParticleSystem on main, fallbacks on error or a
-    3 s timeout. Levi's 11 calls: K302.
-  - owner: agent a3b1bdbb421b88478 (opus) of claude session d8031183,
-    stage 1 (the in-thread physics host) from 20:12 (cap 22:12; ports
-    5810-5811).
+    3 s timeout. Levi's 11 calls: K302, all yes (2026-10-14 21:18).
+  - stage 1 (the in-thread physics host) finished at 21:10, not merged
+    yet: `PhysicsHost`, `PhysicsCore` and `InThreadHost` in
+    `src/physics/physics_host.ts`, `grabAt`, `buildSceneGraph` in
+    `src/core/scene_graph.ts`, every physics write in `main.ts` through
+    `host` (`ps` is a read alias), and the guard
+    `test/physics/host_seam.test.ts`. 941 tests pass, no snapshot moved,
+    and the hidden loads end bit-identical to master's. The A/B matched:
+    the daily's first sleep 20.96/20.68 s against master's 20.68/20.66,
+    drags 7.0 fps on both, the knot's first sleep 16.69 s against 16.56.
+    Residuals K314 and K315.
+  - owner: nobody since 2026-10-14 21:10 (agent a3b1bdbb421b88478 (opus)
+    of claude session d8031183 finished stage 1; worktree kept); the
+    coordinator merges.
   - branch: `worktree-agent-a3b1bdbb421b88478`
     (`.claude/worktrees/agent-a3b1bdbb421b88478`, from bf7f7e9); last
-    commit: `bf7f7e9` (the design and stage 1's brief, on master).
+    commit: `f979e2c` (the handoff; the code is `be9f5bd`, the lore
+    `c9fc1c3`).
   - evidence: the design's `.claude/probes/K7/design/`
     (`k7_results.jsonl`, `frames/`, `summarize.mjs`, `run_k7.ps1`,
     `k7_frames.mjs`, `transport/`, `spike/`); stage 1's
-    `.claude/probes/K7/stage1/` in its worktree.
-  - next: stage 1 (`PhysicsHost` and `InThreadHost`, `grabAt`,
-    `buildSceneGraph`, every physics write in `main.ts` through the host,
-    a seam guard test; byte-identical), then stages 2-5 in order. Stages
-    1 and 4 own `main.ts` (K298's small edits run beside stage 1); stage
-    5 needs the phone (Design 10; the phone's worker substep cost is
-    unknown).
-  - brief: `docs/design/K7_worker.md`, "Stage 1" (bf7f7e9).
-- **K253** · K193's portrait A/A floor on a quiet phone. Levi lent the
-  phone at about 20:33 ("The phone will be untouched for 40 minutes"):
-  the 3-rep A/A (`aa4`, master 9a5eaa8 against itself) runs from 20:37
-  to about 21:05, with `-Moves 0,7,13`, so its fabric@13 cell sits on the
-  maze's finish (K300). Earlier tries tripped on a touch (13:59 after one
-  rep; 19:37 after 22 of 36 samples, `.claude/probes/K253/aa3/`).
-  - owner: claude d8031183-cd9e-4b70-9968-661d70634c84 (the coordinator's
-    background shell), from 20:37.
-  - branch: mainline; last commit: `9a5eaa8` (the build under test).
-  - evidence: `.claude/probes/K253/aa4/` (`logs/run.log`, then
-    `summary.md` and `noise.json`) and `aa4_console.txt` beside it.
-  - next: on exit 0, install the floor as K193's next says, flagging
-    fabric@13 (K300); on a trip (exit 2), report it and install nothing.
-  - brief: `docs/design/K193.md` ("Stage 1 handoff");
-    `docs/design/K156.md` ("Round 2026-10-14c handoff", Step 7).
+    `.claude/probes/K7/stage1/` (`load_probe.mjs`, `input_probe.mjs`,
+    the A/B), in its worktree until the merge copies it.
+  - next: merge stage 1, then stage 2 (the worker core, the snapshot and
+    the mirror, in Node only), then 3-5 in order. Stage 3 checks that
+    pre-settle slices answered from a `settled` message arrive a frame
+    late. Stage 4 also attributes the main-thread JS that K307's trace
+    left unexplained (about 86 ms in the first freeze, 47 ms in the
+    second, and an 80-96 ms frame at about 6.1 s). Stages 1 and 4 own
+    `main.ts`; stage 5 needs the phone.
+  - brief: `docs/design/K7_worker.md`, "Stage 1 handoff" (on the branch)
+    and "Stage 2: the worker core, the snapshot and the mirror, in Node".
 - **K298** · The hover glow, its own stage (Levi, 2026-10-14 about 19:13,
   verbatim: "Ok, I take it back. Let's give hoverGlow it's own length
   setting. Also, let's make the length of its fade-out near the end of
@@ -807,28 +769,43 @@ and never reused.
     (rebased onto K7's stage 1 if that has merged), then the merge; K111
     stage 5 (K265) follows.
   - brief: `docs/design/K298_hover_glow.md`.
-- **K307** · The daily intro's two freezes, 2.7 s at 1.1 s and 2.0 s at
-  3.8 s (plus about 300 ms at 0.4 s), which happen with physics paused
-  too, so the worker cannot remove them; inferred shader compiles, never
-  traced (K7's design). Levi, 2026-10-14 about 20:43, answering K302
-  (8): "Let's prioritize this too." Split from K9. Stage 1 traces and
-  attributes them, measures cold and warm shader caches and the ANGLE
-  backends, proves it with throwaway blocking and parallel-compile
-  warm-ups, and designs stage 2; it changes no tracked src. Stage 2 (the
-  warm-up) touches the load sequence and the program sites, so it
-  follows K7's stage 1.
-  - owner: agent a119ffbc187f24aad (opus) of claude session d8031183,
-    stage 1 from 20:49 (cap 22:49; ports 5820-5829).
+- **K307** · The daily intro's freezes are cold shader compiles (stage
+  1's trace, 2026-10-14 21:39; the desktop's RX 6800 XT, ANGLE D3D11):
+  bg-vellum about 0.28 s at 0.3 s, section-rgb about 2.8 s at 1.0 s,
+  arm-strip and junction-field about 2.2 s at 3.9 s; `am=instant` links
+  freeze 3.1-5.4 s cold in their first frame. FXC compiles them and Pixi
+  reads LINK_STATUS right after `linkProgram`, so main blocks until the
+  link ends, and the GPU's wait stops every present: nothing on the page
+  animates through it, a worker's canvas, CSS or a GIF included. With a
+  warm cache the first frame shows at 0.70-0.74 s. A throwaway prototype
+  that compiles in parallel (`KHR_parallel_shader_compile`) kept the
+  screen presenting at about 56 frames a second with the CSS trefoil
+  turning throughout, and the intro ran smoothly from about 3.6 s instead
+  of 6.2 s; the maze's first frame moves from about 1.0 s to about 3.3 s,
+  behind the loader. Levi, 2026-10-14 about 20:43, answering K302 (8):
+  "Let's prioritize this too." Split from K9.
+  - owner: nobody since 2026-10-14 21:39 (agent a119ffbc187f24aad (opus)
+    of claude session d8031183 finished stage 1); the coordinator merges.
   - branch: `worktree-agent-a119ffbc187f24aad`
-    (`.claude/worktrees/agent-a119ffbc187f24aad`, from 3e86fb5), plus a
-    local throwaway `k307-proto` for the prototypes; last commit:
-    `3e86fb5` (the brief, on master).
-  - evidence: `.claude/probes/K307/` in its worktree
-    (`trace_intro.mjs`, traces, `builds/`, patches); K7's measurements
-    in `.claude/probes/K7/design/`.
-  - next: stage 1's seven items, then merge its handoff and lore; stage
-    2 after K7's stage 1 has merged.
-  - brief: `docs/design/K307_intro_freezes.md`.
+    (`.claude/worktrees/agent-a119ffbc187f24aad`, from 3e86fb5); last
+    commit: `4fe5e87` (unpushed). The local `k307-proto` (51f7480) holds
+    the throwaway prototypes and is never merged.
+  - evidence: `.claude/probes/K307/` in its worktree until the merge
+    copies it (`trace_intro.mjs`, the traces, `builds/`, patches); lore
+    `.claude/rules/render-shaders.md` (on the branch).
+  - next: merge stage 1; then stage 2, the warm-up
+    (`src/render/program_registry.ts`, `src/render/shader_warmup.ts`,
+    `__knotWarmup()`, a 15 s gate on `finishPresettle`, the background
+    held, wave 1 then wave 2), once K7's stage 1 and K298 have landed,
+    since both edit `main.ts`. Wave 2 covers the programs nobody has timed
+    yet (the explore variant, the other backgrounds, bg-fog, pluck-still,
+    the DisplacementFilter, the confetti); `trace_intro.mjs` measures
+    them. The phone's measures ride K156's next pass: the renderer
+    string, whether the extension is exposed, per-program cold waits
+    through a shader-salt probe build (never wipe Levi's Chrome data),
+    presents during the waits, and the first frame.
+  - brief: `docs/design/K307_intro_freezes.md`, "Stage 1 handoff" and
+    "Stage 2: the warm-up".
 
 ## Next, in order
 
@@ -864,12 +841,14 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K7's stage 1 from 20:12 (cap 22:12, opus),
-K253's portrait A/A on the phone from 20:37 (to about 21:05), and from
-20:49 K298 and K307's trace (caps 22:49, opus). K111 stage 5 (K265)
-follows K298, and K307's warm-up follows its trace once K7's stage 1
-has merged. K299 merged at 20:45, K7's design at 20:10, K111 stage 4
-at 19:11 and K156's round 2026-10-14c pass at 19:48. K279's
+(he may reorder). Running: K298 from 20:49 (cap 22:49, opus). K7's
+stage 1 finished at 21:10 and K307's trace at 21:39; both merge next,
+then K7's stage 2 starts. K111 stage 5 (K265) follows K298, and K307's
+warm-up follows K7's stage 1 and K298 (all three edit `main.ts`);
+K313's loader follows K307's warm-up. K317 (more confetti) shipped at
+21:53. K253's portrait A/A finished at 21:02 (the floor installed at
+21:24), K299 merged at 20:45, K7's design at 20:10, K111 stage 4 at
+19:11 and K156's round 2026-10-14c pass at 19:48. K279's
 stage 2
 waits for Levi's picks (K288). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
@@ -891,7 +870,7 @@ files at their merges. Then, as code slots free up:
    K148, K198, K100, K93 and K120; K232-K234 filed), and so is round
    2026-10-14c's (18:53-19:37, head 02194b4: K279, K268 and k140 looks;
    merged at 19:48). The next window covers K98 and K92 and the frames,
-   after the portrait floor: its A/A tripped at 19:37 on a touch (K253).
+   on the portrait floor K253 installed at 21:24 (459cc11).
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
    5fed5c1, and its controls (K174, Levi's answers of 2026-10-14 about
@@ -917,8 +896,8 @@ files at their merges. Then, as code slots free up:
     96fa13a..af0f054), K191's
     fade-out (merged 2026-10-14 12:04, fafa340..3467117), K235 with K239
     (merged 2026-10-14 12:44, 08d1383..05e6d4d), and K193's portrait
-    emulation (merged 2026-10-14 14:10, c36b57c..763067a; its A/A floor
-    tripped in round 2026-10-14c and waits for a quiet phone, K253).
+    emulation (merged 2026-10-14 14:10, c36b57c..763067a; its portrait
+    floor installed at 21:24 in 459cc11, K253).
 11. K76 stage 2, in four stages (`docs/design/K76.md`, bcb969e): 2a (the
     re-base, the model, the paint variant) merged at 14:15 and 2b
     (crossing gaps and junction joints) at 16:04 (3ffed34..8d671ba).
@@ -968,7 +947,7 @@ questions for stage 2c); K260 and K261
 (the burn race's
 calls 2-4, and K74 stage 2's calls, built as recommended); K280 (the
 fire's heat); K282 (an explanation for the HUD's stats during play);
-K302 (K7's calls; (8) answered);
+K318 (the win effects' themes); K321 (the credits page);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -985,7 +964,11 @@ five build stages, in order (`docs/design/K7_worker.md`, "Build
 stages"). K5 and K6 are not needed first and come after stage 5, with
 K24. Stages 1 and 4 own `main.ts` (K298's small edits run beside stage
 1). K307 (the intro's freezes; Levi, about 20:43: "Let's prioritize
-this too.") traces beside stage 1, and its warm-up follows stage 1.
+this too.") traced them beside stage 1 (done at 21:39: cold shader
+compiles), and its warm-up follows stage 1 and K298. Stage 1 finished
+at 21:10, and all of K302's calls are yes. K313 (a
+loader that looks like the maze; approved at about 21:20) follows
+K307's warm-up.
 
 - **K294** · Per-model minotaur tuning, for K80 turns stage 3 (Levi,
   2026-10-14 about 19:00: "Yes."): the hunter, guard and stalker share
@@ -1086,7 +1069,8 @@ this too.") traces beside stage 1, and its warm-up follows stage 1.
   polyline tolerance, a per-point far-branch gate, and dropping the
   globals fetch. K7's design (2026-10-14): dense (5448 particles) is
   render-bound at about 30 fps (render alone 31-34 ms), so the worker
-  does not fix it; a priority call on K8 (K302 (6)).
+  does not fix it. K302 (6) put that to Levi as a priority call; his
+  "Yes." is read as noted, so K8 keeps its place.
 - **K9** · G4: smooth-union SDF junction webs (cuspRadius = blend
   radius); A/B crops at cr 1, 3, 6 before the fans are deleted. Also
   closes G1's x160 leftover: a faint tick where a wedge flank meets a
@@ -1264,6 +1248,19 @@ this too.") traces beside stage 1, and its warm-up follows stage 1.
   `floor(k*n/n)` = k-1 in 3275 of 16384 pairs), so ring and lap math
   must be integer-corrected, and a float64 CPU mirror will not catch it.
   Held while Levi is away (claude-config edits wait for his approval).
+- **K313** · A loader that looks like the maze (Levi, 2026-10-14 about
+  20:58; approved at about 21:20: "sgtm", "Trail should be a fixed
+  length"): a trefoil-shaped maze with over/under gaps, the head fixed at
+  the center and a fixed-length trail, the maze turning and sliding
+  beneath it; drawn procedurally by a tiny OffscreenCanvas worker inlined
+  in `index.html` (plus a static SVG trefoil from the first paint), so it
+  shows before the bundle loads and keeps moving while main is busy;
+  today's CSS trefoil is the fallback. Follows K307's warm-up: K307's
+  trace found that on Windows no loader of any kind animates through a
+  blocking shader link (the GPU's wait stops every present), and with
+  the parallel warm-up today's CSS trefoil turned throughout. The build
+  measures on the phone the first frame after navigation and the frames
+  through the freezes. `docs/design/K313_loader.md`.
 
 ## Residuals (known, not fixed)
 
@@ -1516,8 +1513,8 @@ this too.") traces beside stage 1, and its warm-up follows stage 1.
   render ms swings 7.5-20.5 ms in A/A, no use at rest; K80's indicator
   look shows the indicator but never taps it.
   - 2026-10-14: the white strip is fixed by K193 (c36b57c..763067a: screenshots
-    clip to the viewport). The portrait floor is not taken yet: K193's
-    A/A tripped on a touch after one rep (K193's next, K253).
+    clip to the viewport). The portrait floor was taken by K253
+    (installed 2026-10-14 21:24 in 459cc11).
   - 2026-10-14 19:37: the watchdog's touch trip works. Levi's touch
     stopped K253's second A/A after 22 of 36 samples, and the pass's
     cleanup ran clean (K156, "Round 2026-10-14c handoff", Step 7).
@@ -1883,9 +1880,11 @@ this too.") traces beside stage 1, and its warm-up follows stage 1.
   110; the header, line 49, says `?b.J` is solved on its 14th move) now
   lands on the finish: master's `?b.J` is solved on its 12th move (since
   K74 stage 2, inferred), so fabric@13 times the stars and confetti and
-  the bench only logs "made only 12 of 13". Change the default to 0,7,11
-  with K253's A/A, and have the summary drop or flag a cell whose walk
-  fell short (`docs/design/K156.md`, "Round 2026-10-14c handoff", Step 7).
+  the bench only logs "made only 12 of 13". The summary already flags a
+  sample taken at the finish. K253's portrait floor was taken at 0,7,13
+  (fabric@13 on the finish in 6 of 6 samples), so change the default to
+  0,7,11 together with the next A/A, which then takes a fabric@11 floor
+  (`docs/design/K156.md`, "Round 2026-10-14c handoff", Step 7).
 - **K301** · The phone pass tab's layout flips from 411x753 to 412x755
   CSS px after its first real tap or move (round 2026-10-14c, under
   K193's CDP emulation): same-state baselines and fixed-size crops shear
@@ -1912,6 +1911,21 @@ this too.") traces beside stage 1, and its warm-up follows stage 1.
   present in the shader" (in Levi's console, 2026-10-14; noted by K299's
   brief). Find which mesh binds attributes its program does not declare,
   and tidy it. `docs/design/K299_choice_pulse_bug.md`.
+- **K314** · `src/main.ts`: the non-finite watchdog's comment (about line
+  4274 at 459cc11) says `halted` is "Cleared on regenerate", and the
+  stamp says "(regenerate to reset)", but nothing sets it back to false
+  (its only `= false` is the declaration). Noted by K7's stage 1.
+- **K315** · `__knotPhys` calls `sys.readSlideStats()`, which resets the
+  slide counters it reads (a read that writes telemetry). Under K7's
+  mirror it needs the diagnostic bridge or a worker-side count; decide in
+  K7's stage 2 or 4 (`docs/design/K7_worker.md`, "Stage 1 handoff", "For
+  stage 2", on K7's branch until it merges).
+- **K319** · ANGLE's Vulkan backend does not expose
+  `KHR_parallel_shader_compile` (K307's stage 1), and phones may not
+  either, so there K307's warm-up falls back to blocking links and the
+  screen still stalls for the longest compile (section-rgb, about 2.8 s
+  cold on the desktop's D3D11). The phone's answer rides K156's next pass
+  (K307's measures).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1922,6 +1936,12 @@ this too.") traces beside stage 1, and its warm-up follows stage 1.
 - **K24** · Render on demand when the scene is fully static (battery);
   part of K6. An animated background (K21) must not defeat it. After
   K7's stage 5; it reads `host.asleep`.
+- **K322** · Art, sound and music by people (Levi, 2026-10-14 21:47: "we
+  can have a follow-up item to get better icon art and to get better sfx
+  and music from actual people. We'll also want to credit them."):
+  commission or license better icon art, sound effects and music before
+  launch, and credit each artist on the credits page (K321) with the
+  terms their work ships under (`notices/credits.ts`).
 
 ## Ideas (not scheduled)
 
@@ -2160,9 +2180,67 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   phases, not three or four, and its rim was injected rather than a real
   hovered choice (K298 builds the hovered choice).
   `.claude/probes/K299/sheet/`.
+- **K316** · Single-threaded WASM for the collision narrow-phase: the
+  audit's 2-4x on that slice (about 40% of a drag's physics), about
+  enough to bring gs 18 from 0.76x to real time under K7. Only if K7
+  stage 5's phone numbers show that physics, not rendering, is the
+  bottleneck. Threads are ruled out: the Gauss-Seidel solver must not be
+  colored (CLAUDE.md's architecture audit), only the collision pass could
+  split, and SharedArrayBuffer needs COOP/COEP on pages.dev, through the
+  levi.dev proxy and on the dev server, with Cloudflare's injected beacon
+  allowed. Levi asked on 2026-10-14 at about 21:18; answered at about
+  21:20.
+- **K320** · Slim or split section-rgb: at 46,850 characters it is the
+  cold critical path (about 2.8 s on the desktop, K307's stage 1). Every
+  deploy that changes a shader costs every player one cold compile (the
+  browser caches programs by their source), so a smaller or split
+  program shortens every such load, not only the first.
 
 ## Done
 
+- **K317** · More confetti by default (Levi, 2026-10-14 21:37: "We should
+  show more confetti by default, both from the top, but especially from
+  the finish marker."): the rain per amount 140 -> 280 and the finish's
+  spray 40 -> 160; reduced motion keeps its 16 pieces. The phone's frame
+  rate at the finish rides K156's next pass. Done in ab8b78f (2026-10-14
+  21:53).
+- **K253** · K193's portrait A/A floor, taken on a quiet phone (Levi lent
+  it at about 20:33: "The phone will be untouched for 40 minutes"):
+  `aa4`, master 9a5eaa8 against itself, 20:37-21:02, 3 reps, no trip, 36
+  of 36 samples at the emulated 411x753 @2.625. Installed as
+  `scripts/phone_pass/noise.json` by `scripts/phone_pass/install_floor.mjs`;
+  the landscape floor is kept as `noise.landscape.json`. The phone warmed
+  from 29.4 to 40.0 C (skin), so the load floors are mostly heat;
+  fabric@13 sat on the finish (K300). Lore: `probes-phone.md` ("THE
+  PORTRAIT FLOOR"); evidence `.claude/probes/K253/aa4/`. Done in 459cc11
+  (2026-10-14 21:24).
+- **K193** · The phone pass's orientation (Levi, 2026-10-14 about 11:10,
+  email 4.1: "b seems best"): the pass emulates a 411x753 portrait
+  viewport over CDP and leaves the phone as it sits. Stage 1 merged in
+  c36b57c..763067a (14:10): `-Viewport portrait|native`, the proof
+  (`scripts/phone_pass/emulation.mjs`) and viewport-clipped screenshots,
+  which fixed K195's strip. Its A/A tripped on a touch twice (13:59,
+  19:37); K253 took the portrait floor. Left over: K300 and K254-K256.
+  `docs/design/K193.md` ("Stage 1 handoff"). Done in 459cc11 (2026-10-14
+  21:24).
+- **K302** · K7's 11 calls (`docs/design/K7_worker.md`, "Design
+  handoff", "Levi's calls"; recommended yes on each; asked at 20:15): (1)
+  the worker becomes the default after the phone pass, with `phw=0` and
+  an automatic fallback; (2) no SharedArrayBuffer and no COOP/COEP; (3)
+  no pointer-led grab at first (the grab trails by about 40-50 ms); (4)
+  the hidden pre-settle and the trefoil move into the worker; (5) physics
+  pauses while main is frozen (the daily sleeps at about 12 s, not 7-8);
+  (6) FYI: dense stays render-bound at about 30 fps, so a priority call on
+  K8; (7) the phone pass gates the default; (8) K8/K9's warm-up next,
+  beside stage 2, starting with a trace; (9) `phw` as a daily-exempt link
+  param; (10) five stages instead of four; (11) FYI: 0.76x real time at
+  gs 18. Answers, 2026-10-14: (8) at about 20:43, "Let's prioritize this
+  too." (K307); yes to (1), (2), (4), (7), (8) and (9) at 20:58-21:05;
+  "What?" to (3), (5), (10) and (11), explained at 21:08 with (2), then
+  "All these recommendations sound good" at about 21:18. (6)'s "Yes." is
+  read as noted, so K8 keeps its place. His question on multithreaded
+  WASM was answered at about 21:20 (K316), and (4) led to K313. Closed
+  2026-10-14 21:18: all yes.
 - **K299** · The choice pulses and the trail misdrawn at one junction
   (Levi, 2026-10-14 about 19:15, on `?qoietk.KSIeBoGlf4-`). Cause:
   `kArcOfCtrl` wrapped a closed chain's ctrl through a float division
