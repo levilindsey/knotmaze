@@ -340,8 +340,9 @@ export interface UrlParams {
   exploration: Exploration;
   fowRadius: number; // [1.5, 10] visibility radius, lattice units.
   // With fog or threads: still play the intro appearance animation in the
-  // open, then close the fog in (fade + contracting reveal radius) or let
-  // the hidden threads dissolve. Live.
+  // open, then close the fog in (fade + contracting reveal radius) or
+  // close the thread reveal in (a front contracting onto what was seen,
+  // never a dissolve). Live.
   fowIntro: boolean;
   // The thread reveal (exploration "threads", K76): how far the arms of
   // the junctions you have reached show ([REVEAL_DISTANCE_MIN,
