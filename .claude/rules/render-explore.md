@@ -310,7 +310,7 @@ slot. Design and calls: `docs/design/K268.md` ("Stage 1 design", "Stage
   shaped slot's silhouette cut by 2b's scalar (crossing 100, over pass at
   vis 0.47, whose mode-on cut grew 225 px in the same run). Junctions 56,
   57, 58 and 161 still differ from mode off, with master's counts
-  (unattributed).
+  (unattributed; stage 2d's MEASURED entry below rules out two causes).
 
 ## In the game (stage 2c, 2026-10-15)
 
@@ -370,8 +370,20 @@ gameplay-links.md's EXPLORATION PARAMS.
 - THE HALO BREATHES between 0.6 and 0.85 over 2.5 s (`styleHalos`, every
   frame from tickExplore); Reduced motion holds 0.8; High contrast draws
   it at 1 in pure white (`exploreStill`, `exploreContrast`, set by
-  main.ts each fabric tick). The dots under High contrast are still the
-  look's (stage 2d: an explore-program change plus its CPU twin).
+  main.ts each fabric tick).
+- HIGH CONTRAST DOTS (K76 stage 2d, 2026-10-15, 0ac54dc): under High
+  contrast `setExplore` writes uKExplore.x = 2 instead of 1 (every other
+  test of it reads > 0.5); the fabric's `exploreContrast` setter forwards
+  to `ribbons.setExploreContrast`, which also rewrites a live 1/2 (a
+  uniform, no update()). kExploreLook then drops the dots' 1 - 0.55 u²
+  dimming and sets `kExDot` (1 where the nearest shape is a dot, 0 on the
+  cap and in every other look); the thread's main mixes rgb to white by
+  it right after the call, before the char, so a burnt dot still
+  darkens. The cap keeps the thread's color; the beacon's dots follow
+  (the same code); the shaped cut draws its dots at full strength (it
+  calls kExploreLook). CPU twins: `kExploreLookCpu(..., hc, out)` and
+  `exploreCutCoverCpu(..., hc)` in paint_math.ts, held by
+  explore_cut.test.ts "K76 stage 2d: High contrast dots" (5 tests).
 - KEPT AS 2b BUILT, calls for Levi: K268's draw order (K286). (The
   joints' binary pop at 0.98 became THE JOINT FADE in K268 stage 2.)
 - MEASURED (2026-10-15, 53a161f, `.claude/probes/K76/stage2c/`;
@@ -392,6 +404,52 @@ gameplay-links.md's EXPLORATION PARAMS.
   1.1 s after the hold starts and zooms straight in during the close-in;
   master's fog intro opens and pulls out the same way, but its close-in
   first zooms OUT to s 11.7 for about a second (`introcam.mjs`).
+- MEASURED, STAGE 2d (2026-10-15, 1ba0c8c against master ce359aa;
+  `.claude/probes/K76/stage2d/`, every desktop run under the perf lock).
+  GPU PER PROGRAM (RX 6800 XT, 3200x1800, `k111.L` phy=0, 2 moves,
+  `k268s2/gpu_by_program.mjs`: TIME_ELAPSED from the first draw, ms a
+  frame): mode off 2.59 on master and 2.58 on the branch (ribbon 1.69 /
+  1.66, fan 0.58, strip 0.06; 98.7 draws); mode on, 5 pieces, 0.86 (10
+  draws); visitAll (392 pieces) 2.82, 9% over mode off; High contrast
+  0.88; `phw=0` 0.83. THE CENSUS ON SHAPED SLOTS (`census2d.mjs`: K268
+  stage 1's S/R/F proof inside 2b's census walk; `out/census_branch.txt`,
+  `census_hc.txt`): 25/27 with High contrast off and on. The 8 shaped
+  slots at reach 2.5 follow the CPU twin at p95 0.003 to 0.009 in fade,
+  dots, beacon and halo and in HC dots and beacon, with 0 ghosts and 0
+  under-cuts. A shaped slot restores through `applyExploreGaps` (setVis
+  reads NaN there). The two fails are master's four joints (56, 57, 58,
+  161). Two hypotheses FALSIFIED: the underlay (the fan-less frames are
+  identical where the fans differ) and the gap gate (every live slot
+  reset to solved: identical). Hidden chain 70 crosses shown chain 65
+  at c273 to c279, beside 57 and 58. A third, the FAN PROGRAM, is ruled
+  out too: with both fan meshes swapped onto master's junction-field
+  program (captured in mode off), the four joints read the same counts as
+  shot on both builds, and `k268s2/swapcheck.mjs`, which names each
+  draw's program from its fragment source, shows the swap rendered (8
+  `fan` draws and no `fan-explore`, then 8 `fan-explore` after the
+  restore). So 57 and 58 (solid arms, slots solved) differ upstream of
+  the fan's shader: its records, the strip rows it reads or the geometry
+  (K268 stage 3). K290's fire-off A/B
+  against master: 31/31, 0 px in every state (`out/k290ab.txt`). THE
+  WORKER: the default against `&phw=0`, 31/31 at 0 px with phy=0 and with
+  the physics on (both hosts sleep at sim 5.000000000000038 s). THE PHONE
+  GATE (Pixel 11, section 5 of `K76_reveal_mode.md`;
+  `phonekit/gate.mjs`, the default link, the worker, the flow on): 1
+  PASSES (60.3 fps at the start, mode off and on; 60.5 mid-solve; 60.0
+  with all 388 pieces shown; no interval over 33.4 ms) and 4 PASSES (the
+  close-in, 80 frames, max 33.5 ms, none over 50). With the flow on, 2
+  and 3 cannot be read: at rest the flow's half-rate update() runs 30
+  times a second with the mode OFF too (main thread 9.8 ms a frame, p95
+  20.8), and the mode on adds 0.2 ms mean and one update() in 4 s.
+  @@FW0LORE@@ The phone has no GPU timer (PowerVR). THE
+  HELD FRAME (`k76c_probe.mjs` D, HELD_T 9 and 12.5): the hold lasts
+  about 7 s before the 1.6 s close-in (7.0 s desktop, 6.9 s phone-size,
+  6.7 s on the phone), most of it on the whole-maze fit while the
+  appearance draws: 1.6 s into the hold the upper-left half is drawn, 5.2
+  s in nearly all of it. Clock times depend on the program cache: in a
+  fresh probe profile the hold starts 6.6 to 7.4 s after load (the
+  page's 50 ms sampler misses 6 to 7 s; inferred, K307's cold compiles),
+  on the warm phone at 1.1 s, where the close-in ends by 9.4 s.
 - PROBE GOTCHAS: the fit camera now moves with the mode and after every
   move, so a same-state on/off probe waits for `__knotView()` to hold
   still after each toggle (k76_probe.mjs's viewStill) or pins
