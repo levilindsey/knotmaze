@@ -12,6 +12,8 @@ import {
   FIRE_DELAY_MAX,
   FIRE_SPEED_MAX,
   FIRE_SPEED_MIN,
+  HOVER_GLOW_WIDTH_MAX,
+  HOVER_GLOW_WIDTH_MIN,
   LOAD_SETTLE_MAX,
   MINO_ROAM_RUNS_MAX,
   MINO_RUNS_MIN,
@@ -833,6 +835,13 @@ export function buildPanel(
     fMaze, p, "hoverGlow", { min: 0, max: 1, step: 0.05 },
     "Hover glow: a run that is not one of your choices glows softly along both edges near the pointer (or under a touch press), fading toward its junctions. 0 turns it off. Applies live.",
     D.hoverGlow, () => callbacks.onTrailChange()
+  );
+  // K111 stage 4 (K264): that glow's width, a personal setting like it.
+  const hoverGlowWidthRow = row(
+    fMaze, p, "hoverGlowWidth",
+    { min: HOVER_GLOW_WIDTH_MIN, max: HOVER_GLOW_WIDTH_MAX, step: 0.05 },
+    "Hover glow width: how far in from each edge the hover glow reaches, as a share of the half-width (1 = the two edges' glows meet in the middle). Applies live.",
+    D.hoverGlowWidth, () => callbacks.onTrailChange()
   );
   const mazeStatsRow = row(
     fMaze, s, "showMazeStats", undefined,
@@ -1924,6 +1933,7 @@ export function buildPanel(
     pulseSpacingRow.hidden = !fab;
     pulseReachRow.hidden = !fab;
     hoverGlowRow.hidden = !fab;
+    hoverGlowWidthRow.hidden = !fab;
     // The gold recolor paints in gold/trail modes; the yarn replaces it.
     pathColorRow.hidden = !fab || params.pathViz === "string";
     // Music mode derives its pitch set from the song itself; manual and

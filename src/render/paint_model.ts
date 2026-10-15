@@ -67,7 +67,7 @@ export function knotUniforms(): UniformGroup {
       // No reach limit until a renderer writes one (finite: the shaders
       // subtract the fade from it).
       uKReach: v4(1e6, 1, 0, 0),
-      uKGold: v4(1, 0.8235, 0.2902, 0),
+      uKGold: v4(1, 0.8235, 0.2902, 1),
       // K76 thread reveal (on, look, breath, threadWidth): declared only by
       // the explore program (explore_glsl.ts); programs without it skip it.
       uKExplore: v4(0, 0, 1, 0.52),

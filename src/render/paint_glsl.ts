@@ -48,7 +48,10 @@ const S = PAINT_CONST.K_ROW_SHIFT;
 //                                            hover glow's strength and its
 //                                            hover point, an unwrapped ctrl
 //                                            on the RIM item's run (K145)
-//   uKGold  = (gold rgb, -)                  the path color
+//   uKGold  = (gold rgb, rimScale)           the path color; the hover glow's
+//                                            width as a scale, RIM_EDGE /
+//                                            hoverGlowWidth (1 at the default;
+//                                            K111 stage 4)
 export const KNOT_UNIFORMS_GLSL = /* glsl */ `
 uniform vec4 uKBase;
 uniform vec4 uKFx;
@@ -676,11 +679,14 @@ highp float kCov(highp float sd, highp float px) {
 }
 
 // The hover glow across the ribbon (K145, K111 stage 3; side = vUV.y, the
-// edges at 0 and 1): 1 at either edge, fading out smoothly to 0 at
-// RIM_EDGE of the half-width in from it.
+// edges at 0 and 1): 1 at either edge, fading out smoothly to 0 at the
+// hoverGlowWidth param's share of the half-width in from it (K111 stage 4,
+// K264). The width arrives as a scale on RIM_EDGE (its default), not as a
+// divisor: at the default the scale is exactly 1, so the shader divides by
+// the same constant as before the slider, however a compiler folds it.
 highp float kRimAcross(highp float side) {
   highp float e = abs(2.0 * side - 1.0);
-  return 1.0 - kSmooth((1.0 - e) / RIM_EDGE);
+  return 1.0 - kSmooth((1.0 - e) / RIM_EDGE * uKGold.w);
 }
 
 // (p, band, v, rim): the gold ramp amount, a pulse band and its strength,

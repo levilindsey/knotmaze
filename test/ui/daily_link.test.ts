@@ -323,6 +323,8 @@ describe("the daily design and its exempt preferences (K56)", () => {
       "snapBack",
       // K145, proposed with it.
       "hoverGlow",
+      // K111 stage 4 (Levi K264: "personal setting").
+      "hoverGlowWidth",
       "physics",
       // K147, proposed with it.
       "settleBudget",

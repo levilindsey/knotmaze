@@ -43,6 +43,7 @@ import {
   RIPPLE_STRENGTH_MAX,
 } from "../render/pluck_model";
 import { MARKER_SIZE_DEFAULT, sanitizeMarkerSize } from "../render/marker_glyphs";
+import { PAINT_CONST } from "../render/paint_const";
 import type {
   BackgroundColorMode,
   BackgroundId,
@@ -446,6 +447,11 @@ export interface UrlParams {
   // both rims under the pointer (or a touch press), in [0, 1]; 0 = off.
   // A viewer preference.
   hoverGlow: number;
+  // K111 stage 4 (K264): how far in from each edge that glow reaches, in
+  // half-widths ([HOVER_GLOW_WIDTH_MIN, HOVER_GLOW_WIDTH_MAX]; 1 = the two
+  // rims meet in the middle). The shader's kRimAcross divisor (uKGold.w).
+  // A viewer preference.
+  hoverGlowWidth: number;
   // K80 turns: the TURN-ALIGNED minotaur (game/minotaur_turns.ts), a
   // modifier of the turn clock (clk=realtime runs real time's own model and
   // ignores these): off | hunter | guard | stalker; the runs it takes a
@@ -496,6 +502,11 @@ export const MINO_SLEEP_MAX = 99;
 export const FIRE_SPEED_MIN = 0.3;
 export const FIRE_SPEED_MAX = 0.95;
 export const FIRE_DELAY_MAX = 40;
+
+// The hover glow's width range (K111 stage 4; url_state clamps, the panel's
+// slider). Above 0: the glow's scale divides by it (paint_math kRimScale).
+export const HOVER_GLOW_WIDTH_MIN = 0.3;
+export const HOVER_GLOW_WIDTH_MAX = 1;
 
 // The two load-settle sliders' tops (K147). LOAD_SETTLE_MAX is a sentinel
 // as well: there the page waits for the first sleep (or main.ts's wall cap).
@@ -644,6 +655,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   autoPluckGain: 0.5, // -6 dB; neutral: 1.
   markerSize: MARKER_SIZE_DEFAULT,
   hoverGlow: 0.4,
+  hoverGlowWidth: PAINT_CONST.RIM_EDGE, // 0.85 (K111 stage 3's width)
   minotaur: DEFAULT_TURN_MINO.model,
   minoSpeed: DEFAULT_TURN_MINO.speed,
   minoTelegraph: DEFAULT_TURN_MINO.telegraph,
@@ -679,6 +691,12 @@ export function fireSettingsOf(
     speed: clampFireSpeed(p.fireSpeed),
     delay: clampTo(p.fireDelay, FIRE_DELAY_MAX),
   };
+}
+
+// [HOVER_GLOW_WIDTH_MIN, HOVER_GLOW_WIDTH_MAX]; garbage reads as the default.
+export function clampHoverGlowWidth(v: number): number {
+  if (!Number.isFinite(v)) return PARAM_DEFAULTS.hoverGlowWidth;
+  return Math.min(HOVER_GLOW_WIDTH_MAX, Math.max(HOVER_GLOW_WIDTH_MIN, v));
 }
 
 // [FIRE_SPEED_MIN, FIRE_SPEED_MAX]; garbage reads as the default.
@@ -822,6 +840,7 @@ function fromCodecValues(
   p.pluckWhole = clampTo(p.pluckWhole, PLUCK_WHOLE_MAX);
   p.markerSize = sanitizeMarkerSize(p.markerSize);
   p.hoverGlow = clampTo(p.hoverGlow, 1);
+  p.hoverGlowWidth = clampHoverGlowWidth(p.hoverGlowWidth);
   clampTurnMino(p);
   p.hCutShare = clamp01(p.hCutShare);
   p.fireSpeed = clampFireSpeed(p.fireSpeed);
@@ -1110,6 +1129,8 @@ function readLegacy(
     markerSize: sanitizeMarkerSize(readNumber(query, "mks", D.markerSize)),
     // K145's hover glow (`&hg=0`), clamped to [0, 1].
     hoverGlow: clampTo(readNumber(query, "hg", D.hoverGlow), 1),
+    // K111 stage 4's hover glow width (`&hgw=0.6`), clamped to [0.3, 1].
+    hoverGlowWidth: clampHoverGlowWidth(readNumber(query, "hgw", D.hoverGlowWidth)),
     // K80 turns' turn-aligned minotaur (`&mt=hunter&msp=two&mtg=0`).
     minotaur: readChoice(query, "mt", MINOTAUR_SETTINGS, D.minotaur),
     minoSpeed: readChoice(query, "msp", TURN_SPEEDS, D.minoSpeed),

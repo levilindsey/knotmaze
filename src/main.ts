@@ -54,6 +54,7 @@ import {
 } from "./render/background_model";
 import {
   chaseParamsOf,
+  clampHoverGlowWidth,
   fireSettingsOf,
   turnMinoParamsOf,
   writeParams as writeTokenParams,
@@ -2053,6 +2054,7 @@ async function main(): Promise<void> {
     renderer.pulseSpacing = params.pulseSpacing;
     renderer.pulseReach = params.pulseReach;
     renderer.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
+    renderer.hoverGlowWidth = clampHoverGlowWidth(params.hoverGlowWidth);
     renderer.appearFx = params.appearFx;
   }
   motion.subscribe(applyAccessibility);
