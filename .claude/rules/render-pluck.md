@@ -167,10 +167,10 @@ only with the files it is about; `render.md` lists the area's other files.
   with the same |k| share an onset, so a Set of times would halve it
   exactly.
 - SOUND-ONLY TAPS (skipCore: the tapped span minus hide zones is under
-  LOBE_MIN_LEN, i.e. inside junction cores) make no pluck, so fallback
-  gives them no cue, though K104's criterion counts them as can't tell
-  (21 of 284 fabric taps, 51 of 564 dense). The web covers the thread
-  there; a cue would have to be drawn on the web or the arms. Open.
+  LOBE_MIN_LEN, i.e. inside junction cores) made no pluck, so fallback
+  gave them no cue, though K104's criterion counts them as can't tell
+  (21 of 284 fabric taps, 51 of 564 dense). K235 made them SILENT (next
+  entry), so the cue-on-the-web idea is moot for taps.
 - CENSUS (`.claude/probes/K180/census/`: K104's census per option,
   can't-tell share with sound-only taps, pluckSize 1.75, pluckWhole 0.5;
   fabric `?b.J`, dense `?b.J&gs=24&wd=0.6&brd=0.6`, knot `?7k.J&mf=0`;
@@ -178,7 +178,7 @@ only with the files it is about; `render.md` lists the area's other files.
   desktop through 19.7 / 24.3 / 0%, ride the same, pinch 22.2 / 26.1 /
   0%; phone through 26.1 / 42.2 / 0%, ride 26.1 / 93.8 / 0%, pinch 71.1 /
   93.8 / 32.8%; fallback leaves 7.4 / 9.0 / 0% showing nothing on both
-  (the sound-only taps; the cue lights 12.3 / 15.2 / 0% desktop, 18.7 /
+  (the sound-only taps, silent since K235; the cue lights 12.3 / 15.2 / 0% desktop, 18.7 /
   33.2 / 0% phone). Ride caps the sum near 1 h, and the phone's dense h
   is 1.73 px, under the 2 px line; pinch takes W from short lobes (the
   knot's, the dense design's). Through, the default, reads best.
@@ -194,3 +194,45 @@ only with the files it is about; `render.md` lists the area's other files.
   `sheet_phone.png` (+ .html). Probes there too: census/census.mjs +
   k180_table.mjs + table.md, k79_motion.mjs, png.mjs; builds through
   `scripts/preview.ps1 -Root .claude\probes\K180\builds`.
+
+## No sound in junction cores (K235)
+
+- NO SOUND IN JUNCTION CORES (K235, 2026-10-14; worktree agent; brief
+  `docs/design/K235_K239.md`; replaces K180's "sound-only taps"). Levi, on
+  K194 call 5.2: "I think nothing makes sense. Do we trigger pluck sounds
+  for this? Probably shouldn't." A tap whose pluck is skipped as skipCore
+  drew nothing but still played its note (21 of K180's 284 fabric taps, 51
+  of 564 dense). It now plays nothing. Every other tap sounds as before.
+- HOW. `tapLobes` (pluck_model.ts, pure, tested in pluck_model.test.ts
+  "a tap inside a junction core (K235)") is the one place that finds a
+  tap's tapped lobe, shared by `PluckOverlay.add()` and the sound decision:
+  `core` = the tapped lobe exists but its vibrating length (the span minus
+  the hide zones, `vibratingSpan`) is under LOBE_MIN_LEN. `add()` records
+  why it returned false in `PluckOverlay.lastSkip` ("core" | "hot" |
+  "held" | "other"; `resetSkip()` clears it; the boolean return and
+  `stats.skip*` are unchanged), and `tapPluck` (main.ts) resets it, draws
+  FIRST, then returns before `synth.pluck` when `!drawn && lastSkip ===
+  "core"`. ONLY core silences: a mid-reveal chain, pluckSize 0, a hot or
+  held unit and a degenerate lobe (a tapped lobe shorter than LOBE_MIN_LEN
+  has no `tapped` and stays `skipOther`) still sound. A side channel
+  rather than a new return type, so ribbon_renderer.ts (renderer.pluck
+  forwards add()'s boolean) stayed untouched.
+- OTHER SOUND PATHS, checked and left alone: a drag's release (endDrag:
+  a real tug with its own snap-back visual), auto plucks (random and music
+  modes: a note must sound whatever the geometry) and key moves (silent).
+  There is no strum path. An auto pluck or a release can still land in a
+  core and sound with no overlay.
+- VERIFIED (`.claude/probes/K235/k235_taps.mjs <host> <out> <label>
+  [cases]`: REAL mouse and touch taps at the middle of every span between
+  two crossing nodes, the synth's own pluck counter `__knotSynth().plucks`,
+  `&am=instant&snd=manual&fw=0&pgh=0`; fabric `?b.J`, dense `?b.J&gs=24&
+  wd=0.6&brd=0.6`, knot `?7k.J&mf=0`). Taps (maze moves, plucks, core) and
+  synth sounds, master f5207d1 -> K235: fabric 1400x900 1124 (138, 965,
+  21) 986 -> 965; dense 2336 (381, 1904, 51) 1955 -> 1904; fabric phone
+  411x753 1124 (166, 937, 21) 958 -> 937; dense phone 2336 (3, 2281, 52)
+  2333 -> 2281; knot 832 (0, 832, 0) 832 -> 832. Core taps 1 -> 0 sounds,
+  thread taps exactly 1 as before; no tap fell in hot, held, a degenerate
+  lobe or no-pluck, so those still-sounding cases never occurred in 7752
+  taps. The "miss" taps are maze moves: a press on a choice run next to
+  the head is a move (handleFabricTap), and the head or walked length
+  moved on all 138 of the desktop fabric's.
