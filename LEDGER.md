@@ -15,6 +15,32 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K90** · A physical minimum bend radius, stage 1 (Levi, 2026-10-13:
+  "ideally we'd have a more physics-based constraint to prevent loops
+  from becoming too tight in the first place"). No thread folds tighter
+  than half its width, so neither the pinch nor the filled lobe (K8)
+  ever shows. Stage 1: a census of over-tight folds on the rendered
+  centerline (fresh, gestures, violent play), then prototypes behind a
+  flag that defaults OFF (not a codec param), and
+  `docs/design/K90_bend_radius.md` with a recommendation. Guards: the K63
+  sleep battery, the kink-eye censuses, the gesture battery, and the
+  knot-mode golden (byte-identical with the flag off). Same-chain
+  collision skips +-2 ctrl, so it cannot catch folds that short.
+  - stage 1a MERGED in 6f97b92..ac5b880 (2026-10-14 07:32; no behavior
+    change).
+  - stage 1b MERGED in 10ddcac..feb12a0 (2026-10-14 09:03; flag off, no
+    behavior change; 689 tests). The folds are the Catmull-Rom's own
+    overshoot at the particle polyline's corners. A render-side bend
+    bound (`boundBend`, `src/geometry/spline_generator.ts`: 1.2 h, each
+    sample moved at most 0.5 h, 3 passes, a hard clamp or an optional
+    soft one) takes fresh windows under 1.0 h from 2357 to 10, for +5-9%
+    per ribbon rebuild. Try it live: `__knotSplineBend(true)`.
+  - Levi's call (sent 2026-10-14 about 09:20 with the sheet
+    `.claude/probes/K90/out_1b/sheet/sheet.png`): ship, tune or stop;
+    default on or off; hard or soft clamp. Before it ships: K213.
+  - record `docs/design/K90_bend_radius.md`; handoff `docs/design/K90.md`
+    ("Stage 1b handoff"); evidence `.claude/probes/K90/out_1b/`. Never
+    alongside K8 (the same fold definition).
 - **K210** · Near launch: since K132 a daily is today's `PARAM_DEFAULTS`,
   so a deployed default change moves that day's maze mid-day (a stale tab
   and a fresh load differ; saved attempts are refused, results stay).
@@ -121,45 +147,6 @@ and never reused.
 
 ## In progress
 
-- **K90** · A physical minimum bend radius, stage 1 (Levi, 2026-10-13:
-  "ideally we'd have a more physics-based constraint to prevent loops
-  from becoming too tight in the first place"). No thread folds tighter
-  than half its width, so neither the pinch nor the filled lobe (K8)
-  ever shows. Stage 1: a census of over-tight folds on the rendered
-  centerline (fresh, gestures, violent play), then prototypes behind a
-  flag that defaults OFF (not a codec param), and
-  `docs/design/K90_bend_radius.md` with a recommendation. Guards: the K63
-  sleep battery, the kink-eye censuses, the gesture battery, and the
-  knot-mode golden (byte-identical with the flag off). Same-chain
-  collision skips +-2 ctrl, so it cannot catch folds that short.
-  - stage 1a MERGED in 6f97b92..ac5b880 (2026-10-14 07:32; no behavior
-    change; 686 tests at the merge).
-  - owner: agent a15ef7bcac0582272 (opus) of session d8031183, stage 1b,
-    started 2026-10-14 07:38; it stops at about 09:38 or when the stage
-    is done. (Stage 1a's agent a1b6fa0fe2294cd2a stopped 2026-10-13 11:08
-    at the 1a/1b boundary, as asked.)
-  - found (1a): maze designs average 54 windows under 1.0 half-width at
-    rest, knot mode 2.9. 85% of the maze's and all of knot mode's are
-    Catmull-Rom overshoot, mostly at junction hosts and kink eyes; a
-    particle floor alone would need a target near 2.3 (the handoff has
-    the numbers and four open checks).
-  - branch: `worktree-agent-a15ef7bcac0582272`
-    (`.claude/worktrees/agent-a15ef7bcac0582272`), from c8ad399; last
-    commit: `86d1a3f` (3 commits, unpushed). Stage 1a is on master (6f97b92 adds
-    `src/geometry/bend_radius.ts`, the one over-tight definition, with 12
-    tests; f4cb719 adds `scripts/fold_census.{ts,ps1,mjs}`, 79 jobs in
-    about 7 min, no server); its worktree
-    `.claude/worktrees/agent-a1b6fa0fe2294cd2a` is kept.
-  - evidence: `.claude/probes/K90/` in its worktree, seeded from the main
-    checkout's copy of the 1a evidence (copy back at merge).
-  - next: stage 1b per its brief (the junction-web crop check, then
-    option 3, the spline fix, behind a flag that defaults off); then the
-    merge and Levi's look at the crops. It changes every ribbon and
-    touches K8: never alongside K8.
-  - brief: `docs/design/K90.md` ("Stage 1b handoff", then "Stage 1b
-    brief").
-  - env: none for the census; crops need a dev server on ports
-    5351-5354.
 - **K74** · Maze design, decided (Levi, 2026-10-13 13:17; his answers
   verbatim in `docs/design/levi_notes_2026-10-13.md`): every mechanism
   gets params whose neutral value turns it off, so difficulty and feel
@@ -280,8 +267,9 @@ and never reused.
     (`.claude/worktrees/agent-a262df65dcc1489a7`,
     `.claude/worktrees/agent-a957f7f1407f5df9f`) with
     `.claude/probes/K161/cleanup.ps1` (`-DryRun` first). The next round's
-    pass covers K146, K151, K148, K149, K120 and K90 1a (no behavior
-    change), on head ac5b880 or later, and adds K120's look `k120-pad`
+    pass runs after K198 and K93 merge and covers K146, K151, K148, K149,
+    K120, K90 1a and 1b (no behavior change), K100, K132, K198 and K93,
+    and adds K120's look `k120-pad`
     (`.claude/probes/K120/looks_k120.json`). The pad is on by default on
     the phone, so unpinned head shots and frame cells show it where the
     base shows nothing, and `makeMoves`' choice taps could land on it
@@ -312,15 +300,18 @@ and never reused.
   measurements behind it are in the brief. Passages move verbatim, by a
   re-runnable script (`scripts/split_rules.mjs`), so the split can be
   redone on top of the 07:38 batch's rules edits.
-  - owner: agent a363e26d8e7409480 (opus) of session d8031183, started
-    2026-10-14 08:05; it stops at about 10:05 or when the stage is done.
+  - owner: agent a363e26d8e7409480 (opus) of session d8031183. Its stage
+    finished at 09:02 (the split `0eac859` on d12e245, handoff
+    `2d7438e`); resumed at 09:20 to redo it on feb12a0 with K90 1b's
+    lore (a new `generation-geometry.md`), stopping by about 10:20.
   - branch: `worktree-agent-a363e26d8e7409480`
-    (`.claude/worktrees/agent-a363e26d8e7409480`), from c591c6b; last
-    commit: `6b41cd7` (2 commits, unpushed).
+    (`.claude/worktrees/agent-a363e26d8e7409480`); last commit: `2d7438e`
+    (unpushed).
   - evidence: `.claude/probes/K173/` in its worktree (copy at merge).
-  - next: the brief's stage. It merges LAST in this batch, after K90 1b,
-    K132 and K100: redo the split on the merged master with the
-    handoff's recipe, then the suite, then merge.
+    Lore attached per read: median 37.3 KB before, 5.8 after.
+  - next: merge the redo BEFORE K198, K93 and K98, carrying their rules
+    edits into the topic files at their merges; then rewrite this
+    ledger's old rules pointers (K198, K92, K13, K29, K95, K82).
   - brief: `docs/design/K173.md`.
 - **K198** · The fit camera's pan and the off-screen indicators, decided
   (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
@@ -373,6 +364,28 @@ and never reused.
     then K145 as stage 2, a fresh agent from master.
   - brief: `docs/design/K93_K145.md`.
   - env: dev servers on ports 5580-5589.
+- **K98** · Marker sizes and two new glyphs (Levi, 2026-10-13: "I
+  like all your icons. The defaults are good."). A slider for the
+  player's dot diameter relative to the thread width, 0.25-3, defaulting
+  to the pre-K83 head dot (radius 0.54 tw, so 1.08 tw across; K83's
+  discs are 3 tw, `markerRadiusFor`). The black disc is what the slider
+  sizes; each white icon fits inside its disc with a slight margin. The
+  start, finish, minotaur and every other in-game icon match the
+  player's. Colored dots return at the start and finish, larger than the
+  icon disc, so a colored ring shows at the default (the pre-K83 discs
+  were 0.95 tw in radius). Simple minotaur and spider glyphs
+  (`src/render/marker_glyphs.ts` and its fit test). Call (3) unanswered:
+  the head stays on top. Call (4), K121, stays as is (Levi, 2026-10-13).
+  A codec append, after K79 stage B and K81.
+  - owner: agent a4aa6adc47840272d (opus) of session d8031183, started
+    2026-10-14 09:31; it stops at about 11:31 or when the stage is done.
+  - branch: `worktree-agent-a4aa6adc47840272d`
+    (`.claude/worktrees/agent-a4aa6adc47840272d`), from e17c2a2; last
+    commit: none yet.
+  - evidence: `.claude/probes/K98/` in its worktree (copy at merge).
+  - next: its one stage; the size param is a codec append, daily-exempt.
+  - brief: `docs/design/K98.md`.
+  - env: dev servers on ports 5590-5599.
 
 ## Next, in order
 
@@ -392,8 +405,8 @@ longer wait for each other: the second branch to merge renumbers its
 appends. Usage: don't hold agents back until the week nears 95% (Levi,
 2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17, 54% at
 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
-23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38, 78% at 08:05
-and 80% at 08:37; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
+23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38, 78% at 08:05,
+80% at 08:37 and 82% at 09:10; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
 at about 07:53 "Keep going at full pace."; it resets Mondays at 12:00).
 Long work runs in stages from
 committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
@@ -407,27 +420,28 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running on 10-14: K90 stage 1b from 07:38, K198 stage 1
-from 08:37 and K93 (stage 1 of K93 + K145) from 08:45 (all opus, 2 h
-caps), and from 08:05 K173 (the rules split, a docs agent on top; it
-merges last). K100 and K132 merged at 08:39-08:41. Then, as code slots
-free up:
+(he may reorder). Running on 10-14: K198 stage 1 from 08:37, K93 (stage
+1 of K93 + K145) from 08:45 and K98 from 09:31 (all opus, 2 h caps), and
+K173's redo of the rules split from 09:20 (it lands first; the
+coordinator carries the others' rules edits across). K100, K132 and K90
+stage 1b merged at 08:39-09:03. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
    K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
    and K180 against base ab6d330) is done (K197 filed); the next pass
-   covers K146, K151, K148, K149, K120, K90 1a, K100 and K132.
+   runs after K198 and K93 merge and covers K146, K151, K148, K149,
+   K120, K90 1a and 1b, K100, K132, K198 and K93.
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
    5fed5c1; Levi plays it (K174).
 3. K146 + K151 and K148 + K149: merged 2026-10-14 (b9cf882, fcc402b).
 4. K120: merged 2026-10-14 (0acbce0).
-5. K90 stage 1b, running from 07:38 (stage 1a merged in ac5b880): the
-   junction-web crop check, then option 3 (the spline fix) first.
+5. K90 stage 1b: merged 2026-10-14 (feb12a0, flag off); Levi's call
+   (ship, tune or stop) is in Waiting on Levi.
 6. K132 and K100: merged 2026-10-14 (402eb4b, 458e1e5).
 7. K93 + K145 (`docs/design/K93_K145.md`): stage 1 (K93) running from
    08:45; stage 2 (K145) from master after it.
 8. K92, then K111 (both rework the panel).
-9. K98.
+9. K98, running from 09:31 (`docs/design/K98.md`).
 10. K76 stage 2.
 11. K80's turn-aligned hunter, a modifier of the normal maze; then
     K137's toggles, K138's M mechanisms and K139.
@@ -486,19 +500,6 @@ K5-K7 (split, frame loop, worker) follow.
   that override every relevant setting (today's Motion setting is
   `src/ui/motion.ts`, K79). The panel part after K79 stage B merges and
   after K92 (both rework the panel); the highlight modes after K81.
-- **K98** · Marker sizes and two new glyphs (Levi, 2026-10-13: "I
-  like all your icons. The defaults are good."). A slider for the
-  player's dot diameter relative to the thread width, 0.25-3, defaulting
-  to the pre-K83 head dot (radius 0.54 tw, so 1.08 tw across; K83's
-  discs are 3 tw, `markerRadiusFor`). The black disc is what the slider
-  sizes; each white icon fits inside its disc with a slight margin. The
-  start, finish, minotaur and every other in-game icon match the
-  player's. Colored dots return at the start and finish, larger than the
-  icon disc, so a colored ring shows at the default (the pre-K83 discs
-  were 0.95 tw in radius). Simple minotaur and spider glyphs
-  (`src/render/marker_glyphs.ts` and its fit test). Call (3) unanswered:
-  the head stays on top. Call (4), K121, stays as is (Levi, 2026-10-13).
-  A codec append, after K79 stage B and K81.
 - **K76** · The thread-reveal mode, stage 2 (doc section 7), decided
   (Levi, 2026-10-13): the end look is a dropdown (fade, halo, glow, dots,
   fray, beacon; default beacon); the doc's other recommendations stand
@@ -712,6 +713,18 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K216** · The rules split's hand-kept parts: `docs/lore_index.md` and
+  each area file's topic list are maintained by hand, and 26 design docs
+  still name the area files, one hop from the topic (`docs/design/K173.md`).
+- **K214** · `particle_system.ts` and `forces.ts` still attach 30.8 KB of
+  lore after the split: all the physics lore is about them, so only
+  trimming the text would cut it (`docs/design/K173.md`).
+- **K213** · Before K90's bend bound ships (if Levi ships it): the min
+  regression (the hard clamp tightens the worst window in 24 of 585
+  scans, the soft one in 4; done when `k90_minrows.mjs` reports 0),
+  `controlArcLengths`, unit tests and a CPU mirror, hit tests on the
+  moved samples, the phone's rebuild cost (`docs/design/K90.md`, Stage
+  1b handoff).
 - **K212** · PixiJS warns "Attribute aGap/aGapId/aUV is not present in the
   shader" on every load, on master too (seen by K132's probes,
   `.claude/probes/K132/`).
@@ -1243,6 +1256,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   override. A call for Levi whenever he wants it (raised by K100).
 - **K211** · Drop the retired `snappiness` from `CODEC_PARAMS` at the
   next codec version bump; removing it now would bump the version (K132).
+- **K215** · Move the per-feature probe recipes (K73, K79 B, K80, K104,
+  K140, K146 + K151, K147, K100) out of `probes.md` (15.5k chars, attached
+  by every script or probe read) into narrow files (K173).
 
 ## Done
 
