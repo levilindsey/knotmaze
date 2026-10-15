@@ -30,6 +30,11 @@ export interface HudSnapshot {
   // the time it spent hunting the player (the win banner's).
   catches?: number | null;
   chasedMs?: number | null;
+  // K114's burn race (absent elsewhere; lattice units): the fire's lead at
+  // your junction while the race runs, T(v) - L, and the closest call (the
+  // smallest lead at any arrival) once it is over.
+  fireLead?: number | null;
+  closestCall?: number | null;
 }
 
 // Distances read x10 as whole numbers, as the HUD always has.
@@ -41,8 +46,20 @@ export const fmtDist = (v: number): string =>
 type StatFields = Pick<
   HudSnapshot,
   | "timeMs" | "path" | "optimal" | "efficiency" | "backtrack" | "junctions" | "deadEnds"
-  | "catches" | "chasedMs"
+  | "catches" | "chasedMs" | "fireLead" | "closestCall"
 >;
+
+// The rows that are part of the game, not stats (K80's catches, K114's
+// fire): the HUD shows them with the stat rows off too.
+type GameFields = Pick<HudSnapshot, "catches" | "fireLead" | "closestCall">;
+export function gameRows(s: GameFields): Array<[string, string]> {
+  const rows: Array<[string, string]> = [];
+  if (s.catches != null) rows.push(["caught", String(s.catches)]);
+  if (s.fireLead != null) rows.push(["fire lead", fmtDist(s.fireLead)]);
+  if (s.closestCall != null) rows.push(["closest call", fmtDist(s.closestCall)]);
+  return rows;
+}
+
 export function statRows(s: StatFields): Array<[string, string]> {
   const rows: Array<[string, string]> = [];
   rows.push(["time", formatDuration(s.timeMs)]);
@@ -55,6 +72,8 @@ export function statRows(s: StatFields): Array<[string, string]> {
   if (s.deadEnds !== null) rows.push(["dead ends", String(s.deadEnds)]);
   if (s.catches != null) rows.push(["caught", String(s.catches)]);
   if (s.chasedMs != null) rows.push(["chased", formatDuration(s.chasedMs)]);
+  if (s.fireLead != null) rows.push(["fire lead", fmtDist(s.fireLead)]);
+  if (s.closestCall != null) rows.push(["closest call", fmtDist(s.closestCall)]);
   return rows;
 }
 
@@ -89,6 +108,10 @@ export function ensureHudStyles(): void {
     // The heading stays centered and clear of the close button.
     `.km-banner .km-head{font:650 15px/1.35 ${sans};color:#8fe6ff;` +
     "margin-bottom:6px;padding:0 20px}" +
+    // K114: the Burnt banner (LossBanner).
+    ".km-banner.km-burnt{border-color:#e8643c}" +
+    ".km-banner.km-burnt .km-head{color:#ffb27a}" +
+    `.km-banner .km-sub{font:12px/1.45 ${sans};color:#8ea0c0;margin:0 0 8px}` +
     ".km-banner .km-rows{display:grid;grid-template-columns:1fr auto;" +
     "column-gap:24px;text-align:left}" +
     ".km-banner .k{color:#8ea0c0;white-space:nowrap}" +
@@ -206,16 +229,14 @@ export class MazeHud {
   // their set or values change; the ticking time takes setTime().
   render(s: HudSnapshot | null): void {
     // K80: the real-time mode's catch count is part of the game, not a
-    // stat: its row shows with the stat rows off too.
-    const chase = s?.catches != null;
-    if (!s || (!s.showStats && !chase)) {
+    // stat: its row shows with the stat rows off too (K114: and the fire's).
+    const game = s ? gameRows(s) : [];
+    if (!s || (!s.showStats && game.length === 0)) {
       this.el.hidden = true;
       this.lastSig = "";
       return;
     }
-    const rows: Array<[string, string]> = s.showStats
-      ? statRows(s)
-      : [["caught", String(s.catches)]];
+    const rows: Array<[string, string]> = s.showStats ? statRows(s) : game;
     const sig = JSON.stringify(rows);
     this.el.hidden = false;
     if (sig === this.lastSig) return;
@@ -254,6 +275,8 @@ export interface WinInfo {
   // K80's real-time mode: catches and time chased (absent elsewhere).
   catches?: number | null;
   chasedMs?: number | null;
+  // K114's burn race: the closest call (absent elsewhere).
+  closestCall?: number | null;
   // K155: the run's stars (null or absent: no rating, no stars).
   rating?: StarRating | null;
   // Show the daily stats button.
@@ -327,6 +350,91 @@ export class WinBanner {
     x.setAttribute("aria-label", "Close");
     x.addEventListener("click", () => this.hide());
     el.append(rows, btns, x);
+    el.hidden = false;
+  }
+
+  hide(): void {
+    this.el.hidden = true;
+    this.onHide();
+  }
+
+  get shown(): boolean {
+    return !this.el.hidden;
+  }
+}
+
+// K114 call 1: a lost burn race. Lattice units, as the HUD's.
+export interface LossInfo {
+  timeMs: number;
+  walked: number;
+  // The smallest lead the fire left you at any arrival (Infinity: none).
+  closest: number;
+}
+
+// The Burnt banner: where the win banner sits, an ember border, one
+// primary button (Try again: main.ts restarts with the fuse relit) and the
+// close button.
+export class LossBanner {
+  readonly el: HTMLDivElement;
+  private readonly onRetry: () => void;
+  private readonly onHide: () => void;
+
+  constructor(onRetry: () => void, onHide = (): void => {}) {
+    ensureHudStyles();
+    this.onRetry = onRetry;
+    this.onHide = onHide;
+    this.el = document.createElement("div");
+    this.el.id = "maze-loss";
+    this.el.className = "km-banner km-burnt";
+    this.el.setAttribute("role", "status");
+    this.el.hidden = true;
+    document.body.appendChild(this.el);
+  }
+
+  show(l: LossInfo): void {
+    const el = this.el;
+    el.textContent = "";
+    const head = document.createElement("div");
+    head.className = "km-head";
+    head.textContent = "Burnt \u{1F525}";
+    const why = document.createElement("div");
+    why.className = "km-sub";
+    why.textContent = "The fire reaches the end of every way on before you.";
+    const rows = document.createElement("div");
+    rows.className = "km-rows";
+    const pairs: Array<[string, string]> = [
+      ["time", formatDuration(l.timeMs)],
+      ["walked", fmtDist(l.walked)],
+      ["closest call", fmtDist(l.closest)],
+    ];
+    for (const [k, v] of pairs) {
+      const kEl = document.createElement("span");
+      kEl.className = "k";
+      kEl.textContent = k;
+      const vEl = document.createElement("span");
+      vEl.className = "v";
+      vEl.textContent = v;
+      rows.append(kEl, vEl);
+    }
+    const btns = document.createElement("div");
+    btns.className = "km-btns";
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "km-btn km-primary";
+    retry.textContent = "Try again";
+    retry.addEventListener("click", () => {
+      this.hide();
+      this.onRetry();
+    });
+    btns.appendChild(retry);
+    const x = document.createElement("button");
+    x.type = "button";
+    x.className = "km-x";
+    x.textContent = "×";
+    x.title = "Close";
+    x.setAttribute("aria-label", "Close");
+    x.addEventListener("click", () => this.hide());
+    el.append(head, why, rows, btns, x);
     el.hidden = false;
   }
 
