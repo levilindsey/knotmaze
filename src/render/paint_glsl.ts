@@ -675,13 +675,12 @@ highp float kCov(highp float sd, highp float px) {
   return clamp(sd / px + 0.5, 0.0, 1.0);
 }
 
-// The hover glow across the ribbon (K145; side = vUV.y, the edges at 0 and
-// 1): 1 at either edge, falling as a square to 0 at RIM_EDGE of the
-// half-width in from it.
+// The hover glow across the ribbon (K145, K111 stage 3; side = vUV.y, the
+// edges at 0 and 1): 1 at either edge, fading out smoothly to 0 at
+// RIM_EDGE of the half-width in from it.
 highp float kRimAcross(highp float side) {
   highp float e = abs(2.0 * side - 1.0);
-  highp float x = clamp((e - (1.0 - RIM_EDGE)) / RIM_EDGE, 0.0, 1.0);
-  return x * x;
+  return 1.0 - kSmooth((1.0 - e) / RIM_EDGE);
 }
 
 // (p, band, v, rim): the gold ramp amount, a pulse band and its strength,
@@ -766,8 +765,9 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
       if (u < u0 || u > u1) continue;
       highp float d = abs(u - kArcU(c, uKReach.w));
       highp float dEnd = min(u - u0, u1 - u);
+      highp float fade = clamp(RIM_END_SHARE * (0.5 * (u1 - u0) - T0.w), 1e-4, RIM_END_FADE);
       highp float g = uKReach.z * (1.0 - kSmooth(d / max(uKReach.x, 1e-4))) *
-        kSmooth((dEnd - T0.w) / RIM_END_FADE);
+        kSmooth((dEnd - T0.w) / fade);
       st.w = max(st.w, g);
     }
   }

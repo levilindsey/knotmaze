@@ -438,7 +438,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
   // unwrapped ctrl span and its end gap; uKReach.zw the strength and the
   // hover point. kPaintAt's `rim` is the strength along the thread and
   // kRimAcross shapes it across the ribbon.
-  it("K145: the hover glow lights both edges and nothing over the middle", () => {
+  it("K145, K111 stage 3: the hover glow peaks at both edges and fades out toward the middle", () => {
     const W = PAINT_CONST.RIM_EDGE;
     expect(kRimAcross(0)).toBe(1);
     expect(kRimAcross(1)).toBe(1);
@@ -454,6 +454,16 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
       expect(v - prev).toBeLessThan(0.01);
       prev = v;
     }
+    // Levi's look (K248): high at the edge, half strength halfway through the
+    // fade, and wider than K145's square over the outer 0.6 (half strength
+    // 0.18 of the half-width in from the edge). `inside` is the depth from
+    // the edge, in half-widths.
+    const at = (inside: number): number => kRimAcross(0.5 + 0.5 * (1 - inside));
+    expect(at(W / 2)).toBeCloseTo(0.5, 12);
+    expect(at(0.1 * W)).toBeGreaterThan(0.95);
+    expect(at(0.3)).toBeGreaterThan(0.5);
+    expect(W).toBeGreaterThan(0.6);
+    expect(W).toBeLessThanOrEqual(1);
   });
 
   // The ctrl at an arc (a binary search over the mirror's own map).
@@ -596,6 +606,50 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
         expect(lit).toBe(0);
       }
       expect(maxStep).toBeLessThan(0.01);
+    }
+  });
+
+  // K236 (c), K111 stage 3: the fade in from each end gap takes at most
+  // RIM_END_SHARE of the stretch between the gap and the run's middle, so a
+  // short run (K145's fixed 0.75 lit a 1.2-world run to a tenth) glows in
+  // full mid-run, and still nothing inside its end gaps.
+  it("K111 stage 3: a short run glows in full mid-run (the end fade scales to the run)", () => {
+    const r = rng(1111);
+    const ch = randomChain(r, 90, false);
+    const n = ch.controlArcLengths.length;
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const G = 0.45;
+    const PX = 0.02;
+    const S = 0.4;
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const D0 = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], uniforms(k));
+    const c0 = 30;
+    const u0 = kArcOfCtrl(D0, kChain(D0, 0), c0);
+    for (const L of [1.2, 1.8, 2.4, 3.2]) {
+      const c1 = ctrlAt(D0, u0 + L, n - 1);
+      const U = uniforms(k);
+      const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], U, [{ c0, c1, gap: G }]);
+      const c = kChain(D, 0);
+      // The run's far end as the mirror's own (f32) arc table puts it.
+      const u1 = kArcOfCtrl(D, c, c1);
+      const um = (u0 + u1) / 2;
+      U.uKReach[0] = 15;
+      U.uKReach[1] = 1;
+      U.uKReach[2] = S;
+      U.uKReach[3] = ctrlAt(D, um, n - 1);
+      expect(kPaintAt(D, U, c, U.uKReach[3], um, PX, st).rim).toBeCloseTo(S, 5);
+      let prev = 0;
+      let maxStep = 0;
+      let gapLit = 0;
+      for (let a = u0 - 0.2; a <= u1 + 0.2; a += 0.002) {
+        const g = kPaintAt(D, U, c, ctrlAt(D, a, n - 1), a, PX, st).rim;
+        // (1e-6: the item holds the gap as f32, 0.44999999.)
+        if (Math.min(a - u0, u1 - a) <= G - 1e-6 && g !== 0) gapLit++;
+        maxStep = Math.max(maxStep, Math.abs(g - prev));
+        prev = g;
+      }
+      expect(gapLit).toBe(0);
+      expect(maxStep).toBeLessThan(0.02);
     }
   });
 });

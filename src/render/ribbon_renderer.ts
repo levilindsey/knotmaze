@@ -496,9 +496,10 @@ void main(void) {
   if (uKBase.z > 4.5) {
     // DEBUG VIEW 5 (probes): the paint terms of the VISIBLE thread (gaps
     // cut as in the normal view) - (gold amount p, the pulse band's
-    // strength v, the reveal glow).
+    // strength v, the glow kComposePaint takes: the reveal glow or the
+    // hover rim, the stronger).
     if (gk <= 0.002) discard;
-    finalColor = vec4(clamp(kst.x, 0.0, 1.0), kst.y > 0.5 ? kst.z : 0.0, kgl, 1.0);
+    finalColor = vec4(clamp(kst.x, 0.0, 1.0), kst.y > 0.5 ? kst.z : 0.0, max(kgl, krim), 1.0);
     return;
   }
   // Probe view (globals texel .y): masked material tinted, not removed
