@@ -20,8 +20,9 @@ only with the files it is about; `physics.md` lists the area's other files.
   keeps the loader, the stamp and the UI and calls the host;
   `__knotSettle()` reads `host.stats()`.
 
-- **The budget is the in-thread host's only (K7 stage 5, 2026-10-15).**
-  With the physics worker (`phw`, `physics-worker.md`) the budget never
+- **The budget is the in-thread host's only (K7 stage 5, 2026-10-15; the
+  worker has been the default since stage 6, so a default page never runs
+  it).** With the physics worker (`phw`, `physics-worker.md`) the budget never
   runs: the worker steps flat out on main's frame allowances and drops
   backlog past 0.05 s as lag, so the catch-up spiral cannot start, and a
   frame no longer pays for physics at all. `__knotSettle().phase` reads
