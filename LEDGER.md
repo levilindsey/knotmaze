@@ -15,6 +15,19 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K257** · K76 section 10's questions, for stage 2c (none blocks 2b;
+  2c builds the recommendation where no answer has come): (1) a catch
+  under thread reveal re-hides explored thread as `minoRefog` says, one
+  setting for both modes (rec.); (2) the minotaur shows through hidden
+  thread under `minoFog`'s setting (rec. yes); (3) a catch mid-run
+  shows that run only up to the dot (rec. yes, as the fog does); (4)
+  pulses and the hover glow on a fading stub fade with the thread (rec.
+  yes; 2a multiplies alpha); (5) `pulseReach` is clamped to
+  `revealDistance` (rec. yes); (6) explored runs keep their section
+  colors while the K93 trail fades on its own (rec. yes); (9) reduced
+  motion stills the beacon's breath; under High contrast the halo and
+  the dots draw at full strength in pure white (rec.). Asked in session
+  2026-10-14 14:19. `docs/design/K76_reveal_mode.md` section 10.
 - **K253** · A quiet phone for K193's portrait A/A floor: the phone
   untouched, awake and plugged in for about 30 minutes (3 reps of about
   9 min). The 2026-10-14 13:47 attempt tripped on a touch at 13:59
@@ -207,7 +220,7 @@ and never reused.
     Abbott's essays and Buck's book-only chapters are unverified (doc
     section 1).
   - next: stage 2's brief in `docs/design/K74.md`, from the handoff's
-    "For stage 2" notes, drafted from 2026-10-14 14:14 by the same docs
+    "For stage 2" notes, drafted from 2026-10-14 14:12 by the same docs
     agent as K114's (branch `worktree-agent-a660c49b14be609c5`); the
     coordinator reviews and merges it, then launches stage 2 (item 14 of
     the order). K80's call 6 (Levi, 14:31: "Absolutely"): dead ends are the
@@ -400,20 +413,33 @@ and never reused.
   scans ran; re-time).
   Stage 2 runs in four stages, 2a to 2d, each from the handoff before it
   (`docs/design/K76.md`, bcb969e).
-  - owner: claude agent a5d63452980ed9fa3 (opus) of session d8031183,
-    stage 2a, started 2026-10-14 13:04 with a 2 h cap (about 15:04;
-    ports 5680-5689). Stage 1 was agent aea102de995e1ce30 (its worktree
-    is kept: prototype WIP 1fbc0d2 and 23907a5).
-  - branch: `worktree-agent-a5d63452980ed9fa3`
-    (`.claude/worktrees/agent-a5d63452980ed9fa3`), from 5438a60; last
-    commit: none yet (unpushed).
-  - evidence: `.claude/probes/K76/stage2a/` in that worktree; stage 1's
-    in the main checkout's `.claude/probes/K76/`.
-  - next: stage 2a (section 10 re-bases the design on today's master;
-    `explore_view.ts` with its tests; the paint variant with the six end
-    looks and the kExploreAt parity test; a probe hook; mode off matches
-    master's frames).
-  - brief: `docs/design/K76.md` ("Stage 2a"), then
+  Stage 2a merged 2026-10-14 14:15 (`5fe6fe1..4e384fc`, 835 tests):
+  the model (`src/game/explore_view.ts`), the paint variant
+  (`src/render/explore_glsl.ts`: `withExplore` splices four anchors
+  into SECTION_FRAG for a lazily built second program,
+  `section-rgb-explore`; the `kExploreAt` mirror and its parity
+  test) and the probe hook `__knotExplore` (main.ts). Mode off: 0 px,
+  and its GPU A/B equals master's. Six-look sheet
+  `.claude/probes/K76/stage2a/out/sheet/K76_2a_looks.png`; lore
+  `render-explore.md`; handoff `docs/design/K76.md` ("Stage 2a
+  handoff"). Section 10's questions are K257, 2a's residuals K258. 2c
+  also gates input: hidden thread still takes taps, tugs and hover.
+  - owner: claude agent ac6e354b85922e7aa (opus) of session d8031183,
+    stage 2b, started 2026-10-14 14:17 with a 2 h cap (about 16:17;
+    ports 5680-5689). Stage 2a was agent a5d63452980ed9fa3 and stage 1
+    aea102de995e1ce30 (both worktrees kept; stage 1's prototype WIP is
+    1fbc0d2 and 23907a5).
+  - branch: `worktree-agent-ac6e354b85922e7aa`
+    (`.claude/worktrees/agent-ac6e354b85922e7aa`), from c45a894; last commit:
+    none yet (unpushed).
+  - evidence: `.claude/probes/K76/stage2b/` in that worktree; stage
+    2a's in the main checkout's `.claude/probes/K76/stage2a/` (copied
+    at the merge), stage 1's in `.claude/probes/K76/`.
+  - next: stage 2b (re-run 2a's mode-off A/B on master; gate the
+    crossing gaps, the markers and the junction webs and fans by
+    visibility, rebuilt on arrivals; mode off stays master's in every
+    program; the gap and joint censuses).
+  - brief: `docs/design/K76.md` ("Stage 2b"), then
     `docs/design/K76_reveal_mode.md`.
 - **K248** · Levi's highlight pick (2026-10-14 about 13:28, answering
   which of K111 stage 2's modes stay): the choices keep the pulses and a
@@ -470,16 +496,17 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K76 stage 2a from 13:04 (opus, 2 h),
-K111 stage 3 (K248) from 14:04 (opus, 2 h) and K80 turns stage 1 from
-14:06 (opus, 2 h). At about 10:57 Levi lifted
+(he may reorder). Running: K111 stage 3 (K248) from 14:04 (opus, 2 h),
+K80 turns stage 1 from 14:06 (opus, 2 h), K76 stage 2b from 14:17
+(opus, 2 h) and a docs agent drafting the K114 burn-race and K74 stage
+2 briefs from 14:12 (opus, 1 h). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
 (the rules split), K93, K198 stage 1, K98 and K92 merged at
 08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, K191 at 12:04,
 K235 + K239 at 12:44, K174 at 12:53, K111 stage 2 at 13:03, K198
-stage 2 at 14:03 and K193 at 14:10; the
+stage 2 at 14:03, K193 at 14:10 and K76 stage 2a at 14:15; the
 coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -514,8 +541,9 @@ files at their merges. Then, as code slots free up:
     emulation (merged 2026-10-14 14:10, c36b57c..763067a; its A/A floor
     waits for a quiet phone, K253).
 11. K76 stage 2, in four stages (`docs/design/K76.md`, bcb969e): 2a (the
-    re-base, the model, the paint variant) runs from 13:04; 2b, 2c and
-    2d follow, each from the handoff before it.
+    re-base, the model, the paint variant) merged at 14:15; 2b (crossing
+    gaps and junction joints, brief c45a894) runs from 14:17; 2c and 2d
+    follow, each from the handoff before it.
 12. K80's turn-aligned hunter, a modifier of the normal maze, in three
     stages (`docs/design/K80_turns.md`, 7699995): stage 1 (the model and
     the mode) runs from 14:06; then K137's toggles, K138's M mechanisms
@@ -536,7 +564,7 @@ defaults (after playing); K225 (the markers' size); K229 (the open
 panel's top); K237 (the hover glow's default); K238 (K111's calls);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
 K251 (the displaced disc's slide across the panel); K253 (a quiet phone
-for K193's A/A);
+for K193's A/A); K257 (K76's questions for stage 2c);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -579,7 +607,7 @@ K5-K7 (split, frame loop, worker) follow.
     something else that makes sense" (an arachnophobia setting swaps its
     icon; the brief designs both icons).
   - next: the burn-race brief (call 1's first prototype), drafted from
-    2026-10-14 14:14 by a docs agent (claude agent a660c49b14be609c5
+    2026-10-14 14:12 by a docs agent (claude agent a660c49b14be609c5
     (opus) of session d8031183, 1 h cap; branch
     `worktree-agent-a660c49b14be609c5`, new `docs/design/K114_burn.md`);
     the coordinator reviews and merges it, then launches stage 1. The
@@ -775,6 +803,12 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K258** · K76 stage 2a's residuals: (a) while a move is in flight, the
+  in-flight piece re-declares the KPAINT items every frame and the
+  per-slot refs shift (check the upload size, `lastPaintUpload`, in 2d);
+  (b) for 0.45 s after each arrival, the growth re-declares every frame;
+  (c) the model is probe-only until 2c feeds it from move events.
+  `docs/design/K76.md` ("Stage 2a handoff", "Residuals").
 - **K254** · K193 stage 1's residuals in the phone pass: (a) the looks
   phase is unexercised with the new code (`shotViewport`,
   `report.viewport`, `emu`, `shotStats`): run a desktop `-Dry -Looks
@@ -1246,6 +1280,11 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Ideas (not scheduled)
 
+- **K259** · With the explore mode on, a chain with any visible piece
+  draws its whole mesh, so hidden fragments still run the shader; drawing
+  only the visible index range would make mode on cheaper. Not needed
+  yet: 2a's cost bound never exceeds master's program (K76 stage 2a's
+  report; `docs/design/K76.md`, "Stage 2a handoff").
 - **K255** · Fold K193's `wait_then_aa.ps1` (`.claude/probes/K193/`) into
   `scripts/phone_pass.ps1` as `-WaitQuiet`: it tolerates touches until a
   full quiet window can no longer end before a deadline, where
