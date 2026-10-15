@@ -77,6 +77,12 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   draws an empty box under a copy of the ripple filter for 3 ticks, which
   links its program and pools its screen-sized texture (render-pluck.md
   STAGE 2). Move it onto the registry when that lands.
+- **The thread reveal's variants** (K268 stage 2, 2026-10-15) are three
+  more, each built lazily and linked at its first draw under the reveal:
+  `arm-strip-explore` (34987 characters against arm-strip's 33023),
+  `junction-field-explore` (32936 against 28482) and
+  `pluck-still-explore` (23991 against 19958). They go on the registry
+  beside the section's explore variant.
 - **Growing a shader costs compile time.** section-rgb is the intro's
   critical path. After a large shader change, time a cold link:
   `trace_intro.mjs` on a fresh profile.
