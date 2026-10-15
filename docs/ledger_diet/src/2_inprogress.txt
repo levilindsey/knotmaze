@@ -1,0 +1,76 @@
+- **K114** · Gameplay round 2, designed in `docs/design/K80_gameplay_additions.md` section R: burn race, cut verb, beat rider, spider, Pluck Hero MVP. Levi took the recs (calls 1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260, K280, residuals K281).
+  - owner: nobody since 2026-10-14 16:35 (stage 1 merged; agent af79edbe2a4677ff5 of session d8031183, worktree kept)
+  - branch: mainline; last commit: `ba6d574` (stage 1 is 801c22b..ba6d574)
+  - evidence: main checkout `.claude/probes/K114/burn/` (`results_rebased.md`, `results_tuning_rebased.md`, `burn_sim.ts`, `burn_page.mjs`)
+  - next: stage 2, real-time burning behind `fireClock`, its brief written from stage 1's handoff (queue item 13); stage 3's look is a shader and carries K290's burnt toggle; the spider follows the minotaur's controls (K174)
+  - brief: `docs/design/K114_burn.md` ("Stage 1 handoff"; stage 2's brief goes there)
+
+- **K74** · Maze design, decided (Levi, 2026-10-13; `docs/design/K74_maze_design.md`): every mechanism gets params whose neutral value turns it off. Stage 1 (long-tail dead ends) and stage 2 (H1, the fused arm cut; calls K261, residuals K278) merged; stage 3 is the trap-zone finish, stage 4 the greedy-trap search and K46's bands.
+  - owner: nobody since 2026-10-14 16:13 (stage 2 merged; agent a2c61932e9e358104 of session d8031183, worktrees kept)
+  - branch: mainline; last commit: `faa9a52` (stage 1 fbf5b5c..8ba0c32, stage 2 4d3efe6..faa9a52)
+  - evidence: `.claude/probes/K74/` (stage 2 in `stage2/`, sheets in `out/`); the design agent's worktree `.claude/worktrees/agent-aeaf1e61bcecaaf0b` is kept
+  - next: stage 3, the trap-zone finish, with H1 at 1 and measured on dailies 1-240, plus H1's exit-clearance guard (K278 (a)); dead-end branches as deeper traps are a later param, settled with K80's brief
+  - brief: `docs/design/K74.md` ("Stage 2 handoff"; stage 3's brief goes there)
+
+- **K80** · The minotaur, decided (Levi, 2026-10-13; design `docs/design/K80_gameplay_additions.md` section 0, his answers in `docs/design/levi_notes_2026-10-13.md`): a telegraphed hunter with guard and stalker variants, real time as its own mode, turn-aligned as a modifier. Real time merged (`5fed5c1`), turns stages 1 and 2 merged; residuals K293, per-model accuracy waits on Levi (K294).
+  - owner: nobody since 2026-10-14 18:48 (turns stage 2 merged; agent a1579d5c460af2d20 of claude d8031183; earlier agents af5995f5900f0f945 and a9c90f15cd6a55710; worktrees kept)
+  - branch: mainline; last commit: `02194b4` (turns 0047148..68524e1 and 86d404e..02194b4, K174 ecf2169..6ec8275)
+  - evidence: main checkout `.claude/probes/K80/` (`turns2/`, `turns/`, `rt/`) and `.claude/probes/K174/rt/`; the research's worktree `.claude/worktrees/agent-a25726c24f262b138`
+  - next: stage 3's brief from stage 2's handoff ("For stage 3": final telegraph 2.7, catch feedback 2.8/K270, sound and fog 2.10, wait key and pad, hover cue, turn minoToward), K293, K294; before a daily pins a minotaur, waits enter `fc.taps` and K47's fingerprint covers its params; real time's phone check is K177
+  - brief: `docs/design/K80_turns.md` ("The stages", "Stage 2 handoff"); `docs/design/K80_realtime.md`; `docs/design/K80.md`
+
+- **K156** · The round phone pass, `scripts/phone_pass.ps1` (K152 (1), from K81's gate kit): two builds run interleaved through a frame bench and a JSON looks list into a summary and sheets. Stages 3a-3c merged (6521bb2..de5f39e); rounds 2026-10-14, 14b and 14c are done (14c merged e6c6034..aa3cdd1).
+  - owner: nobody since 2026-10-14 19:45 (round 14c's agent a04122e6bc4e56b02 (sonnet) finished; worktree kept)
+  - branch: mainline; last commit: `aa3cdd1`
+  - evidence: `.claude/probes/rounds/2026-10-14c-0e865bf/`, `.../2026-10-14-48da84d/`, `.../2026-10-14-81d31a5/`; `.claude/probes/K156/3c/`; the A/A in `.claude/probes/K253/aa3/`
+  - next: the next phone window Levi lends: frames (`-Phase frames -Reps 2` on K253's portrait floor; K300's `-Moves` fix waits for the next A/A), K307's phone measures, the finish frame rate under K317's confetti, K98 and K92 (K230), the 14 dropped looks (K233), K232's load cells at 3 reps; sweep the 3a/3b worktrees with `.claude/probes/K161/cleanup.ps1` (`-DryRun` first); looks cope with K301's width flip
+  - brief: `docs/design/K156.md` ("Round 2026-10-14c handoff"; the next round gets its own section); K7 stage 5's phone plan is `docs/design/K7_worker.md` Design 10
+  - env: none; the pass builds and serves both builds itself (ports 5480-5489); check nobody is using the phone first (K234)
+
+- **K161** · Disk: `$env:TEMP` held about 1100 `knotmaze-*` Chrome profiles (about 33 GB) that probe runs never delete, plus stale worktrees (C: had 19.6 GB free, 2026-10-14). Levi approved the cleanup (item 2): delete profiles older than a day, sweep stale worktrees, probe libraries delete their profile on exit (K150).
+  - owner: claude session d8031183 (the coordinator), a background cleanup script under the perf lock
+  - branch: mainline (no code); last commit: n/a
+  - evidence: `.claude/probes/K161/cleanup.ps1` (`-DryRun` first) and `cleanup.log`; the 2026-10-14 01:17 run swept the five merged worktrees
+  - next: run `cleanup.ps1` again for the profiles (it was due after 16:20 on 10-14, none was a day old at 01:17); the libraries' delete-on-exit goes with K150
+
+- **K76** · The thread-reveal mode, stage 2 (Levi, 2026-10-13): an end-look dropdown (default beacon) and one `exploration` dropdown (off | fog | threads) replacing the fog toggle, built as a separate shader variant. Design `docs/design/K76_reveal_mode.md`; 2a and 2b merged (residuals K258, K276; joints fade with their thread, K275), 2c running, then K268 stage 2, K290 and 2d.
+  - owner: agent a58040d5b7b031c80 (opus) of claude session d8031183, stage 2c from 23:39 (cap 01:39; ports 5810-5819); earlier worktrees kept (2b `ac6e354b85922e7aa`, 2a `a5d63452980ed9fa3`, stage 1 `aea102de995e1ce30`)
+  - branch: `worktree-agent-a58040d5b7b031c80` (`.claude/worktrees/agent-a58040d5b7b031c80`, from 2c81a92); last commit: `2c81a92` (master) until its first WIP commit
+  - evidence: `.claude/probes/K76/stage2c/` in its worktree; 2a's and 2b's in the main checkout's `.claude/probes/K76/` (sheets `stage2a/out/sheet/`, `stage2b/out/`); lore `render-explore.md`
+  - next: stage 2c (move-event feed, input gating and camera, the `exploration` dropdown with codec 6, K73 indicator, intro, K257's and K286's recommendations, a census walk), its handoff, the merge
+  - brief: `docs/design/K76.md` ("Stage 2c", 79c5a97), then `docs/design/K76_reveal_mode.md`
+
+- **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14 15:16): a gap must not show until the over thread is seen, and a stub's variable overlap and dead ends need a dynamic gap shape. Stage 1 (the ribbon's shaped cut, proof, desktop sheet) merged; stage 2 is the fans, pluck-still, protect, smooth-min, underWindows and caps.
+  - owner: nobody since 2026-10-14 17:50 (stage 1 merged; agent ab65d913a3b9a3dcb, worktree `.claude/worktrees/agent-ab65d913a3b9a3dcb` kept)
+  - branch: mainline; last commit: `61c8859` (stage 1 is 1e55365..61c8859)
+  - evidence: `.claude/probes/K268/` (the proof, the census, GPU timings, the partial sheet)
+  - next: stage 2 ("For stage 2", with K275's fade), after the physics worker and never alongside K76 2c, K298, K299 or K111 stage 5 (all change the paint shaders); residuals K287, draw order waits on Levi (K286); burn stage 3 runs the cut in reverse (K290)
+  - brief: `docs/design/K268.md` ("Stage 1 handoff (2026-10-14 17:41)", "For stage 2"); the design is in `docs/design/K76.md` ("Shaped gaps (Levi, 15:16)")
+
+- **K279** · Plucks you can see, feel and hear (Levi, 2026-10-14 16:11): a non-physics ripple (weaker on auto plucks), more vibration looks, an optional physics tug, a stronger default vibration, louder manual plucks. Stage 1 merged (50c1aab..ad2618a; ten daily-exempt params, codec rows 121-127; tug `ptg` off by default); Levi's picks are K288, residuals K289.
+  - owner: nobody since 2026-10-14 23:55 (stage 2 ready to launch; stage 1's agent abf68d906aaae3609, worktree kept)
+  - branch: mainline; last commit: `ad2618a`
+  - evidence: `.claude/probes/K279/` (`sheet2/`, `k279_wake.mjs`, `wake.log`, `test_run5.txt`)
+  - next: stage 2 builds K288's picks (glint the default `prp`); check it against K344's pluck-overlay fix first; phone 60 fps in every look, `ptg=0.3` stutters so the tug stays off
+  - brief: `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up")
+
+- **K7** · Physics in a Web Worker with render-side interpolation (K28's acceptance: the intro runs at full frame rate while physics settles). Design merged (`docs/design/K7_worker.md`; Levi's 11 calls K302, all yes); stage 1 (in-thread host, 67c0604..e0980b5; residuals K314, K315) and stage 2 (worker core in Node, 86708b4..472ef83; K346, K347) merged.
+  - owner: agent a9f593eca9038e6d3 (opus) of claude session d8031183, stage 3 from 23:22 (cap 01:22; ports 5792-5795)
+  - branch: `worktree-agent-a9f593eca9038e6d3` (`.claude/worktrees/agent-a9f593eca9038e6d3`, from 472ef83); last commit: `472ef83` (master) until its first WIP commit
+  - evidence: `.claude/probes/K7/` (`design/`, `stage1/`, `stage2/`; stage 3's `stage3/` in its worktree); `test/physics/physics_host.test.ts`, `snapshot.test.ts`
+  - next: stage 3 (the worker in the browser behind `phw`, off by default; check that pre-settle slices answered from a `settled` message arrive a frame late), then 4 (also attributes K307's unexplained main-thread JS) and 5 (needs the phone); stages 1 and 4 own `main.ts`
+  - brief: `docs/design/K7_worker.md` ("Stage 2 handoff", "Stage 3: the worker in the browser, behind `phw`")
+
+- **K307** · The daily intro's freezes are cold shader compiles (stage 1's trace, 2026-10-14; Pixi blocks on `linkProgram` and the wait stops every present). A `KHR_parallel_shader_compile` prototype kept the screen presenting, so stage 2 builds the warm-up (Levi, K302 (8): "Let's prioritize this too").
+  - owner: nobody since 2026-10-14 21:39 (stage 1 merged at 22:06; agent a119ffbc187f24aad (opus) of claude d8031183); stage 2 waits for a code slot
+  - branch: mainline; last commit: `b72d5dd`; the local `k307-proto` (51f7480) holds throwaway prototypes and is never merged
+  - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches); lore `.claude/rules/render-shaders.md`
+  - next: stage 2, the warm-up (`src/render/program_registry.ts`, `src/render/shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2 for untimed programs); K329 may still touch `main.ts`; the phone's measures ride K156's next pass
+  - brief: `docs/design/K307_intro_freezes.md` ("Stage 1 handoff", "Stage 2: the warm-up")
+
+- **K344** · A sharp cusp in the pluck vibration on a self-crossing loop (Levi, 2026-10-14 23:04; link `?qoietk.KIiHgRRXwRlRt8fGrST4sf`, crossing 104, chain 21). The fix covers the general case, not this loop alone.
+  - owner: agent a67c6d4d11a9ea6b4 (opus) of claude session d8031183, from 23:30 (cap 01:30; ports 5890-5899)
+  - branch: `worktree-agent-a67c6d4d11a9ea6b4` (`.claude/worktrees/agent-a67c6d4d11a9ea6b4`, from 79c5a97); last commit: `79c5a97` (master; none of its own yet)
+  - evidence: `.claude/probes/K344/` in its worktree
+  - next: reproduce on Levi's link at 1400x900, measure the cusp's geometry, fix the general case with a test that fails first, the after sheet, lore and the handoff; then the merge
+  - brief: `docs/design/K344_pluck_cusp.md`
