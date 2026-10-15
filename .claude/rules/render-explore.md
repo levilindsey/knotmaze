@@ -236,9 +236,10 @@ slot. Design and calls: `docs/design/K268.md` ("Stage 1 design", "Stage
   terminal never does). No end: hidden. One or two: shaped. More: 2b's
   scalar (fallback). Hidden, solid and fallback slots take 2b's setVis
   path EXACTLY. A shaped slot keeps its solved reject radii (never
-  rejected), and its texel 1.w still carries 2b's scalar, which no
-  program reads under the reveal since stage 2 gave the fans and the
-  still pluck the shaped cut (THE CUT IN THE FANS, below).
+  rejected), and its texel 1.w still carries 2b's scalar, which every
+  explore program fetches and replaces by the profile since stage 2 gave
+  the fans and the still pluck the shaped cut (THE CUT IN THE FANS,
+  below); only a master program would use it.
   underWindows and `slotExploreHid` stay binary (0.5), as in 2b.
 - ROW-PARTIAL UPLOAD: the gap texture is a row-dirty source with its own
   uploader, `knot-gap-rows` (registered at module load, as float_rows'),
@@ -300,6 +301,16 @@ slot. Design and calls: `docs/design/K268.md` ("Stage 1 design", "Stage
   kSmooth, which its fragment lacks; PluckOverlay.setExplore (from the
   renderer's setExplore) moves live still plucks onto it. No new CPU twin:
   nothing mirrors gapKeepAt, and the coverage has exploreCutCoverCpu.
+  MEASURED (K76 2c's census walk, ten moves, cam=follow; probes in
+  `.claude/probes/K268/stage2/`): mode off 0 px against master. Mode on,
+  483 px changed against the build before this step, all within 40 px of
+  junction 101, which now paints mode off's pixels exactly (its fan had
+  painted the web over a fully shown gold thread: 224 fan px against mode
+  off's 94, a mismatch master has too). Inferred: the fan had scaled a
+  shaped slot's silhouette cut by 2b's scalar (crossing 100, over pass at
+  vis 0.47, whose mode-on cut grew 225 px in the same run). Junctions 56,
+  57, 58 and 161 still differ from mode off, with master's counts
+  (unattributed).
 
 ## In the game (stage 2c, 2026-10-15)
 
