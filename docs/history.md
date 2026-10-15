@@ -799,6 +799,19 @@ demand.
   a reload. *[Lore: `.claude/rules/gameplay.md` (The fog of war),
   `.claude/rules/probes.md` (K100); probes and screenshots in
   `.claude/probes/K100/`.]*
+- ONE LIVE CODEC TABLE (K132, 2026-10-14; brief `docs/design/K132.md`,
+  agent under session d8031183; Levi, 2026-10-13: "we can ignore keeping
+  support for previous url params, or preserving mazes from previous
+  control combinations"): the frozen codec tables v1-v3 and their pins,
+  K74's copy of the v4 defaults, the delta blobs (K20's
+  `?daily=<n>.<delta>`), `LEGACY_BASE`, the `mc` / `trm` keys and
+  DAILY_V1 are gone. A link lists what differs from today's
+  PARAM_DEFAULTS, a token of another version reads as its seed at today's
+  defaults with one warning, and a daily is today's defaults on the day's
+  seed. DAILY_V1 differed from today's defaults only in trailLength (5
+  against 10, render-only), so no daily maze moved: the golden dailies
+  and the K87 pin held. *[Lore: CLAUDE.md (URL-as-complete-state, Daily
+  maze), `.claude/rules/gameplay.md`; probes in `.claude/probes/K132/`.]*
 
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the

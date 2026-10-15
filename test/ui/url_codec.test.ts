@@ -143,7 +143,7 @@ describe("links", () => {
   });
 
   // K80: the chase's defaults are the simulation-picked tuning; a retune
-  // edits DEFAULT_CHASE_PARAMS, PARAM_DEFAULTS and the pin above together.
+  // edits DEFAULT_CHASE_PARAMS (PARAM_DEFAULTS reads it) and the pin above.
   it("reads the chase tuning as DEFAULT_CHASE_PARAMS", () => {
     expect(chaseParamsOf(PARAM_DEFAULTS)).toEqual({ ...DEFAULT_CHASE_PARAMS });
   });

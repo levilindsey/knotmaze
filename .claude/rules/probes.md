@@ -25,12 +25,12 @@ PROBE LORE (2026-10-12, K56): **a bare URL is TODAY'S DAILY** - fabric
 mode with music, the trace + burn intro, the daily's HUD title, and a
 SAVED ATTEMPT that the next bare load restores (a probe profile that
 played once is no longer fresh). Probes that want a fresh default
-design must pass a query (`?am=instant`: a random seed; `?<seed>.J`: a
-given one, at codec v4's defaults); `?daily&am=instant` is NOT a daily any more (am is not a
+design must pass a query (`?am=instant`: a random seed; `?<seed>`: a
+given one, at today's defaults); `?daily&am=instant` is NOT a daily any more (am is not a
 preference) - daily probes wait out the intro (probe_daily.mjs
 waitReady). Probes that want knot mode pass `mf=0`, and probes that need
-a settled first frame without a reveal pass `am=instant` - as legacy
-links (`?s=1471kin&am=instant`, still parsed) or after a compact token
+a settled first frame without a reveal pass `am=instant` - in a
+key=value link (`?s=1471kin&am=instant`) or after a token
 (`?1471kin.<blob>&am=instant`). COMPACT LINKS: the app rewrites every link to one token, so
 `location.search` has no keys to read - read settings via
 `window.__knotParams()`. AUDIO IS GATED on a trusted user
@@ -198,16 +198,14 @@ desktop Chrome with the phone's viewport: plumbing only, never timings.
 - *From COMPACT LINKS, reading the live params:* `window.__knotParams()` returns the live params (the address bar has no
   readable keys any more); scripts/diag_scan.mjs reads tw/gap from it.
 
-- *From COMPACT LINKS, probe URLs:* PROBE GOTCHA: `?<seed>&am=instant`
-  and `?s=<seed>&...` probe URLs are v1 links (junctionBlend 0, not the
-  current 0.88): write `?<seed>.J&...` for current defaults (v4, since
-  K73 on 2026-10-12). Older all-default tokens still parse with their own
-  version's defaults: `.c` is v3 (trailLength 5, not 10), `.U` is v2
-  (pluckSize 1 too).
+- *From COMPACT LINKS, probe URLs:* `?<seed>&am=instant`,
+  `?<seed>.J&...` and `?s=<seed>&...` all read today's defaults (K132).
+  A token of another version (older probes' `.c` = v3, `.U` = v2) reads
+  as its seed at today's defaults, with a console warning.
 
 - *From RENDER-ONLY PLUCKS, probe hooks:* Probe hooks:
   __knotPluck, __knotPluckState, __knotPerf, __knotSetPhysics,
-  __knotSetPhysicsParam, __knotReplay. PROBE GOTCHA: a legacy `seed=`
+  __knotSetPhysicsParam, __knotReplay. PROBE GOTCHA: a `seed=`
   probe URL that already carries a key IGNORES a second copy appended
   after it (URLSearchParams.get returns the first) - REPLACE `mf=1` with
   `mf=0`, never append.
