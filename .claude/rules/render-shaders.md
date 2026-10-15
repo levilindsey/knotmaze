@@ -103,6 +103,15 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   `junction-field-explore` (likely `pluck-still-explore` too, for a still
   pluck during a burn; not checked), or the first burn freezes the screen
   while they link. Stage 2's warm-up does (THE WARM-UP, the burn rule).
+- **High contrast dots changed all four** (K76 stage 2d, 2026-10-15,
+  0ac54dc): the section's explore variant is 56595 characters,
+  `arm-strip-explore` 37084 (only EXPLORE_VIS_GLSL's comment, through
+  STRIP_EXPLORE_DECL_GLSL), `junction-field-explore` 33270 and
+  `pluck-still-explore` 24325 (`kExDot` in kExploreLook); the masters are
+  unchanged. Each compiles cold once; SwiftShader compiles all eight
+  (`.claude/probes/K76/stage2d/dump_variants.ts`, `compile_glsl.mjs`).
+  No new program site or variant (High contrast is a uniform value,
+  uKExplore.x = 2), so the registry needed no entry.
 - **Growing a shader costs compile time.** section-rgb is the intro's
   critical path. After a large shader change, time a cold link:
   `trace_intro.mjs` on a fresh profile.
