@@ -1,4 +1,4 @@
-> RE-BASED 2026-10-15 on master d741412 by K8 stage 1 (agent `agent-a35a43cee74c92b93`; docs only, nothing measured; brief `docs/design/K8_stage1.md`). Since the snapshot below, G1 (per-pixel gaps), G2 (shader paint), K76 2a/2b (the thread reveal), K268 stage 1 (the shaped cut), K81/K127/K169 (route bands, traveled webs, the web fade), the render-only plucks (K77, K104, K279), K7 (the physics worker) and K307 stage 1 (cold compiles) have landed. What changed here: sections 1-4 describe master d741412 (its line numbers), with the data model re-cut for G2's textures (SAMP packs two samples per RGBA32F texel; AUX and PAINT are gone; per-sample radii get their own texture) and the fragment programs calling G2's paint library; section 5's stages are re-cut, with the reveal chain (K76 2c, K268 stage 2, K290, K76 2d) landing first; section 6 is refreshed for the Pixel 11 on Android Chrome, with a recommendation on every question. The decisions K8 stage 1 made are marked **(K8 s1)**.
+> RE-BASED 2026-10-15 on master d741412 by K8 stage 1 (agent `agent-a35a43cee74c92b93`; docs only, nothing measured; brief `docs/design/K8_stage1.md`). Since the snapshot below, G1 (per-pixel gaps), G2 (shader paint), K76 2a/2b (the thread reveal), K268 stage 1 (the shaped cut), K81/K127/K169 (route bands, traveled webs, the web fade), the render-only plucks (K77, K104, K279), K7 stages 1-2 (the physics host, and the worker core in Node; the worker reaches the browser at stage 3) and K307 stage 1 (cold compiles) have landed. What changed here: sections 1-4 describe master d741412 (its line numbers), with the data model re-cut for G2's textures (SAMP packs two samples per RGBA32F texel; AUX and PAINT are gone; per-sample radii get their own texture) and the fragment programs calling G2's paint library; section 5's stages are re-cut, with the reveal chain (K76 2c, K268 stage 2, K290, K76 2d) landing first; section 6 is refreshed for the Pixel 11 on Android Chrome, with a recommendation on every question. The decisions K8 stage 1 made are marked **(K8 s1)**.
 >
 > DESIGN SNAPSHOT (2026-10-11), written by a read-only design agent against the G1 branch (per-pixel gaps) as it stood that day; file:line citations referred to that code. What actually lands is recorded in CLAUDE.md and the commit messages; open work is tracked in LEDGER.md.
 
@@ -15,7 +15,7 @@
 ## Decisions at a glance
 
 1. **One geometry source.** The GPU gets geometry from one shared RGBA32F texture of centerline samples (SAMP), two samples per texel, written by `update()`.
-   - The CPU keeps producing `chainSamples` exactly as today, so every CPU consumer keeps working. Under K7 they are the interpolated mirror positions, the same ones the samples are built from today.
+   - The CPU keeps producing `chainSamples` exactly as today, so every CPU consumer keeps working. Under K7's worker they come from the mirror (section 1.1), the same positions the samples are built from.
    - Per-sample radii (the reveal taper, the pluck base collapse, the swell) live in a second texture (RADII), written only for chains whose width multiplier is not 1. **(K8 s1)**
    - There is no GPU readback anywhere.
 2. **Ribbons are one instanced draw, one instance per centerline segment.**
@@ -52,7 +52,7 @@
 
 ### 1.1 What runs per frame on master d741412
 
-**The physics hand-off (K7).** The renderer reads `ps.positions` from the mirror (`physics/mirror_system.ts`). With the worker on, that is the worker's snapshot stream interpolated at now − D (D = the median snapshot interval, clamped to 8-50 ms); at rest the frame is exact. `&phw=0` runs the in-thread host. G3 reads the same positions as today's samples and never talks to the worker.
+**The physics hand-off (K7).** On master d741412 the physics still runs on the main thread (`InThreadHost`, K7 stage 1), and the renderer reads `ps.positions` directly. K7 stage 2 built the worker core, the snapshot and the mirror in Node (`physics_worker_core.ts`, `snapshot.ts`, `mirror_system.ts`). Stage 3 (running) puts the worker in the browser behind `phw` (off by default); stage 4 adds the diagnostic bridge (`__knotPhysFreeze(on)`); stage 5 makes the worker the default. With the worker on, the renderer reads the mirror: the newest snapshot, or the last two interpolated at now − D (D = the median snapshot interval, clamped to 8-50 ms) if stage 3's A/B keeps interpolation; at rest the frame is exact. G3 reads the same positions as today's samples and never talks to the worker.
 
 **`RibbonRenderer.update()`** (`ribbon_renderer.ts:2449-2607`). Setup: `kData()`, `geomRev++`, `underWindows` cleared, the reveal lifecycle (`finishReveal`), and K90's `splineBend.halfWidth` (off unless `__knotSplineBend(true)`). Then per chain, in order:
 - Copy the controls from `ps.positions`.
@@ -647,9 +647,9 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
     - Park the pointer. Use unique scratchpad subdirectories and check the stamp's SHA. Layers are reset each frame. The URL rewrite drops `#hash`.
     - A bare URL is today's daily, with a saved attempt, so probes pass a query (`?<seed>&am=instant&snd=none`).
     - Hold the perf lock for every pixel-exact GPU probe, not only for timings, and record `webglcontextlost`.
-20. **The physics runs in K7's worker (new since the snapshot).**
-    - The renderer reads the mirror, interpolated at now − D while awake (D = the median snapshot interval, clamped to 8-50 ms) and exact at rest.
-    - A same-state A/B therefore freezes the physics: `&phw=0` (the in-thread host) plus the freeze patch `__knotPS().step = function () {}`, or `__knotPhysFreeze(on)` under the worker. `&phy=0` turns physics off for a deterministic layout.
+20. **The physics moves into K7's worker (new since the snapshot; stages 3-5, section 1.1).**
+    - With the worker on, the renderer reads the mirror: exact at rest, and while awake the newest snapshot or, if K7 stage 3 keeps it, an interpolation at now − D.
+    - A same-state A/B therefore freezes the physics. In-thread (today, or `&phw=0` once stage 3 adds it): the freeze patch `__knotPS().step = function () {}`. Under the worker: `__knotPhysFreeze(on)` (K7 stage 4), which resolves once a snapshot shows the freeze. `&phy=0` turns physics off for a deterministic layout.
     - Neither G3 nor G4 touches `src/physics/`.
 21. **Dependents of the strip (K8 s1).** Each needs its replacement before the strip goes at G3-3.
     - The pluck host's `visibility` stays on `underGapVisibility`.
@@ -662,118 +662,248 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
 
 ## 5. STAGED PLAN (each stage lands end-to-end working on master)
 
-**Common recipe pieces.**
-- **URL set:** `urls.mjs` in the G1 worktree probes — user, userThin, ring, def, knot, fat, kink. Every URL pins `am=instant&snd=none`; the knot URLs add `mf=0`.
-- **Same-state cross-build A/B.** G3-0 adds `__knotSnapshot()` / `__knotRestore(s)` (`main.ts` dev hook). Snapshot: positions, prev, zPos, every pass's ctrl/displayF/weld, the emergent list. Restore pauses the sim and pins `flowTime` and `paintClock`.
-- **Same-build A/B.** Uses the dev-only runtime switches `rp=` / `jp=`. Read from `location.search` directly; not added to `PARAM_DEFAULTS`, so links are unaffected.
-- **Timing.**
-  - CPU: `probe_perf` / `probe_cpuprof` (`update`, `tickPaint`, gated rebuild).
-  - Desktop GPU: `probe_gpudraw` at 3200x1800.
-  - iPhone: new `__knotBench(n)` that re-renders the stage n times around `gl.finish()`. Shown in the stats footer behind `bench=1` so the user can screenshot it from the deployed build, with the panel version stamp.
-- **Shader status line.** Compile and link failures go into the on-page stamp, because a phone has no console.
+**Re-cut by K8 s1 for master d741412.** Each stage names its files, what it stays out of, its tests and A/Bs, and its acceptance numbers. While K7's stages 3 and 4 own `main.ts`, no stage needs a line there: every hook hangs off `__knotRenderer()` (main.ts ~4829).
 
-**G3-0 — data plane, no visual change.**
-- **Work:** SAMP, CHAIN and RANGES written every `update()`; `FloatRows` format parameter; snapshot/restore hooks; extend `probe_texreadback` to the new textures.
-- **Verify:**
-  - GPU readback equals the CPU mirror (max |Δ| = 0).
-  - Same-state cross-build A/B shows 0 px diff at all 7 URLs.
-  - `update()` costs ≤ +0.3 ms at the user URL.
+### 5.0 Common recipe pieces
 
-**G3-1 — slots reference SAMP, chunk-pruned search.**
-- **Work:** GAP rows at 16 texels with chunk bounds; the CPU stops building fine polylines; brute-force debug flag.
-- **Verify:**
-  - Debug brute force vs pruned: 0 px diff.
-  - G1 casing census at all URLs: overcut 0 and naked/merge no worse than G1.
-  - Same-state cross-build A/B: only sub-pixel casing-edge diffs. Clusters over 2 px must be attributed with the `uDebugView` tint before landing.
-  - GL readback of GAP.
-  - Desktop GPU draw time drops (target ≤ 2.0 ms from 2.83); `update()` drops.
+**Links.** Every probe link passes a query (a bare URL is today's daily, with its intro and a saved attempt) and pins `am=instant&snd=none`. Same-state A/Bs add `fw=0` unless flow is the subject.
+- fabric at defaults: `?b`
+- dense (5448 particles, render-bound at about 30 fps): `?b&gs=24&wd=0.6&brd=0.6`
+- knot mode: `?7k&mf=0`
+- fat: fat threads `?b&tw=.64`; G1's fat knot `?p9ar6&mf=0&rep=.4&bd=1.75&sm=.7&tw=.52`
+- the thread reveal: `__knotExplore({ on: true })` after load (the K76 stage 2a hook, main.ts 5449), or K76 2c's link key once it lands
+- a daily: `?daily=<n>&snd=none` on a fresh profile, captured after its intro. `am` is not a `DAILY_EXEMPT_KEYS` entry, so `&am=instant` turns it into an ordinary design with the same maze; use that only as a labelled fallback.
+- G1's set (`.claude/probes/g1/urls.mjs`: user, userGap, userThin, ring, def, defU, knot, fat, fatGap, kink) for the casing census. Its `s=` links read today's defaults plus their overrides (K132).
 
-**G3-2 — SDF ribbon pass, default on, `?rp=strip` escape hatch.**
-- **Work:** instanced segment mesh; VS/FS above; slot windows via RANGES (`aMaskId` retired); colours from PAINT/AUX; fold detection; flat caps for anchored tails; the 0.98 interim radius on tucked samples. G1 fans unchanged on top.
-- **Verify:**
-  - Same-page A/B (`rp` toggle on a frozen state) at all URLs. Diff classes are attributed with the ownership tint; the expected ones are round joins (sub-pixel), tight folds (filled lobe vs thinned), taper tips (rounder) and AA style.
-  - P3.34 fold repro (radius ~0.13 under a held tug) and kink seed crops.
-  - Census.
-  - Reveal frame series for every appear FX (rainbow swell, comet/roots tapers, ink).
-  - GL readback.
-  - Desktop GPU ≤ G1 + 10%.
-  - iPhone bench at 2x and a visual check on the user's phone with ring + default URLs (WebKit gate).
-- **Do not delete the strip until the user confirms on iPhone.**
+**Same-state cross-build A/B (K8 s1).** G3-0 adds `captureScene()` and `restoreScene(s)` to `RibbonRenderer`, reached as `__knotRenderer().captureScene()`. No main.ts lines.
+- The physics part reuses `snapshot.ts` (`writeSnapshot` / `readSnapshot`: what K7's worker ships the renderer). The rest is what `update()` reads besides: the emergent list, the gate latches and `gateCache`, `flowTime`, the paint clocks, the reveal and explore state. G3-0 lists what `update()` reads and proves the capture complete: capture, restore on the same build, 0 px.
+- Freeze the physics first. In-thread (the default until K7 stage 5): `__knotPS().step = function () {}`. Under `phw=1`: `__knotPhysFreeze(on)` (K7 stage 4). Results name the host.
+- Pin the clocks: `r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn = 0`. Park the pointer.
+- The pattern to copy is `.claude/probes/K83/k83_ab.mjs`. Serve both builds with `scripts/preview.ps1 -Port <p> -Ref <commit>` on separate ports and check each page's stamp SHA.
+- Hold the perf lock for every pixel-exact GPU probe, and record `webglcontextlost` (invariant 19).
 
-**G3-3 — cleanup.**
-- **Work:** delete the strip path, free-tip discs, AXIS records and the full fan mode; port `census_lib` / `probe_samestate` to SAMP-based lanes; fold-window hardening.
-- **Verify:** same-state cross-build 0 px diff vs G3-2's SDF path; probe suite green; `npm test` green.
+**Same-build A/B.** A switch on the renderer (`r.rp = "strip" | "sdf"`, `r.jp = "fans" | "sdf"`) flips the pass on one frozen state. The escape-hatch link keys (`rp=strip`, `jp=fans`) are read from `location.search` when the module loads, because the URL rewrite drops keys the codec doesn't know. They never enter `PARAM_DEFAULTS` or the codec.
 
-**G3-4 — performance.**
+**Timing.**
+- CPU: `.claude/probes/g1/probe_perf.mjs` and `.claude/probes/probe_cpuprof.mjs` (`update`, `tickPaint`, the gated rebuild).
+- Desktop GPU: `.claude/probes/probe_gpudraw.mjs` at 3200×1800, per program.
+- Pixel 11: Chrome there exposes no GPU timer query, so G3-0 adds `bench(n)` to the renderer: n renders of the same stage between two `gl.finish()` calls, in ms per frame. Call it over CDP with `scripts/phone.ps1 [-Wireless] [-Ports <p>,<q>] [-Url <link>]` and `.claude/probes/phone_probe.mjs`. Alternate the builds (A B A B), because the phone throttles over minutes. `update()` on the phone is timed the way `probe_perf` wraps it.
+- Cold compiles: `.claude/probes/K307/trace_intro.mjs` on a fresh profile (section-rgb 2.8 s today).
+- Upload bytes: `ROW_UPLOAD_STATS` (G2's float rows), `GAP_UPLOAD_STATS`, and G3-0's `SAMP_UPLOAD_STATS`.
+- GL readback: `.claude/probes/probe_texreadback.mjs`, extended to SAMP, RADII, G3 CHAIN and RANGES.
+
+**Shader status line.** Compile and link failures show on the page, because a phone has no console. That is one main.ts line (the stamp), so it lands with G3-2, after K7 stage 4.
+
+### 5.1 G3-0: the data plane, no visual change. Ready now (K8 s1)
+
+- **Files:**
+  - new `src/render/samp_table.ts`: pure packers for SAMP, RADII, G3 CHAIN and RANGES (no Pixi), and `test/render/samp_table.test.ts`;
+  - `ribbon_renderer.ts`: the textures (G2's `FloatRows`, page-lifetime), their writes in `update()`, `captureScene` / `restoreScene`, `bench(n)`.
+- **Stays out of:**
+  - `main.ts` (K7 stages 3-4);
+  - `src/physics/*`;
+  - every GLSL string, so no program changes and K307's registry is untouched;
+  - `pluck_overlay.ts` (K279 stage 2);
+  - `paint_*.ts` and `explore_glsl.ts` (the reveal chain).
+- **Work (section 2):**
+  - SAMP: `chainSamples[c]`, two samples per texel, chain bases even-aligned;
+  - RADII: h × widthMul per sample, four per texel, only for chains whose widthMul isn't all 1 (the others get the unit flag);
+  - G3 CHAIN: one texel per chain;
+  - RANGES: per chain, the slot windows `assignGapIds` packs per sample today, as sorted sample ranges;
+  - dirty rows only. Asleep at fw 0, `update()` doesn't run, so nothing uploads.
+  - No `FloatRows` format parameter: two samples per RGBA32F texel fit G2's rows as they are.
+- **Tests:**
+  - packing: even alignment, two samples per texel, four radii per texel, the unit flag, row partials;
+  - neighbour indices: closed chains wrap, open chains clamp, never a last-to-first chord (invariant 6);
+  - the window lists reproduce `idScratch`'s per-sample ids exactly, on fixtures cut from real scenes;
+  - SAMP decodes to `chainSamples` bit for bit in float32;
+  - `npm test` green, the golden byte-identity test untouched.
+- **A/Bs:**
+  - same-state cross-build, master against G3-0: 0 px on a daily, a fat design, the thread reveal on, dense, the default fabric and knot mode;
+  - GL readback of the four textures against the packers: max |Δ| 0.
+- **Acceptance:**
+  - `update()` at most +0.3 ms on the desktop (fabric default and dense) and at most +1 ms on the Pixel;
+  - upload bytes per awake update as section 2 computes (about 0.35 MB at the default fabric), by `SAMP_UPLOAD_STATS`; 0 B asleep;
+  - capture and restore on one build: 0 px.
+- **Phone pass:** record the Pixel's caps (`MAX_VARYING_VECTORS`, the highp ranges, the real renderer via `WEBGL_debug_renderer_info`) and master's `bench` numbers at the default fabric and dense, as G3-2's baseline.
+- The brief is "Stage 2 (G3-0)" in `docs/design/K8_stage1.md`.
+
+### 5.2 G3-1: gap slots reference SAMP, chunk-pruned search. After K268 stage 2 and K290
+
+- **Files:**
+  - `gap_mask.ts`: the new row (section 3.4), the search GLSL, the slot writer;
+  - new `src/render/fabric_sdf.ts` with `sampAt`, the only part of section 3.1 the search needs;
+  - `ribbon_renderer.ts`: `computeGapSlot`, `renderMarkerGaps`, and `bindGap`'s binding list, which grows SAMP for the strip, its explore variant, the fans (`bindFieldGap`) and the still pluck (`bindPluckGap`);
+  - `explore_glsl.ts` only if ANCHOR_SURE / ANCHOR_BK move. The new search must keep each anchor string exactly once (`paint_explore.test.ts`).
+- **Waits for:** K268 stage 2 (the far-branch soft-min, its per-point gate, the protect change and the shaped-cut anchors in the fans and the still pluck) and K290 (the shaped cut reversed). Both rewrite the same search. G3-1 ports what they land.
+- **Stays out of:** `main.ts`, physics, the paint library, the strip's paint code.
 - **Work:**
-  - Asleep-flow round-robin re-solve: centers recomputed every frame, window extents 1/8 per frame, bounds every frame. Valid only while asleep with no pluck/reveal/FX; a slot strength ramp change forces a full solve.
-  - `mediump` colour math; header packing; render-on-demand when fully static.
+  - slot points referenced by SAMP range; the CPU stops building fine polylines (`buildPoly(fineO)`, `FINE_SPACING`);
+  - G1's levers: row 0's globals move to uniforms; the protect test is loop-free (one sample range per side); a zoom-aware tolerance (one SAMP stride at low zoom); the per-point far-branch gate as K268 stage 2 lands it;
+  - chunk bounds walked in index order (section 3.4's correction);
+  - a brute-force debug uniform.
+- **Tests:** the row layout; kStart/nPts rounded outward; the protect ranges; the marker disc (nPts 0); `paint_explore.test.ts` green.
+- **A/Bs:**
+  - brute force against pruned on one page: 0 px;
+  - the G1 casing census (`.claude/probes/g1/census_lib.mjs`) on G1's set: overcut 0, naked and merge no worse than master;
+  - K268's and K76's own censuses (their designs name them): unchanged;
+  - same-state cross-build against master: only sub-pixel casing-edge diffs. A cluster over 2 px is attributed with the `uDebugView` tint before landing;
+  - a held pluck (still) and a routed web, cropped: 0 px or attributed;
+  - GL readback of GAP.
+- **Acceptance:**
+  - the ribbon program's GPU time drops against master's 1.59-1.71 ms at 3200×1800 (section 3.7). The target, 20% lower, is a planning figure, not a measurement: G1's per-pixel gaps took the program from 0.85 to 1.94 ms at defaults, and G1's levers are what G3-1 folds in;
+  - `update()` drops;
+  - GAP bytes per update drop with the row (114 → about 24 texels).
+- **Coordinate:** the still pluck's binding sits in `pluck_overlay.ts`; land it after K279 stage 2.
+
+### 5.3 G3-2: the SDF ribbon pass, default on, `rp=strip` escape hatch. After the reveal chain
+
+- **Files:**
+  - `fabric_sdf.ts`: the rest of section 3.1 (`radAt`, `sdCone`, the AA);
+  - new `src/render/ribbon_sdf.ts`: the segment mesh (one static `aSeg` instance buffer per scene) and the VS/FS text, which calls G2's paint library and carries the explore anchors;
+  - the fold windows (section 3.3) as a pure, tested module;
+  - `ribbonProbe`, the CPU transliteration of the ribbon FS (invariant 15);
+  - `ribbon_renderer.ts`: the pass, the `rp` switch, the pluck host's `setCollapse` writing RADII rows;
+  - `explore_glsl.ts`: `withExplore` for the new host (same anchor strings, or a per-host anchor table).
+- **Waits for:** the reveal chain (K76 2c, K268 stage 2, K290, K76 2d), then ports it: the same paint calls, the reveal's VIS anchors, K268's shaped cut in `gapKeepAt` (decision 1). Stop K90 first (section 6, 13).
+- **Work:** sections 3.2-3.3: the one-sided pinch in fold windows, argmin ownership as the safety net, flat anchored caps, round free tips, the fused-end disk under today's cap cover disc, side01 exactly as `uv.y` today (K328 relies on it). G1's fans stay on top.
+- **Tests:** the fold windows (turn radius, marks, ±W, wrapped ranges split); `ribbonProbe` against `paint_math.ts`; both explore hosts pinned.
+- **A/Bs:**
+  - same page, `rp` flipped on a frozen state, on every link above. Diff classes are attributed with the ownership tint; the expected ones are round joins (sub-pixel), the pinch (same side, smoother), taper tips (rounder) and AA style;
+  - the P3.34 fold repro (radius about 0.13 under a held tug) and kink seed crops;
+  - paint, rim, explore and shaped-cut censuses: at most 2/255;
+  - reveal frame series for every appear FX (rainbow swell, comet and roots tapers, ink);
+  - GL readback.
+- **Acceptance:**
+  - desktop GPU at most the strip's + 10% (same page, probe_gpudraw);
+  - Pixel: 60 fps held at defaults, dense no worse than master (`bench`); `MAX_VARYING_VECTORS` covers section 3.2's varyings;
+  - cold link: ribbon-sdf compiles in at most section-rgb's 2.8 s + 15% (trace_intro on a fresh profile), and is measured on the Pixel;
+  - K307's registry lists ribbon-sdf and ribbon-sdf-explore; `rp=strip` compiles on demand only.
+- **Gate:** Levi checks G3-2 on his phone before G3-3 deletes the strip.
+
+### 5.4 G3-3: cleanup
+
+- **Delete:** the strip (`SECTION_VERT/FRAG`, section-rgb and its explore variant, `RibbonMesh` and its buffers), `GAP_VERT_DECL/MAIN`, the free-tip disc fans, AXIS records, G1's full fan mode (section 4.1).
+- **Add:** a small pure extrusion helper for K81's cover strips, which read `RibbonMesh.vertices` today, until G4-2.
+- **Port:** `census_lib` and `probe_samestate` off `fills[].vertexData`, onto SAMP and `ribbonProbe`.
+- **Verify:** same-state cross-build 0 px against G3-2's SDF path; the probe suite; `npm test`; K307's registry drops section-rgb and section-rgb-explore.
+
+### 5.5 G3-4: performance
+
+- **Work:**
+  - the asleep-flow round-robin re-solve (CPU): centres every frame, window extents 1/8 a frame, bounds every frame; only while asleep with no pluck, reveal or FX; a slot strength ramp forces a full solve;
+  - `mediump` colour, compose and blend math, after checking the fp16 rate on the Pixel;
+  - slot header packing (9 → about 5 texels);
+  - K259: the VS collapses segments outside every VIS piece in the thread reveal.
+  - Not here: render-on-demand (K24/K6, lever 7).
 - **Verify:**
-  - Flicker probe under flow: 0 spike pairs.
-  - 60 s asleep-flow series: max casing deviation vs full solve under 0.5 px (run both and diff).
-  - CPU at rest drops, measured.
+  - the flicker probe under flow: 0 spike pairs;
+  - a 60 s asleep-flow series against a full solve: max casing deviation under 0.5 px;
+  - CPU at rest drops (measured);
+  - K259: the reveal's GPU time drops against K76 2d's per-program numbers.
 
-**G3-5 — yarn pass** (independent of G4; can float).
-- **Work:** YARN table, instances, turn instances; delete `drawYarn`.
+### 5.6 G3-5: the yarn (K23). Independent of G4; floats after G3-2
+
+- **Files:** `fabric_maze_renderer.ts` (`drawYarn` becomes the YARN table and instances, gap-masked through `gapKeepAt`), a yarn program (K307 registry: yarn).
+- **Delete:** `drawYarn`'s Graphics strokes, Chaikin smoothing and alpha buckets. The yarn stops using `underGapVisibility`; the pluck host keeps it.
 - **Verify:**
-  - Scripted traversal in `pv=string`: forward moves, backtracks and U-turns, using the `probe_travsync` family.
-  - Dips under exactly with the host: census of yarn pixels inside host casings = 0.
-  - Tension slider live.
-  - Shadow ordering crops.
+  - a scripted traversal in `pv=string` (forward moves, backtracks, U-turns; the `.claude/probes/g1/probe_travsync.mjs` family);
+  - yarn pixels inside host casings: 0;
+  - the tension slider stays live;
+  - shadow ordering crops;
+  - the trail (K93), fog (K99) and markers (K83) unchanged: they read `pointFlowed`, which stays.
 
-**G4-0 — cluster records, no visual change.**
-- **Work:** CPU cluster builder, RANGES CLUSTER entries, record v2 written beside v1; `fieldProbe` v2 on the CPU.
-- **Verify:** readback; structural census (every ribbon-gated segment lies in exactly one piece; ranges clear their disks); rebuild cost ≤ G1.
+### 5.7 G4-0: cluster records v2 and `fieldProbe` v2, no visual change. After G3-0
 
-**G4-1 — joint SDF pass, default on, `?jp=fans` escape hatch.**
-- **Work:** joint mesh and shader; ribbon gate active.
-- **Verify:**
-  - Same-page A/B crops of every joint at dsf 3 for ring (41), user, userThin and def (89-92), at cr {0, 1, 3, 6} × tw {0.42, 0.64} × fl {0, 0.34}.
-  - Gameplay paint at a pinned clock after scripted moves, including a traveled host with an untraveled bridge and the reverse.
-  - Reveal FX series (no pale stars).
-  - GPU-vs-CPU census (`probe_gpucensus` style: inject point instances with a debug "output field" mode) ≤ 1/255.
-  - Field-vs-ribbon census on the R_out..R ring: error 0.
-  - Ownership tint: each pixel has exactly one writer.
-  - The G1 casing census is unchanged outside domains.
-  - Desktop GPU budget; iPhone bench ≤ 4 ms at 2x at cr 3.
+- **Work:** a pure cluster builder (tested), RANGES' cluster entries, records v2 beside v1 (`junction_field.ts`), `fieldProbe` v2 on the CPU.
+- **Stays out of:** the fans' shader text. K81, K169, K76 2b, K268 stage 2 and K290 keep their looks there until G4-1 carries them.
+- **Verify:** readback; the structural census (every ribbon-gated segment lies in exactly one piece; ranges clear their disks), on dense and ring as well; rebuild cost at most today's `rebuildFillets`.
 
-**G4-2 — delete fans, tuck, discs, votes; lore.**
-- **Work:** as in section 4.1; update CLAUDE.md render and probe lore (new layer indices: 0 ribbons, 1 joints; 2-4 empty or removed with the probes updated).
-- **Verify:** same-state cross-build 0 px vs G4-1; probe suite; tests.
+### 5.8 G4-1: the joint SDF pass (K9), default on, `jp=fans` escape hatch. After G3-2
 
-**Ordering with G2.** G2 can land before or after any G3 stage. The `threadColor` / `threadRadius` adapter is the seam. If G2 is first, G3-2 calls it directly and AUX is never built.
+- **Files:** a new joint program module, `junction_field.ts`, `junction_routes.ts`; `ribbon_renderer.ts` turns the ribbon gate on (the joint discs in section 3.3's FS). `web_fade.ts`'s clock is read as it is.
+- **Carries (section 3.5):** K81's route bands, K127's traveled webs, K169's fade, K345's hover rim (rimGap → 0 in webs), K76 2b's joint gate, K268 stage 2's anchors, K290's dropped arm, the HC looks.
+- **A/Bs:**
+  - crops of every joint at dsf 3 for cr {0, 1, 3, 6} × tw {0.42, 0.64} × fl {0, 0.34} on ring, user, userThin and def. The cr 1/3/6 crops are K9's blend-radius sheet for Levi;
+  - route bands: `.claude/probes/K81/census_k81.mjs`;
+  - gameplay paint at a pinned clock after scripted moves, including a traveled host with an untraveled bridge, and the reverse;
+  - reveal FX series (no pale stars);
+  - GPU against CPU (`probe_gpucensus` style): at most 1/255;
+  - field against ribbon on the R_out..R ring: 0;
+  - the ownership tint: one writer per pixel;
+  - the G1 casing census unchanged outside the domains.
+- **Acceptance:** the Pixel at most 4 ms GPU at 2x at cr 3 for the whole fabric (`bench`), 60 fps at defaults; desktop GPU for ribbons and joints together within section 3.7's 2.2-2.8 ms; joint-sdf's cold compile under arm-strip's 1.7 s + junction-field's 0.4 s, which it replaces; K307's registry lists joint-sdf.
+- **Gate:** Levi's phone check before G4-2.
+
+### 5.9 G4-2: deletions and lore
+
+- **Delete (section 4.1):** the fans, `TriFanMesh`, the fillet discs, wedges and votes, the arm strips and their program, the cover strips and G3-3's extrusion helper, the tuck, the junction-field program, the angular `junctionField`.
+- **Lore** goes to `.claude/rules/render-*.md` topic files and `docs/lore_index.md`, not CLAUDE.md: the new layer order (0 ribbons, 1 joints) and the probes that read layers.
+- **Verify:** same-state cross-build 0 px against G4-1; the probe suite; `npm test`; K307's registry drops arm-strip and junction-field.
+
+### 5.10 Ordering (K8 s1)
+
+This replaces "Ordering with G2": G2 has landed, so there is no `threadColor` adapter and AUX is never built.
+- **G3-0 now,** at the next free code slot. It touches no shader text and no main.ts.
+- **G3-1 after K268 stage 2 and K290,** which rewrite the same gap search.
+- **G3-2 after the reveal chain** (K76 2c, K268 stage 2, K290, K76 2d), which it ports.
+- **G4-0 after G3-0; G4-1 after G3-2** (the ribbon gate is in the SDF ribbon FS). Levi's phone checks gate G3-3 and G4-2.
+- K7 stages 3-4 own main.ts. Nothing here needs it but G3-2's status line, after K7 stage 4.
+- K9 = G4. **K345 → G4-1, confirmed:** a piece SDF gives an across coordinate inside webs, so the rim continues and rimGap goes to 0 there; fan work now would be deleted at G4-2.
+- **K328 needs nothing from G3/G4** (a correction to the ledger's "probably K328 into G4-1"): it changes the paint library's rim profile, with K111 stage 5 and K265. G3-2 must hand the paint library side01 exactly as `uv.y` today.
+- K22 (the resolution scaler) after G3. K23 = G3-5. K24/K6 (render on demand) are separate. K259 → G3-4.
+- K90 (boundBend): stop it before G3-2, and never run it beside a K8 stage.
 
 ---
 
 ## 6. RISKS AND OPEN QUESTIONS
 
-1. **Mobile GPU cost is estimated, not measured.** WebKit has no `EXT_disjoint_timer_query`, so the `gl.finish` bench is the instrument. Watch thermal throttling over multi-minute sessions. The joint pass is the largest single item at cr 3-6; levers 1, 3 and 9 above.
-2. **WebKit / ANGLE-Metal.** Things that should work, each needing a device check:
-   - vertex texture fetch of RG32F, dynamic loops in VS and FS, instancing (all WebGL2 core);
-   - about 8 flat vec4 varyings;
-   - large shaders compiling with a first-use hitch (warm up during the intro).
+Refreshed by K8 s1 for the Pixel 11 on Android Chrome. Each question for Levi carries a recommendation.
 
-   No escape hatch survives G3-3/G4-2, so the user's on-device confirmation is a gate before deletion.
-3. **Look changes needing user review:**
-   - filled-lobe folds (P3.34);
-   - smin web shape vs bezier fillets (c_cal; quadratic vs circular smin; whether obtuse wedges over ~150° should keep a fillet — today they are skipped);
-   - the SDF colour blend vs the angular field (segments-scheme crotches, the "tan RGB-mean crotch" note);
-   - the yarn lane bias tapering at pass ends;
-   - flat vs round caps on anchored tails.
-4. **Large R_sep** where arms ride (JunctionCover span) inflates domains and cost. If R_sep would exceed R_cap, the residual is a hand-off seam on riding arms; measure how often.
-5. **Cluster merging edge cases.** Three or more joints close together get their disks shrunk, which gives smaller webs. Long chains with many joints mean longer RANGES lists (binary search keeps the VS bounded).
-6. **Webs still overpaint non-crossing foreign threads near big-cr joints** (same as G1/today). Open question: should webs also yield to any foreign silhouette in the domain?
+1. **The Pixel's GPU cost is estimated, not measured.** Chrome there exposes no GPU timer query (the Pixel's PowerVR CXTP-48), so `bench(n)` around `gl.finish()` is the instrument; alternate builds, because the phone throttles over minutes. The joint pass is the largest single item at cr 3-6 (levers 1, 3 and 9). **Recommendation:** G3-0's phone pass records master's `bench` numbers, so every later stage has a same-phone baseline.
+2. **Android Chrome on PowerVR (ANGLE over GLES)** replaces the snapshot's WebKit risk. Each needs a device check:
+   - RGBA32F vertex texture fetch with NEAREST and `texelFetch`: already proven, since G2's vertex stage reads KSTATIC and KGEOM on the phone;
+   - dynamic loops in the FS (the gap search loops today; the fold argmin and joint pieces add more);
+   - `MAX_VARYING_VECTORS`: section 3.2 needs about 13-14 of the 15 guaranteed vec4s;
+   - highp in the FS (guaranteed by WebGL2; mediump is lever 3);
+   - compile stalls: K307's warm-up must cover the new programs (risk 14);
+   - `EXT_color_buffer_float`, only if flow moves to the GPU (question 8).
+
+   No escape hatch survives G3-3 / G4-2, so Levi's on-device checks of G3-2 and G4-1 gate the deletions. **Recommendation:** read the caps in G3-0's phone pass, before any shader is written.
+3. **Looks for Levi.**
+   - Decided, and K8 s1 confirms: the one-sided pinch (Levi, 2026-10-13), flat caps on anchored tails, the 2x phone cap.
+   - The smin web shape against today's bezier fillets (c_cal; quadratic or circular smin; whether obtuse wedges over ~150° keep a fillet: today they are skipped). **Recommendation:** a polynomial (quadratic) smin calibrated to today's reach, chosen from G4-1's cr 1/3/6 sheet; keep skipping wedges over 150° unless the sheet shows a notch.
+   - The SDF colour blend against the angular field (the segments scheme's crotches, the "tan RGB-mean crotch" note). **Recommendation:** take the SDF blend if the field-against-ribbon census is 0 and the crotch crops are clean.
+   - The yarn's lane bias tapering at pass ends (G3-5). **Recommendation:** accept.
+4. **Large R_sep** where arms ride (the JunctionCover span) inflates domains and cost. If R_sep would exceed R_cap, the residual is a hand-off seam on riding arms. **Recommendation:** count it in G4-0's structural census before choosing a cap (lever 9).
+5. **Cluster merging edge cases.** Three or more joints close together get their disks shrunk, so their webs are smaller. Long chains with many joints mean longer RANGES lists; the VS's binary search keeps them bounded. **Recommendation:** dense and ring go into G4-0's census.
+6. **Webs still overpaint non-crossing foreign threads near big-cr joints,** as today. **Recommendation:** yes, webs yield to any foreign silhouette in their domain: silhouette only, inset 1 px (invariant 10).
 7. **Pre-existing residuals.**
-   - The G1 cyclic triangle persists. Fix direction as G1 noted: exempt a thread's own over-region at a nearby crossing from another slot's margin. That needs over-slot ids per segment, which the RANGES list can carry.
-   - The concave crease gets the optional soft-min in G3-1.
-   - The merge-core hairline is gone by construction in G4.
-8. **Flow on the GPU (deferred).** It would remove the at-rest spline cost. It needs either noise per fetched point inside slot loops (prohibitive) or a warp pass into a float render target (`EXT_color_buffer_float`, WebKit risk), plus `flowOffset` for every CPU consumer. Revisit only if the G3-4 round-robin path still burns too much CPU on the phone.
-9. **Considered alternative ("G5").** A single full-screen pass over binned segment tiles that resolves all threads, crossings, joints and the yarn per pixel. It removes every cross-pass ownership rule and the cyclic-triangle class. It costs per-frame binning (~1 ms CPU) and ~25-40 segment evaluations over the whole fabric region, a higher fixed mobile cost and a larger rewrite. Recommendation: keep the G3/G4 data model (SAMP, slot windows, cluster records), which it would reuse, and revisit only if draw-order residuals remain after G4.
-10. **Resolution cap.** The app renders 3x phones at 2x. Analytic AA plus the CSS upscale reads slightly soft. Lifting the cap costs ~2.25x fragments; use the dynamic scaler or keep the cap.
+   - G1's cyclic triangle persists. The fix G1 named (exempt a thread's own over region at a nearby crossing from another slot's margin) needs over-slot ids per segment, which RANGES can carry. **Recommendation:** its own item after G3-1.
+   - The concave crease: K268 stage 2's far-branch soft-min, which G3-1 ports.
+   - The x160 hairline and the merge-core hairline close by construction in G4 (K9); G1's fused tail riding its host goes with the tuck at G4-2.
+8. **Flow on the GPU (deferred).** It would remove the at-rest spline cost, but needs noise per fetched point inside slot loops (prohibitive) or a warp pass into a float render target (`EXT_color_buffer_float`), plus `pointFlowed` for every CPU consumer (yarn, fog, markers, hit tests). The CPU flow already runs at half rate at rest. **Recommendation:** revisit only if G3-4's round-robin still costs too much CPU on the Pixel.
+9. **G5,** one full-screen pass over binned segment tiles. **Recommendation:** not now. K7's worker takes the physics off the main thread, and G5 would reuse G3/G4's data model anyway. Revisit only if draw-order residuals remain after G4.
+10. **Resolution.** The Pixel 11's DSF is 2.625 and the app renders at min(dpr, 2), so its 822×1506 canvas is upscaled 1.31x; analytic AA plus the upscale reads slightly soft. Lifting the cap costs about 1.72x fragments. **Recommendation:** keep 2x until K22's frame-time scaler, after G3.
 
-### Critical Files for Implementation
-- src\render\ribbon_renderer.ts (master `src\render\ribbon_renderer.ts` after G1)
-- src\render\gap_mask.ts
-- src\render\junction_field.ts
-- src\render\ribbon_mesh.ts
-- src\render\fabric_maze_renderer.ts (yarn, markers, hit tests)
+**New risks (K8 s1).**
+
+11. **K7 interplay.** A same-state A/B needs the physics frozen, and the worker can't be patched from main: under `phw=1` use `__knotPhysFreeze(on)` (K7 stage 4). Until stage 5 makes the worker the default, A/Bs run in-thread. G3 reads positions only through `ps.positions` (the mirror under the worker) and never talks to the worker. **Recommendation:** every G3/G4 result names its host.
+12. **Shader-text conflicts with the reveal chain.** K76 2c, K268 stage 2, K290 and K76 2d edit the strip shader, the gap search, the fans and the explore anchors, which G3-1 and G3-2 rewrite. **Recommendation:** the order in 5.10; never run G3-1 or G3-2 beside a reveal-chain stage.
+13. **K90's boundBend** (off unless `__knotSplineBend(true)`; Levi is testing it live) changes the samples G3 packs and would make fold windows rare. **Recommendation:** decide K90 (keep or drop) and stop it before G3-2; never alongside a K8 stage.
+14. **K307's warm-up and registry.** Once K307 stage 2 lands, `program_registry.test.ts` fails on any unlisted program site, so each new program lands with its entry: ribbon-sdf and ribbon-sdf-explore (G3-2), yarn (G3-5), joint-sdf (G4-1). The warm-up must compile ribbon-sdf (and its explore variant on a reveal link) and, on fabric, joint-sdf before the intro's first frame. The `rp`/`jp` hatches compile on demand and stay out of it. Cold FXC today: section-rgb 2.8 s, arm-strip 1.7 s, junction-field 0.4 s, pluck-still about 340 ms. **Recommendation:** a cold-link acceptance in every stage that adds a program (5.3, 5.8).
+15. **`pluck_overlay.ts` is busy:** K344 merged at 93d0e4d (the pluck host's nodes carry `selfArc` now) and K279 stage 2 runs there. G3-1 rebinds the still pluck's gap and G3-2 moves `setCollapse` to RADII rows. **Recommendation:** land both after K279 stage 2, keeping the pluck host's interface (invariant 21).
+
+### Critical files for implementation
+
+- `src/render/ribbon_renderer.ts`: `update()`, the slot writers, the pluck host, `rebuildFillets`; G3-0 adds `captureScene` / `restoreScene` / `bench`.
+- `src/render/gap_mask.ts`: the slot rows and the search (G3-1).
+- `src/render/float_rows.ts`, `paint_model.ts`, `paint_glsl.ts`, `paint_math.ts`: G2's rows and the paint library G3 calls; the CPU mirror the censuses read.
+- `src/render/explore_glsl.ts`: the reveal's anchors, pinned by `test/render/paint_explore.test.ts`.
+- `src/render/ribbon_mesh.ts`: `RibbonMesh` goes at G3-3, `TriFanMesh` at G4-2.
+- `src/render/junction_field.ts`, `junction_routes.ts`, `arm_strip.ts`, `web_fade.ts`: G4.
+- `src/render/pluck_overlay.ts`: the still pluck's gap binding (coordinate with K279).
+- `src/render/fabric_maze_renderer.ts`: the yarn (G3-5); markers, fog and hit tests read `pointFlowed`, unchanged.
+- `src/physics/snapshot.ts`: read only, for the capture's physics part.
+- New: `src/render/samp_table.ts` (G3-0), `fabric_sdf.ts` (G3-1, G3-2), `ribbon_sdf.ts` (G3-2), the joint program module (G4-1); tests beside them in `test/render/`.
+- `src/main.ts`: `__knotRenderer()` (~4829) is the only hook used; G3-2's status line is its one new line.
