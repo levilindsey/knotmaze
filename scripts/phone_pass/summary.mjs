@@ -7,8 +7,8 @@
 // and one unit of the printed digit), verdict = "within noise" when
 // |delta| <= noise, else better or worse by the metric's direction. An A/A pass
 // (cfg.aa) has no verdict: its deltas ARE the noise, written to
-// <out>/noise.json (copy the first one you trust to
-// scripts/phone_pass/noise.json, the tracked floor every later summary reads).
+// <out>/noise.json (install_floor.mjs makes a trusted one the tracked floor,
+// scripts/phone_pass/noise.json, which every later summary reads).
 // A fabric cell sampled at the finish (fab.solved) is flagged in its title.
 // Dry runs (cfg.dry) are labeled: they check plumbing, not timings.
 // Usage: node summary.mjs <config.json>
@@ -22,12 +22,10 @@ const text = (f) => (existsSync(f) ? readFileSync(f, "utf8") : null);
 const json = (f) => { const t = text(f); try { return t ? JSON.parse(t) : null; } catch { return null; } };
 const rows = (text(join(CFG.out, "bench.jsonl")) || "").split("\n").filter(Boolean).map((l) => JSON.parse(l));
 const vpOf = (s) => { const m = /^(\d+)x\d+@([\d.]+)$/.exec(s || ""); return m ? [+m[1], +m[2]] : null; };
-// K193: a floor is for ONE viewport. Until a portrait A/A completes (K193's stage 1 and K253's 2026-10-14 19:20 try both
-// stopped at a touch), the tracked noise.json is still the docked phone's LANDSCAPE floor (810 wide), so a portrait pass
-// warns that it may not apply. When the emulated portrait floor (411x753 @2.625) replaces it, the landscape one is kept
-// beside it as noise.landscape.json.
+// K193: a floor is for ONE viewport. The tracked noise.json is the emulated PORTRAIT floor (411x753 @2.625; K253's A/A,
+// 2026-10-14), and the docked phone's LANDSCAPE floor (810 wide; K156 3c) is kept beside it as noise.landscape.json.
 // With the default floor (no -Noise), a pass that ran at another viewport (-Viewport native on a docked phone) reads
-// whichever of the two matches.
+// whichever of the two matches; a pass that fits neither warns that the floor may not apply.
 const noiseDefault = join(HERE, "noise.json");
 let noiseFile = CFG.noise || noiseDefault;
 let noise = json(noiseFile);
