@@ -67,7 +67,7 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/render/hash2d.ts`, `src/render/background_shaders.ts`, `test/render/hash2d.test.ts`
 - `render-paint.md`: SHADER PAINT (G2), PULSES and PULSE REACH (K75; the trail split and the hover's reach, K93), palette strip order, gamut locality
   paths: `src/render/paint_glsl.ts`, `src/render/paint_math.ts`, `src/render/paint_model.ts`, `src/render/paint_const.ts`, `src/render/float_rows.ts`, `src/render/trail_paint.ts`, `test/render/trail_paint.test.ts`, `test/render/paint_fx.test.ts`, `test/render/paint_gameplay.test.ts`, `test/render/paint_math.test.ts`, `test/render/paint_section.test.ts`, `test/render/fixtures/pre_g2.ts`, `test/render/fixtures/pre_g23.ts`
-- `render-ribbon.md`: the GPU junction field, overlay width, flat fills, arc-wrap, the arcAt gotcha, wedge flanks, fan indices, blend distance, miter clamp, displayF
+- `render-ribbon.md`: the GPU junction field, overlay width, flat fills, arc-wrap, the arcAt gotcha, wedge flanks, fan indices, blend distance, miter clamp, displayF, the thread reveal's joint gate (K76 2b)
   paths: `src/render/ribbon_renderer.ts`, `src/render/ribbon_mesh.ts`, `src/render/arm_strip.ts`, `src/render/junction_field.ts`, `test/render/fixtures/chains.ts`
 - `render-pluck.md`: the concave-side cap, base collapse (K77), still plucks (K104), pluck params (K180)
   paths: `src/render/pluck_overlay.ts`, `src/render/pluck_model.ts`, `test/render/pluck_model.test.ts`
@@ -79,9 +79,9 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/render/web_fade.ts`, `test/render/web_fade.test.ts`
 - `render-confetti.md`: FINISH CONFETTI (K140)
   paths: `src/render/confetti.ts`, `src/render/confetti_model.ts`, `test/render/confetti_model.test.ts`
-- `render-explore.md`: THE THREAD REVEAL (K76 stage 2a): the visibility model, VIS items and the whole-chain flag, the explore program and its looks, mode off = master's frame, the probe hook
-  paths: `src/render/explore_glsl.ts`, `src/game/explore_view.ts`, `test/render/paint_explore.test.ts`, `test/game/explore_view.test.ts`
-- `render-gaps.md`: PER-PIXEL CROSSING GAPS (G1) and its render lore, marker gaps
+- `render-explore.md`: THE THREAD REVEAL (K76 stages 2a and 2b): the visibility model, VIS items and the whole-chain flag, the explore program and its looks, mode off = master's frame, the probe hook; the gates (crossing gaps, markers, junction joints), when the fans rebuild, the concurrent-GPU-probe lesson
+  paths: `src/render/explore_glsl.ts`, `src/game/explore_view.ts`, `test/render/paint_explore.test.ts`, `test/render/explore_gates.test.ts`, `test/game/explore_view.test.ts`
+- `render-gaps.md`: PER-PIXEL CROSSING GAPS (G1) and its render lore, marker gaps, the thread reveal's gap gate (K76 2b)
   paths: `src/render/gap_mask.ts`, `src/render/ribbon_renderer.ts`, `src/render/ribbon_mesh.ts`
 - `notices.md`: the credits and licenses page (K122)
   paths: `notices/**`, `test/notices/**`, `vite.config.ts`
