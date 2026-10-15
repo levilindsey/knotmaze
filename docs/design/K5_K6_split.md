@@ -1048,7 +1048,7 @@ fails loudly on a missing or out-of-order anchor. Output at 1646491:
 `remap_1646491.md` (this table, every main() declaration with its
 references by region, every `let` write with its region and whether it
 runs at boot or later, references to every import) and
-`list_1646491.txt` (main()'s top-level statements). main.ts is 5654
+`list_1646491.txt` (main()'s top-level statements). main.ts is 5653
 lines; main() runs 359-5651 with 185 `const`s, 108 `let`s and 22
 functions at its top level.
 
@@ -1070,7 +1070,7 @@ functions at its top level.
 | MR14 | 4334-4752 | the frame loop: flowParity, halted, renderDirty (4344), wake 4345, startSettling 4351, freeze 4356, applyPhysicsMode 4366, physicsInputsChanged, the cost rings (4385), sceneAnimating 4402, backgroundTick, `app.ticker.add`, tick 4462 | flowParity, halted, renderDirty, frameCostN, frameCostTotal, revealMs, revealMsTotal, lastViewX, lastViewY, lastViewS, sceneWasAnimating | 48: params 29, fabric 25, renderer 17, perf 14, physState 11, host 11, root 8, fabricController 8, dragPos 8, reveal 7, ps 6, updateStamp 5 | physState (MR5), perfLine (MR15), frozenSig (MR5), pendingWin (MR11), pendingLoss (MR5), snapMode (MR13), settleWall0 (MR5) |
 | MR15 | 4753-4787 | stamp and perf readout (4753; probes read sim/wall from it), the boot console line (4780) | perfLine | 5: host 2, BUILD_STAMP 2, app 1, settings 1, ps 1 | - |
 | MR16 | 4788-5649 | probe hooks `window.__knot*` | - | 84: params 33, fabricController 23, fabric 19, renderer 19, root 17, host 14, background 11, walkGraph 9, confetti 7, ps 7, look 7, motion 6 | renderDirty (MR14), hcLookChoice (MR3), chaseRunning (MR5), tapsWait (MR12) |
-| MR17 | 5650-5654 | the boot's first `rebuild()`, then `main().catch` | - | 2: rebuild 1, main 1 | - |
+| MR17 | 5650-5653 | the boot's first `rebuild()`, then `main().catch` | - | 2: rebuild 1, main 1 | - |
 
 What changed since f04aa4b, for the later stages:
 - **The host left MR5.** K7 stage 5 makes it in MR3 (417), before
@@ -1117,3 +1117,205 @@ What changed since f04aa4b, for the later stages:
   `let`s); the MR12 key-hold state (15); the MR13 drag, pinch and tap
   state (8 besides snapMode); flowParity, the cost-ring counters,
   lastView*, sceneWasAnimating (MR14).
+
+#### The SceneRef (step 2, 163724a)
+
+`src/app/scene_ref.ts`: `interface SceneRef`, one readonly field per scene
+`let` that `rebuild()` or a mode switch reassigns: ps, renderer, debug,
+walkGraph, buildHueGroup, buildStrandCount, fabric, chase, turnMino,
+fabricController, reveal. main.ts builds `const scene: SceneRef` once,
+one getter per field, right after `let reveal` (459-496 at c49f63f,
+with its comment).
+Readers so far: stamp.ts (`scene.ps`) and probe_hooks.ts
+(`ctx.scene.<field>`, 90 sites). Not in it:
+- the host: an assigned-once `const` since K7 stage 5 (a worker fallback
+  swaps its inside, not the binding), so it is passed as a value;
+- the other `let`s that several regions write (physState, pendingWin,
+  perfLine, ...): state, not scene objects. Until a module owns one, code
+  moved out of main() reads it through a getter, or a get/set pair, in
+  the object main.ts passes (StampDeps, ProbeCtx).
+
+#### What moved (steps 3-5)
+
+Old lines are main.ts at 1646491. Each commit message carries the same
+map and its non-move edits. With those edits undone the moved text is
+byte-identical (observed: the `--color-moved` review of all three
+commits, and for step 5 a mechanical undo, `verify_step5.mjs`).
+
+| Step | Commit | Old | New | Non-move edits |
+|---|---|---|---|---|
+| 3 | 4366783 | 242-355: the comment and `createLoader()` | `src/ui/loader.ts` 3-116 | `export`; loader.ts imports `whenReduced` (main.ts no longer does); main.ts imports createLoader |
+| 4 | a0dd1bd | 168 (the build_info import); 173-180 (BUILD_STAMP and its comment); 4747-4762 and 4764-4784 (the stamp, wallStart, perf, updateStamp and its first call, the gl console line) | `src/app/stamp.ts` 2; 7-14; 43-79, inside `createStamp(deps, scene)` | `ps?.simTime` → `scene.ps?.simTime`; `perfLine` → `deps.perfLine()` (main.ts keeps `let perfLine`, 4763 at 1646491, and passes a getter); `export` on BUILD_STAMP, text unchanged; StampDeps, StampPerf, Stamp; main.ts destructures `{ stamp, perf, updateStamp }` under the old names |
+| 5 | c5520b9 | 4786-5648 (MR16: the "live design params" comment and the 45 statements that set the hooks) | `src/app/probe_hooks.ts` 160-1022, the body of `installProbeHooks(ctx: ProbeCtx)` | 253 of the 863 lines: 208 `ctx.<name>`, 90 `ctx.scene.<field>`, 10 shorthand `{ x }` → `{ x: ctx.x }`, 3 `renderDirty = true` → `ctx.invalidate()`; the nine imports only MR16 used move with it; main.ts calls `installProbeHooks({...})` at the same place, before the first `rebuild()` |
+
+main.ts went from 5653 to 4813 lines. The re-map at c49f63f is
+`remap_c49f63f.md`, made with `anchors_c49f63f.json` (env
+`ANCHORS=<file>`; the 1646491 anchors name statements that moved). At
+c49f63f: `main()` 230-4811, `scene` 462, `createLoader()`'s call 543,
+`let perfLine` 4656, `createStamp` 4657, `installProbeHooks` 4663-4809,
+the first `rebuild()` 4810.
+
+ProbeCtx (probe_hooks.ts 46-157) holds the SceneRef, 26 assigned-once
+values, 24 functions, 24 read-only `let`s as getters, 3 read-write `let`s
+as get/set pairs (hcLookChoice, chaseRunning, tapsWait) and `invalidate()`.
+Every hook reads ctx when it runs. MR16 had no install-time read of a
+reassigned name, so moving the install changes no ordering.
+
+**Hook inventory** (observed): 48 `window.__knot*` names set and 49
+named across `src/`, at 1646491 and at c5520b9, the same sets
+(`hooks_master_1646491.txt`, `hooks_branch_step5.txt`). `__knotHostOpts`
+is named (read) but never set. `__knotUndo` stays in main.ts (the undo
+region, MR11), and `__knotSplineBend` stays in the renderer.
+
+#### The host seam (step 6, 86fb67b)
+
+`test/physics/host_seam.test.ts` scans main.ts and every `.ts` under
+`src/app/` (keys `main.ts` and `app/<file>`). It collects the fields
+annotated `ParticleSystem` or a host type across the scanned files
+(interface and type-literal members, class fields, getters; today
+SceneRef.ps and ProbeCtx's ps and host). It reports a write through such
+a field, or through a destructured copy of one (`const { host } = deps`,
+`({ ps }: SceneRef)`). New tests:
+- the scanned keys and the collected fields;
+- three writes planted in probe_hooks.ts, each reported once;
+- ten writes through cross-file fields, each reported (among them
+  `ctx.ps.step = () => {};` and `scene.ps!.positions.set(other);`), and a
+  block of reads and host calls that reports nothing.
+
+vitest: 6 passed (observed, `vitest_host_seam_step6.txt`). Limits: a field
+matches by name across files, so an unrelated `.ps` or `.host` would count
+(nothing writes through one today); nested binding patterns and element
+access (`x["ps"]`) are not covered.
+
+#### Lore and the tree (step 7, c49f63f)
+
+gameplay.md's `paths:` gains `src/app/**` and probes.md's
+`src/app/probe_hooks.ts`; their `docs/lore_index.md` rows match.
+CLAUDE.md's Project Structure gains `ui/loader.ts` and one `app/` line
+(scene_ref, stamp, probe_hooks; each file's header maps it), and its
+host_seam line says main + src/app.
+
+#### What is left
+
+- **M2 onward** (section 5.2). Re-run the re-map at each stage's base,
+  with `anchors_c49f63f.json` (or its successor).
+- **An owner replaces a getter.** When a stage moves a `let` that the
+  stamp or the hooks read (ProbeCtx's 24 getters and 3 get/set pairs,
+  `perfLine`, `invalidate`), the `createStamp(...)` and
+  `installProbeHooks({...})` arguments point at the new owner. MR7 (M4)
+  and MR14 (M3) write `perfLine`. The cost rings, which `__knotPerf` reads,
+  go with the frame loop (M3).
+- **PhysState** is spelled out in ProbeCtx, because main.ts's local
+  `type PhysState` is not exported. Export it from its owner (M3 or M4)
+  and import it in probe_hooks.ts.
+- **`__knotUndo`** moves with the undo region (M7a, `design_history.ts`).
+- **Not mine to edit:** `.claude/rules/physics-worker.md`'s invariant line
+  and CLAUDE.md's overview sentence say "main.ts writes physics only
+  through the host (`host_seam.test.ts`)". The scan now covers src/app
+  too.
+
+#### Checks
+
+Paths are under `.claude/probes/K5/stage1/` (untracked). "Base" is
+master 1646491 and "ref" c49f63f, each built by `scripts/preview.ps1` and
+served on 5840 / 5841. The probes ran in one perf-lock hold, 05:38-05:46
+(`checks.ps1`; the summary is `checks/checks.log`).
+
+- **tsc** (observed): `npx tsc --noEmit` exits 0 at c49f63f
+  (`tsc_c49f63f.txt`, empty).
+- **The moved-code review** (observed): `review_moves.mjs` runs git's
+  `--color-moved` on each move commit. The lines it does not show as
+  moved are listed in `review_<sha>.txt` (summary `review_moves.md`),
+  and they are the edits in the table above.
+- **Step 5's mechanical undo** (observed): `verify_step5.mjs` undoes the
+  253 edits, and the body then equals MR16 byte for byte, against HEAD's
+  main.ts before the move (`verify_step5.txt`) and against 1646491's
+  (`verify_step5_vs_1646491.txt`).
+- **The hook inventory** (observed): see above.
+- **host_seam** (observed): 6 passed (`vitest_host_seam_step6.txt`).
+- **`npm test`** (observed): exit 0, 107 s. 82 files passed and 1 was
+  skipped; 1133 tests passed and 1 was skipped (the manual sweep)
+  (`checks/npm_test.txt`).
+- **`npm run build`** (observed): exit 0 (`checks/npm_build.txt`).
+- **The bare link (today's daily), `scripts/diag_screenshot.mjs` at its
+  default 12 s settle** (`checks/diag_base.*`, `checks/diag_ref.*`):
+  - Observed on both: exit 0, the worker host, no errors, and a frame
+    median of 17.6 ms. Each stamp names its SHA.
+  - Observed difference: base was captured asleep, with its first sleep
+    11.0 s into the budget phase. Ref was awake at the same sim 5.0 s /
+    wall 11.9 s (`mv 2.1e-3`) and had no first-sleep record yet.
+  - Inferred: a race at the capture, not a regression. On the worker,
+    the first sleep lands within about 0.2 s of the 12 s capture (K7's
+    frames below: 12.13 s on base, 12.12 s on ref). M1 touches neither
+    the host, the worker nor the frame loop.
+  - The test is `recheck_sleep.ps1` (settle 20 s, in the order base,
+    ref, ref, base; `checks/recheck/recheck.log`): RECHECK_SLEEP.
+- **The same-state A/B** (`.claude/probes/K83/k83_ab.mjs`, base vs ref,
+  query `k5ab&phy=0&am=instant&fw=0&snd=none`). `ab_compare.mjs` counts
+  the raw pixels. Outputs: `checks/ab/`, `checks/ab_*.txt`,
+  `checks/abcmp_*.txt`.
+  - Knot (`&mf=0`) (observed): 0 px. k83_ab exits 1 after its captures
+    (no markers, see Surprises).
+  - Fabric, three moves (observed): 0 px.
+  - Fog (`&xp=fog`), three moves (observed): 1003 px, maxΔ 49. Of them,
+    855 px are Δ 1 in a top-left strip (x 135-312, y 0-14) and 148 sit
+    inside the start marker's footprint.
+  - The fog control, base against base (`checks/abctl/`) (observed):
+    5512 px, maxΔ 43, all outside the markers, in a top-left strip
+    (x 66-137, y 0-16).
+  - Inferred: under fog the recipe leaves something unpinned in that
+    strip, so this case misses 0 px even on master against itself
+    (probes.md records 0, or 76 px with mist). FOG_RERUN
+- **The daily's front door** (`.claude/probes/K19-K20/probe_daily.mjs
+  front`; `checks/daily_front_*.txt`):
+  - Observed: 4/14 on both builds. The same ten checks fail with the
+    same values; only `?am=instant`'s random seed differs. No page errors.
+  - Inferred: probe drift, not M1.
+    - The eight daily cases want a HUD title (`#maze-hud .km-title`)
+      that neither build has (`hudTitle: null`).
+    - `?daily=1.aBMge` wants a design; both builds open daily #1.
+    - `?1471kin.c`, a v3 token, wants a token; both write a bare seed
+      (K132).
+- **K7's frames** (a copy of `.claude/probes/K7/stage4/k7_frames.mjs`,
+  `?1471kin.J&phw=0|1 --drag`; `checks/k5m1_*.txt`, `k7_results.jsonl`):
+  observed, the two builds match within noise.
+
+  | | base phw=0 | ref phw=0 | base phw=1 | ref phw=1 |
+  |---|---|---|---|---|
+  | host | in-thread | in-thread | worker | worker |
+  | first sleep: wall s, sim s | 20.95, 5.0 | 20.85, 5.0 | 12.13, 5.03 | 12.12, 5.03 |
+  | intro fps; ms per substep | 21.8; 10.42 | 21.8; 10.51 | 30.3; 10.67 | 30.4; 10.65 |
+  | drag fps; frame p50 ms | 7.0; 141.9 | 7.0; 141.8 | 55.8; 17.6 | 55.8; 17.7 |
+  | errors; contexts lost | 0; 0 | 0; 0 | 0; 0 | 0; 0 |
+
+  The in-thread drag (12 substeps a frame) runs at 7 fps on both builds.
+- **The re-map at c49f63f** (observed): `remap_c49f63f.md`, made in 2 s.
+- **Not run:** the phone, and a frame-time check (section 7: M1 moves no
+  hot path).
+
+#### Surprises
+
+- The host is an assigned-once `const` (K7 stage 5), not the SceneRef
+  field the design expected.
+- The design's SceneRef lacked buildHueGroup and buildStrandCount, which
+  rebuild() reassigns like the rest.
+- STATS_KEY, MAZE_STATS_KEY and the cost rings stay in main.ts: MR3 and
+  MR9 read the keys, and the frame loop and `__knotPerf` use the rings.
+- MR7 and MR14 write `perfLine`, so it stays in main.ts behind a getter.
+- MR17 is new: the first `rebuild()` runs after the hooks are installed.
+- MR16 also writes hcLookChoice, chaseRunning and tapsWait; they now go
+  through setters.
+- Step 2's commit fails tsc with TS6133 ('scene' unused); step 4 reads
+  it, and every commit from step 4 on is tsc-clean.
+- 25 lines of probe_hooks.ts pass 80 columns against MR16's 12: the
+  `ctx.` prefixes lengthen them, and a pure move does not reflow. Prettier
+  is not installed in the checkout.
+- `tsconfig.json` includes `src` only, and vitest strips types without
+  checking them, so nothing type-checks the tests. Step 6's test was
+  checked through a temp config (`tsconfig.seam.json`).
+- k83_ab attributes a difference to the fabric's markers, so a knot link
+  (no markers) stops after its captures. ab_compare.mjs counts the raw
+  pixels instead.
+- The re-map's first report said main.ts had 5654 lines: it counted the
+  empty string after the final newline. Fixed in remap.ts and the
+  report.
