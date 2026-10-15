@@ -29,6 +29,9 @@ export const ROW_W = 1 << ROW_SHIFT;
 class RowSource extends BufferImageSource {
   dirtyLo = 0;
   dirtyHi = 0;
+  // A second accumulator this source's uploads also count into (the G3
+  // tables' SAMP_UPLOAD_STATS); ROW_UPLOAD_STATS counts every source.
+  stats: UploadCounter | null = null;
   constructor(data: Float32Array, width: number, rows: number) {
     super({
       resource: data,
@@ -57,7 +60,19 @@ interface GlTextureLike {
 
 // Bytes this page has sent through the row uploader (probes: upload
 // accounting per frame).
-export const ROW_UPLOAD_STATS = { bytes: 0, calls: 0 };
+export interface UploadCounter {
+  bytes: number;
+  calls: number;
+}
+export const ROW_UPLOAD_STATS: UploadCounter = { bytes: 0, calls: 0 };
+function countUpload(source: RowSource, bytes: number): void {
+  ROW_UPLOAD_STATS.bytes += bytes;
+  ROW_UPLOAD_STATS.calls++;
+  if (source.stats) {
+    source.stats.bytes += bytes;
+    source.stats.calls++;
+  }
+}
 
 const ROWS_UPLOADER = {
   id: "knot-float-rows",
@@ -83,8 +98,7 @@ const ROWS_UPLOADER = {
       );
       glTexture.width = w;
       glTexture.height = h;
-      ROW_UPLOAD_STATS.bytes += w * h * 16;
-      ROW_UPLOAD_STATS.calls++;
+      countUpload(source, w * h * 16);
     } else if (source.dirtyHi > source.dirtyLo) {
       const lo = Math.max(0, source.dirtyLo);
       const hi = Math.min(h, source.dirtyHi);
@@ -100,8 +114,7 @@ const ROWS_UPLOADER = {
           glTexture.type,
           data.subarray(lo * w * 4, hi * w * 4)
         );
-        ROW_UPLOAD_STATS.bytes += (hi - lo) * w * 16;
-        ROW_UPLOAD_STATS.calls++;
+        countUpload(source, (hi - lo) * w * 16);
       }
     }
     source.dirtyLo = 0;
@@ -127,11 +140,13 @@ export class FloatRows {
   // Content revision: bumped by every markDirty().
   rev = 0;
 
-  constructor(width: number, rows: number) {
+  // `stats`: an extra upload accumulator for this table alone.
+  constructor(width: number, rows: number, stats: UploadCounter | null = null) {
     this.width = width;
     this.rows = rows;
     this.data = new Float32Array(width * rows * 4);
     this.source = new RowSource(this.data, width, rows);
+    this.source.stats = stats;
   }
 
   // Capacity for at least `texels` texels. Growing swaps the mirror for a
