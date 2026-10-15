@@ -15,6 +15,24 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K238** · K111 stage 1's calls (merged 2026-10-14 11:58), for review:
+  (1) High contrast wears a black page (`background` none,
+  `backgroundBase` #000000), the pastel palette, a yellow route
+  (#ffff00), fade 0, a gap of at least 0.12 and markers of at least 1.5;
+  not overridden: `threadWidth` (it would change the simulation),
+  `colorScheme`, `junctionBlend`, `gamutArc` and the fog's look; (2) the
+  Accessibility folder is the panel's first, open by default; (3) the
+  "Reduced motion" box drives the Motion setting; (4) a viewer whose OS
+  asks for reduced motion now also gets a still flow. The table:
+  `docs/design/K111.md` ("Stage 1 handoff"); screenshots
+  `.claude/probes/K111/out/` (`desktop_hc_off_panel_open.png`,
+  `desktop_hc_on_panel_open.png`, the `_panel_closed` and `_canvas`
+  pairs, `desktop_both_on_panel_open.png`, and the same with `phone_`).
+- **K237** · K145's hover glow (merged 2026-10-14 11:55, 56b6f2d): keep
+  `hoverGlow` at 0.4, and keep it daily-exempt (K57) as built? Sheet
+  `.claude/probes/K145/sheet2/sheet_b.png` (mouse and touch at 0, 0.25,
+  0.4 and 0.6), zooms `sheet2/zoom_s0.png`, `zoom_s0.4.png` and
+  `zoom_s0.6.png`.
 - **K229** · K92 put the mode badge on its own row below the undo
   buttons while the panel is open (his spec), so the open panel now
   starts 90 px from the top on the desktop and 100 on phones (was 50):
@@ -279,42 +297,6 @@ and never reused.
   - next: after 16:20 on 10-14, run `cleanup.ps1` again for the
     profiles (about 33 GB). The probe libraries' delete-on-exit goes
     with K150.
-- **K145** · A subtle hover glow on runs that aren't choices (Levi,
-  2026-10-13 about 16:00 and 16:12, verbatim in
-  `docs/design/levi_notes_2026-10-13.md`): in the maze, hovering any run
-  that isn't a choice at the player's junction (the choices keep their
-  stronger hover) lights a glow along both edges of the thread, inside
-  its bounds, fading quickly toward the center line and fading out with
-  distance from the hover point and toward the run's junctions; the
-  reach can borrow the choices' length param (`pulseReach`, which K93
-  makes the hover's reach). A touch press shows it too, until the finger
-  lifts (the tap-pluck still fires on release) or the press becomes a
-  tug or a pan. For the brief: the pointer move in `src/main.ts` asks
-  `fabric.edgeAt`, which picks only choosable runs, `setHover` tracks
-  one run, and a touch press on a thread sets `pendingPluck` with no
-  hover at all; the glow is a new G2 paint term plus its `paint_math`
-  mirror (the hovered run and the hover point's arc position), measured
-  along the thread like the pulses; a strength param (0 = off), proposed
-  daily-exempt (K57). Stage 2 of `docs/design/K93_K145.md` (K93's stage 1
-  merged in ed8f284).
-  - owner: claude agent a79a226819ef75712 (opus) of session d8031183,
-    started 2026-10-14 10:59 with a 90-minute cap (about 12:29). It
-    resumes the first agent's work (ad81d903c987ef01d, stopped at 10:06
-    on the usage cap; its worktree is kept until this one merges).
-  - branch: `worktree-agent-a79a226819ef75712`
-    (`.claude/worktrees/agent-a79a226819ef75712`), from f1b6261 with the
-    first agent's a28e0ea and 0036256 cherry-picked; last commit: none of
-    its own yet (unpushed).
-  - evidence: `.claude/probes/K145/` in the new worktree; the first
-    agent's `npm_test.txt` and `build.txt` in its own worktree's
-    `.claude/probes/K145/`.
-  - next: the Stage 2 handoff's list: `hoverGlow` at codec index 105 (the
-    `param_codec.ts` comment, the table pin, the exempt-list pin in
-    `daily_link.test.ts`); the rim's mirror tests; the GPU census; the
-    strength-0 A/B against master; the mouse and touch-press sheets and
-    the tuning; GPU time under the perf lock; the `render-paint.md` lore.
-    The glow's reach follows `pulseReach`, with no floor (K219).
-  - brief: `docs/design/K93_K145.md` (Stage 2 and its Stage 2 handoff).
 - **K111** · Accessibility (Levi, 2026-10-13). Reduced motion also
   stills the flow undulation, but not the intros or the pulses next to
   the player. Those pulses get a dropdown of alternative highlight modes,
@@ -323,16 +305,22 @@ and never reused.
   that override every relevant setting (today's Motion setting is
   `src/ui/motion.ts`, K79). Brief `docs/design/K111.md` (3f011fa): stage
   1 is the group, reduced motion and high contrast as far as today's
-  settings reach; stage 2, the highlight modes, waits for K145 (the same
-  G2 paint files).
-  - owner: claude agent a46b211b839cf82d1 (sonnet) of session d8031183,
-    started 2026-10-14 11:01 with a 1 h cap (about 12:01).
-  - branch: `worktree-agent-a46b211b839cf82d1`
-    (`.claude/worktrees/agent-a46b211b839cf82d1`), from 3f011fa; last
-    commit: none yet (unpushed).
-  - evidence: `.claude/probes/K111/` in that worktree.
-  - next: stage 1 of the brief; stage 2 after K145 merges.
-  - brief: `docs/design/K111.md`.
+  settings reach (merged 2026-10-14 11:58, 0e5a138..9c6cab3:
+  `src/ui/accessibility.ts`, the Accessibility folder first in the
+  panel; lore `gameplay-motion.md` ACCESSIBILITY GROUP and
+  `gameplay-panel.md` ACCESSIBILITY FOLDER; Levi's review is K238).
+  Stage 2, the highlight modes, is unblocked since K145 merged.
+  - owner: nobody since 2026-10-14 11:58 (stage 1 done by agent
+    a46b211b839cf82d1 (sonnet) of claude session d8031183 and merged;
+    stage 2 not started).
+  - branch: mainline; last commit: 9c6cab3 (stage 1's handoff).
+  - evidence: `.claude/probes/K111/` (`k111_probe.mjs`, modes rm | intro
+    | hc | os | storage | ab; `daily.mjs`; `out/` with the logs and the
+    screenshots).
+  - next: stage 2, the pulse highlight modes (render prototypes, K152);
+    High contrast then selects one, as one more row in
+    `HIGH_CONTRAST_OVERRIDES`.
+  - brief: `docs/design/K111.md` ("Goal, stage 2" and "Stage 1 handoff").
 - **K191** · K169's two calls, decided (Levi, 2026-10-14 about 11:10,
   email 3.x): 3.1 "fade out": a web that stops being full (a backtrack
   or a reset) fades its gold out over the same 0.25 s instead of losing
@@ -349,6 +337,35 @@ and never reused.
     main checkout's `.claude/probes/K154_K169/`.
   - next: the brief's stage 2.
   - brief: `docs/design/K154_K169.md` ("Stage 2 (K191): fade out too").
+- **K235** · Taps inside junction cores make no sound (Levi, 2026-10-14
+  about 11:10, on K194's 5.2: "Do we trigger pluck sounds for this?
+  Probably shouldn't."). They play the pluck sound and draw nothing
+  today (K180's census: 21 of 284 maze taps; `render-pluck.md`
+  SOUND-ONLY TAPS, `skipCore`). Small; one agent with K239.
+  - owner: claude agent a7165f67497869b47 (sonnet) of session d8031183,
+    started 2026-10-14 11:59 with a 1 h cap (about 12:59), with K239.
+  - branch: `worktree-agent-a7165f67497869b47`
+    (`.claude/worktrees/agent-a7165f67497869b47`), from f5207d1; last
+    commit: none yet (unpushed).
+  - evidence: `.claude/probes/K235/` in that worktree.
+  - next: the brief's one stage (K235, then K239).
+  - brief: `docs/design/K235_K239.md`.
+- **K239** · A fresh static page (`phy=0&fw=0`, or paused at load) draws
+  its first frame with the crossing cuts solved at fade 0, about 28k px
+  off a refreshed frame: in the asleep and paused branches
+  `flowRender(force)` calls `renderer.update()` before `fabricTick` hands
+  the renderer `fadeLength`, `flowStrength` and `flowSpeed`. Older than
+  K111, which found it (`docs/design/K111.md`, "Stage 1 handoff") and
+  fixed the same order for its own toggles. The fix changes those
+  frames, which pre-launch allows.
+  - owner: claude agent a7165f67497869b47 (sonnet) of session d8031183,
+    started 2026-10-14 11:59 with a 1 h cap (about 12:59), with K235.
+  - branch: `worktree-agent-a7165f67497869b47`
+    (`.claude/worktrees/agent-a7165f67497869b47`), from f5207d1; last
+    commit: none yet (unpushed).
+  - evidence: `.claude/probes/K235/` in that worktree.
+  - next: the brief's one stage (K235, then K239).
+  - brief: `docs/design/K235_K239.md`.
 
 ## Next, in order
 
@@ -370,7 +387,8 @@ appends. Usage: don't hold agents back until the week nears 97% (Levi,
 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
 23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38, 78% at 08:05,
 80% at 08:37, 82% at 09:04, 83% at 09:28, 84% at 09:36, 88% at 10:01 (the 09:37 batch was told to wrap up by 10:30 and launches stopped) and 91% at 10:56, when Levi said "Let's ignore the usage limits until 97%. Proceed"; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
-at about 07:53 "Keep going at full pace."; it resets Mondays at 12:00).
+at about 07:53 "Keep going at full pace."; 95% at 11:54, and at about
+11:59 Levi reset the week to 0%; it resets Mondays at about 12:00).
 Long work runs in stages from
 committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
 brief names its stage boundary, where the agent writes a "Stage N
@@ -383,14 +401,15 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K145 (stage 2 of K93 + K145), resumed at
-10:59 from its handoff (opus, 90 min), K111 stage 1 from 11:01
-(sonnet, 1 h) and K191's fade-out from 11:21 (sonnet, 1 h). At about
-10:57 Levi lifted the usage hold: launches go on
-until the week reaches 97% (it resets Mon 2026-10-19 12:00). K100, K132,
-K90 stage 1b, K173 (the rules split), K93, K198 stage 1, K98 and K92
-merged at 08:39-10:08; the coordinator carries the running agents' rules
-edits into the topic files at their merges. Then, as code slots free up:
+(he may reorder). Running: K191's fade-out from 11:21 (sonnet, 1 h)
+and K235 + K239 from 11:59 (sonnet, 1 h). At about 10:57 Levi lifted
+the usage hold: launches go on until the week reaches 97% (Levi reset
+it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
+K90 stage 1b, K173
+(the rules split), K93, K198 stage 1, K98 and K92 merged at
+08:39-10:08, and K145 and K111 stage 1 at 11:55 and 11:58; the
+coordinator carries the running agents' rules edits into the topic
+files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
    K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
    and K180 against base ab6d330) is done (K197 filed), and so is round
@@ -406,17 +425,17 @@ edits into the topic files at their merges. Then, as code slots free up:
 5. K90 stage 1b: merged 2026-10-14 (feb12a0, flag off); Levi's call
    (ship, tune or stop) is in Waiting on Levi.
 6. K132 and K100: merged 2026-10-14 (402eb4b, 458e1e5).
-7. K93 + K145 (`docs/design/K93_K145.md`): stage 1 (K93) merged
-   2026-10-14 (ed8f284); stage 2 (K145) stopped at 10:06 on the usage
-   cap and resumed from its handoff at 10:59.
-8. K92 + K224: merged 2026-10-14 (e78ddcc). K111 stage 1 (the panel)
-   runs from 11:01 (brief 3f011fa); its stage 2 waits for K145.
+7. K93 + K145 (`docs/design/K93_K145.md`): merged 2026-10-14 (ed8f284,
+   06edef4..56b6f2d).
+8. K92 + K224: merged 2026-10-14 (e78ddcc). K111 stage 1 (the panel):
+   merged 2026-10-14 (0e5a138..9c6cab3); its stage 2, the highlight
+   modes, is unblocked.
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
     coordinator; Levi may reorder): K198 stage 2 and K174's controls
-    (both after K111 stage 1, the panel), K191's fade-out (running from 11:21), K193's
-    portrait emulation and then K195's A/A floor, and K235 (after K145,
-    main.ts).
+    (the panel, one at a time; unblocked since K111 stage 1 merged),
+    K191's fade-out (running from 11:21), K193's portrait emulation and
+    then K195's A/A floor, and K235 (running from 11:59, with K239).
 11. K76 stage 2.
 12. K80's turn-aligned hunter, a modifier of the normal maze; then
     K137's toggles, K138's M mechanisms and K139.
@@ -433,7 +452,8 @@ edits into the topic files at their merges. Then, as code slots free up:
 Waiting for Levi: K90's bend bound (Levi tests it live); the G3-3 and
 G4-2 old-path deletions; K162 and K184-K186 (play, then call); K194's
 defaults (after playing); K225 (the markers' size); K229 (the open
-panel's top); near launch, K117 and K210; after the churn, K46, K57 and
+panel's top); K237 (the hover glow's default); K238 (K111's calls);
+near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
 about 11:10 for calls 1-7 (K114 call 7, K174, K191, K193, K194's 5.2,
@@ -510,12 +530,10 @@ K5-K7 (split, frame loop, worker) follow.
   px at dpr 2.625); round 2026-10-14b's pass ran in portrait because the
   phone was off its dock and in use, so its A/B against the landscape
   floor is weak (K232).
-- **K235** · Taps inside junction cores make no sound (Levi, 2026-10-14
-  about 11:10, on K194's 5.2: "Do we trigger pluck sounds for this?
-  Probably shouldn't."). They play the pluck sound and draw nothing
-  today (K180's census: 21 of 284 maze taps). The brief finds where such
-  a tap reaches the synth; K145 is editing main.ts's pointer and touch
-  handlers, so after K145 merges. Small.
+- **K240** · High contrast for the DOM chrome (a K111 follow-up): a CSS
+  layer on `:root[data-contrast="high"]`, which K111 already sets, for
+  the panel, the HUD and the badge (their styles live in TS-injected
+  strings). Small; after K238's review.
 - **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
   in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
   Shortlist: the burn race (turn-based), the cut verb with an
@@ -760,6 +778,13 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K236** · K145's hover glow misses four places
+  (`docs/design/K93_K145.md`, "Stage 2 handoff (resumed)"): (a) a
+  pluck's overlay hides it on the plucked run (`composedAtArc` has no
+  coordinate across the width); (b) webs, fans and arm strips never
+  glow; (c) runs shorter than about 2.5 world units glow weakly (the end
+  gap and fade are fixed lengths; an end fade scaled to the run would
+  fix it); (d) debug view 5 doesn't show the rim.
 - **K234** · `scripts/phone_pass.ps1`'s `-Phase check` and `-WaitReady`
   treat a phone in use as ready. Round 2026-10-14b's agent saw Gmail in
   front at 10:10 and waited by hand for 120 s without user activity
@@ -1226,6 +1251,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   - Place K73's two viewer preferences, `finishIndicator` and
     `tapToPan` (localStorage, panel checkboxes), and K79's Motion
     setting (`knotmaze.motion`, today in Motion & intro).
+  - K111 adds High contrast (`knotmaze.contrast`, in the Accessibility
+    folder). No viewer preference follows a change made in another tab
+    (no `storage` listener).
 
   It meets K57 (the daily's exempt keys are mostly preferences) and
   feeds K78's param reference.
@@ -1330,8 +1358,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   - Everything else leaves the daily, including moveSpeed, pathViz, fog,
     the intro and flow, and the physics tuning. K79's `backgroundSpeed`
     is not exempt either, like background and its intensity.
-  - Exempt since: K140's confetti on/off and amount (`cf`, `cfa`), and K147's `settleBudget` and `loadSettle` (K162 (3) asks whether they stay); K180 adds its pluck params; K98 adds `markerSize` (`mks`). Proposed: K145's hover glow
-    strength.
+  - Exempt since: K140's confetti on/off and amount (`cf`, `cfa`), and
+    K147's `settleBudget` and `loadSettle` (K162 (3) asks whether they
+    stay); K180 adds its pluck params; K98 adds `markerSize` (`mks`);
+    K145 adds `hoverGlow` (`hg`; K237 asks whether it stays).
+  - K111's Reduced motion stills the flow by an override, not an edit,
+    so the daily stays; moving the flow sliders still leaves it.
 - **K117** · Repo visibility (Levi's notes, 2026-10-13;
   `docs/design/levi_notes_2026-10-13.md`). Levi: private later, on his
   word; he won't share it for a while. Done in a756ca5: the panel's
@@ -1369,6 +1401,32 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K145** · A subtle hover glow on runs that aren't choices (Levi,
+  2026-10-13 about 16:00 and 16:12, verbatim in
+  `docs/design/levi_notes_2026-10-13.md`): in the maze, hovering any run
+  that isn't a choice at the player's junction (the choices keep their
+  stronger hover) lights a glow along both edges of the thread, inside
+  its bounds, fading quickly toward the center line and fading out with
+  distance from the hover point and toward the run's junctions; the
+  reach can borrow the choices' length param (`pulseReach`, which K93
+  makes the hover's reach). A touch press shows it too, until the finger
+  lifts (the tap-pluck still fires on release) or the press becomes a
+  tug or a pan. For the brief: the pointer move in `src/main.ts` asks
+  `fabric.edgeAt`, which picks only choosable runs, `setHover` tracks
+  one run, and a touch press on a thread sets `pendingPluck` with no
+  hover at all; the glow is a new G2 paint term plus its `paint_math`
+  mirror (the hovered run and the hover point's arc position), measured
+  along the thread like the pulses; a strength param (0 = off), proposed
+  daily-exempt (K57). Stage 2 of `docs/design/K93_K145.md` (K93's stage 1
+  merged in ed8f284).
+  - Done in 06edef4..56b6f2d (2026-10-14 11:55): `hoverGlow` (`hg`,
+    codec index 105, default 0.4, daily-exempt), a G2 rim term with its
+    `paint_math` mirror (the GPU within 0.6/255 of it); with no hover, or
+    at strength 0, frames equal master's; GPU +0.04-0.05 ms. Lore
+    `render-paint.md` HOVER GLOW; handoff `docs/design/K93_K145.md`
+    ("Stage 2 handoff (resumed)"); sheets `.claude/probes/K145/sheet2/`.
+    The WIP commit's message says codec index 104; the code holds 105.
+    Residuals: K236. The default and the exemption: K237.
 - **K219** · Since K93 the choice hover stops at `pulseReach` in every
   path mode, and at reach 0.5 it lights very little: does it need a
   floor? Asked 2026-10-14 about 09:33 with
