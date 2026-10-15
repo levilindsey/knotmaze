@@ -134,8 +134,9 @@ only with the files it is about; `render.md` lists the area's other files.
   the pulses in every mode, so the pluck overlay's colors (composedAtArc),
   fieldProbe and paintProbe show the pulses look, and no parity test
   covers the modes. The mode id rides in uKGold.w (tickPaintPalette, from
-  `renderer.highlightMode`, which main.ts sets from look("highlightMode")
-  every fabric tick and on an accessibility change); kHiMode() reads it,
+  `renderer.highlightMode`, which main.ts's handRendererLook (K239) sets
+  from look("highlightMode") before every update() and every fabric tick,
+  so an accessibility toggle's forced pass wears it); kHiMode() reads it,
   `HIGHLIGHT_MODE` (paint_const.ts) names the ids. PULSES (0) is master's
   code path: every other branch sits behind kHiMode() != HM_PULSES, so
   same state vs master is 0 px (4 pulse-clock phases and a hovered choice
