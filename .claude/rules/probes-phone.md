@@ -78,12 +78,13 @@ A/A: fps +-1.2, p95 0.1 ms, longest frame 16-33 ms (one dropped frame),
 frames over 25 ms +-3-5, fabric render ms +-2-5 (18 samples spanned
 19.6-27.9 ms: K81's 20-29 vs 24-31 is noise), knot render ms +-8 (7.5-20.5,
 the GPU clock), load first sleep +-1.3 s (17.5-21.6 s), frames over 50 ms
-+-11-26. It is one pass: weak, and for ONE viewport. The docked phone sits
-in LANDSCAPE (display 2424x1080, the page 810 CSS px wide at dpr 2.625 and
-331-387 high with Chrome's toolbar, not the 411x753 of the lessons), the
++-11-26. It is one pass: weak, and for ONE viewport, the docked phone's
+LANDSCAPE one (display 2424x1080, the page 810 CSS px wide at dpr 2.625 and
+331-387 high with Chrome's toolbar, not the 411x753 of the lessons). The
 summary prints the viewport and warns when the floor's width or dpr
-differs, and `-Phase check` prints the display: rerun an A/A
-pass when the orientation changes. `-Dry` runs the same scripts against a
+differs, and `-Phase check` prints the display. Since K193 the pass
+emulates portrait (next paragraph), so this floor is the landscape one
+until a portrait A/A replaces it. `-Dry` runs the same scripts against a
 desktop Chrome with the phone's viewport: plumbing only, never timings.
 
 K193 (2026-10-14), THE PASS EMULATES PORTRAIT (`docs/design/K193.md`):
@@ -126,7 +127,33 @@ calls an awake, unlocked phone ready even with another app in front
 activity is sh.paseo, expected com.android.chrome"; K193, 13:21) after a
 clean cleanup. `retry_quiet.ps1` then waits 15 quiet minutes and every touch
 (dozens of events a second while a finger moves) restarts the wait; it
-gives up at `-GiveUpMin`. FLOOR-PENDING
+gives up at `-GiveUpMin`. THE PORTRAIT FLOOR IS NOT TAKEN YET (K193 stage 1):
+the 3-rep A/A (`-Base master -Head master -Reps 3`, master 96fa13a,
+`.claude/probes/K193/aa3/`) ran 13:47-13:59 and TRIPPED on a touch (13:59:08,
+BTN_TOUCH DOWN, the launcher in front; the cleanup ran clean) after rep 0 and
+the three head fabric cells of rep 1. `scripts/phone_pass/noise.json` is
+therefore STILL the landscape floor (810x331@2.625), and a portrait pass's
+summary warns that it may not apply. A rep takes about 9 minutes on the phone
+(a 3-rep A/A needs about 27 quiet minutes), and the phone warms through it
+(skin 32.0 C at the first sample, 38.4 at the end of rep 0, 38.6-38.9 in rep
+1), so one rep's cells ran at different temperatures. ONE rep (aa3 rep 0, per
+cell max(|head - base|, one unit); `.claude/probes/K193/rep0_table.mjs`)
+against the landscape floor: the 60 fps fabric and knot cells sit at or below
+it (fps 0.1-0.5 against 0.5-1.3, render ms 0.2-2.8 against 2.1-8.4, the
+longest frame 16.5-16.6 ms or 0.1 against 0.1-33.3); load-default is the same
+size (fps 2.3 against 2.4, first sleep 0.5 against 1.17 s, but p95 16.3 ms
+against 0.1 and frames over 50 ms 10 against 26); load-slow is larger (fps 2.8
+against 1.6, frames over 50 ms 24 against 11, longest frame 50 against 33 ms,
+first frame 76 against 45 ms). The three rep-1 head rows are worse (longest
+frame 100-117.5 ms, 8-17 frames over 25 ms): the heat or a person near the
+phone, which the rows cannot tell apart. TO FINISH: with the phone left alone
+and awake, `-Phase check`, then `pwsh -NoProfile -File scripts\phone_pass.ps1
+-Base master -Head master -Reps 3 -Out <dir>` (`.claude/probes/K193/
+wait_then_aa.ps1` waits for 15 quiet minutes first); then `git mv
+scripts/phone_pass/noise.json scripts/phone_pass/noise.landscape.json`, copy
+the pass's `noise.json` to `scripts/phone_pass/noise.json` with a handwritten
+`note`, and commit (the summary then picks whichever of the two matches a
+pass's viewport).
 
 - K79 stage B3 (2026-10-13), phone gate probes (`.claude/probes/K79/phone/`:
   `run_b3.ps1`, `panel_b3.mjs`, `passcost_x.mjs`, `watchdog.ps1`). (1) A

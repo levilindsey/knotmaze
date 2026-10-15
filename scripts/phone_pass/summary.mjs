@@ -22,9 +22,11 @@ const text = (f) => (existsSync(f) ? readFileSync(f, "utf8") : null);
 const json = (f) => { const t = text(f); try { return t ? JSON.parse(t) : null; } catch { return null; } };
 const rows = (text(join(CFG.out, "bench.jsonl")) || "").split("\n").filter(Boolean).map((l) => JSON.parse(l));
 const vpOf = (s) => { const m = /^(\d+)x\d+@([\d.]+)$/.exec(s || ""); return m ? [+m[1], +m[2]] : null; };
-// K193: a floor is for ONE viewport. The tracked noise.json is the emulated portrait one (411x753 @2.625); the docked
-// phone's landscape floor (810 wide) is kept beside it as noise.landscape.json. With the default floor (no -Noise), a
-// pass that ran at another viewport (-Viewport native on a docked phone) reads the landscape one when that matches.
+// K193: a floor is for ONE viewport. Until a portrait A/A is taken (stage 1 stopped at a touch), the tracked noise.json
+// is still the docked phone's LANDSCAPE floor (810 wide), so a portrait pass warns that it may not apply. When the
+// emulated portrait floor (411x753 @2.625) replaces it, the landscape one is kept beside it as noise.landscape.json.
+// With the default floor (no -Noise), a pass that ran at another viewport (-Viewport native on a docked phone) reads
+// whichever of the two matches.
 const noiseDefault = join(HERE, "noise.json");
 let noiseFile = CFG.noise || noiseDefault;
 let noise = json(noiseFile);
