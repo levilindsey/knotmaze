@@ -139,35 +139,46 @@ It uploads `aPosition` and `aTan` for all samples. **Per-vertex attributes per c
 
 - **Thread length.** The lattice is 36×36 world units (doubled lattice). Two families of diagonal threads at spacing √2 give √2 world of thread per world², so about 1833 world units at lattice time. At `SAMPLE_SPACING` 0.09 that is about 20.4k samples.
 - **Bridges.** About 40 bridges, each at `MIN_SAMPLES` 48, add about 1.9k samples. Total: **≈22k samples, ≈22k segments.**
-- **Crossings.** 323 tree openings plus about 100 weave openings ≈ 420, minus merges and trims. With 64 emergent and 4 marker slots: **≈480 slots.**
+- **The dense preset** (gs 24, `wd=0.6`): about 39-40k samples. It is the size the acceptance numbers in section 5 must survive.
+- **Crossings.** 323 tree openings plus about 100 weave openings ≈ 420, minus merges and trims (K268's census counted 412 live slots on the K111 test maze). With 64 emergent and 4 marker slots: **≈480 slots.**
 - **Joints.** 89-92 fused joints (measured at defaults). About 60-100 chains.
 - **Coverage.** Ribbon coverage is about 60% of the lattice area (two families at width 0.52 and pitch 1.41, with overlaps).
 
 ### 2.2 Textures
 
-All textures are page-lifetime (PALETTE_CACHE lore), NEAREST, read with `texelFetch` only, through `highp` samplers. They are grown in place via `FloatRows.ensure` and uploaded through the existing `knot-float-rows` row uploader (`junction_field.ts:110-161`), generalized with a format parameter. Linear texel index → (i & 1023, i >> 10).
+All textures are page-lifetime (PALETTE_CACHE lore), NEAREST, read with `texelFetch` only, through `highp` samplers. **(K8 s1)** Every new float texture is a G2 `FloatRows` (`float_rows.ts`: RGBA32F, `ROW_W` 1024, grown in place, uploaded by the `knot-float-rows` dirty-row uploader, counted in `ROW_UPLOAD_STATS`). FloatRows needs no format parameter: SAMP packs two samples into one RGBA32F texel instead of using RG32F. Linear texel index → (i & 1023, i >> 10).
 
-| Texture | Format | Content | Writer / cadence | Bytes at gs 18 |
-|---|---|---|---|---|
-| **SAMP** (new) | rg32float | texel `sampleBase[c]+k` = (x, y), the flowed + plucked spline sample, bit-identical to `chainSamples` | `update()`, all rows | 22k × 8 = **176 KB per update** |
-| **AUX** (new, pre-G2) | rgba32float | same index: (wMul, fx, –, –) | reveal / swell / FX passes; dirty rows only while hot | 0 at rest; up to 352 KB while animating |
-| **PAINT** (exists) | rgba32float | same index: (r, g, b, U) | `writeFillPaint` per paint tick, touched rows | as today |
-| **CHAIN** (new) | rgba32float | 3 texels per chain: (base, count, closed, arcPer), (total, capStart, capEnd, flags), (winListBase, nWin, rangeListBase, nRange) | `update()` | ~7 KB |
-| **RANGES** (new) | rgba32float | per-chain lists sorted by kLo: slot windows (slot, kLo−2, kHi+2, –) replacing `aMaskId`; segment ranges (type CLUSTER/FOLD, kLo, kHi, payload) | `update()` / cluster build | ~10 KB |
-| **GAP** (G1, reshaped) | rgba32float, 16 wide | row per slot: 7 header texels + up to 8 chunk bounds (section 3.4) | `update()` | 480 × 16 × 16 B = **123 KB** (today 512 × 40 × 16 B = 328 KB) |
-| **RECORD** (exists, re-laid out) | rgba32float | cluster records (section 3.5) | gated rebuild | ~90 × ~70 texels × 16 B ≈ 100 KB |
-| **YARN** (new) | rgba32float | 4 texels per pass + per-chain pass index | on yarn change; 1 texel per frame for the unspool clip | a few KB |
-| Accent strip | rgba8 256×1 | unchanged | recolor | – |
+**New in G3/G4:**
 
-When G2 lands, AUX and PAINT are superseded by G2's `color()` and width functions.
+| Texture | Content | Writer / cadence | Bytes at gs 18 |
+|---|---|---|---|
+| **SAMP** | texel `sampBase[c]/2 + j` = (x, y) of samples 2j and 2j+1. Each chain's base is even, so a chain starts on a texel. Values are `chainSamples` (flowed, tucked) rounded to float32. | `update()`, every chain while awake | 22k × 8 B = **176 KB per awake update** (dense ≈ 320 KB) |
+| **RADII** | 4 radii per texel: h × widthMul, where widthMul = the reveal mask × the pluck base collapse × the swell | `update()`, only chains whose multiplier is not 1, dirty rows only; `setCollapse` writes its chain's rows | 0 at rest outside a reveal; ≤ 88 KB while every chain tapers |
+| **G3 CHAIN** | 2 texels per chain: (sampBase, radBase or −1 for unit width, capStart, capEnd), (winBase, nWin, rangeBase, nRange) | `update()` | ~2 KB |
+| **RANGES** | per-chain lists sorted by kLo: slot windows (slot, kLo − 1, kHi + 1, flags) replacing `aMaskId`; segment ranges (type CLUSTER/FOLD, kLo, kHi, payload) | `update()` / cluster build | ~10 KB |
+| **YARN** (G3-5) | 4 texels per pass + a per-chain pass index | on yarn change; 1 texel per frame for the unspool clip | a few KB |
+
+The G3 CHAIN texels hold only what G2's chain data lacks: KSTATIC's C0 already carries (nCtrl, closed, sampleCount, idxBase) and KGEOM's G0 (total, arcPer, fxDone, paintOn). They stay a separate table so that G3-0 changes no shader text: growing KSTATIC's per-chain stride would change the paint library's GLSL.
+
+**Reshaped:**
+
+| Texture | Content | Writer / cadence | Bytes at gs 18 |
+|---|---|---|---|
+| **GAP** (G1) | row per slot, about 24 texels: the header (texels 0-8 as today, with the point count and polyline frame replaced by a SAMP range), up to 8 chunk bounds (section 3.4), 2 protect range texels (a sample range per side instead of 19 copied texels), K268's 3 profile texels. Row 0's globals move to uniforms (G1's lever). | `update()`, `setVis`, `setShape`; row-partial (`knot-gap-rows`) | ≈412 live rows × 24 × 16 B ≈ **158 KB per awake update** (today ≈412 × 114 × 16 B ≈ 750 KB) |
+| **RECORD** (fans today) | cluster records (section 3.5), K81's route blocks | gated rebuild | ~90 × ~70 texels × 16 B ≈ 100 KB |
+
+**Read unchanged (G2):** KSTATIC (CHAINS, CTRLIDX, RUNS), KGEOM (per `update()`), KREVEAL, KPAINT (paint items, VIS items, the whole-chain flags), the `knotUniforms()` group. The arm strips (RGBA8 rows) stay until G4-2 deletes them.
+
+**Gone:** the snapshot's AUX (FX has been per pixel since G2.1, and the width multiplier moved to RADII), its PAINT rows (G2.3) and the accent strip (G2.3).
 
 ### 2.3 Vertex and instance attributes
 
 - **Ribbon.**
   - Static `aCorner` (4 vertices: side ±1, end 0/1) and a static 6-entry index buffer.
   - Per-instance `aSeg` = (global sample index of the segment start, chain), float32x2, `instance: true`.
-  - `instanceCount` = Σ(closed ? n : n−1) ≈ 22k. That is 176 KB static, uploaded at scene build.
+  - `instanceCount` = Σ(closed ? n : n−1) ≈ 22k (dense ≈ 40k). That is 176 KB static, uploaded at scene build.
   - pixi 8.19 supports this: Geometry `instanceCount` plus Attribute `instance`; `GlEncoderSystem.draw` forwards `geometry.instanceCount`; custom-shader meshes are never batched.
+  - Under the thread reveal, the vertex stage collapses a segment outside every VIS piece to a degenerate quad (K259's "draw only the visible range", G3-4).
 - **Joint.**
   - Static unit octagon (8 vertices: direction + member selector, 18 indices).
   - The cluster is looked up by `gl_InstanceID` through a cluster list at the head of RECORD. There is no per-instance buffer, so no partial-upload hazard.
@@ -176,22 +187,24 @@ When G2 lands, AUX and PAINT are superseded by G2's `color()` and width function
 
 ### 2.4 Uniforms and binding
 
-- One `UniformGroup` named `fabricUniforms`:
+- G2's `knotUniforms()` group (uKBase, uKFx, uKFx2, uKShape, uKInk, uKKnots[8], uKGamut, uKSect, uKPaint, uKPulse, uKReach, uKGold) is bound as it is today; the explore variants add uKExplore. Its clocks already live there, so G3 adds no time uniform.
+- One more `UniformGroup`, `fabricUniforms`, holds what G2's lacks:
   - uHalf (h)
   - uPadPx (1.5)
   - uPxPerWorld (from `root.worldTransform` scale × renderer resolution; `uResolution` is also in pixi's global group)
   - uKMax, uBeta
-  - uGapEnabled / uDebugView (moved out of the gap texture's row 0)
+  - the gap globals that row 0 of the gap texture holds today (G1's "drop the globals fetch" lever)
   - uYarn (amp, laneAmp, width, shadow offset)
-  - uTime (for G2)
-- Every texture is bound through shader `resources`. Custom shaders ignore `mesh.texture` (RENDER LORE 2026-10-10).
+- Every texture is bound through shader `resources`. Custom shaders ignore `mesh.texture` (RENDER LORE 2026-10-10). `bindGap`'s fan-out (the ribbon program, its explore variant, the field, the still pluck) becomes one binding list that also carries SAMP, RADII, G3 CHAIN and RANGES.
 
 ### 2.5 Per-frame upload while awake (gs 18)
 
-| | Upload per awake frame |
+| | Upload per awake `update()` |
 |---|---|
-| G3+G4 | ≈ 176 (SAMP) + 7 + 10 + 123 (GAP) + ~100 (RECORD) ≈ **0.42 MB**, plus AUX/PAINT rows while animating |
-| Today | ≈ 1.2-2 MB: positions 352 KB + tangents 352 KB + slot table 328 KB + changed `aMaskId` chains (up to 704 KB) + fan vertex/index ranges + 145 KB records + per-vertex UVs |
+| G3+G4 | ≈ 176 (SAMP) + 2 (G3 CHAIN) + 10 (RANGES) + 158 (GAP rows) + KGEOM (as today) ≈ **0.35 MB**, plus RECORD (~100 KB) on a fan rebuild and RADII rows while a reveal or a pluck collapse runs |
+| Today | ≈ 1.5-2.2 MB: `aPosition` 352 KB + `aTan` 352 KB + GAP rows ≈ 750 KB + changed `aMaskId` chains (up to 704 KB) + fan vertex/index ranges + records + KGEOM |
+
+Asleep with no flow, neither uploads anything: `update()` does not run while the knot sleeps. Under flow at rest, `update()` runs at half rate, so the awake numbers apply at half rate until G3-4's round-robin.
 
 ---
 
