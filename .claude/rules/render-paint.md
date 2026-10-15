@@ -5,6 +5,8 @@ paths:
   - "src/render/paint_model.ts"
   - "src/render/paint_const.ts"
   - "src/render/float_rows.ts"
+  - "src/render/trail_paint.ts"
+  - "test/render/trail_paint.test.ts"
   - "test/render/paint_fx.test.ts"
   - "test/render/paint_gameplay.test.ts"
   - "test/render/paint_math.test.ts"
@@ -61,7 +63,12 @@ only with the files it is about; `render.md` lists the area's other files.
   model bug, not a shader divergence). Pre-G2 too (c3ebf11, same state:
   gold crests over the base-colored far end). K4's linear fade widened it,
   because a span's p is linear between its two ends, so the run holding
-  the fade start fades from the head junction. ON_PATH, trailGoldAt and
+  the fade start fades from the head junction. K93 (2026-10-14) split
+  that span (`trail_paint.ts`, buildTrail): solid gold to the fade start,
+  then linear. The two spans OVERLAP, the solid one reaching halfway into
+  the fading part and the fading one written after it: abutting spans
+  each cover the shared point by half under the one-pixel coverage ramp,
+  and p dipped to 0.75 there (a seam). ON_PATH, trailGoldAt and
   KPaintState.famB are gone. Gold mode is unchanged (same-state A/B: 0 px
   in 4 phases). In trail mode only band pixels over partial paint change,
   plus the joint web they feed. LORE: a per-ARM family flag is a palette
@@ -80,8 +87,12 @@ only with the files it is about; `render.md` lists the area's other files.
   different world distances. uKReach = (reach, fade) windows kPulseV:
   1 - smoothstep over the last PULSE_REACH_FADE 1.0 (at most half the
   reach). A FIXED fade length, because a share of the reach dimmed a long
-  reach's crests over its whole second half. Hover is exempt: it still
-  lights the whole run a tap would take. Default from same-state sheets
+  reach's crests over its whole second half. The hover stops at the reach
+  too and fades over the same window (K93, 2026-10-14; Levi: "hover should
+  stop at pulseReach (and fade-out toward the end, same as pulseReach)"):
+  kReachWin in kPulseV's hovered branch, in every path mode, K120's
+  key-hold preview included. Same state vs master: pr 15 0 px, pr 3 6599
+  px (`.claude/probes/K93/`). Default from same-state sheets
   (`reach_sheet.mjs`): at 2.5 the floor glow (PULSE_FLOOR_REACH 2.0,
   renamed from PULSE_REACH) swallows the crests; at 3 one crest emerges
   past the glow and dissolves, clearly short of a median run (3.7).

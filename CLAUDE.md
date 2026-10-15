@@ -78,6 +78,7 @@ src/
     background_model.ts   # K21 pure: effect list, profiles, colors, drift clock
     background_shaders.ts # K21 GLSL: noise lib, six effects, blit, fog
     fabric_maze_renderer.ts # P4: what gameplay paints; markers, yarn, fog of war
+    trail_paint.ts        # K93 pure: the memory trail's paint spans (split at the fade start)
     fog_arc.ts            # K99 pure: fog stations along a move's run
     marker_glyphs.ts      # K83 pure: start/finish/head icon designs, fit, SVG
     marker_mesh.ts        # K83: a marker as one quad, glyph drawn by an SDF shader
@@ -144,6 +145,7 @@ test/
     confetti_model.test.ts  # K140 counts, screen scale, reduced motion, falls out
     hash2d.test.ts  # K154 avalanche, uniformity, correlation, bijection, shader text
     web_fade.test.ts  # K169 the fade's levels at 0 / 0.12 / 0.25 s, retarget rules
+    trail_paint.test.ts  # K93 the split at several trail lengths, the ideal fade, the eps skip
     paint_math / paint_fx / paint_section / paint_gameplay .test.ts  # G2
       mirror vs frozen pre-G2 code (fixtures/), exact skips, parity
   ui/
