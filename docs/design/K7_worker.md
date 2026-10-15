@@ -1840,7 +1840,17 @@ Every work item. The targets are under 3.
      through `__knotPhysFreeze` when the build has it, and with the old
      patch on builds before stage 4.
    - In the probes folder, as copies (the main checkout's originals are
-     untouched): [[PORTS]]
+     untouched), by a sonnet helper: `ports/K147/k147_measure.mjs`
+     (reports the host and its `physMs` / `substeps`; it patched
+     nothing), `ports/K279/k279_sheet.mjs` (its frozen stepping is now
+     `__knotStepUntil`), `ports/K279/k279_wake.mjs` (per-frame physics
+     time from `__knotPerf(1)` deltas; on a build without `physMs` it
+     keeps the old wrapper), `ports/K279/k279_live.mjs` (awaits the
+     tug's Promise) and `ports/g2lib/g2lib.mjs` (the union of the two
+     `g2lib.mjs` lineages, freezing through the hook: copy it over a
+     folder's own copy to port that folder's probes; `g2_smoke.mjs`
+     checks it). `ports/run_batch.ps1` runs them all in both modes
+     under the perf lock.
    - The other files that patch or wrap `ps.step` (a scan of the main
      checkout's `.claude/probes/`; lines and notes in
      `ports/FREEZE_PATCH_FILES.md`). Each tests the in-thread path only:
@@ -1895,9 +1905,12 @@ Every work item. The targets are under 3.
 
    | | intro fps (p95 ms) | between freezes fps (p95) | first sleep s | sim/wall: intro, visible to sleep | drag fps (p95) | wake fps | ms/substep |
    |---|---|---|---|---|---|---|---|
-   | master 1 / 2 | 20.4 / 19.7 (36) | 40.2 / 38.9 (36) | 21.39 / 21.75 | 0.17, 0.23 | 6.9 (160) | 9.2 / 9.5 | 10.6 |
+   | master 1 / 2 | 20.4 / 19.7 (36) | 40.2 / 38.9 (36) | 21.39 / 21.75 | 0.17, 0.23 | 6.9 (160) | 9.2 / 9.5 | 10.7 / 10.8 |
    | phw=0 1 / 2 | 20.3 / 20.6 (36) | 40.6 / 40.5 (36) | 21.16 / 21.44 | 0.17, 0.23 | 6.9 (160) | 9.0 / 8.7 | 10.6 / 10.8 |
-   | phw=1 1 / 2 | 28.2 / 28.6 (18.1) | 56.2 / 56.3 (18.1) | 12.37 / 12.37 | 0.40, 0.42 | 55.2 / 54.8 (18.5) | 55.2 / 54.4 | 10.7 |
+   | phw=1 1 / 2 | 28.2 / 28.6 (18.1) | 56.2 / 56.3 (18.1) | 12.37 / 12.37 | 0.40, 0.42 | 55.2 / 54.8 (18.5) | 55.2 / 54.4 | 10.7 / 10.8 |
+
+   The substep costs the same in the worker as on main (10.7 ms); the
+   worker wins by taking it off main's frame, not by running it faster.
 
    The other designs (one run each; [[OTHER_NOTE]]):
 
@@ -1916,13 +1929,52 @@ Every work item. The targets are under 3.
    - **The daily's first sleep by 13 s:** met, 12.37 s in both runs
      (in-thread 21.2-21.4).
    - **A gs 18 drag at 50 fps or more:** met, 55.3 (in-thread 7.0).
-   - **Latency p50 of 50 ms or less:** [[LAT_VERDICT]]
+   - **Latency p50 of 50 ms or less:** NOT met. The worker cuts it
+     2.7x on the daily (p50 105 ms against 286 in-thread) and 3.3x on
+     the knot (70 against 228), but what is left is the substeps the
+     grabbed point needs to settle, at 10.7 ms each on the daily (see 4).
    - **`phw=0` unchanged within noise:** on the daily, s4a's `phw=0`
      matches master's default path on every column (between freezes
      40.6 / 40.5 against 40.2 / 38.9 fps, first sleep 21.16 / 21.44
      against 21.39 / 21.75 s, drag 6.9 against 6.9, wake 9.0 / 8.7
      against 9.2 / 9.5). [[PHW0_OTHERS]]
-4. **Latency** ([[LAT_SECTION]])
+4. **Latency** (`k7_latency.mjs`, build s4a, under the lock,
+   `k7_latency.jsonl`). After the first sleep, press the thread particle
+   nearest the screen centre, move past the slop, hold, then 12 single
+   mouse moves of 36 px alternating left and right, 700 ms apart. The
+   latency of a step is the event's `timeStamp` to the end of the JS of
+   the first frame whose grabbed point (as main holds it, the drawn state
+   with the worker) covers 90% of where it settles for that step; the
+   compositor and display after that frame (about one vsync) are not
+   counted. A 36 px move settles 23.6-23.9 css px on the daily (the drag
+   bound, L = 23.1 css px there), 3.2-3.7 px short of the target main
+   sent, and 22.8-23.3 px on the knot (3.3-5.2 short), the same on both
+   hosts.
+
+   | run | p50 (p95) ms | first motion p50 | frames to 90% | frame interval p50 |
+   |---|---|---|---|---|
+   | daily, worker, 2 runs | 104.5 / 105.5 (109 / 108) | 69.2 | 5 (one step 4) | 17.6-17.7 |
+   | daily, in-thread, 2 runs | 285.5 / 285.5 (288 / 291) | 285.5 | 1 | 142 |
+   | knot `?7k&mf=0`, worker | 69.9 (85.3) | 51.8 | 4 | 17.6 |
+   | knot, in-thread | 227.5 (241.6) | 227.5 | 1 | 121 |
+
+   - In-thread, an event waits about a frame for its handler (140-147
+     ms of queue on the daily, 112-121 on the knot: the frame in
+     progress) and the next frame shows it whole: its 12 substeps run
+     before the draw.
+   - With the worker, the handler runs at the next frame (queue 0.2-19
+     ms: Chrome aligns pointermoves to rAF), and the move shows over 4-5
+     frames: the first moving frame already shows half of it (first
+     motion = half, 69 ms on the daily), 90% two frames later. Inferred:
+     the grabbed point needs several substeps to settle (the exact chase
+     puts it on the target at a substep's start, and the constraints
+     pull it back to 3.3 px short), and the worker runs about 1.6
+     substeps per frame on the daily, so the last 40% of the move waits
+     on the worker's throughput (10.7 ms a substep), plus the snapshot
+     interpolation's D (about 11 ms).
+   - Design 4's estimate (40-50 ms typical) assumed the point sits on the
+     target after one substep; the first motion (52 ms on the knot, 69
+     on the daily) is that estimate plus a frame's JS and the queue.
 5. **K307's unattributed main-thread JS** (a sonnet helper, `k307/`:
    V8's CPU sampler inside a Chrome trace with K307's WebGL wrapper, an
    unminified source-mapped build of `7f4c1bd`, `?daily&phw=0` and
