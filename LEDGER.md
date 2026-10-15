@@ -37,7 +37,8 @@ and never reused.
   decides once, at pluck time and zoom, and keeps W; `instead` and `with`
   light the glow even at pw 0; still plucks ignore all three params.
   - if fallback becomes a default: time `peakEstimate` under the perf
-    lock and on the Pixel (0.79-1.17 ms a tap on the desktop;
+    lock and on the Pixel (unlocked on the desktop: 0.79-1.17 ms a tap at
+    desktop size, 1.75 ms at phone size, `.claude/probes/K180/sheet*.log`;
     deduplicating its times halves the work).
 - **K114** · Gameplay round 2 (Levi's notes, 2026-10-13) is designed
   in section R of `docs/design/K80_gameplay_additions.md` (9f0a9c3).
@@ -80,7 +81,8 @@ and never reused.
 - **K174** · K80 stage 1's calls (`.claude/probes/K80/rt/results.md`).
   Play it: https://levi.dev/knotmaze/?7.J&clk=realtime
   - The minotaur's chase pace as a share of the player's: 0.7 (default)
-    or 0.8? At 0.8 a fleeing player escapes 16% of chases, at 0.7 53%.
+    or 0.8? At 0.8 a player who stops to think at junctions escapes 16%
+    of chases (53% at 0.7); one who queues taps mid-run, 67% (75%).
   - Detection starts at 15 (default) or 17.5? The greedy player's mean
     catches go 1.26 -> 1.73.
   - Should `minoFog` default to "always"?
@@ -138,7 +140,7 @@ and never reused.
     the numbers and four open checks).
   - branch: `worktree-agent-a15ef7bcac0582272`
     (`.claude/worktrees/agent-a15ef7bcac0582272`), from c8ad399; last
-    commit: none yet. Stage 1a is on master (6f97b92 adds
+    commit: `42d459e` (unpushed). Stage 1a is on master (6f97b92 adds
     `src/geometry/bend_radius.ts`, the one over-tight definition, with 12
     tests; f4cb719 adds `scripts/fold_census.{ts,ps1,mjs}`, 79 jobs in
     about 7 min, no server); its worktree
@@ -320,10 +322,15 @@ and never reused.
     2026-10-14 07:38; it stops at about 09:38 or when the stage is done.
   - branch: `worktree-agent-a340d1375525098a9`
     (`.claude/worktrees/agent-a340d1375525098a9`), from c8ad399; last
-    commit: none yet.
+    commit: `131a1fe` (2 commits, unpushed).
   - evidence: `.claude/probes/K132/` in its worktree (copy at merge).
   - next: the brief's stage; then the merge (it moves the pins: name what
     moved in the commit) and the next round's phone pass.
+  - at merge: the links sent to Levi must still work (asked of its agent
+    2026-10-14 08:35): `?7.J&clk=realtime`, `?7.J&cam=follow` and
+    `?7.J&pw=1&pcx=ride&pgl=fallback`; if `?7.J` no longer means seed 7
+    at the defaults, fix the 11:07 reminder (cron b6d03718) and the links
+    in K174 and K194.
   - brief: `docs/design/K132.md`.
   - env: dev servers on ports 5530-5539.
 - **K100** · The fog of war resets on a restart only (Levi,
@@ -338,7 +345,7 @@ and never reused.
     2026-10-14 07:38; it stops at about 09:38 or when the stage is done.
   - branch: `worktree-agent-a4c4c1df6bad339a1`
     (`.claude/worktrees/agent-a4c4c1df6bad339a1`), from c8ad399; last
-    commit: none yet.
+    commit: `e87c4f0` (3 commits, unpushed).
   - evidence: `.claude/probes/K100/` in its worktree (copy at merge).
   - next: the brief's stage; then the merge and the next round's phone
     pass. K93 and K145 share its renderer file: not alongside it.
@@ -355,7 +362,7 @@ and never reused.
     2026-10-14 08:05; it stops at about 10:05 or when the stage is done.
   - branch: `worktree-agent-a363e26d8e7409480`
     (`.claude/worktrees/agent-a363e26d8e7409480`), from c591c6b; last
-    commit: none yet.
+    commit: `c20e53a` (unpushed).
   - evidence: `.claude/probes/K173/` in its worktree (copy at merge).
   - next: the brief's stage. It merges LAST in this batch, after K90 1b,
     K132 and K100: redo the split on the merged master with the
@@ -428,8 +435,12 @@ answers of 2026-10-14 about 07:53), then:
 
 Waiting for Levi: K114's spider (call 7); the G3-3 and G4-2 old-path
 deletions; K162, K174 and K184-K186 (play, then call); K191, K193 and
-K194; K198's flash (2), which he asked to have re-explained (2026-10-14);
-near launch, K117; after the churn, K46, K57 and K84.
+K194; K198's marker settings and flash; near launch, K117; after the
+churn, K46, K57 and K84. Emailed 2026-10-14 about 08:35, each with
+enough detail to decide and numbered for a reply by number: K114 call 7
+(1.x), K174 (2.x), K191 (3.x), K193 (4.1), K194 (5.x), K198 (6.1
+settings, 6.2 flash) and claude-config's CC39 (7.1); the draft is in
+`.claude/probes/levi_email/` (untracked).
 
 K5-K7 (split, frame loop, worker) follow.
 
@@ -438,13 +449,16 @@ K5-K7 (split, frame loop, worker) follow.
   just want to be able to pan such that the right edge of the maze is
   shown to the left of the left edge of the panel. Flash: not sure what
   you're describing. Markers should have settings, and I guess we should
-  prevent the excess pan." The coordinator's reading, sent to him to
-  correct: (1) the pan clamp (K149, `src/ui/view_clamp.ts`) lets the
-  maze's right edge reach the open panel's left edge (on the phone the
-  panel covers x 81-401 of 411), in place of 0.3 of the screen on every
-  side, and allows no more; (3) the indicators (head, start, finish,
-  minotaur) get panel settings (which ones is asked; K98 plans marker
-  sizes); (2) the head indicator's flash waits on his reply. Touches
+  prevent the excess pan." The coordinator's reading, emailed to him
+  2026-10-14 to correct: (1) the pan clamp (K149, `src/ui/view_clamp.ts`)
+  lets the maze's right edge reach the open panel's left edge (on the
+  phone the panel covers x 81-401 of 411), in place of 0.3 of the screen
+  on every side, and allows no more; with the panel closed the pan stops
+  at the maze's edges, as before 10-13; (3) the edge indicators (finish,
+  head, minotaur) get panel settings: show/hide, a size or both is email
+  call 6.1 (K98 plans marker sizes); (2) the head indicator's flash in
+  follow mode, a short delay or not, is call 6.2. Part (1) can start
+  before he answers. Touches
   view_clamp.ts, main.ts, offscreen_indicators.ts, head_indicator.ts
   and tweakpane_panel.ts: not alongside K92 or K111 (the panel). Records:
   `docs/design/K148_K149.md` ("Stage 1 handoff"), gameplay.md THE HEAD
