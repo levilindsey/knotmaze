@@ -2758,3 +2758,36 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   branch `k279-stage1-prerebase`: re-cite them as 50c1aab; (k)
   `k279_phone.mjs` reads `ripples` 1.9 s after the tap, so always 0.
   `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
+
+## K7 (2026-10-15, stage 4 merged, stage 5 started)
+
+- **K7** · Physics in a Web Worker with render-side interpolation, so the
+  intro runs at full frame rate while physics settles (K28). Levi's calls:
+  K302. Stages 1-3 merged; stage 3 put the worker behind `phw` (63603bd..7f4c1bd).
+  - owner: agent `abee0faca59fb8636` (opus) of claude session d8031183, from 2026-10-15 00:48 (cap 02:48; ports 5796-5797; owns `main.ts`)
+  - branch: `worktree-agent-abee0faca59fb8636` (`.claude/worktrees/agent-abee0faca59fb8636`); last commit: none yet (base `7f4c1bd`)
+  - evidence: `.claude/probes/K7/` (stage 3: `stage3/` with `run_s3.ps1`, `k7_frames.mjs`, the results); stage 4's in its worktree's `.claude/probes/K7/stage4/`
+  - next: stage 4, the diagnostic bridge and desktop acceptance under the perf lock, with K307's unexplained main-thread JS; then stage 5 (the phone, the worker by default); then K5 and K6
+  - brief: `docs/design/K7_worker.md`, "Stage 4" and the stage 3 handoff's "For stage 4"
+
+## K307 (2026-10-15, K7 stage 4 traced the freezes)
+
+- **K307** · The daily intro's freezes are cold shader compiles (stage
+  1's trace, 2026-10-14; Pixi blocks on `linkProgram` and the wait stops
+  every present). A `KHR_parallel_shader_compile` prototype kept the
+  screen presenting, so stage 2 builds the warm-up (Levi, K302 (8):
+  "Let's prioritize this too").
+  - owner: nobody since 2026-10-14 21:39 (stage 1 merged at 22:06; agent
+    a119ffbc187f24aad (opus) of claude d8031183); stage 2 waits for a
+    code slot
+  - branch: mainline; last commit: `b72d5dd`; the local `k307-proto`
+    (51f7480) holds throwaway prototypes and is never merged
+  - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces,
+    `builds/`, patches); lore `.claude/rules/render-shaders.md`
+  - next: stage 2, the warm-up (`src/render/program_registry.ts`,
+    `src/render/shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on
+    `finishPresettle`, wave 1 then wave 2 for untimed programs); K329
+    may still touch `main.ts`; the phone's measures ride K156's next
+    pass
+  - brief: `docs/design/K307_intro_freezes.md` ("Stage 1 handoff",
+    "Stage 2: the warm-up")

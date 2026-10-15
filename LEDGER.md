@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K370.
+Next free ID: K375.
 
 ## Waiting on Levi
 
@@ -219,33 +219,22 @@ Next free ID: K370.
   - evidence: `.claude/probes/K268/` (stage 1's); stage 2's in its worktree's `.claude/probes/K268/stage2/`
   - next: first the MAX defect K76 2c found (crossing 275, both threads walked: the mode on cuts 0 px of gap against 1010 px off, so the threads fuse; `.claude/probes/K76/stage2c/out/census_new2/shaped_c275.png`), then K275's fade, the fans and still pluck, protect, smooth-min, underWindows; never alongside K298, K299 or K111 s5; K290 next in the chain
   - brief: `docs/design/K268.md` ("For stage 2"); `docs/design/K76.md` ("Stage 2c handoff", "For K268 stage 2")
-- **K7** · Physics in a Web Worker with render-side interpolation, so the
-  intro runs at full frame rate while physics settles (K28). Levi's calls:
-  K302. Stages 1-3 merged; stage 3 put the worker behind `phw` (63603bd..7f4c1bd).
-  - owner: agent `abee0faca59fb8636` (opus) of claude session d8031183, from 2026-10-15 00:48 (cap 02:48; ports 5796-5797; owns `main.ts`)
-  - branch: `worktree-agent-abee0faca59fb8636` (`.claude/worktrees/agent-abee0faca59fb8636`); last commit: none yet (base `7f4c1bd`)
-  - evidence: `.claude/probes/K7/` (stage 3: `stage3/` with `run_s3.ps1`, `k7_frames.mjs`, the results); stage 4's in its worktree's `.claude/probes/K7/stage4/`
-  - next: stage 4, the diagnostic bridge and desktop acceptance under the perf lock, with K307's unexplained main-thread JS; then stage 5 (the phone, the worker by default); then K5 and K6
-  - brief: `docs/design/K7_worker.md`, "Stage 4" and the stage 3 handoff's "For stage 4"
-- **K307** · The daily intro's freezes are cold shader compiles (stage
-  1's trace, 2026-10-14; Pixi blocks on `linkProgram` and the wait stops
-  every present). A `KHR_parallel_shader_compile` prototype kept the
-  screen presenting, so stage 2 builds the warm-up (Levi, K302 (8):
-  "Let's prioritize this too").
-  - owner: nobody since 2026-10-14 21:39 (stage 1 merged at 22:06; agent
-    a119ffbc187f24aad (opus) of claude d8031183); stage 2 waits for a
-    code slot
-  - branch: mainline; last commit: `b72d5dd`; the local `k307-proto`
-    (51f7480) holds throwaway prototypes and is never merged
-  - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces,
-    `builds/`, patches); lore `.claude/rules/render-shaders.md`
-  - next: stage 2, the warm-up (`src/render/program_registry.ts`,
-    `src/render/shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on
-    `finishPresettle`, wave 1 then wave 2 for untimed programs); K329
-    may still touch `main.ts`; the phone's measures ride K156's next
-    pass
-  - brief: `docs/design/K307_intro_freezes.md` ("Stage 1 handoff",
-    "Stage 2: the warm-up")
+- **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
+  calls K302). Stages 1-4 merged: the worker behind `phw`, the probe bridge and
+  desktop acceptance (4d39a1f..de22867). Stage 5: the phone, then the default.
+  - owner: agent `adf244f47f53e8230` (opus) of claude session d8031183, stage 5 from 02:35 (cap 04:35; ports 5798-5799; owns `main.ts`; the phone first, under the phone lock); stage 4's worktree `abee0faca59fb8636` kept
+  - branch: `worktree-agent-adf244f47f53e8230` (`.claude/worktrees/agent-adf244f47f53e8230`, from `de22867`); last commit: `de22867` (master) until its first WIP commit
+  - evidence: `.claude/probes/K7/` (`stage3/`; `stage4/` with `k7_frames.mjs`, `k7_latency.mjs`, `run_s4.ps1`, `table_s4.mjs`, `k307/`, `ports/`); stage 5's in its worktree's `.claude/probes/K7/stage5/`
+  - next: stage 5: the worker start gate, the phone pass (Design 10's criteria, plus touch latency), then `phw` on by default if it passes, K147's budget bypass and the lore; then K5 and K6
+  - brief: `docs/design/K7_worker.md`, "Stage 5" and the stage 4 handoff's "For stage 5"
+- **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
+  prioritize). K7 s4's trace: GPU compile waits (bg-vellum's 190 ms queued behind
+  12-15 small links); the worker can't hide them; its 6.1 s frame is gone.
+  - owner: nobody since 2026-10-14 21:39 (stage 1 merged at 22:06; agent a119ffbc187f24aad (opus) of claude d8031183); stage 2 waits for a code slot
+  - branch: mainline; last commit: `b72d5dd`; the local `k307-proto` (51f7480) holds throwaway prototypes and is never merged
+  - evidence: `.claude/probes/K307/` (`trace_intro.mjs`, traces, `builds/`, patches); K7 s4's traces in `.claude/probes/K7/stage4/k307/`; lore `.claude/rules/render-shaders.md`
+  - next: stage 2, the warm-up (`program_registry.ts`, `shader_warmup.ts`, `__knotWarmup()`, a 15 s gate on `finishPresettle`, wave 1 then wave 2), not alongside K7 s5 (both edit `main.ts`); K366 rides it; the phone's measures ride K156's next pass
+  - brief: `docs/design/K307_intro_freezes.md` ("Stage 1 handoff", "Stage 2: the warm-up"); K7's in `docs/design/K7_worker.md` ("Stage 4 handoff")
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`, re-based by stage 1, 05aac8e..cbeb963). G3-1
   waits for K268 s2 and K290, G3-2 for the reveal chain (K76 2c to 2d).
@@ -524,6 +513,12 @@ Every other item below waits on the trigger it names.
 - **K366** · With K307 stage 2 (K279 s2): move the ripple's `warm()` onto the
   program registry, and take the first-tap residual: one 35-54 ms frame among
   tap 1's first five, on both builds, ripple or not.
+- **K370** · The worker's input latency (K7 s4): p50 105 ms on the daily, 70 on
+  the knot (in-thread 285), against a 50 ms target. Measure each stage first
+  (`k7_latency.mjs`); levers: newest snapshot while grabbed, more drag substeps.
+- **K373** · Two cheap boot fixes from K7 s4's trace: the `safeAreaInsets`
+  forced layout (`offscreen_indicators.ts` 797-809, ~35 ms) and `formatDayDate`
+  (`daily_calendar.ts:75`, ~8 ms). Rec: do both.
 
 ## Residuals (known, not fixed)
 
@@ -1125,6 +1120,12 @@ Every other item below waits on the trigger it names.
 - **K369** · `index.html` links no icon while `public/favicon.svg` ships
   unlinked, so Chrome asks for `/favicon.ico` (a 404 in every probe log; K279
   s2, unchecked). The link must be relative (the levi.dev proxy).
+- **K372** · Fabric `?b` doesn't sleep again within 30 s after a drag, on any
+  host, master included (K7 s4). Rec: a short sonnet probe of whether and when
+  it sleeps.
+- **K374** · 52 freeze-patch probes and 5 timing wrappers still patch `ps.step`
+  and run only with `&phw=0` (`.claude/probes/K7/stage4/ports/FREEZE_PATCH_FILES.md`):
+  port each when next needed, `k279_ab` first; re-run g2_smoke and livefabric.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1363,6 +1364,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K360** · Ledger diet pass 2 (K353's handoff): the open items still over
   three lines (about 150), the skipped K7 and K279, Done one-liners to ~160
   bytes; then drop `docs/ledger_diet/` (keep `scripts/ledger_diet.mjs`).
+- **K371** · Let the worker run ahead of main's frames during the pre-settle, so
+  it settles through K307's compile freezes (K7 s4); watch its saturation on
+  the phone (97% busy, lagS 1.04 s by 8 s).
 
 ## Done
 
