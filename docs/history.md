@@ -782,6 +782,23 @@ demand.
   K120's call, open for Levi. *[Lore: `.claude/rules/gameplay.md` (MOVES
   BY DIRECTION); pad probes and phone-width screenshots in
   `.claude/probes/K120/`.]*
+- THE FOG RESETS ON A RESTART ONLY (K100 stage 1, 2026-10-14; brief
+  `docs/design/K100.md`, agent under session d8031183; Levi, 2026-10-13:
+  "The fog should reset when the maze restarts. But the fog shouldn't
+  reset if we just backtrack to the start."): the fog of war used to
+  clear whenever the path was empty, so walking back to the entrance, a
+  daily's Reset path and a K80 catch all wiped it. Now it clears only
+  when the solve restarts: the controller counts reset() calls
+  (`restarts`) and the renderer clears the stamps when the count moves.
+  A saved attempt re-explores every tap, each run in the direction it was
+  walked (`travelOrder`, as live moves do; restores used to stamp every
+  run one way), a daily's Reset path stamps the runs it retraces, and a
+  catch lifts the fog only as far as the dot got. On a static daily the
+  restored fog equals the live one exactly; with physics they agree to an
+  IoU of 0.977 on one page (the old one-way rule 0.947) and 0.957 across
+  a reload. *[Lore: `.claude/rules/gameplay.md` (The fog of war),
+  `.claude/rules/probes.md` (K100); probes and screenshots in
+  `.claude/probes/K100/`.]*
 
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the
