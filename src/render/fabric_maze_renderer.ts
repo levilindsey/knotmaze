@@ -454,6 +454,9 @@ export class FabricMazeRenderer {
   // grown) and runs walked, the restart they belong to, the clock, the last
   // view and the halo sprites.
   explore = { on: false, reach: 2.5, fade: 1, look: EXPLORE_LOOK_DEFAULT };
+  // K290 (burn stage 3a): how burnt thread draws, the `burnt` param (main.ts
+  // syncExploration): gone (not drawn) or char (a burnt coloring).
+  burntLook: "gone" | "char" = "gone";
   private seenV = new Map<string, number>();
   private seenRuns = new Set<number>();
   private seenRestart = -1;

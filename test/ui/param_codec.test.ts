@@ -178,6 +178,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["revealDistance", "number"], // 136, K76 stage 2c
   ["revealFade", "number"], // 137
   ["revealLook", "enum", ["fade", "halo", "glow", "dots", "fray", "beacon"]], // 138
+  ["burnt", "enum", ["gone", "char"]], // 139, K290 (burn stage 3a)
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

@@ -268,6 +268,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("revealDistance"), // 136
   num("revealFade"), // 137
   choice("revealLook", ["fade", "halo", "glow", "dots", "fray", "beacon"]), // 138
+  // K290 (burn stage 3a): how burnt runs draw (BURNT_MODES order).
+  choice("burnt", ["gone", "char"]), // 139
 ]);
 
 // The format version a blob names first. Bump it for anything but an
