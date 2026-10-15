@@ -4,18 +4,23 @@ import {
   GLYPH_MAX_CIRCLES,
   GLYPH_MAX_SEGMENTS,
   MARKER_GLYPHS,
+  MARKER_DOT_MIN_TW,
   MARKER_MARGIN,
-  MARKER_R_MIN,
-  MARKER_R_PER_WIDTH,
+  MARKER_RING_TW,
+  MARKER_SIZE_DEFAULT,
+  MARKER_SIZE_MAX,
+  MARKER_SIZE_MIN,
   MARKER_STROKE,
   glyphExtent,
   glyphSegmentCount,
   glyphsForRole,
+  markerDotRadiusFor,
   markerGlyph,
   markerGlyphSvg,
   markerGlyphSvgFit,
   markerGlyphSvgMarks,
   markerRadiusFor,
+  sanitizeMarkerSize,
 } from "../../src/render/marker_glyphs";
 import type { MarkerRole } from "../../src/render/marker_glyphs";
 
@@ -79,12 +84,13 @@ describe("marker glyphs (K83)", () => {
     }
   });
 
-  it("the shipped set: play, flag, ring and dot", () => {
+  it("the shipped set: play, flag, ring and dot, horns, spider", () => {
     expect(DEFAULT_GLYPHS).toEqual({
       start: "play",
       exit: "flag",
       head: "here",
-      minotaur: "bull",
+      minotaur: "horns",
+      spider: "spider",
     });
     for (const role of ROLES) {
       const ids = glyphsForRole(role);
@@ -114,24 +120,87 @@ describe("marker glyphs (K83)", () => {
     expect(markerGlyph("pennant", "exit").id).toBe("pennant");
   });
 
-  it("one marker radius: 1.5 thread widths, floored, scalable", () => {
-    expect(MARKER_R_PER_WIDTH).toBe(1.5);
-    expect(markerRadiusFor(0.52)).toBeCloseTo(0.78, 12);
-    expect(markerRadiusFor(0.2)).toBe(MARKER_R_MIN);
-    expect(markerRadiusFor(0.64, 1.25)).toBeCloseTo(1.2, 12);
-    // A disc always covers its own ribbon's width.
-    for (const tw of [0.15, 0.3, 0.52, 0.8]) {
-      expect(markerRadiusFor(tw)).toBeGreaterThan(tw / 2);
+  it("one marker size (K98): the disc's diameter in thread widths", () => {
+    expect([MARKER_SIZE_MIN, MARKER_SIZE_DEFAULT, MARKER_SIZE_MAX]).toEqual([
+      0.25, 1.08, 3,
+    ]);
+    // The default is the pre-K83 head dot: radius 0.54 tw.
+    expect(markerRadiusFor(1)).toBeCloseTo(0.54, 12);
+    expect(markerRadiusFor(0.52)).toBeCloseTo(0.2808, 12);
+    expect(markerRadiusFor(0.52, 0.25)).toBeCloseTo(0.065, 12);
+    expect(markerRadiusFor(0.52, 3)).toBeCloseTo(0.78, 12);
+    // Clamped to the slider's range; garbage reads as the default.
+    expect(markerRadiusFor(1, 0.1)).toBeCloseTo(0.125, 12);
+    expect(markerRadiusFor(1, 9)).toBeCloseTo(1.5, 12);
+    expect(markerRadiusFor(1, Number.NaN)).toBeCloseTo(0.54, 12);
+    expect(sanitizeMarkerSize(Number.POSITIVE_INFINITY)).toBe(MARKER_SIZE_DEFAULT);
+    expect(sanitizeMarkerSize(-2)).toBe(MARKER_SIZE_MIN);
+    expect(sanitizeMarkerSize(2)).toBe(2);
+    // The probe hook's scale multiplies.
+    expect(markerRadiusFor(0.64, 2, 1.25)).toBeCloseTo(0.8, 12);
+    // No floor: the size is relative to the thread width alone.
+    expect(markerRadiusFor(0.01, 3)).toBeCloseTo(0.015, 12);
+  });
+
+  it("the start and finish dots ring the disc at every size (K98)", () => {
+    expect([MARKER_DOT_MIN_TW, MARKER_RING_TW]).toEqual([0.95, 0.41]);
+    const tw = 0.52;
+    // [size, dot radius, rim beyond the icon disc], both in thread widths.
+    const cases: Array<[number, number, number]> = [
+      [0.25, 0.95, 0.825],
+      // The default: exactly the pre-K83 pair, a 0.95 tw colored disc
+      // around the head's 0.54 tw dot.
+      [MARKER_SIZE_DEFAULT, 0.95, 0.41],
+      [2, 1.41, 0.41],
+      [3, 1.91, 0.41],
+    ];
+    for (const [size, dotTw, rimTw] of cases) {
+      const R = markerDotRadiusFor(tw, size);
+      const r = markerRadiusFor(tw, size);
+      expect(R / tw, `size ${size}`).toBeCloseTo(dotTw, 9);
+      expect((R - r) / tw, `size ${size}`).toBeCloseTo(rimTw, 9);
+    }
+    // Across the whole range the colored dot reaches past its own thread's
+    // edge and shows at least the rim around the icon disc.
+    for (let s = MARKER_SIZE_MIN; s <= MARKER_SIZE_MAX + 1e-9; s += 0.05) {
+      const R = markerDotRadiusFor(tw, s);
+      expect(R, `size ${s}`).toBeGreaterThan(tw / 2);
+      expect(R - markerRadiusFor(tw, s), `size ${s}`).toBeGreaterThanOrEqual(
+        MARKER_RING_TW * tw - 1e-12
+      );
+    }
+    // The probe hook's scale multiplies the dot too.
+    expect(markerDotRadiusFor(tw, 3, 1.25)).toBeCloseTo(1.91 * tw * 1.25, 9);
+  });
+
+  it("the minotaur (K80) wears Taurus horns (K98); the bull's head stays", () => {
+    expect(glyphsForRole("minotaur")).toEqual(["horns", "bull"]);
+    expect(markerGlyph("here", "minotaur").id).toBe("horns");
+    expect(markerGlyph("bull", "minotaur").id).toBe("bull");
+    // Two marks: the crescent of horns and the ring of the head.
+    const g = MARKER_GLYPHS.get("horns")!;
+    expect([g.lines.length, g.rings.length / 3, g.dots.length / 3]).toEqual([1, 1, 0]);
+  });
+
+  it("the spider (K98, for K114): a two-dot body and eight mirrored legs", () => {
+    expect(glyphsForRole("spider")).toEqual(["spider"]);
+    expect(markerGlyph("here", "spider").id).toBe("spider");
+    const g = MARKER_GLYPHS.get("spider")!;
+    expect([g.lines.length, g.rings.length / 3, g.dots.length / 3]).toEqual([8, 0, 2]);
+    // Each left leg's mirror image about the vertical axis is the next leg.
+    for (let i = 0; i < 8; i += 2) {
+      const a = g.lines[i];
+      const b = g.lines[i + 1];
+      expect(b.length).toBe(a.length);
+      for (let j = 0; j < a.length; j += 2) {
+        expect(b[j]).toBeCloseTo(-a[j], 6);
+        expect(b[j + 1]).toBeCloseTo(a[j + 1], 6);
+      }
     }
   });
 
-  it("the minotaur (K80) wears a bull's head", () => {
-    expect(glyphsForRole("minotaur")).toEqual(["bull"]);
-    expect(markerGlyph("here", "minotaur").id).toBe("bull");
-  });
-
   it("fits a glyph's outer ink to any radius (the off-screen indicator's box)", () => {
-    for (const role of [...ROLES, "minotaur" as const]) {
+    for (const role of [...ROLES, "minotaur" as const, "spider" as const]) {
       const id = DEFAULT_GLYPHS[role];
       const svg = markerGlyphSvgFit(id, role, 10.75);
       const k = Number(svg.match(/^<g transform="scale\(([\d.]+)\)">/)![1]);
@@ -158,7 +227,11 @@ describe("marker glyphs (K83)", () => {
     // K148: a dot never inherits a stroke from the group it is drawn in
     // (the indicator's icon group sets one): the head's dot and the bull's
     // eyes were disc-sized white blobs without this.
-    for (const [id, role] of [["here", "head"], ["bull", "minotaur"]] as const) {
+    for (const [id, role] of [
+      ["here", "head"],
+      ["bull", "minotaur"],
+      ["spider", "spider"],
+    ] as const) {
       const marks = markerGlyphSvgMarks(id, role);
       const dotsGroup = marks.match(/<g fill="#fff"[^>]*>/)![0];
       expect(dotsGroup).toContain('stroke="none"');

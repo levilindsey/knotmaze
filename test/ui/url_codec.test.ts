@@ -92,7 +92,28 @@ describe("links", () => {
       minoDeadEnds: 0.4, minoRoam: 30, minoWake: 2, minoFog: "always",
       confetti: true, confettiAmount: 1,
       pluckWhole: 0.5, pluckCrossings: "through", pluckGlow: "off",
+      markerSize: 1.08,
     });
+  });
+
+  // K98: the marker size's override key, its clamp to [0.25, 3], and the
+  // token round trip.
+  it("reads the marker size from its override key", () => {
+    const p = parseParams("?7&mks=2");
+    expect(p.markerSize).toBe(2);
+    expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    // The default stays out of the token.
+    expect(encodeParams(parseParams("?7&mks=1.08"))).toBe("7");
+    expect(parseParams("?7&mks=9").markerSize).toBe(3);
+    expect(parseParams("?7&mks=0").markerSize).toBe(0.25);
+    expect(parseParams("?7&mks=-1").markerSize).toBe(0.25);
+    expect(parseParams("?7&mks=x").markerSize).toBe(1.08);
+    expect(
+      parseParams(`?${encodeParams(withSeed(7, { markerSize: 7 }))}`).markerSize
+    ).toBe(3);
+    expect(
+      parseParams(`?${encodeParams(withSeed(7, { markerSize: 0.1 }))}`).markerSize
+    ).toBe(0.25);
   });
 
   // K140: the finish confetti's override keys, the amount's clamp, and the
@@ -372,7 +393,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoDetect: "mdt", minoLose: "mls", minoCatch: "mct", minoDeadEnds: "mde",
   minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", confetti: "cf",
   confettiAmount: "cfa", pluckWhole: "pw", pluckCrossings: "pcx",
-  pluckGlow: "pgl",
+  pluckGlow: "pgl", markerSize: "mks",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

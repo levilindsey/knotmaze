@@ -151,6 +151,9 @@ export const DAILY_EXEMPT_KEYS = [
   // Proposed for Levi's review with K140.
   "confetti",
   "confettiAmount",
+  // K98's marker size: only the look of the markers. Proposed for Levi's
+  // review with K98 (K57).
+  "markerSize",
 ] as const satisfies readonly (keyof UrlParams)[];
 
 const EXEMPT: ReadonlySet<string> = new Set(DAILY_EXEMPT_KEYS);

@@ -7,11 +7,17 @@
 // and round-cap tessellation counts segments from the RAW local radius,
 // which is a fraction of a world unit here - the N-gon marker lore).
 //
-// The quad lives in the DISC FRAME (disc radius 1, y down); place() sets
+// The glyph lives in the DISC FRAME (disc radius 1, y down); place() sets
 // the mesh's position and scale (the disc's world radius), so the stroke
 // width scales with the marker. Meshes, shaders and uniform groups are
 // built per marker and never destroyed mid-session (the PALETTE_CACHE
 // lore); the program is shared (Shader.from caches it by source).
+//
+// K98: an optional COLORED DOT under the disc (setRingColor + place's
+// outer radius): the start and finish show their section color as a rim
+// around the black disc. With a dot larger than the disc the quad is
+// scaled to the dot (uFrame.x converts quad units to disc units), so the
+// dot's rim gets the same analytic ramp as the disc's.
 
 import { Mesh, MeshGeometry, Shader, Texture, UniformGroup } from "pixi.js";
 import {
@@ -57,19 +63,25 @@ uniform vec4 uCirc[${GLYPH_MAX_CIRCLES}];
 uniform vec4 uGlyph;
 uniform vec4 uInk;
 uniform vec4 uDisc;
+// K98: the colored dot under the disc (rgb, a = 0 for none) and the frame:
+// x = disc units per quad unit, y = the dot's radius in disc radii.
+uniform vec4 uRing;
+uniform vec4 uFrame;
 void main(void) {
+  vec2 p = vP * uFrame.x;
   // Disc units per pixel - derivatives first, in uniform control flow.
-  float px = max(length(dFdx(vP)), 1e-6);
-  float r = length(vP);
+  float px = max(length(dFdx(p)), 1e-6);
+  float r = length(p);
   float disc = clamp((1.0 - r) / px + 0.5, 0.0, 1.0);
-  if (disc <= 0.0) discard;
+  float ring = uRing.a * clamp((uFrame.y - r) / px + 0.5, 0.0, 1.0);
+  if (disc <= 0.0 && ring <= 0.0) discard;
   float h = uGlyph.z;
   float d = 1e6;
   int ns = int(uGlyph.x + 0.5);
   for (int i = 0; i < ${GLYPH_MAX_SEGMENTS}; i++) {
     if (i >= ns) break;
     vec4 s = uSeg[i];
-    vec2 pa = vP - s.xy;
+    vec2 pa = p - s.xy;
     vec2 ba = s.zw - s.xy;
     float t = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-12), 0.0, 1.0);
     d = min(d, length(pa - ba * t) - h);
@@ -78,12 +90,14 @@ void main(void) {
   for (int i = 0; i < ${GLYPH_MAX_CIRCLES}; i++) {
     if (i >= nc) break;
     vec4 c = uCirc[i];
-    float q = length(vP - c.xy) - c.z;
+    float q = length(p - c.xy) - c.z;
     d = min(d, c.w > 0.5 ? q : abs(q) - h);
   }
   float ink = clamp(0.5 - d / px, 0.0, 1.0);
   float a = disc * uDisc.a;
-  finalColor = vec4(mix(uDisc.rgb, uInk.rgb, ink) * a, a) * vColor;
+  // The disc and its glyph over the dot (premultiplied).
+  vec3 rgb = mix(uDisc.rgb, uInk.rgb, ink) * a + uRing.rgb * ring * (1.0 - a);
+  finalColor = vec4(rgb, a + ring * (1.0 - a)) * vColor;
 }
 `;
 
@@ -93,6 +107,8 @@ interface MarkerUniformValues {
   uGlyph: Float32Array;
   uInk: Float32Array;
   uDisc: Float32Array;
+  uRing: Float32Array;
+  uFrame: Float32Array;
 }
 
 export class MarkerMesh {
@@ -118,6 +134,8 @@ export class MarkerMesh {
       },
       uInk: { value: new Float32Array([1, 1, 1, 1]), type: "vec4<f32>" },
       uDisc: { value: new Float32Array([0, 0, 0, 1]), type: "vec4<f32>" },
+      uRing: { value: new Float32Array([0, 0, 0, 0]), type: "vec4<f32>" },
+      uFrame: { value: new Float32Array([1, 1, 0, 0]), type: "vec4<f32>" },
     });
     this.values = uniforms.uniforms as unknown as MarkerUniformValues;
     const shader = Shader.from({
@@ -165,10 +183,29 @@ export class MarkerMesh {
     v.uGlyph[1] = c;
   }
 
-  // Center the disc at a world point with a world radius (or hide it).
-  place(x: number, y: number, radius: number): void {
+  // The colored dot's color (0-1 rgb); it shows wherever place() is given
+  // an outer radius larger than the disc's.
+  setRingColor(rgb: ArrayLike<number>): void {
+    const u = this.values.uRing;
+    u[0] = rgb[0];
+    u[1] = rgb[1];
+    u[2] = rgb[2];
+    u[3] = 1;
+  }
+
+  clearRing(): void {
+    this.values.uRing[3] = 0;
+  }
+
+  // Center the disc at a world point with a world radius, over a colored
+  // dot of world radius `outer` (K98; none when it is not larger).
+  place(x: number, y: number, radius: number, outer = 0): void {
+    const s = Math.max(radius, outer);
     this.mesh.position.set(x, y);
-    this.mesh.scale.set(radius);
+    this.mesh.scale.set(s);
+    const f = this.values.uFrame;
+    f[0] = radius > 0 ? s / radius : 1;
+    f[1] = radius > 0 && outer > radius ? outer / radius : 1;
     this.mesh.visible = true;
   }
 
