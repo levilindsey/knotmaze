@@ -95,6 +95,7 @@ import {
   kPaintAt,
   kRimAcross,
   kRimScale,
+  kWrap,
   knotSection,
   smoothInv,
   sourcePieces,
@@ -5012,15 +5013,13 @@ export class RibbonRenderer {
     const c = kChain(D, ch);
     // GLSL twin: the seed normalized onto the chain (rings wrap, runs clamp).
     const nc = c.nCtrl;
-    const seed = c.closed
-      ? seedIn - nc * Math.floor(seedIn / nc)
-      : Math.max(0, Math.min(nc - 1, seedIn));
+    const seed = c.closed ? kWrap(seedIn, nc) : Math.max(0, Math.min(nc - 1, seedIn));
     const total = c.total;
     if (!(total > 0) || c.count < 2) {
       knotSection(D, U, c, 0, out);
       return;
     }
-    const an = c.closed ? a - total * Math.floor(a / total) : Math.max(0, Math.min(total, a));
+    const an = c.closed ? kWrap(a, total) : Math.max(0, Math.min(total, a));
     const c0 = kSectionAtArc(D, U, c, a, seed, out);
     const actrl = kCtrlOfArcNear(D, c, an, c0);
     if (U.uKFx[3] >= 0.5 && U.uKFx[2] < c.fxDone) {

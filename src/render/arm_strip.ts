@@ -191,10 +191,10 @@ vec3 chainMaterial(int ch, highp float a, highp float seedIn, bool untrav) {
   KChain c = kChain(ch);
   // The ctrl search seed, normalized onto the chain (rings wrap, runs clamp).
   highp float nc = float(c.nCtrl);
-  highp float seed = c.closed ? seedIn - nc * floor(seedIn / nc) : clamp(seedIn, 0.0, nc - 1.0);
+  highp float seed = c.closed ? kWrap(seedIn, nc) : clamp(seedIn, 0.0, nc - 1.0);
   highp float total = c.total;
   if (total <= 0.0 || c.count < 2) return knotSection(c, 0.0);
-  highp float an = c.closed ? a - total * floor(a / total) : clamp(a, 0.0, total);
+  highp float an = c.closed ? kWrap(a, total) : clamp(a, 0.0, total);
   vec3 m = kSectionAtArc(c, a, seed);
   highp float actrl = kCtrlOfArcNear(c, an, kSecK0);
   if (uKFx.w > 0.5 && uKFx.z < c.fxDone) {

@@ -79,21 +79,48 @@ export function kCA(D: KData, c: KChain, i: number): number {
   return D.geom[(c.geom + 1 + (i >> 2)) * 4 + (i & 3)];
 }
 
+// GLSL twin: kLapOf - floor(fl / n) EXACTLY for an integer-valued fl and
+// n > 0 (K299). The GPU's float division is approximate (floor(28.0 / 28.0)
+// came out 0 on an RX 6800 XT under ANGLE D3D11), so the shader corrects
+// the quotient by one integer step. JS division is correctly rounded, so
+// here the step never fires; `q` lets the tests pass the GPU's quotient.
+export function kLapOf(fl: number, n: number, q = fl / n): number {
+  const k = Math.floor(q);
+  const r = fl - k * n;
+  return r < 0 ? k - 1 : r >= n ? k + 1 : k;
+}
+
+// GLSL twin: kWrap - x wrapped into [0, m) for m > 0, whatever the
+// division's rounding (K299; `q` as in kLapOf).
+export function kWrap(x: number, m: number, q = x / m): number {
+  let r = x - m * Math.floor(q);
+  if (r < 0) r += m;
+  if (r >= m) r -= m;
+  return r;
+}
+
+// GLSL twin: kRingArc - a closed ring's arc of ctrl x within x's lap, in
+// [0, total] (total only where the slot's fraction rounds to its end); the
+// lap goes to kRingLap.
+let kRingLap = 0;
+export function kRingArc(D: KData, c: KChain, x: number): number {
+  const n = c.nCtrl;
+  const fl = Math.floor(x);
+  kRingLap = kLapOf(fl, n);
+  const i0 = fl - n * kRingLap;
+  const a0 = kCA(D, c, i0);
+  const a1 = i0 + 1 < n ? kCA(D, c, i0 + 1) : c.total;
+  return a0 + (a1 - a0) * (x - fl);
+}
+
 // GLSL twin: kArcOfCtrl - the renderer's paintArcAt: closed chains wrap
 // (arcAt), open chains clamp the slot (a ctrl below 0 extrapolates to a
 // NEGATIVE arc, exactly as paintArcAt does).
 export function kArcOfCtrl(D: KData, c: KChain, x: number): number {
   const n = c.nCtrl;
   if (c.closed) {
-    const fl = Math.floor(x);
-    const t = x - fl;
-    const i0 = fl - n * Math.floor(fl / n);
-    const i1 = i0 + 1 >= n ? 0 : i0 + 1;
-    const a0 = kCA(D, c, i0);
-    let a1 = kCA(D, c, i1);
-    if (a1 <= a0) a1 += c.total;
-    const a = a0 + (a1 - a0) * t;
-    return a - c.total * Math.floor(a / c.total);
+    const a = kRingArc(D, c, x);
+    return a >= c.total ? a - c.total : a;
   }
   const i = Math.max(0, Math.min(n - 1, Math.floor(x)));
   const a0 = kCA(D, c, i);
@@ -104,9 +131,9 @@ export function kArcOfCtrl(D: KData, c: KChain, x: number): number {
 // GLSL twin: kArcU - monotone UNWRAPPED arc of an unwrapped ctrl (closed
 // rings add one total per lap; open chains = kArcOfCtrl).
 export function kArcU(D: KData, c: KChain, x: number): number {
-  return c.closed
-    ? kArcOfCtrl(D, c, x) + c.total * Math.floor(x / c.nCtrl)
-    : kArcOfCtrl(D, c, x);
+  if (!c.closed) return kArcOfCtrl(D, c, x);
+  const a = kRingArc(D, c, x);
+  return a + c.total * kRingLap;
 }
 
 // GLSL twin: kCtrlOfArc - the per-sample bake's arc -> ctrl map (largest
@@ -137,7 +164,7 @@ export function kCtrlNear(
 ): number {
   const n = c.nCtrl;
   let s = Math.floor(approx);
-  if (c.closed) s -= n * Math.floor(s / n);
+  if (c.closed) s -= n * kLapOf(s, n);
   else s = Math.max(0, Math.min(n - 1, s));
   let a0 = 0;
   let a1 = 0;
@@ -1049,7 +1076,7 @@ export function kSampleBracket(c: KChain, a: number, out: number[]): void {
     return;
   }
   if (c.closed) {
-    const an = a - total * Math.floor(a / total);
+    const an = kWrap(a, total);
     const f = (an / total) * count;
     const fl = Math.floor(f);
     out[0] = fl % count;
@@ -1311,9 +1338,11 @@ export function kPaintAt(
       let dirPos: boolean;
       let span: number;
       if (c.closed) {
+        // Unwrapped (K299): a run that goes once around has span = total.
         dirPos = cB > cA;
-        const x = dirPos ? aF - aJ : aJ - aF;
-        span = x - total * Math.floor(x / total);
+        const uJ = kArcU(D, c, cA);
+        const uF = kArcU(D, c, cB);
+        span = dirPos ? uF - uJ : uJ - uF;
       } else {
         dirPos = aF >= aJ;
         span = Math.abs(aF - aJ);
@@ -1321,8 +1350,7 @@ export function kPaintAt(
       if (span <= 1e-6) continue;
       let d: number;
       if (c.closed) {
-        const x = dirPos ? arc - aJ : aJ - arc;
-        d = x - total * Math.floor(x / total);
+        d = kWrap(dirPos ? arc - aJ : aJ - arc, total);
       } else {
         d = dirPos ? arc - aJ : aJ - arc;
       }
@@ -1343,10 +1371,7 @@ export function kPaintAt(
       const u0 = kArcU(D, c, cA);
       const u1 = kArcU(D, c, cB);
       let u = arc;
-      if (c.closed) {
-        const x = arc - u0;
-        u = u0 + (x - total * Math.floor(x / total));
-      }
+      if (c.closed) u = u0 + kWrap(arc - u0, total);
       if (u < u0 || u > u1) continue;
       const d = Math.abs(u - kArcU(D, c, U.uKReach[3]));
       const dEnd = Math.min(u - u0, u1 - u);

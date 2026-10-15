@@ -134,20 +134,48 @@ highp float kCA(KChain c, int i) {
   return j == 0 ? t.x : j == 1 ? t.y : j == 2 ? t.z : t.w;
 }
 
+// K299: floor(fl / n) EXACTLY, for an integer-valued fl and n > 0 (a ring's
+// lap). GPU float division is approximate (GLSL ES allows 2.5 ULP; ANGLE's
+// D3D11 path multiplies by a reciprocal): on an RX 6800 XT floor(28.0 /
+// 28.0) came out 0, and floor(k n / n) came out k - 1 for a fifth of (k, n).
+// A lap one short put the slot index one past the chain's arc table, into
+// the next chain's header: a closed chain's run ending at its seam drew its
+// pulse and trail at a garbage arc. The quotient is within one of the
+// truth, so one integer step corrects it.
+int kLapOf(highp float fl, int n) {
+  int k = int(floor(fl / float(n)));
+  int r = int(fl) - k * n;
+  return r < 0 ? k - 1 : r >= n ? k + 1 : k;
+}
+
+// x wrapped into [0, m) for m > 0, whatever the division's rounding (K299).
+highp float kWrap(highp float x, highp float m) {
+  highp float r = x - m * floor(x / m);
+  if (r < 0.0) r += m;
+  if (r >= m) r -= m;
+  return r;
+}
+
+// A closed ring's arc of ctrl x within x's lap, in [0, total] (total only
+// where the slot's fraction rounds to its end); the lap goes to kRingLap.
+int kRingLap;
+highp float kRingArc(KChain c, highp float x) {
+  int n = c.nCtrl;
+  highp float fl = floor(x);
+  kRingLap = kLapOf(fl, n);
+  int i0 = int(fl) - n * kRingLap;
+  highp float a0 = kCA(c, i0);
+  highp float a1 = i0 + 1 < n ? kCA(c, i0 + 1) : c.total;
+  return a0 + (a1 - a0) * (x - fl);
+}
+
 // The renderer's paintArcAt: closed rings wrap, open chains clamp the slot
 // (ctrl < 0 extrapolates to a negative arc, as on the CPU).
 highp float kArcOfCtrl(KChain c, highp float x) {
   int n = c.nCtrl;
   if (c.closed) {
-    highp float fl = floor(x);
-    highp float t = x - fl;
-    int i0 = int(fl - float(n) * floor(fl / float(n)));
-    int i1 = i0 + 1 >= n ? 0 : i0 + 1;
-    highp float a0 = kCA(c, i0);
-    highp float a1 = kCA(c, i1);
-    if (a1 <= a0) a1 += c.total;
-    highp float a = a0 + (a1 - a0) * t;
-    return a - c.total * floor(a / c.total);
+    highp float a = kRingArc(c, x);
+    return a >= c.total ? a - c.total : a;
   }
   int i = clamp(int(floor(x)), 0, n - 1);
   highp float a0 = kCA(c, i);
@@ -157,9 +185,9 @@ highp float kArcOfCtrl(KChain c, highp float x) {
 
 // Monotone unwrapped arc of an unwrapped ctrl.
 highp float kArcU(KChain c, highp float x) {
-  return c.closed
-    ? kArcOfCtrl(c, x) + c.total * floor(x / float(c.nCtrl))
-    : kArcOfCtrl(c, x);
+  if (!c.closed) return kArcOfCtrl(c, x);
+  highp float a = kRingArc(c, x);
+  return a + c.total * float(kRingLap);
 }
 
 // The bake's arc -> ctrl map, by binary search (vertex stage; 13 steps
@@ -203,7 +231,7 @@ highp float kCtrlOfArcNear(KChain c, highp float a, highp float seed) {
 highp float kCtrlNear(KChain c, highp float a, highp float approx) {
   int n = c.nCtrl;
   int s = int(floor(approx));
-  if (c.closed) s -= n * int(floor(float(s) / float(n)));
+  if (c.closed) s -= n * kLapOf(float(s), n);
   else s = clamp(s, 0, n - 1);
   highp float a0 = 0.0;
   highp float a1 = 0.0;
@@ -593,7 +621,7 @@ vec3 kSectionAtArc(KChain c, highp float a, highp float seed) {
   int k1;
   highp float fr;
   if (c.closed) {
-    highp float an = a - total * floor(a / total);
+    highp float an = kWrap(a, total);
     highp float f = an / total * float(count);
     highp float fl = floor(f);
     k0 = int(fl) % count;
@@ -757,9 +785,11 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
       bool dirPos;
       highp float span;
       if (c.closed) {
+        // Unwrapped (K299): a run that goes once around has span = total.
         dirPos = T0.z > T0.y;
-        highp float x = dirPos ? aF - aJ : aJ - aF;
-        span = x - total * floor(x / total);
+        highp float uJ = kArcU(c, T0.y);
+        highp float uF = kArcU(c, T0.z);
+        span = dirPos ? uF - uJ : uJ - uF;
       } else {
         dirPos = aF >= aJ;
         span = abs(aF - aJ);
@@ -767,8 +797,7 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
       if (span <= 1e-6) continue;
       highp float d;
       if (c.closed) {
-        highp float x = dirPos ? arc - aJ : aJ - arc;
-        d = x - total * floor(x / total);
+        d = kWrap(dirPos ? arc - aJ : aJ - arc, total);
       } else {
         d = dirPos ? arc - aJ : aJ - arc;
       }
@@ -785,10 +814,7 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
       highp float u0 = kArcU(c, T0.y);
       highp float u1 = kArcU(c, T0.z);
       highp float u = arc;
-      if (c.closed) {
-        highp float x = arc - u0;
-        u = u0 + (x - total * floor(x / total));
-      }
+      if (c.closed) u = u0 + kWrap(arc - u0, total);
       if (u < u0 || u > u1) continue;
       highp float d = abs(u - kArcU(c, uKReach.w));
       highp float dEnd = min(u - u0, u1 - u);
