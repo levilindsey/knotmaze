@@ -553,7 +553,7 @@ The colour row is the same library code that the strip's fragment shader runs to
 G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
 - G3+G4 ≈ **2.2-2.8 ms desktop.** That is about today's cost, while deleting the CPU geometry work (update() 5.7 ms on the desktop and 15 ms on the phone after G1) and the artifact classes.
 - **Pixel ≈ 2-3 ms at 2x**, if its PowerVR runs this mix 4-5x slower than the desktop GPU. The ratio is a guess:
-  - Chrome on the Pixel exposes no GPU timer query, so it is measured as frame time, with G3-0's `__knotBench(n)` (`gl.finish` around n renders).
+  - Chrome on the Pixel exposes no GPU timer query, so it is measured as frame time, with G3-0's frame bench `scripts/bench_frame.mjs` (`gl.finish()` after a frame's draws; section 5.0).
   - The baseline is today's 60 fps at rest at defaults. The dense preset is render-bound at about 30 fps.
 - **Budget:** at most 4 ms GPU at the 2x cap for the whole fabric at cr 3 on the Pixel, and 60 fps held at defaults.
 
@@ -648,8 +648,8 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
     - A bare URL is today's daily, with a saved attempt, so probes pass a query (`?<seed>&am=instant&snd=none`).
     - Hold the perf lock for every pixel-exact GPU probe, not only for timings, and record `webglcontextlost`.
 20. **The physics moves into K7's worker (new since the snapshot; stages 3-5, section 1.1).**
-    - With the worker on, the renderer reads the mirror: exact at rest, and while awake the newest snapshot or, if K7 stage 3 keeps it, an interpolation at now − D.
-    - A same-state A/B therefore freezes the physics. In-thread (today, or `&phw=0` once stage 3 adds it): the freeze patch `__knotPS().step = function () {}`. Under the worker: `__knotPhysFreeze(on)` (K7 stage 4), which resolves once a snapshot shows the freeze. `&phy=0` turns physics off for a deterministic layout.
+    - With the worker on, the renderer reads the mirror: exact at rest. While awake, K7 stage 3 (landed after d741412) renders at now − D, D the median snapshot interval clamped to 8-50 ms, lerping positions between the two newest snapshots; `__knotHostOpts = { interpolate: false }` switches that off for an A/B.
+    - A same-state A/B therefore freezes the physics. In-thread (the default, `&phw=0`): the freeze patch `__knotPS().step = function () {}`. Under the worker: `__knotPhysFreeze(on)` (K7 stage 4), which resolves once a snapshot shows the freeze. `&phy=0` turns physics off for a deterministic layout.
     - Neither G3 nor G4 touches `src/physics/`.
 21. **Dependents of the strip (K8 s1).** Each needs its replacement before the strip goes at G3-3.
     - The pluck host's `visibility` stays on `underGapVisibility`.
