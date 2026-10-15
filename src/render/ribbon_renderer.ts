@@ -1017,7 +1017,8 @@ export class RibbonRenderer {
       (window as unknown as Record<string, unknown>).__knotSplineBend = (
         on?: boolean,
         opts?: Partial<
-          Record<"ratio" | "maxShift" | "maxTurn" | "iterations" | "marginMax" | "passes", number>
+          Record<"ratio" | "maxShift" | "maxTurn" | "iterations" | "marginMax" | "passes", number> &
+            Record<"soft", boolean>
         >
       ) => {
         if (on !== undefined || opts) {

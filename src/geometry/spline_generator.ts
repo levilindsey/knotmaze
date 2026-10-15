@@ -96,6 +96,14 @@ export interface SplineBend {
   // Detect-and-relax passes: a later pass catches a turn that the first
   // pushed onto the edge of its range.
   passes: number;
+  // Clamp each run as a whole instead of each sample: relax the run with
+  // no clamp, then blend it back toward where the pass found it until no
+  // sample lies more than maxShift from the spline. A sample's second
+  // difference is linear in the positions, so a blended sample turns about
+  // no tighter than the tighter of the two states; a per-sample clamp can
+  // stop one sample while its neighbors straighten, and the turn then
+  // gathers on it (census r2's min-ratio regression, K90_bend_radius.md).
+  soft: boolean;
   // Diagnostics, accumulated until the caller zeroes them: samples moved,
   // the largest shift (world), runs relaxed and runs left alone.
   moved: number;
@@ -116,6 +124,7 @@ export const splineBend: SplineBend = {
   iterations: 48,
   marginMax: 24,
   passes: 3,
+  soft: false,
   moved: 0,
   shiftMax: 0,
   runs: 0,
@@ -127,6 +136,8 @@ const BEND_MARGIN_MIN = 3;
 // A sample moving less than this (world) has converged.
 const BEND_STILL = 1e-6;
 let bendOrig = new Float32Array(0);
+// A run's positions before its relaxation (the soft clamp's blend base).
+let bendPre = new Float32Array(0);
 
 function bendRadiusAt(
   pos: Float32Array,
@@ -217,6 +228,17 @@ export function boundBend(pos: Float32Array, count: number, closed: boolean): vo
       const margin = Math.min(marginMax, Math.max(BEND_MARGIN_MIN, need));
       const j0 = w.start - margin;
       const j1 = w.start + w.length - 1 + margin;
+      // The run's distinct samples, s0 .. s0 + span - 1 (wrapped when closed).
+      const s0 = closed ? j0 : Math.max(0, j0);
+      const span = closed ? Math.min(j1 - j0 + 1, count) : Math.min(count - 1, j1) - s0 + 1;
+      if (b.soft) {
+        if (bendPre.length < span * 2) bendPre = new Float32Array(span * 2);
+        for (let i = 0; i < span; i++) {
+          const k = closed ? wrap(s0 + i) : s0 + i;
+          bendPre[i * 2] = pos[k * 2];
+          bendPre[i * 2 + 1] = pos[k * 2 + 1];
+        }
+      }
       for (let it = 0; it < b.iterations; it++) {
         let movedAny = false;
         for (let j = j0; j <= j1; j++) {
@@ -228,13 +250,15 @@ export function boundBend(pos: Float32Array, count: number, closed: boolean): vo
           const c = k * 2;
           let x = pos[c] + ((pos[p] + pos[n]) * 0.5 - pos[c]) * 0.5;
           let y = pos[c + 1] + ((pos[p + 1] + pos[n + 1]) * 0.5 - pos[c + 1]) * 0.5;
-          const dx = x - bendOrig[c];
-          const dy = y - bendOrig[c + 1];
-          const d2 = dx * dx + dy * dy;
-          if (d2 > maxD2) {
-            const f = maxD / Math.sqrt(d2);
-            x = bendOrig[c] + dx * f;
-            y = bendOrig[c + 1] + dy * f;
+          if (!b.soft) {
+            const dx = x - bendOrig[c];
+            const dy = y - bendOrig[c + 1];
+            const d2 = dx * dx + dy * dy;
+            if (d2 > maxD2) {
+              const f = maxD / Math.sqrt(d2);
+              x = bendOrig[c] + dx * f;
+              y = bendOrig[c + 1] + dy * f;
+            }
           }
           if (Math.abs(x - pos[c]) + Math.abs(y - pos[c + 1]) < BEND_STILL) continue;
           pos[c] = x;
@@ -249,6 +273,37 @@ export function boundBend(pos: Float32Array, count: number, closed: boolean): vo
           }
         }
         if (!movedAny) break;
+      }
+      if (b.soft) {
+        // The largest t in [0, 1] with |pre + t (pos - pre) - orig| <= maxD
+        // at every sample of the run: per sample, the larger root of
+        // a t^2 + bq t + c = 0 (the numerically stable form).
+        let tStar = 1;
+        for (let i = 0; i < span; i++) {
+          const k = (closed ? wrap(s0 + i) : s0 + i) * 2;
+          const px = bendPre[i * 2];
+          const py = bendPre[i * 2 + 1];
+          const dx = pos[k] - px;
+          const dy = pos[k + 1] - py;
+          const a = dx * dx + dy * dy;
+          if (a === 0) continue;
+          const ex = px - bendOrig[k];
+          const ey = py - bendOrig[k + 1];
+          const bq = 2 * (ex * dx + ey * dy);
+          const c = ex * ex + ey * ey - maxD2;
+          if (a + bq + c <= 0) continue;
+          const sq = Math.sqrt(Math.max(0, bq * bq - 4 * a * c));
+          let t = bq >= 0 ? (bq + sq > 0 ? (-2 * c) / (bq + sq) : 0) : (sq - bq) / (2 * a);
+          if (!(t > 0)) t = 0;
+          if (t < tStar) tStar = t;
+        }
+        if (tStar < 1) {
+          for (let i = 0; i < span; i++) {
+            const k = (closed ? wrap(s0 + i) : s0 + i) * 2;
+            pos[k] = bendPre[i * 2] + (pos[k] - bendPre[i * 2]) * tStar;
+            pos[k + 1] = bendPre[i * 2 + 1] + (pos[k + 1] - bendPre[i * 2 + 1]) * tStar;
+          }
+        }
       }
     }
   }
