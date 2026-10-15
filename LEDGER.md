@@ -589,21 +589,20 @@ and never reused.
   handoff `docs/design/K76.md` ("Stage 2b handoff"). Joints and caps fade
   with their thread (K275, answered 16:50); 2b's residuals are K276. Levi's shaped
   gaps (2026-10-14 15:16) are K268 (stage 1 merged 17:50).
-  - owner: nobody since 2026-10-14 16:04 (stage 2b merged). Its agent
-    ac6e354b85922e7aa of session d8031183 finished; its worktree is
-    kept, as are 2a's (a5d63452980ed9fa3) and stage 1's
+  - owner: agent a58040d5b7b031c80 (opus) of claude session d8031183, stage 2c from
+    23:39 (cap 01:39; ports 5810-5819). Earlier stages' worktrees are kept:
+    2b's (ac6e354b85922e7aa), 2a's (a5d63452980ed9fa3) and stage 1's
     (aea102de995e1ce30; its prototype WIP is 1fbc0d2 and 23907a5).
-  - branch: mainline; last commit: `8d671ba`.
-  - evidence: the main checkout's `.claude/probes/K76/stage2b/` and
-    `stage2a/` (copied at the merges); stage 1's in
-    `.claude/probes/K76/`.
-  - next: stage 2c (the burn race merged at 16:35; main.ts, params, codec
-    version 6, the panel, hit-testing, the model fed from move events),
-    its brief written from both "For stage 2c" sections of
-    `docs/design/K76.md` and K257 (burn stage 3 runs this visibility in
-    reverse, K290, so it must be able to shrink); then 2d.
-  - brief: `docs/design/K76.md` (the 2a and 2b handoffs; 2c's brief is
-    to be written), then `docs/design/K76_reveal_mode.md`.
+  - branch: `worktree-agent-a58040d5b7b031c80` (`.claude/worktrees/agent-a58040d5b7b031c80`, from
+    2c81a92); last commit: `2c81a92` (master) until its first WIP commit.
+  - evidence: `.claude/probes/K76/stage2c/` in its worktree; 2a's and
+    2b's in the main checkout's `.claude/probes/K76/`.
+  - next: stage 2c (the move-event feed, input and the camera, the
+    `exploration` dropdown with codec 6, the K73 indicator, the intro,
+    K257's and K286's recommendations, a census walk), its handoff, the
+    merge; then K268 stage 2, K290 and 2d in turn.
+  - brief: `docs/design/K76.md` ("Stage 2c", 79c5a97), then
+    `docs/design/K76_reveal_mode.md`.
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi,
   2026-10-14 15:16, verbatim): "For the mode where threads only appear as
   you travel along them, we should make sure we handle gaps well. If
@@ -777,23 +776,6 @@ and never reused.
     presents during the waits, and the first frame.
   - brief: `docs/design/K307_intro_freezes.md`, "Stage 1 handoff" and
     "Stage 2: the warm-up".
-- **K329** · The arrow keys don't move the player at a 4-way
-  intersection (Levi, 2026-10-14 about 22:15, on the LAN dev server at
-  b72d5dd: `?qoietk.KaIeBFFfBGVG3x8Mj4`; his inspect named crossing 34,
-  chains 2 and 16). K7's stage 1 (main.ts's physics call sites) merged
-  minutes before. The picker is K120's `src/ui/key_moves.ts`. Since
-  22:21 the stage also builds K333 and K334 (Levi's follow-up).
-  - owner: agent accf7e9ec87288e8a (opus) of claude session d8031183,
-    from 22:16 (cap 00:16; ports 5850-5859).
-  - branch: `worktree-agent-accf7e9ec87288e8a`
-    (`.claude/worktrees/agent-accf7e9ec87288e8a`, from b72d5dd); last
-    commit: `b72d5dd` (master) until its first WIP commit.
-  - evidence: `.claude/probes/K329/` in its worktree.
-  - next: reproduce, the root cause (and whether K7's stage 1 is
-    involved), the fix with a regression test, K333 and K334, a rebase
-    onto 813e098 or later, then the merge. Its report says where K332's
-    hints hook in.
-  - brief: this item and K332-K334 (no design doc).
 - **K339** · Audit and reorganize the settings panel (Levi, 2026-10-14
   about 22:48: "We should also audit the current list of settings in
   this panel, and reorganize them now. We should also consider whether
@@ -870,10 +852,10 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
 (he may reorder). Running: K7's stage 3 from 23:22 (cap 01:22, opus),
-K329 (the arrow keys, with K333 and K334) from 22:16 (cap 00:16, opus),
-K344 (the pluck cusp) from 23:30 (cap 01:30, opus) and K339's panel
-audit from 22:54 (cap 00:54, opus, docs only). K335 (the confetti's top
-edge) merged at 23:32, K7's stage 2 at 23:21, K325 at 22:53, the K323/K324 design at 22:44,
+K76's stage 2c from 23:39 (cap 01:39, opus), K344 (the pluck cusp) from
+23:30 (cap 01:30, opus) and K339's panel audit from 22:54 (cap 00:54,
+opus, docs only). K329 (the arrow keys, with K333 and K334) merged at
+23:38, K335 (the confetti's top edge) at 23:32, K7's stage 2 at 23:21, K325 at 22:53, the K323/K324 design at 22:44,
 K298 at 22:20, K307's stage 1 at 22:06 and K7's stage 1 at 22:04. The order
 from 2026-10-14 23:00 (Levi, verbatim: "Let's defer the more-complex
 celebratory effects to after other tasks. ... I think I'd like to get
@@ -881,7 +863,7 @@ thread appear/disappear support working as a close second priority
 after the web worker."; at about 23:09, going to bed: "I'll leave the
 phone available. Proceed through the night."): K7's stages 3-5 in turn;
 then thread appear/disappear, one at a time since all four edit the
-paint shaders: K76 2c (after K329), K268 stage 2, K290 (burn stage 3)
+paint shaders: K76 2c (running), K268 stage 2, K290 (burn stage 3)
 and K76 2d. Then
 K321 (the credits page, sonnet), K307's warm-up (K313's loader follows
 it), K331 with K330, K111 stage 5 with K265, K328 and K345, K332 (the
@@ -1402,22 +1384,14 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   near the start  of each current segment option to help indicate which
   key to press. We should only show these if the player has pressed an
   arrow key at some point previously in the session."): a small key icon
-  (or chord, K333) near the start of each choice. The stage after K329,
-  whose report says where it hooks in.
-- **K333** · Diagonal chords (Levi, 2026-10-14 about 22:20: "it might be
-  nice to support pressing combinations of arrow keys to indicate
-  diagonals, like UP+RIGHT."): two keys within a short window pick the
-  diagonal. Built in K329's stage (needs K334).
-- **K334** · No snap on a second press (Levi, 2026-10-14 about 22:20:
-  "with the curren timplementation,  it looks like a successive direction
-  press snaps the position to the end of the current segment traversal.
-  I think we should turn that off, and force the player to wait to see
-  the position movement animation."): a direction press during a move no
-  longer snaps the head to the run's end. Built in K329's stage for the
-  keys (and the move pad); taps and clicks wait too (Levi, 22:50: "Yes.
-  But held-down arrows when reaching the next junction can
-  immediately/seamlessly trigger the next move."; relayed to K329's
-  stage at 22:50).
+  (or chord, K333) near the start of each choice. The stage after K329.
+  Hooks (K329's report): which key takes which run is `keyMap` /
+  `chordMap` in `key_moves.ts` (fed by main.ts `keyDepartures` ->
+  `departureVectors`); draw near each choice run's start at KEY_REACH
+  with K83's `MarkerMesh` and `marker_glyphs.ts`; "pressed an arrow
+  this session" is a module flag set in main.ts's keydown and
+  `keyPress` (the pad too), not localStorage; refresh on arrival in
+  `keyStep` / `stepWaiting`.
 - **K331** · Touch gets K298's pick margins (Levi, 2026-10-14 about
   22:50: "yes and yes."): touch moves from today's world-unit radii
   (0.7, and max(0.9, 1.6 x threadWidth) on a choice) to the mouse's form
@@ -2166,6 +2140,25 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   lines 2281-2287) only catches an infinite move, and a NaN displacement
   fails `d * d > max`, so a state that turns NaN without an infinite move
   never halts. Predates K7; found by K7's stage 2 (2026-10-14).
+- **K348** · Key-move edges left by K329/K333/K334: the clockwise X
+  assignment switches only once arms move past KEY_TIE; at a T a chord
+  can pick a run by elimination; a sloppy chord whose first key is clear
+  alone gives that move plus a queued second (absorbed only when the
+  chord picks the same run); a hold whose first run is shorter than
+  HOLD_DELAY pauses at the first junction; a turn-minotaur wait tap
+  during a move isn't queued; the tap and pointer hovers may fight while
+  a tap waits; the arrival frame's overshoot (under a frame of travel
+  per chained junction) is dropped. Lore: TIE CYCLES, CHORDS AND THE
+  MOVE WAIT in `gameplay-moves.md`.
+- **K349** · K120's key probe lags the new rules. Its hold loops got
+  K329's `waiting` patch on 2026-10-14 (`.claude/probes/K120/keys.mjs`;
+  the old copy is `keys.pre-k329.mjs`), but its realtime check "a held
+  key keeps adding inputs" fails on master too (today's `?7.J` hold
+  from node_14 stops after one move; it needs a start where holds
+  chain), and its queued-run check should poll inside the page. One
+  real-time first-press miss under load (sim 3.3 s against wall 20.5 s)
+  was not reproduced in 10 tries
+  (`.claude/probes/K329/k120/out/keys-run2.log`).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -2441,8 +2434,38 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K347** · Type-check the tests in `npm test` or CI: the root tsconfig
   includes only `src`, so a test's type errors go unseen. K7 stage 2's
   `.claude/probes/K7/stage2/tsconfig.tests.json` shows how.
+- **K350** · Key-move ideas from K329: 8-way sectors on the move pad
+  (diagonals are chords today), and a re-run of K120's 24-maze census
+  under the new rules (`censusPress()` covers one maze).
 
 ## Done
+
+- **K329** · The arrow keys at a 4-way junction (Levi, 2026-10-14
+  about 22:15). Cause: K120's `keyMap` settled a tied key only by giving
+  it a run no clear key had claimed, so at an X whose four arms all sit
+  near diagonals every key tied (1 of 45 junctions in his maze; K7 not
+  involved). Now each run gets at most one key: at an X each key takes
+  the diagonal arm clockwise of it, elsewhere the assignment minimizes
+  the worst key's error, and differences under KEY_TIE are ignored so it
+  doesn't flicker. Calls for Levi (reversible): clockwise, the 80 ms
+  chord window, and a lone press waiting only when a chord would pick
+  another run. `src/ui/key_moves.ts`, `src/main.ts`; lore: TIE CYCLES,
+  CHORDS AND THE MOVE WAIT in `gameplay-moves.md`; probes
+  `.claude/probes/K329/`. Leftovers: K348-K350. Done in 56ddd6a..2c81a92 (2026-10-14
+  23:38).
+
+- **K333** · Diagonal chords (Levi, 2026-10-14 about 22:20): two
+  adjacent keys within 80 ms pick from the four diagonals, a held chord
+  holds, opposite keys never chord, and the move pad chords the same
+  way. Built with K329. Done in 56ddd6a..2c81a92 (2026-10-14 23:38).
+
+- **K334** · No snap on a second press (Levi, 2026-10-14 about 22:20
+  and 22:50): a key, pad press, tap or click during a move waits
+  (`MoveWait`: the latest wins, the hover shows its pick) and is taken on
+  the arrival frame, and a held arrow chains at the next junction with no
+  gap. The real-time chase keeps its own queue;
+  `__knotKeyMoves().setTapsWait(false)` restores the snap for A/Bs.
+  Built with K329. Done in 56ddd6a..2c81a92 (2026-10-14 23:38).
 
 - **K335** · The confetti rain's top edge (Levi, 2026-10-14 about
   22:22): the rain's releases taper over 2.2 s (rate
