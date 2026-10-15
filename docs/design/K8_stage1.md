@@ -111,6 +111,46 @@ of this file. It covers:
   - the handle fields: owner, branch + last commit, evidence, next,
     brief.
 
+## Stage 1 handoff
+
+2026-10-15 at about 01:06 PDT, from agent `agent-a35a43cee74c92b93` of
+claude session d8031183. **Done**, inside the cap (it started at 00:13).
+Docs only: nothing was built, served or measured.
+
+**What changed.** `docs/design/G3G4_sdf_geometry.md` is re-based on
+master d741412, one section per commit:
+- a dated note at the top and "Decisions at a glance": 5bfdc6a;
+- section 1, the per-frame pipeline: 5bfdc6a;
+- section 2, the data model: 68bb211;
+- section 3, the shaders: 87e1f57 and ae678fa;
+- section 4, the deletions and invariants: 6e51a8d;
+- sections 5 and 6, the staged plan and the risks: b0b82f4.
+
+Corrections followed in cefd7b0 and c3ebfd8:
+- the Pixel bench is a tracked probe script (`scripts/bench_frame.mjs`),
+  not a renderer method;
+- G3-0's A/B against master loads `phy=0` layouts;
+- G3's upload share is counted on its own;
+- K7 stage 3's interpolation is described.
+
+The decisions this brief asked for are in the doc: the order of the
+stages, K345 and K328 in section 5.10; the one-sided pinch in section
+3.3; K8's other decided defaults (flat anchored caps, the 2x phone cap)
+in section 6, where they hold; G1's levers in section 5.2 (G3-1).
+
+**What's left of stage 1:** nothing. Three open points belong to later
+stages, and the doc gives each one an owner:
+- the Pixel's varyings and highp: G3-0's phone pass;
+- proof that the capture covers everything `update()` reads: G3-0's
+  round trip;
+- K90 (keep or drop) before G3-2.
+
+**Stage 2's brief:** ready, below (db4b698). It starts from current master. K7
+stage 3 (63603bd..7f4c1bd) and K344 (93d0e4d) landed after d741412, so
+the doc's line numbers for `main.ts`, `ribbon_renderer.ts` and
+`pluck_overlay.ts` drift. This branch changes only the two design docs,
+and master hasn't touched either since d741412.
+
 ## Stage 2 (G3-0)
 
 Written by stage 1 on 2026-10-15. G3-0 is section 5.1 of
