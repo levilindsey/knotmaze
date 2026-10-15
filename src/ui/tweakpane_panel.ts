@@ -206,6 +206,9 @@ export interface PanelApi {
   // K92: the callbacks the panel was built with (an undo runs a live row's
   // effect as the row's own edit did).
   callbacks: PanelCallbacks;
+  // K325: the credit line's "Made by Snoring Cat" link, for main.ts to hang
+  // the snore on (ui/snore_link.ts).
+  studioLink: HTMLAnchorElement;
 }
 
 interface ChangeEvent {
@@ -2170,5 +2173,6 @@ export function buildPanel(
     },
     midDrag: () => dragging,
     callbacks,
+    studioLink: studio,
   };
 }
