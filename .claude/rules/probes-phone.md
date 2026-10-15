@@ -5,6 +5,7 @@ paths:
   - "scripts/phone_pass/**"
   - ".claude/probes/K79/**"
   - ".claude/probes/K156/**"
+  - ".claude/probes/K7/stage5/**"
 ---
 
 # Probe lore: the phone
@@ -165,3 +166,28 @@ confetti; a `-Moves 0,7,11` pass has no fabric@11 floor until the next A/A.
   `expect.txt` to `com.android.chrome` right after; the default trips at
   once on the other app. Tweakpane's color popup (`.tp-popv`) closes on a
   tap elsewhere, not on a second tap of its swatch.
+
+- K7 stage 5 (2026-10-15), the physics worker on the phone
+  (`.claude/probes/K7/stage5/`; the record is `docs/design/K7_worker.md`'s
+  Stage 5 handoff). Stage 4's `k7_frames.mjs` and `k7_latency.mjs` take
+  `--phone phone/config.json` (`phone_lib.mjs`: it drives ONLY the tab on
+  the run's origin, emulates 411x753 at dpr 2.625 and no-preference motion
+  from its own CDP session, CLEARS THE ORIGIN'S STORAGE before each load,
+  and presses with touch, CDP `Input.dispatchTouchEvent`). The order: take
+  the phone lock (`.claude/probes/agents/phone_lock_take.ps1`), serve a
+  build on 5799 (`phone_srv.ps1 -Build <dir>`), `phone_setup.ps1 -Port
+  5799` (a read-only awake check, `phone/config.json`, the reverse tunnel
+  and the 9222 forward, ONE tab by an `am start` intent, K156's watchdog),
+  the batch (`run_s5.ps1 -Batch <file> -Port 5799`: one perf-lock take, an
+  `@build <dir>` line switches the served build, a `!<command>` line runs
+  PowerShell), then `phone_teardown.ps1` (it clears the tab's storage
+  through `phone_clear.mjs`, so the server must still be up; closes the
+  tab; stops the watchdog; removes only the tunnels setup added),
+  `phone_srv.ps1 -Stop`, and release the lock. `table_s5.mjs [prefix]`
+  prints a row a run (the gate columns are ms after the main chunk's
+  `responseEnd`) and the latency lines. GOTCHAS: never point
+  `phone_lib.mjs` at levi.dev, or any origin Levi plays on, since it wipes
+  his daily records there (stage 5 skipped the levi.dev cold start for
+  this); the phone's cost per substep drifted 16-37 ms from load to load
+  (soc 44-50 C), so compare hosts alternating within one batch; and at 60
+  Hz an intro p95 of 33.4 ms is one dropped frame.

@@ -59,8 +59,8 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `.claude/probes/**`, `scripts/*.mjs`, `scripts/*.ps1`, `scripts/*.ts`
 - `probes-census.md`: the per-pixel gaps census, the census and scanner rules from P3
   paths: `scripts/diag_scan.mjs`, `scripts/fold_census.mjs`, `scripts/fold_census.ps1`, `scripts/fold_census.ts`, `scripts/fold_census.vite.config.mjs`
-- `probes-phone.md`: the round phone pass (K156), phone gate probes (K79 B3)
-  paths: `scripts/phone.ps1`, `scripts/phone_pass.ps1`, `scripts/phone_pass/**`, `.claude/probes/K79/**`, `.claude/probes/K156/**`
+- `probes-phone.md`: the round phone pass (K156), phone gate probes (K79 B3), the physics worker on the phone (K7 stage 5)
+  paths: `scripts/phone.ps1`, `scripts/phone_pass.ps1`, `scripts/phone_pass/**`, `.claude/probes/K79/**`, `.claude/probes/K156/**`, `.claude/probes/K7/stage5/**`
 - `probes-pluck.md`: K77's pluck profile probes (`.claude/probes/K77/`), K279's pluck emphasis probes (`.claude/probes/K279/`), K344's pluck cusp probes (`.claude/probes/K344/`)
   paths: `.claude/probes/K77/**`, `.claude/probes/K279/**`, `.claude/probes/K344/**`
 - `render.md`: render: the intro, custom shaders and mesh.texture, palette textures, the P3.40 lessons
