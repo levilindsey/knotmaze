@@ -15,6 +15,11 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K210** · Near launch: since K132 a daily is today's `PARAM_DEFAULTS`,
+  so a deployed default change moves that day's maze mid-day (a stale tab
+  and a fresh load differ; saved attempts are refused, results stay).
+  Re-pin the daily to a frozen definition at launch, or accept it
+  (`docs/design/K132.md`, Stage 1 handoff).
 - **K191** · K169's two calls (its agent's, 2026-10-14): a backtrack
   turns a gold web back at once, with no fade-out (as K127), and reduced
   Motion keeps the 0.25 s fade (a colour crossfade; `src/ui/motion.ts`
@@ -140,7 +145,7 @@ and never reused.
     the numbers and four open checks).
   - branch: `worktree-agent-a15ef7bcac0582272`
     (`.claude/worktrees/agent-a15ef7bcac0582272`), from c8ad399; last
-    commit: `42d459e` (unpushed). Stage 1a is on master (6f97b92 adds
+    commit: `86d1a3f` (3 commits, unpushed). Stage 1a is on master (6f97b92 adds
     `src/geometry/bend_radius.ts`, the one over-tight definition, with 12
     tests; f4cb719 adds `scripts/fold_census.{ts,ps1,mjs}`, 79 jobs in
     about 7 min, no server); its worktree
@@ -300,57 +305,6 @@ and never reused.
   - next: after 16:20 on 10-14, run `cleanup.ps1` again for the
     profiles (about 33 GB). The probe libraries' delete-on-exit goes
     with K150.
-- **K132** · Drop link and daily back-compat (Levi, 2026-10-13: "we
-  can ignore keeping support for previous url params, or preserving
-  mazes from previous control combinations. Breaking changes are 100%
-  fine. We are not launched."; CLAUDE.md "Pre-launch: no back-compat").
-  One live codec table: new params append; a reorder or removal bumps
-  the version, and an older link falls back to its seed and today's
-  defaults with one warning. Remove the frozen v1-v3 tables,
-  `LEGACY_BASE` (`src/ui/url_state.ts`), the `?daily=<n>.<delta>`
-  reader, and DAILY_V1's frozen v3 base: a daily becomes today's
-  defaults, the day's seed and the exempt preferences. Keep the
-  `&key=value` overrides and the `s=` / `seed=` keys that probes use
-  (am, mf, psz, ms, fw), read against today's defaults (update the probe
-  lore); determinism (K108); the pins as change detectors. Check that a
-  changed daily refuses its saved attempt cleanly (K47). Drop
-  `test/ui/param_codec.test.ts`'s literal CODEC_V1 pins and the
-  per-version table pins. Rewrite the passages in CLAUDE.md (the
-  compact links decision's frozen codec tables) and `.claude/rules/`
-  (gameplay.md, generation.md, probes.md).
-  - owner: agent a340d1375525098a9 (opus) of session d8031183, started
-    2026-10-14 07:38; it stops at about 09:38 or when the stage is done.
-  - branch: `worktree-agent-a340d1375525098a9`
-    (`.claude/worktrees/agent-a340d1375525098a9`), from c8ad399; last
-    commit: `131a1fe` (2 commits, unpushed).
-  - evidence: `.claude/probes/K132/` in its worktree (copy at merge).
-  - next: the brief's stage; then the merge (it moves the pins: name what
-    moved in the commit) and the next round's phone pass.
-  - at merge: the links sent to Levi must still work (asked of its agent
-    2026-10-14 08:35): `?7.J&clk=realtime`, `?7.J&cam=follow` and
-    `?7.J&pw=1&pcx=ride&pgl=fallback`; if `?7.J` no longer means seed 7
-    at the defaults, fix the 11:07 reminder (cron b6d03718) and the links
-    in K174 and K194.
-  - brief: `docs/design/K132.md`.
-  - env: dev servers on ports 5530-5539.
-- **K100** · The fog of war resets on a restart only (Levi,
-  2026-10-13: "The fog should reset when the maze restarts. But the fog
-  shouldn't reset if we just backtrack to the start."). Today `update()`
-  in `src/render/fabric_maze_renderer.ts` clears the stamps whenever
-  `pathEdges` empties, and `exploredRuns` in `src/game/daily_attempt.ts`
-  mirrors it. A daily's backtrack Reset path (K47's `retreatToStart`)
-  is a backtrack, so it keeps the fog; the explored runs become every tap
-  since the restart, and K47's saves and replays must agree.
-  - owner: agent a4c4c1df6bad339a1 (opus) of session d8031183, started
-    2026-10-14 07:38; it stops at about 09:38 or when the stage is done.
-  - branch: `worktree-agent-a4c4c1df6bad339a1`
-    (`.claude/worktrees/agent-a4c4c1df6bad339a1`), from c8ad399; last
-    commit: `e87c4f0` (3 commits, unpushed).
-  - evidence: `.claude/probes/K100/` in its worktree (copy at merge).
-  - next: the brief's stage; then the merge and the next round's phone
-    pass. K93 and K145 share its renderer file: not alongside it.
-  - brief: `docs/design/K100.md`.
-  - env: dev servers on ports 5540-5549.
 - **K173** · Split the `.claude/rules/` lore by area, so an agent pays
   only for the files it works on (Levi, 2026-10-14 about 07:53:
   "Splitting the rules files seems worthwhile."). One read of a
@@ -362,88 +316,12 @@ and never reused.
     2026-10-14 08:05; it stops at about 10:05 or when the stage is done.
   - branch: `worktree-agent-a363e26d8e7409480`
     (`.claude/worktrees/agent-a363e26d8e7409480`), from c591c6b; last
-    commit: `c20e53a` (unpushed).
+    commit: `6b41cd7` (2 commits, unpushed).
   - evidence: `.claude/probes/K173/` in its worktree (copy at merge).
   - next: the brief's stage. It merges LAST in this batch, after K90 1b,
     K132 and K100: redo the split on the merged master with the
     handoff's recipe, then the suite, then merge.
   - brief: `docs/design/K173.md`.
-
-## Next, in order
-
-Every stage merges after desktop verification, and the phone checks
-each merge round in one scripted pass instead of a gate per feature
-(K152 (1), Levi 2026-10-13 about 17:55: "sgtm"). Small UI items get
-unit tests and a screenshot only, and render prototypes skip the CPU
-mirror and parity tests until Levi picks a look (K152 (2) and (3),
-Levi 2026-10-14 about 00:22: "Yes to both."). The phone stays on its
-charger, awake and unlocked (Levi, 2026-10-13 10:40), and a pass's
-watchdog stops it on any touch. A pass checks the lock first and stops
-at once if the phone is locked (K81's gate waited 47 min on a locked
-phone, 2026-10-13). At most three code agents at once, research on
-top. Pre-launch, nothing keeps old links or dailies (Levi, 2026-10-13
-13:17; CLAUDE.md "Pre-launch: no back-compat"), so codec appends no
-longer wait for each other: the second branch to merge renumbers its
-appends. Usage: don't hold agents back until the week nears 95% (Levi,
-2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17, 54% at
-13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
-23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38 and 78% at
-08:05; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
-at about 07:53 "Keep going at full pace."; it resets Mondays at 12:00).
-Long work runs in stages from
-committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
-brief names its stage boundary, where the agent writes a "Stage N
-handoff" into the brief, commits and stops, and a fresh agent continues
-from it. K81 alone was about a third of the overnight spend. From
-2026-10-13 23:35 each brief stops at a wall-clock cap (2 h Opus, 1 h
-Sonnet; a compaction is not a stop), and a watcher flags agents past it
-(claude-config CC38). Sonnet agents don't compact at 200k yet
-(claude-config CC45), so the cap is what bounds them.
-
-Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
-13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running at 07:38 on 10-14: K90 stage 1b, K132 and K100
-(all opus, 2 h caps), and from 08:05 K173 (the rules split, a docs agent
-on top; it merges last). Then, as code slots free up, K198 first (Levi's
-answers of 2026-10-14 about 07:53), then:
-1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
-   K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
-   and K180 against base ab6d330) is done (K197 filed); the next pass
-   covers K146, K151, K148, K149, K120 and K90 1a.
-2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
-   want the real-time prototype... Do implement it."): stage 1 merged in
-   5fed5c1; Levi plays it (K174).
-3. K146 + K151 and K148 + K149: merged 2026-10-14 (b9cf882, fcc402b).
-4. K120: merged 2026-10-14 (0acbce0).
-5. K90 stage 1b, running from 07:38 (stage 1a merged in ac5b880): the
-   junction-web crop check, then option 3 (the spline fix) first.
-6. K132, running from 07:38.
-7. K100, running from 07:38; then K93 with K145 (the same hover code;
-   K93 shares K100's renderer file, so not alongside it).
-8. K92, then K111 (both rework the panel).
-9. K98.
-10. K76 stage 2.
-11. K80's turn-aligned hunter, a modifier of the normal maze; then
-    K137's toggles, K138's M mechanisms and K139.
-12. K74 stages 2-4, each after the one before.
-13. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
-    K42. K90's spline fix touches K8: never run the two at once.
-14. K115's builder stages (no stage 1a: Levi, about 15:30).
-15. K116, lowest priority.
-16. K144, accounts and shared stats, after everything else (a stretch
-    goal).
-
-Waiting for Levi: K114's spider (call 7); the G3-3 and G4-2 old-path
-deletions; K162, K174 and K184-K186 (play, then call); K191, K193 and
-K194; K198's marker settings and flash; near launch, K117; after the
-churn, K46, K57 and K84. Emailed 2026-10-14 about 08:35, each with
-enough detail to decide and numbered for a reply by number: K114 call 7
-(1.x), K174 (2.x), K191 (3.x), K193 (4.1), K194 (5.x), K198 (6.1
-settings, 6.2 flash) and claude-config's CC39 (7.1); the draft is in
-`.claude/probes/levi_email/` (untracked).
-
-K5-K7 (split, frame loop, worker) follow.
-
 - **K198** · The fit camera's pan and the off-screen indicators, decided
   (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
   just want to be able to pan such that the right edge of the maze is
@@ -463,6 +341,18 @@ K5-K7 (split, frame loop, worker) follow.
   and tweakpane_panel.ts: not alongside K92 or K111 (the panel). Records:
   `docs/design/K148_K149.md` ("Stage 1 handoff"), gameplay.md THE HEAD
   and FIT CAMERA PAN SLACK.
+  - owner: agent aab9f7358ac73188f (opus) of session d8031183, started
+    2026-10-14 08:37; it stops at about 10:37 or when stage 1 (the pan
+    clamp) is done.
+  - branch: `worktree-agent-aab9f7358ac73188f`
+    (`.claude/worktrees/agent-aab9f7358ac73188f`), from 59c70a2; last
+    commit: none yet.
+  - evidence: `.claude/probes/K198/` in its worktree (copy at merge).
+  - next: stage 1, the pan clamp; parts (2) and (3) wait on Levi's email
+    answers 6.1 and 6.2. At merge, if K173 has moved the FIT CAMERA PAN
+    SLACK entry, carry the lore edit across.
+  - brief: `docs/design/K198.md`.
+  - env: dev servers on ports 5570-5579.
 - **K93** · Trail fade and hover reach, decided (Levi, 2026-10-13:
   "Trail fade, yes; Hover vs pulseReach, hover should stop at pulseReach
   (and fade-out toward the end, same as pulseReach)"). (1) The trail
@@ -472,6 +362,94 @@ K5-K7 (split, frame loop, worker) follow.
   `src/render/fabric_maze_renderer.ts` and the G2 paint and its
   `paint_math` mirror, so after K81 merges. Sheets: `.claude/probes/K75/`
   (`NOTES.txt` indexes them).
+  - owner: agent a20dd6f83769279d0 (opus) of session d8031183, started
+    2026-10-14 08:45; it stops at about 10:45 or when stage 1 (K93) is
+    done.
+  - branch: `worktree-agent-a20dd6f83769279d0`
+    (`.claude/worktrees/agent-a20dd6f83769279d0`), from 6b0fca3; last
+    commit: none yet.
+  - evidence: `.claude/probes/K93/` in its worktree (copy at merge).
+  - next: stage 1 (the trail fade's span split, the choice hover's reach);
+    then K145 as stage 2, a fresh agent from master.
+  - brief: `docs/design/K93_K145.md`.
+  - env: dev servers on ports 5580-5589.
+
+## Next, in order
+
+Every stage merges after desktop verification, and the phone checks
+each merge round in one scripted pass instead of a gate per feature
+(K152 (1), Levi 2026-10-13 about 17:55: "sgtm"). Small UI items get
+unit tests and a screenshot only, and render prototypes skip the CPU
+mirror and parity tests until Levi picks a look (K152 (2) and (3),
+Levi 2026-10-14 about 00:22: "Yes to both."). The phone stays on its
+charger, awake and unlocked (Levi, 2026-10-13 10:40), and a pass's
+watchdog stops it on any touch. A pass checks the lock first and stops
+at once if the phone is locked (K81's gate waited 47 min on a locked
+phone, 2026-10-13). At most three code agents at once, research on
+top. Pre-launch, nothing keeps old links or dailies (Levi, 2026-10-13
+13:17; CLAUDE.md "Pre-launch: no back-compat"), so codec appends no
+longer wait for each other: the second branch to merge renumbers its
+appends. Usage: don't hold agents back until the week nears 95% (Levi,
+2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17, 54% at
+13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
+23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38, 78% at 08:05
+and 80% at 08:37; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
+at about 07:53 "Keep going at full pace."; it resets Mondays at 12:00).
+Long work runs in stages from
+committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
+brief names its stage boundary, where the agent writes a "Stage N
+handoff" into the brief, commits and stops, and a fresh agent continues
+from it. K81 alone was about a third of the overnight spend. From
+2026-10-13 23:35 each brief stops at a wall-clock cap (2 h Opus, 1 h
+Sonnet; a compaction is not a stop), and a watcher flags agents past it
+(claude-config CC38). Sonnet agents don't compact at 200k yet
+(claude-config CC45), so the cap is what bounds them.
+
+Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
+13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
+(he may reorder). Running on 10-14: K90 stage 1b from 07:38, K198 stage 1
+from 08:37 and K93 (stage 1 of K93 + K145) from 08:45 (all opus, 2 h
+caps), and from 08:05 K173 (the rules split, a docs agent on top; it
+merges last). K100 and K132 merged at 08:39-08:41. Then, as code slots
+free up:
+1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
+   K122, K147, K81, K80 stage 1, K104 stage 1c, K155, K140, K154, K169
+   and K180 against base ab6d330) is done (K197 filed); the next pass
+   covers K146, K151, K148, K149, K120, K90 1a, K100 and K132.
+2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
+   want the real-time prototype... Do implement it."): stage 1 merged in
+   5fed5c1; Levi plays it (K174).
+3. K146 + K151 and K148 + K149: merged 2026-10-14 (b9cf882, fcc402b).
+4. K120: merged 2026-10-14 (0acbce0).
+5. K90 stage 1b, running from 07:38 (stage 1a merged in ac5b880): the
+   junction-web crop check, then option 3 (the spline fix) first.
+6. K132 and K100: merged 2026-10-14 (402eb4b, 458e1e5).
+7. K93 + K145 (`docs/design/K93_K145.md`): stage 1 (K93) running from
+   08:45; stage 2 (K145) from master after it.
+8. K92, then K111 (both rework the panel).
+9. K98.
+10. K76 stage 2.
+11. K80's turn-aligned hunter, a modifier of the normal maze; then
+    K137's toggles, K138's M mechanisms and K139.
+12. K74 stages 2-4, each after the one before.
+13. The GPU pipeline: K8 (G3-0 + G3-1 first) and K23, then K9 (G4) and
+    K42. K90's spline fix touches K8: never run the two at once.
+14. K115's builder stages (no stage 1a: Levi, about 15:30).
+15. K116, lowest priority.
+16. K144, accounts and shared stats, after everything else (a stretch
+    goal).
+
+Waiting for Levi: K114's spider (call 7); the G3-3 and G4-2 old-path
+deletions; K162, K174 and K184-K186 (play, then call); K191, K193 and
+K194; K198's marker settings and flash; near launch, K117 and K210;
+after the churn, K46, K57 and K84. Emailed 2026-10-14 about 08:25, each with
+enough detail to decide and numbered for a reply by number: K114 call 7
+(1.x), K174 (2.x), K191 (3.x), K193 (4.1), K194 (5.x), K198 (6.1
+settings, 6.2 flash) and claude-config's CC39 (7.1); the draft is in
+`.claude/probes/levi_email/` (untracked).
+
+K5-K7 (split, frame loop, worker) follow.
+
 - **K145** · A subtle hover glow on runs that aren't choices (Levi,
   2026-10-13 about 16:00 and 16:12, verbatim in
   `docs/design/levi_notes_2026-10-13.md`): in the maze, hovering any run
@@ -488,7 +466,8 @@ K5-K7 (split, frame loop, worker) follow.
   hover at all; the glow is a new G2 paint term plus its `paint_math`
   mirror (the hovered run and the hover point's arc position), measured
   along the thread like the pulses; a strength param (0 = off), proposed
-  daily-exempt (K57). With K93, after K81 merges.
+  daily-exempt (K57). Stage 2 of `docs/design/K93_K145.md`, a fresh agent
+  from master after K93's stage 1 merges.
 - **K92** · Undo and redo for design changes (Levi, 2026-10-13). Two
   buttons beside the panel's open/close button, shown only while the
   panel is open, each enabled only when it can act; the mode badge moves
@@ -733,6 +712,20 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K212** · PixiJS warns "Attribute aGap/aGapId/aUV is not present in the
+  shader" on every load, on master too (seen by K132's probes,
+  `.claude/probes/K132/`).
+- **K208** · `restoreYarn` keeps its own copy of the travel-direction
+  rule; it could share `travelOrder` / `moveEnds` (`src/render/fog_arc.ts`,
+  K100).
+- **K207** · Fog stamps grow without bound within a solve: the spacing
+  filter checks only the last stamp, and `renderFog` redraws every stamp.
+  A spatial dedupe fixes both (`src/render/fabric_maze_renderer.ts`;
+  `docs/design/K100.md`, Stage 1 handoff).
+- **K206** · A restored attempt stamps its fog right after the intro,
+  while the threads are still re-settling, so with physics it differs
+  from the live fog by an IoU of about 0.96. Option: stamp after the
+  first sleep (`docs/design/K100.md`, Stage 1 handoff).
 - **K205** · K120's leftovers (`docs/design/K120.md`): the follow camera
   doesn't keep the dot clear of the move pad (a camera inset, K148's and
   K149's area); the maze is small at the phone's fit zoom; a toast at
@@ -1096,9 +1089,6 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K60** · The panel's Daily button always opens today's daily. After
   leaving an older day, the way back is its stats-history row or
   `?daily=N`; the button could name the day you left.
-- **K61** · `encodeDelta` (the old `?daily=N.<delta>` writer) is used
-  only by tests now; retire it at the next codec cleanup and keep the
-  reader for old links.
 - **K55** · An optional parallax background mode: it pans and zooms at a
   fraction of the camera, for depth. Today it is screen-fixed on
   purpose. (K21 agent idea.)
@@ -1248,9 +1238,38 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K204** · A key press that matches nothing or ties gives no feedback
   (K120; in its census presses match nothing 1.9% of the time and tie
   9.4%): maybe a nudge or a toast.
+- **K209** · Fog of war on dailies? Off today; since K132 a daily is
+  today's defaults, so turning it on is a default change or a daily
+  override. A call for Levi whenever he wants it (raised by K100).
+- **K211** · Drop the retired `snappiness` from `CODEC_PARAMS` at the
+  next codec version bump; removing it now would bump the version (K132).
 
 ## Done
 
+- **K132** · Drop link and daily back-compat (Levi, 2026-10-13; CLAUDE.md
+  "Pre-launch: no back-compat"). One live codec table (`CODEC_PARAMS`,
+  still version 4, defaults from `PARAM_DEFAULTS`): an all-default design
+  writes `?<seed>`, a token of another version reads as its seed at
+  today's defaults with one warning, `?daily=<n>.<x>` opens day n, and a
+  daily is today's defaults on the day's seed (`DAILY_DEF` 2). Removed:
+  CODEC_V1-V4, the delta blobs, `LEGACY_BASE`, `mc` / `trm` and
+  DAILY_V1. Every short key still works after a token, pinned with the
+  links sent to Levi (`?7.J` now rewrites to `?7`). No pin moved: DAILY_V1
+  differed from today's defaults only in trailLength (render-only). Brief
+  and handoff `docs/design/K132.md`, probes `.claude/probes/K132/`;
+  follow-ups K210-K212. Done in 402eb4b (2026-10-14).
+- **K100** · The fog of war resets on a restart only (Levi, 2026-10-13).
+  The controller counts restarts and the renderer clears the stamps when
+  the count moves; walking back, a daily's Reset path and a K80 catch
+  keep the fog (a catch used to clear it, against the K80 lore). A
+  restore re-explores every tap in travel direction, as live play does
+  (exact on a static daily; IoU 0.977 with physics). After a backtrack
+  the fog-fit camera keeps framing the explored area. Brief and handoff
+  `docs/design/K100.md`, probes `.claude/probes/K100/`; follow-ups
+  K206-K209. Done in 458e1e5 (2026-10-14).
+- **K61** · `encodeDelta` (the old `?daily=N.<delta>` writer), used only
+  by tests. Done in 402eb4b (2026-10-14): K132 removed it and the delta
+  reader.
 - **K203** · K120's calls (`docs/design/K120.md`): the move pad on by
   default on coarse pointers, bottom right at 132 px, the 15 deg tie rule
   and the 200 ms hold, confirmed by Levi ("ok", 2026-10-14 about 07:53).
