@@ -2491,7 +2491,7 @@ has moved (`8bcfb9f` at 04:35; K8 stage 2 and others touched `probes.md`,
 - **2. The lore, `13f051d`.** Seven files: `CLAUDE.md` (the physics-worker
   sentence in Layer 3), `gameplay-links.md` (PHYSICS WORKER PARAM),
   `physics.md`, `physics-settle.md`, `physics-worker.md` (its Measured bullet
-  is now "THE DEFAULT IS ON": the phone numbers, the 250 ms miss and the
+  is now "THE DEFAULT IS ON": the phone numbers, the start-gate miss and the
   reversal), `probes.md` (the K7 stage 4 entry's opening and tail: a probe
   that patches `ps.step` throws on a default build, so it takes `&phw=0` or
   the one-line port) and `docs/design/G3G4_sdf_geometry.md` (three prober
