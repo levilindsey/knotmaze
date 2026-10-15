@@ -88,6 +88,7 @@ import {
   SHOW_DT,
   rescaleSympathetic,
   roomAt,
+  roundCap,
   roundCollapse,
   roundTau,
   selfPassAhead,
@@ -246,6 +247,13 @@ const TIGHT_K = 2;
 // rim around the loop's eye. Limiting only ever LOWERS a cap, and the cap
 // exists only to keep the strip from folding, so this is always safe.
 const CAP_SLOPE = 1.0;
+// ...and is then ROUNDED (pluck_model.ts roundCap, K395): the slope limit
+// leaves every rise of the cap a triangle, whose apex drew a point into a
+// kink loop's eye where its tip flattens between two tighter shoulders.
+// The opened cap bends at most 1 / (CAP_ROUND h) per unit of arc, so the
+// inner edge rounds like the collapse's (edge radius >= CAP_ROUND h along a
+// straight thread); 1.5 h is COLLAPSE_ROUND's radius.
+const CAP_ROUND = 1.5;
 // W's neighbor room ("overlap") is measured every WHOLE_ROOM_DS of arc at
 // pluck time and may change by at most WHOLE_ROOM_SLOPE per unit of arc, so
 // a close neighbor dents the envelope gently instead of notching it.
@@ -819,6 +827,10 @@ export class PluckOverlay {
   // The collapse's edge radius, x h (COLLAPSE_ROUND; 0 = the raw profile,
   // for same-state A/Bs - set it, then flag every live pluck needsLayout).
   collapseRound = COLLAPSE_ROUND;
+  // The concave cap's rounding radius, x h (CAP_ROUND; 0 = the slope limit
+  // alone, the pre-K395 cap, for same-state A/Bs - set it, then flag every
+  // live pluck needsLayout).
+  capRound = CAP_ROUND;
   // The whole-segment term (K104): its amount (x pluckSize x gain x h; 0 =
   // the lobes alone, exactly the pre-K104 pluck), how it meets neighbors
   // (WholeMode; applies to plucks started after a change - "overlap"
@@ -1840,6 +1852,23 @@ export class PluckOverlay {
     }
     slopeLimit(m.capLOf, m.arcOf, m.lobeOf, n, CAP_SLOPE);
     slopeLimit(m.capROf, m.arcOf, m.lobeOf, n, CAP_SLOPE);
+    // K395: round each lobe's caps (CAP_ROUND above). The swing never
+    // passes pk, so a cap above the run's largest pk + h never binds.
+    if (this.capRound > 0) {
+      const curv = 1 / (this.capRound * h);
+      let a = 0;
+      for (let i = 1; i <= n; i++) {
+        if (i < n && m.lobeOf[i] === m.lobeOf[a]) continue;
+        if (i - a >= 3) {
+          let pkMax = 0;
+          for (let j = a; j < i; j++) if (m.pkOf[j] > pkMax) pkMax = m.pkOf[j];
+          const per = Math.abs(m.arcOf[i - 1] - m.arcOf[a]) / (i - a - 1);
+          roundCap(m.capLOf, a, i, per, curv, pkMax + h);
+          roundCap(m.capROf, a, i, per, curv, pkMax + h);
+        }
+        a = i;
+      }
+    }
     for (let i = 0; i < n; i++) {
       if (!through) {
         // One factor for both terms; the frame reads W's from wOf.

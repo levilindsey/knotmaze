@@ -668,6 +668,68 @@ export function roundCollapse(
 }
 
 // ---------------------------------------------------------------------------
+// The rounded concave-side cap (K395).
+//
+// Toward a bend's center of curvature the overlay caps the swing at 0.9 x
+// the local radius minus the thread (pluck_overlay's layout: the radius of
+// a 5-station circumcircle, its min over +-2 stations, then CAP_SLOPE's
+// slope limit), and the blur's inner edge follows the cap at cap + h from
+// the centerline. A spline loop's curvature is not uniform: it peaks near
+// each control point and flattens between them, so the raw cap rises over
+// a few stations at each flat stretch (0.07 -> 0.43 world at a kink loop's
+// tip) and falls again. The slope limit leaves each rise a TRIANGLE, and
+// its apex drew a sharp point into the loop's eye: Levi's "pointy
+// protrusion on the inside of the loop" (K395, measured on ?7's chain 9).
+// A slope limit cannot round a V (the collapse's lesson above), so the cap
+// is OPENED the same way, by roundCollapse: the largest profile under it
+// built from raised-cosine bumps of curvature at most `curv`. The result
+// never exceeds the cap, so it only ever lowers it (a lower cap narrows the
+// swing toward the center and the strip still cannot fold); a narrow rise
+// between two low stretches becomes a low round bump, a wide one passes.
+//
+// In place on one lobe's run cap[start, end) (station spacing `per`). A cap
+// at or above `ceil` never binds (the caller passes the run's largest swing
+// plus a margin), so the opening sees min(cap, ceil), Infinity included,
+// and a station whose opened value comes back at ceil keeps its own cap
+// (an all-Infinity run stays Infinity). The run's ends continue flat at
+// their edge values, not at 0 as roundCollapse's open ends would.
+export function roundCap(
+  cap: Float32Array,
+  start: number,
+  end: number,
+  per: number,
+  curv: number,
+  ceil: number
+): void {
+  const len = end - start;
+  if (len < 3 || !(curv > 0) || !(per > 0) || !(ceil > 0)) return;
+  const top = Math.fround(ceil);
+  let binds = false;
+  for (let i = start; i < end; i++) {
+    if (cap[i] < top) {
+      binds = true;
+      break;
+    }
+  }
+  if (!binds) return;
+  // The tallest bump's half-width in stations, plus one: a bump centered
+  // on the run's edge never reaches past the padding.
+  const pad = Math.ceil((PI * Math.sqrt(ceil / (2 * curv))) / per) + 1;
+  const n = len + 2 * pad;
+  const src = new Float32Array(n);
+  const out = new Float32Array(n);
+  for (let k = 0; k < n; k++) {
+    const i = start + Math.min(len - 1, Math.max(0, k - pad));
+    src[k] = Math.min(cap[i], top);
+  }
+  roundCollapse(src, per, false, curv, out);
+  for (let i = start; i < end; i++) {
+    const v = out[i - start + pad];
+    if (v < top && v < cap[i]) cap[i] = v;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Coverage (CPU twin of the overlay's fragment shader, for tests/probes).
 
 // Integral of the arcsine CDF over [lo, hi]: 0 below lo, r at hi, slope 1

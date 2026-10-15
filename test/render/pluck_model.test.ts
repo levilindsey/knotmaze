@@ -30,6 +30,7 @@ import {
   pluckShows,
   rescaleSympathetic,
   roomAt,
+  roundCap,
   roundCollapse,
   roundTau,
   segmentLobes,
@@ -1109,5 +1110,120 @@ describe("under-node clip on a self-crossing (K344)", () => {
     expect(selfPassAhead(19, 2, -1, 20, false)).toBe(17);
     // A pass at the node itself is no pass ahead.
     expect(selfPassAhead(4, 4, 1, 20, true)).toBe(Infinity);
+  });
+});
+
+describe("rounded concave cap (K395)", () => {
+  // rMin (the overlay's 5-station circumradius, its min over +-2 stations)
+  // at the 34 stations around a kink loop's tip, measured in the page:
+  // `?7&am=instant&snd=none&fw=0`, chain 9, crossing key 133, zoom step 4,
+  // plucked inward at the tip (`.claude/probes/K395/`, stations 62-95; the
+  // tip is the 21st, rMin 0.810). The spline's curvature peaks near its
+  // control points and flattens between them, so the radius dips and rises
+  // along the loop, and at the tip it rises sharply between two shoulders.
+  const R_MIN = [
+    0.377, 0.377, 0.377, 0.377, 0.377, 0.392, 0.539, 0.594, 0.492, 0.468,
+    0.468, 0.468, 0.443, 0.408, 0.408, 0.408, 0.408, 0.408, 0.426, 0.525,
+    0.81, 0.714, 0.448, 0.394, 0.394, 0.394, 0.394, 0.394, 0.466, 0.497,
+    0.497, 0.497, 0.505, 0.659,
+  ];
+  const TIP = 20;
+  const h = 0.26;
+  const per = 0.0698;
+  const curv = 1 / (1.5 * h); // CAP_ROUND 1.5
+  const ceil = 0.45 + h; // the lobe's largest swing + h
+  // The overlay's layout(): the raw cap 0.9 rMin - h - STRIP_PAD (0.04),
+  // slope-limited at CAP_SLOPE 1 (pluck_overlay.ts), then, since K395,
+  // rounded. `round` false is the pre-K395 cap.
+  const capOf = (round: boolean): Float32Array => {
+    const v = Float32Array.from(R_MIN, (r) => Math.max(0, 0.9 * r - h - 0.04));
+    slopeLimitUniform(v, per, 1);
+    if (round) roundCap(v, 0, v.length, per, curv, ceil);
+    return v;
+  };
+  const worstBend = (v: Float32Array): { worst: number; at: number } => {
+    let worst = 0;
+    let at = -1;
+    for (let k = 1; k < v.length - 1; k++) {
+      const d2 = v[k - 1] - 2 * v[k] + v[k + 1];
+      if (d2 < worst) {
+        worst = d2;
+        at = k;
+      }
+    }
+    return { worst, at };
+  };
+  const bound = curv * per * per;
+
+  it("the slope limit alone leaves a V at the tip (a point into the eye)", () => {
+    const before = capOf(false);
+    // The tip's triangle: 0.083, 0.153, 0.223, 0.173, 0.103 (stations 80-84).
+    expect(before[TIP]).toBeCloseTo(0.223, 3);
+    const { worst, at } = worstBend(before);
+    // Ten times the rounded bound, at the tip itself.
+    expect(at).toBe(TIP);
+    expect(worst).toBeLessThan(-8 * bound);
+  });
+
+  it("rounds every rise: no V anywhere, and the tip comes down", () => {
+    const before = capOf(false);
+    const after = capOf(true);
+    expect(worstBend(after).worst).toBeGreaterThanOrEqual(-bound * (1 + 1e-4) - 1e-6);
+    // Only ever lowers (a lower cap narrows the swing toward the center).
+    for (let k = 0; k < after.length; k++) {
+      expect(after[k]).toBeLessThanOrEqual(before[k] + 1e-7);
+      expect(after[k]).toBeGreaterThanOrEqual(0);
+    }
+    // The tip's apex comes down by more than half its rise above the
+    // shoulders, and the shoulders' minima (the tight caps that keep the
+    // strip from folding) hold.
+    expect(after[TIP]).toBeLessThan(0.5 * (before[TIP] + 0.0672));
+    let minK = 0;
+    for (let k = 0; k < before.length; k++) if (before[k] < before[minK]) minK = k;
+    expect(after[minK]).toBeCloseTo(before[minK], 6);
+  });
+
+  it("leaves a cap that never binds, a flat cap and a smooth wide one alone", () => {
+    // All Infinity (the convex side): untouched.
+    const inf = new Float32Array(30).fill(Infinity);
+    roundCap(inf, 0, 30, per, curv, ceil);
+    for (const v of inf) expect(v).toBe(Infinity);
+    // At or above the ceiling everywhere: untouched.
+    const high = new Float32Array(30).fill(ceil + 0.1);
+    roundCap(high, 0, 30, per, curv, ceil);
+    for (const v of high) expect(v).toBeCloseTo(ceil + 0.1, 6);
+    // Flat: the run's ends continue flat (an open end at 0 would pull them
+    // down to nothing).
+    const flat = new Float32Array(30).fill(0.2);
+    roundCap(flat, 0, 30, per, curv, ceil);
+    for (const v of flat) expect(v).toBeCloseTo(0.2, 6);
+    // A rise far gentler than curv passes unchanged.
+    const n = 80;
+    const wide = Float32Array.from({ length: n }, (_, k) => 0.15 + 0.05 * Math.cos((2 * Math.PI * k) / n));
+    const w2 = wide.slice();
+    roundCap(w2, 0, n, per, curv, ceil);
+    for (let k = 0; k < n; k++) expect(w2[k]).toBeCloseTo(wide[k], 3);
+  });
+
+  it("rounds within its run only, and a far Infinity stays Infinity", () => {
+    // Two runs side by side; only [10, 40) is rounded. The rest, the other
+    // lobes' caps, must not change, and Infinity far from the finite caps
+    // stays Infinity (the slope limit's spread is what reaches it).
+    const n = 60;
+    const v = new Float32Array(n).fill(Infinity);
+    for (let k = 20; k <= 30; k++) v[k] = 0.05 + Math.max(0, 0.15 - 0.05 * Math.abs(k - 25));
+    slopeLimitUniform(v, per, 1);
+    const before = v.slice();
+    roundCap(v, 10, 40, per, curv, ceil);
+    for (let k = 0; k < 10; k++) expect(v[k]).toBe(before[k]);
+    for (let k = 40; k < n; k++) expect(v[k]).toBe(before[k]);
+    for (let k = 10; k < 40; k++) expect(v[k]).toBeLessThanOrEqual(before[k] + 1e-7);
+    expect(v[25]).toBeLessThan(before[25] - 0.02);
+    const far = new Float32Array(n).fill(Infinity);
+    far[30] = 0.1;
+    roundCap(far, 0, n, per, curv, ceil);
+    expect(far[0]).toBe(Infinity);
+    expect(far[n - 1]).toBe(Infinity);
+    expect(far[30]).toBeCloseTo(0.1, 6);
   });
 });
