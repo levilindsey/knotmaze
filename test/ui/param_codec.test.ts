@@ -7,7 +7,8 @@ import {
   numberText,
 } from "../../src/ui/param_codec";
 import type { CodecParam, ParamValue } from "../../src/ui/param_codec";
-import { ENUM_OPTIONS, PARAM_DEFAULTS } from "../../src/ui/url_state";
+import { ENUM_OPTIONS, PARAM_DEFAULTS, REVEAL_LOOKS } from "../../src/ui/url_state";
+import { EXPLORE_LOOKS } from "../../src/render/explore_glsl";
 
 // Today's defaults, what every link is read against (the app passes the
 // same object).
@@ -18,7 +19,7 @@ const D = PARAM_DEFAULTS as unknown as Record<string, ParamValue>;
 // APPEND a new param or enum option, to the table and here. Anything else (a
 // reorder, a removal, a type, an option renamed or moved) bumps
 // CODEC_VERSION: update PIN_VERSION and this list together.
-const PIN_VERSION = 5;
+const PIN_VERSION = 6;
 const ANCHORS = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const PIN: ReadonlyArray<readonly unknown[]> = [
   ["gridSize", "number"], // 0
@@ -79,7 +80,8 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["cameraMode", "enum", ["fit", "follow"]],
   ["trailLength", "number"],
   ["tension", "number"], // 50
-  ["fogOfWar", "boolean"],
+  // K76 stage 2c: the fog flag became the exploration mode (v6).
+  ["exploration", "enum", ["off", "fog", "threads"]],
   ["fowRadius", "number"],
   ["fowIntro", "boolean"],
   ["colorScheme", "enum", ["mono", "strands", "depth", "segments", "noise"]],
@@ -173,6 +175,9 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["pickMargin", "number"], // 133, K298
   ["pickChoiceRatio", "number"], // 134
   ["physicsWorker", "boolean"], // 135, K7 stage 3
+  ["revealDistance", "number"], // 136, K76 stage 2c
+  ["revealFade", "number"], // 137
+  ["revealLook", "enum", ["fade", "halo", "glow", "dots", "fray", "beacon"]], // 138
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
@@ -253,23 +258,31 @@ describe("codec table", () => {
   });
 });
 
+// K76 stage 2c: a reveal look's codec option index is its shader code, so
+// the param's option list is the shader's look list, in order.
+describe("reveal looks", () => {
+  it("lists the shader's end looks in the shader's order", () => {
+    expect(REVEAL_LOOKS).toEqual([...EXPLORE_LOOKS]);
+  });
+});
+
 describe("token format", () => {
   it("writes a bare seed when nothing differs from today's defaults", () => {
     expect(encodeToken(2430477599, PARAM_DEFAULTS, D)).toBe("1471kin");
     expect(encodeToken(0, {}, D)).toBe("0");
     expect(encodeToken(4294967295, {}, D)).toBe("1z141z3");
     expect(decodeToken("1471kin", D)).toEqual({ seed: 2430477599, values: D, error: null });
-    // An all-default blob ("L" = version 5, no entries; earlier builds
-    // wrote v4's "J") still reads as today's defaults.
-    expect(bitsToBlob(`${V} 1`)).toBe("L");
-    expect(decodeToken("1471kin.L", D)).toEqual({ seed: 2430477599, values: D, error: null });
+    // An all-default blob ("N" = version 6, no entries; earlier builds
+    // wrote v5's "L" and v4's "J") still reads as today's defaults.
+    expect(bitsToBlob(`${V} 1`)).toBe("N");
+    expect(decodeToken("1471kin.N", D)).toEqual({ seed: 2430477599, values: D, error: null });
   });
 
   // Defaults come from the caller: a link reads whatever defaults it is
   // given, and a listed boolean is the given default flipped.
   it("reads a link against the defaults it is given", () => {
     const moved = { ...D, gridSize: 20, mazeFabric: false };
-    const d = decodeToken("7.KUfTJ4ZJbGRMK", moved);
+    const d = decodeToken("7.MUfTJ4ZJbGRMK", moved);
     expect(d.error).toBeNull();
     expect(d.values.gridSize).toBe(20); // not listed: the given default
     expect(d.values.mazeFabric).toBe(true); // listed: the given default flipped
@@ -281,6 +294,8 @@ describe("token format", () => {
   it("reads another version's blob as its seed at today's defaults", () => {
     const cases: Array<[string, number, RegExp]> = [
       ["1471kin.U", 2430477599, /^old link version 2$/],
+      // K76 stage 2c: v5 (before the exploration mode).
+      ["1471kin.L", 2430477599, /^old link version 5$/],
       ["1471kin.c", 2430477599, /^old link version 3$/],
       ["7.ZR9MnhklsZEwo", 7, /^old link version 3$/],
       ["7.RR9MnhklsZEwo", 7, /^old link version 2$/],
@@ -349,8 +364,8 @@ describe("token format", () => {
       "00101", // index 45 mazeFabric: gamma(5); a boolean has no value bits
     ].join(" ");
     expect(encodeToken(7, values, D)).toBe(`7.${bitsToBlob(bits)}`);
-    expect(encodeToken(7, values, D)).toBe("7.KUfTJ4ZJbGRMK");
-    const back = decodeToken("7.KUfTJ4ZJbGRMK", D);
+    expect(encodeToken(7, values, D)).toBe("7.MUfTJ4ZJbGRMK");
+    const back = decodeToken("7.MUfTJ4ZJbGRMK", D);
     expect(back.error).toBeNull();
     expect(back.values).toEqual(values);
   });
@@ -386,13 +401,13 @@ describe("token format", () => {
 
   it("reads `<seed>.` (a trailing sentence period) as the bare seed", () => {
     expect(decodeToken("1471kin.", D)).toEqual(decodeToken("1471kin", D));
-    expect(decodeToken("7.KUfTJ4ZJbGRMK.", D)).toEqual(decodeToken("7.KUfTJ4ZJbGRMK", D));
+    expect(decodeToken("7.MUfTJ4ZJbGRMK.", D)).toEqual(decodeToken("7.MUfTJ4ZJbGRMK", D));
     expect(decodeToken("1471kin", D).error).toBeNull();
   });
 });
 
 describe("token robustness", () => {
-  const good = "7.KUfTJ4ZJbGRMK";
+  const good = "7.MUfTJ4ZJbGRMK";
 
   it("rejects every truncation, keeping the seed", () => {
     const blob = good.slice(2);
@@ -408,7 +423,7 @@ describe("token robustness", () => {
     // Gamma bits (gamma, above), so the cases below follow the table.
     const size = CODEC_PARAMS.length;
     const cases: Array<[string, RegExp]> = [
-      ["7.K!0y", /invalid character/], // "K" holds the version bits
+      ["7.M!0y", /invalid character/], // "K" holds the version bits
       [`7.${bitsToBlob(`${V} 1`)}A`, /trailing data/], // a whole extra char
       // gridSize 1, then a non-zero padding bit.
       [`7.${bitsToBlob(`${V} 010 1 0001 1111 1`)}`, /trailing data/],

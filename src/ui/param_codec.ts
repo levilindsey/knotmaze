@@ -139,7 +139,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   choice("cameraMode", ["fit", "follow"]),
   num("trailLength"),
   num("tension"), // 50
-  flag("fogOfWar"),
+  // K76 stage 2c: the fog of war's flag became the exploration mode (v6).
+  choice("exploration", ["off", "fog", "threads"]),
   num("fowRadius"),
   flag("fowIntro"),
   choice("colorScheme", ["mono", "strands", "depth", "segments", "noise"]),
@@ -262,12 +263,18 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("pickChoiceRatio"), // 134
   // K7 stage 3: physics in a worker.
   flag("physicsWorker"), // 135
+  // K76 stage 2c: the thread reveal's reach, its fade and its end look
+  // (the options in EXPLORE_LOOKS order, render/explore_glsl.ts).
+  num("revealDistance"), // 136
+  num("revealFade"), // 137
+  choice("revealLook", ["fade", "halo", "glow", "dots", "fray", "beacon"]), // 138
 ]);
 
 // The format version a blob names first. Bump it for anything but an
 // append (see above). 1-3 were the frozen tables K132 dropped; 5 removed
-// K111 stage 2's highlightMode (index 108, K111 stage 3).
-export const CODEC_VERSION = 5;
+// K111 stage 2's highlightMode (index 108, K111 stage 3); 6 replaced the
+// fogOfWar flag at 51 with the exploration enum (K76 stage 2c).
+export const CODEC_VERSION = 6;
 
 // The shortest decimal for a number, after rounding to 6 decimals (slider
 // steps leave float noise behind - 1.4500000000000002, or 1.7e-17 for a

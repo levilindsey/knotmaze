@@ -96,8 +96,30 @@ export const CLOCK_MODES: ClockMode[] = ["turn", "realtime"];
 export type FireMode = "off" | "fuse";
 export const FIRE_MODES: FireMode[] = ["off", "fuse"];
 
+// The maze's EXPLORATION mode (K76 stage 2c; the fogOfWar flag before it):
+// off (the whole maze shows), fog (the fog of war hides what you have not
+// been close to) or threads (the thread reveal: only the threads you have
+// walked and the arms of the junctions you have reached show,
+// game/explore_view.ts).
+export type Exploration = "off" | "fog" | "threads";
+export const EXPLORATION_MODES: Exploration[] = ["off", "fog", "threads"];
+
+// The thread reveal's END LOOKS (K76): how a frontier's fade ends. The
+// order is render/explore_glsl.ts EXPLORE_LOOKS' (a look's index is its
+// shader code); test/ui/param_codec.test.ts holds the two lists equal.
+export type RevealLook = "fade" | "halo" | "glow" | "dots" | "fray" | "beacon";
+export const REVEAL_LOOKS: RevealLook[] = ["fade", "halo", "glow", "dots", "fray", "beacon"];
+// The reveal's reach and its fade, lattice units (the renderer uses
+// min(fade, reach)).
+export const REVEAL_DISTANCE_MIN = 1;
+export const REVEAL_DISTANCE_MAX = 12;
+export const REVEAL_FADE_MIN = 0.35;
+export const REVEAL_FADE_MAX = 4;
+
 // How the real-time minotaur shows under the fog of war (K80): always, only
 // while it hunts the player, or never (only where the fog has cleared).
+// Under the thread reveal (K76 stage 2c) the same setting reads "where its
+// thread shows" for "where the fog has cleared".
 export type MinoFog = "always" | "hunting" | "never";
 export const MINO_FOG_MODES: MinoFog[] = ["always", "hunting", "never"];
 
@@ -312,13 +334,22 @@ export interface UrlParams {
   // [0, 1] Ariadne string tension: 1 = taut along the centerline, 0 =
   // slack cotton laid loose. Applies live to the whole laid string.
   tension: number;
-  // Fog of war (fabric gameplay): the maze hides under fog until you
-  // have been close by; explored areas stay visible. Applies live.
-  fogOfWar: boolean;
+  // Exploration (fabric gameplay; K76 stage 2c, the fogOfWar flag before
+  // it): off, fog (the maze hides under fog until you have been close by;
+  // explored areas stay visible) or threads (the thread reveal). Live.
+  exploration: Exploration;
   fowRadius: number; // [1.5, 10] visibility radius, lattice units.
-  // With fog on: still play the intro appearance animation unfogged, then
-  // close the fog in (fade + contracting reveal radius). Live.
+  // With fog or threads: still play the intro appearance animation in the
+  // open, then close the fog in (fade + contracting reveal radius) or let
+  // the hidden threads dissolve. Live.
   fowIntro: boolean;
+  // The thread reveal (exploration "threads", K76): how far the arms of
+  // the junctions you have reached show ([REVEAL_DISTANCE_MIN,
+  // REVEAL_DISTANCE_MAX] lattice units), how long their fade-out is
+  // ([REVEAL_FADE_MIN, REVEAL_FADE_MAX]) and how a fade ends. Live.
+  revealDistance: number;
+  revealFade: number;
+  revealLook: RevealLook;
   // Section color scheme (fabric mode; knot mode supports mono/strands):
   // mono | strands | depth | segments | noise.
   colorScheme: ColorScheme;
@@ -608,7 +639,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   cameraMode: "fit",
   trailLength: 10, // K73 (was 5).
   tension: 0.45,
-  fogOfWar: false,
+  exploration: "off",
   fowRadius: 4,
   fowIntro: false,
   colorScheme: "segments",
@@ -710,6 +741,10 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K273: today's respawn (the level goes on, the minotaur to its lair).
   minoRestart: false,
   minoLair: DEFAULT_TURN_MINO.lair,
+  // K76 stage 2c: the thread reveal (the design's section 4 defaults).
+  revealDistance: 2.5,
+  revealFade: 1,
+  revealLook: "beacon",
 };
 
 // The burn race a design plays (K114), or null without one. The fire runs
@@ -754,6 +789,16 @@ export function clampPickMargin(v: number): number {
 export function clampPickChoiceRatio(v: number): number {
   if (!Number.isFinite(v)) return PARAM_DEFAULTS.pickChoiceRatio;
   return Math.min(PICK_CHOICE_RATIO_MAX, Math.max(PICK_CHOICE_RATIO_MIN, v));
+}
+// K76 stage 2c: [REVEAL_DISTANCE_MIN, REVEAL_DISTANCE_MAX] and
+// [REVEAL_FADE_MIN, REVEAL_FADE_MAX]; garbage reads as the default.
+export function clampRevealDistance(v: number): number {
+  if (!Number.isFinite(v)) return PARAM_DEFAULTS.revealDistance;
+  return Math.min(REVEAL_DISTANCE_MAX, Math.max(REVEAL_DISTANCE_MIN, v));
+}
+export function clampRevealFade(v: number): number {
+  if (!Number.isFinite(v)) return PARAM_DEFAULTS.revealFade;
+  return Math.min(REVEAL_FADE_MAX, Math.max(REVEAL_FADE_MIN, v));
 }
 
 // [FIRE_SPEED_MIN, FIRE_SPEED_MAX]; garbage reads as the default.
@@ -860,6 +905,8 @@ export const ENUM_OPTIONS: {
   minotaur: MINOTAUR_SETTINGS,
   minoSpeed: TURN_SPEEDS,
   fire: FIRE_MODES,
+  exploration: EXPLORATION_MODES,
+  revealLook: REVEAL_LOOKS,
 };
 
 function clamp01(v: number): number {
@@ -902,6 +949,8 @@ function fromCodecValues(
   p.hoverGlowFade = clampHoverGlowFade(p.hoverGlowFade);
   p.pickMargin = clampPickMargin(p.pickMargin);
   p.pickChoiceRatio = clampPickChoiceRatio(p.pickChoiceRatio);
+  p.revealDistance = clampRevealDistance(p.revealDistance);
+  p.revealFade = clampRevealFade(p.revealFade);
   clampTurnMino(p);
   p.hCutShare = clamp01(p.hCutShare);
   p.fireSpeed = clampFireSpeed(p.fireSpeed);
@@ -1086,7 +1135,9 @@ function readLegacy(
     cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
     trailLength: readNumber(query, "trl", D.trailLength),
     tension: readNumber(query, "tn", D.tension),
-    fogOfWar: readBool(query, "fow", D.fogOfWar),
+    // K76 stage 2c: `xp=off|fog|threads`; the old fog flag `fow=1` (or
+    // `fow=0`) and `trv=1` (the thread reveal) still read.
+    exploration: readExploration(query, D.exploration),
     fowRadius: readNumber(query, "fr", D.fowRadius),
     fowIntro: readBool(query, "fwi", D.fowIntro),
     colorScheme: readChoice(query, "cs", COLOR_SCHEMES, D.colorScheme),
@@ -1223,7 +1274,21 @@ function readLegacy(
     // K273's catch resets (`&mrs=1`, `&mlr=0`).
     minoRestart: readBool(query, "mrs", D.minoRestart),
     minoLair: readBool(query, "mlr", D.minoLair),
+    // K76 stage 2c's thread reveal (`&xp=threads&rvd=4&rvf=1.5&rvl=halo`).
+    revealDistance: clampRevealDistance(readNumber(query, "rvd", D.revealDistance)),
+    revealFade: clampRevealFade(readNumber(query, "rvf", D.revealFade)),
+    revealLook: readChoice(query, "rvl", REVEAL_LOOKS, D.revealLook),
   };
+}
+
+// The exploration mode a key=value query names: `xp` wins, then `trv=1`
+// (the thread reveal), then the fog of war's old flag (`fow=1` fog,
+// `fow=0` off); none of them keeps `base`.
+function readExploration(query: URLSearchParams, base: Exploration): Exploration {
+  if (query.has("xp")) return readChoice(query, "xp", EXPLORATION_MODES, base);
+  if (query.has("trv") && readBool(query, "trv", false)) return "threads";
+  if (query.has("fow")) return readBool(query, "fow", base === "fog") ? "fog" : "off";
+  return base;
 }
 
 // A design from codec values (a decoded token, or a daily's pinned

@@ -145,9 +145,10 @@ export const LIVE_EFFECTS = {
   ],
   onStyleChange: ["threadWidth", "gap"],
   onTrailChange: [
-    "pathViz", "cameraMode", "trailLength", "tension", "fogOfWar",
+    "pathViz", "cameraMode", "trailLength", "tension", "exploration",
     "fowRadius", "fowIntro", "pulseReach", "hoverGlow",
     "hoverGlowWidth", "hoverGlowLength", "hoverGlowFade",
+    "revealDistance", "revealFade", "revealLook",
   ],
   onRecolor: [
     "colorScheme", "junctionBlend", "hueShift", "gamutArc", "palette",

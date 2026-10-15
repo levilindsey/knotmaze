@@ -809,10 +809,12 @@ export function buildPanel(
     "Ariadne string tension: 1 lays the yarn taut along the thread, 0 leaves it loose and wavy like slack cotton. Applies live.",
     D.tension, () => callbacks.onTrailChange()
   );
+  // K76 stage 2c: the fog of war's checkbox became the exploration mode.
   const fowRow = row(
-    fMaze, p, "fogOfWar", undefined,
-    "Fog of war: the maze hides until you have explored close by; explored areas stay visible. Applies live.",
-    D.fogOfWar, () => callbacks.onTrailChange()
+    fMaze, p, "exploration",
+    { options: { off: "off", "fog of war": "fog", "thread reveal": "threads" }, label: "exploration" },
+    "How much of the maze you see. off: all of it. fog of war: the maze hides until you have explored close by; explored areas stay visible. thread reveal: only the threads you have walked show, and the arms of the junctions you have reached, fading out a little way along. Applies live.",
+    D.exploration, () => callbacks.onTrailChange()
   );
   const fowRadiusRow = row(
     fMaze, p, "fowRadius", { min: 1.5, max: 10, step: 0.25 },
@@ -820,9 +822,29 @@ export function buildPanel(
     D.fowRadius, () => callbacks.onTrailChange()
   );
   const fowIntroRow = row(
-    fMaze, p, "fowIntro", undefined,
-    "Play the intro appearance animation in the open, then close the fog in around you (it fades in while its reveal radius contracts). Applies to the next intro.",
+    fMaze, p, "fowIntro", { label: "intro in the open" },
+    "Play the intro appearance animation in the open, then hide what you have not explored: the fog closes in around you (it fades in while its reveal radius contracts), or the hidden threads dissolve. Applies to the next intro.",
     D.fowIntro, () => callbacks.onTrailChange()
+  );
+  // K76 stage 2c: the thread reveal's reach, its fade and its end look.
+  const revealDistanceRow = row(
+    fMaze, p, "revealDistance", { min: 1, max: 12, step: 0.25, label: "reveal distance" },
+    "How far the arms of the junctions you have reached show, in lattice units; the last part fades out. Applies live.",
+    D.revealDistance, () => callbacks.onTrailChange()
+  );
+  const revealFadeRow = row(
+    fMaze, p, "revealFade", { min: 0.35, max: 4, step: 0.05, label: "reveal fade" },
+    "How long that fade-out is, in lattice units (never longer than the reveal distance). Applies live.",
+    D.revealFade, () => callbacks.onTrailChange()
+  );
+  const revealLookRow = row(
+    fMaze, p, "revealLook",
+    {
+      options: { fade: "fade", halo: "halo", glow: "glow", dots: "dots", fray: "fray", beacon: "beacon" },
+      label: "reveal end",
+    },
+    "How a thread you have not explored ends: fade (it just fades out), halo (a soft light where it fades), glow (the fade glows), dots (it breaks into dots), fray (it frays into fibers) or beacon (dots and the halo). Applies live.",
+    D.revealLook, () => callbacks.onTrailChange()
   );
   const moveSpeedRow = row(
     fMaze, p, "moveSpeed", { min: 0.25, max: 4, step: 0.05 },
@@ -1173,7 +1195,7 @@ export function buildPanel(
   const minoFogRow = chaseRow(
     "minoFog",
     { options: { always: "always", "while hunting": "hunting", never: "never" } },
-    "With fog of war: show the minotaur always, only while it hunts you, or never (only where the fog has lifted). Applies live.",
+    "With fog of war or the thread reveal: show the minotaur always, only while it hunts you, or never (only where the fog has lifted, or on thread you can see). Applies live.",
     true
   );
   // K80 turns stage 2 (K273): what a catch resets, on both clocks. While
@@ -1190,7 +1212,7 @@ export function buildPanel(
   );
   const minoRefogRow = chaseRow(
     "minoRefog", {},
-    "With fog of war: a catch returns the fog to how it stood at the start of the solve. Off: what you explored stays uncovered. Applies from the next catch.",
+    "With fog of war or the thread reveal: a catch returns the fog (or the hidden threads) to how it stood at the start of the solve. Off: what you explored stays uncovered. Applies from the next catch.",
     true
   );
 
@@ -1947,9 +1969,14 @@ export function buildPanel(
     trailLenRow.hidden = !fab || params.pathViz !== "trail";
     tensionRow.hidden = !fab || params.pathViz !== "string";
     fowRow.hidden = !fab;
-    fowRadiusRow.hidden = !fab || !params.fogOfWar;
+    const fog = fab && params.exploration === "fog";
+    const threads = fab && params.exploration === "threads";
+    fowRadiusRow.hidden = !fog;
     fowIntroRow.hidden =
-      !fab || !params.fogOfWar || params.appearSequence === "instant";
+      !(fog || threads) || params.appearSequence === "instant";
+    revealDistanceRow.hidden = !threads;
+    revealFadeRow.hidden = !threads;
+    revealLookRow.hidden = !threads;
     // K80: in real time the dot runs at playerPace instead.
     const realtime = fab && params.clock === "realtime";
     clockRow.hidden = !fab;
@@ -1972,10 +1999,11 @@ export function buildPanel(
     fFire.hidden = !turnClock;
     fireSpeedRow.hidden = params.fire === "off";
     fireDelayRow.hidden = params.fire === "off";
-    minoFogRow.hidden = !minoOn || !params.fogOfWar;
+    // Under the thread reveal too (K76 stage 2c: the same two settings).
+    minoFogRow.hidden = !minoOn || !(fog || threads);
     minoRestartRow.hidden = !minoOn;
     minoLairRow.hidden = !minoOn || params.minoRestart;
-    minoRefogRow.hidden = !minoOn || !params.fogOfWar || params.minoRestart;
+    minoRefogRow.hidden = !minoOn || !(fog || threads) || params.minoRestart;
     moveSpeedRow.hidden = !fab || realtime;
     mazeStatsRow.hidden = !fab;
     finishIndicatorRow.hidden = !fab;

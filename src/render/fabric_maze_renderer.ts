@@ -447,6 +447,7 @@ export class FabricMazeRenderer {
   private seenRestart = -1;
   private exploreClock = 0;
   private exploreLast: ExploreView | null = null;
+  private exploreHeld = false;
   private haloLayer: Container;
   private haloSprites: Sprite[] = [];
   // K80: the minotaur (syncMinotaur): its marker over its red highlight,
@@ -895,10 +896,6 @@ export class FabricMazeRenderer {
   // The rate slows through bends (natural motion): local turn measured
   // from three points one ctrl apart around the dot.
   tickAnim(dt: number, controller: FabricMazeController): void {
-    // K76: the explore clock, and a re-declaration every frame while a newly
-    // visited vertex's arms grow (a move in flight re-declares anyway).
-    this.exploreClock += dt;
-    if (this.explore.on && !this.anim && this.exploreGrowing(dt)) this.syncExplore();
     const a = this.anim;
     if (!a) return;
     const dir = Math.sign(a.to - a.from) || 1;
@@ -2250,6 +2247,21 @@ export class FabricMazeRenderer {
     for (const e of c.taps) this.seenRuns.add(e);
   }
 
+  // K76 stage 2c: the explore clock, called every frame by main.ts in every
+  // clock mode (the real-time chase never runs tickAnim): a re-declaration
+  // every frame while a newly visited vertex's arms grow (a move in flight
+  // re-declares anyway, emitAnimFrame).
+  tickExplore(dt: number): void {
+    this.exploreClock += dt;
+    if (this.explore.on && !this.anim && this.exploreGrowing(dt)) this.syncExplore();
+  }
+
+  // K76 stage 2c: the intro hold (main.ts: the mode on, fowIntro on and the
+  // intro playing). Stage 2c's model reads it.
+  setExploreHold(hold: boolean): void {
+    this.exploreHeld = hold;
+  }
+
   // Whether a visited vertex's arms are still growing (this frame's dt
   // included, so the last step lands at full growth).
   private exploreGrowing(dt: number): boolean {
@@ -2342,6 +2354,7 @@ export class FabricMazeRenderer {
     view: ExploreView | null;
     seen: string[];
     runs: number[];
+    held: boolean;
     gaps: ReturnType<RibbonRenderer["exploreGapState"]>;
   } {
     return {
@@ -2349,6 +2362,7 @@ export class FabricMazeRenderer {
       view: this.exploreLast,
       seen: [...this.seenV.keys()],
       runs: [...this.seenRuns],
+      held: this.exploreHeld,
       // K268: the gap gate's slot kinds and the slot table's uploads.
       gaps: this.ribbons.exploreGapState(),
     };
