@@ -3,6 +3,8 @@ paths:
   - "src/render/pluck_overlay.ts"
   - "src/render/pluck_model.ts"
   - "test/render/pluck_model.test.ts"
+  - "src/render/pluck_ripple.ts"
+  - "test/physics/tug.test.ts"
 ---
 
 # Render lore: plucks
@@ -236,3 +238,105 @@ only with the files it is about; `render.md` lists the area's other files.
   taps. The "miss" taps are maze moves: a press on a choice run next to
   the head is a move (handleFabricTap), and the head or walked length
   moved on all 138 of the desktop fabric's.
+
+## Pluck emphasis (K279)
+
+- PLUCK EMPHASIS (K279 stage 1, 2026-10-14; worktree agent; brief and
+  design `docs/design/K279.md`). Levi: "I want to make plucks
+  visualizations more emphasized. Can we add a new non-physics-based
+  shock-wave/ripple sort of undulation sort of effect around pluck
+  points? This should be made more subtle around autoplucks than player
+  plucks. Also, I wonder if there is something else more we can do to
+  show the plucked segment vibrating. Maybe add a bit of the
+  physics-based tug to it as well, and also increase the default visual
+  vibration effect?" Stage 1 built prototypes behind viewer preferences
+  (keys, ranges and defaults: gameplay-links.md's PLUCK EMPHASIS PARAMS;
+  the auto plucks' quieter bus: gameplay-audio.md): a RIPPLE (`prp`,
+  `prs`, `pra`), a SHEEN on the swing (`psh`), a TUG (`ptg`, `pta`) and
+  louder vibration defaults (psz 1.75 -> 2, pgh .35 -> .5, pw .5 ->
+  .75). Levi picks the looks and numbers in stage 2. NEUTRAL (master's
+  look, sound and physics):
+  `&prp=off&psh=0&ptg=0&pag=1&psz=1.75&pgh=.35&pw=.5`.
+- RIPPLE (`src/render/pluck_ripple.ts`, `PluckRipples`): one pixi Filter
+  for the page's life, on main.ts's `root`. `root` holds the fabric's
+  under container, the ribbons, the fabric's over container and the
+  debug layer, so the wave bends the markers, trail and fog with the
+  threads; the backdrop (K21) is outside it. The filter is attached only
+  while a ripple lives; its filterArea is the whole screen (resolution
+  and antialias "inherit", padding 0). RIPPLE_MAX 8 at once (a ninth
+  replaces the oldest). Each lives RIPPLE_LIFE 0.9 s, fades in over 0.06
+  s, and its front travels RIPPLE_RADIUS 3.6 world (ease-out) in a band
+  whose half width grows 0.45 -> 0.9 world. World units, so it scales
+  with the maze: about 80 CSS px at the fabric default on 1400x900 (22.3
+  px/world), smaller on a phone (not measured). LOOKS at strength 1:
+  `wave` (default) displaces the picture radially across the band by up
+  to RIPPLE_DISP 0.18 world, with a faint crest glint (0.3 of glint's);
+  `glint` brightens only the threads, toward white by up to 0.45; `ring`
+  lays a white annulus over everything at up to 0.3 alpha. WHO RIPPLES:
+  a tap-pluck and a drag release at `prs`; an auto pluck at `pra`, on
+  its own delay and only when its overlay drew. Never a K235 core tap
+  (tapPluck returns before the ripple and the tug), never under Reduced
+  motion, never at `prp=off`. Hooks: `__knotRipple({paused, t})` and
+  `__knotPluck`'s `ripple` and `rippleLook` options (probes-pluck.md).
+- SHEEN (pluck_overlay.ts, `uPluck.w` = psh, 0 under Reduced motion): a
+  vibrating string dwells at its turning points, so a band 0.55 h wide
+  at each edge of the swept interval [lo, hi] brightens toward white, by
+  up to SHEEN_WHITE 0.6 x psh, faded in by smoothstep(0.3 h, 1.5 h) of
+  the swing's width hi - lo: a pluck at rest draws the plain thread. psh
+  0 is the pre-K279 shader's output.
+- TUG (`ParticleSystem.tug`, main.ts `tugAt`, ribbon_renderer.ts
+  `tugSpan`; the exception to "taps touch zero physics" is in
+  gameplay-camera.md). A TAP kicks the tapped stretch: a drag release
+  already tugs, and an auto pluck tugs only with `pta` (on its delay,
+  through setTimeout). `tugSpan(chain, at, TUG_MAX_CTRL 6)` returns the
+  stretch between the neighbouring NODES (the arcs of the crossing,
+  joint, marker and end centres; at most 6 ctrl each way), with the
+  crest at the tap clamped to the middle half of [c0, c1]. It returns
+  null only when the tap lies within a node's `hide` (a junction core or
+  a marker disc, or exactly on a node) or no particle lies inside
+  (ceil(c1) - floor(c0) < 2). `ps.tug(chain, c0, c1, tap, side, amp)`
+  moves the slots strictly inside by a sine bump along the thread's
+  normal toward `side`, amp = min(1, ptg) x threadWidth, in positions
+  AND prev (it starts at rest), never an open chain's end or the grabbed
+  particle. tugAt then wakes the solver, the springs bring the stretch
+  home and the knot sleeps again. Live physics only, never under Reduced
+  motion; ptg 0 touches no physics (bitwise). `test/physics/tug.test.ts`
+  pins the motion. THE FOOTPRINT BUG (fixed in 2d905d0): the first
+  tugSpan stopped at the nodes' pluck FOOTPRINTS, the stretch the
+  overlay may swing, which leaves most spans no particle inside. On
+  0f08f68 only spans of L 2.6 and longer tugged (fabric 1 of 4 sites,
+  dense 2 of 4, knot 1 of 4; spans of L 1.2-2.1 never did). The
+  footprint bounds what the overlay draws; a kick of the material may
+  run up to the nodes, where the sine bump falls to 0.
+- MEASURED (desktop RX 6800 XT, ANGLE D3D11; `.claude/probes/K279/`).
+  NEUTRAL A/B (k279_ab.mjs, same state, master 8ab25d0 vs 0f08f68, 20
+  frames and 6 plucks per case): 0 differing px and 0 moved positions
+  in all six cases (fabric desktop, knot, fabric on the phone viewport,
+  ghost .35, reduced motion, pluckSize 3; `ab2.log`), every pluck
+  fired on both builds. B predates the tugSpan fix, which ptg 0 never
+  reaches (tugAt returns first). The first run (`ab_forcedtug.log`)
+  forced a tug through the hook, which ptg cannot refuse, and fabric
+  phone then differed (20357 px), so the harness does see a tug. GPU
+  (3200x1800, fabric
+  `?b&am=instant&snd=none&fw=0`, ms/frame): a pluck 2.66, with a wave
+  3.88 (its pass 0.185 + blit 0.377), glint 3.70, ring 3.90; 8 plucks
+  2.74, with 8 waves 3.81. So about +1.1-1.2 ms while any ripple lives,
+  nearly independent of the count; CPU unchanged, no context loss. The
+  worst frame was 10.3 ms against 5.3-5.9 (probably the filter's first
+  frame; not checked). SLEEP after a tugged pluck: every span tugged
+  (`.claude/probes/K279/k279_live.mjs` on da1333a: four scripted taps per
+  design at spans of L 1.2-2.7 ctrl, then one real click). At pluckTug 0
+  nothing stepped and positions stayed bitwise. At 0.3 the peak shift was
+  0.12-0.16 world (0.23-0.30 widths), and the knot slept again after
+  2.57-2.63 sim-s in every design (knot, fabric, dense fabric at gs 24):
+  K63's 2.5 sim-s quiet window plus about 0.1. The cost is WALL time:
+  each awake frame stepped pixi's capped 100 ms deltaMS (sim-s per step
+  0.096-0.097), so the wake took 27-29 frames over 3.0 s (knot, about
+  10 fps), 3.7 s (fabric, 7.5 fps) and 7.1-7.3 s (dense, 3.8 fps) in the
+  off-screen probe Chrome; not measured on screen or on the phone. Before
+  K279 a tap cost no physics. Real clicks: the knot's and dense's rippled
+  and slept again in 2.6 sim-s (2.95 and 7.19 s wall); fabric's drew no
+  ripple and no wake, in both runs (timed out at 30 s; not diagnosed:
+  dense's click worked, so its aim is the likely cause, unverified).
+  Before the node-to-node fix only spans of L >= 2.6 tugged
+  (`live_sleep.log`, 0f08f68).

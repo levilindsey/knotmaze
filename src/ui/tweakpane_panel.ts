@@ -46,7 +46,7 @@ import {
   INDICATOR_SCALE_MAX,
   INDICATOR_SCALE_MIN,
 } from "./offscreen_indicators";
-import { PLUCK_WHOLE_MAX } from "../render/pluck_model";
+import { PLUCK_WHOLE_MAX, RIPPLE_STRENGTH_MAX } from "../render/pluck_model";
 import type { MotionPref } from "./motion";
 
 export interface PanelSettings {
@@ -1578,7 +1578,7 @@ export function buildPanel(
       pointerScale: 0.01,
       format: (v: number) => v.toFixed(2),
     },
-    "How far the whole plucked segment swings as one string, on top of the stretch you tapped (scales with pluckSize). 0 = only the tapped stretch and its neighbors move; 0.5 = the default; up to 1.5. Applies to the next pluck.",
+    "How far the whole plucked segment swings as one string, on top of the stretch you tapped (scales with pluckSize). 0 = only the tapped stretch and its neighbors move; 0.75 = the default; up to 1.5. Applies to the next pluck.",
     D.pluckWhole, () => {
       params.pluckWhole = Math.round(params.pluckWhole * 100) / 100;
       callbacks.onSlackChange();
@@ -1595,6 +1595,56 @@ export function buildPanel(
     { options: { off: "off", instead: "instead", with: "with", fallback: "fallback" } },
     "A glow on the plucked segment, brightening toward white as it rings: off = movement only; instead = the glow replaces the whole segment's swing (the tapped stretch still moves); with = the swing and the glow; fallback = the glow only on plucks whose movement is too small to see (zoomed out, or hemmed in by other threads). Reduced motion always glows instead of moving. Applies to the next pluck.",
     D.pluckGlow, () => callbacks.onSlackChange()
+  );
+  // K279 stage 1's pluck emphasis (prototypes for Levi to pick from). The
+  // number rows have no step (K130); an edit keeps 2 decimals.
+  const round2Feel = (key: "rippleStrength" | "rippleAuto" | "pluckSheen" |
+    "pluckTug" | "autoPluckGain") => () => {
+    params[key] = Math.round(params[key] * 100) / 100;
+    callbacks.onSlackChange();
+  };
+  const twoDec = (max: number) => ({
+    min: 0,
+    max,
+    keyScale: 0.05,
+    pointerScale: 0.01,
+    format: (v: number) => v.toFixed(2),
+  });
+  row(
+    fFeel, p, "pluckRipple",
+    { options: { off: "off", wave: "wave", glint: "glint", ring: "ring" } },
+    "A ripple spreading from where a thread is plucked, drawn over the threads (render only: nothing physically moves). wave = the threads it passes bend for a moment; glint = a bright band sweeps outward along them; ring = a soft ring expands from the pluck; off = none. Auto plucks ripple more faintly (rippleAuto). Off under reduced motion. Applies to the next pluck.",
+    D.pluckRipple, () => callbacks.onSlackChange()
+  );
+  const rippleStrengthRow = row(
+    fFeel, p, "rippleStrength", twoDec(RIPPLE_STRENGTH_MAX),
+    "How strong your own plucks' ripple is (taps and drag releases). 0 = none; 1 = the default; up to 2. Applies to the next pluck.",
+    D.rippleStrength, round2Feel("rippleStrength")
+  );
+  const rippleAutoRow = row(
+    fFeel, p, "rippleAuto", twoDec(RIPPLE_STRENGTH_MAX),
+    "How strong auto plucks' ripple is (the random and music sound modes), kept below your own so the knot's own music stays subtle. 0 = none. Applies to the next pluck.",
+    D.rippleAuto, round2Feel("rippleAuto")
+  );
+  const pluckSheenRow = row(
+    fFeel, p, "pluckSheen", twoDec(1),
+    "A bright sheen at the edges of a vibrating thread's blur, where a real string spends most of its swing (like a long-exposure photo of one). 0 = none. Off under reduced motion. Applies live.",
+    D.pluckSheen, round2Feel("pluckSheen")
+  );
+  const pluckTugRow = row(
+    fFeel, p, "pluckTug", twoDec(1),
+    "A small real tug on the plucked stretch on top of the drawn vibration: the thread twitches toward the side you plucked and the knot settles back. 0 = drawn vibration only. None with physics off or under reduced motion. Applies to the next pluck.",
+    D.pluckTug, round2Feel("pluckTug")
+  );
+  const tugAutoRow = row(
+    fFeel, p, "tugAuto", undefined,
+    "Auto plucks tug too (the random and music sound modes). Off = only your own plucks tug, so the knot can rest while the music plays. Applies to the next pluck.",
+    D.tugAuto, () => callbacks.onSlackChange()
+  );
+  row(
+    fFeel, p, "autoPluckGain", twoDec(1),
+    "How loud auto plucks play (the random and music sound modes) next to your own: 1 = as loud as a tap; 0.5 = the default, half the level (-6 dB); 0 = silent. Applies to the next pluck.",
+    D.autoPluckGain, round2Feel("autoPluckGain")
   );
   const tugLimitRow = row(
     fFeel, p, "tugLimit", { min: 0.5, max: 6, step: 0.1 },
@@ -1886,6 +1936,13 @@ export function buildPanel(
       params.pluckSize <= 0 ||
       params.pluckWhole <= 0 ||
       params.pluckGlow === "instead";
+    // K279: the strengths only with a ripple; the sheen only with a drawn
+    // pluck; the tug only where physics can move.
+    rippleStrengthRow.hidden = params.pluckRipple === "off";
+    rippleAutoRow.hidden = params.pluckRipple === "off";
+    pluckSheenRow.hidden = params.pluckSize <= 0;
+    pluckTugRow.hidden = !live;
+    tugAutoRow.hidden = !live || params.pluckTug <= 0;
     appearSpeedRow.hidden = params.appearSequence === "instant";
     appearFxRow.hidden = params.appearSequence === "instant";
     flowSpeedRow.hidden = params.flowStrength <= 0;

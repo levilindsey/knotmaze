@@ -157,6 +157,14 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["fire", "enum", ["off", "fuse"]], // 118, K114
   ["fireSpeed", "number"],
   ["fireDelay", "number"], // 120
+  // K279 stage 1.
+  ["pluckRipple", "enum", ["off", "wave", "glint", "ring"]], // 121
+  ["rippleStrength", "number"],
+  ["rippleAuto", "number"],
+  ["pluckSheen", "number"],
+  ["pluckTug", "number"],
+  ["tugAuto", "boolean"],
+  ["autoPluckGain", "number"], // 127
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

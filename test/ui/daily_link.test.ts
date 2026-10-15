@@ -311,6 +311,14 @@ describe("the daily design and its exempt preferences (K56)", () => {
       "pluckWhole",
       "pluckCrossings",
       "pluckGlow",
+      // K279, with the Touch & feel prefs.
+      "pluckRipple",
+      "rippleStrength",
+      "rippleAuto",
+      "pluckSheen",
+      "pluckTug",
+      "tugAuto",
+      "autoPluckGain",
       "tugLimit",
       "snapBack",
       // K145, proposed with it.

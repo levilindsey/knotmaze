@@ -73,7 +73,7 @@ describe("links", () => {
       rootNote: "seed", tonicEmphasis: 0.5, pulseSpacing: 2.5, hueShift: 300,
       gamutArc: 130, palette: "pastel", pathColor: "#eccc41",
       branchDensity: 0.35, fourWayFraction: 0.12, deadEndDensity: 0.5,
-      pluckStyle: "string", pluckSize: 1.75, pluckGhost: 0.35, pluckReach: "run",
+      pluckStyle: "string", pluckSize: 2, pluckGhost: 0.5, pluckReach: "run",
       physics: true, mazeFabric: true, deadEnds: true, pathViz: "gold",
       cameraMode: "fit", trailLength: 10, tension: 0.45, fogOfWar: false,
       fowRadius: 4, fowIntro: false, colorScheme: "segments",
@@ -93,7 +93,9 @@ describe("links", () => {
       minoDeadEnds: 0.4, minoRoam: 30, minoWake: 2, minoFog: "always",
       minoToward: true, minoRefog: true,
       confetti: true, confettiAmount: 1,
-      pluckWhole: 0.5, pluckCrossings: "through", pluckGlow: "off",
+      pluckWhole: 0.75, pluckCrossings: "through", pluckGlow: "off",
+      pluckRipple: "wave", rippleStrength: 1, rippleAuto: 0.35,
+      pluckSheen: 0.5, pluckTug: 0.3, tugAuto: false, autoPluckGain: 0.5,
       markerSize: 1.08,
       hoverGlow: 0.4,
       minotaur: "off", minoSpeed: "one", minoTelegraph: true, minoSight: 4,
@@ -181,17 +183,40 @@ describe("links", () => {
       expect(parseParams(`?${encodeParams(q)}`)).toEqual(q);
     }
     // Defaults stay out of the token; unknown options read as the default.
-    expect(encodeParams(parseParams("?7&pw=0.5&pcx=through&pgl=off"))).toBe("7");
+    expect(encodeParams(parseParams("?7&pw=0.75&pcx=through&pgl=off"))).toBe("7");
     expect(parseParams("?7&pcx=wobble").pluckCrossings).toBe("through");
     expect(parseParams("?7&pgl=bright").pluckGlow).toBe("off");
     // The amount clamps to [0, 1.5]; garbage reads as the default.
     expect(parseParams("?7&pw=9").pluckWhole).toBe(1.5);
     expect(parseParams("?7&pw=-1").pluckWhole).toBe(0);
-    expect(parseParams("?7&pw=x").pluckWhole).toBe(0.5);
+    expect(parseParams("?7&pw=x").pluckWhole).toBe(0.75);
     expect(parseParams("?7&pw=0").pluckWhole).toBe(0);
     expect(
       parseParams(`?${encodeParams(withSeed(7, { pluckWhole: 4 }))}`).pluckWhole
     ).toBe(1.5);
+  });
+
+  // K279: the pluck emphasis params' override keys, clamps and options.
+  it("reads the pluck emphasis params from override keys", () => {
+    const p = parseParams("?7&prp=ring&prs=1.5&pra=0&psh=1&ptg=0.5&pta=1&pag=1");
+    expect([
+      p.pluckRipple, p.rippleStrength, p.rippleAuto, p.pluckSheen, p.pluckTug,
+      p.tugAuto, p.autoPluckGain,
+    ]).toEqual(["ring", 1.5, 0, 1, 0.5, true, 1]);
+    expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    for (const prp of ["off", "wave", "glint", "ring"]) {
+      expect(parseParams(`?7&prp=${prp}`).pluckRipple).toBe(prp);
+    }
+    expect(parseParams("?7&prp=splash").pluckRipple).toBe("wave");
+    // Strengths clamp to [0, 2], the rest to [0, 1].
+    expect(parseParams("?7&prs=9&pra=-1").rippleStrength).toBe(2);
+    expect(parseParams("?7&prs=9&pra=-1").rippleAuto).toBe(0);
+    expect(parseParams("?7&psh=3&ptg=-2&pag=4").pluckSheen).toBe(1);
+    expect(parseParams("?7&psh=3&ptg=-2&pag=4").pluckTug).toBe(0);
+    expect(parseParams("?7&psh=3&ptg=-2&pag=4").autoPluckGain).toBe(1);
+    expect(
+      parseParams(`?${encodeParams(withSeed(7, { rippleStrength: 5 }))}`).rippleStrength
+    ).toBe(2);
   });
 
   // K80: the chase's defaults are the simulation-picked tuning; a retune
@@ -315,7 +340,7 @@ describe("links", () => {
   it("drops float noise that equals a default", () => {
     expect(encodeParams(withSeed(7, { repulsion: 1.4500000000000002 }))).toBe("7");
     expect(encodeParams(withSeed(7, { junctionBlend: 0.8800000000000001 }))).toBe("7");
-    expect(encodeParams(withSeed(7, { pluckSize: 1.7500000000000002 }))).toBe("7");
+    expect(encodeParams(withSeed(7, { pluckSize: 2.0000000000000004 }))).toBe("7");
     expect(encodeParams(withSeed(7, { trailLength: 10.000000000000002 }))).toBe("7");
   });
 
@@ -450,6 +475,8 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoRoamRuns: "mro", minoTerritory: "mtr", minoAccuracy: "mac",
   minoPause: "mpa", minoSleep: "msl", hCutShare: "hcs",
   fire: "fi", fireSpeed: "fsp", fireDelay: "fdl",
+  pluckRipple: "prp", rippleStrength: "prs", rippleAuto: "pra",
+  pluckSheen: "psh", pluckTug: "ptg", tugAuto: "pta", autoPluckGain: "pag",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

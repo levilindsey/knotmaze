@@ -30,8 +30,18 @@ import {
   TURN_SPEEDS,
 } from "../game/minotaur_turns";
 import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
-import type { PluckCrossings, PluckGlow } from "../render/pluck_model";
-import { PLUCK_CROSSINGS, PLUCK_GLOWS, PLUCK_WHOLE_MAX } from "../render/pluck_model";
+import type {
+  PluckCrossings,
+  PluckGlow,
+  PluckRipple,
+} from "../render/pluck_model";
+import {
+  PLUCK_CROSSINGS,
+  PLUCK_GLOWS,
+  PLUCK_RIPPLES,
+  PLUCK_WHOLE_MAX,
+  RIPPLE_STRENGTH_MAX,
+} from "../render/pluck_model";
 import { MARKER_SIZE_DEFAULT, sanitizeMarkerSize } from "../render/marker_glyphs";
 import type {
   BackgroundColorMode,
@@ -418,6 +428,16 @@ export interface UrlParams {
   pluckWhole: number;
   pluckCrossings: PluckCrossings;
   pluckGlow: PluckGlow;
+  // K279's pluck emphasis (render/pluck_model.ts K279 params): the ripple's
+  // look and its player / auto strengths, the sheen, the tug (and whether
+  // auto plucks tug), and auto plucks' volume. Viewer preferences.
+  pluckRipple: PluckRipple;
+  rippleStrength: number;
+  rippleAuto: number;
+  pluckSheen: number;
+  pluckTug: number;
+  tugAuto: boolean;
+  autoPluckGain: number;
   // K98: the markers' diameter in thread widths (render/marker_glyphs.ts,
   // [MARKER_SIZE_MIN, MARKER_SIZE_MAX]): the player's dot, and the start,
   // the finish and the minotaur at the same size. A viewer preference.
@@ -529,8 +549,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   deadEndLength: 20, // K74.
   hCutShare: 1, // K74 stage 2 (H1): every H.
   pluckStyle: "string",
-  pluckSize: 1.75, // Was 1 until 2026-10-11.
-  pluckGhost: 0.35,
+  pluckSize: 2, // K279 (was 1.75 from 2026-10-11, 1 before).
+  pluckGhost: 0.5, // K279 (was 0.35).
   pluckReach: "run",
   physics: true,
   mazeFabric: true,
@@ -597,9 +617,16 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoRefog: true,
   confetti: true,
   confettiAmount: 1,
-  pluckWhole: 0.5,
+  pluckWhole: 0.75, // K279 (was 0.5, K104's WHOLE_AMP).
   pluckCrossings: "through",
   pluckGlow: "off",
+  pluckRipple: "wave", // K279 stage 1 prototypes (neutral: off).
+  rippleStrength: 1,
+  rippleAuto: 0.35,
+  pluckSheen: 0.5, // Neutral: 0.
+  pluckTug: 0.3, // Neutral: 0.
+  tugAuto: false,
+  autoPluckGain: 0.5, // -6 dB; neutral: 1.
   markerSize: MARKER_SIZE_DEFAULT,
   hoverGlow: 0.4,
   minotaur: DEFAULT_TURN_MINO.model,
@@ -734,6 +761,7 @@ export const ENUM_OPTIONS: {
   minoFog: MINO_FOG_MODES,
   pluckCrossings: PLUCK_CROSSINGS,
   pluckGlow: PLUCK_GLOWS,
+  pluckRipple: PLUCK_RIPPLES,
   minotaur: MINOTAUR_SETTINGS,
   minoSpeed: TURN_SPEEDS,
   fire: FIRE_MODES,
@@ -778,7 +806,17 @@ function fromCodecValues(
   p.hCutShare = clamp01(p.hCutShare);
   p.fireSpeed = clampFireSpeed(p.fireSpeed);
   p.fireDelay = clampTo(p.fireDelay, FIRE_DELAY_MAX);
+  clampPluckEmphasis(p);
   return p;
+}
+
+// K279's pluck emphasis clamps, shared by both link readers.
+function clampPluckEmphasis(p: Omit<UrlParams, "seed">): void {
+  p.rippleStrength = clampTo(p.rippleStrength, RIPPLE_STRENGTH_MAX);
+  p.rippleAuto = clampTo(p.rippleAuto, RIPPLE_STRENGTH_MAX);
+  p.pluckSheen = clamp01(p.pluckSheen);
+  p.pluckTug = clamp01(p.pluckTug);
+  p.autoPluckGain = clamp01(p.autoPluckGain);
 }
 
 // The turn minotaur's clamps, shared by both link readers.
@@ -1031,6 +1069,18 @@ function readLegacy(
     pluckWhole: clampTo(readNumber(query, "pw", D.pluckWhole), PLUCK_WHOLE_MAX),
     pluckCrossings: readChoice(query, "pcx", PLUCK_CROSSINGS, D.pluckCrossings),
     pluckGlow: readChoice(query, "pgl", PLUCK_GLOWS, D.pluckGlow),
+    // K279's pluck emphasis (`&prp=ring&prs=1.5&pra=0&psh=1&ptg=0.5&pta=1
+    // &pag=1`), clamped as a token's are.
+    pluckRipple: readChoice(query, "prp", PLUCK_RIPPLES, D.pluckRipple),
+    rippleStrength: clampTo(
+      readNumber(query, "prs", D.rippleStrength),
+      RIPPLE_STRENGTH_MAX
+    ),
+    rippleAuto: clampTo(readNumber(query, "pra", D.rippleAuto), RIPPLE_STRENGTH_MAX),
+    pluckSheen: clamp01(readNumber(query, "psh", D.pluckSheen)),
+    pluckTug: clamp01(readNumber(query, "ptg", D.pluckTug)),
+    tugAuto: readBool(query, "pta", D.tugAuto),
+    autoPluckGain: clamp01(readNumber(query, "pag", D.autoPluckGain)),
     // K98's marker size (`&mks=2`).
     markerSize: sanitizeMarkerSize(readNumber(query, "mks", D.markerSize)),
     // K145's hover glow (`&hg=0`), clamped to [0, 1].

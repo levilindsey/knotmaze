@@ -308,7 +308,13 @@ export class KnotSynth {
     freq: number;
     strength: number;
     when?: number;
+    auto: boolean;
   }> = [];
+  // K279 (Levi: "I want manual plucks to be louder than auto plucks"): auto
+  // plucks' voices reach the master through this bus, at autoGain [0, 1] of
+  // a manual pluck's level (1 = the mix before K279).
+  private autoBus: GainNode | null = null;
+  private autoGain = 1;
   // Voices scheduled to start later (K101: music mode plays ahead on the
   // audio clock), so a mute, a mode switch or a rebuild can drop the ones
   // not yet sounding. Pruned by cancelScheduled and by each voice's end.
@@ -364,6 +370,14 @@ export class KnotSynth {
   setVolume(v: number): void {
     this.volume = Math.max(0, Math.min(1, v));
     if (this.master) this.master.gain.value = this.volume;
+  }
+
+  // K279: auto plucks' level [0, 1], live (safe pre-context).
+  setAutoGain(g: number): void {
+    const v = Math.max(0, Math.min(1, Number.isFinite(g) ? g : 1));
+    if (v === this.autoGain) return;
+    this.autoGain = v;
+    if (this.autoBus) this.autoBus.gain.value = v;
   }
 
   // Live reverb amount [0, 1] (wet-mix level; safe pre-context).
@@ -440,6 +454,9 @@ export class KnotSynth {
       this.ctx = this.provided ?? new AudioContext();
       this.master = this.ctx.createGain();
       this.master.gain.value = this.volume;
+      this.autoBus = this.ctx.createGain();
+      this.autoBus.gain.value = this.autoGain;
+      this.autoBus.connect(this.master);
       // BODY EQ between the strings and the room: a touch of low-mid
       // warmth and a rounded-off top - the difference between a wire on
       // a board and an instrument with a soundbox.
@@ -519,7 +536,9 @@ export class KnotSynth {
             URL.revokeObjectURL(url);
             const queued = this.pendingPlucks;
             this.pendingPlucks = [];
-            for (const p of queued) this.playNow(p.freq, p.strength, p.when);
+            for (const p of queued) {
+              this.playNow(p.freq, p.strength, p.when, p.auto);
+            }
           });
       } else {
         this.engine = "legacy";
@@ -536,25 +555,30 @@ export class KnotSynth {
 
   // strength in [0, 1] scales loudness and brightness. `when` (audio-clock
   // seconds, see audioTime) starts the note on that sample; omitted or past,
-  // it starts at once.
-  pluck(freq: number, strength: number, when?: number): void {
+  // it starts at once. `auto` (K279): an auto pluck, played on the auto bus.
+  pluck(freq: number, strength: number, when?: number, auto = false): void {
     const ctx = this.ensure();
     if (!ctx || !this.master) return;
     this.stats.plucks++;
     this.stats.lastFreq = freq;
     if (this.engine === "pending") {
-      this.pendingPlucks.push({ freq, strength, when });
+      this.pendingPlucks.push({ freq, strength, when, auto });
       return;
     }
-    this.playNow(freq, strength, when);
+    this.playNow(freq, strength, when, auto);
   }
 
-  private playNow(freq: number, strength: number, when?: number): void {
-    if (this.engine === "harp") this.pluckHarp(freq, strength, when);
-    else this.pluckLegacy(freq, strength, when);
+  private playNow(freq: number, strength: number, when: number | undefined, auto: boolean): void {
+    if (this.engine === "harp") this.pluckHarp(freq, strength, when, auto);
+    else this.pluckLegacy(freq, strength, when, auto);
   }
 
-  private pluckHarp(freq: number, strength: number, when?: number): void {
+  // The node a voice connects to: the auto bus for an auto pluck.
+  private outFor(auto: boolean): GainNode {
+    return auto && this.autoBus ? this.autoBus : this.master!;
+  }
+
+  private pluckHarp(freq: number, strength: number, when: number | undefined, auto: boolean): void {
     const ctx = this.ctx!;
     // Deterministic per-pluck seed (probe reproducibility): pluck ordinal
     // mixed with the pitch.
@@ -577,7 +601,7 @@ export class KnotSynth {
         startFrame: lead > 0 ? Math.round(when! * ctx.sampleRate) : 0,
       },
     });
-    node.connect(this.master!);
+    node.connect(this.outFor(auto));
     let dead = false;
     const voice = {
       at: ctx.currentTime + lead,
@@ -603,7 +627,7 @@ export class KnotSynth {
   // LEGACY VOICE (no-AudioWorklet fallback only): the original native-node
   // Karplus-Strong loop. Known detune: the DelayNode cycle adds one render
   // quantum of loop latency, so pitches land flat (see the header comment).
-  private pluckLegacy(freq: number, strength: number, when?: number): void {
+  private pluckLegacy(freq: number, strength: number, when: number | undefined, auto: boolean): void {
     const ctx = this.ctx!;
     const lead = when === undefined ? 0 : Math.max(0, when - ctx.currentTime);
     const now = ctx.currentTime + lead;
@@ -668,7 +692,7 @@ export class KnotSynth {
     damping.connect(feedback);
     feedback.connect(delay);
     damping.connect(out);
-    out.connect(this.master!);
+    out.connect(this.outFor(auto));
 
     // No explicit stop: the one-period buffer self-terminates (an explicit
     // stop raced the main thread and silenced notes - see git history).

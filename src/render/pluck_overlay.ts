@@ -324,10 +324,11 @@ in vec4 vColor;
 
 out vec4 finalColor;
 
-// (half-width h, partner casing band, ghost tint, unused)
+// (half-width h, partner casing band, ghost tint, sheen (K279))
 uniform vec4 uPluck;
 
 const float PI = 3.141592653589793;
+const float SHEEN_WHITE = 0.6;
 
 // Integral of the arcsine CDF on [lo, hi]: 0 below, r at hi, slope 1
 // beyond. Differencing it box-filters the dwell density over the pixel.
@@ -378,6 +379,15 @@ void main(void) {
   vec3 gc = mix(vCol, vec3(1.0), uPluck.z);
   vec3 rgb = gc * g + vCol * c * (1.0 - g);
   float a = g + c * (1.0 - g);
+  // K279 SHEEN: the swing's turning points (where a vibrating string dwells
+  // longest) catch the light - a thin band at each edge of the swept
+  // interval brightens toward white, fading in with the swing's width so a
+  // pluck at rest draws the plain thread. 0 = the pre-K279 shader's output.
+  if (uPluck.w > 0.0) {
+    float sw = smoothstep(0.3 * h, 1.5 * h, hi - lo);
+    float e = max(band(vLat - hi, 0.55 * h, p), band(vLat - lo, 0.55 * h, p));
+    rgb = mix(rgb, vec3(a), clamp(uPluck.w * sw * e * SHEEN_WHITE, 0.0, 1.0));
+  }
   float px = max(length(dFdx(vPos)), 1e-4);
   float k = clipAt(vClipA, vClipF.x, vPos, px) * clipAt(vClipB, vClipF.y, vPos, px);
   finalColor = vec4(rgb, a) * (vAux.w * k) * vColor;
@@ -395,7 +405,7 @@ function pluckUniforms(): UniformGroup {
   if (!PLUCK_UNIFORMS) {
     PLUCK_UNIFORMS = new UniformGroup({
       uPluck: {
-        value: new Float32Array([0.21, 0.4, GHOST_TINT, CLIP_REACH]),
+        value: new Float32Array([0.21, 0.4, GHOST_TINT, 0]),
         type: "vec4<f32>",
       },
     });
@@ -721,6 +731,9 @@ export class PluckOverlay {
   size = 1; // pluckSize: visual amplitude multiplier (0 = sound only).
   ghost = 0.35; // pluckGhost: strobe-ghost strength.
   sustain = 0.5; // The voice's sustain (decay clock).
+  // pluckSheen (K279): the swing's turning points brighten toward white,
+  // [0, 1]; 0 = the pre-K279 look. Live, and 0 under reduced motion.
+  sheen = 0;
   // Reduced motion: set each frame from the Motion setting (ui/motion.ts).
   // Plucks started under it are still (the unit brightens, nothing moves);
   // plucks already ringing when it turns on keep moving, without their
@@ -1129,6 +1142,7 @@ export class PluckOverlay {
     const u = pluckUniforms().uniforms as { uPluck: Float32Array };
     u.uPluck[0] = host.halfWidth();
     u.uPluck[1] = host.casing();
+    u.uPluck[3] = this.reducedMotion ? 0 : this.sheen;
     const rev = host.geomRev();
     for (let i = this.active.length - 1; i >= 0; i--) {
       const p = this.active[i];

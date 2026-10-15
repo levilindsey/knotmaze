@@ -126,7 +126,8 @@ import {
 } from "./render/marker_glyphs";
 import { ConfettiLayer } from "./render/confetti";
 import { confettiPlan, sprayUnit } from "./render/confetti_model";
-import { PLUCK_WHOLE_MAX } from "./render/pluck_model";
+import { PLUCK_WHOLE_MAX, type PluckRipple } from "./render/pluck_model";
+import { PluckRipples } from "./render/pluck_ripple";
 import { openDailyStats } from "./ui/daily_stats_view";
 import { shareOrCopy, showToast } from "./ui/share";
 import { buildPanel } from "./ui/tweakpane_panel";
@@ -530,6 +531,8 @@ async function main(): Promise<void> {
 
   const root = new Container();
   app.stage.addChild(root);
+  // K279: pluck ripples - a filter on the world container while one lives.
+  const ripples = new PluckRipples(root, () => app.screen);
 
   // K140 FINISH CONFETTI (render/confetti.ts): two particle layers over the
   // world root - the world-space spray around the exit, then the
@@ -1439,6 +1442,8 @@ async function main(): Promise<void> {
     saveAttempt();
     // K140: the old maze's finish is gone, and so is its confetti.
     confetti.clear();
+    // K279: and its ripples.
+    ripples.clear();
     renderer?.destroy();
     debug?.container.destroy({ children: true });
     fabric?.destroy();
@@ -3554,6 +3559,45 @@ async function main(): Promise<void> {
     ps?.release();
   };
 
+  // K279 RIPPLE: a pluck's ring at the plucked point (render/pluck_ripple.ts;
+  // pluckRipple's look, at rippleStrength for taps and releases and
+  // rippleAuto for auto plucks). None under Reduced motion.
+  const startRipple = (
+    chain: number,
+    at: { ctrl?: number; arc?: number },
+    strength: number,
+    delay = 0,
+    look: PluckRipple = params.pluckRipple
+  ): void => {
+    if (!renderer || look === "off" || !(strength > 0)) return;
+    ripples.look = look;
+    ripples.reducedMotion = motion.reduced;
+    const pt = renderer.pluckPoint(chain, at);
+    if (pt) ripples.add(pt.x, pt.y, strength, delay);
+  };
+  // K279 TUG: a tap's small physical kick (pluckTug, peak in thread widths;
+  // auto plucks only with tugAuto). The tapped stretch between its nodes
+  // (renderer.tugSpan: crossings, joints, markers, ends; at most
+  // TUG_MAX_CTRL each way) moves toward
+  // `side` by a sine bump, starting at rest; the springs bring it home and
+  // the knot sleeps again. Live physics only, never under Reduced motion;
+  // tug 0 touches no physics at all (a tap stays render-only).
+  const TUG_MAX_CTRL = 6;
+  const tugAt = (
+    chain: number,
+    at: { ctrl?: number; arc?: number },
+    side: number,
+    amount: number
+  ): void => {
+    if (!ps || !renderer || !(amount > 0) || !physicsLive() || motion.reduced) {
+      return;
+    }
+    const span = renderer.tugSpan(chain, at, TUG_MAX_CTRL);
+    if (!span) return;
+    const amp = Math.min(1, amount) * params.threadWidth;
+    if (ps.tug(chain, span.c0, span.c1, span.tap, side, amp) > 0) wake();
+  };
+
   // Release the current drag. string: free the physics now and set the
   // released unit vibrating (amplitude from the release offset, swinging
   // from the side it was pulled toward); soft: ease home (snapBack).
@@ -3584,6 +3628,8 @@ async function main(): Promise<void> {
           reach: unit.reach,
           spanCtrl: unit.spanCtrl,
         });
+        // K279: the release ripples (the drag already tugged the thread).
+        startRipple(chain, { ctrl: slot }, params.rippleStrength);
       }
       snapMode = "none";
       ps.release();
@@ -3624,6 +3670,9 @@ async function main(): Promise<void> {
     if (!settings.muted && params.soundMode !== "none") {
       synth.pluck(freq, TAP_STRENGTH);
     }
+    // K279: the tap's ripple and tug (a core tap has neither).
+    startRipple(hit.chain, { arc: hit.arc }, params.rippleStrength);
+    tugAt(hit.chain, { arc: hit.arc }, hit.side, params.pluckTug);
   };
 
   app.canvas.style.touchAction = "none";
@@ -4030,7 +4079,8 @@ async function main(): Promise<void> {
   ): void => {
     if (!ps || !renderer || !Number.isFinite(freq)) return;
     if (!settings.muted && params.soundMode !== "none") {
-      synth.pluck(freq, amp, when);
+      // K279: on the synth's auto bus (autoPluckGain).
+      synth.pluck(freq, amp, when, true);
     }
     const site = audioSegSite[seg];
     if (!site) return;
@@ -4047,11 +4097,12 @@ async function main(): Promise<void> {
       g >= 0 && ps.chainOfParticle(g) === site.chain
         ? chainArr.indexOf(g)
         : undefined;
-    renderer.pluck({
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const drawn = renderer.pluck({
       avoidCtrl,
       chain: site.chain,
       ctrl,
-      side: Math.random() < 0.5 ? -1 : 1,
+      side,
       // Auto strengths 0.4-0.75 -> amplitude gains 0.75-1.25.
       gain: Math.max(0.75, Math.min(1.25, 0.75 + ((amp - 0.4) / 0.35) * 0.5)),
       freq,
@@ -4060,6 +4111,18 @@ async function main(): Promise<void> {
       beta: 0.3 + Math.random() * 0.2,
       delay: lead + synth.outputLatency(),
     });
+    // K279: an auto pluck ripples at rippleAuto (subtler than a tap's), on
+    // the vibration's delay, and tugs only with tugAuto.
+    if (drawn) {
+      const delay = lead + synth.outputLatency();
+      startRipple(site.chain, { ctrl }, params.rippleAuto, delay);
+      if (params.tugAuto && params.pluckTug > 0) {
+        const scene = ps;
+        window.setTimeout(() => {
+          if (ps === scene) tugAt(site.chain, { ctrl }, side, params.pluckTug);
+        }, delay * 1000);
+      }
+    }
   };
 
   // K101: the last music notes handed out, for probes (__knotSong).
@@ -4221,6 +4284,8 @@ async function main(): Promise<void> {
     if (moved || !ps || !renderer) return true;
     // K140: confetti in the air (false again once its last piece is gone).
     if (confetti.active) return true;
+    // K279: a pluck ripple spreading.
+    if (ripples.activeCount > 0) return true;
     // K169: a fully traveled gold web fading in (0.25 s).
     if (fabric !== null && fabric.webFading) return true;
     if (physState === "loading" || physState === "settling" || !asleep) {
@@ -4248,6 +4313,8 @@ async function main(): Promise<void> {
   app.ticker.add((ticker) => {
     const c0 = performance.now();
     tick(ticker);
+    // K279: the pluck ripples, after the camera's step (they read its view).
+    ripples.tick(ticker.deltaMS / 1000);
     // K140: the confetti steps in every branch (asleep, paused, loading);
     // a single early return once nothing is in the air.
     confetti.tick(ticker.deltaMS / 1000, app.screen.height, root);
@@ -4319,6 +4386,9 @@ async function main(): Promise<void> {
         params.pluckGlow
       );
       renderer!.plucks.sustain = params.sustain;
+      // K279: the time exposure's sheen (live), and auto plucks' level.
+      renderer!.plucks.sheen = Math.max(0, Math.min(1, params.pluckSheen));
+      synth.setAutoGain(Math.max(0, Math.min(1, params.autoPluckGain)));
       // Reduced motion (the Motion setting, live; WCAG 2.3.3): a pluck
       // started under it is STILL - the plucked segment brightens briefly
       // and nothing moves (K104); the sound is unchanged. Plucks already
@@ -5007,10 +5077,25 @@ async function main(): Promise<void> {
   (window as unknown as Record<string, unknown>).__knotPluck = (
     chain: number,
     ctrl: number,
-    opts: { side?: number; gain?: number; beta?: number; delay?: number } = {}
+    opts: {
+      side?: number;
+      gain?: number;
+      beta?: number;
+      delay?: number;
+      // K279: a ripple at this strength (0 = none), and a tug (pluckTug's
+      // units; 0 = none) - what a tap there would start.
+      ripple?: number;
+      tug?: number;
+      // The ripple's look (default: pluckRipple's).
+      rippleLook?: PluckRipple;
+    } = {}
   ) => {
     if (!renderer || !ps) return false;
     const unit = pluckUnit(chain, ctrl);
+    if (opts.ripple) {
+      startRipple(chain, { ctrl }, opts.ripple, opts.delay ?? 0, opts.rippleLook);
+    }
+    if (opts.tug) tugAt(chain, { ctrl }, opts.side ?? 1, opts.tug);
     return renderer.pluck({
       chain,
       ctrl,
@@ -5022,6 +5107,15 @@ async function main(): Promise<void> {
       beta: opts.beta,
       delay: opts.delay,
     });
+  };
+  // K279: the live ripples.
+  // `paused` holds the ripples' clock, `t` sets every live ripple's time.
+  (window as unknown as Record<string, unknown>).__knotRipple = (
+    o: { paused?: boolean; t?: number } = {}
+  ) => {
+    if (o.paused !== undefined) ripples.paused = o.paused;
+    if (o.t !== undefined) ripples.setTime(o.t);
+    return { count: ripples.activeCount, look: ripples.look };
   };
   (window as unknown as Record<string, unknown>).__knotPluckState = () =>
     renderer
