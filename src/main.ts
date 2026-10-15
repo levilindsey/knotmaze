@@ -1886,6 +1886,16 @@ async function main(): Promise<void> {
     }
     syncBackground();
     if (fabric) fabric.markerSize = look("markerSize");
+    // The renderer takes these three from fabricTick, which runs AFTER an
+    // asleep or paused frame's update(): the one forced pass below would
+    // solve the crossing cuts and the flow with the OLD values and nothing
+    // would redo it (a slider wakes the physics, which keeps updating for
+    // several frames; this does not). Hand them over now.
+    if (renderer) {
+      renderer.fadeLength = look("fadeLength");
+      renderer.flowStrength = look("flowStrength");
+      renderer.flowSpeed = look("flowSpeed");
+    }
     panel.markOverridden(overriddenKeys(a11y));
     // One render pass for an asleep or frozen scene (the flow standing still
     // or coming back, the new gap and palette).
