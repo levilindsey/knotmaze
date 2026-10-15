@@ -199,7 +199,8 @@ function sampleChain(ps: Any, i: number, rb: Ribbon, tw: number): Any {
 // K90_VARIANTS (env, comma-separated) re-samples the SAME live state other
 // ways in the rest and gesture-end summaries (`v` in each), so a variant's
 // counts compare to the base on identical particles:
-//   on:<ratio>:<maxShift>  the bend bound on (splineBend, spline_generator);
+//   on:<ratio>:<maxShift>[:<marginMax>[:<passes>]]
+//                          the bend bound on (splineBend, spline_generator);
 //   sub<N>                 the spline's fine polyline at N subdivisions per
 //                          control segment instead of 12, the same count;
 //   dense<N>x<M>           N subdivisions and M x the sample count: the
@@ -209,6 +210,8 @@ interface Variant {
   kind: "on" | "sub";
   ratio: number;
   maxShift: number;
+  marginMax?: number;
+  passes?: number;
   sub: number;
   mult: number;
 }
@@ -217,9 +220,18 @@ const VARIANTS: Variant[] = (process.env.K90_VARIANTS ?? "")
   .map((t) => t.trim())
   .filter((t) => t.length > 0)
   .map((t): Variant => {
-    const on = /^on:([\d.]+):([\d.]+)$/.exec(t);
+    const on = /^on:([\d.]+):([\d.]+)(?::(\d+))?(?::(\d+))?$/.exec(t);
     if (on) {
-      return { name: t, kind: "on", ratio: +on[1], maxShift: +on[2], sub: 12, mult: 1 };
+      return {
+        name: t,
+        kind: "on",
+        ratio: +on[1],
+        maxShift: +on[2],
+        marginMax: on[3] ? +on[3] : 12,
+        passes: on[4] ? +on[4] : 1,
+        sub: 12,
+        mult: 1,
+      };
     }
     const sub = /^sub(\d+)$/.exec(t);
     if (sub) return { name: t, kind: "sub", ratio: 0, maxShift: 0, sub: +sub[1], mult: 1 };
@@ -358,10 +370,14 @@ const segDist = (
 const FEATURE_CAP = 300;
 // K90 1b: "web" = a window whose tightest sample lies within WEB_COVER
 // half-widths of a fused junction's center, where the junction web draws
-// over the ribbon (calibrated on page crops, docs/design/K90_bend_radius.md).
-// The holder it would have had stays in `h0`.
+// over the ribbon. 0.92 h is calibrated on page crops (docs/design/
+// K90_bend_radius.md, step 1): 82% of the jhost windows within it have
+// 90% or more of their disc under the web, none of the 28 beyond it does,
+// and no window sat between 0.5 and 0.92 h. K90_WEB_COVER overrides it; the
+// web1/web115 columns count 0.92, 1.5 and 2.5 h whatever it is. The holder
+// a window would have had stays in `h0`.
 const HOLDERS = ["grab", "web", "jhost", "jtip", "tip", "kink", "crossing", "collision", "free"];
-const WEB_COVER = Number(process.env.K90_WEB_COVER ?? "1.5");
+const WEB_COVER = Number(process.env.K90_WEB_COVER ?? "0.92");
 const WEB_STEPS = [0.92, 1.5, 2.5];
 
 interface Scan {
@@ -432,6 +448,8 @@ class Census {
         sb.enabled = true;
         sb.ratio = vr.ratio;
         sb.maxShift = vr.maxShift;
+        sb.marginMax = vr.marginMax ?? 12;
+        sb.passes = vr.passes ?? 1;
         sb.halfWidth = this.tw / 2;
         sb.moved = 0;
         sb.shiftMax = 0;
