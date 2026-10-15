@@ -76,10 +76,10 @@ and never reused.
   ring; built default wave) and its strengths (a tap's `prs` 1, an auto
   pluck's `pra` 0.35), the sheen (`psh` 0.5), the tug (`ptg`, off by
   default since the wake check, K279; built at 0.3), the vibration
-  (`psz` 2, `pgh` .5,
-  `pw` .75 against master's 1.75 / .35 / .5) and the auto-pluck volume
-  (`pag` 0.5, -6 dB); and whether the wave keeps bending the markers,
-  trail and fog or bends the ribbon layer only. Live since 18:20:
+  (`psz` 2, `pgh` .5, `pw` .75 against master's 1.75 / .35 / .5) and the
+  auto-pluck volume (`pag` 0.5, -6 dB); and whether the wave keeps
+  bending the markers, trail and fog or bends the ribbon layer only.
+  Live since 18:20:
   `?7&prp=wave` (glint, ring, off), `?7&prs=2&pra=1`, `?7&psh=1`,
   `?7&ptg=1`, `?7&pag=1`. `docs/design/K279.md` ("Stage 1 handoff").
 - **K257** · K76 section 10's questions, for stage 2c (none blocks 2b;
@@ -1414,7 +1414,8 @@ K5-K7 (split, frame loop, worker) follow.
   substeps a frame) and runs at 7-9 fps (3-4 dense) for 3-8 s. K162 (4)
   asks whether drags get K147's budget; K7's worker is the full fix.
   K279 suspected a regression since the 2026-10-10 audit (40 fps
-  mid-drag), unconfirmed: the audit timed a different design.
+  mid-drag), unconfirmed: the audit timed a different design. Offered to
+  Levi at 18:25: a bare-wake probe on 2026-10-10's commit would settle it.
 - **K65** · Low-gridAlign knots (`ga=0`, e.g. Levi's rect link) creep
   under the quiet threshold: a fresh settle drifts about 1.5 world over
   about 50 s, and a cinch up to about 0.9 world/s. Every sleep gate, old
@@ -1659,6 +1660,13 @@ K5-K7 (split, frame loop, worker) follow.
   2d905d0, da1333a, 4eb20a7) exist only on the local branch
   `k279-stage1-prerebase`: re-cite them as 50c1aab.
   `docs/design/K279.md` ("Stage 1 handoff", "Wake follow-up").
+- **K291** · CI: the deploy run of ad2618a (2026-10-14) carried two
+  annotations. Its actions (checkout@v4, setup-node@v4,
+  wrangler-action@v3) target Node 20 and run forced on Node 24, and
+  `ubuntu-latest` moves to Ubuntu 26 from 2026-10-19. Bump each action
+  to a release that runs on Node 24; if the first deploy after the 19th
+  fails, pin `ubuntu-24.04` until it is fixed (a red run leaves the
+  previous deployment live). `.github/workflows/deploy.yml`.
 
 ## Approved, to schedule (2026-10-11)
 
