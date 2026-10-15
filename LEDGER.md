@@ -15,6 +15,11 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K251** · On the phone, a displaced edge indicator crosses the open
+  panel during its 0.25 s slide to its panel-offset place (K198 stage 2,
+  merged 2026-10-14). Keep the slide, or fade the disc out and back in
+  instead? Sheet `.claude/probes/K198/stage2/out/contact_sheet.png`;
+  `docs/design/K198.md` ("Stage 2 handoff").
 - **K245** · How hard should the minotaur roam toward the player
   (K174's call)? `minoToward` (on) sets roamPull 0.5: on the K80 sim 63%
   of games meet it and a game averages 1.68 catches; 0.25 gives 60% and
@@ -323,60 +328,6 @@ and never reused.
   - next: after 16:20 on 10-14, run `cleanup.ps1` again for the
     profiles (about 33 GB). The probe libraries' delete-on-exit goes
     with K150.
-- **K198** · The fit camera's pan and the off-screen indicators, decided
-  (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
-  just want to be able to pan such that the right edge of the maze is
-  shown to the left of the left edge of the panel. Flash: not sure what
-  you're describing. Markers should have settings, and I guess we should
-  prevent the excess pan." The coordinator's reading, emailed to him
-  2026-10-14 to correct: (1) the pan clamp (K149, `src/ui/view_clamp.ts`)
-  lets the maze's right edge reach the open panel's left edge (on the
-  phone the panel covers x 81-401 of 411), in place of 0.3 of the screen
-  on every side, and allows no more; with the panel closed the pan stops
-  at the maze's edges, as before 10-13; (3) the edge indicators (finish,
-  head, minotaur) get panel settings: show/hide, a size or both is email
-  call 6.1 (K98 plans marker sizes); (2) the head indicator's flash in
-  follow mode, a short delay or not, is call 6.2. Parts (2) and (3)
-  touch main.ts, offscreen_indicators.ts, head_indicator.ts and
-  tweakpane_panel.ts (stage 2 runs beside K111 stage 2 and K174, in
-  other panel folders). Records:
-  `docs/design/K148_K149.md` ("Stage 1 handoff"), `gameplay-indicators.md`
-  THE HEAD and `gameplay-camera.md` FIT CAMERA PAN RANGE. Since K98
-  (merged 2026-10-14) `markerSize` sizes the in-game markers; the edge
-  indicators keep their own sizes until part (3).
-  - stage 1 MERGED in 5f6ceb9..d7373a4 (2026-10-14 09:31): the pan range
-    (`src/ui/view_clamp.ts`: `panRange`, `clampFitView`,
-    `easeIntoRange`; 16 tests). With the panel open, the maze's right
-    edge (its threads, or a shown start, head or exit disc) may reach
-    10 px left of the panel's left edge and no further; closing the
-    panel, a resize or fit drift eases back in at 0.15 a frame and never
-    snaps. Checked at 1000x800, 800x700, 1400x900 and 411x753. Lore
-    `gameplay-camera.md` (FIT CAMERA PAN RANGE); handoff
-    `docs/design/K198.md`; probes `.claude/probes/K198/`; follow-ups
-    K221-K224.
-  - parts (2) and (3), decided (Levi, 2026-10-14 about 11:10, email 6):
-    6.1 "both": each edge indicator (finish, head, minotaur) gets a
-    show/hide switch and a size; 6.2 "yes": the head's disc shows only
-    once the head has been off screen for a moment. Added in the same
-    reply: "The panel limit should tween as the panel is toggled.
-    Similarly, I want displaced off-screen indicators to also have their
-    panel-offset positions tween as needed." (Stage 1 already eases the
-    view back into range at 0.15 a frame when the panel closes; whether
-    the range itself follows the panel's slide is for the brief to
-    check.) The reading of part (1) stands: Levi corrected nothing.
-  - stage 2 brief: `docs/design/K198.md` ("Stage 2", f06dfd9): a
-    show/hide switch for the head and minotaur indicators beside the
-    finish's, one size slider for all three, the head's delay, and
-    time-based tweens for the panel limit and the displaced indicators.
-  - owner: claude agent a66866a0c356fc083 (opus) of session d8031183,
-    started 2026-10-14 12:45 with a 2 h cap (about 14:45).
-  - branch: `worktree-agent-a66866a0c356fc083`
-    (`.claude/worktrees/agent-a66866a0c356fc083`), from 05e6d4d; last
-    commit: none yet (unpushed).
-  - evidence: `.claude/probes/K198/stage2/` in that worktree; stage 1's
-    in the main checkout's `.claude/probes/K198/`.
-  - next: the brief's stage 2.
-  - brief: `docs/design/K198.md` ("Stage 2").
 - **K193** · The phone pass's orientation, decided (Levi, 2026-10-14
   about 11:10, email 4.1: "b seems best"): the pass emulates a 411x753
   portrait viewport over CDP and leaves the phone as it sits, and a
@@ -436,13 +387,17 @@ and never reused.
   brightest at the thread's edge and fading toward its center, wider,
   nothing outside the thread or the run. Stage 3 builds it with K236's
   (c) and (d), and sheets `hoverGlow` 0.25-1 for K237's default.
-  - owner: nobody yet; the brief was written 2026-10-14 13:40 and the
-    agent launches at the next free code slot (about 13:55, when K193
-    reports), ahead of K80 turns stage 1.
-  - branch: none yet (it starts from master); last commit: none.
+  - owner: claude agent a39facd348b84a113 (opus) of session d8031183, stage 3,
+    started 2026-10-14 14:04 with a 2 h cap (about 16:05; ports
+    5700-5709). Stages 1 and 2 were agent a98c345abb522e151 (its
+    worktree is kept).
+  - branch: `worktree-agent-a39facd348b84a113`
+    (`.claude/worktrees/agent-a39facd348b84a113`), from af0f054; last commit:
+    none yet (unpushed).
   - evidence: stage 2's `.claude/probes/K111/stage2/` and K145's
     `.claude/probes/K145/`; stage 3 writes `.claude/probes/K111/stage3/`.
-  - next: launch stage 3 (opus, 2 h, ports 5700-5709).
+  - next: the brief's stage 3 (remove the modes, the new hover rim and
+    its mirror, K236 (c) and (d), the hoverGlow sheet).
   - brief: `docs/design/K111.md` ("Stage 3").
 
 ## Next, in order
@@ -479,14 +434,16 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K198 stage 2 from 12:45 (opus, 2 h),
-K193 from 12:54 (sonnet, 1 h) and K76 stage 2a from 13:04 (opus, 2 h). At about 10:57 Levi lifted
+(he may reorder). Running: K193 from 12:54 (sonnet, 1 h),
+K76 stage 2a from 13:04 (opus, 2 h) and K111 stage 3 (K248) from
+14:04 (opus, 2 h). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
 (the rules split), K93, K198 stage 1, K98 and K92 merged at
 08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, K191 at 12:04,
-K235 + K239 at 12:44, K174 at 12:53 and K111 stage 2 at 13:03; the
+K235 + K239 at 12:44, K174 at 12:53, K111 stage 2 at 13:03 and K198
+stage 2 at 14:03; the
 coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -514,7 +471,8 @@ files at their merges. Then, as code slots free up:
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
     coordinator; Levi may reorder): K174's controls (merged 2026-10-14
-    12:53, ecf2169..6ec8275), K198 stage 2 (running from 12:45), K191's
+    12:53, ecf2169..6ec8275), K198 stage 2 (merged 2026-10-14 14:03,
+    96fa13a..af0f054), K191's
     fade-out (merged 2026-10-14 12:04, fafa340..3467117), K235 with K239
     (merged 2026-10-14 12:44, 08d1383..05e6d4d), and K193's portrait
     emulation with K195's A/A floor (running from 12:54).
@@ -538,6 +496,7 @@ G4-2 old-path deletions; K162 and K184-K186 (play, then call); K194's
 defaults (after playing); K225 (the markers' size); K229 (the open
 panel's top); K237 (the hover glow's default); K238 (K111's calls);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
+K251 (the displaced disc's slide across the panel);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -772,6 +731,12 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K252** · K198 stage 2's residuals: (a) `RANGE_EASE` is still a
+  per-frame ease (0.15 a frame) for a resize and the fit's drift, so
+  those settle faster at higher frame rates (the panel's edge is
+  time-based since stage 2); (b) the head's 0.45 s show delay rests on
+  five measured blips, the longest 0.33 s; the next phone pass (K156)
+  can check more. `docs/design/K198.md` ("Stage 2 handoff").
 - **K249** · K111's rims and contrast modes stop hard at junction webs
   and fans: the arm strips carry no across coordinate and there is no
   K145-style end-gap fade, so rims leave the webs unlit and contrast
@@ -1435,6 +1400,71 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K198** · The fit camera's pan and the off-screen indicators, decided
+  (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
+  just want to be able to pan such that the right edge of the maze is
+  shown to the left of the left edge of the panel. Flash: not sure what
+  you're describing. Markers should have settings, and I guess we should
+  prevent the excess pan." The coordinator's reading, emailed to him
+  2026-10-14 to correct: (1) the pan clamp (K149, `src/ui/view_clamp.ts`)
+  lets the maze's right edge reach the open panel's left edge (on the
+  phone the panel covers x 81-401 of 411), in place of 0.3 of the screen
+  on every side, and allows no more; with the panel closed the pan stops
+  at the maze's edges, as before 10-13; (3) the edge indicators (finish,
+  head, minotaur) get panel settings: show/hide, a size or both is email
+  call 6.1 (K98 plans marker sizes); (2) the head indicator's flash in
+  follow mode, a short delay or not, is call 6.2. Parts (2) and (3)
+  touch main.ts, offscreen_indicators.ts, head_indicator.ts and
+  tweakpane_panel.ts (stage 2 runs beside K111 stage 2 and K174, in
+  other panel folders). Records:
+  `docs/design/K148_K149.md` ("Stage 1 handoff"), `gameplay-indicators.md`
+  THE HEAD and `gameplay-camera.md` FIT CAMERA PAN RANGE. Since K98
+  (merged 2026-10-14) `markerSize` sizes the in-game markers; the edge
+  indicators keep their own sizes until part (3).
+  - stage 1 MERGED in 5f6ceb9..d7373a4 (2026-10-14 09:31): the pan range
+    (`src/ui/view_clamp.ts`: `panRange`, `clampFitView`,
+    `easeIntoRange`; 16 tests). With the panel open, the maze's right
+    edge (its threads, or a shown start, head or exit disc) may reach
+    10 px left of the panel's left edge and no further; closing the
+    panel, a resize or fit drift eases back in at 0.15 a frame and never
+    snaps. Checked at 1000x800, 800x700, 1400x900 and 411x753. Lore
+    `gameplay-camera.md` (FIT CAMERA PAN RANGE); handoff
+    `docs/design/K198.md`; probes `.claude/probes/K198/`; follow-ups
+    K221-K224.
+  - parts (2) and (3), decided (Levi, 2026-10-14 about 11:10, email 6):
+    6.1 "both": each edge indicator (finish, head, minotaur) gets a
+    show/hide switch and a size; 6.2 "yes": the head's disc shows only
+    once the head has been off screen for a moment. Added in the same
+    reply: "The panel limit should tween as the panel is toggled.
+    Similarly, I want displaced off-screen indicators to also have their
+    panel-offset positions tween as needed." (Stage 1 already eases the
+    view back into range at 0.15 a frame when the panel closes; whether
+    the range itself follows the panel's slide is for the brief to
+    check.) The reading of part (1) stands: Levi corrected nothing.
+  - stage 2 brief: `docs/design/K198.md` ("Stage 2", f06dfd9): a
+    show/hide switch for the head and minotaur indicators beside the
+    finish's, one size slider for all three, the head's delay, and
+    time-based tweens for the panel limit and the displaced indicators.
+  - Done in 96fa13a..af0f054 (2026-10-14 14:03): stage 2. The panel's edge
+    of the pan range tweens over 0.25 s (`PANEL_TWEEN_S`, smoothstep;
+    `stepRange` eases against last frame's openness and clamps to this
+    frame's, so a view at the limit rides the panel's edge), and a
+    displaced edge indicator slides along the screen's perimeter to its
+    panel-offset place; the Tweakpane panel itself still snaps. New Maze
+    rows: `headIndicator`, `minotaurIndicator` (real time only) and
+    `indicatorSize` (0.6-1.8, one size for all three discs; K98's
+    `markerSize` stays separate). The head's disc shows after 0.45 s
+    off screen (`HEAD_SHOW_DELAY_S`; showing only, hiding is
+    immediate; the finish and minotaur discs have no delay). Reduced
+    motion jumps instead of tweening. A switched-off indicator is not
+    drawn and takes no taps. Closing at the limit: 35 frames / 1042 ms
+    before, 9 / 238 ms after; 806 tests passed at the merge (797 on the
+    branch). The disc's slide across
+    the open panel is K251, the residuals K252. Lore
+    `gameplay-indicators.md`, `gameplay-camera.md`; handoff
+    `docs/design/K198.md` ("Stage 2 handoff"); sheet and probes
+    `.claude/probes/K198/stage2/` (`out/contact_sheet.png`; stage 1's
+    `pan.mjs` closing check is superseded by stage 2's glide check).
 - **K111** · Accessibility (Levi, 2026-10-13). Reduced motion also
   stills the flow undulation, but not the intros or the pulses next to
   the player. Those pulses get a dropdown of alternative highlight modes,
