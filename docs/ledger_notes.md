@@ -2685,3 +2685,50 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   needs an edge-distance term in the fan shader and a rule for where the
   rim ends on the web (K145 kept it off webs; `render-paint.md`).
   Probably folds into K9's G4-1 with K328 (K8's stage 1 confirms).
+
+## K76 (2026-10-15, stage 2c merged)
+
+- **K76** · The thread-reveal mode, stage 2 (Levi, 2026-10-13): an
+  end-look dropdown (default beacon) and one `exploration` dropdown (off
+  | fog | threads) replacing the fog toggle, built as a separate shader
+  variant. Design `docs/design/K76_reveal_mode.md`; 2a and 2b merged
+  (residuals K258, K276; joints fade with their thread, K275), 2c
+  running, then K268 stage 2, K290 and 2d.
+  - owner: agent a58040d5b7b031c80 (opus) of claude session d8031183,
+    stage 2c from 23:39 (cap 01:39; ports 5810-5819); earlier worktrees
+    kept (2b `ac6e354b85922e7aa`, 2a `a5d63452980ed9fa3`, stage 1
+    `aea102de995e1ce30`)
+  - branch: `worktree-agent-a58040d5b7b031c80`
+    (`.claude/worktrees/agent-a58040d5b7b031c80`, from 2c81a92); last
+    commit: `2c81a92` (master) until its first WIP commit
+  - evidence: `.claude/probes/K76/stage2c/` in its worktree; 2a's and
+    2b's in the main checkout's `.claude/probes/K76/` (sheets
+    `stage2a/out/sheet/`, `stage2b/out/`); lore `render-explore.md`
+  - next: stage 2c (move-event feed, input gating and camera, the
+    `exploration` dropdown with codec 6, K73 indicator, intro, K257's
+    and K286's recommendations, a census walk), its handoff, the merge
+  - brief: `docs/design/K76.md` ("Stage 2c", 79c5a97), then
+    `docs/design/K76_reveal_mode.md`
+
+## K268 (2026-10-15, stage 2 started)
+
+- **K268** · Shaped crossing gaps under thread reveal (K76; Levi,
+  2026-10-14 15:16): a gap must not show until the over thread is seen,
+  and a stub's variable overlap and dead ends need a dynamic gap shape.
+  Stage 1 (the ribbon's shaped cut, proof, desktop sheet) merged; stage
+  2 is the fans, pluck-still, protect, smooth-min, underWindows and
+  caps.
+  - owner: nobody since 2026-10-14 17:50 (stage 1 merged; agent
+    ab65d913a3b9a3dcb, worktree
+    `.claude/worktrees/agent-ab65d913a3b9a3dcb` kept)
+  - branch: mainline; last commit: `61c8859` (stage 1 is
+    1e55365..61c8859)
+  - evidence: `.claude/probes/K268/` (the proof, the census, GPU
+    timings, the partial sheet)
+  - next: stage 2 ("For stage 2", with K275's fade), after the physics
+    worker and never alongside K76 2c, K298, K299 or K111 stage 5 (all
+    change the paint shaders); residuals K287, draw order waits on Levi
+    (K286); burn stage 3 runs the cut in reverse (K290)
+  - brief: `docs/design/K268.md` ("Stage 1 handoff (2026-10-14 17:41)",
+    "For stage 2"); the design is in `docs/design/K76.md` ("Shaped gaps
+    (Levi, 15:16)")

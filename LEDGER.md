@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K362.
+Next free ID: K365.
 
 ## Waiting on Levi
 
@@ -100,6 +100,9 @@ Next free ID: K362.
 - **K361** · G3/G4's calls (K8 stage 1; `G3G4_sdf_geometry.md` §6), none
   blocking G3-0. Recs: smin webs (sheet first), webs inset 1 px, accept the
   yarn taper, 2x until K22, drop `rp`/`jp` after the phone check; K90 by G3-2.
+- **K362** · K76 2c's calls (`K76.md` "Stage 2c handoff"). Recs: the intro
+  stays off by default; 2d widens the start view (at the 90 cap) to a ~2 x
+  (revealDistance + 2) span. Called: the mode stays in the panel before the MAX fix.
 
 ## In progress
 
@@ -197,47 +200,22 @@ Next free ID: K362.
   - next: run `cleanup.ps1` again for the profiles (it was due after
     16:20 on 10-14, none was a day old at 01:17); the libraries'
     delete-on-exit goes with K150
-- **K76** · The thread-reveal mode, stage 2 (Levi, 2026-10-13): an
-  end-look dropdown (default beacon) and one `exploration` dropdown (off
-  | fog | threads) replacing the fog toggle, built as a separate shader
-  variant. Design `docs/design/K76_reveal_mode.md`; 2a and 2b merged
-  (residuals K258, K276; joints fade with their thread, K275), 2c
-  running, then K268 stage 2, K290 and 2d.
-  - owner: agent a58040d5b7b031c80 (opus) of claude session d8031183,
-    stage 2c from 23:39 (cap 01:39; ports 5810-5819); earlier worktrees
-    kept (2b `ac6e354b85922e7aa`, 2a `a5d63452980ed9fa3`, stage 1
-    `aea102de995e1ce30`)
-  - branch: `worktree-agent-a58040d5b7b031c80`
-    (`.claude/worktrees/agent-a58040d5b7b031c80`, from 2c81a92); last
-    commit: `2c81a92` (master) until its first WIP commit
-  - evidence: `.claude/probes/K76/stage2c/` in its worktree; 2a's and
-    2b's in the main checkout's `.claude/probes/K76/` (sheets
-    `stage2a/out/sheet/`, `stage2b/out/`); lore `render-explore.md`
-  - next: stage 2c (move-event feed, input gating and camera, the
-    `exploration` dropdown with codec 6, K73 indicator, intro, K257's
-    and K286's recommendations, a census walk), its handoff, the merge
-  - brief: `docs/design/K76.md` ("Stage 2c", 79c5a97), then
-    `docs/design/K76_reveal_mode.md`
+- **K76** · Thread-reveal mode, stage 2 (Levi, 2026-10-13): `exploration`
+  (off | fog | threads) and an end look, a separate shader variant. 2a-2c
+  merged, so the mode is in the panel (off by default); 2d after K268 s2, K290.
+  - owner: nobody since 2026-10-15 01:08 (stage 2c done; agent `a58040d5b7b031c80` of claude session d8031183; worktrees kept: 2c's, 2b `ac6e354b85922e7aa`, 2a `a5d63452980ed9fa3`, stage 1 `aea102de995e1ce30`)
+  - branch: mainline; last commit: `82c1f23` (2c is `e6e151d..82c1f23`)
+  - evidence: `.claude/probes/K76/stage2c/` (2a's and 2b's beside it); lore `render-explore.md`
+  - next: stage 2d ("For stage 2d": High contrast dots, the census on K268's shaped slots, the held frame, step 8's phone gate and GPU, the final sheets) after K268 s2 and K290; Levi's calls are K362
+  - brief: `docs/design/K76.md`, "Stage 2c handoff"; design `docs/design/K76_reveal_mode.md`
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi,
-  2026-10-14 15:16): a gap must not show until the over thread is seen,
-  and a stub's variable overlap and dead ends need a dynamic gap shape.
-  Stage 1 (the ribbon's shaped cut, proof, desktop sheet) merged; stage
-  2 is the fans, pluck-still, protect, smooth-min, underWindows and
-  caps.
-  - owner: nobody since 2026-10-14 17:50 (stage 1 merged; agent
-    ab65d913a3b9a3dcb, worktree
-    `.claude/worktrees/agent-ab65d913a3b9a3dcb` kept)
-  - branch: mainline; last commit: `61c8859` (stage 1 is
-    1e55365..61c8859)
-  - evidence: `.claude/probes/K268/` (the proof, the census, GPU
-    timings, the partial sheet)
-  - next: stage 2 ("For stage 2", with K275's fade), after the physics
-    worker and never alongside K76 2c, K298, K299 or K111 stage 5 (all
-    change the paint shaders); residuals K287, draw order waits on Levi
-    (K286); burn stage 3 runs the cut in reverse (K290)
-  - brief: `docs/design/K268.md` ("Stage 1 handoff (2026-10-14 17:41)",
-    "For stage 2"); the design is in `docs/design/K76.md` ("Shaped gaps
-    (Levi, 15:16)")
+  2026-10-14): no gap until the over thread is seen, and a dynamic gap for
+  a stub's overlap and dead ends. Stage 1 merged; stage 2 runs.
+  - owner: agent `a42c63c2db0401edb` (opus) of claude session d8031183, stage 2 from 01:15 (cap 03:15; ports 5820-5829); stage 1's worktree `ab65d913a3b9a3dcb` kept
+  - branch: `worktree-agent-a42c63c2db0401edb` (`.claude/worktrees/agent-a42c63c2db0401edb`, from `82c1f23`); last commit: `82c1f23` (master) until its first WIP commit
+  - evidence: `.claude/probes/K268/` (stage 1's); stage 2's in its worktree's `.claude/probes/K268/stage2/`
+  - next: first the MAX defect K76 2c found (crossing 275, both threads walked: the mode on cuts 0 px of gap against 1010 px off, so the threads fuse; `.claude/probes/K76/stage2c/out/census_new2/shaped_c275.png`), then K275's fade, the fans and still pluck, protect, smooth-min, underWindows; never alongside K298, K299 or K111 s5; K290 next in the chain
+  - brief: `docs/design/K268.md` ("For stage 2"); `docs/design/K76.md` ("Stage 2c handoff", "For K268 stage 2")
 - **K279** · Plucks you can see, feel and hear (Levi, 2026-10-14): a
   ripple at pluck points (glint by default, K288), more vibration, a tug
   (off: its wake cost is K7's), quieter auto plucks. Stage 1: ad2618a.
@@ -1144,6 +1122,11 @@ Every other item below waits on the trigger it names.
 - **K358** · The physics worker's modules reach the notices collector
   before main's `generateBundle` (inferred in K7 stage 3, nothing depends
   on it yet): add a check when a worker-only package arrives.
+- **K363** · K76 2c's residuals (`K76.md` "Stage 2c handoff"): a K47 restore
+  shows a caught partial's run whole and ignores refogs; the minotaur's
+  telegraph can draw over hidden thread; the fit box is cached per declaration.
+- **K364** · Master's fog intro (`fow=1&fwi=1`) zooms out to s 11.7 before
+  it closes in (seen in K76 2c's probes; not investigated).
 
 ## Approved, to schedule (2026-10-11)
 
