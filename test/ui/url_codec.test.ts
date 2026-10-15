@@ -95,7 +95,7 @@ describe("links", () => {
       confetti: true, confettiAmount: 1,
       pluckWhole: 0.75, pluckCrossings: "through", pluckGlow: "off",
       pluckRipple: "wave", rippleStrength: 1, rippleAuto: 0.35,
-      pluckSheen: 0.5, pluckTug: 0.3, tugAuto: false, autoPluckGain: 0.5,
+      pluckSheen: 0.5, pluckTug: 0, tugAuto: false, autoPluckGain: 0.5,
       markerSize: 1.08,
       hoverGlow: 0.4,
       minotaur: "off", minoSpeed: "one", minoTelegraph: true, minoSight: 4,
@@ -500,6 +500,7 @@ function otherValue(name: keyof typeof PARAM_DEFAULTS): string | number | boolea
   // A share whose default could be 0 (off), where halving changes nothing.
   if (name === "hCutShare") return d === 0.5 ? 0.25 : 0.5;
   if (name === "fireDelay") return 12; // K114: its default is 0
+  if (name === "pluckTug") return 0.3; // K279 wake follow-up: default 0
   return (d as number) * 0.5;
 }
 // As a link writes it: booleans 0/1, colors without the "#".

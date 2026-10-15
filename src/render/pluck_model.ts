@@ -285,7 +285,8 @@ export const PLUCK_WHOLE_MAX = 1.5;
 //   pluckSheen      bright turning-point edges on the time exposure, [0, 1];
 //                   0 = the pre-K279 strip bit for bit.
 //   pluckTug        a small physics displace-and-release of the plucked lobe,
-//                   [0, 1]; 0 = render-only plucks (K3).
+//                   [0, 1]; 0 = render-only plucks (K3), the default since
+//                   the K279 wake probe (a tug wakes the solver).
 //   tugAuto         auto plucks tug too (default off: they never wake the knot).
 //   autoPluckGain   auto plucks' volume, [0, 1]; 1 = a manual pluck's level.
 export type PluckRipple = "off" | "wave" | "glint" | "ring";

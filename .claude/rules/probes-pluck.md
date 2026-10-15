@@ -52,7 +52,12 @@ only with the files it is about; `probes.md` lists the area's other files.
   node-to-node spans tugged and timed to the next sleep, plus one real
   click), k279_sheet.mjs (the contact sheet: one frozen state, pinned
   ripple and pluck clocks; its tug group steps the sim to a target time
-  through a gated ps.step, `window.__stepUntil`), run_locked.ps1 (runs
+  through a gated ps.step, `window.__stepUntil`), k279_wake.mjs `<host>
+  <out> [designs] [WxHxDSF]` (the wake table: per frame from inside the
+  page, the rAF interval, every rAF callback's ms, ps.step's ms, dt and
+  substeps, renderer.update and the fabric overlay; a tap, a drag-release
+  and a bare wake from one sleeping state; one off-screen window with the
+  occlusion-safe flags and its own profile), run_locked.ps1 (runs
   one probe under the perf lock), png.mjs and crop.mjs. Builds:
   `builds/<sha>` served by `npx vite preview --outDir <dir> --port <p>
   --strictPort`.
