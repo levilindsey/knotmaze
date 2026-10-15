@@ -15,6 +15,40 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K198** · The fit camera's pan and the off-screen indicators, decided
+  (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
+  just want to be able to pan such that the right edge of the maze is
+  shown to the left of the left edge of the panel. Flash: not sure what
+  you're describing. Markers should have settings, and I guess we should
+  prevent the excess pan." The coordinator's reading, emailed to him
+  2026-10-14 to correct: (1) the pan clamp (K149, `src/ui/view_clamp.ts`)
+  lets the maze's right edge reach the open panel's left edge (on the
+  phone the panel covers x 81-401 of 411), in place of 0.3 of the screen
+  on every side, and allows no more; with the panel closed the pan stops
+  at the maze's edges, as before 10-13; (3) the edge indicators (finish,
+  head, minotaur) get panel settings: show/hide, a size or both is email
+  call 6.1 (K98 plans marker sizes); (2) the head indicator's flash in
+  follow mode, a short delay or not, is call 6.2. Parts (2) and (3)
+  touch main.ts, offscreen_indicators.ts, head_indicator.ts and
+  tweakpane_panel.ts: not alongside K92 or K111 (the panel). Records:
+  `docs/design/K148_K149.md` ("Stage 1 handoff"), `gameplay-indicators.md`
+  THE HEAD and `gameplay-camera.md` FIT CAMERA PAN RANGE.
+  - stage 1 MERGED in 5f6ceb9..d7373a4 (2026-10-14 09:29): the pan range
+    (`src/ui/view_clamp.ts`: `panRange`, `clampFitView`,
+    `easeIntoRange`; 16 tests). With the panel open, the maze's right
+    edge (its threads, or a shown start, head or exit disc) may reach
+    10 px left of the panel's left edge and no further; closing the
+    panel, a resize or fit drift eases back in at 0.15 a frame and never
+    snaps. Checked at 1000x800, 800x700, 1400x900 and 411x753. Lore
+    `gameplay-camera.md` (FIT CAMERA PAN RANGE); handoff
+    `docs/design/K198.md`; probes `.claude/probes/K198/`; follow-ups
+    K221-K224.
+  - parts (2) and (3) wait on Levi's email answers 6.1 (the indicators'
+    settings) and 6.2 (the flash).
+- **K219** · Since K93 the choice hover stops at `pulseReach` in every
+  path mode, and at reach 0.5 it lights very little: does it need a
+  floor? Asked 2026-10-14 about 09:33 with
+  `.claude/probes/K93/K93_hover_sheet.png`.
 - **K90** · A physical minimum bend radius, stage 1 (Levi, 2026-10-13:
   "ideally we'd have a more physics-based constraint to prevent loops
   from becoming too tight in the first place"). No thread folds tighter
@@ -299,60 +333,6 @@ and never reused.
   - next: after 16:20 on 10-14, run `cleanup.ps1` again for the
     profiles (about 33 GB). The probe libraries' delete-on-exit goes
     with K150.
-- **K198** · The fit camera's pan and the off-screen indicators, decided
-  (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
-  just want to be able to pan such that the right edge of the maze is
-  shown to the left of the left edge of the panel. Flash: not sure what
-  you're describing. Markers should have settings, and I guess we should
-  prevent the excess pan." The coordinator's reading, emailed to him
-  2026-10-14 to correct: (1) the pan clamp (K149, `src/ui/view_clamp.ts`)
-  lets the maze's right edge reach the open panel's left edge (on the
-  phone the panel covers x 81-401 of 411), in place of 0.3 of the screen
-  on every side, and allows no more; with the panel closed the pan stops
-  at the maze's edges, as before 10-13; (3) the edge indicators (finish,
-  head, minotaur) get panel settings: show/hide, a size or both is email
-  call 6.1 (K98 plans marker sizes); (2) the head indicator's flash in
-  follow mode, a short delay or not, is call 6.2. Part (1) can start
-  before he answers. Touches
-  view_clamp.ts, main.ts, offscreen_indicators.ts, head_indicator.ts
-  and tweakpane_panel.ts: not alongside K92 or K111 (the panel). Records:
-  `docs/design/K148_K149.md` ("Stage 1 handoff"), `gameplay-indicators.md`
-  THE HEAD and `gameplay-camera.md` FIT CAMERA PAN SLACK.
-  - owner: agent aab9f7358ac73188f (opus) of session d8031183, started
-    2026-10-14 08:37; it stops at about 10:37 or when stage 1 (the pan
-    clamp) is done.
-  - branch: `worktree-agent-aab9f7358ac73188f`
-    (`.claude/worktrees/agent-aab9f7358ac73188f`), from 59c70a2; last
-    commit: none yet.
-  - evidence: `.claude/probes/K198/` in its worktree (copy at merge).
-  - next: stage 1, the pan clamp; parts (2) and (3) wait on Levi's email
-    answers 6.1 and 6.2. At merge, carry its lore edits into
-    `gameplay-indicators.md` (THE HEAD) and `gameplay-camera.md` (FIT
-    CAMERA PAN SLACK), where K173 moved them.
-  - brief: `docs/design/K198.md`.
-  - env: dev servers on ports 5570-5579.
-- **K93** · Trail fade and hover reach, decided (Levi, 2026-10-13:
-  "Trail fade, yes; Hover vs pulseReach, hover should stop at pulseReach
-  (and fade-out toward the end, same as pulseReach)"). (1) The trail
-  fade follows K4: split the span holding the fade start in `buildTrail`
-  (gold up to the fade start, then linear). (2) Hover stops at
-  `pulseReach` and fades toward its end like the pulses. Both touch
-  `src/render/fabric_maze_renderer.ts` and the G2 paint and its
-  `paint_math` mirror, so after K81 merges. Sheets: `.claude/probes/K75/`
-  (`NOTES.txt` indexes them).
-  - owner: agent a20dd6f83769279d0 (opus) of session d8031183, started
-    2026-10-14 08:45; it stops at about 10:45 or when stage 1 (K93) is
-    done.
-  - branch: `worktree-agent-a20dd6f83769279d0`
-    (`.claude/worktrees/agent-a20dd6f83769279d0`), from 6b0fca3; last
-    commit: none yet.
-  - evidence: `.claude/probes/K93/` in its worktree (copy at merge).
-  - next: stage 1 (the trail fade's span split, the choice hover's reach);
-    then K145 as stage 2, a fresh agent from master. At merge, carry its
-    lore edits into the topic files (the K75 passage is in
-    `render-paint.md` since K173).
-  - brief: `docs/design/K93_K145.md`.
-  - env: dev servers on ports 5580-5589.
 - **K98** · Marker sizes and two new glyphs (Levi, 2026-10-13: "I
   like all your icons. The defaults are good."). A slider for the
   player's dot diameter relative to the thread width, 0.25-3, defaulting
@@ -397,7 +377,7 @@ appends. Usage: don't hold agents back until the week nears 95% (Levi,
 2026-10-13 07:40, raised from 90% at about 23:53; 42% at 07:17, 54% at
 13:35, 57% at 15:33, 61% at 17:48, 63% at 19:15, 66% at 23:13, 68% at
 23:54; on 10-14 69% at 00:25, 72% at 01:49, 76% at 07:38, 78% at 08:05,
-80% at 08:37 and 82% at 09:04; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
+80% at 08:37, 82% at 09:04 and 83% at 09:28; at 13:40 on 10-13 he said keep going at full speed, and on 10-14
 at about 07:53 "Keep going at full pace."; it resets Mondays at 12:00).
 Long work runs in stages from
 committed briefs (Levi, 2026-10-13; the coordinator oversees it): each
@@ -446,7 +426,7 @@ into the topic files at their merges. Then, as code slots free up:
 
 Waiting for Levi: K90's bend bound (he tests it live); K114's spider (call 7); the G3-3 and G4-2 old-path
 deletions; K162, K174 and K184-K186 (play, then call); K191, K193 and
-K194; K198's marker settings and flash; near launch, K117 and K210;
+K194; K198's indicator settings and flash; K219 (a floor for the hover); near launch, K117 and K210;
 after the churn, K46, K57 and K84. Emailed 2026-10-14 about 08:25, each with
 enough detail to decide and numbered for a reply by number: K114 call 7
 (1.x), K174 (2.x), K191 (3.x), K193 (4.1), K194 (5.x), K198 (6.1
@@ -705,6 +685,34 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K224** · On the phone (411x753) the K120 move pad (z-index 18) draws
+  over the open panel (seen in K198's phone probe). K92 reworks that
+  chrome, so its launch takes the fix.
+- **K223** · Tooling after K198: K149's `.claude/probes/K148_K149/probe.mjs
+  slack` checks the old 0.3-screen rule and now fails by design (K198's
+  `.claude/probes/K198/pan.mjs` replaces it), and K173's
+  `scripts/split_rules.json` still anchors on the old FIT CAMERA PAN
+  SLACK entry, which matters only if the split is re-run.
+- **K222** · K198's maze edge leaves out the win ring (about 5 px past
+  the disc, inside the 10 px gap), the head's glow and the minotaur, and
+  the range ignores the panel's height, so a maze lower than a short
+  panel still has to clear it (`docs/design/K198.md`, The calls).
+- **K221** · K198's range reads the maze's right edge, which creeps while
+  the knot settles (about 0.3 fit px per 200 ms), so at the left limit
+  the gap to the open panel shrinks by zoom times the creep (0.2-1.2 px
+  measured) (`docs/design/K198.md`).
+- **K220** · Tooling: K75's `census_fan.mjs` misreads routed joints since
+  K81 (it calls `fieldProbe.at` without `px` and `strip`, so it reports
+  0.21 where the fans agree to 0.006). Use K169's `census_k81.mjs` or
+  K93's `census_k81h.mjs` (`.claude/probes/K93/`); fix or retire it.
+- **K218** · In trail mode, a junction cap inside the fade holds a flat p
+  over its 0.31 radius, then steps at its edge (pre-existing, mostly
+  under the web; `docs/design/K93_K145.md`, Stage 1 handoff).
+- **K217** · K93's trail split is placed linearly in ctrl, but the trail
+  measures lattice length and the paint is linear in arc, so the fade
+  start sits slightly off in arc (pre-existing: the partial oldest span
+  does the same), and a fading part narrower than a pixel blends
+  sub-pixel at the split (`docs/design/K93_K145.md`, Stage 1 handoff).
 - **K216** · The rules split's hand-kept parts: `docs/lore_index.md` and
   each area file's topic list are maintained by hand, and 26 design docs
   still name the area files, one hop from the topic (`docs/design/K173.md`).
@@ -1254,6 +1262,16 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K93** · Trail fade and hover reach (Levi, 2026-10-13: "Trail fade,
+  yes; Hover vs pulseReach, hover should stop at pulseReach (and
+  fade-out toward the end, same as pulseReach)"). The trail piece that
+  holds the fade start splits in two (`src/render/trail_paint.ts`,
+  `buildTrail`): solid gold out to the fade start, then the fade. The
+  choice hover stops at `pulseReach` and fades over its end in every
+  path mode (kPulseV's `kReachWin`, mirrored in `paint_math.ts`).
+  Handoff `docs/design/K93_K145.md` ("Stage 1 handoff"); probes and the
+  sheets sent to Levi in `.claude/probes/K93/`; follow-ups K217-K220;
+  stage 2 is K145. Done in 82ca7d9..ed8f284 (2026-10-14).
 - **K173** · Split the `.claude/rules/` lore by topic (Levi, 2026-10-14
   about 07:53: "Splitting the rules files seems worthwhile."). 32 new
   topic files with narrow `paths:` lists; the area files keep the general
