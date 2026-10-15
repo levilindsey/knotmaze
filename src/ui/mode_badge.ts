@@ -222,7 +222,12 @@ function ensureBadgeStyles(): void {
     "border-radius:21px;padding:0 15px 0 12px;font-size:13px}" +
     ".km-mode.km-free{padding-right:13px}" +
     ".km-mode .km-mode-x{width:12px;height:12px}" +
-    ".km-mode.km-fit-icon{width:42px;padding:0}}";
+    ".km-mode.km-fit-icon{width:42px;padding:0}}" +
+    // K92: while the panel is open (the root's kp-open) undo and redo take
+    // the hamburger's row, and the badge its own row below it, right-aligned
+    // with the hamburger; the panel opens below that (--kp-top).
+    ".kp-open .km-mode{top:calc(max(10px,env(safe-area-inset-top)) + 50px);" +
+    "right:max(10px,env(safe-area-inset-right))}";
   document.head.appendChild(style);
 }
 
