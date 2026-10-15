@@ -2903,3 +2903,38 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - evidence: `.claude/probes/K76/stage2c/` (2a's and 2b's beside it); lore `render-explore.md`
   - next: stage 2d ("For stage 2d": High contrast dots, the census on K268's shaped slots, the held frame, step 8's phone gate and GPU, the final sheets) after K268 s2 and K290; Levi's calls are K362
   - brief: `docs/design/K76.md`, "Stage 2c handoff"; design `docs/design/K76_reveal_mode.md`
+
+## K7 (2026-10-15, stage 6 merged)
+
+- **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
+  calls K302). Stages 1-5 merged (stage 5: 3e6b7c5..988be6a, the start gate and the phone
+  pass, which missed only the 250 ms gate). Call F6: the default anyway.
+  - owner: agent `a6023a3244ff623cc` (sonnet) of claude session d8031183, stage 6 (the flip) from 03:49 (cap 04:49; ports 5850-5859); stage 5's worktree `adf244f47f53e8230` kept
+  - branch: `worktree-agent-a6023a3244ff623cc` (`.claude/worktrees/agent-a6023a3244ff623cc`, from `8b3b401`); last commit: `8b3b401` (master) until its first WIP commit
+  - evidence: `.claude/probes/K7/` (`stage5/`: the phone tooling, `s5_gate.txt`, `run_s5.ps1`, `table_s5.mjs`; `stage4/`, `stage3/`)
+  - next: stage 6 (sonnet): `phw` on by default, its pins and lore, the 21 shared probe libraries ported (K374); then K5 M1; then stage 7 (opus; after M1, since both edit main.ts's boot): the start-gate lever (params and tuning in the Worker's `name`, main adopts gen 0), the phone pass again and the spike page `?d=gs18`
+  - brief: `docs/design/K7_worker.md`, "Stage 6 brief: the flip (call F6)"; stage 7 from "Stage 5 handoff" ("For the next stage")
+  - env: the phone: `.claude/probes/K7/stage5/phone_setup.ps1` and `phone_teardown.ps1`, under the phone lock
+
+## K374 (2026-10-15, stage 6 ported the shared libraries)
+
+- **K374** · 52 freeze-patch probes and 5 timing wrappers still patch `ps.step`
+  and run only with `&phw=0` (`.claude/probes/K7/stage4/ports/FREEZE_PATCH_FILES.md`):
+  port each when next needed, `k279_ab` first; re-run g2_smoke and livefabric.
+
+## K381 (2026-10-15, done)
+
+- **K381** · The K83 PIN recipe (`probes.md`) and `k83_ab` don't pin the fabric's
+  explore clock: a thread-reveal A/B differs by 22050 px without it (G3-0). Rec:
+  add `F.exploreClock = 1000` and `tickExplore` forwarded with 0 (probes.md's K8 bullet has it).
+
+## K5 (2026-10-15, stage M1 launched)
+
+- **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
+  with seams so G3 becomes a module swap; K6 rides it. Design merged:
+  `docs/design/K5_K6_split.md` (its calls: K377).
+  - owner: nobody since 2026-10-15 03:14 (design done and merged; agent `aa60ed52201f75682` of claude session d8031183, worktree kept)
+  - branch: mainline; last commit: `4931204`
+  - evidence: `.claude/probes/K5/design/` (eight region maps of main.ts and ribbon_renderer.ts)
+  - next: stage M1 once K7 stage 5 merges (re-map main.ts first), then section 5's stages: M1-M8, and R1-R5 (R1 after G3-0 merges); section 6 orders them against the queue
+  - brief: `docs/design/K5_K6_split.md`, "7. Stage 1 brief"
