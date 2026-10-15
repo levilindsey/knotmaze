@@ -86,6 +86,48 @@ differs, and `-Phase check` prints the display: rerun an A/A
 pass when the orientation changes. `-Dry` runs the same scripts against a
 desktop Chrome with the phone's viewport: plumbing only, never timings.
 
+K193 (2026-10-14), THE PASS EMULATES PORTRAIT (`docs/design/K193.md`):
+`-Viewport portrait` (the default; `native` leaves the tab as the phone has
+it, so an old landscape pass reproduces) sets the pass tab to 411x753 CSS px
+at dpr 2.625 with `Emulation.setDeviceMetricsOverride` (mobile, portrait
+orientation) from the script's own CDP session, whichever way the phone sits
+(docked in landscape, or off the dock in portrait). No phone setting changes,
+and the override ends with the script's connection, so EVERY script sets it
+again (`myPage` calls `emulate`; `ensureViewport` runs before each
+navigation). Measured on the Pixel 11: the override survives `goto` and
+`reload` inside the session that set it; mobile emulation keeps the layout
+width a page LOADED with, and a read right after setting an override can
+still show the old width. The log and `summary.md` print the phone's display
+as it sits AND the emulated viewport, the bench rows carry `emu` (what the
+page reported at each sample; the summary says in how many samples it held),
+and the looks report carries `viewport`. PROOF (`emulation.mjs`, the first
+step of the frames phase; exit 4 stops the pass after its cleanup): the
+page's own `innerWidth x innerHeight`, dpr, orientation media query, visual
+viewport, document and screen; an ODD size the phone does not have (360x640
+@3: when the phone itself sits in portrait, a match with 411x753 would prove
+nothing); the override surviving a navigation and a reload; the canvas's CSS
+box; and a viewport-clipped screenshot of the right aspect with no flat
+strip. The app caps its canvas at dpr 2 (`src/main.ts`, `Math.min(
+devicePixelRatio, 2)`): at 2.625 the backing is 822x1506, NOT the 1079x1977
+the brief expected (reported as a note, not a verdict). THE CAPTURE SURFACE
+IS TALLER THAN THE VIEWPORT (K195): a bare `page.screenshot()` came back
+1080x2125 px = 808.7 CSS px under a 753 CSS px viewport (K195's landscape
+frames: 387 under 331), and its bottom 148 rows are a flat off-white strip
+(250,250,248: a white-row detector misses it, blue is 248). Every pass
+screenshot is therefore clipped to the viewport (`shotViewport` in `lib.mjs`:
+the visual viewport's rectangle, `captureBeyondViewport:false`, and a
+geometry-only crop when a capture is still taller than the viewport's
+aspect; the looks report counts both in `shotStats`). `emulation_unclipped.png`
+keeps one bare capture as the evidence. A `-Dry` run captures at the
+desktop's display scale (2), so the clip is only exercised for real on the
+phone. THE WATCHDOG TRIPS WHEN A PERSON USES THE PHONE: `-Phase check`
+calls an awake, unlocked phone ready even with another app in front
+(sh.paseo, the Claude app), and the start then trips at once ("top
+activity is sh.paseo, expected com.android.chrome"; K193, 13:21) after a
+clean cleanup. `retry_quiet.ps1` then waits 15 quiet minutes and every touch
+(dozens of events a second while a finger moves) restarts the wait; it
+gives up at `-GiveUpMin`. FLOOR-PENDING
+
 - K79 stage B3 (2026-10-13), phone gate probes (`.claude/probes/K79/phone/`:
   `run_b3.ps1`, `panel_b3.mjs`, `passcost_x.mjs`, `watchdog.ps1`). (1) A
   "nothing jumps" pixel strip (the same strip of the page, compared before
