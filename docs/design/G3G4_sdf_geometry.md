@@ -583,48 +583,80 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
 
 ### 4.1 Deleted
 
-**G3:**
-- `RibbonMesh.update` with all its miter, open-leg, zero-length-leg, P3.34 concave-clamp and swell-clamp logic (`ribbon_mesh.ts:216-340`).
-- `RibbonMesh`'s per-vertex aUV, aColor, aFx, aArcPos, aTan and aMaskId buffers; `writePaint`/`setFx`/`setMaskIds`; the ~45-100 per-chain meshes. `RibbonMesh` itself disappears; `TriFanMesh` goes in G4.
-- `SECTION_VERT/FRAG`.
+**G3 (most of it at G3-3, after Levi's phone check of G3-2):**
+- `RibbonMesh.update`, with all its miter, open-leg, zero-length-leg, P3.34 concave-clamp and swell-clamp logic (`ribbon_mesh.ts`).
+- `RibbonMesh` itself:
+  - its per-vertex aPosition, aUV, aKey, aArcPos, aTan and aMaskId buffers, and their writers;
+  - the ~60-100 per-chain meshes.
+- The strip program: `section-rgb` (`SECTION_VERT/FRAG`, about 46.8k characters, a 2.8 s cold FXC compile) and its lazy `section-rgb-explore` variant. K307's registry drops both.
 - `GAP_VERT_DECL/MAIN`.
-- `gap_mask.ts` polyline texels (`GAP_MAX_PTS`, the polyline copy in `writeSlot`, `GAP_TEX_W` 40).
+- `gap_mask.ts`' copied texels:
+  - the polyline points (up to 57 [x, y, u]) and the 2 protect blocks of 19;
+  - `GAP_TEX_W` goes from 114 to about 24 (section 3.4).
 - `buildPoly(fineO)` / `FINE_SPACING`.
-- `assignGapIds`' per-sample 4-component packing (it becomes window range lists).
-- The unit-circle arc encoding.
+- `assignGapIds`' per-sample 4-component packing. It becomes window range lists (RANGES).
+- The unit-circle arc encoding (`aArcPos`, `arcScale`).
 - G1's full fan-mask mode.
 - The free-tip disc fans and the AXIS record type.
-- `drawYarn` Graphics strokes, Chaikin smoothing and alpha buckets.
-- `underGapVisibility`. `underWindows` stays because G4's gapNear uses it.
+- At G3-5 (K23): `drawYarn`'s Graphics strokes, Chaikin smoothing and alpha buckets.
 
-**G4:**
-- `TriFanMesh` (`ribbon_mesh.ts:422-520`).
-- `rebuildFillets`' geometry: discs (`DISC_*`), wedges (`FILLET_EDGE_*`, `FILLET_BEZIER_STEPS`, `FILLET_CORNER_LIM`, `FILLET_MAX_WEDGE`), the `flankPts` cache, the layer votes (armTop/armDives/overNear/underNear, `FILLET_DIVE_NEAR`), `filletTopLayer`/`filletTopMesh`, `fanFx`/`FAN_SOLID_START`, and the arm-reveal gate.
+**What G3 keeps that the snapshot deleted (K8 s1):**
+- `underGapVisibility` stays: the pluck host's `visibility` uses it (pluck rule 3). The yarn stops using it at G3-5.
+- `underWindows` stays because G4's gapNear uses it.
+
+**G4 (at G4-2):**
+- `TriFanMesh` (`ribbon_mesh.ts`).
+- `rebuildFillets`' geometry:
+  - the discs (`DISC_*`, `TIP_DISC_SCALE`);
+  - the wedges (`FILLET_EDGE_*`, `FILLET_BEZIER_STEPS`, `FILLET_CORNER_LIM`, `FILLET_MAX_WEDGE`) and the `flankPts` cache;
+  - the layer votes (armTop/armDives/overNear/underNear, `FILLET_DIVE_NEAR`) and `filletTopLayer`/`filletTopMesh`;
+  - the arm-reveal gate.
+- The arm strips (`arm_strip.ts`: per-frame RGBA8 rows of composed colour) and the `arm-strip` program (1.7 s cold FXC).
+- K81's cover strips (`COVER_STRIP_PTS` 32, `fm.pushStrip`). They read `RibbonMesh.vertices` today. Between G3-3 and G4-2 they need a small pure extrusion helper (section 4.2, dependents).
 - `tuckFusedTips`, `chainTipFused`, `fusedTips`.
-- `JUNCTION_VERT/FRAG` and the angular `junctionField` per-arm lookup.
-- `cpuJunctionField` is rewritten as `fieldProbe` v2, a line-for-line transliteration of the new joint shader.
+- `JUNCTION_VERT/FRAG` (the `junction-field` program) and the angular `junctionField` per-arm lookup.
+- `cpuJunctionField` is rewritten as `fieldProbe` v2, a line-for-line transliteration of the new joint shader. It keeps K81's `fieldProbe.at` / `.routes`.
 
 ### 4.2 Hard-won invariants, stated for the new world
 
-1. **Palette strip order is load-bearing.** Lerping U between adjacent samples of one thread then sampling the strip stays legal; the FS does exactly what vertex interpolation did. **Blend composed colours, never U from different sources:** joint blends mix `threadColor` outputs.
-2. **Never destroy textures mid-session.** SAMP, AUX, CHAIN, RANGES, GAP, RECORD and YARN are page-lifetime, grown in place.
-3. **Float data textures:** rg32float/rgba32float, NEAREST, `texelFetch` only, `highp sampler2D`, no premultiply on upload, the row uploader registered before the renderer exists. `source.update()` uploads synchronously mid-tick.
-4. **Custom shaders ignore `mesh.texture`.** Bind via resources (`bindAccent` pattern).
-5. **Partial buffer uploads remember their size.** The only remaining mutable buffer is the yarn instance buffer: upload explicit sizes every time. Joints use `gl_InstanceID` and have no buffer.
-6. **Arc-wrap family.** Open chains clamp and map over count−1 segments; closed chains wrap. This applies to VS neighbor fetch, arc = (k+t)·arcPer, slot point arcs and piece ranges. No last→first chord on open chains, ever.
-7. **Flat fills cannot represent a field; overlays must match ribbons across the whole width.** G4 pieces use the ribbon's own colour function at the ribbon's own nearest point. Certify with `fieldProbe` v2 (field vs ribbon), excluding true overlap.
-8. **Render reach quotes rendered geometry (P3.36/P3.38/P3.40).** Required coverage (the over silhouette) is never reduced. A gap boundary may be truncated but never extended past its solved exit. G3 makes this structural: the over ribbon is exactly radius h everywhere (no concave thinning), and the casing measures the same samples.
+1. **Blend composed colours, never paint inputs from different sources.** G2 retired the palette strip, so there is no U to lerp. Joint blends mix the paint library's composed outputs (RENDER LORE).
+2. **Never destroy textures mid-session.** SAMP, RADII, G3 CHAIN, RANGES, GAP, RECORD and YARN are page-lifetime, grown in place.
+3. **Float data textures:** RGBA32F `FloatRows` (G2), NEAREST, `texelFetch` only, `highp sampler2D`, no premultiply on upload, the row uploader registered before the renderer exists. `source.update()` uploads synchronously mid-tick.
+4. **Custom shaders ignore `mesh.texture`.** Bind through shader resources, with `bindGap`'s one binding list (section 2.4).
+5. **Partial buffer uploads remember their size.** The ribbon's `aSeg` instance buffer is static per scene. The only mutable buffer left is the yarn's instance buffer: upload explicit sizes every time. Joints use `gl_InstanceID` and have no buffer.
+6. **Arc-wrap family.** Open chains clamp and map over count−1 segments; closed chains wrap. This applies to the VS neighbor fetch, arc = (k+t)·arcPer, the ctrl lerp's seam unwrap, slot point arcs and piece ranges. No last→first chord on open chains, ever.
+7. **Flat fills cannot represent a field; overlays must match ribbons across the whole width.** G4 pieces use the ribbon's own paint call at the ribbon's own nearest point. Certify with `fieldProbe` v2 (field vs ribbon), excluding true overlap.
+8. **Render reach quotes rendered geometry (P3.36/P3.38/P3.40).** Required coverage (the over silhouette) is never reduced. A gap boundary may be truncated but never extended past its solved exit. In G3:
+   - the casing measures the over ribbon's own samples, from its true centreline;
+   - the pinch thins only the concave side, as the strip does today, so the casing is never narrower than the over ribbon.
 9. **Junction clearance (fix A)** stays CPU-side as is. jointClear = max(1.1h, 0.55·L) + gap + CUT_BIAS, with L redefined as G4's web along-arm reach (calibrated equal to the old 1.25·h·cr). It caps only margin (floor 0.5) and fade (floor 0.45), never the march.
 10. **Foreign over silhouette only, inset 1 px, for webs.** Full casing for piece material. Own-arm over slots are not listed.
 11. **The JunctionCover theorem (P3.31 again).** Physics fades the anti-riding floor within ±3 ctrl of a joint because the joinery renders that overlap. G4 must keep owning it: R ≥ R_sep up to that span.
 12. **A distance mask needs a window, self-exclusion and connectivity** (G1). Unchanged: CPU windows and connected-overlap marches; self-exclusion now uses sample arcs.
 13. **`fwidth` in uniform control flow; discarded fragments get no MSAA.** All edges carry analytic AA.
-14. **No sawtooth seam inside a fill (P3.34's real invariant)** holds by ownership. The *look* changes: an over-tight fold renders as the true swept disk (a filled lobe) instead of a thinned fold. This is flagged for the user.
-15. **A census must measure the pipeline it certifies (P3.24, render edition).** `fieldProbe` v2 and a new `ribbonProbe` (a CPU transliteration of the ribbon FS) read the same mirrors. The G1 census must be ported off `fills[].vertexData` (14 probe references).
+14. **No sawtooth seam inside a fill (P3.34's real invariant)** holds by ownership. The look stays the strip's: Levi chose the pinch (2026-10-13), so an over-tight fold thins on its concave side as it does today. Argmin ownership only cleans up below ρ ≈ 0.316h (section 3.3).
+15. **A census must measure the pipeline it certifies (P3.24, render edition).**
+    - `fieldProbe` v2 and a new `ribbonProbe` (a CPU transliteration of the ribbon FS) read the same mirrors.
+    - The paint terms are certified by G2's own CPU mirror (`paint_math.ts`).
+    - G3-3 ports the G1 census and `probe_samestate` off `fills[].vertexData`.
 16. **Flow is render-only and physics is never touched.** At fw = 0 asleep, `update()` does not run and nothing uploads.
 17. **No thread-thread contact without a dark line (P3.39 user standard).** Casings are unchanged.
-18. **Section cache drift re-bake (`CACHE_REBAKE_CTRL`)** stays until G2 replaces baked section colours.
-19. **PROBE LORE stands:** pin the paint clock; park the pointer; use unique scratchpad subdirectories and check the stamp's SHA; layers are reset each frame; the URL rewrite drops `#hash`; a bare URL is fabric + music + intro (probes pass `am=instant&snd=none`).
+18. **Section colours are G2's (G2.2).** The snapshot's cache-drift re-bake (`CACHE_REBAKE_CTRL`) is gone. G3 reads the same per-vertex section values, at both segment ends.
+19. **PROBE LORE stands (`.claude/rules/probes.md`).**
+    - Pin the paint clock: since G2 it lives in `advanceClocks()`, so pin `r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn = 0`.
+    - Park the pointer. Use unique scratchpad subdirectories and check the stamp's SHA. Layers are reset each frame. The URL rewrite drops `#hash`.
+    - A bare URL is today's daily, with a saved attempt, so probes pass a query (`?<seed>&am=instant&snd=none`).
+    - Hold the perf lock for every pixel-exact GPU probe, not only for timings, and record `webglcontextlost`.
+20. **The physics runs in K7's worker (new since the snapshot).**
+    - The renderer reads the mirror, interpolated at now − D while awake (D = the median snapshot interval, clamped to 8-50 ms) and exact at rest.
+    - A same-state A/B therefore freezes the physics: `&phw=0` (the in-thread host) plus the freeze patch `__knotPS().step = function () {}`, or `__knotPhysFreeze(on)` under the worker. `&phy=0` turns physics off for a deterministic layout.
+    - Neither G3 nor G4 touches `src/physics/`.
+21. **Dependents of the strip (K8 s1).** Each needs its replacement before the strip goes at G3-3.
+    - The pluck host's `visibility` stays on `underGapVisibility`.
+    - The still pluck reads per-sample gap ids from `idScratch`. The CPU fills them lazily from RANGES' window lists, or the still pluck reads RANGES itself.
+    - `setCollapse` writes its chain's RADII rows instead of re-extruding (`reextrude`).
+    - The still pluck and the fans bind SAMP after G3-1. Coordinate with K344 and K279, which work in `pluck_overlay.ts`.
+    - K81's cover strips need the extrusion helper until G4-2.
 
 ---
 
