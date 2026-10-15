@@ -282,6 +282,10 @@ describe("K299 paint on a run at a ring's seam", () => {
   it("the hover rim on a run ending at or crossing the seam", () => {
     const U = uniforms();
     U.uKReach.set([3, 1, 0.5, 25]);
+    // The glow's own length and end fade (K298; it read the pulses' reach
+    // and a fixed 0.75 before).
+    U.uKSect[2] = 3;
+    U.uKSect[3] = 0.75;
     const D = scene([{ type: PAINT_ITEM.RIM, c0: 22, c1: 28, a: 0.3 }], U);
     expect(paintAt(D, U, A(25)).rim).toBeGreaterThan(0.4);
     for (const a of arcs(0.05, A(21))) expect(paintAt(D, U, a).rim).toBe(0);

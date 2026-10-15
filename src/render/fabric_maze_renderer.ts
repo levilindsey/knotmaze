@@ -377,9 +377,8 @@ export class FabricMazeRenderer {
   private threadWidth: number;
   private hoverEdge = -1;
   // K145: the run under the pointer (or a touch press) for the hover glow,
-  // and the hover point on it (an unwrapped ctrl in its span). A choice is
-  // left out when the paint is declared (rimDecl), not here: the run under
-  // a still pointer can stop or start being one with a move.
+  // and the hover point on it (an unwrapped ctrl in its span); a hovered
+  // choice's run since K298 (setGlowRun).
   private glowEdge = -1;
   private glowAt = 0;
   private anim: MoveAnim | null = null;
@@ -657,12 +656,61 @@ export class FabricMazeRenderer {
     return true;
   }
 
-  // K145: the hover glow's run as the ribbons declare it - none on a
-  // choice, which keeps its own, stronger hover (Levi: "This highlight
-  // shouldn't happen on adjacent-to-current-junction segments").
-  private rimDecl(controller: FabricMazeController): PaintRim | null {
+  // K298: the hover glow on a choice, run eid (edgeAt's pick): centered at
+  // the nearest point of the run's sample polyline (edgeAt's samples) to
+  // the world point, an unwrapped ctrl in [ctrlA, ctrlB]. Returns true when
+  // the run changed, as setGlow does.
+  setGlowRun(eid: number, x: number, y: number): boolean {
+    const e = eid >= 0 ? this.walk.edges[eid] : undefined;
+    if (!e) return this.setGlow(-1, 0);
+    let at = e.ctrlA;
+    let bestD = Infinity;
+    let pf = 0;
+    let px = 0;
+    let py = 0;
+    for (let f = e.ctrlA, first = true; ; f += SAMPLE_STEP, first = false) {
+      const ff = Math.min(f, e.ctrlB);
+      this.pointFlowed(e.chain, this.ctrlMod(e.chain, ff), this.scratch, 0);
+      const qx = this.scratch[0];
+      const qy = this.scratch[1];
+      // The nearest point of the chord from the previous sample (a lone
+      // first sample is a chord of length 0).
+      const ax = first ? qx : px;
+      const ay = first ? qy : py;
+      const af = first ? ff : pf;
+      const dx = qx - ax;
+      const dy = qy - ay;
+      const l2 = dx * dx + dy * dy;
+      const t =
+        l2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+      const ex = ax + t * dx - x;
+      const ey = ay + t * dy - y;
+      const d = ex * ex + ey * ey;
+      if (d < bestD) {
+        bestD = d;
+        at = af + t * (ff - af);
+      }
+      pf = ff;
+      px = qx;
+      py = qy;
+      if (ff >= e.ctrlB) break;
+    }
+    this.glowAt = at;
+    if (eid === this.glowEdge) {
+      this.ribbons.setRimAt(at);
+      return false;
+    }
+    this.glowEdge = eid;
+    return true;
+  }
+
+  // K145: the hover glow's run as the ribbons declare it. Since K298 a
+  // choice glows too, on top of its pulses and its own hover look (Levi:
+  // "render it in-addition to the adjacent-to-current-juction highlight
+  // for those segments"; K145 had left choices out).
+  private rimDecl(): PaintRim | null {
     const eid = this.glowEdge;
-    if (eid < 0 || controller.choices().includes(eid)) return null;
+    if (eid < 0) return null;
     const e = this.walk.edges[eid];
     return { chain: e.chain, c0: e.ctrlA, c1: e.ctrlB, at: this.glowAt };
   }
@@ -1908,7 +1956,7 @@ export class FabricMazeRenderer {
     const a = this.anim!;
     this.syncExplore(); // K76: the dot uncovers its run.
     this.syncYarn(controller);
-    this.ribbons.setRim(this.rimDecl(controller));
+    this.ribbons.setRim(this.rimDecl());
     if (this.pathViz === "string") {
       // The yarn is the record: no gold spans or caps; pulses stay quiet
       // mid-move exactly like the other modes.
@@ -2019,7 +2067,7 @@ export class FabricMazeRenderer {
       }
     }
     this.ribbons.setPaint(spans, pulses, caps, passes.routes, passes.traveled);
-    this.ribbons.setRim(this.rimDecl(controller));
+    this.ribbons.setRim(this.rimDecl());
     // K100: the fog's explored memory belongs to one solve. It starts over
     // when the solve restarts (Reset path's restart, a clock change, a
     // restore's replay: the controller's `restarts` moved) and only then -

@@ -40,7 +40,13 @@ const S = PAINT_CONST.K_ROW_SHIFT;
 //   uKInk   = (inkSpeed, isInk, -, -)
 //   uKKnots = anim -> wall speed knots (animT, wallT, invSpeed, valid)
 //   uKGamut = (baseHue, arcDeg, sat, light)  the section gamut
-//   uKSect  = (blendDist, ease, -, -)        junctionBlend (lattice units)
+//   uKSect  = (blendDist, ease, glowLen,     junctionBlend (lattice units);
+//              glowFade)                     the hover glow's length (world
+//                                            arc from the hover point,
+//                                            hoverGlowLength) and its end
+//                                            fade's cap (hoverGlowFade,
+//                                            floored at 1e-4 on the CPU so
+//                                            the clamp stays ordered; K298)
 //   uKPaint = (on, refBase, itemBase, hover) gameplay paint (KPAINT)
 //   uKPulse = (travelIn, travelOut, spacing, fadeIn)  pulse clocks
 //   uKReach = (reach, fade, rim, rimAt)      pulse trains' reach (world arc
@@ -816,10 +822,12 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
       highp float u = arc;
       if (c.closed) u = u0 + kWrap(arc - u0, total);
       if (u < u0 || u > u1) continue;
+      // K298: its own length (uKSect.z, not the pulses' reach) and end
+      // fade (uKSect.w, not the fixed RIM_END_FADE).
       highp float d = abs(u - kArcU(c, uKReach.w));
       highp float dEnd = min(u - u0, u1 - u);
-      highp float fade = clamp(RIM_END_SHARE * (0.5 * (u1 - u0) - T0.w), 1e-4, RIM_END_FADE);
-      highp float g = uKReach.z * (1.0 - kSmooth(d / max(uKReach.x, 1e-4))) *
+      highp float fade = clamp(RIM_END_SHARE * (0.5 * (u1 - u0) - T0.w), 1e-4, max(uKSect.w, 1e-4));
+      highp float g = uKReach.z * (1.0 - kSmooth(d / max(uKSect.z, 1e-4))) *
         kSmooth((dEnd - T0.w) / fade);
       st.w = max(st.w, g);
     }
@@ -877,6 +885,13 @@ vec3 kComposePaint(vec3 S, highp vec4 st, highp float glow) {
   return under + (vec3(1.0) - under) * (K_BAND * clamp(v, 0.0, 1.0));
 }
 
+// The hover glow over a painted color (K298): the same whitening as a
+// band's, applied after the paint, so a hovered choice shows both. Over a
+// color kComposePaint whitened by nothing it is exactly that whitening.
+vec3 kRimOver(vec3 c, highp float rim) {
+  return c + (vec3(1.0) - c) * (K_BAND * clamp(rim, 0.0, 1.0));
+}
+
 // A High contrast prototype's choice (K111 stage 4): the paint goes toward
 // the pattern's gray "white" (0 black, 1 white) by the band's strength,
 // whatever its hue, and the reveal glow brightens the result as in
@@ -892,8 +907,8 @@ vec3 kHcCompose(vec3 S, highp vec4 st, highp float glow, highp float white) {
 // kComposePaint, except a choice under a High contrast prototype (K111
 // stage 4). 1 CONTRAST: white with a black center line. 2 OUTLINE: a black
 // core between white edges. 3 CHEVRONS: black and white chevrons pointing
-// away from the junction. A hovered choice is solid white under each; a
-// hovered run that is not a choice keeps the hover rim (glow).
+// away from the junction. A hovered choice is solid white under each; the
+// hover rim composes over the result (kRimOver, K298).
 vec3 kComposePaintAcross(vec3 S, highp vec4 st, highp float glow, highp float side) {
   int look = kHcLook();
   if (look == 0 || st.y < 0.5) return kComposePaint(S, st, glow);

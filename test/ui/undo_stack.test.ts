@@ -206,6 +206,14 @@ describe("restorePlan", () => {
       rebuild: false,
       effects: ["onTrailChange"],
     });
+    // K298: its length and end fade too.
+    expect(
+      restorePlan(a, { ...a, hoverGlowLength: 6, hoverGlowFade: 0.5 }, false)
+    ).toEqual({
+      changed: ["hoverGlowLength", "hoverGlowFade"],
+      rebuild: false,
+      effects: ["onTrailChange"],
+    });
   });
 
   it("lists only real params, each under one effect", () => {

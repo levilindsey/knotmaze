@@ -254,6 +254,9 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   flag("minoLair"), // 129
   // K111 stage 4: the hover glow's width (K264).
   num("hoverGlowWidth"), // 130
+  // K298: the hover glow's own length and its end fade.
+  num("hoverGlowLength"), // 131
+  num("hoverGlowFade"), // 132
 ]);
 
 // The format version a blob names first. Bump it for anything but an

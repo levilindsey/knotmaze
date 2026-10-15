@@ -104,6 +104,7 @@ describe("links", () => {
       fire: "off", fireSpeed: 0.75, fireDelay: 0,
       minoRestart: false, minoLair: true,
       hoverGlowWidth: 0.85,
+      hoverGlowLength: 3, hoverGlowFade: 0.2,
     });
   });
 
@@ -122,6 +123,25 @@ describe("links", () => {
     expect(
       parseParams(`?${encodeParams(withSeed(7, { hoverGlowWidth: 0.1 }))}`).hoverGlowWidth
     ).toBe(0.3);
+  });
+
+  // K298: the glow's own length ([0.5, 15], world arc from the hover point)
+  // and end fade ([0, 1.5], world arc in from each end gap), viewer
+  // preferences like hgw=.
+  it("reads the hover glow length and end fade from their override keys", () => {
+    const p = parseParams("?7&hgl=6&hgf=0.5");
+    expect([p.hoverGlowLength, p.hoverGlowFade]).toEqual([6, 0.5]);
+    expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    expect(encodeParams(parseParams("?7&hgl=3&hgf=0.2"))).toBe("7");
+    expect(parseParams("?7&hgl=40").hoverGlowLength).toBe(15);
+    expect(parseParams("?7&hgl=0").hoverGlowLength).toBe(0.5);
+    expect(parseParams("?7&hgl=x").hoverGlowLength).toBe(3);
+    expect(parseParams("?7&hgf=9").hoverGlowFade).toBe(1.5);
+    expect(parseParams("?7&hgf=-1").hoverGlowFade).toBe(0);
+    expect(parseParams("?7&hgf=0").hoverGlowFade).toBe(0);
+    expect(parseParams("?7&hgf=x").hoverGlowFade).toBe(0.2);
+    const q = parseParams(`?${encodeParams(withSeed(7, { hoverGlowLength: 99, hoverGlowFade: -3 }))}`);
+    expect([q.hoverGlowLength, q.hoverGlowFade]).toEqual([15, 0]);
   });
 
   // K98: the marker size's override key, its clamp to [0.25, 3], and the
@@ -504,6 +524,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoRefog: "mrf", confetti: "cf",
   confettiAmount: "cfa", pluckWhole: "pw", pluckCrossings: "pcx",
   pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg", hoverGlowWidth: "hgw",
+  hoverGlowLength: "hgl", hoverGlowFade: "hgf",
   minotaur: "mt", minoSpeed: "msp", minoTelegraph: "mtg", minoSight: "msi",
   minoRoamRuns: "mro", minoTerritory: "mtr", minoAccuracy: "mac",
   minoPause: "mpa", minoSleep: "msl", hCutShare: "hcs",

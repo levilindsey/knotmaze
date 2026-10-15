@@ -12,6 +12,9 @@ import {
   FIRE_DELAY_MAX,
   FIRE_SPEED_MAX,
   FIRE_SPEED_MIN,
+  HOVER_GLOW_FADE_MAX,
+  HOVER_GLOW_LENGTH_MAX,
+  HOVER_GLOW_LENGTH_MIN,
   HOVER_GLOW_WIDTH_MAX,
   HOVER_GLOW_WIDTH_MIN,
   LOAD_SETTLE_MAX,
@@ -830,17 +833,32 @@ export function buildPanel(
     "How far the current junction's pulses, and the hover highlight on a choice, reach along each arm, in lattice units, before fading out. Applies live.",
     D.pulseReach, () => callbacks.onTrailChange()
   );
-  // K145: the subtle glow on a run that is not a choice.
+  // K145: the subtle glow on the run under the pointer (a choice too since
+  // K298, over its own hover look), with its personal settings under it.
   const hoverGlowRow = row(
-    fMaze, p, "hoverGlow", { min: 0, max: 1, step: 0.05 },
-    "Hover glow: a run that is not one of your choices glows softly along both edges near the pointer (or under a touch press), fading toward its junctions. 0 turns it off. Applies live.",
+    fMaze, p, "hoverGlow", { min: 0, max: 1, step: 0.05, label: "Hover glow" },
+    "Hover glow: the run under the pointer (or under a touch press) glows softly along both edges near it, fading toward its junctions; on one of your choices it adds to the choice's own highlight. 0 turns it off. Applies live.",
     D.hoverGlow, () => callbacks.onTrailChange()
   );
-  // K111 stage 4 (K264): that glow's width, a personal setting like it.
+  // K298: its own length (pulseReach's until K298) and its end fade.
+  const hoverGlowLengthRow = row(
+    fMaze, p, "hoverGlowLength",
+    { min: HOVER_GLOW_LENGTH_MIN, max: HOVER_GLOW_LENGTH_MAX, step: 0.25, label: "Hover glow length" },
+    "Hover glow length: how far the hover glow reaches along the thread from the pointer, in lattice units, before it has faded out. Applies live.",
+    D.hoverGlowLength, () => callbacks.onTrailChange()
+  );
+  const hoverGlowFadeRow = row(
+    fMaze, p, "hoverGlowFade",
+    { min: 0, max: HOVER_GLOW_FADE_MAX, step: 0.05, label: "Hover glow end fade" },
+    "Hover glow end fade: how long the hover glow takes to fade in past each end of the run, where the junctions cover it, in lattice units (0 = a hard edge). Applies live.",
+    D.hoverGlowFade, () => callbacks.onTrailChange()
+  );
+  // K111 stage 4 (K264): that glow's thickness, a personal setting like it
+  // (the param keeps its name, hoverGlowWidth, and its link key, hgw).
   const hoverGlowWidthRow = row(
     fMaze, p, "hoverGlowWidth",
-    { min: HOVER_GLOW_WIDTH_MIN, max: HOVER_GLOW_WIDTH_MAX, step: 0.05 },
-    "Hover glow width: how far in from each edge the hover glow reaches, as a share of the half-width (1 = the two edges' glows meet in the middle). Applies live.",
+    { min: HOVER_GLOW_WIDTH_MIN, max: HOVER_GLOW_WIDTH_MAX, step: 0.05, label: "Hover glow thickness" },
+    "Hover glow thickness: how far in from each edge of the thread the hover glow reaches, as a share of the half-width (1 = the two edges' glows meet in the middle). Applies live.",
     D.hoverGlowWidth, () => callbacks.onTrailChange()
   );
   const mazeStatsRow = row(
@@ -1933,6 +1951,8 @@ export function buildPanel(
     pulseSpacingRow.hidden = !fab;
     pulseReachRow.hidden = !fab;
     hoverGlowRow.hidden = !fab;
+    hoverGlowLengthRow.hidden = !fab;
+    hoverGlowFadeRow.hidden = !fab;
     hoverGlowWidthRow.hidden = !fab;
     // The gold recolor paints in gold/trail modes; the yarn replaces it.
     pathColorRow.hidden = !fab || params.pathViz === "string";
