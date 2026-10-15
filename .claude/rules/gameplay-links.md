@@ -52,3 +52,11 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   and the golden dailies do not move. Panel: "Motion & intro", before
   Replay settle. url_state.ts clamps both (SETTLE_BUDGET_MAX 30,
   LOAD_SETTLE_MAX 5); override keys `stb` / `lds`.
+
+- MARKER SIZE PARAM (K98, 2026-10-14): `markerSize` (`mks`, the markers'
+  diameter in thread widths, default 1.08, clamped to [0.25, 3]) is
+  APPENDED to codec v4 at index 104 and is a DAILY_EXEMPT_KEY: it changes
+  only how the markers look, so the golden dailies do not move (K57
+  reviews the exempt list). Panel: the maze folder, after the confetti
+  rows, fabric mode only. The render side is render-markers.md's K98
+  entry.

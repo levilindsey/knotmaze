@@ -25,8 +25,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   first client (main.ts; the minotaur is the second, see REAL-TIME
   MINOTAUR): a
   black disc wearing the exit marker's own glyph and radius (K83:
-  markerGlyphSvgFit into the GLYPH_R box, fabric.markerRadius() - a glyph
-  or size swap reaches both), shown in fabric mode, unsolved, once the intro has
+  markerGlyphSvgFit into the GLYPH_R box; its on-screen test reads
+  fabric.markerDotRadius(), the colored dot, since K98 - a glyph or size
+  swap reaches both), shown in fabric mode, unsolved, once the intro has
   revealed the exit (the 0.98 gate fabric's marker uses) and under fog of
   war too (Levi, 2026-10-13: direction only); a tap eases the camera to
   frame the exit with the head (camTween through placeWorldAt; the

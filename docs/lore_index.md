@@ -19,7 +19,7 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/game/minotaur.ts`, `test/game/minotaur.test.ts`
 - `gameplay-fog.md`: THE FOG RESETS ON A RESTART ONLY (K100)
   paths: `src/game/fabric_controller.ts`, `src/game/daily_attempt.ts`, `src/render/fabric_maze_renderer.ts`, `src/render/fog_arc.ts`, `test/render/fog_arc.test.ts`, `test/game/fabric_controller.test.ts`, `test/game/daily_attempt.test.ts`
-- `gameplay-links.md`: link decoder details, codec v4, LOAD SETTLE PARAMS (K147)
+- `gameplay-links.md`: link decoder details, codec v4, LOAD SETTLE PARAMS (K147), MARKER SIZE PARAM (K98)
   paths: `src/ui/param_codec.ts`, `src/ui/url_state.ts`, `src/ui/daily_link.ts`, `test/ui/param_codec.test.ts`, `test/ui/url_codec.test.ts`, `test/ui/seed_text.test.ts`, `test/ui/appear_mode.test.ts`
 - `gameplay-panel.md`: pathViz labels, live recolor, panel rules, gridAlign, the background rows (K79)
   paths: `src/ui/tweakpane_panel.ts`, `src/ui/grid_align_curve.ts`, `test/ui/grid_align_curve.test.ts`
@@ -71,7 +71,7 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/render/ribbon_renderer.ts`, `src/render/ribbon_mesh.ts`, `src/render/arm_strip.ts`, `src/render/junction_field.ts`, `test/render/fixtures/chains.ts`
 - `render-pluck.md`: the concave-side cap, base collapse (K77), still plucks (K104), pluck params (K180)
   paths: `src/render/pluck_overlay.ts`, `src/render/pluck_model.ts`, `test/render/pluck_model.test.ts`
-- `render-markers.md`: MARKER ICONS (K83)
+- `render-markers.md`: MARKER ICONS (K83), MARKER SIZE, COLORED DOTS, TWO GLYPHS (K98)
   paths: `src/render/marker_glyphs.ts`, `src/render/marker_mesh.ts`, `test/render/marker_glyphs.test.ts`
 - `render-routes.md`: ROUTE BANDS (K81)
   paths: `src/render/junction_routes.ts`, `src/render/junction_field.ts`, `test/render/junction_routes.test.ts`
