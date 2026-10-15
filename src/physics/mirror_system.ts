@@ -33,6 +33,7 @@ export class MirrorSystem extends ParticleSystem {
   private mAsleep = false;
   private mSeq = -1;
   private mWallAt = 0;
+  private mInputs = 0;
   private readonly mEmergent = new Float32Array(EMERGENT_MAX * EMERGENT_ROW);
   private mEmergentN = 0;
 
@@ -70,6 +71,7 @@ export class MirrorSystem extends ParticleSystem {
     this.mAsleep = s.asleep;
     this.mSeq = s.seq;
     this.mWallAt = s.wallAt;
+    this.mInputs = s.inputs;
   }
 
   // The applied snapshot's sequence number (-1: none yet) and write time.
@@ -78,6 +80,10 @@ export class MirrorSystem extends ParticleSystem {
   }
   get snapshotWallAt(): number {
     return this.mWallAt;
+  }
+  // The worker's input count when it wrote the applied snapshot (H.inputs).
+  get snapshotInputs(): number {
+    return this.mInputs;
   }
   // The worker's sleep gate had tripped when the snapshot was written.
   get workerAsleep(): boolean {

@@ -237,9 +237,12 @@ export class PhysicsCore {
   private frameSim0 = 0;
   private frameTuning: PhysicsTuning | null = null;
 
-  build(graph: TangleGraph): ParticleSystem {
+  // gen: the generation to take (the worker takes main's); default the next.
+  // The asleep flag and the gate carry over, as they always have: main
+  // wakes the knot when the load ends.
+  build(graph: TangleGraph, gen?: number): ParticleSystem {
     this.ps = new ParticleSystem(graph);
-    this.gen++;
+    this.gen = gen ?? this.gen + 1;
     return this.ps;
   }
 
@@ -303,6 +306,21 @@ export class PhysicsCore {
       this.stepCount++;
     }
     return Number.isFinite(ps.maxMove);
+  }
+
+  // K7 stage 2: frame()'s unbudgeted step, split for the worker, which runs
+  // one substep per task (ps.runSubstep(tuning)) so that input and
+  // snapshots interleave with them. Records what gateFrame() reads and
+  // returns the substep count, as ps.beginFrame does; with no budget armed
+  // (the worker arms none in stage 2) beginBatch + n runSubstep calls is
+  // exactly frame(dt, tuning, ...) with live false.
+  beginBatch(dt: number, tuning: PhysicsTuning): number {
+    const ps = this.ps;
+    if (!ps) return 0;
+    this.frameSim0 = ps.simTime;
+    this.frameTuning = tuning;
+    this.stepCount++;
+    return ps.beginFrame(dt);
   }
 
   // The sleep gate, fed the last frame's SIMULATED time (frame-rate
