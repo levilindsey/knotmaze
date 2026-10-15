@@ -137,3 +137,10 @@ certifies (the P3.24 probe rule again, render edition).
   `RibbonRenderer.renderCtrl()` prefers it everywhere crossing
   geometry is placed (centers + neighbor gaps). The physics ctrl keeps
   its clamp/topology duties untouched.
+
+- *K76 stage 2b, the thread reveal's joint gate (2026-10-14):*
+  rebuildFillets skips the records of the junctions and free tips the
+  reveal hides (`exploreHideJn`, `exploreHideFree`) and appends the hidden
+  set (`exploreJointsKey`) to its cache key, so the fans rebuild when the
+  set changes, not on growth frames. The rule and its census:
+  `render-explore.md`.

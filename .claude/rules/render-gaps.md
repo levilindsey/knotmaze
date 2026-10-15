@@ -219,3 +219,13 @@ never run.
   around a start/exit dot is a ring of radius dot + gap (lanes march to
   that circle); the old dot-circle-plus-arc-margin edge kept the dot's
   own tighter curvature.
+
+## The thread reveal's gap gate (K76 stage 2b)
+
+- `GapMaskTable.setVis(slot, k)` (2026-10-14) scales a slot's solved
+  strength by k, and k <= 0 rejects the slot in texel 0. The table keeps
+  each slot's solved strength and reject radii, so a factor re-applies
+  without a re-solve, and writeSlot / clearSlot reset it to 1. The
+  renderer sets k only while the reveal is on (the over thread's
+  visibility at the over pass; a marker disc's 0 or 1) and restores 1
+  when it turns off. The rule and its census: `render-explore.md`.
