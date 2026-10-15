@@ -1,6 +1,7 @@
 // K76 THREAD REVEAL, the shader side (stage 2a; design:
-// docs/design/K76_reveal_mode.md sections 2.2, 3 and 9). Pure (no pixi):
-// the vitest parity suite imports it.
+// docs/design/K76_reveal_mode.md sections 2.2, 3 and 9; K268 stage 1's
+// shaped cut: docs/design/K268.md). No GL state: the vitest parity suites
+// import it (through gap_mask.ts it loads pixi, which vitest runs fine).
 //
 // The model (game/explore_view.ts) hands the renderer VISIBILITY PIECES per
 // chain. They ride the KPAINT declaration as VIS items (two texels each,
@@ -27,6 +28,18 @@
 // (the renderer culls its mesh), and with no VIS item kExploreAt returns 0.
 
 import type { ExplorePiece } from "../game/explore_view";
+// K268: the gap table's layout (the shaped cut reads its profile texels) and
+// its shape types. gap_mask.ts imports pixi, so this module is no longer
+// pixi-free; vitest loads pixi fine (explore_gates.test.ts).
+import {
+  GAP_FLAG_SHAPED,
+  GAP_PROF_BASE,
+  GAP_PROF_F0,
+  GAP_PROF_MAX,
+  GAP_PROF_R0,
+  type GapRamp,
+  type GapShape,
+} from "./gap_mask";
 
 // The VIS item type (T0.x). PAINT_ITEM uses 1-4.
 export const EXPLORE_ITEM_VIS = 5;
@@ -95,6 +108,133 @@ export function chainWhole(pieces: readonly ExplorePiece[], n: number, closed: b
   return reach >= hi - 5e-4;
 }
 
+// K268 THE SHAPED CUT'S CLASSIFIER (docs/design/K268.md, "Stage 1 design"):
+// what the over thread's visibility does across one gap slot's FOOTPRINT,
+// the arc range [aLo, aHi] its polyline spans on the over chain, and the
+// ramps that reproduce it when one or two piece ends lie inside.
+// - hidden: no piece reaches the footprint; solid: one piece's solid part
+//   covers it (or the chain is whole); both take 2b's scalar.
+// - shaped: one or two ends inside; one piece's two ends combine by MIN,
+//   ends of different pieces (or ring copies) by best-of (MAX).
+// - fallback: more than two ends (2b's scalar; counted).
+// `arc(c)` maps an unwrapped over-chain ctrl into the polyline's frame
+// (increasing; rings add the total per lap, open chains extend linearly).
+// A ring piece is tried at the copies k - 1, k, k + 1 nearest the over pass,
+// each a separate piece. An open chain's terminal never matters (no thread
+// lies beyond it). `approx`: a ramp kept one of several interior knots.
+export type ExploreCutKind = "hidden" | "solid" | "shaped" | "fallback";
+export interface ExploreCut {
+  kind: ExploreCutKind;
+  shape: GapShape | null;
+  approx: boolean;
+}
+const CUT_SOLID: ExploreCut = { kind: "solid", shape: null, approx: false };
+const CUT_HIDDEN: ExploreCut = { kind: "hidden", shape: null, approx: false };
+const CUT_FALLBACK: ExploreCut = { kind: "fallback", shape: null, approx: false };
+// Arc tolerance: an end within it of the footprint's edge does not matter.
+const CUT_ARC_EPS = 1e-4;
+// A hard end (or a fade of no arc): a step of this signed length.
+const CUT_HARD_F = 1e-6;
+
+export function classifyExploreCut(
+  pieces: readonly ExplorePiece[],
+  whole: boolean,
+  n: number,
+  closed: boolean,
+  overCtrl: number,
+  aLo: number,
+  aHi: number,
+  arc: (c: number) => number,
+  k2b: number
+): ExploreCut {
+  if (whole) return CUT_SOLID;
+  const ramps: GapRamp[] = [];
+  let copies = 0;
+  let approx = false;
+  // The ramp of the end at ctrl cS whose fade runs to cS + fs (fs < 0 below
+  // the solid part). The fade is linear in ctrl and the arc map piecewise
+  // linear with knots at integer ctrls, so one interior knot makes it exact.
+  const ramp = (cS: number, fs: number, front: boolean): GapRamp => {
+    const aS = arc(cS);
+    const f = Math.abs(fs);
+    const dir = fs < 0 ? -1 : 1;
+    if (f <= 1e-4) return { aS, F: dir * CUT_HARD_F, dK: 1, tK: 1, front };
+    let F = arc(cS + fs) - aS;
+    if (Math.abs(F) < CUT_HARD_F) F = dir * CUT_HARD_F;
+    let dK = 1;
+    let tK = 1;
+    let knots = 0;
+    const end = cS + fs;
+    for (let m = dir > 0 ? Math.floor(cS) + 1 : Math.ceil(cS) - 1; dir > 0 ? m < end - 1e-6 : m > end + 1e-6; m += dir) {
+      const tm = Math.abs(m - cS) / f;
+      if (tm <= 1e-6) continue;
+      knots++;
+      if (knots === 1 || Math.abs(tm - 0.5) < Math.abs(tK - 0.5)) {
+        tK = tm;
+        dK = (arc(m) - aS) / F;
+      }
+    }
+    if (knots > 1) approx = true;
+    return { aS, F, dK, tK, front };
+  };
+  for (const p of pieces) {
+    if (p.c1 < p.c0) continue;
+    let k0 = 0;
+    let k1 = 0;
+    if (closed) {
+      const k = Math.round((overCtrl - 0.5 * (p.c0 + p.c1)) / n);
+      k0 = k - 1;
+      k1 = k + 1;
+    }
+    for (let k = k0; k <= k1; k++) {
+      const c0 = p.c0 + k * n;
+      const c1 = p.c1 + k * n;
+      if (arc(c1 + p.f1) <= aLo || arc(c0 - p.f0) >= aHi) continue;
+      const lowIn = arc(c0) > aLo + CUT_ARC_EPS && (closed || c0 > 1e-3);
+      const highIn = arc(c1) < aHi - CUT_ARC_EPS && (closed || c1 < n - 1 - 1e-3);
+      if (!lowIn && !highIn) return CUT_SOLID;
+      copies++;
+      if (lowIn) ramps.push(ramp(c0, -p.f0, p.tip0));
+      if (highIn) ramps.push(ramp(c1, p.f1, p.tip1));
+    }
+  }
+  if (ramps.length === 0) return CUT_HIDDEN;
+  if (ramps.length > 2) return CUT_FALLBACK;
+  return { kind: "shaped", shape: { k2b, ramps, max: copies > 1 }, approx };
+}
+
+// An over chain's arc map in a slot polyline's frame (classifyExploreCut's
+// `arc`): a(c) = overArc + U(c) - U(overCtrl), U the unwrapped arc of an
+// unwrapped ctrl through the control points' arcs `cal` (cal[0] = 0). Rings
+// add `total` per lap; open chains run linearly beyond their two terminals
+// (the end segments' slopes: a fade past a terminal maps to no thread).
+export function exploreArcMap(
+  cal: ArrayLike<number>,
+  total: number,
+  closed: boolean,
+  overCtrl: number,
+  overArc: number
+): (c: number) => number {
+  const n = cal.length;
+  const U = (c: number): number => {
+    if (n < 2) return 0;
+    if (closed) {
+      const fi = Math.floor(c);
+      const lap = Math.floor(fi / n);
+      const i = fi - lap * n;
+      const a0 = cal[i];
+      const a1 = i + 1 < n ? cal[i + 1] : total;
+      return lap * total + a0 + (a1 - a0) * (c - fi);
+    }
+    if (c <= 0) return cal[0] + (cal[1] - cal[0]) * c;
+    if (c >= n - 1) return cal[n - 1] + (cal[n - 1] - cal[n - 2]) * (c - (n - 1));
+    const i = Math.floor(c);
+    return cal[i] + (cal[i + 1] - cal[i]) * (c - i);
+  };
+  const base = overArc - U(overCtrl);
+  return (c: number): number => base + U(c);
+}
+
 // Declarations: the mode's uniform, the item type and kExploreAt. Needs
 // PAINT_DATA_GLSL (kP, KChain) before it. kExploreAt returns the point's
 // visibility, and its globals describe the FRONTIER fade the point lies in
@@ -160,6 +300,99 @@ highp float kExploreAt(KChain c, highp float ctrl) {
   }
   return best;
 }
+// The end look's coverage at a point of a FRONTIER fade: u = progress 0 -> 1
+// through it (< 0: not in a frontier fade), s = world arc from the solid end,
+// lat = vUV.y - 0.5 (0 on the centerline), sideFw = vUV.y per pixel. Returns
+// v itself for the fade and halo looks and outside a frontier. The glow
+// look's tint is the caller's (it colors the thread; it is not coverage).
+// Shared by the thread (main) and the shaped cut (K268). CPU twin:
+// paint_math.ts kExploreLookCpu.
+highp float kExploreLook(int look, highp float v, highp float u, highp float s,
+    highp float lat, highp float sideFw, highp float pxW) {
+  if (u < 0.0 || look < 2) return v;
+  highp float tw = uKExplore.w;
+  if (look == 2) {
+    // GLOW: the alpha fade starts later so the highlight reads.
+    return 1.0 - kSmooth((u - 0.4) / 0.6);
+  }
+  if (look == 4) {
+    // FRAY: the thread unravels into three thinning fibers that fade.
+    highp float fl = lat * 2.0;
+    highp float cov = 0.0;
+    for (int i = -1; i <= 1; i++) {
+      highp float fi = float(i);
+      highp float cf = fi * (0.5 + 0.3 * u) + 0.12 * u * sin(s * 7.0 + fi * 2.1);
+      highp float wf = mix(0.34, 0.1, u);
+      cov = max(cov, clamp((wf - abs(fl - cf)) / max(4.0 * sideFw, 1e-4) + 0.5, 0.0, 1.0));
+    }
+    cov = mix(1.0, cov, kSmooth(u / 0.12));
+    return cov * (1.0 - kSmooth((u - 0.5) / 0.5));
+  }
+  // DOTS (3) and BEACON (5, plus its halo sprite): the solid thread ends in
+  // a round cap and goes on as a dotted line that shrinks and fades.
+  highp float sp = 0.95 * tw;
+  highp float la = lat * tw;
+  highp float dCap = length(vec2(s, la)) - 0.5 * tw;
+  highp float kk = max(1.0, floor(s / sp + 0.5));
+  highp float dDot = length(vec2(s - kk * sp, la)) - 0.3 * tw * (1.0 - 0.4 * u);
+  highp float dd = min(dCap, dDot);
+  return clamp(-dd / pxW + 0.5, 0.0, 1.0) * (1.0 - 0.55 * u * u);
+}
+// K268 THE SHAPED CUT: the over thread's coverage at its chain arc A (the
+// slot polyline's frame), from the slot's profile texels (gap_mask.ts
+// GAP_PROF_BASE): up to two ramps R = [aS, F, dK, tK] (the solid end's arc,
+// the fade's signed arc length, one interior knot of the ctrl-linear fade),
+// combined by MIN (one piece's two ends) or best-of (two pieces: kExploreAt's
+// rule, ties preferring the solid one), with the end look at a frontier on
+// the centerline (lat 0). CPU twin: paint_math.ts exploreCutCoverCpu.
+highp float exploreCutCover(int row, int fl, highp float A, highp float pxW) {
+  bool mx = (fl & ${GAP_PROF_MAX}) != 0;
+  highp float best = mx ? 0.0 : 2.0;
+  highp float bu = -1.0;
+  highp float bs = 0.0;
+  for (int r = 0; r < 2; r++) {
+    if ((fl & (${GAP_PROF_R0} << r)) == 0) continue;
+    highp vec4 R = texelFetch(uGapData, ivec2(${GAP_PROF_BASE} + r, row), 0);
+    highp float d = (A - R.x) / R.y;
+    highp float v = 1.0;
+    highp float u = -1.0;
+    if (d > 0.0) {
+      highp float t = d < R.z
+        ? d * (R.w / R.z)
+        : R.w + (d - R.z) * ((1.0 - R.w) / max(1.0 - R.z, 1e-6));
+      t = min(t, 1.0);
+      v = 1.0 - t * t * (3.0 - 2.0 * t);
+      if (t < 1.0 && (fl & (${GAP_PROF_F0} << r)) != 0) u = t;
+    }
+    if (mx ? (v > best || (v == best && u < 0.0)) : v < best) {
+      best = v;
+      bu = u;
+      bs = abs(A - R.x);
+    }
+  }
+  if (best > 1.0) return 1.0;
+  return kExploreLook(int(uKExplore.y + 0.5), best, bu, bs, 0.0,
+    pxW / max(uKExplore.w, 1e-6), pxW);
+}
+`;
+
+// K268: the shaped cut inside gapKeepAt (explore program only). A ribbon
+// slot with the SHAPED bit searches without the early stop inside the
+// silhouette (the projection must be the true nearest point)...
+export const EXPLORE_GAP_SURE_GLSL = /* glsl */ `    bool exShaped = full && !fan && (fl & ${GAP_FLAG_SHAPED}) != 0 && uKExplore.x > 0.5;
+    if (exShaped) sure2 = 0.0;
+`;
+// ...and cuts by the over thread's coverage at the nearest point's chain
+// arc (texel 4's polyline parameterization, as self-exclusion uses it).
+export const EXPLORE_GAP_CUT_GLSL = /* glsl */ `    if (exShaped) {
+      highp vec4 exT4 = texelFetch(uGapData, ivec2(4, row), 0);
+      highp vec4 exPt = gapPt(row, min(bk, n - 1));
+      highp float exBt = clamp(dot(p - exPt.xy, exPt.zw), 0.0, 1.0);
+      highp float exA = exT4.y + min(float(bk) + exBt, kLast) * exT4.z;
+      highp vec4 exP2 = texelFetch(uGapData, ivec2(${GAP_PROF_BASE + 2}, row), 0);
+      gst = gapStrength(exP2.x) * exploreCutCover(row, int(exP2.y + 0.5), exA, pxW);
+      if (gst <= 0.0) continue;
+    }
 `;
 
 // The variant's main, before the gap mask: the visibility multiplies the
@@ -172,39 +405,13 @@ export const EXPLORE_MAIN_GLSL = /* glsl */ `
     int look = int(uKExplore.y + 0.5);
     if (kExTip >= 0.0 && look >= 2) {
       highp float u = kExTip;
-      highp float tw = uKExplore.w;
       if (look == 2) {
-        // GLOW: the end brightens, then dissolves (the alpha fade starts
-        // later so the highlight reads).
+        // GLOW: the end brightens, then dissolves (kExploreLook).
         highp float g = kSmooth(u / 0.3) * (1.0 - kSmooth((u - 0.55) / 0.45));
         rgb = mix(rgb, vec3(${EXPLORE_GLOW_RGB.join(", ")}), 0.85 * g * uKExplore.z);
-        ev = 1.0 - kSmooth((u - 0.4) / 0.6);
-      } else if (look == 4) {
-        // FRAY: the thread unravels into three thinning fibers that fade.
-        highp float s = abs(kArcU(kc, kExX) - kArcU(kc, kExSolid));
-        highp float lat = (vUV.y - 0.5) * 2.0;
-        highp float cov = 0.0;
-        for (int i = -1; i <= 1; i++) {
-          highp float fi = float(i);
-          highp float cf = fi * (0.5 + 0.3 * u) + 0.12 * u * sin(s * 7.0 + fi * 2.1);
-          highp float wf = mix(0.34, 0.1, u);
-          cov = max(cov, clamp((wf - abs(lat - cf)) / max(4.0 * kSideFw, 1e-4) + 0.5, 0.0, 1.0));
-        }
-        cov = mix(1.0, cov, kSmooth(u / 0.12));
-        ev = cov * (1.0 - kSmooth((u - 0.5) / 0.5));
-      } else {
-        // DOTS (3) and BEACON (5, plus its halo sprite): the solid thread
-        // ends in a round cap and goes on as a dotted line that shrinks
-        // and fades.
-        highp float s = abs(kArcU(kc, kExX) - kArcU(kc, kExSolid));
-        highp float sp = 0.95 * tw;
-        highp float lat = (vUV.y - 0.5) * tw;
-        highp float dCap = length(vec2(s, lat)) - 0.5 * tw;
-        highp float kk = max(1.0, floor(s / sp + 0.5));
-        highp float dDot = length(vec2(s - kk * sp, lat)) - 0.3 * tw * (1.0 - 0.4 * u);
-        highp float dd = min(dCap, dDot);
-        ev = clamp(-dd / pxW + 0.5, 0.0, 1.0) * (1.0 - 0.55 * u * u);
       }
+      highp float exS = look == 2 ? 0.0 : abs(kArcU(kc, kExX) - kArcU(kc, kExSolid));
+      ev = kExploreLook(look, evRaw, u, exS, vUV.y - 0.5, kSideFw, pxW);
     }
     if (uKBase.z > 5.5) {
       finalColor = vec4(evRaw, kExTip >= 0.0 ? kExTip : 0.0, ev, 1.0);
@@ -216,7 +423,12 @@ export const EXPLORE_MAIN_GLSL = /* glsl */ `
 `;
 
 // The anchors withExplore inserts at (each must occur exactly once in the
-// section fragment).
+// section fragment). The declarations go before gapKeepAt (K268: the shaped
+// cut calls them), where the paint library and kSmooth are declared.
+const ANCHOR_DECL =
+  "highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,";
+const ANCHOR_SURE = "    highp float sure2 = sure > 0.0 ? sure * sure : 0.0;\n";
+const ANCHOR_BK = "    if (bk < 0) continue; // Nothing of this slot within reach.\n";
 const ANCHOR_MAIN = "void main(void) {\n  highp vec2 gfw = fwidth(vPos);";
 const ANCHOR_PXARC =
   "highp float pxArc = (ksw.y < 0.5 * ksw.x ? ksw.y : ksw.x) * float(kc.count) * kc.arcPer;\n";
@@ -233,13 +445,20 @@ function once(src: string, anchor: string): number {
 }
 
 // The explore variant of a section fragment (the master text with the
-// declarations before main, the side coordinate's derivative at the top of
-// main - uniform control flow - the exact ctrl for every fragment while
-// the mode is on, and the visibility before the gap mask).
+// declarations before gapKeepAt, the shaped cut in gapKeepAt's slot loop
+// (K268), the side coordinate's derivative at the top of main - uniform
+// control flow - the exact ctrl for every fragment while the mode is on,
+// and the visibility before the gap mask). The fragment must hold the gap
+// library's text (GAP_FRAG interpolated).
 export function withExplore(frag: string): string {
   let s = frag;
-  let i = once(s, ANCHOR_MAIN);
+  once(s, ANCHOR_MAIN);
+  let i = once(s, ANCHOR_DECL);
   s = s.slice(0, i) + EXPLORE_DECL_GLSL + s.slice(i);
+  i = once(s, ANCHOR_SURE) + ANCHOR_SURE.length;
+  s = s.slice(0, i) + EXPLORE_GAP_SURE_GLSL + s.slice(i);
+  i = once(s, ANCHOR_BK) + ANCHOR_BK.length;
+  s = s.slice(0, i) + EXPLORE_GAP_CUT_GLSL + s.slice(i);
   i = once(s, ANCHOR_PXARC) + ANCHOR_PXARC.length;
   s = s.slice(0, i) + "  highp float kSideFw = fwidth(vUV.y);\n" + s.slice(i);
   i = once(s, ANCHOR_KCTRL);

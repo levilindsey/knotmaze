@@ -19,8 +19,11 @@ import {
   type KPaintState,
   type KUniforms,
 } from "../../src/render/paint_math";
+import { GAP_FRAG, GAP_FRAG_LIB } from "../../src/render/gap_mask";
 import {
   EXPLORE_DECL_GLSL,
+  EXPLORE_GAP_CUT_GLSL,
+  EXPLORE_GAP_SURE_GLSL,
   EXPLORE_ITEM_VIS,
   EXPLORE_MAIN_GLSL,
   chainWhole,
@@ -296,18 +299,26 @@ describe("K76 kExploreAt mirror vs the model's chainVis", () => {
 
 describe("K76 the explore program variant (withExplore)", () => {
   // The section fragment as ribbon_renderer.ts writes it (source text; the
-  // anchors hold no interpolation).
+  // anchors hold no interpolation), with the gap library's text where the
+  // module interpolates it (K268: the shaped cut's anchors are in gapKeepAt).
   const src = readFileSync(new URL("../../src/render/ribbon_renderer.ts", import.meta.url), "utf8").replace(
     /\r\n/g,
     "\n"
   );
   const start = src.indexOf("const SECTION_FRAG = /* glsl */ `");
   const end = src.indexOf("`;", start);
-  const sectionText = src.slice(start, end);
+  const sectionText = src.slice(start, end).replace("${GAP_FRAG}", GAP_FRAG);
+  const KEEP_AT = "highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,";
+  const SURE = "    highp float sure2 = sure > 0.0 ? sure * sure : 0.0;\n";
+  const BK = "    if (bk < 0) continue; // Nothing of this slot within reach.\n";
 
   it("finds each anchor exactly once in the real section fragment", () => {
     expect(start).toBeGreaterThan(0);
+    expect(sectionText).toContain(GAP_FRAG_LIB);
     for (const a of [
+      KEEP_AT,
+      SURE,
+      BK,
       "void main(void) {\n  highp vec2 gfw = fwidth(vPos);",
       "highp float pxArc = (ksw.y < 0.5 * ksw.x ? ksw.y : ksw.x) * float(kc.count) * kc.arcPer;\n",
       "highp float kctrl = fxHere || paintHere ? kCtrlNear(kc, kpt.x, kpt.y) : 0.0;",
@@ -319,16 +330,22 @@ describe("K76 the explore program variant (withExplore)", () => {
     }
   });
 
-  it("inserts the declarations, the side derivative, the ctrl and the visibility in order", () => {
+  it("inserts the declarations, the shaped cut, the side derivative, the ctrl and the visibility in order", () => {
     const v = withExplore(sectionText);
     const iDecl = v.indexOf(EXPLORE_DECL_GLSL);
+    const iKeepAt = v.indexOf(KEEP_AT);
+    const iSure = v.indexOf(SURE + EXPLORE_GAP_SURE_GLSL);
+    const iCut = v.indexOf(BK + EXPLORE_GAP_CUT_GLSL);
     const iMain = v.indexOf("void main(void) {");
     const iFw = v.indexOf("highp float kSideFw = fwidth(vUV.y);");
     const iCtrl = v.indexOf("bool exHere = uKExplore.x > 0.5;");
     const iVis = v.indexOf(EXPLORE_MAIN_GLSL);
     const iGap = v.indexOf("  float gk = gapKeep(pxW, gTurn);");
     expect(iDecl).toBeGreaterThan(0);
-    expect(iDecl).toBeLessThan(iMain);
+    expect(iDecl + EXPLORE_DECL_GLSL.length).toBe(iKeepAt);
+    expect(iSure).toBeGreaterThan(iKeepAt);
+    expect(iCut).toBeGreaterThan(iSure);
+    expect(iMain).toBeGreaterThan(iCut);
     expect(iFw).toBeGreaterThan(iMain);
     expect(iCtrl).toBeGreaterThan(iFw);
     expect(iVis).toBeGreaterThan(iCtrl);
@@ -338,11 +355,21 @@ describe("K76 the explore program variant (withExplore)", () => {
     // Everything else is the master text.
     const back = v
       .replace(EXPLORE_DECL_GLSL, "")
+      .replace(EXPLORE_GAP_SURE_GLSL, "")
+      .replace(EXPLORE_GAP_CUT_GLSL, "")
       .replace("  highp float kSideFw = fwidth(vUV.y);\n", "")
       .replace("bool exHere = uKExplore.x > 0.5;\n  ", "")
       .replace("fxHere || paintHere || exHere ?", "fxHere || paintHere ?")
       .replace(EXPLORE_MAIN_GLSL, "");
     expect(back).toBe(sectionText);
+  });
+
+  it("leaves the shared gap library (fans, the still pluck, master's ribbons) without the shaped cut", () => {
+    for (const t of [GAP_FRAG_LIB, GAP_FRAG, sectionText]) {
+      expect(t).not.toContain("exShaped");
+      expect(t).not.toContain("exploreCutCover");
+      expect(t).not.toContain("uKExplore");
+    }
   });
 
   it("throws on a missing or repeated anchor", () => {

@@ -13,6 +13,7 @@
 
 import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, RUN_FLAG } from "./paint_const";
 import { EXPLORE_ITEM_VIS } from "./explore_glsl";
+import { GAP_PROF_F0, GAP_PROF_MAX, GAP_PROF_R0 } from "./gap_mask";
 
 const SHIFT = PAINT_CONST.K_ROW_SHIFT;
 
@@ -1430,6 +1431,87 @@ export function kExploreAt(
   }
   out.v = best;
   return out;
+}
+
+// GLSL twin: kExploreLook (explore_glsl.ts) - the end look's coverage at a
+// point of a frontier fade (u = progress through it, < 0 outside one; s =
+// world arc from the solid end; lat = vUV.y - 0.5; sideFw = vUV.y per pixel;
+// tw = uKExplore.w). The fade and halo looks, and every look outside a
+// frontier, return v.
+export function kExploreLookCpu(
+  look: number,
+  v: number,
+  u: number,
+  s: number,
+  lat: number,
+  sideFw: number,
+  pxW: number,
+  tw: number
+): number {
+  if (u < 0 || look < 2) return v;
+  if (look === 2) return 1 - smooth01((u - 0.4) / 0.6);
+  if (look === 4) {
+    const fl = lat * 2;
+    let cov = 0;
+    for (let i = -1; i <= 1; i++) {
+      const cf = i * (0.5 + 0.3 * u) + 0.12 * u * Math.sin(s * 7 + i * 2.1);
+      const wf = 0.34 + (0.1 - 0.34) * u;
+      const c = (wf - Math.abs(fl - cf)) / Math.max(4 * sideFw, 1e-4) + 0.5;
+      cov = Math.max(cov, c < 0 ? 0 : c > 1 ? 1 : c);
+    }
+    const g = smooth01(u / 0.12);
+    cov = 1 + (cov - 1) * g;
+    return cov * (1 - smooth01((u - 0.5) / 0.5));
+  }
+  const sp = 0.95 * tw;
+  const la = lat * tw;
+  const dCap = Math.sqrt(s * s + la * la) - 0.5 * tw;
+  const kk = Math.max(1, Math.floor(s / sp + 0.5));
+  const dx = s - kk * sp;
+  const dDot = Math.sqrt(dx * dx + la * la) - 0.3 * tw * (1 - 0.4 * u);
+  const dd = Math.min(dCap, dDot);
+  const c = -dd / pxW + 0.5;
+  return (c < 0 ? 0 : c > 1 ? 1 : c) * (1 - 0.55 * u * u);
+}
+
+// GLSL twin: exploreCutCover (explore_glsl.ts, K268) - the over thread's
+// coverage at arc A of a shaped slot's frame, from its 12 profile floats
+// (P0, P1 = the ramps [aS, F, dK, tK], P2 = [strength, flags, 0, 0]).
+export function exploreCutCoverCpu(
+  prof: ArrayLike<number>,
+  A: number,
+  look: number,
+  tw: number,
+  pxW: number
+): number {
+  const fl = Math.round(prof[9]);
+  const mx = (fl & GAP_PROF_MAX) !== 0;
+  let best = mx ? 0 : 2;
+  let bu = -1;
+  let bs = 0;
+  for (let r = 0; r < 2; r++) {
+    if ((fl & (GAP_PROF_R0 << r)) === 0) continue;
+    const aS = prof[r * 4];
+    const F = prof[r * 4 + 1];
+    const dK = prof[r * 4 + 2];
+    const tK = prof[r * 4 + 3];
+    const d = (A - aS) / F;
+    let v = 1;
+    let u = -1;
+    if (d > 0) {
+      let t = d < dK ? d * (tK / dK) : tK + (d - dK) * ((1 - tK) / Math.max(1 - dK, 1e-6));
+      t = Math.min(t, 1);
+      v = 1 - t * t * (3 - 2 * t);
+      if (t < 1 && (fl & (GAP_PROF_F0 << r)) !== 0) u = t;
+    }
+    if (mx ? v > best || (v === best && u < 0) : v < best) {
+      best = v;
+      bu = u;
+      bs = Math.abs(A - aS);
+    }
+  }
+  if (best > 1) return 1;
+  return kExploreLookCpu(look, best, bu, bs, 0, pxW / Math.max(tw, 1e-6), pxW, tw);
 }
 
 // GLSL twin: kGlow - the reveal frontier glow at a point (interval modes,

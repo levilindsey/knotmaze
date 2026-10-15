@@ -27,7 +27,9 @@
 //            seconds) over CROSSING_FADE_IN, from the knot uniforms' clock
 //            (gapStrength), so a reveal / FX gate needs no CPU fade state
 //   texel 2: [winNeg, winPos, hOver, nPts]
-//   texel 3: [capR, nProtNeg, nProtPos, flags (1 perp margin, 2 self)]
+//   texel 3: [capR, nProtNeg, nProtPos, flags (1 perp margin, 2 self,
+//            4 SHAPED: K268, the thread reveal's profile below - read only
+//            by the explore program, set only while the reveal is on)]
 //   texel 4: [selfExcl, polyStartArc, polyStepArc, farK]
 //   texel 5: [fadeScaleNeg, fadeScalePos, centerX, centerY]
 //   texel 6: [underTanX, underTanY, marginScaleNeg, marginScalePos]
@@ -41,6 +43,14 @@
 //   then:       two PROTECT blocks (negative side, positive side), each a
 //               bounding circle [cx, cy, r, -] and GAP_PROT_PTS polyline
 //               texels in the same [x, y, u] form
+//   last:       K268's SHAPED-CUT PROFILE (GAP_PROF_BASE, 3 texels): the
+//               over thread's visibility along the polyline's arc frame
+//               (texel 4: polyStart + k polyStep), written by setShape -
+//               two ramps [aS, F, dK, tK] (a piece end: solid before
+//               aS, then a fade of SIGNED arc length F, piecewise linear
+//               in arc through the knot (dK, tK)), then [solved strength,
+//               profile flags (GAP_PROF_*), 0, 0]. Only the explore
+//               program reads it (texel 3.w bit 4 gates the read)
 // JUNCTION CLEARANCE (the scales): per side of the crossing, the CPU caps
 // the cosmetic margin (floor 0.5) and the fade (floor 0.45) by the room a
 // fused joint leaves on that side - exactly the erase era's lane caps
@@ -120,7 +130,7 @@
 // a one-pixel analytic AA ramp (discarded fragments are not antialiased
 // by MSAA). Marker discs fade radially (their sin is pinned to 1).
 
-import { BufferImageSource, Texture } from "pixi.js";
+import { BufferImageSource, ExtensionType, Texture, extensions } from "pixi.js";
 
 export const GAP_HDR = 9; // Header texels per row.
 export const GAP_CHUNK = 8; // Polyline segments per culling chunk.
@@ -140,7 +150,19 @@ const GAP_PROT_CHUNKS = Math.ceil((GAP_PROT_PTS - 1) / GAP_CHUNK);
 const GAP_PROT_BASE = GAP_PTS_BASE + GAP_MAX_PTS;
 // Per block: bounding circle + capsule radius, chunk chords, points.
 const GAP_PROT_W = 1 + GAP_PROT_CHUNKS + GAP_PROT_PTS;
-export const GAP_TEX_W = GAP_PROT_BASE + 2 * GAP_PROT_W;
+// K268: the shaped-cut profile (see the header), after the protect blocks.
+export const GAP_PROF_BASE = GAP_PROT_BASE + 2 * GAP_PROT_W;
+export const GAP_TEX_W = GAP_PROF_BASE + 3;
+// Texel 3.w's SHAPED bit, and the profile's flags (texel GAP_PROF_BASE+2
+// .y): ramp 0 / 1 present, ramp 0 / 1 a FRONTIER (the end look applies),
+// and MAX (two pieces, kExploreAt's best-of) instead of MIN (one piece's
+// two ends).
+export const GAP_FLAG_SHAPED = 4;
+export const GAP_PROF_R0 = 1;
+export const GAP_PROF_R1 = 2;
+export const GAP_PROF_F0 = 4;
+export const GAP_PROF_F1 = 8;
+export const GAP_PROF_MAX = 16;
 export const GAP_SLOTS = 4; // Slot ids per vertex.
 
 // The chunk loop of a nearest-point search: chunks whose CAPSULE (chord +
@@ -599,31 +621,139 @@ highp float gapKeep(highp float pxW, highp float turn) {
 }
 `;
 
+// K268: THE ROW-PARTIAL GAP UPLOAD. The slot table's source keeps a dirty
+// flag per row (every GapMaskTable write marks its row), and its uploads go
+// through GAP_ROWS_UPLOADER: the first upload (or a resize) allocates with
+// texImage2D, afterwards each contiguous run of dirty rows goes up with one
+// texSubImage2D and a clean table sends nothing. Before K268 every upload()
+// re-sent the whole texture (GAP_TEX_W x capacity texels), so a reveal
+// growth frame that moved one slot's factor paid for all of them.
+const GAP_ROWS_UPLOAD_ID = "knot-gap-rows";
+
+class GapRowSource extends BufferImageSource {
+  readonly dirty: Uint8Array;
+  any = false;
+  constructor(data: Float32Array, width: number, rows: number) {
+    super({
+      resource: data,
+      width,
+      height: rows,
+      format: "rgba32float",
+      // Raw data, never premultiplied (pixi only premultiplies on upload
+      // for 'premultiply-alpha-on-upload').
+      alphaMode: "no-premultiply-alpha",
+      scaleMode: "nearest",
+      autoGenerateMipmaps: false,
+    });
+    this.dirty = new Uint8Array(rows);
+    this.uploadMethodId = GAP_ROWS_UPLOAD_ID;
+  }
+  mark(row: number): void {
+    this.dirty[row] = 1;
+    this.any = true;
+  }
+  markAll(): void {
+    this.dirty.fill(1);
+    this.any = true;
+  }
+}
+
+interface GapGlTexture {
+  target: number;
+  width: number;
+  height: number;
+  internalFormat: number;
+  format: number;
+  type: number;
+}
+
+// Bytes and upload calls the gap table has sent (probes: K268's
+// before / after on a growth move).
+export const GAP_UPLOAD_STATS = { bytes: 0, calls: 0 };
+
+// Exported for the tests (a fake GL context drives it there).
+export const GAP_ROWS_UPLOADER = {
+  id: GAP_ROWS_UPLOAD_ID,
+  upload(source: GapRowSource, glTexture: GapGlTexture, gl: WebGL2RenderingContext): void {
+    const w = source.pixelWidth;
+    const h = source.pixelHeight;
+    const data = source.resource as Float32Array;
+    if (glTexture.width !== w || glTexture.height !== h) {
+      gl.texImage2D(
+        glTexture.target,
+        0,
+        glTexture.internalFormat,
+        w,
+        h,
+        0,
+        glTexture.format,
+        glTexture.type,
+        data
+      );
+      glTexture.width = w;
+      glTexture.height = h;
+      GAP_UPLOAD_STATS.bytes += w * h * 16;
+      GAP_UPLOAD_STATS.calls++;
+    } else if (source.any) {
+      const dr = source.dirty;
+      const rows = Math.min(h, dr.length);
+      let r = 0;
+      while (r < rows) {
+        if (!dr[r]) {
+          r++;
+          continue;
+        }
+        const lo = r;
+        while (r < rows && dr[r]) r++;
+        gl.texSubImage2D(
+          glTexture.target,
+          0,
+          0,
+          lo,
+          w,
+          r - lo,
+          glTexture.format,
+          glTexture.type,
+          data.subarray(lo * w * 4, r * w * 4)
+        );
+        GAP_UPLOAD_STATS.bytes += (r - lo) * w * 16;
+        GAP_UPLOAD_STATS.calls++;
+      }
+    }
+    source.dirty.fill(0);
+    source.any = false;
+  },
+};
+// Registered at module load, before the app creates its renderer (whose
+// GlTextureSystem merges the uploader map at construction) - as
+// float_rows.ts does. ribbon_renderer imports this module statically.
+extensions.add({
+  type: ExtensionType.TextureUploaderWebGL,
+  name: GAP_ROWS_UPLOADER.id,
+  ref: GAP_ROWS_UPLOADER,
+});
+
 // One page-lifetime data texture per row capacity: pixi's retained render
 // state can reference a TextureSource the frame after a rebuild, so these
 // are never destroyed (the PALETTE_CACHE lore); scene rebuilds reuse them.
-const GAP_TEX_CACHE = new Map<number, { tex: Texture; data: Float32Array }>();
+const GAP_TEX_CACHE = new Map<
+  number,
+  { tex: Texture; data: Float32Array; source: GapRowSource }
+>();
 
-function gapTextureFor(rows: number): { tex: Texture; data: Float32Array } {
+function gapTextureFor(rows: number): {
+  tex: Texture;
+  data: Float32Array;
+  source: GapRowSource;
+} {
   let cap = 8;
   while (cap < rows) cap *= 2;
   let hit = GAP_TEX_CACHE.get(cap);
   if (!hit) {
     const data = new Float32Array(GAP_TEX_W * cap * 4);
-    const tex = new Texture({
-      source: new BufferImageSource({
-        resource: data,
-        width: GAP_TEX_W,
-        height: cap,
-        format: "rgba32float",
-        // Raw data, never premultiplied (pixi only premultiplies on upload
-        // for 'premultiply-alpha-on-upload').
-        alphaMode: "no-premultiply-alpha",
-        scaleMode: "nearest",
-        autoGenerateMipmaps: false,
-      }),
-    });
-    hit = { tex, data };
+    const source = new GapRowSource(data, GAP_TEX_W, cap);
+    const tex = new Texture({ source });
+    hit = { tex, data, source };
     GAP_TEX_CACHE.set(cap, hit);
   }
   return hit;
@@ -677,13 +807,38 @@ export interface GapSlotParams {
   protPosN: number;
 }
 
+// K268, one end of a visibility piece as a shaped cut's ramp: aS = the
+// over chain's arc where the solid part ends (the slot polyline's frame),
+// F = the fade's SIGNED arc length (its sign says which side is hidden; a
+// hard end is +-1e-6), (dK, tK) = one interior knot of the ctrl-linear fade
+// in arc (the knot's share of the fade's arc and of the fade; none = (1, 1)),
+// front = the end is a frontier (the end look applies).
+export interface GapRamp {
+  aS: number;
+  F: number;
+  dK: number;
+  tK: number;
+  front: boolean;
+}
+
+// A shaped slot: k2b = 2b's scalar factor (texel 1.w for the fans and the
+// still pluck), up to two ramps, combined by MAX (two pieces) or MIN (one
+// piece's two ends).
+export interface GapShape {
+  k2b: number;
+  ramps: readonly GapRamp[];
+  max: boolean;
+}
+
 export class GapMaskTable {
   readonly slots: number;
   readonly tex: Texture;
   private data: Float32Array;
+  private readonly source: GapRowSource;
   // K76 2b, THE THREAD REVEAL'S GAP GATE: per slot, the strength and the
   // two reject radii as writeSlot / clearSlot solved them, and the
-  // visibility factor setVis applied over them (1 = as solved).
+  // visibility factor setVis applied over them (1 = as solved; NaN after
+  // setShape, so the next setVis always writes).
   private readonly solved: Float32Array;
   private readonly visK: Float64Array;
 
@@ -692,16 +847,19 @@ export class GapMaskTable {
     const hit = gapTextureFor(slots + 1);
     this.tex = hit.tex;
     this.data = hit.data;
+    this.source = hit.source;
     this.solved = new Float32Array(slots * 3);
     this.visK = new Float64Array(slots).fill(1);
     // A reused texture may hold another scene's slots: clear them.
     this.data.fill(0);
     for (let s = 0; s < slots; s++) this.clearSlot(s);
+    this.source.markAll();
   }
 
   setEnabled(on: boolean, debugTint = false): void {
     this.data[0] = on ? 1 : 0;
     this.data[1] = debugTint ? 1 : 0;
+    this.source.mark(0);
   }
 
   // Write one slot; pts is a flat [x, y, ...] polyline of nPts points. The
@@ -933,17 +1091,20 @@ export class GapMaskTable {
     this.data[o + 3] = -1;
     this.data[o + 7] = 0;
     this.data[o + 11] = 0;
+    // Not shaped (K268): writeSlot rewrites texel 3.w whole.
+    this.data[o + 15] = this.data[o + 15] & ~GAP_FLAG_SHAPED;
     this.noteSolved(slot, o);
   }
 
   // A slot was just solved (written or cleared): remember its strength and
-  // reject radii, unscaled.
+  // reject radii, unscaled, and mark its row for upload.
   private noteSolved(slot: number, o: number): void {
     const s3 = slot * 3;
     this.solved[s3] = this.data[o + 7];
     this.solved[s3 + 1] = this.data[o + 2];
     this.solved[s3 + 2] = this.data[o + 3];
     this.visK[slot] = 1;
+    this.source.mark(slot + 1);
   }
 
   // K76 2b: scale a slot's solved strength by a visibility factor k in
@@ -963,12 +1124,102 @@ export class GapMaskTable {
     d[o + 7] = s < 0 ? s : s * Math.max(0, k);
     d[o + 2] = k > 0 ? this.solved[s3 + 1] : -1;
     d[o + 3] = k > 0 ? this.solved[s3 + 2] : -1;
+    this.source.mark(slot + 1);
     return true;
   }
 
-  // The visibility factor setVis last applied to a slot (1 = as solved).
+  // The visibility factor setVis last applied to a slot (1 = as solved;
+  // NaN once setShape has written it).
   visOf(slot: number): number {
     return this.visK[slot];
+  }
+
+  // K268 THE SHAPED CUT: give a slot a visibility profile (the explore
+  // ribbon program cuts by the over thread's visibility at each fragment's
+  // projection), or take it away (null). A shaped slot keeps its solved
+  // reject radii (never rejected); texel 1.w gets 2b's scalar k2b (0 when
+  // the over pass is hidden), which the fans, the still pluck and the
+  // master program read; the profile texels keep the solved strength.
+  // Writes only what differs. Returns whether the table changed. null on
+  // an unshaped slot is a no-op; after it, setVis restores the 2b encoding.
+  setShape(slot: number, shape: GapShape | null): boolean {
+    const d = this.data;
+    const o = (slot + 1) * GAP_TEX_W * 4;
+    const pb = o + GAP_PROF_BASE * 4;
+    const fl = d[o + 15];
+    if (shape === null) {
+      if ((fl & GAP_FLAG_SHAPED) === 0) return false;
+      d[o + 15] = fl & ~GAP_FLAG_SHAPED;
+      d.fill(0, pb, pb + 12);
+      this.visK[slot] = NaN;
+      this.source.mark(slot + 1);
+      return true;
+    }
+    const s3 = slot * 3;
+    const s = this.solved[s3];
+    const k = shape.k2b;
+    let changed = false;
+    const put = (i: number, v: number): void => {
+      if (d[i] !== Math.fround(v)) {
+        d[i] = v;
+        changed = true;
+      }
+    };
+    put(o + 7, k > 0 ? (s < 0 ? s : s * k) : 0);
+    put(o + 2, this.solved[s3 + 1]);
+    put(o + 3, this.solved[s3 + 2]);
+    put(o + 15, fl | GAP_FLAG_SHAPED);
+    let flags = shape.max ? GAP_PROF_MAX : 0;
+    for (let r = 0; r < 2; r++) {
+      const R = shape.ramps[r];
+      const t = pb + r * 4;
+      if (R) {
+        flags |= (r === 0 ? GAP_PROF_R0 : GAP_PROF_R1) | (R.front ? (r === 0 ? GAP_PROF_F0 : GAP_PROF_F1) : 0);
+        put(t, R.aS);
+        put(t + 1, R.F);
+        put(t + 2, R.dK);
+        put(t + 3, R.tK);
+      } else {
+        put(t, 0);
+        put(t + 1, 0);
+        put(t + 2, 0);
+        put(t + 3, 0);
+      }
+    }
+    put(pb + 8, s);
+    put(pb + 9, flags);
+    put(pb + 10, 0);
+    put(pb + 11, 0);
+    this.visK[slot] = NaN;
+    if (changed) this.source.mark(slot + 1);
+    return changed;
+  }
+
+  // Whether a slot is shaped (texel 3.w's bit).
+  isShaped(slot: number): boolean {
+    return (this.data[(slot + 1) * GAP_TEX_W * 4 + 15] & GAP_FLAG_SHAPED) !== 0;
+  }
+
+  // The over chain's arc range the slot's polyline spans (its frame):
+  // [polyStart, polyStart + (n - 1) polyStep, n].
+  polyRange(slot: number): [number, number, number] {
+    const d = this.data;
+    const o = (slot + 1) * GAP_TEX_W * 4;
+    const n = d[o + 11];
+    return [d[o + 17], d[o + 17] + Math.max(0, n - 1) * d[o + 18], n];
+  }
+
+  // A slot's profile texels (12 floats: P0, P1, P2), or null when it is
+  // not shaped (probes, tests).
+  readShape(slot: number): number[] | null {
+    if (!this.isShaped(slot)) return null;
+    const pb = (slot + 1) * GAP_TEX_W * 4 + GAP_PROF_BASE * 4;
+    return Array.from(this.data.subarray(pb, pb + 12));
+  }
+
+  // Whether any row waits for upload (tests).
+  get uploadPending(): boolean {
+    return this.source.any;
   }
 
   // Read back a slot's header + polyline (diagnostics / probes).
@@ -1038,7 +1289,10 @@ export class GapMaskTable {
     };
   }
 
+  // Send the rows written since the last upload (nothing when clean). Before
+  // the source's first bind there is no GL texture: the first bind uploads
+  // everything.
   upload(): void {
-    this.tex.source.update();
+    if (this.source.any) this.source.update();
   }
 }
