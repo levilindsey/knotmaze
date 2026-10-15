@@ -14,7 +14,11 @@ import { APPEAR_SEQUENCES, APPEAR_FX_MODES } from "../core/reveal_plan";
 import type { ShapeId, AnchorId } from "../core/shapes";
 import { SHAPES, ANCHORS } from "../core/shapes";
 import type { ChaseParams, ClockMode } from "../game/minotaur";
-import { DEFAULT_CHASE_PARAMS } from "../game/minotaur";
+import {
+  DEFAULT_CHASE_PARAMS,
+  HUNT_PACE_FRACTION,
+  WANDER_PACE_FRACTION,
+} from "../game/minotaur";
 import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
 import type { PluckCrossings, PluckGlow } from "../render/pluck_model";
 import { PLUCK_CROSSINGS, PLUCK_GLOWS, PLUCK_WHOLE_MAX } from "../render/pluck_model";
@@ -363,7 +367,8 @@ export interface UrlParams {
   // minoCatch) sends the player back to the entrance. Restarts the solve.
   clock: ClockMode;
   // The chase's tuning (chaseParamsOf; lattice units, u/s, seconds). Each
-  // applies live.
+  // applies live. The minotaur's paces are fractions of playerPace (K174:
+  // 0.7 = 0.7 x the player's pace).
   playerPace: number;
   minoWanderPace: number;
   minoHuntPace: number;
@@ -379,6 +384,11 @@ export interface UrlParams {
   minoWake: number;
   // How the minotaur shows under the fog of war (MINO_FOG_MODES).
   minoFog: MinoFog;
+  // K174: the minotaur roams toward the player (DEFAULT_CHASE_PARAMS
+  // .roamPull; off = K80's roam), and a catch returns the fog of war to
+  // the solve's start (off = explored fog stays, K100).
+  minoToward: boolean;
+  minoRefog: boolean;
   // K140's finish confetti: on/off, and the amount in [0,
   // CONFETTI_AMOUNT_MAX] (1 = the designed burst). Viewer preferences.
   confetti: boolean;
@@ -507,11 +517,12 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   settleBudget: 12,
   loadSettle: 0.45,
   // K80: the turn-based maze. The chase's tuning is the simulation-picked
-  // DEFAULT_CHASE_PARAMS (game/minotaur.ts).
+  // DEFAULT_CHASE_PARAMS (game/minotaur.ts); K174 made the minotaur's
+  // paces fractions of the player's.
   clock: "turn",
   playerPace: DEFAULT_CHASE_PARAMS.playerPace,
-  minoWanderPace: DEFAULT_CHASE_PARAMS.wanderPace,
-  minoHuntPace: DEFAULT_CHASE_PARAMS.approachPace,
+  minoWanderPace: WANDER_PACE_FRACTION,
+  minoHuntPace: HUNT_PACE_FRACTION,
   minoPaceJitter: DEFAULT_CHASE_PARAMS.paceJitter,
   minoPauseChance: DEFAULT_CHASE_PARAMS.pauseChance,
   minoPauseMin: DEFAULT_CHASE_PARAMS.pauseMin,
@@ -523,6 +534,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoRoam: DEFAULT_CHASE_PARAMS.roamRange,
   minoWake: DEFAULT_CHASE_PARAMS.wake,
   minoFog: "always",
+  minoToward: true,
+  minoRefog: true,
   confetti: true,
   confettiAmount: 1,
   pluckWhole: 0.5,
@@ -534,15 +547,16 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
 
 // The real-time chase's tuning from a design's params (K80). Negative or
 // non-finite values read as 0; the chase keeps detectEnd >= detectStart
-// and pauseMax >= pauseMin itself.
+// and pauseMax >= pauseMin itself. The minotaur's paces are fractions of
+// the player's (K174), taken here, so the chase stays in u/s.
 export function chaseParamsOf(
   p: Omit<UrlParams, "seed">
 ): ChaseParams {
   const pos = (v: number): number => (Number.isFinite(v) && v > 0 ? v : 0);
   return {
     playerPace: pos(p.playerPace),
-    wanderPace: pos(p.minoWanderPace),
-    approachPace: pos(p.minoHuntPace),
+    wanderPace: pos(p.minoWanderPace) * pos(p.playerPace),
+    approachPace: pos(p.minoHuntPace) * pos(p.playerPace),
     paceJitter: Math.min(0.5, pos(p.minoPaceJitter)),
     pauseChance: clamp01(pos(p.minoPauseChance)),
     pauseMin: pos(p.minoPauseMin),
@@ -553,6 +567,7 @@ export function chaseParamsOf(
     deadEndBias: clamp01(pos(p.minoDeadEnds)),
     roamRange: pos(p.minoRoam),
     wake: pos(p.minoWake),
+    roamPull: p.minoToward ? DEFAULT_CHASE_PARAMS.roamPull : 0,
   };
 }
 
@@ -856,7 +871,7 @@ function readLegacy(
       SETTLE_BUDGET_MAX
     ),
     loadSettle: clampTo(readNumber(query, "lds", D.loadSettle), LOAD_SETTLE_MAX),
-    // And K80's real-time mode (`&clk=realtime&mhp=9`).
+    // And K80's real-time mode (`&clk=realtime&mhp=0.9`).
     clock: readChoice(query, "clk", CLOCK_MODES, D.clock),
     playerPace: readNumber(query, "plp", D.playerPace),
     minoWanderPace: readNumber(query, "mwp", D.minoWanderPace),
@@ -872,6 +887,9 @@ function readLegacy(
     minoRoam: readNumber(query, "mrm", D.minoRoam),
     minoWake: readNumber(query, "mwk", D.minoWake),
     minoFog: readChoice(query, "mfg", MINO_FOG_MODES, D.minoFog),
+    // K174 (`&mtw=0&mrf=0`).
+    minoToward: readBool(query, "mtw", D.minoToward),
+    minoRefog: readBool(query, "mrf", D.minoRefog),
     // K140's finish confetti (`&cf=0`, `&cfa=2`).
     confetti: readBool(query, "cf", D.confetti),
     confettiAmount: clampTo(

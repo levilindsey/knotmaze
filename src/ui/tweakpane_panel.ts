@@ -885,13 +885,25 @@ export function buildPanel(
     opts: Record<string, unknown>,
     tipText: string
   ): RowApi => row(fMino, p, key, opts, tipText, D[key], () => callbacks.onChaseChange());
-  chaseRow(
-    "minoWanderPace", { min: 0, max: 30, step: 0.5 },
-    "The minotaur's pace while it roams, in lattice units per second. Applies live."
+  // K174: the minotaur's paces as multiples of yours (playerPace). No step
+  // (Tweakpane's step grid would snap a link's 0.73, K130); an edit keeps
+  // 2 decimals, so 0.7 x 10 stays exactly the default's 7.
+  const paceRow = (key: "minoWanderPace" | "minoHuntPace", label: string, tipText: string): RowApi =>
+    row(
+      fMino, p, key,
+      { min: 0, max: 2, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label },
+      tipText, D[key], () => {
+        params[key] = Math.round(params[key] * 100) / 100;
+        callbacks.onChaseChange();
+      }
+    );
+  paceRow(
+    "minoWanderPace", "minoWanderPace (x your pace)",
+    "The minotaur's pace while it roams, as a multiple of your pace (playerPace): 0.5 = half as fast as you. Applies live."
   );
-  chaseRow(
-    "minoHuntPace", { min: 0, max: 30, step: 0.5 },
-    "Its pace while it hunts you, along the shortest way to you. Applies live."
+  paceRow(
+    "minoHuntPace", "minoHuntPace (x your pace)",
+    "Its pace while it hunts you, along the shortest way to you, as a multiple of your pace: below 1 you outrun it by moving away. Applies live."
   );
   chaseRow(
     "minoPaceJitter", { min: 0, max: 0.5, step: 0.05 },
@@ -930,6 +942,10 @@ export function buildPanel(
     "The farthest it roams in one go, along the threads (lattice units). Applies live."
   );
   chaseRow(
+    "minoToward", {},
+    "It roams toward you: some of its roaming legs head only for places nearer you along the threads, so it finds you more often. Off: it roams at random. A player on the entrance or exit tail pulls nothing. Applies live."
+  );
+  chaseRow(
     "minoWake", { min: 0, max: 20, step: 0.5 },
     "Seconds it waits in its lair at the finish, at the start and after each catch. Applies live."
   );
@@ -937,6 +953,10 @@ export function buildPanel(
     "minoFog",
     { options: { always: "always", "while hunting": "hunting", never: "never" } },
     "With fog of war: show the minotaur always, only while it hunts you, or never (only where the fog has lifted). Applies live."
+  );
+  const minoRefogRow = chaseRow(
+    "minoRefog", {},
+    "With fog of war: a catch returns the fog to how it stood at the start of the solve. Off: what you explored stays uncovered. Applies from the next catch."
   );
 
   // --- Look ---------------------------------------------------------------
@@ -1616,6 +1636,7 @@ export function buildPanel(
     playerPaceRow.hidden = !realtime;
     fMino.hidden = !realtime;
     minoFogRow.hidden = !params.fogOfWar;
+    minoRefogRow.hidden = !params.fogOfWar;
     moveSpeedRow.hidden = !fab || realtime;
     mazeStatsRow.hidden = !fab;
     finishIndicatorRow.hidden = !fab;

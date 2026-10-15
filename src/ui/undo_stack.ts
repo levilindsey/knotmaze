@@ -160,7 +160,7 @@ export const LIVE_EFFECTS = {
     "playerPace", "minoWanderPace", "minoHuntPace", "minoPaceJitter",
     "minoPauseChance", "minoPauseMin", "minoPauseMax", "minoDetect",
     "minoLose", "minoCatch", "minoDeadEnds", "minoRoam", "minoWake",
-    "minoFog",
+    "minoFog", "minoToward", "minoRefog",
   ],
   onConfettiChange: ["confetti", "confettiAmount"],
   onAudioChange: [

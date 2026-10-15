@@ -222,6 +222,9 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("markerSize"), // 104
   // K145's hover glow.
   num("hoverGlow"), // 105
+  // K174's minotaur controls: it roams toward the player, a catch re-fogs.
+  flag("minoToward"), // 106
+  flag("minoRefog"), // 107
 ]);
 
 // The format version a blob names first. Bump it for anything but an

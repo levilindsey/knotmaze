@@ -86,10 +86,11 @@ describe("links", () => {
       backgroundBase: "#151b28", backgroundAccent1: "#7ab8cd",
       backgroundAccent2: "#cdb17a", backgroundAccent3: "#aa7acd",
       settleBudget: 12, loadSettle: 0.45,
-      clock: "turn", playerPace: 10, minoWanderPace: 5, minoHuntPace: 7,
+      clock: "turn", playerPace: 10, minoWanderPace: 0.5, minoHuntPace: 0.7,
       minoPaceJitter: 0.2, minoPauseChance: 0.3, minoPauseMin: 0.5,
       minoPauseMax: 2, minoDetect: 15, minoLose: 25, minoCatch: 1,
       minoDeadEnds: 0.4, minoRoam: 30, minoWake: 2, minoFog: "always",
+      minoToward: true, minoRefog: true,
       confetti: true, confettiAmount: 1,
       pluckWhole: 0.5, pluckCrossings: "through", pluckGlow: "off",
       markerSize: 1.08,
@@ -171,18 +172,34 @@ describe("links", () => {
     expect(chaseParamsOf(PARAM_DEFAULTS)).toEqual({ ...DEFAULT_CHASE_PARAMS });
   });
 
+  // K174: the minotaur's paces are fractions of the player's, taken in
+  // chaseParamsOf; the defaults' products are exactly the K80 paces.
+  it("reads the minotaur's paces as fractions of the player's", () => {
+    const d = chaseParamsOf(PARAM_DEFAULTS);
+    expect(d.wanderPace).toBe(5);
+    expect(d.approachPace).toBe(7);
+    const fast = chaseParamsOf(parseParams("?7&plp=20"));
+    expect(fast.wanderPace).toBe(10);
+    expect(fast.approachPace).toBe(14);
+    expect(chaseParamsOf(parseParams("?7&mtw=0")).roamPull).toBe(0);
+    expect(chaseParamsOf(parseParams("?7&mtw=1")).roamPull).toBe(DEFAULT_CHASE_PARAMS.roamPull);
+  });
+
   it("reads the real-time mode from override keys", () => {
     const p = parseParams(
-      "?7&clk=realtime&plp=12&mwp=4&mhp=9&mpj=0.1&mpc=0.5&mpn=1&mpx=3" +
-        "&mdt=10&mls=20&mct=1.5&mde=0.6&mrm=40&mwk=3&mfg=hunting"
+      "?7&clk=realtime&plp=12&mwp=0.25&mhp=0.75&mpj=0.1&mpc=0.5&mpn=1&mpx=3" +
+        "&mdt=10&mls=20&mct=1.5&mde=0.6&mrm=40&mwk=3&mfg=hunting&mtw=0&mrf=0"
     );
     expect(p.clock).toBe("realtime");
     expect(chaseParamsOf(p)).toEqual({
-      playerPace: 12, wanderPace: 4, approachPace: 9, paceJitter: 0.1,
+      playerPace: 12, wanderPace: 3, approachPace: 9, paceJitter: 0.1,
       pauseChance: 0.5, pauseMin: 1, pauseMax: 3, detectStart: 10,
       detectEnd: 20, catchDist: 1.5, deadEndBias: 0.6, roamRange: 40, wake: 3,
+      roamPull: 0,
     });
     expect(p.minoFog).toBe("hunting");
+    expect(p.minoToward).toBe(false);
+    expect(p.minoRefog).toBe(false);
     // An unknown clock reads as the default; the token round-trips the mode.
     expect(parseParams("?7&clk=beat").clock).toBe("turn");
     expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
@@ -392,7 +409,8 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoWanderPace: "mwp", minoHuntPace: "mhp", minoPaceJitter: "mpj",
   minoPauseChance: "mpc", minoPauseMin: "mpn", minoPauseMax: "mpx",
   minoDetect: "mdt", minoLose: "mls", minoCatch: "mct", minoDeadEnds: "mde",
-  minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", confetti: "cf",
+  minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", minoToward: "mtw",
+  minoRefog: "mrf", confetti: "cf",
   confettiAmount: "cfa", pluckWhole: "pw", pluckCrossings: "pcx",
   pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg",
 };
