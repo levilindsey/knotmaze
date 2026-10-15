@@ -148,7 +148,7 @@ Each point follows from the rules above. None is a new call.
       stroke moved into the shader, so it respects the gaps (K281 (c)).
     - Gone keeps R.3.3's char band and embers at the fire front, so a
       thread blackens before it vanishes. The sheet shows both looks;
-      Levi picks the default (recommended: gone).
+      the default is gone (Levi, 2026-10-14 about 18:27).
   - Build it on K76's thread reveal, which R.3.3 calls "the same per-run
     visibility, reversed". On master that is the explore program and its
     VIS pieces (`src/render/explore_glsl.ts`, `src/game/explore_view.ts`;
