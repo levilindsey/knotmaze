@@ -13,8 +13,8 @@
 // 16.7 ms is healthy, ~1000 ms means an occluded or background window (a
 // frozen, mid-settle capture). Probes that time the sim against wall can
 // pass `&stb=0` (no budget: real-time stepping through the settle).
-// K7 stage 4: `timing.host` says where the physics ran (`in-thread`, or
-// `worker` with `&phw=1`), and `physMs` / `substeps` are its live stepping
+// K7 stage 4: `timing.host` says where the physics ran (`worker` by default
+// since stage 6, `in-thread` with `&phw=0`), and `physMs` / `substeps` are its live stepping
 // since the build (with a worker, the worker's own time, off the main
 // thread); `frames` are main-thread rAF intervals in both modes.
 import puppeteer from "puppeteer-core";

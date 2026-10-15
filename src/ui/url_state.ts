@@ -428,9 +428,10 @@ export interface UrlParams {
   // until the knot sleeps). Both apply at the next load or Replay settle.
   settleBudget: number;
   loadSettle: number;
-  // K7 stage 3: the physics runs in a module worker (physics/worker_host.ts;
-  // falls back to the main thread when it cannot). Read once at page start,
-  // so a change takes effect on reload. Link-only (`&phw=1`), no panel row.
+  // K7: the physics runs in a module worker (physics/worker_host.ts; falls
+  // back to the main thread when it cannot). On by default since stage 6
+  // (call F6); `&phw=0` runs it on the main thread. Read once at page start,
+  // so a change takes effect on reload. Link-only, no panel row.
   physicsWorker: boolean;
   // THE MAZE CLOCK (K80): turn = the turn-based maze; realtime = the
   // real-time minotaur mode (game/minotaur.ts): the player runs at
@@ -686,7 +687,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K147: see the LOAD SETTLE comment in main.ts.
   settleBudget: 12,
   loadSettle: 0.45,
-  physicsWorker: false, // K7 stage 3: off until the desktop acceptance.
+  physicsWorker: true, // K7 stage 6 (call F6): on; `&phw=0` runs in-thread.
   // K80: the turn-based maze. The chase's tuning is the simulation-picked
   // DEFAULT_CHASE_PARAMS (game/minotaur.ts); K174 made the minotaur's
   // paces fractions of the player's.
@@ -1211,7 +1212,7 @@ function readLegacy(
       SETTLE_BUDGET_MAX
     ),
     loadSettle: clampTo(readNumber(query, "lds", D.loadSettle), LOAD_SETTLE_MAX),
-    // K7 stage 3's physics worker (`&phw=1`).
+    // K7's physics worker (default on since stage 6; `&phw=0` = in-thread).
     physicsWorker: readBool(query, "phw", D.physicsWorker),
     // And K80's real-time mode (`&clk=realtime&mhp=0.9`).
     clock: readChoice(query, "clk", CLOCK_MODES, D.clock),
