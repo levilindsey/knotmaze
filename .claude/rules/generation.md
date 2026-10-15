@@ -50,6 +50,6 @@ CLAUDE.md: the threads ARE the maze paths.
 
 K173 (2026-10-14) moved each topic to a file that attaches only with the
 files it is about; `docs/lore_index.md` lists every rules file and its paths.
-- `generation-plan.md`: the maze plan: the identity pin (K87), dead ends (K74), route and reachability (K109, K110)
+- `generation-plan.md`: the maze plan: the identity pin (K87), dead ends (K74), H1 fused arm cuts (K74 stage 2), route and reachability (K109, K110)
 - `generation-shapes.md`: shapes, anchors and escape tails
 - `generation-geometry.md`: the splines (Layer 2): the bend bound (K90)
