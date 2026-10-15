@@ -6,13 +6,15 @@
 // history scrolls inside the card. K155: today's stars (a tap explains
 // them), each history row's stars (hover explains), a count of the
 // official results' stars by the History heading, and a legend line.
+// K274: a second legend says what the time, efficiency and best-time
+// figures are (game/maze_stats.ts STATS, the win banner's lines).
 // K146: the History lists EVERY past daily (game/daily_store.ts
 // dailyHistory), unplayed days included - a tap plays one, as practice
 // (begun after its day: never scored) - under sticky month headers, with
 // All / Played / Not played chips once it is long. Practice results show
 // muted, in violet.
 
-import { efficiencyPercent, formatDuration } from "../game/maze_stats";
+import { BEST_TIME_LINE, efficiencyPercent, formatDuration, STATS } from "../game/maze_stats";
 import { dailyAggregates, dailyHistory } from "../game/daily_store";
 import type { DailyStore, HistoryEntry } from "../game/daily_store";
 import { formatDayDate, formatDayMonth } from "../game/daily_calendar";
@@ -124,6 +126,8 @@ function ensureStyles(): void {
     ".km-empty{padding:10px 4px;color:#8ea0c0}" +
     ".km-note{margin-top:10px;font-size:11.5px;color:#8ea0c0}" +
     ".km-note.km-warn{color:#e7c56f}" +
+    ".km-legend div+div{margin-top:3px}" +
+    ".km-legend b{color:#c8d3e8;font-weight:650}" +
     ".km-foot{display:flex;justify-content:center;margin-top:12px}" +
     "@media (pointer:coarse){.km-hist button{padding:10px 4px}" +
     ".km-chip{min-height:34px;padding:0 13px}}";
@@ -475,6 +479,26 @@ export function openDailyStats(o: DailyStatsOptions): void {
     legend.textContent =
       `Stars: ${starRules(false).join(" · ")}. ` +
       "Every step counts, backtracks both ways.";
+    card.appendChild(legend);
+  }
+
+  // K274: what the figures are (the time and efficiency of a result, and
+  // the best-time tile), from the same table as the win banner's popover.
+  if (agg.bestTimeMs !== null || entries.some((e) => e.result)) {
+    const legend = document.createElement("div");
+    legend.className = "km-note km-legend";
+    const items: Array<[string, string]> = [
+      [STATS.time.label, STATS.time.line],
+      [STATS.efficiency.label, STATS.efficiency.line],
+      ["best time", BEST_TIME_LINE],
+    ];
+    for (const [name, line] of items) {
+      const d = document.createElement("div");
+      const b = document.createElement("b");
+      b.textContent = name;
+      d.append(b, ` ${line}`);
+      legend.appendChild(d);
+    }
     card.appendChild(legend);
   }
 
