@@ -58,7 +58,17 @@ export interface PanelSettings {
   // K53 viewer preference (persisted per browser by ui/motion.ts): follow
   // the OS's reduce-motion setting, or override it either way.
   motion: MotionPref;
+  // K111 (ui/accessibility.ts): the Accessibility group's two master
+  // switches, shown as what is in force right now. Reduced motion DRIVES the
+  // Motion setting above (one answer, never two); High contrast has its own
+  // preference and follows the OS until chosen. Neither is a design param.
+  reducedMotion: boolean;
+  highContrast: boolean;
 }
+
+// K111: prefixes the tooltip of a row an Accessibility switch overrides.
+const OVERRIDDEN_NOTE =
+  "Overridden by an Accessibility switch while it is on (your value is kept and comes back when it is off). ";
 
 const SETTINGS_DEFAULTS: PanelSettings = {
   temperature: 0,
@@ -73,6 +83,8 @@ const SETTINGS_DEFAULTS: PanelSettings = {
     typeof window.matchMedia === "function" &&
     window.matchMedia("(pointer: coarse)").matches,
   motion: "system",
+  reducedMotion: false,
+  highContrast: false,
 };
 
 export interface PanelCallbacks {
@@ -90,6 +102,9 @@ export interface PanelCallbacks {
   onTapToPanToggle: (on: boolean) => void;
   onMovePadToggle: (on: boolean) => void;
   onMotionChange: (pref: MotionPref) => void;
+  // K111: the Accessibility group's switches (viewer preferences).
+  onReducedMotionToggle: (on: boolean) => void;
+  onHighContrastToggle: (on: boolean) => void;
   onSlackChange: () => void;
   onStyleChange: () => void;
   onTemperatureChange: () => void;
@@ -132,6 +147,17 @@ export interface PanelApi {
   // Every row re-reads params (replaced wholesale - loading a daily),
   // WITHOUT running any row's change effects.
   syncFromParams: () => void;
+  // K111: the Motion row and the two Accessibility switches re-read from
+  // the settings in force (the OS flipped, or the Motion row moved the same
+  // answer), WITHOUT running any row's change effects.
+  syncAccessibility: (v: {
+    motion: MotionPref;
+    reducedMotion: boolean;
+    highContrast: boolean;
+  }) => void;
+  // K111: dims the design rows an Accessibility switch is overriding right
+  // now (their stored values are kept and come back when it is off).
+  markOverridden: (keys: readonly string[]) => void;
   // The daily row's label (today's number turns at local midnight).
   setDailyLabel: (text: string, tip: string) => void;
   // K92: the panel's open state (the hamburger), and a listener for its
@@ -261,6 +287,10 @@ export function buildPanel(
     ".kp-row:hover .kp-reset{opacity:.45}" +
     ".kp-row.kp-mod .kp-reset{opacity:.9;color:#e7c56f}" +
     ".kp-row.kp-mod .tp-lblv_l{color:#e7c56f}" +
+    // K111: a row an Accessibility switch is overriding keeps its stored
+    // value, shown dimmed.
+    ".kp-row.kp-overridden .tp-lblv_v{opacity:.4}" +
+    ".kp-row.kp-overridden .tp-lblv_l{opacity:.6;font-style:italic}" +
     // Folder disclosure marker: a plain triangle (right when collapsed,
     // down when expanded) instead of Tweakpane's default icon; it spins
     // 90 degrees on toggle. Tweakpane marks an open folder with the
@@ -515,6 +545,26 @@ export function buildPanel(
   const regenerateWhenDone = (ev?: ChangeEvent): void => {
     if (!ev || ev.last !== false) callbacks.onRegenerate();
   };
+
+  // --- Accessibility (K111) -----------------------------------------------
+  // Two master switches at the top. While one is on it OVERRIDES every
+  // setting relevant to it; off, the viewer's own values are back (an
+  // override is a view over the stored params, never a write). Viewer
+  // preferences like the Motion setting: no link, no daily, no undo
+  // (ui/accessibility.ts holds the override lists).
+  const fAccess = folder("Accessibility", true);
+  const reducedMotionRow = row(
+    fAccess, s, "reducedMotion", { label: "Reduced motion" },
+    "Master switch: stills what the Motion setting covers (backdrop drift, plucks, the camera's ease to an edge marker, the loading knot, mode badge and edge markers) AND the maze's flow undulation (flowStrength and flowSpeed keep your values and come back when it is off). The intro animation and the pulses beside the player keep playing. Shows what is in force: it follows your device's reduce-motion setting until you choose (Motion & intro holds the detailed choice, including follow system). Remembered per browser.",
+    SETTINGS_DEFAULTS.reducedMotion,
+    () => callbacks.onReducedMotionToggle(settings.reducedMotion === true)
+  );
+  const highContrastRow = row(
+    fAccess, s, "highContrast", { label: "High contrast" },
+    "Master switch. While on it overrides, and dims, these rows (your values come back when it is off): background = none and a black page (no texture behind or through the crossings), palette = pastel (the lightest threads), pathColor = yellow, fadeLength = 0 (crossings cut crisp), gap at least 0.12 (a wider dark line between over and under threads), markerSize at least 1.5. Follows your device's high-contrast setting (prefers-contrast: more, forced colors) until you choose. Remembered per browser.",
+    SETTINGS_DEFAULTS.highContrast,
+    () => callbacks.onHighContrastToggle(settings.highContrast === true)
+  );
 
   // --- Design -------------------------------------------------------------
   const fDesign = folder("Design", true);
@@ -1179,16 +1229,16 @@ export function buildPanel(
   const fMotion = folder("Motion & intro", false);
   // THE MOTION SETTING (K53): a viewer preference, not a design param (no
   // link, no daily; ui/motion.ts stores it).
-  row(
+  const motionRow = row(
     fMotion, s, "motion",
     { options: { "follow system": "system", full: "full", reduced: "reduced" } },
-    "How much the page moves. follow system = your device's reduce-motion setting (it switches live); full = all motion; reduced = backdrops hold still, a plucked thread brightens briefly instead of vibrating (the sound is the same), the camera jumps to an edge marker's target instead of easing there, and the loading knot, the mode badge and the edge markers stop breathing and fading. Remembered per browser.",
+    "How much the page moves. follow system = your device's reduce-motion setting (it switches live); full = all motion; reduced = backdrops hold still, a plucked thread brightens briefly instead of vibrating (the sound is the same), the camera jumps to an edge marker's target instead of easing there, the loading knot, the mode badge and the edge markers stop breathing and fading, and the maze's flow undulation holds still. The Accessibility group's Reduced motion switch sets this same answer. Remembered per browser.",
     SETTINGS_DEFAULTS.motion,
     () => callbacks.onMotionChange(settings.motion)
   );
   row(
     fMotion, p, "flowStrength", { min: 0, max: 1, step: 0.05 },
-    "Flow undulation: how far the whole fabric sways, as if drifting in water. 0 = perfectly still. Render-only - applies live, even while the knot sleeps.",
+    "Flow undulation: how far the whole fabric sways, as if drifting in water. 0 = perfectly still. Render-only - applies live, even while the knot sleeps. Reduced motion (Accessibility, or the Motion row above) holds it still without changing this value.",
     D.flowStrength, () => callbacks.onSlackChange()
   );
   const flowSpeedRow = row(
@@ -1704,6 +1754,39 @@ export function buildPanel(
       syncSeed();
       markAll();
       refreshCond();
+    },
+    syncAccessibility: (v) => {
+      settings.motion = v.motion;
+      settings.reducedMotion = v.reducedMotion;
+      settings.highContrast = v.highContrast;
+      // Only these three rows: a whole-pane refresh() can write a snapped
+      // value back into a param, and a switch must never touch a design.
+      syncing = true;
+      try {
+        motionRow.refresh?.();
+        reducedMotionRow.refresh?.();
+        highContrastRow.refresh?.();
+      } finally {
+        syncing = false;
+      }
+      markAll();
+    },
+    markOverridden: (keys) => {
+      const set = new Set(keys);
+      for (const t of tracked) {
+        if (t.obj !== p) continue;
+        const el = t.api.element;
+        const on = set.has(t.key);
+        if (on === el.classList.contains("kp-overridden")) continue;
+        el.classList.toggle("kp-overridden", on);
+        if (on) {
+          el.dataset.kpTip = el.title;
+          el.title = OVERRIDDEN_NOTE + el.title;
+        } else if (el.dataset.kpTip !== undefined) {
+          el.title = el.dataset.kpTip;
+          delete el.dataset.kpTip;
+        }
+      }
     },
     setDailyLabel: (text, tip) => {
       if (dailyApi.title !== text) dailyApi.title = text;

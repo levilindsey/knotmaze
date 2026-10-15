@@ -124,6 +124,16 @@ import {
 } from "./ui/undo_stack";
 import { UndoButtons } from "./ui/undo_buttons";
 import { MotionSetting, browserMotionQuery, whenReduced } from "./ui/motion";
+import {
+  ContrastSetting,
+  browserContrastQuery,
+  effectiveParam,
+  highContrastChoice,
+  overriddenKeys,
+  reducedMotionChoice,
+  type A11yFlags,
+  type A11yKey,
+} from "./ui/accessibility";
 import type { GenerationParams } from "./core/types";
 import { KnotSynth } from "./audio/knot_synth";
 import {
@@ -372,6 +382,20 @@ async function main(): Promise<void> {
     browserMotionQuery(),
     document.documentElement
   );
+  // K111 (ui/accessibility.ts): the Accessibility group's two master
+  // switches. Reduced motion IS the Motion setting's answer (it also stills
+  // the flow now); High contrast is its own viewer preference. `a11y`
+  // mirrors both for the pure effective-settings functions, and
+  // applyAccessibility() refreshes it when either moves.
+  const contrast = new ContrastSetting(
+    browserStorage(),
+    browserContrastQuery(),
+    document.documentElement
+  );
+  const a11y: A11yFlags = {
+    reducedMotion: motion.reduced,
+    highContrast: contrast.high,
+  };
   await app.init({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -401,6 +425,11 @@ async function main(): Promise<void> {
     dailyStore.prefs()
   );
   const params = launch.params;
+  // K111: a design param as the scene WEARS it under the Accessibility
+  // switches (the stored value itself while both are off). Every visual read
+  // of a param a switch overrides goes through this; `params`, the link, the
+  // daily comparison and the undo stack only ever see the stored values.
+  const look = <K extends A11yKey>(key: K) => effectiveParam(params, a11y, key);
   // The daily on screen, or null for an ordinary design. It ends the moment
   // a param other than a preference changes (syncDaily).
   let dailyN: number | null = launch.daily;
@@ -460,6 +489,8 @@ async function main(): Promise<void> {
     tapToPan,
     movePad: movePadOn,
     motion: motion.pref,
+    reducedMotion: motion.reduced,
+    highContrast: contrast.high,
   };
   const synth = new KnotSynth();
 
@@ -1077,8 +1108,8 @@ async function main(): Promise<void> {
   // The page color: the shared ink, or a custom background's base color
   // (K79), which then shows behind none and under the flat fog too.
   function pageInk(): number {
-    return params.backgroundColorMode === "custom"
-      ? parseHexColor(params.backgroundBase, BACKGROUND)
+    return look("backgroundColorMode") === "custom"
+      ? parseHexColor(look("backgroundBase"), BACKGROUND)
       : BACKGROUND;
   }
   let canvasInk = BACKGROUND;
@@ -1087,8 +1118,12 @@ async function main(): Promise<void> {
   // the main one): what switching the colors to custom starts from.
   function gamutAccentHexes(): [string, string, string] {
     const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
+    // The DESIGN's accents (the stored palette), then the gamut the scene
+    // wears (K111: high contrast swaps the palette) is put back.
     setGamutConfig(params.gamutArc, params.palette);
-    return accentHexes(backgroundColors(BACKGROUND, effHue));
+    const accents = accentHexes(backgroundColors(BACKGROUND, effHue));
+    setGamutConfig(params.gamutArc, look("palette"));
+    return accents;
   }
 
   // K147, PHYSICS ON: settle a new (or replayed) knot. A non-instant
@@ -1259,7 +1294,7 @@ async function main(): Promise<void> {
   // background instead of a flat color.
   function syncBackground(): void {
     const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
-    setGamutConfig(params.gamutArc, params.palette);
+    setGamutConfig(params.gamutArc, look("palette"));
     const ink = pageInk();
     if (ink !== canvasInk) {
       canvasInk = ink;
@@ -1274,14 +1309,14 @@ async function main(): Promise<void> {
       angle: params.backgroundAngle,
     });
     background.configure(
-      params.background,
+      look("background"),
       params.backgroundIntensity,
       params.backgroundSpeed
     );
     background.setDesign(
-      params.backgroundColorMode === "custom"
+      look("backgroundColorMode") === "custom"
         ? customBackgroundColors(
-            params.backgroundBase,
+            look("backgroundBase"),
             params.backgroundAccent1,
             params.backgroundAccent2,
             params.backgroundAccent3,
@@ -1292,6 +1327,34 @@ async function main(): Promise<void> {
     );
     fabric?.setFogColor(ink);
     fabric?.setFogBackdrop(background.texture);
+  }
+
+  // Recolor the live scene in place (the look color rows, and K111's high
+  // contrast, which swaps the palette and the route color): no rebuild, no
+  // wake. The background follows through syncBackground().
+  function recolorScene(): void {
+    if (!renderer || !ps) return;
+    const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
+    setGamutConfig(params.gamutArc, look("palette"));
+    renderer.recolor(
+      effHue,
+      parseInt(look("pathColor").slice(1), 16),
+      params.colorScheme === "strands"
+        ? buildHueGroup
+        : new Array<number>(buildStrandCount).fill(0),
+      buildSectionRuns(
+        params.colorScheme,
+        walkGraph,
+        ps.chains.map((c, i) => ({ len: c.length, closed: ps!.chainBreakAfter[i] < 0 })),
+        buildHueGroup,
+        params.seed,
+        effHue
+      ),
+      params.colorScheme,
+      params.seed,
+      params.junctionBlend
+    );
+    if (fabric && fabricController) fabric.update(fabricController);
   }
 
   function rebuild(): void {
@@ -1355,7 +1418,7 @@ async function main(): Promise<void> {
     // and palette preset configure gamutRgb for every consumer (schemes
     // AND the renderer's per-sample noise path).
     const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
-    setGamutConfig(params.gamutArc, params.palette);
+    setGamutConfig(params.gamutArc, look("palette"));
 
     // The walk graph feeds both the section coloring and (in fabric mode)
     // the gameplay, so it builds before the renderer.
@@ -1363,9 +1426,9 @@ async function main(): Promise<void> {
 
     renderer = new RibbonRenderer(ps, {
       threadWidth: params.threadWidth,
-      casingWidth: params.threadWidth + params.gap * 2,
+      casingWidth: params.threadWidth + look("gap") * 2,
       baseHue: effHue,
-      pathColor: parseInt(params.pathColor.slice(1), 16),
+      pathColor: parseInt(look("pathColor").slice(1), 16),
       // Knot-mode tints only (palette mode colors via the section field):
       // per-strand hues for the strands scheme, mono otherwise.
       hueGroup:
@@ -1409,7 +1472,7 @@ async function main(): Promise<void> {
       fabric.trailLength = params.trailLength;
       fabric.fogOfWar = params.fogOfWar;
       fabric.fowRadius = params.fowRadius;
-      fabric.markerSize = params.markerSize;
+      fabric.markerSize = look("markerSize");
       fabric.fogColor = pageInk();
       fabric.update(fabricController);
     } else {
@@ -1636,6 +1699,14 @@ async function main(): Promise<void> {
     // Stored by the setting itself; the next frame's readers and the
     // stylesheets (the root attribute) follow at once.
     onMotionChange: (pref) => motion.setPref(pref),
+    // K111: the Accessibility switches. Reduced motion sets the Motion
+    // setting's answer, High contrast its own preference; the subscriptions
+    // below (applyAccessibility) carry the change to the scene. Neither
+    // writes a design param, the link or the undo stack.
+    onReducedMotionToggle: (on) =>
+      motion.setPref(reducedMotionChoice(on, motion.system)),
+    onHighContrastToggle: (on) =>
+      contrast.setPref(highContrastChoice(on, contrast.system)),
     onDebugToggle: (visible) => {
       if (debug) debug.container.visible = visible;
     },
@@ -1645,7 +1716,7 @@ async function main(): Promise<void> {
       wake();
     },
     onStyleChange: () => {
-      renderer?.setWidths(params.threadWidth, params.gap);
+      renderer?.setWidths(params.threadWidth, look("gap"));
       fabric?.setWidths(params.threadWidth);
       if (fabric && fabricController) fabric.update(fabricController);
       writeParams(params);
@@ -1677,30 +1748,7 @@ async function main(): Promise<void> {
     // rebuild they used to trigger reset the knot, replayed the reveal and
     // wiped the player's progress for a hue tweak).
     onRecolor: () => {
-      if (renderer && ps) {
-        const effHue =
-          (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
-        setGamutConfig(params.gamutArc, params.palette);
-        renderer.recolor(
-          effHue,
-          parseInt(params.pathColor.slice(1), 16),
-          params.colorScheme === "strands"
-            ? buildHueGroup
-            : new Array<number>(buildStrandCount).fill(0),
-          buildSectionRuns(
-            params.colorScheme,
-            walkGraph,
-            ps.chains.map((c, i) => ({ len: c.length, closed: ps!.chainBreakAfter[i] < 0 })),
-            buildHueGroup,
-            params.seed,
-            effHue
-          ),
-          params.colorScheme,
-          params.seed,
-          params.junctionBlend
-        );
-        if (fabric && fabricController) fabric.update(fabricController);
-      }
+      recolorScene();
       // The background wears the design's gamut too.
       syncBackground();
       writeParams(params);
@@ -1794,7 +1842,7 @@ async function main(): Promise<void> {
     // K98: the markers' size. One render pass (the start/exit gap slots
     // and the markers) without waking the physics.
     onMarkerSizeChange: () => {
-      if (fabric) fabric.markerSize = params.markerSize;
+      if (fabric) fabric.markerSize = look("markerSize");
       writeParams(params);
       renderDirty = true;
     },
@@ -1817,6 +1865,35 @@ async function main(): Promise<void> {
     },
   });
   panelWrap = panel.pane.element.parentElement; // K198 (display none closed).
+  // K111: an Accessibility switch, or the OS setting behind one, moved.
+  // Refresh the flags every `look()` reads, then push the change through the
+  // scene without waking the physics: the new palette and route color, the
+  // casing gap, the backdrop and page, the markers (the per-frame reads pick
+  // up the flow, the fade length and the markers by themselves). The panel's
+  // rows are re-read under its own guard and the overridden ones dimmed. This
+  // never calls writeParams: an override is a view, not a design change.
+  function applyAccessibility(): void {
+    a11y.reducedMotion = motion.reduced;
+    a11y.highContrast = contrast.high;
+    panel.syncAccessibility({
+      motion: motion.pref,
+      reducedMotion: a11y.reducedMotion,
+      highContrast: a11y.highContrast,
+    });
+    if (renderer && ps) {
+      recolorScene();
+      renderer.setWidths(params.threadWidth, look("gap"));
+    }
+    syncBackground();
+    if (fabric) fabric.markerSize = look("markerSize");
+    panel.markOverridden(overriddenKeys(a11y));
+    // One render pass for an asleep or frozen scene (the flow standing still
+    // or coming back, the new gap and palette).
+    renderDirty = true;
+  }
+  motion.subscribe(applyAccessibility);
+  contrast.subscribe(applyAccessibility);
+  panel.markOverridden(overriddenKeys(a11y));
   synth.setVolume(params.volume);
   synth.setReverb(params.reverb);
   synth.setVoice({
@@ -2040,7 +2117,7 @@ async function main(): Promise<void> {
     // thing it draws (FabricMazeRenderer.markerDotRadius).
     radius: () =>
       fabric?.markerDotRadius() ??
-      markerDotRadiusFor(params.threadWidth, params.markerSize),
+      markerDotRadiusFor(params.threadWidth, look("markerSize")),
     icon: finishIcon,
     style: DARK_DISC,
     visible: () => {
@@ -2132,7 +2209,7 @@ async function main(): Promise<void> {
     // (K83; sized by markerSize since K98).
     radius: () =>
       fabric?.markerRadius() ??
-      markerRadiusFor(params.threadWidth, params.markerSize),
+      markerRadiusFor(params.threadWidth, look("markerSize")),
     icon: headIcon,
     style: DARK_DISC,
     visible: () => {
@@ -2164,7 +2241,7 @@ async function main(): Promise<void> {
     world: (out) => !!chase && !!fabric && fabric.minotaurWorld(out),
     radius: () =>
       fabric?.minotaurRadius() ??
-      markerRadiusFor(params.threadWidth, params.markerSize),
+      markerRadiusFor(params.threadWidth, look("markerSize")),
     icon: () =>
       minoIconSvg ||
       (minoIconSvg = markerGlyphSvgFit(
@@ -2530,7 +2607,7 @@ async function main(): Promise<void> {
     // The finish's outer edge: its colored dot (K98).
     const radius =
       fabric?.markerDotRadius() ??
-      markerDotRadiusFor(params.threadWidth, params.markerSize);
+      markerDotRadiusFor(params.threadWidth, look("markerSize"));
     confetti.burst(
       plan,
       app.screen.width,
@@ -3771,7 +3848,7 @@ async function main(): Promise<void> {
     if (physState === "loading" || physState === "settling" || !asleep) {
       return true;
     }
-    if (params.flowStrength > 0 || (reveal !== null && !reveal.done)) {
+    if (look("flowStrength") > 0 || (reveal !== null && !reveal.done)) {
       return true;
     }
     if (renderer.needsFxRender() || renderer.plucks.activeCount > 0) {
@@ -3865,9 +3942,11 @@ async function main(): Promise<void> {
       renderer!.plucks.reducedMotion = motion.reduced;
       // Applies to knot mode too: the erase grids re-read it in the next
       // renderer.update(), and the slider's onSlackChange wakes the sim.
-      renderer!.fadeLength = params.fadeLength;
-      renderer!.flowStrength = params.flowStrength;
-      renderer!.flowSpeed = params.flowSpeed;
+      // K111: the flow holds still under Reduced motion (the intro and the
+      // pulses keep playing) and the crossings cut crisp under High contrast.
+      renderer!.fadeLength = look("fadeLength");
+      renderer!.flowStrength = look("flowStrength");
+      renderer!.flowSpeed = look("flowSpeed");
       renderer!.pulseSpacing = params.pulseSpacing;
       renderer!.pulseReach = params.pulseReach;
       renderer!.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
@@ -3882,7 +3961,7 @@ async function main(): Promise<void> {
         fabric.trailLength = params.trailLength;
         fabric.fogOfWar = params.fogOfWar;
         fabric.fowRadius = params.fowRadius;
-        fabric.markerSize = params.markerSize; // K98 (a no-op unless moved).
+        fabric.markerSize = look("markerSize"); // K98 (a no-op unless moved).
         // fowIntro: keep the fog off while the intro animation plays; the
         // release closes it in (fade + contracting radius).
         fabric.setFogHold(params.fogOfWar && params.fowIntro && revealing);
@@ -3926,7 +4005,7 @@ async function main(): Promise<void> {
       // or crossings stay hidden until the next wake.
       if (
         !force &&
-        params.flowStrength <= 0 &&
+        look("flowStrength") <= 0 &&
         !revealing &&
         !renderer!.needsFxRender()
       ) {
@@ -4629,6 +4708,54 @@ async function main(): Promise<void> {
     system: motion.system,
     reduced: motion.reduced,
     attr: document.documentElement.dataset.motion ?? null,
+  });
+  // K111 probe: the two Accessibility switches, the OS answers, the root
+  // attributes the stylesheets read, the keys overridden, and the values the
+  // scene wears right now next to the stored ones.
+  (window as unknown as Record<string, unknown>).__knotA11y = () => ({
+    reducedMotion: a11y.reducedMotion,
+    highContrast: a11y.highContrast,
+    motion: {
+      pref: motion.pref,
+      system: motion.system,
+      attr: document.documentElement.dataset.motion ?? null,
+    },
+    contrast: {
+      pref: contrast.pref,
+      system: contrast.system,
+      high: contrast.high,
+      attr: document.documentElement.dataset.contrast ?? null,
+    },
+    overridden: overriddenKeys(a11y),
+    stored: {
+      flowStrength: params.flowStrength,
+      flowSpeed: params.flowSpeed,
+      background: params.background,
+      backgroundColorMode: params.backgroundColorMode,
+      backgroundBase: params.backgroundBase,
+      palette: params.palette,
+      pathColor: params.pathColor,
+      fadeLength: params.fadeLength,
+      gap: params.gap,
+      markerSize: params.markerSize,
+    },
+    worn: {
+      flowStrength: renderer?.flowStrength ?? null,
+      flowSpeed: renderer?.flowSpeed ?? null,
+      fadeLength: renderer?.fadeLength ?? null,
+      background: look("background"),
+      backgroundColorMode: look("backgroundColorMode"),
+      backgroundBase: look("backgroundBase"),
+      palette: look("palette"),
+      pathColor: look("pathColor"),
+      gap: look("gap"),
+      markerSize: look("markerSize"),
+      fabricMarkerSize: fabric?.markerSize ?? null,
+      pageInk: canvasInk,
+      canvasBackground: app.canvas.style.background,
+    },
+    asleep,
+    animating: sceneWasAnimating,
   });
   // The "Replay settle" button (probe scripting).
   (window as unknown as Record<string, unknown>).__knotReplay = () => {

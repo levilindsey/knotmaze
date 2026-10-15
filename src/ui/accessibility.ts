@@ -262,9 +262,14 @@ export function effectiveParam<T extends A11yTargets, K extends A11yKey>(
   flags: A11yFlags,
   key: K
 ): T[K] {
+  // No allocation: main.ts asks per frame.
   let value: T[K] = stored[key];
-  for (const table of tablesFor(flags)) {
-    const fn = table[key] as Override<T[K]> | undefined;
+  if (flags.reducedMotion) {
+    const fn = REDUCED_MOTION_OVERRIDES[key] as Override<T[K]> | undefined;
+    if (fn) value = fn(value);
+  }
+  if (flags.highContrast) {
+    const fn = HIGH_CONTRAST_OVERRIDES[key] as Override<T[K]> | undefined;
     if (fn) value = fn(value);
   }
   return value;
