@@ -260,12 +260,16 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   `burn_sim.ts` (R.6.1: scripted players over dailies 1-30 against the
   shipped controller; run `node node_modules\vite-node\vite-node.mjs
   --config <that folder>\vite.node.config.mjs <that folder>\burn_sim.ts
-  <out.md> "rs=0.75,0.9" "hs=0"`; results.md, results_tuning.md) and
-  `burn_page.mjs <base> <outDir> race|loss [seeds]` (real clicks: the lit
-  fuse, a near miss, a refused smoldering arm and its toast, the escape's
-  closest call; or a wander to the Burnt banner, its x and re-show, Try
-  again and Reset path; EXTRA appends link keys). Probe links:
-  `?<seed>&am=instant&fi=fuse`. Hook: `__knotFabric().fire`.
+  <out.md> "rs=0.75,0.9" "hs=0"`, about 2 s; results_rebased.md and
+  results_tuning_rebased.md are the current dailies, results.md and
+  results_tuning.md the ones before K74 stage 2's H1) and `burn_page.mjs
+  <base> <outDir> race|loss|perf [seeds]` (real clicks: the lit fuse, a
+  near miss, a refused smoldering arm and its toast, the escape's closest
+  call; or a wander to the Burnt banner, its x and re-show, Try again and
+  Reset path; perf times drawFire and the pixi render at rest after an
+  escape, under the perf lock, with THROTTLE=n for CDP CPU throttling;
+  EXTRA appends link keys, VIEWPORT=phone a 412x915 phone viewport).
+  Probe links: `?<seed>&am=instant&fi=fuse`. Hook: `__knotFabric().fire`.
 
 ## Census and diagnosis rules
 

@@ -58,27 +58,32 @@ files.
   thread width); with every run burnt at rest it cost about 4.8 ms a
   frame on the desktop when redrawn every frame, about 2.5 ms with the
   cache under the default flow (half-rate re-renders) and about 0 with
-  flow off. A new clock (stage 2's fireClock) must join the key. It draws
-  every run, so K76's thread reveal does not hide unseen fire (the fog
-  sprite does). PARAMS (codec v5 118-120, after K74's `hCutShare` 117;
-  117-119 before the branch rebased onto K74 stage 2): `fire` `fi` (off |
-  fuse), `fireSpeed` `fsp` (0.75, [0.3, 0.95]), `fireDelay` `fdl` (0,
-  [0, 40] lattice units); not daily-exempt, and a daily plays with the
-  fire off (the default).
-  `fireSettingsOf` is null unless fire is fuse, the clock is turn-based
-  and the turn minotaur is off: FIRE AND THE MINOTAUR ARE EXCLUSIVE (call
-  3, open). In the panel's "Burn race" folder (in the maze folder, before
-  the minotaur's, turn clock only), turning one on turns the other off;
-  speed and delay hide while the fire is off. A link setting both plays
-  the minotaur. Fog stays a separate setting (call 4, open). UNDO:
-  onClockChange covers the fire keys (a change restarts the solve). HOOK:
-  `__knotFabric().fire` {speed, delay, lead, closest, lost, pendingLoss,
-  banner, smoldering}. MEASURED (R.6.1, `.claude/probes/K114/burn/`:
-  burn_sim.ts over dailies 1-30, results.md, results_tuning.md): the
+  flow off; under 4x CPU throttling (a phone proxy) about 11 ms, the frame
+  interval's median 69 -> 87 ms, so stage 3's look must not be Graphics
+  strokes rebuilt per flow frame. A new clock (stage 2's fireClock) must
+  join the key. It draws every run, so K76's thread reveal does not hide
+  unseen fire (the fog sprite does). PARAMS (codec v5 118-120, after K74's
+  `hCutShare` 117; 117-119 before the branch rebased onto K74 stage 2):
+  `fire` `fi` (off | fuse), `fireSpeed` `fsp` (0.75, [0.3, 0.95]),
+  `fireDelay` `fdl` (0, [0, 40] lattice units); not daily-exempt, and a
+  daily plays with the fire off (the default). `fireSettingsOf` is null
+  unless fire is fuse, the clock is turn-based and the turn minotaur is off:
+  FIRE AND THE MINOTAUR ARE EXCLUSIVE (call 3, open). In the panel's
+  "Burn race" folder (in the maze folder, before the minotaur's, turn clock
+  only), turning one on turns the other off; speed and delay hide while the
+  fire is off. A link setting both plays the minotaur. Fog stays a separate
+  setting (call 4, open). UNDO: onClockChange covers the fire keys (a change
+  restarts the solve). HOOK: `__knotFabric().fire` {speed, delay, lead,
+  closest, lost, pendingLoss, banner, smoldering}. MEASURED (R.6.1,
+  `.claude/probes/K114/burn/`: burn_sim.ts over dailies 1-30 after K74
+  stage 2's H1, results_rebased.md, results_tuning_rebased.md): the
   optimal route is never trapped; at r 0.75, h 0 an explorer that sees
   only the runs it walked is trapped on 90% of dailies, and sighted
-  wanderers (p 0.1 / 0.2 / 0.3 of a misstep) on 38 / 66 / 83%; r 0.6 with
-  h 20 gives 4 / 22 / 48%. At h = 0 the closest call is set at the first junction
-  (the margin there is h + d(v)(1/r - 1)). PAGE PROBE: `burn_page.mjs
-  <base> <outDir> race|loss [seeds]` (real clicks; EXTRA appends link
-  keys, e.g. `&fsp=0.9`).
+  wanderers (p 0.1 / 0.2 / 0.3 of a misstep) on 33 / 61 / 80%; r 0.6, h 0
+  gives 16 / 43 / 64%. At h = 0 the closest call is set at the first
+  junction (the margin along the optimal route is h + d(v)(1/r - 1), which
+  only grows), so with h >= 10 the optimal route's closest call is h plus
+  its h = 0 value and never under a run (2-21% of sighted p 0.1 wins).
+  PAGE PROBE: `burn_page.mjs <base> <outDir> race|loss|perf [seeds]` (real
+  clicks; EXTRA appends link keys, e.g. `&fsp=0.9`; probes.md has the
+  rest).
