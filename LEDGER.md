@@ -15,6 +15,17 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K248** · Which highlight modes stay (K111 stage 2, merged 2026-10-14
+  13:03)? `highlightMode` offers pulses (today's look), glow (0.75, a
+  steady whitening of the thread's color), rims (a white edge band) and
+  contrast (pure white with a black center line). Also confirm
+  `highlightMode` as daily-exempt, a playback preference that keeps the
+  daily (the agent's proposal). After the pick, the kept modes go into
+  the CPU mirror (`paint_math`) with parity tests; until then the pluck
+  overlay, fieldProbe, paintProbe and debug view 5 show the pulses look
+  in every mode. Removing an option bumps CODEC_VERSION. Sheets
+  `.claude/probes/K111/stage2/out/sheets/`; `docs/design/K111.md`
+  ("Stage 2 handoff").
 - **K245** · How hard should the minotaur roam toward the player
   (K174's call)? `minoToward` (on) sets roamPull 0.5: on the K80 sim 63%
   of games meet it and a game averages 1.68 catches; 0.25 gives 60% and
@@ -323,32 +334,6 @@ and never reused.
   - next: after 16:20 on 10-14, run `cleanup.ps1` again for the
     profiles (about 33 GB). The probe libraries' delete-on-exit goes
     with K150.
-- **K111** · Accessibility (Levi, 2026-10-13). Reduced motion also
-  stills the flow undulation, but not the intros or the pulses next to
-  the player. Those pulses get a dropdown of alternative highlight modes,
-  which also serves high contrast. An Accessibility group near the top of
-  the panel holds "High contrast" and "Reduced motion" master checkboxes
-  that override every relevant setting (today's Motion setting is
-  `src/ui/motion.ts`, K79). Brief `docs/design/K111.md` (3f011fa): stage
-  1 is the group, reduced motion and high contrast as far as today's
-  settings reach (merged 2026-10-14 11:58, 0e5a138..9c6cab3:
-  `src/ui/accessibility.ts`, the Accessibility folder first in the
-  panel; lore `gameplay-motion.md` ACCESSIBILITY GROUP and
-  `gameplay-panel.md` ACCESSIBILITY FOLDER; Levi's review is K238).
-  Stage 2, the highlight modes, ran 12:02-12:52 (brief b6c3832) and is
-  rebasing onto K174 (merged 12:53) before its merge.
-  - owner: claude agent a98c345abb522e151 (opus) of session d8031183,
-    started 2026-10-14 12:02 with a 2 h cap (about 14:02). Stage 1 was
-    agent a46b211b839cf82d1 (sonnet), merged in 0e5a138..9c6cab3.
-  - branch: `worktree-agent-a98c345abb522e151`
-    (`.claude/worktrees/agent-a98c345abb522e151`), from b6c3832; last
-    commit: 6f1d074 before the rebase (unpushed).
-  - evidence: `.claude/probes/K111/stage2/` in that worktree; stage 1's
-    in the main checkout's `.claude/probes/K111/`.
-  - next: the rebase onto K174 (`highlightMode` moves to codec index
-    108, after K174's 106-107; `hoverGlow` joins `LIVE_EFFECTS`, K236),
-    then the merge.
-  - brief: `docs/design/K111.md` ("Stage 2: the highlight modes").
 - **K198** · The fit camera's pan and the off-screen indicators, decided
   (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
   just want to be able to pan such that the right edge of the maze is
@@ -424,6 +409,36 @@ and never reused.
   - next: the brief's one stage (the emulation and its proof, a one-rep
     smoke pass, then the 3-rep A/A floor).
   - brief: `docs/design/K193.md`.
+- **K76** · The thread-reveal mode, stage 2 (doc section 7), decided
+  (Levi, 2026-10-13): the end look is a dropdown (fade, halo, glow, dots,
+  fray, beacon; default beacon); the doc's other recommendations stand
+  (`threadReveal`, `revealDistance` 2.5, `revealFade` 1; dailies via a
+  theme, not a toggle; the literal reveal rule; the exit indicator hidden
+  until the exit is seen); and, at his suggestion, fog and the reveal
+  are the options of one `exploration` dropdown (off | fog | threads),
+  which replaces the fog toggle in place (pre-launch, no back-compat).
+  Design: `docs/design/K76_reveal_mode.md` (0474300); contact sheet
+  `.claude/probes/K76/out/contact.html`. After K81. It must build the
+  mode as a separate shader variant: compiled in, it costs mode-off
+  frames 2.3 -> 2.8 ms on the desktop (measured while two of K74's CPU
+  scans ran; re-time).
+  Stage 2 runs in four stages, 2a to 2d, each from the handoff before it
+  (`docs/design/K76.md`, bcb969e).
+  - owner: claude agent a5d63452980ed9fa3 (opus) of session d8031183,
+    stage 2a, started 2026-10-14 13:04 with a 2 h cap (about 15:04;
+    ports 5680-5689). Stage 1 was agent aea102de995e1ce30 (its worktree
+    is kept: prototype WIP 1fbc0d2 and 23907a5).
+  - branch: `worktree-agent-a5d63452980ed9fa3`
+    (`.claude/worktrees/agent-a5d63452980ed9fa3`), from 5438a60; last
+    commit: none yet (unpushed).
+  - evidence: `.claude/probes/K76/stage2a/` in that worktree; stage 1's
+    in the main checkout's `.claude/probes/K76/`.
+  - next: stage 2a (section 10 re-bases the design on today's master;
+    `explore_view.ts` with its tests; the paint variant with the six end
+    looks and the kExploreAt parity test; a probe hook; mode off matches
+    master's frames).
+  - brief: `docs/design/K76.md` ("Stage 2a"), then
+    `docs/design/K76_reveal_mode.md`.
 
 ## Next, in order
 
@@ -459,15 +474,14 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K111 stage 2 from 12:02 (opus, 2 h;
-rebasing onto K174), K198 stage 2 from 12:45 (opus, 2 h) and K193 from
-12:54 (sonnet, 1 h). At about 10:57 Levi lifted
+(he may reorder). Running: K198 stage 2 from 12:45 (opus, 2 h),
+K193 from 12:54 (sonnet, 1 h) and K76 stage 2a from 13:04 (opus, 2 h). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
 (the rules split), K93, K198 stage 1, K98 and K92 merged at
 08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, K191 at 12:04,
-K235 + K239 at 12:44 and K174 at 12:53; the
+K235 + K239 at 12:44, K174 at 12:53 and K111 stage 2 at 13:03; the
 coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -489,17 +503,18 @@ files at their merges. Then, as code slots free up:
 7. K93 + K145 (`docs/design/K93_K145.md`): merged 2026-10-14 (ed8f284,
    06edef4..56b6f2d).
 8. K92 + K224: merged 2026-10-14 (e78ddcc). K111 stage 1 (the panel):
-   merged 2026-10-14 (0e5a138..9c6cab3); its stage 2, the highlight
-   modes, ran from 12:02 and is rebasing onto K174.
+   merged 2026-10-14 (0e5a138..9c6cab3), and its stage 2, the highlight
+   modes, at 13:03 (36d280a..5438a60); which modes stay is K248.
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
     coordinator; Levi may reorder): K174's controls (merged 2026-10-14
-    12:53, ecf2169..6ec8275), K198 stage 2 (running from 12:45, beside
-    K111 stage 2 in another panel folder), K191's fade-out (merged
-    2026-10-14 12:04, fafa340..3467117), K235 with K239 (merged
-    2026-10-14 12:44, 08d1383..05e6d4d), and K193's portrait emulation
-    with K195's A/A floor (running from 12:54).
-11. K76 stage 2.
+    12:53, ecf2169..6ec8275), K198 stage 2 (running from 12:45), K191's
+    fade-out (merged 2026-10-14 12:04, fafa340..3467117), K235 with K239
+    (merged 2026-10-14 12:44, 08d1383..05e6d4d), and K193's portrait
+    emulation with K195's A/A floor (running from 12:54).
+11. K76 stage 2, in four stages (`docs/design/K76.md`, bcb969e): 2a (the
+    re-base, the model, the paint variant) runs from 13:04; 2b, 2c and
+    2d follow, each from the handoff before it.
 12. K80's turn-aligned hunter, a modifier of the normal maze; then
     K137's toggles, K138's M mechanisms and K139.
 13. K114's round 2, free play first: the burn-race brief, then the
@@ -517,7 +532,7 @@ G4-2 old-path deletions; K162 and K184-K186 (play, then call); K194's
 defaults (after playing); K225 (the markers' size); K229 (the open
 panel's top); K237 (the hover glow's default); K238 (K111's calls);
 K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
-near launch, K117 and K210; after the churn, K46, K57 and
+K248 (which highlight modes stay); near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
 about 11:10 for calls 1-7 (K114 call 7, K174, K191, K193, K194's 5.2,
@@ -560,28 +575,6 @@ K5-K7 (split, frame loop, worker) follow.
     icon; the brief designs both icons).
   - next: the burn-race brief (call 1's first prototype); the spider
     after the minotaur's controls (K174).
-- **K76** · The thread-reveal mode, stage 2 (doc section 7), decided
-  (Levi, 2026-10-13): the end look is a dropdown (fade, halo, glow, dots,
-  fray, beacon; default beacon); the doc's other recommendations stand
-  (`threadReveal`, `revealDistance` 2.5, `revealFade` 1; dailies via a
-  theme, not a toggle; the literal reveal rule; the exit indicator hidden
-  until the exit is seen); and, at his suggestion, fog and the reveal
-  are the options of one `exploration` dropdown (off | fog | threads),
-  which replaces the fog toggle in place (pre-launch, no back-compat).
-  Design: `docs/design/K76_reveal_mode.md` (0474300); contact sheet
-  `.claude/probes/K76/out/contact.html`. After K81. It must build the
-  mode as a separate shader variant: compiled in, it costs mode-off
-  frames 2.3 -> 2.8 ms on the desktop (measured while two of K74's CPU
-  scans ran; re-time).
-  - owner: nobody since 2026-10-13 00:01 (stage 1 done; the agent of
-    session d8031183 can resume while the worktree is kept).
-  - branch: `worktree-agent-aea102de995e1ce30`
-    (`.claude/worktrees/agent-aea102de995e1ce30`); prototype WIP 1fbc0d2
-    and 23907a5, doc c05dbfc (on master as 0474300).
-  - evidence: `.claude/probes/K76/`.
-  - env: the prototype server is in the doc's handle (port 5276, private
-    cacheDir).
-  - brief: `docs/design/K76.md`, then `docs/design/K76_reveal_mode.md`.
 - **K137** · K80 section 4's cheap mechanisms, each behind a toggle
   (Levi, 2026-10-13 14:31: "I'd love to prototype all of these and have
   controls to toggle them"), after the minotaur. Sized S or S-M in the
@@ -773,6 +766,11 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K249** · K111's rims and contrast modes stop hard at junction webs
+  and fans: the arm strips carry no across coordinate and there is no
+  K145-style end-gap fade, so rims leave the webs unlit and contrast
+  paints them flat white. Overlaps K236 (b). `docs/design/K111.md`
+  ("Stage 2 handoff").
 - **K246** · K174's residuals (`docs/design/K174.md`, "Stage 1
   handoff"): pace links aren't clamped, so an old probe link like
   `mhp=25` now means 25x the player's pace; the K80 rt probes in the
@@ -801,7 +799,8 @@ K5-K7 (split, frame loop, worker) follow.
   coordinate across the width); (b) webs, fans and arm strips never
   glow; (c) runs shorter than about 2.5 world units glow weakly (the end
   gap and fade are fixed lengths; an end fade scaled to the run would
-  fix it); (d) debug view 5 doesn't show the rim.
+  fix it); (d) debug view 5 doesn't show the rim. A fifth gap, undo not
+  applying it live (`LIVE_EFFECTS`), was fixed in 5438a60 (K111 stage 2).
 - **K234** · `scripts/phone_pass.ps1`'s `-Phase check` and `-WaitReady`
   treat a phone in use as ready. Round 2026-10-14b's agent saw Gmail in
   front at 10:10 and waited by hand for 120 s without user activity
@@ -1217,6 +1216,9 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Ideas (not scheduled)
 
+- **K250** · The steady highlight modes (glow, rims, contrast) repaint
+  every frame after their fade-in; an idle-render check could skip those
+  frames (K111 stage 2; `docs/design/K111.md`, "Stage 2 handoff").
 - **K247** · K174's ideas: readable labels in the Minotaur folder (the
   `mino*` keys clip, K246); a catch toast that says the fog came back;
   for more than about 2/3 of games to meet the minotaur, homing or the
@@ -1427,6 +1429,31 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K111** · Accessibility (Levi, 2026-10-13). Reduced motion also
+  stills the flow undulation, but not the intros or the pulses next to
+  the player. Those pulses get a dropdown of alternative highlight modes,
+  which also serves high contrast. An Accessibility group near the top of
+  the panel holds "High contrast" and "Reduced motion" master checkboxes
+  that override every relevant setting (today's Motion setting is
+  `src/ui/motion.ts`, K79). Brief `docs/design/K111.md` (3f011fa): stage
+  1 is the group, reduced motion and high contrast as far as today's
+  settings reach (merged 2026-10-14 11:58, 0e5a138..9c6cab3:
+  `src/ui/accessibility.ts`, the Accessibility folder first in the
+  panel; lore `gameplay-motion.md` ACCESSIBILITY GROUP and
+  `gameplay-panel.md` ACCESSIBILITY FOLDER; Levi's review is K238).
+  Stage 2, the highlight modes, ran 12:02-12:52 (brief b6c3832).
+  - Done in 36d280a..5438a60 (2026-10-14 13:03): stage 2, the highlight
+    modes. `highlightMode` (`hm`, codec index 108) is a dropdown of
+    pulses (today's look), glow (0.75, a steady whitening of the
+    thread's color), rims (a white edge band) and contrast (pure white
+    with a black center line), set in `handRendererLook()`. Undo now
+    applies `hoverGlow` live (`LIVE_EFFECTS.onTrailChange`, a K236 gap;
+    test in `test/ui/undo_stack.test.ts`). 779 tests pass. Which modes
+    stay is K248, the junction-web edges K249, the idle-render idea
+    K250; stage 1's calls are K238. Lore `render-paint.md` (HIGHLIGHT
+    MODES) and `gameplay-links.md` (HIGHLIGHT MODE PARAM); sheets
+    `.claude/probes/K111/stage2/out/sheets/`; brief `docs/design/K111.md`
+    ("Stage 2 handoff").
 - **K174** · K80 stage 1's calls, decided (Levi, 2026-10-14 about
   11:10, email 2.x; play: https://levi.dev/knotmaze/?7.J&clk=realtime):
   2.1 the chase pace stays 0.7 of the player's, "let's try 0.7, but this
