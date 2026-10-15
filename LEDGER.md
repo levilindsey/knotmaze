@@ -15,6 +15,13 @@ and never reused.
 
 ## Waiting on Levi
 
+- **K245** · How hard should the minotaur roam toward the player
+  (K174's call)? `minoToward` (on) sets roamPull 0.5: on the K80 sim 63%
+  of games meet it and a game averages 1.68 catches; 0.25 gives 60% and
+  1.62, 1 gives 66% and 1.94. Keep 0.5 or pick another, and should the
+  strength get a slider (none was built; `mtw` is on or off)? Meetings
+  top out near 2/3 because about a fifth of solves finish inside 30 s.
+  `docs/design/K174.md` ("Stage 1 handoff"), `gameplay-minotaur.md`.
 - **K244** · Should auto plucks and a drag's release go silent in
   junction cores too (K235's call)? K235 silenced taps there, but the
   random and music modes' plucks and a drag's release can still land in
@@ -287,10 +294,11 @@ and never reused.
     `looks_run.json`, `make_looks.mjs` and the adb recovery logs); the
     morning's `.claude/probes/rounds/2026-10-14-81d31a5/`; 3c's
     `.claude/probes/K156/3c/`.
-  - next: once K193 settles the orientation, an A/A floor in it (K195),
-    then the two borderline load cells again with 3 reps (K232). The next
-    round's pass covers K98 and K92 (K230), runs k140-confetti and the 14
-    looks dropped for time, and fits its length (K233). Fix the k198
+  - next: K193 (running from 12:54) emulates portrait in the pass and
+    takes its A/A floor (K195); then the two borderline load cells again
+    with 3 reps (K232). The next round's pass covers K98 and K92 (K230),
+    runs k140-confetti and the 14 looks dropped for time, and fits its
+    length (K233). Fix the k198
     `gap` in the round's `make_looks.mjs` (it ignores panX; the real
     gap is panelLeft - (mazeRight + panX), 9.9 px). Sweep the 3a and 3b
     worktrees (`.claude/worktrees/agent-a262df65dcc1489a7`,
@@ -327,40 +335,20 @@ and never reused.
   `src/ui/accessibility.ts`, the Accessibility folder first in the
   panel; lore `gameplay-motion.md` ACCESSIBILITY GROUP and
   `gameplay-panel.md` ACCESSIBILITY FOLDER; Levi's review is K238).
-  Stage 2, the highlight modes, runs from 12:02 (brief b6c3832).
+  Stage 2, the highlight modes, ran 12:02-12:52 (brief b6c3832) and is
+  rebasing onto K174 (merged 12:53) before its merge.
   - owner: claude agent a98c345abb522e151 (opus) of session d8031183,
     started 2026-10-14 12:02 with a 2 h cap (about 14:02). Stage 1 was
     agent a46b211b839cf82d1 (sonnet), merged in 0e5a138..9c6cab3.
   - branch: `worktree-agent-a98c345abb522e151`
     (`.claude/worktrees/agent-a98c345abb522e151`), from b6c3832; last
-    commit: none yet (unpushed).
+    commit: 6f1d074 before the rebase (unpushed).
   - evidence: `.claude/probes/K111/stage2/` in that worktree; stage 1's
     in the main checkout's `.claude/probes/K111/`.
-  - next: the brief's stage 2 (the dropdown, the modes, the sheets).
+  - next: the rebase onto K174 (`highlightMode` moves to codec index
+    108, after K174's 106-107; `hoverGlow` joins `LIVE_EFFECTS`, K236),
+    then the merge.
   - brief: `docs/design/K111.md` ("Stage 2: the highlight modes").
-- **K174** · K80 stage 1's calls, decided (Levi, 2026-10-14 about
-  11:10, email 2.x; play: https://levi.dev/knotmaze/?7.J&clk=realtime):
-  2.1 the chase pace stays 0.7 of the player's, "let's try 0.7, but this
-  should be a slider"; 2.2 detection stays 15 (the coordinator's reading
-  of "fine, slider"); 2.3 the minotaur shows through fog always, as
-  built (the reading of "fine, drop-down"); 2.4 a catch re-fogs the
-  explored maze, "yes, but checkbox toggle control"; 2.5 the caught row
-  stays visible with the stat rows off, "yes" (as built); 2.6 the
-  minotaur roams toward the player (K179's bias), "roam toward, but
-  again, add a control to toggle". The pace and detection sliders and
-  the fog dropdown exist (the Minotaur folder). The work: the paces as
-  fractions of `playerPace` (hunt 0.7, wander 0.5), a re-fog-on-catch
-  checkbox (on) and a roam-toward checkbox (on) tuned on the K80 sim,
-  plus K177's open checks. Brief `docs/design/K174.md` (d644ec5).
-  - owner: claude agent a4b88d31204feef28 (opus) of session d8031183,
-    started 2026-10-14 12:08 with a 2 h cap (about 14:08).
-  - branch: `worktree-agent-a4b88d31204feef28`
-    (`.claude/worktrees/agent-a4b88d31204feef28`), from d644ec5; last
-    commit: none yet (unpushed).
-  - evidence: `.claude/probes/K174/` in that worktree; the K80 sim in the
-    main checkout's `.claude/probes/K80/rt/`.
-  - next: the brief's one stage.
-  - brief: `docs/design/K174.md`.
 - **K198** · The fit camera's pan and the off-screen indicators, decided
   (Levi, 2026-10-14 about 07:53, on K148 + K149's calls): "camera: I
   just want to be able to pan such that the right edge of the maze is
@@ -415,6 +403,27 @@ and never reused.
     in the main checkout's `.claude/probes/K198/`.
   - next: the brief's stage 2.
   - brief: `docs/design/K198.md` ("Stage 2").
+- **K193** · The phone pass's orientation, decided (Levi, 2026-10-14
+  about 11:10, email 4.1: "b seems best"): the pass emulates a 411x753
+  portrait viewport over CDP and leaves the phone as it sits, and a
+  fresh A/A floor at that viewport replaces the landscape one (K195)
+  before the next round's pass (K98, K92, k140-confetti) and K232's
+  rerun. `scripts/phone_pass.ps1` follows the phone's orientation today
+  (its display check, about line 176). Background: the docked phone
+  sits in landscape (K156 3c: display 2424x1080, pages 810x331-387 CSS
+  px at dpr 2.625); round 2026-10-14b's pass ran in portrait because the
+  phone was off its dock and in use, so its A/B against the landscape
+  floor is weak (K232). Brief `docs/design/K193.md` (2b6389c).
+  - owner: claude agent a092bd665532db806 (sonnet) of session d8031183,
+    started 2026-10-14 12:54 with a 1 h cap (about 13:54).
+  - branch: `worktree-agent-a092bd665532db806`
+    (`.claude/worktrees/agent-a092bd665532db806`), from 2b6389c; last
+    commit: none yet (unpushed).
+  - evidence: `.claude/probes/K193/` and the passes' output under
+    `.claude/probes/rounds/`, both in that worktree.
+  - next: the brief's one stage (the emulation and its proof, a one-rep
+    smoke pass, then the 3-rep A/A floor).
+  - brief: `docs/design/K193.md`.
 
 ## Next, in order
 
@@ -450,15 +459,15 @@ Sonnet; a compaction is not a stop), and a watcher flags agents past it
 
 Order from 2026-10-13 15:45, after Levi's answers at 09:35, 13:17,
 13:30, 14:31-14:39 and 15:30-15:40, and on 2026-10-14 at about 00:22
-(he may reorder). Running: K111 stage 2 from 12:02 (opus, 2 h),
-K174's controls from 12:08 (opus, 2 h) and K198 stage 2 from 12:45
-(opus, 2 h). At about 10:57 Levi lifted
+(he may reorder). Running: K111 stage 2 from 12:02 (opus, 2 h;
+rebasing onto K174), K198 stage 2 from 12:45 (opus, 2 h) and K193 from
+12:54 (sonnet, 1 h). At about 10:57 Levi lifted
 the usage hold: launches go on until the week reaches 97% (Levi reset
 it to 0% at about 11:59; it resets Mon 2026-10-19 11:59). K100, K132,
 K90 stage 1b, K173
 (the rules split), K93, K198 stage 1, K98 and K92 merged at
-08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, K191 at 12:04
-and K235 + K239 at 12:44; the
+08:39-10:08, K145 and K111 stage 1 at 11:55 and 11:58, K191 at 12:04,
+K235 + K239 at 12:44 and K174 at 12:53; the
 coordinator carries the running agents' rules edits into the topic
 files at their merges. Then, as code slots free up:
 1. The round's phone pass (K156): the 01:53 pass on head 81d31a5 (K79 B,
@@ -466,11 +475,12 @@ files at their merges. Then, as code slots free up:
    and K180 against base ab6d330) is done (K197 filed), and so is round
    2026-10-14b's (10:12-10:42, head 48da84d, with looks for K146, K151,
    K148, K198, K100, K93 and K120; K232-K234 filed). The next pass covers
-   K98 and K92 and needs a floor in the phone's orientation (K193, K195).
+   K98 and K92 and needs the portrait floor (K193 with K195, running
+   from 12:54).
 2. K80's real-time chase, its own mode (Levi, about 15:30: "I really
    want the real-time prototype... Do implement it."): stage 1 merged in
-   5fed5c1; K174's answers (2026-10-14 about 11:10) queue its controls
-   (item 10).
+   5fed5c1, and its controls (K174, Levi's answers of 2026-10-14 about
+   11:10) in ecf2169..6ec8275 (12:53); roamPull's strength is K245.
 3. K146 + K151 and K148 + K149: merged 2026-10-14 (b9cf882, fcc402b).
 4. K120: merged 2026-10-14 (0acbce0).
 5. K90 stage 1b: merged 2026-10-14 (feb12a0, flag off); Levi's call
@@ -480,15 +490,15 @@ files at their merges. Then, as code slots free up:
    06edef4..56b6f2d).
 8. K92 + K224: merged 2026-10-14 (e78ddcc). K111 stage 1 (the panel):
    merged 2026-10-14 (0e5a138..9c6cab3); its stage 2, the highlight
-   modes, runs from 12:02.
+   modes, ran from 12:02 and is rebasing onto K174.
 9. K98: merged 2026-10-14 (f5982cd); its default size waits on Levi (K225).
 10. Levi's answers of 2026-10-14 about 11:10 (placed here by the
-    coordinator; Levi may reorder): K174's controls (running from
-    12:08), K198 stage 2 (running from 12:45, beside K174 and K111
-    stage 2 in other panel folders), K191's fade-out (merged 2026-10-14
-    12:04, fafa340..3467117), K235 with K239 (merged 2026-10-14
-    12:44, 08d1383..05e6d4d), then K193's portrait emulation and then
-    K195's A/A floor.
+    coordinator; Levi may reorder): K174's controls (merged 2026-10-14
+    12:53, ecf2169..6ec8275), K198 stage 2 (running from 12:45, beside
+    K111 stage 2 in another panel folder), K191's fade-out (merged
+    2026-10-14 12:04, fafa340..3467117), K235 with K239 (merged
+    2026-10-14 12:44, 08d1383..05e6d4d), and K193's portrait emulation
+    with K195's A/A floor (running from 12:54).
 11. K76 stage 2.
 12. K80's turn-aligned hunter, a modifier of the normal maze; then
     K137's toggles, K138's M mechanisms and K139.
@@ -506,6 +516,7 @@ Waiting for Levi: K90's bend bound (Levi tests it live); the G3-3 and
 G4-2 old-path deletions; K162 and K184-K186 (play, then call); K194's
 defaults (after playing); K225 (the markers' size); K229 (the open
 panel's top); K237 (the hover glow's default); K238 (K111's calls);
+K241, K244 and K245 (a reset's web fade, quiet cores, the roam pull);
 near launch, K117 and K210; after the churn, K46, K57 and
 K84. The 2026-10-14 email (08:25, plus 10:11; the draft is in
 `.claude/probes/levi_email/`, untracked) was answered in session at
@@ -514,17 +525,6 @@ K198 and CC39); 9.1 (K225) and 10.1 (K229) are still open.
 
 K5-K7 (split, frame loop, worker) follow.
 
-- **K193** · The phone pass's orientation, decided (Levi, 2026-10-14
-  about 11:10, email 4.1: "b seems best"): the pass emulates a 411x753
-  portrait viewport over CDP and leaves the phone as it sits, and a
-  fresh A/A floor at that viewport replaces the landscape one (K195)
-  before the next round's pass (K98, K92, k140-confetti) and K232's
-  rerun. `scripts/phone_pass.ps1` follows the phone's orientation today
-  (its display check, about line 176). Background: the docked phone
-  sits in landscape (K156 3c: display 2424x1080, pages 810x331-387 CSS
-  px at dpr 2.625); round 2026-10-14b's pass ran in portrait because the
-  phone was off its dock and in use, so its A/B against the landscape
-  floor is weak (K232).
 - **K240** · High contrast for the DOM chrome (a K111 follow-up): a CSS
   layer on `:root[data-contrast="high"]`, which K111 already sets, for
   the panel, the HUD and the badge (their styles live in TS-injected
@@ -773,6 +773,14 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Residuals (known, not fixed)
 
+- **K246** · K174's residuals (`docs/design/K174.md`, "Stage 1
+  handoff"): pace links aren't clamped, so an old probe link like
+  `mhp=25` now means 25x the player's pace; the K80 rt probes in the
+  main checkout (`.claude/probes/K80/rt/`) lack K132's `rt_lib.ts` fix
+  (`paramsFromValues(seed, {...overrides})`), and `rt_chase.mjs` puts
+  its Chrome profile in OS temp (both fixed only in the copies in
+  `.claude/probes/K174/rt/`); at desktop width the panel's label column
+  clips the `mino*` keys.
 - **K243** · A paused page with the instant intro draws no threads at
   load (`?b.J&am=instant&fw=0&sp=0`, 393k px off a refreshed frame; the
   same on master): `beginSettle()`'s instant branch shows the root
@@ -1168,10 +1176,14 @@ K5-K7 (split, frame loop, worker) follow.
 - **K176** · K80's entrance-tail trap: after losing a player on the
   entrance tail, the minotaur pauses at that tail's junction and catches
   them about 3 s later (`.claude/probes/K80/rt/results.md`).
-- **K177** · K80 checks not run yet: the indicator on a phone, fog at
-  `minoFog=always`, waiting out a non-instant intro, and frame time (the
-  round's phone pass takes the phone ones). Chases are not saved or
-  replayable: `replayChase` exists, and the dailies stay turn-based.
+- **K177** · K80's last unrun check: the minotaur's indicator on the
+  phone itself, which the next round's pass shows (K174 checked it on
+  the desktop in 411x753 emulation). K174 ran the other three: the fog
+  modes; a non-instant intro (no chase tick before the first tap, and
+  the minotaur wakes 2 s after it); desktop frame time (median 17.6 ms,
+  the same as turn mode; the chase's own work under 0.1 ms). Chases are
+  not saved or replayable: `replayChase` exists, and the dailies stay
+  turn-based.
 - **K178** · Since K122, the private-cache vite wrappers of K19-K20, K79
   and K99 (and K104's, after its rebase) fail with ERR_MODULE_NOT_FOUND.
   K80's wrapper (`.claude/probes/K80/rt/vite.private-cache.config.ts`)
@@ -1205,6 +1217,11 @@ K5-K7 (split, frame loop, worker) follow.
 
 ## Ideas (not scheduled)
 
+- **K247** · K174's ideas: readable labels in the Minotaur folder (the
+  `mino*` keys clip, K246); a catch toast that says the fog came back;
+  for more than about 2/3 of games to meet the minotaur, homing or the
+  rejected "closest" roam pick (2.11 catches a game at 0.5).
+  `docs/design/K174.md` ("Stage 1 handoff").
 - **K233** · The phone pass's length: the full spec (26 looks, 3 reps)
   takes about 55-60 min (frames about 6.7 min a rep, looks about 80 s
   each; round 2026-10-14b). Trim it per round, or add a spec `deadline`
@@ -1410,6 +1427,32 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K174** · K80 stage 1's calls, decided (Levi, 2026-10-14 about
+  11:10, email 2.x; play: https://levi.dev/knotmaze/?7.J&clk=realtime):
+  2.1 the chase pace stays 0.7 of the player's, "let's try 0.7, but this
+  should be a slider"; 2.2 detection stays 15 (the coordinator's reading
+  of "fine, slider"); 2.3 the minotaur shows through fog always, as
+  built (the reading of "fine, drop-down"); 2.4 a catch re-fogs the
+  explored maze, "yes, but checkbox toggle control"; 2.5 the caught row
+  stays visible with the stat rows off, "yes" (as built); 2.6 the
+  minotaur roams toward the player (K179's bias), "roam toward, but
+  again, add a control to toggle". The pace and detection sliders and
+  the fog dropdown exist (the Minotaur folder). The work: the paces as
+  fractions of `playerPace` (hunt 0.7, wander 0.5), a re-fog-on-catch
+  checkbox (on) and a roam-toward checkbox (on) tuned on the K80 sim,
+  plus K177's open checks. Brief `docs/design/K174.md` (d644ec5).
+  - Done in ecf2169..6ec8275 (2026-10-14 12:53): the paces are
+    fractions of `playerPace` (`mwp` wander 0.5, `mhp` hunt 0.7; panel
+    sliders 0-2, "(x your pace)"); `minoToward` (`mtw`, on) roams toward
+    the player (roamPull 0.5 and a "nearer" roam pick); `minoRefog`
+    (`mrf`, on) re-fogs the explored maze on a catch (`respawn(refog)`,
+    a `refogs` counter). Codec indices 106-107. On the K80 sim, games
+    where the minotaur meets the player rose from 56% to 63% and catches
+    from 1.32 to 1.68 a game; 74% of games end with 0-2 catches. Three
+    of K177's four checks passed (K177 keeps the phone one). roamPull's
+    strength is K245, the residuals K246, the ideas K247. Lore
+    `gameplay-minotaur.md` (THE MINOTAUR'S CONTROLS); brief
+    `docs/design/K174.md` ("Stage 1 handoff").
 - **K235** · Taps inside junction cores make no sound (Levi, 2026-10-14
   about 11:10, on K194's 5.2: "Probably shouldn't.").
   - Done in 08d1383..05e6d4d (2026-10-14 12:44): `tapLobes()`
