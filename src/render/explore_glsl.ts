@@ -309,10 +309,11 @@ highp float kExploreAt(KChain c, highp float ctrl) {
 }
 `;
 
-// The section variant's declarations: the visibility above, then the end
-// looks and the shaped cut's coverage (K268), which need kSmooth and the
-// gap library's uGapData.
-export const EXPLORE_DECL_GLSL = EXPLORE_VIS_GLSL + /* glsl */ `// The end look's coverage at a point of a FRONTIER fade: u = progress 0 -> 1
+// The end looks and the shaped cut's coverage (K268), which need kSmooth,
+// uKExplore and the gap library's uGapData. The section variant declares
+// them after the visibility (EXPLORE_DECL_GLSL); the fans and the still
+// pluck, which have no visibility of their own, through exploreGapEdits.
+export const EXPLORE_LOOK_GLSL = /* glsl */ `// The end look's coverage at a point of a FRONTIER fade: u = progress 0 -> 1
 // through it (< 0: not in a frontier fade), s = world arc from the solid end,
 // lat = vUV.y - 0.5 (0 on the centerline), sideFw = vUV.y per pixel. Returns
 // v itself for the fade and halo looks and outside a frontier. The glow
@@ -388,6 +389,10 @@ highp float exploreCutCover(int row, int fl, highp float A, highp float pxW) {
 }
 `;
 
+// The section variant's declarations: the visibility above, then the end
+// looks and the shaped cut's coverage.
+export const EXPLORE_DECL_GLSL = EXPLORE_VIS_GLSL + EXPLORE_LOOK_GLSL;
+
 // K268: the shaped cut inside gapKeepAt (explore program only). A ribbon
 // slot with the SHAPED bit searches without the early stop inside the
 // silhouette (the projection must be the true nearest point)...
@@ -406,6 +411,25 @@ export const EXPLORE_GAP_CUT_GLSL = /* glsl */ `    if (exShaped) {
       if (gst <= 0.0) continue;
     }
 `;
+
+// K268 stage 2: the same cut in a fan (the junction field and free-tip caps,
+// turn < -0.5). The search also runs without the early stop, and the fan
+// re-applies master's inside-silhouette branch once the shaped strength is
+// known: with sure2 0 the search finds the true nearest point, so best <
+// exSure2 is master's condition exactly. (A ribbon has no such branch to
+// keep: its shaped cut replaces it, as stage 1 built.)
+export const EXPLORE_FAN_SURE_GLSL = /* glsl */ `    bool exShaped = (fl & ${GAP_FLAG_SHAPED}) != 0 && uKExplore.x > 0.5;
+    highp float exSure2 = sure2;
+    if (exShaped) sure2 = 0.0;
+`;
+export const EXPLORE_FAN_CUT_GLSL = EXPLORE_GAP_CUT_GLSL.replace(
+  "      if (gst <= 0.0) continue;\n",
+  "      if (gst <= 0.0) continue;\n" +
+    "      if (best < exSure2) {\n" +
+    "        keep = min(keep, 1.0 - (full ? inWin * inFoot : 1.0) * gst);\n" +
+    "        continue;\n" +
+    "      }\n",
+);
 
 // The variant's main, before the gap mask: the visibility multiplies the
 // alpha; in a FRONTIER fade the look reshapes it. Debug view 6 (probes,
@@ -447,6 +471,21 @@ const ANCHOR_PXARC =
 const ANCHOR_KCTRL =
   "highp float kctrl = fxHere || paintHere ? kCtrlNear(kc, kpt.x, kpt.y) : 0.0;";
 const ANCHOR_GAP = "  float gk = gapKeep(pxW, gTurn);";
+
+// The shaped cut's edits to gapKeepAt in a program other than the section
+// variant (K268 stage 2): the end looks before it, after `decl` (whatever the
+// program lacks of uKExplore and kSmooth), the search without the early stop
+// and the cut. A fan (the junction field) takes the fan texts; the still
+// pluck draws a ribbon (turn >= 0, full), so it takes the ribbons' texts.
+// Each [anchor, replacement] occurs exactly once in a fragment holding the
+// gap library's text.
+export function exploreGapEdits(fan: boolean, decl: string): [string, string][] {
+  return [
+    [ANCHOR_DECL, decl + EXPLORE_LOOK_GLSL + ANCHOR_DECL],
+    [ANCHOR_SURE, ANCHOR_SURE + (fan ? EXPLORE_FAN_SURE_GLSL : EXPLORE_GAP_SURE_GLSL)],
+    [ANCHOR_BK, ANCHOR_BK + (fan ? EXPLORE_FAN_CUT_GLSL : EXPLORE_GAP_CUT_GLSL)],
+  ];
+}
 
 function once(src: string, anchor: string): number {
   const i = src.indexOf(anchor);

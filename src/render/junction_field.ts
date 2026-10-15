@@ -86,6 +86,7 @@ import { FloatRows, ROW_SHIFT } from "./float_rows";
 import { KNOT_UNIFORMS_GLSL, PAINT_CONST_GLSL, PAINT_GATE_GLSL } from "./paint_glsl";
 import { knotUniforms } from "./paint_model";
 import { STRIP_LOOKUP_GLSL, STRIP_LOOKUP_P_GLSL, stripTexture } from "./arm_strip";
+import { exploreGapEdits } from "./explore_glsl";
 
 // Field geometry constants (shared with the CPU side in ribbon_renderer):
 // arm radial profiles resample the centerline (walked in FIELD_PROF_ARC
@@ -421,6 +422,8 @@ void main(void) {
 // junctionField return vec4, the angular blend, the K169 web fade and the
 // K81 band mixes included. A web then fades with its arms and a free-tip
 // cap with its thread at the tip; over solid arms it is master's color.
+// The last three edits give the fans the shaped crossing cut (K268 stage 2,
+// explore_glsl.ts exploreGapEdits): a cut fades with its over thread.
 // Each [anchor, replacement] must occur exactly once in JUNCTION_FRAG.
 export const FIELD_EXPLORE_EDITS: ReadonlyArray<readonly [string, string]> = [
   ["vec4 jAt(int i) {", STRIP_LOOKUP_P_GLSL + "vec4 jAt(int i) {"],
@@ -466,6 +469,7 @@ export const FIELD_EXPLORE_EDITS: ReadonlyArray<readonly [string, string]> = [
     "  finalColor = vec4(rgb, 1.0) * vColor * (aM * gk);",
     "  if (exC.a <= 0.002) discard;\n  finalColor = exC * vColor * (aM * gk);",
   ],
+  ...exploreGapEdits(true, "uniform vec4 uKExplore;\n"),
 ];
 
 export function withExploreField(frag: string): string {
