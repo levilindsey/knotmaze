@@ -112,9 +112,10 @@ export const STATS: Record<StatId, { label: string; line: string }> = {
   chased: {
     label: "chased",
     line:
-      "How long the minotaur spent hunting you: from when you came close " +
-      "enough along the threads for it to notice you, until you got clear " +
-      "of it or it caught you.",
+      "How long the minotaur spent hunting you, added up over the run. A " +
+      "hunt starts when you come close enough along the threads for it to " +
+      "notice you, and ends when you get clear of it, it catches you or " +
+      "you finish.",
   },
   // game/fire.ts fireLead: T(v) - L, with T(v) = delay + d(v) / speed and
   // L = walkedDist. HUD only while the race runs (the banners show the
