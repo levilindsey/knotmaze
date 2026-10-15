@@ -1543,10 +1543,10 @@ Every work item.
 
 ## Stage 3 handoff
 
-Stage 3 ended 2026-10-15 at 00:34, inside its two-hour cap (it started
+Stage 3 ended 2026-10-15 at 00:43, inside its two-hour cap (it started
 2026-10-14 at 23:22). The branch is `worktree-agent-a9f593eca9038e6d3`,
 from `472ef83` (stage 2's handoff): three commits, `5fcee42` to
-`6bbd300`, and this handoff after them. Master (`2753a29`) has
+`6bbd300`, and this handoff after them. Master (`1e7456c`) has
 changed `src/main.ts` since (`2c81a92`, K329/K333/K334's key moves); a
 trial merge (`git merge-tree`) combines the two without a conflict, and
 no other file changed on both sides. The evidence is in
@@ -1617,11 +1617,13 @@ Every work item.
    (`/src/physics/physics_worker.ts?worker_file&type=module`) and fetched
    it and its whole import graph: 20 modules, all 200, simplex-noise from
    the optimized deps. In a browser (`dev_check.mjs`, under the perf
-   lock, `?7k&snd=none&phw=1`, `dev_results.jsonl`): Chrome started the
-   worker from that URL, the host was ready in 397 ms (kind worker, no
-   reason), and 21 snapshots of the pre-settle arrived, with no page
-   errors. That sample came at about 3.7 s, before the pre-settle ended
-   (no live frame posted yet).
+   lock, `?7k&snd=none&phw=1`, `dev_results.jsonl`, two runs): Chrome
+   started the worker from that URL, the host was ready in 397 and
+   417 ms (kind worker, no reason), and no page errors. The second run
+   waited for the live phase: main posted its first frame at 6.7 s,
+   after 23 snapshots of the pre-settle, and 3 s later it had posted 172
+   frames and the newest snapshot's sim time had gone from 0.32 to
+   2.67 s.
 4. **`phw`** (`physicsWorker`, a flag, default false) in `url_state.ts`,
    appended to `CODEC_PARAMS` at index 135 (codec v5 unchanged; the
    key-order pin re-frozen), exempt from the daily in `daily_link.ts`
@@ -1765,10 +1767,6 @@ in this stage), fabric designs.
 
 - The phone (off-limits in this stage): the worker's substep cost and
   the frame rate there are unknown.
-- The dev server's live phase in a browser: `dev_check.mjs` sampled
-  before the pre-settle ended (item 3). Inferred to work: the live phase
-  runs the same code as the build's, which the smoke covered, and the
-  dev server only changes how the modules are served.
 
 ### For stage 4
 
