@@ -68,5 +68,14 @@ declaration it rides: `render-paint.md`.
   show), the crossing gaps (a hidden over thread still cuts a gap in a
   visible under thread), the markers (the exit marker is not gated) and
   hit-testing of hidden runs.
-- GPU (`gpu_batch.ps1`, 3200x1800, RX 6800 XT, interleaved, under the perf
-  lock): GPU_RESULTS_PENDING
+- GPU (`gpu_batch.ps1`, 3200x1800, RX 6800 XT, 3 interleaved rounds of
+  286 frames under the perf lock; ms/frame mean [range], `gpu_summary.mjs`):
+  MODE OFF COSTS NOTHING, master's ribbon program 1.978 [1.948-2.004] vs the
+  branch's 1.970 [1.956-1.989], 92.7 draws each, frames 2.779 vs 2.785.
+  MODE ON (5 pieces, 3 frontiers): the explore program 0.730 [0.721-0.735]
+  in 3 draws (a chain with a piece draws its whole mesh; hidden fragments
+  still run the shader), frame 1.566; the fans (0.56) draw in full until 2b.
+  THE BOUND (every chain on the explore program, 390 pieces, 228
+  frontiers): 1.962 [1.954-1.968], the same as master's program; the 228
+  halo sprites add about 0.06 ms (the sprite batch, 0.064 vs 0.008); frame
+  2.824.
