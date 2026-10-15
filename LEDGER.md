@@ -206,9 +206,11 @@ and never reused.
     `.claude/worktrees/agent-aeaf1e61bcecaaf0b` is kept. Fisher's books,
     Abbott's essays and Buck's book-only chapters are unverified (doc
     section 1).
-  - next: write stage 2's brief in `docs/design/K74.md` from the
-    handoff's "For stage 2" notes, then launch it (item 12 of the
-    order). K80's call 6 (Levi, 14:31: "Absolutely"): dead ends are the
+  - next: stage 2's brief in `docs/design/K74.md`, from the handoff's
+    "For stage 2" notes, drafted from 2026-10-14 14:14 by the same docs
+    agent as K114's (branch `worktree-agent-a660c49b14be609c5`); the
+    coordinator reviews and merges it, then launches stage 2 (item 14 of
+    the order). K80's call 6 (Levi, 14:31: "Absolutely"): dead ends are the
     minotaur's hunting ground. Dead-end branches, several runs behind
     one bridge, would make deeper traps: a later K74 param, settled with
     K80's brief.
@@ -576,8 +578,12 @@ K5-K7 (split, frame loop, worker) follow.
     have a toggle in settings for no spiders, and then swap the icon to
     something else that makes sense" (an arachnophobia setting swaps its
     icon; the brief designs both icons).
-  - next: the burn-race brief (call 1's first prototype); the spider
-    after the minotaur's controls (K174).
+  - next: the burn-race brief (call 1's first prototype), drafted from
+    2026-10-14 14:14 by a docs agent (claude agent a660c49b14be609c5
+    (opus) of session d8031183, 1 h cap; branch
+    `worktree-agent-a660c49b14be609c5`, new `docs/design/K114_burn.md`);
+    the coordinator reviews and merges it, then launches stage 1. The
+    spider after the minotaur's controls (K174).
 - **K137** · K80 section 4's cheap mechanisms, each behind a toggle
   (Levi, 2026-10-13 14:31: "I'd love to prototype all of these and have
   controls to toggle them"), after the minotaur. Sized S or S-M in the
