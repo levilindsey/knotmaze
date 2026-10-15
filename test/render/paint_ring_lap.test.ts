@@ -325,7 +325,7 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "paint_glsl.ts: floor(raw / s)": [1, "kPulseV's crest phase: periodic, either side is the same crest"],
   "gap_mask.ts: floor(da / per + 0.5)": [1, "nearest lap: ambiguous only at the antipode"],
   "gap_mask.ts: floor(off / t1.z + 0.5)": [1, "nearest lap: ambiguous only at the antipode"],
-  "explore_glsl.ts: floor((0.5 * (c0 + c1) - x) / nf + 0.5)": [1, "nearest lap: ambiguous only at the antipode"],
+  "explore_glsl.ts: floor((0.5 * (c0 + c1) - x) / nf + 0.5)": [2, "nearest lap (kExploreAt, K290's kCharAt): ambiguous only at the antipode"],
   "explore_glsl.ts: floor(s / sp + 0.5)": [1, "a rounded count, clamped to at least 1"],
   "junction_field.ts: floor(ra / TAU)": [1, "an angle wrap for comparisons: TAU instead of 0 is the same direction"],
   // KNOWN RESIDUAL (K299 report): mod divides, so on an affected GPU a

@@ -302,8 +302,10 @@ export class PaintScene {
 
   // K76 THREAD REVEAL: the whole-chain flags (KPAINT texel `chain` .x, a
   // range no slot table uses; explore_glsl.ts). null = the mode is off
-  // (zeros). Only changed texels upload. Returns the texels changed.
-  setExploreFlags(flags: Uint8Array | null): number {
+  // (zeros). K290 (burn stage 3a): `char` flags the chains with a CHAR item
+  // (texel `chain` .y; kCharAt scans only those). Only changed texels
+  // upload. Returns the texels changed.
+  setExploreFlags(flags: Uint8Array | null, char: Uint8Array | null = null): number {
     const n = this.chains.length;
     const pt = kPaint();
     pt.ensure(Math.max(n, 1));
@@ -312,8 +314,10 @@ export class PaintScene {
     let hi = -Infinity;
     for (let c = 0; c < n; c++) {
       const v = flags && flags[c] ? 1 : 0;
-      if (d[c * 4] !== v) {
+      const w = flags && char && char[c] ? 1 : 0;
+      if (d[c * 4] !== v || d[c * 4 + 1] !== w) {
         d[c * 4] = v;
+        d[c * 4 + 1] = w;
         if (c < lo) lo = c;
         if (c + 1 > hi) hi = c + 1;
       }

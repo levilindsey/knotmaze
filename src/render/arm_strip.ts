@@ -267,10 +267,18 @@ const STRIP_ANCHOR_OUT =
 export const STRIP_EXPLORE_DECL_GLSL = /* glsl */ `${EXPLORE_VIS_GLSL}
 // K268 stage 2: the texel's visibility (chainMaterial sets it).
 highp float kStripVis;
+// K290 (burn stage 3a): how charred the texel's thread is (chainMaterial
+// sets it), so a web over a charred arm wears the char (no ash core: a
+// strip has no across coordinate).
+highp float kStripChar;
 `;
-export const STRIP_EXPLORE_CTRL_GLSL = "  if (uKExplore.x > 0.5) kStripVis = kExploreAt(c, actrl);\n";
+export const STRIP_EXPLORE_CTRL_GLSL =
+  "  if (uKExplore.x > 0.5) kStripVis = kExploreAt(c, actrl);\n" +
+  "  if (uKExplore.x > 0.5) kStripChar = kCharAt(c, actrl);\n";
 export const STRIP_EXPLORE_OUT_GLSL = /* glsl */ `  kStripVis = 1.0;
+  kStripChar = 0.0;
   vec3 exM = chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z > 0.5);
+  if (kStripChar > 0.0) exM = kCharLook(exM, kStripChar, 0.0);
   finalColor = vec4(exM * kStripVis, kStripVis);
 `;
 
