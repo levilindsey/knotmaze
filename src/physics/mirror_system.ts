@@ -1,5 +1,5 @@
 import { ParticleSystem, EMERGENT_MAX, EMERGENT_ROW } from "./particle_system";
-import type { CrossingPass } from "./particle_system";
+import type { CrossingPass, PhysicsTuning } from "./particle_system";
 import type { TangleGraph } from "../core/types";
 import type { SnapshotView } from "./snapshot";
 
@@ -126,16 +126,25 @@ export class MirrorSystem extends ParticleSystem {
     return r && { particle: r.particle, chain: r.chain, speed: 0 };
   }
 
-  override step(): void {
+  // The live class's signatures, so a call compiles wherever it did and
+  // fails loudly at run time.
+  override step(_dt: number, _tuning?: PhysicsTuning): void {
     throw new Error("MirrorSystem.step: the physics steps in the worker");
   }
-  override beginFrame(): number {
+  override beginFrame(_dt: number): number {
     throw new Error("MirrorSystem.beginFrame: the physics steps in the worker");
   }
-  override runSubstep(): void {
+  override runSubstep(_tuning?: PhysicsTuning): void {
     throw new Error("MirrorSystem.runSubstep: the physics steps in the worker");
   }
-  override tug(): number {
+  override tug(
+    _chain: number,
+    _c0: number,
+    _c1: number,
+    _cTap: number,
+    _side: number,
+    _amp: number
+  ): number {
     throw new Error("MirrorSystem.tug: post tug to the worker");
   }
   override reset(): void {
