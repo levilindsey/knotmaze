@@ -4513,6 +4513,9 @@ async function main(): Promise<void> {
         fabric.trailLength = params.trailLength;
         syncExploration(fabric);
         fabric.markerSize = look("markerSize"); // K98 (a no-op unless moved).
+        // K76 stage 2c: the reveal's halo follows the Accessibility flags.
+        fabric.exploreStill = a11y.reducedMotion;
+        fabric.exploreContrast = a11y.highContrast;
         // fowIntro: keep the fog off while the intro animation plays; the
         // release closes it in (fade + contracting radius). K76 stage 2c:
         // the thread reveal's hold shows every thread while the intro plays,
