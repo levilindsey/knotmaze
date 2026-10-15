@@ -91,7 +91,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   - `rippleStrength` (`prs`, [0, 2], default 1);
   - `rippleAuto` (`pra`, [0, 2], default 0.35);
   - `pluckSheen` (`psh`, [0, 1], default 0.5);
-  - `pluckTug` (`ptg`, [0, 1] thread widths, default 0.3);
+  - `pluckTug` (`ptg`, [0, 1] thread widths, default 0; 0.3 until the
+    wake probe, render-pluck.md's K279 WAKE COST);
   - `tugAuto` (`pta`, a flag, default off);
   - `autoPluckGain` (`pag`, [0, 1], default 0.5).
 

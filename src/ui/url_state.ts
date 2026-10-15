@@ -624,7 +624,12 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   rippleStrength: 1,
   rippleAuto: 0.35,
   pluckSheen: 0.5, // Neutral: 0.
-  pluckTug: 0.3, // Neutral: 0.
+  // 0 since the K279 wake probe (docs/design/K279.md, "Wake follow-up"): a
+  // tug wakes the solver, and awake physics runs at 7-9 fps at default
+  // sizes on the desktop (3-4 in a dense maze), so a tap would drop the
+  // frame rate for ~2.6 sim-s.
+  // The panel and `&ptg=` still reach it (stage 1 had 0.3).
+  pluckTug: 0,
   tugAuto: false,
   autoPluckGain: 0.5, // -6 dB; neutral: 1.
   markerSize: MARKER_SIZE_DEFAULT,

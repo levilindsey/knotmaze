@@ -252,7 +252,8 @@ only with the files it is about; `render.md` lists the area's other files.
   vibration effect?" Stage 1 built prototypes behind viewer preferences
   (keys, ranges and defaults: gameplay-links.md's PLUCK EMPHASIS PARAMS;
   the auto plucks' quieter bus: gameplay-audio.md): a RIPPLE (`prp`,
-  `prs`, `pra`), a SHEEN on the swing (`psh`), a TUG (`ptg`, `pta`) and
+  `prs`, `pra`), a SHEEN on the swing (`psh`), a TUG (`ptg`, `pta`;
+  default 0 since the WAKE COST entry below, 0.3 before) and
   louder vibration defaults (psz 1.75 -> 2, pgh .35 -> .5, pw .5 ->
   .75). Levi picks the looks and numbers in stage 2. NEUTRAL (master's
   look, sound and physics):
@@ -336,7 +337,33 @@ only with the files it is about; `render.md` lists the area's other files.
   off-screen probe Chrome; not measured on screen or on the phone. Before
   K279 a tap cost no physics. Real clicks: the knot's and dense's rippled
   and slept again in 2.6 sim-s (2.95 and 7.19 s wall); fabric's drew no
-  ripple and no wake, in both runs (timed out at 30 s; not diagnosed:
-  dense's click worked, so its aim is the likely cause, unverified).
+  ripple and no wake, in both runs (timed out at 30 s). DIAGNOSED in the
+  follow-up: a mouse press in fabric mode goes to `handleFabricTap`
+  first, and a press on a choosable run moves the player and returns, so
+  nothing plucks; the probe's site was such a run. Not a bug.
   Before the node-to-node fix only spans of L >= 2.6 tugged
   (`live_sleep.log`, 0f08f68).
+- WAKE COST (K279 follow-up, 2026-10-14; the table is in
+  `docs/design/K279.md`, "Wake follow-up"). `k279_wake.mjs` on 42a1684,
+  under the perf lock, in one off-screen window with the occlusion-safe
+  flags (1400x900 at DSF 2, CPU idle at 3-5% of 24 cores): from one
+  sleeping state per design, a real click (tap at ptg 0.3), a small real
+  drag-release and a bare wake() (`__knotSetPhysicsParam` re-setting
+  slack), twice each, timed to the next sleep. ASLEEP the window ran
+  17-18 ms frames, so it was not throttled. ALL THREE WAKES COST THE
+  SAME. The first awake frame steps a normal 17-18 ms (2 substeps, no
+  large first dt), but a 1/120 s substep costs 8.2 ms of physics in the
+  knot (`?7k&mf=0`, 2592 particles), 10.5 ms in fabric (`?b`, 3011) and
+  20-23 ms in dense (gs 24, 5448): at or past the 8.33 ms real-time
+  line. Real-time stepping then spirals: dt climbs 17 -> 35 -> 53 -> 71
+  -> 89 ms to pixi's 100 ms cap in 2-6 frames, and every frame after
+  steps 12 substeps. rAF median 106-122 / 141-142 / 267-319 ms (8-9, 7
+  and 3-4 fps), p95 124-125 / 158-160 / 284-374 ms, for 2.8-8.0 s of
+  wall per wake. A drag runs as slowly during its own gesture. So the
+  tap's slow wake is the physics' real cost at these sizes, not the
+  window or a wake-path bug, and `ptg`'s default went back to 0 (a tap
+  is render-only again); the panel and `&ptg=` still reach the tug.
+  One tap-only cost, ONCE per page: the first tap's first frame spends
+  30-36 ms more in pixi's tick than a later tap's (knot 67 vs 31 ms,
+  fabric 60 vs 38, dense 104 vs 72) and reaches the cap a frame or two
+  sooner. Probably the ripple filter's first compile (not tested).

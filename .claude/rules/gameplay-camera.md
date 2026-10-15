@@ -76,8 +76,11 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   10 CSS px): lift = tap-pluck on pointerup, move = tug grabbed at the
   PRESS point (physics off: a pan).
   K279 (2026-10-14) is Levi's exception ("maybe add a bit of the
-  physics-based tug to it as well"): the zero-physics rule now holds at
-  `pluckTug` 0. At the default 0.3, a tap displaces the tapped stretch
-  (positions and prev together) and wakes the knot. Auto plucks tug only
-  with `tugAuto`. Never with physics off or under reduced motion. The
-  mechanism is the K279 entry in render-pluck.md.
+  physics-based tug to it as well"): the zero-physics rule holds at
+  `pluckTug` 0, the default. At `ptg` > 0 (stage 1's default 0.3), a tap
+  displaces the tapped stretch (positions and prev together) and wakes
+  the knot. Auto plucks tug only with `tugAuto`. Never with physics off
+  or under reduced motion. The default went back to 0 after the wake
+  probe: any wake runs at 7-9 fps at default sizes on the desktop, 3-4
+  in a dense maze (render-pluck.md's K279 WAKE COST). The mechanism is the K279 entry in
+  render-pluck.md.
