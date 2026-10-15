@@ -36,6 +36,11 @@
 //   destination (pauseMin..pauseMax seconds). With chance deadEndBias the
 //   destination is a dead-end tip (its hunting ground, up to 2 x
 //   roamRange away), otherwise a junction roamRange/4..roamRange away.
+//   ROAM TOWARD THE PLAYER (K174, `roamPull`): with chance roamPull a leg
+//   picks among those candidates only the ones nearer the player than
+//   where it stands (thread distance), so it drifts their way without
+//   homing in; a player it cannot see (on a tail) pulls nothing. roamPull 0
+//   is K80's pick exactly: the same three draws, the same choice.
 // - HUNT: it starts when the player is within detectStart of it and ends
 //   beyond detectEnd, both measured along the threads (shortest arc through
 //   the walk graph minus the barred tails, not a count of runs). While
@@ -84,7 +89,19 @@ export interface ChaseParams {
   deadEndBias: number; // [0, 1]: chance a roam destination is a dead-end tip.
   roamRange: number; // u: the farthest junction it roams to.
   wake: number; // s in its lair, at the start and after each catch.
+  // [0, 1]: chance a roam leg heads toward the player (K174; 0 = K80's
+  // pick, exactly).
+  roamPull: number;
 }
+
+// K174: the minotaur's paces as fractions of the player's (Levi: "0.7 of
+// your speed"). Links and the panel carry the fractions (minoWanderPace,
+// minoHuntPace); ChaseParams carries their products with playerPace, so
+// one playerPace edit scales the whole chase. 0.5 x 10 and 0.7 x 10 are
+// exactly 5 and 7 in doubles (url_codec.test.ts checks it).
+export const WANDER_PACE_FRACTION = 0.5;
+export const HUNT_PACE_FRACTION = 0.7;
+const PLAYER_PACE = 10;
 
 // The defaults come from a headless simulation (2026-10-13, 288 default
 // mazes, scripted greedy and fleeing players; the table and how to rerun it
@@ -93,9 +110,9 @@ export interface ChaseParams {
 // url_state.ts PARAM_DEFAULTS reads these, so a retune edits only them (and
 // moves every link that leaves them out).
 export const DEFAULT_CHASE_PARAMS: Readonly<ChaseParams> = Object.freeze({
-  playerPace: 10,
-  wanderPace: 5,
-  approachPace: 7,
+  playerPace: PLAYER_PACE,
+  wanderPace: WANDER_PACE_FRACTION * PLAYER_PACE,
+  approachPace: HUNT_PACE_FRACTION * PLAYER_PACE,
   paceJitter: 0.2,
   pauseChance: 0.3,
   pauseMin: 0.5,
@@ -106,6 +123,7 @@ export const DEFAULT_CHASE_PARAMS: Readonly<ChaseParams> = Object.freeze({
   deadEndBias: 0.4,
   roamRange: 30,
   wake: 2,
+  roamPull: 0,
 });
 
 // Where an entity stands: at a vertex (edge < 0), or on a run `pos` units
@@ -591,7 +609,12 @@ export class MinotaurChase {
   }
 
   // The next roam destination, from where it stands (its lair counts as
-  // the exit tail's junction). Always three RNG draws.
+  // the exit tail's junction). Always three RNG draws: u1 picks the kind
+  // (a tip or a junction), u2 the candidate (and, with roamPull, whether
+  // the leg heads toward the player: below roamPull it does, and u2 /
+  // roamPull picks among the nearer candidates; above, (u2 - roamPull) /
+  // (1 - roamPull) picks among all, so roamPull 0 is u2 itself), u3 the
+  // leg's pace.
   private pickDest(): void {
     const g = this.g;
     const P = this.params;
@@ -616,7 +639,31 @@ export class MinotaurChase {
     }
     let pool = u1 < P.deadEndBias && tips.length > 0 ? tips : near;
     if (pool.length === 0) pool = tips.length > 0 ? tips : any;
-    this.dest = pool.length > 0 ? pool[Math.floor(u2 * pool.length)] : -1;
+    let u = u2;
+    const pull = P.roamPull;
+    if (pull > 0 && pool.length > 0 && !this.invisible()) {
+      if (u2 < pull) {
+        u = u2 / pull;
+        const nearer = this.nearerThePlayer(pool, here);
+        if (nearer.length > 0) pool = nearer;
+      } else {
+        u = (u2 - pull) / (1 - pull);
+      }
+    }
+    this.dest = pool.length > 0 ? pool[Math.min(pool.length - 1, Math.floor(u * pool.length))] : -1;
+  }
+
+  // K174: the candidates nearer the player than `here`, along the threads
+  // the minotaur may use (pool order kept).
+  private nearerThePlayer(pool: readonly number[], here: number): number[] {
+    const g = this.g;
+    const p = this.player;
+    const base = g.spotToVertex(p, here, true);
+    const out: number[] = [];
+    for (const v of pool) {
+      if (g.spotToVertex(p, v, true) < base) out.push(v);
+    }
+    return out;
   }
 
   // Where roaming distances are measured from: its vertex, or the exit

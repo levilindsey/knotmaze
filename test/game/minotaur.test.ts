@@ -4,13 +4,19 @@ import {
   CHASE_HZ,
   ChaseGraph,
   DEFAULT_CHASE_PARAMS,
+  HUNT_PACE_FRACTION,
   MinotaurChase,
   replayChase,
   undoAllowed,
+  WANDER_PACE_FRACTION,
 } from "../../src/game/minotaur";
 import type { ChaseEvent, ChaseParams } from "../../src/game/minotaur";
 import { resetPathAction } from "../../src/game/daily_attempt";
 import { SeededRNG } from "../../src/util/random";
+import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
+import { buildMazePlan, DEAD_END_DENSITY_ON, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
+import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
+import { buildWalkGraph } from "../../src/core/walk_graph";
 
 // K80 stage 1: the real-time minotaur over small hand-built walk graphs.
 
@@ -320,5 +326,127 @@ describe("MinotaurChase: the clock", () => {
     expect(again.catches).toBe(live.catches);
     expect(again.huntTicks).toBe(live.huntTicks);
     expect(again.finished).toBe(live.finished);
+  });
+});
+
+// K174: real mazes (the UI's dead-end density) and a chase's whole course
+// as one FNV-1a digest: every tick's minotaur and player spots, mode and
+// catches, under a scripted player who taps a random run at their decision
+// vertex every 45 ticks.
+function mazeWalk(seed: number): WalkGraph {
+  const g = generateLatticeKnotwork({ gridSize: 10, weaveDensity: 0.3, turnBias: 0.6, randSeed: seed });
+  const plan = buildMazePlan(g, { ...DEFAULT_MAZE_PARAMS, deadEndDensity: DEAD_END_DENSITY_ON });
+  const hueGroup = applyMazePlan(g, plan);
+  applyMazeCuts(g, plan, hueGroup);
+  return buildWalkGraph(g)!;
+}
+
+function chaseDigest(
+  walk: WalkGraph,
+  params: ChaseParams,
+  seed: number,
+  tapEvery = 45,
+  ticks = 120 * CHASE_HZ
+): string {
+  const sim = new MinotaurChase(walk, params, seed);
+  const pick = new SeededRNG(seed + 1);
+  let h = 0x811c9dc5;
+  const mix = (s: string): void => {
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+  };
+  let hunts = 0;
+  for (let i = 0; i < ticks && !sim.finished; i++) {
+    if (tapEvery > 0 && i % tapEvery === 0) {
+      const runs = sim.g.adj[sim.g.index.get(sim.decisionVertex)!];
+      sim.tap(runs[Math.floor(pick.next() * runs.length)]);
+    }
+    const out = sim.step();
+    hunts += out.filter((e) => e.kind === "spotted").length;
+    const m = sim.mino;
+    const p = sim.player;
+    mix(`${m.edge}:${m.pos}:${m.vertex}:${sim.mode}:${p.edge}:${p.pos}:${sim.catches};`);
+  }
+  return `${sim.tick}/${hunts}/${sim.catches}/${h.toString(16)}`;
+}
+
+// Seconds until the minotaur first spots a player who stands still at the
+// junction farthest from its lair (90 when it never does).
+function secondsToFind(walk: WalkGraph, params: ChaseParams, seed: number): number {
+  const sim = new MinotaurChase(walk, params, seed);
+  const g = sim.g;
+  const d = g.from(g.exit, false);
+  let far = -1;
+  for (let i = 0; i < g.ids.length; i++) {
+    if (i === g.start || i === g.exit || g.isEnd[i] || !(d[i] < Infinity)) continue;
+    if (far < 0 || d[i] > d[far]) far = i;
+  }
+  sim.place("player", g.ids[far]);
+  for (let i = 0; i < 90 * CHASE_HZ; i++) {
+    if (sim.step().some((e) => e.kind === "spotted")) return i / CHASE_HZ;
+  }
+  return 90;
+}
+
+describe("K174: the minotaur's controls", () => {
+  const MAZES = [3, 17, 42];
+  // Master's chase before K174 (d644ec5), on mazes 3, 17 and 42 with seeds
+  // 1 and 2: ticks / hunts / catches / digest of every tick.
+  const K80_DIGESTS = [
+    "14400/0/0/735ad93c",
+    "14400/4/3/82eddc6c",
+    "14400/6/5/1d87a40",
+    "14400/7/6/99a18aa9",
+    "14400/4/4/613ba18f",
+    "1690/0/0/28a076bb",
+  ];
+
+  it("roamPull 0 plays K80's chase tick for tick", () => {
+    const rows: string[] = [];
+    for (const maze of MAZES) {
+      const walk = mazeWalk(maze);
+      for (const seed of [1, 2]) rows.push(chaseDigest(walk, P({ roamPull: 0 }), seed));
+    }
+    expect(rows).toEqual(K80_DIGESTS);
+  });
+
+  it("a pull is deterministic and changes the chase", () => {
+    const walk = mazeWalk(17);
+    const a = chaseDigest(walk, P({ roamPull: 0.5 }), 1);
+    expect(chaseDigest(walk, P({ roamPull: 0.5 }), 1)).toBe(a);
+    expect(a).not.toBe(chaseDigest(walk, P({ roamPull: 0 }), 1));
+  });
+
+  it("a player it cannot see pulls nothing", () => {
+    // Nobody taps: the player stands on the entrance for two minutes.
+    const walk = mazeWalk(42);
+    for (const seed of [1, 2]) {
+      expect(chaseDigest(walk, P({ roamPull: 1 }), seed, 0)).toBe(chaseDigest(walk, P({ roamPull: 0 }), seed, 0));
+    }
+  });
+
+  it("a pull finds a still player sooner", () => {
+    const mean = (pull: number): number => {
+      let sum = 0;
+      let n = 0;
+      for (const maze of MAZES) {
+        const walk = mazeWalk(maze);
+        for (let seed = 1; seed <= 12; seed++, n++) sum += secondsToFind(walk, P({ roamPull: pull }), seed);
+      }
+      return sum / n;
+    };
+    const off = mean(0);
+    const on = mean(1);
+    console.log(`K174 mean seconds to find a still player: pull 0 ${off.toFixed(1)}, pull 1 ${on.toFixed(1)}`);
+    expect(on).toBeLessThan(0.8 * off);
+  });
+
+  it("the paces are fractions of the player's, exactly", () => {
+    expect(WANDER_PACE_FRACTION * DEFAULT_CHASE_PARAMS.playerPace).toBe(5);
+    expect(HUNT_PACE_FRACTION * DEFAULT_CHASE_PARAMS.playerPace).toBe(7);
+    expect(DEFAULT_CHASE_PARAMS.wanderPace).toBe(5);
+    expect(DEFAULT_CHASE_PARAMS.approachPace).toBe(7);
   });
 });
