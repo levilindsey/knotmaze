@@ -101,7 +101,8 @@ only with the files it is about; `render.md` lists the area's other files.
 - HOVER GLOW (K145, 2026-10-14; brief `docs/design/K93_K145.md`; its
   look since K111 stage 3, `docs/design/K111.md` "Stage 3"): the run
   under the pointer lights along both edges when it is not a choice (a
-  choice keeps its pulses and its own, stronger hover). One KPAINT item,
+  choice keeps its pulses and its own, stronger hover; since K298 the
+  glow draws over a hovered choice too, see K298 below). One KPAINT item,
   `(RIM, c0, c1, gap)`, written LAST; the strength (`hoverGlow`, hg=,
   codec index 105, default 0.4, 0 = off) and the hover point (an
   unwrapped ctrl on the run) are uniforms (uKReach.z, .w), so a pointer
@@ -132,12 +133,14 @@ only with the files it is about; `render.md` lists the area's other files.
   dark border draws along a ribbon, so the peak sits on the ribbon's own
   edge; measured, the lift peaks at ±0.92 half-width (the outermost fully
   covered pixel). Peak luma lift at 0.4: +26 at 1400x900 (K145 +20), +25
-  at 411x753 (+17). ALONG: 1 - smooth(d / pulseReach) from the hover
-  point, NO floor (K219, Levi: "Hover should honor the slider."). ENDS:
+  at 411x753 (+17). ALONG: 1 - smooth(d / hoverGlowLength) from the
+  hover point (K298; pulseReach before), NO floor (K219, Levi: "Hover
+  should honor the slider."). ENDS:
   an end GAP at each end (rimGap, the junction web's reach along an arm:
   0.975 world at defaults), because webs draw over the ribbons from arm
   strips, which carry no across coordinate; then a fade-in over
-  min(RIM_END_FADE 0.75, RIM_END_SHARE 0.6 x (half the run - gap)),
+  min(hoverGlowFade (K298; the fixed RIM_END_FADE 0.75 before),
+  RIM_END_SHARE 0.6 x (half the run - gap)),
   floor 1e-4 (K236 c: the fixed 0.75 lit a 2.6-world run to about 40%
   mid-run; now any run past two gaps glows in full mid-run). A run under
   two gaps (1.95 world) never glows: the webs cover it. Strength 0 writes
@@ -161,6 +164,42 @@ only with the files it is about; `render.md` lists the area's other files.
   (rim_sheet.mjs). Probes: `.claude/probes/K145/`,
   `.claude/probes/K111/stage3/`, `.claude/probes/K111/stage4/`
   (rim_sheet.mjs WIDTHS=..., census_widths.ps1).
+  K298 (2026-10-14; brief and handoff `docs/design/K298_hover_glow.md`;
+  Levi: "give hoverGlow it's own length setting", the end fade "much
+  shorter--give this a slider too", "render it in-addition to the
+  adjacent-to-current-juction highlight", then "Keep both."):
+  - LENGTH `hoverGlowLength` (hgl=, default 3, [0.5, 15] world from the
+    hover point) and END FADE `hoverGlowFade` (hgf=, default 0.2, [0,
+    1.5] world) are viewer preferences (gameplay-links.md) on uKSect.zw
+    (renderer `hoverGlowLength`, `hoverGlowFade`). The fade is
+    clamp(RIM_END_SHARE (half the run - gap), 1e-4, max(fade, 1e-4)), so
+    0 is a hard edge at the gap. RIM_END_FADE left paint_const. Master's
+    length was uKReach.x (pulseReach, default 3), so at the defaults only
+    the end fade moved: 0.75 -> 0.2, about 16 -> 4.4 CSS px at 1400x900.
+  - ON A CHOICE: rimDecl writes the item for a hovered choice too
+    (`fabric.setGlowRun(eid, x, y)` sets the run and the point), and
+    kRimOver(c, rim) = c + (1 - c) K_BAND rim whitens the COMPOSED paint
+    after kComposePaintAcross, in SECTION_FRAG and the mirror. A max with
+    the band (master's composition) hid a 0.4 rim under the choice's
+    breath band at most phases. Off a band and the reveal glow it is the
+    old max whitening exactly. Still not on webs, fans, arm strips or
+    the pluck overlay.
+  - MEASURED (`.claude/probes/K298/`, batch_k298.ps1, perf lock). Census
+    (census_rim.mjs; master, branch, lengths 0.5 and 15, fades 0.1 and
+    0.75, a 4-ctrl run, a hovered choice): inner max 0.55-0.62/255, none
+    over 2/255; the terminal class reads 131.92/255 on master and branch
+    alike (the open-chain terminal-sample residual above). Same state
+    vs master at the defaults (hm_probe.mjs ab): desktop 22/24 cases 0
+    px, phone 20/21, phonemouse 22/24; what moved is the hovered choice
+    (desktop 331 px, max 29/255; phonemouse 219 px, max 26: the glow) and
+    the rim case (18-29 px, max 1/255: the end fade, mostly past the
+    length's falloff). GPU (gpu_by_program.mjs, ribbon ms/frame, two
+    rounds): rest master 1.622/1.624, branch 1.592/1.634; hover master
+    1.601/1.616, branch 1.627/1.655 (+0.03, noise); draws 90.7 on both.
+    Sheets `sheet/K298_{len,fade,choice}.png`: lit px grow with the
+    length (0.5: 519 ... 15: 12767), peak lift about +35; the choice's
+    glow shows at every breath phase (+21 to +7 over the band), no
+    blowout.
 
 - RING LAPS ARE INTEGER-CORRECTED (K299, 2026-10-14; Levi: a choice's
   pulse missing, another drawn backward, a gold sliver on the next run

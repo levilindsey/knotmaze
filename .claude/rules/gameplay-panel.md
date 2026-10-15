@@ -112,3 +112,19 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   undo_stack.ts lists it under that callback's LIVE_EFFECTS, so an undo
   applies it live. It still shows at strength 0 (a stage 5 candidate).
   Param: gameplay-links.md; shader: render-paint.md's WIDTH SLIDER.
+
+- K298 ROWS (2026-10-14; Levi: "its own length setting", the end fade
+  "give this a slider too", "a slider for its thickness", the pick
+  margin "add a slider to control this" and "a separate slider for that
+  ratio"). In the maze folder, between "Hover glow" and its width row,
+  fabric mode only: "Hover glow length" ([0.5, 15], step 0.25) and "Hover
+  glow end fade" ([0, 1.5], step 0.05), both onTrailChange. The width row
+  is relabeled "Hover glow thickness" (the param keeps `hoverGlowWidth`,
+  `hgw`). In Touch & feel, before tugLimit: "Mouse pick margin" ([0, 20]
+  CSS px, always shown: knot mode picks threads too) and "Choice pick
+  ratio" ([1, 4], fabric only: knot mode has no choices), both
+  onSlackChange, with no step (K130) and an edit rounded to 2 decimals.
+  The two pick rows carry word labels, like the hover glow rows, while
+  the rest of Touch & feel shows camelCase keys (pluckRipple, tugLimit);
+  unifying them is open. Tooltips say what each does and that it applies
+  live. Params: gameplay-links.md.

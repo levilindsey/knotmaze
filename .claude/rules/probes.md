@@ -324,6 +324,15 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   at `DCompPresenter::Present`, on `CrGpuMain`. A probe build that reads
   a `#hash` flag must read it at module load, before main.ts's URL
   rewrite drops it (the prototype's `#seq`).
+- K298 (2026-10-14), pick margins: `.claude/probes/K298/pick_probe.mjs
+  <base> <out.json> [desktop|phonemouse]` (env `EXTRA=&fw=0`, `ZOOM=1`)
+  moves the real cursor d px past a run's drawn edge and reads the
+  canvas cursor, then clicks and press-drags at set distances;
+  `pick_batch.ps1` runs it under the perf lock (call it with `&`);
+  `pick_sheet.mjs` + `pick_compose.mjs` draw the old and new zones.
+  Measure from the DRAWN centerline (`renderer.chainSamples`), not
+  `__knotPoint`, whose curve sits 0.015-0.06 world off it (more with
+  flow): gameplay-camera.md's PICK MARGINS.
 
 ## Census and diagnosis rules
 
