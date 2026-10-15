@@ -124,13 +124,13 @@ describe("the counter RNG", () => {
 });
 
 describe("params to config", () => {
-  it("gives the research's hunter and guard at the defaults", () => {
+  it("gives the research's hunter and guard, retuned (stage 2: sight 2, accuracy 0.3)", () => {
     const hunter = turnConfig(params());
-    expect(hunter).toMatchObject({ policy: "prox", speed: 1, telegraph: true, q: 0.9, stall: 0.1, see: 4, lose: 7, rMin: 3, rMax: 8, sleep: 0 });
+    expect(hunter).toMatchObject({ policy: "prox", speed: 1, telegraph: true, q: 0.3, stall: 0.1, see: 2, lose: 5, rMin: 3, rMax: 8, sleep: 0 });
     expect(hunter.home).toBeUndefined();
     expect(hunter.chaseSpeed).toBeUndefined();
     const guard = turnConfig(params({ model: "guard" }));
-    expect(guard).toMatchObject({ policy: "prox", home: true, rMin: 1, rMax: 6, see: 4, lose: 7 });
+    expect(guard).toMatchObject({ policy: "prox", home: true, rMin: 1, rMax: 6, see: 2, lose: 5 });
     expect(turnConfig(params({ model: "stalker" })).policy).toBe("chase");
     expect(turnConfig(params({ roam: 2 }))).toMatchObject({ rMin: 2, rMax: 2 });
   });
