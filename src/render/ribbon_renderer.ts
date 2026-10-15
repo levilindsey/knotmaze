@@ -94,6 +94,7 @@ import {
   kGlow,
   kPaintAt,
   kRimAcross,
+  kRimOver,
   kRimScale,
   kWrap,
   knotSection,
@@ -505,13 +506,18 @@ void main(void) {
   highp float krim = kst.w > 0.0 ? kst.w * kRimAcross(vUV.y) : 0.0;
   // A High contrast prototype shapes a choice across the ribbon (K111
   // stage 4; kComposePaint itself under today's look).
-  vec3 rgb = paintHere ? kComposePaintAcross(base, kst, max(kgl, krim), vUV.y) : base;
+  vec3 rgb = paintHere ? kComposePaintAcross(base, kst, kgl, vUV.y) : base;
+  // K298: the hover glow composes OVER the paint, so it shows on a hovered
+  // choice at every breath phase of its own hover band (a max with the
+  // band hid it under the breath). Off a band and the reveal glow this is
+  // the old max(kgl, krim) whitening exactly.
+  if (krim > 0.0) rgb = kRimOver(rgb, krim);
   float gk = gapKeep(pxW, gTurn);
   if (uKBase.z > 4.5) {
     // DEBUG VIEW 5 (probes): the paint terms of the VISIBLE thread (gaps
     // cut as in the normal view) - (gold amount p, the pulse band's
-    // strength v, the glow kComposePaint takes: the reveal glow or the
-    // hover rim, the stronger).
+    // strength v, the reveal glow or the hover rim, the stronger; the rim
+    // composes over the paint since K298).
     if (gk <= 0.002) discard;
     finalColor = vec4(clamp(kst.x, 0.0, 1.0), kst.y > 0.5 ? kst.z : 0.0, max(kgl, krim), 1.0);
     return;
@@ -877,11 +883,17 @@ export class RibbonRenderer {
   pulseReach = Infinity;
   // Live strength of the hover glow (the hoverGlow panel param, K145;
   // main.ts syncs it every tick): 0 = off. The glow's run comes from
-  // setRim, its reach is pulseReach's.
+  // setRim.
   hoverGlow = 0;
   // Its width, how far in from each edge it reaches in half-widths (the
   // hoverGlowWidth panel param, K111 stage 4; main.ts syncs it every tick).
   hoverGlowWidth: number = PAINT_CONST.RIM_EDGE;
+  // Its own length along the thread, world arc from the hover point to
+  // where it has faded out (hoverGlowLength, K298; pulseReach's before),
+  // and the fade in from each end gap (hoverGlowFade, K298; RIM_END_FADE
+  // 0.75 before). main.ts syncs both every tick.
+  hoverGlowLength = 3;
+  hoverGlowFade = 0.2;
   // High contrast's highlight prototype (K111 stage 4, K265; main.ts syncs
   // it every tick: 0 unless High contrast is on), sent as uKBase.y. 0 =
   // today's pulses.
@@ -2243,9 +2255,11 @@ export class RibbonRenderer {
         knotSection(data, U, c, ctrl, rgb);
         const a = kShadeFx(data, U, c, ctrl, arc / c.arcPer, side, rgb);
         const st = kPaintAt(data, U, c, ctrl, arc, px, this.paintTmp);
-        // The hover glow (K145), shaped across at `side` as SECTION_FRAG does.
+        // The hover glow (K145), shaped across at `side` and composed over
+        // the paint (K298) as SECTION_FRAG does.
         const rim = st.rim > 0 ? st.rim * kRimAcross(side, U.uKGold[3]) : 0;
-        kComposePaint(U, rgb, st, Math.max(kGlow(data, U, c, ctrl), rim));
+        kComposePaint(U, rgb, st, kGlow(data, U, c, ctrl));
+        if (rim > 0) kRimOver(rgb, rim);
         return [rgb[0], rgb[1], rgb[2], a];
       },
       shadeFx: (ch, arc, side, base) => {
@@ -4433,6 +4447,9 @@ export class RibbonRenderer {
     U.uKReach[3] = this.rimAt;
     // K111 stage 4: its width, as the scale kRimAcross reads (1 at the default).
     U.uKGold[3] = kRimScale(this.hoverGlowWidth);
+    // K298: its own length and end fade (the shader floors both at 1e-4).
+    U.uKSect[2] = Math.min(1e6, Math.max(0, this.hoverGlowLength));
+    U.uKSect[3] = Math.max(0, this.hoverGlowFade);
     // K111 stage 4: High contrast's highlight prototype (0 = the pulses).
     U.uKBase[1] = this.hcLook;
     // Junction fillets ride the same tick: live positions, live paint.

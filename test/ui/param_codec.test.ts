@@ -168,6 +168,8 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["minoRestart", "boolean"], // 128, K80 turns stage 2 (K273)
   ["minoLair", "boolean"], // 129
   ["hoverGlowWidth", "number"], // 130, K111 stage 4
+  ["hoverGlowLength", "number"], // 131, K298
+  ["hoverGlowFade", "number"], // 132
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

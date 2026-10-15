@@ -154,6 +154,9 @@ export const DAILY_EXEMPT_KEYS = [
   "hoverGlow",
   // K111 stage 4: the same glow's width (Levi K264: "personal setting").
   "hoverGlowWidth",
+  // K298: its own length and end fade.
+  "hoverGlowLength",
+  "hoverGlowFade",
   // Physics on/off: a device-speed choice; the settled layout is the same.
   "physics",
   // K147's load settle: the same device-speed kind of choice (how the

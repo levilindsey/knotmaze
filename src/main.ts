@@ -40,6 +40,8 @@ import {
 } from "./render/background_model";
 import {
   chaseParamsOf,
+  clampHoverGlowFade,
+  clampHoverGlowLength,
   clampHoverGlowWidth,
   fireSettingsOf,
   turnMinoParamsOf,
@@ -1845,6 +1847,8 @@ async function main(): Promise<void> {
     renderer.pulseReach = params.pulseReach;
     renderer.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
     renderer.hoverGlowWidth = clampHoverGlowWidth(params.hoverGlowWidth);
+    renderer.hoverGlowLength = clampHoverGlowLength(params.hoverGlowLength);
+    renderer.hoverGlowFade = clampHoverGlowFade(params.hoverGlowFade);
     renderer.hcLook = a11y.highContrast ? hcLookChoice : 0;
     renderer.appearFx = params.appearFx;
   }
@@ -3623,13 +3627,16 @@ async function main(): Promise<void> {
       fabric.edgeAt(x, y, fabricController) >= 0
     );
   // K145, the hover glow: the run under the pointer lights subtly along
-  // both rims when it is not a choice (the fabric leaves choices out; a
-  // point over a choice sets none). A touch press shows it until the
+  // both rims. Over a choice (eid >= 0, edgeAt's pick) it lights that run
+  // too, centered where the pointer projects onto it (K298, Levi: "render
+  // it in-addition to the adjacent-to-current-juction highlight"); else
+  // the thread under the pointer. A touch press shows it until the
   // finger lifts or the press becomes a tug or a pan. Returns true when
   // the paint declaration needs a refresh.
   const setGlowAt = (x: number, y: number, eid: number): boolean => {
     if (!params.mazeFabric || !fabric) return false;
-    const hit = eid < 0 ? renderer?.pickThread(x, y, GRAB_RADIUS) : null;
+    if (eid >= 0) return fabric.setGlowRun(eid, x, y);
+    const hit = renderer?.pickThread(x, y, GRAB_RADIUS);
     return fabric.setGlow(hit ? hit.chain : -1, hit ? hit.ctrl : 0);
   };
   const clearGlow = (): void => {

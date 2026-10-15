@@ -16,6 +16,7 @@ import {
   kPulseV,
   kReachWin,
   kRimAcross,
+  kRimOver,
   kRimScale,
   writeChainHeader,
   writeGeomTable,
@@ -56,7 +57,10 @@ function uniforms(k: OldClock): KUniforms {
     uKInk: new Float32Array([1, 0, 0, 0]),
     uKKnots: K,
     uKGamut: new Float32Array([0, 280, 0.45, 0.64]),
-    uKSect: new Float32Array(4),
+    // (blendDist, ease) 0; the hover glow's length and end fade (K298) as
+    // they were before their sliders (pulseReach's whole arms, RIM_END_FADE
+    // 0.75), unless a test sets them.
+    uKSect: new Float32Array([0, 0, 1e6, 0.75]),
     uKPaint: new Float32Array([1, 0, 0, 0.5 + 0.3 * Math.sin(k.clock * 5.2)]),
     uKPulse: new Float32Array([mod(k.clock * 1.6), mod((k.clock + 0.3) * 1.6), s, fi * fi * (3 - 2 * fi)]),
     // Whole arms (the retired pass had no reach window), unless a test sets one.
@@ -509,7 +513,10 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     return (lo + hi) / 2;
   };
 
-  it("K145: the glow peaks at the hover point, ends at the reach and fades toward the run's ends", () => {
+  // K298: the glow's length (R, uKSect.z) and end fade (EF, uKSect.w) are
+  // its own sliders; the pulses' reach (uKReach.x, here 7) no longer
+  // touches it. EF 0 reads as the 1e-4 floor: a hard edge at the end gap.
+  it("K145, K298: the glow peaks at the hover point, ends at its length and fades toward the run's ends", () => {
     const r = rng(145);
     const ch = randomChain(r, 90, false);
     const n = ch.controlArcLengths.length;
@@ -517,7 +524,6 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     const pulses: OldPulse[] = [{ cJunction: 10, cFar: 30, inward: false, onPath: false, hovered: false }];
     const spans: OldSpan[] = [{ c0: 40, c1: 70 }];
     const G = 0.45;
-    const EF = PAINT_CONST.RIM_END_FADE;
     const PX = 0.02;
     const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
     const st0: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
@@ -527,7 +533,16 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
       const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], uniforms(k));
       for (let a = 0; a <= ch.totalLength; a += 0.002) samples.push([a, ctrlAt(D, a, n - 1)]);
     }
-    for (const R of [0.5, 3, 15]) {
+    const cases: [number, number][] = [
+      [0.5, 0.2],
+      [3, 0.2],
+      [15, 0.2],
+      [3, 0.75],
+      [3, 0.1],
+      [15, 0],
+    ];
+    for (const [R, EF] of cases) {
+      const EFf = Math.max(Math.fround(EF), 1e-4);
       for (const hoverAt of [50, 22, 12]) {
         const U = uniforms(k);
         const c0 = 10;
@@ -535,8 +550,10 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
         const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, spans, [], pulses, U, [{ c0, c1, gap: G }]);
         const U0 = uniforms(k);
         const D0 = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, spans, [], pulses, U0);
-        U.uKReach[0] = U0.uKReach[0] = R;
-        U.uKReach[1] = U0.uKReach[1] = Math.min(PAINT_CONST.PULSE_REACH_FADE, 0.5 * R);
+        U.uKReach[0] = U0.uKReach[0] = 7;
+        U.uKReach[1] = U0.uKReach[1] = PAINT_CONST.PULSE_REACH_FADE;
+        U.uKSect[2] = R;
+        U.uKSect[3] = EF;
         U.uKReach[2] = 0.4;
         U.uKReach[3] = hoverAt;
         const S = U.uKReach[2];
@@ -563,7 +580,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
           if (!(g >= 0 && g <= S)) range++;
           const dEnd = Math.min(a - u0, u1 - a);
           if ((a < u0 || a > u1 || dEnd <= G || Math.abs(a - uh) >= R) && g !== 0) darkLit++;
-          if (dEnd >= G + EF && Math.abs(g - S * (1 - smoothstep(Math.abs(a - uh) / R))) > 1e-6) falloff++;
+          if (dEnd >= G + EFf && Math.abs(g - S * (1 - smoothstep(Math.abs(a - uh) / R))) > 1e-6) falloff++;
           if (g > 0.01) lit++;
           maxStep = Math.max(maxStep, Math.abs(g - prev));
           prev = g;
@@ -572,13 +589,162 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
         // Full strength at a hover point clear of the ends' fade.
         const dEndH = Math.min(uh - u0, u1 - uh);
         const atH = kPaintAt(D, U, c, hoverAt, uh, PX, st).rim;
-        if (dEndH >= G + EF) expect(atH).toBeCloseTo(S, 6);
+        if (dEndH >= G + EFf) expect(atH).toBeCloseTo(S, 6);
         else expect(atH).toBeLessThan(S);
-        // A smooth glow: no step between samples 0.002 apart.
-        expect(maxStep).toBeLessThan(0.005);
+        // A smooth glow: no step between samples 0.002 apart beyond what the
+        // two smoothsteps' steepest slopes (1.5 S / length, 1.5 S / fade)
+        // allow; EF 0 is a hard edge by design.
+        if (EF > 0) expect(maxStep).toBeLessThan(0.002 * 1.5 * S * (1 / R + 1 / EF) * 1.1);
         expect(lit).toBeGreaterThan(0);
         expect(lit * 0.002).toBeLessThan(2 * R);
       }
+    }
+  });
+
+  it("K298: the end fade is the slider's, at most RIM_END_SHARE of the stretch to mid-run", () => {
+    // Where the fade ends, measured on a long run: the glow first reaches
+    // full strength EF past the end gap (EF 0: right at it).
+    const r = rng(298);
+    const ch = randomChain(r, 90, false);
+    const n = ch.controlArcLengths.length;
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const G = 0.45;
+    const PX = 0.02;
+    const S = 0.4;
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    for (const EF of [0, 0.1, 0.2, 0.3, 0.75, 1.5]) {
+      const U = uniforms(k);
+      const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], U, [{ c0: 10, c1: 80, gap: G }]);
+      const c = kChain(D, 0);
+      const u0 = kArcOfCtrl(D, c, 10);
+      U.uKSect[2] = 1e6; // Whole run: only the end fade shapes it.
+      U.uKSect[3] = EF;
+      U.uKReach[2] = S;
+      U.uKReach[3] = ctrlAt(D, u0 + 20, n - 1);
+      const at = (dEnd: number): number => kPaintAt(D, U, c, ctrlAt(D, u0 + dEnd, n - 1), u0 + dEnd, PX, st).rim;
+      expect(at(G - 0.01)).toBe(0);
+      const EFf = Math.max(EF, 1e-4);
+      expect(at(G + EFf + 0.01)).toBeCloseTo(S, 5);
+      if (EF > 0) {
+        // Half strength halfway through the fade (a smoothstep).
+        expect(at(G + EF / 2)).toBeCloseTo(S / 2, 2);
+        expect(at(G + EF * 0.9)).toBeLessThan(S);
+      }
+    }
+  });
+
+  it("K298: the glow reads its own length and fade, never the pulses' reach", () => {
+    const r = rng(2981);
+    const ch = randomChain(r, 60, false);
+    const n = ch.controlArcLengths.length;
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const G = 0.45;
+    const PX = 0.02;
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const U = uniforms(k);
+    const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], U, [{ c0: 5, c1: 50, gap: G }]);
+    const c = kChain(D, 0);
+    const uh = kArcOfCtrl(D, c, 25);
+    U.uKReach[2] = 0.4;
+    U.uKReach[3] = 25;
+    U.uKSect[2] = 3;
+    U.uKSect[3] = 0.2;
+    const probe = (): number[] => {
+      const out: number[] = [];
+      for (let d = -4; d <= 4; d += 0.05) out.push(kPaintAt(D, U, c, ctrlAt(D, uh + d, n - 1), uh + d, PX, st).rim);
+      return out;
+    };
+    U.uKReach[0] = 0.5;
+    U.uKReach[1] = 0.25;
+    const a = probe();
+    U.uKReach[0] = 15;
+    U.uKReach[1] = 1;
+    expect(probe()).toEqual(a);
+    U.uKSect[2] = 1.5;
+    const b = probe();
+    expect(b).not.toEqual(a);
+    // Gone at the length, lit inside it.
+    expect(kPaintAt(D, U, c, ctrlAt(D, uh + 1.6, n - 1), uh + 1.6, PX, st).rim).toBe(0);
+    expect(kPaintAt(D, U, c, ctrlAt(D, uh + 1.0, n - 1), uh + 1.0, PX, st).rim).toBeGreaterThan(0);
+  });
+
+  // K298 (Levi: "render it in-addition to the adjacent-to-current-juction
+  // highlight for those segments"; then "Keep both."): a hovered choice
+  // shows its breath band (0.2-0.8) and the glow over it. kRimOver whitens
+  // the COMPOSED paint by the glow, so the glow lifts the band at every
+  // breath phase without reaching white; where no band is drawn it is
+  // exactly the old composition (the glow joined the reveal glow's max).
+  it("K298: a hovered choice's band and the glow both show, at every breath phase", () => {
+    const r = rng(2982);
+    const ch = randomChain(r, 60, false);
+    const n = ch.controlArcLengths.length;
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const G = 0.45;
+    const PX = 0.02;
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const pulses: OldPulse[] = [{ cJunction: 5, cFar: 50, inward: false, onPath: false, hovered: true }];
+    const sideEdge = 0.04; // Near a ribbon edge, where the glow is strong.
+    let checked = 0;
+    for (const breath of [0.2, 0.35, 0.5, 0.65, 0.8]) {
+      for (const strength of [0.4, 1]) {
+        const U = uniforms(k);
+        const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], pulses, U, [{ c0: 5, c1: 50, gap: G }]);
+        const c = kChain(D, 0);
+        U.uKPaint[3] = breath;
+        U.uKReach[2] = strength;
+        U.uKReach[3] = 20;
+        U.uKSect[2] = 3;
+        U.uKSect[3] = 0.2;
+        const uh = kArcOfCtrl(D, c, 20);
+        const across = kRimAcross(sideEdge, 1);
+        for (let d = -2.5; d <= 2.5; d += 0.1) {
+          const a = uh + d;
+          const ctrl = ctrlAt(D, a, n - 1);
+          kPaintAt(D, U, c, ctrl, a, PX, st);
+          expect(st.band).toBe(true);
+          expect(st.v).toBeCloseTo(breath, 5);
+          const rim = st.rim * across;
+          for (const S0 of [[0.2, 0.45, 0.7], [0.9, 0.3, 0.1], [0.05, 0.05, 0.05]]) {
+            const band = Float32Array.from(S0);
+            kComposePaint(U, band, st, 0);
+            const both = Float32Array.from(band);
+            kRimOver(both, rim);
+            // The old composition: the glow in the band's max.
+            const old = Float32Array.from(S0);
+            kComposePaint(U, old, st, rim);
+            for (let i = 0; i < 3; i++) {
+              expect(both[i]).toBeLessThan(1);
+              if (rim > 0.01) {
+                expect(both[i]).toBeGreaterThan(band[i]);
+                // Brighter than the max kept, which hid a glow under the band.
+                expect(both[i]).toBeGreaterThanOrEqual(old[i] - 1e-6);
+              } else {
+                expect(both[i]).toBeCloseTo(band[i], 6);
+              }
+            }
+            checked++;
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(100);
+  });
+
+  it("K298: with no band the glow over the paint is exactly the old composition", () => {
+    const r = rng(2983);
+    const U = uniforms({ clock: 20, pulseBorn: 0, spacing: 2.5 });
+    for (let i = 0; i < 2000; i++) {
+      const S0 = [r(), r(), r()];
+      const st: KPaintState = { p: r() < 0.3 ? 0 : r(), band: false, v: r(), rim: 0 };
+      const rim = r() < 0.1 ? 0 : r() * 0.6;
+      // Plain arrays: the shader keeps the intermediate color at its own
+      // precision too (a Float32Array would round it between the steps).
+      const old = [...S0];
+      kComposePaint(U, old, st, rim);
+      const now = [...S0];
+      kComposePaint(U, now, st, 0);
+      kRimOver(now, rim);
+      expect(now).toEqual(old);
     }
   });
 
@@ -597,8 +763,7 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     for (const strength of [0.4, 0]) {
       const U = uniforms(k);
       const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, true, [], [], [], U, [{ c0, c1, gap: G }]);
-      U.uKReach[0] = 3;
-      U.uKReach[1] = 1;
+      U.uKSect[2] = 3; // The glow's length (K298).
       U.uKReach[2] = strength;
       U.uKReach[3] = n + 1;
       const c = kChain(D, 0);
@@ -655,7 +820,14 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     const D0 = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], uniforms(k));
     const c0 = 30;
     const u0 = kArcOfCtrl(D0, kChain(D0, 0), c0);
-    for (const L of [1.2, 1.8, 2.4, 3.2]) {
+    for (const [L, EF] of [
+      [1.2, 0.75],
+      [1.8, 0.75],
+      [2.4, 0.75],
+      [3.2, 0.75],
+      [1.2, 0.2],
+      [2.4, 0.2],
+    ]) {
       const c1 = ctrlAt(D0, u0 + L, n - 1);
       const U = uniforms(k);
       const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], [], U, [{ c0, c1, gap: G }]);
@@ -663,8 +835,8 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
       // The run's far end as the mirror's own (f32) arc table puts it.
       const u1 = kArcOfCtrl(D, c, c1);
       const um = (u0 + u1) / 2;
-      U.uKReach[0] = 15;
-      U.uKReach[1] = 1;
+      U.uKSect[2] = 15; // The glow's length and end fade (K298).
+      U.uKSect[3] = EF;
       U.uKReach[2] = S;
       U.uKReach[3] = ctrlAt(D, um, n - 1);
       expect(kPaintAt(D, U, c, U.uKReach[3], um, PX, st).rim).toBeCloseTo(S, 5);

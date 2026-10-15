@@ -325,6 +325,9 @@ describe("the daily design and its exempt preferences (K56)", () => {
       "hoverGlow",
       // K111 stage 4 (Levi K264: "personal setting").
       "hoverGlowWidth",
+      // K298 (Levi: its own length and end fade sliders).
+      "hoverGlowLength",
+      "hoverGlowFade",
       "physics",
       // K147, proposed with it.
       "settleBudget",

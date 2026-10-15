@@ -285,7 +285,7 @@ export interface KUniforms {
   uKInk: Float32Array; // (inkSpeed, isInk, -, -)
   uKKnots: Float32Array; // 8 x (animT, wallT, invSpeed, valid)
   uKGamut: Float32Array; // (baseHue, arcDeg, sat, light)
-  uKSect: Float32Array; // (blendDist, ease, -, -)
+  uKSect: Float32Array; // (blendDist, ease, glowLen, glowFade) the hover glow's (K298)
   uKPaint: Float32Array; // (on, refBase, itemBase, hover)
   uKPulse: Float32Array; // (travelIn, travelOut, spacing, fadeIn)
   uKReach: Float32Array; // (reach, fade, rim, rimAt) pulse trains (K75), hover glow (K145)
@@ -949,7 +949,8 @@ export function kRevealMaskAt(
 //   R2 = (colMid, perLattice)       in .x under RF_GAMUT), RUN_FLAG bits;
 //   R3 = (colB, -)                  own color, ctrl per lattice unit; B end
 // CTRLIDX.x = the slot's run, .z = the slot's noise coordinate (NOISE runs).
-// uKGamut = (baseHue, arcDeg, sat, light); uKSect = (blendDist, ease, -, -).
+// uKGamut = (baseHue, arcDeg, sat, light); uKSect = (blendDist, ease, ...),
+// its .zw the hover glow's length and end fade (K298, kPaintAt's RIM).
 // ======================================================================
 
 // GLSL twin: kHsl (core/section_colors hslToRgb).
@@ -1195,7 +1196,9 @@ export function writeRunTexels(
 // (K75: the pulseReach param; a train used to run its whole arm), then the
 // hover glow's strength and its hover point, an unwrapped ctrl on the RIM
 // item's run (K145); uKGold = (gold rgb, rimScale), rimScale the hover
-// glow's width as kRimScale gives it (K111 stage 4).
+// glow's width as kRimScale gives it (K111 stage 4); uKSect.zw = the hover
+// glow's own length along the thread and its end fade (K298: it rode the
+// trains' reach and RIM_END_FADE before).
 // ======================================================================
 
 // The retired strip's gold-ramp U (ordering only - the caps' never-darken
@@ -1365,9 +1368,11 @@ export function kPaintAt(
       // junction web's reach). The hover point (an unwrapped ctrl in the
       // span) and the strength are uniforms (uKReach.w, .z): a pointer
       // moving along one run rewrites no texel. Along the thread the glow
-      // falls off to 0 at the reach from the hover point, and it fades in
-      // from each end gap over RIM_END_FADE, or over RIM_END_SHARE of the
-      // stretch between the gap and the run's middle where that is shorter.
+      // falls off to 0 at its own length from the hover point (uKSect.z,
+      // hoverGlowLength, K298), and it fades in from each end gap over the
+      // end fade (uKSect.w, hoverGlowFade, K298; RIM_END_FADE before), or
+      // over RIM_END_SHARE of the stretch between the gap and the run's
+      // middle where that is shorter.
       const u0 = kArcU(D, c, cA);
       const u1 = kArcU(D, c, cB);
       let u = arc;
@@ -1376,12 +1381,12 @@ export function kPaintAt(
       const d = Math.abs(u - kArcU(D, c, U.uKReach[3]));
       const dEnd = Math.min(u - u0, u1 - u);
       const fade = Math.min(
-        PAINT_CONST.RIM_END_FADE,
+        Math.max(U.uKSect[3], 1e-4),
         Math.max(1e-4, PAINT_CONST.RIM_END_SHARE * (0.5 * (u1 - u0) - P[o + 3])),
       );
       const g =
         U.uKReach[2] *
-        (1 - smooth01(d / Math.max(U.uKReach[0], 1e-4))) *
+        (1 - smooth01(d / Math.max(U.uKSect[2], 1e-4))) *
         smooth01((dEnd - P[o + 3]) / fade);
       if (g > out.rim) out.rim = g;
     }
@@ -1608,15 +1613,25 @@ export function kComposePaint(U: KUniforms, S: Float32Array | number[], st: KPai
   }
 }
 
+// GLSL twin: kRimOver - the hover glow over a painted color (K298, in
+// place): the band's whitening, applied after the paint, so a hovered
+// choice shows both. Over a color whitened by nothing it is exactly
+// kComposePaint's whitening.
+export function kRimOver(S: Float32Array | number[], rim: number): void {
+  const w = PAINT_CONST.K_BAND * Math.max(0, Math.min(1, rim));
+  for (let i = 0; i < 3; i++) S[i] = S[i] + (1 - S[i]) * w;
+}
+
 const PAINT_TMP: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
 
 // The ribbon shader's full color at a material point (section S in place,
 // FX, then the paint): what a probe vertex there renders, before the
 // coverage alpha (returned). Census reference for G2.3. The hover glow
 // (K145) shapes its along-thread strength across the ribbon at `side` and
-// joins the reveal glow in the whitening; only the ribbons draw it (the
-// arm strips and the pluck overlay have no across coordinate, and the
-// glow is gone before the junction webs).
+// whitens OVER the composed paint (K298; it joined the reveal glow's max
+// before, which hid it under a hovered choice's band); only the ribbons
+// draw it (the arm strips and the pluck overlay have no across
+// coordinate, and the glow is gone before the junction webs).
 export function kShadeAll(
   D: KData,
   U: KUniforms,
@@ -1630,6 +1645,7 @@ export function kShadeAll(
   const a = kShadeFx(D, U, c, ctrl, arc / c.arcPer, side, S);
   const st = kPaintAt(D, U, c, ctrl, arc, px, PAINT_TMP);
   const rim = st.rim > 0 ? st.rim * kRimAcross(side, U.uKGold[3]) : 0;
-  kComposePaint(U, S, st, Math.max(kGlow(D, U, c, ctrl), rim));
+  kComposePaint(U, S, st, kGlow(D, U, c, ctrl));
+  if (rim > 0) kRimOver(S, rim);
   return a;
 }
