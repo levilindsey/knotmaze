@@ -676,7 +676,7 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
 - G1's set (`.claude/probes/g1/urls.mjs`: user, userGap, userThin, ring, def, defU, knot, fat, fatGap, kink) for the casing census. Its `s=` links read today's defaults plus their overrides (K132).
 
 **Same-state cross-build A/B (K8 s1).** G3-0 adds `captureScene()` and `restoreScene(s)` to `RibbonRenderer`, reached as `__knotRenderer().captureScene()`. No main.ts lines.
-- The physics part reuses `snapshot.ts` (`writeSnapshot` / `readSnapshot`: what K7's worker ships the renderer). The rest is what `update()` reads besides: the emergent list, the gate latches and `gateCache`, `flowTime`, the paint clocks, the reveal and explore state. G3-0 lists what `update()` reads and proves the capture complete: capture, restore on the same build, 0 px.
+- The physics part can reuse `snapshot.ts` (`writeSnapshot` / `readSnapshot`: what K7's worker ships the renderer), or copy the arrays the renderer reads from its `ps`. The rest is what `update()` reads besides: the emergent list, the gate latches and `gateCache`, `flowTime`, the paint clocks, the reveal and explore state. G3-0 lists what `update()` reads and proves the capture complete: capture, restore on the same build, 0 px. Both builds of an A/B need the hook, so it serves from G3-1 on; G3-0's own A/B against master uses `phy=0` layouts.
 - Freeze the physics first. In-thread (the default until K7 stage 5): `__knotPS().step = function () {}`. Under `phw=1`: `__knotPhysFreeze(on)` (K7 stage 4). Results name the host.
 - Pin the clocks: `r.advanceClocks = () => {}; r.paintClock = 100; r.pulseBorn = 0`. Park the pointer.
 - The pattern to copy is `.claude/probes/K83/k83_ab.mjs`. Serve both builds with `scripts/preview.ps1 -Port <p> -Ref <commit>` on separate ports and check each page's stamp SHA.
@@ -687,9 +687,9 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
 **Timing.**
 - CPU: `.claude/probes/g1/probe_perf.mjs` and `.claude/probes/probe_cpuprof.mjs` (`update`, `tickPaint`, the gated rebuild).
 - Desktop GPU: `.claude/probes/probe_gpudraw.mjs` at 3200×1800, per program.
-- Pixel 11: Chrome there exposes no GPU timer query, so G3-0 adds `bench(n)` to the renderer: n renders of the same stage between two `gl.finish()` calls, in ms per frame. Call it over CDP with `scripts/phone.ps1 [-Wireless] [-Ports <p>,<q>] [-Url <link>]` and `.claude/probes/phone_probe.mjs`. Alternate the builds (A B A B), because the phone throttles over minutes. `update()` on the phone is timed the way `probe_perf` wraps it.
+- Pixel 11: Chrome there exposes no GPU timer query, so G3-0 adds a frame bench, `scripts/bench_frame.mjs` (tracked, since every later stage reuses it). It is probe_gpudraw's pattern with `gl.finish()` in place of the query: wrap the context's draw calls, take the time at a frame's first draw, and call `gl.finish()` in a rAF callback queued after the app's render. It needs no app code: `RibbonRenderer` holds no reference to the Pixi app (its constructor takes `(ps, style)`). Wrap the instanced draw calls too, because G3-2's ribbons and G4-1's joints draw instanced. Reach the phone over CDP with `scripts/phone.ps1 [-Wireless] [-Ports <p>,<q>] [-Url <link>]` and `.claude/probes/phone_probe.mjs`. Alternate the builds (A B A B), because the phone throttles over minutes. `update()` on the phone is timed the way `probe_perf` wraps it.
 - Cold compiles: `.claude/probes/K307/trace_intro.mjs` on a fresh profile (section-rgb 2.8 s today).
-- Upload bytes: `ROW_UPLOAD_STATS` (G2's float rows), `GAP_UPLOAD_STATS`, and G3-0's `SAMP_UPLOAD_STATS`.
+- Upload bytes: `ROW_UPLOAD_STATS` (every `FloatRows` instance, G2's and G3's alike), `GAP_UPLOAD_STATS`, and G3-0's `SAMP_UPLOAD_STATS`, the share of G3's own tables.
 - GL readback: `.claude/probes/probe_texreadback.mjs`, extended to SAMP, RADII, G3 CHAIN and RANGES.
 
 **Shader status line.** Compile and link failures show on the page, because a phone has no console. That is one main.ts line (the stamp), so it lands with G3-2, after K7 stage 4.
@@ -698,7 +698,8 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
 
 - **Files:**
   - new `src/render/samp_table.ts`: pure packers for SAMP, RADII, G3 CHAIN and RANGES (no Pixi), and `test/render/samp_table.test.ts`;
-  - `ribbon_renderer.ts`: the textures (G2's `FloatRows`, page-lifetime), their writes in `update()`, `captureScene` / `restoreScene`, `bench(n)`.
+  - `ribbon_renderer.ts`: the textures (G2's `FloatRows`, page-lifetime), their writes in `update()`, `captureScene` / `restoreScene`;
+  - new `scripts/bench_frame.mjs`, the frame bench (section 5.0).
 - **Stays out of:**
   - `main.ts` (K7 stages 3-4);
   - `src/physics/*`;
@@ -708,8 +709,8 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
 - **Work (section 2):**
   - SAMP: `chainSamples[c]`, two samples per texel, chain bases even-aligned;
   - RADII: h × widthMul per sample, four per texel, only for chains whose widthMul isn't all 1 (the others get the unit flag);
-  - G3 CHAIN: one texel per chain;
-  - RANGES: per chain, the slot windows `assignGapIds` packs per sample today, as sorted sample ranges;
+  - G3 CHAIN: two texels per chain (section 2.2), with nRange 0 for now;
+  - RANGES: per chain, the slot windows `assignGapIds` packs per sample today, as sorted sample ranges. Only the slot windows: the FOLD ranges arrive with G3-2 and the CLUSTER entries with G4-0;
   - dirty rows only. Asleep at fw 0, `update()` doesn't run, so nothing uploads.
   - No `FloatRows` format parameter: two samples per RGBA32F texel fit G2's rows as they are.
 - **Tests:**
@@ -719,13 +720,14 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
   - SAMP decodes to `chainSamples` bit for bit in float32;
   - `npm test` green, the golden byte-identity test untouched.
 - **A/Bs:**
-  - same-state cross-build, master against G3-0: 0 px on a daily, a fat design, the thread reveal on, dense, the default fabric and knot mode;
+  - cross-build, master against G3-0: 0 px on a daily, a fat design, the thread reveal on, dense, the default fabric and knot mode. Master has no capture hook, so these load with `phy=0` (K83's deterministic layout) and the clock pins;
+  - physics on, on the G3-0 build: capture, restore into a second page, 0 px. That certifies the hook that G3-1's cross-build A/Bs rely on;
   - GL readback of the four textures against the packers: max |Δ| 0.
 - **Acceptance:**
   - `update()` at most +0.3 ms on the desktop (fabric default and dense) and at most +1 ms on the Pixel;
-  - upload bytes per awake update as section 2 computes (about 0.35 MB at the default fabric), by `SAMP_UPLOAD_STATS`; 0 B asleep;
+  - upload bytes per awake update: G3-0 adds SAMP, G3 CHAIN and RANGES, about 0.19 MB at the default fabric (section 2.2: 176 + 2 + 10 KB) and about 0.35 MB dense, on top of today's uploads, which shrink at G3-1 (the GAP rows) and G3-3 (the strip's buffers). RADII adds rows only while a reveal or a pluck collapse runs. Measured by `SAMP_UPLOAD_STATS`; 0 B asleep;
   - capture and restore on one build: 0 px.
-- **Phone pass:** record the Pixel's caps (`MAX_VARYING_VECTORS`, the highp ranges, the real renderer via `WEBGL_debug_renderer_info`) and master's `bench` numbers at the default fabric and dense, as G3-2's baseline.
+- **Phone pass:** record the Pixel's caps (`MAX_VARYING_VECTORS`, the highp ranges, the real renderer via `WEBGL_debug_renderer_info`) and master's frame-bench numbers at the default fabric and dense, as G3-2's baseline.
 - The brief is "Stage 2 (G3-0)" in `docs/design/K8_stage1.md`.
 
 ### 5.2 G3-1: gap slots reference SAMP, chunk-pruned search. After K268 stage 2 and K290
@@ -776,7 +778,7 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
   - GL readback.
 - **Acceptance:**
   - desktop GPU at most the strip's + 10% (same page, probe_gpudraw);
-  - Pixel: 60 fps held at defaults, dense no worse than master (`bench`); `MAX_VARYING_VECTORS` covers section 3.2's varyings;
+  - Pixel: 60 fps held at defaults, dense no worse than master (the frame bench); `MAX_VARYING_VECTORS` covers section 3.2's varyings;
   - cold link: ribbon-sdf compiles in at most section-rgb's 2.8 s + 15% (trace_intro on a fresh profile), and is measured on the Pixel;
   - K307's registry lists ribbon-sdf and ribbon-sdf-explore; `rp=strip` compiles on demand only.
 - **Gate:** Levi checks G3-2 on his phone before G3-3 deletes the strip.
@@ -832,7 +834,7 @@ G1 measured 2.83 ms for its brute-force version, before the pruning and G2. So:
   - field against ribbon on the R_out..R ring: 0;
   - the ownership tint: one writer per pixel;
   - the G1 casing census unchanged outside the domains.
-- **Acceptance:** the Pixel at most 4 ms GPU at 2x at cr 3 for the whole fabric (`bench`), 60 fps at defaults; desktop GPU for ribbons and joints together within section 3.7's 2.2-2.8 ms; joint-sdf's cold compile under arm-strip's 1.7 s + junction-field's 0.4 s, which it replaces; K307's registry lists joint-sdf.
+- **Acceptance:** the Pixel at most 4 ms GPU at 2x at cr 3 for the whole fabric (the frame bench), 60 fps at defaults; desktop GPU for ribbons and joints together within section 3.7's 2.2-2.8 ms; joint-sdf's cold compile under arm-strip's 1.7 s + junction-field's 0.4 s, which it replaces; K307's registry lists joint-sdf.
 - **Gate:** Levi's phone check before G4-2.
 
 ### 5.9 G4-2: deletions and lore
@@ -860,7 +862,7 @@ This replaces "Ordering with G2": G2 has landed, so there is no `threadColor` ad
 
 Refreshed by K8 s1 for the Pixel 11 on Android Chrome. Each question for Levi carries a recommendation.
 
-1. **The Pixel's GPU cost is estimated, not measured.** Chrome there exposes no GPU timer query (the Pixel's PowerVR CXTP-48), so `bench(n)` around `gl.finish()` is the instrument; alternate builds, because the phone throttles over minutes. The joint pass is the largest single item at cr 3-6 (levers 1, 3 and 9). **Recommendation:** G3-0's phone pass records master's `bench` numbers, so every later stage has a same-phone baseline.
+1. **The Pixel's GPU cost is estimated, not measured.** Chrome there exposes no GPU timer query (the Pixel's PowerVR CXTP-48), so a `gl.finish()` frame bench is the instrument (`scripts/bench_frame.mjs`, G3-0); alternate builds, because the phone throttles over minutes. The joint pass is the largest single item at cr 3-6 (levers 1, 3 and 9). **Recommendation:** G3-0's phone pass records master's frame-bench numbers, so every later stage has a same-phone baseline.
 2. **Android Chrome on PowerVR (ANGLE over GLES)** replaces the snapshot's WebKit risk. Each needs a device check:
    - RGBA32F vertex texture fetch with NEAREST and `texelFetch`: already proven, since G2's vertex stage reads KSTATIC and KGEOM on the phone;
    - dynamic loops in the FS (the gap search loops today; the fold argmin and joint pieces add more);
@@ -896,7 +898,8 @@ Refreshed by K8 s1 for the Pixel 11 on Android Chrome. Each question for Levi ca
 
 ### Critical files for implementation
 
-- `src/render/ribbon_renderer.ts`: `update()`, the slot writers, the pluck host, `rebuildFillets`; G3-0 adds `captureScene` / `restoreScene` / `bench`.
+- `src/render/ribbon_renderer.ts`: `update()`, the slot writers, the pluck host, `rebuildFillets`; G3-0 adds `captureScene` / `restoreScene`.
+- `scripts/bench_frame.mjs` (new, G3-0): the frame bench on the desktop and the Pixel.
 - `src/render/gap_mask.ts`: the slot rows and the search (G3-1).
 - `src/render/float_rows.ts`, `paint_model.ts`, `paint_glsl.ts`, `paint_math.ts`: G2's rows and the paint library G3 calls; the CPU mirror the censuses read.
 - `src/render/explore_glsl.ts`: the reveal's anchors, pinned by `test/render/paint_explore.test.ts`.
