@@ -65,9 +65,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   "full" when the OS asks for reduced, so the box really clears; the
   dropdown stays as the detailed control (the only way back to follow
   system). On top of Motion's list it stills the FLOW (flowStrength and
-  flowSpeed worn as 0), NOT the intro and NOT the pulses: it never
-  changes the highlight mode (stage 2; Levi keeps the pulses under
-  reduced motion, and a test pins it). HIGH CONTRAST
+  flowSpeed worn as 0), NOT the intro and NOT the pulses (Levi keeps the
+  pulses under reduced motion). HIGH CONTRAST
   (pref `knotmaze.contrast`: system | normal | high; follows
   `prefers-contrast: more` OR `forced-colors: active` live until the
   viewer chooses, then the choice sticks; the root's data-contrast is
@@ -76,9 +75,10 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   "custom" with backgroundBase #000000 (a black page, the fog follows),
   palette "pastel" (the lightest preset, already the default, so a no-op
   on default designs), pathColor #ffff00, fadeLength 0 (crisp crossing
-  cuts), gap max(stored, 0.12), markerSize max(stored, 1.5), and
-  highlightMode "contrast" (stage 2, `HIGH_CONTRAST_HIGHLIGHT`; its lore:
-  HIGHLIGHT MODES in `render-paint.md`). NOT overridden (candidates):
+  cuts), gap max(stored, 0.12) and markerSize max(stored, 1.5). Its
+  choices keep the pulses: K111 stage 3 removed stage 2's "contrast"
+  highlight mode, and whether High contrast gets a look of its own is
+  waiting on Levi. NOT overridden (candidates):
   threadWidth (physics), colorScheme, junctionBlend, gamutArc, the fog's
   look, the DOM chrome. forced-colors recolors the DOM only, never
   canvas content. Probe: `.claude/probes/K111/k111_probe.mjs` (rm | hc |

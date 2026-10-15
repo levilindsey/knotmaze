@@ -42,10 +42,10 @@ declaration it rides: `render-paint.md`.
   ("section-rgb-explore", the same resources, built lazily the first time
   the mode turns on, `bindGap` binds its uGapData too). The visibility
   multiplies the fragment's alpha, so the section color, paint, pulses,
-  the hover glow and every highlight mode fade with the thread. uKExplore
+  and the hover glow fade with the thread. uKExplore
   = (on, look, breath, threadWidth). THE SIX LOOKS (`EXPLORE_LOOKS`, the
   end of a frontier fade): fade, halo, glow, dots, fray, and beacon (dots
-  plus the halo), the default. They are GPU-only like K111's modes; halo and beacon also
+  plus the halo), the default. They are GPU-only, as K111 stage 2's highlight modes were; halo and beacon also
   place a sprite per frontier (fabric_maze_renderer's haloLayer, beneath the
   weave). Parity: `paint_math.ts kExploreAt` is the line-for-line CPU twin,
   `test/render/paint_explore.test.ts` holds it to explore_view's pieceVis

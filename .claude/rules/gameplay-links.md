@@ -61,14 +61,11 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   rows, fabric mode only. The render side is render-markers.md's K98
   entry.
 
-- HIGHLIGHT MODE PARAM (K111 stage 2, 2026-10-14): `highlightMode`
-  (`hm`; pulses | glow | rims | contrast, default pulses) is APPENDED to
-  codec v4 at index 108, after K174's minoToward and minoRefog at 106-107
-  (106 on its branch until K174 merged first; the second to merge
-  renumbers, before it lands). It is a DAILY_EXEMPT_KEY,
-  PROPOSED for Levi's call: like hoverGlow it changes how the choices
-  look, never what they are, so the golden dailies do not move. Panel: the
-  maze folder, after the hover glow row, fabric mode only; undo runs it
-  live (LIVE_EFFECTS onTrailChange). High contrast wears "contrast";
-  reduced motion keeps the stored mode. The render side is
-  render-paint.md's HIGHLIGHT MODES entry.
+- HIGHLIGHT MODE PARAM: removed in K111 stage 3 (2026-10-14).
+  `highlightMode` (`hm`, codec index 108, the table's last; a
+  DAILY_EXEMPT_KEY) went with the modes: Levi (K248) kept the pulses on
+  the choices (render-paint.md's HIGHLIGHT MODES line). A removal bumps
+  the codec, so CODEC_VERSION is 5: a v4 token (`?<seed>.J...`) reads as
+  its seed at today's defaults, with a warning, and an empty v5 blob is
+  `.L`. Index 108 is free again: the next appended param takes it, and a
+  branch that appended after 108 (K80's turns) renumbers when it rebases.

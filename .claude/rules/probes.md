@@ -99,9 +99,11 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   readable keys any more); scripts/diag_scan.mjs reads tw/gap from it.
 
 - *From COMPACT LINKS, probe URLs:* `?<seed>&am=instant`,
-  `?<seed>.J&...` and `?s=<seed>&...` all read today's defaults (K132).
-  A token of another version (older probes' `.c` = v3, `.U` = v2) reads
-  as its seed at today's defaults, with a console warning.
+  `?<seed>.L&...` and `?s=<seed>&...` all read today's defaults (K132).
+  A token of another version (`.J` = v4 since K111 stage 3 made the codec
+  v5, older probes' `.c` = v3, `.U` = v2) reads as its seed at today's
+  defaults, with a console warning, so the `.J` links in older entries
+  still build the same design.
 
 - *From RENDER-ONLY PLUCKS, probe hooks:* Probe hooks:
   __knotPluck, __knotPluckState, __knotPerf, __knotSetPhysics,
