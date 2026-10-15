@@ -1,8 +1,15 @@
 // K279 stage 2: the ripple filter's attach rules and its load warm-up.
 // No GL here: these check which containers carry the filter, not pixels.
 import { describe, expect, it } from "vitest";
-import { Container, DOMAdapter, type Adapter } from "pixi.js";
-import { PluckRipples, RIPPLE_LIFE, RIPPLE_RADIUS, discOnScreen } from "../../src/render/pluck_ripple";
+import { Container, DOMAdapter, type Adapter, type UniformGroup } from "pixi.js";
+import {
+  PluckRipples,
+  RIPPLE_DISP,
+  RIPPLE_FLOOR_CSS,
+  RIPPLE_LIFE,
+  RIPPLE_RADIUS,
+  discOnScreen,
+} from "../../src/render/pluck_ripple";
 
 // Node has no document: pixi's GlProgram asks a test canvas for the
 // fragment precision, and a canvas with no context answers "mediump".
@@ -122,5 +129,51 @@ describe("PluckRipples warm-up (K279 stage 2, K289 a)", () => {
     ripples.tick(1 / 60);
     expect(root.filters?.length).toBe(1);
     expect(root.filters?.[0]).not.toBe(stage.children[2]?.filters?.[0]);
+  });
+});
+
+// The live filter's slot table, as the shader reads it.
+function slots(root: Container) {
+  const group = root.filters?.[0]?.resources.rippleUniforms as UniformGroup | undefined;
+  if (!group) throw new Error("no ripple filter attached");
+  return group.uniforms as unknown as { uRip: Float32Array; uAmp: Float32Array; uCount: number };
+}
+
+describe("PluckRipples size floor (K279 stage 2, K289 d)", () => {
+  it("scales a small view's whole ripple so that its front ends at RIPPLE_FLOOR_CSS px", () => {
+    // 5 px per world: without the floor the front would end at 18 px.
+    const scale = 5;
+    const grow = RIPPLE_FLOOR_CSS / (RIPPLE_RADIUS * scale);
+    const { root, ripples } = setup(scale);
+    ripples.look = "wave";
+    ripples.add(80, 60, 1);
+    ripples.setTime(RIPPLE_LIFE);
+    const u = slots(root);
+    expect(u.uCount).toBe(1);
+    expect(u.uRip[2]).toBeCloseTo(RIPPLE_FLOOR_CSS, 4);
+    // The band (0.9 world at the end) and the wave's bend scale alike.
+    expect(u.uRip[3]).toBeCloseTo(0.9 * scale * grow, 4);
+    ripples.setTime(0.3);
+    const strength = (1 - 0.3 / RIPPLE_LIFE) ** 2;
+    expect(u.uAmp[0]).toBeCloseTo(RIPPLE_DISP * scale * grow * strength, 4);
+  });
+
+  it("leaves a view at or above the floor bit for bit as before", () => {
+    // 20 px per world: the front ends at 72 px, past the floor.
+    const scale = 20;
+    const { root, ripples } = setup(scale);
+    ripples.look = "wave";
+    ripples.add(20, 15, 1);
+    for (const t of [0.1, 0.45, 0.8]) {
+      ripples.setTime(t);
+      const u = slots(root);
+      const f = Math.min(1, t / RIPPLE_LIFE);
+      const radius = RIPPLE_RADIUS * (1 - (1 - f) ** 3);
+      const band = 0.45 + (0.9 - 0.45) * f;
+      const strength = Math.min(1, t / 0.06) * (1 - f) * (1 - f);
+      expect(u.uRip[2]).toBe(Math.fround(radius * scale));
+      expect(u.uRip[3]).toBe(Math.fround(Math.max(1, band * scale)));
+      expect(u.uAmp[0]).toBe(Math.fround(RIPPLE_DISP * scale * strength));
+    }
   });
 });
