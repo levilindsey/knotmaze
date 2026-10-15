@@ -619,3 +619,422 @@ Pass: an intro p95 of 33 ms or less, no later first sleep than phw=0,
 drags at 30 fps or more, no errors, and the worker ready within 250 ms
 of the main chunk. The phone's worker substep cost is unknown until
 then; the numbers above for the phone are inference.
+
+## Build stages
+
+Five stages, in order, each one 2-hour Opus agent:
+
+1. the physics host, in-thread and byte-identical (`main.ts` to itself);
+2. the worker core, the snapshot and the mirror, in Node (no `main.ts`);
+3. the worker in the browser behind `phw`, off by default (a brief
+   `main.ts` edit);
+4. the diagnostic bridge and desktop acceptance (`main.ts` to itself);
+5. the phone pass, the worker on by default, K147's budget retired where
+   moot, and the lore (needs the phone).
+
+Placement of related work:
+
+- **K5** (splitting `main.ts` and `ribbon_renderer.ts`) goes after stage
+  5. It conflicts with stages 1, 3 and 4, and the host makes it smaller.
+- **K6 and K24** go after stage 5; K24 reads `host.asleep`.
+- **K8/K9** (the GPU pipeline and the warm-up for the two freezes) can
+  run beside stages 2 and 5. Beside stages 1, 3 and 4 only if they keep
+  out of `main.ts`'s load path. K7 does not touch `ribbon_renderer.ts`.
+
+### Every build stage: setup and process
+
+**Setup:**
+
+- **Your branch starts from master.** Run `git log -1 --oneline` first;
+  if your stage's section is missing from this file, `git merge
+  --ff-only origin/master`.
+- **`node_modules`:** a junction to the main checkout's (`New-Item
+  -ItemType Junction node_modules -Target
+  C:\Users\lsl\Repositories\knotmaze\node_modules`). Before anything
+  removes your worktree, delete it with `(Get-Item node_modules).Delete()`,
+  never a recursive delete.
+- **Servers:** your stage's ports, each server with a private vite
+  cacheDir. K80's wrapper (`probes.md`) loads the config through vite's
+  `loadConfigFromFile`.
+- **Chrome:** its own `--user-data-dir` inside your probes folder,
+  deleted when you are done (K161), and the off-screen window flags.
+- **Files:** probes, logs and notes go in `.claude/probes/K7/stage<N>/`
+  (untracked; the coordinator copies them at the merge). The design's
+  probes (`k7_frames.mjs`, `run_k7.ps1`, `summarize.mjs`, the spike) are
+  in the main checkout's `.claude/probes/K7/design/`; copy what you use.
+- **The perf lock:** hold `$env:TEMP\claude-perf.lock` for every frame
+  timing and every pixel-exact GPU probe, waiting for it inside one
+  blocking command.
+- **Running alongside:** the coordinator names it at launch.
+- **Helpers:** if you start any, give each `model: sonnet` and the stop
+  rule below with a 1-hour cap.
+
+**Process:**
+
+- **One stage.** Run `Get-Date` at the start and at each milestone.
+  Commit WIP on your branch at every milestone, broken or not. Never
+  push. Don't edit `LEDGER.md`.
+- **The stop rule:** stop when the stage is done or at the 2-hour cap,
+  whichever comes first. Neither a compaction nor context size is a
+  stop. After a compaction, re-read this brief and `git log`, then go
+  on.
+- **At the stop:** commit WIP, append a "Stage N handoff" to this file
+  (what is done, what is not, the evidence paths, and "For stage N+1"
+  notes), commit it and report. Start nothing beyond your stage.
+- **The final report covers:** what changed and where, your calls, the
+  verification results, a `Ledger items` list, and the handle fields
+  (branch, last commit, evidence, next).
+
+## Stage 1: the physics host, in-thread and byte-identical
+
+Put every main-thread touch of physics behind one interface, still on
+the main thread, with nothing on screen and no number changing. Stage 1
+needs `main.ts` to itself. Ports 5790-5791; probes in
+`.claude/probes/K7/stage1/`.
+
+### The work
+
+1. **`src/physics/physics_host.ts`.** The `PhysicsHost` interface:
+   `kind`, `gen`, `view` (the `ParticleSystem` the readers use,
+   read-only by contract), `build(...)`, `presettle(): Promise`,
+   `frame(dt, tuning, now)`, `grab(particle, x, y)`, `dragTo(x, y)`,
+   `release()`, `tug(...)`, `reset()`, `setTuning(t)`, `asleep`,
+   `wake()`, `stats()` and `dispose()`. `InThreadHost` implements it on
+   today's code. A `PhysicsCore` holds what both hosts will share, moved
+   verbatim from `main.ts`: the step path with K147's budget, the sleep
+   gate's frame call, the pre-settle loops and the tug's wake.
+2. **`grabAt(p, x, y)`** in `particle_system.ts`; `grab(x, y, r)`
+   becomes `grabAt(nearest(x, y, r), x, y)`. Main picks the particle
+   with `nearest` on `host.view` and calls `host.grab(p, x, y)`.
+3. **`src/core/scene_graph.ts`: `buildSceneGraph(params, ...)`,** the
+   pure part of `main.ts`'s build (generation, the maze plan and apply),
+   which main and later the worker both call. List every input it reads
+   in the handoff. None may be DOM or live state; pass any that is
+   through the params.
+4. **Every write in `main.ts` goes through the host:** grab, dragTo
+   (about 3608 and the snap-back at 4578), release (3616, 3692, 3697,
+   3784, 4587), tug (3654; the delayed tug at 4177-4181 checks
+   `host.gen` instead of `ps === scene`), reset (1172), the loading and
+   pre-settle loops (1109-1141, 1247-1301, finishPresettle 1148,
+   finishLoading 1307-1332), the step path (4598-4614) and the sleep
+   gate (4625-4643). Reads go through `host.view`. The lines drift:
+   search for `ps.`.
+5. **The freeze patch keeps working.** InThreadHost calls
+   `this.ps.step(...)` through the instance every frame, so
+   `__knotPS().step = function(){}` and timing wrappers still work.
+6. **A guard test,** `test/physics/host_seam.test.ts`: it scans
+   `src/main.ts` and fails on a `new ParticleSystem` or a call to step,
+   grab, dragTo, release, tug or reset on the system outside the host.
+
+### What must not change
+
+- Every number: the golden (`test/physics/byte_identity.test.ts`), the
+  K87 pin, the golden dailies, every physics test, and the frame timings
+  within noise.
+- K147 in-thread: the stamp's settle lag and `__knotSettle()`'s phases
+  and `endedBy`.
+- The probe hooks' shapes, and the freeze patch.
+- Behavior: grab, drag, release, taps and plucks, the reveal, the
+  daily's resume.
+
+### What exists (read first)
+
+- This file's Design, sections 1, 4, 5 and 8.
+- `src/main.ts` at the boundary table's lines.
+- `src/physics/particle_system.ts`: `step` (1714), `grab` (1595),
+  `release` (1611), `tug` (1632), `reset` (1536).
+- `src/physics/sleep_gate.ts`; the K147 and K63 lore attaches when you
+  open these files.
+
+### Verification
+
+- `npm test` green, with the golden, the K87 pin and the golden dailies
+  untouched, and the guard test.
+- k7_frames under the perf lock, master against the branch: the daily
+  (2 runs) and the knot. Intro fps, first sleep and drag fps match
+  within noise.
+- Real input (template `scripts/diag_tug.mjs`): a drag, a tap's tug, a
+  release, a rebuild in mid-drag and the daily's resume behave as on
+  master.
+- The freeze patch freezes: a probe sets it and checks that simTime
+  holds.
+
+### Setup
+
+- The shared setup above; ports 5790-5791.
+- Nothing else that edits `main.ts` runs alongside.
+
+### Process
+
+- The shared process above. The stop rule: stop when the stage is done
+  or at the 2-hour cap, whichever comes first. Neither a compaction nor
+  context size is a stop; after one, re-read this brief and `git log`.
+- Lore: a line in `.claude/rules/physics-settle.md` saying where the
+  settle code now lives.
+- At the stop, append "Stage 1 handoff", commit and report. Start
+  nothing beyond this stage.
+
+## Stage 2: the worker core, the snapshot and the mirror, in Node
+
+Build everything the worker will run, and the mirror, and prove both
+match the in-thread host bit for bit, with no browser. No `main.ts`
+change. It starts after stage 1 merges; its snapshot half (work items 2
+and 3) could start beside stage 1. Probes in `.claude/probes/K7/stage2/`.
+
+### The work
+
+1. **The step split** in `particle_system.ts`: `beginFrame(dt): number`
+   (the accumulator math, returning the substep count) and
+   `runSubstep(tuning)`. `step()` stays beginFrame plus the loop.
+2. **`src/physics/snapshot.ts`:** the layout in Design 1, with
+   `snapshotBytes(N, C)`, `writeSnapshot(ps, buf, header)` and
+   `readSnapshot(buf)`.
+3. **The mirror,** in `particle_system.ts`: `applySnapshot(view)` sets
+   positions and each pass's ctrl and displayF in place (the same pass
+   objects), plus overrides for simTime, maxMove, settleComplete,
+   contactsStatic, ridersPending and emergentCrossings. A mirror's
+   `step` and position writes throw; it records `grabbedParticle`.
+4. **`src/physics/physics_worker_core.ts`:** `PhysicsWorkerCore.onMessage
+   (msg, post)` with a pluggable scheduler (a MessageChannel in the
+   worker, synchronous in tests), built on stage 1's `PhysicsCore`. It
+   speaks this protocol, and drops any message of an older gen:
+   - main to worker: `init{gen, params, tuning}`, `settle{gen, maxSim,
+     maxWall}`, `frame{gen, dt}`, `grab{gen, particle, x, y}`,
+     `drag{gen, x, y}`, `release{gen}`, `tug{gen, ...}`,
+     `tuning{gen, t}`, `reset{gen}`, `pause`, `resume`, `give{buf}`, and
+     for probes `freeze{on}`, `stepUntil{simTime}`, `dump`;
+   - worker to main: `ready{gen, fingerprint, genMs, ctorMs}`,
+     `snap{buf}` (transferred), `settled{endedBy}`, `tugged{gen, id,
+     count}`, `error`, `dumped`.
+   - `frame` follows Design 4: allowances add into batches of at most
+     0.25 s or 30 substeps, one substep per scheduled task, inputs
+     between substeps, drags coalesced, backlog past 0.05 s dropped as
+     lag, the sleep gate at batch ends, allowances discarded while
+     asleep, and a snapshot after each substep while a buffer is free.
+   - A tug with a nonzero count wakes the gate in the worker.
+5. **Tests:**
+   - `test/physics/physics_host.test.ts`: InThreadHost and the worker
+     core in lockstep (synchronous scheduler, K147's budget off, frame
+     dts under 0.05 s so neither drops time). Scripted inputs: grab,
+     drag, release, tug, tuning, reset, a re-init at gen 2, a stale-gen
+     message dropped. After every frame, positions, prev, zPos and the
+     pass ctrls match bit for bit, and the mirror's readers (positions,
+     pass ctrl and displayF, emergentCrossings, the flags) match the
+     live system's.
+   - `test/physics/snapshot.test.ts`: the round trip, NaN as undefined,
+     the sizes.
+
+### What must not change
+
+- The golden, every physics test, the K87 pin and the golden dailies.
+- `main.ts` and the browser: nothing runs in a Worker yet.
+
+### What exists (read first)
+
+- Design 1, 4, 6 and 7, and the spike in the main checkout's
+  `.claude/probes/K7/design/spike/` (`spike_worker.ts` packs a snapshot
+  into a transferred buffer pool).
+- Stage 1's `physics_host.ts` and its handoff.
+
+### Verification
+
+- `npm test` green, with the two new test files.
+- 600 substeps in Node with `step()` against beginFrame plus
+  runSubstep: the same bits, the same time within noise.
+
+### Setup
+
+- The shared setup above. Node only: no ports, and the perf lock only
+  for the timing check.
+
+### Process
+
+- The shared process above. The stop rule: stop when the stage is done
+  or at the 2-hour cap, whichever comes first. Neither a compaction nor
+  context size is a stop; after one, re-read this brief and `git log`.
+- At the stop, append "Stage 2 handoff", commit and report. Start
+  nothing beyond this stage.
+
+## Stage 3: the worker in the browser, behind `phw`
+
+Run the worker for real behind a link param that is off by default. The
+`main.ts` edit is brief (choosing the host); nothing else may edit
+`main.ts` while it lands. Ports 5792-5795; probes in
+`.claude/probes/K7/stage3/`.
+
+### The work
+
+1. **`src/physics/physics_worker.ts`,** the entry: `self.onmessage` into
+   the worker core, with the MessageChannel scheduler.
+2. **`src/physics/worker_host.ts`:** `WorkerHost` implements
+   `PhysicsHost`:
+   - the mirror, built from main's own graph;
+   - the buffer pool (4; keep the two newest, give the rest back);
+   - interpolation (Design 4), with a switch for the A/B;
+   - frame posting and input marshaling (grab by the index picked on the
+     mirror);
+   - gen ids, visibility pause and resume, and `presettle()` resolving on
+     `settled`;
+   - the fallback to InThreadHost on `onerror`, `messageerror`, no
+     `ready` within 3 s, a fingerprint mismatch, or no module Worker;
+   - `stats()` with the host's kind and the fallback's reason.
+3. **`vite.config.ts`:** `worker: { format: "es" }`. Check that the dev
+   server serves the module worker, and that the K122 notices plugin
+   sees the worker build's packages (simplex-noise); fix the plugin, or
+   record why the main chunk covers it.
+4. **`phw`** (`physicsWorker`, a boolean, default false): in
+   `url_state.ts`, appended to `CODEC_PARAMS` (re-freeze the key-order
+   pin in `test/ui/param_codec.test.ts`), and exempt from the daily in
+   `daily_link.ts`, following `stb` and `lds`.
+5. **`main.ts`:** choose the host at build from `phw` and Worker support.
+6. **Probes:**
+   - a smoke run with `phw=1`: load, settle, sleep, drag, tap, rebuild,
+     hide and show, served from a build under `/knotmaze/` (the spike's
+     `run_spike.mjs` pattern);
+   - the fallback: Worker overridden to throw, and an init that never
+     answers. Both must end in-thread with `host.reason` set;
+   - the interpolation A/B under the perf lock: interpolated against
+     newest-only, frame-to-frame motion on a drag and during the settle.
+     Keep interpolation only if it measurably smooths the motion.
+
+### What must not change
+
+- `phw=0`, the default, behaves exactly as stage 2's master: the golden,
+  the K87 pin, the golden dailies, frame timings.
+- The codec only gains a param.
+
+### What exists (read first)
+
+- Design 2, 4 and 6; the spike (`spike_main.ts` is a working pool and
+  snapshot reader).
+- Stages 1 and 2's code and handoffs.
+
+### Verification
+
+- `npm test` green.
+- The three probes above.
+- A first k7_frames look at `phw=1` against `phw=0` on the daily (the
+  full acceptance is stage 4's).
+
+### Setup
+
+- The shared setup above; ports 5792-5795.
+
+### Process
+
+- The shared process above. The stop rule: stop when the stage is done
+  or at the 2-hour cap, whichever comes first. Neither a compaction nor
+  context size is a stop; after one, re-read this brief and `git log`.
+- At the stop, append "Stage 3 handoff", commit and report. Start
+  nothing beyond this stage.
+
+## Stage 4: the diagnostic bridge and desktop acceptance
+
+Give the probes their worker-mode forms, port the load-bearing ones, and
+measure the worker against the in-thread host on the desktop. It needs
+`main.ts` to itself. Ports 5796-5797; probes in
+`.claude/probes/K7/stage4/`.
+
+### The work
+
+1. **Hooks** (Design 8): `__knotPhysFreeze(on)` (a Promise);
+   `__knotPS().step` throwing on assignment in worker mode, naming
+   `__knotPhysFreeze` and `&phw=0`; `stepUntil(simTime)` and a dump or
+   hash of prev, zPos and the pass ctrls, both Promises; a Promise from
+   `__knotPluck({tug})`; the worker's step stats, lag and `asleep` in
+   `__knotPerf()` and `__knotSettle()`; and a reveal timing field.
+2. **Ports:** `scripts/diag_screenshot.mjs` (frame stats valid in both
+   modes) and `scripts/phone_pass/walk.mjs:95` (the freeze patch). Then
+   the load-bearing probes: K147's `k147_measure.mjs`, K279's sheet,
+   wake and live probes, and the newest `g2lib.mjs`. List the other
+   files that use the freeze patch in the handoff, with the one-line
+   port.
+3. **Acceptance,** under the perf lock: k7_frames `phw=0` against
+   `phw=1` on the daily (2 runs), gs 18, the knot, the fabric and dense:
+   intro fps and p95, first sleep, sim/wall, drag fps and bare wake fps.
+   Plus input latency: from a pointer event to the first frame whose
+   grabbed point reaches its target.
+4. **Targets** (Design 10): the intro at 50 fps or more between the
+   freezes; the daily's first sleep by 13 s; a gs 18 drag at 50 fps or
+   more; latency p50 of 50 ms or less; `phw=0` unchanged within noise.
+
+### What must not change
+
+- `phw=0` behavior and numbers, and the in-thread freeze patch.
+
+### What exists (read first)
+
+- Design 8 and 10; `scripts/diag_screenshot.mjs`;
+  `scripts/phone_pass/walk.mjs`; the main checkout's
+  `.claude/probes/K279/` and `.claude/probes/K147/`.
+
+### Verification
+
+- `npm test` green; the ported probes run in both modes.
+- The acceptance table in the handoff, with each target met or the
+  reason it is not.
+
+### Setup
+
+- The shared setup above; ports 5796-5797.
+- Nothing else that edits `main.ts` runs alongside, and nothing else
+  measures (the perf lock).
+
+### Process
+
+- The shared process above. The stop rule: stop when the stage is done
+  or at the 2-hour cap, whichever comes first. Neither a compaction nor
+  context size is a stop; after one, re-read this brief and `git log`.
+- Lore: `probes.md` gets the freeze hook, `phw=0` and which probes test
+  which path.
+- At the stop, append "Stage 4 handoff", commit and report. Start
+  nothing beyond this stage.
+
+## Stage 5: the phone pass, the worker by default, and the lore
+
+Measure the worker on the phone, turn it on by default if it passes, and
+retire what it makes moot. It needs the phone (`scripts/phone.ps1`).
+Ports 5798-5799; probes in `.claude/probes/K7/stage5/`.
+
+### The work
+
+1. **The phone pass** (Design 10's plan) on stage 4's build.
+2. **If it passes:** `phw` defaults to true. Re-freeze any pin it moves
+   and name it in the commit.
+3. **K147:** in worker mode the budget and its stamp text are bypassed;
+   `stb` stays for the fallback.
+4. **Lore:**
+   - a new `.claude/rules/physics-worker.md` with narrow `paths:` (the
+     host, the worker, the worker core, the snapshot), a line in
+     `physics.md`'s list and a row in `docs/lore_index.md`;
+   - `physics.md`'s CANDIDATE paragraph becomes a pointer to it;
+   - `physics-settle.md` (the budget is the fallback's);
+   - CLAUDE.md: the Layer 3 overview line and the project tree.
+5. **If it fails:** keep the default off, record the numbers and the
+   lever (K8/K9, or the phone's worker cost), and stop.
+
+### What must not change
+
+- The fallback (`phw=0`, or no Worker) behaves as today.
+
+### What exists (read first)
+
+- Design 10; `.claude/rules/probes-phone.md`; stage 4's handoff and its
+  acceptance numbers.
+
+### Verification
+
+- The phone pass's pass criteria (Design 10), and `npm test` green.
+
+### Setup
+
+- The shared setup above; ports 5798-5799; the phone, free of other
+  passes.
+
+### Process
+
+- The shared process above. The stop rule: stop when the stage is done
+  or at the 2-hour cap, whichever comes first. Neither a compaction nor
+  context size is a stop; after one, re-read this brief and `git log`.
+- At the stop, append "Stage 5 handoff", commit and report. Start
+  nothing beyond this stage.
