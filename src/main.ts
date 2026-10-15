@@ -814,13 +814,27 @@ async function main(): Promise<void> {
     );
   };
   // Follow framing: FOLLOW_SPAN lattice units across the short screen
-  // side - or under fog, the visible disc plus a margin.
+  // side - or under fog, the visible disc plus a margin. The thread reveal
+  // keeps FOLLOW_SPAN (K76 section 2.7).
   const followScale = (): number => {
-    const span = params.fogOfWar
+    const span = params.exploration === "fog"
       ? 2 * (params.fowRadius + 1.2)
       : FOLLOW_SPAN;
     return Math.min(app.screen.width, app.screen.height) / span;
   };
+  // K76 stage 2c: the exploration mode onto the fabric - the fog of war's
+  // switch and radius, and the thread reveal's switch, reach, fade (never
+  // longer than the reach: the design's sanitize) and end look.
+  function syncExploration(f: FabricMazeRenderer): void {
+    f.fogOfWar = params.exploration === "fog";
+    f.fowRadius = params.fowRadius;
+    const ex = f.explore;
+    ex.on = params.exploration === "threads";
+    ex.reach = params.revealDistance;
+    ex.fade = Math.min(params.revealFade, params.revealDistance);
+    const li = (EXPLORE_LOOKS as readonly string[]).indexOf(params.revealLook);
+    if (li >= 0) ex.look = li;
+  }
   const placeWorldAt = (
     wx: number,
     wy: number,
@@ -1373,8 +1387,7 @@ async function main(): Promise<void> {
       fabric.pathViz = params.pathViz;
       fabric.tension = params.tension;
       fabric.trailLength = params.trailLength;
-      fabric.fogOfWar = params.fogOfWar;
-      fabric.fowRadius = params.fowRadius;
+      syncExploration(fabric);
       fabric.markerSize = look("markerSize");
       fabric.fogColor = pageInk();
       fabric.update(fabricController);
@@ -1664,8 +1677,7 @@ async function main(): Promise<void> {
         fabric.pathViz = params.pathViz;
         fabric.tension = params.tension;
         fabric.trailLength = params.trailLength;
-        fabric.fogOfWar = params.fogOfWar;
-        fabric.fowRadius = params.fowRadius;
+        syncExploration(fabric);
         fabric.update(fabricController);
       }
       updateHud();
@@ -1873,7 +1885,12 @@ async function main(): Promise<void> {
     renderer.flowSpeed = look("flowSpeed");
     renderer.cuspRadius = params.cuspRadius;
     renderer.pulseSpacing = params.pulseSpacing;
-    renderer.pulseReach = params.pulseReach;
+    // K76 stage 2c (question 5): under the thread reveal the pulses never
+    // reach past the reveal distance.
+    renderer.pulseReach =
+      params.mazeFabric && params.exploration === "threads"
+        ? Math.min(params.pulseReach, params.revealDistance)
+        : params.pulseReach;
     renderer.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
     renderer.hoverGlowWidth = clampHoverGlowWidth(params.hoverGlowWidth);
     renderer.hoverGlowLength = clampHoverGlowLength(params.hoverGlowLength);
@@ -2185,17 +2202,22 @@ async function main(): Promise<void> {
               ? "loading"
               : renderer.revealMulAtCtrl(v.chain, v.ctrl) < 0.98
                 ? "exit unrevealed"
-                : "";
+                : // K76 stage 2c (decision 6): the thread reveal keeps the
+                  // exit's direction to itself until its marker shows (the
+                  // marker's own rule; 1 with the mode off).
+                  renderer.exploreVisAt(v.chain, v.ctrl) < 0.98
+                  ? "exit unseen"
+                  : "";
       return finishWhy === "";
     },
     label: () =>
-      params.fogOfWar
+      params.exploration === "fog"
         ? "The exit lies this way, still under the fog."
         : settings.tapToPan
           ? "The exit is off screen, this way. Tap to bring it into view."
           : "The exit is off screen, this way.",
     onTap: () => {
-      if (params.fogOfWar) {
+      if (params.exploration === "fog") {
         showToast("The exit lies this way. Explore to lift the fog.", 3000);
         return;
       }
@@ -2205,11 +2227,9 @@ async function main(): Promise<void> {
       frameWorld(exitScratch[0], exitScratch[1]);
     },
   });
-  // K76 HOOK (thread-reveal mode, Decision 6): until the exit marker has
-  // been seen, the finish's indicator would give its direction away. The
-  // mode adds a gate here, e.g.
-  //   finishIndicator.gate(() => !params.threadReveal || exitSeen);
-  // (gate() returns its remover). Nothing else in the indicator changes.
+  // K76 (Decision 6): until the exit marker has been seen, the finish's
+  // indicator would give its direction away; visible() above holds it back
+  // ("exit unseen") under the thread reveal.
   void finishIndicator;
 
   // THE PLAYER (K148; Levi, 2026-10-13: "When panning away from the
@@ -4466,13 +4486,20 @@ async function main(): Promise<void> {
         fabric.pathViz = params.pathViz;
         fabric.tension = params.tension;
         fabric.trailLength = params.trailLength;
-        fabric.fogOfWar = params.fogOfWar;
-        fabric.fowRadius = params.fowRadius;
+        syncExploration(fabric);
         fabric.markerSize = look("markerSize"); // K98 (a no-op unless moved).
         // fowIntro: keep the fog off while the intro animation plays; the
-        // release closes it in (fade + contracting radius).
-        fabric.setFogHold(params.fogOfWar && params.fowIntro && revealing);
+        // release closes it in (fade + contracting radius). K76 stage 2c:
+        // the thread reveal's hold shows every thread while the intro plays,
+        // and its release closes in on what you have explored the same way.
+        fabric.setFogHold(params.exploration === "fog" && params.fowIntro && revealing);
+        fabric.setExploreHold(
+          params.exploration === "threads" && params.fowIntro && revealing
+        );
         fabric.tickFog(ticker.deltaMS / 1000);
+        // K76 stage 2c: the reveal's clock (growth, the close-in) in every
+        // clock mode - the real-time chase never runs tickAnim (K324).
+        fabric.tickExplore(ticker.deltaMS / 1000);
         fabricController.trailMode = params.pathViz === "trail";
         // K80: in the real-time mode the chase moves the dot (tickChase).
         if (chase) tickChase(ticker.deltaMS / 1000);
@@ -5451,10 +5478,10 @@ async function main(): Promise<void> {
     replaySettle();
     return physState;
   };
-  // K76 THREAD REVEAL, stage 2a's PROBE HOOK (no params, panel or codec
-  // until stage 2c): on, reach and fade (lattice units), look (an
-  // EXPLORE_LOOKS name or index), visitAll (every vertex visited: the GPU
-  // cost bound). Returns the fabric's explore state (null outside fabric).
+  // K76 THREAD REVEAL, stage 2a's PROBE HOOK: on (exploration threads or
+  // off), reach and fade (lattice units), look (an EXPLORE_LOOKS name or
+  // index), visitAll (every vertex visited: the GPU cost bound). Returns
+  // the fabric's explore state (null outside fabric).
   (window as unknown as Record<string, unknown>).__knotExplore = (
     o: {
       on?: boolean;
@@ -5465,15 +5492,18 @@ async function main(): Promise<void> {
     } = {}
   ) => {
     if (!fabric || !fabricController) return null;
-    const ex = fabric.explore;
-    if (o.on !== undefined) ex.on = o.on;
-    if (o.reach !== undefined) ex.reach = o.reach;
-    if (o.fade !== undefined) ex.fade = o.fade;
-    if (typeof o.look === "number") ex.look = o.look;
-    else if (typeof o.look === "string") {
-      const i = (EXPLORE_LOOKS as readonly string[]).indexOf(o.look);
-      if (i >= 0) ex.look = i;
+    // Stage 2c: through the params (the frame loop syncs them every tick).
+    // The numbers go in raw, past the panel's ranges (a reach of 1000 shows
+    // every stub whole).
+    if (o.on !== undefined) params.exploration = o.on ? "threads" : "off";
+    if (o.reach !== undefined) params.revealDistance = o.reach;
+    if (o.fade !== undefined) params.revealFade = o.fade;
+    const looks = EXPLORE_LOOKS as readonly string[];
+    const lk = typeof o.look === "number" ? looks[o.look] : o.look;
+    if (lk !== undefined && looks.includes(lk)) {
+      params.revealLook = lk as UrlParams["revealLook"];
     }
+    syncExploration(fabric);
     fabric.update(fabricController);
     if (o.visitAll) {
       fabric.exploreVisitAll();

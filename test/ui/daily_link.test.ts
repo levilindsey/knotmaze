@@ -127,7 +127,7 @@ describe("maze identity", () => {
       soundMode: "none",
       physics: false,
       pathViz: "trail",
-      fogOfWar: true,
+      exploration: "fog",
       appearMode: "instant",
     };
     expect(sameMaze(a, { ...a, ...look })).toBe(true);
@@ -259,7 +259,12 @@ describe("the front door (K56)", () => {
     expect([quiet.params.volume, quiet.params.cameraMode]).toEqual([0, "follow"]);
     // A look or a maze override is an ordinary design: the day's design with
     // that change (probe URLs `?daily&am=instant` included).
-    for (const q of ["?daily=5&am=instant", "?daily=5&hs=40", "?daily=5&gs=8", "?daily&fow=1"]) {
+    // K76 stage 2c: the thread reveal leaves the daily as the fog does
+    // (`xp=threads`, and the legacy `trv=1`).
+    for (const q of [
+      "?daily=5&am=instant", "?daily=5&hs=40", "?daily=5&gs=8", "?daily&fow=1",
+      "?daily=5&xp=threads", "?daily&trv=1", "?daily=5&xp=fog",
+    ]) {
       expect([q, parseLaunch(q, today).daily]).toEqual([q, null]);
     }
     const off = parseLaunch("?daily=5&gs=8", today);
