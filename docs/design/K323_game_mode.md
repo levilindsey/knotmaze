@@ -101,7 +101,7 @@ is the mode that reads the param today. Proposed labels are section 3's.
 | minoDeadEnds (mde, 95) | 0.4 | Minotaur, key | real time | tuning, "Visits dead ends" |
 | minoRoam (mrm, 96) | 30 | Minotaur, key | real time | tuning, "Roam range" |
 | minoWake (mwk, 97) | 2 | Minotaur, key | real time | tuning, "Lair wait (s)" |
-| minoToward (mtw, 106) | on | Minotaur, key | real time | tuning, "Roams toward you" (K324 may make it a slider) |
+| minoToward (mtw, 106) | on | Minotaur, key | real time | becomes `minoPull` (mpl), a slider in this bump (K324 4.2, K245); tuning, "Roams toward you" |
 | minoFog (mfg, 98) | always | Minotaur, key | both clocks, fog on | Game > Minotaur, "Seen through fog" |
 | minoRefog (mrf, 107) | on | Minotaur, key | both, fog on | Game > Minotaur, "A catch brings back the fog" |
 | minoRestart (mrs, 128) | off | Minotaur, key | both | Game > Minotaur, "A catch restarts the level" |
@@ -188,8 +188,10 @@ is the mode that reads the param today. Proposed labels are section 3's.
 ### 2.5 Codec, links, dailies, undo
 
 - ONE BUMP: remove `snappiness` (33), `mazeFabric` (45) and `fire` (118)
-  from `CODEC_PARAMS`, drop `minotaur`'s `off`, append `gameMode`;
-  `CODEC_VERSION` 5 -> 6. K76 stage 2c also bumps (it replaces
+  from `CODEC_PARAMS`, drop `minotaur`'s `off`, append `gameMode`, and
+  turn `minoToward` (`mtw`, a boolean) into K324's `minoPull` (`mpl`, a
+  number in [0, 1], default 0.5 = today's roamPull; K245's slider), so
+  K324 needs no bump of its own; `CODEC_VERSION` 5 -> 6. K76 stage 2c also bumps (it replaces
   `fogOfWar` with an `exploration` enum in place): whichever merges second
   bumps again (6 -> 7). Two bumps in a day cost nothing pre-launch.
 - RENUMBERING: deleting three entries shifts every later index (34-44 by
