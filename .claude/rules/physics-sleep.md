@@ -4,6 +4,7 @@ paths:
   - "test/physics/sleep_gate.test.ts"
   - "test/physics/sleep.regression.test.ts"
   - "test/quiescence.regression.test.ts"
+  - "src/physics/physics_host.ts"
 ---
 
 # Physics lore: the sleep gate (K63)

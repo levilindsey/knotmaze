@@ -2,6 +2,7 @@
 paths:
   - "src/physics/settle_budget.ts"
   - "test/physics/settle_budget.test.ts"
+  - "src/physics/physics_host.ts"
 ---
 
 # Physics lore: the load settle (K147)
@@ -10,6 +11,14 @@ Moved verbatim from `physics.md` by K173 (2026-10-14), so that it attaches
 only with the files it is about; `physics.md` lists the area's other files.
 
 ## The load settle (K147)
+
+- **Where the code lives (K7 stage 1, 2026-10-14):** the settle code the
+  entry below names in main.ts (`beginSettle` .. `activeBudget`, the
+  K147 header comment, the frame's step, the physics-off load and the
+  pre-settle slices) moved verbatim into `src/physics/physics_host.ts`:
+  `PhysicsCore`, which `InThreadHost` runs on the main thread. main.ts
+  keeps the loader, the stamp and the UI and calls the host;
+  `__knotSettle()` reads `host.stats()`.
 
 - **A new knot's first settle is paced, never caught up (K147,
   2026-10-13; `physics/settle_budget.ts`, main.ts `beginSettle` ..
