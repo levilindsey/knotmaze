@@ -1,4 +1,4 @@
-# K298: the hover glow's own length, end fade, thickness, choices and pick margin
+# K298: the hover glow's own length, end fade, thickness, choices and pick margins
 
 Levi, 2026-10-14 about 19:13, verbatim:
 
@@ -12,7 +12,8 @@ Levi, 2026-10-14 about 19:13, verbatim:
 
 "I take it back" most likely reverses K219 ("Hover should honor the
 slider."), which made the glow's length follow `pulseReach`. That is a
-reading, not something he said.
+reading, not something he said. His answers to the coordinator's two
+questions (about 20:25) are quoted in items 4 and 5.
 
 ## What is there today
 
@@ -40,9 +41,21 @@ when you read the paint files). In short:
   before his message, so he had most likely not seen it yet (inferred).
 - **Choices.** A run that is one of the player's choices draws no glow.
   It keeps its pulses and its own, stronger hover look.
-- **Picking.** `GRAB_RADIUS = 0.7` in `src/main.ts` is the one radius
-  that `renderer.pickThread`, `ps.nearest` and `ps.grab` use for hover,
-  click, the thread cursor and the drag grab, for mouse and touch alike.
+- **Picking: two radii, the same for mouse and touch.**
+  - **The current junction's choices** are hovered and tapped through
+    `fabric.edgeAt` (`src/render/fabric_maze_renderer.ts`), whose radius
+    from the centerline is `max(0.9, 1.6 x threadWidth)` world units: 0.9
+    at the default thread width (0.52), wider past about 0.56.
+    `fabric.runDistance` (K80's wait tap) uses the same radius.
+  - **Every other run, and the knot,** use `GRAB_RADIUS = 0.7`
+    (`src/main.ts`) through `renderer.pickThread`, `ps.nearest` and
+    `ps.grab`: the hover glow (`setGlowAt`, only when no choice is under
+    the pointer), the pluck and grab press, the drag grab and the thread
+    cursor.
+  - So a choice is already about 1.3x easier to hit (0.9 / 0.7). In
+    `main.ts` a touch press on a choice sets `pendingTap`, and a mouse
+    press calls `handleFabricTap` (the chase tap, then `fabric.edgeAt`,
+    then `moveAlong`).
 
 **The worked example.** `hoverGlowWidth`'s path is the one to follow for
 a new viewer-preference param. It runs through `url_state.ts`
@@ -53,9 +66,11 @@ a new viewer-preference param. It runs through `url_state.ts`
 
 ## Stage 1 (this stage)
 
-Codec appends start at index 131, in the order below. Every new param is
-a viewer preference: daily-exempt, live, with its own panel row under
-"Hover glow".
+Codec appends start at index 131, in the order below: 131 the glow's
+length, 132 its end fade, 133 the mouse margin, 134 the choices' ratio
+(if master has appended more by then, follow them). Every new param is
+a viewer preference: daily-exempt and live, with its own panel row. The
+glow's rows sit under "Hover glow"; item 5 says where the margins go.
 
 1. **The glow's own length.**
    - Add a param (e.g. `hoverGlowLength`) that replaces `pulseReach` in
@@ -80,13 +95,14 @@ a viewer preference: daily-exempt, live, with its own panel row under
    - Keep the param name and `hgw=`: the codec reads names and indices.
 4. **The glow on a hovered choice too.**
    - A hovered choice run draws the glow in addition to its pulses.
-   - It also keeps its own hover look. Levi was asked at 19:21 whether
-     the glow should replace that look; the coordinator updates this line
-     before launch if he answers.
+   - It also keeps its own hover look. Asked at 19:21 whether the glow
+     should replace that look, Levi answered at about 20:25: "Keep both."
+     So a hovered choice draws its pulses, its own hover look and the
+     glow.
    - Check how the rim item composes with the pulses and the choice's
      hover (max, add or over) on the GPU and in the mirror. The glow must
      stay visible at every pulse phase without blowing out.
-5. **A mouse pick margin, with a slider.**
+5. **Pick margins, with sliders.**
    - **Do this item last.** K7's stage 1 (the physics host) runs
      alongside you and rewrites `main.ts`'s physics call sites (`nearest`,
      `grab`, `dragTo`, `release`). Route the radius through one helper
@@ -94,18 +110,36 @@ a viewer preference: daily-exempt, live, with its own panel row under
      merge onto stage 1 stays mechanical. If stage 1 has reached master
      by the time you get here (`git fetch`, then look for "K7 stage 1" in
      `git log origin/master`), rebase onto it first.
-   - Add a param for the mouse's pick radius. It covers hover, click, the
-     thread cursor and the drag grab, so the cursor never promises a grab
-     that the click then misses. Its default sits below today's 0.7.
-   - Touch keeps 0.7. Levi was asked at 19:21 whether touch should change
-     too; the coordinator updates this line before launch if he answers.
-   - **Measure first.** Find what 0.7 is in CSS px at the default zoom,
-     against the ribbon's half-width (about 5.7 CSS px at 1400x900).
+   - **What exists:** the two radii under "Picking" above. A choice is
+     already about 1.3x easier to hit than any other run.
+   - **Levi's answers** (2026-10-14 about 20:25, verbatim): "Sure. For
+     pick margin, do we have a wider margin for choosing adjacent
+     segments to the current junction vs other segments? We probably
+     should? I guess we should have a separate slider for that ratio."
+     ("Sure" answers the 19:21 question: touch keeps today's margins.)
+   - **The mouse margin.** Add a param for the mouse's pick radius on
+     every run that is not a choice: hover, click, the thread cursor and
+     the drag grab, so the cursor never promises a grab that the click
+     then misses. Its default sits below today's 0.7.
+   - **The choices' ratio.** Add a second param: the choices' margin as a
+     multiple of the mouse margin. It sets the radius of `fabric.edgeAt`
+     and `fabric.runDistance` for the mouse. Default near today's ratio
+     (0.9 / 0.7, about 1.3), unless the sheet argues for another. Today
+     the choices' margin grows with the thread width (`1.6 x threadWidth`
+     past about 0.56); keep that property, and say how the ratio combines
+     with it.
+   - **Touch keeps both of today's margins exactly** (0.7, and the
+     choices' `max(0.9, 1.6 x threadWidth)`). Say in your report whether
+     the ratio should reach touch later.
+   - **Measure first.** Find what 0.7 and 0.9 are in CSS px at the default
+     zoom, against the ribbon's half-width (about 5.7 CSS px at 1400x900).
    - **Then decide the unit.** Should the margin be in screen px rather
      than world units, given that a world-unit margin grows and shrinks
-     with zoom? Say which you chose and why.
-   - Propose a default that hugs the ribbon.
-   - This row applies in knot mode too, so don't hide it outside fabric.
+     with zoom? Say which you chose and why. The ratio has no unit.
+   - Propose defaults that hug the ribbon.
+   - The mouse margin applies in knot mode too, so its row must show
+     there (not in the maze folder, which hides outside fabric). The
+     ratio's row may hide outside fabric, where there are no choices.
 6. **The mirror and parity.**
    - `paint_math.ts` follows every shader change.
    - Parity tests (`paint_gameplay.test.ts`) cover several lengths, end
@@ -124,8 +158,8 @@ a viewer preference: daily-exempt, live, with its own panel row under
    - lengths;
    - end fades;
    - a hovered choice at three or four pulse phases;
-   - the pick radius drawn around the pointer against a ribbon, old and
-     new, at 1400x900 and 411x753.
+   - both pick radii (a choice's and any other run's) drawn around the
+     pointer against a ribbon, old and new, at 1400x900 and 411x753.
 
 ### Verification
 
