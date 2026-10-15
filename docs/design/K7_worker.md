@@ -1139,3 +1139,182 @@ Stage 1 needs none of these answered; stage 2 assumes 5 and 10.
   route those reads through `host.view` now.
 - The spike's `scene.ts` and `spike_worker.ts` are a working reference
   for the graph build and the snapshot pool.
+
+## Stage 1 handoff
+
+Stage 1 ended 2026-10-14 at 21:10, inside its two-hour cap (it started
+at 20:12). The branch is `worktree-agent-a3b1bdbb421b88478`, from master
+`bf7f7e9`: the code is `be9f5bd`, the lore `c9fc1c3`, this handoff the
+commit after. No master commit since `bf7f7e9` touches `src/main.ts`,
+`src/physics/`, `src/core/` or `test/physics/` (master `3ecae28` at
+21:01), and a trial merge onto it is clean. The evidence is in
+`.claude/probes/K7/stage1/` (untracked, for the coordinator to copy).
+
+### What is done
+
+Every work item, and the lore line.
+
+1. **`src/physics/physics_host.ts`:** the `PhysicsHost` interface,
+   `PhysicsCore`, and `InThreadHost`, which delegates to one core. Moved
+   verbatim from `main.ts` into the core: K147's header comment and
+   constants (`SETTLE_CHUNK_MS`, `LOAD_SIM_CAP`, `LOAD_WALL_CAP_MS`,
+   `BUDGET_WALL_CAP_MS`), the step path with the budget, the sleep gate's
+   frame call, the physics-off load's and the pre-settle's slices, the
+   tug's wake, `asleep`, and the counters behind `__knotPerf` and
+   `__knotSettle`. `PRESETTLE_SIM`, `LOADER_DELAY_MS`, `LOADER_MIN_MS` and
+   `NOMINAL_SLEEP_SIM` stay in `main.ts` with the loader they time.
+2. **`grabAt(p, x, y)`** in `particle_system.ts`; `grab(x, y, r)` is
+   `grabAt(nearest(x, y, r), x, y)`. Main picks with `ps.nearest(x, y,
+   GRAB_RADIUS)` and calls `host.grab(p, x, y)`, also on a miss (-1),
+   because the old `grab` cleared `grabbedParticle` on a miss.
+3. **`src/core/scene_graph.ts`:** `buildSceneGraph(params)` returns
+   `{graph, hueGroup}`: the generation, the plan and its apply, moved from
+   `rebuild()`. It takes a structural `SceneParams` (the 17 fields it
+   reads), so `src/core` imports nothing from `ui`; K108's exact-math scan
+   covers it.
+4. **`main.ts` writes only through `host`:** reset, build, grab, dragTo
+   (the drag and the snap-back), release (five sites), tug, the loads, the
+   step and the gate. `ps` stays as main's read alias of `host.view`, set
+   from `host.build(...)` in `rebuild()`, so the readers, the pick sites
+   and `__knotPS = () => ps` read as before. The delayed auto-pluck tug
+   checks `host.gen`.
+5. **The freeze patch:** the core calls `this.ps.step(...)` through the
+   instance every frame.
+6. **`test/physics/host_seam.test.ts`:** parses `main.ts` with the
+   TypeScript parser, works out which names hold the system
+   (`host.view`, the result of `host.build(...)`, anything typed
+   `ParticleSystem`, and their aliases), and fails on `new
+   ParticleSystem`, a value import of it, a call to (or a reference to)
+   step, grab, grabAt, dragTo, release, tug, reset, openChain or
+   addJunction on the system, and an assignment, `++`/`--`, `delete` or
+   array mutator into its state. Against master's `main.ts` it lists
+   exactly the 16 sites the work list names (step x4, reset, the `new`,
+   the value import, dragTo x2, release x5, tug, grab).
+
+- **Lore:** `physics-settle.md` says where the settle code lives;
+  `physics_host.ts` joins the `paths:` of `physics-settle.md` and
+  `physics-sleep.md`, and `docs/lore_index.md` follows.
+
+### Where it departs from the interface in work item 1
+
+- **No `setTuning`:** `frame`, `loadFrame` and `presettleFrame` take the
+  tuning per call, as main built it every frame. A worker host can send
+  `tuning` when it changes.
+- **No `presettle(): Promise`:** its continuation would run after the
+  frame's render, so the scene would show a frame later and the
+  pre-settle's times in `__knotSettle()` would shift. It is slices
+  instead: `beginPresettle()`, then `presettleFrame(tuning, settleFirst,
+  simCap, workCap, mayFinish)` each animation frame (`mayFinish` is
+  main's loader check), then `finishPresettle(loaderShown)` before main's
+  UI and `goLive(budgetMs)` after it. The physics-off load is the same
+  shape: `beginLoad()`, `loadFrame(tuning)`, `endLoad()`.
+- **The gate stays after the render:** `frame(dt, tuning, now, live,
+  budgetMs)` steps, and `gateFrame(ignoreTemp)` runs the gate after the
+  render, as on master, because `fabricTick` can wake the knot in
+  between. One order change: when the gate trips, the core ends the
+  budget inside `gateFrame`, before main's `freeze()`; master ran
+  `freeze()` first. Inferred harmless (`freeze()` only sets physState,
+  asleep and frozenSig), and the A/B's `endedBy` and first sleeps match.
+- **More members:** `presettling`, `settleLagS`, `sleep()`, `armBudget`,
+  `endBudget`, `disarm`. `build(graph, params)` ignores `params`
+  in-thread; the worker will build from them.
+- **`asleep` belongs to the host** (`host.wake()`, `host.sleep()`); main's
+  `wake()` also marks the render dirty. A tug with a nonzero count wakes
+  in the core, and main still calls its `wake()` for the render (a
+  double wake, harmless).
+
+### Verification (observed)
+
+- `npx tsc --noEmit` is clean. `npm test`: 72 files passed and 1
+  skipped; 941 tests passed and 1 skipped (`npm_test.log`). No snapshot
+  or fixture changed: the golden, the K87 pin and the golden dailies
+  hold.
+- **k7_frames** under the perf lock (`run_k7.ps1 -Batch batch_ab.txt`;
+  `k7_results.jsonl`, `frames/`, `summarize.mjs`, `batch_ab.log`): master
+  `bf7f7e9` on 5810 against the branch `be9f5bd` on 5811, built and
+  served by `serve_ab.ps1` (`scripts/preview.ps1 -BuildOnly`, then `vite
+  preview`), interleaved, each run with a drag and a wake, stamps
+  checked. The daily is the bare URL; the knot is
+  `?7k&mf=0&am=instant&snd=none`.
+
+  | run | intro fps | first sleep (s) | vis to sleep fps | drag fps | settle lag (s) | endedBy (pre / budget) |
+  |---|---|---|---|---|---|---|
+  | master daily a | 22.4 | 20.68 | 28.7 | 7.0 | 9.60 | work / sleep |
+  | master daily b | 22.5 | 20.66 | 28.7 | 7.0 | 9.60 | work / sleep |
+  | branch daily a | 22.1 | 20.96 | 28.4 | 7.0 | 9.78 | work / sleep |
+  | branch daily b | 22.6 | 20.68 | 28.7 | 7.0 | 9.62 | work / sleep |
+  | master knot | - | 16.56 | 36.6 | 8.9 | 7.78 | - / sleep |
+  | branch knot | - | 16.69 | 36.4 | 8.9 | 7.77 | - / sleep |
+
+  Sim at the first sleep is 5.0 in all six; a substep costs 10.4-10.6 ms
+  (daily) and 8.2 ms (knot) on both; the drag's physics p50 is 124-126 ms
+  (daily) and 98.6-98.7 ms (knot) on both. No page errors, no context
+  loss.
+- **Real input** (`input_probe.mjs`, `input_results.jsonl`): the same
+  outcome on both builds in every scenario.
+  - A tap at `ptg` 0: the positions, prev and zPos hash, simTime and the
+    step count unchanged, still asleep, and a pluck.
+  - A drag (press, past the slop, a circle, a hold, the release): the
+    same particle grabbed at the start and mid-drag, awake, 57.75 px from
+    the pointer on both; `grabbedParticle` -1 after the release; asleep
+    again 2.83 s later.
+  - A rebuild in mid-drag (the seed's dice): a new system, nothing
+    grabbed on it, no errors, live, asleep after.
+  - A tap's tug at `ptg=.3`: the stretch moved, the knot woke and slept
+    again (2.9 s).
+  - The freeze patch: with `__knotPS().step = function(){}` and a wake,
+    simTime held at 5.000 while awake; with the patch deleted it advanced
+    (to 7.55).
+  - The daily: one arrow-key move, a reload: the attempt was restored
+    (the same head, moves and saved record).
+  - On both builds, not new: a 404 on each page load (index.html links
+    no favicon; inferred: Chrome's favicon request) and PixiJS's
+    "Attribute aGap / aGapId / aUV is not present in the shader"
+    warnings.
+- **The deterministic hidden loads** (`load_probe.mjs`,
+  `load_results.jsonl`, `batch_load.log`; under the perf lock,
+  21:05-21:07): the physics-off load (`phy=0`) and the settle-first
+  pre-settle (`lds=5`), each for the knot (`?7k&mf=0&snd=none`) and the
+  fabric (`?7k&snd=none`), on fresh loads. Both step at a virtual 60 fps
+  and end on the sim-time gate, so they can be compared bit for bit, and
+  master and the branch end in the same state in all four: the same
+  FNV-1a hash of positions, prev and zPos (knot `471160618`, 2592
+  particles; fabric `2901863473`, 3034), sim 5.000000000000038, 300
+  steps, for `lds=5` the pre-settle's `endedBy` sleep, and the same hash
+  1.5 s later. On both builds the two paths also agree with each other (`phy=0`
+  and `lds=5` reach the same hash). Only the wall times and `loadFrames`
+  (the frames the physics-off load took: 151 and 159 on master, 151 and
+  153 on the branch) differ; inferred, the wall-time slicing.
+
+### Not done
+
+- Nothing in the stage's list.
+- Not measured: gs 18, dense, the phone, and `stb=0` (real-time stepping)
+  on the branch. The A/B covers the daily and the knot, as the
+  verification asks.
+
+### For stage 2
+
+- **Build on `PhysicsCore`.** Its `frame()` is master's step path
+  (`budgetedStep` while armed and live, else `ps.step`), and the gate is
+  `gateFrame()` after the render. In the worker the gate runs at batch
+  ends (Design 1 and 5); `gateFrame()` becomes a no-op or a notice there.
+- **The step split** (`beginFrame`/`runSubstep`) goes under
+  `budgetedStep` and `ps.step`; the freeze patch needs `step` still
+  called through the instance in-thread.
+- **`grab` takes -1** (a miss clears the grab), so the protocol's `grab
+  {gen, particle, x, y}` should too.
+- **`__knotPhys` calls `sys.readSlideStats()`**, which resets the slide
+  counters on the system: a read that writes telemetry. The guard test
+  allows it (not in its mutator list); under the mirror it needs the
+  bridge (Design 8) or a worker-side count.
+- **The readers** go through main's `ps` alias of `host.view`; the pick
+  sites are `ps.nearest(x, y, GRAB_RADIUS)` (K298 swaps in its mouse
+  pick radius there, a plain argument), plus `__knotPS`, `__knotPhys`,
+  `__knotFabric`, `__knotPoint` and the renderers.
+- **The pre-settle is synchronous slices,** not a Promise (see above).
+  A worker host can keep the same calls and answer them from the
+  worker's `settled` message, a frame late, which stage 3's A/B should
+  look at.
+- **`gen` bumps on every build;** the auto-pluck's delayed tug checks it,
+  and the worker protocol drops older gens.
