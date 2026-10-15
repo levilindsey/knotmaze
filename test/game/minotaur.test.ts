@@ -332,12 +332,11 @@ describe("MinotaurChase: the clock", () => {
 // K174: real mazes (the UI's dead-end density) and a chase's whole course
 // as one FNV-1a digest: every tick's minotaur and player spots, mode and
 // catches, under a scripted player who taps a random run at their decision
-// vertex every 45 ticks. The mazes stay the ones K80_DIGESTS and the pull's
-// gain were measured on: H1 (K74 stage 2, hCutShare) off. On H1 mazes the
-// pull still finds a still player, but no longer 0.8x as fast (LEDGER).
+// vertex every 45 ticks. TODAY'S mazes: H1 (K74 stage 2, hCutShare 1) on,
+// since K80 turns stage 2 lifted the hCutShare 0 pin (K278 (c)).
 function mazeWalk(seed: number): WalkGraph {
   const g = generateLatticeKnotwork({ gridSize: 10, weaveDensity: 0.3, turnBias: 0.6, randSeed: seed });
-  const plan = buildMazePlan(g, { ...DEFAULT_MAZE_PARAMS, deadEndDensity: DEAD_END_DENSITY_ON, hCutShare: 0 });
+  const plan = buildMazePlan(g, { ...DEFAULT_MAZE_PARAMS, deadEndDensity: DEAD_END_DENSITY_ON });
   const hueGroup = applyMazePlan(g, plan);
   applyMazeCuts(g, plan, hueGroup);
   return buildWalkGraph(g)!;
@@ -394,15 +393,17 @@ function secondsToFind(walk: WalkGraph, params: ChaseParams, seed: number): numb
 
 describe("K174: the minotaur's controls", () => {
   const MAZES = [3, 17, 42];
-  // Master's chase before K174 (d644ec5), on mazes 3, 17 and 42 with seeds
-  // 1 and 2: ticks / hunts / catches / digest of every tick.
+  // The chase at roamPull 0 on mazes 3, 17 and 42 with seeds 1 and 2: ticks
+  // / hunts / catches / digest of every tick. On hCutShare 0 mazes these
+  // equalled master's chase before K174 (d644ec5); K80 turns stage 2
+  // re-froze them on today's H1 mazes, the roamPull 0 path unchanged.
   const K80_DIGESTS = [
-    "14400/0/0/735ad93c",
-    "14400/4/3/82eddc6c",
-    "14400/6/5/1d87a40",
-    "14400/7/6/99a18aa9",
-    "14400/4/4/613ba18f",
-    "1690/0/0/28a076bb",
+    "14400/3/3/f3428983",
+    "14400/2/2/6dc590cc",
+    "14400/5/5/55344e84",
+    "14400/7/5/44122f41",
+    "14400/4/4/557840f8",
+    "6832/3/2/e9c9d2d6",
   ];
 
   it("roamPull 0 plays K80's chase tick for tick", () => {
@@ -429,13 +430,18 @@ describe("K174: the minotaur's controls", () => {
     }
   });
 
+  // Twenty mazes, not MAZES: one maze's pull-1 / pull-0 ratio ranges 0.40 to
+  // 1.06, and MAZES' three read 0.81 on H1 mazes (0.72 without H1). Measured
+  // on 40 mazes x 12 seeds (.claude/probes/K80/turns2/rt/still.md), the gain
+  // is 0.69 with H1 on or off; windows of 20 mazes x 6 seeds read 0.60-0.74,
+  // so 0.8 holds with margin (K80 turns stage 2).
   it("a pull finds a still player sooner", () => {
     const mean = (pull: number): number => {
       let sum = 0;
       let n = 0;
-      for (const maze of MAZES) {
+      for (let maze = 100; maze < 120; maze++) {
         const walk = mazeWalk(maze);
-        for (let seed = 1; seed <= 12; seed++, n++) sum += secondsToFind(walk, P({ roamPull: pull }), seed);
+        for (let seed = 1; seed <= 6; seed++, n++) sum += secondsToFind(walk, P({ roamPull: pull }), seed);
       }
       return sum / n;
     };
