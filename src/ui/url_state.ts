@@ -1,8 +1,9 @@
 // URL-as-complete-state: every design is fully specified by (seed, params)
 // serialized in the query string - one compact token (ui/param_codec.ts),
-// `?<seed>` or `?<seed>.<blob>`. The older key=value links still parse.
+// `?<seed>` or `?<seed>.<blob>`. key=value pairs (`?s=<seed>&am=instant`)
+// still parse, against today's defaults.
 
-import { codecDefaults, decodeToken, encodeToken } from "./param_codec";
+import { decodeToken, encodeToken } from "./param_codec";
 import type { ParamValue } from "./param_codec";
 import type { ColorScheme, GamutPalette } from "../core/section_colors";
 import { COLOR_SCHEMES, GAMUT_PALETTES } from "../core/section_colors";
@@ -240,8 +241,8 @@ export interface UrlParams {
   // RETIRED with the render-only plucks (2026-10-11): the old render ring's
   // frequency/decay scale - the time-exposure vibration has no visible
   // frequency, and its decay follows the sound's sustain. Nothing reads it;
-  // it stays only because the codec tables list it (dropping a param is a
-  // codec version bump), so links that carry it still read.
+  // it stays only because the codec table lists it (dropping a param is a
+  // codec version bump).
   snappiness: number;
   // RENDER-ONLY PLUCKS (taps, auto plucks, string releases): visual swing
   // multiplier [0, 2] (0 = sound only), strobe-ghost strength [0, 1] (the
@@ -284,8 +285,7 @@ export interface UrlParams {
   // close the fog in (fade + contracting reveal radius). Live.
   fowIntro: boolean;
   // Section color scheme (fabric mode; knot mode supports mono/strands):
-  // mono | strands | depth | segments | noise. Replaces the old multiColor
-  // checkbox (mc=1 reads as "strands").
+  // mono | strands | depth | segments | noise.
   colorScheme: ColorScheme;
   // [0, 6] lattice units: how far a junction's blended color bleeds into
   // the sections meeting there, beyond the short built-in blend (segments +
@@ -399,12 +399,10 @@ export const LOAD_SETTLE_MAX = 5;
 // reset buttons + modified indicators, and the Reset-to-defaults button.
 // The Omit type keeps it provably in sync with UrlParams. The user's chosen
 // settings (2026-10-11).
-// LINKS OMIT DEFAULTS, so the defaults are part of every link's meaning -
-// and the codec keeps its own frozen copy per version (param_codec.ts
-// CODEC_V1, which legacy s=/seed= links read with too). The tests pin this
-// table and require it to equal the current codec table's defaults:
-// changing a default means a new codec version (see param_codec.ts), and a
-// new param must be appended to the codec table as well.
+// LINKS OMIT DEFAULTS, so a default edit changes what every link that
+// leaves the param out means, and moves every daily (K132: accepted
+// before launch). A new param must be appended to the codec's
+// CODEC_PARAMS as well (param_codec.ts; a test fails until it is).
 export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   gridSize: 18,
   shape: "rect",
@@ -443,7 +441,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   rootNote: "seed",
   tonicEmphasis: 0.5,
   pulseSpacing: 2.5,
-  pulseReach: 3, // K75: appended to codec v3.
+  pulseReach: 3, // K75.
   hueShift: 300,
   gamutArc: 130,
   palette: "pastel",
@@ -453,7 +451,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   deadEndDensity: 0.5, // K74 (was 0.25).
   deadEndLength: 20, // K74.
   pluckStyle: "string",
-  pluckSize: 1.75, // Since codec v3 (v2 links read 1).
+  pluckSize: 1.75, // Was 1 until 2026-10-11.
   pluckGhost: 0.35,
   pluckReach: "run",
   physics: true,
@@ -461,13 +459,13 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   deadEnds: true, // K74 (was off).
   pathViz: "gold",
   cameraMode: "fit",
-  trailLength: 10, // Since codec v4 (v3 links and the dailies read 5).
+  trailLength: 10, // K73 (was 5).
   tension: 0.45,
   fogOfWar: false,
   fowRadius: 4,
   fowIntro: false,
   colorScheme: "segments",
-  junctionBlend: 0.88, // Since codec v2 (v1 links read 0).
+  junctionBlend: 0.88, // Was 0 until 2026-10-11.
   // trace + burn at 2.2 matches no preset.
   appearMode: "custom",
   appearSequence: "trace",
@@ -481,11 +479,11 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K21: the subtlest backdrop - static, keeps the page's ink on average.
   background: "vellum",
   backgroundIntensity: 0.5,
-  // K79: auto - every effect's pre-K79 pace (appended to codec v4).
+  // K79: auto - every effect's pre-K79 pace.
   backgroundSpeed: BACKGROUND_SPEED_AUTO,
-  // K79 stage B (appended to codec v4): the designed pattern and the
-  // design's gamut colors - the look every earlier link had. The custom
-  // colors start as the page ink and the default design's accents.
+  // K79 stage B: the designed pattern and the design's gamut colors - the
+  // look every earlier link had. The custom colors start as the page ink
+  // and the default design's accents.
   backgroundScale: 1,
   backgroundDetail: 1,
   backgroundFibers: 1,
@@ -496,11 +494,11 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   backgroundAccent1: "#7ab8cd",
   backgroundAccent2: "#cdb17a",
   backgroundAccent3: "#aa7acd",
-  // K147 (appended to codec v4): see the LOAD SETTLE comment in main.ts.
+  // K147: see the LOAD SETTLE comment in main.ts.
   settleBudget: 12,
   loadSettle: 0.45,
   // K80: the turn-based maze. The chase's tuning is the simulation-picked
-  // DEFAULT_CHASE_PARAMS (game/minotaur.ts); all appended to codec v4.
+  // DEFAULT_CHASE_PARAMS (game/minotaur.ts).
   clock: "turn",
   playerPace: DEFAULT_CHASE_PARAMS.playerPace,
   minoWanderPace: DEFAULT_CHASE_PARAMS.wanderPace,
@@ -571,9 +569,9 @@ export function seedFromText(text: string): number | null {
   return h;
 }
 
-// The CURRENT option list of every enum param: what this build accepts
-// from any link (anything else reads as the default) - and, in the tests,
-// what every codec table must still list.
+// The option list of every enum param: what this build accepts from any
+// link (anything else reads as the default) - and, in the tests, what the
+// codec's lists must equal.
 export const ENUM_OPTIONS: {
   readonly [K in keyof typeof PARAM_DEFAULTS]?: readonly string[];
 } = {
@@ -606,7 +604,7 @@ function clamp01(v: number): number {
 
 // A decoded token's values as app params. A value this build cannot use
 // (wrong type, an option it no longer has) reads as the default; the clamps
-// match the legacy reader's.
+// match the key=value reader's.
 function fromCodecValues(
   values: Readonly<Record<string, ParamValue>>
 ): Omit<UrlParams, "seed"> {
@@ -649,12 +647,6 @@ function sanitizeBackgroundSpeed(v: number): number {
     : Math.min(BACKGROUND_SPEED_MAX, v);
 }
 
-// What legacy links (s=, seed=) read for a missing key: the codec's v1
-// defaults - the table s= links were written against. Equal to
-// PARAM_DEFAULTS until a default changes; then the codec moves to v2 and
-// legacy links keep their meaning.
-const LEGACY_BASE = fromCodecValues(codecDefaults(1));
-
 function readNumber(
   query: URLSearchParams,
   key: string,
@@ -677,8 +669,8 @@ function readBool(
   return Number.isFinite(value) ? value > 0.5 : fallback;
 }
 
-// The legacy seed: s= (base-36, short links) or seed= (decimal, every link
-// made before short links); neither = a fresh random design.
+// The key=value seed: s= (base-36) or seed= (decimal); neither = a fresh
+// random design.
 function readSeed(query: URLSearchParams): number {
   const s = query.get("s");
   if (s && /^[0-9a-z]{1,7}$/.test(s)) return Number.parseInt(s, 36) >>> 0;
@@ -689,14 +681,14 @@ export function readParams(): UrlParams {
   return parseParams(window.location.search);
 }
 
-// Reads every link form:
-// - COMPACT: `?<seed>` / `?<seed>.<blob>` (param_codec.ts). Legacy
-//   key=value pairs AFTER the token override it (probes:
-//   `?<token>&am=instant`); unknown keys (fbclid, utm_*) are ignored.
-// - LEGACY: `?s=<base-36 seed>&<changed params>` short links and
-//   `?seed=<decimal>&<every param>` links, legacy keys (mc, trm) included.
-// No seed at all = a fresh random design. Never throws: an unreadable
-// token keeps whatever seed it has and warns once.
+// Reads every link form, always against TODAY's defaults:
+// - COMPACT: `?<seed>` / `?<seed>.<blob>` (param_codec.ts). key=value
+//   pairs AFTER the token override it (probes: `?<token>&am=instant`);
+//   unknown keys (fbclid, utm_*) are ignored.
+// - KEY=VALUE: `?s=<base-36 seed>&<params>` or `?seed=<decimal>&...`; with
+//   no seed (`?am=instant`), a fresh random design.
+// Never throws: an unreadable token, or one of another codec version, keeps
+// whatever seed it has and warns once.
 export function parseParams(search: string): UrlParams {
   const query = search.startsWith("?") ? search.slice(1) : search;
   const amp = query.indexOf("&");
@@ -705,16 +697,9 @@ export function parseParams(search: string): UrlParams {
   const head = (amp < 0 ? query : query.slice(0, amp)).replace(/=$/, "");
   if (head === "" || head.includes("=")) {
     const legacy = new URLSearchParams(query);
-    // A legacy LINK (s= / seed=) means what it meant when written: the v1
-    // defaults. Without a seed it is no link at all - a fresh design at
-    // TODAY's defaults (the bare page, or a `?am=instant` probe URL).
-    const linked = legacy.has("s") || legacy.has("seed");
-    return {
-      seed: readSeed(legacy),
-      ...readLegacy(legacy, linked ? LEGACY_BASE : { ...PARAM_DEFAULTS }),
-    };
+    return { seed: readSeed(legacy), ...readLegacy(legacy, PARAM_DEFAULTS) };
   }
-  const decoded = decodeToken(head);
+  const decoded = decodeToken(head, PARAM_DEFAULTS);
   if (decoded.error !== null) {
     console.warn(
       decoded.seed === null
@@ -733,10 +718,9 @@ export function parseParams(search: string): UrlParams {
   return { seed, ...readLegacy(overrides, values) };
 }
 
-// The legacy key=value readers: each key the query lacks reads `base`
-// (LEGACY_BASE for a legacy link; the decoded token for overrides after
-// one). A param added after compact links needs no key here - it simply
-// reads base.
+// The key=value readers: each key the query lacks reads `base` (today's
+// defaults for a key=value link; the decoded token for overrides after
+// one). A param needs no key here - without one it simply reads base.
 function readLegacy(
   query: URLSearchParams,
   base: Omit<UrlParams, "seed">
@@ -798,14 +782,14 @@ function readLegacy(
     physics: readBool(query, "phy", D.physics),
     mazeFabric: readBool(query, "mf", D.mazeFabric),
     deadEnds: readBool(query, "de", D.deadEnds),
-    pathViz: readPathViz(query, D.pathViz),
+    pathViz: readChoice(query, "pv", PATH_VIZ_MODES, D.pathViz),
     cameraMode: readChoice(query, "cam", CAMERA_MODES, D.cameraMode),
     trailLength: readNumber(query, "trl", D.trailLength),
     tension: readNumber(query, "tn", D.tension),
     fogOfWar: readBool(query, "fow", D.fogOfWar),
     fowRadius: readNumber(query, "fr", D.fowRadius),
     fowIntro: readBool(query, "fwi", D.fowIntro),
-    colorScheme: readScheme(query, D.colorScheme),
+    colorScheme: readChoice(query, "cs", COLOR_SCHEMES, D.colorScheme),
     junctionBlend: Math.max(0, readNumber(query, "jbl", D.junctionBlend)),
     ...readAppearance(query, D),
     entranceClearance: readNumber(query, "ecl", D.entranceClearance),
@@ -970,33 +954,6 @@ function readChoice<T extends string>(
     : fallback;
 }
 
-function readPathViz(query: URLSearchParams, fallback: PathViz): PathViz {
-  const raw = query.get("pv");
-  if (raw && (PATH_VIZ_MODES as readonly string[]).includes(raw)) {
-    return raw as PathViz;
-  }
-  // Back-compat: the short-lived Stage 23 trailMode checkbox.
-  if (query.has("trm")) {
-    return readNumber(query, "trm", 0) > 0.5 ? "trail" : "gold";
-  }
-  return fallback;
-}
-
-function readScheme(
-  query: URLSearchParams,
-  fallback: ColorScheme
-): ColorScheme {
-  const raw = query.get("cs");
-  if (raw && (COLOR_SCHEMES as string[]).includes(raw)) {
-    return raw as ColorScheme;
-  }
-  // Back-compat: the old multiColor checkbox.
-  if (query.has("mc")) {
-    return readNumber(query, "mc", 0) > 0.5 ? "strands" : "mono";
-  }
-  return fallback;
-}
-
 // The three values a preset, random or instant appearMode implies, so a
 // link in one of those modes leaves them out.
 const APPEAR_IMPLIED: ReadonlySet<string> = new Set([
@@ -1020,6 +977,7 @@ export function encodeParams(params: UrlParams): string {
   return encodeToken(
     params.seed,
     params as unknown as Record<string, unknown>,
+    PARAM_DEFAULTS,
     impliedParams(params)
   );
 }

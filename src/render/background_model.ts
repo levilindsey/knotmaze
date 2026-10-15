@@ -15,9 +15,9 @@
 import { gamutRgb } from "../core/section_colors";
 import type { RGB } from "../core/section_colors";
 
-// The `background` param's options. ORDER IS LOAD-BEARING: the codec table
-// (ui/param_codec.ts) lists these options in this order, and a published
-// link stores an option's index - append new effects at the end.
+// The `background` param's options. ORDER IS LOAD-BEARING: the codec
+// (ui/param_codec.ts) lists these options in this order, and a link stores
+// an option's index - append new effects at the end.
 export type BackgroundId =
   | "none"
   | "vellum"

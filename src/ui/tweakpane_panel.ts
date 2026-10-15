@@ -659,9 +659,9 @@ export function buildPanel(
   // LABELS AND VALUES DIFFER ON PURPOSE (K73, Levi 2026-10-12: "rename
   // 'gold' to 'fullPath', and 'trail' to 'recentPath'"). Only the shown
   // labels changed: the values stay gold / trail / string, because links
-  // store the option's index in the frozen codec tables (param_codec.ts),
-  // legacy `pv=` links name the values, `trm=1` reads as trail, and the
-  // daily records keep the value a result ended in.
+  // store the option's index in the codec's list (param_codec.ts), `pv=`
+  // overrides name the values, and the daily records keep the value a
+  // result ended in.
   const pathVizRow = row(
     fMaze, p, "pathViz",
     { options: { fullPath: "gold", recentPath: "trail", string: "string" } },
