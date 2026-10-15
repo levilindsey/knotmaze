@@ -25,7 +25,7 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/ui/tweakpane_panel.ts`, `src/ui/grid_align_curve.ts`, `test/ui/grid_align_curve.test.ts`
 - `gameplay-motion.md`: THE MOTION SETTING (K53, K79)
   paths: `src/ui/motion.ts`, `test/ui/motion.test.ts`
-- `gameplay-camera.md`: the camera round, FIT CAMERA PAN SLACK (K149), taps and drags
+- `gameplay-camera.md`: the camera round, FIT CAMERA PAN RANGE (K198), taps and drags
   paths: `src/main.ts`, `src/ui/view_clamp.ts`, `test/ui/view_clamp.test.ts`
 - `gameplay-moves.md`: MOVES BY DIRECTION (K120): keys, the picker, the move pad
   paths: `src/ui/key_moves.ts`, `src/ui/move_pad.ts`, `test/ui/key_moves.test.ts`, `test/ui/move_pad.test.ts`

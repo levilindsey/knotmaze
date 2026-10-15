@@ -24,40 +24,37 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   camera steps in EVERY ticker branch (moves and fog growth happen while
   the physics sleeps).
 
-- FIT CAMERA PAN SLACK (K149, 2026-10-14; ui/view_clamp.ts, pure and
-  tested; brief docs/design/K148_K149.md). Levi: "we should support
-  panning the maze a bit more off-screen at furthest zoom. Especially to
-  get it out from under the menu." The fit view is screen = zoom x
-  fitScreen + pan; until K149 the zoomed fit frame had to COVER the
-  screen, so zoom 1 had no pan range. Now the frame may overhang the
-  screen's edge by PAN_SLACK = 0.3 of the screen's size per side, at every
-  zoom: pan in [size (1 - zoom) - 0.3 size, 0.3 size] per axis
-  (`clampFitView`, called by main.ts's clampView). A fixed share of the
-  SCREEN, so opening or closing the panel never moves the view. WHY 0.3:
-  the desktop panel is 256 px at 10 px from the right, and a maze that
-  fills the width has FIT_MARGIN 40, so it must move left by 226 px plus a
-  gap: 17% of 1400, 23% of 1000, 29% of 800 (below 700 px the panel
-  starts closed). MEASURED (`.claude/probes/K148_K149/probe.mjs slack`):
-  at 1000x800 and 800x700 the maze overlaps the open panel at home (its
-  right edge 850 against the panel's 734; 701 against 534) and clears it
-  at the limit (550; 461); at 1400x900 it already clears it at home (1099
-  against 1134). A PHONE (411x753): the open panel is 320 px wide at x
-  81-401 (78%) and runs to the bottom, so no share short of about 70%
-  clears it; 0.3 moves the maze 123 px, and the panel starts closed
-  there. Left as is (open for Levi). WHAT FOLLOWS: zoom about a point
-  (pinch, wheel) keeps the point under the cursor, and zooming back out
-  returns to the slack view it left (at zoom 1 the pan range is no longer
-  a point, so it is not snapped home); the RESET (double-click, double-tap
-  on empty space; viewHoming) ended on |zoom - 1| alone, so from a
-  slack-panned zoom-1 view it snapped on its first frame: it now waits
-  for the pan too and eases; the FOLLOW camera has no clamp (placeWorldAt
-  clamps only its zoom), is unchanged, and returns to the head by itself
-  2.2 s after a gesture; indicators place themselves against the chrome
-  whatever the pan (both discs clear of each other and of the open panel
-  at 1400x900 and 411x753). Hooks: `__knotView()` also returns the fit
-  camera's zoom, panX and panY, `__knotIndicators()` headWhy and
-  followIdle. GOTCHA: puppeteer's `mouse.click(x, y, {clickCount: 2})`
-  gave two pointerdowns and no dblclick here; dispatch the event.
+- FIT CAMERA PAN RANGE (K198, 2026-10-14, replacing K149's 0.3-screen
+  slack; ui/view_clamp.ts, pure and tested; brief docs/design/K198.md).
+  Levi: pan only "such that the right edge of the maze is shown to the
+  left of the left edge of the panel". Fit view: screen = zoom x fitScreen
+  + pan. The zoomed frame covers the screen (pan in [size (1 - zoom), 0]
+  per axis; home, zoom 1, is one point), except that while the panel is
+  open panX may go left until the maze's drawn right edge sits PANEL_GAP
+  10 px (the panel's own margin) left of the panel: panX >= min(W (1 -
+  zoom), panelLeft - 10 - zoom x mazeRight). Nothing more: not right, not
+  vertically, not for a maze already clear of the panel. RIGHT EDGE
+  (main.ts `fitRight`, fit-screen px): the threads' or a shown
+  start/head/exit disc's, whichever is further (`markersRight`; the
+  default `se` exit's disc pokes past the threads); under fog the fog
+  box's. Not counted: the win ring (about 5 px past the disc, inside the
+  gap), the head's glow, the minotaur. PANEL: the Tweakpane wrapper's
+  rect, closed at width 0, height ignored. Opening only widens the range,
+  so it never moves the view. Closing, a resize or fit drift (the edge
+  creeps a few px while the knot settles) EASE the view back: each
+  fit-mode frame `easeIntoRange` keeps a per-side allowance of 0.85 of how
+  far it is out (RANGE_EASE 0.15, the reset's rate), and gestures clamp
+  to range + allowance, so nothing snaps. MEASURED (`.claude/probes/K198/
+  pan.mjs <base> <out> 1000x800|800x700|1400x900|phone`): the zoom-1 left
+  limit puts the edge 9-10 px left of the panel (725 vs 734, 525 vs 534,
+  phone 71 vs 81; 1400x900 clears it at home, 1122 vs 1134); closing eases
+  home in 36-40 frames. Reset, zoom about a point and the FOLLOW camera
+  (unclamped) are unchanged; zooming out with the panel closed slides the
+  view in a little each step (64 px a 0.9x step at 1000x800, as before
+  K149). Hooks: `__knotView()` adds panel, mazeRight, range, allow;
+  K149's `probe.mjs slack` checks the old rule. GOTCHA: puppeteer's
+  `mouse.click(x, y, {clickCount: 2})` gave no dblclick; dispatch the
+  event.
 
 - *From RENDER-ONLY PLUCKS (2026-10-11), taps and drags:* TAPS + AUTO PLUCKS touch zero physics
   (bitwise: positions/prev/zPos/pass ctrls, 0 steps, never wake); a DRAG

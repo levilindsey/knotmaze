@@ -100,7 +100,7 @@ src/
     offscreen_indicators.ts # K73: edge indicators for off-screen targets
     motion.ts             # K53/K79: the Motion setting (viewer pref, data-motion)
     head_indicator.ts     # K148 pure: the player's edge indicator (when it shows, what a tap does)
-    view_clamp.ts         # K149 pure: the fit camera's pan clamp (slack at every zoom)
+    view_clamp.ts         # K198 pure: the fit camera's pan range (clears the open panel)
     key_moves.ts          # K120: moves by direction (arrows, WASD; picker, hold)
     move_pad.ts           # K120: the touch move pad (viewer pref, same picker)
   util/
@@ -156,7 +156,7 @@ test/
     the front door, the exempt set, prefs)
     mode_badge.test.ts, offscreen_indicators.test.ts (edge layout,
     chrome avoidance), motion.test.ts (prefs, live follow, storage
-    failures), head_indicator.test.ts (K148), view_clamp.test.ts (K149),
+    failures), head_indicator.test.ts (K148), view_clamp.test.ts (K198),
     key_moves.test.ts (K120: picker, ties, holds, guards),
     move_pad.test.ts (pref, arms)
   notices/
