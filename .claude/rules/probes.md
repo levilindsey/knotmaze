@@ -334,6 +334,44 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   Measure from the DRAWN centerline (`renderer.chainSamples`), not
   `__knotPoint`, whose curve sits 0.015-0.06 world off it (more with
   flow): gameplay-camera.md's PICK MARGINS.
+- K7 stage 4 (2026-10-15), THE PHYSICS WORKER AND THE PROBE BRIDGE
+  (`docs/design/K7_worker.md`, design 8 and the stage 4 handoff). With
+  `&phw=1` the physics runs in a Web Worker and `__knotPS()` is main's
+  MIRROR: positions, pass ctrls, flags and emergent rows from the
+  snapshots (interpolated between the newest two), and NO prev, zPos,
+  contact state or slide stats. Assigning its `step` THROWS, naming the
+  fix. `phw=0`, or no `phw` (the default), is the in-thread path,
+  unchanged: every older probe still runs there. The bridge works on both
+  hosts: `await __knotPhysFreeze(true|false)` -> `{frozen, simTime, kind}`
+  (in-thread it IS the old `ps.step = function(){}` patch, an own
+  property; with a worker it stops the worker's clock and resolves once
+  main shows that exact state); `await __knotStepUntil(simTime)` steps
+  1/60 s frames to that sim time through the class's own step, frozen or
+  not, not counted as live stepping; `await __knotPhysDump({arrays})` ->
+  FNV-1a hashes of positions, prev, zPos and passes (equal across hosts
+  for one state) and, asked, the arrays; `__knotPluck({tug})` returns a
+  Promise that resolves once the tug is in the state main shows.
+  `__knotPerf()` and `__knotSettle()` add `physMs` and `substeps`
+  (cumulative live stepping since the build: main-thread ps.step time
+  in-thread, the worker's own time with a worker; difference them per
+  frame instead of wrapping ps.step), `lagS`, `frozen`, `asleep`, `kind`;
+  `__knotPerf()` adds reveal.tick's cost (`revealMean/P95/Max`,
+  `revealMsTotal`) and `__knotReveal()` its `tickMs`. Ported to both
+  hosts: `scripts/diag_screenshot.mjs` (`timing.host`, `physMs`),
+  `scripts/phone_pass/walk.mjs` (pinAll freezes through the hook),
+  `.claude/probes/K7/stage4/` (`k7_frames.mjs`, now a FIXED WALL-TIME
+  drag, `--dragms` 5000; `k7_latency.mjs`, a pointer event to the end of
+  the first frame whose grabbed point covers 90% of where it SETTLES for
+  that step: main bounds a drag, L tanh(r / L), and the constraints hold
+  the grabbed particle short of even that, so a target at the pointer is
+  never reached) and its `ports/` (`K147/k147_measure.mjs`,
+  `K279/k279_sheet.mjs` (stepUntil), `k279_wake.mjs` (physMs deltas),
+  `k279_live.mjs`, and `g2lib/g2lib.mjs`, the union of the two g2lib
+  lineages, freezing through the hook). Every other probe that patches
+  or wraps ps.step tests the in-thread path only: run it with `&phw=0`
+  or port it (the list and the one-line ports: the stage 4 handoff and
+  `ports/FREEZE_PATCH_FILES.md`). With the worker,
+  `__knotSettle().phase` reads `off`: K147's budget runs only in-thread.
 
 ## Census and diagnosis rules
 

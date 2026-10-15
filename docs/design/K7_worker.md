@@ -1781,3 +1781,263 @@ in this stage), fabric designs.
 - **Cold shader-compile freezes on both hosts** (K307): 5.3 s on a
   cold-profile `am=instant` load, 2.2-3.1 s in the daily's intro.
 - **The phone.**
+
+## Stage 4 handoff
+
+Stage 4 ended 2026-10-15 at [[END]], inside its two-hour cap (it started
+at 00:48). The branch is `worktree-agent-abee0faca59fb8636`, from
+`7f4c1bd` (stage 3's handoff): `681cd3d` (the bridge), `02357d4` (the
+two tracked ports), [[LORE_SHA]] (the lore) and this handoff. Master
+(`fa7f9dc`) has changed `src/main.ts` since (K76 stage 2c); a trial merge
+(`git merge-tree`) combines the two without a conflict, and no other file
+changed on both sides. The evidence is in `.claude/probes/K7/stage4/`
+(untracked, for the coordinator to copy): the probes, the batches
+(`s4_*.txt`) and their logs, `k7_results.jsonl`, `k7_latency.jsonl`,
+`frames/`, and the helpers' `k307/` and `ports/`. The builds
+(`builds/`, `k307/builds/`) and K307's raw traces
+(`k307/runs/*/load1.trace.json`, 79 MB) need not be kept.
+
+### What is done
+
+Every work item. The targets are under 3.
+
+1. **The bridge** (`681cd3d`, design 8). Every hook works on both hosts.
+   - `await __knotPhysFreeze(on)` returns `{frozen, simTime, kind}`.
+     In-thread it IS the old patch (an own `ps.step = function(){}`,
+     deleted to unfreeze), so that path is unchanged. With the worker it
+     stops the worker's live clock (a `freeze` message) and resolves once
+     main shows the frozen state exactly (a fence: the first snapshot
+     written after the freeze, drawn without interpolation).
+   - The mirror's `step` is an accessor whose setter throws: "physics
+     runs in a Web Worker (phw=1), so ps.step cannot be patched: freeze
+     with __knotPhysFreeze(true) (a Promise), or load the page with
+     &phw=0 for the in-thread system."
+   - `await __knotStepUntil(simTime)` steps 1/60 s frames to that sim
+     time through the class's own step (`ParticleSystem.prototype.step`),
+     frozen or not, and does not count them as live stepping.
+   - `await __knotPhysDump({arrays})` returns `{gen, simTime, n, c,
+     kind, hashes, arrays?}`: FNV-1a hashes of positions, prev, zPos and
+     the pass ctrls (`src/physics/probe_dump.ts`), equal across hosts for
+     one state (a test). The worker answers in order, so a dump after
+     `stepUntil` holds its state.
+   - `__knotPluck(..., {tug})` returns a Promise that resolves once the
+     tug is in the state main shows.
+   - `__knotPerf()` adds `physMs` and `substeps` (cumulative live
+     stepping since the build: main's `ps.step` time in-thread, the
+     worker's own with a worker), `lagS`, `frozen`, `host`, and
+     reveal.tick's cost (`revealMean`, `revealP95`, `revealMax`,
+     `revealMsTotal`); `__knotSettle()` adds `asleep`, `physMs`,
+     `substeps` and `kind`; `__knotReveal()` adds `tickMs` and
+     `tickMsTotal`.
+   - The worker side: `freeze`, `stepUntil` and `dump` messages in
+     `physics_worker_core.ts`; the snapshot header carries the batch's
+     step time (`stepMs`; the header is 152 bytes now).
+2. **Ports.**
+   - `scripts/diag_screenshot.mjs` (`02357d4`): `timing.host`
+     (in-thread | worker) and the host's `physMs` and `substeps`. Its
+     frame stats were already host-blind (rAF intervals).
+   - `scripts/phone_pass/walk.mjs:95` (`02357d4`): `pinAll()` freezes
+     through `__knotPhysFreeze` when the build has it, and with the old
+     patch on builds before stage 4.
+   - In the probes folder, as copies (the main checkout's originals are
+     untouched): [[PORTS]]
+   - The other files that patch or wrap `ps.step` (a scan of the main
+     checkout's `.claude/probes/`; lines and notes in
+     `ports/FREEZE_PATCH_FILES.md`). Each tests the in-thread path only:
+     run it with `&phw=0`, or port it with its kind's one line,
+     feature-detected (`typeof window.__knotPhysFreeze === "function"`,
+     else the old line):
+     - **The freeze patch** (`__knotPS().step = function () {}`), 52
+       files. Port: `await window.__knotPhysFreeze(true)` inside an async
+       `page.evaluate`; an unfreeze (`delete ps.step`, or restoring a
+       saved `__step`: `g1/probe_gestures.mjs:72`,
+       `K7/stage1/input_probe.mjs:256`) becomes
+       `await window.__knotPhysFreeze(false)`.
+       - 21 library copies, which 95 probes import (`freeze` or
+         `openFrozen`), so porting a folder's copy covers its probes:
+         `g2lib.mjs` in `g2`, `K4`, `K75`, `K79`, `K81`, `K93`,
+         `K111/stage2`, `K111/stage3`, `K111/stage4`, `K145`,
+         `K154_K169/census`, `K191`, `K268`, `K298`, `K76/stage2a`,
+         `K76/stage2b`, `K76/stage2c`; `lib.mjs` in `K77`, `K104`,
+         `K104/collapse`, `K344`.
+       - 31 probes that patch directly: `g1/` probe_capext, probe_gestures,
+         probe_gx, probe_overcut_attr, probe_protab, probe_protlen,
+         probe_samestate, probe_smin, probe_tipab, probe_togglediff;
+         `g2/` and `K4/` census_bands, census_fx; `K104/census/census`;
+         `K180/` census/census, k180_ab, k180_sheet;
+         `K191/census_out`; `K21/` bg_fog, bg_sheet; `K279/k279_ab`;
+         `K7/stage1/input_probe`; `K76/probe_explore`; `K79/` bg_sheet,
+         k79_sheet, k79b_sheet; `K81/phone/k81phone`; `K83/k83_shot`
+         (conditional: `if (freezePhysics) await ...`); `K90/k90_crops`;
+         `K98/k98_shot`.
+     - **A timing wrapper** around `ps.step`, 6 files: `g1/probe_perf`,
+       `g1/probe_perf2` (through `wrap(ps, pproto, "step", ...)`),
+       `K279/k279_wake`, and the `k7_frames.mjs` copies in `K7/design`,
+       `K7/stage1` and `K7/stage3`. Port: no wrapper; difference
+       `__knotPerf(1).physMs` and `.substeps` over the window or per frame
+       (with the worker they arrive with the snapshots, so a frame's delta
+       is a snapshot's, not a call's).
+     - **Stepping a frozen scene** (a gated step plus
+       `ParticleSystem.prototype.step.call`), 1 file: `K279/k279_sheet`.
+       Port: freeze once, then `await window.__knotStepUntil(t)` per
+       target (it overshoots a target off the 1/60 s grid by under one
+       frame, where the gate clipped the last dt).
+     - Not affected: Node harnesses that build their own
+       `ParticleSystem` (25 files), and the historic `main.ts`
+       snapshots under `K41/`.
+3. **Acceptance** under the perf lock, builds of `681cd3d` (s4a) and of
+   master `7f4c1bd` (its default path, in-thread), 1600x900 at dsf 1.5,
+   a fresh profile per load, the drag a fixed 5 s wall-time circle. "Between
+   freezes" is the intro after its last callback over 300 ms (the shader
+   compiles, K307) to the intro's end, as design 10 took it.
+
+   The daily (the bare URL, #4, 2988 particles):
+
+   | | intro fps (p95 ms) | between freezes fps (p95) | first sleep s | sim/wall: intro, visible to sleep | drag fps (p95) | wake fps | ms/substep |
+   |---|---|---|---|---|---|---|---|
+   | master 1 / 2 | 20.4 / 19.7 (36) | 40.2 / 38.9 (36) | 21.39 / 21.75 | 0.17, 0.23 | 6.9 (160) | 9.2 / 9.5 | 10.6 |
+   | phw=0 1 / 2 | 20.3 / 20.6 (36) | 40.6 / 40.5 (36) | 21.16 / 21.44 | 0.17, 0.23 | 6.9 (160) | 9.0 / 8.7 | 10.6 / 10.8 |
+   | phw=1 1 / 2 | 28.2 / 28.6 (18.1) | 56.2 / 56.3 (18.1) | 12.37 / 12.37 | 0.40, 0.42 | 55.2 / 54.8 (18.5) | 55.2 / 54.4 | 10.7 |
+
+   The other designs (one run each; [[OTHER_NOTE]]):
+
+   [[OTHER_TABLE]]
+
+   Against design 10's targets:
+   - **The intro at 50 fps or more between the freezes:** met with the
+     worker on every design but dense (56.2-56.3 on the daily, 56.3 at gs
+     18, 55.4 on the knot, [[FABRIC_BETW]] on the fabric). Dense runs at
+     37.7: main is render-bound there, not physics-bound (the callback's
+     median is 24.9 ms with no physics in it, renderer.update 16.2 of it;
+     on the daily it is 13.9 and 9.4). That is K8's lever, as design 10
+     expected. The whole intro still averages 28-36 fps on both hosts
+     because the two shader-compile freezes (about 2.9 s and 2.2 s) stay
+     (K307; see 5).
+   - **The daily's first sleep by 13 s:** met, 12.37 s in both runs
+     (in-thread 21.2-21.4).
+   - **A gs 18 drag at 50 fps or more:** met, 55.3 (in-thread 7.0).
+   - **Latency p50 of 50 ms or less:** [[LAT_VERDICT]]
+   - **`phw=0` unchanged within noise:** on the daily, s4a's `phw=0`
+     matches master's default path on every column (between freezes
+     40.6 / 40.5 against 40.2 / 38.9 fps, first sleep 21.16 / 21.44
+     against 21.39 / 21.75 s, drag 6.9 against 6.9, wake 9.0 / 8.7
+     against 9.2 / 9.5). [[PHW0_OTHERS]]
+4. **Latency** ([[LAT_SECTION]])
+5. **K307's unattributed main-thread JS** (a sonnet helper, `k307/`:
+   V8's CPU sampler inside a Chrome trace with K307's WebGL wrapper, an
+   unminified source-mapped build of `7f4c1bd`, `?daily&phw=0` and
+   `&phw=1`, two cold loads each, under the lock; profiling makes JS
+   15-30% slower, so its 97-108 ms reads as the doc's 86). Each window
+   splits into GL wait, JS and GC, and adds up to its wall time.
+   - **Freeze 1 (about 86 ms, the hidden pre-settle):** the FIRST
+     pre-settle step, `presettleTick` (main.ts:1171) through
+     `presettleFrame` and `ParticleSystem.step`: 96 / 86 ms, of it
+     `applySegmentCollision` 40 and `substep`'s own lines 28-37. It is
+     cold: about 4x a warm step (22-25 ms; the worker shows the same, 91
+     then 24-33 ms). `SETTLE_CHUNK_MS` (22) makes every slice one step:
+     16 steps in all, one in freeze 1, about 14 in hidden frames and one
+     in freeze 2. Pixi's own JS is 10-11 ms. **The worker removes the
+     physics** (main's JS falls to 11.4 / 11.8 ms), but the freeze only
+     shortens by 19-30 ms: the GPU process compiles serially, and
+     without the physics in front, bg-vellum's 190 ms compile waits
+     behind 12-15 small programs' links instead (observed in the
+     GPU-thread trace; the reading is inferred).
+   - **Freeze 2 (about 47 ms, the first visible frame):** half physics,
+     half render. The pre-settle's 16th step (22.5 ms), then
+     `finishPresettle` (main.ts:1210, 22 ms): ribbon update 16
+     (`sampleOpenSpline` 6, `RibbonMesh.update` 3, `flowOffset` 2) and
+     `startAppearance` 5 (RevealAnimator, buildRevealPlan); Pixi 8. **The
+     worker removes the step** (main's JS 32-36 ms); the wall time is
+     the section-rgb compile either way (2913 / 2914 against 2964 / 3043
+     ms, inside the GPU noise of other agents' runs).
+   - **The 80-96 ms frame at about 6.1 s: not reproduced at
+     `7f4c1bd`.** In the helper's four traces the first frame after
+     freeze 3 is a 24-36 ms task, and in the acceptance runs (minified,
+     no profiler) a 29-31 ms callback in-thread and 19 ms with the
+     worker; K147's budget takes ONE substep in it, then frames of 21-29
+     ms (in-thread) or 11-19 ms (worker). The doc traced master
+     `3e86fb5`. Nothing to fix here.
+   - **Freeze 3 (about 2.2 s):** 48 ms of JS (paint palette, fillets,
+     width profiles, spline sampling, one physics frame of 12 ms) inside
+     the arm-strip and junction-field compiles; the worker removes the
+     12 ms.
+   - **Fixed in stage 4: nothing.** What the worker can take, it
+     already takes (every physics slice above); the rest is render-side
+     setup or GPU compile waits, K307's and K8's. Recommendations are
+     under "For stage 5".
+   - **Found on the way** (the worker's, observed in the trace,
+     mechanism inferred): with `phw=1` the worker's `init` (posted at
+     about 335 ms, before the worker had evaluated its module at 398 ms)
+     is held until main processes the worker's script-evaluated
+     notification, which waits behind freeze 1's long task: the worker
+     idles from 398 to 692 ms, so its pre-settle starts about 300 ms
+     late and the first visible frame comes at 1.16-1.21 s against
+     1.02-1.05 s in-thread. And the worker idles through freezes 2 and 3:
+     its clock is main's frames, one 0.25 s batch at most, so it cannot
+     settle ahead while main waits on the GPU.
+6. **Lore:** `probes.md` has the freeze hook, `phw=0`, the bridge and
+   which probes test which path ([[LORE_SHA]]).
+
+### Where it departs from the brief
+
+- **Latency's target is where the grabbed point settles, not the
+  pointer.** Main bounds a drag (`boundedDragTo`, L tanh(r / L) from the
+  grab origin, L = tugLimit x threadWidth) and the constraints hold the
+  grabbed particle short of even that, so the pointer's own position is
+  never reached; the first version of the probe found no step "reached"
+  on either host. A step's target is the grabbed point's position in the
+  last frame before the next step, and latency runs to the first frame
+  at 90% of that displacement.
+- **The ported K147 and K279 probes and `g2lib.mjs` are copies** in the
+  stage 4 folder, untracked like their originals.
+- **One acceptance run was taken under load:** the first `phw=1` fabric
+  run overlapped another agent's unlocked Chrome probe; [[RERUN_NOTE]]
+
+### Verification
+
+Observed unless marked inferred. Desktop only.
+
+- `npm test`: [[NPM_TEST]]
+- The bridge's tests (`test/physics/worker_host.test.ts`, "the probe
+  bridge"): the worker freezes, shows the frozen state exactly and steps
+  nothing until unfrozen; steps until a sim time, frozen or not; dumps
+  prev, zPos and the passes; syncs; rejects what is in flight on a
+  rebuild; refuses the patch on the mirror, naming the hook; and matches
+  the in-thread host on the patch, `stepUntil` and the dump.
+  `physics_host.test.ts` covers the in-thread side.
+- `diag_screenshot.mjs` on `?7k&mf=0&am=instant`: [[DIAG]]
+- The ported probes in both modes: [[PORTS_SMOKE]]
+- **Not the bridge's:** with the worker, `__knotSettle().phase` reads
+  `off` (K147's budget does not run there; the worker drops lag past 0.05
+  s itself), so the k7_frames column of the phase is blank on `phw=1`.
+
+### Not done
+
+- The phone (stage 5).
+- [[NOT_DONE]]
+
+### For stage 5
+
+- **The phone pass** on this build (design 10's plan): every hook and
+  ported probe runs on the worker; `walk.mjs` pins through the hook.
+  Latency on the phone is unmeasured; `k7_latency.mjs` runs there with
+  a touch path added.
+- **K307's freezes stay on both hosts** and dominate the intro (28 fps
+  averaged on the worker, 56 between them). The worker cannot hide them:
+  the compiles block main, which drives the worker's clock. Recommended
+  (K307's lever, not K7's): compile the programs in parallel and before
+  the first visible frame, as K307's doc measured, and look at which
+  call sites queue the 12-15 small programs ahead of bg-vellum.
+- **The worker start gate** (above): construct the Worker at the top of
+  boot, or let main yield once after posting `init` before the first
+  long frame, or have the worker say hello first and post `init` on it
+  (`worker_host.ts:315`). Worth about 0.2-0.3 s to the first visible
+  frame on the desktop, more on the phone (inferred).
+- **The worker idles through the compile freezes:** letting it run
+  ahead of main's frames during the pre-settle (a budget of its own)
+  would settle during the freezes. Its saturation while the knot
+  settles (97% busy, `lagS` 1.04 s by 8 s, the helper's trace) is the
+  cost to watch on the phone.
+- **Dense is render-bound on main** (renderer.update 16 ms a frame):
+  K8.
+- **K147's budget in worker mode** is already stage 5's item 3.
