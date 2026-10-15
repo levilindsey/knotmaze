@@ -307,6 +307,8 @@ describe("the daily design and its exempt preferences (K56)", () => {
       "pluckGlow",
       "tugLimit",
       "snapBack",
+      // K145, proposed with it.
+      "hoverGlow",
       "physics",
       // K147, proposed with it.
       "settleBudget",

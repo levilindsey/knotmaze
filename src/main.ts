@@ -3227,6 +3227,7 @@ async function main(): Promise<void> {
     pendingPluck = null;
     dragPan = null;
     touchLocked = true;
+    clearGlow();
     const [a, b] = pinchPair();
     const mx = (a.x + b.x) / 2;
     const my = (a.y + b.y) / 2;
@@ -3265,6 +3266,21 @@ async function main(): Promise<void> {
       fabricController &&
       fabric.edgeAt(x, y, fabricController) >= 0
     );
+  // K145, the hover glow: the run under the pointer lights subtly along
+  // both rims when it is not a choice (the fabric leaves choices out; a
+  // point over a choice sets none). A touch press shows it until the
+  // finger lifts or the press becomes a tug or a pan. Returns true when
+  // the paint declaration needs a refresh.
+  const setGlowAt = (x: number, y: number, eid: number): boolean => {
+    if (!params.mazeFabric || !fabric) return false;
+    const hit = eid < 0 ? renderer?.pickThread(x, y, GRAB_RADIUS) : null;
+    return fabric.setGlow(hit ? hit.chain : -1, hit ? hit.ctrl : 0);
+  };
+  const clearGlow = (): void => {
+    if (fabric && fabricController && fabric.setGlow(-1, 0)) {
+      fabric.update(fabricController);
+    }
+  };
 
   app.canvas.addEventListener(
     "wheel",
@@ -3307,6 +3323,7 @@ async function main(): Promise<void> {
     // Middle-button drag pans from anywhere.
     if (e.pointerType === "mouse" && e.button === 1) {
       e.preventDefault();
+      clearGlow();
       dragPan = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 };
       app.canvas.setPointerCapture(e.pointerId);
       app.canvas.style.cursor = "grabbing";
@@ -3353,6 +3370,10 @@ async function main(): Promise<void> {
         y,
       };
       app.canvas.setPointerCapture(e.pointerId);
+      // The press shows the hover glow (a touch has no hover before it).
+      if (setGlowAt(x, y, -1) && fabric && fabricController) {
+        fabric.update(fabricController);
+      }
     } else {
       // Empty space: drag to pan the camera.
       dragPan = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 };
@@ -3367,6 +3388,8 @@ async function main(): Promise<void> {
     const pp = pendingPluck;
     pendingPluck = null;
     if (!pp || !ps) return;
+    // A tug or a pan is not a hover: the glow goes (K145).
+    clearGlow();
     if (!physicsLive()) {
       dragPan = { id: pp.id, x: pp.sx, y: pp.sy, moved: pp.slop + 1 };
       return;
@@ -3450,9 +3473,11 @@ async function main(): Promise<void> {
       wake();
     } else if (params.mazeFabric && fabric && fabricController) {
       // Hover: light the choosable run under the pointer (the paint pass
-      // animates it even while the physics sleeps - no wake needed).
+      // animates it even while the physics sleeps - no wake needed), or
+      // glow subtly along any other run under it (K145).
       const eid = fabric.edgeAt(x, y, fabricController);
-      if (fabric.setHover(eid)) fabric.update(fabricController);
+      const glow = setGlowAt(x, y, eid);
+      if (fabric.setHover(eid) || glow) fabric.update(fabricController);
       app.canvas.style.cursor =
         eid >= 0
           ? "pointer"
@@ -3495,9 +3520,10 @@ async function main(): Promise<void> {
           handleFabricTap(tap.x, tap.y);
         }
       }
-      // A lifted finger leaves no hover behind (touch has no pointer
-      // to move off the run).
-      if (fabric && fabricController && fabric.setHover(-1)) {
+      // A lifted finger leaves no hover or glow behind (touch has no
+      // pointer to move off the run).
+      const glow = !!fabric && fabric.setGlow(-1, 0);
+      if (fabric && fabricController && (fabric.setHover(-1) || glow)) {
         fabric.update(fabricController);
       }
       if (touches.size === 0) touchLocked = false;
@@ -3527,6 +3553,11 @@ async function main(): Promise<void> {
   };
   app.canvas.addEventListener("pointerup", endDrag);
   app.canvas.addEventListener("pointercancel", endDrag);
+  // A mouse that leaves the canvas (for the panel, say) takes the hover
+  // glow with it (K145). The choice hover keeps its old behavior.
+  app.canvas.addEventListener("pointerleave", (e) => {
+    if (e.pointerType === "mouse" && !pendingPluck) clearGlow();
+  });
 
   // ---- Stage 20: auto plucks (random + music modes), RENDER-ONLY: the
   // sound plays and the segment's unit vibrates (render/pluck_overlay.ts) -
@@ -3839,6 +3870,7 @@ async function main(): Promise<void> {
       renderer!.flowSpeed = params.flowSpeed;
       renderer!.pulseSpacing = params.pulseSpacing;
       renderer!.pulseReach = params.pulseReach;
+      renderer!.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
       // Frontier particle style: live dropdown, consumed by the
       // appearance-FX pass inside tickPaint while a reveal runs.
       renderer!.appearFx = params.appearFx;

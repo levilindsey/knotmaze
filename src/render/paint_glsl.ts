@@ -42,9 +42,12 @@ const S = PAINT_CONST.K_ROW_SHIFT;
 //   uKSect  = (blendDist, ease, -, -)        junctionBlend (lattice units)
 //   uKPaint = (on, refBase, itemBase, hover) gameplay paint (KPAINT)
 //   uKPulse = (travelIn, travelOut, spacing, fadeIn)  pulse clocks
-//   uKReach = (reach, fade, -, -)            pulse trains' reach (world arc
+//   uKReach = (reach, fade, rim, rimAt)      pulse trains' reach (world arc
 //                                            from the junction) and the
-//                                            fade over its end (K75)
+//                                            fade over its end (K75); the
+//                                            hover glow's strength and its
+//                                            hover point, an unwrapped ctrl
+//                                            on the RIM item's run (K145)
 //   uKGold  = (gold rgb, -)                  the path color
 export const KNOT_UNIFORMS_GLSL = /* glsl */ `
 uniform vec4 uKBase;
@@ -672,7 +675,17 @@ highp float kCov(highp float sd, highp float px) {
   return clamp(sd / px + 0.5, 0.0, 1.0);
 }
 
-// (p, band, v, -): the gold ramp amount, and a pulse band and its strength.
+// The hover glow across the ribbon (K145; side = vUV.y, the edges at 0 and
+// 1): 1 at either edge, falling as a square to 0 at RIM_EDGE of the
+// half-width in from it.
+highp float kRimAcross(highp float side) {
+  highp float e = abs(2.0 * side - 1.0);
+  highp float x = clamp((e - (1.0 - RIM_EDGE)) / RIM_EDGE, 0.0, 1.0);
+  return x * x;
+}
+
+// (p, band, v, rim): the gold ramp amount, a pulse band and its strength,
+// and the hover glow along the thread (K145; kRimAcross shapes it across).
 highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px) {
   highp vec4 st = vec4(0.0);
   if (uKPaint.x < 0.5) return st;
@@ -742,6 +755,20 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
         st.y = 1.0;
         st.z = v;
       }
+    } else if (type == PI_RIM) {
+      highp float u0 = kArcU(c, T0.y);
+      highp float u1 = kArcU(c, T0.z);
+      highp float u = arc;
+      if (c.closed) {
+        highp float x = arc - u0;
+        u = u0 + (x - total * floor(x / total));
+      }
+      if (u < u0 || u > u1) continue;
+      highp float d = abs(u - kArcU(c, uKReach.w));
+      highp float dEnd = min(u - u0, u1 - u);
+      highp float g = uKReach.z * (1.0 - kSmooth(d / max(uKReach.x, 1e-4))) *
+        kSmooth((dEnd - T0.w) / RIM_END_FADE);
+      st.w = max(st.w, g);
     }
   }
   return st;

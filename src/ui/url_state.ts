@@ -393,6 +393,10 @@ export interface UrlParams {
   // [MARKER_SIZE_MIN, MARKER_SIZE_MAX]): the player's dot, and the start,
   // the finish and the minotaur at the same size. A viewer preference.
   markerSize: number;
+  // K145's hover glow: how strongly a run that is not a choice glows along
+  // both rims under the pointer (or a touch press), in [0, 1]; 0 = off.
+  // A viewer preference.
+  hoverGlow: number;
 }
 
 // The two load-settle sliders' tops (K147). LOAD_SETTLE_MAX is a sentinel
@@ -525,6 +529,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   pluckCrossings: "through",
   pluckGlow: "off",
   markerSize: MARKER_SIZE_DEFAULT,
+  hoverGlow: 0.4,
 };
 
 // The real-time chase's tuning from a design's params (K80). Negative or
@@ -638,6 +643,7 @@ function fromCodecValues(
   p.confettiAmount = clampTo(p.confettiAmount, CONFETTI_AMOUNT_MAX);
   p.pluckWhole = clampTo(p.pluckWhole, PLUCK_WHOLE_MAX);
   p.markerSize = sanitizeMarkerSize(p.markerSize);
+  p.hoverGlow = clampTo(p.hoverGlow, 1);
   return p;
 }
 
@@ -878,6 +884,8 @@ function readLegacy(
     pluckGlow: readChoice(query, "pgl", PLUCK_GLOWS, D.pluckGlow),
     // K98's marker size (`&mks=2`).
     markerSize: sanitizeMarkerSize(readNumber(query, "mks", D.markerSize)),
+    // K145's hover glow (`&hg=0`), clamped to [0, 1].
+    hoverGlow: clampTo(readNumber(query, "hg", D.hoverGlow), 1),
   };
 }
 

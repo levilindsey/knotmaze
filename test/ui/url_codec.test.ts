@@ -93,6 +93,7 @@ describe("links", () => {
       confetti: true, confettiAmount: 1,
       pluckWhole: 0.5, pluckCrossings: "through", pluckGlow: "off",
       markerSize: 1.08,
+      hoverGlow: 0.4,
     });
   });
 
@@ -393,7 +394,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoDetect: "mdt", minoLose: "mls", minoCatch: "mct", minoDeadEnds: "mde",
   minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", confetti: "cf",
   confettiAmount: "cfa", pluckWhole: "pw", pluckCrossings: "pcx",
-  pluckGlow: "pgl", markerSize: "mks",
+  pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

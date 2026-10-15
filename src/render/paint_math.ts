@@ -1159,9 +1159,10 @@ export function writeRunTexels(
 // Uniforms: uKPaint = (on, refBase, itemBase, hover), hover = the hover
 // breath 0.5 + 0.3 sin(clock W); uKPulse = (travelIn, travelOut, spacing,
 // fadeIn), travel reduced mod spacing on the CPU; uKReach = (reach, fade,
-// -, -), the trains' reach window in world arc from the junction (K75: the
-// pulseReach param; a train used to run its whole arm); uKGold = (gold
-// rgb, -).
+// rim, rimAt), the trains' reach window in world arc from the junction
+// (K75: the pulseReach param; a train used to run its whole arm), then the
+// hover glow's strength and its hover point, an unwrapped ctrl on the RIM
+// item's run (K145); uKGold = (gold rgb, -).
 // ======================================================================
 
 // The retired strip's gold-ramp U (ordering only - the caps' never-darken
@@ -1200,11 +1201,23 @@ export function kPulseV(U: KUniforms, d: number, span: number, inward: boolean, 
 }
 
 // Paint state at a point: the gold ramp amount p (the thread's own paint),
-// and whether a pulse band brightens it, with strength v.
+// whether a pulse band brightens it, with strength v, and the hover glow
+// along the thread (K145; kRimAcross shapes it across the ribbon).
 export interface KPaintState {
   p: number;
   band: boolean;
   v: number;
+  rim: number;
+}
+
+// GLSL twin: kRimAcross - the hover glow across the ribbon (K145; side =
+// the ribbon's vUV.y, the edges at 0 and 1): 1 at either edge, falling as
+// a square to 0 at RIM_EDGE of the half-width in from it.
+export function kRimAcross(side: number): number {
+  const W = PAINT_CONST.RIM_EDGE;
+  const e = Math.abs(2 * side - 1);
+  const x = Math.min(1, Math.max(0, (e - (1 - W)) / W));
+  return x * x;
 }
 
 // Ring distance on a closed chain (|a - b| folded), plain on open ones.
@@ -1234,6 +1247,7 @@ export function kPaintAt(
   out.p = 0;
   out.band = false;
   out.v = 0;
+  out.rim = 0;
   if (U.uKPaint[0] < 0.5) return out;
   const P = D.paint;
   const n = c.nCtrl;
@@ -1303,6 +1317,29 @@ export function kPaintAt(
         out.band = true;
         out.v = v;
       }
+    } else if (type === PAINT_ITEM.RIM) {
+      // K145, the hover glow: T0 = (RIM, c0, c1, gap) - the run's unwrapped
+      // ctrl span and the stretch at each end it keeps clear of (the
+      // junction web's reach). The hover point (an unwrapped ctrl in the
+      // span) and the strength are uniforms (uKReach.w, .z): a pointer
+      // moving along one run rewrites no texel. Along the thread the glow
+      // falls off to 0 at the reach from the hover point, and it fades in
+      // from each end gap over RIM_END_FADE.
+      const u0 = kArcU(D, c, cA);
+      const u1 = kArcU(D, c, cB);
+      let u = arc;
+      if (c.closed) {
+        const x = arc - u0;
+        u = u0 + (x - total * Math.floor(x / total));
+      }
+      if (u < u0 || u > u1) continue;
+      const d = Math.abs(u - kArcU(D, c, U.uKReach[3]));
+      const dEnd = Math.min(u - u0, u1 - u);
+      const g =
+        U.uKReach[2] *
+        (1 - smooth01(d / Math.max(U.uKReach[0], 1e-4))) *
+        smooth01((dEnd - P[o + 3]) / PAINT_CONST.RIM_END_FADE);
+      if (g > out.rim) out.rim = g;
     }
   }
   return out;
@@ -1366,11 +1403,15 @@ export function kComposePaint(U: KUniforms, S: Float32Array | number[], st: KPai
   }
 }
 
-const PAINT_TMP: KPaintState = { p: 0, band: false, v: 0 };
+const PAINT_TMP: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
 
 // The ribbon shader's full color at a material point (section S in place,
 // FX, then the paint): what a probe vertex there renders, before the
-// coverage alpha (returned). Census reference for G2.3.
+// coverage alpha (returned). Census reference for G2.3. The hover glow
+// (K145) shapes its along-thread strength across the ribbon at `side` and
+// joins the reveal glow in the whitening; only the ribbons draw it (the
+// arm strips and the pluck overlay have no across coordinate, and the
+// glow is gone before the junction webs).
 export function kShadeAll(
   D: KData,
   U: KUniforms,
@@ -1382,6 +1423,8 @@ export function kShadeAll(
   S: Float32Array | number[]
 ): number {
   const a = kShadeFx(D, U, c, ctrl, arc / c.arcPer, side, S);
-  kComposePaint(U, S, kPaintAt(D, U, c, ctrl, arc, px, PAINT_TMP), kGlow(D, U, c, ctrl));
+  const st = kPaintAt(D, U, c, ctrl, arc, px, PAINT_TMP);
+  const rim = st.rim > 0 ? st.rim * kRimAcross(side) : 0;
+  kComposePaint(U, S, st, Math.max(kGlow(D, U, c, ctrl), rim));
   return a;
 }

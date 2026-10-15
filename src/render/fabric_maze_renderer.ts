@@ -39,6 +39,7 @@ import type {
   PaintSpan,
   PulseArm,
   PaintCap,
+  PaintRim,
 } from "./ribbon_renderer";
 import { legRoutes, pathLegs, traveledRoutes } from "./junction_routes";
 import type { PaintRoute } from "./junction_routes";
@@ -320,6 +321,12 @@ export class FabricMazeRenderer {
   private dotRgb = new Float32Array(3);
   private threadWidth: number;
   private hoverEdge = -1;
+  // K145: the run under the pointer (or a touch press) for the hover glow,
+  // and the hover point on it (an unwrapped ctrl in its span). A choice is
+  // left out when the paint is declared (rimDecl), not here: the run under
+  // a still pointer can stop or start being one with a move.
+  private glowEdge = -1;
+  private glowAt = 0;
   private anim: MoveAnim | null = null;
   private scratch = new Float32Array(2);
   private flowScratch = new Float32Array(2);
@@ -524,6 +531,48 @@ export class FabricMazeRenderer {
     if (edgeId === this.hoverEdge) return false;
     this.hoverEdge = edgeId;
     return true;
+  }
+
+  // K145: the thread point under the pointer for the hover glow (a chain
+  // and its fractional ctrl, as RibbonRenderer.pickThread finds them;
+  // chain < 0 = none). Returns true when the run under it changed (the
+  // caller then refreshes the paint declaration); a move along the same
+  // run only moves the glow's center, a uniform.
+  setGlow(chain: number, ctrl: number): boolean {
+    let eid = -1;
+    let at = 0;
+    const ch = chain >= 0 ? this.ps.chains[chain] : undefined;
+    if (ch && ch.length > 0) {
+      const n = ch.length;
+      const closed = this.ps.chainBreakAfter[chain] < 0;
+      for (const e of this.walk.edges) {
+        if (e.chain !== chain) continue;
+        // A closed chain's run may be unwrapped past its length.
+        const x = closed ? e.ctrlA + ((((ctrl - e.ctrlA) % n) + n) % n) : ctrl;
+        if (x >= e.ctrlA && x <= e.ctrlB) {
+          eid = e.id;
+          at = x;
+          break;
+        }
+      }
+    }
+    this.glowAt = at;
+    if (eid === this.glowEdge) {
+      this.ribbons.setRimAt(at);
+      return false;
+    }
+    this.glowEdge = eid;
+    return true;
+  }
+
+  // K145: the hover glow's run as the ribbons declare it - none on a
+  // choice, which keeps its own, stronger hover (Levi: "This highlight
+  // shouldn't happen on adjacent-to-current-junction segments").
+  private rimDecl(controller: FabricMazeController): PaintRim | null {
+    const eid = this.glowEdge;
+    if (eid < 0 || controller.choices().includes(eid)) return null;
+    const e = this.walk.edges[eid];
+    return { chain: e.chain, c0: e.ctrlA, c1: e.ctrlB, at: this.glowAt };
   }
 
   // World position on a chain plus the ribbons' flow-undulation offset:
@@ -1523,6 +1572,7 @@ export class FabricMazeRenderer {
   private emitAnimFrame(controller: FabricMazeController): void {
     const a = this.anim!;
     this.syncYarn(controller);
+    this.ribbons.setRim(this.rimDecl(controller));
     if (this.pathViz === "string") {
       // The yarn is the record: no gold spans or caps; pulses stay quiet
       // mid-move exactly like the other modes.
@@ -1630,6 +1680,7 @@ export class FabricMazeRenderer {
       }
     }
     this.ribbons.setPaint(spans, pulses, caps, passes.routes, passes.traveled);
+    this.ribbons.setRim(this.rimDecl(controller));
     // K100: the fog's explored memory belongs to one solve. It starts over
     // when the solve restarts (Reset path's restart, a clock change, a
     // restore's replay: the controller's `restarts` moved) and only then -
