@@ -45,14 +45,14 @@ export function designKey(s: DesignState): string {
 export class UndoStack<S> {
   private readonly past: S[] = [];
   private readonly future: S[] = [];
+  private readonly key: (s: S) => string;
+  readonly cap: number;
   private cur: S;
   private curKey: string;
 
-  constructor(
-    initial: S,
-    private readonly key: (s: S) => string,
-    readonly cap = UNDO_CAP
-  ) {
+  constructor(initial: S, key: (s: S) => string, cap = UNDO_CAP) {
+    this.key = key;
+    this.cap = cap;
     this.cur = initial;
     this.curKey = key(initial);
   }

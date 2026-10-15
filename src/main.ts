@@ -114,6 +114,15 @@ import { openDailyStats } from "./ui/daily_stats_view";
 import { shareOrCopy, showToast } from "./ui/share";
 import { buildPanel } from "./ui/tweakpane_panel";
 import type { PanelSettings } from "./ui/tweakpane_panel";
+import {
+  UndoStack,
+  designKey,
+  designState,
+  restorePlan,
+  undoFlags,
+  type DesignState,
+} from "./ui/undo_stack";
+import { UndoButtons } from "./ui/undo_buttons";
 import { MotionSetting, browserMotionQuery, whenReduced } from "./ui/motion";
 import type { GenerationParams } from "./core/types";
 import { KnotSynth } from "./audio/knot_synth";
@@ -398,6 +407,16 @@ async function main(): Promise<void> {
   // The player came for TODAY's daily (the bare page, `?daily`, the Daily
   // button) rather than a numbered one: the address bar stays bare.
   let dailyFloating = launch.floating;
+  // K92 (ui/undo_stack.ts): the design history the undo and redo buttons
+  // walk. Every design the page writes is recorded where it writes the
+  // address bar, the first write (the first build) starting the history;
+  // nothing while an undo or redo puts one back, nor mid-drag (the release
+  // records the drag once).
+  const liveDesign = (): DesignState => designState(params, dailyN, dailyFloating);
+  let undoStack: UndoStack<DesignState> | null = null;
+  let undoRestoring = false;
+  let panelMidDrag = (): boolean => false;
+  let syncUndoButtons = (): void => {};
   // Every URL write: on a daily the address bar is bare (today's, as asked
   // for) or `?daily=<n>`; a param change that leaves the daily is caught
   // first (syncDaily), and the page becomes an ordinary design link.
@@ -409,6 +428,9 @@ async function main(): Promise<void> {
     } else {
       writeTokenParams(p);
     }
+    if (undoStack === null) undoStack = new UndoStack(liveDesign(), designKey);
+    else if (!undoRestoring && !panelMidDrag()) undoStack.commit(liveDesign());
+    syncUndoButtons();
   };
   let statsShown = false;
   let mazeStatsShown = false;
@@ -1877,6 +1899,17 @@ async function main(): Promise<void> {
   });
   const fitModeBadge = (): void => modeBadge.fit([hud.el, banner.el]);
   window.addEventListener("resize", fitModeBadge);
+  // K92 UNDO AND REDO (ui/undo_buttons.ts): beside the hamburger while the
+  // panel is open, the badge on the row below them then (so it re-fits).
+  const undoButtons = new UndoButtons({
+    undo: () => undoDesign(),
+    redo: () => redoDesign(),
+  });
+  syncUndoButtons = () => {
+    if (undoStack) undoButtons.set(undoFlags(undoStack, liveDesign()));
+  };
+  panelMidDrag = () => panel.midDrag();
+  panel.onOpenChange(() => fitModeBadge());
   const syncModeBadge = (): void => {
     modeBadge.set(
       modeBadgeFor({
@@ -1908,6 +1941,7 @@ async function main(): Promise<void> {
       banner.el,
       modeBadge.el,
       menuButton,
+      undoButtons.el, // K92 (display none closed).
       panel.pane.element.parentElement, // The panel (display none closed).
       stamp,
       document.querySelector<HTMLElement>(".km-pad"), // K120 (hidden: none).
@@ -2659,6 +2693,78 @@ async function main(): Promise<void> {
     rebuild();
     app.canvas.style.cursor = "default";
     wake();
+  };
+
+  // K92: put design `s` back as loading its link would (an undo or redo):
+  // the address bar, the maze, and a daily with its saved attempt (K47). A
+  // daily on screen is left first, as any change that leaves it is (its
+  // attempt and prefs saved, the toast), or saved as the Daily button saves
+  // it when another daily comes back. Only live params changed (a hue, the
+  // volume, the fog radius): their rows' effects run as the edit's own did
+  // and the solve goes on. Anything else rebuilds.
+  const restoreDesign = (s: DesignState): void => {
+    const entersDaily = s.daily !== null && s.daily !== dailyN;
+    const plan = restorePlan({ ...params }, s.params, entersDaily);
+    undoRestoring = true;
+    try {
+      if (s.daily === null) {
+        leaveDaily();
+      } else if (entersDaily) {
+        savePrefsNow();
+        saveAttempt();
+      }
+      Object.assign(params, s.params);
+      if (entersDaily) {
+        dailyN = s.daily;
+        prefsFrom = { ...params };
+      }
+      dailyFloating = s.floating;
+      panel.syncFromParams();
+      if (plan.rebuild) {
+        if (entersDaily) dailyChanged();
+        rebuild();
+        app.canvas.style.cursor = "default";
+        wake();
+      } else {
+        for (const e of plan.effects) panel.callbacks[e]();
+        writeParams(params);
+      }
+    } finally {
+      undoRestoring = false;
+    }
+    syncUndoButtons();
+  };
+  const undoDesign = (): void => {
+    if (!undoStack) return;
+    // A design on screen but not recorded yet: record it, so redo can bring
+    // it back.
+    undoStack.commit(liveDesign());
+    const s = undoStack.undo();
+    if (s) restoreDesign(s);
+    else syncUndoButtons();
+  };
+  const redoDesign = (): void => {
+    if (!undoStack?.isCurrent(liveDesign())) return;
+    const s = undoStack.redo();
+    if (s) restoreDesign(s);
+  };
+  // K92 probe: the history (depth, the recorded and the live design's keys),
+  // the buttons, the maze on screen (its walk fingerprint) and the address
+  // bar; undo() and redo() as the buttons do them.
+  (window as unknown as Record<string, unknown>).__knotUndo = {
+    state: () => ({
+      depth: undoStack?.depth ?? null,
+      current: undoStack ? designKey(undoStack.current) : null,
+      live: designKey(liveDesign()),
+      flags: undoButtons.flags,
+      shown: getComputedStyle(undoButtons.el).display !== "none",
+      maze: walkGraph ? walkFingerprint(walkGraph) : null,
+      daily: dailyN,
+      floating: dailyFloating,
+      search: location.search,
+    }),
+    undo: () => undoDesign(),
+    redo: () => redoDesign(),
   };
 
   // The panel's daily button names TODAY's daily (it turns at midnight).
@@ -3761,8 +3867,9 @@ async function main(): Promise<void> {
         }
       }
       // K120: the move pad shows while the keys are live (knot mode too:
-      // there it hides).
-      movePad.setShown(settings.movePad && keysLive());
+      // there it hides). K224: and the panel is closed (an open panel is
+      // the whole screen on a phone, and the pad sat on its rows).
+      movePad.setShown(settings.movePad && keysLive() && !panel.isOpen());
       renderer!.tickPaint(ticker.deltaMS / 1000);
       // After the paint pass: fabric pluck colors read this frame's paint.
       renderer!.tickPlucks(ticker.deltaMS / 1000);

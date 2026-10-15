@@ -134,6 +134,16 @@ export interface PanelApi {
   syncFromParams: () => void;
   // The daily row's label (today's number turns at local midnight).
   setDailyLabel: (text: string, tip: string) => void;
+  // K92: the panel's open state (the hamburger), and a listener for its
+  // changes (the undo buttons and the mode badge move with it).
+  isOpen: () => boolean;
+  onOpenChange: (cb: (open: boolean) => void) => void;
+  // K92: true while a row's change runs before its release (a slider or a
+  // color picker mid-drag): the design is not final yet.
+  midDrag: () => boolean;
+  // K92: the callbacks the panel was built with (an undo runs a live row's
+  // effect as the row's own edit did).
+  callbacks: PanelCallbacks;
 }
 
 interface ChangeEvent {
@@ -211,12 +221,14 @@ export function buildPanel(
   // The pane has outgrown short viewports: cap Tweakpane's fixed wrapper
   // at the window height and scroll INSIDE it (wheel over the panel stays
   // in the panel; the thin scrollbar matches the dark theme). It sits
-  // BELOW the menu button, inside the safe area (notches).
+  // BELOW the menu button's row and the mode badge's (K92: the badge moves
+  // there while the panel is open, making room for undo and redo beside the
+  // menu button), inside the safe area (notches): --kp-top, set below.
   const wrap = pane.element.parentElement;
   const SCROLL_KEY = "knotmaze.panelScroll";
   if (wrap) {
-    const top = "(max(10px, env(safe-area-inset-top)) + 50px)";
-    wrap.style.top = `calc${top}`;
+    const top = "var(--kp-top)";
+    wrap.style.top = top;
     wrap.style.right = "max(10px, env(safe-area-inset-right))";
     wrap.style.maxHeight = `calc(100vh - ${top} - 10px)`;
     // Dynamic viewport height where supported (mobile URL bars).
@@ -319,9 +331,14 @@ export function buildPanel(
     ".kp-menu[aria-expanded='true'] span:nth-child(3)" +
     "{transform:translateY(-6px) rotate(-45deg)}" +
     ".kp-menu:focus-visible{outline:2px solid #8ea0c0;outline-offset:2px}" +
+    // K92: the panel's top. The menu button's row (42 px at max(10px, safe
+    // area)) and 8 px, then the open panel's mode badge row (32 px; 42 on
+    // touch, ui/mode_badge.ts) and 8 px.
+    ":root{--kp-top:calc(max(10px,env(safe-area-inset-top)) + 90px)}" +
     // Touch screens: finger-sized rows and a wider panel.
     "@media (pointer:coarse){.tp-dfwv{width:min(320px,calc(100vw - 20px));" +
     "--tp-container-unit-size:30px;--tp-blade-value-width:150px}" +
+    ":root{--kp-top:calc(max(10px,env(safe-area-inset-top)) + 100px)}" +
     ".kp-reset{opacity:.45;font-size:14px;padding:0 4px}}";
   document.head.appendChild(style);
 
@@ -361,6 +378,9 @@ export function buildPanel(
   // Set while syncFromParams refreshes the rows: refresh() fires change
   // handlers, and a wholesale params swap must not run their effects.
   let syncing = false;
+  // K92: set while a row's effects run for a change before its release
+  // (`last === false`: a slider or a color picker mid-drag).
+  let dragging = false;
 
   // One adjustable row: tooltip + reset glyph + modified tint. `after`
   // runs on every change AND after a glyph reset (the forwarded ev lets
@@ -415,7 +435,12 @@ export function buildPanel(
       fired = true;
       markRow(t);
       if (syncing) return;
-      after(ev);
+      dragging = ev.last === false;
+      try {
+        after(ev);
+      } finally {
+        dragging = false;
+      }
       refreshCond();
     });
     tracked.push(t);
@@ -1622,11 +1647,16 @@ export function buildPanel(
   }
   // Scroll restores on the first OPEN (a hidden wrapper has no layout).
   let scrollRestored = false;
+  const openListeners: Array<(open: boolean) => void> = [];
   const setOpen = (v: boolean): void => {
     open = v;
     if (wrap) wrap.style.display = v ? "" : "none";
     menu.setAttribute("aria-expanded", String(v));
     menu.title = v ? "Hide settings" : "Show settings";
+    // K92: the stylesheets follow it (undo and redo show, the mode badge
+    // takes the row below them).
+    document.documentElement.classList.toggle("kp-open", v);
+    for (const cb of openListeners) cb(v);
     if (v && !scrollRestored && wrap) {
       scrollRestored = true;
       let saved = 0;
@@ -1672,5 +1702,11 @@ export function buildPanel(
       if (dailyApi.title !== text) dailyApi.title = text;
       dailyApi.element.title = tip;
     },
+    isOpen: () => open,
+    onOpenChange: (cb) => {
+      openListeners.push(cb);
+    },
+    midDrag: () => dragging,
+    callbacks,
   };
 }
