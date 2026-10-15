@@ -82,7 +82,7 @@ demand.
   rounded caps; the branch pulse has ONE global period/phase with
   smooth end windows (the hard boundary line was the crest popping
   against the d>R cutoff); `multiColor` checkbox / `mc=1` (DEFAULT
-  OFF: whole fabric one hue — much stronger gold route). *[Moved to `.claude/rules/render.md`: the arcAt GOTCHA.]*
+  OFF: whole fabric one hue — much stronger gold route). *[Moved to `.claude/rules/render-ribbon.md`: the arcAt GOTCHA.]*
 
 - Stage 14 — SPEED + POLISH ROUND: traversal base rate 1.7x (34
   ctrl/s) under a moveSpeed slider (`ms=`); tip discs read endpoint
@@ -165,7 +165,7 @@ demand.
   audit): the fabric had silently lost the ability to sleep somewhere
   in Stages 10-19 — 2-4 standing anti-riding violations at fused
   bridge-terminal junctions held `ridersPending` nonzero forever
-  (~25-30ms/frame burned at rest in the flagship mode). *[Moved to `.claude/rules/physics.md`: the junction cover.]* All
+  (~25-30ms/frame burned at rest in the flagship mode). *[Moved to `.claude/rules/physics-fabric.md`: the junction cover.]* All
   fabric configs now sleep at sim ~3.7s. Also: `flowRender` runs at
   HALF RATE while asleep (the full crossing re-solve cost ~10ms/frame;
   30fps sway is imperceptible).
@@ -259,12 +259,12 @@ demand.
   (core/shapes.ts; largest-connected-component keep, holes = out-of-
   mask interiors - the ring proves them); the grower confines tree +
   weave openings to in-mask pairs, mask boundaries act like the outer
-  border. *[Moved to `.claude/rules/generation.md`: rect identity and the start/exit anchors.]*
+  border. *[Moved to `.claude/rules/generation-shapes.md`: rect identity and the start/exit anchors.]*
   Battery: 24/24 shape x mode x seed settles; scripted star solve
   lands exactly on optimal; invariants unit-tested per shape. Known
   residual: star e-w 6/8 sleeps, 2 stragglers hover at threshold
   (bistable-attractor class, no blowups).
-- *[Moved to `.claude/rules/physics.md`: PHYSICS JUNCTION SPACING.]*
+- *[Moved to `.claude/rules/physics-fabric.md`: PHYSICS JUNCTION SPACING.]*
 - JUNCTION CLEARANCE (fix A) + TWO-LAYER FILLETS (fix B), same round,
   REFIT in e78909c: junctions were invisible to the crossing
   bookkeeping, so gap cuts + fade tails marched into seal discs/webs
@@ -319,7 +319,7 @@ demand.
   along every fresh thread). Comet streaks lie along the host thread
   (tip-backward polyline, local tangents), blue..blue-green tints;
   dust x2 (pool 1200); roots dirt x2 + bigger; hover breathes
-  0.2..0.8. *[Moved to `.claude/rules/gameplay.md`: live recolor.]*
+  0.2..0.8. *[Moved to `.claude/rules/gameplay-panel.md`: live recolor.]*
 - ROOT-CAUSE ROUND (late 2026-10-10; three measuring agents):
   GAP JITTER (4th report) lived in the OVER-FILLS, not the erase cuts:
   windows copied WHOLE samples (floor/ceil), so fill ends rode the
@@ -337,7 +337,7 @@ demand.
   flank tangent already pointed outward; multiplying by arm.dir again
   mirrored every dir = -1 flank onto the arm's FAR edge, 988/988
   measured), and webs overhanging an arm's under-gap now stop short of
-  its nearest underWindows cut. *[Moved to `.claude/rules/physics.md`: open-chain terminal passes.]* RAINBOW now swells (up to 1.6x, easing to normal as the
+  its nearest underWindows cut. *[Moved to `.claude/rules/physics-fabric.md`: open-chain terminal passes.]* RAINBOW now swells (up to 1.6x, easing to normal as the
   stripes fade; swell-aware concave clamp in RibbonMesh.update) under
   a longer plateaued white head; crossings wait out the swell, and a
   gated crossing whose UNDER pass draws on top (chain/strip order)
@@ -357,14 +357,14 @@ demand.
   under fog the fit frames only the FOG-VISIBLE region) | follow = a
   chase camera on the head with a critically damped pull-back spring,
   OFF for FOLLOW_DELAY after the last gesture, stiffness eased in over
-  FOLLOW_RAMP (it frames the whole knot during the intro). *[Moved to `.claude/rules/gameplay.md`: camera and gestures.]* FOG: `fowIntro` (fwi=) holds the fog off during
+  FOLLOW_RAMP (it frames the whole knot during the intro). *[Moved to `.claude/rules/gameplay-camera.md`: camera and gestures.]* FOG: `fowIntro` (fwi=) holds the fog off during
   the intro animation, then closes it in (fade + reveal radius
   contracting from the whole maze to fowRadius).
 - SHAPED START/EXIT CLEARANCE (late 2026-10-10): on every non-rect
   shape the start/exit dots sat among other threads (settled clearance
   0.4-1.3 vs 2.3-2.5 at rect corners) - the anchor target is nudged into
   thick material (the sliver/kink-eye stability fix) and the fixed
-  CUT_REACH tail parked the pin inside the weave. *[Moved to `.claude/rules/generation.md`: escape tails.]* Settle battery: 5
+  CUT_REACH tail parked the pin inside the weave. *[Moved to `.claude/rules/generation-shapes.md`: escape tails.]* Settle battery: 5
   shapes x 3 seeds x 3 anchor pairs all asleep; ends clear 1.8-3.5
   except the rare no-trim decoy pairs (two close tails by design) and
   one physics outlier (fish seed 11 n/s: a loose loop swings past the
@@ -478,7 +478,7 @@ demand.
   1.41x into spurs past the host's edge, at every tucked bridge tip. A
   zero-length leg borrows the other leg (both zero = straight cap) in
   RibbonMesh.update AND buildEraseGrid's station widths, which must
-  mirror each other. *[Moved to `.claude/rules/render-gaps.md`: concentric dot gaps.]* *[Moved to `.claude/rules/render.md`: adaptive wedge flanks.]* *[Moved to `.claude/rules/render.md`: stale fan indices.]* WORKTREE DEV SERVERS
+  mirror each other. *[Moved to `.claude/rules/render-gaps.md`: concentric dot gaps.]* *[Moved to `.claude/rules/render-ribbon.md`: adaptive wedge flanks.]* *[Moved to `.claude/rules/render-ribbon.md`: stale fan indices.]* WORKTREE DEV SERVERS
   (ab09488): the watch-ignore is anchored to this checkout's own .claude/,
   so a server started inside an agent worktree sees its own edits.
 - 2026-10-11 APPEARANCE MODES + USER DEFAULTS + SHORT LINKS. The old
@@ -490,8 +490,8 @@ demand.
   user's chosen settings became PARAM_DEFAULTS (gs 18, mazeFabric ON,
   music/chromatic, cr 3, tw 0.52, gap 0.04, segments, trace + burn 2.2
   intro, ...) and links shrank to `?s=<seed>` + changed params (superseded
-  the same day by COMPACT LINKS, below). *[Moved to `.claude/rules/gameplay.md`: panel lore.]*
-- 2026-10-11 small round 2. *[Moved to `.claude/rules/render.md`: junction blend distance.]* *[Moved to `.claude/rules/gameplay.md`: the audio autoplay gate.]* RELATIVE BASE (vite base
+  the same day by COMPACT LINKS, below). *[Moved to `.claude/rules/gameplay-panel.md`: panel lore.]*
+- 2026-10-11 small round 2. *[Moved to `.claude/rules/render-ribbon.md`: junction blend distance.]* *[Moved to `.claude/rules/gameplay-audio.md`: the audio autoplay gate.]* RELATIVE BASE (vite base
   "./"): one build serves at knotmaze.pages.dev/ and under a path prefix
   (levi.dev/knotmaze/ via levi.dev's proxy function); the dev server still
   serves at /. Credit line reads "[cat] Made by Snoring Cat" as one link.
@@ -507,7 +507,7 @@ demand.
   spent 56% of the visible change on its first 0.05 step).
   `src/ui/grid_align_curve.ts`: strength = (2^(10x) - 1) / 1023 (each
   tenth of the slider doubles it; settled steps 8-13% each), inverse
-  gridAlignSlider. *[Moved to `.claude/rules/gameplay.md`: the strength and view rules.]* Measured
+  gridAlignSlider. *[Moved to `.claude/rules/gameplay-panel.md`: the strength and view rules.]* Measured
   residuals (pre-existing physics, not the curve): loose rings buckle
   lopsided below strength ~1.8e-3 and snap round above it (one step
   between slider 0.1 and 0.2); at 5e-4..1.6e-3 a ring can wander for
@@ -546,19 +546,19 @@ demand.
   `?<seed>.<blob>` (format in Key Design Decisions; param_codec.ts header).
   The user's rect design: 121 -> 55 chars. KEPT from the short links: the
   delta semantics (6-decimal rounding, implied appearance values, random
-  re-rolls on load). *[Moved to `.claude/rules/gameplay.md`: decoder details.]*
+  re-rolls on load). *[Moved to `.claude/rules/gameplay-links.md`: decoder details.]*
   *[Moved to `.claude/rules/probes.md`: reading the live params.]*
   CODEC V2 (same day): the user set junctionBlend's default to 0.88, the
   first default change under the codec - so CODEC_V2 (an edited copy of
   v1), CODEC_VERSION 2, and all-default links became `?<seed>.U` (the v2
   header with zero entries). Bare seeds, v1 blobs and legacy s=/seed=
   links keep junctionBlend 0 and re-encode with it explicit.
-  *[Moved to `.claude/rules/gameplay.md`: a query without a seed.]* *[Moved to `.claude/rules/probes.md`: probe URLs.]*
+  *[Moved to `.claude/rules/gameplay-links.md`: a query without a seed.]* *[Moved to `.claude/rules/probes.md`: probe URLs.]*
 - RENDER-ONLY PLUCKS + PHYSICS CHECKBOX (worktree agent, 2026-10-11; user:
   a tap or auto pluck moves nothing but the plucked segment, vibrating
   "way faster", motion-blurred; then "a checkbox for disabling physics
   entirely"). Retires the render-only standing-wave ring (pluckWaves) and
-  the auto pluck's physical pull. *[Moved to `.claude/rules/gameplay.md`: taps and drags.]* THE LOOK (render/pluck_overlay.ts;
+  the auto pluck's physical pull. *[Moved to `.claude/rules/gameplay-camera.md`: taps and drags.]* THE LOOK (render/pluck_overlay.ts;
   pure math in pluck_model.ts, unit-tested) is a TIME EXPOSURE: every
   node-to-node LOBE of the unit (fabric: the walk run; knot: the tapped
   lobe +-2) is an ideal plucked string (modes a1(beta), d'Alembert
@@ -578,7 +578,7 @@ demand.
   collapsed base left it as a pale static sliver beside a dark gap). Weave
   checks: every erase / fill / fillet buffer and every other chain stays
   identical during a pluck; partner casing bands at under nodes: 0 px
-  changed (fw=0). *[Moved to `.claude/rules/render.md`: the concave-side cap.]* PARAMS (appended to codec v2): pluckSize
+  changed (fw=0). *[Moved to `.claude/rules/render-pluck.md`: the concave-side cap.]* PARAMS (appended to codec v2): pluckSize
   psz (0-2, 0 = sound only), pluckGhost pgh, pluckReach prc (run|lobe),
   physics phy. snappiness/snpy is RETIRED (no visible ring frequency left
   to scale; decay follows sustain) but stays in the codec tables, since
@@ -595,12 +595,12 @@ demand.
   cost the same (the sleep gate already stops stepping). *[Moved to `.claude/rules/probes.md`: probe hooks.]* Known: at the defaults the median tapped lobe gets
   the 0.45h amplitude floor (psz 1.5-2 reads better at default zoom);
   short lobes inside junction web footprints show a halo, not a blur.
-- *[Moved to `.claude/rules/physics.md`: KINK EYES (2026-10-11, with K41).]*
+- *[Moved to `.claude/rules/physics-kinks.md`: KINK EYES (2026-10-11, with K41).]*
 - *[Moved to `.claude/rules/render-gaps.md`: PER-PIXEL CROSSING GAPS (G1, K1).]*
-- *[Moved to `.claude/rules/gameplay.md`: MAZE STATS + DAILY MAZE (K19, K20, K47, K56).]*
+- *[Moved to `.claude/rules/gameplay-daily.md`: MAZE STATS + DAILY MAZE (K19, K20, K47, K56).]*
   *[Moved to `.claude/rules/probes.md`: daily probes and dev servers.]*
-- *[Moved to `.claude/rules/render.md`: SHADER BACKGROUNDS (K21).]*
-- *[Moved to `.claude/rules/render.md`: SHADER PAINT (G2, K4).]*
+- *[Moved to `.claude/rules/render-backgrounds.md`: SHADER BACKGROUNDS (K21).]*
+- *[Moved to `.claude/rules/render-paint.md`: SHADER PAINT (G2, K4).]*
 - THE LOAD SETTLE (K147, 2026-10-13): the few-fps intro was the physics
   catch-up spiral (every frame ran 12 substeps of ~12 ms at gs 18). A
   per-frame physics budget (`settleBudget`, 12 ms, at least one substep a
@@ -610,12 +610,12 @@ demand.
   (`loadSettle`, 0.45 s; its max 5 settles first). gs 18 intro p95 164 ->
   32 ms at 1x, 744 -> 189 ms at 4x; the first sleep moves 11.6 -> 21 s
   (1x) and 40 -> 98 s (4x), a slow-motion settle. *[Lore: `.claude/rules/
-  physics.md` (The load settle) and `gameplay.md` (LOAD SETTLE PARAMS);
+  physics-settle.md` (The load settle) and `gameplay-links.md` (LOAD SETTLE PARAMS);
   measurements in `.claude/probes/K147/results.md`.]*
 
 *[Stays in `CLAUDE.md`: the Architecture audit.]*
 
-*[Moved to `.claude/rules/render.md`: RENDER LORE (GPU junction field).]*
+*[Moved to `.claude/rules/render-ribbon.md`: RENDER LORE (GPU junction field).]*
 
 *[Moved to `.claude/rules/probes.md`: PROBE LORE (K56).]*
 
@@ -623,16 +623,16 @@ demand.
 
 *[Moved to `.claude/rules/render-gaps.md`: RENDER LORE (per-pixel gaps).]*
 
-*[Moved to `.claude/rules/probes.md`: PROBE LORE (per-pixel gaps).]*
+*[Moved to `.claude/rules/probes-census.md`: PROBE LORE (per-pixel gaps).]*
 
-*[Moved to `.claude/rules/render.md`: RENDER LORE (junction overlays across the width).]*
+*[Moved to `.claude/rules/render-ribbon.md`: RENDER LORE (junction overlays across the width).]*
 *[Moved to `.claude/rules/probes.md`: PROBE LORE (same round).]*
 
 *[Moved to `.claude/rules/render.md`: the RENDER LORE blocks of 2026-10-09 and 2026-10-10.]*
 
 - K79 STAGE B (2026-10-13; agents B1, B2, B2b and B3 under session
   d8031183; the record is `docs/design/K79.md`, the lore is in
-  `.claude/rules/render.md` and `gameplay.md`): the backdrop's shape
+  `.claude/rules/render-backgrounds.md` and `gameplay-panel.md`): the backdrop's shape
   (pattern scale, fbm detail, vellum's fibers and grain, silk's angle) and
   custom colors (a base plus three accents), as ten codec v4 appends at
   indices 72-81 after K74's `deadEndLength` (71), and the speed slider's
@@ -651,7 +651,7 @@ demand.
   at 84-98. The defaults come from a headless simulation of 288 mazes
   (greedy and fleeing scripted players): the only change from the
   provisional set was the hunting pace 8 -> 7. *[Lore: `.claude/rules/
-  gameplay.md` (REAL-TIME MINOTAUR); harness, tables and page probes in
+  gameplay-minotaur.md` (REAL-TIME MINOTAUR); harness, tables and page probes in
   `.claude/probes/K80/rt/`.]*
 
 - STAR RATINGS (K155 stage 1, 2026-10-14; brief `docs/design/K155.md`,
@@ -664,7 +664,7 @@ demand.
   so nothing new is stored. The thresholds come from scripted solvers
   over 288 mazes at the defaults and 288 dailies: a careful solver earns
   three stars 94% of the time, a greedy one exactly two 52%. *[Lore:
-  `.claude/rules/gameplay.md` (STAR RATINGS); harness, reports and page
+  `.claude/rules/gameplay-stars.md` (STAR RATINGS); harness, reports and page
   probes in `.claude/probes/K155/`.]*
 - FINISH CONFETTI (K140 stage 1, 2026-10-14; brief `docs/design/K140.md`,
   agent under session d8031183): every finish's banner now throws a rain
@@ -676,7 +676,7 @@ demand.
   proposal). Render-only: it never wakes the physics, and its
   sceneAnimating() term goes false when the last piece falls out (knot
   mode then idles; fabric's paint keeps animating). *[Lore: `.claude/rules/
-  render.md` (Finish confetti); probes, screenshots and the frame-time
+  render-confetti.md` (Finish confetti); probes, screenshots and the frame-time
   A/B in `.claude/probes/K140/`.]*
 - OUR OWN HASH (K154, 2026-10-14; brief `docs/design/K154_K169.md`, agent
   under session d8031183): the backgrounds' noise runs on a two-lane
@@ -687,7 +687,7 @@ demand.
   is added). Tested for avalanche, uniformity, correlation and
   collisions; all six effects look the same in kind and show no tile, row
   or diagonal. The effect programs' pixels differ and their sha256 pins
-  moved. *[Lore: `.claude/rules/render.md` (THE BACKGROUNDS' HASH IS OUR
+  moved. *[Lore: `.claude/rules/render-hash.md` (THE BACKGROUNDS' HASH IS OUR
   OWN), `.claude/rules/notices.md`; probes and the before/after sheets in
   `.claude/probes/K154_K169/`.]*
 - THE GOLD WEB FADES IN (K169, 2026-10-14; same brief and agent): K127's
@@ -695,7 +695,7 @@ demand.
   s, caps included, and its fade keeps running under reduced motion (a
   color crossfade moves nothing). Fade in only. Pixel-identical to the
   K127 look once the fade ends, at desktop and phone width. *[Lore:
-  `.claude/rules/render.md` (The gold web's fade); probes and frames in
+  `.claude/rules/render-web-fade.md` (The gold web's fade); probes and frames in
   `.claude/probes/K154_K169/`.]*
 - PLUCK PARAMS (K180 stage 1, 2026-10-14; brief `docs/design/K180.md`,
   agent under session d8031183): K104's whole-segment pluck gets three
@@ -708,7 +708,7 @@ demand.
   same-state A/B. The census: ride and pinch leave far more taps that
   cannot be told at phone scale (pinch 71% of fabric taps, ride 94% of
   a dense design's); the fallback leaves only the sound-only taps in
-  junction cores. *[Lore: `.claude/rules/render.md` (Pluck params);
+  junction cores. *[Lore: `.claude/rules/render-pluck.md` (Pluck params);
   census, sheets and the A/B in `.claude/probes/K180/`.]*
 - THE PLAYER'S OFF-SCREEN INDICATOR (K148, 2026-10-14; brief
   `docs/design/K148_K149.md`, Sonnet agent under session d8031183; Levi,
@@ -722,7 +722,7 @@ demand.
   resume at once. Found on the way: the indicator's icon group made the
   glyphs' filled dots inherit a 12.6 px stroke, so the head's dot and the
   bull's eyes were disc-sized white blobs (fixed in the glyph SVG writer).
-  *[Lore: `.claude/rules/gameplay.md` (OFF-SCREEN INDICATORS, THE HEAD);
+  *[Lore: `.claude/rules/gameplay-indicators.md` (OFF-SCREEN INDICATORS, THE HEAD);
   probes in `.claude/probes/K148_K149/`.]*
 - PAN ROOM AT THE FIT ZOOM (K149, 2026-10-14; same brief and agent; Levi:
   "we should support panning the maze a bit more off-screen at furthest
@@ -732,7 +732,7 @@ demand.
   1000x800 and 800x700 the maze overlaps the open panel at home and clears
   it at the limit; a phone's 320 px panel (78% of the width) cannot be
   cleared by any such share. The reset now eases from a slack view
-  instead of snapping. *[Lore: `.claude/rules/gameplay.md` (FIT CAMERA PAN
+  instead of snapping. *[Lore: `.claude/rules/gameplay-camera.md` (FIT CAMERA PAN
   SLACK); probes in `.claude/probes/K148_K149/`.]*
 - PAST DAILIES AS PRACTICE (K146 stage 1, 2026-10-14; brief
   `docs/design/K146_K151.md`, agent under session d8031183): the daily
@@ -744,7 +744,7 @@ demand.
   "Daily #N practice solved" and its share title "(practice)". An attempt
   begun on its day still counts when it finishes later, and old late
   official results stay official, flagged late. *[Lore:
-  `.claude/rules/gameplay.md` (binding rule 5); probes and shots in
+  `.claude/rules/gameplay-daily.md` (binding rule 5); probes and shots in
   `.claude/probes/K146_K151/`.]*
 - THE MODE BADGE NAMES EVERY MODE (K151 stage 1, same brief and agent):
   the daily's label left the HUD's title row (gone) for the badge's spot:
@@ -756,7 +756,7 @@ demand.
   gained a one-word level ("Replay", "Practice") between the short label
   and the bare icon: on a 411 px phone with the HUD's stat rows on,
   "Daily #3 replay" did not fit and the badge fell to its icon. *[Lore:
-  `.claude/rules/gameplay.md` (MODE BADGE); probes and shots in
+  `.claude/rules/gameplay-badge.md` (MODE BADGE); probes and shots in
   `.claude/probes/K146_K151/`.]*
 - ARROW KEYS (K120 stage 1 Part A, 2026-10-14; brief
   `docs/design/K120.md`, agent under session d8031183): the arrow keys
@@ -770,7 +770,7 @@ demand.
   running queues. The thresholds come from a census of 4259 junctions in
   24 mazes: every run has a key at 98.9% of them. Panel rows, text
   fields, the stats modal and modifier chords keep their keys. *[Lore:
-  `.claude/rules/gameplay.md` (MOVES BY DIRECTION); census and key probes
+  `.claude/rules/gameplay-moves.md` (MOVES BY DIRECTION); census and key probes
   in `.claude/probes/K120/`.]*
 - THE MOVE PAD (K120 stage 1 Part B, same brief and agent): a four-way pad
   in the bottom-right corner moves like the keys on touch screens (press,
@@ -779,7 +779,7 @@ demand.
   pointers, never in a link. Chosen over swipe-to-pick (it fights the
   one-finger pan and thread tugs) and long-press on a choice (it fights
   the press slop, and the finger hides the run). Its default and place are
-  K120's call, open for Levi. *[Lore: `.claude/rules/gameplay.md` (MOVES
+  K120's call, open for Levi. *[Lore: `.claude/rules/gameplay-moves.md` (MOVES
   BY DIRECTION); pad probes and phone-width screenshots in
   `.claude/probes/K120/`.]*
 - THE FOG RESETS ON A RESTART ONLY (K100 stage 1, 2026-10-14; brief
@@ -796,7 +796,7 @@ demand.
   catch lifts the fog only as far as the dot got. On a static daily the
   restored fog equals the live one exactly; with physics they agree to an
   IoU of 0.977 on one page (the old one-way rule 0.947) and 0.957 across
-  a reload. *[Lore: `.claude/rules/gameplay.md` (The fog of war),
+  a reload. *[Lore: `.claude/rules/gameplay-fog.md` (The fog of war),
   `.claude/rules/probes.md` (K100); probes and screenshots in
   `.claude/probes/K100/`.]*
 - ONE LIVE CODEC TABLE (K132, 2026-10-14; brief `docs/design/K132.md`,
@@ -811,7 +811,8 @@ demand.
   seed. DAILY_V1 differed from today's defaults only in trailLength (5
   against 10, render-only), so no daily maze moved: the golden dailies
   and the K87 pin held. *[Lore: CLAUDE.md (URL-as-complete-state, Daily
-  maze), `.claude/rules/gameplay.md`; probes in `.claude/probes/K132/`.]*
+  maze), `.claude/rules/gameplay-daily.md` and `gameplay-links.md`;
+  probes in `.claude/probes/K132/`.]*
 - THE BEND BOUND (K90 stage 1b, 2026-10-14; brief `docs/design/K90.md`,
   agent under session d8031183): crops with and without the junction webs
   showed the webs cover junction-host folds within 0.92 half-widths of a
@@ -828,8 +829,8 @@ demand.
   tune: a scan's tightest window can get tighter (24 of 585 scans; tw .64
   0.299 -> 0.132 h), and a soft clamp (an option, off) cut that to 4.
   *[Record: `docs/design/K90_bend_radius.md`; lore:
-  `.claude/rules/generation.md` (K90, the bend bound); census, crops and
-  sheet in `.claude/probes/K90/out_1b/`.]*
+  `.claude/rules/generation-geometry.md` (K90, the bend bound); census,
+  crops and sheet in `.claude/probes/K90/out_1b/`.]*
 
 Still open in P4:
 - ~~Textured background~~ - DONE as K21's shader backgrounds (the
@@ -852,12 +853,12 @@ Still open in P4:
   under flow, during pluck rings, through the ap=trace reveal) never
   produced one; the settle is chaotic, so the user's run reached a
   configuration ours do not. Next step needs a fresh repro on the
-  current build (panel version string + screenshot). *[Moved to `.claude/rules/probes.md`: census lore.]* One
+  current build (panel version string + screenshot). *[Moved to `.claude/rules/probes-census.md`: census lore.]* One
   real leftover seen: a tiny dark spur at a kink-loop tip (crossing 30
   at the current ring URL) [not seen after KINK EYES + G1: crossing 30
   and the ring URL's 12 on-screen self-crossings crop clean on a868f31
   in both renderers]. The segments-scheme seams are RESOLVED
-  (junction blend round). *[Moved to `.claude/rules/physics.md`: agent-measured and not yet fixed.]*
+  (junction blend round). *[Moved to `.claude/rules/physics-fabric.md`: agent-measured and not yet fixed.]*
   Optional look: a narrower two-arm fillet blend
   band (FILLET_BLEND_BAND 0.18 patch in the session scratchpad) for
   the residual tan RGB-mean crotches under segments. Icon set: user
@@ -882,18 +883,18 @@ before P4 unless the user asks):
 
 ## Follow-ups
 
-- *[Moved to `.claude/rules/physics.md`: The sleep gate counts SIM TIME (K63).]*
+- *[Moved to `.claude/rules/physics-sleep.md`: The sleep gate counts SIM TIME (K63).]*
 - **Physics broadphase rebuilt flat (P3.42): phys 85.9 -> 15.8 ms,
   10 -> 32 fps mid-drag at fat params.** applySegmentCollision was 73%
   of ALL CPU (measured via CDP profile, probe recipe: drag-wiggle 4s at
   the fat URL) - the cost was the per-call Map<number, number[]>
-  spatial hash rebuilt 4x per substep, not the narrow-phase math. *[Moved to `.claude/rules/physics.md`: the counting-sort grid.]* TWO GOTCHAS measured during verification: (1) settle
+  spatial hash rebuilt 4x per substep, not the narrow-phase math. *[Moved to `.claude/rules/physics-collision.md`: the counting-sort grid.]* TWO GOTCHAS measured during verification: (1) settle
   sweeps now report "asleep" at sim ~3.9s for EVERY seed (was 4.0-6.3)
   - not a physics change: the sleep gate counted 45 STILL FRAMES, and
   faster frames span fewer sim-seconds; quiet-start is unchanged. Do
   not compare sim-at-sleep across builds with different frame rates.
   (Until K63: the gate counts sim time now, see above.)
-  *[Moved to `.claude/rules/physics.md`: gotcha (2).]*
+  *[Moved to `.claude/rules/physics-collision.md`: gotcha (2).]*
   Verified: fat+default sweeps 16/16; scans clean x3 URLs; gesture
   battery (hold/pull/cinch at 5 twist pairs) clean, re-sleeps; 20/20
   tests (suite wall time 122s -> 93s as a side effect).
@@ -937,7 +938,7 @@ before P4 unless the user asks):
   every gesture; fat + default sweeps 8/8 (sim 5.2-6.3 / 4.0-4.2);
   diag_scan clean on fat/kink/default URLs; 20/20 tests; render
   ~10ms mid-drag at fat params (frame is physics-bound regardless).
-  *[Moved to `.claude/rules/probes.md`: probe lore and recipes.]*
+  *[Moved to `.claude/rules/probes-census.md`: probe lore and recipes.]*
   *[Moved to `.claude/rules/render.md`: lessons.]*
 - **The flattened-twist flip ("same as before" after P3.38): RESOLVED
   by the twist MATERIAL RATCHET (P3.39) - held twists now render as
@@ -949,14 +950,14 @@ before P4 unless the user asks):
   cap assignment can fix it (the corridor is over-constrained: the
   two crossings' gap footprints sum past the corridor length, so any
   1D split either repaints a gap or leaves a dark pinch band; the
-  correct render needs per-pixel masking). *[Moved to `.claude/rules/physics.md`: the twist material ratchet.]* Held/pulled
+  correct render needs per-pixel masking). *[Moved to `.claude/rules/physics-collision.md`: the twist material ratchet.]* Held/pulled
   twists now park at pairDist 1.23-2.43 with CURVED eyes (arcs well
   above chords, ctrl gaps 2.7-5.4) and every hold/pull crop shows
   fully separated over/unders - zero color-color contact for the
   first time in the saga. Verified: fat + default sweeps 8/8 (6.3-6.8
   / 3.9); census riders 0 fresh + post-tug, re-sleeps 16.3; cinch
   clean (cinch pairs sit at 4-8 ctrl, unaffected); scans clean; 20/20
-  tests. *[Moved to `.claude/rules/physics.md`: lessons.]*
+  tests. *[Moved to `.claude/rules/physics-collision.md`: lessons.]*
 - **The pull-outward merge (the user's persistent artifact, still
   reported after P3.37): RESOLVED by the NEIGHBOR-GAP fill reserve
   (P3.38).** Recipe: outer twist, grab the thread between the
@@ -997,7 +998,7 @@ before P4 unless the user asks):
   the world-space twist contact floor + the flip fill bias (P3.37).**
   Recipe (user's, deterministic): outside twist, grab one thread
   BETWEEN the two intersections, HOLD 6s - one intersection rendered a
-  gapless ragged merge. *[Moved to `.claude/rules/probes.md`: the probe.]* *[Moved to `.claude/rules/physics.md`: the world-space contact floor.]* (2) RENDER - held pairs
+  gapless ragged merge. *[Moved to `.claude/rules/probes.md`: the probe.]* *[Moved to `.claude/rules/physics-collision.md`: the world-space contact floor.]* (2) RENDER - held pairs
   can park BELOW the floor at the MATERIAL BOUND: a starved eye
   (ctrl gaps pinned at 1.6/1.6, world arc 0.77 = taut chord) is a
   short stacked ride whose over/under flip must render INSIDE the
@@ -1015,7 +1016,7 @@ before P4 unless the user asks):
   P3.31 forced-separation pump is not reintroduced); scans clean both
   URLs; 20/20 tests; vigorous-play watch shows only the pre-existing
   bistable attractor with `twist-spacing` absent from every phase
-  attribution. *[Moved to `.claude/rules/physics.md`: lessons.]*
+  attribution. *[Moved to `.claude/rules/physics-collision.md`: lessons.]*
   Related fixes that were real but NOT this bug: P3.36 long-overlap
   erase (cinch rides), lane-spread scaling, miter clamp, P3.31-35
   floor/coverage work.
@@ -1032,12 +1033,12 @@ before P4 unless the user asks):
   lengthwise seam. Fixes: RIDE_REACH_CAP 4.5 on both marches (all
   other limits - neighbor clearance, self-split, total/4 - still
   apply; the marches stop where overlap truly ends), LOCAL_SAMPLES
-  24 -> 48, OVER_PATCH_MAX_SAMPLES 56 -> 128. *[Moved to `.claude/rules/physics.md`: force-side coverage.]*
-  *[Moved to `.claude/rules/probes.md`: diag_scan.]*
-  *[Moved to `.claude/rules/physics.md`: the quiescence test.]* Verified: cinch probe (6
+  24 -> 48, OVER_PATCH_MAX_SAMPLES 56 -> 128. *[Moved to `.claude/rules/physics-collision.md`: force-side coverage.]*
+  *[Moved to `.claude/rules/probes-census.md`: diag_scan.]*
+  *[Moved to `.claude/rules/physics-collision.md`: the quiescence test.]* Verified: cinch probe (6
   twists, the exact gesture) renders clean woven over/unders; fat +
   default sweeps 8/8; riders 0; tap2 sleeps; scans clean; 20/20.
-  *[Moved to `.claude/rules/physics.md`: lesson.]*
+  *[Moved to `.claude/rules/physics-collision.md`: lesson.]*
 - **The "merged parallel threads" seam was a SINGLE THREAD all along:
   RESOLVED by the concave-side miter clamp (P3.34).** Three
   pair-floor fixes (P3.31-33) changed nothing on the user's screen
@@ -1047,7 +1048,7 @@ before P4 unless the user asks):
   self-overlaps and draws a jagged sawtooth seam inside the fill that
   READS as two merged threads. Invisible to every pair census, and
   the old miter (halfWidth/cosHalf, both sides) made it WORSE at
-  sharp joins. *[Moved to `.claude/rules/render.md`: the concave-side miter clamp.]* *[Moved to `.claude/rules/physics.md`: the physics helpers.]* Curvature census
+  sharp joins. *[Moved to `.claude/rules/render-ribbon.md`: the concave-side miter clamp.]* *[Moved to `.claude/rules/physics-collision.md`: the physics helpers.]* Curvature census
   lives in the probe archive (probe_curv). Verified: harsh headless
   wound re-sleeps at sim+6.5 (was +49); both sweeps 8/8; riders 0;
   tap2 sleeps; scans clean; 19/19. *[Moved to `.claude/rules/probes.md`: lesson.]*
@@ -1057,13 +1058,13 @@ before P4 unless the user asks):
   repro'd the same seam TWICE (P3.32's flat cap RIDE_MAX_PUSH 1.2e-2
   lost the tug-of-war against bd 1.75 bending at a hairpin tip - the
   equilibrium parked 10-15% below width and the sleep gate froze it).
-  *[Moved to `.claude/rules/physics.md`: the push-law experiments and the riders gate.]* Verified: moderate play (5 sites,
+  *[Moved to `.claude/rules/physics-collision.md`: the push-law experiments and the riders gate.]* Verified: moderate play (5 sites,
   2.2-unit drags) riders 0 and sleeps at sim 21.6 with the pending
   gate draining first; fat sweep 8/8; tap2 sleeps; scans clean; 19/19
-  fast. *[Moved to `.claude/rules/physics.md`: known residual.]*
+  fast. *[Moved to `.claude/rules/physics-collision.md`: known residual.]*
 - **Post-play riders in the sin 0.35-0.55 band: RESOLVED by the strict
   ramp + emergent coverage + bounded authority (P3.32).** User repro:
-  parallel-thread merges reappeared on the fat URL after play. *[Moved to `.claude/rules/probes.md`: the census rule.]* *[Moved to `.claude/rules/physics.md`: the fix.]* Headless violent wound now re-sleeps at sim+49 (test
+  parallel-thread merges reappeared on the fat URL after play. *[Moved to `.claude/rules/probes-census.md`: the census rule.]* *[Moved to `.claude/rules/physics-collision.md`: the fix.]* Headless violent wound now re-sleeps at sim+49 (test
   budget 1920 frames; the old 30-s pass was sleeping ON the merges).
   Census after: riders 0 at rest (fresh + small-tug), 4-6 transients
   mid-churn (was 23-27); fat sweep 8/8 asleep; standard play session
@@ -1071,7 +1072,7 @@ before P4 unless the user asks):
   clean; 19/19. Accepted residual: a truly blocked pair in a
   pathological wound can freeze merged - rare, bounded, and owned by
   the open loud-attractor problem below.
-- *[Moved to `.claude/rules/physics.md`: OPEN: post-VIOLENT-play loud attractor (K13).]*
+- *[Moved to `.claude/rules/physics-collision.md`: OPEN: post-VIOLENT-play loud attractor (K13).]*
 - **Fresh-settle limit cycle at fat widths: RESOLVED by crossing
   coverage + soft cosmetic margin on the anti-riding floor (P3.31).**
   P3.30's floor pumped with NO interaction at fat params (tw 0.52,
@@ -1079,11 +1080,11 @@ before P4 unless the user asks):
   STEEP crossings (sin 0.85-1.0), mv bursting 1.2e-2 - 7e-2 through
   the stick/unstick hysteresis (the freeze/unfreeze regimes have
   different equilibria - a limit cycle THROUGH the friction switch).
-  *[Moved to `.claude/rules/physics.md`: crossing coverage and the two-zone floor.]*
+  *[Moved to `.claude/rules/physics-collision.md`: crossing coverage and the two-zone floor.]*
   Verified: fat sweep 8/8 asleep sim 5-7s (was 5/8 at 12-23s + 3
   never); default sweep 8/8 at 3.9s unchanged; rider census 0 fresh
   AND post-tug (P3.30 regression guarded); play+tap re-sleeps; scans
-  clean both repro URLs; 19/19 tests. *[Moved to `.claude/rules/physics.md`: the amended invariant.]*
+  clean both repro URLs; 19/19 tests. *[Moved to `.claude/rules/physics-collision.md`: the amended invariant.]*
 - **Tangential riding under true-3D: RESOLVED by the
   transversality-gated 2D floor (P3.30).** True-3D collision legalized
   the one thing the eye still caught: threads riding ALONG each other,
@@ -1096,16 +1097,16 @@ before P4 unless the user asks):
   at partial floors in the sin~0.3 band. Post-tug tangential census 12
   -> 0. QUIET_EPS raised 1.5e-2 -> 2.2e-2 (the gated push holds
   ~1.8e-2 standing corrections at shallow crossings post-interaction).
-  *[Moved to `.claude/rules/physics.md`: THE INVARIANT.]*
+  *[Moved to `.claude/rules/physics-collision.md`: THE INVARIANT.]*
 - **"Threads too close" (all remaining forms): RESOLVED by TRUE-3D
   collision (P3.29).** The tug-then-rest census showed ZERO violations
   of the depth-exemption spec - the spec itself permitted sub-width
-  hugging in every crossing's exempt core. *[Moved to `.claude/rules/physics.md`: the true-3D model.]* Deleted: ZONE_SLOTS/zones,
+  hugging in every crossing's exempt core. *[Moved to `.claude/rules/physics-collision.md`: the true-3D model.]* Deleted: ZONE_SLOTS/zones,
   sharedZone, quartic falloff, CrossingZones (collector dedup is now a
   spatial scan of registered contacts). Post-tug census: flatClose
   (2D-close without depth separation) 0, VIOL3D 1 marginal at 92% of
   floor (Gauss-Seidel sandwich residual), 472 clean over/unders. All
-  scans/settles/tests green. *[Moved to `.claude/rules/physics.md`: the z state and rendering.]*
+  scans/settles/tests green. *[Moved to `.claude/rules/physics-collision.md`: the z state and rendering.]*
 - **Torn/mangled crossings after a small pull: RESOLVED by rendering at
   the true intersection (P3.28).** The user's actual workflow - a small
   tug, then observe AT REST - left crossings drawn as jagged, torn
@@ -1113,7 +1114,7 @@ before P4 unless the user asks):
   the true intersection during the pull, the graduated weld then
   freezes that displacement into the rest state, and the renderer drew
   the erase + over-fill AT THE BINDING - beside the real overlap.
-  *[Moved to `.claude/rules/render.md`: displayF.]* *[Moved to `.claude/rules/probes.md`: probe rule.]*
+  *[Moved to `.claude/rules/render-ribbon.md`: displayF.]* *[Moved to `.claude/rules/probes.md`: probe rule.]*
 - **Fat-thread "penetration": RESOLVED by width-scaled renderer reaches
   (P3.27).** After P3.26 the post-play physics state was verifiably
   clean (0 overlap pairs without full depth separation) yet tw 0.52
@@ -1133,7 +1134,7 @@ before P4 unless the user asks):
   bend 1.75, smooth 0.7, tw 0.52, PBD collision at stiffness 0.5 lost
   its committee votes: equilibria settled in visible interpenetration
   (census: 9 cross-thread pairs at 0.31 vs the 0.60 floor) and the
-  quiescence gate froze them. *[Moved to `.claude/rules/physics.md`: the final-authority principle.]* Census after: crossFree 0,
+  quiescence gate froze them. *[Moved to `.claude/rules/physics-collision.md`: the final-authority principle.]* Census after: crossFree 0,
   selfNear 0, remaining selfMid pairs are kink necks that render as
   proper covered crossings. Play-settle, scans, tests all green.
 - **Shallow-crossing tangential merges + release twitching: RESOLVED
@@ -1169,16 +1170,16 @@ before P4 unless the user asks):
   weaves (crossings every ~5 ctrl on big chains), letting pairs sink
   while covered then freeze as canceled standoffs 0.18-0.25 apart.
   ZONE_SLOTS=4, first-come no-evict. Sink census (non-shared pairs
-  < 0.7 margin at rest): 8 → 0. *[Moved to `.claude/rules/probes.md`: probe rule.]*
+  < 0.7 margin at rest): 8 → 0. *[Moved to `.claude/rules/probes-census.md`: probe rule.]*
 - **Post-play endless jiggle: RESOLVED by graduated contact friction +
   the spacing/window triangle (P3.23).** P3.22's depth model removed the
   lens's parasitic tangential weld — which had ALSO been the only
   dissipation for the PBD standoff (bending/structural/collision cancel
   ~1e-1 each at rest). After a play session the knot rang forever at
-  ~5e-2, above the binary stick gate. *[Moved to `.claude/rules/physics.md`: the root causes, the triangle and graduated friction.]* Verified:
+  ~5e-2, above the binary stick gate. *[Moved to `.claude/rules/physics-collision.md`: the root causes, the triangle and graduated friction.]* Verified:
   play session + tap re-sleeps in ~2s at dr 0.5; all 4 tap sites clean;
   scans clean on both repro seeds; weak tug still slides 9.4 ctrl.
-  *[Moved to `.claude/rules/physics.md`: the regression guard.]*
+  *[Moved to `.claude/rules/physics-collision.md`: the regression guard.]*
 - **Crossing weld + loop-end gaps: RESOLVED by quasi-3D depth collision
   (P3.22).** The circular exemption lens was the root cause of four
   bugs (twist-eye merge, oblique naked gaps, R1-kink collapse,
@@ -1205,7 +1206,7 @@ before P4 unless the user asks):
   (deadband 1e-4, joint targeting, SLIDE_EASE_GRABBED 1.0): the same weak
   tug slides 2.21 ctrl smoothly, other-thread residual 0.042, no
   snapback. Rest chatter (the deadband's old job) is owned by static
-  friction. *[Moved to `.claude/rules/physics.md`: negative results.]*
+  friction. *[Moved to `.claude/rules/physics-collision.md`: negative results.]*
   *[Moved to `.claude/rules/probes.md`: the retracted claim and its probe rule.]*
 - **Giant gaps at loop-end twists: RESOLVED by arc-length gap margins
   (P3.21).** The erase cut boundary was the over ribbon's OFFSET CURVE
@@ -1215,7 +1216,7 @@ before P4 unless the user asks):
   wedges ~2× gap per side, reading as giant gaps. Fix: cut at the over
   SILHOUETTE (fillHalf) and push caps outward by `gap` as ARC LENGTH —
   margin now constant along the thread at every angle (span range
-  collapsed 0.59–1.07 → 0.59–0.67). *[Moved to `.claude/rules/probes.md`: the scanner lesson.]*
+  collapsed 0.59–1.07 → 0.59–0.67). *[Moved to `.claude/rules/probes-census.md`: the scanner lesson.]*
 - **The `cp` coupling toggle is REMOVED (P3.20).** The experiment
   answered its question: cp=0 welds crossings (collision has no
   tangential projection) and under stress leaves bound pairs torn up to
@@ -1227,7 +1228,7 @@ before P4 unless the user asks):
   (P3.17).** Rest floor is now ~2e-3 units/substep (was ~1e-2): static
   mode freezes the crossing machinery so the constraint standoff repeats
   identically. QUIET_EPS 1.5e-2 and the test bound 1.2e-2 could tighten
-  to ~5e-3 if ever useful. *[Moved to `.claude/rules/physics.md`: negative results.]* Still open:
+  to ~5e-3 if ever useful. *[Moved to `.claude/rules/physics-collision.md`: negative results.]* Still open:
   default composition got looser/sprawlier after the twist-eye work
   (MIN_PASS_SEPARATION is the main compactness lever; consider making
   twist-eye openness a user param instead of a constant).

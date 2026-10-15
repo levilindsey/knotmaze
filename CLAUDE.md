@@ -22,7 +22,7 @@ Rendering: PixiJS v8 custom ribbon meshes with depth-based over/under casing gap
 - **ParamField abstraction:** All generator parameters read through a `ParamField` (constant | Simplex-modulated | painted), enabling region-biome variety natively.
 - **Hero relaxation:** On load, lattice paths (angular 45° zigzags) visibly settle into smooth curves. Temperature slider allows re-agitation.
 - **Knot-as-instrument:** Pluck threads → waves propagate; Web Audio maps loop-length to pitch.
-- **Daily maze (K20, 2026-10-12):** one maze per LOCAL calendar day (Daily #1 = 2026-10-12), the same for everyone: THE BARE URL is today's (K56; `?daily` too) / `?daily=<n>`; any other query, or a panel edit other than a playback preference, is an ordinary design. A daily's design is today's `PARAM_DEFAULTS` on a seed from the day number, plus the player's playback preferences (`ui/daily_link.ts`; nothing freezes it since K132, so a default or generation change moves every daily). Results and unfinished attempts (K47: a reload resumes; a moved maze refuses the attempt) live in localStorage (first finish official, replays separate) and share as a Wordle-style move grid. Full record: the MAZE STATS + DAILY MAZE entry in `.claude/rules/gameplay.md`.
+- **Daily maze (K20, 2026-10-12):** one maze per LOCAL calendar day (Daily #1 = 2026-10-12), the same for everyone: THE BARE URL is today's (K56; `?daily` too) / `?daily=<n>`; any other query, or a panel edit other than a playback preference, is an ordinary design. A daily's design is today's `PARAM_DEFAULTS` on a seed from the day number, plus the player's playback preferences (`ui/daily_link.ts`; nothing freezes it since K132, so a default or generation change moves every daily). Results and unfinished attempts (K47: a reload resumes; a moved maze refuses the attempt) live in localStorage (first finish official, replays separate) and share as a Wordle-style move grid. Full record: the MAZE STATS + DAILY MAZE entry in `.claude/rules/gameplay-daily.md`.
 
 ## Project Structure
 
@@ -251,32 +251,15 @@ mid-settle capture).
 Subsystem lore loads on demand. Each `.claude/rules/*.md` file has a
 `paths:` list, and Claude Code attaches the file when a session reads or
 edits a matching file; open a rules file directly to read it otherwise.
-`docs/history.md` is never imported. New lore goes to the rules file of
-its area and new history to `docs/history.md` or the commit message, not
-to this file (claude-config `rules/context-budget.md`).
-
-- `.claude/rules/physics.md` (`src/physics/**`, `test/physics/**`,
-  `test/*.regression.test.ts`, `test/sweep.manual.test.ts`): the KINK EYES
-  entry (with K41), the K63 sleep gate, the junction cover and junction
-  spacing, the open loud attractor (K13), the P3 saga's invariants,
-  lessons and negative results, and the Web Worker plan.
-- `.claude/rules/render.md` (`src/render/**`, `test/render/**`): SHADER
-  PAINT (G2), SHADER BACKGROUNDS (K21), the RENDER LORE blocks, and render
-  lessons from the rounds and the P3 saga.
-- `.claude/rules/render-gaps.md` (`src/render/gap_mask.ts`,
-  `src/render/ribbon_renderer.ts`, `src/render/ribbon_mesh.ts`): PER-PIXEL
-  CROSSING GAPS (G1) and its render lore.
-- `.claude/rules/generation.md` (`src/core/**`, `src/geometry/**`,
-  `test/core/**`, `test/geometry/**`): maze-plan invariants (planarity,
-  rect identity) and what generation changes do to the dailies.
-- `.claude/rules/gameplay.md` (`src/game/**`, `src/ui/**`, `src/audio/**`,
-  `src/main.ts`, `test/game/**`, `test/ui/**`, `test/audio/**`): the MAZE
-  STATS and DAILY MAZE entry (the binding daily rules), link-codec
-  details, panel, camera, gesture and pluck rules, and the audio gate.
-- `.claude/rules/probes.md` (`scripts/**`, `.claude/probes/**`): the PROBE
-  LORE blocks, census and diagnosis rules, probe gotchas, hooks and
-  recipes. Read it before probing: a bare URL is today's daily (intro,
-  saved attempt), not a fresh design.
-- `docs/history.md`: Stages 0–26, the dated rounds, the old "Still open
-  in P4" list and the P3 saga (Follow-ups), verbatim; a bracketed note
-  marks each passage that moved to a rules file or stayed here.
+An area's general file (`physics.md`, `render.md`, `generation.md`,
+`gameplay.md`, `probes.md`) lists its topic files (`<area>-<topic>.md`,
+K173), each attaching only with the files it is about;
+`docs/lore_index.md` maps every rules file to its paths. New lore goes
+to its topic file (a new one needs narrow `paths:`, a line in its area's
+list and a row in the index), new history to `docs/history.md` or the
+commit message, not to this file (claude-config
+`rules/context-budget.md`). Read `probes.md` before probing: a bare URL
+is today's daily (intro, saved attempt), not a fresh design.
+`docs/history.md` is never imported: Stages 0–26, the dated rounds, the
+old "Still open in P4" list and the P3 saga (Follow-ups), verbatim; a
+bracketed note marks each passage that moved to a rules file.

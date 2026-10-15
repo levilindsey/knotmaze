@@ -42,7 +42,7 @@ research, the tooling choice and the verification record are in
 - PCG2D IS GONE (K154, Levi 2026-10-14: "swap in our own"; the other calls
   were to keep the Perlin and Scarborough Fair credits and to credit no
   other technique). The backgrounds' integer hash is `src/render/hash2d.ts`,
-  designed here (see render.md), so nothing about it is credited. test/notices
+  designed here (see render-hash.md), so nothing about it is credited. test/notices
   fails if the page names PCG, Jarzynski or Olano again; a hash taken from a
   paper or a library needs its credit back in the commit that takes it.
 - V8 (hypot2). `hypot2` in `src/util/det_math.ts` (K108) follows V8's

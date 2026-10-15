@@ -1,7 +1,9 @@
 ---
 paths:
-  - "scripts/**"
   - ".claude/probes/**"
+  - "scripts/*.mjs"
+  - "scripts/*.ps1"
+  - "scripts/*.ts"
 ---
 
 # Probe and verification lore
@@ -12,10 +14,11 @@ with its source; the narrative is in `docs/history.md`. Elsewhere:
 
 - CLAUDE.md's Verification rule: never `--virtual-time-budget` for
   anything physics-dependent; use `scripts/diag_screenshot.mjs`.
-- `physics.md`: the vite-node harness that reproduces the browser's
-  physics exactly (KINK EYES, PROBE LORE), why a hold probe must move
-  past the tug slop first (K41's PROBE LORE), the off-screen headed
-  window (P3.23) and the K63 sleep-window harness.
+- `physics-kinks.md`: the vite-node harness that reproduces the
+  browser's physics exactly (KINK EYES, PROBE LORE), why a hold probe
+  must move past the tug slop first (K41's PROBE LORE);
+  `physics-collision.md`: the off-screen headed window (P3.23);
+  `physics-sleep.md`: the K63 sleep-window harness.
 - `render-gaps.md`: G1's census baselines and the slot-clearing
   attribution it used.
 
@@ -69,42 +72,6 @@ TIME_ELAPSED query also counts GPU idle between a mid-tick GL upload and
 the render (10-12 ms phantom "spikes" at rest): start the query at the
 frame's first draw call (probe_gpudraw).
 
-PROBE LORE (2026-10-11, per-pixel gaps): an IMPLEMENTATION-INDEPENDENT
-pixel census (score the final frame against ideal casing geometry per
-under-ribbon lane, connected to the crossing core) is what made the
-erase grid and the shader comparable - but its "merge" also counts
-intended behavior (the near-joint clearance narrowing, webs over casing
-bands), and its "overcut" cannot know a spec it does not model (protect
-intervals waive margin on purpose): attribute with page-side toggles and
-count DARKER vs LIGHTER changed pixels before reading a count as a
-failure (protect: 25820 px lighter, 0 darker). Census totals of two
-captures of one frozen state also moved by a few hundred px in
-directions a lighten-only toggle cannot cause (overcut UP with protect
-on) - not understood; the pixel diff is the exact measure. A blend that must be
-inert somewhere needs a PROOF BY PIXEL (probe_smin: same state, blend
-on/off, every changed pixel tested on the CPU against the shader's own
-condition) - it caught padding segments whose raw indices escaped the
-far pass's skip range, so a polyline's own end read as a second branch.
-A same-state A/B also needs the PHYSICS frozen when the knot does not
-sleep (`__knotPS().step = () => {}`): freezing flow and paint is not
-enough - on an awake URL the smooth-min proof read 486 of 500 changed
-pixels as unjustified, all of them motion between the two shots.
-Census "overcut" at one crossing is attributed exactly by clearing slots
-one at a time in the frozen state (probe_overcut_attr: which slot frees
-the pixels) - its per-crossing ideal stops the over polyline at half
-the neighbor gap, the renderer at NB_CLEAR 0.8.
-DRAW-ORDER REVERSAL attributes uncovered ribbon overlap: re-render one
-state with the base chains drawn in reverse; every changed pixel is an
-overlap no overlay covers (probe_tipab TOGGLE=reverse - it found the
-tucked-cap corners). Fabric A/B crops need the PAINT CLOCK PINNED
-(`renderer.paintClock = 100`) and the pointer parked off the maze. And
-an off-screen probe window can STALL: on 2026-10-11 the desktop's
-displays spanned x -1920..1920, the window at 2200,50 lay beyond every
-display, Chrome's occlusion tracking treated it as hidden and stopped
-its rAF, and probes hung waiting for sleep. Launch with
-`--disable-features=CalculateNativeWinOcclusion
---disable-backgrounding-occluded-windows --disable-renderer-backgrounding`.
-
 PROBE LORE, same round: the renderer resets every fill/erase mesh's
 `visible` each frame (hide with `renderable = false`, or per layer);
 the custom section shader ignores `mesh.tint` (tint attribution only
@@ -112,73 +79,6 @@ works on default-shader meshes such as erases); and the URL-state
 rewrite drops `#hash` on load (pass probe args through page.evaluate).
 Three "no effect" toggles in a row meant the probe, not the renderer.
 
-PROBE LORE (2026-10-13, K156, the round phone pass): **one scripted
-phone pass per merge round** (`scripts/phone_pass.ps1`, parts in
-`scripts/phone_pass/`, record in `docs/design/K156.md`) instead of a
-phone gate per feature: `-Base <ref> -Head <ref>` (head defaults to
-master) are built once each into `<Out>\builds` (`preview.ps1 -Root`,
-K150), served on two ports from 5480-5489, and every sample checks its
-page's stamp SHA (an A/A pass builds once and serves it on both ports).
-Phases: start | frames | looks | cleanup | summary (`all` runs them in
-order). The phone must be awake and unlocked first (the pass never wakes
-it); the watchdog stops the pass on a touch, a key, a lock or another
-app in front, and `retry_quiet.ps1` retries once after 15 quiet minutes.
-`-WaitReady <min>` (K171 b) waits for the phone read-only (a check every
-3 minutes, two ready in a row start the pass, exit 3 at the deadline);
-`retry_quiet.ps1` waits the same way (`-WaitReadyMin`) instead of
-exiting 3, and `-Phase check` is the one-shot read-only check. Never
-pipe a `-Dry -Phase start` run (its Chrome child inherits the pipe and
-the command never returns): redirect it to a file.
-FRAMES (`bench.mjs`): fabric at 0/7/13 moves and knot (`mf=0`) at rest,
-both builds interleaved per rep (fps, p95, longest frame, render ms,
-asleep), plus K147's load scenario (rAF intervals from a fresh
-navigation: time to first frame, frames over 50 ms, longest, first
-sleep; default link and the slow case `gs=18`; 30 s, because K147 builds
-first slept at about 17.5 s on the phone). `?b.J` is solved on its 14th
-move, and since K155 and K140 a finish shows stars and throws confetti,
-which a frame cell must not time: the cells stop at 13 (the row's
-`made`; the summary flags a sample taken at the finish). LOOKS
-(`looks.mjs`, `sheet.mjs`): JSON
-`{looks:[{name, link, load: sleep|frozen|none, needs:[...], steps:[...]}]}`;
-the header of `looks.mjs` is the spec and `looks.example.json` is K81's
-arc. `needs` = `__hook`, `param:<key>` (a key of `__knotParams()`) or
-`js:<expr>`; a build without it (the feature is new) records `missing`
-and the pass goes on, and only a watchdog trip stops it. Steps: waitSleep
-wait moves tapChoice click panel scroll pin reload eval shot burst. An
-`eval` step runs page JS (a Promise is awaited) and keeps its JSON result
-in the report (`steps[].result`, listed in the summary): K140's frame
-timing while confetti falls, K80's walk to the hunt. A
-look runs on the head first (junction crop boxes are chosen there and
-reused on base). The sheet puts base on the left (blue bar) and head on
-the right (orange); a pixel diff is made for single shots only, and only
-a frozen, pinned look (`phy=0&fw=0` + `pin`) can read 0 px (a live page
-always differs, as the panel shot's 14061 px did on master vs master).
-The `click` step sets `target=_self` on anchors, so Licenses opens in the
-pass's own tab, not a second one. Every look starts on a CLEAN origin
-(localStorage and sessionStorage cleared first): the panel's open state
-persists, and K122's look had left the panel open over the maze in every
-look after it, so their walks tapped the panel (found on the phone, 3c).
-K79's drift pauses 2.5 s after a still
-scene, so a speed look bursts straight after a load (motion forced to
-`full` through localStorage and a reload). SUMMARY (`summary.mjs`): a
-table per scenario with base, head, delta, the A/A noise and a verdict
-("within noise" when |delta| <= the noise). An A/A pass writes
-`noise.json`; the tracked `scripts/phone_pass/noise.json` (3 reps of
-master vs master, 2026-10-14) is the floor every later summary reads. A
-cell's floor is the largest of the medians' |difference|, the largest
-single-rep |head - base| and one unit of the printed digit (a vsync-locked
-p95 of 16.8 both ways would otherwise flag every 0.1 ms). That floor, in
-A/A: fps +-1.2, p95 0.1 ms, longest frame 16-33 ms (one dropped frame),
-frames over 25 ms +-3-5, fabric render ms +-2-5 (18 samples spanned
-19.6-27.9 ms: K81's 20-29 vs 24-31 is noise), knot render ms +-8 (7.5-20.5,
-the GPU clock), load first sleep +-1.3 s (17.5-21.6 s), frames over 50 ms
-+-11-26. It is one pass: weak, and for ONE viewport. The docked phone sits
-in LANDSCAPE (display 2424x1080, the page 810 CSS px wide at dpr 2.625 and
-331-387 high with Chrome's toolbar, not the 411x753 of the lessons), the
-summary prints the viewport and warns when the floor's width or dpr
-differs, and `-Phase check` prints the display: rerun an A/A
-pass when the orientation changes. `-Dry` runs the same scripts against a
-desktop Chrome with the phone's viewport: plumbing only, never timings.
 ## Probe gotchas, hooks and tooling
 
 - *K75 (2026-10-12), cross-build frames:* a frozen page keeps the flow
@@ -243,40 +143,6 @@ desktop Chrome with the phone's viewport: plumbing only, never timings.
   (at most 0.05 s of spring per frame). `.claude/probes/K96/k96_cam.mjs`
   slows frames with a busy-wait in every rAF: CPU throttling barely
   slows a frozen layout.
-
-- K77 (2026-10-13), pluck profile probes: `.claude/probes/K77/`.
-  `lib.mjs` opens a frozen page (physics, flow, paint clock and pulse
-  pinned; chrome hidden; pointer parked), lists lobes, plucks at an arc,
-  pins the pluck clock (`setPluckTime`), dumps per-station profiles and
-  shoots with toggles: base | nocollapse | nooverlay | nocap | noattack |
-  noclip | noround | nosoft | rndNNN (collapseRound = NNN/100). Scripts:
-  attrib.mjs (one site, every term toggled), abexplore / absites / abzoom
-  (raw vs rounded across sites, curvature stats, zoomed crops),
-  k77_weave.mjs (FNV hashes of every mesh buffer outside the pluck layer
-  plus the gap slot table, before / rounded / raw / after clear(), and
-  partner band pixels), floorab.mjs (the amplitude-floor A/B),
-  k77_sheet.mjs (the before/after sheet; pair, hcat and mksheet make
-  crops and sheets). GOTCHAS: zoom with a synthetic WheelEvent, so the
-  parked pointer never moves (a real move can grab or pluck). Check
-  partner bands zoomed in: at default zoom 8-10 crossings' bands held
-  only 51-76 px in all, at 3.3x about 13k. Pin
-  Math.random around each `__knotPluck` to repeat the lobe phases. A
-  different amplitude floor is re-created exactly by scaling the tap's
-  gain (aTap is linear in gain, every lobe in aTap, and capClearance
-  does not depend on it).
-
-- K79 stage B3 (2026-10-13), phone gate probes (`.claude/probes/K79/phone/`:
-  `run_b3.ps1`, `panel_b3.mjs`, `passcost_x.mjs`, `watchdog.ps1`). (1) A
-  "nothing jumps" pixel strip (the same strip of the page, compared before
-  and after a panel action) needs `fw=0` in the URL AND a stopped drift
-  (backgroundSpeed 0): the ribbons' undulation and mist's drift both move
-  it, and the first desktop dry run read both as jumps. Add a control (the
-  same grab, no change) to show the 0. (2) To launch Chrome over another
-  app (Messages was in front), start the phone watchdog with `expect.txt` =
-  `any` (its top-activity check is then off), launch Chrome, and switch
-  `expect.txt` to `com.android.chrome` right after; the default trips at
-  once on the other app. Tweakpane's color popup (`.tp-popv`) closes on a
-  tap elsewhere, not on a second tap of its swatch.
 
 - K79 stage B merge (2026-10-13), panel probes: a row's reset glyph
   (`.kp-reset`) listens for `pointerdown`, not `click`, so a probe's
@@ -358,23 +224,6 @@ desktop Chrome with the phone's viewport: plumbing only, never timings.
 
 ## Census and diagnosis rules
 
-- *From the open artifact queue (2026-10-11), census lore:* Census lore from
-  the hunt: probe_bites' "third-thread bites" (erases cutting a joint's
-  bridge beside the crossing, 61/63/78 at the ring URL) are real in the
-  BASE layer but covered by webs in the final image; a rescue-patch
-  repaint was built, measured, and DISCARDED (it drew faint edge lines
-  and fixed nothing visible). Self-crossing censuses must restrict
-  "the over thread" to the over PASS's local ribbon (a shared chain
-  matches the under pass too); tight kink loops still confound it.
-
-- *From P3.40 (gap shapes at loop-end twists), probe lore and recipes:* PROBE LORE: `window.__knotRenderer()` now exposes the renderer -
-  tinting `underErases[i]` by index (emergent white) attributes WHICH
-  primitive draws a wrong pixel; this cracked in one capture what
-  three blind fixes missed. Session probe scripts die with the
-  scratchpad - recipes: gesture battery = hold pair midpoint 6s /
-  pull perp 0.5 + hold / grab 0.7 past pair, pull perp 1.2, release;
-  sweep = 8 seeds x fat/default, expect "asleep" by wall 18s.
-
 - *From P3.38 (the pull-outward merge), lesson:* LESSON: the
   "same artifact" reported across N fixes was at least THREE render
   classes (fill-cap abutment at twist flips, taut-chord stacked
@@ -387,24 +236,10 @@ desktop Chrome with the phone's viewport: plumbing only, never timings.
   pairDist/arcs/ctrlGaps), captures at dsf >= 1.5 with small clips
   (dsf-1 hid this artifact for a whole session).
 
-- *From P3.36, diag_scan:* diag_scan: a long erase whose over-patch out-spans it is a COVERED
-  long crossing, healthy - only uncovered spans are flagged.
-
 - *From P3.34, lesson:* LESSON, twice paid this session: a
   census that only measures PAIRS certifies single-thread artifacts
   as healthy; and "exactly the same after the fix" means the
   diagnosis class is wrong, not the tuning.
-
-- *From P3.32 (post-play riders), the census rule:* The
-  P3.30 ramp zeroed the floor by sin 0.55 on the assumption that
-  2D-close pairs in the 0.35-0.55 band are crossing-adjacent and
-  render - true at rest, FALSE for tunneled tangles from violent play
-  (renderability census: 23-27 unrenderable riders mid-churn, NONE
-  sharing a registered crossing; the P3.30 census only counted
-  sin < 0.35 and missed the class; my P3.31 census classified pairs
-  with the force pass's own coverage rule and so could not see
-  coverage leaks either - A CENSUS MUST MEASURE RENDERABILITY, i.e.
-  erase-reach coverage, never the force rule under test).
 
 - *From P3.28, probe rule:* Probe rule (twice burned):
   verify AT REST **after a small tug**, not just fresh settles or long
@@ -416,9 +251,6 @@ desktop Chrome with the phone's viewport: plumbing only, never timings.
   "renderer failure" (depth-separated pairs drawn uncut) before fixing
   either.
 
-- *From P3.24 (sink-through), probe rule:* Probe rule: census scripts must
-  replicate the force pass's zone lookup exactly or they lie.
-
 - *From P3.19/P3.20 (stuck-crossing feel), the retracted claim and its probe rule:* RETRACTED (P3.21): the "woven fabric co-motion" claim was a MEASUREMENT
   ARTIFACT — the sweep probe sampled reference points at fixed offsets
   from the SLIDING binding ctrl, conflating binding slide with material
@@ -428,12 +260,14 @@ desktop Chrome with the phone's viewport: plumbing only, never timings.
   material ctrls captured before the gesture. `ParticleSystem.slideStats`
   + `window.__knotPoint(chain, ctrl)` are the diagnostics.
 
-- *From P3.21 (giant gaps at loop-end twists), the scanner lesson:* The scanner's BIG-GAP threshold sat
-  at 1.3 and certified the bug as healthy through two "clean" audits —
-  now 0.85. Lesson: a scanner threshold chosen without a perceptual
-  reference is a rubber stamp; calibrate against what the worst healthy
-  case SHOULD be.
-
 - *From P3.20 (the cp toggle), why it went:* It was removed rather than kept as a toggle because
   a lingering `cp=0` in a live tab's URL silently poisons every later
   evaluation (Vite reloads preserve query params).
+
+## Where the rest of the probe lore lives
+
+K173 (2026-10-14) moved each topic to a file that attaches only with the
+files it is about; `docs/lore_index.md` lists every rules file and its paths.
+- `probes-census.md`: the pixel census and the census and scanner rules (`scripts/diag_scan.mjs`, `scripts/fold_census.*`)
+- `probes-phone.md`: the phone pass (K156) and phone gate probes (K79)
+- `probes-pluck.md`: K77's pluck profile probes

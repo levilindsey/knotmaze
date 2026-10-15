@@ -15,7 +15,7 @@
 // a clean run). No finite optimal, or nothing walked: no rating.
 //
 // THRESHOLDS come from simulated solvers over 288 mazes at today's defaults
-// and 288 dailies (the table and the solvers: .claude/rules/gameplay.md,
+// and 288 dailies (the table and the solvers: .claude/rules/gameplay-stars.md,
 // K155): a careful solver earns three stars nine times in ten, a greedy
 // one earns exactly two about half the time.
 //

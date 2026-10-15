@@ -1,0 +1,1801 @@
+{
+  "rulesDir": ".claude/rules",
+  "sources": [
+    "gameplay.md",
+    "generation.md",
+    "physics.md",
+    "probes.md",
+    "render.md"
+  ],
+  "outputs": {
+    "gameplay.md": {
+      "paths": [
+        "src/game/**",
+        "src/ui/**",
+        "src/audio/**",
+        "src/main.ts",
+        "test/game/**",
+        "test/ui/**",
+        "test/audio/**"
+      ],
+      "header": [],
+      "footer": [
+        "## Where the rest of the gameplay lore lives",
+        "",
+        "K173 (2026-10-14) moved each topic to a file that attaches only with the",
+        "files it is about; `docs/lore_index.md` lists every rules file and its paths.",
+        "- `gameplay-daily.md`: the daily maze and stats (binding)",
+        "- `gameplay-stars.md`: star ratings (K155)",
+        "- `gameplay-badge.md`: the mode badge (K73, K151)",
+        "- `gameplay-indicators.md`: off-screen indicators and the head (K73, K148)",
+        "- `gameplay-minotaur.md`: the real-time minotaur (K80)",
+        "- `gameplay-fog.md`: the fog of war resets on a restart only (K100)",
+        "- `gameplay-links.md`: links and the codec",
+        "- `gameplay-panel.md`: the panel",
+        "- `gameplay-motion.md`: the Motion setting (K53, K79)",
+        "- `gameplay-camera.md`: camera, gestures and taps (with `src/main.ts`)",
+        "- `gameplay-moves.md`: moves by direction (K120)",
+        "- `gameplay-audio.md`: audio"
+      ],
+      "index": "gameplay and UI: the intro and the list of the topic files"
+    },
+    "gameplay-daily.md": {
+      "paths": [
+        "src/game/daily_attempt.ts",
+        "src/game/daily_calendar.ts",
+        "src/game/daily_store.ts",
+        "src/game/maze_stats.ts",
+        "src/game/share_text.ts",
+        "src/ui/daily_link.ts",
+        "src/ui/daily_stats_view.ts",
+        "src/ui/share.ts",
+        "src/ui/maze_hud.ts",
+        "test/game/daily_attempt.test.ts",
+        "test/game/daily_calendar.test.ts",
+        "test/game/daily_store.test.ts",
+        "test/game/maze_stats.test.ts",
+        "test/ui/daily_link.test.ts"
+      ],
+      "header": [
+        "# Gameplay lore: the daily maze and stats",
+        "",
+        "Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `gameplay.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "MAZE STATS + DAILY MAZE (K19, K20, K47, K56; the binding daily rules)"
+    },
+    "gameplay-stars.md": {
+      "paths": [
+        "src/game/star_rating.ts",
+        "src/game/fabric_controller.ts",
+        "src/game/share_text.ts",
+        "src/ui/maze_hud.ts",
+        "src/ui/daily_stats_view.ts",
+        "test/game/star_rating.test.ts",
+        "test/game/fabric_controller.test.ts",
+        "test/game/fabric_trail.test.ts"
+      ],
+      "header": [
+        "# Gameplay lore: star ratings (K155)",
+        "",
+        "Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `gameplay.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "STAR RATINGS (K155)"
+    },
+    "gameplay-badge.md": {
+      "paths": [
+        "src/ui/mode_badge.ts",
+        "test/ui/mode_badge.test.ts"
+      ],
+      "header": [
+        "# Gameplay lore: the mode badge",
+        "",
+        "Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `gameplay.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "MODE BADGE (K73, K151)"
+    },
+    "gameplay-indicators.md": {
+      "paths": [
+        "src/ui/offscreen_indicators.ts",
+        "src/ui/head_indicator.ts",
+        "test/ui/offscreen_indicators.test.ts",
+        "test/ui/head_indicator.test.ts"
+      ],
+      "header": [
+        "# Gameplay lore: off-screen indicators",
+        "",
+        "Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `gameplay.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "OFF-SCREEN INDICATORS (K73) and THE HEAD (K148)"
+    },
+    "gameplay-minotaur.md": {
+      "paths": [
+        "src/game/minotaur.ts",
+        "test/game/minotaur.test.ts"
+      ],
+      "header": [
+        "# Gameplay lore: the real-time minotaur",
+        "",
+        "Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `gameplay.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "REAL-TIME MINOTAUR (K80)"
+    },
+    "gameplay-fog.md": {
+      "paths": [
+        "src/game/fabric_controller.ts",
+        "src/game/daily_attempt.ts",
+        "src/render/fabric_maze_renderer.ts",
+        "src/render/fog_arc.ts",
+        "test/render/fog_arc.test.ts",
+        "test/game/fabric_controller.test.ts",
+        "test/game/daily_attempt.test.ts"
+      ],
+      "header": [
+        "# Gameplay lore: the fog of war",
+        "",
+        "Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `gameplay.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "THE FOG RESETS ON A RESTART ONLY (K100)",
+      "widen": [
+        "src/render/fabric_maze_renderer.ts",
+        "src/render/fog_arc.ts",
+        "test/render/fog_arc.test.ts"
+      ]
+    },
+    "gameplay-links.md": {
+      "paths": [
+        "src/ui/param_codec.ts",
+        "src/ui/url_state.ts",
+        "src/ui/daily_link.ts",
+        "test/ui/param_codec.test.ts",
+        "test/ui/url_codec.test.ts",
+        "test/ui/seed_text.test.ts",
+        "test/ui/appear_mode.test.ts"
+      ],
+      "header": [
+        "# Gameplay lore: links and the codec",
+        "",
+        "Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `gameplay.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "link decoder details, codec v4, LOAD SETTLE PARAMS (K147)"
+    },
+    "gameplay-panel.md": {
+      "paths": [
+        "src/ui/tweakpane_panel.ts",
+        "src/ui/grid_align_curve.ts",
+        "test/ui/grid_align_curve.test.ts"
+      ],
+      "header": [
+        "# Gameplay lore: the panel",
+        "",
+        "Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `gameplay.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "pathViz labels, live recolor, panel rules, gridAlign, the background rows (K79)"
+    },
+    "gameplay-motion.md": {
+      "paths": [
+        "src/ui/motion.ts",
+        "test/ui/motion.test.ts"
+      ],
+      "header": [
+        "# Gameplay lore: the Motion setting",
+        "",
+        "Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `gameplay.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "THE MOTION SETTING (K53, K79)"
+    },
+    "gameplay-camera.md": {
+      "paths": [
+        "src/main.ts",
+        "src/ui/view_clamp.ts",
+        "test/ui/view_clamp.test.ts"
+      ],
+      "header": [
+        "# Gameplay lore: camera, gestures and taps",
+        "",
+        "Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `gameplay.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "the camera round, FIT CAMERA PAN SLACK (K149), taps and drags"
+    },
+    "gameplay-moves.md": {
+      "paths": [
+        "src/ui/key_moves.ts",
+        "src/ui/move_pad.ts",
+        "test/ui/key_moves.test.ts",
+        "test/ui/move_pad.test.ts"
+      ],
+      "header": [
+        "# Gameplay lore: moves by direction (K120)",
+        "",
+        "Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `gameplay.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "MOVES BY DIRECTION (K120): keys, the picker, the move pad"
+    },
+    "gameplay-audio.md": {
+      "paths": [
+        "src/audio/**",
+        "test/audio/**"
+      ],
+      "header": [
+        "# Gameplay lore: audio",
+        "",
+        "Moved verbatim from `gameplay.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `gameplay.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "the audio autoplay gate"
+    },
+    "generation.md": {
+      "paths": [
+        "src/core/**",
+        "src/util/**",
+        "test/core/**",
+        "test/util/**"
+      ],
+      "header": [],
+      "footer": [
+        "## Where the rest of the generation lore lives",
+        "",
+        "K173 (2026-10-14) moved each topic to a file that attaches only with the",
+        "files it is about; `docs/lore_index.md` lists every rules file and its paths.",
+        "- `generation-plan.md`: the maze plan: the identity pin (K87), dead ends (K74), route and reachability (K109, K110)",
+        "- `generation-shapes.md`: shapes, anchors and escape tails",
+        "- `generation-geometry.md`: the splines (Layer 2): the bend bound (K90)"
+      ],
+      "index": "generation: what changes move the dailies, the plan history pointer, engine-exact generation (K108)",
+      "widen": [
+        "src/util/**",
+        "test/util/**"
+      ]
+    },
+    "generation-plan.md": {
+      "paths": [
+        "src/core/maze_plan.ts",
+        "src/core/maze_apply.ts",
+        "src/core/shapes.ts",
+        "test/core/maze_plan.test.ts",
+        "test/core/maze_plan_identity.test.ts",
+        "test/core/maze_apply.test.ts",
+        "test/core/maze_solvable.test.ts",
+        "test/core/maze_reachable.test.ts",
+        "test/core/shapes.test.ts",
+        "test/core/fixtures/maze_plan_v1.ts"
+      ],
+      "header": [
+        "# Generation lore: the maze plan",
+        "",
+        "Moved verbatim from `generation.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `generation.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "the plan identity pin (K87), long-tail dead ends (K74), a route to the exit (K109), reachability (K110)"
+    },
+    "generation-shapes.md": {
+      "paths": [
+        "src/core/shapes.ts",
+        "src/core/lattice_grower.ts",
+        "src/core/maze_plan.ts",
+        "src/core/maze_apply.ts",
+        "test/core/shapes.test.ts",
+        "test/core/lattice_grower.test.ts"
+      ],
+      "header": [
+        "# Generation lore: shapes, anchors and escape tails",
+        "",
+        "Moved verbatim from `generation.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `generation.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "rect identity, the start/exit anchors, escape tails"
+    },
+    "generation-geometry.md": {
+      "paths": [
+        "src/geometry/**",
+        "test/geometry/**"
+      ],
+      "header": [
+        "# Generation lore: the splines (Layer 2)",
+        "",
+        "Moved verbatim from `generation.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `generation.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "the spline bend bound (K90)"
+    },
+    "physics.md": {
+      "paths": [
+        "src/physics/**",
+        "test/physics/**",
+        "test/*.regression.test.ts",
+        "test/sweep.manual.test.ts"
+      ],
+      "header": [],
+      "footer": [
+        "## Where the rest of the physics lore lives",
+        "",
+        "K173 (2026-10-14) moved each topic to a file that attaches only with the",
+        "files it is about; `docs/lore_index.md` lists every rules file and its paths.",
+        "- `physics-sleep.md`: the sleep gate (K63)",
+        "- `physics-settle.md`: the load settle (K147)",
+        "- `physics-kinks.md`: kink eyes (KINK EYES, K41)",
+        "- `physics-fabric.md`: fabric and open-chain mechanisms (P4)",
+        "- `physics-collision.md`: the P3 saga (contacts, collision, invariants, lessons) and the loud attractor (K13)"
+      ],
+      "index": "physics: the intro, the sweep test, the Web Worker plan"
+    },
+    "physics-sleep.md": {
+      "paths": [
+        "src/physics/sleep_gate.ts",
+        "test/physics/sleep_gate.test.ts",
+        "test/physics/sleep.regression.test.ts",
+        "test/quiescence.regression.test.ts"
+      ],
+      "header": [
+        "# Physics lore: the sleep gate (K63)",
+        "",
+        "Moved verbatim from `physics.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `physics.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "the sleep gate counts sim time (K63)"
+    },
+    "physics-settle.md": {
+      "paths": [
+        "src/physics/settle_budget.ts",
+        "test/physics/settle_budget.test.ts"
+      ],
+      "header": [
+        "# Physics lore: the load settle (K147)",
+        "",
+        "Moved verbatim from `physics.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `physics.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "a new knot's first settle is paced (K147)"
+    },
+    "physics-kinks.md": {
+      "paths": [
+        "src/physics/particle_system.ts",
+        "src/physics/forces.ts",
+        "test/physics/sleep.regression.test.ts"
+      ],
+      "header": [
+        "# Physics lore: kink eyes",
+        "",
+        "Moved verbatim from `physics.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `physics.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "KINK EYES (with K41): the eye ratchet, across-eye pressure, the fairing exemption"
+    },
+    "physics-fabric.md": {
+      "paths": [
+        "src/physics/particle_system.ts",
+        "src/physics/forces.ts",
+        "test/physics/open_chain.test.ts",
+        "test/physics/junction.test.ts",
+        "test/physics/maze_fabric.test.ts"
+      ],
+      "header": [
+        "# Physics lore: fabric and open chains",
+        "",
+        "Moved verbatim from `physics.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `physics.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "the junction cover, junction spacing, open-chain terminals"
+    },
+    "physics-collision.md": {
+      "paths": [
+        "src/physics/particle_system.ts",
+        "src/physics/forces.ts",
+        "test/physics/particle_system.test.ts",
+        "test/quiescence.regression.test.ts"
+      ],
+      "header": [
+        "# Physics lore: contacts and collision (the P3 saga)",
+        "",
+        "Moved verbatim from `physics.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `physics.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "the P3 saga's invariants, mechanisms, lessons and negative results; the open loud attractor (K13)"
+    },
+    "probes.md": {
+      "paths": [
+        ".claude/probes/**",
+        "scripts/*.mjs",
+        "scripts/*.ps1",
+        "scripts/*.ts"
+      ],
+      "header": [],
+      "footer": [
+        "## Where the rest of the probe lore lives",
+        "",
+        "K173 (2026-10-14) moved each topic to a file that attaches only with the",
+        "files it is about; `docs/lore_index.md` lists every rules file and its paths.",
+        "- `probes-census.md`: the pixel census and the census and scanner rules (`scripts/diag_scan.mjs`, `scripts/fold_census.*`)",
+        "- `probes-phone.md`: the phone pass (K156) and phone gate probes (K79)",
+        "- `probes-pluck.md`: K77's pluck profile probes"
+      ],
+      "index": "probing: a bare URL is the daily, same-state A/Bs, the scratchpad, gotchas, hooks, recipes, the general diagnosis rules"
+    },
+    "probes-census.md": {
+      "paths": [
+        "scripts/diag_scan.mjs",
+        "scripts/fold_census.mjs",
+        "scripts/fold_census.ps1",
+        "scripts/fold_census.ts",
+        "scripts/fold_census.vite.config.mjs"
+      ],
+      "header": [
+        "# Probe lore: census and diagnosis",
+        "",
+        "Moved verbatim from `probes.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `probes.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "the per-pixel gaps census, the census and scanner rules from P3"
+    },
+    "probes-phone.md": {
+      "paths": [
+        "scripts/phone.ps1",
+        "scripts/phone_pass.ps1",
+        "scripts/phone_pass/**",
+        ".claude/probes/K79/**",
+        ".claude/probes/K156/**"
+      ],
+      "header": [
+        "# Probe lore: the phone",
+        "",
+        "Moved verbatim from `probes.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `probes.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "the round phone pass (K156), phone gate probes (K79 B3)"
+    },
+    "probes-pluck.md": {
+      "paths": [
+        ".claude/probes/K77/**"
+      ],
+      "header": [
+        "# Probe lore: pluck profile probes (K77)",
+        "",
+        "Moved verbatim from `probes.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `probes.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "K77's pluck profile probes (`.claude/probes/K77/`)"
+    },
+    "render.md": {
+      "paths": [
+        "src/render/**",
+        "test/render/**"
+      ],
+      "header": [],
+      "footer": [
+        "## Where the rest of the render lore lives",
+        "",
+        "K173 (2026-10-14) moved each topic to a file that attaches only with the",
+        "files it is about; `docs/lore_index.md` lists every rules file and its paths.",
+        "- `render-gaps.md`: per-pixel crossing gaps (G1)",
+        "- `render-paint.md`: shader paint (G2), pulses, palette order, gamut locality",
+        "- `render-backgrounds.md`: shader backgrounds (K21, K79)",
+        "- `render-hash.md`: the backgrounds' hash (K154)",
+        "- `render-ribbon.md`: ribbons and junctions: the junction field, fills, arc-wrap, wedges, fans",
+        "- `render-pluck.md`: plucks: the concave-side cap, base collapse (K77), still plucks (K104), pluck params (K180)",
+        "- `render-markers.md`: marker icons (K83)",
+        "- `render-routes.md`: route bands (K81)",
+        "- `render-web-fade.md`: the gold web's fade (K169)",
+        "- `render-confetti.md`: finish confetti (K140)"
+      ],
+      "index": "render: the intro, custom shaders and mesh.texture, palette textures, the P3.40 lessons"
+    },
+    "render-backgrounds.md": {
+      "paths": [
+        "src/render/background.ts",
+        "src/render/background_model.ts",
+        "src/render/background_shaders.ts",
+        "test/render/background_model.test.ts",
+        "test/render/background_shaders.test.ts"
+      ],
+      "header": [
+        "# Render lore: shader backgrounds (K21)",
+        "",
+        "Moved verbatim from `render.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `render.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "SHADER BACKGROUNDS (K21), SHAPE PARAMS + CUSTOM COLORS (K79)"
+    },
+    "render-hash.md": {
+      "paths": [
+        "src/render/hash2d.ts",
+        "src/render/background_shaders.ts",
+        "test/render/hash2d.test.ts"
+      ],
+      "header": [
+        "# Render lore: the backgrounds' hash (K154)",
+        "",
+        "Moved verbatim from `render.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `render.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "THE BACKGROUNDS' HASH IS OUR OWN (K154)"
+    },
+    "render-paint.md": {
+      "paths": [
+        "src/render/paint_glsl.ts",
+        "src/render/paint_math.ts",
+        "src/render/paint_model.ts",
+        "src/render/paint_const.ts",
+        "src/render/float_rows.ts",
+        "test/render/paint_fx.test.ts",
+        "test/render/paint_gameplay.test.ts",
+        "test/render/paint_math.test.ts",
+        "test/render/paint_section.test.ts",
+        "test/render/fixtures/pre_g2.ts",
+        "test/render/fixtures/pre_g23.ts"
+      ],
+      "header": [
+        "# Render lore: shader paint (G2) and pulses",
+        "",
+        "Moved verbatim from `render.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `render.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "SHADER PAINT (G2), PULSES and PULSE REACH (K75), palette strip order, gamut locality"
+    },
+    "render-ribbon.md": {
+      "paths": [
+        "src/render/ribbon_renderer.ts",
+        "src/render/ribbon_mesh.ts",
+        "src/render/arm_strip.ts",
+        "src/render/junction_field.ts",
+        "test/render/fixtures/chains.ts"
+      ],
+      "header": [
+        "# Render lore: ribbons and junctions",
+        "",
+        "Moved verbatim from `render.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `render.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "the GPU junction field, overlay width, flat fills, arc-wrap, the arcAt gotcha, wedge flanks, fan indices, blend distance, miter clamp, displayF"
+    },
+    "render-pluck.md": {
+      "paths": [
+        "src/render/pluck_overlay.ts",
+        "src/render/pluck_model.ts",
+        "test/render/pluck_model.test.ts"
+      ],
+      "header": [
+        "# Render lore: plucks",
+        "",
+        "Moved verbatim from `render.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `render.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "the concave-side cap, base collapse (K77), still plucks (K104), pluck params (K180)"
+    },
+    "render-markers.md": {
+      "paths": [
+        "src/render/marker_glyphs.ts",
+        "src/render/marker_mesh.ts",
+        "test/render/marker_glyphs.test.ts"
+      ],
+      "header": [
+        "# Render lore: marker icons (K83)",
+        "",
+        "Moved verbatim from `render.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `render.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "MARKER ICONS (K83)"
+    },
+    "render-routes.md": {
+      "paths": [
+        "src/render/junction_routes.ts",
+        "src/render/junction_field.ts",
+        "test/render/junction_routes.test.ts"
+      ],
+      "header": [
+        "# Render lore: route bands (K81)",
+        "",
+        "Moved verbatim from `render.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `render.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "ROUTE BANDS (K81)"
+    },
+    "render-web-fade.md": {
+      "paths": [
+        "src/render/web_fade.ts",
+        "test/render/web_fade.test.ts"
+      ],
+      "header": [
+        "# Render lore: the gold web's fade (K169)",
+        "",
+        "Moved verbatim from `render.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `render.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "THE FULLY TRAVELED WEB FADES IN (K169)"
+    },
+    "render-confetti.md": {
+      "paths": [
+        "src/render/confetti.ts",
+        "src/render/confetti_model.ts",
+        "test/render/confetti_model.test.ts"
+      ],
+      "header": [
+        "# Render lore: finish confetti (K140)",
+        "",
+        "Moved verbatim from `render.md` by K173 (2026-10-14), so that it attaches",
+        "only with the files it is about; `render.md` lists the area's other files."
+      ],
+      "footer": [],
+      "index": "FINISH CONFETTI (K140)"
+    }
+  },
+  "passages": [
+    {
+      "source": "gameplay.md",
+      "anchor": "# Gameplay, daily and UI lore",
+      "to": "gameplay.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "Binding lore for the game state, the daily maze,",
+      "to": "gameplay.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "## The daily maze and stats (binding)",
+      "to": "gameplay-daily.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- MAZE STATS + DAILY MAZE (K19 + K20, then K47 +",
+      "to": "gameplay-daily.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- STAR RATINGS (K155 stage 1, 2026-10-14; game/star_rating",
+      "to": "gameplay-stars.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "## Corner chrome",
+      "to": "gameplay-badge.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- MODE BADGE (K73, 2026-10-12; K151 stage 1, 2026",
+      "to": "gameplay-badge.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- OFF-SCREEN INDICATORS (K73, 2026-10-13; ui/offscreen_indicators",
+      "to": "gameplay-indicators.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "## The real-time minotaur",
+      "to": "gameplay-minotaur.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- REAL-TIME MINOTAUR (K80 stage 1, 2026-10-13; game",
+      "to": "gameplay-minotaur.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "## The fog of war",
+      "to": "gameplay-fog.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- THE FOG RESETS ON A RESTART ONLY (K100 stage 1",
+      "to": "gameplay-fog.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "## Links and the codec",
+      "to": "gameplay-links.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- *From COMPACT LINKS (2026-10-11), decoder details",
+      "to": "gameplay-links.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- *From COMPACT LINKS, a query without a seed:* A",
+      "to": "gameplay-links.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- trailLength's default is 10 (K73, 2026-10-12; Levi",
+      "to": "gameplay-links.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- LOAD SETTLE PARAMS (K147, 2026-10-13; the mechanism",
+      "to": "gameplay-links.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "## The panel",
+      "to": "gameplay-panel.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- pathViz LABELS ARE NOT ITS VALUES (K73, 2026-10",
+      "to": "gameplay-panel.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- *From APPEARANCE FX round 3 (2026-10-10), live",
+      "to": "gameplay-panel.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- *From the 2026-10-11 APPEARANCE MODES round, panel",
+      "to": "gameplay-panel.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- *From the gridAlign EXPONENTIAL SLIDER (2026-10",
+      "to": "gameplay-panel.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- BACKGROUND SPEED ROW (K79, 2026-10-13): gridAlign",
+      "to": "gameplay-panel.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- BACKGROUND SHAPE + COLOR ROWS (K79 stage B, 2026",
+      "to": "gameplay-panel.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- THE MOTION SETTING (K53, built in K79, 2026-10",
+      "to": "gameplay-motion.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "## Camera, gestures and plucks",
+      "to": "gameplay-camera.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- *From the MOBILE + CAMERA ROUND (late 2026-10-10",
+      "to": "gameplay-camera.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- FIT CAMERA PAN SLACK (K149, 2026-10-14; ui/view_clamp",
+      "to": "gameplay-camera.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- *From RENDER-ONLY PLUCKS (2026-10-11), taps and",
+      "to": "gameplay-camera.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- MOVES BY DIRECTION (K120 stage 1, 2026-10-14; ui",
+      "to": "gameplay-moves.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "## Audio",
+      "to": "gameplay-audio.md"
+    },
+    {
+      "source": "gameplay.md",
+      "anchor": "- *From the 2026-10-11 small round 2, the audio autoplay",
+      "to": "gameplay-audio.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "# Maze generation lore",
+      "to": "generation.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "Lore for the lattice, the maze plan and its graph",
+      "to": "generation.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "- Generation changes move every daily and every link",
+      "to": "generation.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "- The plan's design history (splices, merges, corner",
+      "to": "generation.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "- *K87 (2026-10-13), the plan identity pin:*",
+      "to": "generation-plan.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "- *K74 (2026-10-13), long-tail dead ends:* `deadEndLength",
+      "to": "generation-plan.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "- *K108 (2026-10-13), engine-exact generation:* everything",
+      "to": "generation.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "- *K109 (2026-10-13), a route from start to exit",
+      "to": "generation-plan.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "- *K110 (2026-10-13), every piece reachable from",
+      "to": "generation-plan.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "- *K90 (2026-10-14), the bend bound:* a Catmull-Rom",
+      "to": "generation-geometry.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "## Shapes, anchors and escape tails",
+      "to": "generation-shapes.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "- *From SHAPED LATTICES, rect identity and the start",
+      "to": "generation-shapes.md"
+    },
+    {
+      "source": "generation.md",
+      "anchor": "- *From SHAPED START/EXIT CLEARANCE (late 2026-10",
+      "to": "generation-shapes.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "# Physics lore",
+      "to": "physics.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "Binding lore for the particle system, moved verbatim",
+      "to": "physics.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "## The sleep gate (K63)",
+      "to": "physics-sleep.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- **The sleep gate counts SIM TIME (K63): QUIET_WINDOW",
+      "to": "physics-sleep.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "## The load settle (K147)",
+      "to": "physics-settle.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- **A new knot's first settle is paced, never caught",
+      "to": "physics-settle.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "## Kink eyes (KINK EYES, with K41)",
+      "to": "physics-kinks.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- KINK EYES (worktree agent, 2026-10-11; Levi: \"This",
+      "to": "physics-kinks.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "## Fabric and open-chain mechanisms (P4 rounds)",
+      "to": "physics-fabric.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From the FABRIC SLEEP FIX (2026-10-10), the junction",
+      "to": "physics-fabric.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- PHYSICS JUNCTION SPACING (worktree agent, user",
+      "to": "physics-fabric.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From the ROOT-CAUSE ROUND (late 2026-10-10), open",
+      "to": "physics-fabric.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From the open artifact queue (2026-10-11), agent",
+      "to": "physics-fabric.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "## The P3 saga: invariants, mechanisms, lessons, negative results",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.42 (broadphase rebuilt flat), the counting",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.42, gotcha (2):* (2) The pathological",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.39 (the flattened-twist flip), the twist",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.39, lessons:* LESSONS: (1) when a render",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.37 (twist collapse during a held grab",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.37, lessons:* LESSONS: a world-space invariant",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.36 (the cinched-twist merge), force-side",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.36, the quiescence test:* Quiescence test",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.36, lesson:* LESSON: the P3.31 sin was",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.34 (the merged-parallel-threads seam)",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.33 (the frozen merge seam after play)",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.33, known residual:* KNOWN RESIDUAL: 75",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.32 (post-play riders), the fix:* Fix:",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.31 (fresh-settle limit cycle at fat widths",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.31, the amended invariant:* Amends the",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.30 (tangential riding under true-3D),",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.29 (true-3D collision), the true-3D model",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.29 (true-3D collision), the z state and",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.26 (deep penetration at extreme params",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.23 (post-play endless jiggle), the root",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.23 (post-play endless jiggle), the regression",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.19/P3.20 (stuck-crossing feel), negative",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- *From P3.17 (static/kinetic contacts), negative",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "## Open: the loud attractor (K13)",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- **OPEN: post-VIOLENT-play loud attractor at fat",
+      "to": "physics-collision.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "## Architecture and tooling",
+      "to": "physics.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "- `test/sweep.manual.test.ts` was reviewed and KEPT",
+      "to": "physics.md"
+    },
+    {
+      "source": "physics.md",
+      "anchor": "**CANDIDATE perf follow-up — move the sim to a Web",
+      "to": "physics.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "# Probe and verification lore",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "How to probe and verify Knotmaze, moved verbatim",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- CLAUDE.md's Verification rule: never `--virtual",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- `physics.md`: the vite-node harness that reproduces",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- `render-gaps.md`: G1's census baselines and the",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "## PROBE LORE",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "PROBE LORE (2026-10-12, K56): **a bare URL is TODAY",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "PROBE LORE (2026-10-13, K83): **a same-state A/B",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "PROBE LORE (2026-10-11): **the session scratchpad",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "PROBE LORE (2026-10-11, per-pixel gaps): an IMPLEMENTATION",
+      "to": "probes-census.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "PROBE LORE, same round: the renderer resets every",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "PROBE LORE (2026-10-13, K156, the round phone pass",
+      "to": "probes-phone.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "## Probe gotchas, hooks and tooling",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *K75 (2026-10-12), cross-build frames:* a frozen",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From JUNCTION CLEARANCE + TWO-LAYER FILLETS, the",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From COMPACT LINKS, reading the live params:*",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From COMPACT LINKS, probe URLs:* `?<seed>&am=instant",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From RENDER-ONLY PLUCKS, probe hooks:* Probe hooks",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From MAZE STATS + DAILY MAZE, daily probes and",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- K73 (2026-10-13), corner chrome probes: `.claude",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- K77 (2026-10-13), pluck profile probes: `.claude",
+      "to": "probes-pluck.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- K79 stage B3 (2026-10-13), phone gate probes (",
+      "to": "probes-phone.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- K79 stage B merge (2026-10-13), panel probes: a",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- K147 (2026-10-13), the load settle: **sim and wall",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- K80 (2026-10-13), the real-time chase: `.claude",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- K104 (2026-10-13), motion and size: while the desktop",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- K140 (2026-10-14), CPU throttling: throttle after",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- K146 + K151 (2026-10-14), past dailies and the",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- K100 (2026-10-14), the fog over backtracks and",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "## Census and diagnosis rules",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From the open artifact queue (2026-10-11), census",
+      "to": "probes-census.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From P3.40 (gap shapes at loop-end twists), probe",
+      "to": "probes-census.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From P3.38 (the pull-outward merge), lesson:*",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From P3.37 (twist collapse during a held grab",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From P3.36, diag_scan:* diag_scan: a long erase",
+      "to": "probes-census.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From P3.34, lesson:* LESSON, twice paid this session",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From P3.32 (post-play riders), the census rule",
+      "to": "probes-census.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From P3.28, probe rule:* Probe rule (twice burned",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From P3.27 (fat-thread penetration), probe rule",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From P3.24 (sink-through), probe rule:* Probe",
+      "to": "probes-census.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From P3.19/P3.20 (stuck-crossing feel), the retracted",
+      "to": "probes.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From P3.21 (giant gaps at loop-end twists), the",
+      "to": "probes-census.md"
+    },
+    {
+      "source": "probes.md",
+      "anchor": "- *From P3.20 (the cp toggle), why it went:* It was",
+      "to": "probes.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "# Render lore",
+      "to": "render.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "Binding lore for the renderer, moved verbatim from",
+      "to": "render.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "## Shader paint (G2) and backgrounds (K21)",
+      "to": "render-paint.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- SHADER BACKGROUNDS (K21, 2026-10-12; the commit",
+      "to": "render-backgrounds.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- THE BACKGROUNDS' HASH IS OUR OWN (K154, 2026-10",
+      "to": "render-hash.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- SHADER PAINT (G2 of the GPU migration, K4; worktree",
+      "to": "render-paint.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- PULSES BRIGHTEN THE THREAD'S OWN PAINT (K75, 2026",
+      "to": "render-paint.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- PULSE REACH (K75, same day; Levi: the junction",
+      "to": "render-paint.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "## RENDER LORE",
+      "to": "render-ribbon.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "RENDER LORE (2026-10-11, GPU junction field): **blend",
+      "to": "render-ribbon.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "RENDER LORE (hard-won, 2026-10-11): **a junction",
+      "to": "render-ribbon.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "RENDER LORE (hard-won, 2026-10-10): **a custom pixi",
+      "to": "render.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "RENDER LORE (hard-won, 2026-10-09): **flat fills",
+      "to": "render-ribbon.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "RENDER LORE (hard-won, 2026-10-09, closed 2026-10",
+      "to": "render-ribbon.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "RENDER LORE (hard-won, 2026-10-09; the strip is RETIRED",
+      "to": "render-paint.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "RENDER LORE (hard-won, 2026-10-09): **never destroy",
+      "to": "render.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "RENDER LORE (2026-10-09; MOSTLY RETIRED by Stage",
+      "to": "render-paint.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "## From the rounds and the P3 saga",
+      "to": "render-ribbon.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- *From Stage 13 (junction joinery), the arcAt GOTCHA",
+      "to": "render-ribbon.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- *From the 2026-10-11 small fixes, adaptive wedge",
+      "to": "render-ribbon.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- *From the 2026-10-11 small fixes, stale fan indices",
+      "to": "render-ribbon.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- *From the 2026-10-11 small round 2, junction blend",
+      "to": "render-ribbon.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- *From RENDER-ONLY PLUCKS (2026-10-11), the concave",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- *From P3.40 (gap shapes at loop-end twists), lessons",
+      "to": "render.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- *From P3.34 (the merged-parallel-threads seam)",
+      "to": "render-ribbon.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- *From P3.28 (torn crossings after a small pull",
+      "to": "render-ribbon.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "## Pluck base collapse (K77)",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- ROUNDED BASE COLLAPSE (K77, 2026-10-13; worktree",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- FIX (`roundCollapse` in pluck_model, applied at",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- VERIFIED (same state): fabric's 6 collapsing sites",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- AMPLITUDE FLOOR (44885f3 raised tapAmplitude's",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- NOT the collapse (present with `nocollapse`, and",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "## Still plucks (K104)",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- COST (K104 stage 1c, 2026-10-14; the mechanism",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "## Pluck params (K180)",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- PLUCK PARAMS (K180 stage 1, 2026-10-14; worktree",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- AMOUNT. W0 = pluckWhole x pluckSize x gain x h",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- CROSSINGS: how W meets the crossings INSIDE its",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- GLOW (the cue: the unit brightens toward white",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- THE FALLBACK ESTIMATE (`peakEstimate`, once at",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- SOUND-ONLY TAPS (skipCore: the tapped span minus",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- CENSUS (`.claude/probes/K180/census/`: K104's census",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- VERIFIED: same-state A/B against master ca7d3e6",
+      "to": "render-pluck.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "## Marker icons (K83)",
+      "to": "render-markers.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- MARKER ICONS (K83, 2026-10-13; worktree agent)",
+      "to": "render-markers.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "## Route bands (K81)",
+      "to": "render-routes.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- ROUTE BANDS (K81, 2026-10-13; worktree agent, stages",
+      "to": "render-routes.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- PURE PART (`junction_routes.ts`; its header holds",
+      "to": "render-routes.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- RECORD + SHADER (`junction_field.ts`). A routed",
+      "to": "render-routes.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- WIRING. `setPaint`'s 4th argument is `routes`;",
+      "to": "render-routes.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- DECISIONS. (1) Backtracks: the band follows the",
+      "to": "render-routes.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- MEASURED. SMOKE: no shader compile or link error",
+      "to": "render-routes.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- RESIDUALS. The pluck overlay draws over the band",
+      "to": "render-routes.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- PROBES (`.claude/probes/K81/`, untracked): k81lib",
+      "to": "render-routes.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "## The gold web's fade (K169)",
+      "to": "render-web-fade.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- THE FULLY TRAVELED WEB FADES IN (K169, 2026-10",
+      "to": "render-web-fade.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "## Finish confetti (K140)",
+      "to": "render-confetti.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- FINISH CONFETTI (K140 stage 1, 2026-10-14; worktree",
+      "to": "render-confetti.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- COUNTS. Amount 1 (`cfa`, 0-3; `cf` turns it off",
+      "to": "render-confetti.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- COLORS: a fixed festive set, the path's gold (0xffd23f",
+      "to": "render-confetti.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- REDUCED MOTION (`motion.reduced`): no rain (a full",
+      "to": "render-confetti.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- ANIMATING. Render-only: nothing touches the physics",
+      "to": "render-confetti.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- WHEN. throwConfetti() ends showFabricWin, so it",
+      "to": "render-confetti.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- INPUT. Both containers sit above the world root",
+      "to": "render-confetti.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- COST (2026-10-14, desktop at 1400x900 dpr 1, K104",
+      "to": "render-confetti.md"
+    },
+    {
+      "source": "render.md",
+      "anchor": "- PROBES (`.claude/probes/K140/`, untracked): k140_page",
+      "to": "render-confetti.md"
+    }
+  ],
+  "rewrites": [
+    {
+      "file": ".claude/rules/gameplay.md",
+      "from": "`probes.md`. Add new gameplay and UI lore here, not to CLAUDE.md.",
+      "to": "`probes.md`. Add new gameplay and UI lore to its topic file (listed at\nthe end), not to CLAUDE.md."
+    },
+    {
+      "file": ".claude/rules/gameplay-links.md",
+      "from": "the mechanism is physics.md's",
+      "to": "the mechanism is physics-settle.md's"
+    },
+    {
+      "file": ".claude/rules/gameplay-panel.md",
+      "from": "side is in `render.md` (SHAPE PARAMS",
+      "to": "side is in `render-backgrounds.md` (SHAPE PARAMS"
+    },
+    {
+      "file": ".claude/rules/generation.md",
+      "from": "The daily rules are in `gameplay.md`.",
+      "to": "The daily rules are in `gameplay-daily.md`."
+    },
+    {
+      "file": ".claude/rules/notices.md",
+      "from": "(see render.md)",
+      "to": "(see render-hash.md)"
+    },
+    {
+      "file": ".claude/rules/physics.md",
+      "from": "CLAUDE.md, probe and census methods in `probes.md`, render-side lessons\nin `render.md`. Add new physics lore here, not to CLAUDE.md.",
+      "to": "CLAUDE.md, probe and census methods in `probes.md` and\n`probes-census.md`, render-side lessons in `render.md` and\n`render-ribbon.md`. Add new physics lore to its topic file (listed at\nthe end), not to CLAUDE.md."
+    },
+    {
+      "file": ".claude/rules/probes.md",
+      "from": "- `physics.md`: the vite-node harness that reproduces the browser's\n  physics exactly (KINK EYES, PROBE LORE), why a hold probe must move\n  past the tug slop first (K41's PROBE LORE), the off-screen headed\n  window (P3.23) and the K63 sleep-window harness.",
+      "to": "- `physics-kinks.md`: the vite-node harness that reproduces the\n  browser's physics exactly (KINK EYES, PROBE LORE), why a hold probe\n  must move past the tug slop first (K41's PROBE LORE);\n  `physics-collision.md`: the off-screen headed window (P3.23);\n  `physics-sleep.md`: the K63 sleep-window harness."
+    },
+    {
+      "file": ".claude/rules/render-gaps.md",
+      "from": "attribution, same-state proofs) is in `probes.md`; general render lore\nin `render.md`.",
+      "to": "attribution, same-state proofs) is in `probes-census.md` and\n`probes.md`; general render lore in `render.md`."
+    },
+    {
+      "file": ".claude/rules/render.md",
+      "from": "from the P3.39 lessons in `physics.md`: no thread-thread contact\nwithout a dark line, ever. Add new render lore here, not to CLAUDE.md.",
+      "to": "from the P3.39 lessons in `physics-collision.md`: no thread-thread\ncontact without a dark line, ever. Add new render lore to its topic file\n(listed at the end), not to CLAUDE.md."
+    },
+    {
+      "file": ".claude/rules/render-backgrounds.md",
+      "from": "the panel side is in `gameplay.md`)",
+      "to": "the panel side is in `gameplay-panel.md`)"
+    },
+    {
+      "file": ".claude/rules/render-pluck.md",
+      "from": "(gameplay.md). Sheets",
+      "to": "(gameplay-motion.md). Sheets"
+    },
+    {
+      "file": "src/game/minotaur.ts",
+      "from": ".claude/rules/gameplay.md, REAL-TIME MINOTAUR",
+      "to": ".claude/rules/gameplay-minotaur.md, REAL-TIME MINOTAUR"
+    },
+    {
+      "file": "src/game/star_rating.ts",
+      "from": ".claude/rules/gameplay.md,",
+      "to": ".claude/rules/gameplay-stars.md,"
+    },
+    {
+      "file": "src/physics/particle_system.ts",
+      "from": "// .claude/rules/physics.md and the code in commit 0b91d15",
+      "to": "// .claude/rules/physics-collision.md and the code in commit 0b91d15"
+    },
+    {
+      "file": "src/render/junction_routes.ts",
+      "from": ".claude/rules/render.md \"Route bands\"",
+      "to": ".claude/rules/render-routes.md \"Route bands\""
+    },
+    {
+      "file": "src/ui/view_clamp.ts",
+      "from": "gameplay.md (FIT CAMERA",
+      "to": "gameplay-camera.md (FIT CAMERA"
+    },
+    {
+      "file": "test/physics/sleep.regression.test.ts",
+      "from": ".claude/rules/physics.md, KINK EYES.",
+      "to": ".claude/rules/physics-kinks.md, KINK EYES."
+    },
+    {
+      "file": "test/quiescence.regression.test.ts",
+      "from": "see .claude/rules/physics.md,\n//   loud-attractor",
+      "to": "see .claude/rules/physics-collision.md,\n//   loud-attractor"
+    },
+    {
+      "file": "CLAUDE.md",
+      "from": "entry in `.claude/rules/gameplay.md`.",
+      "to": "entry in `.claude/rules/gameplay-daily.md`."
+    },
+    {
+      "file": "CLAUDE.md",
+      "from": "## Lore and history: where things live\n\nSubsystem lore loads on demand. Each `.claude/rules/*.md` file has a\n`paths:` list, and Claude Code attaches the file when a session reads or\nedits a matching file; open a rules file directly to read it otherwise.\n`docs/history.md` is never imported. New lore goes to the rules file of\nits area and new history to `docs/history.md` or the commit message, not\nto this file (claude-config `rules/context-budget.md`).\n\n- `.claude/rules/physics.md` (`src/physics/**`, `test/physics/**`,\n  `test/*.regression.test.ts`, `test/sweep.manual.test.ts`): the KINK EYES\n  entry (with K41), the K63 sleep gate, the junction cover and junction\n  spacing, the open loud attractor (K13), the P3 saga's invariants,\n  lessons and negative results, and the Web Worker plan.\n- `.claude/rules/render.md` (`src/render/**`, `test/render/**`): SHADER\n  PAINT (G2), SHADER BACKGROUNDS (K21), the RENDER LORE blocks, and render\n  lessons from the rounds and the P3 saga.\n- `.claude/rules/render-gaps.md` (`src/render/gap_mask.ts`,\n  `src/render/ribbon_renderer.ts`, `src/render/ribbon_mesh.ts`): PER-PIXEL\n  CROSSING GAPS (G1) and its render lore.\n- `.claude/rules/generation.md` (`src/core/**`, `src/geometry/**`,\n  `test/core/**`, `test/geometry/**`): maze-plan invariants (planarity,\n  rect identity) and what generation changes do to the dailies.\n- `.claude/rules/gameplay.md` (`src/game/**`, `src/ui/**`, `src/audio/**`,\n  `src/main.ts`, `test/game/**`, `test/ui/**`, `test/audio/**`): the MAZE\n  STATS and DAILY MAZE entry (the binding daily rules), link-codec\n  details, panel, camera, gesture and pluck rules, and the audio gate.\n- `.claude/rules/probes.md` (`scripts/**`, `.claude/probes/**`): the PROBE\n  LORE blocks, census and diagnosis rules, probe gotchas, hooks and\n  recipes. Read it before probing: a bare URL is today's daily (intro,\n  saved attempt), not a fresh design.\n- `docs/history.md`: Stages 0–26, the dated rounds, the old \"Still open\n  in P4\" list and the P3 saga (Follow-ups), verbatim; a bracketed note\n  marks each passage that moved to a rules file or stayed here.",
+      "to": "## Lore and history: where things live\n\nSubsystem lore loads on demand. Each `.claude/rules/*.md` file has a\n`paths:` list, and Claude Code attaches the file when a session reads or\nedits a matching file; open a rules file directly to read it otherwise.\nAn area's general file (`physics.md`, `render.md`, `generation.md`,\n`gameplay.md`, `probes.md`) lists its topic files (`<area>-<topic>.md`,\nK173), each attaching only with the files it is about;\n`docs/lore_index.md` maps every rules file to its paths. New lore goes\nto its topic file (a new one needs narrow `paths:`, a line in its area's\nlist and a row in the index), new history to `docs/history.md` or the\ncommit message, not to this file (claude-config\n`rules/context-budget.md`). Read `probes.md` before probing: a bare URL\nis today's daily (intro, saved attempt), not a fresh design.\n`docs/history.md` is never imported: Stages 0–26, the dated rounds, the\nold \"Still open in P4\" list and the P3 saga (Follow-ups), verbatim; a\nbracketed note marks each passage that moved to a rules file."
+    },
+    {
+      "file": "docs/history.md",
+      "from": "`.claude/rules/render.md` and `gameplay.md`): the backdrop's shape",
+      "to": "`.claude/rules/render-backgrounds.md` and `gameplay-panel.md`): the backdrop's shape"
+    },
+    {
+      "file": "docs/history.md",
+      "from": "maze), `.claude/rules/gameplay.md`; probes in `.claude/probes/K132/`.]*",
+      "to": "maze), `.claude/rules/gameplay-daily.md` and `gameplay-links.md`;\n  probes in `.claude/probes/K132/`.]*"
+    },
+    {
+      "file": "docs/history.md",
+      "from": "8 → 0. *[Moved to `.claude/rules/probes.md`: probe rule.]*",
+      "to": "8 → 0. *[Moved to `.claude/rules/probes-census.md`: probe rule.]*"
+    },
+    {
+      "file": "docs/history.md",
+      "from": "`.claude/rules/generation.md` (K90, the bend bound); census, crops and\n  sheet in",
+      "to": "`.claude/rules/generation-geometry.md` (K90, the bend bound); census,\n  crops and sheet in"
+    }
+  ],
+  "movedNotes": {
+    "file": "docs/history.md",
+    "labels": {
+      "gameplay.md|binding rule 5": "gameplay-daily.md",
+      "gameplay.md|camera and gestures": "gameplay-camera.md",
+      "gameplay.md|panel lore": "gameplay-panel.md",
+      "gameplay.md|OFF-SCREEN INDICATORS, THE HEAD": "gameplay-indicators.md",
+      "gameplay.md|The fog of war": "gameplay-fog.md",
+      "probes.md|K100": "probes.md",
+      "render.md|RENDER LORE (junction overlays across the width)": "render-ribbon.md",
+      "probes.md|the probe": "probes.md",
+      "probes.md|diag_scan": "probes-census.md",
+      "physics.md|the fix": "physics-collision.md",
+      "render.md|the RENDER LORE blocks of 2026-10-09 and 2026-10-10": "render.md",
+      "physics.md|the test/sweep.manual.test.ts note": "physics.md",
+      "physics.md|the Web Worker plan": "physics.md",
+      "probes.md|lesson": "probes.md",
+      "probes.md|probe rule": "probes.md"
+    }
+  },
+  "index": {
+    "file": "docs/lore_index.md",
+    "header": [
+      "# Rules lore index",
+      "",
+      "Every path-scoped rules file in `.claude/rules/`, what it holds and the",
+      "files whose read attaches it. Written by K173's split",
+      "(`scripts/split_rules.mjs`, 2026-10-14); keep it current by hand when a",
+      "rules file or its `paths:` change. Not auto-loaded."
+    ],
+    "unchanged": {
+      "render-gaps.md": "PER-PIXEL CROSSING GAPS (G1) and its render lore, marker gaps",
+      "notices.md": "the credits and licenses page (K122)"
+    }
+  }
+}

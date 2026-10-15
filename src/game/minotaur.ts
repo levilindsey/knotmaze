@@ -88,7 +88,7 @@ export interface ChaseParams {
 
 // The defaults come from a headless simulation (2026-10-13, 288 default
 // mazes, scripted greedy and fleeing players; the table and how to rerun it
-// are in .claude/rules/gameplay.md, REAL-TIME MINOTAUR). approachPace 7 =
+// are in .claude/rules/gameplay-minotaur.md, REAL-TIME MINOTAUR). approachPace 7 =
 // 0.7 x playerPace: a player who keeps moving away outruns a hunt.
 // url_state.ts PARAM_DEFAULTS reads these, so a retune edits only them (and
 // moves every link that leaves them out).
