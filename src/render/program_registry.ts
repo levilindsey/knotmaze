@@ -43,6 +43,11 @@ export interface WarmContext {
   fabric: boolean;
   // The thread reveal (fabric, exploration "threads"): the -explore variants.
   explore: boolean;
+  // A burn race (fabric, fire on; K290): its first burnt stretch, at the
+  // first move, switches every ribbon, strip and fan onto the -explore
+  // programs, so a fire link warms both sets in wave 1 (wave 2 starts after
+  // the reveal, and a move can come before it ends compiling).
+  burn: boolean;
   // The fog of war (fabric, exploration "fog"): its displacement filter, and
   // the fog backdrop over an active background.
   fog: boolean;
@@ -141,7 +146,7 @@ export function programRegistry(): readonly ProgramEntry[] {
     {
       name: "section-rgb-explore",
       files: [RIBBON],
-      wave1: (c) => c.explore,
+      wave1: (c) => c.explore || c.burn,
       build: () => sectionProgram(true),
     },
     {
@@ -153,7 +158,7 @@ export function programRegistry(): readonly ProgramEntry[] {
     {
       name: "arm-strip-explore",
       files: [STRIP],
-      wave1: (c) => c.fabric && c.explore,
+      wave1: (c) => c.fabric && (c.explore || c.burn),
       build: () => stripProgram(true),
     },
     {
@@ -165,7 +170,7 @@ export function programRegistry(): readonly ProgramEntry[] {
     {
       name: "junction-field-explore",
       files: [FIELD],
-      wave1: (c) => c.fabric && c.explore,
+      wave1: (c) => c.fabric && (c.explore || c.burn),
       build: () => junctionProgram(true),
     },
     {
@@ -189,7 +194,7 @@ export function programRegistry(): readonly ProgramEntry[] {
     {
       name: "pluck-still-explore",
       files: [PLUCK],
-      wave1: (c) => c.reduced && c.explore,
+      wave1: (c) => c.reduced && (c.explore || c.burn),
       build: () => pluckStillProgram(true),
     },
     {
