@@ -3,17 +3,25 @@
 // (and on Windows the whole screen: every present waits on the GPU
 // process's main thread) stops for the compile: 2.8 s for section-rgb under
 // FXC. The warm-up compiles and links what the intro draws BEFORE the first
-// visible frame, in parallel (KHR_parallel_shader_compile), polls once a
-// frame and deletes each program; pixi's later link of the same source is a
-// cache hit (about 25 ms). Lore: .claude/rules/render-shaders.md; brief:
-// docs/design/K307_intro_freezes.md, "Stage 2: the warm-up".
+// visible frame and deletes each program; pixi's later link of the same
+// source is a cache hit (about 25 ms). Lore: .claude/rules/render-shaders.md;
+// brief: docs/design/K307_intro_freezes.md, "Stage 2: the warm-up".
+//
+// IT LINKS BLOCKING (PARALLEL_DEFAULT): every link is submitted at once and
+// every status is read at the next frame, so the wait is the longest compile
+// and the loader stalls for it (2.7 s on the desktop, cold). The parallel
+// path (KHR_parallel_shader_compile, polled once a frame) keeps the loader
+// moving, but in Chrome on D3D11 a program linked that way never reaches the
+// GPU program cache on DISK: only the in-memory one, so every later visit
+// was cold again (3 s of loader on every load, where master's warm load is
+// visible at 0.8 s). Measured by K307 stage 2 with restarts on one profile.
 //
 // WAVE 1 (what the current mode's intro draws) GATES the first visible
 // frame: main.ts holds the pre-settle (or an instant link's first frame)
 // until it completes, fails or times out (15 s). WAVE 2 (every other
 // registry program) never gates; main starts it after the reveal or at the
-// first sleep. A program pixi creates before wave 2 has run links blocking,
-// as before.
+// first sleep, and it runs only on the parallel path (off by default, so
+// those programs link blocking at their first draw, as before, and persist).
 //
 // The sources are the sites' own GlPrograms' `.vertex` and `.fragment`
 // (program_registry.ts), never captured text. A program whose vertex is not
@@ -40,6 +48,11 @@ const NAME_DEFINE = /#define[ \t]+SHADER_NAME[ \t]+(\S+)/;
 // several times this desktop's 3 s), then pixi's links block as before.
 export const WARMUP_TIMEOUT_MS = 15000;
 
+// Off: see the header. The warm-up then never asks for the extension at all,
+// since getExtension enables it on the context (its links then take the
+// parallel path, whoever reads them).
+export const PARALLEL_DEFAULT = false;
+
 // The slice of WebGL the warm-up uses (a fake in the tests).
 export interface WarmGl {
   createShader(type: number): WebGLShader | null;
@@ -64,6 +77,8 @@ export interface WarmupOptions {
   now?: () => number;
   timeoutMs?: number;
   log?: (msg: string) => void;
+  // Ask for KHR_parallel_shader_compile (PARALLEL_DEFAULT).
+  parallel?: boolean;
 }
 
 interface Job {
@@ -106,6 +121,7 @@ function srcKey(vertex: string, fragment: string): string {
 
 export class ShaderWarmup {
   readonly parallel: boolean;
+  private readonly serialReason: string;
   private readonly gl: WarmGl | null;
   private readonly now: () => number;
   private readonly timeoutMs: number;
@@ -136,7 +152,9 @@ export class ShaderWarmup {
     this.now = opts.now ?? (() => performance.now());
     this.timeoutMs = opts.timeoutMs ?? WARMUP_TIMEOUT_MS;
     this.log = opts.log ?? ((m) => console.warn(m));
-    this.parallel = !!gl && !!gl.getExtension("KHR_parallel_shader_compile");
+    const want = opts.parallel ?? PARALLEL_DEFAULT;
+    this.parallel = want && !!gl && !!gl.getExtension("KHR_parallel_shader_compile");
+    this.serialReason = want ? "no KHR_parallel_shader_compile" : "parallel path off (its programs miss the disk cache)";
     if (!gl) this.abort("no WebGL context");
   }
 
@@ -163,16 +181,16 @@ export class ShaderWarmup {
     this.wave2Source = sources;
   }
 
-  // Start wave 2 (idempotent; never gating). Without the parallel extension
-  // it is skipped: its blocking links would freeze play for programs the
-  // player may never draw, where a program's own first draw costs only its
-  // own compile.
+  // Start wave 2 (idempotent; never gating). Off the parallel path it is
+  // skipped: its blocking links would freeze play for programs the player
+  // may never draw, where a program's own first draw costs only its own
+  // compile.
   startWave2(): void {
     if (this.wave2Started) return;
     this.wave2Started = true;
     if (this.aborted) return;
     if (!this.parallel) {
-      this.wave2Skipped = "no KHR_parallel_shader_compile";
+      this.wave2Skipped = this.serialReason;
       return;
     }
     this.submit(2, this.wave2Source?.() ?? []);
