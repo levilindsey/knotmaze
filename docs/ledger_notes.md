@@ -2656,3 +2656,32 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   - evidence: its worktree's `scripts/ledger_diet.mjs`, `docs/ledger_diet/map.jsonl` and `.claude/probes/K353/`
   - next: when it reports, apply the map to master at a quiet point (`apply --dry-run`, then `apply`, then `verify` against the pre-apply copy); tomorrow with Levi, the same diet for claude-config's and the other repos' ledgers, plus the claude-config side (the `rules/ledger.md` convention, a shared `tools/ledger.mjs`, the merge script closing items, a nightly hygiene job), filed in claude-config's ledger (Levi, 2026-10-15 00:05)
   - brief: `docs/design/K353_ledger_diet.md`
+
+## K8 (2026-10-15, stage 1 merged)
+
+- **K8** · G3: SDF ribbons drawn from one shared sample texture
+  (`docs/design/G3G4_sdf_geometry.md`). Decided: flat caps on anchored
+  tails, a 2x phone cap, today's fold pinch, and G1's GPU levers fold in.
+  - owner: agent `a35a43cee74c92b93` (opus) of claude session d8031183, from 2026-10-15 00:13 (cap 02:13; docs only, ports 5880-5889)
+  - branch: `worktree-agent-a35a43cee74c92b93` (`.claude/worktrees/agent-a35a43cee74c92b93`); last commit: none yet (base `d741412`)
+  - evidence: its worktree's `docs/design/G3G4_sdf_geometry.md` and `docs/design/K8_stage1.md`
+  - next: stage 1 re-bases the doc's plan on today's master and writes the "Stage 2 (G3-0)" brief; then G3-0 takes the next free code slot
+  - brief: `docs/design/K8_stage1.md`
+
+## K328 (2026-10-15, K8 stage 1: no G3/G4 need)
+
+- **K328** · The hover glow's rim profile (Levi, 2026-10-14): a fully
+  opaque band at the rim's outside, then a fade starting further in, as
+  knobs that High contrast reuses with the fade at 0 (K265's pick).
+  Today's profile is kRimAcross (`render-paint.md`); also hide the
+  glow's rows at strength 0 (K298's leftover). Probably folds into K9's
+  G4-1 with K345 (K8's stage 1 checks whether it needs G3); otherwise
+  K111 stage 5 with K265.
+
+## K345 (2026-10-15, K8 stage 1: G4-1)
+
+- **K345** · The hover rim stops at `rimGap` (0.975 world) short of
+  junctions; Levi (2026-10-14) wants it to follow the fillets. That
+  needs an edge-distance term in the fan shader and a rule for where the
+  rim ends on the web (K145 kept it off webs; `render-paint.md`).
+  Probably folds into K9's G4-1 with K328 (K8's stage 1 confirms).

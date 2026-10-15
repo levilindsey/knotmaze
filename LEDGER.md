@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K361.
+Next free ID: K362.
 
 ## Waiting on Levi
 
@@ -97,6 +97,9 @@ Next free ID: K361.
 - **K357** · Is the cusp gone? Open `?qoietk.KIiHgRRXwRlRt8fGrST4sf` on
   the live build and pluck at crossing 104 (K344's fix, 93d0e4d).
   Recommended: close it unless the cusp still shows.
+- **K361** · G3/G4's calls (K8 stage 1; `G3G4_sdf_geometry.md` §6), none
+  blocking G3-0. Recs: smin webs (sheet first), webs inset 1 px, accept the
+  yarn taper, 2x until K22, drop `rp`/`jp` after the phone check; K90 by G3-2.
 
 ## In progress
 
@@ -271,13 +274,13 @@ Next free ID: K361.
   - brief: `docs/design/K307_intro_freezes.md` ("Stage 1 handoff",
     "Stage 2: the warm-up")
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
-  (`docs/design/G3G4_sdf_geometry.md`). Decided: flat caps on anchored
-  tails, a 2x phone cap, today's fold pinch, and G1's GPU levers fold in.
-  - owner: agent `a35a43cee74c92b93` (opus) of claude session d8031183, from 2026-10-15 00:13 (cap 02:13; docs only, ports 5880-5889)
-  - branch: `worktree-agent-a35a43cee74c92b93` (`.claude/worktrees/agent-a35a43cee74c92b93`); last commit: none yet (base `d741412`)
-  - evidence: its worktree's `docs/design/G3G4_sdf_geometry.md` and `docs/design/K8_stage1.md`
-  - next: stage 1 re-bases the doc's plan on today's master and writes the "Stage 2 (G3-0)" brief; then G3-0 takes the next free code slot
-  - brief: `docs/design/K8_stage1.md`
+  (`docs/design/G3G4_sdf_geometry.md`, re-based by stage 1, 05aac8e..cbeb963). G3-1
+  waits for K268 s2 and K290, G3-2 for the reveal chain (K76 2c to 2d).
+  - owner: nobody since 2026-10-15 01:08 (stage 1's docs agent `a35a43cee74c92b93` of claude session d8031183 finished; G3-0 waits for a free code slot)
+  - branch: mainline; last commit: `cbeb963` (stage 1's handoff)
+  - evidence: `docs/design/G3G4_sdf_geometry.md`, `docs/design/K8_stage1.md` ("Stage 1 handoff"); stage 1's notes in `.claude/probes/K8/stage1/notes.md`; stage 2's probes go to `.claude/probes/K8/stage2/`
+  - next: G3-0 (stage 2) at the next free code slot, from current master, never alongside K90; Levi's calls are K361 (none blocks G3-0)
+  - brief: `docs/design/K8_stage1.md`, "Stage 2 (G3-0)"
 
 ## Next, in order
 
@@ -323,11 +326,9 @@ Every other item below waits on the trigger it names.
   arm); default gone. Burn stage 3 builds both on K76's visibility and
   K268's shaped gaps, so those briefs must not assume visibility only
   grows. `docs/design/K114_burn.md` (stage 3).
-- **K345** · The hover rim stops at `rimGap` (0.975 world) short of
-  junctions; Levi (2026-10-14) wants it to follow the fillets. That
-  needs an edge-distance term in the fan shader and a rule for where the
-  rim ends on the web (K145 kept it off webs; `render-paint.md`).
-  Probably folds into K9's G4-1 with K328 (K8's stage 1 confirms).
+- **K345** · The hover rim stops `rimGap` (0.975 world) short of junctions;
+  Levi (2026-10-14) wants it to follow the fillets. Goes in K9's G4-1 (K8
+  s1: piece SDFs give webs an across coordinate; fan work now is wasted).
 - **K294** · Per-model minotaur tuning for K80 turns stage 3 (Levi,
   2026-10-14: "Yes."): hunter, guard and stalker share sight and
   accuracy, so the hunter's retune moved the others (stalker 20% to 1%).
@@ -501,13 +502,9 @@ Every other item below waits on the trigger it names.
   (maze icons) sound the same; proposed "Edge arrow size" and "Maze icon
   size". Touch & feel also mixes words with camelCase keys. In K323's
   design; relates to K247, K292, K297.
-- **K328** · The hover glow's rim profile (Levi, 2026-10-14): a fully
-  opaque band at the rim's outside, then a fade starting further in, as
-  knobs that High contrast reuses with the fade at 0 (K265's pick).
-  Today's profile is kRimAcross (`render-paint.md`); also hide the
-  glow's rows at strength 0 (K298's leftover). Probably folds into K9's
-  G4-1 with K345 (K8's stage 1 checks whether it needs G3); otherwise
-  K111 stage 5 with K265.
+- **K328** · Hover rim profile (Levi, 10-14): an opaque outer band, then a
+  fade from further in; High contrast reuses it at fade 0. Paint library
+  only (K8 s1), with K111 s5 and K265; and hide the glow at strength 0 (K298).
 - **K332** · Arrow-key hints (Levi, 2026-10-14): a small key icon (or
   chord, K333) near the start of each choice, shown only once an arrow
   key was pressed this session (a module flag, not localStorage). The
@@ -1382,19 +1379,15 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K359** · Replace the pre-settle's spent-prediction shim
   (`presettleFrame`, K7 stage 3) with an explicit "settling in the worker"
   signal from the physics host.
-- **K360** · Ledger diet pass 2 (K353's handoff): the 152 open items over three
-  lines, the skipped K7, K8 and K279, Done one-liners to ~160 bytes; then drop
-  `docs/ledger_diet/` (keep `scripts/ledger_diet.mjs`, the shared CLI's base).
+- **K360** · Ledger diet pass 2 (K353's handoff): the open items still over
+  three lines (about 150), the skipped K7 and K279, Done one-liners to ~160
+  bytes; then drop `docs/ledger_diet/` (keep `scripts/ledger_diet.mjs`).
 
 ## Done
 
-- **K353** · The ledger diet: `scripts/ledger_diet.mjs` shortened the open
-  items and made Done one-liners; the originals are in `docs/ledger_notes.md`
-  and `docs/ledger_done.md`. Done in 300c995..c4a0280, applied in 6c85a38 (2026-10-15).
+- **K353** · The ledger diet: `scripts/ledger_diet.mjs` shortened the open items and made Done one-liners; the originals are in `docs/ledger_notes.md` and `docs/ledger_done.md`. Done in 300c995..c4a0280, applied in 6c85a38 (2026-10-15).
 
-- **K344** · The pluck blur's sharp cusp in a self-crossing loop: an
-  under node's clip now stops short of the loop's own over pass. Done in
-  93d0e4d..810b462 (2026-10-15).
+- **K344** · The pluck blur's sharp cusp in a self-crossing loop: an under node's clip now stops short of the loop's own over pass. Done in 93d0e4d..810b462 (2026-10-15).
 
 - **K257** · K76 section 10's questions: Levi took every recommendation; K76 2c builds them. Done (2026-10-14).
 
