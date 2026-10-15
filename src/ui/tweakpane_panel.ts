@@ -734,6 +734,11 @@ export function buildPanel(
     "How far each dead end runs before it ends (half lattice cells of thread with no junction on it): longer tails take longer to find out. 0 = the older placement, spread out and mostly short. Regenerates the maze.",
     D.deadEndLength, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
+  const hCutShareRow = row(
+    fMaze, p, "hCutShare", { min: 0, max: 1, step: 0.05 },
+    "Fused arm cuts (H1): the share of bridges between two neighbouring threads replaced by one smooth junction, so the bridge's two junctions become one. 0 = off, every bridge kept. Regenerates the maze.",
+    D.hCutShare, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
   const branchDensityRow = row(
     fMaze, p, "branchDensity", { min: 0, max: 1, step: 0.05 },
     "How many extra choice junctions the maze adds beyond the minimum needed to connect everything. Regenerates the maze.",
@@ -1741,6 +1746,7 @@ export function buildPanel(
     deadEndsRow.hidden = !fab;
     deadEndDensityRow.hidden = !fab || !params.deadEnds;
     deadEndLengthRow.hidden = !fab || !params.deadEnds;
+    hCutShareRow.hidden = !fab;
     branchDensityRow.hidden = !fab;
     fourWayRow.hidden = !fab;
     junctionSpacingRow.hidden = !fab;

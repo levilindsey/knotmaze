@@ -15,6 +15,10 @@
 //  - 4-WAY MERGE: retype the crossing node CROSSING -> JUNCTION. The graph
 //    keeps its degree-4 adjacency; downstream, the passes lose their crossing
 //    machinery (no over/under) and the threads genuinely meet.
+//  - H1 FUSED ARM CUT (applyMazeCuts, plan.hCutShare > 0; K74 stage 2): a
+//    splice's junction B gives up one host arm back to its first crossing,
+//    which is fused into a 3-way junction, and B becomes a plain turn
+//    (fuseHCuts, at the end of this file).
 //
 // Entrance/exit cuts are NOT applied here - they stay physics-side carves
 // (ParticleSystem.openChain), the machinery Stages 1-3 built and verified.
@@ -23,7 +27,7 @@
 // the result is deterministic regardless of what else has touched the global
 // id counters.
 
-import type { TangleGraph } from "./types";
+import type { Strand, TangleGraph } from "./types";
 import { NODE_TYPE } from "./types";
 import type { MazePlan, MazeCut, MazeCutTrim } from "./maze_plan";
 import { hypot2 } from "../util/det_math";
@@ -321,11 +325,13 @@ export function escapePath(
 export const ENTRANCE_END_IDS = ["mentr_a", "mentr_b"] as const;
 export const EXIT_END_IDS = ["mexit_a", "mexit_b"] as const;
 
+// Returns the H1 pass's counts when the plan asks for it (plan.hCutShare >
+// 0), else null.
 export function applyMazeCuts(
   graph: TangleGraph,
   plan: MazePlan,
   hueGroup?: number[]
-): void {
+): HCutStats | null {
   // Tail directions follow the plan's anchors (SHAPED LATTICES); legacy
   // plans without dirs keep the historic corner diagonals.
   const s = Math.SQRT1_2;
@@ -355,6 +361,9 @@ export function applyMazeCuts(
     }
     cutStrandOpen(graph, cut, null, `mdead${k}`, hueGroup);
   });
+  // H1 runs last: its guards read the END runs the cuts above made.
+  const share = plan.hCutShare ?? 0;
+  return share > 0 ? fuseHCuts(graph, share, hueGroup) : null;
 }
 
 // Delete a trim's stub (edges + interior TURN nodes) from the graph and
@@ -559,4 +568,394 @@ function cutStrandOpen(
     // Both halves keep the original loop's hue.
     hueGroup?.push(hueGroup[si]);
   }
+}
+
+// ---------------------------------------------------------------------------
+// H1 (K74 stage 2), THE FUSED ARM CUT (docs/design/K74_maze_design.md 4.8).
+// A splice reads as an H: two host threads, a junction on each (A and B) and
+// a short bridge between them, so a player meets two branch points a
+// bridge's length apart and the bridge itself is a one-tap run. The pass
+// removes one of B's two host arms back to its first crossing X, fuses X
+// into a 3-way junction (the trim surgery the corner and dead-end cuts use)
+// and leaves B a plain turn: the thread runs host -> B -> bridge -> A, so
+// the bridge becomes part of a longer run and the second branch point moves
+// to X.
+//  - WHICH H's: round(share x bridges) of the splice bridges, at an even
+//    stride in strand order (todo[floor(k x bridges / nCut)]).
+//  - WHICH ARM: each end of the bridge as B, each of B's two arms; the
+//    option whose KEPT arm turns least into the bridge (the smoothest
+//    thread through B) goes first, then the next if it fails.
+//  - NEVER: an arm that meets a junction or an end before a crossing; a
+//    crossing on an END's run up to its first junction (the entrance and
+//    exit corridors and the long dead-end tails stay junction-free; the set
+//    is refreshed after each cut, which can lengthen such a run); a
+//    self-crossing of the host (it would pinch the host onto itself); a
+//    splice whose two ends sit on one strand.
+//  - REACHABILITY: every walk vertex (JUNCTION/END) stays reachable. Each
+//    option is checked on the strands it would produce (a union-find over
+//    the vertices along each strand: exactly the walk graph's components)
+//    before the graph is touched, and refused when it splits the walk.
+// Deterministic and engine-exact (K108): integer strides, a cosine order
+// (no acos) normalized with hypot2, and a stable sort.
+
+export interface HCutStats {
+  bridges: number; // Splice bridges before the pass.
+  attempted: number; // round(share x bridges).
+  cut: number; // H's cut.
+  skipped: number; // Attempted H's left whole (no option, or all refused).
+  rejected: number; // Options refused by the reachability check.
+  whole: boolean; // The walk was one component before the pass.
+}
+
+interface HArm {
+  stubE: string[]; // Edges removed, from B outward.
+  stubN: string[]; // TURN nodes removed.
+  x: string; // The crossing fused into a junction.
+  xIdx: number; // Its index on the host strand.
+}
+
+interface HOption {
+  B: string;
+  A: string;
+  h: number; // B's host strand.
+  i: number; // B's index on it.
+  dir: 1 | -1; // The cut arm runs forward (+1) or backward (-1) from B.
+  cos: number; // Cosine of the thread's turn through B (1 = straight).
+  arm: HArm;
+}
+
+function fuseHCuts(
+  graph: TangleGraph,
+  share: number,
+  hueGroup?: number[]
+): HCutStats {
+  const work: Array<Strand | null> = graph.strands.slice();
+  const typeOf = (id: string): string | undefined =>
+    graph.nodes.get(id)?.type;
+  const countOf = (st: Strand): number =>
+    st.isClosed ? st.nodes.length - 1 : st.nodes.length;
+
+  // Crossings on every END's run up to its first junction (or end).
+  const protectedX = new Set<string>();
+  const refreshProtected = (): void => {
+    protectedX.clear();
+    for (const st of work) {
+      if (!st || st.isClosed) continue;
+      const n = st.nodes.length;
+      for (const [start, step] of [
+        [0, 1],
+        [n - 1, -1],
+      ]) {
+        if (typeOf(st.nodes[start]) !== NODE_TYPE.END) continue;
+        for (let k = start + step; k >= 0 && k < n; k += step) {
+          const t = typeOf(st.nodes[k]);
+          if (t === NODE_TYPE.JUNCTION || t === NODE_TYPE.END) break;
+          if (t === NODE_TYPE.CROSSING) protectedX.add(st.nodes[k]);
+        }
+      }
+    }
+  };
+
+  const isBridge = (st: Strand | null): st is Strand =>
+    st !== null &&
+    !st.isClosed &&
+    st.edgeIds.length === 1 &&
+    st.nodes.length === 2 &&
+    st.nodes.every(
+      (n) => n.startsWith("mnode_") && typeOf(n) === NODE_TYPE.JUNCTION
+    );
+
+  // One walk component? Strands are read from `work` except: `h` is read as
+  // `kept`, `bi` is gone, `rest` is added; `notV` stops being a vertex and
+  // `newV` becomes one.
+  const whole = (
+    h: number,
+    kept: Strand | null,
+    bi: number,
+    rest: Strand | null,
+    notV: string,
+    newV: string
+  ): boolean => {
+    const parent = new Map<string, string>();
+    const find = (a: string): string => {
+      let r = a;
+      while (parent.get(r) !== r) r = parent.get(r)!;
+      while (a !== r) {
+        const next = parent.get(a)!;
+        parent.set(a, r);
+        a = next;
+      }
+      return r;
+    };
+    let comps = 0;
+    const visit = (st: Strand): void => {
+      const nc = countOf(st);
+      let prev: string | null = null;
+      for (let k = 0; k < nc; k++) {
+        const id = st.nodes[k];
+        if (id === notV) continue;
+        if (id !== newV) {
+          const t = typeOf(id);
+          if (t !== NODE_TYPE.JUNCTION && t !== NODE_TYPE.END) continue;
+        }
+        if (!parent.has(id)) {
+          parent.set(id, id);
+          comps++;
+        }
+        if (prev !== null) {
+          const ra = find(prev);
+          const rb = find(id);
+          if (ra !== rb) {
+            parent.set(ra, rb);
+            comps--;
+          }
+        }
+        prev = id;
+      }
+    };
+    for (let s = 0; s < work.length; s++) {
+      if (s === bi) continue;
+      const st = s === h ? kept : work[s];
+      if (st) visit(st);
+    }
+    if (rest) visit(rest);
+    return comps <= 1;
+  };
+
+  const todo: number[] = [];
+  work.forEach((st, i) => {
+    if (isBridge(st)) todo.push(i);
+  });
+  const s01 = Math.min(1, Math.max(0, share));
+  const nCut = Math.round(s01 * todo.length);
+  const stats: HCutStats = {
+    bridges: todo.length,
+    attempted: nCut,
+    cut: 0,
+    skipped: 0,
+    rejected: 0,
+    whole: whole(-1, null, -1, null, "", ""),
+  };
+  if (nCut <= 0) return stats;
+  if (!stats.whole) {
+    // Every option would be refused; say so instead of trying them.
+    stats.skipped = nCut;
+    return stats;
+  }
+  refreshProtected();
+
+  const hostOf = (n: string, skip: number): number => {
+    for (let s = 0; s < work.length; s++) {
+      const st = work[s];
+      if (s === skip || !st) continue;
+      const nc = countOf(st);
+      for (let k = 0; k < nc; k++) if (st.nodes[k] === n) return s;
+    }
+    return -1;
+  };
+
+  // Walk B's arm from index i in direction dir to its first crossing.
+  const planArm = (st: Strand, i: number, dir: 1 | -1): HArm | null => {
+    const nc = countOf(st);
+    const ne = st.edgeIds.length;
+    const stubE: string[] = [];
+    const stubN: string[] = [];
+    for (let k = 0; k < nc; k++) {
+      let ei = dir > 0 ? i + k : i - 1 - k;
+      let ni = dir > 0 ? i + k + 1 : i - 1 - k;
+      if (st.isClosed) {
+        ei = ((ei % ne) + ne) % ne;
+        ni = ((ni % nc) + nc) % nc;
+      } else if (ei < 0 || ei >= ne) {
+        return null;
+      }
+      stubE.push(st.edgeIds[ei]);
+      const nid = st.nodes[ni];
+      const t = typeOf(nid);
+      if (t === NODE_TYPE.TURN) {
+        stubN.push(nid);
+        continue;
+      }
+      if (t !== NODE_TYPE.CROSSING || protectedX.has(nid)) return null;
+      let occ = 0;
+      for (let k2 = 0; k2 < nc; k2++) if (st.nodes[k2] === nid) occ++;
+      if (occ > 1) return null;
+      return { stubE, stubN, x: nid, xIdx: ni };
+    }
+    return null;
+  };
+
+  // First segment of an edge leaving `from` (lattice points run from nodeA).
+  const leaving = (eid: string, from: string): [number, number] => {
+    const e = graph.edges.get(eid)!;
+    const lp = e.latticePoints;
+    const n = lp.length;
+    const fwd = e.nodeA === from;
+    const a = fwd ? lp[0] : lp[n - 1];
+    const b = fwd ? lp[Math.min(1, n - 1)] : lp[Math.max(0, n - 2)];
+    return [b[0] - a[0], b[1] - a[1]];
+  };
+
+  // The host's new strand(s): the KEPT side runs on over the bridge to A;
+  // an open host also leaves the far piece, from X on (`rest`).
+  const pieces = (
+    st: Strand,
+    o: HOption,
+    bridgeEdge: string
+  ): { kept: Strand; rest: Strand | null } => {
+    const { i, dir, A } = o;
+    const xIdx = o.arm.xIdx;
+    if (st.isClosed) {
+      const nc = countOf(st);
+      const ns: string[] = [];
+      const es: string[] = [];
+      if (dir > 0) {
+        // X forward around to B, then the bridge.
+        let k = xIdx;
+        ns.push(st.nodes[k]);
+        while (k !== i) {
+          es.push(st.edgeIds[k]);
+          k = (k + 1) % nc;
+          ns.push(st.nodes[k]);
+        }
+        es.push(bridgeEdge);
+        ns.push(A);
+      } else {
+        // A, the bridge, then B forward around to X.
+        ns.push(A);
+        es.push(bridgeEdge);
+        let k = i;
+        ns.push(st.nodes[k]);
+        while (k !== xIdx) {
+          es.push(st.edgeIds[k]);
+          k = (k + 1) % nc;
+          ns.push(st.nodes[k]);
+        }
+      }
+      return { kept: { edgeIds: es, isClosed: false, nodes: ns }, rest: null };
+    }
+    if (dir > 0) {
+      return {
+        kept: {
+          edgeIds: [...st.edgeIds.slice(0, i), bridgeEdge],
+          isClosed: false,
+          nodes: [...st.nodes.slice(0, i + 1), A],
+        },
+        rest: {
+          edgeIds: st.edgeIds.slice(xIdx),
+          isClosed: false,
+          nodes: st.nodes.slice(xIdx),
+        },
+      };
+    }
+    return {
+      kept: {
+        edgeIds: [bridgeEdge, ...st.edgeIds.slice(i)],
+        isClosed: false,
+        nodes: [A, ...st.nodes.slice(i)],
+      },
+      rest: {
+        edgeIds: st.edgeIds.slice(0, xIdx),
+        isClosed: false,
+        nodes: st.nodes.slice(0, xIdx + 1),
+      },
+    };
+  };
+
+  const rmAdj = (n: string, e: string): void => {
+    const list = graph.adjacency.get(n);
+    if (!list) return;
+    const i = list.indexOf(e);
+    if (i >= 0) list.splice(i, 1);
+  };
+
+  for (let k = 0; k < nCut; k++) {
+    const bi = todo[Math.floor((k * todo.length) / nCut)];
+    const bs = work[bi];
+    if (!isBridge(bs)) {
+      stats.skipped++;
+      continue;
+    }
+    const bridgeEdge = bs.edgeIds[0];
+    const opts: HOption[] = [];
+    for (const [B, A] of [
+      [bs.nodes[0], bs.nodes[1]],
+      [bs.nodes[1], bs.nodes[0]],
+    ]) {
+      const h = hostOf(B, bi);
+      if (h < 0 || hostOf(A, bi) === h) continue; // Same-strand splice.
+      const st = work[h]!;
+      const nc = countOf(st);
+      let i = -1;
+      for (let m = 0; m < nc; m++) if (st.nodes[m] === B) i = m;
+      if (i < 0) continue;
+      const bd = leaving(bridgeEdge, B);
+      for (const dir of [1, -1] as const) {
+        const arm = planArm(st, i, dir);
+        if (!arm) continue;
+        // The KEPT arm is the other direction: its first edge from B.
+        const ne = st.edgeIds.length;
+        let kei = dir > 0 ? i - 1 : i;
+        if (st.isClosed) kei = ((kei % ne) + ne) % ne;
+        else if (kei < 0 || kei >= ne) continue;
+        const kd = leaving(st.edgeIds[kei], B);
+        // The thread runs (kept arm) -> B -> bridge: straight when the
+        // bridge leaves B opposite the kept arm (cos 1).
+        const len = hypot2(kd[0], kd[1]) * hypot2(bd[0], bd[1]);
+        const cos = len > 0 ? -(kd[0] * bd[0] + kd[1] * bd[1]) / len : 0;
+        opts.push({ B, A, h, i, dir, cos, arm });
+      }
+    }
+    opts.sort((p, q) => q.cos - p.cos);
+    let done = false;
+    for (const o of opts) {
+      const { kept, rest } = pieces(work[o.h]!, o, bridgeEdge);
+      if (!whole(o.h, kept, bi, rest, o.B, o.arm.x)) {
+        stats.rejected++;
+        continue;
+      }
+      for (const eid of o.arm.stubE) {
+        const e = graph.edges.get(eid)!;
+        graph.edges.delete(eid);
+        rmAdj(e.nodeA, eid);
+        rmAdj(e.nodeB, eid);
+      }
+      for (const nid of o.arm.stubN) {
+        graph.nodes.delete(nid);
+        graph.adjacency.delete(nid);
+      }
+      graph.nodes.get(o.arm.x)!.type = NODE_TYPE.JUNCTION;
+      graph.nodes.get(o.B)!.type = NODE_TYPE.TURN;
+      work[o.h] = kept;
+      work[bi] = null;
+      if (rest) {
+        work.push(rest);
+        // Both pieces keep the host's hue.
+        hueGroup?.push(hueGroup[o.h]);
+      }
+      stats.cut++;
+      done = true;
+      break;
+    }
+    if (!done) {
+      stats.skipped++;
+      continue;
+    }
+    refreshProtected();
+  }
+
+  // Drop the merged bridges' slots, keeping hueGroup aligned.
+  if (stats.cut > 0) {
+    const live: number[] = [];
+    work.forEach((st, i) => {
+      if (st) live.push(i);
+    });
+    graph.strands = live.map((i) => work[i]!);
+    if (hueGroup) {
+      const hues = live.map((i) => hueGroup[i]);
+      hueGroup.length = 0;
+      hueGroup.push(...hues);
+    }
+  }
+  return stats;
 }

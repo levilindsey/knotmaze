@@ -80,7 +80,7 @@ describe("links", () => {
       appearFx: "burn",
       entranceClearance: 2.5, exitClearance: 12, junctionSpacing: 2,
       background: "vellum", backgroundIntensity: 0.5,
-      pulseReach: 3, backgroundSpeed: -1, deadEndLength: 20,
+      pulseReach: 3, backgroundSpeed: -1, deadEndLength: 20, hCutShare: 0,
       backgroundScale: 1, backgroundDetail: 1, backgroundFibers: 1,
       backgroundGrain: 1, backgroundAngle: -1, backgroundColorMode: "gamut",
       backgroundBase: "#151b28", backgroundAccent1: "#7ab8cd",
@@ -216,11 +216,13 @@ describe("links", () => {
       exitClearance: DEFAULT_MAZE_PARAMS.exitClearance,
       junctionSpacing: DEFAULT_MAZE_PARAMS.junctionSpacing,
       deadEndLength: DEFAULT_MAZE_PARAMS.deadEndLength,
+      hCutShare: DEFAULT_MAZE_PARAMS.hCutShare,
     }).toEqual({
       entranceClearance: PARAM_DEFAULTS.entranceClearance,
       exitClearance: PARAM_DEFAULTS.exitClearance,
       junctionSpacing: PARAM_DEFAULTS.junctionSpacing,
       deadEndLength: PARAM_DEFAULTS.deadEndLength,
+      hCutShare: PARAM_DEFAULTS.hCutShare,
     });
   });
 
@@ -421,7 +423,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg",
   minotaur: "mt", minoSpeed: "msp", minoTelegraph: "mtg", minoSight: "msi",
   minoRoamRuns: "mro", minoTerritory: "mtr", minoAccuracy: "mac",
-  minoPause: "mpa", minoSleep: "msl",
+  minoPause: "mpa", minoSleep: "msl", hCutShare: "hcs",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -442,6 +444,8 @@ function otherValue(name: keyof typeof PARAM_DEFAULTS): string | number | boolea
   if (name === "backgroundSpeed") return 2;
   if (name === "backgroundAngle") return 90;
   if (name === "minoSleep") return 2; // K80 turns: its default is 0
+  // A share whose default could be 0 (off), where halving changes nothing.
+  if (name === "hCutShare") return d === 0.5 ? 0.25 : 0.5;
   return (d as number) * 0.5;
 }
 // As a link writes it: booleans 0/1, colors without the "#".

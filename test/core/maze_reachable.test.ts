@@ -30,7 +30,7 @@ import { buildMazePlan as buildMazePlanV1 } from "./fixtures/maze_plan_v1";
 // K110 cases keep the knobs they were found with (PRE_K74), and the last
 // test repeats the checks at the new defaults.
 
-const PRE_K74: Partial<UrlParams> = { exitClearance: 5, deadEndDensity: 0.25, deadEndLength: 0 };
+const PRE_K74: Partial<UrlParams> = { exitClearance: 5, deadEndDensity: 0.25, deadEndLength: 0, hCutShare: 0 };
 
 function design(
   shape: ShapeName,
@@ -59,6 +59,7 @@ function mazeParamsOf(p: UrlParams): MazeParams {
     fourWayFraction: p.fourWayFraction,
     deadEndDensity: p.deadEnds ? p.deadEndDensity : 0,
     deadEndLength: p.deadEndLength,
+    hCutShare: p.hCutShare,
     entranceClearance: p.entranceClearance,
     exitClearance: p.exitClearance,
     junctionSpacing: p.junctionSpacing,
