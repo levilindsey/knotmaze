@@ -1,44 +1,44 @@
-- **K416** · `docs/design/K5_K6_split.md` is stale beyond §2.3 (R1 updates its table): §1.3 ranges (f04aa4b), the strip block (`sectionProgram`, `sameBurn`, `sameSpans`), §5.1 pins (PROGRAM_SITES/RIBBON, `paint_explore.test.ts`, `paint_ring_lap.test.ts`), §5.3 and §6 sequencing, `__knotRenderer` now in `src/app/probe_hooks.ts` (K5 R1 brief).
+- **K416** · `docs/design/K5_K6_split.md` is stale beyond §2.3 (R1 updates its table): §1.3 ranges (f04aa4b), the strip block, §5.1 pins (`paint_explore.test.ts`, `paint_ring_lap.test.ts`), §5.3 and §6 sequencing, `__knotRenderer`'s move to `src/app/probe_hooks.ts` (K5 R1 brief).
 
-- **K417** · The R lane vs the probes (K5 R1 brief): ~80 probes call the sampling helpers through the renderer (R1's façade forwarders stay); probes editing `ribbon_renderer.ts` by path break once code moves: K76 2d and K290 3a `dump_variants.ts`, `variant_build.ps1` (`g2/`, `K4/`), `K154_K169/edit_rr2.ps1`, `edit_rr3.ps1`. Fix each when it runs.
+- **K417** · R lane vs the probes (K5 R1 brief): ~80 probes call the sampling helpers through the renderer; probes editing `ribbon_renderer.ts` break once code moves: K76 2d and K290 3a `dump_variants.ts`, `variant_build.ps1` (`g2/`, `K4/`), `K154_K169/edit_rr2.ps1`, `edit_rr3.ps1`.
 
-- **K266** · The hover rim's short-run limits (K248): runs under 2 x rimGap (1.95 world) never glow, and a short run lit under a crossing's over thread shows nothing (run 187); `census_rim.mjs`'s open-chain terminal sample (k = 235) reads a probe triangle on both builds. `docs/design/K111.md` ("Stage 3 handoff").
+- **K266** · The hover rim's short-run limits (K248): runs under 2 x rimGap never glow, and a short run lit under a crossing's over thread shows nothing; `census_rim.mjs`'s open-chain terminal sample (k = 235) reads a probe triangle. `docs/design/K111.md` ("Stage 3 handoff").
 
-- **K267** · Stale `highlightMode` mentions after K248 in `docs/design/` (K76, K76_reveal_mode, K174, K193, K198, levi_notes_2026-10-13), and v4 `.J` probe links in rules files (gameplay-motion, probes-phone, render-pluck, probes.md) and design docs' play links (K174, K180, K198, brief templates).
+- **K267** · Stale `highlightMode` mentions after K248 in `docs/design/` (K76, K76_reveal_mode, K174, K193, K198, levi_notes_2026-10-13), and v4 `.J` probe links in rules files (gameplay-motion, probes-phone, render-pluck, probes.md) and play links in K174, K180, K198, brief templates.
 
 - **K263** · `minotaur.ts` exports `undoAllowed`, but nothing in `src` calls it, no move undo exists, and `docs/design/K80_turns.md` step 2 cites it as real time's behavior. Delete it, or wire it when an undo lands.
 
-- **K262** · Two probe harnesses K132 (41e81b5) broke: K80's `.claude/probes/K80/lib.ts` (`designParams` calls the removed `codecDefaults(3)`; use `paramsFromValues(seed, {...})` as in `.claude/probes/K174/rt/rt_lib.ts`) and K100's `vite.fogdaily.config.ts` (patches the removed `DAILY_V1`). The burn race fixes its copy of the first (`docs/design/K114_burn.md`).
+- **K262** · K132 (41e81b5) broke two harnesses: K80's `.claude/probes/K80/lib.ts` (removed `codecDefaults(3)`; see `.claude/probes/K174/rt/rt_lib.ts`) and K100's `vite.fogdaily.config.ts` (removed `DAILY_V1`). K114 fixes its copy (`docs/design/K114_burn.md`).
 
-- **K258** · K76 stage 2a's residuals: (a) in flight, KPAINT items are re-declared every frame and the per-slot refs shift (check `lastPaintUpload` in 2d); (b) so is growth, 0.45 s after each arrival; (c) the model is probe-only until 2c feeds it. `docs/design/K76.md` ("Stage 2a handoff", "Residuals").
+- **K258** · K76 s2a's residuals: (a) in flight, KPAINT items are redeclared per frame and the per-slot refs shift (check `lastPaintUpload` in 2d); (b) so is growth, 0.45 s after each arrival; (c) the model is probe-only until 2c. `docs/design/K76.md` ("Stage 2a handoff", "Residuals").
 
-- **K276** · K76 stage 2b's residuals (a)-(e): a visited END at growth 0 shows nothing at its tip; the census may miss a long shallow gap's far end and covered two moves' ground; the mode-off-again failure (77% of the frame) is unexplained; mode-on strip and fan costs are up slightly. `docs/design/K76.md` ("Stage 2b handoff", "Residuals").
+- **K276** · K76 s2b's residuals (a)-(e): a visited END at growth 0 shows nothing at its tip; the census may miss a long shallow gap's far end; the mode-off-again failure is unexplained; mode-on costs are up slightly. `docs/design/K76.md` ("Stage 2b handoff", "Residuals").
 
-- **K278** · K74 stage 2's residuals: (a) H1 ignores the exit clearance (guard it in stage 3); (b) the pass adds ~30% to generation; (d) dense heart and ring designs cut no bridges; (e) H1 can shorten the optimal route (tree `1l6e`); (f) 494f2fe says codec index 108, it is 117; (c) done (86d404e..02194b4). `docs/design/K74.md` ("Stage 2 handoff").
+- **K278** · K74 s2's residuals: (a) H1 ignores the exit clearance; (b) generation ~30% slower; (d) heart and ring designs cut no bridges; (e) H1 can shorten the optimal route; (f) 494f2fe says codec 108, it is 117; (c) done 86d404e..02194b4. `docs/design/K74.md` ("Stage 2 handoff").
 
 - **K285** · Citation details K277 left out until a record confirms them: Jakobsen's venue, Müller et al.'s volume and pages, Jaffe and Smith's pages, the Elias DOI, the editor of Perlin's course notes. `docs/design/K274_K277.md` ("Stage 1 handoff").
 
-- **K281** · The burn race's stage 1 residuals (K114): (a) `drawFire` costs ~2.5 ms a frame once all is burnt; (b) it ignores K76's reveal; (c) the char stroke draws over crossing gaps ((a)-(c) wait for stage 3's shader look); (d)-(h) small (c014a83 says codec 117-119, it is 118-120). `docs/design/K114_burn.md` ("Stage 1 handoff").
+- **K281** · The burn race's s1 residuals (K114): (a) `drawFire` costs ~2.5 ms a frame; (b) it ignores K76's reveal; (c) char stroke draws over crossing gaps ((a)-(c) wait for s3's shader look); (d)-(h) small (c014a83: codec is 118-120). `docs/design/K114_burn.md` ("Stage 1 handoff").
 
-- **K254** · K193 stage 1's phone-pass residuals: (a) run a desktop `-Dry -Looks scripts/phone_pass/looks.example.json` and check `looks_report.json` and the sheet; (b) docked landscape is unverified (`-Viewport portrait`); (c) `-Phase check` accepts a phone in use (K234). `docs/design/K193.md` ("Stage 1 handoff").
+- **K254** · K193 s1's phone-pass residuals (`docs/design/K193.md`, "Stage 1 handoff"): (a) desktop `-Dry -Looks scripts/phone_pass/looks.example.json` unrun, check `looks_report.json`; (b) docked landscape unverified (`-Viewport portrait`); (c) `-Phase check` accepts a phone in use.
 
-- **K252** · K198 stage 2's residuals: (a) `RANGE_EASE` is a per-frame ease (0.15), so resize and fit drift settle faster at higher frame rates; (b) the head's 0.45 s show delay rests on five measured blips (longest 0.33 s): K156's next phone pass can check more. `docs/design/K198.md` ("Stage 2 handoff").
+- **K252** · K198 s2's residuals: (a) `RANGE_EASE` is a per-frame ease (0.15), so resize and fit drift settle faster at higher fps; (b) the head's 0.45 s show delay rests on five blips (longest 0.33 s): K156's next phone pass can check more. `docs/design/K198.md` ("Stage 2 handoff").
 
-- **K246** · K174's residuals (`docs/design/K174.md`, "Stage 1 handoff"): pace links aren't clamped (an old `mhp=25` means 25x pace); the K80 rt probes (`.claude/probes/K80/rt/`) lack K132's `rt_lib.ts` fix and `rt_chase.mjs` puts its Chrome profile in OS temp (fixed only in `.claude/probes/K174/rt/`); the desktop label column clips `mino*` keys.
+- **K246** · K174's residuals (`docs/design/K174.md`, "Stage 1 handoff"): pace links aren't clamped (old `mhp=25` means 25x pace); the K80 rt probes (`.claude/probes/K80/rt/`) lack K132's `rt_lib.ts` fix; `rt_chase.mjs` profiles in OS temp (fixed in `.claude/probes/K174/rt/`).
 
-- **K243** · A paused page with the instant intro draws no threads at load (`?b.J&am=instant&fw=0&sp=0`): `beginSettle()`'s instant branch shows the root without an `update()`. Likely fix: `renderer.update(); fabric.update(...)` there, after a pinned-frame A/B. `docs/design/K235_K239.md` ("Stage 1 handoff"); `.claude/probes/K235/k239_paused.mjs`.
+- **K243** · A paused instant-intro page draws no threads at load (`?b.J&am=instant&fw=0&sp=0`): `beginSettle()`'s instant branch skips an `update()`; fix: `renderer.update(); fabric.update(...)` there. `docs/design/K235_K239.md` ("Stage 1 handoff"); `.claude/probes/K235/k239_paused.mjs`.
 
 - **K242** · K191's residuals (`docs/design/K154_K169.md`, "Stage 2 handoff"): the fan program's GPU cost during fades and stage 1's phone hash cost are unmeasured; the tap-time fade-out and a full web restored on load are unit-tested only; the knot and fog A/B against stage 1 was not rerun.
 
-- **K236** · K145's hover glow, now K248's rim: a pluck's overlay hides it on the plucked run (`pluckColor` composes one color per arc, no across coordinate; the fix needs an across varying in the overlay strip and an across-aware mirror compose). Other gaps settled (3321592). `docs/design/K111.md` ("Stage 3 handoff"), `docs/design/K93_K145.md`.
+- **K236** · K145's hover glow, now K248's rim: a pluck's overlay hides it (`pluckColor` has no across coordinate; fix: an across varying in the overlay strip and mirror compose). Other gaps settled in 3321592. `docs/design/K111.md` ("Stage 3 handoff"), `docs/design/K93_K145.md`.
 
 - **K234** · `scripts/phone_pass.ps1`'s `-Phase check` and `-WaitReady` treat a phone in use as ready (round 2026-10-14b saw Gmail in front); wait for 120 s without user activity (`dumpsys power` activity ages). `docs/design/K156.md` ("Round 2026-10-14b handoff").
 
-- **K232** · Round 2026-10-14b (K156): the default link's load (`?b.J`, 54a2b43 vs 48da84d) has two borderline worse cells, p95 33.4 -> 50.0 ms and first sleep 18.4 -> 19.6 s (2 reps, hot phone, portrait). Rerun with 3 reps once the floor matches (K193, K195); K197 is the morning's shift. `.claude/probes/rounds/2026-10-14-48da84d/pass/summary.md`.
+- **K232** · Round 2026-10-14b (K156): the default link's load (`?b.J`, 54a2b43 vs 48da84d) is borderline worse: p95 33.4 -> 50.0 ms, first sleep 18.4 -> 19.6 s (2 reps). Rerun with 3 reps once the floor matches (K193, K195, K197). `.claude/probes/rounds/2026-10-14-48da84d/pass/summary.md`
 
 - **K230** · K92 did not check the badge's last fit level (bare icon) with the panel open; its phone checks were desktop emulation, so K156's next phone pass covers K92 (`gameplay-badge.md`). No phone look reaches the badge's fit levels at 411 px: use an emulated narrower viewport.
 
-- **K223** · Tooling after K198: K149's `.claude/probes/K148_K149/probe.mjs slack` checks the old 0.3-screen rule and fails by design (`.claude/probes/K198/pan.mjs` replaces it); K173's `scripts/split_rules.json` still anchors on the old FIT CAMERA PAN SLACK entry (only matters if the split is re-run).
+- **K223** · Tooling after K198: K149's `.claude/probes/K148_K149/probe.mjs slack` checks the old 0.3-screen rule and fails by design (`.claude/probes/K198/pan.mjs` replaces it); K173's `scripts/split_rules.json` still anchors on the old FIT CAMERA PAN SLACK entry.
 
 - **K222** · K198's maze edge leaves out the win ring (~5 px past the disc), the head's glow and the minotaur, and the range ignores the panel's height (`docs/design/K198.md`, The calls).
 
@@ -48,23 +48,23 @@
 
 - **K217** · K93's trail split is placed linearly in ctrl but the trail measures lattice length and the paint is linear in arc, so the fade start sits slightly off; a fading part under a pixel blends at the split (`docs/design/K93_K145.md`, Stage 1 handoff). Pre-existing.
 
-- **K213** · Before K90's bend bound ships (if Levi ships it): the min regression (hard clamp tightens the worst window in 24 of 585 scans, soft in 4; done at 0 in `k90_minrows.mjs`), `controlArcLengths`, unit tests and a CPU mirror, hit tests on moved samples, the phone's rebuild cost (`docs/design/K90.md`, Stage 1b handoff).
+- **K213** · Before K90's bend bound ships: the min regression (hard clamp worsens 24 of 585 scans, soft 4; `k90_minrows.mjs`), `controlArcLengths`, tests and a CPU mirror, hit tests on moved samples, the phone's rebuild cost (`docs/design/K90.md`, Stage 1b handoff).
 
 - **K207** · Fog stamps grow without bound within a solve: the spacing filter checks only the last stamp, and `renderFog` redraws every stamp. A spatial dedupe fixes both (`src/render/fabric_maze_renderer.ts`; `docs/design/K100.md`, Stage 1 handoff).
 
 - **K206** · A restored attempt stamps its fog right after the intro, while the threads re-settle, so with physics it differs from the live fog (IoU ~0.96). Option: stamp after the first sleep (`docs/design/K100.md`, Stage 1 handoff).
 
-- **K205** · K120's leftovers (`docs/design/K120.md`): the follow camera doesn't keep the dot clear of the move pad (K148's, K149's area); the maze is small at the phone's fit zoom; a 411 px toast can overlap the pad; an arrow after clicking the panel's empty area moves in the maze; a hold could loop a cycle of runs.
+- **K205** · K120's leftovers (`docs/design/K120.md`): the follow camera doesn't keep the dot clear of the move pad (K148, K149); small maze at the phone's fit zoom; a 411 px toast can overlap the pad; an arrow after clicking the panel's empty area still moves; a hold could loop runs.
 
 - **K202** · A bare-URL daily left open past midnight with no move becomes practice when begun the next day (K146). An unstarted daily the bare URL opened could roll over to the new day instead (`docs/design/K146_K151.md`, "Open").
 
 - **K201** · History's "Played" chip counts any record, practice included, so it can exceed the played tile (24 against 21 in K146's probe); a practice row's count shows only in its tooltip, which phones lack (`src/ui/daily_stats_view.ts`).
 
-- **K197** · The phone's load settles later over ab6d330..54a2b43 (K156 round 2026-10-14): first sleep 8.0 -> 19.3 s, p95 33 -> 50 ms; K147's settle budget (b0a1c49..97293e7) is the likely cause. Attribute with the frames phase `-Base b0a1c49~1 -Head 97293e7`; whether 19 s is acceptable is Levi's call.
+- **K197** · The phone's load settles later over ab6d330..54a2b43 (K156, 2026-10-14): first sleep 8.0 -> 19.3 s, p95 33 -> 50 ms; likely K147's settle budget (b0a1c49..97293e7): attribute with the frames phase `-Base b0a1c49~1 -Head 97293e7`. Is 19 s acceptable? Levi's call.
 
-- **K190** · Unmeasured costs from K154+K169 (aaa3dda): the new hash costs the drifting backgrounds' programs 37-60% more on the desktop; the phone and the fan program during a web fade are unmeasured. Measure at K79's K52 phone gate, vellum-drift first (`docs/design/K154_K169.md`, "Stage 1 handoff").
+- **K190** · Unmeasured costs from K154+K169 (aaa3dda): the new hash adds 37-60% to the drifting backgrounds on the desktop; the phone and the fan program in a web fade are unmeasured. Measure at K79's K52 phone gate, vellum-drift first (`docs/design/K154_K169.md`, "Stage 1 handoff").
 
-- **K195** · The phone pass's gaps (K156 3c, `docs/design/K156.md`, "Stage 3c handoff"): the noise floor is one 3-rep A/A pass for `-Moves 0,7,13` (rerun when the orientation, phone or load changes); knot-mode render ms swings 7.5-20.5 ms in A/A; K80's indicator look never taps the indicator.
+- **K195** · The phone pass's gaps (K156 3c, `docs/design/K156.md`, "Stage 3c handoff"): the noise floor is one 3-rep A/A pass for `-Moves 0,7,13` (rerun if orientation, phone or load changes); knot-mode render swings 7.5-20.5 ms in A/A; K80's indicator look never taps the indicator.
 
 - **K196** · K180's crossings options at phone scale: `ride` and `pinch` leave most taps unreadable in the census (dense `ride` 93.8%, fabric `pinch` 71.1%); `through` reads best (`docs/design/K180.md`, "Stage 1 handoff"; `.claude/probes/K180/`).
 
@@ -74,9 +74,9 @@
 
 - **K128** · `src/render/marker_mesh.ts:32` declares `in vec2 aUV;` but never reads it while the marker geometry carries it, so PixiJS warns "Attribute aUV is not present" per marker mesh on every load (K83; found by K81 stage 3a). Read it in the shader or drop it from the geometry.
 
-- **K130** · Panel rows with a slider step (`backgroundIntensity`, `pulseReach`, `settleBudget`, `loadSettle`) snap to Tweakpane's step grid, which starts at the row's first value: after an off-grid link, "Reset to defaults" can write a wrong default (e.g. intensity 0.48). `src/ui/tweakpane_panel.ts`; K79 stage B1.
+- **K130** · Rows with a slider step (`backgroundIntensity`, `pulseReach`, `settleBudget`, `loadSettle`) snap to Tweakpane's step grid from the row's first value: after an off-grid link, "Reset to defaults" writes a wrong default (intensity 0.48). `src/ui/tweakpane_panel.ts`; K79 B1.
 
-- **K131** · The phone probe kit (`.claude/probes/K79/phone/`, untracked): `drift.mjs` and `frames.mjs` take slow full-size PNG shots (10-25 s over Tailscale; use JPEG or clipped); `bench.mjs`'s `thermal()` reads the stale "Cached temperatures" block, not the live one (`.claude/probes/K81/phone/lib.mjs` does, in K81's worktree).
+- **K131** · Phone probe kit (`.claude/probes/K79/phone/`, untracked): `drift.mjs` and `frames.mjs` take slow full-size PNG shots (10-25 s; use JPEG or clipped); `bench.mjs`'s `thermal()` reads the stale temperatures block (`.claude/probes/K81/phone/lib.mjs` reads the live one).
 
 - **K12** · Shaped-lattice sleep failures: star with e-w anchors sleeps on 6/8 seeds; K46's scans at gs 20-24: star 4/60 never sleep, tree 4/60, fish 2/60; heart, ring, rect clean. The circle at gs 18 with n/s anchors: 3 of 7 seeds never sleep. Repro: `?4.c&shp=circle&sa=n&xa=s&am=instant`.
 
@@ -84,9 +84,9 @@
 
 - **K15** · During a reveal, a joint's fan can turn opaque while a fill beside it is still striped (K4 fixes it by construction). May be moot: G1 (99443cb) deleted the over-fills. Re-check fan vs base ribbon during a reveal.
 
-- **K16** · Physics settle is slow: 100-190 ms/frame at gs 18 (loaded desktop), 7 sim-s in 14 s on the phone. K279's wake check (`.claude/probes/K279/wake/`): drag, tug tap and bare wake cost the same, so every wake spirals to the 100 ms cap (7-9 fps for 3-8 s). K162 (4): do drags get K147's budget? K7's worker is the full fix.
+- **K16** · Physics settle is slow: 100-190 ms/frame at gs 18, 7 sim-s in 14 s on the phone. K279's wake check (`.claude/probes/K279/wake/`): every wake (drag, tug tap, bare) spirals to the 100 ms cap. K162 (4): do drags get K147's budget? K7's worker is the full fix.
 
-- **K65** · Low-gridAlign knots (`ga=0`, e.g. Levi's rect link) creep under the quiet threshold (a fresh settle ~1.5 world over ~50 s, a cinch up to 0.9 world/s) and every sleep gate freezes them mid-creep. A net-displacement test would catch it but keep them awake for tens of seconds. Related: K11 (K63 finding).
+- **K65** · Low-gridAlign knots (`ga=0`) creep under the quiet threshold (a fresh settle ~1.5 world over ~50 s, a cinch up to 0.9 world/s) and every sleep gate freezes them mid-creep. A net-displacement test would catch it but keep them awake for tens of seconds. Related: K11 (K63).
 
 - **K29** · Boxed kinks at tw 0.64: 3 of ~152 kinks (8 seeds) rest at 0.56-0.78 thread widths of eye hole, boxed in by a fused joint and the 1.6 corridor floor; stronger eye pressure (2.6, 2.8) doesn't lift them. K49 is the size decision. `.claude/rules/physics-kinks.md` ("KINK EYES").
 
@@ -100,25 +100,25 @@
 
 - **K42** · Silhouette-level cyclic overlaps: three ribbons over one pixel, each over the next (user links x170/x93 after repeated cinches, x134/x135). G1's per-pixel protect can't break a cycle; it needs a per-pixel winner.
 
-- **K44** · Probe tooling quirks: the gap census drifts between captures of one frozen state and ends a crossing's ideal at 0.5 of the neighbor gap (renderer: 0.8); a hold probe must first move past the 4 CSS px tug threshold (df373b5; `.claude/probes/K41/` moves 12 px); A/B at `fw=0`; pair `phy=0` builds on one side of K63; 4x throttle is for ratios.
+- **K44** · Probe tooling quirks: the gap census drifts between captures of one frozen state; a hold probe must move past the 4 CSS px tug threshold (df373b5; `.claude/probes/K41/` moves 12 px); A/B at `fw=0`; pair `phy=0` builds on one side of K63; 4x throttle is for ratios.
 
-- **K69** · String mode (`pv=string`) on pre-G2.3 builds drew a 1-px diagonal sliver from the start to the exit marker after a few moves (`?b.c&pv=string`, 6 moves); G2.3 doesn't show it, never attributed (G2 doc section 7, Follow-ups). Since K83 (45aac50) that Graphics draws only the win ring.
+- **K69** · String mode (`pv=string`) on pre-G2.3 builds drew a 1-px diagonal sliver from the start to the exit marker (`?b.c&pv=string`, 6 moves); G2.3 doesn't show it, never attributed (G2 doc section 7, Follow-ups). Since K83 (45aac50) that Graphics draws only the win ring.
 
-- **K103** · Below 10 fps the fit camera, move animation, paint clock and pluck overlay still slow down (fixed-fraction fit ease; `tickAnim`, the paint and `tickPlucks` read Pixi's capped `deltaMS`). K96 (d8b9175) moved only the follow camera onto real time; a time-based fit ease would change its feel. Since K101 (e9e01ae) a note's string trails its sound.
+- **K103** · Below 10 fps the fit camera, moves, paint clock and pluck overlay still slow down (fixed fit ease; `tickAnim`, paint and `tickPlucks` read Pixi's capped `deltaMS`). K96 (d8b9175) moved only the follow camera. Since K101 (e9e01ae) a note's string trails its sound.
 
 - **K112** · Motion setting residuals (K79, 9ffda8a): no cross-tab sync (another tab picks a change up on reload; `src/ui/motion.ts`), and the camera's reduced-motion jump on an edge-indicator tap was code-reviewed, not probed.
 
-- **K133** · Crossed join bridges: plans built before K110 can hold two join bridges that cross (diagonals of one cell; 108 plans, 20 dailies); K110's joins skip such a splice, the older code doesn't check. Fixing moves those plans (pre-launch policy allows); first see whether a crossing reads wrong (`.claude/probes/K110/verify_run3.txt`).
+- **K133** · Crossed join bridges: plans built before K110 can hold two crossing join bridges (108 plans, 20 dailies); K110's joins skip such a splice, older code doesn't. Fixing moves those plans; first see whether a crossing reads wrong (`.claude/probes/K110/verify_run3.txt`).
 
 - **K136** · A gs 6 tree maze with dead ends never sleeps (140 s of sim) on 7e41a02 and ade3537 alike, so not K110's doing; maybe the K13 attractor. Repro `?12l&gs=6&shp=tree`; `.claude/probes/K110/sheet/results_run1_tree_awake.json`.
 
 - **K142** · The A/B harness's first case in a fresh browser can read nonzero (1 of 11 runs: K79 B2b's `none_desk`, specks on thread edges); cause not found (a cold server or GPU cache?). Rerun before trusting it; a warm-up case is untested (`docs/design/K79.md`, "The 18/19 run").
 
-- **K150** · Probe tooling isn't safe for concurrent agents: fixed Chrome profile and window (`scripts/diag_screenshot.mjs`), fixed TEMP build folders unless `-Root <dir>` (`scripts/preview.ps1 -Ref`, 1f8be97), OS-tmpdir profile (`scripts/bench_frame.mjs`, `probe_gpudraw.mjs`). Fix: per-run profiles and off-screen windows (claude-config `rules/lessons.md`); disjoint ports; hold the perf lock between samples.
+- **K150** · Probes clash across agents (fix: claude-config `rules/lessons.md`): one Chrome profile (`scripts/diag_screenshot.mjs`), TEMP builds unless `-Root` (`scripts/preview.ps1 -Ref`, 1f8be97), tmpdir profiles (`scripts/bench_frame.mjs`, `probe_gpudraw.mjs`).
 
 - **K157** · K79 B's color rows on the phone (B3): accent 3's picker opens 8 px below the viewport until the panel scrolls, and a second tap on a swatch doesn't close Tweakpane's popup (check the older color rows too). `docs/design/K79.md` ("Stage B3 results").
 
-- **K166** · K81's render residuals (`docs/design/K81.md`, "Residuals to report"): the pluck overlay draws over the gold band; band edge cases (past a non-route arm's cover cap, varying-width ribbons, non-adjacent routes, skipped wedges, caps dropped past MAX_ROUTES and MAX_ARMS); at a tap, setPaint runs a frame ahead of tickPaint.
+- **K166** · K81's render residuals (`docs/design/K81.md`, "Residuals to report"): the pluck overlay draws over the gold band; band edge cases (cover cap past a non-route arm, varying-width ribbons, non-adjacent routes, skipped wedges); setPaint runs a frame ahead of tickPaint at a tap.
 
 - **K168** · K81's untested ranges: more than 20 routed records, zoomed in, and a full web on the phone (the gate walks the cheapest route, so a full web was certified on the desktop only). K156's looks can cover some.
 
@@ -128,10 +128,10 @@
 
 - **K178** · Since K122 the private-cache vite wrappers of K19-K20, K79, K99 and K104 fail with ERR_MODULE_NOT_FOUND; K80's (`.claude/probes/K80/rt/vite.private-cache.config.ts`, which loads the config with `loadConfigFromFile`) works (`.claude/rules/probes.md`).
 
-- **K181** · K104's residuals: the phone's "can't tell" share stays high in fabric and dense (26%, 41%); sound-only taps in junction cores and taps bound by hide zones show only through a cue (constants unreviewed); G1's soft edge shows the under ribbon at 80-90 degree crossings. `docs/design/K104.md` ("Stage 1b handoff", "Stage 1c handoff").
+- **K181** · K104's residuals: the phone's "can't tell" share stays high in fabric and dense (26%, 41%); sound-only and hide-zone taps show only through a cue; G1's soft edge shows the under ribbon at 80-90 degrees. `docs/design/K104.md` ("Stage 1b handoff", "Stage 1c handoff").
 
 - **K188** · K140's residuals (`docs/design/K140.md`, "Stage 1 handoff"): `restartSolve()` leaves pieces in the air; the open desktop panel covers the spray when the exit is at the lower right; the rain takes 5.5-6.2 s to fall out, longer below 10 fps.
 
-- **K287** · K268 stage 1's residuals (a)-(g): the full proof sweep is unrun (11 configurations on one state); the MAX case and an over thread's tip in a footprint lack a GPU check; fray's cut flickers; no mode-off A/B after the K114 rebase; the phone's per-slot proof needs `__knotExplore` slot positions. `docs/design/K268.md` ("Not done in stage 1", Calls).
+- **K287** · K268 s1's residuals (a)-(g): the full proof sweep is unrun; the MAX case and an over thread's tip lack a GPU check; no mode-off A/B after the K114 rebase; the phone's per-slot proof needs `__knotExplore` slots. `docs/design/K268.md` ("Not done in stage 1", Calls).
 
-- **K291** · CI: the deploy run of ad2618a warned that checkout@v4, setup-node@v4 and wrangler-action@v3 target Node 20, and `ubuntu-latest` moves to Ubuntu 26 on 2026-10-19. Bump each action to a Node 24 release; if the first deploy after the 19th fails, pin `ubuntu-24.04`. `.github/workflows/deploy.yml`.
+- **K291** · CI: ad2618a's deploy warned that checkout@v4, setup-node@v4 and wrangler-action@v3 target Node 20, and `ubuntu-latest` becomes Ubuntu 26 on 2026-10-19. Bump them to Node 24 releases; if the next deploy fails, pin `ubuntu-24.04`. `.github/workflows/deploy.yml`.
