@@ -487,6 +487,9 @@ export function installProbeHooks(ctx: ProbeCtx): void {
             departL: c.fireDepartL,
             arriveL: c.fireArriveL,
             racing: c.fireRacing,
+            // K408: the start marker's target (shown until the fire passes
+            // the start) and its drawn fade level.
+            startMarker: fb.startMarkerState,
           }
         : null,
       // K100: the solve's restarts, and the fog's explored stamps.
