@@ -171,17 +171,19 @@ Next free ID: K397.
   guard and stalker variants, real time as its own mode, turn-aligned as
   a modifier. Real time merged (`5fed5c1`), turns stages 1 and 2 merged;
   residuals K293, per-model tuning K294 (Levi: "Yes.").
-  - owner: nobody since 2026-10-14 18:48 (turns stage 2 merged; agent
+  - owner: agent `ad4536aff31e4c7ba` of claude session 05e60da0 (turns stage 3a, started
+    2026-10-15 08:51, 2 h cap ~10:51). Before it: turns stage 2 merged 2026-10-14 18:48 (agent
     a1579d5c460af2d20 of claude d8031183; earlier agents
     af5995f5900f0f945 and a9c90f15cd6a55710; worktrees removed by the K161 sweep 2026-10-15,
     branches kept). Stage 3's brief merged in 9f1ada2 (docs agent `ae4714d103b5fd3bf` of
     claude session 05e60da0, worktree kept)
-  - branch: mainline; last commit: `02194b4` (turns 0047148..68524e1 and
-    86d404e..02194b4, K174 ecf2169..6ec8275)
+  - branch: `worktree-agent-ad4536aff31e4c7ba`, worktree
+    `.claude/worktrees/agent-ad4536aff31e4c7ba`, from `901b3f1`; last commit: `901b3f1` (none
+    of its own yet). Merged: turns 0047148..68524e1 and 86d404e..02194b4, K174 ecf2169..6ec8275
   - evidence: main checkout `.claude/probes/K80/` (`turns2/`, `turns/`,
     `rt/`) and `.claude/probes/K174/rt/`; the research's branch
     `worktree-agent-a25726c24f262b138` (5 commits not on master; worktree swept 2026-10-15)
-  - next: turns 3a (Opus, 2 h, ports 5940-5949; questions K401), never beside K114 stage 2: a
+  - next: turns 3a is running (Opus, 2 h, ports 5940-5949; questions K401), never beside K114 stage 2: a
     digest pin for whole turn games, wait keys and the pad's wait (a wait mid-move stops
     snapping the dot to the run's end), a hover cue, `mlm`/`mrn` (the tooltips hard-code 3),
     the turn pull, K294, K293 (a), (c), (e). 3b (telegraph, catch feedback, sounds) after
@@ -281,7 +283,7 @@ Next free ID: K397.
   - brief: `docs/design/K114_burn.md`, "Stage 3b brief: the fire's look"
 - **K395** · The pluck blur at a kink loop's tip, on the phone (Levi, 2026-10-15 07:04, after
   K344's fix): a seam from the tip to an edge, and a heart-shaped pinch (a point inside, a dimple outside).
-  - owner: nobody since 2026-10-15 08:38 (stage 1 finished, merged 08:50; agent `ac0d0267cdf7467ec` of claude session 05e60da0, worktree kept)
+  - owner: nobody since 2026-10-15 08:38 (stage 1 finished, merged 08:47; agent `ac0d0267cdf7467ec` of claude session 05e60da0, worktree kept)
   - branch: mainline; last commit: `b625853` (the fix is `cd62db6`; tests 1159 green, build clean)
   - evidence: the main checkout's `.claude/probes/K395/` (Levi's screenshot; `out/ab_*/pair_*.png`: pre-K395 left, the fix right; `phone_run.ps1`)
   - next: the phone check after the deploy: Levi plucks a kink loop, or `phone_run.ps1` with the phone awake and unlocked; then Done. CAP_ROUND is K406, the soft "M" K405
