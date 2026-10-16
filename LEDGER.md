@@ -1,4 +1,4 @@
-﻿# Knotmaze ledger
+# Knotmaze ledger
 
 The to-do surface for work that isn't done yet: follow-ups, known
 residuals, decisions waiting on Levi, and ideas. Claude Code sessions and
