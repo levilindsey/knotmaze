@@ -496,6 +496,10 @@ export interface LossInfo {
   walked: number;
   // The smallest lead the fire left you at any arrival (Infinity: none).
   closest: number;
+  // K114 stage 2: the real-time fire reached you where you stood (that
+  // clock refuses no way on, so it never traps you); absent or false: the
+  // turn clock's trap.
+  reached?: boolean;
 }
 
 // The Burnt banner's rows (K274: built through `entry`, like every row).
@@ -535,7 +539,9 @@ export class LossBanner {
     head.textContent = "Burnt \u{1F525}";
     const sub = document.createElement("div");
     sub.className = "km-sub";
-    sub.textContent = "The fire reaches the end of every way on before you.";
+    sub.textContent = l.reached
+      ? "The fire reaches you where you stand."
+      : "The fire reaches the end of every way on before you.";
     const entries = lossEntries(l);
     const rows = rowsEl(entries);
     const btns = document.createElement("div");
