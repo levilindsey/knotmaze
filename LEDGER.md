@@ -146,21 +146,10 @@ Next free ID: K430.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: nobody since 2026-10-15 08:31 (stage 2's brief merged in 9f1ada2; docs agent
-    `ae4714d103b5fd3bf` of claude session 05e60da0, worktree kept). Stage 1's agent
-    af79edbe2a4677ff5 (session d8031183) finished; worktree removed by the K161 sweep
-    2026-10-15, branch kept
-  - branch: mainline; last commit: `ba6d574` (stage 1 is
-    801c22b..ba6d574)
-  - evidence: main checkout `.claude/probes/K114/burn/`
-    (`results_rebased.md`, `results_tuning_rebased.md`, `burn_sim.ts`,
-    `burn_page.mjs`)
-  - next: stage 2, real-time burning behind `fireClock` (Opus, 2 h, ports 5950-5959; questions
-    K400): unblocked (K290 3b and K80 3a merged); launch when a code slot frees (R1's, ~11:20).
-    K5 M3 moves the frame loop meanwhile: whoever merges second ports the tick's hunks
-    (K5_K6_split.md section 6). K408 can ride it; its item 6 measures realtime's per-frame cost.
-    Stage 3's look is a shader and carries K290's burnt toggle. The spider follows the
-    minotaur's controls (K174)
+  - owner: agent `a58dfc230583f43e4` of claude session 05e60da0 (opus, started 2026-10-15 11:02, 2 h cap ~13:02; ports 5950-5959). Stage 2's brief merged in 9f1ada2 (docs agent `ae4714d103b5fd3bf`, worktree kept). Stage 1's agent af79edbe2a4677ff5 (session d8031183) finished; worktree removed by the K161 sweep 2026-10-15, branch kept
+  - branch: `worktree-agent-a58dfc230583f43e4`, worktree `.claude/worktrees/agent-a58dfc230583f43e4`; last commit: `12c5e0a`
+  - evidence: `.claude/probes/K114/stage2/` (in its worktree); stage 1's: main checkout `.claude/probes/K114/burn/` (`results_tuning_rebased.md`, `burn_sim.ts`, `burn_page.mjs`)
+  - next: stage 2 running (realtime burning behind `fireClock`, questions K400 on the recs, K408 riding it). K5 M3 moves the frame loop meanwhile: whoever merges second ports the tick hunks (K5_K6_split.md section 6; the agent lists its main.ts per-frame hunks). Then stage 3, the look as a shader with K290's burnt toggle; the spider follows the minotaur's controls (K174)
   - brief: `docs/design/K114_stage2.md`; stage 1's handoff: `docs/design/K114_burn.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
@@ -288,7 +277,7 @@ Next free ID: K430.
   the section program to `src/render/ribbon/ribbon_shader.ts`, sampling to `ribbon/sampling.ts`;
   ribbon_renderer.ts 7747 → 7377 lines.
   - owner: agent M3 `af649e53424d2062c` of claude session 05e60da0 (started 10:17; opus, 2 h cap ~12:17; ports 5840-5849). R1's agent `ab73ce063da5446b5` finished 10:53, merged 10:57 (56d4504), worktree kept; R1's brief merged in 9041939 (docs agent `aae67981858ddb4a6`, worktree kept). M2's agent `abe93d522f82975c1` finished 09:52, merged 09:56, worktree kept. M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
-  - branch: M3 `worktree-agent-af649e53424d2062c`, worktree `.claude/worktrees/agent-af649e53424d2062c`, from `e6e1734`; last commit: `efa70f9` (WIP). Mainline `56d4504` (R1; its branch `worktree-agent-ab73ce063da5446b5` and worktree kept)
+  - branch: M3 `worktree-agent-af649e53424d2062c`, worktree `.claude/worktrees/agent-af649e53424d2062c`, from `e6e1734`; last commit: `2f37306` (WIP). Mainline `56d4504` (R1; its branch `worktree-agent-ab73ce063da5446b5` and worktree kept)
   - evidence: `.claude/probes/K5/M3/`, `.claude/probes/K5/R1/` (`checks/` and `checks2/`, each with `checks.log`; `checks3.ps1`, the fog `&phw=0` B-vs-B control, not run: K290 3c held the perf lock; R2's inventory in `parts.md`, `probe_surface.md`, `surface.json`; the brief's `rr_map.cjs` and maps in `brief/`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/` (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
   - next: M3 (the frame loop to `src/app/frame_loop.ts`, a hot path: the frame-time check under the perf lock) running; then M4, M3/M4 export PhysState, M7a moves `__knotUndo`. The R lane (K377 q3): R2 next, brief to write from 2.3 and R1's handoff (`ribbon/crossing_gaps.ts`, `ribbon/explore_gaps.ts`: buildPoly, polyDist, protectReach, samePieces, sameBurn, sameSpans, plus a part for the G3-0 probe hooks g3DataState, g3TableRows, g3Expected, captureScene, restoreScene). R2 and K397 stage 2 both edit the explore gap code, so they run one after the other. Then R5; G3-1 after R2
   - brief: `docs/design/K5_K6_split.md` ("Stage M3 brief"; "Stage M2 handoff"); the R lane `docs/design/K5_R1.md` ("Stage R1 handoff")
@@ -357,7 +346,7 @@ free slots (Levi, 2026-10-14 23:00-23:55):
 
 - **K408** · Hide the start marker once its thread has burnt (Levi, K383): in `fabric_maze_renderer.ts`
   drawMarkers, gate on the burnt spans covering `walk.start`'s thread point, with the marker fade
-  and a test. Rides K114 stage 2, or a small stage of its own.
+  and a test. Riding K114 stage 2 (launched 2026-10-15 11:01).
 - **K410** · The fire's FRONT and SMOLDER paint items into `paint_math`'s mirror and the parity
   tests, once K409 settles the look (K152 item 3; `K114_burn.md` 3b handoff).
 - **K412** · K7's worker-chunk modulepreload on a real network (measured only on localhost): a
