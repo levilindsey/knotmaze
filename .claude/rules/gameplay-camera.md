@@ -1,6 +1,7 @@
 ---
 paths:
   - "src/main.ts"
+  - "src/app/camera.ts"
   - "src/ui/view_clamp.ts"
   - "test/ui/view_clamp.test.ts"
 ---
