@@ -56,23 +56,37 @@ export const ensureViewport = (page) => emulate(page);
 // viewport's own CSS size keeps only the page (puppeteer intersects it with the visual viewport). Should a capture
 // still come back taller than the viewport at its own scale, the rows below the viewport are cropped (geometry only,
 // never a color test, so a page with a flat bottom edge keeps its rows). Counts go to SHOT_STATS (the looks report).
-export const SHOT_STATS = { shots: 0, cropped: 0 };
+export const SHOT_STATS = { shots: 0, cropped: 0, scaled: 0 };
+// K514: while the phone sits in landscape its capture surface (2125x1017) is
+// shorter than a portrait capture at the emulated dpr (1977 rows) and tiles
+// every 1017 rows (K513); clip-offset bands tile too (the surface itself only
+// paints its top ~872 rows). On the phone, capture the whole viewport at a
+// surface-fitting scale instead: height x dpr x scale <= 850 rows fits one
+// tile, so the shot is the full page, downscaled. The capture reuses the
+// page's emulation CDP session (a fresh session has no override and its clip
+// intersects to zero height). Dry/desktop keeps the native-scale capture.
+const FIT_ROWS = 850;
 export async function shotViewport(page, opts = {}) {
   const v = await page.evaluate(() => {
     const vv = window.visualViewport;
-    return { x: vv ? vv.pageLeft : window.scrollX, y: vv ? vv.pageTop : window.scrollY, w: window.innerWidth, h: window.innerHeight };
+    return { x: vv ? vv.pageLeft : window.scrollX, y: vv ? vv.pageTop : window.scrollY, w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio || 1 };
   });
-  let buf = await page.screenshot({ type: "png", captureBeyondViewport: false, clip: { x: v.x, y: v.y, width: v.w, height: v.h }, ...opts });
   SHOT_STATS.shots++;
+  const fit = FIT_ROWS / (v.h * v.dpr);
+  if (!DRY && fit < 1) {
+    const own = emuSessions.get(page); const cdp = own ?? await page.createCDPSession();
+    try {
+      const cap = await cdp.send("Page.captureScreenshot", { format: "png", captureBeyondViewport: false, fromSurface: true, clip: { x: v.x, y: v.y, width: v.w, height: v.h, scale: fit } });
+      SHOT_STATS.scaled++;
+      return Buffer.from(cap.data, "base64");
+    } finally { if (!own) await cdp.detach().catch(() => {}); }
+  }
+  let buf = await page.screenshot({ type: "png", captureBeyondViewport: false, clip: { x: v.x, y: v.y, width: v.w, height: v.h }, ...opts });
   const { W, H } = pngSize(buf);
   const wantH = Math.round((v.h * W) / v.w);
-  if (H > wantH + 2) {
-    buf = encodePNG(cropRows(decodePNG(buf), wantH));
-    SHOT_STATS.cropped++;
-  }
+  if (H > wantH + 2) { buf = encodePNG(cropRows(decodePNG(buf), wantH)); SHOT_STATS.cropped++; }
   return buf;
 }
-
 // What the page itself says about its viewport (page.evaluate(EMU_READ)): innerWidth x innerHeight x dpr, the
 // orientation media query, the visual viewport, the document's client size, the screen, and the biggest canvas
 // (backing size and CSS box). The proof that the emulation is real, not merely accepted.
