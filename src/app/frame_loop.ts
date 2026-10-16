@@ -16,6 +16,13 @@ import type { PanelApi, PanelSettings } from "../ui/tweakpane_panel";
 import type { UrlParams } from "../ui/url_state";
 import { CAM_MAX_DT } from "./camera";
 import type { PhysState } from "./lifecycle";
+import {
+  Flag,
+  NEED_AMBIENT,
+  NEED_EVENT,
+  SCENE_ACTIVE,
+  type LoopFlags,
+} from "./loop_flags";
 import type { SceneRef } from "./scene_ref";
 import type { StampPerf } from "./stamp";
 
@@ -85,6 +92,16 @@ export interface FrameLoopDeps {
   keyStep: () => void;
   autoAudioTick: () => void;
   freeze: () => void;
+  // K6-1 (docs/design/K6_1.md): the flag ledger, created first in main.ts
+  // (question 6), and the polls over state main.ts keeps: read-only and
+  // allocation-free. GAME: the chase's clock, the turn minotaur's wait, a
+  // key hold or a waiting move (the loop adds the fabric's move, the
+  // real-time fire and a pending banner). AUDIO: the auto sound's clock.
+  // CAMERA: the camera has not converged, or an indicator's show delay runs.
+  flags: LoopFlags;
+  gameNeedsFrame: () => boolean;
+  audioNeedsFrame: () => boolean;
+  cameraNeedsFrame: () => boolean;
   // main.ts's and the lifecycle's `let`s: read only,
   readonly physState: PhysState;
   readonly settleWall0: number;
@@ -140,6 +157,10 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     keyStep,
     autoAudioTick,
     freeze,
+    flags,
+    gameNeedsFrame,
+    audioNeedsFrame,
+    cameraNeedsFrame,
   } = deps;
 
   // Quiescence: a motionless deterministic knot stays motionless without
@@ -161,6 +182,20 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   const wake = (): void => {
     host.wake();
     renderDirty = true;
+    flags.push(Flag.PHYS | Flag.GEOM); // K6-1 (shadow: recorded only)
+  };
+  // K6-1: the frame stepped the physics without PHYS in its need (the
+  // report's observer; reset at each frame's end).
+  let stepUnflagged = false;
+  // simSpeed [0, 10]: piecewise-linear multiplier hitting the spec's
+  // pinned points exactly - 0 paused, 1 -> 0.2x, 5 -> 1x, 10 -> 5x. A
+  // physics-off settle runs regardless (it must reach its freeze).
+  const speedMultNow = (): number => {
+    const rawMult =
+      params.simSpeed <= 5
+        ? params.simSpeed / 5
+        : 1 + (params.simSpeed - 5) * 0.8;
+    return deps.physState === "settling" && rawMult === 0 ? 1 : rawMult;
   };
   // (The sleep gate's per-frame test - physicsQuiet plus the temperature
   // rule - runs in the host: PhysicsCore.gateFrame.)
@@ -184,7 +219,9 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   let lastViewX = NaN;
   let lastViewY = NaN;
   let lastViewS = NaN;
-  const sceneAnimating = (): boolean => {
+  // Did the world root move since the last call? (Moves its bookkeeping:
+  // call once a frame.) K6-1 keeps it as the report's observer.
+  const viewMoved = (): boolean => {
     // The fit camera's ease converges geometrically: ignore sub-pixel
     // creep (comparing exact floats held the drift awake ~11 s after the
     // knot slept, instead of the 2.5 s grace).
@@ -196,6 +233,11 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     lastViewX = root.position.x;
     lastViewY = root.position.y;
     lastViewS = root.scale.x;
+    return moved;
+  };
+  // The pre-K6 answer (K6-1 keeps it beside the flags as the legacy
+  // observer): `moved` is this frame's viewMoved().
+  const sceneAnimating = (moved: boolean): boolean => {
     if (moved || !scene.ps || !scene.renderer) return true;
     // K140: confetti in the air (false again once its last piece is gone).
     if (confetti.active) return true;
@@ -216,14 +258,64 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     // wobble) animates continuously.
     return params.mazeFabric && scene.fabric !== null;
   };
+  // K6-1: the polls (docs/design/K6_1.md, "The flags"), read at a frame's
+  // end for the next one. Read-only and allocation-free: each is a test of
+  // state the loop or a module already keeps.
+  const readPolls = (dt: number): number => {
+    let p = 0;
+    const st = deps.physState;
+    if (
+      st === "loading" ||
+      st === "settling" ||
+      deps.warmHoldFrom >= 0 ||
+      host.presettling ||
+      !warmup.wave1Done
+    ) {
+      p |= Flag.LOAD;
+    }
+    if (!halted && st !== "frozen" && host.needsFrame() && speedMultNow() > 0) p |= Flag.PHYS;
+    if (look("flowStrength") > 0) p |= Flag.FLOW;
+    if (scene.reveal !== null && !scene.reveal.done) p |= Flag.REVEAL;
+    const r = scene.renderer;
+    const fab = params.mazeFabric ? scene.fabric : null;
+    if (r !== null) {
+      if (r.needsFxRender() || r.appearFxAlive() > 0) p |= Flag.FX;
+      const paint = r.paintNeedsFrame() | (fab !== null ? fab.needsFrame() : 0);
+      if (paint & NEED_EVENT) p |= Flag.PAINT;
+      if (paint & NEED_AMBIENT) p |= Flag.PAINT_AMBIENT;
+      if (r.plucks.activeCount > 0) p |= Flag.OVERLAY;
+    }
+    if (
+      (fab !== null && fab.animating) ||
+      deps.pendingWin ||
+      deps.pendingLoss ||
+      realtimeFire() ||
+      gameNeedsFrame()
+    ) {
+      p |= Flag.GAME;
+    }
+    if (cameraNeedsFrame()) p |= Flag.CAMERA;
+    if (ripples.activeCount > 0 || confetti.active) p |= Flag.OVERLAY;
+    if (warmup.wave1Done && background.needsFrame(dt)) p |= Flag.BACKGROUND;
+    if (audioNeedsFrame()) p |= Flag.AUDIO;
+    return p;
+  };
   // The last frame's sceneAnimating() (probes read it; calling it again
   // would move its view bookkeeping).
   let sceneWasAnimating = false;
   const backgroundTick = (dt: number): void => {
     background.reducedMotion = motion.reduced;
-    sceneWasAnimating = sceneAnimating();
+    const rootMoved = viewMoved();
+    const legacy = sceneAnimating(rootMoved);
+    sceneWasAnimating = legacy;
+    // K6-1: the flags' answer, beside the legacy one (shadow: the
+    // background still reads the legacy answer until the switch).
+    const polls = readPolls(dt);
+    const active = ((flags.pushed | polls) & SCENE_ACTIVE) !== 0;
     // K307: no texture pass before wave 1 (pixi would link the effect cold).
     if (warmup.wave1Done) background.tick(dt, sceneWasAnimating);
+    flags.endFrame(polls, { rootMoved, legacy, active, stepUnflagged });
+    stepUnflagged = false;
   };
 
   const onTick = (ticker: Ticker): void => {
@@ -263,15 +355,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       return;
     }
 
-    // simSpeed [0, 10]: piecewise-linear multiplier hitting the spec's
-    // pinned points exactly - 0 paused, 1 -> 0.2x, 5 -> 1x, 10 -> 5x. A
-    // physics-off settle runs regardless (it must reach its freeze).
-    const rawMult =
-      params.simSpeed <= 5
-        ? params.simSpeed / 5
-        : 1 + (params.simSpeed - 5) * 0.8;
-    const speedMult =
-      deps.physState === "settling" && rawMult === 0 ? 1 : rawMult;
+    const speedMult = speedMultNow();
 
     // Stage 22: the appearance reveal advances on WALL time in every
     // branch (awake, asleep, paused). While it runs, the render pass must
@@ -489,6 +573,8 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       restFrame(" | asleep");
       return;
     }
+    // K6-1 observer: a step the need did not carry (a missing PHYS poll).
+    if ((flags.need & Flag.PHYS) === 0) stepUnflagged = true;
     const t0 = performance.now();
     const requestDt = (ticker.deltaMS / 1000) * speedMult;
     // The frame's step (K147: under the load settle's budget while it is
@@ -525,7 +611,12 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     // A physics-off settle freezes where live physics would fall asleep (or
     // at its wall-clock cap).
     const settling = deps.physState === "settling";
-    if (host.gateFrame(settling) && settling) freeze();
+    const slept = host.gateFrame(settling);
+    // K6-1 (question 2): the worker's sleep trip applies its last snapshot
+    // inside gateFrame, after this frame's geometry pass, so the next frame
+    // owes one (GEOM, noted for it).
+    if (slept && host.kind === "worker") flags.defer(Flag.GEOM);
+    if (slept && settling) freeze();
     if (
       settling &&
       deps.physState === "settling" &&
@@ -559,18 +650,46 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // probe hooks).
   const invalidate = (): void => {
     renderDirty = true;
+    flags.push(Flag.GEOM); // K6-1 (shadow: recorded only)
   };
+  // K6-1: a push for the change a region just made (main.ts: GEOM at a
+  // width, resize, panel, rebuild or recolor change).
+  const note = (bits: number): void => {
+    flags.push(bits);
+  };
+  // K6-1: every input event pushes INPUT (one capture-phase listener per
+  // type on the window; recorded only - INPUT is not visual).
+  const onInput = (): void => {
+    flags.push(Flag.INPUT);
+  };
+  const INPUT_EVENTS = [
+    "pointerdown",
+    "pointermove",
+    "pointerup",
+    "pointercancel",
+    "wheel",
+    "keydown",
+    "keyup",
+    "resize",
+    "focus",
+  ] as const;
   // Registers the ticker callback, once (main.ts, after createStamp).
   const start = (): void => {
     app.ticker.add(onTick);
+    if (typeof window !== "undefined") {
+      for (const type of INPUT_EVENTS) {
+        window.addEventListener(type, onInput, { capture: true, passive: true });
+      }
+      document.addEventListener("visibilitychange", onInput, { capture: true, passive: true });
+    }
   };
 
   return {
     // Called, or mutated in place: main.ts destructures these.
     wake,
     invalidate,
+    note,
     start,
-    sceneAnimating,
     frameCost,
     revealCost,
     // The `let`s other regions read (the probe hooks) or write (the load

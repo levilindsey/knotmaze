@@ -3286,6 +3286,30 @@ export class RibbonRenderer {
     return U.uKFx[2] < this.gateOpenAt + PAINT_CONST.CROSSING_FADE_IN;
   }
 
+  // K6-1 (question 1), the frame loop's PAINT polls: what the gameplay
+  // paint still animates. Bit 2 (PAINT_AMBIENT): pulses are declared (their
+  // trains run on the paint clock for as long as they live). Bit 1 (PAINT):
+  // the pulses' fade-in window, a hovered pulse's breath or a web fade
+  // (K169). Paint rows written during a frame upload at its own render, so
+  // no pending-upload term (a write between frames is an input's push).
+  paintNeedsFrame(): number {
+    if (!this.style.paletteMode) return 0;
+    let need = 0;
+    const pulses = this.paintPulses;
+    if (pulses.length > 0) {
+      need |= 2;
+      if (this.paintClock - this.pulseBorn < PAINT_CONST.PULSE_FADE_IN) need |= 1;
+      for (const p of pulses) {
+        if (p.hovered) {
+          need |= 1;
+          break;
+        }
+      }
+    }
+    if (this.webFade.active) need |= 1;
+    return need;
+  }
+
   // THE PAINT CLOCK (G2): advanced once per frame by main.ts right after
   // the reveal animator's tick - BEFORE update() - so every CPU mirror
   // evaluation inside update() (reveal masks, crossing and joint gates) and

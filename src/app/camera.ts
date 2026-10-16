@@ -11,6 +11,7 @@ import {
   stepRange,
   type OpenPanel,
 } from "../ui/view_clamp";
+import { Flag, type LoopFlags } from "./loop_flags";
 import type { SceneRef } from "./scene_ref";
 
 // K5 M2 (docs/design/K5_K6_split.md, 2.2): the camera, moved out of main()
@@ -39,6 +40,10 @@ const FOLLOW_W = 2.4;
 // stall longer than CAM_MAX_DT (a hidden tab) counts as that long.
 const CAM_STEP = 0.05;
 export const CAM_MAX_DT = 1;
+// K6-1: converged()'s thresholds, a frame's motion: screen px, and log
+// scale (1e-5 moves a point 1000 px from the origin by 0.01 px).
+const CONVERGED_PX = 0.01;
+const CONVERGED_LOG = 1e-5;
 
 // What the camera reads from main(), each assigned once.
 export interface CameraDeps {
@@ -46,16 +51,22 @@ export interface CameraDeps {
   root: Container;
   params: UrlParams;
   motion: MotionSetting;
+  // K6-1: the loop's flag ledger (a gesture, a reset or a tween pushes CAMERA).
+  flags: LoopFlags;
 }
 
 export function createCamera(deps: CameraDeps, scene: SceneRef) {
-  const { app, root, params, motion } = deps;
+  const { app, root, params, motion, flags } = deps;
   // The unanchored knot finds its own shape, so the viewport fit follows
   // the live particle bounds, easing toward the target to avoid popping.
   const fitTarget = { scale: 1, x: 0, y: 0 };
   // K198: the framed maze's drawn right edge, world x (the pan range's).
   let fitRight = 0;
-  function computeFitTarget(): void {
+  // `out`: where the target goes (K6-1: converged() computes a fresh one
+  // into a scratch); only the real target's call sets fitRight.
+  function computeFitTarget(
+    out: { scale: number; x: number; y: number } = fitTarget
+  ): void {
     if (!scene.ps) return;
     let minX = Infinity;
     let minY = Infinity;
@@ -86,12 +97,14 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     }
     // The threads' edge, or a start/head/exit disc poking past it; under
     // fog, the visible region's.
-    fitRight = fogBox
-      ? maxX
-      : Math.max(
-          maxX + params.threadWidth / 2,
-          params.mazeFabric && scene.fabric ? scene.fabric.markersRight() : -Infinity
-        );
+    if (out === fitTarget) {
+      fitRight = fogBox
+        ? maxX
+        : Math.max(
+            maxX + params.threadWidth / 2,
+            params.mazeFabric && scene.fabric ? scene.fabric.markersRight() : -Infinity
+          );
+    }
     minX -= pad;
     minY -= pad;
     maxX += pad;
@@ -99,14 +112,13 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     const w = Math.max(maxX - minX, 1);
     const h = Math.max(maxY - minY, 1);
     // Fit the knot, but never zoom in past a comfortable thread scale.
-    fitTarget.scale = Math.min(
+    out.scale = Math.min(
       (app.screen.width - FIT_MARGIN * 2) / w,
       (app.screen.height - FIT_MARGIN * 2) / h,
       90
     );
-    fitTarget.x = (app.screen.width - w * fitTarget.scale) / 2 - minX * fitTarget.scale;
-    fitTarget.y =
-      (app.screen.height - h * fitTarget.scale) / 2 - minY * fitTarget.scale;
+    out.x = (app.screen.width - w * out.scale) / 2 - minX * out.scale;
+    out.y = (app.screen.height - h * out.scale) / 2 - minY * out.scale;
   }
 
   // ---- CAMERA ------------------------------------------------------------
@@ -255,6 +267,7 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     const sc = Math.min(hi, Math.max(lo, s));
     const px = sx - wx * sc;
     const py = sy - wy * sc;
+    flags.push(Flag.CAMERA); // K6-1: a gesture or a tween's step moved the view.
     if (camFollow) {
       cam.s = sc;
       cam.cx = (app.screen.width / 2 - px) / sc;
@@ -290,6 +303,7 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
   };
   // Double-click / double-tap on empty space: back to the home framing.
   const resetCamera = (): void => {
+    flags.push(Flag.CAMERA); // K6-1
     camTween = null;
     if (camFollow) camTouchedAt = -1e9; // Full-strength pull at once.
     else viewHoming = true;
@@ -420,6 +434,50 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     applyCam();
   };
 
+  // K6-1, the frame loop's CAMERA poll: has the camera stopped? False while
+  // updateCamera would still move the root next frame by CONVERGED_PX or
+  // more (a scale by CONVERGED_LOG): a tween, the reset's homing, the
+  // panel's tween (or a panel that changed since the last frame), the pan
+  // range's ease, the fit's ease toward a FRESH target (computed here, not
+  // the every-third-frame one), or the follow spring off its target or
+  // still moving. A follow camera held off by a recent gesture is not
+  // converged while it is off its target: the spring will move it later.
+  const fitScratch = { scale: 1, x: 0, y: 0 };
+  const followScratch = new Float64Array(2);
+  const converged = (): boolean => {
+    if (camTween || viewHoming) return false;
+    if (panelT !== panelTPrev || (panelU > 0 && panelU < 1)) return false;
+    if (readPanel() !== panelU > 0) return false;
+    if (!scene.ps) return true;
+    computeFitTarget(fitScratch);
+    if (!camFollow) {
+      if (panAllow.loX || panAllow.hiX || panAllow.loY || panAllow.hiY) return false;
+      const z = view.zoom * 0.08;
+      return (
+        Math.abs(fitScratch.x - fitCur.x) * z < CONVERGED_PX &&
+        Math.abs(fitScratch.y - fitCur.y) * z < CONVERGED_PX &&
+        Math.abs(fitScratch.scale - fitCur.scale) * 0.08 < CONVERGED_LOG * fitCur.scale
+      );
+    }
+    let ts = fitScratch.scale;
+    let tx = (app.screen.width / 2 - fitScratch.x) / ts;
+    let ty = (app.screen.height / 2 - fitScratch.y) / ts;
+    if (!introPlaying() && scene.fabric && scene.fabric.headPosition(followScratch)) {
+      ts = followScale();
+      tx = followScratch[0];
+      ty = followScratch[1];
+    }
+    const s = cam.s;
+    return (
+      Math.abs(Math.log(s) - Math.log(ts)) < CONVERGED_LOG &&
+      Math.abs(cam.cx - tx) * s < CONVERGED_PX &&
+      Math.abs(cam.cy - ty) * s < CONVERGED_PX &&
+      Math.abs(cam.vl) / 60 < CONVERGED_LOG &&
+      (Math.abs(cam.vx) * s) / 60 < CONVERGED_PX &&
+      (Math.abs(cam.vy) * s) / 60 < CONVERGED_PX
+    );
+  };
+
   function fitToScreen(): void {
     computeFitTarget();
     fitCur.scale = fitTarget.scale;
@@ -450,6 +508,7 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     introPlaying,
     updateCamera,
     fitToScreen,
+    converged,
     // The `let`s other regions read (the indicators, returnToHead, the
     // probe hooks): getters, so each read is the current value.
     get fitRight() {
@@ -482,6 +541,7 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
       return camTween;
     },
     set camTween(v) {
+      if (v !== null) flags.push(Flag.CAMERA); // K6-1: a tween starts.
       camTween = v;
     },
     get panelWrap() {
