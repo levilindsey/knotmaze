@@ -119,6 +119,21 @@ export function peakShape(b: number, x: number, tapped: boolean): number {
   return Math.max(tri(b, x), tri(1 - b, x), lens);
 }
 
+// K459: a FREE END (the thread reveal's stub, which ends in a rounded cap
+// past its solid end). A fixed-free string of length L swings as one half
+// of a fixed-fixed string of length 2L plucked at its middle: the middle
+// is that string's antinode, and its zero slope there is the free end's
+// condition. So a lobe with a free end lays every shape out over this x
+// (with beta 0.5): x / 2 when the free end is the lobe's high end (x = 1
+// lands on the middle), 0.5 + x / 2 when it is the low end. The tap's
+// position is not modeled: a free lobe swings as if plucked at its tip.
+// At most one end is free (the high end wins).
+export function freeEndX(x: number, freeLo: boolean, freeHi: boolean): number {
+  if (freeHi) return 0.5 * clamp(x, 0, 1);
+  if (freeLo) return 0.5 + 0.5 * clamp(x, 0, 1);
+  return x;
+}
+
 // The instantaneous (ghost) offset at overtone weight q, unit amplitude.
 export function ghostShape(
   b: number,
