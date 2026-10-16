@@ -146,3 +146,77 @@ what you tried; the coordinator will ask Levi for his link.
   - the lore you added;
   - a `Ledger items` list;
   - the handle fields: branch, last commit, evidence and next.
+
+## Stage 1 handoff
+
+Agent `agent-ac0d0267cdf7467ec` (claude; coordinating session
+403049c5-8dc2-4171-8fdf-ec446586ae05), 2026-10-15 07:24 to 08:45
+PDT. Branch `worktree-agent-ac0d0267cdf7467ec`: bcbe914 (the fix and
+its test), f8ca9e0 (lore) and this handoff. Evidence: the worktree's
+`.claude/probes/K395/` (untracked; `probes-pluck.md` lists the scripts).
+
+- **Reproduced** on one frozen page per case, at the phone viewport
+  (411x753 @2.625, mobile and touch) and at 1400x900:
+  `?7&am=instant&snd=none&fw=0` chain 9's kink loop (key 133) plucked
+  at its tip, at zoom steps 0, 3 and 4, and the kink loops 3:95 and
+  62:539 of `?qoietk.KIiHgRRXwRlRt8fGrST4sf`. The heart is there: a V
+  pointing into the eye at the middle of the tip.
+- **Cause, observed:** the concave-side cap. `nocap` removes the V; the
+  ghost and W toggles leave it. The cap follows the 5-station
+  circumradius (min over +-2), which oscillates with the control-point
+  spacing (chain 9: 5.6 at the tip between shoulders of 0.38-0.41).
+  CAP_SLOPE turns the plateaus into ramps that meet in a triangle at the
+  tip (stations 80-84: 0.083, 0.153, 0.223, 0.173, 0.103), and the
+  strip's inner edge turned -112 and -85 degrees at the apex stations.
+  The seam, at zoom step 3: a straight radial streak from the V's apex
+  through the bands toward the outer edge, plus a crease into the eye.
+- **Inferred, not measured:** the apex station's sharp inner edge creases
+  the strip's interpolation across its width (the streak), and Levi's
+  "dimple on the outside" is where the streak meets the outer bands; no
+  separate outer dimple showed. Ruled out: a dependence on screen size
+  (tapAmplitude is in world units, so the brief's hypothesis 1 is false).
+- **Fix:** `roundCap` (`src/render/pluck_model.ts`), run per lobe run in
+  `pluck_overlay.ts` layout() after the slope limit. CAP_ROUND 1.5,
+  live as `PluckOverlay.capRound` (0 = the pre-K395 cap). It is a
+  min(cap, ceil) of nested raised-cosine bumps, ceil = the run's
+  largest swing + h: the cap only goes DOWN (the clearance holds), and
+  its second difference stays >= -per^2/(CAP_ROUND h). Apex edge turns
+  after: -0.2, -17.1, -11.1 and +9.5 degrees at stations 69, 73, 82 and
+  91 (before: -112, -52.6, -85.3, -54.5); the tip's cap 0.223 -> 0.101.
+- **Test:** `test/render/pluck_model.test.ts`, "rounded concave cap
+  (K395)"; the slope limit alone fails it. `npm test`: 84 files and
+  1159 tests pass (1 and 1 skipped). `npm run build` passes. The golden,
+  the K87 pin and the golden dailies did not move.
+- **Sheets** (`.claude/probes/K395/out/`, `pair_*.png` = cr0 | base, one
+  frozen state each): `ab_c9`, `ab_c9z3` (the seam, zoomed), `ab_desk`,
+  `ab_knobA` (psz 3, pgh 1, pw 1.5, ride, wave), `ab_knobB` (psz 0.5,
+  pgh 0, pw 0, pinch, ring), `ab_levi_3k95`, `ab_levi_62k539`. The V and
+  the seam are gone in every case; knobB is mild in both and keeps small
+  "ears".
+- **Phone: not run.** K7 stage 7 held the phone lock from 08:30; I took
+  it at 08:36 and the phone was dozing with the keyguard showing.
+  `phone_run.ps1` checks readiness read-only and never wakes the phone,
+  so it skipped and released the lock at once. To run it with the phone
+  awake and unlocked, serve the pre-K395 build on 5911 and this branch's
+  build on 5912 (the `vite preview` lines below), then run, from the
+  worktree root, `pwsh -NoProfile -File .claude/probes/K395/phone_run.ps1
+  [-WaitMin <n>]`. It shoots `?7` chain 9's loop (zoom step 3, t 0.2, in
+  and out) as `out/phone/pre` (base) and `out/phone/k395` (base, cr0);
+  `node .claude/probes/K395/pairs.mjs .claude/probes/K395/out/phone/k395`
+  writes the pairs. Servers: `npx vite preview --config
+  .claude/probes/K395/vite.private-cache.config.ts --outDir
+  .claude/probes/K395/builds/21d701e --port 5911 --strictPort --host
+  127.0.0.1`, and the same with `--outDir dist --port 5912` after
+  `npm run build`.
+- **Residuals:** (1) a soft "M" at the tip: where an rMin plateau meets
+  a rise, the opening keeps a valley (it only lowers), and the inner
+  edge turns +31..+56 degrees at stations 75, 79, 85 and 89, much
+  milder than the heart. The root is the circumradius's oscillation; a
+  smooth envelope of the radius or a wider rMin window would treat it.
+  (2) CAP_ROUND 3 takes those turns to +19..+42 with a flat arch, for
+  0.02-0.03 world less inner swing at the tip: a call for Levi (1.5
+  kept, as COLLAPSE_ROUND). (3) K354's dark star in the eye changed shape
+  (an X became a rounded square) and remains. (4) The brief's link
+  builds another design now: its chain 21 has no self-crossing.
+- **Next:** the coordinator's review and the merge to master; then
+  Levi's look at a kink loop on his phone, and the CAP_ROUND call.
