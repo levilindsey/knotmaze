@@ -99,6 +99,24 @@ in `probes.md` (the K7 stage 4 entry).
   `hello` at module evaluation and `ready` carries `initAt` / `readyAt`;
   `__knotPerf().host.gate` has spawnAt, helloAt, postAt, initAt, readyAt
   and heardAt (epoch ms).
+- **The name build (K7 stage 7, the lever).** main.ts passes the link's
+  params as `prebuild`, and the host spawns the Worker with `name` =
+  `workerNameOf(scene params, tuning)` (JSON). `core.start(self.name)`
+  posts hello, then builds gen 0 from the name without waiting for main
+  (`ready.src` `"name"`). Main's first build ADOPTS that build (keeps gen
+  0) when its scene and tuning equal the name's (`sameSceneParams`,
+  `sameTuning`); a ready heard before that build is kept for it. The first
+  build still posts `init` at gen 0, on purpose: the worker drops it over
+  its name build, or builds from it when it could not read the name, with
+  no extra round trip (an init builds when its gen is newer, or the same
+  gen with nothing built). A first build of another scene posts init at
+  gen 1, as without a name. `host.gate` adds `acceptAt`, and
+  `host.prebuild` (`adopted` | `differs` | empty) and `host.readySrc`.
+  The build plugin `k7-worker-preload` (vite.config.ts) puts a
+  `<link rel="modulepreload">` for the worker's chunk in index.html and
+  fails the build when the chunk is missing: the chunk downloads beside
+  the main chunk, and the worker's own fetch reads it from the HTTP cache
+  (levi.dev gives hashed assets 4 hours).
 - **Fallback to an `InThreadHost`** on: a spawn that throws (`construct:
   <message>`), no Worker (`no-worker`), `onerror`, `messageerror`, a
   `postMessage` that throws, a worker `error` message, an unreadable
@@ -141,9 +159,9 @@ in `probes.md` (the K7 stage 4 entry).
   ms against 872; the cost is a first visible frame about 0.16 s later
   (median 1.11 s against 0.95). To reverse: `physicsWorker: false` in
   url_state.ts's `PARAM_DEFAULTS` and in the defaults table pinned at
-  `test/ui/url_codec.test.ts` (nothing else pins it). The lever and the
-  phone pass again are stage 7, after K5 stage M1 (both edit main.ts's
-  boot). Stage 5's measurement, which the flip rests on: design 10's pass on the Pixel 11
+  `test/ui/url_codec.test.ts` (nothing else pins it). Stage 7 built the
+  lever; its phone pass did not run (the last bullet). Stage 5's
+  measurement, which the flip rests on: design 10's pass on the Pixel 11
   (60 Hz; build `c0f1622`; `.claude/probes/K7/stage5/`, `s5_gate.txt`),
   today's daily and gs 18 (`?1471kin.J`), three loads a host each,
   alternating, under the perf lock:
@@ -168,9 +186,16 @@ in `probes.md` (the K7 stage 4 entry).
   messages until main has processed the worker's script-evaluated
   notification. The desktop: hello 87-94 ms, init 282, ready 325
   (gen and ctor 42-44 ms).
-- **The lever (not built):** let the worker build without waiting for
-  main, for example the scene params and tuning in the Worker's `name` at
-  construction (main then adopts that build when its first build's params
-  match, and posts `init` only when they differ). Expected (inferred): ready
-  at hello + gen and ctor, about 195-260 ms on the phone. Stage 7 builds
-  it and re-runs the phone pass (the default is already on, see above).
+- **The lever (K7 stage 7: the name build, under Lifecycle) removes that
+  wait.** Desktop (`.claude/probes/K7/stage7/`, `s7_desktop.txt`; the
+  daily and gs 18, three loads a build, a fresh profile each): the worker
+  is ready 139-165 ms after the main chunk, built from its name and
+  adopted on all six loads (master 363-396), so the desktop gate holds.
+  The first visible frame did not move (3.69-3.79 s against 3.72-3.97):
+  K307's cold compiles (one 2.8-3.1 s frame) and the pre-settle, which
+  main's frames drive, set it. The modulepreload moved hello and ready
+  40-60 ms sooner on a localhost that held each asset 40 ms.
+  The phone pass did not run (the phone stayed asleep or locked from
+  08:30 to the give-up). Inferred from stage 5's phone numbers (hello
+  105-138 ms in, a build 89-121 ms): a name build would be ready about
+  195-260 ms in, at the 250 gate.
