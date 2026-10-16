@@ -9,6 +9,7 @@ import {
   chainVis,
   exploreDistances,
   exploreHoldRadius,
+  END_MOVE_STEPS,
   endPullBack,
   endPushPast,
   exploreView,
@@ -391,6 +392,10 @@ describe("explore view (K466): the ends kept out from under crossings", () => {
     // Touching is not overlapping: the fade [1.5, 2.5] stays.
     expect(endPushPast([0.5, 1.5, 2.5, 3], 2.5, 1, 10)).toBe(2.5);
     expect(endPushPast([], 2.5, 1, 10)).toBe(2.5);
+    // At most `steps` pushes: one crossing passes, a second refuses.
+    expect(endPushPast([2, 3], 2.5, 1, 10, 1)).toBe(4);
+    expect(endPushPast([2, 3, 3.5, 4.5], 2.5, 1, 10, 1)).toBeNaN();
+    expect(endPushPast([0.5, 1.5], 2.5, 1, 10, 0)).toBe(2.5);
   });
 
   it("endPullBack: before every span the fade overlaps, chained, NaN below the floor", () => {
@@ -398,6 +403,19 @@ describe("explore view (K466): the ends kept out from under crossings", () => {
     expect(endPullBack([1.8, 2.2, 0.9, 1.2], 2.5, 1, 0.5)).toBeNaN();
     expect(endPullBack([1.8, 2.2, 0.9, 1.2], 2.5, 1, -1)).toBe(0.9);
     expect(endPullBack([2.5, 3], 2.5, 1, 0.5)).toBe(2.5);
+    expect(endPullBack([2, 3], 2.5, 1, 0.5, 1)).toBe(2);
+    expect(endPullBack([1.8, 2.2, 0.9, 1.2], 2.5, 1, -1, 1)).toBeNaN();
+  });
+
+  it("moves a stub's end past one crossing at most (END_MOVE_STEPS)", () => {
+    expect(END_MOVE_STEPS).toBe(1);
+    // Two spans in a row past the plain fade [1.5, 2.5]: past refuses, and
+    // back (one pull, to [1, 2]) is taken.
+    const v = exploreView(input(LINE, { visited: J1, keepOut: ko({ 0: [2, 3, 3.5, 4.5] }, "past") }));
+    expect(end0(v)).toEqual({ cSolid: 1, cEnd: 2 });
+    // Back blocked too (a span right before it): the plain end stays.
+    const w = exploreView(input(LINE, { visited: J1, keepOut: ko({ 0: [0.9, 1.2, 2, 3, 3.5, 4.5] }, "past") }));
+    expect(end0(w)).toEqual({ cSolid: 1.5, cEnd: 2.5 });
   });
 
   // LINE's run 0 from J1: web 0.5, reach 2.5, fade 1, so the plain fade is

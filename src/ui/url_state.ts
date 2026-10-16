@@ -838,7 +838,7 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // K465: the finish shows under the thread reveal (Levi, 2026-10-15).
   revealFinish: true,
   // K466: ends move out from under crossings, and their halos are bright.
-  revealEndCross: "past",
+  revealEndCross: "under",
   revealEndGlow: "bright",
 };
 
