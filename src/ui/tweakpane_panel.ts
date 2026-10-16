@@ -1044,6 +1044,12 @@ export function buildPanel(
     "How a thread you have not explored ends: fade (it just fades out), halo (a soft light where it fades), glow (the fade glows), dots (it breaks into dots), fray (it frays into fibers) or beacon (dots and the halo). Applies live.",
     D.revealLook, () => callbacks.onTrailChange()
   );
+  // K465: the finish shows from the start (Levi, 2026-10-15).
+  const revealFinishRow = row(
+    fMaze, p, "revealFinish", { label: "show finish" },
+    "Show where the finish is from the start: its marker, the gap around it and the arrow at the screen edge while it is off screen, even over thread you have not explored. Off hides the finish until you have seen it. Applies live.",
+    D.revealFinish, () => callbacks.onTrailChange()
+  );
   const moveSpeedRow = row(
     fMaze, p, "moveSpeed", { min: 0.25, max: 4, step: 0.05 },
     "Maze travel speed: how fast the dot and the gold front move along the thread. Applies live.",
@@ -2250,6 +2256,7 @@ export function buildPanel(
     revealDistanceRow.hidden = !threads;
     revealFadeRow.hidden = !threads;
     revealLookRow.hidden = !threads;
+    revealFinishRow.hidden = !threads;
     // K80: in real time the dot runs at playerPace instead.
     const realtime = fab && params.clock === "realtime";
     clockRow.hidden = !fab;

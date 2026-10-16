@@ -24,8 +24,9 @@
 //
 //   samePieces, sameBurn,          491-539    whether a declaration changed
 //     sameSpans
-//   EXPLORE_MARKER_VIS,            544-553    the marker gate, the joint floor
-//     EXPLORE_JOINT_MIN
+//   EXPLORE_JOINT_MIN              544-553    the joint floor (EXPLORE_MARKER_VIS,
+//                                             the marker gate's rule, moved to
+//                                             game/explore_finish.ts, K465)
 //   exploreGateByChain             3646       the burn gate's pieces per chain
 //   exploreRev                     3653-3654  the declaration's revision
 //   exploreContrast                3655-3658  High contrast
@@ -49,6 +50,7 @@ import { knotUniformValues } from "../paint_model";
 import { junctionShader, junctionShaderExplore } from "../junction_field";
 import { chainWhole, classifyExploreCut, exploreArcMap } from "../explore_glsl";
 import type { ExploreCut } from "../explore_glsl";
+import { markerGapHeld } from "../../game/explore_finish";
 import { pieceVis } from "../../game/explore_view";
 import type {
   BurntSpan,
@@ -112,10 +114,6 @@ function sameSpans(a: BurntSpan[] | null, b: BurntSpan[] | null): boolean {
   return true;
 }
 
-// K76 2b, the thread reveal's marker gate: a marker disc's gap shows once
-// its thread point is this visible (the exit marker's own rule;
-// applyExploreGaps).
-const EXPLORE_MARKER_VIS = 0.98;
 // K268 stage 2 (K275), the joint gate: a junction's web and fans emit no
 // record once an arm's visibility at its slot is at most this, nor a free
 // tip's cap once its thread's is at the tip (exploreJointShown). Above it
@@ -267,7 +265,9 @@ export class ExploreGaps {
   // fans alike), so a hidden over thread cuts nothing and a visible
   // crossing keeps its gap exactly. A marker disc's gap shows only once its
   // thread point is fully visible (EXPLORE_MARKER_VIS, the exit marker's own
-  // rule). With the mode off every slot is restored as solved. Flags
+  // rule), unless K465's revealFinish lifts the exit's hold
+  // (game/explore_finish.ts markerGapHeld). With the mode off every slot is
+  // restored as solved. Flags
   // exploreUpdatePending when update()'s bookkeeping no longer matches
   // (see there). Returns whether the slot table changed.
   //
@@ -306,8 +306,9 @@ export class ExploreGaps {
     }
     for (let m = 0; m < MARKER_SLOTS; m++) {
       const occ = this.r.markerOccluders[m];
+      const lifted = occ?.exit === true && this.r.exploreFinish;
       const k =
-        on && occ && this.r.exploreVisAt(occ.chain, occ.ctrl) < EXPLORE_MARKER_VIS ? 0 : 1;
+        on && occ && markerGapHeld(this.r.exploreVisAt(occ.chain, occ.ctrl), lifted) ? 0 : 1;
       if (this.r.gaps.setVis(this.r.markerBase + m, k)) {
         changed = true;
         this.r.exploreUpdatePending = true;

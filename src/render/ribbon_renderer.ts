@@ -755,10 +755,13 @@ export class RibbonRenderer {
   // MARKER DISC OCCLUDERS (start/exit dots): each owns a gap slot on its
   // thread whose "over polyline" is the disc center and whose margin is
   // CONCENTRIC - the thread is hidden inside radius (disc + gap).
+  // K465: `exit` marks the exit's disc, whose gap slot the revealFinish
+  // param can lift off the thread reveal's gate (explore_gaps.ts).
   /** @internal ribbon */ markerOccluders: Array<{
     chain: number;
     ctrl: number;
     radius: number;
+    exit?: true;
   }> = [];
   // Crossing VISIBILITY GATES (G2.1): a gated crossing's gap slot carries
   // its SHOW TIME (reveal-relative wall seconds, encoded in the slot's
@@ -3675,6 +3678,10 @@ export class RibbonRenderer {
   // (the fabric redraws its markers in the same pass). Growth frames that
   // only move fades set nothing; update() clears it.
   exploreUpdatePending = false;
+  // K465: the exit's hold under the thread reveal is lifted (the
+  // `revealFinish` param; the fabric declares it each drawMarkers pass), so
+  // the exit's gap slot is open from the start. explore_gaps.ts reads it.
+  exploreFinish = false;
   // THE THREAD REVEAL'S GAPS (K5 R2): the gap gate, the joint gate and the
   // declaration's bookkeeping (exploreGateByChain, exploreRev) live in
   // ribbon/explore_gaps.ts; the delegations, rebuildFillets and pluck() call
@@ -3692,6 +3699,17 @@ export class RibbonRenderer {
   // setExploreContrast: ribbon/explore_gaps.ts (K5 R2); the fabric calls it.
   setExploreContrast(on: boolean): void {
     this.explore.setExploreContrast(on);
+  }
+
+  // K465: the fabric declares whether the exit's hold is lifted (the
+  // `revealFinish` param) on each drawMarkers pass. A change re-applies the
+  // gap gate at once, as setExplore does, so the marker and its gap turn in
+  // the same frame; the gate flags the update() it needs only when the exit's
+  // slot really turned (never with the mode off, which restores every slot).
+  setExploreFinish(lifted: boolean): void {
+    if (lifted === this.exploreFinish) return;
+    this.exploreFinish = lifted;
+    if (this.applyExploreGaps()) this.gaps.upload();
   }
 
   // setExplore: ribbon/explore_gaps.ts (K5 R2); the fabric, restoreScene and
@@ -4096,7 +4114,7 @@ export class RibbonRenderer {
   // solved every update() like a crossing's (see renderMarkerGaps). At
   // most MARKER_SLOTS discs.
   setMarkerOccluders(
-    list: Array<{ chain: number; ctrl: number; radius: number }>
+    list: Array<{ chain: number; ctrl: number; radius: number; exit?: true }>
   ): void {
     this.markerOccluders = list.slice(0, MARKER_SLOTS);
   }

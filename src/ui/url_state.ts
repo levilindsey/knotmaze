@@ -366,6 +366,12 @@ export interface UrlParams {
   revealDistance: number;
   revealFade: number;
   revealLook: RevealLook;
+  // K465 (Levi, 2026-10-15: "we should show where the destination marker
+  // is, by default"): under the thread reveal the finish (the exit marker,
+  // its gap slot and its off-screen indicator) shows from the start instead
+  // of waiting until the exit has been seen (K76's decision 6, which off
+  // keeps). Live; only the thread reveal reads it.
+  revealFinish: boolean;
   // Section color scheme (fabric mode; knot mode supports mono/strands):
   // mono | strands | depth | segments | noise.
   colorScheme: ColorScheme;
@@ -814,6 +820,8 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   // thinking a decision. The turn pair keeps 0.75 / 0.
   fireSpeedRt: 0.2,
   fireDelayRt: 20,
+  // K465: the finish shows under the thread reveal (Levi, 2026-10-15).
+  revealFinish: true,
 };
 
 // The burn race a design plays (K114), or null without one. Never on K80's
@@ -1395,6 +1403,8 @@ function readLegacy(
     // K440's real-time pair (`&fck=realtime&fsr=0.3&fdr=10`).
     fireSpeedRt: clampFireSpeed(readNumber(query, "fsr", D.fireSpeedRt), D.fireSpeedRt),
     fireDelayRt: clampTo(readNumber(query, "fdr", D.fireDelayRt), FIRE_DELAY_MAX),
+    // K465's finish under the thread reveal (`&xp=threads&rvx=0` hides it).
+    revealFinish: readBool(query, "rvx", D.revealFinish),
   };
 }
 

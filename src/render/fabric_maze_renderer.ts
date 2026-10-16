@@ -49,6 +49,7 @@ import { spotCtrl } from "../game/minotaur";
 import type { ChaseGraph, MinotaurMode, Spot } from "../game/minotaur";
 import type { TurnTelegraph } from "../game/minotaur_turns";
 import { firePassed, runBurnAt, type Fire } from "../game/fire";
+import { finishHold, finishLifted } from "../game/explore_finish";
 import { WebFade } from "./web_fade";
 
 // What syncMinotaur draws: the real-time chase (MinotaurChase) or the
@@ -500,6 +501,10 @@ export class FabricMazeRenderer {
   // K290 (burn stage 3a): how burnt thread draws, the `burnt` param (main.ts
   // syncExploration): gone (not drawn) or char (a burnt coloring).
   burntLook: "gone" | "char" = "gone";
+  // K465: the `revealFinish` param (main.ts syncExploration): on, the exit's
+  // marker, gap slot and indicator show from the start under the thread
+  // reveal, over thread not yet seen (game/explore_finish.ts).
+  revealFinish = true;
   // K290: the burnt stretches drawFire last found (null = nothing burnt or
   // the fire off), declared to the ribbons by syncExplore.
   private burnSpans: BurntSpan[] | null = null;
@@ -705,7 +710,9 @@ export class FabricMazeRenderer {
     const e = this.walk.vertices.get(this.walk.exit);
     if (!s || !e) return;
     const r = this.markerDotRadius();
-    const exit = { chain: e.chain, ctrl: e.ctrl, radius: r };
+    // K465: `exit` names the exit's slot, which the revealFinish param lifts
+    // off the thread reveal's gate (the start's slot is never lifted).
+    const exit = { chain: e.chain, ctrl: e.ctrl, radius: r, exit: true as const };
     // K408: a start marker the fire has passed gives up its slot.
     this.ribbons.setMarkerOccluders(
       this.startShown ? [{ chain: s.chain, ctrl: s.ctrl, radius: r }, exit] : [exit]
@@ -2609,12 +2616,22 @@ export class FabricMazeRenderer {
     m.start.place(this.scratch[0], this.scratch[1], r, dotR);
 
     const exitV = this.walk.vertices.get(this.walk.exit)!;
+    // K465: the revealFinish param lifts the thread reveal's hold on the
+    // exit (marker, gap slot and indicator alike); the renderer gates the
+    // gap slot by the same rule (game/explore_finish.ts). Declared BEFORE
+    // the early return so the marker and its gap change in the same frame.
+    const lifted = this.exitLifted();
+    this.ribbons.setExploreFinish(lifted);
     if (
-      (this.revealQuery &&
-        this.revealQuery(exitV.chain, exitV.ctrl) < 0.98) ||
-      // K76 2b: nor while the thread reveal hides it (the renderer gates
-      // its gap slot by the same rule, EXPLORE_MARKER_VIS).
-      this.ribbons.exploreVisAt(exitV.chain, exitV.ctrl) < 0.98
+      finishHold({
+        // The intro reveal still holds the exit until it has revealed it.
+        introMul: this.revealQuery
+          ? this.revealQuery(exitV.chain, exitV.ctrl)
+          : 1,
+        // K76 2b: and the thread reveal, unless lifted.
+        exploreVis: this.ribbons.exploreVisAt(exitV.chain, exitV.ctrl),
+        lifted,
+      }) !== ""
     ) {
       m.exit.hide(); // Exit still unrevealed: no marker, no gap, no ring.
       return;
@@ -2848,6 +2865,17 @@ export class FabricMazeRenderer {
       }
     }
     return false;
+  }
+
+  // K465: whether the thread reveal's hold on the exit is lifted: the
+  // `revealFinish` param, unless the fire burnt the exit's own point away
+  // (a burnt-gone exit stays hidden, as with the mode off). The marker, its
+  // gap slot (ribbons.setExploreFinish) and main.ts's finish indicator read
+  // it; the rule is game/explore_finish.ts's.
+  exitLifted(): boolean {
+    const e = this.walk.vertices.get(this.walk.exit);
+    if (!e) return this.revealFinish;
+    return finishLifted(this.revealFinish, this.burntGoneAt(e.chain, e.ctrl));
   }
 
   // The looks drawn BESIDE the thread: the halo (halo, beacon) - a soft
