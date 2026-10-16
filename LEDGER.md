@@ -268,10 +268,10 @@ Next free ID: K469.
 - **K6** · One frame loop driven by what-changed flags
   (`docs/design/K5_K6_split.md`, 4 and 5.4): K6-1, shadow flags, after M3;
   K6-2 (skip CPU work) and K6-3 (= K24, skip the draw) after M6.
-  - owner: agent `a859a72c41121806c` of claude session 05e60da0 (opus, started 2026-10-15 14:42, 2 h cap ~16:42)
-  - branch: `worktree-agent-a859a72c41121806c`, worktree `.claude/worktrees/agent-a859a72c41121806c`; last commit: `2c100ab`
+  - owner: nobody since 2026-10-15 16:12 (merged; agent `a859a72c41121806c` of claude session 05e60da0)
+  - branch: mainline; last commit: `87bbb26`
   - evidence: `.claude/probes/K6/K6-1/`
-  - next: K6-1 running (shadow flags beside today's loop, the wall-clock audit, the six-link report); at its finish merge it. Then K6-2 (skip CPU work by flag) after M6; K6-3 (= K24, skip the draw) after K6-2
+  - next: K6-2 (skip CPU work by flag, after M6): first measure the GEOM miss at the worker's sleep trip (K6_1.md handoff, Q2) and pass dt to tickFireFx; then K6-3 (= K24)
   - brief: `docs/design/K6_1.md`
 - **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
   stub, its rounded cap included (2026-10-15 13:39, `?2gozcj.MgaM`, `.claude/probes/K397/levi_1339.png`).
