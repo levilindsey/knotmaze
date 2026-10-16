@@ -545,31 +545,32 @@ describe("TurnMinotaur", () => {
   });
 
   // K80 turns stage 3a (item 1): WHOLE GAMES at the defaults. Mazes 3, 17
-  // and 42, the three models at DEFAULT_TURN_MINO, two scripted players per
-  // maze (SeededRNG): a wait one turn in six, else a run toward the exit (in
-  // runs) two times in five, else any run; 300 turns at most. A row is
-  // model:maze:walk turns/catches/close calls/seen/won/digest of every turn
-  // (the tap, the result, where both stand, its mode and path). It moves
-  // when a rule or a default the models read moves; re-freeze it and name
-  // what moved in the commit.
+  // and 42, each model at its own defaults (turnMinoDefaults, K294), two
+  // scripted players per maze (SeededRNG): a wait one turn in six, else a
+  // run toward the exit (in runs) two times in five, else any run; 300
+  // turns at most. A row is model:maze:walk turns/catches/close
+  // calls/seen/won/digest of every turn (the tap, the result, where both
+  // stand, its mode and path). It moves when a rule or a default the
+  // models read moves; re-freeze it and name what moved in the commit
+  // (item 8's K294 values moved every guard and stalker row).
   const TURN_GAMES = [
     "hunter:3:1 35/0/4/12/W/fc1c0c78",
     "hunter:3:2 57/2/7/24/W/2adc117c",
-    "guard:3:1 300/13/16/57/-/3c947545",
-    "guard:3:2 57/1/7/19/W/e5afe62a",
-    "stalker:3:1 154/8/5/137/W/612b8412",
-    "stalker:3:2 300/17/24/266/-/8ded2d21",
+    "guard:3:1 300/17/23/134/-/a6c4d0b9",
+    "guard:3:2 186/9/15/84/W/d90fba26",
+    "stalker:3:1 300/16/24/269/-/ec139c1d",
+    "stalker:3:2 300/18/27/268/-/f94f8f08",
     "hunter:17:1 55/1/4/31/W/f5bf596c",
     "hunter:17:2 27/0/0/0/W/cd23e252",
-    "guard:17:1 56/0/5/29/W/1bd527f8",
-    "guard:17:2 27/0/1/10/W/9d92c885",
-    "stalker:17:1 55/2/3/48/W/3145dd78",
-    "stalker:17:2 28/1/1/25/W/2912c523",
+    "guard:17:1 56/0/5/45/W/2053e58a",
+    "guard:17:2 27/0/0/14/W/27fcba8f",
+    "stalker:17:1 32/1/7/28/W/b3accfdb",
+    "stalker:17:2 140/8/8/127/W/549b395d",
     "hunter:42:1 12/0/0/7/W/97fd3af6",
     "hunter:42:2 44/2/2/8/W/c66848f9",
-    "guard:42:1 12/0/0/7/W/97fd3af6",
-    "guard:42:2 46/4/5/20/W/42fb06b",
-    "stalker:42:1 63/2/5/58/W/9b844d55",
+    "guard:42:1 63/2/5/58/W/26366e31",
+    "guard:42:2 46/2/6/41/W/4e511642",
+    "stalker:42:1 261/16/30/231/W/84e219cb",
     "stalker:42:2 46/2/6/42/W/4e511642",
   ];
 
@@ -579,7 +580,7 @@ describe("TurnMinotaur", () => {
       const walk = realMaze(maze);
       for (const model of ["hunter", "guard", "stalker"] as const) {
         for (const walkSeed of [1, 2]) {
-          rows.push(`${model}:${maze}:${walkSeed} ${turnGame(walk, params({ model }), maze, walkSeed)}`);
+          rows.push(`${model}:${maze}:${walkSeed} ${turnGame(walk, turnMinoDefaults(model), maze, walkSeed)}`);
         }
       }
     }

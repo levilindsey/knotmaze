@@ -104,10 +104,14 @@ export const DEFAULT_TURN_MINO: Readonly<TurnMinoParams> = Object.freeze({
 // the stalker its own accuracy (its charge reads the shared sight). The
 // params carry them as their own rows (url_state.ts minoGuardSight,
 // minoGuardAccuracy, minoStalkerAccuracy), and turnMinoParamsOf picks by
-// model.
+// model. Tuned toward section 0's % caught on the three sets (the
+// stalker's: chase1/T, section 0's stalker at accuracy 1): the guard
+// keeps accuracy 0.3 and sees 4 runs (stage 1's sight), the stalker steps
+// best 0.45 of the time (`.claude/probes/K80/stage3/sweep_3a_*64.md`; the
+// table is in docs/design/K80_turns_stage3.md's handoff).
 export const TURN_MODEL_DEFAULTS = Object.freeze({
-  guard: Object.freeze({ sight: 2, accuracy: 0.3 }),
-  stalker: Object.freeze({ accuracy: 0.3 }),
+  guard: Object.freeze({ sight: 4, accuracy: 0.3 }),
+  stalker: Object.freeze({ accuracy: 0.45 }),
 });
 
 // The defaults one model plays with: DEFAULT_TURN_MINO plus that model's

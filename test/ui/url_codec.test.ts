@@ -109,7 +109,7 @@ describe("links", () => {
       revealDistance: 2.5, revealFade: 1, revealLook: "beacon",
       burnt: "gone",
       minoGiveUp: 3, minoRoamMin: 3, minoTurnPull: 0,
-      minoGuardSight: 2, minoGuardAccuracy: 0.3, minoStalkerAccuracy: 0.3,
+      minoGuardSight: 4, minoGuardAccuracy: 0.3, minoStalkerAccuracy: 0.45,
     });
   });
 
