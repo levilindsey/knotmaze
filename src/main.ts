@@ -1,16 +1,12 @@
 import { Application, Container } from "pixi.js";
-import { buildSceneGraph } from "./core/scene_graph";
-import { buildSectionRuns, setGamutConfig } from "./core/section_colors";
-import { buildWalkGraph } from "./core/walk_graph";
+import { setGamutConfig } from "./core/section_colors";
 import type { WalkGraph } from "./core/walk_graph";
 // K7: main never steps or writes the physics itself - every write goes
 // through the PhysicsHost (physics/physics_host.ts); `ps` is its read view.
-import type { ParticleSystem, PhysicsTuning } from "./physics/particle_system";
+import type { PhysicsTuning } from "./physics/particle_system";
 import { InThreadHost } from "./physics/physics_host";
 import type { PhysicsHost } from "./physics/physics_host";
 import { WorkerHost } from "./physics/worker_host";
-import { RibbonRenderer } from "./render/ribbon_renderer";
-import { DebugRenderer } from "./render/debug_renderer";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
 import { EXPLORE_LOOKS } from "./render/explore_glsl";
 import { FabricMazeController } from "./game/fabric_controller";
@@ -37,14 +33,8 @@ import { MOVE_PAD_KEY, MovePad, movePadPref } from "./ui/move_pad";
 import { MinotaurChase } from "./game/minotaur";
 import type { ChaseEvent } from "./game/minotaur";
 import { TurnMinotaur, turnConfig, turnSeed } from "./game/minotaur_turns";
-import { RevealAnimator } from "./render/reveal";
 import { BackgroundLayer } from "./render/background";
-import {
-  accentHexes,
-  backgroundColors,
-  customBackgroundColors,
-  parseHexColor,
-} from "./render/background_model";
+import { accentHexes, backgroundColors } from "./render/background_model";
 import {
   chaseParamsOf,
   clampHoverGlowFade,
@@ -149,18 +139,16 @@ import type { PitchAssignment } from "./audio/pitch_space";
 import { SCARBOROUGH_FAIR } from "./audio/songs";
 import { SongScheduler } from "./audio/song_scheduler";
 import { createLoader } from "./ui/loader";
-import type { SceneRef } from "./app/scene_ref";
 import { createStamp } from "./app/stamp";
 import { installProbeHooks } from "./app/probe_hooks";
 import { createFrameLoop } from "./app/frame_loop";
 import { createLifecycle } from "./app/lifecycle";
+import { BACKGROUND, createScene } from "./app/scene";
 import {
   FOLLOW_DELAY,
   FOLLOW_RAMP,
   createCamera,
 } from "./app/camera";
-
-const BACKGROUND = 0x151b28;
 
 // The stamp/perf readout's visibility persists per browser.
 const STATS_KEY = "knotmaze.showStats";
@@ -392,27 +380,14 @@ async function main(): Promise<void> {
   const confetti = new ConfettiLayer();
   app.stage.addChild(confetti.sprayContainer, confetti.rainContainer);
 
-  // The physics host (`host`) is made before app.init (K7 stage 5's start
-  // gate, above).
-  let ps: ParticleSystem | null = null;
-  let renderer: RibbonRenderer | null = null;
-  let debug: DebugRenderer | null = null;
-  let walkGraph: WalkGraph | null = null;
-  // The build's strand hue groups (maze plan; undefined in knot mode) +
-  // strand count, kept for live recolors (the Look color controls).
-  let buildHueGroup: number[] | undefined;
-  let buildStrandCount = 0;
-  let fabric: FabricMazeRenderer | null = null;
   // K80's real-time mode (params.clock "realtime"): the chase over the walk
   // graph (game/minotaur.ts), built with the fabric. Its clock starts at the
   // player's first accepted tap (chaseRunning) and stops at the finish.
-  let chase: MinotaurChase | null = null;
   let chaseRunning = false;
   // K80 TURNS: the turn-aligned minotaur (params.minotaur under the turn
   // clock, game/minotaur_turns.ts), built with the fabric. Every accepted
   // move is a turn, and so is a wait (a tap on your own junction); its run
   // plays over the player's move animation, a wait's over turnWaitDur.
-  let turnMino: TurnMinotaur | null = null;
   let turnWait = 0; // Seconds left of a wait's animation (0: none).
   let turnWaitDur = 0;
   // K80 turns 3a: the head's WAIT CUE (setWaitCue) - while the pointer is
@@ -422,8 +397,7 @@ async function main(): Promise<void> {
   let waitCueFabric: FabricMazeRenderer | null = null;
   let waitCueHead: string | null = null;
   // The minotaur on screen, whichever clock moves it.
-  const liveMino = (): MinotaurChase | TurnMinotaur | null => chase ?? turnMino;
-  let fabricController: FabricMazeController | null = null;
+  const liveMino = (): MinotaurChase | TurnMinotaur | null => scene.chase ?? scene.turnMino;
   // K114 BURN RACE (game/fire.ts): the fire for walk graph `w` under the
   // params on screen, or null (off, real time, or the turn minotaur on:
   // fireSettingsOf). The controller's `fire`; a change restarts the solve.
@@ -436,48 +410,63 @@ async function main(): Promise<void> {
   // K114 stage 2: the real-time fire's clock (game/fire_clock.ts), run by
   // tickFire while the race runs; a rebuild and restartSolve reset it.
   const fireClock = new FireClock();
-  const realtimeFire = (): boolean => fabricController?.fire?.clock === "realtime";
-  // Stage 22: the running appearance animation (null = instant / done
-  // long ago). Rebuilds and "Replay settle" restart it.
-  let reveal: RevealAnimator | null = null;
-  // K5: the scene lets above, for code moved out of main()
-  // (src/app/scene_ref.ts). Built once; never destructure it or cache a
-  // value read through it.
-  const scene: SceneRef = {
-    get ps() {
-      return ps;
+  const realtimeFire = (): boolean => scene.fabricController?.fire?.clock === "realtime";
+  // The physics host (`host`) is made before app.init (K7 stage 5's start
+  // gate, above).
+  // K5 M4: the scene `let`s (ps, the renderers, the walk graph, the fabric,
+  // the minotaurs, the controller and the reveal) and their build (rebuild,
+  // recolorScene, syncBackground and the page ink) are src/app/scene.ts.
+  // `scene` reads the `let`s through getters (src/app/scene_ref.ts): never
+  // destructure those or cache a value read through them. The three
+  // functions never change, so main.ts destructures them.
+  const scene = createScene({
+    app,
+    root,
+    params,
+    look,
+    host,
+    settings,
+    background,
+    confetti,
+    ripples,
+    fireOf,
+    fireClock,
+    syncExploration,
+    writeParams,
+    rebuildAudioMap: () => rebuildAudioMap(),
+    syncDaily: () => syncDaily(),
+    saveAttempt: () => saveAttempt(),
+    restartChase: () => restartChase(),
+    resetAttempt: () => resetAttempt(),
+    hideWin: () => hideWin(),
+    restoreSavedAttempt: () => restoreSavedAttempt(),
+    beginSettle: () => beginSettle(),
+    beginLoading: () => beginLoading(),
+    setCamFollow: (on) => setCamFollow(on),
+    fitToScreen: () => fitToScreen(),
+    get view() {
+      return view;
     },
-    get renderer() {
-      return renderer;
+    get camera() {
+      return camera;
     },
-    get debug() {
-      return debug;
+    get indicators() {
+      return indicators;
     },
-    get walkGraph() {
-      return walkGraph;
+    get pendingWin() {
+      return pendingWin;
     },
-    get buildHueGroup() {
-      return buildHueGroup;
+    set pendingWin(v) {
+      pendingWin = v;
     },
-    get buildStrandCount() {
-      return buildStrandCount;
+    get pendingLoss() {
+      return pendingLoss;
     },
-    get fabric() {
-      return fabric;
+    set pendingLoss(v) {
+      pendingLoss = v;
     },
-    get chase() {
-      return chase;
-    },
-    get turnMino() {
-      return turnMino;
-    },
-    get fabricController() {
-      return fabricController;
-    },
-    get reveal() {
-      return reveal;
-    },
-  };
+  });
+  const { syncBackground, recolorScene, rebuild } = scene;
 
   const physicsTuning = (): PhysicsTuning => ({
     // Physics off never agitates: temperature would keep it from settling.
@@ -575,10 +564,10 @@ async function main(): Promise<void> {
         perfLine = v;
       },
       get reveal() {
-        return reveal;
+        return scene.reveal;
       },
       set reveal(v) {
-        reveal = v;
+        scene.reveal = v;
       },
     },
     scene
@@ -596,15 +585,6 @@ async function main(): Promise<void> {
     physicsLive,
   } = life;
 
-  // The page color: the shared ink, or a custom background's base color
-  // (K79), which then shows behind none and under the flat fog too.
-  function pageInk(): number {
-    return look("backgroundColorMode") === "custom"
-      ? parseHexColor(look("backgroundBase"), BACKGROUND)
-      : BACKGROUND;
-  }
-  let canvasInk = BACKGROUND;
-
   // The design's own background accents in the panel's order (accent 1 =
   // the main one): what switching the colors to custom starts from.
   function gamutAccentHexes(): [string, string, string] {
@@ -617,220 +597,9 @@ async function main(): Promise<void> {
     return accents;
   }
 
-  // The background follows the design: effect + intensity + animation
-  // speed + shape, the page ink and the design's gamut accents (or the
-  // custom colors), the seed - and the fog of war (when on) draws as the
-  // background instead of a flat color.
-  function syncBackground(): void {
-    const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
-    setGamutConfig(params.gamutArc, look("palette"));
-    const ink = pageInk();
-    if (ink !== canvasInk) {
-      canvasInk = ink;
-      app.canvas.style.background = `#${ink.toString(16).padStart(6, "0")}`;
-    }
-    // Shape first: an effect that turns on below lays out at its scale.
-    background.setShape({
-      scale: params.backgroundScale,
-      detail: params.backgroundDetail,
-      fibers: params.backgroundFibers,
-      grain: params.backgroundGrain,
-      angle: params.backgroundAngle,
-    });
-    background.configure(
-      look("background"),
-      params.backgroundIntensity,
-      params.backgroundSpeed
-    );
-    background.setDesign(
-      look("backgroundColorMode") === "custom"
-        ? customBackgroundColors(
-            look("backgroundBase"),
-            params.backgroundAccent1,
-            params.backgroundAccent2,
-            params.backgroundAccent3,
-            BACKGROUND
-          )
-        : backgroundColors(BACKGROUND, effHue),
-      params.seed
-    );
-    fabric?.setFogColor(ink);
-    fabric?.setFogBackdrop(background.texture);
-  }
-
-  // Recolor the live scene in place (the look color rows, and K111's high
-  // contrast, which swaps the palette and the route color): no rebuild, no
-  // wake. The background follows through syncBackground().
-  function recolorScene(): void {
-    if (!renderer || !ps) return;
-    const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
-    setGamutConfig(params.gamutArc, look("palette"));
-    renderer.recolor(
-      effHue,
-      parseInt(look("pathColor").slice(1), 16),
-      params.colorScheme === "strands"
-        ? buildHueGroup
-        : new Array<number>(buildStrandCount).fill(0),
-      buildSectionRuns(
-        params.colorScheme,
-        walkGraph,
-        ps.chains.map((c, i) => ({ len: c.length, closed: ps!.chainBreakAfter[i] < 0 })),
-        buildHueGroup,
-        params.seed,
-        effHue
-      ),
-      params.colorScheme,
-      params.seed,
-      params.junctionBlend
-    );
-    if (fabric && fabricController) fabric.update(fabricController);
-  }
-
-  function rebuild(): void {
-    // K47/K56: a change that leaves the daily parks its attempt first; one
-    // that keeps it (a rebuild of the daily itself) saves the attempt now,
-    // to restore it into the new scene below.
-    syncDaily();
-    saveAttempt();
-    // K140: the old maze's finish is gone, and so is its confetti.
-    confetti.clear();
-    // K279: and its ripples.
-    ripples.clear();
-    renderer?.destroy();
-    debug?.container.destroy({ children: true });
-    fabric?.destroy();
-    root.removeChildren();
-
-    // The lattice, and in fabric mode the maze plan's graph surgery
-    // (core/scene_graph.ts; K7 stage 1 moved it there unchanged).
-    const { graph, hueGroup } = buildSceneGraph(params);
-
-    // K7: the host owns the system; `ps` is main's read-only view of it.
-    ps = host.build(graph, params);
-    buildHueGroup = hueGroup;
-    buildStrandCount = graph.strands.length;
-
-    // Color space for this build: seed hue rotated by hueShift; arc width
-    // and palette preset configure gamutRgb for every consumer (schemes
-    // AND the renderer's per-sample noise path).
-    const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
-    setGamutConfig(params.gamutArc, look("palette"));
-
-    // The walk graph feeds both the section coloring and (in fabric mode)
-    // the gameplay, so it builds before the renderer.
-    walkGraph = params.mazeFabric ? buildWalkGraph(graph) : null;
-
-    renderer = new RibbonRenderer(ps, {
-      threadWidth: params.threadWidth,
-      casingWidth: params.threadWidth + look("gap") * 2,
-      baseHue: effHue,
-      pathColor: parseInt(look("pathColor").slice(1), 16),
-      // Knot-mode tints only (palette mode colors via the section field):
-      // per-strand hues for the strands scheme, mono otherwise.
-      hueGroup:
-        params.colorScheme === "strands"
-          ? hueGroup
-          : graph.strands.map(() => 0),
-      // Fabric gameplay recolors the actual threads via palette textures.
-      paletteMode: params.mazeFabric,
-      flowSeed: params.seed,
-    });
-    renderer.setSectionRuns(
-      buildSectionRuns(
-        params.colorScheme,
-        walkGraph,
-        ps.chains.map((c, i) => ({ len: c.length, closed: ps!.chainBreakAfter[i] < 0 })),
-        hueGroup,
-        params.seed,
-        effHue // The gamut anchor; matches style.baseHue.
-      ),
-      params.colorScheme,
-      params.seed,
-      params.junctionBlend
-    );
-
-    // Branching gameplay over the fabric: branch-point-only solve state +
-    // the thread-true paint overlay (the walk graph was built above).
-    if (params.mazeFabric && walkGraph) {
-      fabricController = new FabricMazeController(
-        walkGraph,
-        params.pathViz === "trail",
-        fireOf(walkGraph) // K114: null with the fire off.
-      );
-      fabric = new FabricMazeRenderer(
-        ps,
-        walkGraph,
-        params.threadWidth,
-        renderer
-      );
-      fabric.trailMode = params.pathViz === "trail";
-      fabric.pathViz = params.pathViz;
-      fabric.tension = params.tension;
-      fabric.trailLength = params.trailLength;
-      syncExploration(fabric);
-      fabric.markerSize = look("markerSize");
-      fabric.fogColor = pageInk();
-      fabric.update(fabricController);
-    } else {
-      fabricController = null;
-      fabric = null;
-    }
-    syncBackground();
-    pendingWin = false;
-    pendingLoss = false;
-    fireClock.reset();
-    restartChase();
-    resetAttempt();
-    hideWin();
-    rebuildAudioMap();
-
-    // Appearance animation: settle hidden first, then attach the reveal
-    // (K147: beginSettle's pre-settle, finishPresettle; physics off: the
-    // whole layout, finishLoading) - or, instant, show and settle at once.
-    if (params.physics) {
-      beginSettle();
-    } else {
-      beginLoading();
-    }
-    // K47: a daily opens where its saved attempt left off.
-    restoreSavedAttempt();
-
-    debug = new DebugRenderer();
-    debug.render(graph);
-    // The debug renderer draws at cellSize px per lattice unit; the root
-    // container already maps lattice units to screen, so counter-scale.
-    debug.container.scale.set(1 / debug.cellSize);
-    debug.container.visible = settings.showDebug;
-
-    // Order: head glow UNDER the weave, ribbons, the fabric gameplay
-    // overlay, debug.
-    if (fabric) root.addChild(fabric.underContainer);
-    root.addChild(renderer.root);
-    if (fabric) root.addChild(fabric.overContainer);
-    root.addChild(debug.container);
-    // A new scene starts at the home view (user zoom/pan reset); a
-    // follow camera takes over from this framing on the next frame.
-    setCamFollow(false);
-    view.zoom = 1;
-    view.panX = 0;
-    view.panY = 0;
-    camera.viewHoming = false;
-    camera.camTween = null;
-    // The off-screen indicators decide again on the new scene's first
-    // frame.
-    indicators.hideAll();
-    fitToScreen();
-    writeParams(params);
-
-    console.log(
-      `KnotMaze: seed ${params.seed}, ${graph.nodes.size} nodes, ` +
-        `${graph.edges.size} edges, ${graph.strands.length} strands.`
-    );
-  }
-
   // Re-derive the per-segment pitch assignment (cheap; no scene rebuild).
   function rebuildAudioMap(): void {
-    if (!ps) return;
+    if (!scene.ps) return;
     let assignFor: (lengths: number[]) => PitchAssignment;
     if (params.soundMode === "music") {
       // Music mode: the buckets are EXACTLY the song's distinct pitches,
@@ -858,14 +627,14 @@ async function main(): Promise<void> {
           params.tonicEmphasis
         );
     }
-    if (walkGraph) {
-      audioAssign = assignFor(walkGraph.edges.map((e) => e.length));
+    if (scene.walkGraph) {
+      audioAssign = assignFor(scene.walkGraph.edges.map((e) => e.length));
       audioRuns = new Map();
-      audioSegSite = walkGraph.edges.map((e) => ({
+      audioSegSite = scene.walkGraph.edges.map((e) => ({
         chain: e.chain,
         ctrl: (e.ctrlA + e.ctrlB) / 2,
       }));
-      for (const e of walkGraph.edges) {
+      for (const e of scene.walkGraph.edges) {
         let list = audioRuns.get(e.chain);
         if (!list) {
           list = [];
@@ -874,9 +643,9 @@ async function main(): Promise<void> {
         list.push({ c0: e.ctrlA, c1: e.ctrlB, seg: e.id });
       }
     } else {
-      audioAssign = assignFor(ps.chains.map((c) => c.length));
+      audioAssign = assignFor(scene.ps.chains.map((c) => c.length));
       audioRuns = null;
-      audioSegSite = ps.chains.map((c, i) => ({
+      audioSegSite = scene.ps.chains.map((c, i) => ({
         chain: i,
         ctrl: Math.floor(c.length / 2),
       }));
@@ -892,10 +661,10 @@ async function main(): Promise<void> {
     chain: number,
     ctrl: number
   ): { c0: number; c1: number; seg: number } | null {
-    if (!audioRuns || !ps) return null;
+    if (!audioRuns || !scene.ps) return null;
     const list = audioRuns.get(chain);
     if (!list) return null;
-    const len = ps.chains[chain].length;
+    const len = scene.ps.chains[chain].length;
     for (const r of list) {
       if (
         (ctrl >= r.c0 && ctrl <= r.c1) ||
@@ -910,7 +679,7 @@ async function main(): Promise<void> {
   // Pitch of the segment at a chain ctrl. Chains outside the walk graph
   // (decorative culled loops) hash onto the assignment.
   function freqForCtrl(chain: number, ctrl: number): number {
-    if (!audioAssign || !ps) return 220;
+    if (!audioAssign || !scene.ps) return 220;
     const n = audioAssign.segFreq.length;
     if (n === 0) return 220;
     if (!audioRuns) return audioAssign.segFreq[chain % n];
@@ -1029,7 +798,7 @@ async function main(): Promise<void> {
     onHighContrastToggle: (on) =>
       contrast.setPref(highContrastChoice(on, contrast.system)),
     onDebugToggle: (visible) => {
-      if (debug) debug.container.visible = visible;
+      if (scene.debug) scene.debug.container.visible = visible;
     },
     onSlackChange: () => {
       writeParams(params);
@@ -1037,9 +806,9 @@ async function main(): Promise<void> {
       wake();
     },
     onStyleChange: () => {
-      renderer?.setWidths(params.threadWidth, look("gap"));
-      fabric?.setWidths(params.threadWidth);
-      if (fabric && fabricController) fabric.update(fabricController);
+      scene.renderer?.setWidths(params.threadWidth, look("gap"));
+      scene.fabric?.setWidths(params.threadWidth);
+      if (scene.fabric && scene.fabricController) scene.fabric.update(scene.fabricController);
       writeParams(params);
       physicsInputsChanged();
       wake();
@@ -1050,16 +819,16 @@ async function main(): Promise<void> {
     // never the scene - no rebuild, and no wake (the paint pass runs in the
     // asleep/paused ticker branches).
     onTrailChange: () => {
-      if (fabricController) {
-        fabricController.trailMode = params.pathViz === "trail";
+      if (scene.fabricController) {
+        scene.fabricController.trailMode = params.pathViz === "trail";
       }
-      if (fabric && fabricController) {
-        fabric.trailMode = params.pathViz === "trail";
-        fabric.pathViz = params.pathViz;
-        fabric.tension = params.tension;
-        fabric.trailLength = params.trailLength;
-        syncExploration(fabric);
-        fabric.update(fabricController);
+      if (scene.fabric && scene.fabricController) {
+        scene.fabric.trailMode = params.pathViz === "trail";
+        scene.fabric.pathViz = params.pathViz;
+        scene.fabric.tension = params.tension;
+        scene.fabric.trailLength = params.trailLength;
+        syncExploration(scene.fabric);
+        scene.fabric.update(scene.fabricController);
       }
       updateHud();
       writeParams(params);
@@ -1092,9 +861,9 @@ async function main(): Promise<void> {
     },
     onResetPath: () => {
       // A winning move whose dot is still on its way counts: finish it.
-      if (pendingWin && fabricController) {
+      if (pendingWin && scene.fabricController) {
         pendingWin = false;
-        fabric?.cancelMove();
+        scene.fabric?.cancelMove();
         showFabricWin();
       }
       // K47 (game/daily_attempt.ts resetPathAction): inside a daily's
@@ -1105,15 +874,15 @@ async function main(): Promise<void> {
       const action = resetPathAction({
         dailyAttempt: dailyAttemptLive(),
         official: dailyN !== null && dailyStore.hasOfficial(dailyN),
-        solved: fabricController?.solved ?? false,
-        trailMode: fabricController?.trailMode ?? false,
+        solved: scene.fabricController?.solved ?? false,
+        trailMode: scene.fabricController?.trailMode ?? false,
         // K80: a real-time solve always starts over (a fresh chase), and so
         // does one with the turn minotaur (K80 turns, section 2.10: backing
         // out run by run past it would be suicide; a restart, not a catch).
         // K114 call 2: and a burn race (the fuse relit): the way back to the
         // entrance is the way into the fire.
         realtime:
-          chase !== null || turnMino !== null || fabricController?.fire != null,
+          scene.chase !== null || scene.turnMino !== null || scene.fabricController?.fire != null,
         // K146: so does a practice run (a past daily, not scored).
         practice: attemptLate(),
       });
@@ -1121,18 +890,18 @@ async function main(): Promise<void> {
         showToast("recentPath mode has no way back: keep exploring.");
         return;
       }
-      if (action === "backtrack" && fabric && fabricController) {
-        fabric.cancelMove();
-        const depart = fabricController.head;
-        const retraced = fabricController.retreatToStart();
+      if (action === "backtrack" && scene.fabric && scene.fabricController) {
+        scene.fabric.cancelMove();
+        const depart = scene.fabricController.head;
+        const retraced = scene.fabricController.retreatToStart();
         if (retraced.length > 0) {
           // The fog stays (K100) and lifts along the way back again, each
           // run stamped from the head's end as walking it back by hand
           // would and as a restore of these taps will (exploreRuns).
-          fabric.exploreRuns(retraced, depart);
+          scene.fabric.exploreRuns(retraced, depart);
           // The Ariadne string keeps every pass, the way back included.
-          fabric.restoreYarn(fabricController.taps);
-          fabric.update(fabricController);
+          scene.fabric.restoreYarn(scene.fabricController.taps);
+          scene.fabric.update(scene.fabricController);
           updateHud();
           saveAttempt();
           showToast("Back at the start. The clock keeps running.");
@@ -1151,7 +920,7 @@ async function main(): Promise<void> {
       // (nothing moved), so a Reset path never launders a catch: before,
       // a catch under minoRestart, or a counted restart, then a Reset path
       // with no move, started a fresh minotaur at 0 catches.
-      const c = fabricController;
+      const c = scene.fabricController;
       if (liveMino() && c && !c.solved) {
         const moved = c.moveCount > 0;
         restartSolve(true);
@@ -1171,17 +940,17 @@ async function main(): Promise<void> {
     },
     // K80: the chase's tuning, live (the chase goes on).
     onChaseChange: () => {
-      chase?.setParams(chaseParamsOf(params));
+      scene.chase?.setParams(chaseParamsOf(params));
       // K273: the shared catch rows (minoLair) reach the turn minotaur too.
       // Re-committing its next move under unchanged settings decides the
       // same move (its draws are counter-based).
-      turnMino?.setConfig(turnConfig(turnMinoParamsOf(params)));
+      scene.turnMino?.setConfig(turnConfig(turnMinoParamsOf(params)));
       writeParams(params);
     },
     // K80 turns: the turn minotaur's tuning, live (the solve goes on; its
     // next move is committed again under the new settings).
     onTurnMinoChange: () => {
-      turnMino?.setConfig(turnConfig(turnMinoParamsOf(params)));
+      scene.turnMino?.setConfig(turnConfig(turnMinoParamsOf(params)));
       writeParams(params);
     },
     // K140: the finish confetti (render-only, live; off drops the pieces
@@ -1193,7 +962,7 @@ async function main(): Promise<void> {
     // K98: the markers' size. One render pass (the start/exit gap slots
     // and the markers) without waking the physics.
     onMarkerSizeChange: () => {
-      if (fabric) fabric.markerSize = look("markerSize");
+      if (scene.fabric) scene.fabric.markerSize = look("markerSize");
       writeParams(params);
       invalidate();
     },
@@ -1231,12 +1000,12 @@ async function main(): Promise<void> {
       reducedMotion: a11y.reducedMotion,
       highContrast: a11y.highContrast,
     });
-    if (renderer && ps) {
+    if (scene.renderer && scene.ps) {
       recolorScene();
-      renderer.setWidths(params.threadWidth, look("gap"));
+      scene.renderer.setWidths(params.threadWidth, look("gap"));
     }
     syncBackground();
-    if (fabric) fabric.markerSize = look("markerSize");
+    if (scene.fabric) scene.fabric.markerSize = look("markerSize");
     panel.markOverridden(overriddenKeys(a11y));
     // One render pass for an asleep or frozen scene (the flow standing still
     // or coming back, the new gap and palette). Every pass hands the
@@ -1265,24 +1034,24 @@ async function main(): Promise<void> {
   // and the paint pass read ride along: cuspRadius, the pulse spacing and
   // reach, the hover glow and the appearance FX style.
   function handRendererLook(): void {
-    if (!renderer) return;
-    renderer.fadeLength = look("fadeLength");
-    renderer.flowStrength = look("flowStrength");
-    renderer.flowSpeed = look("flowSpeed");
-    renderer.cuspRadius = params.cuspRadius;
-    renderer.pulseSpacing = params.pulseSpacing;
+    if (!scene.renderer) return;
+    scene.renderer.fadeLength = look("fadeLength");
+    scene.renderer.flowStrength = look("flowStrength");
+    scene.renderer.flowSpeed = look("flowSpeed");
+    scene.renderer.cuspRadius = params.cuspRadius;
+    scene.renderer.pulseSpacing = params.pulseSpacing;
     // K76 stage 2c (question 5): under the thread reveal the pulses never
     // reach past the reveal distance.
-    renderer.pulseReach =
+    scene.renderer.pulseReach =
       params.mazeFabric && params.exploration === "threads"
         ? Math.min(params.pulseReach, params.revealDistance)
         : params.pulseReach;
-    renderer.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
-    renderer.hoverGlowWidth = clampHoverGlowWidth(params.hoverGlowWidth);
-    renderer.hoverGlowLength = clampHoverGlowLength(params.hoverGlowLength);
-    renderer.hoverGlowFade = clampHoverGlowFade(params.hoverGlowFade);
-    renderer.hcLook = a11y.highContrast ? hcLookChoice : 0;
-    renderer.appearFx = params.appearFx;
+    scene.renderer.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
+    scene.renderer.hoverGlowWidth = clampHoverGlowWidth(params.hoverGlowWidth);
+    scene.renderer.hoverGlowLength = clampHoverGlowLength(params.hoverGlowLength);
+    scene.renderer.hoverGlowFade = clampHoverGlowFade(params.hoverGlowFade);
+    scene.renderer.hcLook = a11y.highContrast ? hcLookChoice : 0;
+    scene.renderer.appearFx = params.appearFx;
   }
   motion.subscribe(applyAccessibility);
   contrast.subscribe(applyAccessibility);
@@ -1335,22 +1104,22 @@ async function main(): Promise<void> {
   const onThread = (x: number, y: number, pt: string): boolean => {
     const r = pickRadius(pt);
     return (
-      (!renderer?.exploreOn && !!ps && ps.nearest(x, y, r) >= 0) ||
-      !!renderer?.pickThread(x, y, r)
+      (!scene.renderer?.exploreOn && !!scene.ps && scene.ps.nearest(x, y, r) >= 0) ||
+      !!scene.renderer?.pickThread(x, y, r)
     );
   };
   // The particle a press grabs: the nearest one, or under the thread reveal
   // the particle at the shown thread point pickThread finds (a particle's
   // ctrl is its index in its chain), so a tug never grabs hidden thread.
   const grabAt = (x: number, y: number, pt: string): number => {
-    if (!ps) return -1;
+    if (!scene.ps) return -1;
     const r = grabRadius(pt);
-    if (!renderer?.exploreOn) return ps.nearest(x, y, r);
-    const hit = renderer.pickThread(x, y, r);
+    if (!scene.renderer?.exploreOn) return scene.ps.nearest(x, y, r);
+    const hit = scene.renderer.pickThread(x, y, r);
     if (!hit) return -1;
-    const arr = ps.chains[hit.chain];
+    const arr = scene.ps.chains[hit.chain];
     if (!arr || arr.length === 0) return -1;
-    const closed = ps.chainBreakAfter[hit.chain] < 0;
+    const closed = scene.ps.chainBreakAfter[hit.chain] < 0;
     const k = Math.round(hit.ctrl);
     return arr[closed ? ((k % arr.length) + arr.length) % arr.length : Math.max(0, Math.min(arr.length - 1, k))];
   };
@@ -1533,7 +1302,7 @@ async function main(): Promise<void> {
     let maxX = wx;
     let minY = wy;
     let maxY = wy;
-    if (fabric && fabric.headPosition(headScratch)) {
+    if (scene.fabric && scene.fabric.headPosition(headScratch)) {
       minX = Math.min(minX, headScratch[0]);
       maxX = Math.max(maxX, headScratch[0]);
       minY = Math.min(minY, headScratch[1]);
@@ -1563,8 +1332,8 @@ async function main(): Promise<void> {
   // from the design anyway). A tap frames it; under fog it only says which
   // way. finishWhy says why it hides (probes).
   const exitVertex = (): { chain: number; ctrl: number } | null => {
-    if (!params.mazeFabric || !walkGraph) return null;
-    return walkGraph.vertices.get(walkGraph.exit) ?? null;
+    if (!params.mazeFabric || !scene.walkGraph) return null;
+    return scene.walkGraph.vertices.get(scene.walkGraph.exit) ?? null;
   };
   const exitScratch = new Float32Array(2);
   let finishWhy = "init";
@@ -1573,7 +1342,7 @@ async function main(): Promise<void> {
   let finishIconId = "";
   let finishIconSvg = "";
   const finishIcon = (): string => {
-    const id = fabric?.markerGlyphId("exit") ?? DEFAULT_GLYPHS.exit;
+    const id = scene.fabric?.markerGlyphId("exit") ?? DEFAULT_GLYPHS.exit;
     if (id !== finishIconId) {
       finishIconId = id;
       finishIconSvg = markerGlyphSvgFit(id, "exit", GLYPH_R, DARK_DISC.ink);
@@ -1584,15 +1353,15 @@ async function main(): Promise<void> {
     id: "finish",
     world: (out) => {
       const v = exitVertex();
-      if (!v || !renderer) return false;
+      if (!v || !scene.renderer) return false;
       // Where fabric draws the marker: the renderer's own sample.
-      renderer.markerWorld(v.chain, v.ctrl, out);
+      scene.renderer.markerWorld(v.chain, v.ctrl, out);
       return true;
     },
     // The exit marker's own radius: its colored dot (K98), the outermost
     // thing it draws (FabricMazeRenderer.markerDotRadius).
     radius: () =>
-      fabric?.markerDotRadius() ??
+      scene.fabric?.markerDotRadius() ??
       markerDotRadiusFor(params.threadWidth, look("markerSize")),
     icon: finishIcon,
     style: DARK_DISC,
@@ -1600,18 +1369,18 @@ async function main(): Promise<void> {
       const v = exitVertex();
       finishWhy = !settings.finishIndicator
         ? "setting off"
-        : !v || !renderer || !fabric || !fabricController
+        : !v || !scene.renderer || !scene.fabric || !scene.fabricController
           ? "no maze"
-          : fabricController.solved
+          : scene.fabricController.solved
             ? "solved"
             : !root.visible || life.state === "loading"
               ? "loading"
-              : renderer.revealMulAtCtrl(v.chain, v.ctrl) < 0.98
+              : scene.renderer.revealMulAtCtrl(v.chain, v.ctrl) < 0.98
                 ? "exit unrevealed"
                 : // K76 stage 2c (decision 6): the thread reveal keeps the
                   // exit's direction to itself until its marker shows (the
                   // marker's own rule; 1 with the mode off).
-                  renderer.exploreVisAt(v.chain, v.ctrl) < 0.98
+                  scene.renderer.exploreVisAt(v.chain, v.ctrl) < 0.98
                   ? "exit unseen"
                   : "";
       return finishWhy === "";
@@ -1628,8 +1397,8 @@ async function main(): Promise<void> {
         return;
       }
       const v = exitVertex();
-      if (!v || !renderer) return;
-      renderer.markerWorld(v.chain, v.ctrl, exitScratch);
+      if (!v || !scene.renderer) return;
+      scene.renderer.markerWorld(v.chain, v.ctrl, exitScratch);
       frameWorld(exitScratch[0], exitScratch[1]);
     },
   });
@@ -1650,7 +1419,7 @@ async function main(): Promise<void> {
   let headIconId = "";
   let headIconSvg = "";
   const headIcon = (): string => {
-    const id = waitCueGlyph ?? fabric?.markerGlyphId("head") ?? DEFAULT_GLYPHS.head;
+    const id = waitCueGlyph ?? scene.fabric?.markerGlyphId("head") ?? DEFAULT_GLYPHS.head;
     if (id !== headIconId) {
       headIconId = id;
       headIconSvg = markerGlyphSvgFit(id, "head", GLYPH_R, DARK_DISC.ink);
@@ -1663,7 +1432,7 @@ async function main(): Promise<void> {
   // framing of the head and resumes the follow the moment it lands - the
   // pan that suspended the spring is over.
   const returnToHead = (): void => {
-    if (!fabric || !fabric.headPosition(headScratch)) return;
+    if (!scene.fabric || !scene.fabric.headPosition(headScratch)) return;
     const plan = headReturnPlan({
       follow: camera.camFollow,
       head: { x: headScratch[0], y: headScratch[1] },
@@ -1683,18 +1452,18 @@ async function main(): Promise<void> {
   };
   indicators.add({
     id: "head",
-    world: (out) => !!fabric && fabric.headPosition(out),
+    world: (out) => !!scene.fabric && scene.fabric.headPosition(out),
     // The head marker's radius: the one disc radius every marker wears
     // (K83; sized by markerSize since K98).
     radius: () =>
-      fabric?.markerRadius() ??
+      scene.fabric?.markerRadius() ??
       markerRadiusFor(params.threadWidth, look("markerSize")),
     icon: headIcon,
     style: DARK_DISC,
     visible: () => {
       headWhy = headIndicatorWhy({
         mazeFabric: params.mazeFabric,
-        built: !!fabric && !!fabricController && !!renderer,
+        built: !!scene.fabric && !!scene.fabricController && !!scene.renderer,
         shown: root.visible && life.state !== "loading",
         enabled: settings.headIndicator,
       });
@@ -1720,9 +1489,9 @@ async function main(): Promise<void> {
   let minoIconSvg = "";
   indicators.add({
     id: "minotaur",
-    world: (out) => liveMino() !== null && !!fabric && fabric.minotaurWorld(out),
+    world: (out) => liveMino() !== null && !!scene.fabric && scene.fabric.minotaurWorld(out),
     radius: () =>
-      fabric?.minotaurRadius() ??
+      scene.fabric?.minotaurRadius() ??
       markerRadiusFor(params.threadWidth, look("markerSize")),
     icon: () =>
       minoIconSvg ||
@@ -1738,15 +1507,15 @@ async function main(): Promise<void> {
       settings.minotaurIndicator && // K198 stage 2: the viewer's switch.
       (liveMino()?.finished === false) &&
       liveMino()!.mode !== "lair" &&
-      !!fabric &&
-      !fabric.minotaurUnderFog &&
-      fabric.minotaurWorld(minoScratch),
+      !!scene.fabric &&
+      !scene.fabric.minotaurUnderFog &&
+      scene.fabric.minotaurWorld(minoScratch),
     label: () =>
       settings.tapToPan
         ? "The minotaur is off screen, this way. Tap to bring it into view."
         : "The minotaur is off screen, this way.",
     onTap: () => {
-      if (fabric?.minotaurWorld(minoScratch)) {
+      if (scene.fabric?.minotaurWorld(minoScratch)) {
         frameWorld(minoScratch[0], minoScratch[1]);
       }
     },
@@ -1755,8 +1524,8 @@ async function main(): Promise<void> {
   // (K151: the daily's name, date and state moved from the HUD's title row
   // to the mode badge - ui/mode_badge.ts modeBadgeText.)
   const hudSnapshot = (): HudSnapshot | null => {
-    if (!params.mazeFabric || !fabricController) return null;
-    const c = fabricController;
+    if (!params.mazeFabric || !scene.fabricController) return null;
+    const c = scene.fabricController;
     return {
       showStats: settings.showMazeStats,
       timeMs: clock.elapsed(performance.now()),
@@ -1775,8 +1544,8 @@ async function main(): Promise<void> {
       catches: liveMino()?.catches ?? null,
       // K80 turns stage 2: the turn minotaur's close calls and turns seen
       // (null on real time), and the Reset-path restarts on either clock.
-      closeCalls: turnMino ? turnMino.closeCalls : null,
-      seen: turnMino ? turnMino.seen : null,
+      closeCalls: scene.turnMino ? scene.turnMino.closeCalls : null,
+      seen: scene.turnMino ? scene.turnMino.seen : null,
       restarts: liveMino()?.restarts ?? null,
       // K114: the fire's lead at your junction while the race runs, the
       // closest call once it is over (null: no fire).
@@ -1806,21 +1575,21 @@ async function main(): Promise<void> {
     dailyN !== null &&
     attemptDaily === dailyN &&
     attemptRecord === null &&
-    fabricController !== null &&
+    scene.fabricController !== null &&
     clock.started;
 
   // K47: write the daily attempt in progress (the store re-reads first, so
   // two tabs never lose each other's results).
   const saveAttempt = (): void => {
-    if (adopting || !dailyAttemptLive() || !fabricController || !walkGraph) {
+    if (adopting || !dailyAttemptLive() || !scene.fabricController || !scene.walkGraph) {
       return;
     }
     const n = dailyN!;
-    const rec = savedAttemptOf(fabricController, {
+    const rec = savedAttemptOf(scene.fabricController, {
       startedAt: attemptStartedAt,
       day: attemptDay,
       elapsedMs: clock.elapsed(performance.now()),
-      maze: walkFingerprint(walkGraph),
+      maze: walkFingerprint(scene.walkGraph),
       def: DAILY_DEF,
       // Strictly after anything this tab saw (a fast double save, a clock
       // step), so another tab's later save always reads as later.
@@ -1836,10 +1605,10 @@ async function main(): Promise<void> {
   // tab's own state was saved when it was hidden, so nothing of it is
   // lost) - a rebuild restores it - instead of saving over it.
   const adoptOtherTab = (): void => {
-    if (dailyN === null || document.hidden || !fabricController) return;
+    if (dailyN === null || document.hidden || !scene.fabricController) return;
     const saved = dailyStore.attempt(dailyN);
     if (!saved || saved.savedAt <= attemptSyncedAt) return;
-    const mine = fabricController.taps;
+    const mine = scene.fabricController.taps;
     attemptSyncedAt = saved.savedAt;
     if (
       saved.taps.length === mine.length &&
@@ -1864,14 +1633,14 @@ async function main(): Promise<void> {
   // next move. A saved winning move (the page closed before the dot
   // arrived) finishes at once.
   const restoreSavedAttempt = (): void => {
-    if (dailyN === null || !fabricController || !fabric || !walkGraph) return;
+    if (dailyN === null || !scene.fabricController || !scene.fabric || !scene.walkGraph) return;
     const saved = dailyStore.attempt(dailyN);
     if (!saved) return;
     attemptSyncedAt = Math.max(attemptSyncedAt, saved.savedAt);
     const outcome = restoreAttempt(
-      fabricController,
+      scene.fabricController,
       saved,
-      walkFingerprint(walkGraph)
+      walkFingerprint(scene.walkGraph)
     );
     if (outcome !== "ok") {
       console.warn(
@@ -1885,24 +1654,24 @@ async function main(): Promise<void> {
     attemptStartedAt = saved.startedAt;
     attemptRecord = null;
     clock.restore(saved.elapsedMs);
-    fabric.restoreYarn(fabricController.taps);
-    pendingExplored = exploredRuns(fabricController);
-    fabric.exploreRestore(fabricController); // K76 stage 2c: the reveal too.
-    fabric.update(fabricController);
-    if (fabricController.solved) pendingWin = true;
+    scene.fabric.restoreYarn(scene.fabricController.taps);
+    pendingExplored = exploredRuns(scene.fabricController);
+    scene.fabric.exploreRestore(scene.fabricController); // K76 stage 2c: the reveal too.
+    scene.fabric.update(scene.fabricController);
+    if (scene.fabricController.solved) pendingWin = true;
     updateHud();
   };
 
   // The scene is on screen (no hidden settle, no intro still drawing): a
   // restored clock runs on from here, and the fog re-explores.
   const sceneReady = (): boolean =>
-    root.visible && life.state !== "loading" && (reveal === null || reveal.done);
+    root.visible && life.state !== "loading" && (scene.reveal === null || scene.reveal.done);
   const resumeWhenReady = (): void => {
     if (clock.state !== "paused" && pendingExplored === null) return;
     if (!sceneReady()) return;
     if (clock.state === "paused") clock.resume(performance.now(), document.hidden);
-    if (pendingExplored !== null && fabric) {
-      fabric.exploreRuns(pendingExplored);
+    if (pendingExplored !== null && scene.fabric) {
+      scene.fabric.exploreRuns(pendingExplored);
       pendingExplored = null;
     }
     updateHud();
@@ -1999,8 +1768,8 @@ async function main(): Promise<void> {
   // is official, later ones replays; one begun after its day practice,
   // K146), show the banner.
   const showFabricWin = (): void => {
-    if (!fabricController) return;
-    const c = fabricController;
+    if (!scene.fabricController) return;
+    const c = scene.fabricController;
     clock.stop(performance.now());
     const timeMs = clock.elapsed(performance.now());
     const efficiency = efficiencyOf(c.walk.optimalLength, c.pathLength);
@@ -2052,7 +1821,7 @@ async function main(): Promise<void> {
         stars,
         // K80 turns stage 2: the title's minotaur tag (🐂).
         catches: mino ? mino.catches : null,
-        closeCalls: turnMino ? turnMino.closeCalls : null,
+        closeCalls: scene.turnMino ? scene.turnMino.closeCalls : null,
       }),
       url: daily !== null ? dailyUrl(daily) : location.href,
     };
@@ -2076,11 +1845,11 @@ async function main(): Promise<void> {
       // K80: a chase's catches and time hunted (null: no minotaur; the turn
       // minotaur has catches, no time hunted).
       catches: mino ? mino.catches : null,
-      chasedMs: chase ? chase.huntSeconds * 1000 : null,
+      chasedMs: scene.chase ? scene.chase.huntSeconds * 1000 : null,
       // K80 turns stage 2: the turn minotaur's close calls and turns seen,
       // and the restarts under either clock's minotaur.
-      closeCalls: turnMino ? turnMino.closeCalls : null,
-      seen: turnMino ? turnMino.seen : null,
+      closeCalls: scene.turnMino ? scene.turnMino.closeCalls : null,
+      seen: scene.turnMino ? scene.turnMino.seen : null,
       restarts: mino ? mino.restarts : null,
       // K114: a burn race's closest call (null: no fire).
       closestCall: c.fire ? c.fireClosest : null,
@@ -2096,8 +1865,8 @@ async function main(): Promise<void> {
   // `restarts`); so does Reset path (call 2). A burn race is never a daily
   // (fire is no exempt key), so nothing is recorded.
   const showFireLoss = (): void => {
-    if (!fabricController) return;
-    const c = fabricController;
+    if (!scene.fabricController) return;
+    const c = scene.fabricController;
     if (clock.state === "running") clock.stop(performance.now());
     lossBanner.show({
       timeMs: clock.elapsed(performance.now()),
@@ -2124,15 +1893,15 @@ async function main(): Promise<void> {
     let cx = NaN;
     let cy = NaN;
     const v = exitVertex();
-    if (v && renderer) {
+    if (v && scene.renderer) {
       // Where fabric draws the exit marker: the renderer's own sample.
-      renderer.markerWorld(v.chain, v.ctrl, exitScratch);
+      scene.renderer.markerWorld(v.chain, v.ctrl, exitScratch);
       cx = exitScratch[0];
       cy = exitScratch[1];
     }
     // The finish's outer edge: its colored dot (K98).
     const radius =
-      fabric?.markerDotRadius() ??
+      scene.fabric?.markerDotRadius() ??
       markerDotRadiusFor(params.threadWidth, look("markerSize"));
     confetti.burst(
       plan,
@@ -2160,31 +1929,31 @@ async function main(): Promise<void> {
   // or a Reset path under it) hands its tallies to the new one, so the
   // catch count survives the restart.
   const restartChase = (carry = false): void => {
-    const prevChase = carry ? chase : null;
-    const prevTurn = carry ? turnMino : null;
-    chase =
-      params.mazeFabric && params.clock === "realtime" && walkGraph && fabric
-        ? new MinotaurChase(walkGraph, chaseParamsOf(params), params.seed)
+    const prevChase = carry ? scene.chase : null;
+    const prevTurn = carry ? scene.turnMino : null;
+    scene.chase =
+      params.mazeFabric && params.clock === "realtime" && scene.walkGraph && scene.fabric
+        ? new MinotaurChase(scene.walkGraph, chaseParamsOf(params), params.seed)
         : null;
-    if (chase && prevChase) chase.carry(prevChase);
+    if (scene.chase && prevChase) scene.chase.carry(prevChase);
     chaseRunning = false;
     // K80 turns: the turn clock's minotaur, when one is chosen. Its stream
     // is the seed's own (turnSeed), so the same taps meet the same minotaur.
-    turnMino =
+    scene.turnMino =
       params.mazeFabric &&
       params.clock === "turn" &&
       params.minotaur !== "off" &&
-      walkGraph &&
-      fabric
+      scene.walkGraph &&
+      scene.fabric
         ? new TurnMinotaur(
-            walkGraph,
+            scene.walkGraph,
             turnConfig(turnMinoParamsOf(params)),
             turnSeed(params.seed)
           )
         : null;
-    if (turnMino && prevTurn) turnMino.carry(prevTurn);
+    if (scene.turnMino && prevTurn) scene.turnMino.carry(prevTurn);
     turnWait = 0;
-    fabric?.syncMinotaur(liveMino(), params.minoFog, turnMino?.telegraph() ?? null);
+    scene.fabric?.syncMinotaur(liveMino(), params.minoFog, scene.turnMino?.telegraph() ?? null);
   };
 
   // A catch's toast (K80, both clocks; K273: or the level restarts).
@@ -2201,16 +1970,16 @@ async function main(): Promise<void> {
   const restartSolve = (carry = false): void => {
     // K114: the fuse relit under the params on screen (a clock change may
     // have turned the fire on or off, or moved its speed or delay).
-    if (fabricController) fabricController.fire = fireOf(fabricController.walk);
-    fabricController?.reset();
-    fabric?.cancelMove();
-    fabric?.clearYarn();
+    if (scene.fabricController) scene.fabricController.fire = fireOf(scene.fabricController.walk);
+    scene.fabricController?.reset();
+    scene.fabric?.cancelMove();
+    scene.fabric?.clearYarn();
     pendingWin = false;
     pendingLoss = false;
     fireClock.reset(); // K114 stage 2: idle until the next first move.
     restartChase(carry);
     hideWin();
-    if (fabric && fabricController) fabric.update(fabricController);
+    if (scene.fabric && scene.fabricController) scene.fabric.update(scene.fabricController);
     resetAttempt();
     wake();
   };
@@ -2219,28 +1988,28 @@ async function main(): Promise<void> {
   // or the end of the run under way; the latest tap wins); the chase sets
   // off along it on its next tick. Returns true when the tap was taken.
   const handleChaseTap = (x: number, y: number, pt: string): boolean => {
-    if (!chase || !fabric || !fabricController) return false;
+    if (!scene.chase || !scene.fabric || !scene.fabricController) return false;
     return chaseAlong(
-      fabric.edgeAt(x, y, fabricController, pickRadius(pt, true))
+      scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(pt, true))
     );
   };
   // Queue run `eid` as a tap on it would (K120's keys share it).
   const chaseAlong = (eid: number): boolean => {
-    if (!chase || !fabric || !fabricController) return false;
-    if (eid < 0 || chase.tap(eid) === "reject") return false;
+    if (!scene.chase || !scene.fabric || !scene.fabricController) return false;
+    if (eid < 0 || scene.chase.tap(eid) === "reject") return false;
     chaseRunning = true;
-    if (fabric.setHover(-1)) fabric.update(fabricController);
+    if (scene.fabric.setHover(-1)) scene.fabric.update(scene.fabricController);
     return true;
   };
 
   const chaseEvents: ChaseEvent[] = [];
   let chaseWarned = false;
   const tickChase = (dt: number): void => {
-    if (!chase || !fabric || !fabricController) return;
-    const fc = fabricController;
-    if (chaseRunning && !chase.finished && !document.hidden) {
+    if (!scene.chase || !scene.fabric || !scene.fabricController) return;
+    const fc = scene.fabricController;
+    if (chaseRunning && !scene.chase.finished && !document.hidden) {
       chaseEvents.length = 0;
-      chase.advance(dt, chaseEvents);
+      scene.chase.advance(dt, chaseEvents);
       for (const ev of chaseEvents) {
         if (ev.kind === "depart") {
           const result = fc.tapEdge(ev.edge);
@@ -2252,8 +2021,8 @@ async function main(): Promise<void> {
             continue;
           }
           noteMove();
-          fabric.setHover(-1);
-          fabric.beginMove(
+          scene.fabric.setHover(-1);
+          scene.fabric.beginMove(
             ev.edge,
             result === "backtrack" ? "backtrack" : "advance",
             fc
@@ -2273,20 +2042,20 @@ async function main(): Promise<void> {
           }
           fc.markCaught();
           fc.respawn(params.minoRefog);
-          fabric.stopMove();
-          fabric.clearYarn();
+          scene.fabric.stopMove();
+          scene.fabric.clearYarn();
           pendingWin = false;
-          fabric.update(fc);
+          scene.fabric.update(fc);
           updateHud();
-          showCaughtToast(chase.catches);
+          showCaughtToast(scene.chase.catches);
         }
       }
     }
     // A restart above swapped the chase.
-    if (!chase) return;
-    if (chase.playerMoving) fabric.setMoveProgress(chase.playerProgress, fc);
-    else if (fabric.animating) fabric.setMoveProgress(1, fc);
-    fabric.syncMinotaur(chase, params.minoFog);
+    if (!scene.chase) return;
+    if (scene.chase.playerMoving) scene.fabric.setMoveProgress(scene.chase.playerProgress, fc);
+    else if (scene.fabric.animating) scene.fabric.setMoveProgress(1, fc);
+    scene.fabric.syncMinotaur(scene.chase, params.minoFog);
   };
 
   // K114 stage 2, THE REAL-TIME FIRE (game/fire_clock.ts), in tickAnim's
@@ -2296,28 +2065,28 @@ async function main(): Promise<void> {
   // waiting tap (keyStep) leaves at the arrival; fireSet, after keyStep,
   // hands the clock to the controller and the dot.
   const tickFire = (dt: number): void => {
-    const c = fabricController;
-    if (!c || !fabric) return;
-    const running = c.taps.length > 0 && !c.fireLost && (!c.solved || fabric.animating);
+    const c = scene.fabricController;
+    if (!c || !scene.fabric) return;
+    const running = c.taps.length > 0 && !c.fireLost && (!c.solved || scene.fabric.animating);
     if (running && !document.hidden) fireClock.advance(dt);
-    if (fabric.animating && fireClock.L >= c.fireArriveL) {
+    if (scene.fabric.animating && fireClock.L >= c.fireArriveL) {
       c.setFireNow(c.fireArriveL);
-      fabric.setMoveProgress(1, c);
+      scene.fabric.setMoveProgress(1, c);
     }
   };
   // The controller reads the clock (where you stand, the fire may reach
   // you: the Burnt banner), the dot its place on the run, the HUD the lead.
   const fireSet = (): void => {
-    const c = fabricController;
-    if (!c || !fabric) return;
+    const c = scene.fabricController;
+    if (!c || !scene.fabric) return;
     const L = fireClock.L;
     if (c.setFireNow(L)) {
       pendingLoss = true;
-      fabric.update(c);
+      scene.fabric.update(c);
     }
-    if (fabric.animating) {
+    if (scene.fabric.animating) {
       const len = c.fireArriveL - c.fireDepartL;
-      fabric.setMoveProgress(len > 0 ? (L - c.fireDepartL) / len : 1, c);
+      scene.fabric.setMoveProgress(len > 0 ? (L - c.fireDepartL) / len : 1, c);
     }
     hud.setFireLead(c.fire && !c.solved && !c.fireLost ? c.fireLeadHere : null);
   };
@@ -2337,8 +2106,8 @@ async function main(): Promise<void> {
   // tallies carried; with minoLair off the model leaves the minotaur where
   // it caught you. `wait`: caught on a wait (markCaught logs it).
   const turnCaught = (wait = false): void => {
-    if (!turnMino || !fabric || !fabricController) return;
-    const fc = fabricController;
+    if (!scene.turnMino || !scene.fabric || !scene.fabricController) return;
+    const fc = scene.fabricController;
     if (params.minoRestart) {
       restartSolve(true);
       updateHud();
@@ -2347,21 +2116,21 @@ async function main(): Promise<void> {
     }
     fc.markCaught(wait);
     // The move under way was made in full: its fog lifts as cancelMove's.
-    fabric.cancelMove();
+    scene.fabric.cancelMove();
     fc.respawn(params.minoRefog);
-    fabric.clearYarn();
+    scene.fabric.clearYarn();
     pendingWin = false;
     turnWait = 0;
-    fabric.update(fc);
+    scene.fabric.update(fc);
     updateHud();
-    showCaughtToast(turnMino.catches);
+    showCaughtToast(scene.turnMino.catches);
   };
   let turnWarned = false;
   // After the controller took run `eid`: the minotaur's turn. True when
   // the move ended in a catch (nothing left to animate).
   const turnAfterMove = (eid: number): boolean => {
-    if (!turnMino) return false;
-    const r = turnMino.turn(eid);
+    if (!scene.turnMino) return false;
+    const r = scene.turnMino.turn(eid);
     turnWait = 0;
     if (r === "reject" && !turnWarned) {
       turnWarned = true;
@@ -2379,47 +2148,47 @@ async function main(): Promise<void> {
   // splits between the junction and the runs and a tap on an arm moves.
   const waitPt = new Float32Array(2);
   const onHead = (x: number, y: number): boolean => {
-    if (!fabric || !fabricController) return false;
-    fabric.vertexWorld(fabricController.head, waitPt, 0);
-    const r = Math.max(fabric.markerRadius() * 1.5, 0.9);
+    if (!scene.fabric || !scene.fabricController) return false;
+    scene.fabric.vertexWorld(scene.fabricController.head, waitPt, 0);
+    const r = Math.max(scene.fabric.markerRadius() * 1.5, 0.9);
     const dx = waitPt[0] - x;
     const dy = waitPt[1] - y;
     const d = Math.sqrt(dx * dx + dy * dy);
-    return d <= r && d < fabric.runDistance(x, y, fabricController);
+    return d <= r && d < scene.fabric.runDistance(x, y, scene.fabricController);
   };
   // K80 turns 3a: (x, y) is in the WAIT ZONE now - the turn minotaur is on,
   // the maze still open and the point on the head (onHead). A click there
   // waits (handleFabricTap) and the hover shows the wait cue there, both
   // through this, so hover and click agree everywhere.
   const inWaitZone = (x: number, y: number): boolean =>
-    turnMino !== null &&
-    !turnMino.finished &&
-    fabricController !== null &&
-    !fabricController.solved &&
-    !fabricController.fireLost &&
+    scene.turnMino !== null &&
+    !scene.turnMino.finished &&
+    scene.fabricController !== null &&
+    !scene.fabricController.solved &&
+    !scene.fabricController.fireLost &&
     !pendingWin &&
     onHead(x, y);
   // K80 turns 3a: the head's wait cue on or off (the hover over the wait
   // zone). The head swaps to the "hourglass" glyph and back to the one it
   // wore; a rebuild drops the cue with the renderer it was set on.
   const setWaitCue = (on: boolean): void => {
-    if (waitCueFabric !== null && waitCueFabric !== fabric) {
+    if (waitCueFabric !== null && waitCueFabric !== scene.fabric) {
       waitCueGlyph = null;
       waitCueFabric = null;
       waitCueHead = null;
     }
-    if (!fabric || on === (waitCueGlyph !== null)) return;
+    if (!scene.fabric || on === (waitCueGlyph !== null)) return;
     if (on) {
-      waitCueGlyph = fabric.markerGlyphId("head");
-      waitCueFabric = fabric;
-      waitCueHead = fabricController?.head ?? null;
-      fabric.setMarkerStyle({ head: "hourglass" });
+      waitCueGlyph = scene.fabric.markerGlyphId("head");
+      waitCueFabric = scene.fabric;
+      waitCueHead = scene.fabricController?.head ?? null;
+      scene.fabric.setMarkerStyle({ head: "hourglass" });
     } else {
       const g = waitCueGlyph!;
       waitCueGlyph = null;
       waitCueFabric = null;
       waitCueHead = null;
-      fabric.setMarkerStyle({ head: g });
+      scene.fabric.setMarkerStyle({ head: g });
     }
   };
   // The wait move: a turn passes with the player where they stand. Only
@@ -2428,9 +2197,9 @@ async function main(): Promise<void> {
   // it waits for the arrival (MoveWait), so the move under way is never
   // snapped to its end here.
   const waitTurn = (): boolean => {
-    if (!turnMino || !fabric || !fabricController) return false;
-    if (fabricController.solved || pendingWin || turnMino.finished) return false;
-    const r = turnMino.turn(-1);
+    if (!scene.turnMino || !scene.fabric || !scene.fabricController) return false;
+    if (scene.fabricController.solved || pendingWin || scene.turnMino.finished) return false;
+    const r = scene.turnMino.turn(-1);
     if (r === "reject" || r === "noop") return false;
     noteMove();
     if (r === "caught") {
@@ -2439,29 +2208,29 @@ async function main(): Promise<void> {
     }
     // Its run(s) play over what the player's dot would take on them.
     let ctrl = 0;
-    for (const [e] of turnMino.lastPath) {
-      const we = walkGraph?.edges[e];
+    for (const [e] of scene.turnMino.lastPath) {
+      const we = scene.walkGraph?.edges[e];
       if (we) ctrl += we.ctrlB - we.ctrlA;
     }
-    turnWaitDur = ctrl > 0 ? fabric.moveSeconds(ctrl) : 0;
+    turnWaitDur = ctrl > 0 ? scene.fabric.moveSeconds(ctrl) : 0;
     turnWait = turnWaitDur;
-    if (turnWaitDur === 0) turnMino.setProgress(1);
+    if (turnWaitDur === 0) scene.turnMino.setProgress(1);
     updateHud();
     return true;
   };
   // Every frame: the minotaur's progress through its turn (the player's
   // move animation, or the wait's clock), then its marker and telegraph.
   const tickTurnMino = (dt: number): void => {
-    if (!turnMino || !fabric) return;
+    if (!scene.turnMino || !scene.fabric) return;
     let frac = 1;
     if (turnWait > 0) {
       turnWait = Math.max(0, turnWait - dt);
       frac = turnWaitDur > 0 ? 1 - turnWait / turnWaitDur : 1;
-    } else if (fabric.animating) {
-      frac = fabric.moveProgress;
+    } else if (scene.fabric.animating) {
+      frac = scene.fabric.moveProgress;
     }
-    turnMino.setProgress(frac);
-    fabric.syncMinotaur(turnMino, params.minoFog, turnMino.telegraph());
+    scene.turnMino.setProgress(frac);
+    scene.fabric.syncMinotaur(scene.turnMino, params.minoFog, scene.turnMino.telegraph());
   };
 
   // Native share sheet on phones, the clipboard elsewhere (ui/share.ts).
@@ -2582,7 +2351,7 @@ async function main(): Promise<void> {
       live: designKey(liveDesign()),
       flags: undoButtons.flags,
       shown: getComputedStyle(undoButtons.el).display !== "none",
-      maze: walkGraph ? walkFingerprint(walkGraph) : null,
+      maze: scene.walkGraph ? walkFingerprint(scene.walkGraph) : null,
       daily: dailyN,
       floating: dailyFloating,
       search: location.search,
@@ -2637,13 +2406,13 @@ async function main(): Promise<void> {
   // move (advance or backtrack); anywhere else falls through to grab/tug,
   // which stays live in fabric mode. Returns true when the tap was a move.
   const handleFabricTap = (x: number, y: number, pt: string): boolean => {
-    if (!fabric || !fabricController) return false;
+    if (!scene.fabric || !scene.fabricController) return false;
     // K80: the real-time mode queues the run with the chase instead.
-    if (chase) return handleChaseTap(x, y, pt);
+    if (scene.chase) return handleChaseTap(x, y, pt);
     // K114: a lost race takes no moves. A tap on the maze brings the Burnt
     // banner (and its Try again) back if it was closed; otherwise the tap
     // plucks as anywhere else.
-    if (fabricController.fireLost) {
+    if (scene.fabricController.fireLost) {
       if (pendingLoss || lossBanner.shown) return false;
       showFireLoss();
       return true;
@@ -2654,7 +2423,7 @@ async function main(): Promise<void> {
     // arms to the runs). K80 turns 3a: through inputWait, so mid-turn it
     // waits for the arrival as a tap on a run does.
     if (inWaitZone(x, y)) return inputWait();
-    const eid = fabric.edgeAt(x, y, fabricController, pickRadius(pt, true));
+    const eid = scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(pt, true));
     if (eid < 0) return false;
     // K334: a tap while the turn is under way (the dot travels, or a wait's
     // turn plays) waits for the arrival, as a key press does. tapsWait is
@@ -2676,9 +2445,9 @@ async function main(): Promise<void> {
   // One move along run `eid` from the head, as a tap on it (K120's keys
   // share it). Returns true when the move was taken.
   const moveAlong = (eid: number): boolean => {
-    if (!fabric || !fabricController) return false;
-    const result = fabricController.tapEdge(eid);
-    fabric.setHover(-1);
+    if (!scene.fabric || !scene.fabricController) return false;
+    const result = scene.fabricController.tapEdge(eid);
+    scene.fabric.setHover(-1);
     // The game state moved instantly; the dot + gold front animate along
     // the thread to catch up. The win banner waits for the arrival.
     if (result === "advance" || result === "backtrack" || result === "win") {
@@ -2686,17 +2455,17 @@ async function main(): Promise<void> {
       // K80 turns: the move is the minotaur's turn too; a catch leaves
       // nothing to animate (the player is back at the entrance).
       if (turnAfterMove(eid)) return true;
-      fabric.beginMove(
+      scene.fabric.beginMove(
         eid,
         result === "backtrack" ? "backtrack" : "advance",
-        fabricController
+        scene.fabricController
       );
       if (result === "win") pendingWin = true;
       // K114: no safe arm at the new junction loses the race; the Burnt
       // banner waits for the dot, as the win's does.
-      else if (fabricController.fireLost) pendingLoss = true;
+      else if (scene.fabricController.fireLost) pendingLoss = true;
     } else {
-      fabric.update(fabricController);
+      scene.fabric.update(scene.fabricController);
       // K114: the fire reaches that arm's far end first. Say why nothing
       // moved (the tap is taken: no tug).
       if (result === "smolder") smolderToast();
@@ -2740,12 +2509,12 @@ async function main(): Promise<void> {
   // What a waiting press was pressed in: a tap, a reset, a catch or a
   // rebuild since drops it.
   const keyStamp = () => ({
-    fc: fabricController,
-    chase,
-    turnMino,
-    taps: fabricController?.taps.length ?? 0,
-    inputs: chase?.inputs.length ?? 0,
-    catches: chase?.catches ?? turnMino?.catches ?? 0,
+    fc: scene.fabricController,
+    chase: scene.chase,
+    turnMino: scene.turnMino,
+    taps: scene.fabricController?.taps.length ?? 0,
+    inputs: scene.chase?.inputs.length ?? 0,
+    catches: scene.chase?.catches ?? scene.turnMino?.catches ?? 0,
   });
   type KeyStamp = ReturnType<typeof keyStamp>;
   const sameStamp = (a: KeyStamp, b: KeyStamp): boolean =>
@@ -2769,28 +2538,28 @@ async function main(): Promise<void> {
   const keyFlow = new Float32Array(2);
   // A chain's world position as the ribbons draw it (with the flow field).
   const keyPointAt = (chain: number, ctrl: number, out: Float32Array): void => {
-    ps!.pointOnChain(chain, ctrl, out, 0);
-    renderer!.flowOffset(out[0], out[1], keyFlow);
+    scene.ps!.pointOnChain(chain, ctrl, out, 0);
+    scene.renderer!.flowOffset(out[0], out[1], keyFlow);
     out[0] += keyFlow[0];
     out[1] += keyFlow[1];
   };
   // The junction a key move leaves from: the head (the destination while a
   // move animates), or in real time the chase's decision vertex.
   const keyVertex = (): string | null => {
-    if (!fabricController || fabricController.solved) return null;
-    if (chase) return chase.finished ? null : chase.decisionVertex;
-    return fabricController.head;
+    if (!scene.fabricController || scene.fabricController.solved) return null;
+    if (scene.chase) return scene.chase.finished ? null : scene.chase.decisionVertex;
+    return scene.fabricController.head;
   };
   const keyDepartures = (v: string, reach = KEY_REACH): Departure[] => {
-    const wv = walkGraph?.vertices.get(v);
-    if (!wv || !walkGraph || !fabric) return [];
-    fabric.vertexWorld(v, keyPt, 0);
+    const wv = scene.walkGraph?.vertices.get(v);
+    if (!wv || !scene.walkGraph || !scene.fabric) return [];
+    scene.fabric.vertexWorld(v, keyPt, 0);
     // K114: a burnt run is no choice (choices() drops it); a smoldering arm
     // stays, its refusal toasts as a tap's does.
-    const fc = fabricController;
+    const fc = scene.fabricController;
     const edges = fc?.fire && v === fc.head ? fc.choices() : wv.edges;
     return departureVectors(
-      walkGraph.edges,
+      scene.walkGraph.edges,
       edges,
       v,
       keyPt[0],
@@ -2803,22 +2572,22 @@ async function main(): Promise<void> {
   // during the intro, once solved or while the finish lands.
   const keysLive = (): boolean =>
     params.mazeFabric &&
-    fabric !== null &&
-    fabricController !== null &&
-    walkGraph !== null &&
-    ps !== null &&
-    renderer !== null &&
+    scene.fabric !== null &&
+    scene.fabricController !== null &&
+    scene.walkGraph !== null &&
+    scene.ps !== null &&
+    scene.renderer !== null &&
     sceneReady() &&
-    !fabricController.solved &&
+    !scene.fabricController.solved &&
     !pendingWin &&
     // K114: a lost burn race (or one whose loss is landing) takes no moves.
-    !fabricController.fireLost &&
+    !scene.fabricController.fireLost &&
     !pendingLoss &&
-    !(chase?.finished ?? false);
+    !(scene.chase?.finished ?? false);
   const setKeyHover = (eid: number): void => {
-    if (!fabric || !fabricController) return;
+    if (!scene.fabric || !scene.fabricController) return;
     keyHover = eid >= 0;
-    if (fabric.setHover(eid)) fabric.update(fabricController);
+    if (scene.fabric.setHover(eid)) scene.fabric.update(scene.fabricController);
   };
   // A waiting press outlives the hold (a quick press mid-move is still
   // taken on arrival); keyStep drops it when its stamp changes.
@@ -2829,40 +2598,40 @@ async function main(): Promise<void> {
   };
   const noteKeyMove = (): void => {
     keyHold = true;
-    keyHoldFc = fabricController;
-    keyHoldTaps = fabricController?.taps.length ?? 0;
-    keyHoldChase = chase;
-    keyHoldTurnMino = turnMino;
-    if (chase) {
-      keyHoldInputs = chase.inputs.length;
-      keyHoldCatches = chase.catches;
-      keyHoldTick = chase.tick;
-    } else if (turnMino) {
-      keyHoldCatches = turnMino.catches; // K80 turns.
+    keyHoldFc = scene.fabricController;
+    keyHoldTaps = scene.fabricController?.taps.length ?? 0;
+    keyHoldChase = scene.chase;
+    keyHoldTurnMino = scene.turnMino;
+    if (scene.chase) {
+      keyHoldInputs = scene.chase.inputs.length;
+      keyHoldCatches = scene.chase.catches;
+      keyHoldTick = scene.chase.tick;
+    } else if (scene.turnMino) {
+      keyHoldCatches = scene.turnMino.catches; // K80 turns.
     }
   };
   // One move by direction; true when it moved (queued, in real time).
   const keyMoveAlong = (eid: number): boolean => {
-    if (!fabricController) return false;
-    if (chase) {
-      const p = chase.player;
+    if (!scene.fabricController) return false;
+    if (scene.chase) {
+      const p = scene.chase.player;
       if (!chaseAlong(eid)) return false;
       keyQueued = p.edge >= 0 ? eid : -1;
       keyQueuedOn = p.edge;
       keyQueuedDir = p.dir;
       return true;
     }
-    const before = fabricController.taps.length;
-    const caught = turnMino?.catches ?? 0;
+    const before = scene.fabricController.taps.length;
+    const caught = scene.turnMino?.catches ?? 0;
     moveAlong(eid);
     // K80 turns: a move that was caught ends the hold at once (the keys
     // must come up first, as in real time).
-    if (turnMino && turnMino.catches !== caught) {
+    if (scene.turnMino && scene.turnMino.catches !== caught) {
       heldKeys.clear();
       endKeyHold();
       return false;
     }
-    return fabricController.taps.length > before;
+    return scene.fabricController.taps.length > before;
   };
   // A press taken: one key, or a chord (two keys beside each other, oldest
   // first), from the junction the keys leave from, as a tap. No match does
@@ -2904,7 +2673,7 @@ async function main(): Promise<void> {
   // short either. Turn by turn only: real time queues in the chase, so
   // nothing waits for it here.
   const dotMoving = (): boolean =>
-    !chase && ((fabric?.animating ?? false) || turnWait > 0);
+    !scene.chase && ((scene.fabric?.animating ?? false) || turnWait > 0);
   // K334: a tap's run while the dot travels waits for the arrival (the
   // latest press or tap wins). True when it waits.
   const queueTap = (eid: number): boolean => {
@@ -2919,12 +2688,12 @@ async function main(): Promise<void> {
   // the latest input winning), else it is taken at once. True when it was
   // taken or queued.
   const inputWait = (): boolean => {
-    if (!turnMino || !fabric || !fabricController) return false;
+    if (!scene.turnMino || !scene.fabric || !scene.fabricController) return false;
     if (moveWait.waiting !== null && !moveWait.waiting.queued) {
       takeWaiting(moveWait.takeNow());
     }
     endKeyHold();
-    if (!turnMino) return false; // The press before it was caught.
+    if (!scene.turnMino) return false; // The press before it was caught.
     if (moveWait.wait(performance.now(), dotMoving())) {
       moveWaitStamp = keyStamp();
       if (keyHover) setKeyHover(-1);
@@ -2993,32 +2762,32 @@ async function main(): Promise<void> {
   const keyStep = (): void => {
     if (stepWaiting(performance.now())) return;
     if (!keyHold) return;
-    const fc = fabricController;
+    const fc = scene.fabricController;
     if (
       heldKeys.size === 0 ||
       !keysLive() ||
       !fc ||
       fc !== keyHoldFc ||
-      chase !== keyHoldChase ||
-      turnMino !== keyHoldTurnMino
+      scene.chase !== keyHoldChase ||
+      scene.turnMino !== keyHoldTurnMino
     ) {
       endKeyHold();
       return;
     }
     // K80 turns: caught, as in real time - the keys must come up first.
-    if (turnMino && turnMino.catches !== keyHoldCatches) {
+    if (scene.turnMino && scene.turnMino.catches !== keyHoldCatches) {
       heldKeys.clear();
       endKeyHold();
       return;
     }
-    if (chase) {
-      if (chase.catches !== keyHoldCatches) {
+    if (scene.chase) {
+      if (scene.chase.catches !== keyHoldCatches) {
         // Caught and back at the entrance: the keys must come up first.
         heldKeys.clear();
         endKeyHold();
         return;
       }
-      if (chase.inputs.length !== keyHoldInputs) {
+      if (scene.chase.inputs.length !== keyHoldInputs) {
         endKeyHold(); // A tap took over.
         return;
       }
@@ -3033,8 +2802,8 @@ async function main(): Promise<void> {
     }
     const taps = fc.taps;
     const arrival = taps.length > 0 ? taps[taps.length - 1] : -1;
-    if (chase && keyQueued >= 0) {
-      const p = chase.player;
+    if (scene.chase && keyQueued >= 0) {
+      const p = scene.chase.player;
       if (p.edge === keyQueuedOn && p.dir === keyQueuedDir) {
         setKeyHover(keyQueued); // Still on the run it was queued from.
         return;
@@ -3042,8 +2811,8 @@ async function main(): Promise<void> {
       keyQueued = -1;
     }
     const pick = pickHold(keyDepartures(v), heldKeys.dirs, arrival);
-    const moving = chase
-      ? chase.playerMoving || chase.tick === keyHoldTick
+    const moving = scene.chase
+      ? scene.chase.playerMoving || scene.chase.tick === keyHoldTick
       : dotMoving();
     if (!holdDue({ moving, now: performance.now(), since: keyHoldSince })) {
       setKeyHover(pick.edge); // What the hold takes next.
@@ -3064,7 +2833,7 @@ async function main(): Promise<void> {
       // K80 turns 3a: the WAIT key (`.`, or Space off a button or link),
       // with the turn minotaur on; one wait a press (no hold). Shift is let
       // through for `.` (some layouts need it).
-      if (!turnMino || !waitKeyOf(e)) return;
+      if (!scene.turnMino || !waitKeyOf(e)) return;
       const guard = {
         ctrlKey: e.ctrlKey,
         altKey: e.altKey,
@@ -3148,7 +2917,7 @@ async function main(): Promise<void> {
   let snapMode: "none" | "soft" = "none";
 
   const boundedDragTo = (x: number, y: number): void => {
-    if (!ps) return;
+    if (!scene.ps) return;
     const L = Math.max(0.1, params.tugLimit * params.threadWidth);
     const dx = x - grabOrigin[0];
     const dy = y - grabOrigin[1];
@@ -3177,10 +2946,10 @@ async function main(): Promise<void> {
     delay = 0,
     look: PluckRipple = params.pluckRipple
   ): void => {
-    if (!renderer || look === "off" || !(strength > 0)) return;
+    if (!scene.renderer || look === "off" || !(strength > 0)) return;
     ripples.look = look;
     ripples.reducedMotion = motion.reduced;
-    const pt = renderer.pluckPoint(chain, at);
+    const pt = scene.renderer.pluckPoint(chain, at);
     if (pt) ripples.add(pt.x, pt.y, strength, delay);
   };
   // K279 TUG: a tap's small physical kick (pluckTug, peak in thread widths;
@@ -3197,10 +2966,10 @@ async function main(): Promise<void> {
     side: number,
     amount: number
   ): void => {
-    if (!ps || !renderer || !(amount > 0) || !physicsLive() || motion.reduced) {
+    if (!scene.ps || !scene.renderer || !(amount > 0) || !physicsLive() || motion.reduced) {
       return;
     }
-    const span = renderer.tugSpan(chain, at, TUG_MAX_CTRL);
+    const span = scene.renderer.tugSpan(chain, at, TUG_MAX_CTRL);
     if (!span) return;
     const amp = Math.min(1, amount) * params.threadWidth;
     // The host wakes the physics for a tug that moved anything; wake()
@@ -3212,11 +2981,11 @@ async function main(): Promise<void> {
   // released unit vibrating (amplitude from the release offset, swinging
   // from the side it was pulled toward); soft: ease home (snapBack).
   const beginRelease = (style: "soft" | "string", freq: number): void => {
-    if (style === "string" && ps && renderer && ps.grabbedParticle >= 0) {
-      const p = ps.grabbedParticle;
-      const chain = ps.chainOfParticle(p);
+    if (style === "string" && scene.ps && scene.renderer && scene.ps.grabbedParticle >= 0) {
+      const p = scene.ps.grabbedParticle;
+      const chain = scene.ps.chainOfParticle(p);
       if (chain >= 0) {
-        const arr = ps.chains[chain];
+        const arr = scene.ps.chains[chain];
         const slot = arr.indexOf(p);
         const dx = dragPos[0] - grabOrigin[0];
         const dy = dragPos[1] - grabOrigin[1];
@@ -3225,11 +2994,11 @@ async function main(): Promise<void> {
         const len = arr.length;
         const a = arr[Math.max(0, slot - 1)];
         const b = arr[Math.min(len - 1, slot + 1)];
-        const tx = ps.positions[b * 2] - ps.positions[a * 2];
-        const ty = ps.positions[b * 2 + 1] - ps.positions[a * 2 + 1];
+        const tx = scene.ps.positions[b * 2] - scene.ps.positions[a * 2];
+        const ty = scene.ps.positions[b * 2 + 1] - scene.ps.positions[a * 2 + 1];
         const side = off > 1e-6 && tx * dy - ty * dx < 0 ? -1 : 1;
         const unit = pluckUnit(chain, slot);
-        renderer.pluck({
+        scene.renderer.pluck({
           chain,
           ctrl: slot,
           side,
@@ -3256,14 +3025,14 @@ async function main(): Promise<void> {
   // Re-picks at the press point so a knot that moved meanwhile still
   // plucks the thread that is there now.
   const tapPluck = (x: number, y: number, pt: string): void => {
-    if (!ps || !renderer) return;
-    const hit = renderer.pickThread(x, y, pickRadius(pt));
+    if (!scene.ps || !scene.renderer) return;
+    const hit = scene.renderer.pickThread(x, y, pickRadius(pt));
     if (!hit) return;
     const freq = freqForCtrl(hit.chain, hit.ctrl);
     const unit = pluckUnit(hit.chain, hit.ctrl);
     // (renderer.pluck can return before the overlay runs: clear its verdict.)
-    renderer.plucks.resetSkip();
-    const drawn = renderer.pluck({
+    scene.renderer.plucks.resetSkip();
+    const drawn = scene.renderer.pluck({
       chain: hit.chain,
       arc: hit.arc,
       side: hit.side,
@@ -3276,7 +3045,7 @@ async function main(): Promise<void> {
     // shouldn't."): a tap inside a junction core draws no pluck, so it makes
     // no sound either. Every other tap sounds as before, drawn or not (a
     // chain mid-reveal, pluckSize 0, a degenerate lobe).
-    if (!drawn && renderer.plucks.lastSkip === "core") return;
+    if (!drawn && scene.renderer.plucks.lastSkip === "core") return;
     if (!settings.muted && params.soundMode !== "none") {
       synth.pluck(freq, TAP_STRENGTH);
     }
@@ -3335,7 +3104,7 @@ async function main(): Promise<void> {
     return [it.next().value!, it.next().value!];
   };
   const beginPinch = (): void => {
-    if (ps && ps.grabbedParticle >= 0) {
+    if (scene.ps && scene.ps.grabbedParticle >= 0) {
       host.release();
       snapMode = "none";
     }
@@ -3374,13 +3143,13 @@ async function main(): Promise<void> {
   // Nothing to tap or tug at this lattice point (where empty-space
   // gestures - pan, double-tap reset - may take over), for pointer `pt`.
   const emptyAt = (x: number, y: number, pt: string): boolean =>
-    !!ps &&
+    !!scene.ps &&
     !onThread(x, y, pt) &&
     !(
       params.mazeFabric &&
-      fabric &&
-      fabricController &&
-      fabric.edgeAt(x, y, fabricController, pickRadius(pt, true)) >= 0
+      scene.fabric &&
+      scene.fabricController &&
+      scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(pt, true)) >= 0
     );
   // K145, the hover glow: the run under the pointer lights subtly along
   // both rims. Over a choice (eid >= 0, edgeAt's pick) it lights that run
@@ -3396,14 +3165,14 @@ async function main(): Promise<void> {
     eid: number,
     pt: string
   ): boolean => {
-    if (!params.mazeFabric || !fabric) return false;
-    if (eid >= 0) return fabric.setGlowRun(eid, x, y);
-    const hit = renderer?.pickThread(x, y, pickRadius(pt));
-    return fabric.setGlow(hit ? hit.chain : -1, hit ? hit.ctrl : 0);
+    if (!params.mazeFabric || !scene.fabric) return false;
+    if (eid >= 0) return scene.fabric.setGlowRun(eid, x, y);
+    const hit = scene.renderer?.pickThread(x, y, pickRadius(pt));
+    return scene.fabric.setGlow(hit ? hit.chain : -1, hit ? hit.ctrl : 0);
   };
   const clearGlow = (): void => {
-    if (fabric && fabricController && fabric.setGlow(-1, 0)) {
-      fabric.update(fabricController);
+    if (scene.fabric && scene.fabricController && scene.fabric.setGlow(-1, 0)) {
+      scene.fabric.update(scene.fabricController);
     }
   };
 
@@ -3439,7 +3208,7 @@ async function main(): Promise<void> {
   });
 
   app.canvas.addEventListener("pointerdown", (e) => {
-    if (!ps) return;
+    if (!scene.ps) return;
     if (e.pointerType === "touch") {
       touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (touches.size >= 2) {
@@ -3464,7 +3233,7 @@ async function main(): Promise<void> {
     // Alt+click: dump the nearest crossing's render state to the console
     // (diagnostic; makes broken-crossing reports exactly reproducible).
     if (e.altKey) {
-      renderer?.requestInspect(x, y);
+      scene.renderer?.requestInspect(x, y);
       wake();
       return;
     }
@@ -3473,9 +3242,9 @@ async function main(): Promise<void> {
     if (params.mazeFabric) {
       if (e.pointerType === "touch") {
         if (
-          fabric &&
-          fabricController &&
-          (fabric.edgeAt(x, y, fabricController, pickRadius("touch", true)) >= 0 ||
+          scene.fabric &&
+          scene.fabricController &&
+          (scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius("touch", true)) >= 0 ||
             inWaitZone(x, y)) // K80 turns 3a: a tap on the head waits.
         ) {
           pendingTap = { id: e.pointerId, sx: e.clientX, sy: e.clientY, x, y };
@@ -3498,8 +3267,8 @@ async function main(): Promise<void> {
       };
       app.canvas.setPointerCapture(e.pointerId);
       // The press shows the hover glow (a touch has no hover before it).
-      if (setGlowAt(x, y, -1, e.pointerType) && fabric && fabricController) {
-        fabric.update(fabricController);
+      if (setGlowAt(x, y, -1, e.pointerType) && scene.fabric && scene.fabricController) {
+        scene.fabric.update(scene.fabricController);
       }
     } else {
       // Empty space: drag to pan the camera.
@@ -3514,7 +3283,7 @@ async function main(): Promise<void> {
   const commitPendingDrag = (e: PointerEvent): void => {
     const pp = pendingPluck;
     pendingPluck = null;
-    if (!pp || !ps) return;
+    if (!pp || !scene.ps) return;
     // A tug or a pan is not a hover: the glow goes (K145).
     clearGlow();
     if (!physicsLive()) {
@@ -3529,9 +3298,9 @@ async function main(): Promise<void> {
       dragPan = { id: pp.id, x: pp.sx, y: pp.sy, moved: pp.slop + 1 };
       return;
     }
-    const p = ps.grabbedParticle;
-    grabOrigin[0] = ps.positions[p * 2];
-    grabOrigin[1] = ps.positions[p * 2 + 1];
+    const p = scene.ps.grabbedParticle;
+    grabOrigin[0] = scene.ps.positions[p * 2];
+    grabOrigin[1] = scene.ps.positions[p * 2 + 1];
     dragPos[0] = grabOrigin[0];
     dragPos[1] = grabOrigin[1];
     dragVel = 0;
@@ -3540,7 +3309,7 @@ async function main(): Promise<void> {
     wake();
   };
   app.canvas.addEventListener("pointermove", (e) => {
-    if (!ps) return;
+    if (!scene.ps) return;
     if (e.pointerType === "touch") {
       const t = touches.get(e.pointerId);
       if (t) {
@@ -3591,7 +3360,7 @@ async function main(): Promise<void> {
       return;
     }
     const [x, y] = toLattice(e);
-    if (ps.grabbedParticle >= 0 && snapMode === "none") {
+    if (scene.ps.grabbedParticle >= 0 && snapMode === "none") {
       const px = dragPos[0];
       const py = dragPos[1];
       boundedDragTo(x, y);
@@ -3601,7 +3370,7 @@ async function main(): Promise<void> {
         dragVel * 0.6 +
         (Math.hypot(dragPos[0] - px, dragPos[1] - py) / dt) * 0.4;
       wake();
-    } else if (params.mazeFabric && fabric && fabricController) {
+    } else if (params.mazeFabric && scene.fabric && scene.fabricController) {
       // Hover: light the choosable run under the pointer (the paint pass
       // animates it even while the physics sleeps - no wake needed), or
       // glow subtly along any other run under it (K145). K80 turns 3a: the
@@ -3611,9 +3380,9 @@ async function main(): Promise<void> {
       setWaitCue(zone);
       const eid = zone
         ? -1
-        : fabric.edgeAt(x, y, fabricController, pickRadius(e.pointerType, true));
-      const glow = zone ? fabric.setGlow(-1, 0) : setGlowAt(x, y, eid, e.pointerType);
-      if (fabric.setHover(eid) || glow) fabric.update(fabricController);
+        : scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(e.pointerType, true));
+      const glow = zone ? scene.fabric.setGlow(-1, 0) : setGlowAt(x, y, eid, e.pointerType);
+      if (scene.fabric.setHover(eid) || glow) scene.fabric.update(scene.fabricController);
       app.canvas.style.cursor =
         zone || eid >= 0
           ? "pointer"
@@ -3627,7 +3396,7 @@ async function main(): Promise<void> {
     }
   });
   const endDrag = (e: PointerEvent): void => {
-    if (!ps) return;
+    if (!scene.ps) return;
     if (dragPan && dragPan.id === e.pointerId) {
       // A touch that never really moved on empty space is a TAP there:
       // two within 320ms reset the view (double-tap).
@@ -3659,9 +3428,9 @@ async function main(): Promise<void> {
       }
       // A lifted finger leaves no hover or glow behind (touch has no
       // pointer to move off the run).
-      const glow = !!fabric && fabric.setGlow(-1, 0);
-      if (fabric && fabricController && (fabric.setHover(-1) || glow)) {
-        fabric.update(fabricController);
+      const glow = !!scene.fabric && scene.fabric.setGlow(-1, 0);
+      if (scene.fabric && scene.fabricController && (scene.fabric.setHover(-1) || glow)) {
+        scene.fabric.update(scene.fabricController);
       }
       if (touches.size === 0) touchLocked = false;
     }
@@ -3671,12 +3440,12 @@ async function main(): Promise<void> {
       const pp = pendingPluck;
       pendingPluck = null;
       if (e.type === "pointerup") tapPluck(pp.x, pp.y, pp.pt);
-    } else if (ps.grabbedParticle >= 0 && snapMode === "none") {
+    } else if (scene.ps.grabbedParticle >= 0 && snapMode === "none") {
       wake();
-      const chain = ps.chainOfParticle(ps.grabbedParticle);
+      const chain = scene.ps.chainOfParticle(scene.ps.grabbedParticle);
       const freq =
         chain >= 0
-          ? freqForCtrl(chain, ps.chains[chain].indexOf(ps.grabbedParticle))
+          ? freqForCtrl(chain, scene.ps.chains[chain].indexOf(scene.ps.grabbedParticle))
           : 220;
       if (!settings.muted && params.soundMode !== "none" && chain >= 0) {
         synth.pluck(freq, Math.max(0.35, Math.min(1, dragVel / 25)));
@@ -3711,28 +3480,28 @@ async function main(): Promise<void> {
     when?: number,
     lead = 0
   ): void => {
-    if (!ps || !renderer || !Number.isFinite(freq)) return;
+    if (!scene.ps || !scene.renderer || !Number.isFinite(freq)) return;
     if (!settings.muted && params.soundMode !== "none") {
       // K279: on the synth's auto bus (autoPluckGain).
       synth.pluck(freq, amp, when, true);
     }
     const site = audioSegSite[seg];
     if (!site) return;
-    const chainArr = ps.chains[site.chain];
+    const chainArr = scene.ps.chains[site.chain];
     if (!chainArr || chainArr.length === 0) return;
     const len = chainArr.length;
     // Knot mode: the audio segment is the whole strand - excite a random
     // place along it (the fixed mid-strand site rang one spot forever).
-    const ctrl = walkGraph ? site.ctrl : Math.random() * len;
+    const ctrl = scene.walkGraph ? site.ctrl : Math.random() * len;
     const unit = pluckUnit(site.chain, ctrl);
     // A unit the user is holding stays sound-only.
-    const g = ps.grabbedParticle;
+    const g = scene.ps.grabbedParticle;
     const avoidCtrl =
-      g >= 0 && ps.chainOfParticle(g) === site.chain
+      g >= 0 && scene.ps.chainOfParticle(g) === site.chain
         ? chainArr.indexOf(g)
         : undefined;
     const side = Math.random() < 0.5 ? -1 : 1;
-    const drawn = renderer.pluck({
+    const drawn = scene.renderer.pluck({
       avoidCtrl,
       chain: site.chain,
       ctrl,
@@ -3767,7 +3536,7 @@ async function main(): Promise<void> {
     clock: string;
   }> = [];
   const autoAudioTick = (): void => {
-    if (!ps) return;
+    if (!scene.ps) return;
     if (!audioAssign || settings.muted) {
       synth.cancelScheduled();
       return;
@@ -4000,7 +3769,7 @@ async function main(): Promise<void> {
       return camera.camTween;
     },
     get canvasInk() {
-      return canvasInk;
+      return scene.canvasInk;
     },
     get dailyFloating() {
       return dailyFloating;
