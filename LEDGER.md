@@ -1244,7 +1244,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
-- **K76** · Thread-reveal mode, stage 2: criterion 2 fixed (applyExploreGaps re-derives underWindows/pluck footprints from the last solve ungated slot data, no update() per move; phone gate2 fw=0: 0 updates/move, was 1-5), K362 start view widened to 2x(revealDistance+2), HC phone shot taken (capture tiles, K513 path). Done in PLACEHOLDER (2026-10-16; evidence .claude/probes/K76/stage2e/).
+- **K76** · Thread-reveal mode, stage 2: criterion 2 fixed (applyExploreGaps re-derives underWindows/pluck footprints from the last solve ungated slot data, no update() per move; phone gate2 fw=0: 0 updates/move, was 1-5), K362 start view widened to 2x(revealDistance+2), HC phone shot taken (capture tiles, K513 path). Done in 5da3f5c (2026-10-16; evidence .claude/probes/K76/stage2e/).
 
 - **K514** Â· Looks screenshots no longer tile with the phone sitting in landscape: `shotViewport` captures at a surface-fitting scale on the page's emulation CDP session (464x850 for 411x753). Done in this commit (2026-10-16).
 - **K516** Â· K6-3 phone cadence check: knot fw=0 draws 0/s at rest (ticker stopped), fabric ambient cadence 23.8 drawn/s (rAF p95 16.9 ms, smooth), continuous mode 60.2 / 44.0 drawn/s; load first sleep 10.5-12.9 s. Done in PLACEHOLDER (2026-10-16; `.claude/probes/K516/results.md`). Residual K520.
