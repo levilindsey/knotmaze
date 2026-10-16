@@ -4193,7 +4193,8 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   copies), `g2/` and `K4/` `variant_build.ps1`, `K154_K169/edit_rr2.ps1` and
   `edit_rr3.ps1`. Repoint them at `src/render/ribbon/ribbon_shader.ts` when next used
   (R1's copy: `.claude/probes/K5/R1/dump_variants.ts`). A `variant_build.ps1 -Subst` on moved
-  text must name the new file.
+  text must name the new file. K5 R2 (52faab8) moved the crossing and explore gaps to
+  `src/render/ribbon/crossing_gaps.ts` and `explore_gaps.ts`; a `-Subst` on that text names them.
 
 ## K428 (2026-10-15, shortened by the diet)
 
@@ -4201,7 +4202,9 @@ turns stage 3 follows that design, since it shares the minotaur's rows.
   (`k5ab&phy=0&am=instant&fw=0&snd=none&xp=threads`, 3 moves, k83_ab with K381's
   explore-clock pin) land in a few discrete states 17-67551 px apart, with or without
   `&phw=0`. A clock is still unpinned; until it is found, take several captures per
-  build (K5 R1 `checks/`, `checks2/pairs_threads3.txt`).
+  build (K5 R1 `checks/`, `checks2/pairs_threads3.txt`). K5 R2 (2026-10-15): beacon halo
+  sprites differ by 30-185k px between captures of one build, and the dots' reveal has two
+  states about 115k px apart (`.claude/probes/K5/R2/checks/`).
 
 ## K431 (2026-10-15, shortened by the diet)
 
