@@ -19,7 +19,7 @@ one line, `- **K<n>** Â· <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K528.
+Next free ID: K529.
 
 ## Waiting on Levi
 
@@ -107,7 +107,7 @@ Next free ID: K528.
 
 - **K515** Â· K480 stage 2's look, built as recommended (Levi may change): a hovered tap's whole route at the hover breath, its tapped run keeping the rim glow, non-route branched arms keeping their trains; plus page-probing the hover route with a real pointer (desktop, and in K500's phone pass). `docs/design/K480.md` ("Stage 2 handoff").
 
-- **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`.
+- **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`. The real-phone sheet is now `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524): hunt 0.95 reads clearly at fit zoom, roam 0.45 is effectively invisible at fit zoom, the catch ring had mostly faded by the shot, and fog bleed 0.16 is unexercised (fog off in this design).
 
 ## In progress
 
@@ -292,6 +292,7 @@ The queue (coordinator, overnight 2026-10-15/16):
 5. Overnight run 4 done (2026-10-16): K518 (8215349; residuals K519), K514+K516 (11309be; residual K520), K76 criterion 2 (5da3f5c), K74 stage 3 (9ccf360; residual K521, K284/K402/K278(a) closed). What remains needs Levi first: K501 (K481 stage 2 after it), K517, K515, K399 (G3-1 after it) and the other Waiting calls; then K521's measurement or K74 stage 4, and K397's phone pass + Levi's link (K519).
 6. Overnight run 5 done (2026-10-16): K519 (9926525; residuals K522, K523), K521 (4098946; the greedy bar fails on dailies 1-240, owned by K527), K80 turns 3b (dcdfaf4; K270 done, residuals K524-K526), the K397 phone pass (no commit; K397 advanced, K477 narrowed) and K74 stage 4's sim-first half (49efe76; build half K527). Next queue: Levi first - K501 (K481 stage 2 after it), K517 (ship K307's late enable), K515 (K480's look), K525 (K80 3b's look), K399 (G3-1 after it) and the rest of Waiting on Levi; then ungated, in order: K527 once its brief's six calls land, K524 in the next phone window (K522/K523 done, Stage 6 handoff in `docs/design/K397.md`).
 
+7. Overnight run 6 done (2026-10-16, final run): K522+K523 (5558669; census2d flicker floor + attributedUW/lifted-exit port, m10 30/30) and K524 (real-Pixel sheet, no commit). Residual K528 (census2d first-frame drift, localize only if it grows). Next queue: Levi first - K501 (K481 stage 2 after it), K517 (ship K307's late enable), K515 (K480's look), K525 (K80 3b's look, real sheet now in), K399 (G3-1 after it), K527's six calls, and the rest of Waiting on Levi; then ungated work in their sections.
 
 Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
 merged):
@@ -1024,7 +1025,6 @@ Every other item below waits on the trigger it names.
 - **K511** Â· K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 3b1612f; K348's mid-move wait-tap leftover is now intentional for pointers.
 
 - **K528** · census2d's long-sequence drift against the FIRST mode-off frame (K522): 11,343 exact px (1,077 hard) over the m10 census while visitAll vs the contemporaneous mode-off-again frame is exactly 0 px; candidates are the follow-camera tail and one-level backdrop flicker (K519) - localize only if it grows (`.claude/probes/K76/stage2d/out_k522_m10e/`, `docs/design/K397.md` Stage 6 handoff).
-- **K524** · K80 turns 3b's real-phone contact sheet: only phone emulation ran (no phone lock/window confirmed); shoot roam/hunt/caught at 411x753 on the real Pixel in the next phone pass. `.claude/probes/K80/stage3b/contact_sheet.png` is the emulated sheet.
 - **K526** · Footstep panning by screen x (section 2.10) waits for a pan control in KnotSynth; footsteps currently carry distance only (strength to 0 at 6 runs).
 ## Approved, to schedule (2026-10-11)
 
@@ -1242,6 +1242,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K524** · K80 turns 3b's real-phone contact sheet: shot 2026-10-16 on the real Pixel 11 at 411x753 (master 5558669, PowerVR Vulkan; roam turn 2, hunt turn 47, caught turn 48, all checks pass). `.claude/probes/K80/stage3b/contact_sheet_real.png` beside the emulated sheet; frames + look notes in `shots/phone_real/` (probe `turns_phone_real.mjs`). Done 2026-10-16 (probe evidence only, no commit).
 - **K521** · K74 stage 3 items 7-8 measured: prototype port byte-identical 640/640 (K109/K110 exception list empty); greedy bar fails on dailies 1-240 (gF median 2.86x, 20.0% within 1.5x vs the 15% bar) - owned by stage 4's search (K527), not a stage-3 retune. Done in 4098946 (2026-10-16; evidence `.claude/probes/K74/stage3/out/results_k521.md`).
 - **K270** · K80 turns 3b diagnosed the lavender band: a stale pre-catch telegraph/glow frame at the catch site; turnCaught now re-syncs the minotaur in the same call. Done in dcdfaf4 (2026-10-16).
 
