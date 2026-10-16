@@ -618,3 +618,78 @@ only with the files it is about; `render.md` lists the area's other files.
   (3) a fade tap's pluck point clamps to BETA_MIN/MAX at the solid end;
   (4) K279's tug (`ptg`, default 0) ignores the reveal. NOT VERIFIED:
   the phone, and a reveal-off pixel A/B (the same path by construction).
+
+## Pluck to the stub's rounded cap (K459)
+
+- REPORT (Levi, 2026-10-15 13:39, phone, `?2gozcj.MgaM`): "it is a bit
+  weird to not see the vibration extend all the way to the end of the
+  solid thread stub (including the rounded cap)." His call b: "If we
+  make a pluck sound, then we should show the pluck effect". Brief and
+  handoff: `docs/design/K459.md`.
+- MODEL (A, a FREE END): a solid end that ends in the dots' rounded cap
+  is free, not K397's hard fret. A string fixed at one end and free at
+  the other swings most at its free tip; a fret at the cap's tip (model
+  B) would barely move the cap, the part Levi asked to see.
+  `freeEndX(x, freeLo, freeHi)` (pluck_model.ts) maps the lobe's shape
+  coordinate onto half of a symmetric string (freeHi: 0.5 x; freeLo: 0.5
+  + 0.5 x; freeHi wins when both are set), so layout and capClearance
+  see the tip as a string's middle. A free lobe ignores the tap's
+  position (f5's fade and solid taps draw the same pluck), so K397's
+  residual 3 (BETA_MIN/MAX) is moot there.
+- WHERE (`pluck()` and `stubCaps`, ribbon_renderer.ts): under the
+  reveal and not under reduced motion, an end of the solid span that is
+  a piece's FRONTIER end with a fade (tip0/tip1, f > 0), under the dots
+  or beacon look (uKExplore look 3 or 5), gets the cap length of
+  `kExDotsSd`: 0.5 tw g, g = clamp(lf / (EXPLORE_DOTS_SPAN tw), 1e-3,
+  1). The span grows by it, [a0 - freeLo, a1 + freeHi], and
+  `PluckRequest.freeLo/freeHi` carry it. Other looks, still plucks and
+  other ends keep the hard fret. In the overlay only the TAPPED lobe, at
+  a node -1 end, gets `Lobe.freeA/freeB` (sympathetic lobes keep both
+  ends fixed), and its beta is 0.5. The extrusion writes the cap
+  coordinate q (0 at the solid end, 1 at the tip) to aUV.y, and
+  PLUCK_FRAG narrows the thread to h sqrt(1 - vCap²) over it, so the
+  blur rounds over the cap; vCap 0 is the old thread exactly.
+- A NODE IN THE CAP PINS IT (`pinFreeEnds`, pluck_model.ts; add() runs
+  it before tapLobes): an end whose cap stretch ([span0, span0 +
+  freeLo] or [span1 - freeHi, span1], eps-inclusive; a closed chain's
+  nodes matched a loop away) holds a node goes back to K397's hard fret
+  at the solid end (span trimmed, free 0). Found on 2gozcj f12 (chain
+  85, open, total 34.222): solid [32.634, 34.222], and freeLo 0.26
+  reached 32.374, past a crossing at 32.414. Unpinned, a fade tap's
+  lobe was [32.374, 32.414], 0.04 long: it drew nothing and still
+  sounded. A solid tap's lobe ran from that node to the end, the node's
+  footprints covered it, and its base collapse went 2004 -> 0 px
+  (`.claude/probes/K459/diag_free.mjs`, `out_diag_free.log`).
+- SILENT WHEN NOTHING DRAWS (call b): a reveal tap with no solid stretch
+  (`pluck()`), a fretted tapped lobe under LOBE_MIN_LEN and a fretted
+  tap with no tapped lobe now report lastSkip "core", which tapPluck
+  silences (K235's channel). Unfretted, a degenerate lobe stays "other"
+  and sounds, as K235 left it. STILL SOUNDING with nothing drawn, in
+  main.ts (K6-1's file, not touched): "hot" (a chain mid-intro),
+  "held", pluckSize 0 and an unfretted degenerate lobe or failed layout
+  ("other"), plus auto plucks (main.ts's auto path ignores lastSkip, by
+  K76 2c's design) and drag releases (by design). tapPluck could
+  silence on every `!drawn`.
+- TESTS (pluck_model.test.ts): "a free end (K459): the stub's lobe
+  swings most at its free tip" and "a free end (K459): a node inside the
+  cap pins it to the solid end".
+- MEASURED (`.claude/probes/K459/pluck_stub.mjs`, K397's probe and bins;
+  `out_pluck_after2.log` against
+  `.claude/probes/K397/stage2/out_s2_pluck.log`; px as solid / the
+  fade's first half / its second half / past). f5 (chain 49, fade 1.145
+  world, cap 0.26), fade tap at t 0.06: 42527 px (42473 / 21 / 0 / 0),
+  unit s [-1.306, 0] -> 53470 px (44582 / 8170 / 0 / 0), out to s 0.26,
+  the cap's tip; at t 0.20 44901 (37593 / 7308 / 0 / 0); the base
+  collapse still leaves the dots alone (0 px), controls 0 px. f12, its
+  cap pinned by the crossing: fade tap 30254 -> 30252 px, solid tap
+  30761 -> 30761, collapse 2004 -> 2003, K397's lobe. Past the tip and
+  over the dots: 0 px in every case.
+- RESIDUALS: (1) the rounded tip narrows the blur across the thread
+  only (no AA along it at the strip's end); (2) a fretted fade tap whose
+  nearer lobe is under LOBE_MIN_LEN is now silent, where it could pluck
+  the next lobe inward; (3) a cap pinned by a node stays still (K397's
+  behavior); (4) K397's residual 2 (a re-pluck after the stub grows)
+  holds for a free lobe too. NOT VERIFIED: the phone; a reveal-off
+  pixel A/B (unchanged by construction: no fret, no caps); only the
+  probe link's default look was measured. The pluck-blur program's text
+  changed (render-shaders.md).

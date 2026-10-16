@@ -132,6 +132,12 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   compiles cold once; SwiftShader compiles all eight
   (`.claude/probes/K397/stage2/`: `dump_variants.ts`,
   `compile_glsl.mjs`, `out/variants/`). No new program site or variant.
+- **The stub's free end changed pluck-blur** (K459, 2026-10-15;
+  render-pluck.md, K459): PLUCK_VERT passes `vCap` (the cap coordinate,
+  aUV.y) and PLUCK_FRAG narrows the thread over the stub's cap, so
+  `pluck-blur` compiles cold once per player. `pluck-still` and
+  `pluck-still-explore` have their own shaders and are unchanged. No new
+  program site or variant.
 - **Growing a shader costs compile time.** section-rgb is the intro's
   critical path. After a large shader change, time a cold link:
   `trace_intro.mjs` on a fresh profile.
