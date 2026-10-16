@@ -1028,7 +1028,7 @@ Every other item below waits on the trigger it names.
   inside-both taps still backtrack); sample-based distances break the inside-one-ribbon rule on
   0.066% of taps; no mid-move census (gameplay-camera.md TAP PREFERENCE).
 
-- **K499** · Gamepad support (new, separate later stage - do NOT fold into K480 stage 2): Gamepad API polled per frame; d-pad + left stick (deadzone) feed the same direction picker as keys; gamepad direction follows the held-at-arrival rule like keys; A/confirm acts as a tap (no mid-move queue). Gameplay movement only, no panel navigation. Pure mapping (stick vector to direction/chord, deadzone) gets unit tests in test/ui/.
+
 - **K500** · K480 stage 1 residuals: page-probe the realtime chase's multi-run tap; measure targetAt's pointermove cost on the phone; a touch press on a beyond run lighting its glow.
 - **K501** · K481 by-length difficulty (Levi / stage 2 call): at the tuned BY_LENGTH_CATCH_DIST 0 the mode stays deadlier for the attentive explorer (stalker daily explorer 3.4% today -> 8.9% by-length; hunter 1.1 -> 3.4, guard 2.0 -> 4.2, 32-rep turn sim), because at speed one it averages 1.69 hops a turn; matching today's rates closer needs a lever outside K481 decision 2 (a travel scale or a by-length-only retune) before the toggle ships. Evidence: .claude/probes/K481/sweep_length_32.md and the Stage 1 handoff in docs/design/K481.md.
 - **K503** · The G3-0 probe hooks (g3DataState, g3TableRows, g3Expected, captureScene, restoreScene) still sit on the RibbonRenderer facade; R5 left them there because they read reveal/paint state R3/R4 have not homed yet - give them a part (e.g. ribbon/scene_probe.ts) once R3/R4 land.
@@ -1256,6 +1256,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K499** · Gamepad support: d-pad + left stick (deadzone, eight sectors) feed the key picker as held keys, held-at-arrival like keys; A/confirm is a tap-class step (no mid-move queue). Pure mapping `src/ui/gamepad.ts`, lore GAMEPAD in `gameplay-moves.md`; unprobed on real hardware. Done in 9a6f63d (2026-10-16).
 - **K502** · K5 R5 same-state pixel proof (48fc9ee vs 1c666ec, perf lock, &phw=0): knot 0 px, fabric 0 px, fog 258 px vs 283 px same-build control, threads load-state 0 px (post-move divergence 572,889 px below its 604,864 px control - follow-camera non-repeatability, K428); rebuildFillets(true) on fabric 4.23 -> 4.30 ms mean (+1.6%), median 4.355 = 4.355 ms. No regression. Done (probes only, 2026-10-16; evidence `.claude/probes/K5/K502K505/`).
 - **K505** · K5 M5 same-state pixel proof (e53e4d9 vs 3166d8f, perf lock, scripted input): knot 0 px, fabric 0 px, fog 43 px vs 8,555 px control, threads load-state 0 px (post-move divergence in the same-build control's range); hook inventory identical (50 `__knot*` hooks, renderer prototype/own surface, 153 params, panel labels). No regression. Done (probes only, 2026-10-16; evidence `.claude/probes/K5/K502K505/`).
 - **K471** · K6-1's unrun checks: &phw=0 PHYS clear at rest on both hosts; the fabric/chase/reduced non-tug was a loop_shadow probe bug (pressed the entrance choice run), fixed in the probe; m2_input_ab's pins fixed (pluck clock, syncExplore, fogTime, waitStill) - controls now 0 px. Done in fb54535 (2026-10-15).
