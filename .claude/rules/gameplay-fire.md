@@ -168,7 +168,11 @@ files.
     loss, standing there is. NEVER CAUGHT MID-RUN for r < 1: at x along
     a run left at L0, the dot is at L0 + x, the fire from behind at
     T(head) + x/r > L0 + x, and the fire from ahead at
-    T(far) + (len - x)/r > L0 + len >= L0 + x (the arm test).
+    T(far) + (len - x)/r > L0 + len >= L0 + x (the arm test). The Burnt
+    banner says so ("The fire reaches you where you stand.", maze_hud.ts
+    LossInfo `reached`). OPEN: the "What the numbers mean" lines for
+    `walked` and `fire lead` (maze_stats.ts STATS) still describe the
+    turn clock ("The fire's clock runs on it, not on time.").
   - THE CLOSEST CALL: every arrival's T(v) - L, as on the turn clock,
     plus every departure's margin except the first move's; a loss makes
     it 0. The HUD's `fire lead` counts down while you stand (maze_hud.ts

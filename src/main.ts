@@ -2325,6 +2325,7 @@ async function main(): Promise<void> {
       timeMs: clock.elapsed(performance.now()),
       walked: c.walkedDist,
       closest: c.fireClosest,
+      reached: c.fire?.clock === "realtime",
     });
     updateHud();
   };
