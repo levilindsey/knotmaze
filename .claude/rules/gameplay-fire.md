@@ -220,7 +220,9 @@ files.
     Suppressing drawFire recovers about 0.6 ms (0.9 at x4), the HUD lead's
     writes about 0.1; about 0.5 ms (1.5 at x4) is unattributed. Not a
     same-burnt-share comparison: the turn stand sits at L 18.7 under the
-    delay (40), realtime's L runs 25 to 73. Unfixed: re-declaring less
+    delay (40), realtime's L runs 25 to 73. Both clocks ran at 0.3 / 40
+    (rt_page.mjs's EXTRA); since K440 the same realtime race needs
+    `&fsr=0.3&fdr=40` (probes.md, K114). Unfixed: re-declaring less
     often (L quantized in drawFire's key, or every Nth frame) recovers at
     most drawFire's share and steps the front.
 
