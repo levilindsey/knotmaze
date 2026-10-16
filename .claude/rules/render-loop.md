@@ -41,7 +41,10 @@ handoff); `render.md` lists the area's other files.
   fallback; PHYS is also clear while paused, frozen or `halted`),
   `camera.converged()` and `indicators.needsFrame()` (CAMERA: no tween,
   homing, panel tween, fit or range ease, follow motion, or a show delay
-  pending, at the root-move test's 0.01 px / 1e-5 scale),
+  pending, at the root-move test's 0.01 px / 1e-5 scale; the fit ease is
+  tested on what it has LEFT, |target - current| x zoom, not on its next
+  step: the 0.08-a-frame ease never lands, and a step test let its last
+  ~0.1 px creep out with CAMERA clear),
   `renderer.paintNeedsFrame()` and `fabric.needsFrame()` (a two-bit
   number each: 2 ambient = declared pulses, the fog's wobble; 1 event = a
   pulse's fade-in window, a hovered pulse, a web fade, the fog's intro,
@@ -58,6 +61,14 @@ handoff); `render.md` lists the area's other files.
   (`exploreGrowing(0)` and WebFade's `level`, `has` and `active`
   included). A poll that stepped a clock would change what the frame
   draws, and the same-state A/B would not catch it under pinned clocks.
+- **What the shadow still misses (K6-1's last runs; K6-3 must close
+  both before it stops the ticker).** The CAMERA scale test is relative
+  (1e-5), not screen px: zoomed in to MAX_ZOOM the root's origin sits
+  thousands of px off screen, so a creep under 1e-5 still moves pixels
+  (knotfw0's two UNDER frames, 168 and 360 px, both after a zoom). The
+  BACKGROUND poll assumes the next frame's dt equals this one's; a longer
+  frame can bring a pass due a frame early (inferred for drift's three
+  UNDER frames of 36-48k px after the finish).
 - **paintNeedsFrame has no dirty-rows term** (item 4 asked for one):
   rows written during a frame upload at that frame's render, and a write
   between frames comes from input, which is K6-3's push.
