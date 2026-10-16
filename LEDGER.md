@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K421.
+Next free ID: K423.
 
 ## Waiting on Levi
 
@@ -126,9 +126,13 @@ Next free ID: K421.
 - **K409** · The fire's widths are in ctrl (band 0.7, ember 0.25 ahead and 0.55 behind): under gone only
   a thin ember rim shows at the cut end, and the fuse's ember sits partly under the FX smoke. Rec: the
   ember onto the unburnt side under gone; world units if the phone sheet shows them thin. `K114_burn.md` 3b handoff.
-- **K411** · A phone window, about 30 min: the phone awake, unlocked, on its charger and untouched
-  (the probes never wake or unlock it; 08:30-08:55 on 2026-10-15 found it locked). It runs K7's
-  phone pass (F6's review rests on stage 5's phone numbers until then) and K290's phone sheet.
+- **K411** · A phone window (Levi, 2026-10-15 10:07: "The phone is your's for at least the next
+  hour"): K7's phone pass first (waiting for the perf lock), then K290's phone sheet (stage 3c),
+  then K8's bench (`.claude/probes/K8/stage2/phone6.ps1`, stale params) if time remains. The
+  probes never wake or unlock the phone. Close this when Levi takes the phone back.
+- **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
+  and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
+  keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
 
 ## In progress
 
@@ -147,9 +151,11 @@ Next free ID: K421.
   - evidence: main checkout `.claude/probes/K114/burn/`
     (`results_rebased.md`, `results_tuning_rebased.md`, `burn_sim.ts`,
     `burn_page.mjs`)
-  - next: stage 2, real-time burning behind `fireClock` (Opus, 2 h, ports 5950-5959;
-    questions K400): after K290 3b merges, never beside K80 turns 3a (the same main.ts
-    paths); its item 6 measures realtime's per-frame cost. Stage 3's look is a shader and carries K290's burnt toggle. The spider follows the
+  - next: stage 2, real-time burning behind `fireClock` (Opus, 2 h, ports 5950-5959; questions
+    K400): unblocked (K290 3b and K80 3a merged); launch when a code slot frees (R1's, ~11:20).
+    K5 M3 moves the frame loop meanwhile: whoever merges second ports the tick's hunks
+    (K5_K6_split.md section 6). K408 can ride it; its item 6 measures realtime's per-frame cost.
+    Stage 3's look is a shader and carries K290's burnt toggle. The spider follows the
     minotaur's controls (K174)
   - brief: `docs/design/K114_stage2.md`; stage 1's handoff: `docs/design/K114_burn.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
@@ -175,28 +181,25 @@ Next free ID: K421.
   `docs/design/K80_gameplay_additions.md` section 0, his answers in
   `docs/design/levi_notes_2026-10-13.md`): a telegraphed hunter with
   guard and stalker variants, real time as its own mode, turn-aligned as
-  a modifier. Real time merged (`5fed5c1`), turns stages 1 and 2 merged;
-  residuals K293, per-model tuning K294 (Levi: "Yes.").
-  - owner: agent `ad4536aff31e4c7ba` of claude session 05e60da0 (turns stage 3a, started
-    2026-10-15 08:51, 2 h cap ~10:51). Before it: turns stage 2 merged 2026-10-14 18:48 (agent
-    a1579d5c460af2d20 of claude d8031183; earlier agents
-    af5995f5900f0f945 and a9c90f15cd6a55710; worktrees removed by the K161 sweep 2026-10-15,
-    branches kept). Stage 3's brief merged in 9f1ada2 (docs agent `ae4714d103b5fd3bf` of
-    claude session 05e60da0, worktree kept)
-  - branch: `worktree-agent-ad4536aff31e4c7ba`, worktree
-    `.claude/worktrees/agent-ad4536aff31e4c7ba`, from `901b3f1`; last commit: `901b3f1` (none
-    of its own yet). Merged: turns 0047148..68524e1 and 86d404e..02194b4, K174 ecf2169..6ec8275
-  - evidence: main checkout `.claude/probes/K80/` (`turns2/`, `turns/`,
-    `rt/`) and `.claude/probes/K174/rt/`; the research's branch
+  a modifier. Real time merged (`5fed5c1`); turns stages 1, 2 and 3a merged (3a: the wait on
+  every input, the give-up and roam-min knobs, the turn pull, K294, K293); stalker call K421.
+  - owner: nobody since 2026-10-15 10:15 (turns 3a done, merged 10:15; agent `ad4536aff31e4c7ba`
+    of claude session 05e60da0, worktree kept). Stage 2's agent a1579d5c460af2d20 of claude
+    d8031183 (earlier agents af5995f5900f0f945 and a9c90f15cd6a55710; worktrees removed by the
+    K161 sweep 2026-10-15, branches kept)
+  - branch: mainline; last commit: `e6e1734` (3a is 1bd49f8..e6e1734). Merged before: turns
+    0047148..68524e1 and 86d404e..02194b4, K174 ecf2169..6ec8275
+  - evidence: main checkout `.claude/probes/K80/` (`stage3/`: `wait_inputs.mjs`, `banner/`,
+    `compare_after.ts`, `sim.ts`, sweeps, `shots/`, `rerun/K120`, `rerun/K329`; `turns2/`,
+    `turns/`, `rt/`) and `.claude/probes/K174/rt/`; the research's branch
     `worktree-agent-a25726c24f262b138` (5 commits not on master; worktree swept 2026-10-15)
-  - next: turns 3a is running (Opus, 2 h, ports 5940-5949; questions K401), never beside K114 stage 2: a
-    digest pin for whole turn games, wait keys and the pad's wait (a wait mid-move stops
-    snapping the dot to the run's end), a hover cue, `mlm`/`mrn` (the tooltips hard-code 3),
-    the turn pull, K294, K293 (a), (c), (e). 3b (telegraph, catch feedback, sounds) after
-    K290 3b merges; the chevrons after K324 stage 2. Before a daily pins a minotaur, waits
-    enter `fc.taps` and K47's fingerprint covers its params; real time's phone check is K177
-  - brief: `docs/design/K80_turns_stage3.md`; `docs/design/K80_turns.md` ("The stages",
-    "Stage 2 handoff"); `docs/design/K80_realtime.md`; `docs/design/K80.md`
+  - next: turns 3b (Opus, 2 h; unblocked, K290 3b merged): section 2.7's telegraph, 2.8's catch
+    feedback with K270's band, 2.10's sounds and fog, a contact sheet; the chevrons after K324
+    stage 2. Check its main.ts overlap with K114 stage 2 and K5 M3 before running them together.
+    Before a daily pins a minotaur, waits enter `fc.taps` and K47's fingerprint covers its
+    params; real time's phone check is K177
+  - brief: `docs/design/K80_turns_stage3.md` (3b: sections 2.7, 2.8, 2.10; "Stage 3a handoff");
+    `docs/design/K80_turns.md`; `docs/design/K80_realtime.md`; `docs/design/K80.md`
 - **K156** · The round phone pass, `scripts/phone_pass.ps1` (K152 (1),
   from K81's gate kit): two builds run interleaved through a frame bench
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
@@ -251,10 +254,10 @@ Next free ID: K421.
   in-thread. Stage 7 (6cfb416..fdb38ac) builds the first scene from the Worker's name and
   modulepreloads its chunk: ready 139-165 ms in on the desktop (master 363-396), first visible
   unchanged (K307's compiles set it). The phone's 250 ms gate is unmeasured (inferred ~195-260).
-  - owner: nobody since 2026-10-15 08:57 (stage 7 done, merged 09:00; agent `a29b026fa5e2829ee` of claude session 05e60da0, worktree kept)
+ 
   - branch: mainline; last commit: `fdb38ac`
   - evidence: `.claude/probes/K7/stage7/` (`run_s7.ps1`, `phone_run.ps1`, `s7_desktop.txt`, `s7_phone.txt`, `k7_results.jsonl`, `table_s7.mjs`, `spike/`); stages 3-6 beside it
-  - next: the phone pass in a window Levi lends (K411): `pwsh .claude/probes/K7/stage7/phone_run.ps1 -NotBefore <HH:mm> -GiveUp <HH:mm>` (24 loads + 2 spike runs, gate first; close the stray stage 7 tab on `localhost:5921` first); then Levi's F6 review; K412
+ 
   - brief: `docs/design/K7_worker.md`, "Stage 7 handoff" ("Not done", "For the next stage")
   - env: the phone, under the phone lock (`phone_run.ps1` takes it and runs `stage5/phone_setup.ps1`)
 - **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
@@ -277,19 +280,19 @@ Next free ID: K421.
   with seams so G3 becomes a module swap; K6 rides it. Design: `docs/design/K5_K6_split.md`
   (calls: K377). M1 merged (baa0847..12709e5): main.ts 5709 → 4869 lines, no logic changes. M2 merged
   (cc19c2b..a9121b4): the camera to `src/app/camera.ts`, main.ts 4493 lines.
-  - owner: agent `ab73ce063da5446b5` of the same session (R1, started 09:20; opus, 2 h cap ~11:20; ports 5980-5989). R1's brief merged in 9041939 (docs agent `aae67981858ddb4a6`, worktree kept). M2's agent `abe93d522f82975c1` finished 09:52, merged 09:56, worktree kept. M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
-  - branch: R1 `worktree-agent-ab73ce063da5446b5`, worktree `.claude/worktrees/agent-ab73ce063da5446b5`, from `9041939`; last commit: `52ce2a1` (WIP); mainline `a9121b4` (M2)
-  - evidence: `.claude/probes/K5/M2/`, `.claude/probes/K5/R1/` (the brief's `rr_map.cjs` and maps in `brief/`); stage 1's tools in `.claude/probes/K5/stage1/` (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
-  - next: R1 (`ribbon/ribbon_shader.ts`, `ribbon/sampling.ts`) running; K80 3a rebases over M2 (asked). Then M3 (brief written; launch after K80 3a merges; re-map from `.claude/probes/K5/M2/anchors_f47be3b.json`, M2 handoff "Left for M3 and later") (the frame loop, a hot path), M3/M4 export PhysState, M7a moves `__knotUndo`. The R lane (K377 q3): R2 and R5 after R1, G3-1 after R2. While R1 runs, nothing else edits `ribbon_renderer.ts` (not K397's fix, K268 stage 3, K76's next stage or G3-1)
-  - brief: `docs/design/K5_K6_split.md` ("Stage M2 brief", "Stage M2 handoff"; "Stage M3 brief"); R1 `docs/design/K5_R1.md`
+ 
+ 
+  - evidence: `.claude/probes/K5/M3/`, `.claude/probes/K5/M2/`, `.claude/probes/K5/R1/` (the brief's `rr_map.cjs` and maps in `brief/`); stage 1's tools in `.claude/probes/K5/stage1/` (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
+ 
+ 
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
   char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b merged (5913f4f..f7dd57e).
-  - owner: nobody since 2026-10-15 08:53 (stage 3b finished, merged 08:56; agent `a7c0069bafcb78c52` of claude session 05e60da0, worktree kept)
-  - branch: mainline; last commit: `f7dd57e` (tests 1159 green, build clean)
-  - evidence: the main checkout's `.claude/probes/K290/stage3b/` (desktop sheet `out/sheet/K290_3b_sheet_crop.png`, `perf_*`, `k290_ab.mjs`, `sheet.mjs`) and `stage3a/`; burn stage 1's `.claude/probes/K114/`
-  - next: the phone sheet in K411's window, under the phone lock, plus a fog-on row and an unseen-front frame; then K408 (start hide), Levi's width call K409, the mirror K410
-  - brief: `docs/design/K114_burn.md`, "Stage 3b brief" and "Stage 3b handoff"
+ 
+ 
+  - evidence: the main checkout's `.claude/probes/K290/stage3c/` (3c's scripts and sheets), `stage3b/` (desktop sheet `out/sheet/K290_3b_sheet_crop.png`, `perf_*`, `k290_ab.mjs`, `sheet.mjs`) and `stage3a/`; burn stage 1's `.claude/probes/K114/`
+ 
+ 
 - **K395** · The pluck blur at a kink loop's tip, on the phone (Levi, 2026-10-15 07:04, after
   K344's fix): a seam from the tip to an edge, and a heart-shaped pinch (a point inside, a dimple outside).
   - owner: nobody since 2026-10-15 08:38 (stage 1 finished, merged 08:47; agent `ac0d0267cdf7467ec` of claude session 05e60da0, worktree kept)
@@ -358,12 +361,6 @@ Every other item below waits on the trigger it names.
 - **K345** · The hover rim stops `rimGap` (0.975 world) short of junctions;
   Levi (2026-10-14) wants it to follow the fillets. Goes in K9's G4-1 (K8
   s1: piece SDFs give webs an across coordinate; fan work now is wasted).
-- **K294** · Per-model minotaur tuning for K80 turns stage 3 (Levi,
-  2026-10-14: "Yes."): hunter, guard and stalker share sight and
-  accuracy, so the hunter's retune moved the others (stalker 20% to 1%).
-  Give each its own defaults, tuned to section 0's rates.
-  `docs/design/K80_turns.md` ("Stage 2 handoff": Calls, the table under
-  Verification).
 - **K284** · Credit K74's sources (K277):
   `docs/design/K74_maze_design.md` builds on Pullen (*Think Labyrinth*)
   and Zhao and Marquez 2013 (arXiv:1307.5713), but `src/` names neither,
@@ -1086,16 +1083,6 @@ Every other item below waits on the trigger it names.
   2026-10-19. Bump each action to a Node 24 release; if the first deploy
   after the 19th fails, pin `ubuntu-24.04` (a red run leaves the
   previous deployment live). `.github/workflows/deploy.yml`.
-- **K293** · K80 turns stage 2's residuals, for stage 3: (a) under
-  minoRestart the stars rate only the last life, while the popover says
-  the walk before it counts; (b) the ox emoji shows only in the share
-  grid, never under minoRestart; (c) markCaught on an empty move log
-  pushes `x`, so the moves read 1; (d) with minoLair off the minotaur
-  can camp the first junction past the entrance; (e) the minoSleep
-  tooltip is wrong with minoLair off; (f) a Reset path restart shows no
-  toast; (g) real time has no close-call or seen stats; (h) the messages
-  of c021177 and e571894 say codec 121-122, the rows are 128-129.
-  `docs/design/K80_turns.md` ("Stage 2 handoff", "For stage 3").
 - **K295** · `.claude/probes/K155/probe_stars.mjs` is stale in two
   checks: it expects 4 rules lines in the stars popover (stat lines
   follow them since K274) and today among the History rows (own row
@@ -1287,6 +1274,10 @@ Every other item below waits on the trigger it names.
   terms their work ships under (`notices/credits.ts`).
 - **K420** · `.claude/probes/K19-K20/probe_daily.mjs front` fails 10 of 14 checks on every build: it reads
   `#maze-hud .km-title` (gone from src) and expects `?daily=1.aBMge` and `?1471kin.c` to stay tokens (K5 M2).
+- **K422** · Two K120 regression probe checks fail on master too (seen by K80 3a): keys.mjs realtime
+  "a held key keeps adding inputs" (2 → 3; untested guess: the seed-7 maze changed under it) and
+  pad.mjs desktop "the stored choice shows it" (the pad hides under the open panel since K224,
+  86dc0cf; store `knotmaze.panelOpen` "0"). `.claude/probes/K80/stage3/rerun/K120/`.
 
 ## Ideas (not scheduled)
 
@@ -1529,6 +1520,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K294** · Per-model minotaur defaults: guard sight 4, accuracy 0.3; stalker accuracy 0.45; the hunter keeps 2 and 0.3 (stalker call K421). Done in c2ebabc (2026-10-15).
+- **K293** · K80 turns stage 2's residuals: (a), (c), (e) fixed in 8df33a2; (b), (g), (h) needed no code; (d), (f) kept by design and written into lore. Done in e6e1734 (2026-10-15).
 - **K311** · Pixi's aGap/aGapId/aUV warnings at load. Dropped: duplicate of K212 (2026-10-15).
 - **K361** · G3/G4's calls. Answered by Levi (2026-10-15): recs taken except the spline bend (q13), which stays open in K90; recorded in `G3G4_sdf_geometry.md` §6.
 - **K362** · K76 2c's calls. Answered by Levi (2026-10-15): recs taken; recorded in `K76.md` ("Stage 2c handoff"); the start view's widening is in K76's next.
