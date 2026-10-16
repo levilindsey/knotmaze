@@ -2,6 +2,7 @@
 paths:
   - "src/render/gap_mask.ts"
   - "src/render/ribbon_renderer.ts"
+  - "src/render/ribbon/**"
   - "src/render/ribbon_mesh.ts"
 ---
 

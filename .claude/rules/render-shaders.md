@@ -1,6 +1,7 @@
 ---
 paths:
   - "src/render/ribbon_renderer.ts"
+  - "src/render/ribbon/**"
   - "src/render/paint_glsl.ts"
   - "src/render/explore_glsl.ts"
   - "src/render/arm_strip.ts"

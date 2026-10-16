@@ -541,7 +541,8 @@ export function junctionShaderExplore(): FieldShader {
 }
 
 // Point the field shader at a scene's gap-slot table (see bindGap in
-// ribbon_renderer; a shader built later binds the table current then).
+// ribbon/ribbon_shader.ts; a shader built later binds the table current
+// then).
 export function bindFieldGap(tex: Texture): void {
   GAP_TEX = tex;
   for (const sh of [JUNCTION_SHADER, JUNCTION_SHADER_EX]) {
