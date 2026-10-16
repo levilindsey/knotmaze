@@ -111,7 +111,13 @@ modes and the mode off is master's frame by construction.
 - MARKERS: the exit marker draws only once its thread point is solid
   (`exploreVisAt` >= EXPLORE_MARKER_VIS 0.98; `fabric_maze_renderer`
   drawMarkers), and a marker disc's gap slot is on or off by the same
-  test, so neither shows on hidden thread.
+  test, so neither shows on hidden thread. K465 (2026-10-15) lifts that
+  for the EXIT by default: `revealFinish` (`rvx`), one pure rule in
+  `src/game/explore_finish.ts` (`finishHold`, `markerGapHeld`; the
+  constant moved there from explore_gaps.ts) read by the marker, its gap
+  slot (`exploreFinish`, set by `setExploreFinish`, flagged on the exit's
+  `markerOccluders` entry) and the indicator. The start marker's rule
+  stands. "MARKERS, THE MINOTAUR, PULSES" below has the rest.
 - JOINT GATE (`syncExploreJoints`, recomputed when `exploreRev` moves): a
   junction's web and fans draw unless an arm is hidden at its slot (vis
   <= EXPLORE_JOINT_MIN 0.002). K268 stage 2 (2026-10-15) replaced 2b's
@@ -345,7 +351,8 @@ gameplay-links.md's EXPLORATION PARAMS.
   tickAnim).
 - HIDDEN THREAD IS EMPTY SPACE for input. `ribbons.exploreShownAt` =
   vis >= EXPLORE_PICK_VIS 0.5 (a fading stub answers to its half-fade;
-  the markers and the minotaur use 0.98). pickThread skips hidden
+  the minotaur uses 0.98, and so do the markers, bar the exit's under
+  K465's `revealFinish`). pickThread skips hidden
   samples, and fabric `shownAt` gates edgeAt and runDistance, so hover,
   the cursor, taps, presses and tugs all see empty space there: a drag
   pans, a double-tap resets, and main.ts `grabAt` grabs through
@@ -364,7 +371,21 @@ gameplay-links.md's EXPLORATION PARAMS.
   whole maze, and the close-in zooms onto what was seen. Follow mode
   keeps FOLLOW_SPAN 13.
 - MARKERS, THE MINOTAUR, PULSES: the exit's K73 indicator follows the
-  exit marker's own rule (solid at vis 0.98; not sticky). A minotaur that
+  exit marker's own rule (solid at vis 0.98; not sticky) - since K465
+  (Levi, 2026-10-15: "show where the destination marker is, by default")
+  only with `revealFinish` OFF (`&rvx=0`; panel "show finish", under
+  threads). On (the default) the marker, its gap slot and the indicator
+  behave as with the mode off: the exit shows over hidden thread from the
+  start, the indicator sits at the screen edge while the exit is off
+  screen, and its tap frames the exit (`frameWorld`, as with the mode
+  off). What still holds it (`finishHold`): the intro's appearance
+  reveal (`revealMulAtCtrl` < 0.98: "exit unrevealed"), and an exit
+  point the burn has taken under `burnt` gone (`exitLifted` is false
+  there, and the burn's own hiding of that point drops its vis under
+  0.98, so the exit hides as with the mode off); the indicator's other
+  clauses (setting off, loading, solved) are untouched. The fit camera is
+  unchanged (it frames the seen thread, so the exit starts off screen
+  and the indicator points to it). A minotaur that
   `minoFog` keeps under the fog (never, or hunting while it is not
   hunting) hides while its thread point's vis < 0.98, and
   `minotaurUnderFog` withholds its indicator; its telegraph can still

@@ -264,3 +264,24 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   OVERRIDE_KEYS (`fsr`, `fdr`) and the `fsp` floor cases (0 and 0.05 read
   0.1); its new test "plays each fire clock's own speed and delay". The
   rows: gameplay-panel.md's FIRE CLOCK ROW.
+
+- REVEAL FINISH PARAM (K465, 2026-10-15; brief docs/design/K465.md; Levi:
+  "With the thread reveal mode, we should show where the destination marker
+  is, by default."): `revealFinish` (`rvx`, a flag, default ON) APPENDED
+  at index 149 after `fireDelayRt` (148); CODEC_VERSION stays 6. A link
+  lists only what differs from today's default (K132), so `&rvx=0` is the
+  one that carries it. On, the exit's marker, its gap slot and its
+  off-screen indicator show from the start under `xp=threads`, over thread
+  not yet seen; off keeps K76's decision 6 (hidden until the exit has been
+  seen). The rule is one pure pair in `src/game/explore_finish.ts`
+  (`finishHold`, `markerGapHeld`; render-explore.md's MARKERS). Neither
+  daily-exempt nor a MAZE key. Under onTrailChange in undo_stack.ts's
+  LIVE_EFFECTS; main.ts's `syncExploration` copies it onto the fabric
+  renderer. Panel: the maze folder's "show finish" checkbox after "reveal
+  end", only under threads (gameplay-panel.md's EXPLORATION ROWS). Pins
+  that moved: the table pin (`test/ui/param_codec.test.ts`),
+  url_codec.test.ts's defaults table, OVERRIDE_KEYS (`rvx`) and its new
+  test "reads the reveal's show-finish flag from rvx", undo_stack.test.ts's
+  live-effects case; new: test/game/explore_finish.test.ts. The golden
+  snapshot and the golden dailies did not move. A branch that also appends
+  codec params (K466) renumbers when it rebases.
