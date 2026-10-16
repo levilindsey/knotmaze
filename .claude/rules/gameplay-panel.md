@@ -342,3 +342,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   label at its first line near its left (x + 12), not at the middle of
   its box, where the reset glyph or the second line sits; a layout
   switch needs a reload after `setViewport` on a mobile emulation (probes.md).
+
+- *K74 stage 3 (2026-10-16):* the Maze folder gains `exitCorridor`,
+  `exitFlank`, `exitTaperRadius` and `exitTaperStrength` rows beside
+  `exitClearance` (hidden with it, fabric only, all regenerating).

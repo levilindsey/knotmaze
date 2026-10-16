@@ -70,6 +70,7 @@ export const SOUND_MODES: SoundMode[] = ["none", "manual", "random", "music"];
 
 // Release feel: soft eased snap-back vs sharp ringing string.
 export type PluckStyle = "soft" | "string";
+export type ExitFlank = "stub" | "away" | "near";
 export const PLUCK_STYLES: PluckStyle[] = ["soft", "string"];
 
 // What a render-only pluck sets vibrating: the whole walk run (in knot
@@ -86,6 +87,7 @@ export const PATH_VIZ_MODES: PathViz[] = ["gold", "trail", "string"];
 // follow = chase the player's head (maze mode).
 export type CameraMode = "fit" | "follow";
 export const CAMERA_MODES: CameraMode[] = ["fit", "follow"];
+export const EXIT_FLANKS = ["stub", "away", "near"] as const;
 
 // The maze clock (K80; game/minotaur.ts ClockMode): turn = the turn-based
 // maze, realtime = the real-time minotaur mode. K114's beat clock would
@@ -318,6 +320,12 @@ export interface UrlParams {
   // K74 stage 2, H1: [0, 1] share of splice H's whose junction moves to a
   // crossing (core/maze_plan.ts hCutShare); 0 = off.
   hCutShare: number;
+  // K74 stage 3 trap-zone finish: [0, 32] exit corridor arc, its flank
+  // rule, and the exit taper ([0, 32] radius, [0, 2] strength; 0 = off).
+  exitCorridor: number;
+  exitFlank: ExitFlank;
+  exitTaperRadius: number;
+  exitTaperStrength: number;
   pluckStyle: PluckStyle; // Drag-release feel: soft ease vs ringing string.
   // RETIRED with the render-only plucks (2026-10-11): the old render ring's
   // frequency/decay scale - the time-exposure vibration has no visible
@@ -700,6 +708,10 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   deadEndDensity: 0.5, // K74 (was 0.25).
   deadEndLength: 20, // K74.
   hCutShare: 1, // K74 stage 2 (H1): every H.
+  exitCorridor: 24, // K74 stage 3 (K402): corridor 24, away flank.
+  exitFlank: "away",
+  exitTaperRadius: 0,
+  exitTaperStrength: 0,
   pluckStyle: "string",
   pluckSize: 2, // K279 (was 1.75 from 2026-10-11, 1 before).
   pluckGhost: 0.5, // K279 (was 0.35).
@@ -1009,6 +1021,7 @@ export const ENUM_OPTIONS: {
   pluckReach: PLUCK_REACHES,
   pathViz: PATH_VIZ_MODES,
   cameraMode: CAMERA_MODES,
+  exitFlank: EXIT_FLANKS,
   colorScheme: COLOR_SCHEMES,
   appearMode: APPEAR_MODES,
   appearSequence: APPEAR_SEQUENCES,
@@ -1075,6 +1088,9 @@ function fromCodecValues(
   p.revealFade = clampRevealFade(p.revealFade);
   clampTurnMino(p);
   p.hCutShare = clamp01(p.hCutShare);
+  p.exitCorridor = clampTo(p.exitCorridor, 32);
+  p.exitTaperRadius = clampTo(p.exitTaperRadius, 32);
+  p.exitTaperStrength = clampTo(p.exitTaperStrength, 2);
   p.fireSpeed = clampFireSpeed(p.fireSpeed);
   p.fireDelay = clampTo(p.fireDelay, FIRE_DELAY_MAX);
   p.fireSpeedRt = clampFireSpeed(p.fireSpeedRt, PARAM_DEFAULTS.fireSpeedRt);
@@ -1292,6 +1308,11 @@ function readLegacy(
     deadEndLength: readNumber(query, "del", D.deadEndLength),
     // And K74 stage 2's H1 share (&hcs=0.5; 0 = off).
     hCutShare: clamp01(readNumber(query, "hcs", D.hCutShare)),
+    // K74 stage 3 (&xcr=24&xfl=away&xtr=16&xtk=1; 0/off values keep off).
+    exitCorridor: clampTo(readNumber(query, "xcr", D.exitCorridor), 32),
+    exitFlank: readChoice(query, "xfl", EXIT_FLANKS, D.exitFlank),
+    exitTaperRadius: clampTo(readNumber(query, "xtr", D.exitTaperRadius), 32),
+    exitTaperStrength: clampTo(readNumber(query, "xtk", D.exitTaperStrength), 2),
     // Its shape and colors (K79 stage B: `&bgsz=2&bgan=90&bgcm=custom
     // &bgc0=101820&bgc1=ffcc66`; colors as pc= takes them, no "#").
     backgroundScale: sanitizeBackgroundScale(

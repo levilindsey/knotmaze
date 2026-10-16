@@ -133,3 +133,28 @@ only with the files it is about; `generation.md` lists the area's other files.
   0 after; every plan that was already whole is byte-identical. Older
   plans can hold crossed join bridges (K133). Test:
   `test/core/maze_reachable.test.ts`; probes: `.claude/probes/K110/`.
+
+- *K74 stage 3 (2026-10-16), the trap-zone finish and H1's exit guard:*
+  `exitCorridor` (`xcr`, codec 152, [0,32], default 24), `exitFlank`
+  (`xfl`, 153: stub | away | near, default away), `exitTaperRadius`
+  (`xtr`, 154, [0,32], default 0) and `exitTaperStrength` (`xtk`, 155,
+  [0,2], default 0) - all maze params, never daily-exempt. The corridor is
+  the exit's kept flank (both flanks untrimmed) to arc L, collected before
+  spanning, ranked LAST by spanning, K109's repair and K110's joins
+  (never skipped), claimed after the repair so choices, 4-ways and dead
+  ends keep off it. The flank score is the farthest squared node distance
+  from the exit point within L (24 without a corridor); the taper grades
+  the choice/4-way spacing floor by least hypot2 distance to the exit.
+  `edgeLen`/`walkFlank` are module-level (`makeEdgeLen`/`walkFlankImpl`),
+  shared with `placeLongTails`. The plan carries `exitGuardPoint` /
+  `exitGuardClearance` (only when H1 runs and clearance > 0) and
+  `exitGuardCrossings` (only when H1 runs and corridor > 0); `fuseHCuts`
+  refuses those crossings - on dailies 1-80 H1 now adds 0 junctions inside
+  the exit clearance (stage 2: 36 fused; totals 134 at share 1 vs 138 at
+  share 0, `stage2/clearance.ts`). Golden dailies re-frozen: optimal
+  122.610/189/283, 66.483/185/273, 122.679/183/273. K87 pin and the knot
+  golden hold; K74_PLANS, K74_WALKS_H0 and K74_WALKS_DEFAULT re-frozen
+  (H0 moves because the plan itself changed). Sources (K284): Pullen's
+  near misses at the goal (corridor) and Pullen plus Zhao and Marquez
+  2013 (long blind alleys, at `placeLongTails`); RESEARCH entries in
+  `notices/credits.ts`. Tests: `test/core/maze_trapzone.test.ts`.

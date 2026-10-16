@@ -307,3 +307,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   explore_view.test.ts's K466 block. The golden snapshot and the golden
   dailies did not move. A branch that also appends codec params
   renumbers when it rebases.
+
+- *K74 stage 3 (2026-10-16):* codec rows 152-155 appended - `exitCorridor`
+  (number), `exitFlank` (stub | away | near), `exitTaperRadius`,
+  `exitTaperStrength`; override keys `xcr`, `xfl`, `xtr`, `xtk`. Defaults
+  corridor 24 / away / 0 / 0, so links without them build the trap-zone
+  finish. CODEC_VERSION stays 6 (append only).
