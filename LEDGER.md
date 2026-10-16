@@ -273,14 +273,6 @@ Next free ID: K463.
   - evidence: none yet (K6-1's goes in `.claude/probes/K6/K6-1/`)
   - next: launch K6-1 (Opus, 2 h, ports 5840-5849) from its brief once K5 M4 has merged (its setup needs `src/app/lifecycle.ts`); its seven questions take the brief's recs (coordinator, 2026-10-15)
   - brief: `docs/design/K6_1.md` (it corrects `docs/design/K5_K6_split.md` 4.3/4.4); parent: K5_K6_split.md (4 and 5.4)
-- **K440** · Real-time fire defaults (K114 s2 item 7). Levi, 2026-10-15 ("yes and yes"): real time
-  gets its own pair, 0.2 / 20 (a 1.7 s head start); turn keeps 0.75 / 0; the speed range is
-  [0.1, 0.95] under both. Brief `docs/design/K440.md`.
-  - owner: agent `ae08baca315c6d514` of claude session 05e60da0 (opus, started 2026-10-15 13:31, 2 h cap ~15:31)
-  - branch: `worktree-agent-ae08baca315c6d514`, worktree `.claude/worktrees/agent-ae08baca315c6d514`; last commit: `fc00fe8`
-  - evidence: its worktree's .claude/probes/K440/ until the merge
-  - next: the agent builds items 1-8 of the brief; merge it with agent_merge.ps1 (suite and build), then K441
-  - brief: `docs/design/K440.md`
 
 ## Next, in order
 
@@ -1176,6 +1168,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K440** · Real-time fire defaults: real time plays its own pair, 0.2 / 20 (`fsr`, `fdr`); turn keeps 0.75 / 0; speed floor 0.1. Done in bb40ae2 (2026-10-15).
 - **K395** · Pluck blur seam and heart pinch at a kink loop's tip; the phone check passed on live 8f81faf. Done in cd62db6 (2026-10-15).
 - **K449** · K397 stage 2's looks: Levi keeps the cap and two dots, and the fade tap's pluck ("If we make a pluck sound, then we should show the pluck effect"); his 13:39 report is K397's and K459. Done in 092aca0 (2026-10-15).
 - **K411** · A phone window for K8's bench: Levi lent the phone 2026-10-15 13:45 (K395, K8). Done.
