@@ -1034,10 +1034,12 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       look?: string | number;
       visitAll?: boolean;
       burnt?: string; // K290: the burnt thread's look, "gone" or "char"
+      revealFinish?: boolean; // K465: the finish shows from the start
     } = {}
   ) => {
     if (!ctx.scene.fabric || !ctx.scene.fabricController) return null;
     if (o.burnt === "gone" || o.burnt === "char") ctx.params.burnt = o.burnt;
+    if (typeof o.revealFinish === "boolean") ctx.params.revealFinish = o.revealFinish;
     // Stage 2c: through the params (the frame loop syncs them every tick).
     // The numbers go in raw, past the panel's ranges (a reach of 1000 shows
     // every stub whole).

@@ -10,6 +10,7 @@ import { WorkerHost } from "./physics/worker_host";
 import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
 import { EXPLORE_LOOKS } from "./render/explore_glsl";
 import { FabricMazeController } from "./game/fabric_controller";
+import { finishHold } from "./game/explore_finish";
 import { buildFire } from "./game/fire";
 import { FireClock } from "./game/fire_clock";
 import type { Fire } from "./game/fire";
@@ -530,6 +531,7 @@ async function main(): Promise<void> {
     const li = (EXPLORE_LOOKS as readonly string[]).indexOf(params.revealLook);
     if (li >= 0) ex.look = li;
     f.burntLook = params.burnt; // K290: how burnt runs draw
+    f.revealFinish = params.revealFinish; // K465: the finish under the reveal
   }
   // How long a follow camera stays on a framing an indicator's tap moved it
   // to, beyond the usual FOLLOW_DELAY, before it eases back to the head.
@@ -1278,14 +1280,15 @@ async function main(): Promise<void> {
             ? "solved"
             : !root.visible || life.state === "loading"
               ? "loading"
-              : scene.renderer.revealMulAtCtrl(v.chain, v.ctrl) < 0.98
-                ? "exit unrevealed"
-                : // K76 stage 2c (decision 6): the thread reveal keeps the
-                  // exit's direction to itself until its marker shows (the
-                  // marker's own rule; 1 with the mode off).
-                  scene.renderer.exploreVisAt(v.chain, v.ctrl) < 0.98
-                  ? "exit unseen"
-                  : "";
+              : // The exit marker's own rule (explore_finish.ts, one place
+                // for the three sites): the appearance has reached the exit,
+                // and, K76 stage 2c (decision 6), the thread reveal has
+                // shown it - unless K465's revealFinish lifts that hold.
+                finishHold({
+                  introMul: scene.renderer.revealMulAtCtrl(v.chain, v.ctrl),
+                  exploreVis: scene.renderer.exploreVisAt(v.chain, v.ctrl),
+                  lifted: scene.fabric.exitLifted(),
+                });
       return finishWhy === "";
     },
     label: () =>
@@ -1307,7 +1310,9 @@ async function main(): Promise<void> {
   });
   // K76 (Decision 6): until the exit marker has been seen, the finish's
   // indicator would give its direction away; visible() above holds it back
-  // ("exit unseen") under the thread reveal.
+  // ("exit unseen") under the thread reveal. K465 (Levi, 2026-10-15): not by
+  // default - `revealFinish` shows the marker, its gap and this indicator
+  // from the start, and off keeps the hold.
   void finishIndicator;
 
   // THE PLAYER (K148; Levi, 2026-10-13: "When panning away from the

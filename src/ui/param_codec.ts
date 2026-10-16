@@ -282,6 +282,8 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // K440: the real-time fire's own speed and delay (fireClock realtime).
   num("fireSpeedRt"), // 147
   num("fireDelayRt"), // 148
+  // K465: the finish shows under the thread reveal (default on).
+  flag("revealFinish"), // 149
 ]);
 
 // The format version a blob names first. Bump it for anything but an

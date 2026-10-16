@@ -113,6 +113,7 @@ describe("links", () => {
       minoGuardSight: 4, minoGuardAccuracy: 0.3, minoStalkerAccuracy: 0.45,
       fireClock: "turn",
       fireSpeedRt: 0.2, fireDelayRt: 20,
+      revealFinish: true,
     });
   });
 
@@ -307,6 +308,43 @@ describe("links", () => {
     expect(
       fireSettingsOf({ ...turn, fireSpeed: 0.05 })
     ).toEqual({ speed: 0.1, delay: 0, clock: "turn" });
+  });
+
+  // K465 (Levi, 2026-10-15: "With the thread reveal mode, we should show
+  // where the destination marker is, by default"): the finish shows from the
+  // start under the thread reveal. `rvx` is the flag's override key; the
+  // default is on, so a link lists it only when it is off.
+  it("reads the reveal's show-finish flag from rvx", () => {
+    expect(PARAM_DEFAULTS.revealFinish).toBe(true);
+    expect(parseParams("?7").revealFinish).toBe(true);
+    expect(parseParams("?7&xp=threads").revealFinish).toBe(true);
+    const off = parseParams("?7&xp=threads&rvx=0");
+    expect(off.revealFinish).toBe(false);
+    expect(off.exploration).toBe("threads");
+    // The token round trip keeps it.
+    expect(parseParams(`?${encodeParams(off)}`)).toEqual(off);
+    const defaults = PARAM_DEFAULTS as unknown as CodecDefaults;
+    const decoded = decodeToken(encodeParams(off), defaults);
+    expect(decoded.error).toBeNull();
+    expect(
+      Object.keys(decoded.values)
+        .filter((k) => decoded.values[k] !== defaults[k])
+        .sort()
+    ).toEqual(["exploration", "revealFinish"]);
+    // On is the default: it stays out of the token, a bare rvx=1 is no link
+    // setting, and garbage reads as the default.
+    expect(encodeParams(parseParams("?7&rvx=1"))).toBe("7");
+    expect(encodeParams(parseParams("?7&xp=threads"))).not.toContain("rvx");
+    expect(parseParams("?7&rvx=x").revealFinish).toBe(true);
+    // An override after a token wins over the token's own value.
+    const token = encodeParams(off);
+    expect(parseParams(`?${token}&rvx=1`).revealFinish).toBe(true);
+    // The look of the reveal is independent: neither key moves the other.
+    const both = parseParams("?7&xp=threads&rvx=0&rvl=dots&rvd=4");
+    expect([both.revealFinish, both.revealLook, both.revealDistance]).toEqual([
+      false, "dots", 4,
+    ]);
+    expect(parseParams(`?${encodeParams(both)}`)).toEqual(both);
   });
 
   // K140: the finish confetti's override keys, the amount's clamp, and the
@@ -651,6 +689,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoGuardSight: "mgs", minoGuardAccuracy: "mga", minoStalkerAccuracy: "msa",
   fireClock: "fck",
   fireSpeedRt: "fsr", fireDelayRt: "fdr",
+  revealFinish: "rvx",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

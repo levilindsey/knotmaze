@@ -188,6 +188,7 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["fireClock", "enum", ["turn", "realtime"]], // 146, K114 stage 2
   ["fireSpeedRt", "number"], // 147, K440
   ["fireDelayRt", "number"], // 148
+  ["revealFinish", "boolean"], // 149, K465
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

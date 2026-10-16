@@ -230,6 +230,13 @@ describe("restorePlan", () => {
       rebuild: false,
       effects: ["onClockChange"],
     });
+    // K465: the thread reveal's show-finish flag redraws live (main copies
+    // it to the renderer each tick).
+    expect(restorePlan(a, { ...a, revealFinish: false }, false)).toEqual({
+      changed: ["revealFinish"],
+      rebuild: false,
+      effects: ["onTrailChange"],
+    });
   });
 
   it("lists only real params, each under one effect", () => {
