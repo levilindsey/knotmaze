@@ -83,6 +83,8 @@ export interface FrameLoopDeps {
   fireSet: () => void;
   setWaitCue: (on: boolean) => void;
   keysLive: () => boolean;
+  // K499: poll the gamepad once a frame (edges only; never wakes).
+  pollGamepad: () => void;
   handRendererLook: () => void;
   loadingTick: () => void;
   presettleTick: () => void;
@@ -148,6 +150,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     fireSet,
     setWaitCue,
     keysLive,
+    pollGamepad,
     handRendererLook,
     loadingTick,
     presettleTick,
@@ -453,6 +456,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
           if (scene.turnMino) tickTurnMino(ticker.deltaMS / 1000);
         }
         // K120: a held key's next move, once the dot has arrived.
+        pollGamepad();
         keyStep();
         // K114 stage 2: after the waiting move left, the fire's clock.
         if (realtimeFire()) fireSet();

@@ -33,6 +33,8 @@ import {
 } from "./ui/key_moves";
 import type { Departure, KeyDir, LastPress, WaitingMove } from "./ui/key_moves";
 import { MOVE_PAD_KEY, MovePad, movePadPref } from "./ui/move_pad";
+import { GamepadInput } from "./ui/gamepad";
+import type { GamepadSnapshot } from "./ui/gamepad";
 import { MinotaurChase } from "./game/minotaur";
 import type { ChaseEvent } from "./game/minotaur";
 import { TurnMinotaur, turnConfig, turnSeed } from "./game/minotaur_turns";
@@ -2698,6 +2700,40 @@ async function main(): Promise<void> {
     },
   });
 
+  // K499: the gamepad (ui/gamepad.ts), polled once a frame by the frame
+  // loop (fabricTick, beside keyStep). Its directions are held keys
+  // ("game:<dir>", one per direction) through the same press path as the
+  // keyboard and the pad, so the picker, chords, holds and the
+  // held-at-arrival rule are the keys' own; a direction released drops
+  // its key, as a keyup does. A/confirm is a tap-class step: at rest it
+  // steps once along the held direction (pressMove, no hold of its own);
+  // while the dot travels it is discarded, never queued (tapWhileMoving,
+  // Levi's correction). The poll only reads the pad and fires on edges,
+  // so an idle pad never wakes a sleeping scene; presses count only
+  // while the keys are live (a modal or the panel owns the moment, as
+  // keyBelongsElsewhere keeps the arrows), releases always land.
+  const gamepad = new GamepadInput();
+  const pollGamepad = (): void => {
+    if (typeof navigator === "undefined" || !navigator.getGamepads) return;
+    let snap: GamepadSnapshot | null = null;
+    for (const gp of navigator.getGamepads()) {
+      if (gp !== null && gp.connected) {
+        snap = gp;
+        break;
+      }
+    }
+    const ev = gamepad.poll(snap);
+    for (const dir of ev.released) releaseKey(`game:${dir}`);
+    if (!keysLive()) return;
+    const at = performance.now();
+    for (const dir of ev.pressed) {
+      if (heldKeys.press(`game:${dir}`, dir, at)) keyPress(dir, at);
+    }
+    if (ev.confirm && gamepad.dirs.length > 0 && tapWhileMoving(dotMoving()) === "move") {
+      pressMove(gamepad.dirs, at);
+    }
+  };
+
   // Stage 19 - bounded tug + snap-back, pointer-layer only (the physics
   // grab machinery is untouched, so knot-mode byte identity holds). The
   // drag target is rubber-banded around the grab ORIGIN (the grabbed
@@ -3454,6 +3490,7 @@ async function main(): Promise<void> {
       fireSet,
       setWaitCue,
       keysLive,
+      pollGamepad,
       handRendererLook,
       loadingTick,
       presettleTick,
