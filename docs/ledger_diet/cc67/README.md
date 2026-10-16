@@ -39,10 +39,37 @@ and "Done" (the nightly job archives it).
 
 ## Commands
 
-    node scripts/ledger_diet.mjs pack docs/ledger_diet/cc67/src/*.txt --snapshot docs/ledger_diet/cc67/snapshot.md --out docs/ledger_diet/cc67/map.jsonl
+PowerShell does not expand the glob for node, so `pack` takes the files by
+name. `--width 100` is deliberate: the newest ledger items (K394, K399-K421)
+are already wrapped at about 100 columns, and 100 keeps an item at three
+lines with its pointers; at the tool's default 72 about a third of the items
+would need more cutting.
+
+    node scripts/ledger_diet.mjs pack docs/ledger_diet/cc67/src/1_waiting.txt docs/ledger_diet/cc67/src/3_next.txt docs/ledger_diet/cc67/src/4a_residuals.txt docs/ledger_diet/cc67/src/4b_residuals.txt docs/ledger_diet/cc67/src/5_approved_ideas.txt --snapshot docs/ledger_diet/cc67/snapshot.md --out docs/ledger_diet/cc67/map.jsonl --width 100
     node scripts/ledger_diet.mjs pointers docs/ledger_diet/cc67/map.jsonl --snapshot docs/ledger_diet/cc67/snapshot.md
     node scripts/ledger_diet.mjs apply docs/ledger_diet/cc67/map.jsonl --file docs/ledger_diet/cc67/dry/LEDGER.md
     node scripts/ledger_diet.mjs verify docs/ledger_diet/cc67/snapshot.md --file docs/ledger_diet/cc67/dry/LEDGER.md
+
+## Status
+
+All 165 in-scope items are authored (Waiting on Levi 16, Next 29,
+Residuals 95, Approved 1, Ideas 24) and packed. `pointers` lists nothing.
+The dry run (`dry/`, untracked) took the ledger from 1719 to 1297 lines
+(139723 to 123232 bytes), the notes file gains the 165 verbatim originals,
+and `verify` passes. Merge this branch, then from the main checkout:
+`apply ... --dry-run`, `apply`, `verify` against the snapshot.
+
+Prose the tool cannot touch, for a hand edit after the apply:
+
+- K10 (Next) keeps a trailing prose paragraph ("Rerun after every stage:
+  ...", the thermal notes: `dumpsys thermalservice`, `phone_blank.mjs`). It
+  repeats the item's rerun line; fold the thermal sentences into
+  `.claude/rules/probes-phone.md` if wanted, then delete the paragraph.
+- K84 (Ideas) keeps a stray duplicate tail after a blank line ("It meets K57
+  ... and feeds K78's param reference."). The shortened K84 already says
+  "Meets K57, feeds K78."; delete the tail.
+- The "Offers from 2026-10-10 that Levi hasn't answered yet" paragraph before
+  K32 (Ideas) is not an item and is left alone.
 
 ## Restart
 

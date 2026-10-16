@@ -18,9 +18,9 @@
 
 - **K399** · G3-1's launch gates (`docs/design/K8_G3-1.md` "Gates"; gate 1 is K377 q3, taken): (2) G3-1 before K268 item 4, never beside it; (3) a gap slot over 64 SAMP points strides at most 3, never a cut reach; (4) GAP stays one slot a row, K398 clamps links. Rec. all three.
 
-- **K400** · K114 stage 2's questions (`docs/design/K114_stage2.md` "Questions"; recs build unless Levi objects): realtime dot at constant pace, moveSpeed unused; one fireSpeed/fireDelay for both clocks; lose when the fire reaches you; realtime queues taps; `fireClock` a Burn race row (K323).
+- **K400** · K114 s2 (`docs/design/K114_stage2.md` "Questions"; recs build unless Levi objects): realtime dot at constant pace, moveSpeed unused (rec. (a)); one fireSpeed/fireDelay, both clocks; lose when the fire reaches you; realtime queues taps; `fireClock` a Burn race row (K323).
 
-- **K401** · K80 turns s3's questions (`docs/design/K80_turns_stage3.md` "Questions"; recs build unless Levi objects): 3a now, 3b after K290 3b, chevrons after K324 s2; guard/stalker rows per model; wait keys `.`, Space; pad center waits; turn pull own param (0); K293 (d), (f) stay lore.
+- **K401** · K80 turns s3 (`docs/design/K80_turns_stage3.md` "Questions"; recs build unless Levi objects): 3a now, 3b after K290 3b, chevrons after K324 s2; guard/stalker rows per model (rec. (c)); wait keys `.`, Space; pad center waits; turn pull own param (0); K293 (d), (f) stay lore.
 
 - **K402** · K74 s3's questions (`docs/design/K74_stage3.md` "Questions"; recs build unless Levi objects): C3's defaults (corridor 24, away flank, exitClearance 12); `xcr` [0,32], `xfl`, `xtr` [0,32], `xtk` [0,2], never daily-exempt; no exit-guard param; corridor cap 32; deeper traps out.
 
