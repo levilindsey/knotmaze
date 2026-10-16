@@ -34,7 +34,7 @@ import {
 import type { ParticleSystem } from "../physics/particle_system";
 import type { WalkGraph, WalkEdge } from "../core/walk_graph";
 import { walkDistances } from "../core/walk_graph";
-import { planRoute } from "../game/route_plan";
+import { litArms, planRoute } from "../game/route_plan";
 import type { FabricMazeController } from "../game/fabric_controller";
 import type {
   RibbonRenderer,
@@ -463,6 +463,9 @@ export class FabricMazeRenderer {
   private dotRgb = new Float32Array(3);
   private threadWidth: number;
   private hoverEdge = -1;
+  // K480 stage 2: the route a hovered tap would walk (its arms light
+  // steadily, as a hovered choice does); null = no route hover.
+  private hoverRoute: number[] | null = null;
   // K145: the run under the pointer (or a touch press) for the hover glow,
   // and the hover point on it (an unwrapped ctrl in its span); a hovered
   // choice's run since K298 (setGlowRun).
@@ -803,6 +806,17 @@ export class FabricMazeRenderer {
 
   // Track the hovered choosable run; returns true when it changed (the
   // caller then refreshes the paint declaration).
+  // K480 stage 2: the hovered tap's route (targetAt's run list), or null.
+  // Returns true when it changed, as setHover does.
+  setHoverRoute(route: readonly number[] | null): boolean {
+    const next = route && route.length > 0 ? [...route] : null;
+    const cur = this.hoverRoute;
+    if (cur === next) return false;
+    if (cur && next && cur.length === next.length && cur.every((v, i) => v === next[i])) return false;
+    this.hoverRoute = next;
+    return true;
+  }
+
   setHover(edgeId: number): boolean {
     if (edgeId === this.hoverEdge) return false;
     this.hoverEdge = edgeId;
@@ -2705,7 +2719,8 @@ export class FabricMazeRenderer {
           : -1;
       for (const eid of controller.choices()) {
         const e = this.walk.edges[eid];
-        const hovered = eid === this.hoverEdge;
+        const hovered =
+          eid === this.hoverEdge || (this.hoverRoute?.includes(eid) ?? false);
         const inward = eid === last;
         const arm = (cJunction: number, cFar: number): void => {
           pulses.push({ chain: e.chain, cJunction, cFar, inward, hovered });
@@ -2719,6 +2734,38 @@ export class FabricMazeRenderer {
         } else {
           arm(e.ctrlB, e.ctrlA);
         }
+      }
+    }
+    // K480 stage 2 (decision 1): beyond the choices, the light branches
+    // through short runs to the reach - every run out of a junction a lit
+    // run ends inside of, until the reach runs out. Arms on hidden or
+    // burnt thread stay dark (decision 3), and a hovered tap's route
+    // arms light steadily (the whole route a tap would take).
+    if (!controller.solved) {
+      const gate = (eid: number, atA: boolean): boolean => {
+        const e = this.walk.edges[eid];
+        if (!this.shownAt(e.chain, atA ? e.ctrlA : e.ctrlB)) return false;
+        if (
+          controller.fire &&
+          runBurnAt(this.walk, controller.fire, eid, controller.fireL).state === "burnt"
+        ) {
+          return false;
+        }
+        return true;
+      };
+      for (const lit of litArms(this.walk, controller.head, this.ribbons.pulseReach, gate)) {
+        if (lit.dist0 === 0) continue; // The choices above already lit these.
+        const e = this.walk.edges[lit.edge];
+        pulses.push({
+          chain: e.chain,
+          cJunction: lit.atA ? e.ctrlA : e.ctrlB,
+          cFar: lit.atA ? e.ctrlB : e.ctrlA,
+          inward: false,
+          hovered:
+            lit.edge === this.hoverEdge || (this.hoverRoute?.includes(lit.edge) ?? false),
+          dist0: lit.dist0,
+          cont: lit.cont,
+        });
       }
     }
     this.ribbons.setPaint(spans, pulses, caps, passes.routes, passes.traveled);

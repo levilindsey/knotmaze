@@ -119,6 +119,84 @@ export function planRoute(
   return route;
 }
 
+// K480 stage 2, THE LIGHT (decision 1): one lit arm of the branching
+// pulse/hover light. `atA` = the arm's junction end is the run's ctrlA
+// end; `dist0` = world arc from the head to that junction along the
+// shortest walk (the arm's own crests are phased by dist0 + local arc,
+// so a train crosses a junction without a phase step); `cont` = the
+// light carries on past the far end (it ends inside the reach at a
+// junction, not an END), so no end fade applies there.
+export interface LitArm {
+  edge: number;
+  atA: boolean;
+  dist0: number;
+  cont: boolean;
+}
+
+// Every arm lit from `head` out to `reach` (world arc): the runs out of
+// the head whole, then, where a lit run ends inside the reach, every run
+// out of its far junction (not back along itself), until the reach runs
+// out. Each walk edge appears once, from its nearer end (Dijkstra
+// order); a self-loop appears twice, once per end. `gate(eid, atA)` may
+// veto a BEYOND-head arm (hidden or burnt thread is not lit, decision
+// 3); a vetoed arm neither lights nor carries light through. Head arms
+// are never gated (they are today's choices, lit as before).
+export function litArms(
+  walk: WalkGraph,
+  head: string,
+  reach: number,
+  gate?: (eid: number, atA: boolean) => boolean
+): LitArm[] {
+  const arms: LitArm[] = [];
+  if (!walk.vertices.has(head)) return arms;
+  const dist = new Map<string, number>();
+  for (const id of walk.vertices.keys()) dist.set(id, Infinity);
+  dist.set(head, 0);
+  const emitted = new Set<number>();
+  const done = new Set<string>();
+  for (;;) {
+    let cur: string | null = null;
+    let curD = Infinity;
+    for (const [id, d] of dist) {
+      if (done.has(id) || !Number.isFinite(d)) continue;
+      if (d < curD || (d === curD && cur !== null && id < cur)) {
+        curD = d;
+        cur = id;
+      }
+    }
+    if (cur === null) break;
+    done.add(cur);
+    if (cur !== head && !(curD < reach)) continue;
+    for (const eid of walk.vertices.get(cur)!.edges) {
+      if (emitted.has(eid)) continue;
+      const e = walk.edges[eid];
+      const atA = e.va === cur;
+      if (e.va === e.vb) {
+        emitted.add(eid);
+        arms.push({ edge: eid, atA: true, dist0: curD, cont: false });
+        arms.push({ edge: eid, atA: false, dist0: curD, cont: false });
+        continue;
+      }
+      const other = atA ? e.vb : e.va;
+      if (curD > 0 && gate && !gate(eid, atA)) {
+        emitted.add(eid);
+        continue;
+      }
+      emitted.add(eid);
+      const nd = curD + e.length;
+      const far = walk.vertices.get(other);
+      arms.push({
+        edge: eid,
+        atA,
+        dist0: curD,
+        cont: nd < reach && !!far && !far.isEnd,
+      });
+      if (nd < (dist.get(other) ?? Infinity)) dist.set(other, nd);
+    }
+  }
+  return arms;
+}
+
 // The index of the first run of `route` (walked from `head` at fire
 // clock `L`) that the fire would refuse - the run that would be
 // smoldering when the player gets to it - or -1 when the whole route

@@ -247,9 +247,20 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   is refused when it comes up (tested at its departure clock), which
   ends the route with the toast. THE HOVER (stage 1's scope): over a
   beyond run it lights the run a tap would finish (`setGlowRun` on
-  targetAt's run, the pointermove path); the pulses and the hover
-  branching to the same reach are stage 2. Tests:
-  `test/game/route_plan.test.ts` (the planner, the projected smolder,
+  targetAt's run, the pointermove path). THE LIGHT (stage 2, 2026-10-16):
+  the pulses branch to the same reach - `litArms` (route_plan.ts) walks
+  Dijkstra from the head, each run lit once from its nearer end with
+  `dist0` (arc to its junction) and `cont` (a lit run ending inside the
+  reach at a junction carries on, so no end fade there); beyond-head
+  arms on hidden (`shownAt`) or burnt thread stay dark. In the shader
+  and its mirror (`kPulseV`, paint_glsl/paint_math) phase, floor and
+  the reach window read the global dist0 + local arc, so a crest train
+  crosses a junction in phase; the item carries dist0 in T0.w and cont
+  in T1.z (defaults 0/false = stage 1's arms, bit for bit). The hover
+  lights the whole route a tap would take: targetAt's route
+  (`setHoverRoute`) marks its arms hovered (the steady breath), the
+  tapped run keeping its rim glow. Tests:
+  `test/game/route_plan.test.ts` (the planner, litArms' branching, the projected smolder,
   the warnings, whole-route solves and replays, the minotaur replay).
 
 - GAMEPAD (K499, 2026-10-16; `src/ui/gamepad.ts` pure, main.ts

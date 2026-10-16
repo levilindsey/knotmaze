@@ -1224,21 +1224,33 @@ export function kReachWin(U: KUniforms, d: number): number {
 // the reach window. Hover lights the run a tap would take out to the same
 // reach, fading over its end as the trains do (K93; Levi: "hover should
 // stop at pulseReach (and fade-out toward the end, same as pulseReach)").
-export function kPulseV(U: KUniforms, d: number, span: number, inward: boolean, hovered: boolean): number {
+// K480 stage 2: a branched arm carries dist0 (arc from the head to its
+// junction) and cont (the light carries past its far end); phase, floor
+// and the reach window read dist0 + d, and a cont arm has no end fade.
+export function kPulseV(
+  U: KUniforms,
+  d: number,
+  span: number,
+  inward: boolean,
+  hovered: boolean,
+  dist0 = 0,
+  cont = false
+): number {
   const C = PAINT_CONST;
   if (d < 0 || d > span) return 0;
-  const endWin = Math.min(1, Math.max(0, (span - d) / C.PULSE_END_WINDOW));
-  if (hovered) return endWin * U.uKPaint[3] * kReachWin(U, d);
+  const dG = dist0 + d;
+  const endWin = cont ? 1 : Math.min(1, Math.max(0, (span - d) / C.PULSE_END_WINDOW));
+  if (hovered) return endWin * U.uKPaint[3] * kReachWin(U, dG);
   const s = U.uKPulse[2];
-  const raw = inward ? d + U.uKPulse[0] : d - U.uKPulse[1];
+  const raw = inward ? dG + U.uKPulse[0] : dG - U.uKPulse[1];
   const ph = raw - s * Math.floor(raw / s);
   const dist = Math.min(ph, s - ph);
-  const dC = Math.max(0, d - (ph <= s - ph ? ph : ph - s));
+  const dC = Math.max(0, dG - (ph <= s - ph ? ph : ph - s));
   const bump = Math.max(0, 1 - dist / C.CREST_WIDTH) * Math.min(1, dC / C.CREST_RAMP);
   const floor =
-    (C.PULSE_FLOOR + C.PULSE_CORE_BOOST * Math.max(0, 1 - d / C.PULSE_CORE_RADIUS)) *
-    Math.max(0, 1 - d / C.PULSE_FLOOR_REACH);
-  return Math.min(1, (floor + bump * 0.9) * endWin) * U.uKPulse[3] * kReachWin(U, d);
+    (C.PULSE_FLOOR + C.PULSE_CORE_BOOST * Math.max(0, 1 - dG / C.PULSE_CORE_RADIUS)) *
+    Math.max(0, 1 - dG / C.PULSE_FLOOR_REACH);
+  return Math.min(1, (floor + bump * 0.9) * endWin) * U.uKPulse[3] * kReachWin(U, dG);
 }
 
 // Paint state at a point: the gold ramp amount p (the thread's own paint),
@@ -1362,7 +1374,7 @@ export function kPaintAt(
       } else {
         d = dirPos ? arc - aJ : aJ - arc;
       }
-      const v = kPulseV(U, d, span, (flags & ITEM_FLAG.INWARD) !== 0, (flags & ITEM_FLAG.HOVER) !== 0);
+      const v = kPulseV(U, d, span, (flags & ITEM_FLAG.INWARD) !== 0, (flags & ITEM_FLAG.HOVER) !== 0, P[o + 3], P[o + 6] > 0.5);
       if (v > PAINT_CONST.PULSE_MIN_V) {
         out.band = true;
         out.v = v;

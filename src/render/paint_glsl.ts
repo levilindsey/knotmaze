@@ -701,22 +701,23 @@ int kHcLook() {
 highp float kHcD;
 highp float kHcPx;
 
-highp float kPulseV(highp float d, highp float span, bool inward, bool hovered) {
+highp float kPulseV(highp float d, highp float span, bool inward, bool hovered, highp float dist0, bool cont) {
   if (d < 0.0 || d > span) return 0.0;
-  highp float endWin = clamp((span - d) / PULSE_END_WINDOW, 0.0, 1.0);
+  highp float dG = dist0 + d;
+  highp float endWin = cont ? 1.0 : clamp((span - d) / PULSE_END_WINDOW, 0.0, 1.0);
   // A prototype: no trains and no breath, one steady level out to the
   // reach, faded in after a move like the trains; the look shapes it.
-  if (kHcLook() != 0) return endWin * uKPulse.w * kReachWin(d);
-  if (hovered) return endWin * uKPaint.w * kReachWin(d);
+  if (kHcLook() != 0) return endWin * uKPulse.w * kReachWin(dG);
+  if (hovered) return endWin * uKPaint.w * kReachWin(dG);
   highp float s = uKPulse.z;
-  highp float raw = inward ? d + uKPulse.x : d - uKPulse.y;
+  highp float raw = inward ? dG + uKPulse.x : dG - uKPulse.y;
   highp float ph = raw - s * floor(raw / s);
   highp float dist = min(ph, s - ph);
-  highp float dC = max(0.0, d - (ph <= s - ph ? ph : ph - s));
+  highp float dC = max(0.0, dG - (ph <= s - ph ? ph : ph - s));
   highp float bump = max(0.0, 1.0 - dist / CREST_WIDTH) * min(1.0, dC / CREST_RAMP);
-  highp float fl = (PULSE_FLOOR + PULSE_CORE_BOOST * max(0.0, 1.0 - d / PULSE_CORE_RADIUS)) *
-    max(0.0, 1.0 - d / PULSE_FLOOR_REACH);
-  return min(1.0, (fl + bump * 0.9) * endWin) * uKPulse.w * kReachWin(d);
+  highp float fl = (PULSE_FLOOR + PULSE_CORE_BOOST * max(0.0, 1.0 - dG / PULSE_CORE_RADIUS)) *
+    max(0.0, 1.0 - dG / PULSE_FLOOR_REACH);
+  return min(1.0, (fl + bump * 0.9) * endWin) * uKPulse.w * kReachWin(dG);
 }
 
 highp float kRingDist(highp float a, highp float b, highp float total, bool closed) {
@@ -807,7 +808,7 @@ highp vec4 kPaintAt(KChain c, highp float ctrl, highp float arc, highp float px)
       } else {
         d = dirPos ? arc - aJ : aJ - arc;
       }
-      highp float v = kPulseV(d, span, (flags & IF_INWARD) != 0, (flags & IF_HOVER) != 0);
+      highp float v = kPulseV(d, span, (flags & IF_INWARD) != 0, (flags & IF_HOVER) != 0, T0.w, T1.z > 0.5);
       if (v > PULSE_MIN_V) {
         // 2 = a hovered choice under a High contrast prototype (K111 stage
         // 4), which the looks draw apart; anything over 0.5 is a band.

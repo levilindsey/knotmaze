@@ -352,6 +352,59 @@ describe("G2.3 paint mirror vs the retired per-sample pass", () => {
     }
   });
 
+  // K480 stage 2: a branched arm (past a short first run) is phased by
+  // its GLOBAL distance from the head (dist0 + local), ends at the same
+  // reach window, and carries through its far end when cont is set (no
+  // end fade at a junction the light branches on from).
+  it("K480: branched pulse arms read global distance and carry through continuing ends", () => {
+    const k: OldClock = { clock: 20, pulseBorn: 0, spacing: 2.5 };
+    const U = uniforms(k);
+    U.uKReach[0] = 3;
+    U.uKReach[1] = Math.min(PAINT_CONST.PULSE_REACH_FADE, 0.5 * 3);
+    // Phase continuity: a branched arm at local d reads as a head arm at
+    // dist0 + d (both away from any end window or reach fade).
+    const Ubig = uniforms(k);
+    for (let d = 0; d <= 4; d += 0.25) {
+      expect(kPulseV(Ubig, d, 100, false, false, 2.5, true)).toBeCloseTo(
+        kPulseV(Ubig, 2.5 + d, 102.5, false, false),
+        12
+      );
+    }
+    // The reach window acts on the global distance, not the local one.
+    expect(kPulseV(U, 0.4, 10, false, false, 2, true)).toBeGreaterThan(0);
+    expect(kPulseV(U, 1.1, 10, false, false, 2, true)).toBe(0);
+    expect(kPulseV(U, 0.4, 10, false, true, 2, true)).toBeGreaterThan(0);
+    expect(kPulseV(U, 1.1, 10, false, true, 2, true)).toBe(0);
+    // At a continuing far end there is no end fade; at a terminal one
+    // the hover is gone exactly at the end, as before.
+    const span = 2;
+    expect(kPulseV(Ubig, span, span, false, true, 2, true)).toBeCloseTo(Ubig.uKPaint[3], 12);
+    expect(kPulseV(Ubig, span, span, false, true, 2, false)).toBe(0);
+    // Through kPaintAt: the item's dist0 (T0.w) and cont (T1.z) slots.
+    const r = rng(480);
+    const ch = randomChain(r, 60, false);
+    const pulses: OldPulse[] = [
+      { cJunction: 10, cFar: 30, inward: false, onPath: false, hovered: false },
+    ];
+    const D = scene(ch.controlArcLengths, ch.totalLength, ch.count, false, [], [], pulses, U);
+    const itemBase = Math.round(U.uKPaint[2]);
+    D.paint[itemBase * 4 + 3] = 2; // dist0
+    D.paint[itemBase * 4 + 6] = 1; // cont
+    const c = kChain(D, 0);
+    const aJ = kArcOfCtrl(D, c, 10);
+    const aF = kArcOfCtrl(D, c, 30);
+    const st: KPaintState = { p: 0, band: false, v: 0, rim: 0 };
+    const mid = aJ + 0.4;
+    const got = kPaintAt(D, U, c, 11, mid, 0.02, st);
+    expect(got.band).toBe(true);
+    expect(got.v).toBeCloseTo(kPulseV(U, mid - aJ, aF - aJ, false, false, 2, true), 12);
+    // Past the reach (global) the same point would be dark: dist0 alone
+    // already beyond it leaves nothing, however short the local arc is.
+    D.paint[itemBase * 4 + 3] = 99;
+    const dark = kPaintAt(D, U, c, 11, mid, 0.02, st);
+    expect(dark.band).toBe(false);
+  });
+
   // K93 (Levi, 2026-10-13: "Trail fade, yes"): the memory trail is solid
   // gold out to its fade start and fades linearly after it. The run holding
   // the fade start is two spans (trail_paint.ts): a solid one reaching past
