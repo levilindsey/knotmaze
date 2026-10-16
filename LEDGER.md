@@ -19,7 +19,7 @@ one line, `- **K<n>** Â· <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K521.
+Next free ID: K522.
 
 ## Waiting on Levi
 
@@ -95,9 +95,6 @@ Next free ID: K521.
 - **K401** Â· K80 turns s3 (`docs/design/K80_turns_stage3.md` "Questions"; recs build unless Levi
   objects): 3a now, 3b after K290 3b, chevrons after K324 s2; guard/stalker rows per model (rec.
   (c)); wait keys `.`, Space; pad center waits; turn pull own param (0); K293 (d), (f) stay lore.
-- **K402** Â· K74 s3's questions (`docs/design/K74_stage3.md` "Questions"; recs build unless Levi
-  objects): C3's defaults (corridor 24, away flank, exitClearance 12); `xcr` [0,32], `xfl`, `xtr`
-  [0,32], `xtk` [0,2], never daily-exempt; no exit-guard param; corridor cap 32; deeper traps out.
 - **K406** Â· K395's CAP_ROUND: 1.5 (as built, = COLLAPSE_ROUND) or 3 (tip inner edge turns +19Â° to
   +42Â° not +31Â° to +56Â°, flat arch, 0.02-0.03 world less inner swing; 6 looks like 3). Live as
   `PluckOverlay.capRound`; sheets `.claude/probes/K395/out/`. Stays 1.5 until Levi picks.
@@ -132,14 +129,11 @@ Next free ID: K521.
     `ae4714d103b5fd3bf` of claude session 05e60da0, worktree on K161's sweep list). Stage 2's agent
     a2c61932e9e358104 (session d8031183) finished; worktrees removed by the K161 sweep
     2026-10-15, branches kept
-  - branch: mainline; last commit: `faa9a52` (stage 1 fbf5b5c..8ba0c32,
-    stage 2 4d3efe6..faa9a52)
+  - branch: mainline; last commit: `9ccf360` (stage 3; stages 1-2 fbf5b5c..faa9a52)
   - evidence: `.claude/probes/K74/` (stage 2 in `stage2/`, sheets in
     `out/`); the design agent's branch `worktree-agent-aeaf1e61bcecaaf0b` (its worktree swept
     2026-10-15, probes copied to the main checkout)
-  - next: stage 3, the trap-zone finish and H1's exit guard (K278 (a)) (Opus, 2 h, ports
-    5930-5939; questions K402), after K7 stage 7 merges (both edit `sceneParamsOf`). It moves
-    the golden dailies and K74's pins (and K326 A's maze golden if that lands first).
+  - next: K521's item 7-8 measurement, then stage 4 (greedy-trap search, K46's bands).
     Dead-end branches as deeper traps are out of scope; K80's brief does not settle them
   - brief: `docs/design/K74_stage3.md`; stage 2's handoff: `docs/design/K74.md`
 - **K80** Â· The minotaur, decided (Levi, 2026-10-13; design
@@ -293,6 +287,7 @@ The queue (coordinator, overnight 2026-10-15/16):
 3. K6-3 (= K24) done in 1654ef0 (2026-10-16; phone check K516); G3-1 waits on K399. Overnight residuals wait in their sections; K513 fixed the gate; the K156 frames spot check ran 2026-10-16 (A/A 65a7787, all within noise).
 
 4. Overnight run 3 done (2026-10-16): K513 (6eb0a84), K480 stage 2 (6aaed30), K6-3 (1654ef0, close 7c952cd) all on master; K307 stage 3 probes point Levi at branch (b) late enable (K517); K397's census runs but its dots-cut PROOF stays vacuous and its probe needs a frame-flag port (K518). K481 stage 2 still waits on Levi's K501 difficulty call; G3-1 on K399; K74 stage 3 (K402) and the thread-reveal chain (K76 2c, K268 stage 2, K290, K76 2d) remain queued. Waiting-on-Levi untouched.
+5. Overnight run 4 done (2026-10-16): K518 (8215349; residuals K519), K514+K516 (11309be; residual K520), K76 criterion 2 (5da3f5c), K74 stage 3 (9ccf360; residual K521, K284/K402/K278(a) closed). What remains needs Levi first: K501 (K481 stage 2 after it), K517, K515, K399 (G3-1 after it) and the other Waiting calls; then K521's measurement or K74 stage 4, and K397's phone pass + Levi's link (K519).
 
 
 Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
@@ -332,9 +327,6 @@ Every other item below waits on the trigger it names.
 - **K345** Â· The hover rim stops `rimGap` (0.975 world) short of junctions;
   Levi (2026-10-14) wants it to follow the fillets. Goes in K9's G4-1 (K8
   s1: piece SDFs give webs an across coordinate; fan work now is wasted).
-- **K284** Â· Credit K74's sources (K277): `docs/design/K74_maze_design.md` builds on Pullen (*Think
-  Labyrinth*) and Zhao and Marquez 2013 (arXiv:1307.5713); `src/` names neither. K74 stage 3 adds a
-  comment naming each where the code follows it, then the `RESEARCH` entries.
 - **K240** Â· High contrast for the DOM chrome (K111 follow-up): a CSS layer on
   `:root[data-contrast="high"]` (already set) for the panel, HUD and badge (TS-injected styles).
   Small; after K238's review.
@@ -487,7 +479,7 @@ Every other item below waits on the trigger it names.
 - **K276** Â· K76 s2b's residuals (a)-(e): a visited END at growth 0 shows nothing at its tip; the
   census may miss a long shallow gap's far end; the mode-off-again failure is unexplained; mode-on
   costs are up slightly. `docs/design/K76.md` ("Stage 2b handoff", "Residuals").
-- **K278** Â· K74 s2's residuals: (a) H1 ignores the exit clearance; (b) generation ~30% slower; (d)
+- **K278** Â· K74 s2's residuals: (a) done in 9ccf360 (H1 exit guard); (b) generation ~30% slower; (d)
   heart and ring designs cut no bridges; (e) H1 can shorten the optimal route; (f) 494f2fe says
   codec 108, it is 117; (c) done 86d404e..02194b4. `docs/design/K74.md` ("Stage 2 handoff").
 - **K285** Â· Citation details K277 left out until a record confirms them: Jakobsen's venue, MÃ¼ller
@@ -1028,6 +1020,7 @@ Every other item below waits on the trigger it names.
 - **K511** Â· K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 3b1612f; K348's mid-move wait-tap leftover is now intentional for pointers.
 
 - **K519** Â· Census leftovers from K518's ported re-run (m10 recipe, master f314045; `.claude/probes/K397/stage4/out_k518_m10c/census_m10.json`, 17/29 pass): visible crossings' mode-on cut ~30-60 px smaller than mode-off (7, none exact), 3 hidden-class slots leak 1-6 px, JOINTS (2d) pixel-exact + attribution restores differ 1,633 px, MARKERS i1 (chain 5, vis 0, k 1), visitAll/mode-off-again differ 11,489 px, one shaped slot restores at 2 px - attribute (census tolerance vs product) before fixing; JOINTS (2d) also failed historically. `docs/design/K397.md`, "Stage 4 handoff (K518)".
+- **K521** Â· K74 stage 3 residuals (9ccf360): item 7 prototype port (dailies 1-80 outside the K109/K110 list) and item 8 full measurement (greedy bar on dailies 1-240, sleep, generation timing, before/after sheet of the three finishes) not run; only `clearance.ts` (0 new junctions inside) and unit tests verify the finish. `docs/design/K74_stage3.md` Stage 3 handoff.
 ## Approved, to schedule (2026-10-11)
 
 - **K22** Â· Dynamic resolution scaler (2x up to 3x when frame time
@@ -1244,10 +1237,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K402** Â· K74 stage 3's questions, built as recommended (corridor 24, away flank, exit taper off; codec 152-155, never daily-exempt). Done in 9ccf360 (2026-10-16).
+- **K284** Â· K74's sources credited (Pullen; Zhao and Marquez 2013) in `src/` and RESEARCH. Done in 9ccf360 (2026-10-16).
 - **K76** · Thread-reveal mode, stage 2: criterion 2 fixed (applyExploreGaps re-derives underWindows/pluck footprints from the last solve ungated slot data, no update() per move; phone gate2 fw=0: 0 updates/move, was 1-5), K362 start view widened to 2x(revealDistance+2), HC phone shot taken (capture tiles, K513 path). Done in 5da3f5c (2026-10-16; evidence .claude/probes/K76/stage2e/).
 
 - **K514** Â· Looks screenshots no longer tile with the phone sitting in landscape: `shotViewport` captures at a surface-fitting scale on the page's emulation CDP session (464x850 for 411x753). Done in this commit (2026-10-16).
-- **K516** Â· K6-3 phone cadence check: knot fw=0 draws 0/s at rest (ticker stopped), fabric ambient cadence 23.8 drawn/s (rAF p95 16.9 ms, smooth), continuous mode 60.2 / 44.0 drawn/s; load first sleep 10.5-12.9 s. Done in PLACEHOLDER (2026-10-16; `.claude/probes/K516/results.md`). Residual K520.
+- **K516** Â· K6-3 phone cadence check: knot fw=0 draws 0/s at rest (ticker stopped), fabric ambient cadence 23.8 drawn/s (rAF p95 16.9 ms, smooth), continuous mode 60.2 / 44.0 drawn/s; load first sleep 10.5-12.9 s. Done in 11309be (2026-10-16; `.claude/probes/K516/results.md`). Residual K520.
 
 - **K518** Â· K397/K76 census ported after K6-3 (continuous `__knotLoop` + freeze of the per-frame slot re-derivation during mutation shots; stale PROOF_UNTIL default removed) and re-run on master: dots-cut PROOF PASS non-vacuous (32 shaped slots, 11,381 px, ghosts/under 0, dots p95 err 0.059). Done (probes + docs only, 2026-10-16; evidence `.claude/probes/K397/stage4/out_k518_m10c/`, `docs/design/K397.md` Stage 4 handoff). Residuals K519; phone/Levi link still owed under K397.
 
