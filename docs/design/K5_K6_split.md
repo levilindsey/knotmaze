@@ -1661,3 +1661,189 @@ The plan for step 2:
 - The module constants move to camera.ts's top. FOLLOW_DELAY, FOLLOW_RAMP
   and CAM_MAX_DT are exported for MR11 and MR14.
 - syncExploration and PEEK_HOLD stay in main.ts.
+
+#### What moved (2167d26, f47be3b)
+
+- **2167d26** moves MR6 to `src/app/camera.ts` (494 lines) as
+  `createCamera(deps: CameraDeps, scene: SceneRef)`, with CameraDeps =
+  { app, root, params, motion }. main.ts goes from 4872 to 4493 lines.
+  The commit message holds the old → new line map and lists every edit
+  that is not a move.
+- main.ts calls it where MR6 was: `const camera = createCamera({ app,
+  root, params, motion }, scene)` (562 at f47be3b), then destructures the
+  16 names other regions call or mutate in place (563-580). Those are
+  the objects `fitCur`, `view`, `headScratch` and `panAllow`, and the
+  functions `nowSec`, `touchCamera`, `openPanel`, `followScale`,
+  `placeWorldAt`, `zoomAt`, `panBy`, `resetCamera`, `setCamFollow`,
+  `introPlaying`, `updateCamera` and `fitToScreen`.
+- The 8 `let`s other regions use stay on `camera`, never destructured:
+  getters `fitRight`, `camFollow`, `panelT`, `panelBox`, and get/set
+  pairs `camTouchedAt`, `viewHoming`, `camTween`, `panelWrap`. Their
+  main.ts sites at f47be3b:
+  - rebuild 1035-1036 (`viewHoming`, `camTween`);
+  - the panel 1431 (`panelWrap`);
+  - the indicators 1716 (`panelBox`, `panelT`);
+  - startCamTween 1728 (`camTween`);
+  - returnToHead 1881-1895 (`camFollow`, `camTween`, `camTouchedAt`,
+    `viewHoming`);
+  - the probe hooks 4408-4450.
+- The module constants FIT_MARGIN, MAX_ZOOM, FOLLOW_SPAN, FOLLOW_DELAY,
+  FOLLOW_RAMP, FOLLOW_W, CAM_STEP and CAM_MAX_DT now open camera.ts.
+  main.ts imports three of them: FOLLOW_DELAY and FOLLOW_RAMP
+  (returnToHead, 1887) and CAM_MAX_DT (the ticker, 4173).
+- `ps`, `fabric` and `reveal` became `scene.<name>` (14 sites). The other
+  edits are imports: the view_clamp import's path, `Rect` leaving
+  main.ts's offscreen_indicators import, and camera.ts's type imports.
+- The five ProbeCtx getters that read the camera's `let`s (camFollow,
+  camTouchedAt, camTween, fitRight, panelT) return `camera.<name>`.
+  ProbeCtx is unchanged, and so is `createStamp(...)`: the stamp reads
+  none of the camera's state.
+- **f47be3b** adds `src/app/camera.ts` to `gameplay-camera.md`'s
+  `paths:` and to its row in `docs/lore_index.md`.
+
+#### Checks
+
+Everything is under the main checkout's untracked
+`.claude/probes/K5/M2/`, and every path below is relative to it.
+- **tsc, tests, build** ran at 2167d26, the one code commit (6dc5ac5 and
+  f47be3b touch only docs and lore), under the perf lock:
+  - tsc: clean;
+  - `npm test`: 84 files (1 skipped), 1168 tests, 108 s;
+  - `npm run build`: 5 s.
+
+  Files: `step2/` (tests.ps1, tests.log, npm_test.txt, npm_build.txt).
+- **Moved-code review**: `node review_moves.mjs step2 2167d26` wrote
+  `step2/review_2167d26.txt`. camera.ts: +408 moved, +86 not. main.ts:
+  -402/+3 moved, -20/+40 not. Every line that did not move is an edit
+  the commit message lists.
+- **Hook inventory**: unchanged, 49 `window.__knot*` hooks set and 50
+  named at both eb8436a and f47be3b (`checks/hooks_set_*.txt`,
+  `checks/hooks_named_*.txt`). Stage 1's `hooks_scan.ts` has been
+  obsolete since M1, so this is a git grep.
+- **The browser checks** compare eb8436a (base) with f47be3b (ref), using
+  preview builds served by `vite preview` on 5840 and 5841, under the
+  perf lock from 09:31 to 09:47. `checks_m2.ps1` ran them (phases up,
+  probes and down), and `checks/checks.log` is its summary.
+- **diag_screenshot**, bare link (Daily #4, the worker host): both builds
+  were asleep at sim 5.0 s, wall 11.9 s. Frame median 17.9 ms on both;
+  p95 18.1 ms (base) and 18.2 ms (ref). The consoles match, each with one
+  `/favicon.ico` 404 from `vite preview`. Files: `checks/diag_base.*`,
+  `checks/diag_ref.*`.
+- **Same-state input A/B**, `m2_input_ab.mjs` (new): the scripted input
+  runs on both builds with clocks pinned, and each step is captured once
+  the view holds still. The base link is
+  `?k5ab&phy=0&am=instant&fw=0&snd=none`. Per case:
+  `checks/ab_<case>.txt` and `checks/ab/`; base-vs-base controls:
+  `checks/abctl_<case>.txt` and `checks/abctl/`.
+
+| Case | Steps | ref vs base | base vs base |
+|---|---|---|---|
+| knot (`&mf=0`) | pluck, zoom (3.32x), pan | 0 px | - |
+| fabric | move, zoom, pan, pluck, move | 0 px | - |
+| fabric2 (`checks_fabric2/`) | move, zoom, pan, pluck, zoomout, move | 0 px | - |
+| follow (`&cam=follow`, 12 s settle) | move, zoom, pan, move | 767 px, all at load | 1718 px, all at load |
+| fog (`&xp=fog`) | move x3, zoom, pan | 136 px (moves 1 and 3) | 7232 px |
+| thread reveal (`&xp=threads`) | move x3, zoom, pan | 107210 px | 186026 px |
+
+  The non-zero rows are capture timing, not the move:
+  - in each differing step the two views differ by the camera's
+    unfinished ease (follow's load scale is 69.230397 on base and
+    69.230376 on ref, both on the way to 69.230769; after the reveal's
+    third move it is 89.213 and 89.236);
+  - every base-vs-base control differs in the same way and by more;
+  - every step whose views match is 0 px.
+
+  In the fabric case, the last tap missed on both builds: after the zoom
+  its choice sat off-screen, so neither build moved. fabric2 zooms back
+  out first, and both of its moves land on both builds (mentr_b → node_0
+  → mnode_154). The script in `M2/` is that version: it adds `zoomout`
+  and records each move's to, moved and onScreen.
+- **The daily's front door**, `K19-K20/probe_daily.mjs front`: the same
+  on both builds, 4/14 checks ok (`checks/daily_front_*.txt`,
+  `checks/daily_base/`, `checks/daily_ref/`). The 10 failures come from
+  the probe's stale expectations and fail on base too:
+  - it reads the HUD title `#maze-hud .km-title`, which src no longer
+    has;
+  - it expects two old blobs (`?daily=1.aBMge`, `?1471kin.c`) to stay
+    tokens.
+
+  The only difference is `?am=instant`'s random seed.
+- **k7_frames** (`K7/stage4/k7_frames.mjs`, copied here; link
+  `?1471kin.J`, with the drag). Files:
+  `checks/k5m2_<base|ref>_phw<0|1>.txt`.
+
+| | phw=0 base | phw=0 ref | phw=1 base | phw=1 ref |
+|---|---|---|---|---|
+| host | in-thread | in-thread | worker | worker |
+| first sleep (s); sim | 19.23; 5.00 | 18.97; 5.00 | 10.39; 5.03 | 9.97; 4.98 |
+| visible to sleep: fps; cb p50 | 36.3; 27.0 ms | 37.0; 26.7 ms | 54.3; 16.1 ms | 55.1; 15.3 ms |
+| drag: fps; cb p50 | 6.9; 143.0 ms | 6.9; 144.2 ms | 53.1; 17.8 ms | 55.2; 17.2 ms |
+| errors; context lost | 0; 0 | 0; 0 | 0; 0 | 0; 0 |
+
+  Every row agrees within run-to-run noise.
+
+#### Left for M3 and later
+
+- **The re-map**: M3 runs it with `anchors_f47be3b.json`. There, MR6
+  anchors on `camera`, and MR2's text names the constants camera.ts now
+  owns. It resolves at f47be3b: `remap_f47be3b.md` and `list_f47be3b.txt`
+  (main.ts 4493 lines, `main()` 211-4491, MR6 562-602, MR14 3916-4335).
+- **M3** (the frame loop) reads `introPlaying()` (4032, K307's wave 2)
+  and, at 4173-4174, `CAM_MAX_DT` and `updateCamera(camDt)`. It can take
+  `camera` itself as a dep instead of the destructured names
+  (`ReturnType<typeof createCamera>`: camera.ts exports no named type
+  yet).
+- **M4** takes the camera calls in lifecycle and the scene build:
+  - `fitToScreen()` in finishLoading (671) and finishPresettle (832);
+  - in rebuild: `setCamFollow(false)` (1031), `camera.viewHoming =
+    false; camera.camTween = null` (1035-1036) and `fitToScreen()`
+    (1040);
+  - syncExploration (581-594), which rebuild (989), a panel callback
+    (1279) and the ticker (4127) call.
+- **M5** (panel wiring): the `camera.panelWrap` write (1431) and the
+  resize listener's `fitToScreen()` (1515).
+- **M6** (pointer input) calls placeWorldAt, zoomAt, panBy, resetCamera,
+  touchCamera and nowSec.
+- **M7b**:
+  - the indicators' `panelBox`/`panelT` (1716);
+  - startCamTween (1720, its `camTween` write at 1728);
+  - frameWorld (1744), which uses `headScratch` (1749-1753) and
+    PEEK_HOLD (597, read at 1769);
+  - returnToHead (1878-1895).
+- Once a get/set pair's last writer has left main.ts, the pair can
+  become a named owner method or a plain getter.
+- `converged()`, from section 2.2's table, belongs to K6.
+
+#### Surprises
+
+- syncExploration and PEEK_HOLD sat inside MR6's span (eb8436a 770-783
+  and 837-839). The move therefore took three ranges, and both stay in
+  main.ts (581-597).
+- Section 2.2's export list includes `applyView` (line 311), but nothing
+  outside MR6 calls it, so camera.ts does not export it.
+- The deps are `params` and `motion`, not 2.2's `settings`. The camera
+  reads the URL params (threadWidth, mazeFabric, cameraMode, exploration,
+  fowRadius) and `motion.reduced` (the panel tween), but never
+  PanelSettings.
+- Owner methods versus accessors: the brief says a `let` another region
+  writes becomes an owner method. I used get/set pairs instead, which
+  line 865 ("a setter or owner method") and lines 1139-1141 ("a getter,
+  or a get/set pair") allow while the writers stay in main.ts. Each
+  write keeps its shape with one prefix (`camTween = null` became
+  `camera.camTween = null`), so the diff still reads as a move.
+- `headScratch` is not the camera's alone: MR11's frameWorld and
+  returnToHead use it as their own scratch. It is handed back as a
+  shared object.
+- computeFitTarget (every third frame, in every ticker branch) now reads
+  `scene.ps` through the SceneRef getter three times per particle
+  (camera.ts 64-66), where it used to read a closure `let`. k7_frames
+  shows no difference, and no other frame-time check was asked for.
+  Hoisting `const ps = scene.ps` would be a logic edit, so it is left.
+- The prefixes pushed five lines past 80 columns: camera.ts 78, 93, 341
+  and 353 (`scene.`) and main.ts 1431 (`camera.`). camera.ts 107, 181 and
+  304 were over 80 already. The repo has no formatter config.
+- gameplay-camera.md's K198 entry still says "main.ts `fitRight`"
+  (line 38), and gameplay.md lists the file as "(with `src/main.ts`)".
+  The brief allowed only the `paths:` edit, so I left both.
+
+Stopped with M2 done, inside the 2 h cap (start 09:05).
