@@ -92,15 +92,6 @@ import {
   headReturnPlan,
 } from "./ui/head_indicator";
 import {
-  PANEL_TWEEN_S,
-  clampFitView,
-  easePanel,
-  noAllowance,
-  stepPanelTween,
-  stepRange,
-  type OpenPanel,
-} from "./ui/view_clamp";
-import {
   DARK_DISC,
   GLYPH_R,
   HEAD_INDICATOR_KEY,
@@ -109,7 +100,7 @@ import {
   OffscreenIndicators,
   indicatorPrefs,
 } from "./ui/offscreen_indicators";
-import type { IndicatorStyle, Rect } from "./ui/offscreen_indicators";
+import type { IndicatorStyle } from "./ui/offscreen_indicators";
 import {
   DEFAULT_GLYPHS,
   markerDotRadiusFor,
@@ -161,9 +152,14 @@ import { createLoader } from "./ui/loader";
 import type { SceneRef } from "./app/scene_ref";
 import { createStamp } from "./app/stamp";
 import { installProbeHooks } from "./app/probe_hooks";
+import {
+  CAM_MAX_DT,
+  FOLLOW_DELAY,
+  FOLLOW_RAMP,
+  createCamera,
+} from "./app/camera";
 
 const BACKGROUND = 0x151b28;
-const FIT_MARGIN = 40;
 
 // The stamp/perf readout's visibility persists per browser.
 const STATS_KEY = "knotmaze.showStats";
@@ -172,22 +168,6 @@ const MAZE_STATS_KEY = "knotmaze.showMazeStats";
 // K84 sorts every param into preference vs design later).
 const FINISH_INDICATOR_KEY = "knotmaze.finishIndicator";
 const TAP_TO_PAN_KEY = "knotmaze.tapToPan";
-// Pinch / wheel zoom ceiling, as a multiple of the auto-fit scale.
-const MAX_ZOOM = 8;
-// FOLLOW camera (cameraMode follow): framing span (lattice units across
-// the short screen side), the grace period after a pan/zoom gesture
-// before the pull-back spring engages, its ease-in time, and its
-// full-strength angular rate (critically damped - weak, no overshoot).
-const FOLLOW_SPAN = 13;
-const FOLLOW_DELAY = 1.2;
-const FOLLOW_RAMP = 1.0;
-const FOLLOW_W = 2.4;
-// K96: the camera steps by REAL elapsed time (the ticker's deltaMS is
-// capped at 100 ms), the spring in substeps of at most CAM_STEP so it stays
-// stable, so a low frame rate no longer means a slow-motion camera. A
-// stall longer than CAM_MAX_DT (a hidden tab) counts as that long.
-const CAM_STEP = 0.05;
-const CAM_MAX_DT = 1;
 
 // THE LOAD SETTLE (K147, docs/design/K147.md): the pre-settle and the
 // budgeted settle step in the physics host (physics/physics_host.ts, whose
@@ -576,197 +556,28 @@ async function main(): Promise<void> {
   // K101: music mode's notes, on the audio clock once it runs.
   const songSched = new SongScheduler();
 
-  // The unanchored knot finds its own shape, so the viewport fit follows
-  // the live particle bounds, easing toward the target to avoid popping.
-  const fitTarget = { scale: 1, x: 0, y: 0 };
-  // K198: the framed maze's drawn right edge, world x (the pan range's).
-  let fitRight = 0;
-  function computeFitTarget(): void {
-    if (!ps) return;
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (let i = 0; i < ps.particleCount; i++) {
-      const x = ps.positions[i * 2];
-      const y = ps.positions[i * 2 + 1];
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    }
-    let pad = params.threadWidth / 2 + 0.3;
-    // FOG OF WAR: frame only what the fog lets you see (the explored
-    // region grown by the reveal radius) - it widens as you explore. K76
-    // stage 2c: the thread reveal frames the thread it shows the same way.
-    const fogBox =
-      params.mazeFabric && fabric
-        ? (fabric.fogVisibleBounds() ?? fabric.exploreVisibleBounds())
-        : null;
-    if (fogBox) {
-      minX = fogBox.minX;
-      minY = fogBox.minY;
-      maxX = fogBox.maxX;
-      maxY = fogBox.maxY;
-      pad = 0.3;
-    }
-    // The threads' edge, or a start/head/exit disc poking past it; under
-    // fog, the visible region's.
-    fitRight = fogBox
-      ? maxX
-      : Math.max(
-          maxX + params.threadWidth / 2,
-          params.mazeFabric && fabric ? fabric.markersRight() : -Infinity
-        );
-    minX -= pad;
-    minY -= pad;
-    maxX += pad;
-    maxY += pad;
-    const w = Math.max(maxX - minX, 1);
-    const h = Math.max(maxY - minY, 1);
-    // Fit the knot, but never zoom in past a comfortable thread scale.
-    fitTarget.scale = Math.min(
-      (app.screen.width - FIT_MARGIN * 2) / w,
-      (app.screen.height - FIT_MARGIN * 2) / h,
-      90
-    );
-    fitTarget.x = (app.screen.width - w * fitTarget.scale) / 2 - minX * fitTarget.scale;
-    fitTarget.y =
-      (app.screen.height - h * fitTarget.scale) / 2 - minY * fitTarget.scale;
-  }
-
-  // ---- CAMERA ------------------------------------------------------------
-  // Two modes (params.cameraMode):
-  // FIT - the eased auto-fit (the whole knot, or under fog the visible
-  //   region) with the user's zoom/pan composed on top in SCREEN space:
-  //   screen = zoom * fitScreen + pan. Zoom 1 is the home view. Pans clamp
-  //   (ui/view_clamp.ts, K198) so the zoomed fit frame covers the screen,
-  //   except that while the panel is open the maze may go left until its
-  //   right edge clears the panel; out of range (the panel closed, a
-  //   resize), the view eases back in. A reset (double-click) eases back to
-  //   zoom 1, pan 0.
-  // FOLLOW - a chase camera on the player's head (maze mode): a scale +
-  //   world center that gestures move freely, pulled back by a weak,
-  //   critically damped spring that stays OFF for FOLLOW_DELAY after the
-  //   last gesture and then eases its stiffness in over FOLLOW_RAMP (the
-  //   approach itself eases out). During the intro it frames the knot.
-  // Gestures speak one primitive - put world point (wx, wy) at screen
-  // point (sx, sy) at scale s (placeWorldAt) - and each mode maps it onto
-  // its own state, so pinch / wheel / drag behave identically in both.
-  const fitCur = { scale: 1, x: 0, y: 0 };
-  const view = { zoom: 1, panX: 0, panY: 0 };
-  const cam = { s: 1, cx: 0, cy: 0, vl: 0, vx: 0, vy: 0 };
-  let camFollow = false;
-  let camTouchedAt = -1e9; // performance.now seconds of the last gesture.
-  let viewHoming = false; // Fit mode: easing a reset back to the home view.
-  // K73: an eased move to a framing (an off-screen indicator's tap): the
-  // world point at the screen's center and the scale, from -> to. Any
-  // gesture or a reset cancels it. `hold`: how long the follow camera
-  // stays off once the move ends (negative: it is at full strength at
-  // once - K148's return to the head).
-  let camTween: {
-    t: number;
-    dur: number;
-    s0: number;
-    x0: number;
-    y0: number;
-    s1: number;
-    x1: number;
-    y1: number;
-    hold: number;
-  } | null = null;
-  const headScratch = new Float64Array(2);
-  const nowSec = (): number => performance.now() / 1000;
-  const touchCamera = (): void => {
-    camTouchedAt = nowSec();
-    viewHoming = false;
-    camTween = null;
-  };
-  // K198: how far outside its range the view may still sit while it eases
-  // back in (ui/view_clamp.ts), and the panel's wrapper once it exists.
-  const panAllow = noAllowance();
-  let panelWrap: HTMLElement | null = null;
-  // K198 stage 2: the panel as the range and the indicators see it. The
-  // panel snaps open and shut; its edge reaches them through a time-based
-  // tween (panelU, linear progress, stepped in updateCamera; panelT, its
-  // eased openness, this frame's and the last). While it closes, the box
-  // is the last open one (a closed panel has none).
-  let panelU = 0;
-  let panelT = 0;
-  let panelTPrev = 0;
-  let panelBox: Rect | null = null;
-  const readPanel = (): boolean => {
-    const r = panelWrap?.getBoundingClientRect();
-    if (!r || r.width <= 0) return false;
-    panelBox = { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
-    return true;
-  };
-  const stepPanel = (dt: number): void => {
-    const open = readPanel();
-    panelTPrev = panelT;
-    panelU = stepPanelTween(panelU, open, dt, motion.reduced ? 0 : PANEL_TWEEN_S);
-    panelT = easePanel(panelU);
-  };
-  // The open panel as the pan range needs it, at openness t (null while
-  // it is shut).
-  const openPanelAt = (t: number): OpenPanel | null =>
-    t > 0 && panelBox
-      ? {
-          left: panelBox.left,
-          mazeRight: fitCur.x + fitRight * fitCur.scale,
-          open: t,
-        }
-      : null;
-  const openPanel = (): OpenPanel | null => openPanelAt(panelT);
-  // The fit camera's zoom range and pan range (ui/view_clamp.ts).
-  const clampView = (): void => {
-    clampFitView(
-      view,
-      app.screen.width,
-      app.screen.height,
-      MAX_ZOOM,
-      openPanel(),
-      panAllow
-    );
-  };
-  // One frame of the range: the ease back into it (rate 0: hold where it
-  // is), measured at last frame's openness, then the clamp at this one's,
-  // so a view at the limit rides the tweened edge (stepRange).
-  const easeView = (rate?: number): void => {
-    stepRange(
-      view,
-      app.screen.width,
-      app.screen.height,
-      MAX_ZOOM,
-      openPanelAt(panelTPrev),
-      openPanel(),
-      panAllow,
-      rate
-    );
-  };
-  const applyView = (): void => {
-    root.scale.set(fitCur.scale * view.zoom);
-    root.position.set(
-      fitCur.x * view.zoom + view.panX,
-      fitCur.y * view.zoom + view.panY
-    );
-  };
-  const applyCam = (): void => {
-    root.scale.set(cam.s);
-    root.position.set(
-      app.screen.width / 2 - cam.cx * cam.s,
-      app.screen.height / 2 - cam.cy * cam.s
-    );
-  };
-  // Follow framing: FOLLOW_SPAN lattice units across the short screen
-  // side - or under fog, the visible disc plus a margin. The thread reveal
-  // keeps FOLLOW_SPAN (K76 section 2.7).
-  const followScale = (): number => {
-    const span = params.exploration === "fog"
-      ? 2 * (params.fowRadius + 1.2)
-      : FOLLOW_SPAN;
-    return Math.min(app.screen.width, app.screen.height) / span;
-  };
+  // K5 M2: the camera (the eased fit, the follow camera, placeWorldAt, the
+  // K198 pan range, the panel's tween) is src/app/camera.ts. The `let`s
+  // other regions read or write are `camera.<name>`, never destructured.
+  const camera = createCamera({ app, root, params, motion }, scene);
+  const {
+    fitCur,
+    view,
+    headScratch,
+    nowSec,
+    touchCamera,
+    panAllow,
+    openPanel,
+    followScale,
+    placeWorldAt,
+    zoomAt,
+    panBy,
+    resetCamera,
+    setCamFollow,
+    introPlaying,
+    updateCamera,
+    fitToScreen,
+  } = camera;
   // K76 stage 2c: the exploration mode onto the fabric - the fog of war's
   // switch and radius, and the thread reveal's switch, reach, fade (never
   // longer than the reach: the design's sanitize) and end look.
@@ -781,199 +592,9 @@ async function main(): Promise<void> {
     if (li >= 0) ex.look = li;
     f.burntLook = params.burnt; // K290: how burnt runs draw
   }
-  const placeWorldAt = (
-    wx: number,
-    wy: number,
-    sx: number,
-    sy: number,
-    s: number
-  ): void => {
-    const lo = camFollow
-      ? Math.min(fitTarget.scale, followScale()) * 0.85
-      : fitCur.scale;
-    const hi = camFollow ? followScale() * 4 : fitCur.scale * MAX_ZOOM;
-    const sc = Math.min(hi, Math.max(lo, s));
-    const px = sx - wx * sc;
-    const py = sy - wy * sc;
-    if (camFollow) {
-      cam.s = sc;
-      cam.cx = (app.screen.width / 2 - px) / sc;
-      cam.cy = (app.screen.height / 2 - py) / sc;
-      cam.vl = 0;
-      cam.vx = 0;
-      cam.vy = 0;
-      applyCam();
-    } else {
-      view.zoom = sc / fitCur.scale;
-      view.panX = px - fitCur.x * view.zoom;
-      view.panY = py - fitCur.y * view.zoom;
-      clampView();
-      applyView();
-    }
-  };
-  // Zoom by `factor` about screen point (sx, sy).
-  const zoomAt = (sx: number, sy: number, factor: number): void => {
-    const s = root.scale.x;
-    placeWorldAt(
-      (sx - root.position.x) / s,
-      (sy - root.position.y) / s,
-      sx,
-      sy,
-      s * factor
-    );
-    touchCamera();
-  };
-  const panBy = (dx: number, dy: number): void => {
-    const s = root.scale.x;
-    placeWorldAt(-root.position.x / s, -root.position.y / s, dx, dy, s);
-    touchCamera();
-  };
-  // Double-click / double-tap on empty space: back to the home framing.
-  const resetCamera = (): void => {
-    camTween = null;
-    if (camFollow) camTouchedAt = -1e9; // Full-strength pull at once.
-    else viewHoming = true;
-  };
   // How long a follow camera stays on a framing an indicator's tap moved it
   // to, beyond the usual FOLLOW_DELAY, before it eases back to the head.
   const PEEK_HOLD = 1.3;
-  // One frame of camTween (it owns the camera while it runs).
-  const stepCamTween = (dt: number): void => {
-    const tw = camTween;
-    if (!tw) return;
-    tw.t += dt;
-    const u = tw.dur > 0 ? Math.min(1, tw.t / tw.dur) : 1;
-    const e = u * u * (3 - 2 * u);
-    const s = Math.exp(Math.log(tw.s0) + (Math.log(tw.s1) - Math.log(tw.s0)) * e);
-    placeWorldAt(
-      tw.x0 + (tw.x1 - tw.x0) * e,
-      tw.y0 + (tw.y1 - tw.y0) * e,
-      app.screen.width / 2,
-      app.screen.height / 2,
-      s
-    );
-    // The follow spring stays off through the move, then for the hold.
-    camTouchedAt = nowSec() + (u >= 1 ? tw.hold : 0);
-    viewHoming = false;
-    if (u >= 1) camTween = null;
-  };
-  // Mode switches hand over the CURRENT framing (no jump); each mode then
-  // eases to its own target.
-  const setCamFollow = (on: boolean): void => {
-    if (on === camFollow) return;
-    if (on) {
-      cam.s = root.scale.x;
-      cam.cx = (app.screen.width / 2 - root.position.x) / cam.s;
-      cam.cy = (app.screen.height / 2 - root.position.y) / cam.s;
-      cam.vl = 0;
-      cam.vx = 0;
-      cam.vy = 0;
-      camTouchedAt = nowSec() - FOLLOW_DELAY;
-    } else {
-      fitCur.scale = root.scale.x;
-      fitCur.x = root.position.x;
-      fitCur.y = root.position.y;
-      view.zoom = 1;
-      view.panX = 0;
-      view.panY = 0;
-    }
-    camFollow = on;
-  };
-
-  // The appearance intro is playing (the follow camera frames the knot).
-  const introPlaying = (): boolean => reveal !== null && !reveal.done;
-
-  // Per-frame camera step, in EVERY ticker branch (fog reveals grow and
-  // the head travels while the physics sleeps).
-  let fitFrames = 0;
-  const updateCamera = (dt: number): void => {
-    stepPanel(dt);
-    if (fitFrames++ % 3 === 0) computeFitTarget();
-    fitCur.scale += (fitTarget.scale - fitCur.scale) * 0.08;
-    fitCur.x += (fitTarget.x - fitCur.x) * 0.08;
-    fitCur.y += (fitTarget.y - fitCur.y) * 0.08;
-    setCamFollow(
-      params.cameraMode === "follow" && params.mazeFabric && fabric !== null
-    );
-    // K198: a view the range left behind (the panel closed, a resize, the
-    // fit drifting) eases back in, every frame, whatever else runs.
-    if (!camFollow) easeView();
-    if (camTween) {
-      stepCamTween(dt);
-      return;
-    }
-    if (!camFollow) {
-      if (viewHoming) {
-        view.zoom += (1 - view.zoom) * 0.15;
-        view.panX -= view.panX * 0.15;
-        view.panY -= view.panY * 0.15;
-        // K149: zoom 1 can have a pan range (the panel open, K198), so the
-        // pan must settle too (else a reset from a panned zoom-1 view snaps
-        // on frame one).
-        if (
-          Math.abs(view.zoom - 1) < 1e-3 &&
-          Math.abs(view.panX) < 0.5 &&
-          Math.abs(view.panY) < 0.5
-        ) {
-          view.zoom = 1;
-          view.panX = 0;
-          view.panY = 0;
-          viewHoming = false;
-        }
-        clampView();
-      }
-      applyView();
-      return;
-    }
-    // Target: the head - or the whole knot while the intro plays.
-    let ts = fitTarget.scale;
-    let tx = (app.screen.width / 2 - fitTarget.x) / ts;
-    let ty = (app.screen.height / 2 - fitTarget.y) / ts;
-    const intro = introPlaying();
-    if (!intro && fabric && fabric.headPosition(headScratch)) {
-      ts = followScale();
-      tx = headScratch[0];
-      ty = headScratch[1];
-    }
-    const idle = nowSec() - camTouchedAt;
-    const r = Math.max(0, Math.min(1, (idle - FOLLOW_DELAY) / FOLLOW_RAMP));
-    const ease = r * r * (3 - 2 * r);
-    if (ease > 0) {
-      const w = FOLLOW_W * ease;
-      const n = Math.max(1, Math.ceil(dt / CAM_STEP));
-      const h = dt / n;
-      // Critically damped spring per axis (zoom in log space).
-      const step = (
-        x: number,
-        v: number,
-        target: number
-      ): [number, number] => {
-        const v2 = v + (w * w * (target - x) - 2 * w * v) * h;
-        return [x + v2 * h, v2];
-      };
-      let ls = Math.log(cam.s);
-      const lts = Math.log(ts);
-      for (let i = 0; i < n; i++) {
-        [ls, cam.vl] = step(ls, cam.vl, lts);
-        [cam.cx, cam.vx] = step(cam.cx, cam.vx, tx);
-        [cam.cy, cam.vy] = step(cam.cy, cam.vy, ty);
-      }
-      cam.s = Math.exp(ls);
-    }
-    applyCam();
-  };
-
-  function fitToScreen(): void {
-    computeFitTarget();
-    fitCur.scale = fitTarget.scale;
-    fitCur.x = fitTarget.x;
-    fitCur.y = fitTarget.y;
-    // K198: a resize can leave the view out of range: hold it here, and
-    // let the next frames ease it in (never a snap).
-    easeView(0);
-    if (camFollow) applyCam();
-    else applyView();
-  }
 
   // Stage 22: (re)start the appearance animation: hand the renderer a
   // fresh animator. Instant mode detaches everything: the render path is
@@ -1411,8 +1032,8 @@ async function main(): Promise<void> {
     view.zoom = 1;
     view.panX = 0;
     view.panY = 0;
-    viewHoming = false;
-    camTween = null;
+    camera.viewHoming = false;
+    camera.camTween = null;
     // The off-screen indicators decide again on the new scene's first
     // frame.
     indicators.hideAll();
@@ -1807,7 +1428,7 @@ async function main(): Promise<void> {
       });
     },
   });
-  panelWrap = panel.pane.element.parentElement; // K198 (display none closed).
+  camera.panelWrap = panel.pane.element.parentElement; // K198 (display none closed).
   // K111: an Accessibility switch, or the OS setting behind one, moved.
   // Refresh the flags every `look()` reads, then push the change through the
   // scene without waking the physics: the new palette and route color, the
@@ -2092,7 +1713,7 @@ async function main(): Promise<void> {
     // K198 stage 2: the size setting, and the panel on the camera's clock
     // (displaced indicators slide to their new place as its edge moves).
     scale: () => settings.indicatorSize,
-    panel: () => ({ box: panelBox, open: panelT }),
+    panel: () => ({ box: camera.panelBox, open: camera.panelT }),
   });
   // Start an eased move that puts world (x1, y1) at the screen's center at
   // scale s1 (placeWorldAt clamps it every frame); see camTween.
@@ -2104,7 +1725,7 @@ async function main(): Promise<void> {
     hold: number
   ): void => {
     const s0 = root.scale.x;
-    camTween = {
+    camera.camTween = {
       t: 0,
       dur,
       s0,
@@ -2257,7 +1878,7 @@ async function main(): Promise<void> {
   const returnToHead = (): void => {
     if (!fabric || !fabric.headPosition(headScratch)) return;
     const plan = headReturnPlan({
-      follow: camFollow,
+      follow: camera.camFollow,
       head: { x: headScratch[0], y: headScratch[1] },
       scale: root.scale.x,
       followScale: followScale(),
@@ -2268,10 +1889,10 @@ async function main(): Promise<void> {
     if (plan.tween) {
       startCamTween(plan.x, plan.y, plan.s, plan.dur, plan.hold);
     } else {
-      camTween = null;
+      camera.camTween = null;
     }
-    if (plan.resume) camTouchedAt = -1e9; // Full-strength pull at once.
-    viewHoming = false;
+    if (plan.resume) camera.camTouchedAt = -1e9; // Full-strength pull at once.
+    camera.viewHoming = false;
   };
   indicators.add({
     id: "head",
@@ -4784,13 +4405,13 @@ async function main(): Promise<void> {
       return attemptStartedAt;
     },
     get camFollow() {
-      return camFollow;
+      return camera.camFollow;
     },
     get camTouchedAt() {
-      return camTouchedAt;
+      return camera.camTouchedAt;
     },
     get camTween() {
-      return camTween;
+      return camera.camTween;
     },
     get canvasInk() {
       return canvasInk;
@@ -4805,7 +4426,7 @@ async function main(): Promise<void> {
       return finishWhy;
     },
     get fitRight() {
-      return fitRight;
+      return camera.fitRight;
     },
     get frameCostN() {
       return frameCostN;
@@ -4826,7 +4447,7 @@ async function main(): Promise<void> {
       return loaderShownAt;
     },
     get panelT() {
-      return panelT;
+      return camera.panelT;
     },
     get pendingLoss() {
       return pendingLoss;
