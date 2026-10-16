@@ -94,14 +94,16 @@ describe("the daily design", () => {
   // moved in the commit. Re-frozen by K74 (2026-10-13; before:
   // 85.647/200/302, 75.359/194/294, 85.433/194/295). K132 moved none: the
   // frozen DAILY_V1 base differed from today's defaults only in trailLength.
+  // Re-frozen by K74 stage 3 (2026-10-16, corridor 24 + away flank:
+  // before: 97.106/189/283, 84.020/183/270, 109.737/182/271).
   // Re-frozen by K74 stage 2 (2026-10-14, H1 at share 1: the fused arm cuts
   // move branch points, not their count; before: 86.677/189/283,
   // 68.423/183/270, 103.734/182/271).
   it("builds the same mazes it always has (golden)", () => {
     const golden = [
-      { n: 1, optimal: 97.10632097161104, vertices: 189, edges: 283 },
-      { n: 2, optimal: 84.01980426384605, vertices: 183, edges: 270 },
-      { n: 3, optimal: 109.73739120556503, vertices: 182, edges: 271 },
+      { n: 1, optimal: 122.61022842252392, vertices: 189, edges: 283 },
+      { n: 2, optimal: 66.48331693271706, vertices: 185, edges: 273 },
+      { n: 3, optimal: 122.67868475924162, vertices: 183, edges: 273 },
     ];
     // All three in one comparison, so a failure prints every new value.
     const got = golden.map((g) => {

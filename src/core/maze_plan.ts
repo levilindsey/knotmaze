@@ -95,6 +95,24 @@ export interface MazeParams {
   // the junction. 0 = off: the plan carries no hCutShare and the maze is
   // the older one, byte for byte.
   hCutShare: number;
+  // K74 stage 3, THE TRAP-ZONE FINISH (decision 2 (c)): the exit corridor,
+  // its flank rule and the exit taper. exitCorridor is arc length (doubled
+  // lattice units) along the exit's kept flank (both flanks when untrimmed)
+  // that carries no choice splice, 4-way or dead-end merge; the spanning
+  // backbone, K109's repair and K110's joins rank corridor sites last
+  // instead of skipping them. 0 = off. exitFlank picks which flank keeps
+  // the exit tail when a trim exists: "stub" (today's shorter-stub rule),
+  // "away" (the flank whose nodes within the corridor - or 24 u without
+  // one - reach farthest from the exit point) or "near" (the other).
+  // exitTaperRadius / exitTaperStrength grade the choice and 4-way
+  // spacing floor toward the exit (see planMaze); either at 0 = off.
+  // Sources (K284): the corridor follows Pullen's "near misses at the
+  // goal" (Think Labyrinth) - junctions near the exit stay, but none of
+  // them lead in.
+  exitCorridor: number;
+  exitFlank: "stub" | "away" | "near";
+  exitTaperRadius: number;
+  exitTaperStrength: number;
   // Lattice radii around the exit / entrance corners kept junction-free, so
   // the endgame isn't cluttered with choices (challenge shaping).
   exitClearance: number;
@@ -127,6 +145,10 @@ export const DEFAULT_MAZE_PARAMS: MazeParams = {
   // Every H since K74 stage 2: share 1 keeps decision 1's greedy bar on
   // dailies 1-80 (generation-plan.md, H1).
   hCutShare: 1,
+  exitCorridor: 24,
+  exitFlank: "away",
+  exitTaperRadius: 0,
+  exitTaperStrength: 0,
   exitClearance: 12,
   entranceClearance: 2.5,
   junctionSpacing: 2,
@@ -169,6 +191,10 @@ export interface MazePlan {
   // H1's share (MazeParams.hCutShare), read by applyMazeCuts. Present only
   // when > 0, so a plan without it is the older plan, JSON and all.
   hCutShare?: number;
+  // H1's exit guard (K74 stage 3, K278 (a)): present only when H1 runs and each part is non-zero; fuseHCuts refuses crossings inside the clearance or on the corridor. No param of its own.
+  exitGuardPoint?: [number, number];
+  exitGuardClearance?: number;
+  exitGuardCrossings?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -655,11 +681,15 @@ function pickFarthest<T>(
   onPick: (t: T) => void,
   count: number,
   spacing: number,
-  placed: number[]
+  // K74 stage 3 taper: a per-candidate floor (fixed per candidate; a candidate's nearest placed distance only falls, so the incremental drop stays exact). Absent = the constant floor.
+  // (the floor override itself is the last parameter, after placed.)
+  placed: number[],
+  spacingOf?: (pts: number[]) => number
 ): T[] {
   const out: T[] = [];
   if (count <= 0) return out;
   const pts = pool.map(ptsOf);
+  const floors = spacingOf ? pts.map((p) => spacingOf(p)) : null;
   const near = new Float64Array(pool.length).fill(Infinity);
   const live = pool.map((_, i) => i);
   let seen = 0;
@@ -688,7 +718,7 @@ function pickFarthest<T>(
         }
       }
       near[i] = d;
-      if (d < spacing) continue;
+      if (d < (floors ? floors[i] : spacing)) continue;
       live[w++] = i;
     }
     live.length = w;
@@ -1019,7 +1049,9 @@ function repairTailRoute(
   placed: number[],
   clearOf: (p: [number, number]) => boolean,
   spanningSplices: SpliceSite[],
-  spanningMerges: string[]
+  spanningMerges: string[],
+  corridorEdges?: Set<string>,
+  corridorNodes?: Set<string>
 ): void {
   const cuts = [entrance, exit];
   const p = buildPieces(graph, cuts, spanningMerges, spanningSplices);
@@ -1030,6 +1062,7 @@ function repairTailRoute(
     v: number;
     pts: number[];
     clear: boolean;
+    corr: boolean;
   }
   while (!tailsJoined(p, graph, entrance, exit)) {
     const links: Link[] = [];
@@ -1040,7 +1073,7 @@ function repairTailRoute(
       const v = p.find(p.edgeOcc.get(c.edgeB)!);
       if (u === v) continue;
       const pts = [c.a[0], c.a[1], c.b[0], c.b[1]];
-      links.push({ splice: c, u, v, pts, clear: clearOf(c.a) && clearOf(c.b) });
+      links.push({ splice: c, u, v, pts, clear: clearOf(c.a) && clearOf(c.b), corr: !!(corridorEdges && (corridorEdges.has(c.edgeA) || corridorEdges.has(c.edgeB))) });
     }
     for (const x of crossings) {
       if (usedCrossings.has(x.id) || x.strands.length !== 2) continue;
@@ -1049,7 +1082,7 @@ function repairTailRoute(
       const u = p.find(os[0]);
       const v = p.find(os[1]);
       if (u === v) continue;
-      links.push({ merge: x, u, v, pts: [...x.pos], clear: clearOf(x.pos) });
+      links.push({ merge: x, u, v, pts: [...x.pos], clear: clearOf(x.pos), corr: !!(corridorNodes && corridorNodes.has(x.id)) });
     }
 
     // Hops from the exit's pieces, breadth first.
@@ -1098,7 +1131,9 @@ function repairTailRoute(
       if (best) {
         const kind = (best.merge ? 1 : 0) - (l.merge ? 1 : 0);
         const clear = (l.clear ? 1 : 0) - (best.clear ? 1 : 0);
-        if (kind < 0 || (kind === 0 && (clear < 0 || (clear === 0 && near <= bestNear)))) {
+        // K74 stage 3: corridor sites rank last (after clear), never skipped.
+        const corr = (best.corr ? 1 : 0) - (l.corr ? 1 : 0);
+        if (kind < 0 || (kind === 0 && (clear < 0 || (clear === 0 && (corr < 0 || (corr === 0 && near <= bestNear)))))) {
           continue;
         }
       }
@@ -1153,7 +1188,9 @@ function joinOrphanPieces(
   spanningSplices: SpliceSite[],
   spanningMerges: string[],
   choiceSplices: SpliceSite[],
-  fourWayMerges: string[]
+  fourWayMerges: string[],
+  corridorEdges?: Set<string>,
+  corridorNodes?: Set<string>
 ): boolean {
   const p = buildPieces(
     graph,
@@ -1176,6 +1213,7 @@ function joinOrphanPieces(
     merge?: CrossingSite;
     pts: number[];
     clear: boolean;
+    corr: boolean;
   }
   for (;;) {
     const region = p.find(start);
@@ -1187,7 +1225,8 @@ function joinOrphanPieces(
     const bridges = [...spanningSplices, ...choiceSplices];
     const links: Link[] = [];
     for (const c of candidates) {
-      if (usedEdges.has(c.edgeA) || usedEdges.has(c.edgeB)) continue;
+      // K74 stage 3: a claimed corridor edge may still join (ranked last).
+      if ((usedEdges.has(c.edgeA) && !(corridorEdges && corridorEdges.has(c.edgeA))) || (usedEdges.has(c.edgeB) && !(corridorEdges && corridorEdges.has(c.edgeB)))) continue;
       if (!inMaze.has(c.strandA) || !inMaze.has(c.strandB)) continue;
       const u = p.find(p.edgeOcc.get(c.edgeA)!) === region;
       const v = p.find(p.edgeOcc.get(c.edgeB)!) === region;
@@ -1200,17 +1239,17 @@ function joinOrphanPieces(
         continue;
       }
       const pts = [c.a[0], c.a[1], c.b[0], c.b[1]];
-      links.push({ splice: c, pts, clear: clearOf(c.a) && clearOf(c.b) });
+      links.push({ splice: c, pts, clear: clearOf(c.a) && clearOf(c.b), corr: !!(corridorEdges && (corridorEdges.has(c.edgeA) || corridorEdges.has(c.edgeB))) });
     }
     for (const x of crossings) {
-      if (usedCrossings.has(x.id) || x.strands.length !== 2) continue;
+      if ((usedCrossings.has(x.id) && !(corridorNodes && corridorNodes.has(x.id))) || x.strands.length !== 2) continue;
       if (!inMaze.has(x.strands[0]) || !inMaze.has(x.strands[1])) continue;
       const os = p.occsOf.get(x.id)!;
       if (!keeps.has(os[0]) || !keeps.has(os[1])) continue;
       const u = p.find(os[0]) === region;
       const v = p.find(os[1]) === region;
       if (u === v) continue;
-      links.push({ merge: x, pts: [...x.pos], clear: clearOf(x.pos) });
+      links.push({ merge: x, pts: [...x.pos], clear: clearOf(x.pos), corr: !!(corridorNodes && corridorNodes.has(x.id)) });
     }
     let best: Link | null = null;
     let bestNear = -1;
@@ -1225,7 +1264,8 @@ function joinOrphanPieces(
       if (best) {
         const kind = (best.merge ? 1 : 0) - (l.merge ? 1 : 0);
         const clear = (l.clear ? 1 : 0) - (best.clear ? 1 : 0);
-        if (kind < 0 || (kind === 0 && (clear < 0 || (clear === 0 && near <= bestNear)))) {
+        const corr = (best.corr ? 1 : 0) - (l.corr ? 1 : 0);
+        if (kind < 0 || (kind === 0 && (clear < 0 || (clear === 0 && (corr < 0 || (corr === 0 && near <= bestNear)))))) {
           continue;
         }
       }
@@ -1303,7 +1343,9 @@ interface DeadCandidate {
   trim?: MazeCutTrim;
 }
 
-// K74 LONG-TAIL DEAD ENDS (MazeParams.deadEndLength > 0). A player finds a
+// K74 LONG-TAIL DEAD ENDS (MazeParams.deadEndLength > 0). Sources (K284):
+// long blind alleys follow Pullen (Think Labyrinth) and Zhao and Marquez
+// 2013 (arXiv:1307.5713). A player finds a
 // dead end by walking its free flank from the junction where it leaves the
 // maze to the tip at the cut, so its length is that flank's junction-free
 // arc - the older spread placement left most of them a few units long. Each
@@ -1315,6 +1357,55 @@ interface DeadCandidate {
 // is then RESERVED (edges and crossings claimed), so the choice junctions,
 // 4-ways, later trims and K110 joins all stay off it. Arcs are lattice
 // polyline lengths through hypot2 (K108: engine-exact).
+// K74 stage 3 (item 1): the lattice arc of an edge and the flank walker,
+// lifted out of placeLongTails so the exit corridor and flank score share
+// them byte for byte. Arcs are polyline lengths through hypot2 (K108).
+function makeEdgeLen(graph: TangleGraph): (eid: string) => number {
+  const cache = new Map<string, number>();
+  return (eid: string): number => {
+    let l = cache.get(eid);
+    if (l === undefined) {
+      const pts = graph.edges.get(eid)!.latticePoints;
+      l = 0;
+      for (let i = 1; i < pts.length; i++) {
+        l += hypot2(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      }
+      cache.set(eid, l);
+    }
+    return l;
+  };
+}
+
+// Walk closed strand s's flank from the middle of its edge c: dir +1 runs
+// along edge order (the flank a side-"a" trim leaves free), -1 against
+// it. visit gets each node, then each edge at its middle, with the arc
+// from the cut, and returns true to stop; so does passing maxArc or
+// coming all the way around.
+function walkFlankImpl(
+  graph: TangleGraph,
+  edgeLen: (eid: string) => number,
+  s: number,
+  c: number,
+  dir: 1 | -1,
+  visit: (isNode: boolean, id: string, arc: number) => boolean,
+  maxArc: number
+): void {
+  const strand = graph.strands[s];
+  const m = strand.edgeIds.length;
+  let arc = edgeLen(strand.edgeIds[c]) / 2;
+  for (let k = 0; k < m; k++) {
+    const ni = (((dir > 0 ? c + 1 + k : c - k) % m) + m) % m;
+    if (visit(true, strand.nodes[ni], arc)) return;
+    const ei = (((dir > 0 ? c + 1 + k : c - 1 - k) % m) + m) % m;
+    const eid = strand.edgeIds[ei];
+    if (eid === strand.edgeIds[c]) return;
+    const l = edgeLen(eid);
+    if (visit(false, eid, arc + l / 2)) return;
+    arc += l;
+    if (arc > maxArc) return;
+  }
+}
+
 function placeLongTails(
   graph: TangleGraph,
   pool: DeadCandidate[],
@@ -1331,46 +1422,14 @@ function placeLongTails(
   commit: (c: DeadCandidate, trim: MazeCutTrim) => void
 ): void {
   if (nDead <= 0) return;
-  const lenCache = new Map<string, number>();
-  const edgeLen = (eid: string): number => {
-    let l = lenCache.get(eid);
-    if (l === undefined) {
-      const pts = graph.edges.get(eid)!.latticePoints;
-      l = 0;
-      for (let i = 1; i < pts.length; i++) {
-        l += hypot2(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-      }
-      lenCache.set(eid, l);
-    }
-    return l;
-  };
-  // Walk closed strand s's flank from the middle of its edge c: dir +1 runs
-  // along edge order (the flank a side-"a" trim leaves free), -1 against
-  // it. visit gets each node, then each edge at its middle, with the arc
-  // from the cut, and returns true to stop; so does passing maxArc or
-  // coming all the way around.
+  const edgeLen = makeEdgeLen(graph);
   const walkFlank = (
     s: number,
     c: number,
     dir: 1 | -1,
     visit: (isNode: boolean, id: string, arc: number) => boolean,
     maxArc: number
-  ): void => {
-    const strand = graph.strands[s];
-    const m = strand.edgeIds.length;
-    let arc = edgeLen(strand.edgeIds[c]) / 2;
-    for (let k = 0; k < m; k++) {
-      const ni = (((dir > 0 ? c + 1 + k : c - k) % m) + m) % m;
-      if (visit(true, strand.nodes[ni], arc)) return;
-      const ei = (((dir > 0 ? c + 1 + k : c - 1 - k) % m) + m) % m;
-      const eid = strand.edgeIds[ei];
-      if (eid === strand.edgeIds[c]) return;
-      const l = edgeLen(eid);
-      if (visit(false, eid, arc + l / 2)) return;
-      arc += l;
-      if (arc > maxArc) return;
-    }
-  };
+  ): void => walkFlankImpl(graph, edgeLen, s, c, dir, visit, maxArc);
   const isJunction = (isNode: boolean, id: string, ownMerge?: string): boolean =>
     isNode
       ? junctionNodes.has(id) || id === ownMerge
@@ -1527,15 +1586,67 @@ function planMaze(
   for (const x of crossings) crossMap.set(x.id, x.strands);
   const wallEdges = new Set([entrance.edgeId, exit.edgeId]);
   const trimLinks: Array<[number, number]> = [];
+  // K74 stage 3: shared edge arcs for the flank score and the corridor.
+  const edgeLenAll = makeEdgeLen(graph);
+  const flankL = params.exitCorridor > 0 ? params.exitCorridor : 24;
+  const corridorEdges = new Set<string>();
+  const corridorNodes = new Set<string>();
+  const collectCorridor = (): void => {
+    if (!(params.exitCorridor > 0)) return;
+    const s = exit.strand;
+    const strand = graph.strands[s];
+    if (!strand.isClosed) return;
+    const c = strand.edgeIds.indexOf(exit.edgeId);
+    if (c < 0) return;
+    const dirs: Array<1 | -1> = exit.trim ? [exit.trim.side === "a" ? 1 : -1] : [1, -1];
+    for (const dir of dirs) {
+      walkFlankImpl(graph, edgeLenAll, s, c, dir, (isNode, id, arc) => {
+        if (arc > params.exitCorridor) return true;
+        if (!isNode) corridorEdges.add(id);
+        else if (graph.nodes.get(id)!.type === NODE_TYPE.CROSSING) corridorNodes.add(id);
+        return false;
+      }, params.exitCorridor);
+    }
+  };
   for (const cut of [entrance, exit]) {
-    cut.trim = planTrim(
-      graph,
-      cut,
-      crossMap,
-      usedCrossings,
-      usedEdges,
-      wallEdges
-    );
+    if (cut === exit && params.exitFlank !== "stub") {
+      // The exit trim waits for the flank rule: score each flank by the
+      // farthest squared distance its nodes reach from the exit point
+      // within flankL (squared distances, as in placeLongTails' room).
+      const both = planTrimBoth(graph, cut, crossMap, usedCrossings, usedEdges, wallEdges);
+      const s = cut.strand;
+      const ci = graph.strands[s].edgeIds.indexOf(cut.edgeId);
+      const score = (trim: MazeCutTrim): number => {
+        let mx = 0;
+        walkFlankImpl(graph, edgeLenAll, s, ci, trim.side === "a" ? 1 : -1, (isNode, id, arc) => {
+          if (arc > flankL) return true;
+          if (isNode) {
+            const p = graph.nodes.get(id)!.latticePos;
+            const dx = p[0] - exitPoint[0];
+            const dy = p[1] - exitPoint[1];
+            const d2 = dx * dx + dy * dy;
+            if (d2 > mx) mx = d2;
+          }
+          return false;
+        }, flankL);
+        return mx;
+      };
+      let pick: MazeCutTrim | undefined;
+      if (both.a && both.b) {
+        pick = params.exitFlank === "near" ? (score(both.a) < score(both.b) ? both.a : both.b) : (score(both.a) >= score(both.b) ? both.a : both.b);
+      } else pick = both.a ?? both.b ?? undefined;
+      cut.trim = pick;
+    } else {
+      cut.trim = planTrim(
+        graph,
+        cut,
+        crossMap,
+        usedCrossings,
+        usedEdges,
+        wallEdges
+      );
+    }
+    if (cut === exit) collectCorridor();
     if (!cut.trim) continue;
     usedCrossings.add(cut.trim.mergeCrossing);
     for (const eid of cut.trim.stubEdges) usedEdges.add(eid);
@@ -1554,17 +1665,18 @@ function planMaze(
   // Corner-clear candidates first, then the rest (reachability may use an
   // in-clearance site only when nothing else can reach a strand).
   const interCands = candidates.filter((c) => c.strandA !== c.strandB);
+  const corrClear = (c: Candidate): boolean => !corridorEdges.has(c.edgeA) && !corridorEdges.has(c.edgeB);
   const spanOrder = [...interCands].sort((p, q) => {
-    const pc = clearOf(p.a) && clearOf(p.b) ? 0 : 1;
-    const qc = clearOf(q.a) && clearOf(q.b) ? 0 : 1;
+    const pc = clearOf(p.a) && clearOf(p.b) && corrClear(p) ? 0 : 1;
+    const qc = clearOf(q.a) && clearOf(q.b) && corrClear(q) ? 0 : 1;
     return pc - qc || (p.key < q.key ? -1 : 1);
   });
   const interCross = crossings.filter(
     (x) => x.strands.length === 2 && x.strands[0] !== x.strands[1]
   );
   const crossOrder = [...interCross].sort((p, q) => {
-    const pc = clearOf(p.pos) ? 0 : 1;
-    const qc = clearOf(q.pos) ? 0 : 1;
+    const pc = clearOf(p.pos) && !corridorNodes.has(p.id) ? 0 : 1;
+    const qc = clearOf(q.pos) && !corridorNodes.has(q.id) ? 0 : 1;
     return pc - qc || (p.id < q.id ? -1 : 1);
   });
 
@@ -1649,9 +1761,18 @@ function planMaze(
       placed,
       clearOf,
       spanningSplices,
-      spanningMerges
+      spanningMerges,
+      corridorEdges,
+      corridorNodes
     );
   }
+
+  // K74 stage 3: claim the corridor only now (after spanning and K109's
+  // repair), so the backbone could use it when nothing else connects;
+  // choices, 4-ways and dead ends below keep off it. K110's joins (later)
+  // may still use it, ranked last.
+  for (const eid of corridorEdges) usedEdges.add(eid);
+  for (const nid of corridorNodes) usedCrossings.add(nid);
 
   // ---- Long dead-end threads. Cut one plain edge of a closed maze strand
   // (never the entrance/exit hosts, at most one cut per strand), fuse one
@@ -1751,6 +1872,18 @@ function planMaze(
     usedEdges.add(c.edgeB);
   };
 
+  // K74 stage 3 taper: floor = spacing x (1 + K x max(0, 1 - d/R)), d the
+  // candidate's least hypot2 distance to the exit point.
+  const taperOf = params.exitTaperRadius > 0 && params.exitTaperStrength > 0
+    ? (pts: number[]): number => {
+        let d = Infinity;
+        for (let k = 0; k < pts.length; k += 2) {
+          const dd = hypot2(pts[k] - exitPoint[0], pts[k + 1] - exitPoint[1]);
+          if (dd < d) d = dd;
+        }
+        return params.junctionSpacing * (1 + params.exitTaperStrength * Math.max(0, 1 - d / params.exitTaperRadius));
+      }
+    : undefined;
   const choiceSplices = pickFarthest(
     eligible,
     (c) => [c.a[0], c.a[1], c.b[0], c.b[1]],
@@ -1758,7 +1891,8 @@ function planMaze(
     spliceTake,
     nSplice,
     params.junctionSpacing,
-    placed
+    placed,
+    taperOf
   ).map(stripKey);
 
   // Inter-strand crossings only: merging a SELF-crossing fuses a thread to
@@ -1778,7 +1912,8 @@ function planMaze(
     (x) => usedCrossings.add(x.id),
     nFour,
     params.junctionSpacing,
-    placed
+    placed,
+    taperOf
   ).map((x) => x.id);
 
   if (!(params.deadEndLength > 0)) {
@@ -1824,7 +1959,9 @@ function planMaze(
       spanningSplices,
       spanningMerges,
       choiceSplices,
-      fourWayMerges
+      fourWayMerges,
+      corridorEdges,
+      corridorNodes
     );
   }
 
@@ -1843,5 +1980,11 @@ function planMaze(
     fourWayMerges,
     deadEndCuts,
     ...(params.hCutShare > 0 ? { hCutShare: params.hCutShare } : {}),
+    ...(params.hCutShare > 0 && params.exitClearance > 0
+      ? { exitGuardPoint: exitPoint, exitGuardClearance: params.exitClearance }
+      : {}),
+    ...(params.hCutShare > 0 && params.exitCorridor > 0 && corridorNodes.size > 0
+      ? { exitGuardCrossings: [...corridorNodes] }
+      : {}),
   };
 }

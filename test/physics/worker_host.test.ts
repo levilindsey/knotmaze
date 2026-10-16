@@ -6,6 +6,7 @@ import {
   READY_TICK_MS,
   INTERP_MIN_MS,
   INTERP_MAX_MS,
+  sceneParamsOf,
 } from "../../src/physics/worker_host";
 import type { WorkerPort, WorkerHostOptions } from "../../src/physics/worker_host";
 import {
@@ -243,7 +244,7 @@ describe("the name build (K7 stage 7)", () => {
     expect(sameSceneParams(nb!.params, scene.params)).toBe(true);
     expect(sameTuning(nb!.tuning, scene.tuning)).toBe(true);
     // Only the scene's fields travel (main's params carry many more).
-    expect(Object.keys(nb!.params).length).toBe(17);
+    expect(Object.keys(nb!.params).length).toBe(21);
     const json = JSON.parse(name.slice(name.indexOf(" ") + 1));
     const without = { ...json, params: { ...json.params } };
     delete without.params.seed;
@@ -610,5 +611,20 @@ describe("the probe bridge", () => {
     const d = await u.dump();
     expect(w.simTime).toBe(r1);
     expect(hashDump(w)).toEqual(hashDump(d));
+  });
+});
+
+describe("sceneParamsOf (K74 stage 3)", () => {
+  it("copies every SceneParams key", () => {
+    const { params } = fabricScene("?7&gs=8");
+    const copy = sceneParamsOf(params);
+    expect(Object.keys(copy).sort()).toEqual(Object.keys(params).filter((k) => k in copy).sort());
+    // every key of the copy equals the source, and the copy has all 21
+    expect(Object.keys(copy)).toHaveLength(21);
+    for (const k of Object.keys(copy) as Array<keyof typeof copy>) {
+      expect(copy[k]).toEqual(params[k]);
+    }
+    expect(copy.exitCorridor).toBe(24);
+    expect(copy.exitFlank).toBe("away");
   });
 });

@@ -26,6 +26,10 @@ export interface SceneParams {
   deadEndDensity: number;
   deadEndLength: number;
   hCutShare: number;
+  exitCorridor: number;
+  exitFlank: "stub" | "away" | "near";
+  exitTaperRadius: number;
+  exitTaperStrength: number;
   entranceClearance: number;
   exitClearance: number;
   junctionSpacing: number;
@@ -62,6 +66,10 @@ export function buildSceneGraph(params: SceneParams): SceneGraph {
       deadEndDensity: params.deadEnds ? params.deadEndDensity : 0,
       deadEndLength: params.deadEndLength,
       hCutShare: params.hCutShare,
+      exitCorridor: params.exitCorridor,
+      exitFlank: params.exitFlank,
+      exitTaperRadius: params.exitTaperRadius,
+      exitTaperStrength: params.exitTaperStrength,
       entranceClearance: params.entranceClearance,
       exitClearance: params.exitClearance,
       junctionSpacing: params.junctionSpacing,

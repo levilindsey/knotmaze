@@ -209,7 +209,7 @@ describe("the real-time fire's rules (K114 stage 2)", () => {
   it("never lets the fire reach the dot mid-run (generated mazes, r < 1)", () => {
     let runsChecked = 0;
     let losses = 0;
-    for (const seed of [3, 7, 11, 19]) {
+    for (const seed of [3, 7, 11, 19, 23, 29]) {
       const walk = walkFor(seed, 0.5);
       for (const [r, h] of [
         [0.5, 0],

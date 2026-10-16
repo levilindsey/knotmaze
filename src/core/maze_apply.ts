@@ -363,7 +363,9 @@ export function applyMazeCuts(
   });
   // H1 runs last: its guards read the END runs the cuts above made.
   const share = plan.hCutShare ?? 0;
-  return share > 0 ? fuseHCuts(graph, share, hueGroup) : null;
+  return share > 0
+    ? fuseHCuts(graph, share, hueGroup, plan.exitGuardPoint, plan.exitGuardClearance, plan.exitGuardCrossings)
+    : null;
 }
 
 // Delete a trim's stub (edges + interior TURN nodes) from the graph and
@@ -627,8 +629,23 @@ interface HOption {
 function fuseHCuts(
   graph: TangleGraph,
   share: number,
-  hueGroup?: number[]
+  hueGroup?: number[],
+  // K74 stage 3, H1's exit guard (K278 (a)): refuse a crossing inside the
+  // exit clearance (the plan's clearOf measure, hypot2 to the anchor
+  // target) or on the exit corridor. Absent/0 = off.
+  guardPoint?: [number, number],
+  guardClearance?: number,
+  guardCrossings?: string[]
 ): HCutStats {
+  const guardSet = guardCrossings ? new Set(guardCrossings) : null;
+  const guarded = (id: string): boolean => {
+    if (guardSet && guardSet.has(id)) return true;
+    if (guardPoint && guardClearance && guardClearance > 0) {
+      const p = graph.nodes.get(id)?.latticePos;
+      if (p && hypot2(p[0] - guardPoint[0], p[1] - guardPoint[1]) < guardClearance) return true;
+    }
+    return false;
+  };
   const work: Array<Strand | null> = graph.strands.slice();
   const typeOf = (id: string): string | undefined =>
     graph.nodes.get(id)?.type;
@@ -776,7 +793,7 @@ function fuseHCuts(
         stubN.push(nid);
         continue;
       }
-      if (t !== NODE_TYPE.CROSSING || protectedX.has(nid)) return null;
+      if (t !== NODE_TYPE.CROSSING || protectedX.has(nid) || guarded(nid)) return null;
       let occ = 0;
       for (let k2 = 0; k2 < nc; k2++) if (st.nodes[k2] === nid) occ++;
       if (occ > 1) return null;

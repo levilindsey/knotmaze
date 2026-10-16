@@ -314,6 +314,25 @@ export interface ResearchCredit {
 // maze-psychology reading) waits until the code is. Order is the page's.
 export const RESEARCH: readonly ResearchCredit[] = [
   {
+    id: "pullen-near-misses",
+    technique: "Near misses at the goal",
+    by: "Walter D. Pullen",
+    sources: [{ text: "Think Labyrinth: Maze Algorithms" }],
+    use: "The exit corridor keeps junctions near the finish that do not lead in, so the direct approach misleads.",
+    files: [{ path: "src/core/maze_plan.ts", mark: "Pullen" }],
+  },
+  {
+    id: "long-blind-alleys",
+    technique: "Long blind alleys",
+    by: "Walter D. Pullen; Zhao and Marquez, 2013",
+    sources: [
+      { text: "Think Labyrinth: Maze Algorithms" },
+      { text: "Zhao and Marquez, 2013", url: "https://arxiv.org/abs/1307.5713" },
+    ],
+    use: "Dead ends are placed so each one's free flank runs a long junction-free stretch before it ends.",
+    files: [{ path: "src/core/maze_plan.ts", mark: "Zhao and Marquez" }],
+  },
+  {
     id: "mulberry32",
     technique: "Mulberry32 random numbers",
     by: "Tommy Ettinger, 2017",

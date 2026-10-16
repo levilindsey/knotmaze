@@ -152,3 +152,47 @@ what degree?" Build at neutral values first: the pins hold until item 10.
   sleep tables; the sheet; the test count, the build and the pins that
   moved; the lore; a `Ledger items` list; and the handle fields (branch,
   last commit, evidence and next).
+
+## Stage 3 handoff (2026-10-16)
+
+Landed on master: items 1-6, 9 and 10 (item 7's prototype port and item 8's
+full 240-daily measurement were reduced to the checks below; see Residuals).
+
+- **Plan (`src/core/maze_plan.ts`):** `makeEdgeLen`/`walkFlankImpl` lifted
+  out of `placeLongTails` (item 1, shared byte for byte); the exit flank
+  (`xfl`: stub | away | near, farthest squared node distance within L =
+  corridor or 24); the corridor (`xcr`, collected pre-spanning, ranked last
+  by spanning/K109/K110, claimed after K109's repair, before the tails);
+  the taper (`xtr`/`xtk` per-candidate floors in `pickFarthest`); the plan
+  carries `exitGuardPoint`/`exitGuardClearance`/`exitGuardCrossings` only
+  when H1 runs and each is non-zero. Defaults (K402 as recommended):
+  corridor 24, away flank, exitClearance 12, taper off (0/0).
+- **H1 guard (`src/core/maze_apply.ts`):** `fuseHCuts` refuses a crossing
+  inside the clearance (hypot2 to the anchor target) or on the corridor.
+  `stage2/clearance.ts` on dailies 1-80: junctions inside the exit
+  clearance, share 0 138 / share 1 134, days with more at share 1: 0,
+  junction ids new inside: 0 (stage 2 measured 36 fused inside).
+- **Plumbing:** MazeParams, SceneParams, `sceneParamsOf` (+ a copies-every-key
+  test), `SCENE_FIELDS`, url_state (defaults, clamps, `xcr`/`xfl`/`xtr`/`xtk`
+  overrides, `EXIT_FLANKS`/`ENUM_OPTIONS`), codec rows 152-155 (appended,
+  version stays 6), `MAZE_PARAM_KEYS`, four Maze panel rows.
+- **K284:** Pullen (near misses) at the corridor and Pullen + Zhao and
+  Marquez 2013 (long blind alleys) at `placeLongTails`; RESEARCH entries
+  `pullen-near-misses` and `long-blind-alleys` in `notices/credits.ts`.
+- **Pins moved (named):** the golden dailies (optimal 97.106/189/283,
+  84.020/183/270, 109.737/182/271 -> 122.610/189/283, 66.483/185/273,
+  122.679/183/273); `K74_PLANS`, `K74_WALKS_H0` (moves: the plan itself
+  changed) and `K74_WALKS_DEFAULT` in `maze_plan_identity.test.ts`; the
+  codec table pin and defaults pin; `OVERRIDE_KEYS` (four new keys);
+  minotaur pinned games (K80_DIGESTS, TURN_GAMES, LENGTH_GAMES - re-frozen
+  on today's mazes, as K80 turns stage 2 did); worker name-build key count
+  17 -> 21. The K87 pin, the knot golden and `byte_identity` hold.
+- **Tests:** `npm test` 1347 passed, 1 skipped (was 1342 + 5 new:
+  `test/core/maze_trapzone.test.ts` x4, sceneParamsOf x1); `npm run build`
+  passes. Solvability/reachability stay green (`maze_solvable`,
+  `maze_reachable` - the latter's PRE_K74 gained the neutral values).
+- **Residuals:** item 7 (port against the prototype on dailies 1-80) and
+  the full item 8 measurement (greedy bar, sleep, generation timing, the
+  before/after sheet) were not run; only the clearance check and the unit
+  tests above verify the finish. The fire-clock property test gained seeds
+  23 and 29 to keep its non-vacuity count above 100 on the new mazes.

@@ -288,6 +288,11 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // (REVEAL_END_CROSSES and REVEAL_END_GLOWS order, url_state.ts).
   choice("revealEndCross", ["under", "past", "back"]), // 150
   choice("revealEndGlow", ["soft", "bright"]), // 151
+  // K74 stage 3: the trap-zone finish (appended; defaults in url_state).
+  num("exitCorridor"), // 152
+  choice("exitFlank", ["stub", "away", "near"]), // 153
+  num("exitTaperRadius"), // 154
+  num("exitTaperStrength"), // 155
 ]);
 
 // The format version a blob names first. Bump it for anything but an

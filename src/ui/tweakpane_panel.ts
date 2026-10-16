@@ -988,6 +988,27 @@ export function buildPanel(
     "Fused arm cuts (H1): the share of bridges between two neighbouring threads replaced by one smooth junction, so the bridge's two junctions become one. 0 = off, every bridge kept. Regenerates the maze.",
     D.hCutShare, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
+  const exitCorridorRow = row(
+    fMaze, p, "exitCorridor", { min: 0, max: 32, step: 1 },
+    "Trap-zone finish: how much of the exit thread (half lattice cells of arc from the exit) carries no choice junction, so threads near the finish are near misses that do not lead in. 0 = off. Regenerates the maze.",
+    D.exitCorridor, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const exitFlankRow = row(
+    fMaze, p, "exitFlank",
+    { options: { stub: "stub", away: "away", near: "near" } },
+    "Which side of the exit cut keeps the tail: stub = the shorter stub is trimmed (the older rule); away = the flank that wanders farthest from the exit is kept; near = the other. Regenerates the maze.",
+    D.exitFlank, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const exitTaperRadiusRow = row(
+    fMaze, p, "exitTaperRadius", { min: 0, max: 32, step: 1 },
+    "Exit taper: within this radius of the exit (half lattice cells), choice junctions space out further (the strength sets how much). 0 = off. Regenerates the maze.",
+    D.exitTaperRadius, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
+  const exitTaperStrengthRow = row(
+    fMaze, p, "exitTaperStrength", { min: 0, max: 2, step: 0.1 },
+    "How much wider the junction spacing grows at the exit under the taper. 0 = off. Regenerates the maze.",
+    D.exitTaperStrength, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
+  );
   const branchDensityRow = row(
     fMaze, p, "branchDensity", { min: 0, max: 1, step: 0.05 },
     "How many extra choice junctions the maze adds beyond the minimum needed to connect everything. Regenerates the maze.",
@@ -2293,6 +2314,10 @@ export function buildPanel(
     junctionSpacingRow.hidden = !fab;
     entranceClearanceRow.hidden = !fab;
     exitClearanceRow.hidden = !fab;
+    exitCorridorRow.hidden = !fab;
+    exitFlankRow.hidden = !fab;
+    exitTaperRadiusRow.hidden = !fab;
+    exitTaperStrengthRow.hidden = !fab;
     pathVizRow.hidden = !fab;
     cameraRow.hidden = !fab;
     trailLenRow.hidden = !fab || params.pathViz !== "trail";

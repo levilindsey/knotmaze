@@ -83,6 +83,7 @@ describe("links", () => {
       junctionBlend: 0.88, appearMode: "custom", appearSequence: "trace", appearSpeed: 2.2,
       appearFx: "burn",
       entranceClearance: 2.5, exitClearance: 12, junctionSpacing: 2,
+      exitCorridor: 24, exitFlank: "away", exitTaperRadius: 0, exitTaperStrength: 0,
       background: "vellum", backgroundIntensity: 0.5,
       pulseReach: 3, backgroundSpeed: -1, deadEndLength: 20, hCutShare: 1,
       backgroundScale: 1, backgroundDetail: 1, backgroundFibers: 1,
@@ -727,6 +728,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   fireSpeedRt: "fsr", fireDelayRt: "fdr",
   revealFinish: "rvx",
   revealEndCross: "rve", revealEndGlow: "rvg",
+  exitCorridor: "xcr", exitFlank: "xfl", exitTaperRadius: "xtr", exitTaperStrength: "xtk",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -751,6 +753,8 @@ function otherValue(name: keyof typeof PARAM_DEFAULTS): string | number | boolea
   // A share whose default could be 0 (off), where halving changes nothing.
   if (name === "hCutShare") return d === 0.5 ? 0.25 : 0.5;
   if (name === "fireDelay") return 12; // K114: its default is 0
+  if (name === "exitTaperRadius") return 16; // K74 stage 3: its default is 0
+  if (name === "exitTaperStrength") return 1; // K74 stage 3: its default is 0
   if (name === "pluckTug") return 0.3; // K279 wake follow-up: default 0
   if (name === "pickChoiceRatio") return 2; // K298: half of 1.5 is under its floor 1
   return (d as number) * 0.5;

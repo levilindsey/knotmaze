@@ -191,6 +191,10 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["revealFinish", "boolean"], // 149, K465
   ["revealEndCross", "enum", ["under", "past", "back"]], // 150, K466
   ["revealEndGlow", "enum", ["soft", "bright"]], // 151
+  ["exitCorridor", "number"], // 152
+  ["exitFlank", "enum", ["stub", "away", "near"]],
+  ["exitTaperRadius", "number"],
+  ["exitTaperStrength", "number"], // 155
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>

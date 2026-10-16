@@ -436,12 +436,12 @@ describe("K174: the minotaur's controls", () => {
   // equalled master's chase before K174 (d644ec5); K80 turns stage 2
   // re-froze them on today's H1 mazes, the roamPull 0 path unchanged.
   const K80_DIGESTS = [
-    "14400/3/3/f3428983",
-    "14400/2/2/6dc590cc",
-    "14400/5/5/55344e84",
-    "14400/7/5/44122f41",
-    "14400/4/4/557840f8",
-    "6832/3/2/e9c9d2d6",
+    "14400/8/8/fa6fd229",
+    "14400/6/6/3d3ccfca",
+    "14400/7/7/41b15849",
+    "14400/7/7/a14ee569",
+    "14400/6/4/a1a7149",
+    "14400/8/7/ec00c9b6",
   ];
 
   it("roamPull 0 plays K80's chase tick for tick", () => {
