@@ -282,6 +282,14 @@ Next free ID: K454.
   - next: stage 3 per its brief, launched once K5 R2 merges (find a whole U, attribute it, fix per plan (a), (b) or H1; it also teaches the reveal census the dots' new cut). Then the phone and Levi's link `?2gozcj.MgaM`, and stage 2's unrun pluck checks (the K279 and K344 profiles, a reveal-off pluck A/B)
   - brief: `docs/design/K397.md` ("Stage 3 brief")
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
+- **K6** · One frame loop driven by what-changed flags
+  (`docs/design/K5_K6_split.md`, 4 and 5.4): K6-1, shadow flags, after M3;
+  K6-2 (skip CPU work) and K6-3 (= K24, skip the draw) after M6.
+  - owner: brief agent `a1c75e8bc02ef5677` of claude session 05e60da0 (opus, started 2026-10-15 13:13, 1 h cap ~14:13)
+  - branch: `worktree-agent-a1c75e8bc02ef5677`, worktree `.claude/worktrees/agent-a1c75e8bc02ef5677`; last commit: `a1c4179`
+  - evidence: its worktree's `.claude/probes/K6/K6-1/brief/` until the merge
+  - next: the brief agent writes `docs/design/K6_1.md` (K6-1, shadow flags); merge it, then launch K6-1 once K5 M4 has merged (ports 5980-5989)
+  - brief: `docs/design/K5_K6_split.md` (4 and 5.4); K6-1's own `docs/design/K6_1.md` once written
 
 ## Next, in order
 
@@ -361,9 +369,6 @@ Every other item below waits on the trigger it names.
 - **K341** · The second panel audit after the design iteration (Levi 10-14): rerun K339's inventory
   (`scripts/panel_inventory.ts`, `docs/design/K339_inventory.md`) and checklist, feed K297's
   pared-down set (`docs/design/K339_panel_audit.md` item 8).
-- **K6** · One frame loop driven by what-changed flags
-  (`docs/design/K5_K6_split.md`, 4 and 5.4): K6-1, shadow flags, after M3;
-  K6-2 (skip CPU work) and K6-3 (= K24, skip the draw) after M6.
 - **K9** · G4: smooth-union SDF junction webs (cuspRadius = blend radius); A/B crops at cr 1, 3, 6
   before the fans are deleted. Also closes G1's x160 leftover (`.claude/rules/render-gaps.md`); webs
   carry the traveled route as the smooth union of the traveled pieces only (K81).
