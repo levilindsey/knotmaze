@@ -259,3 +259,137 @@ and this doc.** The coordinator applies your maps to each repo.
 
 Process as above (stop rule: done or 1 h; commit at each milestone; never
 push). The final report ends with `Ledger items` and the handle fields.
+
+## CC64 handoff (2026-10-15, sonnet agent ad1cce843de69341e)
+
+Done and committed on `worktree-agent-ad1cce843de69341e` (from 3d78f09).
+Nothing is pushed and nothing is applied: no `LEDGER.md` and no
+`docs/ledger_*.md` of claude-config, hopnbop or snoringcat-platform was
+touched, and every run used copies. All output is in the main
+checkout's untracked `.claude/probes/CC64/` (`identity/`, `cc/`,
+`hopnbop/`, `platform/`). Each ledger's folder holds `snapshot.md`,
+`map.jsonl`, `work/` (the scratch result), `apply.txt`, `verify.txt`,
+`pointers.txt` and `results.md` (the counts below, the riskiest cuts and
+the warnings, in full).
+
+**The tool** (`056b7aa`, `ed7358a`). `scripts/ledger_diet.mjs` takes
+`--prefix <P>` (default `K`) and `--cutoff YYYY-MM-DD` (default
+`2026-10-12`) on every command. The prefix reaches every ID pattern and
+every ID the tool writes (items, the `## <P><n>` headings, "Next free
+ID"). A ledger with no "Next free ID" line keeps having none: a warning
+only, and the tool counts the next ID from the highest present. With the
+defaults the notes and done files get the K353 headers byte for byte;
+another prefix or cutoff gets a generic header (wrapped at 76 columns).
+`--date` still defaults to the local date.
+
+Knotmaze is unchanged. `.claude/probes/CC64/identity/run_identity.mjs`
+runs a script over the K353 snapshot (`6c85a38^`) in four variants (LF
+and CRLF, with and without an existing notes file) through `list`,
+`apply --dry-run`, `apply` and a second `apply`, `verify`, `pointers`
+and `pack` of `docs/ledger_diet/src`; `compare_out.mjs` compares two
+runs. The base script (3d78f09) against this branch's: 51 files,
+identical byte for byte except `hashes.txt` (it hashes stdout captures
+that print the output directory's name). Run again on the final script
+at 09:35.
+
+**Counts** (each snapshot is a byte copy of the live file, still equal
+to it at 09:34; the commit that holds it is in each `results.md`)
+
+| Ledger (snapshot held by) | Bytes | Lines | Items | Open rewritten | Done one-liners | Archived | Left as they were |
+|---|---|---|---|---|---|---|---|
+| claude-config, `CC` (`b509f63`) | 30,171 -> 13,045 | 473 -> 195 | 65 | 38 | 15 | 4 | 8 |
+| hopnbop, `H` (`351e9784`) | 23,480 -> 16,125 | 409 -> 265 | 100 | 30 | 10 | 8 | 52 |
+| platform, `SP` (`282ac35`) | 15,859 -> 11,216 | 277 -> 199 | 71 | 17 | 1 | 8 | 45 |
+
+- Every rewritten open item is within three lines, and `verify` ends
+  `verify: ok` on all three scratch results (each warns "no Next free ID
+  line"; CC has 14 and H 7 Done items that follow each other with no
+  blank line, as they did).
+- Left as they were: every item already within three lines, plus CC64
+  (the live In progress handle).
+- `docs/ledger_notes.md` receives the verbatim originals of the
+  rewritten open items (CC 22.5 KB in 38 entries, H 10.6 KB in 30, SP
+  7.1 KB in 17) and `docs/ledger_done.md` the originals of every Done
+  item the diet touches (CC 7.7 KB in 19, H 7.0 KB in 18, SP 2.9 KB in
+  9).
+- Archived (out of the ledger, in `docs/ledger_done.md` only): CC2, CC3,
+  CC4, CC11; H1, H2, H12, H13, H25, H38, H67, H70; SP1, SP4, SP5, SP6,
+  SP7, SP8, SP11, SP70.
+
+**To apply**, one ledger at a time, from the knotmaze root with the tool
+(after this branch is merged, or from its worktree), while no one is
+editing that ledger. An item whose text changed since the snapshot keeps
+its long text (the dry run prints the SKIPPED ones). Copy the ledger
+first: `verify` wants every original text of the before file in one of
+the three files, so run it before any other edit to the ledger.
+
+```powershell
+$P = 'C:\Users\lsl\Repositories\knotmaze\.claude\probes\CC64'
+
+# claude-config (master)
+$L = 'C:\Users\lsl\Repositories\claude-config\LEDGER.md'
+Copy-Item $L $env:TEMP\CC.before.md
+node scripts\ledger_diet.mjs apply $P\cc\map.jsonl --file $L --prefix CC --dry-run
+node scripts\ledger_diet.mjs apply $P\cc\map.jsonl --file $L --prefix CC
+node scripts\ledger_diet.mjs verify $env:TEMP\CC.before.md --file $L --prefix CC
+
+# hopnbop (main)
+$L = 'C:\Users\lsl\Repositories\hopnbop\LEDGER.md'
+Copy-Item $L $env:TEMP\H.before.md
+node scripts\ledger_diet.mjs apply $P\hopnbop\map.jsonl --file $L --prefix H --dry-run
+node scripts\ledger_diet.mjs apply $P\hopnbop\map.jsonl --file $L --prefix H
+node scripts\ledger_diet.mjs verify $env:TEMP\H.before.md --file $L --prefix H
+
+# snoringcat-platform: a submodule, detached at 282ac35 today
+$S = 'C:\Users\lsl\Repositories\hopnbop\third_party\snoringcat-platform'
+git -C $S checkout main
+git -C $S pull --ff-only
+$L = "$S\LEDGER.md"
+Copy-Item $L $env:TEMP\SP.before.md
+node scripts\ledger_diet.mjs apply $P\platform\map.jsonl --file $L --prefix SP --dry-run
+node scripts\ledger_diet.mjs apply $P\platform\map.jsonl --file $L --prefix SP
+node scripts\ledger_diet.mjs verify $env:TEMP\SP.before.md --file $L --prefix SP
+```
+
+Commit each ledger with its two `docs/ledger_*.md` files and push at
+once (ledgers merge with `merge=union`: pull before the apply, and after
+the push look for an ID that now appears twice; the bottom copy is the
+current one). claude-config lands on `master`, hopnbop on `main`, the
+platform on its `main`; then bump hopnbop's submodule pointer to the new
+platform commit (skill `bump-platform-submodule`). The three maps are
+independent, so the order does not matter. The claude-config ledger is
+edited live (the CC64 handle among others): an item edited since the
+snapshot is skipped and stays long, which is safe.
+
+**Needs a look before or while applying**
+- Undated Done items leave the ledger by the tool's rule (the last
+  `YYYY-MM-DD` in an item dates it; none means it leaves): H38, H67 and
+  H70 (all fixed 2026-10-14) and SP70. H38's one open thread, the
+  release-template check, is carried by the H72 rewrite. SP70's text
+  ends "Runtime deploy still required (nakama-runtime workflow)" and H41
+  says it ships "after SP70 and SP27": unless that deploy happened, file
+  a Next item for it in the platform ledger, or first add a date to the
+  live SP70 (an edited item is skipped by the map, so it keeps its text).
+- None of the three ledgers has a "Next free ID" line, so "the highest
+  ID ever used" now includes `docs/ledger_done.md`. The next IDs are
+  CC66, H101 and SP72 today, and every archived ID is lower.
+- Two stray lines, `  (Session 530145bc, ...)` after CC7 and
+  `  (Session c56311ec-..., ...)` after CC12, are prose after a blank
+  line, so the tool leaves them. They hold only a session id and a time
+  (the notes file does not have them either): delete both by hand, or
+  leave them.
+- The riskiest cuts; the original is then only in
+  `docs/ledger_notes.md`. CC40 (31 lines to 3: the laptop's Paseo setup
+  state, the `supervisor.js` `windowsHide` patch, the user-only
+  checklist; read its notes entry before picking the item up), CC39 (42
+  to 3; it keeps the capture list that memory
+  `feedback_desktop_network_restart.md` points at), CC65, CC21, CC59,
+  CC45; H10 (9 to 3), H17, H62, H35; SP12 (9 to 3).
+- `pointers.txt` per ledger lists what the new texts no longer name:
+  12 of 53 map lines (CC), 19 of 40 (H), 11 of 18 (SP), mostly session
+  and agent ids, a few commit ids and paths.
+
+**Next**: merge this branch (the script change and this section), then
+apply the three maps as above. The maps and snapshots stay in
+`.claude/probes/CC64/` (untracked, main checkout) until the three
+applies are committed.
