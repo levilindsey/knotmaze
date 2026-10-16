@@ -110,9 +110,6 @@ Next free ID: K454.
 - **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
   and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
   keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
-- **K440** · Real-time fire defaults (K114 s2 item 7). Levi, 2026-10-15 ("yes and yes"): real time
-  gets its own pair, 0.2 / 20 (a 1.7 s head start); turn keeps 0.75 / 0; the speed range is
-  [0.1, 0.95] under both. Brief `docs/design/K440.md`.
 - **K449** · K397 stage 2's two looks, for the phone: (1) each fade draws a cap and two spread dots,
   so long fades and High contrast lose the old row of dots; (2) a tap in a fade plucks the solid
   stretch beside the solid end: keep that, or sound-only? (`docs/design/K397.md`, Stage 2 handoff)
@@ -128,7 +125,7 @@ Next free ID: K454.
   - owner: nobody since 2026-10-15 12:31 (stage 2 merged at cebb75e; agent `a58dfc230583f43e4` of claude session 05e60da0, worktree kept)
   - branch: mainline; last commit: `cebb75e`
   - evidence: `.claude/probes/K114/stage2/` (`burn_sim_rt.ts`, `proposal.md`, `results_rt*.md`, `rt_page.mjs`, `perf_attr.ps1`, `vref_probe.mjs`, shots `out_rt*/`); stage 1's: `.claude/probes/K114/burn/` (`results_tuning_rebased.md`, `burn_sim.ts`, `burn_page.mjs`)
-  - next: K440 first (Levi: the real-time defaults and ranges), then K441's profile. Stage 3: the burn look as a shader with K290's burnt toggle; the spider follows the minotaur's controls (K174). Stage 2's residuals K442-K447, idea K448
+  - next: K440 is running (brief docs/design/K440.md), then K441's profile. Stage 3: the burn look as a shader with K290's burnt toggle; the spider follows the minotaur's controls (K174). Stage 2's residuals K442-K447, idea K448
   - brief: `docs/design/K114_stage2.md` (Stage 2 handoff); stage 1's handoff: `docs/design/K114_burn.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
@@ -290,6 +287,14 @@ Next free ID: K454.
   - evidence: its worktree's `.claude/probes/K6/K6-1/brief/` until the merge
   - next: the brief agent writes `docs/design/K6_1.md` (K6-1, shadow flags); merge it, then launch K6-1 once K5 M4 has merged (ports 5980-5989)
   - brief: `docs/design/K5_K6_split.md` (4 and 5.4); K6-1's own `docs/design/K6_1.md` once written
+- **K440** · Real-time fire defaults (K114 s2 item 7). Levi, 2026-10-15 ("yes and yes"): real time
+  gets its own pair, 0.2 / 20 (a 1.7 s head start); turn keeps 0.75 / 0; the speed range is
+  [0.1, 0.95] under both. Brief `docs/design/K440.md`.
+  - owner: agent `ae08baca315c6d514` of claude session 05e60da0 (opus, started 2026-10-15 13:31, 2 h cap ~15:31)
+  - branch: `worktree-agent-ae08baca315c6d514`, worktree `.claude/worktrees/agent-ae08baca315c6d514`; last commit: `fc00fe8`
+  - evidence: its worktree's .claude/probes/K440/ until the merge
+  - next: the agent builds items 1-8 of the brief; merge it with agent_merge.ps1 (suite and build), then K441
+  - brief: `docs/design/K440.md`
 
 ## Next, in order
 
