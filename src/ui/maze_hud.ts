@@ -331,6 +331,9 @@ function rowsEl(rows: readonly StatEntry[]): HTMLDivElement {
 export class MazeHud {
   readonly el: HTMLDivElement;
   private timeCell: HTMLElement | null = null;
+  // K114 stage 2: the fire's lead row, which the real-time fire counts
+  // down every frame (setFireLead).
+  private leadCell: HTMLElement | null = null;
   private lastSig = "";
 
   constructor() {
@@ -360,6 +363,7 @@ export class MazeHud {
     this.lastSig = sig;
     this.el.textContent = "";
     this.timeCell = null;
+    this.leadCell = null;
     for (const [k, v] of rows) {
       const kEl = document.createElement("span");
       kEl.className = "k";
@@ -368,8 +372,17 @@ export class MazeHud {
       vEl.className = "v";
       vEl.textContent = v;
       if (k === "time") this.timeCell = vEl;
+      if (k === STATS.fireLead.label) this.leadCell = vEl;
       this.el.append(kEl, vEl);
     }
+  }
+
+  // K114 stage 2: the real-time fire's lead, every frame (one text node,
+  // only when its shown value changes; null: no row to write).
+  setFireLead(v: number | null): void {
+    if (v === null || !this.leadCell || this.el.hidden) return;
+    const t = fmtDist(v);
+    if (this.leadCell.textContent !== t) this.leadCell.textContent = t;
   }
 
   // The running clock (cheap: one text node, only when the second changes).

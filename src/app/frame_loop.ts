@@ -69,6 +69,10 @@ export interface FrameLoopDeps {
   syncExploration: (f: FabricMazeRenderer) => void;
   tickChase: (dt: number) => void;
   tickTurnMino: (dt: number) => void;
+  // K114 stage 2: the real-time fire (main.ts owns its clock).
+  realtimeFire: () => boolean;
+  tickFire: (dt: number) => void;
+  fireSet: () => void;
   setWaitCue: (on: boolean) => void;
   keysLive: () => boolean;
   handRendererLook: () => void;
@@ -121,6 +125,9 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     syncExploration,
     tickChase,
     tickTurnMino,
+    realtimeFire,
+    tickFire,
+    fireSet,
     setWaitCue,
     keysLive,
     handRendererLook,
@@ -339,6 +346,8 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
         scene.fabricController.trailMode = params.pathViz === "trail";
         // K80: in the real-time mode the chase moves the dot (tickChase).
         if (scene.chase) tickChase(ticker.deltaMS / 1000);
+        // K114 stage 2: the real-time fire's clock moves the dot.
+        else if (realtimeFire()) tickFire(ticker.deltaMS / 1000);
         else {
           scene.fabric.tickAnim(ticker.deltaMS / 1000, scene.fabricController);
           // K80 turns: the turn minotaur rides the move just stepped.
@@ -346,6 +355,8 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
         }
         // K120: a held key's next move, once the dot has arrived.
         keyStep();
+        // K114 stage 2: after the waiting move left, the fire's clock.
+        if (realtimeFire()) fireSet();
         if (deps.pendingWin && !scene.fabric.animating) {
           deps.pendingWin = false;
           showFabricWin();

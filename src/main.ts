@@ -15,6 +15,7 @@ import { FabricMazeRenderer } from "./render/fabric_maze_renderer";
 import { EXPLORE_LOOKS } from "./render/explore_glsl";
 import { FabricMazeController } from "./game/fabric_controller";
 import { buildFire } from "./game/fire";
+import { FireClock } from "./game/fire_clock";
 import type { Fire } from "./game/fire";
 import {
   HeldKeys,
@@ -447,6 +448,10 @@ async function main(): Promise<void> {
   };
   // Set when a losing move lands; the Burnt banner waits for the dot.
   let pendingLoss = false;
+  // K114 stage 2: the real-time fire's clock (game/fire_clock.ts), run by
+  // tickFire while the race runs; a rebuild and restartSolve reset it.
+  const fireClock = new FireClock();
+  const realtimeFire = (): boolean => fabricController?.fire?.clock === "realtime";
   // Stage 22: the running appearance animation (null = instant / done
   // long ago). Rebuilds and "Replay settle" restart it.
   let reveal: RevealAnimator | null = null;
@@ -995,6 +1000,7 @@ async function main(): Promise<void> {
     syncBackground();
     pendingWin = false;
     pendingLoss = false;
+    fireClock.reset();
     restartChase();
     resetAttempt();
     hideWin();
@@ -2422,6 +2428,7 @@ async function main(): Promise<void> {
     fabric?.clearYarn();
     pendingWin = false;
     pendingLoss = false;
+    fireClock.reset(); // K114 stage 2: idle until the next first move.
     restartChase(carry);
     hideWin();
     if (fabric && fabricController) fabric.update(fabricController);
@@ -2501,6 +2508,39 @@ async function main(): Promise<void> {
     if (chase.playerMoving) fabric.setMoveProgress(chase.playerProgress, fc);
     else if (fabric.animating) fabric.setMoveProgress(1, fc);
     fabric.syncMinotaur(chase, params.minoFog);
+  };
+
+  // K114 stage 2, THE REAL-TIME FIRE (game/fire_clock.ts), in tickAnim's
+  // place: the clock runs from the first move until the fire reaches you
+  // or the winning move lands, while the page is visible. A dot the clock
+  // has carried past its run's end lands at the arrival first, so a
+  // waiting tap (keyStep) leaves at the arrival; fireSet, after keyStep,
+  // hands the clock to the controller and the dot.
+  const tickFire = (dt: number): void => {
+    const c = fabricController;
+    if (!c || !fabric) return;
+    const running = c.taps.length > 0 && !c.fireLost && (!c.solved || fabric.animating);
+    if (running && !document.hidden) fireClock.advance(dt);
+    if (fabric.animating && fireClock.L >= c.fireArriveL) {
+      c.setFireNow(c.fireArriveL);
+      fabric.setMoveProgress(1, c);
+    }
+  };
+  // The controller reads the clock (where you stand, the fire may reach
+  // you: the Burnt banner), the dot its place on the run, the HUD the lead.
+  const fireSet = (): void => {
+    const c = fabricController;
+    if (!c || !fabric) return;
+    const L = fireClock.L;
+    if (c.setFireNow(L)) {
+      pendingLoss = true;
+      fabric.update(c);
+    }
+    if (fabric.animating) {
+      const len = c.fireArriveL - c.fireDepartL;
+      fabric.setMoveProgress(len > 0 ? (L - c.fireDepartL) / len : 1, c);
+    }
+    hud.setFireLead(c.fire && !c.solved && !c.fireLost ? c.fireLeadHere : null);
   };
 
   // K80 TURNS (game/minotaur_turns.ts). A move the controller accepted is
@@ -2840,8 +2880,9 @@ async function main(): Promise<void> {
     // K334: a tap while the turn is under way (the dot travels, or a wait's
     // turn plays) waits for the arrival, as a key press does. tapsWait is
     // on by default; the hook's setTapsWait(false) brings back the snap to
-    // the run's end, for A/Bs.
-    if (tapsWait && dotMoving()) return queueTap(eid);
+    // the run's end, for A/Bs. K114 stage 2: the real-time fire always
+    // queues (the dot rides the fire's clock, so it cannot snap).
+    if ((tapsWait || realtimeFire()) && dotMoving()) return queueTap(eid);
     return moveAlong(eid);
   };
   // K114: a refused (smoldering) tap's toast, at most once per 1.5 s (a
@@ -4077,6 +4118,9 @@ async function main(): Promise<void> {
       syncExploration,
       tickChase,
       tickTurnMino,
+      realtimeFire,
+      tickFire,
+      fireSet,
       setWaitCue,
       keysLive,
       handRendererLook,
