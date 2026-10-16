@@ -805,7 +805,8 @@ rows: gameplay-panel.md's EXPLORATION ROWS.
   lies beneath the weave, so where an over thread covers an end the halo
   still shows around that thread (seen once, in the A/B below: a halo
   crossed by an over thread lit on both sides of it); and it moves
-  nothing, so it shows no unexplored thread.
+  nothing, so it shows no unexplored thread. Levi kept A as the default
+  (K492, 2026-10-15); B stays opt-in.
 - B, THE END MOVES (CPU only; off by default). THE STRETCHES:
   `ribbon/crossing_gaps.ts` pushes `[slot, underCenter, allNeg,
   allPos]` into `r.chainCuts` per under chain, beside chainWins: the arc

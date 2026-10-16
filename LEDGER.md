@@ -117,14 +117,6 @@ Next free ID: K499.
   frame the exit: the fit camera frames only the seen thread (the tween ends where it began), the
   follow camera zooms out but not enough, and the label still says "Tap to bring it into view"
   (main.ts l.1298; docs/design/K465.md Handoff)
-- **K492** · Thread reveal ends (K466): keep A as the default (`rvg=bright`, `rve=under`: a bigger,
-  brighter, breathing halo on each unexplored end) or make B the default (`rve=past|back`: an end
-  under a crossing moves out from under it, but up to 4.67 ctrl of unexplored thread shows; K494).
-  Sheet: `.claude/probes/K466/sheet/`; docs/design/K466.md Handoff.
-- **K496** · Tap preference (K479), your calls: (a) bias the run you physically retrace after a
-  backtrack too? (i) where the arrival run crosses an outgoing run, a tap inside both ribbons now
-  goes outgoing; should the backtrack win there? (b) the factor: 1.5 now, vs 2 or one per pointer
-  (no panel row). gameplay-camera.md TAP PREFERENCE; docs/design/K479.md Handoff.
 
 ## In progress
 
@@ -1260,6 +1252,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K496** · Tap preference (K479): Levi kept all three calls as built (the retraced run stays an ordinary choice, a tap inside both ribbons at a crossing goes outgoing, ARRIVAL_BIAS 1.5 for both pointers). Done in 796e158 (2026-10-15).
+- **K492** · Thread reveal ends (K466): Levi kept A (`rvg=bright`, `rve=under`) as the default; B stays opt-in (K494). Done in 554f2af (2026-10-15).
 - **K479** · Taps prefer the outgoing runs (Levi 2026-10-15: taps meant for the next run take the arrival run): in `edgeAt` the arrival run should win only by a clear margin, and the hover must pick what a tap takes. Done in 796e158 (2026-10-15).
 - **K466** · Thread reveal: emphasize unexplored thread ends more, especially ends that lie under a crossing (Levi 2026-10-15 15:49). Done in 554f2af (2026-10-15).
 - **K465** · Thread reveal: show the finish marker and its off-screen indicator by default (Levi 2026-10-15 15:49); K76 decision 6 hides both until the exit's thread is seen (drawMarkers, main.ts finishIndicator, EXPLORE_MARKER_VIS). Done in 76fb5ea (2026-10-15).

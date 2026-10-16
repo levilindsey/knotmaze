@@ -237,6 +237,11 @@ only with the files it is about; `gameplay.md` lists the area's other files.
     (`click_e2e.mjs`, desktop and a phone-size mouse): with the
     preference the path [0] becomes [0, 247], without it the click
     backtracks (the path empties).
+  - LEVI'S CALLS (K496, 2026-10-15): all three as built. The run retraced
+    after a backtrack stays an ordinary choice; a tap inside both ribbons
+    where the arrival run crosses an outgoing run goes outgoing; and
+    ARRIVAL_BIAS stays 1.5 for the mouse and touch until he has played
+    with it.
 
 - THE THREAD REVEAL (K76 stage 2c, 2026-10-15): hidden thread is empty
   space for every press, tap, hover and tug (a drag pans, a double-tap
