@@ -148,6 +148,53 @@ certifies (the P3.24 probe rule again, render edition).
   set changes, not on growth frames. The rule and its census:
   `render-explore.md`.
 
+## A FUSED JOINT IS NOT A CROSSING (K397 stage 3, 2026-10-15)
+
+- **The knuckle U and the node_12 sliver were one mechanism** (H6,
+  `docs/design/K397.md` stage 3). A tucked tip's end particle is fused
+  to its host's, so the tip's last segment and the host's next one cross
+  properly at that shared point. The physics' emergent collector
+  (`forces.ts`: a proper intersection with sin > 0.25, no junction
+  exclusion) registers the pair, and renderEmergent gave it a gap slot.
+  Stub over host cut a dark round-ended ring inside the host (Levi's
+  knuckle U, levi_0801: 2gozcj, 50e over host 56 at junction 132). Host
+  over stub cut a band across the stub's root, past the cap cover's
+  reach (stage 1's node_12 sliver: 48s under host 71). A third pair,
+  55s on host 81, showed with the reveal off. The joint's own covers (the
+  cap cover, the seal disc, the fans) own that overlap. Not H1: no hidden
+  or gated joint in 14 walks.
+- **The fix is CPU-only and touches no shader text.** `isJointPair`
+  (`ribbon/crossing_gaps.ts`) is true when the two passes are on
+  different chains and each lies within `JOINT_PAIR_REACH` (2) ctrl of a
+  joint of the same junction (`junctionArcCtrls`, the same `jn`; wrapped
+  on a closed chain). renderEmergent skips such a pair before the gate,
+  so it gets no slot and no underWindows entry. The physics keeps the
+  row (`ps.emergentCrossings` is unchanged). Knot mode has no fused
+  junctions and does not move. Same-state toggle: `r.skipJointPairs =
+  false` (master), then `r.update(); r.rebuildFillets(true)`. Pinned by
+  `test/render/joint_pairs.test.ts`.
+- **Side effect: the full web at those tucks.** rebuildFillets'
+  `gapNearOf` reads underWindows, so the phantom window clamped the
+  web's reach on the under thread's arm (armReach: FILLET_GAP_PAD,
+  FILLET_GAP_MIN_FRAC). Without it, the three tucks draw the same web as
+  the other 171: a rounded elbow with its inner fillet where master drew
+  a sharp inner corner. The layer votes read only registered crossings,
+  so they do not move (`dives` needs an under vote first).
+- **Measured** (desktop, under the perf lock, same state;
+  `.claude/probes/K397/stage3/`). Knot: 0 px. Fabric with the reveal off,
+  174 tucks: live emergent slots 3 -> 0. Changed px within 1.6 fill
+  half-widths of a tuck: 482-536. Between 1.6 and 3.5: 138-159. Beyond
+  3.5: 0, at any threshold. Controls: 0. knuckle2: only the three
+  vertices that see 48s change (3646-3827 px); the other nine read 0.
+  census_fan (two loads): mean 0.00332 and p99 0.0046 on both; max
+  0.2039 -> 0.2078, one 8-bit step at junction 132.
+- **Recipe.** `h1scan.mjs` sorts fused tips by hypothesis. `h6look.mjs`
+  zooms on one tip (panels A R E RE H F X). `jointab.mjs` diffs whole
+  frames per tuck. `farcheck.mjs` (offline) counts changed px by
+  distance from the tucks. `knuckle2.mjs` adds panel M (master).
+- The dark slashes beside the head in Levi's 08:06 shot are ordinary
+  crossing gaps of walked threads, not this mechanism.
+
 ## G3-0 DATA PLANE (K8 stage 2, 2026-10-15)
 
 - **Four page-lifetime tables that nothing samples yet** (G3G4_sdf_geometry.md
@@ -290,7 +337,9 @@ header maps its members to their old lines).
   protectReach and their scratch), the emergent pool (renderEmergent),
   renderMarkerGaps, assignGapIds with G3-0's RANGES, and the gap
   constants. GATE_LEAD, CUT_BIAS, EMERGENT_POOL, MARKER_SLOTS and
-  JOINT_CLEAR_REACH_SCALE are exported from there.
+  JOINT_CLEAR_REACH_SCALE are exported from there, and since K397
+  stage 3 JOINT_PAIR_REACH and isJointPair (A FUSED JOINT IS NOT A
+  CROSSING).
 - `ribbon/explore_gaps.ts` (`ExploreGaps`, `explore`): the reveal's
   declaration (setExplore, setExploreContrast, samePieces, sameBurn,
   sameSpans), the gap gate (applyExploreGaps, exploreCutAt), the joint
@@ -304,8 +353,9 @@ header maps its members to their old lines).
   delegations, and a part calls them as `this.r.x(...)`, never as its
   own `this.x(...)`, so a probe's patch on `__knotRenderer()` sees every
   call (renderEmergent to computeGapSlot, setExplore to
-  applyExploreGaps, and so on). smoothMin, protect, gapMode, gapOverflow
-  and exploreContrast are façade accessors over the parts' fields.
+  applyExploreGaps, and so on). smoothMin, protect, gapMode, gapOverflow,
+  skipJointPairs (K397 stage 3) and exploreContrast are façade accessors
+  over the parts' fields.
 - **No value import from the façade.** The crossing part reads `G3` and
   `FILLET_REACH_PER_HALF` through façade getters of those names, so the
   cycle stays type-only.
