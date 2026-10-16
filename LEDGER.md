@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K430.
+Next free ID: K435.
 
 ## Waiting on Levi
 
@@ -137,6 +137,11 @@ Next free ID: K430.
   fade runs 0.38-1.36 world, so the fixed pitch shows 1, 2 or a cut dot. Keep the pitch and drop
   the partial dot, spread round(fade / pitch) dots over it, or always 2 sized to fit. (2) Where a
   tap's vibration stops: at vis 0.5 (the pick threshold) or the stub's solid end.
+- **K430** · The underWindows step (K268 3a): when a crossing's over pass reaches vis
+  0.5, the under thread's junction web retracts in one frame while the gap fades in.
+  Accept it, clip each window to where its over pass shows, or ramp it with that vis
+  (rec.: ramp). `docs/design/K268.md`, Stage 3a handoff; crops
+  `.claude/probes/K268/stage3a/out/census3a_master/j*_off_on_uw_uwgate.png`.
 
 ## In progress
 
@@ -237,11 +242,11 @@ Next free ID: K430.
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
-  - owner: agent `a5d9b049e72746ad2` of claude session 05e60da0 (stage 3a, started 10:02; opus, 2 h cap ~12:02; ports 5850-5859). Stage 2's agent `a42c63c2db0401edb` (session d8031183): worktree swept; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept
-  - branch: `worktree-agent-a5d9b049e72746ad2`, worktree `.claude/worktrees/agent-a5d9b049e72746ad2`; last commit: `ea00de0` (the brief, on mainline)
-  - evidence: `.claude/probes/K268/stage3a/` (in the worktree until the merge); `.claude/probes/K268/stage2/` (probes, `run_batch2.ps1` to `run_batch5.ps1`, `out/`, builds); stage 1's beside it
-  - next: stage 3a running (the census fixes; junctions 56-58 and 161; the sheet probe). Then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip), after G3-1 and never beside it (rec., K399)
-  - brief: `docs/design/K268.md`, "Stage 3a brief"; "Stage 2 handoff" ("For the next stage")
+  - owner: nobody since 2026-10-15 11:22 (stage 3a's agent `a5d9b049e72746ad2` of claude session 05e60da0 finished; merged 11:26, worktree kept). Stage 2's agent `a42c63c2db0401edb` (session d8031183): worktree swept; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept
+  - branch: mainline (3a's worktree `.claude/worktrees/agent-a5d9b049e72746ad2` kept); last commit: `f307e43`
+  - evidence: `.claude/probes/K268/stage3a/` (census3a.mjs, 31/31 on master; sheet3a.mjs; the k76_probe.mjs copy with the bit-exact view wait; `out/`); `.claude/probes/K268/stage2/`; stage 1's beside it
+  - next: Levi's call K430; then stage 2's item 2 a part at a time (protect, the far-branch smooth-min, K430's rule), after G3-1 (K399) and never beside it, in the files K5 R1 moved computeGapSlot and rebuildFillets to; census3a's attributedUW then judges against that rule. Items 5 and 6 by eye (K307's registry). Probe fixes: K431, K432
+  - brief: `docs/design/K268.md`, Stage 3a handoff (2026-10-15 11:35), For the next stage
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
   in-thread. Stage 7 (6cfb416..fdb38ac) builds the first scene from the Worker's name and
@@ -1283,6 +1288,17 @@ Every other item below waits on the trigger it names.
   explore-clock pin) land in a few discrete states 17-67551 px apart, with or without
   `&phw=0`. A clock is still unpinned; until it is found, take several captures per
   build (K5 R1 `checks/`, `checks2/pairs_threads3.txt`).
+- **K431** · Probes' three-decimal `viewStill` isn't pixel-still under cam=follow:
+  frames change for 0.6-1 s after it passes, and the view stops bit-exactly ~10 s later
+  (K268 3a). Port stage3a `k76_probe.mjs`'s bit-exact wait (EXACT) to census3a's prepare
+  and the other probes with that wait; add the probes.md lore line.
+- **K432** · A pinned backdrop went black with no `webglcontextlost` in 2 of 3 unlocked
+  k76 sheets (K268 3a, 11:11-11:13, beside K290 3c's phone run); no census lost it.
+  Rerun the sheet alone under the perf lock to attribute it; until then pixel-exact
+  sheets take the perf lock (probes.md, K76 2b). Lore line.
+- **K433** · Master's compositing isn't monotone in a gap's strength by one 8-bit level
+  at some AA pixels (crossing 100; 84 px in census3a's KSWEEP=100 clip; K268 3a).
+  census3a allows one level; which layer rounds is unattributed.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1534,6 +1550,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   pluck-overlay pool mesh (its geometry carries them, pluck_overlay.ts 692-693;
   pluck-blur's program doesn't declare them), so every probe console carries 1-4 pairs.
   Console noise (K5 R1 handoff).
+- **K434** · Snap the follow camera's spring tail (`src/app/camera.ts` 395-420) below
+  ~1e-3 px of offset and speed, so the view stops bit-exactly instead of easing on ~10 s
+  by sub-pixel steps (K268 3a). It changes every follow camera's tail: Levi's call.
 
 ## Done
 
