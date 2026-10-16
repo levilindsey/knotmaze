@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K425.
+Next free ID: K430.
 
 ## Waiting on Levi
 
@@ -284,12 +284,14 @@ Next free ID: K425.
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
   with seams so G3 becomes a module swap; K6 rides it. Design: `docs/design/K5_K6_split.md`
   (calls: K377). M1 merged (baa0847..12709e5): main.ts 5709 → 4869 lines, no logic changes. M2 merged
-  (cc19c2b..a9121b4): the camera to `src/app/camera.ts`, main.ts 4493 lines.
-  - owner: agents of claude session 05e60da0: R1 `ab73ce063da5446b5` (started 09:20; opus, 2 h cap ~11:20; ports 5980-5989) and M3 `af649e53424d2062c` (started 10:17; opus, 2 h cap ~12:17; ports 5840-5849). R1's brief merged in 9041939 (docs agent `aae67981858ddb4a6`, worktree kept). M2's agent `abe93d522f82975c1` finished 09:52, merged 09:56, worktree kept. M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
-  - branch: R1 `worktree-agent-ab73ce063da5446b5`, worktree `.claude/worktrees/agent-ab73ce063da5446b5`, from `9041939`; last commit: `fe48f06` (WIP). M3 `worktree-agent-af649e53424d2062c`, worktree `.claude/worktrees/agent-af649e53424d2062c`, from `e6e1734`; last commit: `efa70f9` (WIP). Mainline `a9121b4` (M2)
-  - evidence: `.claude/probes/K5/M3/`, `.claude/probes/K5/M2/`, `.claude/probes/K5/R1/` (the brief's `rr_map.cjs` and maps in `brief/`); stage 1's tools in `.claude/probes/K5/stage1/` (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
-  - next: R1 (`ribbon/ribbon_shader.ts`, `ribbon/sampling.ts`) and M3 (the frame loop to `src/app/frame_loop.ts`, a hot path: the frame-time check under the perf lock) running. Then M4, M3/M4 export PhysState, M7a moves `__knotUndo`. The R lane (K377 q3): R2 and R5 after R1, G3-1 after R2. While R1 runs, nothing else edits `ribbon_renderer.ts` (not K397's fix, K268 stage 3, K76's next stage or G3-1)
-  - brief: `docs/design/K5_K6_split.md` ("Stage M3 brief"; "Stage M2 handoff"); R1 `docs/design/K5_R1.md`
+  (cc19c2b..a9121b4): the camera to `src/app/camera.ts`, main.ts 4493 lines. R1 merged (7240953..56d4504):
+  the section program to `src/render/ribbon/ribbon_shader.ts`, sampling to `ribbon/sampling.ts`;
+  ribbon_renderer.ts 7747 → 7377 lines.
+  - owner: agent M3 `af649e53424d2062c` of claude session 05e60da0 (started 10:17; opus, 2 h cap ~12:17; ports 5840-5849). R1's agent `ab73ce063da5446b5` finished 10:53, merged 10:57 (56d4504), worktree kept; R1's brief merged in 9041939 (docs agent `aae67981858ddb4a6`, worktree kept). M2's agent `abe93d522f82975c1` finished 09:52, merged 09:56, worktree kept. M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
+  - branch: M3 `worktree-agent-af649e53424d2062c`, worktree `.claude/worktrees/agent-af649e53424d2062c`, from `e6e1734`; last commit: `efa70f9` (WIP). Mainline `56d4504` (R1; its branch `worktree-agent-ab73ce063da5446b5` and worktree kept)
+  - evidence: `.claude/probes/K5/M3/`, `.claude/probes/K5/R1/` (`checks/` and `checks2/`, each with `checks.log`; `checks3.ps1`, the fog `&phw=0` B-vs-B control, not run: K290 3c held the perf lock; R2's inventory in `parts.md`, `probe_surface.md`, `surface.json`; the brief's `rr_map.cjs` and maps in `brief/`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/` (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
+  - next: M3 (the frame loop to `src/app/frame_loop.ts`, a hot path: the frame-time check under the perf lock) running; then M4, M3/M4 export PhysState, M7a moves `__knotUndo`. The R lane (K377 q3): R2 next, brief to write from 2.3 and R1's handoff (`ribbon/crossing_gaps.ts`, `ribbon/explore_gaps.ts`: buildPoly, polyDist, protectReach, samePieces, sameBurn, sameSpans, plus a part for the G3-0 probe hooks g3DataState, g3TableRows, g3Expected, captureScene, restoreScene). R2 and K397 stage 2 both edit the explore gap code, so they run one after the other. Then R5; G3-1 after R2
+  - brief: `docs/design/K5_K6_split.md` ("Stage M3 brief"; "Stage M2 handoff"); the R lane `docs/design/K5_R1.md` ("Stage R1 handoff")
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
   char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b merged (5913f4f..f7dd57e).
@@ -1240,7 +1242,8 @@ Every other item below waits on the trigger it names.
   compares stamps, not SHAs; k111.L's shaped-slot count varied; `restoreScene` may keep HC's x = 2.
 - **K390** · The fog A/B recipe (`probes.md`, `k83_ab`) is not deterministic: K5 M1's same-build
   controls differ by 4054-7979 px (maxΔ up to 49), the start marker flipping between two states
-  (exactly 148 px). Unexplained; try `&phw=0` first. `.claude/probes/K5/stage1/fogbisect/`
+  (exactly 148 px). Unexplained. `&phw=0` cuts it to about 700 px per capture (maxΔ 53; K5 R1
+  `checks2/pairs_fog3.txt`), so probes.md's K83 recipe should pass it. `.claude/probes/K5/stage1/fogbisect/`
 - **K391** · K5 M1's probe residuals: `k83_ab` has no knot-mode path (exits 1 at :149); diag's 12 s
   capture vs the worker's first sleep (about 9.9 s; recheck); `probe_daily` `front` fails 10/14
   (expects `#maze-hud .km-title`; its `?daily=1.aBMge` and `?1471kin.c` predate K132).
@@ -1276,6 +1279,21 @@ Every other item below waits on the trigger it names.
 - **K424** · Thread reveal: some junctions stay hidden while one of their arms turns visible 0.5-1
   ctrl out, so their webs are missing beside thread about to show (junctions 87 and 160 on
   `?2gozcj.MgaM`, K397 stage 1). `docs/design/K397.md`, Stage 1 handoff.
+- **K425** · Probes that read the section shader's source still read or edit
+  `ribbon_renderer.ts`: `K290/stage3b/dump_variants.ts` (and its K76 2d and K290 3a
+  copies), `g2/` and `K4/` `variant_build.ps1`, `K154_K169/edit_rr2.ps1` and
+  `edit_rr3.ps1`. Repoint them at `src/render/ribbon/ribbon_shader.ts` when next used
+  (R1's copy: `.claude/probes/K5/R1/dump_variants.ts`).
+- **K426** · `docs/lore_index.md`'s render-paint row lacks
+  `test/render/paint_ring_lap.test.ts` (drift from before K5 R1).
+- **K427** · `warmup.mjs`'s unregistered-program check works only on a dev build
+  (checkLinks defaults to `import.meta.env.DEV`), so a prod A/B cannot catch an
+  unregistered program (K5 R1 handoff, `checks/`).
+- **K428** · Thread-reveal same-state A/Bs don't repeat: one build's captures
+  (`k5ab&phy=0&am=instant&fw=0&snd=none&xp=threads`, 3 moves, k83_ab with K381's
+  explore-clock pin) land in a few discrete states 17-67551 px apart, with or without
+  `&phw=0`. A clock is still unpinned; until it is found, take several captures per
+  build (K5 R1 `checks/`, `checks2/pairs_threads3.txt`).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1523,6 +1541,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K419** · `computeFitTarget` reads `scene.ps` through the SceneRef getter three times per particle
   (`src/app/camera.ts` 64-66); hoist `const ps = scene.ps` at a stage that allows logic edits. No cost
   measured (K5 M2 handoff).
+- **K429** · Pixi warns `Attribute aGap / aGapId is not present in the shader` once per
+  pluck-overlay pool mesh (its geometry carries them, pluck_overlay.ts 692-693;
+  pluck-blur's program doesn't declare them), so every probe console carries 1-4 pairs.
+  Console noise (K5 R1 handoff).
 
 ## Done
 
