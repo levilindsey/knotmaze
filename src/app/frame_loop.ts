@@ -15,6 +15,7 @@ import type { OffscreenIndicators } from "../ui/offscreen_indicators";
 import type { PanelApi, PanelSettings } from "../ui/tweakpane_panel";
 import type { UrlParams } from "../ui/url_state";
 import { CAM_MAX_DT } from "./camera";
+import type { PhysState } from "./lifecycle";
 import type { SceneRef } from "./scene_ref";
 import type { StampPerf } from "./stamp";
 
@@ -40,8 +41,8 @@ import type { StampPerf } from "./stamp";
 const SETTLE_WALL_CAP_MS = 12000;
 
 // What the frame loop reads from main(): values and functions, each
-// assigned once, then accessors for the `let`s main.ts keeps (their owners
-// move in later stages: physState's is M4's lifecycle).
+// assigned once, then accessors for the `let`s main.ts keeps and the
+// lifecycle's (physState, settleWall0, warmHoldFrom: src/app/lifecycle.ts).
 export interface FrameLoopDeps {
   app: Application;
   root: Container;
@@ -84,8 +85,8 @@ export interface FrameLoopDeps {
   keyStep: () => void;
   autoAudioTick: () => void;
   freeze: () => void;
-  // main.ts's `let`s: read only,
-  readonly physState: "live" | "loading" | "settling" | "frozen";
+  // main.ts's and the lifecycle's `let`s: read only,
+  readonly physState: PhysState;
   readonly settleWall0: number;
   readonly warmHoldFrom: number;
   readonly waitCueGlyph: string | null;
