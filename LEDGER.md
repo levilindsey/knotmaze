@@ -259,10 +259,10 @@ Next free ID: K472.
 - **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone, `?2gozcj.MgaM`):
   stage 2 fixed issues 1, 2, 4 and 5 (092aca0); left is issue 3, the dark U at a tucked tip's root. At 13:39
   (`.claude/probes/K397/levi_1339.png`) truncated dots and issue 3 still show sometimes; the dot vibration is gone.
-  - owner: agent `a2806c50953dec23d` of claude session 05e60da0 (opus, started 2026-10-15 15:02, 2 h cap ~17:02)
-  - branch: `worktree-agent-a2806c50953dec23d`, worktree `.claude/worktrees/agent-a2806c50953dec23d`; last commit: `6c6e4ad`
+  - owner: nobody since 2026-10-15 16:17 (merged; agent `a2806c50953dec23d` of claude session 05e60da0)
+  - branch: mainline; last commit: `e0bcad8`
   - evidence: `.claude/probes/K397/stage3/`
-  - next: stage 3 running (find a whole U, attribute it, fix per plan (a), (b) or H1; teach the reveal census the dots' new cut); at its finish merge it. Then the phone and Levi's link `?2gozcj.MgaM`, and stage 2's unrun pluck profiles (K279, K344). The truncated dots and the stub's pluck are K459's
+  - next: teach K76's reveal census `exploreCutCoverCpu` and run it on master; then the phone and Levi's link on the merged build (`docs/design/K397.md`, "Stage 3 handoff")
   - brief: `docs/design/K397.md`
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K6** · One frame loop driven by what-changed flags
