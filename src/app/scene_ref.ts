@@ -9,8 +9,8 @@ import type { TurnMinotaur } from "../game/minotaur_turns";
 import type { RevealAnimator } from "../render/reveal";
 
 // K5 (docs/design/K5_K6_split.md, 2.2): the scene `let`s that main()'s
-// rebuild() or a mode switch reassigns, read through getters. main.ts builds
-// ONE SceneRef right after it declares them; code moved out of main() says
+// rebuild() or a mode switch reassigns, read through getters. createScene (src/app/scene.ts) builds
+// ONE SceneRef with the scene `let`s it owns; code moved out of main() says
 // `scene.renderer` where it said `renderer`, and so reads the current value,
 // as the closure did. Never destructure a SceneRef or cache one of its
 // values: a cached renderer is the previous build's after a rebuild.

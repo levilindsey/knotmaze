@@ -1,5 +1,5 @@
 import { Application, Container } from "pixi.js";
-import { setGamutConfig } from "./core/section_colors";
+
 import type { WalkGraph } from "./core/walk_graph";
 // K7: main never steps or writes the physics itself - every write goes
 // through the PhysicsHost (physics/physics_host.ts); `ps` is its read view.
@@ -38,16 +38,12 @@ import type { ChaseEvent } from "./game/minotaur";
 import { TurnMinotaur, turnConfig, turnSeed } from "./game/minotaur_turns";
 import { firstSmolderIndex, planRoute, routeWarning } from "./game/route_plan";
 import { BackgroundLayer } from "./render/background";
-import { accentHexes, backgroundColors } from "./render/background_model";
+
 import {
   chaseParamsOf,
-  clampHoverGlowFade,
-  clampHoverGlowLength,
-  clampHoverGlowWidth,
   fireSettingsOf,
   turnMinoParamsOf,
   writeParams as writeTokenParams,
-  newSeed,
 } from "./ui/url_state";
 import type { UrlParams } from "./ui/url_state";
 import {
@@ -69,7 +65,6 @@ import type { DailyResult, SolveRecord } from "./game/daily_store";
 import {
   attemptRecord as savedAttemptOf,
   exploredRuns,
-  resetPathAction,
   restoreAttempt,
   walkFingerprint,
 } from "./game/daily_attempt";
@@ -88,9 +83,6 @@ import { finishPeekPlan } from "./ui/finish_peek";
 import {
   DARK_DISC,
   GLYPH_R,
-  HEAD_INDICATOR_KEY,
-  INDICATOR_SIZE_KEY,
-  MINOTAUR_INDICATOR_KEY,
   OffscreenIndicators,
   indicatorPrefs,
 } from "./ui/offscreen_indicators";
@@ -109,7 +101,7 @@ import { startShaderWarmup, warmContextFor } from "./render/shader_warmup";
 import { openDailyStats } from "./ui/daily_stats_view";
 import { shareOrCopy, showToast } from "./ui/share";
 import { SHEET_QUERY } from "./ui/panel_sheet";
-import { buildPanel } from "./ui/tweakpane_panel";
+import { wirePanel } from "./app/panel_wiring";
 import type { PanelSettings } from "./ui/tweakpane_panel";
 import {
   UndoStack,
@@ -125,9 +117,6 @@ import {
   ContrastSetting,
   browserContrastQuery,
   effectiveParam,
-  highContrastChoice,
-  overriddenKeys,
-  reducedMotionChoice,
   type A11yFlags,
   type A11yKey,
 } from "./ui/accessibility";
@@ -564,7 +553,7 @@ async function main(): Promise<void> {
       warmup,
       loader,
       physicsTuning,
-      handRendererLook,
+      handRendererLook: () => handRendererLook(),
       fitToScreen,
       wake: () => wake(),
       get indicators() {
@@ -601,375 +590,74 @@ async function main(): Promise<void> {
     physicsLive,
   } = life;
 
-  // The design's own background accents in the panel's order (accent 1 =
-  // the main one): what switching the colors to custom starts from.
-  function gamutAccentHexes(): [string, string, string] {
-    const effHue = (((params.seed % 360) + params.hueShift) % 360 + 360) % 360;
-    // The DESIGN's accents (the stored palette), then the gamut the scene
-    // wears (K111: high contrast swaps the palette) is put back.
-    setGamutConfig(params.gamutArc, params.palette);
-    const accents = accentHexes(backgroundColors(BACKGROUND, effHue));
-    setGamutConfig(params.gamutArc, look("palette"));
-    return accents;
-  }
-
-  const panel = buildPanel(params, settings, {
-    onRegenerate: () => {
-      rebuild();
-      wake();
+  // K5 M5: the panel wiring (the buildPanel callbacks, applyAccessibility,
+  // handRendererLook, the resize listener) is src/app/panel_wiring.ts. Its
+  // session callbacks run only from user actions, after every closure
+  // below exists, so they come in as closures that read the current
+  // bindings at call time.
+  const { panel, handRendererLook } = wirePanel(
+    {
+      app,
+      params,
+      settings,
+      motion,
+      contrast,
+      a11y,
+      look,
+      synth,
+      confetti,
+      background,
+      dailyStore,
+      flags,
+      statsKey: STATS_KEY,
+      mazeStatsKey: MAZE_STATS_KEY,
+      finishIndicatorKey: FINISH_INDICATOR_KEY,
+      tapToPanKey: TAP_TO_PAN_KEY,
+      rebuild,
+      recolorScene,
+      syncBackground,
+      syncExploration,
+      writeParams,
+      wake: () => wake(),
+      invalidate: () => invalidate(),
+      replaySettle,
+      applyPhysicsMode,
+      physicsInputsChanged,
+      rebuildAudioMap,
+      fitToScreen,
+      updateHud: () => updateHud(),
+      showFabricWin: () => showFabricWin(),
+      restartSolve: (carry) => restartSolve(carry),
+      playDaily: (n, floating) => playDaily(n, floating),
+      showDailyStats: () => showDailyStats(),
+      saveAttempt: () => saveAttempt(),
+      dailyAttemptLive: () => dailyAttemptLive(),
+      attemptLate: () => attemptLate(),
+      get stampEl() {
+        return stamp;
+      },
+      get dailyN() {
+        return dailyN;
+      },
+      get attemptDaily() {
+        return attemptDaily;
+      },
+      get attemptRecord() {
+        return attemptRecord;
+      },
+      get hcLookChoice() {
+        return hcLookChoice;
+      },
+      get pendingWin() {
+        return pendingWin;
+      },
+      set pendingWin(v) {
+        pendingWin = v;
+      },
     },
-    onReseed: () => {
-      params.seed = newSeed();
-      rebuild();
-      wake();
-    },
-    onSetSeed: (seed: number) => {
-      if (seed === params.seed) return;
-      params.seed = seed;
-      rebuild();
-      wake();
-    },
-    onReplaySettle: () => replaySettle(),
-    onPhysicsToggle: () => {
-      writeParams(params);
-      applyPhysicsMode();
-    },
-    onStatsToggle: (visible) => {
-      stamp.style.display = visible ? "" : "none";
-      try {
-        localStorage.setItem(STATS_KEY, visible ? "1" : "0");
-      } catch {
-        // Storage unavailable: the choice just doesn't persist.
-      }
-    },
-    onMazeStatsToggle: (visible) => {
-      updateHud();
-      try {
-        localStorage.setItem(MAZE_STATS_KEY, visible ? "1" : "0");
-      } catch {
-        // Storage unavailable: the choice just doesn't persist.
-      }
-    },
-    // The next frame shows or hides the indicator / makes it inert.
-    onFinishIndicatorToggle: (visible) => {
-      try {
-        localStorage.setItem(FINISH_INDICATOR_KEY, visible ? "1" : "0");
-      } catch {
-        // Storage unavailable: the choice just doesn't persist.
-      }
-    },
-    // K198 stage 2: the head's and the minotaur's switches and the size
-    // (the next frame reads them).
-    onHeadIndicatorToggle: (visible) => {
-      try {
-        localStorage.setItem(HEAD_INDICATOR_KEY, visible ? "1" : "0");
-      } catch {
-        // Storage unavailable: the choice just doesn't persist.
-      }
-    },
-    onMinotaurIndicatorToggle: (visible) => {
-      try {
-        localStorage.setItem(MINOTAUR_INDICATOR_KEY, visible ? "1" : "0");
-      } catch {
-        // Storage unavailable: the choice just doesn't persist.
-      }
-    },
-    onIndicatorSizeChange: (scale) => {
-      try {
-        localStorage.setItem(INDICATOR_SIZE_KEY, String(scale));
-      } catch {
-        // Storage unavailable: the choice just doesn't persist.
-      }
-    },
-    onTapToPanToggle: (on) => {
-      try {
-        localStorage.setItem(TAP_TO_PAN_KEY, on ? "1" : "0");
-      } catch {
-        // Storage unavailable: the choice just doesn't persist.
-      }
-    },
-    // K120: the next frame shows or hides the move pad.
-    onMovePadToggle: (on) => {
-      try {
-        localStorage.setItem(MOVE_PAD_KEY, on ? "1" : "0");
-      } catch {
-        // Storage unavailable: the choice just doesn't persist.
-      }
-    },
-    // Stored by the setting itself; the next frame's readers and the
-    // stylesheets (the root attribute) follow at once.
-    onMotionChange: (pref) => motion.setPref(pref),
-    // K111: the Accessibility switches. Reduced motion sets the Motion
-    // setting's answer, High contrast its own preference; the subscriptions
-    // below (applyAccessibility) carry the change to the scene. Neither
-    // writes a design param, the link or the undo stack.
-    onReducedMotionToggle: (on) =>
-      motion.setPref(reducedMotionChoice(on, motion.system)),
-    onHighContrastToggle: (on) =>
-      contrast.setPref(highContrastChoice(on, contrast.system)),
-    onDebugToggle: (visible) => {
-      if (scene.debug) scene.debug.container.visible = visible;
-    },
-    onSlackChange: () => {
-      writeParams(params);
-      physicsInputsChanged();
-      wake();
-    },
-    onStyleChange: () => {
-      scene.renderer?.setWidths(params.threadWidth, look("gap"));
-      scene.fabric?.setWidths(params.threadWidth);
-      if (scene.fabric && scene.fabricController) scene.fabric.update(scene.fabricController);
-      writeParams(params);
-      physicsInputsChanged();
-      wake();
-    },
-    onTemperatureChange: () => wake(),
-    // Memory-trail mode + trail length apply LIVE: they change only the
-    // gameplay interpretation (controller flag) and the paint declaration,
-    // never the scene - no rebuild, and no wake (the paint pass runs in the
-    // asleep/paused ticker branches).
-    onTrailChange: () => {
-      if (scene.fabricController) {
-        scene.fabricController.trailMode = params.pathViz === "trail";
-      }
-      if (scene.fabric && scene.fabricController) {
-        scene.fabric.trailMode = params.pathViz === "trail";
-        scene.fabric.pathViz = params.pathViz;
-        scene.fabric.tension = params.tension;
-        scene.fabric.trailLength = params.trailLength;
-        syncExploration(scene.fabric);
-        scene.fabric.update(scene.fabricController);
-      }
-      updateHud();
-      writeParams(params);
-    },
-    // Look color controls: recolor the live scene in place (the full
-    // rebuild they used to trigger reset the knot, replayed the reveal and
-    // wiped the player's progress for a hue tweak).
-    onRecolor: () => {
-      recolorScene();
-      // The background wears the design's gamut too.
-      syncBackground();
-      writeParams(params);
-      wake();
-    },
-    // Background effect / intensity / speed / shape / colors: the layer
-    // (and the page color) only - no scene change.
-    onBackgroundChange: () => {
-      syncBackground();
-      writeParams(params);
-    },
-    backgroundGamutColors: () => gamutAccentHexes(),
-    onModeChange: () => {
-      // Mode changes alter the graph TOPOLOGY (fabric surgery, color
-      // field), which is baked in at build time, so a full rebuild is
-      // required rather than a visibility toggle.
-      writeParams(params);
-      rebuild();
-      app.canvas.style.cursor = "default";
-      wake();
-    },
-    onResetPath: () => {
-      // A winning move whose dot is still on its way counts: finish it.
-      if (pendingWin && scene.fabricController) {
-        pendingWin = false;
-        scene.fabric?.cancelMove();
-        showFabricWin();
-      }
-      // K47 (game/daily_attempt.ts resetPathAction): inside a daily's
-      // attempt - the one that will be official - Reset path is
-      // backtracking to the entrance: every run retracted like a tap would
-      // (logged, on the backtrack meter), the clock running on. It never
-      // restarts the attempt.
-      const action = resetPathAction({
-        dailyAttempt: dailyAttemptLive(),
-        official: dailyN !== null && dailyStore.hasOfficial(dailyN),
-        solved: scene.fabricController?.solved ?? false,
-        trailMode: scene.fabricController?.trailMode ?? false,
-        // K80: a real-time solve always starts over (a fresh chase), and so
-        // does one with the turn minotaur (K80 turns, section 2.10: backing
-        // out run by run past it would be suicide; a restart, not a catch).
-        // K114 call 2: and a burn race (the fuse relit): the way back to the
-        // entrance is the way into the fire.
-        realtime:
-          scene.chase !== null || scene.turnMino !== null || scene.fabricController?.fire != null,
-        // K146: so does a practice run (a past daily, not scored).
-        practice: attemptLate(),
-      });
-      if (action === "refuse") {
-        showToast("recentPath mode has no way back: keep exploring.");
-        return;
-      }
-      if (action === "backtrack" && scene.fabric && scene.fabricController) {
-        scene.fabric.cancelMove();
-        const depart = scene.fabricController.head;
-        const retraced = scene.fabricController.retreatToStart();
-        if (retraced.length > 0) {
-          // The fog stays (K100) and lifts along the way back again, each
-          // run stamped from the head's end as walking it back by hand
-          // would and as a restore of these taps will (exploreRuns).
-          scene.fabric.exploreRuns(retraced, depart);
-          // The Ariadne string keeps every pass, the way back included.
-          scene.fabric.restoreYarn(scene.fabricController.taps);
-          scene.fabric.update(scene.fabricController);
-          updateHud();
-          saveAttempt();
-          showToast("Back at the start. The clock keeps running.");
-        }
-        return;
-      }
-      // Anywhere else a fresh attempt (a daily's replay or practice run
-      // starts over).
-      if (dailyN !== null && attemptDaily === dailyN && attemptRecord === null) {
-        dailyStore.clearAttempt(dailyN);
-      }
-      // K80 turns section 2.10 (stage 2): under a minotaur, an unsolved run
-      // with a move made restarts COUNTED, not as a catch: the tallies carry
-      // to the new minotaur and its `restarts` goes up. Stage 3a: with no
-      // move made since the last restart the tallies carry too, uncounted
-      // (nothing moved), so a Reset path never launders a catch: before,
-      // a catch under minoRestart, or a counted restart, then a Reset path
-      // with no move, started a fresh minotaur at 0 catches.
-      const c = scene.fabricController;
-      if (liveMino() && c && !c.solved) {
-        const moved = c.moveCount > 0;
-        restartSolve(true);
-        const m = liveMino();
-        if (m && moved) m.restarts++;
-        updateHud();
-        return;
-      }
-      restartSolve();
-    },
-    // K80: the maze clock. The graph is the same, so no rebuild: the solve
-    // starts over in the new mode (a fresh chase, or none).
-    onClockChange: () => {
-      writeParams(params);
-      restartSolve();
-      updateHud();
-    },
-    // K80: the chase's tuning, live (the chase goes on).
-    onChaseChange: () => {
-      scene.chase?.setParams(chaseParamsOf(params));
-      // K273: the shared catch rows (minoLair) reach the turn minotaur too.
-      // Re-committing its next move under unchanged settings decides the
-      // same move (its draws are counter-based).
-      scene.turnMino?.setConfig(turnConfig(turnMinoParamsOf(params)));
-      writeParams(params);
-    },
-    // K80 turns: the turn minotaur's tuning, live (the solve goes on; its
-    // next move is committed again under the new settings).
-    onTurnMinoChange: () => {
-      scene.turnMino?.setConfig(turnConfig(turnMinoParamsOf(params)));
-      writeParams(params);
-    },
-    // K140: the finish confetti (render-only, live; off drops the pieces
-    // still in the air).
-    onConfettiChange: () => {
-      if (!params.confetti) confetti.clear();
-      writeParams(params);
-    },
-    // K98: the markers' size. One render pass (the start/exit gap slots
-    // and the markers) without waking the physics.
-    onMarkerSizeChange: () => {
-      if (scene.fabric) scene.fabric.markerSize = look("markerSize");
-      writeParams(params);
-      invalidate();
-    },
-    onPlayDaily: () => playDaily(todayNumber(), true),
-    onShowDailyStats: () => showDailyStats(),
-    // K468: a pop of the settings sheet's history entry (Android Back, or the
-    // close button handing the entry back): the entry it landed on holds the
-    // link from before the sheet opened, so write the design on screen again.
-    onSheetBack: () => writeParams(params),
-    onAudioChange: () => {
-      writeParams(params);
-      rebuildAudioMap();
-    },
-    onVolumeChange: () => {
-      writeParams(params);
-      synth.setVolume(params.volume);
-      synth.setReverb(params.reverb);
-      synth.setVoice({
-        brightness: params.brightness,
-        sustain: params.sustain,
-        shimmer: params.shimmer,
-        pickPosition: params.pickPosition,
-      });
-    },
-  });
+    scene
+  );
   camera.panelWrap = panel.pane.element.parentElement; // K198 (display none closed).
-  // K111: an Accessibility switch, or the OS setting behind one, moved.
-  // Refresh the flags every `look()` reads, then push the change through the
-  // scene without waking the physics: the new palette and route color, the
-  // casing gap, the backdrop and page, the markers (the per-frame reads pick
-  // up the flow, the fade length and the markers by themselves). The panel's
-  // rows are re-read under its own guard and the overridden ones dimmed. This
-  // never calls writeParams: an override is a view, not a design change.
-  function applyAccessibility(): void {
-    a11y.reducedMotion = motion.reduced;
-    a11y.highContrast = contrast.high;
-    panel.syncAccessibility({
-      motion: motion.pref,
-      reducedMotion: a11y.reducedMotion,
-      highContrast: a11y.highContrast,
-    });
-    if (scene.renderer && scene.ps) {
-      recolorScene();
-      scene.renderer.setWidths(params.threadWidth, look("gap"));
-    }
-    syncBackground();
-    if (scene.fabric) scene.fabric.markerSize = look("markerSize");
-    panel.markOverridden(overriddenKeys(a11y));
-    // One render pass for an asleep or frozen scene (the flow standing still
-    // or coming back, the new gap and palette). Every pass hands the
-    // renderer the worn fade and flow first (handRendererLook, K239), so the
-    // pass solves the crossing cuts with the NEW values.
-    invalidate();
-  }
-
-  // K239 (the K111 finding, "A renderer finding" part 2): the renderer takes
-  // its fade length and flow from the page's params, and the crossing cuts
-  // (fade) and the flow displacement are solved INSIDE update(). They used
-  // to be handed over by fabricTick, which runs AFTER the frame's update():
-  // the first pass of a STATIC page (physics off, or paused, no flow, no
-  // reveal - nothing ever redoes it) solved the cuts at the constructor's
-  // fade 0, about 28k px off a refreshed frame. This is the one place that
-  // does it, and it runs before EVERY update() - the load's first frame, the
-  // asleep, frozen and paused passes (an Accessibility toggle's forced pass
-  // among them) and the awake step - and in fabricTick for the readers
-  // between passes (tickPaint, the pluck footprints, the flow clock). The
-  // values are the WORN ones (`look`: Reduced motion holds the flow still,
-  // High contrast cuts the crossings crisp).
-  // The probe found the same lag in the junction rounding: the renderer's
-  // cuspRadius (1) is not the param's (3), update() builds every fan and web
-  // from it, and a static fabric page kept the cusp-1 fans (3936 px off a
-  // refreshed frame after the fade fix alone). So the other inputs update()
-  // and the paint pass read ride along: cuspRadius, the pulse spacing and
-  // reach, the hover glow and the appearance FX style.
-  function handRendererLook(): void {
-    if (!scene.renderer) return;
-    scene.renderer.fadeLength = look("fadeLength");
-    scene.renderer.flowStrength = look("flowStrength");
-    scene.renderer.flowSpeed = look("flowSpeed");
-    scene.renderer.cuspRadius = params.cuspRadius;
-    scene.renderer.pulseSpacing = params.pulseSpacing;
-    // K76 stage 2c (question 5): under the thread reveal the pulses never
-    // reach past the reveal distance.
-    scene.renderer.pulseReach =
-      params.mazeFabric && params.exploration === "threads"
-        ? Math.min(params.pulseReach, params.revealDistance)
-        : params.pulseReach;
-    scene.renderer.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
-    scene.renderer.hoverGlowWidth = clampHoverGlowWidth(params.hoverGlowWidth);
-    scene.renderer.hoverGlowLength = clampHoverGlowLength(params.hoverGlowLength);
-    scene.renderer.hoverGlowFade = clampHoverGlowFade(params.hoverGlowFade);
-    scene.renderer.hcLook = a11y.highContrast ? hcLookChoice : 0;
-    scene.renderer.appearFx = params.appearFx;
-  }
-  motion.subscribe(applyAccessibility);
-  contrast.subscribe(applyAccessibility);
-  panel.markOverridden(overriddenKeys(a11y));
   synth.setVolume(params.volume);
   synth.setReverb(params.reverb);
   synth.setVoice({
@@ -977,13 +665,6 @@ async function main(): Promise<void> {
     sustain: params.sustain,
     shimmer: params.shimmer,
     pickPosition: params.pickPosition,
-  });
-
-  window.addEventListener("resize", () => {
-    app.renderer.resize(window.innerWidth, window.innerHeight);
-    background.resize(app.screen.width, app.screen.height);
-    fitToScreen();
-    flags.push(Flag.GEOM | Flag.CAMERA); // K6-1 (shadow)
   });
 
   // Pointer tug: grab the nearest thread particle, drag it (springs carry
