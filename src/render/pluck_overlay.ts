@@ -196,6 +196,10 @@ export interface PluckRequest {
   freq: number; // The segment's pitch: the decay clock follows the voice.
   reach: number; // Lobes kept each side of the plucked one.
   span?: [number, number] | null; // Unwrapped arc span (the walk run).
+  // K397: the span's ends are hard frets (the thread reveal's solid
+  // stretch): the tapped lobe is cut at them, and a tap past one plucks the
+  // stretch inside it (pluck_model.ts segmentLobes).
+  fret?: boolean;
   beta?: number; // Pluck position in its lobe (default: from `arc`).
   delay?: number; // Seconds before the visual starts (audio latency).
   // An arc the unit must not contain (a particle the user is holding):
@@ -724,7 +728,8 @@ class PluckBlurMesh {
 }
 
 interface Lobe {
-  keyA: number; // Node keys (-1: a pseudo lobe on a node-less loop).
+  keyA: number; // Node keys (-1: a pseudo lobe on a node-less loop, or
+  // an end cut at a fret, K397).
   keyB: number;
   s0: number; // Last resolved arcs (unwrapped, s0 < s1).
   s1: number;
@@ -984,7 +989,8 @@ export class PluckOverlay {
       closed,
       req.arc,
       Math.max(0, Math.round(req.reach)),
-      req.span ?? null
+      req.span ?? null,
+      req.fret ?? false
     );
     const avoid = req.avoidArc;
     const holds = (s0: number, s1: number): boolean => {
@@ -1027,6 +1033,14 @@ export class PluckOverlay {
       this.stats.skipped++;
       this.stats.skipCore++;
       this.lastSkip = "core";
+      return false;
+    }
+    if (tapLen < LOBE_MIN_LEN) {
+      // K397: a tap past a fret whose lobe has no vibrating stretch (its
+      // hide zone fills it) stays sound-only. Unfretted, core caught it.
+      this.stats.skipped++;
+      this.stats.skipOther++;
+      this.lastSkip = "other";
       return false;
     }
     const beta = clampBeta(req.beta ?? (req.arc - t0) / tapLen);
@@ -1091,8 +1105,11 @@ export class PluckOverlay {
       const old = this.active[i];
       if (old.chain !== req.chain || old.evicting) continue;
       if (still && old.still) continue;
+      // (A lobe cut at a fret, K397, has one real key: it still matches.)
       const shares = old.lobes.some((ol) =>
-        lobes.some((nl) => nl.keyA === ol.keyA && nl.keyB === ol.keyB && ol.keyA >= 0)
+        lobes.some(
+          (nl) => nl.keyA === ol.keyA && nl.keyB === ol.keyB && (ol.keyA >= 0 || ol.keyB >= 0)
+        )
       );
       if (!shares) continue;
       if (old.still !== still) {
@@ -1104,7 +1121,7 @@ export class PluckOverlay {
       let delta = 0;
       if (closed) {
         for (const ol of old.lobes) {
-          if (ol.keyA < 0) continue;
+          if (ol.keyA < 0 && ol.keyB < 0) continue;
           const nl = lobes.find((q) => q.keyA === ol.keyA && q.keyB === ol.keyB);
           if (!nl) continue;
           delta = Math.round((nl.s0 + nl.shift - (ol.s0 + ol.shift)) / total) * total;
@@ -1506,7 +1523,8 @@ export class PluckOverlay {
     const byKey = new Map<number, PluckNode>();
     for (const n of host.nodes(p.chain)) byKey.set(n.key, n);
     for (const l of p.lobes) {
-      if (l.keyA < 0) continue; // Pseudo lobe: keeps its stored arcs.
+      // A pseudo lobe, or one cut at a fret (K397), keeps its stored arcs.
+      if (l.keyA < 0 || l.keyB < 0) continue;
       const a = byKey.get(l.keyA);
       const b = byKey.get(l.keyB);
       if (!a || !b) {

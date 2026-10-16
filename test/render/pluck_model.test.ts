@@ -522,6 +522,59 @@ describe("lobe segmentation", () => {
     expect(pseudo[0].s0).toBeCloseTo(5.5, 9);
     expect(pseudo[0].s1).toBeCloseTo(8.5, 9);
   });
+
+  // K397: under the thread reveal the span is the solid stretch, and its ends
+  // are hard frets: a tap's vibration stops at a stub's solid end.
+  it("fretted (K397): the span's ends cut the tapped lobe", () => {
+    const nodes = [1, 3, 6, 8];
+    // Unfretted, the tapped lobe 3-6 runs past the span's end at 5.
+    expect(spans(segmentLobes(nodes, 10, true, 4, 2, [2, 5]))).toEqual([[3, 6, 0]]);
+    // Fretted, it stops there: the cut end has no node, the other keeps its.
+    const hi = segmentLobes(nodes, 10, true, 4, 2, [2, 5], undefined, true);
+    expect(spans(hi)).toEqual([[3, 5, 0]]);
+    expect(hi[0]).toMatchObject({ a: 1, b: -1 });
+    // The low fret, with the neighbor inside the span kept.
+    const lo = segmentLobes(nodes, 10, true, 5, 1, [4, 8], undefined, true);
+    expect(spans(lo)).toEqual([
+      [4, 6, 0],
+      [6, 8, 1],
+    ]);
+    expect(lo[0]).toMatchObject({ a: -1, b: 2 });
+    // An end within eps of a fret keeps its node.
+    const at = segmentLobes(nodes, 10, true, 4, 0, [3, 6], undefined, true);
+    expect(at[0]).toMatchObject({ a: 1, b: 2, s0: 3, s1: 6 });
+    // Open chains too.
+    const open = segmentLobes([0, 2, 5, 9], 9, false, 3, 1, [1, 4], undefined, true);
+    expect(spans(open)).toEqual([[2, 4, 0]]);
+    expect(open[0]).toMatchObject({ a: 1, b: -1 });
+  });
+
+  it("fretted (K397): a tap past a fret (in the fade) plucks the stretch inside it", () => {
+    const nodes = [1, 3, 6, 8];
+    // Past the high fret: the same stretch as a tap inside.
+    expect(spans(segmentLobes(nodes, 10, true, 7, 1, [2, 5], undefined, true))).toEqual([
+      [3, 5, 0],
+    ]);
+    // Nearer the span's next copy across the seam: that copy's low end.
+    const seam = segmentLobes(nodes, 10, true, 9.5, 1, [2, 5], undefined, true);
+    expect(spans(seam)).toEqual([[12, 13, 0]]);
+    expect(seam[0]).toMatchObject({ a: -1, b: 1 });
+    // A fret on a node: the lobe inside the span, from either side.
+    const onLo = segmentLobes(nodes, 10, true, 2, 1, [3, 5], undefined, true);
+    expect(spans(onLo)[0]).toEqual([3, 5, 0]);
+    expect(onLo[0]).toMatchObject({ a: 1, b: -1 });
+    const onHi = segmentLobes(nodes, 10, true, 7, 1, [4, 6], undefined, true);
+    expect(spans(onHi)[0]).toEqual([4, 6, 0]);
+    expect(onHi[0]).toMatchObject({ a: -1, b: 2 });
+    // Open chains: clamped to the span.
+    expect(spans(segmentLobes([0, 2, 5, 9], 9, false, 7, 1, [1, 4], undefined, true))).toEqual([
+      [2, 4, 0],
+    ]);
+    // A node-less loop's pseudo lobe stays inside the span.
+    expect(spans(segmentLobes([], 10, true, 7, 1, [2, 5], undefined, true))).toEqual([
+      [3.5, 5, 0],
+    ]);
+  });
 });
 
 // K77: the base collapse's depth profile, rounded so no wedge survives.
@@ -968,6 +1021,31 @@ describe("a tap inside a junction core (K235)", () => {
     expect(t.core).toBe(false);
     // A loop too short to hold a lobe has no tapped lobe at all.
     expect(tapLobes([], 0.04, true, 0.02, 1).tapped).toBeNull();
+  });
+
+  it("fretted (K397): the fret end has no hide zone, and a tap past it is never a core", () => {
+    const nodes = [node(1), node(3, 0.5), node(6), node(8)];
+    const t = tapLobes(nodes, 10, true, 4.5, 1, [2, 5], true);
+    expect(t.tapped).toMatchObject({ a: 1, b: -1, s0: 3, s1: 5 });
+    expect(t.vibrating![0]).toBeCloseTo(3 + 0.5 + HIDE_RAMP, 12);
+    expect(t.vibrating![1]).toBeCloseTo(5, 12);
+    expect(t.core).toBe(false);
+    // A stub whose solid part ends inside a junction core: a tap there is a
+    // core (K235: silent); a tap past the fret, in the fade, is not, so it
+    // sounds, and the overlay skips it as "other" (nothing vibrates).
+    const inCore = tapLobes(nodes, 10, true, 3.61, 1, [2, 3.62], true);
+    expect(inCore.vibrating![1] - inCore.vibrating![0]).toBeCloseTo(0.02, 9);
+    expect(inCore.core).toBe(true);
+    const inFade = tapLobes(nodes, 10, true, 5, 1, [2, 3.62], true);
+    expect(inFade.tapped).toMatchObject({ a: 1, b: -1 });
+    expect(inFade.tapped!.s0).toBeCloseTo(3, 12);
+    expect(inFade.tapped!.s1).toBeCloseTo(3.62, 12);
+    expect(inFade.core).toBe(false);
+    // The same across the seam (the tap a loop away) and on an open chain.
+    expect(tapLobes(nodes, 10, true, 13.61, 1, [2, 3.62], true).core).toBe(true);
+    const open = [node(0), node(3, 0.5), node(6), node(9)];
+    expect(tapLobes(open, 9, false, 3.61, 1, [2, 3.62], true).core).toBe(true);
+    expect(tapLobes(open, 9, false, 5, 1, [2, 3.62], true).core).toBe(false);
   });
 });
 

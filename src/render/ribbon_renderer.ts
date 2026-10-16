@@ -4004,6 +4004,9 @@ export class RibbonRenderer {
   // mid-reveal, or nothing to vibrate). K76 stage 2c: under the thread
   // reveal the unit is clipped to the thread that shows around the plucked
   // point (exploreShownSpan), and a pluck on hidden thread is sound-only.
+  // K397: and to that stretch's solid part (exploreSolidSpan), whose ends
+  // are hard frets: the vibration stops at a stub's solid end, and a tap in
+  // a fade plucks the solid stretch beside it (sound-only when none).
   pluck(req: {
     chain: number;
     ctrl?: number;
@@ -4031,10 +4034,14 @@ export class RibbonRenderer {
       );
     const arc = req.arc ?? ctrlArc(req.ctrl ?? 0);
     let sc = req.spanCtrl ?? null;
+    let fret = false;
     if (this.explorePieces && !this.exploreWhole[req.chain]) {
       const at = req.ctrl ?? this.ctrlAtArc(samples, arc);
       sc = this.exploreShownSpan(req.chain, at, sc, len, closed);
       if (!sc) return false;
+      sc = this.exploreSolidSpan(req.chain, at, sc, len, closed);
+      if (!sc || !(sc[1] > sc[0])) return false;
+      fret = true;
     }
     let span: [number, number] | null = null;
     if (sc) {
@@ -4054,6 +4061,7 @@ export class RibbonRenderer {
       freq: req.freq,
       reach: req.reach,
       span,
+      fret,
       beta: req.beta,
       delay: req.delay,
       avoidArc:
@@ -5348,6 +5356,57 @@ export class RibbonRenderer {
       const n = Math.min(hi0, hi + STEP);
       if (!at(n)) break;
       hi = n;
+    }
+    return [lo, hi];
+  }
+
+  // K397: the solid part (unwrapped ctrls, in `shown`'s frame) of a shown
+  // stretch (exploreShownSpan's) nearest a chain ctrl: the pieces' solid
+  // parts inside it, the one holding the ctrl or else the nearest, grown
+  // through any that meet it. Null when none lies inside (only a fade shows).
+  private exploreSolidSpan(
+    chain: number,
+    ctrl: number,
+    shown: [number, number],
+    len: number,
+    closed: boolean
+  ): [number, number] | null {
+    const l = this.exploreByChain.get(chain);
+    if (!l) return null;
+    const [s0, s1] = shown;
+    const mid = 0.5 * (s0 + s1);
+    let u = ctrl;
+    if (closed) u += len * Math.round((mid - u) / len);
+    const iv: Array<[number, number]> = [];
+    for (const p of l) {
+      const base = closed ? len * Math.round((mid - 0.5 * (p.c0 + p.c1)) / len) : 0;
+      for (const k of closed ? [-1, 0, 1] : [0]) {
+        const a = Math.max(s0, p.c0 + base + k * len);
+        const b = Math.min(s1, p.c1 + base + k * len);
+        if (b >= a) iv.push([a, b]);
+      }
+    }
+    if (iv.length === 0) return null;
+    let lo = 0;
+    let hi = 0;
+    let bd = Infinity;
+    for (const [a, b] of iv) {
+      const d = Math.max(a - u, u - b, 0);
+      if (d < bd) {
+        bd = d;
+        lo = a;
+        hi = b;
+      }
+    }
+    for (let grew = true; grew; ) {
+      grew = false;
+      for (const [a, b] of iv) {
+        if (a <= hi + 1e-3 && b >= lo - 1e-3 && (a < lo || b > hi)) {
+          lo = Math.min(lo, a);
+          hi = Math.max(hi, b);
+          grew = true;
+        }
+      }
     }
     return [lo, hi];
   }
