@@ -282,6 +282,15 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   escape, under the perf lock, with THROTTLE=n for CDP CPU throttling;
   EXTRA appends link keys, VIEWPORT=phone a 412x915 phone viewport).
   Probe links: `?<seed>&am=instant&fi=fuse`. Hook: `__knotFabric().fire`.
+  Stage 2, the real-time fire (2026-10-15): `.claude/probes/K114/stage2/`
+  holds `rt_page.mjs <base> <outDir> still|race|perf [seeds]` (env CLOCK,
+  EXTRA, THROTTLE, LABEL; VIEWPORT=phone is phonemouse; MIDSHOT=n shoots
+  the race after move n; SUPPRESS=hud|fire no-ops the HUD lead's writes
+  or drawFire), `perf_batch.ps1` and `perf_attr.ps1` (perf lock),
+  `burn_sim_rt.ts` (burn_sim.ts plus think time) and `vref_probe.mjs`.
+  GOTCHA: a real-time race does not wait for the probe. A shot between
+  taps is think time: the tight race (`&fsp=0.95&fdl=0`, closest call
+  0.98) escapes without one and burns at the shot with it.
 - K111 stage 4 (2026-10-14), hover probes: a TOUCH press on a choice
   lights nothing (main.ts only sets pendingTap), so a phone-size hovered
   choice needs a MOUSE at the phone viewport (`phonemouse`: 411x753 dsf
