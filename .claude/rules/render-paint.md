@@ -88,7 +88,15 @@ only with the files it is about; `render.md` lists the area's other files.
   different world distances. uKReach = (reach, fade) windows kPulseV:
   1 - smoothstep over the last PULSE_REACH_FADE 1.0 (at most half the
   reach). A FIXED fade length, because a share of the reach dimmed a long
-  reach's crests over its whole second half. The hover stops at the reach
+  reach's crests over its whole second half. K480 stage 2 (2026-10-16):
+  the trains BRANCH to the reach - past a short first run the light
+  carries through its far junction into every run out of it (route_plan
+  `litArms`; a PULSE item's T0.w = dist0, its arc from the head, T1.z =
+  cont, no end fade where it carries on), and kPulseV (shader + mirror,
+  parity in paint_gameplay.test.ts) phases by the global distance, so
+  crests cross junctions in phase; a hovered tap's route arms are
+  hovered the whole way. Defaults (dist0 0, cont false) are the old
+  arms bit for bit. The hover stops at the reach
   too and fades over the same window (K93, 2026-10-14; Levi: "hover should
   stop at pulseReach (and fade-out toward the end, same as pulseReach)"):
   kReachWin in kPulseV's hovered branch, in every path mode, K120's

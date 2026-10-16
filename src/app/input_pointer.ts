@@ -433,7 +433,7 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
     return scene.fabric.setGlow(hit ? hit.chain : -1, hit ? hit.ctrl : 0);
   };
   const clearGlow = (): void => {
-    if (scene.fabric && scene.fabricController && scene.fabric.setGlow(-1, 0)) {
+    if (scene.fabric && scene.fabricController && (scene.fabric.setGlow(-1, 0) || scene.fabric.setHoverRoute(null))) {
       scene.fabric.update(scene.fabricController);
     }
   };
@@ -641,8 +641,17 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
       // pointer cursor, the head's wait cue, no choice lit and no glow.
       const zone = inWaitZone(x, y);
       setWaitCue(zone);
-      // K480: past the choices, the hover lights the run a tap would
-      // finish (targetAt's tapped run; the whole route lights in stage 2).
+      // K480: past the choices, the hover lights the whole route a tap
+      // would take (stage 2), the tapped run wearing the rim glow.
+      const target = zone
+        ? null
+        : scene.fabric.targetAt(
+            x,
+            y,
+            scene.fabricController,
+            pickRadius(e.pointerType, true),
+            tapReach()
+          );
       const eid = zone
         ? -1
         : (scene.fabric.targetAt(
@@ -653,7 +662,8 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
             tapReach()
           )?.eid ?? -1);
       const glow = zone ? scene.fabric.setGlow(-1, 0) : setGlowAt(x, y, eid, e.pointerType);
-      if (scene.fabric.setHover(eid) || glow) scene.fabric.update(scene.fabricController);
+      const routeChanged = scene.fabric.setHoverRoute(zone ? null : (target?.route ?? null));
+      if (scene.fabric.setHover(eid) || glow || routeChanged) scene.fabric.update(scene.fabricController);
       app.canvas.style.cursor =
         zone || eid >= 0
           ? "pointer"
@@ -700,7 +710,7 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
       // A lifted finger leaves no hover or glow behind (touch has no
       // pointer to move off the run).
       const glow = !!scene.fabric && scene.fabric.setGlow(-1, 0);
-      if (scene.fabric && scene.fabricController && (scene.fabric.setHover(-1) || glow)) {
+      if (scene.fabric && scene.fabricController && (scene.fabric.setHover(-1) || scene.fabric.setHoverRoute(null) || glow)) {
         scene.fabric.update(scene.fabricController);
       }
       if (touches.size === 0) touchLocked = false;

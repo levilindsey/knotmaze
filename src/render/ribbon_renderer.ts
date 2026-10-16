@@ -283,6 +283,8 @@ export interface PulseArm {
   cFar: number; // Ctrl at the far end (direction + extent).
   inward: boolean; // Crest slides INTO the junction (the arrival run).
   hovered: boolean; // Steady bright highlight instead of the pulse.
+  dist0?: number; // K480 s2: arc from the head to this arm's junction (branched arms).
+  cont?: boolean; // K480 s2: the light carries past the far end (no end fade).
 }
 // A small gold disc of thread around one occurrence of a traversed
 // junction. At a fusion several ribbons overlap; painting every arm's
@@ -3507,7 +3509,7 @@ export class RibbonRenderer {
       const i = items.length / 8;
       const flags =
         (p.inward ? ITEM_FLAG.INWARD : 0) | (p.hovered ? ITEM_FLAG.HOVER : 0);
-      items.push(PAINT_ITEM.PULSE, p.cJunction, p.cFar, 0, 0, flags, 0, 0);
+      items.push(PAINT_ITEM.PULSE, p.cJunction, p.cFar, p.dist0 ?? 0, 0, flags, p.cont ? 1 : 0, 0);
       touch(p.chain, Math.min(p.cJunction, p.cFar), Math.max(p.cJunction, p.cFar), i);
     }
     // K76: the thread reveal's visibility pieces (explore_glsl.ts), but

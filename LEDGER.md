@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K515.
+Next free ID: K516.
 
 ## Waiting on Levi
 
@@ -107,6 +107,8 @@ Next free ID: K515.
 - **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
   and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
   keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
+
+- **K515** · K480 stage 2's look, built as recommended (Levi may change): a hovered tap's whole route at the hover breath, its tapped run keeping the rim glow, non-route branched arms keeping their trains; plus page-probing the hover route with a real pointer (desktop, and in K500's phone pass). `docs/design/K480.md` ("Stage 2 handoff").
 
 ## In progress
 
@@ -303,8 +305,8 @@ Binding for every stage:
 Running agents are listed under In progress, each with its own next step.
 The queue (coordinator, overnight 2026-10-15/16):
 1. Overnight run 2 done (2026-10-16): K507 (7c5daa9), K502+K505 (66fe538), K499 gamepad (9a6f63d, close dde7b83), K510/M6 (c268a9b, close 8808a15), K6-2 with K509 measured 0 px (926fdfe); phone pass: K500 targetAt measured (no budget problem), K156 frames blocked as K513 (fixed 2026-10-16, see Done). Waiting-on-Levi untouched.
-2. Next: K480 stage 2 (the light: pulses + hover branching to the reach, shader + CPU mirror; brief from `docs/design/K480.md` Stage 1 handoff),
-   then K481 stage 2 (param/row, animation, telegraph) plus the K501 difficulty call for Levi.
+2. K480 stage 2 done (2026-10-16, the light: pulses + hover branching to the reach, shader + CPU mirror; `docs/design/K480.md` Stage 2 handoff; look call K515). Next: K481 stage 2 (param/row, animation, telegraph) plus the K501 difficulty call for Levi.
+
 3. K6-3 (= K24) next; G3-1 waits on K399. Overnight residuals wait in their sections; K513 fixed the gate; the K156 frames spot check ran 2026-10-16 (A/A 65a7787, all within noise).
 
 
@@ -335,9 +337,9 @@ merged):
 
 Every other item below waits on the trigger it names.
 
-- **K480** · Multi-run taps (Levi 2026-10-15): a tap on any lit run within `pulseReach` walks there
-  run by run, stopping when a warning matters; pulses and hover branch to the same reach. Opus, after
-  stage 1 done in 3b1612f (2026-10-15); stage 2 (the light: pulses + hover branching to the reach, shader + CPU mirror) next, brief from `docs/design/K480.md` Stage 1 handoff; residuals K500, gamepad K499.
+
+
+
 - **K481** · Turns by length (Levi 2026-10-15): a toggle moves the turn minotaur its speed x your
   move's length, with mid-run stops, contact by thread distance and a telegraph tick per choice; tuned
   on the turn sim. Stage 1 (model + sim) done in 48fc9ee (2026-10-15); stage 2 (param/row, animation, telegraph) next plus the K501 difficulty call; brief `docs/design/K481.md`.
@@ -1254,6 +1256,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   ENDS; docs/design/K466.md Handoff).
 
 ## Done
+
+- **K480** · Multi-run taps (Levi 2026-10-15): stage 2, the light - pulses and hover branch through short runs to `pulseReach` (`litArms` in route_plan.ts; `kPulseV` phases by global distance in shader + CPU mirror), and a hover lights the whole route its tap would take. Done (stage 2, this commit, 2026-10-16; stage 1 in 3b1612f; evidence `.claude/probes/K480/stage2/`). Residuals K500, look K515.
 
 - **K513** · Phone-pass frames gate: the 88-row flat strip was Android capture tiling (landscape surface 2125x1017 repeated every 1017 rows), not a blank render; `emulation.mjs` re-checks a strip at dpr 1 and frames then ran A/A 2 reps on 65a7787 within noise. Done (this commit, 2026-10-16; evidence `.claude/probes/K513/`, `.claude/probes/rounds/2026-10-16-65a7787/`).
 - **K509** · K6-1 Q2 sleep-trip GEOM miss measured 0 px (knot fw=0 with worker, first-sleep shot vs after invalidate(), controls 0 px, before and after K6-2) - GEOM gating loses nothing. Done in 926fdfe (2026-10-16; evidence `.claude/probes/K6/K6-2/`).
