@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K517.
+Next free ID: K519.
 
 ## Waiting on Levi
 
@@ -232,7 +232,7 @@ Next free ID: K517.
   - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `14d34b5`
   - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (51f7480), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
-  - next: stage 3 opens with K385's probes: (a) the parallel build under `--enable-features=ANGLEPerContextBlobCache` (`trace_intro.mjs --restart`), then (b) late enable against the blocking build (the cold still page, presents, the warm restart). Then the cold load's still page before the trefoil (0.40-3.19 s, the warm-up's one status read: read it after the trefoil shows, unless (b) ends it), then K366's first tap, then the phone's measures with K156 (programs persist? Android's cache cap)
+  - next: stage 3 probes done 2026-10-16 (`.claude/probes/K307/stage3/`): (a) confirmed the blob-cache mechanism, (b) late enable works flag-free and is the shippable branch — Levi's call in K517 (ship (b), file crbug (d)). Then stage 3 proper, K366's first tap, and the phone's measures with K156 (programs persist? Android's cache cap)
   - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff" and "K385" (the mechanism and the plan)
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (b3917ca..f6d10e3): the four G3
@@ -264,7 +264,7 @@ Next free ID: K517.
   - owner: nobody since 2026-10-15 16:17 (merged; agent `a2806c50953dec23d` of claude session 05e60da0)
   - branch: mainline; last commit: `e0bcad8`
   - evidence: `.claude/probes/K397/stage3/`
-  - next: teach K76's reveal census `exploreCutCoverCpu` and run it on master; then the phone and Levi's link on the merged build (`docs/design/K397.md`, "Stage 3 handoff")
+  - next: census taught `exploreCutCoverCpu` and run on master 2026-10-16 (`.claude/probes/K397/stage4/out/census_m2.json`): GAPS all pass, PROOF vacuous (0 qualifying px), 8 failures pattern-match the K6-3 on-demand loop ignoring direct probe mutations — port the census per K518, then the phone and Levi's link on the merged build (`docs/design/K397.md`, "Stage 3 handoff")
   - brief: `docs/design/K397.md`
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
@@ -300,6 +300,8 @@ The queue (coordinator, overnight 2026-10-15/16):
 2. K480 stage 2 done (2026-10-16, the light: pulses + hover branching to the reach, shader + CPU mirror; `docs/design/K480.md` Stage 2 handoff; look call K515). Next: K481 stage 2 (param/row, animation, telegraph) plus the K501 difficulty call for Levi.
 
 3. K6-3 (= K24) done in 1654ef0 (2026-10-16; phone check K516); G3-1 waits on K399. Overnight residuals wait in their sections; K513 fixed the gate; the K156 frames spot check ran 2026-10-16 (A/A 65a7787, all within noise).
+
+4. Overnight run 3 done (2026-10-16): K513 (6eb0a84), K480 stage 2 (6aaed30), K6-3 (1654ef0, close 7c952cd) all on master; K307 stage 3 probes point Levi at branch (b) late enable (K517); K397's census runs but its dots-cut PROOF stays vacuous and its probe needs a frame-flag port (K518). K481 stage 2 still waits on Levi's K501 difficulty call; G3-1 on K399; K74 stage 3 (K402) and the thread-reveal chain (K76 2c, K268 stage 2, K290, K76 2d) remain queued. Waiting-on-Levi untouched.
 
 
 Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
@@ -1031,6 +1033,9 @@ Every other item below waits on the trigger it names.
 - **K512** · The cross-build threads round trip's 0 px expectation only holds across builds whose threads defaults match: K466 (2aea912) added `rve`/`rvg` with new defaults, so c22de79-vs-post-K466 pairings differ by 43,385 px unless the query pins the legacy look (`&rve=under&rvg=soft`, 0 px both ways, K507). Future prescribed pairings spanning 2aea912 must pin both, or expect the frontier diff.
 - **K508** · K5 R2's checks_r2.ps1/checks_threads.ps1 hardcode the deleted worktree agent-a695f82540244625a and cannot rerun as-is; K463's repo-relative k463_checks.ps1 supersedes them for these two checks.
 - **K514** · Looks-phase screenshots still tile in landscape (K513 leftover): `shotViewport` captures at the emulated dpr 2.625, so while the phone sits in landscape (capture surface 2125x1017) looks sheets repeat the surface every 1017 rows and are not evidence; the frames gate's dpr-1 recheck does not cover them. Capture looks at a surface-fitting scale, stitch, or require portrait sitting for a looks phase. `.claude/probes/K513/`, lore `probes-phone.md` (K513).
+- **K516** · K6-3's phone check (Levi's question 1): in K156's next round confirm the 30 fps rest cadence's pulses read smooth on the phone, measure rest frames drawn/s on knot fw=0 and fabric defaults, and run the frame-timing probes (k147, k7_latency, K174/K114 perf, k96_cam) once in continuous mode (`__knotLoopMode` pre-load). Desktop done in 1654ef0.
+- **K517** · K385 decided by probes (K307 stage 3, 2026-10-16): (a) `--enable-features=ANGLEPerContextBlobCache` confirms the mechanism (parallel warm restart 0.803 s vs 3.02 s without); (b) late enable works flag-free (cold live page 166 presents/55.3/s, warm restart 0.806 s) — Levi's call: ship (b) in K307 stage 3 proper, file crbug (d); evidence `.claude/probes/K307/stage3/`.
+- **K518** · K397/K76 census drift after K6-3 (1654ef0): census2d's direct `gaps.upload()`/`setVis` mutations no longer redraw under the on-demand frame loop (mode-off slot clearing changes 0/353 crossings; visitAll/mode-off-again/attribution restores differ 100k–463k px on master 7c952cd), and its PROOF is vacuous (3 shaped slots, 0 qualifying px per look) — port the census to poke a frame flag (or `__knotLoop` continuous) and re-run for a real dots-cut verdict; evidence `.claude/probes/K397/stage4/out/census_m2.json`.
 - **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 3b1612f; K348's mid-move wait-tap leftover is now intentional for pointers.
 
 ## Approved, to schedule (2026-10-11)
