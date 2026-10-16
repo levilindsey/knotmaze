@@ -432,6 +432,15 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   frame from its first draw to after gl.finish() (frameMs, split into
   submit and finish), counts draws and update() ms per call, records the
   caps and exits 1 on a lost context.
+- K397 (2026-10-15), the thread reveal's stub ends:
+  `.claude/probes/K397/` (stage 1) and `stage2/` (`survey.mjs`, the
+  dots at every frontier; `zoomcrops.mjs`, a crossing's cut against the
+  slot rejected; `pluck_stub.mjs`, a tap's blur by stretch: solid, fade,
+  past; `k397.mjs`, the shared walk and freeze). A SLOT REJECTION (a
+  "no cut" frame) holds only on an `am=instant` link: under an intro the
+  reveal rewrites every slot's vis each frame. `run_locked.ps1` takes
+  `-What` and `-Cmds` by name: a third positional string binds to
+  `-MaxWaitMin` and fails to parse; call it with `&` and `npx.cmd`.
 
 ## Census and diagnosis rules
 

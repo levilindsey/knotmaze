@@ -221,11 +221,13 @@ slot. Design and calls: `docs/design/K268.md` ("Stage 1 design", "Stage
   which misplaces the projection by up to the half-width). EXPLORE_GAP_CUT,
   after `if (bk < 0) continue;`: `A = polyStart + min(bk + bt, kLast) *
   polyStep` (texel 4, self-exclusion's formula) and `gst =
-  gapStrength(P2.x) * exploreCutCover(row, A, pxW)`; 0 skips the slot.
-  The look is ONE function, `kExploreLook(look, v, u, s, lat, sideFw,
-  pxW)`, called by the thread's main and by the cut at lat 0 (dots and
-  beacon cut a casing per dot; fray cuts by its center fiber, so its cut
-  flickers along the fiber). The glow look's tint stays in main. CPU
+  gapStrength(P2.x) * exploreCutCover(row, fl, A, lat, pxW)` (K397:
+  `lat = sqrt(best)`, the fragment's distance from the over centerline);
+  0 skips the slot. The look is ONE function, `kExploreLook(look, v, u,
+  s, lf, lat, sideFw, pxW)`, called by the thread's main and by the cut
+  at lat 0 (fray cuts by its center fiber, so its cut flickers along the
+  fiber); since K397 the dots and beacon cut by the dots' own shape
+  instead (THE DOTS, at the end). The glow look's tint stays in main. CPU
   twins: `paint_math.ts` kExploreLookCpu, exploreCutCoverCpu.
 - THE CLASSIFIER (`classifyExploreCut`; `applyExploreGaps` runs it on
   every declaration change and after every solve, live crossing slots
@@ -380,10 +382,11 @@ gameplay-links.md's EXPLORATION PARAMS.
   cap and in every other look); the thread's main mixes rgb to white by
   it right after the call, before the char, so a burnt dot still
   darkens. The cap keeps the thread's color; the beacon's dots follow
-  (the same code); the shaped cut draws its dots at full strength (it
-  calls kExploreLook). CPU twins: `kExploreLookCpu(..., hc, out)` and
-  `exploreCutCoverCpu(..., hc)` in paint_math.ts, held by
-  explore_cut.test.ts "K76 stage 2d: High contrast dots" (5 tests).
+  (the same code); the shaped cut draws its dots at full strength
+  (exploreCutCover's dots branch, since K397). CPU twins:
+  `kExploreLookCpu(..., hc, out)` and `exploreCutCoverCpu(..., hc)` in
+  paint_math.ts, held by explore_cut.test.ts "K76 stage 2d: High
+  contrast dots" (5 tests).
 - KEPT AS 2b BUILT, calls for Levi: K268's draw order (K286). (The
   joints' binary pop at 0.98 became THE JOINT FADE in K268 stage 2.)
 - MEASURED (2026-10-15, 53a161f, `.claude/probes/K76/stage2c/`;
@@ -624,3 +627,77 @@ plus the `burn` FX. Brief and record: `docs/design/K114_burn.md`, "Stage
   0.04-0.1); at 4x 0.85-0.89 and 0.8-0.9 (master 0.26-0.29 and 0.2-0.4).
   Desktop contact sheet (the lit fuse, early, mid and late; gone and
   char; the reveal off and on): `.claude/probes/K290/stage3b/out/sheet/`.
+
+## THE DOTS (K397 stage 2, 2026-10-15)
+
+Levi's call (c) (K423): "always two beacon dots, sized to fit the fade".
+It fixes K397's issues 1 and 2 (a stub's end showed one dot, two, or a
+dot and a half, cut square by the fade's end: the old fixed pitch of
+0.95 tw against a hard end) and 5 (a dark band across a crossing under
+a dot). Diagnosis, brief and handoff: `docs/design/K397.md`.
+
+- THE SHAPE (`kExDotsSd(s, la, lf)`, explore_glsl.ts; CPU twin
+  `kExDotsSdCpu`, paint_math.ts): the signed world distance from a
+  point of a frontier fade (s along from the solid end, la across, lf
+  the fade's arc length) to the nearer of a CAP and TWO DOTS. lf comes
+  from `kExEnd`, the ctrl where the fade ends, which kExploreAt now sets
+  beside kExSolid (`exLf = abs(kArcU(kc, kExEnd) - exA0)` in main). g =
+  clamp(lf / (EXPLORE_DOTS_SPAN 2.15 tw), 1e-3, 1). The cap is half an
+  ellipse, 0.5 tw across and 0.5 tw g along, so it meets the thread's
+  edge at the solid end (it assumes the half-width is 0.5 tw; where a
+  width multiplier is not 1 a small step shows there). The dots sit at
+  EXPLORE_DOT_AT (0.44, 0.88) of lf, radii EXPLORE_DOT_R tw g (0.2472,
+  0.1944: the old 0.3 (1 - 0.4 u) at those u). At lf = 2.15 tw that is
+  the old dotted line's cap and first two dots (0.95 and 1.9 tw); below,
+  everything scales by g, so the second dot's far edge stays at 0.97 lf
+  and the fade's end never cuts a dot. It sets kExDot (1 when a dot is
+  nearer). The dots and beacon looks (`kExploreLook(look, v, u, s, lf,
+  lat, sideFw, pxW)`) are clamp(-sd / pxW + 0.5) times the strength,
+  1 - 0.55 u² (1 under High contrast).
+- A LOOK CHANGE (for Levi's review): a fade over 2.15 tw used to repeat
+  a dot every 0.95 tw and now has two, spread along it; High contrast
+  too.
+- THE CUT BY THE DOTS' SHAPE: the shaped cut used to call the look on
+  the over thread's centerline (lat 0), so a dot cut the full casing
+  width wherever the centerline lay inside it: a band a casing wide
+  across the under thread (issue 5). Now, for a dots or beacon frontier,
+  `exploreCutCover(row, fl, A, lat, pxW)` (lat = sqrt(best), the
+  fragment's distance from the over centerline) returns only the look's
+  strength, sets `kExCutOn` and `kExCutSd = kExDotsSd(bs, lat, bf)`,
+  and EXPLORE_GAP_SHAPE_GLSL (`if (exShaped && kExCutOn) d = hO +
+  kExCutSd;`, an anchor before ANCHOR_CASING, placed by withExplore and
+  by exploreGapEdits) measures the casing from that shape: a casing ring
+  around each dot and around the cap. Past the fade's end the cover
+  stays on at u = 1 (strength 0.45), so the second dot's ring is whole
+  there too. The fans skip master's inside-silhouette branch while it
+  is on (`best < exSure2 && !kExCutOn`). A MAX slot takes the winning
+  ramp's dots (the best-of, ties to a solid ramp), a MIN slot the lower
+  end's. CPU twin: `exploreCutCoverCpu(prof, A, look, tw, pxW, hc, lat,
+  out)` (`out.on`, `out.sd`).
+- TESTS: explore_cut.test.ts "K397: the dots fit the fade and cut by
+  their own shape" (5: a cap and exactly two dots in every fade, the old
+  layout at SPAN, a signed distance meeting the thread's edge, the cut
+  at lat and past the end, the GLSL against the twin);
+  explore_strip.test.ts "measures a dots cut's casing from the dots'
+  shape (K397), once, before the casing"; paint_explore.test.ts's
+  anchors. K299's ROUNDED_QUOTIENTS lost the old pitch's
+  `floor(s / sp + 0.5)`.
+- MEASURED (desktop RX 6800 XT under the perf lock, the phone's 411x753
+  at 2.625, `?<seed>&xp=threads&snd=none&fw=0&am=instant`, 12-14 moves;
+  `.claude/probes/K397/stage2/`). SURVEY (`survey.mjs`; 2gozcj, k397a,
+  1x2y3z, bead5: 41 frontiers, the same fades as stage 1): dots cut by
+  the fade's end 10 -> 0, and every one stage 1 found cut is whole (e.g.
+  2gozcj f6's second dot, cut at s 1.07, is now [0.83, 1.07]). Two
+  flags remain, 1x2y3z f1 and f6 (the drawn dots end at about 0.85 of
+  the fade, the rule's 0.97), identical in stage 1: inferred an
+  occlusion, not inspected. THE
+  CUT (`zoomcrops.mjs`, 2gozcj f6, slot 174, the over pass at vis
+  0.488): 11160 px change against the slot rejected (stage 1: 9718), all
+  darker, at s 0.2-0.83: a ring around dot 1 and a short cut at the cap,
+  where the band was (`out_s2/zoom/2gozcj_f6_s174_ab.png`). Program text:
+  render-shaders.md. Not run: a K268-style census of the new cut, the
+  K76 2d census, the phone, Levi's link.
+- PROBE NOTES: the survey's s runs 0.02-0.06 ahead of the shader's fade
+  end, and it skips segments that start before s 0.3, so a fade under
+  about 0.9 world reports its second dot only. A slot rejection holds
+  only on an `am=instant` link (probes.md, K397).

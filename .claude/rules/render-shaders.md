@@ -122,6 +122,15 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   (`.claude/probes/K290/stage3b/out/variants/`, K76 stage 2d's
   `compile_glsl.mjs`), and the desktop's warm-up links the three explore
   variants in its first wave. No new program site or variant.
+- **The dots grew all four** (K397 stage 2, 2026-10-15, f2b132b;
+  render-explore.md, THE DOTS): the section's explore variant 58529 ->
+  60606 characters, `junction-field-explore` 33270 -> 35100 and
+  `pluck-still-explore` 24325 -> 26142 (kExDotsSd, the dots' cut and
+  its casing anchor), `arm-strip-explore` 38559 -> 38672 (the
+  visibility's kExEnd); the masters are unchanged byte for byte. Each
+  compiles cold once; SwiftShader compiles all eight
+  (`.claude/probes/K397/stage2/`: `dump_variants.ts`,
+  `compile_glsl.mjs`, `out/variants/`). No new program site or variant.
 - **Growing a shader costs compile time.** section-rgb is the intro's
   critical path. After a large shader change, time a cold link:
   `trace_intro.mjs` on a fresh profile.
