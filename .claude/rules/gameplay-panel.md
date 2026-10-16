@@ -1,6 +1,7 @@
 ---
 paths:
   - "src/ui/tweakpane_panel.ts"
+  - "src/app/panel_wiring.ts"
   - "src/ui/grid_align_curve.ts"
   - "test/ui/grid_align_curve.test.ts"
 ---
