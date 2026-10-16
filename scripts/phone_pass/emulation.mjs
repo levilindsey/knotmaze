@@ -14,7 +14,13 @@
 //     portrait smoke showed the same: a bare page.screenshot() is 1080x2125 px = 808.7 CSS px, the page 753 and
 //     148 rows of flat off-white below it (the capture surface is taller than the emulated viewport). So two
 //     shots are taken: the bare one (emulation_unclipped.png, recorded as the finding) and the pass's own,
-//     clipped to the viewport (lib.mjs shotViewport; emulation_real.png), which the verdict is about;
+//     clipped to the viewport (lib.mjs shotViewport; emulation_real.png), which the verdict is about. K513
+//     (2026-10-16): with the phone sitting in landscape its capture surface (2125x1017 device px) is shorter
+//     than the 1977-device-px portrait capture, and Android Chrome TILES that surface down the request -
+//     each 1017-row tile paints only the native-height top (872 rows) and leaves 145 flat rows, the last
+//     tile's tail reading as an 88-row blank strip though the page itself fills 411x753 (canvas 822x1506).
+//     A flat strip therefore re-checks at dpr 1 on the capture's own CDP session (a 411x753 capture fits
+//     the surface and cannot tile): only a strip that survives there fails the gate (emulation_lowdpr.png);
 //  4. which navigations the override survives (recorded; every script sets it again before each navigation).
 // Writes emulation.json and emulation_real.png in the pass folder; exit 0 = real, 4 = not real (phone_pass.ps1
 // then stops before it measures). With cfg.viewport = native it only records what the tab shows.
@@ -111,11 +117,36 @@ try {
     res.checks.canvasBacking = !!c && near(c.w, wantBW, 2) && near(c.h, wantBH, 2);
     res.checks.shotAspect = Math.abs(img.W / img.H - EMU_VP.width / EMU_VP.height) < 0.004 * (EMU_VP.width / EMU_VP.height);
     res.checks.shotScaleOk = near(img.W, wantW, 1) && near(img.H, wantH, 1);
-    res.checks.noBlankStrip = flat.rows < 4;
+    // K513: a strip at the emulated dpr may be the capture tiling its shorter physical surface (see the
+    // header); re-capture the same CSS viewport at dpr 1, which fits the surface, before calling it blank.
+    let lowDprOk = false;
+    if (flat.rows >= 4) {
+      const shotCdp = await page.createCDPSession();
+      try {
+        await shotCdp.send("Emulation.setDeviceMetricsOverride", { width: EMU_VP.width, height: EMU_VP.height, deviceScaleFactor: 1, mobile: true, screenOrientation: { type: "portraitPrimary", angle: 0 } });
+        await page.goto(LINK(b), { waitUntil: "load", timeout: 90000 });
+        const t2 = Date.now();
+        while (Date.now() - t2 < 25000) { assertFree(); if (/asleep/.test(await stampOf(page))) break; await sleep(500); }
+        await sleep(1000);
+        const cap = await shotCdp.send("Page.captureScreenshot", { format: "png", captureBeyondViewport: false, fromSurface: true, clip: { x: 0, y: 0, width: EMU_VP.width, height: EMU_VP.height, scale: 1 } });
+        const buf1 = Buffer.from(cap.data, "base64");
+        const lowFile = out("emulation_lowdpr.png");
+        writeFileSync(lowFile, buf1);
+        const img1 = decodePNG(buf1), flat1 = flatBottom(img1);
+        res.lowDprShot = { file: lowFile, w: img1.W, h: img1.H, flatRowsAtBottom: flat1.rows, flatColor: flat1.color.join(",") };
+        lowDprOk = img1.W === EMU_VP.width && img1.H === EMU_VP.height && flat1.rows < 4;
+      } finally {
+        await shotCdp.send("Emulation.setDeviceMetricsOverride", { width: EMU_VP.width, height: EMU_VP.height, deviceScaleFactor: EMU_VP.deviceScaleFactor, mobile: true, screenOrientation: { type: "portraitPrimary", angle: 0 } }).catch(() => {});
+        await shotCdp.detach().catch(() => {});
+      }
+    }
+    res.checks.noBlankStrip = flat.rows < 4 || lowDprOk;
     res.pass = res.checks.oddHonored && res.checks.pageSize && res.checks.orientationPortrait && res.checks.documentSize && res.checks.canvasFillsPage && res.checks.shotAspect && res.checks.noBlankStrip;
+    if (res.lowDprShot && res.checks.noBlankStrip) res.noteSuffix = `K513: the ${flat.rows}-row strip at the emulated dpr is capture tiling; the dpr-1 recheck (${res.lowDprShot.w}x${res.lowDprShot.h}, ${res.lowDprShot.flatRowsAtBottom} flat rows) shows the full page`;
     // The backing store and the capture's scale are reported, not failed on their own: an app that caps its
     // resolution, or a browser that captures at its display's scale, is not an unreal emulation.
-    res.note = `canvas backing ${c ? c.w + "x" + c.h : "none"} ${res.checks.canvasBacking ? "= the app's cap (min(dpr, 2) = " + capDpr + "x the CSS box)" : "is NOT " + Math.round(wantBW) + "x" + Math.round(wantBH) + " (min(dpr, 2) x the CSS box): check main.ts's resolution cap"}; the viewport-clipped screenshot ${img.W}x${img.H} px is ${scale.toFixed(3)}x the CSS viewport ${res.checks.shotScaleOk ? "(the emulated dpr: " + wantW + "x" + wantH + ")" : "(the emulated dpr would give " + wantW + "x" + wantH + ")"}; a bare page.screenshot() is ${bareImg.W}x${bareImg.H} px = ${res.unclipped.cssH} CSS px high (${res.unclipped.extraCssPx} more than the viewport), ${res.unclipped.flatRowsAtBottom} flat rows (${res.unclipped.flatColor}) at the bottom`;
+    // (the K513 noteSuffix, set above, is appended to the note below)
+    res.note = `canvas backing ${c ? c.w + "x" + c.h : "none"} ${res.checks.canvasBacking ? "= the app's cap (min(dpr, 2) = " + capDpr + "x the CSS box)" : "is NOT " + Math.round(wantBW) + "x" + Math.round(wantBH) + " (min(dpr, 2) x the CSS box): check main.ts's resolution cap"}; the viewport-clipped screenshot ${img.W}x${img.H} px is ${scale.toFixed(3)}x the CSS viewport ${res.checks.shotScaleOk ? "(the emulated dpr: " + wantW + "x" + wantH + ")" : "(the emulated dpr would give " + wantW + "x" + wantH + ")"}; a bare page.screenshot() is ${bareImg.W}x${bareImg.H} px = ${res.unclipped.cssH} CSS px high (${res.unclipped.extraCssPx} more than the viewport), ${res.unclipped.flatRowsAtBottom} flat rows (${res.unclipped.flatColor}) at the bottom${res.noteSuffix ? "; " + res.noteSuffix : ""}`;
   }
 } catch (e) {
   res.error = String(e.stack || e).slice(0, 600);
@@ -133,6 +164,7 @@ try {
   console.log(`  final               ${f(res.final)}  vv ${JSON.stringify(res.final?.vv)} screen ${JSON.stringify(res.final?.screen)}`);
   if (res.unclipped) console.log(`  bare screenshot     ${res.unclipped.w}x${res.unclipped.h} px = ${res.unclipped.cssH} css high at scale ${res.unclipped.scale} (${res.unclipped.extraCssPx} css px more than the viewport), flat rows at the bottom ${res.unclipped.flatRowsAtBottom} (${res.unclipped.flatColor})`);
   if (res.shot) console.log(`  clipped screenshot  ${res.shot.w}x${res.shot.h} px = ${res.shot.cssW}x${res.shot.cssH} css at scale ${res.shot.scale} (the emulated dpr: ${res.shot.wantW}x${res.shot.wantH}), flat rows at the bottom ${res.shot.flatRowsAtBottom}${res.shot.flatRowsAtBottom ? " (" + res.shot.flatColor + ")" : ""}, cropped by geometry ${res.shot.cropped}`);
+  if (res.lowDprShot) console.log(`  low-dpr recheck     ${res.lowDprShot.w}x${res.lowDprShot.h} px at dpr 1, flat rows at the bottom ${res.lowDprShot.flatRowsAtBottom} (${res.lowDprShot.flatColor}) - the strip ${res.checks.noBlankStrip ? "was a capture-tiling artifact (K513)" : "survives: a real blank strip"}`);
   console.log(`  checks              ${JSON.stringify(res.checks)}`);
   if (res.note) console.log(`  note                ${res.note}`);
   if (res.error) console.log(`  ERROR               ${res.error}`);
