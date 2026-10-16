@@ -35,7 +35,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   10 px (the panel's own margin) left of the panel: panX >= min(W (1 -
   zoom), panelLeft - 10 - zoom x mazeRight). Nothing more: not right, not
   vertically, not for a maze already clear of the panel. RIGHT EDGE
-  (main.ts `fitRight`, fit-screen px): the threads' or a shown
+  (`src/app/camera.ts` `fitRight`, fit-screen px): the threads' or a shown
   start/head/exit disc's, whichever is further (`markersRight`; the
   default `se` exit's disc pokes past the threads); under fog the fog
   box's. Not counted: the win ring (about 5 px past the disc, inside the
