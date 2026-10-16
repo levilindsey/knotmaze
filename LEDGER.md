@@ -286,7 +286,7 @@ Next free ID: K482.
   - owner: nobody since 2026-10-15 16:30 (merged; agent `a21ef2f5cb56d9def` of claude session 05e60da0)
   - branch: mainline; last commit: `3c92598`
   - evidence: `.claude/probes/K459/`
-  - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii); silence main.ts `tapPluck` on every `!drawn`; check the free cap on the phone (`docs/design/K459.md`, Handoff)
+  - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
 - **K465** · Thread reveal: show the finish marker and its off-screen indicator by default (Levi
   2026-10-15 15:49); K76 decision 6 hides both until the exit's thread is seen (drawMarkers, main.ts
@@ -312,6 +312,14 @@ Next free ID: K482.
   - evidence: `.claude/probes/K467/`
   - next: built in K467's stage, item 1 of its brief
   - brief: `docs/design/K467.md`
+- **K466** · Thread reveal: emphasize unexplored thread ends more, especially ends that lie under a
+  crossing (Levi 2026-10-15 15:49). Design + build after K459 (the cap and two dots); brief
+  `docs/design/K466.md`.
+  - owner: agent `a23491d1cf2055b6d` of claude session 05e60da0-74f1-4d1d-906d-240f8a53fd12 (opus, started 2026-10-15 16:35, 2 h cap ~18:35)
+  - branch: `worktree-agent-a23491d1cf2055b6d`, worktree `.claude/worktrees/agent-a23491d1cf2055b6d`; last commit: `d55b335`
+  - evidence: `.claude/probes/K466/`
+  - next: find the cases at the phone viewport, then the candidates on frozen states
+  - brief: `docs/design/K466.md`
 
 ## Next, in order
 
@@ -477,9 +485,6 @@ Every other item below waits on the trigger it names.
 - **K463** · K5 R2's unrun checks, a small Sonnet job under the perf lock: the cross-build threads round
   trip (`K8/stage2/g3_probe.mjs roundtrip ... explore`, c22de79 against 52faab8, expect 0 px) and three
   more fog `phw=0` captures per build (`.claude/probes/K5/R2/checks/`, `pairs_*.txt`, `threads_dots/`).
-- **K466** · Thread reveal: emphasize unexplored thread ends more, especially ends that lie under a
-  crossing (Levi 2026-10-15 15:49). Design + build after K459 (the cap and two dots); brief
-  `docs/design/K466.md`.
 - **K471** · K6-1's unrun checks (Sonnet): the `&phw=0` page check (its item 3); why the probe's
   thread press did not tug in the fabric, chase and reduced-drag phases (no PHYS or GEOM: the probe
   or a bug?); `m2_input_ab.mjs`'s pins and the high base-against-base floors of its fog, threads and
