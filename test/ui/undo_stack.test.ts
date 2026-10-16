@@ -222,6 +222,14 @@ describe("restorePlan", () => {
       rebuild: false,
       effects: ["onSlackChange"],
     });
+    // K440: the real-time fire's pair restarts the solve, as its rows do.
+    expect(
+      restorePlan(a, { ...a, fireSpeedRt: 0.35, fireDelayRt: 30 }, false)
+    ).toEqual({
+      changed: ["fireSpeedRt", "fireDelayRt"],
+      rebuild: false,
+      effects: ["onClockChange"],
+    });
   });
 
   it("lists only real params, each under one effect", () => {

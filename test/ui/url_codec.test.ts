@@ -12,7 +12,8 @@ import {
 } from "../../src/ui/url_state";
 import type { AppearPreset, UrlParams } from "../../src/ui/url_state";
 import { parseLaunch } from "../../src/ui/daily_link";
-import { CODEC_PARAMS, numberText } from "../../src/ui/param_codec";
+import { CODEC_PARAMS, decodeToken, numberText } from "../../src/ui/param_codec";
+import type { CodecDefaults } from "../../src/ui/param_codec";
 import { DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { DEFAULT_CHASE_PARAMS } from "../../src/game/minotaur";
 
@@ -111,6 +112,7 @@ describe("links", () => {
       minoGiveUp: 3, minoRoamMin: 3, minoTurnPull: 0,
       minoGuardSight: 4, minoGuardAccuracy: 0.3, minoStalkerAccuracy: 0.45,
       fireClock: "turn",
+      fireSpeedRt: 0.2, fireDelayRt: 20,
     });
   });
 
@@ -208,9 +210,12 @@ describe("links", () => {
     expect([p.fire, p.fireSpeed, p.fireDelay]).toEqual(["fuse", 0.6, 12.5]);
     expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
     expect(fireSettingsOf(p)).toEqual({ speed: 0.6, delay: 12.5, clock: "turn" });
-    // Clamps: speed to [0.3, 0.95] (garbage = the default), delay to [0, 40].
+    // Clamps: speed to [0.1, 0.95] (K440 lowered the floor from 0.3;
+    // garbage = the default), delay to [0, 40].
     expect(parseParams("?7&fsp=2").fireSpeed).toBe(0.95);
-    expect(parseParams("?7&fsp=0").fireSpeed).toBe(0.3);
+    expect(parseParams("?7&fsp=0").fireSpeed).toBe(0.1);
+    expect(parseParams("?7&fsp=0.05").fireSpeed).toBe(0.1);
+    expect(parseParams("?7&fsp=0.25").fireSpeed).toBe(0.25);
     expect(parseParams("?7&fsp=x").fireSpeed).toBe(0.75);
     expect(parseParams("?7&fdl=99").fireDelay).toBe(40);
     expect(parseParams("?7&fdl=-3").fireDelay).toBe(0);
@@ -235,11 +240,73 @@ describe("links", () => {
     const p = parseParams("?7&fi=fuse&fck=realtime");
     expect(p.fireClock).toBe("realtime");
     expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
-    expect(fireSettingsOf(p)).toEqual({ speed: 0.75, delay: 0, clock: "realtime" });
+    // K440: the real-time clock's own pair.
+    expect(fireSettingsOf(p)).toEqual({ speed: 0.2, delay: 20, clock: "realtime" });
     expect(parseParams("?7&fck=nope").fireClock).toBe("turn");
     expect(fireSettingsOf({ ...p, clock: "realtime" })).toBeNull();
     expect(fireSettingsOf({ ...p, minotaur: "hunter" })).toBeNull();
     expect(fireSettingsOf({ ...p, fire: "off" })).toBeNull();
+  });
+
+  // K440 (Levi, 2026-10-15): the real-time fire has its own speed and delay
+  // (fsr 0.2, fdr 20); the turn clock keeps fsp 0.75 / fdl 0. Each clock
+  // plays its own pair, both clamp like the turn pair did (speed to [0.1,
+  // 0.95] since K440, delay to [0, 40]), and a link lists neither while it
+  // holds its default.
+  it("plays each fire clock's own speed and delay", () => {
+    // The bare real-time link plays 0.2 / 20 and lists neither.
+    const rt = parseParams("?7&fi=fuse&fck=realtime");
+    expect([rt.fireSpeedRt, rt.fireDelayRt]).toEqual([0.2, 20]);
+    const token = encodeParams(rt);
+    const decoded = decodeToken(token, PARAM_DEFAULTS as unknown as CodecDefaults);
+    expect(decoded.error).toBeNull();
+    const listed = Object.keys(decoded.values).filter(
+      (k) => decoded.values[k] !== (PARAM_DEFAULTS as unknown as CodecDefaults)[k]
+    );
+    expect(listed.sort()).toEqual(["fire", "fireClock"]);
+    expect(parseParams(`?${token}`)).toEqual(rt);
+    // The turn link keeps 0.75 / 0, whatever the real-time pair holds.
+    const turn = parseParams("?7&fi=fuse");
+    expect(fireSettingsOf(turn)).toEqual({ speed: 0.75, delay: 0, clock: "turn" });
+    expect(
+      fireSettingsOf({ ...turn, fireSpeedRt: 0.5, fireDelayRt: 33 })
+    ).toEqual({ speed: 0.75, delay: 0, clock: "turn" });
+    // And the real-time clock ignores the turn pair.
+    expect(
+      fireSettingsOf({ ...rt, fireSpeed: 0.9, fireDelay: 7 })
+    ).toEqual({ speed: 0.2, delay: 20, clock: "realtime" });
+    // Override keys, and the token round trip of a changed pair.
+    const set = parseParams("?7&fi=fuse&fck=realtime&fsr=0.35&fdr=30");
+    expect([set.fireSpeedRt, set.fireDelayRt]).toEqual([0.35, 30]);
+    expect([set.fireSpeed, set.fireDelay]).toEqual([0.75, 0]);
+    expect(fireSettingsOf(set)).toEqual({ speed: 0.35, delay: 30, clock: "realtime" });
+    expect(parseParams(`?${encodeParams(set)}`)).toEqual(set);
+    // Clamps: speed to [0.1, 0.95] (garbage = the real-time default),
+    // delay to [0, 40], from override keys and tokens alike.
+    expect(parseParams("?7&fsr=0").fireSpeedRt).toBe(0.1);
+    expect(parseParams("?7&fsr=0.05").fireSpeedRt).toBe(0.1);
+    expect(parseParams("?7&fsr=0.1").fireSpeedRt).toBe(0.1);
+    expect(parseParams("?7&fsr=2").fireSpeedRt).toBe(0.95);
+    expect(parseParams("?7&fsr=x").fireSpeedRt).toBe(0.2);
+    expect(parseParams("?7&fdr=99").fireDelayRt).toBe(40);
+    expect(parseParams("?7&fdr=-3").fireDelayRt).toBe(0);
+    expect(parseParams("?7&fdr=x").fireDelayRt).toBe(20);
+    expect(
+      parseParams(`?${encodeParams(withSeed(7, { fireSpeedRt: 3, fireDelayRt: 77 }))}`)
+    ).toMatchObject({ fireSpeedRt: 0.95, fireDelayRt: 40 });
+    expect(
+      parseParams(`?${encodeParams(withSeed(7, { fireSpeedRt: 0.02, fireDelayRt: -5 }))}`)
+    ).toMatchObject({ fireSpeedRt: 0.1, fireDelayRt: 0 });
+    // fireSettingsOf clamps what it is handed (a panel edit, an undo).
+    expect(
+      fireSettingsOf({ ...rt, fireSpeedRt: 0, fireDelayRt: 99 })
+    ).toEqual({ speed: 0.1, delay: 40, clock: "realtime" });
+    expect(
+      fireSettingsOf({ ...rt, fireSpeedRt: NaN })
+    ).toEqual({ speed: 0.2, delay: 20, clock: "realtime" });
+    expect(
+      fireSettingsOf({ ...turn, fireSpeed: 0.05 })
+    ).toEqual({ speed: 0.1, delay: 0, clock: "turn" });
   });
 
   // K140: the finish confetti's override keys, the amount's clamp, and the
@@ -583,6 +650,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoGiveUp: "mlm", minoRoamMin: "mrn", minoTurnPull: "mtp",
   minoGuardSight: "mgs", minoGuardAccuracy: "mga", minoStalkerAccuracy: "msa",
   fireClock: "fck",
+  fireSpeedRt: "fsr", fireDelayRt: "fdr",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

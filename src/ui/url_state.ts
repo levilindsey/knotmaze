@@ -549,11 +549,13 @@ export interface UrlParams {
   minoGuardAccuracy: number;
   minoStalkerAccuracy: number;
   // K114 burn race (game/fire.ts, brief docs/design/K114_burn.md): the
-  // fire, off | fuse; its speed r (fire distance per unit walked, in
-  // [FIRE_SPEED_MIN, FIRE_SPEED_MAX]) and its delay h (units walked before
-  // it spreads, [0, FIRE_DELAY_MAX]). It never plays on K80's real-time
-  // chase (`clock`) nor with the turn minotaur (fireSettingsOf); its own
-  // clock is fireClock (stage 2). Every change restarts the solve.
+  // fire, off | fuse; on the turn clock its speed r (fire distance per unit
+  // walked, in [FIRE_SPEED_MIN, FIRE_SPEED_MAX]) and its delay h (units
+  // walked before it spreads, [0, FIRE_DELAY_MAX]); the real-time clock
+  // has its own pair (fireSpeedRt, fireDelayRt; K440). It never plays on
+  // K80's real-time chase (`clock`) nor with the turn minotaur
+  // (fireSettingsOf); its own clock is fireClock (stage 2). Every change
+  // restarts the solve.
   fire: FireMode;
   fireSpeed: number;
   fireDelay: number;
@@ -563,6 +565,15 @@ export interface UrlParams {
   // K114 stage 2: the fire's clock, turn | realtime (FIRE_CLOCKS). Every
   // change restarts the solve.
   fireClock: FireClockMode;
+  // K440: the real-time clock's own speed (a fraction of the dot's fixed
+  // pace FIRE_V_REF, [FIRE_SPEED_MIN, FIRE_SPEED_MAX]) and delay (fire-clock
+  // units, FIRE_V_REF a second, before it spreads: [0, FIRE_DELAY_MAX]).
+  // Two params, not a default that depends on the clock: a link lists only
+  // what differs from PARAM_DEFAULTS (K132), so `&fi=fuse&fck=realtime`
+  // plays this pair's defaults and a turn link keeps the turn pair's.
+  // Every change restarts the solve.
+  fireSpeedRt: number;
+  fireDelayRt: number;
   // K80 turns stage 2 (K273): what a minotaur's catch resets, on both
   // clocks. minoRestart on restarts the level (main.ts restartSolve: path,
   // fog, clock and minotaur; its tallies carry over). Off is the respawn:
@@ -585,8 +596,10 @@ export const MINO_SLEEP_MAX = 99;
 export const MINO_GIVE_UP_MAX = 10;
 export const MINO_ROAM_MIN_MAX = 10;
 
-// The burn race's ranges (K114; url_state clamps, the panel's sliders).
-export const FIRE_SPEED_MIN = 0.3;
+// The burn race's ranges (K114; url_state clamps, the panel's sliders),
+// the same for both clocks' pairs. K440 lowered the speed's floor from 0.3
+// to 0.1 (the real-time default is 0.2).
+export const FIRE_SPEED_MIN = 0.1;
 export const FIRE_SPEED_MAX = 0.95;
 export const FIRE_DELAY_MAX = 40;
 
@@ -794,23 +807,39 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   burnt: "gone",
   // K114 stage 2: the turn clock (stage 1's fire).
   fireClock: "turn",
+  // K440 (Levi, 2026-10-15: "yes and yes"; docs/design/K440.md): the
+  // real-time fire's own pair, stage 2's proposal (docs/design/
+  // K114_stage2.md, the Stage 2 handoff's item 7): a 20 / 12 = 1.7 s head
+  // start, and on every test daily the best route allows at least 1.1 s of
+  // thinking a decision. The turn pair keeps 0.75 / 0.
+  fireSpeedRt: 0.2,
+  fireDelayRt: 20,
 };
 
 // The burn race a design plays (K114), or null without one. Never on K80's
 // real-time minotaur clock (`clock`) nor with the turn-aligned minotaur
 // (call 3: one antagonist at a time; the panel switches the other off,
 // and a link that sets both plays the minotaur). `clock` is the fire's own
-// clock (fireClock, stage 2).
+// clock (fireClock, stage 2), and the speed and delay are that clock's
+// pair (K440: fireSpeed / fireDelay on turn, fireSpeedRt / fireDelayRt on
+// realtime).
 export function fireSettingsOf(
   p: Omit<UrlParams, "seed">
 ): { speed: number; delay: number; clock: FireClockMode } | null {
   if (p.fire !== "fuse" || p.clock === "realtime" || p.minotaur !== "off") {
     return null;
   }
+  if (p.fireClock === "realtime") {
+    return {
+      speed: clampFireSpeed(p.fireSpeedRt, PARAM_DEFAULTS.fireSpeedRt),
+      delay: clampTo(p.fireDelayRt, FIRE_DELAY_MAX),
+      clock: "realtime",
+    };
+  }
   return {
     speed: clampFireSpeed(p.fireSpeed),
     delay: clampTo(p.fireDelay, FIRE_DELAY_MAX),
-    clock: p.fireClock === "realtime" ? "realtime" : "turn",
+    clock: "turn",
   };
 }
 
@@ -851,9 +880,11 @@ export function clampRevealFade(v: number): number {
   return Math.min(REVEAL_FADE_MAX, Math.max(REVEAL_FADE_MIN, v));
 }
 
-// [FIRE_SPEED_MIN, FIRE_SPEED_MAX]; garbage reads as the default.
-function clampFireSpeed(v: number): number {
-  if (!Number.isFinite(v)) return PARAM_DEFAULTS.fireSpeed;
+// [FIRE_SPEED_MIN, FIRE_SPEED_MAX]; garbage reads as the pair's default
+// (the turn pair's unless told otherwise; K440's real-time pair passes its
+// own).
+function clampFireSpeed(v: number, fallback: number = PARAM_DEFAULTS.fireSpeed): number {
+  if (!Number.isFinite(v)) return fallback;
   return Math.min(FIRE_SPEED_MAX, Math.max(FIRE_SPEED_MIN, v));
 }
 
@@ -1018,6 +1049,8 @@ function fromCodecValues(
   p.hCutShare = clamp01(p.hCutShare);
   p.fireSpeed = clampFireSpeed(p.fireSpeed);
   p.fireDelay = clampTo(p.fireDelay, FIRE_DELAY_MAX);
+  p.fireSpeedRt = clampFireSpeed(p.fireSpeedRt, PARAM_DEFAULTS.fireSpeedRt);
+  p.fireDelayRt = clampTo(p.fireDelayRt, FIRE_DELAY_MAX);
   clampPluckEmphasis(p);
   return p;
 }
@@ -1359,6 +1392,9 @@ function readLegacy(
     burnt: readChoice(query, "fbt", BURNT_MODES, D.burnt),
     // K114 stage 2's fire clock (`&fck=realtime`).
     fireClock: readChoice(query, "fck", FIRE_CLOCKS, D.fireClock),
+    // K440's real-time pair (`&fck=realtime&fsr=0.3&fdr=10`).
+    fireSpeedRt: clampFireSpeed(readNumber(query, "fsr", D.fireSpeedRt), D.fireSpeedRt),
+    fireDelayRt: clampTo(readNumber(query, "fdr", D.fireDelayRt), FIRE_DELAY_MAX),
   };
 }
 
