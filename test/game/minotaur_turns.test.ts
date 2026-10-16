@@ -80,6 +80,36 @@ function randomTap(t: TurnMinotaur, rng: SeededRNG, waitChance = 0.1): number {
   return runs[rng.nextInt(runs.length)];
 }
 
+// One whole game for the pin (TurnMinotaur "plays the pinned games"): the
+// scripted player's taps against a minotaur seeded as main.ts seeds it.
+function turnGame(walk: WalkGraph, p: TurnMinoParams, maze: number, walkSeed: number): string {
+  const t = new TurnMinotaur(walk, turnConfig(p), turnSeed(maze));
+  const rng = new SeededRNG(walkSeed * 7919 + maze);
+  let h = 0x811c9dc5;
+  const mix = (s: string): void => {
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+  };
+  for (let i = 0; i < 300 && !t.finished; i++) {
+    const v = t.player;
+    const runs = t.g.adj[v];
+    let e = -1;
+    if (rng.next() >= 1 / 6) {
+      const d = t.tg.hopd(v, t.tg.exit);
+      const toward = runs.filter((r) => t.tg.hopd(t.tg.other(r, v), t.tg.exit) < d);
+      const pool = toward.length > 0 && rng.next() < 0.4 ? toward : runs;
+      e = pool[rng.nextInt(pool.length)];
+    }
+    const r = t.turn(e);
+    t.setProgress(1);
+    mix(`${e}|${r}|${t.player}|${t.state.v}|${t.mode}|${t.lastPath.map((s) => s.join(",")).join(";")}/`);
+  }
+  const won = t.finished ? "W" : "-";
+  return `${t.turns}/${t.catches}/${t.closeCalls}/${t.seen}/${won}/${h.toString(16)}`;
+}
+
 describe("contact (the continuous rule)", () => {
   it("catches on the same end vertex", () => {
     expect(contact(A, 1, B, C, [[2, B]])).toBe(true);
@@ -437,6 +467,48 @@ describe("TurnMinotaur", () => {
     expect(t.telegraph()).toBeNull();
     t.turn(0);
     expect(t.lastPath.length).toBe(1);
+  });
+
+  // K80 turns stage 3a (item 1): WHOLE GAMES at the defaults. Mazes 3, 17
+  // and 42, the three models at DEFAULT_TURN_MINO, two scripted players per
+  // maze (SeededRNG): a wait one turn in six, else a run toward the exit (in
+  // runs) two times in five, else any run; 300 turns at most. A row is
+  // model:maze:walk turns/catches/close calls/seen/won/digest of every turn
+  // (the tap, the result, where both stand, its mode and path). It moves
+  // when a rule or a default the models read moves; re-freeze it and name
+  // what moved in the commit.
+  const TURN_GAMES = [
+    "hunter:3:1 35/0/4/12/W/fc1c0c78",
+    "hunter:3:2 57/2/7/24/W/2adc117c",
+    "guard:3:1 300/13/16/57/-/3c947545",
+    "guard:3:2 57/1/7/19/W/e5afe62a",
+    "stalker:3:1 154/8/5/137/W/612b8412",
+    "stalker:3:2 300/17/24/266/-/8ded2d21",
+    "hunter:17:1 55/1/4/31/W/f5bf596c",
+    "hunter:17:2 27/0/0/0/W/cd23e252",
+    "guard:17:1 56/0/5/29/W/1bd527f8",
+    "guard:17:2 27/0/1/10/W/9d92c885",
+    "stalker:17:1 55/2/3/48/W/3145dd78",
+    "stalker:17:2 28/1/1/25/W/2912c523",
+    "hunter:42:1 12/0/0/7/W/97fd3af6",
+    "hunter:42:2 44/2/2/8/W/c66848f9",
+    "guard:42:1 12/0/0/7/W/97fd3af6",
+    "guard:42:2 46/4/5/20/W/42fb06b",
+    "stalker:42:1 63/2/5/58/W/9b844d55",
+    "stalker:42:2 46/2/6/42/W/4e511642",
+  ];
+
+  it("plays the pinned games at the defaults", () => {
+    const rows: string[] = [];
+    for (const maze of [3, 17, 42]) {
+      const walk = realMaze(maze);
+      for (const model of ["hunter", "guard", "stalker"] as const) {
+        for (const walkSeed of [1, 2]) {
+          rows.push(`${model}:${maze}:${walkSeed} ${turnGame(walk, params({ model }), maze, walkSeed)}`);
+        }
+      }
+    }
+    expect(rows).toEqual(TURN_GAMES);
   });
 
   it("animates along its steps, two runs inside one move", () => {
