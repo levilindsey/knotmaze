@@ -2,6 +2,11 @@ import { describe, it, expect } from "vitest";
 import type { WalkEdge, WalkGraph, WalkVertex } from "../../src/core/walk_graph";
 import {
   contact,
+  contactByLength,
+  lengthContactDistance,
+  lengthFactor,
+  spotAlongLengthRoute,
+  spotAtVertex,
   decide,
   DEFAULT_TURN_MINO,
   initMino,
@@ -61,6 +66,19 @@ const G1 = graph(
 );
 const [S, A, B, C, X, D] = [0, 1, 2, 3, 4, 5];
 
+// A plain chain S -0(4)- A -1(20)- B -2(20)- C -3(4)- X for K481.
+// Vertex indices: S 0, A 1, B 2, C 3, X 4. Median run length 12.
+const G2 = graph(
+  [
+    ["S", "A", 4],
+    ["A", "B", 20],
+    ["B", "C", 20],
+    ["C", "X", 4],
+  ],
+  "S",
+  "X"
+);
+
 function realMaze(seed: number): WalkGraph {
   const g = generateLatticeKnotwork({ gridSize: 10, weaveDensity: 0.3, turnBias: 0.6, randSeed: seed });
   const plan = buildMazePlan(g, { ...DEFAULT_MAZE_PARAMS, deadEndDensity: DEAD_END_DENSITY_ON });
@@ -111,6 +129,59 @@ function turnGame(walk: WalkGraph, p: TurnMinoParams, maze: number, walkSeed: nu
   const won = t.finished ? "W" : "-";
   return `${t.turns}/${t.catches}/${t.closeCalls}/${t.seen}/${won}/${h.toString(16)}`;
 }
+
+// K481: the same scripted game in the by-length mode; the digest also
+// covers its spot and travel, so a travel or contact change moves it.
+function turnGameLength(walk: WalkGraph, p: TurnMinoParams, maze: number, walkSeed: number): string {
+  const t = new TurnMinotaur(walk, { ...turnConfig(p), byLength: true }, turnSeed(maze));
+  const rng = new SeededRNG(walkSeed * 7919 + maze);
+  let h = 0x811c9dc5;
+  const mix = (s: string): void => {
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+  };
+  for (let i = 0; i < 300 && !t.finished; i++) {
+    const v = t.player;
+    const runs = t.g.adj[v];
+    let e = -1;
+    if (rng.next() >= 1 / 6) {
+      const d = t.tg.hopd(v, t.tg.exit);
+      const toward = runs.filter((r) => t.tg.hopd(t.tg.other(r, v), t.tg.exit) < d);
+      const pool = toward.length > 0 && rng.next() < 0.4 ? toward : runs;
+      e = pool[rng.nextInt(pool.length)];
+    }
+    const r = t.turn(e);
+    t.setProgress(1);
+    mix(
+      `${e}|${r}|${t.player}|${t.state.v}|${t.state.spot.edge},${t.state.spot.pos}|${t.mode}|${t.lastTravel}|${t.lastPath.map((s) => s.join(",")).join(";")}/`
+    );
+  }
+  const won = t.finished ? "W" : "-";
+  return `${t.turns}/${t.catches}/${t.closeCalls}/${t.seen}/${won}/${h.toString(16)}`;
+}
+
+const LENGTH_GAMES: string[] = [
+    "hunter:3:1 35/0/0/0/W/3cba246a",
+    "hunter:3:2 57/1/1/20/W/49b02e3c",
+    "guard:3:1 300/9/17/164/-/a8276bef",
+    "guard:3:2 141/6/7/54/W/456dcbd7",
+    "stalker:3:1 102/2/3/96/W/6f108b6e",
+    "stalker:3:2 57/2/2/53/W/c4f76840",
+    "hunter:17:1 56/0/0/35/W/78074de",
+    "hunter:17:2 27/0/0/0/W/2dfd00fd",
+    "guard:17:1 53/1/1/40/W/3186743c",
+    "guard:17:2 27/0/0/21/W/cc8fbf96",
+    "stalker:17:1 212/8/0/192/W/88251bb1",
+    "stalker:17:2 27/0/0/25/W/8230ef8e",
+    "hunter:42:1 12/0/1/7/W/86371e66",
+    "hunter:42:2 7/0/0/2/W/d638fabe",
+    "guard:42:1 12/0/1/9/W/acfa115e",
+    "guard:42:2 7/0/0/5/W/e2bbcfde",
+    "stalker:42:1 12/0/1/10/W/acfa115e",
+    "stalker:42:2 7/0/0/5/W/e2bbcfde",
+];
 
 describe("contact (the continuous rule)", () => {
   it("catches on the same end vertex", () => {
@@ -585,6 +656,191 @@ describe("TurnMinotaur", () => {
       }
     }
     expect(rows).toEqual(TURN_GAMES);
+  });
+
+  describe("K481 turns by length", () => {
+    const tg2 = new TurnGraph(G2);
+    const cfgL = (over: Partial<TurnConfig> = {}): TurnConfig => ({
+      ...turnConfig(params({ model: "stalker", accuracy: 1, pause: 0 })),
+      byLength: true,
+      telegraph: false,
+      catchDist: 1,
+      ...over,
+    });
+    const place = (t: TurnMinotaur, v: number, spot = spotAtVertex(v)): void => {
+      t.state = { ...initMino(t.tg), v, left: v !== t.tg.exit, spot };
+    };
+
+    it("measures the wait by the median run length", () => {
+      expect(tg2.medianLength).toBe(12);
+      expect(new TurnGraph(G1).medianLength).toBe(9);
+      const t = new TurnMinotaur(G2, cfgL(), 1);
+      expect(t.turn(0)).toBe("moved"); // S -> A (4); it walks X -> C (4)
+      expect(t.state.v).toBe(C);
+      expect(t.turn(-1)).toBe("moved"); // a wait: 1x the median, 12
+      expect(t.lastTravel).toBe(12);
+      expect(t.state.spot).toMatchObject({ edge: 2, pos: 8, dir: -1 });
+      expect(t.state.v).toBe(B);
+    });
+
+    it("travels the speed factor times the player's run, at each speed", () => {
+      const g = tg2;
+      const base = initMino(g);
+      expect(lengthFactor(g, { policy: "prox", speed: 0.5, telegraph: false }, base, A)).toBe(0.5);
+      expect(lengthFactor(g, { policy: "prox", speed: 1, telegraph: false }, base, A)).toBe(1);
+      expect(lengthFactor(g, { policy: "prox", speed: 2, telegraph: false }, base, A)).toBe(2);
+      const charge: TurnConfig = { policy: "prox", speed: 1, chaseSpeed: 2, see: 2, telegraph: false };
+      expect(lengthFactor(g, charge, { ...base, v: C }, A)).toBe(2); // in sight
+      expect(lengthFactor(g, charge, { ...base, v: X }, A)).toBe(1); // too far, roaming
+      expect(lengthFactor(g, charge, { ...base, v: X, mode: 1 }, A)).toBe(2); // hunting
+      const half = new TurnMinotaur(G2, cfgL({ speed: 0.5 }), 1);
+      half.turn(0);
+      expect(half.lastTravel).toBe(2);
+      expect(half.state.spot).toMatchObject({ edge: 3, pos: 2, dir: -1 });
+      expect(half.state.v).toBe(C);
+      const two = new TurnMinotaur(G2, cfgL({ speed: 2 }), 1);
+      two.turn(0);
+      expect(two.lastTravel).toBe(8);
+      expect(two.state.spot).toMatchObject({ edge: 2, pos: 16, dir: -1 });
+      expect(two.state.v).toBe(B);
+    });
+
+    it("stops mid-run and can turn back on a run", () => {
+      const t1 = new TurnMinotaur(G1, cfgL(), 1);
+      t1.player = B;
+      place(t1, C, { edge: 2, pos: 9, dir: 1, vertex: B });
+      t1.state.prev = B;
+      expect(t1.turn(4)).toBe("moved"); // B -> D (8); it turns back 8 toward B
+      expect(t1.lastTravel).toBe(8);
+      expect(t1.state.spot).toMatchObject({ edge: 2, pos: 1, dir: -1 });
+      expect(t1.state.v).toBe(B);
+    });
+
+    it("is caught when the faster player closes from behind", () => {
+      const t = new TurnMinotaur(G2, cfgL({ speed: 0.5 }), 1);
+      t.player = B;
+      place(t, B, { edge: 2, pos: 8, dir: -1, vertex: C });
+      t.state.prev = C;
+      expect(t.turn(2)).toBe("caught"); // B -> C at 1x closes on its 0.5x turn back
+      expect(t.lastTravel).toBe(0); // reset by the catch
+      expect(t.catches).toBe(1);
+      expect(t.state.v).toBe(X);
+      expect(t.mino).toMatchObject({ edge: -1, vertex: X });
+    });
+
+    it("catches head-on on one run", () => {
+      const cfg: TurnConfig = { ...cfgL(), telegraph: true };
+      const t = new TurnMinotaur(G2, cfg, 1);
+      t.player = A;
+      place(t, B);
+      t.setConfig(cfg);
+      expect(t.telegraph()?.steps).toEqual([[1, A]]);
+      expect(t.turn(1)).toBe("caught"); // A -> B while it runs B -> A
+      expect(t.catches).toBe(1);
+      expect(t.player).toBe(S);
+      expect(t.state.v).toBe(X);
+    });
+
+    it("catches from behind at twice the player's speed", () => {
+      const t = new TurnMinotaur(G2, cfgL({ speed: 2 }), 1);
+      t.player = A;
+      place(t, A, { edge: 0, pos: 1, dir: 1, vertex: S });
+      t.state.prev = S;
+      expect(t.turn(1)).toBe("caught"); // it enters A-B behind you and closes 3 units
+      expect(t.catches).toBe(1);
+    });
+
+    it("catches a move that ends within the catch distance", () => {
+      const t = new TurnMinotaur(G2, cfgL({ speed: 0.5 }), 1);
+      t.player = A;
+      place(t, C, { edge: 2, pos: 10.5, dir: 1, vertex: B });
+      t.state.prev = B;
+      expect(t.turn(1)).toBe("caught"); // you end at B; it stops 0.5 away on B-C
+      expect(t.catches).toBe(1);
+    });
+
+    it("counts a close call and a seen turn in thread distance", () => {
+      const t = new TurnMinotaur(G2, cfgL({ speed: 0.5, catchDist: 0.1 }), 1);
+      t.player = A;
+      place(t, C, { edge: 2, pos: 10.5, dir: 1, vertex: B });
+      t.state.prev = B;
+      expect(t.turn(1)).toBe("moved"); // 0.5 away: past the catch, within a median run
+      expect(t.closeCalls).toBe(1);
+      expect(t.seen).toBe(1);
+    });
+
+    it("never catches a player waiting in the sanctuary", () => {
+      const t = new TurnMinotaur(G2, cfgL(), 1);
+      place(t, A, { edge: 0, pos: 0.5, dir: 1, vertex: S });
+      t.state.prev = S;
+      expect(t.turn(-1)).toBe("moved");
+      expect(t.catches).toBe(0);
+      expect(t.player).toBe(S);
+    });
+
+    it("lets an exit run win before any contact", () => {
+      const t = new TurnMinotaur(G2, cfgL(), 1);
+      t.player = C;
+      place(t, C);
+      expect(t.turn(3)).toBe("win");
+      expect(t.finished).toBe(true);
+      expect(t.catches).toBe(0);
+    });
+
+    it("checks contact continuously along a shared run", () => {
+      const from = spotAtVertex(B);
+      expect(lengthContactDistance(tg2, A, 1, from, [[1, A]], [20], 20)).toBe(0);
+      expect(contactByLength(tg2, A, 1, from, [[1, A]], [20], 20, 1)).toBe(true);
+      const away = spotAlongLengthRoute(tg2, from, [[1, A]], [20], 7);
+      expect(away).toMatchObject({ edge: 1, pos: 13, dir: -1 });
+    });
+
+    it("plays the pinned games in the mode", () => {
+      const rows: string[] = [];
+      for (const maze of [3, 17, 42]) {
+        const walk = realMaze(maze);
+        for (const model of ["hunter", "guard", "stalker"] as const) {
+          for (const walkSeed of [1, 2]) {
+            rows.push(`${model}:${maze}:${walkSeed} ${turnGameLength(walk, turnMinoDefaults(model), maze, walkSeed)}`);
+          }
+        }
+      }
+      expect(rows).toEqual(LENGTH_GAMES);
+    });
+
+    it("replays the same taps to the same spots", () => {
+      const walk = realMaze(21);
+      const cfg: TurnConfig = { ...turnConfig(turnMinoDefaults("hunter")), byLength: true };
+      const play = (seed: number): { inputs: number[]; trace: string[]; a: TurnMinotaur } => {
+        const a = new TurnMinotaur(walk, cfg, seed);
+        const rng = new SeededRNG(8);
+        const trace: string[] = [];
+        for (let i = 0; i < 150 && !a.finished; i++) {
+          a.turn(randomTap(a, rng, 0.2));
+          a.setProgress(1);
+          trace.push(
+            `${a.player}|${a.state.v}|${a.state.spot.edge},${a.state.spot.pos}|${a.lastTravel}|${a.lastPath.map((s) => s.join(",")).join(";")}`
+          );
+        }
+        return { inputs: a.inputs.slice(), trace, a };
+      };
+      const first = play(1234);
+      const b = new TurnMinotaur(walk, cfg, 1234);
+      const traceB: string[] = [];
+      for (const e of first.inputs) {
+        if (b.finished) break;
+        b.turn(e);
+        b.setProgress(1);
+        traceB.push(
+          `${b.player}|${b.state.v}|${b.state.spot.edge},${b.state.spot.pos}|${b.lastTravel}|${b.lastPath.map((s) => s.join(",")).join(";")}`
+        );
+      }
+      expect(traceB).toEqual(first.trace);
+      expect(b.state).toEqual(first.a.state);
+      expect(b.catches).toBe(first.a.catches);
+      const other = play(4321);
+      expect(other.trace).not.toEqual(first.trace);
+    });
   });
 
   it("animates along its steps, two runs inside one move", () => {

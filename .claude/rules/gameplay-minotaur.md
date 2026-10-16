@@ -239,6 +239,51 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   mirror (sim.ts) matches the module on 9600 games at the new defaults
   and at every pull tried, 0 trace mismatches.
 
+- TURNS BY LENGTH (K481 stage 1, 2026-10-15; brief
+  docs/design/K481.md, model only, no page or param yet). Behind
+  `TurnConfig.byLength` (off by default; stage 2 wires `minoByLength`):
+  each accepted move, the minotaur travels the speed factor times the
+  player's thread length (half 0.5x every turn, one 1x, two 2x, charge
+  2x while hunting or in sight else 1x; a wait travels the maze's median
+  run length, `TurnGraph.medianLength`, times the factor). Sleep and
+  pause still gate the turn. Its position is a `Spot` (`MinoState.spot`;
+  at a vertex, or mid-run with `v` the vertex ahead, so a turn can stop
+  mid-run and can turn back on a run). The route
+  (`planLengthRoute`) is decided at the move's start from where the
+  player stands, as the telegraph commits today, long enough for the
+  longest choice at that vertex; its hops keep today's run decisions
+  (sight, roam, give-up, territory, the counter RNG), only the travel
+  changed. Where the travel outruns a roam destination the route
+  EXTENDS past it (a new destination is picked, as decide()'s loop
+  does), keeping the mean travel at the factor times the player's
+  length; a hunting route stops at the player's standing vertex.
+  Contact (`contactByLength` / `lengthContactDistance`) is continuous:
+  the player at t x their run and it at t x its travel, caught when the
+  thread distance (`ChaseGraph.spotToSpot`, whole graph) falls to
+  `BY_LENGTH_CATCH_DIST`. Tuned on the turn sim from the real-time 1
+  down to 0 (the runs rule caught only coincidences too, and crossing
+  already catches head-on and through-vertex meetings; sweep
+  `.claude/probes/K481/sweep_length_32.md`, 32 reps): today's / by-length
+  % caught, hunter daily 1.1/3.4, treelike 1.6/4.2 (explorer cell;
+  nine-cell scores 24.9 hunter, 17.3 guard, 54.6 stalker at 0, the best
+  of 0-1). The mode stays deadlier for the attentive explorer (stalker
+  daily explorer 3.4 -> 8.9): at speed one it averages 1.69 hops a turn
+  (its runs are shorter than the player's picks), which no catch
+  distance in [0, 1] offsets without a travel scale the brief forbids;
+  that is the stage 2 / Levi call in the K481 handoff. The entrance
+  still hides the player (a move ending on the start is never a catch),
+  it never steps onto the start or the exit, and an exit run wins
+  before contact. Stats (decision 9): `seen` counts a turn when any hop
+  it actually started was decided hunting or checking (the chase: the
+  player was visible where the turn was decided), and a close call is
+  a non-catch move ending within one median run of thread from it, out
+  of its lair and off the start. The telegraph carries the route plus
+  `stops` (where it would stop for each choice, the wait included), for
+  stage 3's ticks. With the flag off, `TURN_GAMES` is unchanged; in the
+  mode, `LENGTH_GAMES` pins 18 games and the probe mirror
+  (`.claude/probes/K481/sim_length.ts`) matches the module on 1872
+  games, 0 trace mismatches (`compare_length_8.md`).
+
 - CATCH RESETS (K80 turns stage 2, K273, 2026-10-14; Levi: "a toggle to
   conditionally reset the level/Minotaur/fog when dying to the
   Minotaur"). Both clocks, shared rows after minoSleep / the real-time
