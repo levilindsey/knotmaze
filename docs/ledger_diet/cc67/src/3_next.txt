@@ -40,7 +40,7 @@
 
 - **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`, 091e4dc; Levi took section 7's recs): s1 (sim) after K323 s1; s2 (render) after s1, K7 s2, K307 s2, K329 (checks K270's band); s3 (guard, stalker) after s1. Rel. K245 K247 K271 K293 K294 K296.
 
-- **K326** · Drop knot mode (`mazeFabric`, `mf=0`; `docs/design/K323_game_mode.md` s4-5): A freezes a golden (after K7 s2); B deletes (after A, K323 s1, K307 s2, K329), retargets `scripts/fold_census.*`, `test/physics/byte_identity.test.ts`; optional C: knot paint (after B, K111 s5).
+- **K326** · Drop knot mode (`mazeFabric`; `docs/design/K323_game_mode.md` s4-5): A freezes a golden (after K7 s2); B deletes (after A, K323 s1, K307 s2, K329), retargets `scripts/fold_census.*`, `test/physics/byte_identity.test.ts`; optional C: knot paint (after B, K111 s5).
 
 - **K327** · Labels that say what they size (Levi 10-14): `indicatorSize` (edge arrows, a viewer pref) and `markerSize` (maze icons) sound alike; proposed "Edge arrow size" and "Maze icon size"; Touch & feel mixes words with camelCase keys. In K323's design; rel. K247, K292, K297.
 
