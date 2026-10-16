@@ -306,6 +306,15 @@ Next free ID: K492.
   - evidence: `.claude/probes/K466/`
   - next: find the cases at the phone viewport, then the candidates on frozen states
   - brief: `docs/design/K466.md`
+- **K479** · Taps prefer the outgoing runs (Levi 2026-10-15 ~16:28: taps meant for the next run take
+  the arrival run). `fabric_maze_renderer.ts` `edgeAt` takes the nearest sample of every choice, the
+  arrival run included, so near the junction it is a toss-up; the arrival run should win only by a
+  clear margin, and the hover must pick what a tap takes.
+  - owner: agent `a3a1e1ecdbd2a3f27` of claude session 05e60da0-74f1-4d1d-906d-240f8a53fd12 (sonnet, started 2026-10-15 17:03, 1 h cap ~18:03)
+  - branch: `worktree-agent-a3a1e1ecdbd2a3f27`, worktree `.claude/worktrees/agent-a3a1e1ecdbd2a3f27`; last commit: `0afdff6`
+  - evidence: `.claude/probes/K479/`
+  - next: check the mid-move hypothesis, then the 1.5x preference and the tap census
+  - brief: `docs/design/K479.md`
 
 ## Next, in order
 
@@ -475,11 +484,6 @@ Every other item below waits on the trigger it names.
   thread press did not tug in the fabric, chase and reduced-drag phases (no PHYS or GEOM: the probe
   or a bug?); `m2_input_ab.mjs`'s pins and the high base-against-base floors of its fog, threads and
   _m4 cases (`docs/design/K6_1.md`, "Open after K6-1"; `.claude/probes/K6/K6-1/`).
-- **K479** · Taps prefer the outgoing runs (Levi 2026-10-15 ~16:28: taps meant for the next run take
-  the arrival run). `fabric_maze_renderer.ts` `edgeAt` takes the nearest sample of every choice, the
-  arrival run included, so near the junction it is a toss-up; the arrival run should win only by a
-  clear margin, and the hover must pick what a tap takes.
-  - brief: `docs/design/K479.md`
 - **K485** · Pixel pass for the phone sheet and row help (scripts/phone.ps1): the sheet query, Back,
   the peek, help taps; K467 ran only in phone emulation
 - **K486** · Touch help for the panel's buttons: Reset path, Replay settle, Reset to defaults, the
