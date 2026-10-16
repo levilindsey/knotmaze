@@ -34,6 +34,7 @@ import type { ModeBadge } from "../ui/mode_badge";
 import type { MotionSetting } from "../ui/motion";
 import type { MovePad } from "../ui/move_pad";
 import type { OffscreenIndicators } from "../ui/offscreen_indicators";
+import { REVEAL_END_CROSSES, REVEAL_END_GLOWS } from "../ui/url_state";
 import type { UrlParams } from "../ui/url_state";
 import { panRange } from "../ui/view_clamp";
 import type { OpenPanel, PanBounds } from "../ui/view_clamp";
@@ -1035,11 +1036,21 @@ export function installProbeHooks(ctx: ProbeCtx): void {
       visitAll?: boolean;
       burnt?: string; // K290: the burnt thread's look, "gone" or "char"
       revealFinish?: boolean; // K465: the finish shows from the start
+      endCross?: string; // K466: an end under a crossing (under, past, back)
+      endGlow?: string; // K466: the ends' halo (soft, bright)
     } = {}
   ) => {
     if (!ctx.scene.fabric || !ctx.scene.fabricController) return null;
     if (o.burnt === "gone" || o.burnt === "char") ctx.params.burnt = o.burnt;
     if (typeof o.revealFinish === "boolean") ctx.params.revealFinish = o.revealFinish;
+    const ec = REVEAL_END_CROSSES as readonly string[];
+    if (o.endCross !== undefined && ec.includes(o.endCross)) {
+      ctx.params.revealEndCross = o.endCross as UrlParams["revealEndCross"];
+    }
+    const eg = REVEAL_END_GLOWS as readonly string[];
+    if (o.endGlow !== undefined && eg.includes(o.endGlow)) {
+      ctx.params.revealEndGlow = o.endGlow as UrlParams["revealEndGlow"];
+    }
     // Stage 2c: through the params (the frame loop syncs them every tick).
     // The numbers go in raw, past the panel's ranges (a reach of 1000 shows
     // every stub whole).

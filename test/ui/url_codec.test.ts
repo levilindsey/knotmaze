@@ -3,6 +3,8 @@ import {
   APPEAR_PRESETS,
   ENUM_OPTIONS,
   PARAM_DEFAULTS,
+  REVEAL_END_CROSSES,
+  REVEAL_END_GLOWS,
   applyAppearMode,
   chaseParamsOf,
   encodeParams,
@@ -114,6 +116,7 @@ describe("links", () => {
       fireClock: "turn",
       fireSpeedRt: 0.2, fireDelayRt: 20,
       revealFinish: true,
+      revealEndCross: "past", revealEndGlow: "bright",
     });
   });
 
@@ -347,6 +350,39 @@ describe("links", () => {
     expect(parseParams(`?${encodeParams(both)}`)).toEqual(both);
   });
 
+  // K466 (Levi, 2026-10-15: "emphasize the unexplored thread ends a bit
+  // more, maybe especially for ends that lie under a crossing"): where a
+  // frontier ends at a crossing (`rve`: under | past | back) and the end's
+  // halo (`rvg`: soft | bright). A link lists them only off the default.
+  it("reads the reveal's end params from rve and rvg", () => {
+    expect(REVEAL_END_CROSSES).toEqual(["under", "past", "back"]);
+    expect(REVEAL_END_GLOWS).toEqual(["soft", "bright"]);
+    const D = PARAM_DEFAULTS;
+    for (const c of REVEAL_END_CROSSES) {
+      for (const g of REVEAL_END_GLOWS) {
+        const p = parseParams(`?7&xp=threads&rve=${c}&rvg=${g}`);
+        expect([p.revealEndCross, p.revealEndGlow]).toEqual([c, g]);
+        expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+        const defaults = D as unknown as CodecDefaults;
+        const decoded = decodeToken(encodeParams(p), defaults);
+        expect(decoded.error).toBeNull();
+        const listed = Object.keys(decoded.values).filter((k) => decoded.values[k] !== defaults[k]).sort();
+        const want = ["exploration"];
+        if (c !== D.revealEndCross) want.push("revealEndCross");
+        if (g !== D.revealEndGlow) want.push("revealEndGlow");
+        expect(listed).toEqual(want.sort());
+      }
+    }
+    // Garbage reads as the default, and the defaults stay out of the token.
+    expect(parseParams("?7&rve=x").revealEndCross).toBe(D.revealEndCross);
+    expect(parseParams("?7&rvg=x").revealEndGlow).toBe(D.revealEndGlow);
+    expect(encodeParams(parseParams(`?7&rve=${D.revealEndCross}&rvg=${D.revealEndGlow}`))).toBe("7");
+    // An override after a token wins over the token's own value.
+    const other = REVEAL_END_CROSSES.find((c) => c !== D.revealEndCross)!;
+    const token = encodeParams(parseParams(`?7&rve=${other}`));
+    expect(parseParams(`?${token}`).revealEndCross).toBe(other);
+    expect(parseParams(`?${token}&rve=${D.revealEndCross}`).revealEndCross).toBe(D.revealEndCross);
+  });
   // K140: the finish confetti's override keys, the amount's clamp, and the
   // token round trip.
   it("reads the finish confetti from override keys", () => {
@@ -690,6 +726,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   fireClock: "fck",
   fireSpeedRt: "fsr", fireDelayRt: "fdr",
   revealFinish: "rvx",
+  revealEndCross: "rve", revealEndGlow: "rvg",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

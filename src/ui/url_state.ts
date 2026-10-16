@@ -124,6 +124,15 @@ export const EXPLORATION_MODES: Exploration[] = ["off", "fog", "threads"];
 // shader code); test/ui/param_codec.test.ts holds the two lists equal.
 export type RevealLook = "fade" | "halo" | "glow" | "dots" | "fray" | "beacon";
 export const REVEAL_LOOKS: RevealLook[] = ["fade", "halo", "glow", "dots", "fray", "beacon"];
+// K466 THE ENDS: where a frontier's fade goes when it would lie under a
+// crossing (under: where it falls, K76's placement; past: pushed beyond
+// the crossing, so a little more thread shows; back: pulled in before
+// it), and the end halo's strength (soft: K76's; bright: larger and
+// brighter).
+export type RevealEndCross = "under" | "past" | "back";
+export const REVEAL_END_CROSSES: RevealEndCross[] = ["under", "past", "back"];
+export type RevealEndGlow = "soft" | "bright";
+export const REVEAL_END_GLOWS: RevealEndGlow[] = ["soft", "bright"];
 // The reveal's reach and its fade, lattice units (the renderer uses
 // min(fade, reach)).
 export const REVEAL_DISTANCE_MIN = 1;
@@ -372,6 +381,12 @@ export interface UrlParams {
   // of waiting until the exit has been seen (K76's decision 6, which off
   // keeps). Live; only the thread reveal reads it.
   revealFinish: boolean;
+  // K466 (Levi, 2026-10-15: "emphasize the unexplored thread ends a bit
+  // more, maybe especially for ends that lie under a crossing"): where a
+  // frontier's fade goes when it would lie under a crossing, and how
+  // strong the end's halo is. Live; only the thread reveal reads them.
+  revealEndCross: RevealEndCross;
+  revealEndGlow: RevealEndGlow;
   // Section color scheme (fabric mode; knot mode supports mono/strands):
   // mono | strands | depth | segments | noise.
   colorScheme: ColorScheme;
@@ -822,6 +837,9 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   fireDelayRt: 20,
   // K465: the finish shows under the thread reveal (Levi, 2026-10-15).
   revealFinish: true,
+  // K466: ends move out from under crossings, and their halos are bright.
+  revealEndCross: "past",
+  revealEndGlow: "bright",
 };
 
 // The burn race a design plays (K114), or null without one. Never on K80's
@@ -1009,6 +1027,8 @@ export const ENUM_OPTIONS: {
   revealLook: REVEAL_LOOKS,
   burnt: BURNT_MODES,
   fireClock: FIRE_CLOCKS,
+  revealEndCross: REVEAL_END_CROSSES,
+  revealEndGlow: REVEAL_END_GLOWS,
 };
 
 function clamp01(v: number): number {
@@ -1405,6 +1425,9 @@ function readLegacy(
     fireDelayRt: clampTo(readNumber(query, "fdr", D.fireDelayRt), FIRE_DELAY_MAX),
     // K465's finish under the thread reveal (`&xp=threads&rvx=0` hides it).
     revealFinish: readBool(query, "rvx", D.revealFinish),
+    // K466's ends (`&xp=threads&rve=under&rvg=soft` is K76's look).
+    revealEndCross: readChoice(query, "rve", REVEAL_END_CROSSES, D.revealEndCross),
+    revealEndGlow: readChoice(query, "rvg", REVEAL_END_GLOWS, D.revealEndGlow),
   };
 }
 

@@ -284,6 +284,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("fireDelayRt"), // 148
   // K465: the finish shows under the thread reveal (default on).
   flag("revealFinish"), // 149
+  // K466 THE ENDS: where an end under a crossing goes, and the end's halo
+  // (REVEAL_END_CROSSES and REVEAL_END_GLOWS order, url_state.ts).
+  choice("revealEndCross", ["under", "past", "back"]), // 150
+  choice("revealEndGlow", ["soft", "bright"]), // 151
 ]);
 
 // The format version a blob names first. Bump it for anything but an

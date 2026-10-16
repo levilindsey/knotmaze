@@ -532,6 +532,8 @@ async function main(): Promise<void> {
     if (li >= 0) ex.look = li;
     f.burntLook = params.burnt; // K290: how burnt runs draw
     f.revealFinish = params.revealFinish; // K465: the finish under the reveal
+    ex.endCross = params.revealEndCross; // K466: an end under a crossing
+    ex.endGlow = params.revealEndGlow; // K466: the ends' halo
   }
   // How long a follow camera stays on a framing an indicator's tap moved it
   // to, beyond the usual FOLLOW_DELAY, before it eases back to the head.
