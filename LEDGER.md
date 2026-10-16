@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K512.
+Next free ID: K513.
 
 ## Waiting on Levi
 
@@ -1036,7 +1036,7 @@ Every other item below waits on the trigger it names.
 - **K504** · K425 - a variant_build.ps1 -Subst naming ribbon_renderer.ts for joinery code (rebuildFillets, cpuJunctionField, the FILLET constants) must now name src/render/ribbon/joinery.ts; normArc likewise lives in ribbon/sampling.ts.
 - **K505** · K5 M5: the same-state pixel A/B (section 5.1, knot/fabric/fog/threads with scripted input) and hook inventory were not run for the panel move; run under the perf lock on master 3166d8f before M6.
 - **K506** · Stage M4 handoff leftovers not folded into M5 (filed, not done): FrameLoopDeps still reads physState/settleWall0/warmHoldFrom through main.ts getters instead of taking life; ProbeCtx could take life/scene/audioMap whole; stale lore prose in physics-settle.md and render-shaders.md still names main.ts for lifecycle code; the A/B harness physon step should wait for asleep, not frozen.
-- **K507** · Cross-build threads round trip vs current master fails 0 px: c22de79 and 3166d8f render the same captureScene differently by 43,385 px in the frontier bbox 641,365-884,608 (maxDelta 48), while capture transfer itself is faithful (3/6 px); isolate R2 by rerunning the prescribed c22de79-vs-52faab8 pairing, then bisect fabric_maze_renderer/explore rendering if it persists (.claude/probes/K5/R2/checks/k463/roundtrip/).
+- **K512** · The cross-build threads round trip's 0 px expectation only holds across builds whose threads defaults match: K466 (2aea912) added `rve`/`rvg` with new defaults, so c22de79-vs-post-K466 pairings differ by 43,385 px unless the query pins the legacy look (`&rve=under&rvg=soft`, 0 px both ways, K507). Future prescribed pairings spanning 2aea912 must pin both, or expect the frontier diff.
 - **K508** · K5 R2's checks_r2.ps1/checks_threads.ps1 hardcode the deleted worktree agent-a695f82540244625a and cannot rerun as-is; K463's repo-relative k463_checks.ps1 supersedes them for these two checks.
 - **K509** · K6-1 question 2's sleep-trip miss still unmeasured (deferred to K6-2): on knot fw=0 with the worker, shoot after the first sleep, invalidate(), shoot again, diff - K6-2 should run it before gating GEOM (docs/design/K6_1.md, Stage K471 handoff).
 - **K510** · K5 M6 (pointer input, auto audio, keys; docs/design/K5_K6_split.md 5.2) is the next main-lane extraction and gates K6-2; sized at ~1150 lines across three modules on the hot drag path, it needs its own 2h opus stage (re-map, moved-code review, scripted-input pixel A/B, k7_frames rest+drag on both hosts) before K6-2's GEOM sleep-trip measurement and dt-to-tickFireFx work can start.
@@ -1259,6 +1259,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 ## Done
 
 - **K471** · K6-1's unrun checks: &phw=0 PHYS clear at rest on both hosts; the fabric/chase/reduced non-tug was a loop_shadow probe bug (pressed the entrance choice run), fixed in the probe; m2_input_ab's pins fixed (pluck clock, syncExplore, fogTime, waitStill) - controls now 0 px. Done in fb54535 (2026-10-15).
+- **K507** · K507 isolated: c22de79-vs-52faab8 round trip 0 px both ways (R2 cleared); the 43,385 px vs 3166d8f bisects to K466's 2aea912 (new `rve`/`rvg` defaults), and pins to 0 px with `&rve=under&rvg=soft` - intentional, not a code-move regression; follow-up K512. Done (probes only, this commit, 2026-10-16; evidence `.claude/probes/K5/R2/checks/k507/`, original pairing preserved in `checks/k463_c22_3166/`).
 - **K463** · K5 R2's unrun checks under the perf lock (c22de79 vs 3166d8f): fog phw=0 PASS (same-state cross-build 0 px; branch spread was capture noise, K390); cross-build threads round trip FAIL filed as K507 (capture transfer faithful, render differs). Done (probes only, HEAD 3166d8f, 2026-10-15).
 - **K482** · Desktop panel: row-help labels are buttons only on coarse pointers and in the sheet (the desktop keeps the title tooltip, one Tab stop per row). Done in 3c509ec (2026-10-15).
 - **K483** · Phone sheet font 13 px under SHEET_QUERY only (the side panel stays at 11). Done in 3c509ec (2026-10-15).
