@@ -5,6 +5,8 @@ paths:
   - "test/render/pluck_model.test.ts"
   - "src/render/pluck_ripple.ts"
   - "test/physics/tug.test.ts"
+  - "src/app/input_pointer.ts"
+  - "src/app/auto_audio.ts"
 ---
 
 # Render lore: plucks

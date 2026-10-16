@@ -6,6 +6,7 @@ paths:
   - "test/ui/move_pad.test.ts"
   - "src/ui/gamepad.ts"
   - "test/ui/gamepad.test.ts"
+  - "src/app/input_keys.ts"
   - "src/game/route_plan.ts"
   - "test/game/route_plan.test.ts"
 ---

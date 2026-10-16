@@ -14,27 +14,9 @@ import { finishHold } from "./game/explore_finish";
 import { buildFire } from "./game/fire";
 import { FireClock } from "./game/fire_clock";
 import type { Fire } from "./game/fire";
-import {
-  HeldKeys,
-  KEY_REACH,
-  MoveWait,
-  absorbsChord,
-  chordEdges,
-  chordMatters,
-  departureVectors,
-  holdDue,
-  keyBelongsElsewhere,
-  keyDirOf,
-  pickHold,
-  pickMove,
-  queuedPressHeld,
-  tapWhileMoving,
-  waitKeyOf,
-} from "./ui/key_moves";
-import type { Departure, KeyDir, LastPress, WaitingMove } from "./ui/key_moves";
-import { MOVE_PAD_KEY, MovePad, movePadPref } from "./ui/move_pad";
-import { GamepadInput } from "./ui/gamepad";
-import type { GamepadSnapshot } from "./ui/gamepad";
+import { tapWhileMoving } from "./ui/key_moves";
+import { MOVE_PAD_KEY, movePadPref } from "./ui/move_pad";
+
 import { MinotaurChase } from "./game/minotaur";
 import type { ChaseEvent } from "./game/minotaur";
 import { TurnMinotaur, turnConfig, turnSeed } from "./game/minotaur_turns";
@@ -97,7 +79,6 @@ import {
 } from "./render/marker_glyphs";
 import { ConfettiLayer } from "./render/confetti";
 import { confettiPlan, sprayUnit } from "./render/confetti_model";
-import type { PluckRipple } from "./render/pluck_model";
 import { PluckRipples } from "./render/pluck_ripple";
 import { startShaderWarmup, warmContextFor } from "./render/shader_warmup";
 import { openDailyStats } from "./ui/daily_stats_view";
@@ -125,8 +106,6 @@ import {
 import { KnotSynth } from "./audio/knot_synth";
 import { SnoreSfx, fetchSnore } from "./audio/snore_sfx";
 import { attachSnoreLink } from "./ui/snore_link";
-import { segmentsNear, noteToFreq } from "./audio/pitch_space";
-import { SCARBOROUGH_FAIR } from "./audio/songs";
 import { SongScheduler } from "./audio/song_scheduler";
 import { createLoader } from "./ui/loader";
 import { createStamp } from "./app/stamp";
@@ -136,6 +115,9 @@ import { createLoopFlags, Flag } from "./app/loop_flags";
 import { createLifecycle } from "./app/lifecycle";
 import { BACKGROUND, createScene } from "./app/scene";
 import { createAudioMap } from "./app/audio_map";
+import { createPointerInput } from "./app/input_pointer";
+import { createKeyInput } from "./app/input_keys";
+import { createAutoAudio } from "./app/auto_audio";
 import {
   FOLLOW_DELAY,
   FOLLOW_RAMP,
@@ -150,15 +132,6 @@ const MAZE_STATS_KEY = "knotmaze.showMazeStats";
 const FINISH_INDICATOR_KEY = "knotmaze.finishIndicator";
 const TAP_TO_PAN_KEY = "knotmaze.tapToPan";
 
-// RENDER-ONLY PLUCK input (see render/pluck_overlay.ts): a press that
-// stays within the slop (CSS px, per pointer type) until release is a TAP
-// - it plucks, touching no physics; moving past it commits a tug (or, with
-// physics off, a camera pan). Taps sound at TAP_STRENGTH.
-const TAP_SLOP_PX: Record<string, number> = { mouse: 4, pen: 6, touch: 10 };
-const TAP_STRENGTH = 0.55;
-// K101: how far ahead (seconds of audio clock) music mode schedules its
-// notes. A frame longer than this makes a note start late, never early.
-const MUSIC_LOOKAHEAD = 0.3;
 
 const app = new Application();
 
@@ -669,65 +642,40 @@ async function main(): Promise<void> {
     pickPosition: params.pickPosition,
   });
 
-  // Pointer tug: grab the nearest thread particle, drag it (springs carry
-  // the tug through the knot), and pluck the strand on release.
-  const toLattice = (e: PointerEvent): [number, number] => [
-    (e.clientX - root.position.x) / root.scale.x,
-    (e.clientY - root.position.y) / root.scale.y,
-  ];
-  const GRAB_RADIUS = 0.7;
-  // K298, PICK MARGINS (Levi: "reduce the amount of mouse margin we allow
-  // for clicking/hovering over a thread ... And add a slider"). The pick
-  // radius from a thread's centerline (world) for a pointer type. A MOUSE
-  // (a pen too) reaches the half-width plus `pickMargin` CSS px past the
-  // ribbon's edge, and a CHOICE (edgeAt: a run from the current junction)
-  // `pickChoiceRatio` times that margin. Screen px, because aim error is
-  // in screen px; a world margin balloons when zoomed in. TOUCH keeps its
-  // world radii exactly: GRAB_RADIUS for threads, max(0.9, 1.6 tw) for
-  // choices. Hover, click, the thread cursor and the tug's grab all read
-  // these, so the cursor never promises a grab that the click then misses.
-  const pickRadius = (pt: string, choice = false): number => {
-    if (pt === "touch") {
-      return choice ? Math.max(0.9, 1.6 * params.threadWidth) : GRAB_RADIUS;
-    }
-    const px = params.pickMargin * (choice ? params.pickChoiceRatio : 1);
-    return 0.5 * params.threadWidth + px / Math.max(1e-6, root.scale.x);
-  };
-  // Is a thread within the pointer's pick radius? A particle, or the
-  // rendered ribbon between particles: particles sit up to ~0.64 world
-  // apart, so at a tight mouse margin a point on the ribbon's edge can be
-  // ~0.4 world from both of its particles.
-  // K76 stage 2c: under the thread reveal only pickThread asks (it skips
-  // hidden thread; a particle knows nothing of the reveal).
-  const onThread = (x: number, y: number, pt: string): boolean => {
-    const r = pickRadius(pt);
-    return (
-      (!scene.renderer?.exploreOn && !!scene.ps && scene.ps.nearest(x, y, r) >= 0) ||
-      !!scene.renderer?.pickThread(x, y, r)
-    );
-  };
-  // The particle a press grabs: the nearest one, or under the thread reveal
-  // the particle at the shown thread point pickThread finds (a particle's
-  // ctrl is its index in its chain), so a tug never grabs hidden thread.
-  const grabAt = (x: number, y: number, pt: string): number => {
-    if (!scene.ps) return -1;
-    const r = grabRadius(pt);
-    if (!scene.renderer?.exploreOn) return scene.ps.nearest(x, y, r);
-    const hit = scene.renderer.pickThread(x, y, r);
-    if (!hit) return -1;
-    const arr = scene.ps.chains[hit.chain];
-    if (!arr || arr.length === 0) return -1;
-    const closed = scene.ps.chainBreakAfter[hit.chain] < 0;
-    const k = Math.round(hit.ctrl);
-    return arr[closed ? ((k % arr.length) + arr.length) % arr.length : Math.max(0, Math.min(arr.length - 1, k))];
-  };
-  // The tug's grab radius: touch's as before; for a mouse, wide enough
-  // that a press onThread accepted always finds a particle (the press may
-  // sit on the ribbon between two of them).
-  const grabRadius = (pt: string): number => {
-    const r = pickRadius(pt);
-    return pt === "touch" ? r : Math.sqrt(r * r + GRAB_RADIUS * GRAB_RADIUS);
-  };
+  // K5 M6: pointer input (picking, the bounded tug, tap plucks, the
+  // canvas gestures) is src/app/input_pointer.ts. The session functions
+  // declared below and the frame loop's wake come in as closures, read
+  // at call time; the drag state is `pointer`'s (the frame loop reads
+  // it through there).
+  const pointer = createPointerInput(
+    {
+      app,
+      root,
+      params,
+      settings,
+      motion,
+      synth,
+      host,
+      ripples,
+      freqForCtrl,
+      pluckUnit,
+      physicsLive,
+      wake: () => wake(),
+      isLoading: () => life.state === "loading",
+      placeWorldAt,
+      touchCamera,
+      zoomAt,
+      panBy,
+      resetCamera,
+      nowSec,
+      handleFabricTap: (x, y, pt) => handleFabricTap(x, y, pt),
+      inWaitZone: (x, y) => inWaitZone(x, y),
+      setWaitCue: (on) => setWaitCue(on),
+      tapReach: () => tapReach(),
+    },
+    scene
+  );
+  const { pickRadius, startRipple, tugAt } = pointer;
 
   // ---- K19 MAZE STATS + K20 DAILY + K47 SAVED ATTEMPTS + K56 ------------
   // The HUD (top-left) and the win banner live in ui/maze_hud.ts; the
@@ -2120,6 +2068,12 @@ async function main(): Promise<void> {
     executeRouteRun();
     return true;
   };
+  // K334: the turn is under way: the dot travels, or (K80 turns 3a) a
+  // wait's turn plays (turnWait), so the minotaur's marker is never cut
+  // short either. Turn by turn only: real time queues in the chase, so
+  // nothing waits for it here.
+  const dotMoving = (): boolean =>
+    !scene.chase && ((scene.fabric?.animating ?? false) || turnWait > 0);
   // Every frame on arrival (keyStep, after a waiting input - a newer tap
   // or key replaces the route): the stop rules (game/route_plan.ts).
   // True while a route is in charge of the next move.
@@ -2250,1202 +2204,64 @@ async function main(): Promise<void> {
     return result !== "reject";
   };
 
-  // K120: moves by direction - the arrow keys, WASD and the move pad (the
-  // rules are in ui/key_moves.ts). A press moves at once along the run its
-  // key picks, through moveAlong / chaseAlong, so it is a tap on that run
-  // to everything that records one (the move log, the saved attempt, the
-  // stats, the chase's inputs). A key still down when the dot arrives
-  // takes the next matching run (keyStep, every frame after the move
-  // animation), and the choice hover shows that run while the dot travels.
-  // K333: two keys beside each other pressed together are a chord (a
-  // diagonal); a lone key that is ambiguous at its junction waits
-  // CHORD_WINDOW_MS for one. K334: a press while the dot travels waits for
-  // the arrival (the latest press wins) instead of snapping the dot.
-  const heldKeys = new HeldKeys();
-  let keyHold = false; // A press moved and its key may still be down.
-  let keyHoldSince = 0; // performance.now() of that press.
-  // What the hold moved in: a tap, a reset, a catch or a rebuild ends it.
-  let keyHoldFc: FabricMazeController | null = null;
-  let keyHoldTaps = 0;
-  let keyHoldChase: MinotaurChase | null = null;
-  let keyHoldTurnMino: TurnMinotaur | null = null;
-  let keyHoldInputs = 0;
-  let keyHoldCatches = 0;
-  let keyHoldTick = 0;
-  // Real time: a press while running queues its run for the arrival; the
-  // hover shows it until the player leaves the run it was queued on.
-  let keyQueued = -1;
-  let keyQueuedOn = -1;
-  let keyQueuedDir = 0;
-  let keyHover = false; // The choice hover is the hold's.
-  // What a waiting press was pressed in: a tap, a reset, a catch or a
-  // rebuild since drops it.
-  const keyStamp = () => ({
-    fc: scene.fabricController,
-    chase: scene.chase,
-    turnMino: scene.turnMino,
-    taps: scene.fabricController?.taps.length ?? 0,
-    inputs: scene.chase?.inputs.length ?? 0,
-    catches: scene.chase?.catches ?? scene.turnMino?.catches ?? 0,
-  });
-  type KeyStamp = ReturnType<typeof keyStamp>;
-  const sameStamp = (a: KeyStamp, b: KeyStamp): boolean =>
-    a.fc === b.fc &&
-    a.chase === b.chase &&
-    a.turnMino === b.turnMino &&
-    a.taps === b.taps &&
-    a.inputs === b.inputs &&
-    a.catches === b.catches;
-  // K333/K334: the move not taken yet (ui/key_moves.ts MoveWait), and the
-  // solve it was made in (keyStep drops it when that changes).
-  const moveWait = new MoveWait();
-  let moveWaitStamp: KeyStamp | null = null;
-  // K333: the last lone press that moved at once (absorbsChord).
-  let keyLast: LastPress | null = null;
-  // Levi's correction (2026-10-15): taps mid-move are ignored and keys
-  // gate on held-at-arrival, so nothing reads a tap-wait switch any
-  // more; the hook's tapsWait stays as a readable legacy flag (no-op).
-  let tapsWait = true;
-  const keyPt = new Float32Array(2);
-  const keyFlow = new Float32Array(2);
-  // A chain's world position as the ribbons draw it (with the flow field).
-  const keyPointAt = (chain: number, ctrl: number, out: Float32Array): void => {
-    scene.ps!.pointOnChain(chain, ctrl, out, 0);
-    scene.renderer!.flowOffset(out[0], out[1], keyFlow);
-    out[0] += keyFlow[0];
-    out[1] += keyFlow[1];
-  };
-  // The junction a key move leaves from: the head (the destination while a
-  // move animates), or in real time the chase's decision vertex.
-  const keyVertex = (): string | null => {
-    if (!scene.fabricController || scene.fabricController.solved) return null;
-    if (scene.chase) return scene.chase.finished ? null : scene.chase.decisionVertex;
-    return scene.fabricController.head;
-  };
-  const keyDepartures = (v: string, reach = KEY_REACH): Departure[] => {
-    const wv = scene.walkGraph?.vertices.get(v);
-    if (!wv || !scene.walkGraph || !scene.fabric) return [];
-    scene.fabric.vertexWorld(v, keyPt, 0);
-    // K114: a burnt run is no choice (choices() drops it); a smoldering arm
-    // stays, its refusal toasts as a tap's does.
-    const fc = scene.fabricController;
-    const edges = fc?.fire && v === fc.head ? fc.choices() : wv.edges;
-    return departureVectors(
-      scene.walkGraph.edges,
-      edges,
-      v,
-      keyPt[0],
-      keyPt[1],
-      keyPointAt,
-      reach
-    );
-  };
-  // Keys play only a maze on screen and still open: not in knot mode,
-  // during the intro, once solved or while the finish lands.
-  const keysLive = (): boolean =>
-    params.mazeFabric &&
-    scene.fabric !== null &&
-    scene.fabricController !== null &&
-    scene.walkGraph !== null &&
-    scene.ps !== null &&
-    scene.renderer !== null &&
-    sceneReady() &&
-    !scene.fabricController.solved &&
-    !pendingWin &&
-    // K114: a lost burn race (or one whose loss is landing) takes no moves.
-    !scene.fabricController.fireLost &&
-    !pendingLoss &&
-    !(scene.chase?.finished ?? false);
-  const setKeyHover = (eid: number): void => {
-    if (!scene.fabric || !scene.fabricController) return;
-    keyHover = eid >= 0;
-    if (scene.fabric.setHover(eid)) scene.fabric.update(scene.fabricController);
-  };
-  // A waiting press outlives the hold (a quick press mid-move is still
-  // taken on arrival); keyStep drops it when its stamp changes.
-  const endKeyHold = (): void => {
-    keyHold = false;
-    keyQueued = -1;
-    if (keyHover && moveWait.waiting === null) setKeyHover(-1);
-  };
-  const noteKeyMove = (): void => {
-    keyHold = true;
-    keyHoldFc = scene.fabricController;
-    keyHoldTaps = scene.fabricController?.taps.length ?? 0;
-    keyHoldChase = scene.chase;
-    keyHoldTurnMino = scene.turnMino;
-    if (scene.chase) {
-      keyHoldInputs = scene.chase.inputs.length;
-      keyHoldCatches = scene.chase.catches;
-      keyHoldTick = scene.chase.tick;
-    } else if (scene.turnMino) {
-      keyHoldCatches = scene.turnMino.catches; // K80 turns.
-    }
-  };
-  // One move by direction; true when it moved (queued, in real time).
-  const keyMoveAlong = (eid: number): boolean => {
-    if (!scene.fabricController) return false;
-    if (scene.chase) {
-      const p = scene.chase.player;
-      if (!chaseAlong(eid)) return false;
-      keyQueued = p.edge >= 0 ? eid : -1;
-      keyQueuedOn = p.edge;
-      keyQueuedDir = p.dir;
-      return true;
-    }
-    const before = scene.fabricController.taps.length;
-    const caught = scene.turnMino?.catches ?? 0;
-    clearRoute(); // A key (press or hold) replaces a tap's route (K480).
-    moveAlong(eid);
-    // K80 turns: a move that was caught ends the hold at once (the keys
-    // must come up first, as in real time).
-    if (scene.turnMino && scene.turnMino.catches !== caught) {
-      heldKeys.clear();
-      endKeyHold();
-      return false;
-    }
-    return scene.fabricController.taps.length > before;
-  };
-  // A press taken: one key, or a chord (two keys beside each other, oldest
-  // first), from the junction the keys leave from, as a tap. No match does
-  // nothing; a hold already running keeps going. `at`: when its first key
-  // went down.
-  const pressMove = (dirs: readonly KeyDir[], at: number): void => {
-    const v = keyVertex();
-    if (v === null) return;
-    const deps = keyDepartures(v);
-    const p = pickMove(deps, dirs, { hold: false });
-    if (p.edge < 0) return;
-    const lone = dirs.length === 1 ? dirs[0] : null;
-    const chords = lone ? chordEdges(deps, lone) : {};
-    if (keyHover) setKeyHover(-1);
-    if (keyMoveAlong(p.edge)) {
-      keyHoldSince = at;
-      noteKeyMove();
-      keyLast = lone ? { dir: lone, at, edge: p.edge, chords } : null;
-    }
-  };
-  // Take a waiting move: keys along what they pick now, a tap's run, or a
-  // wait (K80 turns 3a).
-  const takeWaiting = (w: WaitingMove | null): void => {
-    if (w === null) return;
-    if (w.wait) {
-      if (keyHover) setKeyHover(-1);
-      waitTurn();
-      return;
-    }
-    if (w.edge >= 0) {
-      if (keyHover) setKeyHover(-1);
-      moveAlong(w.edge); // K334: the tap, on the arrival.
-      return;
-    }
-    pressMove(w.dirs, w.at);
-  };
-  // K334: the turn is under way: the dot travels, or (K80 turns 3a) a
-  // wait's turn plays (turnWait), so the minotaur's marker is never cut
-  // short either. Turn by turn only: real time queues in the chase, so
-  // nothing waits for it here.
-  const dotMoving = (): boolean =>
-    !scene.chase && ((scene.fabric?.animating ?? false) || turnWait > 0);
-  // K80 turns 3a: the WAIT from any input - the wait key, the pad's center,
-  // a tap on the head (and the probe hook). A press waiting out its chord
-  // window goes first (it was pressed first); a wait ends a hold, as a tap
-  // does; while the turn is under way it waits for the arrival (MoveWait,
-  // the latest input winning), else it is taken at once. True when it was
-  // taken or queued.
-  const inputWait = (): boolean => {
-    if (!scene.turnMino || !scene.fabric || !scene.fabricController) return false;
-    if (moveWait.waiting !== null && !moveWait.waiting.queued) {
-      takeWaiting(moveWait.takeNow());
-    }
-    endKeyHold();
-    clearRoute();
-    if (!scene.turnMino) return false; // The press before it was caught.
-    if (moveWait.wait(performance.now(), dotMoving())) {
-      moveWaitStamp = keyStamp();
-      if (keyHover) setKeyHover(-1);
-      return true;
-    }
-    return waitTurn();
-  };
-  // A fresh press (or a pad press) at `at` (performance.now()).
-  const keyPress = (dir: KeyDir, at: number): void => {
-    if (keyVertex() === null) return;
-    // A press waiting out its window that this key does not join goes
-    // first.
-    takeWaiting(moveWait.before(dir, at));
-    const v = keyVertex();
-    if (v === null) return;
-    const action = moveWait.press(dir, at, {
-      moving: dotMoving(),
-      absorbed:
-        keyLast !== null && absorbsChord(keyLast, dir, at, heldKeys.holds(keyLast.dir)),
-      ambiguous: () => chordMatters(keyDepartures(v), dir),
-    });
-    if (action === "chord") {
-      if (!moveWait.waiting?.queued) takeWaiting(moveWait.takeNow());
-    } else if (action === "queue" || action === "window") {
-      moveWaitStamp = keyStamp();
-    } else if (action === "now") {
-      pressMove([dir], at);
-    }
-  };
-  // K333/K334: the waiting move, every frame. True while it waits (a hold
-  // waits with it) or when it was taken this frame.
-  const stepWaiting = (now: number): boolean => {
-    const w = moveWait.waiting;
-    if (w === null) return false;
-    const v = keyVertex();
-    if (
-      v === null ||
-      !keysLive() ||
-      moveWaitStamp === null ||
-      !sameStamp(moveWaitStamp, keyStamp())
-    ) {
-      moveWait.clear();
-      if (keyHover) setKeyHover(-1);
-      return false;
-    }
-    const moving = dotMoving();
-    const wasQueued = w.queued; // step() clears it on the object it hands back.
-    const due = moveWait.step(now, moving, (d) => chordMatters(keyDepartures(v), d));
-    if (due === "wait") {
-      // While the dot travels the hover shows what the move takes (a wait
-      // takes no run).
-      if (moving) {
-        setKeyHover(
-          w.wait
-            ? -1
-            : w.edge >= 0
-              ? w.edge
-              : pickMove(keyDepartures(v), w.dirs, { hold: false }).edge
-        );
-      }
-      return true;
-    }
-    // Levi's correction: a press queued mid-move counts only when its
-    // key (both, for a chord) is still held on this arrival frame;
-    // press-and-release before it is discarded.
-    if (
-      due !== null &&
-      !queuedPressHeld(
-        { dirs: due.dirs, at: due.at, queued: wasQueued, edge: due.edge, wait: due.wait },
-        (d) => heldKeys.holds(d)
-      )
-    ) {
-      if (keyHover) setKeyHover(-1);
-      return true;
-    }
-    takeWaiting(due);
-    return true;
-  };
-  // Every frame, after the move animation (or the chase) stepped.
-  const keyStep = (): void => {
-    if (stepWaiting(performance.now())) return;
-    if (routeStep()) return; // K480: a multi-run tap's next run, on arrival.
-    if (!keyHold) return;
-    const fc = scene.fabricController;
-    if (
-      heldKeys.size === 0 ||
-      !keysLive() ||
-      !fc ||
-      fc !== keyHoldFc ||
-      scene.chase !== keyHoldChase ||
-      scene.turnMino !== keyHoldTurnMino
-    ) {
-      endKeyHold();
-      return;
-    }
-    // K80 turns: caught, as in real time - the keys must come up first.
-    if (scene.turnMino && scene.turnMino.catches !== keyHoldCatches) {
-      heldKeys.clear();
-      endKeyHold();
-      return;
-    }
-    if (scene.chase) {
-      if (scene.chase.catches !== keyHoldCatches) {
-        // Caught and back at the entrance: the keys must come up first.
-        heldKeys.clear();
-        endKeyHold();
-        return;
-      }
-      if (scene.chase.inputs.length !== keyHoldInputs) {
-        endKeyHold(); // A tap took over.
-        return;
-      }
-    } else if (fc.taps.length !== keyHoldTaps) {
-      endKeyHold(); // A tap, Reset path or a restore moved the solve.
-      return;
-    }
-    const v = keyVertex();
-    if (v === null) {
-      endKeyHold();
-      return;
-    }
-    const taps = fc.taps;
-    const arrival = taps.length > 0 ? taps[taps.length - 1] : -1;
-    if (scene.chase && keyQueued >= 0) {
-      const p = scene.chase.player;
-      if (p.edge === keyQueuedOn && p.dir === keyQueuedDir) {
-        setKeyHover(keyQueued); // Still on the run it was queued from.
-        return;
-      }
-      keyQueued = -1;
-    }
-    const pick = pickHold(keyDepartures(v), heldKeys.dirs, arrival);
-    const moving = scene.chase
-      ? scene.chase.playerMoving || scene.chase.tick === keyHoldTick
-      : dotMoving();
-    if (!holdDue({ moving, now: performance.now(), since: keyHoldSince })) {
-      setKeyHover(pick.edge); // What the hold takes next.
-      return;
-    }
-    // Arrived: the next run on this same frame (a held key chains with no
-    // pause and no snap), or the hold stops here (no match, a tie, a
-    // dead-end tip - its only run is the arrival).
-    // K480 (decision 5): a hold stops for the route's warnings too,
-    // judged on the run it would take next (real time has none).
-    if (pick.edge >= 0 && !scene.chase) {
-      const tele = teleOf();
-      const warn = routeWarning({
-        huntWas: moveHuntWas,
-        huntIs: scene.turnMino?.hunting ?? false,
-        walk: fc.walk,
-        head: fc.head,
-        remaining: [pick.edge],
-        teleEdges: tele.edges,
-        teleVertices: tele.verts,
-        smolderAt:
-          fc.fire?.clock === "turn"
-            ? firstSmolderIndex(fc.walk, fc.fire, fc.walkedDist, fc.head, [pick.edge])
-            : -1,
-      });
-      if (warn) {
-        if (warn === "smolder") smolderToast();
-        endKeyHold();
-        return;
-      }
-    }
-    if (pick.edge < 0 || !keyMoveAlong(pick.edge)) {
-      endKeyHold();
-      return;
-    }
-    noteKeyMove();
-  };
-  window.addEventListener("keydown", (e) => {
-    const dir = keyDirOf(e);
-    if (dir === null) {
-      // K80 turns 3a: the WAIT key (`.`, or Space off a button or link),
-      // with the turn minotaur on; one wait a press (no hold). Shift is let
-      // through for `.` (some layouts need it).
-      if (!scene.turnMino || !waitKeyOf(e)) return;
-      const guard = {
-        ctrlKey: e.ctrlKey,
-        altKey: e.altKey,
-        metaKey: e.metaKey,
-        shiftKey: e.shiftKey && e.key !== ".",
-        defaultPrevented: e.defaultPrevented,
-        target: e.target,
-      };
-      if (keyBelongsElsewhere(guard) || !keysLive()) return;
-      e.preventDefault();
-      if (!e.repeat) inputWait();
-      return;
-    }
-    const id = e.code || e.key;
-    if (e.repeat) {
-      // The browser's own repeat: the hold does the repeating.
-      if (heldKeys.has(id)) e.preventDefault();
-      return;
-    }
-    if (keyBelongsElsewhere(e) || !keysLive()) return;
-    e.preventDefault();
-    const at = performance.now();
-    if (!heldKeys.press(id, dir, at)) return;
-    keyPress(dir, at);
-  });
-  // K333: a key that comes up ends its press's chord window: no second key
-  // is coming.
-  const releaseKey = (id: string): void => {
-    heldKeys.release(id);
-    takeWaiting(moveWait.release((d) => heldKeys.holds(d)));
-    if (heldKeys.size === 0) endKeyHold();
-  };
-  // Capture: a keyup always lands, whoever handles it.
-  window.addEventListener("keyup", (e) => releaseKey(e.code || e.key), true);
-  const dropKeys = (): void => {
-    heldKeys.clear();
-    moveWait.clear();
-    endKeyHold();
-  };
-  window.addEventListener("blur", dropKeys);
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) dropKeys();
-  });
-  // K120 Part B: the move pad (ui/move_pad.ts) - each finger on it is a
-  // held key; fabricTick shows it while the keys are live.
-  // K333: two fingers on arms beside each other within the window are a
-  // chord, as two keys are.
-  const movePad = new MovePad({
-    press: (id, dir) => {
-      const at = performance.now();
-      if (!keysLive() || !heldKeys.press(id, dir, at)) return;
-      keyPress(dir, at);
+  // K5 M6: key input (K120's moves by direction, the move pad, the
+  // gamepad poll) is src/app/input_keys.ts. The session functions it
+  // moves through stay here for M7 and come in as its deps; keyHold and
+  // tapsWait are `keyInput`'s, read through it.
+  const keyInput = createKeyInput(
+    {
+      params,
+      sceneReady,
+      moveAlong,
+      chaseAlong,
+      waitTurn,
+      clearRoute,
+      routeStep: () => routeStep(),
+      dotMoving,
+      smolderToast,
+      teleOf,
+      moveHuntWas: () => moveHuntWas,
+      get turnWait() {
+        return turnWait;
+      },
+      get pendingWin() {
+        return pendingWin;
+      },
+      get pendingLoss() {
+        return pendingLoss;
+      },
     },
-    release: (id) => releaseKey(id),
-    // K80 turns 3a: the center is the wait button while the turn minotaur
-    // is on (fabricTick: setWait).
-    wait: () => {
-      if (keysLive()) inputWait();
-    },
-  });
-
-  // K499: the gamepad (ui/gamepad.ts), polled once a frame by the frame
-  // loop (fabricTick, beside keyStep). Its directions are held keys
-  // ("game:<dir>", one per direction) through the same press path as the
-  // keyboard and the pad, so the picker, chords, holds and the
-  // held-at-arrival rule are the keys' own; a direction released drops
-  // its key, as a keyup does. A/confirm is a tap-class step: at rest it
-  // steps once along the held direction (pressMove, no hold of its own);
-  // while the dot travels it is discarded, never queued (tapWhileMoving,
-  // Levi's correction). The poll only reads the pad and fires on edges,
-  // so an idle pad never wakes a sleeping scene; presses count only
-  // while the keys are live (a modal or the panel owns the moment, as
-  // keyBelongsElsewhere keeps the arrows), releases always land.
-  const gamepad = new GamepadInput();
-  const pollGamepad = (): void => {
-    if (typeof navigator === "undefined" || !navigator.getGamepads) return;
-    let snap: GamepadSnapshot | null = null;
-    for (const gp of navigator.getGamepads()) {
-      if (gp !== null && gp.connected) {
-        snap = gp;
-        break;
-      }
-    }
-    const ev = gamepad.poll(snap);
-    for (const dir of ev.released) releaseKey(`game:${dir}`);
-    if (!keysLive()) return;
-    const at = performance.now();
-    for (const dir of ev.pressed) {
-      if (heldKeys.press(`game:${dir}`, dir, at)) keyPress(dir, at);
-    }
-    if (ev.confirm && gamepad.dirs.length > 0 && tapWhileMoving(dotMoving()) === "move") {
-      pressMove(gamepad.dirs, at);
-    }
-  };
-
-  // Stage 19 - bounded tug + snap-back, pointer-layer only (the physics
-  // grab machinery is untouched, so knot-mode byte identity holds). The
-  // drag target is rubber-banded around the grab ORIGIN (the grabbed
-  // particle's position at grab time): eff = L * tanh(r / L) with
-  // L = tugLimit thread widths, so the first stretch tracks the cursor
-  // ~1:1 and the thread asymptotes at the limit - pulling further reads
-  // as mounting resistance. On release the target eases home
-  // (exponential at snapBack 1/s) before the grab frees; the pluck voice
-  // fires at POINTERUP from the tracked drag speed, since by actual
-  // release time the eased thread is nearly still.
-  // A STRING-style release (pluckStyle string, the default) frees the
-  // physics at once - the knot's natural snap-back propagates as with any
-  // drag - and adds the RENDER-ONLY vibration (render/pluck_overlay.ts) on
-  // the released unit. Taps and auto plucks are that vibration alone:
-  // they never grab, drag or wake the physics.
-  const grabOrigin = new Float64Array(2);
-  const dragPos = new Float64Array(2);
-  let dragVel = 0;
-  let lastMoveT = 0;
-  let snapMode: "none" | "soft" = "none";
-
-  const boundedDragTo = (x: number, y: number): void => {
-    if (!scene.ps) return;
-    const L = Math.max(0.1, params.tugLimit * params.threadWidth);
-    const dx = x - grabOrigin[0];
-    const dy = y - grabOrigin[1];
-    const r = Math.hypot(dx, dy);
-    const s = r > 1e-9 ? (L * Math.tanh(r / L)) / r : 0;
-    dragPos[0] = grabOrigin[0] + dx * s;
-    dragPos[1] = grabOrigin[1] + dy * s;
-    host.dragTo(dragPos[0], dragPos[1]);
-  };
-
-  // End any release animation immediately (new grab, regenerate): free
-  // the grab with no sound - the pluck already played.
-  const cancelSnap = (): void => {
-    if (snapMode === "none") return;
-    snapMode = "none";
-    host.release();
-  };
-
-  // K279 RIPPLE: a pluck's ring at the plucked point (render/pluck_ripple.ts;
-  // pluckRipple's look, at rippleStrength for taps and releases and
-  // rippleAuto for auto plucks). None under Reduced motion.
-  const startRipple = (
-    chain: number,
-    at: { ctrl?: number; arc?: number },
-    strength: number,
-    delay = 0,
-    look: PluckRipple = params.pluckRipple
-  ): void => {
-    if (!scene.renderer || look === "off" || !(strength > 0)) return;
-    ripples.look = look;
-    ripples.reducedMotion = motion.reduced;
-    const pt = scene.renderer.pluckPoint(chain, at);
-    if (pt) ripples.add(pt.x, pt.y, strength, delay);
-  };
-  // K279 TUG: a tap's small physical kick (pluckTug, peak in thread widths;
-  // auto plucks only with tugAuto). The tapped stretch between its nodes
-  // (renderer.tugSpan: crossings, joints, markers, ends; at most
-  // TUG_MAX_CTRL each way) moves toward
-  // `side` by a sine bump, starting at rest; the springs bring it home and
-  // the knot sleeps again. Live physics only, never under Reduced motion;
-  // tug 0 touches no physics at all (a tap stays render-only).
-  const TUG_MAX_CTRL = 6;
-  const tugAt = (
-    chain: number,
-    at: { ctrl?: number; arc?: number },
-    side: number,
-    amount: number
-  ): void => {
-    if (!scene.ps || !scene.renderer || !(amount > 0) || !physicsLive() || motion.reduced) {
-      return;
-    }
-    const span = scene.renderer.tugSpan(chain, at, TUG_MAX_CTRL);
-    if (!span) return;
-    const amp = Math.min(1, amount) * params.threadWidth;
-    // The host wakes the physics for a tug that moved anything; wake()
-    // here also asks for the render pass (a paused scene).
-    if (host.tug(chain, span.c0, span.c1, span.tap, side, amp) > 0) wake();
-  };
-
-  // Release the current drag. string: free the physics now and set the
-  // released unit vibrating (amplitude from the release offset, swinging
-  // from the side it was pulled toward); soft: ease home (snapBack).
-  const beginRelease = (style: "soft" | "string", freq: number): void => {
-    if (style === "string" && scene.ps && scene.renderer && scene.ps.grabbedParticle >= 0) {
-      const p = scene.ps.grabbedParticle;
-      const chain = scene.ps.chainOfParticle(p);
-      if (chain >= 0) {
-        const arr = scene.ps.chains[chain];
-        const slot = arr.indexOf(p);
-        const dx = dragPos[0] - grabOrigin[0];
-        const dy = dragPos[1] - grabOrigin[1];
-        const off = Math.hypot(dx, dy);
-        // Pulled side, against the thread's local normal (-ty, tx).
-        const len = arr.length;
-        const a = arr[Math.max(0, slot - 1)];
-        const b = arr[Math.min(len - 1, slot + 1)];
-        const tx = scene.ps.positions[b * 2] - scene.ps.positions[a * 2];
-        const ty = scene.ps.positions[b * 2 + 1] - scene.ps.positions[a * 2 + 1];
-        const side = off > 1e-6 && tx * dy - ty * dx < 0 ? -1 : 1;
-        const unit = pluckUnit(chain, slot);
-        scene.renderer.pluck({
-          chain,
-          ctrl: slot,
-          side,
-          gain: Math.max(0.6, Math.min(1.4, off / (1.5 * params.threadWidth))),
-          freq,
-          reach: unit.reach,
-          spanCtrl: unit.spanCtrl,
-        });
-        // K279: the release ripples (the drag already tugged the thread).
-        startRipple(chain, { ctrl: slot }, params.rippleStrength);
-      }
-      snapMode = "none";
-      host.release();
-    } else if (style === "soft" && params.snapBack > 0) {
-      snapMode = "soft";
-    } else {
-      snapMode = "none";
-      host.release();
-    }
-  };
-
-  // A TAP on a thread: the render-only pluck, sounding and vibrating on
-  // RELEASE (how a real pluck works, and what tells a tap from a drag).
-  // Re-picks at the press point so a knot that moved meanwhile still
-  // plucks the thread that is there now.
-  const tapPluck = (x: number, y: number, pt: string): void => {
-    if (!scene.ps || !scene.renderer) return;
-    const hit = scene.renderer.pickThread(x, y, pickRadius(pt));
-    if (!hit) return;
-    const freq = freqForCtrl(hit.chain, hit.ctrl);
-    const unit = pluckUnit(hit.chain, hit.ctrl);
-    // (renderer.pluck can return before the overlay runs: clear its verdict.)
-    scene.renderer.plucks.resetSkip();
-    const drawn = scene.renderer.pluck({
-      chain: hit.chain,
-      arc: hit.arc,
-      side: hit.side,
-      gain: 1,
-      freq,
-      reach: unit.reach,
-      spanCtrl: unit.spanCtrl,
-    });
-    // K235 (Levi, on K194: "Do we trigger pluck sounds for this? Probably
-    // shouldn't."): a tap inside a junction core draws no pluck, so it makes
-    // no sound, ripple or tug. K459 (Levi: "If we make a pluck sound, then we
-    // should show the pluck effect"): no other tap sounds without a drawn
-    // pluck either (a chain mid-reveal, a held particle, pluckSize 0, a short
-    // lobe); those keep their ripple and tug.
-    if (!drawn && scene.renderer.plucks.lastSkip === "core") return;
-    if (drawn && !settings.muted && params.soundMode !== "none") {
-      synth.pluck(freq, TAP_STRENGTH);
-    }
-    // K279: the tap's ripple and tug (a core tap has neither).
-    startRipple(hit.chain, { arc: hit.arc }, params.rippleStrength);
-    tugAt(hit.chain, { arc: hit.arc }, hit.side, params.pluckTug);
-  };
-
-  app.canvas.style.touchAction = "none";
-
-  // GESTURES. Touch: two fingers pinch-zoom + pan; one finger tugs
-  // threads and taps choices as before, and drags EMPTY space to pan.
-  // Touch taps on maze choices resolve on RELEASE (desktop clicks stay on
-  // press), so the first finger of a pinch can never move the player; a
-  // pinch also drops any tug it interrupts without plucking, and after a
-  // pinch, fingers still down do nothing until all have lifted. Desktop:
-  // the wheel zooms at the cursor, a trackpad two-finger scroll pans and
-  // its pinch (ctrl+wheel) zooms, dragging empty space (or any middle-
-  // button drag) pans. Double-click / double-tap empty space resets.
-  const touches = new Map<number, { x: number; y: number }>();
-  let pinch: {
-    d0: number;
-    s0: number;
-    wx: number;
-    wy: number;
-  } | null = null;
-  let touchLocked = false;
-  let pendingTap: {
-    id: number;
-    sx: number;
-    sy: number;
-    x: number;
-    y: number;
-  } | null = null;
-  let dragPan: { id: number; x: number; y: number; moved: number } | null =
-    null;
-  // A press on a thread, undecided until it moves past the slop (a tug -
-  // or a pan with physics off) or lifts (a render-only tap-pluck).
-  let pendingPluck: {
-    id: number;
-    // The pointer type: its pick and grab radii (K298).
-    pt: string;
-    slop: number;
-    sx: number;
-    sy: number;
-    x: number;
-    y: number;
-  } | null = null;
-  let lastEmptyTap = -1e9;
-  const TAP_SLOP = 10; // CSS px a tap may wander and still count.
-  const pinchPair = (): [
-    { x: number; y: number },
-    { x: number; y: number },
-  ] => {
-    const it = touches.values();
-    return [it.next().value!, it.next().value!];
-  };
-  const beginPinch = (): void => {
-    if (scene.ps && scene.ps.grabbedParticle >= 0) {
-      host.release();
-      snapMode = "none";
-    }
-    pendingTap = null;
-    pendingPluck = null;
-    dragPan = null;
-    touchLocked = true;
-    clearGlow();
-    const [a, b] = pinchPair();
-    const mx = (a.x + b.x) / 2;
-    const my = (a.y + b.y) / 2;
-    const s0 = root.scale.x;
-    pinch = {
-      d0: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
-      s0,
-      wx: (mx - root.position.x) / s0,
-      wy: (my - root.position.y) / s0,
-    };
-  };
-  const updatePinch = (): void => {
-    if (!pinch) return;
-    const [a, b] = pinchPair();
-    const d = Math.hypot(a.x - b.x, a.y - b.y);
-    placeWorldAt(
-      pinch.wx,
-      pinch.wy,
-      (a.x + b.x) / 2,
-      (a.y + b.y) / 2,
-      pinch.s0 * (d / pinch.d0)
-    );
-    touchCamera();
-  };
-  // Over a thread: grab where it can be tugged, a plain pointer where it
-  // can only be plucked (physics off).
-  const threadCursor = (): string => (physicsLive() ? "grab" : "pointer");
-  // Nothing to tap or tug at this lattice point (where empty-space
-  // gestures - pan, double-tap reset - may take over), for pointer `pt`.
-  const emptyAt = (x: number, y: number, pt: string): boolean =>
-    !!scene.ps &&
-    !onThread(x, y, pt) &&
-    !(
-      params.mazeFabric &&
-      scene.fabric &&
-      scene.fabricController &&
-      (scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(pt, true)) >= 0 ||
-        scene.fabric.targetAt(x, y, scene.fabricController, pickRadius(pt, true), tapReach()) !== null)
-    );
-  // K145, the hover glow: the run under the pointer lights subtly along
-  // both rims. Over a choice (eid >= 0, edgeAt's pick) it lights that run
-  // too, centered where the pointer projects onto it (K298, Levi: "render
-  // it in-addition to the adjacent-to-current-juction highlight"); else
-  // the thread under the pointer. A touch press shows it until the
-  // finger lifts or the press becomes a tug or a pan. Returns true when
-  // the paint declaration needs a refresh. `pt`: the pointer type, whose
-  // pick radius finds the thread (K298).
-  const setGlowAt = (
-    x: number,
-    y: number,
-    eid: number,
-    pt: string
-  ): boolean => {
-    if (!params.mazeFabric || !scene.fabric) return false;
-    if (eid >= 0) return scene.fabric.setGlowRun(eid, x, y);
-    const hit = scene.renderer?.pickThread(x, y, pickRadius(pt));
-    return scene.fabric.setGlow(hit ? hit.chain : -1, hit ? hit.ctrl : 0);
-  };
-  const clearGlow = (): void => {
-    if (scene.fabric && scene.fabricController && scene.fabric.setGlow(-1, 0)) {
-      scene.fabric.update(scene.fabricController);
-    }
-  };
-
-  app.canvas.addEventListener(
-    "wheel",
-    (e) => {
-      e.preventDefault();
-      const unit =
-        e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? app.screen.height : 1;
-      // A mouse wheel ticks in big integer steps with no deltaX (or in
-      // lines); a trackpad pinch arrives as ctrl+wheel; anything else is
-      // a two-finger trackpad scroll, which PANS like a laptop map.
-      const mouseWheel =
-        e.deltaMode !== 0 ||
-        (e.deltaX === 0 &&
-          Number.isInteger(e.deltaY) &&
-          Math.abs(e.deltaY) >= 40);
-      if (e.ctrlKey || mouseWheel) {
-        const k = e.ctrlKey ? 0.01 : 0.0015;
-        zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * unit * k));
-      } else {
-        panBy(-e.deltaX * unit, -e.deltaY * unit);
-      }
-    },
-    { passive: false }
+    scene
   );
-  app.canvas.addEventListener("dblclick", (e) => {
-    const [x, y] = toLattice(e as unknown as PointerEvent);
-    // (dblclick is a MouseEvent: no pointerType, the mouse's radii.)
-    if (emptyAt(x, y, (e as Partial<PointerEvent>).pointerType || "mouse")) {
-      resetCamera();
-    }
-  });
+  const {
+    keyStep,
+    keysLive,
+    keyDepartures,
+    keyVertex,
+    heldKeys,
+    moveWait,
+    movePad,
+    pollGamepad,
+    inputWait,
+  } = keyInput;
 
-  app.canvas.addEventListener("pointerdown", (e) => {
-    if (!scene.ps) return;
-    if (e.pointerType === "touch") {
-      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (touches.size >= 2) {
-        if (!pinch) beginPinch();
-        return;
-      }
-      if (touchLocked) return;
-    }
-    // Middle-button drag pans from anywhere.
-    if (e.pointerType === "mouse" && e.button === 1) {
-      e.preventDefault();
-      clearGlow();
-      dragPan = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 };
-      app.canvas.setPointerCapture(e.pointerId);
-      app.canvas.style.cursor = "grabbing";
-      return;
-    }
-    // No wake() here: a press decides nothing yet. Taps never touch the
-    // physics; a committed drag wakes it (pointermove); maze moves and
-    // the inspector wake for themselves.
-    const [x, y] = toLattice(e);
-    // Alt+click: dump the nearest crossing's render state to the console
-    // (diagnostic; makes broken-crossing reports exactly reproducible).
-    if (e.altKey) {
-      scene.renderer?.requestInspect(x, y);
-      wake();
-      return;
-    }
-    // While the hidden settle runs there is nothing on screen to touch.
-    if (life.state === "loading") return;
-    if (params.mazeFabric) {
-      if (e.pointerType === "touch") {
-        if (
-          scene.fabric &&
-          scene.fabricController &&
-          (scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius("touch", true)) >= 0 ||
-            scene.fabric.targetAt(x, y, scene.fabricController, pickRadius("touch", true), tapReach()) !== null ||
-            inWaitZone(x, y)) // K80 turns 3a: a tap on the head waits.
-        ) {
-          pendingTap = { id: e.pointerId, sx: e.clientX, sy: e.clientY, x, y };
-          return;
-        }
-      } else if (handleFabricTap(x, y, e.pointerType)) {
-        return;
-      }
-    }
-    if (onThread(x, y, e.pointerType)) {
-      // A thread: undecided until it moves past the slop or lifts.
-      pendingPluck = {
-        id: e.pointerId,
-        pt: e.pointerType,
-        slop: TAP_SLOP_PX[e.pointerType] ?? TAP_SLOP,
-        sx: e.clientX,
-        sy: e.clientY,
-        x,
-        y,
-      };
-      app.canvas.setPointerCapture(e.pointerId);
-      // The press shows the hover glow (a touch has no hover before it).
-      if (setGlowAt(x, y, -1, e.pointerType) && scene.fabric && scene.fabricController) {
-        scene.fabric.update(scene.fabricController);
-      }
-    } else {
-      // Empty space: drag to pan the camera.
-      dragPan = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 };
-      app.canvas.setPointerCapture(e.pointerId);
-    }
-  });
-
-  // A pending press moved past its slop: commit a TUG (grab at the PRESSED
-  // point - the bounded target then catches up to the pointer smoothly), or
-  // with physics off, a camera PAN from the press point.
-  const commitPendingDrag = (e: PointerEvent): void => {
-    const pp = pendingPluck;
-    pendingPluck = null;
-    if (!pp || !scene.ps) return;
-    // A tug or a pan is not a hover: the glow goes (K145).
-    clearGlow();
-    if (!physicsLive()) {
-      dragPan = { id: pp.id, x: pp.sx, y: pp.sy, moved: pp.slop + 1 };
-      return;
-    }
-    cancelSnap();
-    // K7: main picks on the view, the host grabs (a miss clears the grab).
-    // K298: at the pointer's grab radius.
-    // K76 stage 2c: never hidden thread (grabAt).
-    if (host.grab(grabAt(pp.x, pp.y, pp.pt), pp.x, pp.y) < 0) {
-      dragPan = { id: pp.id, x: pp.sx, y: pp.sy, moved: pp.slop + 1 };
-      return;
-    }
-    const p = scene.ps.grabbedParticle;
-    grabOrigin[0] = scene.ps.positions[p * 2];
-    grabOrigin[1] = scene.ps.positions[p * 2 + 1];
-    dragPos[0] = grabOrigin[0];
-    dragPos[1] = grabOrigin[1];
-    dragVel = 0;
-    lastMoveT = e.timeStamp;
-    app.canvas.style.cursor = "grabbing";
-    wake();
-  };
-  app.canvas.addEventListener("pointermove", (e) => {
-    if (!scene.ps) return;
-    if (e.pointerType === "touch") {
-      const t = touches.get(e.pointerId);
-      if (t) {
-        t.x = e.clientX;
-        t.y = e.clientY;
-      }
-      if (pinch) {
-        updatePinch();
-        return;
-      }
-      if (
-        pendingTap &&
-        pendingTap.id === e.pointerId &&
-        Math.hypot(e.clientX - pendingTap.sx, e.clientY - pendingTap.sy) >
-          TAP_SLOP
-      ) {
-        // The finger is dragging, not tapping: it pans instead.
-        dragPan = {
-          id: e.pointerId,
-          x: pendingTap.sx,
-          y: pendingTap.sy,
-          moved: TAP_SLOP + 1,
-        };
-        pendingTap = null;
-      }
-      if (touchLocked) return;
-    }
-    if (pendingPluck && pendingPluck.id === e.pointerId) {
-      // Within the slop nothing moves: it may still be a tap.
-      if (
-        Math.hypot(e.clientX - pendingPluck.sx, e.clientY - pendingPluck.sy) <=
-        pendingPluck.slop
-      ) {
-        return;
-      }
-      commitPendingDrag(e);
-    }
-    if (dragPan && dragPan.id === e.pointerId) {
-      const dx = e.clientX - dragPan.x;
-      const dy = e.clientY - dragPan.y;
-      dragPan.x = e.clientX;
-      dragPan.y = e.clientY;
-      dragPan.moved += Math.abs(dx) + Math.abs(dy);
-      if (dragPan.moved > TAP_SLOP) {
-        panBy(dx, dy);
-        app.canvas.style.cursor = "grabbing";
-      }
-      return;
-    }
-    const [x, y] = toLattice(e);
-    if (scene.ps.grabbedParticle >= 0 && snapMode === "none") {
-      const px = dragPos[0];
-      const py = dragPos[1];
-      boundedDragTo(x, y);
-      const dt = Math.max(1e-3, (e.timeStamp - lastMoveT) / 1000);
-      lastMoveT = e.timeStamp;
-      dragVel =
-        dragVel * 0.6 +
-        (Math.hypot(dragPos[0] - px, dragPos[1] - py) / dt) * 0.4;
-      wake();
-    } else if (params.mazeFabric && scene.fabric && scene.fabricController) {
-      // Hover: light the choosable run under the pointer (the paint pass
-      // animates it even while the physics sleeps - no wake needed), or
-      // glow subtly along any other run under it (K145). K80 turns 3a: the
-      // wait zone first, as a click there waits (handleFabricTap): a
-      // pointer cursor, the head's wait cue, no choice lit and no glow.
-      const zone = inWaitZone(x, y);
-      setWaitCue(zone);
-      // K480: past the choices, the hover lights the run a tap would
-      // finish (targetAt's tapped run; the whole route lights in stage 2).
-      const eid = zone
-        ? -1
-        : (scene.fabric.targetAt(
-            x,
-            y,
-            scene.fabricController,
-            pickRadius(e.pointerType, true),
-            tapReach()
-          )?.eid ?? -1);
-      const glow = zone ? scene.fabric.setGlow(-1, 0) : setGlowAt(x, y, eid, e.pointerType);
-      if (scene.fabric.setHover(eid) || glow) scene.fabric.update(scene.fabricController);
-      app.canvas.style.cursor =
-        zone || eid >= 0
-          ? "pointer"
-          : onThread(x, y, e.pointerType)
-            ? threadCursor()
-            : "default";
-    } else {
-      app.canvas.style.cursor = onThread(x, y, e.pointerType)
-        ? threadCursor()
-        : "default";
-    }
-  });
-  const endDrag = (e: PointerEvent): void => {
-    if (!scene.ps) return;
-    if (dragPan && dragPan.id === e.pointerId) {
-      // A touch that never really moved on empty space is a TAP there:
-      // two within 320ms reset the view (double-tap).
-      if (
-        e.pointerType === "touch" &&
-        e.type === "pointerup" &&
-        dragPan.moved <= TAP_SLOP &&
-        !touchLocked
-      ) {
-        const t = nowSec();
-        if (t - lastEmptyTap < 0.32) {
-          resetCamera();
-          lastEmptyTap = -1e9;
-        } else {
-          lastEmptyTap = t;
-        }
-      }
-      dragPan = null;
-    }
-    if (e.pointerType === "touch") {
-      touches.delete(e.pointerId);
-      if (touches.size < 2) pinch = null;
-      if (pendingTap && pendingTap.id === e.pointerId) {
-        const tap = pendingTap;
-        pendingTap = null;
-        if (e.type === "pointerup" && !touchLocked) {
-          handleFabricTap(tap.x, tap.y, "touch");
-        }
-      }
-      // A lifted finger leaves no hover or glow behind (touch has no
-      // pointer to move off the run).
-      const glow = !!scene.fabric && scene.fabric.setGlow(-1, 0);
-      if (scene.fabric && scene.fabricController && (scene.fabric.setHover(-1) || glow)) {
-        scene.fabric.update(scene.fabricController);
-      }
-      if (touches.size === 0) touchLocked = false;
-    }
-    if (pendingPluck && pendingPluck.id === e.pointerId) {
-      // Lifted within the slop: a TAP. Cancels (pointercancel, a pinch -
-      // beginPinch drops pendingPluck) never pluck.
-      const pp = pendingPluck;
-      pendingPluck = null;
-      if (e.type === "pointerup") tapPluck(pp.x, pp.y, pp.pt);
-    } else if (scene.ps.grabbedParticle >= 0 && snapMode === "none") {
-      wake();
-      const chain = scene.ps.chainOfParticle(scene.ps.grabbedParticle);
-      const freq =
-        chain >= 0
-          ? freqForCtrl(chain, scene.ps.chains[chain].indexOf(scene.ps.grabbedParticle))
-          : 220;
-      if (!settings.muted && params.soundMode !== "none" && chain >= 0) {
-        synth.pluck(freq, Math.max(0.35, Math.min(1, dragVel / 25)));
-      }
-      beginRelease(params.pluckStyle, freq);
-    }
-    if (app.canvas.hasPointerCapture(e.pointerId)) {
-      app.canvas.releasePointerCapture(e.pointerId);
-    }
-    app.canvas.style.cursor = "default";
-  };
-  app.canvas.addEventListener("pointerup", endDrag);
-  app.canvas.addEventListener("pointercancel", endDrag);
-  // A mouse that leaves the canvas (for the panel, say) takes the hover
-  // glow with it (K145). The choice hover keeps its old behavior.
-  app.canvas.addEventListener("pointerleave", (e) => {
-    if (e.pointerType === "mouse" && !pendingPluck) clearGlow();
-    setWaitCue(false); // K80 turns 3a.
-  });
-
-  // ---- Stage 20: auto plucks (random + music modes), RENDER-ONLY: the
-  // sound plays and the segment's unit vibrates (render/pluck_overlay.ts) -
-  // no grab, no pull, no wake, so they never disturb the knot and may play
-  // during a user drag (only a unit holding the grabbed particle stays
-  // sound-only). The visual waits out the audio output latency so sight
-  // lands on the sound. `when` (audio clock) and `lead` (seconds from now)
-  // place a note scheduled ahead (K101): its visual waits for it too.
-  const triggerAutoPluck = (
-    seg: number,
-    freq: number,
-    amp: number,
-    when?: number,
-    lead = 0
-  ): void => {
-    if (!scene.ps || !scene.renderer || !Number.isFinite(freq)) return;
-    if (!settings.muted && params.soundMode !== "none") {
-      // K279: on the synth's auto bus (autoPluckGain).
-      synth.pluck(freq, amp, when, true);
-    }
-    const site = audioMap.audioSegSite[seg];
-    if (!site) return;
-    const chainArr = scene.ps.chains[site.chain];
-    if (!chainArr || chainArr.length === 0) return;
-    const len = chainArr.length;
-    // Knot mode: the audio segment is the whole strand - excite a random
-    // place along it (the fixed mid-strand site rang one spot forever).
-    const ctrl = scene.walkGraph ? site.ctrl : Math.random() * len;
-    const unit = pluckUnit(site.chain, ctrl);
-    // A unit the user is holding stays sound-only.
-    const g = scene.ps.grabbedParticle;
-    const avoidCtrl =
-      g >= 0 && scene.ps.chainOfParticle(g) === site.chain
-        ? chainArr.indexOf(g)
-        : undefined;
-    const side = Math.random() < 0.5 ? -1 : 1;
-    const drawn = scene.renderer.pluck({
-      avoidCtrl,
-      chain: site.chain,
-      ctrl,
-      side,
-      // Auto strengths 0.4-0.75 -> amplitude gains 0.75-1.25.
-      gain: Math.max(0.75, Math.min(1.25, 0.75 + ((amp - 0.4) / 0.35) * 0.5)),
-      freq,
-      reach: unit.reach,
-      spanCtrl: unit.spanCtrl,
-      beta: 0.3 + Math.random() * 0.2,
-      delay: lead + synth.outputLatency(),
-    });
-    // K279: an auto pluck ripples at rippleAuto (subtler than a tap's), on
-    // the vibration's delay, and tugs only with tugAuto.
-    if (drawn) {
-      const delay = lead + synth.outputLatency();
-      startRipple(site.chain, { ctrl }, params.rippleAuto, delay);
-      if (params.tugAuto && params.pluckTug > 0) {
-        const gen = host.gen;
-        window.setTimeout(() => {
-          if (host.gen === gen) tugAt(site.chain, { ctrl }, side, params.pluckTug);
-        }, delay * 1000);
-      }
-    }
-  };
-
-  // K101: the last music notes handed out, for probes (__knotSong).
-  const songLog: Array<{
-    at: number;
-    lead: number;
-    note: string | null;
-    clock: string;
-  }> = [];
-  const autoAudioTick = (): void => {
-    if (!scene.ps) return;
-    if (!audioMap.audioAssign || settings.muted) {
-      synth.cancelScheduled();
-      return;
-    }
-    const nowS = performance.now() / 1000;
-    if (params.soundMode === "random") {
-      if (audioMap.nextRandomPluck === 0) audioMap.nextRandomPluck = nowS + 0.8;
-      if (nowS >= audioMap.nextRandomPluck) {
-        audioMap.nextRandomPluck =
-          nowS + (0.45 + Math.random() * 1.75) / Math.max(0.1, params.soundSpeed);
-        const n = audioMap.audioSegSite.length;
-        if (n > 0) {
-          const seg = Math.floor(Math.random() * n);
-          triggerAutoPluck(
-            seg,
-            audioMap.audioAssign.segFreq[seg] ?? 220,
-            0.4 + Math.random() * 0.35
-          );
-        }
-      }
-    } else if (params.soundMode === "music") {
-      // K101: notes start on the audio clock's grid, handed out
-      // MUSIC_LOOKAHEAD ahead so a slow frame cannot delay or stretch them.
-      // Before the autoplay gate (silent plucks, visuals only) the grid runs
-      // on wall time with no lookahead.
-      const audioNow = synth.audioTime();
-      const clock = audioNow === null ? "wall" : "audio";
-      const now = audioNow ?? nowS;
-      const notes = songSched.due(
-        SCARBOROUGH_FAIR,
-        now,
-        clock,
-        audioNow === null ? 0 : MUSIC_LOOKAHEAD,
-        params.soundSpeed
-      );
-      for (const { row, at } of notes) {
-        songLog.push({ at, lead: at - now, note: row.note, clock });
-        if (songLog.length > 64) songLog.shift();
-        if (!row.note) continue;
-        const f = noteToFreq(row.note);
-        const segs = segmentsNear(audioMap.audioAssign, f);
-        if (segs.length > 0 && Number.isFinite(f)) {
-          // The song's true pitch plays; the matching segment moves.
-          triggerAutoPluck(
-            segs[Math.floor(Math.random() * segs.length)],
-            f,
-            0.62,
-            audioNow === null ? undefined : at,
-            at - now
-          );
-        }
-      }
-    } else {
-      audioMap.nextRandomPluck = 0;
-      songSched.reset();
-      synth.cancelScheduled();
-    }
-  };
+  // K5 M6: the auto audio (Stage 20's auto plucks, music mode's
+  // scheduler) is src/app/auto_audio.ts.
+  const autoAudio = createAutoAudio(
+    {
+      params,
+      settings,
+      synth,
+      songSched,
+      audioMap,
+      host,
+      pluckUnit,
+      startRipple,
+      tugAt,
+    },
+    scene
+  );
+  const { autoAudioTick, songLog } = autoAudio;
 
   let perfLine = "";
   const { stamp, perf, updateStamp } = createStamp(
@@ -3475,8 +2291,8 @@ async function main(): Promise<void> {
       panel,
       indicators,
       movePad,
-      dragPos,
-      grabOrigin,
+      dragPos: pointer.dragPos,
+      grabOrigin: pointer.grabOrigin,
       perf,
       updateStamp,
       introPlaying,
@@ -3506,7 +2322,7 @@ async function main(): Promise<void> {
       gameNeedsFrame: () =>
         (scene.chase !== null && chaseRunning && !scene.chase.finished) ||
         (scene.turnMino !== null && turnWait > 0) ||
-        keyHold ||
+        keyInput.keyHold ||
         moveWait.waiting !== null,
       // The auto sound's clock (random plucks, the music's grid).
       audioNeedsFrame: () =>
@@ -3531,10 +2347,10 @@ async function main(): Promise<void> {
         return waitCueHead;
       },
       get snapMode() {
-        return snapMode;
+        return pointer.snapMode;
       },
       set snapMode(v) {
-        snapMode = v;
+        pointer.snapMode = v;
       },
       get pendingWin() {
         return pendingWin;
@@ -3662,7 +2478,7 @@ async function main(): Promise<void> {
       return headWhy;
     },
     get keyHold() {
-      return keyHold;
+      return keyInput.keyHold;
     },
     get lastWin() {
       return lastWin;
@@ -3704,10 +2520,10 @@ async function main(): Promise<void> {
       hcLookChoice = v;
     },
     get tapsWait() {
-      return tapsWait;
+      return keyInput.tapsWait;
     },
     set tapsWait(v) {
-      tapsWait = v;
+      keyInput.tapsWait = v;
     },
     invalidate,
   });
