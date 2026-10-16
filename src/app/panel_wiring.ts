@@ -454,25 +454,53 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
   // refreshed frame after the fade fix alone). So the other inputs update()
   // and the paint pass read ride along: cuspRadius, the pulse spacing and
   // reach, the hover glow and the appearance FX style.
+  // K6-2: change-detecting. The worn values are recomputed every call
+  // (look() is cheap), but the renderer is touched - and GEOM pushed -
+  // only when one actually changed (a panel edit, an accessibility
+  // switch, a probe writing the live params). Before, every frame
+  // re-assigned all twelve, so no frame could skip the geometry pass
+  // on their account.
+  let lookCache: { r: unknown; v: readonly (number | string)[] } | null = null;
   function handRendererLook(): void {
     if (!scene.renderer) return;
-    scene.renderer.fadeLength = look("fadeLength");
-    scene.renderer.flowStrength = look("flowStrength");
-    scene.renderer.flowSpeed = look("flowSpeed");
+    const fadeLength = look("fadeLength");
+    const flowStrength = look("flowStrength");
+    const flowSpeed = look("flowSpeed");
+    const pulseReach =
+      params.mazeFabric && params.exploration === "threads"
+        ? Math.min(params.pulseReach, params.revealDistance)
+        : params.pulseReach;
+    const v: readonly (number | string)[] = [
+      fadeLength, flowStrength, flowSpeed, params.cuspRadius, params.pulseSpacing,
+      pulseReach,
+      Math.max(0, Math.min(1, params.hoverGlow)),
+      clampHoverGlowWidth(params.hoverGlowWidth),
+      clampHoverGlowLength(params.hoverGlowLength),
+      clampHoverGlowFade(params.hoverGlowFade),
+      a11y.highContrast ? deps.hcLookChoice : 0,
+      params.appearFx,
+    ];
+    if (lookCache !== null && lookCache.r === scene.renderer) {
+      let same = true;
+      for (let i = 0; i < v.length; i++) if (v[i] !== lookCache.v[i]) { same = false; break; }
+      if (same) return;
+    }
+    lookCache = { r: scene.renderer, v };
+    scene.renderer.fadeLength = fadeLength;
+    scene.renderer.flowStrength = flowStrength;
+    scene.renderer.flowSpeed = flowSpeed;
     scene.renderer.cuspRadius = params.cuspRadius;
     scene.renderer.pulseSpacing = params.pulseSpacing;
     // K76 stage 2c (question 5): under the thread reveal the pulses never
     // reach past the reveal distance.
-    scene.renderer.pulseReach =
-      params.mazeFabric && params.exploration === "threads"
-        ? Math.min(params.pulseReach, params.revealDistance)
-        : params.pulseReach;
+    scene.renderer.pulseReach = pulseReach;
     scene.renderer.hoverGlow = Math.max(0, Math.min(1, params.hoverGlow));
     scene.renderer.hoverGlowWidth = clampHoverGlowWidth(params.hoverGlowWidth);
     scene.renderer.hoverGlowLength = clampHoverGlowLength(params.hoverGlowLength);
     scene.renderer.hoverGlowFade = clampHoverGlowFade(params.hoverGlowFade);
     scene.renderer.hcLook = a11y.highContrast ? deps.hcLookChoice : 0;
     scene.renderer.appearFx = params.appearFx;
+    deps.flags.push(Flag.GEOM); // K6-2: a look change asks for a geometry pass
   }
   motion.subscribe(applyAccessibility);
   contrast.subscribe(applyAccessibility);
