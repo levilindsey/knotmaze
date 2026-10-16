@@ -291,14 +291,6 @@ Next free ID: K492.
   - evidence: `.claude/probes/K459/`
   - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
-- **K479** · Taps prefer the outgoing runs (Levi 2026-10-15: taps meant for the next run take the
-  arrival run): in `edgeAt` the arrival run should win only by a clear margin, and the hover must
-  pick what a tap takes.
-  - owner: agent `a3a1e1ecdbd2a3f27` of claude session 05e60da0-74f1-4d1d-906d-240f8a53fd12 (sonnet, started 2026-10-15 17:03, 1 h cap ~18:03)
-  - branch: `worktree-agent-a3a1e1ecdbd2a3f27`, worktree `.claude/worktrees/agent-a3a1e1ecdbd2a3f27`; last commit: `0afdff6`
-  - evidence: `.claude/probes/K479/`
-  - next: check the mid-move hypothesis, then the 1.5x preference and the tap census
-  - brief: `docs/design/K479.md`
 
 ## Next, in order
 
@@ -1243,6 +1235,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K479** · Taps prefer the outgoing runs (Levi 2026-10-15: taps meant for the next run take the arrival run): in `edgeAt` the arrival run should win only by a clear margin, and the hover must pick what a tap takes. Done in 796e158 (2026-10-15).
 - **K466** · Thread reveal: emphasize unexplored thread ends more, especially ends that lie under a crossing (Levi 2026-10-15 15:49). Done in 554f2af (2026-10-15).
 - **K465** · Thread reveal: show the finish marker and its off-screen indicator by default (Levi 2026-10-15 15:49); K76 decision 6 hides both until the exit's thread is seen (drawMarkers, main.ts finishIndicator, EXPLORE_MARKER_VIS). Done in 76fb5ea (2026-10-15).
 - **K468** · Settings menu full screen on mobile (Levi 2026-10-15 ~15:58): a top bar with close, undo and redo; Android back closes it; phones in landscape too. Done in 2c066d4 (2026-10-15).
