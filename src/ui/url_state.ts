@@ -14,6 +14,7 @@ import { APPEAR_SEQUENCES, APPEAR_FX_MODES } from "../core/reveal_plan";
 import type { ShapeId, AnchorId } from "../core/shapes";
 import { SHAPES, ANCHORS } from "../core/shapes";
 import type { ChaseParams, ClockMode } from "../game/minotaur";
+import type { FireClock } from "../game/fire";
 import {
   DEFAULT_CHASE_PARAMS,
   HUNT_PACE_FRACTION,
@@ -100,7 +101,7 @@ export const FIRE_MODES: FireMode[] = ["off", "fuse"];
 // distance walked, stage 1) or realtime (L = FIRE_V_REF lattice units a
 // second since the first move; the dot runs at that pace). Not `clock`,
 // the maze clock, whose realtime is K80's minotaur.
-export type FireClockMode = "turn" | "realtime";
+export type FireClockMode = FireClock;
 export const FIRE_CLOCKS: FireClockMode[] = ["turn", "realtime"];
 // How a burnt stretch draws (K290, burn stage 3a): gone (not drawn: the
 // paint shader hides it through the thread reveal's visibility, so its

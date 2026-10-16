@@ -50,11 +50,28 @@
 // is a "noop" and choices() is empty until reset() relights the fuse
 // (main.ts shows the Burnt banner, then restarts). replay(taps) rebuilds
 // all of it; a refused tap in a tap list fails the replay.
+//
+// K114 stage 2, THE REAL-TIME FIRE (fire.clock = realtime; game/fire_clock.ts
+// is the clock): main.ts feeds the clock in with setFireNow(L) every frame,
+// and the dot runs at the clock's own pace, so a move that LEAVES at L
+// arrives at L + len. fireL is the departure clock: max(the clock, the
+// running move's arrival), so a tap queued during a move is tested as it
+// leaves on arrival, and the HUD's lead reads the arrival's margin while
+// the dot runs. The arm test is the same (L + len < T(far)), applied when
+// the dot leaves. LOST: the fire reaches you where you stand, T(head) <= L
+// once the dot has arrived (setFireNow); arriving with no safe arm is no
+// loss under this clock, standing there is. For r < 1 nothing is lost
+// mid-run: the fire behind you gains on nothing, and the arm test kept the
+// far end ahead of it. THE CLOSEST CALL: every arrival's T(v) - L, as on
+// the turn clock, and every departure's (the least margin a stop had),
+// except the first departure from the start; a loss makes it 0. replay()
+// leaves every tap the moment the last one arrives (no thinking time), so
+// its L is walkedDist; a replay never loses by standing.
 
 import type { WalkGraph } from "../core/walk_graph";
 import type { MoveKind } from "./maze_stats";
 import type { Fire } from "./fire";
-import { armSafe, fireLead, fireTrapped, runBurnAt } from "./fire";
+import { armSafe, fireLead, fireTime, fireTrapped, runBurnAt } from "./fire";
 
 export type FabricTapResult =
   | "advance" // stepped across a run to its far vertex
@@ -102,6 +119,11 @@ export class FabricMazeController {
   // The closest call so far, T(v) - L over every arrival (Infinity before
   // the first move).
   fireClosest = Infinity;
+  // Real-time fire: the clock main.ts last set, and the running (or last)
+  // move's departure and arrival clocks.
+  fireNow = 0;
+  fireDepartL = 0;
+  fireArriveL = 0;
 
   constructor(walk: WalkGraph, trailMode = false, fire: Fire | null = null) {
     this.walk = walk;
@@ -113,6 +135,9 @@ export class FabricMazeController {
   reset(): void {
     this.fireLost = false;
     this.fireClosest = Infinity;
+    this.fireNow = 0;
+    this.fireDepartL = 0;
+    this.fireArriveL = 0;
     this.pathVertices = [this.walk.start];
     this.pathEdges = [];
     this.backtrackDist = 0;
@@ -214,9 +239,37 @@ export class FabricMazeController {
   }
 
   // K114: the fire's clock L, the one read of it (fire.ts's header). The
-  // turn clock is walkedDist.
+  // turn clock is walkedDist; the real-time one is the departure clock
+  // (the header's THE REAL-TIME FIRE).
   get fireL(): number {
+    if (this.fire?.clock === "realtime") {
+      return this.fireNow > this.fireArriveL ? this.fireNow : this.fireArriveL;
+    }
     return this.walkedDist;
+  }
+
+  // K114 stage 2: is the real-time fire's race on (a move made, not lost,
+  // not won)? main.ts also runs the clock while the winning move plays.
+  get fireRacing(): boolean {
+    return (
+      this.fire?.clock === "realtime" &&
+      this.taps.length > 0 &&
+      !this.fireLost &&
+      !this.solved
+    );
+  }
+
+  // K114 stage 2: the real-time fire's clock moved to L. True when the
+  // fire reached you where you stand (the race is lost now).
+  setFireNow(L: number): boolean {
+    this.fireNow = L;
+    const fire = this.fire;
+    if (!fire || fire.clock !== "realtime" || !this.fireRacing) return false;
+    if (L < this.fireArriveL) return false; // Still running: never caught.
+    if (fireTime(fire, this.head) > L) return false;
+    this.fireLost = true;
+    if (this.fireClosest > 0) this.fireClosest = 0;
+    return true;
   }
 
   // K114: the fire's lead at the head, T(head) - L (lattice units; null
@@ -239,6 +292,8 @@ export class FabricMazeController {
     if (!e || (e.va !== head && e.vb !== head)) return "reject";
     // K114: a smoldering arm refuses the tap before anything changes.
     if (this.smoldering(edgeId)) return "smolder";
+    // K114 stage 2: the real-time fire's departure clock.
+    const depart = this.fireL;
 
     if (
       !this.trailMode &&
@@ -251,7 +306,7 @@ export class FabricMazeController {
       this.walkedDist += e.length;
       this.moveLog.push("b");
       this.taps.push(edgeId);
-      this.fireArrive(this.head);
+      this.fireArrive(head, depart, e.length, this.head);
       return "backtrack";
     }
 
@@ -263,7 +318,7 @@ export class FabricMazeController {
     this.pathEdges.push(edgeId);
     this.pathVertices.push(far);
     this.arrive(far);
-    this.fireArrive(far);
+    this.fireArrive(head, depart, e.length, far);
     if (far === this.walk.exit) {
       this.solved = true;
       return "win";
@@ -272,10 +327,23 @@ export class FabricMazeController {
   }
 
   // K114: an arrival's margin lowers the closest call; no safe arm left
-  // loses the race (the exit wins instead).
-  private fireArrive(at: string): void {
+  // loses the race (the exit wins instead). Real time: the move left
+  // `from` at `depart` and arrives at depart + len; the departure's margin
+  // counts too (not the first move's), and nothing is lost on arrival.
+  private fireArrive(from: string, depart: number, len: number, at: string): void {
     const fire = this.fire;
     if (!fire) return;
+    if (fire.clock === "realtime") {
+      if (this.taps.length > 1) {
+        const left = fireLead(fire, from, depart);
+        if (left < this.fireClosest) this.fireClosest = left;
+      }
+      this.fireDepartL = depart;
+      this.fireArriveL = depart + len;
+      const lead = fireLead(fire, at, this.fireArriveL);
+      if (lead < this.fireClosest) this.fireClosest = lead;
+      return;
+    }
     const L = this.fireL;
     const lead = fireLead(fire, at, L);
     if (lead < this.fireClosest) this.fireClosest = lead;
