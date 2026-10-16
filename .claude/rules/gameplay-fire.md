@@ -64,8 +64,10 @@ files.
   with flow off; under 4x CPU throttling (a phone proxy) about 11 ms, the
   frame interval's median 69 -> 87 ms. PARAMS (codec v5 118-120, after K74's
   `hCutShare` 117; 117-119 before the branch rebased onto K74 stage 2):
-  `fire` `fi` (off | fuse), `fireSpeed` `fsp` (0.75, [0.3, 0.95]),
-  `fireDelay` `fdl` (0, [0, 40] lattice units); not daily-exempt, and a
+  `fire` `fi` (off | fuse), `fireSpeed` `fsp` (0.75, [0.1, 0.95]; the
+  floor was 0.3 until K440), `fireDelay` `fdl` (0, [0, 40] lattice units;
+  since K440 these two are the turn clock's, and realtime has its own,
+  REAL-TIME FIRE below); not daily-exempt, and a
   daily plays with the fire off (the default). `fireSettingsOf` is null
   unless fire is fuse, the clock (K80's `clock`, not `fireClock`) is
   turn-based and the turn minotaur is off:
@@ -149,8 +151,9 @@ files.
   - FIRE_V_REF = 12 lattice units a second (Q1): the turn animation's
     mean lattice pace at moveSpeed 1, measured 11.80 over dailies 1-6
     (3320 run directions; per daily 11.65-12.06; p10 8.7, p90 18;
-    `.claude/probes/K114/stage2/vref_probe.mjs`). A constant, so
-    `fireSpeed` is the same fraction of the dot's pace on both clocks.
+    `.claude/probes/K114/stage2/vref_probe.mjs`). A constant, so a fire
+    speed is the same fraction of the dot's pace on either clock (each
+    clock plays its own speed since K440).
     Under realtime the dot walks every run at v_ref and moveSpeed is
     unused: a slower dot would hand the fire time it never earned.
   - THE CONTROLLER (fabric_controller.ts, its THE REAL-TIME FIRE
@@ -180,12 +183,21 @@ files.
     and reads the arrival's margin while the dot runs. replay() leaves
     each tap the moment the last arrives (no thinking time): only daily
     attempts replay, and dailies play with the fire off.
-  - The same `fireSpeed` and `fireDelay` serve both clocks (Q2). The
-    turn defaults (0.75, 0) do not carry over: the optimal route then
-    affords about 0.08 s of thinking per decision on the median daily.
-    Stage 2 item 7 (`.claude/probes/K114/stage2/proposal.md`) proposes
-    realtime 0.2 / 20 (1.7 s head start; 1.1-1.5 s a decision), below
-    the panel's ranges ([0.3, 0.95], [0, 40]); for Levi.
+  - EACH CLOCK'S OWN SPEED AND DELAY (K440, 2026-10-15; brief
+    `docs/design/K440.md`; Levi: "K440: yes and yes"). Stage 2 shipped
+    one pair for both clocks (Q2), and the turn defaults (0.75, 0) do not
+    carry over: the optimal route then affords about 0.08 s of thinking
+    per decision on the median daily. Stage 2 item 7
+    (`.claude/probes/K114/stage2/proposal.md`) proposed realtime 0.2 / 20
+    (1.7 s head start; 1.1-1.5 s a decision), which is now realtime's own
+    default: `fireSpeedRt` (`fsr`, 0.2) and `fireDelayRt` (`fdr`, 20),
+    while `fireSpeed` / `fireDelay` stay the turn clock's 0.75 / 0.
+    `fireSettingsOf` (url_state.ts) returns the pair of the design's
+    `fireClock`, so `&fi=fuse&fck=realtime` plays 0.2 / 20 and a turn link
+    is unchanged. The speed floor dropped to 0.1 for both pairs (Levi's
+    second yes); the delay stays [0, 40]. Links and pins:
+    gameplay-links.md's REAL-TIME FIRE PAIR; rows: gameplay-panel.md's
+    EACH CLOCK'S OWN ROWS.
   - Hook: `__knotFabric().fire` adds clock, L, now, departL, arriveL,
     racing, startMarker. The fire still never plays with K80's chase
     (`clk=realtime`) or the turn minotaur (fireSettingsOf). Q5: K323's

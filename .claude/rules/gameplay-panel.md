@@ -139,21 +139,36 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   onTrailChange. Params: gameplay-links.md.
 
 - BURNT ROW (K290 stage 3a, 2026-10-15): "burnt" (gone / char) in the
-  Burn race folder, after fireDelay, hidden while the fire is off like
+  Burn race folder, last since K440, hidden while the fire is off like
   fireSpeed and fireDelay; it runs onTrailChange (live, no restart). Params:
   gameplay-links.md; the look: gameplay-fire.md's BURNT THREAD.
 
 - FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
-  `fireClock`) in the Burn race folder, after fireDelay and before
-  burnt, hidden while the fire is off like them; it runs onClockChange (a
-  change restarts the solve; undo_stack.ts lists it there). Tooltip:
-  "turn: the fire burns as far as you walk, so standing still to think is
-  free. realtime: it burns on a clock from your first move, your dot
-  walks at a fixed pace, and if the fire reaches you while you stand
-  there, you burn. Restarts the solve." fireSpeed and fireDelay keep
-  their turn ranges ([0.3, 0.95], [0, 40]) under both clocks; stage 2's
-  realtime proposal (0.2 / 20) sits below them (gameplay-fire.md's
-  REAL-TIME FIRE). Params: gameplay-links.md.
+  `fireClock`) in the Burn race folder, hidden while the fire is off; it
+  runs onClockChange (a change restarts the solve; undo_stack.ts lists it
+  there). Tooltip: "turn: the fire burns as far as you walk, so standing
+  still to think is free. realtime: it burns on a clock from your first
+  move, your dot walks at a fixed pace, and if the fire reaches you while
+  you stand there, you burn. Each clock keeps its own fireSpeed and
+  fireDelay. Restarts the solve." (the second-last sentence since K440).
+- EACH CLOCK'S OWN ROWS (K440, 2026-10-15; brief `docs/design/K440.md`):
+  the folder holds two speed/delay pairs, the turn clock's (`fireSpeed`,
+  `fireDelay`) and the real-time clock's (`fireSpeedRt`, `fireDelayRt`,
+  rows labeled "fireSpeed" / "fireDelay" too), and refreshCond shows only
+  the clock's own pair, so the order the player sees is fire, clock,
+  fireSpeed, fireDelay, burnt (the clock row moved up from after
+  fireDelay so it sits above the pair it picks). A clock change only
+  swaps which rows show: no value is refreshed, so no row's handler runs.
+  Each reset glyph returns its own pair's default (0.75 / 0 turn, 0.2 /
+  20 realtime). Ranges [0.1, 0.95] (FIRE_SPEED_MIN since K440; 0.3 before)
+  and [0, 40] for both pairs. The real-time tooltips quote the dot's fixed
+  pace (12 lattice units a second; "a run is about 4"): 0.2 burns 2.4
+  units a second, 1 for every 5 the dot walks; a delay of 20 is about 1.7
+  s, 40 about 3.3 s. Every row restarts the solve (onClockChange). PROBE
+  NOTE: the rows share labels, so find them by key or tooltip (the
+  real-time pair's names the "fixed pace"), not by label alone;
+  `.claude/probes/K440/k440_page.mjs` does. Params: gameplay-links.md's
+  REAL-TIME FIRE PAIR; the race: gameplay-fire.md's REAL-TIME FIRE.
 
 - MINOTAUR BEHAVIOR ROWS BY MODEL (K80 turns stage 3a, 2026-10-15; K294,
   K324 section 4.3): the "Minotaur behavior" subfolder (shown while the
