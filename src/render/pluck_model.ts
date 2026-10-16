@@ -770,7 +770,8 @@ export function band(v: number, h: number, p: number): number {
 
 export interface LobeSpan {
   // Node indices (into the sorted node list) at the lobe's two ends; -1 for
-  // a pseudo lobe (a closed chain with no nodes at all).
+  // a pseudo lobe (a closed chain with no nodes at all), and for an end cut
+  // at a fretted span's end (K397).
   a: number;
   b: number;
   // UNWRAPPED arcs (s0 < s1), in the tap's frame: s0 <= tapArc' <= s1 for
@@ -787,6 +788,10 @@ export interface LobeSpan {
 // `reach` = lobes kept on each side of the tapped one. `span` (optional,
 // unwrapped [a0, a1] with a0 <= a1) restricts the unit to lobes inside
 // it - the fabric's walk run; a tap outside the span ignores it.
+// `fret` (K397, the thread reveal's solid stretch): the span's ends are hard
+// frets. The tapped lobe is cut at them too (its end there gets node -1: no
+// hide zone, foot or clip), and a tap outside the span plucks the lobe just
+// inside its nearer end.
 export function segmentLobes(
   nodes: readonly number[],
   total: number,
@@ -794,48 +799,11 @@ export function segmentLobes(
   tapArc: number,
   reach: number,
   span: [number, number] | null = null,
-  pseudoHalf = 1.5
+  pseudoHalf = 1.5,
+  fret = false
 ): LobeSpan[] {
   const m = nodes.length;
   if (total <= 0) return [];
-  if (closed && m === 0) {
-    const half = Math.min(pseudoHalf, total / 2);
-    return [{ a: -1, b: -1, s0: tapArc - half, s1: tapArc + half, k: 0 }];
-  }
-  if (!closed && m < 2) return [];
-  const lobeCount = closed ? m : m - 1;
-  // Lobe i runs from node i to node i + 1 (closed: the last wraps to node
-  // 0 + total). Its unwrapped extent in the base frame:
-  const lobeAt = (i: number): [number, number] => {
-    const s0 = nodes[i];
-    const s1 = i + 1 < m ? nodes[i + 1] : nodes[0] + total;
-    return [s0, s1];
-  };
-  // The tapped lobe.
-  let t = closed ? ((tapArc % total) + total) % total : clamp(tapArc, 0, total);
-  let it = -1;
-  for (let i = 0; i < lobeCount; i++) {
-    const [s0, s1] = lobeAt(i);
-    if (t >= s0 && t <= s1) {
-      it = i;
-      break;
-    }
-  }
-  if (it < 0) {
-    // Closed chain, tap before the first node: it lives in the wrap lobe.
-    it = lobeCount - 1;
-    if (closed) t += total;
-  }
-  // Frame shift so the tapped lobe contains the caller's tapArc itself.
-  const [b0, b1] = lobeAt(it);
-  const shift = closed ? tapArc - t : 0;
-  const tapped: LobeSpan = {
-    a: it,
-    b: (it + 1) % m,
-    s0: b0 + shift,
-    s1: b1 + shift,
-    k: 0,
-  };
   // The span, in the same frame as tapArc.
   let lo = -Infinity;
   let hi = Infinity;
@@ -852,13 +820,79 @@ export function segmentLobes(
         a0 -= total;
         a1v -= total;
       }
+      // Fretted, a span the tap lies past takes its nearer copy.
+      if (fret && a1v < tapArc - 1e-6 && a0 + total - tapArc < tapArc - a1v) {
+        a0 += total;
+        a1v += total;
+      }
     }
-    if (tapArc >= a0 - 1e-6 && tapArc <= a1v + 1e-6) {
+    if (fret || (tapArc >= a0 - 1e-6 && tapArc <= a1v + 1e-6)) {
       lo = a0;
       hi = a1v;
     }
   }
+  // Fretted, the tap moves inside the span (a tap past a fret plucks the
+  // stretch before it), a hair off the fret, so a fret on a node picks the
+  // lobe inside the span.
+  let ta = tapArc;
+  if (fret && span) {
+    const nudge = Math.min(1e-9 * Math.max(1, total), 0.5 * (hi - lo));
+    ta = Math.min(hi - nudge, Math.max(lo + nudge, tapArc));
+  }
+  if (closed && m === 0) {
+    const half = Math.min(pseudoHalf, total / 2);
+    return [
+      fret
+        ? { a: -1, b: -1, s0: Math.max(lo, ta - half), s1: Math.min(hi, ta + half), k: 0 }
+        : { a: -1, b: -1, s0: tapArc - half, s1: tapArc + half, k: 0 },
+    ];
+  }
+  if (!closed && m < 2) return [];
+  const lobeCount = closed ? m : m - 1;
+  // Lobe i runs from node i to node i + 1 (closed: the last wraps to node
+  // 0 + total). Its unwrapped extent in the base frame:
+  const lobeAt = (i: number): [number, number] => {
+    const s0 = nodes[i];
+    const s1 = i + 1 < m ? nodes[i + 1] : nodes[0] + total;
+    return [s0, s1];
+  };
+  // The tapped lobe.
+  let t = closed ? ((ta % total) + total) % total : clamp(ta, 0, total);
+  let it = -1;
+  for (let i = 0; i < lobeCount; i++) {
+    const [s0, s1] = lobeAt(i);
+    if (t >= s0 && t <= s1) {
+      it = i;
+      break;
+    }
+  }
+  if (it < 0) {
+    // Closed chain, tap before the first node: it lives in the wrap lobe.
+    it = lobeCount - 1;
+    if (closed) t += total;
+  }
+  // Frame shift so the tapped lobe contains the caller's tapArc itself.
+  const [b0, b1] = lobeAt(it);
+  const shift = closed ? ta - t : 0;
+  const tapped: LobeSpan = {
+    a: it,
+    b: (it + 1) % m,
+    s0: b0 + shift,
+    s1: b1 + shift,
+    k: 0,
+  };
   const eps = 1e-4 + 1e-6 * total;
+  if (fret) {
+    // Cut at the frets (an end within eps of one keeps its node).
+    if (tapped.s0 < lo - eps) {
+      tapped.s0 = lo;
+      tapped.a = -1;
+    }
+    if (tapped.s1 > hi + eps) {
+      tapped.s1 = hi;
+      tapped.b = -1;
+    }
+  }
   const out: LobeSpan[] = [tapped];
   const maxLobes = closed ? lobeCount : Infinity;
   // Forward.
@@ -1006,14 +1040,17 @@ export interface TapLobes {
 // The unit's lobes for a tap, and the tapped lobe's verdict. `nodes` = the
 // chain's nodes ascending by arc (an open chain's list includes its two ends)
 // with each one's hide radius; the rest is segmentLobes'. One function for
-// the overlay's add() and its tests, so the decision exists once.
+// the overlay's add() and its tests, so the decision exists once. A fretted
+// tap past the span's end (K397: in the reveal's fade) is never a core: it
+// did not land in one, and its lobe was cut short by the fret.
 export function tapLobes(
   nodes: ReadonlyArray<{ readonly arc: number; readonly hide: number }>,
   total: number,
   closed: boolean,
   tapArc: number,
   reach: number,
-  span: [number, number] | null = null
+  span: [number, number] | null = null,
+  fret = false
 ): TapLobes {
   const spans = segmentLobes(
     nodes.map((n) => n.arc),
@@ -1021,7 +1058,9 @@ export function tapLobes(
     closed,
     tapArc,
     reach,
-    span
+    span,
+    undefined,
+    fret
   ).filter((s) => s.s1 - s.s0 >= LOBE_MIN_LEN);
   const tapped = spans.find((s) => s.k === 0) ?? null;
   if (!tapped) {
@@ -1033,10 +1072,20 @@ export function tapLobes(
     tapped.a >= 0 ? nodes[tapped.a].hide : 0,
     tapped.b >= 0 ? nodes[tapped.b].hide : 0
   );
+  // Fretted, the tapped lobe holds the tap unless the tap lay past a fret
+  // (closed chains: in the lobe's frame, a whole loop away at most).
+  let inside = true;
+  if (fret && span && closed) {
+    const d = tapArc - tapped.s0;
+    const w = ((d % total) + total) % total;
+    inside = w <= tapped.s1 - tapped.s0 + 1e-6 || w >= total - 1e-6;
+  } else if (fret && span) {
+    inside = tapArc >= tapped.s0 - 1e-6 && tapArc <= tapped.s1 + 1e-6;
+  }
   return {
     spans,
     tapped,
     vibrating,
-    core: vibrating[1] - vibrating[0] < LOBE_MIN_LEN,
+    core: vibrating[1] - vibrating[0] < LOBE_MIN_LEN && inside,
   };
 }
