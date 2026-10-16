@@ -230,10 +230,11 @@ function archiveHeader(kind, ctx, date) {
       ? '# Ledger done\n\nDone items moved out of `LEDGER.md` by the ledger diet (K353, from\n2026-10-15), verbatim, under their ID: every entry resolved before\n2026-10-12 or undated, and the full text of the newer ones, which the\nledger keeps as a one-line entry. New entries go at the bottom.\n'
       : '';
   }
-  const by = `by the ledger diet (\`scripts/ledger_diet.mjs\` in knotmaze, K353;\napplied ${date})`;
+  const by = `by the ledger diet (\`scripts/ledger_diet.mjs\` in knotmaze, K353; applied ${date})`;
+  const para = (t) => wrapWords('', '', t, 76).join('\n');
   return kind === 'done'
-    ? `# Ledger done\n\nDone items moved out of \`LEDGER.md\` ${by}, verbatim,\nunder their ID: every entry resolved before ${ctx.cutoff} or undated, and the\nfull text of the newer ones, which the ledger keeps as a one-line entry. New\nentries go at the bottom.\n`
-    : `# Ledger notes\n\nText moved out of \`LEDGER.md\` ${by}, verbatim:\nthe full text of items that were shortened, moved or closed, under their ID.\nThe ledger keeps each item short and this file keeps the rest. New entries go\nat the bottom.\n`;
+    ? `# Ledger done\n\n${para(`Done items moved out of \`LEDGER.md\` ${by}, verbatim, under their ID: every entry resolved before ${ctx.cutoff} or undated, and the full text of the newer ones, which the ledger keeps as a one-line entry. New entries go at the bottom.`)}\n`
+    : `# Ledger notes\n\n${para(`Text moved out of \`LEDGER.md\` ${by}, verbatim: the full text of items that were shortened, moved or closed, under their ID. The ledger keeps each item short and this file keeps the rest. New entries go at the bottom.`)}\n`;
 }
 
 function appendEntries(existing, entries, eol, kind, ctx, date) {
