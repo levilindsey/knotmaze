@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K435.
+Next free ID: K436.
 
 ## Waiting on Levi
 
@@ -291,11 +291,11 @@ Next free ID: K435.
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
   char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b merged (5913f4f..f7dd57e).
-  - owner: agent `ab1de7b1a6f3f605a` of claude session 05e60da0 (stage 3c, the phone sheet; sonnet, started 10:17, cap 11:45; ports 5890-5899). Stage 3b's agent `a7c0069bafcb78c52` finished 08:53, merged 08:56, worktree kept
-  - branch: `worktree-agent-ab1de7b1a6f3f605a`, worktree `.claude/worktrees/agent-ab1de7b1a6f3f605a`, from `e6e1734`; last commit: `e6e1734` (none of its own yet; it commits only its handoff). 3b is mainline `f7dd57e`
-  - evidence: the main checkout's `.claude/probes/K290/stage3c/` (3c's scripts and sheets), `stage3b/` (desktop sheet `out/sheet/K290_3b_sheet_crop.png`, `perf_*`, `k290_ab.mjs`, `sheet.mjs`) and `stage3a/`; burn stage 1's `.claude/probes/K114/`
-  - next: 3c running: the phone sheet under the phone lock (K7's pass done 10:32), a fog-on row, an unseen-front frame, width notes for K409; then merge its handoff; then K408 (start hide), Levi's width call K409, the mirror K410
-  - brief: `docs/design/K114_burn.md`, "Stage 3b handoff" ("For the next stage", first bullet; 3c's launch prompt added only the locks, paths and cap)
+  - owner: nobody since 2026-10-15 11:29 (stage 3c's agent `ab1de7b1a6f3f605a` of claude session 05e60da0 finished; merged 11:30, worktree kept). Stage 3b's agent `a7c0069bafcb78c52` finished 08:53, merged 08:56, worktree kept
+  - branch: mainline (3c's worktree `.claude/worktrees/agent-ab1de7b1a6f3f605a` kept); last commit: `9636263`
+  - evidence: `.claude/probes/K290/stage3c/` (`out/sheets/`: phone, fog, unseen-front and width sheets; `out/width_phone/` and `out/width_desk/` measure.txt; scripts incl. `width_probe.mjs`; `builds/e6e1734`), `stage3b/` and `stage3a/`; burn stage 1's `.claude/probes/K114/`
+  - next: Levi's width call K409 (3c's facts), the change if any, then K410 (the mirror). K5 R1's split is not re-probed under a burn: K114 s2 (from 12c5e0a, past R1) shoots burnt frames on it. Open: the grown explore variant's cold-link timing and a cold-cache first-burn trace. K408 rides K114 s2
+  - brief: `docs/design/K114_burn.md`, Stage 3c handoff (item 4: the width facts)
 - **K395** · The pluck blur at a kink loop's tip, on the phone (Levi, 2026-10-15 07:04, after
   K344's fix): a seam from the tip to an edge, and a heart-shaped pinch (a point inside, a dimple outside).
   - owner: nobody since 2026-10-15 08:38 (stage 1 finished, merged 08:47; agent `ac0d0267cdf7467ec` of claude session 05e60da0, worktree kept)
@@ -1301,6 +1301,11 @@ Every other item below waits on the trigger it names.
 - **K433** · Master's compositing isn't monotone in a gap's strength by one 8-bit level
   at some AA pixels (crossing 100; 84 px in census3a's KSWEEP=100 clip; K268 3a).
   census3a allows one level; which layer rounds is unattributed.
+- **K435** · Lore fixes from K290 3c: render-explore.md THE BURN says the front's band
+  darkens the unburnt side under char only, but the code does it under both looks (check
+  THE EMBER DRAWS too); probes.md: `container.visible = false` doesn't stop the burn FX,
+  so a true FX-off frame shadows tickFireFx with a no-op, calls fireFx.clear() and waits
+  two frames (stage3c `width_probe.mjs`).
 
 ## Approved, to schedule (2026-10-11)
 
