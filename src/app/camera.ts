@@ -40,7 +40,7 @@ const FOLLOW_W = 2.4;
 // stall longer than CAM_MAX_DT (a hidden tab) counts as that long.
 const CAM_STEP = 0.05;
 export const CAM_MAX_DT = 1;
-// K6-1: converged()'s thresholds, a frame's motion: screen px, and log
+// K6-1: converged()'s thresholds, the motion left: screen px, and log
 // scale (1e-5 moves a point 1000 px from the origin by 0.01 px).
 const CONVERGED_PX = 0.01;
 const CONVERGED_LOG = 1e-5;
@@ -435,8 +435,9 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
   };
 
   // K6-1, the frame loop's CAMERA poll: has the camera stopped? False while
-  // updateCamera would still move the root next frame by CONVERGED_PX or
-  // more (a scale by CONVERGED_LOG): a tween, the reset's homing, the
+  // updateCamera would still move the root by CONVERGED_PX or more (a
+  // scale by CONVERGED_LOG), next frame or over the fit's ease: a tween,
+  // the reset's homing, the
   // panel's tween (or a panel that changed since the last frame), the pan
   // range's ease, the fit's ease toward a FRESH target (computed here, not
   // the every-third-frame one), or the follow spring off its target or
@@ -452,11 +453,15 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     computeFitTarget(fitScratch);
     if (!camFollow) {
       if (panAllow.loX || panAllow.hiX || panAllow.loY || panAllow.hiY) return false;
-      const z = view.zoom * 0.08;
+      // The fit's ease never lands (8% of the rest a frame): test what is
+      // LEFT of it, not the next step. A step test let the last 0.125 px
+      // creep out unflagged, 100-250 px of the frame changing on a few
+      // frames after the camera "stopped" (the shadow report's UNDER at fw=0).
+      const z = view.zoom;
       return (
         Math.abs(fitScratch.x - fitCur.x) * z < CONVERGED_PX &&
         Math.abs(fitScratch.y - fitCur.y) * z < CONVERGED_PX &&
-        Math.abs(fitScratch.scale - fitCur.scale) * 0.08 < CONVERGED_LOG * fitCur.scale
+        Math.abs(fitScratch.scale - fitCur.scale) < CONVERGED_LOG * fitCur.scale
       );
     }
     let ts = fitScratch.scale;
