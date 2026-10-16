@@ -84,6 +84,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   5. Not daily-exempt. They were 117-119 on their branch until it rebased
   onto K74 stage 2, which renumbered them and re-froze the table pin
   (`test/ui/param_codec.test.ts`). The race itself is gameplay-fire.md.
+  Since K440 `fsp` / `fdl` are the TURN clock's pair (REAL-TIME FIRE PAIR
+  below), and `fsp`'s floor is 0.1 ([0.1, 0.95]; 0.3 before).
 - PLUCK EMPHASIS PARAMS (K279 stage 1, 2026-10-14; brief
   `docs/design/K279.md`). Seven viewer preferences, APPENDED to codec v5
   at 121-127, after the burn race's 118-120 (K114):
@@ -238,3 +240,27 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   url_codec.test.ts's defaults table, OVERRIDE_KEYS and fireSettingsOf
   cases gained the key. What it does: gameplay-fire.md's REAL-TIME FIRE;
   the row: gameplay-panel.md.
+
+- REAL-TIME FIRE PAIR (K440, 2026-10-15; brief `docs/design/K440.md`;
+  Levi: "K440: yes and yes"): the real-time clock plays its own speed and
+  delay. `fireSpeedRt` (`fsr`, default 0.2) and `fireDelayRt` (`fdr`,
+  default 20, about 1.7 s at FIRE_V_REF) are APPENDED at 147-148, after
+  `fireClock` (146); CODEC_VERSION stays 6. The defaults are K114 stage
+  2's proposal (`docs/design/K114_stage2.md`, "Stage 2 handoff" item 7:
+  the best route affords 1.1-1.5 s a decision). Both pairs clamp to
+  [FIRE_SPEED_MIN 0.1, 0.95] and [0, 40] in every reader (link, override
+  key, panel, fireSettingsOf); an unreadable `fsr` / `fdr` reads the
+  pair's own default, and a non-finite speed at a clamp reads its own
+  pair's default too (`clampFireSpeed`'s fallback). Neither is
+  daily-exempt or a MAZE key (a daily plays with the fire off). Under
+  onClockChange in undo_stack.ts's LIVE_EFFECTS (a change restarts the
+  solve), with `fireClock`. `fireSettingsOf` picks the pair by
+  `fireClock`; the other pair is kept, not played. WHY TWO PARAMS, not
+  one pair whose default follows the clock: a link lists only what
+  differs from today's defaults (K132), so `&fi=fuse&fck=realtime` plays
+  0.2 / 20 and every turn link keeps 0.75 / 0, and switching the clock
+  never rewrites a value. Pins that moved: the table pin
+  (`test/ui/param_codec.test.ts`), url_codec.test.ts's defaults table,
+  OVERRIDE_KEYS (`fsr`, `fdr`) and the `fsp` floor cases (0 and 0.05 read
+  0.1); its new test "plays each fire clock's own speed and delay". The
+  rows: gameplay-panel.md's FIRE CLOCK ROW.
