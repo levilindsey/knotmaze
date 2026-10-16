@@ -818,6 +818,10 @@ export class TurnMinotaur {
   lastFactor = 1;
   // Animation progress through the last turn, [0, 1] (1 = at rest).
   progress = 1;
+  // K80 turns 3b (section 2.8): where the last catch happened (the player's
+  // vertex, and the vertex the minotaur's turn ended on), for main.ts to
+  // burst, sound and vibrate at after the respawn moved both. Null before.
+  lastCatch: { player: number; mino: number } | null = null;
   private committed: TurnStep[] = [];
   private committedPlan: TurnLengthPlan | null = null;
   private commitState: MinoState | null = null;
@@ -901,6 +905,7 @@ export class TurnMinotaur {
     }
     if (contact(p, edge, p2, from, path)) {
       this.catches++;
+      this.lastCatch = { player: p2, mino: this.state.v };
       this.player = g.start;
       // K273: back to its lair, or it stays where its turn ended (a fresh
       // roam from there; its sleep and parity count from now, as a spawn's).
@@ -1013,6 +1018,7 @@ export class TurnMinotaur {
       contactByLength(g, p, edge, plan.fromSpot, plan.steps, plan.segLens, realized.travel, catchDist);
     if (caught) {
       this.catches++;
+      this.lastCatch = { player: p2, mino: this.state.v };
       this.player = g.start;
       this.state =
         this.cfg.lair === false
