@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K469.
+Next free ID: K472.
 
 ## Waiting on Levi
 
@@ -271,7 +271,7 @@ Next free ID: K469.
   - owner: nobody since 2026-10-15 16:12 (merged; agent `a859a72c41121806c` of claude session 05e60da0)
   - branch: mainline; last commit: `87bbb26`
   - evidence: `.claude/probes/K6/K6-1/`
-  - next: K6-2 (skip CPU work by flag, after M6): first measure the GEOM miss at the worker's sleep trip (K6_1.md handoff, Q2) and pass dt to tickFireFx; then K6-3 (= K24)
+  - next: K6-2 (skip CPU work by flag, after M6): first measure the GEOM miss at the worker's sleep trip (Q2) and pass dt to tickFireFx; then K6-3 (= K24). Both stages' inputs: `docs/design/K6_1.md`, "Open after K6-1"
   - brief: `docs/design/K6_1.md`
 - **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
   stub, its rounded cap included (2026-10-15 13:39, `?2gozcj.MgaM`, `.claude/probes/K397/levi_1339.png`).
@@ -281,6 +281,30 @@ Next free ID: K469.
   - evidence: `.claude/probes/K459/`
   - next: running: (1) K397's truncated dots, (2) the stub's pluck to its rounded cap, (3) Levi's rule that a pluck sound shows the pluck effect (the audit); at its finish merge it
   - brief: `docs/design/K459.md`
+- **K465** · Thread reveal: show the finish marker and its off-screen indicator by default (Levi
+  2026-10-15 15:49); K76 decision 6 hides both until the exit's thread is seen (drawMarkers, main.ts
+  finishIndicator, EXPLORE_MARKER_VIS). After K6-1 (same files); brief `docs/design/K465.md`.
+  - owner: agent `a2c1144183502178e` of claude session 05e60da0-74f1-4d1d-906d-240f8a53fd12 (sonnet, started 2026-10-15 16:13, 1 h cap ~17:13)
+  - branch: `worktree-agent-a2c1144183502178e`, worktree `.claude/worktrees/agent-a2c1144183502178e`; last commit: `803fbe9`
+  - evidence: `.claude/probes/K465/`
+  - next: build items 1-5 of the brief (the revealFinish param, its gate and row, the phone checks)
+  - brief: `docs/design/K465.md`
+- **K467** · Mobile row help: show each row's tooltip text on touch (Levi 2026-10-15 ~15:58).
+  Proposed: tap the row's label to expand the text inline under the row, an (i) mark on labels that
+  have help; not long press. One stage with K468; brief `docs/design/K467.md`.
+  - owner: agent `a7753559d48a4536a` of claude session 05e60da0-74f1-4d1d-906d-240f8a53fd12 (sonnet, started 2026-10-15 16:13, 1 h cap ~17:13)
+  - branch: `worktree-agent-a7753559d48a4536a`, worktree `.claude/worktrees/agent-a7753559d48a4536a`; last commit: `803fbe9`
+  - evidence: `.claude/probes/K467/`
+  - next: build items 1-5 of the brief: the K468 sheet first, then the row help, the peek, the checks and the lore
+  - brief: `docs/design/K467.md`
+- **K468** · Settings menu full screen on mobile (Levi 2026-10-15 ~15:58): a top bar with close,
+  undo and redo; Android back closes it; phones in landscape too. One stage with K467; brief
+  `docs/design/K467.md`.
+  - owner: agent `a7753559d48a4536a` of claude session 05e60da0-74f1-4d1d-906d-240f8a53fd12 (sonnet, started 2026-10-15 16:13, 1 h cap ~17:13)
+  - branch: `worktree-agent-a7753559d48a4536a`, worktree `.claude/worktrees/agent-a7753559d48a4536a`; last commit: `803fbe9`
+  - evidence: `.claude/probes/K467/`
+  - next: built in K467's stage, item 1 of its brief
+  - brief: `docs/design/K467.md`
 
 ## Next, in order
 
@@ -446,18 +470,13 @@ Every other item below waits on the trigger it names.
 - **K463** · K5 R2's unrun checks, a small Sonnet job under the perf lock: the cross-build threads round
   trip (`K8/stage2/g3_probe.mjs roundtrip ... explore`, c22de79 against 52faab8, expect 0 px) and three
   more fog `phw=0` captures per build (`.claude/probes/K5/R2/checks/`, `pairs_*.txt`, `threads_dots/`).
-- **K465** · Thread reveal: show the finish marker and its off-screen indicator by default (Levi
-  2026-10-15 15:49); K76 decision 6 hides both until the exit's thread is seen (drawMarkers, main.ts
-  finishIndicator, EXPLORE_MARKER_VIS). After K6-1 (same files); brief `docs/design/K465.md`.
 - **K466** · Thread reveal: emphasize unexplored thread ends more, especially ends that lie under a
   crossing (Levi 2026-10-15 15:49). Design + build after K459 (the cap and two dots); brief
   `docs/design/K466.md`.
-- **K467** · Mobile row help: show each row's tooltip text on touch (Levi 2026-10-15 ~15:58).
-  Proposed: tap the row's label to expand the text inline under the row, an (i) mark on labels that
-  have help; not long press. One stage with K468; brief `docs/design/K467.md`.
-- **K468** · Settings menu full screen on mobile (Levi 2026-10-15 ~15:58): a top bar with close,
-  undo and redo; Android back closes it; phones in landscape too. One stage with K467; brief
-  `docs/design/K467.md`.
+- **K471** · K6-1's unrun checks (Sonnet): the `&phw=0` page check (its item 3); why the probe's
+  thread press did not tug in the fabric, chase and reduced-drag phases (no PHYS or GEOM: the probe
+  or a bug?); `m2_input_ab.mjs`'s pins and the high base-against-base floors of its fog, threads and
+  _m4 cases (`docs/design/K6_1.md`, "Open after K6-1"; `.claude/probes/K6/K6-1/`).
 
 ## Residuals (known, not fixed)
 
@@ -980,6 +999,12 @@ Every other item below waits on the trigger it names.
 - **K464** · K5 R2's leftovers (`docs/design/K5_R2.md`, Stage R2 handoff): the G3 and
   FILLET_REACH_PER_HALF facade getters (with R4 or G3's data plane), stale facade comments, the G3-0
   hooks' home (R5), GapSource solve() (R3 or G3-1).
+- **K469** · frame_loop's `halted` never clears on the main thread, so a halted page needs a reload,
+  and its "Cleared on regenerate" comment is wrong (K6-1, Q5; `docs/design/K6_1.md`, "Open after
+  K6-1").
+- **K470** · No app-level WebGL context-loss handling: only `probe_hooks.ts` listens for
+  `webglcontextlost`, to count losses. What a lost context does to the custom data textures on a
+  phone is untested (K6-1).
 
 ## Approved, to schedule (2026-10-11)
 
