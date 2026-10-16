@@ -31,15 +31,20 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   markerGlyphSvgFit into the GLYPH_R box; its on-screen test reads
   fabric.markerDotRadius(), the colored dot, since K98 - a glyph or size
   swap reaches both), shown in fabric mode, unsolved, once the intro has
-  revealed the exit (the 0.98 gate fabric's marker uses) and under fog of
+  revealed the exit (the 0.98 gate fabric's marker uses; under the thread
+  reveal also from the start since K465's `revealFinish`, default on, and
+  only once the exit has been seen with `rvx=0`: `finishHold` in
+  game/explore_finish.ts) and under fog of
   war too (Levi, 2026-10-13: direction only); a tap eases the camera to
   frame the exit with the head (camTween through placeWorldAt; the
   follow camera holds it PEEK_HOLD before easing back), under fog a
   toast only. VIEWER PREFERENCES (localStorage + panel checkboxes, both
   default on, K84 sorts them later): finishIndicator, and tapToPan - off,
   every indicator is inert and taps go through it to the maze. K76 HOOK:
-  finishIndicator.gate(pred) ANDs in a predicate (the thread-reveal mode
-  hides the finish's until the exit has been seen; returns its remover).
+  finishIndicator.gate(pred) ANDs in a predicate (returns its remover;
+  main.ts calls it nowhere today - the thread reveal's hold on the
+  finish's indicator is a clause of its own visible() since stage 2c,
+  `finishHold`, which K465's `revealFinish` can lift).
   THE HEAD is the third client (K148, 2026-10-14; ui/head_indicator.ts holds
   the pure decisions; registered after the finish, before the minotaur): a
   black disc wearing K83's head glyph (`fabric.markerGlyphId("head")`, a

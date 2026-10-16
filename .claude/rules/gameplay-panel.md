@@ -136,7 +136,13 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   (fowIntro) under fog or threads unless the appearance is instant, and
   "reveal distance" ([1, 12], step 0.25), "reveal fade" ([0.35, 4], step
   0.05) and "reveal end" (the six looks) only under threads. All run
-  onTrailChange. Params: gameplay-links.md.
+  onTrailChange. Params: gameplay-links.md. K465 (2026-10-15) added "show
+  finish" (`revealFinish`, a checkbox, default on) after "reveal end",
+  also only under threads and onTrailChange. Tooltip: "Show where the
+  finish is from the start: its marker, the gap around it and the arrow
+  at the screen edge while it is off screen, even over thread you have
+  not explored. Off hides the finish until you have seen it. Applies
+  live."
 
 - BURNT ROW (K290 stage 3a, 2026-10-15): "burnt" (gone / char) in the
   Burn race folder, last since K440, hidden while the fire is off like
