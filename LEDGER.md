@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K482.
+Next free ID: K488.
 
 ## Waiting on Levi
 
@@ -114,6 +114,12 @@ Next free ID: K482.
   x your move's thread length and can stop mid-run; contact by thread distance through the move; a
   telegraph mark per choice; tune on the turn sim (`.claude/probes/K80/stage3/`). The fire already
   runs on walked length (gameplay-fire.md). Open: the telegraph look, a wait's length.
+- **K482** · Desktop panel: K467 made each row's label a focusable button whose click opens its
+  help, so Tab stops twice per row. Gate the help to coarse pointers and the phone sheet?
+  (docs/design/K467.md Handoff)
+- **K483** · Review the phone sheet: its font stays 11 px (long labels wrap; larger?), the bar's
+  badge and undo placement, the slider peek's feel; the replay badge's label was never run
+  (docs/design/K467.md Handoff; screenshots .claude/probes/K467/out/sheet/)
 
 ## In progress
 
@@ -296,14 +302,6 @@ Next free ID: K482.
   - evidence: `.claude/probes/K465/`
   - next: build items 1-5 of the brief (the revealFinish param, its gate and row, the phone checks)
   - brief: `docs/design/K465.md`
-- **K468** · Settings menu full screen on mobile (Levi 2026-10-15 ~15:58): a top bar with close,
-  undo and redo; Android back closes it; phones in landscape too. One stage with K467; brief
-  `docs/design/K467.md`.
-  - owner: agent `a7753559d48a4536a` of claude session 05e60da0-74f1-4d1d-906d-240f8a53fd12 (sonnet, started 2026-10-15 16:13, 1 h cap ~17:13)
-  - branch: `worktree-agent-a7753559d48a4536a`, worktree `.claude/worktrees/agent-a7753559d48a4536a`; last commit: `803fbe9`
-  - evidence: `.claude/probes/K467/`
-  - next: built in K467's stage, item 1 of its brief
-  - brief: `docs/design/K467.md`
 - **K466** · Thread reveal: emphasize unexplored thread ends more, especially ends that lie under a
   crossing (Levi 2026-10-15 15:49). Design + build after K459 (the cap and two dots); brief
   `docs/design/K466.md`.
@@ -485,6 +483,10 @@ Every other item below waits on the trigger it names.
   the arrival run). `fabric_maze_renderer.ts` `edgeAt` takes the nearest sample of every choice, the
   arrival run included, so near the junction it is a toss-up; the arrival run should win only by a
   clear margin, and the hover must pick what a tap takes.
+- **K485** · Pixel pass for the phone sheet and row help (scripts/phone.ps1): the sheet query, Back,
+  the peek, help taps; K467 ran only in phone emulation
+- **K486** · Touch help for the panel's buttons: Reset path, Replay settle, Reset to defaults, the
+  seed row, the dice, Daily, stats (K467 covered the 161 rows only)
 
 ## Residuals (known, not fixed)
 
@@ -1024,6 +1026,11 @@ Every other item below waits on the trigger it names.
 - **K477** · K459's free cap, unchecked: its look on the phone; the base collapse under a free cap
   (f5's never engages); a reveal-off pluck A/B; the rounded tip has no AA along the strip's end; a
   cap a node pins stays still, as in K397 (`docs/design/K459.md`, Handoff).
+- **K484** · Sheet history entries (K467): a stale entry after a reload or discard with the sheet
+  open, an extra one on a fast close-then-reopen, and a live switch pushing one without a gesture
+  (docs/design/K467.md Handoff)
+- **K487** · The shipped probes .claude/probes/K92/undo.mjs and K198/stage2/pan.mjs predate the
+  phone sheet; sheet-aware copies are in .claude/probes/K467/
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1238,6 +1245,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K468** · Settings menu full screen on mobile (Levi 2026-10-15 ~15:58): a top bar with close, undo and redo; Android back closes it; phones in landscape too. Done in 2c066d4 (2026-10-15).
 - **K467** · Mobile row help: show each row's tooltip text on touch (Levi 2026-10-15 ~15:58). Done in 2c066d4 (2026-10-15).
 - **K448** · Real-time fire tooltips give seconds: the delay its head start (20 is about 1.7 s, 40 about 3.3 s), the speed its units a second (K440). Done in bb40ae2 (2026-10-15).
 - **K440** · Real-time fire defaults: real time plays its own pair, 0.2 / 20 (`fsr`, `fdr`); turn keeps 0.75 / 0; speed floor 0.1. Done in bb40ae2 (2026-10-15).
