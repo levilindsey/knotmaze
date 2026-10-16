@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K463.
+Next free ID: K465.
 
 ## Waiting on Levi
 
@@ -242,7 +242,7 @@ Next free ID: K463.
   - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
-  lifecycle, scene, audio_map; M4 at 9f08bf0): main.ts 5709 → 3725 lines; R1 (`src/render/ribbon/`): ribbon_renderer.ts 7747 → 7377.
+  lifecycle, scene, audio_map; M4 at 9f08bf0): main.ts 5709 → 3725 lines; R1-R2 (`src/render/ribbon/`; R2 at 52faab8): ribbon_renderer.ts 7747 → 5989.
   - owner: nobody since 2026-10-15 15:00 (merged)
   - branch: mainline; last commit: `52faab8`
   - evidence: M4's `.claude/probes/K5/M4/` and R2's (in its worktree until the merge) `.claude/probes/K5/R2/`; M3's `.claude/probes/K5/M3/` (`checks/`, `frames/`, `step2/`, `k7_results.jsonl` and `k7_table.mjs`, `checks_m3.ps1`, `remap_e6e1734.md`), `.claude/probes/K5/R2/brief/` (the R2 brief's maps), `.claude/probes/K5/R1/` (`checks/`, `checks2/`; `checks3.ps1`, the fog B-vs-B control, never run; R2's inventory `parts.md`, `probe_surface.md`, `surface.json`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/`; the design's region maps in `.claude/probes/K5/design/`
@@ -259,11 +259,11 @@ Next free ID: K463.
 - **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone, `?2gozcj.MgaM`):
   stage 2 fixed issues 1, 2, 4 and 5 (092aca0); left is issue 3, the dark U at a tucked tip's root. At 13:39
   (`.claude/probes/K397/levi_1339.png`) truncated dots and issue 3 still show sometimes; the dot vibration is gone.
-  - owner: nobody since 2026-10-15 13:04 (stage 2 merged; stage 3 waits for K5 R2's merge, since both edit ribbon_renderer.ts)
-  - branch: mainline; last commit: `092aca0`
-  - evidence: `.claude/probes/K397/` (stage 1, in the main checkout) and `.claude/probes/K397/stage2/` (stage 2)
-  - next: add Levi's 13:39 report (the truncated dots; K459, the vibration to the cap) to the stage 3 brief, then stage 3 per its brief, launched once K5 R2 merges (find a whole U, attribute it, fix per plan (a), (b) or H1; it also teaches the reveal census the dots' new cut). Then the phone and Levi's link `?2gozcj.MgaM`, and stage 2's unrun pluck checks (the K279 and K344 profiles, a reveal-off pluck A/B)
-  - brief: `docs/design/K397.md` ("Stage 3 brief")
+  - owner: agent `a2806c50953dec23d` of claude session 05e60da0 (opus, started 2026-10-15 15:02, 2 h cap ~17:02)
+  - branch: `worktree-agent-a2806c50953dec23d`, worktree `.claude/worktrees/agent-a2806c50953dec23d`; last commit: `6c6e4ad`
+  - evidence: `.claude/probes/K397/stage3/`
+  - next: stage 3 running (find a whole U, attribute it, fix per plan (a), (b) or H1; teach the reveal census the dots' new cut); at its finish merge it. Then the phone and Levi's link `?2gozcj.MgaM`, and stage 2's unrun pluck profiles (K279, K344). The truncated dots and the stub's pluck are K459's
+  - brief: `docs/design/K397.md`
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K6** · One frame loop driven by what-changed flags
   (`docs/design/K5_K6_split.md`, 4 and 5.4): K6-1, shadow flags, after M3;
@@ -273,6 +273,14 @@ Next free ID: K463.
   - evidence: `.claude/probes/K6/K6-1/`
   - next: K6-1 running (shadow flags beside today's loop, the wall-clock audit, the six-link report); at its finish merge it. Then K6-2 (skip CPU work by flag) after M6; K6-3 (= K24, skip the draw) after K6-2
   - brief: `docs/design/K6_1.md`
+- **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
+  stub, its rounded cap included (2026-10-15 13:39, `?2gozcj.MgaM`, `.claude/probes/K397/levi_1339.png`).
+  With K397's truncated dots and Levi's rule that a pluck sound shows the pluck effect (`docs/design/K459.md`).
+  - owner: agent `a21ef2f5cb56d9def` of claude session 05e60da0 (opus, started 2026-10-15 15:02, 2 h cap ~17:02)
+  - branch: `worktree-agent-a21ef2f5cb56d9def`, worktree `.claude/worktrees/agent-a21ef2f5cb56d9def`; last commit: `6c6e4ad`
+  - evidence: `.claude/probes/K459/`
+  - next: running: (1) K397's truncated dots, (2) the stub's pluck to its rounded cap, (3) Levi's rule that a pluck sound shows the pluck effect (the audit); at its finish merge it
+  - brief: `docs/design/K459.md`
 
 ## Next, in order
 
@@ -435,6 +443,9 @@ Every other item below waits on the trigger it names.
 - **K441** · The real-time fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn
   (drawFire's re-declare 0.6, HUD writes 0.1, 0.5 unattributed). CPU-profile a turn and a realtime
   stand at one burnt share (K461 first), then decide a re-declare throttle. `docs/design/K114_stage2.md`.
+- **K463** · K5 R2's unrun checks, a small Sonnet job under the perf lock: the cross-build threads round
+  trip (`K8/stage2/g3_probe.mjs roundtrip ... explore`, c22de79 against 52faab8, expect 0 px) and three
+  more fog `phw=0` captures per build (`.claude/probes/K5/R2/checks/`, `pairs_*.txt`, `threads_dots/`).
 
 ## Residuals (known, not fixed)
 
@@ -882,7 +893,7 @@ Every other item below waits on the trigger it names.
   `?2gozcj.MgaM`, K397 stage 1). `docs/design/K397.md`, Stage 1 handoff.
 - **K425** · Probes editing `ribbon_renderer.ts`: `K290/stage3b/dump_variants.ts` + copies (K76 2d,
   K290 3a), `variant_build.ps1` (`g2/`, `K4/`), `K154_K169/edit_rr2.ps1`, `edit_rr3.ps1`. Repoint to
-  `src/render/ribbon/ribbon_shader.ts` (R1's copy `.claude/probes/K5/R1/dump_variants.ts`).
+  `src/render/ribbon/ribbon_shader.ts` (R1's copy `.claude/probes/K5/R1/dump_variants.ts`); R2's gap files too (notes).
 - **K426** · `docs/lore_index.md`'s render-paint row lacks
   `test/render/paint_ring_lap.test.ts` (drift from before K5 R1).
 - **K427** · `warmup.mjs`'s unregistered-program check works only on a dev build
@@ -945,9 +956,6 @@ Every other item below waits on the trigger it names.
 - **K458** · K6-3's stopped ticker must keep the wall-clock animations: the camera's follow delay
   and tween hold (camera.ts 153), tickFireFx (fabric 1443), the key hold and step timers (main
   3133-3339). K6-1's wall-clock audit lists them all (`docs/design/K6_1.md`).
-- **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
-  stub, its rounded cap included (2026-10-15 13:39, phone, `?2gozcj.MgaM`; the green stub in
-  `.claude/probes/K397/levi_1339.png`). For K397 stage 3.
 - **K460** · Phone probe tooling: `phone6.ps1` holds the phone lock while it waits for perf and
   logs the tailnet address unmasked; `scripts/phone.ps1` wakes the phone, leaves a 9222 forward;
   `phone_run.ps1` hardcodes owner and hosts (live variant: K395's `phone_run_live.ps1`).
@@ -957,6 +965,9 @@ Every other item below waits on the trigger it names.
 - **K462** · K323 Stage A's design (`docs/design/K323_game_mode.md`: the params table ~l.89, the
   undo list ~l.222) predates `fireClock`, `burnt` and K440's real-time pair (`fsr`, `fdr`): Stage A
   carries the pair and labels it (its proposed labels describe the turn pair).
+- **K464** · K5 R2's leftovers (`docs/design/K5_R2.md`, Stage R2 handoff): the G3 and
+  FILLET_REACH_PER_HALF facade getters (with R4 or G3's data plane), stale facade comments, the G3-0
+  hooks' home (R5), GapSource solve() (R3 or G3-1).
 
 ## Approved, to schedule (2026-10-11)
 
