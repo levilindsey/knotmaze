@@ -148,8 +148,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   THE RNG is counter-based on the game's global `turns` (rng.at), so the
   same taps replay the same game; sleep and half-speed parity count
   `lifeTurn` (since the last spawn). MODELS: hunter = prox (roams to a
-  junction rMin = min(3, roam)..roam runs away, hunts within sight, gives
-  up beyond sight + LOSE_MARGIN 3 and checks where it last saw you);
+  junction rMin = min(minoRoamMin, roam)..roam runs away, hunts within
+  sight, gives up beyond sight + minoGiveUp and checks where it last saw
+  you; both 3, the constants ROAM_MIN and LOSE_MARGIN until stage 3a);
   guard = prox around the exit's junction, rMin 1..territory; stalker =
   chase (a best step with chance accuracy while you are off the start,
   random otherwise). Speed half (odd lifeTurns) | one | charge (two runs
@@ -162,8 +163,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   start and it in its lair (lifeTurn 0) and re-commits. Display: lair
   until it leaves; hunt = the stalker sees you or prox mode != 0 (the
   committed state); else wander, with real time's glow alphas. PARAMS,
-  codec v5 108-116, after minoRefog (107; 109-117 on the branch until
-  K111 stage 3 removed highlightMode's 108):
+  108-116 (codec v5 then, v6 since K76 stage 2c), after minoRefog (107;
+  109-117 on the branch until K111 stage 3 removed highlightMode's 108;
+  stage 3a appended six more at 140-145, its entry below):
   minotaur `mt`, minoSpeed `msp` (one), minoTelegraph `mtg` (on),
   minoSight `msi` (2 runs; 4 until stage 2), minoRoamRuns `mro` (8),
   minoTerritory `mtr` (6; both 1 at least since stage 2), minoAccuracy
@@ -178,8 +180,11 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   HEAD_EXCLUDE neighborhood excluded), checked before run hit-testing.
   The radius alone (the 0.9 floor at the default width) swallowed every
   real click on a choice's tap point, 1.5 ctrl out (probe: 0 clicks, 8
-  fallbacks; with the split 30 and 0). No wait key yet, and a wait is not
-  in `fc.taps` (attempt saves miss it). HOOKS: `__knotTurnMino()` (state,
+  fallbacks; with the split 30 and 0). Since stage 3a the `.` and Space
+  keys and the move pad's center wait too, and every wait queues while a
+  move plays instead of snapping it (gameplay-moves.md's THE WAIT ON
+  EVERY INPUT); a wait is still not in `fc.taps` (attempt saves miss
+  it). HOOKS: `__knotTurnMino()` (state,
   telegraph, minoScreen), `__knotTurnMove(edge)`, `__knotTurnWait()`,
   `__knotTurnMinoObj()`. MEASURED (`.claude/probes/K80/turns/`, the
   probes.md K80 entry): the module and the harness agree on 9600 games
@@ -196,7 +201,43 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   cost: on the treelike and dead-end sets the hunter fell below section
   0 (treelike 80%: 8% vs 27%). Sight 1 / accuracy 0.65 was rejected: it
   hunts only when adjacent. The table is in the brief's stage 2 handoff;
-  the stalker lost the most (per-model accuracy is open for Levi).
+  the stalker lost the most (per-model accuracy: K294, stage 3a below).
+
+- TURN MINOTAUR STAGE 3a (2026-10-15; brief
+  docs/design/K80_turns_stage3.md, whose Stage 3a handoff holds the
+  tables; `.claude/probes/K80/stage3/`, untracked: sim.ts, sweep.ts,
+  compare_after.ts, the sweep_3a_* and compare_3a_* files). KNOBS (codec
+  140-145, gameplay-links.md; rows by model, gameplay-panel.md):
+  `minoGiveUp` and `minoRoamMin` (both 3) replace LOSE_MARGIN and
+  ROAM_MIN (K324 section 4.3); `minoTurnPull` (0); K294's per-model
+  sight and accuracy: the guard `minoGuardSight` 4 / `minoGuardAccuracy`
+  0.3, the stalker `minoStalkerAccuracy` 0.45, while the hunter keeps
+  minoSight 2 / minoAccuracy 0.3 and the stalker's charge reads
+  minoSight (TURN_MODEL_DEFAULTS; turnMinoParamsOf picks by model). THE
+  PULL (wanderDest): with chance pull a roam's destination is drawn only
+  among the in-range junctions nearer you (hops) than the junction it
+  stands on (m.v); none nearer, or you on the entrance tail (p < 0),
+  draws among all. It splits the one draw u as roamPull does, so pull 0
+  is the old pick exactly. The stalker never roams, so it ignores it.
+  Default 0 (the brief's question 5): % caught on dailies, explorer /
+  80% / fog-4, 8 reps, at pull 0 / 0.25 / 0.5 / 1: hunter 2/13/13,
+  2/16/13, 0/18/15, 2/22/18; the hunter at speed charge 2/18/15,
+  2/18/16, 3/23/21, 8/28/26; guard 3/19/22, 1/21/24, 2/28/20, 1/27/25. K294'S DEFAULTS:
+  the criterion is the sum over the nine cells (daily, treelike and
+  dead-end sets x the three players) of |caught% - section 0's target|,
+  a near-tie (within about 4) broken by the daily cells alone. At 64
+  reps the guard (sight 2 / 0.3 -> 4 / 0.3) scores 48.9 -> 43.3 and the
+  stalker (0.3 -> 0.45) 100.8 -> 90.5 (0.6 scored 87.6 with daily cells
+  34.3 vs 24.9). OPEN FOR LEVI: the stalker's daily 80% and fog-4 cells
+  overshoot section 0's (27.9 / 28.5 vs 20 / 12); stage 2's dailies-only
+  criterion would keep 0.25-0.3. PIN: test/game/minotaur_turns.test.ts
+  TURN_GAMES, 18 whole games (seeds x the three models x scripted walks
+  with waits) played at turnMinoDefaults(model) and digested; K294
+  re-froze the guard and stalker rows (all but stalker:42:2), the hunter
+  rows held through the pull. guard:42:2 now digests as stalker:42:2
+  does: at sight 4 it hunts the whole game (not a bug). The harness
+  mirror (sim.ts) matches the module on 9600 games at the new defaults
+  and at every pull tried, 0 trace mismatches.
 
 - CATCH RESETS (K80 turns stage 2, K273, 2026-10-14; Levi: "a toggle to
   conditionally reset the level/Minotaur/fog when dying to the
@@ -211,18 +252,27 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   remembered) and lifeTurn restarts, so its sleep applies again there;
   real time: it keeps its Spot, even mid-run, and pauses `wake` s there.
   It can camp the entrance's first junction: the start hides you, so wait
-  it out. TALLIES CARRY: a restart under a minotaur hands the old one's
-  counts to the new (`carry()`: catches, restarts, and huntTicks or
-  closeCalls and seen), so a restart never launders a catch. A Reset path
-  under a minotaur, with a move made and the run unsolved, is a COUNTED
-  restart (`restarts`, a stat row above 0). STATS (section 2.9;
+  it out (K293 (d), kept). TALLIES CARRY: a restart under a minotaur
+  hands the old one's counts to the new (`carry()`: catches, restarts,
+  and huntTicks or closeCalls and seen), so a restart never launders a
+  catch. A Reset path under a minotaur, with a move made and the run
+  unsolved, is a COUNTED restart (`restarts`, a stat row above 0); with
+  no move made since the last restart it carries the tallies too,
+  uncounted (stage 3a; before, it called restartSolve() without carry,
+  so a catch under minoRestart, or a counted restart, then a Reset path
+  started a fresh minotaur at 0 catches). A Reset path shows no toast
+  (K293 (f), kept). STATS (section 2.9;
   game/maze_stats.ts STATS): close calls (turn clock: a move that ends
   one run from it, out of its lair, off the start; real time has none)
   and seen (turns it spent hunting you, the hunting getter's rule, with
   the telegraph read from where you stood when it decided). The move log
   gains `x` (fabric_controller `markCaught`: replaces the run you were
   caught on, adds one for a wait), drawn as the ox U+1F402 in the share
-  grid; the share title wears `🐂 N`, or `🐂 0 · N close calls`. Under
-  minoRestart the move log restarts with the level, so the grid shows no
-  ox (the title still counts) and the stars rate the last life's walk.
-  The win banner has no move grid.
+  grid; the share title wears `🐂 N`, or `🐂 0 · N close calls`. An added
+  `x` is no move: `moveCount` reads the taps, not the move log (K293 (c),
+  stage 3a), so a catch on an empty log does not make a Reset path a
+  counted restart. Under minoRestart the move log restarts with the
+  level, so the grid shows no ox (the title still counts) and the stars
+  rate the walk since the level last started over, which the popover
+  says since stage 3a (K293 (a); gameplay-stars.md). The win banner has
+  no move grid.

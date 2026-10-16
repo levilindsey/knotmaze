@@ -143,3 +143,41 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   45 junctions where no key moves, 0 of 141 runs on no key or chord.
   Hook `__knotKeyMoves()` adds chord, waiting, tapsWait, setTapsWait and
   censusPress(). Tests: test/ui/key_moves.test.ts (K329, K333, K334).
+
+- THE WAIT ON EVERY INPUT (K80 turns stage 3a, 2026-10-15; brief
+  docs/design/K80_turns_stage3.md; the turn minotaur's wait move,
+  gameplay-minotaur.md). Before, only a tap on the head waited. THE KEY
+  (key_moves.ts `waitKeyOf`): `.` always (by `key`, wherever the layout
+  puts it; the keydown guard lets Shift through for `.` only, since some
+  layouts need it), and Space unless the focus is in SPACE_OWNERS (a
+  button, a link, [role=button], summary, a field, contenteditable):
+  there Space presses that (Reset path, a folder) and must not wait too.
+  Live only with the turn minotaur on and the keys live
+  (keyBelongsElsewhere and keysLive as the arrows); one wait a press,
+  `e.repeat` ignored, no hold. THE PAD (move_pad.ts): while the turn
+  minotaur is on (`setWait`, from fabricTick) the center is a WAIT button,
+  an hourglass PAD_WAIT 22 px in radius (the arms start there instead of
+  PAD_DEAD 14): a finger coming DOWN inside it waits a turn
+  (`hooks.wait`) and lights it; sliding into the center only releases the
+  arm. ONE WAY IN (main.ts `inputWait`): the key, the pad, a tap or click
+  on the head and the probe hook's `waitTurn`. A press waiting out its
+  chord window goes first (it was pressed first); a wait ends a key hold,
+  as a tap does; while the turn is under way it waits in MoveWait
+  (`wait(at, moving)`, the latest press, tap or wait winning) and
+  takeWaiting runs it on the arrival frame; else it is taken at once. THE
+  SNAP IS GONE: waitTurn used to cancelMove (snap the in-flight dot to its
+  run's end) before a mid-move wait; now no input cuts a move short. The
+  wait's own turn (`turnWait > 0`, the minotaur's run playing over
+  moveSeconds) counts as the turn under way (`dotMoving`), so a press or
+  tap during it queues too. THE HOVER CUE: the hover path tests the wait
+  zone FIRST (`inWaitZone`: the turn minotaur on, the maze open, `onHead`,
+  the same test a click uses, so hover and click agree everywhere): in it
+  the cursor is a pointer, the head marker wears the "hourglass" glyph
+  (marker_glyphs.ts; `setWaitCue` swaps it and puts back the one it wore,
+  a glyph swap rather than a DOM overlay), and no choice lights and no
+  glow shows. A touch on the head starts a pending tap like a choice's,
+  resolved on release. During a move the zone is the destination's (the
+  controller's head), and the cue clears when the head changes (a move, a
+  catch) or the minotaur goes; the next pointer move puts it back. Tests:
+  key_moves.test.ts (waitKeyOf, MoveWait.wait), move_pad.test.ts
+  (padDirAt at PAD_WAIT).
