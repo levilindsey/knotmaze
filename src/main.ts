@@ -3616,6 +3616,8 @@ async function main(): Promise<void> {
     heldKeys,
     host,
     indicators,
+    loopFlags: flags,
+    stampEl: stamp,
     lossBanner,
     modeBadge,
     motion,
@@ -3723,6 +3725,9 @@ async function main(): Promise<void> {
     },
     get sceneWasAnimating() {
       return loop.sceneWasAnimating;
+    },
+    get loopHalted() {
+      return loop.halted;
     },
     get turnWait() {
       return turnWait;
