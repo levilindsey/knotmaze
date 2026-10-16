@@ -294,14 +294,6 @@ Next free ID: K488.
   - evidence: `.claude/probes/K459/`
   - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
-- **K465** · Thread reveal: show the finish marker and its off-screen indicator by default (Levi
-  2026-10-15 15:49); K76 decision 6 hides both until the exit's thread is seen (drawMarkers, main.ts
-  finishIndicator, EXPLORE_MARKER_VIS). After K6-1 (same files); brief `docs/design/K465.md`.
-  - owner: agent `a2c1144183502178e` of claude session 05e60da0-74f1-4d1d-906d-240f8a53fd12 (sonnet, started 2026-10-15 16:13, 1 h cap ~17:13)
-  - branch: `worktree-agent-a2c1144183502178e`, worktree `.claude/worktrees/agent-a2c1144183502178e`; last commit: `803fbe9`
-  - evidence: `.claude/probes/K465/`
-  - next: build items 1-5 of the brief (the revealFinish param, its gate and row, the phone checks)
-  - brief: `docs/design/K465.md`
 - **K466** · Thread reveal: emphasize unexplored thread ends more, especially ends that lie under a
   crossing (Levi 2026-10-15 15:49). Design + build after K459 (the cap and two dots); brief
   `docs/design/K466.md`.
@@ -1245,6 +1237,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K465** · Thread reveal: show the finish marker and its off-screen indicator by default (Levi 2026-10-15 15:49); K76 decision 6 hides both until the exit's thread is seen (drawMarkers, main.ts finishIndicator, EXPLORE_MARKER_VIS). Done in 76fb5ea (2026-10-15).
 - **K468** · Settings menu full screen on mobile (Levi 2026-10-15 ~15:58): a top bar with close, undo and redo; Android back closes it; phones in landscape too. Done in 2c066d4 (2026-10-15).
 - **K467** · Mobile row help: show each row's tooltip text on touch (Levi 2026-10-15 ~15:58). Done in 2c066d4 (2026-10-15).
 - **K448** · Real-time fire tooltips give seconds: the delay its head start (20 is about 1.7 s, 40 about 3.3 s), the speed its units a second (K440). Done in bb40ae2 (2026-10-15).
