@@ -243,10 +243,10 @@ Next free ID: K463.
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
   lifecycle, scene, audio_map; M4 at 9f08bf0): main.ts 5709 → 3725 lines; R1 (`src/render/ribbon/`): ribbon_renderer.ts 7747 → 7377.
-  - owner: agent `a695f82540244625a` (R2) of claude session 05e60da0 (opus, started 13:10, 2 h cap ~15:10); M4 merged at 9f08bf0
-  - branch: `worktree-agent-a695f82540244625a`, worktree `.claude/worktrees/agent-a695f82540244625a`; last commit: `0112900`
+  - owner: nobody since 2026-10-15 15:00 (merged)
+  - branch: mainline; last commit: `52faab8`
   - evidence: M4's `.claude/probes/K5/M4/` and R2's (in its worktree until the merge) `.claude/probes/K5/R2/`; M3's `.claude/probes/K5/M3/` (`checks/`, `frames/`, `step2/`, `k7_results.jsonl` and `k7_table.mjs`, `checks_m3.ps1`, `remap_e6e1734.md`), `.claude/probes/K5/R2/brief/` (the R2 brief's maps), `.claude/probes/K5/R1/` (`checks/`, `checks2/`; `checks3.ps1`, the fog B-vs-B control, never run; R2's inventory `parts.md`, `probe_surface.md`, `surface.json`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/`; the design's region maps in `.claude/probes/K5/design/`
-  - next: R2 running (crossing and explore gaps out of ribbon_renderer.ts); at its finish merge it, then K397 s3, then R5; G3-1 after R2. The main.ts lane: K6-1 (shadow flags) running (K6), then M5, whose brief folds the Stage M4 handoff leftovers in `docs/design/K5_K6_split.md` (FrameLoopDeps and ProbeCtx take `life`, the stale scene_ref.ts comment, the physon wait in `m2_input_ab.mjs`)
+  - next: K397 stage 3 and K459 (both on the moved code), then R5 (`joinery.ts`); G3-1 once Levi answers K399; then R3 (`reveal_fx.ts`, `paint_state.ts`). The main.ts lane: K6-1 running (K6), then M5, whose brief folds the Stage M4 handoff leftovers in `docs/design/K5_K6_split.md`
   - brief: `docs/design/K5_K6_split.md` (Stage M4 brief); the R lane `docs/design/K5_R2.md`
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
