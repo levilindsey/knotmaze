@@ -357,6 +357,22 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   Measure from the DRAWN centerline (`renderer.chainSamples`), not
   `__knotPoint`, whose curve sits 0.015-0.06 world off it (more with
   flow): gameplay-camera.md's PICK MARGINS.
+- K479 (2026-10-15), tap preference: `.claude/probes/K479/` holds
+  `mid_move.mjs <base> <out.json> [seed]` (the dot frozen at 30% of the
+  first move into a junction, `edgeAt` along the arrival run, a real
+  click on the uncovered stretch), `census.mjs` + `report.mjs`
+  (`node report.mjs <census json...> --variants=old,be1.5,be2`: every
+  junction entered on each of its runs, a world grid, classes from the
+  true geometry, the old and new pick side by side), `hover_ab.mjs` +
+  `hover_compose.mjs` (the lit run under the old and the new pick on ONE
+  page and one frozen state, `tapPreference` toggled; a mouse at phone
+  size, since a touch press lights nothing) and `locked_verify.ps1`
+  (suite, build and hover under the perf lock). GOTCHAS: the controller
+  is not a window hook, so wrap `fb.edgeAt` to capture it (the next
+  hover passes it); `__knotTurnMove(eid)` plays a move through
+  moveAlong, which COMMITS the move at once (the head is the far
+  junction while the dot is still on the run); `fb.runsInReach(x, y, c,
+  maxD, c.arrivalEdge)` lists what a pick chose among.
 - K7 stage 4 (2026-10-15), THE PHYSICS WORKER AND THE PROBE BRIDGE
   (`docs/design/K7_worker.md`, design 8 and the stage 4 handoff). **THE
   WORKER IS THE DEFAULT since K7 stage 6 (call F6, 2026-10-15)**: a bare
