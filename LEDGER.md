@@ -257,11 +257,12 @@ Next free ID: K425.
   calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
   in-thread. Stage 7 (6cfb416..fdb38ac) builds the first scene from the Worker's name and
   modulepreloads its chunk: ready 139-165 ms in on the desktop (master 363-396), first visible
-  unchanged (K307's compiles set it). The phone's 250 ms gate is unmeasured (inferred ~195-260).
- 
+  unchanged (K307's compiles set it). The phone (K411's window) still misses the 250 ms gate: the
+  worker is ready 311-459 ms after the main chunk (master 454-764); its module alone evaluates at 233-364.
+  - owner: nobody since 2026-10-15 10:32 (the phone pass, done in K411's window by claude session 05e60da0; stage 7's agent `a29b026fa5e2829ee` finished 08:57, merged 09:00, worktree kept)
   - branch: mainline; last commit: `fdb38ac`
   - evidence: `.claude/probes/K7/stage7/` (`run_s7.ps1`, `phone_run.ps1`, `s7_desktop.txt`, `s7_phone.txt`, `k7_results.jsonl`, `table_s7.mjs`, `spike/`); stages 3-6 beside it
- 
+  - next: Levi's F6 review with the phone numbers (above); then K412
   - brief: `docs/design/K7_worker.md`, "Stage 7 handoff" ("Not done", "For the next stage")
   - env: the phone, under the phone lock (`phone_run.ps1` takes it and runs `stage5/phone_setup.ps1`)
 - **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
@@ -284,19 +285,19 @@ Next free ID: K425.
   with seams so G3 becomes a module swap; K6 rides it. Design: `docs/design/K5_K6_split.md`
   (calls: K377). M1 merged (baa0847..12709e5): main.ts 5709 → 4869 lines, no logic changes. M2 merged
   (cc19c2b..a9121b4): the camera to `src/app/camera.ts`, main.ts 4493 lines.
- 
- 
+  - owner: agents of claude session 05e60da0: R1 `ab73ce063da5446b5` (started 09:20; opus, 2 h cap ~11:20; ports 5980-5989) and M3 `af649e53424d2062c` (started 10:17; opus, 2 h cap ~12:17; ports 5840-5849). R1's brief merged in 9041939 (docs agent `aae67981858ddb4a6`, worktree kept). M2's agent `abe93d522f82975c1` finished 09:52, merged 09:56, worktree kept. M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
+  - branch: R1 `worktree-agent-ab73ce063da5446b5`, worktree `.claude/worktrees/agent-ab73ce063da5446b5`, from `9041939`; last commit: `fe48f06` (WIP). M3 `worktree-agent-af649e53424d2062c`, worktree `.claude/worktrees/agent-af649e53424d2062c`, from `e6e1734`; last commit: `efa70f9` (WIP). Mainline `a9121b4` (M2)
   - evidence: `.claude/probes/K5/M3/`, `.claude/probes/K5/M2/`, `.claude/probes/K5/R1/` (the brief's `rr_map.cjs` and maps in `brief/`); stage 1's tools in `.claude/probes/K5/stage1/` (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
- 
- 
+  - next: R1 (`ribbon/ribbon_shader.ts`, `ribbon/sampling.ts`) and M3 (the frame loop to `src/app/frame_loop.ts`, a hot path: the frame-time check under the perf lock) running. Then M4, M3/M4 export PhysState, M7a moves `__knotUndo`. The R lane (K377 q3): R2 and R5 after R1, G3-1 after R2. While R1 runs, nothing else edits `ribbon_renderer.ts` (not K397's fix, K268 stage 3, K76's next stage or G3-1)
+  - brief: `docs/design/K5_K6_split.md` ("Stage M3 brief"; "Stage M2 handoff"); R1 `docs/design/K5_R1.md`
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
   char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b merged (5913f4f..f7dd57e).
- 
- 
+  - owner: agent `ab1de7b1a6f3f605a` of claude session 05e60da0 (stage 3c, the phone sheet; sonnet, started 10:17, cap 11:45; ports 5890-5899). Stage 3b's agent `a7c0069bafcb78c52` finished 08:53, merged 08:56, worktree kept
+  - branch: `worktree-agent-ab1de7b1a6f3f605a`, worktree `.claude/worktrees/agent-ab1de7b1a6f3f605a`, from `e6e1734`; last commit: `e6e1734` (none of its own yet; it commits only its handoff). 3b is mainline `f7dd57e`
   - evidence: the main checkout's `.claude/probes/K290/stage3c/` (3c's scripts and sheets), `stage3b/` (desktop sheet `out/sheet/K290_3b_sheet_crop.png`, `perf_*`, `k290_ab.mjs`, `sheet.mjs`) and `stage3a/`; burn stage 1's `.claude/probes/K114/`
- 
- 
+  - next: 3c running: the phone sheet under the phone lock (K7's pass done 10:32), a fog-on row, an unseen-front frame, width notes for K409; then merge its handoff; then K408 (start hide), Levi's width call K409, the mirror K410
+  - brief: `docs/design/K114_burn.md`, "Stage 3b handoff" ("For the next stage", first bullet; 3c's launch prompt added only the locks, paths and cap)
 - **K395** · The pluck blur at a kink loop's tip, on the phone (Levi, 2026-10-15 07:04, after
   K344's fix): a seam from the tip to an edge, and a heart-shaped pinch (a point inside, a dimple outside).
   - owner: nobody since 2026-10-15 08:38 (stage 1 finished, merged 08:47; agent `ac0d0267cdf7467ec` of claude session 05e60da0, worktree kept)
