@@ -110,9 +110,9 @@ Next free ID: K454.
 - **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
   and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
   keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
-- **K440** · Real-time fire defaults (K114 s2 item 7): fireSpeed 0.2 and fireDelay 20 (a 1.7 s head
-  start) with wider panel and link ranges (today [0.3, 0.95] and [0, 40]), or separate realtime
-  defaults? Others: Brisk 0.35/30, Easy 0.15/0, Relaxed 0.1/30. `docs/design/K114_stage2.md`.
+- **K440** · Real-time fire defaults (K114 s2 item 7). Levi, 2026-10-15 ("yes and yes"): real time
+  gets its own pair, 0.2 / 20 (a 1.7 s head start); turn keeps 0.75 / 0; the speed range is
+  [0.1, 0.95] under both. Brief `docs/design/K440.md`.
 - **K449** · K397 stage 2's two looks, for the phone: (1) each fade draws a cap and two spread dots,
   so long fades and High contrast lose the old row of dots; (2) a tap in a fade plucks the solid
   stretch beside the solid end: keep that, or sound-only? (`docs/design/K397.md`, Stage 2 handoff)
