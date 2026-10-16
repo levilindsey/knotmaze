@@ -19,7 +19,7 @@ one line, `- **K<n>** Â· <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K522.
+Next free ID: K524.
 
 ## Waiting on Levi
 
@@ -249,7 +249,7 @@ Next free ID: K522.
   - owner: nobody since 2026-10-15 16:17 (merged; agent `a2806c50953dec23d` of claude session 05e60da0)
   - branch: mainline; last commit: `e0bcad8`
   - evidence: `.claude/probes/K397/stage3/`
-  - next: K518 done (2026-10-16): census ported (continuous loop + update freeze; dots-cut PROOF PASS non-vacuous, `.claude/probes/K397/stage4/out_k518_m10c/`); remaining census failures K519. Then the phone and Levi's link on the merged build (`docs/design/K397.md`, "Stage 4 handoff (K518)")
+  - next: K519 done (2026-10-16): every K518 census leftover attributed, no product bug (narrowed residuals K522, K523). Then the phone and Levi's link on the merged build (`docs/design/K397.md`, "Stage 5 handoff (K519)")
   - brief: `docs/design/K397.md`
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K459** Â· A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
@@ -1019,7 +1019,8 @@ Every other item below waits on the trigger it names.
 - **K520** Â· K516's legacy timing harnesses not rerun in continuous mode: k7_latency (stage-5 batch setup), K174/K114 perf (rt_page first needs K461's fsr/fdr fix), k96_cam (desktop-Chrome launcher). Continuous-mode frame timings were measured instead (`.claude/probes/K516/results.md`); rerun the harnesses when next needed.
 - **K511** Â· K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 3b1612f; K348's mid-move wait-tap leftover is now intentional for pointers.
 
-- **K519** Â· Census leftovers from K518's ported re-run (m10 recipe, master f314045; `.claude/probes/K397/stage4/out_k518_m10c/census_m10.json`, 17/29 pass): visible crossings' mode-on cut ~30-60 px smaller than mode-off (7, none exact), 3 hidden-class slots leak 1-6 px, JOINTS (2d) pixel-exact + attribution restores differ 1,633 px, MARKERS i1 (chain 5, vis 0, k 1), visitAll/mode-off-again differ 11,489 px, one shaped slot restores at 2 px - attribute (census tolerance vs product) before fixing; JOINTS (2d) also failed historically. `docs/design/K397.md`, "Stage 4 handoff (K518)".
+- **K522** Â· census2d's exactness vs the capture floor (K519 attribution; `docs/design/K397.md` Stage 5 handoff): visible cuts, hidden "leaks", c214's 2 px restore and visitAll/off-again all sit in same-state one-level flicker (no-mutation floor 15-23 delta-1 px a clip; slot bytes identical off/on). Teach census2d a delta/edge tolerance instead of set equality and 0 px; the 1,633 px attribution restore no longer reproduces (0 px after 5da3f5c) - localize first if it returns.
+- **K523** Â· census2d's stale ideals (K519): JOINTS (2d) pixel-exact never modelled `underWindows` (failed every 2d run; census3a's attributedUW passes 31/31 and the swap is exact on master for j57/j58/j161) and MARKERS predates K465's exit lift (i1 is the exit, k 1 at vis 0 by design). Port attributedUW + an exit-aware marker rule into census2d, or retire those checks for census3a's; the joints' product side stays K268's next stage (the K430 ramp, after G3-1).
 - **K521** Â· K74 stage 3 residuals (9ccf360): item 7 prototype port (dailies 1-80 outside the K109/K110 list) and item 8 full measurement (greedy bar on dailies 1-240, sleep, generation timing, before/after sheet of the three finishes) not run; only `clearance.ts` (0 new junctions inside) and unit tests verify the finish. `docs/design/K74_stage3.md` Stage 3 handoff.
 ## Approved, to schedule (2026-10-11)
 
@@ -1245,6 +1246,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K516** Â· K6-3 phone cadence check: knot fw=0 draws 0/s at rest (ticker stopped), fabric ambient cadence 23.8 drawn/s (rAF p95 16.9 ms, smooth), continuous mode 60.2 / 44.0 drawn/s; load first sleep 10.5-12.9 s. Done in 11309be (2026-10-16; `.claude/probes/K516/results.md`). Residual K520.
 
 - **K518** Â· K397/K76 census ported after K6-3 (continuous `__knotLoop` + freeze of the per-frame slot re-derivation during mutation shots; stale PROOF_UNTIL default removed) and re-run on master: dots-cut PROOF PASS non-vacuous (32 shaped slots, 11,381 px, ghosts/under 0, dots p95 err 0.059). Done (probes + docs only, 2026-10-16; evidence `.claude/probes/K397/stage4/out_k518_m10c/`, `docs/design/K397.md` Stage 4 handoff). Residuals K519; phone/Levi link still owed under K397.
+- **K519** Â· K518's census leftovers attributed (no product bug; no `src/` change): visible cuts, hidden leaks, c214's restore and visitAll/off-again are one-level capture flicker (slot bytes identical off/on); JOINTS (2d) is census3a's attributedUW case; MARKERS i1 is K465's lifted exit by design; the 1,633 px attribution restore reads 0 px now. Done in this commit (2026-10-16; evidence `.claude/probes/K397/stage5/`, `docs/design/K397.md` Stage 5 handoff). Residuals K522, K523.
 
 - **K6** Â· One frame loop driven by what-changed flags: K6-1 shadow flags, K6-2 skip-CPU (926fdfe), K6-3 (= K24) skip-draw/stop-ticker/30 fps rest cadence, screen-aware CAMERA scale bound, continuous `__knotLoop` + pre-load global, idle stamp refresh, diag `idle`. Done in 1654ef0 (2026-10-16; evidence `.claude/probes/K6/K6-3/`). Residual K516.
 
