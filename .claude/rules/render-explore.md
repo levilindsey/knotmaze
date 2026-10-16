@@ -762,3 +762,124 @@ a dot). Diagnosis, brief and handoff: `docs/design/K397.md`.
   cut and the thread; (ii) the joint gate, a fan or an arm strip at an
   unvisited junction drawing over a dot. Notes:
   `.claude/probes/K459/notes.md`.
+
+## THE ENDS (K466, 2026-10-15)
+
+Levi (15:49): "Also, we should do something to emphasize the unexplored
+thread ends a bit more, maybe especially for ends that lie under a
+crossing". Brief, results and handoff: `docs/design/K466.md`. Binding:
+K423's "always two beacon dots, sized to fit the fade" and K397 stage
+2's "Cap and two dots is good", so the cap and the dots (THE DOTS,
+above) are untouched. Params: gameplay-links.md's REVEAL END PARAMS;
+rows: gameplay-panel.md's EXPLORATION ROWS.
+
+- THE CASES (`.claude/probes/K466/cases.mjs`, `out_cases.log`; the
+  phone's 411x753 at 2.625, `?<seed>&xp=threads&am=instant&snd=none&
+  fw=0`, 12 moves): 37 frontiers on 2gozcj (13), k397a (3), 1x2y3z (9)
+  and bead5 (12). 22 fades lie partly under an over thread's casing, 7
+  of them under a VISIBLE over pass that covers part of the end: 1x2y3z
+  f0 (chain 19: the cap and both dots), f5 (chain 48: the cap and dot 1)
+  and f6 (chain 48: dot 2); bead5 f0 (chain 2: dot 2), f1 (chain 2), f6
+  (chain 58) and f11 (chain 90), the last three whole. The other 15 lie
+  under HIDDEN over threads, which the gap gate draws as empty space, so
+  they show whole until that thread is revealed (2gozcj's 6 and k397a's
+  2 are all of this kind).
+- THE CANDIDATES (brief item 2): A, a stronger end (`rvg=bright`); B,
+  the end moved out from under the crossing, pushed past it (`rve=past`)
+  or pulled back before it (`rve=back`); C, the end drawn through the
+  over thread: NOT BUILT, since it needs shader text and every explore
+  variant would then compile cold (render-shaders.md).
+- A SHIPS, THE BRIGHT HALO (`drawFrontierMarks`, `styleHalos`; the halo
+  and beacon looks only, `exploreLookHasHalo`): the halo at each
+  frontier fade's middle grows from max(1.8, 3.8 tw) to
+  max(HALO_BRIGHT_MIN 2.4, HALO_BRIGHT_D 5.2 tw) world across and
+  breathes 0.75 to 1 (soft: 0.6 to 0.85) over the same HALO_BREATH_S
+  2.5 s, tinted HALO_BRIGHT_TINT 0xd8f2ff (soft 0xa8e4ff). Reduced
+  motion holds HALO_BRIGHT_STILL 0.9 (soft 0.8); High contrast draws it
+  at 1 in white either way, the bright one larger. Sprites only: no
+  shader text and no declaration change, so the pieces, the cap and the
+  dots are master's (the sheet: A's frontiers match under + soft's on
+  all four seeds, in count, flags and fade length to 3 decimals); a
+  translucent dot's pixels change only by the brighter halo beneath it.
+  WHY A: it marks every end, not only those under crossings; the halo
+  lies beneath the weave, so where an over thread covers an end the halo
+  still shows around that thread (seen once, in the A/B below: a halo
+  crossed by an over thread lit on both sides of it); and it moves
+  nothing, so it shows no unexplored thread.
+- B, THE END MOVES (CPU only; off by default). THE STRETCHES:
+  `ribbon/crossing_gaps.ts` pushes `[slot, underCenter, allNeg,
+  allPos]` into `r.chainCuts` per under chain, beside chainWins: the arc
+  that every lane of the over pass's casing covers, shown or not (an end
+  must not move again when its over thread is revealed).
+  `ribbons.underCutCtrls(chain, pad, shownOnly)` returns them as
+  unwrapped chain ctrls grown by `pad` world of arc at each end. The
+  fabric's `exploreKeepOut` pads by `ribbons.fadeLength + 0.25 tw`,
+  caches each chain's stretches until the explore state moves (`koKey`:
+  restart, refogs, seen vertices, runs and partials), so the flow's
+  wobble cannot flip an end across a crossing, and passes `keepOut` to
+  the model only when rve is not under.
+- B, THE MODEL (`explore_view.ts`; `ExploreKeepOut {spans, ring,
+  mode}`): `stub()` moves the end of a stub out of a visited end that a
+  caught dot does not extend (p = 0) and that has a fade. It takes the
+  FULLY GROWN stub's plain fade [eF - fF, eF] (lattice units from the
+  near end; the run's stretches over every ring lap, `keepOutA`) and
+  moves it with `endPushPast` (beyond each stretch it overlaps, up to
+  the limit) or `endPullBack` (before them, down to the near web domain
+  d0): the mode's way first, then the other, then the plain end. The
+  past limit is the far junction's web domain (L - dF), and with the far
+  end visited also the middle of the gap between the two grown plain
+  tips (0.5 (eF + L - eFar)), so two stubs never pass each other. No
+  move when the two grown reaches already make the run whole (`meets`).
+  The move scales with the arm's growth (`gp`), so a growing arm reaches
+  the moved end continuously; the fade keeps its length.
+- ONE CROSSING AT MOST (`END_MOVE_STEPS` 1). The first sheet, at 32
+  steps, chained pushes past up to three crossings (the fade plus the
+  casing and the pads fill most of the room between two): 1x2y3z f5, f6
+  and f7 moved 5.28, 4.67 and 7.6 ctrl and 2gozcj f12 3.7, up to about
+  3.9 lattice units of unexplored thread shown; back mostly failed and
+  fell back to past.
+- THE SHEETS (`.claude/probes/K466/sheet.mjs`; `sheet/<seed>.png`,
+  `sheet/full/`, `sheet/key.txt`; `out_sheet.log` at 32 steps,
+  `out_sheet2.log` at 1; the cases' walks; columns under + soft (master's
+  look), A = under + bright, Bpast, Bback, BA = past + bright; no context
+  loss). At one step: ends under a visible over 7 -> 4 (1x2y3z 3 -> 2,
+  bead5 4 -> 2) and under any over 22 -> 15 (2gozcj 6 -> 3, k397a
+  2 -> 1, 1x2y3z 6 -> 5, bead5 8 -> 6), past and back alike. Moves:
+  2gozcj f4, f5, f7 and f12 1.7 to 3.7 ctrl past (back failed on all
+  four); k397a f1 0.22 back (past failed); 1x2y3z f6 4.67 past or 0.13
+  back (dot 2 clear either way); bead5 f0 4.33 past or 0.59 back, f11
+  2.39 past. NOT MOVED, not diagnosed: 1x2y3z f5, bead5 f1 and f6
+  (inferred: neither way fits, past beyond its limit and back below d0).
+  1x2y3z f0 moved 3.27 ctrl and the survey still flags its cap and dots
+  under a visible over: either the survey's test is wider than the
+  padded stretch or chain 19's stretches miss that crossing; not
+  checked. key.txt's stamp reads d55b335: a dev server's stamp is the
+  SHA at its start (vite.config.ts defines it at config load), not the
+  source it serves.
+- MODE OFF, THE A/B (K290's `k290_ab.mjs` same-state A/B, desktop
+  1400x900, master d3fc17d against 001e8ca as two `vite preview` builds,
+  link `k111&am=instant&snd=none&fw=0&phy=0`, under the perf lock;
+  `.claude/probes/K466/out_ab_soft.log`, `out_ab_default.log`, `ab/`).
+  With `&rvg=soft`, 31 of 31 at 0 px: mode off at four pulse phases, mode
+  on at two, on then off, a hovered choice, A/A floors 0 px, no page
+  errors, context loss or GL warnings. At the defaults, 29 of 31: every
+  mode-off frame 0 px, and mode on differs by 33620 px (max delta 50) at
+  both phases. `ab/blobs.mjs` puts every differing pixel in the three
+  frontier halos (two overlapping at the head's stubs, one split in two
+  by an over thread drawn above it, plus four 1-delta pixels at a halo's
+  fringe; `out_ab_blobs.log`), the ribbons and the marker at 0
+  (`ab/crop3.mjs`; `ab/out_default/crop_blob1.png`, `crop_blob23.png`).
+  No shader or GLSL file changed, so no program compiles cold.
+- PROBE HOOK: `__knotExplore({endCross, endGlow})` writes the params
+  (the frame loop syncs them), alone or with `on`.
+- TESTS: explore_view.test.ts "explore view (K466): the ends kept out
+  from under crossings" (12: the two movers, one crossing at most, past,
+  back, the fallback order, a visited far end's limit, meets, growth
+  continuity, ring laps, the mirrored far end, caught and untouched
+  stubs unchanged); url_codec.test.ts "reads the reveal's end params
+  from rve and rvg".
+- RESIDUALS (K466's handoff): past and back show unexplored thread (up
+  to 4.67 ctrl on the sheet, one crossing); the cached stretches can go
+  stale after a tug, the load settle or a Replay settle until the next
+  arrival, and an end may jump then; the pad may double-count if the
+  casing's cover already includes the gap's fade (unchecked).
