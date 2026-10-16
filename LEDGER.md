@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K423.
+Next free ID: K425.
 
 ## Waiting on Levi
 
@@ -133,6 +133,10 @@ Next free ID: K423.
 - **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
   and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
   keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
+- **K423** · K397's two look calls (`docs/design/K397.md`, Fix plans). (1) The beacon dots: the
+  fade runs 0.38-1.36 world, so the fixed pitch shows 1, 2 or a cut dot. Keep the pitch and drop
+  the partial dot, spread round(fade / pitch) dots over it, or always 2 sized to fit. (2) Where a
+  tap's vibration stops: at vis 0.5 (the pick threshold) or the stub's solid end.
 
 ## In progress
 
@@ -302,13 +306,14 @@ Next free ID: K423.
   - brief: `docs/design/K395_pluck_loop_tip.md` ("Stage 1 handoff")
   - env: the phone: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone, free
-  play): 1-2 beacon dots at a stub's end, a squared-off far end, a circular knuckle, a tap on a
-  stub's end that plucks and shows hidden thread, and end dots sitting in gaps cut over crossings.
-  - owner: agent `a3740655bb9c1fc11` of claude session 05e60da0 (since 2026-10-15 08:45; opus, 2 h cap)
-  - branch: `worktree-agent-a3740655bb9c1fc11`, worktree `.claude/worktrees/agent-a3740655bb9c1fc11`; last commit: `b50e4f8` (from master)
-  - evidence: the main checkout's `.claude/probes/K397/` (Levi's `levi_0801.png`, `levi_0806.png`); the agent's in its worktree's `.claude/probes/K397/`
-  - next: stage 1, the diagnosis (causes and a fix plan appended to `K397.md`); the fix stage after K290 3b and K395 merge. Levi's link starts `?2gozcj.Mg` (the rest asked for)
-  - brief: `docs/design/K397.md`
+  play, `?2gozcj.MgaM`): 1-2 beacon dots at a stub's end, a squared-off far end, a circular knuckle,
+  a tap on a stub's end that plucks and shows hidden thread, and end dots sitting in gaps cut over
+  crossings.
+  - owner: nobody since 2026-10-15 10:26 (stage 1, the diagnosis, merged in 26b8c08)
+  - branch: mainline; last commit: `26b8c08` (stage 1's worktree `.claude/worktrees/agent-a3740655bb9c1fc11` kept)
+  - evidence: the main checkout's `.claude/probes/K397/` (stage 1's probes, `out/` and `out/levi/`; Levi's shots)
+  - next: stage 2, the fixes for 1, 2, 5 and 4, after K423 and K5 R1's merge, in the next free code slot; then stage 3 (issue 3)
+  - brief: `docs/design/K397.md` (Diagnosis, Fix plans, Stage 2 brief)
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 
 ## Next, in order
@@ -1261,6 +1266,15 @@ Every other item below waits on the trigger it names.
 - **K407** · K344's probe link `?qoietk.KIiHgRRXwRlRt8fGrST4sf` builds another design since later
   default changes (its chain 21 no longer self-crosses), so probes and lore citing that loop no
   longer reproduce it; K395 used `?7&am=instant&snd=none&fw=0`, chain 9 (key 133). Re-pin them.
+- **K420** · `.claude/probes/K19-K20/probe_daily.mjs front` fails 10 of 14 checks on every build: it reads
+  `#maze-hud .km-title` (gone from src) and expects `?daily=1.aBMge` and `?1471kin.c` to stay tokens (K5 M2).
+- **K422** · Two K120 regression probe checks fail on master too (seen by K80 3a): keys.mjs realtime
+  "a held key keeps adding inputs" (2 → 3; untested guess: the seed-7 maze changed under it) and
+  pad.mjs desktop "the stored choice shows it" (the pad hides under the open panel since K224,
+  86dc0cf; store `knotmaze.panelOpen` "0"). `.claude/probes/K80/stage3/rerun/K120/`.
+- **K424** · Thread reveal: some junctions stay hidden while one of their arms turns visible 0.5-1
+  ctrl out, so their webs are missing beside thread about to show (junctions 87 and 160 on
+  `?2gozcj.MgaM`, K397 stage 1). `docs/design/K397.md`, Stage 1 handoff.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1272,12 +1286,6 @@ Every other item below waits on the trigger it names.
   commission or license better icon art, sound effects and music before
   launch, and credit each artist on the credits page (K321) with the
   terms their work ships under (`notices/credits.ts`).
-- **K420** · `.claude/probes/K19-K20/probe_daily.mjs front` fails 10 of 14 checks on every build: it reads
-  `#maze-hud .km-title` (gone from src) and expects `?daily=1.aBMge` and `?1471kin.c` to stay tokens (K5 M2).
-- **K422** · Two K120 regression probe checks fail on master too (seen by K80 3a): keys.mjs realtime
-  "a held key keeps adding inputs" (2 → 3; untested guess: the seed-7 maze changed under it) and
-  pad.mjs desktop "the stored choice shows it" (the pad hides under the open panel since K224,
-  86dc0cf; store `knotmaze.panelOpen` "0"). `.claude/probes/K80/stage3/rerun/K120/`.
 
 ## Ideas (not scheduled)
 
