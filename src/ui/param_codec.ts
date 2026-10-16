@@ -278,6 +278,7 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("minoGuardSight"), // 143
   num("minoGuardAccuracy"), // 144
   num("minoStalkerAccuracy"), // 145
+  choice("fireClock", ["turn", "realtime"]), // 146, K114 stage 2
 ]);
 
 // The format version a blob names first. Bump it for anything but an

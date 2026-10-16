@@ -1017,7 +1017,7 @@ export function buildPanel(
   const fireRow = row(
     fFire, p, "fire",
     { options: { off: "off", fuse: "fuse" } },
-    "Turn-based: a fuse lit at the entrance burns along every thread behind you, slower than you walk, and burnt threads are gone. A run whose far end the fire reaches first smolders and refuses your tap. Trapped with no way left, you burn and the race starts over. Backtracking feeds the fire. Not with the minotaur: turning one on turns the other off. Restarts the solve.",
+    "A fuse lit at the entrance burns along every thread behind you, slower than you walk, and burnt threads are gone. A run whose far end the fire reaches first smolders and refuses your tap. Trapped with no way left, you burn and the race starts over. Backtracking feeds the fire. Not with the minotaur: turning one on turns the other off. Restarts the solve.",
     D.fire, () => {
       if (params.fire !== "off" && params.minotaur !== "off") {
         params.minotaur = "off";
@@ -1043,6 +1043,13 @@ export function buildPanel(
       params.fireDelay = Math.round(params.fireDelay * 10) / 10;
       callbacks.onClockChange();
     }
+  );
+  // K114 stage 2: the fire's clock (game/fire_clock.ts).
+  const fireClockRow = row(
+    fFire, p, "fireClock",
+    { options: { turn: "turn", realtime: "realtime" }, label: "clock" },
+    "turn: the fire burns as far as you walk, so standing still to think is free. realtime: it burns on a clock from your first move, your dot walks at a fixed pace, and if the fire reaches you while you stand there, you burn. Restarts the solve.",
+    D.fireClock, () => callbacks.onClockChange()
   );
   // K290 (burn stage 3a): a look, so it applies live and keeps the solve.
   const burntRow = row(
@@ -2050,11 +2057,12 @@ export function buildPanel(
     minoAccuracyRow.hidden = !hunter;
     minoGuardAccuracyRow.hidden = !guard;
     minoStalkerAccuracyRow.hidden = !stalker;
-    // K114: the burn race plays on the turn clock (stage 2 brings it to
-    // real time); its tuning shows while it is on.
+    // K114: the burn race never plays on K80's real-time clock (it has
+    // its own, fireClock); its tuning shows while it is on.
     fFire.hidden = !turnClock;
     fireSpeedRow.hidden = params.fire === "off";
     fireDelayRow.hidden = params.fire === "off";
+    fireClockRow.hidden = params.fire === "off";
     burntRow.hidden = params.fire === "off";
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);

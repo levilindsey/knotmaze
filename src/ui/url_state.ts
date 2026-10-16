@@ -92,10 +92,16 @@ export const CAMERA_MODES: CameraMode[] = ["fit", "follow"];
 export const CLOCK_MODES: ClockMode[] = ["turn", "realtime"];
 
 // K114's burn race (game/fire.ts): off, or a fuse lit at the entrance that
-// burns the maze behind you. The turn clock only until stage 2's fireClock,
-// and never with the turn-aligned minotaur (fireSettingsOf).
+// burns the maze behind you. Never with K80's real-time minotaur clock or
+// the turn-aligned minotaur (fireSettingsOf); fireClock picks its clock.
 export type FireMode = "off" | "fuse";
 export const FIRE_MODES: FireMode[] = ["off", "fuse"];
+// The fire's clock (K114 stage 2; game/fire_clock.ts): turn (L = the
+// distance walked, stage 1) or realtime (L = FIRE_V_REF lattice units a
+// second since the first move; the dot runs at that pace). Not `clock`,
+// the maze clock, whose realtime is K80's minotaur.
+export type FireClockMode = "turn" | "realtime";
+export const FIRE_CLOCKS: FireClockMode[] = ["turn", "realtime"];
 // How a burnt stretch draws (K290, burn stage 3a): gone (not drawn: the
 // paint shader hides it through the thread reveal's visibility, so its
 // crossings close their gaps and its junction fans drop it) or char (a
@@ -553,6 +559,9 @@ export interface UrlParams {
   // K290 (burn stage 3a): how burnt runs draw, gone | char (BURNT_MODES).
   // Live; the solve goes on.
   burnt: BurntMode;
+  // K114 stage 2: the fire's clock, turn | realtime (FIRE_CLOCKS). Every
+  // change restarts the solve.
+  fireClock: FireClockMode;
   // K80 turns stage 2 (K273): what a minotaur's catch resets, on both
   // clocks. minoRestart on restarts the level (main.ts restartSolve: path,
   // fog, clock and minotaur; its tallies carry over). Off is the respawn:
@@ -782,22 +791,25 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   revealLook: "beacon",
   // K290: burnt runs are gone (the brief's "burnt runs are gone").
   burnt: "gone",
+  // K114 stage 2: the turn clock (stage 1's fire).
+  fireClock: "turn",
 };
 
-// The burn race a design plays (K114), or null without one. The fire runs
-// on the turn clock only (stage 2's fireClock brings it to real time) and
-// never with the turn-aligned minotaur (call 3: one antagonist at a time;
-// the panel switches the other off, and a link that sets both plays the
-// minotaur).
+// The burn race a design plays (K114), or null without one. Never on K80's
+// real-time minotaur clock (`clock`) nor with the turn-aligned minotaur
+// (call 3: one antagonist at a time; the panel switches the other off,
+// and a link that sets both plays the minotaur). `clock` is the fire's own
+// clock (fireClock, stage 2).
 export function fireSettingsOf(
   p: Omit<UrlParams, "seed">
-): { speed: number; delay: number } | null {
+): { speed: number; delay: number; clock: FireClockMode } | null {
   if (p.fire !== "fuse" || p.clock === "realtime" || p.minotaur !== "off") {
     return null;
   }
   return {
     speed: clampFireSpeed(p.fireSpeed),
     delay: clampTo(p.fireDelay, FIRE_DELAY_MAX),
+    clock: p.fireClock === "realtime" ? "realtime" : "turn",
   };
 }
 
@@ -956,6 +968,7 @@ export const ENUM_OPTIONS: {
   exploration: EXPLORATION_MODES,
   revealLook: REVEAL_LOOKS,
   burnt: BURNT_MODES,
+  fireClock: FIRE_CLOCKS,
 };
 
 function clamp01(v: number): number {
@@ -1343,6 +1356,8 @@ function readLegacy(
     revealLook: readChoice(query, "rvl", REVEAL_LOOKS, D.revealLook),
     // K290's burnt look (`&fbt=char`).
     burnt: readChoice(query, "fbt", BURNT_MODES, D.burnt),
+    // K114 stage 2's fire clock (`&fck=realtime`).
+    fireClock: readChoice(query, "fck", FIRE_CLOCKS, D.fireClock),
   };
 }
 
