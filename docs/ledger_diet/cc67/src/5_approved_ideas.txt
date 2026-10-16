@@ -1,0 +1,49 @@
+- **K322** · Art, sound and music by people (Levi, 2026-10-14 21:47): commission or license better icon art, sound effects and music before launch; credit each artist on the credits page (K321) with their terms (`notices/credits.ts`).
+
+- **K259** · With explore mode on, a chain with any visible piece draws its whole mesh, so hidden fragments still run the shader; drawing only the visible index range is cheaper. Not needed yet (`docs/design/K76.md`, "Stage 2a handoff").
+
+- **K255** · Fold K193's `wait_then_aa.ps1` (`.claude/probes/K193/`) into `scripts/phone_pass.ps1` as `-WaitQuiet`: it tolerates touches until a full quiet window can no longer end before a deadline; `retry_quiet.ps1` gives up at the first touch that leaves less than one.
+
+- **K256** · The phone warms ~6 C in a pass's first rep, so cells run at different temperatures (K193's A/A). A warm-up, or a temperature column in the summary, would separate heat from noise (`docs/design/K193.md`, "Stage 1 handoff").
+
+- **K247** · K174's ideas: readable labels in the Minotaur folder (`mino*` keys clip, K246); a catch toast saying the fog came back; homing or the rejected "closest" roam pick, if over ~2/3 of games should meet the minotaur. `docs/design/K174.md` ("Stage 1 handoff").
+
+- **K233** · The phone pass's full spec (26 looks, 3 reps) takes ~55-60 min. Trim it per round, or add a spec `deadline` so no look starts after it (`pass/state/watchdog.trip` already stops a pass; `docs/design/K156.md`, "Round 2026-10-14b handoff").
+
+- **K36** · Add to home screen: a web app manifest and icons, blocked on icon art (which also fixes the `/favicon.ico` 404 on every load). K122 found unreferenced template leftovers (`public/favicon.svg`, `public/icons.svg`, `src/assets/hero.png`): delete them or wire up the favicon.
+
+- **K66** · Why do bridges at joints, open tails and kink neighborhoods end the settle ramp near an unstable point (a snap to a new rest 3.5-5 s in forces K63's 2.5 s window; fixing it could make 0.75 s safe, K64)? Harness `.claude/probes/K63/`.
+
+- **K84** · After the churn, a pass over every param (Levi, 2026-10-13): viewer preference or design param, kept in its concept's folder and marked (K292); audit worth, names, tooltips; place `finishIndicator`, `tapToPan` (K73), Motion (K79), High contrast (K111). Meets K57, feeds K78's param reference.
+
+- **K85** · Replay links (Levi, 2026-10-13): record a playthrough in a link and replay it with the path animating, to watch a finished session or pick up an unfinished one. Builds on K47 (tap list plus walk-graph fingerprint); the link needs the design token, the taps and per-move timing.
+
+- **K91** · A shorter quiet window for physics-off loads (they never wake): hidden settle from 5.0 toward 3.25 sim-s. Cost: ~4% of designs lay out 1-4 px differently from physics-on, which K57's exempt physics toggle assumes is the same (K64 follow-up).
+
+- **K82** · Manually override the daily maze for a given day (Levi, 2026-10-12: "could be a follow-up thing"): a frozen per-day override table beside the versioned definitions; a published day's entry must never change (`.claude/rules/gameplay-daily.md`, daily rule 1).
+
+- **K68** · If junction-web edges look soft at deep zoom (about 4x), size the arm material strip rows from the camera's world-per-pixel (re-packed on zoom) instead of raising the 64-texel width for everyone (K4 agent idea).
+
+- **K70** · A more dramatic hero settle (P2 polish): splines round the lattice corners from frame one, so the settle reads as a gentle tightening, not zigzags turning into curves. Blend sampled positions toward the control polyline while progress is low (`docs/history.md`, Follow-ups).
+
+- **K71** · Wobbly threads at slack ~0 (P2 polish): waviness along runs and rope-tight twist chains. Candidate knobs: constraint iterations, pullOnly bending, repulsion/structural balance (`docs/history.md`, Follow-ups).
+
+- **K113** · Two-layer vellum: render the fibers and grain once into a static texture (1 texel per CSS px) and drift only the mottling in a low-res pass; the drift pass costs about 2.1 ms at 1600x900 today (K79, `.claude/probes/K79/out/gpu_k79.log`).
+
+- **K119** · i18n, at the end (Levi, 2026-10-13): there is little text, and an LLM will drive the translations. Strings are mostly in `src/ui/` and `src/game/share_text.ts`; text drawn as threads is K115's question.
+
+- **K141** · K80 section 4's costlier mechanisms, deferred (Levi, 2026-10-13): 4.8 sentries (call 9's "validated sentries"), 4.22 two-player (M hot-seat, L networked), 4.25 over-under swap (`docs/design/K80_gameplay_additions.md`). The M ones are K138.
+
+- **K160** · The background speed slider is linear over 0-8; a curve like gridAlign's (`src/ui/grid_align_curve.ts`) would give the slow end room. At 8x the 10-15 Hz texture pass may look steppy (unchecked on the phone): then scale the re-render rate with speed. A look for K156.
+
+- **K57** · Confirm the daily's exempt settings (`DAILY_EXEMPT_KEYS`, `src/ui/daily_link.ts`), parked for the late review with K46 and K84 (Levi, 2026-10-14; `docs/design/levi_notes_2026-10-14.md` item 13). Open: `settleBudget`, `loadSettle` (K162 (3)), the confetti settings, `markerSize`; the comment at `daily_link.ts:153` is stale (K237, K264).
+
+- **K117** · Repo visibility (`docs/design/levi_notes_2026-10-13.md`): private later, on Levi's word, parked until near launch (2026-10-14; the rest done in a756ca5). Then `gh repo edit --visibility private --accept-visibility-change-consequences` (reversible; Pages keeps working). K122 is needed either way.
+
+- **K316** · Single-threaded WASM for the collision narrow-phase (~40% of a drag's physics, the audit's 2-4x), only if K7 s5's phone numbers show physics, not rendering, as the bottleneck; it would take gs 18 from 0.76x to real time. Threads are ruled out (Gauss-Seidel can't be colored; SharedArrayBuffer needs COOP/COEP).
+
+- **K320** · Slim or split section-rgb: at 46,850 characters it is the cold critical path (~2.8 s on the desktop, K307 s1). A deploy that changes a shader costs every player one cold compile (programs are cached by source), so a smaller or split program shortens every such load.
+
+- **K371** · Let the worker run ahead of main's frames in the pre-settle, so it settles through K307's compile freezes (K7 s4); watch its phone saturation (97% busy, lagS 1.04 s by 8 s). K7 s7's name build could start it (scene ready ~0.15 s in); drop that settle when `prebuild` is `differs`.
+
+- **K429** · Pixi warns `Attribute aGap / aGapId is not present in the shader` once per pluck-overlay pool mesh (its geometry carries them, pluck_overlay.ts 692-693; pluck-blur's program doesn't declare them): 1-4 pairs of console noise per probe (K5 R1 handoff).
