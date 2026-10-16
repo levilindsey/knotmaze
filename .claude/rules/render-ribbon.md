@@ -367,3 +367,26 @@ header maps its members to their old lines).
   (to `paint_state.ts` with recolor, R3); arcForCtrl; and the G3-0 probe
   hooks (g3DataState, g3TableRows, g3Expected, captureScene,
   restoreScene), which 2.3 does not place (R5 can home them).
+
+WHERE THINGS ARE (R5, 2026-10-15; `docs/design/K5_K6_split.md` 2.3;
+each file's header maps its members to their old lines).
+- `ribbon/joinery.ts` (`Joinery`, the façade's `joinery`): the fans'
+  material lookups (cpuChainMaterial, writeStripRow, cpuStripAt,
+  cpuJunctionField), the section color at an arc (sectionAtArc,
+  colorAtArc, armCtrlSlope), `rebuildFillets` whole, the
+  FILLET/DISC/TIP constants and the fields only they use (fan scratch,
+  fusedTips, the profile pool, route/fillet keys, strip rows).
+  FILLET_REACH_PER_HALF is exported from there; the façade's getter of
+  that name (crossing_gaps reads it) and its rimGap/pluckNodes use it.
+  `sampling.ts` gained normArc (pure; both call it).
+- rebuildFillets, cpuStripAt and colorAtArc keep façade delegations
+  (cpuJunctionField calls cpuStripAt through the instance), and
+  tipDiscScale, fusedTips, filletLayer, filletTopLayer, fieldProfLen
+  and fieldProbe are façade accessors over the part. paintMirror calls
+  `joinery.sectionAtArc` directly (not a probe name).
+- **Still on the façade.** filletMesh and filletTopMesh (the explore
+  part sets their shaders; probes read them), geomRev, routeKey,
+  routesByJn, recBaseByJn, fullJn and paintTmp (shared scene state),
+  and the G3-0 probe hooks (they read reveal/paint state R3/R4 have
+  not homed, so R5 leaves them). G4-1 adds its JointPass beside
+  joinery.ts; G4-2 deletes joinery.ts.
