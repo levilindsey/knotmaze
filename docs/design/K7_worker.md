@@ -2716,9 +2716,10 @@ has since moved by `cb4999e` (LEDGER.md only). Evidence:
 `.claude/probes/K7/stage7/` (untracked; the merge copies it): the batches
 (`s7_desktop.txt`, `s7_phone.txt`), their runners (`run_s7.ps1`,
 `phone_run.ps1`), logs (`run_s7_desktop.log`, `run_s7_phone.log`), results
-(`k7_results.jsonl`, `k7_latency.jsonl`; `node table_s7.mjs <prefix>...`
-prints the tables below) and `spike/` (the page, its sampler,
-`spike_phone_results.jsonl`, `raw_<label>.json`).
+(`k7_results.jsonl`; `node table_s7.mjs <prefix>...` prints the table
+below, kept in `desktop_table.txt`; the phone batch's latency runs will
+write `k7_latency.jsonl`) and `spike/` (the page, its sampler, and the
+desktop dry run in `spike_phone_results.jsonl` and `raw_s-dry.json`).
 
 ### What is done
 
@@ -2776,8 +2777,8 @@ prints the tables below) and `spike/` (the page, its sampler,
   `ready` 40-60 ms sooner and left the first visible frame where it was
   (below). Its costs: a `phw=0` page downloads the worker chunk it never
   runs (90 KB raw, beside the 1.0 MB main chunk), and on a real network
-  the preload shares bandwidth with the main chunk. Both were measured
-  only on localhost and over adb reverse (a residual).
+  the preload shares bandwidth with the main chunk. Its effect was
+  measured only on a localhost server (a residual).
 - **Probe tools, all untracked** in the stage 7 folder: `lib.mjs`'s server
   takes `--cache` (assets/ with levi.dev's 4-hour cache, the HTML
   no-store), `--delay <ms>` (holds every assets/ response) and serves
@@ -2879,8 +2880,8 @@ Observed unless marked inferred. Times are ms after the main chunk's
   in `phone_deadline.txt` skips the probe lines left after it; the
   teardown still runs. Someone has to leave the phone awake and unlocked
   for it.
-- **The preload on a real network.** Measured only on localhost and over
-  adb reverse. After the merge, a fresh-profile load of
+- **The preload on a real network.** Measured only on a localhost
+  server. After the merge, a fresh-profile load of
   https://levi.dev/knotmaze/ shows whether the worker's fetch reads the
   preloaded chunk from the cache through the proxy (`k7_frames.mjs`'s
   `wk` column, from resource timing: `c` = from the cache).
