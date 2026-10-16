@@ -195,7 +195,12 @@ files.
     `fireSettingsOf` (url_state.ts) returns the pair of the design's
     `fireClock`, so `&fi=fuse&fck=realtime` plays 0.2 / 20 and a turn link
     is unchanged. The speed floor dropped to 0.1 for both pairs (Levi's
-    second yes); the delay stays [0, 40]. Links and pins:
+    second yes); the delay stays [0, 40]. Checked on the page (phone
+    viewport 411x753, seed 7, under the perf lock;
+    `.claude/probes/K440/k440_page.mjs`): on `?7&fi=fuse&fck=realtime`
+    the start marker hid on the first frame the clock passed 20, 1.672
+    and 1.682 s after the clock's zero in two runs (20 / 12 = 1.667 s);
+    without `fck` the race played 0.75 / 0. Links and pins:
     gameplay-links.md's REAL-TIME FIRE PAIR; rows: gameplay-panel.md's
     EACH CLOCK'S OWN ROWS.
   - Hook: `__knotFabric().fire` adds clock, L, now, departL, arriveL,
