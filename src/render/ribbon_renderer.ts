@@ -1030,7 +1030,7 @@ export class RibbonRenderer {
   private stripK0 = new Float32Array(4);
   private stripK1 = new Float32Array(4);
   // K268 stage 2: kExploreAt's CPU twin's scratch (cpuChainMaterial).
-  private exploreAtScratch: KExploreState = { v: 0, tip: -1, solid: 0, x: 0 };
+  private exploreAtScratch: KExploreState = { v: 0, tip: -1, solid: 0, end: 0, x: 0 };
   // Diagnostics (probes): the strip pass's counters and its render texture.
   get stripStats(): { renders: number; ms: number; rows: number; lines: number } {
     return STRIP_STATS;

@@ -131,6 +131,18 @@ export function exploreLookHasHalo(look: number): boolean {
 // The tint the glow look (and the halo sprites) brighten toward.
 export const EXPLORE_GLOW_RGB = [0.78, 0.94, 1.0] as const;
 
+// K397 (Levi's call (c), K423): the dots and beacon looks end a frontier
+// fade in a cap and ALWAYS TWO dots, sized to fit the fade. In thread
+// widths: from a fade of EXPLORE_DOTS_SPAN up, the cap is a half disc of
+// radius 0.5 and the dots sit at EXPLORE_DOT_AT of the fade's arc length,
+// radii EXPLORE_DOT_R (the 0.3 (1 - 0.4 u) the dotted line had at those
+// u); at SPAN that is the old layout's first two dots (0.95 and 1.9).
+// Below SPAN the cap's length and the radii scale by fade / SPAN, so the
+// second dot's far edge stays at 0.97 of the fade.
+export const EXPLORE_DOTS_SPAN = 2.15;
+export const EXPLORE_DOT_AT = [0.44, 0.88] as const;
+export const EXPLORE_DOT_R = [0.3 * (1 - 0.4 * 0.44), 0.3 * (1 - 0.4 * 0.88)] as const;
+
 // One piece as a VIS item: T0 = (VIS, c0, c1, f0), T1 = (f1, tips, -, -);
 // tips: bit 1 = the low end (f0) is a frontier, bit 2 = the high end.
 export function visItem(p: ExplorePiece): number[] {
@@ -315,8 +327,9 @@ export function exploreArcMap(
 // PAINT_DATA_GLSL (kP, KChain) before it. kExploreAt returns the point's
 // visibility, and its globals describe the FRONTIER fade the point lies in
 // for the end-marker looks: kExTip = progress 0 -> 1 through it (-1 when
-// none), kExSolid = the ctrl where it starts and kExX = the point's ctrl,
-// both unwrapped toward the piece. Line-for-line twin: paint_math.ts
+// none), kExSolid = the ctrl where it starts, kExEnd = the ctrl where it
+// ends (K397: the dots fit the fade) and kExX = the point's ctrl, all
+// unwrapped toward the piece. Line-for-line twin: paint_math.ts
 // kExploreAt (and pieceVis / chainVis in explore_view.ts). The arm strips'
 // variant (K268 stage 2, arm_strip.ts withExploreStrip) needs only this
 // part; the section variant takes EXPLORE_DECL_GLSL, which starts with it.
@@ -327,10 +340,12 @@ uniform vec4 uKExplore;
 const int PI_VIS = ${EXPLORE_ITEM_VIS};
 highp float kExTip;
 highp float kExSolid;
+highp float kExEnd;
 highp float kExX;
 highp float kExploreAt(KChain c, highp float ctrl) {
   kExTip = -1.0;
   kExSolid = 0.0;
+  kExEnd = 0.0;
   kExX = ctrl;
   if (kP(c.ch).x > 0.5) return 1.0;
   int n = c.nCtrl;
@@ -359,21 +374,23 @@ highp float kExploreAt(KChain c, highp float ctrl) {
     highp float v = 1.0;
     highp float u = -1.0;
     highp float cs = 0.0;
+    highp float ce = 0.0;
     if (x < c0 - 1e-3) {
       if (T0.w <= 1e-4) continue;
       highp float t = min(1.0, (c0 - x) / T0.w);
       v = 1.0 - t * t * (3.0 - 2.0 * t);
-      if ((tips & 1) != 0) { u = t; cs = c0; }
+      if ((tips & 1) != 0) { u = t; cs = c0; ce = c0 - T0.w; }
     } else if (x > c1 + 1e-3) {
       if (T1.x <= 1e-4) continue;
       highp float t = min(1.0, (x - c1) / T1.x);
       v = 1.0 - t * t * (3.0 - 2.0 * t);
-      if ((tips & 2) != 0) { u = t; cs = c1; }
+      if ((tips & 2) != 0) { u = t; cs = c1; ce = c1 + T1.x; }
     }
     if (v > best || (v == best && u < 0.0)) {
       best = v;
       kExTip = u;
       kExSolid = cs;
+      kExEnd = ce;
       kExX = x;
     }
   }
@@ -461,7 +478,8 @@ vec3 kCharLook(vec3 rgb, highp float ch, highp float ash) {
 // pluck, which have no visibility of their own, through exploreGapEdits.
 export const EXPLORE_LOOK_GLSL = /* glsl */ `// The end look's coverage at a point of a FRONTIER fade: u = progress 0 -> 1
 // through it (< 0: not in a frontier fade), s = world arc from the solid end,
-// lat = vUV.y - 0.5 (0 on the centerline), sideFw = vUV.y per pixel. Returns
+// lf = the fade's world arc length (K397), lat = vUV.y - 0.5 (0 on the
+// centerline), sideFw = vUV.y per pixel. Returns
 // v itself for the fade and halo looks and outside a frontier. The glow
 // look's tint is the caller's (it colors the thread; it is not coverage).
 // Shared by the thread (main) and the shaped cut (K268). CPU twin:
@@ -470,8 +488,29 @@ export const EXPLORE_LOOK_GLSL = /* glsl */ `// The end look's coverage at a poi
 // whether the point's nearest shape is a dot (1) or the cap (0; 0 in every
 // other look), which main paints pure white.
 highp float kExDot;
+// K397 THE DOTS' SHAPE (Levi's call (c)): the signed world distance from a
+// point of a frontier fade (s along from the solid end, la across, lf the
+// fade's length) to the nearest of the cap (half an ellipse, 0.5 tw across
+// and 0.5 tw g along) and two dots at EXPLORE_DOT_AT of the fade, radii
+// EXPLORE_DOT_R tw g; g = min(1, lf / (EXPLORE_DOTS_SPAN tw)) fits them in.
+// Sets kExDot. Used by the thread's look and the dots' cut. CPU twin:
+// paint_math.ts kExDotsSdCpu.
+highp float kExDotsSd(highp float s, highp float la, highp float lf) {
+  highp float tw = uKExplore.w;
+  highp float g = clamp(lf / (${glslF(EXPLORE_DOTS_SPAN)} * tw), 1e-3, 1.0);
+  highp float ca = 0.5 * tw * g;
+  highp float cb = 0.5 * tw;
+  highp float k0 = length(vec2(s / ca, la / cb));
+  highp float k1 = length(vec2(s / (ca * ca), la / (cb * cb)));
+  highp float dCap = k1 > 1e-6 ? k0 * (k0 - 1.0) / k1 : -ca;
+  highp float dDot = min(
+    length(vec2(s - ${glslF(EXPLORE_DOT_AT[0])} * lf, la)) - ${glslF(EXPLORE_DOT_R[0])} * tw * g,
+    length(vec2(s - ${glslF(EXPLORE_DOT_AT[1])} * lf, la)) - ${glslF(EXPLORE_DOT_R[1])} * tw * g);
+  kExDot = dDot < dCap ? 1.0 : 0.0;
+  return min(dCap, dDot);
+}
 highp float kExploreLook(int look, highp float v, highp float u, highp float s,
-    highp float lat, highp float sideFw, highp float pxW) {
+    highp float lf, highp float lat, highp float sideFw, highp float pxW) {
   kExDot = 0.0;
   if (u < 0.0 || look < 2) return v;
   highp float tw = uKExplore.w;
@@ -493,14 +532,8 @@ highp float kExploreLook(int look, highp float v, highp float u, highp float s,
     return cov * (1.0 - kSmooth((u - 0.5) / 0.5));
   }
   // DOTS (3) and BEACON (5, plus its halo sprite): the solid thread ends in
-  // a round cap and goes on as a dotted line that shrinks and fades.
-  highp float sp = 0.95 * tw;
-  highp float la = lat * tw;
-  highp float dCap = length(vec2(s, la)) - 0.5 * tw;
-  highp float kk = max(1.0, floor(s / sp + 0.5));
-  highp float dDot = length(vec2(s - kk * sp, la)) - 0.3 * tw * (1.0 - 0.4 * u);
-  highp float dd = min(dCap, dDot);
-  kExDot = dDot < dCap ? 1.0 : 0.0;
+  // a cap, then two dots that fade (K397: always two, sized to the fade).
+  highp float dd = kExDotsSd(s, lat * tw, lf);
   return clamp(-dd / pxW + 0.5, 0.0, 1.0) * (uKExplore.x > 1.5 ? 1.0 : 1.0 - 0.55 * u * u);
 }
 // K268 THE SHAPED CUT: the over thread's coverage at its chain arc A (the
@@ -510,11 +543,24 @@ highp float kExploreLook(int look, highp float v, highp float u, highp float s,
 // combined by MIN (one piece's two ends) or best-of (two pieces: kExploreAt's
 // rule, ties preferring the solid one), with the end look at a frontier on
 // the centerline (lat 0). CPU twin: paint_math.ts exploreCutCoverCpu.
-highp float exploreCutCover(int row, int fl, highp float A, highp float pxW) {
+// K397 THE DOTS' CUT: in the dots and beacon looks a frontier fade cuts by
+// the dots' own shape, at the fragment's own distance lat from the over
+// centerline. The cover is then only the look's strength, kExCutOn is set
+// and kExCutSd holds kExDotsSd there, and gapKeepAt measures its casing
+// from that shape (EXPLORE_GAP_SHAPE_GLSL): a disc of radius r + casing
+// around each dot and the cap's half ellipse plus casing, also past the
+// fade's end (t 1), where the second dot's casing reaches.
+bool kExCutOn;
+highp float kExCutSd;
+highp float exploreCutCover(int row, int fl, highp float A, highp float lat, highp float pxW) {
+  kExCutOn = false;
+  int look = int(uKExplore.y + 0.5);
+  bool dots = look == 3 || look == 5;
   bool mx = (fl & ${GAP_PROF_MAX}) != 0;
-  highp float best = mx ? 0.0 : 2.0;
+  highp float best = mx ? -1.0 : 2.0;
   highp float bu = -1.0;
   highp float bs = 0.0;
+  highp float bf = 0.0;
   for (int r = 0; r < 2; r++) {
     if ((fl & (${GAP_PROF_R0} << r)) == 0) continue;
     highp vec4 R = texelFetch(uGapData, ivec2(${GAP_PROF_BASE} + r, row), 0);
@@ -527,16 +573,23 @@ highp float exploreCutCover(int row, int fl, highp float A, highp float pxW) {
         : R.w + (d - R.z) * ((1.0 - R.w) / max(1.0 - R.z, 1e-6));
       t = min(t, 1.0);
       v = 1.0 - t * t * (3.0 - 2.0 * t);
-      if (t < 1.0 && (fl & (${GAP_PROF_F0} << r)) != 0) u = t;
+      if ((t < 1.0 || dots) && (fl & (${GAP_PROF_F0} << r)) != 0) u = t;
     }
     if (mx ? (v > best || (v == best && u < 0.0)) : v < best) {
       best = v;
       bu = u;
       bs = abs(A - R.x);
+      bf = abs(R.y);
     }
   }
   if (best > 1.0) return 1.0;
-  return kExploreLook(int(uKExplore.y + 0.5), best, bu, bs, 0.0,
+  if (best < 0.0) return 0.0;
+  if (dots && bu >= 0.0) {
+    kExCutOn = true;
+    kExCutSd = kExDotsSd(bs, lat, bf);
+    return uKExplore.x > 1.5 ? 1.0 : 1.0 - 0.55 * bu * bu;
+  }
+  return kExploreLook(look, best, bu, bs, bf, 0.0,
     pxW / max(uKExplore.w, 1e-6), pxW);
 }
 `;
@@ -552,14 +605,17 @@ export const EXPLORE_GAP_SURE_GLSL = /* glsl */ `    bool exShaped = full && !fa
     if (exShaped) sure2 = 0.0;
 `;
 // ...and cuts by the over thread's coverage at the nearest point's chain
-// arc (texel 4's polyline parameterization, as self-exclusion uses it).
+// arc (texel 4's polyline parameterization, as self-exclusion uses it), at
+// the fragment's own distance from the over centerline (K397: the dots'
+// cut is shaped across the thread too; best is the true nearest squared
+// distance, since sure2 is 0).
 export const EXPLORE_GAP_CUT_GLSL = /* glsl */ `    if (exShaped) {
       highp vec4 exT4 = texelFetch(uGapData, ivec2(4, row), 0);
       highp vec4 exPt = gapPt(row, min(bk, n - 1));
       highp float exBt = clamp(dot(p - exPt.xy, exPt.zw), 0.0, 1.0);
       highp float exA = exT4.y + min(float(bk) + exBt, kLast) * exT4.z;
       highp vec4 exP2 = texelFetch(uGapData, ivec2(${GAP_PROF_BASE + 2}, row), 0);
-      gst = gapStrength(exP2.x) * exploreCutCover(row, int(exP2.y + 0.5), exA, pxW);
+      gst = gapStrength(exP2.x) * exploreCutCover(row, int(exP2.y + 0.5), exA, sqrt(best), pxW);
       if (gst <= 0.0) continue;
     }
 `;
@@ -569,7 +625,9 @@ export const EXPLORE_GAP_CUT_GLSL = /* glsl */ `    if (exShaped) {
 // re-applies master's inside-silhouette branch once the shaped strength is
 // known: with sure2 0 the search finds the true nearest point, so best <
 // exSure2 is master's condition exactly. (A ribbon has no such branch to
-// keep: its shaped cut replaces it, as stage 1 built.)
+// keep: its shaped cut replaces it, as stage 1 built.) K397: not where the
+// dots' shape cuts (kExCutOn): there the silhouette is the dots' shape,
+// which the fan's own silhouette cut reads through d.
 export const EXPLORE_FAN_SURE_GLSL = /* glsl */ `    bool exShaped = (fl & ${GAP_FLAG_SHAPED}) != 0 && uKExplore.x > 0.5;
     highp float exSure2 = sure2;
     if (exShaped) sure2 = 0.0;
@@ -577,7 +635,7 @@ export const EXPLORE_FAN_SURE_GLSL = /* glsl */ `    bool exShaped = (fl & ${GAP
 export const EXPLORE_FAN_CUT_GLSL = EXPLORE_GAP_CUT_GLSL.replace(
   "      if (gst <= 0.0) continue;\n",
   "      if (gst <= 0.0) continue;\n" +
-    "      if (best < exSure2) {\n" +
+    "      if (best < exSure2 && !kExCutOn) {\n" +
     "        keep = min(keep, 1.0 - (full ? inWin * inFoot : 1.0) * gst);\n" +
     "        continue;\n" +
     "      }\n",
@@ -598,8 +656,14 @@ export const EXPLORE_MAIN_GLSL = /* glsl */ `
         highp float g = kSmooth(u / 0.3) * (1.0 - kSmooth((u - 0.55) / 0.45));
         rgb = mix(rgb, vec3(${EXPLORE_GLOW_RGB.join(", ")}), 0.85 * g * uKExplore.z);
       }
-      highp float exS = look == 2 ? 0.0 : abs(kArcU(kc, kExX) - kArcU(kc, kExSolid));
-      ev = kExploreLook(look, evRaw, u, exS, vUV.y - 0.5, kSideFw, pxW);
+      highp float exS = 0.0;
+      highp float exLf = 0.0;
+      if (look != 2) {
+        highp float exA0 = kArcU(kc, kExSolid);
+        exS = abs(kArcU(kc, kExX) - exA0);
+        exLf = abs(kArcU(kc, kExEnd) - exA0);
+      }
+      ev = kExploreLook(look, evRaw, u, exS, exLf, vUV.y - 0.5, kSideFw, pxW);
       // K76 stage 2d: High contrast paints the dots pure white (the cap keeps
       // the thread's color; char still darkens a burnt dot, below).
       if (uKExplore.x > 1.5) rgb = mix(rgb, vec3(1.0), kExDot);
@@ -629,6 +693,15 @@ export const EXPLORE_MAIN_GLSL = /* glsl */ `
   }
 `;
 
+// K397: in the dots and beacon looks a shaped slot's casing is measured from
+// the dots' shape (exploreCutCover set kExCutOn and kExCutSd), not from the
+// over centerline: d - hO is the shape's signed distance, so the casing
+// (margin) and its fade ring each dot and the cap. hO is the over
+// half-width, the cap's half-width, so the cap meets the solid side's
+// casing at the solid end. Inserted before the casing's distance, after the
+// far-branch smooth-min, in every program that takes the shaped cut.
+export const EXPLORE_GAP_SHAPE_GLSL = "    if (exShaped && kExCutOn) d = hO + kExCutSd;\n";
+
 // The anchors withExplore inserts at (each must occur exactly once in the
 // section fragment). The declarations go before gapKeepAt (K268: the shaped
 // cut calls them), where the paint library and kSmooth are declared.
@@ -642,6 +715,7 @@ const ANCHOR_PXARC =
 const ANCHOR_KCTRL =
   "highp float kctrl = fxHere || paintHere ? kCtrlNear(kc, kpt.x, kpt.y) : 0.0;";
 const ANCHOR_GAP = "  float gk = gapKeep(pxW, gTurn);";
+const ANCHOR_CASING = "    highp float e = d - hO - margin;\n";
 
 // The shaped cut's edits to gapKeepAt in a program other than the section
 // variant (K268 stage 2): the end looks before it, after `decl` (whatever the
@@ -655,6 +729,7 @@ export function exploreGapEdits(fan: boolean, decl: string): [string, string][] 
     [ANCHOR_DECL, decl + EXPLORE_LOOK_GLSL + ANCHOR_DECL],
     [ANCHOR_SURE, ANCHOR_SURE + (fan ? EXPLORE_FAN_SURE_GLSL : EXPLORE_GAP_SURE_GLSL)],
     [ANCHOR_BK, ANCHOR_BK + (fan ? EXPLORE_FAN_CUT_GLSL : EXPLORE_GAP_CUT_GLSL)],
+    [ANCHOR_CASING, EXPLORE_GAP_SHAPE_GLSL + ANCHOR_CASING],
   ];
 }
 
@@ -699,6 +774,8 @@ export function withExplore(frag: string): string {
   s = s.slice(0, i) + EXPLORE_GAP_SURE_GLSL + s.slice(i);
   i = once(s, ANCHOR_BK) + ANCHOR_BK.length;
   s = s.slice(0, i) + EXPLORE_GAP_CUT_GLSL + s.slice(i);
+  i = once(s, ANCHOR_CASING);
+  s = s.slice(0, i) + EXPLORE_GAP_SHAPE_GLSL + s.slice(i);
   i = once(s, ANCHOR_PXARC) + ANCHOR_PXARC.length;
   s = s.slice(0, i) + "  highp float kSideFw = fwidth(vUV.y);\n" + s.slice(i);
   i = once(s, ANCHOR_KCTRL);

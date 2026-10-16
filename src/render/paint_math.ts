@@ -12,7 +12,12 @@
 // mirror runs in f64. Censuses compare at <= 2/255.
 
 import { FX_STYLE, ITEM_FLAG, PAINT_CONST, PAINT_ITEM, RUN_FLAG } from "./paint_const";
-import { EXPLORE_ITEM_VIS } from "./explore_glsl";
+import {
+  EXPLORE_DOT_AT,
+  EXPLORE_DOT_R,
+  EXPLORE_DOTS_SPAN,
+  EXPLORE_ITEM_VIS,
+} from "./explore_glsl";
 import { GAP_PROF_F0, GAP_PROF_MAX, GAP_PROF_R0 } from "./gap_mask";
 
 const SHIFT = PAINT_CONST.K_ROW_SHIFT;
@@ -1396,12 +1401,13 @@ export function kPaintAt(
 
 // K76 THREAD REVEAL: a point's visibility and the frontier fade it lies in
 // (kExploreAt's globals: tip = progress 0 -> 1 through the fade, -1 when
-// none; solid = the ctrl where the fade starts and x = the point's ctrl,
-// both unwrapped toward the piece).
+// none; solid = the ctrl where the fade starts, end = the ctrl where it ends
+// (K397) and x = the point's ctrl, all unwrapped toward the piece).
 export interface KExploreState {
   v: number;
   tip: number;
   solid: number;
+  end: number;
   x: number;
 }
 
@@ -1417,6 +1423,7 @@ export function kExploreAt(
   out.v = 0;
   out.tip = -1;
   out.solid = 0;
+  out.end = 0;
   out.x = ctrl;
   const P = D.paint;
   if (P[c.ch * 4] > 0.5) {
@@ -1446,6 +1453,7 @@ export function kExploreAt(
     let v = 1;
     let u = -1;
     let cs = 0;
+    let ce = 0;
     if (x < c0 - 1e-3) {
       if (f0 <= 1e-4) continue;
       const t = Math.min(1, (c0 - x) / f0);
@@ -1453,6 +1461,7 @@ export function kExploreAt(
       if ((tips & 1) !== 0) {
         u = t;
         cs = c0;
+        ce = c0 - f0;
       }
     } else if (x > c1 + 1e-3) {
       if (f1 <= 1e-4) continue;
@@ -1461,12 +1470,14 @@ export function kExploreAt(
       if ((tips & 2) !== 0) {
         u = t;
         cs = c1;
+        ce = c1 + f1;
       }
     }
     if (v > best || (v === best && u < 0)) {
       best = v;
       out.tip = u;
       out.solid = cs;
+      out.end = ce;
       out.x = x;
     }
   }
@@ -1474,19 +1485,51 @@ export function kExploreAt(
   return out;
 }
 
+// GLSL twin: kExDotsSd (explore_glsl.ts, K397) - the signed world distance
+// from a point of a frontier fade (s along from the solid end, la across, lf
+// the fade's world length) to the nearest of the dots look's cap (half an
+// ellipse, 0.5 tw across, 0.5 tw g along) and its two dots (at EXPLORE_DOT_AT
+// of the fade, radii EXPLORE_DOT_R tw g), g = min(1, lf / (EXPLORE_DOTS_SPAN
+// tw)). `out.dot` is kExDot: 1 where the nearest shape is a dot.
+export function kExDotsSdCpu(
+  s: number,
+  la: number,
+  lf: number,
+  tw: number,
+  out?: { dot: number }
+): number {
+  const g0 = lf / (EXPLORE_DOTS_SPAN * tw);
+  const g = g0 < 1e-3 ? 1e-3 : g0 > 1 ? 1 : g0;
+  const ca = 0.5 * tw * g;
+  const cb = 0.5 * tw;
+  const k0 = Math.sqrt((s / ca) * (s / ca) + (la / cb) * (la / cb));
+  const k1 = Math.sqrt((s / (ca * ca)) * (s / (ca * ca)) + (la / (cb * cb)) * (la / (cb * cb)));
+  const dCap = k1 > 1e-6 ? (k0 * (k0 - 1)) / k1 : -ca;
+  const x0 = s - EXPLORE_DOT_AT[0] * lf;
+  const x1 = s - EXPLORE_DOT_AT[1] * lf;
+  const dDot = Math.min(
+    Math.sqrt(x0 * x0 + la * la) - EXPLORE_DOT_R[0] * tw * g,
+    Math.sqrt(x1 * x1 + la * la) - EXPLORE_DOT_R[1] * tw * g
+  );
+  if (out) out.dot = dDot < dCap ? 1 : 0;
+  return Math.min(dCap, dDot);
+}
+
 // GLSL twin: kExploreLook (explore_glsl.ts) - the end look's coverage at a
 // point of a frontier fade (u = progress through it, < 0 outside one; s =
-// world arc from the solid end; lat = vUV.y - 0.5; sideFw = vUV.y per pixel;
-// tw = uKExplore.w). The fade and halo looks, and every look outside a
-// frontier, return v. K76 stage 2d: `hc` is High contrast (uKExplore.x 2),
-// under which the dots draw at full strength; `out.dot` is the GLSL's kExDot
-// (1 where the point's nearest shape is a dot, which the thread's main paints
-// pure white; 0 on the cap and in every other look).
+// world arc from the solid end; lf = the fade's world arc length (K397);
+// lat = vUV.y - 0.5; sideFw = vUV.y per pixel; tw = uKExplore.w). The fade
+// and halo looks, and every look outside a frontier, return v. K76 stage
+// 2d: `hc` is High contrast (uKExplore.x 2), under which the dots draw at
+// full strength; `out.dot` is the GLSL's kExDot (1 where the point's
+// nearest shape is a dot, which the thread's main paints pure white; 0 on
+// the cap and in every other look).
 export function kExploreLookCpu(
   look: number,
   v: number,
   u: number,
   s: number,
+  lf: number,
   lat: number,
   sideFw: number,
   pxW: number,
@@ -1510,14 +1553,7 @@ export function kExploreLookCpu(
     cov = 1 + (cov - 1) * g;
     return cov * (1 - smooth01((u - 0.5) / 0.5));
   }
-  const sp = 0.95 * tw;
-  const la = lat * tw;
-  const dCap = Math.sqrt(s * s + la * la) - 0.5 * tw;
-  const kk = Math.max(1, Math.floor(s / sp + 0.5));
-  const dx = s - kk * sp;
-  const dDot = Math.sqrt(dx * dx + la * la) - 0.3 * tw * (1 - 0.4 * u);
-  const dd = Math.min(dCap, dDot);
-  if (out) out.dot = dDot < dCap ? 1 : 0;
+  const dd = kExDotsSdCpu(s, lat * tw, lf, tw, out);
   const c = -dd / pxW + 0.5;
   return (c < 0 ? 0 : c > 1 ? 1 : c) * (hc ? 1 : 1 - 0.55 * u * u);
 }
@@ -1525,20 +1561,32 @@ export function kExploreLookCpu(
 // GLSL twin: exploreCutCover (explore_glsl.ts, K268) - the over thread's
 // coverage at arc A of a shaped slot's frame, from its 12 profile floats
 // (P0, P1 = the ramps [aS, F, dK, tK], P2 = [strength, flags, 0, 0]). `hc`:
-// High contrast (K76 stage 2d; the dots cut at full strength).
+// High contrast (K76 stage 2d; the dots cut at full strength). K397: `lat` is
+// the point's world distance from the over centerline; in the dots and
+// beacon looks a frontier fade (and past its end) returns only the look's
+// strength and sets `out.on` (kExCutOn) and `out.sd` (kExCutSd, the dots'
+// signed distance there, which gapKeepAt's casing is measured from).
 export function exploreCutCoverCpu(
   prof: ArrayLike<number>,
   A: number,
   look: number,
   tw: number,
   pxW: number,
-  hc = false
+  hc = false,
+  lat = 0,
+  out?: { on: boolean; sd: number }
 ): number {
+  if (out) {
+    out.on = false;
+    out.sd = 0;
+  }
+  const dots = look === 3 || look === 5;
   const fl = Math.round(prof[9]);
   const mx = (fl & GAP_PROF_MAX) !== 0;
-  let best = mx ? 0 : 2;
+  let best = mx ? -1 : 2;
   let bu = -1;
   let bs = 0;
+  let bf = 0;
   for (let r = 0; r < 2; r++) {
     if ((fl & (GAP_PROF_R0 << r)) === 0) continue;
     const aS = prof[r * 4];
@@ -1552,16 +1600,26 @@ export function exploreCutCoverCpu(
       let t = d < dK ? d * (tK / dK) : tK + (d - dK) * ((1 - tK) / Math.max(1 - dK, 1e-6));
       t = Math.min(t, 1);
       v = 1 - t * t * (3 - 2 * t);
-      if (t < 1 && (fl & (GAP_PROF_F0 << r)) !== 0) u = t;
+      if ((t < 1 || dots) && (fl & (GAP_PROF_F0 << r)) !== 0) u = t;
     }
     if (mx ? v > best || (v === best && u < 0) : v < best) {
       best = v;
       bu = u;
       bs = Math.abs(A - aS);
+      bf = Math.abs(F);
     }
   }
   if (best > 1) return 1;
-  return kExploreLookCpu(look, best, bu, bs, 0, pxW / Math.max(tw, 1e-6), pxW, tw, hc);
+  if (best < 0) return 0;
+  if (dots && bu >= 0) {
+    const sd = kExDotsSdCpu(bs, lat, bf, tw);
+    if (out) {
+      out.on = true;
+      out.sd = sd;
+    }
+    return hc ? 1 : 1 - 0.55 * bu * bu;
+  }
+  return kExploreLookCpu(look, best, bu, bs, bf, 0, pxW / Math.max(tw, 1e-6), pxW, tw, hc);
 }
 
 // GLSL twin: kGlow - the reveal frontier glow at a point (interval modes,

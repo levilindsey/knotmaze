@@ -23,6 +23,7 @@ import { GAP_FRAG, GAP_FRAG_LIB } from "../../src/render/gap_mask";
 import {
   EXPLORE_DECL_GLSL,
   EXPLORE_GAP_CUT_GLSL,
+  EXPLORE_GAP_SHAPE_GLSL,
   EXPLORE_GAP_SURE_GLSL,
   EXPLORE_ITEM_VIS,
   EXPLORE_MAIN_GLSL,
@@ -161,7 +162,7 @@ function randomPieces(r: () => number, ch: number, n: number, closed: boolean, k
   return out;
 }
 
-const fresh = (): KExploreState => ({ v: 0, tip: 0, solid: 0, x: 0 });
+const fresh = (): KExploreState => ({ v: 0, tip: 0, solid: 0, end: 0, x: 0 });
 
 describe("K76 kExploreAt mirror vs the model's chainVis", () => {
   it("VIS is not a paint item type (the shared program's PI_ constants stay master's)", () => {
@@ -323,6 +324,7 @@ describe("K76 the explore program variant (withExplore)", () => {
       "highp float pxArc = (ksw.y < 0.5 * ksw.x ? ksw.y : ksw.x) * float(kc.count) * kc.arcPer;\n",
       "highp float kctrl = fxHere || paintHere ? kCtrlNear(kc, kpt.x, kpt.y) : 0.0;",
       "  float gk = gapKeep(pxW, gTurn);",
+      "    highp float e = d - hO - margin;\n",
     ]) {
       const i = sectionText.indexOf(a);
       expect(i, a).toBeGreaterThan(0);
@@ -336,6 +338,8 @@ describe("K76 the explore program variant (withExplore)", () => {
     const iKeepAt = v.indexOf(KEEP_AT);
     const iSure = v.indexOf(SURE + EXPLORE_GAP_SURE_GLSL);
     const iCut = v.indexOf(BK + EXPLORE_GAP_CUT_GLSL);
+    const iShape = v.indexOf(EXPLORE_GAP_SHAPE_GLSL + "    highp float e = d - hO - margin;\n");
+    const iSmin = v.indexOf("d = mix(d2, d, hb) - sk * hb * (1.0 - hb);");
     const iMain = v.indexOf("void main(void) {");
     const iFw = v.indexOf("highp float kSideFw = fwidth(vUV.y);");
     const iCtrl = v.indexOf("bool exHere = uKExplore.x > 0.5;");
@@ -345,7 +349,11 @@ describe("K76 the explore program variant (withExplore)", () => {
     expect(iDecl + EXPLORE_DECL_GLSL.length).toBe(iKeepAt);
     expect(iSure).toBeGreaterThan(iKeepAt);
     expect(iCut).toBeGreaterThan(iSure);
-    expect(iMain).toBeGreaterThan(iCut);
+    // K397: the dots' casing shape replaces d after the far-branch
+    // smooth-min, just before the casing's distance.
+    expect(iSmin).toBeGreaterThan(iCut);
+    expect(iShape).toBeGreaterThan(iSmin);
+    expect(iMain).toBeGreaterThan(iShape);
     expect(iFw).toBeGreaterThan(iMain);
     expect(iCtrl).toBeGreaterThan(iFw);
     expect(iVis).toBeGreaterThan(iCtrl);
@@ -357,6 +365,7 @@ describe("K76 the explore program variant (withExplore)", () => {
       .replace(EXPLORE_DECL_GLSL, "")
       .replace(EXPLORE_GAP_SURE_GLSL, "")
       .replace(EXPLORE_GAP_CUT_GLSL, "")
+      .replace(EXPLORE_GAP_SHAPE_GLSL, "")
       .replace("  highp float kSideFw = fwidth(vUV.y);\n", "")
       .replace("bool exHere = uKExplore.x > 0.5;\n  ", "")
       .replace("fxHere || paintHere || exHere ?", "fxHere || paintHere ?")
@@ -368,6 +377,7 @@ describe("K76 the explore program variant (withExplore)", () => {
     for (const t of [GAP_FRAG_LIB, GAP_FRAG, sectionText]) {
       expect(t).not.toContain("exShaped");
       expect(t).not.toContain("exploreCutCover");
+      expect(t).not.toContain("kExCutOn");
       expect(t).not.toContain("uKExplore");
     }
   });
