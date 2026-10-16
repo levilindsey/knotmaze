@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K449.
+Next free ID: K454.
 
 ## Waiting on Levi
 
@@ -113,6 +113,9 @@ Next free ID: K449.
 - **K440** · Real-time fire defaults (K114 s2 item 7): fireSpeed 0.2 and fireDelay 20 (a 1.7 s head
   start) with wider panel and link ranges (today [0.3, 0.95] and [0, 40]), or separate realtime
   defaults? Others: Brisk 0.35/30, Easy 0.15/0, Relaxed 0.1/30. `docs/design/K114_stage2.md`.
+- **K449** · K397 stage 2's two looks, for the phone: (1) each fade draws a cap and two spread dots,
+  so long fades and High contrast lose the old row of dots; (2) a tap in a fade plucks the solid
+  stretch beside the solid end: keep that, or sound-only? (`docs/design/K397.md`, Stage 2 handoff)
 
 ## In progress
 
@@ -270,15 +273,14 @@ Next free ID: K449.
   - next: the phone check after the deploy: Levi plucks a kink loop, or `phone_run.ps1` with the phone awake and unlocked; then Done. CAP_ROUND is K406, the soft "M" K405
   - brief: `docs/design/K395_pluck_loop_tip.md` ("Stage 1 handoff")
   - env: the phone: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
-- **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone, free
-  play, `?2gozcj.MgaM`): 1-2 beacon dots at a stub's end, a squared-off far end, a circular knuckle,
-  a tap on a stub's end that plucks and shows hidden thread, and end dots sitting in gaps cut over
-  crossings.
-  - owner: nobody since 2026-10-15 13:04 (merged; agent `ad94f9ee658990968` of claude session 05e60da0)
+- **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone,
+  `?2gozcj.MgaM`): stage 2 fixed issues 1, 2, 4 and 5 (092aca0); left is issue 3, the dark U at a
+  tucked tip's root.
+  - owner: nobody since 2026-10-15 13:04 (stage 2 merged; stage 3 waits for K5 R2's merge, since both edit ribbon_renderer.ts)
   - branch: mainline; last commit: `092aca0`
-  - evidence: `.claude/probes/K397/` (stage 1's, in the main checkout; stage 2's in its worktree)
-  - next: stage 3 (issue 3, the dark band at a tucked tip's root): brief it under "Stage 3" in docs/design/K397.md, then launch it (find a vertex with a whole U, attribute it with knuckle3.mjs, fix per plan (a) or (b)); it edits ribbon_renderer.ts's junction covers, so it goes after K5 R2 merges. Then the phone, Levi's link ?2gozcj.MgaM, the two censuses (they need exploreCutCoverCpu's on/sd first) and the K279/K344 pluck profiles
-  - brief: `docs/design/K397.md` ("Stage 2 brief")
+  - evidence: `.claude/probes/K397/` (stage 1, in the main checkout) and `.claude/probes/K397/stage2/` (stage 2)
+  - next: stage 3 per its brief, launched once K5 R2 merges (find a whole U, attribute it, fix per plan (a), (b) or H1; it also teaches the reveal census the dots' new cut). Then the phone and Levi's link `?2gozcj.MgaM`, and stage 2's unrun pluck checks (the K279 and K344 profiles, a reveal-off pluck A/B)
+  - brief: `docs/design/K397.md` ("Stage 3 brief")
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 
 ## Next, in order
@@ -935,6 +937,16 @@ Every other item below waits on the trigger it names.
   dailies replay and they run with the fire off (K114 s2).
 - **K447** · K114 s2's real-time fire has no hardware phone pass (shot in Chrome at 411x753 only);
   take it in the next phone window (K411).
+- **K450** · K279's tug (`ptg`, default 0) ignores the thread reveal (K397 stage 2;
+  `docs/design/K397.md`, Stage 2 handoff, Residuals).
+- **K451** · Plucks under the reveal (K397 stage 2's frets): a fretted lobe's node end doesn't
+  follow drift (stored arcs); a re-pluck after the stub grows rings both keys ([a,b], [a,-1]); a
+  fade tap's pluck point clamps to BETA_MIN/MAX (`docs/design/K397.md`, Stage 2 handoff).
+- **K452** · The stub dots' cap is 0.5 tw per side, the thread's half-width only while hO = 0.5 tw:
+  under a width multiplier it would meet the edge at a step (inferred, not seen; render-explore.md,
+  THE DOTS).
+- **K453** · K397's survey flags 1x2y3z f1 and f6 in stages 1 and 2: the dots end at about 0.85 of
+  the fade. Inferred occlusion, not inspected (`.claude/probes/K397/stage2/out_s2/`).
 
 ## Approved, to schedule (2026-10-11)
 
