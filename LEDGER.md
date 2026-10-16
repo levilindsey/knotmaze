@@ -19,7 +19,7 @@ one line, `- **K<n>** Â· <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K524.
+Next free ID: K528.
 
 ## Waiting on Levi
 
@@ -107,6 +107,8 @@ Next free ID: K524.
 
 - **K515** Â· K480 stage 2's look, built as recommended (Levi may change): a hovered tap's whole route at the hover breath, its tapped run keeping the rim glow, non-route branched arms keeping their trains; plus page-probing the hover route with a real pointer (desktop, and in K500's phone pass). `docs/design/K480.md` ("Stage 2 handoff").
 
+- **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`.
+
 ## In progress
 
 - **K114** Â· Gameplay round 2, designed in
@@ -129,13 +131,13 @@ Next free ID: K524.
     `ae4714d103b5fd3bf` of claude session 05e60da0, worktree on K161's sweep list). Stage 2's agent
     a2c61932e9e358104 (session d8031183) finished; worktrees removed by the K161 sweep
     2026-10-15, branches kept
-  - branch: mainline; last commit: `9ccf360` (stage 3; stages 1-2 fbf5b5c..faa9a52)
+  - branch: mainline; last commit: `49efe76` (stage 4 sim-first; stage 3 9ccf360, stages 1-2 fbf5b5c..faa9a52)
   - evidence: `.claude/probes/K74/` (stage 2 in `stage2/`, sheets in
     `out/`); the design agent's branch `worktree-agent-aeaf1e61bcecaaf0b` (its worktree swept
     2026-10-15, probes copied to the main checkout)
-  - next: K521's item 7-8 measurement, then stage 4 (greedy-trap search, K46's bands).
+  - next: K521 done in 4098946 (port byte-identical 640/640; greedy bar fails on dailies 1-240 at 20.0% within 1.5x, owned by stage 4, not a stage-3 retune); stage 4 sim-first done in 49efe76 (search works only H1-in-loop: 70% both-targets, 5.0% within 1.5x on 1-80). Next is the build half, K527.
     Dead-end branches as deeper traps are out of scope; K80's brief does not settle them
-  - brief: `docs/design/K74_stage3.md`; stage 2's handoff: `docs/design/K74.md`
+  - brief: `docs/design/K74_stage3.md`; stage 2's handoff: `docs/design/K74.md`; stage 4's brief: `docs/design/K74_stage4.md`
 - **K80** Â· The minotaur, decided (Levi, 2026-10-13; design
   `docs/design/K80_gameplay_additions.md` section 0, his answers in
   `docs/design/levi_notes_2026-10-13.md`): a telegraphed hunter with
@@ -146,15 +148,15 @@ Next free ID: K524.
     of claude session 05e60da0, worktree on K161's sweep list). Stage 2's agent a1579d5c460af2d20 of claude
     d8031183 (earlier agents af5995f5900f0f945 and a9c90f15cd6a55710; worktrees removed by the
     K161 sweep 2026-10-15, branches kept)
-  - branch: mainline; last commit: `e6e1734` (3a is 1bd49f8..e6e1734). Merged before: turns
+  - branch: mainline; last commit: `dcdfaf4` (turns 3b; 3a is 1bd49f8..e6e1734). Merged before: turns
     0047148..68524e1 and 86d404e..02194b4, K174 ecf2169..6ec8275
   - evidence: main checkout `.claude/probes/K80/` (`stage3/`: `wait_inputs.mjs`, `banner/`,
     `compare_after.ts`, `sim.ts`, sweeps, `shots/`, `rerun/K120`, `rerun/K329`; `turns2/`,
     `turns/`, `rt/`) and `.claude/probes/K174/rt/`; the research's branch
     `worktree-agent-a25726c24f262b138` (5 commits not on master; worktree swept 2026-10-15)
-  - next: turns 3b (Opus, 2 h; unblocked, K290 3b merged): section 2.7's telegraph, 2.8's catch
-    feedback with K270's band, 2.10's sounds and fog, a contact sheet; the chevrons after K324
-    stage 2. Check its main.ts overlap with K114 stage 2 and K5 M3 before running them together.
+  - next: turns 3b done in dcdfaf4 (per-run telegraph alphas, catch feedback with K270 diagnosed and fixed, section 2.10's sounds and fog bleed; the contact sheet `.claude/probes/K80/stage3b/contact_sheet.png` is emulated - the real-phone sheet is K524, Levi's look call K525).
+    Next: the chevrons after K324 stage 2. Check its main.ts overlap with K114 stage 2 and K5 M3
+    before running them together.
     Before a daily pins a minotaur, waits enter `fc.taps` and K47's fingerprint covers its
     params; real time's phone check is K177
   - brief: `docs/design/K80_turns_stage3.md` (3b: sections 2.7, 2.8, 2.10; "Stage 3a handoff");
@@ -249,7 +251,7 @@ Next free ID: K524.
   - owner: nobody since 2026-10-15 16:17 (merged; agent `a2806c50953dec23d` of claude session 05e60da0)
   - branch: mainline; last commit: `e0bcad8`
   - evidence: `.claude/probes/K397/stage3/`
-  - next: K519 done (2026-10-16): every K518 census leftover attributed, no product bug (narrowed residuals K522, K523). Then the phone and Levi's link on the merged build (`docs/design/K397.md`, "Stage 5 handoff (K519)")
+  - next: phone pass done (2026-10-16, master dcdfaf4, Pixel 11): issue 3's dark U and the truncated dots not seen on 13 frontiers of Levi's link; the free cap's look is K477's, narrowed there. Nothing else owed; close when K477 lands. Evidence `.claude/probes/K397/stage6/out/`.
   - brief: `docs/design/K397.md`
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K459** Â· A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
@@ -288,6 +290,7 @@ The queue (coordinator, overnight 2026-10-15/16):
 
 4. Overnight run 3 done (2026-10-16): K513 (6eb0a84), K480 stage 2 (6aaed30), K6-3 (1654ef0, close 7c952cd) all on master; K307 stage 3 probes point Levi at branch (b) late enable (K517); K397's census runs but its dots-cut PROOF stays vacuous and its probe needs a frame-flag port (K518). K481 stage 2 still waits on Levi's K501 difficulty call; G3-1 on K399; K74 stage 3 (K402) and the thread-reveal chain (K76 2c, K268 stage 2, K290, K76 2d) remain queued. Waiting-on-Levi untouched.
 5. Overnight run 4 done (2026-10-16): K518 (8215349; residuals K519), K514+K516 (11309be; residual K520), K76 criterion 2 (5da3f5c), K74 stage 3 (9ccf360; residual K521, K284/K402/K278(a) closed). What remains needs Levi first: K501 (K481 stage 2 after it), K517, K515, K399 (G3-1 after it) and the other Waiting calls; then K521's measurement or K74 stage 4, and K397's phone pass + Levi's link (K519).
+6. Overnight run 5 done (2026-10-16): K519 (9926525; residuals K522, K523), K521 (4098946; the greedy bar fails on dailies 1-240, owned by K527), K80 turns 3b (dcdfaf4; K270 done, residuals K524-K526), the K397 phone pass (no commit; K397 advanced, K477 narrowed) and K74 stage 4's sim-first half (49efe76; build half K527). Next queue: Levi first - K501 (K481 stage 2 after it), K517 (ship K307's late enable), K515 (K480's look), K525 (K80 3b's look), K399 (G3-1 after it) and the rest of Waiting on Levi; then ungated, in order: K522/K523 (census2d), K527 once its brief's six calls land, K524 in the next phone window.
 
 
 Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
@@ -442,6 +445,7 @@ Every other item below waits on the trigger it names.
   the peek, help taps; K467 ran only in phone emulation
 - **K486** Â· Touch help for the panel's buttons: Reset path, Replay settle, Reset to defaults, the
   seed row, the dice, Daily, stats (K467 covered the 161 rows only)
+- **K527** · K74 stage 4 build half (`docs/design/K74_stage4.md`): exact heading score, acceptance non-regression floor, `greedyTrap` param (default off, one codec row after 155), H1-in-loop search seam, 1-240 bar + sleep + generation timing; six calls for Levi in the brief (ship it, param shape, acceptance floor, exact heading, in-generation vs offline table, 1-240 bar). Sim-first half done in 49efe76.
 
 ## Residuals (known, not fixed)
 
@@ -455,9 +459,9 @@ Every other item below waits on the trigger it names.
   and Â§6 sequencing, `__knotRenderer`'s move to `src/app/probe_hooks.ts` (K5 R1 brief).
 - **K417** Â· R lane vs the probes (K5 R1 brief): ~80 probes call the sampling helpers through the
   renderer and break as R moves them; the probes that edit `ribbon_renderer.ts` are K425.
-- **K270** Â· After a turn-aligned catch, a lavender band shows at the
-  catch site in the next frame (K80 turns stage 1; undiagnosed, probably
-  a fade). `.claude/probes/K80/turns/shots/`. K80 turns stage 3.
+
+
+
 - **K271** Â· The turn telegraph is unchecked under K76's thread reveal:
   `syncMinotaur` hides the minotaur until `revealQuery` >= 0.98, but its
   line may still draw over hidden thread. For K76 2c (K257 (2)).
@@ -978,9 +982,9 @@ Every other item below waits on the trigger it names.
   (`docs/design/K397.md`, Stage 3 handoff).
 - **K476** Â· `census_fan.mjs` (via g2lib, `.claude/probes/K397/stage3/g2/`) never deletes its Chrome
   profile (K161).
-- **K477** Â· K459's free cap, unchecked: its look on the phone; the base collapse under a free cap
-  (f5's never engages); a reveal-off pluck A/B; the rounded tip has no AA along the strip's end; a
-  cap a node pins stays still, as in K397 (`docs/design/K459.md`, Handoff).
+- **K477** Â· K459's free cap, narrowed by the phone pass (2026-10-16, dcdfaf4): the free-cap look is seen on the phone (chain 48 fade pluck, lobe keyB -1, blur reaches the cap tip at t 0.06) and a reveal-off pluck draws unfretted on the phone. Still open: the base collapse under a free cap (this stub's swing never engages it; overlay-hidden diff 0 px), a strict reveal-off 0-px A/B against a pre-K459 build, the rounded tip's AA along the strip's end, and a cap a node pins staying still, as in K397
+  (`docs/design/K459.md`, Handoff; phone evidence `.claude/probes/K397/stage6/out/`).
+
 - **K484** Â· Sheet history entries (K467): a stale entry after a reload or discard with the sheet
   open, an extra one on a fast close-then-reopen, and a live switch pushing one without a gesture
   (docs/design/K467.md Handoff)
@@ -1021,7 +1025,8 @@ Every other item below waits on the trigger it names.
 
 - **K522** Â· census2d's exactness vs the capture floor (K519 attribution; `docs/design/K397.md` Stage 5 handoff): visible cuts, hidden "leaks", c214's 2 px restore and visitAll/off-again all sit in same-state one-level flicker (no-mutation floor 15-23 delta-1 px a clip; slot bytes identical off/on). Teach census2d a delta/edge tolerance instead of set equality and 0 px; the 1,633 px attribution restore no longer reproduces (0 px after 5da3f5c) - localize first if it returns.
 - **K523** Â· census2d's stale ideals (K519): JOINTS (2d) pixel-exact never modelled `underWindows` (failed every 2d run; census3a's attributedUW passes 31/31 and the swap is exact on master for j57/j58/j161) and MARKERS predates K465's exit lift (i1 is the exit, k 1 at vis 0 by design). Port attributedUW + an exit-aware marker rule into census2d, or retire those checks for census3a's; the joints' product side stays K268's next stage (the K430 ramp, after G3-1).
-- **K521** Â· K74 stage 3 residuals (9ccf360): item 7 prototype port (dailies 1-80 outside the K109/K110 list) and item 8 full measurement (greedy bar on dailies 1-240, sleep, generation timing, before/after sheet of the three finishes) not run; only `clearance.ts` (0 new junctions inside) and unit tests verify the finish. `docs/design/K74_stage3.md` Stage 3 handoff.
+- **K524** · K80 turns 3b's real-phone contact sheet: only phone emulation ran (no phone lock/window confirmed); shoot roam/hunt/caught at 411x753 on the real Pixel in the next phone pass. `.claude/probes/K80/stage3b/contact_sheet.png` is the emulated sheet.
+- **K526** · Footstep panning by screen x (section 2.10) waits for a pan control in KnotSynth; footsteps currently carry distance only (strength to 0 at 6 runs).
 ## Approved, to schedule (2026-10-11)
 
 - **K22** Â· Dynamic resolution scaler (2x up to 3x when frame time
@@ -1237,6 +1242,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   ENDS; docs/design/K466.md Handoff).
 
 ## Done
+
+- **K521** · K74 stage 3 items 7-8 measured: prototype port byte-identical 640/640 (K109/K110 exception list empty); greedy bar fails on dailies 1-240 (gF median 2.86x, 20.0% within 1.5x vs the 15% bar) - owned by stage 4's search (K527), not a stage-3 retune. Done in 4098946 (2026-10-16; evidence `.claude/probes/K74/stage3/out/results_k521.md`).
+- **K270** · K80 turns 3b diagnosed the lavender band: a stale pre-catch telegraph/glow frame at the catch site; turnCaught now re-syncs the minotaur in the same call. Done in dcdfaf4 (2026-10-16).
 
 - **K402** Â· K74 stage 3's questions, built as recommended (corridor 24, away flank, exit taper off; codec 152-155, never daily-exempt). Done in 9ccf360 (2026-10-16).
 - **K284** Â· K74's sources credited (Pullen; Zhao and Marquez 2013) in `src/` and RESEARCH. Done in 9ccf360 (2026-10-16).
