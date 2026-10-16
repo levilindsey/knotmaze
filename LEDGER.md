@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K472.
+Next free ID: K477.
 
 ## Waiting on Levi
 
@@ -1005,6 +1005,14 @@ Every other item below waits on the trigger it names.
 - **K470** · No app-level WebGL context-loss handling: only `probe_hooks.ts` listens for
   `webglcontextlost`, to count losses. What a lost context does to the custom data textures on a
   phone is untested (K6-1).
+- **K473** · Unverified: `fusedTips`' `hostOf` takes the group's first other member, so at a joint
+  of 3+ threads the host can be a stub (K397 s3; `docs/design/K397.md`, Stage 3 handoff).
+- **K474** · An 18 px notch at stub 79's joint (host 56), which K397 s3's fix removes, has no gap
+  slot of its own; not attributed (`docs/design/K397.md`, Stage 3 handoff).
+- **K475** · Unconfirmed: the third slash band at the left edge of Levi's 08:06 shot of 2026-10-15
+  (`docs/design/K397.md`, Stage 3 handoff).
+- **K476** · `census_fan.mjs` (via g2lib, `.claude/probes/K397/stage3/g2/`) never deletes its Chrome
+  profile (K161).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1211,6 +1219,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K438** · ProbeCtx takes the frame loop itself (its four getters, `invalidate`,
   `wake`, `frameCost`, `revealCost`), with frame_loop.ts exporting `type FrameLoop =
   ReturnType<typeof createFrameLoop>` (`docs/design/K5_K6_split.md`, Stage M3 handoff).
+- **K472** · Should forces.ts's emergent collector skip fused-joint pairs too? Today only the
+  renderer does (K397 s3: `crossing_gaps.ts` `isJointPair`; forces.ts l.316-347 has no junction
+  exclusion; `docs/design/K397.md`, Stage 3 handoff).
 
 ## Done
 
