@@ -204,7 +204,8 @@ only with the files it is about; `render.md` lists the area's other files.
   K194 call 5.2: "I think nothing makes sense. Do we trigger pluck sounds
   for this? Probably shouldn't." A tap whose pluck is skipped as skipCore
   drew nothing but still played its note (21 of K180's 284 fabric taps, 51
-  of 564 dense). It now plays nothing. Every other tap sounds as before.
+  of 564 dense). It now plays nothing. Every other tap sounds as before
+  (since K459's follow-up, only when its pluck draws: the K459 entry).
 - HOW. `tapLobes` (pluck_model.ts, pure, tested in pluck_model.test.ts
   "a tap inside a junction core (K235)") is the one place that finds a
   tap's tapped lobe, shared by `PluckOverlay.add()` and the sound decision:
@@ -668,8 +669,11 @@ only with the files it is about; `render.md` lists the area's other files.
   main.ts (K6-1's file, not touched): "hot" (a chain mid-intro),
   "held", pluckSize 0 and an unfretted degenerate lobe or failed layout
   ("other"), plus auto plucks (main.ts's auto path ignores lastSkip, by
-  K76 2c's design) and drag releases (by design). tapPluck could
-  silence on every `!drawn`.
+  K76 2c's design) and drag releases (by design). FOLLOW-UP (the
+  coordinator, 2026-10-15, after the merge): tapPluck plays a tap's note
+  only when its pluck drew, so "hot", "held", pluckSize 0 and "other"
+  taps are silent too and keep their ripple and tug (a core tap has
+  neither). Auto plucks and drag releases are unchanged.
 - TESTS (pluck_model.test.ts): "a free end (K459): the stub's lobe
   swings most at its free tip" and "a free end (K459): a node inside the
   cap pins it to the solid end".
