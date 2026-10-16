@@ -351,6 +351,28 @@ const DESIGNS: GlyphDesign[] = [
     rings: [[12, 12, 7]],
     dots: [[12, 12, 2.6]],
   },
+  {
+    // K80 turns 3a: an hourglass, the WAIT cue - the head wears it while the
+    // pointer is in the wait zone (main.ts setWaitCue), and the move pad's
+    // wait button draws the same shape. Not a pick for the head's look.
+    id: "hourglass",
+    role: "head",
+    label: "hourglass (wait)",
+    lines: pen()
+      .M(6, 3)
+      .L(18, 3)
+      .M(6, 21)
+      .L(18, 21)
+      .M(8, 3)
+      .L(8, 7)
+      .L(16, 17)
+      .L(16, 21)
+      .M(16, 3)
+      .L(16, 7)
+      .L(8, 17)
+      .L(8, 21)
+      .lines(),
+  },
   // THE MINOTAUR (K80, a placeholder like the rest).
   {
     // K98 (Levi: "simple minotaur and spider icons"): the Taurus sign - a

@@ -30,6 +30,7 @@ import {
   keyDirOf,
   pickHold,
   pickMove,
+  waitKeyOf,
 } from "./ui/key_moves";
 import type { Departure, KeyDir, LastPress, WaitingMove } from "./ui/key_moves";
 import { MOVE_PAD_KEY, MovePad, movePadPref } from "./ui/move_pad";
@@ -437,6 +438,12 @@ async function main(): Promise<void> {
   let turnMino: TurnMinotaur | null = null;
   let turnWait = 0; // Seconds left of a wait's animation (0: none).
   let turnWaitDur = 0;
+  // K80 turns 3a: the head's WAIT CUE (setWaitCue) - while the pointer is
+  // in the wait zone the head wears the "hourglass" glyph; this is the glyph
+  // it wore before (null: no cue), which the head's indicator keeps.
+  let waitCueGlyph: string | null = null;
+  let waitCueFabric: FabricMazeRenderer | null = null;
+  let waitCueHead: string | null = null;
   // The minotaur on screen, whichever clock moves it.
   const liveMino = (): MinotaurChase | TurnMinotaur | null => chase ?? turnMino;
   let fabricController: FabricMazeController | null = null;
@@ -1863,7 +1870,7 @@ async function main(): Promise<void> {
   let headIconId = "";
   let headIconSvg = "";
   const headIcon = (): string => {
-    const id = fabric?.markerGlyphId("head") ?? DEFAULT_GLYPHS.head;
+    const id = waitCueGlyph ?? fabric?.markerGlyphId("head") ?? DEFAULT_GLYPHS.head;
     if (id !== headIconId) {
       headIconId = id;
       headIconSvg = markerGlyphSvgFit(id, "head", GLYPH_R, DARK_DISC.ink);
@@ -2563,16 +2570,49 @@ async function main(): Promise<void> {
     const d = Math.sqrt(dx * dx + dy * dy);
     return d <= r && d < fabric.runDistance(x, y, fabricController);
   };
+  // K80 turns 3a: (x, y) is in the WAIT ZONE now - the turn minotaur is on,
+  // the maze still open and the point on the head (onHead). A click there
+  // waits (handleFabricTap) and the hover shows the wait cue there, both
+  // through this, so hover and click agree everywhere.
+  const inWaitZone = (x: number, y: number): boolean =>
+    turnMino !== null &&
+    !turnMino.finished &&
+    fabricController !== null &&
+    !fabricController.solved &&
+    !fabricController.fireLost &&
+    !pendingWin &&
+    onHead(x, y);
+  // K80 turns 3a: the head's wait cue on or off (the hover over the wait
+  // zone). The head swaps to the "hourglass" glyph and back to the one it
+  // wore; a rebuild drops the cue with the renderer it was set on.
+  const setWaitCue = (on: boolean): void => {
+    if (waitCueFabric !== null && waitCueFabric !== fabric) {
+      waitCueGlyph = null;
+      waitCueFabric = null;
+      waitCueHead = null;
+    }
+    if (!fabric || on === (waitCueGlyph !== null)) return;
+    if (on) {
+      waitCueGlyph = fabric.markerGlyphId("head");
+      waitCueFabric = fabric;
+      waitCueHead = fabricController?.head ?? null;
+      fabric.setMarkerStyle({ head: "hourglass" });
+    } else {
+      const g = waitCueGlyph!;
+      waitCueGlyph = null;
+      waitCueFabric = null;
+      waitCueHead = null;
+      fabric.setMarkerStyle({ head: g });
+    }
+  };
   // The wait move: a turn passes with the player where they stand. Only
-  // while the turn minotaur is on and the maze is still open.
+  // while the turn minotaur is on and the maze is still open. K80 turns 3a:
+  // inputWait is the way in (the key, the pad, a tap on the head): mid-turn
+  // it waits for the arrival (MoveWait), so the move under way is never
+  // snapped to its end here.
   const waitTurn = (): boolean => {
     if (!turnMino || !fabric || !fabricController) return false;
     if (fabricController.solved || pendingWin || turnMino.finished) return false;
-    // A wait mid-flight lands the move under way first.
-    if (fabric.animating) {
-      fabric.cancelMove();
-      fabric.update(fabricController);
-    }
     const r = turnMino.turn(-1);
     if (r === "reject" || r === "noop") return false;
     noteMove();
@@ -2794,14 +2834,16 @@ async function main(): Promise<void> {
     // K80 turns: with the turn minotaur on, a tap on your own junction is
     // the wait move (before the runs: a short run's tap zone reaches the
     // junction, and the head disc sits over it; onHead leaves the runs'
-    // arms to the runs).
-    if (turnMino && onHead(x, y)) return waitTurn();
+    // arms to the runs). K80 turns 3a: through inputWait, so mid-turn it
+    // waits for the arrival as a tap on a run does.
+    if (inWaitZone(x, y)) return inputWait();
     const eid = fabric.edgeAt(x, y, fabricController, pickRadius(pt, true));
     if (eid < 0) return false;
-    // K334: with tapsWait a tap while the dot travels waits for the
-    // arrival, as a key press does; off (the default for now), it snaps
-    // the dot to the run's end.
-    if (tapsWait && fabric.animating) return queueTap(eid);
+    // K334: a tap while the turn is under way (the dot travels, or a wait's
+    // turn plays) waits for the arrival, as a key press does. tapsWait is
+    // on by default; the hook's setTapsWait(false) brings back the snap to
+    // the run's end, for A/Bs.
+    if (tapsWait && dotMoving()) return queueTap(eid);
     return moveAlong(eid);
   };
   // K114: a refused (smoldering) tap's toast, at most once per 1.5 s (a
@@ -3023,9 +3065,15 @@ async function main(): Promise<void> {
       keyLast = lone ? { dir: lone, at, edge: p.edge, chords } : null;
     }
   };
-  // Take a waiting move: keys along what they pick now, or a tap's run.
+  // Take a waiting move: keys along what they pick now, a tap's run, or a
+  // wait (K80 turns 3a).
   const takeWaiting = (w: WaitingMove | null): void => {
     if (w === null) return;
+    if (w.wait) {
+      if (keyHover) setKeyHover(-1);
+      waitTurn();
+      return;
+    }
     if (w.edge >= 0) {
       if (keyHover) setKeyHover(-1);
       moveAlong(w.edge); // K334: the tap, on the arrival.
@@ -3033,15 +3081,38 @@ async function main(): Promise<void> {
     }
     pressMove(w.dirs, w.at);
   };
-  // K334: the dot travels (turn by turn; real time queues in the chase, so
-  // nothing waits for it here).
-  const dotMoving = (): boolean => !chase && (fabric?.animating ?? false);
+  // K334: the turn is under way: the dot travels, or (K80 turns 3a) a
+  // wait's turn plays (turnWait), so the minotaur's marker is never cut
+  // short either. Turn by turn only: real time queues in the chase, so
+  // nothing waits for it here.
+  const dotMoving = (): boolean =>
+    !chase && ((fabric?.animating ?? false) || turnWait > 0);
   // K334: a tap's run while the dot travels waits for the arrival (the
   // latest press or tap wins). True when it waits.
   const queueTap = (eid: number): boolean => {
     if (!moveWait.tap(eid, performance.now(), dotMoving())) return false;
     moveWaitStamp = keyStamp();
     return true;
+  };
+  // K80 turns 3a: the WAIT from any input - the wait key, the pad's center,
+  // a tap on the head (and the probe hook). A press waiting out its chord
+  // window goes first (it was pressed first); a wait ends a hold, as a tap
+  // does; while the turn is under way it waits for the arrival (MoveWait,
+  // the latest input winning), else it is taken at once. True when it was
+  // taken or queued.
+  const inputWait = (): boolean => {
+    if (!turnMino || !fabric || !fabricController) return false;
+    if (moveWait.waiting !== null && !moveWait.waiting.queued) {
+      takeWaiting(moveWait.takeNow());
+    }
+    endKeyHold();
+    if (!turnMino) return false; // The press before it was caught.
+    if (moveWait.wait(performance.now(), dotMoving())) {
+      moveWaitStamp = keyStamp();
+      if (keyHover) setKeyHover(-1);
+      return true;
+    }
+    return waitTurn();
   };
   // A fresh press (or a pad press) at `at` (performance.now()).
   const keyPress = (dir: KeyDir, at: number): void => {
@@ -3084,10 +3155,15 @@ async function main(): Promise<void> {
     const moving = dotMoving();
     const due = moveWait.step(now, moving, (d) => chordMatters(keyDepartures(v), d));
     if (due === "wait") {
-      // While the dot travels the hover shows what the move takes.
+      // While the dot travels the hover shows what the move takes (a wait
+      // takes no run).
       if (moving) {
         setKeyHover(
-          w.edge >= 0 ? w.edge : pickMove(keyDepartures(v), w.dirs, { hold: false }).edge
+          w.wait
+            ? -1
+            : w.edge >= 0
+              ? w.edge
+              : pickMove(keyDepartures(v), w.dirs, { hold: false }).edge
         );
       }
       return true;
@@ -3150,7 +3226,7 @@ async function main(): Promise<void> {
     const pick = pickHold(keyDepartures(v), heldKeys.dirs, arrival);
     const moving = chase
       ? chase.playerMoving || chase.tick === keyHoldTick
-      : fabric!.animating;
+      : dotMoving();
     if (!holdDue({ moving, now: performance.now(), since: keyHoldSince })) {
       setKeyHover(pick.edge); // What the hold takes next.
       return;
@@ -3166,7 +3242,24 @@ async function main(): Promise<void> {
   };
   window.addEventListener("keydown", (e) => {
     const dir = keyDirOf(e);
-    if (dir === null) return;
+    if (dir === null) {
+      // K80 turns 3a: the WAIT key (`.`, or Space off a button or link),
+      // with the turn minotaur on; one wait a press (no hold). Shift is let
+      // through for `.` (some layouts need it).
+      if (!turnMino || !waitKeyOf(e)) return;
+      const guard = {
+        ctrlKey: e.ctrlKey,
+        altKey: e.altKey,
+        metaKey: e.metaKey,
+        shiftKey: e.shiftKey && e.key !== ".",
+        defaultPrevented: e.defaultPrevented,
+        target: e.target,
+      };
+      if (keyBelongsElsewhere(guard) || !keysLive()) return;
+      e.preventDefault();
+      if (!e.repeat) inputWait();
+      return;
+    }
     const id = e.code || e.key;
     if (e.repeat) {
       // The browser's own repeat: the hold does the repeating.
@@ -3208,6 +3301,11 @@ async function main(): Promise<void> {
       keyPress(dir, at);
     },
     release: (id) => releaseKey(id),
+    // K80 turns 3a: the center is the wait button while the turn minotaur
+    // is on (fabricTick: setWait).
+    wait: () => {
+      if (keysLive()) inputWait();
+    },
   });
 
   // Stage 19 - bounded tug + snap-back, pointer-layer only (the physics
@@ -3559,7 +3657,8 @@ async function main(): Promise<void> {
         if (
           fabric &&
           fabricController &&
-          fabric.edgeAt(x, y, fabricController, pickRadius("touch", true)) >= 0
+          (fabric.edgeAt(x, y, fabricController, pickRadius("touch", true)) >= 0 ||
+            inWaitZone(x, y)) // K80 turns 3a: a tap on the head waits.
         ) {
           pendingTap = { id: e.pointerId, sx: e.clientX, sy: e.clientY, x, y };
           return;
@@ -3687,17 +3786,18 @@ async function main(): Promise<void> {
     } else if (params.mazeFabric && fabric && fabricController) {
       // Hover: light the choosable run under the pointer (the paint pass
       // animates it even while the physics sleeps - no wake needed), or
-      // glow subtly along any other run under it (K145).
-      const eid = fabric.edgeAt(
-        x,
-        y,
-        fabricController,
-        pickRadius(e.pointerType, true)
-      );
-      const glow = setGlowAt(x, y, eid, e.pointerType);
+      // glow subtly along any other run under it (K145). K80 turns 3a: the
+      // wait zone first, as a click there waits (handleFabricTap): a
+      // pointer cursor, the head's wait cue, no choice lit and no glow.
+      const zone = inWaitZone(x, y);
+      setWaitCue(zone);
+      const eid = zone
+        ? -1
+        : fabric.edgeAt(x, y, fabricController, pickRadius(e.pointerType, true));
+      const glow = zone ? fabric.setGlow(-1, 0) : setGlowAt(x, y, eid, e.pointerType);
       if (fabric.setHover(eid) || glow) fabric.update(fabricController);
       app.canvas.style.cursor =
-        eid >= 0
+        zone || eid >= 0
           ? "pointer"
           : onThread(x, y, e.pointerType)
             ? threadCursor()
@@ -3776,6 +3876,7 @@ async function main(): Promise<void> {
   // glow with it (K145). The choice hover keeps its old behavior.
   app.canvas.addEventListener("pointerleave", (e) => {
     if (e.pointerType === "mouse" && !pendingPluck) clearGlow();
+    setWaitCue(false); // K80 turns 3a.
   });
 
   // ---- Stage 20: auto plucks (random + music modes), RENDER-ONLY: the
@@ -4167,6 +4268,16 @@ async function main(): Promise<void> {
       // there it hides). K224: and the panel is closed (an open panel is
       // the whole screen on a phone, and the pad sat on its rows).
       movePad.setShown(settings.movePad && keysLive() && !panel.isOpen());
+      // K80 turns 3a: the pad's center waits while the turn minotaur is on.
+      movePad.setWait(turnMino !== null);
+      // K80 turns 3a: the wait cue leaves with the head (a key move, a
+      // catch) or the minotaur; the next pointer move puts it back.
+      if (
+        waitCueGlyph !== null &&
+        (turnMino === null || fabricController?.head !== waitCueHead)
+      ) {
+        setWaitCue(false);
+      }
       renderer!.tickPaint(ticker.deltaMS / 1000);
       // After the paint pass: fabric pluck colors read this frame's paint.
       renderer!.tickPlucks(ticker.deltaMS / 1000);
@@ -4389,7 +4500,8 @@ async function main(): Promise<void> {
     syncExploration,
     throwConfetti,
     tugAt,
-    waitTurn,
+    // K80 turns 3a: the hook's wait goes the way every input's does.
+    waitTurn: inputWait,
     wake,
     writeParams,
     get attemptDaily() {

@@ -389,7 +389,8 @@ export function installProbeHooks(ctx: ProbeCtx): void {
   // K80 turns diagnostics (null without the turn minotaur): its state, the
   // committed move the telegraph shows, and the minotaur's SCREEN point while
   // fabric draws it. __knotTurnMove(edge) moves along run `edge` as a tap on
-  // it would; __knotTurnWait() is a tap on your own junction;
+  // it would; __knotTurnWait() is a tap on your own junction (K80 turns 3a:
+  // main.ts inputWait, so mid-turn it waits for the arrival);
   // __knotTurnMinoObj() is the live TurnMinotaur.
   (window as unknown as Record<string, unknown>).__knotTurnMino = () => {
     if (!ctx.scene.turnMino) return null;

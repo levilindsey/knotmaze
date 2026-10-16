@@ -128,6 +128,28 @@ export function keyDirOf(e: { key: string; code?: string }): KeyDir | null {
   return ARROWS[e.key] ?? (e.code ? WASD[e.code] : undefined) ?? null;
 }
 
+// K80 turns 3a: what Space would press or type into instead of waiting.
+const SPACE_OWNERS =
+  "button, a[href], [role='button'], summary, input, textarea, select, " +
+  "[contenteditable]:not([contenteditable='false'])";
+
+// K80 turns 3a: the WAIT key (the turn minotaur's wait move): `.` always
+// (by `key`, so it is wherever the layout puts it, Shift included where
+// the layout needs it: the caller's guard lets Shift through for it), and
+// Space unless a button or a link has focus - there Space presses that
+// (Reset path, a folder) and must not wait too. One wait a press: the
+// caller ignores `e.repeat`.
+export function waitKeyOf(e: {
+  key: string;
+  code?: string;
+  target: EventTarget | null;
+}): boolean {
+  if (e.key === ".") return true;
+  if (e.key !== " " && e.code !== "Space") return false;
+  const t = e.target as Element | null;
+  return !(t && typeof t.closest === "function" && t.closest(SPACE_OWNERS));
+}
+
 // The run fields the reach walk needs (core/walk_graph.ts WalkEdge).
 export interface RunEnds {
   va: string;
@@ -581,12 +603,15 @@ export function absorbsChord(
 
 // K333/K334: a move not taken yet: keys (oldest first), or a tap's run
 // (`edge` >= 0), from `at` (ms). `queued`: it waits for the dot's arrival
-// (K334); otherwise for the rest of its chord window (K333).
+// (K334); otherwise for the rest of its chord window (K333). `wait` (K80
+// turns 3a): the turn minotaur's wait move (no keys, no run), always
+// queued.
 export interface WaitingMove {
   dirs: KeyDir[];
   at: number;
   queued: boolean;
   edge: number;
+  wait?: boolean;
 }
 
 // What a fresh key press does (MoveWait.press):
@@ -651,6 +676,16 @@ export class MoveWait {
     return true;
   }
 
+  // K80 turns 3a: a WAIT (the wait key, the pad's center or a tap on the
+  // head) while the turn is under way waits for its end like a tap, the
+  // latest press, tap or wait winning; step() hands it back on the arrival
+  // frame. True when it waits (otherwise the caller waits at once).
+  wait(at: number, moving: boolean): boolean {
+    if (!moving) return false;
+    this.waiting = { dirs: [], at, queued: true, edge: -1, wait: true };
+    return true;
+  }
+
   // Every frame, after the move animation stepped: "wait" while the move
   // waits (a hold waits with it), the move when it is due (taken off), or
   // null with none. On the arrival a lone key that a key beside it could
@@ -685,7 +720,9 @@ export class MoveWait {
   // at once (no second key is coming). Handed back, to take.
   release(holds: (dir: KeyDir) => boolean): WaitingMove | null {
     const w = this.waiting;
-    if (w === null || w.queued || w.edge >= 0 || w.dirs.some(holds)) return null;
+    if (w === null || w.queued || w.edge >= 0 || w.wait || w.dirs.some(holds)) {
+      return null;
+    }
     this.waiting = null;
     return w;
   }
