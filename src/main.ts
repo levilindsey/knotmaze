@@ -2936,10 +2936,12 @@ async function main(): Promise<void> {
     });
     // K235 (Levi, on K194: "Do we trigger pluck sounds for this? Probably
     // shouldn't."): a tap inside a junction core draws no pluck, so it makes
-    // no sound either. Every other tap sounds as before, drawn or not (a
-    // chain mid-reveal, pluckSize 0, a degenerate lobe).
+    // no sound, ripple or tug. K459 (Levi: "If we make a pluck sound, then we
+    // should show the pluck effect"): no other tap sounds without a drawn
+    // pluck either (a chain mid-reveal, a held particle, pluckSize 0, a short
+    // lobe); those keep their ripple and tug.
     if (!drawn && scene.renderer.plucks.lastSkip === "core") return;
-    if (!settings.muted && params.soundMode !== "none") {
+    if (drawn && !settings.muted && params.soundMode !== "none") {
       synth.pluck(freq, TAP_STRENGTH);
     }
     // K279: the tap's ripple and tug (a core tap has neither).
