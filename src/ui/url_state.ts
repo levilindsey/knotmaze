@@ -551,9 +551,9 @@ export interface UrlParams {
   // K114 burn race (game/fire.ts, brief docs/design/K114_burn.md): the
   // fire, off | fuse; its speed r (fire distance per unit walked, in
   // [FIRE_SPEED_MIN, FIRE_SPEED_MAX]) and its delay h (units walked before
-  // it spreads, [0, FIRE_DELAY_MAX]). It plays only on the turn clock and
-  // never with the turn minotaur (fireSettingsOf). Every change restarts
-  // the solve.
+  // it spreads, [0, FIRE_DELAY_MAX]). It never plays on K80's real-time
+  // chase (`clock`) nor with the turn minotaur (fireSettingsOf); its own
+  // clock is fireClock (stage 2). Every change restarts the solve.
   fire: FireMode;
   fireSpeed: number;
   fireDelay: number;

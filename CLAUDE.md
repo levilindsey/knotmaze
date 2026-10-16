@@ -62,6 +62,7 @@ src/
     daily_attempt.ts      # K47: saved attempts - record, walk fingerprint, replay
     share_text.ts         # K20: Wordle-style share text
     minotaur.ts           # K80: the real-time chase (minotaur, fixed-step clock)
+    fire.ts, fire_clock.ts # K114: the burn race; its real-time clock (FIRE_V_REF)
     star_rating.ts        # K155: stars from walked / optimal, their explanation
     explore_view.ts       # K76 pure: the thread reveal's visibility pieces and frontiers
   render/
@@ -157,7 +158,9 @@ test/
     streaks), daily_attempt.test.ts (fingerprints, save/restore, refusals),
     minotaur.test.ts (K80: lair, wander, hunt, sanctuary, catch, replay),
     star_rating.test.ts (K155: edges, catches, display, records, share),
-    explore_view.test.ts (K76: pieces, frontiers, ends, growth)
+    explore_view.test.ts (K76: pieces, frontiers, ends, growth),
+    fire.test.ts (K114, K408), fire_clock.test.ts (K114 s2: ticks, the
+    standing loss, no catch mid-run)
   render/
     pluck_model.test.ts  # String math vs a modal sum, coverage, lobes
     background_model.test.ts  # K21 drift clock (K24 hook), colors, order

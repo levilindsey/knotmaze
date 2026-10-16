@@ -226,3 +226,15 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   (`test/ui/param_codec.test.ts`) and url_codec.test.ts's defaults table
   gained the keys. What they do: gameplay-minotaur.md; rows:
   gameplay-panel.md.
+
+- FIRE CLOCK PARAM (K114 stage 2, 2026-10-15; brief
+  `docs/design/K114_stage2.md`): `fireClock` (`fck`: turn | realtime,
+  default turn) is APPENDED at 146, after the turn minotaur knobs
+  (140-145); CODEC_VERSION stays 6. Not daily-exempt (a daily plays with
+  the fire off). `fireSettingsOf` carries it as `clock` (still null with
+  K80's `clk=realtime` or the turn minotaur); override key `fck`. Under
+  onClockChange in undo_stack.ts's LIVE_EFFECTS (a change restarts the
+  solve). The table pin (`test/ui/param_codec.test.ts`) and
+  url_codec.test.ts's defaults table, OVERRIDE_KEYS and fireSettingsOf
+  cases gained the key. What it does: gameplay-fire.md's REAL-TIME FIRE;
+  the row: gameplay-panel.md.
