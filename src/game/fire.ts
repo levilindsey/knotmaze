@@ -4,11 +4,15 @@
 // (+ - * /, K108), because an attempt is a tap list that replays on any
 // device.
 //
-// THE CLOCK L is an input. The turn-based fire's L is the controller's
-// walkedDist: each move advances it by the run's length, a backtrack too
-// ("backtracking feeds the fire"), and it is 0 until the first move, so
-// the lit fuse waits at the entrance. Stage 2's real-time clock plugs in
-// the same way.
+// THE CLOCK L is an input, picked by `clock` (the fireClock param). The
+// turn-based fire's L is the controller's walkedDist: each move advances it
+// by the run's length, a backtrack too ("backtracking feeds the fire"), and
+// it is 0 until the first move, so the lit fuse waits at the entrance. The
+// real-time fire's L (K114 stage 2, game/fire_clock.ts) is FIRE_V_REF x
+// the fixed-step time since the first accepted move: the dot runs at
+// FIRE_V_REF too, so a move that leaves at L arrives at L + len, and
+// standing still lets the fire close in (the controller's header has the
+// rules).
 //
 // THE MODEL (R.3.3, derived in the brief's "The model"):
 // - d(v) = v's walk distance from WalkGraph.start; the fire reaches v at
@@ -32,17 +36,27 @@
 import type { WalkGraph } from "../core/walk_graph";
 import { walkDistances } from "../core/walk_graph";
 
+// K114 stage 2: what drives L (the header's THE CLOCK).
+export type FireClock = "turn" | "realtime";
+
 export interface Fire {
   readonly speed: number; // r: fire distance per lattice unit walked
   readonly delay: number; // h: lattice units walked before it spreads
+  readonly clock: FireClock;
   // d(v) from WalkGraph.start (Infinity where unreachable).
   readonly dist: ReadonlyMap<string, number>;
 }
 
-export function buildFire(walk: WalkGraph, speed: number, delay: number): Fire {
+export function buildFire(
+  walk: WalkGraph,
+  speed: number,
+  delay: number,
+  clock: FireClock = "turn"
+): Fire {
   return {
     speed,
     delay,
+    clock,
     dist: walkDistances(walk.vertices, walk.edges, walk.start),
   };
 }

@@ -443,7 +443,7 @@ async function main(): Promise<void> {
   // fireSettingsOf). The controller's `fire`; a change restarts the solve.
   const fireOf = (w: WalkGraph): Fire | null => {
     const s = params.mazeFabric ? fireSettingsOf(params) : null;
-    return s ? buildFire(w, s.speed, s.delay) : null;
+    return s ? buildFire(w, s.speed, s.delay, s.clock) : null;
   };
   // Set when a losing move lands; the Burnt banner waits for the dot.
   let pendingLoss = false;
