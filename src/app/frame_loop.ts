@@ -263,7 +263,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // K6-1: the polls (docs/design/K6_1.md, "The flags"), read at a frame's
   // end for the next one. Read-only and allocation-free: each is a test of
   // state the loop or a module already keeps.
-  const readPolls = (dt: number): number => {
+  const readPolls = (): number => {
     let p = 0;
     const st = deps.physState;
     if (
@@ -298,7 +298,8 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     }
     if (cameraNeedsFrame()) p |= Flag.CAMERA;
     if (ripples.activeCount > 0 || confetti.active) p |= Flag.OVERLAY;
-    if (warmup.wave1Done && background.needsFrame(dt)) p |= Flag.BACKGROUND;
+    // BACKGROUND is not read here: backgroundTick reads it after the
+    // background's own tick (see there).
     if (audioNeedsFrame()) p |= Flag.AUDIO;
     return p;
   };
@@ -314,11 +315,19 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     // polls read now carry a visual flag other than BACKGROUND. It
     // replaces sceneAnimating() for the background's drift pause; the
     // legacy answer stays beside it as the report's observer.
-    const polls = readPolls(dt);
+    let polls = readPolls();
     const active = ((flags.pushed | polls) & SCENE_ACTIVE) !== 0;
     sceneWasAnimating = active;
     // K307: no texture pass before wave 1 (pixi would link the effect cold).
-    if (warmup.wave1Done) background.tick(dt, active);
+    if (warmup.wave1Done) {
+      background.tick(dt, active);
+      // The background's poll reads its clock AFTER this frame's tick. Read
+      // before it (in readPolls), it answered whether THIS frame re-renders,
+      // so the flag landed a frame after each pass: the shadow report saw
+      // every pass of a drift that outlives the rest of the scene as UNDER
+      // and the frame after it as OVER (K6-1, the drift case's finish).
+      if (background.needsFrame(dt)) polls |= Flag.BACKGROUND;
+    }
     flags.endFrame(polls, { rootMoved, legacy, active, stepUnflagged });
     stepUnflagged = false;
   };

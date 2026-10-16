@@ -47,7 +47,11 @@ handoff); `render.md` lists the area's other files.
   pulse's fade-in window, a hovered pulse, a web fade, the fog's intro,
   the fire's FX, the explore growth and hold, the start fade, the halos),
   `background.needsFrame(dt)` (BACKGROUND, only on frames a texture pass
-  is due), and the GAME and AUDIO accessors over state main.ts keeps.
+  is due; read in `backgroundTick` AFTER `background.tick`, since the
+  clock answers "would a tick dt from now re-render": read before the
+  tick, the flag landed a frame after each pass, and the shadow report
+  counted every pass of a drift outliving the rest of the scene as
+  UNDER), and the GAME and AUDIO accessors over state main.ts keeps.
   `src/render` and `src/ui` return plain numbers and import nothing from
   `src/app`.
 - **A poll must never mutate.** Each one was checked to be a read
