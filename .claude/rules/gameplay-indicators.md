@@ -38,7 +38,10 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   war too (Levi, 2026-10-13: direction only); a tap eases the camera to
   frame the exit with the head (camTween through placeWorldAt; the
   follow camera holds it PEEK_HOLD before easing back), under fog a
-  toast only. VIEWER PREFERENCES (localStorage + panel checkboxes, both
+  toast only (K465 residual: at the start of a thread-reveal maze the fit
+  camera is at zoom 1 with no pan range, so that tap ends on the same
+  view and the exit stays off screen; render-explore.md has the
+  numbers). VIEWER PREFERENCES (localStorage + panel checkboxes, both
   default on, K84 sorts them later): finishIndicator, and tapToPan - off,
   every indicator is inert and taps go through it to the maze. K76 HOOK:
   finishIndicator.gate(pred) ANDs in a predicate (returns its remover;
