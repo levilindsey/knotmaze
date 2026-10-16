@@ -1,0 +1,57 @@
+- **K284** · Credit K74's sources (K277): `docs/design/K74_maze_design.md` builds on Pullen (*Think Labyrinth*) and Zhao and Marquez 2013 (arXiv:1307.5713); `src/` names neither. K74 stage 3 adds a comment naming each where the code follows it, then the `RESEARCH` entries.
+
+- **K240** · High contrast for the DOM chrome (K111 follow-up): a CSS layer on `:root[data-contrast="high"]` (already set) for the panel, HUD and badge (TS-injected styles). Small; after K238's review.
+
+- **K137** · K80 section 4's cheap (S, S-M) mechanisms, each toggled (Levi 10-13), after the minotaur: 4.3, 4.7, 4.9, 4.10, 4.13-4.17, 4.21 (after K85), 4.26, 4.28-4.30, 4.32-4.34, plus Levi's sleeper variant. `docs/design/K80_gameplay_additions.md`; M: K138, M-L and L: K141.
+
+- **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`), after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24, 4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation (check solvability). M-L, L: K141.
+
+- **K139** · Collapse mode (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`): no backtracking, each run collapses behind you. `collapse` (off | finish | free); rides 4.3's snap (K137) and R.3.4's longest thread (`docs/design/K80_gameplay_additions.md`). S-M, after 4.3.
+
+- **K46** · Daily variety: no weekly arc; THEMES (constraint sets); per-day overrides later (K82). Engine-exact (K108); memory-trail themes: trailLength 5 (K73). `docs/design/K46_daily_variety.md` (8b1eb90), `docs/design/K46.md`, `.claude/probes/K46/`, branch `worktree-agent-a78c73cec4770a14d`.
+
+- **K78** · The Knotmaze handbook: algorithms, architecture, decisions, a per-param reference, figures; written once the churn settles. Public Markdown, later Levi's Blogger devlog: standalone figures, no repo links or internal IDs (Levi 10-13). `docs/design/K78_handbook_plan.md`.
+
+- **K297** · A pared-down panel for most players (Levi, 2026-10-14): most rows move behind an advanced view, a short set stays in front. Which rows, and how the advanced view opens, come after the churn; K292's marks and K84 / K57 feed it.
+
+- **K340** · Nested folders that look distinct from their parents (Levi 10-14). Looks: K339's stage (`docs/design/K339_panel_audit.md` section 5, its sheet), rec. look F (K339 call 3). Once Levi picks, build its CSS first, check under High contrast; with K339's rebuild.
+
+- **K341** · The second panel audit after the design iteration (Levi 10-14): rerun K339's inventory (`scripts/panel_inventory.ts`, `docs/design/K339_inventory.md`) and checklist, feed K297's pared-down set (`docs/design/K339_panel_audit.md` item 8).
+
+- **K9** · G4: smooth-union SDF junction webs (cuspRadius = blend radius); A/B crops at cr 1, 3, 6 before the fans are deleted. Also closes G1's x160 leftover (`.claude/rules/render-gaps.md`); webs carry the traveled route as the smooth union of the traveled pieces only (K81).
+
+- **K115** · Cursive text and shapes: Hershey Script Simplex (`docs/design/K115_cursive_text.md`, ded57f7; `docs/design/levi_notes_2026-10-13.md`; `.claude/probes/K115/`). Next: stage 1 brief. K122: `shipped: true` on `hershey-fonts` in `notices/credits.ts` with the data.
+
+- **K116** · Pluck instruments and accompaniment, lowest priority: band skeleton first (drone, bass, `pluckVoice` presets), then marimba, bells; Pixel audio-CPU probe first; loop K125. `docs/design/K116_instruments.md` (2e60b00); calls `docs/design/levi_notes_2026-10-13.md`.
+
+- **K144** · Accounts and shared stats, a stretch goal (Levi 10-13): OAuth, cross-device stats, opt-in sharing, percentile bands, replay anti-cheat (K108, K47). Backends: Cloudflare Workers + D1 or the SnoringCat platform (Nakama). Next: design doc. `docs/design/levi_notes_2026-10-13.md`.
+
+- **K10** · Phone benchmark after every stage (Pixel 11; baseline 2026-10-11: 30 fps at rest, 51 with `fw=0`; K79 stage A 60). Rerun `scripts/preview.ps1` per ref, `scripts/phone.ps1 -Ports ...`, `.claude/probes/K10/phone_bench.mjs`; numbers `.claude/probes/K10/bench_*.txt`.
+
+- **K292** · Mark the panel's maze rows with a subtle top-right dog-ear triangle (Levi 10-14), a key at the panel's top; personal settings (`DAILY_EXEMPT_KEYS`, localStorage prefs) unmarked; sheet for Levi first. After K298; replaces K84's section; K57 settles edge cases; leads to K297.
+
+- **K265** · High contrast's own highlight (K111 s5; Levi 10-14): white rim on both edges, hard inner edge; looks 1-3 go (`hcl`, `__knotHcLook`). After K298; never beside K299, K76 2c, K268 s2. `docs/design/K111.md` ("Levi's pick", "For stage 5"); looks `.claude/probes/K111/stage4/sheet/`.
+
+- **K309** · Check K299's ring-lap fix on the phone (PowerVR rounds float division its own way; only the desktop GPU was checked): in K156's next round, Levi's link `?qoietk.KSIeBoGlf4-` at node_2 and the seam cases of K299's A/B. `docs/design/K299_choice_pulse_bug.md` ("Not done").
+
+- **K312** · Add K299's lesson to claude-config `rules/lessons.md` (WebGL): GPU float division is approximate (ANGLE D3D11 `floor(k*n/n)` = k-1 in 3275 of 16384 pairs), so ring and lap math must be integer-corrected. Held while Levi is away (config edits wait for approval).
+
+- **K313** · A loader that looks like the maze (Levi 10-14): a trefoil maze with over/under gaps, fixed-length trail, drawn by an OffscreenCanvas worker inlined in `index.html` (static SVG first). After K307's warm-up; measure the phone's first frame. `docs/design/K313_loader.md`.
+
+- **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`, 091e4dc; Levi took section 7's recs): s1 (sim) after K323 s1; s2 (render) after s1, K7 s2, K307 s2, K329 (checks K270's band); s3 (guard, stalker) after s1. Rel. K245 K247 K271 K293 K294 K296.
+
+- **K326** · Drop knot mode (`mazeFabric`, `mf=0`; `docs/design/K323_game_mode.md` s4-5): A freezes a golden (after K7 s2); B deletes (after A, K323 s1, K307 s2, K329), retargets `scripts/fold_census.*`, `test/physics/byte_identity.test.ts`; optional C: knot paint (after B, K111 s5).
+
+- **K327** · Labels that say what they size (Levi 10-14): `indicatorSize` (edge arrows, a viewer pref) and `markerSize` (maze icons) sound alike; proposed "Edge arrow size" and "Maze icon size"; Touch & feel mixes words with camelCase keys. In K323's design; rel. K247, K292, K297.
+
+- **K332** · Arrow-key hints (Levi 10-14): a small key icon (or chord, K333) near each choice's start, shown after the first arrow key press. After K329. Hooks: `key_moves.ts` (`keyMap`, `chordMap`, `keyStep`, `stepWaiting`), K83's `MarkerMesh`, `marker_glyphs.ts`.
+
+- **K331** · Touch gets K298's pick margins (Levi, 2026-10-14): touch moves from world-unit radii to the mouse's form, with its own margin row beside `pickMargin` at ~4 px, so zones stop growing under a pinch zoom. With K330 after K329 (`docs/design/K298_hover_glow.md`, "Notes").
+
+- **K321** · The credits page (Levi 10-14): page and panel link become Credits (`credits.html`): his name and copyright line, art, icon and music credits, "Built with Claude Code" (not prominent), then techniques, licenses, research. Small sonnet stage: `docs/design/K321_credits.md`.
+
+- **K318** · Win effects (Levi 10-14): one show, many themes; thirteen themes in a Win effects folder (Theme dropdown, Party default), built in twelve stages. Stage 1 after the confetti stage and K111 s5. `docs/design/K318_win_effects.md` ("Build stages").
+
+- **K336** · Side cannons (Levi 10-14): finish confetti and streamers blast in from both edges. With K335, K337 (`docs/design/K335_confetti.md`); deferred. Draft `docs/design/K336_K337_draft.patch` (on K335's merge); codec `cfc`/`cfn`/`cfs`/`cfh`/`cff`; phone fps rides K156's next pass.
+
+- **K337** · Confetti shine (Levi 10-14): spin and flip give each piece a 3D normal lit by one upper-left light (diffuse plus a Blinn-Phong flash); reduced motion keeps the diffuse term. With K335, K336 (`docs/design/K335_confetti.md`); deferred with K336 (draft in its patch).
