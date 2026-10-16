@@ -112,6 +112,14 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   (`.claude/probes/K76/stage2d/dump_variants.ts`, `compile_glsl.mjs`).
   No new program site or variant (High contrast is a uniform value,
   uKExplore.x = 2), so the registry needed no entry.
+- **The burn's fire grew two** (K290 stage 3b, 2026-10-15, ef7f08b):
+  the section's explore variant 56595 -> 58529 characters and
+  `arm-strip-explore` 37084 -> 38559 (the FRONT and SMOLDER items in
+  kCharAt, kEmberLook); `junction-field-explore`, `pluck-still-explore`
+  and the masters are unchanged. SwiftShader compiles all eight
+  (`.claude/probes/K290/stage3b/out/variants/`, K76 stage 2d's
+  `compile_glsl.mjs`), and the desktop's warm-up links the three explore
+  variants in its first wave. No new program site or variant.
 - **Growing a shader costs compile time.** section-rgb is the intro's
   critical path. After a large shader change, time a cold link:
   `trace_intro.mjs` on a fresh profile.

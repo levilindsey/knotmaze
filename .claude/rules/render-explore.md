@@ -539,3 +539,67 @@ through this mode's programs. Brief and record: `docs/design/K114_burn.md`,
   master and branch print the same 13 PixiJS "Attribute aGap / aGapId /
   aUV is not present in the shader" warnings at load in a fire race, so
   they predate 3a.
+
+## THE BURN, stage 3b (K290, 2026-10-15): the fire's look
+
+Stage 1's Graphics fire is gone; the fire draws through these programs
+plus the `burn` FX. Brief and record: `docs/design/K114_burn.md`, "Stage
+3b brief" and "Stage 3b handoff".
+
+- MODEL: `BurnFront {chain, c, dir, kind}` (dir = the ctrl direction of
+  the unburnt side; kind 0 a burning front, 1 the lit fuse) and
+  `ExploreBurn.fronts` / `.smolder` (BurntSpans) beside gate and char.
+  `FabricMazeRenderer.drawFire` builds them: a front for each burnt
+  stretch `runBurnAt` pairs with one (`front[i]`; from the va end the
+  unburnt side lies toward vb); while `L <= fire.delay` none of those,
+  but a kind-1 front on each of the start's runs at min(len / 2, marker
+  radius + FIRE_FUSE_OUT 1.0 thread width); smolder on each smoldering
+  choice from the head to its first burnt stretch, only at rest in a
+  live race (no move, not solved, not lost). Fronts or smolder alone put
+  explore on (`burnOnlyPieces`), as burnt spans do.
+- SHADERS: items `EXPLORE_ITEM_FRONT` (7, T0 = (type, c, dir, kind)) and
+  `EXPLORE_ITEM_SMOLDER` (8, a span) in the KPAINT item rows, read by
+  kCharAt, which sets two globals: `kFireEmber` and `kFireSmolder`. A
+  front darkens the unburnt side under char over FRONT_BAND 0.7 ctrl
+  (meeting the span's own ramp, no seam); the ember peaks at the front,
+  EMBER_AHEAD 0.25 ctrl into the unburnt side and EMBER_BEHIND 0.55 into
+  the burnt one (0xff7a1a at 0.95, a hot core 0xffe08a inside |vUV.y -
+  0.5| < 0.22); smolder is a centerline (0xff3b1f at 0.9, half 0.225).
+  `kEmberLook` applies them after kCharLook inside `if (exHere)`, so the
+  crossing gaps cut them like thread; the arm strip gets the ember, not
+  the smolder line. Static: no fire clock in the shaders; the motion is
+  the FX's. Band widths are in CTRL (about 1.93 ctrl per lattice unit),
+  so short in world terms. K299's ring-lap scan lists the front's
+  nearest-lap floor as a reviewed site.
+- UNSEEN FRONTS DRAW AS NOTHING (`FIRE_UNSEEN_FRONTS` false; Levi
+  accepted): under the reveal the ember scales by the declared
+  visibility like char, and `tickFireFx` skips a front whose
+  `chainVis` < 0.5. True would draw a small piece of thread
+  (FIRE_UNSEEN_HALF 0.4 ctrl) and emit there.
+- FX: one lazy `AppearFxSystem` (style `burn`, seed 0xf17e) in
+  overContainer just under the start marker (over the yarn, under the
+  markers and the fog); `spawnFrontier` at each front at FIRE_FX_RATE
+  0.4 of the appearance's rates, shared past FIRE_FX_FRONTS 12 fronts,
+  round-robin start; no spawns under Reduced motion (exploreStill) or a
+  hidden tab; the pool ticks every frame, asleep too.
+- FOG LIGHT: under fog, a soft hole at each kind-0 front
+  (`fogFireLights`, FIRE_FOG_LIGHT 0.75 of the stamp radius, in
+  renderFog); the fog redraws only when a light appears, goes, or moves
+  FIRE_FOG_LIGHT_STEP 0.3 world.
+- RESIDUAL: THE EMBER DID NOT SHOW ON THE GPU in the 3b probes (the lit
+  fuse at load, fronts re-declared by hand at several ctrls and kinds,
+  `.claude/probes/K290/stage3b/ember_px.mjs`, `fuse_diag.mjs`), though
+  the KPAINT mirror holds the FRONT items in the fuse chain's slot refs
+  and the chain flag reads (1, 1) (`ember_read.mjs`). Unchecked suspects:
+  uKExplore.x at the fuse (exHere false), the whole-chain path, and a
+  re-declaration while asleep that never re-renders. Char, smolder and
+  the FX did show.
+- MEASURED (desktop RX 6800 XT, D3D11, under the perf lock;
+  `.claude/probes/K290/stage3b/`): fire off, branch ef7f08b against
+  21d701e (master's src; 3a's `k290_ab.mjs ab`, same link and pins):
+  31/31 checks, every frame 0 px (reveal off at four pulse phases, a
+  hovered choice, reveal on at two phases, on-then-off, A/A floors 0).
+  Variant lengths: section explore 56595 -> 58529, arm-strip-explore
+  37084 -> 38559, junction-field-explore and pluck-still-explore
+  unchanged; the warm-up's wave 1 compiles all three explore variants
+  (`__knotWarmup()`), no shader errors, no context loss.

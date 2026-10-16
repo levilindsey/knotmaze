@@ -46,24 +46,20 @@ files.
   catch toggle builds on it. HUD (x10, like every HUD distance; call 5):
   `fire lead` while racing, `closest call` once won or lost, both shown
   with the stats off (`gameRows`); the win banner adds the closest call.
-  THE FIRST LOOK (fabric_maze_renderer.ts `drawFire`, the FIRE_*
-  constants; stage 3 builds the real one; K290 stage 3a moved the burnt
-  thread into the shaders, BURNT THREAD below): char 0x22140e (1.1 thread
-  widths) with an ash core over burnt stretches (removed in 3a), embers 0xff7a1a (core
-  0xffe08a) at the fronts, smoldering arms 0xff3b1f, and a lit-fuse ring
-  at the entrance while L <= h. Its clock rides the move animation
-  (walkedDist minus the unplayed share of the run), so the fronts advance
-  with the dot. Redrawn only when update() ran since the last draw (the
-  threads, the flow or the game state moved) or the fire's key changed
-  (its clock L, the head, solved, fireLost, the move animation, the
-  thread width); with every run burnt at rest it cost about 4.8 ms a
-  frame on the desktop when redrawn every frame, about 2.5 ms with the
-  cache under the default flow (half-rate re-renders) and about 0 with
-  flow off; under 4x CPU throttling (a phone proxy) about 11 ms, the frame
-  interval's median 69 -> 87 ms, so stage 3's look must not be Graphics
-  strokes rebuilt per flow frame. A new clock (stage 2's fireClock) must
-  join the key. It draws every run, so K76's thread reveal does not hide
-  unseen fire (the fog sprite does). PARAMS (codec v5 118-120, after K74's
+  THE FIRST LOOK (stage 1's `drawFire` Graphics: char strokes, embers
+  0xff7a1a, smoldering arms 0xff3b1f, a lit-fuse ring) is GONE since K290
+  stage 3b (BURNT THREAD below). Still true of `drawFire`: its clock rides
+  the move animation (walkedDist minus the unplayed share of the run), so
+  the fronts advance with the dot, and it recomputes only when update()
+  ran since the last draw (the threads, the flow or the game state moved)
+  or the fire's key changed (its clock L, the head, solved, fireLost, the
+  move animation, the thread width, the fog, the marker radius); a new
+  clock (stage 2's fireClock) must join the key. Why the look moved into
+  the shaders: with every run burnt at rest the Graphics cost about 4.8
+  ms a frame on the desktop when redrawn every frame, about 2.5 ms with
+  the cache under the default flow (half-rate re-renders) and about 0
+  with flow off; under 4x CPU throttling (a phone proxy) about 11 ms, the
+  frame interval's median 69 -> 87 ms. PARAMS (codec v5 118-120, after K74's
   `hCutShare` 117; 117-119 before the branch rebased onto K74 stage 2):
   `fire` `fi` (off | fuse), `fireSpeed` `fsp` (0.75, [0.3, 0.95]),
   `fireDelay` `fdl` (0, [0, 40] lattice units); not daily-exempt, and a
@@ -106,10 +102,24 @@ files.
   nothing burnt keeps master's frame (no explore program bound); once
   anything burns, every chain is declared whole and the burn cut from it,
   so `ribbons.exploreOn` stays true for the rest of the race. Under the
-  thread reveal, char shows only the burnt thread the reveal shows, but
-  stage 1's embers still draw at every front, seen or not (sheet
-  a12_on_char: about 30 over hidden thread). Stage 1's
-  char and ash strokes are gone; its embers, smoldering arms and lit fuse
-  still draw as Graphics (stage 3b, with the front's char band and the
-  `burn` FX on tipsAt). Contact sheet (gone vs char, reveal off and on,
-  three moments of seed 7's race): `.claude/probes/K290/stage3a/sheet/`.
+  thread reveal, char shows only the burnt thread the reveal shows.
+  Contact sheet (gone vs char, reveal off and on, three moments of seed
+  7's race; stage 3a): `.claude/probes/K290/stage3a/sheet/`. K383 (Levi,
+  2026-10-15): the start marker should hide too once the thread under it
+  has burnt, faded like the other markers; not built yet.
+
+- THE FIRE (K290 stage 3b, 2026-10-15; brief and record
+  `docs/design/K114_burn.md`, "Stage 3b brief" and "Stage 3b handoff";
+  the shader side is render-explore.md's THE BURN, stage 3b). The
+  explore programs draw each front (an ember at the front and, under
+  char, a dark band ahead of it) and each smoldering choice (a hot
+  centerline from the head to its first burnt stretch, at rest only).
+  The lit fuse is a front on each of the start's runs just past the
+  start disc while L <= delay. The `burn` FX (appear_fx.ts) emits at
+  every front at 0.4 of the appearance's rates, the rate shared past 12
+  fronts, over the yarn and under the markers and the fog; none under
+  Reduced motion. Under fog, a soft hole at each burning front (0.75 of
+  the stamp radius; the fog redraws when one moves 0.3 world). Under the
+  thread reveal a front it does not show draws nothing and emits nothing
+  (Levi accepted). RESIDUAL: the ember itself did not show on the GPU in
+  3b's probes; char, smolder and the FX did.
