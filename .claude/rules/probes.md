@@ -474,6 +474,7 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   `farcheck.mjs`, `knuckle2.mjs` (panel M = master) and
   `verify_batch.ps1`. Its `g2/census_fan.mjs` runs the env `PRE` (a JS
   expression) in the page before the census, to flip a toggle.
+  Stage 6 (K522/K523, 2026-10-16): `census2d.mjs` (K76 stage2d) no longer demands exact sets or 0 px: hard diffs are >1 level, `FLOOR_CLIP_PX` 23 is K519's measured per-clip floor, restores use contemporaneous references, JOINTS (2d) carries census3a's `attributedUW` swap and `fadeModel`, and MARKERS is exit-aware (K465's lifted exit is on at vis 0). The diff against the FIRST mode-off frame over a long census is drift (K528), not a verdict; the m10 recipe reads 30/30 (K397.md Stage 6 handoff).
 - K6-1 (2026-10-15), THE FRAME LOOP'S FLAGS (`render-loop.md`):
   `__knotLoop()` returns the flag ledger's report since the last reset:
   `mode` ("ondemand" since K6-3; "continuous" when asked), `stopped`
