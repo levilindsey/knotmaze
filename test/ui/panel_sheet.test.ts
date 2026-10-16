@@ -3,6 +3,8 @@ import {
   SHEET_QUERY,
   SHEET_STATE,
   SheetHistory,
+  SHEET_FONT_PX,
+  helpEnabled,
   panelStartsOpen,
   sheetLayout,
 } from "../../src/ui/panel_sheet";
@@ -43,6 +45,26 @@ describe("the layout rule", () => {
   });
 });
 
+describe("row help gating (K482)", () => {
+  it("help is on for a coarse pointer, sheet or not", () => {
+    expect(helpEnabled(true, false)).toBe(true);
+  });
+
+  it("help is on in the sheet, fine pointer or not", () => {
+    expect(helpEnabled(false, true)).toBe(true);
+    expect(helpEnabled(true, true)).toBe(true);
+  });
+
+  it("help is off on a fine-pointer side panel (desktop keeps the title tooltip)", () => {
+    expect(helpEnabled(false, false)).toBe(false);
+  });
+});
+
+describe("the sheet font (K483)", () => {
+  it("the sheet font is 13 px (the side panel stays at Tweakpane's 11)", () => {
+    expect(SHEET_FONT_PX).toBe(13);
+  });
+});
 describe("whether the panel starts open", () => {
   it("a sheet starts closed, whatever was stored", () => {
     expect(panelStartsOpen(true, "1", true)).toBe(false);

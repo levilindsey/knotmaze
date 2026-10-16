@@ -60,8 +60,10 @@ import {
 import { PLUCK_WHOLE_MAX, RIPPLE_STRENGTH_MAX } from "../render/pluck_model";
 import type { MotionPref } from "./motion";
 import {
+  SHEET_FONT_PX,
   SHEET_QUERY,
   SheetHistory,
+  helpEnabled,
   panelStartsOpen,
 } from "./panel_sheet";
 
@@ -465,7 +467,9 @@ export function buildPanel(
     "max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));" +
     "background:#28292e;--tp-container-unit-size:32px;" +
     "--tp-blade-value-width:min(50%,440px)}" +
-    ".tp-rotv{border-radius:0;box-shadow:none}" +
+    ".tp-rotv{border-radius:0;box-shadow:none;font-size:" + SHEET_FONT_PX + "px}" +
+    ".kp-head{font-size:" + SHEET_FONT_PX + "px}" +
+    ".kp-help{font-size:" + SHEET_FONT_PX + "px}" +
     ".kp-open .kp-bar{display:block}" +
     // THE PEEK: while a row is dragged on the sheet, everything but that row
     // is invisible (visibility, so the row shows inside its hidden parents)
@@ -524,6 +528,10 @@ export function buildPanel(
   // K468: whether the layout is the phone's full-screen sheet right now.
   const sheetMQ = window.matchMedia(SHEET_QUERY);
   const sheetNow = (): boolean => sheetMQ.matches;
+  // K482: row help is on only for a coarse pointer or the sheet (K483's
+  // font and this share SHEET_QUERY); the desktop keeps its title tooltip.
+  const coarseMQ = window.matchMedia("(pointer: coarse)");
+  const helpWanted = (): boolean => helpEnabled(coarseMQ.matches, sheetNow());
 
   // K467 ROW HELP: a tap on a row's label opens the row's tooltip text in a
   // block inside that row. One block at a time. The text is the row's
@@ -536,6 +544,7 @@ export function buildPanel(
   }
   let helpOpen: HelpRow | null = null;
   let helpSeq = 0;
+  const helpRows: HelpRow[] = [];
   const closeHelp = (): void => {
     const h = helpOpen;
     if (!h) return;
@@ -572,6 +581,31 @@ export function buildPanel(
     }
     if (gone) closeHelp();
   };
+  // K482: the label is a button only while help is wanted. Off (fine-pointer
+  // side panel) it carries no role or Tab stop and a click keeps its native
+  // behaviour (the title tooltip); on, it is focusable with aria state. The
+  // (i) mark and the block stay in the DOM (display:none off the sheet), so
+  // a live resize or rotation switches help with the layout.
+  const applyHelpGate = (h: HelpRow): void => {
+    if (helpWanted()) {
+      h.label.setAttribute("role", "button");
+      h.label.tabIndex = 0;
+      h.label.setAttribute("aria-expanded", helpOpen === h ? "true" : "false");
+      h.label.setAttribute("aria-controls", h.block.id);
+    } else {
+      if (helpOpen === h) closeHelp();
+      h.label.removeAttribute("role");
+      h.label.removeAttribute("tabindex");
+      h.label.removeAttribute("aria-expanded");
+      h.label.removeAttribute("aria-controls");
+    }
+  };
+  const syncHelpGate = (): void => {
+    if (!helpWanted()) closeHelp();
+    for (const h of helpRows) applyHelpGate(h);
+  };
+  sheetMQ.addEventListener("change", syncHelpGate);
+  coarseMQ.addEventListener("change", syncHelpGate);
   const wireHelp = (
     rowEl: HTMLElement,
     label: HTMLElement,
@@ -588,16 +622,17 @@ export function buildPanel(
     // The "i" is CSS (.kp-i::before), so the label's text stays the label's.
     label.insertBefore(mark, glyph);
     rowEl.classList.add("kp-has-help");
-    label.setAttribute("role", "button");
-    label.tabIndex = 0;
-    label.setAttribute("aria-expanded", "false");
-    label.setAttribute("aria-controls", id);
     const h: HelpRow = { row: rowEl, label, block };
+    helpRows.push(h);
+    applyHelpGate(h);
     const toggle = (): void => {
       if (helpOpen === h) closeHelp();
       else openHelp(h);
     };
     label.addEventListener("click", (e) => {
+      // K482: off the sheet with a fine pointer the label is not a help
+      // button at all (its title tooltip is the help).
+      if (!helpWanted()) return;
       // The reset glyph has its own pointerdown; never open help for it.
       if ((e.target as Element | null)?.closest(".kp-reset")) return;
       // Never a toggle of the row's control (a checkbox row's label).
@@ -605,6 +640,7 @@ export function buildPanel(
       toggle();
     });
     label.addEventListener("keydown", (e) => {
+      if (!helpWanted()) return;
       if (e.key !== "Enter" && e.key !== " ") return;
       e.preventDefault();
       toggle();

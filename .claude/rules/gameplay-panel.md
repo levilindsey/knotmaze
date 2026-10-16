@@ -231,9 +231,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `(pointer:coarse)` or SHEET_QUERY (desktop keeps its hover tooltip and
   shows no mark), and the "i" is `::before` CSS, not text: the label's
   `textContent` stays "weaveDensity⟲" and K92's undo probe, which finds
-  rows by label text, keeps working. A labeled row gets `kp-has-help`,
-  role=button, tabIndex 0, aria-expanded, aria-controls (the block's id),
-  Enter and Space, and a focus-visible outline. The label's click handler
+  rows by label text, keeps working. A labeled row gets `kp-has-help`;
+  K482 (2026-10-15): it is a BUTTON only while `helpEnabled(coarse, sheet)`
+  (`helpWanted()` in `tweakpane_panel.ts`, pure in `panel_sheet.ts`) -
+  a coarse pointer or the sheet. Then: role=button, tabIndex 0,
+  aria-expanded, aria-controls (the block's id), Enter and Space, and a
+  focus-visible outline. Off (fine-pointer side panel) it carries no role
+  or Tab stop, its click and keys do nothing, and the native `title`
+  tooltip is the help (one Tab stop per row). The block and the mark stay
+  in the DOM (`display:none` off), and `applyHelpGate`/`syncHelpGate`
+  on `sheetMQ`/`coarseMQ` change move every row with the layout, so a
+  resize or rotation switches help live. The label's click handler
   preventDefaults, so a tap on a CHECKBOX row's label opens help and
   never toggles the box (probe: "Reduced motion"). Long labels ("Hover
   glow end fade") wrap on the sheet with the reset glyph and the (i) on
@@ -257,7 +265,9 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   `!important`), z 28, height `100dvh - --kp-top`, opaque #28292e,
   padded by the safe-area insets and scrolling inside itself; unit size 32
   px, value column `min(50%, 440px)` (58% wrapped the long labels), font
-  still 11 px. A TOP BAR (`div.kp-bar`, z 29, fixed, `--kp-top` tall: 62
+  13 px (K483: `SHEET_FONT_PX` on `.tp-rotv`, `.kp-head`, `.kp-help`
+  under SHEET_QUERY only; the side panel stays at Tweakpane's 11).
+  A TOP BAR (`div.kp-bar`, z 29, fixed, `--kp-top` tall: 62
   px, safe-top + 52) sits behind the hamburger, which is the close button
   (X while open, aria-label "Close settings"), and undo and redo, which
   keep their place beside it; the badge keeps the bar's left (see
