@@ -4,6 +4,8 @@ paths:
   - "src/ui/move_pad.ts"
   - "test/ui/key_moves.test.ts"
   - "test/ui/move_pad.test.ts"
+  - "src/ui/gamepad.ts"
+  - "test/ui/gamepad.test.ts"
   - "src/game/route_plan.ts"
   - "test/game/route_plan.test.ts"
 ---
@@ -248,3 +250,31 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   branching to the same reach are stage 2. Tests:
   `test/game/route_plan.test.ts` (the planner, the projected smolder,
   the warnings, whole-route solves and replays, the minotaur replay).
+
+- GAMEPAD (K499, 2026-10-16; `src/ui/gamepad.ts` pure, main.ts
+  `pollGamepad`): the Gamepad API polled once a frame from fabricTick
+  (before keyStep, in every ticker branch), first connected pad, edges
+  only - an idle poll reads `navigator.getGamepads()` and changes
+  nothing, so it never wakes a sleeping scene (a move it does take
+  goes through moveAlong, which never wakes either). THE MAPPING:
+  d-pad buttons 12-15 (opposites cancel) and the left stick (axes
+  0/1, radial STICK_DEADZONE 0.35, quantized to the eight sectors; a
+  diagonal is two dirs), unioned one entry per direction. Directions
+  are held keys `game:<dir>` through keyPress/releaseKey, so picker,
+  chords, preference order, holds and HOLD_DELAY are the keys' own;
+  unplug (a null poll) releases everything. HELD-AT-ARRIVAL: a
+  direction pressed mid-move queues in MoveWait and counts only while
+  still held on the arrival frame, exactly as a key - tapped and
+  released before the arrival, it is discarded; still held, it
+  continues. A/CONFIRM (button 0, edge only) is TAP-CLASS (Levi's
+  correction): at rest it takes one step along the currently held
+  gamepad direction (pressMove; the direction's own hold may chain
+  on after it, A starts none), while the dot travels it is discarded
+  and queues nothing; with no direction held it does nothing (the
+  turn minotaur's wait stays on `.`/Space, the pad center and the
+  head tap). Presses count only while keysLive (releases always
+  land). Gameplay movement only: no panel navigation, no link param,
+  no panel row. Tests: `test/ui/gamepad.test.ts` (deadzone, sectors,
+  d-pad, unions, edges, unplug, and the held-at-arrival rule through
+  HeldKeys/MoveWait/queuedPressHeld). Unprobed on real hardware -
+  first pad check rides the next phone/desktop play pass.
