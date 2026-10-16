@@ -1960,3 +1960,105 @@ with SHAs, the frame-time table, what is left for M4 and later, the
 checks with paths, surprises) and report the commits, the checks, a
 `Ledger items` list and K5's handle fields (owner, branch and last
 commit, evidence, next, brief).
+
+### Stage M3 handoff
+
+(K5 M3 agent, 2026-10-15, base master e6e1734; written step by step,
+completed at the stop.)
+
+#### The re-map (e6e1734)
+
+`.claude/probes/K5/M3/remap_e6e1734.md` and `list_e6e1734.txt`, made by
+stage 1's `remap.ts` (copied) with M2's `anchors_f47be3b.json`: every
+anchor still resolves. main.ts is 4612 lines; `main()` runs 212-4610.
+The regions: MR1 imports 1-162, MR2 module constants 163-209, MR3 boot
+210-368, MR4 369-419, MR5 scene state 420-568 (`scene` 465), MR6 camera
+569-609, MR7 load and settle 610-849, MR8 scene build 850-1161, MR9
+panel 1162-1531, MR10 picking 1532-1597, MR11 session 1598-2911, MR12
+keys 2912-3332, MR13 pointer 3333-4023, **MR14 frame loop 4024-4453**
+(its leading comment is 4019-4023), MR15 stamp 4454-4460, MR16
+`installProbeHooks({...})` 4461-4608, MR17 the first `rebuild()`
+4609-4612.
+
+#### The frame loop's capture list (MR14, e6e1734)
+
+MR14's declarations, in order (line: name; outside users, writes in
+bold):
+- 4024 `flowParity`: MR14 only (restFrame).
+- 4031 `halted`: **MR7 656** (loadingTick) and **786** (presettleTick),
+  both `halted = true`; read only by tick (4160).
+- 4034 `renderDirty`: **MR9 1423** (onMarkerSizeChange), **MR9 1470**
+  (applyAccessibility) and **MR16 4605** (ProbeCtx `invalidate`), each
+  `renderDirty = true`; read and cleared only by tick (takeDirty
+  4326-4330, and 4416).
+- 4035 `wake`: MR7 702 (replaySettle); MR9 1165, 1170, 1176, 1262, 1270,
+  1272, 1300, 1316; MR11 2081, 2438, 2709, 2741; MR13 3397, 3657, 3729,
+  3792, 3864; applyPhysicsMode 4060; MR16 4512 (ProbeCtx `wake`).
+- 4041 `startSettling`, 4046 `freeze`, 4056 `applyPhysicsMode`, 4069
+  `physicsInputsChanged`: the physics lifecycle (section 2.2 gives it to
+  M4's `lifecycle.ts`), inside MR14's span. They stay in main.ts. tick
+  calls freeze (4429, 4435); MR9 and MR16 use the other two.
+- 4075 `frameCost`, 4080 `revealCost`: MR16 (ProbeCtx values).
+- 4076 `frameCostN`, 4077 `frameCostTotal`, 4082 `revealMsTotal`: MR16's
+  getters (4550-4555, 4577-4579). 4081 `revealMs`: MR14 only.
+- 4089-4091 `lastViewX`, `lastViewY`, `lastViewS`: sceneAnimating only.
+- 4092 `sceneAnimating`: MR14 only (backgroundTick).
+- 4126 `sceneWasAnimating`: MR16's getter (4580-4582).
+- 4127 `backgroundTick`, 4134 the ticker callback (`app.ticker.add`),
+  4158 `tick` with its helpers fabricTick (4199), flowRender (4307),
+  takeDirty (4326) and restFrame (4339): MR14 only.
+
+The `let`s other regions own that the loop uses:
+- MR5: `physState` (508), `settleWall0` (511), `warmHoldFrom` (522),
+  `waitCueGlyph` (444), `waitCueHead` (446), all read only; **`pendingLoss`**
+  (458; `= false` at 4267);
+- MR11: **`pendingWin`** (2222; `= false` at 4263);
+- MR13: **`snapMode`** (3337; `= "none"` at 4381 and 4385);
+- MR15: **`perfLine`** (4454; the loop writes it at 4166, 4346, 4357,
+  4407 and 4443, MR7 at 659 and 790).
+
+What it reads from outside (stage 1's three kinds):
+- assigned once: `app` (module level), `motion`, `a11y`, `params`,
+  `host`, `look`, `settings` (MR3), `synth`, `background`, `root`,
+  `ripples`, `warmup`, `confetti` (MR4), `panel` (MR9), `indicators`
+  (MR11), `movePad` (MR12), `grabOrigin`, `dragPos` (MR13), and `perf`
+  and `updateStamp` (MR15, declared after MR14; only the callbacks read
+  them);
+- functions: `physicsTuning` (MR5), `introPlaying`, `updateCamera` and
+  `syncExploration` (MR6), `loadingTick`, `presettleTick`,
+  `warmHoldTick` (MR7), `handRendererLook` (MR9), `showFabricWin`,
+  `showFireLoss`, `tickChase`, `setWaitCue`, `tickTurnMino` (MR11),
+  `keysLive`, `keyStep` (MR12), `autoAudioTick` (MR13), `freeze`
+  (MR14, staying);
+- the scene: `ps`, `renderer`, `fabric`, `fabricController`, `reveal`,
+  `chase`, `turnMino`;
+- module constants and imports only MR14 uses: `SETTLE_WALL_CAP_MS`
+  (MR2 194, with its comment from 188), `CAM_MAX_DT` (camera.ts),
+  `PLUCK_WHOLE_MAX` (`render/pluck_model`) and the `Ticker` type.
+
+Timing: main() has no `await` after line 4019, so between MR14's
+declarations and the first `rebuild()` only MR15's createStamp (which
+reads `perfLine`) and the hook install run. src has one `ticker.add`
+(4134), and Pixi's own render runs after it at LOW priority.
+
+The plan for step 2:
+- `createFrameLoop(deps, scene)` cannot stand where MR14 was: `perf` and
+  `updateStamp` exist only after createStamp (MR15). main.ts calls it
+  after createStamp, destructures `wake`, `invalidate`, `frameCost` and
+  `revealCost`, then calls `loop.start()`, which registers the ticker
+  callback. The registration moves from before MR15 to after it, with no
+  `await` and no other ticker in between.
+- startSettling, freeze, applyPhysicsMode and physicsInputsChanged stay
+  in place for M4.
+- The loop owns `halted` (a get/set pair: MR7's two writes become
+  `loop.halted = true`), `renderDirty` (private: the three writes become
+  `invalidate()`) and the counters MR16 reads (getters).
+- The `let`s main.ts keeps come in through accessors on `deps`: getters
+  for physState, settleWall0, warmHoldFrom, waitCueGlyph and waitCueHead,
+  get/set pairs for pendingWin, pendingLoss, snapMode and perfLine. Moved
+  lines say `deps.<name>`, one token, as M2's `camera.<name>`.
+- introPlaying and updateCamera come in as the two functions, not
+  `camera`, so their lines stay as they are.
+- SETTLE_WALL_CAP_MS (with its comment) moves to frame_loop.ts's top;
+  CAM_MAX_DT, PLUCK_WHOLE_MAX and `Ticker` are imported there and leave
+  main.ts's imports.
