@@ -376,9 +376,9 @@ describe("K7 host seam: main.ts and src/app write the physics only through the h
     // Re-run the name collection through a probe: a write planted at the end
     // of main.ts on each of main's names must be reported.
     for (const line of [
-      "ps.step(1);",
+      "scene.ps!.step(1);",
       "host.view!.grab(1, 2);",
-      "ps!.positions[0] = 1;",
+      "scene.ps!.positions[0] = 1;",
     ]) {
       expect(scan(planted(files, "main.ts", line)).length, line).toBe(1);
     }
