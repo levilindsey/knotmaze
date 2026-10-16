@@ -289,8 +289,15 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   or drawFire), `perf_batch.ps1` and `perf_attr.ps1` (perf lock),
   `burn_sim_rt.ts` (burn_sim.ts plus think time) and `vref_probe.mjs`.
   GOTCHA: a real-time race does not wait for the probe. A shot between
-  taps is think time: the tight race (`&fsp=0.95&fdl=0`, closest call
-  0.98) escapes without one and burns at the shot with it.
+  taps is think time: the tight race (closest call 0.98; stage 2 ran it
+  as `&fsp=0.95&fdl=0`, since K440 `&fsr=0.95&fdr=0`) escapes without
+  one and burns at the shot with it. SINCE K440 (2026-10-15) a real-time
+  race reads its own pair, `fsr` / `fdr` (default 0.2 / 20), and `fsp` /
+  `fdl` set only the turn clock's: rt_page.mjs's default EXTRA
+  (`&fsp=0.3&fdl=40`, stage 2's runs) now races at 0.2 / 20, so pass
+  `EXTRA=&fsr=0.3&fdr=40` to repeat stage 2's measurements. K440's page
+  check: `.claude/probes/K440/k440_page.mjs <base> <outDir> [seed]`
+  (`run_k440.ps1` under the perf lock).
 - K111 stage 4 (2026-10-14), hover probes: a TOUCH press on a choice
   lights nothing (main.ts only sets pendingTap), so a phone-size hovered
   choice needs a MOUSE at the phone viewport (`phonemouse`: 411x753 dsf
