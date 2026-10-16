@@ -16,6 +16,7 @@ import {
   cueWeight,
   drawnSwing,
   envelope,
+  freeEndX,
   gapTurn,
   ghostShape,
   glowCue,
@@ -574,6 +575,37 @@ describe("lobe segmentation", () => {
     expect(spans(segmentLobes([], 10, true, 7, 1, [2, 5], undefined, true))).toEqual([
       [3.5, 5, 0],
     ]);
+  });
+
+  it("a free end (K459): the stub's lobe swings most at its free tip", () => {
+    // Without a free end the coordinate is unchanged.
+    for (const x of [0, 0.3, 1]) expect(freeEndX(x, false, false)).toBe(x);
+    // Free at the high end: 0 stays a node, the tip is the antinode.
+    expect(peakShape(0.5, freeEndX(0, false, true), true)).toBe(0);
+    expect(peakShape(0.5, freeEndX(1, false, true), true)).toBeCloseTo(1, 12);
+    // Free at the low end: the mirror image.
+    expect(peakShape(0.5, freeEndX(1, true, false), true)).toBeCloseTo(0, 12);
+    expect(peakShape(0.5, freeEndX(0, true, false), true)).toBeCloseTo(1, 12);
+    // The swing grows monotonically toward the free tip, and the free
+    // end is flat there (zero slope: the free end's condition), as the
+    // fixed-fixed string's middle is.
+    let prev = -1;
+    for (let i = 0; i <= 20; i++) {
+      const v = peakShape(0.5, freeEndX(i / 20, false, true), true);
+      expect(v).toBeGreaterThanOrEqual(prev);
+      prev = v;
+    }
+    const lens = (x: number): number => a1(0.5) * Math.sin(Math.PI * freeEndX(x, false, true));
+    expect((lens(1) - lens(0.99)) / 0.01).toBeLessThan(0.02);
+    // The ghost at any phase is half of the 2L string's symmetric swing.
+    for (const phi of [0.3, 1.1, 2.5]) {
+      for (const x of [0.2, 0.7, 1]) {
+        const xf = freeEndX(x, false, true);
+        expect(ghostShape(0.5, xf, 1, phi)).toBeCloseTo(ghostShape(0.5, 1 - xf, 1, phi), 9);
+      }
+    }
+    // Both ends free: the high end wins (one free end per lobe).
+    expect(freeEndX(1, true, true)).toBe(0.5);
   });
 });
 

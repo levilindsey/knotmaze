@@ -78,6 +78,7 @@ import {
   clampBeta,
   drawnSwing,
   envelope,
+  freeEndX,
   gapTurn,
   ghostShape,
   glowCue,
@@ -185,7 +186,12 @@ export interface PluckHost {
 // Why an add() drew nothing (PluckOverlay.lastSkip): the chain is mid-reveal
 // ("hot"), the tapped stretch lies inside a junction core ("core"), the unit
 // holds a dragged particle ("held"), or anything else ("other": no samples,
-// a lobe too short to exist, pluckSize 0, a failed layout).
+// a lobe too short to exist, pluckSize 0, a failed layout). "core" is the
+// one main.ts's tapPluck silences, so since K459 it also covers the thread
+// reveal's taps that draw nothing: on hidden thread, on a fade with no solid
+// stretch beside it (renderer.pluck), and past a fret with no vibrating
+// stretch (Levi: "If we make a pluck sound, then we should show the pluck
+// effect").
 export type PluckSkip = "none" | "hot" | "core" | "held" | "other";
 
 export interface PluckRequest {
@@ -200,6 +206,14 @@ export interface PluckRequest {
   // stretch): the tapped lobe is cut at them, and a tap past one plucks the
   // stretch inside it (pluck_model.ts segmentLobes).
   fret?: boolean;
+  // K459: a fretted span's end that is the stub's FREE end (the reveal's
+  // solid stretch ending in its rounded cap, under the dots or beacon
+  // look): the cap's length (world arc; 0 or absent = a hard fret). The
+  // span already reaches the cap's tip. The tapped lobe swings most there,
+  // as a string free at that end (pluck_model.ts freeEndX), and the strip
+  // narrows over the cap's length to its half-ellipse (aUV.y).
+  freeLo?: number;
+  freeHi?: number;
   beta?: number; // Pluck position in its lobe (default: from `arc`).
   delay?: number; // Seconds before the visual starts (audio latency).
   // An arc the unit must not contain (a particle the user is holding):
@@ -299,6 +313,7 @@ in vec4 aClipB;
 in vec4 aClipF;
 
 out float vLat;
+out float vCap;
 out vec2 vEnv;
 out vec4 vAux;
 out vec3 vCol;
@@ -318,6 +333,7 @@ void main(void) {
   mat3 mvp = uProjectionMatrix * uWorldTransformMatrix * uTransformMatrix;
   gl_Position = vec4((mvp * vec3(aPosition, 1.0)).xy, 0.0, 1.0);
   vLat = aUV.x;
+  vCap = aUV.y;
   vEnv = aEnv;
   vAux = aAux;
   vCol = aCol;
@@ -330,7 +346,7 @@ void main(void) {
 `;
 
 // aUV.x = lateral offset from the REST centerline (world, linear across the
-// strip); aEnv = the swept interval [lo, hi]; aAux = (attack double-image
+// strip); aUV.y = a free end's cap coordinate (K459; 0 elsewhere); aEnv = the swept interval [lo, hi]; aAux = (attack double-image
 // mix m, ghost offset, ghost alpha, visibility); aCol = the thread color.
 // Output is premultiplied (pixi's normal blend). At zero amplitude the
 // coverage is exactly an anti-aliased band - the plain thread.
@@ -338,6 +354,7 @@ const PLUCK_FRAG = /* glsl */ `#version 300 es
 precision highp float;
 
 in float vLat;
+in float vCap;
 in vec2 vEnv;
 in vec4 vAux;
 in vec3 vCol;
@@ -401,7 +418,9 @@ float clipW(vec4 L, float reach, float w, vec2 P, float px) {
 }
 
 void main(void) {
-  float h = uPluck.x;
+  // K459: over a free end's cap (vCap > 0) the thread narrows to the cap's
+  // half-ellipse; vCap 0 is the full thread, exactly as before.
+  float h = vCap > 0.0 ? uPluck.x * sqrt(max(0.0, 1.0 - vCap * vCap)) : uPluck.x;
   float p = max(length(vec2(dFdx(vLat), dFdy(vLat))), 1e-4);
   float lo = vEnv.x;
   float hi = vEnv.y;
@@ -750,6 +769,12 @@ interface Lobe {
   // the partner is another chain. The clip's weight falls to 0 halfway.
   selfA: number;
   selfB: number;
+  // K459: the lobe's end at a fret is a FREE end (the stub's rounded cap),
+  // its cap's length (world; 0 = none): the shape coordinate goes through
+  // freeEndX, so the lobe swings most there, and the strip rounds over the
+  // cap. Only the tapped lobe of a fretted unit can have one.
+  freeA: number;
+  freeB: number;
   dead: boolean;
   drawn: boolean; // Got stations in the last layout (only drawn lobes collapse).
   st0: number; // Its first station index in the strip...
@@ -1037,10 +1062,12 @@ export class PluckOverlay {
     }
     if (tapLen < LOBE_MIN_LEN) {
       // K397: a tap past a fret whose lobe has no vibrating stretch (its
-      // hide zone fills it) stays sound-only. Unfretted, core caught it.
+      // hide zone fills it) draws nothing. Unfretted, core caught it. K459
+      // (Levi: "If we make a pluck sound, then we should show the pluck
+      // effect"): so it sounds nothing either, as a core tap (K235).
       this.stats.skipped++;
       this.stats.skipOther++;
-      this.lastSkip = "other";
+      this.lastSkip = "core";
       return false;
     }
     const beta = clampBeta(req.beta ?? (req.arc - t0) / tapLen);
@@ -1053,6 +1080,10 @@ export class PluckOverlay {
       const [e0, e1] = span(s);
       const len = e1 - e0;
       const isTap = s.k === 0;
+      // K459: the tapped lobe's end at the span's free end (node -1 there).
+      // One free end per lobe; the high one wins.
+      const freeB = !still && isTap && s.b < 0 ? Math.max(0, req.freeHi ?? 0) : 0;
+      const freeA = !still && isTap && s.a < 0 && freeB === 0 ? Math.max(0, req.freeLo ?? 0) : 0;
       return {
         e0,
         e1,
@@ -1062,7 +1093,9 @@ export class PluckOverlay {
         s1: s.s1,
         k: s.k,
         A0: len >= LOBE_MIN_LEN ? sympatheticAmplitude(aTap, s.k, len, tapLen) : 0,
-        beta: isTap ? beta : 0.5,
+        // A free lobe swings as if plucked at its free tip (freeEndX maps
+        // it onto half of a symmetric string, plucked at its middle).
+        beta: isTap ? (freeA > 0 || freeB > 0 ? 0.5 : beta) : 0.5,
         attack: isTap && !still,
         onset: Math.abs(s.k) * ONSET_STAGGER,
         phase: Math.random() * Math.PI * 2,
@@ -1074,6 +1107,8 @@ export class PluckOverlay {
         lineB: nB && nB.under ? nB.line : null,
         selfA: nA && nA.under ? selfPassAhead(nA.arc, nA.selfArc ?? NaN, 1, total, closed) : Infinity,
         selfB: nB && nB.under ? selfPassAhead(nB.arc, nB.selfArc ?? NaN, -1, total, closed) : Infinity,
+        freeA,
+        freeB,
         dead: false,
         drawn: false,
         st0: 0,
@@ -1438,7 +1473,8 @@ export class PluckOverlay {
       let cap = l.A0;
       for (let j = 0; j <= steps; j++) {
         const x = 0.2 + (0.6 * j) / steps;
-        const env = peakShape(l.beta, x, l.attack);
+        const xs = l.freeA > 0 || l.freeB > 0 ? freeEndX(x, l.freeA > 0, l.freeB > 0) : x;
+        const env = peakShape(l.beta, xs, l.attack);
         if (env < 0.15) continue;
         const arc = l.e0 + x * L;
         host.sampleAt(samples, arc, sc, 0);
@@ -1599,8 +1635,10 @@ export class PluckOverlay {
       for (let i = 0; i <= segs; i++) {
         const arc = l.s0 + (L * i) / segs;
         const dA = arc - l.s0;
-        // Shape coordinate over the vibrating span (0 / 1 at its frets).
-        const x = eL > 1e-6 ? Math.max(0, Math.min(1, (arc - l.e0) / eL)) : 0;
+        // Shape coordinate over the vibrating span (0 / 1 at its frets; a
+        // free end, K459, maps onto half of a symmetric string).
+        const xr = eL > 1e-6 ? Math.max(0, Math.min(1, (arc - l.e0) / eL)) : 0;
+        const x = l.freeA > 0 || l.freeB > 0 ? freeEndX(xr, l.freeA > 0, l.freeB > 0) : xr;
         m.lobeOf[n] = li;
         m.xOf[n] = x;
         m.arcOf[n] = arc;
@@ -1916,10 +1954,18 @@ export class PluckOverlay {
       m.pos[i * 4 + 1] = py + ny * wLeft;
       m.pos[i * 4 + 2] = px - nx * wRight;
       m.pos[i * 4 + 3] = py - ny * wRight;
+      // K459: aUV.y = the free end's cap coordinate (0 = a full-width
+      // thread; 1 = the cap's tip): the shader narrows the thread to the
+      // cap's half-ellipse, h sqrt(1 - q^2).
+      const lq = lobes[m.lobeOf[i]];
+      let q = 0;
+      if (lq.freeB > 0) q = (m.arcOf[i] - (lq.s1 - lq.freeB)) / lq.freeB;
+      else if (lq.freeA > 0) q = (lq.s0 + lq.freeA - m.arcOf[i]) / lq.freeA;
+      q = q > 0 ? Math.min(1, q) : 0;
       m.uv[i * 4] = wLeft;
-      m.uv[i * 4 + 1] = 0;
+      m.uv[i * 4 + 1] = q;
       m.uv[i * 4 + 2] = -wRight;
-      m.uv[i * 4 + 3] = 0;
+      m.uv[i * 4 + 3] = q;
     }
     // Unused stations repeat the last one (never indexed anyway).
     for (let i = n; i < MAX_STATIONS; i++) {

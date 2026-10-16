@@ -109,6 +109,7 @@ import {
 import { pickRoutes, routeCorner, routeCubic } from "./junction_routes";
 import { WebFade } from "./web_fade";
 import {
+  EXPLORE_DOTS_SPAN,
   EXPLORE_ITEM_CHAR,
   EXPLORE_ITEM_FRONT,
   EXPLORE_ITEM_SMOLDER,
@@ -2890,7 +2891,13 @@ export class RibbonRenderer {
   // point (exploreShownSpan), and a pluck on hidden thread is sound-only.
   // K397: and to that stretch's solid part (exploreSolidSpan), whose ends
   // are hard frets: the vibration stops at a stub's solid end, and a tap in
-  // a fade plucks the solid stretch beside it (sound-only when none).
+  // a fade plucks the solid stretch beside it.
+  // K459: a solid end that ends in the dots' rounded cap (stubCaps) is a
+  // FREE end instead: the span reaches the cap's tip and the overlay swings
+  // the stub most there, cap included. And a tap that finds no solid
+  // stretch (hidden thread, or a fade alone) draws nothing, so it sounds
+  // nothing (Levi: "If we make a pluck sound, then we should show the
+  // pluck effect"): it reports a "core" skip, which tapPluck silences.
   pluck(req: {
     chain: number;
     ctrl?: number;
@@ -2919,13 +2926,20 @@ export class RibbonRenderer {
     const arc = req.arc ?? ctrlArc(req.ctrl ?? 0);
     let sc = req.spanCtrl ?? null;
     let fret = false;
+    let freeLo = 0;
+    let freeHi = 0;
     if (this.explorePieces && !this.exploreWhole[req.chain]) {
       const at = req.ctrl ?? this.ctrlAtArc(samples, arc);
       sc = this.exploreShownSpan(req.chain, at, sc, len, closed);
-      if (!sc) return false;
-      sc = this.explore.exploreSolidSpan(req.chain, at, sc, len, closed);
-      if (!sc || !(sc[1] > sc[0])) return false;
+      if (sc) sc = this.explore.exploreSolidSpan(req.chain, at, sc, len, closed);
+      if (!sc || !(sc[1] > sc[0])) {
+        this.plucks.lastSkip = "core";
+        return false;
+      }
       fret = true;
+      if (!this.plucks.reducedMotion) {
+        [freeLo, freeHi] = this.stubCaps(req.chain, sc, len, closed, ctrlArc, samples.totalLength);
+      }
     }
     let span: [number, number] | null = null;
     if (sc) {
@@ -2935,7 +2949,7 @@ export class RibbonRenderer {
       if (closed && (a1 < a0 || sc[1] - sc[0] >= len)) {
         a1 += samples.totalLength;
       }
-      span = [a0, a1];
+      span = [a0 - freeLo, a1 + freeHi];
     }
     return this.plucks.add({
       chain: req.chain,
@@ -2946,11 +2960,55 @@ export class RibbonRenderer {
       reach: req.reach,
       span,
       fret,
+      freeLo: freeLo > 0 ? freeLo : undefined,
+      freeHi: freeHi > 0 ? freeHi : undefined,
       beta: req.beta,
       delay: req.delay,
       avoidArc:
         req.avoidCtrl !== undefined ? ctrlArc(req.avoidCtrl) : undefined,
     });
+  }
+
+  // K459: the rounded caps at a solid span's ends (unwrapped ctrls, as
+  // exploreSolidSpan returns them). An end that is a piece's FRONTIER end
+  // with a fade, under the dots or beacon look, ends in the dots' cap
+  // (explore_glsl.ts kExDotsSd: half an ellipse, 0.5 tw g along, g = the
+  // fade's world length over EXPLORE_DOTS_SPAN tw, at most 1). Returns each
+  // end's cap length in world arc (0 = a hard fret: no cap there).
+  private stubCaps(
+    chain: number,
+    sc: [number, number],
+    len: number,
+    closed: boolean,
+    ctrlArc: (c: number) => number,
+    total: number
+  ): [number, number] {
+    const E = knotUniformValues().uKExplore;
+    const look = E ? Math.round(E[1]) : -1;
+    const tw = E ? E[3] : 0;
+    const pieces = this.exploreByChain.get(chain);
+    if ((look !== 3 && look !== 5) || !(tw > 0) || !pieces) return [0, 0];
+    // The fade's world arc length from the solid end c, f ctrls along dir.
+    const capLen = (c: number, f: number, dir: number): number => {
+      let lf = dir > 0 ? ctrlArc(c + f) - ctrlArc(c) : ctrlArc(c) - ctrlArc(c - f);
+      if (closed && lf < 0) lf += total;
+      const g = Math.max(1e-3, Math.min(1, Math.abs(lf) / (EXPLORE_DOTS_SPAN * tw)));
+      return 0.5 * tw * g;
+    };
+    let lo = 0;
+    let hi = 0;
+    for (const p of pieces) {
+      for (const k of closed ? [-2, -1, 0, 1, 2] : [0]) {
+        const d = k * len;
+        if (hi === 0 && p.tip1 && p.f1 > 0 && Math.abs(p.c1 + d - sc[1]) < 1e-4) {
+          hi = capLen(p.c1, p.f1, 1);
+        }
+        if (lo === 0 && p.tip0 && p.f0 > 0 && Math.abs(p.c0 + d - sc[0]) < 1e-4) {
+          lo = capLen(p.c0, p.f0, -1);
+        }
+      }
+    }
+    return [lo, hi];
   }
 
   // K279: the drawn thread's world point at an arc (or a ctrl) of a chain,
