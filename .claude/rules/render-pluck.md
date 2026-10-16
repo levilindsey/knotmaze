@@ -691,5 +691,7 @@ only with the files it is about; `render.md` lists the area's other files.
   behavior); (4) K397's residual 2 (a re-pluck after the stub grows)
   holds for a free lobe too. NOT VERIFIED: the phone; a reveal-off
   pixel A/B (unchanged by construction: no fret, no caps); only the
-  probe link's default look was measured. The pluck-blur program's text
+  probe link's default look was measured; the base collapse under a free
+  cap (f5's collapse hides 0 px, at pluckSize 3 too, `out_psz3.log`, and
+  f12's cap is pinned). The pluck-blur program's text
   changed (render-shaders.md).
