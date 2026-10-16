@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K488.
+Next free ID: K492.
 
 ## Waiting on Levi
 
@@ -120,6 +120,10 @@ Next free ID: K488.
 - **K483** · Review the phone sheet: its font stays 11 px (long labels wrap; larger?), the bar's
   badge and undo placement, the slider peek's feel; the replay badge's label was never run
   (docs/design/K467.md Handoff; screenshots .claude/probes/K467/out/sheet/)
+- **K488** · Thread reveal: the finish indicator shows from the start (K465), but its tap cannot
+  frame the exit: the fit camera frames only the seen thread (the tween ends where it began), the
+  follow camera zooms out but not enough, and the label still says "Tap to bring it into view"
+  (main.ts l.1298; docs/design/K465.md Handoff)
 
 ## In progress
 
@@ -475,6 +479,7 @@ Every other item below waits on the trigger it names.
   the arrival run). `fabric_maze_renderer.ts` `edgeAt` takes the nearest sample of every choice, the
   arrival run included, so near the junction it is a toss-up; the arrival run should win only by a
   clear margin, and the hover must pick what a tap takes.
+  - brief: `docs/design/K479.md`
 - **K485** · Pixel pass for the phone sheet and row help (scripts/phone.ps1): the sheet query, Back,
   the peek, help taps; K467 ran only in phone emulation
 - **K486** · Touch help for the panel's buttons: Reset path, Replay settle, Reset to defaults, the
@@ -1023,6 +1028,12 @@ Every other item below waits on the trigger it names.
   (docs/design/K467.md Handoff)
 - **K487** · The shipped probes .claude/probes/K92/undo.mjs and K198/stage2/pan.mjs predate the
   phone sheet; sheet-aware copies are in .claude/probes/K467/
+- **K489** · `finishIndicator.gate()` is unused: main.ts calls it nowhere (K465 Handoff); remove it
+  or wire it
+- **K490** · A console "Failed to load resource ... 404" on every load of K465's preview build (not
+  a pageerror; cause not investigated): check master's build and name the URL
+- **K491** · K465's exit marker over unseen thread is pixel-verified only at 2600x1600 `&gs=4` (the
+  exit is never on screen unseen at 411x753); no phone walk brings it on screen
 
 ## Approved, to schedule (2026-10-11)
 

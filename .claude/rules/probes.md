@@ -138,7 +138,9 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   server with a private vite cacheDir (that folder's
   vite.private-cache.config.ts wraps the served checkout's config):
   worktrees share node_modules through junctions, and a plain `vite`
-  re-optimized the shared `.vite` deps under other servers.
+  re-optimized the shared `.vite` deps under other servers. Chrome
+  refuses some ports (ERR_UNSAFE_PORT: 6000 and 6665-6669 among them), so
+  probe servers skip them (K465, 2026-10-15).
 
 - K73 (2026-10-13), corner chrome probes: `.claude/probes/K73/`
   (probe_badge.mjs free | official | replay | narrow, probe_exit.mjs
