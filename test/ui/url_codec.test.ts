@@ -110,6 +110,7 @@ describe("links", () => {
       burnt: "gone",
       minoGiveUp: 3, minoRoamMin: 3, minoTurnPull: 0,
       minoGuardSight: 4, minoGuardAccuracy: 0.3, minoStalkerAccuracy: 0.45,
+      fireClock: "turn",
     });
   });
 
@@ -206,7 +207,7 @@ describe("links", () => {
     const p = parseParams("?7&fi=fuse&fsp=0.6&fdl=12.5");
     expect([p.fire, p.fireSpeed, p.fireDelay]).toEqual(["fuse", 0.6, 12.5]);
     expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
-    expect(fireSettingsOf(p)).toEqual({ speed: 0.6, delay: 12.5 });
+    expect(fireSettingsOf(p)).toEqual({ speed: 0.6, delay: 12.5, clock: "turn" });
     // Clamps: speed to [0.3, 0.95] (garbage = the default), delay to [0, 40].
     expect(parseParams("?7&fsp=2").fireSpeed).toBe(0.95);
     expect(parseParams("?7&fsp=0").fireSpeed).toBe(0.3);
@@ -220,7 +221,25 @@ describe("links", () => {
     expect(fireSettingsOf(PARAM_DEFAULTS)).toBeNull();
     expect(fireSettingsOf({ ...p, clock: "realtime" })).toBeNull();
     expect(fireSettingsOf({ ...p, minotaur: "hunter" })).toBeNull();
-    expect(fireSettingsOf(parseParams("?7&fi=fuse"))).toEqual({ speed: 0.75, delay: 0 });
+    expect(fireSettingsOf(parseParams("?7&fi=fuse"))).toEqual({
+      speed: 0.75,
+      delay: 0,
+      clock: "turn",
+    });
+  });
+
+  // K114 stage 2: the fire clock's override key, the token round trip, and
+  // fireSettingsOf carrying it (still null on K80's real-time clock or with
+  // the turn minotaur).
+  it("reads the fire clock and carries it in fireSettingsOf", () => {
+    const p = parseParams("?7&fi=fuse&fck=realtime");
+    expect(p.fireClock).toBe("realtime");
+    expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
+    expect(fireSettingsOf(p)).toEqual({ speed: 0.75, delay: 0, clock: "realtime" });
+    expect(parseParams("?7&fck=nope").fireClock).toBe("turn");
+    expect(fireSettingsOf({ ...p, clock: "realtime" })).toBeNull();
+    expect(fireSettingsOf({ ...p, minotaur: "hunter" })).toBeNull();
+    expect(fireSettingsOf({ ...p, fire: "off" })).toBeNull();
   });
 
   // K140: the finish confetti's override keys, the amount's clamp, and the
@@ -563,6 +582,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   burnt: "fbt",
   minoGiveUp: "mlm", minoRoamMin: "mrn", minoTurnPull: "mtp",
   minoGuardSight: "mgs", minoGuardAccuracy: "mga", minoStalkerAccuracy: "msa",
+  fireClock: "fck",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 

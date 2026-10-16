@@ -209,21 +209,27 @@ export class FabricMazeController {
     const edges = this.walk.vertices.get(this.head)!.edges;
     const fire = this.fire;
     if (!fire) return edges;
-    const L = this.walkedDist;
+    const L = this.fireL;
     return edges.filter((eid) => runBurnAt(this.walk, fire, eid, L).state !== "burnt");
+  }
+
+  // K114: the fire's clock L, the one read of it (fire.ts's header). The
+  // turn clock is walkedDist.
+  get fireL(): number {
+    return this.walkedDist;
   }
 
   // K114: the fire's lead at the head, T(head) - L (lattice units; null
   // without a fire).
   get fireLeadHere(): number | null {
-    return this.fire ? fireLead(this.fire, this.head, this.walkedDist) : null;
+    return this.fire ? fireLead(this.fire, this.head, this.fireL) : null;
   }
 
   // K114: would the fire refuse this arm from the head now?
   smoldering(edgeId: number): boolean {
     const fire = this.fire;
     if (!fire || !this.walk.edges[edgeId]) return false;
-    return !armSafe(this.walk, fire, this.walkedDist, this.head, edgeId);
+    return !armSafe(this.walk, fire, this.fireL, this.head, edgeId);
   }
 
   tapEdge(edgeId: number): FabricTapResult {
@@ -270,9 +276,10 @@ export class FabricMazeController {
   private fireArrive(at: string): void {
     const fire = this.fire;
     if (!fire) return;
-    const lead = fireLead(fire, at, this.walkedDist);
+    const L = this.fireL;
+    const lead = fireLead(fire, at, L);
     if (lead < this.fireClosest) this.fireClosest = lead;
-    if (fireTrapped(this.walk, fire, this.walkedDist, at)) this.fireLost = true;
+    if (fireTrapped(this.walk, fire, L, at)) this.fireLost = true;
   }
 
   // Does stepping from `from` across a run of `len` to `to` stay on a
