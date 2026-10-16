@@ -8,6 +8,7 @@ import { FabricMazeController } from "../../src/game/fabric_controller";
 import {
   armSafe,
   buildFire,
+  firePassed,
   fireTime,
   fireTrapped,
   runBurnAt,
@@ -148,6 +149,37 @@ describe("the fire model (K114)", () => {
     expect(c.tapEdge(0)).toBe("smolder");
     expect(c.taps).toEqual([0]);
     expect(c.walkedDist).toBe(2);
+  });
+
+  it("K408: passes the start once L > delay, on either clock", () => {
+    const w = graph(RUNS, "S", "X");
+    // h 0: the lit fuse at L 0 (T(S) = 0) has not passed the start; any L
+    // past it has, and the start's run then holds a burnt stretch.
+    const f0 = buildFire(w, 0.5, 0);
+    expect(firePassed(f0, "S", 0)).toBe(false);
+    expect(firePassed(f0, "S", 1e-9)).toBe(true);
+    const b = runBurnAt(w, f0, 0, 0.5);
+    expect(b.state === "burning" && b.burnt[0][0] === 0 && b.burnt[0][1] > 0).toBe(true);
+    // h 5: shown through the delay. Any vertex: T(A) = 9.
+    const f5 = buildFire(w, 0.5, 5);
+    expect(firePassed(f5, "S", 5)).toBe(false);
+    expect(firePassed(f5, "S", 5.25)).toBe(true);
+    expect(firePassed(f5, "A", 9)).toBe(false);
+    expect(firePassed(f5, "A", 9.1)).toBe(true);
+    expect(firePassed(f5, "nowhere", 1e9)).toBe(false);
+    // Turn clock (L = walkedDist): the first move passes the start at h 0.
+    const c = new FabricMazeController(w, false, f0);
+    expect(firePassed(f0, w.start, c.walkedDist)).toBe(false);
+    expect(c.tapEdge(0)).toBe("advance");
+    expect(firePassed(f0, w.start, c.walkedDist)).toBe(true);
+    // Real-time clock (L = fireNow, which the page feeds every frame).
+    const fr = buildFire(w, 0.5, 5, "realtime");
+    const r = new FabricMazeController(w, false, fr);
+    expect(r.tapEdge(0)).toBe("advance");
+    expect(r.setFireNow(5)).toBe(false);
+    expect(firePassed(fr, w.start, r.fireNow)).toBe(false);
+    expect(r.setFireNow(5.1)).toBe(false);
+    expect(firePassed(fr, w.start, r.fireNow)).toBe(true);
   });
 
   it("lets a backtrack feed the fire", () => {

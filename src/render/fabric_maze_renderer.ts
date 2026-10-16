@@ -48,7 +48,8 @@ import type { MinoFog, PathViz } from "../ui/url_state";
 import { spotCtrl } from "../game/minotaur";
 import type { ChaseGraph, MinotaurMode, Spot } from "../game/minotaur";
 import type { TurnTelegraph } from "../game/minotaur_turns";
-import { runBurnAt, type Fire } from "../game/fire";
+import { firePassed, runBurnAt, type Fire } from "../game/fire";
+import { WebFade } from "./web_fade";
 
 // What syncMinotaur draws: the real-time chase (MinotaurChase) or the
 // turn-aligned minotaur (K80 turns, TurnMinotaur) - where it stands on the
@@ -191,6 +192,10 @@ function sameFronts(a: BurnFront[] | null, b: BurnFront[] | null): boolean {
   }
   return true;
 }
+
+// K408: the start marker's fade sets (its one id, 0: shown or not).
+const START_SHOWN: ReadonlySet<number> = new Set([0]);
+const START_HIDDEN: ReadonlySet<number> = new Set();
 
 // The marker meshes live for the page (each scene's overlay borrows them;
 // destroy() hands them back undestroyed - the PALETTE_CACHE lore). The
@@ -543,6 +548,14 @@ export class FabricMazeRenderer {
   private fireDirty = true;
   private fireKey = "";
   private fireLast: Fire | null = null;
+  // K408 (Levi, via K383): the start marker hides once the fire has passed
+  // its thread point (firePassed at the walk start), under both burnt looks
+  // and both fire clocks, fading over WEB_FADE_S 0.25 s with the gold web's
+  // smoothstep (web_fade.ts, one id: no marker faded before) on the explore
+  // clock. startShown is the target; the start's gap slot follows it (see
+  // syncStartMarker).
+  private startFade = new WebFade();
+  private startShown = true;
   // Where syncMinotaur last drew it (world), and whether a fog of war
   // covers it there; minoShown false = not drawn.
   private minoShown = false;
@@ -592,6 +605,11 @@ export class FabricMazeRenderer {
     this.minoLayer.visible = false;
     this.overContainer.addChild(this.minoLayer);
     for (const m of Object.values(this.markers)) m.hide();
+    // K408: the meshes outlive the scene; a new one starts with the start
+    // marker shown (the fade's first retarget only learns the set).
+    this.markers.start.mesh.alpha = 1;
+    this.markers.start.mesh.renderable = true;
+    this.startFade.retarget(START_SHOWN, 0);
     this.syncMarkerOccluders();
     this.underContainer = new Container();
     this.haloLayer = new Container();
@@ -687,10 +705,36 @@ export class FabricMazeRenderer {
     const e = this.walk.vertices.get(this.walk.exit);
     if (!s || !e) return;
     const r = this.markerDotRadius();
-    this.ribbons.setMarkerOccluders([
-      { chain: s.chain, ctrl: s.ctrl, radius: r },
-      { chain: e.chain, ctrl: e.ctrl, radius: r },
-    ]);
+    const exit = { chain: e.chain, ctrl: e.ctrl, radius: r };
+    // K408: a start marker the fire has passed gives up its slot.
+    this.ribbons.setMarkerOccluders(
+      this.startShown ? [{ chain: s.chain, ctrl: s.ctrl, radius: r }, exit] : [exit]
+    );
+  }
+
+  // K408: show or hide the start marker (drawFire, every frame). A change of
+  // target starts the fade from the level on show (no jump on a reversal)
+  // and moves the start's gap slot at once: it leaves as the fade-out
+  // starts, so under the char look the burnt thread beneath shows through
+  // the fading disc instead of a hole that closes when the fade ends, and
+  // it returns as a fade-in starts (a restart). The slot is re-solved on
+  // the next update(), which exploreUpdatePending forces at rest.
+  private syncStartMarker(shown: boolean): void {
+    if (shown !== this.startShown) {
+      this.startShown = shown;
+      this.startFade.retarget(shown ? START_SHOWN : START_HIDDEN, this.exploreClock);
+      this.syncMarkerOccluders();
+      this.ribbons.exploreUpdatePending = true;
+    }
+    const k = this.startFade.level(0, this.exploreClock);
+    const m = this.markers.start.mesh;
+    m.alpha = k;
+    m.renderable = k > 0;
+  }
+
+  // K408 probes: the start marker's target and drawn level.
+  get startMarkerState(): { shown: boolean; level: number } {
+    return { shown: this.startShown, level: this.markers.start.mesh.alpha };
   }
 
   // Track the hovered choosable run; returns true when it changed (the
@@ -1218,6 +1262,7 @@ export class FabricMazeRenderer {
         this.syncFireLights();
       }
       this.setBurn(null, null, null);
+      this.syncStartMarker(true);
       return;
     }
     const a = this.anim;
@@ -1227,6 +1272,7 @@ export class FabricMazeRenderer {
       fire.clock === "realtime"
         ? controller.fireNow
         : controller.walkedDist - (a ? (1 - this.moveProgress) * a.e.length : 0);
+    this.syncStartMarker(!firePassed(fire, this.walk.start, L));
     const key =
       `${L}|${controller.head}|${controller.solved}|${controller.fireLost}|` +
       `${a ? 1 : 0}|${this.threadWidth}|${this.fogOfWar}|${this.markerRadius()}`;
@@ -2078,7 +2124,10 @@ export class FabricMazeRenderer {
   markersRight(): number {
     let x = -Infinity;
     for (const mk of [this.markers.start, this.markers.head, this.markers.exit]) {
-      if (mk.mesh.visible) x = Math.max(x, mk.mesh.position.x + mk.mesh.scale.x);
+      // K408: a start marker faded out (not renderable) is not on show.
+      if (mk.mesh.visible && mk.mesh.renderable) {
+        x = Math.max(x, mk.mesh.position.x + mk.mesh.scale.x);
+      }
     }
     return x;
   }

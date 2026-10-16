@@ -68,6 +68,15 @@ export function fireTime(fire: Fire, v: string): number {
   return fire.delay + d / fire.speed;
 }
 
+// K408: has the fire passed vertex v by clock L (T(v) < L, strict)? At the
+// walk start T = the delay, so the start's thread point is burnt from the
+// first instant past it: then every run leaving the start holds a burnt
+// stretch of positive length at that end (runBurnAt), and the lit fuse
+// (L <= delay, the renderer's drawFire) is out. The start marker hides by it.
+export function firePassed(fire: Fire, v: string, L: number): boolean {
+  return fireTime(fire, v) < L;
+}
+
 // The far end of the arm `eid` leaving vertex `from` (a self-loop's is
 // `from` itself).
 export function armFar(walk: WalkGraph, eid: number, from: string): string {
