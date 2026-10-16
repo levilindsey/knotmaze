@@ -86,9 +86,6 @@ Next free ID: K529.
 - **K394** Â· The overnight of 2026-10-14/15 (`docs/design/overnight_2026-10-15.md`): eight
   calls (F1-F8), each built as recommended (rec: keep all). Its six questions are answered
   (2026-10-15) except K339's and K361's spline bend (K90).
-- **K399** Â· G3-1's launch gates (`docs/design/K8_G3-1.md` "Gates"; gate 1 is K377 q3, taken): (2)
-  G3-1 before K268 item 4, never beside it; (3) a gap slot over 64 SAMP points strides at most 3,
-  never a cut reach; (4) GAP stays one slot a row, K398 clamps links. Rec. all three.
 - **K400** Â· K114 s2 (`docs/design/K114_stage2.md` "Questions"; recs build unless Levi objects):
   realtime dot at constant pace, moveSpeed unused (rec. (a)); one fireSpeed/fireDelay, both clocks;
   lose when the fire reaches you; realtime queues taps; `fireClock` a Burn race row (K323).
@@ -1253,6 +1250,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 - **K518** Â· K397/K76 census ported after K6-3 (continuous `__knotLoop` + freeze of the per-frame slot re-derivation during mutation shots; stale PROOF_UNTIL default removed) and re-run on master: dots-cut PROOF PASS non-vacuous (32 shaped slots, 11,381 px, ghosts/under 0, dots p95 err 0.059). Done (probes + docs only, 2026-10-16; evidence `.claude/probes/K397/stage4/out_k518_m10c/`, `docs/design/K397.md` Stage 4 handoff). Residuals K519; phone/Levi link still owed under K397.
 - **K519** Â· K518's census leftovers attributed (no product bug; no `src/` change): visible cuts, hidden leaks, c214's restore and visitAll/off-again are one-level capture flicker (slot bytes identical off/on); JOINTS (2d) is census3a's attributedUW case; MARKERS i1 is K465's lifted exit by design; the 1,633 px attribution restore reads 0 px now. Done in this commit (2026-10-16; evidence `.claude/probes/K397/stage5/`, `docs/design/K397.md` Stage 5 handoff). Residuals K522, K523.
+- **K399** · G3-1's launch gates answered by Levi (2026-10-16): G3-1 before K268 item 4 and never beside it; a gap slot over 64 SAMP points strides at most 3, never a cut reach; GAP stays one slot a row, K398 clamps links. G3-1 unlocked.
 - **K517** · K385's branches answered by Levi (2026-10-16): ship (b) late enable in K307 stage 3 proper and file crbug (d); (a) was probe-only, (c) parked. Evidence `.claude/probes/K307/stage3/`.
 - **K501** · K481 by-length difficulty answered by Levi (2026-10-16): add a travel scale, tuned on the turn sim toward today's nine-cell catch rates, not a by-length-only retune and not shipping it deadlier; K481 stage 2 tunes it. Evidence `.claude/probes/K481/sweep_length_32.md`.
 - **K522** · census2d taught the measured flicker floor (hard diffs >1 level, `FLOOR_CLIP_PX` 23 from K519, edge/colour tolerance, contemporaneous restore references; first-frame diff is a drift report, K528). Done in this commit (2026-10-16; probe + docs only, evidence `.claude/probes/K76/stage2d/out_k522_m10e/`).
