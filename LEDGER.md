@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K460.
+Next free ID: K463.
 
 ## Waiting on Levi
 
@@ -235,10 +235,10 @@ Next free ID: K460.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (b3917ca..f6d10e3): the four G3
   tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
-  - owner: phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 (sonnet, started 2026-10-15 13:48, 1 h cap ~14:48) runs the dense bench at rest (`.claude/probes/K8/stage2/phone6b.ps1`, output `phone6b/`). G3-1's brief merged in 9f1ada2. G3-0's `af653fa7f942f2f1e` (session d8031183) finished; its worktree is left, locked by the live Claude process (K161)
+  - owner: nobody since 2026-10-15 14:18 (the phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 finished its bench; G3-0's `af653fa7f942f2f1e` (session d8031183) finished, its worktree left, locked by the live Claude process (K161))
   - branch: mainline; last commit: `f6d10e3` (G3-0)
   - evidence: `.claude/probes/K8/G3-1/` (the brief's texture sizes); `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
-  - next: read the phone agent's dense bench (`phone6b/`); then G3-1 (Opus, 2 h, ports 5960-5969) once K290 3b has merged, R1 and R2 have landed and Levi has answered K399. Lane: R1, R2, G3-1, R3, R4, G3-2, R5; never beside an R stage, K268 item 4, K90 or another GPU measurement; it may run beside K7 or K395. G3G4 §5.2 understates `explore_glsl.ts`'s gap reads (442, 479-483, 499; the brief covers it). G3-2 needs K90's bend decided
+  - next: G3-1 (Opus, 2 h, ports 5960-5969) once K290 3b has merged, R1 and R2 have landed and Levi has answered K399. The phone's dense bench at rest (`.claude/probes/K8/stage2/phone6b/`, notes.md 14:16): no G3-0 regression (update() B-A -1.11 ms dense, +0.63 default; all asleep, 0 lost). Lane: R1, R2, G3-1, R3, R4, G3-2, R5; never beside an R stage, K268 item 4, K90 or another GPU measurement; it may run beside K7. G3G4 5.2 understates `explore_glsl.ts`'s gap reads (442, 479-483, 499; the brief covers it). G3-2 needs K90's bend decided
   - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1, M2 (`src/app/camera.ts`) and M3
@@ -256,14 +256,6 @@ Next free ID: K460.
   - evidence: `.claude/probes/K290/stage3c/` (`out/sheets/`: phone, fog, unseen-front and width sheets; `out/width_phone/` and `out/width_desk/` measure.txt; scripts incl. `width_probe.mjs`; `builds/e6e1734`), `stage3b/` and `stage3a/`; burn stage 1's `.claude/probes/K114/`
   - next: Levi's width call K409 (3c's facts), the change if any, then K410 (the mirror). K5 R1's split is not re-probed under a burn: K114 s2 (from 12c5e0a, past R1) shoots burnt frames on it. Open: the grown explore variant's cold-link timing and a cold-cache first-burn trace. K408 rides K114 s2
   - brief: `docs/design/K114_burn.md`, Stage 3c handoff (item 4: the width facts)
-- **K395** · The pluck blur at a kink loop's tip, on the phone (Levi, 2026-10-15 07:04, after
-  K344's fix): a seam from the tip to an edge, and a heart-shaped pinch (a point inside, a dimple outside).
-  - owner: phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 (sonnet, started 2026-10-15 13:48, cap ~14:48) runs `phone_run.ps1` on the live build; stage 1's agent `ac0d0267cdf7467ec` finished, worktree kept
-  - branch: mainline; last commit: `b625853` (the fix is `cd62db6`; tests 1159 green, build clean)
-  - evidence: the main checkout's `.claude/probes/K395/` (Levi's screenshot; `out/ab_*/pair_*.png`: pre-K395 left, the fix right; `phone_run.ps1`)
-  - next: the phone check after the deploy: Levi plucks a kink loop, or `phone_run.ps1` with the phone awake and unlocked; then Done. CAP_ROUND is K406, the soft "M" K405
-  - brief: `docs/design/K395_pluck_loop_tip.md` ("Stage 1 handoff")
-  - env: the phone: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone, `?2gozcj.MgaM`):
   stage 2 fixed issues 1, 2, 4 and 5 (092aca0); left is issue 3, the dark U at a tucked tip's root. At 13:39
   (`.claude/probes/K397/levi_1339.png`) truncated dots and issue 3 still show sometimes; the dot vibration is gone.
@@ -450,7 +442,7 @@ Every other item below waits on the trigger it names.
   `HIGH_CONTRAST_OVERRIDES` (`src/ui/accessibility.ts`); the glint has little room on light threads over black (inferred, not shot; fallback a stronger glint). Small: a unit test and a screenshot.
 - **K441** · The real-time fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn
   (drawFire's re-declare 0.6, HUD writes 0.1, 0.5 unattributed). CPU-profile a turn and a realtime
-  stand at the same burnt share, then decide a re-declare throttle. `docs/design/K114_stage2.md`.
+  stand at one burnt share (K461 first), then decide a re-declare throttle. `docs/design/K114_stage2.md`.
 
 ## Residuals (known, not fixed)
 
@@ -940,7 +932,7 @@ Every other item below waits on the trigger it names.
 - **K446** · The real-time fire clock is not re-synced after a replay; unreachable today, since only
   dailies replay and they run with the fire off (K114 s2).
 - **K447** · K114 s2's real-time fire has no hardware phone pass (shot in Chrome at 411x753 only);
-  take it in the next phone window (K411).
+  take it in the next phone window (K411), with K440's 1.7 s head start.
 - **K450** · K279's tug (`ptg`, default 0) ignores the thread reveal (K397 stage 2;
   `docs/design/K397.md`, Stage 2 handoff, Residuals).
 - **K451** · Plucks under the reveal (K397 stage 2's frets): a fretted lobe's node end doesn't
@@ -964,6 +956,15 @@ Every other item below waits on the trigger it names.
 - **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
   stub, its rounded cap included (2026-10-15 13:39, phone, `?2gozcj.MgaM`; the green stub in
   `.claude/probes/K397/levi_1339.png`). For K397 stage 3.
+- **K460** · Phone probe tooling: `phone6.ps1` holds the phone lock while it waits for perf and
+  logs the tailnet address unmasked; `scripts/phone.ps1` wakes the phone, leaves a 9222 forward;
+  `phone_run.ps1` hardcodes owner and hosts (live variant: K395's `phone_run_live.ps1`).
+- **K461** · K114 s2's `rt_page.mjs` (and `perf_batch.ps1`, `perf_attr.ps1`) passes
+  `&fsp=0.3&fdl=40`, which since K440 sets only the turn pair, so its real-time race plays 0.2 / 20:
+  pass `&fsr=0.3&fdr=40` (or re-baseline) before K441 re-runs it.
+- **K462** · K323 Stage A's design (`docs/design/K323_game_mode.md`: the params table ~l.89, the
+  undo list ~l.222) predates `fireClock`, `burnt` and K440's real-time pair (`fsr`, `fdr`): Stage A
+  carries the pair and labels it (its proposed labels describe the turn pair).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1175,6 +1176,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K395** · Pluck blur seam and heart pinch at a kink loop's tip; the phone check passed on live 8f81faf. Done in cd62db6 (2026-10-15).
 - **K449** · K397 stage 2's looks: Levi keeps the cap and two dots, and the fade tap's pluck ("If we make a pluck sound, then we should show the pluck effect"); his 13:39 report is K397's and K459. Done in 092aca0 (2026-10-15).
 - **K411** · A phone window for K8's bench: Levi lent the phone 2026-10-15 13:45 (K395, K8). Done.
 - **K408** · The start marker fades out once the fire passes its thread point (K114 s2). Done in 7d29319 (2026-10-15).
