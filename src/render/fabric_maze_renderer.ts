@@ -55,6 +55,11 @@ import { finishHold, finishLifted } from "../game/explore_finish";
 import { ARRIVAL_BIAS, coveredByDot, pickRun } from "../game/tap_pick";
 import type { RunReach } from "../game/tap_pick";
 import { WebFade } from "./web_fade";
+import {
+  MINO_FOG_BLEED_ALPHA,
+  catchBurstAt,
+  telegraphAlphas,
+} from "../game/mino_feedback";
 
 // What syncMinotaur draws: the real-time chase (MinotaurChase) or the
 // turn-aligned minotaur (K80 turns, TurnMinotaur) - where it stands on the
@@ -628,6 +633,12 @@ export class FabricMazeRenderer {
   private minoX = 0;
   private minoY = 0;
   private minoR = 0;
+  // K80 turns 3b (section 2.8): the catch burst at the catch site.
+  private catchGfx: Graphics | null = null;
+  private catchX = 0;
+  private catchY = 0;
+  private catchAge = -1;
+  private catchReduced = false;
 
   constructor(
     ps: ParticleSystem,
@@ -1446,15 +1457,25 @@ export class FabricMazeRenderer {
     mk.setGlyph(markerGlyph(this.markerGlyphIds.minotaur, "minotaur"));
     mk.place(x, y, r);
     this.minoLayer.visible = true;
+    const bleed = this.fogOfWar && !over;
     // Over the fog, or right under it (the fog sprite and its twins are
     // the overlay's topmost children once ensureFog has run).
     const kids = this.overContainer.children;
     const li = kids.indexOf(this.minoLayer);
     const fi = this.fogSprite ? kids.indexOf(this.fogSprite) : -1;
-    if (over && fi > li) {
+    if ((over || bleed) && fi > li) {
       this.overContainer.setChildIndex(this.minoLayer, kids.length - 1);
     } else if (!over && fi >= 0 && li > fi) {
       this.overContainer.setChildIndex(this.minoLayer, fi);
+    }
+    // K80 turns 3b (section 2.10): under fog of war, when the fog rule
+    // keeps it hidden, only its glow bleeds faintly through (no marker,
+    // no telegraph) — placed over the fog below like an `over` minotaur.
+    if (bleed) {
+      this.markers.minotaur.hide();
+      this.teleGfx.clear();
+      this.teleGfx.visible = false;
+      this.minoGlow.alpha = MINO_FOG_BLEED_ALPHA;
     }
     this.minoShown = true;
     // Under the reveal too: an indicator must not give it away (K73).
@@ -1462,7 +1483,7 @@ export class FabricMazeRenderer {
     this.minoX = x;
     this.minoY = y;
     this.minoR = r;
-    this.drawTelegraph(chase.g, telegraph, r);
+    if (!bleed) this.drawTelegraph(chase.g, telegraph, r, chase.mode === "hunt");
   }
 
   // K80 turns, the telegraph's first look: a red line along each committed
@@ -1472,7 +1493,8 @@ export class FabricMazeRenderer {
   private drawTelegraph(
     g: ChaseGraph,
     t: TurnTelegraph | null,
-    r: number
+    r: number,
+    hunting = false
   ): void {
     const gfx = this.teleGfx;
     gfx.clear();
@@ -1480,33 +1502,41 @@ export class FabricMazeRenderer {
       gfx.visible = false;
       return;
     }
-    const pts: number[] = [];
+    // K80 turns 3b (section 2.7): the route-shaped telegraph K324 stage 2
+    // reuses — one stroke per run so each run carries its own alpha
+    // (mino_feedback.telegraphAlphas: faint roaming, bright hunting, the
+    // second run at half). The chevrons wait for K324 stage 2.
+    const alphas = telegraphAlphas(hunting, t.steps.length);
+    const w = this.threadWidth;
     let a = t.from;
-    for (const [e, b] of t.steps) {
+    let prev: number[] | null = null;
+    for (let s = 0; s < t.steps.length; s++) {
+      const [e, b] = t.steps[s];
       const we = this.walk.edges[e];
       if (!we) break;
       const fwd = g.ea[e] === a;
       const c0 = fwd ? we.ctrlA : we.ctrlB;
       const c1 = fwd ? we.ctrlB : we.ctrlA;
       const n = Math.max(1, Math.ceil(Math.abs(c1 - c0) / TELEGRAPH_STEP));
+      const pts: number[] = prev ? [prev[0], prev[1]] : [];
       for (let i = pts.length === 0 ? 0 : 1; i <= n; i++) {
         const c = c0 + ((c1 - c0) * i) / n;
         this.pointFlowed(we.chain, this.ctrlMod(we.chain, c), this.scratch, 0);
         pts.push(this.scratch[0], this.scratch[1]);
       }
+      if (pts.length >= 4) {
+        gfx.moveTo(pts[0], pts[1]);
+        for (let i = 2; i < pts.length; i += 2) gfx.lineTo(pts[i], pts[i + 1]);
+        gfx.stroke({
+          color: TELEGRAPH_COLOR,
+          width: w * TELEGRAPH_WIDTH,
+          alpha: alphas[s],
+          cap: "round",
+          join: "round",
+        });
+      }
+      prev = [pts[pts.length - 2], pts[pts.length - 1]];
       a = b;
-    }
-    const w = this.threadWidth;
-    if (pts.length >= 4) {
-      gfx.moveTo(pts[0], pts[1]);
-      for (let i = 2; i < pts.length; i += 2) gfx.lineTo(pts[i], pts[i + 1]);
-      gfx.stroke({
-        color: TELEGRAPH_COLOR,
-        width: w * TELEGRAPH_WIDTH,
-        alpha: TELEGRAPH_ALPHA,
-        cap: "round",
-        join: "round",
-      });
     }
     // The ring: at the destination's live position (the exit's lair spot
     // never comes up: it never returns there).
@@ -1517,12 +1547,55 @@ export class FabricMazeRenderer {
       gfx.stroke({
         color: TELEGRAPH_COLOR,
         width: w * TELEGRAPH_RING_W,
-        alpha: TELEGRAPH_ALPHA,
+        alpha: alphas[0] ?? TELEGRAPH_ALPHA,
       });
     }
     gfx.visible = true;
   }
 
+  // K80 turns 3b (section 2.8): the catch burst — a red ring bursting
+  // from the catch site (the head dot's last world position, handed in by
+  // main.ts from TurnMinotaur.lastCatch). Static under reduced motion.
+  // tickCatchFx advances it; main.ts calls it every frame beside
+  // tickTurnMino. K270: main.ts also re-syncs the minotaur in the catch
+  // call itself, so no stale telegraph or glow frame survives at the site.
+  showCatchBurst(x: number, y: number, reduced: boolean): void {
+    if (!this.catchGfx) {
+      this.catchGfx = new Graphics();
+      this.overContainer.addChild(this.catchGfx);
+    }
+    this.catchX = x;
+    this.catchY = y;
+    this.catchAge = 0;
+    this.catchReduced = reduced;
+    this.drawCatchBurst();
+  }
+
+  tickCatchFx(dt: number): void {
+    if (this.catchAge < 0 || !this.catchGfx) return;
+    this.catchAge += dt;
+    this.drawCatchBurst();
+  }
+
+  private drawCatchBurst(): void {
+    const gfx = this.catchGfx;
+    if (!gfx) return;
+    const f = catchBurstAt(this.catchAge, this.catchReduced);
+    gfx.clear();
+    if (f.done || f.alpha <= 0) {
+      gfx.visible = false;
+      if (f.done) this.catchAge = -1;
+      return;
+    }
+    const r = this.markerRadius();
+    this.polyCircle(gfx, this.catchX, this.catchY, r * f.radius, 40);
+    gfx.stroke({
+      color: TELEGRAPH_COLOR,
+      width: this.threadWidth * TELEGRAPH_RING_W,
+      alpha: f.alpha,
+    });
+    gfx.visible = true;
+  }
   // K114 burn race; its look since K290 stage 3b. The fire's clock rides
   // the dot: mid-move it is the clock before the move plus the share of the
   // run the dot has covered, so the fire advances with the head's animation

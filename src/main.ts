@@ -20,6 +20,11 @@ import { MOVE_PAD_KEY, movePadPref } from "./ui/move_pad";
 import { MinotaurChase } from "./game/minotaur";
 import type { ChaseEvent } from "./game/minotaur";
 import { TurnMinotaur, turnConfig, turnSeed } from "./game/minotaur_turns";
+import {
+  catchNotes,
+  footstepStrength,
+  turnCue,
+} from "./game/mino_feedback";
 import { firstSmolderIndex, planRoute, routeWarning } from "./game/route_plan";
 import { BackgroundLayer } from "./render/background";
 
@@ -1715,6 +1720,21 @@ async function main(): Promise<void> {
   const turnCaught = (wait = false): void => {
     if (!scene.turnMino || !scene.fabric || !scene.fabricController) return;
     const fc = scene.fabricController;
+    // K80 turns 3b (section 2.8; K270): the catch site BEFORE the respawn
+    // moves everyone — the burst, the dull pluck and the vibration land
+    // there. K270 diagnosed: turnCaught used to update the controller and
+    // leave the minotaur's layer showing its pre-catch telegraph and glow
+    // at the site until the next frame's syncMinotaur; over the pink and
+    // lavender threads that stale red frame read as a lavender band. The
+    // immediate syncMinotaur below (as restartSolve already did) clears it
+    // in the same call.
+    const site = scene.turnMino.lastCatch;
+    const sitePt = new Float32Array(2);
+    let hasSite = false;
+    if (site && scene.walkGraph) {
+      const vid = scene.turnMino.tg.chase.ids[site.player];
+      if (vid) { scene.fabric.vertexWorld(vid, sitePt, 0); hasSite = true; }
+    }
     if (params.minoRestart) {
       restartSolve(true);
       updateHud();
@@ -1729,21 +1749,65 @@ async function main(): Promise<void> {
     pendingWin = false;
     turnWait = 0;
     scene.fabric.update(fc);
+    // K270: re-sync the minotaur NOW (see above), then the feedback.
+    scene.fabric.syncMinotaur(scene.turnMino, params.minoFog, scene.turnMino.telegraph());
+    if (hasSite) {
+      scene.fabric.showCatchBurst(sitePt[0], sitePt[1], motion.reduced);
+      // The caught run's dull pluck, an octave down with its dissonant
+      // neighbor (section 2.8), from the head's pitch at the site.
+      const v = scene.walkGraph?.vertices.get(fc.head);
+      const [lo, nb] = catchNotes(v ? freqForCtrl(v.chain, v.ctrl) : 220);
+      synth.pluck(lo, 0.5);
+      synth.pluck(nb, 0.3);
+      if (!motion.reduced && typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(60);
+      }
+    }
     updateHud();
     showCaughtToast(scene.turnMino.catches);
   };
   let turnWarned = false;
   // After the controller took run `eid`: the minotaur's turn. True when
   // the move ended in a catch (nothing left to animate).
+  // K80 turns 3b (section 2.10): the turn's sound cue — a growl when it
+  // first sees you, a heartbeat double pluck within two runs, else the
+  // quiet footstep of each run it walked (strength by distance; KnotSynth
+  // has no pan, so screen-x panning waits for one).
+  const minoTurnSound = (wasHunting: boolean): void => {
+    if (!scene.turnMino || !scene.walkGraph) return;
+    const tm = scene.turnMino;
+    const dist = tm.tg.hopd(tm.player, tm.state.v);
+    const cue = turnCue(wasHunting, tm.hunting, dist, tm.lastPath.length);
+    if (!cue) return;
+    const last = tm.lastPath[tm.lastPath.length - 1];
+    const we = last ? scene.walkGraph.edges[last[0]] : undefined;
+    const freq = we ? freqForCtrl(we.chain, (we.ctrlA + we.ctrlB) / 2) : 196;
+    if (cue === "growl") {
+      synth.pluck(Math.max(40, freq / 2), 0.55);
+      synth.pluck(Math.max(40, (freq / 2) * Math.pow(2, 3 / 12)), 0.4);
+    } else if (cue === "heartbeat") {
+      const now = synth.audioTime();
+      synth.pluck(Math.max(40, freq / 2), 0.45);
+      if (now !== null) synth.pluck(Math.max(40, freq / 2), 0.3, now + 0.18);
+      else synth.pluck(Math.max(40, freq / 2), 0.3);
+    } else {
+      const s = footstepStrength(dist);
+      if (s > 0) synth.pluck(freq / 2, s);
+    }
+  };
   const turnAfterMove = (eid: number): boolean => {
     if (!scene.turnMino) return false;
+    const wasHunting = scene.turnMino.hunting;
     const r = scene.turnMino.turn(eid);
     turnWait = 0;
     if (r === "reject" && !turnWarned) {
       turnWarned = true;
       console.warn(`K80 turns: the minotaur refused run ${eid} (out of step)`);
     }
-    if (r !== "caught") return false;
+    if (r !== "caught") {
+      if (r === "moved" || r === "win") minoTurnSound(wasHunting);
+      return false;
+    }
     turnCaught();
     return true;
   };
@@ -1806,9 +1870,11 @@ async function main(): Promise<void> {
   const waitTurn = (): boolean => {
     if (!scene.turnMino || !scene.fabric || !scene.fabricController) return false;
     if (scene.fabricController.solved || pendingWin || scene.turnMino.finished) return false;
+    const wasHunting = scene.turnMino.hunting;
     const r = scene.turnMino.turn(-1);
     if (r === "reject" || r === "noop") return false;
     noteMove();
+    if (r === "moved") minoTurnSound(wasHunting);
     if (r === "caught") {
       turnCaught(true);
       return true;
@@ -1836,6 +1902,7 @@ async function main(): Promise<void> {
     } else if (scene.fabric.animating) {
       frac = scene.fabric.moveProgress;
     }
+    scene.fabric.tickCatchFx(dt);
     scene.turnMino.setProgress(frac);
     scene.fabric.syncMinotaur(scene.turnMino, params.minoFog, scene.turnMino.telegraph());
   };
