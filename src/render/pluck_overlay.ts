@@ -85,6 +85,7 @@ import {
   nodeCap,
   peakShape,
   pinchCap,
+  pinFreeEnds,
   pluckShows,
   SHOW_DT,
   rescaleSympathetic,
@@ -1008,13 +1009,30 @@ export class PluckOverlay {
     const closed = host.closed(req.chain);
     const total = samples.totalLength;
     const nodes = host.nodes(req.chain);
+    // K459: a node inside a free end's cap pins that end (pinFreeEnds).
+    let reqSpan = req.span ?? null;
+    let freeLo = req.freeLo ?? 0;
+    let freeHi = req.freeHi ?? 0;
+    if (reqSpan && req.fret && (freeLo > 0 || freeHi > 0)) {
+      const pin = pinFreeEnds(
+        nodes.map((n) => n.arc),
+        total,
+        closed,
+        reqSpan,
+        freeLo,
+        freeHi
+      );
+      reqSpan = pin.span;
+      freeLo = pin.freeLo;
+      freeHi = pin.freeHi;
+    }
     const { spans, tapped, vibrating, core } = tapLobes(
       nodes,
       total,
       closed,
       req.arc,
       Math.max(0, Math.round(req.reach)),
-      req.span ?? null,
+      reqSpan,
       req.fret ?? false
     );
     const avoid = req.avoidArc;
@@ -1028,7 +1046,11 @@ export class PluckOverlay {
     if (!tapped || !vibrating) {
       this.stats.skipped++;
       this.stats.skipOther++;
-      this.lastSkip = "other";
+      // K459: a fretted tap (under the reveal) with no lobe to pluck draws
+      // nothing, so it sounds nothing either (Levi: "If we make a pluck
+      // sound, then we should show the pluck effect"); main.ts's tapPluck
+      // silences "core". Unfretted, a degenerate lobe still sounds (K235).
+      this.lastSkip = req.fret ? "core" : "other";
       return false;
     }
     if (spans.some((s) => holds(s.s0, s.s1))) {
@@ -1082,8 +1104,8 @@ export class PluckOverlay {
       const isTap = s.k === 0;
       // K459: the tapped lobe's end at the span's free end (node -1 there).
       // One free end per lobe; the high one wins.
-      const freeB = !still && isTap && s.b < 0 ? Math.max(0, req.freeHi ?? 0) : 0;
-      const freeA = !still && isTap && s.a < 0 && freeB === 0 ? Math.max(0, req.freeLo ?? 0) : 0;
+      const freeB = !still && isTap && s.b < 0 ? Math.max(0, freeHi) : 0;
+      const freeA = !still && isTap && s.a < 0 && freeB === 0 ? Math.max(0, freeLo) : 0;
       return {
         e0,
         e1,
