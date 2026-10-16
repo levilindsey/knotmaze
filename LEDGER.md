@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K477.
+Next free ID: K482.
 
 ## Waiting on Levi
 
@@ -107,6 +107,13 @@ Next free ID: K477.
 - **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
   and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
   keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
+- **K480** · Multi-run taps (Levi 2026-10-15 ~16:28): a tap on any run within a thread-length reach
+  walks there run by run; the pulses and hover branch across short runs to the same reach. Open:
+  reach = `pulseReach`? the stop rule under the turn minotaur; undo per tap.
+- **K481** · Turns by length (Levi 2026-10-15 ~16:28): a toggle so the turn minotaur moves its speed
+  x your move's thread length and can stop mid-run; contact by thread distance through the move; a
+  telegraph mark per choice; tune on the turn sim (`.claude/probes/K80/stage3/`). The fire already
+  runs on walked length (gameplay-fire.md). Open: the telegraph look, a wait's length.
 
 ## In progress
 
@@ -477,6 +484,10 @@ Every other item below waits on the trigger it names.
   thread press did not tug in the fabric, chase and reduced-drag phases (no PHYS or GEOM: the probe
   or a bug?); `m2_input_ab.mjs`'s pins and the high base-against-base floors of its fog, threads and
   _m4 cases (`docs/design/K6_1.md`, "Open after K6-1"; `.claude/probes/K6/K6-1/`).
+- **K479** · Taps prefer the outgoing runs (Levi 2026-10-15 ~16:28: taps meant for the next run take
+  the arrival run). `fabric_maze_renderer.ts` `edgeAt` takes the nearest sample of every choice, the
+  arrival run included, so near the junction it is a toss-up; the arrival run should win only by a
+  clear margin, and the hover must pick what a tap takes.
 
 ## Residuals (known, not fixed)
 
@@ -1013,6 +1024,9 @@ Every other item below waits on the trigger it names.
   (`docs/design/K397.md`, Stage 3 handoff).
 - **K476** · `census_fan.mjs` (via g2lib, `.claude/probes/K397/stage3/g2/`) never deletes its Chrome
   profile (K161).
+- **K477** · K459's free cap, unchecked: its look on the phone; the base collapse under a free cap
+  (f5's never engages); a reveal-off pluck A/B; the rounded tip has no AA along the strip's end; a
+  cap a node pins stays still, as in K397 (`docs/design/K459.md`, Handoff).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1222,6 +1236,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K472** · Should forces.ts's emergent collector skip fused-joint pairs too? Today only the
   renderer does (K397 s3: `crossing_gaps.ts` `isJointPair`; forces.ts l.316-347 has no junction
   exclusion; `docs/design/K397.md`, Stage 3 handoff).
+- **K478** · A fade tap whose nearer lobe is under LOBE_MIN_LEN is silent since K459; it could pluck
+  the next lobe inward (`docs/design/K459.md`, Handoff).
 
 ## Done
 
