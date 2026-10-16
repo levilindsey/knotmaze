@@ -538,6 +538,9 @@ export class RibbonRenderer {
   /** @internal ribbon */ emergentBase = 0;
   /** @internal ribbon */ markerBase = 0;
   /** @internal ribbon */ chainWins = new Map<number, number[]>();
+  // K466: per under chain, every crossing's [slot, underCenter, allNeg,
+  // allPos] (arc): the stretch the over pass's casing covers, shown or not.
+  /** @internal ribbon */ chainCuts = new Map<number, number[]>();
   // THE CROSSING GAPS (K5 R2): the slot solve, its scratch and the probes'
   // gap toggles live in ribbon/crossing_gaps.ts; update() and the
   // delegations call it.
@@ -2305,6 +2308,7 @@ export class RibbonRenderer {
     const fxNow = knotUniformValues().uKFx[2];
     this.gateOpenAt = -Infinity;
     for (const w of this.chainWins.values()) w.length = 0; // Pooled arrays.
+    for (const w of this.chainCuts.values()) w.length = 0;
     this.gaps.setEnabled(this.maskEnabled, this.maskDebug);
     this.ps.crossings.forEach((crossing, c) => {
       let tShow = -Infinity;
@@ -2866,6 +2870,38 @@ export class RibbonRenderer {
       side,
       dist: hit.d,
     };
+  }
+
+  // K466 THE ENDS: where a chain passes UNDER a crossing, from the last
+  // update()'s solve: per crossing, the stretch the over pass's casing
+  // covers (`all`, every lane under it) grown by `pad` world of arc at each
+  // end, as flat [c0, c1, ...] chain ctrls (c0 <= c1; a ring's span is
+  // unwrapped around its crossing, so it may run below 0 or past the
+  // count). `shownOnly` keeps the crossings whose over pass shows (vis >=
+  // 0.5 at the over pass, the 2b gate's line).
+  underCutCtrls(chain: number, pad: number, shownOnly = false): number[] {
+    const out: number[] = [];
+    const cuts = this.chainCuts.get(chain);
+    const samples = this.chainSamples[chain];
+    if (!cuts || !cuts.length || !samples) return out;
+    const total = samples.totalLength;
+    const n = samples.controlArcLengths.length;
+    if (!(total > 0) || n < 2) return out;
+    const ctrlU = (x: number): number => {
+      if (!samples.closed) return this.ctrlAtArc(samples, Math.max(0, Math.min(total, x)));
+      const k = Math.floor(x / total);
+      return k * n + this.ctrlAtArc(samples, Math.max(0, x - k * total));
+    };
+    for (let i = 0; i + 3 < cuts.length; i += 4) {
+      const slot = cuts[i];
+      if (shownOnly && this.exploreVisAt(this.slotOverChain[slot], this.slotOverCtrl[slot]) < 0.5) continue;
+      const c = cuts[i + 1];
+      const c0 = ctrlU(c - cuts[i + 2] - pad);
+      let c1 = ctrlU(c + cuts[i + 3] + pad);
+      if (samples.closed && c1 < c0) c1 += n;
+      out.push(c0, c1);
+    }
+    return out;
   }
 
   // Inverse of paintArcAt: the fractional ctrl at an arc.
