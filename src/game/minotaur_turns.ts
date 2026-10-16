@@ -1,3 +1,7 @@
+// K481 (stage 1, docs/design/K481.md): with TurnConfig.byLength the
+// turn travel below is by thread length instead of runs; see TURNS BY LENGTH
+// in .claude/rules/gameplay-minotaur.md. Off by default, no param yet.
+//
 // K80 turns (stage 1, 2026-10-14; brief docs/design/K80_turns.md): the
 // turn-aligned minotaur, a modifier of the normal turn-based maze (clock
 // "turn"). It moves when you move: every accepted tap is one turn, and the
@@ -127,6 +131,13 @@ export function turnMinoDefaults(model: TurnMinotaurSetting): TurnMinoParams {
   return p;
 }
 
+// K481: the by-length catch distance, tuned on the turn sim from the
+// real-time chase's 1 (stage 1: 0 is closest to today's rates, since
+// continuous crossing already catches what the runs rule caught only at
+// vertices; .claude/probes/K481/sweep_length_32.md).
+
+export const BY_LENGTH_CATCH_DIST = 0;
+
 // The harness's MinoConfig, trimmed to the two policies stage 1 ships, so
 // the comparison can pass the harness's own configs.
 export interface TurnConfig {
@@ -144,6 +155,13 @@ export interface TurnConfig {
   chaseSpeed?: number; // runs per turn while it hunts you (charge)
   lair?: boolean; // a catch sends it to its lair (default true; K273)
   pull?: number; // P(a roam destination nearer you) (default 0; K80 turns 3a)
+  // K481 (stage 1): travel by thread length instead of by runs. Off by
+  // default; stage 2 wires the `minoByLength` param to it. Decisions stay
+  // in runs (sight, roam, give-up, territory); only the travel changes.
+  byLength?: boolean;
+  // K481: thread distance at which a by-length contact catches (lattice
+  // units; default BY_LENGTH_CATCH_DIST).
+  catchDist?: number;
 }
 
 // Two runs a move, or a charge, forces the telegraph on (section 2.6).
@@ -203,6 +221,9 @@ export class TurnGraph {
   readonly n: number;
   readonly hop: Int16Array; // n x n run counts, -1 = unreachable
   readonly exitJ: number;
+  // K481: the median run (thread) length; a wait travels this times the
+  // speed factor in the by-length mode.
+  readonly medianLength: number;
 
   constructor(walk: WalkGraph) {
     const g = (this.chase = new ChaseGraph(walk));
@@ -227,6 +248,10 @@ export class TurnGraph {
       }
     }
     this.exitJ = this.other(g.adj[g.exit][0], g.exit);
+    const lens = Array.from(g.len).sort((a, b) => a - b);
+    const mid = lens.length >> 1;
+    this.medianLength =
+      lens.length === 0 ? 0 : lens.length % 2 === 1 ? lens[mid] : (lens[mid - 1] + lens[mid]) / 2;
   }
 
   get start(): number {
@@ -245,19 +270,31 @@ export class TurnGraph {
 
 // The minotaur's plan state (the harness's Mino).
 export interface MinoState {
+  // K481: where it stands along the threads. At a vertex, edge < 0 and
+  // vertex === v. Mid-run, v is the vertex it is heading to (the run's far
+  // end in its direction of travel) and spot is on that run.
   v: number;
   prev: number;
   dest: number; // roam destination, -1 = none
   mode: number; // prox: 0 roam, 1 hunt, 2 to where it last saw you
   lastSeen: number;
   left: boolean; // has left its lair
+  spot: Spot;
 }
 
 // One step of a turn: [run, the vertex it ends on].
 export type TurnStep = [number, number];
 
+export function cloneMino(m: MinoState): MinoState {
+  return { ...m, spot: { ...m.spot } };
+}
+
+export function spotAtVertex(v: number): Spot {
+  return { edge: -1, pos: 0, dir: 1, vertex: v };
+}
+
 export function initMino(g: TurnGraph): MinoState {
-  return { v: g.exit, prev: -1, dest: -1, mode: 0, lastSeen: -1, left: false };
+  return { v: g.exit, prev: -1, dest: -1, mode: 0, lastSeen: -1, left: false, spot: spotAtVertex(g.exit) };
 }
 
 function allowed(g: TurnGraph, w: number): boolean {
@@ -294,6 +331,75 @@ function stepRandom(g: TurnGraph, m: MinoState, noReverse: boolean, rng: TurnRng
   if (c.length === 0) return null;
   c.sort((a, b) => a[0] - b[0]);
   return pick(c, rng);
+}
+
+// K481: spot helpers. A mid-run state's v is the vertex ahead, so the
+// vertex behind is the run's other end.
+export function spotAhead(g: TurnGraph, s: Spot): number {
+  if (s.edge < 0) return s.vertex;
+  return s.dir > 0 ? g.chase.eb[s.edge] : g.chase.ea[s.edge];
+}
+
+export function spotBehind(g: TurnGraph, s: Spot): number {
+  if (s.edge < 0) return s.vertex;
+  return s.dir > 0 ? g.chase.ea[s.edge] : g.chase.eb[s.edge];
+}
+
+function spotCoord(g: TurnGraph, s: Spot, e: number): number {
+  if (s.edge === e) return s.pos;
+  return s.vertex === g.chase.ea[e] ? 0 : g.chase.len[e];
+}
+
+function stepTowardSpot(g: TurnGraph, m: MinoState, target: number, rng: TurnRng): TurnStep | null {
+  const s = m.spot;
+  const ahead = spotAhead(g, s);
+  const behind = spotBehind(g, s);
+  const cands: TurnStep[] = [];
+  for (const w of ahead === behind ? [ahead] : [ahead, behind]) {
+    if (!allowed(g, w)) continue;
+    cands.push([s.edge, w]);
+  }
+  if (cands.length === 0) return null;
+  let best = Infinity;
+  for (const [, w] of cands) best = Math.min(best, g.hopd(w, target));
+  if (!Number.isFinite(best) || best < 0) return null;
+  const c = cands.filter(([, w]) => g.hopd(w, target) === best);
+  return pick(c, rng);
+}
+
+function stepRandomSpot(g: TurnGraph, m: MinoState, noReverse: boolean, rng: TurnRng): TurnStep | null {
+  const s = m.spot;
+  const ahead = spotAhead(g, s);
+  const behind = spotBehind(g, s);
+  let c: TurnStep[] = [];
+  for (const w of ahead === behind ? [ahead] : [ahead, behind]) {
+    if (!allowed(g, w)) continue;
+    c.push([s.edge, w]);
+  }
+  if (noReverse && c.length > 1) c = c.filter(([, w]) => w !== m.prev);
+  if (c.length === 0) return null;
+  return pick(c, rng);
+}
+
+function stepTowardAny(g: TurnGraph, m: MinoState, target: number, rng: TurnRng): TurnStep | null {
+  return m.spot.edge < 0 ? stepToward(g, m.v, target, rng) : stepTowardSpot(g, m, target, rng);
+}
+
+function stepRandomAny(g: TurnGraph, m: MinoState, noReverse: boolean, rng: TurnRng): TurnStep | null {
+  return m.spot.edge < 0 ? stepRandom(g, m, noReverse, rng) : stepRandomSpot(g, m, noReverse, rng);
+}
+
+// The by-length speed factor for a turn decided from `m` with the player
+// at `p` (K481 decision 2): cfg.speed, or the charge speed while it hunts
+// or has the player in sight. Half is 0.5x every turn here, not every
+// other turn as in the runs mode; sleep and pause still gate the turn.
+export function lengthFactor(g: TurnGraph, cfg: TurnConfig, m: MinoState, p: number): number {
+  let f = cfg.speed;
+  if (cfg.chaseSpeed && p !== g.start) {
+    const near = g.hopd(m.v, p) <= (cfg.see ?? 4);
+    if (cfg.policy === "chase" ? near : m.mode === 1 || near) f = Math.max(f, cfg.chaseSpeed);
+  }
+  return f;
 }
 
 // A roam destination: a junction rMin..rMax runs from v. THE PULL (K80
@@ -370,6 +476,7 @@ export function decide(
     m.prev = m.v;
     m.v = mv[1];
     m.left = true;
+    m.spot = spotAtVertex(m.v);
   };
   for (let s = 0; s < steps; s++) {
     let mv: TurnStep | null = null;
@@ -407,6 +514,248 @@ export function decide(
   return out;
 }
 
+// K481: one hop of a by-length route, decided from `m` (which may stand
+// mid-run). The decision rules and draw order mirror decide()'s per-run
+// step; arrival transitions (checking the last-seen vertex, picking a new
+// roam destination) only fire at a vertex, so a mid-run hop first decides
+// whether to continue or turn back toward the current target.
+function decideLengthHop(
+  g: TurnGraph,
+  cfg: TurnConfig,
+  m: MinoState,
+  visibleP: number,
+  rng: TurnRng
+): TurnStep | null {
+  const atVertex = m.spot.edge < 0;
+  if (cfg.policy === "chase") {
+    if (visibleP < 0) return stepRandomAny(g, m, true, rng);
+    if (rng.next() < (cfg.q ?? 1)) return stepTowardAny(g, m, visibleP, rng);
+    return stepRandomAny(g, m, false, rng);
+  }
+  const d = visibleP < 0 ? Infinity : g.hopd(m.v, visibleP);
+  if (d <= (cfg.see ?? 4)) m.mode = 1;
+  else if (m.mode === 1 && d > (cfg.lose ?? 7)) m.mode = 2;
+  let mv: TurnStep | null = null;
+  if (m.mode === 1 && visibleP >= 0) {
+    m.lastSeen = visibleP;
+    mv =
+      rng.next() < (cfg.q ?? 1)
+        ? stepTowardAny(g, m, visibleP, rng)
+        : stepRandomAny(g, m, false, rng);
+  } else if (m.mode === 2) {
+    if (atVertex && (m.lastSeen < 0 || m.v === m.lastSeen)) {
+      m.mode = 0;
+      m.dest = -1;
+    } else if (m.lastSeen >= 0) {
+      mv = stepTowardAny(g, m, m.lastSeen, rng);
+    } else {
+      m.mode = 0;
+      m.dest = -1;
+    }
+  }
+  if (m.mode === 0 && !mv) {
+    if (m.dest < 0 || (atVertex && m.dest === m.v)) {
+      m.dest = wanderDest(g, cfg, cfg.home ? g.exitJ : m.v, rng, m.v, visibleP);
+    }
+    mv = m.dest >= 0 ? stepTowardAny(g, m, m.dest, rng) : stepRandomAny(g, m, true, rng);
+  }
+  return mv;
+}
+
+function lengthSegment(g: TurnGraph, m: MinoState, mv: TurnStep): number {
+  const [e, w] = mv;
+  const len = g.chase.len[e];
+  if (m.spot.edge !== e) return len;
+  const ahead = spotAhead(g, m.spot);
+  if (w === ahead) {
+    return m.spot.dir > 0 ? len - m.spot.pos : m.spot.pos;
+  }
+  return m.spot.dir > 0 ? m.spot.pos : len - m.spot.pos;
+}
+
+// A planned by-length route (K481 decisions 2-4): enough hops that its
+// thread length covers `maxTravel`, decided from where the player stands.
+// Where the travel outruns a roam destination the route EXTENDS past it
+// (the next hop picks a new destination, as decide()'s loop does), so the
+// mean travel stays the speed factor times the player's length; a hunting
+// route stops at the player's vertex, as decide()'s steps do.
+export interface TurnLengthPlan {
+  from: number;
+  fromSpot: Spot;
+  fromState: MinoState;
+  steps: TurnStep[];
+  segLens: number[];
+  cumLens: number[];
+  totalLength: number;
+  factor: number;
+  maxTravel: number;
+  stateAfter: MinoState;
+  stepStates: MinoState[];
+}
+
+export function planLengthRoute(
+  g: TurnGraph,
+  cfg: TurnConfig,
+  m0: MinoState,
+  player: number,
+  rng: TurnRng,
+  turn: number,
+  maxTravel: number
+): TurnLengthPlan {
+  const fromState = cloneMino(m0);
+  const factor = lengthFactor(g, cfg, fromState, player);
+  const empty = (): TurnLengthPlan => ({
+    from: fromState.v,
+    fromSpot: { ...fromState.spot },
+    fromState,
+    steps: [],
+    segLens: [],
+    cumLens: [],
+    totalLength: 0,
+    factor,
+    maxTravel,
+    stateAfter: cloneMino(fromState),
+    stepStates: [],
+  });
+  if (turn <= (cfg.sleep ?? 0)) return empty();
+  if (cfg.stall && rng.next() < cfg.stall) return empty();
+  const m = cloneMino(fromState);
+  const visibleP = player === g.start ? -1 : player;
+  const steps: TurnStep[] = [];
+  const segLens: number[] = [];
+  const cumLens: number[] = [];
+  const stepStates: MinoState[] = [];
+  let total = 0;
+  for (let guard = 0; guard < 10000 && total < maxTravel - 1e-9; guard++) {
+    const mv = decideLengthHop(g, cfg, m, visibleP, rng);
+    if (!mv) break;
+    const seg = lengthSegment(g, m, mv);
+    if (!(seg > 0)) break;
+    const prevV = g.other(mv[0], mv[1]);
+    m.prev = prevV;
+    m.v = mv[1];
+    m.left = true;
+    m.spot = spotAtVertex(m.v);
+    steps.push(mv);
+    segLens.push(seg);
+    total += seg;
+    cumLens.push(total);
+    stepStates.push(cloneMino(m));
+  }
+  return {
+    from: fromState.v,
+    fromSpot: { ...fromState.spot },
+    fromState,
+    steps,
+    segLens,
+    cumLens,
+    totalLength: total,
+    factor,
+    maxTravel,
+    stateAfter: cloneMino(m),
+    stepStates,
+  };
+}
+
+// Where a spot travelling `dist` along a route stands.
+export function spotAlongLengthRoute(
+  g: TurnGraph,
+  fromSpot: Spot,
+  steps: readonly TurnStep[],
+  segLens: readonly number[],
+  dist: number
+): Spot {
+  let spot: Spot = { ...fromSpot };
+  let rem = dist;
+  for (let i = 0; i < steps.length; i++) {
+    if (rem <= 0) break;
+    const [e, w] = steps[i];
+    const seg = segLens[i] ?? g.chase.len[e];
+    if (rem < seg - 1e-9) {
+      const dir: 1 | -1 =
+        spot.edge === e ? (w === spotAhead(g, spot) ? spot.dir : ((spot.dir * -1) as 1 | -1)) : w === g.chase.eb[e] ? 1 : -1;
+      const pos = spotCoord(g, spot, e) + dir * rem;
+      return { edge: e, pos, dir, vertex: dir > 0 ? g.chase.ea[e] : g.chase.eb[e] };
+    }
+    rem -= seg;
+    spot = spotAtVertex(w);
+  }
+  return spot;
+}
+
+function playerSpotAt(g: TurnGraph, p: number, e: number, t: number): Spot {
+  if (e < 0) return spotAtVertex(p);
+  const len = g.chase.len[e];
+  if (g.chase.ea[e] === p && g.chase.eb[e] !== p) {
+    return { edge: e, pos: t * len, dir: 1, vertex: p };
+  }
+  if (g.chase.eb[e] === p && g.chase.ea[e] !== p) {
+    return { edge: e, pos: len - t * len, dir: -1, vertex: p };
+  }
+  return { edge: e, pos: t * len, dir: 1, vertex: p };
+}
+
+// K481 decision 5: the least thread distance between the player (at
+// t x their run) and the minotaur (at t x its travel along its route)
+// over the move, t in [0, 1]. The distance is ChaseGraph.spotToSpot on
+// the whole graph. Between the route's breakpoints every candidate
+// shortest path is affine in t, so the least falls at a breakpoint,
+// except on a shared run, where the two can also cross between
+// breakpoints (checked by the sign of their separation).
+export function lengthContactDistance(
+  g: TurnGraph,
+  p: number,
+  e: number,
+  fromSpot: Spot,
+  steps: readonly TurnStep[],
+  segLens: readonly number[],
+  travel: number
+): number {
+  const fracs: number[] = [0, 1];
+  if (travel > 0) {
+    let cum = 0;
+    for (const seg of segLens) {
+      cum += seg;
+      const f = cum / travel;
+      if (f > 0 && f < 1) fracs.push(f);
+    }
+  }
+  fracs.sort((a, b) => a - b);
+  const ts: number[] = [];
+  for (const f of fracs) {
+    if (ts.length === 0 || f - ts[ts.length - 1] > 1e-12) ts.push(f);
+  }
+  let best = Infinity;
+  for (let i = 0; i < ts.length; i++) {
+    const t = ts[i];
+    const ms = spotAlongLengthRoute(g, fromSpot, steps, segLens, t * travel);
+    const ps = playerSpotAt(g, p, e, t);
+    best = Math.min(best, g.chase.spotToSpot(ms, ps, false));
+    if (i + 1 >= ts.length || !(best > 0)) continue;
+    const t1 = ts[i + 1];
+    const mid = (t + t1) / 2;
+    const mm = spotAlongLengthRoute(g, fromSpot, steps, segLens, mid * travel);
+    if (e < 0 || mm.edge !== e) continue;
+    const d0 = spotCoord(g, spotAlongLengthRoute(g, fromSpot, steps, segLens, t * travel), e) - spotCoord(g, playerSpotAt(g, p, e, t), e);
+    const d1 = spotCoord(g, spotAlongLengthRoute(g, fromSpot, steps, segLens, t1 * travel), e) - spotCoord(g, playerSpotAt(g, p, e, t1), e);
+    if ((d0 < 0 && d1 > 0) || (d0 > 0 && d1 < 0)) best = 0;
+  }
+  return best;
+}
+
+export function contactByLength(
+  g: TurnGraph,
+  p: number,
+  e: number,
+  fromSpot: Spot,
+  steps: readonly TurnStep[],
+  segLens: readonly number[],
+  travel: number,
+  catchDist: number
+): boolean {
+  return lengthContactDistance(g, p, e, fromSpot, steps, segLens, travel) <= catchDist + 1e-9;
+}
+
 // Contact, the continuous rule: does a player run p -(e)-> p2 meet a
 // minotaur turn that starts at m0 and takes `path`? A wait (e < 0, p2 = p)
 // is caught wherever its path touches p.
@@ -426,6 +775,14 @@ export type TurnResult = "moved" | "caught" | "win" | "reject" | "noop";
 
 // The minotaur's next move as the telegraph shows it.
 export interface TurnTelegraph {
+  // K481 (by-length only): the spot it leaves, the speed factor, the
+  // segment lengths of `steps`, and where it would stop for each choice
+  // at the player's vertex (edge -1 = the wait), for the tick telegraph.
+  fromSpot?: Spot;
+  factor?: number;
+  segLens?: readonly number[];
+  catchDist?: number;
+  stops?: readonly { edge: number; travel: number; spot: Spot }[];
   from: number; // vertex it leaves
   steps: readonly TurnStep[]; // runs it will take (empty = it stays)
   dest: number; // vertex it will end the turn on
@@ -453,9 +810,16 @@ export class TurnMinotaur {
   // The last turn, for the animation: where it left from and its steps.
   lastFrom: number;
   lastPath: TurnStep[] = [];
+  // K481 (by-length): the last turn's start spot, its segment lengths,
+  // the distance it actually travelled, and that distance's factor basis.
+  lastFromSpot: Spot;
+  lastSegLens: number[] = [];
+  lastTravel = 0;
+  lastFactor = 1;
   // Animation progress through the last turn, [0, 1] (1 = at rest).
   progress = 1;
   private committed: TurnStep[] = [];
+  private committedPlan: TurnLengthPlan | null = null;
   private commitState: MinoState | null = null;
 
   constructor(walk: WalkGraph | TurnGraph, cfg: TurnConfig, seed: number) {
@@ -464,6 +828,7 @@ export class TurnMinotaur {
     this.rng = new TurnRng(seed >>> 0);
     this.player = this.tg.start;
     this.state = initMino(this.tg);
+    this.lastFromSpot = { ...this.state.spot };
     this.lastFrom = this.state.v;
     this.commit();
   }
@@ -488,6 +853,7 @@ export class TurnMinotaur {
 
   // One turn: the player runs `edge` from their vertex (-1 = waits there).
   turn(edge: number): TurnResult {
+    if (this.cfg.byLength) return this.turnByLength(edge);
     if (this.finished) return "noop";
     const g = this.tg;
     const p = this.player;
@@ -540,7 +906,7 @@ export class TurnMinotaur {
       // roam from there; its sleep and parity count from now, as a spawn's).
       this.state =
         this.cfg.lair === false
-          ? { v: this.state.v, prev: -1, dest: -1, mode: 0, lastSeen: -1, left: true }
+          ? { v: this.state.v, prev: -1, dest: -1, mode: 0, lastSeen: -1, left: true, spot: { ...this.state.spot } }
           : initMino(g);
       this.lifeTurn = 0;
       this.lastFrom = this.state.v;
@@ -559,8 +925,189 @@ export class TurnMinotaur {
     return "moved";
   }
 
+  // K481: the choice travels at the player's vertex, for the telegraph's
+  // ticks and the sim: each incident run, plus the wait (the median).
+  lengthChoices(): { edge: number; length: number }[] {
+    const g = this.tg;
+    const out = g.chase.adj[this.player].map((e) => ({ edge: e, length: g.chase.len[e] }));
+    out.push({ edge: -1, length: g.medianLength });
+    return out;
+  }
+
+  private turnByLength(edge: number): TurnResult {
+    if (this.finished) return "noop";
+    const g = this.tg;
+    const p = this.player;
+    let p2 = p;
+    if (edge >= 0) {
+      if (!Number.isInteger(edge) || edge >= g.chase.ea.length) return "reject";
+      const a = g.chase.ea[edge];
+      const b = g.chase.eb[edge];
+      if (a !== p && b !== p) return "reject";
+      p2 = a === p ? b : a;
+    } else {
+      edge = -1;
+    }
+    this.turns++;
+    this.lifeTurn++;
+    this.inputs.push(edge);
+    const playerLen = edge < 0 ? g.medianLength : g.chase.len[edge];
+    let plan: TurnLengthPlan;
+    let seenAt = p2;
+    if (this.cfg.telegraph && this.committedPlan) {
+      plan = this.committedPlan;
+      seenAt = p;
+    } else if (this.cfg.telegraph && this.commitState) {
+      // No plan (should not happen with byLength commits): fall back to a
+      // reactive plan so the turn still plays by length.
+      // (replanned below with the real travel cap)
+      plan = planLengthRoute(
+        g,
+        this.cfg,
+        this.state,
+        p2,
+        this.rng.at(this.turns),
+        this.lifeTurn,
+        lengthFactor(g, this.cfg, this.state, p2) * playerLen
+      );
+    } else {
+      plan = planLengthRoute(
+        g,
+        this.cfg,
+        this.state,
+        p2,
+        this.rng.at(this.turns),
+        this.lifeTurn,
+        lengthFactor(g, this.cfg, this.state, p2) * playerLen
+      );
+    }
+    this.committed = [];
+    this.committedPlan = null;
+    this.commitState = null;
+    const wanted = plan.factor * playerLen;
+    const realized = this.realizeLengthPlan(plan, wanted);
+    this.lastFrom = plan.from;
+    this.lastFromSpot = { ...plan.fromSpot };
+    this.lastPath = realized.steps;
+    this.lastSegLens = realized.segLens;
+    this.lastTravel = realized.travel;
+    this.lastFactor = plan.factor;
+    this.progress = 0;
+    this.state = realized.state;
+    // Seen (decision 9): a turn counts when any hop it actually started
+    // was decided hunting or checking (prox), or the chase could see the
+    // player where the turn was decided.
+    const hunted =
+      this.cfg.policy === "chase"
+        ? seenAt !== g.start
+        : realized.hunted || this.state.mode !== 0;
+    if (this.state.left && hunted) this.seen++;
+    if (p2 === g.exit) {
+      this.player = p2;
+      this.finished = true;
+      return "win";
+    }
+    const catchDist = this.cfg.catchDist ?? BY_LENGTH_CATCH_DIST;
+    const caught =
+      p2 !== g.start &&
+      contactByLength(g, p, edge, plan.fromSpot, plan.steps, plan.segLens, realized.travel, catchDist);
+    if (caught) {
+      this.catches++;
+      this.player = g.start;
+      this.state =
+        this.cfg.lair === false
+          ? { v: this.state.v, prev: -1, dest: -1, mode: 0, lastSeen: -1, left: true, spot: { ...this.state.spot } }
+          : initMino(g);
+      this.lifeTurn = 0;
+      this.lastFrom = this.state.v;
+      this.lastFromSpot = { ...this.state.spot };
+      this.lastPath = [];
+      this.lastSegLens = [];
+      this.lastTravel = 0;
+      this.progress = 1;
+      this.commit();
+      return "caught";
+    }
+    // Close call (decision 9): the move ends within one median run of
+    // thread from it, out of its lair and off the sanctuary.
+    if (this.state.left && p2 !== g.start) {
+      const d = g.chase.spotToVertex(this.state.spot, p2, false);
+      if (d <= g.medianLength + 1e-9) this.closeCalls++;
+    }
+    this.player = p2;
+    this.commit();
+    return "moved";
+  }
+
+  private realizeLengthPlan(
+    plan: TurnLengthPlan,
+    wanted: number
+  ): { state: MinoState; steps: TurnStep[]; segLens: number[]; travel: number; hunted: boolean } {
+    if (plan.steps.length === 0 || !(wanted > 0)) {
+      return { state: cloneMino(plan.fromState), steps: [], segLens: [], travel: 0, hunted: false };
+    }
+    const travel = Math.min(wanted, plan.totalLength);
+    const steps: TurnStep[] = [];
+    const segLens: number[] = [];
+    let hunted = false;
+    let rem = travel;
+    let state = cloneMino(plan.fromState);
+    for (let i = 0; i < plan.steps.length; i++) {
+      if (rem <= 1e-9) break;
+      const seg = plan.segLens[i];
+      steps.push(plan.steps[i]);
+      segLens.push(seg);
+      if (plan.stepStates[i].mode !== 0) hunted = true;
+      if (rem < seg - 1e-9) {
+        state = cloneMino(plan.stepStates[i]);
+        state.spot = spotAlongLengthRoute(
+          this.tg,
+          plan.fromSpot,
+          plan.steps,
+          plan.segLens,
+          travel
+        );
+        // state.v is already the run's far vertex; prev is its other end.
+        state.prev = this.tg.other(plan.steps[i][0], plan.steps[i][1]);
+        rem = 0;
+        break;
+      }
+      rem -= seg;
+      state = cloneMino(plan.stepStates[i]);
+    }
+    if (steps.length === plan.steps.length && travel >= plan.totalLength - 1e-9) {
+      state = cloneMino(plan.stateAfter);
+    }
+    return { state, steps, segLens, travel, hunted };
+  }
+
+  private commitLength(): void {
+    if (!this.cfg.telegraph || this.finished) {
+      this.committed = [];
+      this.committedPlan = null;
+      this.commitState = null;
+      return;
+    }
+    const factor = lengthFactor(this.tg, this.cfg, this.state, this.player);
+    let maxLen = this.tg.medianLength;
+    for (const c of this.lengthChoices()) maxLen = Math.max(maxLen, c.length);
+    const plan = planLengthRoute(
+      this.tg,
+      this.cfg,
+      this.state,
+      this.player,
+      this.rng.at(this.turns + 1),
+      this.lifeTurn + 1,
+      factor * maxLen
+    );
+    this.committedPlan = plan;
+    this.committed = plan.steps.slice();
+    this.commitState = cloneMino(plan.stateAfter);
+  }
+
   // The telegraph: decide the next turn now, from where the player stands.
   private commit(): void {
+    if (this.cfg.byLength) return this.commitLength();
     if (!this.cfg.telegraph || this.finished) {
       this.committed = [];
       this.commitState = null;
@@ -578,8 +1125,32 @@ export class TurnMinotaur {
     this.commitState = c;
   }
 
+  private telegraphLength(): TurnTelegraph | null {
+    const plan = this.committedPlan;
+    if (!plan || this.progress < 1) return null;
+    const stops = this.lengthChoices().map((c) => {
+      const travel = Math.min(plan.factor * c.length, plan.totalLength);
+      return {
+        edge: c.edge,
+        travel,
+        spot: spotAlongLengthRoute(this.tg, plan.fromSpot, plan.steps, plan.segLens, travel),
+      };
+    });
+    return {
+      from: this.state.v,
+      steps: this.committed,
+      dest: plan.stateAfter.v,
+      fromSpot: { ...plan.fromSpot },
+      factor: plan.factor,
+      segLens: plan.segLens.slice(),
+      catchDist: this.cfg.catchDist ?? BY_LENGTH_CATCH_DIST,
+      stops,
+    };
+  }
+
   // The committed next move (null without the telegraph, or mid-animation).
   telegraph(): TurnTelegraph | null {
+    if (this.cfg.byLength) return this.telegraphLength();
     if (!this.commitState || this.progress < 1) return null;
     return { from: this.state.v, steps: this.committed, dest: this.commitState.v };
   }
@@ -606,6 +1177,16 @@ export class TurnMinotaur {
   // Where it stands for the renderer: along the last turn's steps, split by
   // run length (two runs share the player's one animation).
   get mino(): Spot {
+    if (this.cfg.byLength) {
+      if (this.lastPath.length === 0 || this.progress >= 1) return { ...this.state.spot };
+      return spotAlongLengthRoute(
+        this.tg,
+        this.lastFromSpot,
+        this.lastPath,
+        this.lastSegLens,
+        this.progress * this.lastTravel
+      );
+    }
     const path = this.lastPath;
     if (path.length === 0 || this.progress >= 1) {
       return { edge: -1, pos: 0, dir: 1, vertex: this.state.v };
