@@ -1566,3 +1566,98 @@ At the stop, finish "### Stage M2 handoff" (the capture list, what moved
 with SHAs, what is left for M3, the checks with paths, surprises) and
 report the commits, the checks, a `Ledger items` list and K5's handle
 fields (owner, branch and last commit, evidence, next, brief).
+
+### Stage M2 handoff
+
+(K5 M2 agent, 2026-10-15, base master eb8436a; written step by step,
+completed at the stop.)
+
+#### The re-map (eb8436a)
+
+`.claude/probes/K5/M2/remap_eb8436a.md` and `list_eb8436a.txt`, made by
+stage 1's `remap.ts` (copied) with `anchors_c49f63f.json` (env
+`ANCHORS=<file>`): every anchor still resolves. main.ts is 4872 lines;
+`main()` runs 231-4870. The regions: MR1 imports 1-164, MR2 module
+constants 165-228, MR3 boot 229-387, MR4 388-438, MR5 scene state
+439-580 (`scene` 478), **MR6 camera 581-981**, MR7 load and settle
+982-1221, MR8 scene build 1222-1533 (rebuild 1287), MR9 panel 1534-1898,
+MR10 picking 1899-1964, MR11 session 1965-3241, MR12 keys 3242-3606, MR13
+pointer 3607-4294, MR14 frame loop 4295-4714, MR15 stamp 4715-4721, MR16
+`installProbeHooks({...})` 4722-4868, MR17 the first `rebuild()`
+4869-4872.
+
+#### The camera's capture list (MR6, eb8436a)
+
+MR6 is 581-981, with its leading comment at 579-580. Its declarations and
+who else uses them (line: name, outside users):
+- 581 `fitTarget`, 584 `computeFitTarget()`, 658 `cam`, 698 `readPanel`,
+  704 `stepPanel`, 712 `openPanelAt`, 722 `clampView`, 735 `easeView`,
+  747 `applyView`, 754 `applyCam`, 841 `stepCamTween`: MR6 only.
+  (`applyView` is in the design's export list, but nothing outside MR6
+  calls it at eb8436a.)
+- 656 `fitCur`, 687 `panAllow`, 720 `openPanel`: MR16 (ProbeCtx values).
+- 657 `view`: MR8's rebuild writes its fields (1411-1413); MR16.
+- 678 `headScratch`: MR11, 8 uses (frameWorld 2128-2132, returnToHead
+  2258 and 2261).
+- 679 `nowSec`: MR13 (4101, the double tap); MR16.
+- 680 `touchCamera`: MR13 (3832, the pinch).
+- 764 `followScale`: MR11 (2263, returnToHead).
+- 784 `placeWorldAt`: MR13 (3825). 815 `zoomAt`: MR13 (3889). 826 `panBy`:
+  MR13 (3891, 4050). 832 `resetCamera`: MR13 (3900, 4103).
+- 862 `setCamFollow`: MR8 (1410). 884 `introPlaying`: MR11 (2264), MR14
+  (4411, K307's wave 2). 889 `updateCamera`: MR14 (4553).
+- 966 `function fitToScreen`: MR7 (1050 in finishLoading, 1211 in
+  finishPresettle), MR8 (1419), MR9 (1894, the resize listener).
+- **Not camera code, in MR6's span:** 770-783 `function syncExploration`
+  (the exploration params onto the fabric; MR8 1368, MR9 1658, MR14 4506,
+  MR16) and 837-839 `PEEK_HOLD` (read only by MR11's frameWorld, 2148).
+
+The `let`s it owns (writes outside MR6 in bold):
+- `fitRight` (583): MR6 writes; MR16's getter reads.
+- `camFollow` (659): MR6 writes (setCamFollow); MR11 reads (2260), and
+  MR16's getter.
+- `camTouchedAt` (660): MR6 writes, and **MR11 2273** (returnToHead);
+  MR16's getter reads.
+- `viewHoming` (661): MR6 writes, and **MR8 1414** (rebuild) and **MR11
+  2274** (returnToHead).
+- `camTween` (667): MR6 writes, and **MR8 1415**, **MR11 2107**
+  (startCamTween) and **MR11 2271** (returnToHead); MR16's getter reads.
+- `panelWrap` (688): written once, at boot, by **MR9 1810** (after MR6).
+- `panelT` (695), `panelBox` (697): MR6 writes; MR11 reads both (2095,
+  the indicators' `panel`), and MR16's getter reads `panelT`.
+- `panelU`, `panelTPrev`, `fitFrames`: MR6 only.
+
+What it reads from outside (stage 1's three kinds):
+- assigned once: `app` (module level), `root`, `params`, `motion`;
+- the scene: `ps` 4 times (computeFitTarget), `fabric` 8
+  (computeFitTarget 5, updateCamera 3), `reveal` 2 (introPlaying);
+- module constants: FIT_MARGIN (166), MAX_ZOOM, FOLLOW_SPAN, FOLLOW_DELAY,
+  FOLLOW_RAMP, FOLLOW_W and CAM_STEP (175-189). MR11 also reads
+  FOLLOW_DELAY and FOLLOW_RAMP (2266); CAM_MAX_DT (190) is read only by
+  MR14 (4552);
+- imports only MR6 uses: `PANEL_TWEEN_S`, `clampFitView`, `easePanel`,
+  `noAllowance`, `stepPanelTween`, `stepRange`, `OpenPanel`
+  (`ui/view_clamp`), `Rect` (`ui/offscreen_indicators`). `EXPLORE_LOOKS`
+  and `FabricMazeRenderer` are syncExploration's.
+
+At boot MR6 only declares and calls `noAllowance()`. `fitToScreen` is the
+one hoisted function other regions call. Its callers run after boot: the
+ticker (loadingTick, presettleTick, both behind `if (!ps || !renderer)`),
+rebuild (which calls `setCamFollow`, a `const`, first) and the resize
+listener. So a `const` in its place, bound where MR6 was, is never read
+before it exists.
+
+The plan for step 2:
+- `createCamera({ app, root, params, motion }, scene)` replaces MR6 at the
+  same place; `ps`, `fabric` and `reveal` become `scene.<name>`.
+- Handed back and destructured under the old names: the in-place objects
+  (`fitCur`, `view`, `panAllow`, `headScratch`) and the functions other
+  regions call.
+- Getters for the `let`s others read (`fitRight`, `camFollow`, `panelT`,
+  `panelBox`). The `let`s others write get a get/set pair, the owner's
+  accessor (`camTouchedAt`, `viewHoming`, `camTween`, `panelWrap`), so a
+  write such as `camTween = null` becomes `camera.camTween = null`, one
+  token per line. The five ProbeCtx getters return `camera.<name>`.
+- The module constants move to camera.ts's top. FOLLOW_DELAY, FOLLOW_RAMP
+  and CAM_MAX_DT are exported for MR11 and MR14.
+- syncExploration and PEEK_HOLD stay in main.ts.
