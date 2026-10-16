@@ -832,6 +832,12 @@ render-shaders), handoff here, release the lock, SubagentHandback.
 
 ## Stage 3a handoff
 
+**Levi's calls (2026-10-15, K383):** as built (calls 1 and 4: `burnt`
+defaults to gone and is not daily-exempt; char shows only where the
+reveal does), except call 5: the start marker HIDES once its thread has
+burnt, under both looks, faded like the other markers' transitions (sent
+to stage 3b). Stage 3b draws unseen fire fronts as nothing, like char.
+
 2026-10-15, about 04:40. Agent adb9f09e19dfd0c55 (K290) of coordinator
 session d8031183, on branch `worktree-agent-adb9f09e19dfd0c55` (worktree
 `.claude/worktrees/agent-adb9f09e19dfd0c55`), based on master f799991.

@@ -68,7 +68,8 @@ Next free ID: K397.
   (6f97b92..feb12a0), flag off. Ship, tune or stop? Levi tests it live
   (`__knotSplineBend(true)`); rec.: stop. Record
   `docs/design/K90_bend_radius.md`, handoff `docs/design/K90.md`, sheet
-  `.claude/probes/K90/out_1b/`; K213 first, never with K8.
+  `.claude/probes/K90/out_1b/`; K213 first, never with K8. G3-2 needs the
+  answer (K361 q13; Levi, 2026-10-15: "not sure on the spline bend yet").
 - **K210** · Near launch: a daily is today's `PARAM_DEFAULTS` (K132), so
   a default change moves that day's maze. Re-pin the daily at launch, or
   accept it? `docs/design/K132.md`.
@@ -93,25 +94,35 @@ Next free ID: K397.
 - **K323** · A Game folder with a `gameMode` dropdown
   (`docs/design/K323_game_mode.md`). Questions 2 and 5-8 taken as
   recommended; 1, 3, 4 are in K339's calls. Stage A (with K339's
-  rebuild, codec 7) waits on them, K7 stage 3 and K76 2c.
-- **K361** · G3/G4's calls (K8 stage 1; `G3G4_sdf_geometry.md` §6), none
-  blocking G3-0. Recs: smin webs (sheet first), webs inset 1 px, accept the
-  yarn taper, 2x until K22, drop `rp`/`jp` after the phone check; K90 by G3-2.
-- **K362** · K76 2c's calls (`K76.md` "Stage 2c handoff"). Recs: the intro
-  stays off by default; 2d widens the start view (at the 90 cap) to a ~2 x
-  (revealDistance + 2) span. Called: the mode stays in the panel before the MAX fix.
-- **K368** · High contrast's ripple (K289 e): rec ring under High contrast
-  (`HIGH_CONTRAST_OVERRIDES`, `src/ui/accessibility.ts`); glint has little room
-  on light threads over black. Inferred, not shot; fallback a stronger glint.
-- **K377** · K5/K6's seven calls (`docs/design/K5_K6_split.md` 8), each with a
-  rec: 30 fps rest cadence, idle probes, R lane before G3/G4 stages, K290 before
-  R2/R5, CLAUDE.md lines, drift pause, `@internal ribbon`. None blocks M1.
-- **K383** · K290 3a's calls (`docs/design/K114_burn.md`, "Stage 3a handoff"): `burnt`
-  defaults to gone and is not daily-exempt; char shows only where the reveal does; the
-  start marker stays over burnt thread; unseen fire fronts' embers show. Rec: as built, and 3b draws unseen fronts as nothing, like char.
+  rebuild, codec 7) waits on them, K7 stage 3 and K76 2c. Codec 7
+  clashes with the rows K74 s3, K80 3a and K114 s2 append after row 139:
+  whichever lands later rebases and re-freezes the codec pins.
 - **K394** · The overnight of 2026-10-14/15 (`docs/design/overnight_2026-10-15.md`): eight
-  calls (F1-F8), each built as recommended (rec: keep all). Its six questions are K339, K361,
-  K362, K368, K377 and K383.
+  calls (F1-F8), each built as recommended (rec: keep all). Its six questions are answered
+  (2026-10-15) except K339's and K361's spline bend (K90).
+- **K399** · G3-1's launch gates (`docs/design/K8_G3-1.md`, "Gates"; gate 1 is K377 q3, taken):
+  (2) G3-1 before K268 item 4, never beside it; (3) a gap slot needing more than 64 SAMP points
+  takes a per-slot stride of at most 3, never a silently cut reach; (4) GAP stays one slot a
+  row, and K398 clamps links. Recs, all three.
+- **K400** · K114 stage 2's questions (`docs/design/K114_stage2.md`, "Questions"; the recs
+  build unless Levi says otherwise): realtime's dot runs at a constant pace, moveSpeed unused
+  (rec. (a)); one fireSpeed and fireDelay for both clocks; you lose when the fire reaches you,
+  not when no safe arm is left; realtime always queues taps; `fireClock` stays a Burn race
+  row under K323.
+- **K401** · K80 turns stage 3's questions (`docs/design/K80_turns_stage3.md`, "Questions";
+  the recs build unless Levi says otherwise): 3a now, 3b after K290 3b, the chevrons after
+  K324 stage 2; per-model rows for the guard's and stalker's knobs, shown for that model only
+  (rec. (c)); wait keys `.` and Space (unless a button has focus); the pad's center waits (a
+  ~22 px radius); the turn pull its own param, default 0; K293 (d) and (f) stay, in lore.
+- **K402** · K74 stage 3's questions (`docs/design/K74_stage3.md`, "Questions"; the recs
+  build unless Levi says otherwise): defaults in C3's shape (corridor 24, away flank,
+  exitClearance 12; the taper only if it measurably helps); `xcr` [0, 32], `xfl`, `xtr`
+  [0, 32], `xtk` [0, 2], never daily-exempt; the exit guard gets no param; the corridor caps
+  at 32; deeper traps out of scope.
+- **K406** · K395's CAP_ROUND: 1.5 (as built, the same as COLLAPSE_ROUND) or 3 (the tip's inner
+  edge turns +19° to +42° instead of +31° to +56° and the arch is flat, for 0.02-0.03 world less
+  inner swing at the tip; 6 looks like 3). Live as `PluckOverlay.capRound`; sheets in
+  `.claude/probes/K395/out/`. Stays 1.5 until Levi picks.
 
 ## In progress
 
@@ -121,61 +132,63 @@ Next free ID: K397.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: stage 2's brief: docs agent `ae4714d103b5fd3bf` of claude session 05e60da0 (since 07:25,
-    worktree `.claude/worktrees/agent-ae4714d103b5fd3bf`). Stage 1's agent af79edbe2a4677ff5
-    (session d8031183) finished; worktree removed by the K161 sweep 2026-10-15, branch kept
+  - owner: nobody since 2026-10-15 08:31 (stage 2's brief merged in 9f1ada2; docs agent
+    `ae4714d103b5fd3bf` of claude session 05e60da0, worktree kept). Stage 1's agent
+    af79edbe2a4677ff5 (session d8031183) finished; worktree removed by the K161 sweep
+    2026-10-15, branch kept
   - branch: mainline; last commit: `ba6d574` (stage 1 is
     801c22b..ba6d574)
   - evidence: main checkout `.claude/probes/K114/burn/`
     (`results_rebased.md`, `results_tuning_rebased.md`, `burn_sim.ts`,
     `burn_page.mjs`)
-  - next: stage 2, real-time burning behind `fireClock`, its brief
-    written from stage 1's handoff (queue item 13); stage 3's look is a
-    shader and carries K290's burnt toggle; the spider follows the
+  - next: stage 2, real-time burning behind `fireClock` (Opus, 2 h, ports 5950-5959;
+    questions K400): after K290 3b merges, never beside K80 turns 3a (the same main.ts
+    paths); its item 6 measures realtime's per-frame cost. Stage 3's look is a shader and carries K290's burnt toggle. The spider follows the
     minotaur's controls (K174)
-  - brief: `docs/design/K114_burn.md` ("Stage 1 handoff"); stage 2's: `docs/design/K114_stage2.md`,
-    being written on the docs agent's branch
+  - brief: `docs/design/K114_stage2.md`; stage 1's handoff: `docs/design/K114_burn.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
   neutral value turns it off. Stage 1 (long-tail dead ends) and stage 2
   (H1, the fused arm cut; calls K261, residuals K278) merged; stage 3 is
   the trap-zone finish, stage 4 the greedy-trap search and K46's bands.
-  - owner: stage 3's brief: docs agent `ae4714d103b5fd3bf` of claude session 05e60da0 (since 07:25).
-    Stage 2's agent a2c61932e9e358104 (session d8031183) finished; worktrees removed by the K161
-    sweep 2026-10-15, branches kept
+  - owner: nobody since 2026-10-15 08:31 (stage 3's brief merged in 9f1ada2; docs agent
+    `ae4714d103b5fd3bf` of claude session 05e60da0, worktree kept). Stage 2's agent
+    a2c61932e9e358104 (session d8031183) finished; worktrees removed by the K161 sweep
+    2026-10-15, branches kept
   - branch: mainline; last commit: `faa9a52` (stage 1 fbf5b5c..8ba0c32,
     stage 2 4d3efe6..faa9a52)
   - evidence: `.claude/probes/K74/` (stage 2 in `stage2/`, sheets in
     `out/`); the design agent's branch `worktree-agent-aeaf1e61bcecaaf0b` (its worktree swept
     2026-10-15, probes copied to the main checkout)
-  - next: stage 3, the trap-zone finish, with H1 at 1 and measured on
-    dailies 1-240, plus H1's exit-clearance guard (K278 (a)); dead-end
-    branches as deeper traps are a later param, settled with K80's brief
-  - brief: `docs/design/K74.md` ("Stage 2 handoff"); stage 3's: `docs/design/K74_stage3.md`,
-    being written on the docs agent's branch
+  - next: stage 3, the trap-zone finish and H1's exit guard (K278 (a)) (Opus, 2 h, ports
+    5930-5939; questions K402), after K7 stage 7 merges (both edit `sceneParamsOf`). It moves
+    the golden dailies and K74's pins (and K326 A's maze golden if that lands first).
+    Dead-end branches as deeper traps are out of scope; K80's brief does not settle them
+  - brief: `docs/design/K74_stage3.md`; stage 2's handoff: `docs/design/K74.md`
 - **K80** · The minotaur, decided (Levi, 2026-10-13; design
   `docs/design/K80_gameplay_additions.md` section 0, his answers in
   `docs/design/levi_notes_2026-10-13.md`): a telegraphed hunter with
   guard and stalker variants, real time as its own mode, turn-aligned as
   a modifier. Real time merged (`5fed5c1`), turns stages 1 and 2 merged;
-  residuals K293, per-model accuracy waits on Levi (K294).
+  residuals K293, per-model tuning K294 (Levi: "Yes.").
   - owner: nobody since 2026-10-14 18:48 (turns stage 2 merged; agent
     a1579d5c460af2d20 of claude d8031183; earlier agents
     af5995f5900f0f945 and a9c90f15cd6a55710; worktrees removed by the K161 sweep 2026-10-15,
-    branches kept). Stage 3's brief: docs agent `ae4714d103b5fd3bf` of claude session 05e60da0
+    branches kept). Stage 3's brief merged in 9f1ada2 (docs agent `ae4714d103b5fd3bf` of
+    claude session 05e60da0, worktree kept)
   - branch: mainline; last commit: `02194b4` (turns 0047148..68524e1 and
     86d404e..02194b4, K174 ecf2169..6ec8275)
   - evidence: main checkout `.claude/probes/K80/` (`turns2/`, `turns/`,
     `rt/`) and `.claude/probes/K174/rt/`; the research's branch
     `worktree-agent-a25726c24f262b138` (5 commits not on master; worktree swept 2026-10-15)
-  - next: stage 3's brief from stage 2's handoff ("For stage 3": final
-    telegraph 2.7, catch feedback 2.8/K270, sound and fog 2.10, wait key
-    and pad, hover cue, turn minoToward), K293, K294; before a daily
-    pins a minotaur, waits enter `fc.taps` and K47's fingerprint covers
-    its params; real time's phone check is K177
-  - brief: `docs/design/K80_turns.md` ("The stages", "Stage 2 handoff"); stage 3's:
-    `docs/design/K80_turns_stage3.md`, being written;
-    `docs/design/K80_realtime.md`; `docs/design/K80.md`
+  - next: turns 3a (Opus, 2 h, ports 5940-5949; questions K401), never beside K114 stage 2: a
+    digest pin for whole turn games, wait keys and the pad's wait (a wait mid-move stops
+    snapping the dot to the run's end), a hover cue, `mlm`/`mrn` (the tooltips hard-code 3),
+    the turn pull, K294, K293 (a), (c), (e). 3b (telegraph, catch feedback, sounds) after
+    K290 3b merges; the chevrons after K324 stage 2. Before a daily pins a minotaur, waits
+    enter `fc.taps` and K47's fingerprint covers its params; real time's phone check is K177
+  - brief: `docs/design/K80_turns_stage3.md`; `docs/design/K80_turns.md` ("The stages",
+    "Stage 2 handoff"); `docs/design/K80_realtime.md`; `docs/design/K80.md`
 - **K156** · The round phone pass, `scripts/phone_pass.ps1` (K152 (1),
   from K81's gate kit): two builds run interleaved through a frame bench
   and a JSON looks list into a summary and sheets. Stages 3a-3c merged
@@ -214,7 +227,7 @@ Next free ID: K397.
   - owner: nobody since 2026-10-15 06:05 (stage 2d done; agent `adbaac6a024e6d144` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `9e3befd`
   - evidence: `.claude/probes/K76/stage2d/` (`phonekit/gate2.mjs`, `census2d.mjs`, `out/` with `phone_gate_fw0.txt`, `sheet/final_desktop.png` and `final_phone.png`); 2a-2c's beside it; lore `render-explore.md`
-  - next: the gate's criterion 2: count `exploreUpdatePending`'s flips (`applyExploreGaps`, ribbon_renderer.ts) against the calls a move, move that re-derivation out of `update()`, re-run gate2 with `&fw=0` and add the growth frame; a High contrast shot on the phone; the start zoom stays Levi's (K362)
+  - next: the gate's criterion 2: count `exploreUpdatePending`'s flips (`applyExploreGaps`, ribbon_renderer.ts) against the calls a move, move that re-derivation out of `update()`, re-run gate2 with `&fw=0` and add the growth frame; a High contrast shot on the phone; widen the start view to ~2 x (revealDistance + 2) at the 90 cap (K362, taken 2026-10-15; could ride K397's fix stage)
   - brief: `docs/design/K76.md`, "Stage 2d handoff"; design `docs/design/K76_reveal_mode.md`
   - env: the phone: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`); builds: `scripts/preview.ps1`
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
@@ -223,7 +236,7 @@ Next free ID: K397.
   - owner: nobody since 2026-10-15 02:42 (stage 2 done, item 4 not started; agent `a42c63c2db0401edb` of claude session d8031183; stage 2's worktree swept 2026-10-15; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept)
   - branch: mainline; last commit: `f799991`
   - evidence: `.claude/probes/K268/stage2/` (probes, `run_batch2.ps1` to `run_batch5.ps1`, `out/`, builds); stage 1's beside it
-  - next: stage 3: the census fixes first (`census.mjs`: judge shaped slots by S/R/F, skip rather than fail when no crossing shows both threads, a fading joint scales by vis; attribute junctions 56-58 and 161, which mismatch on master too: K76 2d ruled out the underlay, the gap gate and the fan program, so compare fan records, strip rows, then geometry, mode on and off, from `census2d.mjs`'s ATTR block), then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip); unblocked since K76 2d merged
+  - next: stage 3: the census fixes first (`census.mjs`: judge shaped slots by S/R/F, skip rather than fail when no crossing shows both threads, a fading joint scales by vis; attribute junctions 56-58 and 161, which mismatch on master too: K76 2d ruled out the underlay, the gap gate and the fan program, so compare fan records, strip rows, then geometry, mode on and off, from `census2d.mjs`'s ATTR block), then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip); unblocked since K76 2d merged; G3-1 goes first, never beside item 4 (rec., K399)
   - brief: `docs/design/K268.md`, "Stage 2 handoff" ("For the next stage")
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-6 merged: the worker is the default (stage 6: a944841..4d9c9f5,
@@ -240,23 +253,23 @@ Next free ID: K397.
   - owner: nobody since 2026-10-15 05:39 (stage 2 done; agent `a11d7ce60428b687d` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
   - branch: mainline; last commit: `14d34b5`
   - evidence: `.claude/probes/K307/` (stage 1's tools and traces; `stage2/`: `trace_intro.mjs`, `run_s2.ps1`, batches 1-7, `runs/`, two A/B builds, `k366_firsttap.mjs`); the throwaway branch `k307-proto` (51f7480), never merged; lore `.claude/rules/render-shaders.md` ("THE WARM-UP")
-  - next: stage 3: a cold load's still page before the trefoil (0.40-3.19 s, the warm-up's one status read: read after the trefoil shows, or K385's late reads), then K366's first tap, then the phone's measures with K156 (programs persist? Android's cache cap)
-  - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff"
+  - next: stage 3 opens with K385's probes: (a) the parallel build under `--enable-features=ANGLEPerContextBlobCache` (`trace_intro.mjs --restart`), then (b) late enable against the blocking build (the cold still page, presents, the warm restart). Then the cold load's still page before the trefoil (0.40-3.19 s, the warm-up's one status read: read it after the trefoil shows, unless (b) ends it), then K366's first tap, then the phone's measures with K156 (programs persist? Android's cache cap)
+  - brief: `docs/design/K307_intro_freezes.md`, "Stage 2 handoff" and "K385" (the mechanism and the plan)
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (b3917ca..f6d10e3): the four G3
   tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
-  - owner: G3-1's brief: docs agent `af87cd3a5da750759` of claude session 05e60da0 (since 07:25, worktree `.claude/worktrees/agent-af87cd3a5da750759`). G3-0's `af653fa7f942f2f1e` (session d8031183) finished; its worktree is left, locked by the live Claude process (K161)
-  - branch: mainline; last commit: `f6d10e3`
-  - evidence: `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
-  - next: the phone's dense bench again at rest (`phone6.ps1`, its 30000 ms rest raised to 90000); then G3-1 after K290 (R1-R2 first if Levi takes K377 q3); G3-1's textures must fit the Pixel's 8192 max; check capture/restore under the worker (default from K7 s6); Levi's calls: K361
-  - brief: `docs/design/K8_stage1.md` (its stage 2 handoff, at the end); G3-1's: `docs/design/K8_G3-1.md`, being written on the docs agent's branch
+  - owner: nobody since 2026-10-15 08:32 (G3-1's brief merged in 9f1ada2; docs agent `af87cd3a5da750759` of claude session 05e60da0, worktree kept). G3-0's `af653fa7f942f2f1e` (session d8031183) finished; its worktree is left, locked by the live Claude process (K161)
+  - branch: mainline; last commit: `f6d10e3` (G3-0)
+  - evidence: `.claude/probes/K8/G3-1/` (the brief's texture sizes); `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
+  - next: the phone's dense bench at rest (`phone6.ps1`, its 30000 ms rest raised to 90000); then G3-1 (Opus, 2 h, ports 5960-5969) once K290 3b has merged, R1 and R2 have landed and Levi has answered K399. Lane: R1, R2, G3-1, R3, R4, G3-2, R5; never beside an R stage, K268 item 4, K90 or another GPU measurement; it may run beside K7 or K395. G3G4 §5.2 understates `explore_glsl.ts`'s gap reads (442, 479-483, 499; the brief covers it). G3-2 needs K90's bend decided
+  - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
   with seams so G3 becomes a module swap; K6 rides it. Design: `docs/design/K5_K6_split.md`
   (calls: K377). M1 merged (baa0847..12709e5): main.ts 5709 → 4869 lines, no logic changes.
   - owner: nobody since 2026-10-15 06:13 (stage M1 done; agent `a871cd9d98d4f1bf0` of claude session d8031183; its and the design's `aa60ed52201f75682` worktrees removed by the K161 sweep 2026-10-15, branches kept)
   - branch: mainline; last commit: `12709e5`
   - evidence: `.claude/probes/K5/stage1/` (`checks.ps1`, `rebased_checks.ps1` and their `checks/`, `checks_rebased/`, `rebased/`; `fog_bisect.ps1`, `fogbisect/`; `diff_regions.mjs`, `remap_*.md`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
-  - next: M2, the camera to `src/app/camera.ts` (section 5.2; re-map first from `anchors_c49f63f.json`); M3/M4 export PhysState, M7a moves `__knotUndo` (the handoff's "What is left")
+  - next: M2, the camera to `src/app/camera.ts` (section 5.2; re-map first from `anchors_c49f63f.json`), after K7 stage 7 merges (both edit main.ts); M3/M4 export PhysState, M7a moves `__knotUndo` (the handoff's "What is left"). The R lane is approved (K377 q3): R1 may run beside K290 3b, R2 and R5 after K290, G3-1 after R2; R1 needs its brief (sections 5.3 and 6)
   - brief: `docs/design/K5_K6_split.md` section 5.2, "7. Stage 1 brief" and "Stage 1 handoff"
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
@@ -268,12 +281,21 @@ Next free ID: K397.
   - brief: `docs/design/K114_burn.md`, "Stage 3b brief: the fire's look"
 - **K395** · The pluck blur at a kink loop's tip, on the phone (Levi, 2026-10-15 07:04, after
   K344's fix): a seam from the tip to an edge, and a heart-shaped pinch (a point inside, a dimple outside).
-  - owner: agent `ac0d0267cdf7467ec` of claude session 05e60da0 (since 2026-10-15 07:25; opus, 2 h cap)
-  - branch: `worktree-agent-ac0d0267cdf7467ec`, worktree `.claude/worktrees/agent-ac0d0267cdf7467ec`; last commit: `21d701e` (from master)
-  - evidence: the main checkout's `.claude/probes/K395/` (Levi's screenshot `levi_phone_2026-10-15_0704.png`); the agent's in its worktree's `.claude/probes/K395/`
-  - next: reproduce at the phone viewport and on the phone (after 08:30), measure the cause, fix the general case
-  - brief: `docs/design/K395_pluck_loop_tip.md`
+  - owner: nobody since 2026-10-15 08:38 (stage 1 finished; agent `ac0d0267cdf7467ec` of claude session 05e60da0, worktree kept)
+  - branch: `worktree-agent-ac0d0267cdf7467ec`, worktree `.claude/worktrees/agent-ac0d0267cdf7467ec`; last commit: `e79b92b` (the fix, its lore and the handoff; merging)
+  - evidence: the main checkout's `.claude/probes/K395/` (Levi's screenshot); the agent's in its worktree's `.claude/probes/K395/` (`out/ab_*/pair_*.png`: pre-K395 left, the fix right; `phone_run.ps1`), copied at the merge
+  - next: the merge (the coordinator), then the phone check: `phone_run.ps1` with the phone awake and unlocked, or Levi plucks a kink loop on the phone after the deploy. CAP_ROUND is K406
+  - brief: `docs/design/K395_pluck_loop_tip.md` ("Stage 1 handoff")
   - env: the phone: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
+- **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone, free
+  play): 1-2 beacon dots at a stub's end, a squared-off far end, a circular knuckle, a tap on a
+  stub's end that plucks and shows hidden thread, and end dots sitting in gaps cut over crossings.
+  - owner: a diagnosis agent of claude session 05e60da0, launching 2026-10-15 (opus, 2 h cap)
+  - branch: set at launch; last commit: set at launch (from master)
+  - evidence: the main checkout's `.claude/probes/K397/` (Levi's `levi_0801.png`, `levi_0806.png`); the agent's in its worktree's `.claude/probes/K397/`
+  - next: stage 1, the diagnosis (causes and a fix plan appended to `K397.md`); the fix stage after K290 3b and K395 merge. Levi's link starts `?2gozcj.Mg` (the rest asked for)
+  - brief: `docs/design/K397.md`
+  - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 
 ## Next, in order
 
@@ -545,6 +567,8 @@ Every other item below waits on the trigger it names.
 - **K396** · A `scripts/dev.ps1` for Levi's LAN dev server on 5173 (`vite --host 0.0.0.0 --port
   5173 --strictPort`, after checking `node_modules`), so an `env:` line names a script instead of a
   session's memory (claude-config `rules/sessions.md`, "Environment belongs in scripts").
+- **K368** · A ring for the ripple under High contrast (K289 e; Levi, 2026-10-15: yes):
+  `HIGH_CONTRAST_OVERRIDES` (`src/ui/accessibility.ts`); the glint has little room on light threads over black (inferred, not shot; fallback a stronger glint). Small: a unit test and a screenshot.
 
 ## Residuals (known, not fixed)
 
@@ -938,6 +962,8 @@ Every other item below waits on the trigger it names.
   `rules/lessons.md`). Give each agent a disjoint port range, and a
   probe must not release the perf lock between samples (gaps let another
   agent's builds land).
+  `scripts/bench_frame.mjs` and `probe_gpudraw.mjs` default their Chrome
+  profile to the OS tmpdir (found writing K8 G3-1's brief).
 - **K157** · K79 B's color rows on the phone (B3): accent 3's picker
   opens 8 px below the viewport until the panel scrolls, and a second tap
   on a swatch doesn't close Tweakpane's popup (check the older color rows
@@ -1126,9 +1152,11 @@ Every other item below waits on the trigger it names.
 - **K354** · A dark three-armed star in a kink loop's eye under the
   pluck blur, the uncovered middle (concave-side cap off: a thin Y); K77's
   "dark X" family? `docs/design/K344_pluck_cusp.md` (stage 1 handoff).
+  K395 (2026-10-15): the star changed shape (an X became a rounded square) but is still there.
 - **K355** · Zoomed in, the wide outer pluck blur shows staircase bands
   (inferred: affine interpolation over wide quads); before and after
   K344. `docs/design/K344_pluck_cusp.md`.
+  K395 (2026-10-15) left the bands untouched.
 - **K356** · At another chain's crossing, the pluck clip's straight line
   misses a curving over thread: zoomed in, a blur sliver shows over it
   (`.claude/probes/K344/out/nc/`). Fix: an arc clip, or over passes on top.
@@ -1167,12 +1195,18 @@ Every other item below waits on the trigger it names.
 - **K382** · A fire race's costs are unmeasured: its frames (K290 3a: from the first burn every
   ribbon, strip and fan draws through the explore programs) and its programs' cold link
   (K307 s2 warms them in wave 1; inferred +0.4-0.7 s to first visible). Rec: `burn_page.mjs perf`.
+  Realtime's per-frame cost is K114 stage 2's item 6 (inferred: drawFire and the span
+  re-declaration run every frame).
 - **K384** · K290 3a's small residuals: picking uses pickThread for the rest of a race
   once anything burns, even under char; `pieceVis`'s ring unwrap is ill-defined past
   n - 2 fade (pre-existing; a guard and a test); 13 Pixi attribute warnings at load (master too).
 - **K385** · K307 s2: links under KHR_parallel_shader_compile never reach Chrome's disk
-  cache (D3D11; why is inferred), so the warm-up links blocking and wave 2 is off. Untested:
-  no extension and late status reads; the extension on master; a draw mid-compile.
+  cache (D3D11), so the warm-up links blocking and wave 2 is off. The cause, read from Chromium's
+  source (inferred until (a)): the completion query's link resolves in MakeCurrent's poll,
+  outside the program cache's disk scope, and the per-context path that always writes is off
+  by default. Plan: (a) the flag probe, (b) late enable (to ship), (c) no extension with late
+  reads, (d) a crbug once (a) confirms (Levi's call). Also untested: the extension on master; a draw mid-compile. Rides K307 stage 3;
+  `docs/design/K307_intro_freezes.md` ("K385").
 - **K386** · K307 s2's small residuals: 131/212 ms frames after visible (parallel build);
   Pixi's Graphics program unregistered (<45 ms cold); `report()` stamps the blocking read's
   start; the pre-settle relink (8-26 ms a program); stray cache entries from one run.
@@ -1192,6 +1226,25 @@ Every other item below waits on the trigger it names.
   binding patterns and element access; 25 lines of `src/app/probe_hooks.ts` pass 80 columns.
 - **K393** · Nothing type-checks `test/`: tsconfig includes `src` only and vitest strips types,
   so a test's type error goes unseen (K5 M1). Fix: a tsconfig over `test/`, run by `npm test`.
+- **K398** · The GAP texture passes the Pixel's 8192-row limit at gs 66 and up in knot mode
+  (wd 1: 8580 crossings, 16384 rows), and past it the phone's allocation fails and every gap
+  vanishes (K8 G3-1's brief, `.claude/probes/K8/G3-1/`). Pre-existing: `readNumber` and the
+  codec's `num` don't clamp a link's values to the panel's ranges (gs [4, 24]). Fix: clamp them.
+- **K403** · Doc and comment drift found writing the K74/K80/K114 briefs (2026-10-15):
+  `minotaur_turns.ts` 41-42 says stage 3 adds abbott (`K80_turns.md`: stage 4);
+  `gameplay-minotaur.md` cites "codec v5 108-116"; `main.ts` 3177-3179 says tapsWait is off
+  (it is on, 3283); `K74.md` 104 calls stage 3 "doc 4.2-4.5" (4.4 and 4.5 are stage 4's), and
+  114-116 put handoffs in K74.md (the stage 3 brief uses its own file).
+- **K404** · Inferred, unchecked: the hover path ignores onHead, so a hover can light a choice
+  a click would not take (found writing K80 turns 3's brief; its hover cue item is where to look).
+- **K405** · After K395, a soft "M" at a kink loop's tip, much milder than the heart: where a
+  flat stretch of the concave cap meets a rise a dip stays (`roundCap` only lowers the cap), and
+  the inner edge turns +31° to +56° (stations 75, 79, 85, 89 of `?7` chain 9). Root: the
+  5-station circumradius follows the control spacing. Follow-up: a smooth envelope of the
+  radius, or a wider min window (`.claude/rules/render-pluck.md`, "Pluck loop tip (K395)").
+- **K407** · K344's probe link `?qoietk.KIiHgRRXwRlRt8fGrST4sf` builds another design since later
+  default changes (its chain 21 no longer self-crosses), so probes and lore citing that loop no
+  longer reproduce it; K395 used `?7&am=instant&snd=none&fw=0`, chain 9 (key 133). Re-pin them.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1435,6 +1488,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K361** · G3/G4's calls. Answered by Levi (2026-10-15): recs taken except the spline bend (q13), which stays open in K90; recorded in `G3G4_sdf_geometry.md` §6.
+- **K362** · K76 2c's calls. Answered by Levi (2026-10-15): recs taken; recorded in `K76.md` ("Stage 2c handoff"); the start view's widening is in K76's next.
+- **K377** · K5/K6's seven calls. Answered by Levi (2026-10-15): all seven recs taken; recorded in `K5_K6_split.md` 8.
+- **K383** · K290 3a's calls. Answered by Levi (2026-10-15): as built, except the start marker hides once its thread has burnt (sent to stage 3b); 3b draws unseen fronts as nothing; recorded in `K114_burn.md` ("Stage 3a handoff").
 - **K357** · Is K344's cusp gone? Answered by Levi (2026-10-15 07:04, on the phone): not quite, a seam and a pinch remain at a loop's tip; K395 carries it.
 - **K381** · The K83 PIN recipe (`probes.md`) and `k83_ab` pin the fabric's explore clock. Done in 7a17355 (2026-10-15).
 - **K24** · Render on demand when the scene is static. Dropped: folded into K6-3 (`docs/design/K5_K6_split.md`, 5.4), 2026-10-15.

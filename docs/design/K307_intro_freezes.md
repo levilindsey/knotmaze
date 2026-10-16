@@ -854,3 +854,88 @@ with `--restart` for the warm load (the same profile).
   `trace_intro.mjs` with `--restart` and `--inject`, `run_s2.ps1`,
   batches 1-7, `runs/`). Copy it to the main checkout's
   `.claude/probes/K307/` before the worktree goes.
+
+## K385: why parallel links never reach the disk cache (2026-10-15, the coordinator)
+
+Read from the Chromium and ANGLE sources at main (2026-10-15); nothing
+here has run yet. What it explains, from stage 2: under
+KHR_parallel_shader_compile a relink in the same session reads about
+25 ms (the memory cache is warm), but after a restart every program
+links cold, Pixi's included, and useProgram, keeping programs alive,
+waiting, and dropping wave 2 changed nothing.
+
+What the code does:
+
+1. Once the page enables the extension, Blink wraps EVERY `linkProgram`
+   in a `GL_PROGRAM_COMPLETION_QUERY_CHROMIUM`
+   (`webgl_rendering_context_base.cc` 5221-5230). Compiles run on
+   ANGLE's worker pool either way: Blink sets 2 threads at context init
+   (1671-1675), and ANGLE takes the multi-thread pool whenever the count
+   is above 0 (`Context.cpp` 9476-9483; the default is UINT_MAX,
+   `State.cpp` 2443). The extension adds the query, not the threads.
+2. The passthrough decoder's `ProcessQueries` polls that query with
+   COMPLETION_STATUS_KHR, which does not resolve the link (`Context.cpp`
+   7442-7452). Once it reads done, it reads LINK_STATUS, which does
+   (`gles2_cmd_decoder_passthrough.cc` 2470-2500). Resolving offers the
+   binary to the blob cache once (`Program.cpp`
+   `cacheProgramBinaryIfNotAlready`; D3D has no post-link subtasks,
+   `ProgramD3D.cpp`), and never again.
+3. ANGLE's `BlobCache::put` uses per-context callbacks if any are set,
+   else the display's. Chrome sets per-context ones only under
+   `features::kANGLEPerContextBlobCache` (`feature_info.cc` 1698-1703),
+   which is DISABLED by default (`gpu_finch_features.cc` 846). That path
+   always writes to disk (decoder 1920-1945).
+4. The display path (`passthrough_program_cache.cc` `BlobCacheSetImpl`
+   260-278, `Set` 181-215) always stores in memory, but writes to disk
+   only through `cache_program_callback_`, which exists only while a
+   `ProgramCache::ScopedCacheUse` is alive (`program_cache.cc` 22-42).
+   `CommandBufferStub` makes one after `MakeCurrent()` in `PerformWork`
+   (`command_buffer_stub.cc` 198-201) and in `ScopedContextOperation`
+   (752-770), which wraps command processing (`OnAsyncFlush`, 161-172).
+5. The decoder's own `MakeCurrent()` runs `ProcessQueries(false)` first
+   (decoder 1502-1503), before that scope exists.
+
+Inferred: every in-scope poll comes after an out-of-scope one in the
+same operation, so a compile that finishes between flushes is seen
+first by MakeCurrent's poll. The link resolves outside the scope, the
+binary goes to memory only, and ANGLE never offers it again. A blocking
+LINK_STATUS read resolves during command processing, inside the scope,
+which is why the blocking build reaches disk. Pixi's programs miss too:
+their links find the warm-up's binaries in memory, so nothing new is
+offered to disk.
+
+Ways to get both the parallel build's live intro and a warm restart:
+
+- **(a) Confirm, probe-only:** the parallel build in Chrome with
+  `--enable-features=ANGLEPerContextBlobCache`, a cold load, then
+  `trace_intro.mjs --restart`. A warm restart near 0.8 s confirms the
+  mechanism. Players can't set the flag.
+- **(b) Late enable (shippable candidate):** issue every warm-up link
+  BEFORE enabling the extension, so no query is attached, then enable it
+  and poll `COMPLETION_STATUS_KHR`. The client sends that read straight
+  to the GPU process (`program_info_manager.cc` 682-711 fetches no
+  program info for it; `webgl_program.cc` 69-78), and ANGLE answers it
+  without resolving. Read LINK_STATUS once each program reports done:
+  that read resolves inside the scope, so the binary reaches disk, and it
+  never waits. Cost: any program linked after the enable is wrapped again
+  and stays memory-only, so the warm-up must cover every program first.
+- **(c) No extension, timed reads:** link early and read LINK_STATUS late
+  and staggered. It persists the same way but has no completion signal: a
+  read before the compile finishes blocks main and CrGpuMain, and the safe
+  delay differs per device.
+- **(d) A crbug** for the MakeCurrent path, once (a) confirms it. It is
+  outward-facing, so it is Levi's call.
+- For (b) and (c): Pixi must not link the same sources before the
+  warm-up's copies resolve. ANGLE looks the cache up at link time, so an
+  earlier Pixi link compiles again, and Pixi's own status read blocks.
+
+Sources (chromium.googlesource.com, main). Chromium:
+`third_party/blink/renderer/modules/webgl/` (`webgl_rendering_context_base.cc`,
+`webgl_program.cc`, `khr_parallel_shader_compile.cc`),
+`gpu/command_buffer/service/` (`gles2_cmd_decoder_passthrough.cc`,
+`gles2_cmd_decoder_passthrough_doers.cc`, `passthrough_program_cache.cc`,
+`program_cache.cc`, `feature_info.cc`),
+`gpu/command_buffer/client/program_info_manager.cc`,
+`gpu/ipc/service/command_buffer_stub.cc`, `gpu/config/gpu_finch_features.cc`.
+ANGLE: `src/libANGLE/` (`Context.cpp`, `State.cpp`, `Program.cpp`,
+`BlobCache.cpp`, `renderer/d3d/ProgramD3D.cpp`).

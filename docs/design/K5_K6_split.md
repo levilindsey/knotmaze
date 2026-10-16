@@ -950,6 +950,8 @@ At the stop:
 
 ## 8. Open questions for Levi
 
+**Answered (Levi, 2026-10-15, K377): all seven recommendations taken.**
+
 1. **A rest cadence at defaults?** The fabric never idles at defaults:
    the pulses and the flow always animate, so K24's full stop never
    applies there.
