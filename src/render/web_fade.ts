@@ -128,7 +128,7 @@ export class WebFade {
     return this.fades.has(ji);
   }
 
-  // Any fade running: what main.ts's sceneAnimating() reports.
+  // Any fade running: what the frame loop's PAINT poll reads (K6-1).
   get active(): boolean {
     return this.fades.size > 0;
   }

@@ -35,8 +35,9 @@ only with the files it is about; `render.md` lists the area's other files.
   too (K191, below: a reset's webs leave with their arms); a web already
   full on the FIRST declaration after a
   scene is built (a saved attempt restored on load) shows full without a
-  fade. `FabricMazeRenderer.webFading` feeds
-  main.ts's sceneAnimating(). REDUCED MOTION keeps the fade: it moves
+  fade. `FabricMazeRenderer.webFading` feeds the frame loop's PAINT poll
+  (`fabric.needsFrame()`, `render-loop.md`; main.ts's sceneAnimating()
+  before K6-1). REDUCED MOTION keeps the fade: it moves
   nothing, it is a 0.25 s crossfade of colors, and ui/motion.ts gates
   movement (the background's drift, the plucks, the camera ease), not fades
   (the pulses and the move animation are not gated either); the code reads
@@ -101,7 +102,7 @@ only with the files it is about; `render.md` lists the area's other files.
   skipped only when its arm has no level and the junction and the arm are
   routed (the K127 rule), and a fading-out web's remaining caps draw at
   `strength * level` until the fade ends. REDUCED MOTION keeps both fades
-  (no motion setting is read); `webFading` (sceneAnimating) turns false
+  (no motion setting is read); `webFading` (the PAINT poll) turns false
   when the last fade ends.
 - MEASURED (`.claude/probes/K191/`; `?b.c&am=instant&snd=none&phy=0&fw=0&
   bg=none`: K81's "twice" plan, then one FRESH forward arm, edge 120,

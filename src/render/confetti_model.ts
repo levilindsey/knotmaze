@@ -29,7 +29,7 @@
 //
 // Render-only and bounded: nothing here touches the physics, and every
 // piece dies within RAIN_WINDOW + RAIN_LIFE_MAX (rain) or SPRAY_LIFE_MAX
-// (spray) seconds, so main.ts's sceneAnimating() returns to false.
+// (spray) seconds, so the frame loop's OVERLAY poll (K6-1) clears.
 
 // Pieces at amount 1 (the rain's on a phone-sized screen: rainScreenScale
 // multiplies it on bigger ones), and the amount's top (the panel slider and
@@ -410,8 +410,8 @@ export function shadeHex(c: number, k: number): number {
 export const CONFETTI_MAX_DT = 0.1;
 
 // Both effects' pools and their clock, with no pixi (render/confetti.ts
-// mirrors the pools into particles). `active` is the term main.ts's
-// sceneAnimating() reads: true from a burst until the last piece dies.
+// mirrors the pools into particles). `active` is what the frame loop's
+// OVERLAY poll reads (K6-1): true from a burst until the last piece dies.
 export class ConfettiSim {
   readonly rain = new ConfettiPool(RAIN_CAP);
   readonly spray = new ConfettiPool(SPRAY_CAP);

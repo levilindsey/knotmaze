@@ -6,7 +6,7 @@
 // rows into pixi Particles, appear_fx.ts's pattern: slot i renders pool row
 // i, dead slots collapse to scale 0, and once both pools drain the
 // containers hide and tick() is a single early return - no per-frame work,
-// and `active` (which main.ts's sceneAnimating() reads) is false again.
+// and `active` (the frame loop's OVERLAY poll, K6-1) is false again.
 //
 // Both containers sit ABOVE the world root on the stage (the rain topmost)
 // and take no pointer events; the win banner and the HUD are DOM over the

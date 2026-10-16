@@ -33,8 +33,10 @@ only with the files it is about; `render.md` lists the area's other files.
   folded into the alpha lookup, the dither is the blit's), so fogged
   pixels ARE background pixels - a flat fog read as a flat square. (4)
   K24/K6 HOOK: needsFrame() + tick(dt, sceneActive); the drift pauses
-  after 2.5 s of an otherwise still scene (main.ts sceneAnimating()
-  stands in for K6's flags) and stops under reduced motion (the Motion
+  after 2.5 s of an otherwise still scene (sceneActive, the frame loop's
+  flags since K6-1, `render-loop.md`; main.ts's sceneAnimating() stood
+  in before, which kept a solved fabric drifting forever) and stops under
+  reduced motion (the Motion
   setting, ui/motion.ts).
   Screen-fixed, not world-anchored: a backdrop at infinity - camera moves
   never drag it or force a re-render, zoom cannot alias it, and the fog
