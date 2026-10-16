@@ -116,7 +116,7 @@ describe("links", () => {
       fireClock: "turn",
       fireSpeedRt: 0.2, fireDelayRt: 20,
       revealFinish: true,
-      revealEndCross: "past", revealEndGlow: "bright",
+      revealEndCross: "under", revealEndGlow: "bright",
     });
   });
 

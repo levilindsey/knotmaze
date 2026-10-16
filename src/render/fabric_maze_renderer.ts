@@ -521,7 +521,7 @@ export class FabricMazeRenderer {
     reach: 2.5,
     fade: 1,
     look: EXPLORE_LOOK_DEFAULT,
-    endCross: "past" as "under" | "past" | "back",
+    endCross: "under" as "under" | "past" | "back",
     endGlow: "bright" as "soft" | "bright",
   };
   // K466: the keep-out stretches (ribbons.underCutCtrls per chain), filled on

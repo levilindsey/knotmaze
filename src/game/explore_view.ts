@@ -98,15 +98,17 @@ export interface ExploreKeepOut {
 }
 
 // K466: a fade [e - f, e] pushed past every span it overlaps (flat [u0, u1,
-// ...] in the stub's frame), NaN once its end passes `limit`.
-export function endPushPast(sp: readonly number[], e: number, f: number, limit: number): number {
+// ...] in the stub's frame), NaN once its end passes `limit` or it would
+// need more than `steps` pushes.
+export function endPushPast(sp: readonly number[], e: number, f: number, limit: number, steps = 32): number {
   let x = e;
-  for (let it = 0; it < 32; it++) {
+  for (let it = 0; it <= steps; it++) {
     let hit = -Infinity;
     for (let i = 0; i + 1 < sp.length; i += 2) {
       if (sp[i + 1] > x - f && sp[i] < x && sp[i + 1] > hit) hit = sp[i + 1];
     }
     if (hit === -Infinity) return x;
+    if (it === steps) return Number.NaN;
     x = hit + f;
     if (x > limit + 1e-9) return Number.NaN;
   }
@@ -114,20 +116,27 @@ export function endPushPast(sp: readonly number[], e: number, f: number, limit: 
 }
 
 // K466: the same fade pulled back before every span it overlaps, NaN once
-// its start passes below `floor`.
-export function endPullBack(sp: readonly number[], e: number, f: number, floor: number): number {
+// its start passes below `floor` or it would need more than `steps` pulls.
+export function endPullBack(sp: readonly number[], e: number, f: number, floor: number, steps = 32): number {
   let x = e;
-  for (let it = 0; it < 32; it++) {
+  for (let it = 0; it <= steps; it++) {
     let hit = Infinity;
     for (let i = 0; i + 1 < sp.length; i += 2) {
       if (sp[i + 1] > x - f && sp[i] < x && sp[i] < hit) hit = sp[i];
     }
     if (hit === Infinity) return x;
+    if (it === steps) return Number.NaN;
     x = hit;
     if (x - f < floor - 1e-9) return Number.NaN;
   }
   return Number.NaN;
 }
+
+// K466: a stub's end moves past (or back before) ONE crossing at most. The
+// sheet's first run chained pushes past up to three under-crossings (the
+// fade plus the casing and pads fill most of the room between two of
+// them), showing up to 3.9 lattice units of unexplored thread.
+export const END_MOVE_STEPS = 1;
 
 export interface ExploreView {
   pieces: ExplorePiece[];
@@ -310,8 +319,8 @@ export function exploreView(inp: ExploreInput): ExploreView {
             const [eFar] = plain(rFar, dF);
             limit = Math.min(limit, 0.5 * (eF + L - eFar));
           }
-          const past = (): number => endPushPast(sp, eF, fF, limit);
-          const back = (): number => endPullBack(sp, eF, fF, d0);
+          const past = (): number => endPushPast(sp, eF, fF, limit, END_MOVE_STEPS);
+          const back = (): number => endPullBack(sp, eF, fF, d0, END_MOVE_STEPS);
           let to = meets ? Number.NaN : inp.keepOut.mode === "back" ? back() : past();
           if (Number.isNaN(to) && !meets) to = inp.keepOut.mode === "back" ? past() : back();
           if (!Number.isNaN(to) && to !== eF) {
