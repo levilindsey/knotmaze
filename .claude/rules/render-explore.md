@@ -377,8 +377,20 @@ gameplay-links.md's EXPLORATION PARAMS.
   threads). On (the default) the marker, its gap slot and the indicator
   behave as with the mode off: the exit shows over hidden thread from the
   start, the indicator sits at the screen edge while the exit is off
-  screen, and its tap frames the exit (`frameWorld`, as with the mode
-  off). What still holds it (`finishHold`): the intro's appearance
+  screen, and its tap calls `frameWorld`, as with the mode off. MEASURED
+  AT 411x753 (K465, links `?2gozcj` and `?k397a` with `&xp=threads&
+  am=instant&snd=none&fw=0`, never moved): the fit camera starts at its
+  cap (87-90 px/world, zoom 1, pan range 0) and the exit sits about 8
+  viewports away (2gozcj: screen (3339, 3424); the disc at (380, 546)
+  pointing at 0.77 rad), so a tap plays the 0.6 s tween and ENDS ON THE
+  SAME VIEW (`placeWorldAt` clamps to the home view, and at zoom 1 the
+  range is one point): the exit stays off screen, the indicator stays
+  shown and its label "Tap to bring it into view" is untrue there. The
+  follow camera's tap does zoom out (s 31.6 to 26.9 in 0.7 s, held 2.6 s)
+  but the exit was still off screen at every sample, 0 frames on screen
+  (2gozcj). A decision for Levi (a toast as under fog, a camera that
+  includes the exit, or accepting it); K465 left the cameras alone. What
+  still holds it (`finishHold`): the intro's appearance
   reveal (`revealMulAtCtrl` < 0.98: "exit unrevealed"), and an exit
   point the burn has taken under `burnt` gone (`exitLifted` is false
   there, and the burn's own hiding of that point drops its vis under
