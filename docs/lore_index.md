@@ -27,7 +27,7 @@ rules file or its `paths:` change. Not auto-loaded.
 - `gameplay-panel.md`: pathViz labels, live recolor, panel rules, gridAlign, the background rows (K79), the Accessibility folder (K111)
   paths: `src/ui/tweakpane_panel.ts`, `src/ui/grid_align_curve.ts`, `test/ui/grid_align_curve.test.ts`
 - `gameplay-motion.md`: THE MOTION SETTING (K53, K79), THE ACCESSIBILITY GROUP (K111: Reduced motion, High contrast)
-  paths: `src/ui/motion.ts`, `test/ui/motion.test.ts`, `src/ui/accessibility.ts`, `test/ui/accessibility.test.ts`, `src/app/frame_loop.ts`
+  paths: `src/ui/motion.ts`, `test/ui/motion.test.ts`, `src/ui/accessibility.ts`, `test/ui/accessibility.test.ts`, `src/app/frame_loop.ts`, `src/app/lifecycle.ts`
 - `gameplay-camera.md`: the camera round, FIT CAMERA PAN RANGE (K198), taps and drags (the tap tug, K279)
   paths: `src/main.ts`, `src/app/camera.ts`, `src/ui/view_clamp.ts`, `test/ui/view_clamp.test.ts`, `src/app/frame_loop.ts`
 - `gameplay-moves.md`: MOVES BY DIRECTION (K120): keys, the picker, the move pad
@@ -45,11 +45,11 @@ rules file or its `paths:` change. Not auto-loaded.
 - `physics.md`: physics: the intro, the sweep test, the physics worker's pointer and the solver rules
   paths: `src/physics/**`, `test/physics/**`, `test/*.regression.test.ts`, `test/sweep.manual.test.ts`
 - `physics-worker.md`: THE PHYSICS WORKER (K7): the two hosts, the mirror, transport, the allowance clock, interpolation, the start gate, the fallback, invariants, the measured numbers
-  paths: `src/physics/physics_host.ts`, `src/physics/worker_host.ts`, `src/physics/physics_worker.ts`, `src/physics/physics_worker_core.ts`, `src/physics/mirror_system.ts`, `src/physics/snapshot.ts`, `src/physics/probe_dump.ts`, `src/core/scene_graph.ts`, `test/physics/physics_host.test.ts`, `test/physics/worker_host.test.ts`, `test/physics/host_seam.test.ts`, `test/physics/snapshot.test.ts`, `src/app/frame_loop.ts`
+  paths: `src/physics/physics_host.ts`, `src/physics/worker_host.ts`, `src/physics/physics_worker.ts`, `src/physics/physics_worker_core.ts`, `src/physics/mirror_system.ts`, `src/physics/snapshot.ts`, `src/physics/probe_dump.ts`, `src/core/scene_graph.ts`, `test/physics/physics_host.test.ts`, `test/physics/worker_host.test.ts`, `test/physics/host_seam.test.ts`, `test/physics/snapshot.test.ts`, `src/app/frame_loop.ts`, `src/app/lifecycle.ts`, `src/app/scene.ts`
 - `physics-sleep.md`: the sleep gate counts sim time (K63)
   paths: `src/physics/sleep_gate.ts`, `test/physics/sleep_gate.test.ts`, `test/physics/sleep.regression.test.ts`, `test/quiescence.regression.test.ts`, `src/physics/physics_host.ts`, `src/app/frame_loop.ts`
 - `physics-settle.md`: a new knot's first settle is paced (K147); its code lives in the physics host (K7)
-  paths: `src/physics/settle_budget.ts`, `test/physics/settle_budget.test.ts`, `src/physics/physics_host.ts`, `src/app/frame_loop.ts`
+  paths: `src/physics/settle_budget.ts`, `test/physics/settle_budget.test.ts`, `src/physics/physics_host.ts`, `src/app/frame_loop.ts`, `src/app/lifecycle.ts`
 - `physics-kinks.md`: KINK EYES (with K41): the eye ratchet, across-eye pressure, the fairing exemption
   paths: `src/physics/particle_system.ts`, `src/physics/forces.ts`, `test/physics/sleep.regression.test.ts`
 - `physics-fabric.md`: the junction cover, junction spacing, open-chain terminals
@@ -67,7 +67,7 @@ rules file or its `paths:` change. Not auto-loaded.
 - `render.md`: render: the intro, custom shaders and mesh.texture, palette textures, the P3.40 lessons
   paths: `src/render/**`, `test/render/**`
 - `render-backgrounds.md`: SHADER BACKGROUNDS (K21), SHAPE PARAMS + CUSTOM COLORS (K79)
-  paths: `src/render/background.ts`, `src/render/background_model.ts`, `src/render/background_shaders.ts`, `test/render/background_model.test.ts`, `test/render/background_shaders.test.ts`, `src/app/frame_loop.ts`
+  paths: `src/render/background.ts`, `src/render/background_model.ts`, `src/render/background_shaders.ts`, `test/render/background_model.test.ts`, `test/render/background_shaders.test.ts`, `src/app/frame_loop.ts`, `src/app/scene.ts`
 - `render-hash.md`: THE BACKGROUNDS' HASH IS OUR OWN (K154)
   paths: `src/render/hash2d.ts`, `src/render/background_shaders.ts`, `test/render/hash2d.test.ts`
 - `render-paint.md`: SHADER PAINT (G2), PULSES and PULSE REACH (K75; the trail split and the hover's reach, K93), RING LAPS (K299, integer-corrected lap math), palette strip order, gamut locality
@@ -89,6 +89,6 @@ rules file or its `paths:` change. Not auto-loaded.
 - `render-gaps.md`: PER-PIXEL CROSSING GAPS (G1) and its render lore, marker gaps, the thread reveal's gap gate (K76 2b), the shaped cut's profile texels and row-partial upload (K268)
   paths: `src/render/gap_mask.ts`, `src/render/ribbon_renderer.ts`, `src/render/ribbon/**`, `src/render/ribbon_mesh.ts`
 - `render-shaders.md`: SHADER COMPILES FREEZE THE SCREEN (K307): each program's cold cost (FXC on D3D11), where the intro's freezes are, the GPU program cache, why presents stop, parallel vs blocking warm-ups, building warm-up programs from the sites' own GlPrograms; THE WARM-UP (K307 stage 2): what main.ts gates, why it links blocking (parallel links miss the disk cache), wave 2 off, the registry rule, setProgramName twins, the burn rule
-  paths: `src/render/ribbon_renderer.ts`, `src/render/ribbon/**`, `src/render/paint_glsl.ts`, `src/render/explore_glsl.ts`, `src/render/arm_strip.ts`, `src/render/junction_field.ts`, `src/render/background.ts`, `src/render/background_shaders.ts`, `src/render/marker_mesh.ts`, `src/render/pluck_overlay.ts`, `src/render/pluck_ripple.ts`, `src/render/shader_warmup.ts`, `src/render/program_registry.ts`, `test/render/program_registry.test.ts`, `test/render/shader_warmup.test.ts`, `src/app/frame_loop.ts`
+  paths: `src/render/ribbon_renderer.ts`, `src/render/ribbon/**`, `src/render/paint_glsl.ts`, `src/render/explore_glsl.ts`, `src/render/arm_strip.ts`, `src/render/junction_field.ts`, `src/render/background.ts`, `src/render/background_shaders.ts`, `src/render/marker_mesh.ts`, `src/render/pluck_overlay.ts`, `src/render/pluck_ripple.ts`, `src/render/shader_warmup.ts`, `src/render/program_registry.ts`, `test/render/program_registry.test.ts`, `test/render/shader_warmup.test.ts`, `src/app/frame_loop.ts`, `src/app/lifecycle.ts`
 - `notices.md`: the credits and licenses page (K122)
   paths: `notices/**`, `test/notices/**`, `vite.config.ts`
