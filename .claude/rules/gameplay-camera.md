@@ -5,6 +5,8 @@ paths:
   - "src/ui/view_clamp.ts"
   - "test/ui/view_clamp.test.ts"
   - "src/app/frame_loop.ts"
+  - "src/game/tap_pick.ts"
+  - "test/game/tap_pick.test.ts"
 ---
 
 # Gameplay lore: camera, gestures and taps
@@ -147,6 +149,91 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   - OPEN: a touch press on a choice lights no glow until the finger
     moves (the pendingTap path), and whether the ratio should reach touch
     is Levi's call.
+
+- TAP PREFERENCE (K479, 2026-10-15; brief and handoff
+  `docs/design/K479.md`; Levi: "I sometimes accidentally click on the
+  incoming/previous segment when I meant to click on the next/outgoing
+  segment. Can we give preferential treatment somehow to outgoing
+  segments?").
+  - RULE (`game/tap_pick.ts` `pickRun`, pure; tests
+    `test/game/tap_pick.test.ts`): the ARRIVAL run (the run the player
+    came in on; a tap on it backtracks) takes a tap only when it is
+    ARRIVAL_BIAS 1.5 times nearer than the nearest outgoing run,
+    measured as the distance PAST THE DRAWN EDGE, max(0, d - 0.5 tw).
+    An exact tie, and so a tap inside both ribbons (the arms overlap at
+    the junction, or the arrival run crosses an outgoing one), goes to
+    the outgoing run. Alone in reach the arrival run still takes the
+    tap, however far along it, so a backtrack stays one; with no arrival
+    run (the first move, a restart) there is no bias; burnt and hidden
+    thread stay out of reach as before. The arrival run is
+    `FabricMazeController.arrivalEdge`, the path's last run (trail mode:
+    the last run walked), -1 for none: after a backtrack the run just
+    retraced is an ordinary choice. `FabricMazeRenderer.edgeAt` =
+    `pickRun(runsInReach(...))`, so the hover glow, the cursor, taps, the
+    chase tap and the press agree (main.ts is unchanged). Arrow keys and
+    the move pad choose by direction (key_moves.ts), untouched. PROBE
+    SWITCH: `__knotFabricRenderer().tapPreference = false` gives the old
+    nearest pick on the same page (a same-state A/B).
+  - MID-MOVE (the brief's first check, confirmed on a pristine build,
+    `.claude/probes/K479/mid_move.mjs`): moveAlong commits a move at
+    once, so while the dot travels run R into junction J the controller's
+    head is already J and its choices() hold R in FULL. A tap on the
+    stretch of R the dot had not reached was a backtrack: with the dot
+    frozen at 30% of R (k111's first move, 32 ctrl), `edgeAt` on 19
+    points along R's centerline returned R at all 19, and a real click at
+    70% showed the pointer cursor, queued (tapsWait) and, on arrival,
+    walked back (with taps-wait off the code snaps the dot to R's end
+    first). NOW only the stretch the dot has covered counts as the
+    arrival run (`coveredByDot(from, cur, ctrl)`, in `runsInReach`); the
+    stretch ahead is empty space, so an outgoing run in reach takes a tap
+    there and a tap with none in reach is nothing. Same frozen state, new
+    pick: R at 5 of the 6 covered points (the sixth, at 0.20, lies inside
+    both R's and outgoing run 247's ribbon: 247), nothing at all 13
+    uncovered ones, and the real click at 70% no longer backtracks.
+  - MEASURED (`census.mjs` + `report.mjs`, outputs in `out/`): k111,
+    1471kin and maze7 (178-181 junctions each), every junction entered
+    on each of its runs in turn, a 0.04 world grid over a 3.2 world disc
+    (3.6M points and 11M tap-and-arrival cases per viewport), the mouse
+    at 1400x900 (pick radius 0.53 world) and touch at 411x753 (0.9), at
+    rest (not mid-move); classes from the TRUE geometry (the distance to
+    the drawn centerline); the live `edgeAt` re-evaluated at 1 point in
+    61: 0 mismatches in about 180k evaluations on each of the six runs.
+    CONTESTED taps (the arrival run and an outgoing run both in reach):
+    the arrival run took 46.8-47.1% (mouse) / 43.0-43.1% (touch) before
+    and 35.7-36.2% / 33.3-33.5% now (k111: 24,490 of 233,001 taps, 10.5%,
+    moved to the outgoing run with the mouse, 88,147 of 924,158, 9.5%,
+    with touch; none moved the other way). Inside BOTH ribbons the
+    arrival run took 41.9% before and 28.7% now (the rest is the
+    exclusion zone, below). THE INVARIANT (a tap inside exactly one
+    ribbon takes that run): old 99.8% (the 0.2% inferred: exclusion zone),
+    new 99.7%; 0.066% of arrival-ribbon taps (295 of 449,716, k111;
+    0.065-0.083% on the others) move away when taken 0.04 world or more
+    inside the edge (sample distances against the drawn curve: offset
+    mean 0.012, max 0.195 world), and the outgoing-ribbon taps that went
+    to the arrival run fell from 939 to 418.
+  - WHY THE BEYOND-EDGE DISTANCE, AND 1.5: a plain ratio of centerline
+    distances moves more (the arrival run keeps 26.9% of contested mouse
+    taps) but breaks the invariant about 4-6 times as often (1,105
+    against 295 lost at the 0.04 margin, 4,749 against 822 raw): a tap
+    inside only the arrival ribbon, 0.2 from its centerline and 0.3 from
+    an outgoing one, would go outgoing. 1.5 is the brief's number; 1.25
+    leaves the arrival run 38.7%, 2 leaves 33.2% (mouse) / 29.4% (touch)
+    at 1.4x the invariant loss (416 at the margin): a tuning knob, no
+    panel row.
+  - LIMITS: the branch point's HEAD EXCLUSION zone (HEAD_EXCLUDE ctrl,
+    not tappable: the wait tap's) caps the bias at the dot: distances
+    there reach the first tappable sample, so 28.7% of inside-both taps
+    still backtrack (inferred from the classes, not isolated). A tap
+    inside both ribbons also goes outgoing at a crossing of the arrival
+    run with an outgoing run, over or under. A touch press on a choice
+    lights no glow (the pendingTap path), so the hover was checked with
+    a mouse at phone size and the tap path by the unit tests. HOVER A/B
+    (`hover_ab.mjs` + `hover_compose.mjs`; one page, one frozen state,
+    `tapPreference` toggled; sheet `out/hover_sheet.png`): toss-up points
+    near the junction light run 0 before and run 247 after (605 and 796
+    px differ at 1400x900, 326 and 505 at phone size); a point inside
+    only the arrival ribbon and one on an outgoing run light the same run
+    both ways (0 px).
 
 - THE THREAD REVEAL (K76 stage 2c, 2026-10-15): hidden thread is empty
   space for every press, tap, hover and tug (a drag pans, a double-tap
