@@ -296,11 +296,11 @@ Next free ID: K440.
   play, `?2gozcj.MgaM`): 1-2 beacon dots at a stub's end, a squared-off far end, a circular knuckle,
   a tap on a stub's end that plucks and shows hidden thread, and end dots sitting in gaps cut over
   crossings.
-  - owner: nobody since 2026-10-15 10:26 (stage 1, the diagnosis, merged in 26b8c08)
-  - branch: mainline; last commit: `26b8c08` (stage 1's worktree `.claude/worktrees/agent-a3740655bb9c1fc11` kept)
-  - evidence: the main checkout's `.claude/probes/K397/` (stage 1's probes, `out/` and `out/levi/`; Levi's shots)
-  - next: stage 2, the fixes for 1, 2, 5 and 4, after K423 and K5 R1's merge, in the next free code slot; then stage 3 (issue 3)
-  - brief: `docs/design/K397.md` (Diagnosis, Fix plans, Stage 2 brief)
+  - owner: agent `ad94f9ee658990968` of claude session 05e60da0 (opus, started 2026-10-15 11:48, 2 h cap ~13:48; ports 5970-5979)
+  - branch: `worktree-agent-ad94f9ee658990968`, worktree `.claude/worktrees/agent-ad94f9ee658990968`; last commit: `023f780`
+  - evidence: `.claude/probes/K397/` (stage 1's, in the main checkout; stage 2's in its worktree)
+  - next: stage 2 running (fixes 1, 2, 5, then 4); at its merge, brief stage 3 (issue 3)
+  - brief: `docs/design/K397.md` ("Stage 2 brief")
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 
 ## Next, in order
