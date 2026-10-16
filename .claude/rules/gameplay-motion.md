@@ -4,6 +4,7 @@ paths:
   - "test/ui/motion.test.ts"
   - "src/ui/accessibility.ts"
   - "test/ui/accessibility.test.ts"
+  - "src/app/frame_loop.ts"
 ---
 
 # Gameplay lore: the Motion setting

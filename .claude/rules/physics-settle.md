@@ -3,6 +3,7 @@ paths:
   - "src/physics/settle_budget.ts"
   - "test/physics/settle_budget.test.ts"
   - "src/physics/physics_host.ts"
+  - "src/app/frame_loop.ts"
 ---
 
 # Physics lore: the load settle (K147)

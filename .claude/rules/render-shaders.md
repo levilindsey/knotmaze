@@ -15,6 +15,7 @@ paths:
   - "src/render/program_registry.ts"
   - "test/render/program_registry.test.ts"
   - "test/render/shader_warmup.test.ts"
+  - "src/app/frame_loop.ts"
 ---
 
 # Render lore: shader compiles (K307)
