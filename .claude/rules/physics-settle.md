@@ -18,8 +18,10 @@ only with the files it is about; `physics.md` lists the area's other files.
   entry below names in main.ts (`beginSettle` .. `activeBudget`, the
   K147 header comment, the frame's step, the physics-off load and the
   pre-settle slices) moved verbatim into `src/physics/physics_host.ts`:
-  `PhysicsCore`, which `InThreadHost` runs on the main thread. main.ts
-  keeps the loader, the stamp and the UI and calls the host;
+  `PhysicsCore`, which `InThreadHost` runs on the main thread. The
+  settle's UI side (`beginSettle`, the pre-settle and the warm-up hold,
+  the loader's show and hide) then moved from main.ts to
+  `src/app/lifecycle.ts` (K5 M4, 2026-10-15), which calls the host;
   `__knotSettle()` reads `host.stats()`.
 
 - **The budget is the in-thread host's only (K7 stage 5, 2026-10-15; the

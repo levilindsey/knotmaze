@@ -142,10 +142,12 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   links every wave-1 program of `program_registry.ts`, reads each status
   and deletes it. Pixi's later link of the same source is a cache hit:
   section-rgb 19.9 ms, arm-strip 12.9, junction-field 8.4, the rest 3 ms or
-  less. main.ts holds the hidden pre-settle, or an `am=instant` link's
-  first frame, until `warmup.wave1Done` (a 15 s timeout, a link failure or
-  a lost context also open it), keeps the background layer hidden until
-  then, and shows the trefoil at 300 ms while it waits. Everything else
+  less. `src/app/lifecycle.ts` (main.ts until K5 M4) holds the hidden
+  pre-settle, or an `am=instant` link's first frame, until
+  `warmup.wave1Done` (a 15 s timeout, a link failure or a lost context
+  also open it) and shows the trefoil at 300 ms while it waits; the frame
+  loop's `backgroundTick` keeps the background layer hidden until then.
+  Everything else
   lives in `shader_warmup.ts`; `window.__knotWarmup()` reports the waves,
   timings, relinks, failures and unregistered programs.
 - **It links BLOCKING (`PARALLEL_DEFAULT = false`).** In Chrome on D3D11,
