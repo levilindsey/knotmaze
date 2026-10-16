@@ -359,6 +359,8 @@ describe("K299 the render GLSL's rounded quotients", () => {
       .sort();
     expect(files).toContain("ribbon/ribbon_shader.ts");
     expect(files).toContain("ribbon/sampling.ts");
+    expect(files).toContain("ribbon/crossing_gaps.ts");
+    expect(files).toContain("ribbon/explore_gaps.ts");
     for (const f of files) {
       const src = readFileSync(new URL(f, dir), "utf8")
         .split(/\r?\n/)
