@@ -51,16 +51,19 @@ only with the files it is about; `render.md` lists the area's other files.
   pieces at amount 1, as K140 had) at half speed with no spin or flutter. A proposal for Levi
   (`.claude/probes/K140/results/reduced_phone_1b_spray.png`).
 - ANIMATING. Render-only: nothing touches the physics. `confetti.active`
-  is a term of sceneAnimating() and goes false when the last piece dies
+  is the frame loop's OVERLAY poll (`render-loop.md`; a term of main.ts's
+  sceneAnimating() before K6-1) and goes false when the last piece dies
   (5.6-6.8 s after a finish since K335, 5.4-5.9 s before it; 1.9-2.7 s
   reduced). confetti.tick runs in
   the app.ticker callback after tick(), in every branch (asleep, paused,
   loading), and is one early return once both pools drain (the
-  containers hide). Fabric's sceneAnimating() is true at rest today (its
-  gameplay paint animates; K24's render-on-demand does not exist yet),
-  so the term bites only in knot mode, where a rest check needs
-  `mf=0&fw=0&snd=none` (the flow and music's auto plucks animate the
-  knot otherwise).
+  containers hide). Before K6-1 a fabric's sceneAnimating() was true at
+  rest whatever it showed, so the term bit only in knot mode. Since
+  K6-1's sceneActive an unsolved fabric is still active at rest (its
+  choices' pulses are PAINT_AMBIENT), but a SOLVED fabric without flow or
+  fog goes still once the confetti is gone, as the knot does. A knot rest
+  check needs `mf=0&fw=0&snd=none` (the flow and music's auto plucks
+  animate the knot otherwise).
 - WHEN. throwConfetti() ends showFabricWin, so it fires with EVERY
   banner: dailies, free play, replays, the real-time mode, a reload
   that restores a solved attempt (pendingWin), and Reset path pressed
@@ -92,7 +95,8 @@ only with the files it is about; `render.md` lists the area's other files.
   lock; `-Runs desk:1,desk:4`); bench_sim.mjs (the sim's own cost);
   builds/<sha> served by `vite preview` on 5481/5482. Hooks:
   `__knotConfetti()` (pieces alive, bursts, frames stepped - frozen when
-  idle - the plan a finish would throw, sceneAnimating) and
+  idle - the plan a finish would throw, sceneAnimating, which reads the
+  loop's sceneActive since K6-1) and
   `__knotConfettiBurst()` (a finish's burst on demand).
 
 ## The rain's taper (K335)
@@ -123,7 +127,8 @@ only with the files it is about; `render.md` lists the area's other files.
   opening to 0.29 of K140's on-screen count at 0.25 s. The rain runs out
   5.57-6.78 s after a finish, medians 5.9-6.2 (K140 5.40-5.93, medians
   5.6-5.7; 60 seeds x amounts 1 and 3 at 411x753, 1400x900 and
-  3840x2160). Only knot mode feels it (sceneAnimating): about 0.3-0.6 s
+  3840x2160). Only knot mode feels it (sceneAnimating; since K6-1's
+  sceneActive, a solved fabric without flow or fog too): about 0.3-0.6 s
   more drawn frames at the median, 0.9 s at most.
 - COST. The same pieces and per-piece code. bench_sim.mjs at 1400x900,
   K317's counts, two interleaved runs: master 33.5 us a frame at amount

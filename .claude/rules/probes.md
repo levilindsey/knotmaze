@@ -448,6 +448,33 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   reveal rewrites every slot's vis each frame. `run_locked.ps1` takes
   `-What` and `-Cmds` by name: a third positional string binds to
   `-MaxWaitMin` and fails to parse; call it with `&` and `npx.cmd`.
+- K6-1 (2026-10-15), THE FRAME LOOP'S FLAGS (`render-loop.md`):
+  `__knotLoop()` returns the flag ledger's report since the last reset:
+  `mode` ("shadow"), `frames`, `now` and `last` (the open and the last
+  closed frame's need, as flag names), `halted`, `flags` (per flag:
+  `frames` set, `sole` = frames it was the only visual flag, `pushes`),
+  `empty` and `emptyRuns` {count, longest, current} (frames with no
+  visual flag: each one a frame K6-3 would skip), `restarts` (what ended
+  each empty run: `push` or `poll`, `byPush` / `byPoll` bits, and
+  `pollWithInput`; a restart by poll with no INPUT push in its window is
+  an animation a stopped ticker would miss), `ambientOnly`, `observer` (`rootMoved`:
+  the root moved with CAMERA, LOAD and PHYS clear; `legacyOnly` /
+  `flagsOnly`: the old sceneAnimating() against sceneActive;
+  `stepUnflagged`) and `recent` / `recentPush` (the last 240 frames'
+  masks). `__knotLoop({reset: true})` zeroes it. `{track: true}` arms the
+  TRACKER: after Pixi's render in the same rAF it reads the whole
+  framebuffer (`gl.readPixels`) and counts the pixels that differ from
+  the last frame's, plus a MutationObserver's DOM changes, and the report
+  gains `track`: OVER (a visual flag, 0 px, no DOM change) by flag, UNDER
+  (pixels changed with no visual flag and no INPUT push: a miss),
+  `underInput` (the same with an INPUT push), `dom` (in a frame, in an
+  empty frame, between frames), `lost` (webglcontextlost) and `readMs`.
+  `{track: false}` stops it and returns its last report. Armed, timings
+  are void (a GPU sync every frame). The flags are counted on every build
+  since K6-1, unarmed (a few bit operations and the polls a frame). The
+  probe: `.claude/probes/K6/K6-1/loop_shadow.mjs <base> <outDir> <case>`
+  (knotfw0 | knot | fabric | daily | chase | reduced | drift; phases load,
+  rest, tap, drag, finish).
 
 ## Census and diagnosis rules
 
