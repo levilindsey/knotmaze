@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K492.
+Next free ID: K499.
 
 ## Waiting on Levi
 
@@ -117,6 +117,14 @@ Next free ID: K492.
   frame the exit: the fit camera frames only the seen thread (the tween ends where it began), the
   follow camera zooms out but not enough, and the label still says "Tap to bring it into view"
   (main.ts l.1298; docs/design/K465.md Handoff)
+- **K492** · Thread reveal ends (K466): keep A as the default (`rvg=bright`, `rve=under`: a bigger,
+  brighter, breathing halo on each unexplored end) or make B the default (`rve=past|back`: an end
+  under a crossing moves out from under it, but up to 4.67 ctrl of unexplored thread shows; K494).
+  Sheet: `.claude/probes/K466/sheet/`; docs/design/K466.md Handoff.
+- **K496** · Tap preference (K479), your calls: (a) bias the run you physically retrace after a
+  backtrack too? (i) where the arrival run crosses an outgoing run, a tap inside both ribbons now
+  goes outgoing; should the backtrack win there? (b) the factor: 1.5 now, vs 2 or one per pointer
+  (no panel row). gameplay-camera.md TAP PREFERENCE; docs/design/K479.md Handoff.
 
 ## In progress
 
@@ -338,7 +346,7 @@ Every other item below waits on the trigger it names.
 
 - **K480** · Multi-run taps (Levi 2026-10-15): a tap on any lit run within `pulseReach` walks there
   run by run, stopping when a warning matters; pulses and hover branch to the same reach. Opus, after
-  the weekly reset and K479's merge; stage 1 briefed in `docs/design/K480.md`.
+  the weekly reset (K479 merged in 796e158); stage 1 briefed in `docs/design/K480.md`.
 - **K481** · Turns by length (Levi 2026-10-15): a toggle moves the turn minotaur its speed x your
   move's length, with mid-run stops, contact by thread distance and a telegraph tick per choice; tuned
   on the turn sim. Opus, after K480; stage 1 (model + sim) briefed in `docs/design/K481.md`.
@@ -1018,9 +1026,23 @@ Every other item below waits on the trigger it names.
 - **K489** · `finishIndicator.gate()` is unused: main.ts calls it nowhere (K465 Handoff); remove it
   or wire it
 - **K490** · A console "Failed to load resource ... 404" on every load of K465's preview build (not
-  a pageerror; cause not investigated): check master's build and name the URL
+  a pageerror; cause not investigated): check master's build and name the URL.
+  K466 saw it on a vite dev server too (`.claude/probes/K466/sheet/key.txt`), so it is not
+  preview-only.
 - **K491** · K465's exit marker over unseen thread is pixel-verified only at 2600x1600 `&gs=4` (the
   exit is never on screen unseen at 411x753); no phone walk brings it on screen
+- **K494** · K466 B (`rve=past|back`): up to 4.67 ctrl of unexplored thread shows; three covered
+  ends do not move, and 1x2y3z f0 stays flagged after a 3.27 ctrl move (undiagnosed); a moved fade
+  changes its length and its dots' size; the keep-out cache can go stale after a tug or a settle;
+  the pad may count the gap's fade twice (docs/design/K466.md Handoff).
+- **K495** · The panel's end-glow row (`rvg`, K466) shows for every reveal-end look; hide it for the
+  looks without a halo (gameplay-panel.md EXPLORATION ROWS).
+- **K497** · Tap preference (K479) on touch: a touch press lights no glow, and touch hover/tap
+  parity and a real touch tap are unverified; a mid-flight tap ahead of the dot is empty space, and
+  `setGlowRun` may center the glow in that stretch (cosmetic). docs/design/K479.md Handoff.
+- **K498** · Tap preference (K479) limits: HEAD_EXCLUDE caps the bias at the dot (28.7% of
+  inside-both taps still backtrack); sample-based distances break the inside-one-ribbon rule on
+  0.066% of taps; no mid-move census (gameplay-camera.md TAP PREFERENCE).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1232,6 +1254,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   exclusion; `docs/design/K397.md`, Stage 3 handoff).
 - **K478** · A fade tap whose nearer lobe is under LOBE_MIN_LEN is silent since K459; it could pluck
   the next lobe inward (`docs/design/K459.md`, Handoff).
+- **K493** · Thread reveal ends, candidate C (K466): draw an end through the over thread at its
+  crossing. Needs shader text, so every explore variant would compile cold (render-explore.md THE
+  ENDS; docs/design/K466.md Handoff).
 
 ## Done
 
