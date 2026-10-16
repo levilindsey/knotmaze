@@ -1044,6 +1044,20 @@ export function buildPanel(
     "How a thread you have not explored ends: fade (it just fades out), halo (a soft light where it fades), glow (the fade glows), dots (it breaks into dots), fray (it frays into fibers) or beacon (dots and the halo). Applies live.",
     D.revealLook, () => callbacks.onTrailChange()
   );
+  // K466 THE ENDS (Levi, 2026-10-15: "emphasize the unexplored thread ends
+  // a bit more, maybe especially for ends that lie under a crossing").
+  const revealEndCrossRow = row(
+    fMaze, p, "revealEndCross",
+    { options: { under: "under", past: "past", back: "back" }, label: "end at crossing" },
+    "Where a thread you have not explored ends when its end would lie under a crossing, hidden by the thread on top: under (it stays there), past (it shows a little further, beyond the crossing) or back (it ends before the crossing). Applies live.",
+    D.revealEndCross, () => callbacks.onTrailChange()
+  );
+  const revealEndGlowRow = row(
+    fMaze, p, "revealEndGlow",
+    { options: { soft: "soft", bright: "bright" }, label: "end glow" },
+    "How strongly the light at the end of a thread you have not explored shows (the halo and beacon ends): soft or bright (larger and brighter). Applies live.",
+    D.revealEndGlow, () => callbacks.onTrailChange()
+  );
   // K465: the finish shows from the start (Levi, 2026-10-15).
   const revealFinishRow = row(
     fMaze, p, "revealFinish", { label: "show finish" },
@@ -2256,6 +2270,8 @@ export function buildPanel(
     revealDistanceRow.hidden = !threads;
     revealFadeRow.hidden = !threads;
     revealLookRow.hidden = !threads;
+    revealEndCrossRow.hidden = !threads;
+    revealEndGlowRow.hidden = !threads;
     revealFinishRow.hidden = !threads;
     // K80: in real time the dot runs at playerPace instead.
     const realtime = fab && params.clock === "realtime";

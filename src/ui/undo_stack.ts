@@ -149,6 +149,7 @@ export const LIVE_EFFECTS = {
     "fowRadius", "fowIntro", "pulseReach", "hoverGlow",
     "hoverGlowWidth", "hoverGlowLength", "hoverGlowFade",
     "revealDistance", "revealFade", "revealLook", "burnt", "revealFinish",
+    "revealEndCross", "revealEndGlow",
   ],
   onRecolor: [
     "colorScheme", "junctionBlend", "hueShift", "gamutArc", "palette",

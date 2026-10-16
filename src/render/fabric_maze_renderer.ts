@@ -70,7 +70,13 @@ import {
   subtractBurnt,
   wholePieces,
 } from "../game/explore_view";
-import type { BurnFront, BurntSpan, ExplorePiece, ExploreView } from "../game/explore_view";
+import type {
+  BurnFront,
+  BurntSpan,
+  ExploreKeepOut,
+  ExplorePiece,
+  ExploreView,
+} from "../game/explore_view";
 import { AppearFxSystem } from "./appear_fx";
 import { EXPLORE_LOOK_DEFAULT, exploreLookHasHalo } from "./explore_glsl";
 
@@ -92,6 +98,16 @@ const HALO_ALPHA = 0.8;
 const HALO_BREATH_LO = 0.6;
 const HALO_BREATH_HI = 0.85;
 const HALO_BREATH_S = 2.5;
+// K466 THE ENDS, `revealEndGlow` bright: a bigger halo (its diameter in
+// thread widths, and its floor in world), breathing higher and whiter;
+// Reduced motion holds HALO_BRIGHT_STILL. High contrast is unchanged (white
+// at 1). Soft keeps the constants above.
+const HALO_BRIGHT_D = 5.2;
+const HALO_BRIGHT_MIN = 2.4;
+const HALO_BRIGHT_LO = 0.75;
+const HALO_BRIGHT_HI = 1;
+const HALO_BRIGHT_STILL = 0.9;
+const HALO_BRIGHT_TINT = 0xd8f2ff;
 import {
   DEFAULT_GLYPHS,
   MARKER_SIZE_DEFAULT,
@@ -497,7 +513,23 @@ export class FabricMazeRenderer {
   // the vertices seen (-> the clock when first reached, -Infinity = shown
   // grown) and runs walked, the restart they belong to, the clock, the last
   // view and the halo sprites.
-  explore = { on: false, reach: 2.5, fade: 1, look: EXPLORE_LOOK_DEFAULT };
+  // K466 THE ENDS: `endCross` (`revealEndCross`) moves a frontier's fade
+  // out from under a crossing ("under" = where the reach puts it), and
+  // `endGlow` (`revealEndGlow`) sizes and brightens its halo.
+  explore = {
+    on: false,
+    reach: 2.5,
+    fade: 1,
+    look: EXPLORE_LOOK_DEFAULT,
+    endCross: "past" as "under" | "past" | "back",
+    endGlow: "bright" as "soft" | "bright",
+  };
+  // K466: the keep-out stretches (ribbons.underCutCtrls per chain), filled on
+  // first use and kept until the explore state changes (an arrival, a
+  // catch, a restart), so the flow's wobble cannot flip an end back and
+  // forth across a crossing.
+  private koKey = "";
+  private readonly koSpans = new Map<number, number[]>();
   // K290 (burn stage 3a): how burnt thread draws, the `burnt` param (main.ts
   // syncExploration): gone (not drawn) or char (a burnt coloring).
   burntLook: "gone" | "char" = "gone";
@@ -2820,6 +2852,7 @@ export class FabricMazeRenderer {
       partial: this.seenPartial,
       hold,
       holdDist: hold > 0 ? this.holdDist ?? undefined : undefined,
+      keepOut: this.explore.endCross === "under" ? undefined : this.exploreKeepOut(),
     });
     const pieces = this.exploreLast.pieces;
     if (burning) {
@@ -2850,6 +2883,32 @@ export class FabricMazeRenderer {
       this.ribbons.setExplore(pieces, this.explore.look, 1);
     }
     this.drawFrontierMarks();
+  }
+
+  // K466 THE ENDS: where a frontier's fade may not lie (explore_view's
+  // keepOut): every stretch of a chain that passes under a crossing, the
+  // over pass shown or not (an end stays put when its over thread is
+  // revealed later), grown by the under-gap fade plus a quarter thread
+  // width. Built per chain on first use, kept until the explore state moves.
+  private exploreKeepOut(): ExploreKeepOut {
+    const pad = this.ribbons.fadeLength + 0.25 * this.threadWidth;
+    const key = `${this.seenRestart}|${this.seenRefogs}|${this.seenV.size}|${this.seenRuns.size}|${this.seenPartial.length}|${pad}`;
+    if (key !== this.koKey) {
+      this.koKey = key;
+      this.koSpans.clear();
+    }
+    return {
+      spans: (chain: number): readonly number[] => {
+        let s = this.koSpans.get(chain);
+        if (!s) {
+          s = this.ribbons.underCutCtrls(chain, pad);
+          this.koSpans.set(chain, s);
+        }
+        return s;
+      },
+      ring: this.ringN,
+      mode: this.explore.endCross === "back" ? "back" : "past",
+    };
   }
 
   // K290: whether a chain point lies in a burnt stretch that is not drawn
@@ -2898,7 +2957,10 @@ export class FabricMazeRenderer {
     for (let i = 0; i < this.haloSprites.length; i++) {
       this.haloSprites[i].visible = i < want;
     }
-    const d = Math.max(1.8, this.threadWidth * 3.8);
+    const d =
+      this.explore.endGlow === "bright"
+        ? Math.max(HALO_BRIGHT_MIN, this.threadWidth * HALO_BRIGHT_D)
+        : Math.max(1.8, this.threadWidth * 3.8);
     for (let i = 0; i < want; i++) {
       const f = fr[i];
       const c = f.cSolid + (f.cEnd - f.cSolid) * 0.5;
@@ -2928,14 +2990,18 @@ export class FabricMazeRenderer {
   private styleHalos(): void {
     if (this.haloSprites.length === 0) return;
     const hc = this.exploreContrast;
+    const bright = this.explore.endGlow === "bright";
+    const lo = bright ? HALO_BRIGHT_LO : HALO_BREATH_LO;
+    const hi = bright ? HALO_BRIGHT_HI : HALO_BREATH_HI;
     const a = hc
       ? 1
       : this.exploreStill
-        ? HALO_ALPHA
-        : HALO_BREATH_LO +
-          (HALO_BREATH_HI - HALO_BREATH_LO) *
-            (0.5 - 0.5 * Math.cos((2 * Math.PI * this.exploreClock) / HALO_BREATH_S));
-    const tint = hc ? 0xffffff : HALO_TINT;
+        ? bright
+          ? HALO_BRIGHT_STILL
+          : HALO_ALPHA
+        : lo +
+          (hi - lo) * (0.5 - 0.5 * Math.cos((2 * Math.PI * this.exploreClock) / HALO_BREATH_S));
+    const tint = hc ? 0xffffff : bright ? HALO_BRIGHT_TINT : HALO_TINT;
     for (const sp of this.haloSprites) {
       if (!sp.visible) continue;
       sp.alpha = a;
@@ -2953,7 +3019,14 @@ export class FabricMazeRenderer {
 
   // Probe view of the mode and the last declaration.
   exploreState(): {
-    explore: { on: boolean; reach: number; fade: number; look: number };
+    explore: {
+      on: boolean;
+      reach: number;
+      fade: number;
+      look: number;
+      endCross: "under" | "past" | "back";
+      endGlow: "soft" | "bright";
+    };
     view: ExploreView | null;
     seen: string[];
     runs: number[];

@@ -9,10 +9,12 @@ import {
   chainVis,
   exploreDistances,
   exploreHoldRadius,
+  endPullBack,
+  endPushPast,
   exploreView,
   pieceVis,
 } from "../../src/game/explore_view";
-import type { ExploreInput, ExplorePiece } from "../../src/game/explore_view";
+import type { ExploreInput, ExploreKeepOut, ExplorePiece } from "../../src/game/explore_view";
 
 // K76 stage 2a: the thread-reveal model (docs/design/K76_reveal_mode.md
 // section 1; the test list is section 7's step 1).
@@ -373,4 +375,124 @@ describe("explore view (K76 stage 2c): the intro's close-in", () => {
       }
     });
   }
+});
+
+// K466 THE ENDS: a frontier's fade kept out of the stretches where its
+// thread passes under a crossing (docs/design/K466.md).
+function ko(spans: Record<number, number[]>, mode: "past" | "back", rings: Record<number, number> = {}): ExploreKeepOut {
+  return { spans: (c) => spans[c], ring: (c) => rings[c] ?? 0, mode };
+}
+
+describe("explore view (K466): the ends kept out from under crossings", () => {
+  it("endPushPast: past every span the fade overlaps, chained, NaN past the limit", () => {
+    expect(endPushPast([2, 3], 2.5, 1, 10)).toBe(4);
+    expect(endPushPast([2, 3, 3.5, 4.5], 2.5, 1, 10)).toBe(5.5);
+    expect(endPushPast([2, 3], 2.5, 1, 3.9)).toBeNaN();
+    // Touching is not overlapping: the fade [1.5, 2.5] stays.
+    expect(endPushPast([0.5, 1.5, 2.5, 3], 2.5, 1, 10)).toBe(2.5);
+    expect(endPushPast([], 2.5, 1, 10)).toBe(2.5);
+  });
+
+  it("endPullBack: before every span the fade overlaps, chained, NaN below the floor", () => {
+    expect(endPullBack([2, 3], 2.5, 1, 0.5)).toBe(2);
+    expect(endPullBack([1.8, 2.2, 0.9, 1.2], 2.5, 1, 0.5)).toBeNaN();
+    expect(endPullBack([1.8, 2.2, 0.9, 1.2], 2.5, 1, -1)).toBe(0.9);
+    expect(endPullBack([2.5, 3], 2.5, 1, 0.5)).toBe(2.5);
+  });
+
+  // LINE's run 0 from J1: web 0.5, reach 2.5, fade 1, so the plain fade is
+  // [1.5, 2.5] (1 ctrl per unit).
+  const J1 = new Map([["J1", 1]]);
+  const end0 = (v: ReturnType<typeof exploreView>): { cSolid: number; cEnd: number } => {
+    const f = v.frontiers.find((f) => f.edge === 0)!;
+    return { cSolid: f.cSolid, cEnd: f.cEnd };
+  };
+
+  it("past: a fade under a crossing moves beyond it, whole", () => {
+    const v = exploreView(input(LINE, { visited: J1, keepOut: ko({ 0: [2, 3] }, "past") }));
+    expect(end0(v)).toEqual({ cSolid: 3, cEnd: 4 });
+    const [p] = onChain(v.pieces, 0);
+    expect(p).toEqual({ chain: 0, c0: 0, c1: 3, f0: 0, f1: 1, tip0: false, tip1: true });
+  });
+
+  it("back: the same fade moves in before it", () => {
+    const v = exploreView(input(LINE, { visited: J1, keepOut: ko({ 0: [2, 3] }, "back") }));
+    expect(end0(v)).toEqual({ cSolid: 1, cEnd: 2 });
+  });
+
+  it("each falls back to the other, then to the plain end", () => {
+    // Back would cut into the web domain (the span starts at 0.8): past.
+    const a = exploreView(input(LINE, { visited: J1, keepOut: ko({ 0: [0.8, 3] }, "back") }));
+    expect(end0(a)).toEqual({ cSolid: 3, cEnd: 4 });
+    // Past would run into J2's web domain (limit 9.5): back.
+    const b = exploreView(input(LINE, { visited: J1, keepOut: ko({ 0: [2, 9.6] }, "past") }));
+    expect(end0(b)).toEqual({ cSolid: 1, cEnd: 2 });
+    // Neither fits: the plain fade, under the crossing.
+    const c = exploreView(input(LINE, { visited: J1, keepOut: ko({ 0: [0.8, 9.6] }, "past") }));
+    expect(end0(c)).toEqual({ cSolid: 1.5, cEnd: 2.5 });
+  });
+
+  it("a visited far end limits a push to half the gap between the two plain tips", () => {
+    const both = new Map([["J1", 1], ["J2", 1]]);
+    // The plain tips are 2.5 and 7.5: the push may end by 5.
+    const far = exploreView(input(LINE, { visited: both, keepOut: ko({ 0: [2, 4.5] }, "past") }));
+    expect(end0(far)).toEqual({ cSolid: 1, cEnd: 2 });
+    const open = exploreView(input(LINE, { visited: J1, keepOut: ko({ 0: [2, 4.5] }, "past") }));
+    expect(end0(open)).toEqual({ cSolid: 4.5, cEnd: 5.5 });
+  });
+
+  it("does not move a stub whose run will show whole once grown", () => {
+    // reach 5 from both ends meets over the 10-unit run; J2 still growing.
+    const growing = new Map([["J1", 1], ["J2", 0.2]]);
+    const plain = exploreView(input(LINE, { visited: growing, reach: 5 }));
+    const kept = exploreView(input(LINE, { visited: growing, reach: 5, keepOut: ko({ 0: [4, 6] }, "past") }));
+    expect(kept).toEqual(plain);
+  });
+
+  it("moves a growing arm's end continuously, reaching the moved end when grown", () => {
+    let last = -1;
+    for (let i = 0; i <= 100; i++) {
+      const g = i / 100;
+      const v = exploreView(input(LINE, { visited: new Map([["J1", g]]), keepOut: ko({ 0: [2, 3] }, "past") }));
+      const e = end0(v).cEnd;
+      if (last >= 0) {
+        expect(e).toBeGreaterThanOrEqual(last - 1e-12);
+        expect(e - last).toBeLessThan(0.05);
+      }
+      last = e;
+    }
+    expect(last).toBeCloseTo(4, 12);
+  });
+
+  it("reads a ring's span on whichever lap overlaps the run", () => {
+    // A 20-ctrl ring; the run J1 (ctrl 15) -> J2 (25 = 5). The span is given
+    // a lap low, at [-3.5, -2] = [16.5, 18].
+    const ring = mkWalk([{ va: "J1", vb: "J2", chain: 2, ctrlA: 15, ctrlB: 25, length: 10 }]);
+    const v = exploreView(input(ring, { visited: J1, keepOut: ko({ 2: [-3.5, -2] }, "past", { 2: 20 }) }));
+    expect(end0(v)).toEqual({ cSolid: 18, cEnd: 19 });
+    // From the other end (J2 at 25, down), the same span is out of reach.
+    const w = exploreView(input(ring, { visited: new Map([["J2", 1]]), keepOut: ko({ 2: [-3.5, -2] }, "past", { 2: 20 }) }));
+    expect(end0(w)).toEqual({ cSolid: 23.5, cEnd: 22.5 });
+  });
+
+  it("moves a stub from the far end the same way, mirrored", () => {
+    // From J2 (ctrl 10) down: the plain fade is [7.5, 8.5]; a span [7, 8] pushes it to [6, 7].
+    const v = exploreView(input(LINE, { visited: new Map([["J2", 1]]), keepOut: ko({ 0: [7, 8] }, "past") }));
+    expect(end0(v)).toEqual({ cSolid: 7, cEnd: 6 });
+    const [p] = onChain(v.pieces, 0);
+    expect(p).toMatchObject({ c0: 7, c1: 10, f0: 1, tip0: true });
+  });
+
+  it("leaves a caught move's lead and every unaffected stub as they were", () => {
+    const caught = { visited: J1, partial: [{ edge: 0, from: 0, cur: 6 }] };
+    const keep = ko({ 0: [6.2, 7.5], 1: [0, 4] }, "past");
+    expect(exploreView(input(LINE, { ...caught, keepOut: keep }))).toEqual(exploreView(input(LINE, caught)));
+    for (const seed of [5, 42]) {
+      const walk = walkFor(seed);
+      const base = { visited: new Map([[walk.start, 1]]) };
+      const none = exploreView(input(walk, base));
+      expect(exploreView(input(walk, { ...base, keepOut: ko({}, "past") }))).toEqual(none);
+      expect(exploreView(input(walk, { ...base, keepOut: ko({}, "back") }))).toEqual(none);
+    }
+  });
 });

@@ -189,6 +189,8 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["fireSpeedRt", "number"], // 147, K440
   ["fireDelayRt", "number"], // 148
   ["revealFinish", "boolean"], // 149, K465
+  ["revealEndCross", "enum", ["under", "past", "back"]], // 150, K466
+  ["revealEndGlow", "enum", ["soft", "bright"]], // 151
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
