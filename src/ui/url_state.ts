@@ -27,6 +27,7 @@ import type {
 import {
   DEFAULT_TURN_MINO,
   MINOTAUR_SETTINGS,
+  TURN_MODEL_DEFAULTS,
   TURN_SPEEDS,
 } from "../game/minotaur_turns";
 import { CONFETTI_AMOUNT_MAX } from "../render/confetti_model";
@@ -515,11 +516,16 @@ export interface UrlParams {
   // ignores these): off | hunter | guard | stalker; the runs it takes a
   // turn; whether its next move shows. Its behavior, in runs and turns
   // (real time's knobs are in thread length and seconds): it hunts within
-  // minoSight runs (gives up beyond sight + LOSE_MARGIN), the hunter roams
-  // up to minoRoamRuns runs, the guard keeps within minoTerritory runs of
-  // the exit, a hunting step is a best one with chance minoAccuracy, it
-  // stands still a turn with chance minoPause, and sleeps minoSleep turns.
-  // Applies live except `minotaur`, which restarts the solve.
+  // minoSight runs (gives up beyond sight + minoGiveUp), the hunter roams
+  // minoRoamMin (or minoRoamRuns, if less) to minoRoamRuns runs, the guard
+  // keeps within minoTerritory runs of the exit, a hunting step is a best
+  // one with chance minoAccuracy, it stands still a turn with chance
+  // minoPause, and sleeps minoSleep turns. minoSight and minoAccuracy are
+  // the HUNTER's (and the stalker's charge reads minoSight); the guard has
+  // its own sight and accuracy and the stalker its own accuracy (K294, K80
+  // turns 3a: url_state turnMinoParamsOf picks them by model). With chance
+  // minoTurnPull a roam destination is one nearer you (the hunter, the
+  // guard). Applies live except `minotaur`, which restarts the solve.
   minotaur: TurnMinotaurSetting;
   minoSpeed: TurnSpeed;
   minoTelegraph: boolean;
@@ -529,6 +535,12 @@ export interface UrlParams {
   minoAccuracy: number;
   minoPause: number;
   minoSleep: number;
+  minoGiveUp: number;
+  minoRoamMin: number;
+  minoTurnPull: number;
+  minoGuardSight: number;
+  minoGuardAccuracy: number;
+  minoStalkerAccuracy: number;
   // K114 burn race (game/fire.ts, brief docs/design/K114_burn.md): the
   // fire, off | fuse; its speed r (fire distance per unit walked, in
   // [FIRE_SPEED_MIN, FIRE_SPEED_MAX]) and its delay h (units walked before
@@ -558,6 +570,10 @@ export const MINO_SIGHT_MAX = 20;
 export const MINO_ROAM_RUNS_MAX = 30;
 export const MINO_TERRITORY_MAX = 20;
 export const MINO_SLEEP_MAX = 99;
+// K324 section 4.3's ranges: give up [0, 10] runs past sight, the nearest
+// roam [MINO_RUNS_MIN, 10] runs.
+export const MINO_GIVE_UP_MAX = 10;
+export const MINO_ROAM_MIN_MAX = 10;
 
 // The burn race's ranges (K114; url_state clamps, the panel's sliders).
 export const FIRE_SPEED_MIN = 0.3;
@@ -745,6 +761,12 @@ export const PARAM_DEFAULTS: Omit<UrlParams, "seed"> = {
   minoAccuracy: DEFAULT_TURN_MINO.accuracy,
   minoPause: DEFAULT_TURN_MINO.pause,
   minoSleep: DEFAULT_TURN_MINO.sleep,
+  minoGiveUp: DEFAULT_TURN_MINO.giveUp,
+  minoRoamMin: DEFAULT_TURN_MINO.roamMin,
+  minoTurnPull: DEFAULT_TURN_MINO.pull,
+  minoGuardSight: TURN_MODEL_DEFAULTS.guard.sight,
+  minoGuardAccuracy: TURN_MODEL_DEFAULTS.guard.accuracy,
+  minoStalkerAccuracy: TURN_MODEL_DEFAULTS.stalker.accuracy,
   // K114: off; the brief's speed and delay. R.6.1 measured them hot (one
   // wrong branch in ten traps 38% of careful players); r 0.6 or a delay of
   // 10-20 is Levi's call (the brief's stage 1 handoff).
@@ -823,17 +845,28 @@ function clampFireSpeed(v: number): number {
 }
 
 // The turn-aligned minotaur's settings from a design's params (K80 turns).
+// K294 (K80 turns 3a): sight and accuracy are the model's own rows; the
+// stalker's charge reads the shared (the hunter's) sight.
 export function turnMinoParamsOf(p: Omit<UrlParams, "seed">): TurnMinoParams {
+  const guard = p.minotaur === "guard";
+  const accuracy = guard
+    ? p.minoGuardAccuracy
+    : p.minotaur === "stalker"
+      ? p.minoStalkerAccuracy
+      : p.minoAccuracy;
   return {
     model: p.minotaur,
     speed: p.minoSpeed,
     telegraph: p.minoTelegraph,
-    sight: clampTo(p.minoSight, MINO_SIGHT_MAX),
+    sight: clampTo(guard ? p.minoGuardSight : p.minoSight, MINO_SIGHT_MAX),
+    giveUp: clampTo(p.minoGiveUp, MINO_GIVE_UP_MAX),
     roam: clampRuns(p.minoRoamRuns, MINO_ROAM_RUNS_MAX),
+    roamMin: clampRuns(p.minoRoamMin, MINO_ROAM_MIN_MAX),
     territory: clampRuns(p.minoTerritory, MINO_TERRITORY_MAX),
-    accuracy: clampTo(p.minoAccuracy, 1),
+    accuracy: clampTo(accuracy, 1),
     pause: clampTo(p.minoPause, 1),
     sleep: clampTo(p.minoSleep, MINO_SLEEP_MAX),
+    pull: clampTo(p.minoTurnPull, 1),
     lair: p.minoLair,
   };
 }
@@ -992,6 +1025,12 @@ function clampTurnMino(p: Omit<UrlParams, "seed">): void {
   p.minoAccuracy = clampTo(p.minoAccuracy, 1);
   p.minoPause = clampTo(p.minoPause, 1);
   p.minoSleep = clampTo(p.minoSleep, MINO_SLEEP_MAX);
+  p.minoGiveUp = clampTo(p.minoGiveUp, MINO_GIVE_UP_MAX);
+  p.minoRoamMin = clampRuns(p.minoRoamMin, MINO_ROAM_MIN_MAX);
+  p.minoTurnPull = clampTo(p.minoTurnPull, 1);
+  p.minoGuardSight = clampTo(p.minoGuardSight, MINO_SIGHT_MAX);
+  p.minoGuardAccuracy = clampTo(p.minoGuardAccuracy, 1);
+  p.minoStalkerAccuracy = clampTo(p.minoStalkerAccuracy, 1);
 }
 
 // [0, max]; garbage reads 0.
@@ -1283,6 +1322,14 @@ function readLegacy(
     minoAccuracy: clampTo(readNumber(query, "mac", D.minoAccuracy), 1),
     minoPause: clampTo(readNumber(query, "mpa", D.minoPause), 1),
     minoSleep: clampTo(readNumber(query, "msl", D.minoSleep), MINO_SLEEP_MAX),
+    // K80 turns 3a: K324 section 4.3's two knobs, the turn pull and K294's
+    // per-model rows (`&mlm=5&mrn=1&mtp=0.5&mgs=3&mga=0.5&msa=0.5`).
+    minoGiveUp: clampTo(readNumber(query, "mlm", D.minoGiveUp), MINO_GIVE_UP_MAX),
+    minoRoamMin: clampRuns(readNumber(query, "mrn", D.minoRoamMin), MINO_ROAM_MIN_MAX),
+    minoTurnPull: clampTo(readNumber(query, "mtp", D.minoTurnPull), 1),
+    minoGuardSight: clampTo(readNumber(query, "mgs", D.minoGuardSight), MINO_SIGHT_MAX),
+    minoGuardAccuracy: clampTo(readNumber(query, "mga", D.minoGuardAccuracy), 1),
+    minoStalkerAccuracy: clampTo(readNumber(query, "msa", D.minoStalkerAccuracy), 1),
     // K114's burn race (`&fi=fuse&fsp=0.6&fdl=15`).
     fire: readChoice(query, "fi", FIRE_MODES, D.fire),
     fireSpeed: clampFireSpeed(readNumber(query, "fsp", D.fireSpeed)),

@@ -179,6 +179,12 @@ const PIN: ReadonlyArray<readonly unknown[]> = [
   ["revealFade", "number"], // 137
   ["revealLook", "enum", ["fade", "halo", "glow", "dots", "fray", "beacon"]], // 138
   ["burnt", "enum", ["gone", "char"]], // 139, K290 (burn stage 3a)
+  ["minoGiveUp", "number"], // 140, K80 turns 3a
+  ["minoRoamMin", "number"], // 141
+  ["minoTurnPull", "number"], // 142
+  ["minoGuardSight", "number"], // 143, K294
+  ["minoGuardAccuracy", "number"], // 144
+  ["minoStalkerAccuracy", "number"], // 145
 ];
 
 const asPin = (p: CodecParam): readonly unknown[] =>
