@@ -22,6 +22,8 @@ import {
   pickDeparture,
   pickHold,
   pickMove,
+  queuedPressHeld,
+  tapWhileMoving,
   waitKeyOf,
 } from "../../src/ui/key_moves";
 import type { Departure, PointAt, RunEnds } from "../../src/ui/key_moves";
@@ -609,6 +611,81 @@ describe("K334 the move wait", () => {
     expect(w.press("up", 0, still)).toBe("now");
     expect(w.press("right", 20, { ...still, absorbed: true })).toBe("absorb");
     expect(w.waiting).toBeNull();
+  });
+});
+
+describe("Levi's correction (2026-10-15): mid-move input, over K334", () => {
+  const travels = { moving: true, absorbed: false, ambiguous: () => false };
+
+  // main.ts's arrival gate in miniature: a waiting move the step hands
+  // back counts only through queuedPressHeld, judged on the waiting
+  // move as it was queued (its `queued`).
+  const arrival = (
+    w: MoveWait,
+    held: HeldKeys
+  ): "taken" | "discarded" | "wait" => {
+    const wasQueued = w.waiting?.queued ?? false; // step() clears it.
+    const due = w.step(10_000, false, () => false);
+    if (due === null || due === "wait") return "wait";
+    return queuedPressHeld(
+      { dirs: due.dirs, at: due.at, queued: wasQueued, edge: due.edge, wait: due.wait },
+      (d) => held.holds(d)
+    )
+      ? "taken"
+      : "discarded";
+  };
+
+  it("(a) a tap or click while the dot travels is ignored, never queued", () => {
+    expect(tapWhileMoving(true)).toBe("ignore");
+    expect(tapWhileMoving(false)).toBe("move");
+  });
+
+  it("(b) a mid-move key press released before the arrival is discarded", () => {
+    const w = new MoveWait();
+    const held = new HeldKeys();
+    held.press("KeyW", "up", 0);
+    expect(w.press("up", 0, travels)).toBe("queue");
+    held.release("KeyW"); // Gone before the dot arrives.
+    expect(arrival(w, held)).toBe("discarded");
+    expect(w.waiting).toBeNull();
+  });
+
+  it("(c) a mid-move key press still held on the arrival frame is taken", () => {
+    const w = new MoveWait();
+    const held = new HeldKeys();
+    held.press("KeyW", "up", 0);
+    expect(w.press("up", 0, travels)).toBe("queue");
+    expect(arrival(w, held)).toBe("taken");
+  });
+
+  it("a chord is gated the same way: both keys held, or it is discarded", () => {
+    const mk = (): { w: MoveWait; held: HeldKeys } => {
+      const w = new MoveWait();
+      const held = new HeldKeys();
+      held.press("KeyW", "up", 0);
+      held.press("KeyD", "right", 40);
+      w.press("up", 0, travels);
+      expect(w.press("right", 40, travels)).toBe("chord");
+      return { w, held };
+    };
+    const both = mk();
+    expect(arrival(both.w, both.held)).toBe("taken");
+    const one = mk();
+    one.held.release("KeyD");
+    expect(arrival(one.w, one.held)).toBe("discarded");
+  });
+
+  it("a wait move in the slot is not a key press and is not gated", () => {
+    const w = new MoveWait();
+    expect(w.wait(0, true)).toBe(true);
+    const due = w.step(10_000, false, () => false);
+    expect(due).not.toBe("wait");
+    expect(
+      queuedPressHeld(
+        { dirs: [], at: 0, queued: true, edge: -1, wait: true },
+        () => false
+      )
+    ).toBe(true);
   });
 });
 

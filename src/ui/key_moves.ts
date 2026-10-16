@@ -47,16 +47,20 @@
 // it picks another run (chordMatters). Everywhere else it moves at once,
 // and a second key inside the window whose chord picks the run already
 // taken adds nothing (absorbsChord).
-// NO SNAP (K334, MoveWait; main.ts keyPress, queueTap): no input cuts a
-// move short any more. A press, a pad touch, a tap or a click while the dot
-// travels in turn mode waits for the dot to arrive and is taken on the
-// arrival frame (the latest input wins; the hover shows its run). Levi,
-// 2026-10-14: every input waits, so every move animates (main.ts
-// `tapsWait`; the hook's setTapsWait(false) restores the tap snap for
-// A/Bs). A HELD key chains: its next move starts on the frame the dot
-// arrives (holdDue), no rest frame and no snap, except after a first run
-// shorter than HOLD_DELAY_MS, where it waits for the delay (a quick press
-// stays one move). The chase queues its own inputs, as before.
+// NO SNAP (K334, MoveWait; main.ts keyPress): no input cuts a move
+// short. Levi's correction (2026-10-15, over K334's queueing): a TAP or
+// CLICK (touch or mouse) while the dot travels is IGNORED - it queues
+// nothing and replaces nothing (tapWhileMoving; a multi-run route in
+// flight walks on). A direction PRESS while the dot travels waits for
+// the arrival frame but counts only when its key is still held then
+// (queuedPressHeld): press-and-release before the arrival is discarded,
+// a key held at the arrival continues in its direction, and a chord is
+// gated the same way (both keys held). A HELD key chains: its next move
+// starts on the frame the dot arrives (holdDue), no rest frame and no
+// snap, except after a first run shorter than HOLD_DELAY_MS, where it
+// waits for the delay (a quick press stays one move). The chase queues
+// its own inputs, as before. (The K334 text this replaces: every input
+// waited and was taken on the arrival frame, the latest winning.)
 // THE CENSUS (K120, before K329: 24 settled mazes at codec v4's defaults,
 // 4259 junctions, 96% of degree 3; .claude/probes/K120/census*.txt): runs
 // leave a junction mostly DIAGONALLY (half of them within 9 degrees of a
@@ -737,6 +741,26 @@ export class MoveWait {
   clear(): void {
     this.waiting = null;
   }
+}
+
+// Levi's correction (2026-10-15, over K334): a pointer tap on a run
+// while the dot travels is IGNORED ("ignore"); at rest it moves ("move").
+// It never queues and never replaces a move or route in flight.
+export function tapWhileMoving(moving: boolean): "ignore" | "move" {
+  return moving ? "ignore" : "move";
+}
+
+// Levi's correction: a direction press queued mid-move (MoveWait, a
+// `queued` waiting move with keys) counts only when every key it names
+// is still held on the arrival frame - a lone key, or both keys of a
+// chord. Press-and-release before the arrival is discarded. Anything
+// else in the slot (a wait move) is not a key press and is not gated.
+export function queuedPressHeld(
+  w: WaitingMove,
+  holds: (dir: KeyDir) => boolean
+): boolean {
+  if (!w.queued || w.wait || w.dirs.length === 0) return true;
+  return w.dirs.every((d) => holds(d));
 }
 
 // A hold's next move is due on the frame the dot arrives, once the key has

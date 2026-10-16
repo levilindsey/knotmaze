@@ -33,6 +33,8 @@ import {
 } from "pixi.js";
 import type { ParticleSystem } from "../physics/particle_system";
 import type { WalkGraph, WalkEdge } from "../core/walk_graph";
+import { walkDistances } from "../core/walk_graph";
+import { planRoute } from "../game/route_plan";
 import type { FabricMazeController } from "../game/fabric_controller";
 import type {
   RibbonRenderer,
@@ -402,6 +404,17 @@ function fogDispTexture(): Texture {
   return FOG_DISP_TEX;
 }
 
+// K480 (stage 1): what a multi-run tap takes (targetAt): the tapped run,
+// its tapped point (lattice distance along it from va), the world
+// distance to it, and the run list the tap walks there, tapped run last
+// (game/route_plan.ts planRoute; a current choice's list is itself).
+export interface TapTarget {
+  eid: number;
+  at: number;
+  d: number;
+  route: number[];
+}
+
 interface MoveAnim {
   e: WalkEdge;
   from: number; // Ctrl at the departure end.
@@ -456,6 +469,10 @@ export class FabricMazeRenderer {
   private glowEdge = -1;
   private glowAt = 0;
   private anim: MoveAnim | null = null;
+  // K480: targetAt's walk distances from the head (the walk graph is
+  // fixed for a scene, so they are cached per head).
+  private targetDistHead = "";
+  private targetDist: Map<string, number> | null = null;
   // K479: taps and hovers hold the run the player arrived on to a stricter
   // pick than the runs out of the head (edgeAt, game/tap_pick.ts). A probe
   // switch: false is the old nearest-run pick, for same-page A/Bs.
@@ -986,6 +1003,144 @@ export class FabricMazeRenderer {
       if (found) reach.push({ eid, d: Math.sqrt(best2) });
     }
     return reach;
+  }
+
+
+
+
+  // K480 (stage 1): one shown sample of run `e` nearest a world point, as
+  // {d, at} (at: lattice distance along the run from va), or null. `ends`
+  // says which junction neighborhoods do not count (HEAD_EXCLUDE): "head"
+  // is edgeAt's rule for a choice (the end(s) at the controller's head,
+  // waived on a run shorter than two of them); "both" is a run past the
+  // choices (both its junctions, waived the same way). Hidden thread
+  // never counts (shownAt); a "both" sample counts only where the fog
+  // shows it too (fogShownAt) - the choices stay tappable along their
+  // whole length, as before (K480 decision 1).
+  private scanRun(
+    e: WalkEdge,
+    x: number,
+    y: number,
+    controller: FabricMazeController,
+    maxD: number,
+    ends: "head" | "both"
+  ): { d: number; at: number } | null {
+    const span = e.ctrlB - e.ctrlA;
+    const exA = e.va === controller.head;
+    const exB = e.vb === controller.head;
+    const a = this.anim;
+    const dot =
+      ends === "head" &&
+      a !== null &&
+      a.kind === "advance" &&
+      a.e.id === e.id &&
+      e.id === controller.arrivalEdge
+        ? a
+        : null;
+    let best2 = maxD * maxD;
+    let bestF = e.ctrlA;
+    let found = false;
+    for (let f = e.ctrlA; ; f += SAMPLE_STEP) {
+      const ff = Math.min(f, e.ctrlB);
+      const nearHead =
+        ends === "both"
+          ? span > 2 * HEAD_EXCLUDE &&
+            (ff - e.ctrlA <= HEAD_EXCLUDE || e.ctrlB - ff <= HEAD_EXCLUDE)
+          : (exA && ff - e.ctrlA <= HEAD_EXCLUDE) ||
+            (exB && e.ctrlB - ff <= HEAD_EXCLUDE);
+      const allowed = ends === "both" ? !nearHead : !nearHead || span <= 2 * HEAD_EXCLUDE;
+      if (
+        allowed &&
+        (dot === null || coveredByDot(dot.from, dot.cur, ff)) &&
+        this.shownAt(e.chain, ff)
+      ) {
+        this.pointFlowed(e.chain, this.ctrlMod(e.chain, ff), this.scratch, 0);
+        if (ends === "head" || this.fogShownAt(this.scratch[0], this.scratch[1])) {
+          const dx = this.scratch[0] - x;
+          const dy = this.scratch[1] - y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < best2) {
+            best2 = d2;
+            bestF = ff;
+            found = true;
+          }
+        }
+      }
+      if (ff >= e.ctrlB) break;
+    }
+    if (!found) return null;
+    return {
+      d: Math.sqrt(best2),
+      at: span > 0 ? ((bestF - e.ctrlA) * e.length) / span : 0,
+    };
+  }
+
+  // K480 (stage 1): under the fog of war, whether a world point shows
+  // (inside a lifted stamp's radius, as renderFog draws it). The fog
+  // held for the intro shows everything.
+  private fogShownAt(wx: number, wy: number): boolean {
+    if (!this.fogOfWar || this.fogHeld) return true;
+    const r = this.fowRadius * this.fogRadiusMul();
+    if (!(r > 0)) return false;
+    const s = this.fogStamps;
+    for (let i = 0; i + 1 < s.length; i += 2) {
+      const dx = s[i] - wx;
+      const dy = s[i + 1] - wy;
+      if (dx * dx + dy * dy <= r * r) return true;
+    }
+    return false;
+  }
+
+  // K480 (stage 1): the run a tap at a world point takes when it may
+  // cross several runs, or null. Among the current choices this is
+  // edgeAt's pick exactly (K479's preference included, route = that one
+  // run). Past them, it is the nearest shown sample of a run the route
+  // planner can reach within `reach` along the walk graph (decision 1:
+  // the pulseReach arc from the head; stage 2 lights that far, stage 1
+  // already takes taps there), and `route` is the run list the tap
+  // walks, the tapped run last.
+  targetAt(
+    x: number,
+    y: number,
+    controller: FabricMazeController,
+    maxD: number,
+    reach: number
+  ): TapTarget | null {
+    if (controller.solved || controller.fireLost) return null;
+    const picked = this.edgeAt(x, y, controller, maxD);
+    if (picked >= 0) {
+      const e = this.walk.edges[picked];
+      const m = this.scanRun(e, x, y, controller, maxD, "head");
+      return { eid: picked, at: m ? m.at : 0, d: m ? m.d : 0, route: [picked] };
+    }
+    const choices = new Set(controller.choices());
+    if (this.targetDist === null || this.targetDistHead !== controller.head) {
+      this.targetDist = walkDistances(this.walk.vertices, this.walk.edges, controller.head);
+      this.targetDistHead = controller.head;
+    }
+    const dist = this.targetDist;
+    let best: TapTarget | null = null;
+    let best2 = maxD * maxD;
+    for (const e of this.walk.edges) {
+      if (choices.has(e.id)) continue;
+      const near = Math.min(dist.get(e.va) ?? Infinity, dist.get(e.vb) ?? Infinity);
+      if (!(near <= reach)) continue;
+      if (
+        controller.fire &&
+        runBurnAt(this.walk, controller.fire, e.id, controller.fireL).state === "burnt"
+      ) {
+        continue;
+      }
+      const m = this.scanRun(e, x, y, controller, maxD, "both");
+      if (!m) continue;
+      const d2 = m.d * m.d;
+      if (d2 >= best2) continue;
+      const route = planRoute(this.walk, controller.head, { edge: e.id, at: m.at }, reach);
+      if (!route) continue;
+      best2 = d2;
+      best = { eid: e.id, at: m.at, d: m.d, route };
+    }
+    return best;
   }
 
   // K76 stage 2c: under the thread reveal, hidden thread is empty space

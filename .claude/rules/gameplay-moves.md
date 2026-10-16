@@ -4,6 +4,8 @@ paths:
   - "src/ui/move_pad.ts"
   - "test/ui/key_moves.test.ts"
   - "test/ui/move_pad.test.ts"
+  - "src/game/route_plan.ts"
+  - "test/game/route_plan.test.ts"
 ---
 
 # Gameplay lore: moves by direction (K120)
@@ -181,3 +183,68 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   catch) or the minotaur goes; the next pointer move puts it back. Tests:
   key_moves.test.ts (waitKeyOf, MoveWait.wait), move_pad.test.ts
   (padDirAt at PAD_WAIT).
+
+- MID-MOVE INPUT (Levi's correction, 2026-10-15, over K334's MOVE WAIT
+  for pointers; `tapWhileMoving` + `queuedPressHeld` in key_moves.ts,
+  main.ts `handleFabricTap` + `stepWaiting`). TAPS/CLICKS: a tap or
+  click (touch or mouse) on a run while the dot travels is IGNORED -
+  it queues nothing and replaces nothing, so a multi-run route in
+  flight walks on and the next segment is never a queued tap's. (The
+  tap on the head for a wait is the exception that stays: K348's
+  mid-move wait-tap leftover is intentional for pointers, and it still
+  waits through `inputWait`.) KEYS: a direction press mid-move waits
+  for the arrival frame but counts ONLY when its key is still held
+  then: press-and-release before the arrival is discarded; held at
+  the arrival, it continues in that direction; a chord needs both
+  keys held, exactly as a lone key needs its one. The hook's
+  `tapsWait` flag is now a legacy no-op (setTapsWait moves nothing).
+  The real-time chase keeps its own input queue (its inputs are
+  tick-recorded), untouched. Tests: key_moves.test.ts, "Levi's
+  correction" (a mid-move tap ignored, a released press discarded, a
+  held press taken, chords, the wait slot ungated).
+
+- MULTI-RUN TAPS (K480 stage 1, 2026-10-15; brief `docs/design/K480.md`
+  stage 1; Levi: chains of short segments are tedious to click through
+  one by one). REACH: a tap on any SHOWN run within `pulseReach` (pr,
+  default 3, world arc from the head along the walk graph; under the
+  thread reveal capped at `revealDistance`, as the pulses are) walks
+  there run by run. The runs leaving the head stay tappable along their
+  whole length, as before, with K479's arrival preference among them
+  (`FabricMazeRenderer.targetAt`: a choice is edgeAt's pick; past them,
+  the nearest shown sample whose tapped point the planner reaches, a
+  beyond run's samples near either junction excluded, burnt runs out,
+  and under the fog only where a lifted stamp shows the thread, under
+  the thread reveal only `shownAt` thread). THE ROUTE
+  (`game/route_plan.ts` `planRoute`, pure): the shortest walk to the
+  tapped point (Dijkstra over walk lengths, the approach never crossing
+  the tapped run), then that run finished to its far end; refused past
+  the reach or unreachable. THE WALK (main.ts `startRoute` /
+  `routeStep` / `executeRouteRun`, from `handleFabricTap`): one run per
+  move, each a normal move - stats, stars, the fire's clock and the
+  minotaur's turns count it as one - and each logged as its own tap, so
+  a multi-run tap is a tap list and replays to the same game with no
+  new format (saved attempts included). A tap issued mid-move is
+  ignored (MID-MOVE INPUT above), so a route in flight walks on; a new
+  tap at rest, a key taken at an arrival (held-at-arrival), or a wait
+  replaces the route. THE STOPS (decision 4;
+  `routeWarning` + `firstSmolderIndex` in route_plan.ts, judged in
+  `routeStep` before each next run): the route ends at a catch, the
+  finish or a burn loss; under the turn minotaur it stops before its
+  next run when the last move spotted you (hunting flipped on) or the
+  minotaur's new telegraph walks a remaining run or ends on a junction
+  the route ends a run on; under the turn-clock burn it stops before a
+  run that would be smoldering when reached (the fire is deterministic
+  on walked distance, so the departure test is the controller's own),
+  with the Smoldering toast. HOLDS (decision 5): an arrow-key or pad
+  hold stops for the same three warnings, judged on the run it would
+  take next (main.ts keyStep); a catch already ended it. REAL TIME
+  (decision 6): no warning stops - a chase tap queues its route run by
+  run (`handleChaseTap`, fed in `tickChase` as each run departs), a
+  new tap redirects it, and a smoldering arm under the realtime fire
+  is refused when it comes up (tested at its departure clock), which
+  ends the route with the toast. THE HOVER (stage 1's scope): over a
+  beyond run it lights the run a tap would finish (`setGlowRun` on
+  targetAt's run, the pointermove path); the pulses and the hover
+  branching to the same reach are stage 2. Tests:
+  `test/game/route_plan.test.ts` (the planner, the projected smolder,
+  the warnings, whole-route solves and replays, the minotaur replay).
