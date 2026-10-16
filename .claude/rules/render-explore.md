@@ -831,7 +831,12 @@ rows: gameplay-panel.md's EXPLORATION ROWS.
   tips (0.5 (eF + L - eFar)), so two stubs never pass each other. No
   move when the two grown reaches already make the run whole (`meets`).
   The move scales with the arm's growth (`gp`), so a growing arm reaches
-  the moved end continuously; the fade keeps its length.
+  the moved end continuously. The fade keeps its length in lattice
+  units, NOT on screen: the sheet's drawn fades (`Lf`, world arc) moved
+  1x2y3z f0 1.257 -> 0.686, bead5 f0 0.65 -> 1.046 (past) and bead5 f11
+  0.974 -> 0.743, and the dots, sized to the fade (THE DOTS), shrink or
+  grow with it (inferred: the arc per lattice unit varies along a run;
+  a clip at a junction's domain is not ruled out; not checked).
 - ONE CROSSING AT MOST (`END_MOVE_STEPS` 1). The first sheet, at 32
   steps, chained pushes past up to three crossings (the fade plus the
   casing and the pads fill most of the room between two): 1x2y3z f5, f6
@@ -882,4 +887,5 @@ rows: gameplay-panel.md's EXPLORATION ROWS.
   to 4.67 ctrl on the sheet, one crossing); the cached stretches can go
   stale after a tug, the load settle or a Replay settle until the next
   arrival, and an end may jump then; the pad may double-count if the
-  casing's cover already includes the gap's fade (unchecked).
+  casing's cover already includes the gap's fade (unchecked); a moved
+  fade's drawn length, and so its dots, changes (the model bullet).
