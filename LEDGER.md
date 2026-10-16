@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K411.
+Next free ID: K416.
 
 ## Waiting on Levi
 
@@ -126,6 +126,9 @@ Next free ID: K411.
 - **K409** · The fire's widths are in ctrl (band 0.7, ember 0.25 ahead and 0.55 behind): under gone only
   a thin ember rim shows at the cut end, and the fuse's ember sits partly under the FX smoke. Rec: the
   ember onto the unburnt side under gone; world units if the phone sheet shows them thin. `K114_burn.md` 3b handoff.
+- **K411** · A phone window, about 30 min: the phone awake, unlocked, on its charger and untouched
+  (the probes never wake or unlock it; 08:30-08:55 on 2026-10-15 found it locked). It runs K7's
+  phone pass (F6's review rests on stage 5's phone numbers until then) and K290's phone sheet.
 
 ## In progress
 
@@ -244,14 +247,16 @@ Next free ID: K411.
   - next: stage 3: the census fixes first (`census.mjs`: judge shaped slots by S/R/F, skip rather than fail when no crossing shows both threads, a fading joint scales by vis; attribute junctions 56-58 and 161, which mismatch on master too: K76 2d ruled out the underlay, the gap gate and the fan program, so compare fan records, strip rows, then geometry, mode on and off, from `census2d.mjs`'s ATTR block), then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip); unblocked since K76 2d merged; G3-1 goes first, never beside item 4 (rec., K399)
   - brief: `docs/design/K268.md`, "Stage 2 handoff" ("For the next stage")
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
-  calls K302). Stages 1-6 merged: the worker is the default (stage 6: a944841..4d9c9f5,
-  call F6), `&phw=0` runs in-thread. It still misses the 250 ms start gate.
-  - owner: agent `a29b026fa5e2829ee` of claude session 05e60da0 (stage 7, since 2026-10-15 07:25; opus, 2 h cap). Stage 6's `a6023a3244ff623cc` (session d8031183): worktree removed by the K161 sweep 2026-10-15, branch kept
-  - branch: `worktree-agent-a29b026fa5e2829ee`, worktree `.claude/worktrees/agent-a29b026fa5e2829ee`; last commit: `21d701e` (from master; mainline holds stage 6, `4d9c9f5`)
-  - evidence: stage 7's in its worktree's `.claude/probes/K7/stage7/`; `.claude/probes/K7/` (`stage6/`: `ported.md`, the ported libraries' originals in `ported/orig/`; `stage5/`: the phone tooling, `s5_gate.txt`; `stage4/`, `stage3/`)
-  - next: stage 7 running (K5 M2 edits main.ts too, so it waits): the start-gate lever (scene params and tuning in the Worker's `name`, main adopts generation 0), the phone pass again (the phone half of `stage5/s5_gate.txt`), the spike page `?d=gs18`
-  - brief: `docs/design/K7_worker.md`, "Stage 7 brief: the lever, the phone pass, the spike page" (and "Every build stage: setup and process")
-  - env: the phone: `.claude/probes/K7/stage5/phone_setup.ps1` and `phone_teardown.ps1`, under the phone lock
+  calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
+  in-thread. Stage 7 (6cfb416..fdb38ac) builds the first scene from the Worker's name and
+  modulepreloads its chunk: ready 139-165 ms in on the desktop (master 363-396), first visible
+  unchanged (K307's compiles set it). The phone's 250 ms gate is unmeasured (inferred ~195-260).
+  - owner: nobody since 2026-10-15 08:57 (stage 7 done, merged 09:00; agent `a29b026fa5e2829ee` of claude session 05e60da0, worktree kept)
+  - branch: mainline; last commit: `fdb38ac`
+  - evidence: `.claude/probes/K7/stage7/` (`run_s7.ps1`, `phone_run.ps1`, `s7_desktop.txt`, `s7_phone.txt`, `k7_results.jsonl`, `table_s7.mjs`, `spike/`); stages 3-6 beside it
+  - next: the phone pass in a window Levi lends (K411): `pwsh .claude/probes/K7/stage7/phone_run.ps1 -NotBefore <HH:mm> -GiveUp <HH:mm>` (24 loads + 2 spike runs, gate first; close the stray stage 7 tab on `localhost:5921` first); then Levi's F6 review; K412
+  - brief: `docs/design/K7_worker.md`, "Stage 7 handoff" ("Not done", "For the next stage")
+  - env: the phone, under the phone lock (`phone_run.ps1` takes it and runs `stage5/phone_setup.ps1`)
 - **K307** · The daily intro's freezes are cold shader compiles (Levi, K302 (8):
   prioritize). Stage 2 merged (ce5e4d9..14d34b5): a program registry and a warm-up that links
   every program blocking (parallel links never reach Chrome's disk cache, K385; call F8).
@@ -282,7 +287,7 @@ Next free ID: K411.
   - owner: nobody since 2026-10-15 08:53 (stage 3b finished, merged 08:56; agent `a7c0069bafcb78c52` of claude session 05e60da0, worktree kept)
   - branch: mainline; last commit: `f7dd57e` (tests 1159 green, build clean)
   - evidence: the main checkout's `.claude/probes/K290/stage3b/` (desktop sheet `out/sheet/K290_3b_sheet_crop.png`, `perf_*`, `k290_ab.mjs`, `sheet.mjs`) and `stage3a/`; burn stage 1's `.claude/probes/K114/`
-  - next: the phone sheet under the phone lock, plus a fog-on row and an unseen-front frame; then K408 (start hide), Levi's width call K409, the mirror K410
+  - next: the phone sheet in K411's window, under the phone lock, plus a fog-on row and an unseen-front frame; then K408 (start hide), Levi's width call K409, the mirror K410
   - brief: `docs/design/K114_burn.md`, "Stage 3b brief" and "Stage 3b handoff"
 - **K395** · The pluck blur at a kink loop's tip, on the phone (Levi, 2026-10-15 07:04, after
   K344's fix): a seam from the tip to an edge, and a heart-shaped pinch (a point inside, a dimple outside).
@@ -343,6 +348,9 @@ free slots (Levi, 2026-10-14 23:00-23:55):
   and a test. Rides K114 stage 2, or a small stage of its own.
 - **K410** · The fire's FRONT and SMOLDER paint items into `paint_math`'s mirror and the parity
   tests, once K409 settles the look (K152 item 3; `K114_burn.md` 3b handoff).
+- **K412** · K7's worker-chunk modulepreload on a real network (measured only on localhost): a
+  fresh-profile load of https://levi.dev/knotmaze/ through `stage7/k7_frames.mjs`; its `wk` column
+  reads `c` when the worker's fetch came from the cache through the proxy. Rides K7's phone pass.
 
 Every other item below waits on the trigger it names.
 
@@ -583,6 +591,11 @@ Every other item below waits on the trigger it names.
 
 ## Residuals (known, not fixed)
 
+- **K413** · The phone lock (`.claude/probes/agents/phone_lock_take.ps1`) is one line, owner | time |
+  what, with no waiter field, so the briefs' "release it between items when K290 or K395 waits"
+  never triggers (K7 s7 handoff). Add a waiter line, or drop the rule; claude-config CC62.
+- **K414** · Since K7 s7's modulepreload, a `phw=0` page downloads the worker chunk it never runs
+  (90 KB raw, beside the 1.0 MB main chunk).
 - **K270** · After a turn-aligned catch, a lavender band shows at the
   catch site in the next frame (K80 turns stage 1; undiagnosed, probably
   a fade). `.claude/probes/K80/turns/shots/`. K80 turns stage 3.
@@ -1487,7 +1500,11 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   bytes; then drop `docs/ledger_diet/` (keep `scripts/ledger_diet.mjs`).
 - **K371** · Let the worker run ahead of main's frames during the pre-settle, so
   it settles through K307's compile freezes (K7 s4); watch its saturation on
-  the phone (97% busy, lagS 1.04 s by 8 s).
+  the phone (97% busy, lagS 1.04 s by 8 s). K7 s7's name build could start it
+  (scene ready ~0.15 s in); drop that settle when `prebuild` is `differs`.
+- **K415** · Spawn K7's worker before the main chunk evaluates (main spawns it 80-106 ms after
+  the chunk lands on the desktop): a small entry reads the link and spawns first; the name then
+  needs the link's params (the codec there, or the raw query for the worker to parse). K7 s7 handoff.
 - **K389** · Keep comments out of shader text (K76 2d): a comment edit in `EXPLORE_VIS_GLSL`
   changes the strip-explore program, so every returning player links it cold (K307). Move it into TS.
 

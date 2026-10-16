@@ -1495,3 +1495,74 @@ One perf-lock hold, 05:38-05:46; the summary is `checks/checks.log`.
 - The re-map's first report said main.ts had 5654 lines: it counted the
   empty string after the final newline. Fixed in remap.ts and the
   report.
+## Stage M2 brief (2026-10-15, the coordinator)
+
+**Stage:** K5 M2, the camera to `src/app/camera.ts` (section 5.2's M2
+row). One stage: stop after M2 even with time left; M3 is its own brief.
+
+**Start:** `Get-Date` first; your cap is **2 hours** from then. Your
+branch must hold master `fdb38ac` or later (K7 stage 7's one boot line,
+`new WorkerHost(() => rebuild(), { prebuild: params })`); if it does not,
+`git merge --ff-only master`.
+
+**Read first:** sections 2.1, 2.2 and 5.1, then "Stage 1 handoff" ("The
+re-map", "Capture classification", "The SceneRef", "What is left",
+"Surprises"). Do not read the whole of main.ts; read the regions you move.
+
+**Setup and process:** as section 7 ("Setup"), with these changes:
+- probes and results in the main checkout's untracked
+  `C:\Users\lsl\Repositories\knotmaze\.claude\probes\K5\M2\`; stage 1's
+  tools (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`)
+  are in `..\stage1\`: copy, don't edit them there;
+- ports **5840-5849**;
+- the perf lock covers tests and builds too:
+  `pwsh C:\Users\lsl\Repositories\knotmaze\.claude\probes\K268\lock_take.ps1 -Owner 'K5 M2' -What '<what>'`,
+  then `lock_release.ps1 -Owner 'K5 M2'`. No phone.
+
+**Scope, one commit per step:**
+1. **Re-map** main.ts at your base with stage 1's `remap.ts` and
+   `anchors_c49f63f.json` (or its successor): the camera region's
+   declarations, the `let`s it owns, who else reads or writes them, and
+   what it calls. Write the camera's capture list under "### Stage M2
+   handoff" at the end of this doc; commit (WIP).
+2. **Move the camera** to `src/app/camera.ts` as `createCamera(deps:
+   CameraDeps, scene: SceneRef)` (section 2.2). A `let` another region
+   writes becomes an owner method; a `let` the stamp or the probe hooks
+   read gets its `createStamp(...)` / `installProbeHooks({...})` argument
+   pointed at the new owner ("What is left": an owner replaces a
+   getter). The move is pure: no logic edits. If one seems needed, stop
+   and write it into the handoff.
+3. **Lore:** add `src/app/camera.ts` to `gameplay-camera.md`'s `paths:`
+   and its row in `docs/lore_index.md`. Change no CLAUDE.md line.
+
+**Files you own:** `src/main.ts` (the camera region and its call sites
+only), `src/app/camera.ts`, the `createStamp`/`installProbeHooks`
+arguments and `ProbeCtx` fields the move retargets, `gameplay-camera.md`'s
+`paths:`, `docs/lore_index.md`, and this doc's "Stage M2 handoff".
+
+**Running beside you:** K80 turns 3a edits main.ts's input and minotaur
+paths (onHead, waitTurn, resetPathAction, the pad's wait). Stay out of
+those; whoever merges second rebases. Stay out of `src/physics/**`,
+`src/render/**` (K397's diagnosis and the R lane), `tweakpane_panel.ts`,
+`scripts/**`, `LEDGER.md`, and every test.
+
+**Checks** (section 5.1): tsc, `npm test`, `npm run build` at every
+code commit (stage 1's TS6133 surprise: keep each commit tsc-clean); the
+moved-code review per commit with the old → new map in each message; the
+hook inventory, unchanged; `diag_screenshot.mjs` and
+`.claude/probes/K7/stage4/k7_frames.mjs` on `phw=0` and `phw=1`; and the
+same-state pixel A/B with the scripted input (a tap on a choice, a move,
+a pinch zoom, a pan, a pluck, each captured once the view holds still)
+on knot, fabric, fog and thread-reveal links, expecting 0 px. No hot
+path moves, so no frame-time check.
+
+**Helpers:** none.
+
+**Stop rule:** stop when M2 is done or at the 2 h cap, whichever comes
+first. `Get-Date` at the start and at each milestone. Commit WIP at
+each step, broken or not; never push. A compaction is not a stop: after
+one, re-read this brief, `git log -5` and your handoff before going on.
+At the stop, finish "### Stage M2 handoff" (the capture list, what moved
+with SHAs, what is left for M3, the checks with paths, surprises) and
+report the commits, the checks, a `Ledger items` list and K5's handle
+fields (owner, branch and last commit, evidence, next, brief).
