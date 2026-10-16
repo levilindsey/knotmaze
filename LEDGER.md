@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K499.
+Next free ID: K512.
 
 ## Waiting on Levi
 
@@ -244,9 +244,9 @@ Next free ID: K499.
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
   lifecycle, scene, audio_map; M4 at 9f08bf0): main.ts 5709 → 3725 lines; R1-R2 (`src/render/ribbon/`; R2 at 52faab8): ribbon_renderer.ts 7747 → 5989.
   - owner: nobody since 2026-10-15 15:00 (merged)
-  - branch: mainline; last commit: `52faab8`
+  - branch: mainline; last commit: `3166d8f` (R5 1c666ec + e53e4d9, M5 3166d8f)
   - evidence: M4's `.claude/probes/K5/M4/` and R2's `.claude/probes/K5/R2/`; M3's `.claude/probes/K5/M3/` (`checks/`, `frames/`, `step2/`, `k7_results.jsonl` and `k7_table.mjs`, `checks_m3.ps1`, `remap_e6e1734.md`), `.claude/probes/K5/R2/brief/` (the R2 brief's maps), `.claude/probes/K5/R1/` (`checks/`, `checks2/`; `checks3.ps1`, the fog B-vs-B control, never run; R2's inventory `parts.md`, `probe_surface.md`, `surface.json`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/`; the design's region maps in `.claude/probes/K5/design/`
-  - next: R5 (`joinery.ts`; K397 stage 3 and K459 have merged on the moved code); G3-1 once Levi answers K399; then R3 (`reveal_fx.ts`, `paint_state.ts`). The main.ts lane: M5 (K6-1 has merged), whose brief folds the Stage M4 handoff leftovers in `docs/design/K5_K6_split.md`
+  - next: M6 (K510, gates K6-2); G3-1 once Levi answers K399; then R3 (`reveal_fx.ts`, `paint_state.ts`). R5/M5 pixel proofs owed (K502, K505); M4 leftovers K506.
   - brief: `docs/design/K5_K6_split.md` (Stage M4 brief); the R lane `docs/design/K5_R2.md`
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
@@ -301,13 +301,12 @@ Binding for every stage:
   resets Monday 2026-10-19 11:59; it stood at 88% on 10-15 18:03.
 
 Running agents are listed under In progress, each with its own next step.
-The queue (coordinator, 2026-10-15 18:15):
-1. K482 with K483 done (3c509ec). K488 done (be36622).
-2. After the weekly reset: K480 stage 1 (Opus, 2 h, `docs/design/K480.md`),
-   then K481 stage 1 (Opus, 2 h, `docs/design/K481.md`).
-3. Later: K5 R5 (`joinery.ts`) and M5, K463, K471, and K6-2 after M6;
-   G3-1 waits on K399. Today's residuals (K464, K473-K477) and ideas
-   (K472, K478) wait in their sections.
+The queue (coordinator, overnight 2026-10-15/16):
+1. Overnight done: K480 stage 1 (3b1612f), K481 stage 1 (48fc9ee), K5 R5 (1c666ec + e53e4d9), K5 M5 (3166d8f), K463 and K471 (fb54535); K6-2 blocked on M6 (K510). Phone-gated and Waiting-on-Levi items were out of scope tonight.
+2. Next: K480 stage 2 (the light: pulses + hover branching to the reach, shader + CPU mirror; brief from `docs/design/K480.md` Stage 1 handoff),
+   then K481 stage 2 (param/row, animation, telegraph) plus the K501 difficulty call; K499 (gamepad) is a separate later stage.
+3. K5 M6 (K510) gates K6-2 (incl. K509's sleep-trip measurement);
+   G3-1 waits on K399. Overnight residuals K499-K511 wait in their sections.
 
 Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
 merged):
@@ -338,10 +337,10 @@ Every other item below waits on the trigger it names.
 
 - **K480** · Multi-run taps (Levi 2026-10-15): a tap on any lit run within `pulseReach` walks there
   run by run, stopping when a warning matters; pulses and hover branch to the same reach. Opus, after
-  the weekly reset (K479 merged in 796e158); stage 1 briefed in `docs/design/K480.md`.
+  stage 1 done in 3b1612f (2026-10-15); stage 2 (the light: pulses + hover branching to the reach, shader + CPU mirror) next, brief from `docs/design/K480.md` Stage 1 handoff; residuals K500, gamepad K499.
 - **K481** · Turns by length (Levi 2026-10-15): a toggle moves the turn minotaur its speed x your
   move's length, with mid-run stops, contact by thread distance and a telegraph tick per choice; tuned
-  on the turn sim. Opus, after K480; stage 1 (model + sim) briefed in `docs/design/K481.md`.
+  on the turn sim. Stage 1 (model + sim) done in 48fc9ee (2026-10-15); stage 2 (param/row, animation, telegraph) next plus the K501 difficulty call; brief `docs/design/K481.md`.
 
 - **K345** · The hover rim stops `rimGap` (0.975 world) short of junctions;
   Levi (2026-10-14) wants it to follow the fillets. Goes in K9's G4-1 (K8
@@ -460,13 +459,6 @@ Every other item below waits on the trigger it names.
 - **K441** · The real-time fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn
   (drawFire's re-declare 0.6, HUD writes 0.1, 0.5 unattributed). CPU-profile a turn and a realtime
   stand at one burnt share (K461 first), then decide a re-declare throttle. `docs/design/K114_stage2.md`.
-- **K463** · K5 R2's unrun checks, a small Sonnet job under the perf lock: the cross-build threads round
-  trip (`K8/stage2/g3_probe.mjs roundtrip ... explore`, c22de79 against 52faab8, expect 0 px) and three
-  more fog `phw=0` captures per build (`.claude/probes/K5/R2/checks/`, `pairs_*.txt`, `threads_dots/`).
-- **K471** · K6-1's unrun checks (Sonnet): the `&phw=0` page check (its item 3); why the probe's
-  thread press did not tug in the fabric, chase and reduced-drag phases (no PHYS or GEOM: the probe
-  or a bug?); `m2_input_ab.mjs`'s pins and the high base-against-base floors of its fog, threads and
-  _m4 cases (`docs/design/K6_1.md`, "Open after K6-1"; `.claude/probes/K6/K6-1/`).
 - **K485** · Pixel pass for the phone sheet and row help (scripts/phone.ps1): the sheet query, Back,
   the peek, help taps; K467 ran only in phone emulation
 - **K486** · Touch help for the panel's buttons: Reset path, Replay settle, Reset to defaults, the
@@ -1036,6 +1028,20 @@ Every other item below waits on the trigger it names.
   inside-both taps still backtrack); sample-based distances break the inside-one-ribbon rule on
   0.066% of taps; no mid-move census (gameplay-camera.md TAP PREFERENCE).
 
+- **K499** · Gamepad support (new, separate later stage - do NOT fold into K480 stage 2): Gamepad API polled per frame; d-pad + left stick (deadzone) feed the same direction picker as keys; gamepad direction follows the held-at-arrival rule like keys; A/confirm acts as a tap (no mid-move queue). Gameplay movement only, no panel navigation. Pure mapping (stick vector to direction/chord, deadzone) gets unit tests in test/ui/.
+- **K500** · K480 stage 1 residuals: page-probe the realtime chase's multi-run tap; measure targetAt's pointermove cost on the phone; a touch press on a beyond run lighting its glow.
+- **K501** · K481 by-length difficulty (Levi / stage 2 call): at the tuned BY_LENGTH_CATCH_DIST 0 the mode stays deadlier for the attentive explorer (stalker daily explorer 3.4% today -> 8.9% by-length; hunter 1.1 -> 3.4, guard 2.0 -> 4.2, 32-rep turn sim), because at speed one it averages 1.69 hops a turn; matching today's rates closer needs a lever outside K481 decision 2 (a travel scale or a by-length-only retune) before the toggle ships. Evidence: .claude/probes/K481/sweep_length_32.md and the Stage 1 handoff in docs/design/K481.md.
+- **K502** · K5 R5 pixel proof not run - same-state A/B (knot/fabric/fog/threads, K83 recipe) and rebuildFillets(true) timing under the perf lock still owed for the joinery move; the move itself is proven by mechanical undo 0 differences, tsc, byte_identity and paint parity (see K5_K6_split.md Stage R5 handoff).
+- **K503** · The G3-0 probe hooks (g3DataState, g3TableRows, g3Expected, captureScene, restoreScene) still sit on the RibbonRenderer facade; R5 left them there because they read reveal/paint state R3/R4 have not homed yet - give them a part (e.g. ribbon/scene_probe.ts) once R3/R4 land.
+- **K504** · K425 - a variant_build.ps1 -Subst naming ribbon_renderer.ts for joinery code (rebuildFillets, cpuJunctionField, the FILLET constants) must now name src/render/ribbon/joinery.ts; normArc likewise lives in ribbon/sampling.ts.
+- **K505** · K5 M5: the same-state pixel A/B (section 5.1, knot/fabric/fog/threads with scripted input) and hook inventory were not run for the panel move; run under the perf lock on master 3166d8f before M6.
+- **K506** · Stage M4 handoff leftovers not folded into M5 (filed, not done): FrameLoopDeps still reads physState/settleWall0/warmHoldFrom through main.ts getters instead of taking life; ProbeCtx could take life/scene/audioMap whole; stale lore prose in physics-settle.md and render-shaders.md still names main.ts for lifecycle code; the A/B harness physon step should wait for asleep, not frozen.
+- **K507** · Cross-build threads round trip vs current master fails 0 px: c22de79 and 3166d8f render the same captureScene differently by 43,385 px in the frontier bbox 641,365-884,608 (maxDelta 48), while capture transfer itself is faithful (3/6 px); isolate R2 by rerunning the prescribed c22de79-vs-52faab8 pairing, then bisect fabric_maze_renderer/explore rendering if it persists (.claude/probes/K5/R2/checks/k463/roundtrip/).
+- **K508** · K5 R2's checks_r2.ps1/checks_threads.ps1 hardcode the deleted worktree agent-a695f82540244625a and cannot rerun as-is; K463's repo-relative k463_checks.ps1 supersedes them for these two checks.
+- **K509** · K6-1 question 2's sleep-trip miss still unmeasured (deferred to K6-2): on knot fw=0 with the worker, shoot after the first sleep, invalidate(), shoot again, diff - K6-2 should run it before gating GEOM (docs/design/K6_1.md, Stage K471 handoff).
+- **K510** · K5 M6 (pointer input, auto audio, keys; docs/design/K5_K6_split.md 5.2) is the next main-lane extraction and gates K6-2; sized at ~1150 lines across three modules on the hot drag path, it needs its own 2h opus stage (re-map, moved-code review, scripted-input pixel A/B, k7_frames rest+drag on both hosts) before K6-2's GEOM sleep-trip measurement and dt-to-tickFireFx work can start.
+- **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 3b1612f; K348's mid-move wait-tap leftover is now intentional for pointers.
+
 ## Approved, to schedule (2026-10-11)
 
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
@@ -1252,6 +1258,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K471** · K6-1's unrun checks: &phw=0 PHYS clear at rest on both hosts; the fabric/chase/reduced non-tug was a loop_shadow probe bug (pressed the entrance choice run), fixed in the probe; m2_input_ab's pins fixed (pluck clock, syncExplore, fogTime, waitStill) - controls now 0 px. Done in fb54535 (2026-10-15).
+- **K463** · K5 R2's unrun checks under the perf lock (c22de79 vs 3166d8f): fog phw=0 PASS (same-state cross-build 0 px; branch spread was capture noise, K390); cross-build threads round trip FAIL filed as K507 (capture transfer faithful, render differs). Done (probes only, HEAD 3166d8f, 2026-10-15).
 - **K482** · Desktop panel: row-help labels are buttons only on coarse pointers and in the sheet (the desktop keeps the title tooltip, one Tab stop per row). Done in 3c509ec (2026-10-15).
 - **K483** · Phone sheet font 13 px under SHEET_QUERY only (the side panel stays at 11). Done in 3c509ec (2026-10-15).
 - **K488** Â· The finish indicator's tap became a peek: zoom out to frame the exit, hold 2.5 s, ease back; the label says so. Done in be36622 (2026-10-15).
