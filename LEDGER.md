@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K397.
+Next free ID: K411.
 
 ## Waiting on Levi
 
@@ -123,6 +123,9 @@ Next free ID: K397.
   edge turns +19° to +42° instead of +31° to +56° and the arch is flat, for 0.02-0.03 world less
   inner swing at the tip; 6 looks like 3). Live as `PluckOverlay.capRound`; sheets in
   `.claude/probes/K395/out/`. Stays 1.5 until Levi picks.
+- **K409** · The fire's widths are in ctrl (band 0.7, ember 0.25 ahead and 0.55 behind): under gone only
+  a thin ember rim shows at the cut end, and the fuse's ember sits partly under the FX smoke. Rec: the
+  ember onto the unburnt side under gone; world units if the phone sheet shows them thin. `K114_burn.md` 3b handoff.
 
 ## In progress
 
@@ -275,12 +278,12 @@ Next free ID: K397.
   - brief: `docs/design/K5_K6_split.md` section 5.2, "7. Stage 1 brief" and "Stage 1 handoff"
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
-  char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b next.
-  - owner: agent `a7c0069bafcb78c52` of claude session 05e60da0 (stage 3b, since 2026-10-15 07:25; opus, 2 h cap). Stage 3a's `adb9f09e19dfd0c55` (session d8031183): worktree removed by the K161 sweep 2026-10-15, branch kept
-  - branch: `worktree-agent-a7c0069bafcb78c52`, worktree `.claude/worktrees/agent-a7c0069bafcb78c52`; last commit: `21d701e` (from master; mainline holds 3a, `ef92a6a`)
-  - evidence: 3b's in its worktree's `.claude/probes/K290/stage3b/`; `.claude/probes/K290/stage3a/` (`k290_ab.mjs`, `sheet.mjs`, `warn_check.mjs`, `ab/`, `sheet/`); burn stage 1's `.claude/probes/K114/`
-  - next: stage 3b running: the front's char band and embers (replacing stage 1's ember, smolder and fuse marks), the `burn` FX on `tipsAt`, the lit fuse, the fire's light under fog, the phone sheet; Levi's calls K383
-  - brief: `docs/design/K114_burn.md`, "Stage 3b brief: the fire's look"
+  char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b merged (5913f4f..f7dd57e).
+  - owner: nobody since 2026-10-15 08:53 (stage 3b finished, merged 08:56; agent `a7c0069bafcb78c52` of claude session 05e60da0, worktree kept)
+  - branch: mainline; last commit: `f7dd57e` (tests 1159 green, build clean)
+  - evidence: the main checkout's `.claude/probes/K290/stage3b/` (desktop sheet `out/sheet/K290_3b_sheet_crop.png`, `perf_*`, `k290_ab.mjs`, `sheet.mjs`) and `stage3a/`; burn stage 1's `.claude/probes/K114/`
+  - next: the phone sheet under the phone lock, plus a fog-on row and an unseen-front frame; then K408 (start hide), Levi's width call K409, the mirror K410
+  - brief: `docs/design/K114_burn.md`, "Stage 3b brief" and "Stage 3b handoff"
 - **K395** · The pluck blur at a kink loop's tip, on the phone (Levi, 2026-10-15 07:04, after
   K344's fix): a seam from the tip to an edge, and a heart-shaped pinch (a point inside, a dimple outside).
   - owner: nobody since 2026-10-15 08:38 (stage 1 finished, merged 08:47; agent `ac0d0267cdf7467ec` of claude session 05e60da0, worktree kept)
@@ -334,6 +337,12 @@ free slots (Levi, 2026-10-14 23:00-23:55):
 12. K323's Stage A (with K339's rebuild; codec 7), then K324 stage 1.
 13. K326 A.
 14. K318, K336, K337.
+
+- **K408** · Hide the start marker once its thread has burnt (Levi, K383): in `fabric_maze_renderer.ts`
+  drawMarkers, gate on the burnt spans covering `walk.start`'s thread point, with the marker fade
+  and a test. Rides K114 stage 2, or a small stage of its own.
+- **K410** · The fire's FRONT and SMOLDER paint items into `paint_math`'s mirror and the parity
+  tests, once K409 settles the look (K152 item 3; `K114_burn.md` 3b handoff).
 
 Every other item below waits on the trigger it names.
 
@@ -745,9 +754,9 @@ Every other item below waits on the trigger it names.
   `controlArcLengths`, unit tests and a CPU mirror, hit tests on the
   moved samples, the phone's rebuild cost (`docs/design/K90.md`, Stage
   1b handoff).
-- **K212** · PixiJS warns "Attribute aGap/aGapId/aUV is not present in the
-  shader" on every load, on master too (seen by K132's probes,
-  `.claude/probes/K132/`).
+- **K212** · PixiJS warns "Attribute aGap/aGapId/aUV is not present in the shader" on every
+  load (K132's probes; Levi's console 2026-10-14, K311). Find which mesh binds attributes its
+  program does not declare (`docs/design/K299_choice_pulse_bug.md`).
 - **K208** · `restoreYarn` keeps its own copy of the travel-direction
   rule; it could share `travelOrder` / `moveEnds` (`src/render/fog_arc.ts`,
   K100).
@@ -1096,10 +1105,6 @@ Every other item below waits on the trigger it names.
   because the background programs are sha256-pinned. Fix it with the
   next change that re-pins them. `docs/design/K299_choice_pulse_bug.md`
   ("Residuals").
-- **K311** · PixiJS warns at load that attributes aGap / aGapId / aUV
-  are not present in the shader (Levi's console, 2026-10-14). Find which
-  mesh binds attributes its program does not declare and tidy it
-  (`docs/design/K299_choice_pulse_bug.md`).
 - **K314** · `src/main.ts`: the non-finite watchdog's comment (about
   line 4274 at 459cc11) and stamp say `halted` is cleared on regenerate,
   but nothing sets it back to false (its only `= false` is the
@@ -1194,11 +1199,9 @@ Every other item below waits on the trigger it names.
 - **K380** · G3-0's small residuals (`docs/design/K8_stage1.md`, stage 2 handoff):
   dense update() +0.2-0.3 ms, at its +0.3 limit; the desktop bench's branch means
   +0.04-0.16 ms, unattributed; uploads 0.23/0.44 MB against 0.19/0.35 estimated. Rec: only if G3-1's budget needs it.
-- **K382** · A fire race's costs are unmeasured: its frames (K290 3a: from the first burn every
-  ribbon, strip and fan draws through the explore programs) and its programs' cold link
-  (K307 s2 warms them in wave 1; inferred +0.4-0.7 s to first visible). Rec: `burn_page.mjs perf`.
-  Realtime's per-frame cost is K114 stage 2's item 6 (inferred: drawFire and the span
-  re-declaration run every frame).
+- **K382** · A fire race's frames are measured (K290 3b: frame interval unchanged; drawFire 0.18-0.21 ms
+  desktop, 0.85-0.89 at 4x throttle, master 0.06 and 0.26). Still untimed: the first burn on a cold cache
+  and the grown section explore variant's cold link (`trace_intro.mjs`). Realtime's: K114 s2 item 6.
 - **K384** · K290 3a's small residuals: picking uses pickThread for the rest of a race
   once anything burns, even under char; `pieceVis`'s ring unwrap is ill-defined past
   n - 2 fade (pre-existing; a guard and a test); 13 Pixi attribute warnings at load (master too).
@@ -1490,6 +1493,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K311** · Pixi's aGap/aGapId/aUV warnings at load. Dropped: duplicate of K212 (2026-10-15).
 - **K361** · G3/G4's calls. Answered by Levi (2026-10-15): recs taken except the spline bend (q13), which stays open in K90; recorded in `G3G4_sdf_geometry.md` §6.
 - **K362** · K76 2c's calls. Answered by Levi (2026-10-15): recs taken; recorded in `K76.md` ("Stage 2c handoff"); the start view's widening is in K76's next.
 - **K377** · K5/K6's seven calls. Answered by Levi (2026-10-15): all seven recs taken; recorded in `K5_K6_split.md` 8.
