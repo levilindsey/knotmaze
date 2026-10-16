@@ -80,6 +80,53 @@ export interface ExploreInput {
   // (exploreDistances). Without holdDist the close-in is off.
   hold?: number;
   holdDist?: ReadonlyMap<string, number>;
+  // K466 THE ENDS: stretches a frontier's fade must stay out of (where its
+  // thread passes under a crossing). Without it, the plain placement.
+  keepOut?: ExploreKeepOut;
+}
+
+// K466: where a frontier's fade may not lie, and which way it moves.
+// `spans(chain)` = flat [c0, c1, c0, c1, ...] unwrapped chain ctrls (c0 <=
+// c1; a ring's span may run below 0 or past its count), `ring(chain)` = the
+// chain's ring count (0 = open). "past" pushes the fade beyond the stretch
+// (more thread shows), "back" pulls it in before (less); each falls back to
+// the other, then to the plain placement.
+export interface ExploreKeepOut {
+  spans(chain: number): readonly number[] | undefined;
+  ring(chain: number): number;
+  mode: "past" | "back";
+}
+
+// K466: a fade [e - f, e] pushed past every span it overlaps (flat [u0, u1,
+// ...] in the stub's frame), NaN once its end passes `limit`.
+export function endPushPast(sp: readonly number[], e: number, f: number, limit: number): number {
+  let x = e;
+  for (let it = 0; it < 32; it++) {
+    let hit = -Infinity;
+    for (let i = 0; i + 1 < sp.length; i += 2) {
+      if (sp[i + 1] > x - f && sp[i] < x && sp[i + 1] > hit) hit = sp[i + 1];
+    }
+    if (hit === -Infinity) return x;
+    x = hit + f;
+    if (x > limit + 1e-9) return Number.NaN;
+  }
+  return Number.NaN;
+}
+
+// K466: the same fade pulled back before every span it overlaps, NaN once
+// its start passes below `floor`.
+export function endPullBack(sp: readonly number[], e: number, f: number, floor: number): number {
+  let x = e;
+  for (let it = 0; it < 32; it++) {
+    let hit = Infinity;
+    for (let i = 0; i + 1 < sp.length; i += 2) {
+      if (sp[i + 1] > x - f && sp[i] < x && sp[i] < hit) hit = sp[i];
+    }
+    if (hit === Infinity) return x;
+    x = hit;
+    if (x - f < floor - 1e-9) return Number.NaN;
+  }
+  return Number.NaN;
 }
 
 export interface ExploreView {
@@ -195,6 +242,37 @@ export function exploreView(inp: ExploreInput): ExploreView {
       else pB = Math.max(pB, (B - pt.cur) / k);
     }
     const lead = Math.max(FADE_MIN, Math.min(fade, L));
+    // K466: this run's keep-out stretches in lattice units from A (every
+    // ring lap that overlaps the run), built on first use.
+    let outA: number[] | null = null;
+    const keepOutA = (): number[] => {
+      if (outA) return outA;
+      outA = [];
+      const ko = inp.keepOut;
+      const sp = ko ? ko.spans(e.chain) : undefined;
+      if (!ko || !sp) return outA;
+      const n = ko.ring(e.chain);
+      for (let i = 0; i + 1 < sp.length; i += 2) {
+        const m0 = n > 0 ? Math.floor((A - sp[i + 1]) / n) : 0;
+        const m1 = n > 0 ? Math.ceil((B - sp[i]) / n) : 0;
+        for (let m = m0; m <= m1; m++) {
+          const c0 = sp[i] + m * n;
+          const c1 = sp[i + 1] + m * n;
+          if (c1 > A && c0 < B) outA.push((c0 - A) / k, (c1 - A) / k);
+        }
+      }
+      return outA;
+    };
+    // A stub's plain end (lattice units from its near end) at reach `r`.
+    const plain = (r: number, d0: number): [number, number] => {
+      let ext = Math.max(d0, Math.min(r, L));
+      let fLen = Math.min(fade, ext - d0);
+      if (fLen < FADE_MIN) {
+        ext = Math.min(L, d0 + FADE_MIN);
+        fLen = Math.max(0, ext - d0);
+      }
+      return [ext, fLen];
+    };
     // A stub out of one visited end (+1: from A toward B; -1: from B),
     // reaching `r`, extended to a caught move's dot at `p`.
     const stub = (dir: 1 | -1, r: number, p: number): void => {
@@ -206,11 +284,41 @@ export function exploreView(inp: ExploreInput): ExploreView {
         return;
       }
       const d0 = dom(near);
-      let ext = Math.max(d0, Math.min(r, L));
-      let fLen = Math.min(fade, ext - d0);
-      if (fLen < FADE_MIN) {
-        ext = Math.min(L, d0 + FADE_MIN);
-        fLen = Math.max(0, ext - d0);
+      let [ext, fLen] = plain(r, d0);
+      if (inp.keepOut && p <= 1e-6 && fLen > 0) {
+        // K466: where the fully grown stub's fade would lie, moved out of
+        // every keep-out stretch; the move scales with the growth, so a
+        // growing arm reaches the moved end continuously.
+        const dF = dom(far);
+        const rFull = d0 + Math.max(0, reach - d0);
+        const [eF, fF] = plain(rFull, d0);
+        const sA = keepOutA();
+        const sp: number[] = [];
+        for (let i = 0; i + 1 < sA.length; i += 2) {
+          if (dir > 0) sp.push(sA[i], sA[i + 1]);
+          else sp.push(L - sA[i + 1], L - sA[i]);
+        }
+        if (sp.length && fF > 0) {
+          // A visited far end's fully grown stub keeps the other half of
+          // the gap between the two plain tips; else the far junction's
+          // web domain is the limit.
+          let limit = L - dF;
+          let meets = false;
+          if (inp.visited.has(far)) {
+            const rFar = dF + Math.max(0, reach - dF);
+            meets = rFull + rFar >= L; // Grown, the run shows whole.
+            const [eFar] = plain(rFar, dF);
+            limit = Math.min(limit, 0.5 * (eF + L - eFar));
+          }
+          const past = (): number => endPushPast(sp, eF, fF, limit);
+          const back = (): number => endPullBack(sp, eF, fF, d0);
+          let to = meets ? Number.NaN : inp.keepOut.mode === "back" ? back() : past();
+          if (Number.isNaN(to) && !meets) to = inp.keepOut.mode === "back" ? past() : back();
+          if (!Number.isNaN(to) && to !== eF) {
+            const gp = rFull - d0 > 1e-9 ? Math.max(0, Math.min(1, (r - d0) / (rFull - d0))) : 1;
+            ext = Math.max(d0 + fLen, Math.min(L, ext + (to - eF) * gp));
+          }
+        }
       }
       if (p > ext - fLen) {
         // Seen up to where the dot was caught, a lead fade beyond.

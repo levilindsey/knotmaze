@@ -981,6 +981,14 @@ export class CrossingGaps {
       this.r.chainWins.set(crossing.under.chain, wins);
     }
     wins.push(slot, underCenter, winNeg, winPos);
+    // K466: the stretch the over pass covers (every lane under its casing),
+    // shown or not, so a frontier's end can keep out of it.
+    let cuts = this.r.chainCuts.get(crossing.under.chain);
+    if (!cuts) {
+      cuts = [];
+      this.r.chainCuts.set(crossing.under.chain, cuts);
+    }
+    cuts.push(slot, underCenter, allNeg, allPos);
     if (shown) {
       let uw = this.r.underWindows.get(crossing.under.chain);
       if (!uw) {
