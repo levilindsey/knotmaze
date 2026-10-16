@@ -105,6 +105,40 @@ describe("fabric maze controller (P4 Stage 8a)", () => {
     expect(c.pathLength).toBeCloseTo(len, 9);
   });
 
+  it("names the run it arrived on (K479): none at the start, the path's last after", () => {
+    const c = new FabricMazeController(walkFor(42));
+    expect(c.arrivalEdge).toBe(-1);
+    const taken: number[] = [];
+    for (let step = 0; step < 4; step++) {
+      const eid = bestChoice(c);
+      expect(c.tapEdge(eid)).toMatch(/advance|win/);
+      taken.push(eid);
+      expect(c.arrivalEdge).toBe(eid);
+      expect(c.arrivalEdge).toBe(c.pathEdges[c.pathEdges.length - 1]);
+      if (c.solved) break;
+    }
+    // A backtrack hands the title to the run before, and back at the start
+    // there is none.
+    while (taken.length > 0 && !c.solved) {
+      const last = taken.pop()!;
+      expect(c.arrivalEdge).toBe(last);
+      expect(c.tapEdge(last)).toBe("backtrack");
+      expect(c.arrivalEdge).toBe(taken.length > 0 ? taken[taken.length - 1] : -1);
+    }
+    if (!c.solved) expect(c.arrivalEdge).toBe(-1);
+  });
+
+  it("names the last run walked in trail mode, where going back is an advance (K479)", () => {
+    const c = new FabricMazeController(walkFor(5), true);
+    const first = c.choices()[0];
+    expect(c.tapEdge(first)).toBe("advance");
+    expect(c.arrivalEdge).toBe(first);
+    // The same run again walks it back; it is still the last run walked.
+    expect(c.tapEdge(first)).toBe("advance");
+    expect(c.arrivalEdge).toBe(first);
+    expect(c.pathEdges).toEqual([first, first]);
+  });
+
   it("solves exactly the optimal when following the Dijkstra field", () => {
     for (const seed of [5, 42, 1234, 99]) {
       const c = new FabricMazeController(walkFor(seed));
