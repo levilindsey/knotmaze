@@ -166,7 +166,8 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   units a second, 1 for every 5 the dot walks; a delay of 20 is about 1.7
   s, 40 about 3.3 s. Every row restarts the solve (onClockChange). PROBE
   NOTE: the rows share labels, so find them by key or tooltip (the
-  real-time pair's names the "fixed pace"), not by label alone;
+  real-time pair's say "your dot's fixed pace"; the clock row's tooltip
+  says "fixed pace" too, so match the longer phrase), not by label alone;
   `.claude/probes/K440/k440_page.mjs` does. Params: gameplay-links.md's
   REAL-TIME FIRE PAIR; the race: gameplay-fire.md's REAL-TIME FIRE.
 
