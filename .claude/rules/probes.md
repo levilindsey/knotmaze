@@ -448,6 +448,11 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   reveal rewrites every slot's vis each frame. `run_locked.ps1` takes
   `-What` and `-Cmds` by name: a third positional string binds to
   `-MaxWaitMin` and fails to parse; call it with `&` and `npx.cmd`.
+  Stage 3 (`stage3/`, the fused-joint pairs; render-ribbon.md, A FUSED
+  JOINT IS NOT A CROSSING): `h1scan.mjs`, `h6look.mjs`, `jointab.mjs`,
+  `farcheck.mjs`, `knuckle2.mjs` (panel M = master) and
+  `verify_batch.ps1`. Its `g2/census_fan.mjs` runs the env `PRE` (a JS
+  expression) in the page before the census, to flip a toggle.
 - K6-1 (2026-10-15), THE FRAME LOOP'S FLAGS (`render-loop.md`):
   `__knotLoop()` returns the flag ledger's report since the last reset:
   `mode` ("shadow"), `frames`, `now` and `last` (the open and the last
