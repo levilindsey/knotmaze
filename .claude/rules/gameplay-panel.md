@@ -193,3 +193,115 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   minoSleep's tooltip says it waits again after each catch, in its lair
   or, with minoLair off, where it caught you. Params: gameplay-links.md;
   behavior: gameplay-minotaur.md.
+
+- ROW HELP (K467, 2026-10-15; brief `docs/design/K467.md`; Levi: "tooltip
+  type information for param controls on mobile"; the coordinator's
+  recommendation, no long press, no (i) buttons): a tap or click on a
+  row's LABEL (`.tp-lblv_l`) toggles a help block inside the row,
+  `div.kp-help#kp-help-N` appended by `wireHelp` in `row()`, showing the
+  row's `title`. One source: the text is read from `el.title` when the
+  block opens and again by `syncHelpText` after markOverridden changes it
+  (OVERRIDDEN_NOTE rides along), never copied. One block at a time
+  (`helpOpen`); `closeHelpIfHidden` (run by refreshCond and the folder
+  toggles, from the classes, since a closed panel has no layout) closes a
+  block whose row hid or whose folder collapsed. The row wraps only while
+  a block is open (`.kp-row.kp-help-open{flex-wrap:wrap}`, the block is
+  `flex:0 0 100%`); closed, the block and the mark are `display:none`, so
+  a desktop panel with no block open is what it was. The reset glyph is
+  not a help target (its own pointerdown, and the label's click handler
+  skips `.kp-reset`).
+- THE (i) AND THE LABEL AS A BUTTON (K467): the muted (i) is
+  `span.kp-i` inserted before the reset glyph, shown only under
+  `(pointer:coarse)` or SHEET_QUERY (desktop keeps its hover tooltip and
+  shows no mark), and the "i" is `::before` CSS, not text: the label's
+  `textContent` stays "weaveDensity⟲" and K92's undo probe, which finds
+  rows by label text, keeps working. A labeled row gets `kp-has-help`,
+  role=button, tabIndex 0, aria-expanded, aria-controls (the block's id),
+  Enter and Space, and a focus-visible outline. The label's click handler
+  preventDefaults, so a tap on a CHECKBOX row's label opens help and
+  never toggles the box (probe: "Reduced motion"). Long labels ("Hover
+  glow end fade") wrap on the sheet with the reset glyph and the (i) on
+  the second line: cosmetic.
+- NO TOUCH HELP YET (K467): the buttons and non-row elements, whose
+  titles still say what a player may need: "Reset path" (clear the traced
+  path and start over from the entrance), "Replay settle" (restart the
+  knot from its lattice state), "Reset to defaults" (every parameter,
+  seed kept), the seed row and its dice, the Daily button, the stats
+  button; of low value, the credit link (snoringcat.games), the licenses
+  link and the version span (build time). Folder headers have none.
+- THE SHEET ON PHONES (K468, 2026-10-15; `src/ui/panel_sheet.ts`, pure and
+  tested in `test/ui/panel_sheet.test.ts`; Levi: "the settings menu should
+  be full screen on mobile"): SHEET_QUERY = `(max-width: 700px), (pointer:
+  coarse) and (max-height: 500px)` (a phone in either orientation, 753x411
+  included; tablets and desktops keep the 320 px side panel), the one query
+  the panel's CSS, the badge's CSS, camera.ts and `matchMedia` all read
+  (`sheetLayout(w, h, coarse)` is the same rule on numbers). Under it the
+  Tweakpane wrapper `.tp-dfwv` is position:fixed, left 0, right 0 (the
+  inline top, right, width and max-height of the side panel lose to
+  `!important`), z 28, height `100dvh - --kp-top`, opaque #28292e,
+  padded by the safe-area insets and scrolling inside itself; unit size 32
+  px, value column `min(50%, 440px)` (58% wrapped the long labels), font
+  still 11 px. A TOP BAR (`div.kp-bar`, z 29, fixed, `--kp-top` tall: 62
+  px, safe-top + 52) sits behind the hamburger, which is the close button
+  (X while open, aria-label "Close settings"), and undo and redo, which
+  keep their place beside it; the badge keeps the bar's left (see
+  gameplay-badge.md's OPEN-PANEL ROW). A LOAD STARTS WITH THE SHEET CLOSED
+  whatever `knotmaze.panelOpen` holds (`panelStartsOpen`), and the sheet's
+  open state is never stored there. A rotation or a window resize
+  switches live (`sheetMQ` change): an open panel takes or gives back its
+  history entry.
+- BACK CLOSES THE SHEET (K468; `SheetHistory` in panel_sheet.ts): an open
+  sheet owns ONE history entry (`pushState({kmSheet:1})` on open); Android
+  Back pops it and `onPop` closes the sheet, a close by the button or a
+  switch to the side panel gives it back (`history.back()`, counted in
+  `pending` so the pop event it causes does not close a sheet reopened in
+  the same moment). EVERY pop of ours then rewrites the design's link
+  (`onSheetBack`, main.ts: `writeParams(params)`): the app replaces the
+  address bar and never pushes, so the edits made in the sheet went to the
+  pushed entry and the one Back returns to holds the link from before the
+  sheet opened. The page itself stays (Back does not reload it). Probe:
+  `page.goBack()` after a design edit in the sheet closes it, the document
+  is the same (a marker on `window` survives) and `location.search` is the
+  edited link; a button close, then reopen, then Back closes once and
+  stays. KNOWN: a reload (or tab discard) with the sheet open leaves its
+  stale entry under the fresh page, so the first Back lands on the same
+  page (an unclaimed pop only rewrites the link: two Backs to leave); a
+  close and reopen within tens of ms leaves one extra entry; a live
+  switch to the sheet while the panel is open pushes without a user
+  gesture, which Chrome's history-manipulation intervention may skip on
+  Back (a desktop window dragged under 700 px).
+- THE SHEET AND THE CAMERA (K468): `readPanel` in `src/app/camera.ts`
+  returns false while SHEET_QUERY matches, so K198's pan range counts the
+  sheet as no panel (gameplay-camera.md). `fitModeBadge` in main.ts passes
+  no avoid-list (HUD, banners) while the sheet is open: they are under it.
+- THE PEEK (K468; for Levi's review, tune freely): while a ROW is dragged
+  on the sheet, everything but that row turns `visibility:hidden` and the
+  sheet's background clears (root class `kp-peek`, the dragged row
+  `kp-peeking`, a 90% panel color behind it so it stays readable; the top
+  bar, close, undo, redo and the badge hide too), so the player watches
+  the design change under their finger and the sheet returns on release.
+  Visibility, not opacity or display, so the row shows inside its hidden
+  parents and the drag keeps its element (the slider keeps tracking
+  through the flip). It starts on the drag's SECOND change (a tap that
+  only sets a value would flash the sheet away) and ends on any
+  pointerup, touchend, mouseup, cancel or window blur, on the row's last
+  change, on a close and on a layout switch. The sheet's scrollbar is
+  made transparent while it lasts. Phone layouts only: the side panel
+  never peeks.
+- PROBES AND NUMBERS (K467 + K468): `.claude/probes/K467/sheet_probe.mjs
+  <base> <out> portrait|landscape|live` (lib.mjs from K92; each mode ends
+  with a checks summary; 36, 36 and 7 checks, no page errors; screenshots
+  `<mode>_closed|open_top|help_open|scrolled_help|peek_mid_drag|
+  after_peek|after_back.png`). Portrait 411x753 @2.625 touch: sheet
+  0..411 x 62..753, bar 0..62, `--kp-top` 62; badge 123..241, undo and
+  redo 259..351, close 359..401, all at y 10..52. Landscape 753x411: sheet
+  0..753 x 62..411 (349 tall), badge 465..583, undo and redo 601..693,
+  close 701..743. `live`: a 1400x900 desktop keeps the absolute side panel
+  (width 250-340, right edge at least 1380, no bar, no (i) shown, the
+  hover title kept), shrinking to 600x900 shows the sheet with its entry
+  (history length +1, `history.state` kmSheet 1) and growing back gives
+  the entry back (`history.state` null). `.claude/probes/K92/undo.mjs
+  <base> <out> phone` still passes. Gotchas: a probe taps a wrapped
+  label at its first line near its left (x + 12), not at the middle of
+  its box, where the reset glyph or the second line sits; a layout
+  switch needs a reload after `setViewport` on a mobile emulation (probes.md).
