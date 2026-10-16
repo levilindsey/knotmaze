@@ -123,9 +123,11 @@ Next free ID: K435.
   edge turns +19° to +42° instead of +31° to +56° and the arch is flat, for 0.02-0.03 world less
   inner swing at the tip; 6 looks like 3). Live as `PluckOverlay.capRound`; sheets in
   `.claude/probes/K395/out/`. Stays 1.5 until Levi picks.
-- **K409** · The fire's widths are in ctrl (band 0.7, ember 0.25 ahead and 0.55 behind): under gone only
-  a thin ember rim shows at the cut end, and the fuse's ember sits partly under the FX smoke. Rec: the
-  ember onto the unburnt side under gone; world units if the phone sheet shows them thin. `K114_burn.md` 3b handoff.
+- **K409** · The fire's widths are in ctrl (band 0.7, ember 0.25/0.55): a 2.6x spread with
+  curvature; on the phone the gone ember is a ~1.7 device px rim, a third under the smoke; the
+  front's char band darkens the unburnt side under both looks. Options: world units; the ember onto
+  the unburnt side under gone; no band under gone; the ember over the smoke (rec.: all but the
+  third). `K114_burn.md` 3c handoff item 4.
 - **K411** · A phone window for K8's bench (`.claude/probes/K8/stage2/phone6.ps1`: its refs, times and
   preview paths are stale; refresh them and raise the rest to 90000 ms). The 2026-10-15 window (10:07,
   "at least the next hour") ran K7's phone pass (10:32) and K290 3c's sheet (to 11:15); the phone was
