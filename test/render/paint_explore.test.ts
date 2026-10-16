@@ -298,10 +298,10 @@ describe("K76 kExploreAt mirror vs the model's chainVis", () => {
 });
 
 describe("K76 the explore program variant (withExplore)", () => {
-  // The section fragment as ribbon_renderer.ts writes it (source text; the
-  // anchors hold no interpolation), with the gap library's text where the
+  // The section fragment as ribbon/ribbon_shader.ts writes it (source text;
+  // the anchors hold no interpolation), with the gap library's text where the
   // module interpolates it (K268: the shaped cut's anchors are in gapKeepAt).
-  const src = readFileSync(new URL("../../src/render/ribbon_renderer.ts", import.meta.url), "utf8").replace(
+  const src = readFileSync(new URL("../../src/render/ribbon/ribbon_shader.ts", import.meta.url), "utf8").replace(
     /\r\n/g,
     "\n"
   );
