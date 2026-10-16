@@ -85,6 +85,10 @@ export class FabricMazeController {
   // respawn(true) calls so far: a new value = the fog of war starts over,
   // the solve goes on (K174).
   refogs = 0;
+  // respawn() calls since the last reset(): the catches whose walk
+  // walkedDist still holds (K80 turns stage 3a, K293 (a): the stars say
+  // which catches they rate).
+  respawns = 0;
 
   // Memory-trail mode: advance-only taps (see the header comment). Set at
   // construction and freely togglable from main.ts afterwards.
@@ -118,6 +122,7 @@ export class FabricMazeController {
     this.deadEndTips = new Set();
     this.moveLog = [];
     this.taps = [];
+    this.respawns = 0;
     this.restarts++;
   }
 
@@ -152,14 +157,16 @@ export class FabricMazeController {
     return out;
   }
 
-  // K80's real-time mode: the minotaur caught the player. Back to the
-  // entrance in one jump, not a restart: the stats, the move log, the taps,
-  // the backtrack and walked meters and `restarts` stay (replay(taps)
-  // cannot reproduce a respawn; a real-time maze is never a daily, so
-  // nothing replays it). `refog` (K174, the minoRefog param) returns the
-  // fog of war to the solve's start; without it the explored fog stays.
+  // K80's minotaur (real time, and the turn clock since K80 turns) caught
+  // the player. Back to the entrance in one jump, not a restart: the stats,
+  // the move log, the taps, the backtrack and walked meters and `restarts`
+  // stay (replay(taps) cannot reproduce a respawn; a minotaur's maze is
+  // never a daily, so nothing replays it), and `respawns` counts it.
+  // `refog` (K174, the minoRefog param) returns the fog of war to the
+  // solve's start; without it the explored fog stays.
   respawn(refog = false): void {
     if (refog) this.refogs++;
+    this.respawns++;
     this.pathVertices = [this.walk.start];
     this.pathEdges = [];
     this.solved = false;
@@ -169,15 +176,18 @@ export class FabricMazeController {
   // on. It replaces the last move's letter (the run you were on; in real
   // time, caught standing, the run that brought you there). `wait`: a
   // turn-clock wait, which is otherwise not logged, adds an "x" (so does an
-  // empty log). The taps keep the run: a catch is not a tap.
+  // empty log). The taps keep the run: a catch is not a tap, and an added
+  // "x" is not a move (moveCount reads the taps).
   markCaught(wait = false): void {
     if (wait || this.moveLog.length === 0) this.moveLog.push("x");
     else this.moveLog[this.moveLog.length - 1] = "x";
   }
 
-  // Moves made (accepted taps) since the last reset.
+  // Moves made (accepted taps) since the last reset. The taps, not the
+  // move log: a catch's added "x" (on an empty log, or for a wait) counts
+  // no move (K293 (c), K80 turns stage 3a).
   get moveCount(): number {
-    return this.moveLog.length;
+    return this.taps.length;
   }
 
   get head(): string {

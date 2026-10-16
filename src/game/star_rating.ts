@@ -4,15 +4,20 @@
 // THE MEASURE: ratio = walked / optimal. `walked` is every run walked,
 // forward and back (FabricMazeController.walkedDist): the path the player
 // finished on, plus each run backed out of twice (walked out, walked
-// back), plus, in K80's real-time mode, the walk from the entrance again
-// after each catch. In memory-trail mode the path already holds everything
-// walked (backtracking does not exist there). `optimal` is the walk graph's
-// shortest entrance-to-exit route, so 1.0x is a perfect solve.
+// back), plus, under a K80 minotaur (real time or turns), the walk from
+// the entrance again after each catch. A level restart (a catch under
+// minoRestart, or a Reset path) starts the walk over while the catches
+// carry, so `walkedCatches` says how many catches' walks it holds and the
+// explanation says what is rated (K293 (a), K80 turns stage 3a). In
+// memory-trail mode the path already holds everything walked (backtracking
+// does not exist there). `optimal` is the walk graph's shortest
+// entrance-to-exit route, so 1.0x is a perfect solve.
 //
 // STARS: one for any finish; two within TWO_STAR_RATIO; three within
-// THREE_STAR_RATIO and, in real-time mode, never caught (the re-walk a
+// THREE_STAR_RATIO and, under a minotaur, never caught (the re-walk a
 // catch forces already counts in the ratio; the cap keeps three stars for
-// a clean run). No finite optimal, or nothing walked: no rating.
+// a clean run, and counts every catch, a restarted one too). No finite
+// optimal, or nothing walked: no rating.
 //
 // THRESHOLDS come from simulated solvers over 288 mazes at today's defaults
 // and 288 dailies (the table and the solvers: .claude/rules/gameplay-stars.md,
@@ -37,8 +42,11 @@ export interface StarRating {
   ratio: number; // walked / optimal
   walked: number; // lattice units, like the HUD's meters
   optimal: number;
-  // K80's real-time catches; null in turn-based play.
+  // A K80 minotaur's catches (either clock); null without a minotaur.
   catches: number | null;
+  // Of those, the catches whose walk `walked` holds: the ones since the
+  // level last started over (0..catches; null without a minotaur).
+  walkedCatches: number | null;
 }
 
 // Every run walked, from a turn-based record: the finished path plus each
@@ -47,10 +55,13 @@ export function walkedOf(path: number, backtrack: number): number {
   return path + 2 * backtrack;
 }
 
+// `walkedCatches`: how many of the catches the walk holds (the controller's
+// `respawns`); by default all of them. Clamped to 0..catches.
 export function rateRun(
   walked: number,
   optimal: number,
-  catches: number | null = null
+  catches: number | null = null,
+  walkedCatches: number | null = catches
 ): StarRating | null {
   if (!Number.isFinite(optimal) || optimal <= 0) return null;
   if (!Number.isFinite(walked) || walked <= 0) return null;
@@ -62,7 +73,11 @@ export function rateRun(
       : ratio <= TWO_STAR_RATIO + EDGE_EPS
         ? 2
         : 1;
-  return { stars, ratio, walked, optimal, catches };
+  const inWalk =
+    catches === null
+      ? null
+      : Math.max(0, Math.min(catches, walkedCatches ?? catches));
+  return { stars, ratio, walked, optimal, catches, walkedCatches: inWalk };
 }
 
 // A stored daily result's rating (game/daily_store.ts DailyResult): null
@@ -107,6 +122,8 @@ export function starRules(realtime: boolean): string[] {
 
 // Distances as the HUD shows them (ui/maze_hud.ts fmtDist: x10, whole).
 const hudDist = (v: number): string => String(Math.round(v * 10));
+const times = (n: number): string =>
+  n === 1 ? "once" : n === 2 ? "twice" : `${n} times`;
 
 // The tap explanation: the rules, then where this run landed.
 export function starExplanation(r: StarRating): string[] {
@@ -115,12 +132,21 @@ export function starExplanation(r: StarRating): string[] {
     `${hudDist(r.walked)} against ${hudDist(r.optimal)}, ` +
     "backtracks counted both ways.";
   // A catch empties the path, so the HUD's path and backtrack no longer
-  // add up to the walk: say where the rest went.
+  // add up to the walk: say where the rest went. A level restart starts
+  // the walk over (K293 (a)): then say only the walk since counts.
   const n = r.catches;
   if (n !== null && n > 0) {
-    landed +=
-      ` Caught ${n === 1 ? "once" : n === 2 ? "twice" : `${n} times`}: ` +
-      `the walk before ${n === 1 ? "it" : "each catch"} counts too.`;
+    const k = r.walkedCatches ?? n;
+    landed += ` Caught ${times(n)}`;
+    if (k >= n) {
+      landed += `: the walk before ${n === 1 ? "it" : "each catch"} counts too.`;
+    } else if (k <= 0) {
+      landed += ": only the walk since the level last started over counts.";
+    } else {
+      landed +=
+        `, ${times(k)} since the level last started over: only the walk ` +
+        `since then counts, the walk before ${k === 1 ? "that catch" : "those catches"} included.`;
+    }
   }
   return [...starRules(r.catches !== null), landed];
 }

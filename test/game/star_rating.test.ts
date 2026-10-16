@@ -33,7 +33,9 @@ describe("star rating (K155)", () => {
     expect(at(1.5 * 19.6, 19.6)).toBe(3);
     expect(at(4 * 19.6, 19.6)).toBe(2);
     const r = rateRun(294, 196)!;
-    expect(r).toEqual({ stars: 3, ratio: 1.5, walked: 294, optimal: 196, catches: null });
+    expect(r).toEqual({
+      stars: 3, ratio: 1.5, walked: 294, optimal: 196, catches: null, walkedCatches: null,
+    });
   });
 
   it("rates nothing without a finite optimal or a walk", () => {
@@ -52,6 +54,15 @@ describe("star rating (K155)", () => {
     expect(rateRun(380, 100, 2)?.stars).toBe(2);
     expect(rateRun(500, 100, 1)?.stars).toBe(1);
     expect(rateRun(120, 100, 2)?.catches).toBe(2);
+    // K293 (a): the catches the walk holds, by default all; clamped.
+    expect(rateRun(120, 100, 2)?.walkedCatches).toBe(2);
+    expect(rateRun(120, 100, 2, 0)?.walkedCatches).toBe(0);
+    expect(rateRun(120, 100, 2, 5)?.walkedCatches).toBe(2);
+    expect(rateRun(120, 100, 2, -1)?.walkedCatches).toBe(0);
+    expect(rateRun(120, 100, null, 3)?.walkedCatches).toBeNull();
+    // A catch before a restart still caps the stars at two.
+    expect(rateRun(120, 100, 1, 0)?.stars).toBe(2);
+    expect(rateRun(120, 100, 0, 0)?.stars).toBe(3);
   });
 
   it("counts every run walked: the path plus each backtrack twice", () => {
@@ -107,6 +118,18 @@ describe("star rating (K155)", () => {
     expect(caught(1)).toMatch(/ways\. Caught once: the walk before it counts too\.$/);
     expect(caught(2)).toMatch(/ways\. Caught twice: the walk before each catch counts too\.$/);
     expect(caught(5)).toMatch(/ways\. Caught 5 times: the walk before each catch counts too\.$/);
+    // K293 (a): a restart starts the walk over; the line says so.
+    const since = (n: number, k: number): string =>
+      starExplanation(rateRun(25, 19.6, n, k)!)[3];
+    expect(since(1, 1)).toBe(caught(1));
+    expect(since(1, 0)).toMatch(/ways\. Caught once: only the walk since the level last started over counts\.$/);
+    expect(since(3, 0)).toMatch(/ways\. Caught 3 times: only the walk since the level last started over counts\.$/);
+    expect(since(2, 1)).toMatch(
+      /ways\. Caught twice, once since the level last started over: only the walk since then counts, the walk before that catch included\.$/
+    );
+    expect(since(4, 3)).toMatch(
+      /ways\. Caught 4 times, 3 times since the level last started over: only the walk since then counts, the walk before those catches included\.$/
+    );
     expect(starRules(false)).toEqual(starExplanation(rateRun(30, 20)!).slice(0, 3));
   });
 });
