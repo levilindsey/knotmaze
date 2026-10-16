@@ -276,7 +276,7 @@ Next free ID: K416.
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
   with seams so G3 becomes a module swap; K6 rides it. Design: `docs/design/K5_K6_split.md`
   (calls: K377). M1 merged (baa0847..12709e5): main.ts 5709 → 4869 lines, no logic changes.
-  - owner: agent `abe93d522f82975c1` of claude session 05e60da0 (M2, started 2026-10-15 09:08; opus, 2 h cap ~11:08; ports 5840-5849). R1's brief: docs agent `aae67981858ddb4a6` of the same session, since 08:51 (branch `worktree-agent-aae67981858ddb4a6`, writing `docs/design/K5_R1.md`). M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
+  - owner: agent `abe93d522f82975c1` of claude session 05e60da0 (M2, started 2026-10-15 09:06; opus, 2 h cap ~11:06; ports 5840-5849). R1's brief: docs agent `aae67981858ddb4a6` of the same session, since 08:51 (branch `worktree-agent-aae67981858ddb4a6`, writing `docs/design/K5_R1.md`). M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
   - branch: `worktree-agent-abe93d522f82975c1`, worktree `.claude/worktrees/agent-abe93d522f82975c1`, from `eb8436a`; last commit: `eb8436a` (none of its own yet)
   - evidence: `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/` (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
   - next: M2 running (the camera to `src/app/camera.ts`), beside K80 3a (whoever merges second rebases); then M3 (the frame loop, a hot path), M3/M4 export PhysState, M7a moves `__knotUndo`. The R lane (K377 q3): R1 after its brief lands (`docs/design/K5_R1.md`, ports 5980-5989), R2 and R5 after it, G3-1 after R2
