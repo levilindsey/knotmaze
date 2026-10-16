@@ -22,6 +22,7 @@ import {
   pickDeparture,
   pickHold,
   pickMove,
+  waitKeyOf,
 } from "../../src/ui/key_moves";
 import type { Departure, PointAt, RunEnds } from "../../src/ui/key_moves";
 
@@ -661,5 +662,72 @@ describe("K334 a held key chains its moves", () => {
     // running to frame 24, where the dot comes to rest.
     expect(r.rest.filter((f) => f <= 30)).toEqual([24, 25, 26, 27, 28, 29, 30]);
     expect(r.moves).toBe(2);
+  });
+});
+
+// K80 turns 3a: the wait key and the wait in the move slot.
+describe("K80 turns 3a the wait key", () => {
+  const el = (matches: string[]) =>
+    ({
+      closest: (sel: string) =>
+        sel.split(",").some((s) => matches.includes(s.trim())) ? {} : null,
+    }) as unknown as EventTarget;
+  const canvas = el(["canvas"]);
+
+  it("is `.` always and Space off buttons and links", () => {
+    expect(waitKeyOf({ key: ".", code: "Period", target: canvas })).toBe(true);
+    // `.` by key: wherever the layout puts it, the numpad's too.
+    expect(waitKeyOf({ key: ".", code: "NumpadDecimal", target: canvas })).toBe(true);
+    expect(waitKeyOf({ key: ".", code: "KeyE", target: el(["button"]) })).toBe(true);
+    expect(waitKeyOf({ key: " ", code: "Space", target: canvas })).toBe(true);
+    expect(waitKeyOf({ key: " ", code: "Space", target: null })).toBe(true);
+    // Not other keys (`>` is Shift+. on US layouts).
+    expect(waitKeyOf({ key: ">", code: "Period", target: canvas })).toBe(false);
+    expect(waitKeyOf({ key: "Enter", code: "Enter", target: canvas })).toBe(false);
+    expect(waitKeyOf({ key: "ArrowUp", code: "ArrowUp", target: canvas })).toBe(false);
+  });
+
+  it("leaves Space to a focused button or link (Reset path, a folder)", () => {
+    // Tweakpane's Reset path is a <button> inside a panel row.
+    expect(waitKeyOf({ key: " ", code: "Space", target: el([".tp-rotv", "button"]) })).toBe(
+      false
+    );
+    expect(waitKeyOf({ key: " ", code: "Space", target: el(["a[href]"]) })).toBe(false);
+    expect(waitKeyOf({ key: " ", code: "Space", target: el(["[role='button']"]) })).toBe(
+      false
+    );
+    expect(waitKeyOf({ key: " ", code: "Space", target: el(["summary"]) })).toBe(false);
+    expect(waitKeyOf({ key: " ", code: "Space", target: el(["input"]) })).toBe(false);
+  });
+
+  it("a wait while the turn is under way waits for its end, in the move slot", () => {
+    const w = new MoveWait();
+    const travels = { moving: true, absorbed: false, ambiguous: () => false };
+    // At rest it is the caller's to take at once.
+    expect(w.wait(0, false)).toBe(false);
+    expect(w.waiting).toBeNull();
+    expect(w.wait(10, true)).toBe(true);
+    expect(w.waiting).toMatchObject({ dirs: [], edge: -1, queued: true, wait: true });
+    // Never handed back early: not before a key, not when keys come up.
+    expect(w.before("up", 20)).toBeNull();
+    expect(w.release(() => false)).toBeNull();
+    expect(w.step(30, true, () => true)).toBe("wait");
+    // Taken on the arrival frame, chord window or not.
+    expect(w.step(40, false, () => true)).toMatchObject({ wait: true, edge: -1 });
+    expect(w.waiting).toBeNull();
+    // The latest input wins: a press after a wait replaces it, a wait
+    // after a press or a tap replaces them, and a key never chords with
+    // a wait.
+    w.wait(0, true);
+    expect(w.press("up", 10, travels)).toBe("queue");
+    expect(w.waiting).toMatchObject({ dirs: ["up"] });
+    expect(w.waiting?.wait).toBeUndefined();
+    w.wait(20, true);
+    expect(w.waiting).toMatchObject({ wait: true });
+    expect(w.press("right", 30, travels)).toBe("queue");
+    expect(w.waiting).toMatchObject({ dirs: ["right"] });
+    w.tap(5, 40, true);
+    w.wait(50, true);
+    expect(w.step(60, false, () => false)).toMatchObject({ wait: true, edge: -1 });
   });
 });

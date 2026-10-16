@@ -16,6 +16,10 @@ export const MOVE_PAD_KEY = "knotmaze.movePad";
 // (a finger resting there waits for a direction).
 export const PAD_SIZE = 132;
 export const PAD_DEAD = 14;
+// K80 turns 3a: while the turn minotaur is on, the center is the WAIT
+// button (a finger coming DOWN inside it waits a turn), its radius grown to
+// this so a thumb finds it; the arms keep everything outside it.
+export const PAD_WAIT = 22;
 
 // The stored choice ("1" on, "0" off), else on for coarse pointers.
 export function movePadPref(stored: string | null, coarse: boolean): boolean {
@@ -38,12 +42,21 @@ export interface MovePadHooks {
   press: (id: string, dir: KeyDir) => void;
   // That finger lifted, slid off its arm, or the pad hid.
   release: (id: string) => void;
+  // K80 turns 3a: a finger came down on the center while it is the wait
+  // button (setWait). Sliding into the center only releases the arm.
+  wait?: () => void;
 }
 
 const CHEVRON =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" ' +
   'fill="none" stroke="currentColor" stroke-width="2.6" ' +
   'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+// K80 turns 3a: the wait button's icon, an hourglass (the head's wait cue
+// wears the same shape: marker_glyphs.ts "hourglass").
+const HOURGLASS =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12M6 21h12' +
+  'M8 3v4l8 10v4M16 3v4l-8 10v4" fill="none" stroke="currentColor" ' +
+  'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ARMS: Array<{ dir: KeyDir; label: string; rot: number }> = [
   { dir: "up", label: "Move up", rot: 0 },
   { dir: "right", label: "Move right", rot: 90 },
@@ -68,7 +81,15 @@ function injectStyle(): void {
     "display:flex;align-items:center;justify-content:center;" +
     "border-radius:50%;color:#c9d3e6;pointer-events:none}" +
     ".km-pad-arm svg{width:24px;height:24px}" +
-    ".km-pad-arm.km-on{background:#e4ecf833;color:#ffffff}";
+    ".km-pad-arm.km-on{background:#e4ecf833;color:#ffffff}" +
+    `.km-pad-wait{position:absolute;width:${2 * PAD_WAIT}px;` +
+    `height:${2 * PAD_WAIT}px;left:${PAD_SIZE / 2 - PAD_WAIT}px;` +
+    `top:${PAD_SIZE / 2 - PAD_WAIT}px;border-radius:50%;` +
+    "display:flex;align-items:center;justify-content:center;" +
+    "box-shadow:0 0 0 1px #3a4254 inset;color:#c9d3e6;pointer-events:none}" +
+    ".km-pad-wait[hidden]{display:none}" +
+    ".km-pad-wait svg{width:20px;height:20px}" +
+    ".km-pad-wait.km-on{background:#e4ecf833;color:#ffffff}";
   document.head.appendChild(st);
 }
 
@@ -79,6 +100,11 @@ export class MovePad {
   private readonly fingers = new Map<number, KeyDir | null>();
   private shown = false;
   private readonly hooks: MovePadHooks;
+  // K80 turns 3a: the center is the wait button; the fingers that came
+  // down on it and have not left it (they light it).
+  private readonly waitEl: HTMLDivElement;
+  private waitOn = false;
+  private readonly waiting = new Set<number>();
 
   constructor(hooks: MovePadHooks) {
     this.hooks = hooks;
@@ -107,6 +133,14 @@ export class MovePad {
       el.appendChild(d);
       this.arms.set(a.dir, d);
     }
+    const wb = document.createElement("div");
+    wb.className = "km-pad-wait";
+    wb.setAttribute("role", "button");
+    wb.setAttribute("aria-label", "Wait");
+    wb.innerHTML = HOURGLASS;
+    wb.hidden = true;
+    el.appendChild(wb);
+    this.waitEl = wb;
     el.addEventListener("pointerdown", (e) => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
       e.preventDefault();
@@ -116,6 +150,12 @@ export class MovePad {
         // A pointer that is already gone: its up event never comes.
       }
       this.fingers.set(e.pointerId, null);
+      // K80 turns 3a: a finger DOWN on the center waits a turn.
+      if (this.waitOn && this.centerDir(e) === null) {
+        this.waiting.add(e.pointerId);
+        this.hooks.wait?.();
+        this.paint();
+      }
       this.track(e);
     });
     el.addEventListener("pointermove", (e) => {
@@ -143,12 +183,34 @@ export class MovePad {
     return this.shown;
   }
 
-  private track(e: PointerEvent): void {
+  // K80 turns 3a: the center is the wait button (the turn minotaur is on):
+  // shown, and the arms start at PAD_WAIT instead of PAD_DEAD.
+  setWait(v: boolean): void {
+    if (v === this.waitOn) return;
+    this.waitOn = v;
+    this.waitEl.hidden = !v;
+    if (!v) this.waiting.clear();
+    this.paint();
+  }
+
+  get isWait(): boolean {
+    return this.waitOn;
+  }
+
+  // The arm under a pointer, or null in the center (PAD_WAIT while the
+  // center waits, else PAD_DEAD).
+  private centerDir(e: PointerEvent): KeyDir | null {
     const r = this.el.getBoundingClientRect();
-    const dir = padDirAt(
+    return padDirAt(
       e.clientX - (r.left + r.width / 2),
-      e.clientY - (r.top + r.height / 2)
+      e.clientY - (r.top + r.height / 2),
+      this.waitOn ? PAD_WAIT : PAD_DEAD
     );
+  }
+
+  private track(e: PointerEvent): void {
+    const dir = this.centerDir(e);
+    if (dir !== null && this.waiting.delete(e.pointerId)) this.paint();
     const prev = this.fingers.get(e.pointerId) ?? null;
     if (dir === prev) return;
     const id = `pad:${e.pointerId}`;
@@ -162,6 +224,7 @@ export class MovePad {
     if (!this.fingers.has(pointerId)) return;
     const prev = this.fingers.get(pointerId) ?? null;
     this.fingers.delete(pointerId);
+    this.waiting.delete(pointerId);
     if (prev !== null) this.hooks.release(`pad:${pointerId}`);
     this.paint();
   }
@@ -169,5 +232,6 @@ export class MovePad {
   private paint(): void {
     const on = new Set([...this.fingers.values()].filter((d) => d !== null));
     for (const [dir, d] of this.arms) d.classList.toggle("km-on", on.has(dir));
+    this.waitEl.classList.toggle("km-on", this.waitOn && this.waiting.size > 0);
   }
 }
