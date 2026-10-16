@@ -158,8 +158,11 @@ const FIRE_DIR_STEP = 0.15;
 const FIRE_FOG_LIGHT = 0.75;
 const FIRE_FOG_LIGHT_STEP = 0.3;
 // The lit fuse: an ember on each run out of the entrance, this many thread
-// widths past the start disc's rim, until the fire spreads.
+// widths past the start disc's rim (a world distance from the disc's
+// center, found along the run in FIRE_FUSE_STEP lattice steps), until the
+// fire spreads.
 const FIRE_FUSE_OUT = 1.0;
+const FIRE_FUSE_STEP = 0.1;
 // UNSEEN FRONTS (K383, Levi's open call): false = a front the thread reveal
 // does not show draws as nothing, as char does (its ember and FX hidden
 // with the thread); true = its ember shows over a small piece of thread
@@ -1261,11 +1264,18 @@ export class FabricMazeRenderer {
     }
     if (lit) {
       const out = this.markerRadius() + FIRE_FUSE_OUT * this.threadWidth;
+      const sv = this.walk.vertices.get(this.walk.start)!;
+      this.ribbons.markerWorld(sv.chain, sv.ctrl, this.scratch);
+      const cx = this.scratch[0];
+      const cy = this.scratch[1];
       for (const e of this.walk.edges) {
         const sk = e.ctrlB >= e.ctrlA ? 1 : -1;
-        const x = Math.min(e.length / 2, out);
-        if (e.va === this.walk.start) this.pushFront(fronts, e, x, sk, 1);
-        if (e.vb === this.walk.start) this.pushFront(fronts, e, e.length - x, -sk, 1);
+        if (e.va === this.walk.start) {
+          this.pushFront(fronts, e, this.runOut(e, true, cx, cy, out), sk, 1);
+        }
+        if (e.vb === this.walk.start) {
+          this.pushFront(fronts, e, e.length - this.runOut(e, false, cx, cy, out), -sk, 1);
+        }
       }
     }
     // A smoldering arm is marked from the head to its first burnt stretch,
@@ -1296,6 +1306,32 @@ export class FabricMazeRenderer {
     );
     this.syncFireLights();
     this.tickFireFx();
+  }
+
+  // K290 stage 3b: how far along run `e`, in lattice units from its va end
+  // (fromA) or its vb end, the drawn thread first lies `dist` world from
+  // (cx, cy): sampled every FIRE_FUSE_STEP, refined linearly, at most half
+  // the run. The lit fuse's placement: markerRadius and threadWidth are
+  // world lengths and a run's x is lattice units (about 0.65 world at seed
+  // 7's entrance), so using the world sum as x put the ember under the disc.
+  private runOut(e: WalkEdge, fromA: boolean, cx: number, cy: number, dist: number): number {
+    const cap = e.length / 2;
+    if (!(cap > 0)) return 0;
+    const k = (e.ctrlB - e.ctrlA) / e.length;
+    const s = this.scratch;
+    let px = 0;
+    let pd = 0;
+    for (let i = 0; ; i++) {
+      const x = Math.min(cap, i * FIRE_FUSE_STEP);
+      this.pointFlowed(e.chain, this.ctrlMod(e.chain, e.ctrlA + (fromA ? x : e.length - x) * k), s, 0);
+      const dx = s[0] - cx;
+      const dy = s[1] - cy;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d >= dist) return i > 0 && d > pd ? px + ((x - px) * (dist - pd)) / (d - pd) : x;
+      if (x >= cap) return cap;
+      px = x;
+      pd = d;
+    }
   }
 
   // K290 stage 3b: one front at lattice distance x along run `e` (from its
