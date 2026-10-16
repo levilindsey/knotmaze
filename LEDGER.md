@@ -107,16 +107,6 @@ Next free ID: K499.
 - **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
   and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
   keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
-- **K482** · Desktop panel: K467 made each row's label a focusable button whose click opens its
-  help, so Tab stops twice per row. Gate the help to coarse pointers and the phone sheet?
-  (docs/design/K467.md Handoff)
-- **K483** · Review the phone sheet: its font stays 11 px (long labels wrap; larger?), the bar's
-  badge and undo placement, the slider peek's feel; the replay badge's label was never run
-  (docs/design/K467.md Handoff; screenshots .claude/probes/K467/out/sheet/)
-- **K488** · Thread reveal: the finish indicator shows from the start (K465), but its tap cannot
-  frame the exit: the fit camera frames only the seen thread (the tween ends where it began), the
-  follow camera zooms out but not enough, and the label still says "Tap to bring it into view"
-  (main.ts l.1298; docs/design/K465.md Handoff)
 
 ## In progress
 
@@ -126,7 +116,7 @@ Next free ID: K499.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: nobody since 2026-10-15 12:31 (stage 2 merged at cebb75e; agent `a58dfc230583f43e4` of claude session 05e60da0, worktree kept)
+  - owner: nobody since 2026-10-15 12:31 (stage 2 merged at cebb75e; agent `a58dfc230583f43e4` of claude session 05e60da0, worktree on K161's sweep list)
   - branch: mainline; last commit: `cebb75e`
   - evidence: `.claude/probes/K114/stage2/` (`burn_sim_rt.ts`, `proposal.md`, `results_rt*.md`, `rt_page.mjs`, `perf_attr.ps1`, `vref_probe.mjs`, shots `out_rt*/`); stage 1's: `.claude/probes/K114/burn/` (`results_tuning_rebased.md`, `burn_sim.ts`, `burn_page.mjs`)
   - next: K441's profile, K461 first (`rt_page.mjs` must pass `fsr` / `fdr`). Stage 3: the burn look as a shader with K290's burnt toggle; the spider follows the minotaur's controls (K174). Stage 2's residuals K442-K447
@@ -137,7 +127,7 @@ Next free ID: K499.
   (H1, the fused arm cut; calls K261, residuals K278) merged; stage 3 is
   the trap-zone finish, stage 4 the greedy-trap search and K46's bands.
   - owner: nobody since 2026-10-15 08:31 (stage 3's brief merged in 9f1ada2; docs agent
-    `ae4714d103b5fd3bf` of claude session 05e60da0, worktree kept). Stage 2's agent
+    `ae4714d103b5fd3bf` of claude session 05e60da0, worktree on K161's sweep list). Stage 2's agent
     a2c61932e9e358104 (session d8031183) finished; worktrees removed by the K161 sweep
     2026-10-15, branches kept
   - branch: mainline; last commit: `faa9a52` (stage 1 fbf5b5c..8ba0c32,
@@ -157,7 +147,7 @@ Next free ID: K499.
   a modifier. Real time merged (`5fed5c1`); turns stages 1, 2 and 3a merged (3a: the wait on
   every input, the give-up and roam-min knobs, the turn pull, K294, K293); stalker call K421.
   - owner: nobody since 2026-10-15 10:15 (turns 3a done, merged 10:15; agent `ad4536aff31e4c7ba`
-    of claude session 05e60da0, worktree kept). Stage 2's agent a1579d5c460af2d20 of claude
+    of claude session 05e60da0, worktree on K161's sweep list). Stage 2's agent a1579d5c460af2d20 of claude
     d8031183 (earlier agents af5995f5900f0f945 and a9c90f15cd6a55710; worktrees removed by the
     K161 sweep 2026-10-15, branches kept)
   - branch: mainline; last commit: `e6e1734` (3a is 1bd49f8..e6e1734). Merged before: turns
@@ -203,7 +193,7 @@ Next free ID: K499.
   - owner: nobody since 2026-10-15 07:25 (the worktree sweep done; claude session 05e60da0)
   - branch: mainline (no code); last commit: n/a
   - evidence: `.claude/probes/K161/cleanup.ps1` (`-DryRun` first) and `cleanup.log`
-  - next: three worktrees are locked by the live Claude process (pid 12264; probes copied, junctions deleted): once it exits, run `cleanup.ps1 -Ids ab65d913a3b9a3dcb,accf7e9ec87288e8a,af653fa7f942f2f1e` and delete the empty dir `.claude/worktrees/agent-a092bd665532db806`. 8 branches ahead of master have no worktree (Levi's: `backup-pp-gaps-prerebase`, `k279-stage1-prerebase`, K49's `ac664e8a`). Rerun the script for the profiles when C: runs low.
+  - next: run `cleanup.ps1 -Ids (Get-Content .claude/probes/K161/ids_05e60da0.txt)` (`-DryRun` first): the 32 agent worktrees left at coordinator 05e60da0's hand-off, each merged or superseded by master (the script copies probes and unlinks junctions first). Four are locked by that session's Claude process (pid 12264) and go only once it exits (a /clear keeps it); rerun the same list then. Delete `.claude/worktrees/agent-a092bd665532db806` if it is still there (an empty dir the last sweep left). 8 branches ahead of master have no worktree (Levi's: `backup-pp-gaps-prerebase`, `k279-stage1-prerebase`, K49's `ac664e8a`). Rerun the script for the profiles when C: runs low.
   - brief: the header of `.claude/probes/K161/cleanup.ps1`
 - **K76** · Thread-reveal mode, stage 2 (Levi, 2026-10-13): `exploration`
   (off | fog | threads) and an end look, a separate shader variant. 2a-2d merged
@@ -217,8 +207,8 @@ Next free ID: K499.
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
-  - owner: nobody since 2026-10-15 11:22 (stage 3a's agent `a5d9b049e72746ad2` of claude session 05e60da0 finished; merged 11:26, worktree kept). Stage 2's agent `a42c63c2db0401edb` (session d8031183): worktree swept; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept
-  - branch: mainline (3a's worktree `.claude/worktrees/agent-a5d9b049e72746ad2` kept); last commit: `f307e43`
+  - owner: nobody since 2026-10-15 11:22 (stage 3a's agent `a5d9b049e72746ad2` of claude session 05e60da0 finished; merged 11:26, worktree on K161's sweep list). Stage 2's agent `a42c63c2db0401edb` (session d8031183): worktree swept; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept
+  - branch: mainline; last commit: `f307e43`
   - evidence: `.claude/probes/K268/stage3a/` (census3a.mjs, 31/31 on master; sheet3a.mjs; the k76_probe.mjs copy with the bit-exact view wait; `out/`); `.claude/probes/K268/stage2/`; stage 1's beside it
   - next: stage 2's item 2 a part at a time (protect, the far-branch smooth-min, and the ramp Levi picked in K430), after G3-1 (K399) and never beside it: computeGapSlot moves to `ribbon/crossing_gaps.ts` in K5 R2, rebuildFillets stays in `ribbon_renderer.ts` until R5. census3a's attributedUW then judges against the ramp. Items 5 and 6 by eye (K307's registry). Probe fixes: K431, K432
   - brief: `docs/design/K268.md`, Stage 3a handoff (2026-10-15 11:35), For the next stage
@@ -228,7 +218,7 @@ Next free ID: K499.
   modulepreloads its chunk: ready 139-165 ms in on the desktop (master 363-396), first visible
   unchanged (K307's compiles set it). The phone (K411's window) still misses the 250 ms gate: the
   worker is ready 311-459 ms after the main chunk (master 454-764); its module alone evaluates at 233-364.
-  - owner: nobody since 2026-10-15 10:32 (the phone pass, done in K411's window by claude session 05e60da0; stage 7's agent `a29b026fa5e2829ee` finished 08:57, merged 09:00, worktree kept)
+  - owner: nobody since 2026-10-15 10:32 (the phone pass, done in K411's window by claude session 05e60da0; stage 7's agent `a29b026fa5e2829ee` finished 08:57, merged 09:00, worktree on K161's sweep list)
   - branch: mainline; last commit: `fdb38ac`
   - evidence: `.claude/probes/K7/stage7/` (`run_s7.ps1`, `phone_run.ps1`, `s7_desktop.txt`, `s7_phone.txt`, `k7_results.jsonl`, `table_s7.mjs`, `spike/`); stages 3-6 beside it
   - next: Levi's F6 review with the phone numbers (above); then K412
@@ -255,14 +245,14 @@ Next free ID: K499.
   lifecycle, scene, audio_map; M4 at 9f08bf0): main.ts 5709 → 3725 lines; R1-R2 (`src/render/ribbon/`; R2 at 52faab8): ribbon_renderer.ts 7747 → 5989.
   - owner: nobody since 2026-10-15 15:00 (merged)
   - branch: mainline; last commit: `52faab8`
-  - evidence: M4's `.claude/probes/K5/M4/` and R2's (in its worktree until the merge) `.claude/probes/K5/R2/`; M3's `.claude/probes/K5/M3/` (`checks/`, `frames/`, `step2/`, `k7_results.jsonl` and `k7_table.mjs`, `checks_m3.ps1`, `remap_e6e1734.md`), `.claude/probes/K5/R2/brief/` (the R2 brief's maps), `.claude/probes/K5/R1/` (`checks/`, `checks2/`; `checks3.ps1`, the fog B-vs-B control, never run; R2's inventory `parts.md`, `probe_surface.md`, `surface.json`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/`; the design's region maps in `.claude/probes/K5/design/`
-  - next: K397 stage 3 and K459 (both on the moved code), then R5 (`joinery.ts`); G3-1 once Levi answers K399; then R3 (`reveal_fx.ts`, `paint_state.ts`). The main.ts lane: K6-1 running (K6), then M5, whose brief folds the Stage M4 handoff leftovers in `docs/design/K5_K6_split.md`
+  - evidence: M4's `.claude/probes/K5/M4/` and R2's `.claude/probes/K5/R2/`; M3's `.claude/probes/K5/M3/` (`checks/`, `frames/`, `step2/`, `k7_results.jsonl` and `k7_table.mjs`, `checks_m3.ps1`, `remap_e6e1734.md`), `.claude/probes/K5/R2/brief/` (the R2 brief's maps), `.claude/probes/K5/R1/` (`checks/`, `checks2/`; `checks3.ps1`, the fog B-vs-B control, never run; R2's inventory `parts.md`, `probe_surface.md`, `surface.json`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/`; the design's region maps in `.claude/probes/K5/design/`
+  - next: R5 (`joinery.ts`; K397 stage 3 and K459 have merged on the moved code); G3-1 once Levi answers K399; then R3 (`reveal_fx.ts`, `paint_state.ts`). The main.ts lane: M5 (K6-1 has merged), whose brief folds the Stage M4 handoff leftovers in `docs/design/K5_K6_split.md`
   - brief: `docs/design/K5_K6_split.md` (Stage M4 brief); the R lane `docs/design/K5_R2.md`
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
   char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b merged (5913f4f..f7dd57e).
-  - owner: nobody since 2026-10-15 11:29 (stage 3c's agent `ab1de7b1a6f3f605a` of claude session 05e60da0 finished; merged 11:30, worktree kept). Stage 3b's agent `a7c0069bafcb78c52` finished 08:53, merged 08:56, worktree kept
-  - branch: mainline (3c's worktree `.claude/worktrees/agent-ab1de7b1a6f3f605a` kept); last commit: `9636263`
+  - owner: nobody since 2026-10-15 11:29 (stage 3c's agent `ab1de7b1a6f3f605a` of claude session 05e60da0 finished; merged 11:30, worktree on K161's sweep list). Stage 3b's agent `a7c0069bafcb78c52` finished 08:53, merged 08:56, worktree on K161's sweep list
+  - branch: mainline; last commit: `9636263`
   - evidence: `.claude/probes/K290/stage3c/` (`out/sheets/`: phone, fog, unseen-front and width sheets; `out/width_phone/` and `out/width_desk/` measure.txt; scripts incl. `width_probe.mjs`; `builds/e6e1734`), `stage3b/` and `stage3a/`; burn stage 1's `.claude/probes/K114/`
   - next: Levi's width call K409 (3c's facts), the change if any, then K410 (the mirror). K5 R1's split is not re-probed under a burn: K114 s2 (from 12c5e0a, past R1) shoots burnt frames on it. Open: the grown explore variant's cold-link timing and a cold-cache first-burn trace. K408 rides K114 s2
   - brief: `docs/design/K114_burn.md`, Stage 3c handoff (item 4: the width facts)
@@ -306,11 +296,21 @@ Binding for every stage:
   sonnet 1 h; a compaction is not a stop).
 - Pre-launch, when two stages append to the link codec, the second to
   merge renumbers.
-- Usage: agents aren't held back until the week reaches 97% (it resets
-  Mondays about 12:00).
+- Usage: pause at 92% of the week (Levi, 2026-10-15): launch nothing
+  new, and pause running agents with their WIP committed. The week
+  resets Monday 2026-10-19 11:59; it stood at 88% on 10-15 18:03.
 
-Running agents are listed under In progress. The order for the next
-free slots (Levi, 2026-10-14 23:00-23:55):
+Running agents are listed under In progress, each with its own next step.
+The queue (coordinator, 2026-10-15 18:15):
+1. Now, if usage allows: K488, then K482 with K483 (Sonnet, 1 h each).
+2. After the weekly reset: K480 stage 1 (Opus, 2 h, `docs/design/K480.md`),
+   then K481 stage 1 (Opus, 2 h, `docs/design/K481.md`).
+3. Later: K5 R5 (`joinery.ts`) and M5, K463, K471, and K6-2 after M6;
+   G3-1 waits on K399. Today's residuals (K464, K473-K477) and ideas
+   (K472, K478) wait in their sections.
+
+Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
+merged):
 1. K7 stages 3-5, the physics worker.
 2. The thread-reveal chain, one at a time: K76 2c, K268 stage 2, K290,
    K76 2d.
@@ -328,6 +328,19 @@ free slots (Levi, 2026-10-14 23:00-23:55):
 13. K326 A.
 14. K318, K336, K337.
 
+- **K488** · The finish indicator's tap becomes a peek (Levi 2026-10-15, "zoom out in sgtm"): zoom
+  out to frame the exit, hold about 2.5 s, ease back, with a label to match. Today the fit camera
+  frames only the seen thread (the tween ends where it began), the follow camera zooms out too
+  little, and the label says "Tap to bring it into view" (main.ts l.1298). Sonnet, 1 h; its brief
+  is still to write, from `docs/design/K465.md` (Handoff).
+- **K482** · Desktop panel: K467's label help buttons make Tab stop twice per row. Decided (Levi
+  2026-10-15, "whatever's best"): the buttons only on coarse pointers and in the phone sheet;
+  desktop keeps the native `title` tooltip and one Tab stop per row. One Sonnet agent with K483
+  (`docs/design/K467.md` Handoff).
+- **K483** · The phone sheet's font: 11 → 13 px in the sheet only, checked at 411x753 (Levi
+  2026-10-15); rides K482's agent. Then Levi's look on the Pixel (K485): the font, the bar's
+  badge and undo placement, the slider peek, and the replay badge's label, never run
+  (`.claude/probes/K467/out/sheet/`).
 - **K410** · The fire's FRONT and SMOLDER paint items into `paint_math`'s mirror and the parity
   tests, once K409 settles the look (K152 item 3; `K114_burn.md` 3b handoff).
 - **K412** · K7's worker-chunk modulepreload on a real network (measured only on localhost): a
