@@ -643,6 +643,14 @@ export class OffscreenIndicators {
     }
   }
 
+  // K6-1, the frame loop's CAMERA poll: 1 while a show delay is running
+  // (its clock is the frames' dt), else 0. The discs' breath is a CSS
+  // animation and needs no frame.
+  needsFrame(): number {
+    for (const e of this.entries) if (e.pending !== null) return 1;
+    return 0;
+  }
+
   // The size setting, applied: a change resizes the elements and re-reads
   // the chrome's boxes (they are grown by the half-size).
   private sizeNow(): number {

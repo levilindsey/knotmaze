@@ -135,6 +135,7 @@ import { createLoader } from "./ui/loader";
 import { createStamp } from "./app/stamp";
 import { installProbeHooks } from "./app/probe_hooks";
 import { createFrameLoop } from "./app/frame_loop";
+import { createLoopFlags, Flag } from "./app/loop_flags";
 import { createLifecycle } from "./app/lifecycle";
 import { BACKGROUND, createScene } from "./app/scene";
 import { createAudioMap } from "./app/audio_map";
@@ -409,6 +410,9 @@ async function main(): Promise<void> {
   // `scene` reads the `let`s through getters (src/app/scene_ref.ts): never
   // destructure those or cache a value read through them. The three
   // functions never change, so main.ts destructures them.
+  // K6-1 (question 6): the frame loop's flag ledger, created first and
+  // passed down (the camera, the frame loop, the probe hooks).
+  const flags = createLoopFlags();
   const scene = createScene({
     app,
     root,
@@ -456,7 +460,16 @@ async function main(): Promise<void> {
       pendingLoss = v;
     },
   });
-  const { syncBackground, recolorScene, rebuild } = scene;
+  const { syncBackground } = scene;
+  // K6-1: a recolor or a rebuild pushes its flags (shadow: recorded only).
+  const recolorScene = (): void => {
+    scene.recolorScene();
+    flags.push(Flag.GEOM);
+  };
+  const rebuild = (): void => {
+    scene.rebuild();
+    flags.push(Flag.LOAD | Flag.GEOM);
+  };
 
   const physicsTuning = (): PhysicsTuning => ({
     // Physics off never agitates: temperature would keep it from settling.
@@ -484,7 +497,7 @@ async function main(): Promise<void> {
   // K5 M2: the camera (the eased fit, the follow camera, placeWorldAt, the
   // K198 pan range, the panel's tween) is src/app/camera.ts. The `let`s
   // other regions read or write are `camera.<name>`, never destructured.
-  const camera = createCamera({ app, root, params, motion }, scene);
+  const camera = createCamera({ app, root, params, motion, flags }, scene);
   const {
     fitCur,
     view,
@@ -948,6 +961,7 @@ async function main(): Promise<void> {
     app.renderer.resize(window.innerWidth, window.innerHeight);
     background.resize(app.screen.width, app.screen.height);
     fitToScreen();
+    flags.push(Flag.GEOM | Flag.CAMERA); // K6-1 (shadow)
   });
 
   // Pointer tug: grab the nearest thread particle, drag it (springs carry
@@ -3527,6 +3541,21 @@ async function main(): Promise<void> {
       keyStep,
       autoAudioTick,
       freeze,
+      flags,
+      // K6-1 polls (read-only): the chase's clock, the turn minotaur's wait,
+      // a key hold, a waiting move.
+      gameNeedsFrame: () =>
+        (scene.chase !== null && chaseRunning && !scene.chase.finished) ||
+        (scene.turnMino !== null && turnWait > 0) ||
+        keyHold ||
+        moveWait.waiting !== null,
+      // The auto sound's clock (random plucks, the music's grid).
+      audioNeedsFrame: () =>
+        audioMap.audioAssign !== null &&
+        !settings.muted &&
+        (params.soundMode === "random" || params.soundMode === "music"),
+      // The camera has not converged, or an indicator's show delay runs.
+      cameraNeedsFrame: () => !camera.converged() || indicators.needsFrame() > 0,
       get physState() {
         return life.state;
       },

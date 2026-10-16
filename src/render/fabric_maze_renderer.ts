@@ -944,9 +944,43 @@ export class FabricMazeRenderer {
   // gold front travel the thread's actual curve to catch up (ctrl-space
   // interpolation through pointOnChain, so the motion follows every bend).
 
-  // K169: a fully traveled web is still fading in (main.ts sceneAnimating()).
+  // K169: a fully traveled web is still fading in (the frame loop's
+  // sceneAnimating(), src/app/frame_loop.ts).
   get webFading(): boolean {
     return this.ribbons.webFade.active;
+  }
+
+  // K6-1, the frame loop's PAINT polls (the ribbons' paintNeedsFrame()
+  // covers the paint itself). Bit 2 (PAINT_AMBIENT): the fog shows, and its
+  // edges wobble every frame (tickFog). Bit 1 (PAINT): the fog's intro, the
+  // fire's FX (fronts spawning, particles alive), a web fade, the start
+  // marker's fade (K408), the explore growth and close-in, and the halos'
+  // breath (K76).
+  needsFrame(): number {
+    let need = 0;
+    if (this.fogOfWar && this.fogDispSprite) need |= 2;
+    if (this.fogOfWar && this.fogIntroT >= 0) need |= 1;
+    if (this.fireEmit.length > 0 && !this.exploreStill) need |= 1;
+    if (this.fireFx && this.fireFx.aliveCount > 0) need |= 1;
+    if (this.webFading) need |= 1;
+    // (startFade is never stepped, so its fade is never forgotten: test
+    // the level against its end.)
+    if (this.startFade.has(0) && this.startFade.level(0, this.exploreClock) !== (this.startShown ? 1 : 0)) {
+      need |= 1;
+    }
+    if (this.explore.on) {
+      if (!this.exploreHeld && this.exploreHoldT >= 0) need |= 1;
+      else if (this.exploreGrowing(0)) need |= 1;
+    }
+    if (!this.exploreStill && !this.exploreHc) {
+      for (const sp of this.haloSprites) {
+        if (sp.visible) {
+          need |= 1;
+          break;
+        }
+      }
+    }
+    return need;
   }
 
   get animating(): boolean {
