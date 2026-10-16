@@ -37,6 +37,8 @@ import type { OffscreenIndicators } from "../ui/offscreen_indicators";
 import type { UrlParams } from "../ui/url_state";
 import { panRange } from "../ui/view_clamp";
 import type { OpenPanel, PanBounds } from "../ui/view_clamp";
+import { flagNames, VISUAL, Flag } from "./loop_flags";
+import type { LoopFlags } from "./loop_flags";
 import type { SceneRef } from "./scene_ref";
 
 // K5 (docs/design/K5_K6_split.md 2.2, M1 step 5): everything the probe
@@ -59,6 +61,10 @@ export interface ProbeCtx {
   heldKeys: HeldKeys;
   host: PhysicsHost;
   indicators: OffscreenIndicators;
+  // K6-1: the frame loop's flag ledger (main.ts creates it first), and the
+  // stamp element the loop tracker's DOM watch leaves out.
+  loopFlags: LoopFlags;
+  stampEl: HTMLElement;
   lossBanner: LossBanner;
   modeBadge: ModeBadge;
   motion: MotionSetting;
@@ -146,6 +152,7 @@ export interface ProbeCtx {
   readonly physState: "live" | "loading" | "settling" | "frozen";
   readonly revealMsTotal: number;
   readonly sceneWasAnimating: boolean;
+  readonly loopHalted: boolean;
   readonly turnWait: number;
   // main()'s `let`s the hooks also write: get/set pairs (written by several
   // regions, so main.ts keeps them until their owners move).
@@ -890,6 +897,35 @@ export function installProbeHooks(ctx: ProbeCtx): void {
     ctx.throwConfetti();
     return ctx.confetti.active;
   };
+  // K6-1 (docs/design/K6_1.md item 6): the frame loop's flag ledger in
+  // shadow (src/app/loop_flags.ts, report()), whether the loop halted, and
+  // the TRACKER that checks the flags against the pixels. `{reset: true}`
+  // zeroes the ledger and the tracker; `{track: true}` reads the whole
+  // framebuffer back after every render and counts UNDER frames (pixels
+  // changed, no visual flag in the frame's need: K24 would have skipped a
+  // frame that draws something new) and OVER frames (a visual flag, no
+  // pixel changed); `{track: false}` stops it and returns its last report.
+  let tracker: LoopTracker | null = null;
+  let lastTrack: TrackReport | null = null;
+  (window as unknown as Record<string, unknown>).__knotLoop = (
+    o: { reset?: boolean; track?: boolean } = {}
+  ) => {
+    if (o.reset) {
+      ctx.loopFlags.reset();
+      tracker?.reset();
+    }
+    if (o.track === true && !tracker) tracker = startLoopTracker(ctx);
+    if (o.track === false && tracker) {
+      lastTrack = tracker.report();
+      tracker.stop();
+      tracker = null;
+    }
+    return {
+      ...ctx.loopFlags.report(),
+      halted: ctx.loopHalted,
+      track: tracker ? tracker.report() : lastTrack,
+    };
+  };
   (window as unknown as Record<string, unknown>).__knotSetBackground = (
     id: UrlParams["background"],
     intensity?: number,
@@ -1032,5 +1068,210 @@ export function installProbeHooks(ctx: ProbeCtx): void {
     const scratch = new Float32Array(2);
     sys.pointOnChain(chain, f, scratch, 0);
     return { x: scratch[0], y: scratch[1] };
+  };
+}
+
+// K6-1's loop tracker (__knotLoop({track: true})). Probe-only: it costs a
+// whole-framebuffer readPixels (a GPU sync) and a compare every frame.
+interface TrackEntry {
+  frame: number;
+  t: number; // ms since the tracker started (or was reset)
+  px: number; // pixels that differ from the last frame
+  need: string[]; // the frame's need (no visual flag, by definition)
+  dom: string; // the first DOM change made during the frame, if any
+}
+interface TrackReport {
+  frames: number; // frames compared
+  changed: number; // frames whose pixels differ from the last one
+  empty: number; // frames whose need has no visual flag
+  over: { frames: number; byFlag: Record<string, number> };
+  // UNDER: pixels changed, no visual flag and no INPUT push (a miss).
+  under: { frames: number; list: TrackEntry[] };
+  // The same with an INPUT push in the need: K6-3 restarts the loop on
+  // input, so these are covered, but they name a missing push.
+  underInput: { frames: number; list: TrackEntry[] };
+  // DOM changes made during a frame (the overlays write in the tick), and
+  // those of them in an empty frame; between frames: event handlers,
+  // timers (they do not need the loop).
+  dom: {
+    inFrame: number;
+    inFrameEmpty: number;
+    between: number;
+    list: { frame: number; t: number; what: string }[];
+  };
+  lost: number; // webglcontextlost events seen
+  size: [number, number];
+  readMs: number; // mean readback + compare cost a frame
+}
+interface LoopTracker {
+  report(): TrackReport;
+  reset(): void;
+  stop(): void;
+}
+
+const TRACK_LIST_MAX = 60;
+
+function describeNode(n: Node): string {
+  const el = (n.nodeType === 1 ? n : n.parentElement) as HTMLElement | null;
+  if (!el) return n.nodeName;
+  const id = el.id ? `#${el.id}` : "";
+  const cls =
+    typeof el.className === "string" && el.className
+      ? `.${el.className.trim().split(/\s+/).join(".")}`
+      : "";
+  return `${el.tagName.toLowerCase()}${id}${cls}`;
+}
+
+function startLoopTracker(ctx: ProbeCtx): LoopTracker {
+  const gl = (ctx.app.renderer as unknown as { gl?: WebGL2RenderingContext })
+    .gl;
+  const flags = ctx.loopFlags;
+  let w = 0;
+  let h = 0;
+  let cur: Uint8Array | null = null;
+  let prev: Uint8Array | null = null;
+  let primed = false;
+  let t0 = performance.now();
+  let readMsSum = 0;
+  let st = fresh();
+  function fresh() {
+    return {
+      frames: 0,
+      changed: 0,
+      empty: 0,
+      overFrames: 0,
+      overBy: {} as Record<string, number>,
+      under: [] as TrackEntry[],
+      underFrames: 0,
+      underInput: [] as TrackEntry[],
+      underInputFrames: 0,
+      domInFrame: 0,
+      domInFrameEmpty: 0,
+      domBetween: 0,
+      domList: [] as { frame: number; t: number; what: string }[],
+      lost: 0,
+    };
+  }
+  const stampEl = ctx.stampEl;
+  const relevant = (recs: MutationRecord[]): string => {
+    for (const r of recs) {
+      if (stampEl.contains(r.target)) continue;
+      return describeNode(r.target);
+    }
+    return "";
+  };
+  // Mutations delivered by the observer's callback were made between
+  // frames (the tick takes its own with takeRecords below).
+  const obs = new MutationObserver((recs) => {
+    if (relevant(recs)) st.domBetween++;
+  });
+  obs.observe(document.body, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    characterData: true,
+  });
+  const onLost = (): void => {
+    st.lost++;
+  };
+  ctx.app.canvas.addEventListener("webglcontextlost", onLost);
+  // After pixi's render (LOW, -25): UTILITY (-50).
+  const fn = (): void => {
+    if (!gl) return;
+    const a = performance.now();
+    const what = relevant(obs.takeRecords());
+    const bw = gl.drawingBufferWidth;
+    const bh = gl.drawingBufferHeight;
+    if (bw !== w || bh !== h || !cur || !prev) {
+      w = bw;
+      h = bh;
+      cur = new Uint8Array(w * h * 4);
+      prev = new Uint8Array(w * h * 4);
+      primed = false;
+    }
+    // Read the default framebuffer (the frame just presented to the
+    // compositor), restoring whatever pixi left bound.
+    const saved = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING) as
+      | WebGLFramebuffer
+      | null;
+    if (saved) gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+    gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, cur);
+    if (saved) gl.bindFramebuffer(gl.READ_FRAMEBUFFER, saved);
+    const need = flags.lastNeed;
+    if (primed) {
+      const c32 = new Uint32Array(cur.buffer);
+      const p32 = new Uint32Array(prev.buffer);
+      let px = 0;
+      for (let i = 0; i < c32.length; i++) if (c32[i] !== p32[i]) px++;
+      st.frames++;
+      const visual = (need & VISUAL) !== 0;
+      if (!visual) st.empty++;
+      if (px > 0) st.changed++;
+      if (px > 0 && !visual) {
+        const e: TrackEntry = {
+          frame: flags.frames,
+          t: Math.round(a - t0),
+          px,
+          need: flagNames(need),
+          dom: what,
+        };
+        if (need & Flag.INPUT) {
+          st.underInputFrames++;
+          if (st.underInput.length < TRACK_LIST_MAX) st.underInput.push(e);
+        } else {
+          st.underFrames++;
+          if (st.under.length < TRACK_LIST_MAX) st.under.push(e);
+        }
+      } else if (px === 0 && visual) {
+        st.overFrames++;
+        for (const n of flagNames(need & VISUAL)) {
+          st.overBy[n] = (st.overBy[n] ?? 0) + 1;
+        }
+      }
+      if (what) {
+        st.domInFrame++;
+        if (!visual) {
+          st.domInFrameEmpty++;
+          if (st.domList.length < TRACK_LIST_MAX) {
+            st.domList.push({ frame: flags.frames, t: Math.round(a - t0), what });
+          }
+        }
+      }
+    }
+    primed = true;
+    const swap = prev;
+    prev = cur;
+    cur = swap;
+    readMsSum += performance.now() - a;
+  };
+  ctx.app.ticker.add(fn, undefined, -50);
+  return {
+    report: (): TrackReport => ({
+      frames: st.frames,
+      changed: st.changed,
+      empty: st.empty,
+      over: { frames: st.overFrames, byFlag: { ...st.overBy } },
+      under: { frames: st.underFrames, list: st.under.slice() },
+      underInput: { frames: st.underInputFrames, list: st.underInput.slice() },
+      dom: {
+        inFrame: st.domInFrame,
+        inFrameEmpty: st.domInFrameEmpty,
+        between: st.domBetween,
+        list: st.domList.slice(),
+      },
+      lost: st.lost,
+      size: [w, h],
+      readMs: st.frames > 0 ? readMsSum / st.frames : 0,
+    }),
+    reset: (): void => {
+      st = fresh();
+      t0 = performance.now();
+      readMsSum = 0;
+    },
+    stop: (): void => {
+      ctx.app.ticker.remove(fn);
+      obs.disconnect();
+      ctx.app.canvas.removeEventListener("webglcontextlost", onLost);
+    },
   };
 }
