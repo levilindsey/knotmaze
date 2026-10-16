@@ -30,7 +30,7 @@
 
 - **K385** · K307 s2: links under KHR_parallel_shader_compile skip Chrome's disk cache, so warm-up links block. Plan: (a) flag probe, (b) late enable (ship), (c) no extension, late reads, (d) a crbug after (a), Levi's call. Rides K307 s3; `docs/design/K307_intro_freezes.md` ("K385").
 
-- **K390** · The fog A/B recipe (`probes.md`, `k83_ab`) is not deterministic: K5 M1's same-build controls differ by 4054-7979 px (the start marker flips states). `&phw=0` cuts it to ~700 px (K5 R1 `checks2/pairs_fog3.txt`): pass it in the recipe. `.claude/probes/K5/stage1/fogbisect/`
+- **K390** · Fog A/B recipe (`probes.md`'s K83 recipe, `k83_ab`) isn't deterministic: K5 M1's same-build controls differ by 4054-7979 px (start marker flips states). `&phw=0` cuts it to ~700 px (K5 R1 `checks2/pairs_fog3.txt`): pass it in the recipe. `.claude/probes/K5/stage1/fogbisect/`
 
 - **K398** · The GAP texture passes the Pixel's 8192-row limit at gs 66+ in knot mode (16384 rows) and every gap vanishes (K8 G3-1's brief, `.claude/probes/K8/G3-1/`), because `readNumber` and the codec's `num` don't clamp a link to the panel's ranges (gs [4, 24]). Fix: clamp them.
 
@@ -40,7 +40,7 @@
 
 - **K422** · Two K120 probe checks fail on master too (K80 3a): keys.mjs realtime "a held key keeps adding inputs" (the seed-7 maze may have changed) and pad.mjs desktop "the stored choice shows it" (the pad hides under the open panel since K224, 86dc0cf). `.claude/probes/K80/stage3/rerun/K120/`.
 
-- **K425** · Probes still editing `ribbon_renderer.ts`: `K290/stage3b/dump_variants.ts` and copies, `variant_build.ps1` (`g2/`, `K4/`), `K154_K169/edit_rr2.ps1`, `edit_rr3.ps1`. Repoint at `src/render/ribbon/ribbon_shader.ts` (R1's copy `.claude/probes/K5/R1/dump_variants.ts`).
+- **K425** · Probes editing `ribbon_renderer.ts`: `K290/stage3b/dump_variants.ts` + copies (K76 2d, K290 3a), `variant_build.ps1` (`g2/`, `K4/`), `K154_K169/edit_rr2.ps1`, `edit_rr3.ps1`. Repoint to `src/render/ribbon/ribbon_shader.ts` (R1's copy `.claude/probes/K5/R1/dump_variants.ts`).
 
 - **K428** · Thread-reveal same-state A/Bs don't repeat: captures land 17-67551 px apart (k83_ab with K381's explore-clock pin, `k5ab&phy=0&am=instant&fw=0&snd=none&xp=threads`); a clock is unpinned, so take several per build (K5 R1 `checks/`, `checks2/pairs_threads3.txt`).
 

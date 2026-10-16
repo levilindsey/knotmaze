@@ -36,9 +36,9 @@
 
 - **K160** · The background speed slider is linear over 0-8; a curve like gridAlign's (`src/ui/grid_align_curve.ts`) would give the slow end room. At 8x the 10-15 Hz texture pass may look steppy (unchecked on the phone): then scale the re-render rate with speed. A look for K156.
 
-- **K57** · Confirm the daily's exempt settings (`src/ui/daily_link.ts`), parked with K46, K84 for the late review (Levi, 2026-10-14; `docs/design/levi_notes_2026-10-14.md` item 13). Open: `settleBudget`, `loadSettle` (K162 (3)), the two confetti settings, `markerSize`.
+- **K57** · Confirm the daily's exempt settings (`src/ui/daily_link.ts`), parked with K46, K84 (Levi; `docs/design/levi_notes_2026-10-14.md` item 13). Open: `settleBudget`, `loadSettle` (K162 (3)), confetti settings, `markerSize`; stale comment at `daily_link.ts:153` (K237, K264).
 
-- **K117** · Repo visibility (`docs/design/levi_notes_2026-10-13.md`): private on Levi's word, parked until near launch (2026-10-14; the rest done in a756ca5): `gh repo edit --visibility private --accept-visibility-change-consequences` (reversible). K122 is needed either way.
+- **K117** · Repo visibility (`docs/design/levi_notes_2026-10-13.md`): private on Levi's word, parked until near launch (rest done in a756ca5: `LICENSE`, `package.json`): `gh repo edit --visibility private --accept-visibility-change-consequences` (reversible). K122 needed anyway.
 
 - **K316** · Single-threaded WASM for the collision narrow-phase (~40% of a drag's physics; the audit's 2-4x takes gs 18 from 0.76x to real time), only if K7 s5's phone numbers show physics, not rendering, as the limit. No threads (Gauss-Seidel can't be colored; SAB needs COOP/COEP).
 
