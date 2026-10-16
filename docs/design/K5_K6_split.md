@@ -2524,3 +2524,310 @@ Line numbers are c71c1e4's.
   (freqForCtrl, pluckUnit).
 - Captures: params, synth, the scene's ps, walkGraph, fabric through
   `scene.`.
+
+#### What moved (55598bf, f5cf889, 9057c4e, fcd932a)
+
+- `2196210` WIP: the re-map above, committed before any code moved.
+- `55598bf` step 2, the lifecycle: `src/app/lifecycle.ts` (393 lines),
+  `createLifecycle(deps: LifecycleDeps, scene: SceneRef)`; main.ts 4331 ->
+  4077. Moved, c71c1e4 main.ts -> lifecycle.ts:
+  - 173-186 -> 26-39: PRESETTLE_SIM, LOADER_DELAY_MS, LOADER_MIN_MS,
+    NOMINAL_SLEEP_SIM, with their comments;
+  - 497-503 -> 41-47: the PHYSICS MODE comment and `type PhysState`, now
+    exported;
+  - 504-518 -> 84-98 and 531-545 -> 99-113: physState, settleWall0,
+    frozenSig, loaderShownAt, warmHoldFrom; physSig, physicsLive;
+  - 602-699 -> 115-212: startAppearance, beginLoading, loadingTick,
+    finishLoading, replaySettle;
+  - 722-840 -> 214-332: beginSettle, presettleTick, warmHoldTick,
+    finishPresettle;
+  - 4052-4082 -> 334-364: startSettling, freeze, applyPhysicsMode,
+    physicsInputsChanged (const arrows in main.ts already; the others stay
+    function declarations).
+  - New: the header comment (12-24), `LifecycleDeps` (53-69) and the
+    returned object (366-392).
+  - Deps: values params, host, root, warmup, loader, physicsTuning,
+    handRendererLook, fitToScreen, wake; readonly getters indicators,
+    loop; get/set pairs perfLine, reveal. physicsTuning and the loader
+    stay in main.ts (the loop and the probe hooks read physicsTuning; the
+    loader keeps its DOM order).
+  - Returns: beginLoading, loadingTick, finishLoading, replaySettle,
+    beginSettle, presettleTick, warmHoldTick, finishPresettle,
+    startSettling, freeze, applyPhysicsMode, physicsInputsChanged,
+    physicsLive, and getters state, settleWall0, warmHoldFrom,
+    loaderShownAt. startAppearance, frozenSig and physSig are private.
+  - Placement: `const life = createLifecycle(` at main.ts 528, where
+    startAppearance was; a destructure of ten of its functions ends at
+    571. The loop comes later (createFrameLoop 3488, `loop.start()` 3573)
+    and takes the lifecycle's functions directly; the lifecycle reaches
+    the loop through the `loop` getter, so the two `loop.halted = true`
+    writes (loadingTick, presettleTick) stay writes on the loop, and its
+    `wake` is the closure `() => wake()`.
+  - Retargets: physState -> `life.state` (6 sites); settleWall0 and
+    warmHoldFrom -> `life.*` in the loop's deps; loaderShownAt ->
+    `life.loaderShownAt` in the probe hooks (`step2_lifecycle.log`).
+    LOAD_SIM_CAP and LOAD_SETTLE_MAX left main.ts's imports. ProbeCtx and
+    createStamp's arguments are unchanged.
+  - frame_loop.ts, deps only: `import type { PhysState } from
+    "./lifecycle"`, FrameLoopDeps.physState typed `PhysState`, two
+    comments reworded. SETTLE_WALL_CAP_MS stays in frame_loop.ts: its only
+    check is the loop's tick.
+- `f5cf889` step 3, the scene build: `src/app/scene.ts` (408 lines),
+  `createScene(deps: SceneDeps): Scene`, called at main.ts 412-458, then
+  `const { syncBackground, recolorScene, rebuild } = scene;` (459);
+  main.ts 4077 -> 3846. Moved, 55598bf main.ts -> scene.ts:
+  - 163 -> 43: BACKGROUND, now exported; main.ts imports it back for the
+    canvas's CSS background and gamutAccentHexes;
+  - the scene `let`s within 397-442 -> 122-136: ps, renderer, debug,
+    walkGraph, buildHueGroup, buildStrandCount, fabric, chase, turnMino,
+    fabricController, reveal (the session `let`s among them stay);
+  - 447-479 -> 359-400: the SceneRef getters;
+  - 599-606 -> 138-145: pageInk, canvasInk;
+  - 620-829 -> 147-356: syncBackground, recolorScene, rebuild.
+  - Deps (`SceneDeps`, 50-80): values app, root, params, look, host,
+    settings, background, confetti, ripples, fireOf, fireClock,
+    syncExploration, writeParams; closures rebuildAudioMap, syncDaily,
+    saveAttempt, restartChase, resetAttempt, hideWin,
+    restoreSavedAttempt, beginSettle, beginLoading, setCamFollow,
+    fitToScreen; getters view, camera, indicators; get/set pairs
+    pendingWin, pendingLoss.
+  - Returns (`Scene`, 84-92): the SceneRef, plus setters for chase and
+    turnMino (restartChase writes them) and for reveal (the lifecycle's
+    reveal setter), a canvasInk getter (the probe hooks), and the three
+    functions.
+  - Retargets: 452 references on 335 lines became `scene.<name>`, found
+    by symbol with the TS checker (`out_step3/move_log.txt`): fabric 132,
+    fabricController 102, turnMino 48, ps 48, renderer 47, chase 45,
+    walkGraph 23, reveal 4, debug 2, canvasInk 1. Two shorthands became
+    `chase: scene.chase` and `turnMino: scene.turnMino`. Inside scene.ts,
+    pendingWin, pendingLoss, view, camera and indicators read `deps.`.
+    Ten imports left main.ts. The host comment (55598bf 395-396) now
+    heads the call; the K80 comments stayed with the session `let`s.
+- `9057c4e` step 4, the audio map: `src/app/audio_map.ts` (170 lines),
+  `createAudioMap(deps: AudioMapDeps, scene: SceneRef)`, called at main.ts
+  481 with `{ params, synth, songSched }`, then the destructure of
+  rebuildAudioMap, freqForCtrl and pluckUnit (482); main.ts 3846 -> 3725.
+  Moved, f5cf889 main.ts -> audio_map.ts:
+  - 167-170 -> 20-23: RUN_REACH, LOBE_REACH;
+  - 485-495 -> 35-45: audioAssign, audioRuns, audioSegSite,
+    nextRandomPluck;
+  - 600-705 -> 47-152: rebuildAudioMap, runForCtrl, freqForCtrl,
+    pluckUnit.
+  - Deps (`AudioMapDeps`, 26-30): params, synth, songSched.
+  - Returns: the three functions, getters audioAssign and audioSegSite,
+    and a get/set pair for nextRandomPluck. runForCtrl is private;
+    audioRuns has no accessor (nothing outside reads it).
+  - Retargets: 10 references on 9 lines, in triggerAutoPluck and
+    autoAudioTick, became `audioMap.<name>`. Those two and songSched stay
+    for M6.
+- `fcd932a` step 5, lore: `paths:` lines and their `docs/lore_index.md`
+  rows only (5 rows). lifecycle.ts -> physics-settle (the load settle, the
+  trefoil timing, the physics-off load), render-shaders (THE WARM-UP's
+  hold), gameplay-motion (K239's handRendererLook in finishLoading and
+  finishPresettle, beginSettle's instant branch), physics-worker (one
+  `settle` message each); scene.ts -> physics-worker (rebuild posts init
+  through buildSceneGraph; the fallback re-runs rebuild),
+  render-backgrounds (syncBackground, the page ink). audio_map.ts goes
+  nowhere: no rules file covers pitch assignment, and gameplay.md's
+  `src/app/**` already attaches and lists gameplay-audio. Passing
+  mentions left out: render-confetti, gameplay-fire, gameplay-daily,
+  gameplay-fog, gameplay-moves, gameplay-panel, gameplay-links. No
+  CLAUDE.md line changed.
+
+#### Checks
+
+Everything is under the main checkout's untracked `.claude/probes/K5/M4/`,
+and every path below is relative to it.
+
+- Each code commit: tsc 0 errors, `npm test`, `npm run build` ok
+  (`out_step2/`, `out_step3/`, `out_step4/`: tsc.txt, npm_test.txt,
+  npm_build.txt). 55598bf: 85 files passed and 1 skipped, 1187 tests
+  passed and 1 skipped (107 s). f5cf889 and 9057c4e: 1 file failed, 84
+  passed, 1 skipped; 1 test failed, 1186 passed, 1 skipped (107 s,
+  108 s). The failure is host_seam's sentinel (Left for M5, first bullet);
+  the seam's own scan passes. The suites ran under the perf lock
+  (13:00:42-13:02:35, 13:17:59-13:19:53, 13:27:03-13:28:57).
+- The moved-code review (`review_moves.mjs`; `out_step*/review_moves.md`,
+  `review_<sha>.txt`) splits each diff into lines moved verbatim and the
+  rest. 55598bf: lifecycle.ts +278 moved, +115 not; main.ts -270 +1
+  moved, -43 +58 not; frame_loop.ts -4 +5. f5cf889: scene.ts +281, +127;
+  main.ts -283 +7 moved, -340 +385 not (mostly the 335 `scene.` lines).
+  9057c4e: audio_map.ts +129, +41; main.ts -122 moved, -16 +17 not. The
+  rest is headers, deps interfaces, returned objects, `deps.` reads and
+  retargets.
+- Free names (`final/globals.txt`): each new file's free identifiers are
+  standard globals only (lifecycle.ts: Infinity, Math, console,
+  performance; scene.ts: Array, ReturnType, console, parseInt;
+  audio_map.ts: Array, Map, Math, Number, Set).
+- Hooks (`final/hooks.txt`): 49 `window.__knot*` set and 50 named, the
+  same at c71c1e4 and fcd932a.
+- Browser checks: base c71c1e4 on port 5980 against ref fcd932a on 5981
+  (`vite preview` builds). Batch 1 (`checks/`) ran 13:40-13:58, batch 2
+  (`checks2/`, previews rebuilt) 13:58-14:11, each under the perf lock
+  with no other holder; 2 Chrome temp leftovers each.
+- diag, 12 s settle (`checks/diag_summary.txt`, `checks/diag_*`), base /
+  ref:
+  - the bare link (today's daily, the worker): sim 5.0 at wall 11.9 and
+    asleep on both; lag 1.39 / 1.50 s; presettle 505.6 / 507.7 ms, ended
+    by work, loader shown; budget 6173 / 6288 ms, ended by sleep; frames
+    median 17.9, p95 18.1 on both; 9 PixiJS warnings on both; seed
+    148971763 on both.
+  - `?1471kin.J&phw=0` (in-thread; the old-link warning on both): sim
+    3.1 / 3.0; settle lag 5.26 / 5.25 s; phys 10.62 / 10.82 ms; render
+    14.89 / 15.24 ms; 37 / 36 fps; presettle about 3.3 s of wall (0.46 s
+    of work) on both; frames median 18.1, p95 36.1 on both; asleep on
+    neither, as in M3; PixiJS warnings 7 / 5 (M3 had 5 on both; the
+    extra pair is a late aGap/aGapId from pluck_overlay's first draw,
+    auto-pluck timing).
+- The A/B (`checks/ab_summary.txt`, `checks2/ab_summary.txt`): base link
+  `?k5ab&phy=0&am=instant&fw=0&snd=none`; harness `m2_input_ab.mjs` (M4's
+  steps at 186-262). regen types seed k5m4 into the panel's `.kp-seed`
+  and waits for "frozen"; replay is `__knotReplay()`; bg is
+  `__knotSetBackground("mist")`; audio is `__knotPluck` at every chain
+  and ctrl, hashed; phys is `__knotSetPhysics(true)` then `(false)` in
+  one task; physon turns physics on and waits up to 60 s for "frozen".
+
+| Case | Steps | ref vs base | base vs base |
+|---|---|---|---|
+| knot (`mf=0`) | pluck, zoom, pan | 0 px | - |
+| fabric | move, zoom, pan, pluck, move | 0 | - |
+| fabric2 | move, zoom, pan, pluck, zoomout, move | 0 | - |
+| fog (`xp=fog`) | move x3, zoom, pan | 2361 | 10443 |
+| threads (`xp=threads`), batch 1 | move x3, zoom, pan | 452658 | 117835 |
+| threads, rerun (`checks2/`) | move x3, zoom, pan | 135694 | 152351 |
+| knot_m4 (`mf=0`) | regen, bg, audio | audio 213 (max delta 3), the rest 0 | audio 1722 (max delta 8), the rest 0 |
+| fabric_m4 | move, regen, move, replay, audio | audio 690 (max delta 2), the rest 0 | audio 710, the rest 0 |
+| fabric_phys (`checks2/`) | move, phys, move, physon | physon 1288 (max delta 46), the rest 0 | 4124 (phys 1466, move 1469, physon 1189) |
+
+  - fog: moves 1 and 2 differ by 397 and 197 px with views apart in the
+    seventh digit of the scale; move 3 by 1767 px with the same view. The
+    control differs more (6438, 257, 3748).
+  - threads: batch 1 differs at move 2 (38663), move 3 (182652) and zoom
+    (230931) with the views apart (the camera's unfinished ease), past its
+    control. The rerun, per step against the control: move 1 13 (max
+    delta 48) / 1, move 2 96617 / 99228, move 3 25826 / 31433, zoom
+    13158 / 21479, pan 80 / 210; the views differ at capture the same way
+    in both. Within its control.
+  - The moves: fabric's last tap misses on both builds; fabric2 lands
+    node_0 then mnode_154, fabric_m4 node_0 then mnode_65, fabric_phys
+    node_0 then mnode_154.
+  - audio: the pixels are the last plucks' animation. The pluck hashes
+    match on both builds and both controls: the knot n 2592, made 2592,
+    hash 67fe10f0; the fabric n 3039, made 3004, hash 7852f12e. No hook
+    reaches runForCtrl; `__knotPluck` goes through freqForCtrl and
+    pluckUnit.
+  - phys returned `["live","settling"]` in all four runs: the switch-off
+    goes to startSettling, a visible settle, so its pixels depend on
+    timing (the control's 1466 px); the A/B's 0 happened to match.
+    physon ended "live", not frozen, after about 60.5 s in all four runs
+    (60511-60527 ms): with physics on, applyPhysicsMode sets "live", and
+    "frozen" comes only from freeze() (the gate while "settling", or
+    SETTLE_WALL_CAP_MS). The harness waited on the wrong signal, the same
+    on both builds.
+- The daily front door (`checks/daily_front_*.txt`): the same on both
+  builds, 4 of 14 ok, with the 10 failures M2 and M3 recorded as stale;
+  only `?am=instant`'s random seed differs.
+- k7 on the fabric (`?1471kin.J` and a 5 s drag, 3 runs each;
+  `checks/k5m4_*.txt`, `checks/k7_table.md`), base -> ref:
+
+| | phw=0 | phw=1 |
+|---|---|---|
+| first sleep (s) | 19.03 (18.65-19.28) -> 19.18 (18.83-19.55), +0.8% | 10.15 (9.88-10.34) -> 10.20 (10.07-10.41), +0.4% |
+| sim at sleep | 5 -> 5 | 4.99 -> 5.02 |
+| visible fps | 36.87 -> 36.53 | 55.13 -> 55.27 |
+| visible cb p50 (ms) | 26.87 -> 27.07 | 15.33 -> 15.57, +1.5% |
+| visible cb minus physics | 16.23 -> 16.37 | |
+| drag fps | 6.87 -> 6.87 | 54.37 -> 54.53 |
+| drag cb (ms) | 144.10 -> 144.03 | 17.40 -> 17.23 |
+| drag cb minus physics | 18.47 -> 18.40 | |
+
+  0 errors and no context loss; no row moves past 5%, within noise.
+- k7 on the knot (`?1471kin.J&mf=0`: 2592 particles, 10 chains, no
+  junctions; `checks2/k5m4knot_*.txt`, `checks2/k7_table.md`), base ->
+  ref:
+
+| | phw=0 | phw=1 |
+|---|---|---|
+| first sleep (s) | 16.26 (16.10-16.54) -> 16.50 (16.17-16.70), +1.5% | 8.35 (8.23-8.53) -> 8.31 (8.21-8.46), -0.4% |
+| sim at sleep | 5 -> 5 | 5.00 -> 5.02 |
+| visible fps | 43.43 -> 42.83, -1.4% | 56.10 -> 56.00 |
+| visible cb p50 (ms) | 23.10 -> 23.40, +1.3% | 13.30 -> 13.23 |
+| visible cb minus physics | 14.77 -> 15.00, +1.6% | |
+| drag fps | 8.67 -> 8.60 | 56.43 -> 56.47 |
+| drag cb (ms) | 115.43 -> 115.90 | 15.57 -> 15.67 |
+| drag cb minus physics | 16.40 -> 16.70, +1.8% | |
+
+  0 errors; no row moves past 5%, and the ranges overlap on the main
+  rows: within noise.
+
+#### Left for M5 and later
+
+- **host_seam (blocks the merge).** f5cf889 turns
+  `test/physics/host_seam.test.ts`'s sentinel red: "the scan sees main's
+  system and host (it is not scanning nothing)" (374) plants writes on
+  main.ts's own names, and main.ts has no `ps` any more. The seam holds
+  (the scan at 370 passes). The fix is a test edit, outside M4's scope:
+  line 379 `"ps.step(1);"` -> `"scene.ps!.step(1);"` and line 381
+  `"ps!.positions[0] = 1;"` -> `"scene.ps!.positions[0] = 1;"`; 380 (the
+  host) and 474 stay. A probe copy passes 6 of 6 (`out_step3/seam_probe/`,
+  `proposed_fix.diff`). Merged without it, CI is red and the deploy keeps
+  the previous build.
+- Stale lore prose (M4 could edit only `paths:`): physics-settle.md 21-23
+  ("main.ts keeps the loader, the stamp and the UI and calls the host":
+  the lifecycle calls it now) and 39-40 ("main.ts `beginSettle` ..
+  `activeBudget`": beginSettle is lifecycle.ts's); render-shaders.md
+  136-139 at fcd932a (144-147 on master since K397 stage 2's bullet),
+  THE WARM-UP's "What runs": "main.ts holds the hidden pre-settle ... and
+  shows the trefoil at 300 ms" is now lifecycle.ts (beginSettle,
+  warmHoldTick, LOADER_DELAY_MS), and the background layer's hold is
+  frame_loop.ts's backgroundTick. gameplay-motion names no file there and
+  is not stale.
+- `src/app/scene_ref.ts` 11-16 still says main.ts builds the one SceneRef
+  right after it declares the scene `let`s; createScene does now. M8's
+  SceneState fold rewrites the file.
+- FrameLoopDeps still takes physState, settleWall0 and warmHoldFrom as
+  getters from main.ts; passing `life` is a later retarget.
+- triggerAutoPluck, autoAudioTick and songSched move in M6 and fold
+  audioMap's getters and the nextRandomPluck setter.
+- ProbeCtx is unchanged; it could take `life`, `scene` and `audioMap`
+  whole instead of their fields.
+- Rebase: master since c71c1e4 changes only render-shaders.md's body (K397
+  stage 2's dots bullet, not `paths:`), and nothing touches main.ts,
+  `src/app/`, lore_index, host_seam or this file, so a rebase looks
+  clean. K5 R2 runs beside M4; whichever merges second rebases.
+- Optional, the A/B harness: physon should wait for asleep, not "frozen";
+  the phys step's switch-off settles visibly and needs a pinned path (a
+  wait for the settle's end) before its pixels can compare.
+
+#### Surprises
+
+- host_seam's sentinel pins main.ts's local names: it plants `ps.` writes,
+  so moving the scene's `let`s out turned it red although no write
+  escaped the host. Moving `host` out of main.ts would do the same.
+- Six hoisted function declarations became destructured consts (rebuild,
+  syncBackground, recolorScene, rebuildAudioMap, freqForCtrl,
+  pluckUnit), in TDZ until their line. Safe as placed: no direct use
+  precedes them, the WorkerHost's `() => rebuild()` runs from a
+  setTimeout only once a scene exists (worker_host.ts 1084-1106,
+  hadScene), and the scene's closures run only inside rebuild, whose first
+  call is main's last statement (3722).
+- Lifecycle first cost only two accessors for its cycle with the loop:
+  the `loop` getter and the `() => wake()` closure.
+- The K80 comments stayed in main.ts with the session `let`s; the host
+  comment moved to head createScene's call.
+- What createScene returns grew past SceneRef: setters for chase and
+  turnMino (restartChase) and reveal (the lifecycle), and a canvasInk
+  getter for the probe hooks.
+- BACKGROUND moved with the background code, but main.ts reads it twice,
+  so it is exported and imported back.
+- No rules file covers the audio map, so it got no `paths:` entry.
+- The phw=0 diag's PixiJS warnings read 7 against 5: pluck_overlay's
+  first draw fell inside the capture (auto-pluck timing), not a change.
+- Batch 1's threads A/B exceeded its control with the views mid-ease; the
+  rerun did not.
+- physon never reaches "frozen" with physics live, and the phys step's
+  switch-off settles visibly, so the base differs from itself there.
+- f5cf889's message lacks the blank line before its trailer (cosmetic).
+
+Stopped with M4 done at 14:19, inside the 2 h cap (started 12:40, cap
+14:40). Nothing is pushed.
