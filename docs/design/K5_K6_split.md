@@ -2440,3 +2440,87 @@ moved with SHAs, the checks with paths, what is left for M5 and later,
 surprises) and report the commits, the checks, a `Ledger items` list
 and K5's handle fields (owner, branch and last commit, evidence, next,
 brief).
+
+### Stage M4 handoff
+
+Started 12:40 2026-10-15 (cap 14:40) on branch
+`worktree-agent-a7f3683691ec44011` from master c71c1e4. Probes and results:
+`C:\Users\lsl\Repositories\knotmaze\.claude\probes\K5\M4\` (untracked;
+`remap_c71c1e4.md` is the full re-map: declarations, references by region,
+each `let`'s writes).
+
+#### The re-map (c71c1e4, main.ts 4331 lines)
+
+Line numbers are c71c1e4's.
+
+**The lifecycle** (to `src/app/lifecycle.ts`):
+- Moves: the K147 load-settle constants 173-186 (PRESETTLE_SIM,
+  LOADER_DELAY_MS, LOADER_MIN_MS, NOMINAL_SLEEP_SIM; nothing else reads
+  them); the state 497-518 (`type PhysState`, physState, settleWall0,
+  frozenSig, loaderShownAt, warmHoldFrom) and 531-545 (physSig,
+  physicsLive); startAppearance 602-629 (only the lifecycle calls it),
+  beginLoading, loadingTick, finishLoading, replaySettle 631-699;
+  beginSettle, presettleTick, warmHoldTick, finishPresettle 722-840;
+  startSettling, freeze, applyPhysicsMode, physicsInputsChanged 4052-4082.
+- Stays in main.ts: physicsTuning 519-530 (the loop and the probe hooks
+  read it too; a dep), `const loader = createLoader()` 546 (DOM order; a
+  dep), pageInk, canvasInk and gamutAccentHexes 701-720 (the background's;
+  step 3 takes pageInk and canvasInk).
+- Its `let`s are written only by the moved code. Read elsewhere: physState
+  (the indicators' visible callbacks 1829 and 1920, sceneReady 2121, the
+  pointerdown guard 3694, the loop's deps 4136, the probe hooks 4295),
+  settleWall0 and warmHoldFrom (the loop's deps 4139, 4142), loaderShownAt
+  (the probe hooks 4286); physicsLive is called at 3422, 3595, 3742.
+- Called from: the panel (replaySettle 1175, applyPhysicsMode 1178,
+  physicsInputsChanged 1258, 1266), rebuild (beginSettle 1013,
+  beginLoading 1015), the loop's deps (loadingTick, presettleTick,
+  warmHoldTick, freeze), the probe hooks (applyPhysicsMode,
+  physicsInputsChanged, replaySettle).
+- Captures: values params, host, root, warmup, loader, physicsTuning,
+  handRendererLook (a hoisted function), fitToScreen (the camera, 583);
+  declared later, so accessors: indicators (1707), loop (4094; the two
+  `loop.halted = true` stay calls on the loop), wake (4178), perfLine
+  (4084, get/set), reveal (a scene `let`, get/set); the scene's ps,
+  renderer, fabric, fabricController, walkGraph through `scene.`; imports
+  RevealAnimator, LOAD_SETTLE_MAX, LOAD_SIM_CAP.
+
+**The scene build** (to `src/app/scene.ts`):
+- Moves: the scene `let`s ps, renderer, debug, walkGraph, buildHueGroup,
+  buildStrandCount, fabric, chase, turnMino, fabricController, reveal
+  (412-457) and the SceneRef 458-495; pageInk, canvasInk 701-708;
+  syncBackground 842-881, recolorScene 883-909, rebuild 911-1051.
+- Stays in main.ts (session state, read by the session and the loop):
+  chaseRunning, turnWait, turnWaitDur, waitCueGlyph, waitCueFabric,
+  waitCueHead, liveMino, fireOf, pendingLoss, fireClock, realtimeFire
+  (421-454); gamutAccentHexes 710-720 (only the panel calls it; BACKGROUND
+  163 is exported from scene.ts for it and for 286).
+- The `let`s' references outside the moved code (about 436): ps 42,
+  renderer 47, debug 2, walkGraph 19, fabric 132, chase 44 (one write,
+  restartChase 2387), turnMino 47 (one write, 2395), fabricController 101,
+  reveal 2 (sceneReady); buildHueGroup and buildStrandCount none. They
+  become `scene.<name>`; chase and turnMino keep their writes through
+  setters on what createScene returns.
+- Called from: rebuild by the WorkerHost's fallback (266, a setTimeout),
+  the panel (1161, 1166, 1172, 1311), the session (2074, 2739, 2771) and
+  the first build (4328); recolorScene 1293, 1457; syncBackground 1295,
+  1302, 1460 and the probe hooks; canvasInk by the probe hooks (4256).
+- Captures: values app, root, params, look, host, settings, background,
+  confetti, ripples, fireOf, fireClock, syncExploration, writeParams;
+  declared later, so closures or accessors: rebuildAudioMap, syncDaily,
+  saveAttempt, restartChase, resetAttempt, hideWin, restoreSavedAttempt,
+  beginSettle, beginLoading, setCamFollow, fitToScreen, view, camera,
+  indicators, pendingWin and pendingLoss (get/set).
+
+**The audio map** (to `src/app/audio_map.ts`):
+- Moves: RUN_REACH, LOBE_REACH 194-197 (only pluckUnit reads them);
+  audioAssign, audioRuns, audioSegSite, nextRandomPluck 548-558;
+  rebuildAudioMap 1053-1109, runForCtrl 1111-1130, freqForCtrl 1132-1143,
+  pluckUnit 1145-1157.
+- Stays: songSched 560 (autoAudioTick's, M6).
+- Read elsewhere: autoAudioTick (3991-4050) reads audioAssign and
+  audioSegSite and writes nextRandomPluck (3999, 4001, 4046).
+- Called from: rebuild (1007), the panel (1426), the pointer code
+  (pluckUnit 3453, 3485, 3949; freqForCtrl 3484, 3901) and the probe hooks
+  (freqForCtrl, pluckUnit).
+- Captures: params, synth, the scene's ps, walkGraph, fabric through
+  `scene.`.
