@@ -103,6 +103,7 @@ import { PluckRipples } from "./render/pluck_ripple";
 import { startShaderWarmup, warmContextFor } from "./render/shader_warmup";
 import { openDailyStats } from "./ui/daily_stats_view";
 import { shareOrCopy, showToast } from "./ui/share";
+import { SHEET_QUERY } from "./ui/panel_sheet";
 import { buildPanel } from "./ui/tweakpane_panel";
 import type { PanelSettings } from "./ui/tweakpane_panel";
 import {
@@ -860,6 +861,10 @@ async function main(): Promise<void> {
     },
     onPlayDaily: () => playDaily(todayNumber(), true),
     onShowDailyStats: () => showDailyStats(),
+    // K468: a pop of the settings sheet's history entry (Android Back, or the
+    // close button handing the entry back): the entry it landed on holds the
+    // link from before the sheet opened, so write the design on screen again.
+    onSheetBack: () => writeParams(params),
     onAudioChange: () => {
       writeParams(params);
       rebuildAudioMap();
@@ -1093,8 +1098,13 @@ async function main(): Promise<void> {
     daily: () => showDailyStats(),
     explain: (tip) => showToast(tip, 4500),
   });
+  // K468: on the open settings sheet the badge sits in the top bar, over the
+  // HUD and the banners (the sheet covers them), so it avoids none.
+  const sheetMQ = window.matchMedia(SHEET_QUERY);
   const fitModeBadge = (): void =>
-    modeBadge.fit([hud.el, banner.el, lossBanner.el]);
+    modeBadge.fit(
+      panel.isOpen() && sheetMQ.matches ? [] : [hud.el, banner.el, lossBanner.el]
+    );
   window.addEventListener("resize", fitModeBadge);
   // K92 UNDO AND REDO (ui/undo_buttons.ts): beside the hamburger while the
   // panel is open, the badge on the row below them then (so it re-fits).

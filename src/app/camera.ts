@@ -1,6 +1,7 @@
 import type { Application, Container } from "pixi.js";
 import type { MotionSetting } from "../ui/motion";
 import type { Rect } from "../ui/offscreen_indicators";
+import { SHEET_QUERY } from "../ui/panel_sheet";
 import type { UrlParams } from "../ui/url_state";
 import {
   PANEL_TWEEN_S,
@@ -181,7 +182,15 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
   let panelT = 0;
   let panelTPrev = 0;
   let panelBox: Rect | null = null;
+  // K468: the settings sheet (a phone's full-screen panel) counts as no panel
+  // here: its rect spans the screen, and the range would let the maze slide
+  // out of view entirely.
+  const sheetMQ =
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia(SHEET_QUERY)
+      : null;
   const readPanel = (): boolean => {
+    if (sheetMQ?.matches) return false;
     const r = panelWrap?.getBoundingClientRect();
     if (!r || r.width <= 0) return false;
     panelBox = { left: r.left, top: r.top, right: r.right, bottom: r.bottom };

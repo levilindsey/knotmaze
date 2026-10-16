@@ -59,6 +59,11 @@ import {
 } from "./offscreen_indicators";
 import { PLUCK_WHOLE_MAX, RIPPLE_STRENGTH_MAX } from "../render/pluck_model";
 import type { MotionPref } from "./motion";
+import {
+  SHEET_QUERY,
+  SheetHistory,
+  panelStartsOpen,
+} from "./panel_sheet";
 
 export interface PanelSettings {
   temperature: number;
@@ -177,6 +182,9 @@ export interface PanelCallbacks {
   // The daily row (K20): load today's daily maze / open the daily stats.
   onPlayDaily: () => void;
   onShowDailyStats: () => void;
+  // K468: Back closed the settings sheet. The entry it returned to holds
+  // the link from before the sheet opened, so write the design's link again.
+  onSheetBack?: () => void;
 }
 
 // What main.ts can ask of the panel after building it.
@@ -410,7 +418,65 @@ export function buildPanel(
     "@media (pointer:coarse){.tp-dfwv{width:min(320px,calc(100vw - 20px));" +
     "--tp-container-unit-size:30px;--tp-blade-value-width:150px}" +
     ":root{--kp-top:calc(max(10px,env(safe-area-inset-top)) + 100px)}" +
-    ".kp-reset{opacity:.45;font-size:14px;padding:0 4px}}";
+    ".kp-reset{opacity:.45;font-size:14px;padding:0 4px}}" +
+    // K467 ROW HELP: a tap on a row's label opens the row's tooltip text in a
+    // block INSIDE the row, under the label and the control (the row wraps
+    // only while a block is open). Closed, a row is what it always was: the
+    // block and the (i) mark are display:none, and the mark shows only where
+    // there is no hover tooltip (touch screens, the sheet).
+    ".kp-help{display:none;flex:0 0 100%;box-sizing:border-box;" +
+    "margin:3px 0 5px;padding:6px 9px;border-radius:5px;" +
+    "background:rgba(255,255,255,.06);color:#c8cad3;font-size:11px;" +
+    "line-height:1.4;white-space:pre-line}" +
+    ".kp-row.kp-help-open{flex-wrap:wrap}" +
+    ".kp-row.kp-help-open>.kp-help{display:block}" +
+    ".kp-i{display:none;box-sizing:border-box;width:11px;height:11px;" +
+    "margin-left:5px;border:1px solid currentColor;border-radius:50%;" +
+    "font:italic 600 8px/9px Georgia,serif;text-align:center;opacity:.5;" +
+    "vertical-align:1px;pointer-events:none}" +
+    ".kp-row.kp-help-open .kp-i{opacity:.95;color:#8ea0c0}" +
+    ".kp-has-help>.tp-lblv_l:focus-visible{outline:1px solid #8ea0c0;" +
+    "outline-offset:-1px;border-radius:3px}" +
+    "@media (pointer:coarse)," + SHEET_QUERY + "{" +
+    ".kp-has-help .kp-i{display:inline-block}" +
+    ".kp-has-help>.tp-lblv_l{cursor:pointer;" +
+    "-webkit-tap-highlight-color:transparent}}" +
+    // The top bar's strip behind the sheet's buttons (shown only by the
+    // sheet, below).
+    ".kp-bar{display:none;position:fixed;z-index:29;top:0;left:0;right:0;" +
+    "height:var(--kp-top);background:#28292e;" +
+    "box-shadow:0 1px 0 rgba(255,255,255,.07)}" +
+    // K468 THE SHEET: on a phone the open panel fills the screen (Tweakpane's
+    // fixed wrapper, whose top, right and max-height are inline for the side
+    // panel, hence the !important), opaque and scrolling inside itself, below
+    // a top bar of the close button, undo and redo and the mode badge. The
+    // value column takes a share of the width. LAST, so its --kp-top beats
+    // the touch rule's.
+    "@media " + SHEET_QUERY + "{" +
+    ":root{--kp-top:calc(max(10px,env(safe-area-inset-top)) + 52px)}" +
+    // Tweakpane's wrapper is position:absolute; fixed with an explicit
+    // height, so a phone's moving URL bar cannot misplace the sheet.
+    ".tp-dfwv{box-sizing:border-box;position:fixed;z-index:28;left:0;" +
+    "right:0!important;width:auto!important;" +
+    "height:calc(100vh - var(--kp-top));height:calc(100dvh - var(--kp-top));" +
+    "max-height:none!important;" +
+    "padding:0 max(10px,env(safe-area-inset-right)) " +
+    "max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));" +
+    "background:#28292e;--tp-container-unit-size:32px;" +
+    "--tp-blade-value-width:min(58%,440px)}" +
+    ".tp-rotv{border-radius:0;box-shadow:none}" +
+    ".kp-open .kp-bar{display:block}" +
+    // THE PEEK: while a row is dragged on the sheet, everything but that row
+    // is invisible (visibility, so the row shows inside its hidden parents)
+    // and the sheet clears, to watch the design change; it returns on
+    // release.
+    ".kp-peek .tp-dfwv,.kp-peek .tp-rotv{background:transparent!important}" +
+    ".kp-peek .tp-dfwv *{visibility:hidden}" +
+    ".kp-peek .tp-dfwv .kp-peeking,.kp-peek .tp-dfwv .kp-peeking *" +
+    "{visibility:visible}" +
+    ".kp-peek .kp-peeking{background:rgba(40,41,46,.9);border-radius:6px}" +
+    ".kp-peek .kp-menu,.kp-peek .kp-bar,.kp-peek .km-undo,.kp-peek .km-mode" +
+    "{visibility:hidden}}";
   document.head.appendChild(style);
 
   // --- Modified-state tracking + per-row reset ---------------------------
@@ -452,6 +518,123 @@ export function buildPanel(
   // K92: set while a row's effects run for a change before its release
   // (`last === false`: a slider or a color picker mid-drag).
   let dragging = false;
+
+  // K468: whether the layout is the phone's full-screen sheet right now.
+  const sheetMQ = window.matchMedia(SHEET_QUERY);
+  const sheetNow = (): boolean => sheetMQ.matches;
+
+  // K467 ROW HELP: a tap on a row's label opens the row's tooltip text in a
+  // block inside that row. One block at a time. The text is the row's
+  // `title`, read when the block opens and again when markOverridden changes
+  // it: one source (OVERRIDDEN_NOTE rides along), never a copy.
+  interface HelpRow {
+    row: HTMLElement;
+    label: HTMLElement;
+    block: HTMLElement;
+  }
+  let helpOpen: HelpRow | null = null;
+  let helpSeq = 0;
+  const closeHelp = (): void => {
+    const h = helpOpen;
+    if (!h) return;
+    helpOpen = null;
+    h.row.classList.remove("kp-help-open");
+    h.label.setAttribute("aria-expanded", "false");
+  };
+  const openHelp = (h: HelpRow): void => {
+    closeHelp();
+    helpOpen = h;
+    h.block.textContent = h.row.title;
+    h.row.classList.add("kp-help-open");
+    h.label.setAttribute("aria-expanded", "true");
+  };
+  // The open block's text follows its row's title (markOverridden).
+  const syncHelpText = (): void => {
+    if (helpOpen && helpOpen.block.textContent !== helpOpen.row.title) {
+      helpOpen.block.textContent = helpOpen.row.title;
+    }
+  };
+  // A block goes with its row: hidden by refreshCond, or inside a folder that
+  // is (or just got) collapsed. Read from the classes, not the layout (a
+  // closed panel has none).
+  const closeHelpIfHidden = (): void => {
+    const h = helpOpen;
+    if (!h) return;
+    let gone = h.row.closest(".tp-v-hidden") !== null;
+    for (
+      let f = h.row.parentElement?.closest(".tp-fldv") ?? null;
+      !gone && f;
+      f = f.parentElement?.closest(".tp-fldv") ?? null
+    ) {
+      if (!f.classList.contains("tp-fldv-expanded")) gone = true;
+    }
+    if (gone) closeHelp();
+  };
+  const wireHelp = (
+    rowEl: HTMLElement,
+    label: HTMLElement,
+    glyph: Node | null
+  ): void => {
+    const id = `kp-help-${++helpSeq}`;
+    const block = document.createElement("div");
+    block.className = "kp-help";
+    block.id = id;
+    rowEl.appendChild(block);
+    const mark = document.createElement("span");
+    mark.className = "kp-i";
+    mark.setAttribute("aria-hidden", "true");
+    mark.textContent = "i";
+    label.insertBefore(mark, glyph);
+    rowEl.classList.add("kp-has-help");
+    label.setAttribute("role", "button");
+    label.tabIndex = 0;
+    label.setAttribute("aria-expanded", "false");
+    label.setAttribute("aria-controls", id);
+    const h: HelpRow = { row: rowEl, label, block };
+    const toggle = (): void => {
+      if (helpOpen === h) closeHelp();
+      else openHelp(h);
+    };
+    label.addEventListener("click", (e) => {
+      // The reset glyph has its own pointerdown; never open help for it.
+      if ((e.target as Element | null)?.closest(".kp-reset")) return;
+      // Never a toggle of the row's control (a checkbox row's label).
+      e.preventDefault();
+      toggle();
+    });
+    label.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      toggle();
+    });
+  };
+
+  // K468 THE PEEK: while a row is dragged on the sheet, everything but that
+  // row turns invisible and the sheet clears (CSS, keyed on `kp-peek` on the
+  // root and `kp-peeking` on the row), so the design shows live behind it.
+  // It starts on the drag's SECOND change (a tap that only sets a value
+  // would flash the sheet away) and ends on release: the row's last change,
+  // or any pointer end on the window.
+  let peekRow: HTMLElement | null = null;
+  let peekMoves = 0;
+  const setPeek = (el: HTMLElement | null): void => {
+    if (peekRow === el) return;
+    peekRow?.classList.remove("kp-peeking");
+    peekRow = el;
+    el?.classList.add("kp-peeking");
+    document.documentElement.classList.toggle("kp-peek", el !== null);
+  };
+  const endPeek = (): void => {
+    peekMoves = 0;
+    setPeek(null);
+  };
+  for (const type of ["pointerup", "pointercancel", "touchend", "touchcancel", "mouseup"]) {
+    window.addEventListener(type, endPeek, true);
+  }
+  window.addEventListener("blur", endPeek);
+  for (const type of ["pointerdown", "touchstart", "mousedown"]) {
+    window.addEventListener(type, () => (peekMoves = 0), true);
+  }
 
   // One adjustable row: tooltip + reset glyph + modified tint. `after`
   // runs on every change AND after a glyph reset (the forwarded ev lets
@@ -501,12 +684,21 @@ export function buildPanel(
         refreshCond();
       });
       label.appendChild(btn);
+      // K467: a row with a tooltip has help under its label (before the
+      // reset glyph, which keeps its own tap).
+      if (tipText && label instanceof HTMLElement) wireHelp(api.element, label, btn);
     }
     api.on("change", (ev) => {
       fired = true;
       markRow(t);
       if (syncing) return;
       dragging = ev.last === false;
+      // K468: the peek follows a drag on the sheet (see setPeek).
+      if (dragging && sheetNow() && open) {
+        if (++peekMoves >= 2) setPeek(api.element);
+      } else if (peekRow === api.element) {
+        endPeek();
+      }
       try {
         after(ev);
       } finally {
@@ -580,6 +772,8 @@ export function buildPanel(
       } catch {
         // Storage unavailable: folds just don't persist.
       }
+      // K467: a help block goes with its folder (read after the class flips).
+      queueMicrotask(closeHelpIfHidden);
     });
     return f;
   };
@@ -2181,6 +2375,8 @@ export function buildPanel(
         !custom ||
         (i > 0 && !BACKGROUND_ACCENTS_USED[bg].includes(i));
     });
+    // K467: an open help block goes with its row.
+    closeHelpIfHidden();
   };
   refreshCond();
 
@@ -2193,15 +2389,44 @@ export function buildPanel(
   menu.setAttribute("aria-label", "Settings");
   menu.innerHTML = "<span></span><span></span><span></span>";
   document.body.appendChild(menu);
+  // K468: the top bar's strip behind the sheet's buttons (CSS shows it only
+  // on the sheet, while the panel is open).
+  const bar = document.createElement("div");
+  bar.className = "kp-bar";
+  bar.setAttribute("aria-hidden", "true");
+  document.body.appendChild(bar);
   const OPEN_KEY = "knotmaze.panelOpen";
-  let open = !window.matchMedia("(max-width: 700px), (pointer: coarse)")
-    .matches;
+  let storedOpen: string | null = null;
   try {
-    const v = localStorage.getItem(OPEN_KEY);
-    if (v !== null) open = v === "1";
+    storedOpen = localStorage.getItem(OPEN_KEY);
   } catch {
     // Storage unavailable: the default stands.
   }
+  // A sheet never starts open (it would cover the page); the side panel
+  // follows the stored choice, else the screen.
+  let open = panelStartsOpen(
+    sheetNow(),
+    storedOpen,
+    !window.matchMedia("(max-width: 700px), (pointer: coarse)").matches
+  );
+  // K468: an open sheet owns one history entry, so Android's Back closes it.
+  const sheetHistory = new SheetHistory(
+    {
+      push: (state) => history.pushState(state, ""),
+      back: () => history.back(),
+    },
+    {
+      close: () => setOpen(false),
+      rewriteLink: () => callbacks.onSheetBack?.(),
+    }
+  );
+  window.addEventListener("popstate", () => sheetHistory.onPop());
+  // The menu button reads as a close button while the sheet is up.
+  const labelMenu = (): void => {
+    const sheetOpen = open && sheetNow();
+    menu.setAttribute("aria-label", sheetOpen ? "Close settings" : "Settings");
+    menu.title = !open ? "Show settings" : sheetOpen ? "Close settings" : "Hide settings";
+  };
   // Scroll restores on the first OPEN (a hidden wrapper has no layout).
   let scrollRestored = false;
   const openListeners: Array<(open: boolean) => void> = [];
@@ -2209,7 +2434,10 @@ export function buildPanel(
     open = v;
     if (wrap) wrap.style.display = v ? "" : "none";
     menu.setAttribute("aria-expanded", String(v));
-    menu.title = v ? "Hide settings" : "Show settings";
+    labelMenu();
+    if (v && sheetNow()) sheetHistory.open();
+    else sheetHistory.release();
+    if (!v) endPeek();
     // K92: the stylesheets follow it (undo and redo show, the mode badge
     // takes the row below them).
     document.documentElement.classList.toggle("kp-open", v);
@@ -2231,11 +2459,23 @@ export function buildPanel(
   };
   menu.addEventListener("click", () => {
     setOpen(!open);
+    // The sheet's open state is never stored: a phone layout starts closed.
+    if (sheetNow()) return;
     try {
       localStorage.setItem(OPEN_KEY, open ? "1" : "0");
     } catch {
       // Storage unavailable: state just doesn't persist.
     }
+  });
+  // K468: a rotation or a resize switches between the sheet and the side
+  // panel live, and an open one takes or gives back its history entry.
+  sheetMQ.addEventListener("change", () => {
+    if (open) {
+      if (sheetNow()) sheetHistory.open();
+      else sheetHistory.release();
+    }
+    labelMenu();
+    endPeek();
   });
   setOpen(open);
 
@@ -2287,6 +2527,8 @@ export function buildPanel(
           delete el.dataset.kpTip;
         }
       }
+      // K467: an open help block shows the title as it is now.
+      syncHelpText();
     },
     setDailyLabel: (text, tip) => {
       if (dailyApi.title !== text) dailyApi.title = text;
