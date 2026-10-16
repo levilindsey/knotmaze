@@ -1221,7 +1221,12 @@ export class FabricMazeRenderer {
       return;
     }
     const a = this.anim;
-    const L = controller.walkedDist - (a ? (1 - this.moveProgress) * a.e.length : 0);
+    // K114 stage 2: the real-time fire's L is its clock (main.ts feeds the
+    // controller every frame, and the dot rides the same clock).
+    const L =
+      fire.clock === "realtime"
+        ? controller.fireNow
+        : controller.walkedDist - (a ? (1 - this.moveProgress) * a.e.length : 0);
     const key =
       `${L}|${controller.head}|${controller.solved}|${controller.fireLost}|` +
       `${a ? 1 : 0}|${this.threadWidth}|${this.fogOfWar}|${this.markerRadius()}`;

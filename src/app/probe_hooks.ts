@@ -478,6 +478,15 @@ export function installProbeHooks(ctx: ProbeCtx): void {
             pendingLoss: ctx.pendingLoss,
             banner: ctx.lossBanner.shown,
             smoldering: c.choices().filter((eid) => c.smoldering(eid)),
+            // K114 stage 2: the clock (turn | realtime), its L (the
+            // departure clock), the real-time clock itself, the running
+            // move's departure and arrival, and whether the race runs.
+            clock: c.fire.clock,
+            L: c.fireL,
+            now: c.fireNow,
+            departL: c.fireDepartL,
+            arriveL: c.fireArriveL,
+            racing: c.fireRacing,
           }
         : null,
       // K100: the solve's restarts, and the fog's explored stamps.
