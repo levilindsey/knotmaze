@@ -565,3 +565,55 @@ only with the files it is about; `render.md` lists the area's other files.
   now. Verified in desktop Chrome only (with the phone's viewport); the
   phone itself is still to check (`phone_run.ps1`; at 08:36 it was
   dozing and locked, and the script never wakes it).
+
+## Pluck frets under the reveal (K397)
+
+- REPORT (Levi, 2026-10-15, K397 issue 4): "Tapping on the end of an
+  unexplored stub starts the vibration effect, which can sometimes cause
+  more of the thread length to render than it should." His call (K423):
+  the vibration stops at the stub's solid end. Brief and handoff:
+  `docs/design/K397.md`, stage 2.
+- CAUSE (stage 1, observed): K76 2c clips a pluck's unit to the thread
+  that SHOWS around the tap (`exploreShownSpan`), fade included, so a
+  lobe ran on into the stub's dotted fade, and its blur drew solid
+  thread over the dots and past the fade's end (2gozcj f5: out to s 1.06
+  of the fade).
+- RULE: under the reveal (`explorePieces` on, the chain not whole),
+  `pluck()` (ribbon_renderer.ts) clips the unit once more with
+  `exploreSolidSpan`: the solid piece that holds the tap, else the
+  nearest, grown through any piece that meets it. No solid stretch: the
+  pluck is sound-only. It passes `fret: true`, and `segmentLobes`
+  (pluck_model.ts) then treats the span's ends as HARD FRETS: the tapped
+  lobe is cut there and its end at a fret gets node -1 (no hide zone,
+  foot or clip); a tap past a fret (in the fade) plucks the lobe just
+  inside the nearer end (a closed chain's span takes its nearer copy);
+  the pseudo lobe is clipped to the span. `tapLobes` reports a core only
+  for a tap inside the span. With the reveal off, or on a whole chain,
+  `fret` stays false and the old path runs unchanged.
+- THE OVERLAY (pluck_overlay.ts, `PluckRequest.fret`): a fretted tapped
+  lobe shorter than LOBE_MIN_LEN is sound-only ("other"); a re-pluck
+  matches a lobe with one real key; the per-frame deltas skip a lobe
+  only when both keys are < 0; layout keeps a lobe with either key < 0
+  at its stored arcs.
+- TESTS (pluck_model.test.ts): "fretted (K397): the span's ends cut the
+  tapped lobe", "... a tap past a fret (in the fade) plucks the stretch
+  inside it" and "... the fret end has no hide zone, and a tap past it
+  is never a core".
+- MEASURED (`.claude/probes/K397/stage2/pluck_stub.mjs`: 2gozcj after 12
+  moves at the phone viewport, one frozen page per build; changed pixels
+  at t 0.06 within h + 0.3 of the centerline, binned by s along the stub
+  as solid / the fade's first half / its second half / past;
+  `out_s2_pluck.log`, `out_s2/pluck/*_sbs.png`). f5's fade tap: 88086 px
+  (solid 41218, fade 23651 + 14028, out to s 1.06) -> 42527 (42473 / 21
+  / 0 / 0), and the base collapse no longer shrinks the dots (615 -> 0
+  px). f12's fade tap plucked a lobe over s 0.22-1.30 of the fade (25810
+  + 17200 px there); it now plucks the solid stretch beside the solid
+  end, 30254 px (30229 / 25 / 0 / 0). f12's solid tap had 6031 px in the
+  fade, now 25. The 17-31 px left in the fade are the AA fringe;
+  controls 0 px.
+- RESIDUALS: (1) a fretted lobe keeps its stored arcs in layout, so its
+  real node end does not follow drift (not measured); (2) a re-pluck
+  after the stub grows meets keys [a, b] against [a, -1], so both ring;
+  (3) a fade tap's pluck point clamps to BETA_MIN/MAX at the solid end;
+  (4) K279's tug (`ptg`, default 0) ignores the reveal. NOT VERIFIED:
+  the phone, and a reveal-off pixel A/B (the same path by construction).
