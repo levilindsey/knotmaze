@@ -191,10 +191,21 @@ files.
     (`clk=realtime`) or the turn minotaur (fireSettingsOf). Q5: K323's
     plan (section 2.4) kept the burn race turn-only; `fireClock` survives
     K323 as a Burn race row.
-  - COST: not measured (stage 2 item 6, open). Under realtime L moves
-    every frame of the race, so drawFire recomputes (and setBurnSpans
-    re-declares when a span moved) every frame, where the turn clock
-    recomputes only while the dot moves.
+  - COST (item 6, measured 2026-10-15 under the perf lock;
+    `.claude/probes/K114/stage2/` perf_batch.ps1, perf_attr.ps1, their
+    logs). Under realtime L moves every frame, so drawFire's key changes
+    every frame (runBurnAt over every edge, then setBurn and its paint),
+    where the turn clock recomputes only while the dot moves. A 4 s stand
+    after the first move, seed 7, 1400x900, means of two runs: drawFire
+    0.10 ms turn (master and branch alike) against 0.19 realtime, 0.46
+    against 1.05 at 4x CPU throttling; the frame loop 9.5 against
+    10.1-10.7 ms (the desktop is vsync-bound), 39-41 against 42-44 at x4.
+    Suppressing drawFire recovers about 0.6 ms (0.9 at x4), the HUD lead's
+    writes about 0.1; about 0.5 ms (1.5 at x4) is unattributed. Not a
+    same-burnt-share comparison: the turn stand sits at L 18.7 under the
+    delay (40), realtime's L runs 25 to 73. Unfixed: re-declaring less
+    often (L quantized in drawFire's key, or every Nth frame) recovers at
+    most drawFire's share and steps the front.
 
 - THE FIRE (K290 stage 3b, 2026-10-15; brief and record
   `docs/design/K114_burn.md`, "Stage 3b brief" and "Stage 3b handoff";

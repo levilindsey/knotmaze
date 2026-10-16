@@ -153,3 +153,149 @@ burning? I think we should!"
   and frame tables; the shots; the test count, the build and the pins that
   moved; the lore you added; a `Ledger items` list; and the handle fields
   (branch, last commit, evidence and next).
+
+## Stage 2 handoff (2026-10-15, agent K114 s2)
+
+Items 1-5, 7, 9 and 10 are done; item 6 is measured, not fixed; item 8 is
+shot at both sizes in Chrome (no phone pass). Evidence:
+`.claude/probes/K114/stage2/` (untracked).
+
+**Commits** (on master 023f780; master's newer 42efe61 is LEDGER.md only):
+
+- 4c6aaac, items 1-2: the controller's `fireL` getter; `fireClock`
+  (`fck`, turn | realtime) appended at codec row 146 (CODEC_VERSION stays
+  6); the Burn race row "clock".
+- 81f9057, items 3-4: `src/game/fire_clock.ts` (FIRE_V_REF 12, FireClock
+  at CHASE_HZ 120, at most 30 steps an advance); the controller's realtime
+  rules (setFireNow, the departure clock, the standing loss).
+- acc2526, item 5: the page (tickFire, fireSet, queued taps, the HUD lead,
+  the hook).
+- da9a40c: K408, the start marker fades once the fire passes its thread
+  point.
+- 7ab572e, e85a5cd: lore. eed8974: the Burnt banner names the realtime
+  loss.
+- The handoff commit: item 6 and 8 results, the COST lore, the probe lore,
+  this section.
+
+**Calls.** Q1 (a): the dot runs at v_ref, moveSpeed unused; v_ref = 12
+(`vref_probe.mjs`: 11.80 u/s over dailies 1-6 and 3320 run directions,
+11.65-12.06 per daily). Q2: one pair for both clocks. Q3: the loss is the
+fire reaching you (T(head) <= L); no trapped loss under realtime. Q4:
+realtime always queues taps. Q5: `fireClock` survives K323 as a Burn race
+row. Mine:
+
+- The clock runs from the first accepted move until the winning move
+  lands. It stops at a loss, freezes while the page is hidden, and
+  rebuild and restartSolve reset it.
+- A replay has no think time (only dailies replay, with the fire off).
+- The closest call counts every departure but the first; a standing loss
+  makes it 0. For r < 1 nothing catches the dot mid-run (proof in
+  gameplay-fire.md).
+- The HUD lead writes only on a change; the banner reads "The fire reaches
+  you where you stand."
+- K408: a 0.25 s WebFade on the explore clock; the gap slot follows the
+  target; markersRight skips a faded start.
+
+**Per-frame hunks** (for K5 R2):
+
+- `src/app/frame_loop.ts`: `else if (realtimeFire()) tickFire(dt)` after
+  the chase tick, in tickAnim's place; `if (realtimeFire()) fireSet()`
+  after keyStep. FrameLoopDeps gains `realtimeFire`, `tickFire`, `fireSet`.
+- `src/main.ts`: tickFire and fireSet; fireSet calls setFireNow(L),
+  setMoveProgress while the dot moves, and hud.setFireLead every frame.
+- `fabric_maze_renderer.ts` drawFire (already called every frame): under
+  realtime L = `controller.fireNow`, so its key changes every racing frame.
+
+**Item 5** (`rt_page.mjs still|race`, all pass, desktop and phone size):
+the clock is 0 before the first move; it climbs 11.9 a second; lead +
+fireL = T(head) on every frame; it advanced 0 over a 2 s hidden tab, then
+one capped frame; the loss comes on the first frame the clock reaches T,
+3.6-11.4 ms from the prediction; the clock stops; the HUD made 366-387
+writes, none of them repeats; Try again resets. The race escapes (13 taps
+queued, closest call 836, the HUD matches the hook on every frame); the
+tight race (`&fsp=0.95&fdl=0`) escapes at closest call 0.98.
+
+**Item 6** (perf lock; 4 s stand after the first move, seed 7, 1400x900;
+ms, means of two runs, A B C then C B A):
+
+| | master turn | turn | realtime |
+|---|---|---|---|
+| drawFire | 0.10 | 0.10 | 0.19 |
+| drawFire, x4 | 0.46 | 0.47 | 1.05 |
+| frame loop | 9.5 | 9.5 | 10.1 |
+| frame loop, x4 | 40.9 | 39 | 42 |
+
+The attribution run (`perf_attr.ps1`) on this branch only:
+
+| | turn | realtime | no HUD writes | no drawFire |
+|---|---|---|---|---|
+| frame loop | 9.45 | 10.65 | 10.5 | 10.0 |
+| frame loop, x4 | 40.4 | 42.8 | 42.2 | 42.0 |
+
+- drawFire's re-declare costs about 0.6 ms (0.9 at x4) and the HUD
+  writes about 0.1.
+- About 0.5 ms (1.5 at x4) is unattributed.
+- Not a same-burnt-share comparison: the turn stand sits at L 18.7, under
+  the delay, while realtime's L runs from 25 to 73.
+- No re-declare throttle was added. It would recover at most drawFire's
+  share and would step the front.
+
+**Item 7** (`burn_sim_rt.ts`, `proposal.md`, `results_rt*.md`): at zero
+think time it reproduces stage 1 exactly. The turn defaults (0.75, 0)
+leave about 0.08 s of thinking a decision on the median daily. Proposed
+realtime defaults: fireSpeed 0.2, fireDelay 20. That gives a 1.7 s head
+start, and the route allows 1.10 s a decision at worst, 1.25 at p10 and
+1.48 at the median. At 1 s of thinking the share trapped is explorer 77,
+p0.1 35, p0.2 64 and p0.3 83, against the turn defaults' 90/33/61/80. p0.1
+by think time 0 / 0.25 / 0.5 / 0.75 / 1 / 1.5 / 2 s: 0 / 0 / 3 / 10 / 35
+/ 80 / 98%; the route: 0 / 0 / 0 / 0 / 0 / 50 / 97%. Alternatives: Brisk
+(0.35, 30), Easy (0.15, 0), Relaxed (0.1, 30), late fast (0.35, 150). The
+panel and link ranges (fireSpeed [0.3, 0.95], fireDelay [0, 40]) are too
+narrow for these.
+
+**Item 8.** At 1400x900:
+
+- `out_rt_tight/race_7_midrace.png`: mid-race, fire lead 2.3.
+- `out_rt_tight/race_7_escaped.png`: despite its name, a standing loss.
+  The shot before it was think time.
+- `out_rt/still_7_1_burnt.png`: a loss at the start; pre-rebase build
+  21241ef.
+- `out_rt_mid/`: an early race (the fuse still lit) and the escape.
+
+At 411x753 (`out_rt_phone/`, `out_rt_tight/*_phone_*`): the same set. A
+pluck strip in `still_7_phone_1_burnt.png` is probably music mode's auto
+pluck; that was not checked, and the tight runs pass `snd=manual`.
+
+**Item 9:** tsc clean; `npm test` 85 files, 1187 passed and 1 skipped;
+the build is green. Only the codec pins moved (param_codec.test.ts row 146,
+url_codec.test.ts). The golden, K87, the golden dailies and K80_DIGESTS
+did not move. New tests: `test/game/fire_clock.test.ts`, plus additions
+to `test/game/fire.test.ts`.
+
+**Lore:**
+
+- gameplay-fire.md: REAL-TIME FIRE (the clock, v_ref, losses, banner,
+  closest call, COST) and THE START MARKER BURNS.
+- gameplay-links.md: FIRE CLOCK PARAM. gameplay-panel.md: FIRE CLOCK ROW.
+- render-markers.md: K408. render-shaders.md: the burn rule.
+- probes.md: the stage 2 probes. CLAUDE.md structure lines;
+  docs/lore_index.md.
+
+**Open after stage 2:**
+
+- Levi: the realtime defaults (proposed 0.2 / 20) and the slider and link
+  ranges, or separate realtime defaults.
+- The realtime frame cost: about 0.5 ms (1.5 at x4) is unattributed. A
+  CPU profile of a turn and a realtime stand at the same burnt share, then
+  decide on a throttle.
+- maze_stats.ts STATS: the lines for walked and fire lead are false under
+  realtime.
+- Two "clock" rows: K80's in Maze (turn-based | real time) and the fire's
+  in Burn race (turn | realtime). Match the wording, or rename one.
+- K408: the gap slot moves in one frame at the fade's start, and the exit
+  marker still hides without a fade.
+- Item 7 models neither pauses at forced vertices nor queued taps;
+  junction think times on real players are unmeasured.
+- The realtime replay clock is not synced after a replay (unreachable
+  today).
+- The phone pass on hardware was skipped.
