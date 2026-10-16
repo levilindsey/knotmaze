@@ -44,7 +44,6 @@ import {
   turnMinoParamsOf,
   writeParams as writeTokenParams,
   newSeed,
-  ROOT_NOTES,
 } from "./ui/url_state";
 import type { UrlParams } from "./ui/url_state";
 import {
@@ -129,13 +128,7 @@ import {
 import { KnotSynth } from "./audio/knot_synth";
 import { SnoreSfx, fetchSnore } from "./audio/snore_sfx";
 import { attachSnoreLink } from "./ui/snore_link";
-import {
-  assignPitches,
-  assignPitchesFromList,
-  segmentsNear,
-  noteToFreq,
-} from "./audio/pitch_space";
-import type { PitchAssignment } from "./audio/pitch_space";
+import { segmentsNear, noteToFreq } from "./audio/pitch_space";
 import { SCARBOROUGH_FAIR } from "./audio/songs";
 import { SongScheduler } from "./audio/song_scheduler";
 import { createLoader } from "./ui/loader";
@@ -144,6 +137,7 @@ import { installProbeHooks } from "./app/probe_hooks";
 import { createFrameLoop } from "./app/frame_loop";
 import { createLifecycle } from "./app/lifecycle";
 import { BACKGROUND, createScene } from "./app/scene";
+import { createAudioMap } from "./app/audio_map";
 import {
   FOLLOW_DELAY,
   FOLLOW_RAMP,
@@ -164,10 +158,6 @@ const TAP_TO_PAN_KEY = "knotmaze.tapToPan";
 // physics off, a camera pan). Taps sound at TAP_STRENGTH.
 const TAP_SLOP_PX: Record<string, number> = { mouse: 4, pen: 6, touch: 10 };
 const TAP_STRENGTH = 0.55;
-// Lobes kept each side of the plucked one: the fabric walk run (capped)
-// and the local window used in knot mode / off the walk graph.
-const RUN_REACH = 6;
-const LOBE_REACH = 2;
 // K101: how far ahead (seconds of audio clock) music mode schedules its
 // notes. A frame longer than this makes a note start late, never early.
 const MUSIC_LOOKAHEAD = 0.3;
@@ -482,19 +472,14 @@ async function main(): Promise<void> {
   });
   const loader = createLoader();
 
-  // Stage 20 audio: every segment (walk-graph run in fabric mode, whole
-  // strand otherwise) owns one pitch from the chosen space, assigned by
-  // length bucket. audioRuns maps a chain ctrl to its run for manual
-  // plucks; audioSegSite is where auto plucks physically tug.
-  let audioAssign: PitchAssignment | null = null;
-  let audioRuns: Map<
-    number,
-    Array<{ c0: number; c1: number; seg: number }>
-  > | null = null;
-  let audioSegSite: Array<{ chain: number; ctrl: number }> = [];
-  let nextRandomPluck = 0;
   // K101: music mode's notes, on the audio clock once it runs.
   const songSched = new SongScheduler();
+  // K5 M4: the audio map (Stage 20's per-segment pitches, the walk runs a
+  // pluck looks up, the auto plucks' sites) is src/app/audio_map.ts.
+  // autoAudioTick reads its `let`s through getters on `audioMap`, never
+  // destructured; its functions never change, so main.ts destructures them.
+  const audioMap = createAudioMap({ params, synth, songSched }, scene);
+  const { rebuildAudioMap, freqForCtrl, pluckUnit } = audioMap;
 
   // K5 M2: the camera (the eased fit, the follow camera, placeWorldAt, the
   // K198 pan range, the panel's tween) is src/app/camera.ts. The `let`s
@@ -595,112 +580,6 @@ async function main(): Promise<void> {
     const accents = accentHexes(backgroundColors(BACKGROUND, effHue));
     setGamutConfig(params.gamutArc, look("palette"));
     return accents;
-  }
-
-  // Re-derive the per-segment pitch assignment (cheap; no scene rebuild).
-  function rebuildAudioMap(): void {
-    if (!scene.ps) return;
-    let assignFor: (lengths: number[]) => PitchAssignment;
-    if (params.soundMode === "music") {
-      // Music mode: the buckets are EXACTLY the song's distinct pitches,
-      // so every thread belongs to some note the piece actually plays
-      // and every note has segments to animate. pitchSpace/octaves do
-      // not apply here (the panel hides them).
-      const set = new Set<number>();
-      for (const r of SCARBOROUGH_FAIR.notes) {
-        if (!r.note) continue;
-        const f = noteToFreq(r.note);
-        if (Number.isFinite(f)) set.add(Math.round(f * 1000) / 1000);
-      }
-      const pitches = [...set].sort((a, b) => a - b);
-      assignFor = (lengths) => assignPitchesFromList(pitches, lengths);
-    } else {
-      // Root: seed-derived unless the rootNote param picks a fixed class.
-      const rootIdx = ROOT_NOTES.indexOf(params.rootNote) - 1;
-      const root = rootIdx >= 0 ? rootIdx : params.seed % 12;
-      assignFor = (lengths) =>
-        assignPitches(
-          params.pitchSpace,
-          params.octaves,
-          root,
-          lengths,
-          params.tonicEmphasis
-        );
-    }
-    if (scene.walkGraph) {
-      audioAssign = assignFor(scene.walkGraph.edges.map((e) => e.length));
-      audioRuns = new Map();
-      audioSegSite = scene.walkGraph.edges.map((e) => ({
-        chain: e.chain,
-        ctrl: (e.ctrlA + e.ctrlB) / 2,
-      }));
-      for (const e of scene.walkGraph.edges) {
-        let list = audioRuns.get(e.chain);
-        if (!list) {
-          list = [];
-          audioRuns.set(e.chain, list);
-        }
-        list.push({ c0: e.ctrlA, c1: e.ctrlB, seg: e.id });
-      }
-    } else {
-      audioAssign = assignFor(scene.ps.chains.map((c) => c.length));
-      audioRuns = null;
-      audioSegSite = scene.ps.chains.map((c, i) => ({
-        chain: i,
-        ctrl: Math.floor(c.length / 2),
-      }));
-    }
-    nextRandomPluck = 0;
-    songSched.reset();
-    synth.cancelScheduled();
-  }
-
-  // The walk run (fabric) holding a chain ctrl, or null (knot mode, or a
-  // decorative chain outside the walk graph).
-  function runForCtrl(
-    chain: number,
-    ctrl: number
-  ): { c0: number; c1: number; seg: number } | null {
-    if (!audioRuns || !scene.ps) return null;
-    const list = audioRuns.get(chain);
-    if (!list) return null;
-    const len = scene.ps.chains[chain].length;
-    for (const r of list) {
-      if (
-        (ctrl >= r.c0 && ctrl <= r.c1) ||
-        (ctrl + len >= r.c0 && ctrl + len <= r.c1)
-      ) {
-        return r;
-      }
-    }
-    return null;
-  }
-
-  // Pitch of the segment at a chain ctrl. Chains outside the walk graph
-  // (decorative culled loops) hash onto the assignment.
-  function freqForCtrl(chain: number, ctrl: number): number {
-    if (!audioAssign || !scene.ps) return 220;
-    const n = audioAssign.segFreq.length;
-    if (n === 0) return 220;
-    if (!audioRuns) return audioAssign.segFreq[chain % n];
-    const list = audioRuns.get(chain);
-    if (!list || list.length === 0) return audioAssign.segFreq[chain % n];
-    const r = runForCtrl(chain, ctrl);
-    return audioAssign.segFreq[(r ?? list[0]).seg];
-  }
-
-  // What a pluck at a chain ctrl sets ringing (the pluckReach param):
-  // the whole walk run (capped at RUN_REACH lobes each side) - exactly the
-  // segment the audio sounds - or, in knot mode and off the walk graph,
-  // the plucked lobe +-LOBE_REACH; "lobe" = only the plucked lobe.
-  function pluckUnit(
-    chain: number,
-    ctrl: number
-  ): { spanCtrl: [number, number] | null; reach: number } {
-    if (params.pluckReach === "lobe") return { spanCtrl: null, reach: 0 };
-    const r = runForCtrl(chain, ctrl);
-    if (r) return { spanCtrl: [r.c0, r.c1], reach: RUN_REACH };
-    return { spanCtrl: null, reach: LOBE_REACH };
   }
 
   const panel = buildPanel(params, settings, {
@@ -3485,7 +3364,7 @@ async function main(): Promise<void> {
       // K279: on the synth's auto bus (autoPluckGain).
       synth.pluck(freq, amp, when, true);
     }
-    const site = audioSegSite[seg];
+    const site = audioMap.audioSegSite[seg];
     if (!site) return;
     const chainArr = scene.ps.chains[site.chain];
     if (!chainArr || chainArr.length === 0) return;
@@ -3537,22 +3416,22 @@ async function main(): Promise<void> {
   }> = [];
   const autoAudioTick = (): void => {
     if (!scene.ps) return;
-    if (!audioAssign || settings.muted) {
+    if (!audioMap.audioAssign || settings.muted) {
       synth.cancelScheduled();
       return;
     }
     const nowS = performance.now() / 1000;
     if (params.soundMode === "random") {
-      if (nextRandomPluck === 0) nextRandomPluck = nowS + 0.8;
-      if (nowS >= nextRandomPluck) {
-        nextRandomPluck =
+      if (audioMap.nextRandomPluck === 0) audioMap.nextRandomPluck = nowS + 0.8;
+      if (nowS >= audioMap.nextRandomPluck) {
+        audioMap.nextRandomPluck =
           nowS + (0.45 + Math.random() * 1.75) / Math.max(0.1, params.soundSpeed);
-        const n = audioSegSite.length;
+        const n = audioMap.audioSegSite.length;
         if (n > 0) {
           const seg = Math.floor(Math.random() * n);
           triggerAutoPluck(
             seg,
-            audioAssign.segFreq[seg] ?? 220,
+            audioMap.audioAssign.segFreq[seg] ?? 220,
             0.4 + Math.random() * 0.35
           );
         }
@@ -3577,7 +3456,7 @@ async function main(): Promise<void> {
         if (songLog.length > 64) songLog.shift();
         if (!row.note) continue;
         const f = noteToFreq(row.note);
-        const segs = segmentsNear(audioAssign, f);
+        const segs = segmentsNear(audioMap.audioAssign, f);
         if (segs.length > 0 && Number.isFinite(f)) {
           // The song's true pitch plays; the matching segment moves.
           triggerAutoPluck(
@@ -3590,7 +3469,7 @@ async function main(): Promise<void> {
         }
       }
     } else {
-      nextRandomPluck = 0;
+      audioMap.nextRandomPluck = 0;
       songSched.reset();
       synth.cancelScheduled();
     }
