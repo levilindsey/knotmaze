@@ -4,6 +4,7 @@ paths:
   - "src/ui/head_indicator.ts"
   - "test/ui/offscreen_indicators.test.ts"
   - "test/ui/head_indicator.test.ts"
+  - "src/app/frame_loop.ts"
 ---
 
 # Gameplay lore: off-screen indicators

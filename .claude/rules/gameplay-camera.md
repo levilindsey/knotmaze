@@ -4,6 +4,7 @@ paths:
   - "src/app/camera.ts"
   - "src/ui/view_clamp.ts"
   - "test/ui/view_clamp.test.ts"
+  - "src/app/frame_loop.ts"
 ---
 
 # Gameplay lore: camera, gestures and taps

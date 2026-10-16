@@ -5,6 +5,7 @@ paths:
   - "src/render/background_shaders.ts"
   - "test/render/background_model.test.ts"
   - "test/render/background_shaders.test.ts"
+  - "src/app/frame_loop.ts"
 ---
 
 # Render lore: shader backgrounds (K21)
