@@ -276,10 +276,10 @@ Next free ID: K477.
 - **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
   stub, its rounded cap included (2026-10-15 13:39, `?2gozcj.MgaM`, `.claude/probes/K397/levi_1339.png`).
   With K397's truncated dots and Levi's rule that a pluck sound shows the pluck effect (`docs/design/K459.md`).
-  - owner: agent `a21ef2f5cb56d9def` of claude session 05e60da0 (opus, started 2026-10-15 15:02, 2 h cap ~17:02)
-  - branch: `worktree-agent-a21ef2f5cb56d9def`, worktree `.claude/worktrees/agent-a21ef2f5cb56d9def`; last commit: `6c6e4ad`
+  - owner: nobody since 2026-10-15 16:30 (merged; agent `a21ef2f5cb56d9def` of claude session 05e60da0)
+  - branch: mainline; last commit: `3c92598`
   - evidence: `.claude/probes/K459/`
-  - next: running: (1) K397's truncated dots, (2) the stub's pluck to its rounded cap, (3) Levi's rule that a pluck sound shows the pluck effect (the audit); at its finish merge it
+  - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii); silence main.ts `tapPluck` on every `!drawn`; check the free cap on the phone (`docs/design/K459.md`, Handoff)
   - brief: `docs/design/K459.md`
 - **K465** · Thread reveal: show the finish marker and its off-screen indicator by default (Levi
   2026-10-15 15:49); K76 decision 6 hides both until the exit's thread is seen (drawMarkers, main.ts
