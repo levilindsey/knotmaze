@@ -121,5 +121,6 @@ files.
   Reduced motion. Under fog, a soft hole at each burning front (0.75 of
   the stamp radius; the fog redraws when one moves 0.3 world). Under the
   thread reveal a front it does not show draws nothing and emits nothing
-  (Levi accepted). RESIDUAL: the ember itself did not show on the GPU in
-  3b's probes; char, smolder and the FX did.
+  (Levi accepted). The lit fuse's ember first sat under the start disc
+  (a world length used as a lattice distance); `runOut` places it in
+  world terms (render-explore.md, THE EMBER DRAWS).

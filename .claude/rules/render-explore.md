@@ -552,8 +552,10 @@ plus the `burn` FX. Brief and record: `docs/design/K114_burn.md`, "Stage
   `FabricMazeRenderer.drawFire` builds them: a front for each burnt
   stretch `runBurnAt` pairs with one (`front[i]`; from the va end the
   unburnt side lies toward vb); while `L <= fire.delay` none of those,
-  but a kind-1 front on each of the start's runs at min(len / 2, marker
-  radius + FIRE_FUSE_OUT 1.0 thread width); smolder on each smoldering
+  but a kind-1 front on each of the start's runs where the thread first
+  lies marker radius + FIRE_FUSE_OUT 1.0 thread width (world) from the
+  start disc's center (`runOut`: FIRE_FUSE_STEP 0.1 lattice samples,
+  refined linearly, at most half the run); smolder on each smoldering
   choice from the head to its first burnt stretch, only at rest in a
   live race (no move, not solved, not lost). Fronts or smolder alone put
   explore on (`burnOnlyPieces`), as burnt spans do.
@@ -586,14 +588,23 @@ plus the `burn` FX. Brief and record: `docs/design/K114_burn.md`, "Stage
   (`fogFireLights`, FIRE_FOG_LIGHT 0.75 of the stamp radius, in
   renderFog); the fog redraws only when a light appears, goes, or moves
   FIRE_FOG_LIGHT_STEP 0.3 world.
-- RESIDUAL: THE EMBER DID NOT SHOW ON THE GPU in the 3b probes (the lit
-  fuse at load, fronts re-declared by hand at several ctrls and kinds,
-  `.claude/probes/K290/stage3b/ember_px.mjs`, `fuse_diag.mjs`), though
-  the KPAINT mirror holds the FRONT items in the fuse chain's slot refs
-  and the chain flag reads (1, 1) (`ember_read.mjs`). Unchecked suspects:
-  uKExplore.x at the fuse (exHere false), the whole-chain path, and a
-  re-declaration while asleep that never re-renders. Char, smolder and
-  the FX did show.
+- THE EMBER DRAWS; THE LIT FUSE HID UNDER THE START DISC (2026-10-15).
+  3b's first probes found no ember. A TEMPORARY debug view (a dev-server
+  edit of EXPLORE_MAIN_GLSL, never committed: uKBase.z 7 writes
+  (kCharAt, kFireEmber, kFireSmolder) as RGB and returns) showed injected
+  kind-0 fronts at c 12 and 20 where the CPU points put them
+  (`ember_dbg2.mjs`, `ember_dbg3.mjs`, seed 7). Under char, a glowing
+  band at the char's end in normal colors; under gone, the ember's
+  behind part lies on gone thread, so only a rim at the cut end shows.
+  The lit fuse used the world sum (marker radius + thread width) as a
+  run's LATTICE distance (a lattice unit is about 0.65 world at seed 7's
+  entrance), so its ember centered at 731 px against the disc's rim at
+  733 (c 1.54). `runOut` fixed it: c 2.55, the ember at 746-757 px, partly
+  under the burn FX's smoke. PROBE GOTCHA: the fabric re-declares its
+  stored burn on every update() (`syncExplore`), so a probe that injects
+  fronts through `setExplore` first sets `F.syncExplore = () => {}` and
+  `F.drawFire = () => {}` (`F = __knotFabricRenderer()`); inferred to
+  have hidden the earlier injections, not re-run.
 - MEASURED (desktop RX 6800 XT, D3D11, under the perf lock;
   `.claude/probes/K290/stage3b/`): fire off, branch ef7f08b against
   21d701e (master's src; 3a's `k290_ab.mjs ab`, same link and pins):
