@@ -92,6 +92,7 @@ try {
     const wall = num(/wall (\d+(?:\.\d+)?)s/);
     const lag = settle ? settle.lagS : num(/settle lag (\d+(?:\.\d+)?)s/) ?? 0;
     const asleep = perf ? perf.asleep : /asleep/.test(stamp);
+    const loop = window.__knotLoop?.() ?? null;
     return {
       gpu: gl
         ? ext
@@ -120,7 +121,16 @@ try {
         d.sort((a, b) => a - b);
         const q = (p) =>
           d.length ? +d[Math.min(d.length - 1, Math.floor(d.length * p))].toFixed(1) : null;
-        return { n: t.length, medianMs: q(0.5), p95Ms: q(0.95), maxMs: q(1) };
+        // K6-3: a stopped on-demand loop is idle, not throttled - its own
+        // rAF timestamps keep arriving from this script's loop either way.
+        return {
+          n: t.length,
+          medianMs: q(0.5),
+          p95Ms: q(0.95),
+          maxMs: q(1),
+          idle: loop?.stopped === true,
+          loopMode: loop?.mode ?? null,
+        };
       })(),
     };
   });

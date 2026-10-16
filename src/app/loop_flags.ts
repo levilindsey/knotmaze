@@ -77,6 +77,21 @@ export function flagNames(mask: number): FlagName[] {
 export const NEED_EVENT = 1;
 export const NEED_AMBIENT = 2;
 
+// K6-3: the loop's mode. "ondemand" skips the draw, cadences ambient-only
+// frames and stops the ticker when quiet; "continuous" is today's
+// every-frame loop (probes that time frames ask for it).
+export type LoopMode = "ondemand" | "continuous";
+
+// True when a mask's visual flags are all ambient (the rest cadence's
+// frames), and when a mask carries any work at all (visual, or AUDIO:
+// an audio-only frame draws nothing but must still tick).
+export const ambientOnly = (mask: number): boolean => {
+  const v = mask & VISUAL;
+  return v !== 0 && (v & ~AMBIENT) === 0;
+};
+export const hasWork = (mask: number): boolean =>
+  (mask & (VISUAL | Flag.AUDIO)) !== 0;
+
 // One frame's observations beside the masks (the report's observer).
 // K6-2 deleted the legacy sceneAnimating()/root-move observer; what
 // remains is sceneActive itself and the unflagged-step check.
@@ -94,7 +109,7 @@ export interface PerFlag {
 }
 
 export interface LoopReport {
-  mode: "shadow";
+  mode: LoopMode;
   frames: number;
   now: FlagName[]; // the open frame's need so far (carried polls | pushes)
   last: FlagName[]; // the last closed frame's need
@@ -123,6 +138,10 @@ export interface LoopReport {
 export const RING = 240;
 
 export class LoopFlags {
+  // K6-3: the loop's mode (the frame loop owns it; report() reads it), and
+  // a wake hook the frame loop installs: any push restarts a stopped ticker.
+  mode: LoopMode = "ondemand";
+  onPush: (() => void) | null = null;
   // Pushes since the last frame closed.
   private pushedBits = 0;
   // The polls read at the end of the last frame, carried into the open one
@@ -156,6 +175,7 @@ export class LoopFlags {
     bits &= ALL_FLAGS;
     this.pushedBits |= bits;
     for (let i = 0; i < FLAG_COUNT; i++) if (bits & (1 << i)) this.pushCounts[i]++;
+    if (bits !== 0) this.onPush?.();
   }
 
   // A note for the NEXT frame: a change made after this frame's geometry
@@ -270,7 +290,7 @@ export class LoopFlags {
       recentPush.push(v >>> 16);
     }
     return {
-      mode: "shadow",
+      mode: this.mode,
       frames: this.frameCount,
       now: flagNames(this.need),
       last: flagNames(this.lastNeedBits),

@@ -154,6 +154,9 @@ export interface ProbeCtx {
   readonly revealMsTotal: number;
   readonly sceneWasAnimating: boolean;
   readonly loopHalted: boolean;
+  // K6-3: the frame loop's stopped state and its continuous switch.
+  readonly loopStopped: boolean;
+  setLoopContinuous(on: boolean): void;
   readonly turnWait: number;
   // main()'s `let`s the hooks also write: get/set pairs (written by several
   // regions, so main.ts keeps them until their owners move).
@@ -909,8 +912,9 @@ export function installProbeHooks(ctx: ProbeCtx): void {
   let tracker: LoopTracker | null = null;
   let lastTrack: TrackReport | null = null;
   (window as unknown as Record<string, unknown>).__knotLoop = (
-    o: { reset?: boolean; track?: boolean } = {}
+    o: { reset?: boolean; track?: boolean; continuous?: boolean } = {}
   ) => {
+    if (typeof o.continuous === "boolean") ctx.setLoopContinuous(o.continuous);
     if (o.reset) {
       ctx.loopFlags.reset();
       tracker?.reset();
@@ -924,6 +928,7 @@ export function installProbeHooks(ctx: ProbeCtx): void {
     return {
       ...ctx.loopFlags.report(),
       halted: ctx.loopHalted,
+      stopped: ctx.loopStopped,
       track: tracker ? tracker.report() : lastTrack,
     };
   };

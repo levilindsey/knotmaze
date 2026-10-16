@@ -44,7 +44,10 @@ export const CAM_MAX_DT = 1;
 // K6-1: converged()'s thresholds, the motion left: screen px, and log
 // scale (1e-5 moves a point 1000 px from the origin by 0.01 px).
 const CONVERGED_PX = 0.01;
-const CONVERGED_LOG = 1e-5;
+// K6-3: the scale test is screen-aware: a relative scale error e moves a
+// screen point by e x its distance from the root's origin, which at
+// MAX_ZOOM sits thousands of px off screen (K6-1's two UNDER frames). The
+// lever is that distance's maximum over the screen's corners.
 
 // What the camera reads from main(), each assigned once.
 export interface CameraDeps {
@@ -423,7 +426,8 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     if (
       Math.abs(fitTarget.x - fitCur.x) * view.zoom < CONVERGED_PX &&
       Math.abs(fitTarget.y - fitCur.y) * view.zoom < CONVERGED_PX &&
-      Math.abs(fitTarget.scale - fitCur.scale) < CONVERGED_LOG * fitCur.scale
+      (Math.abs(fitTarget.scale - fitCur.scale) / fitCur.scale) * leverPx() <
+      CONVERGED_PX
     ) {
       fitCur.scale = fitTarget.scale;
       fitCur.x = fitTarget.x;
@@ -502,13 +506,26 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
 
   // K6-1, the frame loop's CAMERA poll: has the camera stopped? False while
   // updateCamera would still move the root by CONVERGED_PX or more (a
-  // scale by CONVERGED_LOG), next frame or over the fit's ease: a tween,
+  // scale in screen px), next frame or over the fit's ease: a tween,
   // the reset's homing, the
   // panel's tween (or a panel that changed since the last frame), the pan
   // range's ease, the fit's ease toward a FRESH target (computed here, not
   // the every-third-frame one), or the follow spring off its target or
   // still moving. A follow camera held off by a recent gesture is not
   // converged while it is off its target: the spring will move it later.
+  const leverPx = (): number => {
+    const w = app.screen.width;
+    const h = app.screen.height;
+    const ox = root.position.x;
+    const oy = root.position.y;
+    return Math.max(
+      1,
+      Math.hypot(ox, oy),
+      Math.hypot(w - ox, oy),
+      Math.hypot(ox, h - oy),
+      Math.hypot(w - ox, h - oy)
+    );
+  };
   const fitScratch = { scale: 1, x: 0, y: 0 };
   const followScratch = new Float64Array(2);
   const converged = (): boolean => {
@@ -527,7 +544,8 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
       return (
         Math.abs(fitScratch.x - fitCur.x) * z < CONVERGED_PX &&
         Math.abs(fitScratch.y - fitCur.y) * z < CONVERGED_PX &&
-        Math.abs(fitScratch.scale - fitCur.scale) < CONVERGED_LOG * fitCur.scale
+        (Math.abs(fitScratch.scale - fitCur.scale) / fitCur.scale) * leverPx() <
+        CONVERGED_PX
       );
     }
     let ts = fitScratch.scale;
@@ -540,10 +558,10 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     }
     const s = cam.s;
     return (
-      Math.abs(Math.log(s) - Math.log(ts)) < CONVERGED_LOG &&
+      Math.abs(Math.log(s) - Math.log(ts)) * leverPx() < CONVERGED_PX &&
       Math.abs(cam.cx - tx) * s < CONVERGED_PX &&
       Math.abs(cam.cy - ty) * s < CONVERGED_PX &&
-      Math.abs(cam.vl) / 60 < CONVERGED_LOG &&
+      (Math.abs(cam.vl) / 60) * leverPx() < CONVERGED_PX &&
       (Math.abs(cam.vx) * s) / 60 < CONVERGED_PX &&
       (Math.abs(cam.vy) * s) / 60 < CONVERGED_PX
     );

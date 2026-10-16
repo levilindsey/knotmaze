@@ -113,3 +113,31 @@ handoff); `render.md` lists the area's other files.
 - **Probe hook:** `__knotLoop()` (probes.md, K6-1). Unarmed it costs the
   bit accounting and the polls; armed (`{track: true}`) it reads the whole
   framebuffer every frame, so timings taken while armed are void.
+- **K6-3 (= K24): the draw and the ticker.** Pixi's auto-render is off
+  (`app.ticker.remove(app.render, app)` in `start()`); `onTick` calls
+  `app.render()` itself only when the frame's closed need is visual.
+  Ambient-only needs (FLOW, PAINT_AMBIENT, BACKGROUND) run the whole tick
+  at 30 fps with the accumulated dt (the cadence replaces restFrame's
+  flowParity: the flow pass runs on every cadence tick), and off-cadence
+  rAFs return without counting a frame. Two workless frames in a row (no
+  VISUAL, no AUDIO - an audio-only frame must still tick the auto sound's
+  wall clock) stop the ticker; the last change is drawn by then. Any
+  `flags.push` restarts it (`LoopFlags.onPush`, installed by the loop:
+  input, invalidate, wake, a confetti burst's new OVERLAY push), as does
+  `__knotLoop({continuous: true})` or the pre-load global
+  `window.__knotLoopMode = "continuous"` (continuous = every frame drawn,
+  never stopped, `report().mode` says which). While stopped, a 250 ms
+  idle timer refreshes the stamp (DOM only) and re-reads the polls,
+  catching what no push can (the background's next drift pass, a worker
+  "tugged" clearing `host.asleep`, timed audio). Wall-clock safety: the
+  camera's follow delay / tween hold hold CAMERA (converged() is false
+  off-target or mid-tween, its scale test now screen-aware via the
+  corner lever `leverPx()`), key holds and waiting moves hold GAME, the
+  fire's FX (dt-based since K6-2) hold PAINT. Fabric at defaults is NOT
+  ambient-only while the auto sound rings plucks (OVERLAY every frame);
+  with `snd=none` it cadences at ~28-30 ticks/s. Measured on the desktop
+  (`.claude/probes/K6/K6-3/`): knot fw=0 at rest went from 224 frames /
+  48.5 ms of callback in 4 s to 0 / 0 (stopped), the pinned same-state
+  A/B stayed 0 px on knot, fabric, fog and threads, and k7_frames' drag
+  stayed at 55.8 fps / cb p50 13.5 ms. The phone pass is K156's next
+  round (the cadence's pulse smoothness is Levi's question 1 check).
