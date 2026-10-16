@@ -27,6 +27,8 @@ import {
   keyDirOf,
   pickHold,
   pickMove,
+  queuedPressHeld,
+  tapWhileMoving,
   waitKeyOf,
 } from "./ui/key_moves";
 import type { Departure, KeyDir, LastPress, WaitingMove } from "./ui/key_moves";
@@ -34,6 +36,7 @@ import { MOVE_PAD_KEY, MovePad, movePadPref } from "./ui/move_pad";
 import { MinotaurChase } from "./game/minotaur";
 import type { ChaseEvent } from "./game/minotaur";
 import { TurnMinotaur, turnConfig, turnSeed } from "./game/minotaur_turns";
+import { firstSmolderIndex, planRoute, routeWarning } from "./game/route_plan";
 import { BackgroundLayer } from "./render/background";
 import { accentHexes, backgroundColors } from "./render/background_model";
 import {
@@ -405,6 +408,15 @@ async function main(): Promise<void> {
   // tickFire while the race runs; a rebuild and restartSolve reset it.
   const fireClock = new FireClock();
   const realtimeFire = (): boolean => scene.fabricController?.fire?.clock === "realtime";
+  // K480 (stage 1): a multi-run tap's route still to walk (the run in
+  // flight is not in it), the solve it belongs to, the real-time chase's
+  // route tail, and whether the last moveAlong move started the turn
+  // minotaur hunting (the stop rules read them; the machinery is below,
+  // by handleFabricTap).
+  let routeRuns: number[] = [];
+  let routeFc: FabricMazeController | null = null;
+  let chaseRoute: number[] = [];
+  let moveHuntWas = false;
   // The physics host (`host`) is made before app.init (K7 stage 5's start
   // gate, above).
   // K5 M4: the scene `let`s (ps, the renderers, the walk graph, the fabric,
@@ -1904,6 +1916,9 @@ async function main(): Promise<void> {
     // have turned the fire on or off, or moved its speed or delay).
     if (scene.fabricController) scene.fabricController.fire = fireOf(scene.fabricController.walk);
     scene.fabricController?.reset();
+    routeRuns = [];
+    routeFc = null;
+    chaseRoute = [];
     scene.fabric?.cancelMove();
     scene.fabric?.clearYarn();
     pendingWin = false;
@@ -1921,13 +1936,34 @@ async function main(): Promise<void> {
   // off along it on its next tick. Returns true when the tap was taken.
   const handleChaseTap = (x: number, y: number, pt: string): boolean => {
     if (!scene.chase || !scene.fabric || !scene.fabricController) return false;
-    return chaseAlong(
-      scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(pt, true))
+    const eid = scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(pt, true));
+    if (eid >= 0) return chaseAlong(eid);
+    // K480 (decision 6): a tap past the choices queues its whole route
+    // with the chase, run by run (tickChase feeds the next as each
+    // departs); a newer tap or key replaces it. No warning stops in
+    // real time.
+    const t = scene.fabric.targetAt(
+      x,
+      y,
+      scene.fabricController,
+      pickRadius(pt, true),
+      tapReach()
     );
+    if (!t) return false;
+    const route = planRoute(
+      scene.fabricController.walk,
+      scene.chase.decisionVertex,
+      { edge: t.eid, at: t.at },
+      tapReach()
+    );
+    if (!route || !chaseAlong(route[0])) return false;
+    chaseRoute = route.slice(1);
+    return true;
   };
   // Queue run `eid` as a tap on it would (K120's keys share it).
   const chaseAlong = (eid: number): boolean => {
     if (!scene.chase || !scene.fabric || !scene.fabricController) return false;
+    chaseRoute = []; // A fresh tap or key replaces a queued route (K480).
     if (eid < 0 || scene.chase.tap(eid) === "reject") return false;
     chaseRunning = true;
     if (scene.fabric.setHover(-1)) scene.fabric.update(scene.fabricController);
@@ -1961,6 +1997,12 @@ async function main(): Promise<void> {
           );
           // The finish is the exit tail's far end: the banner waits for it.
           if (result === "win") pendingWin = true;
+          // K480: feed a multi-run tap's next run to the chase as this
+          // one departs (it leaves on arrival, from its far vertex).
+          if (chaseRoute.length > 0 && scene.chase) {
+            if (scene.chase.tap(chaseRoute[0]) === "reject") chaseRoute = [];
+            else chaseRoute.shift();
+          }
           updateHud();
         } else if (ev.kind === "caught") {
           // K273: a catch that resets the level is the level restart, the
@@ -1972,6 +2014,7 @@ async function main(): Promise<void> {
             showCaughtToast(liveMino()?.catches ?? 1, true);
             break;
           }
+          chaseRoute = [];
           fc.markCaught();
           fc.respawn(params.minoRefog);
           scene.fabric.stopMove();
@@ -2334,9 +2377,110 @@ async function main(): Promise<void> {
     }
   }, 250);
 
+  // K480 (stage 1; game/route_plan.ts, design docs/design/K480.md): a tap
+  // on any shown run within the pulseReach arc of the head walks there
+  // run by run. tapReach is handRendererLook's reach (under the thread
+  // reveal the pulses - and so the taps - stop at the reveal distance).
+  const tapReach = (): number =>
+    params.mazeFabric && params.exploration === "threads"
+      ? Math.min(params.pulseReach, params.revealDistance)
+      : params.pulseReach;
+  const clearRoute = (): void => {
+    routeRuns = [];
+    routeFc = null;
+  };
+  // The turn minotaur's telegraph in walk terms (its steps are walk-edge
+  // ids; its vertices are chase indices, ids[] maps them back).
+  const teleOf = (): { edges: number[]; verts: string[] } => {
+    if (!scene.turnMino) return { edges: [], verts: [] };
+    const t = scene.turnMino.telegraph();
+    if (!t) return { edges: [], verts: [] };
+    const ids = scene.turnMino.tg.chase.ids;
+    return {
+      edges: t.steps.map((s) => s[0]),
+      verts: [...t.steps.map((s) => ids[s[1]]), ids[t.dest]],
+    };
+  };
+  // Walk the route's next run, as a tap on it. A turn-clock smolder stops
+  // the route before the run, with the tap's toast; a real-time refusal
+  // (tested at its departure clock) ends it the same way, in moveAlong.
+  const executeRouteRun = (): void => {
+    const fc = scene.fabricController;
+    if (!fc || routeRuns.length === 0) return;
+    const eid = routeRuns[0];
+    if (fc.fire?.clock === "turn" && fc.smoldering(eid)) {
+      clearRoute();
+      smolderToast();
+      return;
+    }
+    routeRuns.shift();
+    const taps0 = fc.taps.length;
+    const catches0 = liveMino()?.catches ?? 0;
+    moveAlong(eid);
+    if (
+      fc.solved ||
+      fc.fireLost ||
+      (liveMino()?.catches ?? 0) !== catches0 ||
+      fc.taps.length === taps0
+    ) {
+      clearRoute();
+    }
+  };
+  // Take a planned route (issued while stationary; a tap mid-move is
+  // ignored, below): the first run now, the rest one per arrival.
+  const startRoute = (route: readonly number[]): boolean => {
+    if (!scene.fabricController || route.length === 0) return false;
+    moveWait.clear();
+    routeRuns = [...route];
+    routeFc = scene.fabricController;
+    if (dotMoving()) return false; // Issued at rest only (the caller's tap).
+    executeRouteRun();
+    return true;
+  };
+  // Every frame on arrival (keyStep, after a waiting input - a newer tap
+  // or key replaces the route): the stop rules (game/route_plan.ts).
+  // True while a route is in charge of the next move.
+  const routeStep = (): boolean => {
+    if (routeRuns.length === 0) return false;
+    const fc = scene.fabricController;
+    if (!fc || fc !== routeFc || scene.chase) {
+      clearRoute();
+      return false;
+    }
+    if (dotMoving()) return true;
+    if (fc.solved || fc.fireLost || pendingWin || pendingLoss) {
+      clearRoute();
+      return false;
+    }
+    const tele = teleOf();
+    const smolderAt =
+      fc.fire?.clock === "turn"
+        ? firstSmolderIndex(fc.walk, fc.fire, fc.walkedDist, fc.head, routeRuns)
+        : -1;
+    const warn = routeWarning({
+      huntWas: moveHuntWas,
+      huntIs: scene.turnMino?.hunting ?? false,
+      walk: fc.walk,
+      head: fc.head,
+      remaining: routeRuns,
+      teleEdges: tele.edges,
+      teleVertices: tele.verts,
+      smolderAt,
+    });
+    if (warn) {
+      if (warn === "smolder") smolderToast();
+      clearRoute();
+      return true;
+    }
+    executeRouteRun();
+    return true;
+  };
+
   // Fabric maze: a tap on a run incident to the current branch point is a
   // move (advance or backtrack); anywhere else falls through to grab/tug,
   // which stays live in fabric mode. Returns true when the tap was a move.
+  // K480: a tap on a shown run past the branch point walks its route
+  // (targetAt + startRoute); either replaces a route in flight.
   const handleFabricTap = (x: number, y: number, pt: string): boolean => {
     if (!scene.fabric || !scene.fabricController) return false;
     // K80: the real-time mode queues the run with the chase instead.
@@ -2355,14 +2499,25 @@ async function main(): Promise<void> {
     // arms to the runs). K80 turns 3a: through inputWait, so mid-turn it
     // waits for the arrival as a tap on a run does.
     if (inWaitZone(x, y)) return inputWait();
+    // Levi's correction (2026-10-15, over K334): a tap or click on a run
+    // while the dot travels is IGNORED - it queues nothing and replaces
+    // nothing (a route in flight walks on; keys gate on held-at-arrival).
+    if (tapWhileMoving(dotMoving()) === "ignore") return false;
     const eid = scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(pt, true));
-    if (eid < 0) return false;
-    // K334: a tap while the turn is under way (the dot travels, or a wait's
-    // turn plays) waits for the arrival, as a key press does. tapsWait is
-    // on by default; the hook's setTapsWait(false) brings back the snap to
-    // the run's end, for A/Bs. K114 stage 2: the real-time fire always
-    // queues (the dot rides the fire's clock, so it cannot snap).
-    if ((tapsWait || realtimeFire()) && dotMoving()) return queueTap(eid);
+    if (eid < 0) {
+      // K480: a shown run past the branch point, within the reach: walk
+      // its route run by run (a current choice above keeps K479's pick).
+      const t = scene.fabric.targetAt(
+        x,
+        y,
+        scene.fabricController,
+        pickRadius(pt, true),
+        tapReach()
+      );
+      if (!t) return false;
+      return startRoute(t.route);
+    }
+    clearRoute();
     return moveAlong(eid);
   };
   // K114: a refused (smoldering) tap's toast, at most once per 1.5 s (a
@@ -2378,7 +2533,9 @@ async function main(): Promise<void> {
   // share it). Returns true when the move was taken.
   const moveAlong = (eid: number): boolean => {
     if (!scene.fabric || !scene.fabricController) return false;
+    const hunt0 = scene.turnMino?.hunting ?? false;
     const result = scene.fabricController.tapEdge(eid);
+    moveHuntWas = hunt0;
     scene.fabric.setHover(-1);
     // The game state moved instantly; the dot + gold front animate along
     // the thread to catch up. The win banner waits for the arrival.
@@ -2462,9 +2619,9 @@ async function main(): Promise<void> {
   let moveWaitStamp: KeyStamp | null = null;
   // K333: the last lone press that moved at once (absorbsChord).
   let keyLast: LastPress | null = null;
-  // K334 (Levi, 2026-10-14: every input waits, so every move animates): a
-  // tap while the dot travels waits for the arrival too. The hook
-  // `__knotKeyMoves().setTapsWait(false)` brings back the snap, for A/Bs.
+  // Levi's correction (2026-10-15): taps mid-move are ignored and keys
+  // gate on held-at-arrival, so nothing reads a tap-wait switch any
+  // more; the hook's tapsWait stays as a readable legacy flag (no-op).
   let tapsWait = true;
   const keyPt = new Float32Array(2);
   const keyFlow = new Float32Array(2);
@@ -2555,6 +2712,7 @@ async function main(): Promise<void> {
     }
     const before = scene.fabricController.taps.length;
     const caught = scene.turnMino?.catches ?? 0;
+    clearRoute(); // A key (press or hold) replaces a tap's route (K480).
     moveAlong(eid);
     // K80 turns: a move that was caught ends the hold at once (the keys
     // must come up first, as in real time).
@@ -2606,13 +2764,6 @@ async function main(): Promise<void> {
   // nothing waits for it here.
   const dotMoving = (): boolean =>
     !scene.chase && ((scene.fabric?.animating ?? false) || turnWait > 0);
-  // K334: a tap's run while the dot travels waits for the arrival (the
-  // latest press or tap wins). True when it waits.
-  const queueTap = (eid: number): boolean => {
-    if (!moveWait.tap(eid, performance.now(), dotMoving())) return false;
-    moveWaitStamp = keyStamp();
-    return true;
-  };
   // K80 turns 3a: the WAIT from any input - the wait key, the pad's center,
   // a tap on the head (and the probe hook). A press waiting out its chord
   // window goes first (it was pressed first); a wait ends a hold, as a tap
@@ -2625,6 +2776,7 @@ async function main(): Promise<void> {
       takeWaiting(moveWait.takeNow());
     }
     endKeyHold();
+    clearRoute();
     if (!scene.turnMino) return false; // The press before it was caught.
     if (moveWait.wait(performance.now(), dotMoving())) {
       moveWaitStamp = keyStamp();
@@ -2672,6 +2824,7 @@ async function main(): Promise<void> {
       return false;
     }
     const moving = dotMoving();
+    const wasQueued = w.queued; // step() clears it on the object it hands back.
     const due = moveWait.step(now, moving, (d) => chordMatters(keyDepartures(v), d));
     if (due === "wait") {
       // While the dot travels the hover shows what the move takes (a wait
@@ -2687,12 +2840,26 @@ async function main(): Promise<void> {
       }
       return true;
     }
+    // Levi's correction: a press queued mid-move counts only when its
+    // key (both, for a chord) is still held on this arrival frame;
+    // press-and-release before it is discarded.
+    if (
+      due !== null &&
+      !queuedPressHeld(
+        { dirs: due.dirs, at: due.at, queued: wasQueued, edge: due.edge, wait: due.wait },
+        (d) => heldKeys.holds(d)
+      )
+    ) {
+      if (keyHover) setKeyHover(-1);
+      return true;
+    }
     takeWaiting(due);
     return true;
   };
   // Every frame, after the move animation (or the chase) stepped.
   const keyStep = (): void => {
     if (stepWaiting(performance.now())) return;
+    if (routeStep()) return; // K480: a multi-run tap's next run, on arrival.
     if (!keyHold) return;
     const fc = scene.fabricController;
     if (
@@ -2753,6 +2920,29 @@ async function main(): Promise<void> {
     // Arrived: the next run on this same frame (a held key chains with no
     // pause and no snap), or the hold stops here (no match, a tie, a
     // dead-end tip - its only run is the arrival).
+    // K480 (decision 5): a hold stops for the route's warnings too,
+    // judged on the run it would take next (real time has none).
+    if (pick.edge >= 0 && !scene.chase) {
+      const tele = teleOf();
+      const warn = routeWarning({
+        huntWas: moveHuntWas,
+        huntIs: scene.turnMino?.hunting ?? false,
+        walk: fc.walk,
+        head: fc.head,
+        remaining: [pick.edge],
+        teleEdges: tele.edges,
+        teleVertices: tele.verts,
+        smolderAt:
+          fc.fire?.clock === "turn"
+            ? firstSmolderIndex(fc.walk, fc.fire, fc.walkedDist, fc.head, [pick.edge])
+            : -1,
+      });
+      if (warn) {
+        if (warn === "smolder") smolderToast();
+        endKeyHold();
+        return;
+      }
+    }
     if (pick.edge < 0 || !keyMoveAlong(pick.edge)) {
       endKeyHold();
       return;
@@ -3083,7 +3273,8 @@ async function main(): Promise<void> {
       params.mazeFabric &&
       scene.fabric &&
       scene.fabricController &&
-      scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(pt, true)) >= 0
+      (scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(pt, true)) >= 0 ||
+        scene.fabric.targetAt(x, y, scene.fabricController, pickRadius(pt, true), tapReach()) !== null)
     );
   // K145, the hover glow: the run under the pointer lights subtly along
   // both rims. Over a choice (eid >= 0, edgeAt's pick) it lights that run
@@ -3179,6 +3370,7 @@ async function main(): Promise<void> {
           scene.fabric &&
           scene.fabricController &&
           (scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius("touch", true)) >= 0 ||
+            scene.fabric.targetAt(x, y, scene.fabricController, pickRadius("touch", true), tapReach()) !== null ||
             inWaitZone(x, y)) // K80 turns 3a: a tap on the head waits.
         ) {
           pendingTap = { id: e.pointerId, sx: e.clientX, sy: e.clientY, x, y };
@@ -3312,9 +3504,17 @@ async function main(): Promise<void> {
       // pointer cursor, the head's wait cue, no choice lit and no glow.
       const zone = inWaitZone(x, y);
       setWaitCue(zone);
+      // K480: past the choices, the hover lights the run a tap would
+      // finish (targetAt's tapped run; the whole route lights in stage 2).
       const eid = zone
         ? -1
-        : scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius(e.pointerType, true));
+        : (scene.fabric.targetAt(
+            x,
+            y,
+            scene.fabricController,
+            pickRadius(e.pointerType, true),
+            tapReach()
+          )?.eid ?? -1);
       const glow = zone ? scene.fabric.setGlow(-1, 0) : setGlowAt(x, y, eid, e.pointerType);
       if (scene.fabric.setHover(eid) || glow) scene.fabric.update(scene.fabricController);
       app.canvas.style.cursor =

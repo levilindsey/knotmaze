@@ -30,8 +30,8 @@ rules file or its `paths:` change. Not auto-loaded.
   paths: `src/ui/motion.ts`, `test/ui/motion.test.ts`, `src/ui/accessibility.ts`, `test/ui/accessibility.test.ts`, `src/app/frame_loop.ts`, `src/app/lifecycle.ts`
 - `gameplay-camera.md`: the camera round, FIT CAMERA PAN RANGE (K198), taps and drags (the tap tug, K279), TAP PREFERENCE (K479: outgoing runs over the arrival run)
   paths: `src/main.ts`, `src/app/camera.ts`, `src/ui/view_clamp.ts`, `test/ui/view_clamp.test.ts`, `src/app/frame_loop.ts`, `src/game/tap_pick.ts`, `test/game/tap_pick.test.ts`
-- `gameplay-moves.md`: MOVES BY DIRECTION (K120): keys, the picker, the move pad
-  paths: `src/ui/key_moves.ts`, `src/ui/move_pad.ts`, `test/ui/key_moves.test.ts`, `test/ui/move_pad.test.ts`
+- `gameplay-moves.md`: MOVES BY DIRECTION (K120): keys, the picker, the move pad; MULTI-RUN TAPS (K480 stage 1)
+  paths: `src/ui/key_moves.ts`, `src/ui/move_pad.ts`, `test/ui/key_moves.test.ts`, `test/ui/move_pad.test.ts`, `src/game/route_plan.ts`, `test/game/route_plan.test.ts`
 - `gameplay-audio.md`: the audio autoplay gate, AUTO PLUCKS' VOLUME (K279), THE SNORING CAT LINK (K325)
   paths: `src/audio/**`, `test/audio/**`, `src/ui/snore_link.ts`, `test/ui/snore_link.test.ts`
 - `generation.md`: generation: what changes move the dailies, the plan history pointer, engine-exact generation (K108)
