@@ -279,11 +279,41 @@ sectionShader, sectionShaderExplore) and bindGap. K307's
 `program_registry.ts` keys its two programs to that file, and
 `paint_explore.test.ts` slices SECTION_FRAG out of its text.
 `ribbon/sampling.ts`: sampleAt, arcAt, renderCtrl, neighborGaps,
-paintArcAt, sampleAtSafe and PassNeighbors. Still on the façade:
-buildPoly, polyDist and protectReach (to `crossing_gaps.ts` with
-computeGapSlot, R2); samePieces, sameBurn and sameSpans (to
-`explore_gaps.ts`, R2); knotChainRgb and hslToHex (to `paint_state.ts`
-with recolor, R3); arcForCtrl (stays); and the G3-0 probe hooks
-(g3DataState, g3TableRows, g3Expected, captureScene, restoreScene),
-which 2.3 does not place. K299's ring-lap scan reads `src/render/`
-recursively, so the parts stay under its review.
+paintArcAt, sampleAtSafe and PassNeighbors. K299's ring-lap scan reads
+`src/render/` recursively, so the parts stay under its review (since
+R2 it names both gap parts' files).
+
+WHERE THINGS ARE (R2, 2026-10-15; `docs/design/K5_R2.md`; each file's
+header maps its members to their old lines).
+- `ribbon/crossing_gaps.ts` (`CrossingGaps`, the façade's `crossing`):
+  the slot solve (computeGapSlot, twinNeighbor, buildPoly, polyDist,
+  protectReach and their scratch), the emergent pool (renderEmergent),
+  renderMarkerGaps, assignGapIds with G3-0's RANGES, and the gap
+  constants. GATE_LEAD, CUT_BIAS, EMERGENT_POOL, MARKER_SLOTS and
+  JOINT_CLEAR_REACH_SCALE are exported from there.
+- `ribbon/explore_gaps.ts` (`ExploreGaps`, `explore`): the reveal's
+  declaration (setExplore, setExploreContrast, samePieces, sameBurn,
+  sameSpans), the gap gate (applyExploreGaps, exploreCutAt), the joint
+  gate (syncExploreJoints, exploreJointShown, exploreGateVisAt,
+  exploreJointsKey, EXPLORE_JOINT_MIN), a pluck's spans
+  (exploreShownSpan, exploreSolidSpan) and the probe views
+  (exploreGapState, exploreJointState).
+- **A name probes use goes through the instance** (`K5_R2.md` Q3).
+  computeGapSlot, assignGapIds, applyExploreGaps, exploreCutAt,
+  exploreJointShown, exploreGateVisAt and exploreShownSpan keep façade
+  delegations, and a part calls them as `this.r.x(...)`, never as its
+  own `this.x(...)`, so a probe's patch on `__knotRenderer()` sees every
+  call (renderEmergent to computeGapSlot, setExplore to
+  applyExploreGaps, and so on). smoothMin, protect, gapMode, gapOverflow
+  and exploreContrast are façade accessors over the parts' fields.
+- **No value import from the façade.** The crossing part reads `G3` and
+  `FILLET_REACH_PER_HALF` through façade getters of those names, so the
+  cycle stays type-only.
+- **Still on the façade.** passInfo and emergentBase (shared scene
+  state); update()'s gap pass, which calls the parts (R2 adds no
+  GapSource `solve()`: R3 or G3-1 does); exploreVisAt, exploreShownAt
+  and exploreOn (the paint and the plucks read them); exploreHideJn and
+  exploreHideFree (rebuildFillets reads them); knotChainRgb and hslToHex
+  (to `paint_state.ts` with recolor, R3); arcForCtrl; and the G3-0 probe
+  hooks (g3DataState, g3TableRows, g3Expected, captureScene,
+  restoreScene), which 2.3 does not place (R5 can home them).

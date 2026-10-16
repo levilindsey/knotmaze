@@ -386,8 +386,8 @@ stays on the façade.
 |---|---|---|---|---|
 | `ribbon/ribbon_shader.ts` | 393-618 (the strip program, sectionShader, sectionShaderExplore, samePieces, bindGap) | the strip program, the bind list | sectionShader, sectionShaderExplore, bindGap | G3-1 extends bindGap; G3-3 deletes the strip program |
 | `ribbon/sampling.ts` | 1384-1645, plus paintArcAt, sampleAtSafe (RR14) and arcForCtrl (RR3) if their callers allow | none (functions of `r`) | sampleAt, sampleAtSafe, buildPoly, polyDist, protectReach, arcAt, paintArcAt, renderCtrl, neighborGaps | reads the hub; G3-0's SAMP rows mirror it |
-| `ribbon/crossing_gaps.ts` | 620-718, RR6 2617-3529 | the solve's scratch, the emergent pool | `GapSource`: `solve(fillHalf, gap)` writes slots and underWindows; renderMarkerGaps; assignGapIds | **G3-1's seam** |
-| `ribbon/explore_gaps.ts` | RR12 4670-4987 | explore state | setExplore, applyExploreGaps, exploreGapState, exploreVisAt, exploreShownAt, exploreJointState, exploreOn | K268, K290 and K76 2d work here |
+| `ribbon/crossing_gaps.ts` | 620-718, RR6 2617-3529 | the solve's scratch, the emergent pool | as landed in R2: computeGapSlot, renderEmergent, renderMarkerGaps, assignGapIds; `GapSource`'s `solve(fillHalf, gap)` (writes slots and underWindows) comes from R3 or G3-1 | **G3-1's seam** |
+| `ribbon/explore_gaps.ts` | RR12 4670-4987 | explore state | as landed in R2: setExplore, setExploreContrast, applyExploreGaps, exploreGapState, exploreJointState, the joint gate, the pluck spans; exploreVisAt, exploreShownAt and exploreOn stayed on the façade (`K5_R2.md` Q2) | K268, K290 and K76 2d work here |
 | `ribbon/reveal_fx.ts` | RR4 1743-2452 (paintMirror and probeTris go with paint if their callers say so) | reveal state, appear FX, the ink frontier | beginReveal, revealMulAtCtrl, revealPin, appearFxAlive, widthMulFor, the gates | - |
 | `ribbon/paint_state.ts` | RR7 3530-3635, RR8 3636-3876, RR11 4386-4669 | spans, rim, routes, section runs, the clocks (accessors on the façade for paintClock and pulseBorn) | setPaint, setRim, setRimAt, setSectionRuns, recolor, tickPaint, advanceClocks, needsFxRender, `paintNeedsFrame()` (new in K6) | where K6's paint poll lives |
 | `ribbon/pluck_host.ts` | RR10 4010-4385 | plucks | pluck, pluckPoint, tugSpan, tickPlucks, makePluckHost, withPluckCollapse, composedAtArc, pluckNodes | invariant 21; G3-2's setCollapse writes radii |
@@ -399,6 +399,22 @@ six pure helpers and PassNeighbors, forwarded from the façade; buildPoly,
 polyDist and protectReach go to `crossing_gaps.ts` (R2), samePieces,
 sameBurn and sameSpans to `explore_gaps.ts` (R2), knotChainRgb and
 hslToHex to `paint_state.ts` (R3); arcForCtrl stays on the façade.
+
+Where things went (R2, `K5_R2.md` questions 1-6, every recommendation
+taken): `crossing_gaps.ts` took buildPoly, polyDist, protectReach,
+twinNeighbor, computeGapSlot, renderEmergent, renderMarkerGaps and
+assignGapIds, and exports the constants another file reads (GATE_LEAD,
+CUT_BIAS, EMERGENT_POOL, MARKER_SLOTS, JOINT_CLEAR_REACH_SCALE; Q4).
+`explore_gaps.ts` took samePieces, sameBurn, sameSpans, setExplore,
+setExploreContrast, the gap gate, the joint gate, the pluck spans and the
+two probe views, and exports EXPLORE_JOINT_MIN. A name probes use keeps a
+façade delegation, and a part calls it through the instance (Q3). Stayed
+on the façade: the G3-0 probe hooks (Q1; R5 can home them), exploreVisAt,
+exploreShownAt and exploreOn (Q2: callers in both parts, the façade and
+the app), and passInfo and emergentBase (Q5: shared scene state). There
+is no `solve()` (Q6): update()'s gap pass interleaves the reveal gate
+(R3's state) with computeGapSlot, so R2's seam is the part's surface as it
+landed, and the GapSource `solve()` comes from R3 or G3-1.
 
 `rebuildFillets` moves **as one method**, with no phase refactor: G4-2
 deletes it, and a refactor would be the riskiest edit in the split for
@@ -753,7 +769,7 @@ Each R stage needs ribbon_renderer.ts to itself for its duration
 | Stage | Moves | Seam | Must precede |
 |---|---|---|---|
 | **R1** | the probe-surface inventory; the part convention; `ribbon_shader.ts`; `sampling.ts`; rules `paths:` gain `src/render/ribbon/**` (render-gaps, render-ribbon, render-shaders) | - | everything |
-| **R2** | `crossing_gaps.ts` (RR6); `explore_gaps.ts` (RR12) | GapSource | G3-1 |
+| **R2** | `crossing_gaps.ts` (RR6); `explore_gaps.ts` (RR12) | the parts' surface as landed (no `solve()`; GapSource's comes from R3 or G3-1, `K5_R2.md` Q6) | G3-1 |
 | **R3** | `reveal_fx.ts` (RR4); `paint_state.ts` (RR7, RR8, RR11) | the paint poll | K6-2 (optional) |
 | **R4** | `pluck_host.ts` (RR10); `strip_pass.ts` (the extrusion, reextrude, RR13) | ThreadPass | G3-2 |
 | **R5** | `joinery.ts` (RR14, RR15), moved whole | JointPass | G4-1 |
