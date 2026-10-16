@@ -282,6 +282,14 @@ Next free ID: K499.
   - next: test the truncated dots' hypothesis (iii), a marker's gap ring biting dot 2, then (i) and (ii) (`docs/design/K459.md`, Handoff); the free cap's checks are K477
   - brief: `docs/design/K459.md`
 
+- **K482 + K483** Â· Desktop panel: label help buttons only on coarse pointers and in the phone sheet (desktop keeps the native title tooltip, one Tab stop per row); the phone sheet font 11 to 13 px in the sheet only (Levi 2026-10-15).
+  - owner: nobody since 2026-10-15 20:02 (muse session 01a14297 hand-off; paused before starting, for the desktop resume)
+  - branch: mainline; last commit: be36622
+  - evidence: .claude/probes/K467/out/sheet/ (on the desktop checkout); no K482 probe yet
+  - next: gate wireHelp in tweakpane_panel.ts to coarse pointers and SHEET_QUERY; sheet font 13 px under SHEET_QUERY only; unit tests, desktop pixel A/B 0 px, sheet check at 411x753; then K485 on the Pixel
+  - brief: docs/design/K467.md (Handoff, Residuals and decisions)
+  - env: dev server on port 5173 (npx vite --host 0.0.0.0 --port 5173 --strictPort)
+
 ## Next, in order
 
 Binding for every stage:
@@ -302,7 +310,7 @@ Binding for every stage:
 
 Running agents are listed under In progress, each with its own next step.
 The queue (coordinator, 2026-10-15 18:15):
-1. Now, if usage allows: K488, then K482 with K483 (Sonnet, 1 h each).
+1. Now: K482 with K483 (Sonnet, 1 h). K488 done (be36622).
 2. After the weekly reset: K480 stage 1 (Opus, 2 h, `docs/design/K480.md`),
    then K481 stage 1 (Opus, 2 h, `docs/design/K481.md`).
 3. Later: K5 R5 (`joinery.ts`) and M5, K463, K471, and K6-2 after M6;
@@ -328,19 +336,6 @@ merged):
 13. K326 A.
 14. K318, K336, K337.
 
-- **K488** · The finish indicator's tap becomes a peek (Levi 2026-10-15, "zoom out in sgtm"): zoom
-  out to frame the exit, hold about 2.5 s, ease back, with a label to match. Today the fit camera
-  frames only the seen thread (the tween ends where it began), the follow camera zooms out too
-  little, and the label says "Tap to bring it into view" (main.ts l.1298). Sonnet, 1 h; its brief
-  is still to write, from `docs/design/K465.md` (Handoff).
-- **K482** · Desktop panel: K467's label help buttons make Tab stop twice per row. Decided (Levi
-  2026-10-15, "whatever's best"): the buttons only on coarse pointers and in the phone sheet;
-  desktop keeps the native `title` tooltip and one Tab stop per row. One Sonnet agent with K483
-  (`docs/design/K467.md` Handoff).
-- **K483** · The phone sheet's font: 11 → 13 px in the sheet only, checked at 411x753 (Levi
-  2026-10-15); rides K482's agent. Then Levi's look on the Pixel (K485): the font, the bar's
-  badge and undo placement, the slider peek, and the replay badge's label, never run
-  (`.claude/probes/K467/out/sheet/`).
 - **K410** · The fire's FRONT and SMOLDER paint items into `paint_math`'s mirror and the parity
   tests, once K409 settles the look (K152 item 3; `K114_burn.md` 3b handoff).
 - **K412** · K7's worker-chunk modulepreload on a real network (measured only on localhost): a
@@ -1265,6 +1260,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K488** Â· The finish indicator's tap became a peek: zoom out to frame the exit, hold 2.5 s, ease back; the label says so. Done in be36622 (2026-10-15).
 - **K496** · Tap preference (K479): Levi kept all three calls as built (the retraced run stays an ordinary choice, a tap inside both ribbons at a crossing goes outgoing, ARRIVAL_BIAS 1.5 for both pointers). Done in 796e158 (2026-10-15).
 - **K492** · Thread reveal ends (K466): Levi kept A (`rvg=bright`, `rve=under`) as the default; B stays opt-in (K494). Done in 554f2af (2026-10-15).
 - **K479** · Taps prefer the outgoing runs (Levi 2026-10-15: taps meant for the next run take the arrival run): in `edgeAt` the arrival run should win only by a clear margin, and the hover must pick what a tap takes. Done in 796e158 (2026-10-15).
