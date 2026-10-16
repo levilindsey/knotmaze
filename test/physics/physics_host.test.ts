@@ -191,6 +191,8 @@ class Lockstep {
     if (!w) throw new Error("worker has no system");
     expect(stateDiff(this.live, w)).toBe("");
     expect(this.worker.core.asleep).toBe(this.host.asleep);
+    // K6-1: the loop's PHYS poll is the host's !asleep.
+    expect(this.host.needsFrame()).toBe(!this.host.asleep);
     expect(mirrorDiff(this.m, this.live)).toBe("");
     expect(this.m.workerAsleep).toBe(this.host.asleep);
     const em = this.live.emergentCrossings;

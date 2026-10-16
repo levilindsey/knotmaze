@@ -134,16 +134,20 @@ describe("WorkerHost on a fake worker", () => {
     port.deliver();
     frame(host);
     port.deliver();
+    expect(host.needsFrame()).toBe(true);
     host.sleep();
     port.deliver();
     expect(host.asleep).toBe(true);
+    expect(host.needsFrame()).toBe(false);
     // A wake whose answer is still in flight: the newest snapshot says
     // asleep but was written before the wake.
     host.wake();
+    expect(host.needsFrame()).toBe(true);
     frame(host);
     expect((host.view as MirrorSystem).workerAsleep).toBe(true);
     expect(host.gateFrame(false)).toBe(false);
     expect(host.asleep).toBe(false);
+    expect(host.needsFrame()).toBe(true);
     port.deliver();
     frame(host);
     expect(host.gateFrame(false)).toBe(false);
@@ -151,8 +155,12 @@ describe("WorkerHost on a fake worker", () => {
     port.core.onMessage({ type: "sleep", gen: host.gen });
     port.deliver();
     frame(host);
+    // K6-1: frames are still wanted until main applies the sleeping
+    // snapshot (the gate's trip, after which the loop notes GEOM).
+    expect(host.needsFrame()).toBe(true);
     expect(host.gateFrame(false)).toBe(true);
     expect(host.asleep).toBe(true);
+    expect(host.needsFrame()).toBe(false);
   });
 
   it("runs in-thread when the worker cannot start, with no rebuild", () => {
@@ -163,6 +171,12 @@ describe("WorkerHost on a fake worker", () => {
     expect(blocked.host.reason).toBe("construct: blocked");
     expect(build(blocked.host)).not.toBeInstanceOf(MirrorSystem);
     expect(blocked.onFallback).not.toHaveBeenCalled();
+    // K6-1: in-thread, needsFrame follows the in-thread host.
+    expect(blocked.host.needsFrame()).toBe(!blocked.host.asleep);
+    blocked.host.sleep();
+    expect(blocked.host.needsFrame()).toBe(false);
+    blocked.host.wake();
+    expect(blocked.host.needsFrame()).toBe(true);
     const none = makeHost(() => {
       throw new Error("no-worker");
     });
