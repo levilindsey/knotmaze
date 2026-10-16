@@ -104,15 +104,9 @@ Next free ID: K454.
 - **K409** · The fire's widths are in ctrl (band 0.7, ember 0.25/0.55), a 2.6x spread; on the phone
   the gone ember is a ~1.7 px rim. Options: world units; ember onto the unburnt side under gone; no
   band under gone; ember over smoke (rec.: all but the third). `K114_burn.md` 3c handoff item 4.
-- **K411** · A phone window for K8's bench (`.claude/probes/K8/stage2/phone6.ps1`: refresh its stale
-  refs, times and preview paths; raise the rest to 90000 ms). The 2026-10-15 window (10:07) ran K7's
-  phone pass and K290 3c's sheet; handed back 11:19. Probes never wake or unlock the phone.
 - **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
   and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
   keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
-- **K449** · K397 stage 2's two looks, for the phone: (1) each fade draws a cap and two spread dots,
-  so long fades and High contrast lose the old row of dots; (2) a tap in a fade plucks the solid
-  stretch beside the solid end: keep that, or sound-only? (`docs/design/K397.md`, Stage 2 handoff)
 
 ## In progress
 
@@ -241,10 +235,10 @@ Next free ID: K454.
 - **K8** · G3: SDF ribbons drawn from one shared sample texture
   (`docs/design/G3G4_sdf_geometry.md`). G3-0 merged (b3917ca..f6d10e3): the four G3
   tables, capture/restore, `scripts/bench_frame.mjs`; no visual change.
-  - owner: nobody since 2026-10-15 08:32 (G3-1's brief merged in 9f1ada2; docs agent `af87cd3a5da750759` of claude session 05e60da0, worktree kept). G3-0's `af653fa7f942f2f1e` (session d8031183) finished; its worktree is left, locked by the live Claude process (K161)
+  - owner: phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 (sonnet, started 2026-10-15 13:48, 1 h cap ~14:48) runs the dense bench at rest (`.claude/probes/K8/stage2/phone6b.ps1`, output `phone6b/`). G3-1's brief merged in 9f1ada2. G3-0's `af653fa7f942f2f1e` (session d8031183) finished; its worktree is left, locked by the live Claude process (K161)
   - branch: mainline; last commit: `f6d10e3` (G3-0)
   - evidence: `.claude/probes/K8/G3-1/` (the brief's texture sizes); `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
-  - next: the phone's dense bench at rest (`phone6.ps1`, its 30000 ms rest raised to 90000); then G3-1 (Opus, 2 h, ports 5960-5969) once K290 3b has merged, R1 and R2 have landed and Levi has answered K399. Lane: R1, R2, G3-1, R3, R4, G3-2, R5; never beside an R stage, K268 item 4, K90 or another GPU measurement; it may run beside K7 or K395. G3G4 §5.2 understates `explore_glsl.ts`'s gap reads (442, 479-483, 499; the brief covers it). G3-2 needs K90's bend decided
+  - next: read the phone agent's dense bench (`phone6b/`); then G3-1 (Opus, 2 h, ports 5960-5969) once K290 3b has merged, R1 and R2 have landed and Levi has answered K399. Lane: R1, R2, G3-1, R3, R4, G3-2, R5; never beside an R stage, K268 item 4, K90 or another GPU measurement; it may run beside K7 or K395. G3G4 §5.2 understates `explore_glsl.ts`'s gap reads (442, 479-483, 499; the brief covers it). G3-2 needs K90's bend decided
   - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1, M2 (`src/app/camera.ts`) and M3
@@ -264,29 +258,29 @@ Next free ID: K454.
   - brief: `docs/design/K114_burn.md`, Stage 3c handoff (item 4: the width facts)
 - **K395** · The pluck blur at a kink loop's tip, on the phone (Levi, 2026-10-15 07:04, after
   K344's fix): a seam from the tip to an edge, and a heart-shaped pinch (a point inside, a dimple outside).
-  - owner: nobody since 2026-10-15 08:38 (stage 1 finished, merged 08:47; agent `ac0d0267cdf7467ec` of claude session 05e60da0, worktree kept)
+  - owner: phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 (sonnet, started 2026-10-15 13:48, cap ~14:48) runs `phone_run.ps1` on the live build; stage 1's agent `ac0d0267cdf7467ec` finished, worktree kept
   - branch: mainline; last commit: `b625853` (the fix is `cd62db6`; tests 1159 green, build clean)
   - evidence: the main checkout's `.claude/probes/K395/` (Levi's screenshot; `out/ab_*/pair_*.png`: pre-K395 left, the fix right; `phone_run.ps1`)
   - next: the phone check after the deploy: Levi plucks a kink loop, or `phone_run.ps1` with the phone awake and unlocked; then Done. CAP_ROUND is K406, the soft "M" K405
   - brief: `docs/design/K395_pluck_loop_tip.md` ("Stage 1 handoff")
   - env: the phone: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
-- **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone,
-  `?2gozcj.MgaM`): stage 2 fixed issues 1, 2, 4 and 5 (092aca0); left is issue 3, the dark U at a
-  tucked tip's root.
+- **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone, `?2gozcj.MgaM`):
+  stage 2 fixed issues 1, 2, 4 and 5 (092aca0); left is issue 3, the dark U at a tucked tip's root. At 13:39
+  (`.claude/probes/K397/levi_1339.png`) truncated dots and issue 3 still show sometimes; the dot vibration is gone.
   - owner: nobody since 2026-10-15 13:04 (stage 2 merged; stage 3 waits for K5 R2's merge, since both edit ribbon_renderer.ts)
   - branch: mainline; last commit: `092aca0`
   - evidence: `.claude/probes/K397/` (stage 1, in the main checkout) and `.claude/probes/K397/stage2/` (stage 2)
-  - next: stage 3 per its brief, launched once K5 R2 merges (find a whole U, attribute it, fix per plan (a), (b) or H1; it also teaches the reveal census the dots' new cut). Then the phone and Levi's link `?2gozcj.MgaM`, and stage 2's unrun pluck checks (the K279 and K344 profiles, a reveal-off pluck A/B)
+  - next: add Levi's 13:39 report (the truncated dots; K459, the vibration to the cap) to the stage 3 brief, then stage 3 per its brief, launched once K5 R2 merges (find a whole U, attribute it, fix per plan (a), (b) or H1; it also teaches the reveal census the dots' new cut). Then the phone and Levi's link `?2gozcj.MgaM`, and stage 2's unrun pluck checks (the K279 and K344 profiles, a reveal-off pluck A/B)
   - brief: `docs/design/K397.md` ("Stage 3 brief")
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K6** · One frame loop driven by what-changed flags
   (`docs/design/K5_K6_split.md`, 4 and 5.4): K6-1, shadow flags, after M3;
   K6-2 (skip CPU work) and K6-3 (= K24, skip the draw) after M6.
-  - owner: brief agent `a1c75e8bc02ef5677` of claude session 05e60da0 (opus, started 2026-10-15 13:13, 1 h cap ~14:13)
-  - branch: `worktree-agent-a1c75e8bc02ef5677`, worktree `.claude/worktrees/agent-a1c75e8bc02ef5677`; last commit: `a1c4179`
-  - evidence: its worktree's `.claude/probes/K6/K6-1/brief/` until the merge
-  - next: the brief agent writes `docs/design/K6_1.md` (K6-1, shadow flags); merge it, then launch K6-1 once K5 M4 has merged (ports 5980-5989)
-  - brief: `docs/design/K5_K6_split.md` (4 and 5.4); K6-1's own `docs/design/K6_1.md` once written
+  - owner: nobody since 2026-10-15 13:48 (K6-1's brief merged in a8514a6; brief agent `a1c75e8bc02ef5677` of claude session 05e60da0 finished, worktree kept)
+  - branch: mainline; last commit: `a8514a6`
+  - evidence: none yet (K6-1's goes in `.claude/probes/K6/K6-1/`)
+  - next: launch K6-1 (Opus, 2 h, ports 5840-5849) from its brief once K5 M4 has merged (its setup needs `src/app/lifecycle.ts`); its seven questions take the brief's recs (coordinator, 2026-10-15)
+  - brief: `docs/design/K6_1.md` (it corrects `docs/design/K5_K6_split.md` 4.3/4.4); parent: K5_K6_split.md (4 and 5.4)
 - **K440** · Real-time fire defaults (K114 s2 item 7). Levi, 2026-10-15 ("yes and yes"): real time
   gets its own pair, 0.2 / 20 (a 1.7 s head start); turn keeps 0.75 / 0; the speed range is
   [0.1, 0.95] under both. Brief `docs/design/K440.md`.
@@ -957,6 +951,19 @@ Every other item below waits on the trigger it names.
   THE DOTS).
 - **K453** · K397's survey flags 1x2y3z f1 and f6 in stages 1 and 2: the dots end at about 0.85 of
   the fade. Inferred occlusion, not inspected (`.claude/probes/K397/stage2/out_s2/`).
+- **K454** · `halted` never clears: frame_loop.ts 156 says "Cleared on regenerate", but main never
+  clears it, so a halted page needs a reload (K6-1's brief reports it, changes nothing).
+- **K455** · At fw=0 the worker's exact sleep state is never drawn: gateFrame applies the snapshot
+  after that frame's geometry pass (inferred; K6-1 measures it, K6-2's GEOM gating would draw it).
+- **K456** · No webglcontextlost / webglcontextrestored handler anywhere in `src/` (K6-1's brief
+  research); what a lost context does to the page is untested.
+- **K457** · `probe_daily.mjs` (K19-K20) has stale front expectations (K6-1's brief research).
+- **K458** · K6-3's stopped ticker must keep the wall-clock animations: the camera's follow delay
+  and tween hold (camera.ts 153), tickFireFx (fabric 1443), the key hold and step timers (main
+  3133-3339). K6-1's wall-clock audit lists them all (`docs/design/K6_1.md`).
+- **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
+  stub, its rounded cap included (2026-10-15 13:39, phone, `?2gozcj.MgaM`; the green stub in
+  `.claude/probes/K397/levi_1339.png`). For K397 stage 3.
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1168,6 +1175,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K449** · K397 stage 2's looks: Levi keeps the cap and two dots, and the fade tap's pluck ("If we make a pluck sound, then we should show the pluck effect"); his 13:39 report is K397's and K459. Done in 092aca0 (2026-10-15).
+- **K411** · A phone window for K8's bench: Levi lent the phone 2026-10-15 13:45 (K395, K8). Done.
 - **K408** · The start marker fades out once the fire passes its thread point (K114 s2). Done in 7d29319 (2026-10-15).
 - **K430** · The underWindows step (K268 3a): when a crossing's over pass reaches vis 0.5, the under thread's junction web retracts in one frame while the gap fades in. Dropped: Levi picked the ramp (2026-10-15); K268's next stage builds it (`docs/design/K268.md`, Stage 3a handoff, item 1) (2026-10-15).
 - **K423** · Levi: dots (c), always two sized to fit; the vibration stops at the stub's solid end. Done in 2254b50 (2026-10-15).
