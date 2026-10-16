@@ -14,6 +14,8 @@
 //   neighborGaps   1933-1987  arc gaps to a pass's neighboring passes
 //   paintArcAt     5790-5808  a ctrl's arc for paint (open chains clamp)
 //   sampleAtSafe   6138-6154  sampleAt clamped short of an open chain's end
+//   normArc        (facade)   wrap or clamp a world arc (K5 R5: joinery and
+//                             the facade both call it, and it is pure)
 
 import type { SplineSamples } from "../../geometry/spline_generator";
 import type { CrossingPass } from "../../physics/particle_system";
@@ -188,4 +190,11 @@ export function sampleAtSafe(
     ? arc
     : Math.min(Math.max(0, arc), samples.totalLength - 1e-4);
   sampleAt(samples, a, out, offset);
+}
+
+// Wrap (closed) or clamp (open) a world arc into a chain's [0, total].
+export function normArc(a: number, total: number, closed: boolean): number {
+  if (total <= 0) return 0;
+  if (closed) return ((a % total) + total) % total;
+  return Math.max(0, Math.min(total, a));
 }
