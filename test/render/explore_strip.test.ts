@@ -21,6 +21,7 @@ import {
   EXPLORE_FAN_CUT_GLSL,
   EXPLORE_FAN_SURE_GLSL,
   EXPLORE_GAP_CUT_GLSL,
+  EXPLORE_GAP_SHAPE_GLSL,
   EXPLORE_GAP_SURE_GLSL,
   EXPLORE_LOOK_GLSL,
   EXPLORE_VIS_GLSL,
@@ -129,12 +130,15 @@ const MASTER_EARLY =
   "      continue;\n" +
   "    }\n";
 // The fan's copy of it, inside the shaped branch, against the true nearest
-// point (sure2 is 0 there; exSure2 keeps master's value).
+// point (sure2 is 0 there; exSure2 keeps master's value). K397: not where the
+// dots' shape cuts (kExCutOn).
 const FAN_EARLY =
-  "      if (best < exSure2) {\n" +
+  "      if (best < exSure2 && !kExCutOn) {\n" +
   "        keep = min(keep, 1.0 - (full ? inWin * inFoot : 1.0) * gst);\n" +
   "        continue;\n" +
   "      }\n";
+// gapKeepAt's casing distance, which the dots' shape (K397) precedes.
+const CASING = "    highp float e = d - hO - margin;\n";
 
 describe("K268 stage 2: the shaped cut's texts", () => {
   it("splits the section variant's declarations byte for byte", () => {
@@ -173,6 +177,12 @@ describe("K268 stage 2: the fans' shaped cut", () => {
     // take it as before.
     expect(count(ex, MASTER_EARLY)).toBe(1);
   });
+
+  it("measures a dots cut's casing from the dots' shape (K397), once, before the casing", () => {
+    expect(count(ex, EXPLORE_GAP_SHAPE_GLSL)).toBe(1);
+    expect(count(ex, EXPLORE_GAP_SHAPE_GLSL + CASING)).toBe(1);
+    expect(ex.indexOf(EXPLORE_FAN_CUT_GLSL)).toBeLessThan(ex.indexOf(EXPLORE_GAP_SHAPE_GLSL));
+  });
 });
 
 describe("K268 stage 2: the still pluck's shaped cut", () => {
@@ -196,6 +206,7 @@ describe("K268 stage 2: the still pluck's shaped cut", () => {
     expect(count(ex, EXPLORE_GAP_SURE_GLSL)).toBe(1);
     expect(count(ex, EXPLORE_GAP_CUT_GLSL)).toBe(1);
     expect(count(ex, EXPLORE_FAN_CUT_GLSL)).toBe(0);
+    expect(count(ex, EXPLORE_GAP_SHAPE_GLSL + CASING)).toBe(1);
   });
 
   it("is master's text once its edits are undone", () => {

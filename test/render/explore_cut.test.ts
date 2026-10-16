@@ -27,13 +27,21 @@ import {
 } from "../../src/render/gap_mask";
 import {
   classifyExploreCut,
+  EXPLORE_DOT_AT,
+  EXPLORE_DOT_R,
+  EXPLORE_DOTS_SPAN,
+  EXPLORE_FAN_CUT_GLSL,
   EXPLORE_FAN_SURE_GLSL,
+  EXPLORE_GAP_CUT_GLSL,
+  EXPLORE_GAP_SHAPE_GLSL,
   EXPLORE_GAP_SURE_GLSL,
   EXPLORE_LOOK_GLSL,
   EXPLORE_MAIN_GLSL,
+  EXPLORE_VIS_GLSL,
   exploreArcMap,
+  exploreGapEdits,
 } from "../../src/render/explore_glsl";
-import { exploreCutCoverCpu, kExploreLookCpu } from "../../src/render/paint_math";
+import { exploreCutCoverCpu, kExDotsSdCpu, kExploreLookCpu } from "../../src/render/paint_math";
 import { chainVis, type ExplorePiece } from "../../src/game/explore_view";
 
 function slotParams(strength: number, polyStart = 0, polyStep = 0): GapSlotParams {
@@ -443,23 +451,36 @@ describe("K268 the shaped cut: exploreCutCoverCpu vs the model's chainVis (look 
   });
 
   it("the end looks at a frontier read the same as the thread's own (kExploreLookCpu)", () => {
-    // Beyond the fade the cut is 0 for every look; inside it, at lat 0.
+    // Beyond the fade the cut is 0 for the fade, halo, glow and fray looks;
+    // inside it, the look at lat 0. K397: the dots and beacon looks return
+    // only their strength through the fade and past it, and hand the dots'
+    // shape to the casing (out.on, out.sd).
     const shape: GapShape = {
       k2b: 1,
       ramps: [{ aS: 1, F: 0.5, dK: 1, tK: 1, front: true }],
       max: false,
     };
     const prof = profileOf(shape, 1);
+    const o = { on: true, sd: 0 };
     for (const look of [0, 1, 2, 3, 4, 5]) {
-      expect(exploreCutCoverCpu(prof, 0.5, look, 0.2, 0.01)).toBe(1);
-      expect(exploreCutCoverCpu(prof, 1.6, look, 0.2, 0.01)).toBe(0);
+      const dots = look === 3 || look === 5;
+      expect(exploreCutCoverCpu(prof, 0.5, look, 0.2, 0.01, false, 0, o)).toBe(1);
+      expect(o.on).toBe(false);
+      expect(exploreCutCoverCpu(prof, 1.6, look, 0.2, 0.01, false, 0.03, o)).toBeCloseTo(dots ? 0.45 : 0, 12);
+      expect(o.on).toBe(dots);
+      if (dots) expect(o.sd).toBe(kExDotsSdCpu(1.6 - 1, 0.03, 0.5, 0.2));
       const A = 1.2;
       const t = 0.4;
       const v = 1 - t * t * (3 - 2 * t);
-      expect(exploreCutCoverCpu(prof, A, look, 0.2, 0.01)).toBeCloseTo(
-        kExploreLookCpu(look, v, t, Math.fround(A) - 1, 0, 0.01 / 0.2, 0.01, 0.2),
-        6
-      );
+      const got = exploreCutCoverCpu(prof, A, look, 0.2, 0.01, false, 0.05, o);
+      if (dots) {
+        expect(got).toBeCloseTo(1 - 0.55 * t * t, 12);
+        expect(o.on).toBe(true);
+        expect(o.sd).toBe(kExDotsSdCpu(A - 1, 0.05, 0.5, 0.2));
+      } else {
+        expect(got).toBeCloseTo(kExploreLookCpu(look, v, t, Math.fround(A) - 1, 0.5, 0, 0.01 / 0.2, 0.01, 0.2), 6);
+        expect(o.on).toBe(false);
+      }
     }
   });
 });
@@ -478,44 +499,47 @@ describe("K76 stage 2d: High contrast dots (kExploreLookCpu hc, out.dot)", () =>
     const o2 = { dot: -1 };
     let lit = 0;
     for (const look of [3, 5]) {
-      for (let iu = 0; iu <= 20; iu++) {
-        const u = iu / 20;
-        for (let is = 0; is <= 60; is++) {
-          const s = (is / 60) * 6 * tw;
-          for (const lat of [-0.45, -0.2, 0, 0.1, 0.3]) {
-            const plain = kExploreLookCpu(look, 0.7, u, s, lat, sideFw, pxW, tw, false, o1);
-            const hc = kExploreLookCpu(look, 0.7, u, s, lat, sideFw, pxW, tw, true, o2);
-            expect(o2.dot).toBe(o1.dot);
-            expect(hc * (1 - 0.55 * u * u)).toBeCloseTo(plain, 12);
-            expect(hc).toBeGreaterThanOrEqual(plain);
-            if (plain > 0) lit++;
+      for (const lf of [0.5 * tw, EXPLORE_DOTS_SPAN * tw, 3 * tw]) {
+        for (let iu = 0; iu <= 20; iu++) {
+          const u = iu / 20;
+          for (let is = 0; is <= 60; is++) {
+            const s = (is / 60) * 1.1 * lf;
+            for (const lat of [-0.45, -0.2, 0, 0.1, 0.3]) {
+              const plain = kExploreLookCpu(look, 0.7, u, s, lf, lat, sideFw, pxW, tw, false, o1);
+              const hc = kExploreLookCpu(look, 0.7, u, s, lf, lat, sideFw, pxW, tw, true, o2);
+              expect(o2.dot).toBe(o1.dot);
+              expect(hc * (1 - 0.55 * u * u)).toBeCloseTo(plain, 12);
+              expect(hc).toBeGreaterThanOrEqual(plain);
+              if (plain > 0) lit++;
+            }
           }
         }
       }
     }
-    expect(lit).toBeGreaterThan(500);
+    expect(lit).toBeGreaterThan(1500);
   });
 
   it("a dot's center is full under HC and dimmed without; out.dot says dot or cap", () => {
-    const sp = 0.95 * tw;
     const o = { dot: -1 };
     for (const look of [3, 5]) {
-      for (const kk of [1, 2, 5]) {
-        const u = 0.95;
-        expect(kExploreLookCpu(look, 0, u, kk * sp, 0, sideFw, pxW, tw, true, o)).toBe(1);
-        expect(o.dot).toBe(1);
-        expect(kExploreLookCpu(look, 0, u, kk * sp, 0, sideFw, pxW, tw, false, o)).toBeCloseTo(
-          1 - 0.55 * u * u,
-          12
-        );
-        expect(o.dot).toBe(1);
+      for (const lf of [1 * tw, EXPLORE_DOTS_SPAN * tw, 5 * tw]) {
+        for (const at of EXPLORE_DOT_AT) {
+          const u = 0.95;
+          expect(kExploreLookCpu(look, 0, u, at * lf, lf, 0, sideFw, pxW, tw, true, o)).toBe(1);
+          expect(o.dot).toBe(1);
+          expect(kExploreLookCpu(look, 0, u, at * lf, lf, 0, sideFw, pxW, tw, false, o)).toBeCloseTo(
+            1 - 0.55 * u * u,
+            12
+          );
+          expect(o.dot).toBe(1);
+        }
+        // The cap (the solid end's round end) is not a dot: it keeps the
+        // thread's color under HC.
+        expect(kExploreLookCpu(look, 0, 0.1, 0.1 * tw, lf, 0, sideFw, pxW, tw, true, o)).toBe(1);
+        expect(o.dot).toBe(0);
+        expect(kExploreLookCpu(look, 0, 0.1, 0, lf, 0.2, sideFw, pxW, tw, true, o)).toBe(1);
+        expect(o.dot).toBe(0);
       }
-      // The cap (the solid end's round end) is not a dot: it keeps the
-      // thread's color under HC.
-      expect(kExploreLookCpu(look, 0, 0.1, 0.1 * tw, 0, sideFw, pxW, tw, true, o)).toBe(1);
-      expect(o.dot).toBe(0);
-      expect(kExploreLookCpu(look, 0, 0.1, 0, 0.2, sideFw, pxW, tw, true, o)).toBe(1);
-      expect(o.dot).toBe(0);
     }
   });
 
@@ -524,16 +548,16 @@ describe("K76 stage 2d: High contrast dots (kExploreLookCpu hc, out.dot)", () =>
     for (const look of [0, 1, 2, 4]) {
       for (const u of [0, 0.3, 0.7, 0.99]) {
         for (const s of [0, 0.4, 1.3]) {
-          const plain = kExploreLookCpu(look, 0.6, u, s, 0.1, sideFw, pxW, tw, false, o);
+          const plain = kExploreLookCpu(look, 0.6, u, s, 1.5, 0.1, sideFw, pxW, tw, false, o);
           expect(o.dot).toBe(0);
-          expect(kExploreLookCpu(look, 0.6, u, s, 0.1, sideFw, pxW, tw, true, o)).toBe(plain);
+          expect(kExploreLookCpu(look, 0.6, u, s, 1.5, 0.1, sideFw, pxW, tw, true, o)).toBe(plain);
           expect(o.dot).toBe(0);
         }
       }
     }
     for (const look of [3, 5]) {
       o.dot = -1;
-      expect(kExploreLookCpu(look, 0.6, -1, 1, 0, sideFw, pxW, tw, true, o)).toBe(0.6);
+      expect(kExploreLookCpu(look, 0.6, -1, 1, 1.5, 0, sideFw, pxW, tw, true, o)).toBe(0.6);
       expect(o.dot).toBe(0);
     }
   });
@@ -545,9 +569,10 @@ describe("K76 stage 2d: High contrast dots (kExploreLookCpu hc, out.dot)", () =>
       max: false,
     };
     const prof = profileOf(shape, 1);
+    const o = { on: false, sd: 0 };
     let differ = 0;
     for (let i = 0; i <= 120; i++) {
-      const A = 1 + (i / 120) * 3;
+      const A = 1 + (i / 120) * 3.6;
       // aS 1 and F 3 are exact in f32, so the twin's arithmetic is this.
       const d = (A - 1) / 3;
       const t = Math.min(d, 1);
@@ -556,12 +581,25 @@ describe("K76 stage 2d: High contrast dots (kExploreLookCpu hc, out.dot)", () =>
       const s = Math.abs(A - 1);
       for (const look of [0, 1, 2, 3, 4, 5]) {
         const plain = exploreCutCoverCpu(prof, A, look, tw, pxW);
-        const hc = exploreCutCoverCpu(prof, A, look, tw, pxW, true);
-        expect(hc).toBeCloseTo(kExploreLookCpu(look, v, u, s, 0, pxW / tw, pxW, tw, true), 6);
+        const hc = exploreCutCoverCpu(prof, A, look, tw, pxW, true, 0, o);
         if (look === 3 || look === 5) {
+          // K397: the strength alone (the shape goes to the casing), through
+          // the fade and past its end.
+          if (d > 0) {
+            expect(plain).toBeCloseTo(1 - 0.55 * t * t, 12);
+            expect(hc).toBe(1);
+            expect(o.on).toBe(true);
+            expect(o.sd).toBe(kExDotsSdCpu(s, 0, 3, tw));
+          } else {
+            expect(hc).toBe(1);
+            expect(plain).toBe(1);
+            expect(o.on).toBe(false);
+          }
           if (hc !== plain) differ++;
         } else {
+          expect(hc).toBeCloseTo(kExploreLookCpu(look, v, u, s, 3, 0, pxW / tw, pxW, tw, true), 6);
           expect(hc).toBe(plain);
+          expect(o.on).toBe(false);
         }
       }
     }
@@ -586,6 +624,171 @@ describe("K76 stage 2d: High contrast dots (kExploreLookCpu hc, out.dot)", () =>
     // Every other reader of uKExplore.x tests it against 0.5, so 2 is "on".
     for (const g of [EXPLORE_GAP_SURE_GLSL, EXPLORE_FAN_SURE_GLSL]) {
       expect(g).toContain("uKExplore.x > 0.5");
+    }
+  });
+});
+
+// K397 (docs/design/K397.md, issues 1, 2 and 5; Levi's call (c), K423): the
+// dots and beacon looks end a frontier fade in a cap and ALWAYS TWO dots,
+// sized to fit the fade, and a crossing's cut follows that shape at the
+// fragment's own distance from the over centerline (kExDotsSd, through
+// exploreCutCover's kExCutOn / kExCutSd and EXPLORE_GAP_SHAPE_GLSL).
+describe("K397: the dots fit the fade and cut by their own shape", () => {
+  // The centerline's runs of sd < 0 from the solid end to past the fade's
+  // end: [start, end, isDot] in world units.
+  function runs(lf: number, tw: number, la = 0): [number, number, number][] {
+    const out: [number, number, number][] = [];
+    const o = { dot: 0 };
+    const n = 6000;
+    let cur: [number, number, number] | null = null;
+    for (let i = 0; i <= n; i++) {
+      const s = (i / n) * 1.3 * lf;
+      const sd = kExDotsSdCpu(s, la, lf, tw, o);
+      if (sd < 0) {
+        if (!cur) cur = [s, s, o.dot];
+        cur[1] = s;
+        expect(o.dot).toBe(cur[2]);
+      } else if (cur) {
+        out.push(cur);
+        cur = null;
+      }
+    }
+    if (cur) out.push(cur);
+    return out;
+  }
+
+  it("draws a cap and exactly two dots inside every fade, short or long", () => {
+    for (const tw of [0.52, 0.3]) {
+      for (const k of [0.4375, 0.6, 1, 1.5, 2, 2.15, 2.5, 4, 7.7]) {
+        const lf = k * tw;
+        const r = runs(lf, tw);
+        expect(r.length, `tw ${tw} lf ${lf}`).toBe(3);
+        expect(r.map((x) => x[2])).toEqual([0, 1, 1]);
+        expect(r[0][0]).toBe(0);
+        // The second dot's far edge stays inside the fade.
+        expect(r[2][1]).toBeLessThanOrEqual(0.9705 * lf);
+        // Each dot is centered on EXPLORE_DOT_AT of the fade.
+        for (let j = 0; j < 2; j++) {
+          expect((r[j + 1][0] + r[j + 1][1]) / 2).toBeCloseTo(EXPLORE_DOT_AT[j] * lf, 3);
+        }
+      }
+    }
+  });
+
+  it("at EXPLORE_DOTS_SPAN, is the old dotted line's first two dots and cap", () => {
+    const tw = 0.52;
+    const lf = EXPLORE_DOTS_SPAN * tw;
+    const r = runs(lf, tw);
+    expect(r[0][1]).toBeCloseTo(0.5 * tw, 3);
+    const old = [0.95 * tw, 1.9 * tw];
+    for (let j = 0; j < 2; j++) {
+      const c = EXPLORE_DOT_AT[j] * lf;
+      expect(Math.abs(c - old[j])).toBeLessThan(0.01 * tw);
+      // The old radius, 0.3 tw (1 - 0.4 u), at the dot's own progress.
+      expect(EXPLORE_DOT_R[j]).toBeCloseTo(0.3 * (1 - 0.4 * (c / lf)), 12);
+      expect((r[j + 1][1] - r[j + 1][0]) / 2).toBeCloseTo(EXPLORE_DOT_R[j] * tw, 3);
+    }
+    // Longer fades keep the sizes and spread the dots; shorter ones shrink.
+    const long = runs(4 * tw, tw);
+    expect((long[1][1] - long[1][0]) / 2).toBeCloseTo(EXPLORE_DOT_R[0] * tw, 3);
+    const short = runs(tw, tw);
+    expect((short[1][1] - short[1][0]) / 2).toBeCloseTo(EXPLORE_DOT_R[0] * tw / EXPLORE_DOTS_SPAN, 3);
+    expect(short[0][1]).toBeCloseTo((0.5 * tw) / EXPLORE_DOTS_SPAN, 3);
+  });
+
+  it("is a signed distance: the dots are discs and the cap meets the thread's edge at the solid end", () => {
+    const tw = 0.52;
+    for (const lf of [0.8 * tw, 3 * tw]) {
+      const g = Math.min(1, lf / (EXPLORE_DOTS_SPAN * tw));
+      for (let j = 0; j < 2; j++) {
+        const c = EXPLORE_DOT_AT[j] * lf;
+        const rad = EXPLORE_DOT_R[j] * tw * g;
+        for (const a of [0, 0.7, 1.6, 2.9]) {
+          for (const q of [0.3, 0.9, 1.2]) {
+            const s = c + q * rad * Math.cos(a);
+            const la = q * rad * Math.sin(a);
+            // Nearer this dot than anything else: the disc's distance.
+            expect(kExDotsSdCpu(s, la, lf, tw)).toBeCloseTo((q - 1) * rad, 9);
+          }
+        }
+      }
+      // The cap's half-width at the solid end is the thread's.
+      expect(kExDotsSdCpu(0, 0.5 * tw, lf, tw)).toBeCloseTo(0, 9);
+      expect(kExDotsSdCpu(0, 0.3 * tw, lf, tw)).toBeCloseTo(-0.2 * tw, 9);
+    }
+  });
+
+  it("cuts by the shape at the fragment's own distance, past the fade's end too", () => {
+    const tw = 0.52;
+    const pxW = 0.02;
+    const F = 2.4;
+    const shape: GapShape = {
+      k2b: 1,
+      ramps: [{ aS: 1, F, dK: 1, tK: 1, front: true }],
+      max: false,
+    };
+    const prof = profileOf(shape, 1);
+    const lf = Math.fround(F);
+    const o = { on: false, sd: 0 };
+    for (const look of [3, 5]) {
+      for (const hc of [false, true]) {
+        for (const A of [1.05, 1.9, 3.1, 3.6, 5]) {
+          for (const lat of [0, 0.05, 0.12, 0.3]) {
+            const got = exploreCutCoverCpu(prof, A, look, tw, pxW, hc, lat, o);
+            const d = (A - 1) / lf;
+            const t = Math.min(d, 1);
+            expect(o.on).toBe(true);
+            expect(o.sd).toBe(kExDotsSdCpu(Math.abs(A - 1), lat, lf, tw));
+            expect(got).toBeCloseTo(hc ? 1 : 1 - 0.55 * t * t, 12);
+          }
+        }
+      }
+      // A two-piece (best-of) slot evaluates the winning piece's dots.
+      const two: GapShape = {
+        k2b: 1,
+        ramps: [
+          { aS: 1, F: 2, dK: 1, tK: 1, front: true },
+          { aS: 6, F: -2, dK: 1, tK: 1, front: true },
+        ],
+        max: true,
+      };
+      const p2 = profileOf(two, 1);
+      exploreCutCoverCpu(p2, 2, look, tw, pxW, false, 0.1, o);
+      expect(o.on).toBe(true);
+      expect(o.sd).toBe(kExDotsSdCpu(1, 0.1, 2, tw));
+      exploreCutCoverCpu(p2, 5.5, look, tw, pxW, false, 0.1, o);
+      expect(o.sd).toBe(kExDotsSdCpu(0.5, 0.1, 2, tw));
+      // Past both fades' ends the first ramp wins the tie (its dots, far
+      // behind: the casing there cuts nothing).
+      expect(exploreCutCoverCpu(p2, 4, look, tw, pxW, false, 0.1, o)).toBeCloseTo(0.45, 12);
+      expect(o.sd).toBe(kExDotsSdCpu(3, 0.1, 2, tw));
+      // The solid parts cut in full, without the shape.
+      for (const A of [0.5, 6.5]) {
+        expect(exploreCutCoverCpu(p2, A, look, tw, pxW, false, 0.1, o)).toBe(1);
+        expect(o.on).toBe(false);
+      }
+    }
+  });
+
+  it("the GLSL carries the twin's shape, the cut's lat and the casing's swap", () => {
+    // The emitted constants are the twin's.
+    expect(EXPLORE_LOOK_GLSL).toContain("highp float kExDotsSd(highp float s, highp float la, highp float lf) {");
+    expect(EXPLORE_LOOK_GLSL).toContain("  highp float dd = kExDotsSd(s, lat * tw, lf);");
+    expect(EXPLORE_LOOK_GLSL).toContain("if ((t < 1.0 || dots) && (fl & ");
+    expect(EXPLORE_LOOK_GLSL).toContain("    kExCutSd = kExDotsSd(bs, lat, bf);");
+    expect(EXPLORE_LOOK_GLSL).toContain("highp float exploreCutCover(int row, int fl, highp float A, highp float lat, highp float pxW) {");
+    expect(EXPLORE_GAP_CUT_GLSL).toContain("exploreCutCover(row, int(exP2.y + 0.5), exA, sqrt(best), pxW)");
+    expect(EXPLORE_FAN_CUT_GLSL).toContain("      if (best < exSure2 && !kExCutOn) {\n");
+    expect(EXPLORE_GAP_SHAPE_GLSL).toBe("    if (exShaped && kExCutOn) d = hO + kExCutSd;\n");
+    // The fade's end (kExEnd) is set where the solid end is.
+    expect(EXPLORE_VIS_GLSL).toContain("kExEnd = ce;");
+    expect(EXPLORE_MAIN_GLSL).toContain("exLf = abs(kArcU(kc, kExEnd) - exA0);");
+    // Every program that takes the shaped cut swaps the casing's distance.
+    for (const fan of [false, true]) {
+      const edits = exploreGapEdits(fan, "");
+      const last = edits[edits.length - 1];
+      expect(last[0]).toBe("    highp float e = d - hO - margin;\n");
+      expect(last[1]).toBe(EXPLORE_GAP_SHAPE_GLSL + last[0]);
     }
   });
 });
