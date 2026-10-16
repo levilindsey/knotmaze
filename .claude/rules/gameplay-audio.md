@@ -2,6 +2,7 @@
 paths:
   - "src/audio/**"
   - "test/audio/**"
+  - "src/app/auto_audio.ts"
   - "src/ui/snore_link.ts"
   - "test/ui/snore_link.test.ts"
 ---
