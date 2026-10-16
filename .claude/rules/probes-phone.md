@@ -122,7 +122,7 @@ geometry-only crop when a capture is still taller than the viewport's
 aspect; the looks report counts both in `shotStats`). `emulation_unclipped.png`
 keeps one bare capture as the evidence. A `-Dry` run captures at the
 desktop's display scale (2), so the clip is only exercised for real on the
-phone. THE WATCHDOG TRIPS WHEN A PERSON USES THE PHONE: `-Phase check`
+phone. THE CAPTURE TILES WHEN THE PHONE SITS IN LANDSCAPE (K513, 2026-10-16): the physical capture surface is then 2125x1017 device px, shorter than the 1977-device-px portrait capture, and Android Chrome repeats that surface down the request (period 1017 rows; each tile paints only the native-height top, 872 rows, leaving flat 250,250,248 bands - the last tile's tail reads as an 88-row blank strip at the clipped shot's bottom). The page is not blank: it reports 411x753 with canvas backing 822x1506, and a capture of the same CSS viewport at dpr 1 on the capture's own CDP session (411x753, fits the surface, cannot tile) shows the full page with 0 flat rows. `emulation.mjs` therefore re-checks any flat strip at dpr 1 (`emulation_lowdpr.png`) and fails `noBlankStrip` only when the strip survives there. Pass screenshots at the emulated dpr (`shotViewport`, the looks sheets) still tile while the phone sits in landscape - see K514. THE WATCHDOG TRIPS WHEN A PERSON USES THE PHONE: `-Phase check`
 calls an awake, unlocked phone ready even with another app in front
 (sh.paseo, the Claude app), and the start then trips at once ("top
 activity is sh.paseo, expected com.android.chrome"; K193, 13:21) after a

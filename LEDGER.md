@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K514.
+Next free ID: K515.
 
 ## Waiting on Levi
 
@@ -174,7 +174,7 @@ Next free ID: K514.
   - evidence: `.claude/probes/rounds/2026-10-14c-0e865bf/`,
     `.../2026-10-14-48da84d/`, `.../2026-10-14-81d31a5/`;
     `.claude/probes/K156/3c/`; the A/A in `.claude/probes/K253/aa3/`
-  - next: the next phone window Levi lends: frames (`-Phase frames -Reps 2` blocked by K513's noBlankStrip gate failure until the gate or its shot is fixed, then the frames spot check runs; `-Phase frames -Reps
+  - next: the next phone window Levi lends: frames (done 2026-10-16 after K513's gate fix: `-Phase frames -Reps 2` A/A on 65a7787, emulation REAL, all cells within noise; fabric ~59.5-60 fps, knot ~60.3 fps, load first sleep 16.3-17.5 s; evidence `.claude/probes/rounds/2026-10-16-65a7787/`; `-Phase frames -Reps
     2` on K253's portrait floor; K300's `-Moves` fix waits for the next
     A/A), K307's phone measures, the finish frame rate under K317's
     confetti, K98 and K92 (K230), the 14 dropped looks (K233), K232's
@@ -302,10 +302,10 @@ Binding for every stage:
 
 Running agents are listed under In progress, each with its own next step.
 The queue (coordinator, overnight 2026-10-15/16):
-1. Overnight run 2 done (2026-10-16): K507 (7c5daa9), K502+K505 (66fe538), K499 gamepad (9a6f63d, close dde7b83), K510/M6 (c268a9b, close 8808a15), K6-2 with K509 measured 0 px (926fdfe); phone pass: K500 targetAt measured (no budget problem), K156 frames blocked as K513. Waiting-on-Levi untouched.
+1. Overnight run 2 done (2026-10-16): K507 (7c5daa9), K502+K505 (66fe538), K499 gamepad (9a6f63d, close dde7b83), K510/M6 (c268a9b, close 8808a15), K6-2 with K509 measured 0 px (926fdfe); phone pass: K500 targetAt measured (no budget problem), K156 frames blocked as K513 (fixed 2026-10-16, see Done). Waiting-on-Levi untouched.
 2. Next: K480 stage 2 (the light: pulses + hover branching to the reach, shader + CPU mirror; brief from `docs/design/K480.md` Stage 1 handoff),
    then K481 stage 2 (param/row, animation, telegraph) plus the K501 difficulty call for Levi.
-3. K6-3 (= K24) next; G3-1 waits on K399. Overnight residuals wait in their sections; K513 blocks the K156 frames spot check.
+3. K6-3 (= K24) next; G3-1 waits on K399. Overnight residuals wait in their sections; K513 fixed the gate; the K156 frames spot check ran 2026-10-16 (A/A 65a7787, all within noise).
 
 
 Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
@@ -1036,7 +1036,7 @@ Every other item below waits on the trigger it names.
 - **K506** · Stage M4 handoff leftovers not folded into M5 (filed, not done): FrameLoopDeps still reads physState/settleWall0/warmHoldFrom through main.ts getters instead of taking life; ProbeCtx could take life/scene/audioMap whole; stale lore prose in physics-settle.md and render-shaders.md still names main.ts for lifecycle code; the A/B harness physon step should wait for asleep, not frozen.
 - **K512** · The cross-build threads round trip's 0 px expectation only holds across builds whose threads defaults match: K466 (2aea912) added `rve`/`rvg` with new defaults, so c22de79-vs-post-K466 pairings differ by 43,385 px unless the query pins the legacy look (`&rve=under&rvg=soft`, 0 px both ways, K507). Future prescribed pairings spanning 2aea912 must pin both, or expect the frontier diff.
 - **K508** · K5 R2's checks_r2.ps1/checks_threads.ps1 hardcode the deleted worktree agent-a695f82540244625a and cannot rerun as-is; K463's repo-relative k463_checks.ps1 supersedes them for these two checks.
-- **K513** · Phone-pass frames gate blocked (2026-10-16, build 926fdfe): `scripts/phone_pass.ps1 -Phase frames -Reps 2` fails 3x deterministically at emulation.mjs exit 4 - only check `noBlankStrip` fails (88 flat rows of 250,250,248 at the clipped shot's bottom; pageSize/orientation/canvas/aspect all pass, watchdog never tripped). Evidence `.claude/probes/rounds/2026-10-16-926fdfe/` (emulation.json, emulation_real.png, logs). Frames spot check (K156 next) still owed once the gate or its shot is fixed; no code changed this stage.
+- **K514** · Looks-phase screenshots still tile in landscape (K513 leftover): `shotViewport` captures at the emulated dpr 2.625, so while the phone sits in landscape (capture surface 2125x1017) looks sheets repeat the surface every 1017 rows and are not evidence; the frames gate's dpr-1 recheck does not cover them. Capture looks at a surface-fitting scale, stitch, or require portrait sitting for a looks phase. `.claude/probes/K513/`, lore `probes-phone.md` (K513).
 - **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 3b1612f; K348's mid-move wait-tap leftover is now intentional for pointers.
 
 ## Approved, to schedule (2026-10-11)
@@ -1255,6 +1255,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K513** · Phone-pass frames gate: the 88-row flat strip was Android capture tiling (landscape surface 2125x1017 repeated every 1017 rows), not a blank render; `emulation.mjs` re-checks a strip at dpr 1 and frames then ran A/A 2 reps on 65a7787 within noise. Done (this commit, 2026-10-16; evidence `.claude/probes/K513/`, `.claude/probes/rounds/2026-10-16-65a7787/`).
 - **K509** · K6-1 Q2 sleep-trip GEOM miss measured 0 px (knot fw=0 with worker, first-sleep shot vs after invalidate(), controls 0 px, before and after K6-2) - GEOM gating loses nothing. Done in 926fdfe (2026-10-16; evidence `.claude/probes/K6/K6-2/`).
 - **K510** · K5 M6: pointer input, auto audio and keys moved to `src/app/input_pointer.ts`, `auto_audio.ts`, `input_keys.ts` (pure move; tsc clean, 1333 tests, scripted-input A/B knot/fabric 0 px, fog/threads within same-build controls, k7_frames rest+drag within noise on both hosts). Done in c268a9b (2026-10-16).
 - **K499** · Gamepad support: d-pad + left stick (deadzone, eight sectors) feed the key picker as held keys, held-at-arrival like keys; A/confirm is a tap-class step (no mid-move queue). Pure mapping `src/ui/gamepad.ts`, lore GAMEPAD in `gameplay-moves.md`; unprobed on real hardware. Done in 9a6f63d (2026-10-16).
