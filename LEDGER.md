@@ -144,10 +144,10 @@ Next free ID: K440.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: agent `a58dfc230583f43e4` of claude session 05e60da0 (opus, started 2026-10-15 11:02, 2 h cap ~13:02; ports 5950-5959). Stage 2's brief merged in 9f1ada2 (docs agent `ae4714d103b5fd3bf`, worktree kept). Stage 1's agent af79edbe2a4677ff5 (session d8031183) finished; worktree removed by the K161 sweep 2026-10-15, branch kept
-  - branch: `worktree-agent-a58dfc230583f43e4`, worktree `.claude/worktrees/agent-a58dfc230583f43e4`; last commit: `12c5e0a`
+  - owner: nobody since 2026-10-15 12:31 (merged; agent `a58dfc230583f43e4` of claude session 05e60da0)
+  - branch: mainline; last commit: `cebb75e`
   - evidence: `.claude/probes/K114/stage2/` (in its worktree); stage 1's: main checkout `.claude/probes/K114/burn/` (`results_tuning_rebased.md`, `burn_sim.ts`, `burn_page.mjs`)
-  - next: stage 2 running (realtime burning behind `fireClock`, questions K400 on the recs, K408 riding it). K5 M3 moves the frame loop meanwhile: whoever merges second ports the tick hunks (K5_K6_split.md section 6; the agent lists its main.ts per-frame hunks). Then stage 3, the look as a shader with K290's burnt toggle; the spider follows the minotaur's controls (K174)
+  - next: Levi picks the realtime fire defaults and ranges; then a CPU profile of a turn stand and a realtime stand at the same burnt share decides the re-declare throttle (docs/design/K114_stage2.md, Stage 2 handoff)
   - brief: `docs/design/K114_stage2.md`; stage 1's handoff: `docs/design/K114_burn.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
