@@ -18,6 +18,8 @@ import {
   HOVER_GLOW_WIDTH_MAX,
   HOVER_GLOW_WIDTH_MIN,
   LOAD_SETTLE_MAX,
+  MINO_GIVE_UP_MAX,
+  MINO_ROAM_MIN_MAX,
   MINO_ROAM_RUNS_MAX,
   MINO_RUNS_MIN,
   MINO_SIGHT_MAX,
@@ -1100,21 +1102,41 @@ export function buildPanel(
     "Show its next move in red: the run it will take and where it will stand, decided when your move ends (forced on at charge and two). Applies live."
   );
   const fMinoBehavior = folder("Minotaur behavior", false, fMino);
-  turnRow(
+  // K294 (K80 turns 3a): sight and accuracy are per model. minoSight is the
+  // hunter's, and the stalker's charge reads it too, so it also shows for
+  // the stalker at charge; the guard has its own sight and accuracy rows,
+  // the stalker its own accuracy row.
+  const minoSightRow = turnRow(
     fMinoBehavior, "minoSight", { min: 0, max: MINO_SIGHT_MAX, step: 1 },
-    "Sight, in runs: it hunts you once you are this few runs away, and gives up beyond 3 more. It never sees you on the entrance tail. Applies live."
+    "Hunter: sight, in runs. It hunts you once you are this few runs away and gives up beyond minoGiveUp more. The stalker charges within this sight. It never sees you on the entrance tail. Applies live."
+  );
+  const minoGuardSightRow = turnRow(
+    fMinoBehavior, "minoGuardSight", { min: 0, max: MINO_SIGHT_MAX, step: 1 },
+    "Guard: sight, in runs. It hunts you once you are this few runs away and gives up beyond minoGiveUp more. It never sees you on the entrance tail. Applies live."
+  );
+  // K324 section 4.3 (K80 turns 3a): the two constants the harness fixed.
+  const minoGiveUpRow = turnRow(
+    fMinoBehavior, "minoGiveUp", { min: 0, max: MINO_GIVE_UP_MAX, step: 1 },
+    "How many runs past its sight you must get before it gives up the hunt; then it checks where it last saw you. Applies live."
   );
   // K272: roam and territory start at 1 (0 stood still, or walked at
   // random); 1 = destinations one run away, or next to the finish.
+  const minoRoamMinRow = turnRow(
+    fMinoBehavior, "minoRoamMin", { min: MINO_RUNS_MIN, max: MINO_ROAM_MIN_MAX, step: 1 },
+    "Hunter: the nearest it roams in one go, in runs (minoRoamRuns if that is less). Applies live."
+  );
   const minoRoamRunsRow = turnRow(
     fMinoBehavior, "minoRoamRuns", { min: MINO_RUNS_MIN, max: MINO_ROAM_RUNS_MAX, step: 1 },
-    "Hunter: the farthest it roams in one go, in runs (its nearest destination is 3 runs away, or this if less). Applies live."
+    "Hunter: the farthest it roams in one go, in runs. Applies live."
   );
   const minoTerritoryRow = turnRow(
     fMinoBehavior, "minoTerritory", { min: MINO_RUNS_MIN, max: MINO_TERRITORY_MAX, step: 1 },
     "Guard: it roams only to junctions within this many runs of the finish. Applies live."
   );
-  const chanceRow = (key: "minoAccuracy" | "minoPause", tipText: string): RowApi =>
+  const chanceRow = (
+    key: "minoAccuracy" | "minoGuardAccuracy" | "minoStalkerAccuracy" | "minoTurnPull" | "minoPause",
+    tipText: string
+  ): RowApi =>
     row(
       fMinoBehavior, p, key,
       { min: 0, max: 1, pointerScale: 0.01, format: (v: number) => v.toFixed(2) },
@@ -1123,14 +1145,28 @@ export function buildPanel(
         callbacks.onTurnMinoChange();
       }
     );
-  chanceRow(
+  const minoTurnPullRow = chanceRow(
+    "minoTurnPull",
+    "The chance a roam ends nearer you than where it stands (when any such junction is in range); otherwise anywhere in range. It still roams; only where a roam ends leans toward you. Applies live."
+  );
+  const minoAccuracyRow = chanceRow(
     "minoAccuracy",
-    "While it hunts (the stalker: always), the chance each step takes a shortest way to you; otherwise it steps at random. Applies live."
+    "Hunter: while it hunts, the chance each step takes a shortest way to you; otherwise it steps at random. Applies live."
+  );
+  const minoGuardAccuracyRow = chanceRow(
+    "minoGuardAccuracy",
+    "Guard: while it hunts, the chance each step takes a shortest way to you; otherwise it steps at random. Applies live."
+  );
+  const minoStalkerAccuracyRow = chanceRow(
+    "minoStalkerAccuracy",
+    "Stalker: the chance each step takes a shortest way to you (always, while you are off the entrance tail); otherwise it steps at random. Applies live."
   );
   chanceRow("minoPause", "The chance it stands still for a turn. Applies live.");
+  // K293 (e): true with minoLair off too (a catch leaves it where it caught
+  // you, and it sleeps again there).
   turnRow(
     fMinoBehavior, "minoSleep", { min: 0, max: MINO_SLEEP_MAX, step: 1 },
-    "Turns it waits in its lair before it first moves, at the start and after each catch. Applies live."
+    "Turns it waits before it first moves: at the start, and again after each catch (in its lair, or where it caught you while minoLair is off). Applies live."
   );
   // K174: the minotaur's paces as multiples of yours (playerPace). No step
   // (Tweakpane's step grid would snap a link's 0.73, K130); an edit keeps
@@ -1999,8 +2035,21 @@ export function buildPanel(
     minoSpeedRow.hidden = !turnMinoOn;
     minoTelegraphRow.hidden = !turnMinoOn;
     fMinoBehavior.hidden = !turnMinoOn;
-    minoRoamRunsRow.hidden = params.minotaur !== "hunter";
-    minoTerritoryRow.hidden = params.minotaur !== "guard";
+    // K294 (K80 turns 3a): each model's own rows. The stalker never roams
+    // (no pull, no give-up) and charges within the shared sight.
+    const hunter = params.minotaur === "hunter";
+    const guard = params.minotaur === "guard";
+    const stalker = params.minotaur === "stalker";
+    minoSightRow.hidden = !(hunter || (stalker && params.minoSpeed === "charge"));
+    minoGuardSightRow.hidden = !guard;
+    minoGiveUpRow.hidden = !(hunter || guard);
+    minoRoamMinRow.hidden = !hunter;
+    minoRoamRunsRow.hidden = !hunter;
+    minoTerritoryRow.hidden = !guard;
+    minoTurnPullRow.hidden = !(hunter || guard);
+    minoAccuracyRow.hidden = !hunter;
+    minoGuardAccuracyRow.hidden = !guard;
+    minoStalkerAccuracyRow.hidden = !stalker;
     // K114: the burn race plays on the turn clock (stage 2 brings it to
     // real time); its tuning shows while it is on.
     fFire.hidden = !turnClock;

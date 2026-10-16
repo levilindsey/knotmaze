@@ -170,6 +170,8 @@ export const LIVE_EFFECTS = {
   onTurnMinoChange: [
     "minoSpeed", "minoTelegraph", "minoSight", "minoRoamRuns",
     "minoTerritory", "minoAccuracy", "minoPause", "minoSleep",
+    "minoGiveUp", "minoRoamMin", "minoTurnPull", "minoGuardSight",
+    "minoGuardAccuracy", "minoStalkerAccuracy",
   ],
   onConfettiChange: ["confetti", "confettiAmount"],
   onAudioChange: [

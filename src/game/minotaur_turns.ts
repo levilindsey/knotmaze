@@ -58,11 +58,20 @@ export interface TurnMinoParams {
   speed: TurnSpeed;
   telegraph: boolean;
   sight: number; // runs: it hunts you within this many runs...
+  // runs: ...and gives up beyond sight + giveUp, then checks where it last
+  // saw you (K324 section 4.3, K80 turns 3a; was LOSE_MARGIN 3).
+  giveUp: number;
   roam: number; // runs: the hunter's farthest roam destination
+  // runs: the hunter's nearest roam destination, at most `roam` (K324
+  // section 4.3, K80 turns 3a; was ROAM_MIN 3).
+  roamMin: number;
   territory: number; // runs from the exit junction: the guard's ground
   accuracy: number; // [0, 1]: chance a hunting step is a best one
   pause: number; // [0, 1]: chance it stands still for a turn
   sleep: number; // turns in its lair before it first moves
+  // [0, 1]: chance a roam destination is one nearer you than it stands
+  // (K80 turns 3a: real time's roamPull, in runs; 0 = the plain pick).
+  pull: number;
   // K80 turns stage 2 (K273): a catch sends it back to its lair (true), or
   // leaves it where its turn ended (false).
   lair: boolean;
@@ -79,18 +88,40 @@ export const DEFAULT_TURN_MINO: Readonly<TurnMinoParams> = Object.freeze({
   speed: "one",
   telegraph: true,
   sight: 2,
+  giveUp: 3,
   roam: 8,
+  roamMin: 3,
   territory: 6,
   accuracy: 0.3,
   pause: 0.1,
   sleep: 0,
+  pull: 0,
   lair: true,
 });
 
-// ...and gives up beyond sight + LOSE_MARGIN runs (a rule, not a knob).
-export const LOSE_MARGIN = 3;
-// The hunter's nearest roam destination, in runs (at most `roam`).
-export const ROAM_MIN = 3;
+// K294 (K80 turns 3a): per-model defaults. DEFAULT_TURN_MINO's sight and
+// accuracy are the HUNTER's; the guard has its own sight and accuracy and
+// the stalker its own accuracy (its charge reads the shared sight). The
+// params carry them as their own rows (url_state.ts minoGuardSight,
+// minoGuardAccuracy, minoStalkerAccuracy), and turnMinoParamsOf picks by
+// model.
+export const TURN_MODEL_DEFAULTS = Object.freeze({
+  guard: Object.freeze({ sight: 2, accuracy: 0.3 }),
+  stalker: Object.freeze({ accuracy: 0.3 }),
+});
+
+// The defaults one model plays with: DEFAULT_TURN_MINO plus that model's
+// rows from TURN_MODEL_DEFAULTS.
+export function turnMinoDefaults(model: TurnMinotaurSetting): TurnMinoParams {
+  const p: TurnMinoParams = { ...DEFAULT_TURN_MINO, model };
+  if (model === "guard") {
+    p.sight = TURN_MODEL_DEFAULTS.guard.sight;
+    p.accuracy = TURN_MODEL_DEFAULTS.guard.accuracy;
+  } else if (model === "stalker") {
+    p.accuracy = TURN_MODEL_DEFAULTS.stalker.accuracy;
+  }
+  return p;
+}
 
 // The harness's MinoConfig, trimmed to the two policies stage 1 ships, so
 // the comparison can pass the harness's own configs.
@@ -108,6 +139,7 @@ export interface TurnConfig {
   home?: boolean; // roam destinations around the exit junction (the guard)
   chaseSpeed?: number; // runs per turn while it hunts you (charge)
   lair?: boolean; // a catch sends it to its lair (default true; K273)
+  pull?: number; // P(a roam destination nearer you) (default 0; K80 turns 3a)
 }
 
 // Two runs a move, or a charge, forces the telegraph on (section 2.6).
@@ -123,14 +155,15 @@ export function turnConfig(p: TurnMinoParams): TurnConfig {
     q: p.accuracy,
     stall: p.pause,
     see: p.sight,
-    lose: p.sight + LOSE_MARGIN,
+    lose: p.sight + p.giveUp,
     sleep: p.sleep,
   };
   if (p.lair === false) base.lair = false;
   if (p.speed === "charge") base.chaseSpeed = 2;
   if (p.model === "stalker") return { ...base, policy: "chase" };
+  if (p.pull > 0) base.pull = p.pull;
   if (p.model === "guard") return { ...base, home: true, rMin: 1, rMax: p.territory };
-  return { ...base, rMin: Math.min(ROAM_MIN, p.roam), rMax: p.roam };
+  return { ...base, rMin: Math.min(p.roamMin, p.roam), rMax: p.roam };
 }
 
 export function mix32(x: number): number {
@@ -259,17 +292,46 @@ function stepRandom(g: TurnGraph, m: MinoState, noReverse: boolean, rng: TurnRng
   return pick(c, rng);
 }
 
-function wanderDest(g: TurnGraph, cfg: TurnConfig, v: number, rng: TurnRng): number {
+// A roam destination: a junction rMin..rMax runs from v. THE PULL (K80
+// turns 3a, real time's roamPull in runs, minotaur.ts pickDest): with chance
+// cfg.pull it is drawn only among those nearer the player p than the
+// minotaur's own junction `at`, when there are any and p is seen (p < 0 on
+// the start: it pulls nothing). It splits the one draw u: below pull,
+// u / pull picks among the nearer; above, (u - pull) / (1 - pull) among
+// all, so pull 0 is the plain pick exactly.
+function wanderDest(
+  g: TurnGraph,
+  cfg: TurnConfig,
+  v: number,
+  rng: TurnRng,
+  at: number,
+  p: number
+): number {
   const lo = cfg.rMin ?? 3;
   const hi = cfg.rMax ?? 8;
-  const c: number[] = [];
+  let c: number[] = [];
   for (let w = 0; w < g.n; w++) {
     if (g.chase.isEnd[w]) continue;
     const d = g.hopd(v, w);
     if (d >= lo && d <= hi) c.push(w);
   }
   if (c.length === 0) return -1;
-  return c[Math.floor(rng.next() * c.length)];
+  let u = rng.next();
+  const pull = cfg.pull ?? 0;
+  if (pull > 0 && p >= 0) {
+    if (u < pull) {
+      u /= pull;
+      const base = g.hopd(at, p);
+      const nearer = c.filter((w) => {
+        const d = g.hopd(w, p);
+        return d >= 0 && d < base;
+      });
+      if (nearer.length > 0) c = nearer;
+    } else {
+      u = (u - pull) / (1 - pull);
+    }
+  }
+  return c[Math.min(c.length - 1, Math.floor(u * c.length))];
 }
 
 // One turn of the minotaur, with the player standing at (or bound for) p:
@@ -331,7 +393,7 @@ export function decide(
       }
       if (m.mode === 0 && !mv) {
         if (m.dest < 0 || m.dest === m.v) {
-          m.dest = wanderDest(g, cfg, cfg.home ? g.exitJ : m.v, rng);
+          m.dest = wanderDest(g, cfg, cfg.home ? g.exitJ : m.v, rng, m.v, visibleP);
         }
         mv = m.dest >= 0 ? stepToward(g, m.v, m.dest, rng) : stepRandom(g, m, true, rng);
       }

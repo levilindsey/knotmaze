@@ -270,6 +270,14 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   choice("revealLook", ["fade", "halo", "glow", "dots", "fray", "beacon"]), // 138
   // K290 (burn stage 3a): how burnt runs draw (BURNT_MODES order).
   choice("burnt", ["gone", "char"]), // 139
+  // K80 turns 3a: K324 section 4.3's two knobs, the turn pull, and K294's
+  // per-model rows (the guard's sight and accuracy, the stalker's accuracy).
+  num("minoGiveUp"), // 140
+  num("minoRoamMin"), // 141
+  num("minoTurnPull"), // 142
+  num("minoGuardSight"), // 143
+  num("minoGuardAccuracy"), // 144
+  num("minoStalkerAccuracy"), // 145
 ]);
 
 // The format version a blob names first. Bump it for anything but an

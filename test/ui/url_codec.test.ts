@@ -108,6 +108,8 @@ describe("links", () => {
       pickMargin: 4, pickChoiceRatio: 1.5,
       revealDistance: 2.5, revealFade: 1, revealLook: "beacon",
       burnt: "gone",
+      minoGiveUp: 3, minoRoamMin: 3, minoTurnPull: 0,
+      minoGuardSight: 2, minoGuardAccuracy: 0.3, minoStalkerAccuracy: 0.3,
     });
   });
 
@@ -559,6 +561,8 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   pluckSheen: "psh", pluckTug: "ptg", tugAuto: "pta", autoPluckGain: "pag",
   minoRestart: "mrs", minoLair: "mlr",
   burnt: "fbt",
+  minoGiveUp: "mlm", minoRoamMin: "mrn", minoTurnPull: "mtp",
+  minoGuardSight: "mgs", minoGuardAccuracy: "mga", minoStalkerAccuracy: "msa",
 };
 const APPEAR_GROUP = ["appearMode", "appearSequence", "appearSpeed", "appearFx"];
 
@@ -579,6 +583,7 @@ function otherValue(name: keyof typeof PARAM_DEFAULTS): string | number | boolea
   if (name === "backgroundSpeed") return 2;
   if (name === "backgroundAngle") return 90;
   if (name === "minoSleep") return 2; // K80 turns: its default is 0
+  if (name === "minoTurnPull") return 0.5; // K80 turns 3a: its default is 0
   // A share whose default could be 0 (off), where halving changes nothing.
   if (name === "hCutShare") return d === 0.5 ? 0.25 : 0.5;
   if (name === "fireDelay") return 12; // K114: its default is 0

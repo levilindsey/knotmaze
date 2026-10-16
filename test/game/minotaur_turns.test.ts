@@ -9,9 +9,11 @@ import {
   telegraphOn,
   turnConfig,
   TurnGraph,
+  turnMinoDefaults,
   TurnMinotaur,
   TurnRng,
   turnSeed,
+  TURN_MODEL_DEFAULTS,
 } from "../../src/game/minotaur_turns";
 import type { TurnConfig, TurnMinoParams, TurnStep } from "../../src/game/minotaur_turns";
 import { undoAllowed } from "../../src/game/minotaur";
@@ -173,6 +175,32 @@ describe("params to config", () => {
     expect(turnConfig(params({ telegraph: false, speed: "charge" }))).toMatchObject({ telegraph: true, speed: 1, chaseSpeed: 2 });
     expect(turnConfig(params({ speed: "half" })).speed).toBe(0.5);
   });
+  // K80 turns 3a: K324 section 4.3's two knobs and the pull.
+  it("gives up past sight + giveUp, roams from roamMin, and pulls the roamers only", () => {
+    expect(turnConfig(params({ giveUp: 0 }))).toMatchObject({ see: 2, lose: 2 });
+    expect(turnConfig(params({ sight: 3, giveUp: 5 }))).toMatchObject({ see: 3, lose: 8 });
+    expect(turnConfig(params({ roamMin: 1 }))).toMatchObject({ rMin: 1, rMax: 8 });
+    expect(turnConfig(params({ roamMin: 5, roam: 4 }))).toMatchObject({ rMin: 4, rMax: 4 });
+    expect(turnConfig(params({ model: "guard", roamMin: 5 }))).toMatchObject({ rMin: 1, rMax: 6 });
+    expect(turnConfig(params()).pull).toBeUndefined();
+    expect(turnConfig(params({ pull: 0.5 })).pull).toBe(0.5);
+    expect(turnConfig(params({ model: "guard", pull: 0.5 })).pull).toBe(0.5);
+    expect(turnConfig(params({ model: "stalker", pull: 0.5 })).pull).toBeUndefined();
+  });
+  // K294 (K80 turns 3a): the per-model defaults.
+  it("plays each model at its own sight and accuracy", () => {
+    expect(turnMinoDefaults("hunter")).toEqual({ ...DEFAULT_TURN_MINO, model: "hunter" });
+    expect(turnMinoDefaults("guard")).toMatchObject({
+      model: "guard",
+      sight: TURN_MODEL_DEFAULTS.guard.sight,
+      accuracy: TURN_MODEL_DEFAULTS.guard.accuracy,
+    });
+    expect(turnMinoDefaults("stalker")).toMatchObject({
+      model: "stalker",
+      sight: DEFAULT_TURN_MINO.sight,
+      accuracy: TURN_MODEL_DEFAULTS.stalker.accuracy,
+    });
+  });
 });
 
 describe("undo", () => {
@@ -292,6 +320,53 @@ describe("decide", () => {
         expect(tg.chase.isEnd[m.dest]).toBe(false);
       }
     }
+  });
+
+  // K80 turns 3a: THE PULL. With chance pull a roam ends nearer the player
+  // than the junction it stands on (when one is in range); pull 0 is the
+  // plain pick, and so is any pull while the player is unseen (the start).
+  it("roams nearer the player with the pull, and plainly without it", () => {
+    const walk = realMaze(7);
+    const tg = new TurnGraph(walk);
+    let pulled = 0;
+    for (let s = 0; s < 60; s++) {
+      const rng = new SeededRNG(s + 1);
+      const walkIn = (from: number, n: number): number => {
+        let v = from;
+        for (let i = 0; i < n; i++) {
+          const runs = tg.chase.adj[v].filter((e) => {
+            const w = tg.other(e, v);
+            return w !== tg.start && w !== tg.exit && !tg.chase.isEnd[w];
+          });
+          if (runs.length === 0) break;
+          v = tg.other(runs[rng.nextInt(runs.length)], v);
+        }
+        return v;
+      };
+      const v = walkIn(tg.exitJ, 4);
+      const p = walkIn(v, 9);
+      if (tg.hopd(v, p) <= 2) continue;
+      const dest = (pull: number | undefined, player: number): number => {
+        const m = { ...initMino(tg), left: true, v };
+        const c: TurnConfig = { ...cfg(), rMin: 3, rMax: 8, see: 0, lose: 0, pull };
+        decide(tg, c, m, player, 1, new TurnRng(s).at(1));
+        return m.dest;
+      };
+      // Pull 0 and an unseen player are the plain pick, draw for draw.
+      expect(dest(0, p)).toBe(dest(undefined, p));
+      expect(dest(1, tg.start)).toBe(dest(undefined, tg.start));
+      const d = dest(1, p);
+      if (d < 0) continue;
+      const nearer: number[] = [];
+      for (let w = 0; w < tg.n; w++) {
+        const r = tg.hopd(v, w);
+        if (!tg.chase.isEnd[w] && r >= 3 && r <= 8 && tg.hopd(w, p) < tg.hopd(v, p)) nearer.push(w);
+      }
+      if (nearer.length === 0) continue;
+      expect(nearer).toContain(d);
+      pulled++;
+    }
+    expect(pulled).toBeGreaterThan(20);
   });
 });
 
