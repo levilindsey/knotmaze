@@ -562,4 +562,6 @@ only with the files it is about; `render.md` lists the area's other files.
   dark star in the eye changed shape (an X became a rounded square) and
   remains. K344's link (`?qoietk.KIiHgRRXwRlRt8fGrST4sf`) builds another
   design since later default changes: its chain 21 has no self-crossing
-  now.
+  now. Verified in desktop Chrome only (with the phone's viewport); the
+  phone itself is still to check (`phone_run.ps1`; at 08:36 it was
+  dozing and locked, and the script never wakes it).
