@@ -2322,3 +2322,121 @@ Everything is under the main checkout's untracked
 
 Stopped with M3 done at 11:35, inside the 2 h cap (started 10:17, cap
 12:17). Nothing is pushed.
+
+## Stage M4 brief (2026-10-15, the coordinator)
+
+**Stage:** K5 M4: the lifecycle to `src/app/lifecycle.ts`, the scene
+build to `src/app/scene.ts` and the audio map to `src/app/audio_map.ts`
+(section 2.2's three rows, 5.2's M4 row). One stage: stop after M4 even
+with time left; M5 is its own brief. If the cap comes first, stop after
+a whole module, in this order: lifecycle, scene, audio map. Each module
+is its own tsc-clean, tested commit, so a partial M4 still merges.
+
+**Start:** `Get-Date` first; your cap is **2 hours** from then. Your
+branch must hold master 8fecac3 (K114 stage 2 merged at cebb75e) or
+later; if it does not, `git merge --ff-only master`.
+
+**Read first:** sections 2.1, 2.2 (the three rows and the three kinds of
+capture) and 5.1; "Stage M3 handoff" ("The frame loop's capture list" as
+the pattern, "Left for M4 and later", "Surprises"); "Stage M2 handoff"
+("Surprises"). Do not read the whole of main.ts; read the regions you
+move and the call sites the re-map lists.
+
+**Setup and process:** as section 7 ("Setup"), with these changes:
+- probes and results in the main checkout's untracked
+  `C:\Users\lsl\Repositories\knotmaze\.claude\probes\K5\M4\`. M3's tools
+  are in `..\M3\` (`remap.ts`, `anchors_f47be3b.json`,
+  `remap_e6e1734.md`, `checks_m3.ps1`, `review_moves.mjs`,
+  `verify_step2.mjs`, `ab_compare.mjs`, `m2_input_ab.mjs`,
+  `globals_check.mjs`): copy, don't edit them there;
+- ports **5980-5989**;
+- the perf lock covers tests, builds and every timing:
+  `pwsh C:\Users\lsl\Repositories\knotmaze\.claude\probes\K268\lock_take.ps1 -Owner 'K5 M4' -What '<what>'`,
+  then `lock_release.ps1 -Owner 'K5 M4'`. Wait for it inside one
+  blocking command. No phone.
+
+**Scope, one commit per step:**
+1. **Re-map** main.ts at your base (K114 stage 2 added fire-clock lines
+   since e6e1734). For each of the three modules, list its declarations,
+   the `let`s it owns (the lifecycle: physState, settleWall0, frozenSig,
+   loaderShownAt, physSig, physicsLive, warmHoldFrom and any others the
+   re-map finds; the scene: the `let`s behind the SceneRef; the audio
+   map's), every other region that reads or writes them, and every name
+   each calls. Write the capture lists under "### Stage M4 handoff" at
+   the end of this doc; commit (WIP).
+2. **The lifecycle** to `src/app/lifecycle.ts` as
+   `createLifecycle(deps, scene)`, exporting 2.2's list (beginLoading,
+   loadingTick, finishLoading, replaySettle, beginSettle, presettleTick,
+   finishPresettle, startSettling, freeze, applyPhysicsMode,
+   physicsInputsChanged, `state`).
+   - Break the loop/lifecycle cycle as "Left for M4" says: whichever is
+     created first takes the other's half as closures (for example
+     `freeze: () => life.freeze()`); `loop.halted` writes stay calls on
+     the loop.
+   - physState, settleWall0 and warmHoldFrom become the lifecycle's
+     getters where FrameLoopDeps reads them now; `type PhysState` is
+     exported from lifecycle.ts.
+   - SETTLE_WALL_CAP_MS stays in frame_loop.ts or follows the lifecycle:
+     your call, named in the handoff.
+3. **The scene build** to `src/app/scene.ts`: the scene `let`s,
+   syncBackground, recolorScene and rebuild. `createScene()` returns the
+   SceneRef plus rebuild, recolorScene and syncBackground; main.ts's
+   SceneRef getters go with the `let`s. The SceneState fold is M8's.
+4. **The audio map** to `src/app/audio_map.ts`: rebuildAudioMap,
+   runForCtrl, freqForCtrl and pluckUnit.
+5. **Lore:** add the new files to the `paths:` of each rules file whose
+   lore is about the moved code (the load, the settle and its budget,
+   the loader, the pre-settle and K307's warm-up gate, rebuild, the audio
+   map), and update their rows in `docs/lore_index.md`. Change no
+   CLAUDE.md line.
+
+Each move is pure: no logic edits. If one seems needed, stop and write
+it into the handoff.
+
+**Files you own:** `src/main.ts` (the moved regions and the call sites
+the moves retarget), `src/app/lifecycle.ts`, `src/app/scene.ts`,
+`src/app/audio_map.ts`, `src/app/scene_ref.ts` if the SceneRef's type
+has to change, `src/app/frame_loop.ts`'s deps (FrameLoopDeps' lifecycle
+accessors, nothing else), the `createStamp` and `installProbeHooks`
+arguments main.ts passes, the `paths:` lines of step 5,
+`docs/lore_index.md`, and this doc's "Stage M4 handoff". R1 has merged,
+so ProbeCtx's type may change; keep such changes small, since K5 R2 may
+launch beside you.
+
+**Running beside you:** the launch prompt names them. Stay out of
+`src/physics/**`, `src/render/**`, `tweakpane_panel.ts`, `scripts/**`,
+`LEDGER.md`, and every test. Whoever merges second rebases; a hunk
+another item adds to a moved region is ported by hand into the new file
+(section 6).
+
+**Checks** (section 5.1):
+- tsc, `npm test` and `npm run build` at every code commit (keep each
+  commit tsc-clean);
+- the moved-code review per commit, with the old → new map in each
+  message;
+- the hook inventory, unchanged;
+- `diag_screenshot.mjs` on `phw=0` and `phw=1`;
+- the same-state pixel A/B on the knot, fabric, fog and thread-reveal
+  links, expecting 0 px; on fabric, also after a regenerate (a new seed,
+  through the panel or a hook) and after a physics-mode switch (physics
+  off, then on), since rebuild and applyPhysicsMode move;
+- the load path moves (loadingTick, presettleTick and warmHoldTick run
+  every frame while a design loads): time to the first sleep (the
+  stamp's sim/wall, which `diag_screenshot.mjs` reports) on knot and
+  fabric, `phw=0` and `phw=1`, master and branch, three runs each under
+  the perf lock. A pure move lands within noise;
+- the audio map: if a hook exposes runForCtrl or freqForCtrl, compare
+  them over every ctrl on the knot and fabric links, master and branch;
+  if none does, say so in the handoff.
+
+**Helpers:** none.
+
+**Stop rule:** stop when M4 is done or at the 2 h cap, whichever comes
+first. `Get-Date` at the start and at each milestone. Commit WIP at
+each step, broken or not; never push. A compaction is not a stop: after
+one, re-read this brief, `git log -5` and your handoff before going on.
+At the stop, finish "### Stage M4 handoff" (the capture lists, what
+moved with SHAs, the checks with paths, what is left for M5 and later,
+surprises) and report the commits, the checks, a `Ledger items` list
+and K5's handle fields (owner, branch and last commit, evidence, next,
+brief).
