@@ -196,3 +196,20 @@ full 240-daily measurement were reduced to the checks below; see Residuals).
   before/after sheet) were not run; only the clearance check and the unit
   tests above verify the finish. The fire-clock property test gained seeds
   23 and 29 to keep its non-vacuity count above 100 on the new mazes.
+
+## K521 measurement: items 7-8 (2026-10-16, master 9926525)
+
+Measurement only, no generation changes; evidence
+`.claude/probes/K74/stage3/out/results_k521.md` (raw scan, port, classify,
+sleep and timing files beside it). Item 7: today's plans are identical to
+the prototype's on 640/640 recipe-days (B, C1-C3, flank recipes, neutral
+control) — 0 mismatches, so the K109/K110 exception list is empty on
+dailies 1-80. Item 8 (dailies 1-240, tails + H1 at 1): today's C3 reads
+gF median 2.86x with 20.0% within 1.5x — **the bar (≥ 2.5x and ≤ 15%)
+fails on the within share for every recipe** (best 18.3%), which is
+stage 4's job; stage 2's 135 in-clearance junctions at share 0 classify
+as 80 exit corner trims + 55 spanning splices, 0 from K109/K110; the
+clearance guard still shows 0 new junctions inside; all 39 sleep
+designs sleep by 5 s at both finishes (K136 the known exception);
+generation 25.8 vs 26.4 ms median (no regression); the before/after
+sheet of dailies 1-3 is in the results file. `npm test` 1347 passed.
