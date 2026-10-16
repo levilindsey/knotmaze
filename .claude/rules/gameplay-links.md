@@ -285,3 +285,25 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   live-effects case; new: test/game/explore_finish.test.ts. The golden
   snapshot and the golden dailies did not move. A branch that also appends
   codec params (K466) renumbers when it rebases.
+
+- REVEAL END PARAMS (K466, 2026-10-15; brief docs/design/K466.md; Levi:
+  "we should do something to emphasize the unexplored thread ends a bit
+  more, maybe especially for ends that lie under a crossing"): two
+  choices APPENDED after K465's `revealFinish` (149); CODEC_VERSION
+  stays 6. `revealEndCross` (`rve`, index 150: under | past | back,
+  default under) says where a stub's end goes when its fade would lie
+  under an over thread's casing; `revealEndGlow` (`rvg`, index 151: soft
+  | bright, default bright) sizes the frontier halo. url_state reads both
+  with readChoice (`REVEAL_END_CROSSES`, `REVEAL_END_GLOWS`); an unknown
+  option reads the default. Neither daily-exempt nor a MAZE key (a daily
+  plays with the reveal off). Under onTrailChange in undo_stack.ts's
+  LIVE_EFFECTS; main.ts `syncExploration` copies both onto the fabric
+  renderer (`explore.endCross`, `explore.endGlow`). K76's own look is
+  `&rvg=soft` (rve's default is K76's behavior). What they do:
+  render-explore.md's THE ENDS; rows: gameplay-panel.md's EXPLORATION
+  ROWS. Pins that moved: the table pin (`test/ui/param_codec.test.ts`),
+  url_codec.test.ts's defaults table, OVERRIDE_KEYS (`rve`, `rvg`) and
+  its new test "reads the reveal's end params from rve and rvg"; new:
+  explore_view.test.ts's K466 block. The golden snapshot and the golden
+  dailies did not move. A branch that also appends codec params
+  renumbers when it rebases.

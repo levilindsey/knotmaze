@@ -142,7 +142,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   finish is from the start: its marker, the gap around it and the arrow
   at the screen edge while it is off screen, even over thread you have
   not explored. Off hides the finish until you have seen it. Applies
-  live."
+  live." K466 (2026-10-15) added "end at crossing" (`revealEndCross`,
+  under / past / back, default under) and "end glow" (`revealEndGlow`,
+  soft / bright, default bright) between "reveal end" and "show finish",
+  both only under threads and onTrailChange. Tooltips: "Where a thread
+  you have not explored ends when its end would lie under a crossing,
+  hidden by the thread on top: under (it stays there), past (it shows a
+  little further, beyond the crossing) or back (it ends before the
+  crossing). Applies live." and "How strongly the light at the end of a
+  thread you have not explored shows (the halo and beacon ends): soft or
+  bright (larger and brighter). Applies live." The glow row shows for
+  every look, though only halo and beacon draw a halo.
 
 - BURNT ROW (K290 stage 3a, 2026-10-15): "burnt" (gone / char) in the
   Burn race folder, last since K440, hidden while the fire is off like
