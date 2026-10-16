@@ -197,15 +197,6 @@ Next free ID: K521.
   - evidence: `.claude/probes/K161/cleanup.ps1` (`-DryRun` first) and `cleanup.log`
   - next: run `cleanup.ps1 -Ids (Get-Content .claude/probes/K161/ids_05e60da0.txt)` (`-DryRun` first): the 32 agent worktrees left at coordinator 05e60da0's hand-off, each merged or superseded by master (the script copies probes and unlinks junctions first). Four are locked by that session's Claude process (pid 12264) and go only once it exits (a /clear keeps it); rerun the same list then. Delete `.claude/worktrees/agent-a092bd665532db806` if it is still there (an empty dir the last sweep left). 8 branches ahead of master have no worktree (Levi's: `backup-pp-gaps-prerebase`, `k279-stage1-prerebase`, K49's `ac664e8a`). Rerun the script for the profiles when C: runs low.
   - brief: the header of `.claude/probes/K161/cleanup.ps1`
-- **K76** Â· Thread-reveal mode, stage 2 (Levi, 2026-10-13): `exploration`
-  (off | fog | threads) and an end look, a separate shader variant. 2a-2d merged
-  (2d: 0ac54dc..9e3befd); off by default. The phone gate fails one criterion: 1-5 `update()` calls a move.
-  - owner: nobody since 2026-10-15 06:05 (stage 2d done; agent `adbaac6a024e6d144` of claude session d8031183, worktree removed by the K161 sweep 2026-10-15, branch kept)
-  - branch: mainline; last commit: `9e3befd`
-  - evidence: `.claude/probes/K76/stage2d/` (`phonekit/gate2.mjs`, `census2d.mjs`, `out/` with `phone_gate_fw0.txt`, `sheet/final_desktop.png` and `final_phone.png`); 2a-2c's beside it; lore `render-explore.md`
-  - next: the gate's criterion 2: count `exploreUpdatePending`'s flips (`applyExploreGaps`, ribbon_renderer.ts) against the calls a move, move that re-derivation out of `update()`, re-run gate2 with `&fw=0` and add the growth frame; a High contrast shot on the phone; widen the start view to ~2 x (revealDistance + 2) at the 90 cap (K362, taken 2026-10-15; could ride K397's fix stage)
-  - brief: `docs/design/K76.md`, "Stage 2d handoff"; design `docs/design/K76_reveal_mode.md`
-  - env: the phone: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`); builds: `scripts/preview.ps1`
 - **K268** Â· Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
@@ -1252,6 +1243,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   ENDS; docs/design/K466.md Handoff).
 
 ## Done
+
+- **K76** · Thread-reveal mode, stage 2: criterion 2 fixed (applyExploreGaps re-derives underWindows/pluck footprints from the last solve ungated slot data, no update() per move; phone gate2 fw=0: 0 updates/move, was 1-5), K362 start view widened to 2x(revealDistance+2), HC phone shot taken (capture tiles, K513 path). Done in PLACEHOLDER (2026-10-16; evidence .claude/probes/K76/stage2e/).
 
 - **K514** Â· Looks screenshots no longer tile with the phone sitting in landscape: `shotViewport` captures at a surface-fitting scale on the page's emulation CDP session (464x850 for 411x753). Done in this commit (2026-10-16).
 - **K516** Â· K6-3 phone cadence check: knot fw=0 draws 0/s at rest (ticker stopped), fabric ambient cadence 23.8 drawn/s (rAF p95 16.9 ms, smooth), continuous mode 60.2 / 44.0 drawn/s; load first sleep 10.5-12.9 s. Done in PLACEHOLDER (2026-10-16; `.claude/probes/K516/results.md`). Residual K520.

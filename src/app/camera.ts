@@ -98,6 +98,16 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
       maxX = fogBox.maxX;
       maxY = fogBox.maxY;
       pad = 0.3;
+      // K362 (taken 2026-10-15): under the thread reveal the framed span
+      // is at least about 2 x (revealDistance + 2) world units, so the
+      // start view is not pinned at the 90 px/world cap on the first stubs.
+      if (params.exploration === 'threads') {
+        const span = 2 * (params.revealDistance + 2);
+        const cx = (minX + maxX) / 2;
+        const cy = (minY + maxY) / 2;
+        if (maxX - minX < span) { minX = cx - span / 2; maxX = cx + span / 2; }
+        if (maxY - minY < span) { minY = cy - span / 2; maxY = cy + span / 2; }
+      }
     }
     // The threads' edge, or a start/head/exit disc poking past it; under
     // fog, the visible region's.
