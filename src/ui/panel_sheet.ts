@@ -27,6 +27,15 @@ export function sheetLayout(
   );
 }
 
+// K482: row help (the label as a button: role, Tab stop, tap to open) is
+// touch-only. A coarse pointer or the sheet gets it; a fine-pointer side
+// panel keeps the native title tooltip and one Tab stop per row.
+export function helpEnabled(coarsePointer: boolean, sheet: boolean): boolean {
+  return coarsePointer || sheet;
+}
+
+// K483: the sheet's font, px (Tweakpane's side panel stays at its 11).
+export const SHEET_FONT_PX = 13;
 // Whether the panel starts open. A sheet never does, whatever was stored (it
 // would cover the page on every load); otherwise the stored choice, else
 // open on roomy, pointer-precise screens (`roomy`).
