@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K465.
+Next free ID: K469.
 
 ## Waiting on Levi
 
@@ -446,6 +446,18 @@ Every other item below waits on the trigger it names.
 - **K463** · K5 R2's unrun checks, a small Sonnet job under the perf lock: the cross-build threads round
   trip (`K8/stage2/g3_probe.mjs roundtrip ... explore`, c22de79 against 52faab8, expect 0 px) and three
   more fog `phw=0` captures per build (`.claude/probes/K5/R2/checks/`, `pairs_*.txt`, `threads_dots/`).
+- **K465** · Thread reveal: show the finish marker and its off-screen indicator by default (Levi
+  2026-10-15 15:49); K76 decision 6 hides both until the exit's thread is seen (drawMarkers, main.ts
+  finishIndicator, EXPLORE_MARKER_VIS). After K6-1 (same files); brief `docs/design/K465.md`.
+- **K466** · Thread reveal: emphasize unexplored thread ends more, especially ends that lie under a
+  crossing (Levi 2026-10-15 15:49). Design + build after K459 (the cap and two dots); brief
+  `docs/design/K466.md`.
+- **K467** · Mobile row help: show each row's tooltip text on touch (Levi 2026-10-15 ~15:58).
+  Proposed: tap the row's label to expand the text inline under the row, an (i) mark on labels that
+  have help; not long press. One stage with K468; brief `docs/design/K467.md`.
+- **K468** · Settings menu full screen on mobile (Levi 2026-10-15 ~15:58): a top bar with close,
+  undo and redo; Android back closes it; phones in landscape too. One stage with K467; brief
+  `docs/design/K467.md`.
 
 ## Residuals (known, not fixed)
 
