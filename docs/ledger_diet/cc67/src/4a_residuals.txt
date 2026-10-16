@@ -4,7 +4,7 @@
 
 - **K266** · The hover rim's short-run limits (K248): runs under 2 x rimGap never glow, and a short run lit under a crossing's over thread shows nothing; `census_rim.mjs`'s open-chain terminal sample (k = 235) reads a probe triangle. `docs/design/K111.md` ("Stage 3 handoff").
 
-- **K267** · Stale `highlightMode` mentions after K248 in `docs/design/` (K76, K76_reveal_mode, K174, K193, K198, levi_notes_2026-10-13), and v4 `.J` probe links in rules files (gameplay-motion, probes-phone, render-pluck, probes.md) and play links in K174, K180, K198, brief templates.
+- **K267** · Stale `highlightMode` mentions after K248 in `docs/design/` (K76, K76_reveal_mode, K174, K193, K198, levi_notes_2026-10-13), and v4 `.J` probe links in rules files (gameplay-motion, probes-phone, render-pluck, probes.md (K80)), play links in K174, K180, K198, brief templates.
 
 - **K263** · `minotaur.ts` exports `undoAllowed`, but nothing in `src` calls it, no move undo exists, and `docs/design/K80_turns.md` step 2 cites it as real time's behavior. Delete it, or wire it when an undo lands.
 
@@ -24,9 +24,9 @@
 
 - **K252** · K198 s2's residuals: (a) `RANGE_EASE` is a per-frame ease (0.15), so resize and fit drift settle faster at higher fps; (b) the head's 0.45 s show delay rests on five blips (longest 0.33 s): K156's next phone pass can check more. `docs/design/K198.md` ("Stage 2 handoff").
 
-- **K246** · K174's residuals (`docs/design/K174.md`, "Stage 1 handoff"): pace links aren't clamped (old `mhp=25` means 25x pace); the K80 rt probes (`.claude/probes/K80/rt/`) lack K132's `rt_lib.ts` fix; `rt_chase.mjs` profiles in OS temp (fixed in `.claude/probes/K174/rt/`).
+- **K246** · K174's residuals (`docs/design/K174.md`, "Stage 1 handoff"): pace links unclamped (old `mhp=25` = 25x pace); K80 rt probes (`.claude/probes/K80/rt/`) lack K132's `rt_lib.ts` fix; `rt_chase.mjs` uses OS temp (fixed in `.claude/probes/K174/rt/`); panel labels clip `mino*` keys.
 
-- **K243** · A paused instant-intro page draws no threads at load (`?b.J&am=instant&fw=0&sp=0`): `beginSettle()`'s instant branch skips an `update()`; fix: `renderer.update(); fabric.update(...)` there. `docs/design/K235_K239.md` ("Stage 1 handoff"); `.claude/probes/K235/k239_paused.mjs`.
+- **K243** · Paused instant intro draws no threads (`?b.J&am=instant&fw=0&sp=0`): `beginSettle()`'s instant branch skips `update()`; fix: `handRendererLook(); renderer.update(); fabric.update(...)`. `docs/design/K235_K239.md` ("Stage 1 handoff"); `.claude/probes/K235/k239_paused.mjs`.
 
 - **K242** · K191's residuals (`docs/design/K154_K169.md`, "Stage 2 handoff"): the fan program's GPU cost during fades and stage 1's phone hash cost are unmeasured; the tap-time fade-out and a full web restored on load are unit-tested only; the knot and fog A/B against stage 1 was not rerun.
 
@@ -64,7 +64,7 @@
 
 - **K190** · Unmeasured costs from K154+K169 (aaa3dda): the new hash adds 37-60% to the drifting backgrounds on the desktop; the phone and the fan program in a web fade are unmeasured. Measure at K79's K52 phone gate, vellum-drift first (`docs/design/K154_K169.md`, "Stage 1 handoff").
 
-- **K195** · The phone pass's gaps (K156 3c, `docs/design/K156.md`, "Stage 3c handoff"): the noise floor is one 3-rep A/A pass for `-Moves 0,7,13` (rerun if orientation, phone or load changes); knot-mode render swings 7.5-20.5 ms in A/A; K80's indicator look never taps the indicator.
+- **K195** · Phone pass gaps (K156 3c, `docs/design/K156.md`, "Stage 3c handoff"): noise floor is one 3-rep A/A pass for `-Moves 0,7,13` (rerun if orientation, phone or load changes); knot-mode render swings 7.5-20.5 ms in A/A; K80's indicator look never tapped. Fixed: K193, K253 (459cc11).
 
 - **K196** · K180's crossings options at phone scale: `ride` and `pinch` leave most taps unreadable in the census (dense `ride` 93.8%, fabric `pinch` 71.1%); `through` reads best (`docs/design/K180.md`, "Stage 1 handoff"; `.claude/probes/K180/`).
 
@@ -84,11 +84,11 @@
 
 - **K15** · During a reveal, a joint's fan can turn opaque while a fill beside it is still striped (K4 fixes it by construction). May be moot: G1 (99443cb) deleted the over-fills. Re-check fan vs base ribbon during a reveal.
 
-- **K16** · Physics settle is slow: 100-190 ms/frame at gs 18, 7 sim-s in 14 s on the phone. K279's wake check (`.claude/probes/K279/wake/`): every wake (drag, tug tap, bare) spirals to the 100 ms cap. K162 (4): do drags get K147's budget? K7's worker is the full fix.
+- **K16** · Settle is slow: 100-190 ms/frame at gs 18, 7 sim-s in 14 s on the phone (sleeps at ~5 sim-s since K63). K279's wake check (`.claude/probes/K279/wake/`): every wake (drag, tap, bare) spirals to the 100 ms cap. K162 (4): do drags get K147's budget? K7's worker is the full fix.
 
 - **K65** · Low-gridAlign knots (`ga=0`) creep under the quiet threshold (a fresh settle ~1.5 world over ~50 s, a cinch up to 0.9 world/s) and every sleep gate freezes them mid-creep. A net-displacement test would catch it but keep them awake for tens of seconds. Related: K11 (K63).
 
-- **K29** · Boxed kinks at tw 0.64: 3 of ~152 kinks (8 seeds) rest at 0.56-0.78 thread widths of eye hole, boxed in by a fused joint and the 1.6 corridor floor; stronger eye pressure (2.6, 2.8) doesn't lift them. K49 is the size decision. `.claude/rules/physics-kinks.md` ("KINK EYES").
+- **K29** · Boxed kinks at tw 0.64: 3 of ~152 kinks (8 seeds) rest at 0.56-0.78 thread widths of eye hole, boxed by a fused joint and the 1.6 corridor floor; eye pressure 2.6, 2.8 doesn't lift them; smaller since K41. K49 is the size decision. `.claude/rules/physics-kinks.md` ("KINK EYES").
 
 - **K30** · Very wide threads (tw >= 0.72) never sleep, standing riders; after K41, 7/8 seeds sleep at tw .72 (was 4/8). Seed 1q2w3e's kink X360 cycles material through its crossing at mv ~0.09; turning eye pressure off doesn't stop it. The slider reaches 0.8.
 
@@ -110,11 +110,11 @@
 
 - **K133** · Crossed join bridges: plans built before K110 can hold two crossing join bridges (108 plans, 20 dailies); K110's joins skip such a splice, older code doesn't. Fixing moves those plans; first see whether a crossing reads wrong (`.claude/probes/K110/verify_run3.txt`).
 
-- **K136** · A gs 6 tree maze with dead ends never sleeps (140 s of sim) on 7e41a02 and ade3537 alike, so not K110's doing; maybe the K13 attractor. Repro `?12l&gs=6&shp=tree`; `.claude/probes/K110/sheet/results_run1_tree_awake.json`.
+- **K136** · A gs 6 tree maze with dead ends never sleeps (140 s of sim) on 7e41a02 and ade3537 alike, so not K110's doing; maybe the K13 attractor. Repro `?12l&gs=6&shp=tree` (K74's agent saw it at the new defaults too); `.claude/probes/K110/sheet/results_run1_tree_awake.json`.
 
 - **K142** · The A/B harness's first case in a fresh browser can read nonzero (1 of 11 runs: K79 B2b's `none_desk`, specks on thread edges); cause not found (a cold server or GPU cache?). Rerun before trusting it; a warm-up case is untested (`docs/design/K79.md`, "The 18/19 run").
 
-- **K150** · Probes clash across agents (fix: claude-config `rules/lessons.md`): one Chrome profile (`scripts/diag_screenshot.mjs`), TEMP builds unless `-Root` (`scripts/preview.ps1 -Ref`, 1f8be97), tmpdir profiles (`scripts/bench_frame.mjs`, `probe_gpudraw.mjs`).
+- **K150** · Probes clash across agents (fix: claude-config `rules/lessons.md`): one Chrome profile (`scripts/diag_screenshot.mjs`), TEMP builds unless `-Root` (`scripts/preview.ps1 -Ref`, K156 s1, 1f8be97), tmpdir profiles (`scripts/bench_frame.mjs`, `probe_gpudraw.mjs`).
 
 - **K157** · K79 B's color rows on the phone (B3): accent 3's picker opens 8 px below the viewport until the panel scrolls, and a second tap on a swatch doesn't close Tweakpane's popup (check the older color rows too). `docs/design/K79.md` ("Stage B3 results").
 
@@ -132,6 +132,6 @@
 
 - **K188** · K140's residuals (`docs/design/K140.md`, "Stage 1 handoff"): `restartSolve()` leaves pieces in the air; the open desktop panel covers the spray when the exit is at the lower right; the rain takes 5.5-6.2 s to fall out, longer below 10 fps.
 
-- **K287** · K268 s1's residuals (a)-(g): the full proof sweep is unrun; the MAX case and an over thread's tip lack a GPU check; no mode-off A/B after the K114 rebase; the phone's per-slot proof needs `__knotExplore` slots. `docs/design/K268.md` ("Not done in stage 1", Calls).
+- **K287** · K268 s1 residuals (a)-(g): full proof sweep unrun; MAX case and an over thread's tip lack GPU checks; no mode-off A/B after the K114 rebase; phone slot proof needs `__knotExplore` (K156 10-14c census passed). `docs/design/K268.md` ("Not done in stage 1", Calls).
 
 - **K291** · CI: ad2618a's deploy warned that checkout@v4, setup-node@v4 and wrangler-action@v3 target Node 20, and `ubuntu-latest` becomes Ubuntu 26 on 2026-10-19. Bump them to Node 24 releases; if the next deploy fails, pin `ubuntu-24.04`. `.github/workflows/deploy.yml`.

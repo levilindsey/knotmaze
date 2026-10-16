@@ -6,7 +6,7 @@
 
 - **K138** · K80 section 4's M mechanisms (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`), after K137: 4.1, 4.2, 4.4 (then 4.5), 4.6 (simulate first), 4.11, 4.12, 4.18-4.20, 4.23, 4.24, 4.27, 4.31; 4.1, 4.2, 4.4, 4.11, 4.24, 4.31 change generation (check solvability). M-L, L: K141.
 
-- **K139** · Collapse mode (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`): no backtracking, each run collapses behind you. `collapse` (off | finish | free); rides 4.3's snap (K137) and R.3.4's longest thread (`docs/design/K80_gameplay_additions.md`). S-M, after 4.3.
+- **K139** · Collapse mode (Levi 10-13, `docs/design/levi_notes_2026-10-13.md`): no backtracking, each run collapses behind you. `collapse` (off | finish | free); rides 4.3's snap (`fragile`, K137) and R.3.4's longest thread (`docs/design/K80_gameplay_additions.md`). S-M, after 4.3.
 
 - **K46** · Daily variety: no weekly arc; THEMES (constraint sets); per-day overrides later (K82). Engine-exact (K108); memory-trail themes: trailLength 5 (K73). `docs/design/K46_daily_variety.md` (8b1eb90), `docs/design/K46.md`, `.claude/probes/K46/`, branch `worktree-agent-a78c73cec4770a14d`.
 
@@ -22,7 +22,7 @@
 
 - **K115** · Cursive text and shapes: Hershey Script Simplex (`docs/design/K115_cursive_text.md`, ded57f7; `docs/design/levi_notes_2026-10-13.md`; `.claude/probes/K115/`). Next: stage 1 brief. K122: `shipped: true` on `hershey-fonts` in `notices/credits.ts` with the data.
 
-- **K116** · Pluck instruments and accompaniment, lowest priority: band skeleton first (drone, bass, `pluckVoice` presets), then marimba, bells; Pixel audio-CPU probe first; loop K125. `docs/design/K116_instruments.md` (2e60b00); calls `docs/design/levi_notes_2026-10-13.md`.
+- **K116** · Pluck instruments, accompaniment, lowest priority (`docs/design/K116_instruments.md`, 2e60b00, `docs/design/levi_notes_2026-10-13.md`): skeleton (drone, bass, `pluckVoice` presets), then marimba, bells; `pvc`, `acc`, `acl` daily-exempt; Pixel audio probe first; loop K125.
 
 - **K144** · Accounts and shared stats, a stretch goal (Levi 10-13): OAuth, cross-device stats, opt-in sharing, percentile bands, replay anti-cheat (K108, K47). Backends: Cloudflare Workers + D1 or the SnoringCat platform (Nakama). Next: design doc. `docs/design/levi_notes_2026-10-13.md`.
 
@@ -36,7 +36,7 @@
 
 - **K312** · Add K299's lesson to claude-config `rules/lessons.md` (WebGL): GPU float division is approximate (ANGLE D3D11 `floor(k*n/n)` = k-1 in 3275 of 16384 pairs), so ring and lap math must be integer-corrected. Held while Levi is away (config edits wait for approval).
 
-- **K313** · A loader that looks like the maze (Levi 10-14): a trefoil maze with over/under gaps, fixed-length trail, drawn by an OffscreenCanvas worker inlined in `index.html` (static SVG first). After K307's warm-up; measure the phone's first frame. `docs/design/K313_loader.md`.
+- **K313** · A loader that looks like the maze (`docs/design/K313_loader.md`; Levi 10-14, approved): a trefoil maze with over/under gaps, fixed-length trail, drawn by an OffscreenCanvas worker inlined in `index.html` (static SVG first). After K307's warm-up; measure the phone's first frame.
 
 - **K324** · Real-time minotaur, more alive and tunable (`docs/design/K324_realtime_minotaur.md`, 091e4dc; Levi took section 7's recs): s1 (sim) after K323 s1; s2 (render) after s1, K7 s2, K307 s2, K329 (checks K270's band); s3 (guard, stalker) after s1. Rel. K245 K247 K271 K293 K294 K296.
 
@@ -48,7 +48,7 @@
 
 - **K331** · Touch gets K298's pick margins (Levi, 2026-10-14): touch moves from world-unit radii to the mouse's form, with its own margin row beside `pickMargin` at ~4 px, so zones stop growing under a pinch zoom. With K330 after K329 (`docs/design/K298_hover_glow.md`, "Notes").
 
-- **K321** · The credits page (Levi 10-14): page and panel link become Credits (`credits.html`): his name and copyright line, art, icon and music credits, "Built with Claude Code" (not prominent), then techniques, licenses, research. Small sonnet stage: `docs/design/K321_credits.md`.
+- **K321** · The credits page (`docs/design/K321_credits.md`; Levi 10-14, approved): page and panel link become Credits (`credits.html`): his name and copyright line, art, icon and music credits, "Built with Claude Code" (not prominent), then techniques, licenses, research. Small sonnet stage.
 
 - **K318** · Win effects (Levi 10-14): one show, many themes; thirteen themes in a Win effects folder (Theme dropdown, Party default), built in twelve stages. Stage 1 after the confetti stage and K111 s5. `docs/design/K318_win_effects.md` ("Build stages").
 
