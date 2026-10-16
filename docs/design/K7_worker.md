@@ -2707,3 +2707,213 @@ note), K370's latency, K373's boot fixes.
   default build.
 
 The handoff goes at the end of this file as "## Stage 7 handoff".
+
+## Stage 7 handoff
+
+Written 2026-10-15 by the stage 7 agent (opus, 2 h cap, started 07:24:07)
+on `worktree-agent-a29b026fa5e2829ee`, forked from master `21d701e`. Master
+has since moved by `cb4999e` (LEDGER.md only). Evidence:
+`.claude/probes/K7/stage7/` (untracked; the merge copies it): the batches
+(`s7_desktop.txt`, `s7_phone.txt`), their runners (`run_s7.ps1`,
+`phone_run.ps1`), logs (`run_s7_desktop.log`, `run_s7_phone.log`), results
+(`k7_results.jsonl`, `k7_latency.jsonl`; `node table_s7.mjs <prefix>...`
+prints the tables below) and `spike/` (the page, its sampler,
+`spike_phone_results.jsonl`, `raw_<label>.json`).
+
+### What is done
+
+- **1. The lever, `4b51e5c`.** The worker builds the first scene from its
+  Worker `name`, without waiting for main.
+  - `physics_worker_core.ts`, THE NAME BUILD: `workerNameOf(scene, tuning)`
+    is `"knotmaze-physics "` plus JSON (`v` 1, the 17 `SceneParams` fields,
+    from a table typed as a full `Record` so that a new field fails to
+    compile, and the tuning). `readWorkerName` returns them, or null for
+    another tag or version, bad JSON, or a field missing, mistyped or not
+    finite. `PhysicsWorkerCore.start(name)` posts `hello`, then builds gen 0
+    from the name (`ready.src` `"name"`). An `init` builds when its gen is
+    newer than the core's, or the same gen with nothing built.
+    `physics_worker.ts` calls `core.start(self.name)`.
+  - `worker_host.ts`: options `prebuild?: SceneParams` and `spawn?` (for
+    tests). The Worker is spawned `{type: "module", name}`; without a
+    prebuild the name is a plain label the worker reads as no scene. The
+    host reads its own name back, so it compares against what the worker
+    builds (JSON turns -0 into 0). The first `build()` adopts gen 0 when
+    its scene and tuning equal that read (`sameSceneParams`, `sameTuning`:
+    every field, `Object.is`), and a `ready` heard before that build is
+    kept for it. Any other first build posts `init` at gen 1, as before.
+    `stats().host` adds `gate.acceptAt`, `prebuild` (`adopted` |
+    `differs` | empty) and `readySrc` (`name` | `init`).
+  - `main.ts`, the boot only: `new WorkerHost(() => rebuild(), { prebuild:
+    params })`.
+  - 9 tests in `worker_host.test.ts`, "the name build (K7 stage 7)": the
+    name's round trip and 11 names it refuses; adoption with the ready
+    heard before and after the first build; the adopted build steps bit
+    for bit as an init-built one (the dump's hashes); a first build of
+    another scene posts init at gen 1; a name the worker loses, gets
+    truncated or reads as another version builds from the gen-0 init,
+    with no fallback; without a prebuild, a plain name and init as before.
+- **2. The worker chunk's modulepreload, `0e49ed5`.** `vite.config.ts`'s
+  build-only plugin `k7-worker-preload` adds `<link rel="modulepreload"
+  href="./assets/physics_worker-<hash>.js">` to index.html and fails the
+  build when the chunk is missing. The chunk downloads beside the main
+  chunk, and the Worker's own fetch reads it from the HTTP cache (levi.dev
+  gives proxied hashed assets 4 hours).
+- **3. The lore:** `physics-worker.md` (the name build under Lifecycle;
+  Measured: this stage's numbers).
+- **4. The desktop gate:** below. The phone pass and the spike page did
+  not run (Not done).
+
+### Where it departs from the brief
+
+- **The adopting first build still posts `init`, at gen 0,** where the
+  brief says "posts `init` only when they differ". The worker drops it
+  (same gen, already built); a worker that could not read its name builds
+  from it with no extra round trip. Without it, that worker would wait for
+  the 3 s ready timeout and fall back in-thread. The cost is one
+  postMessage of the params, read after the worker's own build.
+- **The modulepreload stays in** (the brief said "try"): on a localhost
+  server that holds every asset 40 ms, it moved the worker's `hello` and
+  `ready` 40-60 ms sooner and left the first visible frame where it was
+  (below). Its costs: a `phw=0` page downloads the worker chunk it never
+  runs (90 KB raw, beside the 1.0 MB main chunk), and on a real network
+  the preload shares bandwidth with the main chunk. Both were measured
+  only on localhost and over adb reverse (a residual).
+- **Probe tools, all untracked** in the stage 7 folder: `lib.mjs`'s server
+  takes `--cache` (assets/ with levi.dev's 4-hour cache, the HTML
+  no-store), `--delay <ms>` (holds every assets/ response) and serves
+  `/knotmaze/c<N>/...` as `/knotmaze/...` (a cold HTTP cache per load
+  under `--cache`) and `/knotmaze/__clear_cache` (`Clear-Site-Data:
+  "cache"`, which `phone_clear.mjs` fetches at teardown); `k7_frames.mjs`
+  records the new gate fields and the worker chunk's fetches;
+  `run_s7.ps1`'s `!!` lines must succeed, and a tripped phone watchdog
+  stops the batch; `phone_run.ps1` waits for 08:30, the phone lock, a phone
+  awake, unlocked and untouched for 20 s, and the perf lock;
+  `phone_setup.ps1` refuses a locked phone.
+- **The phone lock is held from the setup to the teardown.** The brief
+  says to release it between items 3 and 4 when the lock file names K290
+  3b or K395 as waiting, but the lock file (`owner | time | what`) has
+  no waiter field, so nothing can name one; the batch refreshes the lock
+  between its parts instead.
+
+### Verification
+
+Observed unless marked inferred. Times are ms after the main chunk's
+`responseEnd` (stage 5's gate fields), first visible and sleep in s.
+
+- **The code:** `npx tsc --noEmit` clean, and `npx vitest run` 84 files
+  and 1164 tests passed (1 skipped) on `0e49ed5` (08:20, under the perf
+  lock) and on `4b51e5c`: K87's pin, the golden dailies, the
+  byte-identity golden and `physics_host.test.ts`'s lockstep among them.
+  `npm run build` passed on both commits, and the built `index.html`
+  carries the preload.
+- **The desktop gate** (`s7_desktop.txt`, 07:47-07:52 under the perf
+  lock, the daily and gs 18 alternating, three loads a build each, a fresh
+  Chrome profile a load, so every load pays K307's cold compiles):
+
+  | | lever `4b51e5c` | master `21d701e` |
+  |---|---|---|
+  | worker `hello` | 94-121 | 94-122 |
+  | worker `ready` | **139-165** (6 of 6 built from the name and adopted) | 363-396 |
+  | gen + ctor | 36-41 + 6-7 | 41-61 + 6-8 |
+  | main hears `ready` | 307-334 (accepted at its first build) | 3157-3415 |
+  | the compile freeze (one frame) | 2794-2872 | 2825-3079 |
+  | pre-settle done | 3577-3654 | 3598-3867 |
+  | first visible | 3.69-3.79 (median 3.73) | 3.72-3.97 (median 3.81) |
+  | intro fps (p95 ms) | 55.1-55.5 (18.1-18.3) | 55.0-55.5 (18.1) |
+  | first sleep | 9.83-10.00 | 9.85-10.17 |
+  | errors, context losses | 0, 0 | 0, 0 |
+
+  In-thread on the lever's build (`phw=0`, one load a design): first
+  visible 3.63-3.68, intro 39.4-39.5 fps (p95 36 ms), first sleep
+  18.58-18.87. **The desktop gate holds:** the worker is ready 139-165 ms
+  in, against 250 (master 363-396). Inferred: the desktop's first visible
+  frame is set by the cold compiles and by the pre-settle, which main's
+  frames drive, not by the worker; the lever's 0.08 s lower median tracks
+  its 0.1 s shorter compile freeze, so no first-visible gain is
+  attributable to it there.
+- **The preload trial** (`--cache --delay 40`: assets/ cached 4 hours and
+  held 40 ms; the daily, three loads each, alternating; the preload build
+  against `4b51e5c`): `hello` 102-103 against 137-157, `ready` 141-145
+  against 181-204, first visible 3.80-3.93 against 3.83-3.89. On every
+  preload load the worker's own fetch of its chunk came from the HTTP
+  cache. Main heard the `ready` at 143-146 ms on two of them, before its
+  first build (kept, accepted at 314-332). On the third (`pl-pre-daily-2`)
+  it heard it only at 3114 ms: main ran its first build and the compile
+  freezes as one busy stretch. That load's first visible frame still came
+  at 3.80 s, since the pre-settle waits for main's frames anyway.
+- **The phone pass did not run** (brief item 3). The phone was Levi's
+  until 08:30. The runner then found it asleep at every check up to its
+  give-up at 08:55 (85 checks; none between the two runners,
+  08:36-08:38), and the probes never wake or unlock it. At 08:35 it woke
+  on its lock screen, and the first runner, which then checked only that
+  the screen was on, sent its setup intent: no tab reached DevTools
+  within 40 s and the batch stopped with nothing measured. Its teardown
+  left no tunnel, forward or lock, but that intent may have left a
+  Chrome tab (the knotmaze page on `localhost:5921`) behind the lock
+  screen, with no tab id to close it by. `phone_setup.ps1` now refuses a
+  locked phone, and `phone_run.ps1` waits for a phone awake, unlocked and
+  untouched for 20 s. The phone's start gate (the worker ready within
+  250 ms of the main chunk; stage 5: 309-513) is therefore unmeasured
+  with the lever, and so is the preload's effect there. Inferred from
+  stage 5's phone numbers (hello 105-138 ms in, a build 89-121 ms): a
+  name build would be ready about 195-260 ms in, at the gate.
+- **The spike page did not run on the phone** (brief item 4; it sits in
+  the phone batch). Its desktop dry run (gs 18, 300 substeps a phase, to
+  check the page) worked end to end: a substep took p50 10.3 ms (p95
+  11.6) on main, 10.3 (10.8) in a worker with main idle and 11.6 (16.3)
+  in a worker with main busy 15 ms a frame, and both worker runs ended
+  bit for bit in main's state (positions, prev, zPos, sim time). The
+  core sampler (`spike/sampler.sh`, which finds the page's threads in
+  `/proc` and logs each one's core every 50 ms) has not run on the phone.
+
+### Not done
+
+- **The phone pass and the spike page (brief items 3 and 4).** Both are
+  ready: `pwsh .claude/probes/K7/stage7/phone_run.ps1 -NotBefore <HH:mm>
+  -GiveUp <HH:mm>` takes the phone lock, waits for the perf lock and a
+  phone awake, unlocked and untouched for 20 s, then runs `s7_phone.txt`
+  through `run_s7.ps1`: 24 loads and two spike runs, the gate first (the
+  lever with the preload against master, ABBA on both designs), then the
+  in-thread references, the spike, the lever without the preload, a
+  third round, drags, touch latency and the spike again. A time (HH:mm)
+  in `phone_deadline.txt` skips the probe lines left after it; the
+  teardown still runs. Someone has to leave the phone awake and unlocked
+  for it.
+- **The preload on a real network.** Measured only on localhost and over
+  adb reverse. After the merge, a fresh-profile load of
+  https://levi.dev/knotmaze/ shows whether the worker's fetch reads the
+  preloaded chunk from the cache through the proxy (`k7_frames.mjs`'s
+  `wk` column, from resource timing: `c` = from the cache).
+- **Not in this stage** (the brief): main's long task at about 0.36 s,
+  K370's latency, K373's boot fixes.
+
+### For the next stage
+
+- **Merge.** Two code commits and this docs commit. `main.ts` changed by
+  one line at the boot (`new WorkerHost(() => rebuild(), { prebuild:
+  params })`), so K5 M2 rebases over it. Master moved only by LEDGER.md
+  since the fork. The stage 7 probe folder is untracked (`builds/` 6 MB:
+  the four builds the batches serve and the spike page's).
+- **The phone pass** (Not done) is what decides whether the lever meets
+  the phone's start gate. Until it runs, Levi's review of F6 stands on
+  stage 5's phone numbers (`physics-worker.md`, Measured), which this
+  stage did not change.
+- **Ideas the numbers point to (not scheduled):**
+  - K371's run-ahead can start from the name build. On the desktop the
+    worker has its scene about 0.15 s in, then idles until main's
+    `settle` after the cold compiles (3.6 s); a pre-settle the worker
+    starts on its own would be done before main's first frame. It must
+    drop that settle when main's first build differs (`prebuild`
+    `differs`), and keep the settle's sim-time rules.
+  - Spawn the worker before the main chunk evaluates. Main spawns it
+    80-106 ms after the main chunk arrives on the desktop (the chunk's
+    evaluation; more on the phone), so a small entry that reads the link
+    and spawns first would move `hello` and `ready` that much sooner. The
+    name needs the link's params before the main chunk runs: the codec
+    and `PARAM_DEFAULTS` in that entry, or the raw query in the name for
+    the worker to parse.
+- **The probes:** the lever's gate fields are in `__knotPerf().host`
+  (`gate.acceptAt`, `prebuild`, `readySrc`); `k7_frames.mjs` records them.
+  A probe that compares a first build against the name build reads
+  `readySrc` (`name` on a bare link or a token, `init` after a fallback
+  to init or a first build of another scene).
