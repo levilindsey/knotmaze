@@ -19,7 +19,7 @@ import { junctionProgram } from "./junction_field";
 import { markerProgram } from "./marker_mesh";
 import { pluckBlurProgram, pluckStillProgram } from "./pluck_overlay";
 import { rippleProgram } from "./pluck_ripple";
-import { sectionProgram } from "./ribbon_renderer";
+import { sectionProgram } from "./ribbon/ribbon_shader";
 
 // Program sites per file under src/ (the test's scan, comments stripped):
 // matches of GlProgram.from | new GlProgram( | Shader.from | new Filter |
@@ -34,7 +34,7 @@ export const PROGRAM_SITES: Readonly<Record<string, number>> = {
   "src/render/marker_mesh.ts": 1, // knot-marker
   "src/render/pluck_overlay.ts": 3, // pluck-blur, pluck-still, pluck-still-explore
   "src/render/pluck_ripple.ts": 2, // pluck-ripple: its program and its Filter
-  "src/render/ribbon_renderer.ts": 2, // section-rgb, section-rgb-explore
+  "src/render/ribbon/ribbon_shader.ts": 2, // section-rgb, section-rgb-explore
 };
 
 // What the current page draws, as the warm-up needs to know it.
@@ -113,7 +113,7 @@ function displacementProgram(): GlProgram {
   return DISPLACEMENT;
 }
 
-const RIBBON = "src/render/ribbon_renderer.ts";
+const RIBBON = "src/render/ribbon/ribbon_shader.ts";
 const STRIP = "src/render/arm_strip.ts";
 const FIELD = "src/render/junction_field.ts";
 const BG = "src/render/background.ts";
