@@ -68,6 +68,50 @@ export function charRange(s: { b0: number; b1: number }): [number, number] {
   return [s.b0 - EXPLORE_CHAR_EDGE, s.b1 + EXPLORE_CHAR_EDGE];
 }
 
+// K290 stage 3b: the FIRE FRONT item, T0 = (FRONT, c, dir, kind), T1 unused:
+// c = the front's unwrapped chain ctrl, dir = +-1 the ctrl direction of the
+// UNBURNT side, kind 0 = a burning front (the char band ahead, the ember
+// at the front), 1 = the lit fuse (the ember only, before the fire
+// spreads). Like CHAR, not a PAINT_ITEM; kCharAt reads it (chains with the
+// flag .y). Static: the shaders have no fire clock (uKFx2 runs only during
+// the appearance reveal), so the motion is the `burn` FX particles'.
+export const EXPLORE_ITEM_FRONT = 7;
+// K290 stage 3b: the SMOLDER item, T0 = (SMOLDER, c0, c1, -): a smoldering
+// arm's stretch from the head to its first burnt stretch, a thin hot line
+// along the centerline (stage 1's red stroke, now under the gaps).
+export const EXPLORE_ITEM_SMOLDER = 8;
+// The char band ahead of a front (ctrl): a thread blackens before it
+// vanishes. Full char at the front, smoothly to none BAND ahead; it ramps
+// in over EXPLORE_CHAR_EDGE behind the front, so under the char look it
+// meets the burnt span's own ramp without a seam.
+export const EXPLORE_FRONT_BAND = 0.7;
+// The ember: a glow peaking at the front, AHEAD ctrl into the unburnt side
+// and BEHIND ctrl into the burnt one (seen only under char: gone cuts it).
+export const EXPLORE_EMBER_AHEAD = 0.25;
+export const EXPLORE_EMBER_BEHIND = 0.55;
+export const EXPLORE_EMBER_RGB = [0xff / 255, 0x7a / 255, 0x1a / 255] as const;
+export const EXPLORE_EMBER_ALPHA = 0.95;
+// The ember's hot core: its centerline half-width (vUV.y), color and power.
+export const EXPLORE_EMBER_CORE_RGB = [0xff / 255, 0xe0 / 255, 0x8a / 255] as const;
+export const EXPLORE_EMBER_CORE_HALF = 0.22;
+export const EXPLORE_SMOLDER_RGB = [0xff / 255, 0x3b / 255, 0x1f / 255] as const;
+export const EXPLORE_SMOLDER_ALPHA = 0.9;
+export const EXPLORE_SMOLDER_HALF = 0.225;
+
+// One fire front as a FRONT item, and the unwrapped ctrl range its slot
+// references must cover.
+export function frontItem(f: { c: number; dir: number; kind: number }): number[] {
+  return [EXPLORE_ITEM_FRONT, f.c, f.dir < 0 ? -1 : 1, f.kind, 0, 0, 0, 0];
+}
+export function frontRange(f: { c: number; dir: number }): [number, number] {
+  const ahead = Math.max(EXPLORE_FRONT_BAND, EXPLORE_EMBER_AHEAD) + 0.05;
+  const behind = Math.max(EXPLORE_EMBER_BEHIND, EXPLORE_CHAR_EDGE) + 0.05;
+  return f.dir < 0 ? [f.c - ahead, f.c + behind] : [f.c - behind, f.c + ahead];
+}
+export function smolderItem(s: { b0: number; b1: number }): number[] {
+  return [EXPLORE_ITEM_SMOLDER, s.b0, s.b1, 0, 0, 0, 0, 0];
+}
+
 const glslF = (x: number): string => x.toFixed(5);
 const glslV3 = (v: readonly number[]): string => `vec3(${v.map(glslF).join(", ")})`;
 
@@ -341,7 +385,17 @@ highp float kExploreAt(KChain c, highp float ctrl) {
 // spans make exactly 1 at their shared end). Only chains whose KPAINT flag
 // .y is set scan. No CPU twin (K152 item 3).
 const int PI_CHAR = ${EXPLORE_ITEM_CHAR};
+// K290 stage 3b: the same scan reads the FRONT items (the char band ahead of
+// a front joins the sum; the ember's glow, the max over fronts, goes to
+// kFireEmber) and the SMOLDER items (kFireSmolder, 1 on a smoldering arm's
+// stretch, ramped at its ends like char).
+const int PI_FRONT = ${EXPLORE_ITEM_FRONT};
+const int PI_SMOLDER = ${EXPLORE_ITEM_SMOLDER};
+highp float kFireEmber;
+highp float kFireSmolder;
 highp float kCharAt(KChain c, highp float ctrl) {
+  kFireEmber = 0.0;
+  kFireSmolder = 0.0;
   if (kP(c.ch).y < 0.5) return 0.0;
   int n = c.nCtrl;
   highp float nf = float(n);
@@ -359,15 +413,39 @@ highp float kCharAt(KChain c, highp float ctrl) {
     int j = r & 3;
     int item = int((j == 0 ? rt.x : j == 1 ? rt.y : j == 2 ? rt.z : rt.w) + 0.5);
     highp vec4 T0 = kP(itemBase + 2 * item);
-    if (int(T0.x + 0.5) != PI_CHAR) continue;
+    int ty = int(T0.x + 0.5);
+    if (ty == PI_FRONT) {
+      highp float x = ctrl;
+      if (c.closed) x += nf * floor((T0.y - x) / nf + 0.5);
+      // s > 0 on the unburnt side.
+      highp float s = (x - T0.y) * T0.z;
+      if (T0.w < 0.5) {
+        sum += (1.0 - smoothstep(0.0, ${glslF(EXPLORE_FRONT_BAND)}, s)) *
+          clamp(s * ${glslF(1 / EXPLORE_CHAR_EDGE)} + 0.5, 0.0, 1.0);
+      }
+      highp float e = s >= 0.0
+        ? 1.0 - smoothstep(0.0, ${glslF(EXPLORE_EMBER_AHEAD)}, s)
+        : 1.0 - smoothstep(0.0, ${glslF(EXPLORE_EMBER_BEHIND)}, -s);
+      kFireEmber = max(kFireEmber, e);
+      continue;
+    }
+    if (ty != PI_CHAR && ty != PI_SMOLDER) continue;
     highp float c0 = T0.y;
     highp float c1 = T0.z;
     highp float x = ctrl;
     if (c.closed) x += nf * floor((0.5 * (c0 + c1) - x) / nf + 0.5);
-    sum += clamp((x - c0) * ${glslF(1 / EXPLORE_CHAR_EDGE)} + 0.5, 0.0, 1.0) *
+    highp float cr = clamp((x - c0) * ${glslF(1 / EXPLORE_CHAR_EDGE)} + 0.5, 0.0, 1.0) *
       clamp((c1 - x) * ${glslF(1 / EXPLORE_CHAR_EDGE)} + 0.5, 0.0, 1.0);
+    if (ty == PI_CHAR) sum += cr;
+    else kFireSmolder = max(kFireSmolder, cr);
   }
   return min(sum, 1.0);
+}
+// K290 stage 3b: the ember over a composed (charred) thread color; core =
+// the centerline's coverage (0 in the arm strips, which have no across).
+vec3 kEmberLook(vec3 rgb, highp float e, highp float core) {
+  rgb = mix(rgb, ${glslV3(EXPLORE_EMBER_RGB)}, ${glslF(EXPLORE_EMBER_ALPHA)} * e);
+  return mix(rgb, ${glslV3(EXPLORE_EMBER_CORE_RGB)}, e * e * e * core);
 }
 // K290: the char look over a composed thread color; ash = the centerline
 // core's coverage (0 off the ribbon, as in the arm strips).
@@ -535,6 +613,16 @@ export const EXPLORE_MAIN_GLSL = /* glsl */ `
     if (exCh > 0.0) {
       highp float exAsh = clamp((${glslF(EXPLORE_ASH_HALF)} - abs(vUV.y - 0.5)) / max(kSideFw, 1e-4) + 0.5, 0.0, 1.0);
       rgb = kCharLook(rgb, exCh, exAsh);
+    }
+    // K290 stage 3b: the fire front's ember and a smoldering arm's hot line
+    // (kCharAt set both), under the gaps like the char.
+    if (kFireEmber > 0.0) {
+      highp float exCore = clamp((${glslF(EXPLORE_EMBER_CORE_HALF)} - abs(vUV.y - 0.5)) / max(kSideFw, 1e-4) + 0.5, 0.0, 1.0);
+      rgb = kEmberLook(rgb, kFireEmber, exCore);
+    }
+    if (kFireSmolder > 0.0) {
+      highp float exLine = clamp((${glslF(EXPLORE_SMOLDER_HALF)} - abs(vUV.y - 0.5)) / max(kSideFw, 1e-4) + 0.5, 0.0, 1.0);
+      rgb = mix(rgb, ${glslV3(EXPLORE_SMOLDER_RGB)}, ${glslF(EXPLORE_SMOLDER_ALPHA)} * kFireSmolder * exLine);
     }
     aM *= ev;
     if (aM <= 0.002) discard;

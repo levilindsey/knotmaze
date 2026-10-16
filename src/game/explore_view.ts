@@ -415,6 +415,20 @@ export function subtractBurnt(
 export interface ExploreBurn {
   gate: ExplorePiece[] | null;
   char: BurntSpan[] | null;
+  // K290 stage 3b: the fire's fronts (char band and ember, or the lit
+  // fuse's ember) and the smoldering arms' stretches; null or absent = none.
+  fronts?: BurnFront[] | null;
+  smolder?: BurntSpan[] | null;
+}
+
+// K290 stage 3b: a fire front on a chain. `c` = its unwrapped chain ctrl,
+// `dir` = +-1, the ctrl direction of the unburnt side; kind 0 = burning (the
+// char band ahead and the ember), 1 = the lit fuse (the ember only).
+export interface BurnFront {
+  chain: number;
+  c: number;
+  dir: number;
+  kind: number;
 }
 
 // K290: every chain whole, as pieces (the burn's visibility with the
