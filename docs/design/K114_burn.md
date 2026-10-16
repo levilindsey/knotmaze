@@ -1194,3 +1194,364 @@ Copy it to the main checkout before the worktree is removed.
   - `pieceVis`' ring-unwrap guard;
   - the PixiJS attribute warnings at load (aGap, aGapId, aUV), which
     master has too.
+
+## Stage 3c handoff (the phone sheet)
+
+Agent ab1de7b1a6f3f605a of coordinator session 05e60da0, 2026-10-15
+10:17 to 11:29, a probe stage: no source, test, script or rules
+file changed. Branch `worktree-agent-ab1de7b1a6f3f605a` from e6e1734
+(3b is in it: merged as f7dd57e, with K80's 3a), unpushed; this handoff
+is its only commit. Everything was probed on e6e1734 itself (the page's
+stamp read `P4 v0.4.0 e6e1734 2026-10-15 17:38`). Master has moved on
+(957f04d, 17 commits ahead at 11:25): see "Master moved" under item 6.
+The phone was Levi's, lent until about 11:10; its locks are released and
+my server is stopped. The width call (K409) waits on Levi: this stage
+gives him the facts and decides nothing. The sheets are in the main
+checkout's `.claude/probes/K290/stage3c/out/sheets/` (see Evidence).
+
+### Done
+
+1. **The phone sheet.** 3b's cells on the phone's own Chrome.
+   - Setup: Levi's Pixel 11 over USB, the production build of e6e1734
+     served from the desktop on port 5890 through `adb reverse`. Link
+     `?7&am=instant&fi=fuse&fsp=0.9&snd=none` (seed 7, the optimal
+     route, 14 arrivals, as 3b's desktop sheet). The tab was 411x753 CSS
+     px at dpr 2.625 (the canvas caps its dpr at 2); every shot is the
+     full 1079x1977 frame, plus a 578x420 device px crop around the head
+     (220x160 CSS px at 1:1). The physics worker ran (host kind
+     `worker`), the page's wake-lock check read `True`, `ctxLost` 0.
+   - The run (10:41:51 to 10:46:50, the sheet and the fog run) solved the
+     maze and never lost. All 14 arrivals matched 3b's desktop run
+     exactly (node, walked, lead, spans, fronts, burnt share; #12
+     node_666, walked 65.18, lead 7.243, 146 spans, 29 fronts, 0.4049;
+     #13 node_676, 86.38, 9.598, 264, 31, 0.7725). The knot was asleep
+     at every arrival. Thermals (skin, SoC, battery, C): 33.0, 34.8,
+     32.3 before; 37.5, 45.4, 36.1 after.
+   - The watchdog never tripped. It watched the touchscreen with
+     `getevent` and polled the power state (awake, keyguard off, Chrome
+     on top) every 36 s; the user-activity timestamp never moved.
+   - Phone timings are not a benchmark: a desktop probe ran beside the
+     phone from 10:44, under the same perf lock.
+   - `out/sheets/K290_3c_phone_full.png` (frames at 0.28x) and
+     `K290_3c_phone_crop.png`: four rows (#0 the lit fuse, #1 early,
+     #12 mid, #13 late) by four columns (reveal off gone | off char |
+     on gone | on char). What they show:
+     - **#0 the lit fuse** (gone and char alike: the fuse has no burnt
+       side). Reveal off, at the phone's fit scale (s 8.8; the maze
+       fills the top 40% of the portrait frame): a tiny orange speck
+       inside a grey smoke glow beside the start disc, and a pale ramp
+       that is the choice pulse, not the fire. Reveal on (s 86): a huge
+       start disc, the thread stub ending in a pale rounded cap with
+       orange sparks and ember blobs in it, a tan and pink smoke haze, a
+       teal glow.
+     - **#1 early** (1% is the burnt share of ALL thread; the burnt
+       route is 16.6 of the 18.68 ctrl walked). Reveal off, gone: the
+       start marker floats with no thread to the head; by the head a
+       pale thread with an orange and yellow strip, a small ember and a
+       smoke puff at the front. Char: the dark brown route from the start
+       marker to the head, with a thin orange halo. Reveal on, gone: the
+       start marker alone at the top left, and at the head a pale
+       lavender thread, an orange and yellow arc with a red core, an
+       ember at its end, grey smoke puffs and teal glows. Char: the same,
+       plus the dark brown burnt route curving in from the start and a
+       char loop below the front.
+     - **#12 mid** (40%). Reveal off, gone: the left and top of the maze
+       cut away, ragged cut ends with grey smoke puffs and only a few
+       device px of orange rim. Char: those threads dark brown with
+       orange-brown outlines, the cut ends with smoke and small embers.
+       Reveal on, gone: only the head's neighborhood (a yellow arc with a
+       red core, the head, blue and teal junction glows). Char: the dark
+       brown walked route from the start to the head, with about twelve
+       blue-ringed glow dots (the choice and branch markers, which gone
+       removes with the route) and branch stubs.
+     - **#13 late** (77%). Reveal off, gone: sparse fragments, smoke
+       puffs and tiny orange rims. Char: nearly everything dark brown,
+       with a few colored fragments. Reveal on, gone: the head, an orange
+       and yellow arc ending in a smoke puff, the finish marker. Char:
+       the same plus the long dark brown route with blue glow dots.
+     - Nothing odd or broken in any frame; the vellum backdrop is in all
+       of them.
+2. **The fog row.** The same link plus `&xp=fog`:
+   `K290_3c_phone_fog_full.png` and `_phone_fog_crop.png` (gone | char,
+   the same four moments). It works as designed.
+   - #0: the start disc inside a fog hole with its two threads, the
+     smoke glow and orange sparks (gone and char alike).
+   - #1: a fog hole around the head. Gone: the start marker floats, no
+     route, a smoke puff and an ember speck at the front. Char: the dark
+     brown burnt route at the upper right, and a char loop at the lower
+     left under the smoke puff.
+   - #12 and #13: scattered fog-revealed fragments. Gone: cut ends with
+     smoke puffs and 3-6 px orange ticks, nothing along the walked
+     route. Char: a diagonal band of dark brown and orange char threads
+     along the walked route (the fog stamps reveal it), with intact
+     threads in color. No thread shows outside the fog.
+3. **The unseen-front frames** (desktop, 1400x900, as briefed). Unseen
+   fronts draw as nothing, with gone and with char, and a same-camera
+   pair shows it.
+   - **Same camera (`cam=follow`).** `K290_3c_unseen_follow_ring.png`
+     (crops) and `_unseen_follow_full.png` (full frames), arrivals 4, 5
+     and 12, with a cyan ring on one unseen front. The follow camera is
+     the same with the reveal on and off. Reveal on (gone and char): the
+     ring sits on empty dark space: no thread, no ember, no smoke.
+     Reveal off (gone and char): the same world point shows thread, with
+     a smoke puff and an orange ember with sparks at the cut end inside
+     the ring. The ringed fronts: arrival 4 front 0 (chain 4, c 38.401),
+     5 front 7 (chain 70, c 73.219), 12 front 21 (chain 72, c 25.863).
+     Fully hidden fronts in view under follow, by arrival: 4:1, 5:3,
+     6:3, 7:3, 8:2, 9:3, 10:2, 11:2, 12:8, 13:2; none at 0-3.
+   - **Fit camera.** `K290_3c_unseen_ring.png` and `_unseen_full.png`,
+     arrivals 2, 6, 10 and 13, cells reveal on gone | on char | off gone
+     | off char. The same result. The fit camera differs between reveal
+     on and off (s about 90 at the start against 21.9 off), so the two
+     halves show different scales and places; the sheet says so.
+   - Counts per arrival from `out/desk_unseen/` (fronts, unseen with
+     declared visibility under 0.5, and the probe's "hard in view"): #0
+     1/0/0 (the lit fuse, kind 1); #1 1/0/0; #2 2/1/1; #3 2/1/1; #4
+     7/6/5; #5 11/10/10; #6 14/13/13; #7 15/12/12; #8 17/14/14; #9
+     18/17/17; #10 26/25/25; #11 30/27/26; #12 29/28/23; #13 31/30/30.
+     Every front but the fuse is kind 0.
+4. **The widths** (3b's question: how wide the ember and the band read).
+   The facts for K409; Levi makes the call.
+   - **Method.** A same-state diff on one frozen state (`fw=0`, every
+     clock pinned). A = as played (FX on); B = the FX truly stopped; C =
+     B with no front declared; D = |B-C| x6. "Footprint" is the px where
+     B differs from C (what the shader's ember and band draw), "ember px"
+     the warm ones (r > 140 and r - b > 60), "hidden" the share of the
+     warm B px that the FX covers in A. `K290_3c_width_off.png` and
+     `_width_on.png` show A | B | C | D for the fuse and for #12, gone
+     and char (reveal off: 64x64 device px windows at 8x; reveal on: 512
+     px at 1x at the fuse, 128 px at 4x at #12), and the 8
+     `zs_<off|on>_<fuse|mid>_<gone|char>.png` strips show the same at
+     other zooms. The control is zero: B against a second B differs by 0
+     px in all 16 cells, and C has no warm px at the fuse.
+   - **The numbers come from a phone-SIZED desktop Chrome** (411x753 at
+     dpr 2), not from the real phone: the phone's own `_fxoff_` and
+     `_none_` frames are not valid FX-off frames (see "For the next
+     stage"). Its reveal-off fit camera equals the real phone's, (47.68,
+     215.4, 8.8192); its reveal-on cameras differ by scene. Pixel counts
+     are device px (1 CSS px is 2 per side).
+   - **Scale.** The thread is 0.52 world: 9.17 device px, 4.59 CSS px at
+     reveal off (s 8.82); 44.76 CSS px at the fuse with the reveal on (s
+     86); 5.99 CSS px at #12 with it on (s 11.52). One ctrl is 2.97 CSS
+     px at the fuse; over #12's 29 fronts at reveal off it is 2.67, 4.84
+     and 7.01 CSS px (min, median, max); 6.41 at front 26 with the
+     reveal on. The band and the ember are in ctrl, so their visual width
+     varies 2.6x with the thread's curvature.
+   - **Fuse, reveal off** (gone = char): footprint 39 px (ember 26). The
+     ember reaches 0.41 CSS px ahead and 1.01 behind: about 3 device px
+     long, across the full 9 px thread. The FX adds about 500 px (smoke
+     radius about 11.4 CSS px, 2.5 thread widths) and hides 87% (gone) or
+     92% (char) of the ember. The look is the same under both; the gap
+     is the FX's own state (not checked).
+   - **Fuse, reveal on** (s 86; one ctrl 29 CSS px): footprint 3538 px
+     (ember 2514), ahead 4.33 and behind 9.99 CSS px, across +-22.7 CSS
+     px. The FX is 30-31k px, radius 80 CSS px, and hides 81% (gone) or
+     78% (char) of the ember.
+   - **#12, reveal off, 29 fronts** (min / median / max):
+     - gone: footprint 7 / 56 / 81 px; ember px 2 / 13 / 32; ember ahead
+       0.08 / 0.84 / 3.43 CSS px; behind -2.70 / -0.01 / 0.45 (nothing
+       behind the cut); across 1.82 / 2.47 / 4.72; FX radius 8.3 / 11.8
+       / 13.7 CSS px; hidden 0 / 33 / 100%.
+     - char: footprint 5 / 79 / 142; ember px 0 / 29 / 60; ahead -0.02 /
+       0.87 / 3.43; behind -2.83 / 1.74 / 2.63; FX radius 8.2 / 12.0 /
+       14.0; hidden 12 / 65 / 100%.
+     - So under gone the ember is a rim of about 0.84 CSS px at a cut
+       end (about 1.7 device px, 0.18 thread widths), and the FX hides a
+       third of it. Under char the ember adds about 1.7 CSS px behind the
+       cut, plus the dark char band, and the FX hides two thirds.
+   - **#12, reveal on** (one front in view, idx 26; s 11.52). Gone:
+     ahead 3.88, behind 0.02 CSS px, footprint 93 px (ember 58), FX 1215
+     px, radius 13.4 CSS px, 49% hidden. Char: ahead 3.88, behind 2.26,
+     footprint 169 (ember 103), FX 794 px, radius 12.0, 55% hidden.
+   - **Desktop** (1400x900, k 1; reveal-off s 22.04, thread 11.46 px, one
+     ctrl 6.66 / 12.09 / 17.52 CSS px over #12). Fuse, reveal off: ember
+     41 px, ahead 1.08, behind 2.49 CSS px, FX radius about 30 CSS px,
+     91% (gone) or 97% (char) hidden. Fuse, reveal on (s 90, thread 46.8
+     px): ember 687 px, ahead 4.51, behind 10.36, FX radius 126 CSS px,
+     95% or 87% hidden. #12, reveal off, gone: ember px 3 / 21 / 51,
+     ahead -0.34 / 2.09 / 8.86, behind -6.66 / 0.02 / 1.31, FX radius
+     20.2 / 29.6 / 33.5, hidden 0 / 24 / 100%. Char: ember px 0 / 43 /
+     91, ahead -0.21 / 2.24 / 8.54, behind -7.14 / 4.20 / 6.32, hidden 27
+     / 66 / 100%. #12, reveal on (front 26, s 26.05): gone ahead 8.68,
+     behind -0.01 (footprint 120, ember 77, 43% hidden); char ahead 8.68,
+     behind 4.95 (219, 135, 65%). All in `out/width_desk/measure.txt`.
+   - **The dark ramp under gone.** Centerline samples across a cut end
+     (`ahead_probe.mjs`, phone-sized #12 reveal on, front 26, 12.82
+     device px per ctrl; t > 0 is the unburnt side; B against C).
+     Observed, gone: for t < 0, B equals C (the dark backdrop (25,29,43):
+     nothing is drawn behind the cut); a bright core at t = 0 (254,213,
+     127); then a DARK ramp for t = 1 to 7 px, (120,68,32) rising to
+     (217,185,60), back at the thread color (236,204,65) by t = 8 px
+     (0.62 ctrl), darkest at 2-4 px. Char: char (105,53,30) for t = -12
+     to -7, the ember behind the cut from t = -7 (107,54,30) up to
+     (252,204,117) at t = -1, then the same ramp.
+   - **Why (read from the code, not A/B'd).** The ember alone cannot
+     make (120,68,32); the ramp is the front's char band. `kCharAt`
+     (`explore_glsl.ts`, about lines 417-425) adds the FRONT band under
+     `if (T0.w < 0.5)`, and T0.w is the front item's KIND (0 a burning
+     front, 1 the lit fuse), not the burnt look. `fabric_maze_renderer.ts`
+     (about 2663-2742) hands the ribbons `fronts` under gone as under
+     char (only `char` is null under gone: `char: gone ? null : spans`),
+     and `ribbon_renderer.ts` (about 5005-5008) pushes a `frontItem` for
+     every front. So a thread blackens over EXPLORE_FRONT_BAND (0.7
+     ctrl) ahead of every kind-0 front under BOTH looks (the shader's
+     comment: "a thread blackens before it vanishes"). Under gone a cut
+     end therefore reads, from the cut: a thin ember rim, then scorched
+     thread for about 0.5 ctrl (1.3 to 3.5 CSS px over #12's fronts at
+     reveal off on the phone), the FX smoke over both. `render-explore.md`
+     (THE BURN, stage 3b: "A front darkens the unburnt side under char
+     over FRONT_BAND 0.7 ctrl") is inaccurate for gone.
+   - **Options for K409** (3b named the first two; the third is this
+     stage's; none is chosen):
+     1. Band and ember widths in world units, not ctrl: removes the 2.6x
+        spread.
+     2. Under gone, move the ember onto the unburnt side: today only the
+        0.25 ctrl ahead part shows (median 0.84 CSS px), and its 0.55
+        ctrl behind part lies on gone thread.
+     3. Decide whether the char band (0.7 ctrl) should draw under gone at
+        all; today it does.
+     A fourth factor sits under all three: the FX smoke hides the ember
+     (median 33% under gone and 65% under char at #12 reveal off on the
+     phone; 87-92% at the lit fuse). A smaller smoke radius, or drawing
+     the ember over the FX, would change that.
+5. **Phone against desktop** (same build, same link).
+   - Portrait 1079x1977 at dpr 2.625 (canvas dpr capped at 2) against
+     1400x900 at 1. At the fit scale the thread is 4.6 CSS px wide on
+     the phone against 11.5 px on the desktop, so the ember rim at a
+     gone cut end is 1-2 device px there and mostly under smoke.
+   - Reveal off, the phone-sized Chrome's fit camera equals the real
+     phone's; reveal on, the cameras differ by scene (s 86 at #0, 11.52
+     at #12).
+   - Load: ready 8.3 s and the first sleep 6.65 s after ready on the
+     phone, against about 5.3-5.4 s and 6.7 s on the desktop; the first
+     frame's stamp read `sim 0.4s / wall 7.8s | lag 0.3s | phys 0.19ms
+     render 20.84ms 39fps`. Taken beside a desktop probe: not a
+     benchmark.
+   - The same PixiJS "Attribute aGap, aGapId, aUV is not present in the
+     shader" console errors as the desktop (5 in the sheet run, 6 in the
+     fog run); they predate 3a.
+   - No phone-only artifact showed in the sheets: the backdrop is in
+     every frame and `ctxLost` is 0.
+6. **Checks and clean-up.**
+   - No source, test, script or rules file was edited: `git diff --stat
+     e6e1734` shows this file only.
+   - Phone: never woken, unlocked or reconfigured, and no output names
+     its address or serial. The one address in the watchdog log is
+     masked in place (`<phone>`). Its `adb forward` and `adb reverse`
+     lists were empty after the teardown.
+   - Locks and servers: `claude-phone.lock` absent; the perf lock
+     released at 11:15:16; the server on port 5890 stopped; the watchdog
+     ended.
+   - **Master moved.** At 11:25 master was 957f04d, 17 commits past
+     e6e1734, 3 of them in `src/`: K5 R1's ribbon split (7240953,
+     5a39ff3, 9b468e6): `ribbon/ribbon_shader.ts` (+265) and
+     `ribbon/sampling.ts` (+191) new, `ribbon_renderer.ts` -402, small
+     edits to `junction_field.ts`, `pluck_overlay.ts`,
+     `background_shaders.ts` and `program_registry.ts` (7 files, +480
+     -393). The burn's own files (`src/render/explore_glsl.ts`,
+     `fabric_maze_renderer.ts`, `appear_fx.ts`, `src/game/`) are
+     identical there (empty `git diff --stat`). I probed e6e1734 and did
+     not re-probe master.
+
+### Not done
+
+- **A phone width run.** The width diff ran on a phone-sized desktop
+  Chrome; a re-run on the phone with the corrected FX-off method was not
+  made (the lend ended at about 11:10).
+- **No unseen-front frame on the phone,** desktop only, as briefed.
+  The shots are at arrivals 4, 5 and 12 (follow camera) and 2, 6, 10 and
+  13 (fit camera).
+- **No second phone pass,** no cold-link timing and no first-burn trace
+  (3b's open item).
+- **K383** and the **`paint_math` mirror** are not built (not this
+  stage).
+- **The width call** is Levi's (K409).
+
+### Evidence
+
+`.claude/probes/K290/stage3c/` is untracked and lives in the MAIN
+checkout, not in this worktree.
+
+- Sheets, `out/sheets/`: `K290_3c_phone_full.png`, `_phone_crop.png`,
+  `_phone_fog_full.png`, `_phone_fog_crop.png`, `_unseen_ring.png`,
+  `_unseen_full.png`, `_unseen_follow_ring.png`,
+  `_unseen_follow_full.png`, `_width_off.png`, `_width_on.png` and the
+  8 `zs_*.png` strips, composed by 3a's `mksheet.mjs`
+  (`.claude/probes/K268/stage2/`) from the rows files `make_rows.mjs`
+  writes. 3b's desktop sheets for comparison:
+  `stage3b/out/sheet/K290_3b_sheet_full.png` and `_crop.png`.
+- Frames and logs:
+  - `out/phone/sheet`: `p00_` fuse, `p01_` early, `p12_` mid, `p13_`
+    late, each `_<off|on>_<gone|char>.png` plus `_crop.png`. The
+    `_fxoff_` and `_none_` frames at #0 and #12 are NOT valid FX-off
+    frames;
+  - `out/phone/fog`: `p00/p01/p12/p13_fog_<gone|char>.png` plus crops;
+  - `out/desk_unseen`, `out/desk_unseen_follow`;
+  - `out/width_phone` (48 PNGs, `frames.json`, `measure.txt` and
+    `measure.json`) and `out/width_desk`;
+  - `out/run_phone.log`, `phone/state/watchdog.log`.
+- Scripts:
+  - the phone: `phone_sheet.mjs` (`--mode sheet|fog`, `--dry`,
+    `--nofront`), `phone_lib.mjs`, `phone_setup.ps1`,
+    `phone_teardown.ps1`, `phone_clear.mjs`, `run_phone.ps1` (setup, both
+    runs, teardown, server stop), `serve_bg.mjs`, `phone_srv.ps1`
+    (`-Stop`; port 5890);
+  - the desktop: `desk_sheet.mjs` (`--mode fog|sheet|unseen`),
+    `width_probe.mjs` (`--origin --out --vp phone|desk --picks 0,12 --xps
+    off,on --expect e6e1734 --deadline HH:mm`), `measure.mjs <dir>
+    [thr]`, `ahead_probe.mjs <dir> <cell> <frontIdx> [from] [to]`,
+    `zoomstrip.mjs`, `make_rows.mjs [followDir] [arrivals]`;
+  - helpers: `lib.mjs`, `png.mjs`, `zoom.mjs`, `diffbox.mjs`, `pix.mjs`;
+  - the build: `builds/e6e1734`.
+
+### My calls
+
+- **No decision on widths.** Facts and options only (K409).
+- **The production build over `adb reverse`,** not the dev server: the
+  phone shows what a player gets.
+- **The width diff on one frozen state:** `fw=0`, pinned clocks, the FX
+  truly stopped (B), a second B as the control, and C with no front, so
+  the footprint is exactly what the shader draws.
+- **A same-camera unseen pair through `cam=follow`,** because the fit
+  camera moves between reveal on and off.
+- **The width numbers from a phone-sized desktop Chrome** (411x753 at
+  dpr 2), whose reveal-off camera equals the phone's, after the phone's
+  own FX-off frames proved invalid.
+- **The lit fuse measured at its own state (#0),** not at a later
+  arrival.
+
+### For the next stage
+
+- **K409, the width call (Levi).** The facts and options are in item 4.
+  The constants are `EXPLORE_FRONT_BAND` (0.7), `EXPLORE_EMBER_AHEAD`
+  (0.25) and `EXPLORE_EMBER_BEHIND` (0.55), in ctrl, in
+  `explore_glsl.ts`; a ctrl is about 1.93 per lattice unit and 2.7 to
+  7.0 CSS px at the phone's fit scale.
+- **A lore correction** (not made: this stage edits no rules).
+  `render-explore.md`, THE BURN stage 3b, says the front's band darkens
+  the unburnt side "under char"; the code darkens it under both looks.
+  Check THE EMBER DRAWS for the same assumption.
+- **A probe lesson** for `probes.md`. `AppearFxSystem.tick()` sets its
+  container visible each frame while particles live, and `drawFire`
+  calls `tickFireFx()` every frame, so `container.visible = false` does
+  not stop the FX: 3b's `_fxoff_` and `_none_` frames and
+  `desk_sheet.mjs`' pattern are not reliable FX-off frames. A true
+  FX-off frame shadows `tickFireFx` with an own no-op property, calls
+  `fireFx.clear()` and waits two frames (`width_probe.mjs`; restore with
+  `delete F.tickFireFx`, `F.fireFxT = -1` and a reset `drawFire`,
+  `fireDirty`, `fireKey`). Add `fw=0`, pinned clocks and a B-against-B
+  control: a plain shot-to-shot diff is polluted by flow, the
+  background's drift and the FX. A same-camera unseen-front pair needs
+  `cam=follow`.
+- **K383** (hide the start marker once the thread under it has burnt) is
+  still unbuilt.
+- **The cold-link time and the first-burn trace** (3b's item): not
+  done.
+- **The `paint_math` mirror** for FRONT and SMOLDER (K152 item 3), when
+  the look is final.
+- **Still open from 3a:**
+  - pickThread under a declared burn;
+  - `pieceVis`' ring-unwrap guard;
+  - the PixiJS attribute warnings at load (aGap, aGapId, aUV).
+- **Master past e6e1734** (K5 R1's ribbon split) is not re-probed: after
+  the merge, look at one burnt frame.
