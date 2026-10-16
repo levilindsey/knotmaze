@@ -35,6 +35,6 @@ files it is about; `docs/lore_index.md` lists every rules file and its paths.
 - `gameplay-links.md`: links and the codec
 - `gameplay-panel.md`: the panel
 - `gameplay-motion.md`: the Motion setting (K53, K79), the Accessibility group (K111)
-- `gameplay-camera.md`: camera, gestures and taps (with `src/main.ts`)
+- `gameplay-camera.md`: camera, gestures and taps (with `src/main.ts` and `src/app/camera.ts`)
 - `gameplay-moves.md`: moves by direction (K120)
 - `gameplay-audio.md`: audio

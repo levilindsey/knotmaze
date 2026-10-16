@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K419.
+Next free ID: K421.
 
 ## Waiting on Levi
 
@@ -275,12 +275,13 @@ Next free ID: K419.
   - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
   with seams so G3 becomes a module swap; K6 rides it. Design: `docs/design/K5_K6_split.md`
-  (calls: K377). M1 merged (baa0847..12709e5): main.ts 5709 → 4869 lines, no logic changes.
-  - owner: agent `abe93d522f82975c1` of claude session 05e60da0 (M2, started 2026-10-15 09:06; opus, 2 h cap ~11:06; ports 5840-5849); agent `ab73ce063da5446b5` of the same session (R1, started 09:20; opus, 2 h cap ~11:20; ports 5980-5989). R1's brief merged in 9041939 (docs agent `aae67981858ddb4a6`, worktree kept). M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
-  - branch: M2 `worktree-agent-abe93d522f82975c1`, worktree `.claude/worktrees/agent-abe93d522f82975c1`, from `eb8436a`; R1 `worktree-agent-ab73ce063da5446b5`, worktree `.claude/worktrees/agent-ab73ce063da5446b5`, from `9041939`; last commits: their bases (none of their own yet)
+  (calls: K377). M1 merged (baa0847..12709e5): main.ts 5709 → 4869 lines, no logic changes. M2 merged
+  (cc19c2b..a9121b4): the camera to `src/app/camera.ts`, main.ts 4493 lines.
+  - owner: agent `ab73ce063da5446b5` of the same session (R1, started 09:20; opus, 2 h cap ~11:20; ports 5980-5989). R1's brief merged in 9041939 (docs agent `aae67981858ddb4a6`, worktree kept). M2's agent `abe93d522f82975c1` finished 09:52, merged 10:03, worktree kept. M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
+  - branch: R1 `worktree-agent-ab73ce063da5446b5`, worktree `.claude/worktrees/agent-ab73ce063da5446b5`, from `9041939`; last commit: `52ce2a1` (WIP); mainline `a9121b4` (M2)
   - evidence: `.claude/probes/K5/M2/`, `.claude/probes/K5/R1/` (the brief's `rr_map.cjs` and maps in `brief/`); stage 1's tools in `.claude/probes/K5/stage1/` (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
-  - next: M2 (the camera to `src/app/camera.ts`) and R1 (`ribbon/ribbon_shader.ts`, `ribbon/sampling.ts`) running; whoever of M2 and K80 3a merges second rebases. Then M3 (the frame loop, a hot path), M3/M4 export PhysState, M7a moves `__knotUndo`. The R lane (K377 q3): R2 and R5 after R1, G3-1 after R2. While R1 runs, nothing else edits `ribbon_renderer.ts` (not K397's fix, K268 stage 3, K76's next stage or G3-1)
-  - brief: M2 `docs/design/K5_K6_split.md`, "Stage M2 brief" (process: "7. Stage 1 brief", "Stage 1 handoff"); R1 `docs/design/K5_R1.md`
+  - next: R1 (`ribbon/ribbon_shader.ts`, `ribbon/sampling.ts`) running; K80 3a rebases over M2 (asked). Then M3 (after K80 3a merges; re-map from `.claude/probes/K5/M2/anchors_f47be3b.json`, M2 handoff "Left for M3 and later") (the frame loop, a hot path), M3/M4 export PhysState, M7a moves `__knotUndo`. The R lane (K377 q3): R2 and R5 after R1, G3-1 after R2. While R1 runs, nothing else edits `ribbon_renderer.ts` (not K397's fix, K268 stage 3, K76's next stage or G3-1)
+  - brief: `docs/design/K5_K6_split.md` ("Stage M2 brief", "Stage M2 handoff"; M3's brief to come); R1 `docs/design/K5_R1.md`
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
   char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b merged (5913f4f..f7dd57e).
@@ -1284,6 +1285,8 @@ Every other item below waits on the trigger it names.
   commission or license better icon art, sound effects and music before
   launch, and credit each artist on the credits page (K321) with the
   terms their work ships under (`notices/credits.ts`).
+- **K420** · `.claude/probes/K19-K20/probe_daily.mjs front` fails 10 of 14 checks on every build: it reads
+  `#maze-hud .km-title` (gone from src) and expects `?daily=1.aBMge` and `?1471kin.c` to stay tokens (K5 M2).
 
 ## Ideas (not scheduled)
 
@@ -1520,6 +1523,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K418** · `scripts/ledger_diet.mjs` archives an undated Done item silently (CC64: H38, H67, H70,
   SP70) and its header's `K<n>` examples predate `--prefix`: warn, generalize. CC65's
   `ledger.mjs archive` may supersede it (claude-config `docs/design/CC65.md`).
+- **K419** · `computeFitTarget` reads `scene.ps` through the SceneRef getter three times per particle
+  (`src/app/camera.ts` 64-66); hoist `const ps = scene.ps` at a stage that allows logic edits. No cost
+  measured (K5 M2 handoff).
 
 ## Done
 
