@@ -139,11 +139,13 @@ files.
     CHASE_HZ (120, K80's), and L = ticks x FIRE_V_REF / 120, exact for
     the same ticks on every device. `advance(s)` runs at most 30 steps a
     frame and drops the backlog, so a long frame slows the fire instead
-    of jumping it. main.ts `tickFire` (fabricTick, realtime only) runs
-    it from the first accepted move until the winning move lands, stops
-    it at a loss, freezes it while `document.hidden`, and rebuild and
-    restartSolve reset it; `fireSet` hands L to the controller each
-    frame. The dot arrives when L reaches `fireArriveL`.
+    of jumping it. main.ts `tickFire` (realtime only, in tickAnim's
+    place) runs it from the first accepted move until the winning move
+    lands, stops it at a loss, freezes it while `document.hidden`, and
+    rebuild and restartSolve reset it; `fireSet`, after keyStep, hands L
+    to the controller each frame. The fabric tick in `src/app/frame_loop.ts`
+    (K5 M3) calls both through FrameLoopDeps (`realtimeFire`, `tickFire`,
+    `fireSet`). The dot arrives when L reaches `fireArriveL`.
   - FIRE_V_REF = 12 lattice units a second (Q1): the turn animation's
     mean lattice pace at moveSpeed 1, measured 11.80 over dailies 1-6
     (3320 run directions; per daily 11.65-12.06; p10 8.7, p90 18;
