@@ -132,10 +132,15 @@ import { pickRoutes, routeCorner, routeCubic } from "./junction_routes";
 import { WebFade } from "./web_fade";
 import {
   EXPLORE_ITEM_CHAR,
+  EXPLORE_ITEM_FRONT,
+  EXPLORE_ITEM_SMOLDER,
   EXPLORE_ITEM_VIS,
   chainWhole,
   charItem,
   charRange,
+  frontItem,
+  frontRange,
+  smolderItem,
   classifyExploreCut,
   exploreArcMap,
   visItem,
@@ -144,7 +149,7 @@ import {
 } from "./explore_glsl";
 import type { ExploreCut } from "./explore_glsl";
 import { pieceVis } from "../game/explore_view";
-import type { ExploreBurn, ExplorePiece } from "../game/explore_view";
+import type { BurntSpan, ExploreBurn, ExplorePiece } from "../game/explore_view";
 import type { PaintRoute } from "./junction_routes";
 import {
   STRIP_STATS,
@@ -742,11 +747,25 @@ function sameBurn(a: ExploreBurn | null, b: ExploreBurn | null): boolean {
   if (!a || !b) return false;
   const g = a.gate === b.gate || (!!a.gate && !!b.gate && samePieces(a.gate, b.gate));
   if (!g) return false;
-  if (a.char === b.char) return true;
-  if (!a.char || !b.char || a.char.length !== b.char.length) return false;
-  for (let i = 0; i < a.char.length; i++) {
-    const p = a.char[i];
-    const q = b.char[i];
+  if (!sameSpans(a.char, b.char) || !sameSpans(a.smolder ?? null, b.smolder ?? null)) return false;
+  const f = a.fronts ?? null;
+  const h = b.fronts ?? null;
+  if (f === h) return true;
+  if (!f || !h || f.length !== h.length) return false;
+  for (let i = 0; i < f.length; i++) {
+    const p = f[i];
+    const q = h[i];
+    if (p.chain !== q.chain || p.c !== q.c || p.dir !== q.dir || p.kind !== q.kind) return false;
+  }
+  return true;
+}
+
+function sameSpans(a: BurntSpan[] | null, b: BurntSpan[] | null): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const p = a[i];
+    const q = b[i];
     if (p.chain !== q.chain || p.b0 !== q.b0 || p.b1 !== q.b1) return false;
   }
   return true;
@@ -4877,7 +4896,14 @@ export class RibbonRenderer {
     const painted = new Uint8Array(n);
     const touch = (chain: number, lo: number, hi: number, item: number): void => {
       const type = items[item * 8];
-      if (type !== EXPLORE_ITEM_VIS && type !== EXPLORE_ITEM_CHAR) painted[chain] = 1;
+      if (
+        type !== EXPLORE_ITEM_VIS &&
+        type !== EXPLORE_ITEM_CHAR &&
+        type !== EXPLORE_ITEM_FRONT &&
+        type !== EXPLORE_ITEM_SMOLDER
+      ) {
+        painted[chain] = 1;
+      }
       const len = this.ps.chains[chain].length;
       const closed = this.ps.chainBreakAfter[chain] < 0;
       let s0 = Math.floor(lo) - 1;
@@ -4972,6 +4998,21 @@ export class RibbonRenderer {
         if (s.chain >= n || !(s.b1 > s.b0)) continue;
         const i = items.length / 8;
         items.push(...charItem(s));
+        const [lo, hi] = charRange(s);
+        touch(s.chain, lo, hi, i);
+      }
+      // K290 stage 3b: the fire's fronts and the smoldering arms (kCharAt).
+      for (const f of this.exploreBurn?.fronts ?? []) {
+        if (f.chain >= n) continue;
+        const i = items.length / 8;
+        items.push(...frontItem(f));
+        const [lo, hi] = frontRange(f);
+        touch(f.chain, lo, hi, i);
+      }
+      for (const s of this.exploreBurn?.smolder ?? []) {
+        if (s.chain >= n || !(s.b1 > s.b0)) continue;
+        const i = items.length / 8;
+        items.push(...smolderItem(s));
         const [lo, hi] = charRange(s);
         touch(s.chain, lo, hi, i);
       }
@@ -5087,9 +5128,14 @@ export class RibbonRenderer {
     }
     this.exploreWhole = whole;
     let charred: Uint8Array | null = null;
-    if (burn?.char && burn.char.length > 0) {
+    const fronts = burn?.fronts ?? [];
+    const smolder = burn?.smolder ?? [];
+    if ((burn?.char && burn.char.length > 0) || fronts.length > 0 || smolder.length > 0) {
       charred = new Uint8Array(n);
-      for (const s of burn.char) if (s.chain < n && s.b1 > s.b0) charred[s.chain] = 1;
+      for (const s of burn?.char ?? []) if (s.chain < n && s.b1 > s.b0) charred[s.chain] = 1;
+      // K290 stage 3b: kCharAt scans these chains for FRONT and SMOLDER too.
+      for (const f of fronts) if (f.chain < n) charred[f.chain] = 1;
+      for (const s of smolder) if (s.chain < n && s.b1 > s.b0) charred[s.chain] = 1;
     }
     const sh = pieces ? sectionShaderExplore() : sectionShader();
     for (let c = 0; c < this.fills.length; c++) {

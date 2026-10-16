@@ -61,8 +61,15 @@ export interface MinotaurView {
 import { FogBackdrop } from "./background";
 import { fogArcStations, moveEnds, travelOrder } from "./fog_arc";
 import { MarkerMesh } from "./marker_mesh";
-import { exploreDistances, exploreView, subtractBurnt, wholePieces } from "../game/explore_view";
-import type { BurntSpan, ExplorePiece, ExploreView } from "../game/explore_view";
+import {
+  chainVis,
+  exploreDistances,
+  exploreView,
+  subtractBurnt,
+  wholePieces,
+} from "../game/explore_view";
+import type { BurnFront, BurntSpan, ExplorePiece, ExploreView } from "../game/explore_view";
+import { AppearFxSystem } from "./appear_fx";
 import { EXPLORE_LOOK_DEFAULT, exploreLookHasHalo } from "./explore_glsl";
 
 // K76 THREAD REVEAL (stage 2a; docs/design/K76.md): a newly visited
@@ -132,22 +139,55 @@ const TELEGRAPH_RING_R = 1.45;
 const TELEGRAPH_RING_W = 0.32;
 const TELEGRAPH_STEP = 0.5;
 
-// K114 burn race, the first look (stage 1; stage 3 builds the real one,
-// brief docs/design/K114_burn.md): an ember at each fire front, a
-// flame-red line along each smoldering arm at the head, and the lit fuse
-// (an ember in a ring) at the entrance until the fire spreads. Burnt
-// thread itself draws in the ribbon shaders since K290 stage 3a (the
-// `burnt` param: gone or char; syncExplore). Widths and radii in thread
-// widths; sampled every FIRE_STEP ctrl.
-const FIRE_EMBER_COLOR = 0xff7a1a;
-const FIRE_EMBER_CORE = 0xffe08a;
-const FIRE_EMBER_R = 0.7;
-const FIRE_SMOLDER_COLOR = 0xff3b1f;
-const FIRE_SMOLDER_WIDTH = 0.45;
-const FIRE_SMOLDER_ALPHA = 0.9;
-const FIRE_FUSE_RING_R = 1.5;
-const FIRE_FUSE_RING_W = 0.28;
-const FIRE_STEP = 0.75;
+// K114 burn race, the look (K290 stage 3b, brief docs/design/K114_burn.md).
+// The burnt thread, the char band and ember at each front, the lit fuse and
+// the smoldering arms draw in the explore programs (explore_glsl.ts, the
+// FRONT and SMOLDER items; declared by syncExplore). Here: the `burn`
+// frontier FX at the fronts and the fire's light under the fog.
+// FIRE_FX_RATE scales the appearance's burn rates (110 smoke and 36 sparks
+// a second per front); past FIRE_FX_FRONTS fronts the rate is shared, so a
+// late race's many fronts emit no more than that many.
+const FIRE_FX_RATE = 0.4;
+const FIRE_FX_FRONTS = 12;
+// The FX's travel direction: the thread's chord over this many ctrl each
+// side of the front, toward the unburnt side.
+const FIRE_DIR_STEP = 0.15;
+// The fire's light under the fog of war: a hole at each burning front, this
+// share of the explored stamps' radius; the fog redraws once a front moved
+// FIRE_FOG_LIGHT_STEP world.
+const FIRE_FOG_LIGHT = 0.75;
+const FIRE_FOG_LIGHT_STEP = 0.3;
+// The lit fuse: an ember on each run out of the entrance, this many thread
+// widths past the start disc's rim, until the fire spreads.
+const FIRE_FUSE_OUT = 1.0;
+// UNSEEN FRONTS (K383, Levi's open call): false = a front the thread reveal
+// does not show draws as nothing, as char does (its ember and FX hidden
+// with the thread); true = its ember shows over a small piece of thread
+// (FIRE_UNSEEN_HALF ctrl each side) and its FX emits.
+const FIRE_UNSEEN_FRONTS = false;
+const FIRE_UNSEEN_HALF = 0.4;
+// fireEmit's stride: x, y, dx, dy, chain, ctrl, kind.
+const FIRE_EMIT_STRIDE = 7;
+
+// K290 stage 3b: whether two declarations' stretches (or fronts) match.
+function sameSpanList(a: BurntSpan[] | null, b: BurntSpan[] | null): boolean {
+  if (!a || !b) return a === b;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].chain !== b[i].chain || a[i].b0 !== b[i].b0 || a[i].b1 !== b[i].b1) return false;
+  }
+  return true;
+}
+function sameFronts(a: BurnFront[] | null, b: BurnFront[] | null): boolean {
+  if (!a || !b) return a === b;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const p = a[i];
+    const q = b[i];
+    if (p.chain !== q.chain || p.c !== q.c || p.dir !== q.dir || p.kind !== q.kind) return false;
+  }
+  return true;
+}
 
 // The marker meshes live for the page (each scene's overlay borrows them;
 // destroy() hands them back undestroyed - the PALETTE_CACHE lore). The
@@ -481,11 +521,21 @@ export class FabricMazeRenderer {
   private minoGlow: Sprite;
   // K80 turns: the telegraph (its committed next move), under the glow.
   private teleGfx: Graphics;
-  // K114: the burn race's first look (drawFire), over the yarn, under the
-  // markers; fireDrawn = something is drawn (cleared once the fire is off).
-  // fireDirty: update() ran since the last draw (the threads, flow or game
-  // state moved); fireKey: the fire's clock and state at the last draw.
-  private fireGfx: Graphics;
+  // K114: the burn race (drawFire); fireDrawn = a fire is declared (cleared
+  // once the fire is off). fireDirty: update() ran since the last draw (the
+  // threads, flow or game state moved); fireKey: the fire's clock and state
+  // at the last draw. K290 stage 3b: the `burn` FX (over the yarn, under the
+  // markers; made at the first front), its emitters (FIRE_EMIT_STRIDE per
+  // front), the declared fronts and smoldering stretches, and the fog's
+  // fire lights (world x, y per burning front; as last drawn).
+  private fireFx: AppearFxSystem | null = null;
+  private fireEmit: number[] = [];
+  private fireFxT = -1;
+  private fireFxTurn = 0;
+  private burnFronts: BurnFront[] | null = null;
+  private burnSmolder: BurntSpan[] | null = null;
+  private fogFireLights: number[] = [];
+  private fogFireDrawn: number[] = [];
   private fireDrawn = false;
   private fireDirty = true;
   private fireKey = "";
@@ -510,7 +560,6 @@ export class FabricMazeRenderer {
     this.threadWidth = threadWidth;
     this.overContainer = new Container();
     this.yarnGfx = new Graphics();
-    this.fireGfx = new Graphics();
     this.gfx = new Graphics();
     this.markers = markerMeshes();
     // Yarn under the markers: the markers stay readable on top of the
@@ -520,7 +569,6 @@ export class FabricMazeRenderer {
     // owned by the ribbon renderer - see syncMarkerOccluders.)
     this.overContainer.addChild(
       this.yarnGfx,
-      this.fireGfx,
       this.markers.start.mesh,
       this.markers.head.mesh,
       this.markers.exit.mesh,
@@ -1140,48 +1188,55 @@ export class FabricMazeRenderer {
     gfx.visible = true;
   }
 
-  // K114 burn race, the first look (the FIRE_* constants). The fire's clock
-  // rides the dot: mid-move it is the clock before the move plus the share
-  // of the run the dot has covered, so the fire advances with the head's
-  // animation instead of jumping at its end. The smoldering arms show while
-  // the dot stands at its junction in a live race. Called every frame, it
-  // redraws only when update() ran since (the threads, the flow or the game
-  // state moved: update() rides every ribbon render) or the fire's clock or
-  // state changed; at rest that is never (half the frames under flow). A
-  // redraw with every run burnt cost 1.0 ms here plus 3.8 ms of tessellation
-  // in the pixi render (desktop; `.claude/probes/K114/burn/`; stage 1, with
-  // the char strokes). Cleared once when the fire is off. Every run's fire
-  // is drawn, seen or not: the fog sprite covers it, but K76's thread
-  // reveal does not (burn stage 3b owns the front's look). K290 stage 3a:
-  // the burnt stretches go to the ribbons as a visibility declaration
-  // (syncExplore), which composes with the reveal's.
+  // K114 burn race; its look since K290 stage 3b. The fire's clock rides
+  // the dot: mid-move it is the clock before the move plus the share of the
+  // run the dot has covered, so the fire advances with the head's animation
+  // instead of jumping at its end. Every run's burnt stretches (the `burnt`
+  // param: gone or char), its fronts (a char band ahead of each and an
+  // ember at it), the lit fuse (an ember on each run out of the entrance,
+  // just past the start disc, while the clock is within the delay: at
+  // h = 0, until the first move) and the smoldering arms (while the dot
+  // stands at its junction in a live race) go to the ribbons as one
+  // declaration (setBurn, syncExplore): the explore programs draw them
+  // under the crossing gaps, and under the thread reveal only where it
+  // shows thread. Drawn here: the `burn` FX at the fronts (tickFireFx) and
+  // the fire's light under the fog (syncFireLights, renderFog). Called
+  // every frame, it recomputes only when update() ran since (the threads,
+  // the flow or the game state moved: update() rides every ribbon render)
+  // or the fire's clock or state changed; the FX tick every frame.
   drawFire(controller: FabricMazeController): void {
-    const gfx = this.fireGfx;
     const fire = controller.fire;
     if (!fire) {
       if (this.fireDrawn) {
-        gfx.clear();
         this.fireDrawn = false;
+        this.fireEmit.length = 0;
+        this.fireFx?.clear();
+        this.fireFxT = -1;
+        this.syncFireLights();
       }
-      this.setBurnSpans(null);
+      this.setBurn(null, null, null);
       return;
     }
     const a = this.anim;
     const L = controller.walkedDist - (a ? (1 - this.moveProgress) * a.e.length : 0);
     const key =
       `${L}|${controller.head}|${controller.solved}|${controller.fireLost}|` +
-      `${a ? 1 : 0}|${this.threadWidth}`;
+      `${a ? 1 : 0}|${this.threadWidth}|${this.fogOfWar}|${this.markerRadius()}`;
     if (this.fireDrawn && !this.fireDirty && key === this.fireKey && fire === this.fireLast) {
-      if (this.burnLookDeclared !== this.burntLook) this.setBurnSpans(this.burnSpans, true);
+      if (this.burnLookDeclared !== this.burntLook) {
+        this.setBurn(this.burnSpans, this.burnFronts, this.burnSmolder, true);
+      }
+      this.tickFireFx();
       return;
     }
     this.fireDirty = false;
     this.fireKey = key;
     this.fireLast = fire;
-    gfx.clear();
     this.fireDrawn = true;
     const spans: BurntSpan[] = [];
-    const embers: number[] = [];
+    const fronts: BurnFront[] = [];
+    this.fireEmit.length = 0;
+    const lit = L <= fire.delay;
     for (let eid = 0; eid < this.walk.edges.length; eid++) {
       const e = this.walk.edges[eid];
       const b = runBurnAt(this.walk, fire, eid, L);
@@ -1190,18 +1245,33 @@ export class FabricMazeRenderer {
         spans.push(this.burnSpan(e, 0, e.length));
         continue;
       }
-      for (const [x0, x1] of b.burnt) {
+      const sk = e.ctrlB >= e.ctrlA ? 1 : -1;
+      for (let i = 0; i < b.burnt.length; i++) {
+        const [x0, x1] = b.burnt[i];
         if (x1 > x0) spans.push(this.burnSpan(e, x0, x1));
+        // Within the delay the fire has not spread (at h = 0 the start's
+        // runs hold zero-length stretches): the lit fuse stands for it.
+        if (lit) continue;
+        // runBurnAt pairs each stretch with its front: from the va end
+        // [0, x] (the unburnt side lies toward vb), from the vb end [x, len].
+        const x = b.front[i];
+        const fromA = x0 === 0 && x === x1;
+        this.pushFront(fronts, e, x, fromA ? sk : -sk, 0);
       }
-      for (const x of b.front) {
-        const p = this.runPoints(e, x, x);
-        embers.push(p[0], p[1]);
+    }
+    if (lit) {
+      const out = this.markerRadius() + FIRE_FUSE_OUT * this.threadWidth;
+      for (const e of this.walk.edges) {
+        const sk = e.ctrlB >= e.ctrlA ? 1 : -1;
+        const x = Math.min(e.length / 2, out);
+        if (e.va === this.walk.start) this.pushFront(fronts, e, x, sk, 1);
+        if (e.vb === this.walk.start) this.pushFront(fronts, e, e.length - x, -sk, 1);
       }
     }
     // A smoldering arm is marked from the head to its first burnt stretch,
     // so a burning arm (the run just walked, say) keeps its char and ember
     // in view. The head's own end is never burnt (an arrival beats the fire).
-    const smolder: number[][] = [];
+    const smolder: BurntSpan[] = [];
     if (!a && !controller.solved && !controller.fireLost) {
       for (const eid of controller.choices()) {
         if (!controller.smoldering(eid)) continue;
@@ -1216,60 +1286,113 @@ export class FabricMazeRenderer {
             else x0 = Math.max(x0, s1);
           }
         }
-        if (x1 > x0) smolder.push(this.runPoints(e, x0, x1));
+        if (x1 > x0) smolder.push(this.burnSpan(e, x0, x1));
       }
     }
-    const w = this.threadWidth;
-    const strokeAll = (lines: number[][], color: number, width: number, alpha: number) => {
-      let any = false;
-      for (const pts of lines) {
-        if (pts.length < 4) continue;
-        gfx.moveTo(pts[0], pts[1]);
-        for (let i = 2; i < pts.length; i += 2) gfx.lineTo(pts[i], pts[i + 1]);
-        any = true;
-      }
-      if (any) gfx.stroke({ color, width: w * width, alpha, cap: "round", join: "round" });
-    };
-    this.setBurnSpans(spans.length > 0 ? spans : null);
-    strokeAll(smolder, FIRE_SMOLDER_COLOR, FIRE_SMOLDER_WIDTH, FIRE_SMOLDER_ALPHA);
-    const ember = (x: number, y: number) => {
-      this.polyCircle(gfx, x, y, w * FIRE_EMBER_R, 24);
-      gfx.fill({ color: FIRE_EMBER_COLOR });
-      this.polyCircle(gfx, x, y, w * FIRE_EMBER_R * 0.45, 16);
-      gfx.fill({ color: FIRE_EMBER_CORE });
-    };
-    for (let i = 0; i < embers.length; i += 2) ember(embers[i], embers[i + 1]);
-    // The lit fuse: at the entrance from the load until the fire spreads
-    // (the clock within the delay; at h = 0, until the first move).
-    if (L <= fire.delay) {
-      this.vertexWorld(this.walk.start, this.scratch, 0);
-      const x = this.scratch[0];
-      const y = this.scratch[1];
-      this.polyCircle(gfx, x, y, w * FIRE_FUSE_RING_R, 40);
-      gfx.stroke({ color: FIRE_EMBER_COLOR, width: w * FIRE_FUSE_RING_W, alpha: 0.95 });
-      ember(x, y);
-    }
+    this.setBurn(
+      spans.length > 0 ? spans : null,
+      fronts.length > 0 ? fronts : null,
+      smolder.length > 0 ? smolder : null
+    );
+    this.syncFireLights();
+    this.tickFireFx();
   }
 
-  // World points along run `e` from lattice distance x0 to x1 (from its va
-  // end; ctrl taken as linear in distance along a run), every FIRE_STEP
-  // ctrl, both ends included (one point when x0 = x1).
-  private runPoints(e: WalkEdge, x0: number, x1: number): number[] {
+  // K290 stage 3b: one front at lattice distance x along run `e` (from its
+  // va end), `dir` the ctrl direction of its unburnt side, and its FX
+  // emitter: the world point and the chord toward the unburnt side, clamped
+  // to the run.
+  private pushFront(fronts: BurnFront[], e: WalkEdge, x: number, dir: number, kind: number): void {
     const k = e.length > 0 ? (e.ctrlB - e.ctrlA) / e.length : 0;
-    const c0 = e.ctrlA + x0 * k;
-    const c1 = e.ctrlA + x1 * k;
-    const n = c1 > c0 ? Math.max(1, Math.ceil((c1 - c0) / FIRE_STEP)) : 0;
-    const pts: number[] = [];
-    for (let i = 0; i <= n; i++) {
-      const c = n === 0 ? c0 : c0 + ((c1 - c0) * i) / n;
-      this.pointFlowed(e.chain, this.ctrlMod(e.chain, c), this.scratch, 0);
-      pts.push(this.scratch[0], this.scratch[1]);
+    const c = e.ctrlA + x * k;
+    fronts.push({ chain: e.chain, c, dir, kind });
+    const lo = Math.min(e.ctrlA, e.ctrlB);
+    const hi = Math.max(e.ctrlA, e.ctrlB);
+    const s = this.scratch;
+    const at = (f: number): void => {
+      this.pointFlowed(e.chain, this.ctrlMod(e.chain, Math.min(hi, Math.max(lo, f))), s, 0);
+    };
+    at(c - dir * FIRE_DIR_STEP);
+    const bx = s[0];
+    const by = s[1];
+    at(c + dir * FIRE_DIR_STEP);
+    const fx = s[0];
+    const fy = s[1];
+    at(c);
+    this.fireEmit.push(s[0], s[1], fx - bx, fy - by, e.chain, c, kind);
+  }
+
+  // K290 stage 3b: the fog's fire lights, one per burning front (the lit
+  // fuse stands at the entrance, always seen). The fog redraws when a light
+  // appears or goes, or one moved FIRE_FOG_LIGHT_STEP world.
+  private syncFireLights(): void {
+    const lights = this.fogFireLights;
+    lights.length = 0;
+    if (this.fogOfWar) {
+      const emit = this.fireEmit;
+      for (let i = 0; i < emit.length; i += FIRE_EMIT_STRIDE) {
+        if (emit[i + 6] === 0) lights.push(emit[i], emit[i + 1]);
+      }
     }
-    return pts;
+    const drawn = this.fogFireDrawn;
+    let moved = lights.length !== drawn.length;
+    for (let i = 0; i < lights.length && !moved; i += 2) {
+      const dx = lights[i] - drawn[i];
+      const dy = lights[i + 1] - drawn[i + 1];
+      moved = dx * dx + dy * dy > FIRE_FOG_LIGHT_STEP * FIRE_FOG_LIGHT_STEP;
+    }
+    if (!moved) return;
+    this.fogFireDrawn = lights.slice();
+    this.fogDirty = true;
+    this.renderFog();
+  }
+
+  // K290 stage 3b: the `burn` frontier FX (appear_fx.ts) at each front, then
+  // the pool's tick, every frame (the particles fly on while the knot
+  // sleeps). No spawns while the tab is hidden or under Reduced motion
+  // (exploreStill), and under the thread reveal none from a front it does
+  // not show (FIRE_UNSEEN_FRONTS).
+  private tickFireFx(): void {
+    const now = performance.now() / 1000;
+    const dt = this.fireFxT < 0 ? 0 : Math.min(0.1, Math.max(0, now - this.fireFxT));
+    this.fireFxT = now;
+    const emit = this.fireEmit;
+    if (!this.fireFx) {
+      if (emit.length === 0) return;
+      const created = new AppearFxSystem(0xf17e);
+      created.style = "burn";
+      this.fireFx = created;
+      // Over the yarn, under the markers (the start disc stays readable over
+      // the lit fuse's smoke) and the fog.
+      this.overContainer.addChildAt(
+        created.container,
+        this.overContainer.getChildIndex(this.markers.start.mesh)
+      );
+    }
+    const fx = this.fireFx;
+    fx.unit = this.threadWidth;
+    const count = emit.length / FIRE_EMIT_STRIDE;
+    if (count > 0 && dt > 0 && !this.exploreStill && !document.hidden) {
+      const share = FIRE_FX_RATE * Math.min(1, FIRE_FX_FRONTS / count);
+      const pieces = this.explore.on && !FIRE_UNSEEN_FRONTS ? this.exploreLast?.pieces : null;
+      const start = this.fireFxTurn++ % count;
+      for (let j = 0; j < count; j++) {
+        const o = ((start + j) % count) * FIRE_EMIT_STRIDE;
+        if (pieces) {
+          const chain = emit[o + 4];
+          const n = this.ps.chains[chain].length;
+          const closed = this.ps.chainBreakAfter[chain] < 0;
+          if (chainVis(pieces, chain, emit[o + 5], n, closed) < 0.5) continue;
+        }
+        fx.spawnFrontier(emit[o], emit[o + 1], emit[o + 2], emit[o + 3], 0, dt * share);
+      }
+    }
+    fx.tick(dt);
   }
 
   // K290: run `e` from lattice distance x0 to x1 as a burnt span of its
-  // chain (unwrapped ctrls, as the reveal's pieces; runPoints' mapping).
+  // chain (unwrapped ctrls, as the reveal's pieces; ctrl linear in distance
+  // along a run).
   private burnSpan(e: WalkEdge, x0: number, x1: number): BurntSpan {
     const k = e.length > 0 ? (e.ctrlB - e.ctrlA) / e.length : 0;
     const c0 = e.ctrlA + x0 * k;
@@ -1277,24 +1400,25 @@ export class FabricMazeRenderer {
     return { chain: e.chain, b0: Math.min(c0, c1), b1: Math.max(c0, c1) };
   }
 
-  // K290: record the burnt stretches (null = none) and re-declare the
-  // ribbons' visibility when they or the look changed (`force`: the look).
+  // K290: record the burnt stretches, the fronts and the smoldering arms
+  // (null = none) and re-declare the ribbons' visibility when one of them or
+  // the look changed (`force`: the look).
   private burnLookDeclared: "gone" | "char" = "gone";
-  private setBurnSpans(spans: BurntSpan[] | null, force = false): void {
-    const prev = this.burnSpans;
-    let same = !force && this.burnLookDeclared === this.burntLook;
-    if (same) {
-      if (!prev || !spans) same = prev === spans;
-      else if (prev.length !== spans.length) same = false;
-      else {
-        for (let i = 0; i < prev.length && same; i++) {
-          const a = prev[i];
-          const b = spans[i];
-          same = a.chain === b.chain && a.b0 === b.b0 && a.b1 === b.b1;
-        }
-      }
-    }
+  private setBurn(
+    spans: BurntSpan[] | null,
+    fronts: BurnFront[] | null,
+    smolder: BurntSpan[] | null,
+    force = false
+  ): void {
+    const same =
+      !force &&
+      this.burnLookDeclared === this.burntLook &&
+      sameSpanList(this.burnSpans, spans) &&
+      sameSpanList(this.burnSmolder, smolder) &&
+      sameFronts(this.burnFronts, fronts);
     this.burnSpans = spans;
+    this.burnFronts = fronts;
+    this.burnSmolder = smolder;
     if (same) return;
     this.burnLookDeclared = this.burntLook;
     this.syncExplore();
@@ -1956,6 +2080,22 @@ export class FabricMazeRenderer {
       ctx.arc(px, py, r, 0, Math.PI * 2);
       ctx.fill();
     }
+    // K290 stage 3b: the fire's light, a softer hole at each burning front
+    // (syncFireLights), so the fire shows the branches it reached and the
+    // player has not.
+    const rl = r * FIRE_FOG_LIGHT;
+    const fl = this.fogFireLights;
+    for (let i = 0; i < fl.length; i += 2) {
+      const px = (fl[i] - this.fogRect.x0) * k;
+      const py = (fl[i + 1] - this.fogRect.y0) * k;
+      const grad = ctx.createRadialGradient(px, py, rl * 0.3, px, py, rl);
+      grad.addColorStop(0, "rgba(0,0,0,0.85)");
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(px, py, rl, 0, Math.PI * 2);
+      ctx.fill();
+    }
     this.fogTexture!.source.update();
   }
 
@@ -2484,13 +2624,18 @@ export class FabricMazeRenderer {
   // programs draw the burn; nothing burnt keeps master's path.
   private syncExplore(): void {
     const spans = this.burnSpans;
+    const fronts = this.burnFronts;
+    const smolder = this.burnSmolder;
+    const burning = !!(spans || fronts || smolder);
     const gone = this.burntLook === "gone";
     if (!this.explore.on) {
-      if (spans) {
+      if (burning) {
         this.exploreLast = null;
-        this.ribbons.setExplore(this.burnOnlyPieces(spans, gone), this.explore.look, 1, {
+        this.ribbons.setExplore(this.burnOnlyPieces(spans ?? [], gone), this.explore.look, 1, {
           gate: null,
           char: gone ? null : spans,
+          fronts,
+          smolder,
         });
         this.drawFrontierMarks();
         return;
@@ -2536,12 +2681,29 @@ export class FabricMazeRenderer {
       holdDist: hold > 0 ? this.holdDist ?? undefined : undefined,
     });
     const pieces = this.exploreLast.pieces;
-    if (spans) {
+    if (burning) {
+      // K383 (Levi's open call): a front the reveal does not show draws as
+      // nothing unless FIRE_UNSEEN_FRONTS adds a little thread around it.
+      let shown = pieces;
+      if (FIRE_UNSEEN_FRONTS && fronts) {
+        const h = FIRE_UNSEEN_HALF / 2;
+        shown = pieces.concat(
+          fronts.map((f) => ({
+            chain: f.chain,
+            c0: f.c - h,
+            c1: f.c + h,
+            f0: h,
+            f1: h,
+            tip0: false,
+            tip1: false,
+          }))
+        );
+      }
       this.ribbons.setExplore(
-        gone ? subtractBurnt(pieces, spans, this.ringN) : pieces,
+        gone && spans ? subtractBurnt(shown, spans, this.ringN) : shown,
         this.explore.look,
         1,
-        { gate: pieces, char: gone ? null : spans }
+        { gate: pieces, char: gone ? null : spans, fronts, smolder }
       );
     } else {
       this.ribbons.setExplore(pieces, this.explore.look, 1);

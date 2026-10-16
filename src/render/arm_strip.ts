@@ -278,8 +278,10 @@ export const STRIP_EXPLORE_CTRL_GLSL =
   "  if (uKExplore.x > 0.5) kStripChar = kCharAt(c, actrl);\n";
 export const STRIP_EXPLORE_OUT_GLSL = /* glsl */ `  kStripVis = 1.0;
   kStripChar = 0.0;
+  kFireEmber = 0.0;
   vec3 exM = chainMaterial(int(t0.x + 0.5), t0.y + t0.z * fk, t1.x + t1.y * fk, t1.z > 0.5);
   if (kStripChar > 0.0) exM = kCharLook(exM, kStripChar, 0.0);
+  if (kFireEmber > 0.0) exM = kEmberLook(exM, kFireEmber, 0.0);
   finalColor = vec4(exM * kStripVis, kStripVis);
 `;
 
