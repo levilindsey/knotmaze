@@ -161,6 +161,8 @@ import {
 } from "./samp_table";
 import { EMERGENT_MAX, EMERGENT_ROW } from "../physics/particle_system";
 import { bindGap, sectionShader, sectionShaderExplore } from "./ribbon/ribbon_shader";
+import * as sampling from "./ribbon/sampling";
+import type { PassNeighbors } from "./ribbon/sampling";
 
 // K8 G3-0: the probe capture (captureScene / restoreScene): plain JSON, typed
 // arrays as base64.
@@ -648,11 +650,6 @@ function hslToHex(h: number, s: number, l: number): number {
     (Math.round(f(8) * 255) << 8) |
     Math.round(f(4) * 255)
   );
-}
-
-interface PassNeighbors {
-  prev: { chain: number; ctrl: number };
-  next: { chain: number; ctrl: number };
 }
 
 export class RibbonRenderer {
@@ -1495,56 +1492,14 @@ export class RibbonRenderer {
     ]);
   }
 
-  // Interpolate position and unit tangent at an arc position into `out`
-  // as [x, y, tx, ty]. Closed chains are rings: `count` segments, arcs wrap
-  // modulo total. Open chains are runs: `count - 1` segments, arcs CLAMP -
-  // the arc-wrap family's fourth bite lived here, in the ring math itself:
-  // applied to an open chain it maps any arc within one sample spacing of
-  // total onto a phantom last->first chord, so terminal queries (bridge
-  // arms, corner tails - arc0 == total) interpolated ~99.8% of the way to
-  // the chain's OTHER END. Every fused bridge junction fanned fillet
-  // slivers toward its twin junction; the corner junctions drew the
-  // start/finish shards.
+  // Lives in ribbon/sampling.ts (K5 R1); the class and the probes call it here.
   private sampleAt(
     samples: SplineSamples,
     arc: number,
     out: Float32Array,
     offset: number
   ): void {
-    const total = samples.totalLength;
-    let i0: number;
-    let i1: number;
-    let frac: number;
-    if (samples.closed) {
-      const wrapped = ((arc % total) + total) % total;
-      const f = (wrapped / total) * samples.count;
-      i0 = Math.floor(f) % samples.count;
-      i1 = (i0 + 1) % samples.count;
-      frac = f - Math.floor(f);
-    } else {
-      const clamped = Math.max(0, Math.min(total, arc));
-      const f = (clamped / total) * (samples.count - 1);
-      i0 = Math.max(0, Math.min(samples.count - 2, Math.floor(f)));
-      i1 = i0 + 1;
-      frac = f - i0;
-    }
-
-    out[offset] =
-      samples.positions[i0 * 2] +
-      (samples.positions[i1 * 2] - samples.positions[i0 * 2]) * frac;
-    out[offset + 1] =
-      samples.positions[i0 * 2 + 1] +
-      (samples.positions[i1 * 2 + 1] - samples.positions[i0 * 2 + 1]) * frac;
-
-    let tx =
-      samples.tangents[i0 * 2] +
-      (samples.tangents[i1 * 2] - samples.tangents[i0 * 2]) * frac;
-    let ty =
-      samples.tangents[i0 * 2 + 1] +
-      (samples.tangents[i1 * 2 + 1] - samples.tangents[i0 * 2 + 1]) * frac;
-    const len = Math.hypot(tx, ty) || 1;
-    out[offset + 2] = tx / len;
-    out[offset + 3] = ty / len;
+    sampling.sampleAt(samples, arc, out, offset);
   }
 
   // Sample a chain's centerline over arcs [center - neg, center + pos] into
@@ -1660,81 +1615,23 @@ export class RibbonRenderer {
     return s;
   }
 
-  // Arc position of a fractional control position, wrapping around the loop.
+  // Lives in ribbon/sampling.ts (K5 R1); the class and the probes call it here.
   private arcAt(samples: SplineSamples, ctrl: number): number {
-    const n = samples.controlArcLengths.length;
-    const i = Math.floor(ctrl);
-    const t = ctrl - i;
-    const i0 = ((i % n) + n) % n;
-    const i1 = (i0 + 1) % n;
-    const a0 = samples.controlArcLengths[i0];
-    let a1 = samples.controlArcLengths[i1];
-    if (a1 <= a0) a1 += samples.totalLength;
-    return (a0 + (a1 - a0) * t) % samples.totalLength;
+    return sampling.arcAt(samples, ctrl);
   }
 
-  // Ctrl a pass RENDERS at: the true intersection when the physics has
-  // one (displayF), else the binding. During a tug the ordering clamps
-  // can pin the binding away from where the threads actually cross;
-  // drawing there mangles the crossing.
+  // Lives in ribbon/sampling.ts (K5 R1); the class and the probes call it here.
   private renderCtrl(pass: CrossingPass): number {
-    return pass.displayF ?? pass.ctrl;
+    return sampling.renderCtrl(pass);
   }
 
-  // Arc gap to the neighboring crossing passes, wrapping around the loop.
+  // Lives in ribbon/sampling.ts (K5 R1); the class and the probes call it here.
   private neighborGaps(
     samples: SplineSamples,
     pass: CrossingPass,
     neighbors: PassNeighbors
   ): [number, number] {
-    const total = samples.totalLength;
-    // OPEN chains: physics unlinks the open seam by SELF-linking (the first
-    // pass's prev and the last pass's next point at the pass itself), so
-    // a self-linked side has no neighbor - its room is the run to that
-    // chain end. The ring rule below only knew `next === pass` (a
-    // single-pass ring): first passes read a ZERO prev gap (their
-    // chain-start-side cut sat at the march's 0.15 floor) and last passes
-    // ignored their real prev neighbor.
-    if (!samples.closed) {
-      const selfPrev = neighbors.prev === pass;
-      const selfNext = neighbors.next === pass;
-      if (selfPrev || selfNext) {
-        const c = this.paintArcAt(samples, this.renderCtrl(pass), false);
-        const gapPrev = selfPrev
-          ? c
-          : Math.max(
-              0,
-              c -
-                this.paintArcAt(samples, this.renderCtrl(neighbors.prev), false)
-            );
-        const gapNext = selfNext
-          ? total - c
-          : Math.max(
-              0,
-              this.paintArcAt(samples, this.renderCtrl(neighbors.next), false) -
-                c
-            );
-        return [gapPrev, gapNext];
-      }
-    }
-    if (
-      neighbors.next === pass ||
-      neighbors.next.ctrl === pass.ctrl
-    ) {
-      return [total / 2, total / 2];
-    }
-    const center = this.arcAt(samples, this.renderCtrl(pass));
-    const gapNext =
-      (((this.arcAt(samples, this.renderCtrl(neighbors.next)) - center) %
-        total) +
-        total) %
-      total;
-    const gapPrev =
-      (((center - this.arcAt(samples, this.renderCtrl(neighbors.prev))) %
-        total) +
-        total) %
-      total;
-    return [gapPrev, gapNext];
+    return sampling.neighborGaps(samples, pass, neighbors);
   }
 
   private inspectIndex = -1;
@@ -5538,24 +5435,13 @@ export class RibbonRenderer {
     this.colorAtArc(chain, this.paintArcAt(samples, ctrl, closed), out);
   }
 
-  // Arc of a ctrl for PAINT purposes. arcAt's closing modulo is correct
-  // for closed chains but wraps an OPEN chain's terminal arc (== total) to
-  // ZERO - a traveled bridge's span [0, lastCtrl] collapsed to a point and
-  // the bridge stayed base-colored (the "connective bits don't highlight"
-  // report). Open chains clamp instead of wrapping.
+  // Lives in ribbon/sampling.ts (K5 R1); the class and the probes call it here.
   private paintArcAt(
     samples: SplineSamples,
     ctrl: number,
     closed: boolean
   ): number {
-    if (closed) return this.arcAt(samples, ctrl);
-    const n = samples.controlArcLengths.length;
-    const i = Math.max(0, Math.min(n - 1, Math.floor(ctrl)));
-    const t = ctrl - i;
-    const a0 = samples.controlArcLengths[i];
-    const a1 =
-      i + 1 < n ? samples.controlArcLengths[i + 1] : samples.totalLength;
-    return Math.min(samples.totalLength, a0 + (a1 - a0) * t);
+    return sampling.paintArcAt(samples, ctrl, closed);
   }
 
   // CPU REFERENCE of the GPU junction field (junction_field.ts FIELD_GLSL)
@@ -5886,11 +5772,7 @@ export class RibbonRenderer {
     }
   }
 
-  // Positional sampling for junction joinery: before the sampleAt
-  // open-chain fix this clamp was the only guard against the arc-wrap
-  // family's third bite (flank samples at corner-cut terminals flew to
-  // the chain START). sampleAt now clamps open chains itself; this stays
-  // as a cheap belt-and-suspenders for joinery callers.
+  // Lives in ribbon/sampling.ts (K5 R1); the class and the probes call it here.
   private sampleAtSafe(
     samples: SplineSamples,
     arc: number,
@@ -5898,10 +5780,7 @@ export class RibbonRenderer {
     out: Float32Array,
     offset: number
   ): void {
-    const a = closed
-      ? arc
-      : Math.min(Math.max(0, arc), samples.totalLength - 1e-4);
-    this.sampleAt(samples, a, out, offset);
+    sampling.sampleAtSafe(samples, arc, closed, out, offset);
   }
 
   // Section RGB at a world ARC along a chain into out[0..2] - the ribbon's
