@@ -497,3 +497,69 @@ only with the files it is about; `render.md` lists the area's other files.
   and `z2_nc_diff2.png`).
   The general fix would follow the over thread's curve (an arc instead
   of a line) or draw the over passes above the blur.
+
+## Pluck loop tip (K395)
+
+- REPORT (Levi, 2026-10-15, Pixel 11 Chrome, live 12709e5, Free play):
+  "Pluck cusps still have a bit of weirdness in loops. It seems like
+  there is a bit of discontinuity with the vibration effect at times from
+  the middle of the loop tip to an edge, and there is still a bit of
+  jagged pinching at the tip with the vibration effect--in this case it
+  seems to not be somewhat heart shaped, with a pointy protrusion on the
+  inside of the loop and a dimple on the outside". His screenshot: a
+  kink loop's blur shaped like a heart, a V pointing into the eye at the
+  middle of the tip. Brief and handoff: `docs/design/K395_pluck_loop_tip.md`.
+- CAUSE, OBSERVED (toggles on one frozen page, `.claude/probes/K395/`):
+  the V is the CONCAVE-SIDE CAP (`nocap` removes it; the ghost and W
+  toggles leave it). The cap is 0.9 x the 5-station circumradius, min
+  over +-2, minus the thread. A loop's spline bends most at its control
+  points, so the circumradius oscillates with the control spacing (`?7`
+  chain 9's loop: 5.6 at the tip between shoulders of 0.38-0.41), the min
+  over +-2 makes plateaus, and CAP_SLOPE turns them into straight ramps
+  that meet in corners: a triangle at the tip (stations 80-84: 0.083,
+  0.153, 0.223, 0.173, 0.103). The strip's inner edge turned by -112 and
+  -85 degrees at the apex stations. THE SEAM, OBSERVED at zoom step 3:
+  a straight radial streak from the V's apex through the blur's bands
+  toward the outer edge, plus a crease down into the eye, both gone with
+  the fix (`out/ab_c9z3/`). INFERRED: the apex station's sharp inner edge
+  creases the strip's interpolation across its width, and the "dimple on
+  the outside" is where the streak meets the outer bands (no separate
+  outer dimple was seen). RULED OUT: a screen-size dependence through the
+  tap amplitude (tapAmplitude is in world units).
+- RULE: after the slope limit, `roundCap` (pluck_model.ts) OPENS each
+  lobe run's concave caps the way roundCollapse opens the collapse:
+  nested raised-cosine bumps under min(cap, ceil), ceil = the run's
+  largest swing + h, so the cap is only LOWERED (the clearance it
+  guarantees holds) and its second difference stays >= -per^2 /
+  (CAP_ROUND h). CAP_ROUND 1.5, as COLLAPSE_ROUND. A run whose cap never
+  binds, and a flat or smooth wide cap, passes unchanged.
+  `PluckOverlay.capRound` is live; 0 is the pre-K395 cap (set it, then
+  mark the live plucks needsLayout). It also lowers the convex side's
+  capR where its ramps near the ceil (by up to 0.15 at chain 9's tip),
+  still above every swing of the run, so it binds nowhere there.
+- MEASURED (`capan.mjs`, zoom step 4, same state): apex edge turns -112
+  -> -0.2 degrees (station 69), -52.6 -> -17.1 (73), -85.3 -> -11.1 (82),
+  -54.5 -> +9.5 (91); the tip's cap 0.223 -> 0.101. The unit fixture's
+  worst second difference: -0.120 slope-limited, -0.024 at CAP_ROUND
+  0.75, -0.012 at 1.5, -0.006 at 3 (`capfix.ts`).
+- RESIDUAL: where an rMin plateau meets a rise the opening keeps a valley
+  (it only lowers), and the inner edge turns +31..+56 degrees there
+  (stations 75, 79, 85, 89): a soft "M" at the tip at zoom step 3, much
+  milder than the heart. CAP_ROUND 3 takes those to +19..+42 with a flat
+  arch (6 looks like 3) for 0.02-0.03 less inner swing at the tip (a
+  decision for Levi). The root is the circumradius's oscillation with
+  the control spacing; a smooth envelope of the radius, or a wider rMin
+  window, would treat it there.
+- CHECK: the unit test "rounded concave cap (K395)" (the slope limit
+  alone leaves the V and fails). In the browser, `ttog.mjs` shoots `cr0`
+  (capRound 0) against `base` on one frozen page; `capan.mjs` reads a
+  DUMP's caps and edge turns per station.
+- VERIFIED, same state (`base` vs `cr0`; `out/ab_*`, `pair_*.png` =
+  cr0 | base): `?7` chain 9's loop at the phone viewport (zoom steps 3
+  and 4) and the desktop, both knob ends (psz 3, pgh 1, pw 1.5, ride,
+  wave; psz 0.5, pgh 0, pw 0, pinch, ring) and two kink loops of K344's
+  design (3:95, 62:539): the V and the seam are gone in every case. K344's
+  dark star in the eye changed shape (an X became a rounded square) and
+  remains. K344's link (`?qoietk.KIiHgRRXwRlRt8fGrST4sf`) builds another
+  design since later default changes: its chain 21 has no self-crossing
+  now.

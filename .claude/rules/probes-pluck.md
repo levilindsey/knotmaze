@@ -3,9 +3,10 @@ paths:
   - ".claude/probes/K77/**"
   - ".claude/probes/K279/**"
   - ".claude/probes/K344/**"
+  - ".claude/probes/K395/**"
 ---
 
-# Probe lore: pluck probes (K77, K279, K344)
+# Probe lore: pluck probes (K77, K279, K344, K395)
 
 Moved verbatim from `probes.md` by K173 (2026-10-14), so that it attaches
 only with the files it is about; `probes.md` lists the area's other files.
@@ -115,3 +116,32 @@ only with the files it is about; `probes.md` lists the area's other files.
   no-ripple frame, by 1 level across the filtered area and by 36-46 at
   thread-edge pixels where one MSAA sample of four flips. Compare ripple
   frames with ripple frames.
+
+- K395 (2026-10-15), the pluck blur at a kink loop's tip:
+  `.claude/probes/K395/` (render-pluck.md's K395 entry has the
+  mechanism). `lib.mjs` is K344's (frozen page, pinned plucks, pluck
+  clock, dumps; it freezes through `__knotPhysFreeze`). `keys.mjs <host>
+  <query> <chain>` lists a chain's self-crossings (key, arcs).
+  `tip.mjs <host> <outDir> <phone|desk> <query>` shoots every kink loop
+  plucked at its tip (sheets and strip dumps); `tipan.mjs` and
+  `capan.mjs <dump.json> <tipArc>` tabulate a dump per station (capan:
+  the circumradius, rMin, the raw and dumped caps, both blur edges and
+  their turns). `ttog.mjs <host> <outDir> <phone|desk|cdp> <query>
+  <in|out> [t] [togs]`, env `ONLY=<chain>:<key>` (the loop), `ZOOM`
+  (wheel steps at its tip) and `DUMP=1`, shoots one frozen page with
+  toggles: base | nocap | noghost | noW | nooverlay | crX (capRound = X;
+  cr0 is the pre-K395 cap, so `base,cr0` is the same-state A/B); `cdp`
+  drives the visible localhost:591x tab of the phone's Chrome, portrait
+  411x753 @2.625 emulated by each run (host = the address the phone
+  sees). `phone_run.ps1` is the whole phone pass: the phone lock, a
+  read-only readiness check (never wakes the phone), scripts/phone.ps1's
+  tunnels and ONE tab by intent, K156's watchdog, the runs and a
+  teardown; it masks the serial and address in all it prints. `pairs.mjs <dir>` writes `pair_*.png`
+  (cr0 | base), `crop.mjs` crops and upscales, `capfix.ts` (vite-node)
+  prints the unit fixture's cap at several CAP_ROUND. `run_locked.ps1
+  -What <what> -Cmds "& .claude/probes/K395/<batch>.ps1"` runs a batch
+  under the perf lock (`batch_ab.ps1`, `batch_ab2.ps1`). The dev server
+  is `vite.private-cache.config.ts` on 5910; `builds/` holds the pre-K395
+  build (21d701e). GOTCHA: PowerShell variables are case-insensitive: a
+  `foreach ($t ...)` in a batch line clobbered the batch's `$T`. Put a
+  batch in its own .ps1 file.
