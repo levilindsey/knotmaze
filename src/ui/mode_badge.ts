@@ -30,6 +30,7 @@
 import { formatDayDate } from "../game/daily_calendar";
 import type { SolveRecord } from "../game/daily_store";
 import { whenReduced } from "./motion";
+import { SHEET_QUERY } from "./panel_sheet";
 
 export type ModeBadgeKind = "free" | "daily" | "replay" | "practice";
 
@@ -227,7 +228,16 @@ function ensureBadgeStyles(): void {
     // the hamburger's row, and the badge its own row below it, right-aligned
     // with the hamburger; the panel opens below that (--kp-top).
     ".kp-open .km-mode{top:calc(max(10px,env(safe-area-inset-top)) + 50px);" +
-    "right:max(10px,env(safe-area-inset-right))}";
+    "right:max(10px,env(safe-area-inset-right))}" +
+    // K468: on the settings sheet (a phone's full-screen panel) the top bar
+    // holds close, undo and redo (150 px from the right edge, plus the 10 px
+    // margin), so the badge keeps the hamburger's row, left of them.
+    "@media " + SHEET_QUERY + "{" +
+    ".kp-open .km-mode,.kp-open .km-mode.km-fit-low" +
+    "{top:calc(max(10px,env(safe-area-inset-top)) + 5px);" +
+    "right:calc(max(10px,env(safe-area-inset-right)) + 160px)}" +
+    "@media (pointer:coarse){.kp-open .km-mode,.kp-open .km-mode.km-fit-low" +
+    "{top:max(10px,env(safe-area-inset-top))}}}";
   document.head.appendChild(style);
 }
 
