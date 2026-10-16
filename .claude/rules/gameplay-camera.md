@@ -66,7 +66,19 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   (unclamped) are unchanged; zooming out with the panel closed slides the
   view in a little each step (64 px a 0.9x step at 1000x800, as before
   K149). Hooks: `__knotView()` adds panel, mazeRight, range, allow and
-  panelT (stage 2);
+  panelT (stage 2).
+  SHEET (K468, 2026-10-15): the phone's full-screen settings sheet counts
+  as NO panel: `readPanel` (camera.ts) returns false while `SHEET_QUERY`
+  matches, so the range never widens for it (`panel` null, `panelT` 0 and
+  the range 0 at zoom 1 with the sheet open, at 411x753 and 753x411: the
+  sheet covers the whole maze, so there is no edge to keep clear of).
+  stage2/pan.mjs on phone: master 15/16 (its one miss, the close glide's
+  smoothness check, is frame timing: 15 frames in 246 ms in the probe
+  window) and the sheet 13/16, the 3 misses being the checks that expect
+  a panel edge with the panel open (the zoom-1 left limit, the drawn
+  pixels and the 200 ms recheck; master puts the edge at 71 against the
+  panel at 81 and rides 298 px home on a close). Every closed-panel check
+  is identical. The sheet: gameplay-panel.md's THE SHEET ON PHONES.
   K149's `probe.mjs slack` checks the old rule. GOTCHA: puppeteer's
   `mouse.click(x, y, {clickCount: 2})` gave no dblclick; dispatch the
   event.

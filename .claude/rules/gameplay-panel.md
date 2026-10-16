@@ -301,7 +301,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   hover title kept), shrinking to 600x900 shows the sheet with its entry
   (history length +1, `history.state` kmSheet 1) and growing back gives
   the entry back (`history.state` null). `.claude/probes/K92/undo.mjs
-  <base> <out> phone` still passes. Gotchas: a probe taps a wrapped
+  <base> <out> phone` passes 8 of its 9 phone checks as shipped and fails
+  one BY DESIGN, "the badge sits below them, clear of the panel" (the badge
+  now shares the top bar, left of undo and redo); its copy in
+  `.claude/probes/K467/k92_undo.mjs` asks "left of them in the bar, clear of
+  the sheet" and passes 9/9 on phone and 27/27 on desktop. K198's
+  `stage2/pan.mjs` phone: gameplay-camera.md's SHEET note (3 of 16 checks
+  expect a panel edge and fail by design). DESKTOP 1400x900, panel open and
+  closed, master `803fbe9` against the branch `e26e05a`: 0 px, and the
+  master-vs-master control 0 px too (`.claude/probes/K467/desktop_ab.mjs`,
+  K83's pins; the build stamp and the panel's version span hidden, they
+  differ per build). Gotchas: a probe taps a wrapped
   label at its first line near its left (x + 12), not at the middle of
   its box, where the reset glyph or the second line sits; a layout
   switch needs a reload after `setViewport` on a mobile emulation (probes.md).
