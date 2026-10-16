@@ -169,6 +169,7 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   url_state's `fireSettingsOf` on purpose) puts the explore variants of
   section-rgb, arm-strip and junction-field in wave 1, and
   pluck-still-explore under reduced motion. The fire's clock is the
-  distance walked, so the first burn can come at the first move. Inferred
+  distance walked (or, under `fireClock` realtime, time from the first
+  move), so the first burn can come at the first move. Inferred
   cost: about 0.4-0.7 s more to first visible on a cold cache; not
   measured.

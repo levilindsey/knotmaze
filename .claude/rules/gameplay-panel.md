@@ -143,6 +143,18 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   fireSpeed and fireDelay; it runs onTrailChange (live, no restart). Params:
   gameplay-links.md; the look: gameplay-fire.md's BURNT THREAD.
 
+- FIRE CLOCK ROW (K114 stage 2, 2026-10-15): "clock" (turn / realtime,
+  `fireClock`) in the Burn race folder, after fireDelay and before
+  burnt, hidden while the fire is off like them; it runs onClockChange (a
+  change restarts the solve; undo_stack.ts lists it there). Tooltip:
+  "turn: the fire burns as far as you walk, so standing still to think is
+  free. realtime: it burns on a clock from your first move, your dot
+  walks at a fixed pace, and if the fire reaches you while you stand
+  there, you burn. Restarts the solve." fireSpeed and fireDelay keep
+  their turn ranges ([0.3, 0.95], [0, 40]) under both clocks; stage 2's
+  realtime proposal (0.2 / 20) sits below them (gameplay-fire.md's
+  REAL-TIME FIRE). Params: gameplay-links.md.
+
 - MINOTAUR BEHAVIOR ROWS BY MODEL (K80 turns stage 3a, 2026-10-15; K294,
   K324 section 4.3): the "Minotaur behavior" subfolder (shown while the
   turn minotaur is on) gains six rows and shows each model only the rows

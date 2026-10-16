@@ -91,3 +91,10 @@ only with the files it is about; `render.md` lists the area's other files.
   barely read. Sheet: `.claude/probes/K98/sheet_k98.png` (+ .html);
   `k98_shot.mjs` freezes a real-time maze after sleep and switches sizes
   live, `build_sheets.mjs` assembles it.
+
+- THE START MARKER FADES WHEN ITS THREAD BURNS (K408, 2026-10-15; K114
+  stage 2's branch, e536bb6): FabricMazeRenderer `syncStartMarker`, fed
+  by drawFire, fades the start disc out with a WebFade (0.25 s) once the
+  fire passes its thread point, and back in on a restart; its gap slot
+  follows the fade's target. The record: gameplay-fire.md's THE START
+  MARKER BURNS.
