@@ -8,7 +8,11 @@
 // steers). A viewer preference (localStorage `knotmaze.movePad`, a panel
 // checkbox), never a link param: on by default for coarse pointers, off for
 // mice. main.ts shows it only while the keys are live (fabric mode, the
-// intro over, unsolved).
+// intro over, unsolved). K80 turns 3a: while the turn minotaur is on
+// (setWait), the center is a WAIT button, an hourglass PAD_WAIT px in
+// radius: a finger coming down inside it waits a turn (hooks.wait), as the
+// `.` and Space keys and a tap on the head do; outside it the arms work as
+// before. Without the minotaur the center is PAD_DEAD's dead spot.
 import type { KeyDir } from "./key_moves";
 
 export const MOVE_PAD_KEY = "knotmaze.movePad";

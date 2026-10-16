@@ -420,15 +420,19 @@ describe("real-time respawn (K80)", () => {
     const c = new FabricMazeController(walkFor(1234));
     c.markCaught(); // caught before any move: one "x"
     expect(c.moveLog).toEqual(["x"]);
+    // K293 (c): an "x" is not a move (moveCount reads the taps).
+    expect(c.moveCount).toBe(0);
     c.tapEdge(bestChoice(c));
     c.tapEdge(bestChoice(c));
     expect(c.moveLog).toEqual(["x", "g", "g"]);
+    expect(c.moveCount).toBe(2);
     const taps = [...c.taps];
     c.markCaught(); // the run you were on becomes the catch
     expect(c.moveLog).toEqual(["x", "g", "x"]);
     c.markCaught(true); // a wait adds one
     expect(c.moveLog).toEqual(["x", "g", "x", "x"]);
     expect(c.taps).toEqual(taps);
+    expect(c.moveCount).toBe(2);
   });
 });
 
@@ -474,5 +478,25 @@ describe("restarts (K100): what the fog of war starts over on", () => {
     expect(c.pathEdges).toEqual([]);
     c.reset();
     expect([c.restarts, c.refogs]).toEqual([2, 1]);
+  });
+
+  // K293 (a), K80 turns stage 3a: `respawns` counts the catches since the
+  // last reset(), the ones whose walk walkedDist still holds.
+  it("count the catches since the last restart (respawns)", () => {
+    const c = new FabricMazeController(walkFor(1234), false);
+    expect(c.respawns).toBe(0);
+    c.tapEdge(bestChoice(c));
+    c.respawn();
+    c.tapEdge(bestChoice(c));
+    c.respawn(true);
+    expect(c.respawns).toBe(2);
+    expect(c.walkedDist).toBeGreaterThan(0);
+    c.reset(); // a level restart: the walk and the count start over
+    expect([c.respawns, c.walkedDist]).toEqual([0, 0]);
+    c.tapEdge(bestChoice(c));
+    c.respawn();
+    expect(c.respawns).toBe(1);
+    expect(c.replay([...c.taps])).toBe(true); // a replay restarts too
+    expect(c.respawns).toBe(0);
   });
 });

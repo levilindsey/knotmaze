@@ -1371,12 +1371,17 @@ async function main(): Promise<void> {
       }
       // K80 turns section 2.10 (stage 2): under a minotaur, an unsolved run
       // with a move made restarts COUNTED, not as a catch: the tallies carry
-      // to the new minotaur and its `restarts` goes up.
+      // to the new minotaur and its `restarts` goes up. Stage 3a: with no
+      // move made since the last restart the tallies carry too, uncounted
+      // (nothing moved), so a Reset path never launders a catch: before,
+      // a catch under minoRestart, or a counted restart, then a Reset path
+      // with no move, started a fresh minotaur at 0 catches.
       const c = fabricController;
-      if (liveMino() && c && !c.solved && c.moveCount > 0) {
+      if (liveMino() && c && !c.solved) {
+        const moved = c.moveCount > 0;
         restartSolve(true);
         const m = liveMino();
-        if (m) m.restarts++;
+        if (m && moved) m.restarts++;
         updateHud();
         return;
       }
@@ -2253,10 +2258,12 @@ async function main(): Promise<void> {
     // K155: the stars. Turn-based walks rate from path + 2 x backtrack, as
     // a stored daily result does (the stats view agrees to the bit); a
     // chase rates from the walked meter (a catch's re-walk) and its catches,
-    // and so does a solve with the turn minotaur (K80 turns).
+    // and so does a solve with the turn minotaur (K80 turns). The walked
+    // meter starts over with the level and the catches carry, so the
+    // popover says which catches' walks it holds (`respawns`, K293 (a)).
     const mino = liveMino();
     const rating = mino
-      ? rateRun(c.walkedDist, c.walk.optimalLength, mino.catches)
+      ? rateRun(c.walkedDist, c.walk.optimalLength, mino.catches, c.respawns)
       : rateRun(walkedOf(c.pathLength, c.backtrackDist), c.walk.optimalLength);
     const stars = rating?.stars ?? null;
     lastWin = {
