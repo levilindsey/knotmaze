@@ -160,6 +160,10 @@ export interface PhysicsHost {
   readonly view: ParticleSystem | null;
   // The sleep gate tripped (or the scene is frozen): no step until wake().
   readonly asleep: boolean;
+  // K6-1: the host wants frames (the frame loop's PHYS poll): not asleep.
+  // With the worker, until main has seen the snapshot that says it slept
+  // (the gate's trip applies that last snapshot; the loop notes GEOM then).
+  needsFrame(): boolean;
   // The pre-settle is running.
   readonly presettling: boolean;
   // Simulated seconds the settle budget dropped, while armed or after.
@@ -640,6 +644,9 @@ export class InThreadHost implements PhysicsHost {
   }
   get asleep(): boolean {
     return this.core.asleep;
+  }
+  needsFrame(): boolean {
+    return !this.core.asleep;
   }
   get presettling(): boolean {
     return this.core.presettling;

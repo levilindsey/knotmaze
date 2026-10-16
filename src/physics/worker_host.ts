@@ -365,6 +365,11 @@ export class WorkerHost implements PhysicsHost {
   get asleep(): boolean {
     return this.inThread ? this.inThread.asleep : this.asleepFlag;
   }
+  // K6-1: main's asleep flag, which clears on a wake or a "tugged" and
+  // sets when gateFrame applies the worker's sleeping snapshot.
+  needsFrame(): boolean {
+    return this.inThread ? this.inThread.needsFrame() : !this.asleepFlag;
+  }
   get presettling(): boolean {
     return this.inThread ? this.inThread.presettling : this.presettleFlag;
   }
