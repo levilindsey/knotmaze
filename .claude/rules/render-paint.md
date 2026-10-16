@@ -219,7 +219,8 @@ only with the files it is about; `render.md` lists the area's other files.
   take the quotient as an optional argument, to test GPU-like rounding);
   PULSE spans the unwrapped run, so a full-lap (self-loop) run's pulse
   now draws (span total; master's x mod total gave 0 on every GPU).
-  `test/render/paint_ring_lap.test.ts` scans every `src/render/*.ts` for
+  `test/render/paint_ring_lap.test.ts` scans every `.ts` under
+  `src/render/` (recursively since K5 R1: `ribbon/<file>.ts` keys) for
   a rounder (floor, mod, fract, int, ...) of a quotient: a new site fails
   until it uses kLapOf/kWrap or joins `ROUNDED_QUOTIENTS` with the reason
   it is benign, and a listed site that is gone fails too. The contours'

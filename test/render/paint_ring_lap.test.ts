@@ -312,8 +312,9 @@ describe("K299 paint on a run at a ring's seam", () => {
 // a reciprocal), so floor(k n / n) can be k - 1: a lap, a slot or a wrap
 // taken that way is one step off at exact multiples. Each listed site is
 // either one of K299's exact helpers or reviewed as benign there; a new
-// site needs the same review (or kLapOf / kWrap). Keyed by file and the
-// exact call; the value is how many times it occurs, and why it is safe.
+// site needs the same review (or kLapOf / kWrap). Keyed by file (its path
+// under src/render/, e.g. "ribbon/<file>.ts") and the exact call; the
+// value is how many times it occurs, and why it is safe.
 const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "paint_glsl.ts: floor(fl / float(n))": [1, "kLapOf's estimate, corrected by one integer step"],
   "paint_glsl.ts: floor(x / m)": [1, "kWrap's estimate, corrected into [0, m)"],
@@ -351,7 +352,15 @@ describe("K299 the render GLSL's rounded quotients", () => {
     const dir = new URL("../../src/render/", import.meta.url);
     const seen = new Map<string, number>();
     const re = new RegExp(`(?<![A-Za-z0-9_.])(${ROUNDERS.join("|")})\\(`, "g");
-    for (const f of readdirSync(dir).filter((f) => f.endsWith(".ts"))) {
+    // Recursive (K5 R1): the renderer's parts live in src/render/ribbon/,
+    // keyed "ribbon/<file>.ts" (forward slashes on every OS).
+    const files = readdirSync(dir, { recursive: true })
+      .map((f) => String(f).replace(/\\/g, "/"))
+      .filter((f) => f.endsWith(".ts"))
+      .sort();
+    expect(files).toContain("ribbon/ribbon_shader.ts");
+    expect(files).toContain("ribbon/sampling.ts");
+    for (const f of files) {
       const src = readFileSync(new URL(f, dir), "utf8")
         .split(/\r?\n/)
         .map((l) => l.replace(/\/\/.*$/, ""))

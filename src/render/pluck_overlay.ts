@@ -606,8 +606,8 @@ function pluckStillShader(): PluckShader {
   return PLUCK_STILL_SHADER;
 }
 
-// Point the still programs at a scene's gap-slot table (ribbon_renderer's
-// bindGap, beside the section and junction shaders).
+// Point the still programs at a scene's gap-slot table (bindGap in
+// ribbon/ribbon_shader.ts, beside the section and junction shaders).
 export function bindPluckGap(tex: Texture): void {
   STILL_GAP_TEX = tex;
   for (const sh of [PLUCK_STILL_SHADER, PLUCK_STILL_EXPLORE_SHADER]) {

@@ -1,6 +1,7 @@
 ---
 paths:
   - "src/render/ribbon_renderer.ts"
+  - "src/render/ribbon/**"
   - "src/render/ribbon_mesh.ts"
   - "src/render/arm_strip.ts"
   - "src/render/junction_field.ts"
@@ -224,3 +225,65 @@ certifies (the P3.24 probe rule again, render edition).
   the default (of 14.7 ms) and about +0.6 ms dense (of 34.5 ms; mid-settle,
   as the dense pages had not slept after 30 s, and noisy), and the frame
   bench reads p50 0.7 ms (default) and 2.5 ms (dense) on both builds.
+
+## THE PARTS (K5)
+
+K5 splits `ribbon_renderer.ts` into parts under `src/render/ribbon/`
+(`docs/design/K5_K6_split.md` 2.3; R1 moved the first two on
+2026-10-15, R2 to R5 move the rest). Every part follows these rules:
+
+- **The façade stays.** `RibbonRenderer` keeps its name, file,
+  constructor and public API, and the shared scene fields: the samples
+  and controls, passInfo and neighbors, geomRev, updateCount,
+  underWindows, flow, the widths and look, the containers and `ps`.
+  `update()` stays on it, the pipeline that calls the parts in order.
+- **A part** is a class the façade constructs with `(r: RibbonRenderer)`,
+  or a set of functions of `r` when it has no state. It owns the fields
+  only it uses. A moved body keeps its text, `this.x` becoming
+  `this.r.x` (or `r.x`) for a shared field. Parts use `import type {
+  RibbonRenderer }` (a type-only cycle). A public method that moves
+  leaves a one-line delegation on the façade.
+- **`private`.** A part cannot read a private member, so a shared field
+  a part reads drops `private` and gets `/** @internal ribbon */`. R1's
+  inventory counts them per part (`docs/design/K5_R1.md`, the handoff).
+- **The probe surface stays on the façade.** Every name a probe reads,
+  writes or patches through `__knotRenderer()` stays on the instance with
+  the same effect. A field stays, or becomes a get/set accessor that
+  forwards to its part (the K83 A/B writes `paintClock` and
+  `pulseBorn`). A method probes patch (`r.advanceClocks = () => {}`)
+  stays a façade method that the frame calls through the instance, and
+  no part calls another part's copy where a probe patches the façade's.
+- **A helper moves with its only calling region.** A helper with callers
+  in two parts goes to `sampling.ts` if it is a pure read, and otherwise
+  stays on the façade. A pure helper takes no `r`: tsconfig's
+  `noUnusedParameters` fails a parameter never read (and
+  `noUnusedLocals` a private method nothing calls).
+- **Forwarders stay while probes call them.** The façade keeps each
+  moved helper as a private one-line forwarder with its name, modifiers
+  and signature, under a pointer comment, so its call sites and the
+  probes run unchanged. It imports the module as a namespace (`import *
+  as sampling from "./ribbon/sampling"`), so a forwarder never reads as
+  recursion. Parts call `sampling.x` directly.
+- **Each new file's header is its map:** what it holds, the commit and
+  lines it came from, and who calls it.
+- **Pure moves, checked mechanically** (design 2.1). Each move commit
+  carries its old-to-new line map and the pins it moved. Undoing its
+  edits (the indent, `export`, `this.`) gives the old text byte for byte
+  (`.claude/probes/K5/R1/verify_sampling.mjs`), and every shader text
+  stays byte-identical: an edit compiles cold once for every player
+  (`render-shaders.md`).
+
+WHERE THINGS ARE (R1). `ribbon/ribbon_shader.ts`: the section program
+(SECTION_VERT, SECTION_FRAG, SECTION_EXPLORE_FRAG, sectionProgram,
+sectionShader, sectionShaderExplore) and bindGap. K307's
+`program_registry.ts` keys its two programs to that file, and
+`paint_explore.test.ts` slices SECTION_FRAG out of its text.
+`ribbon/sampling.ts`: sampleAt, arcAt, renderCtrl, neighborGaps,
+paintArcAt, sampleAtSafe and PassNeighbors. Still on the façade:
+buildPoly, polyDist and protectReach (to `crossing_gaps.ts` with
+computeGapSlot, R2); samePieces, sameBurn and sameSpans (to
+`explore_gaps.ts`, R2); knotChainRgb and hslToHex (to `paint_state.ts`
+with recolor, R3); arcForCtrl (stays); and the G3-0 probe hooks
+(g3DataState, g3TableRows, g3Expected, captureScene, restoreScene),
+which 2.3 does not place. K299's ring-lap scan reads `src/render/`
+recursively, so the parts stay under its review.

@@ -394,6 +394,12 @@ stays on the façade.
 | `ribbon/strip_pass.ts` | the fills extrusion in `update()`, reextrude 4201, RR13 4988-5067 (tuckFusedTips, markers) | the fill meshes | `ThreadPass`: extrude(chain), collapse(chain, radii), tuck(), the meshes | **G3-2's seam**; G3-3 deletes this file |
 | `ribbon/joinery.ts` | RR14 5068-5477 (cpuJunctionField, the arm strips, the material lookups only fans read), RR15 5478-6993 | fillet caches, fan meshes, the junction field, arm strips, cover strips | `JointPass`: rebuild(force), the junction-field records | **G4-1's seam**; G4-2 deletes this file |
 
+Where things went (R1, `K5_R1.md` questions 1-5): `sampling.ts` took the
+six pure helpers and PassNeighbors, forwarded from the façade; buildPoly,
+polyDist and protectReach go to `crossing_gaps.ts` (R2), samePieces,
+sameBurn and sameSpans to `explore_gaps.ts` (R2), knotChainRgb and
+hslToHex to `paint_state.ts` (R3); arcForCtrl stays on the façade.
+
 `rebuildFillets` moves **as one method**, with no phase refactor: G4-2
 deletes it, and a refactor would be the riskiest edit in the split for
 code with the shortest future. Splitting it into phase functions is

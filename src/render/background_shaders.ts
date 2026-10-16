@@ -427,7 +427,7 @@ export function effectFragment(id: string): string {
 }
 
 // The pixi mesh uniforms every mesh shader receives (see SECTION_VERT in
-// ribbon_renderer.ts: the mesh pipe syncs these by name).
+// ribbon/ribbon_shader.ts: the mesh pipe syncs these by name).
 const MESH_UNIFORMS = /* glsl */ `
 uniform mat3 uProjectionMatrix;
 uniform mat3 uWorldTransformMatrix;
