@@ -281,17 +281,17 @@ Next free ID: K397.
   - brief: `docs/design/K114_burn.md`, "Stage 3b brief: the fire's look"
 - **K395** · The pluck blur at a kink loop's tip, on the phone (Levi, 2026-10-15 07:04, after
   K344's fix): a seam from the tip to an edge, and a heart-shaped pinch (a point inside, a dimple outside).
-  - owner: nobody since 2026-10-15 08:38 (stage 1 finished; agent `ac0d0267cdf7467ec` of claude session 05e60da0, worktree kept)
-  - branch: `worktree-agent-ac0d0267cdf7467ec`, worktree `.claude/worktrees/agent-ac0d0267cdf7467ec`; last commit: `e79b92b` (the fix, its lore and the handoff; merging)
-  - evidence: the main checkout's `.claude/probes/K395/` (Levi's screenshot); the agent's in its worktree's `.claude/probes/K395/` (`out/ab_*/pair_*.png`: pre-K395 left, the fix right; `phone_run.ps1`), copied at the merge
-  - next: the merge (the coordinator), then the phone check: `phone_run.ps1` with the phone awake and unlocked, or Levi plucks a kink loop on the phone after the deploy. CAP_ROUND is K406
+  - owner: nobody since 2026-10-15 08:38 (stage 1 finished, merged 08:50; agent `ac0d0267cdf7467ec` of claude session 05e60da0, worktree kept)
+  - branch: mainline; last commit: `b625853` (the fix is `cd62db6`; tests 1159 green, build clean)
+  - evidence: the main checkout's `.claude/probes/K395/` (Levi's screenshot; `out/ab_*/pair_*.png`: pre-K395 left, the fix right; `phone_run.ps1`)
+  - next: the phone check after the deploy: Levi plucks a kink loop, or `phone_run.ps1` with the phone awake and unlocked; then Done. CAP_ROUND is K406, the soft "M" K405
   - brief: `docs/design/K395_pluck_loop_tip.md` ("Stage 1 handoff")
   - env: the phone: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K397** · The thread reveal's stub artifacts (Levi, 2026-10-15 08:01 and 08:06, phone, free
   play): 1-2 beacon dots at a stub's end, a squared-off far end, a circular knuckle, a tap on a
   stub's end that plucks and shows hidden thread, and end dots sitting in gaps cut over crossings.
-  - owner: a diagnosis agent of claude session 05e60da0, launching 2026-10-15 (opus, 2 h cap)
-  - branch: set at launch; last commit: set at launch (from master)
+  - owner: agent `a3740655bb9c1fc11` of claude session 05e60da0 (since 2026-10-15 08:45; opus, 2 h cap)
+  - branch: `worktree-agent-a3740655bb9c1fc11`, worktree `.claude/worktrees/agent-a3740655bb9c1fc11`; last commit: `b50e4f8` (from master)
   - evidence: the main checkout's `.claude/probes/K397/` (Levi's `levi_0801.png`, `levi_0806.png`); the agent's in its worktree's `.claude/probes/K397/`
   - next: stage 1, the diagnosis (causes and a fix plan appended to `K397.md`); the fix stage after K290 3b and K395 merge. Levi's link starts `?2gozcj.Mg` (the rest asked for)
   - brief: `docs/design/K397.md`
