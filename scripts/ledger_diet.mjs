@@ -13,10 +13,21 @@
 //                                      [--out docs/ledger_diet/map.jsonl] [--width 72]
 //   node scripts/ledger_diet.mjs pointers <map.jsonl> [--snapshot LEDGER.md]
 //
-// An ITEM starts at a line matching /^- \*\*K\d+\*\* ·/ and ends before the
-// next such line, a blank line or a heading. Prose that is not an item is
-// never touched. An item's SHA is the sha1 of its text: lines joined with
-// LF (CRLF turned to LF), trailing whitespace of the whole text trimmed.
+// Every command also takes (CC64, 2026-10-15; knotmaze's defaults are unchanged):
+//   --prefix <P>           the ledger's ID letters (default K; claude-config CC,
+//                          hopnbop H, snoringcat-platform SP): items, the
+//                          `## <P><n>` headings and "Next free ID: <P><n>."
+//   --cutoff YYYY-MM-DD    a Done item resolved before it leaves the ledger
+//                          (default 2026-10-12)
+// A ledger with no "Next free ID: <P><n>." line keeps having none (a warning).
+// The notes and done files a run creates get a header naming this tool; with
+// the defaults (K, 2026-10-12) they get the K353 headers byte for byte.
+//
+// An ITEM starts at a line matching /^- \*\*K\d+\*\* ·/ (K = the prefix) and
+// ends before the next such line, a blank line or a heading. Prose that is
+// not an item is never touched. An item's SHA is the sha1 of its text: lines
+// joined with LF (CRLF turned to LF), trailing whitespace of the whole text
+// trimmed.
 //
 // apply (map lines are {id, sha, text}):
 //   - replaces an item only when its current sha equals the map's `sha`, and
@@ -25,14 +36,17 @@
 //     docs/ledger_notes.md under `## K<n> (<date>, shortened by the diet)`;
 //   - appends the verbatim original of every Done item it touches to
 //     docs/ledger_done.md under `## K<n> (Done <date>)`, creating the file;
-//   - a Done item resolved before 2026-10-12 (the last YYYY-MM-DD in the
-//     item decides), or with no date, leaves LEDGER.md entirely; the other
+//   - a Done item resolved before the cutoff, 2026-10-12 unless --cutoff says
+//     otherwise (the last YYYY-MM-DD in the item decides), or with no date,
+//     leaves LEDGER.md entirely; the other
 //     Done items are replaced by their map line (an item with no map line
 //     stays as it is);
 //   - keeps the file's line endings; a removed item takes one adjacent
 //     blank line with it, so the separators that were there stay;
 //   - sets the header's "Next free ID: K<n>." to the highest ID in the three
-//     files plus one (never lower than the header already says).
+//     files plus one (never lower than the header already says); a ledger
+//     with no such line gets none, only a warning (the archived Done IDs are
+//     then in docs/ledger_done.md, which "the highest ID ever used" includes).
 // The notes and done files live in `docs/` next to the ledger file (so a copy
 // of the ledger in a scratch folder never touches the real ones) unless
 // --notes / --done name them.
@@ -58,10 +72,29 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-const ITEM_RE = /^- \*\*K(\d+)\*\* ·/;
 const HEAD_RE = /^#{1,6}\s/;
-const NEXT_ID_RE = /^Next free ID: K(\d+)\.\s*$/;
-const CUTOFF = '2026-10-12';
+const DEFAULT_PREFIX = 'K';
+const DEFAULT_CUTOFF = '2026-10-12';
+
+// What differs between ledgers: the ID letters and the Done cutoff. Every
+// pattern and every ID the tool writes comes from here. `legacy` is knotmaze's
+// own run (K, 2026-10-12): its archive files keep their K353 headers byte for
+// byte.
+export function makeCtx(opt = {}) {
+  const prefix = opt.prefix === undefined ? DEFAULT_PREFIX : opt.prefix;
+  const cutoff = opt.cutoff === undefined ? DEFAULT_CUTOFF : opt.cutoff;
+  if (!/^[A-Za-z]+$/.test(prefix)) throw new Error(`--prefix takes letters only, got "${prefix}"`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) throw new Error(`--cutoff takes YYYY-MM-DD, got "${cutoff}"`);
+  return {
+    prefix,
+    cutoff,
+    itemRe: new RegExp(`^- \\*\\*${prefix}(\\d+)\\*\\* ·`),
+    nextIdRe: new RegExp(`^Next free ID: ${prefix}(\\d+)\\.\\s*$`),
+    headIdRe: new RegExp(`^## ${prefix}(\\d+)\\b`),
+    legacy: prefix === DEFAULT_PREFIX && cutoff === DEFAULT_CUTOFF,
+  };
+}
+const defaultCtx = makeCtx();
 
 const isBlank = (s) => s.trim() === '';
 const sha1 = (text) => crypto.createHash('sha1').update(text, 'utf8').digest('hex');
@@ -81,7 +114,7 @@ function localDate() {
 
 // ---------------------------------------------------------------- parsing
 
-export function parse(content) {
+export function parse(content, ctx = defaultCtx) {
   const eol = content.includes('\r\n') ? '\r\n' : '\n';
   let body = content;
   let finalEol = false;
@@ -94,13 +127,13 @@ export function parse(content) {
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
-    const m = ITEM_RE.exec(line);
+    const m = ctx.itemRe.exec(line);
     if (m) {
       let j = i + 1;
-      while (j < lines.length && !isBlank(lines[j]) && !ITEM_RE.test(lines[j]) && !HEAD_RE.test(lines[j])) j++;
+      while (j < lines.length && !isBlank(lines[j]) && !ctx.itemRe.test(lines[j]) && !HEAD_RE.test(lines[j])) j++;
       const text = normText(lines.slice(i, j).join('\n'));
       items.push({
-        id: 'K' + m[1], num: Number(m[1]), section, start: i, end: j,
+        id: ctx.prefix + m[1], num: Number(m[1]), section, start: i, end: j,
         lines: j - i, text, sha: sha1(text),
       });
       i = j;
@@ -139,13 +172,13 @@ function paths(opt) {
   };
 }
 
-// highest item ID in the given files' contents: item lines and `## K<n>` headings
-function highestId(contents) {
+// highest item ID in the given files' contents: item lines and `## <P><n>` headings
+function highestId(contents, ctx) {
   let max = 0;
   for (const c of contents) {
     if (!c) continue;
     for (const line of c.split(/\r?\n/)) {
-      const m = ITEM_RE.exec(line) || /^## K(\d+)\b/.exec(line);
+      const m = ctx.itemRe.exec(line) || ctx.headIdRe.exec(line);
       if (m) max = Math.max(max, Number(m[1]));
     }
   }
@@ -154,17 +187,17 @@ function highestId(contents) {
 
 // ------------------------------------------------------------------- list
 
-function cmdList(file) {
+function cmdList(file, ctx) {
   const content = readFile(file || 'LEDGER.md');
   if (content === null) throw new Error(`no such file: ${file || 'LEDGER.md'}`);
-  for (const it of parse(content).items) {
+  for (const it of parse(content, ctx).items) {
     console.log(JSON.stringify({ id: it.id, section: it.section, sha: it.sha, lines: it.lines, text: it.text }));
   }
 }
 
 // ------------------------------------------------------------------ apply
 
-function readMap(file) {
+function readMap(file, ctx) {
   const map = new Map();
   const errors = [];
   const raw = fs.readFileSync(file, 'utf8').split(/\r?\n/);
@@ -180,7 +213,7 @@ function readMap(file) {
     const tl = text.split('\n');
     const bad = !text.startsWith(`- **${o.id}** · `) ? 'the first line must start "- **' + o.id + '** · "'
       : tl.some(isBlank) ? 'a blank line inside the text'
-      : tl.slice(1).some((l) => ITEM_RE.test(l) || HEAD_RE.test(l)) ? 'a continuation line looks like an item or a heading'
+      : tl.slice(1).some((l) => ctx.itemRe.test(l) || HEAD_RE.test(l)) ? 'a continuation line looks like an item or a heading'
       : null;
     if (bad) { errors.push(`map line ${n + 1}: ${o.id}: ${bad}`); return; }
     map.set(o.id, { sha: o.sha, text });
@@ -188,15 +221,24 @@ function readMap(file) {
   return { map, errors };
 }
 
-function archiveHeader(kind) {
+// The header of an archive file this run creates. knotmaze's own run (the
+// defaults) keeps its literal K353 header (its notes file was started by
+// hand, so none); any other ledger gets one that names the tool and the date.
+function archiveHeader(kind, ctx, date) {
+  if (ctx.legacy) {
+    return kind === 'done'
+      ? '# Ledger done\n\nDone items moved out of `LEDGER.md` by the ledger diet (K353, from\n2026-10-15), verbatim, under their ID: every entry resolved before\n2026-10-12 or undated, and the full text of the newer ones, which the\nledger keeps as a one-line entry. New entries go at the bottom.\n'
+      : '';
+  }
+  const by = `by the ledger diet (\`scripts/ledger_diet.mjs\` in knotmaze, K353;\napplied ${date})`;
   return kind === 'done'
-    ? '# Ledger done\n\nDone items moved out of `LEDGER.md` by the ledger diet (K353, from\n2026-10-15), verbatim, under their ID: every entry resolved before\n2026-10-12 or undated, and the full text of the newer ones, which the\nledger keeps as a one-line entry. New entries go at the bottom.\n'
-    : '';
+    ? `# Ledger done\n\nDone items moved out of \`LEDGER.md\` ${by}, verbatim,\nunder their ID: every entry resolved before ${ctx.cutoff} or undated, and the\nfull text of the newer ones, which the ledger keeps as a one-line entry. New\nentries go at the bottom.\n`
+    : `# Ledger notes\n\nText moved out of \`LEDGER.md\` ${by}, verbatim:\nthe full text of items that were shortened, moved or closed, under their ID.\nThe ledger keeps each item short and this file keeps the rest. New entries go\nat the bottom.\n`;
 }
 
-function appendEntries(existing, entries, eol, kind) {
+function appendEntries(existing, entries, eol, kind, ctx, date) {
   let out = existing;
-  if (out === null) out = archiveHeader(kind).replace(/\n/g, eol);
+  if (out === null) out = archiveHeader(kind, ctx, date).replace(/\n/g, eol);
   if (out !== '' && !out.endsWith('\n')) out += eol;
   for (const e of entries) {
     out += eol + `## ${e.id} (${e.note})` + eol + eol + e.original.replace(/\n/g, eol) + eol;
@@ -204,8 +246,8 @@ function appendEntries(existing, entries, eol, kind) {
   return out;
 }
 
-function planApply(content, map, date) {
-  const P = parse(content);
+function planApply(content, map, date, ctx) {
+  const P = parse(content, ctx);
   const done = []; // {it, kind, text?}
   const report = { replaced: [], doneReplaced: [], doneRemoved: [], kept: 0, alreadyApplied: [], skipped: [], warnings: [] };
   const seen = new Map();
@@ -217,7 +259,7 @@ function planApply(content, map, date) {
     const m = map.get(it.id);
     if (isDone) {
       const d = lastDate(it.text);
-      if (!d || d < CUTOFF) { done.push({ it, kind: 'remove', date: d }); report.doneRemoved.push(it.id); if (m) used.add(it.id); continue; }
+      if (!d || d < ctx.cutoff) { done.push({ it, kind: 'remove', date: d }); report.doneRemoved.push(it.id); if (m) used.add(it.id); continue; }
     }
     if (!m) { report.kept++; continue; }
     used.add(it.id);
@@ -256,34 +298,34 @@ function planApply(content, map, date) {
   return { P, lines, notes, doneEntries, report };
 }
 
-function cmdApply(mapFile, opt) {
+function cmdApply(mapFile, opt, ctx) {
   if (!mapFile) throw new Error('usage: apply <map.jsonl> [--dry-run] [--file LEDGER.md]');
   const p = paths(opt);
   const content = readFile(p.ledger);
   if (content === null) throw new Error(`no such file: ${p.ledger}`);
-  const { map, errors } = readMap(mapFile);
+  const { map, errors } = readMap(mapFile, ctx);
   const date = opt.date || localDate();
-  const plan = planApply(content, map, date);
+  const plan = planApply(content, map, date, ctx);
   for (const e of errors) plan.report.skipped.push({ id: '(map)', reason: e });
   const { P } = plan;
   const notesOld = readFile(p.notes);
   const doneOld = readFile(p.done);
-  const notesNew = appendEntries(notesOld, plan.notes, P.eol, 'notes');
-  const doneNew = appendEntries(doneOld, plan.doneEntries, P.eol, 'done');
+  const notesNew = appendEntries(notesOld, plan.notes, P.eol, 'notes', ctx, date);
+  const doneNew = appendEntries(doneOld, plan.doneEntries, P.eol, 'done', ctx, date);
 
-  // the header's next free ID
+  // the header's next free ID (a ledger without one keeps having none)
   let lines = plan.lines;
   const ledgerPre = lines.join(P.eol);
-  const high = highestId([ledgerPre, notesNew, doneNew]);
-  const idx = lines.findIndex((l) => NEXT_ID_RE.test(l));
+  const high = highestId([ledgerPre, notesNew, doneNew], ctx);
+  const idx = lines.findIndex((l) => ctx.nextIdRe.test(l));
   let nextId = high + 1;
   if (idx >= 0) {
-    const cur = Number(NEXT_ID_RE.exec(lines[idx])[1]);
-    if (cur > nextId) { plan.report.warnings.push(`header says K${cur} but the highest ID is K${high}: header kept`); nextId = cur; }
+    const cur = Number(ctx.nextIdRe.exec(lines[idx])[1]);
+    if (cur > nextId) { plan.report.warnings.push(`header says ${ctx.prefix}${cur} but the highest ID is ${ctx.prefix}${high}: header kept`); nextId = cur; }
     lines = lines.slice();
-    lines[idx] = `Next free ID: K${nextId}.`;
+    lines[idx] = `Next free ID: ${ctx.prefix}${nextId}.`;
   } else {
-    plan.report.warnings.push('no "Next free ID: K<n>." line in the ledger');
+    plan.report.warnings.push(`no "Next free ID: ${ctx.prefix}<n>." line in the ledger`);
   }
   const out = lines.join(P.eol) + (P.finalEol ? P.eol : '');
 
@@ -293,7 +335,7 @@ function cmdApply(mapFile, opt) {
   console.log(`  items: ${P.items.length}; open rewritten ${r.replaced.length}; Done replaced by a one-liner ${r.doneReplaced.length}; Done archived (left the ledger) ${r.doneRemoved.length}; kept as they were ${r.kept}; already applied ${r.alreadyApplied.length}; skipped ${r.skipped.length}`);
   console.log(`  ledger: ${bytes(content)} -> ${bytes(out)} bytes, ${P.lines.length} -> ${lines.length} lines`);
   console.log(`  notes: ${notesOld === null ? 0 : bytes(notesOld)} -> ${bytes(notesNew)} bytes (${plan.notes.length} entries); done: ${doneOld === null ? 0 : bytes(doneOld)} -> ${bytes(doneNew)} bytes (${plan.doneEntries.length} entries)`);
-  console.log(`  Next free ID: K${nextId}`);
+  console.log(`  Next free ID: ${ctx.prefix}${nextId}`);
   for (const s of r.skipped) console.log(`  SKIPPED ${s.id}: ${s.reason}`);
   for (const w of r.warnings) console.log(`  warning: ${w}`);
   if (opt.dryRun) return;
@@ -326,7 +368,7 @@ function hasBlock(hay, text) {
   }
 }
 
-function cmdVerify(beforeFile, opt) {
+function cmdVerify(beforeFile, opt, ctx) {
   if (!beforeFile) throw new Error('usage: verify <before-file> [--file LEDGER.md]');
   const p = paths(opt);
   const beforeC = readFile(beforeFile);
@@ -335,9 +377,9 @@ function cmdVerify(beforeFile, opt) {
   if (afterC === null) throw new Error(`no such file: ${p.ledger}`);
   const notesC = readFile(p.notes) || '';
   const doneC = readFile(p.done) || '';
-  const B = parse(beforeC);
-  const A = parse(afterC);
-  const D = parse(doneC);
+  const B = parse(beforeC, ctx);
+  const A = parse(afterC, ctx);
+  const D = parse(doneC, ctx);
   const lf = (s) => s.replace(/\r\n/g, '\n');
   const hays = [lf(afterC), lf(notesC), lf(doneC)];
   const fails = [];
@@ -368,7 +410,7 @@ function cmdVerify(beforeFile, opt) {
   }
 
   // 3. headings and non-item prose unchanged; sections and order of items
-  const norm = (l) => (NEXT_ID_RE.test(l) ? 'Next free ID: K#.' : l);
+  const norm = (l) => (ctx.nextIdRe.test(l) ? `Next free ID: ${ctx.prefix}#.` : l);
   const bp = B.prose.map((x) => norm(x.line));
   const ap = A.prose.map((x) => norm(x.line));
   if (bp.length !== ap.length) fails.push(`non-item lines: ${bp.length} before, ${ap.length} after`);
@@ -386,10 +428,10 @@ function cmdVerify(beforeFile, opt) {
     if (pos < last) fails.push(`${it.id}: out of order`);
     last = Math.max(last, pos);
   }
-  const nid = A.lines.map((l) => NEXT_ID_RE.exec(l)).find(Boolean);
-  const high = highestId([afterC, notesC, doneC]);
+  const nid = A.lines.map((l) => ctx.nextIdRe.exec(l)).find(Boolean);
+  const high = highestId([afterC, notesC, doneC], ctx);
   if (!nid) warns.push('no "Next free ID" line');
-  else if (Number(nid[1]) < high + 1) fails.push(`Next free ID is K${nid[1]} but the highest ID in the three files is K${high}`);
+  else if (Number(nid[1]) < high + 1) fails.push(`Next free ID is ${ctx.prefix}${nid[1]} but the highest ID in the three files is ${ctx.prefix}${high}`);
   if (A.eol !== B.eol) warns.push('line endings differ from the before-file');
 
   // layout warnings
@@ -406,8 +448,8 @@ function cmdVerify(beforeFile, opt) {
   if (lay.openBlank) warns.push(`${lay.openBlank} open items are separated by a blank line`);
   const longOpen = A.items.filter((it) => !isDoneSection(it.section) && !/^in progress/i.test(it.section) && it.lines > 3);
   if (longOpen.length) warns.push(`${longOpen.length} open items (not In progress) still over three lines: ${longOpen.map((x) => x.id).join(' ')}`);
-  const longDone = A.items.filter((it) => isDoneSection(it.section) && (lastDate(it.text) || '') >= CUTOFF && it.lines > 1);
-  if (longDone.length) warns.push(`${longDone.length} Done items from ${CUTOFF} on still over one line: ${longDone.map((x) => x.id).join(' ')}`);
+  const longDone = A.items.filter((it) => isDoneSection(it.section) && (lastDate(it.text) || '') >= ctx.cutoff && it.lines > 1);
+  if (longDone.length) warns.push(`${longDone.length} Done items from ${ctx.cutoff} on still over one line: ${longDone.map((x) => x.id).join(' ')}`);
 
   console.log(`verify: ${B.items.length} items before, ${A.items.length} in the ledger now, ${D.items.length} in ledger_done.md`);
   for (const w of warns) console.log(`  warning: ${w}`);
@@ -435,18 +477,18 @@ function wrapWords(first, rest, text, width) {
   return out;
 }
 
-function wrapBlock(blockLines, width) {
+function wrapBlock(blockLines, width, ctx) {
   // paragraphs: the item line (continuation indent 2), then each "  - " line (indent 4)
   const paras = [];
   for (const l of blockLines) {
-    if (ITEM_RE.test(l)) paras.push({ head: '', indent: '  ', text: l });
+    if (ctx.itemRe.test(l)) paras.push({ head: '', indent: '  ', text: l });
     else if (/^\s{2}- /.test(l)) paras.push({ head: '  ', indent: '    ', text: l.trim() });
     else if (paras.length) paras[paras.length - 1].text += ' ' + l.trim();
   }
   const out = [];
   for (const p of paras) {
     const t = p.text.trim();
-    if (p.head === '' && ITEM_RE.test(t)) {
+    if (p.head === '' && ctx.itemRe.test(t)) {
       // keep the "- **K12** · " lead intact
       out.push(...wrapWords('', p.indent, t, width));
     } else {
@@ -456,9 +498,9 @@ function wrapBlock(blockLines, width) {
   return out.join('\n');
 }
 
-function cmdPack(srcs, opt) {
+function cmdPack(srcs, opt, ctx) {
   if (!srcs.length) throw new Error('usage: pack <src>... [--snapshot LEDGER.md] [--out docs/ledger_diet/map.jsonl]');
-  const snap = parse(readFile(opt.snapshot || 'LEDGER.md'));
+  const snap = parse(readFile(opt.snapshot || 'LEDGER.md'), ctx);
   const byId = new Map();
   for (const it of snap.items) byId.set(it.id, it); // the bottom-most copy wins
   const width = Number(opt.width || 72);
@@ -470,18 +512,18 @@ function cmdPack(srcs, opt) {
     let cur = null;
     const blocks = [];
     for (const l of lines) {
-      if (ITEM_RE.test(l)) { cur = [l]; blocks.push(cur); }
+      if (ctx.itemRe.test(l)) { cur = [l]; blocks.push(cur); }
       else if (cur && !isBlank(l)) cur.push(l);
       else if (isBlank(l)) cur = null;
     }
     for (const b of blocks) {
-      const id = 'K' + ITEM_RE.exec(b[0])[1];
+      const id = ctx.prefix + ctx.itemRe.exec(b[0])[1];
       const it = byId.get(id);
       if (!it) { console.error(`${src}: ${id} is not in the snapshot`); errors++; continue; }
       if (seen.has(id)) { console.error(`${src}: ${id} appears twice in the sources`); errors++; continue; }
       seen.add(id);
       // a Done entry is ONE line (not wrapped); open items wrap at `width`
-      const text = wrapBlock(b, isDoneSection(it.section) ? Infinity : width);
+      const text = wrapBlock(b, isDoneSection(it.section) ? Infinity : width, ctx);
       out.push({ id, sha: it.sha, text });
       const tl = text.split('\n');
       const desc = tl.findIndex((l) => /^\s{2}- /.test(l));
@@ -514,10 +556,10 @@ function pointersOf(text) {
   return set;
 }
 
-function cmdPointers(mapFile, opt) {
-  const snap = parse(readFile(opt.snapshot || 'LEDGER.md'));
+function cmdPointers(mapFile, opt, ctx) {
+  const snap = parse(readFile(opt.snapshot || 'LEDGER.md'), ctx);
   const byId = new Map(snap.items.map((it) => [it.id, it]));
-  const { map } = readMap(mapFile);
+  const { map } = readMap(mapFile, ctx);
   let n = 0;
   for (const [id, m] of map) {
     const it = byId.get(id);
@@ -535,12 +577,13 @@ function cmdPointers(mapFile, opt) {
 function main() {
   const [cmd, ...rest] = process.argv.slice(2);
   const { pos, opt } = parseArgs(rest);
+  const ctx = makeCtx(opt);
   switch (cmd) {
-    case 'list': return cmdList(pos[0] || opt.file);
-    case 'apply': return cmdApply(pos[0], opt);
-    case 'verify': return cmdVerify(pos[0], opt);
-    case 'pack': return cmdPack(pos, opt);
-    case 'pointers': return cmdPointers(pos[0], opt);
+    case 'list': return cmdList(pos[0] || opt.file, ctx);
+    case 'apply': return cmdApply(pos[0], opt, ctx);
+    case 'verify': return cmdVerify(pos[0], opt, ctx);
+    case 'pack': return cmdPack(pos, opt, ctx);
+    case 'pointers': return cmdPointers(pos[0], opt, ctx);
     default:
       console.error('usage: ledger_diet.mjs list|apply|verify|pack|pointers (see the header of this file)');
       process.exit(2);
