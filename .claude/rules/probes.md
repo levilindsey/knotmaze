@@ -366,8 +366,11 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   true geometry, the old and new pick side by side), `hover_ab.mjs` +
   `hover_compose.mjs` (the lit run under the old and the new pick on ONE
   page and one frozen state, `tapPreference` toggled; a mouse at phone
-  size, since a touch press lights nothing) and `locked_verify.ps1`
-  (suite, build and hover under the perf lock). GOTCHAS: the controller
+  size, since a touch press lights nothing), `click_e2e.mjs <base> <out>
+  on|off desktop|phonemouse` (a REAL click at a toss-up point, and the
+  path it ends with; `click_e2e.ps1` runs the four under the perf lock)
+  and `locked_verify.ps1` (suite, build and hover under the perf lock).
+  GOTCHAS: the controller
   is not a window hook, so wrap `fb.edgeAt` to capture it (the next
   hover passes it); `__knotTurnMove(eid)` plays a move through
   moveAlong, which COMMITS the move at once (the head is the far
