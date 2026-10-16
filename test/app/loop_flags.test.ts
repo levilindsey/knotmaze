@@ -13,7 +13,7 @@ import {
   type FrameObservation,
 } from "../../src/app/loop_flags";
 
-const QUIET: FrameObservation = { rootMoved: false, legacy: false, active: false, stepUnflagged: false };
+const QUIET: FrameObservation = { active: false, stepUnflagged: false };
 
 describe("loop flags: the masks", () => {
   it("names every bit in order", () => {
@@ -110,15 +110,12 @@ describe("loop flags: empty runs and restarts", () => {
 });
 
 describe("loop flags: the observer", () => {
-  it("counts root moves without a camera, load or physics flag", () => {
+  it("counts sceneActive frames and unflagged physics steps (K6-2 slimmed it)", () => {
     const f = createLoopFlags();
-    f.endFrame(0, { ...QUIET, rootMoved: true }); // unflagged
-    f.push(Flag.CAMERA);
-    f.endFrame(0, { ...QUIET, rootMoved: true }); // flagged
-    f.endFrame(0, { ...QUIET, legacy: true }); // legacy only
-    f.endFrame(0, { ...QUIET, active: true }); // flags only
-    f.endFrame(0, { ...QUIET, legacy: true, active: true, stepUnflagged: true });
-    expect(f.report().observer).toEqual({ rootMoved: 1, legacyOnly: 1, flagsOnly: 1, stepUnflagged: 1 });
+    f.endFrame(0, QUIET);
+    f.endFrame(0, { ...QUIET, active: true });
+    f.endFrame(0, { ...QUIET, active: true, stepUnflagged: true });
+    expect(f.report().observer).toEqual({ active: 2, stepUnflagged: 1 });
   });
 });
 

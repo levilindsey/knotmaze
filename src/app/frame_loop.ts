@@ -30,7 +30,9 @@ import type { StampPerf } from "./stamp";
 // main() as it was: the ticker callback (each frame's main-thread cost and
 // the reveal's), tick (the load settle or the physics step, the sleep
 // gate's call, the camera, the fabric's per-frame work, flow's half rate,
-// the rest frame, the stamp), sceneAnimating and the background's tick.
+// the rest frame, the stamp) and the background's tick. K6-2: the tick's
+// parts and the rest/paused geometry pass run only on their loop flags
+// (src/app/loop_flags.ts); the draw is still every frame (K6-3).
 // main.ts calls createFrameLoop once, after createStamp (perf and
 // updateStamp exist only from there), and loop.start() registers the
 // ticker callback. The `let`s main.ts keeps come in as accessors on `deps`
@@ -182,6 +184,11 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // A one-shot render pass requested where nothing else would run
   // update() (a frozen physics-off scene: width / recolor changes).
   let renderDirty = false;
+  // K6-2: the change-detected per-frame param syncs (fabricTick): the
+  // last values handed to the renderer's plucks and to the fabric, keyed
+  // on the objects they were handed to (a rebuild replaces both).
+  let pluckSync: { r: unknown; v: readonly (number | string | boolean)[] } | null = null;
+  let fabricSync: { f: unknown; c: unknown; v: readonly (number | string | boolean)[] } | null = null;
   const wake = (): void => {
     host.wake();
     renderDirty = true;
@@ -218,51 +225,9 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // The background's drift pauses once the rest of the scene has been
   // still for a while (BACKGROUND_PAUSE_GRACE), and background.needsFrame()
   // then says false - so a render-on-demand loop can stop drawing. Since
-  // K6-1 the answer is sceneActive (the flags, backgroundTick below);
-  // sceneAnimating() is the pre-K6 approximation, kept as an observer
-  // until K6-2 deletes it.
-  let lastViewX = NaN;
-  let lastViewY = NaN;
-  let lastViewS = NaN;
-  // Did the world root move since the last call? (Moves its bookkeeping:
-  // call once a frame.) K6-1 keeps it as the report's observer.
-  const viewMoved = (): boolean => {
-    // The fit camera's ease converges geometrically: ignore sub-pixel
-    // creep (comparing exact floats held the drift awake ~11 s after the
-    // knot slept, instead of the 2.5 s grace).
-    const moved = !(
-      Math.abs(root.position.x - lastViewX) < 0.01 &&
-      Math.abs(root.position.y - lastViewY) < 0.01 &&
-      Math.abs(root.scale.x - lastViewS) < 1e-5 * root.scale.x
-    );
-    lastViewX = root.position.x;
-    lastViewY = root.position.y;
-    lastViewS = root.scale.x;
-    return moved;
-  };
-  // The pre-K6 answer (K6-1 keeps it beside the flags as the legacy
-  // observer): `moved` is this frame's viewMoved().
-  const sceneAnimating = (moved: boolean): boolean => {
-    if (moved || !scene.ps || !scene.renderer) return true;
-    // K140: confetti in the air (false again once its last piece is gone).
-    if (confetti.active) return true;
-    // K279: a pluck ripple spreading.
-    if (ripples.activeCount > 0) return true;
-    // K169: a fully traveled gold web fading in (0.25 s).
-    if (scene.fabric !== null && scene.fabric.webFading) return true;
-    if (deps.physState === "loading" || deps.physState === "settling" || !host.asleep) {
-      return true;
-    }
-    if (look("flowStrength") > 0 || (scene.reveal !== null && !scene.reveal.done)) {
-      return true;
-    }
-    if (scene.renderer.needsFxRender() || scene.renderer.plucks.activeCount > 0) {
-      return true;
-    }
-    // Fabric gameplay paint (pulses, hover breathing, traversal, the fog's
-    // wobble) animates continuously.
-    return params.mazeFabric && scene.fabric !== null;
-  };
+  // K6-1 the answer is sceneActive (the flags, backgroundTick below).
+  // K6-2 deleted the pre-K6 sceneAnimating()/viewMoved observer that
+  // K6-1 kept beside it: the flags are the only answer now.
   // K6-1: the polls (docs/design/K6_1.md, "The flags"), read at a frame's
   // end for the next one. Read-only and allocation-free: each is a test of
   // state the loop or a module already keeps.
@@ -312,12 +277,10 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   let sceneWasAnimating = false;
   const backgroundTick = (dt: number): void => {
     background.reducedMotion = motion.reduced;
-    const rootMoved = viewMoved();
-    const legacy = sceneAnimating(rootMoved);
     // K6-1: sceneActive, the flags' answer: this frame's pushes or the
     // polls read now carry a visual flag other than BACKGROUND. It
-    // replaces sceneAnimating() for the background's drift pause; the
-    // legacy answer stays beside it as the report's observer.
+    // drives the background's drift pause (K6-2 deleted the legacy
+    // sceneAnimating() observer it replaced).
     let polls = readPolls();
     const active = ((flags.pushed | polls) & SCENE_ACTIVE) !== 0;
     sceneWasAnimating = active;
@@ -331,7 +294,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       // and the frame after it as OVER (K6-1, the drift case's finish).
       if (background.needsFrame(dt)) polls |= Flag.BACKGROUND;
     }
-    flags.endFrame(polls, { rootMoved, legacy, active, stepUnflagged });
+    flags.endFrame(polls, { active, stepUnflagged });
     stepUnflagged = false;
   };
 
@@ -374,6 +337,18 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
 
     const speedMult = speedMultNow();
 
+    // K6-2: hand the look over FIRST (change-detecting since K6-2: it
+    // pushes GEOM only when a worn value changed), so this frame's need
+    // snapshot below already carries that push and a rest/paused frame
+    // can run its geometry pass in this same frame. The later calls in
+    // fabricTick/flowRender/awake are then no-ops.
+    handRendererLook();
+    // K6-2: this frame's need (the polls carried from last frame | the
+    // pushes since, the look change above included). CPU work below
+    // runs only on its flags; the draw is still every frame (K6-3).
+    const need = flags.need;
+    const inputPushed = (flags.pushed & Flag.INPUT) !== 0;
+
     // Stage 22: the appearance reveal advances on WALL time in every
     // branch (awake, asleep, paused). While it runs, the render pass must
     // execute even when the physics does not (see flowRender's guard);
@@ -388,12 +363,19 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     }
     // G2: the paint clock advances here, BEFORE any update() this frame
     // (the shader uniforms and update()'s CPU mirror read one clock).
-    scene.renderer.advanceClocks(ticker.deltaMS / 1000);
+    // K6-2: the paint clock advances only while paint, its FX, the
+    // reveal or the pulses animate (at rest it has nothing to move: the
+    // shader uniforms it feeds are static without those flags).
+    if ((need & (Flag.REVEAL | Flag.FX | Flag.PAINT | Flag.PAINT_AMBIENT)) !== 0 || revealing) {
+      scene.renderer.advanceClocks(ticker.deltaMS / 1000);
+    }
     // The gameplay animations (traversal, pulse, hover) run even while
     // paused or asleep - they touch only markers and UV buffers, never
     // physics or splines.
     const fabricTick = (): void => {
-      autoAudioTick();
+      // K6-2: the auto sound's clock only on AUDIO (its poll: live,
+      // random or music, not muted).
+      if ((need & Flag.AUDIO) !== 0) autoAudioTick();
       // K239: handRendererLook (cuspRadius, fade, flow, pulses, glow, FX) runs
       // here too, for the readers between passes, and before every update().
       // K111: the flow holds still under Reduced motion (the intro and the
@@ -401,76 +383,125 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       // The FX style is consumed by the appearance-FX pass inside tickPaint
       // while a reveal runs.
       handRendererLook();
+      // K6-2: the per-frame param re-syncs are change-detected pushes
+      // now, not assignments: the pluck look and the auto level below
+      // (and the fabric's fields further down) are applied only when a
+      // value actually changed (panel, URL or probe writing the live
+      // params), which is also when they take effect - the next pluck,
+      // the next move - so no frame at rest pays for them.
       // Render-only pluck look (live; a hand-edited link cannot leave the
       // panel's ranges - pluckSize's slider has reached 3 since K25, and a
       // clamp left at 2 made its top third do nothing).
-      scene.renderer!.plucks.size = Math.max(0, Math.min(3, params.pluckSize));
-      scene.renderer!.plucks.ghost = Math.max(0, Math.min(1, params.pluckGhost));
-      // K180's pluck params: W's amount and the glow reach the next pluck,
-      // a crossings change re-lays the ringing ones out.
-      scene.renderer!.plucks.setWhole(
+      const pv: readonly (number | string | boolean)[] = [
+        Math.max(0, Math.min(3, params.pluckSize)),
+        Math.max(0, Math.min(1, params.pluckGhost)),
         Math.max(0, Math.min(PLUCK_WHOLE_MAX, params.pluckWhole)),
-        params.pluckCrossings,
-        params.pluckGlow
-      );
-      scene.renderer!.plucks.sustain = params.sustain;
-      // K279: the time exposure's sheen (live), and auto plucks' level.
-      scene.renderer!.plucks.sheen = Math.max(0, Math.min(1, params.pluckSheen));
-      synth.setAutoGain(Math.max(0, Math.min(1, params.autoPluckGain)));
-      // Reduced motion (the Motion setting, live; WCAG 2.3.3): a pluck
-      // started under it is STILL - the plucked segment brightens briefly
-      // and nothing moves (K104); the sound is unchanged. Plucks already
-      // ringing when it turns on finish without the ghost and the attack.
-      scene.renderer!.plucks.reducedMotion = motion.reduced;
+        params.pluckCrossings, params.pluckGlow, params.sustain,
+        Math.max(0, Math.min(1, params.pluckSheen)),
+        Math.max(0, Math.min(1, params.autoPluckGain)),
+        motion.reduced,
+      ];
+      if (pluckSync === null || pluckSync.r !== scene.renderer || pv.some((x, i) => x !== pluckSync!.v[i])) {
+        pluckSync = { r: scene.renderer, v: pv };
+        scene.renderer!.plucks.size = pv[0] as number;
+        scene.renderer!.plucks.ghost = pv[1] as number;
+        // K180's pluck params: W's amount and the glow reach the next pluck,
+        // a crossings change re-lays the ringing ones out.
+        scene.renderer!.plucks.setWhole(pv[2] as number, params.pluckCrossings, params.pluckGlow);
+        scene.renderer!.plucks.sustain = params.sustain;
+        // K279: the time exposure's sheen (live), and auto plucks' level.
+        scene.renderer!.plucks.sheen = pv[6] as number;
+        synth.setAutoGain(pv[7] as number);
+        // Reduced motion (the Motion setting, live; WCAG 2.3.3): a pluck
+        // started under it is STILL - the plucked segment brightens briefly
+        // and nothing moves (K104); the sound is unchanged. Plucks already
+        // ringing when it turns on finish without the ghost and the attack.
+        scene.renderer!.plucks.reducedMotion = motion.reduced;
+      }
       if (params.mazeFabric && scene.fabric && scene.fabricController) {
-        scene.fabric.moveSpeed = params.moveSpeed;
-        scene.fabric.trailMode = params.pathViz === "trail";
-        scene.fabric.pathViz = params.pathViz;
-        scene.fabric.tension = params.tension;
-        scene.fabric.trailLength = params.trailLength;
-        syncExploration(scene.fabric);
-        scene.fabric.markerSize = look("markerSize"); // K98 (a no-op unless moved).
-        // K76 stage 2c: the reveal's halo follows the Accessibility flags.
-        scene.fabric.exploreStill = a11y.reducedMotion;
-        scene.fabric.exploreContrast = a11y.highContrast;
-        // fowIntro: keep the fog off while the intro animation plays; the
-        // release closes it in (fade + contracting radius). K76 stage 2c:
-        // the thread reveal's hold shows every thread while the intro plays,
-        // and its release closes in on what you have explored the same way.
-        scene.fabric.setFogHold(params.exploration === "fog" && params.fowIntro && revealing);
-        scene.fabric.setExploreHold(
-          params.exploration === "threads" && params.fowIntro && revealing
-        );
-        scene.fabric.tickFog(ticker.deltaMS / 1000);
+        // K6-2: the fabric's param fields sync only on a change (the
+        // tuple covers every field assigned here and everything
+        // syncExploration reads; `revealing` rides in through the two
+        // holds, which flip at the reveal's end).
+        const fogHold = params.exploration === "fog" && params.fowIntro && revealing;
+        const exploreHold = params.exploration === "threads" && params.fowIntro && revealing;
+        const fv: readonly (number | string | boolean)[] = [
+          params.moveSpeed, params.pathViz, params.tension, params.trailLength,
+          look("markerSize"), a11y.reducedMotion, a11y.highContrast, fogHold, exploreHold,
+          params.exploration, params.fowRadius, params.revealDistance, params.revealFade,
+          params.revealLook, params.burnt, params.revealFinish, params.revealEndCross,
+          params.revealEndGlow,
+        ];
+        if (fabricSync === null || fabricSync.f !== scene.fabric || fabricSync.c !== scene.fabricController || fv.some((x, i) => x !== fabricSync!.v[i])) {
+          fabricSync = { f: scene.fabric, c: scene.fabricController, v: fv };
+          scene.fabric.moveSpeed = params.moveSpeed;
+          scene.fabric.trailMode = params.pathViz === "trail";
+          scene.fabric.pathViz = params.pathViz;
+          scene.fabric.tension = params.tension;
+          scene.fabric.trailLength = params.trailLength;
+          syncExploration(scene.fabric);
+          scene.fabric.markerSize = look("markerSize"); // K98 (a no-op unless moved).
+          // K76 stage 2c: the reveal's halo follows the Accessibility flags.
+          scene.fabric.exploreStill = a11y.reducedMotion;
+          scene.fabric.exploreContrast = a11y.highContrast;
+          // fowIntro: keep the fog off while the intro animation plays; the
+          // release closes it in (fade + contracting radius). K76 stage 2c:
+          // the thread reveal's hold shows every thread while the intro plays,
+          // and its release closes in on what you have explored the same way.
+          scene.fabric.setFogHold(fogHold);
+          scene.fabric.setExploreHold(exploreHold);
+          scene.fabricController.trailMode = params.pathViz === "trail";
+        }
+        // K6-2: the fog's wobble is PAINT_AMBIENT, its intro PAINT (the
+        // fabric poll); nothing else in tickFog moves at rest.
+        if ((need & (Flag.PAINT | Flag.PAINT_AMBIENT | Flag.REVEAL)) !== 0) {
+          scene.fabric.tickFog(ticker.deltaMS / 1000);
+        }
         // K76 stage 2c: the reveal's clock (growth, the close-in) in every
         // clock mode - the real-time chase never runs tickAnim (K324).
-        scene.fabric.tickExplore(ticker.deltaMS / 1000);
-        scene.fabricController.trailMode = params.pathViz === "trail";
-        // K80: in the real-time mode the chase moves the dot (tickChase).
-        if (scene.chase) tickChase(ticker.deltaMS / 1000);
-        // K114 stage 2: the real-time fire's clock moves the dot.
-        else if (realtimeFire()) tickFire(ticker.deltaMS / 1000);
-        else {
-          scene.fabric.tickAnim(ticker.deltaMS / 1000, scene.fabricController);
-          // K80 turns: the turn minotaur rides the move just stepped.
-          if (scene.turnMino) tickTurnMino(ticker.deltaMS / 1000);
+        // K6-2: its poll is PAINT (growth, halos) and a move is GAME; a
+        // move in flight or the reveal itself also keeps it running.
+        if ((need & (Flag.PAINT | Flag.GAME)) !== 0 || scene.fabric.animating || revealing) {
+          scene.fabric.tickExplore(ticker.deltaMS / 1000);
         }
-        // K120: a held key's next move, once the dot has arrived.
+        // K120/K499: the gamepad polls every frame (edges only; a press
+        // at rest is an input no flag poll could see first).
         pollGamepad();
-        keyStep();
-        // K114 stage 2: after the waiting move left, the fire's clock.
-        if (realtimeFire()) fireSet();
-        if (deps.pendingWin && !scene.fabric.animating) {
-          deps.pendingWin = false;
-          showFabricWin();
+        // K6-2: the game clocks run only on GAME (a chase, the turn
+        // minotaur, the fire, a move, a key hold) - or on the frame an
+        // input lands, so a tap's first step keeps its old timing; a
+        // move in flight and a pending banner are GAME by poll, and are
+        // named here so a skipped frame can never strand them.
+        if ((need & Flag.GAME) !== 0 || inputPushed || scene.fabric.animating || deps.pendingWin || deps.pendingLoss) {
+          // K80: in the real-time mode the chase moves the dot (tickChase).
+          if (scene.chase) tickChase(ticker.deltaMS / 1000);
+          // K114 stage 2: the real-time fire's clock moves the dot.
+          else if (realtimeFire()) tickFire(ticker.deltaMS / 1000);
+          else {
+            scene.fabric.tickAnim(ticker.deltaMS / 1000, scene.fabricController);
+            // K80 turns: the turn minotaur rides the move just stepped.
+            if (scene.turnMino) tickTurnMino(ticker.deltaMS / 1000);
+          }
+          // K120: a held key's next move, once the dot has arrived.
+          keyStep();
+          // K114 stage 2: after the waiting move left, the fire's clock.
+          if (realtimeFire()) fireSet();
+          if (deps.pendingWin && !scene.fabric.animating) {
+            deps.pendingWin = false;
+            showFabricWin();
+          }
+          if (deps.pendingLoss && !scene.fabric.animating) {
+            deps.pendingLoss = false;
+            showFireLoss();
+          }
         }
-        if (deps.pendingLoss && !scene.fabric.animating) {
-          deps.pendingLoss = false;
-          showFireLoss();
+        // K114: the fire's look rides the dot. K6-2: it recomputes on
+        // GAME (the fire's clock, a move), PAINT (its FX), GEOM/LOAD (a
+        // rebuild) or an input frame; at rest with no fire it has
+        // nothing to declare. It takes the frame's dt now (K6-2).
+        if ((need & (Flag.GAME | Flag.PAINT | Flag.GEOM | Flag.LOAD)) !== 0 || inputPushed) {
+          scene.fabric.drawFire(scene.fabricController, ticker.deltaMS / 1000);
         }
-        // K114: the fire's look rides the dot (the cheap first look; a no-op
-        // without a fire once cleared).
-        scene.fabric.drawFire(scene.fabricController);
       }
       // K120: the move pad shows while the keys are live (knot mode too:
       // there it hides). K224: and the panel is closed (an open panel is
@@ -486,14 +517,29 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       ) {
         setWaitCue(false);
       }
-      scene.renderer!.tickPaint(ticker.deltaMS / 1000);
+      // K6-2: the paint pass only on its flags (pulses and the fog's
+      // wobble are PAINT/PAINT_AMBIENT, the hover breath and web fade
+      // PAINT, the FX tails FX, the flow clock FLOW) or on an input
+      // frame (a hover move re-declares the rim before its poll lands).
+      if ((need & (Flag.PAINT | Flag.PAINT_AMBIENT | Flag.FX | Flag.REVEAL | Flag.FLOW | Flag.GEOM)) !== 0 || inputPushed) {
+        scene.renderer!.tickPaint(ticker.deltaMS / 1000);
+      }
       // After the paint pass: fabric pluck colors read this frame's paint.
-      scene.renderer!.tickPlucks(ticker.deltaMS / 1000);
-      const camDt = Math.min(ticker.elapsedMS / 1000, CAM_MAX_DT);
-      updateCamera(camDt);
-      // After the camera step: the indicators read this frame's framing
-      // (and the head's show delay runs on the same clock).
-      indicators.update(camDt);
+      // K6-2: only while plucks/ripples/confetti are live (OVERLAY), or
+      // on the input frame that starts one.
+      if ((need & Flag.OVERLAY) !== 0 || inputPushed) {
+        scene.renderer!.tickPlucks(ticker.deltaMS / 1000);
+      }
+      // K6-2: the camera and the indicators only while the camera has
+      // not converged (CAMERA) or on an input frame (a pan/zoom gesture
+      // starts before its poll lands); at rest both are still.
+      if ((need & Flag.CAMERA) !== 0 || inputPushed) {
+        const camDt = Math.min(ticker.elapsedMS / 1000, CAM_MAX_DT);
+        updateCamera(camDt);
+        // After the camera step: the indicators read this frame's framing
+        // (and the head's show delay runs on the same clock).
+        indicators.update(camDt);
+      }
     };
 
     // Flow undulation is RENDER-side only: while the physics is paused or
@@ -539,7 +585,10 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     // FULL rate - with physics off the whole intro plays in this branch.
     const restFrame = (label: string): void => {
       flowParity = !flowParity;
-      const force = takeDirty();
+      // K6-2: a GEOM push (invalidate, wake, a look change, and the
+      // worker sleep trip's deferred GEOM - K509 measured its miss at
+      // 0 px, and this pass is what would draw it) forces the pass.
+      const force = takeDirty() || (need & Flag.GEOM) !== 0;
       if (force || flowParity || revealing || scene.renderer!.needsFxRender()) {
         flowRender(force);
       }
@@ -553,7 +602,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     }
 
     if (speedMult === 0) {
-      flowRender(takeDirty());
+      flowRender(takeDirty() || (need & Flag.GEOM) !== 0);
       fabricTick();
       deps.perfLine = " | paused";
       updateStamp();
@@ -659,10 +708,10 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     updateStamp();
   };
 
-  // K6 (section 4.8) puts the frame's decision here; none of it is built
-  // yet: tick in today's order, the geometry pass, then draw or skip
-  // app.render(); flowParity becomes the rest cadence; no flag set for two
-  // frames stops the ticker, and invalidate() or any input starts it.
+  // K6 (section 4.8): K6-2 built the CPU half of the frame's decision
+  // (the tick's parts and the rest/paused geometry pass run only on
+  // their flags, in today's order). K6-3 adds the rest: draw or skip
+  // app.render(), the rest cadence, stopping the ticker.
   // A one-shot render pass (renderDirty), for the regions that change what
   // a frozen scene shows (the marker size, the accessibility looks, the
   // probe hooks).

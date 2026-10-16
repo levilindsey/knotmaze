@@ -1,10 +1,11 @@
 // K6-1 (docs/design/K6_1.md; design: docs/design/K5_K6_split.md 4.3-4.5):
-// the frame loop's FLAG LEDGER, in SHADOW. Each frame the loop records what
-// asked for it - a push (an event between frames or during one) or a poll
-// (state read at the end of the last frame) - and this module keeps the
-// counts a render-on-demand loop (K6-2, K6-3 = K24) needs before it may skip
-// anything. Nothing reads the flags to decide anything yet, except the
-// background's pause (sceneActive, K6-1 question 6). Pure: no Pixi, no DOM.
+// the frame loop's FLAG LEDGER (K6-1 shadow; K6-2 gates CPU work on
+// it). Each frame the loop records what asked for it - a push (an event
+// between frames or during one) or a poll (state read at the end of the
+// last frame). K6-2 reads the need to skip CPU work (frame_loop.ts);
+// K6-3 (= K24) will skip the draw and stop the ticker on it. The
+// background's pause reads sceneActive (K6-1 question 6). Pure: no
+// Pixi, no DOM.
 //
 // SEMANTICS. Frame N's NEED mask = the polls read at the end of frame N-1 |
 // every push since (between the frames, or during frame N up to its end).
@@ -77,12 +78,9 @@ export const NEED_EVENT = 1;
 export const NEED_AMBIENT = 2;
 
 // One frame's observations beside the masks (the report's observer).
+// K6-2 deleted the legacy sceneAnimating()/root-move observer; what
+// remains is sceneActive itself and the unflagged-step check.
 export interface FrameObservation {
-  // The world root moved this frame (the legacy root-move test: 0.01 px,
-  // 1e-5 scale).
-  rootMoved: boolean;
-  // The legacy sceneAnimating() (K6-2 deletes it).
-  legacy: boolean;
   // sceneActive as computed this frame.
   active: boolean;
   // The frame stepped the physics without PHYS in its need.
@@ -114,9 +112,7 @@ export interface LoopReport {
   };
   ambientOnly: number; // frames whose visual flags are all ambient
   observer: {
-    rootMoved: number; // the root moved with CAMERA, LOAD and PHYS clear
-    legacyOnly: number; // legacy sceneAnimating() true, sceneActive false
-    flagsOnly: number; // sceneActive true, legacy false
+    active: number; // frames sceneActive was true
     stepUnflagged: number; // physics stepped without PHYS in the need
   };
   recent: number[]; // the last RING frames' need masks, oldest first
@@ -150,9 +146,7 @@ export class LoopFlags {
   private readonly restartByPush = new Uint32Array(FLAG_COUNT);
   private readonly restartByPoll = new Uint32Array(FLAG_COUNT);
   private ambientOnlyFrames = 0;
-  private obsRoot = 0;
-  private obsLegacyOnly = 0;
-  private obsFlagsOnly = 0;
+  private obsActive = 0;
   private obsStep = 0;
   private readonly ring = new Uint32Array(RING);
   private ringN = 0;
@@ -221,9 +215,7 @@ export class LoopFlags {
       }
       if ((vis & ~AMBIENT) === 0) this.ambientOnlyFrames++;
     }
-    if (obs.rootMoved && (need & (Flag.CAMERA | Flag.LOAD | Flag.PHYS)) === 0) this.obsRoot++;
-    if (obs.legacy && !obs.active) this.obsLegacyOnly++;
-    if (!obs.legacy && obs.active) this.obsFlagsOnly++;
+    if (obs.active) this.obsActive++;
     if (obs.stepUnflagged) this.obsStep++;
     this.ring[this.ringN++ % RING] = (need & 0xffff) | ((pushed & 0xffff) << 16);
     this.lastNeedBits = need;
@@ -249,9 +241,7 @@ export class LoopFlags {
     this.restartByPush.fill(0);
     this.restartByPoll.fill(0);
     this.ambientOnlyFrames = 0;
-    this.obsRoot = 0;
-    this.obsLegacyOnly = 0;
-    this.obsFlagsOnly = 0;
+    this.obsActive = 0;
     this.obsStep = 0;
     this.ring.fill(0);
     this.ringN = 0;
@@ -296,9 +286,7 @@ export class LoopFlags {
       },
       ambientOnly: this.ambientOnlyFrames,
       observer: {
-        rootMoved: this.obsRoot,
-        legacyOnly: this.obsLegacyOnly,
-        flagsOnly: this.obsFlagsOnly,
+        active: this.obsActive,
         stepUnflagged: this.obsStep,
       },
       recent,

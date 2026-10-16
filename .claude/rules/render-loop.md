@@ -22,10 +22,33 @@ handoff); `render.md` lists the area's other files.
   ledger FIRST (`createLoopFlags()`, before the camera, the scene and the
   lifecycle) and hands it to every module that pushes, so a module built
   before the loop can push (question 6).
-- **Shadow only.** K6-1 records; every rAF still runs the whole tick and
-  draws. The one reader is the background's drift pause (sceneActive,
-  below). K6-2 skips CPU work by flag; K6-3 (= K24) skips the draw, stops
-  the ticker and adds the rest cadence.
+- **Shadow in K6-1; K6-2 gates CPU work.** Every rAF still draws
+  (K6-3 = K24 skips the draw, stops the ticker, adds the rest cadence),
+  but in `frame_loop.ts`'s tick the parts run only on their flags:
+  `advanceClocks` on REVEAL|FX|PAINT|PAINT_AMBIENT, `autoAudioTick` on
+  AUDIO, `tickFog` on PAINT|PAINT_AMBIENT|REVEAL, `tickExplore` on
+  PAINT|GAME (or a move in flight / the reveal), the game clocks
+  (chase, fire, tickAnim, turn minotaur, keyStep, the banners) on GAME,
+  `drawFire` on GAME|PAINT|GEOM|LOAD, `tickPaint` on
+  PAINT|PAINT_AMBIENT|FX|REVEAL|FLOW|GEOM, `tickPlucks` on OVERLAY, and
+  `updateCamera` + the indicators on CAMERA - each also on an INPUT-push
+  frame, so a gesture's first frame keeps its old timing (the poll lands
+  a frame later). `pollGamepad` stays ungated (a gamepad press at rest
+  is visible to no poll first). The rest/paused geometry pass forces on
+  GEOM as well as renderDirty (the worker sleep trip's deferred GEOM
+  included). The awake pass is unchanged: PHYS is set whenever the
+  host is awake. `handRendererLook` (panel_wiring.ts) is
+  change-detecting and pushes GEOM only when a worn value changed;
+  the pluck/fabric per-frame param re-syncs in fabricTick are likewise
+  change-detected tuples, so a panel/URL/probe change is applied once,
+  as a push, not re-assigned every frame. `drawFire(controller, dt)`
+  passes the frame's dt to `tickFireFx` (it read performance.now()
+  before; the 0.1 s cap stays, so a stopped stretch bursts bounded).
+  The fit ease now SNAPS its last remainder at converged()'s
+  thresholds (camera.ts; pulled from K6-3's list): once updateCamera
+  is CAMERA-gated the 0.08 creep would otherwise freeze up to
+  CONVERGED_PX short of target and the fog A/B differed by speckle
+  (20,525 px at maxD 50 before the snap, 0 after).
 - **The frame boundary.** Frame N's need mask = the polls read at the end
   of frame N-1 | every push since. A POLL is read at a frame's end
   (`readPolls`, in `backgroundTick`) and asks for the next frame; a PUSH
@@ -75,8 +98,8 @@ handoff); `render.md` lists the area's other files.
 - **sceneActive replaces main.ts's sceneAnimating() as the background's
   input** (item 5). `backgroundTick` computes ((this frame's pushes | the
   polls read now) & SCENE_ACTIVE) != 0 and calls `background.tick(dt,
-  active)`. The old body stays as the report's `legacy` observer
-  (disagreements counted both ways); K6-2 deletes it. THE VISIBLE CHANGE:
+  active)`. K6-2 deleted the legacy `sceneAnimating()`/`viewMoved`
+  observer and slimmed the report's observer to {active, stepUnflagged}. THE VISIBLE CHANGE:
   a fabric with no flow, no declared pulses and no fog (in practice a
   solved maze; an unsolved one declares its choices' pulses, which are
   PAINT_AMBIENT and so keep it active) pauses the drift 2.5 s after the

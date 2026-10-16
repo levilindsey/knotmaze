@@ -415,6 +415,20 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     fitCur.scale += (fitTarget.scale - fitCur.scale) * 0.08;
     fitCur.x += (fitTarget.x - fitCur.x) * 0.08;
     fitCur.y += (fitTarget.y - fitCur.y) * 0.08;
+    // K6-2 (pulled from K6-3's list): snap the ease's last remainder, at
+    // converged()'s own thresholds. The 0.08 ease never lands, and once
+    // the frame loop gates updateCamera on CAMERA the creep would freeze
+    // up to CONVERGED_PX short of the target - a resting frame a
+    // sub-pixel off master's. Snapped, both land on the target exactly.
+    if (
+      Math.abs(fitTarget.x - fitCur.x) * view.zoom < CONVERGED_PX &&
+      Math.abs(fitTarget.y - fitCur.y) * view.zoom < CONVERGED_PX &&
+      Math.abs(fitTarget.scale - fitCur.scale) < CONVERGED_LOG * fitCur.scale
+    ) {
+      fitCur.scale = fitTarget.scale;
+      fitCur.x = fitTarget.x;
+      fitCur.y = fitTarget.y;
+    }
     setCamFollow(
       params.cameraMode === "follow" && params.mazeFabric && scene.fabric !== null
     );

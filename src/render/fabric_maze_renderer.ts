@@ -598,7 +598,9 @@ export class FabricMazeRenderer {
   // fire lights (world x, y per burning front; as last drawn).
   private fireFx: AppearFxSystem | null = null;
   private fireEmit: number[] = [];
-  private fireFxT = -1;
+  // K6-2: tickFireFx takes the frame's dt (it read performance.now()
+  // before); unprimed = the next tick steps 0, as the first wall tick did.
+  private fireFxPrimed = false;
   private fireFxTurn = 0;
   private burnFronts: BurnFront[] | null = null;
   private burnSmolder: BurntSpan[] | null = null;
@@ -1523,14 +1525,14 @@ export class FabricMazeRenderer {
   // every frame, it recomputes only when update() ran since (the threads,
   // the flow or the game state moved: update() rides every ribbon render)
   // or the fire's clock or state changed; the FX tick every frame.
-  drawFire(controller: FabricMazeController): void {
+  drawFire(controller: FabricMazeController, dt: number): void {
     const fire = controller.fire;
     if (!fire) {
       if (this.fireDrawn) {
         this.fireDrawn = false;
         this.fireEmit.length = 0;
         this.fireFx?.clear();
-        this.fireFxT = -1;
+        this.fireFxPrimed = false;
         this.syncFireLights();
       }
       this.setBurn(null, null, null);
@@ -1552,7 +1554,7 @@ export class FabricMazeRenderer {
       if (this.burnLookDeclared !== this.burntLook) {
         this.setBurn(this.burnSpans, this.burnFronts, this.burnSmolder, true);
       }
-      this.tickFireFx();
+      this.tickFireFx(dt);
       return;
     }
     this.fireDirty = false;
@@ -1628,7 +1630,7 @@ export class FabricMazeRenderer {
       smolder.length > 0 ? smolder : null
     );
     this.syncFireLights();
-    this.tickFireFx();
+    this.tickFireFx(dt);
   }
 
   // K290 stage 3b: how far along run `e`, in lattice units from its va end
@@ -1711,10 +1713,11 @@ export class FabricMazeRenderer {
   // sleeps). No spawns while the tab is hidden or under Reduced motion
   // (exploreStill), and under the thread reveal none from a front it does
   // not show (FIRE_UNSEEN_FRONTS).
-  private tickFireFx(): void {
-    const now = performance.now() / 1000;
-    const dt = this.fireFxT < 0 ? 0 : Math.min(0.1, Math.max(0, now - this.fireFxT));
-    this.fireFxT = now;
+  private tickFireFx(rawDt: number): void {
+    // K6-2: the frame's dt, capped as the wall-clock delta was (0.1 s);
+    // after a stopped stretch (K6-3) that cap keeps the burst bounded.
+    const dt = this.fireFxPrimed ? Math.min(0.1, Math.max(0, rawDt)) : 0;
+    this.fireFxPrimed = true;
     const emit = this.fireEmit;
     if (!this.fireFx) {
       if (emit.length === 0) return;
