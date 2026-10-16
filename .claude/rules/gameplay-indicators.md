@@ -35,13 +35,14 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   reveal also from the start since K465's `revealFinish`, default on, and
   only once the exit has been seen with `rvx=0`: `finishHold` in
   game/explore_finish.ts) and under fog of
-  war too (Levi, 2026-10-13: direction only); a tap eases the camera to
-  frame the exit with the head (camTween through placeWorldAt; the
-  follow camera holds it PEEK_HOLD before easing back), under fog a
-  toast only (K465 residual: at the start of a thread-reveal maze the fit
-  camera is at zoom 1 with no pan range, so that tap ends on the same
-  view and the exit stays off screen; render-explore.md has the
-  numbers). VIEWER PREFERENCES (localStorage + panel checkboxes, both
+  war too (Levi, 2026-10-13: direction only); a tap peeks at the exit
+  (K488; ui/finish_peek.ts plans it: center the exit at
+  min(current scale, followScale), never zooming in; the camera's free
+  tween eases out past the fit clamp, holds 2.5 s and eases back to the
+  pre-tap view; the label says "Tap to peek at the exit."), under fog a
+  toast only. (Before K488 the tap framed the exit with the head through
+  placeWorldAt's clamps, so at a thread-reveal start it ended where it
+  began and the exit stayed off screen: K465's finding.) VIEWER PREFERENCES (localStorage + panel checkboxes, both
   default on, K84 sorts them later): finishIndicator, and tapToPan - off,
   every indicator is inert and taps go through it to the maze. K76 HOOK:
   finishIndicator.gate(pred) ANDs in a predicate (returns its remover;
@@ -62,7 +63,7 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   edge lands at the range's limit, on screen); the FOLLOW camera eases onto
   its own framing of the head (`followScale`) and the spring is at full
   strength the moment the tween ends (`camTween.hold` = -(FOLLOW_DELAY +
-  FOLLOW_RAMP); the finish's tap still passes PEEK_HOLD), so the follow
+  FOLLOW_RAMP); the minotaur's tap still passes PEEK_HOLD), so the follow
   resumes at once; mid-intro the follow target is the whole knot, so a tap
   only pulls the spring to full strength. A follow run of 14 moves never
   showed it at 1400x900 and flashed it once for 0.33 s at 411x753 (a long

@@ -81,6 +81,11 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   pixels and the 200 ms recheck; master puts the edge at 71 against the
   panel at 81 and rides 298 px home on a close). Every closed-panel check
   is identical. The sheet: gameplay-panel.md's THE SHEET ON PHONES.
+  PEEK (K488): the finish indicator's free tween (camTween.free, with a
+  back target) places its point at the asked scale without the fit clamp
+  and may sit outside the pan range while it holds at the exit; a gesture
+  cancels it (touchCamera), and the range ease then glides the pan home
+  while the zoom clamps back to 1 at once.
   K149's `probe.mjs slack` checks the old rule. GOTCHA: puppeteer's
   `mouse.click(x, y, {clickCount: 2})` gave no dblclick; dispatch the
   event.
