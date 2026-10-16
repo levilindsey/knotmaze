@@ -119,7 +119,7 @@ Next free ID: K463.
   - owner: nobody since 2026-10-15 12:31 (stage 2 merged at cebb75e; agent `a58dfc230583f43e4` of claude session 05e60da0, worktree kept)
   - branch: mainline; last commit: `cebb75e`
   - evidence: `.claude/probes/K114/stage2/` (`burn_sim_rt.ts`, `proposal.md`, `results_rt*.md`, `rt_page.mjs`, `perf_attr.ps1`, `vref_probe.mjs`, shots `out_rt*/`); stage 1's: `.claude/probes/K114/burn/` (`results_tuning_rebased.md`, `burn_sim.ts`, `burn_page.mjs`)
-  - next: K440 is running (brief docs/design/K440.md), then K441's profile. Stage 3: the burn look as a shader with K290's burnt toggle; the spider follows the minotaur's controls (K174). Stage 2's residuals K442-K447, idea K448
+  - next: K441's profile, K461 first (`rt_page.mjs` must pass `fsr` / `fdr`). Stage 3: the burn look as a shader with K290's burnt toggle; the spider follows the minotaur's controls (K174). Stage 2's residuals K442-K447
   - brief: `docs/design/K114_stage2.md` (Stage 2 handoff); stage 1's handoff: `docs/design/K114_burn.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
@@ -241,12 +241,12 @@ Next free ID: K463.
   - next: G3-1 (Opus, 2 h, ports 5960-5969) once K290 3b has merged, R1 and R2 have landed and Levi has answered K399. The phone's dense bench at rest (`.claude/probes/K8/stage2/phone6b/`, notes.md 14:16): no G3-0 regression (update() B-A -1.11 ms dense, +0.63 default; all asleep, 0 lost). Lane: R1, R2, G3-1, R3, R4, G3-2, R5; never beside an R stage, K268 item 4, K90 or another GPU measurement; it may run beside K7. G3G4 5.2 understates `explore_glsl.ts`'s gap reads (442, 479-483, 499; the brief covers it). G3-2 needs K90's bend decided
   - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
-  swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1, M2 (`src/app/camera.ts`) and M3
-  (`src/app/frame_loop.ts`, fee8a77..783df8e): main.ts 5709 → 4286 lines; R1 (`src/render/ribbon/`): ribbon_renderer.ts 7747 → 7377.
-  - owner: nobody since 2026-10-15 14:37 (merged)
-  - branch: mainline; last commit: `9f08bf0`
+  swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
+  lifecycle, scene, audio_map; M4 at 9f08bf0): main.ts 5709 → 3725 lines; R1 (`src/render/ribbon/`): ribbon_renderer.ts 7747 → 7377.
+  - owner: agent `a695f82540244625a` (R2) of claude session 05e60da0 (opus, started 13:10, 2 h cap ~15:10); M4 merged at 9f08bf0
+  - branch: `worktree-agent-a695f82540244625a`, worktree `.claude/worktrees/agent-a695f82540244625a`; last commit: `0112900`
   - evidence: M4's `.claude/probes/K5/M4/` and R2's (in its worktree until the merge) `.claude/probes/K5/R2/`; M3's `.claude/probes/K5/M3/` (`checks/`, `frames/`, `step2/`, `k7_results.jsonl` and `k7_table.mjs`, `checks_m3.ps1`, `remap_e6e1734.md`), `.claude/probes/K5/R2/brief/` (the R2 brief's maps), `.claude/probes/K5/R1/` (`checks/`, `checks2/`; `checks3.ps1`, the fog B-vs-B control, never run; R2's inventory `parts.md`, `probe_surface.md`, `surface.json`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/`; the design's region maps in `.claude/probes/K5/design/`
-  - next: R2 running (crossing and explore gaps out of ribbon_renderer.ts); at its finish merge it, then K397 s3, then R5; G3-1 after R2. The main.ts lane: K6-1 (shadow flags) next, then M5, whose brief folds the Stage M4 handoff leftovers in `docs/design/K5_K6_split.md` (FrameLoopDeps and ProbeCtx take `life`, the stale scene_ref.ts comment, the physon wait in `m2_input_ab.mjs`)
+  - next: R2 running (crossing and explore gaps out of ribbon_renderer.ts); at its finish merge it, then K397 s3, then R5; G3-1 after R2. The main.ts lane: K6-1 (shadow flags) running (K6), then M5, whose brief folds the Stage M4 handoff leftovers in `docs/design/K5_K6_split.md` (FrameLoopDeps and ProbeCtx take `life`, the stale scene_ref.ts comment, the physon wait in `m2_input_ab.mjs`)
   - brief: `docs/design/K5_K6_split.md` (Stage M4 brief); the R lane `docs/design/K5_R2.md`
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
@@ -268,11 +268,11 @@ Next free ID: K463.
 - **K6** · One frame loop driven by what-changed flags
   (`docs/design/K5_K6_split.md`, 4 and 5.4): K6-1, shadow flags, after M3;
   K6-2 (skip CPU work) and K6-3 (= K24, skip the draw) after M6.
-  - owner: nobody since 2026-10-15 13:48 (K6-1's brief merged in a8514a6; brief agent `a1c75e8bc02ef5677` of claude session 05e60da0 finished, worktree kept)
-  - branch: mainline; last commit: `a8514a6`
-  - evidence: none yet (K6-1's goes in `.claude/probes/K6/K6-1/`)
-  - next: launch K6-1 (Opus, 2 h, ports 5840-5849) from its brief once K5 M4 has merged (its setup needs `src/app/lifecycle.ts`); its seven questions take the brief's recs (coordinator, 2026-10-15)
-  - brief: `docs/design/K6_1.md` (it corrects `docs/design/K5_K6_split.md` 4.3/4.4); parent: K5_K6_split.md (4 and 5.4)
+  - owner: agent `a859a72c41121806c` of claude session 05e60da0 (opus, started 2026-10-15 14:42, 2 h cap ~16:42)
+  - branch: `worktree-agent-a859a72c41121806c`, worktree `.claude/worktrees/agent-a859a72c41121806c`; last commit: `2c100ab`
+  - evidence: `.claude/probes/K6/K6-1/`
+  - next: K6-1 running (shadow flags beside today's loop, the wall-clock audit, the six-link report); at its finish merge it. Then K6-2 (skip CPU work by flag) after M6; K6-3 (= K24, skip the draw) after K6-2
+  - brief: `docs/design/K6_1.md`
 
 ## Next, in order
 
@@ -1163,11 +1163,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K438** · ProbeCtx takes the frame loop itself (its four getters, `invalidate`,
   `wake`, `frameCost`, `revealCost`), with frame_loop.ts exporting `type FrameLoop =
   ReturnType<typeof createFrameLoop>` (`docs/design/K5_K6_split.md`, Stage M3 handoff).
-- **K448** · Under the real-time fire clock, the fire speed and delay rows' tooltips give a seconds
-  equivalent, e.g. the head start in s (K114 s2).
 
 ## Done
 
+- **K448** · Real-time fire tooltips give seconds: the delay its head start (20 is about 1.7 s, 40 about 3.3 s), the speed its units a second (K440). Done in bb40ae2 (2026-10-15).
 - **K440** · Real-time fire defaults: real time plays its own pair, 0.2 / 20 (`fsr`, `fdr`); turn keeps 0.75 / 0; speed floor 0.1. Done in bb40ae2 (2026-10-15).
 - **K395** · Pluck blur seam and heart pinch at a kink loop's tip; the phone check passed on live 8f81faf. Done in cd62db6 (2026-10-15).
 - **K449** · K397 stage 2's looks: Levi keeps the cap and two dots, and the fade tap's pluck ("If we make a pluck sound, then we should show the pluck effect"); his 13:39 report is K397's and K459. Done in 092aca0 (2026-10-15).
