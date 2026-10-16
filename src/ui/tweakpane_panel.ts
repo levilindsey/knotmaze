@@ -1012,7 +1012,12 @@ export function buildPanel(
   // the turn minotaur and exclusive with it (call 3: switching one on
   // switches the other off). Every row restarts the solve. No slider steps
   // (a step snaps a link's off-grid value on the next refresh, K130); an
-  // edit keeps 2 decimals of speed, 1 of delay.
+  // edit keeps 2 decimals of speed, 1 of delay. K440: each fire clock has
+  // its own speed and delay params; the panel shows one speed row and one
+  // delay row, the clock's own (refreshCond), under the same labels, so
+  // the clock row comes first: fire, clock, speed, delay, burnt. A clock
+  // change only swaps which rows show; it refreshes no value, so no row's
+  // handler runs.
   const fFire = folder("Burn race", false, fMaze);
   const fireRow = row(
     fFire, p, "fire",
@@ -1026,6 +1031,14 @@ export function buildPanel(
       callbacks.onClockChange();
     }
   );
+  // K114 stage 2: the fire's clock (game/fire_clock.ts).
+  const fireClockRow = row(
+    fFire, p, "fireClock",
+    { options: { turn: "turn", realtime: "realtime" }, label: "clock" },
+    "turn: the fire burns as far as you walk, so standing still to think is free. realtime: it burns on a clock from your first move, your dot walks at a fixed pace, and if the fire reaches you while you stand there, you burn. Each clock keeps its own fireSpeed and fireDelay. Restarts the solve.",
+    D.fireClock, () => callbacks.onClockChange()
+  );
+  // The turn clock's pair.
   const fireSpeedRow = row(
     fFire, p, "fireSpeed",
     { min: FIRE_SPEED_MIN, max: FIRE_SPEED_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2) },
@@ -1044,12 +1057,26 @@ export function buildPanel(
       callbacks.onClockChange();
     }
   );
-  // K114 stage 2: the fire's clock (game/fire_clock.ts).
-  const fireClockRow = row(
-    fFire, p, "fireClock",
-    { options: { turn: "turn", realtime: "realtime" }, label: "clock" },
-    "turn: the fire burns as far as you walk, so standing still to think is free. realtime: it burns on a clock from your first move, your dot walks at a fixed pace, and if the fire reaches you while you stand there, you burn. Restarts the solve.",
-    D.fireClock, () => callbacks.onClockChange()
+  // K440: the real-time clock's pair (fireSpeedRt, fireDelayRt), under the
+  // turn pair's labels. FIRE_V_REF (game/fire_clock.ts) is the dot's fixed
+  // pace and the fire clock's rate: 12 lattice units a second.
+  const fireSpeedRtRow = row(
+    fFire, p, "fireSpeedRt",
+    { min: FIRE_SPEED_MIN, max: FIRE_SPEED_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "fireSpeed" },
+    "The fire's speed as a fraction of your dot's fixed pace (12 lattice units a second; a run is about 4): at 0.2 it burns 2.4 units of thread a second, 1 for every 5 your dot walks. Restarts the solve.",
+    D.fireSpeedRt, () => {
+      params.fireSpeedRt = Math.round(params.fireSpeedRt * 100) / 100;
+      callbacks.onClockChange();
+    }
+  );
+  const fireDelayRtRow = row(
+    fFire, p, "fireDelayRt",
+    { min: 0, max: FIRE_DELAY_MAX, pointerScale: 0.1, format: (v: number) => v.toFixed(1), label: "fireDelay" },
+    "How long after your first move the fire starts to spread, in lattice units at your dot's fixed pace (12 a second; a run is about 4): 20 is about 1.7 s, 40 about 3.3 s. Restarts the solve.",
+    D.fireDelayRt, () => {
+      params.fireDelayRt = Math.round(params.fireDelayRt * 10) / 10;
+      callbacks.onClockChange();
+    }
   );
   // K290 (burn stage 3a): a look, so it applies live and keeps the solve.
   const burntRow = row(
@@ -2058,12 +2085,17 @@ export function buildPanel(
     minoGuardAccuracyRow.hidden = !guard;
     minoStalkerAccuracyRow.hidden = !stalker;
     // K114: the burn race never plays on K80's real-time clock (it has
-    // its own, fireClock); its tuning shows while it is on.
+    // its own, fireClock); its tuning shows while it is on. K440: the
+    // speed and delay rows are the fire clock's own pair.
     fFire.hidden = !turnClock;
-    fireSpeedRow.hidden = params.fire === "off";
-    fireDelayRow.hidden = params.fire === "off";
-    fireClockRow.hidden = params.fire === "off";
-    burntRow.hidden = params.fire === "off";
+    const fireOn = params.fire !== "off";
+    const fireRt = params.fireClock === "realtime";
+    fireClockRow.hidden = !fireOn;
+    fireSpeedRow.hidden = !fireOn || fireRt;
+    fireDelayRow.hidden = !fireOn || fireRt;
+    fireSpeedRtRow.hidden = !fireOn || !fireRt;
+    fireDelayRtRow.hidden = !fireOn || !fireRt;
+    burntRow.hidden = !fireOn;
     // Under the thread reveal too (K76 stage 2c: the same two settings).
     minoFogRow.hidden = !minoOn || !(fog || threads);
     minoRestartRow.hidden = !minoOn;

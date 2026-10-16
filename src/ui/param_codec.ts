@@ -279,6 +279,9 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("minoGuardAccuracy"), // 144
   num("minoStalkerAccuracy"), // 145
   choice("fireClock", ["turn", "realtime"]), // 146, K114 stage 2
+  // K440: the real-time fire's own speed and delay (fireClock realtime).
+  num("fireSpeedRt"), // 147
+  num("fireDelayRt"), // 148
 ]);
 
 // The format version a blob names first. Bump it for anything but an
