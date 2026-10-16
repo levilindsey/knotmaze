@@ -208,3 +208,21 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   there). A LIVE_EFFECT under onTrailChange (undo_stack); main.ts
   `syncExploration` copies it to the fabric renderer's `burntLook` every
   tick. The look: gameplay-fire.md's BURNT THREAD.
+
+- TURN MINOTAUR KNOBS (K80 turns stage 3a, 2026-10-15; brief
+  `docs/design/K80_turns_stage3.md`): six numbers APPENDED at 140-145,
+  after `burnt` (139); CODEC_VERSION stays 6. `minoGiveUp` (`mlm`,
+  default 3, [0, 10], was LOSE_MARGIN) and `minoRoamMin` (`mrn`, default
+  3, [1, 10], was ROAM_MIN; K324 section 4.3 reserved both keys),
+  `minoTurnPull` (`mtp`, default 0, [0, 1]), and K294's per-model rows
+  `minoGuardSight` (`mgs`, default 4, [0, MINO_SIGHT_MAX]),
+  `minoGuardAccuracy` (`mga`, 0.3) and `minoStalkerAccuracy` (`msa`,
+  0.45), whose defaults read TURN_MODEL_DEFAULTS (minotaur_turns.ts);
+  `minoSight` / `minoAccuracy` stay the hunter's. url_state.ts clamps
+  each in every reader (link, override key, panel); turnMinoParamsOf
+  picks the sight and accuracy by model. Not daily-exempt (a daily plays
+  with the minotaur off). All six are LIVE_EFFECTS under
+  onTurnMinoChange (undo_stack.ts). The table pin
+  (`test/ui/param_codec.test.ts`) and url_codec.test.ts's defaults table
+  gained the keys. What they do: gameplay-minotaur.md; rows:
+  gameplay-panel.md.

@@ -69,7 +69,21 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   needs updating. K80 turns stage 2: the share title adds a minotaur's
   tag after the stars (`Knotmaze 🧶 ★★☆ · 🐂 1`, or `🐂 0 · 3 close
   calls`; share_text.ts minotaurTag) and the grid draws `x`, the move
-  you were caught on, as 🐂. Under minoRestart a catch restarts the
-  level, which zeroes walkedDist, so the stars rate the last life's walk
-  and the popover's "the walk before it counts too" does not hold there
-  (gameplay-minotaur.md's CATCH RESETS).
+  you were caught on, as 🐂. A LEVEL RESTART (a catch under minoRestart,
+  a Reset path) zeroes walkedDist while the catches carry
+  (gameplay-minotaur.md's CATCH RESETS), so "the walk before it counts
+  too" did not hold there. K80 turns stage 3a (K293 (a), 2026-10-15) makes the popover
+  say what is rated: the controller counts `respawns` (respawn() calls
+  since the last reset(): the catches whose walk walkedDist still holds),
+  and `rateRun(walked, optimal, catches, walkedCatches = catches)` keeps
+  them as `walkedCatches` (clamped to 0..catches; null without a
+  minotaur; main.ts passes `c.respawns`). With n catches of which k are
+  in the walk, starExplanation's last line ends: k = n, the old line; k =
+  0, "Caught {once|twice|n times}: only the walk since the level last
+  started over counts."; else "Caught n times, k times since the level
+  last started over: only the walk since then counts, the walk before
+  {that catch|those catches} included." The walk is NOT carried across a
+  restart: that would charge a restart's lost walk on top of the
+  two-star cap, which already counts every catch. Tests:
+  star_rating.test.ts; probe: `.claude/probes/K80/stage3/banner/`
+  (probe_stars.mjs, turnmino and turnmino_restart).

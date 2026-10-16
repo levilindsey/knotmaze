@@ -142,3 +142,26 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   Burn race folder, after fireDelay, hidden while the fire is off like
   fireSpeed and fireDelay; it runs onTrailChange (live, no restart). Params:
   gameplay-links.md; the look: gameplay-fire.md's BURNT THREAD.
+
+- MINOTAUR BEHAVIOR ROWS BY MODEL (K80 turns stage 3a, 2026-10-15; K294,
+  K324 section 4.3): the "Minotaur behavior" subfolder (shown while the
+  turn minotaur is on) gains six rows and shows each model only the rows
+  it reads (refreshCond, so a model or speed change re-runs it). Hunter:
+  minoSight, minoGiveUp, minoRoamMin, minoRoamRuns, minoTurnPull,
+  minoAccuracy. Guard: minoGuardSight, minoGiveUp, minoTerritory,
+  minoTurnPull, minoGuardAccuracy. Stalker: minoStalkerAccuracy, plus
+  minoSight at speed charge (its charge reads the shared sight; it never
+  roams, so no pull, give-up or roam rows). Every model: minoPause and
+  minoSleep. Folder order: minoSight, minoGuardSight, minoGiveUp,
+  minoRoamMin, minoRoamRuns, minoTerritory, minoTurnPull, minoAccuracy,
+  minoGuardAccuracy, minoStalkerAccuracy, minoPause, minoSleep. The run
+  counts are integer sliders (sight [0, MINO_SIGHT_MAX], give-up [0,
+  MINO_GIVE_UP_MAX 10], roam-min [MINO_RUNS_MIN 1, MINO_ROAM_MIN_MAX
+  10]); the chances are chanceRow's ([0, 1], no step, an edit rounded to
+  2 decimals). Labels stay the camelCase keys like the folder's other
+  rows; each tooltip names the model it tunes ("Hunter:", "Guard:",
+  "Stalker:"; minoSight's adds that the stalker charges within it) and
+  says it applies live (onTurnMinoChange, LIVE_EFFECTS). K293 (e):
+  minoSleep's tooltip says it waits again after each catch, in its lair
+  or, with minoLair off, where it caught you. Params: gameplay-links.md;
+  behavior: gameplay-minotaur.md.
