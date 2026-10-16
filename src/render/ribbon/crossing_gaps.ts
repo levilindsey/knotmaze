@@ -405,6 +405,9 @@ export class CrossingGaps {
       this.r.exploreVisAt(crossing.over.chain, overCtrl) <= 0.5;
     this.r.slotExploreHid[slot] = exploreHid ? 1 : 0;
     if (exploreHid) shown = false;
+    // K76 next: the ungated solve, for applyExploreGaps' re-derivation.
+    this.r.slotUnderChain[slot] = crossing.under.chain;
+    this.r.slotUnderCenter[slot] = underCenter;
 
     // SELF-crossings: the arc between the two passes splits at its
     // midpoint (less a small guard) between the over polyline and the
@@ -743,6 +746,12 @@ export class CrossingGaps {
         coverNeg = coverX;
       }
     }
+    this.r.slotCoverNeg[slot] = coverNeg;
+    this.r.slotCoverPos[slot] = coverPos;
+    this.r.slotAllNeg[slot] = allNeg;
+    this.r.slotAllPos[slot] = allPos;
+    this.r.slotCutNeg[slot] = cutNeg;
+    this.r.slotCutPos[slot] = cutPos;
     if (index >= 0) {
       // A gated crossing not yet shown has no footprint to pluck around.
       this.r.overHalfNeg[index] = shown ? coverNeg : 0;

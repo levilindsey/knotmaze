@@ -472,6 +472,18 @@ export class RibbonRenderer {
   /** @internal ribbon */ slotOverCtrl = new Float64Array(0);
   /** @internal ribbon */ slotLive = new Uint8Array(0);
   /** @internal ribbon */ slotExploreHid = new Uint8Array(0);
+  // K76 next: the last solve's UNGATED per-slot data (the under chain and
+  // its cut window, the over cover and erase extents), so applyExploreGaps
+  // can re-derive the gated CPU bookkeeping (underWindows, pluck
+  // footprints) when a slot's hidden flag flips, without an update().
+  /** @internal ribbon */ slotUnderChain = new Int32Array(0);
+  /** @internal ribbon */ slotUnderCenter = new Float32Array(0);
+  /** @internal ribbon */ slotCutNeg = new Float32Array(0);
+  /** @internal ribbon */ slotCutPos = new Float32Array(0);
+  /** @internal ribbon */ slotCoverNeg = new Float32Array(0);
+  /** @internal ribbon */ slotCoverPos = new Float32Array(0);
+  /** @internal ribbon */ slotAllNeg = new Float32Array(0);
+  /** @internal ribbon */ slotAllPos = new Float32Array(0);
   // Mask switch (probes A/B the bare base layer) and margin look:
   // "perp" (default): a constant-width CASING around the over thread -
   // the gap's edge is one level set of the distance to the over
@@ -974,6 +986,14 @@ export class RibbonRenderer {
     this.slotOverCtrl = new Float64Array(this.gaps.slots);
     this.slotLive = new Uint8Array(this.gaps.slots);
     this.slotExploreHid = new Uint8Array(this.gaps.slots);
+    this.slotUnderChain = new Int32Array(this.gaps.slots).fill(-1);
+    this.slotUnderCenter = new Float32Array(this.gaps.slots);
+    this.slotCutNeg = new Float32Array(this.gaps.slots);
+    this.slotCutPos = new Float32Array(this.gaps.slots);
+    this.slotCoverNeg = new Float32Array(this.gaps.slots);
+    this.slotCoverPos = new Float32Array(this.gaps.slots);
+    this.slotAllNeg = new Float32Array(this.gaps.slots);
+    this.slotAllPos = new Float32Array(this.gaps.slots);
 
     // Junction joinery bookkeeping (fabric only; knot mode has no fused
     // junctions). Arms = directed half-threads leaving each junction.
@@ -3576,11 +3596,13 @@ export class RibbonRenderer {
   // K290: the fire's part of the declaration, and its gate's pieces per
   // chain (null: no burn, or the reveal off).
   /** @internal ribbon */ exploreBurn: ExploreBurn | null = null;
-  // K76 2b: update() must re-run (needsFxRender) because the declaration
-  // changed what update() derives from it: a crossing's over thread crossed
-  // vis 0.5 (its under window and pluck footprint) or a marker's gap turned
-  // (the fabric redraws its markers in the same pass). Growth frames that
-  // only move fades set nothing; update() clears it.
+  // K76 2b: update() must re-run (needsFxRender) when a marker's gap
+  // turned (the fabric redraws its markers in the same pass) or the start
+  // marker's occluder changed (fabric_maze_renderer syncStartMarker). A
+  // crossing slot's vis-0.5 flip no longer sets it: applyExploreGaps
+  // re-derives the under window and pluck footprints from the last
+  // solve's ungated data (slotUnder*/slotCover*/slotAll*). update()
+  // clears it.
   exploreUpdatePending = false;
   // K465: the exit's hold under the thread reveal is lifted (the
   // `revealFinish` param; the fabric declares it each drawMarkers pass), so

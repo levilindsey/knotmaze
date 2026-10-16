@@ -281,6 +281,7 @@ export class ExploreGaps {
   applyExploreGaps(): boolean {
     const on = this.r.explorePieces !== null;
     let changed = false;
+    const dirtyUnder = new Set<number>();
     const st = this.exploreGapCounts;
     st.hidden = st.solid = st.shaped = st.fallback = st.approx = st.mismatch = 0;
     for (let s = 0; s < this.r.markerBase; s++) {
@@ -300,9 +301,32 @@ export class ExploreGaps {
           st.mismatch++;
         }
       }
-      if ((on && v <= 0.5 ? 1 : 0) !== this.r.slotExploreHid[s]) {
-        this.r.exploreUpdatePending = true;
+      const hid = on && v <= 0.5 ? 1 : 0;
+      if (hid !== this.r.slotExploreHid[s]) {
+        // K76 next: re-derive this slot's gated CPU bookkeeping here, from
+        // the last solve's ungated data, instead of forcing an update():
+        // the pluck footprints (registered slots: slot == crossing index)
+        // and the under chain's windows (rebuilt below, once per chain).
+        this.r.slotExploreHid[s] = hid;
+        if (s < this.r.ps.crossings.length) {
+          this.r.overHalfNeg[s] = hid ? 0 : this.r.slotCoverNeg[s];
+          this.r.overHalfPos[s] = hid ? 0 : this.r.slotCoverPos[s];
+          this.r.eraseExtentNeg[s] = hid ? 0 : this.r.slotAllNeg[s];
+          this.r.eraseExtentPos[s] = hid ? 0 : this.r.slotAllPos[s];
+        }
+        const uc = this.r.slotUnderChain[s];
+        if (uc >= 0) dirtyUnder.add(uc);
       }
+    }
+    for (const uc of dirtyUnder) {
+      const win: number[] = [];
+      for (let s = 0; s < this.r.markerBase; s++) {
+        if (!this.r.slotLive[s] || this.r.slotExploreHid[s]) continue;
+        if (this.r.slotUnderChain[s] !== uc) continue;
+        win.push(this.r.slotUnderCenter[s], this.r.slotCutNeg[s], this.r.slotCutPos[s]);
+      }
+      if (win.length) this.r.underWindows.set(uc, win);
+      else this.r.underWindows.delete(uc);
     }
     for (let m = 0; m < MARKER_SLOTS; m++) {
       const occ = this.r.markerOccluders[m];
