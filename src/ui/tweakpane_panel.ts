@@ -434,6 +434,7 @@ export function buildPanel(
     "margin-left:5px;border:1px solid currentColor;border-radius:50%;" +
     "font:italic 600 8px/9px Georgia,serif;text-align:center;opacity:.5;" +
     "vertical-align:1px;pointer-events:none}" +
+    ".kp-i::before{content:'i'}" +
     ".kp-row.kp-help-open .kp-i{opacity:.95;color:#8ea0c0}" +
     ".kp-has-help>.tp-lblv_l:focus-visible{outline:1px solid #8ea0c0;" +
     "outline-offset:-1px;border-radius:3px}" +
@@ -463,14 +464,15 @@ export function buildPanel(
     "padding:0 max(10px,env(safe-area-inset-right)) " +
     "max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));" +
     "background:#28292e;--tp-container-unit-size:32px;" +
-    "--tp-blade-value-width:min(58%,440px)}" +
+    "--tp-blade-value-width:min(50%,440px)}" +
     ".tp-rotv{border-radius:0;box-shadow:none}" +
     ".kp-open .kp-bar{display:block}" +
     // THE PEEK: while a row is dragged on the sheet, everything but that row
     // is invisible (visibility, so the row shows inside its hidden parents)
     // and the sheet clears, to watch the design change; it returns on
     // release.
-    ".kp-peek .tp-dfwv,.kp-peek .tp-rotv{background:transparent!important}" +
+    ".kp-peek .tp-dfwv,.kp-peek .tp-rotv{background:transparent!important;" +
+    "scrollbar-color:transparent transparent}" +
     ".kp-peek .tp-dfwv *{visibility:hidden}" +
     ".kp-peek .tp-dfwv .kp-peeking,.kp-peek .tp-dfwv .kp-peeking *" +
     "{visibility:visible}" +
@@ -583,7 +585,7 @@ export function buildPanel(
     const mark = document.createElement("span");
     mark.className = "kp-i";
     mark.setAttribute("aria-hidden", "true");
-    mark.textContent = "i";
+    // The "i" is CSS (.kp-i::before), so the label's text stays the label's.
     label.insertBefore(mark, glyph);
     rowEl.classList.add("kp-has-help");
     label.setAttribute("role", "button");

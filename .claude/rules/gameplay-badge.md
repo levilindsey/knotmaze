@@ -59,3 +59,17 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   411x753, the K151 numbers. Open: desktop 1283..1390 at y 60..92 with
   the panel from y 100; phone 283..401 at y 60..102 with the panel from
   y 110 (`.claude/probes/K92/undo.mjs`).
+  THE SHEET (K468, 2026-10-15): on the phone's full-screen settings sheet
+  (SHEET_QUERY, gameplay-panel.md's THE SHEET ON PHONES) the badge sits IN
+  the top bar, left of undo and redo: `top` max(10px, safe-top) + 5 px
+  (coarse pointers: safe-top, the badge being 42 px tall there) and
+  `right` max(10px, safe-right) + 160 px, which clears the close button
+  and the undo/redo pair (150 px plus the margin). Measured at 411x753:
+  badge 123..241, undo and redo 259..351, close 359..401, all at y 10..52
+  in a bar from 0 to 62 (`--kp-top` 62 px, not 100); at 753x411: badge
+  465..583, undo and redo 601..693, close 701..743. main.ts's
+  `fitModeBadge` passes no avoid-list (HUD, banners) while the sheet is
+  open, since they lie under it, so the label keeps its longest level (only
+  the free-play label was measured; a long daily or replay label grows
+  leftward from x 241 at 411 px). The peek (a slider drag on the sheet)
+  hides the badge with the rest of the bar. Probe: `.claude/probes/K467/sheet_probe.mjs`.
