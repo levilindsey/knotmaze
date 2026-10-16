@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K513.
+Next free ID: K514.
 
 ## Waiting on Levi
 
@@ -174,7 +174,7 @@ Next free ID: K513.
   - evidence: `.claude/probes/rounds/2026-10-14c-0e865bf/`,
     `.../2026-10-14-48da84d/`, `.../2026-10-14-81d31a5/`;
     `.claude/probes/K156/3c/`; the A/A in `.claude/probes/K253/aa3/`
-  - next: the next phone window Levi lends: frames (`-Phase frames -Reps
+  - next: the next phone window Levi lends: frames (`-Phase frames -Reps 2` blocked by K513's noBlankStrip gate failure until the gate or its shot is fixed, then the frames spot check runs; `-Phase frames -Reps
     2` on K253's portrait floor; K300's `-Moves` fix waits for the next
     A/A), K307's phone measures, the finish frame rate under K317's
     confetti, K98 and K92 (K230), the 14 dropped looks (K233), K232's
@@ -246,7 +246,7 @@ Next free ID: K513.
   - owner: nobody since 2026-10-15 15:00 (merged)
   - branch: mainline; last commit: `3166d8f` (R5 1c666ec + e53e4d9, M5 3166d8f)
   - evidence: M4's `.claude/probes/K5/M4/` and R2's `.claude/probes/K5/R2/`; M3's `.claude/probes/K5/M3/` (`checks/`, `frames/`, `step2/`, `k7_results.jsonl` and `k7_table.mjs`, `checks_m3.ps1`, `remap_e6e1734.md`), `.claude/probes/K5/R2/brief/` (the R2 brief's maps), `.claude/probes/K5/R1/` (`checks/`, `checks2/`; `checks3.ps1`, the fog B-vs-B control, never run; R2's inventory `parts.md`, `probe_surface.md`, `surface.json`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/`; the design's region maps in `.claude/probes/K5/design/`
-  - next: K6-2 (after M6, c268a9b); G3-1 once Levi answers K399; then R3 (`reveal_fx.ts`, `paint_state.ts`). M4 leftovers K506.
+  - next: K6-2 done in 926fdfe (2026-10-16); G3-1 once Levi answers K399; then R3 (`reveal_fx.ts`, `paint_state.ts`). M4 leftovers K506.
   - brief: `docs/design/K5_K6_split.md` (Stage M4 brief); the R lane `docs/design/K5_R2.md`
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
@@ -269,9 +269,9 @@ Next free ID: K513.
   (`docs/design/K5_K6_split.md`, 4 and 5.4): K6-1, shadow flags, after M3;
   K6-2 (skip CPU work) and K6-3 (= K24, skip the draw) after M6.
   - owner: nobody since 2026-10-15 16:12 (merged; agent `a859a72c41121806c` of claude session 05e60da0)
-  - branch: mainline; last commit: `87bbb26`
-  - evidence: `.claude/probes/K6/K6-1/`
-  - next: K6-2 (skip CPU work by flag, after M6): first measure the GEOM miss at the worker's sleep trip (Q2) and pass dt to tickFireFx; then K6-3 (= K24). Both stages' inputs: `docs/design/K6_1.md`, "Open after K6-1"
+  - branch: mainline; last commit: `926fdfe`
+  - evidence: `.claude/probes/K6/K6-1/`; K6-2's `.claude/probes/K6/K6-2/` (k509 before/after, rest and k7 rows, A/B 0 px)
+  - next: K6-3 (= K24) only: its CAMERA list shrinks to the screen-aware scale bound (the fit-ease snap was pulled into K6-2, forced by the CAMERA gate; fog A/B 20,525 px before, 0 after); `LoopReport.mode` still reads "shadow" though K6-2 gates CPU work - the rename rides K6-3's continuous mode. Inputs: `docs/design/K6_1.md`, "Open after K6-1"
   - brief: `docs/design/K6_1.md`
 - **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
   stub, its rounded cap included (2026-10-15 13:39, `?2gozcj.MgaM`, `.claude/probes/K397/levi_1339.png`).
@@ -302,11 +302,11 @@ Binding for every stage:
 
 Running agents are listed under In progress, each with its own next step.
 The queue (coordinator, overnight 2026-10-15/16):
-1. Overnight done: K480 stage 1 (3b1612f), K481 stage 1 (48fc9ee), K5 R5 (1c666ec + e53e4d9), K5 M5 (3166d8f), K463 and K471 (fb54535); K6-2 blocked on M6 (K510). Phone-gated and Waiting-on-Levi items were out of scope tonight.
+1. Overnight run 2 done (2026-10-16): K507 (7c5daa9), K502+K505 (66fe538), K499 gamepad (9a6f63d, close dde7b83), K510/M6 (c268a9b, close 8808a15), K6-2 with K509 measured 0 px (926fdfe); phone pass: K500 targetAt measured (no budget problem), K156 frames blocked as K513. Waiting-on-Levi untouched.
 2. Next: K480 stage 2 (the light: pulses + hover branching to the reach, shader + CPU mirror; brief from `docs/design/K480.md` Stage 1 handoff),
-   then K481 stage 2 (param/row, animation, telegraph) plus the K501 difficulty call; K499 (gamepad) is a separate later stage.
-3. K6-2 next (M6 landed c268a9b; incl. K509's sleep-trip measurement);
-   G3-1 waits on K399. Overnight residuals K499-K511 wait in their sections.
+   then K481 stage 2 (param/row, animation, telegraph) plus the K501 difficulty call for Levi.
+3. K6-3 (= K24) next; G3-1 waits on K399. Overnight residuals wait in their sections; K513 blocks the K156 frames spot check.
+
 
 Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
 merged):
@@ -1029,14 +1029,14 @@ Every other item below waits on the trigger it names.
   0.066% of taps; no mid-move census (gameplay-camera.md TAP PREFERENCE).
 
 
-- **K500** · K480 stage 1 residuals: page-probe the realtime chase's multi-run tap; measure targetAt's pointermove cost on the phone; a touch press on a beyond run lighting its glow.
+- **K500** · K480 stage 1 residuals: page-probe the realtime chase's multi-run tap; a touch press on a beyond run lighting its glow. (targetAt on the phone done 2026-10-16, build 926fdfe: warm 0.51 ms mean / 0.8 p95, n=300, sweep 60 fps 0 frames >25 ms; `.claude/probes/K480/out/targetat_phone.md`.)
 - **K501** · K481 by-length difficulty (Levi / stage 2 call): at the tuned BY_LENGTH_CATCH_DIST 0 the mode stays deadlier for the attentive explorer (stalker daily explorer 3.4% today -> 8.9% by-length; hunter 1.1 -> 3.4, guard 2.0 -> 4.2, 32-rep turn sim), because at speed one it averages 1.69 hops a turn; matching today's rates closer needs a lever outside K481 decision 2 (a travel scale or a by-length-only retune) before the toggle ships. Evidence: .claude/probes/K481/sweep_length_32.md and the Stage 1 handoff in docs/design/K481.md.
 - **K503** · The G3-0 probe hooks (g3DataState, g3TableRows, g3Expected, captureScene, restoreScene) still sit on the RibbonRenderer facade; R5 left them there because they read reveal/paint state R3/R4 have not homed yet - give them a part (e.g. ribbon/scene_probe.ts) once R3/R4 land.
 - **K504** · K425 - a variant_build.ps1 -Subst naming ribbon_renderer.ts for joinery code (rebuildFillets, cpuJunctionField, the FILLET constants) must now name src/render/ribbon/joinery.ts; normArc likewise lives in ribbon/sampling.ts.
 - **K506** · Stage M4 handoff leftovers not folded into M5 (filed, not done): FrameLoopDeps still reads physState/settleWall0/warmHoldFrom through main.ts getters instead of taking life; ProbeCtx could take life/scene/audioMap whole; stale lore prose in physics-settle.md and render-shaders.md still names main.ts for lifecycle code; the A/B harness physon step should wait for asleep, not frozen.
 - **K512** · The cross-build threads round trip's 0 px expectation only holds across builds whose threads defaults match: K466 (2aea912) added `rve`/`rvg` with new defaults, so c22de79-vs-post-K466 pairings differ by 43,385 px unless the query pins the legacy look (`&rve=under&rvg=soft`, 0 px both ways, K507). Future prescribed pairings spanning 2aea912 must pin both, or expect the frontier diff.
 - **K508** · K5 R2's checks_r2.ps1/checks_threads.ps1 hardcode the deleted worktree agent-a695f82540244625a and cannot rerun as-is; K463's repo-relative k463_checks.ps1 supersedes them for these two checks.
-- **K509** · K6-1 question 2's sleep-trip miss still unmeasured (deferred to K6-2): on knot fw=0 with the worker, shoot after the first sleep, invalidate(), shoot again, diff - K6-2 should run it before gating GEOM (docs/design/K6_1.md, Stage K471 handoff).
+- **K513** · Phone-pass frames gate blocked (2026-10-16, build 926fdfe): `scripts/phone_pass.ps1 -Phase frames -Reps 2` fails 3x deterministically at emulation.mjs exit 4 - only check `noBlankStrip` fails (88 flat rows of 250,250,248 at the clipped shot's bottom; pageSize/orientation/canvas/aspect all pass, watchdog never tripped). Evidence `.claude/probes/rounds/2026-10-16-926fdfe/` (emulation.json, emulation_real.png, logs). Frames spot check (K156 next) still owed once the gate or its shot is fixed; no code changed this stage.
 - **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 3b1612f; K348's mid-move wait-tap leftover is now intentional for pointers.
 
 ## Approved, to schedule (2026-10-11)
@@ -1255,6 +1255,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K509** · K6-1 Q2 sleep-trip GEOM miss measured 0 px (knot fw=0 with worker, first-sleep shot vs after invalidate(), controls 0 px, before and after K6-2) - GEOM gating loses nothing. Done in 926fdfe (2026-10-16; evidence `.claude/probes/K6/K6-2/`).
 - **K510** · K5 M6: pointer input, auto audio and keys moved to `src/app/input_pointer.ts`, `auto_audio.ts`, `input_keys.ts` (pure move; tsc clean, 1333 tests, scripted-input A/B knot/fabric 0 px, fog/threads within same-build controls, k7_frames rest+drag within noise on both hosts). Done in c268a9b (2026-10-16).
 - **K499** · Gamepad support: d-pad + left stick (deadzone, eight sectors) feed the key picker as held keys, held-at-arrival like keys; A/confirm is a tap-class step (no mid-move queue). Pure mapping `src/ui/gamepad.ts`, lore GAMEPAD in `gameplay-moves.md`; unprobed on real hardware. Done in 9a6f63d (2026-10-16).
 - **K502** · K5 R5 same-state pixel proof (48fc9ee vs 1c666ec, perf lock, &phw=0): knot 0 px, fabric 0 px, fog 258 px vs 283 px same-build control, threads load-state 0 px (post-move divergence 572,889 px below its 604,864 px control - follow-camera non-repeatability, K428); rebuildFillets(true) on fabric 4.23 -> 4.30 ms mean (+1.6%), median 4.355 = 4.355 ms. No regression. Done (probes only, 2026-10-16; evidence `.claude/probes/K5/K502K505/`).
