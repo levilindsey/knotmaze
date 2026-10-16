@@ -1031,3 +1031,166 @@ checkout's `.claude/probes/K290/stage3a/` (`k290_ab.mjs`, `sheet.mjs`,
 - **Running alongside:** K7 stage 7 (`main.ts`'s boot, the physics
   worker) and K395 (the pluck files, and pluckNodes in
   `ribbon_renderer.ts`). Keep `main.ts` edits small and out of the boot.
+
+## Stage 3b handoff
+
+Agent a7c0069bafcb78c52 of coordinator session 05e60da0, 2026-10-15
+07:24 to about 09:00, stopped with everything done except the phone half
+of the contact sheet. Branch `worktree-agent-a7c0069bafcb78c52` from
+21d701e, unpushed: ef7f08b (the look, WIP), d64e9c7 (the K299 entry),
+0df3eb3 (lore), f8e7d7d (the lit fuse in world terms) and this handoff.
+No `main.ts` edits. The record of the look is render-explore.md's THE
+BURN, stage 3b, and gameplay-fire.md's THE FIRE.
+
+### Done
+
+1. **The front.** `drawFire` declares a `BurnFront` for each burnt
+   stretch `runBurnAt` pairs with a front, and the explore programs draw
+   it (`EXPLORE_ITEM_FRONT` in the KPAINT item rows, read by kCharAt;
+   `kEmberLook` after kCharLook inside `if (exHere)`, so the crossing gaps
+   cut it like thread). Under char, a dark band ahead of each burning
+   front (0.7 ctrl, meeting the span's own ramp); an ember at every front
+   (0xff7a1a, a hot core 0xffe08a). Smoldering choices draw as a hot
+   centerline (`EXPLORE_ITEM_SMOLDER`) from the head to the first burnt
+   stretch, at rest only. Stage 1's Graphics (char strokes, embers,
+   smoldering arms, the fuse ring) is deleted.
+2. **The `burn` FX.** One lazy `AppearFxSystem` (style `burn`) over the
+   yarn and under the markers and the fog; `spawnFrontier` at each front
+   at 0.4 of the appearance's rates, the rate shared past 12 fronts. Under
+   Reduced motion or in a hidden tab, nothing spawns.
+3. **The lit fuse.** While L <= delay, a kind-1 front on each of the
+   start's runs, where the thread first lies marker radius + 1.0 thread
+   width (world) from the start disc's center (`runOut`). The first
+   version used that world length as a lattice distance, which put the
+   ember under the disc (c 1.54, centered at 731 px against the rim at
+   733). f8e7d7d moves it to c 2.55 (746-757 px).
+4. **Fire light under fog.** A soft hole at each burning front, 0.75 of
+   the stamp radius (`fogFireLights`). The fog redraws only when a light
+   appears, goes, or moves 0.3 world.
+5. **Unseen fronts draw as nothing.** This is one switch,
+   `FIRE_UNSEEN_FRONTS` (false). Under the reveal, the ember scales by the
+   declared visibility as char does, and no FX spawns there. True would
+   draw 0.4 ctrl of thread there and emit.
+6. **The warm-up.** K307's wave 1 already links the three explore
+   variants (`section-rgb`'s explore variant, `arm-strip-explore`,
+   `junction-field-explore`). `__knotWarmup()` showed them linked with
+   3b's grown texts, with no shader errors. The first burn itself was
+   not traced (see "For the next stage").
+7. **A race's frames (K382).** `burn_page.mjs perf` on seed 7 at
+   `fsp=0.95`, measured at rest after the escape (278 runs), under the
+   perf lock, against 21d701e:
+   - The frame interval does not move, fire drawn or not, on both builds:
+     on the desktop P50 17.4-17.5 ms and P95 18.1; under 4x CPU
+     throttling, 51-52 and 70-71.
+   - The fire's own CPU per frame on the desktop: drawFire 0.18-0.21 ms
+     (it spawns the FX), plus about 0.2 ms of pixi render for the FX.
+     Master, with stage 1's cached Graphics: 0.06 and 0.04-0.1.
+   - Under 4x throttling: 0.85-0.89 and 0.8-0.9 ms (master 0.26-0.29 and
+     0.2-0.4).
+8. **The desktop contact sheet.** `sheet.mjs` (3a's, plus a lit-fuse row)
+   on the branch build (0df3eb3+, which includes the fuse fix): seed 7 at
+   `fsp=0.9` on the optimal route, 14 arrivals, solved and never lost, no
+   context loss. Rows: the lit fuse #0, early #1 (1% burnt), mid #12
+   (40%), late #13 (77%). Each row has gone and char, with the reveal off
+   and on.
+   - The fuse's ember glows just past the start disc.
+   - Smoke rises at every front with the reveal off, and only at the seen
+     fronts with it on (mid #12).
+   - A smoldering arm draws as a red centerline (late #13).
+9. **Checks.**
+   - Fire off against 21d701e (3a's `k290_ab.mjs ab`): 31/31 checks,
+     every frame 0 px. Run on ef7f08b; f8e7d7d touches only the fire's
+     path.
+   - `npm test`: 1155 passed, 84 files, 1 skipped; the golden, the K87
+     pin and the golden dailies did not move. `npm run build` is green.
+   - SwiftShader compiles all 8 variants. The section's explore variant
+     went from 56595 to 58529 characters and `arm-strip-explore` from
+     37084 to 38559; the others are unchanged.
+   - K299's ring-lap scan lists the front's nearest-lap floor as a
+     reviewed site.
+   - As the brief allows, the stage skips the `paint_math` mirror and the
+     parity tests.
+10. **Lore:**
+    - render-explore.md: THE BURN, stage 3b (model, shaders, unseen
+      fronts, FX, fog light, THE EMBER DRAWS, measured);
+    - gameplay-fire.md: THE FIRE, with stage 1's first look retired;
+    - render-shaders.md: the two grown variants.
+
+### Not done
+
+- **Item 8's phone half.** The phone lock was never taken. The desktop
+  sheet also lacks the fog-on row and a dedicated unseen-front frame. The
+  reveal-on cells show unseen fronts only by their absence.
+- **K383** (hide the start marker once the thread under it has burnt) is
+  not built, as instructed.
+
+### Evidence
+
+`.claude/probes/K290/stage3b/` is untracked and lives in this worktree.
+Copy it to the main checkout before the worktree is removed.
+
+- Scripts:
+  - `k290_ab.mjs` (the fire-off A/B);
+  - `burn_page.mjs` (perf ported: phase B clears `fireFx`);
+  - `sheet.mjs` (outDir now absolute for mksheet);
+  - `look.mjs`, `zoom.mjs`, `fuse_diag.mjs`, `gfind.mjs`;
+  - `ember_px.mjs`, `ember_read.mjs`, `ember_dbg.mjs`, `ember_dbg2.mjs`,
+    `ember_dbg3.mjs` (these need the debug view below);
+  - `dump_variants.ts` (the SwiftShader compile), `warn_check.mjs`,
+    `png.mjs`;
+  - `lock_take.ps1`, `lock_release.ps1`,
+    `vite.private-cache.config.ts`.
+- Results:
+  - `out/ab`, with `ab_desktop.log`;
+  - `out/variants`;
+  - `out/look1`, `px1`, `fuse1`, `dbg1`-`dbg4`;
+  - `out/perf_master` and `out/perf_branch`: `perf_7_perf.json` and
+    `perf_7_x4_perf.json`;
+  - `out/sheet`: `K290_3b_sheet_full.png`, `K290_3b_sheet_crop.png`,
+    `shots.json`, the per-arrival frames and crops.
+- Logs: `npm_test.log`, `npm_test2.log`, `build.log`.
+
+### My calls
+
+- **A static glow.** The shaders have no fire clock; the motion comes
+  from the FX.
+- **Band widths in ctrl** (about 1.93 ctrl per lattice unit): the band
+  is 0.7, the ember reaches 0.25 ahead and 0.55 behind. They are short in
+  world terms.
+- **Fronts come from `runBurnAt`'s `front[]`,** paired with the burnt
+  stretches.
+- **The fuse sits at the disc radius + 1.0 thread width in world terms,**
+  at most half the run.
+- **Smolder only at rest,** in a live race (no move in flight, not solved,
+  not lost), and not on the arm strips.
+- **FX at 0.4 of the appearance's rates,** shared past 12 fronts.
+- **Fog light only at burning fronts,** not at the fuse: the entrance is
+  explored anyway.
+- **`FIRE_UNSEEN_FRONTS` false,** which Levi accepted.
+
+### For the next stage
+
+- **The phone sheet** under the phone lock, plus a fog-on row and an
+  unseen-front frame; then the merge (the coordinator's call).
+- **K383:** in `fabric_maze_renderer.ts` drawMarkers, gate on the burnt
+  spans covering `walk.start`'s thread point, use the marker fade, and add
+  a test.
+- **Look at the sheet for widths.**
+  - Under gone, only a thin rim of ember shows at the cut end, because
+    the ember's behind part lies on gone thread.
+  - The fuse's ember sits partly under the FX smoke.
+  - Consider band and ember widths in world units, or moving the ember
+    onto the unburnt side under gone.
+- **Time a cold link** of the grown section explore variant
+  (`trace_intro.mjs`, a fresh profile). Also trace the first burn on a
+  cold cache, to show item 6 directly.
+- **When the look is final,** add the FRONT and SMOLDER items to the
+  `paint_math` mirror and the parity tests (K152 item 3).
+- **Debug view 7 is the ember's x-ray** (render-explore.md, THE EMBER
+  DRAWS). It is a dev-server edit only: never commit it. A probe that
+  injects fronts must first stub `syncExplore` and `drawFire`.
+- **Still open from 3a:**
+  - pickThread under a declared burn;
+  - `pieceVis`' ring-unwrap guard;
+  - the PixiJS attribute warnings at load (aGap, aGapId, aUV), which
+    master has too.

@@ -614,3 +614,13 @@ plus the `burn` FX. Brief and record: `docs/design/K114_burn.md`, "Stage
   37084 -> 38559, junction-field-explore and pluck-still-explore
   unchanged; the warm-up's wave 1 compiles all three explore variants
   (`__knotWarmup()`), no shader errors, no context loss.
+- A RACE'S FRAMES (K382; `burn_page.mjs perf`, seed 7 `fsp=0.95`, at
+  rest after the escape, 278 runs, under the perf lock; the branch at
+  0df3eb3+ against 21d701e): the frame interval does not move (desktop
+  P50 17.4-17.5 ms and P95 18.1, fire drawn or not, both builds; under
+  4x CPU throttling 51-52 and 70-71). The fire's own CPU a frame:
+  drawFire, which spawns the FX, 0.18-0.21 ms, and about 0.2 ms more
+  pixi render, the FX (master, stage 1's cached Graphics: 0.06 and
+  0.04-0.1); at 4x 0.85-0.89 and 0.8-0.9 (master 0.26-0.29 and 0.2-0.4).
+  Desktop contact sheet (the lit fuse, early, mid and late; gone and
+  char; the reveal off and on): `.claude/probes/K290/stage3b/out/sheet/`.
