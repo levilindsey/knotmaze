@@ -219,6 +219,15 @@ export class FabricMazeController {
     return this.pathVertices[this.pathVertices.length - 1];
   }
 
+  // K479: the run the player arrived on (the path's last), or -1 before the
+  // first move and back at the start. A tap on it is a backtrack (a trail
+  // walks it back instead), so it is the one choice that tap_pick.ts holds
+  // to a stricter pick than the runs out of the head.
+  get arrivalEdge(): number {
+    const n = this.pathEdges.length;
+    return n > 0 ? this.pathEdges[n - 1] : -1;
+  }
+
   get pathLength(): number {
     let sum = 0;
     for (const eid of this.pathEdges) sum += this.walk.edges[eid].length;

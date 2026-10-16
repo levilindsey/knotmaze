@@ -50,6 +50,8 @@ import type { ChaseGraph, MinotaurMode, Spot } from "../game/minotaur";
 import type { TurnTelegraph } from "../game/minotaur_turns";
 import { firePassed, runBurnAt, type Fire } from "../game/fire";
 import { finishHold, finishLifted } from "../game/explore_finish";
+import { ARRIVAL_BIAS, coveredByDot, pickRun } from "../game/tap_pick";
+import type { RunReach } from "../game/tap_pick";
 import { WebFade } from "./web_fade";
 
 // What syncMinotaur draws: the real-time chase (MinotaurChase) or the
@@ -454,6 +456,10 @@ export class FabricMazeRenderer {
   private glowEdge = -1;
   private glowAt = 0;
   private anim: MoveAnim | null = null;
+  // K479: taps and hovers hold the run the player arrived on to a stricter
+  // pick than the runs out of the head (edgeAt, game/tap_pick.ts). A probe
+  // switch: false is the old nearest-run pick, for same-page A/Bs.
+  tapPreference = true;
   private scratch = new Float32Array(2);
   private flowScratch = new Float32Array(2);
   // Live traversal-speed multiplier (the moveSpeed slider; main.ts keeps
@@ -904,44 +910,82 @@ export class FabricMazeRenderer {
     return ((f % len) + len) % len;
   }
 
-  // Nearest tappable run to a world point among the current choices, or -1.
-  // Samples each run's full span, excluding the neighborhood of the branch
-  // point where all arms coincide. maxD is the pick radius from the
-  // centerline (world): main.ts pickRadius (K298), touch's max(0.9, 1.6 x
-  // threadWidth), the mouse's half-width plus its choice margin.
+  // The tappable run a world point takes among the current choices, or -1.
+  // maxD is the pick radius from the centerline (world): main.ts pickRadius
+  // (K298), touch's max(0.9, 1.6 x threadWidth), the mouse's half-width
+  // plus its choice margin. K479: the nearest run wins, except that the
+  // run the player arrived on (a tap on it backtracks) must be clearly
+  // nearer than the nearest outgoing run (game/tap_pick.ts), so a tap
+  // where the arms converge goes on. Hover, cursor, tap and press all
+  // call this, so they agree.
   edgeAt(
     x: number,
     y: number,
     controller: FabricMazeController,
     maxD: number
   ): number {
-    let best = -1;
-    let bestD = maxD * maxD;
+    const arrival = this.tapPreference ? controller.arrivalEdge : -1;
+    return pickRun(
+      this.runsInReach(x, y, controller, maxD, arrival),
+      arrival,
+      ARRIVAL_BIAS,
+      0.5 * this.threadWidth
+    );
+  }
+
+  // K479: edgeAt's measuring half. Every choice with a tappable sample
+  // closer than maxD to a world point, as {eid, d} (d: the distance to its
+  // nearest sample, world), in choices() order. Samples each run's full
+  // span every SAMPLE_STEP, excluding the neighborhood of the branch point
+  // where all arms coincide (both ends of a self-loop run return to it),
+  // and hidden or burnt thread. `arrival` is the run the player arrived
+  // on, -1 for none: while the dot is still travelling it, the controller
+  // has already committed the move, so the run is a choice and a tap on it
+  // a backtrack, but only the stretch the dot has covered counts (the
+  // stretch ahead is empty space, coveredByDot). A backtrack's retraced run
+  // is an ordinary choice. Probes read it for the census.
+  runsInReach(
+    x: number,
+    y: number,
+    controller: FabricMazeController,
+    maxD: number,
+    arrival: number
+  ): RunReach[] {
+    const reach: RunReach[] = [];
+    const a = this.anim;
+    const flying = a !== null && a.kind === "advance" && a.e.id === arrival ? a : null;
+    const max2 = maxD * maxD;
     for (const eid of controller.choices()) {
       const e = this.walk.edges[eid];
-      // Exclude the neighborhood of every end that touches the head (both
-      // ends of a self-loop run return to the branch point).
       const exA = e.va === controller.head;
       const exB = e.vb === controller.head;
+      const dot = eid === arrival ? flying : null;
+      let best2 = max2;
+      let found = false;
       for (let f = e.ctrlA; ; f += SAMPLE_STEP) {
         const ff = Math.min(f, e.ctrlB);
         const nearHead =
           (exA && ff - e.ctrlA <= HEAD_EXCLUDE) ||
           (exB && e.ctrlB - ff <= HEAD_EXCLUDE);
-        if ((!nearHead || e.ctrlB - e.ctrlA <= 2 * HEAD_EXCLUDE) && this.shownAt(e.chain, ff)) {
+        if (
+          (!nearHead || e.ctrlB - e.ctrlA <= 2 * HEAD_EXCLUDE) &&
+          (dot === null || coveredByDot(dot.from, dot.cur, ff)) &&
+          this.shownAt(e.chain, ff)
+        ) {
           this.pointFlowed(e.chain, this.ctrlMod(e.chain, ff), this.scratch, 0);
           const dx = this.scratch[0] - x;
           const dy = this.scratch[1] - y;
-          const d = dx * dx + dy * dy;
-          if (d < bestD) {
-            bestD = d;
-            best = eid;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < best2) {
+            best2 = d2;
+            found = true;
           }
         }
         if (ff >= e.ctrlB) break;
       }
+      if (found) reach.push({ eid, d: Math.sqrt(best2) });
     }
-    return best;
+    return reach;
   }
 
   // K76 stage 2c: under the thread reveal, hidden thread is empty space
