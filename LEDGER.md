@@ -126,10 +126,10 @@ Next free ID: K430.
 - **K409** · The fire's widths are in ctrl (band 0.7, ember 0.25 ahead and 0.55 behind): under gone only
   a thin ember rim shows at the cut end, and the fuse's ember sits partly under the FX smoke. Rec: the
   ember onto the unburnt side under gone; world units if the phone sheet shows them thin. `K114_burn.md` 3b handoff.
-- **K411** · A phone window (Levi, 2026-10-15 10:07: "The phone is your's for at least the next
-  hour"): K7's phone pass first (waiting for the perf lock), then K290's phone sheet (stage 3c),
-  then K8's bench (`.claude/probes/K8/stage2/phone6.ps1`, stale params) if time remains. The
-  probes never wake or unlock the phone. Close this when Levi takes the phone back.
+- **K411** · A phone window for K8's bench (`.claude/probes/K8/stage2/phone6.ps1`: its refs, times and
+  preview paths are stale; refresh them and raise the rest to 90000 ms). The 2026-10-15 window (10:07,
+  "at least the next hour") ran K7's phone pass (10:32) and K290 3c's sheet (to 11:15); the phone was
+  free at 11:19 and handed back. The probes never wake or unlock the phone.
 - **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
   and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
   keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
