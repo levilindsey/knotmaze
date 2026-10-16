@@ -6,6 +6,7 @@ paths:
   - "test/render/explore_gates.test.ts"
   - "test/render/explore_cut.test.ts"
   - "test/game/explore_view.test.ts"
+  - "src/render/ribbon/explore_gaps.ts"
 ---
 
 # Render lore: the thread reveal (K76)
@@ -91,7 +92,7 @@ slot's strength, which records rebuildFillets emits, whether a marker
 draws), so the gap, strip and fan programs run master's text in both
 modes and the mode off is master's frame by construction.
 
-- GAP GATE (`ribbon_renderer.applyExploreGaps`, `GapMaskTable.setVis`): a
+- GAP GATE (`ribbon/explore_gaps.ts` applyExploreGaps, `GapMaskTable.setVis`): a
   crossing slot's strength is its solved strength times the over thread's
   visibility at the over pass (`slotOverCtrl`, the render ctrl
   computeGapSlot placed it at). A factor <= 0 rejects the slot in texel 0

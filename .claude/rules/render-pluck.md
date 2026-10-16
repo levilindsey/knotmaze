@@ -580,8 +580,9 @@ only with the files it is about; `render.md` lists the area's other files.
   of the fade).
 - RULE: under the reveal (`explorePieces` on, the chain not whole),
   `pluck()` (ribbon_renderer.ts) clips the unit once more with
-  `exploreSolidSpan`: the solid piece that holds the tap, else the
-  nearest, grown through any piece that meets it. No solid stretch: the
+  `exploreSolidSpan` (in `ribbon/explore_gaps.ts` since K5 R2): the
+  solid piece that holds the tap, else the nearest, grown through any
+  piece that meets it. No solid stretch: the
   pluck is sound-only. It passes `fret: true`, and `segmentLobes`
   (pluck_model.ts) then treats the span's ends as HARD FRETS: the tapped
   lobe is cut there and its end at a fret gets node -1 (no hide zone,

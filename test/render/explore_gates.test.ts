@@ -6,7 +6,7 @@
 //    through texel 0's radii, a GATED slot (intro gate pending, strength < 0)
 //    keeps its encoding.
 // 2. A CPU census of the joint gate against the model: the renderer's rule
-//    (ribbon_renderer exploreJointShown: every arm solid, vis >= 0.98, at its
+//    (explore_gaps.ts exploreJointShown: every arm solid, vis >= 0.98, at its
 //    slot and min(0.25, 0.45 run) ctrl out; a free tip's cap when its thread
 //    is solid at the tip) evaluated on explore_view's pieces, on generated
 //    mazes, entering and after 2 and 10 moves: every visited junction
@@ -153,7 +153,7 @@ function armsOf(walk: WalkGraph, v: string): Arm[] {
   return out;
 }
 
-// The renderer's joint rule (ribbon_renderer.ts exploreJointShown).
+// The renderer's joint rule (ribbon/explore_gaps.ts exploreJointShown).
 const JOINT_VIS = 0.98;
 const JOINT_OUT = 0.25;
 function jointShown(m: Maze, pieces: ExplorePiece[], arms: Arm[]): boolean {
