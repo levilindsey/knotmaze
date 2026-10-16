@@ -327,6 +327,7 @@ const ROUNDED_QUOTIENTS: Record<string, [number, string]> = {
   "gap_mask.ts: floor(off / t1.z + 0.5)": [1, "nearest lap: ambiguous only at the antipode"],
   "explore_glsl.ts: floor((0.5 * (c0 + c1) - x) / nf + 0.5)": [2, "nearest lap (kExploreAt, K290's kCharAt): ambiguous only at the antipode"],
   "explore_glsl.ts: floor(s / sp + 0.5)": [1, "a rounded count, clamped to at least 1"],
+  "explore_glsl.ts: floor((T0.y - x) / nf + 0.5)": [1, "nearest lap to a fire front (K290 3b's kCharAt): ambiguous only at the antipode, where every front term is 0"],
   "junction_field.ts: floor(ra / TAU)": [1, "an angle wrap for comparisons: TAU instead of 0 is the same direction"],
   // KNOWN RESIDUAL (K299 report): mod divides, so on an affected GPU a
   // fifth contour line can take the 0.55 weight instead of 1.0. The
