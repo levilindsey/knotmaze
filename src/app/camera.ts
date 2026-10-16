@@ -161,6 +161,12 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     x1: number;
     y1: number;
     hold: number;
+    // K488: a free tween (the finish's peek) places its point at the
+    // asked scale, past the fit clamp; with a `back` target it holds at
+    // its end for `hold` seconds (camera dt) and then tweens back.
+    free?: boolean;
+    back?: { x: number; y: number; s: number; dur: number } | null;
+    holdLeft?: number;
   } | null = null;
   const headScratch = new Float64Array(2);
   const nowSec = (): number => performance.now() / 1000;
@@ -267,13 +273,19 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
     wy: number,
     sx: number,
     sy: number,
-    s: number
+    s: number,
+    free = false
   ): void => {
     const lo = camFollow
       ? Math.min(fitTarget.scale, followScale()) * 0.85
       : fitCur.scale;
     const hi = camFollow ? followScale() * 4 : fitCur.scale * MAX_ZOOM;
-    const sc = Math.min(hi, Math.max(lo, s));
+    // K488: a free placement (a peek tween's step) takes the scale as
+    // asked, inside wide sane bounds, so it can zoom out past the fit
+    // frame to frame the exit.
+    const sc = free
+      ? Math.min(2000, Math.max(0.5, s))
+      : Math.min(hi, Math.max(lo, s));
     const px = sx - wx * sc;
     const py = sy - wy * sc;
     flags.push(Flag.CAMERA); // K6-1: a gesture or a tween's step moved the view.
@@ -289,7 +301,7 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
       view.zoom = sc / fitCur.scale;
       view.panX = px - fitCur.x * view.zoom;
       view.panY = py - fitCur.y * view.zoom;
-      clampView();
+      if (!free) clampView();
       applyView();
     }
   };
@@ -330,12 +342,43 @@ export function createCamera(deps: CameraDeps, scene: SceneRef) {
       tw.y0 + (tw.y1 - tw.y0) * e,
       app.screen.width / 2,
       app.screen.height / 2,
-      s
+      s,
+      tw.free ?? false
     );
-    // The follow spring stays off through the move, then for the hold.
-    camTouchedAt = nowSec() + (u >= 1 ? tw.hold : 0);
     viewHoming = false;
-    if (u >= 1) camTween = null;
+    if (u < 1) {
+      // The follow spring stays off through the move.
+      camTouchedAt = nowSec();
+      return;
+    }
+    if (tw.back) {
+      // K488: hold the framing for `hold` seconds, then ease back to
+      // the pre-tap one (the place above re-places the target each
+      // frame, so the hold tracks the fit's drift).
+      if (tw.holdLeft === undefined) tw.holdLeft = tw.hold;
+      tw.holdLeft -= dt;
+      camTouchedAt = nowSec();
+      if (tw.holdLeft > 0) return;
+      const b = tw.back;
+      const sNow = root.scale.x;
+      camTween = {
+        t: 0,
+        dur: b.dur,
+        s0: sNow,
+        x0: (app.screen.width / 2 - root.position.x) / sNow,
+        y0: (app.screen.height / 2 - root.position.y) / sNow,
+        s1: b.s,
+        x1: b.x,
+        y1: b.y,
+        hold: 0,
+        free: tw.free,
+        back: null,
+      };
+      return;
+    }
+    // The follow spring stays off for the hold once the move ends.
+    camTouchedAt = nowSec() + tw.hold;
+    camTween = null;
   };
   // Mode switches hand over the CURRENT framing (no jump); each mode then
   // eases to its own target.

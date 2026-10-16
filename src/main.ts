@@ -81,6 +81,7 @@ import {
   headIndicatorWhy,
   headReturnPlan,
 } from "./ui/head_indicator";
+import { finishPeekPlan } from "./ui/finish_peek";
 import {
   DARK_DISC,
   GLYPH_R,
@@ -1185,25 +1186,34 @@ async function main(): Promise<void> {
     y1: number,
     s1: number,
     dur: number,
-    hold: number
+    hold: number,
+    backDur?: number
   ): void => {
     const s0 = root.scale.x;
+    const x0 = (app.screen.width / 2 - root.position.x) / s0;
+    const y0 = (app.screen.height / 2 - root.position.y) / s0;
     camera.camTween = {
       t: 0,
       dur,
       s0,
-      x0: (app.screen.width / 2 - root.position.x) / s0,
-      y0: (app.screen.height / 2 - root.position.y) / s0,
+      x0,
+      y0,
       s1,
       x1,
       y1,
       hold,
+      // K488: with a back duration the tween is the finish's peek: free
+      // of the fit clamp, holding at its target, then easing back here.
+      ...(backDur !== undefined
+        ? { free: true, back: { x: x0, y: y0, s: s0, dur: backDur } }
+        : {}),
     };
   };
-  // A tap on an indicator: ease the camera to frame its target - and the
-  // head, as far as the zoom allows (placeWorldAt clamps the zoom-out: the
-  // home view in fit mode, the whole knot in follow mode, which then holds
-  // the framing a moment before it eases back to the head).
+  // A tap on the minotaur's indicator: ease the camera to frame it - and
+  // the head, as far as the zoom allows (placeWorldAt clamps the zoom-out:
+  // the home view in fit mode, the whole knot in follow mode, which then
+  // holds the framing a moment before it eases back to the head). The
+  // finish's tap peeks instead (peekFinish below, K488).
   const frameWorld = (wx: number, wy: number): void => {
     let minX = wx;
     let maxX = wx;
@@ -1256,6 +1266,21 @@ async function main(): Promise<void> {
     }
     return finishIconSvg;
   };
+  // K488: a tap on the finish's indicator peeks at the exit: ease out
+  // to frame it (ui/finish_peek.ts), hold, and ease back to this view.
+  // Under fog the tap only toasts (the onTap below).
+  const peekFinish = (): void => {
+    const v = exitVertex();
+    if (!v || !scene.renderer) return;
+    scene.renderer.markerWorld(v.chain, v.ctrl, exitScratch);
+    const plan = finishPeekPlan({
+      exit: { x: exitScratch[0], y: exitScratch[1] },
+      scale: root.scale.x,
+      followScale: followScale(),
+      reduced: motion.reduced,
+    });
+    startCamTween(plan.x, plan.y, plan.s, plan.dur, plan.hold, plan.backDur);
+  };
   const finishIndicator = indicators.add({
     id: "finish",
     world: (out) => {
@@ -1297,17 +1322,14 @@ async function main(): Promise<void> {
       params.exploration === "fog"
         ? "The exit lies this way, still under the fog."
         : settings.tapToPan
-          ? "The exit is off screen, this way. Tap to bring it into view."
+          ? "The exit is off screen, this way. Tap to peek at the exit."
           : "The exit is off screen, this way.",
     onTap: () => {
       if (params.exploration === "fog") {
         showToast("The exit lies this way. Explore to lift the fog.", 3000);
         return;
       }
-      const v = exitVertex();
-      if (!v || !scene.renderer) return;
-      scene.renderer.markerWorld(v.chain, v.ctrl, exitScratch);
-      frameWorld(exitScratch[0], exitScratch[1]);
+      peekFinish();
     },
   });
   // K76 (Decision 6): until the exit marker has been seen, the finish's
