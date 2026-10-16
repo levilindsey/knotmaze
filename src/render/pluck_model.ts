@@ -134,6 +134,44 @@ export function freeEndX(x: number, freeLo: boolean, freeHi: boolean): number {
   return x;
 }
 
+// K459: a node (a crossing or a junction) inside a free end's cap pins it.
+// `span` is the fretted span WITH its caps (renderer.pluck adds freeLo below
+// the solid stretch and freeHi above it); `nodes` are the chain's node arcs
+// in [0, total]. An end whose cap holds a node goes back to K397's hard fret
+// at the solid end (its cap stays still): a lobe cut at the cap's tip by the
+// node was too short to pluck (a fade tap there drew nothing), and one run
+// through the node would swing the cap over the crossing.
+export function pinFreeEnds(
+  nodes: readonly number[],
+  total: number,
+  closed: boolean,
+  span: [number, number],
+  freeLo: number,
+  freeHi: number
+): { span: [number, number]; freeLo: number; freeHi: number } {
+  const eps = 1e-4 + 1e-6 * total;
+  const holds = (x0: number, x1: number): boolean => {
+    for (const a of nodes) {
+      let b = a;
+      if (closed && total > 0) b = a + Math.ceil((x0 - eps - a) / total) * total;
+      if (b >= x0 - eps && b <= x1 + eps) return true;
+    }
+    return false;
+  };
+  let [a0, a1] = span;
+  let lo = freeLo > 0 ? freeLo : 0;
+  let hi = freeHi > 0 ? freeHi : 0;
+  if (lo > 0 && holds(a0, a0 + lo)) {
+    a0 += lo;
+    lo = 0;
+  }
+  if (hi > 0 && holds(a1 - hi, a1)) {
+    a1 -= hi;
+    hi = 0;
+  }
+  return { span: [a0, a1], freeLo: lo, freeHi: hi };
+}
+
 // The instantaneous (ghost) offset at overtone weight q, unit amplitude.
 export function ghostShape(
   b: number,

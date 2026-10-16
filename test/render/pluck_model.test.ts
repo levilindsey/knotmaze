@@ -17,6 +17,7 @@ import {
   drawnSwing,
   envelope,
   freeEndX,
+  pinFreeEnds,
   gapTurn,
   ghostShape,
   glowCue,
@@ -606,6 +607,46 @@ describe("lobe segmentation", () => {
     }
     // Both ends free: the high end wins (one free end per lobe).
     expect(freeEndX(1, true, true)).toBe(0.5);
+  });
+
+  it("a free end (K459): a node inside the cap pins it to the solid end", () => {
+    // 2gozcj after 12 moves, chain 85 (open, total 34.222): the solid
+    // stretch [32.634, 34.222], a cap of 0.26 below it, a crossing at
+    // 32.414 inside that cap.
+    const nodes = [0, 31.33, 32.414, 34.222];
+    const pinned = pinFreeEnds(nodes, 34.222, false, [32.374, 34.222], 0.26, 0);
+    expect(pinned.freeLo).toBe(0);
+    expect(pinned.span[0]).toBeCloseTo(32.634, 9);
+    expect(pinned.span[1]).toBe(34.222);
+    // So a fade tap past the cap's tip plucks the stretch inside the solid
+    // end again (K397's lobe), not a 0.04 sliver from the tip to the node.
+    const tl = tapLobes(
+      nodes.map((arc) => ({ arc, hide: arc === 34.222 ? 0.495 : 0 })),
+      34.222,
+      false,
+      32.37,
+      6,
+      pinned.span,
+      true
+    );
+    expect(tl.tapped).not.toBeNull();
+    expect(tl.tapped!.a).toBe(-1);
+    expect(tl.tapped!.s0).toBeCloseTo(32.634, 9);
+    // A cap with no node in it stays free, at either end.
+    const free = pinFreeEnds([0, 31.33, 34.222], 34.222, false, [32.374, 34.222], 0.26, 0);
+    expect(free).toEqual({ span: [32.374, 34.222], freeLo: 0.26, freeHi: 0 });
+    const hi = pinFreeEnds([0, 5, 9], 10, false, [5.2, 8.5], 0, 0.3);
+    expect(hi.freeHi).toBe(0.3);
+    const hp = pinFreeEnds([0, 8.4, 9], 10, false, [5.2, 8.5], 0, 0.3);
+    expect(hp.freeHi).toBe(0);
+    expect(hp.span[0]).toBe(5.2);
+    expect(hp.span[1]).toBeCloseTo(8.2, 9);
+    // A closed chain's unwrapped span finds the node a loop away.
+    const cl = pinFreeEnds([1, 4, 7], 10, true, [10.5, 13.8], 0, 0.3);
+    expect(cl.freeHi).toBe(0.3);
+    const cl2 = pinFreeEnds([1, 3.6, 7], 10, true, [10.5, 13.8], 0, 0.3);
+    expect(cl2.freeHi).toBe(0);
+    expect(cl2.span[1]).toBeCloseTo(13.5, 9);
   });
 });
 
