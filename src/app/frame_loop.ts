@@ -211,11 +211,13 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   let revealMs = 0;
   let revealMsTotal = 0;
 
-  // K24/K6 HOOK (approximate until K6's what-changed flags): is anything
-  // besides the background moving this frame? The background's drift
-  // pauses once the rest of the scene has been still for a while
-  // (BACKGROUND_PAUSE_GRACE), and background.needsFrame() then says false -
-  // so a render-on-demand loop can stop drawing.
+  // K24/K6 HOOK: is anything besides the background moving this frame?
+  // The background's drift pauses once the rest of the scene has been
+  // still for a while (BACKGROUND_PAUSE_GRACE), and background.needsFrame()
+  // then says false - so a render-on-demand loop can stop drawing. Since
+  // K6-1 the answer is sceneActive (the flags, backgroundTick below);
+  // sceneAnimating() is the pre-K6 approximation, kept as an observer
+  // until K6-2 deletes it.
   let lastViewX = NaN;
   let lastViewY = NaN;
   let lastViewS = NaN;
@@ -300,20 +302,23 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     if (audioNeedsFrame()) p |= Flag.AUDIO;
     return p;
   };
-  // The last frame's sceneAnimating() (probes read it; calling it again
-  // would move its view bookkeeping).
+  // The last frame's sceneActive (probes read it under its old name,
+  // K6-1 question 3: sceneWasAnimating, __knotConfetti().sceneAnimating,
+  // __knotA11y().animating).
   let sceneWasAnimating = false;
   const backgroundTick = (dt: number): void => {
     background.reducedMotion = motion.reduced;
     const rootMoved = viewMoved();
     const legacy = sceneAnimating(rootMoved);
-    sceneWasAnimating = legacy;
-    // K6-1: the flags' answer, beside the legacy one (shadow: the
-    // background still reads the legacy answer until the switch).
+    // K6-1: sceneActive, the flags' answer: this frame's pushes or the
+    // polls read now carry a visual flag other than BACKGROUND. It
+    // replaces sceneAnimating() for the background's drift pause; the
+    // legacy answer stays beside it as the report's observer.
     const polls = readPolls(dt);
     const active = ((flags.pushed | polls) & SCENE_ACTIVE) !== 0;
+    sceneWasAnimating = active;
     // K307: no texture pass before wave 1 (pixi would link the effect cold).
-    if (warmup.wave1Done) background.tick(dt, sceneWasAnimating);
+    if (warmup.wave1Done) background.tick(dt, active);
     flags.endFrame(polls, { rootMoved, legacy, active, stepUnflagged });
     stepUnflagged = false;
   };
