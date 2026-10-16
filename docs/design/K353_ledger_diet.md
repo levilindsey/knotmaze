@@ -217,3 +217,45 @@ answerable and keep their recommendations; about 20 other items were
 compared with their originals. What a rewrite dropped (worktree paths,
 probe file names, commit ids, quotes) is in the originals appended to
 `docs/ledger_notes.md` and `docs/ledger_done.md`.
+
+## CC64 brief: the other repos' ledgers (2026-10-15, the coordinator)
+
+Levi, 2026-10-14 23:58: "Do make sure we remember to do this for the
+others though tomorrow". Only three other ledgers are big enough to
+need it: claude-config `LEDGER.md` (28.5 KB, 454 lines), hopnbop
+`LEDGER.md` (23.5 KB, 409 lines) and snoringcat-platform
+(`C:\Users\lsl\Repositories\hopnbop\third_party\snoringcat-platform\LEDGER.md`,
+15.9 KB, 277 lines). Their IDs are `CC<n>`, `H<n>` and `SP<n>`
+(claude-config `LEDGERS.md`).
+
+One sonnet agent, 1 h cap, on a knotmaze worktree branch. **You edit no
+ledger and nothing in any repo but your branch's `scripts/ledger_diet.mjs`
+and this doc.** The coordinator applies your maps to each repo.
+
+1. **Generalize `scripts/ledger_diet.mjs`** (commit on your branch):
+   - `--prefix <P>` (default `K`) for every ID pattern and every ID it
+     writes (items, the `## <P><n>` headings, "Next free ID: <P><n>.");
+   - `--cutoff YYYY-MM-DD` (default `2026-10-12`) for the Done archive;
+   - a ledger with no "Next free ID" line keeps having none (a warning,
+     as now);
+   - knotmaze unchanged: `list` on knotmaze's `LEDGER.md` prints the same
+     bytes before and after your change, and an apply of
+     `docs/ledger_diet/map.jsonl` to a copy of the K353 snapshot
+     (`git show 6c85a38^:LEDGER.md`) gives the same files as before.
+2. **Per ledger**, in the main checkout's untracked
+   `C:\Users\lsl\Repositories\knotmaze\.claude\probes\CC64\<cc|hopnbop|platform>\`:
+   - `snapshot.md`, a copy of the ledger, and in `results.md` the repo's
+     commit that holds it (`git -C <repo> log -1 --format=%h -- LEDGER.md`);
+   - author the short texts by section 2's rules above (open items over
+     three lines; Done one-liners; Done before the cutoff `2026-10-12`
+     leaves), `pack` them into `map.jsonl`;
+   - apply to a scratch copy (`work\LEDGER.md` with its own `work\docs\`,
+     so nothing real is touched), then `verify` and `pointers`; keep
+     their output (`verify.txt`, `pointers.txt`);
+   - `results.md`: bytes and lines before and after, items rewritten,
+     left, archived; any item too risky to shorten; warnings.
+3. **A "CC64 handoff"** at the end of this doc: the counts per ledger,
+   the exact `apply` command line for each, and anything left.
+
+Process as above (stop rule: done or 1 h; commit at each milestone; never
+push). The final report ends with `Ledger items` and the handle fields.

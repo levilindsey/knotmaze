@@ -276,11 +276,11 @@ Next free ID: K416.
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
   with seams so G3 becomes a module swap; K6 rides it. Design: `docs/design/K5_K6_split.md`
   (calls: K377). M1 merged (baa0847..12709e5): main.ts 5709 → 4869 lines, no logic changes.
-  - owner: nobody since 2026-10-15 06:13 (stage M1 done; agent `a871cd9d98d4f1bf0` of claude session d8031183; its and the design's `aa60ed52201f75682` worktrees removed by the K161 sweep 2026-10-15, branches kept). R1's brief: docs agent `aae67981858ddb4a6` of claude session 05e60da0, since 08:51 (branch `worktree-agent-aae67981858ddb4a6`, writing `docs/design/K5_R1.md`)
-  - branch: mainline; last commit: `12709e5`
-  - evidence: `.claude/probes/K5/stage1/` (`checks.ps1`, `rebased_checks.ps1` and their `checks/`, `checks_rebased/`, `rebased/`; `fog_bisect.ps1`, `fogbisect/`; `diff_regions.mjs`, `remap_*.md`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
-  - next: M2, the camera to `src/app/camera.ts` (section 5.2; re-map first from `anchors_c49f63f.json`), after K7 stage 7 merges (both edit main.ts); M3/M4 export PhysState, M7a moves `__knotUndo` (the handoff's "What is left"). The R lane is approved (K377 q3): R1 may run beside K290 3b, R2 and R5 after K290, G3-1 after R2; R1's brief is being written (`docs/design/K5_R1.md`, ports 5980-5989)
-  - brief: `docs/design/K5_K6_split.md` section 5.2, "7. Stage 1 brief" and "Stage 1 handoff"
+  - owner: agent `abe93d522f82975c1` of claude session 05e60da0 (M2, started 2026-10-15 09:08; opus, 2 h cap ~11:08; ports 5840-5849). R1's brief: docs agent `aae67981858ddb4a6` of the same session, since 08:51 (branch `worktree-agent-aae67981858ddb4a6`, writing `docs/design/K5_R1.md`). M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
+  - branch: `worktree-agent-abe93d522f82975c1`, worktree `.claude/worktrees/agent-abe93d522f82975c1`, from `eb8436a`; last commit: `eb8436a` (none of its own yet)
+  - evidence: `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/` (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
+  - next: M2 running (the camera to `src/app/camera.ts`), beside K80 3a (whoever merges second rebases); then M3 (the frame loop, a hot path), M3/M4 export PhysState, M7a moves `__knotUndo`. The R lane (K377 q3): R1 after its brief lands (`docs/design/K5_R1.md`, ports 5980-5989), R2 and R5 after it, G3-1 after R2
+  - brief: `docs/design/K5_K6_split.md`, "Stage M2 brief" (process: "7. Stage 1 brief", "Stage 1 handoff")
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
   char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b merged (5913f4f..f7dd57e).
