@@ -2062,3 +2062,263 @@ The plan for step 2:
 - SETTLE_WALL_CAP_MS (with its comment) moves to frame_loop.ts's top;
   CAM_MAX_DT, PLUCK_WHOLE_MAX and `Ticker` are imported there and leave
   main.ts's imports.
+
+#### What moved (2c8821c, 2f37306)
+
+- **efa70f9** (WIP) wrote the re-map and the capture list above.
+- **2c8821c** moves MR14 to `src/app/frame_loop.ts` (585 lines) as
+  `createFrameLoop(deps: FrameLoopDeps, scene: SceneRef)`. main.ts goes
+  from 4612 to 4286 lines. The commit message holds the old → new line
+  map and lists every edit that is not a move. Moved (e6e1734 main.ts →
+  frame_loop.ts):
+  - 188-194 → 34-40: SETTLE_WALL_CAP_MS with its comment;
+  - 4019-4040 → 137-158: the quiescence comment, flowParity, halted,
+    renderDirty, wake, the sleep gate's comment;
+  - 4073-4452 → 160-539: the cost rings, the K24/K6 hook, sceneAnimating,
+    sceneWasAnimating, backgroundTick, the ticker callback (now the const
+    `onTick`), and tick with fabricTick, flowRender, takeDirty and
+    restFrame.
+- main.ts calls it once, right after createStamp (4052-4132 at 2c8821c),
+  then `const { wake, invalidate, frameCost, revealCost } = loop;` (4133)
+  and `loop.start();` (4134), which registers the ticker callback.
+- FrameLoopDeps (frame_loop.ts 45-94): the 37 names main() assigns once
+  (values, and the functions the loop calls: introPlaying and
+  updateCamera from the camera, freeze from the lifecycle that stays,
+  loadingTick, presettleTick, warmHoldTick, tickChase, keyStep, ...), then
+  accessors for the `let`s main.ts keeps: getters physState, settleWall0,
+  warmHoldFrom, waitCueGlyph and waitCueHead; get/set pairs snapMode,
+  pendingWin, pendingLoss and perfLine. Moved lines say `deps.<name>` for
+  those and `scene.<name>` for ps, renderer, fabric, fabricController,
+  reveal, chase and turnMino: 73 lines differ from e6e1734 only by those
+  prefixes.
+- The returned object: wake, invalidate, start, sceneAnimating, frameCost
+  and revealCost; a get/set pair for halted; getters frameCostN,
+  frameCostTotal, revealMsTotal and sceneWasAnimating. renderDirty is
+  private.
+- The retargeted sites in main.ts: loadingTick (647) and presettleTick
+  (777) write `loop.halted = true`; onMarkerSizeChange (1414) and
+  applyAccessibility (1461) call `invalidate()` (kind 3); ProbeCtx's
+  getters frameCostN, frameCostTotal, revealMsTotal and sceneWasAnimating
+  return `loop.<name>` (4227-4257), and its `invalidate` is the loop's.
+  ProbeCtx's type and createStamp's arguments are unchanged.
+- The `Ticker` type, PLUCK_WHOLE_MAX and CAM_MAX_DT left main.ts's
+  imports (only the loop used them); frame_loop.ts imports them.
+- A comment at frame_loop.ts 541-544 marks where K6 puts the frame's
+  decision (section 4.8); none of it is built.
+- **2f37306** adds `src/app/frame_loop.ts` to ten rules files' `paths:`
+  and to their rows in `docs/lore_index.md`:
+  - physics-sleep (the sleep gate's call), physics-settle (the settle
+    budget; the loop holds SETTLE_WALL_CAP_MS and drives the presettle
+    and the visible settle), physics-worker (the clock and the frame, the
+    host-seam rule for `src/app/`);
+  - gameplay-camera (the camera steps in every ticker branch),
+    gameplay-motion (K239's hand-over before each pass, flowRender's
+    rest passes), gameplay-indicators (indicators.update in every
+    branch);
+  - render-confetti (confetti.tick, a sceneAnimating term),
+    render-backgrounds (the K24/K6 hook, backgroundTick, sceneAnimating),
+    render-web-fade (the fade feeds sceneAnimating), render-shaders
+    (K307's warm-up gates in the tick).
+
+  Left out as passing mentions: gameplay-audio (setAutoGain each
+  fabricTick), gameplay-moves (setWait from fabricTick), render-markers,
+  render-explore and gameplay-fire (half-rate measurement notes),
+  render-pluck, render-gaps and render.md. No CLAUDE.md line changed.
+
+#### Checks
+
+Everything is under the main checkout's untracked
+`.claude/probes/K5/M3/`, and every path below is relative to it.
+- **tsc, tests, build** of 2c8821c's code, the one code commit (efa70f9
+  and 2f37306 touch only the doc and lore; they ran at 2f37306), under
+  the perf lock:
+  - tsc: clean (before the commit too);
+  - `npm test`: 84 files passed (1 skipped), 1177 tests passed (1
+    skipped), 108 s;
+  - `npm run build`: 5 s.
+
+  Files: `step2/` (tests.log, tsc.txt, npm_test.txt, npm_build.txt), run
+  by `tests.ps1`.
+- **Moved-code review**: `node review_moves.mjs step2 2c8821c` wrote
+  `step2/review_2c8821c.txt`. frame_loop.ts: +359 moved, +226 not.
+  main.ts: -346/+16 moved, -79/+83 not. `verify_step2.mjs` (new) then
+  places every line by number (`step2/verify_2c8821c.txt`):
+  - of the 409 moved lines, 334 are identical and 73 differ only by
+    `scene.`/`deps.`; the other two are the ticker callback's first line
+    (`app.ticker.add((ticker) => {` → `const onTick = (ticker: Ticker):
+    void => {`) and its `});` → `};`;
+  - the kept main.ts lines are identical except the 9 listed edits, and
+    base lines 2, 157 and 4604-4606 are the listed cuts;
+  - every line git leaves unmoved is one of the listed edits: 0 flagged.
+- **Free names**: `step2/globals_check.txt`. The seven names in
+  frame_loop.ts that resolve to the standard library (ArrayBuffer,
+  Float32Array, Float64Array, Math, NaN, console, performance) were
+  never main.ts locals at e6e1734, so none changed meaning.
+- **Hook inventory**: unchanged, 49 `window.__knot*` hooks set and 50
+  named at both e6e1734 and 2f37306 (`checks/hooks_set_*.txt`,
+  `checks/hooks_named_*.txt`).
+- **The browser checks** compare e6e1734 (base) with 2f37306 (ref), using
+  preview builds served by `vite preview` on 5840 and 5841, from 11:17 to
+  11:31. The perf lock was ours from 11:15 (the tests) to 11:31, and
+  `checks.log` has no `LOCK NOT OURS` line. `checks_m3.ps1` ran them
+  (phases up, probes and down), and `checks/checks.log` is its summary.
+- **diag_screenshot**, 12 s settle (`checks/diag_*.png`, `.txt`):
+  - the bare link (Daily #4, the worker host): both builds were asleep at
+    sim 5.0 s, wall 11.9 s (lag 1.4 s base, 1.5 s ref). Frame median 17.9
+    ms and p95 18.1 ms on both;
+  - `?1471kin.J&phw=0` (in-thread): neither was asleep yet at wall
+    11.9 s, as the in-thread first sleep near 19 s predicts. Sim 3.1 s
+    (base) and 3.0 s (ref), settle lag 5.2 and 5.4 s; frame median 18.1
+    and 18.2 ms, p95 36.1 ms on both;
+  - the stamps name e6e1734 and 2f37306. The consoles hold the same lines
+    in the same order: `vite preview`'s favicon 404, the build and seed
+    lines, the same PixiJS attribute warnings (9 on the bare link, 5
+    in-thread) and, on `.J`, the old-link warning that probes.md expects.
+- **Same-state input A/B**, M2's `m2_input_ab.mjs` (copied), base link
+  `?k5ab&phy=0&am=instant&fw=0&snd=none`. Per case: `checks/ab_<case>.txt`
+  and `checks/ab/`; base-vs-base controls: `checks/abctl_<case>.txt` and
+  `checks/abctl/`.
+
+| Case | Steps | ref vs base | base vs base |
+|---|---|---|---|
+| knot (`&mf=0`) | pluck, zoom, pan | 0 px | - |
+| fabric | move, zoom, pan, pluck, move | 0 px | - |
+| fabric2 | move, zoom, pan, pluck, zoomout, move | 0 px | - |
+| fog (`&xp=fog`) | move x3, zoom, pan | 438 px (moves 2, 3) | 4752 px (moves 1, 3) |
+| thread reveal (`&xp=threads`) | move x3, zoom, pan | 246020 px | 460981 px |
+
+  `checks/ab_summary.txt` (from `ab_summary.mjs`, new) lists every step's
+  pixels, views and moves. Each non-zero row's control differs by more,
+  and as in M2 I read them as capture timing, not the move:
+  - fog: ref and base differ in moves 2 and 3 (355 and 83 px, maxΔ 35
+    and 43), whose views match; in move 1 the scale differs in the sixth
+    decimal and the pixels match. The two diffs I looked at
+    (`ab/fog_2_move_diff.png`, `abctl/fog_3_move_diff.png`) are scattered
+    single pixels inside the fogged knot and in the dark at the screen's
+    left, the same in the control as in the A/B. That is the same-build
+    fog difference K390 records (K5 M1's controls: 4054-7979 px);
+  - the thread reveal: move 1 differs by 6 px (maxΔ 1). From move 2 on,
+    the two views differ at capture (after move 2, x 487.597 vs 486.492;
+    after move 3, s 89.176 vs 89.234), and the control's differ the same
+    way (after move 3, s 89.969 vs 88.950): the camera's unfinished
+    ease;
+  - fabric's last tap misses on both builds, as in M2: after the zoom its
+    choice is off-screen. fabric2's two moves land on both (node_0, then
+    mnode_154).
+
+- **The daily's front door**, `K19-K20/probe_daily.mjs front`: the same
+  on both builds, 4/14 checks ok, with M2's 10 failures (the probe's
+  stale expectations: the HUD title it reads is gone from src, and it
+  expects two old blobs to stay tokens). The one line that differs is
+  `?am=instant`'s random seed. Files: `checks/daily_front_*.txt`,
+  `checks/daily_base/`, `checks/daily_ref/`.
+- **Frame time**, `K7/stage4/k7_frames.mjs` (copied here), link
+  `?1471kin.J`, rest then a 5 s drag, three runs per build and host with
+  the build order alternating run to run. Files:
+  `checks/k5m3_<base|ref>_phw<0|1>_r<1-3>.txt`; `k7_table.mjs` (new)
+  wrote the table to `checks/k7_table.md`. Means of the three runs, with
+  the range:
+
+| | phw=0 base | phw=0 ref | change | phw=1 base | phw=1 ref | change |
+|---|---|---|---|---|---|---|
+| host | in-thread | in-thread | | worker | worker | |
+| first sleep (s) | 19.43 (19.40-19.47) | 19.21 (18.96-19.46) | -1.1% | 10.17 (10.06-10.22) | 10.04 (10.02-10.07) | -1.2% |
+| sim at sleep (s) | 5.00 (5.00-5.00) | 5.00 (5.00-5.00) | 0.0% | 5.02 (5.01-5.03) | 5.01 (4.99-5.03) | -0.2% |
+| visible to sleep: fps | 36.1 (35.8-36.5) | 36.5 (36.0-36.8) | +1.0% | 55.0 (53.9-55.6) | 55.2 (55.0-55.4) | +0.4% |
+| visible to sleep: cb p50 (ms) | 27.3 (27.1-27.4) | 27.0 (26.8-27.3) | -1.1% | 15.6 (15.4-15.7) | 15.3 (15.3-15.3) | -1.7% |
+| visible to sleep: cb minus physics p50 (ms) | 16.5 (16.3-16.7) | 16.4 (16.2-16.6) | -1.0% | 15.6 (15.4-15.7) | 15.3 (15.3-15.3) | -1.7% |
+| drag: fps | 6.87 (6.8-6.9) | 6.90 (6.9-6.9) | +0.5% | 55.2 (55.1-55.4) | 54.6 (53.3-55.3) | -1.1% |
+| drag: cb p50 (ms) | 144.0 (142.9-145.2) | 143.2 (143.0-143.3) | -0.6% | 17.1 (17.0-17.2) | 17.3 (17.1-17.7) | +1.4% |
+| drag: cb minus physics p50 (ms) | 18.3 (17.9-18.5) | 18.2 (17.9-18.4) | -0.5% | 17.1 (17.0-17.2) | 17.3 (17.1-17.7) | +1.4% |
+| errors; context lost | 0; 0 | 0; 0 | | 0; 0 | 0; 0 | |
+
+  No row moves past 5%. The largest change is 1.7%, the worker's
+  visible-to-sleep callback, where ref is the faster: it read 15.3 ms in
+  all three runs against base's 15.4-15.7 ms (cb minus physics equals cb
+  with the worker, since the stepping runs off main). On all the other
+  rows the two builds' ranges overlap. The move lands within noise, so V8's
+  inlining (section 5.1, item 4) was not examined. M2's single runs
+  agree: in-thread drag 6.9 fps at a cb of 143-144 ms, worker drag 53-55
+  fps at about 17 ms, and first sleep near 19 s in-thread and 10 s with
+  the worker.
+
+#### Left for M4 and later
+
+- **M4, the lifecycle**: startSettling, freeze, applyPhysicsMode and
+  physicsInputsChanged stay in main.ts (4010-4040 at 2c8821c), just
+  above the loop's creation. The loop and the lifecycle call each other:
+  the loop takes `freeze`, `loadingTick`, `presettleTick` and
+  `warmHoldTick` as deps, while applyPhysicsMode calls `wake()` and
+  loadingTick and presettleTick write `loop.halted`. Whichever is
+  created first takes the other's half as closures (for example
+  `freeze: () => life.freeze()`), or one of them takes the other later.
+  SETTLE_WALL_CAP_MS (frame_loop.ts 40) caps the visible re-settle that
+  startSettling begins; it can follow the lifecycle or stay with the
+  check in tick.
+- **The deps accessors**, by owner: physState, settleWall0 and
+  warmHoldFrom are the lifecycle's (M4); snapMode is the pointer
+  input's (M6); waitCueGlyph, waitCueHead, pendingWin and pendingLoss are
+  the session's (M7); perfLine is written by the load (MR7), read by the
+  stamp, and written by the loop. Each pair becomes its owner's getter or
+  method once the owner moves.
+- **The camera**: the loop takes introPlaying and updateCamera, not
+  `camera` itself, so those lines did not change. Passing `camera` is a
+  retarget left for later.
+- **ProbeCtx**: unchanged. Once R1 merges, it can take the loop (four
+  getters, `invalidate`, `wake`, `frameCost` and `revealCost` in one), for
+  which frame_loop.ts would export `type FrameLoop = ReturnType<typeof
+  createFrameLoop>`.
+- **K6**: the frame's decision goes at the comment at frame_loop.ts
+  541-544. `start()` becomes the ticker's start/stop, flowParity the rest
+  cadence, and invalidate() a ticker start.
+- **Stale prose**: rules entries that name main.ts for code that now
+  lives in frame_loop.ts. The brief allowed only `paths:` edits, so all
+  are left:
+  - gameplay-indicators.md 25: "main.ts calls indicators.update(camDt)
+    in fabricTick";
+  - gameplay-audio.md 32: "main.ts's fabricTick calls
+    `synth.setAutoGain`";
+  - render-backgrounds.md 35 and render-web-fade.md 39: "main.ts
+    sceneAnimating()";
+  - render-explore.md 373: exploreStill and exploreContrast "set by
+    main.ts each fabric tick";
+  - render-shaders.md 134-136: the background layer hidden until
+    `warmup.wave1Done` is now backgroundTick's gate (the hold of the
+    pre-settle is still main.ts's).
+- **No lore on flow's half rate**: the brief lists it as a frame topic,
+  but no rules file documents flowParity, so nothing attaches for it.
+
+#### Surprises
+
+- **The loop's `halted` is never cleared.** Its comment (frame_loop.ts
+  148) says "Cleared on regenerate", the HALTED stamp line says
+  "regenerate to reset", and 8838340 (2026-07-22), which added it, says
+  regenerating clears the halt. But `git log -S 'halted = false'` finds
+  only its own declaration (8838340, then 2c8821c's move) and the worker
+  core's separate flag (270afbc), which a build and a settle job do clear
+  (physics_worker_core.ts 479, 610). On the main thread only a reload
+  clears it. Moved as it is, since a fix would be a logic edit.
+- **The ticker callback now registers after createStamp**, because
+  `perf` and `updateStamp` exist only from there. No order changes: it is
+  the only `ticker.add` in src, Pixi's own render runs at its lower
+  priority, and main() has no `await` between the two points.
+- **Declaration order**: `loop.halted` (647, 777) and `invalidate()`
+  (1414, 1461) sit above `const loop` (4052) in the file, as `halted =
+  true` and `renderDirty = true` sat above their `let`s (4031, 4034)
+  before. Each is inside a callback that first runs from the ticker or a
+  user action, and nothing between the old and the new declaration
+  points calls one.
+- The prefixes pushed eight lines past 80 columns: frame_loop.ts 198,
+  201, 204, 299, 309, 323, 371 and 494. Lines 227 and 331 were over 80
+  already (e6e1734 4140 and 4244).
+- Of the frame lore's rules files only gameplay-camera named
+  `src/main.ts`; the others attached through their own modules' paths, so
+  step 3 mapped the brief's topics to the files that hold them.
+- Git's color-moved pairs some removals with unrelated new lines: 24 new
+  frame_loop lines (braces, blanks, invalidate's `renderDirty = true`,
+  the getters' returns) and 16 in main.ts's new block (braces). It is
+  harmless, and `verify_step2.mjs` places every line by number instead.
+- tsc was clean on the first compile of the move.
+
+Stopped with M3 done at 11:35, inside the 2 h cap (started 10:17, cap
+12:17). Nothing is pushed.
