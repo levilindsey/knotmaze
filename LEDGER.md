@@ -107,13 +107,6 @@ Next free ID: K492.
 - **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
   and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
   keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
-- **K480** · Multi-run taps (Levi 2026-10-15 ~16:28): a tap on any run within a thread-length reach
-  walks there run by run; the pulses and hover branch across short runs to the same reach. Open:
-  reach = `pulseReach`? the stop rule under the turn minotaur; undo per tap.
-- **K481** · Turns by length (Levi 2026-10-15 ~16:28): a toggle so the turn minotaur moves its speed
-  x your move's thread length and can stop mid-run; contact by thread distance through the move; a
-  telegraph mark per choice; tune on the turn sim (`.claude/probes/K80/stage3/`). The fire already
-  runs on walked length (gameplay-fire.md). Open: the telegraph look, a wait's length.
 - **K482** · Desktop panel: K467 made each row's label a focusable button whose click opens its
   help, so Tab stops twice per row. Gate the help to coarse pointers and the phone sheet?
   (docs/design/K467.md Handoff)
@@ -306,10 +299,9 @@ Next free ID: K492.
   - evidence: `.claude/probes/K466/`
   - next: find the cases at the phone viewport, then the candidates on frozen states
   - brief: `docs/design/K466.md`
-- **K479** · Taps prefer the outgoing runs (Levi 2026-10-15 ~16:28: taps meant for the next run take
-  the arrival run). `fabric_maze_renderer.ts` `edgeAt` takes the nearest sample of every choice, the
-  arrival run included, so near the junction it is a toss-up; the arrival run should win only by a
-  clear margin, and the hover must pick what a tap takes.
+- **K479** · Taps prefer the outgoing runs (Levi 2026-10-15: taps meant for the next run take the
+  arrival run): in `edgeAt` the arrival run should win only by a clear margin, and the hover must
+  pick what a tap takes.
   - owner: agent `a3a1e1ecdbd2a3f27` of claude session 05e60da0-74f1-4d1d-906d-240f8a53fd12 (sonnet, started 2026-10-15 17:03, 1 h cap ~18:03)
   - branch: `worktree-agent-a3a1e1ecdbd2a3f27`, worktree `.claude/worktrees/agent-a3a1e1ecdbd2a3f27`; last commit: `0afdff6`
   - evidence: `.claude/probes/K479/`
@@ -359,6 +351,13 @@ free slots (Levi, 2026-10-14 23:00-23:55):
   reads `c` when the worker's fetch came from the cache through the proxy. Rides K7's phone pass.
 
 Every other item below waits on the trigger it names.
+
+- **K480** · Multi-run taps (Levi 2026-10-15): a tap on any lit run within `pulseReach` walks there
+  run by run, stopping when a warning matters; pulses and hover branch to the same reach. Opus, after
+  the weekly reset and K479's merge; stage 1 briefed in `docs/design/K480.md`.
+- **K481** · Turns by length (Levi 2026-10-15): a toggle moves the turn minotaur its speed x your
+  move's length, with mid-run stops, contact by thread distance and a telegraph tick per choice; tuned
+  on the turn sim. Opus, after K480; stage 1 (model + sim) briefed in `docs/design/K481.md`.
 
 - **K345** · The hover rim stops `rimGap` (0.975 world) short of junctions;
   Levi (2026-10-14) wants it to follow the fillets. Goes in K9's G4-1 (K8
