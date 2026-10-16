@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K516.
+Next free ID: K517.
 
 ## Waiting on Levi
 
@@ -267,14 +267,6 @@ Next free ID: K516.
   - next: teach K76's reveal census `exploreCutCoverCpu` and run it on master; then the phone and Levi's link on the merged build (`docs/design/K397.md`, "Stage 3 handoff")
   - brief: `docs/design/K397.md`
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
-- **K6** · One frame loop driven by what-changed flags
-  (`docs/design/K5_K6_split.md`, 4 and 5.4): K6-1, shadow flags, after M3;
-  K6-2 (skip CPU work) and K6-3 (= K24, skip the draw) after M6.
-  - owner: nobody since 2026-10-15 16:12 (merged; agent `a859a72c41121806c` of claude session 05e60da0)
-  - branch: mainline; last commit: `926fdfe`
-  - evidence: `.claude/probes/K6/K6-1/`; K6-2's `.claude/probes/K6/K6-2/` (k509 before/after, rest and k7 rows, A/B 0 px)
-  - next: K6-3 (= K24) only: its CAMERA list shrinks to the screen-aware scale bound (the fit-ease snap was pulled into K6-2, forced by the CAMERA gate; fog A/B 20,525 px before, 0 after); `LoopReport.mode` still reads "shadow" though K6-2 gates CPU work - the rename rides K6-3's continuous mode. Inputs: `docs/design/K6_1.md`, "Open after K6-1"
-  - brief: `docs/design/K6_1.md`
 - **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
   stub, its rounded cap included (2026-10-15 13:39, `?2gozcj.MgaM`, `.claude/probes/K397/levi_1339.png`).
   With K397's truncated dots and Levi's rule that a pluck sound shows the pluck effect (`docs/design/K459.md`).
@@ -307,7 +299,7 @@ The queue (coordinator, overnight 2026-10-15/16):
 1. Overnight run 2 done (2026-10-16): K507 (7c5daa9), K502+K505 (66fe538), K499 gamepad (9a6f63d, close dde7b83), K510/M6 (c268a9b, close 8808a15), K6-2 with K509 measured 0 px (926fdfe); phone pass: K500 targetAt measured (no budget problem), K156 frames blocked as K513 (fixed 2026-10-16, see Done). Waiting-on-Levi untouched.
 2. K480 stage 2 done (2026-10-16, the light: pulses + hover branching to the reach, shader + CPU mirror; `docs/design/K480.md` Stage 2 handoff; look call K515). Next: K481 stage 2 (param/row, animation, telegraph) plus the K501 difficulty call for Levi.
 
-3. K6-3 (= K24) next; G3-1 waits on K399. Overnight residuals wait in their sections; K513 fixed the gate; the K156 frames spot check ran 2026-10-16 (A/A 65a7787, all within noise).
+3. K6-3 (= K24) done in 1654ef0 (2026-10-16; phone check K516); G3-1 waits on K399. Overnight residuals wait in their sections; K513 fixed the gate; the K156 frames spot check ran 2026-10-16 (A/A 65a7787, all within noise).
 
 
 Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
@@ -1256,6 +1248,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   ENDS; docs/design/K466.md Handoff).
 
 ## Done
+
+- **K6** · One frame loop driven by what-changed flags: K6-1 shadow flags, K6-2 skip-CPU (926fdfe), K6-3 (= K24) skip-draw/stop-ticker/30 fps rest cadence, screen-aware CAMERA scale bound, continuous `__knotLoop` + pre-load global, idle stamp refresh, diag `idle`. Done in 1654ef0 (2026-10-16; evidence `.claude/probes/K6/K6-3/`). Residual K516.
 
 - **K480** · Multi-run taps (Levi 2026-10-15): stage 2, the light - pulses and hover branch through short runs to `pulseReach` (`litArms` in route_plan.ts; `kPulseV` phases by global distance in shader + CPU mirror), and a hover lights the whole route its tap would take. Done (stage 2, this commit, 2026-10-16; stage 1 in 3b1612f; evidence `.claude/probes/K480/stage2/`). Residuals K500, look K515.
 
