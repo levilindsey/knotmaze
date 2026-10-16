@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K440.
+Next free ID: K449.
 
 ## Waiting on Levi
 
@@ -110,6 +110,9 @@ Next free ID: K440.
 - **K421** · The stalker's accuracy default (K294: 0.45) overshoots section 0 on the dailies at 80%
   and fog-4 (27.9 and 28.5% caught against 20 and 12); stage 2's dailies-only criterion would
   keep 0.25-0.3. Keep 0.45? `docs/design/K80_turns_stage3.md` ("Stage 3a handoff").
+- **K440** · Real-time fire defaults (K114 s2 item 7): fireSpeed 0.2 and fireDelay 20 (a 1.7 s head
+  start) with wider panel and link ranges (today [0.3, 0.95] and [0, 40]), or separate realtime
+  defaults? Others: Brisk 0.35/30, Easy 0.15/0, Relaxed 0.1/30. `docs/design/K114_stage2.md`.
 
 ## In progress
 
@@ -119,11 +122,11 @@ Next free ID: K440.
   1-6, 8-10; call 7: a separate spider enemy, a no-spiders setting that
   swaps its icon). Burn stage 1 merged (`src/game/fire.ts`; calls K260,
   K280, residuals K281).
-  - owner: nobody since 2026-10-15 12:31 (merged; agent `a58dfc230583f43e4` of claude session 05e60da0)
+  - owner: nobody since 2026-10-15 12:31 (stage 2 merged at cebb75e; agent `a58dfc230583f43e4` of claude session 05e60da0, worktree kept)
   - branch: mainline; last commit: `cebb75e`
-  - evidence: `.claude/probes/K114/stage2/` (in its worktree); stage 1's: main checkout `.claude/probes/K114/burn/` (`results_tuning_rebased.md`, `burn_sim.ts`, `burn_page.mjs`)
-  - next: Levi picks the realtime fire defaults and ranges; then a CPU profile of a turn stand and a realtime stand at the same burnt share decides the re-declare throttle (docs/design/K114_stage2.md, Stage 2 handoff)
-  - brief: `docs/design/K114_stage2.md`; stage 1's handoff: `docs/design/K114_burn.md`
+  - evidence: `.claude/probes/K114/stage2/` (`burn_sim_rt.ts`, `proposal.md`, `results_rt*.md`, `rt_page.mjs`, `perf_attr.ps1`, `vref_probe.mjs`, shots `out_rt*/`); stage 1's: `.claude/probes/K114/burn/` (`results_tuning_rebased.md`, `burn_sim.ts`, `burn_page.mjs`)
+  - next: K440 first (Levi: the real-time defaults and ranges), then K441's profile. Stage 3: the burn look as a shader with K290's burnt toggle; the spider follows the minotaur's controls (K174). Stage 2's residuals K442-K447, idea K448
+  - brief: `docs/design/K114_stage2.md` (Stage 2 handoff); stage 1's handoff: `docs/design/K114_burn.md`
 - **K74** · Maze design, decided (Levi, 2026-10-13;
   `docs/design/K74_maze_design.md`): every mechanism gets params whose
   neutral value turns it off. Stage 1 (long-tail dead ends) and stage 2
@@ -314,9 +317,6 @@ free slots (Levi, 2026-10-14 23:00-23:55):
 13. K326 A.
 14. K318, K336, K337.
 
-- **K408** · Hide the start marker once its thread has burnt (Levi, K383): in `fabric_maze_renderer.ts`
-  drawMarkers, gate on the burnt spans covering `walk.start`'s thread point, with the marker fade
-  and a test. Riding K114 stage 2 (launched 2026-10-15 11:01).
 - **K410** · The fire's FRONT and SMOLDER paint items into `paint_math`'s mirror and the parity
   tests, once K409 settles the look (K152 item 3; `K114_burn.md` 3b handoff).
 - **K412** · K7's worker-chunk modulepreload on a real network (measured only on localhost): a
@@ -442,6 +442,9 @@ Every other item below waits on the trigger it names.
   session's memory (claude-config `rules/sessions.md`, "Environment belongs in scripts").
 - **K368** · A ring for the ripple under High contrast (K289 e; Levi, 2026-10-15: yes):
   `HIGH_CONTRAST_OVERRIDES` (`src/ui/accessibility.ts`); the glint has little room on light threads over black (inferred, not shot; fallback a stronger glint). Small: a unit test and a screenshot.
+- **K441** · The real-time fire's frame cost (K114 s2 item 6): 0.6-1.2 ms more a frame than turn
+  (drawFire's re-declare 0.6, HUD writes 0.1, 0.5 unattributed). CPU-profile a turn and a realtime
+  stand at the same burnt share, then decide a re-declare throttle. `docs/design/K114_stage2.md`.
 
 ## Residuals (known, not fixed)
 
@@ -454,8 +457,7 @@ Every other item below waits on the trigger it names.
   (f04aa4b), the strip block, §5.1 pins (`paint_explore.test.ts`, `paint_ring_lap.test.ts`), §5.3
   and §6 sequencing, `__knotRenderer`'s move to `src/app/probe_hooks.ts` (K5 R1 brief).
 - **K417** · R lane vs the probes (K5 R1 brief): ~80 probes call the sampling helpers through the
-  renderer; probes editing `ribbon_renderer.ts` break once code moves: K76 2d and K290 3a
-  `dump_variants.ts`, `variant_build.ps1` (`g2/`, `K4/`), `K154_K169/edit_rr2.ps1`, `edit_rr3.ps1`.
+  renderer and break as R moves them; the probes that edit `ribbon_renderer.ts` are K425.
 - **K270** · After a turn-aligned catch, a lavender band shows at the
   catch site in the next frame (K80 turns stage 1; undiagnosed, probably
   a fade). `.claude/probes/K80/turns/shots/`. K80 turns stage 3.
@@ -491,7 +493,7 @@ Every other item below waits on the trigger it names.
   look); (d)-(h) small (c014a83: codec is 118-120). `docs/design/K114_burn.md` ("Stage 1 handoff").
 - **K254** · K193 s1's phone-pass residuals (`docs/design/K193.md`, "Stage 1 handoff"): (a) desktop
   `-Dry -Looks scripts/phone_pass/looks.example.json` unrun, check `looks_report.json`; (b) docked
-  landscape unverified (`-Viewport portrait`); (c) `-Phase check` accepts a phone in use.
+  landscape unverified (`-Viewport portrait`); (c) is K234.
 - **K252** · K198 s2's residuals: (a) `RANGE_EASE` is a per-frame ease (0.15), so resize and fit
   drift settle faster at higher fps; (b) the head's 0.45 s show delay rests on five blips (longest
   0.33 s): K156's next phone pass can check more. `docs/design/K198.md` ("Stage 2 handoff").
@@ -920,6 +922,19 @@ Every other item below waits on the trigger it names.
 - **K439** · The G3-0 probe hooks (g3DataState, g3TableRows, g3Expected, captureScene, restoreScene; ribbon_renderer.ts
   4924-5182 at 4afb8dc) stay on the renderer's facade through K5 R2; R5 gives them a part, e.g. `ribbon/scene_probe.ts`
   (`docs/design/K5_R2.md`, Questions 1).
+- **K442** · `src/game/maze_stats.ts` STATS: the walked and fire lead lines are false under the
+  real-time fire (K114 s2).
+- **K443** · Two panel rows labelled `clock`: K80's in Maze (turn-based | real time) and the fire's
+  in Burn race (turn | realtime). Match the wording or rename one (K114 s2).
+- **K444** · K408's start-marker fade: the gap slot moves in one frame when the fade starts, and the
+  exit marker still hides without a fade (K114 s2; `.claude/rules/render-markers.md`).
+- **K445** · K114 s2's real-time burn sim (`.claude/probes/K114/stage2/burn_sim_rt.ts`) models
+  neither pauses at forced vertices nor queued taps, and real players' junction think times are
+  unmeasured; K440's proposal rests on it.
+- **K446** · The real-time fire clock is not re-synced after a replay; unreachable today, since only
+  dailies replay and they run with the fire off (K114 s2).
+- **K447** · K114 s2's real-time fire has no hardware phone pass (shot in Chrome at 411x753 only);
+  take it in the next phone window (K411).
 
 ## Approved, to schedule (2026-10-11)
 
@@ -1103,9 +1118,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K359** · Replace the pre-settle's spent-prediction shim
   (`presettleFrame`, K7 stage 3) with an explicit "settling in the worker"
   signal from the physics host.
-- **K360** · Ledger diet pass 2 (K353's handoff): the open items still over
-  three lines (about 150), the skipped K7 and K279, Done one-liners to ~160
-  bytes; then drop `docs/ledger_diet/` (keep `scripts/ledger_diet.mjs`).
+- **K360** · Ledger diet pass 2 (K353's handoff): CC67 (b5027d8) cut the 165 long open items. Left:
+  long In progress items (`ledger.mjs lint`), Done one-liners to ~160 bytes, the "Approved" heading;
+  then drop `docs/ledger_diet/`, keep `scripts/ledger_diet.mjs`.
 - **K371** · Let the worker run ahead of main's frames in the pre-settle, so it settles through
   K307's compile freezes (K7 s4); watch its phone saturation (97% busy, lagS 1.04 s by 8 s). K7 s7's
   name build could start it (scene ready ~0.15 s in); drop that settle when `prebuild` is `differs`.
@@ -1126,9 +1141,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 - **K438** · ProbeCtx takes the frame loop itself (its four getters, `invalidate`,
   `wake`, `frameCost`, `revealCost`), with frame_loop.ts exporting `type FrameLoop =
   ReturnType<typeof createFrameLoop>` (`docs/design/K5_K6_split.md`, Stage M3 handoff).
+- **K448** · Under the real-time fire clock, the fire speed and delay rows' tooltips give a seconds
+  equivalent, e.g. the head start in s (K114 s2).
 
 ## Done
 
+- **K408** · The start marker fades out once the fire passes its thread point (K114 s2). Done in 7d29319 (2026-10-15).
 - **K430** · The underWindows step (K268 3a): when a crossing's over pass reaches vis 0.5, the under thread's junction web retracts in one frame while the gap fades in. Dropped: Levi picked the ramp (2026-10-15); K268's next stage builds it (`docs/design/K268.md`, Stage 3a handoff, item 1) (2026-10-15).
 - **K423** · Levi: dots (c), always two sized to fit; the vibration stops at the stub's solid end. Done in 2254b50 (2026-10-15).
 - **K418** · ledger_diet.mjs archives undated Done items silently. Dropped: superseded by CC65's `ledger.mjs archive` (claude-config fdbcf79), which leaves undated entries in place and warns (2026-10-15).
