@@ -241,11 +241,11 @@ Next free ID: K421.
 - **K268** · Shaped crossing gaps under thread reveal (K76; Levi, 2026-10-14):
   no gap until the over thread is seen, a dynamic gap for a stub's overlap and
   dead ends. Stages 1-2 merged (stage 2: 189b024..f799991; MAX fixed, joints fade).
-  - owner: nobody since 2026-10-15 02:42 (stage 2 done, item 4 not started; agent `a42c63c2db0401edb` of claude session d8031183; stage 2's worktree swept 2026-10-15; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept)
-  - branch: mainline; last commit: `f799991`
-  - evidence: `.claude/probes/K268/stage2/` (probes, `run_batch2.ps1` to `run_batch5.ps1`, `out/`, builds); stage 1's beside it
-  - next: stage 3: the census fixes first (`census.mjs`: judge shaped slots by S/R/F, skip rather than fail when no crossing shows both threads, a fading joint scales by vis; attribute junctions 56-58 and 161, which mismatch on master too: K76 2d ruled out the underlay, the gap gate and the fan program, so compare fan records, strip rows, then geometry, mode on and off, from `census2d.mjs`'s ATTR block), then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip); unblocked since K76 2d merged; G3-1 goes first, never beside item 4 (rec., K399)
-  - brief: `docs/design/K268.md`, "Stage 2 handoff" ("For the next stage")
+  - owner: agent `a5d9b049e72746ad2` of claude session 05e60da0 (stage 3a, started 10:02; opus, 2 h cap ~12:02; ports 5850-5859). Stage 2's agent `a42c63c2db0401edb` (session d8031183): worktree swept; stage 1's `ab65d913a3b9a3dcb` is left, locked by the live Claude process (K161); branches kept
+  - branch: `worktree-agent-a5d9b049e72746ad2`, worktree `.claude/worktrees/agent-a5d9b049e72746ad2`; last commit: `ea00de0` (the brief, on mainline)
+  - evidence: `.claude/probes/K268/stage3a/` (in the worktree until the merge); `.claude/probes/K268/stage2/` (probes, `run_batch2.ps1` to `run_batch5.ps1`, `out/`, builds); stage 1's beside it
+  - next: stage 3a running (the census fixes; junctions 56-58 and 161; the sheet probe). Then item 4 a part at a time (protect, the far-branch smooth-min, underWindows: a crop for Levi before building the clip), after G3-1 and never beside it (rec., K399)
+  - brief: `docs/design/K268.md`, "Stage 3a brief"; "Stage 2 handoff" ("For the next stage")
 - **K7** · Physics in a Web Worker with render-side interpolation (K28; Levi's
   calls K302). Stages 1-7 merged: the worker is the default (stage 6, call F6), `&phw=0` runs
   in-thread. Stage 7 (6cfb416..fdb38ac) builds the first scene from the Worker's name and
@@ -277,7 +277,7 @@ Next free ID: K421.
   with seams so G3 becomes a module swap; K6 rides it. Design: `docs/design/K5_K6_split.md`
   (calls: K377). M1 merged (baa0847..12709e5): main.ts 5709 → 4869 lines, no logic changes. M2 merged
   (cc19c2b..a9121b4): the camera to `src/app/camera.ts`, main.ts 4493 lines.
-  - owner: agent `ab73ce063da5446b5` of the same session (R1, started 09:20; opus, 2 h cap ~11:20; ports 5980-5989). R1's brief merged in 9041939 (docs agent `aae67981858ddb4a6`, worktree kept). M2's agent `abe93d522f82975c1` finished 09:52, merged 10:03, worktree kept. M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
+  - owner: agent `ab73ce063da5446b5` of the same session (R1, started 09:20; opus, 2 h cap ~11:20; ports 5980-5989). R1's brief merged in 9041939 (docs agent `aae67981858ddb4a6`, worktree kept). M2's agent `abe93d522f82975c1` finished 09:52, merged 09:56, worktree kept. M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
   - branch: R1 `worktree-agent-ab73ce063da5446b5`, worktree `.claude/worktrees/agent-ab73ce063da5446b5`, from `9041939`; last commit: `52ce2a1` (WIP); mainline `a9121b4` (M2)
   - evidence: `.claude/probes/K5/M2/`, `.claude/probes/K5/R1/` (the brief's `rr_map.cjs` and maps in `brief/`); stage 1's tools in `.claude/probes/K5/stage1/` (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
   - next: R1 (`ribbon/ribbon_shader.ts`, `ribbon/sampling.ts`) running; K80 3a rebases over M2 (asked). Then M3 (after K80 3a merges; re-map from `.claude/probes/K5/M2/anchors_f47be3b.json`, M2 handoff "Left for M3 and later") (the frame loop, a hot path), M3/M4 export PhysState, M7a moves `__knotUndo`. The R lane (K377 q3): R2 and R5 after R1, G3-1 after R2. While R1 runs, nothing else edits `ribbon_renderer.ts` (not K397's fix, K268 stage 3, K76's next stage or G3-1)
