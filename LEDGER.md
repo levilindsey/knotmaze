@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K519.
+Next free ID: K520.
 
 ## Waiting on Levi
 
@@ -264,7 +264,7 @@ Next free ID: K519.
   - owner: nobody since 2026-10-15 16:17 (merged; agent `a2806c50953dec23d` of claude session 05e60da0)
   - branch: mainline; last commit: `e0bcad8`
   - evidence: `.claude/probes/K397/stage3/`
-  - next: census taught `exploreCutCoverCpu` and run on master 2026-10-16 (`.claude/probes/K397/stage4/out/census_m2.json`): GAPS all pass, PROOF vacuous (0 qualifying px), 8 failures pattern-match the K6-3 on-demand loop ignoring direct probe mutations — port the census per K518, then the phone and Levi's link on the merged build (`docs/design/K397.md`, "Stage 3 handoff")
+  - next: K518 done (2026-10-16): census ported (continuous loop + update freeze; dots-cut PROOF PASS non-vacuous, `.claude/probes/K397/stage4/out_k518_m10c/`); remaining census failures K519. Then the phone and Levi's link on the merged build (`docs/design/K397.md`, "Stage 4 handoff (K518)")
   - brief: `docs/design/K397.md`
   - env: the phone, only if the desktop can't reproduce: `scripts/phone.ps1`, under the phone lock (`.claude/probes/agents/phone_lock_take.ps1`)
 - **K459** · A pluck at a stub stops short of its end: Levi wants the vibration on the whole solid
@@ -1035,9 +1035,9 @@ Every other item below waits on the trigger it names.
 - **K514** · Looks-phase screenshots still tile in landscape (K513 leftover): `shotViewport` captures at the emulated dpr 2.625, so while the phone sits in landscape (capture surface 2125x1017) looks sheets repeat the surface every 1017 rows and are not evidence; the frames gate's dpr-1 recheck does not cover them. Capture looks at a surface-fitting scale, stitch, or require portrait sitting for a looks phase. `.claude/probes/K513/`, lore `probes-phone.md` (K513).
 - **K516** · K6-3's phone check (Levi's question 1): in K156's next round confirm the 30 fps rest cadence's pulses read smooth on the phone, measure rest frames drawn/s on knot fw=0 and fabric defaults, and run the frame-timing probes (k147, k7_latency, K174/K114 perf, k96_cam) once in continuous mode (`__knotLoopMode` pre-load). Desktop done in 1654ef0.
 - **K517** · K385 decided by probes (K307 stage 3, 2026-10-16): (a) `--enable-features=ANGLEPerContextBlobCache` confirms the mechanism (parallel warm restart 0.803 s vs 3.02 s without); (b) late enable works flag-free (cold live page 166 presents/55.3/s, warm restart 0.806 s) — Levi's call: ship (b) in K307 stage 3 proper, file crbug (d); evidence `.claude/probes/K307/stage3/`.
-- **K518** · K397/K76 census drift after K6-3 (1654ef0): census2d's direct `gaps.upload()`/`setVis` mutations no longer redraw under the on-demand frame loop (mode-off slot clearing changes 0/353 crossings; visitAll/mode-off-again/attribution restores differ 100k–463k px on master 7c952cd), and its PROOF is vacuous (3 shaped slots, 0 qualifying px per look) — port the census to poke a frame flag (or `__knotLoop` continuous) and re-run for a real dots-cut verdict; evidence `.claude/probes/K397/stage4/out/census_m2.json`.
 - **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 3b1612f; K348's mid-move wait-tap leftover is now intentional for pointers.
 
+- **K519** · Census leftovers from K518's ported re-run (m10 recipe, master f314045; `.claude/probes/K397/stage4/out_k518_m10c/census_m10.json`, 17/29 pass): visible crossings' mode-on cut ~30-60 px smaller than mode-off (7, none exact), 3 hidden-class slots leak 1-6 px, JOINTS (2d) pixel-exact + attribution restores differ 1,633 px, MARKERS i1 (chain 5, vis 0, k 1), visitAll/mode-off-again differ 11,489 px, one shaped slot restores at 2 px - attribute (census tolerance vs product) before fixing; JOINTS (2d) also failed historically. `docs/design/K397.md`, "Stage 4 handoff (K518)".
 ## Approved, to schedule (2026-10-11)
 
 - **K22** · Dynamic resolution scaler (2x up to 3x when frame time
@@ -1253,6 +1253,8 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   ENDS; docs/design/K466.md Handoff).
 
 ## Done
+
+- **K518** · K397/K76 census ported after K6-3 (continuous `__knotLoop` + freeze of the per-frame slot re-derivation during mutation shots; stale PROOF_UNTIL default removed) and re-run on master: dots-cut PROOF PASS non-vacuous (32 shaped slots, 11,381 px, ghosts/under 0, dots p95 err 0.059). Done (probes + docs only, 2026-10-16; evidence `.claude/probes/K397/stage4/out_k518_m10c/`, `docs/design/K397.md` Stage 4 handoff). Residuals K519; phone/Levi link still owed under K397.
 
 - **K6** · One frame loop driven by what-changed flags: K6-1 shadow flags, K6-2 skip-CPU (926fdfe), K6-3 (= K24) skip-draw/stop-ticker/30 fps rest cadence, screen-aware CAMERA scale bound, continuous `__knotLoop` + pre-load global, idle stamp refresh, diag `idle`. Done in 1654ef0 (2026-10-16; evidence `.claude/probes/K6/K6-3/`). Residual K516.
 
