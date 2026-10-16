@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K418.
+Next free ID: K419.
 
 ## Waiting on Levi
 
@@ -1517,6 +1517,9 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   needs the link's params (the codec there, or the raw query for the worker to parse). K7 s7 handoff.
 - **K389** · Keep comments out of shader text (K76 2d): a comment edit in `EXPLORE_VIS_GLSL`
   changes the strip-explore program, so every returning player links it cold (K307). Move it into TS.
+- **K418** · `scripts/ledger_diet.mjs` archives an undated Done item silently (CC64: H38, H67, H70,
+  SP70) and its header's `K<n>` examples predate `--prefix`: warn, generalize. CC65's
+  `ledger.mjs archive` may supersede it (claude-config `docs/design/CC65.md`).
 
 ## Done
 
