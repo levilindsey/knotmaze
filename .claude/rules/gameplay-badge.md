@@ -70,6 +70,10 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   465..583, undo and redo 601..693, close 701..743. main.ts's
   `fitModeBadge` passes no avoid-list (HUD, banners) while the sheet is
   open, since they lie under it, so the label keeps its longest level (only
-  the free-play label was measured; a long daily or replay label grows
-  leftward from x 241 at 411 px). The peek (a slider drag on the sheet)
+  the labels grow leftward from the right edge, x 241 at 411 px and 190 at
+  360; fit() still keeps the left edge on screen. Measured, `badge_long.mjs`:
+  at 411 "Free play" 123..241, "Daily #4" 143..241 and "Daily #1 practice ·
+  not scored" 22..241, undo from 259; at 360 the practice label steps down
+  to "Daily #1 practice" 44..190, undo from 208; the replay label was not
+  run). The peek (a slider drag on the sheet)
   hides the badge with the rest of the bar. Probe: `.claude/probes/K467/sheet_probe.mjs`.
