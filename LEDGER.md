@@ -246,7 +246,7 @@ Next free ID: K513.
   - owner: nobody since 2026-10-15 15:00 (merged)
   - branch: mainline; last commit: `3166d8f` (R5 1c666ec + e53e4d9, M5 3166d8f)
   - evidence: M4's `.claude/probes/K5/M4/` and R2's `.claude/probes/K5/R2/`; M3's `.claude/probes/K5/M3/` (`checks/`, `frames/`, `step2/`, `k7_results.jsonl` and `k7_table.mjs`, `checks_m3.ps1`, `remap_e6e1734.md`), `.claude/probes/K5/R2/brief/` (the R2 brief's maps), `.claude/probes/K5/R1/` (`checks/`, `checks2/`; `checks3.ps1`, the fog B-vs-B control, never run; R2's inventory `parts.md`, `probe_surface.md`, `surface.json`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/`; the design's region maps in `.claude/probes/K5/design/`
-  - next: M6 (K510, gates K6-2); G3-1 once Levi answers K399; then R3 (`reveal_fx.ts`, `paint_state.ts`). M4 leftovers K506.
+  - next: K6-2 (after M6, c268a9b); G3-1 once Levi answers K399; then R3 (`reveal_fx.ts`, `paint_state.ts`). M4 leftovers K506.
   - brief: `docs/design/K5_K6_split.md` (Stage M4 brief); the R lane `docs/design/K5_R2.md`
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
@@ -305,7 +305,7 @@ The queue (coordinator, overnight 2026-10-15/16):
 1. Overnight done: K480 stage 1 (3b1612f), K481 stage 1 (48fc9ee), K5 R5 (1c666ec + e53e4d9), K5 M5 (3166d8f), K463 and K471 (fb54535); K6-2 blocked on M6 (K510). Phone-gated and Waiting-on-Levi items were out of scope tonight.
 2. Next: K480 stage 2 (the light: pulses + hover branching to the reach, shader + CPU mirror; brief from `docs/design/K480.md` Stage 1 handoff),
    then K481 stage 2 (param/row, animation, telegraph) plus the K501 difficulty call; K499 (gamepad) is a separate later stage.
-3. K5 M6 (K510) gates K6-2 (incl. K509's sleep-trip measurement);
+3. K6-2 next (M6 landed c268a9b; incl. K509's sleep-trip measurement);
    G3-1 waits on K399. Overnight residuals K499-K511 wait in their sections.
 
 Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
@@ -1037,7 +1037,6 @@ Every other item below waits on the trigger it names.
 - **K512** · The cross-build threads round trip's 0 px expectation only holds across builds whose threads defaults match: K466 (2aea912) added `rve`/`rvg` with new defaults, so c22de79-vs-post-K466 pairings differ by 43,385 px unless the query pins the legacy look (`&rve=under&rvg=soft`, 0 px both ways, K507). Future prescribed pairings spanning 2aea912 must pin both, or expect the frontier diff.
 - **K508** · K5 R2's checks_r2.ps1/checks_threads.ps1 hardcode the deleted worktree agent-a695f82540244625a and cannot rerun as-is; K463's repo-relative k463_checks.ps1 supersedes them for these two checks.
 - **K509** · K6-1 question 2's sleep-trip miss still unmeasured (deferred to K6-2): on knot fw=0 with the worker, shoot after the first sleep, invalidate(), shoot again, diff - K6-2 should run it before gating GEOM (docs/design/K6_1.md, Stage K471 handoff).
-- **K510** · K5 M6 (pointer input, auto audio, keys; docs/design/K5_K6_split.md 5.2) is the next main-lane extraction and gates K6-2; sized at ~1150 lines across three modules on the hot drag path, it needs its own 2h opus stage (re-map, moved-code review, scripted-input pixel A/B, k7_frames rest+drag on both hosts) before K6-2's GEOM sleep-trip measurement and dt-to-tickFireFx work can start.
 - **K511** · K334/K348 note (2026-10-15): K334's pointer queueing is superseded by Levi's correction in 3b1612f; K348's mid-move wait-tap leftover is now intentional for pointers.
 
 ## Approved, to schedule (2026-10-11)
@@ -1256,6 +1255,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K510** · K5 M6: pointer input, auto audio and keys moved to `src/app/input_pointer.ts`, `auto_audio.ts`, `input_keys.ts` (pure move; tsc clean, 1333 tests, scripted-input A/B knot/fabric 0 px, fog/threads within same-build controls, k7_frames rest+drag within noise on both hosts). Done in c268a9b (2026-10-16).
 - **K499** · Gamepad support: d-pad + left stick (deadzone, eight sectors) feed the key picker as held keys, held-at-arrival like keys; A/confirm is a tap-class step (no mid-move queue). Pure mapping `src/ui/gamepad.ts`, lore GAMEPAD in `gameplay-moves.md`; unprobed on real hardware. Done in 9a6f63d (2026-10-16).
 - **K502** · K5 R5 same-state pixel proof (48fc9ee vs 1c666ec, perf lock, &phw=0): knot 0 px, fabric 0 px, fog 258 px vs 283 px same-build control, threads load-state 0 px (post-move divergence 572,889 px below its 604,864 px control - follow-camera non-repeatability, K428); rebuildFillets(true) on fabric 4.23 -> 4.30 ms mean (+1.6%), median 4.355 = 4.355 ms. No regression. Done (probes only, 2026-10-16; evidence `.claude/probes/K5/K502K505/`).
 - **K505** · K5 M5 same-state pixel proof (e53e4d9 vs 3166d8f, perf lock, scripted input): knot 0 px, fabric 0 px, fog 43 px vs 8,555 px control, threads load-state 0 px (post-move divergence in the same-build control's range); hook inventory identical (50 `__knot*` hooks, renderer prototype/own surface, 153 params, panel labels). No regression. Done (probes only, 2026-10-16; evidence `.claude/probes/K5/K502K505/`).
