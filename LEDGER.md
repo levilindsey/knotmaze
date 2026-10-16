@@ -1520,15 +1520,13 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   needs the link's params (the codec there, or the raw query for the worker to parse). K7 s7 handoff.
 - **K389** · Keep comments out of shader text (K76 2d): a comment edit in `EXPLORE_VIS_GLSL`
   changes the strip-explore program, so every returning player links it cold (K307). Move it into TS.
-- **K418** · `scripts/ledger_diet.mjs` archives an undated Done item silently (CC64: H38, H67, H70,
-  SP70) and its header's `K<n>` examples predate `--prefix`: warn, generalize. CC65's
-  `ledger.mjs archive` may supersede it (claude-config `docs/design/CC65.md`).
 - **K419** · `computeFitTarget` reads `scene.ps` through the SceneRef getter three times per particle
   (`src/app/camera.ts` 64-66); hoist `const ps = scene.ps` at a stage that allows logic edits. No cost
   measured (K5 M2 handoff).
 
 ## Done
 
+- **K418** · ledger_diet.mjs archives undated Done items silently. Dropped: superseded by CC65's `ledger.mjs archive` (claude-config fdbcf79), which leaves undated entries in place and warns (2026-10-15).
 - **K294** · Per-model minotaur defaults: guard sight 4, accuracy 0.3; stalker accuracy 0.45; the hunter keeps 2 and 0.3 (stalker call K421). Done in c2ebabc (2026-10-15).
 - **K293** · K80 turns stage 2's residuals: (a), (c), (e) fixed in 8df33a2; (b), (g), (h) needed no code; (d), (f) kept by design and written into lore. Done in e6e1734 (2026-10-15).
 - **K311** · Pixi's aGap/aGapId/aUV warnings at load. Dropped: duplicate of K212 (2026-10-15).
