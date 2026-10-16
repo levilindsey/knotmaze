@@ -1847,3 +1847,110 @@ Everything is under the main checkout's untracked
   The brief allowed only the `paths:` edit, so I left both.
 
 Stopped with M2 done, inside the 2 h cap (start 09:05).
+
+## Stage M3 brief (2026-10-15, the coordinator)
+
+**Stage:** K5 M3, the frame loop to `src/app/frame_loop.ts` (section
+5.2's M3 row). One stage: stop after M3 even with time left; M4 is its
+own brief.
+
+**Start:** `Get-Date` first; your cap is **2 hours** from then. Your
+branch must hold the master commit the launch prompt names (K80 turns 3a
+merged) or later; if it does not, `git merge --ff-only master`.
+
+**Read first:** sections 1.2, 2.1, 2.2 (the `frame_loop.ts` row and the
+three kinds of capture) and 5.1; "Stage 1 handoff" ("Capture
+classification", "The SceneRef", "What is left", "Surprises"); "Stage M2
+handoff" ("The camera's capture list" as the pattern, "Left for M3 and
+later", "Surprises"). Section 4 is K6's design: read 4.8 so the module
+leaves K6 a place for the frame's decision, and build none of it. Do not
+read the whole of main.ts; read the region you move and the call sites
+the re-map lists.
+
+**Setup and process:** as section 7 ("Setup"), with these changes:
+- probes and results in the main checkout's untracked
+  `C:\Users\lsl\Repositories\knotmaze\.claude\probes\K5\M3\`; stage 1's
+  tools (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`)
+  are in `..\stage1\` and M2's anchors in `..\M2\`: copy, don't edit
+  them there;
+- ports **5840-5849**;
+- the perf lock covers tests, builds and every timing:
+  `pwsh C:\Users\lsl\Repositories\knotmaze\.claude\probes\K268\lock_take.ps1 -Owner 'K5 M3' -What '<what>'`,
+  then `lock_release.ps1 -Owner 'K5 M3'`. Wait for it inside one
+  blocking command. No phone.
+
+**Scope, one commit per step:**
+1. **Re-map** main.ts at your base with `remap.ts` and
+   `..\M2\anchors_f47be3b.json` (MR14 was 3916-4335 at f47be3b; K80 3a
+   has moved lines since). List MR14's declarations, the `let`s it owns
+   (renderDirty, halted, flowParity and any others the re-map finds),
+   every other region that reads or writes them (each
+   `renderDirty = true` site), and every name the loop calls. Write the
+   capture list under "### Stage M3 handoff" at the end of this doc;
+   commit (WIP).
+2. **Move the loop** to `src/app/frame_loop.ts` as
+   `createFrameLoop(deps: FrameLoopDeps, scene: SceneRef)` (section
+   2.2's row): flowParity, halted, renderDirty, wake, sceneAnimating,
+   backgroundTick, the ticker callback, and tick with its helpers
+   (fabricTick, flowRender, restFrame). It exports `invalidate()`,
+   `wake()`, `start()` and `sceneAnimating()` (until K6).
+   - Each `renderDirty = true` elsewhere becomes `invalidate()` (kind
+     3).
+   - A `let` the loop owns that another region reads goes through a
+     getter.
+   - A `let` another region owns that the loop writes (physState, whose
+     owner is M4's lifecycle) comes in as a closure or a get/set pair, as
+     M2 did.
+   - The camera can come in as `camera` itself ("Left for M3").
+
+   The move is pure: no logic edits. If one seems needed, stop and write
+   it into the handoff.
+3. **Lore:** add `src/app/frame_loop.ts` to the `paths:` of each rules
+   file whose lore is about the frame (the ticker, the sleep gate, the
+   settle budget, flow's half rate, the rest frame; `docs/lore_index.md`
+   shows which ones name `src/main.ts`), and update their rows in
+   `docs/lore_index.md`. Change no CLAUDE.md line.
+
+**Files you own:** `src/main.ts` (MR14 and the call sites the move
+retargets), `src/app/frame_loop.ts`, the `createStamp` and
+`installProbeHooks` arguments main.ts passes, the `paths:` lines of step
+3, `docs/lore_index.md`, and this doc's "Stage M3 handoff". K5 R1 edits
+`src/app/probe_hooks.ts`: unless R1 is already in master, keep
+`ProbeCtx`'s type and retarget only the arguments. A type change then
+waits for R1's merge and goes into the handoff.
+
+**Running beside you:** the launch prompt names them. Stay out of
+`src/physics/**`, `src/render/**`, `tweakpane_panel.ts`, `scripts/**`,
+`LEDGER.md`, and every test. Whoever merges second rebases; a hunk
+another item adds to MR14 is ported by hand into `frame_loop.ts`
+(section 6).
+
+**Checks** (section 5.1):
+- tsc, `npm test` and `npm run build` at every code commit (keep each
+  commit tsc-clean);
+- the moved-code review per commit, with the old → new map in each
+  message;
+- the hook inventory, unchanged;
+- `diag_screenshot.mjs` and `.claude/probes/K7/stage4/k7_frames.mjs` on
+  `phw=0` and `phw=1`;
+- the same-state pixel A/B with the scripted input (a tap on a choice, a
+  move, a pinch zoom, a pan, a pluck, each captured once the view holds
+  still) on knot, fabric, fog and thread-reveal links, expecting 0 px;
+- **the frame-time check: this stage moves a hot path.**
+  `k7_frames.mjs`, rest plus a fixed wall-time drag, on master and on the
+  branch, `phw=0` and `phw=1`, at least three runs each, under the perf
+  lock. A pure move lands within noise. Over 5% on any row, look at V8's
+  inlining before going on (section 5.1, item 4) and report what you
+  find.
+
+**Helpers:** none.
+
+**Stop rule:** stop when M3 is done or at the 2 h cap, whichever comes
+first. `Get-Date` at the start and at each milestone. Commit WIP at
+each step, broken or not; never push. A compaction is not a stop: after
+one, re-read this brief, `git log -5` and your handoff before going on.
+At the stop, finish "### Stage M3 handoff" (the capture list, what moved
+with SHAs, the frame-time table, what is left for M4 and later, the
+checks with paths, surprises) and report the commits, the checks, a
+`Ledger items` list and K5's handle fields (owner, branch and last
+commit, evidence, next, brief).
