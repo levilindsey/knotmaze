@@ -113,31 +113,26 @@ import {
   EXPLORE_ITEM_FRONT,
   EXPLORE_ITEM_SMOLDER,
   EXPLORE_ITEM_VIS,
-  chainWhole,
   charItem,
   charRange,
   frontItem,
   frontRange,
   smolderItem,
-  classifyExploreCut,
-  exploreArcMap,
   visItem,
   visRange,
 } from "./explore_glsl";
 import type { ExploreCut } from "./explore_glsl";
 import { pieceVis } from "../game/explore_view";
-import type { BurntSpan, ExploreBurn, ExplorePiece } from "../game/explore_view";
+import type { ExploreBurn, ExplorePiece } from "../game/explore_view";
 import type { PaintRoute } from "./junction_routes";
 import {
   STRIP_STATS,
   STRIP_W,
-  setStripExplore,
   setStripRows,
   stripTable,
   stripTexture,
 } from "./arm_strip";
 import {
-  GAP_UPLOAD_STATS,
   GAP_SLOTS,
   GapMaskTable,
 } from "./gap_mask";
@@ -158,7 +153,7 @@ import {
   writeChainTexels,
 } from "./samp_table";
 import { EMERGENT_MAX, EMERGENT_ROW } from "../physics/particle_system";
-import { bindGap, sectionShader, sectionShaderExplore } from "./ribbon/ribbon_shader";
+import { bindGap, sectionShader } from "./ribbon/ribbon_shader";
 import * as sampling from "./ribbon/sampling";
 import type { PassNeighbors } from "./ribbon/sampling";
 import {
@@ -169,6 +164,7 @@ import {
   JOINT_CLEAR_REACH_SCALE,
   MARKER_SLOTS,
 } from "./ribbon/crossing_gaps";
+import { EXPLORE_JOINT_MIN, ExploreGaps } from "./ribbon/explore_gaps";
 
 // K8 G3-0: the probe capture (captureScene / restoreScene): plain JSON, typed
 // arrays as base64.
@@ -488,69 +484,9 @@ const RAINBOW_SWELL_END =
   PAINT_CONST.RAINBOW_HOLD +
   PAINT_CONST.RAINBOW_FADE * smoothInv(1 - PAINT_CONST.RAINBOW_SWELL_MIN_P);
 
-function samePieces(a: readonly ExplorePiece[], b: readonly ExplorePiece[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    const p = a[i];
-    const q = b[i];
-    if (
-      p.chain !== q.chain ||
-      p.c0 !== q.c0 ||
-      p.c1 !== q.c1 ||
-      p.f0 !== q.f0 ||
-      p.f1 !== q.f1 ||
-      p.tip0 !== q.tip0 ||
-      p.tip1 !== q.tip1
-    ) {
-      return false;
-    }
-  }
-  return true;
-}
-
-// K290: whether two burn declarations are the same (null = no burn).
-function sameBurn(a: ExploreBurn | null, b: ExploreBurn | null): boolean {
-  if (a === b) return true;
-  if (!a || !b) return false;
-  const g = a.gate === b.gate || (!!a.gate && !!b.gate && samePieces(a.gate, b.gate));
-  if (!g) return false;
-  if (!sameSpans(a.char, b.char) || !sameSpans(a.smolder ?? null, b.smolder ?? null)) return false;
-  const f = a.fronts ?? null;
-  const h = b.fronts ?? null;
-  if (f === h) return true;
-  if (!f || !h || f.length !== h.length) return false;
-  for (let i = 0; i < f.length; i++) {
-    const p = f[i];
-    const q = h[i];
-    if (p.chain !== q.chain || p.c !== q.c || p.dir !== q.dir || p.kind !== q.kind) return false;
-  }
-  return true;
-}
-
-function sameSpans(a: BurntSpan[] | null, b: BurntSpan[] | null): boolean {
-  if (a === b) return true;
-  if (!a || !b || a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    const p = a[i];
-    const q = b[i];
-    if (p.chain !== q.chain || p.b0 !== q.b0 || p.b1 !== q.b1) return false;
-  }
-  return true;
-}
-
 // Dense enough that tight bends near crossings (low slack) stay resolved.
 const SAMPLE_SPACING = 0.09;
 const MIN_SAMPLES = 48;
-// K76 2b, the thread reveal's marker gate: a marker disc's gap shows once
-// its thread point is this visible (the exit marker's own rule;
-// applyExploreGaps).
-const EXPLORE_MARKER_VIS = 0.98;
-// K268 stage 2 (K275), the joint gate: a junction's web and fans emit no
-// record once an arm's visibility at its slot is at most this, nor a free
-// tip's cap once its thread's is at the tip (exploreJointShown). Above it
-// they draw, faded with their threads by the arm strips' premultiplied
-// alpha (arm_strip.ts withExploreStrip, junction_field.ts withExploreField).
-const EXPLORE_JOINT_MIN = 0.002;
 // K76 stage 2c: hidden thread is empty space for input below this
 // visibility (pickThread, exploreShownAt: taps, hover, plucks, the tug's
 // grab).
@@ -575,7 +511,7 @@ export class RibbonRenderer {
   root: Container;
 
   /** @internal ribbon */ ps: ParticleSystem;
-  private style: RibbonStyle;
+  /** @internal ribbon */ style: RibbonStyle;
   /** @internal ribbon */ fills: RibbonMesh[] = [];
   // Knot mode: each chain's constant section color (the old per-strand
   // tint, now an aColor through the section shader).
@@ -763,7 +699,7 @@ export class RibbonRenderer {
   private flowScratch = new Float32Array(2);
   private flowNoise: (x: number, y: number, z: number) => number;
   private axisScratch = new Float32Array(2);
-  private junctionArms: Array<{
+  /** @internal ribbon */ junctionArms: Array<{
     particles: number[];
     arms: Array<{ chain: number; slot: number; dir: 1 | -1 }>;
   }> = [];
@@ -779,7 +715,7 @@ export class RibbonRenderer {
   // Free (unanchored, unfused) open-chain tips: dead-end thread ends. They
   // get rounded caps, drawn with the fillets and colored from the live
   // paint.
-  private freeTips: Array<{ chain: number; atEnd: boolean }> = [];
+  /** @internal ribbon */ freeTips: Array<{ chain: number; atEnd: boolean }> = [];
   // Fused (tucked) tips get the same disc treatment: it rounds the tucked
   // cap and covers its corner ears and the hairline sliver between the cap
   // and the host's edge. The disc lies mostly ON the host's face, so it
@@ -806,7 +742,7 @@ export class RibbonRenderer {
   // arm's gap punching its web) is now the fan's own gap mask (see
   // junction masks in rebuildFillets).
   private filletTopLayer: Container | null = null;
-  private filletTopMesh: TriFanMesh | null = null;
+  /** @internal ribbon */ filletTopMesh: TriFanMesh | null = null;
   // MARKER DISC OCCLUDERS (start/exit dots): each owns a gap slot on its
   // thread whose "over polyline" is the disc center and whose margin is
   // CONCENTRIC - the thread is hidden inside radius (disc + gap).
@@ -896,10 +832,10 @@ export class RibbonRenderer {
   // (probes: 0 off, 1 = ctrl, 2 = arc, 3 / 4 = the fans' per-arm views,
   // 5 = the ribbons' paint terms - see SECTION_FRAG) and the probe
   // triangle mesh (lazily built by probeTris).
-  private paintScene: PaintScene;
+  /** @internal ribbon */ paintScene: PaintScene;
   paintDebug = 0;
   private probeMesh: ProbeTriMesh | null = null;
-  private filletMesh: TriFanMesh | null = null;
+  /** @internal ribbon */ filletMesh: TriFanMesh | null = null;
   // G2.2 SECTION RUNS (core/section_colors; evaluated by the vertex shader):
   // the noise scheme's field, junctionBlend (lattice units; a uniform), and
   // every chain's control positions at construction - the noise scheme's
@@ -1434,8 +1370,8 @@ export class RibbonRenderer {
     sampling.sampleAt(samples, arc, out, offset);
   }
 
-  // Lives in ribbon/sampling.ts (K5 R1); the class and the probes call it here.
-  private arcAt(samples: SplineSamples, ctrl: number): number {
+  // Lives in ribbon/sampling.ts (K5 R1); since K5 R2 only probes call it.
+  /** @internal ribbon */ arcAt(samples: SplineSamples, ctrl: number): number {
     return sampling.arcAt(samples, ctrl);
   }
 
@@ -2979,7 +2915,7 @@ export class RibbonRenderer {
       const at = req.ctrl ?? this.ctrlAtArc(samples, arc);
       sc = this.exploreShownSpan(req.chain, at, sc, len, closed);
       if (!sc) return false;
-      sc = this.exploreSolidSpan(req.chain, at, sc, len, closed);
+      sc = this.explore.exploreSolidSpan(req.chain, at, sc, len, closed);
       if (!sc || !(sc[1] > sc[0])) return false;
       fret = true;
     }
@@ -3482,7 +3418,7 @@ export class RibbonRenderer {
   // range, caps over their arc radius at the chain's tightest slot (doubled:
   // the knot keeps moving under a static declaration), every range widened
   // by a slot for the edge coverage ramp. Only changed texels upload.
-  private writePaintItems(): void {
+  /** @internal ribbon */ writePaintItems(): void {
     const items: number[] = [];
     const n = this.ps.chains.length;
     const slots: Array<Array<number[] | undefined> | null> = new Array(n).fill(null);
@@ -3638,214 +3574,61 @@ export class RibbonRenderer {
   // The visible pieces (null = the mode is off), per chain, and the chains
   // they cover whole (KPAINT texel `chain` .x).
   /** @internal ribbon */ explorePieces: ExplorePiece[] | null = null;
-  private readonly exploreByChain = new Map<number, ExplorePiece[]>();
-  private exploreWhole = new Uint8Array(0);
+  /** @internal ribbon */ readonly exploreByChain = new Map<number, ExplorePiece[]>();
+  /** @internal ribbon */ exploreWhole = new Uint8Array(0);
   // K290: the fire's part of the declaration, and its gate's pieces per
   // chain (null: no burn, or the reveal off).
-  private exploreBurn: ExploreBurn | null = null;
-  private exploreGateByChain: Map<number, ExplorePiece[]> | null = null;
+  /** @internal ribbon */ exploreBurn: ExploreBurn | null = null;
   // K76 2b: update() must re-run (needsFxRender) because the declaration
   // changed what update() derives from it: a crossing's over thread crossed
   // vis 0.5 (its under window and pluck footprint) or a marker's gap turned
   // (the fabric redraws its markers in the same pass). Growth frames that
   // only move fades set nothing; update() clears it.
   exploreUpdatePending = false;
-  // Bumped by every declaration change; the joint gate follows it.
-  private exploreRev = 0;
-  // K76 stage 2d (question 9): High contrast. uKExplore.x is 2 instead of 1
-  // while the mode is on, and the dots look draws its dots at full strength
-  // in pure white (kExploreLook, kExDot).
-  private exploreContrast = false;
-
-  // High contrast for the reveal's end look (the fabric forwards a11y's
-  // setting each tick). Takes effect at the next draw: uKExplore is a
-  // uniform, no update() needed.
-  setExploreContrast(on: boolean): void {
-    this.exploreContrast = on;
-    const E = knotUniformValues().uKExplore!;
-    if (E[0] > 0.5) E[0] = on ? 2 : 1;
+  // THE THREAD REVEAL'S GAPS (K5 R2): the gap gate, the joint gate and the
+  // declaration's bookkeeping (exploreGateByChain, exploreRev) live in
+  // ribbon/explore_gaps.ts; the delegations, rebuildFillets and pluck() call
+  // it.
+  private readonly explore = new ExploreGaps(this);
+  // exploreContrast lives in ribbon/explore_gaps.ts (K5 R2) with its
+  // comment; probes read it here.
+  /** @internal ribbon */ get exploreContrast(): boolean {
+    return this.explore.exploreContrast;
+  }
+  /** @internal ribbon */ set exploreContrast(v: boolean) {
+    this.explore.exploreContrast = v;
   }
 
-  // Declare the visible pieces (null = the mode off: every chain draws on
-  // master's program again). With the mode on, the ribbons draw with the
-  // explore program, a chain with no piece is not drawn at all, and the
-  // pieces ride the paint declaration as VIS items. look = an
-  // EXPLORE_LOOKS index, breath = the glow look's strength.
-  // K290 (burn stage 3a): `burn` = the fire's part (explore_view
-  // ExploreBurn; null = none): under "gone" the pieces already lack the
-  // burnt thread and `burn.gate` (the reveal's own pieces) decides which
-  // junctions hide; under "char" `burn.char` lists the stretches to darken.
+  // setExploreContrast: ribbon/explore_gaps.ts (K5 R2); the fabric calls it.
+  setExploreContrast(on: boolean): void {
+    this.explore.setExploreContrast(on);
+  }
+
+  // setExplore: ribbon/explore_gaps.ts (K5 R2); the fabric, restoreScene and
+  // the probes call it here.
   setExplore(
     pieces: ExplorePiece[] | null,
     look = 0,
     breath = 1,
     burn: ExploreBurn | null = null
   ): void {
-    const E = knotUniformValues().uKExplore!;
-    E[0] = pieces ? (this.exploreContrast ? 2 : 1) : 0;
-    E[1] = look;
-    E[2] = breath;
-    E[3] = this.style.threadWidth;
-    if (!pieces) burn = null;
-    const prev = this.explorePieces;
-    if (
-      (prev === pieces || (prev && pieces && samePieces(prev, pieces))) &&
-      sameBurn(this.exploreBurn, burn)
-    ) {
-      return;
-    }
-    this.explorePieces = pieces;
-    this.exploreBurn = burn;
-    this.exploreByChain.clear();
-    for (const p of pieces ?? []) {
-      let l = this.exploreByChain.get(p.chain);
-      if (!l) {
-        l = [];
-        this.exploreByChain.set(p.chain, l);
-      }
-      l.push(p);
-    }
-    this.exploreGateByChain = null;
-    if (burn?.gate) {
-      const g = new Map<number, ExplorePiece[]>();
-      for (const p of burn.gate) {
-        let l = g.get(p.chain);
-        if (!l) g.set(p.chain, (l = []));
-        l.push(p);
-      }
-      this.exploreGateByChain = g;
-    }
-    const n = this.ps.chains.length;
-    const whole = new Uint8Array(n);
-    for (const [c, l] of this.exploreByChain) {
-      if (c < n && chainWhole(l, this.ps.chains[c].length, this.ps.chainBreakAfter[c] < 0)) {
-        whole[c] = 1;
-      }
-    }
-    this.exploreWhole = whole;
-    let charred: Uint8Array | null = null;
-    const fronts = burn?.fronts ?? [];
-    const smolder = burn?.smolder ?? [];
-    if ((burn?.char && burn.char.length > 0) || fronts.length > 0 || smolder.length > 0) {
-      charred = new Uint8Array(n);
-      for (const s of burn?.char ?? []) if (s.chain < n && s.b1 > s.b0) charred[s.chain] = 1;
-      // K290 stage 3b: kCharAt scans these chains for FRONT and SMOLDER too.
-      for (const f of fronts) if (f.chain < n) charred[f.chain] = 1;
-      for (const s of smolder) if (s.chain < n && s.b1 > s.b0) charred[s.chain] = 1;
-    }
-    const sh = pieces ? sectionShaderExplore() : sectionShader();
-    for (let c = 0; c < this.fills.length; c++) {
-      const m = this.fills[c].mesh;
-      if (m.shader !== sh) m.shader = sh;
-      m.renderable = !pieces || this.exploreByChain.has(c);
-    }
-    // K268 stage 2 (K275): the arm strips write the visibility as
-    // premultiplied alpha, and the fans read them so (a web fades with its
-    // arms, a cap with its thread). The fans and the still plucks also take
-    // the shaped crossing cut (a cut fades with its over thread).
-    setStripExplore(!!pieces);
-    this.plucks.setExplore(!!pieces);
-    const fsh = pieces ? junctionShaderExplore() : junctionShader();
-    if (this.filletMesh) this.filletMesh.mesh.shader = fsh;
-    if (this.filletTopMesh) this.filletTopMesh.mesh.shader = fsh;
-    this.paintScene.setExploreFlags(pieces ? whole : null, charred);
-    if (this.style.paletteMode) this.writePaintItems();
-    this.exploreRev++;
-    // The gap gate follows at once (the slots keep their last solve).
-    if (this.applyExploreGaps()) this.gaps.upload();
+    this.explore.setExplore(pieces, look, breath, burn);
   }
 
-  // K76 2b, THE GAP GATE (K76_reveal_mode.md 2.3, 2.5): a crossing's gap is
-  // as strong as its over thread is visible at the over pass (the slot's
-  // strength times vis; vis 0 rejects the slot in texel 0, for ribbons and
-  // fans alike), so a hidden over thread cuts nothing and a visible
-  // crossing keeps its gap exactly. A marker disc's gap shows only once its
-  // thread point is fully visible (EXPLORE_MARKER_VIS, the exit marker's own
-  // rule). With the mode off every slot is restored as solved. Flags
-  // exploreUpdatePending when update()'s bookkeeping no longer matches
-  // (see there). Returns whether the slot table changed.
-  //
-  // K268 stage 1, THE SHAPED CUT (docs/design/K268.md): with the mode on, a
-  // slot whose footprint holds one or two piece ends gets a visibility
-  // profile instead (GapMaskTable.setShape): the explore program cuts each
-  // under fragment by the over thread's visibility at its projection, so a
-  // fade's gap fades along the over thread exactly as the thread does.
-  // Hidden, solid and fallback slots keep 2b's scalar (setVis); a shaped
-  // slot's texel 1.w still carries it for the fans and the still pluck.
-  private applyExploreGaps(): boolean {
-    const on = this.explorePieces !== null;
-    let changed = false;
-    const st = this.exploreGapCounts;
-    st.hidden = st.solid = st.shaped = st.fallback = st.approx = st.mismatch = 0;
-    for (let s = 0; s < this.markerBase; s++) {
-      if (!this.slotLive[s]) continue;
-      const v = on ? this.exploreVisAt(this.slotOverChain[s], this.slotOverCtrl[s]) : 1;
-      const cut = on ? this.exploreCutAt(s, v) : null;
-      if (cut && cut.shape) {
-        if (this.gaps.setShape(s, cut.shape)) changed = true;
-      } else {
-        if (this.gaps.setShape(s, null)) changed = true;
-        if (this.gaps.setVis(s, v)) changed = true;
-      }
-      if (cut) {
-        st[cut.kind]++;
-        if (cut.approx) st.approx++;
-        if ((cut.kind === "hidden" && v !== 0) || (cut.kind === "solid" && v !== 1)) {
-          st.mismatch++;
-        }
-      }
-      if ((on && v <= 0.5 ? 1 : 0) !== this.slotExploreHid[s]) {
-        this.exploreUpdatePending = true;
-      }
-    }
-    for (let m = 0; m < MARKER_SLOTS; m++) {
-      const occ = this.markerOccluders[m];
-      const k =
-        on && occ && this.exploreVisAt(occ.chain, occ.ctrl) < EXPLORE_MARKER_VIS ? 0 : 1;
-      if (this.gaps.setVis(this.markerBase + m, k)) {
-        changed = true;
-        this.exploreUpdatePending = true;
-      }
-    }
-    return changed;
+  // applyExploreGaps: ribbon/explore_gaps.ts (K5 R2). update() and
+  // setExplore call it here, so a probe's patch sees every gate.
+  /** @internal ribbon */ applyExploreGaps(): boolean {
+    return this.explore.applyExploreGaps();
   }
 
-  // K268: how the over thread's visibility runs across slot s's footprint
-  // (the arc range its polyline spans), given 2b's scalar v at the over
-  // pass (the shaped slot's texel 1.w).
-  private exploreCutAt(s: number, v: number): ExploreCut {
-    const ch = this.slotOverChain[s];
-    const samples = this.chainSamples[ch];
-    if (ch < 0 || !samples || this.exploreWhole[ch]) {
-      return classifyExploreCut([], true, 0, false, 0, 0, 0, () => 0, v);
-    }
-    const oc = this.slotOverCtrl[s];
-    const n = this.ps.chains[ch].length;
-    const closed = this.ps.chainBreakAfter[ch] < 0;
-    const [aLo, aHi] = this.gaps.polyRange(s);
-    const arc = exploreArcMap(
-      samples.controlArcLengths,
-      samples.totalLength,
-      closed,
-      oc,
-      this.arcAt(samples, oc)
-    );
-    const pieces = this.exploreByChain.get(ch) ?? [];
-    return classifyExploreCut(pieces, false, n, closed, oc, aLo, aHi, arc, v);
+  // exploreCutAt: ribbon/explore_gaps.ts (K5 R2); applyExploreGaps and the
+  // probes call it here.
+  /** @internal ribbon */ exploreCutAt(s: number, v: number): ExploreCut {
+    return this.explore.exploreCutAt(s, v);
   }
 
-  // K268: what the last gap gate made of the live crossing slots (counts by
-  // kind; mismatch = a hidden slot with vis != 0 or a solid one with vis !=
-  // 1 at the over pass, which should not happen) and the slot table's
-  // upload totals (probes).
-  private readonly exploreGapCounts = {
-    hidden: 0,
-    solid: 0,
-    shaped: 0,
-    fallback: 0,
-    approx: 0,
-    mismatch: 0,
-  };
+  // exploreGapState: ribbon/explore_gaps.ts (K5 R2); the fabric's probe view
+  // reads it here.
   exploreGapState(): {
     hidden: number;
     solid: number;
@@ -3857,16 +3640,7 @@ export class RibbonRenderer {
     uploadCalls: number;
     shapedSlots: number[];
   } {
-    const shapedSlots: number[] = [];
-    for (let s = 0; s < this.markerBase; s++) {
-      if (this.slotLive[s] && this.gaps.isShaped(s)) shapedSlots.push(s);
-    }
-    return {
-      ...this.exploreGapCounts,
-      uploadBytes: GAP_UPLOAD_STATS.bytes,
-      uploadCalls: GAP_UPLOAD_STATS.calls,
-      shapedSlots,
-    };
+    return this.explore.exploreGapState();
   }
 
   // G3-0 probes: the data plane's state and its upload accounting
@@ -4129,104 +3903,26 @@ export class RibbonRenderer {
     this.update();
   }
 
-  // K76 2b, THE JOINT GATE (K76_reveal_mode.md 2.4): which joints the
-  // thread reveal hides - junction webs and fans (by junctionArms index),
-  // free-tip caps (by freeTips index) - recomputed when the declaration
-  // changes, and the key rebuildFillets adds to its own (the fans rebuild
-  // when the hidden SET changes, not on growth frames). Since K268 stage 2
-  // (K275) the gate is no longer binary: a junction hides once any arm's
-  // visibility at its slot is at most EXPLORE_JOINT_MIN, a free tip's cap
-  // once its thread's is at the tip, and whatever draws fades with its
-  // threads through the arm strips' premultiplied alpha. In the model's
-  // states the hidden set is 2b's: a visited junction's arms are solid
-  // through its web domain (at least 2.3 half-widths, at most half the
-  // run), and a stub fades out INTO an unvisited one (vis 0 at its slot).
-  private exploreJointRev = -1;
-  private exploreHideJn: Uint8Array | null = null;
-  private exploreHideFree: Uint8Array | null = null;
-  private exploreJointKey = "";
-  private syncExploreJoints(): void {
-    if (this.exploreJointRev === this.exploreRev) return;
-    this.exploreJointRev = this.exploreRev;
-    if (!this.explorePieces) {
-      this.exploreHideJn = null;
-      this.exploreHideFree = null;
-      this.exploreJointKey = "";
-      return;
-    }
-    const hideJn = new Uint8Array(this.junctionArms.length);
-    const hideFree = new Uint8Array(this.freeTips.length);
-    const parts: string[] = [];
-    for (let jn = 0; jn < this.junctionArms.length; jn++) {
-      if (!this.exploreJointShown(jn)) {
-        hideJn[jn] = 1;
-        parts.push("j" + jn);
-      }
-    }
-    for (let i = 0; i < this.freeTips.length; i++) {
-      const tip = this.freeTips[i];
-      const n = this.ps.chains[tip.chain].length;
-      if (this.exploreVisAt(tip.chain, tip.atEnd ? n - 1 : 0) <= EXPLORE_JOINT_MIN) {
-        hideFree[i] = 1;
-        parts.push("t" + i);
-      }
-    }
-    this.exploreHideJn = hideJn;
-    this.exploreHideFree = hideFree;
-    this.exploreJointKey = "x" + parts.join(",");
+  // The joint gate's hidden sets: ribbon/explore_gaps.ts (K5 R2) computes
+  // them (THE JOINT GATE); rebuildFillets reads them here.
+  /** @internal ribbon */ exploreHideJn: Uint8Array | null = null;
+  /** @internal ribbon */ exploreHideFree: Uint8Array | null = null;
+
+  // exploreJointShown: ribbon/explore_gaps.ts (K5 R2); syncExploreJoints
+  // and the probes call it here.
+  /** @internal ribbon */ exploreJointShown(jn: number): boolean {
+    return this.explore.exploreJointShown(jn);
   }
 
-  // The joint gate's part of the fillet key ("" with the mode off).
-  private exploreJointsKey(): string {
-    this.syncExploreJoints();
-    return this.exploreJointKey;
+  // exploreGateVisAt: ribbon/explore_gaps.ts (K5 R2); exploreJointShown and
+  // the probes call it here.
+  /** @internal ribbon */ exploreGateVisAt(chain: number, ctrl: number): number {
+    return this.explore.exploreGateVisAt(chain, ctrl);
   }
 
-  // Whether a junction draws under the reveal (the joint gate): every arm
-  // visible past EXPLORE_JOINT_MIN at its slot. An unvisited junction, whose
-  // stubs fade out into it, hides; a drawn web fades with its arms.
-  // K290 (burn stage 3a): under a burn the reveal's own pieces (the gate)
-  // apply that rule, and the declared pieces (which lack the burnt thread)
-  // hide a junction only when every arm is gone; otherwise the web draws
-  // and a burnt arm's lobe fades out with its strip (the joint fade).
-  // Without a burn the two are the same pieces: the rule above, exactly.
-  private exploreJointShown(jn: number): boolean {
-    let any = false;
-    for (const a of this.junctionArms[jn].arms) {
-      const n = this.ps.chains[a.chain].length;
-      const closed = this.ps.chainBreakAfter[a.chain] < 0;
-      const c = closed ? a.slot : Math.max(0, Math.min(n - 1, a.slot));
-      if (this.exploreGateVisAt(a.chain, c) <= EXPLORE_JOINT_MIN) return false;
-      if (this.exploreVisAt(a.chain, c) > EXPLORE_JOINT_MIN) any = true;
-    }
-    return any || this.junctionArms[jn].arms.length === 0;
-  }
-
-  // K290: the reveal's own visibility at a chain point (exploreVisAt with
-  // no burn; 1 with a burn and the reveal off).
-  private exploreGateVisAt(chain: number, ctrl: number): number {
-    if (!this.exploreBurn) return this.exploreVisAt(chain, ctrl);
-    const g = this.exploreGateByChain;
-    if (!g) return 1;
-    const l = g.get(chain);
-    if (!l) return 0;
-    const n = this.ps.chains[chain].length;
-    const closed = this.ps.chainBreakAfter[chain] < 0;
-    let best = 0;
-    for (const p of l) best = Math.max(best, pieceVis(p, ctrl, n, closed));
-    return best;
-  }
-
-  // Probe view of the joint gate: hidden junctionArms / freeTips indices
-  // (empty with the mode off).
+  // exploreJointState: ribbon/explore_gaps.ts (K5 R2); probes read it here.
   exploreJointState(): { junctions: number[]; freeTips: number[] } {
-    this.syncExploreJoints();
-    const pick = (a: Uint8Array | null): number[] => {
-      const out: number[] = [];
-      if (a) a.forEach((v, i) => v && out.push(i));
-      return out;
-    };
-    return { junctions: pick(this.exploreHideJn), freeTips: pick(this.exploreHideFree) };
+    return this.explore.exploreJointState();
   }
 
   get exploreOn(): boolean {
@@ -4256,10 +3952,8 @@ export class RibbonRenderer {
     return this.exploreVisAt(chain, ctrl) >= EXPLORE_PICK_VIS;
   }
 
-  // K76 stage 2c: the shown stretch (unwrapped ctrls, found in 0.25 ctrl
-  // steps) around a chain ctrl, inside `lim` (a pluck unit's span; else
-  // half a loop each way, or the open chain); null when the point itself
-  // is hidden. A pluck's unit is clipped to it.
+  // exploreShownSpan: ribbon/explore_gaps.ts (K5 R2); pluck() and probes
+  // call it here.
   private exploreShownSpan(
     chain: number,
     ctrl: number,
@@ -4267,88 +3961,7 @@ export class RibbonRenderer {
     len: number,
     closed: boolean
   ): [number, number] | null {
-    const STEP = 0.25;
-    let u = ctrl;
-    let lo0: number;
-    let hi0: number;
-    if (lim) {
-      [lo0, hi0] = lim;
-      if (closed && u < lo0) u += len;
-      u = Math.max(lo0, Math.min(hi0, u));
-    } else if (closed) {
-      lo0 = u - len / 2;
-      hi0 = u + len / 2;
-    } else {
-      lo0 = 0;
-      hi0 = len - 1;
-    }
-    const at = (c: number): boolean =>
-      this.exploreShownAt(chain, closed ? ((c % len) + len) % len : Math.max(0, Math.min(len - 1, c)));
-    if (!at(u)) return null;
-    let lo = u;
-    while (lo > lo0) {
-      const n = Math.max(lo0, lo - STEP);
-      if (!at(n)) break;
-      lo = n;
-    }
-    let hi = u;
-    while (hi < hi0) {
-      const n = Math.min(hi0, hi + STEP);
-      if (!at(n)) break;
-      hi = n;
-    }
-    return [lo, hi];
-  }
-
-  // K397: the solid part (unwrapped ctrls, in `shown`'s frame) of a shown
-  // stretch (exploreShownSpan's) nearest a chain ctrl: the pieces' solid
-  // parts inside it, the one holding the ctrl or else the nearest, grown
-  // through any that meet it. Null when none lies inside (only a fade shows).
-  private exploreSolidSpan(
-    chain: number,
-    ctrl: number,
-    shown: [number, number],
-    len: number,
-    closed: boolean
-  ): [number, number] | null {
-    const l = this.exploreByChain.get(chain);
-    if (!l) return null;
-    const [s0, s1] = shown;
-    const mid = 0.5 * (s0 + s1);
-    let u = ctrl;
-    if (closed) u += len * Math.round((mid - u) / len);
-    const iv: Array<[number, number]> = [];
-    for (const p of l) {
-      const base = closed ? len * Math.round((mid - 0.5 * (p.c0 + p.c1)) / len) : 0;
-      for (const k of closed ? [-1, 0, 1] : [0]) {
-        const a = Math.max(s0, p.c0 + base + k * len);
-        const b = Math.min(s1, p.c1 + base + k * len);
-        if (b >= a) iv.push([a, b]);
-      }
-    }
-    if (iv.length === 0) return null;
-    let lo = 0;
-    let hi = 0;
-    let bd = Infinity;
-    for (const [a, b] of iv) {
-      const d = Math.max(a - u, u - b, 0);
-      if (d < bd) {
-        bd = d;
-        lo = a;
-        hi = b;
-      }
-    }
-    for (let grew = true; grew; ) {
-      grew = false;
-      for (const [a, b] of iv) {
-        if (a <= hi + 1e-3 && b >= lo - 1e-3 && (a < lo || b > hi)) {
-          lo = Math.min(lo, a);
-          hi = Math.max(hi, b);
-          grew = true;
-        }
-      }
-    }
-    return [lo, hi];
+    return this.explore.exploreShownSpan(chain, ctrl, lim, len, closed);
   }
 
   // Texels the last paint declaration change uploaded (probes).
@@ -4869,7 +4482,7 @@ export class RibbonRenderer {
       this.fadeLength +
       "|" +
       this.routeKey +
-      this.exploreJointsKey();
+      this.explore.exploreJointsKey();
     // A reveal moves the joint gate times (their speed extrapolation) every
     // frame; the FX fades themselves animate on the GPU from the record's
     // J1 times (G2.1), so they need no rebuild.
