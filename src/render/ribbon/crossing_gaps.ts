@@ -18,6 +18,10 @@
 // keep one-line delegations there, which the class and the probes call;
 // smoothMin, protect, gapMode and gapOverflow are accessors onto these
 // (docs/design/K5_K6_split.md 2.3; render-ribbon.md, THE PARTS).
+// Added since the move (not in c22de79): JOINT_PAIR_REACH and isJointPair
+// below EMERGENT_POOL, the skipJointPairs toggle (a façade accessor too)
+// and its chainLen / chainClosed readers, and renderEmergent's joint skip
+// (K397 stage 3).
 //
 //   REVEAL_CROSSING_MIN            465        destructured from PAINT_CONST
 //   GATE_LEAD                      477-480    the reveal gate's look-ahead
@@ -134,6 +138,46 @@ export const CUT_BIAS = 0.03;
 // Sized for taut knots: at slack ~0 dozens of real emergent crossings can
 // coexist, and a starved pool renders some overlaps gap-less.
 export const EMERGENT_POOL = 64;
+
+// A FUSED JOINT IS NOT A CROSSING (K397 stage 3). A tucked tip's end
+// particle is fused to its host's, so the tip's last segment and the
+// host's next one share an endpoint, and the physics' emergent collector
+// (a proper intersection, sin > 0.25, no junction exclusion) finds an
+// "emergent crossing" right at the tuck. Its slot cut the under thread
+// around the over one's footprint: stub over host left a dark round-ended
+// ring inside the host, cut square at the host's edge, with host color on
+// both sides (Levi's knuckle U, levi_0801); host over stub left a dark
+// band across the stub's root past the cap cover's reach (stage 1's
+// node_12 sliver). The joint's own covers (the cap cover, the seal disc,
+// the fans) own that overlap, so renderEmergent gives no slot to a pair
+// whose two passes both lie within JOINT_PAIR_REACH ctrl of one fused
+// junction (junctionArcCtrls). Physics keeps the pair.
+export const JOINT_PAIR_REACH = 2;
+
+export function isJointPair(
+  a: { chain: number; ctrl: number },
+  b: { chain: number; ctrl: number },
+  joints: ReadonlyMap<number, ReadonlyArray<{ ctrl: number; jn: number }>>,
+  chainLen: (chain: number) => number,
+  closed: (chain: number) => boolean
+): boolean {
+  if (a.chain === b.chain) return false;
+  const ja = joints.get(a.chain);
+  const jb = joints.get(b.chain);
+  if (!ja || !jb) return false;
+  const near = (chain: number, ctrl: number, at: number): boolean => {
+    let d = Math.abs(ctrl - at);
+    if (closed(chain)) d = Math.min(d, chainLen(chain) - d);
+    return d < JOINT_PAIR_REACH;
+  };
+  for (const x of ja) {
+    if (!near(a.chain, a.ctrl, x.ctrl)) continue;
+    for (const y of jb) {
+      if (y.jn === x.jn && near(b.chain, b.ctrl, y.ctrl)) return true;
+    }
+  }
+  return false;
+}
 // Gap slots for marker discs (start/exit dots).
 export const MARKER_SLOTS = 4;
 
@@ -172,6 +216,12 @@ export class CrossingGaps {
   smoothMin = true;
   // The gap slots' protect intervals (computeGapSlot); off = A/B probes.
   protect = true;
+  // The emergent pool skips a fused joint's own pairs (isJointPair, K397
+  // stage 3); off = A/B probes (master's slots at the tuck points).
+  skipJointPairs = true;
+  private readonly chainLen = (c: number): number => this.r.ps.chains[c].length;
+  private readonly chainClosed = (c: number): boolean =>
+    this.r.ps.chainBreakAfter[c] < 0;
   gapMode: "arc" | "perp" = "perp";
   // Windows dropped because a sample already carried GAP_SLOTS slots
   // (diagnostic; should stay 0).
@@ -993,6 +1043,20 @@ export class CrossingGaps {
     const fxNow = knotUniformValues().uKFx[2];
     for (const em of this.r.ps.emergentCrossings) {
       if (poolUsed >= EMERGENT_POOL) break;
+      // A fused joint's own pair is not a crossing (isJointPair): no slot,
+      // and no gate either.
+      if (
+        this.skipJointPairs &&
+        isJointPair(
+          em.over,
+          em.under,
+          this.r.junctionArcCtrls,
+          this.chainLen,
+          this.chainClosed
+        )
+      ) {
+        continue;
+      }
       // REVEAL + FX: the registered crossings' gate - and since G2.1 the
       // same fade-in (the show time travels with the slot, so a pooled,
       // unstably indexed slot needs no per-crossing clock).

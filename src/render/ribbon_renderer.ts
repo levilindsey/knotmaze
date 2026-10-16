@@ -609,6 +609,14 @@ export class RibbonRenderer {
   set gapOverflow(v: number) {
     this.crossing.gapOverflow = v;
   }
+  // The emergent pool's fused-joint skip (crossing_gaps.ts isJointPair,
+  // K397 stage 3); false = master's slots at tuck points (A/B probes).
+  get skipJointPairs(): boolean {
+    return this.crossing.skipJointPairs;
+  }
+  set skipJointPairs(v: boolean) {
+    this.crossing.skipJointPairs = v;
+  }
   // Per-chain UNDER-GAP windows, rebuilt every update() from the live
   // crossing solve (emergent crossings included): flat triplets
   // [centerArc, extNeg, extPos] along the UNDER chain - where its
