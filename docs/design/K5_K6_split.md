@@ -416,6 +416,23 @@ is no `solve()` (Q6): update()'s gap pass interleaves the reveal gate
 (R3's state) with computeGapSlot, so R2's seam is the part's surface as it
 landed, and the GapSource `solve()` comes from R3 or G3-1.
 
+Where things went (R5, 2026-10-15): `joinery.ts` took cpuChainMaterial,
+writeStripRow, cpuStripAt, cpuJunctionField, colorAtArc, armCtrlSlope,
+sectionAtArc and `rebuildFillets` whole (no phase refactor, as below),
+the FILLET/DISC/TIP constants (FILLET_REACH_PER_HALF exported; the
+façade's getter for crossing_gaps and its rimGap/pluckNodes read it) and
+the fields only they use. `normArc` went to `sampling.ts` (pure, callers
+in both). A name probes use keeps a façade delegation (rebuildFillets;
+cpuStripAt, which cpuJunctionField calls through the instance;
+colorAtArc), and tipDiscScale, fusedTips, filletLayer, filletTopLayer,
+fieldProfLen and fieldProbe are façade accessors onto the part. Stayed
+on the façade: filletMesh and filletTopMesh (the explore part and the
+probes read them), geomRev, routeKey, routesByJn, recBaseByJn, fullJn
+and paintTmp (shared scene state). The G3-0 probe hooks stay on the
+façade too (R2 Q1 left them for R5; they read reveal and paint state
+that R3/R4 have not homed yet, so R5 does not home them either). G4-1
+adds its JointPass beside this file; G4-2 deletes it.
+
 `rebuildFillets` moves **as one method**, with no phase refactor: G4-2
 deletes it, and a refactor would be the riskiest edit in the split for
 code with the shortest future. Splitting it into phase functions is
@@ -2847,3 +2864,38 @@ and every path below is relative to it.
 
 Stopped with M4 done at 14:19, inside the 2 h cap (started 12:40, cap
 14:40). Nothing is pushed.
+
+### Stage R5 handoff (2026-10-15)
+
+Agent K5 R5 on master 48fc9ee, direct to master (coordinator's brief).
+Items: joinery.ts extracted as specified in 2.3/5.3; K397 stage 3 and
+K459 were already merged on the moved code and ride along verbatim.
+
+- Commits: 1c666ec the move (ribbon_renderer.ts, ribbon/joinery.ts,
+  ribbon/sampling.ts); the lore/scan commit after it.
+- Line map (48fc9ee): constants 358-432 + ERASE_WIDTH_PAD 495-497,
+  fields 557-559/586-588/713/731-756/803/816-817/864-916, methods
+  cpuChainMaterial 4203-4250, writeStripRow 4251-4278, cpuStripAt
+  4280-4307, cpuJunctionField 4309-4529, colorAtArc 4542-4559,
+  armCtrlSlope 4561-4578, sectionAtArc 4580-4591, rebuildFillets
+  4593-6125 into joinery.ts (2162 lines); facade 6133 -> 4135 lines.
+  normArc 434-439 -> sampling.ts.
+- Calls: rebuildFillets/cpuStripAt/colorAtArc keep facade delegations
+  (cpuJunctionField calls cpuStripAt through the instance, R2 Q3);
+  tipDiscScale, fusedTips, filletLayer, filletTopLayer, fieldProfLen,
+  fieldProbe are facade accessors; filletMesh/filletTopMesh, geomRev,
+  routeKey, routesByJn, recBaseByJn, fullJn, paintTmp stay on the
+  facade (@internal); the G3-0 hooks stay (no R3/R4 home yet).
+- Checks: mechanical undo 0 differences on all 26 blocks + normArc;
+  npx tsc --noEmit clean; npm test 92 files / 1320 tests passed
+  (byte_identity golden and the paint parity suites included);
+  npm run build exit 0. No shader text moved, so no warm-up check;
+  no same-state pixel A/B or perf-lock timing ran in this stage
+  (coordinator to file as residual if wanted; R1/R2 recipe applies,
+  rebuildFillets(true) timing is the hot path).
+- Ledger items: (a) R5 pixel A/B + rebuildFillets timing under the
+  perf lock not run; (b) the G3-0 probe hooks still need a home once
+  R3/R4 land; (c) K425 variant_build -Subst naming ribbon_renderer.ts
+  for joinery code must name ribbon/joinery.ts.
+- Handle: owner K5 R5 agent; branch master; next G4-1 (JointPass
+  beside joinery.ts), R3/R4 still outstanding in the R lane order.

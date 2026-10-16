@@ -67,7 +67,7 @@ src/
     explore_view.ts       # K76 pure: the thread reveal's visibility pieces and frontiers
   render/
     ribbon_renderer.ts    # PixiJS ribbon meshes
-    ribbon/               # K5: the renderer's parts (ribbon_shader, sampling, crossing_gaps, explore_gaps); headers map each file
+    ribbon/               # K5: the renderer's parts (ribbon_shader, sampling, crossing_gaps, explore_gaps, joinery); headers map each file
     ribbon_mesh.ts        # Triangle strip extrusion
     junction_field.ts     # GPU junction field: records + fan shader
     junction_routes.ts    # K81: route bands - which arms the path joins, the band's corner
