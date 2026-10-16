@@ -388,7 +388,13 @@ gameplay-links.md's EXPLORATION PARAMS.
   shown and its label "Tap to bring it into view" is untrue there. The
   follow camera's tap does zoom out (s 31.6 to 26.9 in 0.7 s, held 2.6 s)
   but the exit was still off screen at every sample, 0 frames on screen
-  (2gozcj). A decision for Levi (a toast as under fog, a camera that
+  (2gozcj). PIXEL A/B of the marker itself (the exit is never on screen
+  AND unseen at 411x753): `k83_ab.mjs` at 2600x1600 on `&gs=4` (the exit
+  is on screen, unseen), master against this build: default 6355 px, all
+  inside the exit's footprint (max 0.5 world from its center), 0 px at
+  the start and the head; `&rvx=0` 0 px
+  (`.claude/probes/K465/ab/big_gs4_*`; crops in `out/`). A decision for
+  Levi (a toast as under fog, a camera that
   includes the exit, or accepting it); K465 left the cameras alone. What
   still holds it (`finishHold`): the intro's appearance
   reveal (`revealMulAtCtrl` < 0.98: "exit unrevealed"), and an exit
