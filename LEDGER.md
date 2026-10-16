@@ -296,14 +296,6 @@ Next free ID: K482.
   - evidence: `.claude/probes/K465/`
   - next: build items 1-5 of the brief (the revealFinish param, its gate and row, the phone checks)
   - brief: `docs/design/K465.md`
-- **K467** · Mobile row help: show each row's tooltip text on touch (Levi 2026-10-15 ~15:58).
-  Proposed: tap the row's label to expand the text inline under the row, an (i) mark on labels that
-  have help; not long press. One stage with K468; brief `docs/design/K467.md`.
-  - owner: agent `a7753559d48a4536a` of claude session 05e60da0-74f1-4d1d-906d-240f8a53fd12 (sonnet, started 2026-10-15 16:13, 1 h cap ~17:13)
-  - branch: `worktree-agent-a7753559d48a4536a`, worktree `.claude/worktrees/agent-a7753559d48a4536a`; last commit: `803fbe9`
-  - evidence: `.claude/probes/K467/`
-  - next: build items 1-5 of the brief: the K468 sheet first, then the row help, the peek, the checks and the lore
-  - brief: `docs/design/K467.md`
 - **K468** · Settings menu full screen on mobile (Levi 2026-10-15 ~15:58): a top bar with close,
   undo and redo; Android back closes it; phones in landscape too. One stage with K467; brief
   `docs/design/K467.md`.
@@ -1246,6 +1238,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K467** · Mobile row help: show each row's tooltip text on touch (Levi 2026-10-15 ~15:58). Done in 2c066d4 (2026-10-15).
 - **K448** · Real-time fire tooltips give seconds: the delay its head start (20 is about 1.7 s, 40 about 3.3 s), the speed its units a second (K440). Done in bb40ae2 (2026-10-15).
 - **K440** · Real-time fire defaults: real time plays its own pair, 0.2 / 20 (`fsr`, `fdr`); turn keeps 0.75 / 0; speed floor 0.1. Done in bb40ae2 (2026-10-15).
 - **K395** · Pluck blur seam and heart pinch at a kink loop's tip; the phone check passed on live 8f81faf. Done in cd62db6 (2026-10-15).
