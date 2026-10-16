@@ -19,7 +19,7 @@ one line, `- **K<n>** · <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K416.
+Next free ID: K418.
 
 ## Waiting on Levi
 
@@ -276,11 +276,11 @@ Next free ID: K416.
 - **K5** · Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines,
   with seams so G3 becomes a module swap; K6 rides it. Design: `docs/design/K5_K6_split.md`
   (calls: K377). M1 merged (baa0847..12709e5): main.ts 5709 → 4869 lines, no logic changes.
-  - owner: agent `abe93d522f82975c1` of claude session 05e60da0 (M2, started 2026-10-15 09:06; opus, 2 h cap ~11:06; ports 5840-5849). R1's brief: docs agent `aae67981858ddb4a6` of the same session, since 08:51 (branch `worktree-agent-aae67981858ddb4a6`, writing `docs/design/K5_R1.md`). M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
-  - branch: `worktree-agent-abe93d522f82975c1`, worktree `.claude/worktrees/agent-abe93d522f82975c1`, from `eb8436a`; last commit: `eb8436a` (none of its own yet)
-  - evidence: `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/` (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
-  - next: M2 running (the camera to `src/app/camera.ts`), beside K80 3a (whoever merges second rebases); then M3 (the frame loop, a hot path), M3/M4 export PhysState, M7a moves `__knotUndo`. The R lane (K377 q3): R1 after its brief lands (`docs/design/K5_R1.md`, ports 5980-5989), R2 and R5 after it, G3-1 after R2
-  - brief: `docs/design/K5_K6_split.md`, "Stage M2 brief" (process: "7. Stage 1 brief", "Stage 1 handoff")
+  - owner: agent `abe93d522f82975c1` of claude session 05e60da0 (M2, started 2026-10-15 09:06; opus, 2 h cap ~11:06; ports 5840-5849); agent `ab73ce063da5446b5` of the same session (R1, started 09:20; opus, 2 h cap ~11:20; ports 5980-5989). R1's brief merged in 9041939 (docs agent `aae67981858ddb4a6`, worktree kept). M1's agent `a871cd9d98d4f1bf0` (session d8031183): worktree swept 2026-10-15, branch kept
+  - branch: M2 `worktree-agent-abe93d522f82975c1`, worktree `.claude/worktrees/agent-abe93d522f82975c1`, from `eb8436a`; R1 `worktree-agent-ab73ce063da5446b5`, worktree `.claude/worktrees/agent-ab73ce063da5446b5`, from `9041939`; last commits: their bases (none of their own yet)
+  - evidence: `.claude/probes/K5/M2/`, `.claude/probes/K5/R1/` (the brief's `rr_map.cjs` and maps in `brief/`); stage 1's tools in `.claude/probes/K5/stage1/` (`remap.ts`, `checks.ps1`, `ab_compare.mjs`, `diff_regions.mjs`, `anchors_c49f63f.json`); the design's region maps in `.claude/probes/K5/design/`
+  - next: M2 (the camera to `src/app/camera.ts`) and R1 (`ribbon/ribbon_shader.ts`, `ribbon/sampling.ts`) running; whoever of M2 and K80 3a merges second rebases. Then M3 (the frame loop, a hot path), M3/M4 export PhysState, M7a moves `__knotUndo`. The R lane (K377 q3): R2 and R5 after R1, G3-1 after R2. While R1 runs, nothing else edits `ribbon_renderer.ts` (not K397's fix, K268 stage 3, K76's next stage or G3-1)
+  - brief: M2 `docs/design/K5_K6_split.md`, "Stage M2 brief" (process: "7. Stage 1 brief", "Stage 1 handoff"); R1 `docs/design/K5_R1.md`
 - **K290** · Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
   char (CHAR items in the explore programs). Stage 3a merged (b83d1b1..ef92a6a); 3b merged (5913f4f..f7dd57e).
@@ -596,6 +596,16 @@ Every other item below waits on the trigger it names.
   never triggers (K7 s7 handoff). Add a waiter line, or drop the rule; claude-config CC62.
 - **K414** · Since K7 s7's modulepreload, a `phw=0` page downloads the worker chunk it never runs
   (90 KB raw, beside the 1.0 MB main chunk).
+- **K416** · `docs/design/K5_K6_split.md` is stale beyond §2.3 (R1 updates its table): §1.3's
+  line ranges are from f04aa4b; the strip block gained `sectionProgram`, `sameBurn`, `sameSpans`;
+  §5.1 misses pins (PROGRAM_SITES/RIBBON, `paint_explore.test.ts` reading the source,
+  `paint_ring_lap.test.ts`'s non-recursive scan); the sequencing text (§5.3, §6) is stale;
+  `__knotRenderer` now lives in `src/app/probe_hooks.ts` (K5 R1 brief).
+- **K417** · The R lane vs the probes: about 80 probe files call the sampling helpers through the
+  renderer (renderCtrl 30, paintArcAt 18, sampleAtSafe 17, sampleAt 15), so R1's façade forwarders
+  stay while those probes live; probes that read or edit `ribbon_renderer.ts` by path break once
+  code moves (K76 2d and K290 3a `dump_variants.ts`, `variant_build.ps1` in `g2/` and `K4/`,
+  `K154_K169/edit_rr2.ps1`, `edit_rr3.ps1`). Fix each when it next runs (K5 R1 brief).
 - **K270** · After a turn-aligned catch, a lavender band shows at the
   catch site in the next frame (K80 turns stage 1; undiagnosed, probably
   a fade). `.claude/probes/K80/turns/shots/`. K80 turns stage 3.
