@@ -476,7 +476,8 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   expression) in the page before the census, to flip a toggle.
 - K6-1 (2026-10-15), THE FRAME LOOP'S FLAGS (`render-loop.md`):
   `__knotLoop()` returns the flag ledger's report since the last reset:
-  `mode` ("shadow"), `frames`, `now` and `last` (the open and the last
+  `mode` ("ondemand" since K6-3; "continuous" when asked), `stopped`
+  (K6-3: the ticker is halted), `frames`, `now` and `last` (the open and the last
   closed frame's need, as flag names), `halted`, `flags` (per flag:
   `frames` set, `sole` = frames it was the only visual flag, `pushes`),
   `empty` and `emptyRuns` {count, longest, current} (frames with no
@@ -487,7 +488,12 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   the root moved with CAMERA, LOAD and PHYS clear; `legacyOnly` /
   `flagsOnly`: the old sceneAnimating() against sceneActive;
   `stepUnflagged`) and `recent` / `recentPush` (the last 240 frames'
-  masks). `__knotLoop({reset: true})` zeroes it. `{track: true}` arms the
+  masks). `__knotLoop({reset: true})` zeroes it. K6-3: `{continuous: true}`
+  restores the every-frame loop (probes that wait for or time frames use
+  it, or set `window.__knotLoopMode = "continuous"` with
+  evaluateOnNewDocument before load); an idle on-demand page draws
+  nothing, and diag_screenshot reports `frames.idle: true` there instead
+  of a throttled frame rate. `{track: true}` arms the
   TRACKER: after Pixi's render in the same rAF it reads the whole
   framebuffer (`gl.readPixels`) and counts the pixels that differ from
   the last frame's, plus a MutationObserver's DOM changes, and the report

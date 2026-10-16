@@ -10,6 +10,8 @@ import {
   RING,
   flagNames,
   createLoopFlags,
+  ambientOnly,
+  hasWork,
   type FrameObservation,
 } from "../../src/app/loop_flags";
 
@@ -106,6 +108,34 @@ describe("loop flags: empty runs and restarts", () => {
     const f = createLoopFlags();
     for (let i = 0; i < 5; i++) f.endFrame(0, QUIET);
     expect(f.report().emptyRuns).toEqual({ count: 1, longest: 5, current: 5 });
+  });
+});
+
+describe("loop flags: K6-3 mode, wake hook and cadence helpers", () => {
+  it("ambientOnly is visual-and-all-ambient; hasWork counts AUDIO", () => {
+    expect(ambientOnly(Flag.FLOW | Flag.BACKGROUND)).toBe(true);
+    expect(ambientOnly(Flag.FLOW | Flag.GAME)).toBe(false);
+    expect(ambientOnly(Flag.AUDIO)).toBe(false);
+    expect(ambientOnly(0)).toBe(false);
+    expect(hasWork(Flag.AUDIO)).toBe(true);
+    expect(hasWork(Flag.INPUT)).toBe(false);
+    expect(hasWork(0)).toBe(false);
+  });
+  it("report() carries the mode, defaulting to ondemand", () => {
+    const f = createLoopFlags();
+    expect(f.report().mode).toBe("ondemand");
+    f.mode = "continuous";
+    expect(f.report().mode).toBe("continuous");
+  });
+  it("a push fires the wake hook; an empty push does not", () => {
+    const f = createLoopFlags();
+    let wakes = 0;
+    f.onPush = () => wakes++;
+    f.push(0);
+    expect(wakes).toBe(0);
+    f.push(Flag.INPUT);
+    f.push(Flag.GEOM);
+    expect(wakes).toBe(2);
   });
 });
 

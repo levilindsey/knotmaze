@@ -21,6 +21,9 @@ import {
   NEED_AMBIENT,
   NEED_EVENT,
   SCENE_ACTIVE,
+  VISUAL,
+  ambientOnly,
+  hasWork,
   type LoopFlags,
 } from "./loop_flags";
 import type { SceneRef } from "./scene_ref";
@@ -48,6 +51,11 @@ import type { StampPerf } from "./stamp";
 // (unchecking while awake, or a physics slider moved while frozen) gives
 // up after SETTLE_WALL_CAP_MS.
 const SETTLE_WALL_CAP_MS = 12000;
+
+// K6-3 (= K24): ambient-only frames run the tick at this cadence (Levi's
+// question 1: 30 fps), and the ticker stops after two workless frames.
+const REST_CADENCE_MS = 1000 / 30;
+const IDLE_POLL_MS = 250;
 
 // What the frame loop reads from main(): values and functions, each
 // assigned once, then accessors for the `let`s main.ts keeps and the
@@ -275,7 +283,7 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   // K6-1 question 3: sceneWasAnimating, __knotConfetti().sceneAnimating,
   // __knotA11y().animating).
   let sceneWasAnimating = false;
-  const backgroundTick = (dt: number): void => {
+  const backgroundTick = (dt: number): { need: number; polls: number } => {
     background.reducedMotion = motion.reduced;
     // K6-1: sceneActive, the flags' answer: this frame's pushes or the
     // polls read now carry a visual flag other than BACKGROUND. It
@@ -294,27 +302,106 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
       // and the frame after it as OVER (K6-1, the drift case's finish).
       if (background.needsFrame(dt)) polls |= Flag.BACKGROUND;
     }
-    flags.endFrame(polls, { active, stepUnflagged });
+    const closedNeed = flags.endFrame(polls, { active, stepUnflagged });
+    return { need: closedNeed, polls };
     stepUnflagged = false;
+  };
+
+  // K6-3 (= K24): the draw/ticker half of the frame's decision (design
+  // 4.8). Pixi's auto-render is removed in start(); onTick calls
+  // app.render() itself only on a frame whose closed need is visual (or
+  // every frame in continuous mode). Ambient-only frames run the whole
+  // tick at REST_CADENCE_MS with the accumulated dt. Two workless frames
+  // in a row (no visual flag, no AUDIO) stop the ticker; any push (input
+  // included, via flags.onPush), a probe's continuous request, or the
+  // idle poll below restarts it. Wall-clock animations are safe on a
+  // stopped ticker because each polls true while it runs (K6-1's audit):
+  // the camera's follow delay and tween hold hold CAMERA (converged() is
+  // false off-target or mid-tween), key holds and waiting moves hold
+  // GAME, the fire's FX hold PAINT, and AUDIO-only frames never count as
+  // workless, so the auto sound's wall clock keeps ticking.
+  let continuous = false;
+  let stopped = false;
+  let emptyStreak = 0;
+  let cadenceAccumMs = 0;
+  let idleTimer: ReturnType<typeof setInterval> | null = null;
+  const stopTicker = (): void => {
+    if (stopped) return;
+    stopped = true;
+    app.ticker.stop();
+    // While stopped the stamp still refreshes (DOM only, no draw), and a
+    // cheap poll catches what no push can: the background's next drift
+    // pass coming due, a worker "tugged" clearing host.asleep, an audio
+    // clock's next event. 250 ms is far below any of their periods.
+    if (typeof window !== "undefined" && idleTimer === null) {
+      idleTimer = setInterval(() => {
+        updateStamp();
+        let polls = readPolls();
+        if (warmup.wave1Done && background.needsFrame(IDLE_POLL_MS / 1000)) {
+          polls |= Flag.BACKGROUND;
+        }
+        if (hasWork(polls)) ensureRunning();
+      }, IDLE_POLL_MS);
+    }
+  };
+  const ensureRunning = (): void => {
+    if (!stopped) return;
+    stopped = false;
+    emptyStreak = 0;
+    cadenceAccumMs = 0;
+    if (idleTimer !== null) {
+      clearInterval(idleTimer);
+      idleTimer = null;
+    }
+    app.ticker.start();
+  };
+  flags.onPush = ensureRunning;
+  const setContinuous = (on: boolean): void => {
+    continuous = on;
+    flags.mode = on ? "continuous" : "ondemand";
+    if (on) ensureRunning();
   };
 
   const onTick = (ticker: Ticker): void => {
     const c0 = performance.now();
     revealMs = 0;
+    // K6-3: the rest cadence. An ambient-only need runs the whole tick at
+    // 30 fps: off-cadence rAFs return at once (no tick, no draw, no frame
+    // counted), and the tick that runs gets the accumulated dt, so every
+    // dt clock (paint, fog, background drift, flow) advances as before.
+    let eff = ticker;
+    if (!continuous && ambientOnly(flags.need)) {
+      cadenceAccumMs += ticker.deltaMS;
+      if (cadenceAccumMs < REST_CADENCE_MS) return;
+      eff = { deltaMS: cadenceAccumMs, elapsedMS: cadenceAccumMs } as Ticker;
+      cadenceAccumMs = 0;
+    } else {
+      cadenceAccumMs = 0;
+    }
     warmup.poll(); // K307: the warm-up's compiles, once a frame.
-    tick(ticker);
+    tick(eff);
     // K307: wave 2 once the intro is over (the reveal done, or asleep).
     if (warmup.wave1Done && deps.physState !== "loading" && (host.asleep || !introPlaying())) {
       warmup.startWave2();
     }
     // K279: the pluck ripples, after the camera's step (they read its view).
-    ripples.tick(ticker.deltaMS / 1000);
+    ripples.tick(eff.deltaMS / 1000);
     // K140: the confetti steps in every branch (asleep, paused, loading);
     // a single early return once nothing is in the air.
-    confetti.tick(ticker.deltaMS / 1000, app.screen.height, root);
+    confetti.tick(eff.deltaMS / 1000, app.screen.height, root);
     // After the scene's frame (the background's render-texture pass, when
     // due, precedes the stage render either way).
-    backgroundTick(ticker.deltaMS / 1000);
+    const closed = backgroundTick(eff.deltaMS / 1000);
+    // K6-3: draw only on a visual need (every frame in continuous mode);
+    // the canvas keeps its last frame otherwise. Stop after two workless
+    // frames so the last change is drawn before the ticker halts.
+    if (continuous || (closed.need & VISUAL) !== 0) app.render();
+    if (!continuous) {
+      emptyStreak = hasWork(closed.need) || hasWork(closed.polls) ? 0 : emptyStreak + 1;
+      if (emptyStreak >= 2) stopTicker();
+    } else {
+      emptyStreak = 0;
+    }
     const c = performance.now() - c0;
     revealCost[frameCostN % revealCost.length] = revealMs;
     revealMsTotal += revealMs;
@@ -584,7 +671,9 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     // plucks stay at full rate. A reveal (or its lingering FX) renders at
     // FULL rate - with physics off the whole intro plays in this branch.
     const restFrame = (label: string): void => {
-      flowParity = !flowParity;
+      // K6-3: at the rest cadence the tick itself is half-rate, so the
+      // flow pass runs on every tick (the cadence replaces flowParity).
+      flowParity = ambientOnly(need) ? true : !flowParity;
       // K6-2: a GEOM push (invalidate, wake, a look change, and the
       // worker sleep trip's deferred GEOM - K509 measured its miss at
       // 0 px, and this pass is what would draw it) forces the pass.
@@ -742,6 +831,16 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
   ] as const;
   // Registers the ticker callback, once (main.ts, after createStamp).
   const start = (): void => {
+    // K6-3: the loop draws itself (design 4.8's mechanics), so Pixi's
+    // auto-render comes off the ticker. A probe that times frames sets
+    // the pre-load global (evaluateOnNewDocument) for continuous mode.
+    app.ticker.remove(app.render, app);
+    if (
+      typeof window !== "undefined" &&
+      (window as unknown as Record<string, unknown>).__knotLoopMode === "continuous"
+    ) {
+      setContinuous(true);
+    }
     app.ticker.add(onTick);
     if (typeof window !== "undefined") {
       for (const type of INPUT_EVENTS) {
@@ -757,6 +856,13 @@ export function createFrameLoop(deps: FrameLoopDeps, scene: SceneRef) {
     invalidate,
     note,
     start,
+    setContinuous,
+    get stopped() {
+      return stopped;
+    },
+    get continuous() {
+      return continuous;
+    },
     frameCost,
     revealCost,
     // The `let`s other regions read (the probe hooks) or write (the load

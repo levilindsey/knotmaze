@@ -1465,6 +1465,7 @@ async function main(): Promise<void> {
       app.screen.height
     );
     if (plan.rain === 0 && plan.spray === 0) return;
+    flags.push(Flag.OVERLAY); // K6-3: wake a stopped loop for the burst.
     let cx = NaN;
     let cy = NaN;
     const v = exitVertex();
@@ -2504,6 +2505,10 @@ async function main(): Promise<void> {
     get loopHalted() {
       return loop.halted;
     },
+    get loopStopped() {
+      return loop.stopped;
+    },
+    setLoopContinuous: (on: boolean) => loop.setContinuous(on),
     get turnWait() {
       return turnWait;
     },
