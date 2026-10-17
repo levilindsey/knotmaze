@@ -1,4 +1,4 @@
-// K307 stage 2: THE SHADER WARM-UP. On a cold GPU program cache, pixi links
+// K307: THE SHADER WARM-UP. On a cold GPU program cache, pixi links
 // each program at its first draw and reads LINK_STATUS at once, so the page
 // (and on Windows the whole screen: every present waits on the GPU
 // process's main thread) stops for the compile: 2.8 s for section-rgb under
@@ -7,26 +7,36 @@
 // source is a cache hit (about 25 ms). Lore: .claude/rules/render-shaders.md;
 // brief: docs/design/K307_intro_freezes.md, "Stage 2: the warm-up".
 //
-// IT LINKS BLOCKING (PARALLEL_DEFAULT): every link is submitted at once and
-// every status is read at the next frame, so the wait is the longest compile
-// and the loader stalls for it (2.7 s on the desktop, cold). The parallel
-// path (KHR_parallel_shader_compile, polled once a frame) keeps the loader
-// moving, but in Chrome on D3D11 a program linked that way never reaches the
-// GPU program cache on DISK: only the in-memory one, so every later visit
-// was cold again (3 s of loader on every load, where master's warm load is
-// visible at 0.8 s). Measured by K307 stage 2 with restarts on one profile.
+// IT LINKS LATE-ENABLE (K307 stage 3, branch (b) of K385; Levi's call K517):
+// every warm-up link is issued BEFORE KHR_parallel_shader_compile is
+// enabled on the context, so Blink attaches no completion query to them;
+// only then is the extension enabled and COMPLETION_STATUS_KHR polled once
+// a frame, reading LINK_STATUS once each program reports done. That read
+// resolves the link inside Chrome's cache scope, so the binary reaches the
+// GPU program cache on DISK and a warm restart stays at about 0.8 s, while
+// no read ever waits: the trefoil keeps turning through a cold load. (A
+// program linked only after the enable - wave 2's, and pixi's own later
+// links of any source the registry missed - is wrapped in a query and can
+// stay memory-only; the registry therefore has to list every program
+// first, which the dev build's unregistered-program check verifies.)
+// Without the extension the warm-up falls back to blocking reads, held
+// until the trefoil is up (releaseBlocking): every link is submitted at
+// once and every status read at the next poll after that, so the wait is
+// the longest compile, with the loader shown (frozen) through it.
 //
 // WAVE 1 (what the current mode's intro draws) GATES the first visible
 // frame: main.ts holds the pre-settle (or an instant link's first frame)
 // until it completes, fails or times out (15 s). WAVE 2 (every other
 // registry program) never gates; main starts it after the reveal or at the
-// first sleep, and it runs only on the parallel path (off by default, so
-// those programs link blocking at their first draw, as before, and persist).
+// first sleep, on the poll path only (under the blocking fallback those
+// programs link at their first draw, as before, and persist).
 //
 // The sources are the sites' own GlPrograms' `.vertex` and `.fragment`
 // (program_registry.ts), never captured text. A program whose vertex is not
 // GLSL ES 3.00 is linked TWICE by pixi (extractAttributesFromGlProgram binds
-// the sorted attributes and relinks), so the warm-up does the same.
+// the sorted attributes and relinks), so the warm-up does the same. (The
+// relink is issued after the enable, so its binary can stay memory-only;
+// the three relinked programs are small.)
 
 import type { BackgroundId } from "./background_model";
 import { backgroundWarmIds } from "./background";
@@ -48,10 +58,9 @@ const NAME_DEFINE = /#define[ \t]+SHADER_NAME[ \t]+(\S+)/;
 // several times this desktop's 3 s), then pixi's links block as before.
 export const WARMUP_TIMEOUT_MS = 15000;
 
-// Off: see the header. The warm-up then never asks for the extension at all,
-// since getExtension enables it on the context (its links then take the
-// parallel path, whoever reads them).
-export const PARALLEL_DEFAULT = false;
+// On: see the header (late enable). Off, the warm-up never asks for the
+// extension at all and reads every status blocking, held for the trefoil.
+export const PARALLEL_DEFAULT = true;
 
 // The slice of WebGL the warm-up uses (a fake in the tests).
 export interface WarmGl {
@@ -100,6 +109,7 @@ interface WaveState {
 
 export interface WarmupReport {
   parallel: boolean;
+  lateEnabled: boolean;
   aborted: string | null;
   gateOpenAt: number | null;
   wave1: Omit<WaveState, "left"> | null;
@@ -120,8 +130,14 @@ function srcKey(vertex: string, fragment: string): string {
 }
 
 export class ShaderWarmup {
-  readonly parallel: boolean;
-  private readonly serialReason: string;
+  // Poll COMPLETION_STATUS_KHR (late enable, the header). Provisional from
+  // construction until the first submit's enable attempt settles it: asking
+  // for the extension any earlier would wrap the very links it must not.
+  parallel: boolean;
+  private serialReason: string;
+  private lateEnabled = false;
+  // The blocking fallback's reads wait for the trefoil (releaseBlocking).
+  private blockingReleased = false;
   private readonly gl: WarmGl | null;
   private readonly now: () => number;
   private readonly timeoutMs: number;
@@ -153,9 +169,20 @@ export class ShaderWarmup {
     this.timeoutMs = opts.timeoutMs ?? WARMUP_TIMEOUT_MS;
     this.log = opts.log ?? ((m) => console.warn(m));
     const want = opts.parallel ?? PARALLEL_DEFAULT;
-    this.parallel = want && !!gl && !!gl.getExtension("KHR_parallel_shader_compile");
-    this.serialReason = want ? "no KHR_parallel_shader_compile" : "parallel path off (its programs miss the disk cache)";
+    // No getExtension here: it enables the extension on the context, and
+    // every link issued after that is query-wrapped (the header). The
+    // enable attempt happens in submit(), after its links.
+    this.parallel = want && !!gl;
+    this.serialReason = want ? "no KHR_parallel_shader_compile" : "parallel path off";
     if (!gl) this.abort("no WebGL context");
+  }
+
+  // The trefoil is up: the blocking fallback may read its statuses (they
+  // freeze it, and the screen, for the longest compile - the header). On
+  // the poll path this is a no-op. Called by the lifecycle with its
+  // loader.show().
+  releaseBlocking(): void {
+    this.blockingReleased = true;
   }
 
   // Wave 1 has completed, failed, timed out or been aborted: the first
@@ -181,10 +208,12 @@ export class ShaderWarmup {
     this.wave2Source = sources;
   }
 
-  // Start wave 2 (idempotent; never gating). Off the parallel path it is
+  // Start wave 2 (idempotent; never gating). Off the poll path it is
   // skipped: its blocking links would freeze play for programs the player
   // may never draw, where a program's own first draw costs only its own
-  // compile.
+  // compile. On the poll path its links are issued after the enable, so
+  // they can stay memory-only (the header); they still spare this visit's
+  // first draws, and wave 1 alone sets the warm restart.
   startWave2(): void {
     if (this.wave2Started) return;
     this.wave2Started = true;
@@ -234,15 +263,22 @@ export class ShaderWarmup {
         st.names.push(src.name);
         st.left++;
       }
+      // LATE ENABLE (the header): only now, with this submit's links
+      // already issued unwrapped, ask for the extension. A missing one
+      // settles the warm-up onto the blocking fallback.
+      if (this.parallel && !this.lateEnabled) {
+        this.lateEnabled = true;
+        if (!gl.getExtension("KHR_parallel_shader_compile")) this.parallel = false;
+      }
     }
     this.submitMs.push(this.now() - t0);
     if (st.left === 0) this.waveDone(wave, t0);
   }
 
-  // Once a frame. Parallel: walk the pending programs in order, finishing
+  // Once a frame. Poll path: walk the pending programs in order, finishing
   // each one COMPLETION_STATUS_KHR says is done, and stop at the first that
   // is not (each query is a round trip to the GPU process). Blocking: read
-  // every status now (the wait is the longest compile).
+  // every status, once released (the wait is the longest compile).
   poll(): void {
     if (this.pending.length === 0 && this.gateOpen) return;
     const gl = this.gl;
@@ -251,15 +287,21 @@ export class ShaderWarmup {
       this.abort("context lost");
       return;
     }
-    if (this.parallel) {
-      while (this.pending.length > 0) {
-        const job = this.pending[0];
-        if (!gl.getProgramParameter(job.program, COMPLETION_STATUS_KHR)) break;
-        this.pending.shift();
-        this.finish(gl, job, t0);
+    // The blocking fallback holds its reads until the trefoil is up
+    // (releaseBlocking): a read now would freeze a still, loader-less page
+    // for the longest compile. A timed-out gate releases the hold too.
+    const held = !this.parallel && !this.blockingReleased && !this.gateOpen;
+    if (!held) {
+      if (this.parallel) {
+        while (this.pending.length > 0) {
+          const job = this.pending[0];
+          if (!gl.getProgramParameter(job.program, COMPLETION_STATUS_KHR)) break;
+          this.pending.shift();
+          this.finish(gl, job, t0);
+        }
+      } else {
+        while (this.pending.length > 0) this.finish(gl, this.pending.shift()!, t0);
       }
-    } else {
-      while (this.pending.length > 0) this.finish(gl, this.pending.shift()!, t0);
     }
     const t1 = this.now();
     const w1 = this.waves[1];
@@ -269,8 +311,10 @@ export class ShaderWarmup {
         `[K307 warm-up] wave 1 timed out after ${Math.round(t1 - w1.submitAt)} ms; ` +
           `${w1.left} program(s) still compiling, the first frame draws now`
       );
+      this.blockingReleased = true;
       this.openGate(t1);
     }
+    if (held) return; // No status read: not a counted poll.
     const ms = t1 - t0;
     if (this.firstPollMs === null) this.firstPollMs = ms;
     this.polls++;
@@ -352,6 +396,7 @@ export class ShaderWarmup {
     };
     return {
       parallel: this.parallel,
+      lateEnabled: this.lateEnabled,
       aborted: this.aborted,
       gateOpenAt: this.gateOpenAt,
       wave1: strip(this.waves[1]),

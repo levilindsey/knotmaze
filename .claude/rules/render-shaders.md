@@ -142,7 +142,7 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   critical path. After a large shader change, time a cold link:
   `trace_intro.mjs` on a fresh profile.
 
-## THE WARM-UP (K307 stage 2, 2026-10-15)
+## THE WARM-UP (K307 stage 2, 2026-10-15; late enable stage 3, 2026-10-16)
 
 - **What runs.** `startShaderWarmup` (main.ts, right after `app.init`)
   links every wave-1 program of `program_registry.ts`, reads each status
@@ -156,24 +156,37 @@ Measured by K307 stage 1 (2026-10-14). The brief and every number are in
   Everything else
   lives in `shader_warmup.ts`; `window.__knotWarmup()` reports the waves,
   timings, relinks, failures and unregistered programs.
-- **It links BLOCKING (`PARALLEL_DEFAULT = false`).** In Chrome on D3D11,
-  a program linked after the page enabled `KHR_parallel_shader_compile`
-  never reached the GPU program cache on DISK. On the parallel path,
-  every restart on the same profile was cold (3.0-3.5 s to first visible,
-  loader on), where master's restart is warm (0.806 s). With restarts on
-  one profile (`trace_intro.mjs --restart`, observed): keeping the
-  programs undeleted, calling useProgram after each link, waiting before
-  the restart, or skipping wave 2 changed nothing. Hiding the extension
-  (the blocking path) made the restart warm (0.805 s) and wrote the
-  binary to the profile's `GPUCache`. Why Chrome drops them is inferred,
-  not checked. The warm-up never calls `getExtension` for it, since that
-  enables it on the context for every later link too.
-- **The blocking path's cost:** on a cold cache, the trefoil stalls for
-  the longest compile (about 2.7 s on the desktop) before the first
-  visible frame (3.66 s). After it, no frame over 66 ms.
-- **Wave 2** (what the intro does not draw) runs only on the parallel
-  path, so it is off: those programs link blocking at their first draw,
-  as on master, and persist.
+- **It links LATE-ENABLE (K307 stage 3, branch (b) of K385; Levi's call
+  K517).** Every warm-up link is issued BEFORE `getExtension` enables
+  `KHR_parallel_shader_compile` on the context, so no link is wrapped in
+  a completion query; only then does the warm-up enable it and poll
+  `COMPLETION_STATUS_KHR` once a frame, reading `LINK_STATUS` once each
+  program reports done. Stage 2's parallel path (enable first) never
+  reached the DISK cache - every restart was cold (3.0-3.5 s) - because a
+  compile resolved by the decoder's MakeCurrent poll lands outside
+  Chrome's cache scope (K385; the crbug draft for Levi is
+  `.claude/probes/K307/stage3/crbug.md`). The late read resolves inside
+  the scope, so the binary persists AND no read waits. Shipped numbers
+  (desktop, D3D11, `trace_intro.mjs --restart` on `builds/shipped`):
+  cold first visible 3.27 s with the trefoil turning (loader 0.58-3.25 s,
+  poll max 31 ms, worst frame after visible 88 ms) and warm restart
+  0.80 s - the blocking build's 3.67 / 0.81 s with its frozen first
+  frame gone. Every pixi link after the warm-up was 28 ms or less, cold
+  and warm; the dev build's unregistered check stayed empty (`K427`:
+  it only runs on a dev build; `stage3/dev_check.mjs`).
+- **Any program linked after the enable can stay memory-only** (wave 2's
+  links, the attribute relinks, and any pixi link of a source the
+  registry missed). That is why the registry must list every program
+  first: wave 1 alone sets the warm restart. Wave 2 still spares this
+  visit's first draws; its programs recompile behind the next visit's
+  wave 2 rather than freezing a draw.
+- **Without the extension** (desktop Vulkan; maybe phones) the warm-up
+  reads every status blocking, but only once the trefoil is up
+  (`releaseBlocking`, called with the lifecycle's `loader.show()`): the
+  reads freeze the loader for the longest compile instead of freezing a
+  still, loader-less page first (stage 2 shipped its cold read at 0.35 s,
+  2.8 s before the trefoil appeared at 3.36 s). A 15 s timeout releases
+  the hold too.
 - **Never make a second `new GlProgram` of a name to read its source.**
   Pixi's `setProgramName` numbers each new GlProgram of a name
   (`batch-fragment`, then `batch-fragment-2`) into its SHADER_NAME, so a

@@ -96,6 +96,13 @@ export function createLifecycle(deps: LifecycleDeps, scene: SceneRef) {
   // warm-up's wave 1 (beginSettle's instant branch; warmHoldTick). The
   // hold's start, or -1.
   let warmHoldFrom = -1;
+  // K307 stage 3: showing the trefoil also releases the warm-up's blocking
+  // fallback reads (they freeze the page, trefoil included, so they must
+  // not run before it is up; on the poll path this is a no-op).
+  const showLoader = (): void => {
+    loader.show();
+    warmup.releaseBlocking();
+  };
   const physSig = (): string => {
     const t = physicsTuning();
     return [
@@ -154,7 +161,7 @@ export function createLifecycle(deps: LifecycleDeps, scene: SceneRef) {
     if (scene.fabric) scene.fabric.revealQuery = null;
     root.visible = false;
     deps.indicators.hideAll();
-    loader.show();
+    showLoader();
   }
 
   // One slice of the hidden settle (the host's loadFrame: virtual 60 fps
@@ -288,13 +295,13 @@ export function createLifecycle(deps: LifecycleDeps, scene: SceneRef) {
       let workLeft = simDone > 0 ? (simLeft * pr.workMs) / simDone : Infinity;
       if (!settleFirst) workLeft = Math.min(workLeft, workCap - pr.workMs);
       if (pr.elapsed + workLeft > LOADER_DELAY_MS || pr.elapsed > LOADER_DELAY_MS) {
-        loader.show();
+        showLoader();
         loaderShownAt = performance.now();
       }
     }
     // K307: so does the warm-up's wave 1, still compiling at LOADER_DELAY_MS.
     if (loaderShownAt < 0 && !warmup.wave1Done && pr.elapsed > LOADER_DELAY_MS) {
-      loader.show();
+      showLoader();
       loaderShownAt = performance.now();
     }
     if (pr.end !== "" && mayFinish()) finishPresettle();
@@ -306,7 +313,7 @@ export function createLifecycle(deps: LifecycleDeps, scene: SceneRef) {
   function warmHoldTick(): void {
     const now = performance.now();
     if (loaderShownAt < 0 && !warmup.wave1Done && now - warmHoldFrom > LOADER_DELAY_MS) {
-      loader.show();
+      showLoader();
       loaderShownAt = now;
     }
     if (!warmup.wave1Done) return;
