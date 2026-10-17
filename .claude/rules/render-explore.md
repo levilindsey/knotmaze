@@ -352,6 +352,23 @@ the pick and the pluck host read the same windows, so they ramp too.
   census3a as a whole stands 22/31 on both master and this change; the
   other 9 fails are pre-existing rot (see the K268.md ramp handoff).
 
+## THE FAR-BRANCH BLEND (K268 stage 2 item 2, last part, 2026-10-16)
+
+Master's far-branch smooth-min blends the near and far branches'
+centerline distances, then the shaped cut multiplies by the near
+branch's coverage alone (a ghost dip toward a hidden branch; a shown
+far branch lost behind a hidden near one). The explore programs now
+blend the VIS-WEIGHTED CUTS instead (`EXPLORE_FAR_GLSL` /
+`EXPLORE_KEEP_GLSL` in explore_glsl.ts, `farBlendCut` its pure twin):
+each branch's geometric cut (`exCutAtDist`, gapKeepAt's own margin and
+fade at the near point) times its own coverage - the far branch's at
+its own projection arc through `exploreCutCover` - combined as the
+stronger weighted cut plus the smooth-min dip scaled by the visibility
+both branches share. Equal coverages = master's blended cut, weighted;
+a hidden branch adds nothing. The dots' shape (`kExCutOn`) replaces
+`d` anyway and keeps master's path; non-shaped slots keep the distance
+blend. Item 2 (ramp, PROTECT, far-branch) is complete with this.
+
 ## In the game (stage 2c, 2026-10-15)
 
 Brief and handoff: `docs/design/K76.md`, "Stage 2c". Params and codec:
