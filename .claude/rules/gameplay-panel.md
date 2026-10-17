@@ -346,3 +346,21 @@ only with the files it is about; `gameplay.md` lists the area's other files.
 - *K74 stage 3 (2026-10-16):* the Maze folder gains `exitCorridor`,
   `exitFlank`, `exitTaperRadius` and `exitTaperStrength` rows beside
   `exitClearance` (hidden with it, fabric only, all regenerating).
+
+- PANEL STAGE A2 (K541, 2026-10-16; K339 tree, A1 was K534): the folder
+  order is Accessibility (Reduced motion, High contrast, Motion), Design
+  (grid, shape, weave, turn, seed, Daily), Game, Maze (generation only,
+  anchors included), Path & view (path display, camera, pulses, marker
+  size, maze stats, move pad, confetti; Hover glow and Off-screen arrows
+  nested collapsed), Look (Backdrop tuning nested collapsed: speed,
+  size, detail, fibers, grain, silk angle, colors, page color, accents),
+  Motion & intro, Touch & feel, Sound (Muted, Volume, auto-pluck
+  loudness first), Physics (agitation last), Developer (debug, stats,
+  sim speed, settle budget, load settle; last, collapsed), then Reset to
+  defaults at the root. Every row's label is words of at most 23
+  characters (K327); keys and values never change with a label. The
+  desktop panel is 320 px wide (`.tp-dfwv{width:320px}`; the sheet
+  overrides it). All top-level folders are created in display order at
+  the Design folder, so a row's code may live anywhere; the three nested
+  folders are created just before their first row so they sit after
+  their parent's own rows.

@@ -329,6 +329,9 @@ export function buildPanel(
   }
   const style = document.createElement("style");
   style.textContent =
+    // K541 (K339 Q4): the desktop panel widens 256 -> 320 px so the
+    // word labels fit uncut; the phone sheet overrides this below.
+    ".tp-dfwv{width:320px}" +
     ".tp-dfwv::-webkit-scrollbar{width:6px}" +
     ".tp-dfwv::-webkit-scrollbar-thumb{background:#3a4254;border-radius:3px}" +
     ".tp-dfwv::-webkit-scrollbar-track{background:transparent}" +
@@ -846,7 +849,7 @@ export function buildPanel(
   const fAccess = folder("Accessibility", true);
   const reducedMotionRow = row(
     fAccess, s, "reducedMotion", { label: "Reduced motion" },
-    "Master switch: stills what the Motion setting covers (backdrop drift, plucks, the camera's ease to an edge marker, the loading knot, mode badge and edge markers) AND the maze's flow undulation (flowStrength and flowSpeed keep your values and come back when it is off). The intro animation and the pulses beside the player keep playing. Shows what is in force: it follows your device's reduce-motion setting until you choose (Motion & intro holds the detailed choice, including follow system). Remembered per browser.",
+    "Master switch: stills what the Motion setting covers (backdrop drift, plucks, the camera's ease to an edge marker, the loading knot, mode badge and edge markers) AND the maze's flow undulation (flowStrength and flowSpeed keep your values and come back when it is off). The intro animation and the pulses beside the player keep playing. Shows what is in force: it follows your device's reduce-motion setting until you choose (the Motion row below holds the detailed choice, including follow system). Remembered per browser.",
     SETTINGS_DEFAULTS.reducedMotion,
     () => callbacks.onReducedMotionToggle(settings.reducedMotion === true)
   );
@@ -859,14 +862,26 @@ export function buildPanel(
 
   // --- Design -------------------------------------------------------------
   const fDesign = folder("Design", true);
+  // K541: every top-level folder is created here, in display order, so a
+  // row can be created wherever its code lives and still land in its folder.
+  const fGame = folder("Game", true);
+  const fMaze = folder("Maze", true);
+  const fPath = folder("Path & view", true);
+  const fLook = folder("Look", true);
+  const fMotion = folder("Motion & intro", false);
+  const fFeel = folder("Touch & feel", false);
+  const fSound = folder("Sound", false);
+  const fPhysics = folder("Physics", false);
+  const fDeveloper = folder("Developer", false);
   row(
-    fDesign, p, "gridSize", { min: 4, max: 24, step: 1 },
+    fDesign, p, "gridSize", { min: 4, max: 24, step: 1, label: "Grid size" },
     "Lattice size. Bigger = a larger, denser knot with more threads. Regenerates the design.",
     D.gridSize, regenerateWhenDone
   );
   row(
     fDesign, p, "shape",
     {
+      label: "Maze shape",
       options: {
         rect: "rect",
         circle: "circle",
@@ -884,22 +899,22 @@ export function buildPanel(
     options: { nw: "nw", n: "n", ne: "ne", e: "e", se: "se", s: "s", sw: "sw", w: "w" },
   };
   const startAnchorRow = row(
-    fDesign, p, "startAnchor", ANCHOR_OPTS,
+    fMaze, p, "startAnchor", { ...ANCHOR_OPTS, label: "Entrance side" },
     "Which side of the shape hosts the maze ENTRANCE (compass point). Regenerates the maze.",
     D.startAnchor, regenerateWhenDone
   );
   const exitAnchorRow = row(
-    fDesign, p, "exitAnchor", ANCHOR_OPTS,
+    fMaze, p, "exitAnchor", { ...ANCHOR_OPTS, label: "Exit side" },
     "Which side of the shape hosts the maze EXIT (compass point). Regenerates the maze.",
     D.exitAnchor, regenerateWhenDone
   );
   row(
-    fDesign, p, "weaveDensity", { min: 0, max: 1, step: 0.05 },
+    fDesign, p, "weaveDensity", { min: 0, max: 1, step: 0.05, label: "Weave density" },
     "How much of the lattice fills with woven thread. Low = sparse open tangle, high = tight fabric. Regenerates the design.",
     D.weaveDensity, regenerateWhenDone
   );
   row(
-    fDesign, p, "turnBias", { min: 0, max: 1, step: 0.05 },
+    fDesign, p, "turnBias", { min: 0, max: 1, step: 0.05, label: "Turn bias" },
     "How often growing threads turn instead of running straight. Low = long runs, high = curly meanders. Regenerates the design.",
     D.turnBias, regenerateWhenDone
   );
@@ -908,7 +923,7 @@ export function buildPanel(
   // that design; the dice button in the row rolls a random one. The row
   // always re-shows the canonical token, so a hashed word shows its seed.
   const seedView = { seed: seedText(params.seed) };
-  const seedApi = fDesign.addBinding(seedView, "seed" as never) as RowApi;
+  const seedApi = fDesign.addBinding(seedView, "seed" as never, { label: "Seed" } as Record<string, unknown>) as RowApi;
   seedApi.element.title =
     "The design's seed - the first part of the link. Type a seed (or any word) and press Enter to load that design; the dice rolls a random one.";
   seedApi.element.classList.add("kp-row", "kp-seed");
@@ -970,7 +985,6 @@ export function buildPanel(
   // After Design, before Maze, expanded (K323 question 1). Every row is a
   // design row (none daily-exempt); the exploration rows sit right under
   // Game mode (question 3, sooner than K323 proposed, per K339).
-  const fGame = folder("Game", true);
   const gameModeRow = row(
     fGame, p, "gameMode",
     { options: { Classic: "classic", Minotaur: "minotaur", "Burn race": "burn" }, label: "Game mode" },
@@ -980,7 +994,6 @@ export function buildPanel(
   void gameModeRow;
 
   // --- Maze ---------------------------------------------------------------
-  const fMaze = folder("Maze", true);
   // (The mazeFabric switch left the panel in K323 Stage A: the codec
   // entry is gone and the field stays on until K326 deletes knot mode.)
   // K323: "Real time" is a checkbox over `clock`, shown only under the
@@ -999,38 +1012,39 @@ export function buildPanel(
     D.playerPace, () => callbacks.onChaseChange()
   );
   const deadEndDensityRow = row(
-    fMaze, p, "deadEndDensity", { min: 0, max: 1, step: 0.05 },
+    fMaze, p, "deadEndDensity", { min: 0, max: 1, step: 0.05, label: "Dead-end density" },
     "Fraction of eligible loops cut into dead-end threads (long threads that end in a loose tip). 0 = a pure braided maze where every wrong turn loops back; 1 = maximally tree-like. Regenerates the maze.",
     D.deadEndDensity, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const deadEndLengthRow = row(
-    fMaze, p, "deadEndLength", { min: 0, max: 40, step: 1 },
+    fMaze, p, "deadEndLength", { min: 0, max: 40, step: 1, label: "Dead-end length" },
     "How far each dead end runs before it ends (half lattice cells of thread with no junction on it): longer tails take longer to find out. 0 = the older placement, spread out and mostly short. Regenerates the maze.",
     D.deadEndLength, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const hCutShareRow = row(
-    fMaze, p, "hCutShare", { min: 0, max: 1, step: 0.05 },
+    fMaze, p, "hCutShare", { min: 0, max: 1, step: 0.05, label: "Fused arm cuts" },
     "Fused arm cuts (H1): the share of bridges between two neighbouring threads replaced by one smooth junction, so the bridge's two junctions become one. 0 = off, every bridge kept. Regenerates the maze.",
     D.hCutShare, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const exitCorridorRow = row(
-    fMaze, p, "exitCorridor", { min: 0, max: 32, step: 1 },
+    fMaze, p, "exitCorridor", { min: 0, max: 32, step: 1, label: "Exit corridor" },
     "Trap-zone finish: how much of the exit thread (half lattice cells of arc from the exit) carries no choice junction, so threads near the finish are near misses that do not lead in. 0 = off. Regenerates the maze.",
     D.exitCorridor, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const exitFlankRow = row(
     fMaze, p, "exitFlank",
-    { options: { stub: "stub", away: "away", near: "near" } },
+    {
+      label: "Exit flank kept", options: { stub: "stub", away: "away", near: "near" } },
     "Which side of the exit cut keeps the tail: stub = the shorter stub is trimmed (the older rule); away = the flank that wanders farthest from the exit is kept; near = the other. Regenerates the maze.",
     D.exitFlank, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const exitTaperRadiusRow = row(
-    fMaze, p, "exitTaperRadius", { min: 0, max: 32, step: 1 },
+    fMaze, p, "exitTaperRadius", { min: 0, max: 32, step: 1, label: "Exit taper radius" },
     "Exit taper: within this radius of the exit (half lattice cells), choice junctions space out further (the strength sets how much). 0 = off. Regenerates the maze.",
     D.exitTaperRadius, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const exitTaperStrengthRow = row(
-    fMaze, p, "exitTaperStrength", { min: 0, max: 2, step: 0.1 },
+    fMaze, p, "exitTaperStrength", { min: 0, max: 2, step: 0.1, label: "Taper strength" },
     "How much wider the junction spacing grows at the exit under the taper. 0 = off. Regenerates the maze.",
     D.exitTaperStrength, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
@@ -1086,27 +1100,27 @@ export function buildPanel(
     D.trapSurplus, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const branchDensityRow = row(
-    fMaze, p, "branchDensity", { min: 0, max: 1, step: 0.05 },
+    fMaze, p, "branchDensity", { min: 0, max: 1, step: 0.05, label: "Branch density" },
     "How many extra choice junctions the maze adds beyond the minimum needed to connect everything. Regenerates the maze.",
     D.branchDensity, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const fourWayRow = row(
-    fMaze, p, "fourWayFraction", { min: 0, max: 1, step: 0.05 },
+    fMaze, p, "fourWayFraction", { min: 0, max: 1, step: 0.05, label: "Four-way share" },
     "Share of junctions realized as 4-way crossings instead of 3-way splits. Regenerates the maze.",
     D.fourWayFraction, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const junctionSpacingRow = row(
-    fMaze, p, "junctionSpacing", { min: 0.5, max: 8, step: 0.25 },
+    fMaze, p, "junctionSpacing", { min: 0.5, max: 8, step: 0.25, label: "Junction spacing" },
     "Minimum distance between junctions (half lattice cells): higher spreads the choices out, so fewer fit. Regenerates the maze.",
     D.junctionSpacing, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const entranceClearanceRow = row(
-    fMaze, p, "entranceClearance", { min: 0, max: 12, step: 0.5 },
+    fMaze, p, "entranceClearance", { min: 0, max: 12, step: 0.5, label: "Entrance clearance" },
     "Junction-free radius around the entrance (half lattice cells): the first stretch is a single path. Regenerates the maze.",
     D.entranceClearance, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const exitClearanceRow = row(
-    fMaze, p, "exitClearance", { min: 0, max: 20, step: 0.5 },
+    fMaze, p, "exitClearance", { min: 0, max: 20, step: 0.5, label: "Exit clearance" },
     "Junction-free radius around the exit (half lattice cells), so the endgame isn't cluttered with choices. Regenerates the maze.",
     D.exitClearance, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
@@ -1117,54 +1131,54 @@ export function buildPanel(
   // overrides name the values, and the daily records keep the value a
   // result ended in.
   const pathVizRow = row(
-    fMaze, p, "pathViz",
-    { options: { fullPath: "gold", recentPath: "trail", string: "string" } },
+    fPath, p, "pathViz",
+    { options: { fullPath: "gold", recentPath: "trail", string: "string" }, label: "Path display" },
     "How your route is shown: fullPath = your whole traveled route stays recolored; recentPath = memory mode: only the last stretch of your route stays lit (trailLength sets how much) and there is no backtracking; string = unroll a thin white yarn behind you - it U-turns at junctions when you backtrack and is never picked up. Applies live.",
     D.pathViz, () => callbacks.onTrailChange()
   );
   const cameraRow = row(
-    fMaze, p, "cameraMode",
-    { options: { fit: "fit", follow: "follow" } },
+    fPath, p, "cameraMode",
+    { options: { fit: "fit", follow: "follow" }, label: "Camera" },
     "Camera: fit = frame the whole maze (under fog: just what you can see); follow = chase your position. Pinch, scroll or drag to zoom and pan in either - in follow mode a gentle pull brings the view back after a moment. Double-click / double-tap empty space to reset the view. Applies live.",
     D.cameraMode, () => callbacks.onTrailChange()
   );
   // Max 30 since the default went 5 -> 10 (codec v4): the slider keeps
   // its old headroom of three times the default.
   const trailLenRow = row(
-    fMaze, p, "trailLength", { min: 1, max: 30, step: 0.5 },
+    fPath, p, "trailLength", { min: 1, max: 30, step: 0.5, label: "Recent path length" },
     "How much of your recent path stays lit in recentPath mode, in lattice units. Applies live.",
     D.trailLength, () => callbacks.onTrailChange()
   );
   const tensionRow = row(
-    fMaze, p, "tension", { min: 0, max: 1, step: 0.05 },
+    fPath, p, "tension", { min: 0, max: 1, step: 0.05, label: "String tension" },
     "Ariadne string tension: 1 lays the yarn taut along the thread, 0 leaves it loose and wavy like slack cotton. Applies live.",
     D.tension, () => callbacks.onTrailChange()
   );
   // K76 stage 2c: the fog of war's checkbox became the exploration mode.
   const fowRow = row(
     fGame, p, "exploration",
-    { options: { off: "off", "fog of war": "fog", "thread reveal": "threads" }, label: "exploration" },
+    { options: { off: "off", "fog of war": "fog", "thread reveal": "threads" }, label: "Exploration" },
     "How much of the maze you see. off: all of it. fog of war: the maze hides until you have explored close by; explored areas stay visible. thread reveal: only the threads you have walked show, and the arms of the junctions you have reached, fading out a little way along. Applies live.",
     D.exploration, () => callbacks.onTrailChange()
   );
   const fowRadiusRow = row(
-    fGame, p, "fowRadius", { min: 1.5, max: 10, step: 0.25 },
+    fGame, p, "fowRadius", { min: 1.5, max: 10, step: 0.25, label: "Fog radius" },
     "How far around your explored path the fog lifts, in lattice units. Applies live and reshapes everything already explored.",
     D.fowRadius, () => callbacks.onTrailChange()
   );
   const fowIntroRow = row(
-    fGame, p, "fowIntro", { label: "intro in the open" },
+    fGame, p, "fowIntro", { label: "Intro in the open" },
     "Play the intro appearance animation in the open, then hide what you have not explored: the fog closes in around you (it fades in while its reveal radius contracts), or the threads you have not seen withdraw toward you. Applies to the next intro.",
     D.fowIntro, () => callbacks.onTrailChange()
   );
   // K76 stage 2c: the thread reveal's reach, its fade and its end look.
   const revealDistanceRow = row(
-    fGame, p, "revealDistance", { min: 1, max: 12, step: 0.25, label: "reveal distance" },
+    fGame, p, "revealDistance", { min: 1, max: 12, step: 0.25, label: "Reveal distance" },
     "How far the arms of the junctions you have reached show, in lattice units; the last part fades out. Applies live.",
     D.revealDistance, () => callbacks.onTrailChange()
   );
   const revealFadeRow = row(
-    fGame, p, "revealFade", { min: 0.35, max: 4, step: 0.05, label: "reveal fade" },
+    fGame, p, "revealFade", { min: 0.35, max: 4, step: 0.05, label: "Reveal fade" },
     "How long that fade-out is, in lattice units (never longer than the reveal distance). Applies live.",
     D.revealFade, () => callbacks.onTrailChange()
   );
@@ -1172,7 +1186,7 @@ export function buildPanel(
     fGame, p, "revealLook",
     {
       options: { fade: "fade", halo: "halo", glow: "glow", dots: "dots", fray: "fray", beacon: "beacon" },
-      label: "reveal end",
+      label: "Reveal end",
     },
     "How a thread you have not explored ends: fade (it just fades out), halo (a soft light where it fades), glow (the fade glows), dots (it breaks into dots), fray (it frays into fibers) or beacon (dots and the halo). Applies live.",
     D.revealLook, () => callbacks.onTrailChange()
@@ -1181,53 +1195,54 @@ export function buildPanel(
   // a bit more, maybe especially for ends that lie under a crossing").
   const revealEndCrossRow = row(
     fGame, p, "revealEndCross",
-    { options: { under: "under", past: "past", back: "back" }, label: "end at crossing" },
+    { options: { under: "under", past: "past", back: "back" }, label: "End at crossing" },
     "Where a thread you have not explored ends when its end would lie under a crossing, hidden by the thread on top: under (it stays there), past (it shows a little further, beyond the crossing) or back (it ends before the crossing). Applies live.",
     D.revealEndCross, () => callbacks.onTrailChange()
   );
   const revealEndGlowRow = row(
     fGame, p, "revealEndGlow",
-    { options: { soft: "soft", bright: "bright" }, label: "end glow" },
+    { options: { soft: "soft", bright: "bright" }, label: "End glow" },
     "How strongly the light at the end of a thread you have not explored shows (the halo and beacon ends): soft or bright (larger and brighter). Applies live.",
     D.revealEndGlow, () => callbacks.onTrailChange()
   );
   // K465: the finish shows from the start (Levi, 2026-10-15).
   const revealFinishRow = row(
-    fGame, p, "revealFinish", { label: "show finish" },
+    fGame, p, "revealFinish", { label: "Show finish" },
     "Show where the finish is from the start: its marker, the gap around it and the arrow at the screen edge while it is off screen, even over thread you have not explored. Off hides the finish until you have seen it. Applies live.",
     D.revealFinish, () => callbacks.onTrailChange()
   );
   const moveSpeedRow = row(
-    fGame, p, "moveSpeed", { min: 0.25, max: 4, step: 0.05 },
+    fGame, p, "moveSpeed", { min: 0.25, max: 4, step: 0.05, label: "Travel speed" },
     "Maze travel speed: how fast the dot and the gold front move along the thread. Applies live.",
     D.moveSpeed, () => callbacks.onSlackChange()
   );
   const pulseSpacingRow = row(
-    fMaze, p, "pulseSpacing", { min: 0.8, max: 6, step: 0.1 },
+    fPath, p, "pulseSpacing", { min: 0.8, max: 6, step: 0.1, label: "Pulse spacing" },
     "Distance between traveling pulses on the current junction's arms. Applies live.",
     D.pulseSpacing, () => callbacks.onSlackChange()
   );
   const pulseReachRow = row(
-    fMaze, p, "pulseReach", { min: 0.5, max: 15, step: 0.25 },
+    fPath, p, "pulseReach", { min: 0.5, max: 15, step: 0.25, label: "Pulse reach" },
     "How far the current junction's pulses, and the hover highlight on a choice, reach along each arm, in lattice units, before fading out. Applies live.",
     D.pulseReach, () => callbacks.onTrailChange()
   );
   // K145: the subtle glow on the run under the pointer (a choice too since
   // K298, over its own hover look), with its personal settings under it.
+  const fHover = folder("Hover glow", false, fPath);
   const hoverGlowRow = row(
-    fMaze, p, "hoverGlow", { min: 0, max: 1, step: 0.05, label: "Hover glow" },
+    fHover, p, "hoverGlow", { min: 0, max: 1, step: 0.05, label: "Hover glow" },
     "Hover glow: the run under the pointer (or under a touch press) glows softly along both edges near it, fading toward its junctions; on one of your choices it adds to the choice's own highlight. 0 turns it off. Applies live.",
     D.hoverGlow, () => callbacks.onTrailChange()
   );
   // K298: its own length (pulseReach's until K298) and its end fade.
   const hoverGlowLengthRow = row(
-    fMaze, p, "hoverGlowLength",
+    fHover, p, "hoverGlowLength",
     { min: HOVER_GLOW_LENGTH_MIN, max: HOVER_GLOW_LENGTH_MAX, step: 0.25, label: "Hover glow length" },
     "Hover glow length: how far the hover glow reaches along the thread from the pointer, in lattice units, before it has faded out. Applies live.",
     D.hoverGlowLength, () => callbacks.onTrailChange()
   );
   const hoverGlowFadeRow = row(
-    fMaze, p, "hoverGlowFade",
+    fHover, p, "hoverGlowFade",
     { min: 0, max: HOVER_GLOW_FADE_MAX, step: 0.05, label: "Hover glow end fade" },
     "Hover glow end fade: how long the hover glow takes to fade in past each end of the run, where the junctions cover it, in lattice units (0 = a hard edge). Applies live.",
     D.hoverGlowFade, () => callbacks.onTrailChange()
@@ -1235,20 +1250,21 @@ export function buildPanel(
   // K111 stage 4 (K264): that glow's thickness, a personal setting like it
   // (the param keeps its name, hoverGlowWidth, and its link key, hgw).
   const hoverGlowWidthRow = row(
-    fMaze, p, "hoverGlowWidth",
+    fHover, p, "hoverGlowWidth",
     { min: HOVER_GLOW_WIDTH_MIN, max: HOVER_GLOW_WIDTH_MAX, step: 0.05, label: "Hover glow thickness" },
     "Hover glow thickness: how far in from each edge of the thread the hover glow reaches, as a share of the half-width (1 = the two edges' glows meet in the middle). Applies live.",
     D.hoverGlowWidth, () => callbacks.onTrailChange()
   );
   const mazeStatsRow = row(
-    fMaze, s, "showMazeStats", undefined,
+    fPath, s, "showMazeStats", { label: "Maze stats" },
     "Show the maze readout in the top-left corner: solve time (from your first move to arriving at the exit), your path vs the optimal route, efficiency once solved, the distance you backtracked, junctions visited and (with dead ends on) dead ends entered. Remembered per browser.",
     SETTINGS_DEFAULTS.showMazeStats,
     () => callbacks.onMazeStatsToggle(settings.showMazeStats === true)
   );
   // K73 viewer preferences (K84 will move them with the others).
+  const fArrows = folder("Off-screen arrows", false, fPath);
   const finishIndicatorRow = row(
-    fMaze, s, "finishIndicator", { label: "Arrow to the finish" },
+    fArrows, s, "finishIndicator", { label: "Arrow to the finish" },
     "While the finish is off screen, a marker at the edge of the screen points the way to it (under fog of war too, as a direction only). Remembered per browser.",
     SETTINGS_DEFAULTS.finishIndicator,
     () => callbacks.onFinishIndicatorToggle(settings.finishIndicator === true)
@@ -1256,19 +1272,19 @@ export function buildPanel(
   // K198 stage 2: the other two indicators' switches and one size for all
   // three (no step: an edit keeps 2 decimals).
   const headIndicatorRow = row(
-    fMaze, s, "headIndicator", { label: "Arrow to you" },
+    fArrows, s, "headIndicator", { label: "Arrow to you" },
     "While your own position is off screen (you panned away, or a long run outpaced the camera), a marker at the edge of the screen points back to it. Remembered per browser.",
     SETTINGS_DEFAULTS.headIndicator,
     () => callbacks.onHeadIndicatorToggle(settings.headIndicator === true)
   );
   const minotaurIndicatorRow = row(
-    fMaze, s, "minotaurIndicator", { label: "Arrow to the minotaur" },
+    fArrows, s, "minotaurIndicator", { label: "Arrow to the minotaur" },
     "In a real-time chase, while the minotaur is off screen, a marker at the edge of the screen points to it. Remembered per browser.",
     SETTINGS_DEFAULTS.minotaurIndicator,
     () => callbacks.onMinotaurIndicatorToggle(settings.minotaurIndicator === true)
   );
   const indicatorSizeRow = row(
-    fMaze, s, "indicatorSize",
+    fArrows, s, "indicatorSize",
     {
       label: "Off-screen arrow size",
       min: INDICATOR_SCALE_MIN,
@@ -1285,7 +1301,7 @@ export function buildPanel(
     }
   );
   const tapToPanRow = row(
-    fMaze, s, "tapToPan", undefined,
+    fArrows, s, "tapToPan", { label: "Tap arrow to pan" },
     "Tapping an edge marker (the finish's, your own position's, the minotaur's) brings what it points at into view. Off: the markers only point, and taps go through them to the maze. Remembered per browser.",
     SETTINGS_DEFAULTS.tapToPan,
     () => callbacks.onTapToPanToggle(settings.tapToPan === true)
@@ -1293,7 +1309,7 @@ export function buildPanel(
   // K120: the move pad (ui/move_pad.ts), a viewer preference like the two
   // above.
   const movePadRow = row(
-    fMaze, s, "movePad", undefined,
+    fPath, s, "movePad", { label: "Move pad" },
     "A four-way pad in the bottom-right corner that moves like the arrow keys: press a direction to take the run that best matches it, and keep it pressed to keep going at each junction until nothing matches. On by default on touch screens. Remembered per browser.",
     SETTINGS_DEFAULTS.movePad,
     () => callbacks.onMovePadToggle(settings.movePad === true)
@@ -1302,8 +1318,9 @@ export function buildPanel(
   // on/off switch into it). Daily-exempt (how a finish celebrates, not
   // what was played). No step (K130); an edit keeps 2 decimals.
   const confettiAmountRow = row(
-    fMaze, p, "confettiAmount",
+    fPath, p, "confettiAmount",
     {
+      label: "Confetti amount",
       min: 0,
       max: CONFETTI_AMOUNT_MAX,
       keyScale: 0.05,
@@ -1319,7 +1336,7 @@ export function buildPanel(
   // K98: the markers' diameter in thread widths. Daily-exempt (only the
   // look). No step, like the confetti amount: an edit keeps 2 decimals.
   const markerSizeRow = row(
-    fMaze, p, "markerSize",
+    fPath, p, "markerSize",
     {
       label: "Maze marker size",
       min: MARKER_SIZE_MIN,
@@ -1601,26 +1618,26 @@ export function buildPanel(
   // K80 turns stage 2 (K273): what a catch resets, on both clocks. While
   // the level row is on a catch resets everything, so the other two hide.
   const minoRestartRow = chaseRow(
-    "minoRestart", { label: "A catch restarts the level" },
+    "minoRestart", { label: "Catch restarts level" },
     "A catch restarts the level: your path, the fog and the clock start over, and the minotaur goes back to its lair. Your catches still count. Off: a catch sends you back to the entrance and the solve goes on (the rows below say what else resets). Applies from the next catch.",
     true
   );
   const minoLairRow = chaseRow(
-    "minoLair", { label: "Back to its lair after a catch" },
+    "minoLair", { label: "Lair after a catch" },
     "A catch sends the minotaur back to its lair at the finish. Off: it stays where it caught you, and roams on from there (in real time after its wake pause). Applies from the next catch.",
     true
   );
   const minoRefogRow = chaseRow(
-    "minoRefog", { label: "A catch brings back the fog" },
+    "minoRefog", { label: "Catch restores fog" },
     "With fog of war or the thread reveal: a catch returns the fog (or the hidden threads) to how it stood at the start of the solve. Off: what you explored stays uncovered. Applies from the next catch.",
     true
   );
 
   // --- Look ---------------------------------------------------------------
-  const fLook = folder("Look", true);
   row(
     fLook, p, "colorScheme",
     {
+      label: "Color scheme",
       options: {
         mono: "mono",
         strands: "strands",
@@ -1633,23 +1650,24 @@ export function buildPanel(
     D.colorScheme, () => callbacks.onRecolor()
   );
   const junctionBlendRow = row(
-    fLook, p, "junctionBlend", { min: 0, max: 6, step: 0.05 },
+    fLook, p, "junctionBlend", { min: 0, max: 6, step: 0.05, label: "Junction blend" },
     "How far (in lattice units) each intersection's blended color bleeds into the sections meeting there, beyond the short built-in blend. 0 = the blend stays inside the intersection; a section shorter than twice this becomes one continuous gradient between its two intersections. Segments and strands schemes. Applies live.",
     D.junctionBlend, () => callbacks.onRecolor()
   );
   row(
-    fLook, p, "hueShift", { min: 0, max: 359, step: 1 },
+    fLook, p, "hueShift", { min: 0, max: 359, step: 1, label: "Hue shift" },
     "Rotates the whole color gamut around the hue wheel (added to the seed's base hue). Applies live.",
     D.hueShift, () => callbacks.onRecolor()
   );
   row(
-    fLook, p, "gamutArc", { min: 40, max: 360, step: 5 },
+    fLook, p, "gamutArc", { min: 40, max: 360, step: 5, label: "Gamut arc" },
     "Width of the hue arc colors are drawn from: narrow = one tight family, 360 = the full rainbow. Applies live.",
     D.gamutArc, () => callbacks.onRecolor()
   );
   row(
     fLook, p, "palette",
     {
+      label: "Palette",
       options: {
         pastel: "pastel",
         jewel: "jewel",
@@ -1662,33 +1680,34 @@ export function buildPanel(
     D.palette, () => callbacks.onRecolor()
   );
   const pathColorRow = row(
-    fLook, p, "pathColor", { view: "color" },
+    fPath, p, "pathColor", { view: "color", label: "Path color" },
     "Color of the traveled-path highlight (the classic gold). Applies live.",
     D.pathColor, () => callbacks.onRecolor()
   );
   row(
-    fLook, p, "threadWidth", { min: 0.15, max: 0.8, step: 0.01 },
+    fLook, p, "threadWidth", { min: 0.15, max: 0.8, step: 0.01, label: "Thread width" },
     "Ribbon width of every thread, in lattice units.",
     D.threadWidth, () => callbacks.onStyleChange()
   );
   row(
-    fLook, p, "gap", { min: 0.04, max: 0.5, step: 0.01 },
+    fLook, p, "gap", { min: 0.04, max: 0.5, step: 0.01, label: "Crossing gap" },
     "Visible break in the under thread at each crossing - the classic over/under gap.",
     D.gap, () => callbacks.onStyleChange()
   );
   row(
-    fLook, p, "fadeLength", { min: 0, max: 1.2, step: 0.02 },
+    fLook, p, "fadeLength", { min: 0, max: 1.2, step: 0.02, label: "Crossing fade" },
     "How far the under thread fades out approaching a crossing gap. 0 = sharp cut. Applies live.",
     D.fadeLength, () => callbacks.onSlackChange()
   );
   row(
-    fLook, p, "cuspRadius", { min: 0, max: 6, step: 0.05 },
+    fLook, p, "cuspRadius", { min: 0, max: 6, step: 0.05, label: "Corner reach" },
     "How far the rounded corners reach where threads join at an intersection. 0 = sharp joints. Applies live.",
     D.cuspRadius, () => callbacks.onSlackChange()
   );
   row(
     fLook, p, "background",
     {
+      label: "Backdrop",
       options: {
         none: "none",
         vellum: "vellum",
@@ -1708,7 +1727,7 @@ export function buildPanel(
     }
   );
   const backgroundIntensityRow = row(
-    fLook, p, "backgroundIntensity", { min: 0, max: 1, step: 0.05 },
+    fLook, p, "backgroundIntensity", { min: 0, max: 1, step: 0.05, label: "Backdrop intensity" },
     "Backdrop contrast: 0 = the plain page color, 1 = the strongest look. Applies live.",
     D.backgroundIntensity, () => callbacks.onBackgroundChange()
   );
@@ -1718,16 +1737,18 @@ export function buildPanel(
   // when the slider moves off it; the reset glyph returns to auto. No step
   // (a step constraint snaps an off-step speed from a link on the next
   // refresh); the param keeps 2 decimals.
+  const fBackdrop = folder("Backdrop tuning", false, fLook);
   const backgroundSpeedRow = row(
-    fLook, bgView, "backgroundSpeed",
+    fBackdrop, bgView, "backgroundSpeed",
     {
+      label: "Backdrop speed",
       min: 0,
       max: BACKGROUND_SPEED_MAX,
       keyScale: 0.05,
       pointerScale: 0.01,
       format: (v: number) => v.toFixed(2),
     },
-    "How fast the backdrop moves: 0 = still, 1 = the effect's own pace, up to 8x. Vellum is still until you give it a speed (then its mottling drifts and its light wanders; the grain stays put). The reset glyph returns to each effect's own pace. Reduced motion (Motion & intro) keeps every backdrop still. Applies live.",
+    "How fast the backdrop moves: 0 = still, 1 = the effect's own pace, up to 8x. Vellum is still until you give it a speed (then its mottling drifts and its light wanders; the grain stays put). The reset glyph returns to each effect's own pace. Reduced motion (Accessibility) keeps every backdrop still. Applies live.",
     0, () => {
       const v = bgView.backgroundSpeed as number;
       if (Math.abs(v - shownSpeed()) > 1e-9) {
@@ -1751,6 +1772,7 @@ export function buildPanel(
   // with an off-step value a refresh snaps others onto that grid (Reset to
   // defaults would write 0.98 for 1). An edit keeps 2 decimals.
   const round2 = (v: number): number => Math.round(v * 100) / 100;
+  const SHAPE_LABELS: Record<string, string> = { backgroundScale: "Backdrop size", backgroundDetail: "Backdrop detail", backgroundFibers: "Paper fibers", backgroundGrain: "Paper grain" };
   const shapeRow = (
     key:
       | "backgroundScale"
@@ -1762,13 +1784,14 @@ export function buildPanel(
     tipText: string
   ): RowApi =>
     row(
-      fLook, p, key,
+      fBackdrop, p, key,
       {
         min,
         max,
         keyScale: 0.05,
         pointerScale: 0.01,
         format: (v: number) => v.toFixed(2),
+        label: SHAPE_LABELS[key],
       },
       tipText,
       D[key], () => {
@@ -1797,8 +1820,9 @@ export function buildPanel(
   // writes the param only when the slider moves off it (whole degrees,
   // counterclockwise from screen right); the reset glyph returns to auto.
   const backgroundAngleRow = row(
-    fLook, bgView, "backgroundAngle",
+    fBackdrop, bgView, "backgroundAngle",
     {
+      label: "Silk angle",
       min: 0,
       max: 360,
       keyScale: 1,
@@ -1873,8 +1897,9 @@ export function buildPanel(
     PARAM_DEFAULTS.backgroundAccent3,
   ];
   row(
-    fLook, p, "backgroundColorMode",
-    { options: { design: "gamut", custom: "custom" } },
+    fBackdrop, p, "backgroundColorMode",
+    {
+      label: "Backdrop colors", options: { design: "gamut", custom: "custom" } },
     "Backdrop colors: design = the page color plus the design's own colors (they follow hue, gamut and palette); custom = choose the page color and the accent colors yourself (they start from the design's). Applies live.",
     D.backgroundColorMode, () => {
       if (params.backgroundColorMode === "custom") {
@@ -1893,33 +1918,33 @@ export function buildPanel(
     "Accent 2: one end of the backdrop's color range (mist's smoke, silk's streaks, the contour lines, an aurora curtain, a wash bloom). Applies live.",
     "Accent 3: the other end of the backdrop's color range. Applies live.",
   ];
+  const COLOR_LABELS: Record<string, string> = { backgroundBase: "Page color", backgroundAccent1: "Backdrop accent 1", backgroundAccent2: "Backdrop accent 2", backgroundAccent3: "Backdrop accent 3" };
   customKeys.forEach((key, i) => {
     colorRows.push(
       row(
-        fLook, p, key, { view: "color" }, colorTips[i],
+        fBackdrop, p, key, { view: "color", label: COLOR_LABELS[key] }, colorTips[i],
         D[key], () => callbacks.onBackgroundChange()
       )
     );
   });
 
   // --- Motion & intro -----------------------------------------------------
-  const fMotion = folder("Motion & intro", false);
   // THE MOTION SETTING (K53): a viewer preference, not a design param (no
   // link, no daily; ui/motion.ts stores it).
   const motionRow = row(
-    fMotion, s, "motion",
-    { options: { "follow system": "system", full: "full", reduced: "reduced" } },
+    fAccess, s, "motion",
+    { options: { "follow system": "system", full: "full", reduced: "reduced" }, label: "Motion" },
     "How much the page moves. follow system = your device's reduce-motion setting (it switches live); full = all motion; reduced = backdrops hold still, a plucked thread brightens briefly instead of vibrating (the sound is the same), the camera jumps to an edge marker's target instead of easing there, the loading knot, the mode badge and the edge markers stop breathing and fading, and the maze's flow undulation holds still. The Accessibility group's Reduced motion switch sets this same answer. Remembered per browser.",
     SETTINGS_DEFAULTS.motion,
     () => callbacks.onMotionChange(settings.motion)
   );
   row(
-    fMotion, p, "flowStrength", { min: 0, max: 1, step: 0.05 },
+    fMotion, p, "flowStrength", { min: 0, max: 1, step: 0.05, label: "Flow strength" },
     "Flow undulation: how far the whole fabric sways, as if drifting in water. 0 = perfectly still. Render-only - applies live, even while the knot sleeps. Reduced motion (Accessibility, or the Motion row above) holds it still without changing this value.",
     D.flowStrength, () => callbacks.onSlackChange()
   );
   const flowSpeedRow = row(
-    fMotion, p, "flowSpeed", { min: 0, max: 3, step: 0.05 },
+    fMotion, p, "flowSpeed", { min: 0, max: 3, step: 0.05, label: "Flow speed" },
     "How fast the flow undulation drifts. Applies live.",
     D.flowSpeed, () => callbacks.onSlackChange()
   );
@@ -1932,6 +1957,7 @@ export function buildPanel(
   const appearModeRow = row(
     fMotion, p, "appearMode",
     {
+      label: "Appearance preset",
       options: {
         instant: "instant",
         "ink + dust": "ink-dust",
@@ -1968,6 +1994,7 @@ export function buildPanel(
   const appearSequenceRow = row(
     fMotion, p, "appearSequence",
     {
+      label: "Appearance sequence",
       options: {
         instant: "instant",
         trace: "trace",
@@ -1980,13 +2007,14 @@ export function buildPanel(
     D.appearSequence, appearEdited(() => callbacks.onModeChange())
   );
   const appearSpeedRow = row(
-    fMotion, p, "appearSpeed", { min: 0.3, max: 4, step: 0.05 },
+    fMotion, p, "appearSpeed", { min: 0.3, max: 4, step: 0.05, label: "Appearance speed" },
     "How fast the appearance animation reveals the threads. Applies live.",
     D.appearSpeed, appearEdited(() => callbacks.onSlackChange())
   );
   const appearFxRow = row(
     fMotion, p, "appearFx",
     {
+      label: "Appearance effect",
       options: {
         none: "none",
         rainbow: "rainbow",
@@ -2004,12 +2032,12 @@ export function buildPanel(
   // take effect at the next load or Replay settle (the budget also follows
   // the slider while a settle is running).
   row(
-    fMotion, p, "settleBudget", { min: 0, max: SETTLE_BUDGET_MAX, step: 1 },
+    fDeveloper, p, "settleBudget", { min: 0, max: SETTLE_BUDGET_MAX, step: 1, label: "Settle budget" },
     "Settle budget: at most this many milliseconds of physics per frame while the knot first settles after loading, so the intro stays smooth on slow devices - the settle plays in slow motion instead of the frame rate dropping. Ends when the knot first comes to rest (or at the latest after five minutes on screen). 0 = off: the physics keeps up with real time and the intro stutters while it settles. Applies at the next load or Replay settle.",
     D.settleBudget, () => callbacks.onSlackChange()
   );
   row(
-    fMotion, p, "loadSettle", { min: 0, max: LOAD_SETTLE_MAX, step: 0.05 },
+    fDeveloper, p, "loadSettle", { min: 0, max: LOAD_SETTLE_MAX, step: 0.05, label: "Load settle" },
     "Load settle: seconds of physics to run before the knot appears, so it starts its intro already partly relaxed. A loading knot shows if this takes a noticeable moment. 0 = appear at once; the max = wait until the knot is fully at rest (settle first, then the intro). Applies at the next load or Replay settle.",
     D.loadSettle, () => callbacks.onSlackChange()
   );
@@ -2020,20 +2048,20 @@ export function buildPanel(
   ).on("click", callbacks.onReplaySettle);
 
   // --- Touch & feel ---------------------------------------------------------
-  const fFeel = folder("Touch & feel", false);
   row(
-    fFeel, p, "pluckSize", { min: 0, max: 3, step: 0.05 },
+    fFeel, p, "pluckSize", { min: 0, max: 3, step: 0.05, label: "Pluck size" },
     "How wide a plucked thread swings. A tap (or an auto pluck) sets the thread between its crossings vibrating - visual only, nothing else moves. 0 = sound only. Applies live.",
     D.pluckSize, () => callbacks.onSlackChange()
   );
   const pluckGhostRow = row(
-    fFeel, p, "pluckGhost", { min: 0, max: 1, step: 0.05 },
+    fFeel, p, "pluckGhost", { min: 0, max: 1, step: 0.05, label: "Pluck ghost" },
     "The speed cue on a vibrating thread: a faint crisp copy of the string flickering inside the blur. 0 = a pure time-exposure blur. Off under reduced motion (Motion & intro). Applies live.",
     D.pluckGhost, () => callbacks.onSlackChange()
   );
   row(
     fFeel, p, "pluckReach",
-    { options: { run: "run", lobe: "lobe" } },
+    {
+      label: "Pluck reach", options: { run: "run", lobe: "lobe" } },
     "What a pluck sets vibrating: run = the whole maze segment you hear, each stretch between crossings humming (in knot mode, the plucked stretch and two either side); lobe = only the stretch between the two nearest crossings. Applies to the next pluck.",
     D.pluckReach, () => callbacks.onSlackChange()
   );
@@ -2042,6 +2070,7 @@ export function buildPanel(
   const pluckWholeRow = row(
     fFeel, p, "pluckWhole",
     {
+      label: "Whole-pluck swing",
       min: 0,
       max: PLUCK_WHOLE_MAX,
       keyScale: 0.05,
@@ -2056,13 +2085,15 @@ export function buildPanel(
   );
   const pluckCrossingsRow = row(
     fFeel, p, "pluckCrossings",
-    { options: { through: "through", ride: "ride", pinch: "pinch" } },
+    {
+      label: "Pluck crossings", options: { through: "through", ride: "ride", pinch: "pinch" } },
     "How the whole segment's swing meets the crossings inside it: through = it carries across them, so the segment's blur stays one piece; ride = it stays within each crossing's soft limit (short stretches keep it near a thread width); pinch = it narrows to a waist at every crossing. Applies live.",
     D.pluckCrossings, () => callbacks.onSlackChange()
   );
   const pluckGlowRow = row(
     fFeel, p, "pluckGlow",
-    { options: { off: "off", instead: "instead", with: "with", fallback: "fallback" } },
+    {
+      label: "Pluck glow", options: { off: "off", instead: "instead", with: "with", fallback: "fallback" } },
     "A glow on the plucked segment, brightening toward white as it rings: off = movement only; instead = the glow replaces the whole segment's swing (the tapped stretch still moves); with = the swing and the glow; fallback = the glow only on plucks whose movement is too small to see (zoomed out, or hemmed in by other threads). Reduced motion always glows instead of moving. Applies to the next pluck.",
     D.pluckGlow, () => callbacks.onSlackChange()
   );
@@ -2082,39 +2113,35 @@ export function buildPanel(
   });
   row(
     fFeel, p, "pluckRipple",
-    { options: { off: "off", wave: "wave", glint: "glint", ring: "ring" } },
+    {
+      label: "Pluck ripple", options: { off: "off", wave: "wave", glint: "glint", ring: "ring" } },
     "A ripple spreading from where a thread is plucked, drawn over the threads (render only: nothing physically moves). wave = the threads it passes bend for a moment; glint = a bright band sweeps outward along them; ring = a soft ring expands from the pluck; off = none. Auto plucks ripple more faintly (rippleAuto). Off under reduced motion. Applies to the next pluck.",
     D.pluckRipple, () => callbacks.onSlackChange()
   );
   const rippleStrengthRow = row(
-    fFeel, p, "rippleStrength", twoDec(RIPPLE_STRENGTH_MAX),
+    fFeel, p, "rippleStrength", { ...twoDec(RIPPLE_STRENGTH_MAX), label: "Ripple strength" },
     "How strong your own plucks' ripple is (taps and drag releases). 0 = none; 1 = the default; up to 2. Applies to the next pluck.",
     D.rippleStrength, round2Feel("rippleStrength")
   );
   const rippleAutoRow = row(
-    fFeel, p, "rippleAuto", twoDec(RIPPLE_STRENGTH_MAX),
+    fFeel, p, "rippleAuto", { ...twoDec(RIPPLE_STRENGTH_MAX), label: "Auto ripple strength" },
     "How strong auto plucks' ripple is (the random and music sound modes), kept below your own so the knot's own music stays subtle. 0 = none. Applies to the next pluck.",
     D.rippleAuto, round2Feel("rippleAuto")
   );
   const pluckSheenRow = row(
-    fFeel, p, "pluckSheen", twoDec(1),
+    fFeel, p, "pluckSheen", { ...twoDec(1), label: "Pluck sheen" },
     "A bright sheen at the edges of a vibrating thread's blur, where a real string spends most of its swing (like a long-exposure photo of one). 0 = none. Off under reduced motion. Applies live.",
     D.pluckSheen, round2Feel("pluckSheen")
   );
   const pluckTugRow = row(
-    fFeel, p, "pluckTug", twoDec(1),
+    fFeel, p, "pluckTug", { ...twoDec(1), label: "Pluck tug" },
     "A small real tug on the plucked stretch on top of the drawn vibration: the thread twitches toward the side you plucked and the knot settles back. 0 = drawn vibration only. None with physics off or under reduced motion. Applies to the next pluck.",
     D.pluckTug, round2Feel("pluckTug")
   );
   const tugAutoRow = row(
-    fFeel, p, "tugAuto", undefined,
+    fFeel, p, "tugAuto", { label: "Auto plucks tug" },
     "Auto plucks tug too (the random and music sound modes). Off = only your own plucks tug, so the knot can rest while the music plays. Applies to the next pluck.",
     D.tugAuto, () => callbacks.onSlackChange()
-  );
-  row(
-    fFeel, p, "autoPluckGain", twoDec(1),
-    "How loud auto plucks play (the random and music sound modes) next to your own: 1 = as loud as a tap; 0.5 = the default, half the level (-6 dB); 0 = silent. Applies to the next pluck.",
-    D.autoPluckGain, round2Feel("autoPluckGain")
   );
   // K298: how near a thread the MOUSE picks it (a pen's too; touch keeps
   // its own wider reach). No step (K130); an edit keeps 2 decimals.
@@ -2151,40 +2178,62 @@ export function buildPanel(
     }
   );
   const tugLimitRow = row(
-    fFeel, p, "tugLimit", { min: 0.5, max: 6, step: 0.1 },
+    fFeel, p, "tugLimit", { min: 0.5, max: 6, step: 0.1, label: "Tug limit" },
     "Dragging a thread tugs it (taps pluck instead). How far a thread can be tugged, in thread widths; the stretch resists more as it nears the limit (drag further, move less). Applies live.",
     D.tugLimit, () => callbacks.onSlackChange()
   );
   const snapBackRow = row(
-    fFeel, p, "snapBack", { min: 0, max: 12, step: 0.5 },
+    fFeel, p, "snapBack", { min: 0, max: 12, step: 0.5, label: "Snap back" },
     "After a drag: how quickly the released thread eases back to where it was grabbed (soft release style). 0 = release in place. Applies live.",
     D.snapBack, () => callbacks.onSlackChange()
   );
   const pluckStyleRow = row(
     fFeel, p, "pluckStyle",
-    { options: { string: "string", soft: "soft" } },
+    {
+      label: "Release style", options: { string: "string", soft: "soft" } },
     "After a drag: string = let go at once - the knot snaps back and the released stretch vibrates like a plucked string; soft = ease home gently (speed = the snapBack slider), no vibration.",
     D.pluckStyle, () => callbacks.onSlackChange()
   );
   const temperatureRow = row(
-    fFeel, s, "temperature", { min: 0, max: 0.5, step: 0.01 },
+    fPhysics, s, "temperature", { min: 0, max: 0.5, step: 0.01, label: "Agitation" },
     "Agitation. Shake the knot with noise; slide back to 0 and it settles into a new pose.",
     SETTINGS_DEFAULTS.temperature, () => callbacks.onTemperatureChange()
   );
 
   // --- Sound ----------------------------------------------------------------
-  const fSound = folder("Sound", false);
+  row(
+    fSound, s, "muted", { label: "Muted" },
+    "Silence everything (also pauses the random/music auto-pluck modes).",
+    SETTINGS_DEFAULTS.muted, () => {}
+  );
+  row(
+    fSound, p, "volume", { min: 0, max: 1, step: 0.01, label: "Volume" },
+    "Master output level.",
+    D.volume, () => callbacks.onVolumeChange()
+  );
+  row(
+    fSound, p, "autoPluckGain", { ...twoDec(1), label: "Auto pluck loudness" },
+    "How loud auto plucks play (the random and music sound modes) next to your own: 1 = as loud as a tap; 0.5 = the default, half the level (-6 dB); 0 = silent. Applies to the next pluck.",
+    D.autoPluckGain, round2Feel("autoPluckGain")
+  );
   row(
     fSound, p, "soundMode",
     {
+      label: "Sound mode",
       options: { none: "none", manual: "manual", random: "random", music: "music" },
     },
     "Pluck behavior: none = silent; manual = your plucks only; random = the knot plucks a random thread now and then; music = a scripted song plays itself on matching threads. Auto plucks make the thread ring (visual only - nothing else moves).",
     D.soundMode, () => callbacks.onAudioChange()
   );
+  const soundSpeedRow = row(
+    fSound, p, "soundSpeed", { min: 0.25, max: 6, step: 0.05, label: "Sound speed" },
+    "Tempo of music mode and cadence of random plucks. 1 = normal.",
+    D.soundSpeed, () => callbacks.onAudioChange()
+  );
   const pitchSpaceRow = row(
     fSound, p, "pitchSpace",
     {
+      label: "Pitch scale",
       options: {
         chromatic: "chromatic",
         pentMajor: "pentMajor",
@@ -2201,13 +2250,14 @@ export function buildPanel(
     D.pitchSpace, () => callbacks.onAudioChange()
   );
   const octavesRow = row(
-    fSound, p, "octaves", { min: 1, max: 4, step: 1 },
+    fSound, p, "octaves", { min: 1, max: 4, step: 1, label: "Octaves" },
     "How many octaves the segment pitches spread across.",
     D.octaves, () => callbacks.onAudioChange()
   );
   const rootNoteRow = row(
     fSound, p, "rootNote",
     {
+      label: "Root note",
       options: {
         seed: "seed", C: "C", "C#": "C#", D: "D", "D#": "D#", E: "E",
         F: "F", "F#": "F#", G: "G", "G#": "G#", A: "A", "A#": "A#", B: "B",
@@ -2217,90 +2267,74 @@ export function buildPanel(
     D.rootNote, () => callbacks.onAudioChange()
   );
   const tonicEmphasisRow = row(
-    fSound, p, "tonicEmphasis", { min: 0, max: 1, step: 0.05 },
+    fSound, p, "tonicEmphasis", { min: 0, max: 1, step: 0.05, label: "Tonic emphasis" },
     "How strongly the segment pitches gravitate to the key: more threads ring the tonic (up to 3x), the dominant (2x) and the third (1.5x). 0 = every scale note equally often.",
     D.tonicEmphasis, (ev) => { if (!ev || ev.last !== false) callbacks.onAudioChange(); }
   );
-  const soundSpeedRow = row(
-    fSound, p, "soundSpeed", { min: 0.25, max: 6, step: 0.05 },
-    "Tempo of music mode and cadence of random plucks. 1 = normal.",
-    D.soundSpeed, () => callbacks.onAudioChange()
-  );
   row(
-    fSound, p, "volume", { min: 0, max: 1, step: 0.01 },
-    "Master output level.",
-    D.volume, () => callbacks.onVolumeChange()
-  );
-  row(
-    fSound, p, "reverb", { min: 0, max: 1, step: 0.01 },
+    fSound, p, "reverb", { min: 0, max: 1, step: 0.01, label: "Reverb" },
     "Hall reverb amount. 0 = dry strings, 1 = a wash of room.",
     D.reverb, () => callbacks.onVolumeChange()
   );
   row(
-    fSound, p, "brightness", { min: 0, max: 1, step: 0.01 },
+    fSound, p, "brightness", { min: 0, max: 1, step: 0.01, label: "Brightness" },
     "String brightness: low = felted and dark, high = wiry and bright. Applies from the next pluck.",
     D.brightness, () => callbacks.onVolumeChange()
   );
   row(
-    fSound, p, "sustain", { min: 0, max: 1, step: 0.01 },
+    fSound, p, "sustain", { min: 0, max: 1, step: 0.01, label: "Sustain" },
     "How long strings ring after a pluck.",
     D.sustain, () => callbacks.onVolumeChange()
   );
   row(
-    fSound, p, "shimmer", { min: 0, max: 1, step: 0.01 },
+    fSound, p, "shimmer", { min: 0, max: 1, step: 0.01, label: "Shimmer" },
     "Unison-course detune: the slow beating shimmer of paired strings. 0 = a single pure string.",
     D.shimmer, () => callbacks.onVolumeChange()
   );
   row(
-    fSound, p, "pickPosition", { min: 0, max: 1, step: 0.01 },
+    fSound, p, "pickPosition", { min: 0, max: 1, step: 0.01, label: "Pick position" },
     "Where along the string the finger plucks: low = near the end (nasal, thin), high = near the middle (round, hollow).",
     D.pickPosition, () => callbacks.onVolumeChange()
   );
-  row(
-    fSound, s, "muted", undefined,
-    "Silence everything (also pauses the random/music auto-pluck modes).",
-    SETTINGS_DEFAULTS.muted, () => {}
-  );
 
   // --- Physics --------------------------------------------------------------
-  const fPhysics = folder("Physics", false);
   row(
-    fPhysics, p, "physics", undefined,
+    fPhysics, p, "physics", { label: "Physics" },
     "Physics simulation. Off: each design settles behind a loading spinner, then its layout freezes - nothing simulates afterwards (lighter on battery and slow devices). Threads can still be plucked (and flow, pulses and the intro still play), but not tugged: a drag pans the view. Applies live - turning it off first lets a moving knot come to rest; the sliders below still shape the frozen layout.",
     D.physics, () => callbacks.onPhysicsToggle()
   );
   const simSpeedRow = row(
-    fPhysics, p, "simSpeed", { min: 0, max: 10, step: 0.5 },
+    fDeveloper, p, "simSpeed", { min: 0, max: 10, step: 0.5, label: "Sim speed" },
     "Simulation speed. 0 pauses, 5 is real time, 10 is 5x.",
     D.simSpeed, () => callbacks.onSlackChange()
   );
   row(
-    fPhysics, p, "slack", { min: 0, max: 1, step: 0.05 },
+    fPhysics, p, "slack", { min: 0, max: 1, step: 0.05, label: "Slack" },
     "How loose the threads rest. 0 pulls the knot rope-taut, 1 leaves it soft and open.",
     D.slack, () => callbacks.onSlackChange()
   );
   row(
-    fPhysics, p, "drag", { min: 0, max: 1, step: 0.05 },
+    fPhysics, p, "drag", { min: 0, max: 1, step: 0.05, label: "Motion damping" },
     "Motion damping. Low = springy, waves ring after a pluck; high = movement dies quickly.",
     D.drag, () => callbacks.onSlackChange()
   );
   row(
-    fPhysics, p, "repulsion", { min: 0.4, max: 1.8, step: 0.05 },
+    fPhysics, p, "repulsion", { min: 0.4, max: 1.8, step: 0.05, label: "Repulsion" },
     "Breathing room between parallel threads. Higher spreads the composition apart.",
     D.repulsion, () => callbacks.onSlackChange()
   );
   row(
-    fPhysics, p, "bend", { min: 0.2, max: 2.5, step: 0.05 },
+    fPhysics, p, "bend", { min: 0.2, max: 2.5, step: 0.05, label: "Bend stiffness" },
     "Bending stiffness. Higher resists sharp curves - smoother, rounder thread paths.",
     D.bend, () => callbacks.onSlackChange()
   );
   row(
-    fPhysics, p, "stiffness", { min: 0.1, max: 1.35, step: 0.05 },
+    fPhysics, p, "stiffness", { min: 0.1, max: 1.35, step: 0.05, label: "Spring stiffness" },
     "Structural spring strength along each thread. Higher = firmer, less stretchy material.",
     D.stiffness, () => callbacks.onSlackChange()
   );
   row(
-    fPhysics, p, "smooth", { min: 0, max: 1, step: 0.05 },
+    fPhysics, p, "smooth", { min: 0, max: 1, step: 0.05, label: "Smoothing" },
     "Curvature smoothing. Evens out wiggles along threads so they read as continuous curves.",
     D.smooth, () => callbacks.onSlackChange()
   );
@@ -2311,7 +2345,8 @@ export function buildPanel(
   // constraint would snap the default (slider 0.669) off its exact value.
   row(
     fPhysics, gaView, "gridAlign",
-    { min: 0, max: 1, format: (v: number) => v.toFixed(2) },
+    {
+      label: "Grid alignment", min: 0, max: 1, format: (v: number) => v.toFixed(2) },
     "How strongly every thread is pulled back toward its lattice position, on an exponential scale (each tenth of the slider doubles the pull): 0 = free-flowing curves, 1 = a formal, grid-like composition. Applies live.",
     gridAlignSlider(PARAM_DEFAULTS.gridAlign), () => {
       params.gridAlign = gridAlignStrength(gaView.gridAlign as number);
@@ -2319,22 +2354,21 @@ export function buildPanel(
     }
   );
 
-  // --- Advanced ---------------------------------------------------------------
-  const fAdvanced = folder("Advanced", false);
+  // --- Developer (K541: Advanced renamed; Reset to defaults is at the root) ---
   row(
-    fAdvanced, s, "showDebug", undefined,
+    fDeveloper, s, "showDebug", { label: "Debug overlay" },
     "Overlay the physics debug view (particles, bindings, contacts).",
     SETTINGS_DEFAULTS.showDebug,
     () => callbacks.onDebugToggle(settings.showDebug === true)
   );
   row(
-    fAdvanced, s, "showStats", undefined,
+    fDeveloper, s, "showStats", { label: "Stats readout" },
     "Show the build + performance readout (version, sim/wall time, frame cost) in the bottom-left corner. Remembered per browser.",
     SETTINGS_DEFAULTS.showStats,
     () => callbacks.onStatsToggle(settings.showStats === true)
   );
   button(
-    fAdvanced,
+    pane as unknown as Parent,
     "Reset to defaults",
     "Restore every parameter to its default value (keeps the current seed) and regenerate."
   ).on("click", () => {

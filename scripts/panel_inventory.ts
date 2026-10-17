@@ -53,6 +53,7 @@ const storage = {
 const define = (k: string, v: unknown): void => {
   Object.defineProperty(globalThis, k, { value: v, configurable: true, writable: true });
 };
+define("HTMLElement", class HTMLElement {});
 define("localStorage", storage);
 define("document", {
   createElement: () => stubElement(),
