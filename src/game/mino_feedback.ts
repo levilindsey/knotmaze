@@ -79,12 +79,21 @@ export function turnCue(
 }
 
 // A footstep's strength by run distance: full next door, gone at
-// FOOTSTEP_RUNS. (Panning by screen x is section 2.10's other half;
-// KnotSynth has no pan control, so distance carries it for now.)
+// FOOTSTEP_RUNS. (Its screen-x pan is footstepPan, K526.)
 export function footstepStrength(distRuns: number): number {
   if (!Number.isFinite(distRuns) || distRuns >= FOOTSTEP_RUNS) return 0;
   if (distRuns <= 0) return 0.5;
   return 0.5 * (1 - distRuns / FOOTSTEP_RUNS);
+}
+
+// Section 2.10's other half (K526): a footstep's pan from the
+// minotaur's screen x - hard left at the left edge, centered mid-screen,
+// hard right at the right edge. Garbage (no position, no width) centers.
+export function footstepPan(screenX: number, screenWidth: number): number {
+  if (!Number.isFinite(screenX) || !Number.isFinite(screenWidth) || screenWidth <= 0) {
+    return 0;
+  }
+  return Math.max(-1, Math.min(1, (screenX / screenWidth) * 2 - 1));
 }
 
 // The catch's two notes from the caught run's pitch: an octave down, and

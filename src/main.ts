@@ -22,6 +22,7 @@ import type { ChaseEvent } from "./game/minotaur";
 import { TurnMinotaur, turnConfig, turnSeed } from "./game/minotaur_turns";
 import {
   catchNotes,
+  footstepPan,
   footstepStrength,
   turnCue,
 } from "./game/mino_feedback";
@@ -1767,12 +1768,13 @@ async function main(): Promise<void> {
     showCaughtToast(scene.turnMino.catches);
   };
   let turnWarned = false;
+  const stepPanScratch = new Float32Array(2);
   // After the controller took run `eid`: the minotaur's turn. True when
   // the move ended in a catch (nothing left to animate).
   // K80 turns 3b (section 2.10): the turn's sound cue — a growl when it
   // first sees you, a heartbeat double pluck within two runs, else the
-  // quiet footstep of each run it walked (strength by distance; KnotSynth
-  // has no pan, so screen-x panning waits for one).
+  // quiet footstep of each run it walked (strength by distance,
+  // panned by its screen x (K526).
   const minoTurnSound = (wasHunting: boolean): void => {
     if (!scene.turnMino || !scene.walkGraph) return;
     const tm = scene.turnMino;
@@ -1792,7 +1794,19 @@ async function main(): Promise<void> {
       else synth.pluck(Math.max(40, freq / 2), 0.3);
     } else {
       const s = footstepStrength(dist);
-      if (s > 0) synth.pluck(freq / 2, s);
+      if (s > 0) {
+        // K526: the footstep pans by the minotaur's screen x.
+        let pan = 0;
+        const vid = tm.tg.chase.ids[tm.state.v];
+        if (scene.fabric && vid !== undefined) {
+          scene.fabric.vertexWorld(vid, stepPanScratch, 0);
+          pan = footstepPan(
+            root.position.x + stepPanScratch[0] * root.scale.x,
+            app.screen.width
+          );
+        }
+        synth.pluck(freq / 2, s, undefined, false, pan);
+      }
     }
   };
   const turnAfterMove = (eid: number): boolean => {
