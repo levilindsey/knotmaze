@@ -1234,6 +1234,7 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K346** · A NaN displacement now raises the frame's max move (particle_system's Verlet loop), so maxMove reads non-finite and the physics halt fires on a NaN state. Done in this commit (2026-10-16).
 - **K398** · Link values clamp to the panel ranges (PARAM_RANGES in param_codec.ts: on encode, and in url_state's readers; the codec's decode stays lossless, hueShift/background sentinels/junctionBlend's floor keep their pins), so a gs 66+ knot link can no longer overflow the GAP texture. Done in this commit (2026-10-16).
 - **K524** · K80 turns 3b's real-phone contact sheet: shot 2026-10-16 on the real Pixel 11 at 411x753 (master 5558669, PowerVR Vulkan; roam turn 2, hunt turn 47, caught turn 48, all checks pass). `.claude/probes/K80/stage3b/contact_sheet_real.png` beside the emulated sheet; frames + look notes in `shots/phone_real/` (probe `turns_phone_real.mjs`). Done 2026-10-16 (probe evidence only, no commit).
 - **K521** · K74 stage 3 items 7-8 measured: prototype port byte-identical 640/640 (K109/K110 exception list empty); greedy bar fails on dailies 1-240 (gF median 2.86x, 20.0% within 1.5x vs the 15% bar) - owned by stage 4's search (K527), not a stage-3 retune. Done in 4098946 (2026-10-16; evidence `.claude/probes/K74/stage3/out/results_k521.md`).
