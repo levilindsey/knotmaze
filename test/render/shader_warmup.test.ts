@@ -362,7 +362,7 @@ describe("shader warm-up (K307)", () => {
     const daily = {
       mazeFabric: true,
       exploration: "off",
-      fire: "off",
+      gameMode: "classic",
       pluckRipple: "glint",
       backgroundIntensity: 0.5,
       backgroundSpeed: -1,
@@ -390,8 +390,8 @@ describe("shader warm-up (K307)", () => {
       fog: false,
       bgIds: ["mist"],
     });
-    expect(warmContextFor({ ...daily, fire: "fuse" }, "vellum", false, 16).burn).toBe(true);
-    expect(warmContextFor({ ...daily, fire: "fuse", mazeFabric: false }, "vellum", false, 16).burn).toBe(false);
+    expect(warmContextFor({ ...daily, gameMode: "burn" }, "vellum", false, 16).burn).toBe(true);
+    expect(warmContextFor({ ...daily, gameMode: "burn", mazeFabric: false }, "vellum", false, 16).burn).toBe(false);
     expect(warmContextFor({ ...daily, backgroundSpeed: 1 }, "vellum", false, 16).bgIds).toEqual([
       "vellum",
       "vellum-drift",

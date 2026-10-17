@@ -45,7 +45,7 @@ function walkOf(p: UrlParams) {
     ...DEFAULT_MAZE_PARAMS,
     branchDensity: p.branchDensity,
     fourWayFraction: p.fourWayFraction,
-    deadEndDensity: p.deadEnds ? p.deadEndDensity : 0,
+    deadEndDensity: p.deadEndDensity,
     deadEndLength: p.deadEndLength,
     hCutShare: p.hCutShare,
     entranceClearance: p.entranceClearance,
@@ -133,9 +133,9 @@ describe("maze identity", () => {
       appearMode: "instant",
     };
     expect(sameMaze(a, { ...a, ...look })).toBe(true);
-    // The dead-end knobs are inert while dead ends are off.
-    const off = { ...a, deadEnds: false };
-    expect(sameMaze(off, { ...off, deadEndDensity: 0.9, deadEndLength: 33 })).toBe(true);
+    // At density 0 (the braided maze) the tail length is inert.
+    const off = { ...a, deadEndDensity: 0 };
+    expect(sameMaze(off, { ...off, deadEndLength: 33 })).toBe(true);
     const maze: Array<Partial<UrlParams>> = [
       { seed: a.seed + 1 },
       { gridSize: 12 },
@@ -143,8 +143,7 @@ describe("maze identity", () => {
       { startAnchor: "n" },
       { weaveDensity: 0.5 },
       { branchDensity: 0.5 },
-      { deadEnds: false },
-      { deadEndDensity: 0.9 },
+      { deadEndDensity: 0 },
       { deadEndLength: 30 },
       { junctionSpacing: 3 },
       { exitClearance: 2 },
@@ -346,7 +345,6 @@ describe("the daily design and its exempt preferences (K56)", () => {
       // K7 stage 3: which thread runs the physics.
       "physicsWorker",
       // K140, proposed with it.
-      "confetti",
       "confettiAmount",
       // K98, proposed with it.
       "markerSize",

@@ -39,7 +39,8 @@ function design(
   deadEnds: boolean,
   knobs: Partial<UrlParams> = {}
 ): UrlParams {
-  return { ...PARAM_DEFAULTS, ...PRE_K74, shape, gridSize, seed, deadEnds, ...knobs };
+  // K323: the old switch is density 0 (off) or PRE_K74's density (on).
+  return { ...PARAM_DEFAULTS, ...PRE_K74, shape, gridSize, seed, deadEndDensity: deadEnds ? PRE_K74.deadEndDensity : 0, ...knobs };
 }
 
 function graphOf(p: UrlParams): TangleGraph {
@@ -57,7 +58,7 @@ function mazeParamsOf(p: UrlParams): MazeParams {
     ...DEFAULT_MAZE_PARAMS,
     branchDensity: p.branchDensity,
     fourWayFraction: p.fourWayFraction,
-    deadEndDensity: p.deadEnds ? p.deadEndDensity : 0,
+    deadEndDensity: p.deadEndDensity,
     deadEndLength: p.deadEndLength,
     hCutShare: p.hCutShare,
     exitCorridor: p.exitCorridor,
@@ -350,7 +351,7 @@ describe("maze plan: every piece reachable from the start (K110)", () => {
     }
     let cuts = 0;
     for (const p of designs) {
-      expect(p.deadEnds).toBe(true);
+      expect(p.deadEndDensity).toBeGreaterThan(0);
       const plan = buildMazePlan(graphOf(p), mazeParamsOf(p));
       cuts += plan.deadEndCuts.length;
       const label = `${p.shape} gs${p.gridSize} seed ${p.seed}`;

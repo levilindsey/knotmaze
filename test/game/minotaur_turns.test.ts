@@ -24,7 +24,6 @@ import {
   lengthContactFraction,
 } from "../../src/game/minotaur_turns";
 import type { TurnConfig, TurnMinoParams, TurnStep } from "../../src/game/minotaur_turns";
-import { undoAllowed } from "../../src/game/minotaur";
 import { SeededRNG } from "../../src/util/random";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEAD_END_DENSITY_ON, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
@@ -277,16 +276,6 @@ describe("params to config", () => {
       sight: DEFAULT_TURN_MINO.sight,
       accuracy: TURN_MODEL_DEFAULTS.stalker.accuracy,
     });
-  });
-});
-
-describe("undo", () => {
-  it("is off in real time and whenever the turn minotaur is on", () => {
-    expect(undoAllowed("turn")).toBe(true);
-    expect(undoAllowed("turn", "off")).toBe(true);
-    expect(undoAllowed("turn", "hunter")).toBe(false);
-    expect(undoAllowed("realtime")).toBe(false);
-    expect(undoAllowed("realtime", "off")).toBe(false);
   });
 });
 

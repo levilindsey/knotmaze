@@ -211,7 +211,6 @@ const SCENE_FIELDS: Record<keyof SceneParams, "number" | "boolean" | "string"> =
   mazeFabric: "boolean",
   branchDensity: "number",
   fourWayFraction: "number",
-  deadEnds: "boolean",
   deadEndDensity: "number",
   deadEndLength: "number",
   hCutShare: "number",

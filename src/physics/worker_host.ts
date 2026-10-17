@@ -141,7 +141,6 @@ export function sceneParamsOf(p: SceneParams): SceneParams {
     mazeFabric: p.mazeFabric,
     branchDensity: p.branchDensity,
     fourWayFraction: p.fourWayFraction,
-    deadEnds: p.deadEnds,
     deadEndDensity: p.deadEndDensity,
     deadEndLength: p.deadEndLength,
     hCutShare: p.hCutShare,

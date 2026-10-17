@@ -512,3 +512,17 @@ Collision notes:
 ## 7. Handoff
 
 (Implementing agents append their stage handoffs here.)
+
+### Stage A1 (K534, 2026-10-16; K339's A1/A2 split - A2 is ledger K541)
+
+Landed: codec v7 (snappiness, the mazeFabric codec entry, deadEnds,
+confetti and fire deleted; minotaur loses off; minoToward becomes the
+minoPull slider; gameMode appended), `clockOf`, the implied-mode
+key=value keys (`fi=fuse`, `clk=realtime`, a named model), the Game
+folder after Design (Game mode, the exploration rows, moveSpeed,
+Reset path, the minotaur and burn rows with K323's labels, Minotaur
+tuning for the turn rows), the indicator/marker labels, and K340
+look F. The mazeFabric field stays until K326. No default moves a
+maze: the golden dailies and the K74 pins are unchanged. A2 (the
+remaining folder moves, every-row word labels, the 320 px desktop
+width, the inventory rerun) is ledger K541.

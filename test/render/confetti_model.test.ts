@@ -71,13 +71,13 @@ function runOut(sim: ConfettiSim, height: number, cap = 30): number {
 
 describe("confettiPlan: how many pieces a finish throws", () => {
   it("scales both effects with the amount", () => {
-    expect(confettiPlan(true, 1, false)).toEqual({
+    expect(confettiPlan(1, false)).toEqual({
       rain: RAIN_PER_AMOUNT,
       spray: SPRAY_PER_AMOUNT,
       slow: false,
     });
-    expect(confettiPlan(true, 0.5, false)).toEqual({ rain: 140, spray: 80, slow: false });
-    expect(confettiPlan(true, CONFETTI_AMOUNT_MAX, false)).toEqual({
+    expect(confettiPlan(0.5, false)).toEqual({ rain: 140, spray: 80, slow: false });
+    expect(confettiPlan(CONFETTI_AMOUNT_MAX, false)).toEqual({
       rain: RAIN_PER_AMOUNT * CONFETTI_AMOUNT_MAX,
       spray: SPRAY_CAP,
       slow: false,
@@ -86,17 +86,17 @@ describe("confettiPlan: how many pieces a finish throws", () => {
 
   it("scales the rain (not the spray) with the screen, up to the cap", () => {
     // The reference phone, portrait or landscape, and anything smaller.
-    expect(confettiPlan(true, 1, false, RAIN_REF_W, RAIN_REF_H).rain).toBe(RAIN_PER_AMOUNT);
-    expect(confettiPlan(true, 1, false, RAIN_REF_H, RAIN_REF_W).rain).toBe(RAIN_PER_AMOUNT);
-    expect(confettiPlan(true, 1, false, 320, 568).rain).toBe(RAIN_PER_AMOUNT);
+    expect(confettiPlan(1, false, RAIN_REF_W, RAIN_REF_H).rain).toBe(RAIN_PER_AMOUNT);
+    expect(confettiPlan(1, false, RAIN_REF_H, RAIN_REF_W).rain).toBe(RAIN_PER_AMOUNT);
+    expect(confettiPlan(1, false, 320, 568).rain).toBe(RAIN_PER_AMOUNT);
     // Desktops: the same coverage in bigger pieces.
     expect(rainScreenScale(1400, 900)).toBeCloseTo(2.059, 3);
     expect(rainScreenScale(1920, 1080)).toBeCloseTo(2.537, 3);
-    const desk = confettiPlan(true, 1, false, 1400, 900);
+    const desk = confettiPlan(1, false, 1400, 900);
     expect(desk).toEqual({ rain: 576, spray: SPRAY_PER_AMOUNT, slow: false });
     // A huge screen at the top amount fills the pool exactly.
     expect(rainScreenScale(3840, 2160)).toBe(RAIN_SCREEN_MAX);
-    expect(confettiPlan(true, CONFETTI_AMOUNT_MAX, false, 3840, 2160).rain).toBe(RAIN_CAP);
+    expect(confettiPlan(CONFETTI_AMOUNT_MAX, false, 3840, 2160).rain).toBe(RAIN_CAP);
     // No screen, or a garbage one: the phone's count.
     for (const [w, h] of [
       [0, 0],
@@ -106,31 +106,25 @@ describe("confettiPlan: how many pieces a finish throws", () => {
       expect(rainScreenScale(w, h)).toBe(1);
     }
     // Reduced motion still throws no rain on any screen.
-    expect(confettiPlan(true, 1, true, 1920, 1080).rain).toBe(0);
+    expect(confettiPlan(1, true, 1920, 1080).rain).toBe(0);
   });
 
-  it("caps the amount and reads off, zero or garbage as none", () => {
-    expect(confettiPlan(true, 50, false)).toEqual(confettiPlan(true, CONFETTI_AMOUNT_MAX, false));
-    for (const [on, amount] of [
-      [false, 1],
-      [true, 0],
-      [true, -2],
-      [true, NaN],
-      [true, Infinity * 0],
-    ] as const) {
-      const p = confettiPlan(on, amount, false);
-      expect([on, amount, p.rain, p.spray]).toEqual([on, amount, 0, 0]);
+  it("caps the amount and reads zero or garbage as none", () => {
+    expect(confettiPlan(50, false)).toEqual(confettiPlan(CONFETTI_AMOUNT_MAX, false));
+    for (const amount of [0, -2, NaN, Infinity * 0]) {
+      const p = confettiPlan(amount, false);
+      expect([amount, p.rain, p.spray]).toEqual([amount, 0, 0]);
     }
   });
 
   it("drops the rain and keeps a slow 10% spray with reduced motion", () => {
-    expect(confettiPlan(true, 1, true)).toEqual({ rain: 0, spray: 16, slow: true });
-    expect(confettiPlan(true, CONFETTI_AMOUNT_MAX, true)).toEqual({
+    expect(confettiPlan(1, true)).toEqual({ rain: 0, spray: 16, slow: true });
+    expect(confettiPlan(CONFETTI_AMOUNT_MAX, true)).toEqual({
       rain: 0,
       spray: 48,
       slow: true,
     });
-    expect(confettiPlan(false, 1, true)).toEqual({ rain: 0, spray: 0, slow: true });
+    expect(confettiPlan(0, true)).toEqual({ rain: 0, spray: 0, slow: true });
   });
 });
 
@@ -299,7 +293,7 @@ describe("the rain (screen space)", () => {
       [3840, 2160],
     ]) {
       const sim = new ConfettiSim();
-      const plan = confettiPlan(true, CONFETTI_AMOUNT_MAX, false, w, h);
+      const plan = confettiPlan(CONFETTI_AMOUNT_MAX, false, w, h);
       sim.burst(plan, w, h, 0, 0, 1, seeded(w));
       expect(sim.rain.alive).toBe(plan.rain);
       // The oldest live piece after every frame: a piece that dies is at
@@ -371,7 +365,7 @@ describe("the spray (world space)", () => {
 
   it("dies within SPRAY_LIFE_MAX", () => {
     const sim = new ConfettiSim();
-    sim.burst(confettiPlan(true, CONFETTI_AMOUNT_MAX, false), 0, 0, 5, 5, 1, seeded(5));
+    sim.burst(confettiPlan(CONFETTI_AMOUNT_MAX, false), 0, 0, 5, 5, 1, seeded(5));
     expect([sim.rain.alive, sim.spray.alive]).toEqual([0, SPRAY_CAP]);
     expect(runOut(sim, 900)).toBeLessThanOrEqual(SPRAY_LIFE_MAX + DT);
   });
@@ -397,7 +391,7 @@ describe("ConfettiSim: the animating flag", () => {
     expect(sim.active).toBe(false);
     sim.step(DT, 900);
     expect(sim.active).toBe(false);
-    expect(sim.burst(confettiPlan(true, 1, false), 1400, 900, 0, 0, 1, seeded(7))).toBe(true);
+    expect(sim.burst(confettiPlan(1, false), 1400, 900, 0, 0, 1, seeded(7))).toBe(true);
     expect(sim.active).toBe(true);
     const t = runOut(sim, 900);
     expect(sim.active).toBe(false);
@@ -406,14 +400,14 @@ describe("ConfettiSim: the animating flag", () => {
 
   it("throws nothing (and stays idle) when the plan is empty", () => {
     const sim = new ConfettiSim();
-    expect(sim.burst(confettiPlan(false, 1, false), 1400, 900, 0, 0, 1)).toBe(false);
-    expect(sim.burst(confettiPlan(true, 0, false), 1400, 900, 0, 0, 1)).toBe(false);
+    expect(sim.burst(confettiPlan(0, false), 1400, 900, 0, 0, 1)).toBe(false);
+    expect(sim.burst(confettiPlan(0, false), 1400, 900, 0, 0, 1)).toBe(false);
     expect(sim.active).toBe(false);
   });
 
   it("goes idle with reduced motion too (spray only)", () => {
     const sim = new ConfettiSim();
-    sim.burst(confettiPlan(true, 1, true), 1400, 900, 0, 0, 1, seeded(8));
+    sim.burst(confettiPlan(1, true), 1400, 900, 0, 0, 1, seeded(8));
     expect([sim.rain.alive, sim.spray.alive]).toEqual([0, 16]);
     expect(runOut(sim, 900)).toBeLessThanOrEqual(SPRAY_LIFE_MAX * 0.8 + DT);
     expect(sim.active).toBe(false);
@@ -422,8 +416,8 @@ describe("ConfettiSim: the animating flag", () => {
   it("clamps a stalled frame, and a garbage step moves nothing", () => {
     const a = new ConfettiSim();
     const b = new ConfettiSim();
-    a.burst(confettiPlan(true, 1, false), 0, 0, 0, 0, 1, seeded(9));
-    b.burst(confettiPlan(true, 1, false), 0, 0, 0, 0, 1, seeded(9));
+    a.burst(confettiPlan(1, false), 0, 0, 0, 0, 1, seeded(9));
+    b.burst(confettiPlan(1, false), 0, 0, 0, 0, 1, seeded(9));
     a.step(5, 900);
     b.step(CONFETTI_MAX_DT, 900);
     expect(Array.from(a.spray.data)).toEqual(Array.from(b.spray.data));
@@ -435,7 +429,7 @@ describe("ConfettiSim: the animating flag", () => {
 
   it("clear() drops every piece", () => {
     const sim = new ConfettiSim();
-    sim.burst(confettiPlan(true, 1, false), 1400, 900, 0, 0, 1, seeded(10));
+    sim.burst(confettiPlan(1, false), 1400, 900, 0, 0, 1, seeded(10));
     sim.clear();
     expect(sim.active).toBe(false);
   });

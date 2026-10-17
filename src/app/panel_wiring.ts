@@ -373,7 +373,7 @@ export function wirePanel(deps: PanelWiringDeps, scene: SceneRef): PanelWiring {
     // K140: the finish confetti (render-only, live; off drops the pieces
     // still in the air).
     onConfettiChange: () => {
-      if (!params.confetti) deps.confetti.clear();
+      if (params.confettiAmount <= 0) deps.confetti.clear();
       deps.writeParams(params);
     },
     // K98: the markers' size. One render pass (the start/exit gap slots

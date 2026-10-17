@@ -107,7 +107,6 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("sustain"), // 30
   num("shimmer"),
   num("pickPosition"),
-  num("snappiness"), // Retired; removing it bumps the version.
   choice("rootNote", [
     "seed",
     "C",
@@ -133,8 +132,6 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("fourWayFraction"),
   num("deadEndDensity"),
   choice("pluckStyle", ["soft", "string"]),
-  flag("mazeFabric"), // 45
-  flag("deadEnds"),
   choice("pathViz", ["gold", "trail", "string"]),
   choice("cameraMode", ["fit", "follow"]),
   num("trailLength"),
@@ -213,7 +210,6 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("minoWake"),
   choice("minoFog", ["always", "hunting", "never"]), // 98
   // K140's finish confetti.
-  flag("confetti"), // 99
   num("confettiAmount"), // 100
   // K180's pluck params.
   num("pluckWhole"), // 101
@@ -224,10 +220,10 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // K145's hover glow.
   num("hoverGlow"), // 105
   // K174's minotaur controls: it roams toward the player, a catch re-fogs.
-  flag("minoToward"), // 106
+  num("minoPull"), // 106 (K323: was minoToward flag)
   flag("minoRefog"), // 107
   // K80 turns stage 1: the turn-aligned minotaur (game/minotaur_turns.ts).
-  choice("minotaur", ["off", "hunter", "guard", "stalker"]), // 108
+  choice("minotaur", ["hunter", "guard", "stalker"]), // 108 (K323: off removed)
   choice("minoSpeed", ["half", "one", "charge", "two"]), // 109
   flag("minoTelegraph"), // 110
   num("minoSight"), // 111
@@ -239,7 +235,6 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   // K74 stage 2's H1 share (the fused arm cut).
   num("hCutShare"), // 117
   // K114 stage 1: the burn race (game/fire.ts).
-  choice("fire", ["off", "fuse"]), // 118
   num("fireSpeed"), // 119
   num("fireDelay"), // 120
   // K279 stage 1's pluck emphasis (render/pluck_model.ts K279 params).
@@ -295,20 +290,26 @@ export const CODEC_PARAMS: readonly CodecParam[] = Object.freeze([
   num("exitTaperStrength"), // 155
   // K481 stage 2: the turn minotaur travels by thread length.
   flag("minoByLength"), // 156
+  // K323 Stage A (v7): the game mode (appended; classic is the default).
+  choice("gameMode", ["classic", "minotaur", "burn"]),
 ]);
 
 // The format version a blob names first. Bump it for anything but an
 // append (see above). 1-3 were the frozen tables K132 dropped; 5 removed
 // K111 stage 2's highlightMode (index 108, K111 stage 3); 6 replaced the
-// fogOfWar flag at 51 with the exploration enum (K76 stage 2c).
-// K398: the panel's range for every numeric param that has one, so a
+// fogOfWar flag at 51 with the exploration enum (K76 stage 2c); 7 is
+// K323 Stage A (see above).
+// v7 (K323 Stage A): snappiness, mazeFabric (codec only; the field stays
+// until K326), deadEnds, confetti and fire left the table; minotaur lost
+// its off option; minoToward became the minoPull slider; gameMode was
+// appended. K398: the panel's range for every numeric param that has one, so a
 // link cannot leave it in either reader (here, and url_state.ts's
 // clampToRanges for the key=value form). A gs of 66 in knot mode needs
 // 16384 GAP rows - past the Pixel's 8192-row texture limit, where the
 // allocation fails and every gap vanishes. Not listed: hueShift (it
 // wraps mod 360, so any finite value is the same design), the two AUTO
 // sentinels backgroundSpeed / backgroundAngle (their sanitizers own
-// them), and the retired snappiness (no panel row). gap's floor is 0,
+// them). gap's floor is 0,
 // not the slider's 0.04: 0 is "no casing gap", which links have said.
 export const PARAM_RANGES: Readonly<
   Record<string, readonly [number, number]>
@@ -347,7 +348,7 @@ export const PARAM_RANGES: Readonly<
   gamutArc: [40, 360],
   branchDensity: [0, 1],
   fourWayFraction: [0, 1],
-  deadEndDensity: [0.05, 1],
+  deadEndDensity: [0, 1],
   deadEndLength: [0, 40],
   hCutShare: [0, 1],
   exitCorridor: [0, 32],
@@ -384,6 +385,7 @@ export const PARAM_RANGES: Readonly<
   minoDeadEnds: [0, 1],
   minoRoam: [5, 150],
   minoWake: [0, 20],
+  minoPull: [0, 1],
   confettiAmount: [0, 3],
   pluckWhole: [0, 1.5],
   markerSize: [0.25, 3],
@@ -426,7 +428,7 @@ export function clampParamValue(name: string, value: number): number {
   return Math.min(range[1], Math.max(range[0], value));
 }
 
-export const CODEC_VERSION = 6;
+export const CODEC_VERSION = 7;
 
 // The shortest decimal for a number, after rounding to 6 decimals (slider
 // steps leave float noise behind - 1.4500000000000002, or 1.7e-17 for a

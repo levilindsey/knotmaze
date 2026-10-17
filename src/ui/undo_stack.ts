@@ -165,7 +165,7 @@ export const LIVE_EFFECTS = {
     "playerPace", "minoWanderPace", "minoHuntPace", "minoPaceJitter",
     "minoPauseChance", "minoPauseMin", "minoPauseMax", "minoDetect",
     "minoLose", "minoCatch", "minoDeadEnds", "minoRoam", "minoWake",
-    "minoFog", "minoToward", "minoRefog", "minoRestart", "minoLair",
+    "minoFog", "minoPull", "minoRefog", "minoRestart", "minoLair",
   ],
   // K80 turns: the turn-aligned minotaur's tuning.
   onTurnMinoChange: [
@@ -174,7 +174,7 @@ export const LIVE_EFFECTS = {
     "minoGiveUp", "minoRoamMin", "minoTurnPull", "minoGuardSight",
     "minoGuardAccuracy", "minoStalkerAccuracy",
   ],
-  onConfettiChange: ["confetti", "confettiAmount"],
+  onConfettiChange: ["confettiAmount"],
   onAudioChange: [
     "soundMode", "pitchSpace", "octaves", "rootNote", "tonicEmphasis",
     "soundSpeed",
@@ -187,7 +187,7 @@ export const LIVE_EFFECTS = {
   // new speed or delay moves every vertex's burn time; K440's real-time
   // pair likewise).
   onClockChange: [
-    "clock", "minotaur", "fire", "fireSpeed", "fireDelay", "fireClock",
+    "gameMode", "clock", "minotaur", "fireSpeed", "fireDelay", "fireClock",
     "fireSpeedRt", "fireDelayRt",
   ],
 } as const satisfies Record<string, readonly string[]>;

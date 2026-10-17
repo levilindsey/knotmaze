@@ -65,7 +65,8 @@ function mazeParamsOf(p: UrlParams): MazeParams {
     ...DEFAULT_MAZE_PARAMS,
     branchDensity: p.branchDensity,
     fourWayFraction: p.fourWayFraction,
-    deadEndDensity: p.deadEnds ? p.deadEndDensity : 0,
+    // K323: cases still carry the old switch; density 0 is its off.
+    deadEndDensity: (p as { deadEnds?: boolean }).deadEnds === false ? 0 : p.deadEndDensity,
     deadEndLength: p.deadEndLength,
     hCutShare: p.hCutShare,
     exitCorridor: p.exitCorridor,

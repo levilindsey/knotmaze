@@ -358,6 +358,18 @@ export function buildPanel(
     "border-top:5px solid #8ea0c0;margin-right:7px;" +
     "transform:rotate(-90deg);transition:transform .2s ease}" +
     ".tp-fldv.tp-fldv-expanded>.tp-fldv_b::before{transform:rotate(0deg)}" +
+    // K340 look F (K339 call 3): a nested folder's bar loses its fill and
+    // bold, takes lighter text and a 2px accent rule; while open its body
+    // sits 6px in, in a dark well that deepens at depth 3 (the translucent
+    // backgrounds stack). A closed subfolder keeps only the lighter bar.
+    ".tp-fldv_c>.tp-fldv{margin-left:6px;background-color:rgba(0,0,0,.14);border-radius:0 3px 3px 0}" +
+    ".tp-fldv_c>.tp-fldv>.tp-fldv_i{color:rgba(142,160,192,.55)}" +
+    ".tp-fldv_c>.tp-fldv>.tp-fldv_i::before{width:2px}" +
+    ".tp-fldv_c>.tp-fldv>.tp-fldv_b{background-color:transparent;font-weight:400;color:#b4c0d6;box-shadow:inset 2px 0 0 rgba(142,160,192,.55)}" +
+    ".tp-fldv_c>.tp-fldv>.tp-fldv_b:hover{background-color:rgba(255,255,255,.05)}" +
+    ".tp-fldv_c>.tp-fldv>.tp-fldv_b::before{border-top-color:rgba(142,160,192,.8)}" +
+    ".tp-fldv_c>.tp-fldv:not(.tp-fldv-expanded){background-color:transparent}" +
+    ".tp-fldv_c>.tp-fldv:not(.tp-fldv-expanded)>.tp-fldv_i::before{opacity:0}" +
     // Header: name left, the version de-emphasized in the corner; under
     // it the credit line (the studio link, the licenses link at the far end).
     ".kp-head{padding:7px 10px 6px;" +
@@ -774,6 +786,12 @@ export function buildPanel(
     backgroundSpeed: shownSpeed(),
     backgroundAngle: shownAngle(),
   };
+  // K323: the "Real time" checkbox's view (the gridAlign pattern): it
+  // shows clock === "realtime" and writes `clock`; only the minotaur
+  // reads the clock (clockOf), classic and burn ignore a stored realtime.
+  const rtView: Record<string, unknown> = {
+    realTime: params.clock === "realtime",
+  };
 
   // Folder open/closed state persists across sessions (localStorage),
   // keyed by folder title.
@@ -948,34 +966,41 @@ export function buildPanel(
   dailyStats.addEventListener("click", callbacks.onShowDailyStats);
   dailyApi.element.querySelector(".tp-lblv_v")?.appendChild(dailyStats);
 
+  // --- Game (K323 Stage A) ------------------------------------------------
+  // After Design, before Maze, expanded (K323 question 1). Every row is a
+  // design row (none daily-exempt); the exploration rows sit right under
+  // Game mode (question 3, sooner than K323 proposed, per K339).
+  const fGame = folder("Game", true);
+  const gameModeRow = row(
+    fGame, p, "gameMode",
+    { options: { Classic: "classic", Minotaur: "minotaur", "Burn race": "burn" }, label: "Game mode" },
+    "Game mode: Classic = the plain maze. Minotaur = a minotaur hunts you (turns, or real time with the box below). Burn race = a fuse burns the maze behind you. Restarts the solve.",
+    D.gameMode, () => callbacks.onClockChange()
+  );
+  void gameModeRow;
+
   // --- Maze ---------------------------------------------------------------
   const fMaze = folder("Maze", true);
-  row(
-    fMaze, p, "mazeFabric", undefined,
-    "Branching maze: walk the thread from the green entrance to the orange exit. Tap a highlighted run at your branch point to advance (tap the gold one to backtrack); tug anywhere else.",
-    D.mazeFabric, () => callbacks.onModeChange()
-  );
-  // K80: the real-time minotaur mode (its tuning rows: the Minotaur
-  // subfolder at the end of this folder).
-  const clockRow = row(
-    fMaze, p, "clock",
-    { options: { "turn-based": "turn", "real time": "realtime" } },
-    "Turn-based: the maze waits for each move. Real time: you run the threads at your own pace while a minotaur roams them from the finish; it hunts you once you come close, and a catch sends you back to the entrance (counted in the stats). No undo. Restarts the solve.",
-    D.clock, () => callbacks.onClockChange()
+  // (The mazeFabric switch left the panel in K323 Stage A: the codec
+  // entry is gone and the field stays on until K326 deletes knot mode.)
+  // K323: "Real time" is a checkbox over `clock`, shown only under the
+  // minotaur; classic and the burn race ignore a stored realtime value.
+  const rtRow = row(
+    fGame, rtView, "realTime", { label: "Real time" },
+    "Real time: you run the threads at your own pace while the minotaur roams them from the finish; it hunts you once you come close, and a catch sends you back to the entrance (counted in the stats). No undo. Off: the maze waits for each move. Restarts the solve.",
+    false, () => {
+      params.clock = rtView.realTime === true ? "realtime" : "turn";
+      callbacks.onClockChange();
+    }
   );
   const playerPaceRow = row(
-    fMaze, p, "playerPace", { min: 2, max: 30, step: 0.5 },
-    "Real time: your pace along the threads, in lattice units per second. Applies live.",
+    fGame, p, "playerPace", { min: 2, max: 30, step: 0.5, label: "Your speed (units/s)" },
+    "Your speed in real time, along the threads, in lattice units per second. Applies live.",
     D.playerPace, () => callbacks.onChaseChange()
   );
-  const deadEndsRow = row(
-    fMaze, p, "deadEnds", undefined,
-    "Dead ends: some loops become long threads that end, somewhere far away, in a loose tip. Off = a pure braided maze where every wrong turn loops back. Regenerates the maze.",
-    D.deadEnds, () => callbacks.onModeChange()
-  );
   const deadEndDensityRow = row(
-    fMaze, p, "deadEndDensity", { min: 0.05, max: 1, step: 0.05 },
-    "Fraction of eligible loops cut into dead-end threads. 1 = maximally tree-like. Regenerates the maze.",
+    fMaze, p, "deadEndDensity", { min: 0, max: 1, step: 0.05 },
+    "Fraction of eligible loops cut into dead-end threads (long threads that end in a loose tip). 0 = a pure braided maze where every wrong turn loops back; 1 = maximally tree-like. Regenerates the maze.",
     D.deadEndDensity, (ev) => { if (!ev || ev.last !== false) callbacks.onModeChange(); }
   );
   const deadEndLengthRow = row(
@@ -1066,34 +1091,34 @@ export function buildPanel(
   );
   // K76 stage 2c: the fog of war's checkbox became the exploration mode.
   const fowRow = row(
-    fMaze, p, "exploration",
+    fGame, p, "exploration",
     { options: { off: "off", "fog of war": "fog", "thread reveal": "threads" }, label: "exploration" },
     "How much of the maze you see. off: all of it. fog of war: the maze hides until you have explored close by; explored areas stay visible. thread reveal: only the threads you have walked show, and the arms of the junctions you have reached, fading out a little way along. Applies live.",
     D.exploration, () => callbacks.onTrailChange()
   );
   const fowRadiusRow = row(
-    fMaze, p, "fowRadius", { min: 1.5, max: 10, step: 0.25 },
+    fGame, p, "fowRadius", { min: 1.5, max: 10, step: 0.25 },
     "How far around your explored path the fog lifts, in lattice units. Applies live and reshapes everything already explored.",
     D.fowRadius, () => callbacks.onTrailChange()
   );
   const fowIntroRow = row(
-    fMaze, p, "fowIntro", { label: "intro in the open" },
+    fGame, p, "fowIntro", { label: "intro in the open" },
     "Play the intro appearance animation in the open, then hide what you have not explored: the fog closes in around you (it fades in while its reveal radius contracts), or the threads you have not seen withdraw toward you. Applies to the next intro.",
     D.fowIntro, () => callbacks.onTrailChange()
   );
   // K76 stage 2c: the thread reveal's reach, its fade and its end look.
   const revealDistanceRow = row(
-    fMaze, p, "revealDistance", { min: 1, max: 12, step: 0.25, label: "reveal distance" },
+    fGame, p, "revealDistance", { min: 1, max: 12, step: 0.25, label: "reveal distance" },
     "How far the arms of the junctions you have reached show, in lattice units; the last part fades out. Applies live.",
     D.revealDistance, () => callbacks.onTrailChange()
   );
   const revealFadeRow = row(
-    fMaze, p, "revealFade", { min: 0.35, max: 4, step: 0.05, label: "reveal fade" },
+    fGame, p, "revealFade", { min: 0.35, max: 4, step: 0.05, label: "reveal fade" },
     "How long that fade-out is, in lattice units (never longer than the reveal distance). Applies live.",
     D.revealFade, () => callbacks.onTrailChange()
   );
   const revealLookRow = row(
-    fMaze, p, "revealLook",
+    fGame, p, "revealLook",
     {
       options: { fade: "fade", halo: "halo", glow: "glow", dots: "dots", fray: "fray", beacon: "beacon" },
       label: "reveal end",
@@ -1104,25 +1129,25 @@ export function buildPanel(
   // K466 THE ENDS (Levi, 2026-10-15: "emphasize the unexplored thread ends
   // a bit more, maybe especially for ends that lie under a crossing").
   const revealEndCrossRow = row(
-    fMaze, p, "revealEndCross",
+    fGame, p, "revealEndCross",
     { options: { under: "under", past: "past", back: "back" }, label: "end at crossing" },
     "Where a thread you have not explored ends when its end would lie under a crossing, hidden by the thread on top: under (it stays there), past (it shows a little further, beyond the crossing) or back (it ends before the crossing). Applies live.",
     D.revealEndCross, () => callbacks.onTrailChange()
   );
   const revealEndGlowRow = row(
-    fMaze, p, "revealEndGlow",
+    fGame, p, "revealEndGlow",
     { options: { soft: "soft", bright: "bright" }, label: "end glow" },
     "How strongly the light at the end of a thread you have not explored shows (the halo and beacon ends): soft or bright (larger and brighter). Applies live.",
     D.revealEndGlow, () => callbacks.onTrailChange()
   );
   // K465: the finish shows from the start (Levi, 2026-10-15).
   const revealFinishRow = row(
-    fMaze, p, "revealFinish", { label: "show finish" },
+    fGame, p, "revealFinish", { label: "show finish" },
     "Show where the finish is from the start: its marker, the gap around it and the arrow at the screen edge while it is off screen, even over thread you have not explored. Off hides the finish until you have seen it. Applies live.",
     D.revealFinish, () => callbacks.onTrailChange()
   );
   const moveSpeedRow = row(
-    fMaze, p, "moveSpeed", { min: 0.25, max: 4, step: 0.05 },
+    fGame, p, "moveSpeed", { min: 0.25, max: 4, step: 0.05 },
     "Maze travel speed: how fast the dot and the gold front move along the thread. Applies live.",
     D.moveSpeed, () => callbacks.onSlackChange()
   );
@@ -1172,7 +1197,7 @@ export function buildPanel(
   );
   // K73 viewer preferences (K84 will move them with the others).
   const finishIndicatorRow = row(
-    fMaze, s, "finishIndicator", undefined,
+    fMaze, s, "finishIndicator", { label: "Arrow to the finish" },
     "While the finish is off screen, a marker at the edge of the screen points the way to it (under fog of war too, as a direction only). Remembered per browser.",
     SETTINGS_DEFAULTS.finishIndicator,
     () => callbacks.onFinishIndicatorToggle(settings.finishIndicator === true)
@@ -1180,13 +1205,13 @@ export function buildPanel(
   // K198 stage 2: the other two indicators' switches and one size for all
   // three (no step: an edit keeps 2 decimals).
   const headIndicatorRow = row(
-    fMaze, s, "headIndicator", undefined,
+    fMaze, s, "headIndicator", { label: "Arrow to you" },
     "While your own position is off screen (you panned away, or a long run outpaced the camera), a marker at the edge of the screen points back to it. Remembered per browser.",
     SETTINGS_DEFAULTS.headIndicator,
     () => callbacks.onHeadIndicatorToggle(settings.headIndicator === true)
   );
   const minotaurIndicatorRow = row(
-    fMaze, s, "minotaurIndicator", undefined,
+    fMaze, s, "minotaurIndicator", { label: "Arrow to the minotaur" },
     "In a real-time chase, while the minotaur is off screen, a marker at the edge of the screen points to it. Remembered per browser.",
     SETTINGS_DEFAULTS.minotaurIndicator,
     () => callbacks.onMinotaurIndicatorToggle(settings.minotaurIndicator === true)
@@ -1194,6 +1219,7 @@ export function buildPanel(
   const indicatorSizeRow = row(
     fMaze, s, "indicatorSize",
     {
+      label: "Off-screen arrow size",
       min: INDICATOR_SCALE_MIN,
       max: INDICATOR_SCALE_MAX,
       keyScale: 0.05,
@@ -1221,14 +1247,9 @@ export function buildPanel(
     SETTINGS_DEFAULTS.movePad,
     () => callbacks.onMovePadToggle(settings.movePad === true)
   );
-  // K140: the finish confetti. Daily-exempt (how a finish celebrates, not
-  // what was played). The amount has no step (K130: a step grid starts at
-  // the row's first value); an edit keeps 2 decimals.
-  const confettiRow = row(
-    fMaze, p, "confetti", undefined,
-    "Celebrate the finish: confetti rains from the top of the screen and bursts from around the exit. With reduced motion (the Motion setting), only a small, slow burst at the exit.",
-    D.confetti, () => callbacks.onConfettiChange()
-  );
+  // K140: the finish confetti amount (0 = none since K323 merged the
+  // on/off switch into it). Daily-exempt (how a finish celebrates, not
+  // what was played). No step (K130); an edit keeps 2 decimals.
   const confettiAmountRow = row(
     fMaze, p, "confettiAmount",
     {
@@ -1249,6 +1270,7 @@ export function buildPanel(
   const markerSizeRow = row(
     fMaze, p, "markerSize",
     {
+      label: "Maze marker size",
       min: MARKER_SIZE_MIN,
       max: MARKER_SIZE_MAX,
       keyScale: 0.05,
@@ -1262,7 +1284,7 @@ export function buildPanel(
     }
   );
   const resetPathBtn = button(
-    fMaze,
+    fGame,
     "Reset path",
     "Clear the traced maze path and start over from the entrance."
   ) as ButtonApi & { hidden: boolean };
@@ -1270,20 +1292,8 @@ export function buildPanel(
   void fowRow;
   void pathVizRow;
 
-  // A programmatic refresh that runs no row effects (the change handler
-  // still re-tints the row).
-  const quietRefresh = (r: RowApi): void => {
-    const was = syncing;
-    syncing = true;
-    try {
-      r.refresh?.();
-    } finally {
-      syncing = was;
-    }
-  };
-  // K114: the burn race (game/fire.ts), a modifier of the turn clock like
-  // the turn minotaur and exclusive with it (call 3: switching one on
-  // switches the other off). Every row restarts the solve. No slider steps
+  // K114: the burn race (game/fire.ts; gameMode "burn" since K323).
+  // Every row restarts the solve. No slider steps
   // (a step snaps a link's off-grid value on the next refresh, K130); an
   // edit keeps 2 decimals of speed, 1 of delay. K440: each fire clock has
   // its own speed and delay params; the panel shows one speed row and one
@@ -1291,30 +1301,21 @@ export function buildPanel(
   // the clock row comes first: fire, clock, speed, delay, burnt. A clock
   // change only swaps which rows show; it refreshes no value, so no row's
   // handler runs.
-  const fFire = folder("Burn race", false, fMaze);
-  const fireRow = row(
-    fFire, p, "fire",
-    { options: { off: "off", fuse: "fuse" } },
-    "A fuse lit at the entrance burns along every thread behind you, slower than you walk, and burnt threads are gone. A run whose far end the fire reaches first smolders and refuses your tap. Trapped with no way left, you burn and the race starts over. Backtracking feeds the fire. Not with the minotaur: turning one on turns the other off. Restarts the solve.",
-    D.fire, () => {
-      if (params.fire !== "off" && params.minotaur !== "off") {
-        params.minotaur = "off";
-        quietRefresh(minotaurRow);
-      }
-      callbacks.onClockChange();
-    }
-  );
+  // K323: the burn race is gameMode "burn" (no fire toggle row); a fuse
+  // lit at the entrance burns along every thread behind you. The rows
+  // below show only in that mode.
+  const fFire = fGame;
   // K114 stage 2: the fire's clock (game/fire_clock.ts).
   const fireClockRow = row(
     fFire, p, "fireClock",
-    { options: { turn: "turn", realtime: "realtime" }, label: "clock" },
+    { options: { turn: "turn", realtime: "realtime" }, label: "Fire clock" },
     "turn: the fire burns as far as you walk, so standing still to think is free. realtime: it burns on a clock from your first move, your dot walks at a fixed pace, and if the fire reaches you while you stand there, you burn. Each clock keeps its own fireSpeed and fireDelay. Restarts the solve.",
     D.fireClock, () => callbacks.onClockChange()
   );
   // The turn clock's pair.
   const fireSpeedRow = row(
     fFire, p, "fireSpeed",
-    { min: FIRE_SPEED_MIN, max: FIRE_SPEED_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2) },
+    { min: FIRE_SPEED_MIN, max: FIRE_SPEED_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "Fire speed (x yours)" },
     "The fire's speed as a fraction of yours: at 0.75 it burns 3 units of thread while you walk 4. Restarts the solve.",
     D.fireSpeed, () => {
       params.fireSpeed = Math.round(params.fireSpeed * 100) / 100;
@@ -1323,7 +1324,7 @@ export function buildPanel(
   );
   const fireDelayRow = row(
     fFire, p, "fireDelay",
-    { min: 0, max: FIRE_DELAY_MAX, pointerScale: 0.1, format: (v: number) => v.toFixed(1) },
+    { min: 0, max: FIRE_DELAY_MAX, pointerScale: 0.1, format: (v: number) => v.toFixed(1), label: "Head start (units)" },
     "How far you walk before the fire starts to spread, in lattice units (a run is about 4). Restarts the solve.",
     D.fireDelay, () => {
       params.fireDelay = Math.round(params.fireDelay * 10) / 10;
@@ -1335,7 +1336,7 @@ export function buildPanel(
   // pace and the fire clock's rate: 12 lattice units a second.
   const fireSpeedRtRow = row(
     fFire, p, "fireSpeedRt",
-    { min: FIRE_SPEED_MIN, max: FIRE_SPEED_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "fireSpeed" },
+    { min: FIRE_SPEED_MIN, max: FIRE_SPEED_MAX, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label: "Fire speed (x yours)" },
     "The fire's speed as a fraction of your dot's fixed pace (12 lattice units a second; a run is about 4): at 0.2 it burns 2.4 units of thread a second, 1 for every 5 your dot walks. Restarts the solve.",
     D.fireSpeedRt, () => {
       params.fireSpeedRt = Math.round(params.fireSpeedRt * 100) / 100;
@@ -1344,7 +1345,7 @@ export function buildPanel(
   );
   const fireDelayRtRow = row(
     fFire, p, "fireDelayRt",
-    { min: 0, max: FIRE_DELAY_MAX, pointerScale: 0.1, format: (v: number) => v.toFixed(1), label: "fireDelay" },
+    { min: 0, max: FIRE_DELAY_MAX, pointerScale: 0.1, format: (v: number) => v.toFixed(1), label: "Head start (units)" },
     "How long after your first move the fire starts to spread, in lattice units at your dot's fixed pace (12 a second; a run is about 4): 20 is about 1.7 s, 40 about 3.3 s. Restarts the solve.",
     D.fireDelayRt, () => {
       params.fireDelayRt = Math.round(params.fireDelayRt * 10) / 10;
@@ -1354,7 +1355,7 @@ export function buildPanel(
   // K290 (burn stage 3a): a look, so it applies live and keeps the solve.
   const burntRow = row(
     fFire, p, "burnt",
-    { options: { gone: "gone", char: "char" }, label: "burnt" },
+    { options: { gone: "gone", char: "char" }, label: "Burnt threads" },
     "How burnt thread looks: gone (it is not drawn, and a thread it crossed over closes its gap) or char (a dark burnt coloring that keeps the over and under gaps). Applies live.",
     D.burnt, () => callbacks.onTrailChange()
   );
@@ -1364,7 +1365,7 @@ export function buildPanel(
   // turns the folder also holds the turn-aligned minotaur's rows, first;
   // each clock shows only its own rows (refreshCond), and minoFog,
   // minoRefog and the indicator setting serve both.
-  const fMino = folder("Minotaur", false, fMaze);
+  const fMino = fGame;
   // Real time's own rows (hidden under the turn clock).
   const rtRows: RowApi[] = [];
   const chaseRow = (
@@ -1382,16 +1383,9 @@ export function buildPanel(
   // live. Chances keep the pace rows' pattern (no step, 2 decimals, K130).
   const minotaurRow = row(
     fMino, p, "minotaur",
-    { options: { off: "off", hunter: "hunter", guard: "guard", stalker: "stalker" } },
-    "Turn-based: a minotaur that moves when you move, from its lair at the finish. Hunter: roams, hunts you once you come within sight, then checks where it last saw you. Guard: the hunter, keeping to the ground around the finish. Stalker: always hunts you. Running into it, or it into you, sends you back to the entrance (counted); the entrance tail is a sanctuary. Tap your own position to wait a turn. No undo while it is on. Restarts the solve.",
-    D.minotaur, () => {
-      // K114: one antagonist at a time (call 3).
-      if (params.minotaur !== "off" && params.fire !== "off") {
-        params.fire = "off";
-        quietRefresh(fireRow);
-      }
-      callbacks.onClockChange();
-    }
+    { options: { Hunter: "hunter", Guard: "guard", Stalker: "stalker" }, label: "Behavior" },
+    "Behavior: Hunter roams and hunts you once you come within sight, then checks where it last saw you. Guard keeps to the ground around the finish. Stalker always hunts you. It moves when you move, from its lair at the finish; running into it sends you back to the entrance (counted); the entrance tail is a sanctuary. Tap your own position to wait a turn. No undo. Restarts the solve.",
+    D.minotaur, () => callbacks.onClockChange()
   );
   const turnRow = (
     parent: Parent,
@@ -1401,82 +1395,83 @@ export function buildPanel(
   ): RowApi => row(parent, p, key, opts, tipText, D[key], () => callbacks.onTurnMinoChange());
   const minoSpeedRow = turnRow(
     fMino, "minoSpeed",
-    { options: { "half (every other turn)": "half", one: "one", "charge (two while hunting)": "charge", two: "two" } },
+    { options: { "half (every other turn)": "half", one: "one", "charge (two while hunting)": "charge", two: "two" }, label: "Runs per turn" },
     "Runs it takes each turn: half = one run every other turn; one; charge = one, two while it hunts you; two. Charge and two always show its next move. Applies live."
   );
   const minoByLengthRow = turnRow(
-    fMino, "minoByLength", {},
+    fMino, "minoByLength", { label: "Travel by length" },
     "Travel by thread length: each turn it moves its speed times your move's length (times the tuned travel scale), stopping mid-run and turning back on a run; a wait moves it the maze's median run length. Contact is by thread distance through the move. Off: it takes whole runs. Applies live."
   );
   const minoTelegraphRow = turnRow(
-    fMino, "minoTelegraph", {},
+    fMino, "minoTelegraph", { label: "Show its next move" },
     "Show its next move in red: the run it will take and where it will stand, decided when your move ends (forced on at charge and two). Applies live."
   );
-  const fMinoBehavior = folder("Minotaur behavior", false, fMino);
+  const fMinoBehavior = folder("Minotaur tuning", false, fGame);
   // K294 (K80 turns 3a): sight and accuracy are per model. minoSight is the
   // hunter's, and the stalker's charge reads it too, so it also shows for
   // the stalker at charge; the guard has its own sight and accuracy rows,
   // the stalker its own accuracy row.
   const minoSightRow = turnRow(
-    fMinoBehavior, "minoSight", { min: 0, max: MINO_SIGHT_MAX, step: 1 },
+    fMinoBehavior, "minoSight", { min: 0, max: MINO_SIGHT_MAX, step: 1, label: "Sight (runs)" },
     "Hunter: sight, in runs. It hunts you once you are this few runs away and gives up beyond minoGiveUp more. The stalker charges within this sight. It never sees you on the entrance tail. Applies live."
   );
   const minoGuardSightRow = turnRow(
-    fMinoBehavior, "minoGuardSight", { min: 0, max: MINO_SIGHT_MAX, step: 1 },
+    fMinoBehavior, "minoGuardSight", { min: 0, max: MINO_SIGHT_MAX, step: 1, label: "Sight (runs)" },
     "Guard: sight, in runs. It hunts you once you are this few runs away and gives up beyond minoGiveUp more. It never sees you on the entrance tail. Applies live."
   );
   // K324 section 4.3 (K80 turns 3a): the two constants the harness fixed.
   const minoGiveUpRow = turnRow(
-    fMinoBehavior, "minoGiveUp", { min: 0, max: MINO_GIVE_UP_MAX, step: 1 },
+    fMinoBehavior, "minoGiveUp", { min: 0, max: MINO_GIVE_UP_MAX, step: 1, label: "Give-up margin (runs)" },
     "How many runs past its sight you must get before it gives up the hunt; then it checks where it last saw you. Applies live."
   );
   // K272: roam and territory start at 1 (0 stood still, or walked at
   // random); 1 = destinations one run away, or next to the finish.
   const minoRoamMinRow = turnRow(
-    fMinoBehavior, "minoRoamMin", { min: MINO_RUNS_MIN, max: MINO_ROAM_MIN_MAX, step: 1 },
+    fMinoBehavior, "minoRoamMin", { min: MINO_RUNS_MIN, max: MINO_ROAM_MIN_MAX, step: 1, label: "Roam nearest (runs)" },
     "Hunter: the nearest it roams in one go, in runs (minoRoamRuns if that is less). Applies live."
   );
   const minoRoamRunsRow = turnRow(
-    fMinoBehavior, "minoRoamRuns", { min: MINO_RUNS_MIN, max: MINO_ROAM_RUNS_MAX, step: 1 },
+    fMinoBehavior, "minoRoamRuns", { min: MINO_RUNS_MIN, max: MINO_ROAM_RUNS_MAX, step: 1, label: "Roam range (runs)" },
     "Hunter: the farthest it roams in one go, in runs. Applies live."
   );
   const minoTerritoryRow = turnRow(
-    fMinoBehavior, "minoTerritory", { min: MINO_RUNS_MIN, max: MINO_TERRITORY_MAX, step: 1 },
+    fMinoBehavior, "minoTerritory", { min: MINO_RUNS_MIN, max: MINO_TERRITORY_MAX, step: 1, label: "Territory (runs)" },
     "Guard: it roams only to junctions within this many runs of the finish. Applies live."
   );
   const chanceRow = (
     key: "minoAccuracy" | "minoGuardAccuracy" | "minoStalkerAccuracy" | "minoTurnPull" | "minoPause",
+    label: string,
     tipText: string
   ): RowApi =>
     row(
       fMinoBehavior, p, key,
-      { min: 0, max: 1, pointerScale: 0.01, format: (v: number) => v.toFixed(2) },
+      { min: 0, max: 1, pointerScale: 0.01, format: (v: number) => v.toFixed(2), label },
       tipText, D[key], () => {
         params[key] = Math.round(params[key] * 100) / 100;
         callbacks.onTurnMinoChange();
       }
     );
   const minoTurnPullRow = chanceRow(
-    "minoTurnPull",
+    "minoTurnPull", "Roams toward you",
     "The chance a roam ends nearer you than where it stands (when any such junction is in range); otherwise anywhere in range. It still roams; only where a roam ends leans toward you. Applies live."
   );
   const minoAccuracyRow = chanceRow(
-    "minoAccuracy",
+    "minoAccuracy", "Accuracy",
     "Hunter: while it hunts, the chance each step takes a shortest way to you; otherwise it steps at random. Applies live."
   );
   const minoGuardAccuracyRow = chanceRow(
-    "minoGuardAccuracy",
+    "minoGuardAccuracy", "Accuracy",
     "Guard: while it hunts, the chance each step takes a shortest way to you; otherwise it steps at random. Applies live."
   );
   const minoStalkerAccuracyRow = chanceRow(
-    "minoStalkerAccuracy",
+    "minoStalkerAccuracy", "Accuracy",
     "Stalker: the chance each step takes a shortest way to you (always, while you are off the entrance tail); otherwise it steps at random. Applies live."
   );
-  chanceRow("minoPause", "The chance it stands still for a turn. Applies live.");
+  chanceRow("minoPause", "Chance it waits a turn", "The chance it stands still for a turn. Applies live.");
   // K293 (e): true with minoLair off too (a catch leaves it where it caught
   // you, and it sleeps again there).
   turnRow(
-    fMinoBehavior, "minoSleep", { min: 0, max: MINO_SLEEP_MAX, step: 1 },
+    fMinoBehavior, "minoSleep", { min: 0, max: MINO_SLEEP_MAX, step: 1, label: "Lair sleep (turns)" },
     "Turns it waits before it first moves: at the start, and again after each catch (in its lair, or where it caught you while minoLair is off). Applies live."
   );
   // K174: the minotaur's paces as multiples of yours (playerPace). No step
@@ -1495,77 +1490,77 @@ export function buildPanel(
     return r;
   };
   paceRow(
-    "minoWanderPace", "minoWanderPace (x your pace)",
+    "minoWanderPace", "Wander speed (x yours)",
     "The minotaur's pace while it roams, as a multiple of your pace (playerPace): 0.5 = half as fast as you. Applies live."
   );
   paceRow(
-    "minoHuntPace", "minoHuntPace (x your pace)",
+    "minoHuntPace", "Hunt speed (x yours)",
     "Its pace while it hunts you, along the shortest way to you, as a multiple of your pace: below 1 you outrun it by moving away. Applies live."
   );
   chaseRow(
-    "minoPaceJitter", { min: 0, max: 0.5, step: 0.05 },
+    "minoPaceJitter", { min: 0, max: 0.5, step: 0.05, label: "Speed variation" },
     "Pace variety: each roaming leg runs at the wander pace times 1 ± up to this, at random. Applies live."
   );
   chaseRow(
-    "minoPauseChance", { min: 0, max: 1, step: 0.05 },
+    "minoPauseChance", { min: 0, max: 1, step: 0.05, label: "Chance of a long stop" },
     "Chance it stops for a while at a junction it roams through. Applies live."
   );
   chaseRow(
-    "minoPauseMin", { min: 0, max: 10, step: 0.1 },
+    "minoPauseMin", { min: 0, max: 10, step: 0.1, label: "Long stop, shortest (s)" },
     "Its shortest pause, in seconds. Applies live."
   );
   chaseRow(
-    "minoPauseMax", { min: 0, max: 10, step: 0.1 },
+    "minoPauseMax", { min: 0, max: 10, step: 0.1, label: "Long stop, longest (s)" },
     "Its longest pause, in seconds (at least the shortest). Applies live."
   );
   chaseRow(
-    "minoDetect", { min: 0, max: 100, step: 1 },
+    "minoDetect", { min: 0, max: 100, step: 1, label: "Spots you within" },
     "It starts hunting you once you are this close, measured along the threads (lattice units). Applies live."
   );
   chaseRow(
-    "minoLose", { min: 0, max: 150, step: 1 },
+    "minoLose", { min: 0, max: 150, step: 1, label: "Loses you beyond" },
     "It loses you once you are farther than this along the threads (never less than the distance above). Applies live."
   );
   chaseRow(
-    "minoCatch", { min: 0.2, max: 5, step: 0.1 },
+    "minoCatch", { min: 0.2, max: 5, step: 0.1, label: "Catch distance" },
     "Catch distance: closer than this along the threads and it catches you, sending you back to the entrance. Applies live."
   );
   chaseRow(
-    "minoDeadEnds", { min: 0, max: 1, step: 0.05 },
+    "minoDeadEnds", { min: 0, max: 1, step: 0.05, label: "Visits dead ends" },
     "How often it roams to a dead-end tip instead of a junction: dead ends are its hunting ground. Applies live."
   );
   chaseRow(
-    "minoRoam", { min: 5, max: 150, step: 1 },
+    "minoRoam", { min: 5, max: 150, step: 1, label: "Roam range" },
     "The farthest it roams in one go, along the threads (lattice units). Applies live."
   );
   chaseRow(
-    "minoToward", {},
-    "It roams toward you: some of its roaming legs head only for places nearer you along the threads, so it finds you more often. Off: it roams at random. A player on the entrance or exit tail pulls nothing. Applies live."
+    "minoPull", { min: 0, max: 1, step: 0.05, label: "Roams toward you" },
+    "Roams toward you: how often its roaming legs head only for places nearer you along the threads, so it finds you more often (0 = it roams at random, 1 = always toward you). A player on the entrance or exit tail pulls nothing. Applies live."
   );
   chaseRow(
-    "minoWake", { min: 0, max: 20, step: 0.5 },
+    "minoWake", { min: 0, max: 20, step: 0.5, label: "Lair wait (s)" },
     "Seconds it waits in its lair at the finish, at the start and after each catch. Applies live."
   );
   const minoFogRow = chaseRow(
     "minoFog",
-    { options: { always: "always", "while hunting": "hunting", never: "never" } },
+    { options: { always: "always", "while hunting": "hunting", never: "never" }, label: "Seen through fog" },
     "With fog of war or the thread reveal: show the minotaur always, only while it hunts you, or never (only where the fog has lifted, or on thread you can see). Applies live.",
     true
   );
   // K80 turns stage 2 (K273): what a catch resets, on both clocks. While
   // the level row is on a catch resets everything, so the other two hide.
   const minoRestartRow = chaseRow(
-    "minoRestart", {},
+    "minoRestart", { label: "A catch restarts the level" },
     "A catch restarts the level: your path, the fog and the clock start over, and the minotaur goes back to its lair. Your catches still count. Off: a catch sends you back to the entrance and the solve goes on (the rows below say what else resets). Applies from the next catch.",
     true
   );
   const minoLairRow = chaseRow(
-    "minoLair", {},
+    "minoLair", { label: "Back to its lair after a catch" },
     "A catch sends the minotaur back to its lair at the finish. Off: it stays where it caught you, and roams on from there (in real time after its wake pause). Applies from the next catch.",
     true
   );
   const minoRefogRow = chaseRow(
-    "minoRefog", {},
+    "minoRefog", { label: "A catch brings back the fog" },
     "With fog of war or the thread reveal: a catch returns the fog (or the hidden threads) to how it stood at the start of the solve. Off: what you explored stays uncovered. Applies from the next catch.",
     true
   );
@@ -2307,11 +2302,11 @@ export function buildPanel(
   // hides whenever the feature it tunes is off or owned by another mode.
   refreshCond = (): void => {
     const fab = params.mazeFabric;
+    fGame.hidden = !fab;
     startAnchorRow.hidden = !fab;
     exitAnchorRow.hidden = !fab;
-    deadEndsRow.hidden = !fab;
-    deadEndDensityRow.hidden = !fab || !params.deadEnds;
-    deadEndLengthRow.hidden = !fab || !params.deadEnds;
+    deadEndDensityRow.hidden = !fab;
+    deadEndLengthRow.hidden = !fab || params.deadEndDensity === 0;
     hCutShareRow.hidden = !fab;
     branchDensityRow.hidden = !fab;
     fourWayRow.hidden = !fab;
@@ -2338,18 +2333,16 @@ export function buildPanel(
     revealEndCrossRow.hidden = !threads;
     revealEndGlowRow.hidden = !threads;
     revealFinishRow.hidden = !threads;
-    // K80: in real time the dot runs at playerPace instead.
-    const realtime = fab && params.clock === "realtime";
-    clockRow.hidden = !fab;
+    // K323: only the minotaur reads `clock` (clockOf); classic and the
+    // burn race play on the turn clock whatever a link stored.
+    const gameMino = fab && params.gameMode === "minotaur";
+    const realtime = gameMino && params.clock === "realtime";
+    rtRow.hidden = !gameMino;
     playerPaceRow.hidden = !realtime;
-    // K80 turns: the folder shows in both clocks, each with its own rows;
-    // the turn minotaur's tuning only while it is on.
-    const turnClock = fab && !realtime;
-    const turnMinoOn = turnClock && params.minotaur !== "off";
-    const minoOn = realtime || turnMinoOn;
-    fMino.hidden = !fab;
+    const turnMinoOn = gameMino && !realtime;
+    const minoOn = gameMino;
     for (const r of rtRows) r.hidden = !realtime;
-    minotaurRow.hidden = !turnClock;
+    minotaurRow.hidden = !turnMinoOn;
     minoSpeedRow.hidden = !turnMinoOn;
     minoTelegraphRow.hidden = !turnMinoOn;
     minoByLengthRow.hidden = !turnMinoOn;
@@ -2369,11 +2362,10 @@ export function buildPanel(
     minoAccuracyRow.hidden = !hunter;
     minoGuardAccuracyRow.hidden = !guard;
     minoStalkerAccuracyRow.hidden = !stalker;
-    // K114: the burn race never plays on K80's real-time clock (it has
-    // its own, fireClock); its tuning shows while it is on. K440: the
-    // speed and delay rows are the fire clock's own pair.
-    fFire.hidden = !turnClock;
-    const fireOn = params.fire !== "off";
+    // K323/K114: the burn race is gameMode "burn" (its own clock,
+    // fireClock); its rows show only in that mode. K440: the speed and
+    // delay rows are the fire clock's own pair.
+    const fireOn = fab && params.gameMode === "burn";
     const fireRt = params.fireClock === "realtime";
     fireClockRow.hidden = !fireOn;
     fireSpeedRow.hidden = !fireOn || fireRt;
@@ -2394,8 +2386,7 @@ export function buildPanel(
     indicatorSizeRow.hidden = !fab;
     tapToPanRow.hidden = !fab;
     movePadRow.hidden = !fab;
-    confettiRow.hidden = !fab;
-    confettiAmountRow.hidden = !fab || !params.confetti;
+    confettiAmountRow.hidden = !fab;
     markerSizeRow.hidden = !fab;
     resetPathBtn.hidden = !fab;
     pulseSpacingRow.hidden = !fab;
@@ -2575,6 +2566,7 @@ export function buildPanel(
     syncFromParams: () => {
       syncing = true;
       try {
+        rtView.realTime = params.clock === "realtime";
         gaView.gridAlign = gridAlignSlider(params.gridAlign);
         bgView.backgroundSpeed = shownSpeed();
         bgView.backgroundAngle = shownAngle();

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   APPEAR_PRESETS,
   ENUM_OPTIONS,
+  clockOf,
   PARAM_DEFAULTS,
   REVEAL_END_CROSSES,
   REVEAL_END_GLOWS,
@@ -29,7 +30,7 @@ const withSeed = (seed: number, over: Partial<UrlParams> = {}): UrlParams => ({
 const USER_KEYS =
   "s=1471kin&gs=12&rep=1&bd=1&sm=.25&ga=0&tw=.64&gap=.12&cr=2.4&fl=0&fw=.25&fv=1.15&vol=.18&hs=312&pal=moss&pc=6c644c&as=2.1";
 // ...and as its token (121 -> 55 chars).
-const USER_COMPACT = "1471kin.MEYl4kfj-iX0H6ZP0JeipPh-iX40K-ehjxRiXolsZEwJFQ-";
+const USER_COMPACT = "1471kin.OEYl4kfj-iX0H6ZP0JeipPh-iX40K-ehjxJiXolsZEwIFQ-";
 const USER = withSeed(2430477599, {
   gridSize: 12,
   repulsion: 1,
@@ -72,12 +73,12 @@ describe("links", () => {
       fadeLength: 0.14, flowStrength: 0.3, flowSpeed: 0.5, tugLimit: 2,
       snapBack: 4, soundMode: "music", pitchSpace: "chromatic", octaves: 3,
       soundSpeed: 1, volume: 0.33, reverb: 0.42, brightness: 0.5,
-      sustain: 0.5, shimmer: 0.4, pickPosition: 0.4, snappiness: 0.88,
+      sustain: 0.5, shimmer: 0.4, pickPosition: 0.4,
       rootNote: "seed", tonicEmphasis: 0.5, pulseSpacing: 2.5, hueShift: 300,
       gamutArc: 130, palette: "pastel", pathColor: "#eccc41",
       branchDensity: 0.35, fourWayFraction: 0.12, deadEndDensity: 0.5,
       pluckStyle: "string", pluckSize: 2, pluckGhost: 0.5, pluckReach: "run",
-      physics: true, mazeFabric: true, deadEnds: true, pathViz: "gold",
+      physics: true, mazeFabric: true, pathViz: "gold",
       cameraMode: "fit", trailLength: 10, tension: 0.45, exploration: "off",
       fowRadius: 4, fowIntro: false, colorScheme: "segments",
       junctionBlend: 0.88, appearMode: "custom", appearSequence: "trace", appearSpeed: 2.2,
@@ -94,18 +95,19 @@ describe("links", () => {
       clock: "turn", playerPace: 10, minoWanderPace: 0.5, minoHuntPace: 0.7,
       minoPaceJitter: 0.2, minoPauseChance: 0.3, minoPauseMin: 0.5,
       minoPauseMax: 2, minoDetect: 15, minoLose: 25, minoCatch: 1,
+      gameMode: "classic",
       minoDeadEnds: 0.4, minoRoam: 30, minoWake: 2, minoFog: "always",
-      minoToward: true, minoRefog: true,
-      confetti: true, confettiAmount: 1,
+      minoPull: 0.5, minoRefog: true,
+      confettiAmount: 1,
       pluckWhole: 0.75, pluckCrossings: "through", pluckGlow: "off",
       pluckRipple: "glint", rippleStrength: 1, rippleAuto: 0.35,
       pluckSheen: 0.5, pluckTug: 0, tugAuto: false, autoPluckGain: 0.5,
       markerSize: 1.08,
       hoverGlow: 0.4,
-      minotaur: "off", minoSpeed: "one", minoTelegraph: true, minoSight: 2,
+      minotaur: "hunter", minoSpeed: "one", minoTelegraph: true, minoSight: 2,
       minoRoamRuns: 8, minoTerritory: 6, minoAccuracy: 0.3, minoPause: 0.1,
       minoSleep: 0,
-      fire: "off", fireSpeed: 0.75, fireDelay: 0,
+      fireSpeed: 0.75, fireDelay: 0,
       minoRestart: false, minoLair: true,
       hoverGlowWidth: 0.85,
       hoverGlowLength: 3, hoverGlowFade: 0.2,
@@ -209,11 +211,14 @@ describe("links", () => {
     expect(parseParams(`?${encodeParams(r)}`)).toEqual(r);
   });
 
-  // K114: the burn race's override keys, its clamps, the token round trip,
-  // and when it plays (turn clock, no turn minotaur).
+  // K114/K323: the burn race is gameMode burn (`fi=fuse` implies it; `gm`
+  // names it directly), with its clamps and the token round trip.
   it("reads the burn race from its override keys", () => {
     const p = parseParams("?7&fi=fuse&fsp=0.6&fdl=12.5");
-    expect([p.fire, p.fireSpeed, p.fireDelay]).toEqual(["fuse", 0.6, 12.5]);
+    expect(p.gameMode).toBe("burn");
+    expect(parseParams("?7&gm=burn&fsp=0.6&fdl=12.5").gameMode).toBe("burn");
+    expect(parseParams("?7&gm=classic").gameMode).toBe("classic");
+    expect([p.fireSpeed, p.fireDelay]).toEqual([0.6, 12.5]);
     expect(parseParams(`?${encodeParams(p)}`)).toEqual(p);
     expect(fireSettingsOf(p)).toEqual({ speed: 0.6, delay: 12.5, clock: "turn" });
     // Clamps: speed to [0.1, 0.95] (K440 lowered the floor from 0.3;
@@ -228,10 +233,16 @@ describe("links", () => {
     expect(
       parseParams(`?${encodeParams(withSeed(7, { fireSpeed: 3, fireDelay: 77 }))}`)
     ).toMatchObject({ fireSpeed: 0.95, fireDelay: 40 });
-    // Off by default; never in real time or with the turn minotaur.
+    // Classic by default; the maze clock and the model no longer refuse
+    // it (the modes are exclusive by construction).
     expect(fireSettingsOf(PARAM_DEFAULTS)).toBeNull();
-    expect(fireSettingsOf({ ...p, clock: "realtime" })).toBeNull();
-    expect(fireSettingsOf({ ...p, minotaur: "hunter" })).toBeNull();
+    expect(fireSettingsOf({ ...p, gameMode: "classic" })).toBeNull();
+    expect(fireSettingsOf({ ...p, clock: "realtime" })).toEqual({
+      speed: 0.6, delay: 12.5, clock: "turn",
+    });
+    expect(fireSettingsOf({ ...p, minotaur: "guard" })).toEqual({
+      speed: 0.6, delay: 12.5, clock: "turn",
+    });
     expect(fireSettingsOf(parseParams("?7&fi=fuse"))).toEqual({
       speed: 0.75,
       delay: 0,
@@ -240,8 +251,7 @@ describe("links", () => {
   });
 
   // K114 stage 2: the fire clock's override key, the token round trip, and
-  // fireSettingsOf carrying it (still null on K80's real-time clock or with
-  // the turn minotaur).
+  // fireSettingsOf carrying it (null only outside the burn mode).
   it("reads the fire clock and carries it in fireSettingsOf", () => {
     const p = parseParams("?7&fi=fuse&fck=realtime");
     expect(p.fireClock).toBe("realtime");
@@ -249,9 +259,10 @@ describe("links", () => {
     // K440: the real-time clock's own pair.
     expect(fireSettingsOf(p)).toEqual({ speed: 0.2, delay: 20, clock: "realtime" });
     expect(parseParams("?7&fck=nope").fireClock).toBe("turn");
-    expect(fireSettingsOf({ ...p, clock: "realtime" })).toBeNull();
-    expect(fireSettingsOf({ ...p, minotaur: "hunter" })).toBeNull();
-    expect(fireSettingsOf({ ...p, fire: "off" })).toBeNull();
+    expect(fireSettingsOf({ ...p, gameMode: "minotaur" })).toBeNull();
+    expect(fireSettingsOf({ ...p, clock: "realtime" })).toEqual({
+      speed: 0.2, delay: 20, clock: "realtime",
+    });
   });
 
   // K440 (Levi, 2026-10-15): the real-time fire has its own speed and delay
@@ -269,7 +280,7 @@ describe("links", () => {
     const listed = Object.keys(decoded.values).filter(
       (k) => decoded.values[k] !== (PARAM_DEFAULTS as unknown as CodecDefaults)[k]
     );
-    expect(listed.sort()).toEqual(["fire", "fireClock"]);
+    expect(listed.sort()).toEqual(["fireClock", "gameMode"]);
     expect(parseParams(`?${token}`)).toEqual(rt);
     // The turn link keeps 0.75 / 0, whatever the real-time pair holds.
     const turn = parseParams("?7&fi=fuse");
@@ -385,13 +396,14 @@ describe("links", () => {
     expect(parseParams(`?${token}`).revealEndCross).toBe(other);
     expect(parseParams(`?${token}&rve=${D.revealEndCross}`).revealEndCross).toBe(D.revealEndCross);
   });
-  // K140: the finish confetti's override keys, the amount's clamp, and the
-  // token round trip.
+  // K140/K323: the finish confetti amount (0 = none; the old `cf`
+  // switch is ignored), its clamp, and the token round trip.
   it("reads the finish confetti from override keys", () => {
-    const off = parseParams("?7&cf=0");
-    expect([off.confetti, off.confettiAmount]).toEqual([false, 1]);
+    const off = parseParams("?7&cfa=0");
+    expect(off.confettiAmount).toBe(0);
+    expect(parseParams("?7&cf=0").confettiAmount).toBe(1);
     const lots = parseParams("?7&cfa=2.5");
-    expect([lots.confetti, lots.confettiAmount]).toEqual([true, 2.5]);
+    expect(lots.confettiAmount).toBe(2.5);
     expect(parseParams(`?${encodeParams(lots)}`)).toEqual(lots);
     expect(parseParams(`?${encodeParams(off)}`)).toEqual(off);
     // The amount clamps to [0, 3]; garbage reads as the default.
@@ -471,14 +483,24 @@ describe("links", () => {
     const fast = chaseParamsOf(parseParams("?7&plp=20"));
     expect(fast.wanderPace).toBe(10);
     expect(fast.approachPace).toBe(14);
-    expect(chaseParamsOf(parseParams("?7&mtw=0")).roamPull).toBe(0);
-    expect(chaseParamsOf(parseParams("?7&mtw=1")).roamPull).toBe(DEFAULT_CHASE_PARAMS.roamPull);
+    expect(chaseParamsOf(parseParams("?7&mpl=0")).roamPull).toBe(0);
+    expect(chaseParamsOf(parseParams("?7&mpl=0.5")).roamPull).toBe(DEFAULT_CHASE_PARAMS.roamPull);
+    expect(chaseParamsOf(parseParams("?7&mpl=1")).roamPull).toBe(1);
+  });
+
+  it("scopes the clock to the minotaur (clockOf, K323)", () => {
+    expect(clockOf(parseParams("?7&gm=minotaur&clk=realtime"))).toBe("realtime");
+    expect(clockOf(parseParams("?7&gm=classic&clk=realtime"))).toBe("turn");
+    expect(clockOf(parseParams("?7&gm=burn&clk=realtime"))).toBe("turn");
+    expect(clockOf(parseParams("?7&gm=minotaur"))).toBe("turn");
+    const m = parseParams("?7&gm=minotaur&clk=realtime&mt=guard");
+    expect(parseParams(`?${encodeParams(m)}`)).toEqual(m);
   });
 
   it("reads the real-time mode from override keys", () => {
     const p = parseParams(
       "?7&clk=realtime&plp=12&mwp=0.25&mhp=0.75&mpj=0.1&mpc=0.5&mpn=1&mpx=3" +
-        "&mdt=10&mls=20&mct=1.5&mde=0.6&mrm=40&mwk=3&mfg=hunting&mtw=0&mrf=0&mlr=0"
+        "&mdt=10&mls=20&mct=1.5&mde=0.6&mrm=40&mwk=3&mfg=hunting&mpl=0&mrf=0&mlr=0"
     );
     expect(p.clock).toBe("realtime");
     expect(chaseParamsOf(p)).toEqual({
@@ -488,8 +510,9 @@ describe("links", () => {
       roamPull: 0, lair: false,
     });
     expect(chaseParamsOf(parseParams("?7&clk=realtime")).lair).toBe(true);
+    expect(p.gameMode).toBe("minotaur");
     expect(p.minoFog).toBe("hunting");
-    expect(p.minoToward).toBe(false);
+    expect(p.minoPull).toBe(0);
     expect(p.minoRefog).toBe(false);
     // An unknown clock reads as the default; the token round-trips the mode.
     expect(parseParams("?7&clk=beat").clock).toBe("turn");
@@ -516,16 +539,16 @@ describe("links", () => {
 
   it("is the bare seed for an all-default design", () => {
     expect(encodeParams(withSeed(2430477599))).toBe("1471kin");
-    // A sentence period, a URLSearchParams "=", the all-default blob (".N")
-    // and the ones earlier builds wrote (".L", codec v5, and ".J", codec
-    // v4: each warns) read the same.
+    // A sentence period, a URLSearchParams "=", the all-default blob (".P")
+    // and the ones earlier builds wrote (".N", codec v6, ".L", v5, and
+    // ".J", v4: each warns) read the same.
     const warn = warnings();
     for (const q of [
-      "?1471kin", "1471kin", "?1471kin.", "?1471kin=", "?1471kin.N", "?1471kin.L", "?1471kin.J",
+      "?1471kin", "1471kin", "?1471kin.", "?1471kin=", "?1471kin.P", "?1471kin.N", "?1471kin.L", "?1471kin.J",
     ]) {
       expect(parseParams(q)).toEqual(withSeed(2430477599));
     }
-    expect(warn).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledTimes(3);
   });
 
   it("packs the user's rect design into one token", () => {
@@ -590,12 +613,12 @@ describe("links", () => {
       threadWidth: 0.6000000000000001, // slider-step float noise
       gap: 0,
       shape: "ring",
-      mazeFabric: false,
+      physics: false,
       pathColor: "#ffd24a",
       hueShift: -15,
     });
     const q = encodeParams(p);
-    expect(q).toBe("1z141z3.MdGG03w8LWK-__SSig");
+    expect(q).toBe("1z141z3.OdGG03w8K2K-__SSgq");
     expect(parseParams("?" + q)).toEqual({ ...p, threadWidth: 0.6 });
   });
 
@@ -613,17 +636,17 @@ describe("links", () => {
       appearFx: "rainbow",
       appearSpeed: 2,
     });
-    expect(encodeParams(preset)).toBe("7.Mgck");
-    expect(parseParams("?7.Mgck")).toEqual(preset);
+    expect(encodeParams(preset)).toBe("7.OgbE");
+    expect(parseParams("?7.OgbE")).toEqual(preset);
     const instant = withSeed(7, {
       appearMode: "instant",
       appearSequence: "instant",
     });
-    expect(encodeParams(instant)).toBe("7.Mgcw");
-    expect(parseParams("?7.Mgcw")).toEqual(instant);
+    expect(encodeParams(instant)).toBe("7.OgbQ");
+    expect(parseParams("?7.OgbQ")).toEqual(instant);
     const custom = withSeed(7, { appearFx: "dust" });
-    expect(encodeParams(custom)).toBe("7.MgeE");
-    expect(parseParams("?7.MgeE")).toEqual(custom);
+    expect(encodeParams(custom)).toBe("7.Ogck");
+    expect(parseParams("?7.Ogck")).toEqual(custom);
     // Every preset round-trips, values implied.
     for (const id of Object.keys(APPEAR_PRESETS) as AppearPreset[]) {
       const p = withSeed(9, { appearMode: id });
@@ -659,7 +682,7 @@ describe("key=value links", () => {
     expect(parseParams("?s=1471kin")).toEqual(withSeed(2430477599));
     expect(encodeParams(parseParams("?s=1471kin"))).toBe("1471kin");
     expect(encodeParams(parseParams("?" + USER_KEYS))).toBe(USER_COMPACT);
-    expect(encodeParams(parseParams("?s=7&am=trace-rainbow"))).toBe("7.Mgck");
+    expect(encodeParams(parseParams("?s=7&am=trace-rainbow"))).toBe("7.OgbE");
     expect(parseParams("?s=7&afx=dust")).toEqual(withSeed(7, { appearFx: "dust" }));
     expect(parseParams("?s=7&pv=trail")).toEqual(withSeed(7, { pathViz: "trail" }));
   });
@@ -669,15 +692,16 @@ describe("key=value links", () => {
     // trail length it lists are no longer the defaults, so they stay.
     const old =
       "?seed=2430477599&gs=18&shp=rect&sa=nw&xa=se&wd=0.35&tb=0.7&sl=0.55&sp=5&dr=0.5&rep=1.4500000000000002&bd=2&sm=0.75&st=1&ga=0.1&tw=0.52&gap=0.04&ms=1&cr=3&fl=0.14000000000000004&fw=0.3&fv=0.5000000000000001&tl=2&sb=4&snd=music&sc=chromatic&oct=3&ss=0.9999999999999996&vol=0.33&rv=0.42&brt=0.5&sus=0.5&shm=0.4&pp=0.4&snpy=0.88&rn=seed&tnc=0.5&psp=2.5&hs=300&arc=130&pal=pastel&pc=eccc41&brd=0.35&fwf=0.12&ded=0.25&pk=string&mf=1&de=0&pv=gold&cam=fit&trl=5&tn=0.45&fow=0&fr=4&fwi=0&cs=segments&ap=trace&as=2.1999999999999997&afx=burn";
-    const listed = { deadEnds: false, deadEndDensity: 0.25, trailLength: 5 };
+    // K323: `de=0` is ignored (dead ends are density 0 now); ded stays.
+    const listed = { deadEndDensity: 0.25, trailLength: 5 };
     const token = encodeParams(parseParams(old));
-    expect(token).toBe("1471kin.MQFlEvtr4");
+    expect(token).toBe("1471kin.OwV0S-Rf");
     expect(parseParams("?" + token)).toEqual(withSeed(2430477599, listed));
     const user = parseParams(
       "?seed=2430477599&gs=12&shp=rect&sa=nw&xa=se&wd=0.35&tb=0.7&sl=0.55&sp=5&dr=0.5&rep=1&bd=1&sm=0.25&st=1&ga=0&tw=0.64&gap=0.12&ms=1&cr=2.4&fl=1.734723475976807e-17&fw=0.25&fv=1.1500000000000001&tl=2&sb=4&snd=music&sc=chromatic&oct=3&ss=0.9999999999999996&vol=0.18&rv=0.42&brt=0.5&sus=0.5&shm=0.4&pp=0.4&snpy=0.88&rn=seed&tnc=0.5&psp=2.5&hs=312&arc=130&pal=moss&pc=6c644c&brd=0.35&fwf=0.12&ded=0.25&pk=string&mf=1&de=0&pv=gold&cam=fit&trl=5&tn=0.45&fow=0&fr=4&fwi=0&cs=segments&ap=trace&as=2.1&afx=burn"
     );
     const userToken = encodeParams(user);
-    expect(userToken).toBe("1471kin.MFIl4kfj-iX0H6ZP0JeipPh-iX40K-ehjxRiXolsZEx0S-2viSof");
+    expect(userToken).toBe("1471kin.OE4l4kfj-iX0H6ZP0JeipPh-iX40K-ehjxJiXolsZEx0S-RfElQ-");
     expect(parseParams("?" + userToken)).toEqual({ ...USER, ...listed });
     // Earlier builds' renamed keys (mc=, trm=) are gone: ignored.
     expect(parseParams("?seed=1&mc=1").colorScheme).toBe(PARAM_DEFAULTS.colorScheme);
@@ -710,12 +734,12 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   fadeLength: "fl", flowStrength: "fw", flowSpeed: "fv", tugLimit: "tl",
   snapBack: "sb", soundMode: "snd", pitchSpace: "sc", octaves: "oct",
   soundSpeed: "ss", volume: "vol", reverb: "rv", brightness: "brt",
-  sustain: "sus", shimmer: "shm", pickPosition: "pp", snappiness: "snpy",
+  sustain: "sus", shimmer: "shm", pickPosition: "pp",
   rootNote: "rn", tonicEmphasis: "tnc", pulseSpacing: "psp", hueShift: "hs",
   gamutArc: "arc", palette: "pal", pathColor: "pc", branchDensity: "brd",
   fourWayFraction: "fwf", deadEndDensity: "ded", pluckStyle: "pk",
   pluckSize: "psz", pluckGhost: "pgh", pluckReach: "prc", physics: "phy",
-  mazeFabric: "mf", deadEnds: "de", pathViz: "pv", cameraMode: "cam",
+  mazeFabric: "mf", pathViz: "pv", cameraMode: "cam",
   trailLength: "trl", tension: "tn", exploration: "xp", fowRadius: "fr",
   fowIntro: "fwi", colorScheme: "cs", junctionBlend: "jbl", appearMode: "am",
   appearSequence: "ap", appearSpeed: "as", appearFx: "afx",
@@ -730,8 +754,8 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minoWanderPace: "mwp", minoHuntPace: "mhp", minoPaceJitter: "mpj",
   minoPauseChance: "mpc", minoPauseMin: "mpn", minoPauseMax: "mpx",
   minoDetect: "mdt", minoLose: "mls", minoCatch: "mct", minoDeadEnds: "mde",
-  minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", minoToward: "mtw",
-  minoRefog: "mrf", confetti: "cf",
+  minoRoam: "mrm", minoWake: "mwk", minoFog: "mfg", minoPull: "mpl",
+  minoRefog: "mrf", gameMode: "gm",
   confettiAmount: "cfa", pluckWhole: "pw", pluckCrossings: "pcx",
   pluckGlow: "pgl", markerSize: "mks", hoverGlow: "hg", hoverGlowWidth: "hgw",
   revealDistance: "rvd", revealFade: "rvf", revealLook: "rvl",
@@ -740,7 +764,7 @@ const OVERRIDE_KEYS: Record<keyof typeof PARAM_DEFAULTS, string> = {
   minotaur: "mt", minoSpeed: "msp", minoTelegraph: "mtg", minoSight: "msi",
   minoRoamRuns: "mro", minoTerritory: "mtr", minoAccuracy: "mac",
   minoPause: "mpa", minoSleep: "msl", hCutShare: "hcs",
-  fire: "fi", fireSpeed: "fsp", fireDelay: "fdl",
+  fireSpeed: "fsp", fireDelay: "fdl",
   pluckRipple: "prp", rippleStrength: "prs", rippleAuto: "pra",
   pluckSheen: "psh", pluckTug: "ptg", tugAuto: "pta", autoPluckGain: "pag",
   minoRestart: "mrs", minoLair: "mlr",
@@ -797,7 +821,7 @@ describe("token + overrides", () => {
     const warn = warnings();
     const sent: Array<[string, Partial<UrlParams>]> = [
       ["?7.J", {}],
-      ["?7.J&clk=realtime", { clock: "realtime" }],
+      ["?7.J&clk=realtime", { clock: "realtime", gameMode: "minotaur" }],
       ["?7.J&cam=follow", { cameraMode: "follow" }],
       [
         "?7.J&pw=1&pcx=ride&pgl=fallback",
@@ -836,19 +860,28 @@ describe("token + overrides", () => {
     for (const name of names) {
       const value = otherValue(name);
       expect([name, value]).not.toEqual([name, PARAM_DEFAULTS[name]]);
-      const q = `?7.N&${OVERRIDE_KEYS[name]}=${linkText(value)}`;
+      const q = `?7.P&${OVERRIDE_KEYS[name]}=${linkText(value)}`;
       const p = parseParams(q);
       // The value lands and nothing else moves (in the appearance group the
       // mode follows the values).
       expect([q, p[name]]).toEqual([q, value]);
-      const want = withSeed(7, { [name]: value });
+      // K323 implied mode: naming the clock or the model names the mode.
+      const want = withSeed(7, {
+        [name]: value,
+        ...(name === "clock" || name === "minotaur" ? { gameMode: "minotaur" as const } : {}),
+      });
       if (APPEAR_GROUP.includes(name)) {
         expect([q, rest(p)]).toEqual([q, rest(want)]);
       } else {
         expect([q, p]).toEqual([q, want]);
       }
-      // And survives the page's rewrite to a token.
-      expect([q, parseParams("?" + encodeParams(p))]).toEqual([q, p]);
+      // And survives the page's rewrite to a token (mazeFabric excepted:
+      // its codec entry is gone in v7, so a token reads it back on, K326).
+      if (name === "mazeFabric") {
+        expect(parseParams("?" + encodeParams(p)).mazeFabric).toBe(true);
+      } else {
+        expect([q, parseParams("?" + encodeParams(p))]).toEqual([q, p]);
+      }
     }
     expect(warn).not.toHaveBeenCalled();
   });
@@ -894,7 +927,7 @@ describe("token + overrides", () => {
       physics: false,
     });
     const q = encodeParams(p);
-    expect(q).toBe("7.MUHo0vw-o");
+    expect(q).toBe("7.OUHQ0vw-o");
     expect(parseParams("?" + q)).toEqual(p);
     // A token takes them as overrides (probe URLs: &phy=0).
     expect(parseParams("?7&psz=1.5&pgh=0&prc=lobe&phy=0")).toEqual(p);
@@ -909,24 +942,25 @@ describe("token + overrides", () => {
     const q = encodeParams(p);
     expect(parseParams("?" + q)).toEqual(p);
     // A link that leaves them out reads today's maze.
-    for (const link of ["?7", "?7.N", "?s=7"]) {
+    for (const link of ["?7", "?7.P", "?s=7"]) {
       expect(parseParams(link)).toMatchObject({
         entranceClearance: 2.5,
         exitClearance: 12,
         junctionSpacing: 2,
-        deadEnds: true,
         deadEndDensity: 0.5,
         deadEndLength: 20,
       });
     }
+    // Density 0 is the braided maze the deadEnds switch used to mean.
+    expect(parseParams("?7&ded=0").deadEndDensity).toBe(0);
     expect(parseParams("?7&ecl=4&xcl=0&jsp=3.25")).toEqual(p);
   });
 
   it("round-trips the shader background params", () => {
     const p = withSeed(7, { background: "aurora", backgroundIntensity: 0.8 });
     const q = encodeParams(p);
-    // v5, 2 entries, index 67 (gamma 68) = option 5, index 68 = ".8".
-    expect(q).toBe("7.MwIhtR4");
+    // v7, 2 entries, index 64 = option 5, index 65 = ".8".
+    expect(q).toBe("7.OwIJtR4");
     expect(parseParams("?" + q)).toEqual(p);
     // Every effect round-trips.
     for (const id of ENUM_OPTIONS.background!) {

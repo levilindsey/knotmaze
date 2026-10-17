@@ -70,7 +70,7 @@ export function dailyParams(n: number): UrlParams {
 // optimal length: the lattice (seed, size, shape, growth), the anchors and
 // every maze-plan knob. Everything else (look, sound, physics, path display,
 // camera, fog) leaves the maze as it is. deadEndDensity and deadEndLength
-// matter only with deadEnds on (main.ts passes density 0 otherwise).
+// matter only above density 0 (0 is the braided maze).
 export const MAZE_PARAM_KEYS = [
   "seed",
   "mazeFabric",
@@ -82,7 +82,6 @@ export const MAZE_PARAM_KEYS = [
   "turnBias",
   "branchDensity",
   "fourWayFraction",
-  "deadEnds",
   "deadEndDensity",
   "deadEndLength",
   "hCutShare",
@@ -98,7 +97,7 @@ export const MAZE_PARAM_KEYS = [
 // A design's maze identity as text (numbers at link precision).
 export function mazeKey(p: UrlParams): string {
   return MAZE_PARAM_KEYS.map((k) => {
-    if ((k === "deadEndDensity" || k === "deadEndLength") && !p.deadEnds) {
+    if ((k === "deadEndDensity" || k === "deadEndLength") && p.deadEndDensity === 0) {
       return "-";
     }
     const v = p[k];
@@ -175,7 +174,6 @@ export const DAILY_EXEMPT_KEYS = [
   "physicsWorker",
   // K140's finish confetti: how a finish celebrates, not what was played.
   // Proposed for Levi's review with K140.
-  "confetti",
   "confettiAmount",
   // K98's marker size: only the look of the markers. Proposed for Levi's
   // review with K98 (K57).
