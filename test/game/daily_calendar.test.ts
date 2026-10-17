@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   DAILY_EPOCH,
   dayNumber,
@@ -118,6 +118,19 @@ describe("local dates across time zones", () => {
   it("formats a daily's date", () => {
     expect(formatDayDate(1, "en-US")).toBe("Oct 12");
     expect(formatDayDate(82, "en-US")).toBe("Jan 1");
+    // K373: one cached formatter per locale, not a fresh locale format
+    // on every call (the boot trace priced the per-call construction).
+    const spy = vi.spyOn(Intl, "DateTimeFormat");
+    try {
+      formatDayDate(1, "en-US");
+      formatDayDate(82, "fr-FR");
+      formatDayDate(1, "en-US");
+      expect(spy.mock.calls.length).toBe(1);
+      formatDayDate(1, "de-DE");
+      expect(spy.mock.calls.length).toBe(2);
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it("formats a daily's month (K146: the History's headers)", () => {

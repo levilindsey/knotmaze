@@ -71,14 +71,25 @@ export function todayNumber(now: Date = new Date(), timeZone?: string): number {
   return Math.max(1, dayNumber(localDay(now, timeZone)));
 }
 
+// One date formatter per locale (K373: constructing one per call was
+// ~8 ms of the boot trace; the stats view formats a row per daily).
+const dateFormatters = new Map<string, Intl.DateTimeFormat>();
+
 // "Oct 12" (the player's locale unless one is given) for a daily number.
 export function formatDayDate(n: number, locale?: string): string {
   const day = dayOfNumber(n);
   try {
-    return new Date(Date.UTC(day.y, day.m - 1, day.d)).toLocaleDateString(
-      locale,
-      { month: "short", day: "numeric", timeZone: "UTC" }
-    );
+    const key = locale ?? "";
+    let f = dateFormatters.get(key);
+    if (!f) {
+      f = new Intl.DateTimeFormat(locale, {
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      });
+      dateFormatters.set(key, f);
+    }
+    return f.format(new Date(Date.UTC(day.y, day.m - 1, day.d)));
   } catch {
     return `${day.y}-${String(day.m).padStart(2, "0")}-${String(day.d).padStart(2, "0")}`;
   }

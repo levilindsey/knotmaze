@@ -518,15 +518,18 @@ export class OffscreenIndicators {
   private avoidBoxes: Rect[] = [];
   private avoidAge = Infinity;
   private safe: Rect = { left: 0, top: 0, right: 0, bottom: 0 };
+  private safeDirty = true;
   // The size the elements and the avoid boxes were last made for.
   private size = INDICATOR_SIZE;
 
   constructor(env: IndicatorEnv) {
     ensureStyles();
     this.env = env;
-    this.safe = safeAreaInsets();
+    // K373: the safe area is read lazily on the first update (it forces
+    // layout), and re-read only after a resize invalidates it.
     window.addEventListener("resize", () => {
-      this.safe = safeAreaInsets();
+      invalidateSafeAreaInsets();
+      this.safeDirty = true;
       this.avoidAge = Infinity;
     });
   }
@@ -586,6 +589,10 @@ export class OffscreenIndicators {
   // One frame: decide, place and draw every indicator. dt = seconds since
   // the last frame (the show delays' clock).
   update(dt: number = 1 / 60): void {
+    if (this.safeDirty) {
+      this.safe = safeAreaInsets();
+      this.safeDirty = false;
+    }
     const { x: vx, y: vy, s } = this.env.view();
     const { w, h } = this.env.size();
     const size = this.sizeNow();
@@ -802,7 +809,14 @@ export class OffscreenIndicators {
 // The safe-area insets (CSS px), read through a probe element: env() has
 // no JavaScript accessor.
 let safeProbe: HTMLDivElement | null = null;
+// K373: reading the probe forces layout (~35 ms at boot in the K7 s4
+// trace), so the result is cached until a resize invalidates it.
+let safeCache: Rect | null = null;
+export function invalidateSafeAreaInsets(): void {
+  safeCache = null;
+}
 export function safeAreaInsets(): Rect {
+  if (safeCache) return safeCache;
   if (!safeProbe) {
     safeProbe = document.createElement("div");
     safeProbe.style.cssText =
@@ -813,10 +827,11 @@ export function safeAreaInsets(): Rect {
     document.body.appendChild(safeProbe);
   }
   const cs = getComputedStyle(safeProbe);
-  return {
+  safeCache = {
     top: parseFloat(cs.paddingTop) || 0,
     right: parseFloat(cs.paddingRight) || 0,
     bottom: parseFloat(cs.paddingBottom) || 0,
     left: parseFloat(cs.paddingLeft) || 0,
   };
+  return safeCache;
 }
