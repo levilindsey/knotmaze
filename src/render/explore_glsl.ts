@@ -611,9 +611,13 @@ export const EXPLORE_GAP_SURE_GLSL = /* glsl */ `    bool exShaped = full && !fa
 // distance, since sure2 is 0).
 export const EXPLORE_GAP_CUT_GLSL = /* glsl */ `    if (exShaped) {
       highp vec4 exT4 = texelFetch(uGapData, ivec2(4, row), 0);
-      highp vec4 exPt = gapPt(row, min(bk, n - 1));
-      highp float exBt = clamp(dot(p - exPt.xy, exPt.zw), 0.0, 1.0);
-      highp float exA = exT4.y + min(float(bk) + exBt, kLast) * exT4.z;
+      highp vec4 exT9 = texelFetch(uGapData, ivec2(9, row), 0);
+      highp vec2 exP0 = gapPt(row, bk);
+      highp vec2 exP1 = gapPt(row, bk + 1);
+      highp vec2 exAb = exP1 - exP0;
+      highp float exBl = dot(exAb, exAb);
+      highp float exBt = exBl > 1e-12 ? clamp(dot(p - exP0, exAb) / exBl, 0.0, 1.0) : 0.0;
+      highp float exA = (exT4.z + (float(bk) + exBt) * exT9.x) * exT4.w;
       highp vec4 exP2 = texelFetch(uGapData, ivec2(${GAP_PROF_BASE + 2}, row), 0);
       gst = gapStrength(exP2.x) * exploreCutCover(row, int(exP2.y + 0.5), exA, sqrt(best), pxW);
       if (gst <= 0.0) continue;

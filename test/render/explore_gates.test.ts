@@ -14,7 +14,7 @@
 //    and an END shows exactly when the model shows its thread to the tip.
 
 import { describe, expect, it } from "vitest";
-import { GapMaskTable, type GapSlotParams } from "../../src/render/gap_mask";
+import { GapMaskTable, gapChunkBounds, type GapSlotParams } from "../../src/render/gap_mask";
 import { generateLatticeKnotwork } from "../../src/core/lattice_grower";
 import { buildMazePlan, DEFAULT_MAZE_PARAMS } from "../../src/core/maze_plan";
 import { applyMazePlan, applyMazeCuts } from "../../src/core/maze_apply";
@@ -37,8 +37,9 @@ function slotParams(strength: number): GapSlotParams {
     tanX: 1,
     tanY: 0,
     selfExcl: 0,
-    polyStart: 0,
-    polyStep: 0,
+    over: { base: 0, kStart: 0, n: 3, stride: 1, count: 100, closed: false },
+    overArcPer: 1,
+    overChunks: gapChunkBounds((j) => [PTS[j * 2], PTS[j * 2 + 1]], 3),
     marginScaleNeg: 1,
     marginScalePos: 1,
     fadeScaleNeg: 1,
@@ -51,9 +52,10 @@ function slotParams(strength: number): GapSlotParams {
     protNegB: 0,
     protPosA: 0,
     protPosB: 0,
-    protPts: null,
-    protNegN: 0,
-    protPosN: 0,
+    protNeg: null,
+    protPos: null,
+    protNegCircle: null,
+    protPosCircle: null,
   };
 }
 
@@ -62,7 +64,7 @@ const PTS = new Float32Array([-1, 0, 0, 0, 1, 0]);
 describe("explore gates (K76 2b): the gap gate", () => {
   it("scales a slot's strength by vis, rejects it at 0 and restores it exactly at 1", () => {
     const t = new GapMaskTable(6);
-    t.writeSlot(2, slotParams(1), PTS, 3);
+    t.writeSlot(2, slotParams(1));
     const solved = t.readSlot(2);
     expect(solved.header[2]).toBeGreaterThan(0);
     expect(solved.header[3]).toBeGreaterThan(0);
@@ -88,7 +90,7 @@ describe("explore gates (K76 2b): the gap gate", () => {
 
   it("keeps a gated slot's encoding while its over thread shows at all", () => {
     const t = new GapMaskTable(6);
-    t.writeSlot(4, slotParams(-3.5), PTS, 3); // Fades in from tShow 2.5.
+    t.writeSlot(4, slotParams(-3.5)); // Fades in from tShow 2.5.
     const solved = t.readSlot(4);
     t.setVis(4, 0.3);
     expect(t.readSlot(4)).toEqual(solved);
@@ -101,9 +103,9 @@ describe("explore gates (K76 2b): the gap gate", () => {
 
   it("lets a new solve win over the last factor", () => {
     const t = new GapMaskTable(6);
-    t.writeSlot(1, slotParams(1), PTS, 3);
+    t.writeSlot(1, slotParams(1));
     t.setVis(1, 0);
-    t.writeSlot(1, slotParams(0.75), PTS, 3);
+    t.writeSlot(1, slotParams(0.75));
     expect(t.visOf(1)).toBe(1);
     expect(t.readSlot(1).header[7]).toBe(0.75);
     expect(t.readSlot(1).header[2]).toBeGreaterThan(0);

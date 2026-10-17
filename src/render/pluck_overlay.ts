@@ -57,6 +57,7 @@ import { GAP_FRAG_LIB, GAP_SLOTS, defaultGapTexture } from "./gap_mask";
 import { applyEdits, exploreGapEdits } from "./explore_glsl";
 import { KNOT_UNIFORMS_GLSL, PAINT_CONST_GLSL, PAINT_GATE_GLSL } from "./paint_glsl";
 import { knotUniforms } from "./paint_model";
+import { fabricUniforms, sampSource } from "./fabric_sdf";
 import {
   ATTACK_MIX,
   CUE_KILL,
@@ -614,6 +615,8 @@ function makeStillShader(glProgram: GlProgram): PluckShader {
     glProgram,
     resources: {
       uGapData: (STILL_GAP_TEX ?? defaultGapTexture()).source,
+      uSamp: sampSource(),
+      fabricUniforms: fabricUniforms(),
       knotUniforms: knotUniforms(),
       pluckUniforms: pluckUniforms(),
     },
@@ -634,8 +637,10 @@ function pluckStillShader(): PluckShader {
 // ribbon/ribbon_shader.ts, beside the section and junction shaders).
 export function bindPluckGap(tex: Texture): void {
   STILL_GAP_TEX = tex;
+  const samp = sampSource();
   for (const sh of [PLUCK_STILL_SHADER, PLUCK_STILL_EXPLORE_SHADER]) {
     if (sh && sh.resources.uGapData !== tex.source) sh.resources.uGapData = tex.source;
+    if (sh && sh.resources.uSamp !== samp) sh.resources.uSamp = samp;
   }
 }
 

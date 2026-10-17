@@ -139,6 +139,7 @@ import {
   typedToB64,
   writeChainTexels,
 } from "./samp_table";
+import { setFabricGapBrute, setSampSource } from "./fabric_sdf";
 import { EMERGENT_MAX, EMERGENT_ROW } from "../physics/particle_system";
 import { bindGap, sectionShader } from "./ribbon/ribbon_shader";
 import * as sampling from "./ribbon/sampling";
@@ -497,6 +498,10 @@ export class RibbonRenderer {
   maskEnabled = true;
   // Probe view: masked material is tinted magenta instead of removed.
   maskDebug = false;
+  // G3-1 probe toggle: the gap search runs brute-force (no chunk prune,
+  // no sure2 exit; fabric_sdf.ts uFabricGap.z). Brute against pruned on
+  // one frozen state must read 0 px apart.
+  gapBrute = false;
   // tipDiscScale lives in ribbon/joinery.ts (K5 R5) with its comment;
   // same-state probes read and write it here.
   get tipDiscScale(): number {
@@ -1112,6 +1117,9 @@ export class RibbonRenderer {
       this.g3Caps[i * 2 + 1] = ce;
     });
     this.initG3Tables();
+    // G3-1: point every gap reader at this scene's SAMP table.
+    setSampSource(g3Tables().samp.source as never);
+    bindGap(this.gaps.tex);
   }
 
   // Size the G3 tables for this scene and clear its regions (a previous
@@ -1223,6 +1231,12 @@ export class RibbonRenderer {
   // This frame's RANGES (the scratch, `entries` long) into the table:
   // copies and marks only the changed span, zeroes a shorter frame's stale
   // tail; then the CHAIN records.
+  // A chain's SAMP base (sample units; samp_table.ts), for the gap
+  // slots' ranges (ribbon/crossing_gaps.ts).
+  /** @internal ribbon */ g3SampBase(chain: number): number {
+    return this.g3.sampBase[chain];
+  }
+
   /** @internal ribbon */ g3WriteRanges(entries: number): void {
     const T = G3;
     if (!T) return;
@@ -2198,6 +2212,7 @@ export class RibbonRenderer {
     for (const w of this.chainWins.values()) w.length = 0; // Pooled arrays.
     for (const w of this.chainCuts.values()) w.length = 0;
     this.gaps.setEnabled(this.maskEnabled, this.maskDebug);
+    setFabricGapBrute(this.gapBrute);
     this.ps.crossings.forEach((crossing, c) => {
       let tShow = -Infinity;
       if (this.fxLive) {

@@ -40,6 +40,7 @@ import {
 } from "../paint_glsl";
 import { kGeom, kPaint, kReveal, kStatic, knotUniforms } from "../paint_model";
 import { bindPluckGap } from "../pluck_overlay";
+import { fabricUniforms, sampSource } from "../fabric_sdf";
 
 // Mesh.shader wants a TextureShader (a Shader carrying its texture).
 type SectionShader = Shader & { texture: Texture };
@@ -212,6 +213,9 @@ export function sectionShader(): SectionShader {
         // pixi binds every TextureSource resource to the sampler uniform of
         // the same name; bindGap swaps it per scene.
         uGapData: defaultGapTexture().source,
+        // G3-1: the shared SAMP table and the gap globals (fabric_sdf.ts).
+        uSamp: sampSource(),
+        fabricUniforms: fabricUniforms(),
         // G2 shader paint (paint_model.ts): page-lifetime data textures +
         // the shared uniform group.
         uKStatic: kStatic().source,
@@ -238,6 +242,8 @@ export function sectionShaderExplore(): SectionShader {
       glProgram: sectionProgram(true),
       resources: {
         uGapData: sectionShader().resources.uGapData,
+        uSamp: sampSource(),
+        fabricUniforms: fabricUniforms(),
         uKStatic: kStatic().source,
         uKGeom: kGeom().source,
         uKReveal: kReveal().source,
@@ -258,8 +264,11 @@ export function sectionShaderExplore(): SectionShader {
 export function bindGap(tex: Texture): void {
   bindFieldGap(tex);
   bindPluckGap(tex);
+  const samp = sampSource();
   const sh = sectionShader();
   if (sh.resources.uGapData !== tex.source) sh.resources.uGapData = tex.source;
+  if (sh.resources.uSamp !== samp) sh.resources.uSamp = samp;
   const ex = SECTION_EXPLORE_SHADER;
   if (ex && ex.resources.uGapData !== tex.source) ex.resources.uGapData = tex.source;
+  if (ex && ex.resources.uSamp !== samp) ex.resources.uSamp = samp;
 }

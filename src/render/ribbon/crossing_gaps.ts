@@ -47,7 +47,13 @@ import type { CrossingPass } from "../../physics/particle_system";
 import type { SplineSamples } from "../../geometry/spline_generator";
 import { knotUniformValues } from "../paint_model";
 import { PAINT_CONST } from "../paint_const";
-import { GAP_MAX_PTS, GAP_PROT_PTS, GAP_SLOTS } from "../gap_mask";
+import {
+  GAP_SLOTS,
+  gapChunkBounds,
+  gapRangeCircle,
+  gapSampRange,
+  type GapSampRef,
+} from "../gap_mask";
 import {
   RANGE_FLOATS,
   assignWindowLanes,
@@ -74,14 +80,8 @@ export const GATE_LEAD = 0.1;
 const MARCH_STEP = 0.07;
 const COARSE_SPACING = 0.1;
 const COARSE_MAX = 128;
-// The shader's over polyline is measured by SEGMENT distance, so its error
-// is the chord sag spacing^2 * curvature / 8 (< 0.003 world even at a
-// radius-0.3 kink).
-const FINE_SPACING = 0.075;
-// Adaptive polyline resolution (computeGapSlot): the coarsest spacing a
-// straight over pass gets, and the chord sagitta allowed on a bend.
-const POLY_SPACING_MAX = 0.3;
-const POLY_SAG_TOL = 0.0015;
+// (G3-1 deleted the fine shader polyline and its adaptive spacing: the
+// shader measures SEGMENT distance to the over chain's own SAMP samples.)
 // Far-branch smooth-min radius: SMIN_K_PER x (half-width + margin),
 // clamped (gap_mask.ts).
 const SMIN_K_PER = 0.3;
@@ -98,12 +98,10 @@ const PROTECT_PAD = 0.02;
 // add past the straight-thread estimate.
 const PROTECT_STEP = 0.03;
 const PROTECT_MARCH_MAX = 1.5;
-// Longest stretch of the covered thread a protect polyline spans per side,
-// and its point spacing (coarser only when GAP_PROT_PTS cannot cover the
-// span): every margin-band fragment inside a protect interval tests its
-// segments, so a short polyline keeps that cheap.
+// Longest stretch of the covered thread a protect range spans per side:
+// every margin-band fragment inside a protect interval tests its
+// segments, so a short range keeps that cheap.
 const PROT_POLY_SPAN_MAX = 3.0;
-const PROT_POLY_SPACING = 0.2;
 // Render-only pluck over-node footprints (computeGapSlot): the cover's
 // slack past the casing band, and its floor - the over-fill window's
 // OVER_PATCH_MARGIN / OVER_HALF_LENGTH_MIN, which they replace.
@@ -197,7 +195,6 @@ export class CrossingGaps {
   readonly r: RibbonRenderer;
   private coarseO = new Float32Array(COARSE_MAX * 2);
   private coarseU = new Float32Array(COARSE_MAX * 2);
-  private fineO = new Float32Array(GAP_MAX_PTS * 2);
   private nearIdx = 0; // Out-param of polyDist (nearest vertex index).
   // [marginNeg, fadeNeg, marginPos, fadePos] clearance scales
   // (computeGapSlot).
@@ -207,11 +204,12 @@ export class CrossingGaps {
   // protectReach's samples of the two threads.
   private protScA = new Float32Array(4);
   private protScB = new Float32Array(4);
-  // The two protect polylines of the slot being written (negative side,
-  // positive side; GAP_PROT_PTS points each).
-  private protPts = new Float32Array(GAP_PROT_PTS * 4);
-  private protPolyNeg = this.protPts.subarray(0, GAP_PROT_PTS * 2);
-  private protPolyPos = this.protPts.subarray(GAP_PROT_PTS * 2);
+  // The two protect SAMP ranges of the slot being written (negative
+  // side, positive side), with their bounding circles.
+  private protNegRef: GapSampRef | null = null;
+  private protPosRef: GapSampRef | null = null;
+  private protNegCircle: [number, number, number] | null = null;
+  private protPosCircle: [number, number, number] | null = null;
   // The gap slots' far-branch smooth-min (gap_mask.ts); off = A/B probes.
   smoothMin = true;
   // The gap slots' protect intervals (computeGapSlot); off = A/B probes.
@@ -759,56 +757,42 @@ export class CrossingGaps {
       this.r.eraseExtentNeg[index] = shown ? allNeg : 0;
       this.r.eraseExtentPos[index] = shown ? allPos : 0;
     }
-    // ADAPTIVE RESOLUTION: the shader's cost is per polyline segment, and a
-    // straight over pass needs few. The spacing keeps the chord sagitta
-    // (s^2 * curvature / 8) under POLY_SAG_TOL on the tightest bend of the
-    // reach, read off the coarse march polyline.
-    let kMax = 0;
-    {
-      const lo = Math.max(1, Math.floor((oCapNeg - reachNeg) / oSt) - 1);
-      const hi = Math.min(nO - 2, Math.ceil((oCapNeg + reachPos) / oSt) + 1);
-      for (let m = lo; m <= hi; m++) {
-        const ax = co[m * 2] - co[(m - 1) * 2];
-        const ay = co[m * 2 + 1] - co[(m - 1) * 2 + 1];
-        const bx = co[(m + 1) * 2] - co[m * 2];
-        const by = co[(m + 1) * 2 + 1] - co[m * 2 + 1];
-        const la = Math.hypot(ax, ay);
-        const lb = Math.hypot(bx, by);
-        if (la < 1e-9 || lb < 1e-9) continue;
-        const turn = Math.abs(Math.atan2(ax * by - ay * bx, ax * bx + ay * by));
-        kMax = Math.max(kMax, turn / (0.5 * (la + lb)));
-      }
-    }
-    const spacing =
-      kMax > 1e-6
-        ? Math.min(
-            POLY_SPACING_MAX,
-            Math.max(FINE_SPACING, Math.sqrt((8 * POLY_SAG_TOL) / kMax))
-          )
-        : POLY_SPACING_MAX;
-    const nF = this.buildPoly(
-      this.fineO,
-      overSamples,
+    // G3-1: the shader reads the over chain's own SAMP samples (the CPU
+    // no longer builds a fine polyline; the march reaches above are the
+    // range, rounded outward to whole samples by gapSampRange, strided
+    // to the 64-segment cap at most 3 - never stretched, never cut).
+    const { ref: overRef, arcPer: overArcPer } = gapSampRange(
+      totalO,
+      overSamples.count,
+      overSamples.closed,
       overCenter,
       reachNeg,
-      reachPos,
-      spacing,
-      GAP_MAX_PTS
+      reachPos
     );
-    const polyStep = (reachNeg + reachPos) / (nF - 1);
+    overRef.base = this.r.g3SampBase(crossing.over.chain);
+    const overAt = (j: number): readonly [number, number] => {
+      const raw = overRef.kStart + j * overRef.stride;
+      const idx = overSamples.closed
+        ? ((raw % overSamples.count) + overSamples.count) % overSamples.count
+        : Math.max(0, Math.min(overSamples.count - 1, raw));
+      return [overSamples.positions[idx * 2], overSamples.positions[idx * 2 + 1]];
+    };
+    const overChunks = gapChunkBounds(overAt, overRef.n);
+    const polyStep = Math.max(overArcPer * overRef.stride, 1e-6);
     // FAR-BRANCH SMOOTH-MIN (gap_mask.ts): a straight run's points beyond
     // farK segments are at least sqrt(2 * reach * sminK) * 1.3 + one step
     // of arc from the nearest one, i.e. more than sminK farther - the blend
-    // is exact there; only a polyline that bends back gets it.
+    // is exact there; only a range that bends back gets it. Today's
+    // smooth-min, ported AS-IS (K399: G3-1 before K268 item 4).
     const sminK = Math.min(
       SMIN_K_MAX,
       Math.max(SMIN_K_MIN, SMIN_K_PER * (fillHalf + margin))
     );
     const hideReach = fillHalf + margin + fade;
     const farK = Math.ceil(
-      (Math.sqrt(2 * hideReach * sminK) * 1.3 + polyStep) /
-        Math.max(polyStep, 1e-6)
+      (Math.sqrt(2 * hideReach * sminK) * 1.3 + polyStep) / polyStep
     );
+
 
     // PROTECT: where the under thread A is itself the OVER pass of a
     // neighboring crossing (A over B), this slot's cosmetic margin and fade
@@ -824,8 +808,10 @@ export class CrossingGaps {
     prot[1] = 0;
     prot[2] = 0;
     prot[3] = 0;
-    let protNegN = 0;
-    let protPosN = 0;
+    this.protNegRef = null;
+    this.protPosRef = null;
+    this.protNegCircle = null;
+    this.protPosCircle = null;
     if (index >= 0 && this.protect) {
       for (const nb of [underNb.prev, underNb.next]) {
         if (nb === crossing.under) continue;
@@ -870,17 +856,32 @@ export class CrossingGaps {
           this.protectReach(bSamples, bArc, 1, underSamples, aArc, fillHalf, w0) +
             fillHalf
         );
-        const nP = this.buildPoly(
-          o === 0 ? this.protPolyNeg : this.protPolyPos,
-          bSamples,
+        // B's centerline as a SAMP range, read in place by the shader
+        // (the loop-free protect; no copied polyline since G3-1).
+        const { ref: pref } = gapSampRange(
+          bSamples.totalLength,
+          bSamples.count,
+          bSamples.closed,
           bArc,
           bNeg,
-          bPos,
-          Math.max(PROT_POLY_SPACING, (bNeg + bPos) / (GAP_PROT_PTS - 1)),
-          GAP_PROT_PTS
+          bPos
         );
-        if (o === 0) protNegN = nP;
-        else protPosN = nP;
+        pref.base = this.r.g3SampBase(xc.under.chain);
+        const bAt = (j: number): readonly [number, number] => {
+          const raw = pref.kStart + j * pref.stride;
+          const idx = bSamples.closed
+            ? ((raw % bSamples.count) + bSamples.count) % bSamples.count
+            : Math.max(0, Math.min(bSamples.count - 1, raw));
+          return [bSamples.positions[idx * 2], bSamples.positions[idx * 2 + 1]];
+        };
+        const circ = gapRangeCircle(bAt, pref.n);
+        if (o === 0) {
+          this.protNegRef = pref;
+          this.protNegCircle = circ;
+        } else {
+          this.protPosRef = pref;
+          this.protPosCircle = circ;
+        }
       }
     }
 
@@ -946,44 +947,41 @@ export class CrossingGaps {
     clearScales(jRoomPos, silPos, cutPos, cs, 2);
 
     sampling.sampleAt(underSamples, underCenter, sc4, 0);
-    this.r.gaps.writeSlot(
-      slot,
-      {
-        hOver: fillHalf,
-        margin,
-        fade,
-        strength,
-        perp,
-        arcScale: underSamples.closed ? totalU : totalU / 0.45,
-        centerArc: underCenter,
-        winNeg,
-        winPos,
-        closed: underSamples.closed,
-        totalU,
-        tanX: sc4[2],
-        tanY: sc4[3],
-        selfExcl: selfEx,
-        polyStart: overCenter - reachNeg,
-        polyStep,
-        marginScaleNeg: cs[0],
-        marginScalePos: cs[2],
-        fadeScaleNeg: cs[1],
-        fadeScalePos: cs[3],
-        centerX: sc4[0],
-        centerY: sc4[1],
-        sminK: this.smoothMin ? sminK : 0,
-        farK,
-        protNegA: prot[0],
-        protNegB: prot[1],
-        protPosA: prot[2],
-        protPosB: prot[3],
-        protPts: this.protPts,
-        protNegN,
-        protPosN,
-      },
-      this.fineO,
-      nF
-    );
+    this.r.gaps.writeSlot(slot, {
+      hOver: fillHalf,
+      margin,
+      fade,
+      strength,
+      perp,
+      arcScale: underSamples.closed ? totalU : totalU / 0.45,
+      centerArc: underCenter,
+      winNeg,
+      winPos,
+      closed: underSamples.closed,
+      totalU,
+      tanX: sc4[2],
+      tanY: sc4[3],
+      selfExcl: selfEx,
+      marginScaleNeg: cs[0],
+      marginScalePos: cs[2],
+      fadeScaleNeg: cs[1],
+      fadeScalePos: cs[3],
+      centerX: sc4[0],
+      centerY: sc4[1],
+      sminK: this.smoothMin ? sminK : 0,
+      farK,
+      protNegA: prot[0],
+      protNegB: prot[1],
+      protPosA: prot[2],
+      protPosB: prot[3],
+      over: overRef,
+      overArcPer,
+      overChunks,
+      protNeg: this.protNegRef,
+      protPos: this.protPosRef,
+      protNegCircle: this.protNegCircle,
+      protPosCircle: this.protPosCircle,
+    });
     let wins = this.r.chainWins.get(crossing.under.chain);
     if (!wins) {
       wins = [];
@@ -1043,7 +1041,7 @@ export class CrossingGaps {
               cut: [round(cutNeg), round(cutPos)],
               win: [round(winNeg), round(winPos)],
               reach: [round(reachNeg), round(reachPos)],
-              polyPts: nF,
+              polyPts: overRef.n,
               strength: round(strength),
               mode: this.gapMode,
             })
@@ -1180,46 +1178,42 @@ export class CrossingGaps {
       };
       const winNeg = winOf(-1);
       const winPos = winOf(1);
-      this.fineO[0] = cx;
-      this.fineO[1] = cy;
-      this.r.gaps.writeSlot(
-        slot,
-        {
-          hOver: occ.radius,
-          margin,
-          fade: this.r.fadeLength,
-          strength: 1,
-          perp: true,
-          arcScale: closed ? total : total / 0.45,
-          centerArc: center,
-          winNeg,
-          winPos,
-          closed,
-          totalU: total,
-          tanX: tx,
-          tanY: ty,
-          selfExcl: 0,
-          polyStart: 0,
-          polyStep: 0,
-          marginScaleNeg: 1,
-          marginScalePos: 1,
-          fadeScaleNeg: 1,
-          fadeScalePos: 1,
-          centerX: cx,
-          centerY: cy,
-          sminK: 0,
-          farK: 0,
-          protNegA: 0,
-          protNegB: 0,
-          protPosA: 0,
-          protPosB: 0,
-          protPts: null,
-          protNegN: 0,
-          protPosN: 0,
-        },
-        this.fineO,
-        1
-      );
+      // The marker disc: n 0, the "polyline" is the disc center (texel 5).
+      this.r.gaps.writeSlot(slot, {
+        hOver: occ.radius,
+        margin,
+        fade: this.r.fadeLength,
+        strength: 1,
+        perp: true,
+        arcScale: closed ? total : total / 0.45,
+        centerArc: center,
+        winNeg,
+        winPos,
+        closed,
+        totalU: total,
+        tanX: tx,
+        tanY: ty,
+        selfExcl: 0,
+        marginScaleNeg: 1,
+        marginScalePos: 1,
+        fadeScaleNeg: 1,
+        fadeScalePos: 1,
+        centerX: cx,
+        centerY: cy,
+        sminK: 0,
+        farK: 0,
+        protNegA: 0,
+        protNegB: 0,
+        protPosA: 0,
+        protPosB: 0,
+        over: { base: 0, kStart: 0, n: 0, stride: 1, count: 1, closed: false },
+        overArcPer: 1,
+        overChunks: new Float32Array(32),
+        protNeg: null,
+        protPos: null,
+        protNegCircle: null,
+        protPosCircle: null,
+      });
       let wins = this.r.chainWins.get(occ.chain);
       if (!wins) {
         wins = [];

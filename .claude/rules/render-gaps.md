@@ -1,6 +1,7 @@
 ---
 paths:
   - "src/render/gap_mask.ts"
+  - "src/render/fabric_sdf.ts"
   - "src/render/ribbon_renderer.ts"
   - "src/render/ribbon/**"
   - "src/render/ribbon_mesh.ts"
@@ -176,6 +177,23 @@ attribution, same-state proofs) is in `probes-census.md` and
   (slots 170, 94, 93); also x134/x135 in one squeezed cinch. Breaking it
   needs a winner per pixel (e.g. waive a silhouette whose over thread is
   itself hidden there by the third thread).
+
+## G3-1: SAMP-referenced gap rows (K8)
+
+- Since G3-1 a slot row (25 texels, one slot a row) REFERENCES the G3
+  SAMP table instead of copying its over polyline: texel 4/9 hold the
+  over chain's SAMP range (base, kStart rounded outward, stride, count,
+  closed; arcPer), texels 10-17 up to 8 chunk bounding circles, texels
+  18-21 the two protect ranges (a SAMP range + its circle per side, read
+  in place by one loop - the loop-free protect). `fabric_sdf.ts` holds
+  `sampAt` and `fabricUniforms` (uFabricGap: enabled, probe tint, the
+  brute-force debug flag); row 0's globals moved there. A slot over 64
+  SAMP points strides at most 3 (chord <= 0.3), never stretched, never
+  cut (K399 gate 3). The search keeps index chunk order, the sure2 exit
+  (its inset floored at one SAMP stride - the zoom-aware tolerance),
+  SAMP central-difference tangents, protect and today's smooth-min
+  AS-IS (K268 item 4 lands after). The marker disc is nPts 0 (the
+  center in texel 5). Tests: `test/render/gap_mask.test.ts`.
 
 ## RENDER LORE (per-pixel gaps)
 

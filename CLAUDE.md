@@ -79,6 +79,7 @@ src/
     paint_const.ts        # G2: shared numeric constants (emitted into GLSL)
     float_rows.ts         # Row-partial RGBA32F data textures + uploader
     samp_table.ts         # K8 G3-0: pure packers for the SDF data tables (SAMP, RADII, CHAIN, RANGES)
+    fabric_sdf.ts         # K8 G3-1: sampAt + fabricUniforms, the gap search's shared SDF helpers
     reveal.ts             # Appearance reveal: per-sample width masks
     appear_fx.ts          # Reveal-front particles (rainbow, comet, dust, burn, roots)
     confetti.ts           # K140: finish confetti view (two ParticleContainers)
