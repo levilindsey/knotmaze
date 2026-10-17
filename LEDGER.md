@@ -19,7 +19,7 @@ one line, `- **K<n>** Â· <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K529.
+Next free ID: K530.
 
 ## Waiting on Levi
 
@@ -941,9 +941,6 @@ Every other item below waits on the trigger it names.
 - **K460** Â· Phone probe tooling: `phone6.ps1` holds the phone lock while it waits for perf and
   logs the tailnet address unmasked; `scripts/phone.ps1` wakes the phone, leaves a 9222 forward;
   `phone_run.ps1` hardcodes owner and hosts (live variant: K395's `phone_run_live.ps1`).
-- **K461** Â· K114 s2's `rt_page.mjs` (and `perf_batch.ps1`, `perf_attr.ps1`) passes
-  `&fsp=0.3&fdl=40`, which since K440 sets only the turn pair, so its real-time race plays 0.2 / 20:
-  pass `&fsr=0.3&fdr=40` (or re-baseline) before K441 re-runs it.
 - **K462** Â· K323 Stage A's design (`docs/design/K323_game_mode.md`: the params table ~l.89, the
   undo list ~l.222) predates `fireClock`, `burnt` and K440's real-time pair (`fsr`, `fdr`): Stage A
   carries the pair and labels it (its proposed labels describe the turn pair).
@@ -991,7 +988,6 @@ Every other item below waits on the trigger it names.
   0.066% of taps; no mid-move census (gameplay-camera.md TAP PREFERENCE).
 
 
-- **K500** Â· K480 stage 1 residuals: page-probe the realtime chase's multi-run tap; a touch press on a beyond run lighting its glow. (targetAt on the phone done 2026-10-16, build 926fdfe: warm 0.51 ms mean / 0.8 p95, n=300, sweep 60 fps 0 frames >25 ms; `.claude/probes/K480/out/targetat_phone.md`.)
 - **K503** Â· The G3-0 probe hooks (g3DataState, g3TableRows, g3Expected, captureScene, restoreScene) still sit on the RibbonRenderer facade; R5 left them there because they read reveal/paint state R3/R4 have not homed yet - give them a part (e.g. ribbon/scene_probe.ts) once R3/R4 land.
 - **K504** Â· K425 - a variant_build.ps1 -Subst naming ribbon_renderer.ts for joinery code (rebuildFillets, cpuJunctionField, the FILLET constants) must now name src/render/ribbon/joinery.ts; normArc likewise lives in ribbon/sampling.ts.
 - **K506** Â· Stage M4 handoff leftovers not folded into M5 (filed, not done): FrameLoopDeps still reads physState/settleWall0/warmHoldFrom through main.ts getters instead of taking life; ProbeCtx could take life/scene/audioMap whole; stale lore prose in physics-settle.md and render-shaders.md still names main.ts for lifecycle code; the A/B harness physon step should wait for asleep, not frozen.
@@ -1215,8 +1211,12 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
   crossing. Needs shader text, so every explore variant would compile cold (render-explore.md THE
   ENDS; docs/design/K466.md Handoff).
 
+- **K529** · K500's other half: a touch press on a beyond run lighting its glow, in the realtime chase (desktop mouse hover verified; touch unprobed).
+
 ## Done
 
+- **K500** · The realtime chase's multi-run tap is page-probed: real clicks walk the whole route in order, uncaught, with the hover glow on the tapped beyond run (desktop; build 5011adf). Done 2026-10-16 (probe only, .claude/probes/K500/; no commit). Touch-press half is K529.
+- **K461** · rt_page.mjs (and perf_batch/perf_attr via its default) now pass the realtime pair &fsr=0.3&fdr=40, not the turn pair. Done 2026-10-16 (probe only, .claude/probes/K114/stage2/; no commit).
 - **K526** · Footsteps pan by screen x: KnotSynth gains a StereoPanner pan on pluck (clampPan), and the turn minotaur's footstep pans by its vertex's screen x (footstepPan in mino_feedback). Done in this commit (2026-10-16).
 - **K373** · Boot fixes: safeAreaInsets is cached and read lazily on the first indicator update (was a forced layout at boot), and formatDayDate reuses one Intl formatter per locale. Done in this commit (2026-10-16).
 - **K436** · Regenerate clears the frame loop's halted flag on the main thread (lifecycle beginLoading/beginSettle), so a halted page recovers without a reload; K454, K469 and K314 were the same defect. Done in this commit (2026-10-16).
