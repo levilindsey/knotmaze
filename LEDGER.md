@@ -769,8 +769,6 @@ Every other item below waits on the trigger it names.
 - **K308** Â· `mod(floor(v + 0.5), 5.0)` in the background contours is a float quotient like K299's,
   allowlisted in `ROUNDED_QUOTIENTS` (`test/render/paint_ring_lap.test.ts`); fix it when the
   sha256-pinned programs are next re-pinned. `docs/design/K299_choice_pulse_bug.md` ("Residuals").
-- **K314** Â· `src/main.ts`: the non-finite watchdog's comment (about line 4274 at 459cc11) and stamp
-  say `halted` is cleared on regenerate, but nothing sets it false again. Noted by K7 s1.
 - **K315** Â· `__knotPhys` calls `sys.readSlideStats()`, which resets the counters it reads; under
   K7's mirror it needs the diagnostic bridge or a worker-side count (decide in K7 s2 or s4).
   `docs/design/K7_worker.md` ("Stage 1 handoff", "For stage 2").
@@ -786,9 +784,6 @@ Every other item below waits on the trigger it names.
 - **K343** Â· K325's snore is silent before the first activation (no AudioContext: a first hover is
   silent, and the gesture that opens the audio gate plays nothing, the MP3 undecoded). Fix: decode
   on an OfflineAudioContext before the gate. `gameplay-audio.md`, THE SNORING CAT LINK.
-- **K346** Â· The physics halt (`src/physics/particle_system.ts`, ~lines 2281-2287) misses NaN:
-  `Number.isFinite(maxMove)` catches only an infinite move, and a NaN displacement fails `d * d >
-  max`, so a NaN state never halts. Predates K7; found in K7 s2 (2026-10-14).
 - **K348** Â· Key-move edges left by K329/K333/K334: the X assignment switches only past KEY_TIE, a
   hold shorter than HOLD_DELAY pauses at the first junction, a wait tap mid-move isn't queued, and
   four smaller ones. Lore: TIE CYCLES, CHORDS AND THE MOVE WAIT in `gameplay-moves.md`.
@@ -909,9 +904,6 @@ Every other item below waits on the trigger it names.
 - **K435** Â· Lore (K290 3c): render-explore.md THE BURN says the band darkens the unburnt side under
   char only, but the code does it under both looks (check THE EMBER DRAWS); probes.md: a true FX-off
   frame needs a no-op tickFireFx, fireFx.clear() and two frames (stage3c `width_probe.mjs`).
-- **K436** Â· The frame loop's `halted` is never cleared on the main thread: `src/app/frame_loop.ts` 148's comment,
-  the HALTED stamp and 8838340 say a regenerate clears it, but only a reload does (the worker core clears its own,
-  `physics_worker_core.ts` 479, 610). Eight frame_loop.ts lines run past 80 columns (`K5_K6_split.md`, M3 handoff).
 - **K437** Â· Rules prose names main.ts for code K5 M3 moved to `src/app/frame_loop.ts`: gameplay-indicators.md 25,
   gameplay-audio.md 32, render-backgrounds.md 35, render-web-fade.md 39, render-explore.md 373, render-shaders.md
   134-136; nothing documents flow's half rate (`flowParity`). For the docs batch with K425, K426, K431, K432, K435.
@@ -941,8 +933,6 @@ Every other item below waits on the trigger it names.
   THE DOTS).
 - **K453** Â· K397's survey flags 1x2y3z f1 and f6 in stages 1 and 2: the dots end at about 0.85 of
   the fade. Inferred occlusion, not inspected (`.claude/probes/K397/stage2/out_s2/`).
-- **K454** Â· `halted` never clears: frame_loop.ts 156 says "Cleared on regenerate", but main never
-  clears it, so a halted page needs a reload (K6-1's brief reports it, changes nothing).
 - **K455** Â· At fw=0 the worker's exact sleep state is never drawn: gateFrame applies the snapshot
   after that frame's geometry pass (inferred; K6-1 measures it, K6-2's GEOM gating would draw it).
 - **K456** Â· No webglcontextlost / webglcontextrestored handler anywhere in `src/` (K6-1's brief
@@ -963,9 +953,6 @@ Every other item below waits on the trigger it names.
 - **K464** Â· K5 R2's leftovers (`docs/design/K5_R2.md`, Stage R2 handoff): the G3 and
   FILLET_REACH_PER_HALF facade getters (with R4 or G3's data plane), stale facade comments, the G3-0
   hooks' home (R5), GapSource solve() (R3 or G3-1).
-- **K469** Â· frame_loop's `halted` never clears on the main thread, so a halted page needs a reload,
-  and its "Cleared on regenerate" comment is wrong (K6-1, Q5; `docs/design/K6_1.md`, "Open after
-  K6-1").
 - **K470** Â· No app-level WebGL context-loss handling: only `probe_hooks.ts` listens for
   `webglcontextlost`, to count losses. What a lost context does to the custom data textures on a
   phone is untested (K6-1).
@@ -1234,6 +1221,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K436** · Regenerate clears the frame loop's halted flag on the main thread (lifecycle beginLoading/beginSettle), so a halted page recovers without a reload; K454, K469 and K314 were the same defect. Done in this commit (2026-10-16).
+- **K454** · Same defect as K436. Done in this commit (2026-10-16).
+- **K469** · Same defect as K436. Done in this commit (2026-10-16).
+- **K314** · Same defect as K436 (the watchdog comment now holds). Done in this commit (2026-10-16).
 - **K346** · A NaN displacement now raises the frame's max move (particle_system's Verlet loop), so maxMove reads non-finite and the physics halt fires on a NaN state. Done in this commit (2026-10-16).
 - **K398** · Link values clamp to the panel ranges (PARAM_RANGES in param_codec.ts: on encode, and in url_state's readers; the codec's decode stays lossless, hueShift/background sentinels/junctionBlend's floor keep their pins), so a gs 66+ knot link can no longer overflow the GAP texture. Done in this commit (2026-10-16).
 - **K524** · K80 turns 3b's real-phone contact sheet: shot 2026-10-16 on the real Pixel 11 at 411x753 (master 5558669, PowerVR Vulkan; roam turn 2, hunt turn 47, caught turn 48, all checks pass). `.claude/probes/K80/stage3b/contact_sheet_real.png` beside the emulated sheet; frames + look notes in `shots/phone_real/` (probe `turns_phone_real.mjs`). Done 2026-10-16 (probe evidence only, no commit).

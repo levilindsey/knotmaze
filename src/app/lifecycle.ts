@@ -147,6 +147,7 @@ export function createLifecycle(deps: LifecycleDeps, scene: SceneRef) {
     if (!scene.ps || !scene.renderer) return;
     physState = "loading";
     warmHoldFrom = -1;
+    deps.loop.halted = false; // K436: a regenerate clears the halt.
     host.beginLoad();
     deps.reveal = null;
     scene.renderer.beginReveal(null);
@@ -218,6 +219,7 @@ export function createLifecycle(deps: LifecycleDeps, scene: SceneRef) {
   // to the first sleep.
   function beginSettle(): void {
     if (!scene.ps || !scene.renderer) return;
+    deps.loop.halted = false; // K436: a regenerate clears the halt.
     host.disarm();
     warmHoldFrom = -1;
     if (params.appearSequence === "instant" || params.loadSettle <= 0) {
