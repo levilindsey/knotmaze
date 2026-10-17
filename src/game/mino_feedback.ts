@@ -20,6 +20,62 @@ export function telegraphAlphas(hunting: boolean, runs: number): number[] {
   return out;
 }
 
+// K481 stage 3 (decision 7): the by-length telegraph's ticks. One tick
+// sits where the minotaur would stop for each choice at the player's
+// junction (the wait's edge is -1). Hovering or pressing a choice lights
+// its tick and moves the destination ring there; with nothing hovered
+// (and always on the phone, which has no hover) the route and its ticks
+// show alone. For a multi-run tap (K480) the lit tick is its first run's.
+// The alphas stay in K80 3b's language: an unlit tick at the route's
+// base (roam 0.45 / hunt 0.95), a lit roam tick raised to the hunt
+// brightness, the other ticks dimmed to half while one is lit.
+export const TELEGRAPH_TICK_SCALE = 0.55; // of the destination ring's radius
+export const TELEGRAPH_TICK_SCALE_LIT = 0.8;
+export const TELEGRAPH_TICK_SCALE_COARSE = 0.8; // phone: no hover, fit zoom
+export const TELEGRAPH_TICK_SCALE_COARSE_LIT = 1;
+
+export interface TelegraphTickLook {
+  alpha: number;
+  scale: number; // of the destination ring's radius
+  ring: boolean; // draw the full destination ring at this tick
+}
+
+// Which choice's tick a hover or press lights: the wait zone first
+// (-1), then a hovered route's first run (K480), then the hovered run
+// itself; null = nothing hovered. A hovered run that is no choice (a
+// beyond run without its route) lights nothing here - its caller
+// passes the route, whose first run is a choice.
+export function resolveTelegraphHover(
+  hoverEdge: number,
+  hoverRoute: readonly number[] | null,
+  waitHovered: boolean
+): number | null {
+  if (waitHovered) return -1;
+  if (hoverRoute && hoverRoute.length > 0) return hoverRoute[0];
+  return hoverEdge >= 0 ? hoverEdge : null;
+}
+
+export function telegraphTickLook(
+  hunting: boolean,
+  lit: boolean,
+  anyLit: boolean,
+  coarse: boolean
+): TelegraphTickLook {
+  const base = hunting ? TELEGRAPH_ALPHA_HUNT : TELEGRAPH_ALPHA_ROAM;
+  if (lit) {
+    return {
+      alpha: hunting ? 1 : TELEGRAPH_ALPHA_HUNT,
+      scale: coarse ? TELEGRAPH_TICK_SCALE_COARSE_LIT : TELEGRAPH_TICK_SCALE_LIT,
+      ring: true,
+    };
+  }
+  return {
+    alpha: anyLit ? base * 0.5 : base,
+    scale: coarse ? TELEGRAPH_TICK_SCALE_COARSE : TELEGRAPH_TICK_SCALE,
+    ring: false,
+  };
+}
+
 // Section 2.10, fog of war: its red glow bleeds faintly through the fog
 // (the marker and the telegraph stay hidden; syncMinotaur's fog rule).
 export const MINO_FOG_BLEED_ALPHA = 0.16;

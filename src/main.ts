@@ -1988,6 +1988,8 @@ async function main(): Promise<void> {
       turnCaught(w, true);
       return;
     }
+    scene.fabric.telegraphCoarse =
+      coarsePointer || window.innerWidth <= 700;
     scene.fabric.syncMinotaur(scene.turnMino, params.minoFog, scene.turnMino.telegraph());
   };
 
@@ -2326,6 +2328,7 @@ async function main(): Promise<void> {
     const result = scene.fabricController.tapEdge(eid);
     moveHuntWas = hunt0;
     scene.fabric.setHover(-1);
+    scene.fabric.setTelegraphHover(null);
     // The game state moved instantly; the dot + gold front animate along
     // the thread to catch up. The win banner waits for the arrival.
     if (result === "advance" || result === "backtrack" || result === "win") {

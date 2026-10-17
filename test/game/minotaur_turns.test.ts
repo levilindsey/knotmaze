@@ -823,6 +823,23 @@ describe("TurnMinotaur", () => {
       expect(t.catches).toBe(0);
     });
 
+    it("marks the telegraph stops that would be caught (stage 3's tint input)", () => {
+      const cfg: TurnConfig = { ...cfgL(), telegraph: true };
+      const t = new TurnMinotaur(G2, cfg, 1);
+      t.player = A;
+      place(t, B);
+      t.setConfig(cfg);
+      const tel = t.telegraph();
+      expect(tel?.player).toBe(A);
+      const byEdge = new Map((tel?.stops ?? []).map((s) => [s.edge, s.caught]));
+      expect(byEdge.get(1)).toBe(true); // A -> B, head-on
+      expect(byEdge.get(0)).toBe(false); // A -> S ends on the start: never a catch
+      expect(byEdge.get(-1)).toBe(false); // waiting at A: it stops short
+      // Reading the telegraph is pure: the game it then plays is the
+      // pinned one regardless.
+      expect(t.turn(1)).toBe("caught");
+    });
+
     it("checks contact continuously along a shared run", () => {
       const from = spotAtVertex(B);
       expect(lengthContactDistance(tg2, A, 1, from, [[1, A]], [20], 20)).toBe(0);

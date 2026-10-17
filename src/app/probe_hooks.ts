@@ -443,10 +443,12 @@ export function installProbeHooks(ctx: ProbeCtx): void {
             // K481 stage 2: by-length stops (ticks) and route spots.
             fromSpot: tel.fromSpot ? { ...tel.fromSpot } : null,
             stops: tel.stops
-              ? tel.stops.map((s) => ({ edge: s.edge, travel: s.travel, spot: { ...s.spot } }))
+              ? tel.stops.map((s) => ({ edge: s.edge, travel: s.travel, spot: { ...s.spot }, caught: s.caught ?? false }))
               : null,
           }
         : null,
+      teleHover: ctx.scene.fabric?.telegraphHoverEdge ?? null,
+      teleCoarse: ctx.scene.fabric?.telegraphCoarse ?? false,
       inputs: [...tm.inputs],
       waiting: ctx.turnWait,
       minoShown: shown,
