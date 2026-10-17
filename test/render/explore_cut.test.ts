@@ -22,6 +22,7 @@ import {
   GAP_TEX_W,
   GAP_UPLOAD_STATS,
   GapMaskTable,
+  gapChunkBounds,
   type GapShape,
   type GapSlotParams,
 } from "../../src/render/gap_mask";
@@ -44,7 +45,7 @@ import {
 import { exploreCutCoverCpu, kExDotsSdCpu, kExploreLookCpu } from "../../src/render/paint_math";
 import { chainVis, type ExplorePiece } from "../../src/game/explore_view";
 
-function slotParams(strength: number, polyStart = 0, polyStep = 0): GapSlotParams {
+function slotParams(strength: number, kStart = 0, arcPer = 1): GapSlotParams {
   return {
     hOver: 0.25,
     margin: 0.1,
@@ -60,8 +61,9 @@ function slotParams(strength: number, polyStart = 0, polyStep = 0): GapSlotParam
     tanX: 1,
     tanY: 0,
     selfExcl: 0,
-    polyStart,
-    polyStep,
+    over: { base: 0, kStart, n: 3, stride: 1, count: 100, closed: false },
+    overArcPer: arcPer,
+    overChunks: gapChunkBounds((j) => [PTS[j * 2], PTS[j * 2 + 1]], 3),
     marginScaleNeg: 1,
     marginScalePos: 1,
     fadeScaleNeg: 1,
@@ -74,9 +76,10 @@ function slotParams(strength: number, polyStart = 0, polyStep = 0): GapSlotParam
     protNegB: 0,
     protPosA: 0,
     protPosB: 0,
-    protPts: null,
-    protNegN: 0,
-    protPosN: 0,
+    protNeg: null,
+    protPos: null,
+    protNegCircle: null,
+    protPosCircle: null,
   };
 }
 
@@ -118,7 +121,7 @@ function profileOf(shape: GapShape, strength: number): Float32Array {
 describe("K268 the shaped cut: the profile encoding", () => {
   it("writes the ramps, keeps the solved radii, carries 2b's scalar in texel 1.w", () => {
     const t = new GapMaskTable(6);
-    t.writeSlot(2, slotParams(0.75, -1.5, 1.5), PTS, 3);
+    t.writeSlot(2, slotParams(0.75, -1, 1.5));
     const solved = t.readSlot(2);
     expect(t.polyRange(2)).toEqual([-1.5, 1.5, 3]);
     const shape: GapShape = {
@@ -152,7 +155,7 @@ describe("K268 the shaped cut: the profile encoding", () => {
 
   it("hands back to 2b's scalar: null clears the bit and the profile, setVis writes again", () => {
     const t = new GapMaskTable(6);
-    t.writeSlot(1, slotParams(1, 0, 1), PTS, 3);
+    t.writeSlot(1, slotParams(1, 0, 1));
     const solved = t.readSlot(1);
     t.setShape(1, { k2b: 0.25, ramps: [{ aS: 0.5, F: 1, dK: 1, tK: 1, front: false }], max: false });
     expect(t.setShape(1, null)).toBe(true);
@@ -169,9 +172,9 @@ describe("K268 the shaped cut: the profile encoding", () => {
 
   it("a re-solve clears the shape (the renderer re-applies it after update())", () => {
     const t = new GapMaskTable(6);
-    t.writeSlot(3, slotParams(1, 0, 1), PTS, 3);
+    t.writeSlot(3, slotParams(1, 0, 1));
     t.setShape(3, { k2b: 1, ramps: [{ aS: 0.5, F: 1, dK: 1, tK: 1, front: false }], max: false });
-    t.writeSlot(3, slotParams(0.5, 0, 1), PTS, 3);
+    t.writeSlot(3, slotParams(0.5, 0, 1));
     expect(t.isShaped(3)).toBe(false);
     expect(t.visOf(3)).toBe(1);
     expect(t.readSlot(3).header[7]).toBe(0.5);
@@ -182,7 +185,7 @@ describe("K268 the shaped cut: the profile encoding", () => {
 
   it("a gated slot (intro gate pending) keeps its show time in texel 1.w and the profile", () => {
     const t = new GapMaskTable(6);
-    t.writeSlot(4, slotParams(-3.5, 0, 1), PTS, 3);
+    t.writeSlot(4, slotParams(-3.5, 0, 1));
     t.setShape(4, { k2b: 0.5, ramps: [{ aS: 0.5, F: 1, dK: 1, tK: 1, front: false }], max: false });
     expect(t.readSlot(4).header[7]).toBe(-3.5);
     expect(t.readShape(4)![8]).toBe(-3.5);
@@ -823,9 +826,9 @@ describe("K268 the row-partial gap upload", () => {
     calls.length = 0;
     GAP_ROWS_UPLOADER.upload(source, tex, gl);
     expect(calls).toEqual([]);
-    t.writeSlot(1, slotParams(1, 0, 1), PTS, 3);
-    t.writeSlot(2, slotParams(1, 0, 1), PTS, 3);
-    t.writeSlot(4, slotParams(1, 0, 1), PTS, 3);
+    t.writeSlot(1, slotParams(1, 0, 1));
+    t.writeSlot(2, slotParams(1, 0, 1));
+    t.writeSlot(4, slotParams(1, 0, 1));
     GAP_ROWS_UPLOADER.upload(source, tex, gl);
     // Slots 1, 2 = rows 2, 3 (one run); slot 4 = row 5.
     expect(calls).toEqual([

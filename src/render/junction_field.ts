@@ -87,6 +87,7 @@ import { KNOT_UNIFORMS_GLSL, PAINT_CONST_GLSL, PAINT_GATE_GLSL } from "./paint_g
 import { knotUniforms } from "./paint_model";
 import { STRIP_LOOKUP_GLSL, STRIP_LOOKUP_P_GLSL, stripTexture } from "./arm_strip";
 import { exploreGapEdits } from "./explore_glsl";
+import { fabricUniforms, sampSource } from "./fabric_sdf";
 
 // Field geometry constants (shared with the CPU side in ribbon_renderer):
 // arm radial profiles resample the centerline (walked in FIELD_PROF_ARC
@@ -513,6 +514,8 @@ function makeShader(glProgram: GlProgram): FieldShader {
     resources: {
       uJData: recordData().source,
       uGapData: (GAP_TEX ?? defaultGapTexture()).source,
+      uSamp: sampSource(),
+      fabricUniforms: fabricUniforms(),
       fieldUniforms: fieldUniforms(),
       // The arms' composed materials (arm_strip.ts), and the clocks the
       // joint gate reads.
@@ -545,10 +548,12 @@ export function junctionShaderExplore(): FieldShader {
 // then).
 export function bindFieldGap(tex: Texture): void {
   GAP_TEX = tex;
+  const samp = sampSource();
   for (const sh of [JUNCTION_SHADER, JUNCTION_SHADER_EX]) {
     if (sh && sh.resources.uGapData !== tex.source) {
       sh.resources.uGapData = tex.source;
     }
+    if (sh && sh.resources.uSamp !== samp) sh.resources.uSamp = samp;
   }
 }
 

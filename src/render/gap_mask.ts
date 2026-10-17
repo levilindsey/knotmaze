@@ -16,7 +16,7 @@
 //
 // DATA: one RGBA32F texture (page-lifetime, NEAREST, read with texelFetch
 // only - WebKit has no float-linear filtering and none is needed). Row 0
-// holds globals [enabled, tint-probe view, -, -]; slot s lives in row s+1,
+// holds the globals in fabricUniforms since G3-1 (row 0 unused); slot s lives in row s+1,
 // its texels ordered by when a fragment needs them:
 //   texel 0: [boundX, boundY, rFull, rSil] - the polyline's bounding circle
 //            and its radius grown by the slot's reach of interest (full
@@ -27,25 +27,24 @@
 //            seconds) over CROSSING_FADE_IN, from the knot uniforms' clock
 //            (gapStrength), so a reveal / FX gate needs no CPU fade state
 //   texel 2: [winNeg, winPos, hOver, nPts]
-//   texel 3: [capR, nProtNeg, nProtPos, flags (1 perp margin, 2 self,
+//   texel 3: [-, nProtNeg, nProtPos, flags (1 perp margin, 2 self,
 //            4 SHAPED: K268, the thread reveal's profile below - read only
 //            by the explore program, set only while the reveal is on)]
-//   texel 4: [selfExcl, polyStartArc, polyStepArc, farK]
+//   texel 4: [selfExcl, overBase, kStart, overArcPer] (the SAMP range)
 //   texel 5: [fadeScaleNeg, fadeScalePos, centerX, centerY]
 //   texel 6: [underTanX, underTanY, marginScaleNeg, marginScalePos]
 //   texel 7: [protNegA, protNegB, protPosA, protPosB] (protect intervals)
-//   texel 8: [margin, fade, sminK, -]
-//   texels 9..: chunk chords [ax, ay, bx, by], one per GAP_CHUNK segments;
-//               every chunk's points lie within capR of its chord
-//   then:       the over centerline polyline, one point per texel
-//               [x, y, u] (u: see GAP_MAX_PTS), padded with its last point
-//               to a whole chunk (zero-length segments)
-//   then:       two PROTECT blocks (negative side, positive side), each a
-//               bounding circle [cx, cy, r, -] and GAP_PROT_PTS polyline
-//               texels in the same [x, y, u] form
+//   texel 8: [margin, fade, sminK, farK] (farK in sampled segments)
+//   texel 9: [overStride, overCount, overClosed, -]
+//   texels 10..17: chunk bounding circles [cx, cy, radius, firstPoint],
+//               GAP_CHUNK sampled segments per chunk (a slot over 64 SAMP
+//               points strides at most 3, chord <= 0.3; K399 gate 3)
+//   texels 18/20: PROTECT ranges [sampBase, kStart, nPts, stride] per
+//               side, read in place from SAMP; texels 19/21 their
+//               bounding circles [cx, cy, r, -] (loop-free protect)
 //   last:       K268's SHAPED-CUT PROFILE (GAP_PROF_BASE, 3 texels): the
-//               over thread's visibility along the polyline's arc frame
-//               (texel 4: polyStart + k polyStep), written by setShape -
+//               over thread's visibility along the over chain's arc frame
+//               (texel 4's arc), written by setShape -
 //               two ramps [aS, F, dK, tK] (a piece end: solid before
 //               aS, then a fade of SIGNED arc length F, piecewise linear
 //               in arc through the knot (dK, tK)), then [solved strength,
@@ -131,28 +130,25 @@
 // by MSAA). Marker discs fade radially (their sin is pinned to 1).
 
 import { BufferImageSource, ExtensionType, Texture, extensions } from "pixi.js";
+import { FABRIC_GLSL, fabricGapBrute, setFabricGap } from "./fabric_sdf";
 
-export const GAP_HDR = 9; // Header texels per row.
-export const GAP_CHUNK = 8; // Polyline segments per culling chunk.
-export const GAP_MAX_CHUNKS = 7; // Chunk-chord texels per row.
-const GAP_CHUNK_BASE = GAP_HDR; // First chunk-chord texel.
-const GAP_PTS_BASE = GAP_HDR + GAP_MAX_CHUNKS; // First polyline texel.
+export const GAP_HDR = 10; // Header texels per row (0-9).
+export const GAP_CHUNK = 8; // Sampled segments per culling chunk.
+export const GAP_MAX_CHUNKS = 8; // Chunk-circle texels per row.
 // Every chunk reads GAP_CHUNK whole segments, closing point included, so
-// the cap is 7 chunks x 8 segments + 1 = 57 points (padding fills the last
-// chunk; never read past it). One texel per point: [x, y, u] with
-// u = (next - this) / |next - this|^2, so a segment's nearest parameter is
-// one dot product - no division in the search loop.
+// the cap is 8 chunks x 8 segments + 1 = 65 sampled points.
 export const GAP_MAX_PTS = GAP_MAX_CHUNKS * GAP_CHUNK + 1;
-// Points per protect polyline (B's local centerline at a neighboring
-// crossing where the under thread goes over), two per row.
-export const GAP_PROT_PTS = 16;
-const GAP_PROT_CHUNKS = Math.ceil((GAP_PROT_PTS - 1) / GAP_CHUNK);
-const GAP_PROT_BASE = GAP_PTS_BASE + GAP_MAX_PTS;
-// Per block: bounding circle + capsule radius, chunk chords, points.
-const GAP_PROT_W = 1 + GAP_PROT_CHUNKS + GAP_PROT_PTS;
-// K268: the shaped-cut profile (see the header), after the protect blocks.
-export const GAP_PROF_BASE = GAP_PROT_BASE + 2 * GAP_PROT_W;
-export const GAP_TEX_W = GAP_PROF_BASE + 3;
+// K399 gate 3: a slot whose raw SAMP span exceeds the cap strides by at
+// most this (SAMP spacing 0.09, so a chord stays <= 0.27 world); the
+// writer never stretches spacing past it and never cuts the reach.
+export const GAP_MAX_STRIDE = 3;
+const GAP_CHUNK_BASE = GAP_HDR; // First chunk-circle texel (10).
+// Protect ranges: per side a range texel then its bounding circle.
+const GAP_PROT_NEG = GAP_CHUNK_BASE + GAP_MAX_CHUNKS; // 18
+const GAP_PROT_POS = GAP_PROT_NEG + 2; // 20
+// K268: the shaped-cut profile (see the header), after the protect ranges.
+export const GAP_PROF_BASE = GAP_PROT_POS + 2; // 22
+export const GAP_TEX_W = GAP_PROF_BASE + 3; // 25
 // Texel 3.w's SHAPED bit, and the profile's flags (texel GAP_PROF_BASE+2
 // .y): ramp 0 / 1 present, ramp 0 / 1 a FRONTIER (the end look applies),
 // and MAX (two pieces, kExploreAt's best-of) instead of MIN (one piece's
@@ -165,40 +161,114 @@ export const GAP_PROF_F1 = 8;
 export const GAP_PROF_MAX = 16;
 export const GAP_SLOTS = 4; // Slot ids per vertex.
 
-// The chunk loop of a nearest-point search: chunks whose CAPSULE (chord +
-// the slot's capR) cannot beat the best distance so far are skipped, and
-// inside sqrt(sure2) the answer is settled. `seg` names the segment test
-// (gapSegFast / gapSegFull) and `args` its trailing arguments.
-function nearestLoop(seg: string, args: string, skip: boolean): string {
-  return /* glsl */ `
-  for (int c = 0; c < ${GAP_MAX_CHUNKS}; c++) {
-    if (c >= nCh) break;
-    if (best < sure2) break;
-    int k0 = c * ${GAP_CHUNK};
-    ${
-      skip
-        ? `// A chunk wholly inside the skipped index range adds nothing
-    // (padding segments count as the last real one - see gapSegFull).
-    if (k0 >= skipLo && min(k0 + ${GAP_CHUNK - 1}, int(kLast) - 1) <= skipHi) {
-      continue;
-    }`
-        : ""
+// One chain's SAMP range as a slot references it: point j (0-based, of n
+// sampled points) is sampAt(base + wrap(kStart + j * stride)), wrap =
+// modulo count on a closed chain, clamped to [0, count - 1] on an open
+// one; its chain arc is (kStart + j * stride) * arcPer.
+export interface GapSampRef {
+  base: number;
+  kStart: number;
+  n: number;
+  stride: number;
+  count: number;
+  closed: boolean;
+}
+
+// The SAMP range covering chain arcs [center - neg, center + pos] of a
+// chain with `count` samples over `total` arc, rounded OUTWARD to whole
+// samples (every sample the reach touches is held), then strided to the
+// GAP_MAX_PTS cap (stride at most GAP_MAX_STRIDE; the reach is never
+// cut). arcPer = arc per sample (closed: total / count; open: total /
+// (count - 1)).
+export function gapSampRange(
+  total: number,
+  count: number,
+  closed: boolean,
+  center: number,
+  neg: number,
+  pos: number
+): { ref: GapSampRef; arcPer: number } {
+  const arcPer = count > 1 ? total / (closed ? count : count - 1) : Math.max(total, 1);
+  if (count < 1 || !(total > 0)) {
+    return { ref: { base: 0, kStart: 0, n: 0, stride: 1, count: Math.max(count, 1), closed }, arcPer };
+  }
+  let kLo = Math.floor((center - neg) / arcPer);
+  let kHi = Math.ceil((center + pos) / arcPer);
+  if (!closed) {
+    kLo = Math.max(0, Math.min(count - 1, kLo));
+    kHi = Math.max(0, Math.min(count - 1, kHi));
+    if (kHi < kLo) kHi = kLo;
+  } else if (kHi - kLo + 1 > count) {
+    kLo = 0;
+    kHi = count - 1;
+  }
+  const nRaw = kHi - kLo + 1;
+  const stride =
+    nRaw <= GAP_MAX_PTS ? 1 : Math.min(GAP_MAX_STRIDE, Math.ceil((nRaw - 1) / (GAP_MAX_PTS - 1)));
+  // A reach spanning the whole ring (never in practice: reaches are a
+  // few world against laps of tens) still caps at GAP_MAX_PTS points.
+  const n = Math.min(GAP_MAX_PTS, Math.floor((nRaw - 1) / stride) + 1);
+  return { ref: { base: 0, kStart: kLo, n, stride, count, closed }, arcPer };
+}
+
+// Chunk bounding circles for a sampled range: GAP_MAX_CHUNKS texels
+// [cx, cy, radius, firstPoint], GAP_CHUNK segments per chunk, from the
+// sampled points `at(j)` (flat [x, y, ...] or a reader). Unused chunks
+// are zero (their firstPoint still names the chunk's first segment).
+export function gapChunkBounds(
+  at: (j: number) => readonly [number, number],
+  nPts: number
+): Float32Array {
+  const out = new Float32Array(GAP_MAX_CHUNKS * 4);
+  for (let c = 0; c < GAP_MAX_CHUNKS; c++) {
+    const j0 = c * GAP_CHUNK;
+    out[c * 4 + 3] = j0;
+    if (nPts < 2 || j0 >= nPts) continue;
+    const j1 = Math.min(j0 + GAP_CHUNK, nPts - 1);
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let j = j0; j <= j1; j++) {
+      const [x, y] = at(j);
+      if (x < x0) x0 = x;
+      if (y < y0) y0 = y;
+      if (x > x1) x1 = x;
+      if (y > y1) y1 = y;
     }
-    highp vec4 cc = texelFetch(uGapData, ivec2(${GAP_CHUNK_BASE} + c, row), 0);
-    highp vec2 ab = cc.zw - cc.xy;
-    highp float l2 = dot(ab, ab);
-    highp float t = l2 > 1e-12 ? clamp(dot(p - cc.xy, ab) / l2, 0.0, 1.0) : 0.0;
-    highp vec2 q = cc.xy + ab * t - p;
-    highp float lb = max(sqrt(dot(q, q)) - capR, 0.0);
-    if (lb * lb >= best) continue;
-    int tx = ${GAP_PTS_BASE} + k0;
-    highp vec4 ta = texelFetch(uGapData, ivec2(tx, row), 0);
-    for (int j = 0; j < ${GAP_CHUNK}; j++) {
-      highp vec4 tb = texelFetch(uGapData, ivec2(tx + j + 1, row), 0);
-      ${seg}(p, ta, tb.xy, k0 + j${args}, best, bk);
-      ta = tb;
+    const cx = (x0 + x1) / 2;
+    const cy = (y0 + y1) / 2;
+    let r = 0;
+    for (let j = j0; j <= j1; j++) {
+      const [x, y] = at(j);
+      r = Math.max(r, Math.hypot(x - cx, y - cy));
     }
-  }`;
+    out[c * 4] = cx;
+    out[c * 4 + 1] = cy;
+    out[c * 4 + 2] = r + 1e-4;
+  }
+  return out;
+}
+
+// The bounding circle [cx, cy, r] of a sampled range's points.
+export function gapRangeCircle(
+  at: (j: number) => readonly [number, number],
+  nPts: number
+): [number, number, number] {
+  if (nPts < 1) return [0, 0, 0];
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let j = 0; j < nPts; j++) {
+    const [x, y] = at(j);
+    if (x < x0) x0 = x;
+    if (y < y0) y0 = y;
+    if (x > x1) x1 = x;
+    if (y > y1) y1 = y;
+  }
+  const cx = (x0 + x1) / 2;
+  const cy = (y0 + y1) / 2;
+  let r = 0;
+  for (let j = 0; j < nPts; j++) {
+    const [x, y] = at(j);
+    r = Math.max(r, Math.hypot(x - cx, y - cy));
+  }
+  return [cx, cy, r + 1e-4];
 }
 
 // Vertex-shader additions (declarations + main body lines). The sample's
@@ -246,15 +316,25 @@ export const GAP_VERT_MAIN = /* glsl */ `
 // removed).
 export const GAP_FRAG_LIB = /* glsl */ `
 uniform highp sampler2D uGapData;
+${FABRIC_GLSL}
 
-// One polyline segment of a nearest-point search: ta = [point k, u] with
-// u = (b - a) / |b - a|^2 (zero for a zero-length segment), b = point k+1.
-// FAST: the plain distance.
-void gapSegFast(highp vec2 p, highp vec4 ta, highp vec2 b, int k,
+// The nearest-point search over a slot's SAMP range (G3-1): chunks are
+// walked in INDEX order (center-out and best-first measured 8-10% slower:
+// neighboring fragments start in different chunks and exit at different
+// times, so the SIMD group runs the union), a chunk whose bounding
+// circle cannot beat the best distance so far is skipped, and the search
+// stops once a point lies inside sure2 (the over silhouette: hidden
+// whatever else is found). uFabricGap.z (the brute-force debug uniform)
+// disables both prunings on the same code, so brute against pruned must
+// read 0 px apart. Segment tests project onto the SAMP segment itself
+// (the samples are the over ribbon's own centerline).
+void gapSeg(highp vec2 p, highp vec2 a, highp vec2 b, int k,
     inout highp float best, inout int bk) {
-  highp vec2 pa = p - ta.xy;
-  highp float h = clamp(dot(pa, ta.zw), 0.0, 1.0);
-  highp vec2 q = pa - (b - ta.xy) * h;
+  highp vec2 ab = b - a;
+  highp vec2 pa = p - a;
+  highp float l2 = dot(ab, ab);
+  highp float h = l2 > 1e-12 ? clamp(dot(pa, ab) / l2, 0.0, 1.0) : 0.0;
+  highp vec2 q = pa - ab * h;
   highp float d2 = dot(q, q);
   if (d2 < best) {
     best = d2;
@@ -265,27 +345,23 @@ void gapSegFast(highp vec2 p, highp vec4 ta, highp vec2 b, int k,
 // FULL: also skips segment indices skipLo..skipHi (the far-branch pass;
 // empty when skipLo > skipHi) and, when ex > 0 (self-crossings), a segment
 // whose nearest point's chain arc lies within ex of the fragment's arc fa
-// (s0/st: the polyline's arc parameterization, kLast: the last real point
-// - padding repeats it; per: the ring period, 0 on open chains).
-void gapSegFull(highp vec2 p, highp vec4 ta, highp vec2 b, int k,
+// (s0/st: the range's arc parameterization in sampled steps; per: the
+// ring period, 0 on open chains).
+void gapSegFull(highp vec2 p, highp vec2 a, highp vec2 b, int k,
     highp float ex, highp float fa, highp float s0, highp float st,
-    highp float kLast, highp float per, int skipLo, int skipHi,
+    highp float per, int skipLo, int skipHi,
     inout highp float best, inout int bk) {
-  // Padding segments (k >= kLast: zero-length copies of the last point)
-  // stand for the LAST REAL segment: by raw index they fell outside a skip
-  // range that holds that segment, and the far-branch pass found the
-  // polyline's own end point as a "second branch" - a smooth-min dip near
-  // polyline ends on straight runs (caught by the same-state smin census).
-  int ks = min(k, int(kLast) - 1);
-  if (ks >= skipLo && ks <= skipHi) return;
-  highp vec2 pa = p - ta.xy;
-  highp float h = clamp(dot(pa, ta.zw), 0.0, 1.0);
+  if (k >= skipLo && k <= skipHi) return;
+  highp vec2 ab = b - a;
+  highp vec2 pa = p - a;
+  highp float l2 = dot(ab, ab);
+  highp float h = l2 > 1e-12 ? clamp(dot(pa, ab) / l2, 0.0, 1.0) : 0.0;
   if (ex > 0.0) {
-    highp float da = s0 + min(float(k) + h, kLast) * st - fa;
+    highp float da = s0 + (float(k) + h) * st - fa;
     if (per > 0.0) da -= per * floor(da / per + 0.5);
     if (abs(da) < ex) return;
   }
-  highp vec2 q = pa - (b - ta.xy) * h;
+  highp vec2 q = pa - ab * h;
   highp float d2 = dot(q, q);
   if (d2 < best) {
     best = d2;
@@ -293,31 +369,82 @@ void gapSegFull(highp vec2 p, highp vec4 ta, highp vec2 b, int k,
   }
 }
 
-highp vec4 gapPt(int row, int k) {
-  return texelFetch(uGapData, ivec2(${GAP_PTS_BASE} + k, row), 0);
+// Sampled point j of a range (t4 = [selfExcl, overBase, kStart, arcPer],
+// t9 = [stride, count, closed, -]): rings wrap, open chains clamp (never
+// a last-to-first chord).
+vec2 gapOverPt(vec4 t4, vec4 t9, int j) {
+  int stride = max(int(t9.x + 0.5), 1);
+  int count = max(int(t9.y + 0.5), 1);
+  int raw = int(t4.z + 0.5) + j * stride;
+  int idx = t9.z > 0.5
+    ? ((raw % count) + count) % count
+    : clamp(raw, 0, count - 1);
+  return sampAt(int(t4.y + 0.5) + idx);
 }
 
-// Nearest point of the polyline within sqrt(best) (best is the squared
-// reach on entry); the nearest segment (-1: none within reach) comes back
-// through bk. Fast form: no exclusions.
-void gapNearestFast(int row, int nCh, highp float capR, highp vec2 p,
-    highp float sure2, inout highp float best, inout int bk) {
-${nearestLoop("gapSegFast", "", false)}
+vec2 gapPt(int row, int k) {
+  highp vec4 t4 = texelFetch(uGapData, ivec2(4, row), 0);
+  highp vec4 t9 = texelFetch(uGapData, ivec2(9, row), 0);
+  return gapOverPt(t4, t9, k);
 }
 
-void gapNearestFull(int row, int nCh, highp float capR, highp vec2 p,
+// Nearest point of the sampled range within sqrt(best) (best is the
+// squared reach on entry); the nearest segment (-1: none within reach)
+// comes back through bk. Fast form: no exclusions.
+void gapNearestFast(int row, int nCh, highp vec2 p,
+    highp float sure2, highp vec4 t4, highp vec4 t9, int nPts,
+    inout highp float best, inout int bk) {
+  bool brute = uFabricGap.z > 0.5;
+  int nSeg = max(nPts - 1, 0);
+  for (int c = 0; c < ${GAP_MAX_CHUNKS}; c++) {
+    if (c >= nCh) break;
+    if (!brute && best < sure2) break;
+    int k0 = c * ${GAP_CHUNK};
+    if (!brute) {
+      highp vec4 cc = texelFetch(uGapData, ivec2(${GAP_CHUNK_BASE} + c, row), 0);
+      highp float lb = length(p - cc.xy) - cc.z;
+      if (lb > 0.0 && lb * lb >= best) continue;
+    }
+    for (int j = 0; j < ${GAP_CHUNK}; j++) {
+      int k = k0 + j;
+      if (k >= nSeg) break;
+      gapSeg(p, gapOverPt(t4, t9, k), gapOverPt(t4, t9, k + 1), k, best, bk);
+    }
+  }
+}
+
+void gapNearestFull(int row, int nCh, highp vec2 p,
     highp float ex, highp float fa, highp float s0, highp float st,
-    highp float kLast, highp float per, int skipLo, int skipHi,
-    highp float sure2, inout highp float best, inout int bk) {
-${nearestLoop(
-  "gapSegFull",
-  ", ex, fa, s0, st, kLast, per, skipLo, skipHi",
-  true
-)}
+    highp float per, int skipLo, int skipHi,
+    highp float sure2, highp vec4 t4, highp vec4 t9, int nPts,
+    inout highp float best, inout int bk) {
+  bool brute = uFabricGap.z > 0.5;
+  int nSeg = max(nPts - 1, 0);
+  for (int c = 0; c < ${GAP_MAX_CHUNKS}; c++) {
+    if (c >= nCh) break;
+    if (!brute && best < sure2) break;
+    int k0 = c * ${GAP_CHUNK};
+    // A chunk wholly inside the skipped index range adds nothing.
+    if (!brute && k0 >= skipLo && min(k0 + ${GAP_CHUNK - 1}, nSeg - 1) <= skipHi) {
+      continue;
+    }
+    if (!brute) {
+      highp vec4 cc = texelFetch(uGapData, ivec2(${GAP_CHUNK_BASE} + c, row), 0);
+      highp float lb = length(p - cc.xy) - cc.z;
+      if (lb > 0.0 && lb * lb >= best) continue;
+    }
+    for (int j = 0; j < ${GAP_CHUNK}; j++) {
+      int k = k0 + j;
+      if (k >= nSeg) break;
+      gapSegFull(p, gapOverPt(t4, t9, k), gapOverPt(t4, t9, k + 1), k,
+        ex, fa, s0, st, per, skipLo, skipHi, best, bk);
+    }
+  }
 }
 bool gapProbe() {
-  return texelFetch(uGapData, ivec2(0, 0), 0).y > 0.5;
+  return uFabricGap.y > 0.5;
 }
+
 
 // A slot's effective strength (texel 1.w; see the header): gated slots
 // ramp in from their show time on the knot clock (uKFx.z = fxNow); with the
@@ -338,42 +465,44 @@ highp float gapInterval(highp float o, highp float a, highp float b) {
 }
 
 // How much of p lies over the ribbon (half-width h) around a PROTECT
-// polyline of n points in the block at texel base: 1 inside, a one-pixel
-// ramp at its edge, 0 outside (and for n < 2). A block is [cx, cy, r,
-// capR] (bounding circle, chunk capsule radius), GAP_PROT_CHUNKS chunk
-// chords, then the points. Only distances below h + pxW matter, so the
-// circle and the chunk capsules reject most fragments before any segment
-// test (an unculled 16-point loop cost 0.2 ms/frame at the user URL).
-highp float gapProtCover(int row, int base, int n, highp vec2 p,
+// range in SAMP (G3-1): 1 inside, a one-pixel ramp at its edge, 0 outside
+// (and for fewer than 2 sampled points). The range texel at base is
+// [sampBase, kStart, nPts, stride] and the next texel its bounding circle
+// [cx, cy, r, signedCount] (negative = the chain is closed, |.| = its
+// sample count, for the wrap). Loop-free: the circle rejects most
+// fragments, then ONE segment loop reads the samples in place - no chunk
+// nesting (G1's protect cost was mostly register pressure, so the loop
+// stays single).
+highp float gapProtCover(int row, int base, highp vec2 p,
     highp float h, highp float pxW) {
+  highp vec4 rg = texelFetch(uGapData, ivec2(base, row), 0);
+  int n = int(rg.z + 0.5);
   if (n < 2) return 0.0;
-  highp vec4 bc = texelFetch(uGapData, ivec2(base, row), 0);
+  highp vec4 bc = texelFetch(uGapData, ivec2(base + 1, row), 0);
   highp float reach = h + pxW;
   highp float rr = bc.z + reach;
   highp vec2 dc = p - bc.xy;
   if (dot(dc, dc) > rr * rr) return 0.0;
+  int pbase = int(rg.x + 0.5);
+  int k0 = int(rg.y + 0.5);
+  int stride = max(int(rg.w + 0.5), 1);
+  int pcount = max(int(abs(bc.w) + 0.5), 1);
+  bool pclosed = bc.w < -0.5;
   highp float best = reach * reach;
-  for (int c = 0; c < ${GAP_PROT_CHUNKS}; c++) {
-    int k0 = c * ${GAP_CHUNK};
-    if (k0 >= n - 1) break;
-    highp vec4 cc = texelFetch(uGapData, ivec2(base + 1 + c, row), 0);
-    highp vec2 ab = cc.zw - cc.xy;
+  for (int j = 0; j < 64; j++) {
+    if (j >= n - 1) break;
+    int ra = k0 + j * stride;
+    int rb = ra + stride;
+    int ia = pclosed ? ((ra % pcount) + pcount) % pcount : clamp(ra, 0, pcount - 1);
+    int ib = pclosed ? ((rb % pcount) + pcount) % pcount : clamp(rb, 0, pcount - 1);
+    highp vec2 a = sampAt(pbase + ia);
+    highp vec2 b = sampAt(pbase + ib);
+    highp vec2 ab = b - a;
+    highp vec2 pa = p - a;
     highp float l2 = dot(ab, ab);
-    highp float t = l2 > 1e-12 ? clamp(dot(p - cc.xy, ab) / l2, 0.0, 1.0) : 0.0;
-    highp vec2 q = cc.xy + ab * t - p;
-    highp float lb = max(sqrt(dot(q, q)) - bc.w, 0.0);
-    if (lb * lb >= best) continue;
-    int tx = base + 1 + ${GAP_PROT_CHUNKS} + k0;
-    highp vec4 ta = texelFetch(uGapData, ivec2(tx, row), 0);
-    for (int j = 1; j <= ${GAP_CHUNK}; j++) {
-      if (k0 + j >= n) break;
-      highp vec4 tb = texelFetch(uGapData, ivec2(tx + j, row), 0);
-      highp vec2 pa = p - ta.xy;
-      highp float h2 = clamp(dot(pa, ta.zw), 0.0, 1.0);
-      highp vec2 qq = pa - (tb.xy - ta.xy) * h2;
-      best = min(best, dot(qq, qq));
-      ta = tb;
-    }
+    highp float hh = l2 > 1e-12 ? clamp(dot(pa, ab) / l2, 0.0, 1.0) : 0.0;
+    highp vec2 q = pa - ab * hh;
+    best = min(best, dot(q, q));
   }
   return clamp((h - sqrt(best)) / pxW + 0.5, 0.0, 1.0);
 }
@@ -381,8 +510,7 @@ highp float gapProtCover(int row, int base, int n, highp vec2 p,
 highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
     highp vec2 tanv, highp vec4 ids) {
   if (all(lessThan(abs(ids + 1.0), vec4(0.5)))) return 1.0;
-  highp vec4 glob = texelFetch(uGapData, ivec2(0, 0), 0);
-  if (glob.x < 0.5) return 1.0;
+  if (uFabricGap.x < 0.5) return 1.0;
   // Every slot of a ribbon fragment windows the fragment's own chain, so
   // one turn serves them all.
   bool fan = turn < -0.5;
@@ -451,20 +579,17 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
     bool perp = (fl & 1) != 0;
     int n = int(t2.w + 0.5);
     highp float kLast = float(max(n - 1, 0));
-    int nCh = (max(n - 1, 1) + ${GAP_CHUNK - 1}) / ${GAP_CHUNK};
-    highp float capR = t3.x;
+    int nCh = n >= 2 ? (n - 2) / ${GAP_CHUNK} + 1 : 0;
+    highp vec4 t4 = texelFetch(uGapData, ivec2(4, row), 0);
+    highp vec4 t9 = texelFetch(uGapData, ivec2(9, row), 0);
     highp float ex = 0.0;
     highp float s0 = 0.0;
     highp float st = 0.0;
     highp float per = 0.0;
-    highp vec4 t4 = vec4(0.0);
-    bool haveT4 = false;
     if ((fl & 2) != 0 && !fan) {
-      t4 = texelFetch(uGapData, ivec2(4, row), 0);
-      haveT4 = true;
       ex = t4.x;
-      s0 = t4.y;
-      st = t4.z;
+      s0 = float(int(t4.z + 0.5)) * t4.w;
+      st = float(max(int(t9.x + 0.5), 1)) * t4.w;
       per = t1.z;
     }
     // REACH of interest (texel 0 holds it grown by the bounding radius):
@@ -473,15 +598,28 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
     // say (the silhouette always hides; the fan cut is inset one pixel
     // more), so the search may stop there.
     highp float reach = full ? hO + (t0.z - t0.w) + 2.0 * pxW : hO + pxW;
-    highp float sure = hO - ((full && !fan) ? 1.0 : 1.5) * pxW;
+    // Zoom-aware tolerance (G3-1): the sure exit's inset floors at one
+    // SAMP stride, so at high zoom (pxW below the sampled chord) the
+    // early exit never trusts the coarse samples past a pixel.
+    highp float tol = max(pxW, t4.w * float(max(int(t9.x + 0.5), 1)));
+    highp float sure = hO - ((full && !fan) ? 1.0 : 1.5) * tol;
     highp float sure2 = sure > 0.0 ? sure * sure : 0.0;
     highp float best = reach * reach;
     int bk = -1;
-    if (haveT4) {
-      gapNearestFull(row, nCh, capR, p, ex, fa, s0, st, kLast, per, 1, 0,
-        sure2, best, bk);
+    if (n <= 1) {
+      // The marker disc (n 0: texel 5's center) or a single sampled point.
+      highp vec2 cpt = n == 0
+        ? texelFetch(uGapData, ivec2(5, row), 0).zw
+        : gapOverPt(t4, t9, 0);
+      highp vec2 dq = p - cpt;
+      best = dot(dq, dq);
+      bk = 0;
+      if (best >= reach * reach) continue;
+    } else if (ex > 0.0) {
+      gapNearestFull(row, nCh, p, ex, fa, s0, st, per, 1, 0,
+        sure2, t4, t9, n, best, bk);
     } else {
-      gapNearestFast(row, nCh, capR, p, sure2, best, bk);
+      gapNearestFast(row, nCh, p, sure2, t4, t9, n, best, bk);
     }
     if (bk < 0) continue; // Nothing of this slot within reach.
     if (best < sure2) {
@@ -503,8 +641,7 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
         highp float pi = sd == 0 ? pn : pp;
         if (pi <= 0.0) continue;
         pr = max(pr, pi * gapProtCover(row,
-          ${GAP_PROT_BASE} + sd * ${GAP_PROT_W},
-          int((sd == 0 ? t3.y : t3.z) + 0.5), p, hO, pxW));
+          ${GAP_PROT_NEG} + sd * 2, p, hO, pxW));
       }
       t5 = texelFetch(uGapData, ivec2(5, row), 0);
       t6 = texelFetch(uGapData, ivec2(6, row), 0);
@@ -523,14 +660,14 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
         highp float tl = length(tanv);
         if (tl > 1e-3) tu = tanv / tl;
       }
-      int k1 = min(bk + 1, n - 1);
-      highp vec2 pm = gapPt(row, max(bk - 1, 0)).xy;
-      highp vec4 p0u = gapPt(row, min(bk, n - 1));
-      highp vec2 p0 = p0u.xy;
-      highp vec2 p1 = gapPt(row, k1).xy;
-      highp vec2 pp = gapPt(row, min(k1 + 1, n - 1)).xy;
+      highp vec2 pm = gapOverPt(t4, t9, bk - 1);
+      highp vec2 p0 = gapOverPt(t4, t9, bk);
+      highp vec2 p1 = gapOverPt(t4, t9, bk + 1);
+      highp vec2 pp = gapOverPt(t4, t9, bk + 2);
       // The nearest parameter on segment bk (zero-length: 0).
-      highp float bt = clamp(dot(p - p0, p0u.zw), 0.0, 1.0);
+      highp vec2 abk = p1 - p0;
+      highp float blk = dot(abk, abk);
+      highp float bt = blk > 1e-12 ? clamp(dot(p - p0, abk) / blk, 0.0, 1.0) : 0.0;
       highp vec2 ta = p1 - pm;
       highp vec2 tb = pp - p0;
       ta /= max(length(ta), 1e-6);
@@ -564,12 +701,11 @@ highp float gapKeepAt(highp float pxW, highp vec2 p, highp float turn,
       highp float lo = hO + margin - 0.5 * pxW;
       highp float hi = hO + margin + max(fadeP, pxW) + 0.25 * sk;
       if (d > lo && d < hi) {
-        if (!haveT4) t4 = texelFetch(uGapData, ivec2(4, row), 0);
-        int farK = int(t4.w + 0.5);
+        int farK = int(t8.w + 0.5);
         highp float best2 = (d + sk) * (d + sk);
         int bk2 = -1;
-        gapNearestFull(row, nCh, capR, p, ex, fa, s0, st, kLast, per,
-          bk - farK, bk + farK, 0.0, best2, bk2);
+        gapNearestFull(row, nCh, p, ex, fa, s0, st, per,
+          bk - farK, bk + farK, 0.0, t4, t9, n, best2, bk2);
         if (bk2 >= 0) {
           highp float d2 = sqrt(best2);
           highp float hb = clamp(0.5 + 0.5 * (d2 - d) / sk, 0.0, 1.0);
@@ -778,11 +914,8 @@ export interface GapSlotParams {
   totalU: number;
   tanX: number;
   tanY: number;
-  // Self-crossings only (0 = off): same-chain arc exclusion, and the
-  // polyline's chain-arc parameterization.
+  // Self-crossings only (0 = off): same-chain arc exclusion.
   selfExcl: number;
-  polyStart: number;
-  polyStep: number;
   // Junction clearance scales per side (1 = no joint in the way) and the
   // window center's world position.
   marginScaleNeg: number;
@@ -792,19 +925,26 @@ export interface GapSlotParams {
   centerX: number;
   centerY: number;
   // Far-branch smooth-min radius (0 = off) and the segment-index
-  // separation of a "far" branch.
+  // separation of a "far" branch, in sampled segments.
   sminK: number;
   farK: number;
-  // Protect intervals (arc offsets along the under thread; A >= B = none)
-  // and their polylines: protPts holds GAP_PROT_PTS [x, y] points per side
-  // (negative side first), protNegN / protPosN of them used (< 2 = none).
+  // Protect intervals (arc offsets along the under thread; A >= B = none).
   protNegA: number;
   protNegB: number;
   protPosA: number;
   protPosB: number;
-  protPts: Float32Array | null;
-  protNegN: number;
-  protPosN: number;
+  // G3-1: the over chain's SAMP range and its chunk bounding circles
+  // (gapChunkBounds; GAP_MAX_CHUNKS * 4 floats). n = 0 is the marker
+  // disc: the "polyline" is (centerX, centerY).
+  over: GapSampRef;
+  overArcPer: number;
+  overChunks: Float32Array;
+  // G3-1: the protect ranges in SAMP (null = none), each with its
+  // bounding circle [cx, cy, r] (gapRangeCircle).
+  protNeg: GapSampRef | null;
+  protPos: GapSampRef | null;
+  protNegCircle: readonly [number, number, number] | null;
+  protPosCircle: readonly [number, number, number] | null;
 }
 
 // K268, one end of a visibility piece as a shaped cut's ramp: aS = the
@@ -857,23 +997,22 @@ export class GapMaskTable {
   }
 
   setEnabled(on: boolean, debugTint = false): void {
+    // G3-1: the globals live in fabricUniforms now; row 0 keeps a copy
+    // for probes that read the texture back.
+    setFabricGap(on, debugTint, fabricGapBrute());
     this.data[0] = on ? 1 : 0;
     this.data[1] = debugTint ? 1 : 0;
     this.source.mark(0);
   }
 
-  // Write one slot; pts is a flat [x, y, ...] polyline of nPts points. The
-  // bounding circle, its reach-grown radii, the chunk chords and the
-  // capsule radius are derived here.
-  writeSlot(
-    slot: number,
-    p: GapSlotParams,
-    pts: Float32Array,
-    nPts: number
-  ): void {
+  // Write one slot from its SAMP range (G3-1): the row references the
+  // over chain's samples; the bounding circle is derived here from the
+  // chunk circles (or the disc center).
+  writeSlot(slot: number, p: GapSlotParams): void {
     const d = this.data;
     const o = (slot + 1) * GAP_TEX_W * 4;
-    const n = Math.max(1, Math.min(GAP_MAX_PTS, nPts));
+    d.fill(0, o, o + GAP_TEX_W * 4);
+    const n = Math.max(0, Math.min(GAP_MAX_PTS, p.over.n));
     // Texel 1.
     d[o + 4] = p.arcScale;
     d[o + 5] = p.centerArc;
@@ -884,101 +1023,18 @@ export class GapMaskTable {
     d[o + 9] = p.winPos;
     d[o + 10] = p.hOver;
     d[o + 11] = n;
-    // Texel 3: [capR (below), nProtNeg, nProtPos, flags].
-    const pts2 = p.protPts;
-    const nNeg = pts2 ? Math.min(GAP_PROT_PTS, p.protNegN) : 0;
-    const nPos = pts2 ? Math.min(GAP_PROT_PTS, p.protPosN) : 0;
-    d[o + 13] = nNeg >= 2 ? nNeg : 0;
-    d[o + 14] = nPos >= 2 ? nPos : 0;
+    // Texel 3: [-, nProtNeg, nProtPos, flags].
+    const nNeg = p.protNeg && p.protNeg.n >= 2 ? p.protNeg.n : 0;
+    const nPos = p.protPos && p.protPos.n >= 2 ? p.protPos.n : 0;
+    d[o + 12] = 0;
+    d[o + 13] = nNeg;
+    d[o + 14] = nPos;
     d[o + 15] = (p.perp ? 1 : 0) + (p.selfExcl > 0 ? 2 : 0);
-    // Protect blocks: the polyline's bounding circle, then its points as
-    // [x, y, u] like the main polyline.
-    if (pts2) {
-      for (let side = 0; side < 2; side++) {
-        const m = side === 0 ? nNeg : nPos;
-        if (m < 2) continue;
-        const src = side * GAP_PROT_PTS * 2;
-        const blk = o + (GAP_PROT_BASE + side * GAP_PROT_W) * 4;
-        let x0 = Infinity;
-        let y0 = Infinity;
-        let x1 = -Infinity;
-        let y1 = -Infinity;
-        for (let k = 0; k < m; k++) {
-          x0 = Math.min(x0, pts2[src + k * 2]);
-          y0 = Math.min(y0, pts2[src + k * 2 + 1]);
-          x1 = Math.max(x1, pts2[src + k * 2]);
-          y1 = Math.max(y1, pts2[src + k * 2 + 1]);
-        }
-        const cx = (x0 + x1) / 2;
-        const cy = (y0 + y1) / 2;
-        let r = 0;
-        for (let k = 0; k < m; k++) {
-          r = Math.max(
-            r,
-            Math.hypot(pts2[src + k * 2] - cx, pts2[src + k * 2 + 1] - cy)
-          );
-        }
-        // Chunk chords (points k0 -> k0 + GAP_CHUNK) and the capsule
-        // radius holding every chunk's points around its chord.
-        let capR = 0;
-        for (let c = 0; c < GAP_PROT_CHUNKS; c++) {
-          const k0 = c * GAP_CHUNK;
-          const co = blk + (1 + c) * 4;
-          if (k0 >= m - 1) {
-            d[co] = d[co + 1] = d[co + 2] = d[co + 3] = 0;
-            continue;
-          }
-          const k1 = Math.min(k0 + GAP_CHUNK, m - 1);
-          const ax = pts2[src + k0 * 2];
-          const ay = pts2[src + k0 * 2 + 1];
-          const abx = pts2[src + k1 * 2] - ax;
-          const aby = pts2[src + k1 * 2 + 1] - ay;
-          const l2 = abx * abx + aby * aby;
-          for (let k = k0; k <= k1; k++) {
-            const x = pts2[src + k * 2];
-            const y = pts2[src + k * 2 + 1];
-            const t =
-              l2 > 1e-12
-                ? Math.min(1, Math.max(0, ((x - ax) * abx + (y - ay) * aby) / l2))
-                : 0;
-            capR = Math.max(capR, Math.hypot(ax + abx * t - x, ay + aby * t - y));
-          }
-          d[co] = ax;
-          d[co + 1] = ay;
-          d[co + 2] = ax + abx;
-          d[co + 3] = ay + aby;
-        }
-        d[blk] = cx;
-        d[blk + 1] = cy;
-        d[blk + 2] = r + 1e-4;
-        d[blk + 3] = capR + 1e-4;
-        const dst = blk + (1 + GAP_PROT_CHUNKS) * 4;
-        for (let k = 0; k < m; k++) {
-          const x = pts2[src + k * 2];
-          const y = pts2[src + k * 2 + 1];
-          let ux = 0;
-          let uy = 0;
-          if (k < m - 1) {
-            const sx = pts2[src + k * 2 + 2] - x;
-            const sy = pts2[src + k * 2 + 3] - y;
-            const l2 = sx * sx + sy * sy;
-            if (l2 > 1e-12) {
-              ux = sx / l2;
-              uy = sy / l2;
-            }
-          }
-          d[dst + k * 4] = x;
-          d[dst + k * 4 + 1] = y;
-          d[dst + k * 4 + 2] = ux;
-          d[dst + k * 4 + 3] = uy;
-        }
-      }
-    }
-    // Texel 4.
+    // Texel 4: the SAMP range; texel 9 its stride / count / closed.
     d[o + 16] = p.selfExcl;
-    d[o + 17] = p.polyStart;
-    d[o + 18] = p.polyStep;
-    d[o + 19] = p.farK;
+    d[o + 17] = p.over.base;
+    d[o + 18] = p.over.kStart;
+    d[o + 19] = p.overArcPer;
     // Texel 5.
     d[o + 20] = p.fadeScaleNeg;
     d[o + 21] = p.fadeScalePos;
@@ -998,84 +1054,60 @@ export class GapMaskTable {
     d[o + 32] = p.margin;
     d[o + 33] = p.fade;
     d[o + 34] = p.sminK;
-    d[o + 35] = 0;
-    // Polyline, one texel per point [x, y, u] (u = the segment to the next
-    // point over its squared length; zero past the last point), padded
-    // with its last point to a whole chunk so every chunk reads GAP_CHUNK
-    // uniform segments.
-    const nCh = Math.max(1, Math.ceil(Math.max(n - 1, 1) / GAP_CHUNK));
-    const padTo = Math.min(GAP_MAX_PTS, nCh * GAP_CHUNK + 1);
-    const base = o + GAP_PTS_BASE * 4;
-    const lx = pts[(n - 1) * 2];
-    const ly = pts[(n - 1) * 2 + 1];
-    for (let k = 0; k < padTo; k++) {
-      const x = k < n ? pts[k * 2] : lx;
-      const y = k < n ? pts[k * 2 + 1] : ly;
-      let ux = 0;
-      let uy = 0;
-      if (k < n - 1) {
-        const sx = pts[k * 2 + 2] - x;
-        const sy = pts[k * 2 + 3] - y;
-        const l2 = sx * sx + sy * sy;
-        if (l2 > 1e-12) {
-          ux = sx / l2;
-          uy = sy / l2;
-        }
-      }
-      const b = base + k * 4;
-      d[b] = x;
-      d[b + 1] = y;
-      d[b + 2] = ux;
-      d[b + 3] = uy;
-    }
-    // Chunk chords (points k0 -> k0 + GAP_CHUNK) and the capsule radius
-    // that holds every chunk's points around its chord, plus the overall
-    // bounding box.
-    let bx0 = Infinity;
-    let by0 = Infinity;
-    let bx1 = -Infinity;
-    let by1 = -Infinity;
-    let capR = 0;
-    for (let c = 0; c < nCh; c++) {
-      const k0 = c * GAP_CHUNK;
-      const k1 = Math.min(k0 + GAP_CHUNK, n - 1);
-      const ax = pts[k0 * 2];
-      const ay = pts[k0 * 2 + 1];
-      const bx = pts[k1 * 2];
-      const by = pts[k1 * 2 + 1];
-      const abx = bx - ax;
-      const aby = by - ay;
-      const l2 = abx * abx + aby * aby;
-      for (let k = k0; k <= k1; k++) {
-        const x = pts[k * 2];
-        const y = pts[k * 2 + 1];
-        if (x < bx0) bx0 = x;
-        if (y < by0) by0 = y;
-        if (x > bx1) bx1 = x;
-        if (y > by1) by1 = y;
-        const t =
-          l2 > 1e-12
-            ? Math.min(1, Math.max(0, ((x - ax) * abx + (y - ay) * aby) / l2))
-            : 0;
-        capR = Math.max(capR, Math.hypot(ax + abx * t - x, ay + aby * t - y));
-      }
-      const co = o + (GAP_CHUNK_BASE + c) * 4;
-      d[co] = ax;
-      d[co + 1] = ay;
-      d[co + 2] = bx;
-      d[co + 3] = by;
-    }
-    d[o + 12] = capR + 1e-4;
-    const bcx = (bx0 + bx1) / 2;
-    const bcy = (by0 + by1) / 2;
-    let br = 0;
-    for (let k = 0; k < n; k++) {
-      br = Math.max(br, Math.hypot(pts[k * 2] - bcx, pts[k * 2 + 1] - bcy));
-    }
-    br += 1e-4;
+    d[o + 35] = p.farK;
+    d[o + 36] = p.over.stride;
+    d[o + 37] = p.over.count;
+    d[o + 38] = p.over.closed ? 1 : 0;
+    d[o + 39] = 0;
+    // Chunk bounding circles.
+    d.set(p.overChunks.subarray(0, GAP_MAX_CHUNKS * 4), o + GAP_CHUNK_BASE * 4);
+    // Protect ranges + circles (signed count in the circle's .w).
+    const prot = (
+      ref: GapSampRef | null,
+      circ: readonly [number, number, number] | null,
+      base: number
+    ): void => {
+      const b = o + base * 4;
+      if (!ref || !circ || ref.n < 2) return;
+      d[b] = ref.base;
+      d[b + 1] = ref.kStart;
+      d[b + 2] = ref.n;
+      d[b + 3] = ref.stride;
+      d[b + 4] = circ[0];
+      d[b + 5] = circ[1];
+      d[b + 6] = circ[2];
+      d[b + 7] = ref.closed ? -ref.count : ref.count;
+    };
+    prot(p.protNeg, p.protNegCircle, GAP_PROT_NEG);
+    prot(p.protPos, p.protPosCircle, GAP_PROT_POS);
     // Texel 0: the bounding circle, grown by the reach of interest (the
     // smooth-min can lower a distance by up to sminK / 4).
-    const on = p.strength !== 0 && nPts >= 1;
+    let bcx = p.centerX;
+    let bcy = p.centerY;
+    let br = 0;
+    if (n >= 1) {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (let c = 0; c < GAP_MAX_CHUNKS; c++) {
+        const co = o + (GAP_CHUNK_BASE + c) * 4;
+        const r = d[co + 2];
+        if (r <= 0 && n >= 2) continue;
+        x0 = Math.min(x0, d[co] - r);
+        y0 = Math.min(y0, d[co + 1] - r);
+        x1 = Math.max(x1, d[co] + r);
+        y1 = Math.max(y1, d[co + 1] + r);
+      }
+      if (x0 <= x1) {
+        bcx = (x0 + x1) / 2;
+        bcy = (y0 + y1) / 2;
+        br = 0;
+        for (let c = 0; c < GAP_MAX_CHUNKS; c++) {
+          const co = o + (GAP_CHUNK_BASE + c) * 4;
+          if (d[co + 2] <= 0 && n >= 2) continue;
+          br = Math.max(br, Math.hypot(d[co] - bcx, d[co + 1] - bcy) + d[co + 2]);
+        }
+      }
+    }
+    const on = p.strength !== 0;
     d[o] = bcx;
     d[o + 1] = bcy;
     d[o + 2] = on ? br + p.hOver + p.margin + p.fade + 0.25 * p.sminK : -1;
@@ -1083,7 +1115,7 @@ export class GapMaskTable {
     this.noteSolved(slot, o);
   }
 
-  // Disable a slot (negative reject radii, strength 0, no points): ids
+
   // still pointing at it from stale vertex data become no-ops.
   clearSlot(slot: number): void {
     const o = (slot + 1) * GAP_TEX_W * 4;
@@ -1202,13 +1234,20 @@ export class GapMaskTable {
     return (this.data[(slot + 1) * GAP_TEX_W * 4 + 15] & GAP_FLAG_SHAPED) !== 0;
   }
 
-  // The over chain's arc range the slot's polyline spans (its frame):
-  // [polyStart, polyStart + (n - 1) polyStep, n].
+  // The over chain's arc range the slot's sampled range spans (its
+  // frame): [kStart * arcPer, (kStart + (n - 1) * stride) * arcPer, n].
   polyRange(slot: number): [number, number, number] {
     const d = this.data;
     const o = (slot + 1) * GAP_TEX_W * 4;
     const n = d[o + 11];
-    return [d[o + 17], d[o + 17] + Math.max(0, n - 1) * d[o + 18], n];
+    const start = d[o + 18] * d[o + 19];
+    return [start, start + Math.max(0, n - 1) * d[o + 36] * d[o + 19], n];
+  }
+
+  // A slot's raw row (GAP_TEX_W texels; tests, probes).
+  readRow(slot: number): Float32Array {
+    const o = (slot + 1) * GAP_TEX_W * 4;
+    return this.data.slice(o, o + GAP_TEX_W * 4);
   }
 
   // A slot's profile texels (12 floats: P0, P1, P2), or null when it is
@@ -1224,38 +1263,41 @@ export class GapMaskTable {
     return this.source.any;
   }
 
-  // Read back a slot's header + polyline (diagnostics / probes).
+  // Read back a slot's header (diagnostics / probes). Since G3-1 the
+  // points live in SAMP, so `pts` is empty; `range` is the SAMP range.
   readSlot(slot: number): {
     n: number;
     header: number[];
     pts: number[];
+    range: GapSampRef & { arcPer: number };
   } {
     const d = this.data;
     const o = (slot + 1) * GAP_TEX_W * 4;
-    const n = d[o + 11];
-    const pts: number[] = [];
-    for (let k = 0; k < n; k++) {
-      const t = o + (GAP_PTS_BASE + k) * 4;
-      pts.push(d[t], d[t + 1]);
-    }
     return {
-      n,
+      n: d[o + 11],
       header: Array.from(d.subarray(o, o + GAP_HDR * 4)),
-      pts,
+      pts: [],
+      range: {
+        base: d[o + 17],
+        kStart: d[o + 18],
+        n: d[o + 11],
+        stride: d[o + 36],
+        count: d[o + 37],
+        closed: d[o + 38] > 0.5,
+        arcPer: d[o + 19],
+      },
     };
   }
 
-  // A slot's two protect polylines as flat [x, y, ...] (diagnostics).
+  // A slot's two protect ranges as [sampBase, kStart, nPts, stride]
+  // (diagnostics; the points themselves live in SAMP).
   readProt(slot: number): number[][] {
     const d = this.data;
     const o = (slot + 1) * GAP_TEX_W * 4;
     const out: number[][] = [];
     for (let side = 0; side < 2; side++) {
-      const n = d[o + 13 + side];
-      const pts: number[] = [];
-      const b = o + (GAP_PROT_BASE + side * GAP_PROT_W + 1 + GAP_PROT_CHUNKS) * 4;
-      for (let k = 0; k < n; k++) pts.push(d[b + k * 4], d[b + k * 4 + 1]);
-      out.push(pts);
+      const b = o + (GAP_PROT_NEG + side * 2) * 4;
+      out.push([d[b], d[b + 1], d[b + 2], d[b + 3]]);
     }
     return out;
   }
@@ -1278,10 +1320,14 @@ export class GapMaskTable {
       winNeg: d[o + 8],
       winPos: d[o + 9],
       selfExcl: d[o + 16],
-      polyStart: d[o + 17],
-      polyStep: d[o + 18],
-      farK: d[o + 19],
+      polyStart: d[o + 18] * d[o + 19],
+      polyStep: d[o + 36] * d[o + 19],
+      farK: d[o + 35],
       sminK: d[o + 34],
+      overBase: d[o + 17],
+      overKStart: d[o + 18],
+      overStride: d[o + 36],
+      overCount: d[o + 37],
       scales: [d[o + 26], d[o + 27], d[o + 20], d[o + 21]],
       center: [d[o + 22], d[o + 23]],
       tan: [d[o + 24], d[o + 25]],
