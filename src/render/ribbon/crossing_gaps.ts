@@ -393,14 +393,24 @@ export class CrossingGaps {
     this.r.slotOverChain[slot] = crossing.over.chain;
     this.r.slotOverArc[slot] = overCenter;
     // K76 2b: a crossing whose over thread the reveal hides (vis <= 0.5 at
-    // the over pass) keeps nothing on the CPU side - no under window for the
-    // yarn and the fillets, no pluck footprint - as a gate not yet open.
+    // the over pass) keeps no pluck footprint, as a gate not yet open; its
+    // under window ramps with the visibility instead (K430, below).
     // The slot itself is still solved; applyExploreGaps scales it.
     this.r.slotOverCtrl[slot] = overCtrl;
     this.r.slotLive[slot] = 1;
-    const exploreHid =
-      this.r.explorePieces !== null &&
-      this.r.exploreVisAt(crossing.over.chain, overCtrl) <= 0.5;
+    // K430: this solve's window push below is provisional; applyExploreGaps
+    // owns the ramped windows and re-derives them in the same update().
+    this.r.slotUwRamp[slot] = Number.NaN;
+    // K76 2b: the over pass's visibility (1 with the reveal off). The pluck
+    // footprints stay binary at 0.5 (shown = false below); the under window
+    // RAMPS with it instead (K430: uwShown, at the window push).
+    const exploreVis =
+      this.r.explorePieces !== null
+        ? this.r.exploreVisAt(crossing.over.chain, overCtrl)
+        : 1;
+    const exploreHid = exploreVis <= 0.5;
+    const uwShown = shown;
+
     this.r.slotExploreHid[slot] = exploreHid ? 1 : 0;
     if (exploreHid) shown = false;
     // K76 next: the ungated solve, for applyExploreGaps' re-derivation.
@@ -996,13 +1006,17 @@ export class CrossingGaps {
       this.r.chainCuts.set(crossing.under.chain, cuts);
     }
     cuts.push(slot, underCenter, allNeg, allPos);
-    if (shown) {
+    // K430 RAMP: the window's extents scale with the over pass's
+    // visibility (exploreVis; 1 with the reveal off), so the junction web
+    // retracts smoothly as the gap fades in instead of stepping at vis
+    // 0.5. applyExploreGaps re-derives this push (slotUwRamp is NaN).
+    if (uwShown && exploreVis > 0) {
       let uw = this.r.underWindows.get(crossing.under.chain);
       if (!uw) {
         uw = [];
         this.r.underWindows.set(crossing.under.chain, uw);
       }
-      uw.push(underCenter, cutNeg, cutPos);
+      uw.push(underCenter, cutNeg * exploreVis, cutPos * exploreVis);
     }
 
     if (index >= 0) {

@@ -121,6 +121,28 @@ function sameSpans(a: BurntSpan[] | null, b: BurntSpan[] | null): boolean {
 // alpha (arm_strip.ts withExploreStrip, junction_field.ts withExploreField).
 export const EXPLORE_JOINT_MIN = 0.002;
 
+// K430 (K268 stage 2 item 2, the ramp Levi picked): an under window's
+// extents scale with its over pass's visibility - the same scalar the gap
+// strength rides - so as the over thread fades in (vis 0 -> 1) the gap
+// fades in and the under thread's junction web retracts smoothly with it.
+// This replaces 2b's binary step at vis 0.5 (the window existed whole or
+// not at all). At vis 1 the window is mode off's exactly; at 0, absent.
+export function uwRampScale(vis: number): number {
+  return vis <= 0 ? 0 : vis >= 1 ? 1 : vis;
+}
+
+// One ramped window triplet ([center, cutNeg, cutPos] scaled by `scale`)
+// appended to a chain's flat window list; scale 0 appends nothing.
+export function pushRampedWindow(
+  out: number[],
+  center: number,
+  cutNeg: number,
+  cutPos: number,
+  scale: number
+): void {
+  if (scale > 0) out.push(center, cutNeg * scale, cutPos * scale);
+}
+
 export class ExploreGaps {
   readonly r: RibbonRenderer;
   private exploreGateByChain: Map<number, ExplorePiece[]> | null = null;
@@ -302,6 +324,15 @@ export class ExploreGaps {
         }
       }
       const hid = on && v <= 0.5 ? 1 : 0;
+      // K430 RAMP: the window follows the visibility continuously, not
+      // only at the 0.5 flip below (the footprints stay binary). A fresh
+      // solve marked the scale NaN, so every solved slot re-derives here.
+      const scale = on ? uwRampScale(v) : 1;
+      if (scale !== this.r.slotUwRamp[s]) {
+        this.r.slotUwRamp[s] = scale;
+        const ucR = this.r.slotUnderChain[s];
+        if (ucR >= 0) dirtyUnder.add(ucR);
+      }
       if (hid !== this.r.slotExploreHid[s]) {
         // K76 next: re-derive this slot's gated CPU bookkeeping here, from
         // the last solve's ungated data, instead of forcing an update():
@@ -318,16 +349,18 @@ export class ExploreGaps {
         if (uc >= 0) dirtyUnder.add(uc);
       }
     }
+    // K430: rebuilt once per dirty chain, ramped windows (uwRampScale).
     for (const uc of dirtyUnder) {
       const win: number[] = [];
       for (let s = 0; s < this.r.markerBase; s++) {
-        if (!this.r.slotLive[s] || this.r.slotExploreHid[s]) continue;
+        if (!this.r.slotLive[s]) continue;
         if (this.r.slotUnderChain[s] !== uc) continue;
-        win.push(this.r.slotUnderCenter[s], this.r.slotCutNeg[s], this.r.slotCutPos[s]);
+        pushRampedWindow(win, this.r.slotUnderCenter[s], this.r.slotCutNeg[s], this.r.slotCutPos[s], this.r.slotUwRamp[s]);
       }
       if (win.length) this.r.underWindows.set(uc, win);
       else this.r.underWindows.delete(uc);
     }
+    if (dirtyUnder.size) this.r.uwRev++;
     for (let m = 0; m < MARKER_SLOTS; m++) {
       const occ = this.r.markerOccluders[m];
       const lifted = occ?.exit === true && this.r.exploreFinish;

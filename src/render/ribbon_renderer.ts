@@ -468,8 +468,8 @@ export class RibbonRenderer {
   // K76 2b, per gap slot: the over pass's render ctrl (its visibility gates
   // the gap), whether update() solved the slot this frame (1) or cleared it
   // (0: a far-future gate, an unused emergent slot), and whether the thread
-  // reveal kept the slot's CPU bookkeeping (underWindows, pluck footprints)
-  // out because its over thread was hidden (vis <= 0.5) when update() ran.
+  // reveal kept the slot's pluck footprints out because its over thread was
+  // hidden (vis <= 0.5) when update() ran. (UnderWindows ramp instead: K430.)
   /** @internal ribbon */ slotOverCtrl = new Float64Array(0);
   /** @internal ribbon */ slotLive = new Uint8Array(0);
   /** @internal ribbon */ slotExploreHid = new Uint8Array(0);
@@ -485,6 +485,10 @@ export class RibbonRenderer {
   /** @internal ribbon */ slotCoverPos = new Float32Array(0);
   /** @internal ribbon */ slotAllNeg = new Float32Array(0);
   /** @internal ribbon */ slotAllPos = new Float32Array(0);
+  // K430: the under-window ramp scale applyExploreGaps last wrote per slot
+  // (the over pass's visibility, clamped; NaN = a fresh solve invalidated
+  // it). See ribbon/explore_gaps.ts uwRampScale.
+  /** @internal ribbon */ slotUwRamp = new Float32Array(0);
   // Mask switch (probes A/B the bare base layer) and margin look:
   // "perp" (default): a constant-width CASING around the over thread -
   // the gap's edge is one level set of the distance to the over
@@ -552,6 +556,10 @@ export class RibbonRenderer {
   // flank clamp) use these to dip under with their host thread - see
   // underGapVisibility().
   /** @internal ribbon */ underWindows = new Map<number, number[]>();
+  // K430 (K268 stage 2 item 2, the ramp): bumped whenever applyExploreGaps
+  // rewrites a chain's windows outside update() (which geomRev covers), so
+  // rebuildFillets' key follows the ramp without an update() per move.
+  /** @internal ribbon */ uwRev = 0;
   // Palette-mode paint state (see PaintSpan/PulseArm). The paint pass is
   // deliberately decoupled from update(): it rewrites only UV buffers, so
   // the pulse animation can run while the physics sleeps.
@@ -999,6 +1007,7 @@ export class RibbonRenderer {
     this.slotCoverPos = new Float32Array(this.gaps.slots);
     this.slotAllNeg = new Float32Array(this.gaps.slots);
     this.slotAllPos = new Float32Array(this.gaps.slots);
+    this.slotUwRamp = new Float32Array(this.gaps.slots).fill(Number.NaN);
 
     // Junction joinery bookkeeping (fabric only; knot mode has no fused
     // junctions). Arms = directed half-threads leaving each junction.

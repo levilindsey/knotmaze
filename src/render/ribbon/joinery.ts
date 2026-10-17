@@ -662,7 +662,9 @@ export class Joinery {
       this.r.fadeLength +
       "|" +
       this.r.routeKey +
-      this.r.explore.exploreJointsKey();
+      this.r.explore.exploreJointsKey() +
+      "|uw" +
+      this.r.uwRev;
     // A reveal moves the joint gate times (their speed extrapolation) every
     // frame; the FX fades themselves animate on the GPU from the record's
     // J1 times (G2.1), so they need no rebuild.

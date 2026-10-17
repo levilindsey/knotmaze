@@ -158,6 +158,13 @@ Three "no effect" toggles in a row meant the probe, not the renderer.
   after setViewport to a narrower width, load the page again. And the
   follow camera takes seconds to ease onto the head: wait for
   `__knotView()` to hold still before tapping a choice's screen point.
+  K431 (2026-10-16): a three-decimal `viewStill` is NOT pixel-still under
+  cam=follow - the spring's tail creeps ~1e-5 a shot for seconds (the
+  2026-10-16 census3a ramp run's clips all shifted). Pixel-exact probes
+  wait for a BIT-EXACT view with frames forced each poll (rAF runs or the
+  spring never advances between polls and the wait passes early):
+  census3a's prepare does this (10 identical full-precision views, frames
+  forced); sheet3a's EXACT=1 is the same wait.
   Builds before K96 (d8b9175) ease even slower while the knot settles
   (at most 0.05 s of spring per frame). `.claude/probes/K96/k96_cam.mjs`
   slows frames with a busy-wait in every rAF: CPU throttling barely
