@@ -2278,11 +2278,14 @@ export class ParticleSystem {
     for (let i = 0; i < this.particleCount * 2; i++) {
       const current = this.positions[i];
       const d = current - this.prev[i];
-      if (d * d > substepMoveSq) substepMoveSq = d * d;
+      const dSq = d * d;
+      // K346: NaN fails every > test, so a NaN displacement must raise
+      // the max explicitly or the non-finite halt never fires.
+      if (dSq > substepMoveSq || Number.isNaN(dSq)) substepMoveSq = dSq;
       this.positions[i] = current + d * damping;
       this.prev[i] = current;
     }
-    if (substepMoveSq > this.frameMaxMoveSq) {
+    if (substepMoveSq > this.frameMaxMoveSq || Number.isNaN(substepMoveSq)) {
       this.frameMaxMoveSq = substepMoveSq;
     }
 

@@ -68,6 +68,18 @@ describe("particle system", () => {
     }
   });
 
+  // K346: a NaN position must read as a non-finite maxMove, so the
+  // host's halt fires. (d * d > max is false for NaN, so NaN used to
+  // slip through and the state never halted.)
+  it("reports a non-finite maxMove once a position is NaN (K346)", () => {
+    const { ps } = build(5);
+    ps.step(1 / 60);
+    expect(Number.isFinite(ps.maxMove)).toBe(true);
+    ps.positions[0] = NaN;
+    ps.step(1 / 60);
+    expect(Number.isFinite(ps.maxMove)).toBe(false);
+  });
+
   it("relaxes without NaN", () => {
     const { ps } = build(5);
     for (let i = 0; i < 300; i++) {
