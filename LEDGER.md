@@ -19,7 +19,7 @@ one line, `- **K<n>** Â· <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K546.
+Next free ID: K547.
 
 ## Waiting on Levi
 
@@ -444,6 +444,7 @@ Every other item below waits on the trigger it names.
 - **K543** · K74 stage 4's before/after sheet of three finishes (searched vs shipped, dailies 1-3) was not made in the build stage; make it from `.claude/probes/K74/stage4/build_measure.ts` output or a diag_screenshot pair when Levi wants the look check.
 - **K544** · Phone timing for searched designs (`greedyTrap` on: generation median 74 ms desktop Node, p90 197 ms) rides K156's next phone window, as stage 3's did.
 - **K541** · Panel Stage A2 (split from K534 per K339's A1/A2 plan): the remaining moves (Maze to generation only, Path & view, Look's Backdrop tuning, Motion/Sound/Physics/Developer reshuffle, Reset to defaults at the root), word labels on every row (K327, at most 23 chars) and the desktop panel width 256 to 320 px; rerun the panel inventory and diff it, with labels uncut at both sizes. Never beside another panel rewrite.
+- **K546** · Loss effects (Levi, 2026-10-16): a catch ends early today - animate the player and the minotaur/fire all the way to their meeting point first (contact t is computed in by-length mode; turn and realtime catches leave a visual gap), then a gratuitous contact effect at the meeting point plus a whole-screen loss effect akin to the win confetti. Levi's seeds: an explosion; a flare-up and burn-away; the player indicator ripped in half and falling over. Base to build on: K80 3b's catch feedback (dcdfaf4) and K270's fix; the fire side is K114. A design doc with options and a recommendation comes before any build.
 
 ## Residuals (known, not fixed)
 
