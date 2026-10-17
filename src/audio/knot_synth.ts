@@ -277,6 +277,13 @@ type ActivationNavigator = Navigator & {
   userActivation?: { isActive: boolean; hasBeenActive: boolean };
 };
 
+// K526: a pan value for StereoPannerNode: -1 hard left, 0 center,
+// 1 hard right; garbage centers.
+export function clampPan(v: number): number {
+  if (!Number.isFinite(v)) return 0;
+  return Math.max(-1, Math.min(1, v));
+}
+
 export class KnotSynth {
   private ctx: BaseAudioContext | null = null;
   private master: GainNode | null = null;
@@ -309,6 +316,7 @@ export class KnotSynth {
     strength: number;
     when?: number;
     auto: boolean;
+    pan: number;
   }> = [];
   // K279 (Levi: "I want manual plucks to be louder than auto plucks"): auto
   // plucks' voices reach the master through this bus, at autoGain [0, 1] of
@@ -610,7 +618,7 @@ export class KnotSynth {
             const queued = this.pendingPlucks;
             this.pendingPlucks = [];
             for (const p of queued) {
-              this.playNow(p.freq, p.strength, p.when, p.auto);
+              this.playNow(p.freq, p.strength, p.when, p.auto, p.pan);
             }
           });
       } else {
@@ -629,21 +637,37 @@ export class KnotSynth {
   // strength in [0, 1] scales loudness and brightness. `when` (audio-clock
   // seconds, see audioTime) starts the note on that sample; omitted or past,
   // it starts at once. `auto` (K279): an auto pluck, played on the auto bus.
-  pluck(freq: number, strength: number, when?: number, auto = false): void {
+  // `pan` (K526): a StereoPanner value in [-1, 1]; 0 (the default) centers.
+  pluck(freq: number, strength: number, when?: number, auto = false, pan = 0): void {
     const ctx = this.ensure();
     if (!ctx || !this.master) return;
     this.stats.plucks++;
     this.stats.lastFreq = freq;
     if (this.engine === "pending") {
-      this.pendingPlucks.push({ freq, strength, when, auto });
+      this.pendingPlucks.push({ freq, strength, when, auto, pan: clampPan(pan) });
       return;
     }
-    this.playNow(freq, strength, when, auto);
+    this.playNow(freq, strength, when, auto, clampPan(pan));
   }
 
-  private playNow(freq: number, strength: number, when: number | undefined, auto: boolean): void {
-    if (this.engine === "harp") this.pluckHarp(freq, strength, when, auto);
-    else this.pluckLegacy(freq, strength, when, auto);
+  private playNow(freq: number, strength: number, when: number | undefined, auto: boolean, pan: number): void {
+    if (this.engine === "harp") this.pluckHarp(freq, strength, when, auto, pan);
+    else this.pluckLegacy(freq, strength, when, auto, pan);
+  }
+
+  // K526: voice -> (panner) -> its bus; a plain connect when centered
+  // or the context has no StereoPanner. Returns the panner to drop.
+  private connectOut(node: AudioNode, auto: boolean, pan: number): StereoPannerNode | null {
+    const dest = this.outFor(auto);
+    if (pan !== 0 && typeof this.ctx!.createStereoPanner === "function") {
+      const panner = this.ctx!.createStereoPanner();
+      panner.pan.value = pan;
+      node.connect(panner);
+      panner.connect(dest);
+      return panner;
+    }
+    node.connect(dest);
+    return null;
   }
 
   // The node a voice connects to: the auto bus for an auto pluck.
@@ -651,7 +675,7 @@ export class KnotSynth {
     return auto && this.autoBus ? this.autoBus : this.master!;
   }
 
-  private pluckHarp(freq: number, strength: number, when: number | undefined, auto: boolean): void {
+  private pluckHarp(freq: number, strength: number, when: number | undefined, auto: boolean, pan: number): void {
     const ctx = this.ctx!;
     // Deterministic per-pluck seed (probe reproducibility): pluck ordinal
     // mixed with the pitch.
@@ -674,7 +698,7 @@ export class KnotSynth {
         startFrame: lead > 0 ? Math.round(when! * ctx.sampleRate) : 0,
       },
     });
-    node.connect(this.outFor(auto));
+    const panner = this.connectOut(node, auto, pan);
     let dead = false;
     const voice = {
       at: ctx.currentTime + lead,
@@ -683,6 +707,7 @@ export class KnotSynth {
         dead = true;
         this.future.delete(voice);
         node.port.postMessage(0); // Stops a voice cut short.
+        panner?.disconnect();
         try {
           node.disconnect();
         } catch {
@@ -700,7 +725,7 @@ export class KnotSynth {
   // LEGACY VOICE (no-AudioWorklet fallback only): the original native-node
   // Karplus-Strong loop. Known detune: the DelayNode cycle adds one render
   // quantum of loop latency, so pitches land flat (see the header comment).
-  private pluckLegacy(freq: number, strength: number, when: number | undefined, auto: boolean): void {
+  private pluckLegacy(freq: number, strength: number, when: number | undefined, auto: boolean, pan: number): void {
     const ctx = this.ctx!;
     const lead = when === undefined ? 0 : Math.max(0, when - ctx.currentTime);
     const now = ctx.currentTime + lead;
@@ -765,7 +790,7 @@ export class KnotSynth {
     damping.connect(feedback);
     feedback.connect(delay);
     damping.connect(out);
-    out.connect(this.outFor(auto));
+    const panner = this.connectOut(out, auto, pan);
 
     // No explicit stop: the one-period buffer self-terminates (an explicit
     // stop raced the main thread and silenced notes - see git history).
@@ -786,6 +811,7 @@ export class KnotSynth {
         damping.disconnect();
         feedback.disconnect();
         out.disconnect();
+        panner?.disconnect();
       },
     };
     if (lead > 0) this.future.add(voice);

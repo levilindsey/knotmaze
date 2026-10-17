@@ -7,6 +7,7 @@ import {
   TELEGRAPH_ALPHA_ROAM,
   catchBurstAt,
   catchNotes,
+  footstepPan,
   footstepStrength,
   telegraphAlphas,
   turnCue,
@@ -78,6 +79,19 @@ describe("sound cues (2.10)", () => {
     expect(footstepStrength(3)).toBeGreaterThan(0);
     expect(footstepStrength(6)).toBe(0);
     expect(footstepStrength(Infinity)).toBe(0);
+  });
+
+  // K526: a footstep pans by the minotaur's screen x (section 2.10's
+  // other half): left edge hard left, center centered, right edge right.
+  it("pans a footstep by screen x (K526)", () => {
+    expect(footstepPan(0, 1000)).toBe(-1);
+    expect(footstepPan(500, 1000)).toBe(0);
+    expect(footstepPan(1000, 1000)).toBe(1);
+    expect(footstepPan(250, 1000)).toBe(-0.5);
+    expect(footstepPan(-50, 1000)).toBe(-1);
+    expect(footstepPan(1200, 1000)).toBe(1);
+    expect(footstepPan(NaN, 1000)).toBe(0);
+    expect(footstepPan(10, 0)).toBe(0);
   });
 
   it("catch notes are an octave down plus a semitone neighbor", () => {
