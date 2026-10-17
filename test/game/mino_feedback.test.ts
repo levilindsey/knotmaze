@@ -9,7 +9,9 @@ import {
   catchNotes,
   footstepPan,
   footstepStrength,
+  resolveTelegraphHover,
   telegraphAlphas,
+  telegraphTickLook,
   turnCue,
 } from "../../src/game/mino_feedback";
 import { TurnMinotaur, turnConfig } from "../../src/game/minotaur_turns";
@@ -32,6 +34,42 @@ describe("telegraphAlphas (2.7)", () => {
       TELEGRAPH_ALPHA_ROAM * 0.5,
     ]);
     expect(telegraphAlphas(true, 0)).toEqual([]);
+  });
+});
+
+describe("by-length telegraph ticks (K481 stage 3, decision 7)", () => {
+  it("resolves the lit tick: wait first, then a route's first run, then the run", () => {
+    expect(resolveTelegraphHover(5, [5, 9], true)).toBe(-1);
+    expect(resolveTelegraphHover(9, [5, 9], false)).toBe(5);
+    expect(resolveTelegraphHover(9, null, false)).toBe(9);
+    expect(resolveTelegraphHover(-1, null, false)).toBeNull();
+    expect(resolveTelegraphHover(-1, [], false)).toBeNull();
+  });
+
+  it("lights a tick in 3b's alphas and moves the ring there", () => {
+    expect(telegraphTickLook(false, false, false, false)).toEqual({
+      alpha: TELEGRAPH_ALPHA_ROAM,
+      scale: 0.55,
+      ring: false,
+    });
+    const lit = telegraphTickLook(false, true, true, false);
+    expect(lit.alpha).toBe(TELEGRAPH_ALPHA_HUNT);
+    expect(lit.ring).toBe(true);
+    expect(lit.scale).toBeGreaterThan(0.55);
+    expect(telegraphTickLook(false, false, true, false).alpha).toBeCloseTo(
+      TELEGRAPH_ALPHA_ROAM * 0.5
+    );
+    expect(telegraphTickLook(true, true, true, false).alpha).toBe(1);
+    expect(telegraphTickLook(true, false, false, false).alpha).toBe(TELEGRAPH_ALPHA_HUNT);
+  });
+
+  it("draws bigger ticks on a coarse pointer, alone or lit", () => {
+    expect(telegraphTickLook(false, false, false, true).scale).toBeGreaterThan(
+      telegraphTickLook(false, false, false, false).scale
+    );
+    expect(telegraphTickLook(false, true, true, true).scale).toBeGreaterThan(
+      telegraphTickLook(false, true, true, false).scale
+    );
   });
 });
 

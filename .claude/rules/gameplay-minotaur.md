@@ -301,7 +301,21 @@ only with the files it is about; `gameplay.md` lists the area's other files.
   correction). The first telegraph draws the route from where it
   stands with a tick ring at each choice's stop, the wait's included;
   hover and press lighting is stage 3. Probed at 1400x900 and a phone
-  viewport (`.claude/probes/K481/out_stage2/`).
+  viewport (`.claude/probes/K481/out_stage2/`). STAGE 3 (K530, 2026-10-16;
+  decision 7): hovering or pressing a choice lights its tick and moves
+  the destination ring there (`mino_feedback.resolveTelegraphHover` /
+  `telegraphTickLook`: the wait's tick in the wait zone, a multi-run
+  tap's first run, a held key's pick; unlit ticks at 3b's roam 0.45 /
+  hunt 0.95, a lit roam tick at hunt brightness, the others halved);
+  with nothing hovered the route and ticks show alone. The phone
+  (coarse or <=700 px) gets bigger ticks and the tint fallback: a
+  choice that would get you caught (`TurnTelegraph.stops[].caught`,
+  the exit winning first, the start never a catch) tints red at the
+  head - at fit zoom the ticks alone are a few px near the minotaur,
+  far from the eye, as 3b's roam alpha already was (K525). Same-state
+  A/Bs (clocks pinned): toggle off 0 px desktop and phone, by-length
+  idle 0 px desktop, phone idle 403 px (the bigger ticks only);
+  evidence `.claude/probes/K481/stage3/`.
 
 - TURNS STAGE 3b (2026-10-16; sections 2.7, 2.8, 2.10): the telegraph draws one stroke a run with `mino_feedback.telegraphAlphas` (roam 0.45, hunt 0.95, later runs half; the ring follows the first), route-shaped for K324 stage 2 to reuse; the chevrons still wait for it. A catch records `TurnMinotaur.lastCatch` (player and minotaur vertices, both travel modes) and main.ts bursts a red ring there (`showCatchBurst`/`tickCatchFx`, static under reduced motion), plucks the caught run an octave down plus its semitone neighbor, and vibrates 60 ms. K270 DIAGNOSED: `turnCaught` updated the controller but left the minotaur layer showing its pre-catch telegraph and glow at the site until the next frame's `syncMinotaur` — over the pink/lavender threads that stale red frame read as a lavender band; `turnCaught` now re-syncs in the same call. Sounds (`mino_feedback.turnCue`): a growl (two low plucks) on the turn it first sees you, a heartbeat double pluck ending within two runs, else a footstep per run walked, strength fading to 0 at 6 runs; no pan (KnotSynth has none). Fog (2.10): when `minoFog` keeps it hidden under fog of war, only its glow bleeds through at `MINO_FOG_BLEED_ALPHA` 0.16, over the fog, with no marker or telegraph. Tests: `test/game/mino_feedback.test.ts`. Sheet: `.claude/probes/K80/stage3b/contact_sheet.png` (desktop + emulated phone; the real-phone sheet waits for a phone window).
 - CATCH RESETS (K80 turns stage 2, K273, 2026-10-14; Levi: "a toggle to

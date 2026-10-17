@@ -59,6 +59,7 @@ import {
   MINO_FOG_BLEED_ALPHA,
   catchBurstAt,
   telegraphAlphas,
+  telegraphTickLook,
 } from "../game/mino_feedback";
 
 // What syncMinotaur draws: the real-time chase (MinotaurChase) or the
@@ -597,6 +598,13 @@ export class FabricMazeRenderer {
   private minoGlow: Sprite;
   // K80 turns: the telegraph (its committed next move), under the glow.
   private teleGfx: Graphics;
+  // K481 stage 3: the by-length telegraph's lit tick (a choice edge, -1
+  // = the wait), set by the input layer's hover/press (null = none, the
+  // phone's idle state); and whether the pointer is coarse (the phone
+  // treatment: bigger ticks, the caught-choice tint below). Both read
+  // only by drawTelegraphLength, so the runs telegraph is untouched.
+  telegraphHoverEdge: number | null = null;
+  telegraphCoarse = false;
   // K114: the burn race (drawFire); fireDrawn = a fire is declared (cleared
   // once the fire is off). fireDirty: update() ran since the last draw (the
   // threads, flow or game state moved); fireKey: the fire's clock and state
@@ -825,6 +833,16 @@ export class FabricMazeRenderer {
     if (cur === next) return false;
     if (cur && next && cur.length === next.length && cur.every((v, i) => v === next[i])) return false;
     this.hoverRoute = next;
+    return true;
+  }
+
+  // K481 stage 3: track the by-length telegraph's lit tick (a choice
+  // edge, -1 = the wait, null = none); returns true when it changed, as
+  // setHover does. The caller refreshes the minotaur (syncMinotaur
+  // redraws the telegraph every frame, so no paint refresh is needed).
+  setTelegraphHover(edge: number | null): boolean {
+    if (edge === this.telegraphHoverEdge) return false;
+    this.telegraphHoverEdge = edge;
     return true;
   }
 
@@ -1500,7 +1518,13 @@ export class FabricMazeRenderer {
   // K481 stage 2, the by-length telegraph's first look: the committed
   // route from where it stands (mid-run included), sampled segment by
   // segment, with a tick ring at each choice's stop (the wait's included;
-  // its edge is -1). Stage 3 adds the hover and press lighting.
+  // its edge is -1). Stage 3 (decision 7): a hovered or pressed choice
+  // lights its tick and takes the destination ring (telegraphTickLook);
+  // with nothing hovered - and always on the phone, which has no hover -
+  // the route and its ticks show alone, the ticks bigger on a coarse
+  // pointer. The phone also gets the tint fallback: a choice that would
+  // get you caught tints red at the head (the wait: a ring there), since
+  // at fit zoom the ticks alone read badly (the stage 3 probe).
   private drawTelegraphLength(g: ChaseGraph, t: TurnTelegraph, r: number, hunting: boolean): void {
     const gfx = this.teleGfx;
     gfx.clear();
@@ -1536,15 +1560,71 @@ export class FabricMazeRenderer {
       }
       spot = { edge: -1, pos: 0, dir: 1, vertex: b };
     }
+    // K481 stage 3, the tint fallback on a coarse pointer: a choice
+    // that would get you caught tints at the head, where the eye is.
+    if (this.telegraphCoarse) {
+      for (const stop of t.stops ?? []) {
+        if (!stop.caught) continue;
+        if (stop.edge < 0) {
+          const pv = t.player !== undefined ? this.walk.vertices.get(g.ids[t.player]) : undefined;
+          if (!pv) continue;
+          this.pointFlowed(pv.chain, this.ctrlMod(pv.chain, pv.ctrl), this.scratch, 0);
+          this.polyCircle(gfx, this.scratch[0], this.scratch[1], r * TELEGRAPH_RING_R, 40);
+          gfx.stroke({ color: TELEGRAPH_COLOR, width: w * TELEGRAPH_RING_W, alpha: 0.85 });
+          continue;
+        }
+        const we = this.walk.edges[stop.edge];
+        if (!we) continue;
+        const n = Math.max(1, Math.ceil(Math.abs(we.ctrlB - we.ctrlA) / TELEGRAPH_STEP));
+        const pts: number[] = [];
+        for (let k = 0; k <= n; k++) {
+          const c = we.ctrlA + ((we.ctrlB - we.ctrlA) * k) / n;
+          this.pointFlowed(we.chain, this.ctrlMod(we.chain, c), this.scratch, 0);
+          pts.push(this.scratch[0], this.scratch[1]);
+        }
+        if (pts.length >= 4) {
+          gfx.moveTo(pts[0], pts[1]);
+          for (let i = 2; i < pts.length; i += 2) gfx.lineTo(pts[i], pts[i + 1]);
+          gfx.stroke({
+            color: TELEGRAPH_COLOR,
+            width: w * TELEGRAPH_WIDTH * 2,
+            alpha: 0.4,
+            cap: "round",
+            join: "round",
+          });
+        }
+      }
+    }
+    const litEdge =
+      this.telegraphHoverEdge !== null &&
+      (t.stops ?? []).some((s) => s.edge === this.telegraphHoverEdge)
+        ? this.telegraphHoverEdge
+        : null;
     for (const stop of t.stops ?? []) {
+      const look = telegraphTickLook(
+        hunting,
+        litEdge !== null && stop.edge === litEdge,
+        litEdge !== null,
+        this.telegraphCoarse
+      );
       const at = spotCtrl(this.walk, g, stop.spot);
       this.pointFlowed(at.chain, this.ctrlMod(at.chain, at.ctrl), this.scratch, 0);
-      this.polyCircle(gfx, this.scratch[0], this.scratch[1], r * TELEGRAPH_RING_R * 0.55, 32);
+      const x = this.scratch[0];
+      const y = this.scratch[1];
+      this.polyCircle(gfx, x, y, r * TELEGRAPH_RING_R * look.scale, 32);
       gfx.stroke({
         color: TELEGRAPH_COLOR,
-        width: w * TELEGRAPH_RING_W,
-        alpha: alphas[0] ?? TELEGRAPH_ALPHA,
+        width: w * TELEGRAPH_RING_W * (look.ring ? 1.5 : 1),
+        alpha: look.alpha,
       });
+      if (look.ring) {
+        this.polyCircle(gfx, x, y, r * TELEGRAPH_RING_R, 48);
+        gfx.stroke({
+          color: TELEGRAPH_COLOR,
+          width: w * TELEGRAPH_RING_W,
+          alpha: look.alpha,
+        });
+      }
     }
     gfx.visible = true;
   }

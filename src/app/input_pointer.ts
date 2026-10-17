@@ -6,6 +6,7 @@ import type { PluckRipples } from "../render/pluck_ripple";
 import type { MotionSetting } from "../ui/motion";
 import type { PanelSettings } from "../ui/tweakpane_panel";
 import type { UrlParams } from "../ui/url_state";
+import { resolveTelegraphHover } from "../game/mino_feedback";
 import type { SceneRef } from "./scene_ref";
 
 // K5 M6 (docs/design/K5_K6_split.md, 2.2): pointer input, moved out of
@@ -433,7 +434,8 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
     return scene.fabric.setGlow(hit ? hit.chain : -1, hit ? hit.ctrl : 0);
   };
   const clearGlow = (): void => {
-    if (scene.fabric && scene.fabricController && (scene.fabric.setGlow(-1, 0) || scene.fabric.setHoverRoute(null))) {
+    // K481 stage 3: a lifted or leaving pointer lights no tick.
+    if (scene.fabric && scene.fabricController && (scene.fabric.setGlow(-1, 0) || scene.fabric.setHoverRoute(null) || scene.fabric.setTelegraphHover(null))) {
       scene.fabric.update(scene.fabricController);
     }
   };
@@ -510,6 +512,18 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
             scene.fabric.targetAt(x, y, scene.fabricController, pickRadius("touch", true), tapReach()) !== null ||
             inWaitZone(x, y)) // K80 turns 3a: a tap on the head waits.
         ) {
+          // K481 stage 3: pressing a choice lights its telegraph tick
+          // while the finger is down (the phone's press for its hover).
+          const pressTarget = inWaitZone(x, y)
+            ? null
+            : scene.fabric.targetAt(x, y, scene.fabricController, pickRadius("touch", true), tapReach());
+          scene.fabric.setTelegraphHover(
+            resolveTelegraphHover(
+              pressTarget?.eid ?? scene.fabric.edgeAt(x, y, scene.fabricController, pickRadius("touch", true)),
+              pressTarget?.route ?? null,
+              inWaitZone(x, y)
+            )
+          );
           pendingTap = { id: e.pointerId, sx: e.clientX, sy: e.clientY, x, y };
           return;
         }
@@ -663,7 +677,12 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
           )?.eid ?? -1);
       const glow = zone ? scene.fabric.setGlow(-1, 0) : setGlowAt(x, y, eid, e.pointerType);
       const routeChanged = scene.fabric.setHoverRoute(zone ? null : (target?.route ?? null));
-      if (scene.fabric.setHover(eid) || glow || routeChanged) scene.fabric.update(scene.fabricController);
+      // K481 stage 3: the same hover lights its by-length telegraph tick
+      // (the wait's in its zone, a multi-run tap's first run otherwise).
+      const teleChanged = scene.fabric.setTelegraphHover(
+        resolveTelegraphHover(eid, target?.route ?? null, zone)
+      );
+      if (scene.fabric.setHover(eid) || glow || routeChanged || teleChanged) scene.fabric.update(scene.fabricController);
       app.canvas.style.cursor =
         zone || eid >= 0
           ? "pointer"
@@ -710,7 +729,7 @@ export function createPointerInput(deps: PointerInputDeps, scene: SceneRef) {
       // A lifted finger leaves no hover or glow behind (touch has no
       // pointer to move off the run).
       const glow = !!scene.fabric && scene.fabric.setGlow(-1, 0);
-      if (scene.fabric && scene.fabricController && (scene.fabric.setHover(-1) || scene.fabric.setHoverRoute(null) || glow)) {
+      if (scene.fabric && scene.fabricController && (scene.fabric.setHover(-1) || scene.fabric.setHoverRoute(null) || scene.fabric.setTelegraphHover(null) || glow)) {
         scene.fabric.update(scene.fabricController);
       }
       if (touches.size === 0) touchLocked = false;

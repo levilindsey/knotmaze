@@ -290,6 +290,8 @@ export function createScene(deps: SceneDeps): Scene {
         params.threadWidth,
         renderer
       );
+      fabric.telegraphCoarse =
+        window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 700;
       fabric.trailMode = params.pathViz === "trail";
       fabric.pathViz = params.pathViz;
       fabric.tension = params.tension;

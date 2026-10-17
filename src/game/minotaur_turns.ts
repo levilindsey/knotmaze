@@ -873,11 +873,17 @@ export interface TurnTelegraph {
   // K481 (by-length only): the spot it leaves, the speed factor, the
   // segment lengths of `steps`, and where it would stop for each choice
   // at the player's vertex (edge -1 = the wait), for the tick telegraph.
+  // Stage 3: `player` is the player's vertex (chase index) the stops are
+  // judged from, and each stop's `caught` says whether taking that
+  // choice would be caught (the tint fallback's input; an exit run wins
+  // first and a move ending on the start is never a catch, as in
+  // turnByLength).
+  player?: number;
   fromSpot?: Spot;
   factor?: number;
   segLens?: readonly number[];
   catchDist?: number;
-  stops?: readonly { edge: number; travel: number; spot: Spot }[];
+  stops?: readonly { edge: number; travel: number; spot: Spot; caught?: boolean }[];
   from: number; // vertex it leaves
   steps: readonly TurnStep[]; // runs it will take (empty = it stays)
   dest: number; // vertex it will end the turn on
@@ -1244,22 +1250,32 @@ export class TurnMinotaur {
   private telegraphLength(): TurnTelegraph | null {
     const plan = this.committedPlan;
     if (!plan || this.progress < 1) return null;
+    const g = this.tg;
+    const catchDist = this.cfg.catchDist ?? BY_LENGTH_CATCH_DIST;
     const stops = this.lengthChoices().map((c) => {
       const travel = Math.min(plan.factor * c.length * travelScaleOf(this.cfg), plan.totalLength);
+      const p2 =
+        c.edge < 0 ? this.player : g.chase.ea[c.edge] === this.player ? g.chase.eb[c.edge] : g.chase.ea[c.edge];
+      const caught =
+        p2 !== g.exit &&
+        p2 !== g.start &&
+        contactByLength(g, this.player, c.edge, plan.fromSpot, plan.steps, plan.segLens, travel, catchDist);
       return {
         edge: c.edge,
         travel,
         spot: spotAlongLengthRoute(this.tg, plan.fromSpot, plan.steps, plan.segLens, travel),
+        caught,
       };
     });
     return {
       from: this.state.v,
       steps: this.committed,
       dest: plan.stateAfter.v,
+      player: this.player,
       fromSpot: { ...plan.fromSpot },
       factor: plan.factor,
       segLens: plan.segLens.slice(),
-      catchDist: this.cfg.catchDist ?? BY_LENGTH_CATCH_DIST,
+      catchDist,
       stops,
     };
   }

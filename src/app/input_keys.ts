@@ -183,8 +183,10 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
     !deps.pendingLoss &&
     !(scene.chase?.finished ?? false);
   const setKeyHover = (eid: number): void => {
+    // K481 stage 3: a held key's pick lights its telegraph tick too.
     if (!scene.fabric || !scene.fabricController) return;
     keyHover = eid >= 0;
+    scene.fabric.setTelegraphHover(eid >= 0 ? eid : null);
     if (scene.fabric.setHover(eid)) scene.fabric.update(scene.fabricController);
   };
   // A waiting press outlives the hold (a quick press mid-move is still
@@ -344,6 +346,9 @@ export function createKeyInput(deps: KeyInputDeps, scene: SceneRef) {
               ? w.edge
               : pickMove(keyDepartures(v), w.dirs, { hold: false }).edge
         );
+        // K481 stage 3: a queued wait lights the wait's tick, not none.
+        if (w.wait) scene.fabric?.setTelegraphHover(-1);
+
       }
       return true;
     }
