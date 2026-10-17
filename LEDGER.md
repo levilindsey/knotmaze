@@ -19,7 +19,7 @@ one line, `- **K<n>** Â· <what>. Done in <commit> (<date>).` Shortened
 items keep their full text in `docs/ledger_notes.md`, and older Done
 entries move to `docs/ledger_done.md`.
 
-Next free ID: K543.
+Next free ID: K546.
 
 ## Waiting on Levi
 
@@ -105,6 +105,7 @@ Next free ID: K543.
 - **K515** Â· K480 stage 2's look, built as recommended (Levi may change): a hovered tap's whole route at the hover breath, its tapped run keeping the rim glow, non-route branched arms keeping their trains; plus page-probing the hover route with a real pointer (desktop, and in K500's phone pass). `docs/design/K480.md` ("Stage 2 handoff").
 
 - **K525** · Levi's look call on K80 turns 3b, built as recommended: telegraph roam 0.45 / hunt 0.95 with the second run at half, the 0.45 s catch ring burst, and the fog bleed at 0.16. `.claude/probes/K80/stage3b/contact_sheet.png`. The real-phone sheet is now `.claude/probes/K80/stage3b/contact_sheet_real.png` (K524): hunt 0.95 reads clearly at fit zoom, roam 0.45 is effectively invisible at fit zoom, the catch ring had mostly faded by the shot, and fog bleed 0.16 is unexercised (fog off in this design).
+- **K545** · K481 stage 3's look for Levi (built as recommended in 31b2238): lit tick + moved ring on hover/press, phone bigger ticks with the caught-choice tint at the head (desktop ticks alone); the real-phone sheet rides the next phone window (this stage was emulated 411x753 only) and Levi's call whether the tint should show on desktop too. `docs/design/K481.md` (Stage 3 handoff); `.claude/probes/K481/stage3/`.
 
 ## In progress
 
@@ -132,7 +133,7 @@ Next free ID: K543.
   - evidence: `.claude/probes/K74/` (stage 2 in `stage2/`, sheets in
     `out/`); the design agent's branch `worktree-agent-aeaf1e61bcecaaf0b` (its worktree swept
     2026-10-15, probes copied to the main checkout)
-  - next: K521 done in 4098946 (port byte-identical 640/640; greedy bar fails on dailies 1-240 at 20.0% within 1.5x, owned by stage 4, not a stage-3 retune); stage 4 sim-first done in 49efe76 (search works only H1-in-loop: 70% both-targets, 5.0% within 1.5x on 1-80). The build half is K527 (fully answered, K532; unlocked after the render lane).
+  - next: K521 done in 4098946; stage 4 build half done in 7d794b5 (K527/K532: greedy-trap search behind `greedyTrap`, H1-in-loop only; gF median 2.86 -> 3.38, within-1.5x 20.0% -> 11.7%, both-targets 38.8% -> 59.2%, generation 25 -> 74 ms median; off = byte-identical). Left: the before/after sheet K543 and the phone timing K544.
     Dead-end branches as deeper traps are out of scope; K80's brief does not settle them
   - brief: `docs/design/K74_stage3.md`; stage 2's handoff: `docs/design/K74.md`; stage 4's brief: `docs/design/K74_stage4.md`
 - **K80** Â· The minotaur, decided (Levi, 2026-10-13; design
@@ -224,7 +225,7 @@ Next free ID: K543.
   - owner: nobody since 2026-10-15 14:18 (the phone agent `a2c95d8bde8feeea8` of claude session 05e60da0 finished its bench; G3-0's `af653fa7f942f2f1e` (session d8031183) finished, its worktree left, locked by the live Claude process (K161))
   - branch: mainline; last commit: `3465090` (G3-1; G3-0 f6d10e3)
   - evidence: `.claude/probes/K8/G3-1/` (the brief's texture sizes); `.claude/probes/K8/stage2/` (`notes.md`, `g3_probe.mjs`, `batch3.ps1`-`batch6.ps1`, `phone6.ps1`, results); stage 1's `.claude/probes/K8/stage1/notes.md`
-  - next: G3-1 done in 3465090 (GAP rows reference SAMP, chunk-pruned search; suite 1389, byte-identity holds; browser verification owed = K536). Lane next: R3, R4, G3-2, R5; never beside an R stage, K268 item 4, K90 or another GPU measurement; it may run beside K7. G3-2 needs K90's bend decided
+  - next: G3-1 done in 3465090 and browser-verified in K536 (brute vs pruned 0 px, GAP GL readback bit-exact; phone half K539, cold first-visible gap K540). Lane next: R3, R4, G3-2, R5; never beside an R stage, K268 item 4, K90 or another GPU measurement; it may run beside K7. G3-2 needs K90's bend decided
   - brief: `docs/design/K8_G3-1.md`; G3-0's handoff: `docs/design/K8_stage1.md` ("Stage 2 handoff")
 - **K5** Â· Split `main.ts` and `ribbon_renderer.ts` along K1-K3's data lines, with seams so G3 becomes a module
   swap; K6 rides it (`docs/design/K5_K6_split.md`, calls K377). Merged M1-M4 (`src/app/`: camera, frame_loop,
@@ -232,7 +233,7 @@ Next free ID: K543.
   - owner: nobody since 2026-10-15 15:00 (merged)
   - branch: mainline; last commit: `3166d8f` (R5 1c666ec + e53e4d9, M5 3166d8f)
   - evidence: M4's `.claude/probes/K5/M4/` and R2's `.claude/probes/K5/R2/`; M3's `.claude/probes/K5/M3/` (`checks/`, `frames/`, `step2/`, `k7_results.jsonl` and `k7_table.mjs`, `checks_m3.ps1`, `remap_e6e1734.md`), `.claude/probes/K5/R2/brief/` (the R2 brief's maps), `.claude/probes/K5/R1/` (`checks/`, `checks2/`; `checks3.ps1`, the fog B-vs-B control, never run; R2's inventory `parts.md`, `probe_surface.md`, `surface.json`), `.claude/probes/K5/M2/`; stage 1's tools in `.claude/probes/K5/stage1/`; the design's region maps in `.claude/probes/K5/design/`
-  - next: K6-2 done in 926fdfe (2026-10-16); G3-1 done in 3465090 (K536 verifies it in the browser); then R3 (`reveal_fx.ts`, `paint_state.ts`). M4 leftovers K506.
+  - next: K6-2 done in 926fdfe (2026-10-16); G3-1 done in 3465090 and browser-verified (K536); then R3 (`reveal_fx.ts`, `paint_state.ts`). M4 leftovers K506.
   - brief: `docs/design/K5_K6_split.md` (Stage M4 brief); the R lane `docs/design/K5_R2.md`
 - **K290** Â· Burnt threads, a toggle (Levi, 2026-10-14): `burnt` (`fbt`), gone
   (default: cut out of the reveal's pieces, so gaps close and fans drop the arm) or
@@ -291,6 +292,7 @@ The queue (coordinator, overnight 2026-10-15/16):
 
 7. Overnight run 6 done (2026-10-16, final run): K522+K523 (5558669; census2d flicker floor + attributedUW/lifted-exit port, m10 30/30) and K524 (real-Pixel sheet, no commit). Residual K528 (census2d first-frame drift, localize only if it grows). Next queue: Levi first - K515 (K480's look), K525 (K80 3b's look, real sheet now in), K399 (G3-1 after it), K527's six calls, and the rest of Waiting on Levi; then ungated work in their sections.
 8. Batch close (2026-10-16): fixes ea2e468 (K398/K346/K436/K454/K469/K314/K373/K526/K461/K500; residual K529), K481 stage 2 a69b5cb (stage 3 = K530), K307 stage 3 e83f203 (K366 measured/attributed, fix = K535; K386 narrowed), G3-1 3465090 (browser verification = K536), K430 ramp 377bc41 (K268 stays In progress; residuals K537, K538; K431 narrowed). Levi answered K210 (-> K531, folds K82), K527 in full (-> K532) and K339/K323 (-> K534, Stage A unlocked); backend dailies filed as K533. Refreshed queue by value - Levi gates first: K515 (K480's look), K525 (K80 3b's look, real sheet in), then the rest of Waiting on Levi; then ungated, in order: K530 (K481 stage 3), K534 (panel Stage A), K527's build half (after the render lane), K536 (G3-1 browser verification), K268's remaining item-2 parts, then work in their sections.
+9. Batch 2 close (2026-10-16): K481 stage 3 31b2238 (K530/K481 done; look call K545), panel Stage A1 35f3ec2 (K534 done; A2 = K541), K74 stage 4 build 7d794b5 (K527/K532 done; sheet K543, phone timing K544), G3-1 verified (K536 done in c946ae2; residuals K539, K540), K268 PROTECT 1fc9458 (far-branch smooth-min remains). Queue by value - Levi gates first: K515 (K480's look), K525 (K80 3b's look, real sheet in), K545 (K481 stage 3's look), then the rest of Waiting on Levi; K531 (daily determinism) lands at launch prep and K533 (backend dailies) with the backend/accounts work; then ungated: K541 (panel Stage A2), K268's far-branch smooth-min, K543/K544 when wanted / in K156's next phone window, then work in their sections.
 
 Levi's order of 2026-10-14 23:00-23:55, kept as history (most of it has
 merged):
@@ -322,11 +324,6 @@ Every other item below waits on the trigger it names.
 
 
 
-- **K481** Â· Turns by length (Levi 2026-10-15): a toggle moves the turn minotaur its speed x your move's length, with mid-run stops, contact by thread distance and a telegraph tick per choice; tuned on the turn sim. Stage 1 (model + sim) done in 48fc9ee (2026-10-15); stage 2 done in a69b5cb (2026-10-16: `minoByLength`/`mbl` codec 156, off by default, live panel row; by-length animation with mid-run stops, catch at its contact moment, live stats, first telegraph route + ticks; K501 travel scale tuned to BY_LENGTH_TRAVEL_SCALE 0.65; suite 1376). Stage 3 is K530; brief `docs/design/K481.md`.
-
-
-
-- **K530** · K481 stage 3: decision 7's telegraph hover/press lighting, the wait tick's hover, the phone treatment, the tint fallback if ticks read badly, and same-state pixel A/Bs with the toggle off; brief `docs/design/K481.md` (Stage 2 handoff).
 - **K531** · Daily determinism at launch (K210 answered by Levi, 2026-10-16): past dailies must be deterministically reconstructible as (app version -> that version's frozen PARAM_DEFAULTS) merged with (daily-specific params/custom overrides for that day); post-launch changes must not significantly alter previous dailies. Implementation: frozen per-version defaults table + per-day override table, published days immutable; folds K82 in; lands at launch prep.
 - **K533** · Backend daily precomputation (Levi, 2026-10-16, future): regularly precompute and cache daily designs on the backend and serve current + previous dailies, moving daily-calculation logic server-side so future dailies cannot be anticipated client-side. Explore/design/implement later alongside accounts/logins/data persistence (K144). Depends on K531's determinism design.
 - **K345** Â· The hover rim stops `rimGap` (0.975 world) short of junctions;
@@ -444,8 +441,8 @@ Every other item below waits on the trigger it names.
   the peek, help taps; K467 ran only in phone emulation
 - **K486** Â· Touch help for the panel's buttons: Reset path, Replay settle, Reset to defaults, the
   seed row, the dice, Daily, stats (K467 covered the 161 rows only)
-- **K527** · K74 stage 4 build half (`docs/design/K74_stage4.md`): exact heading score, acceptance non-regression floor, `greedyTrap` param (default off, one codec row after 155), H1-in-loop search seam, 1-240 bar + sleep + generation timing. Sim-first half done in 49efe76. Fully answered by Levi (K532); build half unlocked after the render lane.
-- **K532** · K527 answered in full by Levi (2026-10-16): calls 1, 2, 5 yes (ship the greedy-trap search, H1-in-loop only; `greedyTrap` param default off; runs in-generation (a) for now); calls 3, 4, 6 also yes (all recommendations accepted; every numeric threshold becomes a slider beside `greedyTrap`, defaults = recommended values; call 2's code-constant targets/caps amended accordingly). K74 stage 4's build half (K527) unlocked after the render lane.
+- **K543** · K74 stage 4's before/after sheet of three finishes (searched vs shipped, dailies 1-3) was not made in the build stage; make it from `.claude/probes/K74/stage4/build_measure.ts` output or a diag_screenshot pair when Levi wants the look check.
+- **K544** · Phone timing for searched designs (`greedyTrap` on: generation median 74 ms desktop Node, p90 197 ms) rides K156's next phone window, as stage 3's did.
 - **K541** · Panel Stage A2 (split from K534 per K339's A1/A2 plan): the remaining moves (Maze to generation only, Path & view, Look's Backdrop tuning, Motion/Sound/Physics/Developer reshuffle, Reset to defaults at the root), word labels on every row (K327, at most 23 chars) and the desktop panel width 256 to 320 px; rerun the panel inventory and diff it, with labels uncut at both sizes. Never beside another panel rewrite.
 
 ## Residuals (known, not fixed)
@@ -1227,6 +1224,10 @@ audit inbox; the first-tap sound offer is done, 82b6b6b).
 
 ## Done
 
+- **K530** · K481 stage 3: telegraph hover/press + wait tick, phone ticks/tint, toggle-off A/Bs. Done in 31b2238 (2026-10-16).
+- **K481** · Turns by length (toggle `minoByLength`, stages 1-3): stage 3 done in 31b2238 (K530); item complete - close or keep only the K545 look call. Done in 31b2238 (2026-10-16).
+- **K527** · K74 stage 4 build half (`docs/design/K74_stage4.md`): greedy-trap search shipped H1-in-loop only behind `greedyTrap`. Done in 7d794b5 (2026-10-16).
+- **K532** · K527 answered in full by Levi (2026-10-16): all calls taken, every threshold a slider beside `greedyTrap`. Done in 7d794b5 (2026-10-16).
 - **K268 (stage 2 item 2, PROTECT part)** · The protect waiver scales by the covered thread B's visibility per side under the thread reveal: computeGapSlot records B's chain/pass per slot side (slotProtChain/slotProtCtrl), applyExploreGaps writes the clamped vis as a per-slot factor into spare gap texels (texel 3.x / 9.w, solved at 1; GapMaskTable.setProtVis/protVisOf), and only the explore shader variants multiply the waiver by it (EXPLORE_PROT_GLSL; master's gap text and mode-off cost untouched, fans never run it). Mode off restores 1. Proof: unit tests (gap table texels, protVisScale, shader texts incl. fan/still undo), CPU census in a walked fabric state (706 sides, 0 mismatches; 544 hidden / 22 shown / 4 partial), protect probe 5/5 and census3a 22/31 = the K430 ramp baseline (the 3 extra fails in one run moved off on rerun - variance inside K537). The biting-triangle GPU census is K542; the far-branch smooth-min is the item's remaining part. Done in this commit (2026-10-16); evidence .claude/probes/K268/stage3a/out/protect_final/ + census_protect2/.
 - **K534** · Panel Stage A1 (K323 stage 1 + K339 merges, codec 7): `gameMode` (classic/minotaur/burn) in a new Game folder after Design, exploration in Game, Real time as a checkbox over `clock` (`clockOf`), burn as a mode, `minoPull` slider for `minoToward`, minotaur without off, confetti/deadEnds/snappiness/fire codec entries gone (density 0 = braided, amount 0 = none), K340 look F CSS, K263 closed. Golden dailies and K74 pins unchanged (no default moves a maze). Done in this commit (2026-10-16); the rest of Stage A is K541.
 - **K536** · G3-1's browser verification: brute vs pruned 0 px on all 10 G1 links (phw=0) and on def/user/ring on the worker host; G1 census unchanged parent vs 3465090 (naked 0 on the clean set, overcut within ~1%); census2d 23/30 parent vs 24/30 G3-1 (same fail families, PROOF passes only on G3-1), census3a 21/30 on G3-1 within K537's pre-existing set; held still pluck (still:true) and routed web (6 moves) brute 0 px on both builds, cross-build diffs single-level casing edges (gt8 = 4 px); GAP GL readback GPU == CPU mirror exactly (25-texel rows, 4 links x worker + phw=0, gl.getError 0, no lost context); frame bench at rest unchanged (default p50 0.2 ms both, dense mean 5.32 vs 5.24 ms). Section cold compiles equal; the cold first-visible gap is K540 and the phone half is K539. Done 2026-10-16 (verification only, no code commit; evidence `.claude/probes/K8/G3-1/`).
